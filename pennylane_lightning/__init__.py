@@ -14,3 +14,4 @@
 """Top level PennyLane-lightning module"""
 
 from ._version import __version__
+from .lightning_qubit import LightningQubit
