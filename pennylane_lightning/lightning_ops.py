@@ -64,7 +64,7 @@ class Hadamard(Observable, Operation):
         return np.array([[1, 1], [1, -1]]) / np.sqrt(2)
 
     _matrix_tensor = _matrix
-    _matrix_tensor_inv = _matrix.conj().T
+    _matrix_tensor_inv = _matrix
 
     def diagonalizing_gates(self):
         r"""Rotates the specified wires such that they
@@ -108,7 +108,7 @@ class PauliX(Observable, Operation):
         return np.array([[0, 1], [1, 0]])
 
     _matrix_tensor = _matrix
-    _matrix_tensor_inv = _matrix.conj().T
+    _matrix_tensor_inv = _matrix
 
     def diagonalizing_gates(self):
         r"""Rotates the specified wires such that they
@@ -150,7 +150,7 @@ class PauliY(Observable, Operation):
         return np.array([[0, -1j], [1j, 0]])
 
     _matrix_tensor = _matrix
-    _matrix_tensor_inv = _matrix.conj().T
+    _matrix_tensor_inv = _matrix
 
     def diagonalizing_gates(self):
         r"""Rotates the specified wires such that they
@@ -194,7 +194,7 @@ class PauliZ(Observable, Operation):
         return np.array([[1, 0], [0, -1]])
 
     _matrix_tensor = _matrix
-    _matrix_tensor_inv = _matrix.conj().T
+    _matrix_tensor_inv = _matrix
 
     def diagonalizing_gates(self):
         return []
@@ -226,7 +226,10 @@ class S(Operation):
         return np.array([[1, 0], [0, 1j]])
 
     _matrix_tensor = _matrix
-    _matrix_tensor_inv = _matrix.conj().T
+
+    @staticmethod
+    def _matrix_tensor_inv(*params):
+        return S._matrix(*params).conj().T
 
 
 class T(Operation):
@@ -255,7 +258,9 @@ class T(Operation):
         return np.array([[1, 0], [0, np.exp(1j * np.pi / 4)]])
 
     _matrix_tensor = _matrix
-    _matrix_tensor_inv = _matrix.conj().T
+
+    def _matrix_tensor_inv(*params):
+        return T._matrix(*params).conj().T
 
 
 class CNOT(Operation):
@@ -296,9 +301,8 @@ class CNOT(Operation):
         )
 
     @staticmethod
-    @jit(nopython=True)
     def _matrix_tensor_inv(*params):
-        return _matrix_tensor(*params)
+        return CNOT._matrix_tensor(*params)
 
 class CZ(Operation):
     r"""CZ(wires)
@@ -336,9 +340,8 @@ class CZ(Operation):
         return np.array([[[[1, 0], [0, 0]], [[0, 1], [0, 0]]], [[[0, 0], [1, 0]], [[0, 0], [0, -1]]]])
 
     @staticmethod
-    @jit(nopython=True)
     def _matrix_tensor_inv(*params):
-        return _matrix_tensor(*params)
+        return CZ._matrix_tensor(*params)
 
 
 class SWAP(Operation):
@@ -375,9 +378,8 @@ class SWAP(Operation):
         return np.array([[[[1, 0], [0, 0]], [[0, 0], [1, 0]]], [[[0, 1], [0, 0]], [[0, 0], [0, 1]]]])
 
     @staticmethod
-    @jit(nopython=True)
     def _matrix_tensor_inv(*params):
-        return _matrix_tensor(*params)
+        return SWAP._matrix_tensor(*params)
 
 
 class CSWAP(Operation):
@@ -442,9 +444,8 @@ class CSWAP(Operation):
         )
 
     @staticmethod
-    @jit(nopython=True)
     def _matrix_tensor_inv(*params):
-        return _matrix_tensor(*params)
+        return CSWAP._matrix_tensor(*params)
 
 
 class Toffoli(Operation):
@@ -510,9 +511,8 @@ class Toffoli(Operation):
         )
 
     @staticmethod
-    @jit(nopython=True)
     def _matrix_tensor_inv(*params):
-        return _matrix_tensor(*params)
+        return Toffoli._matrix_tensor(*params)
 
 
 class RX(Operation):
@@ -547,7 +547,10 @@ class RX(Operation):
         return r_matrix(params[0], 1)
 
     _matrix_tensor = _matrix
-    _matrix_tensor_inv = _matrix.conj().T
+
+    @staticmethod
+    def _matrix_tensor_inv(*params):
+        return r_matrix(params[0], 1).conj().T
 
 
 class RY(Operation):
@@ -582,7 +585,10 @@ class RY(Operation):
         return r_matrix(params[0], 2)
 
     _matrix_tensor = _matrix
-    _matrix_tensor_inv = _matrix.conj().T
+
+    @staticmethod
+    def _matrix_tensor_inv(*params):
+        return r_matrix(params[0], 2).conj().T
 
 
 class RZ(Operation):
@@ -617,7 +623,10 @@ class RZ(Operation):
         return r_matrix(params[0], 3)
 
     _matrix_tensor = _matrix
-    _matrix_tensor_inv = _matrix.conj().T
+
+    @staticmethod
+    def _matrix_tensor_inv(*params):
+        return r_matrix(params[0], 3).conj().T
 
 
 class PhaseShift(Operation):
@@ -652,7 +661,11 @@ class PhaseShift(Operation):
         return np.array([[1, 0], [0, np.exp(1j * phi)]])
 
     _matrix_tensor = _matrix
-    _matrix_tensor_inv = _matrix.conj().T
+
+    @staticmethod
+    def _matrix_tensor_inv(*params):
+        phi = params[0]
+        return np.array([[1, 0], [0, np.exp(-1j * phi)]])
 
 
 class Rot(Operation):
@@ -697,7 +710,9 @@ class Rot(Operation):
         return r_matrix(c, 3) @ r_matrix(b, 2) @ r_matrix(a, 3)
 
     _matrix_tensor = _matrix
-    _matrix_tensor_inv = _matrix.conj().T
+
+    def _matrix_tensor_inv(*params):
+        return _matrix(*params).conj().T
 
     @staticmethod
     def decomposition(phi, theta, omega, wires):
@@ -997,7 +1012,9 @@ class U1(Operation):
         return PhaseShift._matrix(*params)
 
     _matrix_tensor = _matrix
-    _matrix_tensor_inv = _matrix.conj().T
+
+    def _matrix_tensor_inv(*params):
+        return _matrix(*params).conj().T
 
     @staticmethod
     def decomposition(phi, wires):
@@ -1049,7 +1066,9 @@ class U2(Operation):
         return PhaseShift._matrix(phi + lam) @ Rot._matrix(lam, np.pi / 2, -lam)
 
     _matrix_tensor = _matrix
-    _matrix_tensor_inv = _matrix.conj().T
+
+    def _matrix_tensor_inv(*params):
+        return _matrix(*params).conj().T
 
     @staticmethod
     def decomposition(phi, lam, wires):
@@ -1107,7 +1126,9 @@ class U3(Operation):
         return PhaseShift._matrix(phi + lam) @ Rot._matrix(lam, theta, -lam)
 
     _matrix_tensor = _matrix
-    _matrix_tensor_inv = _matrix.conj().T
+
+    def _matrix_tensor_inv(*params):
+        return _matrix(*params).conj().T
 
     @staticmethod
     def decomposition(theta, phi, lam, wires):

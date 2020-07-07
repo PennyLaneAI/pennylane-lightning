@@ -119,7 +119,6 @@ class LightningQubit(QubitDevice):
 
             else:
                 matrix_tensor = self._get_matrix_tensor(operation)
-                print(matrix_tensor, self._state)
                 self._state = mvp(matrix_tensor, self._state, wires)
 
         # store the pre-rotated state
@@ -137,15 +136,14 @@ class LightningQubit(QubitDevice):
         if operation.parameters:
             if not operation.inverse:
                 op = getattr(lightning_ops, operation.name)
-                lightning_op = op(*operation.parameters)
+                lightning_op = op(*operation.parameters, wires=operation.wires)
             else:
                 op = getattr(lightning_ops, operation.name[:-4])
-                lightning_op = op(*operation.parameters).inv()
+                lightning_op = op(*operation.parameters, wires=operation.wires).inv()
         else:
             if not operation.inverse:
                 op = getattr(lightning_ops, operation.name)
                 lightning_op = op(wires=operation.wires)
-                print('inverse ops in mx tensor: ', op, lightning_op)
             else:
                 op = getattr(lightning_ops, operation.name[:-4])
                 lightning_op = op(wires=operation.wires).inv()
@@ -238,7 +236,8 @@ class LightningQubit(QubitDevice):
         self._pre_rotated_state = s_temp.reshape([2] * self.num_wires)
         self._state = s_temp.reshape([2] * self.num_wires)
 
-    def probability(self, wires=None):
+    def analytic_probability(self, wires=None):
+        """Return the (marginal) analytic probability of each computational basis state."""
         if self._state is None:
             return None
 
