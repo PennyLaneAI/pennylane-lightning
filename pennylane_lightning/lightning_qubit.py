@@ -26,6 +26,8 @@ import numpy as np
 from pennylane import QubitDevice, DeviceError, QubitStateVector, BasisState
 # from .lightning_qubit_utils import mvp
 from .lightning_qubit_ops import mvp
+from . import lightning_ops
+
 
 # tolerance for numerical errors
 tolerance = 1e-10
@@ -116,7 +118,9 @@ class LightningQubit(QubitDevice):
                 self.apply_basis_state(basis_state, wires)
 
             else:
-                self._state = mvp(operation.matrix_tensor, self._state, wires)
+                matrix_tensor = self._get_matrix_tensor(operation)
+                print(matrix_tensor, self._state)
+                self._state = mvp(matrix_tensor, self._state, wires)
 
         # store the pre-rotated state
         self._pre_rotated_state = self._state
@@ -124,7 +128,29 @@ class LightningQubit(QubitDevice):
         # apply the circuit rotations
         for operation in rotations:
             wires = operation.wires
-            self._state = mvp(operation.matrix_tensor, self._state, wires)
+
+            matrix_tensor = self._get_matrix_tensor(operation)
+            self._state = mvp(matrix_tensor, self._state, wires)
+
+    def _get_matrix_tensor(self, operation):
+
+        if operation.parameters:
+            if not operation.inverse:
+                op = getattr(lightning_ops, operation.name)
+                lightning_op = op(*operation.parameters)
+            else:
+                op = getattr(lightning_ops, operation.name[:-4])
+                lightning_op = op(*operation.parameters).inv()
+        else:
+            if not operation.inverse:
+                op = getattr(lightning_ops, operation.name)
+                lightning_op = op(wires=operation.wires)
+                print('inverse ops in mx tensor: ', op, lightning_op)
+            else:
+                op = getattr(lightning_ops, operation.name[:-4])
+                lightning_op = op(wires=operation.wires).inv()
+
+        return lightning_op.matrix_tensor
 
     @property
     def state(self):

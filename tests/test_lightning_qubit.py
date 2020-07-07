@@ -168,21 +168,20 @@ class TestApply:
     def test_apply_operation_two_wires_no_parameters(self, qubit_device_2_wires, tol, operation, input, expected_output):
         """Tests that applying an operation yields the expected output state for two wire
            operations that have no parameters."""
-
-        qubit_device_2_wires._state = np.array(input)
+        qubit_device_2_wires._state = np.array(input).reshape(2 *[2])
         qubit_device_2_wires.apply([operation(wires=[0, 1])])
 
-        assert np.allclose(qubit_device_2_wires._state, np.array(expected_output), atol=tol, rtol=0)
+        assert np.allclose(qubit_device_2_wires.state, np.array(expected_output), atol=tol, rtol=0)
 
     @pytest.mark.parametrize("operation,input,expected_output", test_data_two_wires_no_parameters)
     def test_apply_operation_two_wires_no_parameters_inverse(self, qubit_device_2_wires, tol, operation, input, expected_output):
         """Tests that applying an operation yields the expected output state for two wire
            operations that have no parameters."""
 
-        qubit_device_2_wires._state = np.array(input)
+        qubit_device_2_wires._state = np.array(input).reshape(2 *[2])
         qubit_device_2_wires.apply([operation(wires=[0, 1]).inv()])
 
-        assert np.allclose(qubit_device_2_wires._state, np.array(expected_output), atol=tol, rtol=0)
+        assert np.allclose(qubit_device_2_wires.state, np.array(expected_output), atol=tol, rtol=0)
 
     test_data_three_wires_no_parameters = [
         (qml.CSWAP, [1, 0, 0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0]),
@@ -195,20 +194,20 @@ class TestApply:
         """Tests that applying an operation yields the expected output state for three wire
            operations that have no parameters."""
 
-        qubit_device_3_wires._state = np.array(input)
+        qubit_device_3_wires._state = np.array(input).reshape(3 *[2])
         qubit_device_3_wires.apply([operation(wires=[0, 1, 2])])
 
-        assert np.allclose(qubit_device_3_wires._state, np.array(expected_output), atol=tol, rtol=0)
+        assert np.allclose(qubit_device_3_wires.state, np.array(expected_output), atol=tol, rtol=0)
 
     @pytest.mark.parametrize("operation,input,expected_output", test_data_three_wires_no_parameters)
     def test_apply_operation_three_wires_no_parameters_inverse(self, qubit_device_3_wires, tol, operation, input, expected_output):
         """Tests that applying the inverse of an operation yields the expected output state for three wire
            operations that have no parameters."""
 
-        qubit_device_3_wires._state = np.array(input)
+        qubit_device_3_wires._state = np.array(input).reshape(3 *[2])
         qubit_device_3_wires.apply([operation(wires=[0, 1, 2]).inv()])
 
-        assert np.allclose(qubit_device_3_wires._state, np.array(expected_output), atol=tol, rtol=0)
+        assert np.allclose(qubit_device_3_wires.state, np.array(expected_output), atol=tol, rtol=0)
 
 
     @pytest.mark.parametrize("operation,expected_output,par", [
