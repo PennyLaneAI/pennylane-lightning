@@ -32,6 +32,8 @@ using Eigen::Tensor;
 #include <unsupported/Eigen/CXX11/Tensor>
 #include <iostream>
 
+// https://stackoverflow.com/questions/48795789/eigen-unsupported-tensor-to-eigen-matrix
+
 template<typename T>
 using  MatrixType = Eigen::Matrix<T,Eigen::Dynamic, Eigen::Dynamic>;
 
