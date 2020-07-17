@@ -1,7 +1,8 @@
 import numpy as np
 from lightning_qubit_ops import mvp, test
 
-vec = np.ones((4, 4), dtype="double")
+vec = np.zeros(4, dtype="complex")
+vec[0] = 1
 mat = np.eye(2, dtype="complex")
 
 # res = mvp(mat, vec, [0])
