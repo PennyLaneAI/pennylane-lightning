@@ -14,21 +14,77 @@
 #include "pybind11/eigen.h"
 #include <iostream>
 #include <Eigen/Dense>
+//#include "eigen/unsupported/Eigen/CXX11/Tensor"
+#include <unsupported/Eigen/CXX11/Tensor>
+//#include <bitset>
 
 using Eigen::MatrixXd;
-using Eigen::VectorXi;
+using Eigen::VectorXcd;
+using Eigen::Tensor;
 
-Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> test(
-MatrixXd op, VectorXi state, std::vector<unsigned long int>& op_wires
-)
+
+
+VectorXcd test(VectorXcd state)
 {
-  MatrixXd m(2,2);
-  m(0,0) = 3;
-  m(1,0) = 2.5;
-  m(0,1) = -1;
-  m(1,1) = m(1,0) + m(0,1);
-  return m * op;
+  MatrixXd X(2,2);
+  X(0,0) = 0;
+  X(1,0) = 1;
+  X(0,1) = 1;
+  X(1,1) = 0;
+
+  return X * state;
 }
+
+
+//template<class T>
+//py::array_t<T> eigenTensor(py::array_t<T> inArray)
+//Tensor<std::complex<double>, 2> test(Tensor<std::complex<double>, 2> state)
+//{
+//  return state;
+//}
+
+
+//VectorXcd test(VectorXcd state)
+//{
+//  MatrixXd X(2,2);
+//  X(0,0) = 0;
+//  X(1,0) = 1;
+//  X(0,1) = 1;
+//  X(1,1) = 0;
+//
+//  std::string binary = std::bitset<8>(128).to_string(); //to binary
+//  std::cout<<binary<<"\n";
+//
+//  unsigned long decimal = std::bitset<8>(binary).to_ulong();
+//  std::cout<<decimal<<"\n";
+//
+//  return X * state;
+//}
+
+//VectorXcd test(VectorXcd state)
+//{
+//  MatrixXd X(2,2);
+//  X(0,0) = 0;
+//  X(1,0) = 1;
+//  X(0,1) = 1;
+//  X(1,1) = 0;
+//  return X * state;
+//}
+
+
+//Eigen::Matrix<std::complex<double>, Eigen::Dynamic, 1> test(
+//    Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> op,
+//    Eigen::Matrix<std::complex<double>, Eigen::Dynamic, 1> state,
+//    std::vector<unsigned long int>& op_wires
+//)
+//{
+//  MatrixXd m(2,2);
+//  m(0,0) = 3;
+//  m(1,0) = 2.5;
+//  m(0,1) = -1;
+//  m(1,1) = m(1,0) + m(0,1);
+//  return state;
+//}
 
 xt::pyarray<std::complex<double>> mvp(xt::pyarray<std::complex<double>>& op, xt::pyarray<std::complex<double>>& state,
 std::vector<unsigned long int>& op_wires)
