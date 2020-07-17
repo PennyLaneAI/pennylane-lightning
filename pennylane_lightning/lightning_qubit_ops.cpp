@@ -19,6 +19,7 @@
 //#include <bitset>
 
 using Eigen::MatrixXd;
+using Eigen::MatrixXcd;
 using Eigen::VectorXcd;
 using Eigen::Tensor;
 
@@ -49,11 +50,24 @@ auto Matrix_to_Tensor(const MatrixType<Scalar> &matrix, Dims... dims)
 }
 
 
-MatrixXd test (MatrixXd state) {
+Eigen::Tensor<std::complex<double>,2> X() {
+    Eigen::Tensor<std::complex<double>,2> X(2, 2);
+    X(0, 0) = 0;
+    X(0, 1) = 1;
+    X(1, 0) = 1;
+    X(1, 1) = 0;
+    return X;
+}
 
-    std::cout << state.sizeof() << std::endl;
-    Eigen::Tensor<double,4> my_rank4 =  Matrix_to_Tensor(state, 2,2,2, 2);
-    Eigen::MatrixXd         mymatrix =  Tensor_to_Matrix(my_rank4, 16,1);
+MatrixXcd test (MatrixXcd state) {
+
+    Eigen::Tensor<std::complex<double>,2> state_tensor =  Matrix_to_Tensor(state, 2, 2);
+
+    auto X_mat = X();
+    Eigen::array<Eigen::IndexPair<int>, 1> pairs = { Eigen::IndexPair<int>(1, 0) };
+    Eigen::Tensor<std::complex<double>,2> res = state_tensor.contract(X_mat, pairs);
+
+    Eigen::MatrixXcd         mymatrix =  Tensor_to_Matrix(res, 4, 1);
 
     return mymatrix;
 }
