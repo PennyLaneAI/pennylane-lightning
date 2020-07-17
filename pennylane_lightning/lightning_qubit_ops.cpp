@@ -49,16 +49,12 @@ auto Matrix_to_Tensor(const MatrixType<Scalar> &matrix, Dims... dims)
 }
 
 
-int test () {
-    Eigen::Tensor<double,4> my_rank4 (2,2,2,2);
-    my_rank4.setRandom();
+MatrixXd test (MatrixXd state) {
 
-    Eigen::MatrixXd         mymatrix =  Tensor_to_Matrix(my_rank4, 4,4);
-    Eigen::Tensor<double,3> my_rank3 =  Matrix_to_Tensor(mymatrix, 2,2,4);
+    Eigen::Tensor<double,4> my_rank4 =  Matrix_to_Tensor(state, 2,2,2, 2);
+    Eigen::MatrixXd         mymatrix =  Tensor_to_Matrix(my_rank4, 16,1);
 
-    std::cout << my_rank3 << std::endl;
-
-    return 0;
+    return mymatrix;
 }
 
 
