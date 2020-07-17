@@ -1,12 +1,12 @@
 import numpy as np
 from lightning_qubit_ops import mvp, test
 
-vec = np.ones((2, 2), dtype="complex")
+vec = np.ones(2, dtype="complex")
 mat = np.eye(2, dtype="complex")
 
 res = mvp(mat, vec, [0])
 
-print(test(vec))
+print(test())
 # print(res)
 
 # vec = np.array([1, 0, 0, 0, 0, 0, 0, 0])

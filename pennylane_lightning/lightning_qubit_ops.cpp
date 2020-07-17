@@ -24,16 +24,75 @@ using Eigen::Tensor;
 
 
 
-VectorXcd test(VectorXcd state)
-{
-  MatrixXd X(2,2);
-  X(0,0) = 0;
-  X(1,0) = 1;
-  X(0,1) = 1;
-  X(1,1) = 0;
 
-  return X * state;
+
+
+
+#include <unsupported/Eigen/CXX11/Tensor>
+#include <iostream>
+
+template<typename T>
+using  MatrixType = Eigen::Matrix<T,Eigen::Dynamic, Eigen::Dynamic>;
+
+template<typename Scalar,int rank, typename sizeType>
+auto Tensor_to_Matrix(const Eigen::Tensor<Scalar,rank> &tensor,const sizeType rows,const sizeType cols)
+{
+    return Eigen::Map<const MatrixType<Scalar>> (tensor.data(), rows,cols);
 }
+
+
+template<typename Scalar, typename... Dims>
+auto Matrix_to_Tensor(const MatrixType<Scalar> &matrix, Dims... dims)
+{
+    constexpr int rank = sizeof... (Dims);
+    return Eigen::TensorMap<Eigen::Tensor<const Scalar, rank>>(matrix.data(), {dims...});
+}
+
+
+int test () {
+    Eigen::Tensor<double,4> my_rank4 (2,2,2,2);
+    my_rank4.setRandom();
+
+    Eigen::MatrixXd         mymatrix =  Tensor_to_Matrix(my_rank4, 4,4);
+    Eigen::Tensor<double,3> my_rank3 =  Matrix_to_Tensor(mymatrix, 2,2,4);
+
+    std::cout << my_rank3 << std::endl;
+
+    return 0;
+}
+
+
+
+
+
+
+
+
+//template<typename T>
+//using  MatrixType = Eigen::Matrix<T,Eigen::Dynamic, Eigen::Dynamic>;
+//
+//template<typename Scalar, typename... Dims>
+//auto Matrix_to_Tensor(const MatrixType<Scalar> &matrix, Dims... dims)
+//{
+//    constexpr int rank = sizeof... (Dims);
+//    return Eigen::TensorMap<Eigen::Tensor<const Scalar, rank>>(matrix.data(), {dims...});
+//}
+//
+//
+//VectorXcd test(VectorXcd state)
+//{
+//  MatrixXd X(2,2);
+//  X(0,0) = 0;
+//  X(1,0) = 1;
+//  X(0,1) = 1;
+//  X(1,1) = 0;
+//
+//  Matrix_to_Tensor(X);
+//
+//  return X * state;
+//}
+
+
 
 
 //template<class T>
