@@ -119,6 +119,9 @@ class LightningQubit(QubitDevice):
 
             else:
                 matrix_tensor = self._get_matrix_tensor(operation)
+                print(matrix_tensor)
+                print(self._state)
+                print(wires)
                 self._state = mvp(matrix_tensor, self._state, wires)
 
         # store the pre-rotated state

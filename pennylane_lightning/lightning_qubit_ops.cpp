@@ -11,6 +11,25 @@
 #include "xtensor/xsort.hpp"
 #define XTENSOR_USE_XSIMD
 
+#include "pybind11/eigen.h"
+#include <iostream>
+#include <Eigen/Dense>
+
+using Eigen::MatrixXd;
+using Eigen::VectorXi;
+
+Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> test(
+MatrixXd op, VectorXi state, std::vector<unsigned long int>& op_wires
+)
+{
+  MatrixXd m(2,2);
+  m(0,0) = 3;
+  m(1,0) = 2.5;
+  m(0,1) = -1;
+  m(1,1) = m(1,0) + m(0,1);
+  return m * op;
+}
+
 xt::pyarray<std::complex<double>> mvp(xt::pyarray<std::complex<double>>& op, xt::pyarray<std::complex<double>>& state,
 std::vector<unsigned long int>& op_wires)
 {
@@ -43,4 +62,5 @@ PYBIND11_MODULE(lightning_qubit_ops, m)
     xt::import_numpy();
     m.doc() = "Lightning qubit operations using XTensor";
     m.def("mvp", mvp, "Matrix vector product");
+    m.def("test", test, "test");
 }
