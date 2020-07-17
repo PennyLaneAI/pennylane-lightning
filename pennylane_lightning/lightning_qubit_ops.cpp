@@ -51,6 +51,7 @@ auto Matrix_to_Tensor(const MatrixType<Scalar> &matrix, Dims... dims)
 
 MatrixXd test (MatrixXd state) {
 
+    std::cout << state.sizeof() << std::endl;
     Eigen::Tensor<double,4> my_rank4 =  Matrix_to_Tensor(state, 2,2,2, 2);
     Eigen::MatrixXd         mymatrix =  Tensor_to_Matrix(my_rank4, 16,1);
 
