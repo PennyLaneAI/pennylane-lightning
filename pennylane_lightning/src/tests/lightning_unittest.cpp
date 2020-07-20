@@ -13,20 +13,133 @@
 // limitations under the License.
 #include "gtest/gtest.h"
 #include "../operations.hpp"
+#include <unsupported/Eigen/CXX11/Tensor>
+#include <math.h>       /* sqrt */
 
 const double tol = 1.0e-10f;
 
 namespace some_collection_of_tests {
 
-TEST(SomeTestName, TestCase) {
-// "SomeTestName" and "TestCase" are hierarchical names given by the person who makes the test
-  int initial_val = 141;
-  int expected = 142;
-  
-  int val = initial_val + 1; // test some function
 
-  EXPECT_NEAR(expected, val, tol);
+TEST(PauliX1, TestCase) {
+
+  Eigen::Tensor<std::complex<double>,1> InputState(2);
+  InputState.setValues({1, 0});
+
+  auto operation = X();
+  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
+  Eigen::Tensor<std::complex<double>, 1> OutputState = operation.contract(InputState, product_dims);
+
+  Eigen::Tensor<std::complex<double>,1> ExpectedOutputState(2);
+  ExpectedOutputState.setValues({0, 1});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> mis(OutputState.data(), OutputState.size());
+  Eigen::Map<Eigen::VectorXcd> mos(ExpectedOutputState.data(), ExpectedOutputState.size());
+
+  EXPECT_EQ(mis.isApprox(mos, tol), 1);
+}
+
+TEST(PauliX2, TestCase) {
+
+  double SQRT_2 = sqrt(2);
+  Eigen::Tensor<std::complex<double>,1> InputState(2);
+  InputState.setValues({1/SQRT_2, 1/SQRT_2});
+
+  auto operation = X();
+  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
+  Eigen::Tensor<std::complex<double>, 1> OutputState = operation.contract(InputState, product_dims);
+
+  Eigen::Tensor<std::complex<double>,1> ExpectedOutputState(2);
+  ExpectedOutputState.setValues({1/SQRT_2, 1/SQRT_2});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> mis(OutputState.data(), OutputState.size());
+  Eigen::Map<Eigen::VectorXcd> mos(ExpectedOutputState.data(), ExpectedOutputState.size());
+
+  EXPECT_EQ(mis.isApprox(mos, tol), 1);
+}
+
+TEST(PauliY1, TestCase) {
+
+  Eigen::Tensor<std::complex<double>,1> InputState(2);
+  InputState.setValues({1, 0});
+
+  auto operation = Y();
+  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
+  Eigen::Tensor<std::complex<double>, 1> OutputState = operation.contract(InputState, product_dims);
+
+  Eigen::Tensor<std::complex<double>,1> ExpectedOutputState(2);
+  std::complex<double> Val(0, 1);
+  ExpectedOutputState.setValues({0, Val});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> mis(OutputState.data(), OutputState.size());
+  Eigen::Map<Eigen::VectorXcd> mos(ExpectedOutputState.data(), ExpectedOutputState.size());
+
+  EXPECT_EQ(mis.isApprox(mos, tol), 1);
+}
+
+TEST(PauliY2, TestCase) {
+
+  double SQRT_2 = sqrt(2);
+  Eigen::Tensor<std::complex<double>,1> InputState(2);
+  InputState.setValues({1/SQRT_2, 1/SQRT_2});
+
+  auto operation = Y();
+  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
+  Eigen::Tensor<std::complex<double>, 1> OutputState = operation.contract(InputState, product_dims);
+
+  Eigen::Tensor<std::complex<double>,1> ExpectedOutputState(2);
+
+  std::complex<double> Fst(0, -1/SQRT_2);
+  std::complex<double> Snd(0, 1/SQRT_2);
+  ExpectedOutputState.setValues({Fst, Snd});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> mis(OutputState.data(), OutputState.size());
+  Eigen::Map<Eigen::VectorXcd> mos(ExpectedOutputState.data(), ExpectedOutputState.size());
+
+  EXPECT_EQ(mis.isApprox(mos, tol), 1);
+}
+
+TEST(PauliZ1, TestCase) {
+
+  Eigen::Tensor<std::complex<double>,1> InputState(2);
+  InputState.setValues({1, 0});
+
+  auto operation = Z();
+  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
+  Eigen::Tensor<std::complex<double>, 1> OutputState = operation.contract(InputState, product_dims);
+
+  Eigen::Tensor<std::complex<double>,1> ExpectedOutputState(2);
+  ExpectedOutputState.setValues({1, 0});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> mis(OutputState.data(), OutputState.size());
+  Eigen::Map<Eigen::VectorXcd> mos(ExpectedOutputState.data(), ExpectedOutputState.size());
+
+  EXPECT_EQ(mis.isApprox(mos, tol), 1);
+}
+
+TEST(PauliZ2, TestCase) {
+
+  double SQRT_2 = sqrt(2);
+  Eigen::Tensor<std::complex<double>,1> InputState(2);
+  InputState.setValues({1/SQRT_2, 1/SQRT_2});
+
+  auto operation = Z();
+  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
+  Eigen::Tensor<std::complex<double>, 1> OutputState = operation.contract(InputState, product_dims);
+
+  Eigen::Tensor<std::complex<double>,1> ExpectedOutputState(2);
+  ExpectedOutputState.setValues({1/SQRT_2, -1/SQRT_2});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> mis(OutputState.data(), OutputState.size());
+  Eigen::Map<Eigen::VectorXcd> mos(ExpectedOutputState.data(), ExpectedOutputState.size());
+
+  EXPECT_EQ(mis.isApprox(mos, tol), 1);
 }
 
 }  // namespace some_collection_of_tests
-
