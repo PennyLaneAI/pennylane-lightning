@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "gtest/gtest.h"
+#include "../operations.hpp"
 
 const double tol = 1.0e-10f;
 
