@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 EIGEN_INCLUDE_DIR ?= /usr/include/eigen3
-PYBIND_INCLUDE_DIR ?= `python3 -m pybind11 --includes`
 CC = g++
 CFLAGS = -std=c++11 -O3 -g -Wall -fopenmp -fPIC -I/usr/include \
-	-I../include -I$(EIGEN_INCLUDE_DIR) $(PYBIND_INCLUDE_DIR) -I$(GOOGLETEST_DIR)/include \
+	-I../include -I$(EIGEN_INCLUDE_DIR) -I$(GOOGLETEST_DIR)/include \
 	-march=native
 
 LFLAGS = -fopenmp -L$(GOOGLETEST_DIR)/lib -lgtest

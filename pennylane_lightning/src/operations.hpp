@@ -1,4 +1,3 @@
-#include "pybind11/eigen.h"
 #include <iostream>
 #include <Eigen/Dense>
 //#include "eigen/unsupported/Eigen/CXX11/Tensor"
@@ -10,22 +9,26 @@ using Eigen::MatrixXcd;
 using Eigen::VectorXcd;
 using Eigen::Tensor;
 
-Eigen::Tensor<std::complex<double>,2> Identity() {
-    Eigen::Tensor<std::complex<double>,2> X(2, 2);
+using Gate_1q = Eigen::Tensor<std::complex<double>, 2>;
+using Gate_2q = Eigen::Tensor<std::complex<double>, 4>;
+using Gate_3q = Eigen::Tensor<std::complex<double>, 6>;
+
+Gate_1q Identity() {
+    Gate_1q X(2, 2);
     X.setValues({{1, 0}, {0, 1}});
     return X;
 }
 
 
-Eigen::Tensor<std::complex<double>,2> X() {
-    Eigen::Tensor<std::complex<double>,2> X(2, 2);
+Gate_1q X() {
+    Gate_1q X(2, 2);
     X.setValues({{0, 1}, {1, 0}});
     return X;
 }
 
 
-Eigen::Tensor<std::complex<double>,2> Y() {
-    Eigen::Tensor<std::complex<double>,2> Y(2, 2);
+Gate_1q Y() {
+    Gate_1q Y(2, 2);
 
     std::complex<double> Fst(0, -1);
     std::complex<double> Snd(0, 1);
@@ -33,8 +36,8 @@ Eigen::Tensor<std::complex<double>,2> Y() {
     return Y;
 }
 
-Eigen::Tensor<std::complex<double>,2> Z() {
-    Eigen::Tensor<std::complex<double>,2> Z(2, 2);
+Gate_1q Z() {
+    Gate_1q Z(2, 2);
     Z.setValues({{1, 0}, {0, -1}});
     return Z;
 }
