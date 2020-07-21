@@ -20,11 +20,23 @@ It implements the necessary :class:`~pennylane._device.Device` methods as well a
 simulation of a qubit-based quantum circuit architecture.
 """
 from pennylane.plugins import DefaultQubit
+from .src.lightning_qubit_ops import apply_2q
+import numpy as np
 
 
 class LightningQubit(DefaultQubit):
     """TODO"""
 
     def apply(self, operations, rotations=None, **kwargs):
-        print("TODO")
-        super().apply(operations, rotations, **kwargs)
+        # super().apply(operations, rotations, **kwargs)
+        if rotations:  # We should support this!
+            raise NotImplementedError("Rotations not yet supported")
+
+        op_names = [o.name for o in operations]
+        op_wires = [o.wires for o in operations]
+        op_param = [o.params for o in operations]
+        state_vector = self._state.flatten().astype("complex")  # should optimize
+        state_vector_updated = apply_2q(state_vector, op_names, op_wires, op_param)
+        self._state = np.reshape(state_vector_updated, self._state.shape, order="F").astype(
+            self._state.dtype)  # The order part is very suspicious
+        self._pre_rotated_state = self._state  # TODO
