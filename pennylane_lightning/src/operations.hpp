@@ -14,6 +14,10 @@ using Gate_1q = Eigen::Tensor<std::complex<double>, 2>;
 using Gate_2q = Eigen::Tensor<std::complex<double>, 4>;
 using Gate_3q = Eigen::Tensor<std::complex<double>, 6>;
 
+using Pairs = Eigen::IndexPair<int>;
+using Pairs_1q = Eigen::array<Pairs, 1>;
+using Pairs_2q = Eigen::array<Pairs, 2>;
+
 
 extern const double SQRT_2 = sqrt(2);
 extern const std::complex<double> IMAG(0, 1);
@@ -95,4 +99,10 @@ Gate_1q RZ(const double& parameter) {
 
     RZ.setValues({{first, 0}, {0, second}});
     return RZ;
+}
+
+Gate_2q CNOT() {
+    Gate_2q CNOT(2,2,2,2);
+    CNOT.setValues({{{{1, 0},{0, 0}},{{0, 1},{0, 0}}},{{{0, 0},{0, 1}},{{0, 0},{1, 0}}}});
+    return CNOT;
 }

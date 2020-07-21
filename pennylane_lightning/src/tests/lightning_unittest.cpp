@@ -467,3 +467,64 @@ TEST(RZGate, ApplyToPlus) {
   EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
 }
 }  // namespace onequbitops
+
+namespace twoqubitops {
+
+
+TEST(CNOT, ApplyToZero) {
+
+  Eigen::Tensor<std::complex<double>,2> input_state(2,2);
+  input_state.setValues({{1, 0},{0,0}});
+
+  auto operation = CNOT();
+  Pairs_2q product_dims = { Pairs(2, 0), Pairs(3, 1) };
+  Eigen::Tensor<std::complex<double>, 2> output_state = operation.contract(input_state, product_dims);
+
+  Eigen::Tensor<std::complex<double>, 2> expected_output_state(2,2);
+  expected_output_state.setValues({{1, 0},{0,0}});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+
+  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+}
+
+TEST(CNOT, ApplyToZeroOne) {
+
+  Eigen::Tensor<std::complex<double>,2> input_state(2,2);
+  input_state.setValues({{0, 0},{1,0}});
+
+  auto operation = CNOT();
+  Pairs_2q product_dims = { Pairs(2, 0), Pairs(3, 1) };
+  Eigen::Tensor<std::complex<double>, 2> output_state = operation.contract(input_state, product_dims);
+
+  Eigen::Tensor<std::complex<double>, 2> expected_output_state(2,2);
+  expected_output_state.setValues({{0, 0},{0,1}});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+
+  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+}
+
+TEST(CNOT, ApplyToPlusZero) {
+
+  Eigen::Tensor<std::complex<double>,2> input_state(2,2);
+  input_state.setValues({{1/SQRT_2,0},{0, 1/SQRT_2}});
+
+  auto operation = CNOT();
+  Pairs_2q product_dims = { Pairs(2, 0), Pairs(3, 1) };
+  Eigen::Tensor<std::complex<double>, 2> output_state = operation.contract(input_state, product_dims);
+
+  Eigen::Tensor<std::complex<double>, 2> expected_output_state(2,2);
+  expected_output_state.setValues({{1/SQRT_2,0},{1/SQRT_2, 0}});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+
+  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+}
+}  // namespace twoqubitops
