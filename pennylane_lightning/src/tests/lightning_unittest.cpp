@@ -59,7 +59,7 @@ TEST(PauliX, ApplyToPlus) {
   EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
 }
 
-TEST(PauliY, ApplyToZeroTestCase) {
+TEST(PauliY, ApplyToZero) {
 
   Eigen::Tensor<std::complex<double>,1> input_state(2);
   input_state.setValues({1, 0});
