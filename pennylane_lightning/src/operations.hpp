@@ -4,7 +4,6 @@
 #include <cmath>
 #include <Eigen/Dense>
 #include <unsupported/Eigen/CXX11/Tensor>
-//#include <bitset>
 
 using Eigen::MatrixXd;
 using Eigen::MatrixXcd;
