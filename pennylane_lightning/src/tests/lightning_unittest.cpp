@@ -21,7 +21,7 @@ const double tol = 1.0e-10f;
 namespace some_collection_of_tests {
 
 
-TEST(PauliX1, TestCase) {
+TEST(PauliX, ApplyToZero) {
 
   Eigen::Tensor<std::complex<double>,1> InputState(2);
   InputState.setValues({1, 0});
@@ -40,7 +40,7 @@ TEST(PauliX1, TestCase) {
   EXPECT_EQ(mis.isApprox(mos, tol), 1);
 }
 
-TEST(PauliX2, TestCase) {
+TEST(PauliX, ApplyToPlus) {
 
   double SQRT_2 = sqrt(2);
   Eigen::Tensor<std::complex<double>,1> InputState(2);
@@ -60,7 +60,7 @@ TEST(PauliX2, TestCase) {
   EXPECT_EQ(mis.isApprox(mos, tol), 1);
 }
 
-TEST(PauliY1, TestCase) {
+TEST(PauliY, ApplyToZeroTestCase) {
 
   Eigen::Tensor<std::complex<double>,1> InputState(2);
   InputState.setValues({1, 0});
@@ -80,7 +80,7 @@ TEST(PauliY1, TestCase) {
   EXPECT_EQ(mis.isApprox(mos, tol), 1);
 }
 
-TEST(PauliY2, TestCase) {
+TEST(PauliY, ApplyToPlus) {
 
   double SQRT_2 = sqrt(2);
   Eigen::Tensor<std::complex<double>,1> InputState(2);
@@ -103,7 +103,7 @@ TEST(PauliY2, TestCase) {
   EXPECT_EQ(mis.isApprox(mos, tol), 1);
 }
 
-TEST(PauliZ1, TestCase) {
+TEST(PauliZ, ApplyToZero) {
 
   Eigen::Tensor<std::complex<double>,1> InputState(2);
   InputState.setValues({1, 0});
@@ -122,7 +122,7 @@ TEST(PauliZ1, TestCase) {
   EXPECT_EQ(mis.isApprox(mos, tol), 1);
 }
 
-TEST(PauliZ2, TestCase) {
+TEST(PauliZ, ApplyToPlus) {
 
   double SQRT_2 = sqrt(2);
   Eigen::Tensor<std::complex<double>,1> InputState(2);
