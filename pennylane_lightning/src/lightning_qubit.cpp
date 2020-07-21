@@ -99,16 +99,17 @@ VectorXcd apply_2q(
         if (op_string == "Hadamard") {
             Gate_1q op = Hadamard();
             Eigen::array<IndexPair<int>, 1> pairs = {IndexPair<int>(1, w[0])};
-            evolved_tensor = op.contract(state_tensor, pairs);
+            State_2q tensor_contracted = op.contract(state_tensor, pairs);
+
+            Eigen::array<int, 2> shuffling({1, 0});
+            State_2q evolved_tensor2 = evolved_tensor.shuffle(shuffling);
 
             cout << op << endl;
             cout << state_tensor << endl;
-            cout << evolved_tensor << endl;
+            cout << tensor_contracted << endl;
+            cout << evolved_tensor2 << endl;
             cout << endl;
 
-//            Eigen::array<int, 2> shuffling({0, 1});
-//            evolved_tensor = evolved_tensor.shuffle(shuffling);
-            // We probably need to shuffle back
         }
     }
 
