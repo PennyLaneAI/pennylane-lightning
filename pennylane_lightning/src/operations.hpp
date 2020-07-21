@@ -13,6 +13,9 @@ using Gate_1q = Eigen::Tensor<std::complex<double>, 2>;
 using Gate_2q = Eigen::Tensor<std::complex<double>, 4>;
 using Gate_3q = Eigen::Tensor<std::complex<double>, 6>;
 
+
+const double SQRT_2 = sqrt(2);
+
 Gate_1q Identity() {
     Gate_1q X(2, 2);
     X.setValues({{1, 0}, {0, 1}});
@@ -40,4 +43,10 @@ Gate_1q Z() {
     Gate_1q Z(2, 2);
     Z.setValues({{1, 0}, {0, -1}});
     return Z;
+}
+
+Gate_1q H() {
+    Gate_1q H(2, 2);
+    H.setValues({{1/SQRT_2, 1/SQRT_2}, {1/SQRT_2, -1/SQRT_2}});
+    return H;
 }
