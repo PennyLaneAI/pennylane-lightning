@@ -7,13 +7,14 @@ using namespace Eigen;
 using namespace std;
 
 // Declare tensor shape for state
-using State_1q = Tensor<complex<double>, 1>;
-using State_3q = Tensor<complex<double>, 3>;
+using State_1q = Tensor<complex<double>, 1, RowMajor>;
+using State_2q = Tensor<complex<double>, 2, RowMajor>;
+using State_3q = Tensor<complex<double>, 3, RowMajor>;
 
 // Declare tensor shape for 1, 2, and 3-qubit gates
-using Gate_1q = Tensor<complex<double>, 2>;
-using Gate_2q = Tensor<complex<double>, 4>;
-using Gate_3q = Tensor<complex<double>, 6>;
+using Gate_1q = Tensor<complex<double>, 2, RowMajor>;
+using Gate_2q = Tensor<complex<double>, 4, RowMajor>;
+using Gate_3q = Tensor<complex<double>, 6, RowMajor>;
 
 const double ROOT2 = 0.7071067811865475;
 
@@ -68,14 +69,50 @@ VectorXcd apply_1q(
         // Load and apply operation
         if (op_string == "Hadamard") {
             Gate_1q op = Hadamard();
-            Eigen::array<IndexPair<int>, 1> pairs = {IndexPair<int>(0, w[0])};
+            Eigen::array<IndexPair<int>, 1> pairs = {IndexPair<int>(1, w[0])};
             evolved_tensor = op.contract(state_tensor, pairs);
             // We probably need to shuffle back
         }
     }
 
-
     auto out_state = Map<VectorXcd> (evolved_tensor.data(), 2, 1);
+    return out_state;
+}
+
+
+VectorXcd apply_2q(
+    Ref<VectorXcd> state,
+    vector<string> ops,
+    vector<vector<int>> wires,
+    vector<vector<float>> params
+    ) {
+    State_2q state_tensor = TensorMap<State_2q>(state.data(), 2, 2);
+    State_2q evolved_tensor = state_tensor;
+
+    for (int i = 0; i < ops.size(); i++) {
+        // Load operation string and corresponding wires and parameters
+        string op_string = ops[i];
+        vector<int> w = wires[i];
+        vector<float> p = params[i];
+
+        // Load and apply operation
+        if (op_string == "Hadamard") {
+            Gate_1q op = Hadamard();
+            Eigen::array<IndexPair<int>, 1> pairs = {IndexPair<int>(1, w[0])};
+            evolved_tensor = op.contract(state_tensor, pairs);
+
+            cout << op << endl;
+            cout << state_tensor << endl;
+            cout << evolved_tensor << endl;
+            cout << endl;
+
+//            Eigen::array<int, 2> shuffling({0, 1});
+//            evolved_tensor = evolved_tensor.shuffle(shuffling);
+            // We probably need to shuffle back
+        }
+    }
+
+    auto out_state = Map<VectorXcd> (evolved_tensor.data(), 4, 1);
     return out_state;
 }
 
@@ -121,4 +158,5 @@ PYBIND11_MODULE(lightning_qubit_ops, m)
     m.doc() = "lightning.qubit apply() method using Eigen";
 //    m.def("apply_3q", apply_3q, "lightning.qubit apply() method");
     m.def("apply_1q", apply_1q, "lightning.qubit apply() method");
+    m.def("apply_2q", apply_2q, "lightning.qubit apply() method");
 }
