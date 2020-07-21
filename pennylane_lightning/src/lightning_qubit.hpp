@@ -2,7 +2,9 @@
 #include "unsupported/Eigen/CXX11/Tensor"
 
 using namespace Eigen;
-using namespace std;
+using std::vector;
+using std::complex;
+using std::string;
 
 // Declare tensor shape for state
 using State_2q = Tensor<complex<double>, 2, RowMajor>;
