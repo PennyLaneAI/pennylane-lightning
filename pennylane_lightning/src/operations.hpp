@@ -62,11 +62,11 @@ Gate_1q S() {
 }
 
 Gate_1q T() {
-    Gate_1q S(2, 2);
+    Gate_1q T(2, 2);
 
     const std::complex<double> exponent(0, -M_PI/4);
-    S.setValues({{1, 0}, {0, std::pow(M_E, exponent)}});
-    return S;
+    T.setValues({{1, 0}, {0, std::pow(M_E, exponent)}});
+    return T;
 }
 
 Gate_1q RX(const double& parameter) {
