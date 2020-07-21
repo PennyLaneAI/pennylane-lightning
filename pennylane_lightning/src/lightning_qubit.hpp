@@ -18,15 +18,15 @@ using Gate_3q = Tensor<complex<double>, 6, RowMajor>;
 using Pairs = IndexPair<int>;
 using Pairs_1q = Eigen::array<IndexPair<int>, 1>;
 
-const double ROOT2 = 0.7071067811865475;
+const double OVERROOT2 = 0.7071067811865475;
 
 
 Gate_1q Hadamard() {
     Gate_1q hadamard(2, 2);
-    hadamard(0, 0) = ROOT2;
-    hadamard(0, 1) = ROOT2;
-    hadamard(1, 0) = ROOT2;
-    hadamard(1, 1) = -ROOT2;
+    hadamard(0, 0) = OVERROOT2;
+    hadamard(0, 1) = OVERROOT2;
+    hadamard(1, 0) = OVERROOT2;
+    hadamard(1, 1) = -OVERROOT2;
     return hadamard;
 }
 
