@@ -61,24 +61,14 @@ VectorXcd apply_2q(
                 }
             }
 
-            // Calculate inverse permutation TODO
-//            vector<int> inv_perm;
-//            for (int j = 0; j < perm.size(); j++) {
-//                int arg = find(perm.begin(), perm.end(), j)[0];
-//                cout << arg << endl;
-//                inv_perm.push_back(arg);
-//            }
+            // Calculate inverse permutation
+            vector<int> inv_perm;
+            for (int j = perm.size() - 1; j >= 0; j--) {
+                int arg = find(perm.begin(), perm.end(), j)[0];
+                inv_perm.push_back(arg);
+            }
 
-
-            Eigen::array<int, 2> shuffling({1, 0});
-            evolved_tensor = tensor_contracted.shuffle(shuffling);
-
-//            cout << op << endl;
-//            cout << state_tensor << endl;
-//            cout << tensor_contracted << endl;
-//            cout << evolved_tensor << endl;
-//            cout << endl;
-
+            evolved_tensor = tensor_contracted.shuffle(inv_perm);
         }
     }
 
