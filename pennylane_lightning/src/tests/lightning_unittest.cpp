@@ -37,7 +37,7 @@ TEST(PauliX, ApplyToZero) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 TEST(PauliX, ApplyToPlus) {
@@ -56,7 +56,7 @@ TEST(PauliX, ApplyToPlus) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 TEST(PauliY, ApplyToZeroTestCase) {
@@ -76,7 +76,7 @@ TEST(PauliY, ApplyToZeroTestCase) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 TEST(PauliY, ApplyToPlus) {
@@ -98,7 +98,7 @@ TEST(PauliY, ApplyToPlus) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 TEST(PauliZ, ApplyToZero) {
@@ -117,7 +117,7 @@ TEST(PauliZ, ApplyToZero) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 TEST(PauliZ, ApplyToPlus) {
@@ -136,7 +136,7 @@ TEST(PauliZ, ApplyToPlus) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 TEST(Hadamard, ApplyToZero) {
@@ -155,7 +155,7 @@ TEST(Hadamard, ApplyToZero) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 TEST(Hadamard, ApplyToMinus) {
@@ -174,7 +174,7 @@ TEST(Hadamard, ApplyToMinus) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 TEST(SGate, ApplyToZero) {
@@ -193,7 +193,7 @@ TEST(SGate, ApplyToZero) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 TEST(SGate, ApplyToPlus) {
@@ -206,14 +206,14 @@ TEST(SGate, ApplyToPlus) {
   Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
 
   Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
-  std::complex<double> negative_imag_val(0, 1/SQRT_2);
-  expected_output_state.setValues({1/SQRT_2, negative_imag_val});
+  std::complex<double> imag_val(0, 1/SQRT_2);
+  expected_output_state.setValues({1/SQRT_2, imag_val});
 
   // Casting to a vector for comparison
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 TEST(TGate, ApplyToZero) {
@@ -232,7 +232,7 @@ TEST(TGate, ApplyToZero) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 TEST(TGate, ApplyToPlus) {
@@ -254,7 +254,7 @@ TEST(TGate, ApplyToPlus) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 TEST(RXGate, ApplyToZeroPiHalf) {
@@ -278,7 +278,7 @@ TEST(RXGate, ApplyToZeroPiHalf) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 TEST(RXGate, ApplyToZeroPi) {
@@ -301,7 +301,7 @@ TEST(RXGate, ApplyToZeroPi) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 
@@ -325,7 +325,7 @@ TEST(RXGate, ApplyToPlus) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 
@@ -348,7 +348,7 @@ TEST(RYGate, ApplyToZeroPiHalf) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 TEST(RYGate, ApplyToZeroPi) {
@@ -363,15 +363,13 @@ TEST(RYGate, ApplyToZeroPi) {
   Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
 
   Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
-
-  const std::complex<double> second(0, -1);
   expected_output_state.setValues({0, 1});
 
   // Casting to a vector for comparison
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 
@@ -393,7 +391,7 @@ TEST(RYGate, ApplyToPlus) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 
@@ -417,10 +415,10 @@ TEST(RZGate, ApplyToZeroPiHalf) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
-TEST(RZGate, ApplyToZeroPi) {
+TEST(RZGate, ApplyToOnePi) {
 
   Eigen::Tensor<std::complex<double>,1> input_state(2);
   input_state.setValues({0, 1});
@@ -440,7 +438,7 @@ TEST(RZGate, ApplyToZeroPi) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 
@@ -464,7 +462,7 @@ TEST(RZGate, ApplyToPlus) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 }  // namespace onequbitops
 
@@ -487,7 +485,7 @@ TEST(CNOT, ApplyToZero) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 TEST(CNOT, ApplyToZeroOne) {
@@ -506,7 +504,7 @@ TEST(CNOT, ApplyToZeroOne) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
 TEST(CNOT, ApplyToPlusZero) {
@@ -525,6 +523,6 @@ TEST(CNOT, ApplyToPlusZero) {
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
   Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
-  EXPECT_EQ(output_state_vector.isApprox(expected_vector, tol), 1);
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 }  // namespace twoqubitops
