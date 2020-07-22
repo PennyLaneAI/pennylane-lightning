@@ -3,7 +3,6 @@
 #include "operations.hpp"
 
 using Eigen::Tensor;
-using Eigen::RowMajor;
 using Eigen::IndexPair;
 using Eigen::VectorXcd;
 using Eigen::Ref;
@@ -15,11 +14,11 @@ using std::complex;
 using std::string;
 
 // Declare tensor shape for state
-using State_2q = Tensor<complex<double>, 2, RowMajor>;
+using State_2q = Tensor<complex<double>, 2>;
 
 // Declare tensor shape for 1, 2, and 3-qubit gates
-using Gate_1q = Tensor<complex<double>, 2, RowMajor>;
-using Gate_2q = Tensor<complex<double>, 4, RowMajor>;
+using Gate_1q = Tensor<complex<double>, 2>;
+using Gate_2q = Tensor<complex<double>, 4>;
 
 // Declare pairings for tensor contraction
 using Pairs = IndexPair<int>;
