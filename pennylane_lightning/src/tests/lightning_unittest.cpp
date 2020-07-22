@@ -59,7 +59,7 @@ TEST(PauliX, ApplyToPlus) {
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
-TEST(PauliY, ApplyToZeroTestCase) {
+TEST(PauliY, ApplyToZero) {
 
   Eigen::Tensor<std::complex<double>,1> input_state(2);
   input_state.setValues({1, 0});
@@ -305,7 +305,7 @@ TEST(RXGate, ApplyToZeroPi) {
 }
 
 
-TEST(RXGate, ApplyToPlus) {
+TEST(RXGate, ApplyToPlusPiHalf) {
 
   Eigen::Tensor<std::complex<double>,1> input_state(2);
   input_state.setValues({1/SQRT_2, 1/SQRT_2});
@@ -373,7 +373,7 @@ TEST(RYGate, ApplyToZeroPi) {
 }
 
 
-TEST(RYGate, ApplyToPlus) {
+TEST(RYGate, ApplyToPlusPiHalf) {
 
   Eigen::Tensor<std::complex<double>,1> input_state(2);
   input_state.setValues({1/SQRT_2, 1/SQRT_2});
@@ -442,7 +442,7 @@ TEST(RZGate, ApplyToOnePi) {
 }
 
 
-TEST(RZGate, ApplyToPlus) {
+TEST(RZGate, ApplyToPlusHalfPi) {
 
   Eigen::Tensor<std::complex<double>,1> input_state(2);
   input_state.setValues({1/SQRT_2, 1/SQRT_2});
