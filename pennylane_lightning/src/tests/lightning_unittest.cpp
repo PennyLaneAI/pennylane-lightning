@@ -23,14 +23,14 @@ namespace one_qubit_ops {
 
 TEST(PauliX, ApplyToZero) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({1, 0});
 
   auto operation = X();
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
   expected_output_state.setValues({0, 1});
 
   // Casting to a vector for comparison
@@ -42,14 +42,14 @@ TEST(PauliX, ApplyToZero) {
 
 TEST(PauliX, ApplyToPlus) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
   auto operation = X();
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
   expected_output_state.setValues({1/SQRT_2, 1/SQRT_2});
 
   // Casting to a vector for comparison
@@ -61,14 +61,14 @@ TEST(PauliX, ApplyToPlus) {
 
 TEST(PauliY, ApplyToZero) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({1, 0});
 
   auto operation = Y();
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
   std::complex<double> Val(0, 1);
   expected_output_state.setValues({0, Val});
 
@@ -81,14 +81,14 @@ TEST(PauliY, ApplyToZero) {
 
 TEST(PauliY, ApplyToPlus) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
   auto operation = Y();
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
 
   std::complex<double> first(0, -1/SQRT_2);
   std::complex<double> second(0, 1/SQRT_2);
@@ -103,14 +103,14 @@ TEST(PauliY, ApplyToPlus) {
 
 TEST(PauliZ, ApplyToZero) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({1, 0});
 
   auto operation = Z();
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
   expected_output_state.setValues({1, 0});
 
   // Casting to a vector for comparison
@@ -122,14 +122,14 @@ TEST(PauliZ, ApplyToZero) {
 
 TEST(PauliZ, ApplyToPlus) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
   auto operation = Z();
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
   expected_output_state.setValues({1/SQRT_2, -1/SQRT_2});
 
   // Casting to a vector for comparison
@@ -141,14 +141,14 @@ TEST(PauliZ, ApplyToPlus) {
 
 TEST(Hadamard, ApplyToZero) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({1, 0});
 
   auto operation = H();
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
   expected_output_state.setValues({1/SQRT_2, 1/SQRT_2});
 
   // Casting to a vector for comparison
@@ -160,14 +160,14 @@ TEST(Hadamard, ApplyToZero) {
 
 TEST(Hadamard, ApplyToMinus) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({1/SQRT_2, -1/SQRT_2});
 
   auto operation = H();
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
   expected_output_state.setValues({0, 1});
 
   // Casting to a vector for comparison
@@ -179,14 +179,14 @@ TEST(Hadamard, ApplyToMinus) {
 
 TEST(SGate, ApplyToZero) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({1, 0});
 
   auto operation = S();
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
   expected_output_state.setValues({1, 0});
 
   // Casting to a vector for comparison
@@ -198,14 +198,14 @@ TEST(SGate, ApplyToZero) {
 
 TEST(SGate, ApplyToPlus) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
   auto operation = S();
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
   std::complex<double> imag_val(0, 1/SQRT_2);
   expected_output_state.setValues({1/SQRT_2, imag_val});
 
@@ -218,14 +218,14 @@ TEST(SGate, ApplyToPlus) {
 
 TEST(TGate, ApplyToZero) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({1, 0});
 
   auto operation = T();
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
   expected_output_state.setValues({1, 0});
 
   // Casting to a vector for comparison
@@ -237,14 +237,14 @@ TEST(TGate, ApplyToZero) {
 
 TEST(TGate, ApplyToPlus) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
   auto operation = T();
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
 
   const std::complex<double> exponent(0, -M_PI/4);
   std::complex<double> val = std::pow(M_E, exponent)/SQRT_2;
@@ -259,16 +259,16 @@ TEST(TGate, ApplyToPlus) {
 
 TEST(RXGate, ApplyToZeroPiHalf) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({1, 0});
 
   double par = M_PI/2;
 
   auto operation = RX(par);
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
 
   const std::complex<double> first(1/SQRT_2, 0);
   const std::complex<double> second(0, -1/SQRT_2);
@@ -283,16 +283,16 @@ TEST(RXGate, ApplyToZeroPiHalf) {
 
 TEST(RXGate, ApplyToZeroPi) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({1, 0});
 
   double par = M_PI;
 
   auto operation = RX(par);
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
 
   const std::complex<double> second(0, -1);
   expected_output_state.setValues({0, second});
@@ -307,16 +307,16 @@ TEST(RXGate, ApplyToZeroPi) {
 
 TEST(RXGate, ApplyToPlusPiHalf) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
   double par = M_PI/2;
 
   auto operation = RX(par);
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
 
   const std::complex<double> val(0.5, -0.5);
   expected_output_state.setValues({val, val});
@@ -331,16 +331,16 @@ TEST(RXGate, ApplyToPlusPiHalf) {
 
 TEST(RYGate, ApplyToZeroPiHalf) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({1, 0});
 
   double par = M_PI/2;
 
   auto operation = RY(par);
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
 
   expected_output_state.setValues({1/SQRT_2, 1/SQRT_2});
 
@@ -353,16 +353,16 @@ TEST(RYGate, ApplyToZeroPiHalf) {
 
 TEST(RYGate, ApplyToZeroPi) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({1, 0});
 
   double par = M_PI;
 
   auto operation = RY(par);
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
   expected_output_state.setValues({0, 1});
 
   // Casting to a vector for comparison
@@ -375,16 +375,16 @@ TEST(RYGate, ApplyToZeroPi) {
 
 TEST(RYGate, ApplyToPlusPiHalf) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
   double par = M_PI/2;
 
   auto operation = RY(par);
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
   expected_output_state.setValues({0, 1});
 
   // Casting to a vector for comparison
@@ -397,16 +397,16 @@ TEST(RYGate, ApplyToPlusPiHalf) {
 
 TEST(RZGate, ApplyToZeroPiHalf) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({1, 0});
 
   double par = M_PI/2;
 
   auto operation = RZ(par);
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
 
   std::complex<double> val(1/SQRT_2, -1/SQRT_2);
   expected_output_state.setValues({val, 0});
@@ -420,16 +420,16 @@ TEST(RZGate, ApplyToZeroPiHalf) {
 
 TEST(RZGate, ApplyToOnePi) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({0, 1});
 
   double par = M_PI;
 
   auto operation = RZ(par);
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
 
   const std::complex<double> val(0, 1);
   expected_output_state.setValues({0, val});
@@ -444,16 +444,16 @@ TEST(RZGate, ApplyToOnePi) {
 
 TEST(RZGate, ApplyToPlusHalfPi) {
 
-  Eigen::Tensor<std::complex<double>,1> input_state(2);
+  State_1q input_state(2);
   input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
   double par = M_PI/2;
 
   auto operation = RZ(par);
-  Eigen::array<Eigen::IndexPair<int>, 1> product_dims = { Eigen::IndexPair<int>(1, 0) };
-  Eigen::Tensor<std::complex<double>, 1> output_state = operation.contract(input_state, product_dims);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
+  State_1q expected_output_state(2);
   const std::complex<double> first(0.5, -0.5);
   const std::complex<double> second(0.5, 0.5);
   expected_output_state.setValues({first, second});
@@ -471,14 +471,14 @@ namespace two_qubit_ops {
 
 TEST(CNOT, ApplyToZero) {
 
-  Eigen::Tensor<std::complex<double>,2> input_state(2,2);
+  State_2q input_state(2,2);
   input_state.setValues({{1, 0},{0,0}});
 
   auto operation = CNOT();
   Pairs_2q product_dims = { Pairs(2, 0), Pairs(3, 1) };
-  Eigen::Tensor<std::complex<double>, 2> output_state = operation.contract(input_state, product_dims);
+  State_2q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>, 2> expected_output_state(2,2);
+  State_2q expected_output_state(2,2);
   expected_output_state.setValues({{1, 0},{0,0}});
 
   // Casting to a vector for comparison
@@ -490,14 +490,14 @@ TEST(CNOT, ApplyToZero) {
 
 TEST(CNOT, ApplyToOneZero) {
 
-  Eigen::Tensor<std::complex<double>,2> input_state(2,2);
+  State_2q input_state(2,2);
   input_state.setValues({{0, 0},{1,0}});
 
   auto operation = CNOT();
   Pairs_2q product_dims = { Pairs(2, 0), Pairs(3, 1) };
-  Eigen::Tensor<std::complex<double>, 2> output_state = operation.contract(input_state, product_dims);
+  State_2q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>, 2> expected_output_state(2,2);
+  State_2q expected_output_state(2,2);
   expected_output_state.setValues({{0, 0},{0,1}});
 
   // Casting to a vector for comparison
@@ -507,17 +507,17 @@ TEST(CNOT, ApplyToOneZero) {
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
-TEST(CNOT, ApplyToPlusZero) {
+TEST(CNOT, ApplyToBellState) {
 
-  Eigen::Tensor<std::complex<double>,2> input_state(2,2);
-  input_state.setValues({{1/SQRT_2,0},{1/SQRT_2, 0}});
+  State_2q input_state(2,2);
+  input_state.setValues({{1/SQRT_2,0},{0, 1/SQRT_2}});
 
   auto operation = CNOT();
   Pairs_2q product_dims = { Pairs(2, 0), Pairs(3, 1) };
-  Eigen::Tensor<std::complex<double>, 2> output_state = operation.contract(input_state, product_dims);
+  State_2q output_state = operation.contract(input_state, product_dims);
 
-  Eigen::Tensor<std::complex<double>, 2> expected_output_state(2,2);
-  expected_output_state.setValues({{1/SQRT_2,0},{0, 1/SQRT_2}});
+  State_2q expected_output_state(2,2);
+  expected_output_state.setValues({{1/SQRT_2,0},{1/SQRT_2, 0}});
 
   // Casting to a vector for comparison
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
