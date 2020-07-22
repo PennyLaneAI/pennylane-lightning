@@ -25,15 +25,15 @@ using Gate_3q = Tensor<complex<double>, 6, RowMajor>;
 using Pairs = IndexPair<int>;
 using Pairs_1q = array<IndexPair<int>, 1>;
 
-const double OVERROOT2 = 0.7071067811865475;
+const double SQRT2INV = 0.7071067811865475;
 
 
 Gate_1q Hadamard() {
     Gate_1q hadamard(2, 2);
-    hadamard(0, 0) = OVERROOT2;
-    hadamard(0, 1) = OVERROOT2;
-    hadamard(1, 0) = OVERROOT2;
-    hadamard(1, 1) = -OVERROOT2;
+    hadamard(0, 0) = SQRT2INV;
+    hadamard(0, 1) = SQRT2INV;
+    hadamard(1, 0) = SQRT2INV;
+    hadamard(1, 1) = -SQRT2INV;
     return hadamard;
 }
 
