@@ -529,14 +529,17 @@ TEST(CNOT, ApplyToBellState) {
 TEST(CNOT, ApplyToThreeQubitControlThird) {
 
   State_3q input_state(2,2,2);
-  input_state.setValues({{{0,0},{0,1}},{{0,0},{0,0}}});
+  input_state.setValues({{{0,0},{0,0}},{{0,0},{0,1}}});
 
   auto operation = CNOT();
-  Pairs_2q product_dims = { Pairs(2, 3), Pairs(2, 1) };
+  Pairs_2q product_dims = { Pairs(3, 2), Pairs(2, 1) };
   State_3q output_state = operation.contract(input_state, product_dims);
 
   State_3q expected_output_state(2,2,2);
-  expected_output_state.setValues({{{0,1},{0,0}},{{0,0},{0,0}}});
+
+  // The output dimensions are ordered according to the output of the tensor
+  // contraction (no shuffling takes place)
+  expected_output_state.setValues({{{0,0},{0,0}},{{0,1},{0,0}}});
 
   // Casting to a vector for comparison
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
