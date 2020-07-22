@@ -1,6 +1,6 @@
 venv/
 doc/_build/
-pennylane_qiskit.egg-info/
+PennyLane_lightning.egg-info/
 build/
 dist/
 pennylane_qiskit/__pycache__/
@@ -14,3 +14,4 @@ PennyLane_qiskit.egg-info/
 coverage_html_report/
 .coverage
 doc/code/
+*.so
