@@ -1,7 +1,14 @@
 #include "Eigen/Dense"
 #include "unsupported/Eigen/CXX11/Tensor"
 
-using namespace Eigen;
+using Eigen::Tensor;
+using Eigen::RowMajor;
+using Eigen::IndexPair;
+using Eigen::array;
+using Eigen::VectorXcd;
+using Eigen::Ref;
+using Eigen::TensorMap;
+using Eigen::Map;
 using std::vector;
 using std::complex;
 using std::string;
@@ -16,7 +23,7 @@ using Gate_3q = Tensor<complex<double>, 6, RowMajor>;
 
 // Declare pairings for tensor contraction
 using Pairs = IndexPair<int>;
-using Pairs_1q = Eigen::array<IndexPair<int>, 1>;
+using Pairs_1q = array<IndexPair<int>, 1>;
 
 const double OVERROOT2 = 0.7071067811865475;
 
