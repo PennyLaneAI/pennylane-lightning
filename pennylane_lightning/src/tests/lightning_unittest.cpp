@@ -305,7 +305,7 @@ TEST(RXGate, ApplyToZeroPi) {
 }
 
 
-TEST(RXGate, ApplyToPlus) {
+TEST(RXGate, ApplyToPlusPiHalf) {
 
   Eigen::Tensor<std::complex<double>,1> input_state(2);
   input_state.setValues({1/SQRT_2, 1/SQRT_2});
