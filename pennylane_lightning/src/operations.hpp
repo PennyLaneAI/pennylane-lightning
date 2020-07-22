@@ -12,7 +12,7 @@ using Eigen::Tensor;
 
 using State_1q = Eigen::Tensor<std::complex<double>, 1>;
 using State_2q = Eigen::Tensor<std::complex<double>, 2>;
-using State_3q = Eigen::Tensor<std::complex<double>, 4>;
+using State_3q = Eigen::Tensor<std::complex<double>, 3>;
 
 using Gate_1q = Eigen::Tensor<std::complex<double>, 2>;
 using Gate_2q = Eigen::Tensor<std::complex<double>, 4>;
