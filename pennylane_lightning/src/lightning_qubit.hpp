@@ -20,13 +20,11 @@ using State_2q = Tensor<complex<double>, 2, RowMajor>;
 // Declare tensor shape for 1, 2, and 3-qubit gates
 using Gate_1q = Tensor<complex<double>, 2, RowMajor>;
 using Gate_2q = Tensor<complex<double>, 4, RowMajor>;
-using Gate_3q = Tensor<complex<double>, 6, RowMajor>;
 
 // Declare pairings for tensor contraction
 using Pairs = IndexPair<int>;
 using Pairs_1q = array<IndexPair<int>, 1>;
 using Pairs_2q = array<IndexPair<int>, 2>;
-using Pairs_3q = array<IndexPair<int>, 3>;
 
 const double SQRT2INV = 0.7071067811865475;
 
@@ -52,6 +50,51 @@ vector<int> cal_inv_perm(vector<int> perm) {
 }
 
 
+Gate_1q get_gate_1q(string gate_name, vector<float> params) {
+    Gate_1q op;
+    if (gate_name == "Identity") {
+        op = Identity();
+    }
+    if (gate_name == "PauliX") {
+        op = X();
+    }
+    if (gate_name == "PauliY") {
+        op = Y();
+    }
+    if (gate_name == "PauliZ") {
+        op = Z();
+    }
+    if (gate_name == "Hadamard") {
+        op = H();
+    }
+    if (gate_name == "S") {
+        op = S();
+    }
+    if (gate_name == "T") {
+        op = T();
+    }
+    if (gate_name == "RX") {
+        op = RX(params[0]);
+    }
+    if (gate_name == "RY") {
+        op = RY(params[0]);
+    }
+    if (gate_name == "RZ") {
+        op = RZ(params[0]);
+    }
+    return op;
+}
+
+
+Gate_2q get_gate_2q(string gate_name, vector<float> params) {
+    Gate_2q op;
+    if (gate_name == "CNOT") {
+        op = CNOT();
+    }
+    return op;
+}
+
+
 VectorXcd apply_2q(
     Ref<VectorXcd> state,
     vector<string> ops,
@@ -67,98 +110,25 @@ VectorXcd apply_2q(
         string op_string = ops[i];
         vector<int> w = wires[i];
         vector<float> p = params[i];
+        State_2q tensor_contracted;
+        Gate_1q op_1q;
+        Gate_2q op_2q;
 
-//        if (w.size() == 1) {
-//            pairs = {Pairs(1, w[0])};
-//        }
-//        if (w.size() == 2) {
-//            pairs = {Pairs(2, w[0]), Pairs(3, w[1])};
-//        }
-//        if (w.size() == 3) {
-//            pairs = {Pairs(3, w[0]), Pairs(4, w[1]), Pairs(5, w[2])};
-//        }
+        Pairs_1q pairs_1q = {Pairs(1, w[0])};
+        Pairs_2q pairs_2q = {Pairs(2, w[0]), Pairs(3, w[1])};
 
-        // Load and apply operation
-        if (op_string == "Identity") {
-            Gate_1q op = Identity();
-            Pairs_1q pairs = {Pairs(1, w[0])};
-            State_2q tensor_contracted = op.contract(state_tensor, pairs);
-            auto perm = calc_perm(w, qubits);
-            auto inv_perm = cal_inv_perm(perm);
-            evolved_tensor = tensor_contracted.shuffle(inv_perm);
+        if (w.size() == 1) {
+            op_1q = get_gate_1q(op_string, p);
+            tensor_contracted = op_1q.contract(state_tensor, pairs_1q);
         }
-        if (op_string == "PauliX") {
-            Gate_1q op = X();
-            Pairs_1q pairs = {Pairs(1, w[0])};
-            State_2q tensor_contracted = op.contract(state_tensor, pairs);
-            auto perm = calc_perm(w, qubits);
-            auto inv_perm = cal_inv_perm(perm);
-            evolved_tensor = tensor_contracted.shuffle(inv_perm);
+        if (w.size() == 2) {
+            op_2q = get_gate_2q(op_string, p);
+            tensor_contracted = op_2q.contract(state_tensor, pairs_2q);
         }
-        if (op_string == "PauliY") {
-            Gate_1q op = Y();
-            Pairs_1q pairs = {Pairs(1, w[0])};
-            State_2q tensor_contracted = op.contract(state_tensor, pairs);
-            auto perm = calc_perm(w, qubits);
-            auto inv_perm = cal_inv_perm(perm);
-            evolved_tensor = tensor_contracted.shuffle(inv_perm);
-        }
-        if (op_string == "PauliZ") {
-            Gate_1q op = Z();
-            Pairs_1q pairs = {Pairs(1, w[0])};
-            State_2q tensor_contracted = op.contract(state_tensor, pairs);
-            auto perm = calc_perm(w, qubits);
-            auto inv_perm = cal_inv_perm(perm);
-            evolved_tensor = tensor_contracted.shuffle(inv_perm);
-        }
-        if (op_string == "Hadamard") {
-            Gate_1q op = H();
-            Pairs_1q pairs = {Pairs(1, w[0])};
-            State_2q tensor_contracted = op.contract(state_tensor, pairs);
-            auto perm = calc_perm(w, qubits);
-            auto inv_perm = cal_inv_perm(perm);
-            evolved_tensor = tensor_contracted.shuffle(inv_perm);
-        }
-        if (op_string == "S") {
-            Gate_1q op = S();
-            Pairs_1q pairs = {Pairs(1, w[0])};
-            State_2q tensor_contracted = op.contract(state_tensor, pairs);
-            auto perm = calc_perm(w, qubits);
-            auto inv_perm = cal_inv_perm(perm);
-            evolved_tensor = tensor_contracted.shuffle(inv_perm);
-        }
-        if (op_string == "T") {
-            Gate_1q op = T();
-            Pairs_1q pairs = {Pairs(1, w[0])};
-            State_2q tensor_contracted = op.contract(state_tensor, pairs);
-            auto perm = calc_perm(w, qubits);
-            auto inv_perm = cal_inv_perm(perm);
-            evolved_tensor = tensor_contracted.shuffle(inv_perm);
-        }
-        if (op_string == "RX") {
-            Gate_1q op = RX(p[0]);
-            Pairs_1q pairs = {Pairs(1, w[0])};
-            State_2q tensor_contracted = op.contract(state_tensor, pairs);
-            auto perm = calc_perm(w, qubits);
-            auto inv_perm = cal_inv_perm(perm);
-            evolved_tensor = tensor_contracted.shuffle(inv_perm);
-        }
-        if (op_string == "RY") {
-            Gate_1q op = RY(p[0]);
-            Pairs_1q pairs = {Pairs(1, w[0])};
-            State_2q tensor_contracted = op.contract(state_tensor, pairs);
-            auto perm = calc_perm(w, qubits);
-            auto inv_perm = cal_inv_perm(perm);
-            evolved_tensor = tensor_contracted.shuffle(inv_perm);
-        }
-        if (op_string == "RZ") {
-            Gate_1q op = RZ(p[0]);
-            Pairs_1q pairs = {Pairs(1, w[0])};
-            State_2q tensor_contracted = op.contract(state_tensor, pairs);
-            auto perm = calc_perm(w, qubits);
-            auto inv_perm = cal_inv_perm(perm);
-            evolved_tensor = tensor_contracted.shuffle(inv_perm);
-        }
+
+        auto perm = calc_perm(w, qubits);
+        auto inv_perm = cal_inv_perm(perm);
+        evolved_tensor = tensor_contracted.shuffle(inv_perm);
     }
 
     auto out_state = Map<VectorXcd> (evolved_tensor.data(), 4, 1);
