@@ -10,13 +10,13 @@ using Eigen::MatrixXcd;
 using Eigen::VectorXcd;
 using Eigen::Tensor;
 
-using State_1q = Eigen::Tensor<std::complex<double>, 1>;
-using State_2q = Eigen::Tensor<std::complex<double>, 2>;
-using State_3q = Eigen::Tensor<std::complex<double>, 3>;
+using State_1q = Eigen::Tensor<std::complex<double>, 1, Eigen::RowMajor>;
+using State_2q = Eigen::Tensor<std::complex<double>, 2, Eigen::RowMajor>;
+using State_3q = Eigen::Tensor<std::complex<double>, 3, Eigen::RowMajor>;
 
-using Gate_1q = Eigen::Tensor<std::complex<double>, 2>;
-using Gate_2q = Eigen::Tensor<std::complex<double>, 4>;
-using Gate_3q = Eigen::Tensor<std::complex<double>, 6>;
+using Gate_1q = Eigen::Tensor<std::complex<double>, 2, Eigen::RowMajor>;
+using Gate_2q = Eigen::Tensor<std::complex<double>, 4, Eigen::RowMajor>;
+using Gate_3q = Eigen::Tensor<std::complex<double>, 6, Eigen::RowMajor>;
 
 using Pairs = Eigen::IndexPair<int>;
 using Pairs_1q = Eigen::array<Pairs, 1>;
