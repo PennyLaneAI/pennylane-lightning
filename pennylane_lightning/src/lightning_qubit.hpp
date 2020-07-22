@@ -119,16 +119,16 @@ VectorXcd apply_2q(
 
         if (w.size() == 1) {
             op_1q = get_gate_1q(op_string, p);
-            tensor_contracted = op_1q.contract(state_tensor, pairs_1q);
+            tensor_contracted = op_1q.contract(evolved_tensor, pairs_1q);
         }
         if (w.size() == 2) {
             op_2q = get_gate_2q(op_string, p);
-            tensor_contracted = op_2q.contract(state_tensor, pairs_2q);
+            tensor_contracted = op_2q.contract(evolved_tensor, pairs_2q);
         }
 
         auto perm = calc_perm(w, qubits);
-        auto inv_perm = cal_inv_perm(perm);
-        evolved_tensor = tensor_contracted.shuffle(inv_perm);
+        auto inv_perm = cal_inv_perm(perm); // apparently we don't need this
+        evolved_tensor = tensor_contracted.shuffle(perm);
     }
 
     auto out_state = Map<VectorXcd> (evolved_tensor.data(), 4, 1);

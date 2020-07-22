@@ -37,6 +37,6 @@ class LightningQubit(DefaultQubit):
         op_param = [o.params for o in operations]
         state_vector = self._state.flatten().astype("complex")  # should optimize
         state_vector_updated = apply_2q(state_vector, op_names, op_wires, op_param)
-        self._state = np.reshape(state_vector_updated, self._state.shape, order="F").astype(
+        self._state = np.reshape(state_vector_updated, self._state.shape).astype(
             self._state.dtype)  # The order part is very suspicious
         self._pre_rotated_state = self._state  # TODO
