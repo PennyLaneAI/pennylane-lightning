@@ -18,7 +18,7 @@
 
 const double tol = 1.0e-10f;
 
-namespace onequbitops {
+namespace one_qubit_ops {
 
 
 TEST(PauliX, ApplyToZero) {
@@ -90,9 +90,9 @@ TEST(PauliY, ApplyToPlus) {
 
   Eigen::Tensor<std::complex<double>,1> expected_output_state(2);
 
-  std::complex<double> Fst(0, -1/SQRT_2);
-  std::complex<double> Snd(0, 1/SQRT_2);
-  expected_output_state.setValues({Fst, Snd});
+  std::complex<double> first(0, -1/SQRT_2);
+  std::complex<double> second(0, 1/SQRT_2);
+  expected_output_state.setValues({first, second});
 
   // Casting to a vector for comparison
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
@@ -464,9 +464,9 @@ TEST(RZGate, ApplyToPlusHalfPi) {
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
-}  // namespace onequbitops
+}  // namespace one_qubit_ops
 
-namespace twoqubitops {
+namespace two_qubit_ops {
 
 
 TEST(CNOT, ApplyToZero) {
@@ -488,7 +488,7 @@ TEST(CNOT, ApplyToZero) {
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
-TEST(CNOT, ApplyToZeroOne) {
+TEST(CNOT, ApplyToOneZero) {
 
   Eigen::Tensor<std::complex<double>,2> input_state(2,2);
   input_state.setValues({{0, 0},{1,0}});
@@ -510,14 +510,14 @@ TEST(CNOT, ApplyToZeroOne) {
 TEST(CNOT, ApplyToPlusZero) {
 
   Eigen::Tensor<std::complex<double>,2> input_state(2,2);
-  input_state.setValues({{1/SQRT_2,0},{0, 1/SQRT_2}});
+  input_state.setValues({{1/SQRT_2,0},{1/SQRT_2, 0}});
 
   auto operation = CNOT();
   Pairs_2q product_dims = { Pairs(2, 0), Pairs(3, 1) };
   Eigen::Tensor<std::complex<double>, 2> output_state = operation.contract(input_state, product_dims);
 
   Eigen::Tensor<std::complex<double>, 2> expected_output_state(2,2);
-  expected_output_state.setValues({{1/SQRT_2,0},{1/SQRT_2, 0}});
+  expected_output_state.setValues({{1/SQRT_2,0},{0, 1/SQRT_2}});
 
   // Casting to a vector for comparison
   Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
@@ -525,4 +525,4 @@ TEST(CNOT, ApplyToPlusZero) {
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
-}  // namespace twoqubitops
+}  // namespace two_qubit_ops
