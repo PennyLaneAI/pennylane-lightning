@@ -91,7 +91,7 @@ VectorXcd apply_2q(
             Pairs_1q pairs_1q = {Pairs(1, w[0])};
             tensor_contracted = op_1q.contract(evolved_tensor, pairs_1q);
         }
-        if (w.size() == 2) {
+        else if (w.size() == 2) {
             Gate_2q op_2q = get_gate_2q(op_string, p);
             Pairs_2q pairs_2q = {Pairs(2, w[0]), Pairs(3, w[1])};
             tensor_contracted = op_2q.contract(evolved_tensor, pairs_2q);
