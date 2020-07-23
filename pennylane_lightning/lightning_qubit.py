@@ -22,20 +22,55 @@ simulation of a qubit-based quantum circuit architecture.
 from pennylane.plugins import DefaultQubit
 from .src.lightning_qubit_ops import apply_2q
 import numpy as np
+from pennylane import QubitStateVector, BasisState, DeviceError
 
 
 class LightningQubit(DefaultQubit):
     """TODO"""
 
-    def apply(self, operations, rotations=None, **kwargs):
-        # super().apply(operations, rotations, **kwargs)
-        if rotations:  # We should support this!
-            raise NotImplementedError("Rotations not yet supported")
+    _capabilities = {"inverse_operations": False}  # we should look at supporting
 
+    operations = {
+        "BasisState",
+        "QubitStateVector",
+        "PauliX",
+        "PauliY",
+        "PauliZ",
+        "Hadamard",
+        "S",
+        "T",
+        "CNOT",
+        "RX",
+        "RY",
+        "RZ",
+        "Rot",
+    }
+
+    def apply(self, operations, rotations=None, **kwargs):
+
+        for i, operation in enumerate(operations):  # State preparation is currently done in Python
+            if isinstance(operation, (QubitStateVector, BasisState)):
+                if i == 0:
+                    self._apply_operation(operation)
+                    del operations[0]
+                else:
+                    raise DeviceError(
+                        "Operation {} cannot be used after other Operations have already been "
+                        "applied on a {} device.".format(operation.name, self.short_name)
+                    )
+
+        self._pre_rotated_state = self.apply_lightning(self._state, operations)
+        if rotations:
+            self._state = self.apply_lightning(self._pre_rotated_state, rotations)
+        else:
+            self._state = self._pre_rotated_state
+
+    @staticmethod
+    def apply_lightning(state, operations):
+        """TODO"""
         op_names = [o.name for o in operations]
         op_wires = [o.wires for o in operations]
-        op_param = [o.params for o in operations]
-        state_vector = np.ravel(self._state, order="F")
+        op_param = [o.parameters for o in operations]
+        state_vector = np.ravel(state, order="F")
         state_vector_updated = apply_2q(state_vector, op_names, op_wires, op_param)
-        self._state = np.reshape(state_vector_updated, self._state.shape, order="F")
-        self._pre_rotated_state = self._state  # TODO
+        return np.reshape(state_vector_updated, state.shape, order="F")

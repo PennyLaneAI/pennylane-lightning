@@ -134,6 +134,27 @@ Gate_1q RZ(const double& parameter) {
     return RZ;
 }
 
+Gate_1q Rot(const double& phi, const double& theta, const double& omega) {
+    Gate_1q Rot(2, 2);
+
+    const std::complex<double> e00(0, (-phi - omega)/2);
+    const std::complex<double> e10(0, (-phi + omega)/2);
+    const std::complex<double> e01(0, (phi - omega)/2);
+    const std::complex<double> e11(0, (phi + omega)/2);
+
+    const std::complex<double> exp00 = std::pow(M_E, e00);
+    const std::complex<double> exp10 = std::pow(M_E, e10);
+    const std::complex<double> exp01 = std::pow(M_E, e01);
+    const std::complex<double> exp11 = std::pow(M_E, e11);
+
+    const double c = std::cos(theta / 2);
+    const double s = std::sin(theta / 2);
+
+    Rot.setValues({{exp00 * c, -exp01 * s}, {exp10 * s, exp11 * c}});
+
+    return Rot;
+}
+
 Gate_2q CNOT() {
     Gate_2q CNOT(2,2,2,2);
     CNOT.setValues({{{{1, 0},{0, 0}},{{0, 1},{0, 0}}},{{{0, 0},{0, 1}},{{0, 0},{1, 0}}}});
