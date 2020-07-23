@@ -37,41 +37,36 @@ vector<int> calc_perm(vector<int> perm, int qubits) {
     return perm;
 }
 
+typedef Gate_1q (*pfunc_1q)();
+typedef Gate_1q (*pfunc_1q_params)(vector<float>);
+
+typedef Gate_2q (*pfunc_2q)();
 
 Gate_1q get_gate_1q(const string &gate_name, const vector<float> &params) {
     Gate_1q op;
-    if (gate_name == "Identity") {
-        op = Identity();
+
+    std::map<std::string, pfunc_1q> OneQubitOps;
+    OneQubitOps["Identity"] = Identity;
+    OneQubitOps["PauliX"] = X;
+    OneQubitOps["PauliY"] = Y;
+    OneQubitOps["PauliZ"] = Z;
+    OneQubitOps["Hadamard"] = H;
+    OneQubitOps["S"] = S;
+    OneQubitOps["T"] = T;
+
+    std::map<std::string, pfunc_1q_params> OneQubitOpsParams;
+    OneQubitOps["RX"] = RX;
+    OneQubitOps["RY"] = RY;
+    OneQubitOps["RZ"] = RZ;
+    OneQubitOps["Rot"] = Rot;
+
+    if params.empty(){
+        pfunc_1q f = OneQubitOps[gate_name];
+        op = (*f)();
     }
-    if (gate_name == "PauliX") {
-        op = X();
-    }
-    if (gate_name == "PauliY") {
-        op = Y();
-    }
-    if (gate_name == "PauliZ") {
-        op = Z();
-    }
-    if (gate_name == "Hadamard") {
-        op = H();
-    }
-    if (gate_name == "S") {
-        op = S();
-    }
-    if (gate_name == "T") {
-        op = T();
-    }
-    if (gate_name == "RX") {
-        op = RX(params[0]);
-    }
-    if (gate_name == "RY") {
-        op = RY(params[0]);
-    }
-    if (gate_name == "RZ") {
-        op = RZ(params[0]);
-    }
-    if (gate_name == "Rot") {
-        op = Rot(params[0], params[1], params[2]);
+    else {
+        pfunc_1q_params f = OneQubitOpsParams[gate_name];
+        op = (*f)(params);
     }
     return op;
 }
@@ -79,8 +74,14 @@ Gate_1q get_gate_1q(const string &gate_name, const vector<float> &params) {
 
 Gate_2q get_gate_2q(const string &gate_name, const vector<float> &params) {
     Gate_2q op;
-    if (gate_name == "CNOT") {
-        op = CNOT();
+
+    std::map<std::string, pfunc_2q> TwoQubitOps;
+    OneQubitOps["CNOT"] = CNOT;
+
+    pfunc2q f = TwoQubitOps[gate_name];
+    if params.empty(){
+        pfunc_2q f = TwoQubitOps[gate_name];
+        op = (*f)();
     }
     return op;
 }
