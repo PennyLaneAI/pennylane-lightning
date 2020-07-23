@@ -48,6 +48,9 @@ class LightningQubit(DefaultQubit):
 
     def apply(self, operations, rotations=None, **kwargs):
 
+        if self.num_wires == 1:
+            super().apply(self, operations, rotations=None, **kwargs)
+
         for i, operation in enumerate(operations):  # State preparation is currently done in Python
             if isinstance(operation, (QubitStateVector, BasisState)):
                 if i == 0:
