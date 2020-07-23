@@ -38,7 +38,8 @@ vector<int> calc_perm(vector<int> perm, int qubits) {
 }
 
 typedef Gate_1q (*pfunc_1q)();
-typedef Gate_1q (*pfunc_1q_params)(vector<float>);
+typedef Gate_1q (*pfunc_1q_one_param)(const double&);
+typedef Gate_1q (*pfunc_1q_three_params)(const double&, const double&, const double&);
 
 typedef Gate_2q (*pfunc_2q)();
 
@@ -54,19 +55,25 @@ Gate_1q get_gate_1q(const string &gate_name, const vector<float> &params) {
     OneQubitOps["S"] = S;
     OneQubitOps["T"] = T;
 
-    std::map<std::string, pfunc_1q_params> OneQubitOpsParams;
-    OneQubitOps["RX"] = RX;
-    OneQubitOps["RY"] = RY;
-    OneQubitOps["RZ"] = RZ;
-    OneQubitOps["Rot"] = Rot;
+    std::map<std::string, pfunc_1q_one_param> OneQubitOpsOneParam;
+    OneQubitOpsOneParam["RX"] = RX;
+    OneQubitOpsOneParam["RY"] = RY;
+    OneQubitOpsOneParam["RZ"] = RZ;
 
-    if params.empty(){
+    std::map<std::string, pfunc_1q_three_params> OneQubitOpsThreeParams;
+    OneQubitOpsThreeParams["Rot"] = Rot;
+
+    if (params.empty()){
         pfunc_1q f = OneQubitOps[gate_name];
         op = (*f)();
     }
-    else {
-        pfunc_1q_params f = OneQubitOpsParams[gate_name];
-        op = (*f)(params);
+    else if (params.size() == 1){
+        pfunc_1q_one_param f = OneQubitOpsOneParam[gate_name];
+        op = (*f)(params[0]);
+    }
+    else if (params.size() == 3){
+        pfunc_1q_three_params f = OneQubitOpsThreeParams[gate_name];
+        op = (*f)(params[0], params[1], params[2]);
     }
     return op;
 }
@@ -76,10 +83,10 @@ Gate_2q get_gate_2q(const string &gate_name, const vector<float> &params) {
     Gate_2q op;
 
     std::map<std::string, pfunc_2q> TwoQubitOps;
-    OneQubitOps["CNOT"] = CNOT;
+    TwoQubitOps["CNOT"] = CNOT;
 
-    pfunc2q f = TwoQubitOps[gate_name];
-    if params.empty(){
+    pfunc_2q f = TwoQubitOps[gate_name];
+    if (params.empty()) {
         pfunc_2q f = TwoQubitOps[gate_name];
         op = (*f)();
     }
