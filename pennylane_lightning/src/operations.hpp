@@ -25,9 +25,9 @@ using Pairs_1q = Eigen::array<Pairs, 1>;
 using Pairs_2q = Eigen::array<Pairs, 2>;
 
 
-extern const double SQRT_2 = sqrt(2);
-extern const std::complex<double> IMAG(0, 1);
-extern const std::complex<double> NEGATIVE_IMAG(0, -1);
+const double SQRT_2 = sqrt(2);
+const std::complex<double> IMAG(0, 1);
+const std::complex<double> NEGATIVE_IMAG(0, -1);
 
 Gate_1q Identity() {
     Gate_1q X(2, 2);
