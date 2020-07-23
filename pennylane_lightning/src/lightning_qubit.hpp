@@ -83,8 +83,6 @@ Gate_2q get_gate_2q(const string &gate_name, const vector<float> &params) {
     return op;
 }
 
-
-
 // https://stackoverflow.com/questions/1577475/c-sorting-and-keeping-track-of-indexes
 vector<int> argsort(const vector<int> &v) {
 
@@ -94,9 +92,6 @@ vector<int> argsort(const vector<int> &v) {
 
   return idx;
 }
-
-
-
 
 template <class State, typename... Shape>
 VectorXcd apply_ops(
@@ -132,31 +127,8 @@ VectorXcd apply_ops(
         }
 
         auto perm = calc_perm(w, qubits);
-
-        for (auto i = perm.begin(); i != perm.end(); ++i)
-            std::cout << *i << ' ';
-        std::cout << std::endl;
-
-
-//        // Calculate inverse permutation
-//        vector<int> inv_perm;
-//        for (int j = 0; j < perm.size(); j++) {
-//            auto arg = find(perm.begin(), perm.end(), j);
-//            for (auto l = arg.begin(); l != arg.end(); ++l)
-//                std::cout << *l << ' ';
-//            std::cout << j;
-////            std::cout << arg;
-//            std::cout << std::endl;
-//            inv_perm.push_back(arg[0]);
-//        }
-
         auto inv_perm = argsort(perm);
-
-        for (auto i = inv_perm.begin(); i != inv_perm.end(); ++i)
-            std::cout << *i << ' ';
-        std::cout << std::endl;
-
-        evolved_tensor = tensor_contracted.shuffle(perm);
+        evolved_tensor = tensor_contracted.shuffle(inv_perm);
     }
 
     auto out_state = Map<VectorXcd> (evolved_tensor.data(), state.size(), 1);
