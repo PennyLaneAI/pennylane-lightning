@@ -28,8 +28,7 @@ using Pairs_2q = array<IndexPair<int>, 2>;
 const double SQRT2INV = 0.7071067811865475;
 
 
-vector<int> calc_perm(vector<int> w, int qubits) {
-    vector<int> perm = w;
+vector<int> calc_perm(vector<int> perm, int qubits) {
     for (int j = 0; j < qubits; j++) {
         if (count(perm.begin(), perm.end(), j) == 0) {
         perm.push_back(j);
@@ -39,17 +38,7 @@ vector<int> calc_perm(vector<int> w, int qubits) {
 }
 
 
-vector<int> cal_inv_perm(vector<int> perm) {
-    vector<int> inv_perm;
-    for (int j = perm.size() - 1; j >= 0; j--) {
-        int arg = find(perm.begin(), perm.end(), j)[0];
-        inv_perm.push_back(arg);
-    }
-    return inv_perm;
-}
-
-
-Gate_1q get_gate_1q(string gate_name, vector<float> params) {
+Gate_1q get_gate_1q(const string &gate_name, const vector<float> &params) {
     Gate_1q op;
     if (gate_name == "Identity") {
         op = Identity();
@@ -88,7 +77,7 @@ Gate_1q get_gate_1q(string gate_name, vector<float> params) {
 }
 
 
-Gate_2q get_gate_2q(string gate_name, vector<float> params) {
+Gate_2q get_gate_2q(const string &gate_name, const vector<float> &params) {
     Gate_2q op;
     if (gate_name == "CNOT") {
         op = CNOT();
@@ -129,7 +118,6 @@ VectorXcd apply_2q(
         }
 
         auto perm = calc_perm(w, qubits);
-        auto inv_perm = cal_inv_perm(perm); // apparently we don't need this
         evolved_tensor = tensor_contracted.shuffle(perm);
     }
 
