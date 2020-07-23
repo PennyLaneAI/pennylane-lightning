@@ -81,6 +81,9 @@ Gate_1q get_gate_1q(string gate_name, vector<float> params) {
     if (gate_name == "RZ") {
         op = RZ(params[0]);
     }
+    if (gate_name == "Rot") {
+        op = Rot(params[0], params[1], params[2]);
+    }
     return op;
 }
 

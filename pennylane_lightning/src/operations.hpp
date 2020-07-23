@@ -108,15 +108,21 @@ Gate_1q RZ(const double& parameter) {
 Gate_1q Rot(const double& phi, const double& theta, const double& omega) {
     Gate_1q Rot(2, 2);
 
-    const std::complex<double> e00 = std::pow(M_E, -(phi + omega)/2);
-    const std::complex<double> e10 = std::pow(M_E, -(phi - omega)/2);
-    const std::complex<double> e01 = std::pow(M_E, (phi - omega)/2);
-    const std::complex<double> e11 = std::pow(M_E, (phi + omega)/2);
+    const std::complex<double> e00(0, -(phi + omega)/2);
+    const std::complex<double> e10(0, -(phi - omega)/2);
+    const std::complex<double> e01(0, (phi - omega)/2);
+    const std::complex<double> e11(0, (phi + omega)/2);
 
-    const double c = std::cos(parameter / 2);
-    const double s = std::sin(parameter / 2);
+    const std::complex<double> exp00 = std::pow(M_E, e00);
+    const std::complex<double> exp10 = std::pow(M_E, e10);
+    const std::complex<double> exp01 = std::pow(M_E, e01);
+    const std::complex<double> exp11 = std::pow(M_E, e11);
 
-    Rot.setValues({{e00 * c, -e01 * s}, {e10 * s, e11 * c}});
+    const double c = std::cos(theta / 2);
+    const double s = std::sin(theta / 2);
+
+    Rot.setValues({{exp00 * c, -exp01 * s}, {exp10 * s, exp11 * c}});
+
     return Rot;
 }
 
