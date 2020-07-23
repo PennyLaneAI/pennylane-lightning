@@ -71,7 +71,7 @@ class LightningQubit(DefaultQubit):
         """TODO"""
         op_names = [o.name for o in operations]
         op_wires = [o.wires for o in operations]
-        op_param = [o.params for o in operations]
+        op_param = [o.parameters for o in operations]
         state_vector = np.ravel(state, order="F")
         state_vector_updated = apply_2q(state_vector, op_names, op_wires, op_param)
         return np.reshape(state_vector_updated, state.shape, order="F")
