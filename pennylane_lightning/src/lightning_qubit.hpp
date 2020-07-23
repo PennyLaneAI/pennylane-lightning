@@ -85,18 +85,15 @@ VectorXcd apply_2q(
         vector<int> w = wires[i];
         vector<float> p = params[i];
         State_2q tensor_contracted;
-        Gate_1q op_1q;
-        Gate_2q op_2q;
-
-        Pairs_1q pairs_1q = {Pairs(1, w[0])};
-        Pairs_2q pairs_2q = {Pairs(2, w[0]), Pairs(3, w[1])};
 
         if (w.size() == 1) {
-            op_1q = get_gate_1q(op_string, p);
+            Gate_1q op_1q = get_gate_1q(op_string, p);
+            Pairs_1q pairs_1q = {Pairs(1, w[0])};
             tensor_contracted = op_1q.contract(evolved_tensor, pairs_1q);
         }
         if (w.size() == 2) {
-            op_2q = get_gate_2q(op_string, p);
+            Gate_2q op_2q = get_gate_2q(op_string, p);
+            Pairs_2q pairs_2q = {Pairs(2, w[0]), Pairs(3, w[1])};
             tensor_contracted = op_2q.contract(evolved_tensor, pairs_2q);
         }
 
