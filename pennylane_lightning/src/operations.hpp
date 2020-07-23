@@ -1,3 +1,5 @@
+#pragma once
+
 #define _USE_MATH_DEFINES
 
 #include <iostream>
@@ -131,3 +133,36 @@ Gate_2q CNOT() {
     CNOT.setValues({{{{1, 0},{0, 0}},{{0, 1},{0, 0}}},{{{0, 0},{0, 1}},{{0, 0},{1, 0}}}});
     return CNOT;
 }
+
+// Creating aliases based on the function signatures of each operation
+typedef Gate_1q (*pfunc_1q)();
+typedef Gate_1q (*pfunc_1q_one_param)(const double&);
+typedef Gate_1q (*pfunc_1q_three_params)(const double&, const double&, const double&);
+
+typedef Gate_2q (*pfunc_2q)();
+
+// Defining the operation maps
+const std::map<std::string, pfunc_1q> OneQubitOps = {
+    {"Identity", Identity},
+    {"PauliX", X},
+    {"PauliY", Y},
+    {"PauliZ", Z},
+    {"Hadamard", H},
+    {"S", S},
+    {"T", T}
+};
+
+const std::map<std::string, pfunc_1q_one_param> OneQubitOpsOneParam = {
+    {"RX", RX},
+    {"RY", RY},
+    {"RZ", RZ}
+};
+
+const std::map<std::string, pfunc_1q_three_params> OneQubitOpsThreeParams = {
+    {"Rot", Rot}
+};
+
+
+const std::map<std::string, pfunc_2q> TwoQubitOps = {
+    {"CNOT", CNOT}
+};

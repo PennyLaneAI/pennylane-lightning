@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Eigen/Dense"
 #include "unsupported/Eigen/CXX11/Tensor"
 #include "operations.hpp"
@@ -26,37 +28,6 @@ using Pairs_1q = array<IndexPair<int>, 1>;
 using Pairs_2q = array<IndexPair<int>, 2>;
 
 const double SQRT2INV = 0.7071067811865475;
-
-typedef Gate_1q (*pfunc_1q)();
-typedef Gate_1q (*pfunc_1q_one_param)(const double&);
-typedef Gate_1q (*pfunc_1q_three_params)(const double&, const double&, const double&);
-
-typedef Gate_2q (*pfunc_2q)();
-
-const std::map<std::string, pfunc_1q> OneQubitOps = {
-    {"Identity", Identity},
-    {"PauliX", X},
-    {"PauliY", Y},
-    {"PauliZ", Z},
-    {"Hadamard", H},
-    {"S", S},
-    {"T", T}
-};
-
-const std::map<std::string, pfunc_1q_one_param> OneQubitOpsOneParam = {
-    {"RX", RX},
-    {"RY", RY},
-    {"RZ", RZ}
-};
-
-const std::map<std::string, pfunc_1q_three_params> OneQubitOpsThreeParams = {
-    {"Rot", Rot}
-};
-
-
-const std::map<std::string, pfunc_2q> TwoQubitOps = {
-    {"CNOT", CNOT}
-};
 
 vector<int> calc_perm(vector<int> perm, int qubits) {
     for (int j = 0; j < qubits; j++) {
