@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Eigen/Dense"
 #include "unsupported/Eigen/CXX11/Tensor"
 #include "operations.hpp"
@@ -25,7 +27,6 @@ using Pairs_2q = array<IndexPair<int>, 2>;
 
 const double SQRT2INV = 0.7071067811865475;
 
-
 vector<int> calc_perm(vector<int> perm, int qubits) {
     for (int j = 0; j < qubits; j++) {
         if (count(perm.begin(), perm.end(), j) == 0) {
@@ -38,38 +39,18 @@ vector<int> calc_perm(vector<int> perm, int qubits) {
 
 Gate_1q get_gate_1q(const string &gate_name, const vector<float> &params) {
     Gate_1q op;
-    if (gate_name == "Identity") {
-        op = Identity();
+
+    if (params.empty()){
+        pfunc_1q f = OneQubitOps.at(gate_name);
+        op = (*f)();
     }
-    if (gate_name == "PauliX") {
-        op = X();
+    else if (params.size() == 1){
+        pfunc_1q_one_param f = OneQubitOpsOneParam.at(gate_name);
+        op = (*f)(params[0]);
     }
-    if (gate_name == "PauliY") {
-        op = Y();
-    }
-    if (gate_name == "PauliZ") {
-        op = Z();
-    }
-    if (gate_name == "Hadamard") {
-        op = H();
-    }
-    if (gate_name == "S") {
-        op = S();
-    }
-    if (gate_name == "T") {
-        op = T();
-    }
-    if (gate_name == "RX") {
-        op = RX(params[0]);
-    }
-    if (gate_name == "RY") {
-        op = RY(params[0]);
-    }
-    if (gate_name == "RZ") {
-        op = RZ(params[0]);
-    }
-    if (gate_name == "Rot") {
-        op = Rot(params[0], params[1], params[2]);
+    else if (params.size() == 3){
+        pfunc_1q_three_params f = OneQubitOpsThreeParams.at(gate_name);
+        op = (*f)(params[0], params[1], params[2]);
     }
     return op;
 }
@@ -77,8 +58,10 @@ Gate_1q get_gate_1q(const string &gate_name, const vector<float> &params) {
 
 Gate_2q get_gate_2q(const string &gate_name, const vector<float> &params) {
     Gate_2q op;
-    if (gate_name == "CNOT") {
-        op = CNOT();
+
+    if (params.empty()) {
+        pfunc_2q f = TwoQubitOps.at(gate_name);
+        op = (*f)();
     }
     return op;
 }
@@ -111,18 +94,15 @@ VectorXcd apply_ops(
         vector<int> w = wires[i];
         vector<float> p = params[i];
         State tensor_contracted;
-        Gate_1q op_1q;
-        Gate_2q op_2q;
-
-        Pairs_1q pairs_1q = {Pairs(1, w[0])};
-        Pairs_2q pairs_2q = {Pairs(2, w[0]), Pairs(3, w[1])};
 
         if (w.size() == 1) {
-            op_1q = get_gate_1q(op_string, p);
+            Gate_1q op_1q = get_gate_1q(op_string, p);
+            Pairs_1q pairs_1q = {Pairs(1, w[0])};
             tensor_contracted = op_1q.contract(evolved_tensor, pairs_1q);
         }
-        if (w.size() == 2) {
-            op_2q = get_gate_2q(op_string, p);
+        else if (w.size() == 2) {
+            Gate_2q op_2q = get_gate_2q(op_string, p);
+            Pairs_2q pairs_2q = {Pairs(2, w[0]), Pairs(3, w[1])};
             tensor_contracted = op_2q.contract(evolved_tensor, pairs_2q);
         }
 
