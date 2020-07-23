@@ -12,9 +12,7 @@ using std::array;
 using std::vector;
 using std::complex;
 using std::string;
-
-// Declare tensor shape for state
-using State_2q = Tensor<complex<double>, 2>;
+using std::find;
 
 // Declare tensor shape for 1, 2, and 3-qubit gates
 using Gate_1q = Tensor<complex<double>, 2>;
@@ -86,22 +84,44 @@ Gate_2q get_gate_2q(const string &gate_name, const vector<float> &params) {
 }
 
 
-VectorXcd apply_2q(
+
+vector<int> sort_indexes(const vector<int> &v) {
+
+  // initialize original index locations
+  vector<int> idx(v.size());
+  std::iota(idx.begin(), idx.end(), 0);
+
+  // sort indexes based on comparing values in v
+  // using std::stable_sort instead of std::sort
+  // to avoid unnecessary index re-orderings
+  // when v contains elements of equal values
+  stable_sort(idx.begin(), idx.end(),
+       [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+
+  return idx;
+}
+
+
+
+
+template <class State, typename... Shape>
+VectorXcd apply_ops(
     Ref<VectorXcd> state,
     vector<string> ops,
     vector<vector<int>> wires,
-    vector<vector<float>> params
+    vector<vector<float>> params,
+    const int qubits,
+    Shape... shape
     ) {
-    const int qubits = 2;
-    State_2q state_tensor = TensorMap<State_2q>(state.data(), 2, 2);
-    State_2q evolved_tensor = state_tensor;
+    State state_tensor = TensorMap<State>(state.data(), shape...);
+    State evolved_tensor = state_tensor;
 
     for (int i = 0; i < ops.size(); i++) {
         // Load operation string and corresponding wires and parameters
         string op_string = ops[i];
         vector<int> w = wires[i];
         vector<float> p = params[i];
-        State_2q tensor_contracted;
+        State tensor_contracted;
         Gate_1q op_1q;
         Gate_2q op_2q;
 
@@ -118,9 +138,33 @@ VectorXcd apply_2q(
         }
 
         auto perm = calc_perm(w, qubits);
-        evolved_tensor = tensor_contracted.shuffle(perm);
+
+        for (auto i = perm.begin(); i != perm.end(); ++i)
+            std::cout << *i << ' ';
+        std::cout << std::endl;
+
+
+//        // Calculate inverse permutation
+//        vector<int> inv_perm;
+//        for (int j = 0; j < perm.size(); j++) {
+//            auto arg = find(perm.begin(), perm.end(), j);
+//            for (auto l = arg.begin(); l != arg.end(); ++l)
+//                std::cout << *l << ' ';
+//            std::cout << j;
+////            std::cout << arg;
+//            std::cout << std::endl;
+//            inv_perm.push_back(arg[0]);
+//        }
+
+        auto inv_perm = sort_indexes(perm);
+
+        for (auto i = inv_perm.begin(); i != inv_perm.end(); ++i)
+            std::cout << *i << ' ';
+        std::cout << std::endl;
+
+        evolved_tensor = tensor_contracted.shuffle(inv_perm);
     }
 
-    auto out_state = Map<VectorXcd> (evolved_tensor.data(), 4, 1);
+    auto out_state = Map<VectorXcd> (evolved_tensor.data(), state.size(), 1);
     return out_state;
 }
