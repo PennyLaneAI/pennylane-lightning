@@ -85,18 +85,12 @@ Gate_2q get_gate_2q(const string &gate_name, const vector<float> &params) {
 
 
 
-vector<int> sort_indexes(const vector<int> &v) {
+// https://stackoverflow.com/questions/1577475/c-sorting-and-keeping-track-of-indexes
+vector<int> argsort(const vector<int> &v) {
 
-  // initialize original index locations
   vector<int> idx(v.size());
   std::iota(idx.begin(), idx.end(), 0);
-
-  // sort indexes based on comparing values in v
-  // using std::stable_sort instead of std::sort
-  // to avoid unnecessary index re-orderings
-  // when v contains elements of equal values
-  stable_sort(idx.begin(), idx.end(),
-       [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+  stable_sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
 
   return idx;
 }
@@ -156,13 +150,13 @@ VectorXcd apply_ops(
 //            inv_perm.push_back(arg[0]);
 //        }
 
-        auto inv_perm = sort_indexes(perm);
+        auto inv_perm = argsort(perm);
 
         for (auto i = inv_perm.begin(); i != inv_perm.end(); ++i)
             std::cout << *i << ' ';
         std::cout << std::endl;
 
-        evolved_tensor = tensor_contracted.shuffle(inv_perm);
+        evolved_tensor = tensor_contracted.shuffle(perm);
     }
 
     auto out_state = Map<VectorXcd> (evolved_tensor.data(), state.size(), 1);
