@@ -108,8 +108,8 @@ Gate_1q RZ(const double& parameter) {
 Gate_1q Rot(const double& phi, const double& theta, const double& omega) {
     Gate_1q Rot(2, 2);
 
-    const std::complex<double> e00(0, -(phi + omega)/2);
-    const std::complex<double> e10(0, -(phi - omega)/2);
+    const std::complex<double> e00(0, (-phi - omega)/2);
+    const std::complex<double> e10(0, (-phi + omega)/2);
     const std::complex<double> e01(0, (phi - omega)/2);
     const std::complex<double> e11(0, (phi + omega)/2);
 

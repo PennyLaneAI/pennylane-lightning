@@ -47,7 +47,6 @@ class LightningQubit(DefaultQubit):
     }
 
     def apply(self, operations, rotations=None, **kwargs):
-        """TODO"""
 
         for i, operation in enumerate(operations):  # State preparation is currently done in Python
             if isinstance(operation, (QubitStateVector, BasisState)):
