@@ -33,9 +33,9 @@ VectorXcd apply (
 //    case 1:
 //        evolved_state = apply_ops <State_1q> (state, ops, wires, params, 1, 2);
 //        break;
-    case 2:
-        evolved_state = apply_ops <State_2q> (state, ops, wires, params, 2, 2, 2);
-        break;
+//    case 2:
+//        evolved_state = apply_ops <State_2q> (state, ops, wires, params, 2, 2, 2);
+//        break;
     case 3:
         evolved_state = apply_ops <State_3q> (state, ops, wires, params, 3, 2, 2, 2);
         break;

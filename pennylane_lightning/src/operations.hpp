@@ -150,6 +150,15 @@ Gate_2q CZ() {
     return CZ;
 }
 
+Gate_3q Toffoli() {
+    Gate_3q Toffoli(2,2,2,2,2,2);
+    Toffoli.setValues({{{{{{1, 0},{0, 0}},{{0, 0},{0, 0}}},{{{0, 1},{0, 0}},{{0, 0},{0, 0}}}},
+        {{{{0, 0},{1, 0}},{{0, 0},{0, 0}}},{{{0, 0},{0, 1}},{{0, 0},{0, 0}}}}},
+        {{{{{0, 0},{0, 0}},{{1, 0},{0, 0}}},{{{0, 0},{0, 0}},{{0, 1},{0, 0}}}},
+        {{{{0, 0},{0, 0}},{{0, 0},{0, 1}}},{{{0, 0},{0, 0}},{{0, 0},{1, 0}}}}}});
+    return Toffoli;
+}
+
 Gate_2q CRX(const double& parameter) {
     Gate_2q CRX(2, 2, 2, 2);
 
@@ -213,6 +222,8 @@ typedef Gate_2q (*pfunc_2q)();
 typedef Gate_2q (*pfunc_2q_one_param)(const double&);
 typedef Gate_2q (*pfunc_2q_three_params)(const double&, const double&, const double&);
 
+typedef Gate_3q (*pfunc_3q)();
+
 // Defining the operation maps
 const std::map<std::string, pfunc_1q> OneQubitOps = {
     {"Identity", Identity},
@@ -249,4 +260,8 @@ const std::map<std::string, pfunc_2q_one_param> TwoQubitOpsOneParam = {
 
 const std::map<std::string, pfunc_2q_three_params> TwoQubitOpsThreeParams = {
     {"CRot", CRot}
+};
+
+const std::map<std::string, pfunc_3q> ThreeQubitOps = {
+    {"Toffoli", Toffoli}
 };
