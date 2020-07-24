@@ -89,8 +89,8 @@ VectorXcd apply_ops(
     const int qubits,
     Shape... shape
     ) {
-    ThreadPool pool(8);
-    ThreadPoolDevice dev(&pool, 8);
+    ThreadPool pool(2);
+    ThreadPoolDevice dev(&pool, 2);
 
     State state_tensor = TensorMap<State>(state.data(), shape...);
     State evolved_tensor = state_tensor;
