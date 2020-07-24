@@ -44,6 +44,7 @@ class LightningQubit(DefaultQubit):
         "RY",
         "RZ",
         "Rot",
+        "CRot",
     }
 
     def apply(self, operations, rotations=None, **kwargs):

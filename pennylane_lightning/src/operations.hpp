@@ -134,12 +134,35 @@ Gate_2q CNOT() {
     return CNOT;
 }
 
+Gate_2q CRot(const double& phi, const double& theta, const double& omega) {
+    Gate_2q CRot(2,2,2,2);
+
+    const std::complex<double> e00(0, (-phi - omega)/2);
+    const std::complex<double> e10(0, (-phi + omega)/2);
+    const std::complex<double> e01(0, (phi - omega)/2);
+    const std::complex<double> e11(0, (phi + omega)/2);
+
+    const std::complex<double> exp00 = std::pow(M_E, e00);
+    const std::complex<double> exp10 = std::pow(M_E, e10);
+    const std::complex<double> exp01 = std::pow(M_E, e01);
+    const std::complex<double> exp11 = std::pow(M_E, e11);
+
+    const double c = std::cos(theta / 2);
+    const double s = std::sin(theta / 2);
+
+    CRot.setValues({{{{1, 0},{0, 0}},{{0, 1},{0, 0}}},{{{0, 0},{exp00 * c, -exp01 * s}},
+                   {{0, 0},{exp10 * s, exp11 * c}}}});
+    return CRot;
+}
+
+
 // Creating aliases based on the function signatures of each operation
 typedef Gate_1q (*pfunc_1q)();
 typedef Gate_1q (*pfunc_1q_one_param)(const double&);
 typedef Gate_1q (*pfunc_1q_three_params)(const double&, const double&, const double&);
 
 typedef Gate_2q (*pfunc_2q)();
+typedef Gate_2q (*pfunc_2q_three_params)(const double&, const double&, const double&);
 
 // Defining the operation maps
 const std::map<std::string, pfunc_1q> OneQubitOps = {
@@ -165,4 +188,8 @@ const std::map<std::string, pfunc_1q_three_params> OneQubitOpsThreeParams = {
 
 const std::map<std::string, pfunc_2q> TwoQubitOps = {
     {"CNOT", CNOT}
+};
+
+const std::map<std::string, pfunc_2q_three_params> TwoQubitOpsThreeParams = {
+    {"CRot", CRot}
 };
