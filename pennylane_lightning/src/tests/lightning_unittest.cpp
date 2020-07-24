@@ -13,6 +13,7 @@
 // limitations under the License.
 #include "gtest/gtest.h"
 #include "../operations.hpp"
+#include "../lightning_qubit.hpp"
 #include <unsupported/Eigen/CXX11/Tensor>
 #include <math.h>       /* sqrt */
 
@@ -568,8 +569,6 @@ TEST(RotGate, ApplyToPlusNegPiHalfPiPi) {
   State_1q input_state(2);
   input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
-  double par = M_PI/2;
-
   const double par1 = -M_PI/2;
   const double par2 = M_PI;
   const double par3 = M_PI;
@@ -675,3 +674,45 @@ TEST(CNOT, ApplyToThreeQubitControlThird) {
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 }  // namespace two_qubit_ops
+
+namespace auxiliary_functions {
+
+TEST(CalcPerm, OneElemOneQubit) {
+    std::vector<int> input_perm({0});
+    std::vector<int> output_perm = calc_perm(input_perm, 1);
+
+    EXPECT_TRUE(input_perm.size() == output_perm.size());
+    EXPECT_TRUE(std::is_permutation(input_perm.begin(), input_perm.end(), output_perm.begin()));
+}
+
+TEST(CalcPerm, OneElemTwoQubit) {
+    std::vector<int> input_perm({0});
+    std::vector<int> output_perm = calc_perm(input_perm, 2);
+
+    std::vector<int> expected_perm({0, 1});
+
+    EXPECT_TRUE(output_perm.size() == expected_perm.size());
+    EXPECT_TRUE(std::is_permutation(output_perm.begin(), output_perm.end(), expected_perm.begin()));
+}
+
+TEST(CalcPerm, TwoElemFiveQubitAscOrder) {
+    std::vector<int> input_perm({1,2,4});
+    std::vector<int> output_perm = calc_perm(input_perm, 5);
+
+    std::vector<int> expected_perm({1,2,4,0,3});
+
+    EXPECT_TRUE(output_perm.size() == expected_perm.size());
+    EXPECT_TRUE(std::is_permutation(output_perm.begin(), output_perm.end(), expected_perm.begin()));
+}
+
+
+TEST(CalcPerm, TwoElemFiveQubitRandomOrder) {
+    std::vector<int> input_perm({2,1,4});
+    std::vector<int> output_perm = calc_perm(input_perm, 5);
+
+    std::vector<int> expected_perm({2,1,4,0,3});
+
+    EXPECT_TRUE(output_perm.size() == expected_perm.size());
+    EXPECT_TRUE(std::is_permutation(output_perm.begin(), output_perm.end(), expected_perm.begin()));
+}
+}  // namespace auxiliary_functions
