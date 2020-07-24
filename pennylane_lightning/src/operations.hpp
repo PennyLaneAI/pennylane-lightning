@@ -224,7 +224,7 @@ const std::map<std::string, pfunc_2q> TwoQubitOps = {
 };
 
 const std::map<std::string, pfunc_2q_one_param> TwoQubitOpsOneParam = {
-    {"CRY", CRX},
+    {"CRX", CRX},
     {"CRY", CRY},
     {"CRZ", CRZ}
 };
