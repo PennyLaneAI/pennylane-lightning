@@ -107,6 +107,16 @@ Gate_1q RZ(const double& parameter) {
     return RZ;
 }
 
+Gate_1q PhaseShift(const double& parameter) {
+    Gate_1q PhaseShift(2, 2);
+
+    const std::complex<double> exponent(0, parameter);
+    const std::complex<double> shift = std::pow(M_E, exponent);
+
+    PhaseShift.setValues({{1, 0}, {0, shift}});
+    return PhaseShift;
+}
+
 Gate_1q Rot(const double& phi, const double& theta, const double& omega) {
     Gate_1q Rot(2, 2);
 
@@ -211,7 +221,8 @@ const std::map<std::string, pfunc_1q> OneQubitOps = {
 const std::map<std::string, pfunc_1q_one_param> OneQubitOpsOneParam = {
     {"RX", RX},
     {"RY", RY},
-    {"RZ", RZ}
+    {"RZ", RZ},
+    {"PhaseShift", PhaseShift}
 };
 
 const std::map<std::string, pfunc_1q_three_params> OneQubitOpsThreeParams = {
