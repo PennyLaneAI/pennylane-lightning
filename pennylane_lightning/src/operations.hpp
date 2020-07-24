@@ -144,6 +144,12 @@ Gate_2q CNOT() {
     return CNOT;
 }
 
+Gate_2q CZ() {
+    Gate_2q CZ(2,2,2,2);
+    CZ.setValues({{{{1, 0},{0, 0}},{{0, 1},{0, 0}}},{{{0, 0},{1, 0}},{{0, 0},{0, -1}}}});
+    return CZ;
+}
+
 Gate_2q CRX(const double& parameter) {
     Gate_2q CRX(2, 2, 2, 2);
 
@@ -231,7 +237,8 @@ const std::map<std::string, pfunc_1q_three_params> OneQubitOpsThreeParams = {
 
 
 const std::map<std::string, pfunc_2q> TwoQubitOps = {
-    {"CNOT", CNOT}
+    {"CNOT", CNOT},
+    {"CZ", CZ}
 };
 
 const std::map<std::string, pfunc_2q_one_param> TwoQubitOpsOneParam = {
