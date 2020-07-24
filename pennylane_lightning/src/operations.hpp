@@ -134,6 +134,16 @@ Gate_2q CNOT() {
     return CNOT;
 }
 
+Gate_2q CRY(const double& parameter) {
+    Gate_2q CRY(2, 2, 2, 2);
+
+    const double c = std::cos(parameter / 2);
+    const double s = std::sin(parameter / 2);
+
+    CRY.setValues({{{{1, 0},{0, 0}},{{0, 1},{0, 0}}},{{{0, 0},{c, -s}},{{0, 0},{s, c}}}});
+    return CRY;
+}
+
 Gate_2q CRZ(const double& parameter) {
     Gate_2q CRZ(2, 2, 2, 2);
 
@@ -204,7 +214,8 @@ const std::map<std::string, pfunc_2q> TwoQubitOps = {
 };
 
 const std::map<std::string, pfunc_2q_one_param> TwoQubitOpsOneParam = {
-    {"CRZ", CRZ}
+    {"CRZ", CRZ},
+    {"CRY", CRY}
 };
 
 const std::map<std::string, pfunc_2q_three_params> TwoQubitOpsThreeParams = {
