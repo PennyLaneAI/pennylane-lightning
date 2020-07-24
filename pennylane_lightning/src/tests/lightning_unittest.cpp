@@ -464,6 +464,204 @@ TEST(RZGate, ApplyToPlusHalfPi) {
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
+
+
+TEST(RotGate, ApplyToZeroPiHalfZeroZero) {
+
+  State_1q input_state(2);
+  input_state.setValues({1, 0});
+
+  double par = M_PI/2;
+
+  auto operation = Rot(par, 0, 0);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
+
+  State_1q expected_output_state(2);
+
+  std::complex<double> val(1/SQRT_2, -1/SQRT_2);
+  expected_output_state.setValues({val, 0});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
+}
+
+
+TEST(RotGate, ApplyToZeroZeroPiHalfZero) {
+
+  State_1q input_state(2);
+  input_state.setValues({1, 0});
+
+  double par = M_PI/2;
+
+  auto operation = Rot(0, par, 0);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
+
+  State_1q expected_output_state(2);
+
+  expected_output_state.setValues({1/SQRT_2, 1/SQRT_2});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
+}
+
+
+TEST(RotGate, ApplyToPlusZeroZeroPiHalf) {
+
+  State_1q input_state(2);
+  input_state.setValues({1/SQRT_2, 1/SQRT_2});
+
+  double par = M_PI/2;
+
+  auto operation = Rot(0, 0, par);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
+
+  State_1q expected_output_state(2);
+
+  std::complex<double> val1(0.5, -0.5);
+  std::complex<double> val2(0.5, 0.5);
+  expected_output_state.setValues({val1, val2});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
+}
+
+TEST(RotGate, ApplyToZeroPiHalfNegPiHalfPiHalf) {
+
+  State_1q input_state(2);
+  input_state.setValues({1,0});
+
+  const double par1 = M_PI/2;
+  const double par2 = -M_PI/2;
+  const double par3 = M_PI/2;
+
+  auto operation = Rot(par1, par2, par3);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
+
+  State_1q expected_output_state(2);
+
+  std::complex<double> val(0, -1/SQRT_2);
+  expected_output_state.setValues({val, -1/SQRT_2});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
+}
+
+
+TEST(RotGate, ApplyToPlusNegPiHalfPiPi) {
+
+  State_1q input_state(2);
+  input_state.setValues({1/SQRT_2, 1/SQRT_2});
+
+  double par = M_PI/2;
+
+  const double par1 = -M_PI/2;
+  const double par2 = M_PI;
+  const double par3 = M_PI;
+
+  auto operation = Rot(par1, par2, par3);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
+
+  State_1q expected_output_state(2);
+
+  std::complex<double> val1(0.5, 0.5);
+  std::complex<double> val2(-0.5, 0.5);
+  expected_output_state.setValues({val1, val2});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
+}
+
+/*
+TEST(RZGate, ApplyToOnePi) {
+
+  State_1q input_state(2);
+  input_state.setValues({0, 1});
+
+  double par = M_PI;
+
+  auto operation = RZ(par);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
+
+  State_1q expected_output_state(2);
+
+  const std::complex<double> val(0, 1);
+  expected_output_state.setValues({0, val});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
+}
+
+
+TEST(RZGate, ApplyToPlusHalfPi) {
+
+  State_1q input_state(2);
+  input_state.setValues({1/SQRT_2, 1/SQRT_2});
+
+  double par = M_PI/2;
+
+  auto operation = RZ(par);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
+
+  State_1q expected_output_state(2);
+  const std::complex<double> first(0.5, -0.5);
+  const std::complex<double> second(0.5, 0.5);
+  expected_output_state.setValues({first, second});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
+}
+
+TEST(RotGate, ApplyToPlusHalfPi) {
+
+  State_1q input_state(2);
+  input_state.setValues({1/SQRT_2, 1/SQRT_2});
+
+  double par = M_PI/2;
+
+  auto operation = RZ(par);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
+
+  State_1q expected_output_state(2);
+  const std::complex<double> first(0.5, -0.5);
+  const std::complex<double> second(0.5, 0.5);
+  expected_output_state.setValues({first, second});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
+}
+*/
 }  // namespace one_qubit_ops
 
 namespace two_qubit_ops {
