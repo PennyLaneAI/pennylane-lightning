@@ -471,7 +471,7 @@ TEST(RotGate, ApplyToZeroPiHalfZeroZero) {
   State_1q input_state(2);
   input_state.setValues({1, 0});
 
-  double par = M_PI/2;
+  const double par = M_PI/2;
 
   auto operation = Rot(par, 0, 0);
   Pairs_1q product_dims = { Pairs(1, 0) };
@@ -495,7 +495,7 @@ TEST(RotGate, ApplyToZeroZeroPiHalfZero) {
   State_1q input_state(2);
   input_state.setValues({1, 0});
 
-  double par = M_PI/2;
+  const double par = M_PI/2;
 
   auto operation = Rot(0, par, 0);
   Pairs_1q product_dims = { Pairs(1, 0) };
@@ -518,7 +518,7 @@ TEST(RotGate, ApplyToPlusZeroZeroPiHalf) {
   State_1q input_state(2);
   input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
-  double par = M_PI/2;
+  const double par = M_PI/2;
 
   auto operation = Rot(0, 0, par);
   Pairs_1q product_dims = { Pairs(1, 0) };
