@@ -44,6 +44,7 @@ class LightningQubit(DefaultQubit):
         "RY",
         "RZ",
         "Rot",
+        "CRZ",
         "CRot",
     }
 

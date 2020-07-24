@@ -134,6 +134,18 @@ Gate_2q CNOT() {
     return CNOT;
 }
 
+Gate_2q CRZ(const double& parameter) {
+    Gate_2q CRZ(2, 2, 2, 2);
+
+    const std::complex<double> exponent(0, -parameter/2);
+    const std::complex<double> exponent_second(0, parameter/2);
+    const std::complex<double> first = std::pow(M_E, exponent);
+    const std::complex<double> second = std::pow(M_E, exponent_second);
+
+    CRZ.setValues({{{{1, 0},{0, 0}},{{0, 1},{0, 0}}},{{{0, 0},{first, 0}},{{0, 0},{0, second}}}});
+    return CRZ;
+}
+
 Gate_2q CRot(const double& phi, const double& theta, const double& omega) {
     Gate_2q CRot(2,2,2,2);
 
@@ -162,6 +174,7 @@ typedef Gate_1q (*pfunc_1q_one_param)(const double&);
 typedef Gate_1q (*pfunc_1q_three_params)(const double&, const double&, const double&);
 
 typedef Gate_2q (*pfunc_2q)();
+typedef Gate_2q (*pfunc_2q_one_param)(const double&);
 typedef Gate_2q (*pfunc_2q_three_params)(const double&, const double&, const double&);
 
 // Defining the operation maps
@@ -188,6 +201,10 @@ const std::map<std::string, pfunc_1q_three_params> OneQubitOpsThreeParams = {
 
 const std::map<std::string, pfunc_2q> TwoQubitOps = {
     {"CNOT", CNOT}
+};
+
+const std::map<std::string, pfunc_2q_one_param> TwoQubitOpsOneParam = {
+    {"CRZ", CRZ}
 };
 
 const std::map<std::string, pfunc_2q_three_params> TwoQubitOpsThreeParams = {

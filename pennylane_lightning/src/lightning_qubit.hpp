@@ -63,6 +63,10 @@ Gate_2q get_gate_2q(const string &gate_name, const vector<float> &params) {
         pfunc_2q f = TwoQubitOps.at(gate_name);
         op = (*f)();
     }
+    else if (params.size() == 1){
+        pfunc_2q_one_param f = TwoQubitOpsOneParam.at(gate_name);
+        op = (*f)(params[0]);
+    }
     else if (params.size() == 3){
         pfunc_2q_three_params f = TwoQubitOpsThreeParams.at(gate_name);
         op = (*f)(params[0], params[1], params[2]);
