@@ -715,4 +715,39 @@ TEST(CalcPerm, TwoElemFiveQubitRandomOrder) {
     EXPECT_TRUE(output_perm.size() == expected_perm.size());
     EXPECT_TRUE(std::is_permutation(output_perm.begin(), output_perm.end(), expected_perm.begin()));
 }
+
+TEST(ArgSort, OneElem) {
+    std::vector<int> input_perm({0});
+    std::vector<int> output_perm = argsort(input_perm);
+
+    EXPECT_TRUE(input_perm == output_perm);
+}
+
+TEST(ArgSort, MultipleAscendingOrder) {
+    std::vector<int> input_perm({5,10,15});
+    std::vector<int> output_perm = argsort(input_perm);
+
+    std::vector<int> expected({0,1,2});
+
+    EXPECT_TRUE(output_perm == expected);
+}
+
+TEST(ArgSort, MultipleRandomOrderUnique) {
+    std::vector<int> input_perm({10,15,5});
+    std::vector<int> output_perm = argsort(input_perm);
+
+    std::vector<int> expected({2,0,1});
+
+    EXPECT_TRUE(output_perm == expected);
+}
+
+
+TEST(ArgSort, MultipleRandomOrderRepeatedVals) {
+    std::vector<int> input_perm({10,15,15,5});
+    std::vector<int> output_perm = argsort(input_perm);
+
+    std::vector<int> expected({3,0,1,2});
+
+    EXPECT_TRUE(output_perm == expected);
+}
 }  // namespace auxiliary_functions
