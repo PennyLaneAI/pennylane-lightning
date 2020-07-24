@@ -19,7 +19,6 @@ using std::find;
 // Declare tensor shape for 1, 2, and 3-qubit gates
 using Gate_1q = Tensor<complex<double>, 2>;
 using Gate_2q = Tensor<complex<double>, 4>;
-using Gate_3q = Tensor<complex<double>, 6>;
 
 // Declare pairings for tensor contraction
 using Pairs = IndexPair<int>;
@@ -96,33 +95,6 @@ vector<int> argsort(const vector<int> &v) {
   return idx;
 }
 
-template <class State>
-State matrix_vector_product(State vec, string op_string, vector<int> w, vector<float> p, int qubits)
- {
-    State tensor_contracted;
-
-    if (w.size() == 1) {
-        Gate_1q op_1q = get_gate_1q(op_string, p);
-        Pairs_1q pairs_1q = {Pairs(1, w[0])};
-        tensor_contracted = op_1q.contract(vec, pairs_1q);
-    }
-    else if (w.size() == 2) {
-        Gate_2q op_2q = get_gate_2q(op_string, p);
-        Pairs_2q pairs_2q = {Pairs(2, w[0]), Pairs(3, w[1])};
-        tensor_contracted = op_2q.contract(vec, pairs_2q);
-    }
-   else if (w.size() == 3) {
-        Gate_3q op_3q = get_gate_3q(op_string, p);
-        Pairs_3q pairs_3q = {Pairs(3, w[0]), Pairs(4, w[1]), Pairs(5, w[2])};
-        tensor_contracted = op_3q.contract(vec, pairs_3q);
-    }
-
-    auto perm = calc_perm(w, qubits);
-    auto inv_perm = argsort(perm);
-    return tensor_contracted.shuffle(inv_perm);
-}
-
-
 template <class State, typename... Shape>
 VectorXcd apply_ops(
     Ref<VectorXcd> state,
@@ -140,7 +112,27 @@ VectorXcd apply_ops(
         string op_string = ops[i];
         vector<int> w = wires[i];
         vector<float> p = params[i];
-        evolved_tensor = matrix_vector_product(evolved_tensor, op_string, w, p, qubits);
+        State tensor_contracted;
+
+        if (w.size() == 1) {
+            Gate_1q op_1q = get_gate_1q(op_string, p);
+            Pairs_1q pairs_1q = {Pairs(1, w[0])};
+            tensor_contracted = op_1q.contract(evolved_tensor, pairs_1q);
+        }
+        else if (w.size() == 2) {
+            Gate_2q op_2q = get_gate_2q(op_string, p);
+            Pairs_2q pairs_2q = {Pairs(2, w[0]), Pairs(3, w[1])};
+            tensor_contracted = op_2q.contract(evolved_tensor, pairs_2q);
+        }
+       else if (w.size() == 3) {
+            Gate_3q op_3q = get_gate_3q(op_string, p);
+            Pairs_3q pairs_3q = {Pairs(3, w[0]), Pairs(4, w[1]), Pairs(5, w[2])};
+            tensor_contracted = op_3q.contract(evolved_tensor, pairs_3q);
+        }
+
+        auto perm = calc_perm(w, qubits);
+        auto inv_perm = argsort(perm);
+        evolved_tensor = tensor_contracted.shuffle(inv_perm);
     }
 
     auto out_state = Map<VectorXcd> (evolved_tensor.data(), state.size(), 1);
