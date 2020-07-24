@@ -1,12 +1,16 @@
 #pragma once
 
+#define EIGEN_USE_THREADS
 #include "Eigen/Dense"
 #include "unsupported/Eigen/CXX11/Tensor"
+#include "unsupported/Eigen/CXX11/ThreadPool"
 #include "operations.hpp"
 
 using Eigen::Tensor;
 using Eigen::IndexPair;
 using Eigen::VectorXcd;
+using Eigen::ThreadPool;
+using Eigen::ThreadPoolDevice;
 using Eigen::Ref;
 using Eigen::TensorMap;
 using Eigen::Map;
@@ -85,6 +89,9 @@ VectorXcd apply_ops(
     const int qubits,
     Shape... shape
     ) {
+    ThreadPool pool(2);
+    ThreadPoolDevice dev(&pool, 2);
+
     State state_tensor = TensorMap<State>(state.data(), shape...);
     State evolved_tensor = state_tensor;
 
@@ -98,19 +105,21 @@ VectorXcd apply_ops(
         if (w.size() == 1) {
             Gate_1q op_1q = get_gate_1q(op_string, p);
             Pairs_1q pairs_1q = {Pairs(1, w[0])};
-            tensor_contracted = op_1q.contract(evolved_tensor, pairs_1q);
+//            tensor_contracted.device(dev) = op_1q.contract(evolved_tensor, pairs_1q);
         }
         else if (w.size() == 2) {
             Gate_2q op_2q = get_gate_2q(op_string, p);
             Pairs_2q pairs_2q = {Pairs(2, w[0]), Pairs(3, w[1])};
-            tensor_contracted = op_2q.contract(evolved_tensor, pairs_2q);
+            tensor_contracted.device(dev) = op_2q.contract(evolved_tensor, pairs_2q);
+            dev.deallocate(&tensor_contracted)
         }
-
+        std::cout << evolved_tensor << std::endl;
         auto perm = calc_perm(w, qubits);
         auto inv_perm = argsort(perm);
-        evolved_tensor = tensor_contracted.shuffle(inv_perm);
+//        evolved_tensor.device(dev) = tensor_contracted.shuffle(inv_perm);
     }
 
     auto out_state = Map<VectorXcd> (evolved_tensor.data(), state.size(), 1);
-    return out_state;
+
+    return state;
 }
