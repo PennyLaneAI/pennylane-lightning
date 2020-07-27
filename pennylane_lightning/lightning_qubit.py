@@ -28,6 +28,7 @@ from pennylane import QubitStateVector, BasisState, DeviceError
 class LightningQubit(DefaultQubit):
     """TODO"""
 
+    short_name = "lightning.qubit"
     _capabilities = {"inverse_operations": False}  # we should look at supporting
 
     operations = {
@@ -49,7 +50,8 @@ class LightningQubit(DefaultQubit):
     def apply(self, operations, rotations=None, **kwargs):
 
         if self.num_wires == 1:
-            super().apply(self, operations, rotations=None, **kwargs)
+            super().apply(operations, rotations=rotations, **kwargs)
+            return
 
         for i, operation in enumerate(operations):  # State preparation is currently done in Python
             if isinstance(operation, (QubitStateVector, BasisState)):
