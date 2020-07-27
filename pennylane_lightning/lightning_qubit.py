@@ -33,8 +33,6 @@ class LightningQubit(DefaultQubit):
     operations = {
         "BasisState",
         "QubitStateVector",
-        "QubitUnitary",
-        "DiagonalQubitUnitary",
         "PauliX",
         "PauliY",
         "PauliZ",
