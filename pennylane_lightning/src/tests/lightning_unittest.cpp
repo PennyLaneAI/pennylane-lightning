@@ -681,8 +681,7 @@ TEST(CalcPerm, OneElemOneQubit) {
     std::vector<int> input_perm({0});
     std::vector<int> output_perm = calc_perm(input_perm, 1);
 
-    EXPECT_TRUE(input_perm.size() == output_perm.size());
-    EXPECT_TRUE(std::is_permutation(input_perm.begin(), input_perm.end(), output_perm.begin()));
+    EXPECT_TRUE(input_perm == output_perm);
 }
 
 TEST(CalcPerm, OneElemTwoQubit) {
@@ -691,8 +690,7 @@ TEST(CalcPerm, OneElemTwoQubit) {
 
     std::vector<int> expected_perm({0, 1});
 
-    EXPECT_TRUE(output_perm.size() == expected_perm.size());
-    EXPECT_TRUE(std::is_permutation(output_perm.begin(), output_perm.end(), expected_perm.begin()));
+    EXPECT_TRUE(output_perm == expected_perm);
 }
 
 TEST(CalcPerm, TwoElemFiveQubitAscOrder) {
@@ -701,8 +699,7 @@ TEST(CalcPerm, TwoElemFiveQubitAscOrder) {
 
     std::vector<int> expected_perm({1,2,4,0,3});
 
-    EXPECT_TRUE(output_perm.size() == expected_perm.size());
-    EXPECT_TRUE(std::is_permutation(output_perm.begin(), output_perm.end(), expected_perm.begin()));
+    EXPECT_TRUE(output_perm == expected_perm);
 }
 
 
@@ -712,8 +709,7 @@ TEST(CalcPerm, TwoElemFiveQubitRandomOrder) {
 
     std::vector<int> expected_perm({2,1,4,0,3});
 
-    EXPECT_TRUE(output_perm.size() == expected_perm.size());
-    EXPECT_TRUE(std::is_permutation(output_perm.begin(), output_perm.end(), expected_perm.begin()));
+    EXPECT_TRUE(output_perm == expected_perm);
 }
 
 TEST(ArgSort, OneElem) {
