@@ -21,3 +21,9 @@ jobs:
             wget -qO - https://github.com/google/googletest/archive/release-1.8.1.tar.gz | tar -xz
             cmake -D CMAKE_INSTALL_PREFIX:PATH=$HOME/googletest -D CMAKE_BUILD_TYPE=Release googletest-release-1.8.1
             make install
+
+      - run:
+          name: Build and run unit tests
+          command: |
+            cd pennylane_lightning/src/tests
+            GOOGLETEST_DIR=/root/googletest make test
