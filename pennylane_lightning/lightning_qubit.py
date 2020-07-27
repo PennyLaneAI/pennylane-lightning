@@ -20,7 +20,7 @@ It implements the necessary :class:`~pennylane._device.Device` methods as well a
 simulation of a qubit-based quantum circuit architecture.
 """
 from pennylane.plugins import DefaultQubit
-from .src.lightning_qubit_ops import apply_2q
+from .src.lightning_qubit_ops import apply
 import numpy as np
 from pennylane import QubitStateVector, BasisState, DeviceError
 
@@ -48,6 +48,9 @@ class LightningQubit(DefaultQubit):
 
     def apply(self, operations, rotations=None, **kwargs):
 
+        if self.num_wires == 1:
+            super().apply(self, operations, rotations=None, **kwargs)
+
         for i, operation in enumerate(operations):  # State preparation is currently done in Python
             if isinstance(operation, (QubitStateVector, BasisState)):
                 if i == 0:
@@ -65,12 +68,11 @@ class LightningQubit(DefaultQubit):
         else:
             self._state = self._pre_rotated_state
 
-    @staticmethod
-    def apply_lightning(state, operations):
+    def apply_lightning(self, state, operations):
         """TODO"""
         op_names = [o.name for o in operations]
         op_wires = [o.wires for o in operations]
         op_param = [o.parameters for o in operations]
         state_vector = np.ravel(state, order="F")
-        state_vector_updated = apply_2q(state_vector, op_names, op_wires, op_param)
+        state_vector_updated = apply(state_vector, op_names, op_wires, op_param, self.num_wires)
         return np.reshape(state_vector_updated, state.shape, order="F")
