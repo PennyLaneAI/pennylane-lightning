@@ -165,6 +165,15 @@ Gate_3q Toffoli() {
     return Toffoli;
 }
 
+Gate_3q CSWAP() {
+    Gate_3q CSWAP(2,2,2,2,2,2);
+    CSWAP.setValues({{{{{{1, 0},{0, 0}},{{0, 0},{0, 0}}},{{{0, 1},{0, 0}},{{0, 0},{0, 0}}}},
+        {{{{0, 0},{1, 0}},{{0, 0},{0, 0}}},{{{0, 0},{0, 1}},{{0, 0},{0, 0}}}}},
+        {{{{{0, 0},{0, 0}},{{1, 0},{0, 0}}},{{{0, 0},{0, 0}},{{0, 0},{1, 0}}}},
+        {{{{0, 0},{0, 0}},{{0, 1},{0, 0}}},{{{0, 0},{0, 0}},{{0, 0},{0, 1}}}}}});
+    return CSWAP;
+}
+
 Gate_2q CRX(const double& parameter) {
     Gate_2q CRX(2, 2, 2, 2);
 
@@ -270,5 +279,6 @@ const std::map<std::string, pfunc_2q_three_params> TwoQubitOpsThreeParams = {
 };
 
 const std::map<std::string, pfunc_3q> ThreeQubitOps = {
-    {"Toffoli", Toffoli}
+    {"Toffoli", Toffoli},
+    {"CSWAP", CSWAP}
 };
