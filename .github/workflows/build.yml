@@ -22,8 +22,7 @@ jobs:
             cmake -D CMAKE_INSTALL_PREFIX:PATH=$HOME/googletest -D CMAKE_BUILD_TYPE=Release googletest-release-1.8.1
             make install
 
-      - run:
-          name: Build and run unit tests
-          command: |
+      - name: Build and run unit tests
+        run: |
             cd pennylane_lightning/src/tests
             GOOGLETEST_DIR=/root/googletest make test
