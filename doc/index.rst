@@ -15,7 +15,7 @@ PennyLane-Lightning provides the following device:
 .. devicegalleryitem::
     :name: 'lightning.qubit'
     :description: A fast state-vector qubit simulator written in C++
-    :link: devices.html#hqs
+    :link: devices.html
 
 .. raw:: html
 
