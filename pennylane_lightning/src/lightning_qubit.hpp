@@ -82,7 +82,6 @@ VectorXcd apply_ops(
     vector<string> ops,
     vector<vector<int>> wires,
     vector<vector<float>> params,
-    const int qubits,
     Shape... shape
     ) {
     State state_tensor = TensorMap<State>(state.data(), shape...);
@@ -105,7 +104,7 @@ VectorXcd apply_ops(
             Pairs_2q pairs_2q = {Pairs(2, w[0]), Pairs(3, w[1])};
             tensor_contracted = op_2q.contract(evolved_tensor, pairs_2q);
         }
-
+        const int qubits = log2(tensor_contracted.size());
         auto perm = calc_perm(w, qubits);
         auto inv_perm = argsort(perm);
         evolved_tensor = tensor_contracted.shuffle(inv_perm);
