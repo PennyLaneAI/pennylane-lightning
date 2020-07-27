@@ -18,6 +18,12 @@
 
 const double tol = 1.0e-10f;
 
+using Matrix_1q = Eigen::Matrix<std::complex<double>, 2, 2>;
+using Matrix_2q = Eigen::Matrix<std::complex<double>, 4, 4>;
+using Matrix_3q = Eigen::Matrix<std::complex<double>, 8, 8>;
+using Eigen::Map;
+
+
 namespace one_qubit_ops {
 
 
@@ -547,4 +553,20 @@ TEST(CNOT, ApplyToThreeQubitControlThird) {
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
+
+TEST(SWAP, ToMatrix) {
+
+  auto operation = SWAP();
+  auto operation_matrix = Map<Matrix_2q> (operation.data());
+
+  Matrix_2q target_matrix;
+  target_matrix << 1, 0, 0, 0,
+                   0, 0, 1, 0,
+                   0, 1, 0, 0,
+                   0, 0, 0, 1;
+
+  EXPECT_TRUE(operation_matrix.isApprox(target_matrix, tol));
+
+}
+
 }  // namespace two_qubit_ops
