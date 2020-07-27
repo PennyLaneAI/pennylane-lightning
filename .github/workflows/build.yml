@@ -1,0 +1,18 @@
+name: C++ tests 
+
+on: [push, pull_request]	
+
+jobs:	
+  cpptests:	
+    name: Build wheels on ${{ matrix.os }}	
+    runs-on: ${{ matrix.os }}	
+    strategy:	
+      matrix:	
+        os: [ubuntu-18.04] #, windows-latest, macos-latest]	
+
+    steps:	
+      - uses: actions/checkout@v2	
+
+      - name: Install eigen 
+        run: sudo apt-get -y -q install cmake gcc libomp-dev libeigen3-dev
+
