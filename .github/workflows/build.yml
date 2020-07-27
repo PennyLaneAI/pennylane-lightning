@@ -1,18 +1,23 @@
-name: C++ tests 
+name: C++ tests
 
-on: [push, pull_request]	
+on: [push, pull_request]
 
-jobs:	
-  cpptests:	
-    name: Build wheels on ${{ matrix.os }}	
-    runs-on: ${{ matrix.os }}	
-    strategy:	
-      matrix:	
-        os: [ubuntu-18.04] #, windows-latest, macos-latest]	
+jobs:
+  cpptests:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04] #, windows-latest, macos-latest]
 
-    steps:	
-      - uses: actions/checkout@v2	
+    steps:
+      - uses: actions/checkout@v2
 
-      - name: Install eigen 
+      - name: Install dependencies
         run: sudo apt-get -y -q install cmake gcc libeigen3-dev
 
+      - name: Install Google Test
+        run: |
+            wget -qO - https://github.com/google/googletest/archive/release-1.8.1.tar.gz | tar -xz
+            cmake -D CMAKE_INSTALL_PREFIX:PATH=$HOME/googletest -D CMAKE_BUILD_TYPE=Release googletest-release-1.8.1
+            make install
