@@ -25,4 +25,4 @@ jobs:
       - name: Build and run unit tests
         run: |
             cd pennylane_lightning/src/tests
-            sudo GOOGLETEST_DIR=$HOME/googletest make test
+            GOOGLETEST_DIR=$HOME/googletest make test
