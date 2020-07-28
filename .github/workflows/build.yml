@@ -60,12 +60,9 @@ jobs:
             cd pennylane_lightning/src
             make
 
-      - name: Install device
+      - name: Install lightning.qubit device
         run: |
           pip install -e .
-
-      - name: Run PennyLane shared test suite
-        run: |
 
       - name: Checkout PennyLane
         uses: actions/checkout@v2
@@ -73,7 +70,11 @@ jobs:
           name: PennyLaneAI/pennylane
           ref: master
 
-      - name: Running the test suite
+      - name: Install PennyLane
+        run: |
+          pip install -e .
+
+      - name: Run PennyLane shared test suite
         run: |
             pytest pennylane/plugins/tests --device lightning.qubit --shots 1000 --analytic False
             pytest pennylane/plugins/tests --device lightning.qubit --shots 1000 --analytic True
