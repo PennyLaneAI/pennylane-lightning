@@ -1,9 +1,8 @@
 Lightning Qubit device
 ======================
 
-The ``lightning.qubit`` device is an extension of PennyLane's in-built ``default.qubit`` device.
-It uses the C++ Eigen library to perform fast linear algebra calculations such as the tensor
-contraction, which is the main calculation for a state-vector simulator.
+The ``lightning.qubit`` device is an extension of PennyLane's built-in ``default.qubit`` device.
+It uses the C++ Eigen library to perform fast linear algebra calculations for simulating quantum state-vector evolution.
 
 A ``lightning.qubit`` device can be loaded using:
 
