@@ -13,6 +13,7 @@
 // limitations under the License.
 #include "gtest/gtest.h"
 #include "../operations.hpp"
+#include "../lightning_qubit.hpp"
 #include <unsupported/Eigen/CXX11/Tensor>
 #include <math.h>       /* sqrt */
 
@@ -464,6 +465,131 @@ TEST(RZGate, ApplyToPlusHalfPi) {
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
+
+
+TEST(RotGate, ApplyToZeroPiHalfZeroZero) {
+
+  State_1q input_state(2);
+  input_state.setValues({1, 0});
+
+  const double par = M_PI/2;
+
+  auto operation = Rot(par, 0, 0);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
+
+  State_1q expected_output_state(2);
+
+  std::complex<double> val(1/SQRT_2, -1/SQRT_2);
+  expected_output_state.setValues({val, 0});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
+}
+
+
+TEST(RotGate, ApplyToZeroZeroPiHalfZero) {
+
+  State_1q input_state(2);
+  input_state.setValues({1, 0});
+
+  const double par = M_PI/2;
+
+  auto operation = Rot(0, par, 0);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
+
+  State_1q expected_output_state(2);
+
+  expected_output_state.setValues({1/SQRT_2, 1/SQRT_2});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
+}
+
+
+TEST(RotGate, ApplyToPlusZeroZeroPiHalf) {
+
+  State_1q input_state(2);
+  input_state.setValues({1/SQRT_2, 1/SQRT_2});
+
+  const double par = M_PI/2;
+
+  auto operation = Rot(0, 0, par);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
+
+  State_1q expected_output_state(2);
+
+  std::complex<double> val1(0.5, -0.5);
+  std::complex<double> val2(0.5, 0.5);
+  expected_output_state.setValues({val1, val2});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
+}
+
+TEST(RotGate, ApplyToZeroPiHalfNegPiHalfPiHalf) {
+
+  State_1q input_state(2);
+  input_state.setValues({1,0});
+
+  const double par1 = M_PI/2;
+  const double par2 = -M_PI/2;
+  const double par3 = M_PI/2;
+
+  auto operation = Rot(par1, par2, par3);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
+
+  State_1q expected_output_state(2);
+
+  std::complex<double> val(0, -1/SQRT_2);
+  expected_output_state.setValues({val, -1/SQRT_2});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
+}
+
+
+TEST(RotGate, ApplyToPlusNegPiHalfPiPi) {
+
+  State_1q input_state(2);
+  input_state.setValues({1/SQRT_2, 1/SQRT_2});
+
+  const double par1 = -M_PI/2;
+  const double par2 = M_PI;
+  const double par3 = M_PI;
+
+  auto operation = Rot(par1, par2, par3);
+  Pairs_1q product_dims = { Pairs(1, 0) };
+  State_1q output_state = operation.contract(input_state, product_dims);
+
+  State_1q expected_output_state(2);
+
+  std::complex<double> val1(0.5, 0.5);
+  std::complex<double> val2(-0.5, 0.5);
+  expected_output_state.setValues({val1, val2});
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+
+  EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
+}
+
 }  // namespace one_qubit_ops
 
 namespace two_qubit_ops {
@@ -548,3 +674,76 @@ TEST(CNOT, ApplyToThreeQubitControlThird) {
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 }  // namespace two_qubit_ops
+
+namespace auxiliary_functions {
+
+TEST(CalcPerm, OneElemOneQubit) {
+    std::vector<int> input_perm({0});
+    std::vector<int> output_perm = calc_perm(input_perm, 1);
+
+    EXPECT_TRUE(input_perm == output_perm);
+}
+
+TEST(CalcPerm, OneElemTwoQubit) {
+    std::vector<int> input_perm({0});
+    std::vector<int> output_perm = calc_perm(input_perm, 2);
+
+    std::vector<int> expected_perm({0, 1});
+
+    EXPECT_TRUE(output_perm == expected_perm);
+}
+
+TEST(CalcPerm, TwoElemFiveQubitAscOrder) {
+    std::vector<int> input_perm({1,2,4});
+    std::vector<int> output_perm = calc_perm(input_perm, 5);
+
+    std::vector<int> expected_perm({1,2,4,0,3});
+
+    EXPECT_TRUE(output_perm == expected_perm);
+}
+
+
+TEST(CalcPerm, TwoElemFiveQubitRandomOrder) {
+    std::vector<int> input_perm({2,1,4});
+    std::vector<int> output_perm = calc_perm(input_perm, 5);
+
+    std::vector<int> expected_perm({2,1,4,0,3});
+
+    EXPECT_TRUE(output_perm == expected_perm);
+}
+
+TEST(ArgSort, OneElem) {
+    std::vector<int> input_perm({0});
+    std::vector<int> output_perm = argsort(input_perm);
+
+    EXPECT_TRUE(input_perm == output_perm);
+}
+
+TEST(ArgSort, MultipleAscendingOrder) {
+    std::vector<int> input_perm({5,10,15});
+    std::vector<int> output_perm = argsort(input_perm);
+
+    std::vector<int> expected({0,1,2});
+
+    EXPECT_TRUE(output_perm == expected);
+}
+
+TEST(ArgSort, MultipleRandomOrderUnique) {
+    std::vector<int> input_perm({10,15,5});
+    std::vector<int> output_perm = argsort(input_perm);
+
+    std::vector<int> expected({2,0,1});
+
+    EXPECT_TRUE(output_perm == expected);
+}
+
+
+TEST(ArgSort, MultipleRandomOrderRepeatedVals) {
+    std::vector<int> input_perm({10,15,15,5});
+    std::vector<int> output_perm = argsort(input_perm);
+
+    std::vector<int> expected({3,0,1,2});
+
+    EXPECT_TRUE(output_perm == expected);
+}
+}  // namespace auxiliary_functions
