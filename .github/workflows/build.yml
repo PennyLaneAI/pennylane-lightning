@@ -61,7 +61,7 @@ jobs:
 
       - name: Compilation
         run: |
-            cd pennylane_lightning/src
+            cd main/pennylane_lightning/src
             make
 
       - name: Install lightning.qubit device
