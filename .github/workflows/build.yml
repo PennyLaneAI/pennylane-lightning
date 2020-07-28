@@ -84,5 +84,5 @@ jobs:
       - name: Run PennyLane shared test suite
         run: |
           cd pl
-          pytest pennylane/plugins/tests --device lightning.qubit --shots 1000 --analytic False
-          pytest pennylane/plugins/tests --device lightning.qubit --shots 1000 --analytic True
+          pytest pennylane/plugins/tests --device lightning.qubit --shots 1000 --analytic False -rsx
+          pytest pennylane/plugins/tests --device lightning.qubit --shots 1000 --analytic True -rsx
