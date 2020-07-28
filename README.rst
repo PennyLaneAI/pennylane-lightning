@@ -9,7 +9,7 @@ PennyLane-Lightning Plugin
 
 .. header-start-inclusion-marker-do-not-remove
 
-The PennyLane-Lightning plugin provides a fast state-vector simulator written in C++ using Eigen.
+The PennyLane-Lightning plugin provides a fast state-vector simulator written in C++ using `Eigen <http://eigen.tuxfamily.org/index.php?title=Main_Page>`_.
 
 `PennyLane <https://pennylane.readthedocs.io>`_ is a cross-platform Python library for quantum machine
 learning, automatic differentiation, and optimization of hybrid quantum-classical computations.
