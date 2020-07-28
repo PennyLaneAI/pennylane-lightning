@@ -28,6 +28,11 @@ from pennylane import QubitStateVector, BasisState, DeviceError
 class LightningQubit(DefaultQubit):
     """TODO"""
 
+    name = "Lightning Qubit PennyLane plugin"
+    short_name = "lightning.qubit"
+    pennylane_requires = "0.11"
+    version = "0.11.0"
+    author = "Xanadu Inc."
     _capabilities = {"inverse_operations": False}  # we should look at supporting
 
     operations = {
