@@ -1,4 +1,4 @@
-name: Testing 
+name: Testing
 
 on: [pull_request]
 
@@ -35,7 +35,11 @@ jobs:
         os: [ubuntu-18.04] #, windows-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v2
+
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v2
+        with:
+          path: main
 
       - uses: actions/setup-python@v2
         name: Install Python
@@ -62,19 +66,22 @@ jobs:
 
       - name: Install lightning.qubit device
         run: |
+          cd main
           pip install -e .
 
       - name: Checkout PennyLane
         uses: actions/checkout@v2
         with:
-          name: PennyLaneAI/pennylane
-          ref: master
+          repository: PennyLaneAI/pennylane
+          path: pl
 
       - name: Install PennyLane
         run: |
+          cd pl
           pip install -e .
 
       - name: Run PennyLane shared test suite
         run: |
-            pytest pennylane/plugins/tests --device lightning.qubit --shots 1000 --analytic False
-            pytest pennylane/plugins/tests --device lightning.qubit --shots 1000 --analytic True
+          cd pl
+          pytest pennylane/plugins/tests --device lightning.qubit --shots 1000 --analytic False
+          pytest pennylane/plugins/tests --device lightning.qubit --shots 1000 --analytic True
