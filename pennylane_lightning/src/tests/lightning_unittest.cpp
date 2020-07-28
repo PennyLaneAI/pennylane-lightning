@@ -569,4 +569,48 @@ TEST(SWAP, ToMatrix) {
 
 }
 
+TEST(CZ, ToMatrix) {
+
+  auto operation = CZ();
+  auto operation_matrix = Map<Matrix_2q> (operation.data());
+
+  Matrix_2q target_matrix;
+  target_matrix << 1, 0, 0, 0,
+                   0, 1, 0, 0,
+                   0, 0, 1, 0,
+                   0, 0, 0, -1;
+
+  EXPECT_TRUE(operation_matrix.isApprox(target_matrix, tol));
+
+}
+
+TEST(CRX, ToMatrix) {
+
+  auto operation = CRZ(0.1);
+
+  const std::complex<double> const1 (0.99875026, 0);
+  const std::complex<double> const2 (0, -0.04997917);
+
+//  Eigen::TensorMap<Tensor<std::complex<double>, 4, Eigen::RowMajor>> op2(operation.data(), 2, 2, 2,
+//  2
+//  )
+//  ;
+  auto operation_matrix = Map<Matrix_2q> (operation.data());
+
+  Matrix_2q target_matrix;
+  target_matrix << 1, 0, 0, 0,
+                   0, 1, 0, 0,
+                   0, 0, const1, const2,
+                   0, 0, const2, const1;
+
+
+  std::cout << target_matrix << std::endl;
+  std::cout << operation_matrix << std::endl;
+//  std::cout << op2 << std::endl;
+  std::cout << std::endl;
+
+  EXPECT_TRUE(operation_matrix.isApprox(target_matrix, tol));
+
+}
+
 }  // namespace two_qubit_ops
