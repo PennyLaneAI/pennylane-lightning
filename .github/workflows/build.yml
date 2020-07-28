@@ -1,10 +1,10 @@
-name: C++ tests
+name: Testing 
 
 on: [pull_request]
 
 jobs:
   cpptests:
-    name: Build wheels on ${{ matrix.os }}
+    name: C++ tests on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -28,7 +28,7 @@ jobs:
             GOOGLETEST_DIR=$HOME/googletest make test
 
   pythontests:
-    name: Build wheels on ${{ matrix.os }}
+    name: Python tests on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
