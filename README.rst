@@ -76,6 +76,8 @@ If you are doing research using PennyLane and PennyLane-Lightning, please cite `
 Support
 =======
 
+TODO - update
+
 - **Source Code:** https://github.com/XanaduAI/pennylane-lightning
 - **Issue Tracker:** https://github.com/XanaduAI/pennylane-lightning/issues
 - **PennyLane Forum:** https://discuss.pennylane.ai

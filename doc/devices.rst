@@ -1,5 +1,5 @@
-Lightning Qubit
-===============
+Lightning Qubit device
+======================
 
 The ``lightning.qubit`` device is an extension of PennyLane's in-built ``default.qubit`` device.
 It uses the C++ Eigen library to perform fast linear algebra calculations such as the tensor
