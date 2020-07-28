@@ -28,11 +28,15 @@ from pennylane import QubitStateVector, BasisState, DeviceError
 class LightningQubit(DefaultQubit):
     """TODO"""
 
+<<<<<<< HEAD
     name = "Lightning Qubit PennyLane plugin"
     short_name = "lightning.qubit"
     pennylane_requires = "0.11"
     version = "0.11.0"
     author = "Xanadu Inc."
+=======
+    short_name = "lightning.qubit"
+>>>>>>> master
     _capabilities = {"inverse_operations": False}  # we should look at supporting
 
     operations = {
@@ -62,6 +66,10 @@ class LightningQubit(DefaultQubit):
 
     def apply(self, operations, rotations=None, **kwargs):
 
+        if self.num_wires == 1:
+            super().apply(operations, rotations=rotations, **kwargs)
+            return
+
         for i, operation in enumerate(operations):  # State preparation is currently done in Python
             if isinstance(operation, (QubitStateVector, BasisState)):
                 if i == 0:
@@ -73,17 +81,19 @@ class LightningQubit(DefaultQubit):
                         "applied on a {} device.".format(operation.name, self.short_name)
                     )
 
-        self._pre_rotated_state = self.apply_lightning(self._state, operations)
-        if rotations:
-            self._state = self.apply_lightning(self._pre_rotated_state, rotations)
-        else:
-            self._state = self._pre_rotated_state
+        if operations:
+            self._pre_rotated_state = self.apply_lightning(self._state, operations)
+            if rotations:
+                self._state = self.apply_lightning(self._pre_rotated_state, rotations)
+            else:
+                self._state = self._pre_rotated_state
 
     def apply_lightning(self, state, operations):
         """TODO"""
         op_names = [o.name for o in operations]
         op_wires = [o.wires for o in operations]
         op_param = [o.parameters for o in operations]
+
         state_vector = np.ravel(state, order="F")
         state_vector_updated = apply(state_vector, op_names, op_wires, op_param, self.num_wires)
         return np.reshape(state_vector_updated, state.shape, order="F")
