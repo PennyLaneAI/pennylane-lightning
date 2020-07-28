@@ -57,7 +57,7 @@ jobs:
 
       - name: Get numpy, pybind11 and pytest
         run: |
-          pip install numpy pybind11 pytest
+          pip install numpy pybind11 pytest flaky
 
       - name: Compilation
         run: |
