@@ -19,10 +19,7 @@
 
 const double tol = 1.0e-6f;
 
-using Matrix_1q = Eigen::Matrix<std::complex<double>, 2, 2>;
 using Matrix_2q = Eigen::Matrix<std::complex<double>, 4, 4>;
-using Matrix_3q = Eigen::Matrix<std::complex<double>, 8, 8>;
-using Eigen::Map;
 
 
 namespace one_qubit_ops {
