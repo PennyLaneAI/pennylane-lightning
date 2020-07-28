@@ -13,10 +13,11 @@
 // limitations under the License.
 #include "gtest/gtest.h"
 #include "../operations.hpp"
+#include "../lightning_qubit.hpp"
 #include <unsupported/Eigen/CXX11/Tensor>
 #include <math.h>       /* sqrt */
 
-const double tol = 1.0e-10f;
+const double tol = 1.0e-6f;
 
 using Matrix_1q = Eigen::Matrix<std::complex<double>, 2, 2>;
 using Matrix_2q = Eigen::Matrix<std::complex<double>, 4, 4>;
@@ -584,33 +585,134 @@ TEST(CZ, ToMatrix) {
 
 }
 
-TEST(CRX, ToMatrix) {
+TEST(CRots, ApplyTo00) {
 
-  auto operation = CRZ(0.1);
+  State_2q input_state(2,2);
+  input_state.setValues({{1, 0},{0, 0}});
 
-  const std::complex<double> const1 (0.99875026, 0);
-  const std::complex<double> const2 (0, -0.04997917);
+  State_2q expected_output_state(2,2);
+  expected_output_state.setValues({{1, 0},{0, 0}});
 
-//  Eigen::TensorMap<Tensor<std::complex<double>, 4, Eigen::RowMajor>> op2(operation.data(), 2, 2, 2,
-//  2
-//  )
-//  ;
-  auto operation_matrix = Map<Matrix_2q> (operation.data());
+  vector<int> w{0, 1};
+  vector<float> p{0.1};
+  auto output_state_X = contract_2q_op(input_state, "CRX", w, p);
+  auto output_state_Y = contract_2q_op(input_state, "CRY", w, p);
+  auto output_state_Z = contract_2q_op(input_state, "CRZ", w, p);
 
-  Matrix_2q target_matrix;
-  target_matrix << 1, 0, 0, 0,
-                   0, 1, 0, 0,
-                   0, 0, const1, const2,
-                   0, 0, const2, const1;
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> output_state_vector_X(output_state_X.data(), output_state_X.size());
+  Eigen::Map<Eigen::VectorXcd> output_state_vector_Y(output_state_Y.data(), output_state_Y.size());
+  Eigen::Map<Eigen::VectorXcd> output_state_vector_Z(output_state_Z.data(), output_state_Z.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
 
+  EXPECT_TRUE(expected_vector.isApprox(output_state_vector_X, tol));
+  EXPECT_TRUE(expected_vector.isApprox(output_state_vector_Y, tol));
+  EXPECT_TRUE(expected_vector.isApprox(output_state_vector_Z, tol));
+}
 
-  std::cout << target_matrix << std::endl;
-  std::cout << operation_matrix << std::endl;
-//  std::cout << op2 << std::endl;
-  std::cout << std::endl;
+TEST(CRots, ApplyTo01) {
 
-  EXPECT_TRUE(operation_matrix.isApprox(target_matrix, tol));
+  State_2q input_state(2,2);
+  input_state.setValues({{0, 1},{0, 0}});
 
+  State_2q expected_output_state(2,2);
+  expected_output_state.setValues({{0, 1},{0, 0}});
+
+  vector<int> w{0, 1};
+  vector<float> p{0.1};
+  auto output_state_X = contract_2q_op(input_state, "CRX", w, p);
+  auto output_state_Y = contract_2q_op(input_state, "CRY", w, p);
+  auto output_state_Z = contract_2q_op(input_state, "CRZ", w, p);
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> output_state_vector_X(output_state_X.data(), output_state_X.size());
+  Eigen::Map<Eigen::VectorXcd> output_state_vector_Y(output_state_Y.data(), output_state_Y.size());
+  Eigen::Map<Eigen::VectorXcd> output_state_vector_Z(output_state_Z.data(), output_state_Z.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+
+  EXPECT_TRUE(expected_vector.isApprox(output_state_vector_X, tol));
+  EXPECT_TRUE(expected_vector.isApprox(output_state_vector_Y, tol));
+  EXPECT_TRUE(expected_vector.isApprox(output_state_vector_Z, tol));
+}
+
+TEST(CRots, ApplyTo10) {
+
+  State_2q input_state(2,2);
+  input_state.setValues({{0, 0},{1, 0}});
+
+  complex<double> const1(0.99875026, 0);
+  complex<double> const2(0, -0.04997917);
+  complex<double> const3(-0.04997917, 0);
+
+  State_2q expected_output_state_X(2,2);
+  expected_output_state_X.setValues({{0, 0},{const1, const2}});
+
+  State_2q expected_output_state_Y(2,2);
+  expected_output_state_Y.setValues({{0, 0},{const1, -const3}});  // The minus sign was unexpected
+
+  State_2q expected_output_state_Z(2,2);
+  expected_output_state_Z.setValues({{0, 0},{const1+const2, 0}});
+
+  vector<int> w{0, 1};
+  vector<float> p{0.1};
+  auto output_state_X = contract_2q_op(input_state, "CRX", w, p);
+  auto output_state_Y = contract_2q_op(input_state, "CRY", w, p);
+  auto output_state_Z = contract_2q_op(input_state, "CRZ", w, p);
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> output_state_vector_X(output_state_X.data(), output_state_X.size());
+  Eigen::Map<Eigen::VectorXcd> output_state_vector_Y(output_state_Y.data(), output_state_Y.size());
+  Eigen::Map<Eigen::VectorXcd> output_state_vector_Z(output_state_Z.data(), output_state_Z.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector_X(
+                    expected_output_state_X.data(), expected_output_state_X.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector_Y(
+                    expected_output_state_Y.data(), expected_output_state_Y.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector_Z(
+                    expected_output_state_Z.data(), expected_output_state_Z.size());
+
+  EXPECT_TRUE(expected_vector_X.isApprox(output_state_vector_X, tol));
+  EXPECT_TRUE(expected_vector_Y.isApprox(output_state_vector_Y, tol));
+  EXPECT_TRUE(expected_vector_Z.isApprox(output_state_vector_Z, tol));
+}
+
+TEST(CRots, ApplyTo11) {
+
+  State_2q input_state(2,2);
+  input_state.setValues({{0, 0},{0, 1}});
+
+  complex<double> const1(0.99875026, 0);
+  complex<double> const2(0, -0.04997917);
+  complex<double> const3(-0.04997917, 0);
+
+  State_2q expected_output_state_X(2,2);
+  expected_output_state_X.setValues({{0, 0},{const2, const1}});
+
+  State_2q expected_output_state_Y(2,2);
+  expected_output_state_Y.setValues({{0, 0},{const3, const1}});  // The minus sign was unexpected
+
+  State_2q expected_output_state_Z(2,2);
+  expected_output_state_Z.setValues({{0, 0},{0, const1-const2}});
+
+  vector<int> w{0, 1};
+  vector<float> p{0.1};
+  auto output_state_X = contract_2q_op(input_state, "CRX", w, p);
+  auto output_state_Y = contract_2q_op(input_state, "CRY", w, p);
+  auto output_state_Z = contract_2q_op(input_state, "CRZ", w, p);
+
+  // Casting to a vector for comparison
+  Eigen::Map<Eigen::VectorXcd> output_state_vector_X(output_state_X.data(), output_state_X.size());
+  Eigen::Map<Eigen::VectorXcd> output_state_vector_Y(output_state_Y.data(), output_state_Y.size());
+  Eigen::Map<Eigen::VectorXcd> output_state_vector_Z(output_state_Z.data(), output_state_Z.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector_X(
+                    expected_output_state_X.data(), expected_output_state_X.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector_Y(
+                    expected_output_state_Y.data(), expected_output_state_Y.size());
+  Eigen::Map<Eigen::VectorXcd> expected_vector_Z(
+                    expected_output_state_Z.data(), expected_output_state_Z.size());
+
+  EXPECT_TRUE(expected_vector_X.isApprox(output_state_vector_X, tol));
+  EXPECT_TRUE(expected_vector_Y.isApprox(output_state_vector_Y, tol));
+  EXPECT_TRUE(expected_vector_Z.isApprox(output_state_vector_Z, tol));
 }
 
 }  // namespace two_qubit_ops
