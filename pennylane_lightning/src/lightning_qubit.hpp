@@ -131,7 +131,7 @@ VectorXcd apply_ops(
     State state_tensor = TensorMap<State>(state.data(), shape...);
     State evolved_tensor = state_tensor;
 
-    for (int i = 0; i < ops.size(); i++) {
+    for (long unsigned int i = 0; i < ops.size(); i++) {
         // Load operation string and corresponding wires and parameters
         string op_string = ops[i];
         vector<int> w = wires[i];
@@ -167,7 +167,7 @@ VectorXcd apply_ops_1q(
     State_1q state_tensor = TensorMap<State_1q>(state.data(), 2);
     State_1q evolved_tensor = state_tensor;
 
-    for (int i = 0; i < ops.size(); i++) {
+    for (long unsigned int i = 0; i < ops.size(); i++) {
         // Load operation string and corresponding wires and parameters
         string op_string = ops[i];
         vector<int> w = wires[i];
@@ -195,7 +195,7 @@ VectorXcd apply_ops_2q(
     State_2q state_tensor = TensorMap<State_2q>(state.data(), 2, 2);
     State_2q evolved_tensor = state_tensor;
 
-    for (int i = 0; i < ops.size(); i++) {
+    for (long unsigned int i = 0; i < ops.size(); i++) {
         // Load operation string and corresponding wires and parameters
         string op_string = ops[i];
         vector<int> w = wires[i];
