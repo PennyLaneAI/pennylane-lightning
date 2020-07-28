@@ -64,17 +64,19 @@ class LightningQubit(DefaultQubit):
                         "applied on a {} device.".format(operation.name, self.short_name)
                     )
 
-        self._pre_rotated_state = self.apply_lightning(self._state, operations)
-        if rotations:
-            self._state = self.apply_lightning(self._pre_rotated_state, rotations)
-        else:
-            self._state = self._pre_rotated_state
+        if operations:
+            self._pre_rotated_state = self.apply_lightning(self._state, operations)
+            if rotations:
+                self._state = self.apply_lightning(self._pre_rotated_state, rotations)
+            else:
+                self._state = self._pre_rotated_state
 
     def apply_lightning(self, state, operations):
         """TODO"""
         op_names = [o.name for o in operations]
         op_wires = [o.wires for o in operations]
         op_param = [o.parameters for o in operations]
+
         state_vector = np.ravel(state, order="F")
         state_vector_updated = apply(state_vector, op_names, op_wires, op_param, self.num_wires)
         return np.reshape(state_vector_updated, state.shape, order="F")
