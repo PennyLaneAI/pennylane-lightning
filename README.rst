@@ -5,18 +5,11 @@ PennyLane-Lightning Plugin
     :alt: Codacy grade
     :target: https://www.codacy.com/app/XanaduAI/pennylane-lightning
 
-
-.. image:: doc/_static/puzzle.png
-    :align: center
-    :width: 200px
-    :target: javascript:void(0);
-
 |
 
 .. header-start-inclusion-marker-do-not-remove
 
-The PennyLane-Lightning plugin integrates the Qiskit quantum computing framework with PennyLane's
-quantum machine learning capabilities.
+The PennyLane-Lightning plugin provides a fast state-vector simulator written in C++ using `Eigen <http://eigen.tuxfamily.org/index.php?title=Main_Page>`_.
 
 `PennyLane <https://pennylane.readthedocs.io>`_ is a cross-platform Python library for quantum machine
 learning, automatic differentiation, and optimization of hybrid quantum-classical computations.
@@ -33,6 +26,8 @@ Features
 
 Installation
 ============
+
+TODO
 
 This plugin requires Python version 3.5 and above.  Installation of this
 plugin, as well as all dependencies, can be done using ``pip``:
@@ -80,6 +75,8 @@ If you are doing research using PennyLane and PennyLane-Lightning, please cite `
 
 Support
 =======
+
+TODO - update
 
 - **Source Code:** https://github.com/XanaduAI/pennylane-lightning
 - **Issue Tracker:** https://github.com/XanaduAI/pennylane-lightning/issues
