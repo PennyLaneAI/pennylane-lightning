@@ -18,7 +18,6 @@
  * statevector.
  *
  * Also includes PyBind boilerplate for interfacing with Python.
- *
  * \endrst
  */
 #include "pybind11/stl.h"
