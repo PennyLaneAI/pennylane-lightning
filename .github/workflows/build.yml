@@ -52,7 +52,6 @@ jobs:
       - uses: goanpeca/setup-miniconda@v1
         with:
           auto-update-conda: true
-          python-version: ${{ matrix.python-version }}
           channels: conda-forge
 
       - name: Get numpy, pybind11 and pytest
