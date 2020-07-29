@@ -64,7 +64,7 @@ class LightningQubit(DefaultQubit):
 
     def apply(self, operations, rotations=None, **kwargs):
 
-        if self.num_wires == 1:
+        if self.num_wires > 16:
             super().apply(operations, rotations=rotations, **kwargs)
             return
 
