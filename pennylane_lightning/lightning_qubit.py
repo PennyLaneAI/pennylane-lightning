@@ -12,12 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-The default plugin is meant to be used as a template for writing PennyLane device
-plugins for new qubit-based backends.
-
-It implements the necessary :class:`~pennylane._device.Device` methods as well as some built-in
-:mod:`qubit operations <pennylane.ops.qubit>`, and provides a very simple pure state
-simulation of a qubit-based quantum circuit architecture.
+This module contains the :class:`~.LightningQubit` class, a PennyLane simulator device that
+interfaces with C++ for fast linear algebra calculations.
 """
 from pennylane.plugins import DefaultQubit
 from .src.lightning_qubit_ops import apply
@@ -26,7 +22,25 @@ from pennylane import QubitStateVector, BasisState, DeviceError
 
 
 class LightningQubit(DefaultQubit):
-    """TODO"""
+    """PennyLane Lightning device.
+
+    An extension of PennyLane's built-in ``default.qubit`` device that interfaces with C++ to
+    perform fast linear algebra calculations using the
+    `Eigen <http://eigen.tuxfamily.org/index.php?title=Main_Page>`__ library.
+
+    Use of this device requires pre-built binaries or compilation from source. Check out the
+    :doc:`/installation` guide for more details.
+
+    Args:
+        wires (int): the number of modes to initialize the device in
+        shots (int): How many times the circuit should be evaluated (or sampled) to estimate
+            the expectation values. Defaults to 1000 if not specified.
+            If ``analytic == True``, then the number of shots is ignored
+            in the calculation of expectation values and variances, and only controls the number
+            of samples returned by ``sample``.
+        analytic (bool): indicates if the device should calculate expectations
+            and variances analytically
+    """
 
     name = "Lightning Qubit PennyLane plugin"
     short_name = "lightning.qubit"
@@ -90,7 +104,15 @@ class LightningQubit(DefaultQubit):
             self._state = self._pre_rotated_state
 
     def apply_lightning(self, state, operations):
-        """TODO"""
+        """Apply a list of operations to the state tensor.
+
+        Args:
+            state (array[complex]): the input state tensor
+            operations (list[~pennylane.operation.Operation]): operations to apply
+
+        Returns:
+            array[complex]: the output state tensor
+        """
         op_names = [o.name for o in operations]
         op_wires = [o.wires for o in operations]
         op_param = [o.parameters for o in operations]
