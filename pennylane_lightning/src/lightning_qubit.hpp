@@ -96,66 +96,60 @@ vector<int> argsort(const vector<int> &v) {
 }
 
 template <class State>
-State contract_1q_op(State state, string op_string, vector<int> w, vector<float> p) {
+State contract_1q_op(const State &state, string op_string, vector<int> w, vector<float> p) {
     Gate_1q op_1q = get_gate_1q(op_string, p);
     Pairs_1q pairs_1q = {Pairs(1, w[0])};
-    auto tensor_contracted = op_1q.contract(state, pairs_1q);
-    return tensor_contracted;
+    return op_1q.contract(state, pairs_1q);
 }
 
 template <class State>
-State contract_2q_op(State state, string op_string, vector<int> w, vector<float> p) {
+State contract_2q_op(const State & state, string op_string, vector<int> w, vector<float> p) {
     Gate_2q op_2q = get_gate_2q(op_string, p);
     Pairs_2q pairs_2q = {Pairs(2, w[0]), Pairs(3, w[1])};
-    auto tensor_contracted = op_2q.contract(state, pairs_2q);
-    return tensor_contracted;
+    return op_2q.contract(state, pairs_2q);
 }
 
 template <class State>
-State contract_3q_op(State state, string op_string, vector<int> w, vector<float> p) {
+State contract_3q_op(const State &state, string op_string, vector<int> w, vector<float> p) {
     Gate_3q op_3q = get_gate_3q(op_string, p);
     Pairs_3q pairs_3q = {Pairs(3, w[0]), Pairs(4, w[1]), Pairs(5, w[2])};
-    auto tensor_contracted = op_3q.contract(state, pairs_3q);
-    return tensor_contracted;
+    return op_3q.contract(state, pairs_3q);
 }
 
 
 template <class State, typename... Shape>
 VectorXcd apply_ops(
     Ref<VectorXcd> state,
-    vector<string> ops,
-    vector<vector<int>> wires,
-    vector<vector<float>> params,
+    const vector<string> & ops,
+    const vector<vector<int>> & wires,
+    const vector<vector<float>> &params,
     Shape... shape
     ) {
-    State state_tensor = TensorMap<State>(state.data(), shape...);
-    State evolved_tensor = state_tensor;
+    State evolved_tensor = TensorMap<State>(state.data(), shape...);
 
+    const int qubits = log2(evolved_tensor.size());
     for (long unsigned int i = 0; i < ops.size(); i++) {
         // Load operation string and corresponding wires and parameters
         string op_string = ops[i];
         vector<int> w = wires[i];
         vector<float> p = params[i];
-        State tensor_contracted;
 
         if (w.size() == 1) {
-            tensor_contracted = contract_1q_op<State> (evolved_tensor, op_string, w, p);
+            evolved_tensor = contract_1q_op<State> (evolved_tensor, op_string, w, p);
         }
         else if (w.size() == 2) {
-            tensor_contracted = contract_2q_op<State> (evolved_tensor, op_string, w, p);
+            evolved_tensor = contract_2q_op<State> (evolved_tensor, op_string, w, p);
         }
        else if (w.size() == 3) {
-            tensor_contracted = contract_3q_op<State> (evolved_tensor, op_string, w, p);
+            evolved_tensor = contract_3q_op<State> (evolved_tensor, op_string, w, p);
         }
 
-        const int qubits = log2(tensor_contracted.size());
         auto perm = calc_perm(w, qubits);
         auto inv_perm = argsort(perm);
-        evolved_tensor = tensor_contracted.shuffle(inv_perm);
+        evolved_tensor = evolved_tensor.shuffle(inv_perm);
     }
 
-    auto out_state = Map<VectorXcd> (evolved_tensor.data(), state.size(), 1);
-    return out_state;
+    return Map<VectorXcd> (evolved_tensor.data(), state.size(), 1);
 }
 
 VectorXcd apply_ops_1q(
