@@ -99,13 +99,6 @@ State contract_3q_op(State state, string op_string, vector<int> w, vector<float>
     return tensor_contracted;
 }
 
-void print(std::vector<int> const &input)
-{
-	for (int i = 0; i < input.size(); i++) {
-		std::cout << input.at(i) << ' ';
-	}
-}
-
 template <class State, typename... Shape>
 VectorXcd apply_ops(
     Ref<VectorXcd> state,
