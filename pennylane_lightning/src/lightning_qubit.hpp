@@ -1,3 +1,22 @@
+// Copyright 2020 Xanadu Quantum Technologies Inc.
+
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+/**
+ * @file
+ * \rst
+ * Handles implementation of the ``apply()`` function for a range of different qubit numbers.
+ * \endrst
+ */
 #pragma once
 
 #include "Eigen/Dense"
@@ -28,16 +47,29 @@ using Pairs_3q = array<IndexPair<int>, 3>;
 
 const double SQRT2INV = 0.7071067811865475;
 
-vector<int> calc_perm(vector<int> perm, int qubits) {
+/**
+* Calulate the wire indices resulting from the tensor contraction of a gate onto a state tensor.
+*
+* @param wires the wires acted upon by the gate
+* @param qubits the number of qubits in the system
+* @return the resultant indices
+*/
+vector<int> calculate_indices(vector<int> wires, int qubits) {
     for (int j = 0; j < qubits; j++) {
-        if (count(perm.begin(), perm.end(), j) == 0) {
-        perm.push_back(j);
+        if (count(wires.begin(), wires.end(), j) == 0) {
+        wires.push_back(j);
         }
     }
-    return perm;
+    return wires;
 }
 
-
+/**
+* Returns the tensor representation of a one-qubit gate given its name and parameters.
+*
+* @param string the name of the gate
+* @param params the parameters of the gate
+* @return the gate as a tensor
+*/
 Gate_1q get_gate_1q(const string &gate_name, const vector<float> &params) {
     Gate_1q op;
 
@@ -56,7 +88,13 @@ Gate_1q get_gate_1q(const string &gate_name, const vector<float> &params) {
     return op;
 }
 
-
+/**
+* Returns the tensor representation of a two-qubit gate given its name and parameters.
+*
+* @param string the name of the gate
+* @param params the parameters of the gate
+* @return the gate as a tensor
+*/
 Gate_2q get_gate_2q(const string &gate_name, const vector<float> &params) {
     Gate_2q op;
 
@@ -75,6 +113,13 @@ Gate_2q get_gate_2q(const string &gate_name, const vector<float> &params) {
     return op;
 }
 
+/**
+* Returns the tensor representation of a three-qubit gate given its name and parameters.
+*
+* @param string the name of the gate
+* @param params the parameters of the gate
+* @return the gate as a tensor
+*/
 Gate_3q get_gate_3q(const string &gate_name, const vector<float> &params) {
     Gate_3q op;
 
@@ -85,16 +130,31 @@ Gate_3q get_gate_3q(const string &gate_name, const vector<float> &params) {
     return op;
 }
 
-// https://stackoverflow.com/questions/1577475/c-sorting-and-keeping-track-of-indexes
-vector<int> argsort(const vector<int> &v) {
+/**
+* Calulate the index shuffling required to make the state tensor be wire-ordered.
+*
+* Implemented using argsort as given in https://stackoverflow.com/questions/1577475/c-sorting-and-keeping-track-of-indexes.
+*
+* @param indices the wire indices of a contracted tensor, calculated using calculate_indices()
+* @return the resultant indices
+*/
+vector<int> shuffle_indices(const vector<int> &indices) {
 
-  vector<int> idx(v.size());
+  vector<int> idx(indices.size());
   std::iota(idx.begin(), idx.end(), 0);
-  stable_sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
-
+  stable_sort(idx.begin(), idx.end(), [&indices](size_t i1, size_t i2) {return indices[i1] < indices[i2];});
   return idx;
 }
 
+/**
+* Contract a one-qubit gate onto a state tensor.
+*
+* @param state the state tensor
+* @param op_string the name of the operation
+* @param w the wires corresponding to the operation
+* @param p the parameters used in the operation
+* @return the resultant state tensor
+*/
 template <class State>
 State contract_1q_op(State state, string op_string, vector<int> w, vector<float> p) {
     Gate_1q op_1q = get_gate_1q(op_string, p);
@@ -103,6 +163,15 @@ State contract_1q_op(State state, string op_string, vector<int> w, vector<float>
     return tensor_contracted;
 }
 
+/**
+* Contract a two-qubit gate onto a state tensor.
+*
+* @param state the state tensor
+* @param op_string the name of the operation
+* @param w the wires corresponding to the operation
+* @param p the parameters used in the operation
+* @return the resultant state tensor
+*/
 template <class State>
 State contract_2q_op(State state, string op_string, vector<int> w, vector<float> p) {
     Gate_2q op_2q = get_gate_2q(op_string, p);
@@ -111,6 +180,15 @@ State contract_2q_op(State state, string op_string, vector<int> w, vector<float>
     return tensor_contracted;
 }
 
+/**
+* Contract a three-qubit gate onto a state tensor.
+*
+* @param state the state tensor
+* @param op_string the name of the operation
+* @param w the wires corresponding to the operation
+* @param p the parameters used in the operation
+* @return the resultant state tensor
+*/
 template <class State>
 State contract_3q_op(State state, string op_string, vector<int> w, vector<float> p) {
     Gate_3q op_3q = get_gate_3q(op_string, p);
@@ -119,7 +197,21 @@ State contract_3q_op(State state, string op_string, vector<int> w, vector<float>
     return tensor_contracted;
 }
 
-
+/**
+* Applies specified operations onto an input state of three or more qubits.
+*
+* This function converts the statevector into a tensor and then loops through the input operations,
+* finds the corresponding tensor, and contracts it onto the state tensor according to the gate wires
+* and parameters.
+*
+* The resulting state tensor is then converted back to a vector.
+*
+* @param state the multiqubit statevector
+* @param ops a vector of operation names in the order they should be applied
+* @param wires a vector of wires corresponding to the operations specified in ops
+* @param params a vector of parameters corresponding to the operations specified in ops
+* @return the transformed statevector
+*/
 template <class State, typename... Shape>
 VectorXcd apply_ops(
     Ref<VectorXcd> state,
@@ -149,8 +241,8 @@ VectorXcd apply_ops(
         }
 
         const int qubits = log2(tensor_contracted.size());
-        auto perm = calc_perm(w, qubits);
-        auto inv_perm = argsort(perm);
+        auto perm = calculate_indices(w, qubits);
+        auto inv_perm = shuffle_indices(perm);
         evolved_tensor = tensor_contracted.shuffle(inv_perm);
     }
 
@@ -158,6 +250,17 @@ VectorXcd apply_ops(
     return out_state;
 }
 
+/**
+* Applies specified operations onto an input state of one qubit.
+*
+* Implemented similarly to apply_ops() but is restricted to single-qubit gates.
+*
+* @param state the multiqubit statevector
+* @param ops a vector of operation names in the order they should be applied
+* @param wires a vector of wires corresponding to the operations specified in ops
+* @param params a vector of parameters corresponding to the operations specified in ops
+* @return the transformed statevector
+*/
 VectorXcd apply_ops_1q(
     Ref<VectorXcd> state,
     vector<string> ops,
@@ -177,8 +280,8 @@ VectorXcd apply_ops_1q(
         tensor_contracted = contract_1q_op<State_1q> (evolved_tensor, op_string, w, p);
 
         const int qubits = log2(tensor_contracted.size());
-        auto perm = calc_perm(w, qubits);
-        auto inv_perm = argsort(perm);
+        auto perm = calculate_indices(w, qubits);
+        auto inv_perm = shuffle_indices(perm);
         evolved_tensor = tensor_contracted.shuffle(inv_perm);
     }
 
@@ -186,6 +289,17 @@ VectorXcd apply_ops_1q(
     return out_state;
 }
 
+/**
+* Applies specified operations onto an input state of two qubits.
+*
+* Implemented similarly to apply_ops() but is restricted to one-qubit and two-qubit gates.
+*
+* @param state the multiqubit statevector
+* @param ops a vector of operation names in the order they should be applied
+* @param wires a vector of wires corresponding to the operations specified in ops
+* @param params a vector of parameters corresponding to the operations specified in ops
+* @return the transformed statevector
+*/
 VectorXcd apply_ops_2q(
     Ref<VectorXcd> state,
     vector<string> ops,
@@ -210,8 +324,8 @@ VectorXcd apply_ops_2q(
         }
 
         const int qubits = log2(tensor_contracted.size());
-        auto perm = calc_perm(w, qubits);
-        auto inv_perm = argsort(perm);
+        auto perm = calculate_indices(w, qubits);
+        auto inv_perm = shuffle_indices(perm);
         evolved_tensor = tensor_contracted.shuffle(inv_perm);
     }
 
