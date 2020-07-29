@@ -28,16 +28,6 @@ using Pairs_3q = array<IndexPair<int>, 3>;
 
 const double SQRT2INV = 0.7071067811865475;
 
-vector<int> calc_perm(vector<int> perm, int qubits) {
-    for (int j = 0; j < qubits; j++) {
-        if (count(perm.begin(), perm.end(), j) == 0) {
-        perm.push_back(j);
-        }
-    }
-    return perm;
-}
-
-
 Gate_1q get_gate_1q(const string &gate_name, const vector<float> &params) {
     Gate_1q op;
 
@@ -83,16 +73,6 @@ Gate_3q get_gate_3q(const string &gate_name, const vector<float> &params) {
         op = (*f)();
     }
     return op;
-}
-
-// https://stackoverflow.com/questions/1577475/c-sorting-and-keeping-track-of-indexes
-vector<int> argsort(const vector<int> &v) {
-
-  vector<int> idx(v.size());
-  std::iota(idx.begin(), idx.end(), 0);
-  stable_sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
-
-  return idx;
 }
 
 template <class State>
@@ -175,14 +155,9 @@ VectorXcd apply_ops_1q(
         string op_string = ops[i];
         vector<int> w = wires[i];
         vector<float> p = params[i];
-        State_1q tensor_contracted;
 
-        tensor_contracted = contract_1q_op<State_1q> (evolved_tensor, op_string, w, p);
+        evolved_tensor = contract_1q_op<State_1q> (evolved_tensor, op_string, w, p);
 
-        const int qubits = log2(tensor_contracted.size());
-        auto perm = calc_perm(w, qubits);
-        auto inv_perm = argsort(perm);
-        evolved_tensor = tensor_contracted.shuffle(inv_perm);
     }
 
     auto out_state = Map<VectorXcd> (evolved_tensor.data(), state.size(), 1);
@@ -203,19 +178,14 @@ VectorXcd apply_ops_2q(
         string op_string = ops[i];
         vector<int> w = wires[i];
         vector<float> p = params[i];
-        State_2q tensor_contracted;
 
         if (w.size() == 1) {
-            tensor_contracted = contract_1q_op<State_2q> (evolved_tensor, op_string, w, p);
+            evolved_tensor = contract_1q_op<State_2q> (evolved_tensor, op_string, w, p);
         }
         else if (w.size() == 2) {
-            tensor_contracted = contract_2q_op<State_2q> (evolved_tensor, op_string, w, p);
+            evolved_tensor = contract_2q_op<State_2q> (evolved_tensor, op_string, w, p);
         }
 
-        const int qubits = log2(tensor_contracted.size());
-        auto perm = calc_perm(w, qubits);
-        auto inv_perm = argsort(perm);
-        evolved_tensor = tensor_contracted.shuffle(inv_perm);
     }
 
     auto out_state = Map<VectorXcd> (evolved_tensor.data(), state.size(), 1);
