@@ -808,35 +808,39 @@ TEST(CRots, ApplyTo10) {
   State_2q input_state(2,2);
   input_state.setValues({{0, 0},{1, 0}});
 
-  complex<double> const1(0.99875026, 0);
-  complex<double> const2(0, -0.04997917);
-  complex<double> const3(-0.04997917, 0);
+  float phi(0.1);
+  auto cos = std::cos(phi / 2);
+  auto sin = std::sin(phi / 2);
+
+  complex<double> cos_real(cos, 0);
+  complex<double> sin_imag(0, sin);
+  complex<double> sin_real(sin, 0);
 
   State_2q expected_output_state_X(2,2);
-  expected_output_state_X.setValues({{0, 0},{const1, const2}});
+  expected_output_state_X.setValues({{0, 0},{cos_real, -sin_imag}});
 
   State_2q expected_output_state_Y(2,2);
-  expected_output_state_Y.setValues({{0, 0},{const1, -const3}});  // The minus sign was unexpected
+  expected_output_state_Y.setValues({{0, 0},{cos_real, sin_real}});
 
   State_2q expected_output_state_Z(2,2);
-  expected_output_state_Z.setValues({{0, 0},{const1+const2, 0}});
+  expected_output_state_Z.setValues({{0, 0},{cos_real-sin_imag, 0}});
 
-  complex<double> const4(0.97517033, 0);
-  complex<double> const5(0, 0.19767681);
-  complex<double> const6(-0.09933467, 0);
-  complex<double> const7(0, 0.00996671);
+  vector<float> p2{0.4, 0.1, 0.3};
+  complex<double> imag_phi_plus_omega(0, -(p2[0] + p2[2]) / 2);
+  complex<double> imag_phi_minus_omega(0, -(p2[0] - p2[2]) / 2);
+  auto exp_plus = std::pow(M_E, imag_phi_plus_omega);
+  auto exp_minus = std::pow(M_E, imag_phi_minus_omega);
 
   State_2q expected_output_state_Rot(2,2);
-  expected_output_state_Rot.setValues({{0, 0},{const4-const5, const7-const6}});
+  expected_output_state_Rot.setValues({{0, 0},{cos_real * exp_plus, sin_real * exp_minus}});
 
   vector<int> w{0, 1};
-  vector<float> p{0.1};
+  vector<float> p{phi};
   auto output_state_X = contract_2q_op(input_state, "CRX", w, p);
   auto output_state_Y = contract_2q_op(input_state, "CRY", w, p);
   auto output_state_Z = contract_2q_op(input_state, "CRZ", w, p);
 
   vector<int> w2{0, 1};
-  vector<float> p2{0.1, 0.2, 0.3};
   auto output_state_Rot = contract_2q_op(input_state, "CRot", w2, p2);
 
   // Casting to a vector for comparison
@@ -866,35 +870,39 @@ TEST(CRots, ApplyTo11) {
   State_2q input_state(2,2);
   input_state.setValues({{0, 0},{0, 1}});
 
-  complex<double> const1(0.99875026, 0);
-  complex<double> const2(0, -0.04997917);
-  complex<double> const3(-0.04997917, 0);
+  float phi(0.1);
+  auto cos = std::cos(phi / 2);
+  auto sin = std::sin(phi / 2);
+
+  complex<double> cos_real(cos, 0);
+  complex<double> sin_imag(0, sin);
+  complex<double> sin_real(sin, 0);
 
   State_2q expected_output_state_X(2,2);
-  expected_output_state_X.setValues({{0, 0},{const2, const1}});
+  expected_output_state_X.setValues({{0, 0},{-sin_imag, cos_real}});
 
   State_2q expected_output_state_Y(2,2);
-  expected_output_state_Y.setValues({{0, 0},{const3, const1}});  // The lack of minus sign was unexpected
+  expected_output_state_Y.setValues({{0, 0},{-sin_real, cos_real}});
 
   State_2q expected_output_state_Z(2,2);
-  expected_output_state_Z.setValues({{0, 0},{0, const1-const2}});
+  expected_output_state_Z.setValues({{0, 0},{0, cos_real+sin_imag}});
 
-  complex<double> const4(0.97517033, 0);
-  complex<double> const5(0, 0.19767681);
-  complex<double> const6(-0.09933467, 0);
-  complex<double> const7(0, 0.00996671);
+  vector<float> p2{0.4, 0.1, 0.3};
+  complex<double> imag_phi_plus_omega(0, (p2[0] + p2[2]) / 2);
+  complex<double> imag_phi_minus_omega(0, (p2[0] - p2[2]) / 2);
+  auto exp_plus = std::pow(M_E, imag_phi_plus_omega);
+  auto exp_minus = std::pow(M_E, imag_phi_minus_omega);
 
   State_2q expected_output_state_Rot(2,2);
-  expected_output_state_Rot.setValues({{0, 0},{const7+const6, const4+const5}});
+  expected_output_state_Rot.setValues({{0, 0},{-sin_real * exp_minus, cos_real * exp_plus}});
 
   vector<int> w{0, 1};
-  vector<float> p{0.1};
+  vector<float> p{phi};
   auto output_state_X = contract_2q_op(input_state, "CRX", w, p);
   auto output_state_Y = contract_2q_op(input_state, "CRY", w, p);
   auto output_state_Z = contract_2q_op(input_state, "CRZ", w, p);
 
   vector<int> w2{0, 1};
-  vector<float> p2{0.1, 0.2, 0.3};
   auto output_state_Rot = contract_2q_op(input_state, "CRot", w2, p2);
 
   // Casting to a vector for comparison
@@ -955,7 +963,6 @@ TEST(Toffoli, ApplyToAll) {
     std::vector<State_3q> output_states;
 
     vector<int> w{0, 1, 2};
-    vector<int> inv_perm{0, 1, 2};
 
     for (int i=0; i < 8; i++) {
         output_states.push_back(contract_3q_op(input_states[i], "Toffoli", w));
@@ -1010,7 +1017,6 @@ TEST(CSWAP, ApplyToAll) {
     std::vector<State_3q> output_states;
 
     vector<int> w{0, 1, 2};
-    vector<int> inv_perm{0, 1, 2};
 
     for (int i=0; i < 8; i++) {
         output_states.push_back(contract_3q_op(input_states[i], "CSWAP", w));
