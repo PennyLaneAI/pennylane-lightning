@@ -924,7 +924,7 @@ TEST(CRots, ApplyTo11) {
 
 namespace three_qubit_ops {
 
-TEST(Toffoli, ApplyTo000) {
+TEST(Toffoli, ApplyToAll) {
     State_3q input_state_000(2, 2, 2);
     input_state_000.setValues({{{1, 0},{0, 0}}, {{0, 0},{0, 0}}});
     State_3q input_state_001(2, 2, 2);
@@ -979,7 +979,64 @@ TEST(Toffoli, ApplyTo000) {
         EXPECT_TRUE(expected_vector.isApprox(output_state, tol));
     }
 }
+
+TEST(CSWAP, ApplyToAll) {
+    State_3q input_state_000(2, 2, 2);
+    input_state_000.setValues({{{1, 0},{0, 0}}, {{0, 0},{0, 0}}});
+    State_3q input_state_001(2, 2, 2);
+    input_state_001.setValues({{{0, 1},{0, 0}}, {{0, 0},{0, 0}}});
+    State_3q input_state_010(2, 2, 2);
+    input_state_010.setValues({{{0, 0},{1, 0}}, {{0, 0},{0, 0}}});
+    State_3q input_state_011(2, 2, 2);
+    input_state_011.setValues({{{0, 0},{0, 1}}, {{0, 0},{0, 0}}});
+    State_3q input_state_100(2, 2, 2);
+    input_state_100.setValues({{{0, 0},{0, 0}}, {{1, 0},{0, 0}}});
+    State_3q input_state_101(2, 2, 2);
+    input_state_101.setValues({{{0, 0},{0, 0}}, {{0, 1},{0, 0}}});
+    State_3q input_state_110(2, 2, 2);
+    input_state_110.setValues({{{0, 0},{0, 0}}, {{0, 0},{1, 0}}});
+    State_3q input_state_111(2, 2, 2);
+    input_state_111.setValues({{{0, 0},{0, 0}}, {{0, 0},{0, 1}}});
+
+    std::vector<State_3q> input_states{
+        input_state_000,
+        input_state_001,
+        input_state_010,
+        input_state_011,
+        input_state_100,
+        input_state_101,
+        input_state_110,
+        input_state_111,
+    };
+    std::vector<State_3q> output_states;
+
+    vector<int> w{0, 1, 2};
+    vector<float> p{};
+    vector<int> inv_perm{0, 1, 2};
+
+    for (int i=0; i < 8; i++) {
+        output_states.push_back(contract_3q_op(input_states[i], "CSWAP", w, p));
+    }
+
+    State_3q target_state_101(2, 2, 2);
+    target_state_101.setValues({{{0, 0},{0, 0}}, {{0, 0},{1, 0}}});
+    State_3q target_state_110(2, 2, 2);
+    target_state_110.setValues({{{0, 0},{0, 0}}, {{0, 1},{0, 0}}});
+
+    auto expected_states = input_states;
+    expected_states[5] = target_state_101;
+    expected_states[6] = target_state_110;
+
+    for (int i=0; i < 8; i++) {
+        Eigen::Map<Eigen::VectorXcd> expected_vector(
+                    expected_states[i].data(), expected_states[i].size());
+        Eigen::Map<Eigen::VectorXcd> output_state(
+                    output_states[i].data(), output_states[i].size());
+        EXPECT_TRUE(expected_vector.isApprox(output_state, tol));
+    }
 }
+
+} // namespace three_qubit_ops
 
 namespace auxiliary_functions {
 
