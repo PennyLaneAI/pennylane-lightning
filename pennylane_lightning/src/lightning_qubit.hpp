@@ -75,13 +75,10 @@ Gate_2q get_gate_2q(const string &gate_name, const vector<float> &params) {
     return op;
 }
 
-Gate_3q get_gate_3q(const string &gate_name, const vector<float> &params) {
+Gate_3q get_gate_3q(const string &gate_name) {
     Gate_3q op;
-
-    if (params.empty()) {
-        pfunc_3q f = ThreeQubitOps.at(gate_name);
-        op = (*f)();
-    }
+    pfunc_3q f = ThreeQubitOps.at(gate_name);
+    op = (*f)();
     return op;
 }
 
@@ -112,8 +109,8 @@ State contract_2q_op(State state, string op_string, vector<int> w, vector<float>
 }
 
 template <class State>
-State contract_3q_op(State state, string op_string, vector<int> w, vector<float> p) {
-    Gate_3q op_3q = get_gate_3q(op_string, p);
+State contract_3q_op(State state, string op_string, vector<int> w) {
+    Gate_3q op_3q = get_gate_3q(op_string);
     Pairs_3q pairs_3q = {Pairs(3, w[0]), Pairs(4, w[1]), Pairs(5, w[2])};
     auto tensor_contracted = op_3q.contract(state, pairs_3q);
     return tensor_contracted;
@@ -145,7 +142,7 @@ VectorXcd apply_ops(
             tensor_contracted = contract_2q_op<State> (evolved_tensor, op_string, w, p);
         }
        else if (w.size() == 3) {
-            tensor_contracted = contract_3q_op<State> (evolved_tensor, op_string, w, p);
+            tensor_contracted = contract_3q_op<State> (evolved_tensor, op_string, w);
         }
 
         const int qubits = log2(tensor_contracted.size());

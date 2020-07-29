@@ -955,11 +955,10 @@ TEST(Toffoli, ApplyToAll) {
     std::vector<State_3q> output_states;
 
     vector<int> w{0, 1, 2};
-    vector<float> p{};
     vector<int> inv_perm{0, 1, 2};
 
     for (int i=0; i < 8; i++) {
-        output_states.push_back(contract_3q_op(input_states[i], "Toffoli", w, p));
+        output_states.push_back(contract_3q_op(input_states[i], "Toffoli", w));
     }
 
     State_3q target_state_110(2, 2, 2);
@@ -1011,11 +1010,10 @@ TEST(CSWAP, ApplyToAll) {
     std::vector<State_3q> output_states;
 
     vector<int> w{0, 1, 2};
-    vector<float> p{};
     vector<int> inv_perm{0, 1, 2};
 
     for (int i=0; i < 8; i++) {
-        output_states.push_back(contract_3q_op(input_states[i], "CSWAP", w, p));
+        output_states.push_back(contract_3q_op(input_states[i], "CSWAP", w));
     }
 
     State_3q target_state_101(2, 2, 2);
