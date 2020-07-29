@@ -81,10 +81,13 @@ class LightningQubit(DefaultQubit):
 
         if operations:
             self._pre_rotated_state = self.apply_lightning(self._state, operations)
-            if rotations:
-                self._state = self.apply_lightning(self._pre_rotated_state, rotations)
-            else:
-                self._state = self._pre_rotated_state
+        else:
+            self._pre_rotated_state = self._state
+
+        if rotations:
+            self._state = self.apply_lightning(self._pre_rotated_state, rotations)
+        else:
+            self._state = self._pre_rotated_state
 
     def apply_lightning(self, state, operations):
         """TODO"""
