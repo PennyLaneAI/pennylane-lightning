@@ -593,6 +593,38 @@ TEST(RotGate, ApplyToPlusNegPiHalfPiPi) {
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
 
+TEST(PhaseShift, ApplyToZeroAndOne) {
+    State_1q input_state_0(2);
+    State_1q input_state_1(2);
+    input_state_0.setValues({1, 0});
+    input_state_1.setValues({0, 1});
+
+
+    std::complex<double> const1(0.99500417, 0.09983342);
+    State_1q expected_state_0(2);
+    State_1q expected_state_1(2);
+    expected_state_0.setValues({1, 0});
+    expected_state_1.setValues({0, const1});
+
+    vector<int> w{0};
+    vector<float> p{0.1};
+    auto output_state_0 = contract_1q_op(input_state_0, "PhaseShift", w, p);
+    auto output_state_1 = contract_1q_op(input_state_1, "PhaseShift", w, p);
+
+      // Casting to a vector for comparison
+    Eigen::Map<Eigen::VectorXcd> expected_state_vector_0(
+                expected_state_0.data(), expected_state_0.size());
+    Eigen::Map<Eigen::VectorXcd> expected_state_vector_1(
+                expected_state_1.data(), expected_state_1.size());
+    Eigen::Map<Eigen::VectorXcd> output_state_vector_0(
+                output_state_0.data(), output_state_0.size());
+    Eigen::Map<Eigen::VectorXcd> output_state_vector_1(
+                output_state_1.data(), output_state_1.size());
+
+    EXPECT_TRUE(expected_state_vector_0.isApprox(output_state_vector_0, tol));
+    EXPECT_TRUE(expected_state_vector_1.isApprox(output_state_vector_1, tol));
+}
+
 }  // namespace one_qubit_ops
 
 namespace two_qubit_ops {
