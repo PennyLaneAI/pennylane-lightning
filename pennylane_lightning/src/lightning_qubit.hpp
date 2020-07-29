@@ -98,27 +98,33 @@ vector<int> argsort(const vector<int> &v) {
 template <class State>
 State contract_1q_op(State state, string op_string, vector<int> w, vector<float> p) {
     Gate_1q op_1q = get_gate_1q(op_string, p);
-    Pairs_1q pairs_1q = {Pairs(1, w[0])};
-    auto tensor_contracted = op_1q.contract(state, pairs_1q);
+    Pairs_1q pairs_1q = {Pairs(w[0], 1)};
+    auto tensor_contracted = state.contract(op_1q, pairs_1q);
     return tensor_contracted;
 }
 
 template <class State>
 State contract_2q_op(State state, string op_string, vector<int> w, vector<float> p) {
     Gate_2q op_2q = get_gate_2q(op_string, p);
-    Pairs_2q pairs_2q = {Pairs(2, w[0]), Pairs(3, w[1])};
-    auto tensor_contracted = op_2q.contract(state, pairs_2q);
+    Pairs_2q pairs_2q = {Pairs(w[0], 2), Pairs(w[1], 3)};
+    auto tensor_contracted = state.contract(op_2q, pairs_2q);
     return tensor_contracted;
 }
 
 template <class State>
 State contract_3q_op(State state, string op_string, vector<int> w, vector<float> p) {
     Gate_3q op_3q = get_gate_3q(op_string, p);
-    Pairs_3q pairs_3q = {Pairs(3, w[0]), Pairs(4, w[1]), Pairs(5, w[2])};
-    auto tensor_contracted = op_3q.contract(state, pairs_3q);
+    Pairs_3q pairs_3q = {Pairs(w[0], 3), Pairs(w[1], 4), Pairs(w[2], 5)};
+    auto tensor_contracted = state.contract(op_3q, pairs_3q);
     return tensor_contracted;
 }
 
+void print(std::vector<int> const &input)
+{
+	for (int i = 0; i < input.size(); i++) {
+		std::cout << input.at(i) << ' ';
+	}
+}
 
 template <class State, typename... Shape>
 VectorXcd apply_ops(
@@ -136,27 +142,24 @@ VectorXcd apply_ops(
         string op_string = ops[i];
         vector<int> w = wires[i];
         vector<float> p = params[i];
-        State tensor_contracted;
 
         if (w.size() == 1) {
-            tensor_contracted = contract_1q_op<State> (evolved_tensor, op_string, w, p);
+            evolved_tensor = contract_1q_op<State> (evolved_tensor, op_string, w, p);
         }
         else if (w.size() == 2) {
-            tensor_contracted = contract_2q_op<State> (evolved_tensor, op_string, w, p);
+            evolved_tensor = contract_2q_op<State> (evolved_tensor, op_string, w, p);
         }
        else if (w.size() == 3) {
-            tensor_contracted = contract_3q_op<State> (evolved_tensor, op_string, w, p);
+            evolved_tensor = contract_3q_op<State> (evolved_tensor, op_string, w, p);
         }
 
-        const int qubits = log2(tensor_contracted.size());
-        auto perm = calc_perm(w, qubits);
-        auto inv_perm = argsort(perm);
-        evolved_tensor = tensor_contracted.shuffle(inv_perm);
     }
 
     auto out_state = Map<VectorXcd> (evolved_tensor.data(), state.size(), 1);
     return out_state;
 }
+
+
 
 VectorXcd apply_ops_1q(
     Ref<VectorXcd> state,
