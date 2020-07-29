@@ -60,6 +60,8 @@ class LightningQubit(DefaultQubit):
         "CRot",
     }
 
+    observables = {"PauliX", "PauliY", "PauliZ", "Hadamard", "Identity"}
+
     def apply(self, operations, rotations=None, **kwargs):
 
         if self.num_wires == 1:
