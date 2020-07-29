@@ -28,13 +28,12 @@ using Pairs_3q = array<IndexPair<int>, 3>;
 
 const double SQRT2INV = 0.7071067811865475;
 
-vector<int> calc_perm(vector<int> perm, int qubits) {
+void calc_perm(vector<int> & perm, const int &qubits) {
     for (int j = 0; j < qubits; j++) {
         if (count(perm.begin(), perm.end(), j) == 0) {
         perm.push_back(j);
         }
     }
-    return perm;
 }
 
 
@@ -144,8 +143,9 @@ VectorXcd apply_ops(
             evolved_tensor = contract_3q_op<State> (evolved_tensor, op_string, w, p);
         }
 
-        auto perm = calc_perm(w, qubits);
-        auto inv_perm = argsort(perm);
+        // Updates w such that it is the calculated permutation
+        calc_perm(w, qubits);
+        auto inv_perm = argsort(w);
         evolved_tensor = evolved_tensor.shuffle(inv_perm);
     }
 
@@ -171,8 +171,10 @@ VectorXcd apply_ops_1q(
         tensor_contracted = contract_1q_op<State_1q> (evolved_tensor, op_string, w, p);
 
         const int qubits = log2(tensor_contracted.size());
-        auto perm = calc_perm(w, qubits);
-        auto inv_perm = argsort(perm);
+
+        // Updates w such that it is the calculated permutation
+        calc_perm(w, qubits);
+        auto inv_perm = argsort(w);
         evolved_tensor = tensor_contracted.shuffle(inv_perm);
     }
 
@@ -182,33 +184,31 @@ VectorXcd apply_ops_1q(
 
 VectorXcd apply_ops_2q(
     Ref<VectorXcd> state,
-    vector<string> ops,
-    vector<vector<int>> wires,
-    vector<vector<float>> params
+    const vector<string>& ops,
+    const vector<vector<int>>& wires,
+    const vector<vector<float>>& params
     ) {
-    State_2q state_tensor = TensorMap<State_2q>(state.data(), 2, 2);
-    State_2q evolved_tensor = state_tensor;
+    State_2q evolved_tensor = TensorMap<State_2q>(state.data(), 2, 2);
 
+    const int qubits = log2(evolved_tensor.size());
     for (long unsigned int i = 0; i < ops.size(); i++) {
         // Load operation string and corresponding wires and parameters
         string op_string = ops[i];
         vector<int> w = wires[i];
         vector<float> p = params[i];
-        State_2q tensor_contracted;
 
         if (w.size() == 1) {
-            tensor_contracted = contract_1q_op<State_2q> (evolved_tensor, op_string, w, p);
+            evolved_tensor = contract_1q_op<State_2q> (evolved_tensor, op_string, w, p);
         }
         else if (w.size() == 2) {
-            tensor_contracted = contract_2q_op<State_2q> (evolved_tensor, op_string, w, p);
+            evolved_tensor = contract_2q_op<State_2q> (evolved_tensor, op_string, w, p);
         }
 
-        const int qubits = log2(tensor_contracted.size());
-        auto perm = calc_perm(w, qubits);
-        auto inv_perm = argsort(perm);
-        evolved_tensor = tensor_contracted.shuffle(inv_perm);
+        // Updates w such that it is the calculated permutation
+        calc_perm(w, qubits);
+        auto inv_perm = argsort(w);
+        evolved_tensor = evolved_tensor.shuffle(inv_perm);
     }
 
-    auto out_state = Map<VectorXcd> (evolved_tensor.data(), state.size(), 1);
-    return out_state;
+    return Map<VectorXcd> (evolved_tensor.data(), state.size(), 1);
 }

@@ -1042,37 +1042,38 @@ namespace auxiliary_functions {
 
 TEST(CalcPerm, OneElemOneQubit) {
     std::vector<int> input_perm({0});
-    std::vector<int> output_perm = calc_perm(input_perm, 1);
+    const std::vector<int> expected_perm({0});
+    calc_perm(input_perm, 1);
 
-    EXPECT_TRUE(input_perm == output_perm);
+    EXPECT_TRUE(input_perm == expected_perm);
 }
 
 TEST(CalcPerm, OneElemTwoQubit) {
     std::vector<int> input_perm({0});
-    std::vector<int> output_perm = calc_perm(input_perm, 2);
+    calc_perm(input_perm, 2);
 
     std::vector<int> expected_perm({0, 1});
 
-    EXPECT_TRUE(output_perm == expected_perm);
+    EXPECT_TRUE(input_perm == expected_perm);
 }
 
 TEST(CalcPerm, TwoElemFiveQubitAscOrder) {
     std::vector<int> input_perm({1,2,4});
-    std::vector<int> output_perm = calc_perm(input_perm, 5);
+    calc_perm(input_perm, 5);
 
     std::vector<int> expected_perm({1,2,4,0,3});
 
-    EXPECT_TRUE(output_perm == expected_perm);
+    EXPECT_TRUE(input_perm == expected_perm);
 }
 
 
 TEST(CalcPerm, TwoElemFiveQubitRandomOrder) {
     std::vector<int> input_perm({2,1,4});
-    std::vector<int> output_perm = calc_perm(input_perm, 5);
+    calc_perm(input_perm, 5);
 
     std::vector<int> expected_perm({2,1,4,0,3});
 
-    EXPECT_TRUE(output_perm == expected_perm);
+    EXPECT_TRUE(input_perm == expected_perm);
 }
 
 TEST(ArgSort, OneElem) {
