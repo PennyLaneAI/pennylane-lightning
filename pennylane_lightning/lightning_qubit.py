@@ -15,6 +15,8 @@ r"""
 This module contains the :class:`~.LightningQubit` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
+import warnings
+
 from pennylane.plugins import DefaultQubit
 from .src.lightning_qubit_ops import apply
 import numpy as np
@@ -30,6 +32,11 @@ class LightningQubit(DefaultQubit):
 
     Use of this device requires pre-built binaries or compilation from source. Check out the
     :doc:`/installation` guide for more details.
+
+    .. warning::
+
+        The C++ interface currently supports up to 16 wires. If Lightning Qubit is loaded with
+        greater than 16 wires, it will revert to a NumPy-based simulation.
 
     Args:
         wires (int): the number of modes to initialize the device in
@@ -75,6 +82,15 @@ class LightningQubit(DefaultQubit):
     }
 
     observables = {"PauliX", "PauliY", "PauliZ", "Hadamard", "Identity"}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if self.num_wires > 16:
+            warnings.warn(
+                "The number of wires exceeds 16, reverting to NumPy-based evaluation.",
+                UserWarning,
+            )
 
     def apply(self, operations, rotations=None, **kwargs):
 
