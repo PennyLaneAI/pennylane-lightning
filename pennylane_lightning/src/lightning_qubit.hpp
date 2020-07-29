@@ -132,8 +132,6 @@ VectorXcd apply_ops(
     return out_state;
 }
 
-
-
 VectorXcd apply_ops_1q(
     Ref<VectorXcd> state,
     vector<string> ops,
