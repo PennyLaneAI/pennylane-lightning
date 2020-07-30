@@ -54,10 +54,10 @@ const double SQRT2INV = 0.7071067811865475;
 * @param qubits the number of qubits in the system
 * @return the resultant indices
 */
-vector<int> calculate_indices(vector<int> wires, int qubits) {
-    for (int j = 0; j < qubits; j++) {
-        if (count(wires.begin(), wires.end(), j) == 0) {
-        wires.push_back(j);
+vector<int> calculate_indices(vector<int> wires, vector<int> &qubit_indices) {
+    for (int j = 0; j < qubit_indices.size(); j++) {
+        if (count(wires.begin(), wires.end(), qubit_indices[j]) == 0) {
+        wires.push_back(qubit_indices[j]);
         }
     }
     return wires;
@@ -233,6 +233,8 @@ VectorXcd apply_ops(
     vector<int> qubit_indices(qubits);
     std::iota(std::begin(qubit_indices), std::end(qubit_indices), 0);
     vector<int> inv_perm;
+    vector<int> perm;
+    std::iota(std::begin(qubit_indices), std::end(qubit_indices), 0);
 
     for (long unsigned int i = 0; i < ops.size(); i++) {
         // Load operation string and corresponding wires and parameters
@@ -241,17 +243,29 @@ VectorXcd apply_ops(
         vector<float> p = params[i];
         State tensor_contracted;
 
-        auto perm = calculate_indices(w, qubits);
+        std::cout << "Wires:" << std::endl;
+        print(w);
+        std::cout << "Tensor in:" << std::endl;
+        print(qubit_indices);
+
+        perm = calculate_indices(w, qubit_indices);
         inv_perm = shuffle_indices(perm);
 
         vector<int> wires_to_contract(w.size());
         for (int j = 0; j < w.size(); j++) {
-            wires_to_contract[j] = qubit_indices[w[j]];
+            wires_to_contract[j] = perm[w[j]];
         }
-        qubit_indices = inv_perm;
-        print (wires_to_contract);
+        qubit_indices = perm;
+        std::cout << "Tensor out:" << std::endl;
+        print(perm);
+        std::cout << "Qubits out:" << std::endl;
         print(qubit_indices);
-        print(w);
+        std::cout << "Wires to contract:" << std::endl;
+        print(wires_to_contract);
+
+//        print (wires_to_contract);
+//        print(qubit_indices);
+//        print(w);
         std::cout << std::endl;
         if (w.size() == 1) {
             tensor_contracted = contract_1q_op<State> (evolved_tensor, op_string, wires_to_contract, p);
@@ -265,9 +279,9 @@ VectorXcd apply_ops(
         evolved_tensor = tensor_contracted;
 //        std::cout << evolved_tensor << std::endl;
     }
-//    State shuffled_evolved_tensor = evolved_tensor.shuffle(inv_perm);
+    State shuffled_evolved_tensor = evolved_tensor.shuffle(inv_perm);
 
-    return Map<VectorXcd> (evolved_tensor.data(), evolved_tensor.size(), 1);
+    return Map<VectorXcd> (shuffled_evolved_tensor.data(), shuffled_evolved_tensor.size(), 1);
 }
 
 /**
@@ -291,6 +305,9 @@ VectorXcd apply_ops_1q(
     State_1q evolved_tensor = state_tensor;
     const int qubits = log2(state_tensor.size());
 
+    vector<int> qubit_indices(qubits);
+    std::iota(std::begin(qubit_indices), std::end(qubit_indices), 0);
+
     for (long unsigned int i = 0; i < ops.size(); i++) {
         // Load operation string and corresponding wires and parameters
         string op_string = ops[i];
@@ -299,7 +316,7 @@ VectorXcd apply_ops_1q(
 
         auto tensor_contracted = contract_1q_op<State_1q> (evolved_tensor, op_string, w, p);
 
-        auto perm = calculate_indices(w, qubits);
+        auto perm = calculate_indices(w, qubit_indices);
         auto inv_perm = shuffle_indices(perm);
         evolved_tensor = tensor_contracted.shuffle(inv_perm);
     }
@@ -328,6 +345,9 @@ VectorXcd apply_ops_2q(
     State_2q evolved_tensor = state_tensor;
     const int qubits = log2(state_tensor.size());
 
+    vector<int> qubit_indices(qubits);
+    std::iota(std::begin(qubit_indices), std::end(qubit_indices), 0);
+
     for (long unsigned int i = 0; i < ops.size(); i++) {
         // Load operation string and corresponding wires and parameters
         string op_string = ops[i];
@@ -342,7 +362,7 @@ VectorXcd apply_ops_2q(
             tensor_contracted = contract_2q_op<State_2q> (evolved_tensor, op_string, w, p);
         }
 
-        auto perm = calculate_indices(w, qubits);
+        auto perm = calculate_indices(w, qubit_indices);
         auto inv_perm = shuffle_indices(perm);
 
         evolved_tensor = tensor_contracted.shuffle(inv_perm);
