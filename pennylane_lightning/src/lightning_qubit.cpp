@@ -71,54 +71,54 @@ VectorXcd apply (
     case 3:
         evolved_state = apply_ops <State_3q> (state, ops, wires, params, 2, 2, 2);
         break;
-//    case 4:
-//        evolved_state = apply_ops <State_4q> (state, ops, wires, params, 2, 2, 2, 2);
-//        break;
-//    case 5:
-//        evolved_state = apply_ops <State_5q> (state, ops, wires, params, 2, 2, 2, 2, 2);
-//        break;
-//    case 6:
-//        evolved_state = apply_ops <State_6q> (state, ops, wires, params, 2, 2, 2, 2, 2, 2);
-//        break;
-//    case 7:
-//        evolved_state = apply_ops <State_7q> (state, ops, wires, params, 2, 2, 2, 2, 2, 2, 2);
-//        break;
-//    case 8:
-//        evolved_state = apply_ops <State_8q> (state, ops, wires, params, 2, 2, 2, 2, 2, 2, 2,
-//            2);
-//        break;
-//    case 9:
-//        evolved_state = apply_ops <State_9q> (state, ops, wires, params,
-//        2, 2, 2, 2, 2, 2, 2, 2, 2);
-//        break;
-//    case 10:
-//        evolved_state = apply_ops <State_10q> (state, ops, wires, params,
-//        2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
-//        break;
-//    case 11:
-//        evolved_state = apply_ops <State_11q> (state, ops, wires, params,
-//        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
-//        break;
-//    case 12:
-//        evolved_state = apply_ops <State_12q> (state, ops, wires, params,
-//        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
-//        break;
-//    case 13:
-//        evolved_state = apply_ops <State_13q> (state, ops, wires, params,
-//        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
-//        break;
-//    case 14:
-//        evolved_state = apply_ops <State_14q> (state, ops, wires, params,
-//        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
-//        break;
-//    case 15:
-//        evolved_state = apply_ops <State_15q> (state, ops, wires, params,
-//        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
-//        break;
-//    case 16:
-//        evolved_state = apply_ops <State_16q> (state, ops, wires, params,
-//        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
-//        break;
+    case 4:
+        evolved_state = apply_ops <State_4q> (state, ops, wires, params, 2, 2, 2, 2);
+        break;
+    case 5:
+        evolved_state = apply_ops <State_5q> (state, ops, wires, params, 2, 2, 2, 2, 2);
+        break;
+    case 6:
+        evolved_state = apply_ops <State_6q> (state, ops, wires, params, 2, 2, 2, 2, 2, 2);
+        break;
+    case 7:
+        evolved_state = apply_ops <State_7q> (state, ops, wires, params, 2, 2, 2, 2, 2, 2, 2);
+        break;
+    case 8:
+        evolved_state = apply_ops <State_8q> (state, ops, wires, params, 2, 2, 2, 2, 2, 2, 2,
+            2);
+        break;
+    case 9:
+        evolved_state = apply_ops <State_9q> (state, ops, wires, params,
+        2, 2, 2, 2, 2, 2, 2, 2, 2);
+        break;
+    case 10:
+        evolved_state = apply_ops <State_10q> (state, ops, wires, params,
+        2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+        break;
+    case 11:
+        evolved_state = apply_ops <State_11q> (state, ops, wires, params,
+        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+        break;
+    case 12:
+        evolved_state = apply_ops <State_12q> (state, ops, wires, params,
+        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+        break;
+    case 13:
+        evolved_state = apply_ops <State_13q> (state, ops, wires, params,
+        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+        break;
+    case 14:
+        evolved_state = apply_ops <State_14q> (state, ops, wires, params,
+        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+        break;
+    case 15:
+        evolved_state = apply_ops <State_15q> (state, ops, wires, params,
+        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+        break;
+    case 16:
+        evolved_state = apply_ops <State_16q> (state, ops, wires, params,
+        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+        break;
     }
     return evolved_state;
 }
