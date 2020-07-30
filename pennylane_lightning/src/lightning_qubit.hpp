@@ -142,7 +142,7 @@ VectorXcd apply_ops(
             tensor_contracted = contract_2q_op<State> (evolved_tensor, op_string, w, p);
         }
        else if (w.size() == 3) {
-            tensor_contracted = contract_3q_op<State> (evolved_tensor, op_string, w, p);
+            tensor_contracted = contract_3q_op<State> (evolved_tensor, op_string, w);
         }
 
         // Updates w such that it is the calculated permutation
