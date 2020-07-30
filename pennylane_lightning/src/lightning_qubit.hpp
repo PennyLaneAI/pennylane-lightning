@@ -160,8 +160,7 @@ VectorXcd apply_ops_1q(
     vector<vector<int>> wires,
     vector<vector<float>> params
     ) {
-    State_1q state_tensor = TensorMap<State_1q>(state.data(), 2);
-    State_1q evolved_tensor = state_tensor;
+    State_1q evolved_tensor = TensorMap<State_1q>(state.data(), 2);
     const int qubits = log2(evolved_tensor.size());
 
     for (long unsigned int i = 0; i < ops.size(); i++) {
