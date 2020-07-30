@@ -44,8 +44,8 @@ using State_16q = Tensor<complex<double>, 16>;
 /**
 * Applies specified operations onto an input state of an arbitrary number of qubits.
 *
-* Note that only up to 16 qubits are currently supported. This is due to a limitation in the Eigen
-* Tensor library which does not support dynamically ranked tensors.
+* Note that only up to 16 qubits are currently supported. This limitation is due to the Eigen
+* Tensor library not supporting dynamically ranked tensors.
 *
 * @param state the multiqubit statevector
 * @param ops a vector of operation names in the order they should be applied
