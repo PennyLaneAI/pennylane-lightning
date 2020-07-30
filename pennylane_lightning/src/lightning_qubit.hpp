@@ -253,7 +253,6 @@ VectorXcd apply_ops(
             tensor_contracted = contract_3q_op<State> (evolved_tensor, op_string, wires_to_contractx);
         }
         evolved_tensor = tensor_contracted;
-//        std::cout << evolved_tensor << std::endl;
     }
     State shuffled_evolved_tensor = evolved_tensor.shuffle(qubit_positions);
 
