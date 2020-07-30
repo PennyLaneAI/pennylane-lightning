@@ -197,6 +197,14 @@ State contract_3q_op(State state, const string &op_string, const vector<int> &w)
     return tensor_contracted;
 }
 
+void print(std::vector<int> const &input)
+{
+	for (int i = 0; i < input.size(); i++) {
+		std::cout << input.at(i) << ' ';
+	}
+	std::cout << std::endl;
+}
+
 /**
 * Applies specified operations onto an input state of three or more qubits.
 *
@@ -223,27 +231,53 @@ VectorXcd apply_ops(
     State state_tensor = TensorMap<State>(state.data(), shape...);
     State evolved_tensor = state_tensor;
     const int qubits = log2(state_tensor.size());
+    int num_ops = ops.size();
 
-    for (long unsigned int i = 0; i < ops.size(); i++) {
+    // Use identity permutation initially
+    vector<int> qubit_indices(qubits);
+    std::iota(std::begin(qubit_indices), std::end(qubit_indices), 0);
+        vector<int> qubit_indices2(qubits);
+    std::iota(std::begin(qubit_indices2), std::end(qubit_indices2), 0);
+
+    for (int i = 0; i < num_ops; i++) {
         // Load operation string and corresponding wires and parameters
         string op_string = ops[i];
         vector<int> w = wires[i];
+        int num_wires = w.size();
         vector<float> p = params[i];
         State tensor_contracted;
 
-        if (w.size() == 1) {
-            tensor_contracted = contract_1q_op<State> (evolved_tensor, op_string, w, p);
+        vector<int> indices_to_contract(num_wires);
+        for (int j = 0; j < num_wires; j++) {
+            indices_to_contract[j] = qubit_indices[w[j]];
         }
-        else if (w.size() == 2) {
-            tensor_contracted = contract_2q_op<State> (evolved_tensor, op_string, w, p);
-        }
-       else if (w.size() == 3) {
-            tensor_contracted = contract_3q_op<State> (evolved_tensor, op_string, w);
-        }
-
         auto perm = calculate_indices(w, qubits);
         auto inv_perm = shuffle_indices(perm);
-        evolved_tensor = tensor_contracted.shuffle(inv_perm);
+        qubit_indices = inv_perm;
+
+        if (num_wires == 1) {
+            tensor_contracted = contract_1q_op<State> (evolved_tensor, op_string, indices_to_contract, p);
+        }
+        else if (num_wires == 2) {
+            tensor_contracted = contract_2q_op<State> (evolved_tensor, op_string, indices_to_contract, p);
+        }
+       else if (num_wires == 3) {
+            tensor_contracted = contract_3q_op<State> (evolved_tensor, op_string, indices_to_contract);
+        }
+        std::cout << tensor_contracted << std::endl;
+//        auto perm = calculate_indices(w, qubits);
+//        auto inv_perm = shuffle_indices(perm);
+//        qubit_indices = inv_perm;
+//        print(w);
+        print(qubit_indices);
+//        print(perm);
+//        print(inv_perm);
+        if (i == num_wires - 1) {
+            evolved_tensor = tensor_contracted.shuffle(qubit_indices);
+        }
+        else {
+            evolved_tensor = tensor_contracted.shuffle(qubit_indices2);
+        }
     }
 
     return Map<VectorXcd> (evolved_tensor.data(), state.size(), 1);
