@@ -17,7 +17,16 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 #include <math.h>       /* sqrt */
 
-const double tol = 1.0e-10f;
+const double tol = 1.0e-6f;
+
+using Matrix_2q = Eigen::Matrix<std::complex<double>, 4, 4>;
+using Vector_3q = Eigen::Matrix<std::complex<double>, 8, 1>;
+
+template<class State>
+Eigen::VectorXcd vectorize(State state) {
+    Eigen::Map<Eigen::VectorXcd> out(state.data(), state.size());
+    return out;
+}
 
 namespace one_qubit_ops {
 
@@ -35,8 +44,8 @@ TEST(PauliX, ApplyToZero) {
   expected_output_state.setValues({0, 1});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -54,8 +63,8 @@ TEST(PauliX, ApplyToPlus) {
   expected_output_state.setValues({1/SQRT_2, 1/SQRT_2});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -74,8 +83,8 @@ TEST(PauliY, ApplyToZero) {
   expected_output_state.setValues({0, Val});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -96,8 +105,8 @@ TEST(PauliY, ApplyToPlus) {
   expected_output_state.setValues({first, second});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -115,8 +124,8 @@ TEST(PauliZ, ApplyToZero) {
   expected_output_state.setValues({1, 0});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -134,8 +143,8 @@ TEST(PauliZ, ApplyToPlus) {
   expected_output_state.setValues({1/SQRT_2, -1/SQRT_2});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -153,8 +162,8 @@ TEST(Hadamard, ApplyToZero) {
   expected_output_state.setValues({1/SQRT_2, 1/SQRT_2});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -172,8 +181,8 @@ TEST(Hadamard, ApplyToMinus) {
   expected_output_state.setValues({0, 1});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -191,8 +200,8 @@ TEST(SGate, ApplyToZero) {
   expected_output_state.setValues({1, 0});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -211,8 +220,8 @@ TEST(SGate, ApplyToPlus) {
   expected_output_state.setValues({1/SQRT_2, imag_val});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -230,8 +239,8 @@ TEST(TGate, ApplyToZero) {
   expected_output_state.setValues({1, 0});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -252,8 +261,8 @@ TEST(TGate, ApplyToPlus) {
   expected_output_state.setValues({1/SQRT_2, val});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -276,8 +285,8 @@ TEST(RXGate, ApplyToZeroPiHalf) {
   expected_output_state.setValues({first, second});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -299,8 +308,8 @@ TEST(RXGate, ApplyToZeroPi) {
   expected_output_state.setValues({0, second});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -323,8 +332,8 @@ TEST(RXGate, ApplyToPlusPiHalf) {
   expected_output_state.setValues({val, val});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -346,8 +355,8 @@ TEST(RYGate, ApplyToZeroPiHalf) {
   expected_output_state.setValues({1/SQRT_2, 1/SQRT_2});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -367,8 +376,8 @@ TEST(RYGate, ApplyToZeroPi) {
   expected_output_state.setValues({0, 1});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -389,8 +398,8 @@ TEST(RYGate, ApplyToPlusPiHalf) {
   expected_output_state.setValues({0, 1});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -413,8 +422,8 @@ TEST(RZGate, ApplyToZeroPiHalf) {
   expected_output_state.setValues({val, 0});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -436,8 +445,8 @@ TEST(RZGate, ApplyToOnePi) {
   expected_output_state.setValues({0, val});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -460,8 +469,8 @@ TEST(RZGate, ApplyToPlusHalfPi) {
   expected_output_state.setValues({first, second});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -484,8 +493,8 @@ TEST(RotGate, ApplyToZeroPiHalfZeroZero) {
   expected_output_state.setValues({val, 0});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -507,8 +516,8 @@ TEST(RotGate, ApplyToZeroZeroPiHalfZero) {
   expected_output_state.setValues({1/SQRT_2, 1/SQRT_2});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -532,8 +541,8 @@ TEST(RotGate, ApplyToPlusZeroZeroPiHalf) {
   expected_output_state.setValues({val1, val2});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -557,8 +566,8 @@ TEST(RotGate, ApplyToZeroPiHalfNegPiHalfPiHalf) {
   expected_output_state.setValues({val, -1/SQRT_2});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -584,10 +593,38 @@ TEST(RotGate, ApplyToPlusNegPiHalfPiPi) {
   expected_output_state.setValues({val1, val2});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
+}
+
+TEST(PhaseShift, ApplyToZeroAndOne) {
+    State_1q input_state_0(2);
+    State_1q input_state_1(2);
+    input_state_0.setValues({1, 0});
+    input_state_1.setValues({0, 1});
+
+
+    std::complex<double> const1(0.99500417, 0.09983342);
+    State_1q expected_state_0(2);
+    State_1q expected_state_1(2);
+    expected_state_0.setValues({1, 0});
+    expected_state_1.setValues({0, const1});
+
+    vector<int> w{0};
+    vector<float> p{0.1};
+    auto output_state_0 = contract_1q_op(input_state_0, "PhaseShift", w, p);
+    auto output_state_1 = contract_1q_op(input_state_1, "PhaseShift", w, p);
+
+      // Casting to a vector for comparison
+    auto expected_state_vector_0 = vectorize(expected_state_0);
+    auto expected_state_vector_1 = vectorize(expected_state_1);
+    auto output_state_vector_0 = vectorize(output_state_0);
+    auto output_state_vector_1 = vectorize(output_state_1);
+
+    EXPECT_TRUE(expected_state_vector_0.isApprox(output_state_vector_0, tol));
+    EXPECT_TRUE(expected_state_vector_1.isApprox(output_state_vector_1, tol));
 }
 
 }  // namespace one_qubit_ops
@@ -608,8 +645,8 @@ TEST(CNOT, ApplyToZero) {
   expected_output_state.setValues({{1, 0},{0,0}});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -627,8 +664,8 @@ TEST(CNOT, ApplyToOneZero) {
   expected_output_state.setValues({{0, 0},{0,1}});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -646,8 +683,8 @@ TEST(CNOT, ApplyToBellState) {
   expected_output_state.setValues({{1/SQRT_2,0},{1/SQRT_2, 0}});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
@@ -668,12 +705,328 @@ TEST(CNOT, ApplyToThreeQubitControlThird) {
   expected_output_state.setValues({{{0,0},{0,0}},{{0,1},{0,0}}});
 
   // Casting to a vector for comparison
-  Eigen::Map<Eigen::VectorXcd> output_state_vector(output_state.data(), output_state.size());
-  Eigen::Map<Eigen::VectorXcd> expected_vector(expected_output_state.data(), expected_output_state.size());
+  auto output_state_vector = vectorize(output_state);
+  auto expected_vector = vectorize(expected_output_state);
 
   EXPECT_TRUE(output_state_vector.isApprox(expected_vector, tol));
 }
+
+TEST(SWAP, ToMatrix) {
+
+  auto operation = SWAP();
+  auto operation_matrix = Map<Matrix_2q> (operation.data());
+
+  Matrix_2q target_matrix;
+  target_matrix << 1, 0, 0, 0,
+                   0, 0, 1, 0,
+                   0, 1, 0, 0,
+                   0, 0, 0, 1;
+
+  EXPECT_TRUE(operation_matrix.isApprox(target_matrix, tol));
+
+}
+
+TEST(CZ, ToMatrix) {
+
+  auto operation = CZ();
+  auto operation_matrix = Map<Matrix_2q> (operation.data());
+
+  Matrix_2q target_matrix;
+  target_matrix << 1, 0, 0, 0,
+                   0, 1, 0, 0,
+                   0, 0, 1, 0,
+                   0, 0, 0, -1;
+
+  EXPECT_TRUE(operation_matrix.isApprox(target_matrix, tol));
+
+}
+
+TEST(CRots, ApplyTo00) {
+
+  State_2q input_state(2,2);
+  input_state.setValues({{1, 0},{0, 0}});
+
+  State_2q expected_output_state(2,2);
+  expected_output_state.setValues({{1, 0},{0, 0}});
+
+  vector<int> w{0, 1};
+  vector<float> p{0.1};
+  auto output_state_X = contract_2q_op(input_state, "CRX", w, p);
+  auto output_state_Y = contract_2q_op(input_state, "CRY", w, p);
+  auto output_state_Z = contract_2q_op(input_state, "CRZ", w, p);
+
+  vector<int> w2{0, 1};
+  vector<float> p2{0.1, 0.2, 0.3};
+  auto output_state_Rot = contract_2q_op(input_state, "CRot", w2, p2);
+
+  // Casting to a vector for comparison
+  auto output_state_vector_X = vectorize(output_state_X);
+  auto output_state_vector_Y = vectorize(output_state_Y);
+  auto output_state_vector_Z = vectorize(output_state_Z);
+  auto expected_vector = vectorize(expected_output_state);
+  auto output_state_vector_Rot = vectorize(output_state_Rot);
+
+  EXPECT_TRUE(expected_vector.isApprox(output_state_vector_X, tol));
+  EXPECT_TRUE(expected_vector.isApprox(output_state_vector_Y, tol));
+  EXPECT_TRUE(expected_vector.isApprox(output_state_vector_Z, tol));
+  EXPECT_TRUE(expected_vector.isApprox(output_state_vector_Rot, tol));
+}
+
+TEST(CRots, ApplyTo01) {
+
+  State_2q input_state(2,2);
+  input_state.setValues({{0, 1},{0, 0}});
+
+  State_2q expected_output_state(2,2);
+  expected_output_state.setValues({{0, 1},{0, 0}});
+
+  vector<int> w{0, 1};
+  vector<float> p{0.1};
+  auto output_state_X = contract_2q_op(input_state, "CRX", w, p);
+  auto output_state_Y = contract_2q_op(input_state, "CRY", w, p);
+  auto output_state_Z = contract_2q_op(input_state, "CRZ", w, p);
+
+  vector<int> w2{0, 1};
+  vector<float> p2{0.1, 0.2, 0.3};
+  auto output_state_Rot = contract_2q_op(input_state, "CRot", w2, p2);
+
+  // Casting to a vector for comparison
+  auto output_state_vector_X = vectorize(output_state_X);
+  auto output_state_vector_Y = vectorize(output_state_Y);
+  auto output_state_vector_Z = vectorize(output_state_Z);
+  auto expected_vector = vectorize(expected_output_state);
+  auto output_state_vector_Rot = vectorize(output_state_Rot);
+
+  EXPECT_TRUE(expected_vector.isApprox(output_state_vector_X, tol));
+  EXPECT_TRUE(expected_vector.isApprox(output_state_vector_Y, tol));
+  EXPECT_TRUE(expected_vector.isApprox(output_state_vector_Z, tol));
+  EXPECT_TRUE(expected_vector.isApprox(output_state_vector_Rot, tol));
+}
+
+TEST(CRots, ApplyTo10) {
+
+  State_2q input_state(2,2);
+  input_state.setValues({{0, 0},{1, 0}});
+
+  float phi(0.1);
+  auto cos = std::cos(phi / 2);
+  auto sin = std::sin(phi / 2);
+
+  complex<double> cos_real(cos, 0);
+  complex<double> sin_imag(0, sin);
+  complex<double> sin_real(sin, 0);
+
+  State_2q expected_output_state_X(2,2);
+  expected_output_state_X.setValues({{0, 0},{cos_real, -sin_imag}});
+
+  State_2q expected_output_state_Y(2,2);
+  expected_output_state_Y.setValues({{0, 0},{cos_real, sin_real}});
+
+  State_2q expected_output_state_Z(2,2);
+  expected_output_state_Z.setValues({{0, 0},{cos_real-sin_imag, 0}});
+
+  vector<float> p2{0.4, 0.1, 0.3};
+  complex<double> imag_phi_plus_omega(0, -(p2[0] + p2[2]) / 2);
+  complex<double> imag_phi_minus_omega(0, -(p2[0] - p2[2]) / 2);
+  auto exp_plus = std::pow(M_E, imag_phi_plus_omega);
+  auto exp_minus = std::pow(M_E, imag_phi_minus_omega);
+
+  State_2q expected_output_state_Rot(2,2);
+  expected_output_state_Rot.setValues({{0, 0},{cos_real * exp_plus, sin_real * exp_minus}});
+
+  vector<int> w{0, 1};
+  vector<float> p{phi};
+  auto output_state_X = contract_2q_op(input_state, "CRX", w, p);
+  auto output_state_Y = contract_2q_op(input_state, "CRY", w, p);
+  auto output_state_Z = contract_2q_op(input_state, "CRZ", w, p);
+
+  vector<int> w2{0, 1};
+  auto output_state_Rot = contract_2q_op(input_state, "CRot", w2, p2);
+
+  // Casting to a vector for comparison
+  auto output_state_vector_X = vectorize(output_state_X);
+  auto output_state_vector_Y = vectorize(output_state_Y);
+  auto output_state_vector_Z = vectorize(output_state_Z);
+  auto output_state_vector_Rot = vectorize(output_state_Rot);
+
+  auto expected_vector_X = vectorize(expected_output_state_X);
+  auto expected_vector_Y = vectorize(expected_output_state_Y);
+  auto expected_vector_Z = vectorize(expected_output_state_Z);
+  auto expected_vector_Rot = vectorize(expected_output_state_Rot);
+
+  EXPECT_TRUE(expected_vector_X.isApprox(output_state_vector_X, tol));
+  EXPECT_TRUE(expected_vector_Y.isApprox(output_state_vector_Y, tol));
+  EXPECT_TRUE(expected_vector_Z.isApprox(output_state_vector_Z, tol));
+  EXPECT_TRUE(expected_vector_Rot.isApprox(output_state_vector_Rot, tol));
+}
+
+TEST(CRots, ApplyTo11) {
+
+  State_2q input_state(2,2);
+  input_state.setValues({{0, 0},{0, 1}});
+
+  float phi(0.1);
+  auto cos = std::cos(phi / 2);
+  auto sin = std::sin(phi / 2);
+
+  complex<double> cos_real(cos, 0);
+  complex<double> sin_imag(0, sin);
+  complex<double> sin_real(sin, 0);
+
+  State_2q expected_output_state_X(2,2);
+  expected_output_state_X.setValues({{0, 0},{-sin_imag, cos_real}});
+
+  State_2q expected_output_state_Y(2,2);
+  expected_output_state_Y.setValues({{0, 0},{-sin_real, cos_real}});
+
+  State_2q expected_output_state_Z(2,2);
+  expected_output_state_Z.setValues({{0, 0},{0, cos_real+sin_imag}});
+
+  vector<float> p2{0.4, 0.1, 0.3};
+  complex<double> imag_phi_plus_omega(0, (p2[0] + p2[2]) / 2);
+  complex<double> imag_phi_minus_omega(0, (p2[0] - p2[2]) / 2);
+  auto exp_plus = std::pow(M_E, imag_phi_plus_omega);
+  auto exp_minus = std::pow(M_E, imag_phi_minus_omega);
+
+  State_2q expected_output_state_Rot(2,2);
+  expected_output_state_Rot.setValues({{0, 0},{-sin_real * exp_minus, cos_real * exp_plus}});
+
+  vector<int> w{0, 1};
+  vector<float> p{phi};
+  auto output_state_X = contract_2q_op(input_state, "CRX", w, p);
+  auto output_state_Y = contract_2q_op(input_state, "CRY", w, p);
+  auto output_state_Z = contract_2q_op(input_state, "CRZ", w, p);
+
+  vector<int> w2{0, 1};
+  auto output_state_Rot = contract_2q_op(input_state, "CRot", w2, p2);
+
+  // Casting to a vector for comparison
+  auto output_state_vector_X = vectorize(output_state_X);
+  auto output_state_vector_Y = vectorize(output_state_Y);
+  auto output_state_vector_Z = vectorize(output_state_Z);
+  auto output_state_vector_Rot = vectorize(output_state_Rot);
+
+  auto expected_vector_X = vectorize(expected_output_state_X);
+  auto expected_vector_Y = vectorize(expected_output_state_Y);
+  auto expected_vector_Z = vectorize(expected_output_state_Z);
+  auto expected_vector_Rot = vectorize(expected_output_state_Rot);
+
+  EXPECT_TRUE(expected_vector_X.isApprox(output_state_vector_X, tol));
+  EXPECT_TRUE(expected_vector_Y.isApprox(output_state_vector_Y, tol));
+  EXPECT_TRUE(expected_vector_Z.isApprox(output_state_vector_Z, tol));
+  EXPECT_TRUE(expected_vector_Rot.isApprox(output_state_vector_Rot, tol));
+
+}
+
 }  // namespace two_qubit_ops
+
+namespace three_qubit_ops {
+
+TEST(Toffoli, ApplyToAll) {
+    State_3q input_state_000(2, 2, 2);
+    input_state_000.setValues({{{1, 0},{0, 0}}, {{0, 0},{0, 0}}});
+    State_3q input_state_001(2, 2, 2);
+    input_state_001.setValues({{{0, 1},{0, 0}}, {{0, 0},{0, 0}}});
+    State_3q input_state_010(2, 2, 2);
+    input_state_010.setValues({{{0, 0},{1, 0}}, {{0, 0},{0, 0}}});
+    State_3q input_state_011(2, 2, 2);
+    input_state_011.setValues({{{0, 0},{0, 1}}, {{0, 0},{0, 0}}});
+    State_3q input_state_100(2, 2, 2);
+    input_state_100.setValues({{{0, 0},{0, 0}}, {{1, 0},{0, 0}}});
+    State_3q input_state_101(2, 2, 2);
+    input_state_101.setValues({{{0, 0},{0, 0}}, {{0, 1},{0, 0}}});
+    State_3q input_state_110(2, 2, 2);
+    input_state_110.setValues({{{0, 0},{0, 0}}, {{0, 0},{1, 0}}});
+    State_3q input_state_111(2, 2, 2);
+    input_state_111.setValues({{{0, 0},{0, 0}}, {{0, 0},{0, 1}}});
+
+    std::vector<State_3q> input_states{
+        input_state_000,
+        input_state_001,
+        input_state_010,
+        input_state_011,
+        input_state_100,
+        input_state_101,
+        input_state_110,
+        input_state_111,
+    };
+    std::vector<State_3q> output_states;
+
+    vector<int> w{0, 1, 2};
+
+    for (int i=0; i < 8; i++) {
+        output_states.push_back(contract_3q_op(input_states[i], "Toffoli", w));
+    }
+
+    State_3q target_state_110(2, 2, 2);
+    target_state_110.setValues({{{0, 0},{0, 0}}, {{0, 0},{0, 1}}});
+    State_3q target_state_111(2, 2, 2);
+    target_state_111.setValues({{{0, 0},{0, 0}}, {{0, 0},{1, 0}}});
+
+    auto expected_states = input_states;
+    expected_states[6] = target_state_110;
+    expected_states[7] = target_state_111;
+
+    for (int i=0; i < 8; i++) {
+        auto expected_vector = vectorize(expected_states[i]);
+        auto output_state = vectorize(output_states[i]);
+        EXPECT_TRUE(expected_vector.isApprox(output_state, tol));
+    }
+}
+
+TEST(CSWAP, ApplyToAll) {
+    State_3q input_state_000(2, 2, 2);
+    input_state_000.setValues({{{1, 0},{0, 0}}, {{0, 0},{0, 0}}});
+    State_3q input_state_001(2, 2, 2);
+    input_state_001.setValues({{{0, 1},{0, 0}}, {{0, 0},{0, 0}}});
+    State_3q input_state_010(2, 2, 2);
+    input_state_010.setValues({{{0, 0},{1, 0}}, {{0, 0},{0, 0}}});
+    State_3q input_state_011(2, 2, 2);
+    input_state_011.setValues({{{0, 0},{0, 1}}, {{0, 0},{0, 0}}});
+    State_3q input_state_100(2, 2, 2);
+    input_state_100.setValues({{{0, 0},{0, 0}}, {{1, 0},{0, 0}}});
+    State_3q input_state_101(2, 2, 2);
+    input_state_101.setValues({{{0, 0},{0, 0}}, {{0, 1},{0, 0}}});
+    State_3q input_state_110(2, 2, 2);
+    input_state_110.setValues({{{0, 0},{0, 0}}, {{0, 0},{1, 0}}});
+    State_3q input_state_111(2, 2, 2);
+    input_state_111.setValues({{{0, 0},{0, 0}}, {{0, 0},{0, 1}}});
+
+    std::vector<State_3q> input_states{
+        input_state_000,
+        input_state_001,
+        input_state_010,
+        input_state_011,
+        input_state_100,
+        input_state_101,
+        input_state_110,
+        input_state_111,
+    };
+    std::vector<State_3q> output_states;
+
+    vector<int> w{0, 1, 2};
+
+    for (int i=0; i < 8; i++) {
+        output_states.push_back(contract_3q_op(input_states[i], "CSWAP", w));
+    }
+
+    State_3q target_state_101(2, 2, 2);
+    target_state_101.setValues({{{0, 0},{0, 0}}, {{0, 0},{1, 0}}});
+    State_3q target_state_110(2, 2, 2);
+    target_state_110.setValues({{{0, 0},{0, 0}}, {{0, 1},{0, 0}}});
+
+    auto expected_states = input_states;
+    expected_states[5] = target_state_101;
+    expected_states[6] = target_state_110;
+
+    for (int i=0; i < 8; i++) {
+        auto expected_vector = vectorize(expected_states[i]);
+        auto output_state = vectorize(output_states[i]);
+        EXPECT_TRUE(expected_vector.isApprox(output_state, tol));
+    }
+}
+
+} // namespace three_qubit_ops
 
 namespace auxiliary_functions {
 

@@ -30,11 +30,11 @@ VectorXcd apply (
     ) {
     VectorXcd evolved_state;
     switch (qubits) {
-//    case 1:
-//        evolved_state = apply_ops <State_1q> (state, ops, wires, params, 2);
-//        break;
+    case 1:
+        evolved_state = apply_ops_1q (state, ops, wires, params);
+        break;
     case 2:
-        evolved_state = apply_ops <State_2q> (state, ops, wires, params, 2, 2);
+        evolved_state = apply_ops_2q (state, ops, wires, params);
         break;
     case 3:
         evolved_state = apply_ops <State_3q> (state, ops, wires, params, 2, 2, 2);

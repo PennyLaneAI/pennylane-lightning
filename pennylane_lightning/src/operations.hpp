@@ -107,6 +107,16 @@ Gate_1q RZ(const double& parameter) {
     return RZ;
 }
 
+Gate_1q PhaseShift(const double& parameter) {
+    Gate_1q PhaseShift(2, 2);
+
+    const std::complex<double> exponent(0, parameter);
+    const std::complex<double> shift = std::pow(M_E, exponent);
+
+    PhaseShift.setValues({{1, 0}, {0, shift}});
+    return PhaseShift;
+}
+
 Gate_1q Rot(const double& phi, const double& theta, const double& omega) {
     Gate_1q Rot(2, 2);
 
@@ -134,12 +144,100 @@ Gate_2q CNOT() {
     return CNOT;
 }
 
+Gate_2q SWAP() {
+    Gate_2q SWAP(2,2,2,2);
+    SWAP.setValues({{{{1, 0},{0, 0}},{{0, 0},{1, 0}}},{{{0, 1},{0, 0}},{{0, 0},{0, 1}}}});
+    return SWAP;
+}
+
+Gate_2q CZ() {
+    Gate_2q CZ(2,2,2,2);
+    CZ.setValues({{{{1, 0},{0, 0}},{{0, 1},{0, 0}}},{{{0, 0},{1, 0}},{{0, 0},{0, -1}}}});
+    return CZ;
+}
+
+Gate_3q Toffoli() {
+    Gate_3q Toffoli(2,2,2,2,2,2);
+    Toffoli.setValues({{{{{{1, 0},{0, 0}},{{0, 0},{0, 0}}},{{{0, 1},{0, 0}},{{0, 0},{0, 0}}}},
+        {{{{0, 0},{1, 0}},{{0, 0},{0, 0}}},{{{0, 0},{0, 1}},{{0, 0},{0, 0}}}}},
+        {{{{{0, 0},{0, 0}},{{1, 0},{0, 0}}},{{{0, 0},{0, 0}},{{0, 1},{0, 0}}}},
+        {{{{0, 0},{0, 0}},{{0, 0},{0, 1}}},{{{0, 0},{0, 0}},{{0, 0},{1, 0}}}}}});
+    return Toffoli;
+}
+
+Gate_3q CSWAP() {
+    Gate_3q CSWAP(2,2,2,2,2,2);
+    CSWAP.setValues({{{{{{1, 0},{0, 0}},{{0, 0},{0, 0}}},{{{0, 1},{0, 0}},{{0, 0},{0, 0}}}},
+        {{{{0, 0},{1, 0}},{{0, 0},{0, 0}}},{{{0, 0},{0, 1}},{{0, 0},{0, 0}}}}},
+        {{{{{0, 0},{0, 0}},{{1, 0},{0, 0}}},{{{0, 0},{0, 0}},{{0, 0},{1, 0}}}},
+        {{{{0, 0},{0, 0}},{{0, 1},{0, 0}}},{{{0, 0},{0, 0}},{{0, 0},{0, 1}}}}}});
+    return CSWAP;
+}
+
+Gate_2q CRX(const double& parameter) {
+    Gate_2q CRX(2, 2, 2, 2);
+
+    const std::complex<double> c (std::cos(parameter / 2), 0);
+    const std::complex<double> js (0, std::sin(-parameter / 2));
+
+    CRX.setValues({{{{1, 0},{0, 0}},{{0, 1},{0, 0}}},{{{0, 0},{c, js}},{{0, 0},{js, c}}}});
+    return CRX;
+}
+
+Gate_2q CRY(const double& parameter) {
+    Gate_2q CRY(2, 2, 2, 2);
+
+    const double c = std::cos(parameter / 2);
+    const double s = std::sin(parameter / 2);
+
+    CRY.setValues({{{{1, 0},{0, 0}},{{0, 1},{0, 0}}},{{{0, 0},{c, -s}},{{0, 0},{s, c}}}});
+    return CRY;
+}
+
+Gate_2q CRZ(const double& parameter) {
+    Gate_2q CRZ(2, 2, 2, 2);
+
+    const std::complex<double> exponent(0, -parameter/2);
+    const std::complex<double> exponent_second(0, parameter/2);
+    const std::complex<double> first = std::pow(M_E, exponent);
+    const std::complex<double> second = std::pow(M_E, exponent_second);
+
+    CRZ.setValues({{{{1, 0},{0, 0}},{{0, 1},{0, 0}}},{{{0, 0},{first, 0}},{{0, 0},{0, second}}}});
+    return CRZ;
+}
+
+Gate_2q CRot(const double& phi, const double& theta, const double& omega) {
+    Gate_2q CRot(2,2,2,2);
+
+    const std::complex<double> e00(0, (-phi - omega)/2);
+    const std::complex<double> e10(0, (-phi + omega)/2);
+    const std::complex<double> e01(0, (phi - omega)/2);
+    const std::complex<double> e11(0, (phi + omega)/2);
+
+    const std::complex<double> exp00 = std::pow(M_E, e00);
+    const std::complex<double> exp10 = std::pow(M_E, e10);
+    const std::complex<double> exp01 = std::pow(M_E, e01);
+    const std::complex<double> exp11 = std::pow(M_E, e11);
+
+    const double c = std::cos(theta / 2);
+    const double s = std::sin(theta / 2);
+
+    CRot.setValues({{{{1, 0},{0, 0}},{{0, 1},{0, 0}}},{{{0, 0},{exp00 * c, -exp01 * s}},
+                   {{0, 0},{exp10 * s, exp11 * c}}}});
+    return CRot;
+}
+
+
 // Creating aliases based on the function signatures of each operation
 typedef Gate_1q (*pfunc_1q)();
 typedef Gate_1q (*pfunc_1q_one_param)(const double&);
 typedef Gate_1q (*pfunc_1q_three_params)(const double&, const double&, const double&);
 
 typedef Gate_2q (*pfunc_2q)();
+typedef Gate_2q (*pfunc_2q_one_param)(const double&);
+typedef Gate_2q (*pfunc_2q_three_params)(const double&, const double&, const double&);
+
+typedef Gate_3q (*pfunc_3q)();
 
 // Defining the operation maps
 const std::map<std::string, pfunc_1q> OneQubitOps = {
@@ -155,7 +253,8 @@ const std::map<std::string, pfunc_1q> OneQubitOps = {
 const std::map<std::string, pfunc_1q_one_param> OneQubitOpsOneParam = {
     {"RX", RX},
     {"RY", RY},
-    {"RZ", RZ}
+    {"RZ", RZ},
+    {"PhaseShift", PhaseShift}
 };
 
 const std::map<std::string, pfunc_1q_three_params> OneQubitOpsThreeParams = {
@@ -164,5 +263,22 @@ const std::map<std::string, pfunc_1q_three_params> OneQubitOpsThreeParams = {
 
 
 const std::map<std::string, pfunc_2q> TwoQubitOps = {
-    {"CNOT", CNOT}
+    {"CNOT", CNOT},
+    {"SWAP", SWAP},
+    {"CZ", CZ}
+};
+
+const std::map<std::string, pfunc_2q_one_param> TwoQubitOpsOneParam = {
+    {"CRX", CRX},
+    {"CRY", CRY},
+    {"CRZ", CRZ}
+};
+
+const std::map<std::string, pfunc_2q_three_params> TwoQubitOpsThreeParams = {
+    {"CRot", CRot}
+};
+
+const std::map<std::string, pfunc_3q> ThreeQubitOps = {
+    {"Toffoli", Toffoli},
+    {"CSWAP", CSWAP}
 };
