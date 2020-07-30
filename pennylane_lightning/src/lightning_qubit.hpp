@@ -132,21 +132,22 @@ VectorXcd apply_ops(
         string op_string = ops[i];
         vector<int> w = wires[i];
         vector<float> p = params[i];
+        State tensor_contracted;
 
         if (w.size() == 1) {
-            evolved_tensor = contract_1q_op<State> (evolved_tensor, op_string, w, p);
+            tensor_contracted = contract_1q_op<State> (evolved_tensor, op_string, w, p);
         }
         else if (w.size() == 2) {
-            evolved_tensor = contract_2q_op<State> (evolved_tensor, op_string, w, p);
+            tensor_contracted = contract_2q_op<State> (evolved_tensor, op_string, w, p);
         }
        else if (w.size() == 3) {
-            evolved_tensor = contract_3q_op<State> (evolved_tensor, op_string, w, p);
+            tensor_contracted = contract_3q_op<State> (evolved_tensor, op_string, w, p);
         }
 
         // Updates w such that it is the calculated permutation
         calc_perm(w, qubits);
         auto inv_perm = argsort(w);
-        evolved_tensor = evolved_tensor.shuffle(inv_perm);
+        evolved_tensor = tensor_contracted.shuffle(inv_perm);
     }
 
     return Map<VectorXcd> (evolved_tensor.data(), state.size(), 1);
@@ -196,18 +197,19 @@ VectorXcd apply_ops_2q(
         string op_string = ops[i];
         vector<int> w = wires[i];
         vector<float> p = params[i];
+        State_2q tensor_contracted;
 
         if (w.size() == 1) {
-            evolved_tensor = contract_1q_op<State_2q> (evolved_tensor, op_string, w, p);
+            tensor_contracted = contract_1q_op<State_2q> (evolved_tensor, op_string, w, p);
         }
         else if (w.size() == 2) {
-            evolved_tensor = contract_2q_op<State_2q> (evolved_tensor, op_string, w, p);
+            tensor_contracted = contract_2q_op<State_2q> (evolved_tensor, op_string, w, p);
         }
 
         // Updates w such that it is the calculated permutation
         calc_perm(w, qubits);
         auto inv_perm = argsort(w);
-        evolved_tensor = evolved_tensor.shuffle(inv_perm);
+        evolved_tensor = tensor_contracted.shuffle(inv_perm);
     }
 
     return Map<VectorXcd> (evolved_tensor.data(), state.size(), 1);
