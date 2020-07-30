@@ -83,8 +83,8 @@ class LightningQubit(DefaultQubit):
 
     observables = {"PauliX", "PauliY", "PauliZ", "Hadamard", "Identity"}
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, wires, *, shots=1000, analytic=True):
+        super().__init__(wires, shots=shots, analytic=analytic)
 
         if self.num_wires > 16:
             warnings.warn(
