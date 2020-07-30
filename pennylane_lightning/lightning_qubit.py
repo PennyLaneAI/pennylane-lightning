@@ -20,7 +20,7 @@ It implements the necessary :class:`~pennylane._device.Device` methods as well a
 simulation of a qubit-based quantum circuit architecture.
 """
 from pennylane.plugins import DefaultQubit
-from .src.lightning_qubit_ops import apply
+from .lightning_qubit_ops import apply
 import numpy as np
 from pennylane import QubitStateVector, BasisState, DeviceError
 
