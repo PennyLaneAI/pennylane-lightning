@@ -72,7 +72,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: PennyLaneAI/pennylane
-          ref: skip_unsupported_ops_tests
           path: pl
 
       - name: Install PennyLane
@@ -83,5 +82,5 @@ jobs:
       - name: Run PennyLane shared test suite
         run: |
           cd pl
-          pytest pennylane/plugins/tests --device lightning.qubit --analytic False -rsx
-          pytest pennylane/plugins/tests --device lightning.qubit --analytic True -rsx
+          pytest pennylane/plugins/tests --device lightning.qubit --analytic False --skip-ops
+          pytest pennylane/plugins/tests --device lightning.qubit --analytic True --skip-ops
