@@ -39,7 +39,7 @@ class LightningQubit(DefaultQubit):
         more than 16 wires, it will revert to a NumPy-based simulation.
 
     Args:
-        wires (int): the number of modes to initialize the device in
+        wires (int): the number of wires to initialize the device with
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
             the expectation values. Defaults to 1000 if not specified.
             If ``analytic == True``, then the number of shots is ignored

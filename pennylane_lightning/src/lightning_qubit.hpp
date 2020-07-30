@@ -204,7 +204,7 @@ State contract_3q_op(State state, string op_string, vector<int> w, vector<float>
 * finds the corresponding tensor, and contracts it onto the state tensor according to the gate wires
 * and parameters.
 *
-* The resulting state tensor is then converted back to a vector. This is so to ensure interoperability using pybind11.
+* The resulting state tensor is then converted back to a vector. This is to ensure interoperability using pybind11.
 *
 * @param state the multiqubit statevector
 * @param ops a vector of operation names in the order they should be applied
