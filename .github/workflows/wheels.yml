@@ -16,7 +16,10 @@ env:
     brew install gcc eigen libomp
     pip install numpy scipy pybind11
   CIBW_TEST_REQUIRES: numpy scipy pytest pytest-cov
-  CIBW_TEST_COMMAND: python -m pytest {project}/thewalrus
+  CIBW_TEST_COMMAND: |
+    git clone https://github.com/PennyLaneAI/pennylane.git
+    cd pennylane && git checkout skip_unsupported_ops_tests && pip install -e .
+    python -m pytest pennylane/pennylane/plugins/tests --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
 
 jobs:
