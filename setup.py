@@ -150,7 +150,7 @@ if platform.system() == "Darwin":
 
 ext_modules = [
     Extension(
-        "src/lightning_qubit",
+        "lightning_qubit",
         sources=["pennylane_lightning/src/lightning_qubit.cpp"],
         depends=["pennylane_lightning/src/lightning_qubit.hpp", "pennylane_lightning/src/operations.hpp"],
         include_dirs=[
@@ -196,7 +196,7 @@ info = {
     "provides": ["pennylane_lightning"],
     "install_requires": requirements,
     'ext_modules': ext_modules,
-    'ext_package': 'pennylane_lightning',
+    'ext_package': 'pennylane_lightning/src',
     "cmdclass": {'build_ext': BuildExt},
 }
 
