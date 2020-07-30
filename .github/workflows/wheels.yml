@@ -1,0 +1,85 @@
+name: Testing
+
+on: [pull_request]
+
+env:
+  CIBW_SKIP: "cp27-* cp34-* cp35-* *i686"
+  CIBW_BEFORE_BUILD_LINUX: curl -OsL https://bitbucket.org/eigen/eigen/get/3.3.7.tar.gz && tar xzf 3.3.7.tar.gz eigen-eigen-323c052e1731/Eigen --strip-components 1 && cp -rf Eigen {project}/include && pip install numpy scipy cython
+  CIBW_BEFORE_BUILD_MACOS: brew cask uninstall --force oclint && brew install gcc eigen libomp || true; brew install gcc eigen libomp && pip install numpy scipy cython
+  CIBW_TEST_REQUIRES: numpy scipy pytest pytest-cov
+  CIBW_TEST_COMMAND: python -m pytest {project}/thewalrus
+
+
+jobs:
+
+  pythontests:
+    name: Wheels (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, windows-latest, macos-latest]
+
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+
+      - name: Install cibuildwheel
+        run: |
+          python -m pip install cibuildwheel==1.5.5
+
+      - name: Install Visual C++ for Python 2.7
+        if: runner.os == 'Windows'
+        run: choco install vcpython27 -f -y
+
+      - name: Build wheels
+        run: |
+          python -m cibuildwheel --output-dir wheelhouse
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
+
+
+      - name: Install dependencies
+        run: sudo apt-get -y -q install cmake gcc libeigen3-dev
+
+      - uses: goanpeca/setup-miniconda@v1
+        with:
+          auto-update-conda: true
+          channels: conda-forge
+
+      - name: Get numpy, pybind11 and pytest
+        run: |
+          pip install numpy pybind11 pytest flaky
+
+      - name: Compilation
+        run: |
+            cd main/pennylane_lightning/src
+            make
+
+      - name: Install lightning.qubit device
+        run: |
+          cd main
+          pip install -e .
+
+      - name: Checkout PennyLane
+        uses: actions/checkout@v2
+        with:
+          repository: PennyLaneAI/pennylane
+          ref: skip_unsupported_ops_tests
+          path: pl
+
+      - name: Install PennyLane
+        run: |
+          cd pl
+          pip install -e .
+
+      - name: Run PennyLane shared test suite
+        run: |
+          cd pl
+          pytest pennylane/plugins/tests --device lightning.qubit --analytic False -rsx
+          pytest pennylane/plugins/tests --device lightning.qubit --analytic True -rsx
