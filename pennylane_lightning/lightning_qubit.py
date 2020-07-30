@@ -28,7 +28,11 @@ from pennylane import QubitStateVector, BasisState, DeviceError
 class LightningQubit(DefaultQubit):
     """TODO"""
 
+    name = "Lightning Qubit PennyLane plugin"
     short_name = "lightning.qubit"
+    pennylane_requires = "0.11"
+    version = "0.11.0"
+    author = "Xanadu Inc."
     _capabilities = {"inverse_operations": False}  # we should look at supporting
 
     operations = {
@@ -41,15 +45,26 @@ class LightningQubit(DefaultQubit):
         "S",
         "T",
         "CNOT",
+        "SWAP",
+        "CSWAP",
+        "Toffoli",
+        "CZ",
+        "PhaseShift",
         "RX",
         "RY",
         "RZ",
         "Rot",
+        "CRX",
+        "CRY",
+        "CRZ",
+        "CRot",
     }
+
+    observables = {"PauliX", "PauliY", "PauliZ", "Hadamard", "Identity"}
 
     def apply(self, operations, rotations=None, **kwargs):
 
-        if self.num_wires == 1:
+        if self.num_wires > 16:
             super().apply(operations, rotations=rotations, **kwargs)
             return
 
@@ -66,10 +81,13 @@ class LightningQubit(DefaultQubit):
 
         if operations:
             self._pre_rotated_state = self.apply_lightning(self._state, operations)
-            if rotations:
-                self._state = self.apply_lightning(self._pre_rotated_state, rotations)
-            else:
-                self._state = self._pre_rotated_state
+        else:
+            self._pre_rotated_state = self._state
+
+        if rotations:
+            self._state = self.apply_lightning(self._pre_rotated_state, rotations)
+        else:
+            self._state = self._pre_rotated_state
 
     def apply_lightning(self, state, operations):
         """TODO"""

@@ -15,3 +15,5 @@ coverage_html_report/
 .coverage
 doc/code/
 *.so
+cpptests
+*.o
