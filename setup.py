@@ -124,7 +124,7 @@ include_dirs = [
     "/usr/include/eigen3",
 ]
 
-library_dirs = [o for i in os.environ.get("LD_LIBRARY_PATH", "").split(":") if i]
+library_dirs = [i for i in os.environ.get("LD_LIBRARY_PATH", "").split(":") if i]
 libraries = []
 extra_compile_args = []
 extra_link_args = []
