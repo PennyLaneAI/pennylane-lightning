@@ -1,3 +1,23 @@
+// Copyright 2020 Xanadu Quantum Technologies Inc.
+
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+/**
+ * @file
+ * Contains the main `apply()` function for applying a set of operations to a multiqubit
+ * statevector.
+ *
+ * Also includes PyBind boilerplate for interfacing with Python.
+ */
 #include "pybind11/stl.h"
 #include "pybind11/eigen.h"
 #include "lightning_qubit.hpp"
@@ -21,6 +41,18 @@ using State_15q = Tensor<complex<double>, 15>;
 using State_16q = Tensor<complex<double>, 16>;
 
 
+/**
+* Applies specified operations onto an input state of an arbitrary number of qubits.
+*
+* Note that only up to 16 qubits are currently supported. This limitation is due to the Eigen
+* Tensor library not supporting dynamically ranked tensors.
+*
+* @param state the multiqubit statevector
+* @param ops a vector of operation names in the order they should be applied
+* @param wires a vector of wires corresponding to the operations specified in ops
+* @param params a vector of parameters corresponding to the operations specified in ops
+* @return the transformed statevector
+*/
 VectorXcd apply (
     Ref<VectorXcd> state,
     vector<string> ops,
