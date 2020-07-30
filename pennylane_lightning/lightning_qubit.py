@@ -36,7 +36,7 @@ class LightningQubit(DefaultQubit):
     .. warning::
 
         The C++ interface currently supports up to 16 wires. If Lightning Qubit is loaded with
-        greater than 16 wires, it will revert to a NumPy-based simulation.
+        more than 16 wires, it will revert to a NumPy-based simulation.
 
     Args:
         wires (int): the number of modes to initialize the device in

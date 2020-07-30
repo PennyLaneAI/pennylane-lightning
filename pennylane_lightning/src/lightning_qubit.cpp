@@ -13,12 +13,10 @@
 // limitations under the License.
 /**
  * @file
- * \rst
- * Contains the main ``apply()`` function for applying a set of operations to a multiqubit
+ * Contains the main `apply()` function for applying a set of operations to a multiqubit
  * statevector.
  *
  * Also includes PyBind boilerplate for interfacing with Python.
- * \endrst
  */
 #include "pybind11/stl.h"
 #include "pybind11/eigen.h"
