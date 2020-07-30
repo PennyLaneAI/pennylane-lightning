@@ -1032,14 +1032,14 @@ namespace auxiliary_functions {
 
 TEST(CalcPerm, OneElemOneQubit) {
     std::vector<int> input_perm({0});
-    std::vector<int> output_perm = calc_perm(input_perm, 1);
+    std::vector<int> output_perm = calculate_indices(input_perm, 1);
 
     EXPECT_TRUE(input_perm == output_perm);
 }
 
 TEST(CalcPerm, OneElemTwoQubit) {
     std::vector<int> input_perm({0});
-    std::vector<int> output_perm = calc_perm(input_perm, 2);
+    std::vector<int> output_perm = calculate_indices(input_perm, 2);
 
     std::vector<int> expected_perm({0, 1});
 
@@ -1048,7 +1048,7 @@ TEST(CalcPerm, OneElemTwoQubit) {
 
 TEST(CalcPerm, TwoElemFiveQubitAscOrder) {
     std::vector<int> input_perm({1,2,4});
-    std::vector<int> output_perm = calc_perm(input_perm, 5);
+    std::vector<int> output_perm = calculate_indices(input_perm, 5);
 
     std::vector<int> expected_perm({1,2,4,0,3});
 
@@ -1058,7 +1058,7 @@ TEST(CalcPerm, TwoElemFiveQubitAscOrder) {
 
 TEST(CalcPerm, TwoElemFiveQubitRandomOrder) {
     std::vector<int> input_perm({2,1,4});
-    std::vector<int> output_perm = calc_perm(input_perm, 5);
+    std::vector<int> output_perm = calculate_indices(input_perm, 5);
 
     std::vector<int> expected_perm({2,1,4,0,3});
 
@@ -1067,14 +1067,14 @@ TEST(CalcPerm, TwoElemFiveQubitRandomOrder) {
 
 TEST(ArgSort, OneElem) {
     std::vector<int> input_perm({0});
-    std::vector<int> output_perm = argsort(input_perm);
+    std::vector<int> output_perm = shuffle_indices(input_perm);
 
     EXPECT_TRUE(input_perm == output_perm);
 }
 
 TEST(ArgSort, MultipleAscendingOrder) {
     std::vector<int> input_perm({5,10,15});
-    std::vector<int> output_perm = argsort(input_perm);
+    std::vector<int> output_perm = shuffle_indices(input_perm);
 
     std::vector<int> expected({0,1,2});
 
@@ -1083,7 +1083,7 @@ TEST(ArgSort, MultipleAscendingOrder) {
 
 TEST(ArgSort, MultipleRandomOrderUnique) {
     std::vector<int> input_perm({10,15,5});
-    std::vector<int> output_perm = argsort(input_perm);
+    std::vector<int> output_perm = shuffle_indices(input_perm);
 
     std::vector<int> expected({2,0,1});
 
@@ -1093,7 +1093,7 @@ TEST(ArgSort, MultipleRandomOrderUnique) {
 
 TEST(ArgSort, MultipleRandomOrderRepeatedVals) {
     std::vector<int> input_perm({10,15,15,5});
-    std::vector<int> output_perm = argsort(input_perm);
+    std::vector<int> output_perm = shuffle_indices(input_perm);
 
     std::vector<int> expected({3,0,1,2});
 
