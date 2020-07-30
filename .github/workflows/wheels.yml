@@ -8,7 +8,7 @@ env:
     curl -OsL https://bitbucket.org/eigen/eigen/get/3.3.7.tar.gz
     tar xzf 3.3.7.tar.gz eigen-eigen-323c052e1731/Eigen --strip-components 1
     cp -rf Eigen {project}/include
-    export EIGEN_INCLUDE_DIR={project}/include
+    export EIGEN_INCLUDE_DIR=include
     pip install numpy scipy pybind11
   CIBW_BEFORE_BUILD_MACOS: |
     brew cask uninstall --force oclint
