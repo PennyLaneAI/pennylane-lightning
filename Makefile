@@ -2,18 +2,19 @@ PYTHON3 := $(shell which python3 2>/dev/null)
 
 PYTHON := python3
 COVERAGE := --cov=pennylane_lightning --cov-report term-missing --cov-report=html:coverage_html_report
-TESTRUNNER := -m pytest tests --tb=short
+TESTRUNNER := -m pytest pennylane_lightning/tests --tb=short
 
 .PHONY: help
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
-	@echo "  install            to install PennyLane-lightning"
-	@echo "  wheel              to build the PennyLane-lightning wheel"
+	@echo "  install            to install PennyLane-Lightning"
+	@echo "  wheel              to build the PennyLane-Lightning wheel"
 	@echo "  dist               to package the source distribution"
 	@echo "  clean              to delete all temporary, cache, and build files"
 	@echo "  clean-docs         to delete all built documentation"
-	@echo "  test               to run the test suite for all configured devices"
-	@echo "  coverage           to generate a coverage report for all configured devices"
+	@echo "  test               to run the test suite"
+	@echo "  test-cpp           to run the C++ test suite"
+	@echo "  coverage           to generate a coverage report"
 
 .PHONY: install
 install:
@@ -32,12 +33,16 @@ dist:
 
 .PHONY : clean
 clean:
+	$(PYTHON) setup.py clean --all
 	rm -rf pennylane_lightning/__pycache__
-	rm -rf tests/__pycache__
+	rm -rf pennylane_lightning/src/__pycache__
+	rm -rf pennylane_lightning/tests/__pycache__
+	rm -rf pennylane_lightning/src/tests/__pycache__
 	rm -rf dist
 	rm -rf build
-	rm -rf .pytest_cache
 	rm -rf .coverage coverage_html_report/
+	rm -rf tmp
+	rm -rf *.dat
 
 docs:
 	make -C doc html
@@ -51,4 +56,9 @@ test:
 	$(PYTHON) $(TESTRUNNER)
 
 coverage:
+	@echo "Generating coverage report..."
 	$(PYTHON) $(TESTRUNNER) $(COVERAGE)
+
+test-cpp:
+	make -C pennylane_lightning/src/tests clean
+	GOOGLETEST_DIR=$(HOME)/googletest make -C pennylane_lightning/src/tests test
