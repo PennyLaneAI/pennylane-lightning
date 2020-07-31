@@ -1030,75 +1030,88 @@ TEST(CSWAP, ApplyToAll) {
 
 namespace auxiliary_functions {
 
-TEST(CalcPerm, OneElemOneQubit) {
-    std::vector<int> input_perm({0});
+TEST(CalcTensInd, OneWireOneQubit) {
+    std::vector<int> tensor_indices({0});
+    std::vector<int> wires({0});
+    std::vector<int> output_tensor_indices = calculate_tensor_indices(wires, tensor_indices);
 
-    const std::vector<int> expected_perm({0});
-    calculate_indices(input_perm, 1);
-
-    EXPECT_TRUE(input_perm == expected_perm);
+    EXPECT_TRUE(tensor_indices == output_tensor_indices);
 }
 
-TEST(CalcPerm, OneElemTwoQubit) {
-    std::vector<int> input_perm({0});
-    calculate_indices(input_perm, 2);
+TEST(CalcTensInd, OneWireTwoQubit) {
+    std::vector<int> tensor_indices({0, 1});
+    std::vector<int> wires({0});
+    std::vector<int> output_tensor_indices = calculate_tensor_indices(wires, tensor_indices);
 
-    std::vector<int> expected_perm({0, 1});
+    std::vector<int> expected_tensor_indices({0, 1});
 
-    EXPECT_TRUE(input_perm == expected_perm);
+    EXPECT_TRUE(expected_tensor_indices == output_tensor_indices);
 }
 
-TEST(CalcPerm, TwoElemFiveQubitAscOrder) {
-    std::vector<int> input_perm({1,2,4});
-    calculate_indices(input_perm, 5);
+TEST(CalcTensInd, TwoWireFiveQubitAscOrder) {
+    std::vector<int> tensor_indices({0, 1, 2, 3, 4});
+    std::vector<int> wires({1,2,4});
+    std::vector<int> output_tensor_indices = calculate_tensor_indices(wires, tensor_indices);
 
-    std::vector<int> expected_perm({1,2,4,0,3});
+    std::vector<int> expected_tensor_indices({1, 2, 4, 0, 3});
 
-    EXPECT_TRUE(input_perm == expected_perm);
-}
-
-
-TEST(CalcPerm, TwoElemFiveQubitRandomOrder) {
-    std::vector<int> input_perm({2,1,4});
-    calculate_indices(input_perm, 5);
-
-    std::vector<int> expected_perm({2,1,4,0,3});
-
-    EXPECT_TRUE(input_perm == expected_perm);
-}
-
-TEST(ArgSort, OneElem) {
-    std::vector<int> input_perm({0});
-    std::vector<int> output_perm = shuffle_indices(input_perm);
-
-    EXPECT_TRUE(input_perm == output_perm);
-}
-
-TEST(ArgSort, MultipleAscendingOrder) {
-    std::vector<int> input_perm({5,10,15});
-    std::vector<int> output_perm = shuffle_indices(input_perm);
-
-    std::vector<int> expected({0,1,2});
-
-    EXPECT_TRUE(output_perm == expected);
-}
-
-TEST(ArgSort, MultipleRandomOrderUnique) {
-    std::vector<int> input_perm({10,15,5});
-    std::vector<int> output_perm = shuffle_indices(input_perm);
-
-    std::vector<int> expected({2,0,1});
-
-    EXPECT_TRUE(output_perm == expected);
+    EXPECT_TRUE(expected_tensor_indices == output_tensor_indices);
 }
 
 
-TEST(ArgSort, MultipleRandomOrderRepeatedVals) {
-    std::vector<int> input_perm({10,15,15,5});
-    std::vector<int> output_perm = shuffle_indices(input_perm);
+TEST(CalcTensInd, TwoWireFiveQubitRandomOrder) {
+    std::vector<int> tensor_indices({0, 1, 2, 3, 4});
+    std::vector<int> wires({2, 1, 4});
+    std::vector<int> output_tensor_indices = calculate_tensor_indices(wires, tensor_indices);
 
-    std::vector<int> expected({3,0,1,2});
+    std::vector<int> expected_tensor_indices({2, 1, 4, 0, 3});
 
-    EXPECT_TRUE(output_perm == expected);
+    EXPECT_TRUE(expected_tensor_indices == output_tensor_indices);
+
+}
+
+TEST(CalcTensInd, TwoWireFiveQubitRandomOrderReverse) {
+    std::vector<int> tensor_indices({4, 3, 2, 1, 0});
+    std::vector<int> wires({2, 1, 4});
+    std::vector<int> output_tensor_indices = calculate_tensor_indices(wires, tensor_indices);
+
+    std::vector<int> expected_tensor_indices({2, 1, 4, 3, 0});
+
+    EXPECT_TRUE(expected_tensor_indices == output_tensor_indices);
+}
+
+TEST(QubitPositions, OneElem) {
+    std::vector<int> tensor_indices({0});
+    std::vector<int> qubit_positions = calculate_qubit_positions(tensor_indices);
+
+    EXPECT_TRUE(tensor_indices == qubit_positions);
+}
+
+TEST(QubitPositions, MultipleAscendingOrder) {
+    std::vector<int> tensor_indices({0, 1, 2, 3});
+    std::vector<int> qubit_positions = calculate_qubit_positions(tensor_indices);
+
+    std::vector<int> expected_qubit_positions({0, 1, 2, 3});
+
+    EXPECT_TRUE(expected_qubit_positions == qubit_positions);
+}
+
+TEST(QubitPositions, MultipleRandomOrderUnique) {
+    std::vector<int> tensor_indices({1, 2, 0, 3});
+    std::vector<int> qubit_positions = calculate_qubit_positions(tensor_indices);
+
+    std::vector<int> expected_qubit_positions({2, 0, 1, 3});
+
+    EXPECT_TRUE(expected_qubit_positions == qubit_positions);
+}
+
+
+TEST(QubitPositions, MultipleRandomOrderUnique2) {
+    std::vector<int> tensor_indices({1, 3, 2, 0});
+    std::vector<int> qubit_positions = calculate_qubit_positions(tensor_indices);
+
+    std::vector<int> expected_qubit_positions({3, 0, 2, 1});
+
+    EXPECT_TRUE(expected_qubit_positions == qubit_positions);
 }
 }  // namespace auxiliary_functions
