@@ -198,7 +198,6 @@ class TestApply:
         """Tests that applying an operation yields the expected output state for single wire
            operations that have parameters."""
 
-        #parameter = par[0]
         qubit_device_1_wire._state = np.array(input).astype(complex)
 
         qubit_device_1_wire.apply([operation(*par, wires=[0])])

@@ -256,9 +256,9 @@ TEST(TGate, ApplyToPlus) {
 
     State_1q expected_output_state(2);
 
-  const std::complex<double> exponent(0, M_PI/4);
-  std::complex<double> val = std::pow(M_E, exponent)/SQRT_2;
-  expected_output_state.setValues({1/SQRT_2, val});
+    const std::complex<double> exponent(0, M_PI/4);
+    std::complex<double> val = std::pow(M_E, exponent)/SQRT_2;
+    expected_output_state.setValues({1/SQRT_2, val});
 
     // Casting to a vector for comparison
     auto output_state_vector = vectorize(output_state);
