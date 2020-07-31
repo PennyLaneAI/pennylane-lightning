@@ -24,12 +24,7 @@ from pennylane import DeviceError
 import numpy as np
 from pennylane.operation import Operation
 
-U = np.array(
-    [
-        [0.83645892 - 0.40533293j, -0.20215326 + 0.30850569j],
-        [-0.23889780 - 0.28101519j, -0.88031770 - 0.29832709j],
-    ]
-)
+from conftest import U
 
 
 U2 = np.array(
