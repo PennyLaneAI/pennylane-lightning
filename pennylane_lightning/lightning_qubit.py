@@ -51,7 +51,7 @@ class LightningQubit(DefaultQubit):
 
     name = "Lightning Qubit PennyLane plugin"
     short_name = "lightning.qubit"
-    pennylane_requires = "0.11"
+    pennylane_requires = "0.10"
     version = "0.11.0"
     author = "Xanadu Inc."
     _capabilities = {"inverse_operations": False}  # we should look at supporting
