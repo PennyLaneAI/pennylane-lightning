@@ -1067,6 +1067,7 @@ TEST(CalcTensInd, TwoWireFiveQubitRandomOrder) {
     std::vector<int> expected_tensor_indices({2, 1, 4, 0, 3});
 
     EXPECT_TRUE(expected_tensor_indices == output_tensor_indices);
+
 }
 
 TEST(CalcTensInd, TwoWireFiveQubitRandomOrderReverse) {
