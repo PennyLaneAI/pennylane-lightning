@@ -235,15 +235,18 @@ VectorXcd apply_ops(
     vector<int> qubit_positions(qubits);
     std::iota(std::begin(qubit_positions), std::end(qubit_positions), 0);
 
-    for (long unsigned int i = 0; i < ops.size(); i++) {
+    int num_ops = ops.size();
+
+    for (int i = 0; i < num_ops; i++) {
         // Load operation string and corresponding wires and parameters
         string op_string = ops[i];
         vector<int> w = wires[i];
+        int num_wires = w.size();
         vector<float> p = params[i];
         State tensor_contracted;
 
         vector<int> wires_to_contract(w.size());
-        for (int j = 0; j < w.size(); j++) {
+        for (int j = 0; j < num_wires; j++) {
             wires_to_contract[j] = qubit_positions[w[j]];
         }
         tensor_indices = calculate_tensor_indices(w, tensor_indices);
@@ -283,7 +286,9 @@ VectorXcd apply_ops_1q(
     ) {
     VectorXcd evolved_state = state;
 
-    for (long unsigned int i = 0; i < ops.size(); i++) {
+    int num_ops = ops.size();
+
+    for (int i = 0; i < num_ops; i++) {
         // Load operation string and corresponding wires and parameters
         string op_string = ops[i];
         vector<float> p = params[i];
@@ -322,15 +327,18 @@ VectorXcd apply_ops_2q(
     vector<int> qubit_positions(qubits);
     std::iota(std::begin(qubit_positions), std::end(qubit_positions), 0);
 
-    for (long unsigned int i = 0; i < ops.size(); i++) {
+    int num_ops = ops.size();
+
+    for (int i = 0; i < num_ops; i++) {
         // Load operation string and corresponding wires and parameters
         string op_string = ops[i];
         vector<int> w = wires[i];
+        int num_wires = w.size();
         vector<float> p = params[i];
         State_2q tensor_contracted;
 
         vector<int> wires_to_contract(w.size());
-        for (int j = 0; j < w.size(); j++) {
+        for (int j = 0; j < num_wires; j++) {
             wires_to_contract[j] = qubit_positions[w[j]];
         }
         tensor_indices = calculate_tensor_indices(w, tensor_indices);
