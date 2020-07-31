@@ -236,21 +236,21 @@ VectorXcd apply_ops(
         vector<float> p = params[i];
         State tensor_contracted;
 
-        vector<int> wires_to_contractx(w.size());
+        vector<int> wires_to_contract(w.size());
         for (int j = 0; j < w.size(); j++) {
-            wires_to_contractx[j] = qubit_positions[w[j]];
+            wires_to_contract[j] = qubit_positions[w[j]];
         }
         tensor_indices = calculate_indices(w, tensor_indices);
         qubit_positions = shuffle_indices(tensor_indices);
 
         if (w.size() == 1) {
-            tensor_contracted = contract_1q_op<State> (evolved_tensor, op_string, wires_to_contractx, p);
+            tensor_contracted = contract_1q_op<State> (evolved_tensor, op_string, wires_to_contract, p);
         }
         else if (w.size() == 2) {
-            tensor_contracted = contract_2q_op<State> (evolved_tensor, op_string, wires_to_contractx, p);
+            tensor_contracted = contract_2q_op<State> (evolved_tensor, op_string, wires_to_contract, p);
         }
        else if (w.size() == 3) {
-            tensor_contracted = contract_3q_op<State> (evolved_tensor, op_string, wires_to_contractx);
+            tensor_contracted = contract_3q_op<State> (evolved_tensor, op_string, wires_to_contract);
         }
         evolved_tensor = tensor_contracted;
     }
