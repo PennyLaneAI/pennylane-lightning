@@ -21,22 +21,25 @@ Features
 Installation
 ============
 
-TODO
-
-This plugin requires Python version 3.5 and above.  Installation of this
-plugin, as well as all dependencies, can be done using ``pip``:
+PennyLane-Lightning requires Python version 3.6 and above. It can be installed using ``pip``:
 
 .. code-block:: bash
 
     pip install pennylane-lightning
 
-To test that the PennyLane-Lightning plugin is working correctly you can run
+Alternatively, to build PennyLane-Lightning from source you can run
+
+.. code-block:: bash
+
+    git clone https://github.com/XanaduAI/pennylane-lightning.git
+    cd pennylane-lightning
+    pip install -e .
+
+To test that the plugin is working correctly you can then run
 
 .. code-block:: bash
 
     $ make test
-
-in the source folder.
 
 .. installation-end-inclusion-marker-do-not-remove
 
@@ -70,10 +73,8 @@ If you are doing research using PennyLane and PennyLane-Lightning, please cite `
 Support
 =======
 
-TODO - update
-
-- **Source Code:** https://github.com/XanaduAI/pennylane-lightning
-- **Issue Tracker:** https://github.com/XanaduAI/pennylane-lightning/issues
+- **Source Code:** https://github.com/PennyLaneAI/pennylane-lightning
+- **Issue Tracker:** https://github.com/PennyLaneAI/pennylane-lightning/issues
 - **PennyLane Forum:** https://discuss.pennylane.ai
 
 If you are having issues, please let us know by posting the issue on our Github issue tracker, or
