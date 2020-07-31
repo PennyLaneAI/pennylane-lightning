@@ -50,8 +50,6 @@ class TestExpval:
             rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()]
         )
 
-        dev._samples = dev.generate_samples()
-
         res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([1, 1]), tol)
 
@@ -69,8 +67,6 @@ class TestExpval:
             ],
             rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()]
         )
-
-        dev._samples = dev.generate_samples()
 
         res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([np.cos(theta), np.cos(theta) * np.cos(phi)]), tol)
@@ -90,8 +86,6 @@ class TestExpval:
             rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()]
         )
 
-        dev._samples = dev.generate_samples()
-
         res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([np.sin(theta) * np.sin(phi), np.sin(phi)]), tol)
 
@@ -110,8 +104,6 @@ class TestExpval:
             rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()]
         )
 
-        dev._samples = dev.generate_samples()
-
         res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([0, -np.cos(theta) * np.sin(phi)]), tol)
 
@@ -129,8 +121,6 @@ class TestExpval:
             ],
             rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()]
         )
-
-        dev._samples = dev.generate_samples()
 
         res = np.array([dev.expval(O1), dev.expval(O2)])
         expected = np.array(
@@ -160,8 +150,6 @@ class TestTensorExpval:
             ],
             rotations=obs.diagonalizing_gates()
         )
-
-        dev._samples = dev.generate_samples()
         res = dev.expval(obs)
 
         expected = np.sin(theta) * np.sin(phi) * np.sin(varphi)
@@ -185,7 +173,6 @@ class TestTensorExpval:
             rotations=obs.diagonalizing_gates()
         )
 
-        dev._samples = dev.generate_samples()
         res = dev.expval(obs)
 
         expected = np.cos(varphi)*np.cos(phi)
@@ -209,7 +196,6 @@ class TestTensorExpval:
             rotations=obs.diagonalizing_gates()
         )
 
-        dev._samples = dev.generate_samples()
         res = dev.expval(obs)
         expected = -(np.cos(varphi) * np.sin(phi) + np.sin(varphi) * np.cos(theta)) / np.sqrt(2)
 
