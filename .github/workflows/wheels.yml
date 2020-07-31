@@ -4,6 +4,7 @@ on: [pull_request]
 
 env:
   CIBW_SKIP: "cp27-* cp34-* cp35-* *i686"
+
   CIBW_BEFORE_BUILD_LINUX: |
     curl -OsL https://bitbucket.org/eigen/eigen/get/3.3.7.tar.gz
     tar xzf 3.3.7.tar.gz eigen-eigen-323c052e1731/Eigen --strip-components 1
@@ -12,12 +13,15 @@ env:
     cp -rf Eigen {project}/include
     cp -rf unsupported {project}/include
     pip install numpy scipy pybind11
+
   CIBW_BEFORE_BUILD_MACOS: |
     brew cask uninstall --force oclint
     brew install gcc eigen libomp || true
     brew install gcc eigen libomp
     pip install numpy scipy pybind11
-  CIBW_TEST_REQUIRES: numpy scipy pytest pytest-cov
+
+  CIBW_TEST_REQUIRES: numpy scipy pytest pytest-cov pytest-mock flaky
+
   CIBW_TEST_COMMAND: |
     git clone https://github.com/PennyLaneAI/pennylane.git
     cd pennylane && pip install -e .
