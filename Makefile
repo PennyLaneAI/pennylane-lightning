@@ -60,5 +60,5 @@ coverage:
 	$(PYTHON) $(TESTRUNNER) $(COVERAGE)
 
 test-cpp:
-	GOOGLETEST_DIR=$HOME/googletest make -C pennylane_lightning/src/tests clean
-	GOOGLETEST_DIR=$HOME/googletest make -C pennylane_lightning/src/tests test
+	make -C pennylane_lightning/src/tests clean
+	GOOGLETEST_DIR=$(HOME)/googletest make -C pennylane_lightning/src/tests test
