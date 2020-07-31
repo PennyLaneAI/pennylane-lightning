@@ -1079,38 +1079,38 @@ TEST(CalcTensInd, TwoWireFiveQubitRandomOrderReverse) {
     EXPECT_TRUE(expected_tensor_indices == output_tensor_indices);
 }
 
-TEST(ArgSort, OneElem) {
-    std::vector<int> input_perm({0});
-    std::vector<int> output_perm = shuffle_indices(input_perm);
+TEST(QubitPositions, OneElem) {
+    std::vector<int> tensor_indices({0});
+    std::vector<int> qubit_positions = calculate_qubit_positions(tensor_indices);
 
-    EXPECT_TRUE(input_perm == output_perm);
+    EXPECT_TRUE(tensor_indices == qubit_positions);
 }
 
-TEST(ArgSort, MultipleAscendingOrder) {
-    std::vector<int> input_perm({5,10,15});
-    std::vector<int> output_perm = shuffle_indices(input_perm);
+TEST(QubitPositions, MultipleAscendingOrder) {
+    std::vector<int> tensor_indices({0, 1, 2, 3});
+    std::vector<int> qubit_positions = calculate_qubit_positions(tensor_indices);
 
-    std::vector<int> expected({0,1,2});
+    std::vector<int> expected_qubit_positions({0, 1, 2, 3});
 
-    EXPECT_TRUE(output_perm == expected);
+    EXPECT_TRUE(expected_qubit_positions == qubit_positions);
 }
 
-TEST(ArgSort, MultipleRandomOrderUnique) {
-    std::vector<int> input_perm({10,15,5});
-    std::vector<int> output_perm = shuffle_indices(input_perm);
+TEST(QubitPositions, MultipleRandomOrderUnique) {
+    std::vector<int> tensor_indices({1, 2, 0, 3});
+    std::vector<int> qubit_positions = calculate_qubit_positions(tensor_indices);
 
-    std::vector<int> expected({2,0,1});
+    std::vector<int> expected_qubit_positions({2, 0, 1, 3});
 
-    EXPECT_TRUE(output_perm == expected);
+    EXPECT_TRUE(expected_qubit_positions == qubit_positions);
 }
 
 
-TEST(ArgSort, MultipleRandomOrderRepeatedVals) {
-    std::vector<int> input_perm({10,15,15,5});
-    std::vector<int> output_perm = shuffle_indices(input_perm);
+TEST(QubitPositions, MultipleRandomOrderUnique2) {
+    std::vector<int> tensor_indices({1, 3, 2, 0});
+    std::vector<int> qubit_positions = calculate_qubit_positions(tensor_indices);
 
-    std::vector<int> expected({3,0,1,2});
+    std::vector<int> expected_qubit_positions({3, 0, 2, 1});
 
-    EXPECT_TRUE(output_perm == expected);
+    EXPECT_TRUE(expected_qubit_positions == qubit_positions);
 }
 }  // namespace auxiliary_functions
