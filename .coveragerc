@@ -1,6 +1,6 @@
 # .coveragerc to control coverage.py
 [run]
-source = pennylane_qiskit
+source = pennylane_lightning
 
 [report]
 # Regexes for lines to exclude from consideration
