@@ -124,6 +124,8 @@ include_dirs = [
     "/usr/include/eigen3",
 ]
 
+print(include_dirs)
+
 library_dirs = [i for i in os.environ.get("LD_LIBRARY_PATH", "").split(":") if i]
 libraries = []
 extra_compile_args = []
@@ -145,7 +147,7 @@ if os.environ.get("USE_OPENBLAS", False):
 if platform.system() == "Darwin":
     include_dirs += ["/usr/local/opt/libomp/include"]
     library_dirs += ["/usr/local/opt/libomp/lib"]
-    libraies += ["omp"]
+    libraries += ["omp"]
 
 
 ext_modules = [
@@ -153,12 +155,7 @@ ext_modules = [
         "lightning_qubit_ops",
         sources=["pennylane_lightning/src/lightning_qubit.cpp"],
         depends=["pennylane_lightning/src/lightning_qubit.hpp", "pennylane_lightning/src/operations.hpp"],
-        include_dirs=[
-            get_pybind_include(),
-            os.environ.get("EIGEN_INCLUDE_DIR", ""),
-            "/usr/local/include/eigen3",
-            "/usr/include/eigen3",
-        ],
+        include_dirs=include_dirs,
         language="c++",
         libraries=libraries,
         library_dirs=library_dirs,
