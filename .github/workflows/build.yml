@@ -1,10 +1,10 @@
-name: C++ tests
+name: Testing
 
 on: [pull_request]
 
 jobs:
   cpptests:
-    name: Build wheels on ${{ matrix.os }}
+    name: C++ tests on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -26,3 +26,61 @@ jobs:
         run: |
             cd pennylane_lightning/src/tests
             GOOGLETEST_DIR=$HOME/googletest make test
+
+  pythontests:
+    name: Python tests on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04] #, windows-latest, macos-latest]
+
+    steps:
+
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v2
+        with:
+          path: main
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.7'
+
+      - name: Install dependencies
+        run: sudo apt-get -y -q install cmake gcc libeigen3-dev
+
+      - uses: goanpeca/setup-miniconda@v1
+        with:
+          auto-update-conda: true
+          channels: conda-forge
+
+      - name: Get numpy, pybind11 and pytest
+        run: |
+          pip install numpy pybind11 pytest flaky
+
+      - name: Compilation
+        run: |
+            cd main/pennylane_lightning/src
+            make
+
+      - name: Install lightning.qubit device
+        run: |
+          cd main
+          pip install -e .
+
+      - name: Checkout PennyLane
+        uses: actions/checkout@v2
+        with:
+          repository: PennyLaneAI/pennylane
+          path: pl
+
+      - name: Install PennyLane
+        run: |
+          cd pl
+          pip install -e .
+
+      - name: Run PennyLane shared test suite
+        run: |
+          cd pl
+          pytest pennylane/plugins/tests --device lightning.qubit --analytic False --skip-ops
+          pytest pennylane/plugins/tests --device lightning.qubit --analytic True --skip-ops
