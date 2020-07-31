@@ -35,11 +35,19 @@ Alternatively, to build PennyLane-Lightning from source you can run
     cd pennylane-lightning
     pip install -e .
 
-To test that the plugin is working correctly you can then run
+To test that the plugin is working correctly you can test the Python code with
 
 .. code-block:: bash
 
     $ make test
+
+while the C++ code can be tested with
+
+.. code-block:: bash
+
+    $ make test-cpp
+
+Testing the C++ code requires the `GoogleTest <https://github.com/google/googletest>`__ framework.
 
 .. installation-end-inclusion-marker-do-not-remove
 
