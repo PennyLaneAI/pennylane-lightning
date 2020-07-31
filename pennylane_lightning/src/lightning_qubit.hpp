@@ -26,6 +26,7 @@
 using Eigen::Tensor;
 using Eigen::IndexPair;
 using Eigen::VectorXcd;
+using Eigen::MatrixXcd;
 using Eigen::Ref;
 using Eigen::TensorMap;
 using Eigen::Map;
@@ -271,7 +272,7 @@ VectorXcd apply_ops(
 /**
 * Applies specified operations onto an input state of one qubit.
 *
-* Implemented similarly to apply_ops() but is restricted to single-qubit gates.
+* Uses matrix-vector multiplication.
 *
 * @param state the multiqubit statevector
 * @param ops a vector of operation names in the order they should be applied
@@ -282,24 +283,22 @@ VectorXcd apply_ops(
 VectorXcd apply_ops_1q(
     Ref<VectorXcd> state,
     vector<string> ops,
-    vector<vector<int>> wires,
     vector<vector<float>> params
     ) {
-    State_1q state_tensor = TensorMap<State_1q>(state.data(), 2);
-    State_1q evolved_tensor = state_tensor;
-    const int qubits = 1;
+    VectorXcd evolved_state = state;
 
     for (long unsigned int i = 0; i < ops.size(); i++) {
         // Load operation string and corresponding wires and parameters
         string op_string = ops[i];
-        vector<int> w = wires[i];
         vector<float> p = params[i];
 
-        auto tensor_contracted = contract_1q_op<State_1q> (evolved_tensor, op_string, w, p);
-        evolved_tensor = tensor_contracted;
+        Gate_1q gate = get_gate_1q(op_string, p);
+        MatrixXcd gate_matrix = Map<MatrixXcd> (gate.data(), 2, 2);
+
+        evolved_state = gate_matrix * evolved_state;
     }
 
-    return Map<VectorXcd> (evolved_tensor.data(), state.size(), 1);
+    return evolved_state;
 }
 
 /**
