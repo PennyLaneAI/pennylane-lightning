@@ -35,13 +35,10 @@ dist:
 .PHONY : clean
 clean:
 	$(PYTHON) setup.py clean --all
-	rm -rf pennylane/__pycache__
-	rm -rf pennylane/optimize/__pycache__
-	rm -rf pennylane/expectation/__pycache__
-	rm -rf pennylane/ops/__pycache__
-	rm -rf pennylane/plugins/__pycache__
-	rm -rf tests/__pycache__
-	rm -rf tests/new_qnode/__pycache__
+	rm -rf pennylane_lightning/__pycache__
+	rm -rf pennylane_lightning/src/__pycache__
+	rm -rf pennylane_lightning/tests/__pycache__
+	rm -rf pennylane_lightning/src/tests/__pycache__
 	rm -rf dist
 	rm -rf build
 	rm -rf .coverage coverage_html_report/
