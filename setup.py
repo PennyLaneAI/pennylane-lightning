@@ -19,7 +19,13 @@ with open("pennylane_lightning/_version.py") as f:
 
 requirements = [
     "numpy",
-    "pennylane>=0.10.0",
+    "scipy",
+    "networkx",
+    "autograd",
+    "pennylane>=0.9.0",
+    "toml",
+    "appdirs",
+    "semantic_version==2.6",
 ]
 
 info = {

@@ -1,2 +1,10 @@
 numpy
+scipy
+networkx
+tensornetwork==0.3
+autograd
+toml
+appdirs
+semantic_version==2.6
+dask[delayed]
 git+https://github.com/XanaduAI/pennylane.git@lightning_qubit_adjust#egg=pennylane
