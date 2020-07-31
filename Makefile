@@ -14,6 +14,7 @@ help:
 	@echo "  clean              to delete all temporary, cache, and build files"
 	@echo "  clean-docs         to delete all built documentation"
 	@echo "  test               to run the test suite"
+	@echo "  test-cpp           to run the C++ test suite"
 	@echo "  coverage           to generate a coverage report"
 
 .PHONY: install
@@ -61,3 +62,7 @@ test:
 coverage:
 	@echo "Generating coverage report..."
 	$(PYTHON) $(TESTRUNNER) $(COVERAGE)
+
+test-cpp:
+	make -C pennylane_lightning/src/tests clean
+	make -C pennylane_lightning/src/tests test
