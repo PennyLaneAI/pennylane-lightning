@@ -12,7 +12,7 @@ env:
     mkdir -p {project}/include
     cp -rf Eigen {project}/include
     cp -rf unsupported {project}/include
-    pip install numpy scipy pybind11
+    python -m pip install numpy scipy pybind11
 
   CIBW_BEFORE_BUILD_MACOS: |
     brew cask uninstall --force oclint
