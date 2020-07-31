@@ -69,6 +69,11 @@ jobs:
           cd pl
           pip install -e .
 
+      - name: Run PennyLane-Lightning unit tests
+        run: |
+          cd main/
+          pytest pennylane_lightning/tests/
+
       - name: Run PennyLane shared test suite
         run: |
           cd pl
