@@ -81,7 +81,7 @@ jobs:
 
       - name: Run PennyLane-Lightning unit tests
         run: |
-          cd main/pennylane_lightning
+          cd main/
           pytest pennylane_lightning/tests/
 
       - name: Run PennyLane shared test suite
