@@ -20,6 +20,7 @@ import pytest
 import numpy as np
 
 import pennylane as qml
+from pennylane_lightning import LightningQubit
 
 # defaults
 TOL = 1e-6
@@ -47,14 +48,14 @@ def n_subsystems(request):
 
 @pytest.fixture(scope="function")
 def qubit_device_1_wire():
-    return qml.device('lightning.qubit', wires=1)
+    return LightningQubit(wires=1)
 
 
 @pytest.fixture(scope="function")
 def qubit_device_2_wires():
-    return qml.device('lightning.qubit', wires=2)
+    return LightningQubit(wires=2)
 
 
 @pytest.fixture(scope="function")
 def qubit_device_3_wires():
-    return qml.device('lightning.qubit', wires=3)
+    return LightningQubit(wires=3)

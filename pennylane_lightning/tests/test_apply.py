@@ -1,4 +1,4 @@
-# Copyright 2018-2020 Xanadu Quantum Technologies Inc.
+# Copyright 2020 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for the :mod:`pennylane.plugin.LightningQubit` device.
+Unit tests for the :mod:`pennylane_lightning.LightningQubit` device.
 """
 import cmath
 # pylint: disable=protected-access,cell-var-from-loop
@@ -24,12 +24,7 @@ from pennylane import DeviceError
 import numpy as np
 from pennylane.operation import Operation
 
-U = np.array(
-    [
-        [0.83645892 - 0.40533293j, -0.20215326 + 0.30850569j],
-        [-0.23889780 - 0.28101519j, -0.88031770 - 0.29832709j],
-    ]
-)
+from conftest import U
 
 
 U2 = np.array(
@@ -143,6 +138,10 @@ class TestApply:
         (qml.CSWAP, [1, 0, 0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0]),
         (qml.CSWAP, [0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 1, 0]),
         (qml.CSWAP, [0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1, 0, 0]),
+        (qml.Toffoli, [1, 0, 0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0]),
+        (qml.Toffoli, [0, 1, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0]),
+        (qml.Toffoli, [0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0, 0, 1]),
+        (qml.Toffoli, [0, 0, 0, 0, 0, 0, 0, 1], [0, 0, 0, 0, 0, 0, 1, 0]),
     ]
 
     @pytest.mark.parametrize("operation,input,expected_output", test_data_three_wires_no_parameters)
@@ -203,7 +202,6 @@ class TestApply:
         """Tests that applying an operation yields the expected output state for single wire
            operations that have parameters."""
 
-        #parameter = par[0]
         qubit_device_1_wire._state = np.array(input).astype(complex)
 
         qubit_device_1_wire.apply([operation(*par, wires=[0])])
@@ -323,7 +321,6 @@ class TestExpval:
 
     def test_expval_estimate(self):
         """Test that the expectation value is not analytically calculated"""
-
         dev = qml.device("lightning.qubit", wires=1, shots=3, analytic=False)
 
         @qml.qnode(dev)
@@ -770,12 +767,12 @@ class TestLightningQubitIntegration:
 
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)
 
-    def test_multi_samples_return_correlated_results(self):
+    def test_multi_samples_return_correlated_results(self, qubit_device_2_wires):
         """Tests if the samples returned by the sample function have
         the correct dimensions
         """
 
-        dev = qml.device('lightning.qubit', wires=2)
+        dev = qubit_device_2_wires
 
         @qml.qnode(dev)
         def circuit():
@@ -809,9 +806,9 @@ class TestLightningQubitIntegration:
 class TestTensorExpval:
     """Test tensor expectation values"""
 
-    def test_paulix_pauliy(self, theta, phi, varphi, tol):
+    def test_paulix_pauliy(self, theta, phi, varphi, qubit_device_3_wires, tol):
         """Test that a tensor product involving PauliX and PauliY works correctly"""
-        dev = qml.device("lightning.qubit", wires=3)
+        dev = qubit_device_3_wires
         dev.reset()
 
         obs = qml.PauliX(0) @ qml.PauliY(2)
@@ -833,9 +830,9 @@ class TestTensorExpval:
 
         assert np.allclose(res, expected, atol=tol, rtol=0)
 
-    def test_pauliz_identity(self, theta, phi, varphi, tol):
+    def test_pauliz_identity(self, theta, phi, varphi, qubit_device_3_wires, tol):
         """Test that a tensor product involving PauliZ and Identity works correctly"""
-        dev = qml.device("lightning.qubit", wires=3)
+        dev = qubit_device_3_wires
         dev.reset()
 
         obs = qml.PauliZ(0) @ qml.Identity(1) @ qml.PauliZ(2)
@@ -857,9 +854,9 @@ class TestTensorExpval:
 
         assert np.allclose(res, expected, atol=tol, rtol=0)
 
-    def test_pauliz_hadamard(self, theta, phi, varphi, tol):
+    def test_pauliz_hadamard(self, theta, phi, varphi, qubit_device_3_wires, tol):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
-        dev = qml.device("lightning.qubit", wires=3)
+        dev = qubit_device_3_wires
         obs = qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2)
 
         dev.reset()
@@ -884,9 +881,9 @@ class TestTensorExpval:
 class TestTensorVar:
     """Tests for variance of tensor observables"""
 
-    def test_paulix_pauliy(self, theta, phi, varphi, tol):
+    def test_paulix_pauliy(self, theta, phi, varphi, qubit_device_3_wires, tol):
         """Test that a tensor product involving PauliX and PauliY works correctly"""
-        dev = qml.device("lightning.qubit", wires=3)
+        dev = qubit_device_3_wires
 
         obs = qml.PauliX(0) @ qml.PauliY(2)
 
@@ -914,9 +911,9 @@ class TestTensorVar:
 
         assert np.allclose(res, expected, atol=tol, rtol=0)
 
-    def test_pauliz_hadamard(self, theta, phi, varphi, tol):
+    def test_pauliz_hadamard(self, theta, phi, varphi, qubit_device_3_wires, tol):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
-        dev = qml.device("lightning.qubit", wires=3)
+        dev = qubit_device_3_wires
         obs = qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2)
 
         dev.reset()
@@ -988,9 +985,9 @@ class TestTensorSample:
         ) / 16
         assert np.allclose(var, expected, atol=tol, rtol=0)
 
-    def test_pauliz_hadamard(self, theta, phi, varphi, monkeypatch, tol):
+    def test_pauliz_hadamard(self, theta, phi, varphi, monkeypatch, qubit_device_3_wires, tol):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
-        dev = qml.device("lightning.qubit", wires=3)
+        dev = qubit_device_3_wires
         obs = qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2)
         dev.apply(
             [
