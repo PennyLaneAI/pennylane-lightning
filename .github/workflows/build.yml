@@ -4,11 +4,11 @@ on: [pull_request]
 
 jobs:
   cpptests:
-    name: C++ tests on ${{ matrix.os }}
+    name: C++ tests
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-18.04] #, windows-latest, macos-latest]
+        os: [ubuntu-18.04]
 
     steps:
       - uses: actions/checkout@v2
@@ -28,11 +28,11 @@ jobs:
             GOOGLETEST_DIR=$HOME/googletest make test
 
   pythontests:
-    name: Python tests on ${{ matrix.os }}
+    name: Python tests
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-18.04] #, windows-latest, macos-latest]
+        os: [ubuntu-18.04]
 
     steps:
 
@@ -49,19 +49,9 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get -y -q install cmake gcc libeigen3-dev
 
-      - uses: goanpeca/setup-miniconda@v1
-        with:
-          auto-update-conda: true
-          channels: conda-forge
-
       - name: Get numpy, pybind11 and pytest
         run: |
           pip install numpy pybind11 pytest flaky
-
-      - name: Compilation
-        run: |
-            cd main/pennylane_lightning/src
-            make
 
       - name: Install lightning.qubit device
         run: |
