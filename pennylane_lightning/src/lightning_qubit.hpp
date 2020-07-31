@@ -322,8 +322,10 @@ VectorXcd apply_ops_2q(
     State_2q evolved_tensor = state_tensor;
     const int qubits = log2(state_tensor.size());
 
-    vector<int> qubit_indices(qubits);
-    std::iota(std::begin(qubit_indices), std::end(qubit_indices), 0);
+    vector<int> tensor_indices(qubits);
+    std::iota(std::begin(tensor_indices), std::end(tensor_indices), 0);
+    vector<int> qubit_positions(qubits);
+    std::iota(std::begin(qubit_positions), std::end(qubit_positions), 0);
 
     for (long unsigned int i = 0; i < ops.size(); i++) {
         // Load operation string and corresponding wires and parameters
@@ -332,18 +334,22 @@ VectorXcd apply_ops_2q(
         vector<float> p = params[i];
         State_2q tensor_contracted;
 
+        vector<int> wires_to_contract(w.size());
+        for (int j = 0; j < w.size(); j++) {
+            wires_to_contract[j] = qubit_positions[w[j]];
+        }
+        tensor_indices = calculate_tensor_indices(w, tensor_indices);
+        qubit_positions = calculate_qubit_positions(tensor_indices);
+
         if (w.size() == 1) {
-            tensor_contracted = contract_1q_op<State_2q> (evolved_tensor, op_string, w, p);
+            tensor_contracted = contract_1q_op<State_2q> (evolved_tensor, op_string, wires_to_contract, p);
         }
         else if (w.size() == 2) {
-            tensor_contracted = contract_2q_op<State_2q> (evolved_tensor, op_string, w, p);
+            tensor_contracted = contract_2q_op<State_2q> (evolved_tensor, op_string, wires_to_contract, p);
         }
-
-        auto perm = calculate_tensor_indices(w, qubit_indices);
-        auto inv_perm = calculate_qubit_positions(perm);
-
-        evolved_tensor = tensor_contracted.shuffle(inv_perm);
+        evolved_tensor = tensor_contracted;
     }
+    State_2q shuffled_evolved_tensor = evolved_tensor.shuffle(qubit_positions);
 
-    return Map<VectorXcd> (evolved_tensor.data(), state.size(), 1);
+    return Map<VectorXcd> (shuffled_evolved_tensor.data(), shuffled_evolved_tensor.size(), 1);
 }
