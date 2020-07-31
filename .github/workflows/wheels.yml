@@ -25,7 +25,7 @@ env:
 
   # Windows specific build settings
 
-  CIBW_ENVIRONMENT_WINDOWS: EIGEN_INCLUDE_DIR=C:\eigen-eigen-323c052e1731\
+  CIBW_ENVIRONMENT_WINDOWS: EIGEN_INCLUDE_DIR="C:\\eigen-eigen-323c052e1731\\"
 
   # Python build settings
 
