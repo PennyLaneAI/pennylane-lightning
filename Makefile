@@ -18,7 +18,7 @@ help:
 .PHONY: install
 install:
 ifndef PYTHON3
-	@echo "To install PennyLane-Qiskit you need to have Python 3 installed"
+	@echo "To install PennyLane-Lightning you need to have Python 3 installed"
 endif
 	$(PYTHON) setup.py install
 
