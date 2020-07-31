@@ -100,8 +100,6 @@ class BuildExt(build_ext):
         c_opts["unix"] += darwin_opts
         l_opts["unix"] += darwin_opts
 
-    if os.environ.get("USE_LAPACK", False):
-        c_opts
 
     def build_extensions(self):
         ct = self.compiler.compiler_type
