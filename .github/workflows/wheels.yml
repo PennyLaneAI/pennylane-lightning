@@ -26,8 +26,8 @@ env:
   # Windows specific build settings
 
   CIBW_BEFORE_ALL_WINDOWS: |
-    wget http://bitbucket.org/eigen/eigen/get/3.3.7.zip -outfile eigen3.zip
-    7z x eigen3.zip -o"C:\" -y > nul
+    C:\msys64\usr\bin\wget.exe http://bitbucket.org/eigen/eigen/get/3.3.7.zip -outfile eigen3.zip
+    "C:\Program Files\7-Zip\7z.exe" x eigen3.zip -o"C:\" -y > nul
 
   CIBW_ENVIRONMENT_WINDOWS: EIGEN_INCLUDE_DIR=C:\eigen-eigen-323c052e1731\
 
