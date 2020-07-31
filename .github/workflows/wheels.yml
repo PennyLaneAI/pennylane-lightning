@@ -79,7 +79,7 @@ jobs:
           Invoke-WebRequest -Uri "http://bitbucket.org/eigen/eigen/get/3.3.7.zip" -UseBasicParsing -OutFile C:\eigen3.zip
           & "C:\\Program Files\\7-Zip\\7z.exe" x C:\eigen3.zip -o"C:\" -y
           New-Item -ItemType directory -Path "C:\\pennylane"
-          & git clone https://github.com/PennyLaneAI/pennylane.git "C:\\eigen-eigen-323c052e1731\\pennylane"
+          & git clone https://github.com/PennyLaneAI/pennylane.git "C:\\pennylane"
 
       - name: Build wheels
         run: |
