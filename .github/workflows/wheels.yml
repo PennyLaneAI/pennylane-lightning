@@ -74,9 +74,10 @@ jobs:
 
       - name: Install Eigen on Windows
         if: runner.os == 'Windows'
+        shell: powershell
         run: |
-          C:\msys64\usr\bin\wget.exe http://bitbucket.org/eigen/eigen/get/3.3.7.zip -outfile eigen3.zip
-          & ${env:ProgramFiles}\7-Zip\7z.exe x eigen3.zip -o"C:\" -y > nul
+          wget http://bitbucket.org/eigen/eigen/get/3.3.7.zip -outfile eigen3.zip
+          & "C:\\Program Files\\7-Zip\\7z.exe" x eigen3.zip -o"C:\" -y > nul
 
       - name: Build wheels
         run: |
