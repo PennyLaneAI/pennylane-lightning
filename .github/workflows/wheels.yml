@@ -27,7 +27,7 @@ env:
 
   CIBW_BEFORE_ALL_WINDOWS: |
     C:\msys64\usr\bin\wget.exe http://bitbucket.org/eigen/eigen/get/3.3.7.zip -outfile eigen3.zip
-    "C:\Program Files\7-Zip\7z.exe" x eigen3.zip -o"C:\" -y > nul
+    C:\Program\ Files\7-Zip\7z.exe x eigen3.zip -o"C:\" -y > nul
 
   CIBW_ENVIRONMENT_WINDOWS: EIGEN_INCLUDE_DIR=C:\eigen-eigen-323c052e1731\
 
