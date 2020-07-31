@@ -108,3 +108,90 @@ class TestComparison:
         default()
         default_state = default_qubit_dev.state
         assert np.allclose(lightning_state, default_state)
+
+    @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 3))
+    @pytest.mark.parametrize("wires", [3])
+    def test_three_qubit_circuit(self, wires, lightning_qubit_dev, default_qubit_dev, basis_state):
+        """Test a three-qubit circuit"""
+
+        def circuit():
+            """A combination of two and three qubit gates with the one_qubit_block and a simple
+            PauliZ measurement"""
+            qml.BasisState(np.array(basis_state), wires=[0, 1, 2])
+            qml.RX(0.5, wires=0)
+            qml.Hadamard(wires=1)
+            qml.RY(0.9, wires=2)
+            qml.CNOT(wires=[0, 1])
+            qml.CNOT(wires=[2, 0])
+            qml.CZ(wires=[1, 0])
+            one_qubit_block(wires=0)
+            qml.Toffoli(wires=[1, 0, 2])
+            one_qubit_block(wires=2)
+            qml.SWAP(wires=[0, 1])
+            qml.SWAP(wires=[0, 2])
+            qml.CRX(0.5, wires=[1, 0])
+            qml.CSWAP(wires=[2, 1, 0])
+            qml.CRY(0.9, wires=[2, 1])
+            one_qubit_block(wires=1)
+            qml.CRZ(0.02, wires=[0, 1])
+            qml.CRot(0.2, 0.3, 0.7, wires=[2, 1])
+            qml.RZ(0.4, wires=0)
+            qml.Toffoli(wires=[2, 1, 0])
+            return qml.expval(qml.PauliZ(0))
+
+        lightning = qml.QNode(circuit, lightning_qubit_dev)
+        default = qml.QNode(circuit, default_qubit_dev)
+
+        lightning()
+        lightning_state = lightning_qubit_dev.state
+
+        default()
+        default_state = default_qubit_dev.state
+        assert np.allclose(lightning_state, default_state)
+
+    @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 4))
+    @pytest.mark.parametrize("wires", [4])
+    def test_four_qubit_circuit(self, wires, lightning_qubit_dev, default_qubit_dev, basis_state):
+        """Test a four-qubit circuit"""
+
+        def circuit():
+            """A combination of two and three qubit gates with the one_qubit_block and a simple
+            PauliZ measurement, all acting on four qubits"""
+            qml.BasisState(np.array(basis_state), wires=[0, 1, 2, 3])
+            qml.RX(0.5, wires=0)
+            qml.Hadamard(wires=1)
+            qml.RY(0.9, wires=2)
+            qml.Rot(0.1, -0.2, -0.3, wires=3)
+            qml.CNOT(wires=[0, 1])
+            qml.CNOT(wires=[3, 1])
+            one_qubit_block(wires=3)
+            qml.CNOT(wires=[2, 0])
+            qml.CZ(wires=[1, 0])
+            one_qubit_block(wires=0)
+            qml.Toffoli(wires=[1, 0, 2])
+            one_qubit_block(wires=2)
+            qml.SWAP(wires=[0, 1])
+            qml.SWAP(wires=[0, 2])
+            qml.Toffoli(wires=[1, 3, 2])
+            qml.CRX(0.5, wires=[1, 0])
+            qml.CSWAP(wires=[2, 1, 0])
+            qml.CRY(0.9, wires=[2, 1])
+            one_qubit_block(wires=1)
+            qml.CRZ(0.02, wires=[0, 1])
+            qml.CRY(0.9, wires=[2, 3])
+            qml.CRot(0.2, 0.3, 0.7, wires=[2, 1])
+            qml.RZ(0.4, wires=0)
+            qml.Toffoli(wires=[2, 1, 0])
+            return qml.expval(qml.PauliZ(0))
+
+        lightning = qml.QNode(circuit, lightning_qubit_dev)
+        default = qml.QNode(circuit, default_qubit_dev)
+
+        lightning()
+        lightning_state = lightning_qubit_dev.state
+
+        default()
+        default_state = default_qubit_dev.state
+        assert np.allclose(lightning_state, default_state)
+
+
