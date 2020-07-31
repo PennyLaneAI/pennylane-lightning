@@ -21,7 +21,7 @@ env:
   CIBW_TEST_COMMAND: |
     git clone https://github.com/PennyLaneAI/pennylane.git
     cd pennylane && pip install -e .
-    python -m pytest pennylane/pennylane/plugins/tests --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+    python -m pytest pennylane/plugins/tests --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
 
 jobs:
