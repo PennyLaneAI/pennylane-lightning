@@ -323,7 +323,6 @@ class TestExpval:
 
     def test_expval_estimate(self):
         """Test that the expectation value is not analytically calculated"""
-
         dev = qml.device("lightning.qubit", wires=1, shots=3, analytic=False)
 
         @qml.qnode(dev)
@@ -809,9 +808,9 @@ class TestLightningQubitIntegration:
 class TestTensorExpval:
     """Test tensor expectation values"""
 
-    def test_paulix_pauliy(self, theta, phi, varphi, tol):
+    def test_paulix_pauliy(self, theta, phi, varphi, qubit_device_3_wires, tol):
         """Test that a tensor product involving PauliX and PauliY works correctly"""
-        dev = qml.device("lightning.qubit", wires=3)
+        dev = qubit_device_3_wires
         dev.reset()
 
         obs = qml.PauliX(0) @ qml.PauliY(2)
@@ -833,9 +832,9 @@ class TestTensorExpval:
 
         assert np.allclose(res, expected, atol=tol, rtol=0)
 
-    def test_pauliz_identity(self, theta, phi, varphi, tol):
+    def test_pauliz_identity(self, theta, phi, varphi, qubit_device_3_wires, tol):
         """Test that a tensor product involving PauliZ and Identity works correctly"""
-        dev = qml.device("lightning.qubit", wires=3)
+        dev = qubit_device_3_wires
         dev.reset()
 
         obs = qml.PauliZ(0) @ qml.Identity(1) @ qml.PauliZ(2)
@@ -857,9 +856,9 @@ class TestTensorExpval:
 
         assert np.allclose(res, expected, atol=tol, rtol=0)
 
-    def test_pauliz_hadamard(self, theta, phi, varphi, tol):
+    def test_pauliz_hadamard(self, theta, phi, varphi, qubit_device_3_wires, tol):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
-        dev = qml.device("lightning.qubit", wires=3)
+        dev = qubit_device_3_wires
         obs = qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2)
 
         dev.reset()
@@ -884,9 +883,9 @@ class TestTensorExpval:
 class TestTensorVar:
     """Tests for variance of tensor observables"""
 
-    def test_paulix_pauliy(self, theta, phi, varphi, tol):
+    def test_paulix_pauliy(self, theta, phi, varphi, qubit_device_3_wires, tol):
         """Test that a tensor product involving PauliX and PauliY works correctly"""
-        dev = qml.device("lightning.qubit", wires=3)
+        dev = qubit_device_3_wires
 
         obs = qml.PauliX(0) @ qml.PauliY(2)
 
