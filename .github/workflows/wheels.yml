@@ -72,11 +72,16 @@ jobs:
         if: runner.os == 'Windows'
         run: choco install vcpython27 -f -y
 
+      - name: Download Eigen on Windows
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          Invoke-WebRequest -Uri "http://bitbucket.org/eigen/eigen/get/3.3.7.zip" -OutFile eigen3.zip
+
       - name: Install Eigen on Windows
         if: runner.os == 'Windows'
         shell: powershell
         run: |
-          Invoke-WebRequest -Uri http://bitbucket.org/eigen/eigen/get/3.3.7.zip -OutFile eigen3.zip
           & "C:\\Program Files\\7-Zip\\7z.exe" x eigen3.zip -o"C:\" -y > nul
 
       - name: Build wheels
