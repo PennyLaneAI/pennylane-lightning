@@ -769,12 +769,12 @@ class TestLightningQubitIntegration:
 
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)
 
-    def test_multi_samples_return_correlated_results(self):
+    def test_multi_samples_return_correlated_results(self, qubit_device_2_wires):
         """Tests if the samples returned by the sample function have
         the correct dimensions
         """
 
-        dev = qml.device('lightning.qubit', wires=2)
+        dev = qubit_device_2_wires
 
         @qml.qnode(dev)
         def circuit():
@@ -913,9 +913,9 @@ class TestTensorVar:
 
         assert np.allclose(res, expected, atol=tol, rtol=0)
 
-    def test_pauliz_hadamard(self, theta, phi, varphi, tol):
+    def test_pauliz_hadamard(self, theta, phi, varphi, qubit_device_3_wires, tol):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
-        dev = qml.device("lightning.qubit", wires=3)
+        dev = qubit_device_3_wires
         obs = qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2)
 
         dev.reset()
@@ -987,9 +987,9 @@ class TestTensorSample:
         ) / 16
         assert np.allclose(var, expected, atol=tol, rtol=0)
 
-    def test_pauliz_hadamard(self, theta, phi, varphi, monkeypatch, tol):
+    def test_pauliz_hadamard(self, theta, phi, varphi, monkeypatch, qubit_device_3_wires, tol):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
-        dev = qml.device("lightning.qubit", wires=3)
+        dev = qubit_device_3_wires
         obs = qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2)
         dev.apply(
             [
