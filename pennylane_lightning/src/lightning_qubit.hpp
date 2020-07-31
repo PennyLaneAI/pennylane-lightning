@@ -48,19 +48,24 @@ using Pairs_3q = array<IndexPair<int>, 3>;
 const double SQRT2INV = 0.7071067811865475;
 
 /**
-* Calulate the wire indices resulting from the tensor contraction of a gate onto a state tensor.
+* Calculate the qubit-labelled indices of the state tensor after a contraction by a gate.
+*
+* For example, consider a 4-qubit state tensor T_{0123}. If we apply a gate to qubits 1 and 2, the
+* resulting tensor will be T'_{1203}. If we then apply a gate to qubits 1 and 3, the resulting
+* tensor will be T''_{1320}.
 *
 * @param wires the wires acted upon by the gate
-* @param qubits the number of qubits in the system
+* @param tensor_indices the qubit-labelled indices of the state tensor before contraction
 * @return the resultant indices
 */
-vector<int> calculate_indices(vector<int> wires, vector<int> &qubit_indices) {
-    for (int j = 0; j < qubit_indices.size(); j++) {
-        if (count(wires.begin(), wires.end(), qubit_indices[j]) == 0) {
-        wires.push_back(qubit_indices[j]);
+vector<int> calculate_tensor_indices(vector<int> &wires, vector<int> &tensor_indices) {
+    vector<int> new_tensor_indices;
+    for (int j = 0; j < tensor_indices.size(); j++) {
+        if (count(wires.begin(), wires.end(), tensor_indices[j]) == 0) {
+        new_tensor_indices.push_back(tensor_indices[j]);
         }
     }
-    return wires;
+    return new_tensor_indices;
 }
 
 /**
@@ -131,7 +136,7 @@ Gate_3q get_gate_3q(const string &gate_name) {
 *
 * Implemented using argsort as given in https://stackoverflow.com/questions/1577475/c-sorting-and-keeping-track-of-indexes.
 *
-* @param indices the wire indices of a contracted tensor, calculated using calculate_indices()
+* @param indices the wire indices of a contracted tensor, calculated using calculate_tensor_indices()
 * @return the resultant indices
 */
 vector<int> shuffle_indices(const vector<int> &indices) {
@@ -240,7 +245,7 @@ VectorXcd apply_ops(
         for (int j = 0; j < w.size(); j++) {
             wires_to_contract[j] = qubit_positions[w[j]];
         }
-        tensor_indices = calculate_indices(w, tensor_indices);
+        tensor_indices = calculate_tensor_indices(w, tensor_indices);
         qubit_positions = shuffle_indices(tensor_indices);
 
         if (w.size() == 1) {
@@ -291,7 +296,7 @@ VectorXcd apply_ops_1q(
 
         auto tensor_contracted = contract_1q_op<State_1q> (evolved_tensor, op_string, w, p);
 
-        auto perm = calculate_indices(w, qubit_indices);
+        auto perm = calculate_tensor_indices(w, qubit_indices);
         auto inv_perm = shuffle_indices(perm);
         evolved_tensor = tensor_contracted.shuffle(inv_perm);
     }
@@ -337,7 +342,7 @@ VectorXcd apply_ops_2q(
             tensor_contracted = contract_2q_op<State_2q> (evolved_tensor, op_string, w, p);
         }
 
-        auto perm = calculate_indices(w, qubit_indices);
+        auto perm = calculate_tensor_indices(w, qubit_indices);
         auto inv_perm = shuffle_indices(perm);
 
         evolved_tensor = tensor_contracted.shuffle(inv_perm);
