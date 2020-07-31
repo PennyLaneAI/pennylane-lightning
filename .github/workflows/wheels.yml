@@ -89,4 +89,5 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
+          name: ${{ runner.os }}-wheels.zip
           path: ./wheelhouse/*.whl
