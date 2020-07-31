@@ -18,7 +18,7 @@ interfaces with C++ for fast linear algebra calculations.
 import warnings
 
 from pennylane.plugins import DefaultQubit
-from .src.lightning_qubit_ops import apply
+from .lightning_qubit_ops import apply
 import numpy as np
 from pennylane import QubitStateVector, BasisState, DeviceError
 
