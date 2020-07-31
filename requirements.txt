@@ -1,2 +1,2 @@
 numpy
-pennylane>=0.10.0
+git+https://github.com/XanaduAI/pennylane.git@lightning_qubit_adjust#egg=pennylane
