@@ -2,8 +2,8 @@ Lightning Qubit device
 ======================
 
 The ``lightning.qubit`` device is an extension of PennyLane's built-in ``default.qubit`` device.
-It uses the C++ Eigen library to perform fast linear algebra calculations for simulating quantum
-state-vector evolution.
+It uses the C++ `Eigen <http://eigen.tuxfamily.org/index.php?title=Main_Page>`__ library to
+perform fast linear algebra calculations for simulating quantum state-vector evolution.
 
 A ``lightning.qubit`` device can be loaded using:
 

@@ -12,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-The default plugin is meant to be used as a template for writing PennyLane device
-plugins for new qubit-based backends.
-
-It implements the necessary :class:`~pennylane._device.Device` methods as well as some built-in
-:mod:`qubit operations <pennylane.ops.qubit>`, and provides a very simple pure state
-simulation of a qubit-based quantum circuit architecture.
+This module contains the :class:`~.LightningQubit` class, a PennyLane simulator device that
+interfaces with C++ for fast linear algebra calculations.
 """
+import warnings
+
 from pennylane.plugins import DefaultQubit
 from .lightning_qubit_ops import apply
 import numpy as np
@@ -26,9 +24,36 @@ from pennylane import QubitStateVector, BasisState, DeviceError
 
 
 class LightningQubit(DefaultQubit):
-    """TODO"""
+    """PennyLane Lightning device.
 
+    An extension of PennyLane's built-in ``default.qubit`` device that interfaces with C++ to
+    perform fast linear algebra calculations using the
+    `Eigen <http://eigen.tuxfamily.org/index.php?title=Main_Page>`__ library.
+
+    Use of this device requires pre-built binaries or compilation from source. Check out the
+    :doc:`/installation` guide for more details.
+
+    .. warning::
+
+        The C++ interface currently supports up to 16 wires. If Lightning Qubit is loaded with
+        more than 16 wires, it will revert to a NumPy-based simulation.
+
+    Args:
+        wires (int): the number of wires to initialize the device with
+        shots (int): How many times the circuit should be evaluated (or sampled) to estimate
+            the expectation values. Defaults to 1000 if not specified.
+            If ``analytic == True``, then the number of shots is ignored
+            in the calculation of expectation values and variances, and only controls the number
+            of samples returned by ``sample``.
+        analytic (bool): indicates if the device should calculate expectations
+            and variances analytically
+    """
+
+    name = "Lightning Qubit PennyLane plugin"
     short_name = "lightning.qubit"
+    pennylane_requires = "0.11"
+    version = "0.11.0"
+    author = "Xanadu Inc."
     _capabilities = {"inverse_operations": False}  # we should look at supporting
 
     operations = {
@@ -41,15 +66,35 @@ class LightningQubit(DefaultQubit):
         "S",
         "T",
         "CNOT",
+        "SWAP",
+        "CSWAP",
+        "Toffoli",
+        "CZ",
+        "PhaseShift",
         "RX",
         "RY",
         "RZ",
         "Rot",
+        "CRX",
+        "CRY",
+        "CRZ",
+        "CRot",
     }
+
+    observables = {"PauliX", "PauliY", "PauliZ", "Hadamard", "Identity"}
+
+    def __init__(self, wires, *, shots=1000, analytic=True):
+        super().__init__(wires, shots=shots, analytic=analytic)
+
+        if self.num_wires > 16:
+            warnings.warn(
+                "The number of wires exceeds 16, reverting to NumPy-based evaluation.",
+                UserWarning,
+            )
 
     def apply(self, operations, rotations=None, **kwargs):
 
-        if self.num_wires == 1:
+        if self.num_wires > 16:
             super().apply(operations, rotations=rotations, **kwargs)
             return
 
@@ -66,13 +111,24 @@ class LightningQubit(DefaultQubit):
 
         if operations:
             self._pre_rotated_state = self.apply_lightning(self._state, operations)
-            if rotations:
-                self._state = self.apply_lightning(self._pre_rotated_state, rotations)
-            else:
-                self._state = self._pre_rotated_state
+        else:
+            self._pre_rotated_state = self._state
+
+        if rotations:
+            self._state = self.apply_lightning(self._pre_rotated_state, rotations)
+        else:
+            self._state = self._pre_rotated_state
 
     def apply_lightning(self, state, operations):
-        """TODO"""
+        """Apply a list of operations to the state tensor.
+
+        Args:
+            state (array[complex]): the input state tensor
+            operations (list[~pennylane.operation.Operation]): operations to apply
+
+        Returns:
+            array[complex]: the output state tensor
+        """
         op_names = [o.name for o in operations]
         op_wires = [o.wires for o in operations]
         op_param = [o.parameters for o in operations]
