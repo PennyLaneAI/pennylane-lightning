@@ -122,9 +122,8 @@ include_dirs = [
     os.environ.get("EIGEN_INCLUDE_DIR", ""),
     "/usr/local/include/eigen3",
     "/usr/include/eigen3",
+    "include"
 ]
-
-print(include_dirs)
 
 library_dirs = [i for i in os.environ.get("LD_LIBRARY_PATH", "").split(":") if i]
 libraries = []
