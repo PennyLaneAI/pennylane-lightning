@@ -3,13 +3,11 @@ doc/_build/
 PennyLane_lightning.egg-info/
 build/
 dist/
-pennylane_qiskit/__pycache__/
 tests/__pycache__/
 .idea
 *.ipynp
 *.ipynb_checkpoints
 __pycache__
-PennyLane_qiskit.egg-info/
 .pytest_cache/
 coverage_html_report/
 .coverage

@@ -1,12 +1,6 @@
 PennyLane-Lightning Plugin
 ##########################
 
-.. image:: https://img.shields.io/codacy/grade/f4132f03ce224f82bd3e8ba436b52af3.svg?style=popout-square
-    :alt: Codacy grade
-    :target: https://www.codacy.com/app/XanaduAI/pennylane-lightning
-
-|
-
 .. header-start-inclusion-marker-do-not-remove
 
 The PennyLane-Lightning plugin provides a fast state-vector simulator written in C++ using `Eigen <http://eigen.tuxfamily.org/index.php?title=Main_Page>`_.

@@ -63,7 +63,7 @@ VectorXcd apply (
     VectorXcd evolved_state;
     switch (qubits) {
     case 1:
-        evolved_state = apply_ops_1q (state, ops, wires, params);
+        evolved_state = apply_ops_1q (state, ops, params);
         break;
     case 2:
         evolved_state = apply_ops_2q (state, ops, wires, params);
