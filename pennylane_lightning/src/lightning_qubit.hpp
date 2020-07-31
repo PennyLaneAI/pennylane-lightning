@@ -19,6 +19,7 @@
  */
 #pragma once
 
+#define _USE_MATH_DEFINES
 #include "Eigen/Dense"
 #include "unsupported/Eigen/CXX11/Tensor"
 #include "operations.hpp"
