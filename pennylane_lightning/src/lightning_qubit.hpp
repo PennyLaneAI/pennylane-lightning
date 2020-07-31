@@ -58,9 +58,10 @@ const double SQRT2INV = 0.7071067811865475;
 * @param tensor_indices the qubit-labelled indices of the state tensor before contraction
 * @return the resultant indices
 */
-vector<int> calculate_tensor_indices(vector<int> &wires, vector<int> &tensor_indices) {
-    vector<int> new_tensor_indices;
-    for (int j = 0; j < tensor_indices.size(); j++) {
+vector<int> calculate_tensor_indices(const vector<int> &wires, const vector<int> &tensor_indices) {
+    vector<int> new_tensor_indices = wires;
+    int n_indices = tensor_indices.size();
+    for (int j = 0; j < n_indices; j++) {
         if (count(wires.begin(), wires.end(), tensor_indices[j]) == 0) {
         new_tensor_indices.push_back(tensor_indices[j]);
         }

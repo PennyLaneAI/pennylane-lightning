@@ -1030,39 +1030,53 @@ TEST(CSWAP, ApplyToAll) {
 
 namespace auxiliary_functions {
 
-TEST(CalcPerm, OneElemOneQubit) {
-    std::vector<int> input_perm({0});
-    std::vector<int> output_perm = calculate_indices(input_perm, 1);
+TEST(CalcTensInd, OneWireOneQubit) {
+    std::vector<int> tensor_indices({0});
+    std::vector<int> wires({0});
+    std::vector<int> output_tensor_indices = calculate_tensor_indices(wires, tensor_indices);
 
-    EXPECT_TRUE(input_perm == output_perm);
+    EXPECT_TRUE(tensor_indices == output_tensor_indices);
 }
 
-TEST(CalcPerm, OneElemTwoQubit) {
-    std::vector<int> input_perm({0});
-    std::vector<int> output_perm = calculate_indices(input_perm, 2);
+TEST(CalcTensInd, OneWireTwoQubit) {
+    std::vector<int> tensor_indices({0, 1});
+    std::vector<int> wires({0});
+    std::vector<int> output_tensor_indices = calculate_tensor_indices(wires, tensor_indices);
 
-    std::vector<int> expected_perm({0, 1});
+    std::vector<int> expected_tensor_indices({0, 1});
 
-    EXPECT_TRUE(output_perm == expected_perm);
+    EXPECT_TRUE(expected_tensor_indices == output_tensor_indices);
 }
 
-TEST(CalcPerm, TwoElemFiveQubitAscOrder) {
-    std::vector<int> input_perm({1,2,4});
-    std::vector<int> output_perm = calculate_indices(input_perm, 5);
+TEST(CalcTensInd, TwoWireFiveQubitAscOrder) {
+    std::vector<int> tensor_indices({0, 1, 2, 3, 4});
+    std::vector<int> wires({1,2,4});
+    std::vector<int> output_tensor_indices = calculate_tensor_indices(wires, tensor_indices);
 
-    std::vector<int> expected_perm({1,2,4,0,3});
+    std::vector<int> expected_tensor_indices({1, 2, 4, 0, 3});
 
-    EXPECT_TRUE(output_perm == expected_perm);
+    EXPECT_TRUE(expected_tensor_indices == output_tensor_indices);
 }
 
 
-TEST(CalcPerm, TwoElemFiveQubitRandomOrder) {
-    std::vector<int> input_perm({2,1,4});
-    std::vector<int> output_perm = calculate_indices(input_perm, 5);
+TEST(CalcTensInd, TwoWireFiveQubitRandomOrder) {
+    std::vector<int> tensor_indices({0, 1, 2, 3, 4});
+    std::vector<int> wires({2, 1, 4});
+    std::vector<int> output_tensor_indices = calculate_tensor_indices(wires, tensor_indices);
 
-    std::vector<int> expected_perm({2,1,4,0,3});
+    std::vector<int> expected_tensor_indices({2, 1, 4, 0, 3});
 
-    EXPECT_TRUE(output_perm == expected_perm);
+    EXPECT_TRUE(expected_tensor_indices == output_tensor_indices);
+}
+
+TEST(CalcTensInd, TwoWireFiveQubitRandomOrderReverse) {
+    std::vector<int> tensor_indices({4, 3, 2, 1, 0});
+    std::vector<int> wires({2, 1, 4});
+    std::vector<int> output_tensor_indices = calculate_tensor_indices(wires, tensor_indices);
+
+    std::vector<int> expected_tensor_indices({2, 1, 4, 3, 0});
+
+    EXPECT_TRUE(expected_tensor_indices == output_tensor_indices);
 }
 
 TEST(ArgSort, OneElem) {
