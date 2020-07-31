@@ -17,8 +17,9 @@ Integration tests that compare the output states of ``lightning.qubit`` with ``d
 import itertools
 
 import numpy as np
-import pennylane as qml
 import pytest
+
+import pennylane as qml
 
 
 @pytest.fixture
