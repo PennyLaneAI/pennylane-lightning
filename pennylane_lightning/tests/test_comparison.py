@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Integration tests that
+Integration tests that compare the output states of ``lightning.qubit`` with ``default.qubit``.
 """
 import itertools
 
@@ -61,7 +61,8 @@ class TestComparison:
         """Test a single-qubit circuit"""
 
         def circuit():
-            """A combination of the one_qubit_block and a simple PauliZ measurement"""
+            """A combination of the one_qubit_block and a simple PauliZ measurement applied to a
+            basis state"""
             qml.BasisState(np.array(basis_state), wires=0)
             one_qubit_block(wires=0)
             return qml.expval(qml.PauliZ(0))
@@ -84,7 +85,7 @@ class TestComparison:
 
         def circuit():
             """A combination of two qubit gates with the one_qubit_block and a simple PauliZ
-            measurement"""
+            measurement applied to an input basis state"""
             qml.BasisState(np.array(basis_state), wires=[0, 1])
             qml.RX(0.5, wires=0)
             qml.Hadamard(wires=1)
@@ -116,7 +117,7 @@ class TestComparison:
 
         def circuit():
             """A combination of two and three qubit gates with the one_qubit_block and a simple
-            PauliZ measurement"""
+            PauliZ measurement applied to an input basis state"""
             qml.BasisState(np.array(basis_state), wires=[0, 1, 2])
             qml.RX(0.5, wires=0)
             qml.Hadamard(wires=1)
@@ -156,7 +157,7 @@ class TestComparison:
 
         def circuit():
             """A combination of two and three qubit gates with the one_qubit_block and a simple
-            PauliZ measurement, all acting on four qubits"""
+            PauliZ measurement, all acting on a four qubit input basis state"""
             qml.BasisState(np.array(basis_state), wires=[0, 1, 2, 3])
             qml.RX(0.5, wires=0)
             qml.Hadamard(wires=1)
