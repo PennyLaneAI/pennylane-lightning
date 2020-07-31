@@ -7,6 +7,7 @@ env:
   CIBW_BEFORE_BUILD_LINUX: |
     curl -OsL https://bitbucket.org/eigen/eigen/get/3.3.7.tar.gz
     tar xzf 3.3.7.tar.gz eigen-eigen-323c052e1731/Eigen --strip-components 1
+    tar xzf 3.3.7.tar.gz eigen-eigen-323c052e1731/unsupported --strip-components 1
     mkdir -p {project}/include
     cp -rf Eigen {project}/include
     cp -rf unsupported {project}/include
