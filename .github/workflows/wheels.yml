@@ -48,7 +48,7 @@ env:
 jobs:
 
   pythontests:
-    name: ${{ runner.os }}
+    name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
