@@ -22,8 +22,17 @@ import numpy as np
 import pennylane as qml
 
 # defaults
-TOL = 1e-3
+TOL = 1e-6
 
+U = np.array(
+    [
+        [0.83645892 - 0.40533293j, -0.20215326 + 0.30850569j],
+        [-0.23889780 - 0.28101519j, -0.88031770 - 0.29832709j],
+    ]
+)
+
+U2 = np.array([[0, 1, 1, 1], [1, 0, 1, -1], [1, -1, 0, 1], [1, 1, -1, 0]]) / np.sqrt(3)
+A = np.array([[1.02789352, 1.61296440 - 0.3498192j], [1.61296440 + 0.3498192j, 1.23920938 + 0j]])
 
 @pytest.fixture(scope="session")
 def tol():
