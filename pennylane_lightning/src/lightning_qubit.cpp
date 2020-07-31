@@ -59,7 +59,7 @@ VectorXcd apply (
     vector<vector<int>> wires,
     vector<vector<float>> params,
     const int qubits
-    ) {
+) {
     VectorXcd evolved_state;
     switch (qubits) {
     case 1:
@@ -85,39 +85,39 @@ VectorXcd apply (
         break;
     case 8:
         evolved_state = apply_ops <State_8q> (state, ops, wires, params, 2, 2, 2, 2, 2, 2, 2,
-            2);
+                                              2);
         break;
     case 9:
         evolved_state = apply_ops <State_9q> (state, ops, wires, params,
-        2, 2, 2, 2, 2, 2, 2, 2, 2);
+                                              2, 2, 2, 2, 2, 2, 2, 2, 2);
         break;
     case 10:
         evolved_state = apply_ops <State_10q> (state, ops, wires, params,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+                                               2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
         break;
     case 11:
         evolved_state = apply_ops <State_11q> (state, ops, wires, params,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+                                               2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
         break;
     case 12:
         evolved_state = apply_ops <State_12q> (state, ops, wires, params,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+                                               2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
         break;
     case 13:
         evolved_state = apply_ops <State_13q> (state, ops, wires, params,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+                                               2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
         break;
     case 14:
         evolved_state = apply_ops <State_14q> (state, ops, wires, params,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+                                               2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
         break;
     case 15:
         evolved_state = apply_ops <State_15q> (state, ops, wires, params,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+                                               2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
         break;
     case 16:
         evolved_state = apply_ops <State_16q> (state, ops, wires, params,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
+                                               2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
         break;
     }
     return evolved_state;

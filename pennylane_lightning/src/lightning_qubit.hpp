@@ -57,7 +57,7 @@ const double SQRT2INV = 0.7071067811865475;
 vector<int> calculate_indices(vector<int> wires, int qubits) {
     for (int j = 0; j < qubits; j++) {
         if (count(wires.begin(), wires.end(), j) == 0) {
-        wires.push_back(j);
+            wires.push_back(j);
         }
     }
     return wires;
@@ -73,15 +73,15 @@ vector<int> calculate_indices(vector<int> wires, int qubits) {
 Gate_1q get_gate_1q(const string &gate_name, const vector<float> &params) {
     Gate_1q op;
 
-    if (params.empty()){
+    if (params.empty()) {
         pfunc_1q f = OneQubitOps.at(gate_name);
         op = (*f)();
     }
-    else if (params.size() == 1){
+    else if (params.size() == 1) {
         pfunc_1q_one_param f = OneQubitOpsOneParam.at(gate_name);
         op = (*f)(params[0]);
     }
-    else if (params.size() == 3){
+    else if (params.size() == 3) {
         pfunc_1q_three_params f = OneQubitOpsThreeParams.at(gate_name);
         op = (*f)(params[0], params[1], params[2]);
     }
@@ -102,11 +102,11 @@ Gate_2q get_gate_2q(const string &gate_name, const vector<float> &params) {
         pfunc_2q f = TwoQubitOps.at(gate_name);
         op = (*f)();
     }
-    else if (params.size() == 1){
+    else if (params.size() == 1) {
         pfunc_2q_one_param f = TwoQubitOpsOneParam.at(gate_name);
         op = (*f)(params[0]);
     }
-    else if (params.size() == 3){
+    else if (params.size() == 3) {
         pfunc_2q_three_params f = TwoQubitOpsThreeParams.at(gate_name);
         op = (*f)(params[0], params[1], params[2]);
     }
@@ -136,10 +136,12 @@ Gate_3q get_gate_3q(const string &gate_name) {
 */
 vector<int> shuffle_indices(const vector<int> &indices) {
 
-  vector<int> idx(indices.size());
-  std::iota(idx.begin(), idx.end(), 0);
-  stable_sort(idx.begin(), idx.end(), [&indices](size_t i1, size_t i2) {return indices[i1] < indices[i2];});
-  return idx;
+    vector<int> idx(indices.size());
+    std::iota(idx.begin(), idx.end(), 0);
+    stable_sort(idx.begin(), idx.end(), [&indices](size_t i1, size_t i2) {
+        return indices[i1] < indices[i2];
+    });
+    return idx;
 }
 
 /**
@@ -219,7 +221,7 @@ VectorXcd apply_ops(
     vector<vector<int>> wires,
     vector<vector<float>> params,
     Shape... shape
-    ) {
+) {
     State state_tensor = TensorMap<State>(state.data(), shape...);
     State evolved_tensor = state_tensor;
     const int qubits = log2(state_tensor.size());
@@ -237,7 +239,7 @@ VectorXcd apply_ops(
         else if (w.size() == 2) {
             tensor_contracted = contract_2q_op<State> (evolved_tensor, op_string, w, p);
         }
-       else if (w.size() == 3) {
+        else if (w.size() == 3) {
             tensor_contracted = contract_3q_op<State> (evolved_tensor, op_string, w);
         }
 
@@ -265,7 +267,7 @@ VectorXcd apply_ops_1q(
     vector<string> ops,
     vector<vector<int>> wires,
     vector<vector<float>> params
-    ) {
+) {
     State_1q state_tensor = TensorMap<State_1q>(state.data(), 2);
     State_1q evolved_tensor = state_tensor;
     const int qubits = log2(state_tensor.size());
@@ -302,7 +304,7 @@ VectorXcd apply_ops_2q(
     vector<string> ops,
     vector<vector<int>> wires,
     vector<vector<float>> params
-    ) {
+) {
     State_2q state_tensor = TensorMap<State_2q>(state.data(), 2, 2);
     State_2q evolved_tensor = state_tensor;
     const int qubits = log2(state_tensor.size());
