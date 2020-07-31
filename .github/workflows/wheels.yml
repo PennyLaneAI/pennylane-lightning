@@ -76,7 +76,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: powershell
         run: |
-          Invoke-WebRequest -Uri "http://bitbucket.org/eigen/eigen/get/3.3.7.zip" -UseBasicParsing -OutFile eigen3.zip
+          Invoke-WebRequest -Uri "http://bitbucket.org/eigen/eigen/get/3.3.7.zip" -UseBasicParsing -OutFile C:\eigen3.zip
           & "C:\\Program Files\\7-Zip\\7z.exe" x C:\eigen3.zip -o"C:\" -y
 
       - name: Build wheels
