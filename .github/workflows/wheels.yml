@@ -3,7 +3,7 @@ name: Wheels
 on: [pull_request]
 
 env:
-  CIBW_SKIP: "cp27-* cp34-* cp35-* *i686 pp*"
+  CIBW_SKIP: "cp27-* cp34-* cp35-* *i686 pp* *win32"
 
   # Linux specific build settings
 
