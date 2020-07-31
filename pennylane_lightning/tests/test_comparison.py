@@ -14,6 +14,8 @@
 """
 Integration tests that
 """
+import itertools
+
 import numpy as np
 import pennylane as qml
 import pytest
@@ -53,12 +55,14 @@ class TestComparison:
     variety of different circuits. This uses ``default.qubit`` as a gold standard to compare
     against."""
 
+    @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 1))
     @pytest.mark.parametrize("wires", [1])
-    def test_one_qubit_circuit(self, wires, lightning_qubit_dev, default_qubit_dev):
-        """Test a single qubit circuit"""
+    def test_one_qubit_circuit(self, wires, lightning_qubit_dev, default_qubit_dev, basis_state):
+        """Test a single-qubit circuit"""
 
         def circuit():
             """A combination of the one_qubit_block and a simple PauliZ measurement"""
+            qml.BasisState(np.array(basis_state), wires=0)
             one_qubit_block(wires=0)
             return qml.expval(qml.PauliZ(0))
 
@@ -71,4 +75,36 @@ class TestComparison:
         default()
         default_state = default_qubit_dev.state
 
+        assert np.allclose(lightning_state, default_state)
+
+    @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 2))
+    @pytest.mark.parametrize("wires", [2])
+    def test_two_qubit_circuit(self, wires, lightning_qubit_dev, default_qubit_dev, basis_state):
+        """Test a two-qubit circuit"""
+
+        def circuit():
+            """A combination of two qubit gates with the one_qubit_block and a simple PauliZ
+            measurement"""
+            qml.BasisState(np.array(basis_state), wires=[0, 1])
+            qml.RX(0.5, wires=0)
+            qml.Hadamard(wires=1)
+            qml.CNOT(wires=[0, 1])
+            qml.CZ(wires=[1, 0])
+            one_qubit_block(wires=0)
+            qml.SWAP(wires=[0, 1])
+            qml.CRX(0.5, wires=[1, 0])
+            qml.CRY(0.9, wires=[0, 1])
+            one_qubit_block(wires=1)
+            qml.CRZ(0.02, wires=[0, 1])
+            qml.CRot(0.2, 0.3, 0.7, wires=[0, 1])
+            return qml.expval(qml.PauliZ(0))
+
+        lightning = qml.QNode(circuit, lightning_qubit_dev)
+        default = qml.QNode(circuit, default_qubit_dev)
+
+        lightning()
+        lightning_state = lightning_qubit_dev.state
+
+        default()
+        default_state = default_qubit_dev.state
         assert np.allclose(lightning_state, default_state)
