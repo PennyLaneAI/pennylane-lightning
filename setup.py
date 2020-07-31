@@ -86,8 +86,8 @@ class BuildExt(build_ext):
     }
 
     if platform.system() == "Darwin":
-        c_opts["unix"].remove("-fopenmp")
-        l_opts["unix"].remove("-fopenmp")
+        c_opts["unix"].remove("-fopenmp").remove("-shared")
+        l_opts["unix"].remove("-fopenmp").remove("-shared")
 
         darwin_opts = [
             "-stdlib=libc++",

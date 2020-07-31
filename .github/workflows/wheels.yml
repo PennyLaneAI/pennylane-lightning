@@ -5,6 +5,8 @@ on: [pull_request]
 env:
   CIBW_SKIP: "cp27-* cp34-* cp35-* *i686 pp*"
 
+  # Linux specific build settings
+
   CIBW_BEFORE_ALL_LINUX: |
     curl -OsL https://bitbucket.org/eigen/eigen/get/3.3.7.tar.gz
     tar xzf 3.3.7.tar.gz eigen-eigen-323c052e1731/Eigen --strip-components 1
@@ -13,11 +15,15 @@ env:
     cp -rf Eigen {project}/include
     cp -rf unsupported {project}/include
 
+  # MacOS specific build settings
+
   CIBW_BEFORE_ALL_MACOS: |
     brew cask uninstall --force oclint
     brew install gcc eigen libomp
 
   CIBW_ENVIRONMENT_MACOS: EIGEN_INCLUDE_DIR=/usr/local/Cellar/eigen/3.3.7/include/eigen3
+
+  # Windows specific build settings
 
   CIBW_BEFORE_ALL_WINDOWS: |
     wget http://bitbucket.org/eigen/eigen/get/3.3.7.zip -outfile eigen3.zip
@@ -25,8 +31,12 @@ env:
 
   CIBW_ENVIRONMENT_WINDOWS: EIGEN_INCLUDE_DIR=C:\eigen-eigen-323c052e1731\
 
+  # Python build settings
+
   CIBW_BEFORE_BUILD: |
     pip install numpy scipy pybind11
+
+  # Testing of build wheels
 
   CIBW_TEST_REQUIRES: numpy scipy pytest pytest-cov pytest-mock flaky
 
