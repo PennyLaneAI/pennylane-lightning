@@ -1,6 +1,14 @@
 name: Wheels
 
-on: [pull_request]
+on:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+      tags:
+        description: 'Test scenario tags'
 
 env:
   CIBW_SKIP: "cp27-* cp34-* cp35-* *i686 pp* *win32"
