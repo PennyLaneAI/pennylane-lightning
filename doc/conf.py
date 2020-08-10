@@ -20,6 +20,29 @@ sys.path.insert(0, os.path.abspath(''))
 sys.path.insert(0, os.path.abspath('_ext'))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath('doc')), 'doc'))
 
+
+
+from unittest.mock import MagicMock
+class Mock(MagicMock):
+    __name__ = 'foo'
+
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+class TypeMock(type):
+    pass
+
+MOCK_MODULES = [
+    'pennylane_lightning',
+    # 'pennylane_lightning.lightning_qubit',
+    ]
+
+mock = Mock()
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = mock
+
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -72,10 +95,10 @@ add_module_names = False
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 
-import pennylane_lightning
+# import pennylane_lightning
 # The full version, including alpha/beta/rc tags.
-release = pennylane_lightning.__version__
-
+# release = pennylane_lightning.__version__
+release = "0.1.0"
 # The short X.Y version.
 version = re.match(r'^(\d+\.\d+)', release).expand(r'\1')
 
