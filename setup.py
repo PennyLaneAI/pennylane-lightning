@@ -76,12 +76,12 @@ class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
 
     c_opts = {
-        "msvc": ["/EHsc", "-static", "/O2", "-Wall", "-fPIC"],
+        "msvc": ["/EHsc", "/O2", "/Wall"],
         "unix": ["-O3", "-Wall", "-fPIC", "-shared", "-fopenmp"],
     }
 
     l_opts = {
-        "msvc": ["-std=c++11", "-static", "-static-libgfortran", "-static-libgcc"],
+        "msvc": ["/std:c++11"],
         "unix": ["-O3", "-Wall", "-fPIC", "-shared", "-fopenmp"],
     }
 
