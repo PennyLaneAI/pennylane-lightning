@@ -16,7 +16,6 @@ import platform
 import setuptools
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
-import sys
 
 
 with open("pennylane_lightning/_version.py") as f:
@@ -165,6 +164,8 @@ ext_modules = [
     ),
 ]
 
+if os.environ.get("USING_RTD", False):
+    ext_modules = []
 
 requirements = [
     "numpy",
