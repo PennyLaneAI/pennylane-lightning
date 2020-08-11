@@ -81,7 +81,7 @@ class BuildExt(build_ext):
     }
 
     l_opts = {
-        "msvc": ["/std:c++11"],
+        "msvc": ["/std:c++14"],
         "unix": ["-O3", "-Wall", "-fPIC", "-shared", "-fopenmp"],
     }
 
