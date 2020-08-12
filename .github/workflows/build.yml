@@ -76,5 +76,5 @@ jobs:
       - name: Run PennyLane shared test suite
         run: |
           cd pl
-          pytest pennylane/devices/tests --device lightning.qubit --analytic False --skip-ops
+          pytest pennylane/devices/tests --device lightning.qubit --analytic False --skip-ops --shots=20000
           pytest pennylane/devices/tests --device lightning.qubit --analytic True --skip-ops
