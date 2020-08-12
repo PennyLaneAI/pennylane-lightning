@@ -164,7 +164,7 @@ ext_modules = [
     ),
 ]
 
-if os.environ.get("USING_RTD", False):
+if os.environ.get("MOCK_DOCS", False):
     ext_modules = []
 
 requirements = [
