@@ -1,2 +1,4 @@
 numpy
 git+https://github.com/XanaduAI/pennylane.git#egg=pennylane
+pytest
+pytest-cov
