@@ -80,6 +80,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: |
+              "C:\"
               "C:\\pennylane"
               "C:\\vcpython27"
           key: ${{ runner.os }}-eigen
