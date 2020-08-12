@@ -12,6 +12,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 import sys, os, re
+from unittest.mock import MagicMock
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -19,6 +20,21 @@ import sys, os, re
 sys.path.insert(0, os.path.abspath(''))
 sys.path.insert(0, os.path.abspath('_ext'))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath('doc')), 'doc'))
+
+
+class Mock(MagicMock):
+    __name__ = 'foo'
+
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+
+MOCK_MODULES = ['pennylane_lightning.lightning_qubit_ops']
+
+mock = Mock()
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = mock
 
 # -- General configuration ------------------------------------------------
 
