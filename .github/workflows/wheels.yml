@@ -1,5 +1,9 @@
 name: Wheels
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
 
 env:
   CIBW_SKIP: "cp27-* cp34-* cp35-* *i686 pp* *win32"
