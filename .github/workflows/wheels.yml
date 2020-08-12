@@ -79,7 +79,9 @@ jobs:
         id: cache-eigen
         uses: actions/cache@v2
         with:
-          path: "C:\\pennylane"
+          path: |
+              "C:\\pennylane"
+              "C:\\vcpython27"
           key: ${{ runner.os }}-eigen
 
       - name: Install Eigen on Windows
