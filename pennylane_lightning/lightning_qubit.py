@@ -17,7 +17,7 @@ interfaces with C++ for fast linear algebra calculations.
 """
 import warnings
 
-from pennylane.plugins import DefaultQubit
+from pennylane.devices import DefaultQubit
 from .lightning_qubit_ops import apply
 import numpy as np
 from pennylane import QubitStateVector, BasisState, DeviceError
@@ -130,7 +130,7 @@ class LightningQubit(DefaultQubit):
             array[complex]: the output state tensor
         """
         op_names = [o.name for o in operations]
-        op_wires = [o.wires for o in operations]
+        op_wires = [self.wires.indices(o.wires) for o in operations]
         op_param = [o.parameters for o in operations]
 
         state_vector = np.ravel(state, order="F")

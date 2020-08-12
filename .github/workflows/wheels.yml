@@ -35,7 +35,7 @@ env:
   CIBW_ENVIRONMENT_WINDOWS: EIGEN_INCLUDE_DIR="C:\\eigen-eigen-323c052e1731\\"
 
   CIBW_TEST_COMMAND_WINDOWS: |
-    pytest "C:\\pennylane\\pennylane\\plugins\\tests" --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+    pytest "C:\\pennylane\\pennylane\\devices\\tests" --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
   # Python build settings
 
@@ -49,7 +49,7 @@ env:
   CIBW_TEST_COMMAND: |
     git clone https://github.com/PennyLaneAI/pennylane.git
     cd pennylane && pip install -e .
-    pytest pennylane/plugins/tests --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+    pytest pennylane/devices/tests --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
 
 jobs:
