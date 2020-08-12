@@ -118,53 +118,50 @@ class BuildExt(build_ext):
         build_ext.build_extensions(self)
 
 
-include_dirs = [
-    get_pybind_include(),
-    os.environ.get("EIGEN_INCLUDE_DIR", ""),
-    "/usr/local/include/eigen3",
-    "/usr/include/eigen3",
-    "./include"
-]
+if not os.environ.get("MOCK_DOCS", False):
 
-library_dirs = [i for i in os.environ.get("LD_LIBRARY_PATH", "").split(":") if i]
-libraries = []
-extra_compile_args = []
-extra_link_args = []
+    include_dirs = [
+        get_pybind_include(),
+        os.environ.get("EIGEN_INCLUDE_DIR", ""),
+        "/usr/local/include/eigen3",
+        "/usr/include/eigen3",
+        "./include"
+    ]
 
+    library_dirs = [i for i in os.environ.get("LD_LIBRARY_PATH", "").split(":") if i]
+    libraries = []
+    extra_compile_args = []
+    extra_link_args = []
 
-if os.environ.get("USE_LAPACK", False):
-    extra_compile_args += [" -llapacke -DLAPACKE=1"]
-    libraries += ["lapacke"]
-    extra_link_args += ["-llapacke"]
+    if os.environ.get("USE_LAPACK", False):
+        extra_compile_args += [" -llapacke -DLAPACKE=1"]
+        libraries += ["lapacke"]
+        extra_link_args += ["-llapacke"]
 
+    if os.environ.get("USE_OPENBLAS", False):
+        extra_compile_args += [" -lopenblas -DLAPACKE=1"]
+        libraries += ["openblas"]
+        extra_link_args += ["-lopenblas"]
 
-if os.environ.get("USE_OPENBLAS", False):
-    extra_compile_args += [" -lopenblas -DLAPACKE=1"]
-    libraries += ["openblas"]
-    extra_link_args += ["-lopenblas"]
+    if platform.system() == "Darwin":
+        include_dirs += ["/usr/local/opt/libomp/include"]
+        library_dirs += ["/usr/local/opt/libomp/lib"]
+        libraries += ["omp"]
 
-
-if platform.system() == "Darwin":
-    include_dirs += ["/usr/local/opt/libomp/include"]
-    library_dirs += ["/usr/local/opt/libomp/lib"]
-    libraries += ["omp"]
-
-
-ext_modules = [
-    Extension(
-        "lightning_qubit_ops",
-        sources=["pennylane_lightning/src/lightning_qubit.cpp"],
-        depends=["pennylane_lightning/src/lightning_qubit.hpp", "pennylane_lightning/src/operations.hpp"],
-        include_dirs=include_dirs,
-        language="c++",
-        libraries=libraries,
-        library_dirs=library_dirs,
-        extra_compile_args=extra_compile_args,
-        extra_link_args=extra_link_args
-    ),
-]
-
-if os.environ.get("MOCK_DOCS", False):
+    ext_modules = [
+        Extension(
+            "lightning_qubit_ops",
+            sources=["pennylane_lightning/src/lightning_qubit.cpp"],
+            depends=["pennylane_lightning/src/lightning_qubit.hpp", "pennylane_lightning/src/operations.hpp"],
+            include_dirs=include_dirs,
+            language="c++",
+            libraries=libraries,
+            library_dirs=library_dirs,
+            extra_compile_args=extra_compile_args,
+            extra_link_args=extra_link_args
+        ),
+    ]
+else:
     ext_modules = []
 
 requirements = [
