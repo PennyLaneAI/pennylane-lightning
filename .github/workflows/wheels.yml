@@ -88,9 +88,16 @@ jobs:
         env:
           GIT_REDIRECT_STDERR: "2>&1"
         run: |
-          choco install vcpython27 -f -y
           Invoke-WebRequest -Uri "http://bitbucket.org/eigen/eigen/get/3.3.7.zip" -UseBasicParsing -OutFile C:\eigen3.zip
           & "C:\\Program Files\\7-Zip\\7z.exe" x C:\eigen3.zip -o"C:\" -y
+
+      - name: Install PennyLane on Windows
+        if: ${{ runner.os == 'Windows'}}
+        shell: powershell
+        env:
+          GIT_REDIRECT_STDERR: "2>&1"
+        run: |
+          choco install vcpython27 -f -y
           New-Item -ItemType directory -Path "C:\\pennylane"
           & git clone https://github.com/PennyLaneAI/pennylane.git "C:\\pennylane"
 
