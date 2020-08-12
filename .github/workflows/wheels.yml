@@ -84,7 +84,7 @@ jobs:
               "C:\\vcpython27"
           key: ${{ runner.os }}-eigen
 
-      - name: Install Eigen on Windows
+      - name: Install Eigen and VCPython27 on Windows
         if: ${{ runner.os == 'Windows' && steps.cache-eigen.outputs.cache-hit != 'true' }}
         shell: powershell
         env:
