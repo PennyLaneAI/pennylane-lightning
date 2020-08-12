@@ -171,7 +171,7 @@ requirements = [
 
 
 info = {
-    "name": "PennyLane-lightning",
+    "name": "PennyLane-Lightning",
     "version": version,
     "maintainer": "Xanadu Inc.",
     "maintainer_email": "software@xanadu.ai",
@@ -181,7 +181,7 @@ info = {
     "entry_points": {
         "pennylane.plugins": ["lightning.qubit = pennylane_lightning:LightningQubit",],
     },
-    "description": "PennyLane is a Python quantum machine learning library by Xanadu Inc.",
+    "description": "PennyLane lightning.qubit plugin",
     "long_description": open("README.rst").read(),
     "provides": ["pennylane_lightning"],
     "install_requires": requirements,
