@@ -2,7 +2,7 @@ PYTHON3 := $(shell which python3 2>/dev/null)
 
 PYTHON := python3
 COVERAGE := --cov=pennylane_lightning --cov-report term-missing --cov-report=html:coverage_html_report
-TESTRUNNER := -m pytest pennylane_lightning/tests --tb=short
+TESTRUNNER := -m pytest tests --tb=short
 
 .PHONY: help
 help:
@@ -36,7 +36,7 @@ clean:
 	$(PYTHON) setup.py clean --all
 	rm -rf pennylane_lightning/__pycache__
 	rm -rf pennylane_lightning/src/__pycache__
-	rm -rf pennylane_lightning/tests/__pycache__
+	rm -rf tests/__pycache__
 	rm -rf pennylane_lightning/src/tests/__pycache__
 	rm -rf dist
 	rm -rf build
