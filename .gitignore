@@ -1,6 +1,6 @@
 venv/
 doc/_build/
-PennyLane_lightning.egg-info/
+PennyLane_Lightning.egg-info/
 build/
 dist/
 tests/__pycache__/
