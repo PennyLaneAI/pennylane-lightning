@@ -30,6 +30,11 @@ env:
     cd pennylane && pip install -e .
     pytest pennylane/devices/tests --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
+    # Benchmark performance
+    python3 benchmark/benchmark.py -d default.qubit,lightning.qubit time bm_entangling_layers -w 2
+    python3 benchmark/benchmark.py -d default.qubit,lightning.qubit time bm_entangling_layers -w 6
+    python3 benchmark/benchmark.py -d default.qubit,lightning.qubit time bm_entangling_layers -w 10
+
 
 jobs:
 
@@ -65,12 +70,3 @@ jobs:
         with:
           name: ${{ runner.os }}-wheels.zip
           path: ./wheelhouse/*.whl
-
-      - name: Benchmark performance
-        run: |
-
-          git clone https://github.com/PennyLaneAI/pennylane.git
-          cd pennylane && pip install -e .
-          python3 benchmark/benchmark.py -d default.qubit,lightning.qubit time bm_entangling_layers -w 2
-          python3 benchmark/benchmark.py -d default.qubit,lightning.qubit time bm_entangling_layers -w 6
-          python3 benchmark/benchmark.py -d default.qubit,lightning.qubit time bm_entangling_layers -w 10
