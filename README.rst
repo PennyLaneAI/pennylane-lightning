@@ -35,7 +35,10 @@ Alternatively, to build PennyLane-Lightning from source you can run
     $ cd pennylane-lightning
     $ pip install -e .
 
-The following dependencies are required:
+Note that subsequent calls to ``pip install -e .`` will use cached binaries stored in the
+``build`` folder. Run ``make clean`` if you would like to recompile.
+
+The following dependencies are required to install PennyLane-Lightning:
 
 * A C++ compiler, such as ``g++``, ``clang``, or ``MSVC``.
 * `Eigen3 <http://eigen.tuxfamily.org/index.php?title=Main_Page>`_ - a C++ header library for linear algebra.
