@@ -1,6 +1,30 @@
 PennyLane-Lightning Plugin
 ##########################
 
+.. image:: https://img.shields.io/github/workflow/status/PennyLaneAI/pennylane-lightning/Testing/master?logo=github&style=flat-square
+    :alt: GitHub Workflow Status (branch)
+    :target: https://github.com/PennyLaneAI/pennylane-lightning/actions?query=workflow%3ATesting
+
+.. image:: https://img.shields.io/codecov/c/github/PennyLaneAI/pennylane-lightning/master.svg?logo=codecov&style=flat-square
+    :alt: Codecov coverage
+    :target: https://codecov.io/gh/PennyLaneAI/pennylane-lightning
+
+.. image:: https://img.shields.io/codefactor/grade/github/PennyLaneAI/pennylane-lightning/master?logo=codefactor&style=flat-square
+    :alt: CodeFactor Grade
+    :target: https://www.codefactor.io/repository/github/pennylaneai/pennylane-lightning
+
+.. image:: https://img.shields.io/readthedocs/pennylane-lightning.svg?logo=read-the-docs&style=flat-square
+    :alt: Read the Docs
+    :target: https://pennylane-lightning.readthedocs.io
+
+.. image:: https://img.shields.io/pypi/v/PennyLane-Lightning.svg?style=flat-square
+    :alt: PyPI
+    :target: https://pypi.org/project/PennyLane-Lightning
+
+.. image:: https://img.shields.io/pypi/pyversions/PennyLane-Lightning.svg?style=flat-square
+    :alt: PyPI - Python Version
+    :target: https://pypi.org/project/PennyLane-Lightning
+
 .. header-start-inclusion-marker-do-not-remove
 
 The PennyLane-Lightning plugin provides a fast state-vector simulator written in C++ using `Eigen <http://eigen.tuxfamily.org/index.php?title=Main_Page>`_.
