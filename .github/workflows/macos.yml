@@ -1,0 +1,74 @@
+name: Wheels
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+env:
+  CIBW_SKIP: "cp27-* cp34-* cp35-* *i686 pp* *win32"
+
+  # MacOS specific build settings
+
+  CIBW_BEFORE_ALL_MACOS: |
+    brew cask uninstall --force oclint
+    brew install gcc eigen libomp
+
+  CIBW_ENVIRONMENT_MACOS: EIGEN_INCLUDE_DIR=/usr/local/Cellar/eigen/3.3.7/include/eigen3
+
+  # Python build settings
+
+  CIBW_BEFORE_BUILD: |
+    pip install numpy scipy pybind11
+
+  # Testing of built wheels
+
+  CIBW_TEST_REQUIRES: numpy scipy pytest pytest-cov pytest-mock flaky
+
+  CIBW_TEST_COMMAND: |
+    git clone https://github.com/PennyLaneAI/pennylane.git
+    cd pennylane && pip install -e .
+    pytest pennylane/devices/tests --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+
+
+jobs:
+
+  pythontests:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest]
+
+    steps:
+
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+
+      - name: Install cibuildwheel
+        run: |
+          python -m pip install cibuildwheel==1.5.5
+
+      - name: Build wheels
+        run: |
+          python -m cibuildwheel --output-dir wheelhouse
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ runner.os }}-wheels.zip
+          path: ./wheelhouse/*.whl
+
+      - name: Benchmark performance
+        run: |
+          cd pennylane
+          python3 benchmark/benchmark.py -d default.qubit,lightning.qubit time bm_entangling_layers -w 2
+          python3 benchmark/benchmark.py -d default.qubit,lightning.qubit time bm_entangling_layers -w 6
+          python3 benchmark/benchmark.py -d default.qubit,lightning.qubit time bm_entangling_layers -w 10
