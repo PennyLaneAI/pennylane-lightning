@@ -53,16 +53,6 @@ jobs:
         with:
           python-version: '3.7'
 
-
-      - name: Benchmark performance
-        run: |
-
-          git clone https://github.com/PennyLaneAI/pennylane.git
-          cd pennylane && pip install -e .
-          python3 benchmark/benchmark.py -d default.qubit,lightning.qubit time bm_entangling_layers -w 2
-          python3 benchmark/benchmark.py -d default.qubit,lightning.qubit time bm_entangling_layers -w 6
-          python3 benchmark/benchmark.py -d default.qubit,lightning.qubit time bm_entangling_layers -w 10
-
       - name: Install cibuildwheel
         run: |
           python -m pip install cibuildwheel==1.5.5
@@ -75,3 +65,12 @@ jobs:
         with:
           name: ${{ runner.os }}-wheels.zip
           path: ./wheelhouse/*.whl
+
+      - name: Benchmark performance
+        run: |
+
+          git clone https://github.com/PennyLaneAI/pennylane.git
+          cd pennylane && pip install -e .
+          python3 benchmark/benchmark.py -d default.qubit,lightning.qubit time bm_entangling_layers -w 2
+          python3 benchmark/benchmark.py -d default.qubit,lightning.qubit time bm_entangling_layers -w 6
+          python3 benchmark/benchmark.py -d default.qubit,lightning.qubit time bm_entangling_layers -w 10
