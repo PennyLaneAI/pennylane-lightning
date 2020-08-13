@@ -15,17 +15,17 @@
 Unit tests for the :mod:`pennylane_lightning.LightningQubit` device.
 """
 import cmath
+import math
 # pylint: disable=protected-access,cell-var-from-loop
 from unittest import mock
-import math
 
-import pytest
+import numpy as np
 import pennylane as qml
+import pytest
 from pennylane import DeviceError
 from pennylane.devices.default_qubit import DefaultQubit
-import numpy as np
-from pennylane_lightning import LightningQubit
 
+from pennylane_lightning import LightningQubit
 
 U2 = np.array(
     [
