@@ -16,15 +16,15 @@ Unit tests for the :mod:`pennylane_lightning.LightningQubit` device.
 """
 import cmath
 # pylint: disable=protected-access,cell-var-from-loop
+from unittest import mock
 import math
 
 import pytest
 import pennylane as qml
 from pennylane import DeviceError
+from pennylane.devices.default_qubit import DefaultQubit
 import numpy as np
-from pennylane.operation import Operation
-
-from conftest import U
+from pennylane_lightning import LightningQubit
 
 
 U2 = np.array(
@@ -1022,3 +1022,30 @@ class TestTensorSample:
             - 2 * np.cos(theta) * np.sin(phi) * np.sin(2 * varphi)
         ) / 4
         assert np.allclose(var, expected, atol=tol, rtol=0)
+
+
+class TestTooManyQubits:
+    """Test for when too many wires are requested, where lightning.qubit should behave like
+    default.qubit."""
+
+    def test_warning(self):
+        """Test that a warning is produced when lightning.qubit is instantiated with more than
+        the supported number of qubits"""
+        with pytest.warns(UserWarning, match="The number of wires exceeds"):
+            qml.device("lightning.qubit", wires=LightningQubit._MAX_WIRES + 1)
+
+    def test_apply(self, monkeypatch):
+        """Test that the apply method uses the one in default.qubit when the number of wires
+        exceeds the supported number."""
+        dev = qml.device("lightning.qubit", wires=2)
+        dev.num_wires = LightningQubit._MAX_WIRES + 1
+        mock_apply = mock.MagicMock()
+        with monkeypatch.context() as m:
+            m.setattr(DefaultQubit, "apply", mock_apply)
+            dev.apply(0, rotations=1, other=2)
+        call_args = mock_apply.call_args
+
+        assert call_args[0] == (0,)
+        assert call_args[1]["rotations"] == 1
+        assert call_args[1]["other"] == 2
+        assert len(call_args[1]) == 2

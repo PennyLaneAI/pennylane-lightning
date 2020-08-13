@@ -83,17 +83,21 @@ class LightningQubit(DefaultQubit):
 
     observables = {"PauliX", "PauliY", "PauliZ", "Hadamard", "Identity"}
 
+    _MAX_WIRES = 16
+    """maximum number of supported wires. Beyond this number, lightning.qubit behaves like 
+    default.qubit."""
+
     def __init__(self, wires, *, shots=1000, analytic=True):
         super().__init__(wires, shots=shots, analytic=analytic)
 
-        if self.num_wires > 16:
+        if self.num_wires > self._MAX_WIRES:
             warnings.warn(
                 "The number of wires exceeds 16, reverting to NumPy-based evaluation.", UserWarning,
             )
 
     def apply(self, operations, rotations=None, **kwargs):
 
-        if self.num_wires > 16:
+        if self.num_wires > self._MAX_WIRES:
             super().apply(operations, rotations=rotations, **kwargs)
             return
 
