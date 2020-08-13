@@ -181,7 +181,7 @@ info = {
     "entry_points": {
         "pennylane.plugins": ["lightning.qubit = pennylane_lightning:LightningQubit",],
     },
-    "description": "PennyLane lightning.qubit plugin",
+    "description": "PennyLane-Lightning plugin",
     "long_description": open("README.rst").read(),
     "provides": ["pennylane_lightning"],
     "install_requires": requirements,
