@@ -47,27 +47,48 @@ Installation
 
 PennyLane-Lightning requires Python version 3.6 and above. It can be installed using ``pip``:
 
-.. code-block:: bash
+.. code-block:: console
 
-    pip install pennylane-lightning
+    $ pip install pennylane-lightning
 
 Alternatively, to build PennyLane-Lightning from source you can run
 
-.. code-block:: bash
+.. code-block:: console
 
-    git clone https://github.com/XanaduAI/pennylane-lightning.git
-    cd pennylane-lightning
-    pip install -e .
+    $ git clone https://github.com/XanaduAI/pennylane-lightning.git
+    $ cd pennylane-lightning
+    $ pip install -e .
 
-To test that the plugin is working correctly you can test the Python code with
+Note that subsequent calls to ``pip install -e .`` will use cached binaries stored in the
+``build`` folder. Run ``make clean`` if you would like to recompile.
 
-.. code-block:: bash
+The following dependencies are required to install PennyLane-Lightning:
+
+* A C++ compiler, such as ``g++``, ``clang``, or ``MSVC``.
+* `Eigen3 <http://eigen.tuxfamily.org/index.php?title=Main_Page>`_ - a C++ header library for linear algebra.
+* `pybind11 <https://pybind11.readthedocs.io/en/stable/>`_ a library for binding C++
+  functionality to Python.
+
+On Debian-based systems, these can be installed via ``apt`` and ``pip``:
+
+.. code-block:: console
+
+    $ sudo apt install g++ libeigen3-dev
+    $ pip install pybind11
+
+Testing
+-------
+
+To test that the plugin is working correctly you can test the Python code within the cloned
+repository:
+
+.. code-block:: console
 
     $ make test
 
 while the C++ code can be tested with
 
-.. code-block:: bash
+.. code-block:: console
 
     $ make test-cpp
 
