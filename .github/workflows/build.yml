@@ -76,7 +76,7 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1.0.12
         with:
-          file: ./coverage.xml
+          file: main/coverage.xml
 
       - name: Run PennyLane shared test suite
         run: |
