@@ -101,7 +101,7 @@ jobs:
         env:
           GIT_REDIRECT_STDERR: "2>&1"
         run: |
-          choco install vcpython27 -y -source "C:\\vcpython27"
+          choco install vcpython27 -y -source "C:\vcpython27\vcpython27\9.0.0.30729\VCForPython27.msi"
           New-Item -ItemType directory -Path "C:\\pennylane"
           & git clone https://github.com/PennyLaneAI/pennylane.git "C:\\pennylane"
 
