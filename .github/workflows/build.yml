@@ -71,12 +71,12 @@ jobs:
       - name: Run PennyLane-Lightning unit tests
         run: |
           cd main/
-          pytest tests/ --cov=pennylane_lightning --cov-report term-missing --cov-report=xml
+          pytest tests/ --cov=pennylane_lightning --cov-report term-missing --cov-report=xml:../coverage.xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1.0.12
         with:
-          file: main/coverage.xml
+          file: coverage.xml
 
       - name: Run PennyLane shared test suite
         run: |
