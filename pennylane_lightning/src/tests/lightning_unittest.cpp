@@ -1,21 +1,18 @@
 // Copyright 2020 Xanadu Quantum Technologies Inc.
-
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
 //     http://www.apache.org/licenses/LICENSE-2.0
-
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include <math.h>       /* sqrt */
+#include <unsupported/Eigen/CXX11/Tensor>
 #include "gtest/gtest.h"
 #include "../operations.hpp"
 #include "../lightning_qubit.hpp"
-#include <unsupported/Eigen/CXX11/Tensor>
-#include <math.h>       /* sqrt */
 
 const double tol = 1.0e-6f;
 
@@ -32,7 +29,6 @@ namespace one_qubit_ops {
 
 
 TEST(PauliX, ApplyToZero) {
-
     State_1q input_state(2);
     input_state.setValues({1, 0});
 
@@ -51,7 +47,6 @@ TEST(PauliX, ApplyToZero) {
 }
 
 TEST(PauliX, ApplyToPlus) {
-
     State_1q input_state(2);
     input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
@@ -70,7 +65,6 @@ TEST(PauliX, ApplyToPlus) {
 }
 
 TEST(PauliY, ApplyToZero) {
-
     State_1q input_state(2);
     input_state.setValues({1, 0});
 
@@ -90,7 +84,6 @@ TEST(PauliY, ApplyToZero) {
 }
 
 TEST(PauliY, ApplyToPlus) {
-
     State_1q input_state(2);
     input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
@@ -112,7 +105,6 @@ TEST(PauliY, ApplyToPlus) {
 }
 
 TEST(PauliZ, ApplyToZero) {
-
     State_1q input_state(2);
     input_state.setValues({1, 0});
 
@@ -131,7 +123,6 @@ TEST(PauliZ, ApplyToZero) {
 }
 
 TEST(PauliZ, ApplyToPlus) {
-
     State_1q input_state(2);
     input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
@@ -150,7 +141,6 @@ TEST(PauliZ, ApplyToPlus) {
 }
 
 TEST(Hadamard, ApplyToZero) {
-
     State_1q input_state(2);
     input_state.setValues({1, 0});
 
@@ -169,7 +159,6 @@ TEST(Hadamard, ApplyToZero) {
 }
 
 TEST(Hadamard, ApplyToMinus) {
-
     State_1q input_state(2);
     input_state.setValues({1/SQRT_2, -1/SQRT_2});
 
@@ -188,7 +177,6 @@ TEST(Hadamard, ApplyToMinus) {
 }
 
 TEST(SGate, ApplyToZero) {
-
     State_1q input_state(2);
     input_state.setValues({1, 0});
 
@@ -207,7 +195,6 @@ TEST(SGate, ApplyToZero) {
 }
 
 TEST(SGate, ApplyToPlus) {
-
     State_1q input_state(2);
     input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
@@ -227,7 +214,6 @@ TEST(SGate, ApplyToPlus) {
 }
 
 TEST(TGate, ApplyToZero) {
-
     State_1q input_state(2);
     input_state.setValues({1, 0});
 
@@ -246,7 +232,6 @@ TEST(TGate, ApplyToZero) {
 }
 
 TEST(TGate, ApplyToPlus) {
-
     State_1q input_state(2);
     input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
@@ -268,7 +253,6 @@ TEST(TGate, ApplyToPlus) {
 }
 
 TEST(RXGate, ApplyToZeroPiHalf) {
-
     State_1q input_state(2);
     input_state.setValues({1, 0});
 
@@ -292,7 +276,6 @@ TEST(RXGate, ApplyToZeroPiHalf) {
 }
 
 TEST(RXGate, ApplyToZeroPi) {
-
     State_1q input_state(2);
     input_state.setValues({1, 0});
 
@@ -316,7 +299,6 @@ TEST(RXGate, ApplyToZeroPi) {
 
 
 TEST(RXGate, ApplyToPlusPiHalf) {
-
     State_1q input_state(2);
     input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
@@ -340,7 +322,6 @@ TEST(RXGate, ApplyToPlusPiHalf) {
 
 
 TEST(RYGate, ApplyToZeroPiHalf) {
-
     State_1q input_state(2);
     input_state.setValues({1, 0});
 
@@ -362,7 +343,6 @@ TEST(RYGate, ApplyToZeroPiHalf) {
 }
 
 TEST(RYGate, ApplyToZeroPi) {
-
     State_1q input_state(2);
     input_state.setValues({1, 0});
 
@@ -384,7 +364,6 @@ TEST(RYGate, ApplyToZeroPi) {
 
 
 TEST(RYGate, ApplyToPlusPiHalf) {
-
     State_1q input_state(2);
     input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
@@ -406,7 +385,6 @@ TEST(RYGate, ApplyToPlusPiHalf) {
 
 
 TEST(RZGate, ApplyToZeroPiHalf) {
-
     State_1q input_state(2);
     input_state.setValues({1, 0});
 
@@ -429,7 +407,6 @@ TEST(RZGate, ApplyToZeroPiHalf) {
 }
 
 TEST(RZGate, ApplyToOnePi) {
-
     State_1q input_state(2);
     input_state.setValues({0, 1});
 
@@ -453,7 +430,6 @@ TEST(RZGate, ApplyToOnePi) {
 
 
 TEST(RZGate, ApplyToPlusHalfPi) {
-
     State_1q input_state(2);
     input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
@@ -477,7 +453,6 @@ TEST(RZGate, ApplyToPlusHalfPi) {
 
 
 TEST(RotGate, ApplyToZeroPiHalfZeroZero) {
-
     State_1q input_state(2);
     input_state.setValues({1, 0});
 
@@ -501,7 +476,6 @@ TEST(RotGate, ApplyToZeroPiHalfZeroZero) {
 
 
 TEST(RotGate, ApplyToZeroZeroPiHalfZero) {
-
     State_1q input_state(2);
     input_state.setValues({1, 0});
 
@@ -524,7 +498,6 @@ TEST(RotGate, ApplyToZeroZeroPiHalfZero) {
 
 
 TEST(RotGate, ApplyToPlusZeroZeroPiHalf) {
-
     State_1q input_state(2);
     input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
@@ -548,9 +521,8 @@ TEST(RotGate, ApplyToPlusZeroZeroPiHalf) {
 }
 
 TEST(RotGate, ApplyToZeroPiHalfNegPiHalfPiHalf) {
-
     State_1q input_state(2);
-    input_state.setValues({1,0});
+    input_state.setValues({1, 0});
 
     const double par1 = M_PI/2;
     const double par2 = -M_PI/2;
@@ -574,7 +546,6 @@ TEST(RotGate, ApplyToZeroPiHalfNegPiHalfPiHalf) {
 
 
 TEST(RotGate, ApplyToPlusNegPiHalfPiPi) {
-
     State_1q input_state(2);
     input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
@@ -633,16 +604,15 @@ namespace two_qubit_ops {
 
 
 TEST(CNOT, ApplyToZero) {
-
-    State_2q input_state(2,2);
-    input_state.setValues({{1, 0},{0,0}});
+    State_2q input_state(2, 2);
+    input_state.setValues({{1, 0}, {0, 0}});
 
     auto operation = CNOT();
     Pairs_2q product_dims = { Pairs(2, 0), Pairs(3, 1) };
     State_2q output_state = operation.contract(input_state, product_dims);
 
-    State_2q expected_output_state(2,2);
-    expected_output_state.setValues({{1, 0},{0,0}});
+    State_2q expected_output_state(2, 2);
+    expected_output_state.setValues({{1, 0}, {0, 0}});
 
     // Casting to a vector for comparison
     auto output_state_vector = vectorize(output_state);
@@ -652,16 +622,15 @@ TEST(CNOT, ApplyToZero) {
 }
 
 TEST(CNOT, ApplyToOneZero) {
-
-    State_2q input_state(2,2);
-    input_state.setValues({{0, 0},{1,0}});
+    State_2q input_state(2, 2);
+    input_state.setValues({{0, 0}, {1, 0}});
 
     auto operation = CNOT();
     Pairs_2q product_dims = { Pairs(2, 0), Pairs(3, 1) };
     State_2q output_state = operation.contract(input_state, product_dims);
 
-    State_2q expected_output_state(2,2);
-    expected_output_state.setValues({{0, 0},{0,1}});
+    State_2q expected_output_state(2, 2);
+    expected_output_state.setValues({{0, 0}, {0, 1}});
 
     // Casting to a vector for comparison
     auto output_state_vector = vectorize(output_state);
@@ -671,16 +640,15 @@ TEST(CNOT, ApplyToOneZero) {
 }
 
 TEST(CNOT, ApplyToBellState) {
-
-    State_2q input_state(2,2);
-    input_state.setValues({{1/SQRT_2,0},{0, 1/SQRT_2}});
+    State_2q input_state(2, 2);
+    input_state.setValues({{1/SQRT_2, 0}, {0, 1/SQRT_2}});
 
     auto operation = CNOT();
     Pairs_2q product_dims = { Pairs(2, 0), Pairs(3, 1) };
     State_2q output_state = operation.contract(input_state, product_dims);
 
-    State_2q expected_output_state(2,2);
-    expected_output_state.setValues({{1/SQRT_2,0},{1/SQRT_2, 0}});
+    State_2q expected_output_state(2, 2);
+    expected_output_state.setValues({{1/SQRT_2, 0}, {1/SQRT_2, 0}});
 
     // Casting to a vector for comparison
     auto output_state_vector = vectorize(output_state);
@@ -690,19 +658,18 @@ TEST(CNOT, ApplyToBellState) {
 }
 
 TEST(CNOT, ApplyToThreeQubitControlThird) {
-
-    State_3q input_state(2,2,2);
-    input_state.setValues({{{0,0},{0,0}},{{0,0},{0,1}}});
+    State_3q input_state(2, 2, 2);
+    input_state.setValues({{{0, 0}, {0, 0}}, {{0, 0}, {0, 1}}});
 
     auto operation = CNOT();
     Pairs_2q product_dims = { Pairs(3, 2), Pairs(2, 1) };
     State_3q output_state = operation.contract(input_state, product_dims);
 
-    State_3q expected_output_state(2,2,2);
+    State_3q expected_output_state(2, 2, 2);
 
     // The output dimensions are ordered according to the output of the tensor
     // contraction (no shuffling takes place)
-    expected_output_state.setValues({{{0,0},{0,0}},{{0,1},{0,0}}});
+    expected_output_state.setValues({{{0, 0}, {0, 0}}, {{0, 1}, {0, 0}}});
 
     // Casting to a vector for comparison
     auto output_state_vector = vectorize(output_state);
@@ -712,7 +679,6 @@ TEST(CNOT, ApplyToThreeQubitControlThird) {
 }
 
 TEST(SWAP, ToMatrix) {
-
     auto operation = SWAP();
     auto operation_matrix = Map<Matrix_2q> (operation.data());
 
@@ -723,11 +689,9 @@ TEST(SWAP, ToMatrix) {
                   0, 0, 0, 1;
 
     EXPECT_TRUE(operation_matrix.isApprox(target_matrix, tol));
-
 }
 
 TEST(CZ, ToMatrix) {
-
     auto operation = CZ();
     auto operation_matrix = Map<Matrix_2q> (operation.data());
 
@@ -738,16 +702,14 @@ TEST(CZ, ToMatrix) {
                   0, 0, 0, -1;
 
     EXPECT_TRUE(operation_matrix.isApprox(target_matrix, tol));
-
 }
 
 TEST(CRots, ApplyTo00) {
+    State_2q input_state(2, 2);
+    input_state.setValues({{1, 0}, {0, 0}});
 
-    State_2q input_state(2,2);
-    input_state.setValues({{1, 0},{0, 0}});
-
-    State_2q expected_output_state(2,2);
-    expected_output_state.setValues({{1, 0},{0, 0}});
+    State_2q expected_output_state(2, 2);
+    expected_output_state.setValues({{1, 0}, {0, 0}});
 
     vector<int> w{0, 1};
     vector<float> p{0.1};
@@ -773,12 +735,11 @@ TEST(CRots, ApplyTo00) {
 }
 
 TEST(CRots, ApplyTo01) {
+    State_2q input_state(2, 2);
+    input_state.setValues({{0, 1}, {0, 0}});
 
-    State_2q input_state(2,2);
-    input_state.setValues({{0, 1},{0, 0}});
-
-    State_2q expected_output_state(2,2);
-    expected_output_state.setValues({{0, 1},{0, 0}});
+    State_2q expected_output_state(2, 2);
+    expected_output_state.setValues({{0, 1}, {0, 0}});
 
     vector<int> w{0, 1};
     vector<float> p{0.1};
@@ -804,9 +765,8 @@ TEST(CRots, ApplyTo01) {
 }
 
 TEST(CRots, ApplyTo10) {
-
-    State_2q input_state(2,2);
-    input_state.setValues({{0, 0},{1, 0}});
+    State_2q input_state(2, 2);
+    input_state.setValues({{0, 0}, {1, 0}});
 
     float phi(0.1);
     auto cos = std::cos(phi / 2);
@@ -816,14 +776,14 @@ TEST(CRots, ApplyTo10) {
     complex<double> sin_imag(0, sin);
     complex<double> sin_real(sin, 0);
 
-    State_2q expected_output_state_X(2,2);
-    expected_output_state_X.setValues({{0, 0},{cos_real, -sin_imag}});
+    State_2q expected_output_state_X(2, 2);
+    expected_output_state_X.setValues({{0, 0}, {cos_real, -sin_imag}});
 
-    State_2q expected_output_state_Y(2,2);
-    expected_output_state_Y.setValues({{0, 0},{cos_real, sin_real}});
+    State_2q expected_output_state_Y(2, 2);
+    expected_output_state_Y.setValues({{0, 0}, {cos_real, sin_real}});
 
-    State_2q expected_output_state_Z(2,2);
-    expected_output_state_Z.setValues({{0, 0},{cos_real-sin_imag, 0}});
+    State_2q expected_output_state_Z(2, 2);
+    expected_output_state_Z.setValues({{0, 0}, {cos_real-sin_imag, 0}});
 
     vector<float> p2{0.4, 0.1, 0.3};
     complex<double> imag_phi_plus_omega(0, -(p2[0] + p2[2]) / 2);
@@ -831,8 +791,8 @@ TEST(CRots, ApplyTo10) {
     auto exp_plus = std::pow(M_E, imag_phi_plus_omega);
     auto exp_minus = std::pow(M_E, imag_phi_minus_omega);
 
-    State_2q expected_output_state_Rot(2,2);
-    expected_output_state_Rot.setValues({{0, 0},{cos_real * exp_plus, sin_real * exp_minus}});
+    State_2q expected_output_state_Rot(2, 2);
+    expected_output_state_Rot.setValues({{0, 0}, {cos_real * exp_plus, sin_real * exp_minus}});
 
     vector<int> w{0, 1};
     vector<float> p{phi};
@@ -861,9 +821,8 @@ TEST(CRots, ApplyTo10) {
 }
 
 TEST(CRots, ApplyTo11) {
-
-    State_2q input_state(2,2);
-    input_state.setValues({{0, 0},{0, 1}});
+    State_2q input_state(2, 2);
+    input_state.setValues({{0, 0}, {0, 1}});
 
     float phi(0.1);
     auto cos = std::cos(phi / 2);
@@ -873,14 +832,14 @@ TEST(CRots, ApplyTo11) {
     complex<double> sin_imag(0, sin);
     complex<double> sin_real(sin, 0);
 
-    State_2q expected_output_state_X(2,2);
-    expected_output_state_X.setValues({{0, 0},{-sin_imag, cos_real}});
+    State_2q expected_output_state_X(2, 2);
+    expected_output_state_X.setValues({{0, 0}, {-sin_imag, cos_real}});
 
-    State_2q expected_output_state_Y(2,2);
-    expected_output_state_Y.setValues({{0, 0},{-sin_real, cos_real}});
+    State_2q expected_output_state_Y(2, 2);
+    expected_output_state_Y.setValues({{0, 0}, {-sin_real, cos_real}});
 
-    State_2q expected_output_state_Z(2,2);
-    expected_output_state_Z.setValues({{0, 0},{0, cos_real+sin_imag}});
+    State_2q expected_output_state_Z(2, 2);
+    expected_output_state_Z.setValues({{0, 0}, {0, cos_real+sin_imag}});
 
     vector<float> p2{0.4, 0.1, 0.3};
     complex<double> imag_phi_plus_omega(0, (p2[0] + p2[2]) / 2);
@@ -888,8 +847,8 @@ TEST(CRots, ApplyTo11) {
     auto exp_plus = std::pow(M_E, imag_phi_plus_omega);
     auto exp_minus = std::pow(M_E, imag_phi_minus_omega);
 
-    State_2q expected_output_state_Rot(2,2);
-    expected_output_state_Rot.setValues({{0, 0},{-sin_real * exp_minus, cos_real * exp_plus}});
+    State_2q expected_output_state_Rot(2, 2);
+    expected_output_state_Rot.setValues({{0, 0}, {-sin_real * exp_minus, cos_real * exp_plus}});
 
     vector<int> w{0, 1};
     vector<float> p{phi};
@@ -915,30 +874,28 @@ TEST(CRots, ApplyTo11) {
     EXPECT_TRUE(expected_vector_Y.isApprox(output_state_vector_Y, tol));
     EXPECT_TRUE(expected_vector_Z.isApprox(output_state_vector_Z, tol));
     EXPECT_TRUE(expected_vector_Rot.isApprox(output_state_vector_Rot, tol));
-
 }
-
 }  // namespace two_qubit_ops
 
 namespace three_qubit_ops {
 
 TEST(Toffoli, ApplyToAll) {
     State_3q input_state_000(2, 2, 2);
-    input_state_000.setValues({{{1, 0},{0, 0}}, {{0, 0},{0, 0}}});
+    input_state_000.setValues({{{1, 0}, {0, 0}}, {{0, 0}, {0, 0}}});
     State_3q input_state_001(2, 2, 2);
-    input_state_001.setValues({{{0, 1},{0, 0}}, {{0, 0},{0, 0}}});
+    input_state_001.setValues({{{0, 1}, {0, 0}}, {{0, 0}, {0, 0}}});
     State_3q input_state_010(2, 2, 2);
-    input_state_010.setValues({{{0, 0},{1, 0}}, {{0, 0},{0, 0}}});
+    input_state_010.setValues({{{0, 0}, {1, 0}}, {{0, 0}, {0, 0}}});
     State_3q input_state_011(2, 2, 2);
-    input_state_011.setValues({{{0, 0},{0, 1}}, {{0, 0},{0, 0}}});
+    input_state_011.setValues({{{0, 0}, {0, 1}}, {{0, 0}, {0, 0}}});
     State_3q input_state_100(2, 2, 2);
-    input_state_100.setValues({{{0, 0},{0, 0}}, {{1, 0},{0, 0}}});
+    input_state_100.setValues({{{0, 0}, {0, 0}}, {{1, 0}, {0, 0}}});
     State_3q input_state_101(2, 2, 2);
-    input_state_101.setValues({{{0, 0},{0, 0}}, {{0, 1},{0, 0}}});
+    input_state_101.setValues({{{0, 0}, {0, 0}}, {{0, 1}, {0, 0}}});
     State_3q input_state_110(2, 2, 2);
-    input_state_110.setValues({{{0, 0},{0, 0}}, {{0, 0},{1, 0}}});
+    input_state_110.setValues({{{0, 0}, {0, 0}}, {{0, 0}, {1, 0}}});
     State_3q input_state_111(2, 2, 2);
-    input_state_111.setValues({{{0, 0},{0, 0}}, {{0, 0},{0, 1}}});
+    input_state_111.setValues({{{0, 0}, {0, 0}}, {{0, 0}, {0, 1}}});
 
     std::vector<State_3q> input_states{
         input_state_000,
@@ -959,9 +916,9 @@ TEST(Toffoli, ApplyToAll) {
     }
 
     State_3q target_state_110(2, 2, 2);
-    target_state_110.setValues({{{0, 0},{0, 0}}, {{0, 0},{0, 1}}});
+    target_state_110.setValues({{{0, 0}, {0, 0}}, {{0, 0}, {0, 1}}});
     State_3q target_state_111(2, 2, 2);
-    target_state_111.setValues({{{0, 0},{0, 0}}, {{0, 0},{1, 0}}});
+    target_state_111.setValues({{{0, 0}, {0, 0}}, {{0, 0}, {1, 0}}});
 
     auto expected_states = input_states;
     expected_states[6] = target_state_110;
@@ -976,21 +933,21 @@ TEST(Toffoli, ApplyToAll) {
 
 TEST(CSWAP, ApplyToAll) {
     State_3q input_state_000(2, 2, 2);
-    input_state_000.setValues({{{1, 0},{0, 0}}, {{0, 0},{0, 0}}});
+    input_state_000.setValues({{{1, 0}, {0, 0}}, {{0, 0}, {0, 0}}});
     State_3q input_state_001(2, 2, 2);
-    input_state_001.setValues({{{0, 1},{0, 0}}, {{0, 0},{0, 0}}});
+    input_state_001.setValues({{{0, 1}, {0, 0}}, {{0, 0}, {0, 0}}});
     State_3q input_state_010(2, 2, 2);
-    input_state_010.setValues({{{0, 0},{1, 0}}, {{0, 0},{0, 0}}});
+    input_state_010.setValues({{{0, 0}, {1, 0}}, {{0, 0}, {0, 0}}});
     State_3q input_state_011(2, 2, 2);
-    input_state_011.setValues({{{0, 0},{0, 1}}, {{0, 0},{0, 0}}});
+    input_state_011.setValues({{{0, 0}, {0, 1}}, {{0, 0}, {0, 0}}});
     State_3q input_state_100(2, 2, 2);
-    input_state_100.setValues({{{0, 0},{0, 0}}, {{1, 0},{0, 0}}});
+    input_state_100.setValues({{{0, 0}, {0, 0}}, {{1, 0}, {0, 0}}});
     State_3q input_state_101(2, 2, 2);
-    input_state_101.setValues({{{0, 0},{0, 0}}, {{0, 1},{0, 0}}});
+    input_state_101.setValues({{{0, 0}, {0, 0}}, {{0, 1}, {0, 0}}});
     State_3q input_state_110(2, 2, 2);
-    input_state_110.setValues({{{0, 0},{0, 0}}, {{0, 0},{1, 0}}});
+    input_state_110.setValues({{{0, 0}, {0, 0}}, {{0, 0}, {1, 0}}});
     State_3q input_state_111(2, 2, 2);
-    input_state_111.setValues({{{0, 0},{0, 0}}, {{0, 0},{0, 1}}});
+    input_state_111.setValues({{{0, 0}, {0, 0}}, {{0, 0}, {0, 1}}});
 
     std::vector<State_3q> input_states{
         input_state_000,
@@ -1011,9 +968,9 @@ TEST(CSWAP, ApplyToAll) {
     }
 
     State_3q target_state_101(2, 2, 2);
-    target_state_101.setValues({{{0, 0},{0, 0}}, {{0, 0},{1, 0}}});
+    target_state_101.setValues({{{0, 0}, {0, 0}}, {{0, 0}, {1, 0}}});
     State_3q target_state_110(2, 2, 2);
-    target_state_110.setValues({{{0, 0},{0, 0}}, {{0, 1},{0, 0}}});
+    target_state_110.setValues({{{0, 0}, {0, 0}}, {{0, 1}, {0, 0}}});
 
     auto expected_states = input_states;
     expected_states[5] = target_state_101;
@@ -1026,7 +983,7 @@ TEST(CSWAP, ApplyToAll) {
     }
 }
 
-} // namespace three_qubit_ops
+}  // namespace three_qubit_ops
 
 namespace auxiliary_functions {
 
@@ -1050,7 +1007,7 @@ TEST(CalcTensInd, OneWireTwoQubit) {
 
 TEST(CalcTensInd, TwoWireFiveQubitAscOrder) {
     std::vector<int> tensor_indices({0, 1, 2, 3, 4});
-    std::vector<int> wires({1,2,4});
+    std::vector<int> wires({1, 2, 4});
     std::vector<int> output_tensor_indices = calculate_tensor_indices(wires, tensor_indices);
 
     std::vector<int> expected_tensor_indices({1, 2, 4, 0, 3});
@@ -1067,7 +1024,6 @@ TEST(CalcTensInd, TwoWireFiveQubitRandomOrder) {
     std::vector<int> expected_tensor_indices({2, 1, 4, 0, 3});
 
     EXPECT_TRUE(expected_tensor_indices == output_tensor_indices);
-
 }
 
 TEST(CalcTensInd, TwoWireFiveQubitRandomOrderReverse) {
