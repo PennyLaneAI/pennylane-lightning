@@ -1034,18 +1034,13 @@ class TestTooManyQubits:
         with pytest.warns(UserWarning, match="The number of wires exceeds"):
             qml.device("lightning.qubit", wires=LightningQubit._MAX_WIRES + 1)
 
-    def test_apply(self, monkeypatch):
+    def test_apply(self, mocker):
         """Test that the apply method uses the one in default.qubit when the number of wires
         exceeds the supported number."""
+        mocker.patch("pennylane.devices.DefaultQubit.apply")
+
         dev = qml.device("lightning.qubit", wires=2)
         dev.num_wires = LightningQubit._MAX_WIRES + 1
-        mock_apply = mock.MagicMock()
-        with monkeypatch.context() as m:
-            m.setattr(DefaultQubit, "apply", mock_apply)
-            dev.apply(0, rotations=1, other=2)
-        call_args = mock_apply.call_args
+        dev.apply(0, rotations=1, other=2)
 
-        assert call_args[0] == (0,)
-        assert call_args[1]["rotations"] == 1
-        assert call_args[1]["other"] == 2
-        assert len(call_args[1]) == 2
+        DefaultQubit.apply.assert_called_once_with(0, rotations=1, other=2)
