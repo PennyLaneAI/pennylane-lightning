@@ -60,7 +60,7 @@ Alternatively, to build PennyLane-Lightning from source you can run
     $ pip install -e .
 
 Note that subsequent calls to ``pip install -e .`` will use cached binaries stored in the
-``build`` folder. Run ``make clean`` if you would like to recompile.
+``build`` folder. Run ``make clean`` and ``make clean-binaries`` if you would like to recompile.
 
 The following dependencies are required to install PennyLane-Lightning:
 

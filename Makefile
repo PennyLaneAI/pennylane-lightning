@@ -44,6 +44,9 @@ clean:
 	rm -rf tmp
 	rm -rf *.dat
 
+clean-binaries:
+	rm -f pennylane_lightning/lightning_qubit_ops*
+
 docs:
 	make -C doc html
 
