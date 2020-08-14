@@ -84,7 +84,7 @@ class LightningQubit(DefaultQubit):
     observables = {"PauliX", "PauliY", "PauliZ", "Hadamard", "Identity"}
 
     _MAX_WIRES = 16
-    """maximum number of supported wires. Beyond this number, lightning.qubit behaves like 
+    """Maximum number of supported wires. Beyond this number, lightning.qubit behaves like 
     default.qubit."""
 
     def __init__(self, wires, *, shots=1000, analytic=True):
