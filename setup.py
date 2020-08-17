@@ -166,7 +166,7 @@ else:
 
 requirements = [
     "numpy",
-    "pennylane>=0.10.0",
+    "pennylane>=0.11.0",
 ]
 
 

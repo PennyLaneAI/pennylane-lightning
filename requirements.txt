@@ -1,5 +1,5 @@
 numpy
-git+https://github.com/XanaduAI/pennylane.git#egg=pennylane
+pennylane>=0.11
 pytest
 pytest-cov
 pytest-mock
