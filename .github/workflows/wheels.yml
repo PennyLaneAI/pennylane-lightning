@@ -30,8 +30,8 @@ env:
 
   CIBW_ENVIRONMENT_WINDOWS: EIGEN_INCLUDE_DIR="C:\\eigen-eigen-323c052e1731\\"
 
-  CIBW_TEST_COMMAND_WINDOWS: |
-    pytest "C:\\pennylane\\pennylane\\devices\\tests" --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+#  CIBW_TEST_COMMAND_WINDOWS: |
+#    pytest "C:\\pennylane\\pennylane\\devices\\tests" --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
   # Python build settings
 
@@ -43,9 +43,9 @@ env:
   CIBW_TEST_REQUIRES: numpy scipy pytest pytest-cov pytest-mock flaky
 
   CIBW_TEST_COMMAND: |
-    git clone https://github.com/PennyLaneAI/pennylane.git
-    cd pennylane && pip install -e .
-    pytest pennylane/devices/tests --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+#    git clone https://github.com/PennyLaneAI/pennylane.git
+#    cd pennylane && pip install -e .
+    pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
 
 jobs:
@@ -83,8 +83,8 @@ jobs:
           choco install vcpython27 -f -y
           Invoke-WebRequest -Uri "http://bitbucket.org/eigen/eigen/get/3.3.7.zip" -UseBasicParsing -OutFile C:\eigen3.zip
           & "C:\\Program Files\\7-Zip\\7z.exe" x C:\eigen3.zip -o"C:\" -y
-          New-Item -ItemType directory -Path "C:\\pennylane"
-          & git clone https://github.com/PennyLaneAI/pennylane.git "C:\\pennylane"
+#          New-Item -ItemType directory -Path "C:\\pennylane"
+#          & git clone https://github.com/PennyLaneAI/pennylane.git "C:\\pennylane"
 
       - name: Build wheels
         run: |

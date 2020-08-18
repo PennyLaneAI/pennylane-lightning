@@ -75,7 +75,7 @@ class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
 
     c_opts = {
-        "msvc": ["-EHsc", "-O2", "-Wall","-std:c++11"],
+        "msvc": ["-EHsc", "-O2", "-Wall", "-std:c++11"],
         "unix": ["-O3", "-Wall", "-fPIC", "-shared", "-fopenmp"],
     }
 
@@ -98,7 +98,6 @@ class BuildExt(build_ext):
         ]
         c_opts["unix"] += darwin_opts
         l_opts["unix"] += darwin_opts
-
 
     def build_extensions(self):
         ct = self.compiler.compiler_type
@@ -125,7 +124,7 @@ if not os.environ.get("MOCK_DOCS", False):
         os.environ.get("EIGEN_INCLUDE_DIR", ""),
         "/usr/local/include/eigen3",
         "/usr/include/eigen3",
-        "./include"
+        "./include",
     ]
 
     library_dirs = [i for i in os.environ.get("LD_LIBRARY_PATH", "").split(":") if i]
@@ -152,13 +151,16 @@ if not os.environ.get("MOCK_DOCS", False):
         Extension(
             "lightning_qubit_ops",
             sources=["pennylane_lightning/src/lightning_qubit.cpp"],
-            depends=["pennylane_lightning/src/lightning_qubit.hpp", "pennylane_lightning/src/operations.hpp"],
+            depends=[
+                "pennylane_lightning/src/lightning_qubit.hpp",
+                "pennylane_lightning/src/operations.hpp",
+            ],
             include_dirs=include_dirs,
             language="c++",
             libraries=libraries,
             library_dirs=library_dirs,
             extra_compile_args=extra_compile_args,
-            extra_link_args=extra_link_args
+            extra_link_args=extra_link_args,
         ),
     ]
 else:
@@ -178,16 +180,18 @@ info = {
     "url": "https://github.com/XanaduAI/pennylane-lightning",
     "license": "Apache License 2.0",
     "packages": find_packages(where="."),
+    "package_data": {"pennylane_lightning": ["src/*"]},
     "entry_points": {
         "pennylane.plugins": ["lightning.qubit = pennylane_lightning:LightningQubit",],
     },
     "description": "PennyLane-Lightning plugin",
     "long_description": open("README.rst").read(),
+    "long_description_content_type": "text/x-rst",
     "provides": ["pennylane_lightning"],
     "install_requires": requirements,
-    'ext_modules': ext_modules,
-    'ext_package': 'pennylane_lightning',
-    "cmdclass": {'build_ext': BuildExt},
+    "ext_modules": ext_modules,
+    "ext_package": "pennylane_lightning",
+    "cmdclass": {"build_ext": BuildExt},
 }
 
 classifiers = [

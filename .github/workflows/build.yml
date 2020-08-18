@@ -61,17 +61,6 @@ jobs:
           cd main
           pip install -e .
 
-      - name: Checkout PennyLane
-        uses: actions/checkout@v2
-        with:
-          repository: PennyLaneAI/pennylane
-          path: pl
-
-      - name: Install PennyLane
-        run: |
-          cd pl
-          pip install -e .
-
       - name: Run PennyLane-Lightning unit tests
         run: |
           cd main/
@@ -84,6 +73,5 @@ jobs:
 
       - name: Run PennyLane shared test suite
         run: |
-          cd pl
-          pytest pennylane/devices/tests --device lightning.qubit --analytic False --skip-ops --shots=20000
-          pytest pennylane/devices/tests --device lightning.qubit --analytic True --skip-ops
+          pl-device-test --device lightning.qubit --analytic False --skip-ops --shots=20000
+          pl-device-test --device lightning.qubit --analytic True --skip-ops
