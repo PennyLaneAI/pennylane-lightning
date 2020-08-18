@@ -10,7 +10,7 @@ A ``lightning.qubit`` device can be loaded using:
 .. code-block:: python
 
     import pennylane as qml
-    dev = qml.device("lighting.qubit", wires=2)
+    dev = qml.device("lightning.qubit", wires=2)
 
 Supported operations and observables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
