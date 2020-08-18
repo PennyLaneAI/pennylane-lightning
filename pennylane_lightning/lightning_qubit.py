@@ -22,6 +22,8 @@ from .lightning_qubit_ops import apply
 import numpy as np
 from pennylane import QubitStateVector, BasisState, DeviceError
 
+from ._version import __version__
+
 
 class LightningQubit(DefaultQubit):
     """PennyLane Lightning device.
@@ -51,8 +53,8 @@ class LightningQubit(DefaultQubit):
 
     name = "Lightning Qubit PennyLane plugin"
     short_name = "lightning.qubit"
-    pennylane_requires = "0.11"
-    version = "0.11.0"
+    pennylane_requires = ">=0.11"
+    version = __version__
     author = "Xanadu Inc."
     _capabilities = {"inverse_operations": False}  # we should look at supporting
 
