@@ -12,8 +12,8 @@ env:
 
   CIBW_BEFORE_ALL_LINUX: |
     curl -OsL https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz
-    tar xzf 3.3.7.tar.gz eigen-eigen-323c052e1731/Eigen --strip-components 1
-    tar xzf 3.3.7.tar.gz eigen-eigen-323c052e1731/unsupported --strip-components 1
+    tar xzf eigen-3.3.7.tar.gz eigen-3.3.7/Eigen --strip-components 1
+    tar xzf eigen-3.3.7.tar.gz eigen-3.3.7/unsupported --strip-components 1
     mkdir -p {project}/include
     cp -rf Eigen {project}/include
     cp -rf unsupported {project}/include
@@ -28,7 +28,7 @@ env:
 
   # Windows specific build settings
 
-  CIBW_ENVIRONMENT_WINDOWS: EIGEN_INCLUDE_DIR="C:\\eigen-eigen-323c052e1731\\"
+  CIBW_ENVIRONMENT_WINDOWS: EIGEN_INCLUDE_DIR="C:\\eigen-3.3.7\\"
 
 #  CIBW_TEST_COMMAND_WINDOWS: |
 #    pytest "C:\\pennylane\\pennylane\\devices\\tests" --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
