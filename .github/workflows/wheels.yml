@@ -11,7 +11,7 @@ env:
   # Linux specific build settings
 
   CIBW_BEFORE_ALL_LINUX: |
-    curl -OsL https://bitbucket.org/eigen/eigen/get/3.3.7.tar.gz
+    curl -OsL https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz
     tar xzf 3.3.7.tar.gz eigen-eigen-323c052e1731/Eigen --strip-components 1
     tar xzf 3.3.7.tar.gz eigen-eigen-323c052e1731/unsupported --strip-components 1
     mkdir -p {project}/include
@@ -79,7 +79,7 @@ jobs:
           GIT_REDIRECT_STDERR: "2>&1"
         run: |
           choco install vcpython27 -f -y
-          Invoke-WebRequest -Uri "http://bitbucket.org/eigen/eigen/get/3.3.7.zip" -UseBasicParsing -OutFile C:\eigen3.zip
+          Invoke-WebRequest -Uri "https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.zip" -UseBasicParsing -OutFile C:\eigen3.zip
           & "C:\\Program Files\\7-Zip\\7z.exe" x C:\eigen3.zip -o"C:\" -y
 
 #          New-Item -ItemType directory -Path "C:\\pennylane"
