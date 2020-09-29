@@ -54,7 +54,7 @@ jobs:
 
       - name: Get required Python packages
         run: |
-          pip install numpy pybind11 pytest pytest-cov pytest-mock flaky
+          pip install -r requirements.txt
 
       - name: Install lightning.qubit device
         run: |
