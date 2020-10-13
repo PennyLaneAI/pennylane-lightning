@@ -1,7 +1,7 @@
 name: Deploy
 on:
   release:
-    types: [created]
+    types: [published]
 
 env:
   CIBW_SKIP: "cp27-* cp34-* cp35-* *i686 pp* *win32"
