@@ -1,5 +1,7 @@
+flaky
 numpy
 git+https://github.com/PennyLaneAI/pennylane.git
+pybind11
 pytest
 pytest-cov
 pytest-mock
