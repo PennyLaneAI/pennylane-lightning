@@ -1,4 +1,4 @@
-# Release 0.12.0-dev
+# Release 0.12.0
 
 ### Bug fixes
 

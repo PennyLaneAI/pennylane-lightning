@@ -53,7 +53,7 @@ class LightningQubit(DefaultQubit):
 
     name = "Lightning Qubit PennyLane plugin"
     short_name = "lightning.qubit"
-    pennylane_requires = ">=0.11"
+    pennylane_requires = ">=0.12"
     version = __version__
     author = "Xanadu Inc."
 
