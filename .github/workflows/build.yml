@@ -54,7 +54,10 @@ jobs:
 
       - name: Get required Python packages
         run: |
-          pip install numpy pybind11 pytest pytest-cov pytest-mock flaky
+          cd main
+          python -m pip install --upgrade pip
+          pip install git+https://github.com/PennyLaneAI/pennylane.git
+          pip install -r requirements.txt
 
       - name: Install lightning.qubit device
         run: |
