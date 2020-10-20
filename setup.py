@@ -168,7 +168,7 @@ else:
 
 requirements = [
     "numpy",
-    "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git",
+    "pennylane>=0.12.0",
     "pybind11",
 ]
 
