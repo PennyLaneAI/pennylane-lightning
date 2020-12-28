@@ -37,6 +37,10 @@ using std::complex;
 using std::string;
 using std::find;
 
+// Declare tensor shape for state
+template<int X>
+using State_Xq = Tensor<complex<double>, X>;
+
 // Declare tensor shape for 1, 2, and 3-qubit gates
 using Gate_1q = Tensor<complex<double>, 2>;
 using Gate_2q = Tensor<complex<double>, 4>;
@@ -359,3 +363,88 @@ VectorXcd apply_ops_2q(
 
     return Map<VectorXcd> (shuffled_evolved_tensor.data(), shuffled_evolved_tensor.size(), 1);
 }
+
+// Template classes for a generic interface for qubit operations
+
+template<int Dim, int ValueIdx>
+class QubitOperationsGenerator
+{
+public:
+    template<typename... Values>
+    static inline VectorXcd apply(
+        Ref<VectorXcd> state,
+        const vector<string>& ops,
+        const vector<vector<int>>& wires,
+        const vector<vector<float>>& params,
+        Values... values)
+    {
+        return QubitOperationsGenerator<Dim, ValueIdx - 1>::apply(state, ops, wires, params, 2, values...);
+    }
+};
+
+// Generic multi-qubit case
+template<int Dim>
+class QubitOperationsGenerator<Dim, 0>
+{
+public:
+    template<typename... Values>
+    static inline VectorXcd apply(
+        Ref<VectorXcd> state,
+        const vector<string>& ops,
+        const vector<vector<int>>& wires,
+        const vector<vector<float>>& params,
+        Values... values)
+    {
+        return apply_ops<State_Xq<Dim>>(state, ops, wires, params, values...);
+    }
+};
+
+// Specialisation for single qubit case
+template<int ValueIdx>
+class QubitOperationsGenerator<1, ValueIdx>
+{
+public:
+    template<typename... Values>
+    static inline VectorXcd apply(
+        Ref<VectorXcd> state,
+        const vector<string>& ops,
+        const vector<vector<int>>& wires,
+        const vector<vector<float>>& params,
+        Values... values)
+    {
+        return apply_ops_1q(state, ops, params);
+    }
+};
+
+// Specialisation for two qubit case
+template<int ValueIdx>
+class QubitOperationsGenerator<2, ValueIdx>
+{
+public:
+    template<typename... Values>
+    static inline VectorXcd apply(
+        Ref<VectorXcd> state,
+        const vector<string>& ops,
+        const vector<vector<int>>& wires,
+        const vector<vector<float>>& params,
+        Values... values)
+    {
+        return apply_ops_2q(state, ops, wires, params);
+    }
+};
+
+// Generic interface
+template<int Dim>
+class QubitOperations
+{
+public:
+    template<typename... Values>
+    static inline VectorXcd apply(
+        Ref<VectorXcd> state,
+        const vector<string>& ops,
+        const vector<vector<int>>& wires,
+        const vector<vector<float>>& params)
+    {
+        return QubitOperationsGenerator<Dim, Dim>::apply(state, ops, wires, params);
+    }
+};
