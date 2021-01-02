@@ -58,7 +58,41 @@ VectorXcd apply (
     case 14: return QubitOperations<14>::apply(state, ops, wires, params);
     case 15: return QubitOperations<15>::apply(state, ops, wires, params);
     case 16: return QubitOperations<16>::apply(state, ops, wires, params);
-    default: throw std::invalid_argument("No support for > 16 qubits");
+    case 17: return QubitOperations<17>::apply(state, ops, wires, params);
+    case 18: return QubitOperations<18>::apply(state, ops, wires, params);
+    case 19: return QubitOperations<19>::apply(state, ops, wires, params);
+    case 20: return QubitOperations<20>::apply(state, ops, wires, params);
+    case 21: return QubitOperations<21>::apply(state, ops, wires, params);
+    case 22: return QubitOperations<22>::apply(state, ops, wires, params);
+    case 23: return QubitOperations<23>::apply(state, ops, wires, params);
+    case 24: return QubitOperations<24>::apply(state, ops, wires, params);
+    case 25: return QubitOperations<25>::apply(state, ops, wires, params);
+    case 26: return QubitOperations<26>::apply(state, ops, wires, params);
+    case 27: return QubitOperations<27>::apply(state, ops, wires, params);
+    case 28: return QubitOperations<28>::apply(state, ops, wires, params);
+    case 29: return QubitOperations<29>::apply(state, ops, wires, params);
+    case 30: return QubitOperations<30>::apply(state, ops, wires, params);
+    case 31: return QubitOperations<31>::apply(state, ops, wires, params);
+    case 32: return QubitOperations<32>::apply(state, ops, wires, params);
+    case 33: return QubitOperations<33>::apply(state, ops, wires, params);
+    case 34: return QubitOperations<34>::apply(state, ops, wires, params);
+    case 35: return QubitOperations<35>::apply(state, ops, wires, params);
+    case 36: return QubitOperations<36>::apply(state, ops, wires, params);
+    case 37: return QubitOperations<37>::apply(state, ops, wires, params);
+    case 38: return QubitOperations<38>::apply(state, ops, wires, params);
+    case 39: return QubitOperations<39>::apply(state, ops, wires, params);
+    case 40: return QubitOperations<40>::apply(state, ops, wires, params);
+    case 41: return QubitOperations<41>::apply(state, ops, wires, params);
+    case 42: return QubitOperations<42>::apply(state, ops, wires, params);
+    case 43: return QubitOperations<43>::apply(state, ops, wires, params);
+    case 44: return QubitOperations<44>::apply(state, ops, wires, params);
+    case 45: return QubitOperations<45>::apply(state, ops, wires, params);
+    case 46: return QubitOperations<46>::apply(state, ops, wires, params);
+    case 47: return QubitOperations<47>::apply(state, ops, wires, params);
+    case 48: return QubitOperations<48>::apply(state, ops, wires, params);
+    case 49: return QubitOperations<49>::apply(state, ops, wires, params);
+    case 50: return QubitOperations<50>::apply(state, ops, wires, params);
+    default: throw std::invalid_argument("No support for > 50 qubits");
     }
 }
 
