@@ -20,36 +20,17 @@
 #pragma once
 
 #define _USE_MATH_DEFINES
-#include "Eigen/Dense"
-#include "unsupported/Eigen/CXX11/Tensor"
 #include "operations.hpp"
 
-using Eigen::Tensor;
-using Eigen::IndexPair;
 using Eigen::VectorXcd;
 using Eigen::MatrixXcd;
 using Eigen::Ref;
 using Eigen::TensorMap;
 using Eigen::Map;
-using std::array;
 using std::vector;
 using std::complex;
 using std::string;
 using std::find;
-
-// Declare tensor shape for state
-template<int X>
-using State_Xq = Tensor<complex<double>, X>;
-
-// Declare tensor shape for 1, 2, and 3-qubit gates
-using Gate_1q = Tensor<complex<double>, 2>;
-using Gate_2q = Tensor<complex<double>, 4>;
-
-// Declare pairings for tensor contraction
-using Pairs = IndexPair<int>;
-using Pairs_1q = array<IndexPair<int>, 1>;
-using Pairs_2q = array<IndexPair<int>, 2>;
-using Pairs_3q = array<IndexPair<int>, 3>;
 
 const double SQRT2INV = 0.7071067811865475;
 
@@ -82,19 +63,19 @@ vector<int> calculate_tensor_indices(const vector<int> &wires, const vector<int>
 * @param params the parameters of the gate
 * @return the gate as a tensor
 */
-Gate_1q get_gate_1q(const string &gate_name, const vector<float> &params) {
-    Gate_1q op;
+Gate_Xq<1> get_gate_1q(const string &gate_name, const vector<float> &params) {
+    Gate_Xq<1> op;
 
     if (params.empty()) {
-        pfunc_1q f = OneQubitOps.at(gate_name);
+        pfunc_Xq<1> f = OneQubitOps.at(gate_name);
         op = (*f)();
     }
     else if (params.size() == 1) {
-        pfunc_1q_one_param f = OneQubitOpsOneParam.at(gate_name);
+        pfunc_Xq_one_param<1> f = OneQubitOpsOneParam.at(gate_name);
         op = (*f)(params[0]);
     }
     else if (params.size() == 3) {
-        pfunc_1q_three_params f = OneQubitOpsThreeParams.at(gate_name);
+        pfunc_Xq_three_params<1> f = OneQubitOpsThreeParams.at(gate_name);
         op = (*f)(params[0], params[1], params[2]);
     }
     return op;
@@ -107,19 +88,19 @@ Gate_1q get_gate_1q(const string &gate_name, const vector<float> &params) {
 * @param params the parameters of the gate
 * @return the gate as a tensor
 */
-Gate_2q get_gate_2q(const string &gate_name, const vector<float> &params) {
-    Gate_2q op;
+Gate_Xq<2> get_gate_2q(const string &gate_name, const vector<float> &params) {
+    Gate_Xq<2> op;
 
     if (params.empty()) {
-        pfunc_2q f = TwoQubitOps.at(gate_name);
+        pfunc_Xq<2> f = TwoQubitOps.at(gate_name);
         op = (*f)();
     }
     else if (params.size() == 1) {
-        pfunc_2q_one_param f = TwoQubitOpsOneParam.at(gate_name);
+        pfunc_Xq_one_param<2> f = TwoQubitOpsOneParam.at(gate_name);
         op = (*f)(params[0]);
     }
     else if (params.size() == 3) {
-        pfunc_2q_three_params f = TwoQubitOpsThreeParams.at(gate_name);
+        pfunc_Xq_three_params<2> f = TwoQubitOpsThreeParams.at(gate_name);
         op = (*f)(params[0], params[1], params[2]);
     }
     return op;
@@ -131,9 +112,9 @@ Gate_2q get_gate_2q(const string &gate_name, const vector<float> &params) {
 * @param gate_name the name of the gate
 * @return the gate as a tensor
 */
-Gate_3q get_gate_3q(const string &gate_name) {
-    Gate_3q op;
-    pfunc_3q f = ThreeQubitOps.at(gate_name);
+Gate_Xq<3> get_gate_3q(const string &gate_name) {
+    Gate_Xq<3> op;
+    pfunc_Xq<3> f = ThreeQubitOps.at(gate_name);
     op = (*f)();
     return op;
 }
@@ -172,8 +153,8 @@ template <class State>
 State contract_1q_op(
     const State &state, const string &op_string, const vector<int> &indices, const vector<float> &p)
 {
-    Gate_1q op_1q = get_gate_1q(op_string, p);
-    Pairs_1q pairs_1q = {Pairs(1, indices[0])};
+    Gate_Xq<1> op_1q = get_gate_1q(op_string, p);
+    Pairs_Xq<1> pairs_1q = {Pairs(1, indices[0])};
     return op_1q.contract(state, pairs_1q);
 }
 
@@ -190,8 +171,8 @@ template <class State>
 State contract_2q_op(
     const State &state, const string &op_string, const vector<int> &indices, const vector<float> &p)
 {
-    Gate_2q op_2q = get_gate_2q(op_string, p);
-    Pairs_2q pairs_2q = {Pairs(2, indices[0]), Pairs(3, indices[1])};
+    Gate_Xq<2> op_2q = get_gate_2q(op_string, p);
+    Pairs_Xq<2> pairs_2q = {Pairs(2, indices[0]), Pairs(3, indices[1])};
     return op_2q.contract(state, pairs_2q);
 }
 
@@ -206,8 +187,8 @@ State contract_2q_op(
 */
 template <class State>
 State contract_3q_op(const State &state, const string &op_string, const vector<int> &indices) {
-    Gate_3q op_3q = get_gate_3q(op_string);
-    Pairs_3q pairs_3q = {Pairs(3, indices[0]), Pairs(4, indices[1]), Pairs(5, indices[2])};
+    Gate_Xq<3> op_3q = get_gate_3q(op_string);
+    Pairs_Xq<3> pairs_3q = {Pairs(3, indices[0]), Pairs(4, indices[1]), Pairs(5, indices[2])};
     return op_3q.contract(state, pairs_3q);
 }
 
@@ -300,7 +281,7 @@ VectorXcd apply_ops_1q(
         string op_string = ops[i];
         vector<float> p = params[i];
 
-        Gate_1q gate = get_gate_1q(op_string, p);
+        Gate_Xq<1> gate = get_gate_1q(op_string, p);
         MatrixXcd gate_matrix = Map<MatrixXcd> (gate.data(), 2, 2);
 
         evolved_state = gate_matrix * evolved_state;
@@ -326,7 +307,7 @@ VectorXcd apply_ops_2q(
     const vector<vector<int>>& wires,
     const vector<vector<float>>& params
 ) {
-    State_2q evolved_tensor = TensorMap<State_2q>(state.data(), 2, 2);
+    State_Xq<2> evolved_tensor = TensorMap<State_Xq<2>>(state.data(), 2, 2);
     const int qubits = log2(evolved_tensor.size());
 
     vector<int> tensor_indices(qubits);
@@ -342,7 +323,7 @@ VectorXcd apply_ops_2q(
         vector<int> w = wires[i];
         int num_wires = w.size();
         vector<float> p = params[i];
-        State_2q tensor_contracted;
+        State_Xq<2> tensor_contracted;
 
         vector<int> wires_to_contract(w.size());
         for (int j = 0; j < num_wires; j++) {
@@ -352,14 +333,14 @@ VectorXcd apply_ops_2q(
         qubit_positions = calculate_qubit_positions(tensor_indices);
 
         if (w.size() == 1) {
-            tensor_contracted = contract_1q_op<State_2q> (evolved_tensor, op_string, wires_to_contract, p);
+            tensor_contracted = contract_1q_op<State_Xq<2>> (evolved_tensor, op_string, wires_to_contract, p);
         }
         else if (w.size() == 2) {
-            tensor_contracted = contract_2q_op<State_2q> (evolved_tensor, op_string, wires_to_contract, p);
+            tensor_contracted = contract_2q_op<State_Xq<2>> (evolved_tensor, op_string, wires_to_contract, p);
         }
         evolved_tensor = tensor_contracted;
     }
-    State_2q shuffled_evolved_tensor = evolved_tensor.shuffle(qubit_positions);
+    State_Xq<2> shuffled_evolved_tensor = evolved_tensor.shuffle(qubit_positions);
 
     return Map<VectorXcd> (shuffled_evolved_tensor.data(), shuffled_evolved_tensor.size(), 1);
 }

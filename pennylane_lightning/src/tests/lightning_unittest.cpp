@@ -29,14 +29,14 @@ namespace one_qubit_ops {
 
 
 TEST(PauliX, ApplyToZero) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1, 0});
 
     auto operation = X();
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
     expected_output_state.setValues({0, 1});
 
     // Casting to a vector for comparison
@@ -47,14 +47,14 @@ TEST(PauliX, ApplyToZero) {
 }
 
 TEST(PauliX, ApplyToPlus) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
     auto operation = X();
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
     expected_output_state.setValues({1/SQRT_2, 1/SQRT_2});
 
     // Casting to a vector for comparison
@@ -65,14 +65,14 @@ TEST(PauliX, ApplyToPlus) {
 }
 
 TEST(PauliY, ApplyToZero) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1, 0});
 
     auto operation = Y();
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
     std::complex<double> Val(0, 1);
     expected_output_state.setValues({0, Val});
 
@@ -84,14 +84,14 @@ TEST(PauliY, ApplyToZero) {
 }
 
 TEST(PauliY, ApplyToPlus) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
     auto operation = Y();
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
 
     std::complex<double> first(0, -1/SQRT_2);
     std::complex<double> second(0, 1/SQRT_2);
@@ -105,14 +105,14 @@ TEST(PauliY, ApplyToPlus) {
 }
 
 TEST(PauliZ, ApplyToZero) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1, 0});
 
     auto operation = Z();
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
     expected_output_state.setValues({1, 0});
 
     // Casting to a vector for comparison
@@ -123,14 +123,14 @@ TEST(PauliZ, ApplyToZero) {
 }
 
 TEST(PauliZ, ApplyToPlus) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
     auto operation = Z();
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
     expected_output_state.setValues({1/SQRT_2, -1/SQRT_2});
 
     // Casting to a vector for comparison
@@ -141,14 +141,14 @@ TEST(PauliZ, ApplyToPlus) {
 }
 
 TEST(Hadamard, ApplyToZero) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1, 0});
 
     auto operation = H();
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
     expected_output_state.setValues({1/SQRT_2, 1/SQRT_2});
 
     // Casting to a vector for comparison
@@ -159,14 +159,14 @@ TEST(Hadamard, ApplyToZero) {
 }
 
 TEST(Hadamard, ApplyToMinus) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1/SQRT_2, -1/SQRT_2});
 
     auto operation = H();
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
     expected_output_state.setValues({0, 1});
 
     // Casting to a vector for comparison
@@ -177,14 +177,14 @@ TEST(Hadamard, ApplyToMinus) {
 }
 
 TEST(SGate, ApplyToZero) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1, 0});
 
     auto operation = S();
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
     expected_output_state.setValues({1, 0});
 
     // Casting to a vector for comparison
@@ -195,14 +195,14 @@ TEST(SGate, ApplyToZero) {
 }
 
 TEST(SGate, ApplyToPlus) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
     auto operation = S();
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
     std::complex<double> imag_val(0, 1/SQRT_2);
     expected_output_state.setValues({1/SQRT_2, imag_val});
 
@@ -214,14 +214,14 @@ TEST(SGate, ApplyToPlus) {
 }
 
 TEST(TGate, ApplyToZero) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1, 0});
 
     auto operation = T();
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
     expected_output_state.setValues({1, 0});
 
     // Casting to a vector for comparison
@@ -232,14 +232,14 @@ TEST(TGate, ApplyToZero) {
 }
 
 TEST(TGate, ApplyToPlus) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
     auto operation = T();
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
 
     const std::complex<double> exponent(0, M_PI/4);
     std::complex<double> val = std::pow(M_E, exponent)/SQRT_2;
@@ -253,16 +253,16 @@ TEST(TGate, ApplyToPlus) {
 }
 
 TEST(RXGate, ApplyToZeroPiHalf) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1, 0});
 
     double par = M_PI/2;
 
     auto operation = RX(par);
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
 
     const std::complex<double> first(1/SQRT_2, 0);
     const std::complex<double> second(0, -1/SQRT_2);
@@ -276,16 +276,16 @@ TEST(RXGate, ApplyToZeroPiHalf) {
 }
 
 TEST(RXGate, ApplyToZeroPi) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1, 0});
 
     double par = M_PI;
 
     auto operation = RX(par);
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
 
     const std::complex<double> second(0, -1);
     expected_output_state.setValues({0, second});
@@ -299,16 +299,16 @@ TEST(RXGate, ApplyToZeroPi) {
 
 
 TEST(RXGate, ApplyToPlusPiHalf) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
     double par = M_PI/2;
 
     auto operation = RX(par);
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
 
     const std::complex<double> val(0.5, -0.5);
     expected_output_state.setValues({val, val});
@@ -322,16 +322,16 @@ TEST(RXGate, ApplyToPlusPiHalf) {
 
 
 TEST(RYGate, ApplyToZeroPiHalf) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1, 0});
 
     double par = M_PI/2;
 
     auto operation = RY(par);
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
 
     expected_output_state.setValues({1/SQRT_2, 1/SQRT_2});
 
@@ -343,16 +343,16 @@ TEST(RYGate, ApplyToZeroPiHalf) {
 }
 
 TEST(RYGate, ApplyToZeroPi) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1, 0});
 
     double par = M_PI;
 
     auto operation = RY(par);
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
     expected_output_state.setValues({0, 1});
 
     // Casting to a vector for comparison
@@ -364,16 +364,16 @@ TEST(RYGate, ApplyToZeroPi) {
 
 
 TEST(RYGate, ApplyToPlusPiHalf) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
     double par = M_PI/2;
 
     auto operation = RY(par);
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
     expected_output_state.setValues({0, 1});
 
     // Casting to a vector for comparison
@@ -385,16 +385,16 @@ TEST(RYGate, ApplyToPlusPiHalf) {
 
 
 TEST(RZGate, ApplyToZeroPiHalf) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1, 0});
 
     double par = M_PI/2;
 
     auto operation = RZ(par);
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
 
     std::complex<double> val(1/SQRT_2, -1/SQRT_2);
     expected_output_state.setValues({val, 0});
@@ -407,16 +407,16 @@ TEST(RZGate, ApplyToZeroPiHalf) {
 }
 
 TEST(RZGate, ApplyToOnePi) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({0, 1});
 
     double par = M_PI;
 
     auto operation = RZ(par);
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
 
     const std::complex<double> val(0, 1);
     expected_output_state.setValues({0, val});
@@ -430,16 +430,16 @@ TEST(RZGate, ApplyToOnePi) {
 
 
 TEST(RZGate, ApplyToPlusHalfPi) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
     double par = M_PI/2;
 
     auto operation = RZ(par);
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
     const std::complex<double> first(0.5, -0.5);
     const std::complex<double> second(0.5, 0.5);
     expected_output_state.setValues({first, second});
@@ -453,16 +453,16 @@ TEST(RZGate, ApplyToPlusHalfPi) {
 
 
 TEST(RotGate, ApplyToZeroPiHalfZeroZero) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1, 0});
 
     const double par = M_PI/2;
 
     auto operation = Rot(par, 0, 0);
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
 
     std::complex<double> val(1/SQRT_2, -1/SQRT_2);
     expected_output_state.setValues({val, 0});
@@ -476,16 +476,16 @@ TEST(RotGate, ApplyToZeroPiHalfZeroZero) {
 
 
 TEST(RotGate, ApplyToZeroZeroPiHalfZero) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1, 0});
 
     const double par = M_PI/2;
 
     auto operation = Rot(0, par, 0);
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
 
     expected_output_state.setValues({1/SQRT_2, 1/SQRT_2});
 
@@ -498,16 +498,16 @@ TEST(RotGate, ApplyToZeroZeroPiHalfZero) {
 
 
 TEST(RotGate, ApplyToPlusZeroZeroPiHalf) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
     const double par = M_PI/2;
 
     auto operation = Rot(0, 0, par);
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
 
     std::complex<double> val1(0.5, -0.5);
     std::complex<double> val2(0.5, 0.5);
@@ -521,7 +521,7 @@ TEST(RotGate, ApplyToPlusZeroZeroPiHalf) {
 }
 
 TEST(RotGate, ApplyToZeroPiHalfNegPiHalfPiHalf) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1, 0});
 
     const double par1 = M_PI/2;
@@ -529,10 +529,10 @@ TEST(RotGate, ApplyToZeroPiHalfNegPiHalfPiHalf) {
     const double par3 = M_PI/2;
 
     auto operation = Rot(par1, par2, par3);
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
 
     std::complex<double> val(0, -1/SQRT_2);
     expected_output_state.setValues({val, -1/SQRT_2});
@@ -546,7 +546,7 @@ TEST(RotGate, ApplyToZeroPiHalfNegPiHalfPiHalf) {
 
 
 TEST(RotGate, ApplyToPlusNegPiHalfPiPi) {
-    State_1q input_state(2);
+    State_Xq<1> input_state(2);
     input_state.setValues({1/SQRT_2, 1/SQRT_2});
 
     const double par1 = -M_PI/2;
@@ -554,10 +554,10 @@ TEST(RotGate, ApplyToPlusNegPiHalfPiPi) {
     const double par3 = M_PI;
 
     auto operation = Rot(par1, par2, par3);
-    Pairs_1q product_dims = { Pairs(1, 0) };
-    State_1q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<1> product_dims = { Pairs(1, 0) };
+    State_Xq<1> output_state = operation.contract(input_state, product_dims);
 
-    State_1q expected_output_state(2);
+    State_Xq<1> expected_output_state(2);
 
     std::complex<double> val1(0.5, 0.5);
     std::complex<double> val2(-0.5, 0.5);
@@ -571,15 +571,15 @@ TEST(RotGate, ApplyToPlusNegPiHalfPiPi) {
 }
 
 TEST(PhaseShift, ApplyToZeroAndOne) {
-    State_1q input_state_0(2);
-    State_1q input_state_1(2);
+    State_Xq<1> input_state_0(2);
+    State_Xq<1> input_state_1(2);
     input_state_0.setValues({1, 0});
     input_state_1.setValues({0, 1});
 
 
     std::complex<double> const1(0.99500417, 0.09983342);
-    State_1q expected_state_0(2);
-    State_1q expected_state_1(2);
+    State_Xq<1> expected_state_0(2);
+    State_Xq<1> expected_state_1(2);
     expected_state_0.setValues({1, 0});
     expected_state_1.setValues({0, const1});
 
@@ -604,14 +604,14 @@ namespace two_qubit_ops {
 
 
 TEST(CNOT, ApplyToZero) {
-    State_2q input_state(2, 2);
+    State_Xq<2> input_state(2, 2);
     input_state.setValues({{1, 0}, {0, 0}});
 
     auto operation = CNOT();
-    Pairs_2q product_dims = { Pairs(2, 0), Pairs(3, 1) };
-    State_2q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<2> product_dims = { Pairs(2, 0), Pairs(3, 1) };
+    State_Xq<2> output_state = operation.contract(input_state, product_dims);
 
-    State_2q expected_output_state(2, 2);
+    State_Xq<2> expected_output_state(2, 2);
     expected_output_state.setValues({{1, 0}, {0, 0}});
 
     // Casting to a vector for comparison
@@ -622,14 +622,14 @@ TEST(CNOT, ApplyToZero) {
 }
 
 TEST(CNOT, ApplyToOneZero) {
-    State_2q input_state(2, 2);
+    State_Xq<2> input_state(2, 2);
     input_state.setValues({{0, 0}, {1, 0}});
 
     auto operation = CNOT();
-    Pairs_2q product_dims = { Pairs(2, 0), Pairs(3, 1) };
-    State_2q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<2> product_dims = { Pairs(2, 0), Pairs(3, 1) };
+    State_Xq<2> output_state = operation.contract(input_state, product_dims);
 
-    State_2q expected_output_state(2, 2);
+    State_Xq<2> expected_output_state(2, 2);
     expected_output_state.setValues({{0, 0}, {0, 1}});
 
     // Casting to a vector for comparison
@@ -640,14 +640,14 @@ TEST(CNOT, ApplyToOneZero) {
 }
 
 TEST(CNOT, ApplyToBellState) {
-    State_2q input_state(2, 2);
+    State_Xq<2> input_state(2, 2);
     input_state.setValues({{1/SQRT_2, 0}, {0, 1/SQRT_2}});
 
     auto operation = CNOT();
-    Pairs_2q product_dims = { Pairs(2, 0), Pairs(3, 1) };
-    State_2q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<2> product_dims = { Pairs(2, 0), Pairs(3, 1) };
+    State_Xq<2> output_state = operation.contract(input_state, product_dims);
 
-    State_2q expected_output_state(2, 2);
+    State_Xq<2> expected_output_state(2, 2);
     expected_output_state.setValues({{1/SQRT_2, 0}, {1/SQRT_2, 0}});
 
     // Casting to a vector for comparison
@@ -658,14 +658,14 @@ TEST(CNOT, ApplyToBellState) {
 }
 
 TEST(CNOT, ApplyToThreeQubitControlThird) {
-    State_3q input_state(2, 2, 2);
+    State_Xq<3> input_state(2, 2, 2);
     input_state.setValues({{{0, 0}, {0, 0}}, {{0, 0}, {0, 1}}});
 
     auto operation = CNOT();
-    Pairs_2q product_dims = { Pairs(3, 2), Pairs(2, 1) };
-    State_3q output_state = operation.contract(input_state, product_dims);
+    Pairs_Xq<2> product_dims = { Pairs(3, 2), Pairs(2, 1) };
+    State_Xq<3> output_state = operation.contract(input_state, product_dims);
 
-    State_3q expected_output_state(2, 2, 2);
+    State_Xq<3> expected_output_state(2, 2, 2);
 
     // The output dimensions are ordered according to the output of the tensor
     // contraction (no shuffling takes place)
@@ -705,10 +705,10 @@ TEST(CZ, ToMatrix) {
 }
 
 TEST(CRots, ApplyTo00) {
-    State_2q input_state(2, 2);
+    State_Xq<2> input_state(2, 2);
     input_state.setValues({{1, 0}, {0, 0}});
 
-    State_2q expected_output_state(2, 2);
+    State_Xq<2> expected_output_state(2, 2);
     expected_output_state.setValues({{1, 0}, {0, 0}});
 
     vector<int> w{0, 1};
@@ -735,10 +735,10 @@ TEST(CRots, ApplyTo00) {
 }
 
 TEST(CRots, ApplyTo01) {
-    State_2q input_state(2, 2);
+    State_Xq<2> input_state(2, 2);
     input_state.setValues({{0, 1}, {0, 0}});
 
-    State_2q expected_output_state(2, 2);
+    State_Xq<2> expected_output_state(2, 2);
     expected_output_state.setValues({{0, 1}, {0, 0}});
 
     vector<int> w{0, 1};
@@ -765,7 +765,7 @@ TEST(CRots, ApplyTo01) {
 }
 
 TEST(CRots, ApplyTo10) {
-    State_2q input_state(2, 2);
+    State_Xq<2> input_state(2, 2);
     input_state.setValues({{0, 0}, {1, 0}});
 
     float phi(0.1);
@@ -776,13 +776,13 @@ TEST(CRots, ApplyTo10) {
     complex<double> sin_imag(0, sin);
     complex<double> sin_real(sin, 0);
 
-    State_2q expected_output_state_X(2, 2);
+    State_Xq<2> expected_output_state_X(2, 2);
     expected_output_state_X.setValues({{0, 0}, {cos_real, -sin_imag}});
 
-    State_2q expected_output_state_Y(2, 2);
+    State_Xq<2> expected_output_state_Y(2, 2);
     expected_output_state_Y.setValues({{0, 0}, {cos_real, sin_real}});
 
-    State_2q expected_output_state_Z(2, 2);
+    State_Xq<2> expected_output_state_Z(2, 2);
     expected_output_state_Z.setValues({{0, 0}, {cos_real-sin_imag, 0}});
 
     vector<float> p2{0.4, 0.1, 0.3};
@@ -791,7 +791,7 @@ TEST(CRots, ApplyTo10) {
     auto exp_plus = std::pow(M_E, imag_phi_plus_omega);
     auto exp_minus = std::pow(M_E, imag_phi_minus_omega);
 
-    State_2q expected_output_state_Rot(2, 2);
+    State_Xq<2> expected_output_state_Rot(2, 2);
     expected_output_state_Rot.setValues({{0, 0}, {cos_real * exp_plus, sin_real * exp_minus}});
 
     vector<int> w{0, 1};
@@ -821,7 +821,7 @@ TEST(CRots, ApplyTo10) {
 }
 
 TEST(CRots, ApplyTo11) {
-    State_2q input_state(2, 2);
+    State_Xq<2> input_state(2, 2);
     input_state.setValues({{0, 0}, {0, 1}});
 
     float phi(0.1);
@@ -832,13 +832,13 @@ TEST(CRots, ApplyTo11) {
     complex<double> sin_imag(0, sin);
     complex<double> sin_real(sin, 0);
 
-    State_2q expected_output_state_X(2, 2);
+    State_Xq<2> expected_output_state_X(2, 2);
     expected_output_state_X.setValues({{0, 0}, {-sin_imag, cos_real}});
 
-    State_2q expected_output_state_Y(2, 2);
+    State_Xq<2> expected_output_state_Y(2, 2);
     expected_output_state_Y.setValues({{0, 0}, {-sin_real, cos_real}});
 
-    State_2q expected_output_state_Z(2, 2);
+    State_Xq<2> expected_output_state_Z(2, 2);
     expected_output_state_Z.setValues({{0, 0}, {0, cos_real+sin_imag}});
 
     vector<float> p2{0.4, 0.1, 0.3};
@@ -847,7 +847,7 @@ TEST(CRots, ApplyTo11) {
     auto exp_plus = std::pow(M_E, imag_phi_plus_omega);
     auto exp_minus = std::pow(M_E, imag_phi_minus_omega);
 
-    State_2q expected_output_state_Rot(2, 2);
+    State_Xq<2> expected_output_state_Rot(2, 2);
     expected_output_state_Rot.setValues({{0, 0}, {-sin_real * exp_minus, cos_real * exp_plus}});
 
     vector<int> w{0, 1};
@@ -880,24 +880,24 @@ TEST(CRots, ApplyTo11) {
 namespace three_qubit_ops {
 
 TEST(Toffoli, ApplyToAll) {
-    State_3q input_state_000(2, 2, 2);
+    State_Xq<3> input_state_000(2, 2, 2);
     input_state_000.setValues({{{1, 0}, {0, 0}}, {{0, 0}, {0, 0}}});
-    State_3q input_state_001(2, 2, 2);
+    State_Xq<3> input_state_001(2, 2, 2);
     input_state_001.setValues({{{0, 1}, {0, 0}}, {{0, 0}, {0, 0}}});
-    State_3q input_state_010(2, 2, 2);
+    State_Xq<3> input_state_010(2, 2, 2);
     input_state_010.setValues({{{0, 0}, {1, 0}}, {{0, 0}, {0, 0}}});
-    State_3q input_state_011(2, 2, 2);
+    State_Xq<3> input_state_011(2, 2, 2);
     input_state_011.setValues({{{0, 0}, {0, 1}}, {{0, 0}, {0, 0}}});
-    State_3q input_state_100(2, 2, 2);
+    State_Xq<3> input_state_100(2, 2, 2);
     input_state_100.setValues({{{0, 0}, {0, 0}}, {{1, 0}, {0, 0}}});
-    State_3q input_state_101(2, 2, 2);
+    State_Xq<3> input_state_101(2, 2, 2);
     input_state_101.setValues({{{0, 0}, {0, 0}}, {{0, 1}, {0, 0}}});
-    State_3q input_state_110(2, 2, 2);
+    State_Xq<3> input_state_110(2, 2, 2);
     input_state_110.setValues({{{0, 0}, {0, 0}}, {{0, 0}, {1, 0}}});
-    State_3q input_state_111(2, 2, 2);
+    State_Xq<3> input_state_111(2, 2, 2);
     input_state_111.setValues({{{0, 0}, {0, 0}}, {{0, 0}, {0, 1}}});
 
-    std::vector<State_3q> input_states{
+    std::vector<State_Xq<3>> input_states{
         input_state_000,
         input_state_001,
         input_state_010,
@@ -907,7 +907,7 @@ TEST(Toffoli, ApplyToAll) {
         input_state_110,
         input_state_111,
     };
-    std::vector<State_3q> output_states;
+    std::vector<State_Xq<3>> output_states;
 
     vector<int> w{0, 1, 2};
 
@@ -915,9 +915,9 @@ TEST(Toffoli, ApplyToAll) {
         output_states.push_back(contract_3q_op(input_states[i], "Toffoli", w));
     }
 
-    State_3q target_state_110(2, 2, 2);
+    State_Xq<3> target_state_110(2, 2, 2);
     target_state_110.setValues({{{0, 0}, {0, 0}}, {{0, 0}, {0, 1}}});
-    State_3q target_state_111(2, 2, 2);
+    State_Xq<3> target_state_111(2, 2, 2);
     target_state_111.setValues({{{0, 0}, {0, 0}}, {{0, 0}, {1, 0}}});
 
     auto expected_states = input_states;
@@ -932,24 +932,24 @@ TEST(Toffoli, ApplyToAll) {
 }
 
 TEST(CSWAP, ApplyToAll) {
-    State_3q input_state_000(2, 2, 2);
+    State_Xq<3> input_state_000(2, 2, 2);
     input_state_000.setValues({{{1, 0}, {0, 0}}, {{0, 0}, {0, 0}}});
-    State_3q input_state_001(2, 2, 2);
+    State_Xq<3> input_state_001(2, 2, 2);
     input_state_001.setValues({{{0, 1}, {0, 0}}, {{0, 0}, {0, 0}}});
-    State_3q input_state_010(2, 2, 2);
+    State_Xq<3> input_state_010(2, 2, 2);
     input_state_010.setValues({{{0, 0}, {1, 0}}, {{0, 0}, {0, 0}}});
-    State_3q input_state_011(2, 2, 2);
+    State_Xq<3> input_state_011(2, 2, 2);
     input_state_011.setValues({{{0, 0}, {0, 1}}, {{0, 0}, {0, 0}}});
-    State_3q input_state_100(2, 2, 2);
+    State_Xq<3> input_state_100(2, 2, 2);
     input_state_100.setValues({{{0, 0}, {0, 0}}, {{1, 0}, {0, 0}}});
-    State_3q input_state_101(2, 2, 2);
+    State_Xq<3> input_state_101(2, 2, 2);
     input_state_101.setValues({{{0, 0}, {0, 0}}, {{0, 1}, {0, 0}}});
-    State_3q input_state_110(2, 2, 2);
+    State_Xq<3> input_state_110(2, 2, 2);
     input_state_110.setValues({{{0, 0}, {0, 0}}, {{0, 0}, {1, 0}}});
-    State_3q input_state_111(2, 2, 2);
+    State_Xq<3> input_state_111(2, 2, 2);
     input_state_111.setValues({{{0, 0}, {0, 0}}, {{0, 0}, {0, 1}}});
 
-    std::vector<State_3q> input_states{
+    std::vector<State_Xq<3>> input_states{
         input_state_000,
         input_state_001,
         input_state_010,
@@ -959,7 +959,7 @@ TEST(CSWAP, ApplyToAll) {
         input_state_110,
         input_state_111,
     };
-    std::vector<State_3q> output_states;
+    std::vector<State_Xq<3>> output_states;
 
     vector<int> w{0, 1, 2};
 
@@ -967,9 +967,9 @@ TEST(CSWAP, ApplyToAll) {
         output_states.push_back(contract_3q_op(input_states[i], "CSWAP", w));
     }
 
-    State_3q target_state_101(2, 2, 2);
+    State_Xq<3> target_state_101(2, 2, 2);
     target_state_101.setValues({{{0, 0}, {0, 0}}, {{0, 0}, {1, 0}}});
-    State_3q target_state_110(2, 2, 2);
+    State_Xq<3> target_state_110(2, 2, 2);
     target_state_110.setValues({{{0, 0}, {0, 0}}, {{0, 1}, {0, 0}}});
 
     auto expected_states = input_states;
