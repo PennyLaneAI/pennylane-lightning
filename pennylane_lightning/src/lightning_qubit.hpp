@@ -347,79 +347,96 @@ VectorXcd apply_ops_2q(
 
 // Template classes for a generic interface for qubit operations
 
+/**
+* Main recursive template to generate multi-qubit operations
+* @tparam Dim The number of qubits (i.e. tensor rank)
+* @tparam ValueIdx Index to be decremented recursively until 0 to generate the dimensions of the tensor
+*/
 template<int Dim, int ValueIdx>
 class QubitOperationsGenerator
 {
 public:
-    template<typename... Values>
+    template<typename... Shape>
     static inline VectorXcd apply(
         Ref<VectorXcd> state,
         const vector<string>& ops,
         const vector<vector<int>>& wires,
         const vector<vector<float>>& params,
-        Values... values)
+        Shape... shape)
     {
-        return QubitOperationsGenerator<Dim, ValueIdx - 1>::apply(state, ops, wires, params, 2, values...);
+        return QubitOperationsGenerator<Dim, ValueIdx - 1>::apply(state, ops, wires, params, 2, shape...);
     }
 };
 
-// Generic multi-qubit case
+/**
+* Terminal specialised template for general multi-qubit operations
+* @tparam Dim The number of qubits (i.e. tensor rank)
+*/
 template<int Dim>
 class QubitOperationsGenerator<Dim, 0>
 {
 public:
-    template<typename... Values>
+    template<typename... Shape>
     static inline VectorXcd apply(
         Ref<VectorXcd> state,
         const vector<string>& ops,
         const vector<vector<int>>& wires,
         const vector<vector<float>>& params,
-        Values... values)
+        Shape... shape)
     {
-        return apply_ops<State_Xq<Dim>>(state, ops, wires, params, values...);
+        return apply_ops<State_Xq<Dim>>(state, ops, wires, params, shape...);
     }
 };
 
-// Specialisation for single qubit case
+/**
+* Terminal specialised template for single qubit operations
+* @tparam ValueIdx Ignored, but required to specialised the main recursive template
+*/
 template<int ValueIdx>
 class QubitOperationsGenerator<1, ValueIdx>
 {
 public:
-    template<typename... Values>
+    template<typename... Shape>
     static inline VectorXcd apply(
         Ref<VectorXcd> state,
         const vector<string>& ops,
         const vector<vector<int>>& wires,
         const vector<vector<float>>& params,
-        Values... values)
+        Shape... shape)
     {
         return apply_ops_1q(state, ops, params);
     }
 };
 
-// Specialisation for two qubit case
+/**
+* Terminal specialised template for two qubit operations
+* @tparam ValueIdx Ignored, but required to specialised the main recursive template
+*/
 template<int ValueIdx>
 class QubitOperationsGenerator<2, ValueIdx>
 {
 public:
-    template<typename... Values>
+    template<typename... Shape>
     static inline VectorXcd apply(
         Ref<VectorXcd> state,
         const vector<string>& ops,
         const vector<vector<int>>& wires,
         const vector<vector<float>>& params,
-        Values... values)
+        Shape... shape)
     {
         return apply_ops_2q(state, ops, wires, params);
     }
 };
 
-// Generic interface
+/**
+* Generic interface that invokes the generator to generate the desired multi-qubit operation
+* @tparam Dim The number of qubits (i.e. tensor rank)
+*/
 template<int Dim>
 class QubitOperations
 {
 public:
-    template<typename... Values>
+    template<typename... Shape>
     static inline VectorXcd apply(
         Ref<VectorXcd> state,
         const vector<string>& ops,
