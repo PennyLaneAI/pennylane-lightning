@@ -37,8 +37,8 @@ class LightningQubit(DefaultQubit):
 
     .. warning::
 
-        The C++ interface currently supports up to 16 wires. If Lightning Qubit is loaded with
-        more than 16 wires, it will revert to a NumPy-based simulation.
+        The C++ interface currently supports up to 50 wires. If Lightning Qubit is loaded with
+        more than 50 wires, it will revert to a NumPy-based simulation.
 
     Args:
         wires (int): the number of wires to initialize the device with
@@ -84,7 +84,7 @@ class LightningQubit(DefaultQubit):
 
     observables = {"PauliX", "PauliY", "PauliZ", "Hadamard", "Identity"}
 
-    _MAX_WIRES = 16
+    _MAX_WIRES = 50
     """Maximum number of supported wires. Beyond this number, lightning.qubit behaves like 
     default.qubit."""
 
@@ -93,7 +93,7 @@ class LightningQubit(DefaultQubit):
 
         if self.num_wires > self._MAX_WIRES:
             warnings.warn(
-                "The number of wires exceeds 16, reverting to NumPy-based evaluation.",
+                "The number of wires exceeds {}, reverting to NumPy-based evaluation.".format(self._MAX_WIRES),
                 UserWarning,
             )
 
