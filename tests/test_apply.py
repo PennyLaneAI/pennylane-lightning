@@ -1028,11 +1028,22 @@ class TestTooManyQubits:
     """Test for when too many wires are requested, where lightning.qubit should behave like
     default.qubit."""
 
-    def test_warning(self):
+    def test_warning(self, monkeypatch):
         """Test that a warning is produced when lightning.qubit is instantiated with more than
         the supported number of qubits"""
-        with pytest.warns(UserWarning, match="The number of wires exceeds"):
-            qml.device("lightning.qubit", wires=LightningQubit._MAX_WIRES + 1)
+
+        class MockDefaultQubit:
+            """Mock DefaultQubit class."""
+
+            def __init__(self, wires, *args, **kwargs):
+                """Mock __init__ method."""
+                self.num_wires = wires
+
+        with monkeypatch.context() as m:
+            # Mock the DefaultQubit class to avoid an extensive memory allocation
+            m.setattr(pennylane_lightning.lightning_qubit.DefaultQubit, "__init__", MockDefaultQubit.__init__)
+            with pytest.warns(UserWarning, match="The number of wires exceeds"):
+                pennylane_lightning.lightning_qubit.LightningQubit(wires=LightningQubit._MAX_WIRES + 1)
 
     def test_apply(self, mocker):
         """Test that the apply method uses the one in default.qubit when the number of wires
