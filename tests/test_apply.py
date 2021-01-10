@@ -21,6 +21,7 @@ from unittest import mock
 
 import numpy as np
 import pennylane as qml
+import pennylane_lightning
 import pytest
 from pennylane import DeviceError
 from pennylane.devices.default_qubit import DefaultQubit
