@@ -349,8 +349,9 @@ VectorXcd apply_ops_2q(
 
 /**
 * Main recursive template to generate multi-qubit operations
-* @tparam Dim The number of qubits (i.e. tensor rank)
-* @tparam ValueIdx Index to be decremented recursively until 0 to generate the dimensions of the tensor
+* 
+* @tparam Dim the number of qubits (i.e. tensor rank)
+* @tparam ValueIdx index to be decremented recursively until 0 to generate the dimensions of the tensor
 */
 template<int Dim, int ValueIdx>
 class QubitOperationsGenerator
@@ -370,7 +371,8 @@ public:
 
 /**
 * Terminal specialised template for general multi-qubit operations
-* @tparam Dim The number of qubits (i.e. tensor rank)
+* 
+* @tparam Dim the number of qubits (i.e. tensor rank)
 */
 template<int Dim>
 class QubitOperationsGenerator<Dim, 0>
@@ -390,7 +392,8 @@ public:
 
 /**
 * Terminal specialised template for single qubit operations
-* @tparam ValueIdx Ignored, but required to specialised the main recursive template
+* 
+* @tparam ValueIdx ignored, but required to specialised the main recursive template
 */
 template<int ValueIdx>
 class QubitOperationsGenerator<1, ValueIdx>
@@ -410,7 +413,8 @@ public:
 
 /**
 * Terminal specialised template for two qubit operations
-* @tparam ValueIdx Ignored, but required to specialised the main recursive template
+* 
+* @tparam ValueIdx ignored, but required to specialised the main recursive template
 */
 template<int ValueIdx>
 class QubitOperationsGenerator<2, ValueIdx>
@@ -430,7 +434,8 @@ public:
 
 /**
 * Generic interface that invokes the generator to generate the desired multi-qubit operation
-* @tparam Dim The number of qubits (i.e. tensor rank)
+* 
+* @tparam Dim the number of qubits (i.e. tensor rank)
 */
 template<int Dim>
 class QubitOperations
