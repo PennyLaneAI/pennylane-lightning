@@ -93,9 +93,7 @@ class LightningQubit(DefaultQubit):
 
         if self.num_wires > self._MAX_WIRES:
             warnings.warn(
-                "The number of wires exceeds {}, reverting to NumPy-based evaluation.".format(
-                    self._MAX_WIRES
-                ),
+                f"The number of wires exceeds {self._MAX_WIRES}, reverting to NumPy-based evaluation.",
                 UserWarning,
             )
 
