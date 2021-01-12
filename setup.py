@@ -154,6 +154,7 @@ if not os.environ.get("MOCK_DOCS", False):
             depends=[
                 "pennylane_lightning/src/lightning_qubit.hpp",
                 "pennylane_lightning/src/operations.hpp",
+                "pennylane_lightning/src/typedefs.hpp",
             ],
             include_dirs=include_dirs,
             language="c++",
