@@ -51,6 +51,7 @@ using State_16q = Tensor<complex<double>, 16>;
 * @param ops a vector of operation names in the order they should be applied
 * @param wires a vector of wires corresponding to the operations specified in ops
 * @param params a vector of parameters corresponding to the operations specified in ops
+* @param qubits the number of qubits of the statevector
 * @return the transformed statevector
 */
 VectorXcd apply (
@@ -123,6 +124,16 @@ VectorXcd apply (
     return evolved_state;
 }
 
+VectorXcd probs (
+    Ref<VectorXcd> state,
+    vector<vector<int>> wires,
+    const int qubits
+) {
+    for(int i=0; i<state.; ++i){
+
+    }
+
+}
 
 PYBIND11_MODULE(lightning_qubit_ops, m)
 {
