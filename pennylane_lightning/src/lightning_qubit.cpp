@@ -128,4 +128,5 @@ PYBIND11_MODULE(lightning_qubit_ops, m)
 {
     m.doc() = "lightning.qubit apply() method using Eigen";
     m.def("apply", apply, "lightning.qubit apply() method");
+    m.def("probs", probs, "lightning.qubit probs() method");
 }
