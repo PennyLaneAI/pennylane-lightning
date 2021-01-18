@@ -23,26 +23,7 @@
 
 #include <iostream>
 #include <cmath>
-#include <Eigen/Dense>
-#include <unsupported/Eigen/CXX11/Tensor>
-
-using Eigen::MatrixXd;
-using Eigen::MatrixXcd;
-using Eigen::VectorXcd;
-using Eigen::Tensor;
-
-using State_1q = Eigen::Tensor<std::complex<double>, 1>;
-using State_2q = Eigen::Tensor<std::complex<double>, 2>;
-using State_3q = Eigen::Tensor<std::complex<double>, 3>;
-
-using Gate_1q = Eigen::Tensor<std::complex<double>, 2>;
-using Gate_2q = Eigen::Tensor<std::complex<double>, 4>;
-using Gate_3q = Eigen::Tensor<std::complex<double>, 6>;
-
-using Pairs = Eigen::IndexPair<int>;
-using Pairs_1q = Eigen::array<Pairs, 1>;
-using Pairs_2q = Eigen::array<Pairs, 2>;
-
+#include "typedefs.hpp"
 
 const double SQRT_2 = sqrt(2);
 const std::complex<double> IMAG(0, 1);
@@ -53,8 +34,8 @@ const std::complex<double> NEGATIVE_IMAG(0, -1);
 *
 * @return the identity tensor
 */
-Gate_1q Identity() {
-    Gate_1q X(2, 2);
+Gate_Xq<1> Identity() {
+    Gate_Xq<1> X(2, 2);
     X.setValues({{1, 0}, {0, 1}});
     return X;
 }
@@ -64,8 +45,8 @@ Gate_1q Identity() {
 *
 * @return the X tensor
 */
-Gate_1q X() {
-    Gate_1q X(2, 2);
+Gate_Xq<1> X() {
+    Gate_Xq<1> X(2, 2);
     X.setValues({{0, 1}, {1, 0}});
     return X;
 }
@@ -75,8 +56,8 @@ Gate_1q X() {
 *
 * @return the Y tensor
 */
-Gate_1q Y() {
-    Gate_1q Y(2, 2);
+Gate_Xq<1> Y() {
+    Gate_Xq<1> Y(2, 2);
     Y.setValues({{0, NEGATIVE_IMAG}, {IMAG, 0}});
     return Y;
 }
@@ -86,8 +67,8 @@ Gate_1q Y() {
 *
 * @return the Z tensor
 */
-Gate_1q Z() {
-    Gate_1q Z(2, 2);
+Gate_Xq<1> Z() {
+    Gate_Xq<1> Z(2, 2);
     Z.setValues({{1, 0}, {0, -1}});
     return Z;
 }
@@ -97,8 +78,8 @@ Gate_1q Z() {
 *
 * @return the H tensor
 */
-Gate_1q H() {
-    Gate_1q H(2, 2);
+Gate_Xq<1> H() {
+    Gate_Xq<1> H(2, 2);
     H.setValues({{1/SQRT_2, 1/SQRT_2}, {1/SQRT_2, -1/SQRT_2}});
     return H;
 }
@@ -108,8 +89,8 @@ Gate_1q H() {
 *
 * @return the S tensor
 */
-Gate_1q S() {
-    Gate_1q S(2, 2);
+Gate_Xq<1> S() {
+    Gate_Xq<1> S(2, 2);
     S.setValues({{1, 0}, {0, IMAG}});
     return S;
 }
@@ -119,8 +100,8 @@ Gate_1q S() {
 *
 * @return the T tensor
 */
-Gate_1q T() {
-    Gate_1q T(2, 2);
+Gate_Xq<1> T() {
+    Gate_Xq<1> T(2, 2);
 
     const std::complex<double> exponent(0, M_PI/4);
     T.setValues({{1, 0}, {0, std::pow(M_E, exponent)}});
@@ -133,8 +114,8 @@ Gate_1q T() {
 * @param parameter the rotation angle
 * @return the RX tensor
 */
-Gate_1q RX(const double& parameter) {
-    Gate_1q RX(2, 2);
+Gate_Xq<1> RX(const double& parameter) {
+    Gate_Xq<1> RX(2, 2);
 
     const std::complex<double> c (std::cos(parameter / 2), 0);
     const std::complex<double> js (0, std::sin(-parameter / 2));
@@ -149,8 +130,8 @@ Gate_1q RX(const double& parameter) {
 * @param parameter the rotation angle
 * @return the RY tensor
 */
-Gate_1q RY(const double& parameter) {
-    Gate_1q RY(2, 2);
+Gate_Xq<1> RY(const double& parameter) {
+    Gate_Xq<1> RY(2, 2);
 
     const double c = std::cos(parameter / 2);
     const double s = std::sin(parameter / 2);
@@ -165,8 +146,8 @@ Gate_1q RY(const double& parameter) {
 * @param parameter the rotation angle
 * @return the RZ tensor
 */
-Gate_1q RZ(const double& parameter) {
-    Gate_1q RZ(2, 2);
+Gate_Xq<1> RZ(const double& parameter) {
+    Gate_Xq<1> RZ(2, 2);
 
     const std::complex<double> exponent(0, -parameter/2);
     const std::complex<double> exponent_second(0, parameter/2);
@@ -183,8 +164,8 @@ Gate_1q RZ(const double& parameter) {
 * @param parameter the phase shift
 * @return the phase-shift tensor
 */
-Gate_1q PhaseShift(const double& parameter) {
-    Gate_1q PhaseShift(2, 2);
+Gate_Xq<1> PhaseShift(const double& parameter) {
+    Gate_Xq<1> PhaseShift(2, 2);
 
     const std::complex<double> exponent(0, parameter);
     const std::complex<double> shift = std::pow(M_E, exponent);
@@ -204,8 +185,8 @@ Gate_1q PhaseShift(const double& parameter) {
 * @param omega the third rotation angle
 * @return the rotation tensor
 */
-Gate_1q Rot(const double& phi, const double& theta, const double& omega) {
-    Gate_1q Rot(2, 2);
+Gate_Xq<1> Rot(const double& phi, const double& theta, const double& omega) {
+    Gate_Xq<1> Rot(2, 2);
 
     const std::complex<double> e00(0, (-phi - omega)/2);
     const std::complex<double> e10(0, (-phi + omega)/2);
@@ -230,8 +211,8 @@ Gate_1q Rot(const double& phi, const double& theta, const double& omega) {
 *
 * @return the CNOT tensor
 */
-Gate_2q CNOT() {
-    Gate_2q CNOT(2,2,2,2);
+Gate_Xq<2> CNOT() {
+    Gate_Xq<2> CNOT(2,2,2,2);
     CNOT.setValues({{{{1, 0},{0, 0}},{{0, 1},{0, 0}}},{{{0, 0},{0, 1}},{{0, 0},{1, 0}}}});
     return CNOT;
 }
@@ -241,8 +222,8 @@ Gate_2q CNOT() {
 *
 * @return the SWAP tensor
 */
-Gate_2q SWAP() {
-    Gate_2q SWAP(2,2,2,2);
+Gate_Xq<2> SWAP() {
+    Gate_Xq<2> SWAP(2,2,2,2);
     SWAP.setValues({{{{1, 0},{0, 0}},{{0, 0},{1, 0}}},{{{0, 1},{0, 0}},{{0, 0},{0, 1}}}});
     return SWAP;
 }
@@ -252,8 +233,8 @@ Gate_2q SWAP() {
 *
 * @return the CZ tensor
 */
-Gate_2q CZ() {
-    Gate_2q CZ(2,2,2,2);
+Gate_Xq<2> CZ() {
+    Gate_Xq<2> CZ(2,2,2,2);
     CZ.setValues({{{{1, 0},{0, 0}},{{0, 1},{0, 0}}},{{{0, 0},{1, 0}},{{0, 0},{0, -1}}}});
     return CZ;
 }
@@ -263,8 +244,8 @@ Gate_2q CZ() {
 *
 * @return the Toffoli tensor
 */
-Gate_3q Toffoli() {
-    Gate_3q Toffoli(2,2,2,2,2,2);
+Gate_Xq<3> Toffoli() {
+    Gate_Xq<3> Toffoli(2,2,2,2,2,2);
     Toffoli.setValues({{{{{{1, 0},{0, 0}},{{0, 0},{0, 0}}},{{{0, 1},{0, 0}},{{0, 0},{0, 0}}}},
             {{{{0, 0},{1, 0}},{{0, 0},{0, 0}}},{{{0, 0},{0, 1}},{{0, 0},{0, 0}}}}
         },
@@ -279,8 +260,8 @@ Gate_3q Toffoli() {
 *
 * @return the CSWAP tensor
 */
-Gate_3q CSWAP() {
-    Gate_3q CSWAP(2,2,2,2,2,2);
+Gate_Xq<3> CSWAP() {
+    Gate_Xq<3> CSWAP(2,2,2,2,2,2);
     CSWAP.setValues({{{{{{1, 0},{0, 0}},{{0, 0},{0, 0}}},{{{0, 1},{0, 0}},{{0, 0},{0, 0}}}},
             {{{{0, 0},{1, 0}},{{0, 0},{0, 0}}},{{{0, 0},{0, 1}},{{0, 0},{0, 0}}}}
         },
@@ -296,8 +277,8 @@ Gate_3q CSWAP() {
 * @param parameter the rotation angle
 * @return the CRX tensor
 */
-Gate_2q CRX(const double& parameter) {
-    Gate_2q CRX(2, 2, 2, 2);
+Gate_Xq<2> CRX(const double& parameter) {
+    Gate_Xq<2> CRX(2, 2, 2, 2);
 
     const std::complex<double> c (std::cos(parameter / 2), 0);
     const std::complex<double> js (0, std::sin(-parameter / 2));
@@ -312,8 +293,8 @@ Gate_2q CRX(const double& parameter) {
 * @param parameter the rotation angle
 * @return the CRY tensor
 */
-Gate_2q CRY(const double& parameter) {
-    Gate_2q CRY(2, 2, 2, 2);
+Gate_Xq<2> CRY(const double& parameter) {
+    Gate_Xq<2> CRY(2, 2, 2, 2);
 
     const double c = std::cos(parameter / 2);
     const double s = std::sin(parameter / 2);
@@ -328,8 +309,8 @@ Gate_2q CRY(const double& parameter) {
 * @param parameter the rotation angle
 * @return the CRZ tensor
 */
-Gate_2q CRZ(const double& parameter) {
-    Gate_2q CRZ(2, 2, 2, 2);
+Gate_Xq<2> CRZ(const double& parameter) {
+    Gate_Xq<2> CRZ(2, 2, 2, 2);
 
     const std::complex<double> exponent(0, -parameter/2);
     const std::complex<double> exponent_second(0, parameter/2);
@@ -352,8 +333,8 @@ Gate_2q CRZ(const double& parameter) {
 * @param omega the third rotation angle
 * @return the controlled rotation tensor
 */
-Gate_2q CRot(const double& phi, const double& theta, const double& omega) {
-    Gate_2q CRot(2,2,2,2);
+Gate_Xq<2> CRot(const double& phi, const double& theta, const double& omega) {
+    Gate_Xq<2> CRot(2,2,2,2);
 
     const std::complex<double> e00(0, (-phi - omega)/2);
     const std::complex<double> e10(0, (-phi + omega)/2);
@@ -374,20 +355,8 @@ Gate_2q CRot(const double& phi, const double& theta, const double& omega) {
     return CRot;
 }
 
-
-// Creating aliases based on the function signatures of each operation
-typedef Gate_1q (*pfunc_1q)();
-typedef Gate_1q (*pfunc_1q_one_param)(const double&);
-typedef Gate_1q (*pfunc_1q_three_params)(const double&, const double&, const double&);
-
-typedef Gate_2q (*pfunc_2q)();
-typedef Gate_2q (*pfunc_2q_one_param)(const double&);
-typedef Gate_2q (*pfunc_2q_three_params)(const double&, const double&, const double&);
-
-typedef Gate_3q (*pfunc_3q)();
-
 // Defining the operation maps
-const std::map<std::string, pfunc_1q> OneQubitOps = {
+const std::map<std::string, pfunc_Xq<1>> OneQubitOps = {
     {"Identity", Identity},
     {"PauliX", X},
     {"PauliY", Y},
@@ -397,35 +366,35 @@ const std::map<std::string, pfunc_1q> OneQubitOps = {
     {"T", T}
 };
 
-const std::map<std::string, pfunc_1q_one_param> OneQubitOpsOneParam = {
+const std::map<std::string, pfunc_Xq_one_param<1>> OneQubitOpsOneParam = {
     {"RX", RX},
     {"RY", RY},
     {"RZ", RZ},
     {"PhaseShift", PhaseShift}
 };
 
-const std::map<std::string, pfunc_1q_three_params> OneQubitOpsThreeParams = {
+const std::map<std::string, pfunc_Xq_three_params<1>> OneQubitOpsThreeParams = {
     {"Rot", Rot}
 };
 
 
-const std::map<std::string, pfunc_2q> TwoQubitOps = {
+const std::map<std::string, pfunc_Xq<2>> TwoQubitOps = {
     {"CNOT", CNOT},
     {"SWAP", SWAP},
     {"CZ", CZ}
 };
 
-const std::map<std::string, pfunc_2q_one_param> TwoQubitOpsOneParam = {
+const std::map<std::string, pfunc_Xq_one_param<2>> TwoQubitOpsOneParam = {
     {"CRX", CRX},
     {"CRY", CRY},
     {"CRZ", CRZ}
 };
 
-const std::map<std::string, pfunc_2q_three_params> TwoQubitOpsThreeParams = {
+const std::map<std::string, pfunc_Xq_three_params<2>> TwoQubitOpsThreeParams = {
     {"CRot", CRot}
 };
 
-const std::map<std::string, pfunc_3q> ThreeQubitOps = {
+const std::map<std::string, pfunc_Xq<3>> ThreeQubitOps = {
     {"Toffoli", Toffoli},
     {"CSWAP", CSWAP}
 };

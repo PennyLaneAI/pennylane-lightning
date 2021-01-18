@@ -96,7 +96,7 @@ Testing the C++ code requires the `GoogleTest <https://github.com/google/googlet
 
 .. installation-end-inclusion-marker-do-not-remove
 
-Please refer to the `plugin documentation <https://pennylanelightning.readthedocs.io/>`_ as
+Please refer to the `plugin documentation <https://pennylane-lightning.readthedocs.io/>`_ as
 well as to the `PennyLane documentation <https://pennylane.readthedocs.io/>`_ for further reference.
 
 Contributing
