@@ -345,6 +345,23 @@ VectorXcd apply_ops_2q(
     return Map<VectorXcd> (shuffled_evolved_tensor.data(), shuffled_evolved_tensor.size(), 1);
 }
 
+
+template <class State, typename... Shape>
+VectorXcd get_marginal_probs (
+    Ref<VectorXcd> probs,
+    const vector<vector<int>> & wires,
+    Shape... shape
+) {
+
+    State probs_tensor = TensorMap<State>(probs.data(), shape...);
+
+    /* dimension to reduce */
+    Eigen::array<int, 1> dims({0});
+    State_Xq<0> marginal_probs_tensor = probs_tensor.sum(dims);
+    VectorXcd marginal_probs = Map<VectorXcd> (marginal_probs_tensor.data(), marginal_probs_tensor.size(), 1);
+    return marginal_probs;
+}
+
 // Template classes for a generic interface for qubit operations
 
 /**
@@ -367,6 +384,15 @@ public:
     {
         return QubitOperationsGenerator<Dim, ValueIdx - 1>::apply(state, ops, wires, params, 2, shape...);
     }
+
+    template<typename... Shape>
+    static inline VectorXcd marginal_probs (
+        Ref<VectorXcd> probs,
+        const vector<int>& wires,
+        Shape... shape)
+    {
+        return QubitOperationsGenerator<Dim, ValueIdx - 1>::marginal_probs(probs, wires, 2, shape...);
+    }
 };
 
 /**
@@ -387,6 +413,15 @@ public:
         Shape... shape)
     {
         return apply_ops<State_Xq<Dim>>(state, ops, wires, params, shape...);
+    }
+
+    template<typename... Shape>
+    static inline VectorXcd marginal_probs (
+        Ref<VectorXcd> probs,
+        const vector<int>& wires,
+        Shape... shape)
+    {
+        return get_marginal_probs<State_Xq<Dim>>(probs, wires, shape...);
     }
 };
 
@@ -409,6 +444,15 @@ public:
     {
         return apply_ops_1q(state, ops, params);
     }
+
+    template<typename... Shape>
+    static inline VectorXcd marginal_probs (
+        Ref<VectorXcd> probs,
+        const vector<int>& wires,
+        Shape... shape)
+    {
+        return get_marginal_probs<State_Xq<1>>(probs, wires, shape...);
+    }
 };
 
 /**
@@ -429,6 +473,15 @@ public:
         Shape... shape)
     {
         return apply_ops_2q(state, ops, wires, params);
+    }
+
+    template<typename... Shape>
+    static inline VectorXcd marginal_probs (
+        Ref<VectorXcd> probs,
+        const vector<int>& wires,
+        Shape... shape)
+    {
+        return get_marginal_probs<State_Xq<2>>(probs, wires, shape...);
     }
 };
 
