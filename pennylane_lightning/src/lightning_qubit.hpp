@@ -299,13 +299,14 @@ public:
         return QubitOperationsGenerator<Dim, ValueIdx - 1>::apply(state, ops, wires, params, 2, shape...);
     }
 
-    template<typename... Shape>
-    static inline VectorXcd marginal_probs (
-        Ref<VectorXcd> probs,
+    template<int M, typename... Shape>
+    static inline VectorXcd marginal_probs(
+        Ref<VectorXcd> state,
         const vector<int>& wires,
-        Shape... shape)
+        Shape... shape
+        )
     {
-        return QubitOperationsGenerator<Dim, ValueIdx - 1>::marginal_probs(probs, wires, 2, shape...);
+        return QubitOperationsGenerator<Dim, ValueIdx - 1>::template marginal_probs<M>(state, wires, 2, shape...);
     }
 };
 
@@ -329,13 +330,14 @@ public:
         return apply_ops<State_Xq<Dim>>(state, ops, wires, params, shape...);
     }
 
-    template<typename... Shape>
-    static inline VectorXcd marginal_probs (
-        Ref<VectorXcd> probs,
+    template<int M, typename... Shape>
+    static inline VectorXcd marginal_probs(
+        Ref<VectorXcd> state,
         const vector<int>& wires,
-        Shape... shape)
+        Shape... shape
+        )
     {
-        return get_marginal_probs<State_Xq<Dim>>(probs, wires, shape...);
+        return compute_marginal<Dim, M>(state, wires, shape...);
     }
 };
 
@@ -359,13 +361,14 @@ public:
         return apply_ops_1q(state, ops, params);
     }
 
-    template<typename... Shape>
-    static inline VectorXcd marginal_probs (
-        Ref<VectorXcd> probs,
+    template<int M, typename... Shape>
+    static inline VectorXcd marginal_probs(
+        Ref<VectorXcd> state,
         const vector<int>& wires,
-        Shape... shape)
+        Shape... shape
+        )
     {
-        return get_marginal_probs<State_Xq<1>>(probs, wires, shape...);
+        return QubitOperationsGenerator<1, ValueIdx - 1>::template marginal_probs<M>(state, wires, 2, shape...);
     }
 };
 
@@ -389,13 +392,14 @@ public:
         return apply_ops_2q(state, ops, wires, params);
     }
 
-    template<typename... Shape>
-    static inline VectorXcd marginal_probs (
-        Ref<VectorXcd> probs,
+    template<int M, typename... Shape>
+    static inline VectorXcd marginal_probs(
+        Ref<VectorXcd> state,
         const vector<int>& wires,
-        Shape... shape)
+        Shape... shape
+        )
     {
-        return get_marginal_probs<State_Xq<2>>(probs, wires, shape...);
+        return QubitOperationsGenerator<2, ValueIdx - 1>::template marginal_probs<M>(state, wires, 2, shape...);
     }
 };
 
@@ -416,5 +420,14 @@ public:
         const vector<vector<float>>& params)
     {
         return QubitOperationsGenerator<Dim, Dim>::apply(state, ops, wires, params);
+    }
+
+    template<int M, typename... Shape>
+    static inline VectorXcd marginal_probs(
+        Ref<VectorXcd> state,
+        const vector<int>& wires
+        )
+    {
+        return QubitOperationsGenerator<Dim, Dim>::template marginal_probs<M>(state, wires);
     }
 };
