@@ -18,6 +18,7 @@
 
 #include "../operations.hpp"
 #include "../lightning_qubit.hpp"
+#include "../statistics.hpp"
 
 const double tol = 1.0e-6f;
 
@@ -30,11 +31,27 @@ Eigen::VectorXcd vectorize(State state) {
     return out;
 }
 
-namespace marginal_probs {
+namespace probs_unit {
 
 TEST(Marginal, Basic) {
 
-    EXPECT_TRUE(true);
+    const int qubits = 3;
+    int len = int(std::pow(2, qubits));
+    VectorXcd v(len);
+    v(0) = 0;
+    v(1) = 0;
+    v(2) = 0.5;
+    v(3) = 0;
+    v(4) = 0;
+    v(5) = 0;
+    v(6) = 0.5;
+    v(7) = 0;
+
+    const vector<int> wires = {2,1};
+    const int M = 4;
+
+    // M > qubits so we expect an error
+    EXPECT_THROW(marginal_probs(v, qubits, wires, M), const char*); 
 }
 
-}  // namespace marginal_probs
+}  // namespace probs_unit

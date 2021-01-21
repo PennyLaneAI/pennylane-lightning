@@ -21,6 +21,9 @@ template<int X>
 using State_Xq = Eigen::Tensor<std::complex<double>, X>;
 
 template<int X>
+using Array_Xq = Eigen::array<int, X>;
+
+template<int X>
 using Gate_Xq = Eigen::Tensor<std::complex<double>, 2 * X>;
 
 using Pairs = Eigen::IndexPair<int>;

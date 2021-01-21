@@ -19,9 +19,9 @@
  */
 #pragma once
 
-template<int X>
-using Array_Xq = Eigen::array<int, X>;
+#include "statistics.hpp"
 
+using Eigen::Matrix;
 
 std::unordered_set<int> get_inactive_wires(const vector<int>& wires, const int Dim){
     std::unordered_set<int> inactive_wires;
@@ -52,24 +52,7 @@ vector<int> map_wires(const vector<int>& wires, const int num_qubits){
     return mapped_wires;
 }
 
-template <int Dim, int M, typename... Shape>
-VectorXcd compute_marginal(Ref<VectorXcd> state, const vector<int>& wires, Shape... shape){
 
-        vector<int> mapped_wires = map_wires(wires, Dim);
-
-        // Determine which subsystems are to be summed over
-        std::unordered_set<int> inactive_wires = get_inactive_wires(mapped_wires, Dim);
-
-        const int LenInactiveWires = Dim-M;
-        Array_Xq<LenInactiveWires> dims;
-        std::copy_n(std::make_move_iterator(inactive_wires.begin()), LenInactiveWires, dims.begin());
-
-        // Faster not to store the intermediate tensor but compute with ref
-        State_Xq<M> marginal_probs_tensor = TensorMap<State_Xq<Dim>>(state.data(), shape...).sum(dims);
-
-        VectorXcd result = Map<VectorXcd> (marginal_probs_tensor.data(), marginal_probs_tensor.size(), 1);
-        return result;
-}
 
 template<int Dim>
 VectorXcd marginal_probs_aux(Ref<VectorXcd> state, const vector<int> &wires, 

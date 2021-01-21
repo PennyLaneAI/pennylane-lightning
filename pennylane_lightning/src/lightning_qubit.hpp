@@ -276,6 +276,9 @@ VectorXcd get_marginal_probs (
     return marginal_probs;
 }
 
+template <int Dim, int M, typename... Shape>
+VectorXcd compute_marginal(Ref<VectorXcd> state, const vector<int>& wires, Shape... shape);
+
 // Template classes for a generic interface for qubit operations
 
 /**

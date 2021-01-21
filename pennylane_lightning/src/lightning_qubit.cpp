@@ -83,26 +83,6 @@ VectorXcd apply (
     }
 }
 
-VectorXcd marginal_probs (
-    Ref<VectorXcd> probs,
-    vector<int> wires,
-    const int qubits
-) {
-    switch (qubits) {
-    case 1: return QubitOperations<1>::marginal_probs(probs, wires);
-    case 2: return QubitOperations<2>::marginal_probs(probs, wires);
-    case 3: return QubitOperations<3>::marginal_probs(probs, wires);
-    case 4: return QubitOperations<4>::marginal_probs(probs, wires);
-    case 5: return QubitOperations<5>::marginal_probs(probs, wires);
-    }
-}
-
-VectorXcd all_probs (
-    Ref<VectorXcd> state
-) {
-    return (state * state.conjugate().transpose()).diagonal();
-}
-
 vector<int> calculate_tensor_indices(const vector<int> &wires, const vector<int> &tensor_indices) {
     vector<int> new_tensor_indices = wires;
     int n_indices = tensor_indices.size();
