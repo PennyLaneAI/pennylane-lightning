@@ -99,6 +99,210 @@ VectorXcd apply (
     }
 }
 
+vector<int> calculate_tensor_indices(const vector<int> &wires, const vector<int> &tensor_indices) {
+    vector<int> new_tensor_indices = wires;
+    int n_indices = tensor_indices.size();
+    for (int j = 0; j < n_indices; j++) {
+        if (count(wires.begin(), wires.end(), tensor_indices[j]) == 0) {
+            new_tensor_indices.push_back(tensor_indices[j]);
+        }
+    }
+    return new_tensor_indices;
+}
+
+Gate_Xq<1> get_gate_1q(const string &gate_name, const vector<float> &params) {
+    Gate_Xq<1> op;
+
+    if (params.empty()) {
+        pfunc_Xq<1> f = OneQubitOps.at(gate_name);
+        op = (*f)();
+    }
+    else if (params.size() == 1) {
+        pfunc_Xq_one_param<1> f = OneQubitOpsOneParam.at(gate_name);
+        op = (*f)(params[0]);
+    }
+    else if (params.size() == 3) {
+        pfunc_Xq_three_params<1> f = OneQubitOpsThreeParams.at(gate_name);
+        op = (*f)(params[0], params[1], params[2]);
+    }
+    return op;
+}
+
+Gate_Xq<2> get_gate_2q(const string &gate_name, const vector<float> &params) {
+    Gate_Xq<2> op;
+
+    if (params.empty()) {
+        pfunc_Xq<2> f = TwoQubitOps.at(gate_name);
+        op = (*f)();
+    }
+    else if (params.size() == 1) {
+        pfunc_Xq_one_param<2> f = TwoQubitOpsOneParam.at(gate_name);
+        op = (*f)(params[0]);
+    }
+    else if (params.size() == 3) {
+        pfunc_Xq_three_params<2> f = TwoQubitOpsThreeParams.at(gate_name);
+        op = (*f)(params[0], params[1], params[2]);
+    }
+    return op;
+}
+
+Gate_Xq<3> get_gate_3q(const string &gate_name) {
+    Gate_Xq<3> op;
+    pfunc_Xq<3> f = ThreeQubitOps.at(gate_name);
+    op = (*f)();
+    return op;
+}
+
+vector<int> calculate_qubit_positions(const vector<int> &tensor_indices) {
+    vector<int> idx(tensor_indices.size());
+    std::iota(idx.begin(), idx.end(), 0);
+    stable_sort(idx.begin(), idx.end(), [&tensor_indices](size_t i1, size_t i2) {
+        return tensor_indices[i1] < tensor_indices[i2];
+    });
+    return idx;
+}
+
+template <class State>
+State contract_1q_op(
+    const State &state, const string &op_string, const vector<int> &indices, const vector<float> &p)
+{
+    Gate_Xq<1> op_1q = get_gate_1q(op_string, p);
+    Pairs_Xq<1> pairs_1q = {Pairs(1, indices[0])};
+    return op_1q.contract(state, pairs_1q);
+}
+
+template <class State>
+State contract_2q_op(
+    const State &state, const string &op_string, const vector<int> &indices, const vector<float> &p)
+{
+    Gate_Xq<2> op_2q = get_gate_2q(op_string, p);
+    Pairs_Xq<2> pairs_2q = {Pairs(2, indices[0]), Pairs(3, indices[1])};
+    return op_2q.contract(state, pairs_2q);
+}
+
+template <class State>
+State contract_3q_op(const State &state, const string &op_string, const vector<int> &indices) {
+    Gate_Xq<3> op_3q = get_gate_3q(op_string);
+    Pairs_Xq<3> pairs_3q = {Pairs(3, indices[0]), Pairs(4, indices[1]), Pairs(5, indices[2])};
+    return op_3q.contract(state, pairs_3q);
+}
+
+template <class State, typename... Shape>
+VectorXcd apply_ops(
+    Ref<VectorXcd> state,
+    const vector<string> & ops,
+    const vector<vector<int>> & wires,
+    const vector<vector<float>> &params,
+    Shape... shape
+) {
+    State evolved_tensor = TensorMap<State>(state.data(), shape...);
+    const int qubits = log2(evolved_tensor.size());
+
+    vector<int> tensor_indices(qubits);
+    std::iota(std::begin(tensor_indices), std::end(tensor_indices), 0);
+    vector<int> qubit_positions(qubits);
+    std::iota(std::begin(qubit_positions), std::end(qubit_positions), 0);
+
+    int num_ops = ops.size();
+
+    for (int i = 0; i < num_ops; i++) {
+        // Load operation string and corresponding wires and parameters
+        string op_string = ops[i];
+        vector<int> w = wires[i];
+        int num_wires = w.size();
+        vector<float> p = params[i];
+        State tensor_contracted;
+
+        vector<int> wires_to_contract(w.size());
+        for (int j = 0; j < num_wires; j++) {
+            wires_to_contract[j] = qubit_positions[w[j]];
+        }
+        tensor_indices = calculate_tensor_indices(w, tensor_indices);
+        qubit_positions = calculate_qubit_positions(tensor_indices);
+
+        if (w.size() == 1) {
+            tensor_contracted = contract_1q_op<State> (evolved_tensor, op_string, wires_to_contract, p);
+        }
+        else if (w.size() == 2) {
+            tensor_contracted = contract_2q_op<State> (evolved_tensor, op_string, wires_to_contract, p);
+        }
+        else if (w.size() == 3) {
+            tensor_contracted = contract_3q_op<State> (evolved_tensor, op_string, wires_to_contract);
+        }
+        evolved_tensor = tensor_contracted;
+    }
+    State shuffled_evolved_tensor = evolved_tensor.shuffle(qubit_positions);
+
+    return Map<VectorXcd> (shuffled_evolved_tensor.data(), shuffled_evolved_tensor.size(), 1);
+}
+
+VectorXcd apply_ops_1q(
+    Ref<VectorXcd> state,
+    vector<string> ops,
+    vector<vector<float>> params
+) {
+    VectorXcd evolved_state = state;
+
+    int num_ops = ops.size();
+
+    for (int i = 0; i < num_ops; i++) {
+        // Load operation string and corresponding wires and parameters
+        string op_string = ops[i];
+        vector<float> p = params[i];
+
+        Gate_Xq<1> gate = get_gate_1q(op_string, p);
+        MatrixXcd gate_matrix = Map<MatrixXcd> (gate.data(), 2, 2);
+
+        evolved_state = gate_matrix * evolved_state;
+    }
+
+    return evolved_state;
+}
+
+VectorXcd apply_ops_2q(
+    Ref<VectorXcd> state,
+    const vector<string>& ops,
+    const vector<vector<int>>& wires,
+    const vector<vector<float>>& params
+) {
+    State_Xq<2> evolved_tensor = TensorMap<State_Xq<2>>(state.data(), 2, 2);
+    const int qubits = log2(evolved_tensor.size());
+
+    vector<int> tensor_indices(qubits);
+    std::iota(std::begin(tensor_indices), std::end(tensor_indices), 0);
+    vector<int> qubit_positions(qubits);
+    std::iota(std::begin(qubit_positions), std::end(qubit_positions), 0);
+
+    int num_ops = ops.size();
+
+    for (int i = 0; i < num_ops; i++) {
+        // Load operation string and corresponding wires and parameters
+        string op_string = ops[i];
+        vector<int> w = wires[i];
+        int num_wires = w.size();
+        vector<float> p = params[i];
+        State_Xq<2> tensor_contracted;
+
+        vector<int> wires_to_contract(w.size());
+        for (int j = 0; j < num_wires; j++) {
+            wires_to_contract[j] = qubit_positions[w[j]];
+        }
+        tensor_indices = calculate_tensor_indices(w, tensor_indices);
+        qubit_positions = calculate_qubit_positions(tensor_indices);
+
+        if (w.size() == 1) {
+            tensor_contracted = contract_1q_op<State_Xq<2>> (evolved_tensor, op_string, wires_to_contract, p);
+        }
+        else if (w.size() == 2) {
+            tensor_contracted = contract_2q_op<State_Xq<2>> (evolved_tensor, op_string, wires_to_contract, p);
+        }
+        evolved_tensor = tensor_contracted;
+    }
+    State_Xq<2> shuffled_evolved_tensor = evolved_tensor.shuffle(qubit_positions);
+
+    return Map<VectorXcd> (shuffled_evolved_tensor.data(), shuffled_evolved_tensor.size(), 1);
+}
+
 
 PYBIND11_MODULE(lightning_qubit_ops, m)
 {

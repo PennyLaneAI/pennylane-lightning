@@ -45,16 +45,7 @@ const double SQRT2INV = 0.7071067811865475;
 * @param tensor_indices the qubit-labelled indices of the state tensor before contraction
 * @return the resultant indices
 */
-vector<int> calculate_tensor_indices(const vector<int> &wires, const vector<int> &tensor_indices) {
-    vector<int> new_tensor_indices = wires;
-    int n_indices = tensor_indices.size();
-    for (int j = 0; j < n_indices; j++) {
-        if (count(wires.begin(), wires.end(), tensor_indices[j]) == 0) {
-            new_tensor_indices.push_back(tensor_indices[j]);
-        }
-    }
-    return new_tensor_indices;
-}
+vector<int> calculate_tensor_indices(const vector<int> &wires, const vector<int> &tensor_indices);
 
 /**
 * Returns the tensor representation of a one-qubit gate given its name and parameters.
@@ -63,23 +54,7 @@ vector<int> calculate_tensor_indices(const vector<int> &wires, const vector<int>
 * @param params the parameters of the gate
 * @return the gate as a tensor
 */
-Gate_Xq<1> get_gate_1q(const string &gate_name, const vector<float> &params) {
-    Gate_Xq<1> op;
-
-    if (params.empty()) {
-        pfunc_Xq<1> f = OneQubitOps.at(gate_name);
-        op = (*f)();
-    }
-    else if (params.size() == 1) {
-        pfunc_Xq_one_param<1> f = OneQubitOpsOneParam.at(gate_name);
-        op = (*f)(params[0]);
-    }
-    else if (params.size() == 3) {
-        pfunc_Xq_three_params<1> f = OneQubitOpsThreeParams.at(gate_name);
-        op = (*f)(params[0], params[1], params[2]);
-    }
-    return op;
-}
+Gate_Xq<1> get_gate_1q(const string &gate_name, const vector<float> &params);
 
 /**
 * Returns the tensor representation of a two-qubit gate given its name and parameters.
@@ -88,23 +63,7 @@ Gate_Xq<1> get_gate_1q(const string &gate_name, const vector<float> &params) {
 * @param params the parameters of the gate
 * @return the gate as a tensor
 */
-Gate_Xq<2> get_gate_2q(const string &gate_name, const vector<float> &params) {
-    Gate_Xq<2> op;
-
-    if (params.empty()) {
-        pfunc_Xq<2> f = TwoQubitOps.at(gate_name);
-        op = (*f)();
-    }
-    else if (params.size() == 1) {
-        pfunc_Xq_one_param<2> f = TwoQubitOpsOneParam.at(gate_name);
-        op = (*f)(params[0]);
-    }
-    else if (params.size() == 3) {
-        pfunc_Xq_three_params<2> f = TwoQubitOpsThreeParams.at(gate_name);
-        op = (*f)(params[0], params[1], params[2]);
-    }
-    return op;
-}
+Gate_Xq<2> get_gate_2q(const string &gate_name, const vector<float> &params);
 
 /**
 * Returns the tensor representation of a three-qubit gate given its name and parameters.
@@ -112,12 +71,7 @@ Gate_Xq<2> get_gate_2q(const string &gate_name, const vector<float> &params) {
 * @param gate_name the name of the gate
 * @return the gate as a tensor
 */
-Gate_Xq<3> get_gate_3q(const string &gate_name) {
-    Gate_Xq<3> op;
-    pfunc_Xq<3> f = ThreeQubitOps.at(gate_name);
-    op = (*f)();
-    return op;
-}
+Gate_Xq<3> get_gate_3q(const string &gate_name);
 
 /**
 * Calculate the positions of qubits in the state tensor.
@@ -131,14 +85,7 @@ Gate_Xq<3> get_gate_3q(const string &gate_name) {
 * @param tensor_indices the wire indices of a contracted tensor, calculated using calculate_tensor_indices()
 * @return the resultant indices
 */
-vector<int> calculate_qubit_positions(const vector<int> &tensor_indices) {
-    vector<int> idx(tensor_indices.size());
-    std::iota(idx.begin(), idx.end(), 0);
-    stable_sort(idx.begin(), idx.end(), [&tensor_indices](size_t i1, size_t i2) {
-        return tensor_indices[i1] < tensor_indices[i2];
-    });
-    return idx;
-}
+vector<int> calculate_qubit_positions(const vector<int> &tensor_indices);
 
 /**
 * Contract a one-qubit gate onto a state tensor.
@@ -151,12 +98,7 @@ vector<int> calculate_qubit_positions(const vector<int> &tensor_indices) {
 */
 template <class State>
 State contract_1q_op(
-    const State &state, const string &op_string, const vector<int> &indices, const vector<float> &p)
-{
-    Gate_Xq<1> op_1q = get_gate_1q(op_string, p);
-    Pairs_Xq<1> pairs_1q = {Pairs(1, indices[0])};
-    return op_1q.contract(state, pairs_1q);
-}
+    const State &state, const string &op_string, const vector<int> &indices, const vector<float> &p);
 
 /**
 * Contract a two-qubit gate onto a state tensor.
@@ -169,12 +111,7 @@ State contract_1q_op(
 */
 template <class State>
 State contract_2q_op(
-    const State &state, const string &op_string, const vector<int> &indices, const vector<float> &p)
-{
-    Gate_Xq<2> op_2q = get_gate_2q(op_string, p);
-    Pairs_Xq<2> pairs_2q = {Pairs(2, indices[0]), Pairs(3, indices[1])};
-    return op_2q.contract(state, pairs_2q);
-}
+    const State &state, const string &op_string, const vector<int> &indices, const vector<float> &p);
 
 /**
 * Contract a three-qubit gate onto a state tensor.
@@ -186,11 +123,7 @@ State contract_2q_op(
 * @return the resultant state tensor
 */
 template <class State>
-State contract_3q_op(const State &state, const string &op_string, const vector<int> &indices) {
-    Gate_Xq<3> op_3q = get_gate_3q(op_string);
-    Pairs_Xq<3> pairs_3q = {Pairs(3, indices[0]), Pairs(4, indices[1]), Pairs(5, indices[2])};
-    return op_3q.contract(state, pairs_3q);
-}
+State contract_3q_op(const State &state, const string &op_string, const vector<int> &indices);
 
 /**
 * Applies specified operations onto an input state of three or more qubits.
