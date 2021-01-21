@@ -35,6 +35,26 @@ using std::find;
 const double SQRT2INV = 0.7071067811865475;
 
 /**
+* Applies specified operations onto an input state of an arbitrary number of qubits.
+*
+* Note that only up to 50 qubits are currently supported. This limitation is due to the Eigen
+* Tensor library not supporting dynamically ranked tensors.
+*
+* @param state the multiqubit statevector
+* @param ops a vector of operation names in the order they should be applied
+* @param wires a vector of wires corresponding to the operations specified in ops
+* @param params a vector of parameters corresponding to the operations specified in ops
+* @return the transformed statevector
+*/
+VectorXcd apply (
+    Ref<VectorXcd> state,
+    vector<string> ops,
+    vector<vector<int>> wires,
+    vector<vector<float>> params,
+    const int qubits
+);
+
+/**
 * Calculate the qubit-labelled indices of the state tensor after a contraction by a gate.
 *
 * For example, consider a 4-qubit state tensor T_{0123}. If we apply a gate to qubits 1 and 2, the
@@ -98,7 +118,12 @@ vector<int> calculate_qubit_positions(const vector<int> &tensor_indices);
 */
 template <class State>
 State contract_1q_op(
-    const State &state, const string &op_string, const vector<int> &indices, const vector<float> &p);
+    const State &state, const string &op_string, const vector<int> &indices, const vector<float> &p)
+{
+    Gate_Xq<1> op_1q = get_gate_1q(op_string, p);
+    Pairs_Xq<1> pairs_1q = {Pairs(1, indices[0])};
+    return op_1q.contract(state, pairs_1q);
+}
 
 /**
 * Contract a two-qubit gate onto a state tensor.
@@ -111,7 +136,12 @@ State contract_1q_op(
 */
 template <class State>
 State contract_2q_op(
-    const State &state, const string &op_string, const vector<int> &indices, const vector<float> &p);
+    const State &state, const string &op_string, const vector<int> &indices, const vector<float> &p)
+{
+    Gate_Xq<2> op_2q = get_gate_2q(op_string, p);
+    Pairs_Xq<2> pairs_2q = {Pairs(2, indices[0]), Pairs(3, indices[1])};
+    return op_2q.contract(state, pairs_2q);
+}
 
 /**
 * Contract a three-qubit gate onto a state tensor.
@@ -123,7 +153,11 @@ State contract_2q_op(
 * @return the resultant state tensor
 */
 template <class State>
-State contract_3q_op(const State &state, const string &op_string, const vector<int> &indices);
+State contract_3q_op(const State &state, const string &op_string, const vector<int> &indices) {
+    Gate_Xq<3> op_3q = get_gate_3q(op_string);
+    Pairs_Xq<3> pairs_3q = {Pairs(3, indices[0]), Pairs(4, indices[1]), Pairs(5, indices[2])};
+    return op_3q.contract(state, pairs_3q);
+}
 
 /**
 * Applies specified operations onto an input state of three or more qubits.
@@ -204,24 +238,7 @@ VectorXcd apply_ops_1q(
     Ref<VectorXcd> state,
     vector<string> ops,
     vector<vector<float>> params
-) {
-    VectorXcd evolved_state = state;
-
-    int num_ops = ops.size();
-
-    for (int i = 0; i < num_ops; i++) {
-        // Load operation string and corresponding wires and parameters
-        string op_string = ops[i];
-        vector<float> p = params[i];
-
-        Gate_Xq<1> gate = get_gate_1q(op_string, p);
-        MatrixXcd gate_matrix = Map<MatrixXcd> (gate.data(), 2, 2);
-
-        evolved_state = gate_matrix * evolved_state;
-    }
-
-    return evolved_state;
-}
+);
 
 /**
 * Applies specified operations onto an input state of two qubits.
@@ -239,44 +256,7 @@ VectorXcd apply_ops_2q(
     const vector<string>& ops,
     const vector<vector<int>>& wires,
     const vector<vector<float>>& params
-) {
-    State_Xq<2> evolved_tensor = TensorMap<State_Xq<2>>(state.data(), 2, 2);
-    const int qubits = log2(evolved_tensor.size());
-
-    vector<int> tensor_indices(qubits);
-    std::iota(std::begin(tensor_indices), std::end(tensor_indices), 0);
-    vector<int> qubit_positions(qubits);
-    std::iota(std::begin(qubit_positions), std::end(qubit_positions), 0);
-
-    int num_ops = ops.size();
-
-    for (int i = 0; i < num_ops; i++) {
-        // Load operation string and corresponding wires and parameters
-        string op_string = ops[i];
-        vector<int> w = wires[i];
-        int num_wires = w.size();
-        vector<float> p = params[i];
-        State_Xq<2> tensor_contracted;
-
-        vector<int> wires_to_contract(w.size());
-        for (int j = 0; j < num_wires; j++) {
-            wires_to_contract[j] = qubit_positions[w[j]];
-        }
-        tensor_indices = calculate_tensor_indices(w, tensor_indices);
-        qubit_positions = calculate_qubit_positions(tensor_indices);
-
-        if (w.size() == 1) {
-            tensor_contracted = contract_1q_op<State_Xq<2>> (evolved_tensor, op_string, wires_to_contract, p);
-        }
-        else if (w.size() == 2) {
-            tensor_contracted = contract_2q_op<State_Xq<2>> (evolved_tensor, op_string, wires_to_contract, p);
-        }
-        evolved_tensor = tensor_contracted;
-    }
-    State_Xq<2> shuffled_evolved_tensor = evolved_tensor.shuffle(qubit_positions);
-
-    return Map<VectorXcd> (shuffled_evolved_tensor.data(), shuffled_evolved_tensor.size(), 1);
-}
+);
 
 // Template classes for a generic interface for qubit operations
 

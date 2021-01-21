@@ -23,6 +23,8 @@
 
 #include <iostream>
 #include <cmath>
+#include <map>
+
 #include "typedefs.hpp"
 
 const double SQRT_2 = sqrt(2);
