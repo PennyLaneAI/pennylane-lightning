@@ -262,7 +262,7 @@ VectorXcd apply_ops_2q(
 
 /**
 * Main recursive template to generate multi-qubit operations
-* 
+*
 * @tparam Dim the number of qubits (i.e. tensor rank)
 * @tparam ValueIdx index to be decremented recursively until 0 to generate the dimensions of the tensor
 */
@@ -284,7 +284,7 @@ public:
 
 /**
 * Terminal specialised template for general multi-qubit operations
-* 
+*
 * @tparam Dim the number of qubits (i.e. tensor rank)
 */
 template<int Dim>
@@ -305,7 +305,7 @@ public:
 
 /**
 * Terminal specialised template for single qubit operations
-* 
+*
 * @tparam ValueIdx ignored, but required to specialised the main recursive template
 */
 template<int ValueIdx>
@@ -326,7 +326,7 @@ public:
 
 /**
 * Terminal specialised template for two qubit operations
-* 
+*
 * @tparam ValueIdx ignored, but required to specialised the main recursive template
 */
 template<int ValueIdx>
@@ -347,7 +347,7 @@ public:
 
 /**
 * Generic interface that invokes the generator to generate the desired multi-qubit operation
-* 
+*
 * @tparam Dim the number of qubits (i.e. tensor rank)
 */
 template<int Dim>
