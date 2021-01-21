@@ -20,6 +20,7 @@
 #pragma once
 
 #define _USE_MATH_DEFINES
+#include <numeric>
 #include "operations.hpp"
 
 using Eigen::VectorXcd;
