@@ -13,10 +13,7 @@
 // limitations under the License.
 /**
  * @file
- * Contains the main `apply()` function for applying a set of operations to a multiqubit
- * statevector.
- *
- * Also includes PyBind boilerplate for interfacing with Python.
+ * Includes PyBind boilerplate for interfacing with Python.
  */
 #include "pybind11/stl.h"
 #include "pybind11/eigen.h"

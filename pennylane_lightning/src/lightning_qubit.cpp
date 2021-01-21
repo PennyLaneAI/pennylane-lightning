@@ -13,10 +13,8 @@
 // limitations under the License.
 /**
  * @file
- * Contains the main `apply()` function for applying a set of operations to a multiqubit
- * statevector.
- *
- * Also includes PyBind boilerplate for interfacing with Python.
+ * Contains the main `apply()` and auxiliary functions for applying a set of
+ * operations to a multiqubit statevector.
  */
 #include "lightning_qubit.hpp"
 
