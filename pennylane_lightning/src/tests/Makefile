@@ -21,13 +21,19 @@ LFLAGS = -fopenmp -L$(GOOGLETEST_DIR)/lib -lgtest
 
 all: test
 
+lightning_qubit.o: ../lightning_qubit.cpp
+	$(CC) $^ $(CFLAGS) -c
+
 lightning_unittest.o: lightning_unittest.cpp probs_unittest.cpp
+	$(CC) $^ $(CFLAGS) -c
+
+probs_unittest.o: probs_unittest.cpp
 	$(CC) $^ $(CFLAGS) -c
 
 gtest_main.o: gtest_main.cpp
 	$(CC) $^ $(CFLAGS) -c
 
-cpptests: gtest_main.o lightning_unittest.o probs_unittest.o
+cpptests: gtest_main.o lightning_qubit.o lightning_unittest.o probs_unittest.o
 	$(CC) $^ -o $@ $(LFLAGS)
 
 test: cpptests
