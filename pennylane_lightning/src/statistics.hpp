@@ -48,8 +48,46 @@ VectorXcd compute_marginal(Ref<VectorXcd> state, const vector<int>& wires, Shape
         // Faster not to store the intermediate tensor but compute with ref
         State_Xq<M> marginal_probs_tensor = TensorMap<State_Xq<Dim>>(state.data(), shape...).sum(dims);
 
-        VectorXcd result = Map<VectorXcd> (marginal_probs_tensor.data(), marginal_probs_tensor.size(), 1);
-        return result;
+        VectorXcd probs = Map<VectorXcd> (marginal_probs_tensor.data(), marginal_probs_tensor.size(), 1);
+
+        // Compute the permutation
+        // TODO: organize into separate function
+        const int N = 1<<M;
+        Matrix<int, N, M, RowMajor> mx(N, M);
+        for (short i = 0; i < N; ++i) {
+            for  (int j = 0; j < M; ++j){
+                int bit = (i >> j) & 1;
+
+                // Set the rightmost bit the least significant bit (hence we start
+                // populating from there)
+                mx(i, M-1-j) = bit;
+            }
+        }
+        auto mapped_wires = calculate_qubit_positions(calculate_qubit_positions(wires));
+        Matrix<int, N, M, RowMajor> new_mx(N, M);
+        for(int i=0; i < wires.size(); i++){
+           new_mx.col(i) = mx.col(mapped_wires.at(i));
+        }
+        std::string dec = "";
+        std::vector<int> decimals;
+        for (int i = 0; i < N; i++){
+            for (int j = 0; j < M; j++){
+                dec += std::to_string(new_mx.coeff(i,j));
+                }
+            dec += "\0\n ";
+            char * pEnd;
+            int decimal = strtol(dec.data(), &pEnd, 2);
+            decimals.push_back(decimal);
+            dec = "";
+        }
+
+        VectorXcd permuted_res(N);
+        for (int i = 0; i < N; i++){
+            int perm_index = decimals.at(i);
+
+            permuted_res(i) = probs(perm_index);
+        }
+        return permuted_res;
 }
 
 
