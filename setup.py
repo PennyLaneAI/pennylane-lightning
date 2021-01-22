@@ -152,7 +152,8 @@ if not os.environ.get("MOCK_DOCS", False):
             "lightning_qubit_ops",
             sources=[
                 "pennylane_lightning/src/binding.cpp",
-                "pennylane_lightning/src/lightning_qubit.cpp"
+                "pennylane_lightning/src/lightning_qubit.cpp",
+                "pennylane_lightning/src/operations.cpp"
                 ],
             depends=[
                 "pennylane_lightning/src/lightning_qubit.hpp",

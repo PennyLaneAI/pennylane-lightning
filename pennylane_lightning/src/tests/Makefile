@@ -21,7 +21,7 @@ LFLAGS = -fopenmp -L$(GOOGLETEST_DIR)/lib -lgtest
 
 all: test
 
-lightning_qubit.o: ../lightning_qubit.cpp
+lightning_qubit.o: ../lightning_qubit.cpp ../operations.cpp
 	$(CC) $^ $(CFLAGS) -c
 
 lightning_unittest.o: lightning_unittest.cpp
