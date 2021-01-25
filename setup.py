@@ -75,13 +75,13 @@ class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
 
     c_opts = {
-        "msvc": ["-EHsc", "-O2", "-Wall", "-std:c++11"],
-        "unix": ["-O3", "-Wall", "-fPIC", "-shared", "-fopenmp"],
+        "msvc": ["-EHsc", "-O2", "-W1", "-std:c++11"],
+        "unix": ["-O3", "-W1", "-fPIC", "-shared", "-fopenmp"],
     }
 
     l_opts = {
         "msvc": [],
-        "unix": ["-O3", "-Wall", "-fPIC", "-shared", "-fopenmp"],
+        "unix": ["-O3", "-W1", "-fPIC", "-shared", "-fopenmp"],
     }
 
     if platform.system() == "Darwin":
