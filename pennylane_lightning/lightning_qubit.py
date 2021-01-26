@@ -118,7 +118,12 @@ class LightningQubit(DefaultQubit):
         for i, operation in enumerate(operations):  # State preparation is currently done in Python
             if isinstance(operation, (QubitStateVector, BasisState)):
                 if i == 0:
-                    self._apply_operation(operation)
+
+                    if isinstance(operation, QubitStateVector):
+                        self._apply_state_vector(operation.parameters[0], operation.wires)
+                    else:
+                        self._apply_basis_state(operation.parameters[0], operation.wires)
+
                     del operations[0]
                 else:
                     raise DeviceError(
