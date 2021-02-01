@@ -1,4 +1,4 @@
-# Release 0.13.0-dev
+# Release 0.14.0
 
 ### Improvements
 
@@ -15,7 +15,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Thomas Loke, Antal Száva
+Thomas Loke, Tom Bromley, Josh Izaac, Antal Száva
 
 ---
 
