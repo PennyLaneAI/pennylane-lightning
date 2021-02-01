@@ -1,18 +1,21 @@
 # Release 0.13.0-dev
 
-### New features since last release
-
-### Breaking changes
-
 ### Improvements
 
-### Documentation
+* Extends support from 16 qubits to 50 qubits.
+  [(#52)](https://github.com/PennyLaneAI/pennylane-lightning/pull/52)
 
 ### Bug fixes
+
+* Updates applying basis state preparations to correspond to the
+  changes in `DefaultQubit`.
+  [(#55)](https://github.com/PennyLaneAI/pennylane-lightning/pull/55)
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Thomas Loke, Antal Száva
 
 ---
 
