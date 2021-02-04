@@ -35,10 +35,12 @@ U = np.array(
 U2 = np.array([[0, 1, 1, 1], [1, 0, 1, -1], [1, -1, 0, 1], [1, 1, -1, 0]]) / np.sqrt(3)
 A = np.array([[1.02789352, 1.61296440 - 0.3498192j], [1.61296440 + 0.3498192j, 1.23920938 + 0j]])
 
+
 @pytest.fixture(scope="session")
 def tol():
     """Numerical tolerance for equality tests."""
     return float(os.environ.get("TOL", TOL))
+
 
 @pytest.fixture(scope="session", params=[2, 3])
 def n_subsystems(request):
