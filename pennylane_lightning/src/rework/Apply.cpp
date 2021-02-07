@@ -104,7 +104,7 @@ void Pennylane::apply(
         throw std::invalid_argument("Must specify one or more qubits");
 
     size_t expectedLength = exp2(qubits);
-    StateVector state(&stateNumpyArray);
+    StateVector state = StateVector::create(&stateNumpyArray);
     if (state.length != expectedLength)
         throw std::invalid_argument(string("Input state vector length (" + std::to_string(state.length) + ") does not match the given number of qubits ") + std::to_string(qubits));
 

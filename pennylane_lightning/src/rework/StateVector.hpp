@@ -26,12 +26,11 @@ namespace Pennylane {
     class StateVector {
 
     public:
-        CplxType* arr = NULL;
-        size_t length = 0;
+        CplxType* const arr;
+        const size_t length;
 
-        StateVector(pybind11::array_t<CplxType>* numpyArray);
-
-        StateVector(CplxType* arr, size_t length);
+        static StateVector create(const pybind11::array_t<CplxType>* numpyArray);
+        StateVector(CplxType* const arr, const size_t length);
 
     };
 

@@ -13,7 +13,7 @@
 // limitations under the License.
 #include "StateVector.hpp"
 
-Pennylane::StateVector::StateVector(pybind11::array_t<CplxType>* numpyArray) {
+Pennylane::StateVector Pennylane::StateVector::create(const pybind11::array_t<CplxType>* numpyArray) {
     pybind11::buffer_info numpyArrayInfo = numpyArray->request();
 
     if (numpyArrayInfo.ndim != 1)
@@ -21,11 +21,10 @@ Pennylane::StateVector::StateVector(pybind11::array_t<CplxType>* numpyArray) {
     if (numpyArrayInfo.itemsize != sizeof(CplxType))
         throw std::invalid_argument("NumPy array must be a complex double-precision array");
 
-    this->arr = (CplxType*)numpyArrayInfo.ptr;
-    this->length = numpyArrayInfo.shape[0];
+    return StateVector((CplxType*)numpyArrayInfo.ptr, numpyArrayInfo.shape[0]);
 }
 
-Pennylane::StateVector::StateVector(CplxType* arr, size_t length) {
-    this->arr = arr;
-    this->length = length;
-}
+Pennylane::StateVector::StateVector(CplxType* const arr, const size_t length)
+    : arr(arr)
+    , length(length)
+{}
