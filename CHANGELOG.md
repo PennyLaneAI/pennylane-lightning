@@ -10,9 +10,16 @@
 
 ### Bug fixes
 
+* Fixes a bug where the `QNode` would swap `LightningQubit` to
+  `DefaultQubitAutograd` on device execution due to the inherited
+  `passthru_devices` entry of the `capabilities` dictionary.
+  [(#61)](https://github.com/PennyLaneAI/pennylane-lightning/pull/61)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Josh Izaac, Antal Száva
 
 ---
 

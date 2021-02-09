@@ -107,6 +107,7 @@ class LightningQubit(DefaultQubit):
             supports_analytic_computation=True,
             returns_state=True,
         )
+        capabilities.pop("passthru_devices", None)
         return capabilities
 
     def apply(self, operations, rotations=None, **kwargs):
