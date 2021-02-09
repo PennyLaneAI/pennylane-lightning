@@ -17,15 +17,27 @@ interfaces with C++ for fast linear algebra calculations.
 """
 import warnings
 
-from pennylane.devices import DefaultQubit
-from .lightning_qubit_ops import apply
+from pennylane.devices import (
+    DefaultQubit,
+)
+from .lightning_qubit_ops import (
+    apply,
+)
 import numpy as np
-from pennylane import QubitStateVector, BasisState, DeviceError
+from pennylane import (
+    QubitStateVector,
+    BasisState,
+    DeviceError,
+)
 
-from ._version import __version__
+from ._version import (
+    __version__,
+)
 
 
-class LightningQubit(DefaultQubit):
+class LightningQubit(
+    DefaultQubit
+):
     """PennyLane Lightning device.
 
     An extension of PennyLane's built-in ``default.qubit`` device that interfaces with C++ to
@@ -82,24 +94,49 @@ class LightningQubit(DefaultQubit):
         "CRot",
     }
 
-    observables = {"PauliX", "PauliY", "PauliZ", "Hadamard", "Identity"}
+    observables = {
+        "PauliX",
+        "PauliY",
+        "PauliZ",
+        "Hadamard",
+        "Identity",
+    }
 
     _MAX_WIRES = 50
     """Maximum number of supported wires. Beyond this number, lightning.qubit behaves like 
     default.qubit."""
 
-    def __init__(self, wires, *, shots=1000, analytic=True):
-        super().__init__(wires, shots=shots, analytic=analytic)
+    def __init__(
+        self,
+        wires,
+        *,
+        shots=1000,
+        analytic=True,
+    ):
+        super().__init__(
+            wires,
+            shots=shots,
+            analytic=analytic,
+        )
 
-        if self.num_wires > self._MAX_WIRES:
+        if (
+            self.num_wires
+            > self._MAX_WIRES
+        ):
             warnings.warn(
                 f"The number of wires exceeds {self._MAX_WIRES}, reverting to NumPy-based evaluation.",
                 UserWarning,
             )
 
     @classmethod
-    def capabilities(cls):
-        capabilities = super().capabilities().copy()
+    def capabilities(
+        cls,
+    ):
+        capabilities = (
+            super()
+            .capabilities()
+            .copy()
+        )
         capabilities.update(
             model="qubit",
             supports_reversible_diff=False,
@@ -107,42 +144,103 @@ class LightningQubit(DefaultQubit):
             supports_analytic_computation=True,
             returns_state=True,
         )
-        capabilities.pop('passthru_devices', None)
+        capabilities.pop(
+            "passthru_devices",
+            None,
+        )
         return capabilities
 
-    def apply(self, operations, rotations=None, **kwargs):
+    def apply(
+        self,
+        operations,
+        rotations=None,
+        **kwargs,
+    ):
 
-        if self.num_wires > self._MAX_WIRES:
-            super().apply(operations, rotations=rotations, **kwargs)
+        if (
+            self.num_wires
+            > self._MAX_WIRES
+        ):
+            super().apply(
+                operations,
+                rotations=rotations,
+                **kwargs,
+            )
             return
 
-        for i, operation in enumerate(operations):  # State preparation is currently done in Python
-            if isinstance(operation, (QubitStateVector, BasisState)):
-                if i == 0:
+        for (
+            i,
+            operation,
+        ) in enumerate(
+            operations
+        ):  # State preparation is currently done in Python
+            if isinstance(
+                operation,
+                (
+                    QubitStateVector,
+                    BasisState,
+                ),
+            ):
+                if (
+                    i
+                    == 0
+                ):
 
-                    if isinstance(operation, QubitStateVector):
-                        self._apply_state_vector(operation.parameters[0], operation.wires)
+                    if isinstance(
+                        operation,
+                        QubitStateVector,
+                    ):
+                        self._apply_state_vector(
+                            operation.parameters[
+                                0
+                            ],
+                            operation.wires,
+                        )
                     else:
-                        self._apply_basis_state(operation.parameters[0], operation.wires)
+                        self._apply_basis_state(
+                            operation.parameters[
+                                0
+                            ],
+                            operation.wires,
+                        )
 
-                    del operations[0]
+                    del operations[
+                        0
+                    ]
                 else:
                     raise DeviceError(
                         "Operation {} cannot be used after other Operations have already been "
-                        "applied on a {} device.".format(operation.name, self.short_name)
+                        "applied on a {} device.".format(
+                            operation.name,
+                            self.short_name,
+                        )
                     )
 
         if operations:
-            self._pre_rotated_state = self.apply_lightning(self._state, operations)
+            self._pre_rotated_state = self.apply_lightning(
+                self._state,
+                operations,
+            )
         else:
-            self._pre_rotated_state = self._state
+            self._pre_rotated_state = (
+                self._state
+            )
 
         if rotations:
-            self._state = self.apply_lightning(self._pre_rotated_state, rotations)
+            self._state = self.apply_lightning(
+                self._pre_rotated_state,
+                rotations,
+            )
         else:
-            self._state = self._pre_rotated_state
+            self._state = (
+                self._pre_rotated_state
+            )
 
-    def apply_lightning(self, state, operations):
+    def apply_lightning(
+        self,
+        state,
+        operations,
+    ):
         """Apply a list of operations to the state tensor.
 
         Args:
@@ -152,10 +250,34 @@ class LightningQubit(DefaultQubit):
         Returns:
             array[complex]: the output state tensor
         """
-        op_names = [o.name for o in operations]
-        op_wires = [self.wires.indices(o.wires) for o in operations]
-        op_param = [o.parameters for o in operations]
+        op_names = [
+            o.name
+            for o in operations
+        ]
+        op_wires = [
+            self.wires.indices(
+                o.wires
+            )
+            for o in operations
+        ]
+        op_param = [
+            o.parameters
+            for o in operations
+        ]
 
-        state_vector = np.ravel(state, order="F")
-        state_vector_updated = apply(state_vector, op_names, op_wires, op_param, self.num_wires)
-        return np.reshape(state_vector_updated, state.shape, order="F")
+        state_vector = np.ravel(
+            state,
+            order="F",
+        )
+        state_vector_updated = apply(
+            state_vector,
+            op_names,
+            op_wires,
+            op_param,
+            self.num_wires,
+        )
+        return np.reshape(
+            state_vector_updated,
+            state.shape,
+            order="F",
+        )
