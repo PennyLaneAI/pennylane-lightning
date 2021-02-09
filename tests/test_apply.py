@@ -460,7 +460,7 @@ class TestLightningQubitIntegration:
 
         dev = qml.device("lightning.qubit", wires=2)
         def circuit():
-            """Simply quantum function."""
+            """Simple quantum function."""
             return qml.expval(qml.PauliZ(0))
 
         with pytest.raises(qml.QuantumFunctionError):
