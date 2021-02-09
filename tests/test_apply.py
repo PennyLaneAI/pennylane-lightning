@@ -464,7 +464,7 @@ class TestLightningQubitIntegration:
             return qml.expval(qml.PauliZ(0))
 
         with pytest.raises(qml.QuantumFunctionError):
-            lightning = qml.QNode(circuit, dev, diff_method="backprop")
+            qml.QNode(circuit, dev, diff_method="backprop")
 
     def test_args(self):
         """Test that the plugin requires correct arguments"""
