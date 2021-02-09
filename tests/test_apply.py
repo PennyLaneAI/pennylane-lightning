@@ -454,6 +454,18 @@ class TestLightningQubitIntegration:
         assert dev.analytic
         assert dev.short_name == "lightning.qubit"
 
+    def test_no_backprop(self):
+        """Test that lightning.qubit does not support the backprop
+        differentiation method."""
+
+        dev = qml.device("lightning.qubit", wires=2)
+        def circuit():
+            """Simply quantum function."""
+            return qml.expval(qml.PauliZ(0))
+
+        with pytest.raises(qml.QuantumFunctionError):
+            lightning = qml.QNode(circuit, dev, diff_method="backprop")
+
     def test_args(self):
         """Test that the plugin requires correct arguments"""
 
