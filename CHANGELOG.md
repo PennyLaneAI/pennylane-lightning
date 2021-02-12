@@ -1,12 +1,4 @@
-# Release 0.15.0-dev
-
-### New features since last release
-
-### Breaking changes
-
-### Improvements
-
-### Documentation
+# Release 0.14.1
 
 ### Bug fixes
 
@@ -19,7 +11,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Josh Izaac, Antal Száva
+Antal Száva
 
 ---
 
