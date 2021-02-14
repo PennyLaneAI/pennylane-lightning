@@ -20,6 +20,7 @@
 #pragma once
 
 #define _USE_MATH_DEFINES
+#include <numeric>
 #include "operations.hpp"
 
 using Eigen::VectorXcd;
@@ -35,6 +36,26 @@ using std::find;
 const double SQRT2INV = 0.7071067811865475;
 
 /**
+* Applies specified operations onto an input state of an arbitrary number of qubits.
+*
+* Note that only up to 50 qubits are currently supported. This limitation is due to the Eigen
+* Tensor library not supporting dynamically ranked tensors.
+*
+* @param state the multiqubit statevector
+* @param ops a vector of operation names in the order they should be applied
+* @param wires a vector of wires corresponding to the operations specified in ops
+* @param params a vector of parameters corresponding to the operations specified in ops
+* @return the transformed statevector
+*/
+VectorXcd apply (
+    Ref<VectorXcd> state,
+    vector<string> ops,
+    vector<vector<int>> wires,
+    vector<vector<float>> params,
+    const int qubits
+);
+
+/**
 * Calculate the qubit-labelled indices of the state tensor after a contraction by a gate.
 *
 * For example, consider a 4-qubit state tensor T_{0123}. If we apply a gate to qubits 1 and 2, the
@@ -45,16 +66,7 @@ const double SQRT2INV = 0.7071067811865475;
 * @param tensor_indices the qubit-labelled indices of the state tensor before contraction
 * @return the resultant indices
 */
-vector<int> calculate_tensor_indices(const vector<int> &wires, const vector<int> &tensor_indices) {
-    vector<int> new_tensor_indices = wires;
-    int n_indices = tensor_indices.size();
-    for (int j = 0; j < n_indices; j++) {
-        if (count(wires.begin(), wires.end(), tensor_indices[j]) == 0) {
-            new_tensor_indices.push_back(tensor_indices[j]);
-        }
-    }
-    return new_tensor_indices;
-}
+vector<int> calculate_tensor_indices(const vector<int> &wires, const vector<int> &tensor_indices);
 
 /**
 * Returns the tensor representation of a one-qubit gate given its name and parameters.
@@ -63,23 +75,7 @@ vector<int> calculate_tensor_indices(const vector<int> &wires, const vector<int>
 * @param params the parameters of the gate
 * @return the gate as a tensor
 */
-Gate_Xq<1> get_gate_1q(const string &gate_name, const vector<float> &params) {
-    Gate_Xq<1> op;
-
-    if (params.empty()) {
-        pfunc_Xq<1> f = OneQubitOps.at(gate_name);
-        op = (*f)();
-    }
-    else if (params.size() == 1) {
-        pfunc_Xq_one_param<1> f = OneQubitOpsOneParam.at(gate_name);
-        op = (*f)(params[0]);
-    }
-    else if (params.size() == 3) {
-        pfunc_Xq_three_params<1> f = OneQubitOpsThreeParams.at(gate_name);
-        op = (*f)(params[0], params[1], params[2]);
-    }
-    return op;
-}
+Gate_Xq<1> get_gate_1q(const string &gate_name, const vector<float> &params);
 
 /**
 * Returns the tensor representation of a two-qubit gate given its name and parameters.
@@ -88,23 +84,7 @@ Gate_Xq<1> get_gate_1q(const string &gate_name, const vector<float> &params) {
 * @param params the parameters of the gate
 * @return the gate as a tensor
 */
-Gate_Xq<2> get_gate_2q(const string &gate_name, const vector<float> &params) {
-    Gate_Xq<2> op;
-
-    if (params.empty()) {
-        pfunc_Xq<2> f = TwoQubitOps.at(gate_name);
-        op = (*f)();
-    }
-    else if (params.size() == 1) {
-        pfunc_Xq_one_param<2> f = TwoQubitOpsOneParam.at(gate_name);
-        op = (*f)(params[0]);
-    }
-    else if (params.size() == 3) {
-        pfunc_Xq_three_params<2> f = TwoQubitOpsThreeParams.at(gate_name);
-        op = (*f)(params[0], params[1], params[2]);
-    }
-    return op;
-}
+Gate_Xq<2> get_gate_2q(const string &gate_name, const vector<float> &params);
 
 /**
 * Returns the tensor representation of a three-qubit gate given its name and parameters.
@@ -112,12 +92,7 @@ Gate_Xq<2> get_gate_2q(const string &gate_name, const vector<float> &params) {
 * @param gate_name the name of the gate
 * @return the gate as a tensor
 */
-Gate_Xq<3> get_gate_3q(const string &gate_name) {
-    Gate_Xq<3> op;
-    pfunc_Xq<3> f = ThreeQubitOps.at(gate_name);
-    op = (*f)();
-    return op;
-}
+Gate_Xq<3> get_gate_3q(const string &gate_name);
 
 /**
 * Calculate the positions of qubits in the state tensor.
@@ -131,14 +106,7 @@ Gate_Xq<3> get_gate_3q(const string &gate_name) {
 * @param tensor_indices the wire indices of a contracted tensor, calculated using calculate_tensor_indices()
 * @return the resultant indices
 */
-vector<int> calculate_qubit_positions(const vector<int> &tensor_indices) {
-    vector<int> idx(tensor_indices.size());
-    std::iota(idx.begin(), idx.end(), 0);
-    stable_sort(idx.begin(), idx.end(), [&tensor_indices](size_t i1, size_t i2) {
-        return tensor_indices[i1] < tensor_indices[i2];
-    });
-    return idx;
-}
+vector<int> calculate_qubit_positions(const vector<int> &tensor_indices);
 
 /**
 * Contract a one-qubit gate onto a state tensor.
@@ -271,24 +239,7 @@ VectorXcd apply_ops_1q(
     Ref<VectorXcd> state,
     vector<string> ops,
     vector<vector<float>> params
-) {
-    VectorXcd evolved_state = state;
-
-    int num_ops = ops.size();
-
-    for (int i = 0; i < num_ops; i++) {
-        // Load operation string and corresponding wires and parameters
-        string op_string = ops[i];
-        vector<float> p = params[i];
-
-        Gate_Xq<1> gate = get_gate_1q(op_string, p);
-        MatrixXcd gate_matrix = Map<MatrixXcd> (gate.data(), 2, 2);
-
-        evolved_state = gate_matrix * evolved_state;
-    }
-
-    return evolved_state;
-}
+);
 
 /**
 * Applies specified operations onto an input state of two qubits.
@@ -306,50 +257,33 @@ VectorXcd apply_ops_2q(
     const vector<string>& ops,
     const vector<vector<int>>& wires,
     const vector<vector<float>>& params
+);
+
+
+template <class State, typename... Shape>
+VectorXcd get_marginal_probs (
+    Ref<VectorXcd> probs,
+    const vector<vector<int>> & wires,
+    Shape... shape
 ) {
-    State_Xq<2> evolved_tensor = TensorMap<State_Xq<2>>(state.data(), 2, 2);
-    const int qubits = log2(evolved_tensor.size());
 
-    vector<int> tensor_indices(qubits);
-    std::iota(std::begin(tensor_indices), std::end(tensor_indices), 0);
-    vector<int> qubit_positions(qubits);
-    std::iota(std::begin(qubit_positions), std::end(qubit_positions), 0);
+    State probs_tensor = TensorMap<State>(probs.data(), shape...);
 
-    int num_ops = ops.size();
-
-    for (int i = 0; i < num_ops; i++) {
-        // Load operation string and corresponding wires and parameters
-        string op_string = ops[i];
-        vector<int> w = wires[i];
-        int num_wires = w.size();
-        vector<float> p = params[i];
-        State_Xq<2> tensor_contracted;
-
-        vector<int> wires_to_contract(w.size());
-        for (int j = 0; j < num_wires; j++) {
-            wires_to_contract[j] = qubit_positions[w[j]];
-        }
-        tensor_indices = calculate_tensor_indices(w, tensor_indices);
-        qubit_positions = calculate_qubit_positions(tensor_indices);
-
-        if (w.size() == 1) {
-            tensor_contracted = contract_1q_op<State_Xq<2>> (evolved_tensor, op_string, wires_to_contract, p);
-        }
-        else if (w.size() == 2) {
-            tensor_contracted = contract_2q_op<State_Xq<2>> (evolved_tensor, op_string, wires_to_contract, p);
-        }
-        evolved_tensor = tensor_contracted;
-    }
-    State_Xq<2> shuffled_evolved_tensor = evolved_tensor.shuffle(qubit_positions);
-
-    return Map<VectorXcd> (shuffled_evolved_tensor.data(), shuffled_evolved_tensor.size(), 1);
+    /* dimension to reduce */
+    Eigen::array<int, 1> dims({0});
+    State_Xq<0> marginal_probs_tensor = probs_tensor.sum(dims);
+    VectorXcd marginal_probs = Map<VectorXcd> (marginal_probs_tensor.data(), marginal_probs_tensor.size(), 1);
+    return marginal_probs;
 }
+
+template <int Dim, int M, typename... Shape>
+VectorXcd compute_marginal(Ref<VectorXcd> state, const vector<int>& wires, Shape... shape);
 
 // Template classes for a generic interface for qubit operations
 
 /**
 * Main recursive template to generate multi-qubit operations
-* 
+*
 * @tparam Dim the number of qubits (i.e. tensor rank)
 * @tparam ValueIdx index to be decremented recursively until 0 to generate the dimensions of the tensor
 */
@@ -367,11 +301,21 @@ public:
     {
         return QubitOperationsGenerator<Dim, ValueIdx - 1>::apply(state, ops, wires, params, 2, shape...);
     }
+
+    template<int M, typename... Shape>
+    static inline VectorXcd marginal_probs(
+        Ref<VectorXcd> state,
+        const vector<int>& wires,
+        Shape... shape
+        )
+    {
+        return QubitOperationsGenerator<Dim, ValueIdx - 1>::template marginal_probs<M>(state, wires, 2, shape...);
+    }
 };
 
 /**
 * Terminal specialised template for general multi-qubit operations
-* 
+*
 * @tparam Dim the number of qubits (i.e. tensor rank)
 */
 template<int Dim>
@@ -388,11 +332,21 @@ public:
     {
         return apply_ops<State_Xq<Dim>>(state, ops, wires, params, shape...);
     }
+
+    template<int M, typename... Shape>
+    static inline VectorXcd marginal_probs(
+        Ref<VectorXcd> state,
+        const vector<int>& wires,
+        Shape... shape
+        )
+    {
+        return compute_marginal<Dim, M>(state, wires, shape...);
+    }
 };
 
 /**
 * Terminal specialised template for single qubit operations
-* 
+*
 * @tparam ValueIdx ignored, but required to specialised the main recursive template
 */
 template<int ValueIdx>
@@ -409,11 +363,21 @@ public:
     {
         return apply_ops_1q(state, ops, params);
     }
+
+    template<int M, typename... Shape>
+    static inline VectorXcd marginal_probs(
+        Ref<VectorXcd> state,
+        const vector<int>& wires,
+        Shape... shape
+        )
+    {
+        return QubitOperationsGenerator<1, ValueIdx - 1>::template marginal_probs<M>(state, wires, 2, shape...);
+    }
 };
 
 /**
 * Terminal specialised template for two qubit operations
-* 
+*
 * @tparam ValueIdx ignored, but required to specialised the main recursive template
 */
 template<int ValueIdx>
@@ -430,11 +394,21 @@ public:
     {
         return apply_ops_2q(state, ops, wires, params);
     }
+
+    template<int M, typename... Shape>
+    static inline VectorXcd marginal_probs(
+        Ref<VectorXcd> state,
+        const vector<int>& wires,
+        Shape... shape
+        )
+    {
+        return QubitOperationsGenerator<2, ValueIdx - 1>::template marginal_probs<M>(state, wires, 2, shape...);
+    }
 };
 
 /**
 * Generic interface that invokes the generator to generate the desired multi-qubit operation
-* 
+*
 * @tparam Dim the number of qubits (i.e. tensor rank)
 */
 template<int Dim>
@@ -449,5 +423,14 @@ public:
         const vector<vector<float>>& params)
     {
         return QubitOperationsGenerator<Dim, Dim>::apply(state, ops, wires, params);
+    }
+
+    template<int M, typename... Shape>
+    static inline VectorXcd marginal_probs(
+        Ref<VectorXcd> state,
+        const vector<int>& wires
+        )
+    {
+        return QubitOperationsGenerator<Dim, Dim>::template marginal_probs<M>(state, wires);
     }
 };

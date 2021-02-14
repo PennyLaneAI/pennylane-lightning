@@ -150,7 +150,10 @@ if not os.environ.get("MOCK_DOCS", False):
     ext_modules = [
         Extension(
             "lightning_qubit_ops",
-            sources=["pennylane_lightning/src/lightning_qubit.cpp"],
+            sources=[
+                "pennylane_lightning/src/binding.cpp",
+                "pennylane_lightning/src/lightning_qubit.cpp"
+                ],
             depends=[
                 "pennylane_lightning/src/lightning_qubit.hpp",
                 "pennylane_lightning/src/operations.hpp",
