@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#define NDEBUG
 #include <set>
 
 #include "Apply.hpp"
@@ -33,11 +32,6 @@ vector<unsigned int> Pennylane::getIndicesExcluding(vector<unsigned int>& exclud
         indices.erase(excludedIndex);
     }
     return vector<unsigned int>(indices.begin(), indices.end());
-}
-
-static inline size_t decimalValueForQubit(unsigned int qubitIndex, const unsigned int qubits) {
-    assert(qubitIndex < qubits);
-    return exp2(qubits - qubitIndex - 1);
 }
 
 vector<size_t> Pennylane::generateBitPatterns(vector<unsigned int>& qubitIndices, const unsigned int qubits) {

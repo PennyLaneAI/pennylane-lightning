@@ -17,16 +17,30 @@
  */
 #pragma once
 
+#include <assert.h>
+
 namespace Pennylane {
 
     /**
      * Calculates 2^n for some integer n > 0 using bitshifts.
      * 
      * @param n the exponent
-     * @return value of 2^pow
+     * @return value of 2^n
      */
     inline size_t exp2(const unsigned int& n) {
         return (size_t)1 << n;
+    }
+
+    /**
+     * Calculates the decimal value for a qubit, assuming a big-endian convention.
+     * 
+     * @param qubitIndex the index of the qubit in the range [0, qubits)
+     * @param qubits the number of qubits in the circuit
+     * @return decimal value for the qubit at specified index
+     */
+    inline size_t decimalValueForQubit(unsigned int qubitIndex, const unsigned int qubits) {
+        assert(qubitIndex < qubits);
+        return exp2(qubits - qubitIndex - 1);
     }
 
 }
