@@ -1,4 +1,4 @@
-// Copyright 2020 Xanadu Quantum Technologies Inc.
+// Copyright 2021 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ Pennylane::StateVector Pennylane::StateVector::create(const pybind11::array_t<Cp
     if (numpyArrayInfo.ndim != 1)
         throw std::invalid_argument("NumPy array must be a 1-dimensional array");
     if (numpyArrayInfo.itemsize != sizeof(CplxType))
-        throw std::invalid_argument("NumPy array must be a complex double-precision array");
+        throw std::invalid_argument("NumPy array must be a complex128 array");
 
     return StateVector((CplxType*)numpyArrayInfo.ptr, numpyArrayInfo.shape[0]);
 }

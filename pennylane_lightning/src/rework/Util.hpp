@@ -1,4 +1,4 @@
-// Copyright 2020 Xanadu Quantum Technologies Inc.
+// Copyright 2021 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ namespace Pennylane {
      * @param qubits the number of qubits in the circuit
      * @return decimal value for the qubit at specified index
      */
-    inline size_t decimalValueForQubit(unsigned int qubitIndex, const unsigned int qubits) {
+    inline size_t decimalValueForQubit(const unsigned int qubitIndex, const unsigned int qubits) {
         assert(qubitIndex < qubits);
         return exp2(qubits - qubitIndex - 1);
     }

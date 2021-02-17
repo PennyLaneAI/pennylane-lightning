@@ -1,4 +1,4 @@
-// Copyright 2020 Xanadu Quantum Technologies Inc.
+// Copyright 2021 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -331,7 +331,7 @@ Pennylane::CGeneralRotationGate::CGeneralRotationGate(double phi, double theta, 
 // -------------------------------------------------------------------------------------------------------------
 
 Pennylane::ThreeQubitGate::ThreeQubitGate()
-    : AbstractGate(2)
+    : AbstractGate(3)
 {}
 
 // -------------------------------------------------------------------------------------------------------------
