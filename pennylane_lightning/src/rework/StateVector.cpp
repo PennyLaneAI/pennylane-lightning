@@ -24,7 +24,7 @@ Pennylane::StateVector Pennylane::StateVector::create(const pybind11::array_t<Cp
     return StateVector((CplxType*)numpyArrayInfo.ptr, numpyArrayInfo.shape[0]);
 }
 
-Pennylane::StateVector::StateVector(CplxType* const arr, const size_t length)
+Pennylane::StateVector::StateVector(CplxType* arr, size_t length)
     : arr(arr)
     , length(length)
 {}

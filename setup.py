@@ -209,6 +209,7 @@ info = {
     "entry_points": {
         "pennylane.plugins": [
             "lightning.qubit = pennylane_lightning:LightningQubit",
+            "lightning.qubit.new = pennylane_lightning:LightningQubitNew",
         ],
     },
     "description": "PennyLane-Lightning plugin",

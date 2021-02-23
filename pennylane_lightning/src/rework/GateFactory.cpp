@@ -12,79 +12,53 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <functional>
+#include <map>
+
 #include "GateFactory.hpp"
 
+using std::function;
+using std::map;
 using std::string;
 using std::unique_ptr;
 using std::vector;
 
-// FIXME: This should be reworked to use a function dispatch table
+template<class GateType>
+static void addToDispatchTable(map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&)>>& dispatchTable) {
+    dispatchTable.emplace(GateType::label, [](const vector<double>& parameters) { return std::make_unique<GateType>(GateType::create(parameters)); });
+}
+
+static map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&)>> createDispatchTable() {
+    map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&)>> dispatchTable;
+    addToDispatchTable<Pennylane::XGate>(dispatchTable);
+    addToDispatchTable<Pennylane::YGate>(dispatchTable);
+    addToDispatchTable<Pennylane::ZGate>(dispatchTable);
+    addToDispatchTable<Pennylane::HadamardGate>(dispatchTable);
+    addToDispatchTable<Pennylane::SGate>(dispatchTable);
+    addToDispatchTable<Pennylane::TGate>(dispatchTable);
+    addToDispatchTable<Pennylane::RotationXGate>(dispatchTable);
+    addToDispatchTable<Pennylane::RotationYGate>(dispatchTable);
+    addToDispatchTable<Pennylane::RotationZGate>(dispatchTable);
+    addToDispatchTable<Pennylane::PhaseShiftGate>(dispatchTable);
+    addToDispatchTable<Pennylane::GeneralRotationGate>(dispatchTable);
+    addToDispatchTable<Pennylane::CNOTGate>(dispatchTable);
+    addToDispatchTable<Pennylane::SWAPGate>(dispatchTable);
+    addToDispatchTable<Pennylane::CZGate>(dispatchTable);
+    addToDispatchTable<Pennylane::CRotationXGate>(dispatchTable);
+    addToDispatchTable<Pennylane::CRotationYGate>(dispatchTable);
+    addToDispatchTable<Pennylane::CRotationZGate>(dispatchTable);
+    addToDispatchTable<Pennylane::CGeneralRotationGate>(dispatchTable);
+    addToDispatchTable<Pennylane::ToffoliGate>(dispatchTable);
+    addToDispatchTable<Pennylane::CSWAPGate>(dispatchTable);
+    return dispatchTable;
+}
+
+static const map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&)>> dispatchTable = createDispatchTable();
+
 unique_ptr<Pennylane::AbstractGate> Pennylane::constructGate(const string& label, const vector<double>& parameters) {
-    std::unique_ptr<Pennylane::AbstractGate> gate;
+    auto it = dispatchTable.find(label);
+    if (it == dispatchTable.end())
+        throw std::invalid_argument(label + " is not a supported gate type");
 
-    if (Pennylane::XGate::label == label) {
-        gate = std::make_unique<Pennylane::XGate>(Pennylane::XGate::create(parameters));
-    }
-    else if (Pennylane::YGate::label == label) {
-        gate = std::make_unique<Pennylane::YGate>(Pennylane::YGate::create(parameters));
-    }
-    else if (Pennylane::ZGate::label == label) {
-        gate = std::make_unique<Pennylane::ZGate>(Pennylane::ZGate::create(parameters));
-    }
-    else if (Pennylane::HadamardGate::label == label) {
-        gate = std::make_unique<Pennylane::HadamardGate>(Pennylane::HadamardGate::create(parameters));
-    }
-    else if (Pennylane::SGate::label == label) {
-        gate = std::make_unique<Pennylane::SGate>(Pennylane::SGate::create(parameters));
-    }
-    else if (Pennylane::TGate::label == label) {
-        gate = std::make_unique<Pennylane::TGate>(Pennylane::TGate::create(parameters));
-    }
-    else if (Pennylane::RotationXGate::label == label) {
-        gate = std::make_unique<Pennylane::RotationXGate>(Pennylane::RotationXGate::create(parameters));
-    }
-    else if (Pennylane::RotationYGate::label == label) {
-        gate = std::make_unique<Pennylane::RotationYGate>(Pennylane::RotationYGate::create(parameters));
-    }
-    else if (Pennylane::RotationZGate::label == label) {
-        gate = std::make_unique<Pennylane::RotationZGate>(Pennylane::RotationZGate::create(parameters));
-    }
-    else if (Pennylane::PhaseShiftGate::label == label) {
-        gate = std::make_unique<Pennylane::PhaseShiftGate>(Pennylane::PhaseShiftGate::create(parameters));
-    }
-    else if (Pennylane::GeneralRotationGate::label == label) {
-        gate = std::make_unique<Pennylane::GeneralRotationGate>(Pennylane::GeneralRotationGate::create(parameters));
-    }
-    else if (Pennylane::CNOTGate::label == label) {
-        gate = std::make_unique<Pennylane::CNOTGate>(Pennylane::CNOTGate::create(parameters));
-    }
-    else if (Pennylane::SWAPGate::label == label) {
-        gate = std::make_unique<Pennylane::SWAPGate>(Pennylane::SWAPGate::create(parameters));
-    }
-    else if (Pennylane::CZGate::label == label) {
-        gate = std::make_unique<Pennylane::CZGate>(Pennylane::CZGate::create(parameters));
-    }
-    else if (Pennylane::CRotationXGate::label == label) {
-        gate = std::make_unique<Pennylane::CRotationXGate>(Pennylane::CRotationXGate::create(parameters));
-    }
-    else if (Pennylane::CRotationYGate::label == label) {
-        gate = std::make_unique<Pennylane::CRotationYGate>(Pennylane::CRotationYGate::create(parameters));
-    }
-    else if (Pennylane::CRotationZGate::label == label) {
-        gate = std::make_unique<Pennylane::CRotationZGate>(Pennylane::CRotationZGate::create(parameters));
-    }
-    else if (Pennylane::CGeneralRotationGate::label == label) {
-        gate = std::make_unique<Pennylane::CGeneralRotationGate>(Pennylane::CGeneralRotationGate::create(parameters));
-    }
-    else if (Pennylane::ToffoliGate::label == label) {
-        gate = std::make_unique<Pennylane::ToffoliGate>(Pennylane::ToffoliGate::create(parameters));
-    }
-    else if (Pennylane::CSWAPGate::label == label) {
-        gate = std::make_unique<Pennylane::CSWAPGate>(Pennylane::CSWAPGate::create(parameters));
-    }
-    else {
-        throw std::invalid_argument(label + " is not a valid gate type");
-    }
-
-    return gate;
+    return it->second(parameters);
 }

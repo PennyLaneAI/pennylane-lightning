@@ -40,10 +40,10 @@ namespace Pennylane {
      * @param qubits number of qubits
      * @return Set difference of [0, ..., qubits-1] and excludedIndices, in ascending order
      */
-    std::vector<unsigned int> getIndicesExcluding(std::vector<unsigned int>& excludedIndices, const unsigned int qubits);
+    std::vector<unsigned int> getIndicesAfterExclusion(const std::vector<unsigned int>& indicesToExclude, const unsigned int qubits);
 
     /**
-     * Produces the decimal values for all possible bit patterns for a given set of indices, taking other indices to be fixed at 0.
+     * Produces the decimal values for all possible bit patterns determined by a set of indices, taking other indices to be fixed at 0.
      * The qubit indices are taken to be big-endian, i.e. qubit 0 is the most significant bit.
      * 
      * For instance, in a circuit with 5 qubits:
@@ -58,7 +58,7 @@ namespace Pennylane {
      * @param qubits number of qubits
      * @return decimal value corresponding to all possible bit patterns for the given indices
      */
-    std::vector<size_t> generateBitPatterns(std::vector<unsigned int>& qubitIndices, const unsigned int qubits);
+    std::vector<size_t> generateBitPatterns(const std::vector<unsigned int>& qubitIndices, const unsigned int qubits);
 
     /*
      * Constructs the gate defined by the supplied parameters and applies it to the state vector.
@@ -71,9 +71,9 @@ namespace Pennylane {
      */
     void constructAndApplyOperation(
         StateVector& state,
-        std::string& opLabel,
-        std::vector<unsigned int>& opWires,
-        std::vector<double>& opParams,
+        const std::string& opLabel,
+        const std::vector<unsigned int>& opWires,
+        const std::vector<double>& opParams,
         const unsigned int qubits
     );
 

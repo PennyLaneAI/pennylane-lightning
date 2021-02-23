@@ -198,9 +198,11 @@ Pennylane::GeneralRotationGate Pennylane::GeneralRotationGate::create(const vect
 }
 
 Pennylane::GeneralRotationGate::GeneralRotationGate(double phi, double theta, double omega)
-    : matrix{
-      std::cos(theta / 2) * std::pow(M_E, CplxType(0, (-phi - omega) / 2)), -std::sin(theta / 2) * std::pow(M_E, CplxType(0, (phi - omega) / 2)),
-      std::sin(theta / 2) * std::pow(M_E, CplxType(0, (-phi + omega) / 2)), std::cos(theta / 2) * std::pow(M_E, CplxType(0, (phi + omega) / 2)) }
+    : c(std::cos(theta / 2), 0)
+    , s(std::sin(theta / 2), 0)
+    , matrix{
+      c * std::pow(M_E, CplxType(0, (-phi - omega) / 2)), -s * std::pow(M_E, CplxType(0, (phi - omega) / 2)),
+      s * std::pow(M_E, CplxType(0, (-phi + omega) / 2)), c * std::pow(M_E, CplxType(0, (phi + omega) / 2)) }
 {}
 
 // -------------------------------------------------------------------------------------------------------------
@@ -321,11 +323,13 @@ Pennylane::CGeneralRotationGate Pennylane::CGeneralRotationGate::create(const ve
 }
 
 Pennylane::CGeneralRotationGate::CGeneralRotationGate(double phi, double theta, double omega)
-    : matrix{
+    : c(std::cos(theta / 2), 0)
+    , s(std::sin(theta / 2), 0)
+    , matrix{
       1, 0, 0, 0,
       0, 1, 0, 0,
-      0, 0, std::cos(theta / 2) * std::pow(M_E, CplxType(0, (-phi - omega) / 2)), -std::sin(theta / 2) * std::pow(M_E, CplxType(0, (phi - omega) / 2)),
-      0, 0, std::sin(theta / 2) * std::pow(M_E, CplxType(0, (-phi + omega) / 2)), std::cos(theta / 2) * std::pow(M_E, CplxType(0, (phi + omega) / 2)) }
+      0, 0, c * std::pow(M_E, CplxType(0, (-phi - omega) / 2)), -s * std::pow(M_E, CplxType(0, (phi - omega) / 2)),
+      0, 0, s * std::pow(M_E, CplxType(0, (-phi + omega) / 2)), c * std::pow(M_E, CplxType(0, (phi + omega) / 2)) }
 {}
 
 // -------------------------------------------------------------------------------------------------------------

@@ -27,9 +27,10 @@ namespace Pennylane {
     const CplxType IMAG = CplxType(0, 1);
 
     class AbstractGate {
-    protected:
+    public:
         const int numQubits;
         const size_t length;
+    protected:
         AbstractGate(int numQubits);
     public:
         /**
@@ -165,6 +166,7 @@ namespace Pennylane {
 
     class GeneralRotationGate : public SingleQubitGate {
     private:
+        const CplxType c, s;
         const std::vector<CplxType> matrix;
     public:
         static const std::string label;
@@ -256,6 +258,7 @@ namespace Pennylane {
 
     class CGeneralRotationGate : public SingleQubitGate {
     private:
+        const CplxType c, s;
         const std::vector<CplxType> matrix;
     public:
         static const std::string label;

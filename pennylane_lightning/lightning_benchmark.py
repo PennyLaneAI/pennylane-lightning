@@ -42,6 +42,5 @@ def benchmarkMethod(numRepetitions, method):
         result = method()
         endTime = time.time()
         durations.append(endTime - startTime)
-        gc.collect()
 
     return [statistics.mean(durations), statistics.stdev(durations)]

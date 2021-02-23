@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-This module contains the :class:`~.LightningQubit` class, a PennyLane simulator device that
+This module contains the :class:`~.LightningQubitNew` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
 import warnings
@@ -29,7 +29,7 @@ class LightningQubitNew(DefaultQubit):
     """PennyLane Lightning device.
 
     An extension of PennyLane's built-in ``default.qubit`` device that interfaces with C++ to
-    perform fast linear algebra calculations
+    perform fast linear algebra calculations.
 
     Use of this device requires pre-built binaries or compilation from source. Check out the
     :doc:`/installation` guide for more details.
@@ -46,7 +46,7 @@ class LightningQubitNew(DefaultQubit):
     """
 
     name = "Lightning Qubit PennyLane plugin"
-    short_name = "lightning.qubit"
+    short_name = "lightning.qubit.new"
     pennylane_requires = ">=0.12"
     version = __version__
     author = "Xanadu Inc."
@@ -91,13 +91,19 @@ class LightningQubitNew(DefaultQubit):
             supports_analytic_computation=True,
             returns_state=True,
         )
+        capabilities.pop("passthru_devices", None)
         return capabilities
 
     def apply(self, operations, rotations=None, **kwargs):
         for i, operation in enumerate(operations):  # State preparation is currently done in Python
             if isinstance(operation, (QubitStateVector, BasisState)):
                 if i == 0:
-                    self._apply_operation(operation)
+
+                    if isinstance(operation, QubitStateVector):
+                        self._apply_state_vector(operation.parameters[0], operation.wires)
+                    else:
+                        self._apply_basis_state(operation.parameters[0], operation.wires)
+
                     del operations[0]
                 else:
                     raise DeviceError(
@@ -131,6 +137,5 @@ class LightningQubitNew(DefaultQubit):
         op_param = [o.parameters for o in operations]
 
         state_vector = np.ravel(state)
-        assert state_vector.flags["C_CONTIGUOUS"]
         apply(state_vector, op_names, op_wires, op_param, self.num_wires)
         return np.reshape(state_vector, state.shape)

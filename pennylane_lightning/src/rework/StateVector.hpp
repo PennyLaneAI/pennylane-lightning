@@ -30,7 +30,7 @@ namespace Pennylane {
         const size_t length;
 
         static StateVector create(const pybind11::array_t<CplxType>* numpyArray);
-        StateVector(CplxType* const arr, const size_t length);
+        StateVector(CplxType* arr, size_t length);
 
     };
 
