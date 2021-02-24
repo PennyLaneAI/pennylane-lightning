@@ -116,7 +116,7 @@ class LightningQubit(DefaultQubit):
             super().apply(operations, rotations=rotations, **kwargs)
             return
 
-          # State preparation is currently done in Python
+        # State preparation is currently done in Python
         if isinstance(operations[0], QubitStateVector):
             self._apply_state_vector(operations[0].parameters[0], operations[0].wires)
             del operations[0]
