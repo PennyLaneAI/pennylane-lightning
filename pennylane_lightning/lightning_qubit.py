@@ -117,7 +117,7 @@ class LightningQubit(DefaultQubit):
             return
 
         # State preparation is currently done in Python
-        try: # if operations[0] doesn't exist, that's ok and suppress the error
+        try:  # if operations[0] doesn't exist, that's ok and suppress the error
             if isinstance(operations[0], QubitStateVector):
                 self._apply_state_vector(operations[0].parameters[0], operations[0].wires)
                 del operations[0]
