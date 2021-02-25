@@ -117,14 +117,17 @@ class LightningQubit(DefaultQubit):
             return
 
         # State preparation is currently done in Python
-        if isinstance(operations[0], QubitStateVector):
-            self._apply_state_vector(operations[0].parameters[0], operations[0].wires)
-            del operations[0]
-        elif isinstance(operations[0], BasisState):
-            self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
-            del operations[0]
+        try: # if operations[0] doesn't exist, that's ok and suppress the error
+            if isinstance(operations[0], QubitStateVector):
+                self._apply_state_vector(operations[0].parameters[0], operations[0].wires)
+                del operations[0]
+            elif isinstance(operations[0], BasisState):
+                self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
+                del operations[0]
+        except IndexError:
+            pass
 
-        for operation in operations[1:]:
+        for operation in operations:
             if isinstance(operation, (QubitStateVector, BasisState)):
                 raise DeviceError(
                     "Operation {} cannot be used after other Operations have already been "
