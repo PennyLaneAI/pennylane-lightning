@@ -116,21 +116,21 @@ class LightningQubit(DefaultQubit):
             super().apply(operations, rotations=rotations, **kwargs)
             return
 
-        for i, operation in enumerate(operations):  # State preparation is currently done in Python
+        # State preparation is currently done in Python
+        if operations:  # make sure operations[0] exists
+            if isinstance(operations[0], QubitStateVector):
+                self._apply_state_vector(operations[0].parameters[0], operations[0].wires)
+                del operations[0]
+            elif isinstance(operations[0], BasisState):
+                self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
+                del operations[0]
+
+        for operation in operations:
             if isinstance(operation, (QubitStateVector, BasisState)):
-                if i == 0:
-
-                    if isinstance(operation, QubitStateVector):
-                        self._apply_state_vector(operation.parameters[0], operation.wires)
-                    else:
-                        self._apply_basis_state(operation.parameters[0], operation.wires)
-
-                    del operations[0]
-                else:
-                    raise DeviceError(
-                        "Operation {} cannot be used after other Operations have already been "
-                        "applied on a {} device.".format(operation.name, self.short_name)
-                    )
+                raise DeviceError(
+                    "Operation {} cannot be used after other Operations have already been "
+                    "applied on a {} device.".format(operation.name, self.short_name)
+                )
 
         if operations:
             self._pre_rotated_state = self.apply_lightning(self._state, operations)
