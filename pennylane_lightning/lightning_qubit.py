@@ -107,6 +107,7 @@ class LightningQubit(DefaultQubit):
             supports_analytic_computation=True,
             returns_state=True,
         )
+        capabilities.pop("passthru_devices", None)
         return capabilities
 
     def apply(self, operations, rotations=None, **kwargs):
@@ -115,16 +116,21 @@ class LightningQubit(DefaultQubit):
             super().apply(operations, rotations=rotations, **kwargs)
             return
 
-        for i, operation in enumerate(operations):  # State preparation is currently done in Python
+        # State preparation is currently done in Python
+        if operations:  # make sure operations[0] exists
+            if isinstance(operations[0], QubitStateVector):
+                self._apply_state_vector(operations[0].parameters[0], operations[0].wires)
+                del operations[0]
+            elif isinstance(operations[0], BasisState):
+                self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
+                del operations[0]
+
+        for operation in operations:
             if isinstance(operation, (QubitStateVector, BasisState)):
-                if i == 0:
-                    self._apply_operation(operation)
-                    del operations[0]
-                else:
-                    raise DeviceError(
-                        "Operation {} cannot be used after other Operations have already been "
-                        "applied on a {} device.".format(operation.name, self.short_name)
-                    )
+                raise DeviceError(
+                    "Operation {} cannot be used after other Operations have already been "
+                    "applied on a {} device.".format(operation.name, self.short_name)
+                )
 
         if operations:
             self._pre_rotated_state = self.apply_lightning(self._state, operations)
