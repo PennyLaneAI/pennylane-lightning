@@ -56,9 +56,9 @@ static map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<dou
 static const map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&)>> dispatchTable = createDispatchTable();
 
 unique_ptr<Pennylane::AbstractGate> Pennylane::constructGate(const string& label, const vector<double>& parameters) {
-    auto it = dispatchTable.find(label);
-    if (it == dispatchTable.end())
+    auto dispatchTableIterator = dispatchTable.find(label);
+    if (dispatchTableIterator == dispatchTable.end())
         throw std::invalid_argument(label + " is not a supported gate type");
 
-    return it->second(parameters);
+    return dispatchTableIterator->second(parameters);
 }
