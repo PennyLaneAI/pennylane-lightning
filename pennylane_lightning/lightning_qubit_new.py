@@ -112,7 +112,6 @@ class LightningQubitNew(DefaultQubit):
                     )
 
         if operations:
-            # XXX: Do we need a copy here? Not sure of the required copy semantics
             self._pre_rotated_state = self.apply_lightning(self._state, operations)
         else:
             self._pre_rotated_state = self._state
