@@ -2,6 +2,8 @@
 
 ### New features since last release
 
+* TODO - mention new backend and removal of eigen
+
 ### Breaking changes
 
 ### Improvements
@@ -13,6 +15,8 @@
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Thomas Bromley, Christina Lee, Thomas Loke, Antal Száva
 
 ---
 

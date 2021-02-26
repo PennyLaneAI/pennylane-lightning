@@ -121,7 +121,7 @@ if not os.environ.get("MOCK_DOCS", False):
 
     include_dirs = [
         get_pybind_include(),
-        os.environ.get("EIGEN_INCLUDE_DIR", ""),
+        os.environ.get("EIGEN_INCLUDE_DIR", ""),  # TODO - remove
         "/usr/local/include/eigen3",
         "/usr/include/eigen3",
         "./include",

@@ -9,7 +9,7 @@ env:
   CIBW_SKIP: "cp27-* cp34-* cp35-* *i686 pp* *win32"
 
   # Linux specific build settings
-
+  # TODO - remove eigen
   CIBW_BEFORE_ALL_LINUX: |
     curl -OsL https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz
     tar xzf eigen-3.3.7.tar.gz eigen-3.3.7/Eigen --strip-components 1
