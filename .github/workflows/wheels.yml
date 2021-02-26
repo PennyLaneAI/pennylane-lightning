@@ -42,6 +42,8 @@ env:
   # Note: breaking up tests so that no test cases hang on Windows, to be reverted
 
   CIBW_TEST_COMMAND_WINDOWS: |
+    pytest "C:\\pennylane\\pennylane\\devices\\tests" --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+
     python3 -m pytest "C:\\pennylane\\pennylane\\devices\\tests" --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report -k "not test_four_qubit_random_circuit"
     python3 -m pytest "C:\\pennylane\\pennylane\\devices\\tests" --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report -k "test_four_qubit_random_circuit"
 
