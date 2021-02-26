@@ -51,10 +51,6 @@ env:
     python3 -m pytest /tmp/tmp.*/venv/lib/python3.6/site-packages/pennylane/devices/tests --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report -k "not test_four_qubit_random_circuit"
     python3 -m pytest /tmp/tmp.*/venv/lib/python3.6/site-packages/pennylane/devices/tests --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report -k "test_four_qubit_random_circuit"
 
-  CIBW_TEST_COMMAND_MACOS: |
-    python3 -m pytest ../../private/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T/tmp*/lib/python3.7/site-packages/pennylane/devices/tests --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report -k "not test_four_qubit_random_circuit"
-    python3 -m pytest ../../private/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T/tmp*/lib/python3.7/site-packages/pennylane/devices/tests --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report -k "test_four_qubit_random_circuit"
-
 
 jobs:
 
