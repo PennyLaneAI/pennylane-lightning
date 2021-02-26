@@ -230,7 +230,7 @@ namespace Pennylane {
         }
     };
 
-    class CRotationYGate : public SingleQubitGate {
+    class CRotationYGate : public TwoQubitGate {
     private:
         const CplxType c, s;
         const std::vector<CplxType> matrix;
@@ -243,7 +243,7 @@ namespace Pennylane {
         }
     };
 
-    class CRotationZGate : public SingleQubitGate {
+    class CRotationZGate : public TwoQubitGate {
     private:
         const CplxType first, second;
         const std::vector<CplxType> matrix;
@@ -256,7 +256,7 @@ namespace Pennylane {
         }
     };
 
-    class CGeneralRotationGate : public SingleQubitGate {
+    class CGeneralRotationGate : public TwoQubitGate {
     private:
         const CplxType c, s;
         const std::vector<CplxType> matrix;
