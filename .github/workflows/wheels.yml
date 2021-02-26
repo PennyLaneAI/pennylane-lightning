@@ -30,9 +30,6 @@ env:
 
   CIBW_ENVIRONMENT_WINDOWS: EIGEN_INCLUDE_DIR="C:\\eigen-3.3.7\\"
 
-#  CIBW_TEST_COMMAND_WINDOWS: |
-#    pytest "C:\\pennylane\\pennylane\\devices\\tests" --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
-
   # Python build settings
 
   CIBW_BEFORE_BUILD: |
@@ -43,9 +40,20 @@ env:
   CIBW_TEST_REQUIRES: numpy scipy pytest pytest-cov pytest-mock flaky
 
   # Note: breaking up tests so that no test cases hang on Windows, to be reverted
-  CIBW_TEST_COMMAND: |
-    python3 -m pytest /tmp/tmp.xZB03qisdH/venv/lib/python3.6/site-packages/pennylane/devices/tests --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report -k "not test_four_qubit_random_circuit"
-    python3 -m pytest /tmp/tmp.xZB03qisdH/venv/lib/python3.6/site-packages/pennylane/devices/tests --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report -k "test_four_qubit_random_circuit"
+
+  CIBW_TEST_COMMAND_WINDOWS: |
+    pytest "C:\\pennylane\\pennylane\\devices\\tests" --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+
+    python3 -m pytest "C:\\pennylane\\pennylane\\devices\\tests" --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report -k "not test_four_qubit_random_circuit"
+    python3 -m pytest "C:\\pennylane\\pennylane\\devices\\tests" --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report -k "test_four_qubit_random_circuit"
+
+  CIBW_TEST_COMMAND_LINUX: |
+    python3 -m pytest /tmp/tmp.*/venv/lib/python3.6/site-packages/pennylane/devices/tests --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report -k "not test_four_qubit_random_circuit"
+    python3 -m pytest /tmp/tmp.*/venv/lib/python3.6/site-packages/pennylane/devices/tests --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report -k "test_four_qubit_random_circuit"
+
+  CIBW_TEST_COMMAND_MACOS: |
+    python3 -m pytest ../../private/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T/tmp*/lib/python3.7/site-packages/pennylane/devices/tests --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report -k "not test_four_qubit_random_circuit"
+    python3 -m pytest ../../private/var/folders/24/8k48jl6d249_n_qfxwsl6xvm0000gn/T/tmp*/lib/python3.7/site-packages/pennylane/devices/tests --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report -k "test_four_qubit_random_circuit"
 
 
 jobs:
