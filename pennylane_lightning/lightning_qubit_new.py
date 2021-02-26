@@ -12,20 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 r"""
-This module contains the :class:`~.LightningQubitNew` class, a PennyLane simulator device that
+This module contains the :class:`~.LightningQubit` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
 import warnings
 
 from pennylane.devices import DefaultQubit
-from .lightning_qubit_new_ops import apply
+from .lightning_qubit_ops import apply
 import numpy as np
 from pennylane import QubitStateVector, BasisState, DeviceError
 
 from ._version import __version__
 
 
-class LightningQubitNew(DefaultQubit):
+class LightningQubit(DefaultQubit):
     """PennyLane Lightning device.
 
     An extension of PennyLane's built-in ``default.qubit`` device that interfaces with C++ to
@@ -46,7 +46,7 @@ class LightningQubitNew(DefaultQubit):
     """
 
     name = "Lightning Qubit PennyLane plugin"
-    short_name = "lightning.qubit.new"
+    short_name = "lightning.qubit"
     pennylane_requires = ">=0.12"
     version = __version__
     author = "Xanadu Inc."
@@ -95,21 +95,22 @@ class LightningQubitNew(DefaultQubit):
         return capabilities
 
     def apply(self, operations, rotations=None, **kwargs):
-        for i, operation in enumerate(operations):  # State preparation is currently done in Python
+
+        # State preparation is currently done in Python
+        if operations:  # make sure operations[0] exists
+            if isinstance(operations[0], QubitStateVector):
+                self._apply_state_vector(operations[0].parameters[0], operations[0].wires)
+                del operations[0]
+            elif isinstance(operations[0], BasisState):
+                self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
+                del operations[0]
+
+        for operation in operations:
             if isinstance(operation, (QubitStateVector, BasisState)):
-                if i == 0:
-
-                    if isinstance(operation, QubitStateVector):
-                        self._apply_state_vector(operation.parameters[0], operation.wires)
-                    else:
-                        self._apply_basis_state(operation.parameters[0], operation.wires)
-
-                    del operations[0]
-                else:
-                    raise DeviceError(
-                        "Operation {} cannot be used after other Operations have already been "
-                        "applied on a {} device.".format(operation.name, self.short_name)
-                    )
+                raise DeviceError(
+                    "Operation {} cannot be used after other Operations have already been "
+                    "applied on a {} device.".format(operation.name, self.short_name)
+                )
 
         if operations:
             self._pre_rotated_state = self.apply_lightning(self._state, operations)
