@@ -1,4 +1,4 @@
-# Copyright 2020 Xanadu Quantum Technologies Inc.
+# Copyright 2021 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,16 +29,10 @@ class LightningQubit(DefaultQubit):
     """PennyLane Lightning device.
 
     An extension of PennyLane's built-in ``default.qubit`` device that interfaces with C++ to
-    perform fast linear algebra calculations using the
-    `Eigen <http://eigen.tuxfamily.org/index.php?title=Main_Page>`__ library.
+    perform fast linear algebra calculations.
 
     Use of this device requires pre-built binaries or compilation from source. Check out the
     :doc:`/installation` guide for more details.
-
-    .. warning::
-
-        The C++ interface currently supports up to 50 wires. If Lightning Qubit is loaded with
-        more than 50 wires, it will revert to a NumPy-based simulation.
 
     Args:
         wires (int): the number of wires to initialize the device with
@@ -84,18 +78,8 @@ class LightningQubit(DefaultQubit):
 
     observables = {"PauliX", "PauliY", "PauliZ", "Hadamard", "Identity"}
 
-    _MAX_WIRES = 50
-    """Maximum number of supported wires. Beyond this number, lightning.qubit behaves like 
-    default.qubit."""
-
     def __init__(self, wires, *, shots=1000, analytic=True):
         super().__init__(wires, shots=shots, analytic=analytic)
-
-        if self.num_wires > self._MAX_WIRES:
-            warnings.warn(
-                f"The number of wires exceeds {self._MAX_WIRES}, reverting to NumPy-based evaluation.",
-                UserWarning,
-            )
 
     @classmethod
     def capabilities(cls):
@@ -111,10 +95,6 @@ class LightningQubit(DefaultQubit):
         return capabilities
 
     def apply(self, operations, rotations=None, **kwargs):
-
-        if self.num_wires > self._MAX_WIRES:
-            super().apply(operations, rotations=rotations, **kwargs)
-            return
 
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
@@ -138,7 +118,7 @@ class LightningQubit(DefaultQubit):
             self._pre_rotated_state = self._state
 
         if rotations:
-            self._state = self.apply_lightning(self._pre_rotated_state, rotations)
+            self._state = self.apply_lightning(np.copy(self._pre_rotated_state), rotations)
         else:
             self._state = self._pre_rotated_state
 
@@ -156,6 +136,6 @@ class LightningQubit(DefaultQubit):
         op_wires = [self.wires.indices(o.wires) for o in operations]
         op_param = [o.parameters for o in operations]
 
-        state_vector = np.ravel(state, order="F")
-        state_vector_updated = apply(state_vector, op_names, op_wires, op_param, self.num_wires)
-        return np.reshape(state_vector_updated, state.shape, order="F")
+        state_vector = np.ravel(state)
+        apply(state_vector, op_names, op_wires, op_param, self.num_wires)
+        return np.reshape(state_vector, state.shape)
