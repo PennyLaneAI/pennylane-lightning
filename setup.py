@@ -150,21 +150,6 @@ if not os.environ.get("MOCK_DOCS", False):
     ext_modules = [
         Extension(
             "lightning_qubit_ops",
-            sources=["pennylane_lightning/src/lightning_qubit.cpp"],
-            depends=[
-                "pennylane_lightning/src/lightning_qubit.hpp",
-                "pennylane_lightning/src/operations.hpp",
-                "pennylane_lightning/src/typedefs.hpp",
-            ],
-            include_dirs=include_dirs,
-            language="c++",
-            libraries=libraries,
-            library_dirs=library_dirs,
-            extra_compile_args=extra_compile_args,
-            extra_link_args=extra_link_args,
-        ),
-        Extension(
-            "lightning_qubit_new_ops",
             sources=[
                 "pennylane_lightning/src/rework/Apply.cpp",
                 "pennylane_lightning/src/rework/GateFactory.cpp",
@@ -209,7 +194,6 @@ info = {
     "entry_points": {
         "pennylane.plugins": [
             "lightning.qubit = pennylane_lightning:LightningQubit",
-            "lightning.qubit.new = pennylane_lightning:LightningQubitNew",
         ],
     },
     "description": "PennyLane-Lightning plugin",
