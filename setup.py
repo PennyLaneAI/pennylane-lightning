@@ -26,7 +26,7 @@ class get_pybind_include(object):
     """Helper class to determine the pybind11 include path
     The purpose of this class is to postpone importing pybind11
     until it is actually installed, so that the ``get_include()``
-    method can be invoked. """
+    method can be invoked."""
 
     def __str__(self):
         import pybind11
@@ -75,13 +75,13 @@ class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
 
     c_opts = {
-        "msvc": ["-EHsc", "-O2", "-Wall", "-std:c++11"],
-        "unix": ["-O3", "-Wall", "-fPIC", "-shared", "-fopenmp"],
+        "msvc": ["-EHsc", "-O2", "-W1", "-std:c++11"],
+        "unix": ["-O3", "-W", "-fPIC", "-shared", "-fopenmp"],
     }
 
     l_opts = {
         "msvc": [],
-        "unix": ["-O3", "-Wall", "-fPIC", "-shared", "-fopenmp"],
+        "unix": ["-O3", "-W", "-fPIC", "-shared", "-fopenmp"],
     }
 
     if platform.system() == "Darwin":
@@ -163,6 +163,29 @@ if not os.environ.get("MOCK_DOCS", False):
             extra_compile_args=extra_compile_args,
             extra_link_args=extra_link_args,
         ),
+        Extension(
+            "lightning_qubit_new_ops",
+            sources=[
+                "pennylane_lightning/src/rework/Apply.cpp",
+                "pennylane_lightning/src/rework/GateFactory.cpp",
+                "pennylane_lightning/src/rework/Gates.cpp",
+                "pennylane_lightning/src/rework/StateVector.cpp",
+            ],
+            depends=[
+                "pennylane_lightning/src/rework/Apply.hpp",
+                "pennylane_lightning/src/rework/GateFactory.hpp",
+                "pennylane_lightning/src/rework/Gates.hpp",
+                "pennylane_lightning/src/rework/StateVector.hpp",
+                "pennylane_lightning/src/rework/typedefs.hpp",
+                "pennylane_lightning/src/rework/Util.hpp",
+            ],
+            include_dirs=include_dirs,
+            language="c++",
+            libraries=libraries,
+            library_dirs=library_dirs,
+            extra_compile_args=extra_compile_args,
+            extra_link_args=extra_link_args,
+        ),
     ]
 else:
     ext_modules = []
@@ -184,7 +207,10 @@ info = {
     "packages": find_packages(where="."),
     "package_data": {"pennylane_lightning": ["src/*"]},
     "entry_points": {
-        "pennylane.plugins": ["lightning.qubit = pennylane_lightning:LightningQubit",],
+        "pennylane.plugins": [
+            "lightning.qubit = pennylane_lightning:LightningQubit",
+            "lightning.qubit.new = pennylane_lightning:LightningQubitNew",
+        ],
     },
     "description": "PennyLane-Lightning plugin",
     "long_description": open("README.rst").read(),
