@@ -167,13 +167,11 @@ if not os.environ.get("MOCK_DOCS", False):
             "lightning_qubit_new_ops",
             sources=[
                 "pennylane_lightning/src/rework/Apply.cpp",
-                "pennylane_lightning/src/rework/GateFactory.cpp",
                 "pennylane_lightning/src/rework/Gates.cpp",
                 "pennylane_lightning/src/rework/StateVector.cpp",
             ],
             depends=[
                 "pennylane_lightning/src/rework/Apply.hpp",
-                "pennylane_lightning/src/rework/GateFactory.hpp",
                 "pennylane_lightning/src/rework/Gates.hpp",
                 "pennylane_lightning/src/rework/StateVector.hpp",
                 "pennylane_lightning/src/rework/typedefs.hpp",

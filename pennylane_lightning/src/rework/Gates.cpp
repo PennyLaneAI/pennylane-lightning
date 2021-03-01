@@ -15,14 +15,19 @@
 #define _USE_MATH_DEFINES
 
 #include <cmath>
+#include <functional>
+#include <map>
 
 #include "Gates.hpp"
-#include "typedefs.hpp"
 #include "Util.hpp"
 
-using Pennylane::CplxType;
+using std::function;
+using std::map;
 using std::string;
+using std::unique_ptr;
 using std::vector;
+
+using Pennylane::CplxType;
 
 template<class T>
 static void validateLength(const string& errorPrefix, const vector<T>& vec, int requiredLength) {
@@ -375,3 +380,45 @@ const std::vector<CplxType> Pennylane::CSWAPGate::matrix{
     0, 0, 0, 0, 0, 0, 1, 0,
     0, 0, 0, 0, 0, 1, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 1 };
+
+// -------------------------------------------------------------------------------------------------------------
+
+template<class GateType>
+static void addToDispatchTable(map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&)>>& dispatchTable) {
+    dispatchTable.emplace(GateType::label, [](const vector<double>& parameters) { return std::make_unique<GateType>(GateType::create(parameters)); });
+}
+
+static map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&)>> createDispatchTable() {
+    map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&)>> dispatchTable;
+    addToDispatchTable<Pennylane::XGate>(dispatchTable);
+    addToDispatchTable<Pennylane::YGate>(dispatchTable);
+    addToDispatchTable<Pennylane::ZGate>(dispatchTable);
+    addToDispatchTable<Pennylane::HadamardGate>(dispatchTable);
+    addToDispatchTable<Pennylane::SGate>(dispatchTable);
+    addToDispatchTable<Pennylane::TGate>(dispatchTable);
+    addToDispatchTable<Pennylane::RotationXGate>(dispatchTable);
+    addToDispatchTable<Pennylane::RotationYGate>(dispatchTable);
+    addToDispatchTable<Pennylane::RotationZGate>(dispatchTable);
+    addToDispatchTable<Pennylane::PhaseShiftGate>(dispatchTable);
+    addToDispatchTable<Pennylane::GeneralRotationGate>(dispatchTable);
+    addToDispatchTable<Pennylane::CNOTGate>(dispatchTable);
+    addToDispatchTable<Pennylane::SWAPGate>(dispatchTable);
+    addToDispatchTable<Pennylane::CZGate>(dispatchTable);
+    addToDispatchTable<Pennylane::CRotationXGate>(dispatchTable);
+    addToDispatchTable<Pennylane::CRotationYGate>(dispatchTable);
+    addToDispatchTable<Pennylane::CRotationZGate>(dispatchTable);
+    addToDispatchTable<Pennylane::CGeneralRotationGate>(dispatchTable);
+    addToDispatchTable<Pennylane::ToffoliGate>(dispatchTable);
+    addToDispatchTable<Pennylane::CSWAPGate>(dispatchTable);
+    return dispatchTable;
+}
+
+static const map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&)>> dispatchTable = createDispatchTable();
+
+unique_ptr<Pennylane::AbstractGate> Pennylane::constructGate(const string& label, const vector<double>& parameters) {
+    auto dispatchTableIterator = dispatchTable.find(label);
+    if (dispatchTableIterator == dispatchTable.end())
+        throw std::invalid_argument(label + " is not a supported gate type");
+
+    return dispatchTableIterator->second(parameters);
+}

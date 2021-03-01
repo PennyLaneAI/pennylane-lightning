@@ -14,7 +14,7 @@
 #include <set>
 
 #include "Apply.hpp"
-#include "GateFactory.hpp"
+#include "Gates.hpp"
 #include "StateVector.hpp"
 #include "Util.hpp"
 
