@@ -17,6 +17,7 @@
  */
 #pragma once
 
+#include <memory>
 #include <vector>
 
 #include "typedefs.hpp"
@@ -297,5 +298,15 @@ namespace Pennylane {
             return matrix;
         }
     };
+
+    /**
+     * Produces the requested gate, defined by a label and the list of parameters
+     *
+     * @param label unique string corresponding to a gate type
+     * @param parameters defines the gate parameterisation (may be zero-length for some gates)
+     * @return the gate wrapped in std::unique_ptr
+     * @throws std::invalid_argument thrown if the gate type is not defined, or if the number of parameters to the gate is incorrect
+     */
+    std::unique_ptr<AbstractGate> constructGate(const std::string& label, const std::vector<double>& parameters);
 
 }
