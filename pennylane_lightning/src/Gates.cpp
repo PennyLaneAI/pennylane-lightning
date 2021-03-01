@@ -182,7 +182,7 @@ Pennylane::PhaseShiftGate Pennylane::PhaseShiftGate::create(const vector<double>
 }
 
 Pennylane::PhaseShiftGate::PhaseShiftGate(double rotationAngle)
-    : shift(std::pow(M_E, CplxType(0, rotationAngle / 2)))
+    : shift(std::pow(M_E, CplxType(0, rotationAngle)))
     , matrix{
       1, 0,
       0, shift }
