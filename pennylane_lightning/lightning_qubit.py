@@ -18,7 +18,7 @@ interfaces with C++ for fast linear algebra calculations.
 from pennylane.devices import DefaultQubit
 from .lightning_qubit_ops import apply
 import numpy as np
-from pennylane import QubitStateVector, BasisState, DeviceError
+from pennylane import QubitStateVector, BasisState, DeviceError, QubitUnitary
 
 from ._version import __version__
 
@@ -74,7 +74,7 @@ class LightningQubit(DefaultQubit):
         "CRot",
     }
 
-    observables = {"PauliX", "PauliY", "PauliZ", "Hadamard", "Identity"}
+    observables = {"PauliX", "PauliY", "PauliZ", "Hadamard", "Hermitian", "Identity"}
 
     def __init__(self, wires, *, shots=1000, analytic=True):
         super().__init__(wires, shots=shots, analytic=analytic)
@@ -116,7 +116,10 @@ class LightningQubit(DefaultQubit):
             self._pre_rotated_state = self._state
 
         if rotations:
-            self._state = self.apply_lightning(np.copy(self._pre_rotated_state), rotations)
+            if any(isinstance(r, QubitUnitary)for r in rotations):
+                super().apply(operations=[], rotations=rotations)
+            else:
+                self._state = self.apply_lightning(np.copy(self._pre_rotated_state), rotations)
         else:
             self._state = self._pre_rotated_state
 
