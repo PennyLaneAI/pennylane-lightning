@@ -119,7 +119,7 @@ Pennylane::TGate Pennylane::TGate::create(const vector<double>& parameters) {
 
 const vector<CplxType> Pennylane::TGate::matrix{
     1, 0,
-    0, std::pow(M_E, M_PI / 4) };
+    0, std::pow(M_E, CplxType(0, M_PI / 4)) };
 
 // -------------------------------------------------------------------------------------------------------------
 
