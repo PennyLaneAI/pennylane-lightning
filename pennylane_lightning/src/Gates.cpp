@@ -286,7 +286,7 @@ Pennylane::CRotationYGate Pennylane::CRotationYGate::create(const vector<double>
 
 Pennylane::CRotationYGate::CRotationYGate(double rotationAngle)
     : c(std::cos(rotationAngle / 2), 0)
-    , s(std::sin(-rotationAngle / 2), 0)
+    , s(std::sin(rotationAngle / 2), 0)
     , matrix{
       1, 0, 0, 0,
       0, 1, 0, 0,
