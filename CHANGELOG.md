@@ -6,13 +6,21 @@
 
 ### Improvements
 
+* Add new lightweight backend with performance improvements
+  [(#57)](https://github.com/PennyLaneAI/pennylane-lightning/pull/57)
+
 ### Documentation
 
 ### Bug fixes
 
+* Re-add dispatch table after fixing static initialisation order issue
+  [(#68)](https://github.com/PennyLaneAI/pennylane-lightning/pull/68)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Thomas Loke
 
 ---
 
