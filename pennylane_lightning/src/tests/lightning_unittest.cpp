@@ -17,9 +17,30 @@
 namespace test_utils {
 
 TEST(exp2, fixed_example) {
-    const unsigned int n = 5;
-    auto result = Pennylane::exp2(n);
-    EXPECT_TRUE(result == 32);
+    std::vector<unsigned int> inputs = {1, 2, 5, 8};
+    std::vector<size_t> outputs = {2, 4, 32, 256};
+
+    for (size_t i = 0; i < inputs.size(); i++) {
+        size_t result = Pennylane::exp2(inputs[i]);
+        EXPECT_TRUE(result == outputs[i]);
+    }
+}
+
+TEST(maxDecimalForQubit, fixed_example) {
+    std::vector<std::vector<unsigned int>> inputs = {
+        {0, 3},
+        {1, 3},
+        {2, 3},
+        {0, 4},
+        {2, 4},
+        {2, 5},
+    };
+    std::vector<size_t> outputs = {4, 2, 1, 8, 2, 4};
+
+    for (size_t i = 0; i < inputs.size(); i++) {
+        size_t result = Pennylane::maxDecimalForQubit(inputs[i][0], inputs[i][1]);
+        EXPECT_TRUE(result == outputs[i]);
+    }
 }
 
 }
