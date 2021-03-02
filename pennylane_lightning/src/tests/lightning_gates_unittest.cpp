@@ -16,10 +16,28 @@
 #include "gtest/gtest.h"
 #include "../rework/Gates.hpp"
 
+using std::unique_ptr;
+using std::vector;
+using std::string;
+
+using Pennylane::CplxType;
+
 namespace test_gates {
 
-TEST(gtest_works, please) {
-    EXPECT_EQ(0, 0);
+TEST(constructGate, PauliX){
+    const vector<double> params (5, 10.0);
+
+    const string gate_name = "PauliX";
+
+    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, params);
+
+    //const vector<CplxType> gate_matrix = gate->asMatrix();
+    const vector<CplxType> target_matrix{0, 1, 1, 0 };
+
+    //std::cout<<gate_matrix<<"\n";
+    //std::cout<<target_matrix<<"\n";
+
+    //EXPECT_EQ(gate_matrix, target_matrix);
 }
 
 }
