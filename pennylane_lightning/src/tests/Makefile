@@ -24,10 +24,13 @@ all: test
 lightning_unittest.o: lightning_unittest.cpp
 	$(CC) $^ $(CFLAGS) -c
 
+lightning_util_unittest.o: lightning_util_unittest.cpp
+	$(CC) $^ $(CFLAGS) -c
+
 gtest_main.o: gtest_main.cpp
 	$(CC) $^ $(CFLAGS) -c
 
-cpptests: gtest_main.o lightning_unittest.o
+cpptests: gtest_main.o lightning_unittest.o lightning_util_unittest.o
 	$(CC) $^ -o $@ $(LFLAGS)
 
 test: cpptests
