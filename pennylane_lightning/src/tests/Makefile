@@ -24,14 +24,23 @@ all: test
 lightning_unittest.o: lightning_unittest.cpp
 	$(CC) $^ $(CFLAGS) -c
 
+lightning_gates_unittest.o: lightning_gates_unittest.cpp
+	$(CC) $^ $(CFLAGS) -c
+
 gtest_main.o: gtest_main.cpp
 	$(CC) $^ $(CFLAGS) -c
 
 cpptests: gtest_main.o lightning_unittest.o
 	$(CC) $^ -o $@ $(LFLAGS)
 
+cpptests_new: gtest_main.o lightning_gates_unittest.o
+	$(CC) $^ -o $@ $(LFLAGS)
+
 test: cpptests
 	./cpptests
+
+test_new: cpptests_new
+	./cpptests_new
 
 clean:
 	rm -rf *~ cpptests *.out *.o *.so *.pyc *.mod
