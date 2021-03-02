@@ -124,7 +124,7 @@ Pennylane::TGate Pennylane::TGate::create(const vector<double>& parameters) {
 
 const vector<CplxType> Pennylane::TGate::matrix{
     1, 0,
-    0, std::pow(M_E, M_PI / 4) };
+    0, std::pow(M_E, CplxType(0, M_PI / 4)) };
 
 // -------------------------------------------------------------------------------------------------------------
 
@@ -154,7 +154,7 @@ Pennylane::RotationYGate Pennylane::RotationYGate::create(const vector<double>& 
 
 Pennylane::RotationYGate::RotationYGate(double rotationAngle)
     : c(std::cos(rotationAngle / 2), 0)
-    , s(std::sin(-rotationAngle / 2), 0)
+    , s(std::sin(rotationAngle / 2), 0)
     , matrix{
       c, -s,
       s, c }
@@ -187,7 +187,7 @@ Pennylane::PhaseShiftGate Pennylane::PhaseShiftGate::create(const vector<double>
 }
 
 Pennylane::PhaseShiftGate::PhaseShiftGate(double rotationAngle)
-    : shift(std::pow(M_E, CplxType(0, rotationAngle / 2)))
+    : shift(std::pow(M_E, CplxType(0, rotationAngle)))
     , matrix{
       1, 0,
       0, shift }
@@ -291,7 +291,7 @@ Pennylane::CRotationYGate Pennylane::CRotationYGate::create(const vector<double>
 
 Pennylane::CRotationYGate::CRotationYGate(double rotationAngle)
     : c(std::cos(rotationAngle / 2), 0)
-    , s(std::sin(-rotationAngle / 2), 0)
+    , s(std::sin(rotationAngle / 2), 0)
     , matrix{
       1, 0, 0, 0,
       0, 1, 0, 0,
