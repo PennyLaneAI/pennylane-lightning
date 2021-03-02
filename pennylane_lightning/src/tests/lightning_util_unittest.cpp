@@ -27,7 +27,7 @@ TEST_P(Exp2TestFixture, CheckExp2Results) {
     ASSERT_EQ(expected, Pennylane::exp2(input));
 }
 
-INSTANTIATE_TEST_CASE_P (
+INSTANTIATE_TEST_SUITE_P (
         Exp2Tests,
         Exp2TestFixture,
         ::testing::Values(
