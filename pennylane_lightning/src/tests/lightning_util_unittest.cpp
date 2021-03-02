@@ -14,6 +14,8 @@
 #include "gtest/gtest.h"
 #include "../rework/Util.hpp"
 
+#include <tuple>
+
 namespace test_utils {
 
 class Exp2TestFixture :public ::testing::TestWithParam<std::tuple<int, int>> {
