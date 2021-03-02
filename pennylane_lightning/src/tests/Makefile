@@ -20,7 +20,7 @@ LFLAGS = -fopenmp -L$(GOOGLETEST_DIR)/lib -lgtest
 
 all: test
 
-lightning_unittest.o: lightning_unittest_OLD.cpp
+lightning_unittest.o: lightning_unittest.cpp
 	$(CC) $^ $(CFLAGS) -c
 
 gtest_main.o: gtest_main.cpp
