@@ -24,7 +24,7 @@ all: test
 lightning_unittest.o: lightning_unittest.cpp
 	$(CC) $^ $(CFLAGS) -c
 
-lightning_unittest_new.o: lightning_unittest_new.cpp
+lightning_unittest_new.o: lightning_util_unittest.cpp
 	$(CC) $^ $(CFLAGS) -c
 
 gtest_main.o: gtest_main.cpp
