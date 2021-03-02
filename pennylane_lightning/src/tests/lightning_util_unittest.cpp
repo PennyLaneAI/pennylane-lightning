@@ -16,15 +16,23 @@
 
 namespace test_utils {
 
-TEST(exp2, fixed_example) {
-    std::vector<unsigned int> inputs = {1, 2, 5, 8};
-    std::vector<size_t> outputs = {2, 4, 32, 256};
+class Exp2TestFixture :public ::testing::TestWithParam<std::tuple<int, int>> {
+};
 
-    for (size_t i = 0; i < inputs.size(); i++) {
-        size_t result = Pennylane::exp2(inputs[i]);
-        EXPECT_TRUE(result == outputs[i]);
-    }
+TEST_P(Exp2TestFixture, CheckPower) {
+    int input = std::get<0>(GetParam());
+    int expected = std::get<1>(GetParam());
+    ASSERT_EQ(expected, Pennylane::exp2(input));
 }
+
+INSTANTIATE_TEST_SUITE_P (
+        Exp2Tests,
+        Exp2TestFixture,
+        ::testing::Values(
+                std::make_tuple(1, 2),
+                std::make_tuple(2, 4),
+                std::make_tuple(5, 32),
+                std::make_tuple(8, 256)));
 
 TEST(maxDecimalForQubit, fixed_example) {
     std::vector<std::vector<unsigned int>> inputs = {
