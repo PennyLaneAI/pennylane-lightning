@@ -37,8 +37,10 @@ env:
 
   CIBW_TEST_REQUIRES: numpy scipy pytest pytest-cov pytest-mock flaky
 
+  # Note: breaking up tests so that no test cases hang on Windows, to be reverted
   CIBW_TEST_COMMAND: |
-    pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+    pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report -k "not test_four_qubit_random_circuit"
+    pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report -k "test_four_qubit_random_circuit"
 
 
 jobs:
@@ -83,11 +85,6 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: ${{ runner.os }}-wheels.zip
-          path: ./wheelhouse/*.whl
-
-      - uses: actions/upload-artifact@v2
-        with:
-          name: ${{ runner.os }}-wheels
           path: ./wheelhouse/*.whl
 
   upload-wheels:

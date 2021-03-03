@@ -18,8 +18,8 @@ jobs:
 
       - name: Install Google Test
         run: |
-            wget -qO - https://github.com/google/googletest/archive/release-1.8.1.tar.gz | tar -xz
-            cmake -D CMAKE_INSTALL_PREFIX:PATH=$HOME/googletest -D CMAKE_BUILD_TYPE=Release googletest-release-1.8.1
+            wget -qO - https://github.com/google/googletest/archive/release-1.10.0.tar.gz | tar -xz
+            cmake -D CMAKE_INSTALL_PREFIX:PATH=$HOME/googletest -D CMAKE_BUILD_TYPE=Release googletest-release-1.10.0
             make install
 
       - name: Build and run unit tests
