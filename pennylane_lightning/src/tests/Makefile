@@ -41,3 +41,4 @@ test: cpptests
 
 clean:
 	rm -rf *~ cpptests *.out *.o *.so *.pyc *.mod
+
