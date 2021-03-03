@@ -39,19 +39,5 @@ cpptests: gtest_main.o lightning_unittest.o lightning_gates_unittest.o Gates.o
 test: cpptests
 	./cpptests
 
-gates_only: gtest_main.o lightning_gates_unittest.o
-	$(CC) $^ -o $@ $(LFLAGS)
-
-test_gates: gates_only
-	./gates_only
-
 clean:
 	rm -rf *~ cpptests *.out *.o *.so *.pyc *.mod
-
-
-scratch.o: scratch.cpp
-	$(CC) $^ $(CFLAGS) -c
-
-scratch: scratch.o
-	$(CC) $^ -o $@ $(LFLAGS)
-
