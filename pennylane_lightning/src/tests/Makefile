@@ -13,7 +13,7 @@
 # limitations under the License.
 EIGEN_INCLUDE_DIR ?= /usr/include/eigen3
 CC = g++
-CFLAGS = -std=c++11 -g -Wall -fopenmp -fPIC -I/usr/include \
+CFLAGS = -std=c++14 -g -Wall -fopenmp -fPIC -I/usr/include \
 	-I../include -I$(EIGEN_INCLUDE_DIR) -I$(GOOGLETEST_DIR)/include \
 	-march=native
 
@@ -24,13 +24,16 @@ all: test
 lightning_unittest.o: lightning_unittest.cpp
 	$(CC) $^ $(CFLAGS) -c
 
-lightning_gates_unittest.o: lightning_gates_unittest.cpp
+Gates.o: ../rework/Gates.cpp
+	$(CC) $^ $(CFLAGS) -c
+
+lightning_gates_unittest.o: lightning_gates_unittest.cpp 
 	$(CC) $^ $(CFLAGS) -c
 
 gtest_main.o: gtest_main.cpp
 	$(CC) $^ $(CFLAGS) -c
 
-cpptests: gtest_main.o lightning_unittest.o lightning_gates_unittest.o
+cpptests: gtest_main.o lightning_unittest.o lightning_gates_unittest.o Gates.o
 	$(CC) $^ -o $@ $(LFLAGS)
 
 test: cpptests

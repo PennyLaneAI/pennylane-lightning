@@ -11,10 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-
 #include "gtest/gtest.h"
 #include "../rework/Gates.hpp"
+#include "GateData.h"
 
 using std::unique_ptr;
 using std::vector;
@@ -29,15 +28,10 @@ TEST(constructGate, PauliX){
 
     const string gate_name = "PauliX";
 
-    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, params);
+    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, {});
 
     //const vector<CplxType> gate_matrix = gate->asMatrix();
-    const vector<CplxType> target_matrix{0, 1, 1, 0 };
-
-    //std::cout<<gate_matrix<<"\n";
-    //std::cout<<target_matrix<<"\n";
-
-    //EXPECT_EQ(gate_matrix, target_matrix);
+    EXPECT_EQ(gate->asMatrix(), PauliX);
 }
 
 }
