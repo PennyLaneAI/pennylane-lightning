@@ -21,20 +21,6 @@ using std::string;
 using std::unique_ptr;
 using std::vector;
 
-vector<size_t> Pennylane::generateBitPatterns(const vector<unsigned int>& qubitIndices, const unsigned int qubits) {
-    vector<size_t> indices;
-    indices.reserve(exp2(qubitIndices.size()));
-    indices.push_back(0);
-    for (int i = qubitIndices.size() - 1; i >= 0; i--) {
-        size_t value = maxDecimalForQubit(qubitIndices[i], qubits);
-        size_t currentSize = indices.size();
-        for (size_t j = 0; j < currentSize; j++) {
-            indices.push_back(indices[j] + value);
-        }
-    }
-    return indices;
-}
-
 void Pennylane::constructAndApplyOperation(
     StateVector& state,
     const string& opLabel,

@@ -33,24 +33,6 @@
 
 namespace Pennylane {
 
-    /**
-     * Produces the decimal values for all possible bit patterns determined by a set of indices, taking other indices to be fixed at 0.
-     * The qubit indices are taken to be big-endian, i.e. qubit 0 is the most significant bit.
-     * 
-     * For instance, in a circuit with 5 qubits:
-     * [0, 1] -> 00000, 01000, 10000, 11000 -> 0, 8, 16, 24
-     * 
-     * The order of the indices determines the order in which bit patterns are generated, e.g.
-     * [1, 0] -> 00000, 10000, 01000, 11000 -> 0, 16, 8, 24
-     * 
-     * i.e. the qubit indices are evaluted from last-to-first.
-     *  
-     * @param qubitIndices indices of qubits that comprise the bit pattern
-     * @param qubits number of qubits
-     * @return decimal value corresponding to all possible bit patterns for the given indices
-     */
-    std::vector<size_t> generateBitPatterns(const std::vector<unsigned int>& qubitIndices, const unsigned int qubits);
-
     /*
      * Constructs the gate defined by the supplied parameters and applies it to the state vector.
      * 
