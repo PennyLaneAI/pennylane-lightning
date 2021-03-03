@@ -21,17 +21,31 @@ using std::string;
 
 using Pennylane::CplxType;
 
-namespace test_gates {
+namespace test_gates{
 
-TEST(constructGate, PauliX){
-    const vector<double> params (5, 10.0);
-
+TEST(constructGate, MatrixNoParam){
     const string gate_name = "PauliX";
 
     unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, {});
 
-    //const vector<CplxType> gate_matrix = gate->asMatrix();
     EXPECT_EQ(gate->asMatrix(), PauliX);
 }
+
+TEST(constructGate, RX){
+    const string gate_name = "RX";
+    vector<double> params = {0.3};
+
+    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, params);
+
+    EXPECT_EQ(gate->asMatrix(), RX(params.at(0)));
+}
+
+TEST(constructGate, CNOT){
+    const string gate_name = "CNOT";
+    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, {});
+    EXPECT_EQ(gate->asMatrix(), CNOT);
+}
+
+// TODO: add tests for input validation error
 
 }
