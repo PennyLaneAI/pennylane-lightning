@@ -30,9 +30,6 @@ env:
 
   CIBW_ENVIRONMENT_WINDOWS: EIGEN_INCLUDE_DIR="C:\\eigen-3.3.7\\"
 
-#  CIBW_TEST_COMMAND_WINDOWS: |
-#    pytest "C:\\pennylane\\pennylane\\devices\\tests" --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
-
   # Python build settings
 
   CIBW_BEFORE_BUILD: |
@@ -85,14 +82,12 @@ jobs:
           Invoke-WebRequest -Uri "https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.zip" -UseBasicParsing -OutFile C:\eigen3.zip
           & "C:\\Program Files\\7-Zip\\7z.exe" x C:\eigen3.zip -o"C:\" -y
 
-#          New-Item -ItemType directory -Path "C:\\pennylane"
-#          & git clone https://github.com/PennyLaneAI/pennylane.git "C:\\pennylane"
-
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
 
       - uses: actions/upload-artifact@v2
+        if: github.ref == 'refs/heads/master'
         with:
           name: ${{ runner.os }}-wheels.zip
           path: ./wheelhouse/*.whl
