@@ -33,6 +33,23 @@
 
 namespace Pennylane {
 
+    /*
+     * Constructs the gate defined by the supplied parameters and applies it to the state vector.
+     * 
+     * @param state state vector to which to apply the operation
+     * @param opLabel unique string corresponding to a gate type
+     * @param opWires index of qubits on which the gate acts
+     * @param opParams defines the gate parameterisation (may be zero-length for some gates)
+     * @param qubits number of qubits
+     */
+    void constructAndApplyOperation(
+        StateVector& state,
+        const std::string& opLabel,
+        const std::vector<unsigned int>& opWires,
+        const std::vector<double>& opParams,
+        const unsigned int qubits
+    );
+
     /**
      * Applies specified operations onto an input state of an arbitrary number of qubits.
      *
