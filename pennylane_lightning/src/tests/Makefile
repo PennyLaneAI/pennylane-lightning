@@ -21,6 +21,9 @@ LFLAGS = -fopenmp -L$(GOOGLETEST_DIR)/lib -lgtest
 
 all: test
 
+Gates.o: ../rework/Gates.cpp
+	$(CC) $^ $(CFLAGS) -c
+
 lightning_unittest.o: lightning_unittest.cpp
 	$(CC) $^ $(CFLAGS) -c
 
@@ -30,7 +33,7 @@ lightning_util_unittest.o: lightning_util_unittest.cpp
 gtest_main.o: gtest_main.cpp
 	$(CC) $^ $(CFLAGS) -c
 
-cpptests: gtest_main.o lightning_unittest.o lightning_util_unittest.o
+cpptests: Gates.o gtest_main.o lightning_unittest.o lightning_util_unittest.o
 	$(CC) $^ -o $@ $(LFLAGS)
 
 test: cpptests
