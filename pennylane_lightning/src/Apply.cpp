@@ -11,28 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include <set>
-
 #include "Apply.hpp"
 #include "Gates.hpp"
 #include "StateVector.hpp"
 #include "Util.hpp"
+#include "Util.cpp"
 
-using std::set;
 using std::string;
 using std::unique_ptr;
 using std::vector;
-
-vector<unsigned int> Pennylane::getIndicesAfterExclusion(const vector<unsigned int>& indicesToExclude, const unsigned int qubits) {
-    set<unsigned int> indices;
-    for (unsigned int i = 0; i < qubits; i++) {
-        indices.insert(indices.end(), i);
-    }
-    for (const unsigned int& excludedIndex : indicesToExclude) {
-        indices.erase(excludedIndex);
-    }
-    return vector<unsigned int>(indices.begin(), indices.end());
-}
 
 vector<size_t> Pennylane::generateBitPatterns(const vector<unsigned int>& qubitIndices, const unsigned int qubits) {
     vector<size_t> indices;
@@ -63,7 +50,7 @@ void Pennylane::constructAndApplyOperation(
     
     vector<size_t> internalIndices = generateBitPatterns(opWires, qubits);
 
-    vector<unsigned int> externalWires = getIndicesAfterExclusion(opWires, qubits);
+    vector<unsigned int> externalWires = Pennylane::getIndicesAfterExclusion(opWires, qubits);
     vector<size_t> externalIndices = generateBitPatterns(externalWires, qubits);
 
     vector<CplxType> inputVector(internalIndices.size());

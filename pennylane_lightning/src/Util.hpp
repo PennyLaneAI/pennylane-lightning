@@ -22,6 +22,15 @@
 namespace Pennylane {
 
     /**
+     * Produces the list of qubit indices that excludes a given set of indices.
+     *
+     * @param excludedIndices indices to exclude (must be in the range [0, qubits-1])
+     * @param qubits number of qubits
+     * @return Set difference of [0, ..., qubits-1] and excludedIndices, in ascending order
+     */
+    std::vector<unsigned int> getIndicesAfterExclusion(const std::vector<unsigned int>& indicesToExclude, const unsigned int qubits);
+
+    /**
      * Calculates 2^n for some integer n > 0 using bitshifts.
      * 
      * @param n the exponent
