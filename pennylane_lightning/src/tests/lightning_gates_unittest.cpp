@@ -60,6 +60,7 @@ INSTANTIATE_TEST_SUITE_P (
 // -------------------------------------------------------------------------------------------------------------
 // Parametrized gates
 
+/*
 class GateMatrixWithParamsTestFixture : public ::testing::TestWithParam<std::tuple<string, getParametrizedGateMatrix, vector<double> > {
 };
 
@@ -78,6 +79,7 @@ INSTANTIATE_TEST_SUITE_P (
         ::testing::Values(
                 std::make_tuple("RX", RX),
 ));
+*/
 
 TEST(constructGate, RX){
     const string gate_name = "RX";
@@ -86,6 +88,24 @@ TEST(constructGate, RX){
     unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, params);
 
     EXPECT_EQ(gate->asMatrix(), RX(params.at(0)));
+}
+
+TEST(constructGate, RY){
+    const string gate_name = "RY";
+    vector<double> params = {0.3};
+
+    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, params);
+
+    EXPECT_EQ(gate->asMatrix(), RY(params.at(0)));
+}
+
+TEST(constructGate, RZ){
+    const string gate_name = "RZ";
+    vector<double> params = {0.3};
+
+    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, params);
+
+    EXPECT_EQ(gate->asMatrix(), RZ(params.at(0)));
 }
 
 
