@@ -13,7 +13,7 @@
 # limitations under the License.
 EIGEN_INCLUDE_DIR ?= /usr/include/eigen3
 CC = g++
-CFLAGS = -std=c++11 -g -Wall -fopenmp -fPIC -I/usr/include \
+CFLAGS = -std=c++14 -g -Wall -fopenmp -fPIC -I/usr/include \
 	-I../include -I$(EIGEN_INCLUDE_DIR) -I$(GOOGLETEST_DIR)/include \
 	-march=native
 
