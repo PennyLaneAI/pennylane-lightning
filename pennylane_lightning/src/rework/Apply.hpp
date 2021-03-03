@@ -34,50 +34,6 @@
 namespace Pennylane {
 
     /**
-     * Produces the list of qubit indices that excludes a given set of indices.
-     * 
-     * @param excludedIndices indices to exclude (must be in the range [0, qubits-1])
-     * @param qubits number of qubits
-     * @return Set difference of [0, ..., qubits-1] and excludedIndices, in ascending order
-     */
-    std::vector<unsigned int> getIndicesAfterExclusion(const std::vector<unsigned int>& indicesToExclude, const unsigned int qubits);
-
-    /**
-     * Produces the decimal values for all possible bit patterns determined by a set of indices, taking other indices to be fixed at 0.
-     * The qubit indices are taken to be big-endian, i.e. qubit 0 is the most significant bit.
-     * 
-     * For instance, in a circuit with 5 qubits:
-     * [0, 1] -> 00000, 01000, 10000, 11000 -> 0, 8, 16, 24
-     * 
-     * The order of the indices determines the order in which bit patterns are generated, e.g.
-     * [1, 0] -> 00000, 10000, 01000, 11000 -> 0, 16, 8, 24
-     * 
-     * i.e. the qubit indices are evaluted from last-to-first.
-     *  
-     * @param qubitIndices indices of qubits that comprise the bit pattern
-     * @param qubits number of qubits
-     * @return decimal value corresponding to all possible bit patterns for the given indices
-     */
-    std::vector<size_t> generateBitPatterns(const std::vector<unsigned int>& qubitIndices, const unsigned int qubits);
-
-    /*
-     * Constructs the gate defined by the supplied parameters and applies it to the state vector.
-     * 
-     * @param state state vector to which to apply the operation
-     * @param opLabel unique string corresponding to a gate type
-     * @param opWires index of qubits on which the gate acts
-     * @param opParams defines the gate parameterisation (may be zero-length for some gates)
-     * @param qubits number of qubits
-     */
-    void constructAndApplyOperation(
-        StateVector& state,
-        const std::string& opLabel,
-        const std::vector<unsigned int>& opWires,
-        const std::vector<double>& opParams,
-        const unsigned int qubits
-    );
-
-    /**
      * Applies specified operations onto an input state of an arbitrary number of qubits.
      *
      * @param state the multiqubit statevector as a numpy array; modified in place
