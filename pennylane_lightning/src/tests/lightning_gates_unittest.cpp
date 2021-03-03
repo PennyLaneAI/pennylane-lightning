@@ -85,6 +85,4 @@ INSTANTIATE_TEST_SUITE_P (
                 std::make_tuple("PauliZ", TWO_PARAMS),
                 std::make_tuple("Toffoli", vector<double>{0.3, 0})));
 
-// TODO: add tests for input validation error
-
 }
