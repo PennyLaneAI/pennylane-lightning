@@ -16,15 +16,21 @@
 #include "GateData.h"
 #include "TestingUtils.h"
 
+#include <functional>
+
 using std::unique_ptr;
 using std::vector;
 using std::string;
+using std::function;
 
 using Pennylane::CplxType;
 
+using getParametrizedGateMatrix = function< vector<CplxType>(double)>;
+
 namespace test_gates{
 
-// Pair the gate name with its matrix from GateData
+// -------------------------------------------------------------------------------------------------------------
+// Non-parametrized gates
 class GateMatrixNoParamTestFixture : public ::testing::TestWithParam<std::tuple<string, vector<CplxType> > > {
 };
 
@@ -32,7 +38,9 @@ TEST_P(GateMatrixNoParamTestFixture, CheckMatrix) {
     const string gate_name = std::get<0>(GetParam());
     const vector<CplxType> matrix = std::get<1>(GetParam());
 
-    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, {});
+    const vector<double> params = {};
+
+    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, params);
     EXPECT_EQ(gate->asMatrix(), matrix);
 }
 
@@ -43,8 +51,33 @@ INSTANTIATE_TEST_SUITE_P (
                 std::make_tuple("PauliX", PauliX),
                 std::make_tuple("PauliY", PauliY),
                 std::make_tuple("PauliZ", PauliZ),
+                std::make_tuple("Hadamard", Hadamard),
+                std::make_tuple("S", S),
+                std::make_tuple("T", T),
                 std::make_tuple("CNOT", CNOT),
                 std::make_tuple("Toffoli", Toffoli)));
+
+// -------------------------------------------------------------------------------------------------------------
+// Parametrized gates
+
+class GateMatrixWithParamsTestFixture : public ::testing::TestWithParam<std::tuple<string, getParametrizedGateMatrix, vector<double> > {
+};
+
+TEST_P(GateMatrixWithParamsTestFixture, CheckMatrix) {
+    const string gate_name = std::get<0>(GetParam());
+    auto func = std::get<1>(GetParam());
+    const vector<double> params = std::get<2>(GetParam());
+
+    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, params);
+    EXPECT_EQ(gate->asMatrix(), func(params[0]));
+}
+
+INSTANTIATE_TEST_SUITE_P (
+        GateTests,
+        GateMatrixWithParamsTestFixture,
+        ::testing::Values(
+                std::make_tuple("RX", RX),
+));
 
 TEST(constructGate, RX){
     const string gate_name = "RX";
@@ -55,6 +88,9 @@ TEST(constructGate, RX){
     EXPECT_EQ(gate->asMatrix(), RX(params.at(0)));
 }
 
+
+// -------------------------------------------------------------------------------------------------------------
+// Parameter length validation
 
 // Pair the gate name with its matrix from GateData
 class ValidateParamLengthGateFixture : public ::testing::TestWithParam<std::tuple<string, vector<double> > > {
@@ -77,12 +113,14 @@ INSTANTIATE_TEST_SUITE_P (
         ::testing::Values(
                 std::make_tuple("PauliX", ONE_PARAM),
                 std::make_tuple("PauliX", TWO_PARAMS),
-
                 std::make_tuple("PauliY", ONE_PARAM),
                 std::make_tuple("PauliY", TWO_PARAMS),
-
                 std::make_tuple("PauliZ", ONE_PARAM),
                 std::make_tuple("PauliZ", TWO_PARAMS),
-                std::make_tuple("Toffoli", vector<double>{0.3, 0})));
+
+                std::make_tuple("CNOT", ONE_PARAM),
+                std::make_tuple("CNOT", TWO_PARAMS),
+                std::make_tuple("Toffoli", ONE_PARAM),
+                std::make_tuple("Toffoli", TWO_PARAMS)));
 
 }
