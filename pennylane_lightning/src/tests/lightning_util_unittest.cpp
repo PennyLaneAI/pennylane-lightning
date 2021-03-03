@@ -26,7 +26,7 @@ class Exp2TestFixture :public ::testing::TestWithParam<std::tuple<int, int>> {
 
 TEST_P(Exp2TestFixture, CheckExp2Results) {
     int input = std::get<0>(GetParam());
-    int expected = std::get<1>(GetParam());
+    size_t expected = std::get<1>(GetParam());
     ASSERT_EQ(expected, Pennylane::exp2(input));
 }
 
