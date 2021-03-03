@@ -14,6 +14,7 @@
 #include "gtest/gtest.h"
 #include "../rework/Gates.hpp"
 #include "GateData.h"
+#include "TestingUtils.h"
 
 using std::unique_ptr;
 using std::vector;
@@ -23,13 +24,27 @@ using Pennylane::CplxType;
 
 namespace test_gates{
 
-TEST(constructGate, MatrixNoParam){
-    const string gate_name = "PauliX";
+// Pair the gate name with its matrix from GateData
+class GateMatrixNoParamTestFixture : public ::testing::TestWithParam<std::tuple<string, vector<CplxType> > > {
+};
+
+TEST_P(GateMatrixNoParamTestFixture, CheckMatrix) {
+    const string gate_name = std::get<0>(GetParam());
+    const vector<CplxType> matrix = std::get<1>(GetParam());
 
     unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, {});
-
-    EXPECT_EQ(gate->asMatrix(), PauliX);
+    EXPECT_EQ(gate->asMatrix(), matrix);
 }
+
+INSTANTIATE_TEST_SUITE_P (
+        GateTests,
+        GateMatrixNoParamTestFixture,
+        ::testing::Values(
+                std::make_tuple("PauliX", PauliX),
+                std::make_tuple("PauliY", PauliY),
+                std::make_tuple("PauliZ", PauliZ),
+                std::make_tuple("CNOT", CNOT),
+                std::make_tuple("Toffoli", Toffoli)));
 
 TEST(constructGate, RX){
     const string gate_name = "RX";
@@ -40,11 +55,35 @@ TEST(constructGate, RX){
     EXPECT_EQ(gate->asMatrix(), RX(params.at(0)));
 }
 
-TEST(constructGate, CNOT){
-    const string gate_name = "CNOT";
-    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, {});
-    EXPECT_EQ(gate->asMatrix(), CNOT);
+
+// Pair the gate name with its matrix from GateData
+class ValidateParamLengthGateFixture : public ::testing::TestWithParam<std::tuple<string, vector<double> > > {
+};
+
+TEST_P(ValidateParamLengthGateFixture, CheckParamLength) {
+    const string gate_name = std::get<0>(GetParam());
+    const vector<double> params = std::get<1>(GetParam());
+    //EXPECT_THROW(Pennylane::constructGate(gate_name, params), std::invalid_argument);
+    EXPECT_THROW_WITH_MESSAGE_SUBSTRING(Pennylane::constructGate(gate_name, params), std::invalid_argument, gate_name);
 }
+
+const vector<double> ZERO_PARAM = {};
+const vector<double> ONE_PARAM = {0.123};
+const vector<double> TWO_PARAMS = {0.123, 2.345};
+
+INSTANTIATE_TEST_SUITE_P (
+        ValidationTests,
+        ValidateParamLengthGateFixture,
+        ::testing::Values(
+                std::make_tuple("PauliX", ONE_PARAM),
+                std::make_tuple("PauliX", TWO_PARAMS),
+
+                std::make_tuple("PauliY", ONE_PARAM),
+                std::make_tuple("PauliY", TWO_PARAMS),
+
+                std::make_tuple("PauliZ", ONE_PARAM),
+                std::make_tuple("PauliZ", TWO_PARAMS),
+                std::make_tuple("Toffoli", vector<double>{0.3, 0})));
 
 // TODO: add tests for input validation error
 
