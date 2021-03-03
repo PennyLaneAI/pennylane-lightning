@@ -20,7 +20,6 @@
 #include <memory>
 #include <vector>
 
-#include "StateVector.hpp"
 #include "typedefs.hpp"
 
 namespace Pennylane {
@@ -309,22 +308,5 @@ namespace Pennylane {
      * @throws std::invalid_argument thrown if the gate type is not defined, or if the number of parameters to the gate is incorrect
      */
     std::unique_ptr<AbstractGate> constructGate(const std::string& label, const std::vector<double>& parameters);
-
-    /*
-     * Constructs the gate defined by the supplied parameters and applies it to the state vector.
-     *
-     * @param state state vector to which to apply the operation
-     * @param opLabel unique string corresponding to a gate type
-     * @param opWires index of qubits on which the gate acts
-     * @param opParams defines the gate parameterisation (may be zero-length for some gates)
-     * @param qubits number of qubits
-     */
-    void constructAndApplyOperation(
-        StateVector& state,
-        const std::string& opLabel,
-        const std::vector<unsigned int>& opWires,
-        const std::vector<double>& opParams,
-        const unsigned int qubits
-    );
 
 }
