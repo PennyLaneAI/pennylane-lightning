@@ -55,7 +55,6 @@ vector<CplxType> RY(const vector<double> & pars){
 }
 
 vector<CplxType> RZ(const vector<double> & pars){
-
     double parameter = pars.at(0);
     const std::complex<double> exponent(0, -parameter/2);
     const std::complex<double> exponent_second(0, parameter/2);
@@ -65,7 +64,6 @@ vector<CplxType> RZ(const vector<double> & pars){
 }
 
 vector<CplxType> PhaseShift(const vector<double> & pars){
-
     double parameter = pars.at(0);
 
     const std::complex<double> exponent(0, parameter);
@@ -75,7 +73,6 @@ vector<CplxType> PhaseShift(const vector<double> & pars){
 }
 
 vector<CplxType> Rot(const vector<double> & pars){
-
     double phi = pars.at(0);
     double theta = pars.at(1);
     double omega = pars.at(2);
