@@ -96,10 +96,88 @@ vector<CplxType> Rot(const vector<double> & pars){
     return {exp00 * c, -exp01 * s, exp10 * s, exp11 * c};
 }
 
+vector<CplxType> CRX(const vector<double> & pars){
+    double parameter = pars.at(0);
+
+    const std::complex<double> c (std::cos(parameter / 2), 0);
+    const std::complex<double> js (0, std::sin(-parameter / 2));
+
+    vector<CplxType> matrix = {
+          1, 0, 0, 0,
+          0, 1, 0, 0,
+          0, 0, c, js,
+          0, 0, js, c
+    };
+
+    return matrix;
+}
+
+vector<CplxType> CRY(const vector<double> & pars){
+    double parameter = pars.at(0);
+
+    const double c = std::cos(parameter / 2);
+    const double s = std::sin(parameter / 2);
+
+    vector<CplxType> matrix = {
+          1, 0, 0, 0,
+          0, 1, 0, 0,
+          0, 0, c, -s,
+          0, 0, s, c
+    };
+
+    return matrix;
+}
+
+vector<CplxType> CRZ(const vector<double> & pars){
+    double parameter = pars.at(0);
+
+    const std::complex<double> exponent(0, -parameter/2);
+    const std::complex<double> exponent_second(0, parameter/2);
+    const std::complex<double> first = std::pow(M_E, exponent);
+    const std::complex<double> second = std::pow(M_E, exponent_second);
+
+    vector<CplxType> matrix = {
+          1, 0, 0, 0,
+          0, 1, 0, 0,
+          0, 0, first, 0,
+          0, 0, 0, second
+    };
+
+    return matrix;
+}
+
+vector<CplxType> CRot(const vector<double> & pars){
+    double phi = pars.at(0);
+    double theta = pars.at(1);
+    double omega = pars.at(2);
+
+    const std::complex<double> e00(0, (-phi - omega)/2);
+    const std::complex<double> e10(0, (-phi + omega)/2);
+    const std::complex<double> e01(0, (phi - omega)/2);
+    const std::complex<double> e11(0, (phi + omega)/2);
+
+    const std::complex<double> exp00 = std::pow(M_E, e00);
+    const std::complex<double> exp10 = std::pow(M_E, e10);
+    const std::complex<double> exp01 = std::pow(M_E, e01);
+    const std::complex<double> exp11 = std::pow(M_E, e11);
+
+    const double c = std::cos(theta / 2);
+    const double s = std::sin(theta / 2);
+
+    vector<CplxType> matrix = {
+          1, 0, 0, 0,
+          0, 1, 0, 0,
+          0, 0, exp00 * c, -exp01 * s,
+          0, 0, exp10 * s, exp11 * c
+    };
+
+    return matrix;
+}
+
+
 
 // Defining the operation maps
 using pfunc_params = std::function<vector<CplxType>(const vector<double>&)>;
-
 
 static const vector<CplxType> CNOT = {
     1, 0, 0, 0,

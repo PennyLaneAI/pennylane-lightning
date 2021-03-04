@@ -90,7 +90,11 @@ INSTANTIATE_TEST_SUITE_P (
                 std::make_tuple("RY", RY, ONE_PARAM),
                 std::make_tuple("RZ", RZ, ONE_PARAM),
                 std::make_tuple("PhaseShift", PhaseShift, ONE_PARAM),
-                std::make_tuple("Rot", Rot, THREE_PARAMS)
+                std::make_tuple("Rot", Rot, THREE_PARAMS),
+                std::make_tuple("CRX", CRX, ONE_PARAM),
+                std::make_tuple("CRY", CRY, ONE_PARAM),
+                std::make_tuple("CRZ", CRZ, ONE_PARAM),
+                std::make_tuple("CRot", CRot, THREE_PARAMS)
 ));
 
 
