@@ -110,50 +110,31 @@ TEST_P(NumParamsThrowsFixture, CheckParamLength) {
     EXPECT_THROW_WITH_MESSAGE_SUBSTRING(Pennylane::constructGate(gate_name, params), std::invalid_argument, gate_name);
 }
 
+const vector<string> non_param_gates = {"PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T", "CNOT", "SWAP", "CZ", "Toffoli", "CSWAP"};
+const vector<vector<double>> many_params = {ONE_PARAM, THREE_PARAMS};
+
 INSTANTIATE_TEST_SUITE_P (
-        GateChecks,
+        NoParameterGateChecks,
         NumParamsThrowsFixture,
-        ::testing::Values(
-
-                // Non-parametrized gates
-                std::make_tuple("PauliX", ONE_PARAM),
-                std::make_tuple("PauliX", THREE_PARAMS),
-                std::make_tuple("PauliY", ONE_PARAM),
-                std::make_tuple("PauliY", THREE_PARAMS),
-                std::make_tuple("PauliZ", ONE_PARAM),
-                std::make_tuple("PauliZ", THREE_PARAMS),
-
-                std::make_tuple("Hadamard", ONE_PARAM),
-                std::make_tuple("Hadamard", THREE_PARAMS),
-                std::make_tuple("S", ONE_PARAM),
-                std::make_tuple("S", THREE_PARAMS),
-                std::make_tuple("T", ONE_PARAM),
-                std::make_tuple("T", THREE_PARAMS),
-                std::make_tuple("CNOT", ONE_PARAM),
-                std::make_tuple("CNOT", THREE_PARAMS),
-                std::make_tuple("SWAP", ONE_PARAM),
-                std::make_tuple("SWAP", THREE_PARAMS),
-                std::make_tuple("CZ", ONE_PARAM),
-                std::make_tuple("CZ", THREE_PARAMS),
-                std::make_tuple("Toffoli", ONE_PARAM),
-                std::make_tuple("Toffoli", THREE_PARAMS),
-                std::make_tuple("CSWAP", ONE_PARAM),
-                std::make_tuple("CSWAP", THREE_PARAMS),
-
-                // Parametrized gates
-                std::make_tuple("RX", ZERO_PARAM),
-                std::make_tuple("RY", ZERO_PARAM),
-                std::make_tuple("RZ", ZERO_PARAM),
-                std::make_tuple("PhaseShift", ZERO_PARAM),
-                std::make_tuple("Rot", ZERO_PARAM),
-                std::make_tuple("CRX", ZERO_PARAM),
-                std::make_tuple("CRY", ZERO_PARAM),
-                std::make_tuple("CRZ", ZERO_PARAM),
-                std::make_tuple("CRot", ZERO_PARAM)
+        ::testing::Combine(
+            ::testing::ValuesIn(non_param_gates),
+            ::testing::ValuesIn(many_params)
     ));
-}
+
+const vector<string> param_gates = {"RX", "RY", "RZ", "PhaseShift", "Rot", "CRX", "CRY", "CRZ", "CRot"};
+const vector<vector<double>> zero_params = { ZERO_PARAM };
+
+INSTANTIATE_TEST_SUITE_P (
+        ParametrizedGateChecks,
+        NumParamsThrowsFixture,
+        ::testing::Combine(
+            ::testing::ValuesIn(param_gates),
+            ::testing::ValuesIn(zero_params)
+    ));
 
 TEST(DispatchTable, constructGateThrows) {
     const string test_gate_name = "Non-existent gate";
     EXPECT_THROW_WITH_MESSAGE_SUBSTRING(Pennylane::constructGate(test_gate_name, {}), std::invalid_argument, test_gate_name);
+}
+
 }
