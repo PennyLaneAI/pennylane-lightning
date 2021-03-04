@@ -171,7 +171,7 @@ vector<CplxType> CRot(const vector<double> & pars){
     return matrix;
 }
 
-// Defining the operation maps
+// Type alias for the functions of parametrized matrices
 using pfunc_params = std::function<vector<CplxType>(const vector<double>&)>;
 
 static const vector<CplxType> CNOT = {
