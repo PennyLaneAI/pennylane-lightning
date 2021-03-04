@@ -26,7 +26,7 @@ using std::vector;
 const std::complex<double> IMAG(0, 1);
 const std::complex<double> NEGATIVE_IMAG(0, -1);
 const double SQRT_2 = sqrt(2);
-const std::complex<double> exponent(0, M_PI/4);
+const std::complex<double> EXPONENT(0, M_PI/4);
 
 // Non-parametrized single qubit gates
 static const vector<CplxType> PauliX = {0,1,1,0};
@@ -34,7 +34,7 @@ static const vector<CplxType> PauliY = {0, NEGATIVE_IMAG, IMAG, 0};
 static const vector<CplxType> PauliZ = {1,0,0,-1};
 static const vector<CplxType> Hadamard = {1/SQRT_2, 1/SQRT_2, 1/SQRT_2, -1/SQRT_2};
 static const vector<CplxType> S = {1, 0, 0, IMAG};
-static const vector<CplxType> T = {1, 0, 0, std::pow(M_E, exponent)};
+static const vector<CplxType> T = {1, 0, 0, std::pow(M_E, EXPONENT)};
 
 
 // Parametrized single qubit gates
@@ -56,18 +56,18 @@ vector<CplxType> RY(const vector<double> & pars){
 
 vector<CplxType> RZ(const vector<double> & pars){
     double parameter = pars.at(0);
-    const std::complex<double> exponent(0, -parameter/2);
-    const std::complex<double> exponent_second(0, parameter/2);
-    const std::complex<double> first = std::pow(M_E, exponent);
-    const std::complex<double> second = std::pow(M_E, exponent_second);
+    const std::complex<double> phase(0, -parameter/2);
+    const std::complex<double> phase_second(0, parameter/2);
+    const std::complex<double> first = std::pow(M_E, phase);
+    const std::complex<double> second = std::pow(M_E, phase_second);
     return {first, 0, 0, second};
 }
 
 vector<CplxType> PhaseShift(const vector<double> & pars){
     double parameter = pars.at(0);
 
-    const std::complex<double> exponent(0, parameter);
-    const std::complex<double> shift = std::pow(M_E, exponent);
+    const std::complex<double> phase(0, parameter);
+    const std::complex<double> shift = std::pow(M_E, phase);
 
     return {1, 0, 0, shift};
 }
@@ -128,10 +128,10 @@ vector<CplxType> CRY(const vector<double> & pars){
 vector<CplxType> CRZ(const vector<double> & pars){
     double parameter = pars.at(0);
 
-    const std::complex<double> exponent(0, -parameter/2);
-    const std::complex<double> exponent_second(0, parameter/2);
-    const std::complex<double> first = std::pow(M_E, exponent);
-    const std::complex<double> second = std::pow(M_E, exponent_second);
+    const std::complex<double> phase(0, -parameter/2);
+    const std::complex<double> phase_second(0, parameter/2);
+    const std::complex<double> first = std::pow(M_E, phase);
+    const std::complex<double> second = std::pow(M_E, phase_second);
 
     vector<CplxType> matrix = {
           1, 0, 0, 0,
