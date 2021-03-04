@@ -72,6 +72,7 @@ On Debian-based systems, these can be installed via ``apt`` and ``pip``:
 
 .. code-block:: console
 
+    $ sudo apt install g++
     $ pip install pybind11
 
 Testing
