@@ -2,27 +2,28 @@
 
 ### New features since last release
 
-* TODO - mention new backend and removal of eigen
-
 ### Breaking changes
 
 ### Improvements
 
-* Add new lightweight backend with performance improvements
+* Add new lightweight backend with performance improvements.
   [(#57)](https://github.com/PennyLaneAI/pennylane-lightning/pull/57)
+
+* Remove the previous backend using Eigen.
+  [(#57)](https://github.com/PennyLaneAI/pennylane-lightning/pull/67)
 
 ### Documentation
 
 ### Bug fixes
 
-* Re-add dispatch table after fixing static initialisation order issue
+* Re-add dispatch table after fixing static initialisation order issue.
   [(#68)](https://github.com/PennyLaneAI/pennylane-lightning/pull/68)
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Thomas Bromley, Christina Lee, Thomas Loke, Antal Száva
+Thomas Bromley, Christina Lee, Thomas Loke, Antal Száva.
 
 ---
 
