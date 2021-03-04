@@ -13,7 +13,7 @@
 // limitations under the License.
 #include "gtest/gtest.h"
 #include "../rework/Gates.hpp"
-#include "GateData.h"
+#include "GateData.hpp"
 #include "TestingUtils.h"
 
 #include <functional>
