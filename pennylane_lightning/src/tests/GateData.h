@@ -107,6 +107,18 @@ static const vector<CplxType> CNOT = {
     0, 0, 0, 1,
     0, 0, 1, 0};
 
+static const vector<CplxType> SWAP = {
+    1, 0, 0, 0,
+    0, 0, 1, 0,
+    0, 1, 0, 0,
+    0, 0, 0, 1};
+
+static const vector<CplxType> CZ = {
+    1, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, -1};
+
 static const vector<CplxType> Toffoli = {
     1, 0, 0, 0, 0, 0, 0, 0,
     0, 1, 0, 0, 0, 0, 0, 0,
@@ -116,4 +128,14 @@ static const vector<CplxType> Toffoli = {
     0, 0, 0, 0, 0, 1, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 1,
     0, 0, 0, 0, 0, 0, 1, 0 };
+
+static const vector<CplxType> CSWAP = {
+    1, 0, 0, 0, 0, 0, 0, 0,
+    0, 1, 0, 0, 0, 0, 0, 0,
+    0, 0, 1, 0, 0, 0, 0, 0,
+    0, 0, 0, 1, 0, 0, 0, 0,
+    0, 0, 0, 0, 1, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 1, 0,
+    0, 0, 0, 0, 0, 1, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 1 };
 
