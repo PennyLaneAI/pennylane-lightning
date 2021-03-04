@@ -62,8 +62,9 @@ INSTANTIATE_TEST_SUITE_P (
                 std::make_tuple("CNOT", CNOT),
                 std::make_tuple("SWAP", SWAP),
                 std::make_tuple("CZ", CZ),
-                std::make_tuple("Toffoli", Toffoli)));
-                std::make_tuple("CSWAP", CSWAP),
+                std::make_tuple("Toffoli", Toffoli),
+                std::make_tuple("CSWAP", CSWAP)
+));
 
 // -------------------------------------------------------------------------------------------------------------
 // Parametrized gates

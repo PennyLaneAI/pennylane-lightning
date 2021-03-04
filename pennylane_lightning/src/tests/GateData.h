@@ -115,7 +115,7 @@ static const vector<CplxType> SWAP = {
 
 static const vector<CplxType> CZ = {
     1, 0, 0, 0,
-    0, 0, 0, 0,
+    0, 1, 0, 0,
     0, 0, 1, 0,
     0, 0, 0, -1};
 
