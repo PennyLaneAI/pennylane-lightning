@@ -152,3 +152,8 @@ INSTANTIATE_TEST_SUITE_P (
                 std::make_tuple("CRot", ZERO_PARAM)
     ));
 }
+
+TEST(DispatchTable, constructGateThrows) {
+    const string test_gate_name = "Non-existent gate";
+    EXPECT_THROW_WITH_MESSAGE_SUBSTRING(Pennylane::constructGate(test_gate_name, {}), std::invalid_argument, test_gate_name);
+}
