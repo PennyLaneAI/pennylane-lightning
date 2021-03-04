@@ -64,6 +64,39 @@ vector<CplxType> RZ(const vector<double> & pars){
     return {first, 0, 0, second};
 }
 
+vector<CplxType> PhaseShift(const vector<double> & pars){
+
+    double parameter = pars.at(0);
+
+    const std::complex<double> exponent(0, parameter);
+    const std::complex<double> shift = std::pow(M_E, exponent);
+
+    return {1, 0, 0, shift};
+}
+
+vector<CplxType> Rot(const vector<double> & pars){
+
+    double phi = pars.at(0);
+    double theta = pars.at(1);
+    double omega = pars.at(2);
+
+    const std::complex<double> e00(0, (-phi - omega)/2);
+    const std::complex<double> e10(0, (-phi + omega)/2);
+    const std::complex<double> e01(0, (phi - omega)/2);
+    const std::complex<double> e11(0, (phi + omega)/2);
+
+    const std::complex<double> exp00 = std::pow(M_E, e00);
+    const std::complex<double> exp10 = std::pow(M_E, e10);
+    const std::complex<double> exp01 = std::pow(M_E, e01);
+    const std::complex<double> exp11 = std::pow(M_E, e11);
+
+    const double c = std::cos(theta / 2);
+    const double s = std::sin(theta / 2);
+
+    return {exp00 * c, -exp01 * s, exp10 * s, exp11 * c};
+}
+
+
 // Defining the operation maps
 using pfunc_params = std::function<vector<CplxType>(const vector<double>&)>;
 

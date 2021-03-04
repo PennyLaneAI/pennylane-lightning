@@ -25,21 +25,21 @@ using std::function;
 
 using Pennylane::CplxType;
 
-using getParametrizedGateMatrix = function< vector<CplxType>(double)>;
+using getParametrizedMatrix = function< vector<CplxType>(double)>;
 
 namespace test_gates{
 
 
 const vector<double> ZERO_PARAM = {};
 const vector<double> ONE_PARAM = {0.123};
-const vector<double> TWO_PARAMS = {0.123, 2.345};
+const vector<double> THREE_PARAMS = {0.123, 2.345, 1.4321};
 
 // -------------------------------------------------------------------------------------------------------------
 // Non-parametrized gates
-class GateMatrixNoParamTestFixture : public ::testing::TestWithParam<std::tuple<string, vector<CplxType> > > {
+class MatrixNoParamFixture : public ::testing::TestWithParam<std::tuple<string, vector<CplxType> > > {
 };
 
-TEST_P(GateMatrixNoParamTestFixture, CheckMatrix) {
+TEST_P(MatrixNoParamFixture, CheckMatrix) {
     const string gate_name = std::get<0>(GetParam());
     const vector<CplxType> matrix = std::get<1>(GetParam());
 
@@ -50,8 +50,8 @@ TEST_P(GateMatrixNoParamTestFixture, CheckMatrix) {
 }
 
 INSTANTIATE_TEST_SUITE_P (
-        GateTests,
-        GateMatrixNoParamTestFixture,
+        GateMatrix,
+        MatrixNoParamFixture,
         ::testing::Values(
                 std::make_tuple("PauliX", PauliX),
                 std::make_tuple("PauliY", PauliY),
@@ -65,10 +65,10 @@ INSTANTIATE_TEST_SUITE_P (
 // -------------------------------------------------------------------------------------------------------------
 // Parametrized gates
 
-class GateMatrixWithParamsTestFixture : public ::testing::TestWithParam<std::tuple<string, pfunc_params, vector<double> >> {
+class MatrixWithParamsFixture : public ::testing::TestWithParam<std::tuple<string, pfunc_params, vector<double> >> {
 };
 
-TEST_P(GateMatrixWithParamsTestFixture, CheckMatrix) {
+TEST_P(MatrixWithParamsFixture, CheckMatrix) {
     const string gate_name = std::get<0>(GetParam());
     pfunc_params func = std::get<1>(GetParam());
     const vector<double> params = std::get<2>(GetParam());
@@ -79,12 +79,14 @@ TEST_P(GateMatrixWithParamsTestFixture, CheckMatrix) {
 }
 
 INSTANTIATE_TEST_SUITE_P (
-        GateTests,
-        GateMatrixWithParamsTestFixture,
+        GateMatrix,
+        MatrixWithParamsFixture,
         ::testing::Values(
                 std::make_tuple("RX", RX, ONE_PARAM),
                 std::make_tuple("RY", RY, ONE_PARAM),
-                std::make_tuple("RZ", RZ, ONE_PARAM)
+                std::make_tuple("RZ", RZ, ONE_PARAM),
+                std::make_tuple("PhaseShift", PhaseShift, ONE_PARAM),
+                std::make_tuple("Rot", Rot, THREE_PARAMS)
 ));
 
 
@@ -92,10 +94,10 @@ INSTANTIATE_TEST_SUITE_P (
 // Parameter length validation
 
 // Pair the gate name with its matrix from GateData
-class ValidateParamLengthGateFixture : public ::testing::TestWithParam<std::tuple<string, vector<double> > > {
+class NumParamsThrowsFixture : public ::testing::TestWithParam<std::tuple<string, vector<double> > > {
 };
 
-TEST_P(ValidateParamLengthGateFixture, CheckParamLength) {
+TEST_P(NumParamsThrowsFixture, CheckParamLength) {
     const string gate_name = std::get<0>(GetParam());
     const vector<double> params = std::get<1>(GetParam());
     //EXPECT_THROW(Pennylane::constructGate(gate_name, params), std::invalid_argument);
@@ -103,19 +105,19 @@ TEST_P(ValidateParamLengthGateFixture, CheckParamLength) {
 }
 
 INSTANTIATE_TEST_SUITE_P (
-        ValidationTests,
-        ValidateParamLengthGateFixture,
+        GateChecks,
+        NumParamsThrowsFixture,
         ::testing::Values(
                 std::make_tuple("PauliX", ONE_PARAM),
-                std::make_tuple("PauliX", TWO_PARAMS),
+                std::make_tuple("PauliX", THREE_PARAMS),
                 std::make_tuple("PauliY", ONE_PARAM),
-                std::make_tuple("PauliY", TWO_PARAMS),
+                std::make_tuple("PauliY", THREE_PARAMS),
                 std::make_tuple("PauliZ", ONE_PARAM),
-                std::make_tuple("PauliZ", TWO_PARAMS),
+                std::make_tuple("PauliZ", THREE_PARAMS),
 
                 std::make_tuple("CNOT", ONE_PARAM),
-                std::make_tuple("CNOT", TWO_PARAMS),
+                std::make_tuple("CNOT", THREE_PARAMS),
                 std::make_tuple("Toffoli", ONE_PARAM),
-                std::make_tuple("Toffoli", TWO_PARAMS)));
+                std::make_tuple("Toffoli", THREE_PARAMS)));
 
 }
