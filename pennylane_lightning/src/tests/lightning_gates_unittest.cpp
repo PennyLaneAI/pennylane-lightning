@@ -29,6 +29,11 @@ using getParametrizedGateMatrix = function< vector<CplxType>(double)>;
 
 namespace test_gates{
 
+
+const vector<double> ZERO_PARAM = {};
+const vector<double> ONE_PARAM = {0.123};
+const vector<double> TWO_PARAMS = {0.123, 2.345};
+
 // -------------------------------------------------------------------------------------------------------------
 // Non-parametrized gates
 class GateMatrixNoParamTestFixture : public ::testing::TestWithParam<std::tuple<string, vector<CplxType> > > {
@@ -60,53 +65,27 @@ INSTANTIATE_TEST_SUITE_P (
 // -------------------------------------------------------------------------------------------------------------
 // Parametrized gates
 
-/*
-class GateMatrixWithParamsTestFixture : public ::testing::TestWithParam<std::tuple<string, getParametrizedGateMatrix, vector<double> > {
+class GateMatrixWithParamsTestFixture : public ::testing::TestWithParam<std::tuple<string, pfunc_params, vector<double> >> {
 };
 
 TEST_P(GateMatrixWithParamsTestFixture, CheckMatrix) {
     const string gate_name = std::get<0>(GetParam());
-    auto func = std::get<1>(GetParam());
+    pfunc_params func = std::get<1>(GetParam());
     const vector<double> params = std::get<2>(GetParam());
 
+
     unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, params);
-    EXPECT_EQ(gate->asMatrix(), func(params[0]));
+    EXPECT_EQ(gate->asMatrix(), func(params));
 }
 
 INSTANTIATE_TEST_SUITE_P (
         GateTests,
         GateMatrixWithParamsTestFixture,
         ::testing::Values(
-                std::make_tuple("RX", RX),
+                std::make_tuple("RX", RX, ONE_PARAM),
+                std::make_tuple("RY", RY, ONE_PARAM),
+                std::make_tuple("RZ", RZ, ONE_PARAM)
 ));
-*/
-
-TEST(constructGate, RX){
-    const string gate_name = "RX";
-    vector<double> params = {0.3};
-
-    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, params);
-
-    EXPECT_EQ(gate->asMatrix(), RX(params.at(0)));
-}
-
-TEST(constructGate, RY){
-    const string gate_name = "RY";
-    vector<double> params = {0.3};
-
-    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, params);
-
-    EXPECT_EQ(gate->asMatrix(), RY(params.at(0)));
-}
-
-TEST(constructGate, RZ){
-    const string gate_name = "RZ";
-    vector<double> params = {0.3};
-
-    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, params);
-
-    EXPECT_EQ(gate->asMatrix(), RZ(params.at(0)));
-}
 
 
 // -------------------------------------------------------------------------------------------------------------
@@ -122,10 +101,6 @@ TEST_P(ValidateParamLengthGateFixture, CheckParamLength) {
     //EXPECT_THROW(Pennylane::constructGate(gate_name, params), std::invalid_argument);
     EXPECT_THROW_WITH_MESSAGE_SUBSTRING(Pennylane::constructGate(gate_name, params), std::invalid_argument, gate_name);
 }
-
-const vector<double> ZERO_PARAM = {};
-const vector<double> ONE_PARAM = {0.123};
-const vector<double> TWO_PARAMS = {0.123, 2.345};
 
 INSTANTIATE_TEST_SUITE_P (
         ValidationTests,

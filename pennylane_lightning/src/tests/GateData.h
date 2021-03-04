@@ -38,25 +38,35 @@ static const vector<CplxType> T = {1, 0, 0, std::pow(M_E, exponent)};
 
 
 // Parametrized single qubit gates
-vector<CplxType> RX(double parameter){
+vector<CplxType> RX(const vector<double> & pars){
+    double parameter = pars.at(0);
+
     const std::complex<double> c (std::cos(parameter / 2), 0);
     const std::complex<double> js (0, std::sin(-parameter / 2));
     return {c, js, js, c};
 }
 
-vector<CplxType> RY(double parameter){
+vector<CplxType> RY(const vector<double> & pars){
+    double parameter = pars.at(0);
+
     const double c = std::cos(parameter / 2);
     const double s = std::sin(parameter / 2);
     return {c, -s, s, c};
 }
 
-vector<CplxType> RZ(double parameter){
+vector<CplxType> RZ(const vector<double> & pars){
+
+    double parameter = pars.at(0);
     const std::complex<double> exponent(0, -parameter/2);
     const std::complex<double> exponent_second(0, parameter/2);
     const std::complex<double> first = std::pow(M_E, exponent);
     const std::complex<double> second = std::pow(M_E, exponent_second);
     return {first, 0, 0, second};
 }
+
+// Defining the operation maps
+using pfunc_params = std::function<vector<CplxType>(const vector<double>&)>;
+
 
 static const vector<CplxType> CNOT = {
     1, 0, 0, 0,
