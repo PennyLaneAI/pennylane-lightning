@@ -16,6 +16,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Install dependencies
+        run: sudo apt-get -y -q install cmake gcc
+
       - name: Install Google Test
         run: |
             wget -qO - https://github.com/google/googletest/archive/release-1.10.0.tar.gz | tar -xz
@@ -45,6 +48,9 @@ jobs:
         name: Install Python
         with:
           python-version: '3.7'
+
+      - name: Install dependencies
+        run: sudo apt-get -y -q install cmake gcc
 
       - name: Get required Python packages
         run: |
