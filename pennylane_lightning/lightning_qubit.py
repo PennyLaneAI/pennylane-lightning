@@ -116,7 +116,7 @@ class LightningQubit(DefaultQubit):
             self._pre_rotated_state = self._state
 
         if rotations:
-            if any(isinstance(r, QubitUnitary)for r in rotations):
+            if any(isinstance(r, QubitUnitary) for r in rotations):
                 super().apply(operations=[], rotations=rotations)
             else:
                 self._state = self.apply_lightning(np.copy(self._pre_rotated_state), rotations)
