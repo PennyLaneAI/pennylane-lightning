@@ -98,11 +98,11 @@ class LightningQubitNew(DefaultQubit):
         for i, operation in enumerate(operations):  # State preparation is currently done in Python
             if isinstance(operation, (QubitStateVector, BasisState)):
                 if i == 0:
-
+                    input_state = operation.parameters[0].copy()
                     if isinstance(operation, QubitStateVector):
-                        self._apply_state_vector(operation.parameters[0], operation.wires)
+                        self._apply_state_vector(input_state, operation.wires)
                     else:
-                        self._apply_basis_state(operation.parameters[0], operation.wires)
+                        self._apply_basis_state(input_state, operation.wires)
 
                     del operations[0]
                 else:
