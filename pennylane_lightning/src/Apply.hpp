@@ -34,6 +34,15 @@
 namespace Pennylane {
 
     /**
+     * Produces the list of qubit indices that excludes a given set of indices.
+     * 
+     * @param excludedIndices indices to exclude (must be in the range [0, qubits-1])
+     * @param qubits number of qubits
+     * @return Set difference of [0, ..., qubits-1] and excludedIndices, in ascending order
+     */
+    std::vector<unsigned int> getIndicesAfterExclusion(const std::vector<unsigned int>& indicesToExclude, const unsigned int qubits);
+
+    /**
      * Produces the decimal values for all possible bit patterns determined by a set of indices, taking other indices to be fixed at 0.
      * The qubit indices are taken to be big-endian, i.e. qubit 0 is the most significant bit.
      * 
