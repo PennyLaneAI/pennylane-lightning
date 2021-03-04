@@ -25,17 +25,16 @@ using std::function;
 
 using Pennylane::CplxType;
 
-using getParametrizedMatrix = function< vector<CplxType>(double)>;
-
 namespace test_gates{
-
 
 const vector<double> ZERO_PARAM = {};
 const vector<double> ONE_PARAM = {0.123};
 const vector<double> THREE_PARAMS = {0.123, 2.345, 1.4321};
 
+
 // -------------------------------------------------------------------------------------------------------------
 // Non-parametrized gates
+
 class MatrixNoParamFixture : public ::testing::TestWithParam<std::tuple<string, vector<CplxType> > > {
 };
 
@@ -101,14 +100,13 @@ INSTANTIATE_TEST_SUITE_P (
 // -------------------------------------------------------------------------------------------------------------
 // Parameter length validation
 
-// Pair the gate name with its matrix from GateData
 class NumParamsThrowsFixture : public ::testing::TestWithParam<std::tuple<string, vector<double> > > {
 };
 
 TEST_P(NumParamsThrowsFixture, CheckParamLength) {
     const string gate_name = std::get<0>(GetParam());
     const vector<double> params = std::get<1>(GetParam());
-    //EXPECT_THROW(Pennylane::constructGate(gate_name, params), std::invalid_argument);
+
     EXPECT_THROW_WITH_MESSAGE_SUBSTRING(Pennylane::constructGate(gate_name, params), std::invalid_argument, gate_name);
 }
 
@@ -116,6 +114,8 @@ INSTANTIATE_TEST_SUITE_P (
         GateChecks,
         NumParamsThrowsFixture,
         ::testing::Values(
+
+                // Non-parametrized gates
                 std::make_tuple("PauliX", ONE_PARAM),
                 std::make_tuple("PauliX", THREE_PARAMS),
                 std::make_tuple("PauliY", ONE_PARAM),
@@ -123,9 +123,32 @@ INSTANTIATE_TEST_SUITE_P (
                 std::make_tuple("PauliZ", ONE_PARAM),
                 std::make_tuple("PauliZ", THREE_PARAMS),
 
+                std::make_tuple("Hadamard", ONE_PARAM),
+                std::make_tuple("Hadamard", THREE_PARAMS),
+                std::make_tuple("S", ONE_PARAM),
+                std::make_tuple("S", THREE_PARAMS),
+                std::make_tuple("T", ONE_PARAM),
+                std::make_tuple("T", THREE_PARAMS),
                 std::make_tuple("CNOT", ONE_PARAM),
                 std::make_tuple("CNOT", THREE_PARAMS),
+                std::make_tuple("SWAP", ONE_PARAM),
+                std::make_tuple("SWAP", THREE_PARAMS),
+                std::make_tuple("CZ", ONE_PARAM),
+                std::make_tuple("CZ", THREE_PARAMS),
                 std::make_tuple("Toffoli", ONE_PARAM),
-                std::make_tuple("Toffoli", THREE_PARAMS)));
+                std::make_tuple("Toffoli", THREE_PARAMS),
+                std::make_tuple("CSWAP", ONE_PARAM),
+                std::make_tuple("CSWAP", THREE_PARAMS),
 
+                // Parametrized gates
+                std::make_tuple("RX", ZERO_PARAM),
+                std::make_tuple("RY", ZERO_PARAM),
+                std::make_tuple("RZ", ZERO_PARAM),
+                std::make_tuple("PhaseShift", ZERO_PARAM),
+                std::make_tuple("Rot", ZERO_PARAM),
+                std::make_tuple("CRX", ZERO_PARAM),
+                std::make_tuple("CRY", ZERO_PARAM),
+                std::make_tuple("CRZ", ZERO_PARAM),
+                std::make_tuple("CRot", ZERO_PARAM)
+    ));
 }

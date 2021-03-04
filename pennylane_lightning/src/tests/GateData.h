@@ -174,8 +174,6 @@ vector<CplxType> CRot(const vector<double> & pars){
     return matrix;
 }
 
-
-
 // Defining the operation maps
 using pfunc_params = std::function<vector<CplxType>(const vector<double>&)>;
 
