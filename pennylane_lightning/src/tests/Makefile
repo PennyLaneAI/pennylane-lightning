@@ -21,6 +21,7 @@ LFLAGS = -fopenmp -L$(GOOGLETEST_DIR)/lib -lgtest
 all: test
 
 lightning_util_unittest.o: lightning_util_unittest.cpp
+	$(CC) $^ $(CFLAGS) -c
 
 Gates.o: ../rework/Gates.cpp
 	$(CC) $^ $(CFLAGS) -c
