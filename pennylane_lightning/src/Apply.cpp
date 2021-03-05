@@ -15,7 +15,6 @@
 #include "Gates.hpp"
 #include "StateVector.hpp"
 #include "Util.hpp"
-#include "Util.cpp"
 
 using std::string;
 using std::unique_ptr;
