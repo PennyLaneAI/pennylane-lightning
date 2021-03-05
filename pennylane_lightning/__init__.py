@@ -15,4 +15,3 @@
 
 from ._version import __version__
 from .lightning_qubit import LightningQubit
-from .lightning_qubit_new import LightningQubitNew

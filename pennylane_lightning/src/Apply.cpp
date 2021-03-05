@@ -88,7 +88,7 @@ void Pennylane::apply(
 }
 
 
-PYBIND11_MODULE(lightning_qubit_new_ops, m)
+PYBIND11_MODULE(lightning_qubit_ops, m)
 {
     m.doc() = "lightning.qubit apply() method";
     m.def("apply", Pennylane::apply, "lightning.qubit apply() method");
