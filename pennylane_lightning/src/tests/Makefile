@@ -23,7 +23,7 @@ all: test
 lightning_util_unittest.o: lightning_util_unittest.cpp
 	$(CC) $^ $(CFLAGS) -c
 
-Gates.o: ../rework/Gates.cpp
+Gates.o: ../Gates.cpp
 	$(CC) $^ $(CFLAGS) -c
 
 lightning_gates_unittest.o: lightning_gates_unittest.cpp
