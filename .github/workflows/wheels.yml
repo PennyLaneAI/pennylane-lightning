@@ -8,27 +8,11 @@ on:
 env:
   CIBW_SKIP: "cp27-* cp34-* cp35-* *i686 pp* *win32"
 
-  # Linux specific build settings
-
-  CIBW_BEFORE_ALL_LINUX: |
-    curl -OsL https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz
-    tar xzf eigen-3.3.7.tar.gz eigen-3.3.7/Eigen --strip-components 1
-    tar xzf eigen-3.3.7.tar.gz eigen-3.3.7/unsupported --strip-components 1
-    mkdir -p {project}/include
-    cp -rf Eigen {project}/include
-    cp -rf unsupported {project}/include
-
   # MacOS specific build settings
 
   CIBW_BEFORE_ALL_MACOS: |
     brew cask uninstall --force oclint
-    brew install gcc eigen libomp
-
-  CIBW_ENVIRONMENT_MACOS: EIGEN_INCLUDE_DIR=/usr/local/Cellar/eigen/3.3.7/include/eigen3
-
-  # Windows specific build settings
-
-  CIBW_ENVIRONMENT_WINDOWS: EIGEN_INCLUDE_DIR="C:\\eigen-3.3.7\\"
+    brew install gcc libomp
 
   # Python build settings
 
@@ -71,16 +55,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install cibuildwheel==1.5.5
-
-      - name: Install Eigen on Windows
-        if: runner.os == 'Windows'
-        shell: powershell
-        env:
-          GIT_REDIRECT_STDERR: "2>&1"
-        run: |
-          choco install vcpython27 -f -y
-          Invoke-WebRequest -Uri "https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.zip" -UseBasicParsing -OutFile C:\eigen3.zip
-          & "C:\\Program Files\\7-Zip\\7z.exe" x C:\eigen3.zip -o"C:\" -y
 
       - name: Build wheels
         run: |

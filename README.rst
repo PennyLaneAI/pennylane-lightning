@@ -27,7 +27,7 @@ PennyLane-Lightning Plugin
 
 .. header-start-inclusion-marker-do-not-remove
 
-The PennyLane-Lightning plugin provides a fast state-vector simulator written in C++ using `Eigen <http://eigen.tuxfamily.org/index.php?title=Main_Page>`_.
+The PennyLane-Lightning plugin provides a fast state-vector simulator written in C++.
 
 `PennyLane <https://pennylane.readthedocs.io>`_ is a cross-platform Python library for quantum machine
 learning, automatic differentiation, and optimization of hybrid quantum-classical computations.
@@ -65,7 +65,6 @@ Note that subsequent calls to ``pip install -e .`` will use cached binaries stor
 The following dependencies are required to install PennyLane-Lightning:
 
 * A C++ compiler, such as ``g++``, ``clang``, or ``MSVC``.
-* `Eigen3 <http://eigen.tuxfamily.org/index.php?title=Main_Page>`_ - a C++ header library for linear algebra.
 * `pybind11 <https://pybind11.readthedocs.io/en/stable/>`_ a library for binding C++
   functionality to Python.
 
@@ -73,7 +72,7 @@ On Debian-based systems, these can be installed via ``apt`` and ``pip``:
 
 .. code-block:: console
 
-    $ sudo apt install g++ libeigen3-dev
+    $ sudo apt install g++
     $ pip install pybind11
 
 Testing
