@@ -17,6 +17,7 @@
  */
 #pragma once
 
+#include <memory>
 #include <assert.h>
 
 namespace Pennylane {
