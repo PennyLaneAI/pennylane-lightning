@@ -11,18 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-EIGEN_INCLUDE_DIR ?= /usr/include/eigen3
 CC = g++
 CFLAGS = -std=c++11 -g -Wall -fopenmp -fPIC -I/usr/include \
-	-I../include -I$(EIGEN_INCLUDE_DIR) -I$(GOOGLETEST_DIR)/include \
+	-I../include -I$(GOOGLETEST_DIR)/include \
 	-march=native
 
 LFLAGS = -fopenmp -L$(GOOGLETEST_DIR)/lib -lgtest
 
 all: test
-
-lightning_unittest.o: lightning_unittest.cpp
-	$(CC) $^ $(CFLAGS) -c
 
 lightning_util_unittest.o: lightning_util_unittest.cpp
 
@@ -35,7 +31,7 @@ lightning_gates_unittest.o: lightning_gates_unittest.cpp
 gtest_main.o: gtest_main.cpp
 	$(CC) $^ $(CFLAGS) -c
 
-cpptests: gtest_main.o lightning_unittest.o lightning_gates_unittest.o Gates.o
+cpptests: gtest_main.o lightning_util_unittest.o lightning_gates_unittest.o Gates.o
 	$(CC) $^ -o $@ $(LFLAGS)
 
 test: cpptests
