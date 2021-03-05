@@ -14,7 +14,7 @@
 #include "gtest/gtest.h"
 #include "../Gates.hpp"
 #include "GateData.hpp"
-#include "TestingUtils.h"
+#include "TestingUtils.hpp"
 
 #include <functional>
 
