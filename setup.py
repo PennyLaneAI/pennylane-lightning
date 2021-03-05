@@ -151,6 +151,7 @@ if not os.environ.get("MOCK_DOCS", False):
                 "pennylane_lightning/src/Apply.cpp",
                 "pennylane_lightning/src/Gates.cpp",
                 "pennylane_lightning/src/StateVector.cpp",
+                "pennylane_lightning/src/Util.cpp",
             ],
             depends=[
                 "pennylane_lightning/src/Apply.hpp",
