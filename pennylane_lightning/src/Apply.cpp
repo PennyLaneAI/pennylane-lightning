@@ -36,7 +36,7 @@ void Pennylane::constructAndApplyOperation(
     
     vector<size_t> internalIndices = generateBitPatterns(opWires, qubits);
 
-    vector<unsigned int> externalWires = Pennylane::getIndicesAfterExclusion(opWires, qubits);
+    vector<unsigned int> externalWires = getIndicesAfterExclusion(opWires, qubits);
     vector<size_t> externalIndices = generateBitPatterns(externalWires, qubits);
 
     vector<CplxType> inputVector(internalIndices.size());
