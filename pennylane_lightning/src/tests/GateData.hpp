@@ -16,7 +16,7 @@
 
 #include <iostream>
 #include <cmath>
-#include "../rework/typedefs.hpp"
+#include "../typedefs.hpp"
 
 
 using Pennylane::CplxType;
