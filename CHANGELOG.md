@@ -9,8 +9,8 @@
 * Add new lightweight backend with performance improvements.
   [(#57)](https://github.com/PennyLaneAI/pennylane-lightning/pull/57)
 
-* Remove the previous backend using Eigen.
-  [(#57)](https://github.com/PennyLaneAI/pennylane-lightning/pull/67)
+* Remove the previous Eigen-based backend.
+  [(#67)](https://github.com/PennyLaneAI/pennylane-lightning/pull/67)
 
 ### Documentation
 
