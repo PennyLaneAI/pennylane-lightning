@@ -14,6 +14,7 @@
 CC = g++
 CFLAGS = -std=c++11 -g -Wall -fopenmp -fPIC -I/usr/include \
 	-I../include -I$(GOOGLETEST_DIR)/include \
+	`python3 -m pybind11 --includes` \
 	-march=native
 
 LFLAGS = -fopenmp -L$(GOOGLETEST_DIR)/lib -lgtest
