@@ -385,7 +385,7 @@ const std::vector<CplxType> Pennylane::CSWAPGate::matrix{
 
 template<class GateType>
 static void addToDispatchTable(map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&)>>& dispatchTable) {
-    dispatchTable.emplace(GateType::label, [](const vector<double>& parameters) { return std::make_unique<GateType>(GateType::create(parameters)); });
+    dispatchTable.emplace(GateType::label, [](const vector<double>& parameters) { return make_unique<GateType>(GateType::create(parameters)); });
 }
 
 static map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&)>> createDispatchTable() {

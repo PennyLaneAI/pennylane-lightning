@@ -12,35 +12,49 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "gtest/gtest.h"
-#include "../rework/Util.hpp"
+#include "../Util.hpp"
+
+#include <tuple>
 
 namespace test_utils {
 
-TEST(exp2, fixed_example) {
-    std::vector<unsigned int> inputs = {1, 2, 5, 8};
-    std::vector<size_t> outputs = {2, 4, 32, 256};
+class Exp2TestFixture :public ::testing::TestWithParam<std::tuple<int, int>> {
+};
 
-    for (size_t i = 0; i < inputs.size(); i++) {
-        size_t result = Pennylane::exp2(inputs[i]);
-        EXPECT_TRUE(result == outputs[i]);
-    }
+TEST_P(Exp2TestFixture, CheckExp2Results) {
+    int input = std::get<0>(GetParam());
+    size_t expected = std::get<1>(GetParam());
+    ASSERT_EQ(expected, Pennylane::exp2(input));
 }
 
-TEST(maxDecimalForQubit, fixed_example) {
-    std::vector<std::vector<unsigned int>> inputs = {
-        {0, 3},
-        {1, 3},
-        {2, 3},
-        {0, 4},
-        {2, 4},
-        {2, 5},
-    };
-    std::vector<size_t> outputs = {4, 2, 1, 8, 2, 4};
+INSTANTIATE_TEST_SUITE_P (
+        Exp2Tests,
+        Exp2TestFixture,
+        ::testing::Values(
+                std::make_tuple(1, 2),
+                std::make_tuple(2, 4),
+                std::make_tuple(5, 32),
+                std::make_tuple(8, 256)));
 
-    for (size_t i = 0; i < inputs.size(); i++) {
-        size_t result = Pennylane::maxDecimalForQubit(inputs[i][0], inputs[i][1]);
-        EXPECT_TRUE(result == outputs[i]);
-    }
+class maxDecimalForQubitTestFixture :public ::testing::TestWithParam<std::tuple<unsigned int, unsigned int, size_t>> {
+};
+
+TEST_P(maxDecimalForQubitTestFixture, CheckMaxDecimalResults) {
+    unsigned int qubitIndex = std::get<0>(GetParam());
+    unsigned int qubits = std::get<1>(GetParam());
+    size_t expected = std::get<2>(GetParam());
+    ASSERT_EQ(expected, Pennylane::maxDecimalForQubit(qubitIndex, qubits));
 }
+
+INSTANTIATE_TEST_SUITE_P (
+        maxDecimalForQubitTests,
+        maxDecimalForQubitTestFixture,
+        ::testing::Values(
+                std::make_tuple(0, 3, 4),
+                std::make_tuple(1, 3, 2),
+                std::make_tuple(2, 3, 1),
+                std::make_tuple(0, 4, 8),
+                std::make_tuple(2, 4, 2),
+                std::make_tuple(2, 5, 4)));
 
 }

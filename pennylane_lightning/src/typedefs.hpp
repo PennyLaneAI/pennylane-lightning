@@ -1,4 +1,4 @@
-// Copyright 2020 Xanadu Quantum Technologies Inc.
+// Copyright 2021 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,29 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+/**
+ * @file
+ * Contains any widely-used type aliases.
+ */
 #pragma once
 
-#include <array>
 #include <complex>
-#include "unsupported/Eigen/CXX11/Tensor"
 
-template<int X>
-using State_Xq = Eigen::Tensor<std::complex<double>, X>;
+namespace Pennylane {
 
-template<int X>
-using Gate_Xq = Eigen::Tensor<std::complex<double>, 2 * X>;
+    using CplxType = std::complex<double>;
 
-using Pairs = Eigen::IndexPair<int>;
-template<int X>
-using Pairs_Xq = std::array<Eigen::IndexPair<int>, X>;
-
-// Creating aliases based on the function signatures of each operation
-
-template<int X>
-using pfunc_Xq = Gate_Xq<X>(*)();
-
-template<int X>
-using pfunc_Xq_one_param = Gate_Xq<X>(*)(const double&);
-
-template<int X>
-using pfunc_Xq_three_params = Gate_Xq<X>(*)(const double&, const double&, const double&);
+}
