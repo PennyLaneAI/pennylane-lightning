@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install dependencies
-        run: sudo apt-get -y -q install cmake gcc
+        run: sudo apt-get -y -q install cmake gcc python3-dev
 
       - name: Install Pybind11
         run: python -m pip install pybind11
