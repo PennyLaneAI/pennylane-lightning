@@ -20,7 +20,7 @@ jobs:
         run: sudo apt-get -y -q install cmake gcc python3-dev
 
       - name: Install Pybind11
-        run: python -m pip install pybind11
+        run: python3 -m pip install pybind11
 
       - name: Install Google Test
         run: |
