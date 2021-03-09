@@ -13,6 +13,7 @@
 # limitations under the License.
 CC = g++
 CFLAGS = -std=c++11 -g -Wall -fopenmp -fPIC -I/usr/include \
+    `python -m pybind11 --include` \
 	-I../include -I$(GOOGLETEST_DIR)/include \
 	-march=native
 
@@ -26,7 +27,7 @@ lightning_util_unittest.o: lightning_util_unittest.cpp
 lightning_apply_unittest.o: lightning_apply_unittest.cpp
 	$(CC) $^ $(CFLAGS) -c
 
-Gates.o: ../Gates.cpp
+Gates.o: ../Gates.cpp ../Apply.cpp
 	$(CC) $^ $(CFLAGS) -c
 
 lightning_gates_unittest.o: lightning_gates_unittest.cpp
