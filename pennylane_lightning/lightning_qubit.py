@@ -16,9 +16,10 @@ This module contains the :class:`~.LightningQubit` class, a PennyLane simulator 
 interfaces with C++ for fast linear algebra calculations.
 """
 from pennylane.devices import DefaultQubit
-from .lightning_qubit_ops import apply
+from .lightning_qubit_ops import apply, adjoint_jacobian
 import numpy as np
-from pennylane import QubitStateVector, BasisState, DeviceError, QubitUnitary
+from pennylane import QubitStateVector, BasisState, DeviceError, QubitUnitary, QuantumFunctionError
+from pennylane.operation import Expectation
 
 from ._version import __version__
 
@@ -140,3 +141,36 @@ class LightningQubit(DefaultQubit):
         state_vector = np.ravel(state)
         apply(state_vector, op_names, op_wires, op_param, self.num_wires)
         return np.reshape(state_vector, state.shape)
+
+    def adjoint_jacobian(self, tape):
+        for m in tape.measurements:
+            if m.return_type is not Expectation:
+                raise QuantumFunctionError(
+                    "Adjoint differentiation method does not support"
+                    f" measurement {m.return_type.value}"
+                )
+
+            if not hasattr(m.obs, "base_name"):
+                m.obs.base_name = None  # This is needed for when the observable is a tensor product
+
+        phi = self._reshape(self.state, [2] * self.num_wires)
+        param_number = len(tape._par_info) - 1
+
+        op_data = [(op.name, op.params, op.wires) for op in tape.operations]
+        operations, op_params, op_wires = zip(*op_data)
+
+        obs_data = [(obs.name, obs.params, obs.wires) for obs in tape.observables]
+        observables, obs_params, obs_wires = zip(*obs_data)
+
+        jac = adjoint_jacobian(
+            phi,
+            observables,
+            obs_params,
+            obs_wires,
+            operations,
+            op_params,
+            op_wires,
+            tape.trainable_params,
+            param_number
+        )
+        return jac
