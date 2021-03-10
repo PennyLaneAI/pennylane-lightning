@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include <set>
+#include <cmath>
 
 #include "Apply.hpp"
 #include "Gates.hpp"
@@ -48,19 +49,52 @@ vector<size_t> Pennylane::generateBitPatterns(const vector<unsigned int>& qubitI
     return indices;
 }
 
+vector<CplxType> calculateInverse(const vector<CplxType>& matrix) {
+    vector<CplxType> matInv(matrix.size);
+    int matSize = std::sqrt(matrix.size);
+
+    int idxStart = 0;
+    int idx = 0;
+    for (matIt = matrix.begin(); matIt = matrix.end(); ++matIt) {
+        matInv[idx] = std::conj(matIt);
+
+        idx += matSize;
+        if (idx > matrix.size) {
+            idxStart += 1;
+            idx = idxStart;
+        }
+
+    }
+    return matInv;
+}
+
 void Pennylane::constructAndApplyOperation(
     StateVector& state,
     const string& opLabel,
     const vector<unsigned int>& opWires,
     const vector<double>& opParams,
-    const unsigned int qubits
+    const unsigned int qubits,
+    const bool& inverse = false
 ) {
     unique_ptr<AbstractGate> gate = constructGate(opLabel, opParams);
     if (gate->numQubits != opWires.size())
         throw std::invalid_argument(string("The gate of type ") + opLabel + " requires " + std::to_string(gate->numQubits) + " wires, but " + std::to_string(opWires.size()) + " were supplied");
 
     const vector<CplxType>& matrix = gate->asMatrix();
-    
+
+    if (inverse == true) {
+        vector<CplxType> matInv = calculateInverse(matrix);
+        applyUnitary(state, matInv, opWires, qubits);
+    } else {
+        applyUnitary(state, matrix, opWires, qubits);
+    }
+
+void Pennylane::applyUnitary(
+    StateVector& state,
+    const vector<CplxType>& matrix,
+    const vector<unsigned int>& opWires,
+    const unsigned int qubits
+) {
     vector<size_t> internalIndices = generateBitPatterns(opWires, qubits);
 
     vector<unsigned int> externalWires = getIndicesAfterExclusion(opWires, qubits);
@@ -95,7 +129,7 @@ void Pennylane::apply(
     vector<vector<unsigned int>> wires,
     vector<vector<double>> params,
     const unsigned int qubits
-) { 
+) {
     if (qubits <= 0)
         throw std::invalid_argument("Must specify one or more qubits");
 
@@ -114,9 +148,85 @@ void Pennylane::apply(
 
 }
 
+vector<double> Pennylane::adjointJacobian(
+    pybind11::array_t<CplxType>& phiNumpyArray,
+    const vector<string>& observables,
+    const vector<vector<unsigned int>>& obsWires,
+    const vector<vector<double>>& obsParams,
+    const vector<string>& operations,
+    const vector<vector<unsigned int>>& opWires,
+    const vector<vector<double>>& opParams,
+    const vector<int>& trainableParams,
+    int paramNumber
+) {
+    vector<StateVector> lambdas;
+    StateVector phi = StateVector::create(&phiNumpyArray);
+    size_t numOperations = operations.size();
+    size_t numObservables = observables.size();
+    size_t trainableParamNumber = trainableParams.size() - 1;
+
+    for (int i = 0; i < numObservables; i++) {
+        StateVector state = phi;
+        Pennylane:constructAndApplyOperation(
+            state,
+            observables[i],
+            obsWires[i],
+            obsParams[i],
+            obsWires[i]
+        );
+        lambdas.push_back(state);
+    }
+
+    for (auto opIt = operations.rbegin(); opIt != operations.rend(); ++opIt) {
+        int i = std::distance(opIt, v.begin());
+
+        if ((*opIt != "QubitStateVector") && (*opIt != "BasisState")) {
+            Pennylane:constructAndApplyOperation(
+                phi,
+                *opIt,
+                opWires[i],
+                opParams[i],
+                opWires[i]
+            );
+
+            if (paramNumber in trainableParams) {
+                // d_op_matrix = ...
+                // mu = applyUnitary(state, matInv, opWires, qubits)
+
+                // calculate jacColumn
+                trainableParamNumber--;
+            }
+            paramNumber--;
+
+            for (auto lamIt = lambdas.begin(); lamIt != lambdas.end(); ++lamIt) {
+                StateVector state = *lamIt;
+                int j = std::distance(lamIt, v.begin());
+                useInverse = true;
+
+                Pennylane:constructAndApplyOperation(
+                state,
+                *opIt,
+                opWires[i],
+                opParams[i],
+                opWires[i],
+                useInverse
+            );
+            lambdas[j] = state;
+            }
+
+        }
+
+    }
+
+    return jac;
+}
+
 
 PYBIND11_MODULE(lightning_qubit_ops, m)
 {
     m.doc() = "lightning.qubit apply() method";
     m.def("apply", Pennylane::apply, "lightning.qubit apply() method");
+
+    m.doc() = "lightning.qubit adjoint_jacobian() method";
+    m.def("adjoint_jacobian", Pennylane::adjointJacobian, "lightning.qubit adjoint_jacobian() method");
 }
