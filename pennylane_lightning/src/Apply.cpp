@@ -89,21 +89,20 @@ void Pennylane::constructAndApplyOperation(
     }
 }
 
-void Pennylane::apply_x(StateVector& state, unsigned int opWires){
+void Pennylane::apply_x(StateVector& state, unsigned int opWires,
+    const unsigned int qubits
+){
     CplxType* shiftedStatePtr = state.arr;
-    const size_t j = exp2(opWires);
-    for(size_t i=0; i<state.length; i+=(j+1)){
-        for(size_t k=0; k<i+j; ++k){
-            /*
-            pybind11::print(i);
-            pybind11::print(j);
-            pybind11::print(k);
-            */
-            CplxType temp = shiftedStatePtr[i + k];
-            shiftedStatePtr[i+k] = shiftedStatePtr[j +k];
-            shiftedStatePtr[j+k] = temp;
-            i += k;
+    const size_t j = maxDecimalForQubit(opWires, qubits);
+
+    size_t i = 0;
+    while(i<state.length){
+        size_t k = 0;
+        while(k<j){
+            std::swap(shiftedStatePtr[i + k], shiftedStatePtr[i + j +k]);
+            ++k;
         }
+        i += k + j;
     }
 }
 
@@ -129,7 +128,7 @@ void Pennylane::apply(
     for (int i = 0; i < numOperations; i++) {
 
         if(ops[i] == "PauliX"){
-            apply_x(state, wires[i][0]);
+            apply_x(state, wires[i][0], qubits);
         }
         else{
             constructAndApplyOperation(state, ops[i], wires[i], params[i], qubits);
