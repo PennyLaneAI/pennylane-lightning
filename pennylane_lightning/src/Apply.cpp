@@ -91,11 +91,19 @@ void Pennylane::constructAndApplyOperation(
 
 void Pennylane::apply_x(StateVector& state, unsigned int opWires){
     CplxType* shiftedStatePtr = state.arr;
-    for(size_t i=0; i<state.length; i+=opWires+1){
-        size_t j = exp2(opWires);
-        CplxType temp = shiftedStatePtr[i];
-        shiftedStatePtr[i] = shiftedStatePtr[j];
-        shiftedStatePtr[j] = temp;
+    const size_t j = exp2(opWires);
+    for(size_t i=0; i<state.length; i+=(j+1)){
+        for(size_t k=0; k<i+j; ++k){
+            /*
+            pybind11::print(i);
+            pybind11::print(j);
+            pybind11::print(k);
+            */
+            CplxType temp = shiftedStatePtr[i + k];
+            shiftedStatePtr[i+k] = shiftedStatePtr[j +k];
+            shiftedStatePtr[j+k] = temp;
+            i += k;
+        }
     }
 }
 
