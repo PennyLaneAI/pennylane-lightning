@@ -42,6 +42,28 @@ Pennylane::AbstractGate::AbstractGate(int numQubits)
     , length(exp2(numQubits))
 {}
 
+void Pennylane::AbstractGate::applyKernel(CplxType* state, vector<size_t>& indices, vector<CplxType>& v) {
+    const vector<CplxType>& matrix = asMatrix();
+    assert(indices.size() == length && v.size() == length);
+
+    // Gather
+    size_t pos = 0;
+    for (const size_t& index : indices) {
+        v[pos] = state[index];
+        pos++;
+    }
+
+    // Apply + scatter
+    for (size_t i = 0; i < indices.size(); i++) {
+        size_t index = indices[i];
+        state[index] = 0;
+        size_t baseIndex = i * indices.size();
+        for (size_t j = 0; j < indices.size(); j++) {
+            state[index] += matrix[baseIndex + j] * v[j];
+        }
+    }
+}
+
 // -------------------------------------------------------------------------------------------------------------
 
 Pennylane::SingleQubitGate::SingleQubitGate()

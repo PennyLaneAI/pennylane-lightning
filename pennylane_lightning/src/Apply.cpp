@@ -58,8 +58,6 @@ void Pennylane::constructAndApplyOperation(
     unique_ptr<AbstractGate> gate = constructGate(opLabel, opParams);
     if (gate->numQubits != opWires.size())
         throw std::invalid_argument(string("The gate of type ") + opLabel + " requires " + std::to_string(gate->numQubits) + " wires, but " + std::to_string(opWires.size()) + " were supplied");
-
-    const vector<CplxType>& matrix = gate->asMatrix();
     
     vector<size_t> internalIndices = generateBitPatterns(opWires, qubits);
 
@@ -69,23 +67,7 @@ void Pennylane::constructAndApplyOperation(
     vector<CplxType> inputVector(internalIndices.size());
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedStatePtr = state.arr + externalIndex;
-
-        // Gather
-        size_t pos = 0;
-        for (const size_t& internalIndex : internalIndices) {
-            inputVector[pos] = shiftedStatePtr[internalIndex];
-            pos++;
-        }
-
-        // Apply + scatter
-        for (size_t i = 0; i < internalIndices.size(); i++) {
-            size_t internalIndex = internalIndices[i];
-            shiftedStatePtr[internalIndex] = 0;
-            size_t baseIndex = i * internalIndices.size();
-            for (size_t j = 0; j < internalIndices.size(); j++) {
-                shiftedStatePtr[internalIndex] += matrix[baseIndex + j] * inputVector[j];
-            }
-        }
+        gate->applyKernel(shiftedStatePtr, internalIndices, inputVector);
     }
 }
 

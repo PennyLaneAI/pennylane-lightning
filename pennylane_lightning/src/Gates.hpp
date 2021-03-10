@@ -38,6 +38,11 @@ namespace Pennylane {
          * @return the matrix representation for the gate as a one-dimensional vector.
          */
         virtual const std::vector<CplxType>& asMatrix() = 0;
+
+        /**
+         * Generic matrix-multiplication kernel
+         */
+        virtual void applyKernel(CplxType* state, std::vector<size_t>& gateIndices, std::vector<CplxType>& v);
     };
 
     // Single-qubit gates:
