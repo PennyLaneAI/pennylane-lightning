@@ -43,7 +43,6 @@ void apply(
 ) {
     StateVector state = create(&stateNumpyArray);
     Pennylane::apply(state, ops, wires, params, qubits);
-
 }
 
 PYBIND11_MODULE(lightning_qubit_ops, m)
