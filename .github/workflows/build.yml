@@ -50,7 +50,10 @@ jobs:
           python-version: '3.7'
 
       - name: Install dependencies
-        run: sudo apt-get -y -q install cmake gcc
+        run: sudo apt-get -y -q install cmake gcc python3-dev
+
+      - name: Install Pybind11
+        run: python3 -m pip install pybind11
 
       - name: Get required Python packages
         run: |
