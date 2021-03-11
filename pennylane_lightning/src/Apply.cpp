@@ -83,7 +83,6 @@ void Pennylane::apply(
     for (int i = 0; i < numOperations; i++) {
         constructAndApplyOperation(state, ops[i], wires[i], params[i], qubits);
     }
-
 }
 
 
