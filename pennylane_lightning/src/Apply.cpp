@@ -88,6 +88,7 @@ void Pennylane::constructAndApplyOperation(
     } else {
         applyUnitary(state, matrix, opWires, qubits);
     }
+}
 
 void Pennylane::applyUnitary(
     StateVector& state,
@@ -224,9 +225,7 @@ vector<double> Pennylane::adjointJacobian(
 
 PYBIND11_MODULE(lightning_qubit_ops, m)
 {
-    m.doc() = "lightning.qubit apply() method";
+    m.doc() = "lightning.qubit methods for gate application and adjoint differentiation";
     m.def("apply", Pennylane::apply, "lightning.qubit apply() method");
-
-    m.doc() = "lightning.qubit adjoint_jacobian() method";
     m.def("adjoint_jacobian", Pennylane::adjointJacobian, "lightning.qubit adjoint_jacobian() method");
 }
