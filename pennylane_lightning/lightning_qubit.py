@@ -171,6 +171,6 @@ class LightningQubit(DefaultQubit):
             op_params,
             op_wires,
             tape.trainable_params,
-            param_number
+            param_number,
         )
         return jac
