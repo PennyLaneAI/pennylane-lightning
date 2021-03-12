@@ -45,27 +45,6 @@ jobs:
           cd main
           python .github/workflows/benchmarks/run_bench.py lightning.qubit lightning_master.json
 
-      - name: Benchmark default qubit device
-        run: |
-          cd main
-          python .github/workflows/benchmarks/run_bench.py default.qubit default_qubit.json
-
-      - name: Checkout PennyLane-Lightning PR
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ github.ref }}
-          path: main
-
-      - name: Install lightning.qubit device (PR)
-        run: |
-          cd main
-          pip install -e .
-
-      - name: Benchmark lightning PR device
-        run: |
-          cd main
-          python .github/workflows/benchmarks/run_bench.py lightning.qubit lightning_pr.json
-
       - name: Plot results
         run: |
           cd main
