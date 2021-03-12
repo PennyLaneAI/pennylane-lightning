@@ -46,7 +46,7 @@ Pennylane::AbstractGate::AbstractGate(int numQubits)
 
 void Pennylane::AbstractGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
     const vector<CplxType>& matrix = asMatrix();
-    assert(indices.size() == length && v.size() == length);
+    assert(indices.size() == length);
 
     vector<CplxType> v(indices.size());
     for (const size_t& externalIndex : externalIndices) {
