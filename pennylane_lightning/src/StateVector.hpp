@@ -17,8 +17,6 @@
  */
 #pragma once
 
-#include "pybind11/numpy.h"
-
 #include "typedefs.hpp"
 
 namespace Pennylane {
@@ -29,7 +27,6 @@ namespace Pennylane {
         CplxType* const arr;
         const size_t length;
 
-        static StateVector create(const pybind11::array_t<CplxType>* numpyArray);
         StateVector(CplxType* arr, size_t length);
 
     };
