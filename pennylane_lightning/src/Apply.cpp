@@ -91,9 +91,9 @@ void Pennylane::constructAndApplyOperation(
 
 void Pennylane::apply(
     StateVector& state,
-    vector<string>& ops,
-    vector<vector<unsigned int>>& wires,
-    vector<vector<double>>& params,
+    const vector<string>& ops,
+    const vector<vector<unsigned int>>& wires,
+    const vector<vector<double>>& params,
     const unsigned int qubits
 ) { 
     if (qubits <= 0)
