@@ -32,13 +32,12 @@ op_res = {o:[] for o in ops}
 for num_q in range(1,10):
     dev = qml.device(device_string, wires=num_q)
     for gate in ops:
-        @qml.qnode(dev)
-        def circuit():
-            getattr(qml, gate)(wires=0)
-            return qml.expval(qml.PauliZ(0))
+        def apply_op():
+            # Calling apply to minimize the Python overhead
+            dev.apply([getattr(qml, gate)(wires=0)])
 
-        number = 1000
-        res = timeit.timeit(circuit, number =number)/number
+        number = 10000
+        res = timeit.timeit(apply_op, number =number)/number
         op_res[gate].append(res)
 
 with open(filename, 'w') as fp:

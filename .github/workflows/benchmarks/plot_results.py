@@ -47,13 +47,13 @@ import json
 
 COLOR = {
     'lightning_master.json': 'darkblue',
-    'pennylane-lightning with PL v0.13': 'tab:orange',
+    'lightning_pr.json': 'tab:orange',
     'default_qubit.json': 'tab:olive'
 }
 
 projects = [
     'lightning_master.json',
-    #'lightning_pr.json',
+    'lightning_pr.json',
     'default_qubit.json',
 ]
 
