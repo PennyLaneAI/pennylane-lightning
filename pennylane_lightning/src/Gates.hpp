@@ -20,6 +20,7 @@
 #include <memory>
 #include <vector>
 
+#include "StateVector.hpp"
 #include "typedefs.hpp"
 
 namespace Pennylane {
@@ -38,6 +39,11 @@ namespace Pennylane {
          * @return the matrix representation for the gate as a one-dimensional vector.
          */
         virtual const std::vector<CplxType>& asMatrix() = 0;
+
+        /**
+         * Generic matrix-multiplication kernel
+         */
+        virtual void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     // Single-qubit gates:
@@ -56,6 +62,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     class YGate : public SingleQubitGate {
@@ -67,6 +74,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     class ZGate : public SingleQubitGate {
@@ -78,6 +86,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     class HadamardGate : public SingleQubitGate {
@@ -89,6 +98,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     class SGate : public SingleQubitGate {
@@ -100,10 +110,12 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     class TGate : public SingleQubitGate {
     private:
+        static const CplxType shift;
         static const std::vector<CplxType> matrix;
     public:
         static const std::string label;
@@ -111,6 +123,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     class RotationXGate : public SingleQubitGate {
@@ -150,6 +163,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     class PhaseShiftGate : public SingleQubitGate {
@@ -163,11 +177,12 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     class GeneralRotationGate : public SingleQubitGate {
     private:
-        const CplxType c, s;
+        const CplxType c, s, r1, r2, r3, r4;
         const std::vector<CplxType> matrix;
     public:
         static const std::string label;
@@ -194,6 +209,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     class SWAPGate : public TwoQubitGate {
@@ -205,6 +221,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     class CZGate : public TwoQubitGate {
@@ -216,6 +233,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     class CRotationXGate : public TwoQubitGate {
@@ -229,6 +247,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     class CRotationYGate : public TwoQubitGate {
@@ -242,6 +261,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     class CRotationZGate : public TwoQubitGate {
@@ -255,11 +275,12 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     class CGeneralRotationGate : public TwoQubitGate {
     private:
-        const CplxType c, s;
+        const CplxType c, s, r1, r2, r3, r4;
         const std::vector<CplxType> matrix;
     public:
         static const std::string label;
@@ -268,6 +289,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     // Three-qubit gates
@@ -286,6 +308,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     class CSWAPGate : public ThreeQubitGate {
@@ -297,6 +320,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     /**
