@@ -78,7 +78,7 @@ for a in ax.flatten():
 
 for a, op in zip(axes, op_results.keys()):
     for k,v in enumerate(projects):
-        a.semilogy(range(1,10), op_results[op][k], '-o', markersize=4, color=COLOR[v])
+        a.semilogy(range(1,10), op_results[op][k], '-o', markersize=4, color=COLOR[v], linestyle="None")
     
 plots = []
 plt.tight_layout()

@@ -29,7 +29,7 @@ ops = ["PauliX", "T", "Hadamard"]
 
 op_res = {o:[] for o in ops}
 
-for num_q in range(1,10):
+for num_q in [1, 2, 3, 5, 10, 13 15, 18 20]:
     dev = qml.device(device_string, wires=num_q)
     for gate in ops:
         def apply_op():
