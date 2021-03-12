@@ -33,7 +33,11 @@ for num_q in qubits:
     for gate in ops:
         def apply_op():
             # Calling apply to minimize the Python overhead
-            dev.apply([getattr(qml, gate)(wires=0)])
+            pennylane_op = getattr(qml, gate)
+            if pennylane_op.num_wires == 1:
+                dev.apply([pennylane_op(wires=0)])
+            elif num_q > 1 and pennylane_op.num_wires == 2:
+                dev.apply([pennylane_op(wires=[0, 1])])
 
         number = 10000
         res = timeit.timeit(apply_op, number =number)/number

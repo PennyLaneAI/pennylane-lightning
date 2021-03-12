@@ -55,10 +55,7 @@ projects = [
 
 COLOR = dict(zip(projects, colors))
 
-# Single Gate Benchmark Report
-# Ordered as appear in projects
-ops = ["PauliX", "T", "Hadamard"]
-op_results = { o:[] for o in ops} #, "CNOT":[]}
+op_results = { o:[] for o in ops}
 
 for p in projects:
     with open(p) as f:
@@ -74,7 +71,7 @@ axes = ax.flatten()
 for op, a in zip(ops, ax.flatten()):
     a.set_xlabel("nqubits", size=16)
     a.set_ylabel("ns", size=16)
-    a.set_title(op)
+    a.set_title(op + " gate")
 
 for a, op in zip(axes, op_results.keys()):
     for k,v in enumerate(projects):
