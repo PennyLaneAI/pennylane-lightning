@@ -64,11 +64,7 @@ void Pennylane::constructAndApplyOperation(
     vector<unsigned int> externalWires = getIndicesAfterExclusion(opWires, qubits);
     vector<size_t> externalIndices = generateBitPatterns(externalWires, qubits);
 
-    vector<CplxType> inputVector(internalIndices.size());
-    for (const size_t& externalIndex : externalIndices) {
-        CplxType* shiftedStatePtr = state.arr + externalIndex;
-        gate->applyKernel(shiftedStatePtr, internalIndices, inputVector);
-    }
+    gate->applyKernel(state, internalIndices, externalIndices);
 }
 
 void Pennylane::apply(
