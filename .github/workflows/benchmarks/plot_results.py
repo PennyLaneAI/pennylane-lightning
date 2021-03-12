@@ -44,22 +44,21 @@ import os
 import matplotlib
 import matplotlib.pyplot as plt
 import json
+from parameters import qubits, ops
 
-COLOR = {
-    'lightning_master.json': 'darkblue',
-    'lightning_pr.json': 'tab:orange',
-    'default_qubit.json': 'tab:olive'
-}
-
+colors = ['darkblue', 'tab:orange', 'tab:olive']
 projects = [
     'lightning_master.json',
     'lightning_pr.json',
     'default_qubit.json',
 ]
 
+COLOR = dict(zip(projects, colors))
+
 # Single Gate Benchmark Report
 # Ordered as appear in projects
-op_results = {"PauliX":[], "T":[], "Hadamard":[]} #, "CNOT":[]}
+ops = ["PauliX", "T", "Hadamard"]
+op_results = { o:[] for o in ops} #, "CNOT":[]}
 
 for p in projects:
     with open(p) as f:
@@ -72,13 +71,15 @@ fig, ax = plt.subplots(2, 2, figsize=(10, 8))
 
 axes = ax.flatten()
 
-for a in ax.flatten():
+for op, a in zip(ops, ax.flatten()):
     a.set_xlabel("nqubits", size=16)
     a.set_ylabel("ns", size=16)
+    a.set_title(op)
 
 for a, op in zip(axes, op_results.keys()):
     for k,v in enumerate(projects):
-        a.semilogy(range(1,10), op_results[op][k], '-o', markersize=4, color=COLOR[v], linestyle="None")
+        data = op_results[op][k]
+        a.semilogy(qubits, data, '-o', markersize=4, color=COLOR[v], linestyle="None")
     
 plots = []
 plt.tight_layout()

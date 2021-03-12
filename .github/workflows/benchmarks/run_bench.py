@@ -19,17 +19,16 @@ import pennylane as qml
 import timeit
 import json
 import sys
+from parameters import qubits, ops
 
 if len(sys.argv)!=3:
     raise ValueError("Please provide the device name and the filename as the only arguments.")
 
 device_string, filename = sys.argv[1], sys.argv[2]
 
-ops = ["PauliX", "T", "Hadamard"]
-
 op_res = {o:[] for o in ops}
 
-for num_q in [1, 2, 3, 5, 10, 13 15, 18 20]:
+for num_q in qubits:
     dev = qml.device(device_string, wires=num_q)
     for gate in ops:
         def apply_op():
