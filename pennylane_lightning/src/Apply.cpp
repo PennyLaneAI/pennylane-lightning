@@ -90,17 +90,16 @@ void Pennylane::constructAndApplyOperation(
 }
 
 void Pennylane::apply(
-    pybind11::array_t<CplxType>& stateNumpyArray,
-    vector<string> ops,
-    vector<vector<unsigned int>> wires,
-    vector<vector<double>> params,
+    StateVector& state,
+    const vector<string>& ops,
+    const vector<vector<unsigned int>>& wires,
+    const vector<vector<double>>& params,
     const unsigned int qubits
 ) { 
     if (qubits <= 0)
         throw std::invalid_argument("Must specify one or more qubits");
 
     size_t expectedLength = exp2(qubits);
-    StateVector state = StateVector::create(&stateNumpyArray);
     if (state.length != expectedLength)
         throw std::invalid_argument(string("Input state vector length (") + std::to_string(state.length) + ") does not match the given number of qubits " + std::to_string(qubits));
 
@@ -112,11 +111,4 @@ void Pennylane::apply(
         constructAndApplyOperation(state, ops[i], wires[i], params[i], qubits);
     }
 
-}
-
-
-PYBIND11_MODULE(lightning_qubit_ops, m)
-{
-    m.doc() = "lightning.qubit apply() method";
-    m.def("apply", Pennylane::apply, "lightning.qubit apply() method");
 }
