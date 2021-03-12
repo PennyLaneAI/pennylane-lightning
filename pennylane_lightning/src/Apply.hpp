@@ -82,9 +82,9 @@ namespace Pennylane {
      */
     void apply(
         StateVector& state,
-        std::vector<std::string>& ops,
-        std::vector<std::vector<unsigned int>>& wires,
-        std::vector<std::vector<double>>& params,
+        const std::vector<std::string>& ops,
+        const std::vector<std::vector<unsigned int>>& wires,
+        const std::vector<std::vector<double>>& params,
         const unsigned int qubits
     );
 
