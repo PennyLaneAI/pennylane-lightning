@@ -58,49 +58,26 @@ void Pennylane::constructAndApplyOperation(
     unique_ptr<AbstractGate> gate = constructGate(opLabel, opParams);
     if (gate->numQubits != opWires.size())
         throw std::invalid_argument(string("The gate of type ") + opLabel + " requires " + std::to_string(gate->numQubits) + " wires, but " + std::to_string(opWires.size()) + " were supplied");
-
-    const vector<CplxType>& matrix = gate->asMatrix();
     
     vector<size_t> internalIndices = generateBitPatterns(opWires, qubits);
 
     vector<unsigned int> externalWires = getIndicesAfterExclusion(opWires, qubits);
     vector<size_t> externalIndices = generateBitPatterns(externalWires, qubits);
 
-    vector<CplxType> inputVector(internalIndices.size());
-    for (const size_t& externalIndex : externalIndices) {
-        CplxType* shiftedStatePtr = state.arr + externalIndex;
-
-        // Gather
-        size_t pos = 0;
-        for (const size_t& internalIndex : internalIndices) {
-            inputVector[pos] = shiftedStatePtr[internalIndex];
-            pos++;
-        }
-
-        // Apply + scatter
-        for (size_t i = 0; i < internalIndices.size(); i++) {
-            size_t internalIndex = internalIndices[i];
-            shiftedStatePtr[internalIndex] = 0;
-            size_t baseIndex = i * internalIndices.size();
-            for (size_t j = 0; j < internalIndices.size(); j++) {
-                shiftedStatePtr[internalIndex] += matrix[baseIndex + j] * inputVector[j];
-            }
-        }
-    }
+    gate->applyKernel(state, internalIndices, externalIndices);
 }
 
 void Pennylane::apply(
-    pybind11::array_t<CplxType>& stateNumpyArray,
-    vector<string> ops,
-    vector<vector<unsigned int>> wires,
-    vector<vector<double>> params,
+    StateVector& state,
+    const vector<string>& ops,
+    const vector<vector<unsigned int>>& wires,
+    const vector<vector<double>>& params,
     const unsigned int qubits
 ) { 
     if (qubits <= 0)
         throw std::invalid_argument("Must specify one or more qubits");
 
     size_t expectedLength = exp2(qubits);
-    StateVector state = StateVector::create(&stateNumpyArray);
     if (state.length != expectedLength)
         throw std::invalid_argument(string("Input state vector length (") + std::to_string(state.length) + ") does not match the given number of qubits " + std::to_string(qubits));
 
@@ -112,11 +89,4 @@ void Pennylane::apply(
         constructAndApplyOperation(state, ops[i], wires[i], params[i], qubits);
     }
 
-}
-
-
-PYBIND11_MODULE(lightning_qubit_ops, m)
-{
-    m.doc() = "lightning.qubit apply() method";
-    m.def("apply", Pennylane::apply, "lightning.qubit apply() method");
 }
