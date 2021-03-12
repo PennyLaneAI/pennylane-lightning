@@ -33,6 +33,7 @@ jobs:
           cd main
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install matplotlib
 
       - name: Install lightning.qubit device (master)
         run: |
