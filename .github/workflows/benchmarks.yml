@@ -44,9 +44,6 @@ jobs:
         run: |
           cd main
           python .github/workflows/benchmarks/run_bench.py lightning.qubit lightning_master.json
-          pwd
-          ls -la
-          la -la .github/workflows/benchmarks/
 
       - name: Plot results
         run: |
