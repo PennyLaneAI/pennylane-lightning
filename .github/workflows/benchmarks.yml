@@ -7,7 +7,7 @@ on:
 
 jobs:
   benchmarks:
-    name: Python tests
+    name: Gate benchmarks
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -34,17 +34,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Install lightning.qubit device
+      - name: Install lightning.qubit device (master)
         run: |
           cd main
           pip install -e .
 
       - name: Benchmark lightning master device
         run: |
+          cd main
           python .github/workflows/benchmarks/run_bench.py lightning.qubit lightning_master.json
 
       - name: Benchmark default qubit device
         run: |
+          cd main
           python .github/workflows/benchmarks/run_bench.py default.qubit default_qubit.json
 
       - name: Checkout PennyLane-Lightning PR
@@ -53,17 +55,19 @@ jobs:
           ref: ${{ github.ref }}
           path: main
 
-      - name: Install lightning.qubit device
+      - name: Install lightning.qubit device (PR)
         run: |
           cd main
           pip install -e .
 
       - name: Benchmark lightning PR device
         run: |
+          cd main
           python .github/workflows/benchmarks/run_bench.py lightning.qubit lightning_pr.json
 
       - name: Plot results
         run: |
+          cd main
           python .github/workflows/benchmarks/plot_results.py
 
       - uses: actions/upload-artifact@v2
