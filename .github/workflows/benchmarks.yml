@@ -56,6 +56,10 @@ jobs:
           ref: ${{ github.ref }}
           path: main/pr
 
+      - name: Create main/pr
+        run: |
+          mkdir main/pr
+
       - name: Install lightning.qubit device (PR)
         run: |
           cd main/pr
