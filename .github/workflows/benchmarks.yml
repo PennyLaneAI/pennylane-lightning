@@ -41,11 +41,11 @@ jobs:
 
       - name: Benchmark lightning master device
         run: |
-          python .github/workflows/benchmarks/run_bench.py lightning.qubit lightning_master.json 
+          python .github/workflows/benchmarks/run_bench.py lightning.qubit lightning_master.json
 
       - name: Benchmark default qubit device
         run: |
-          python .github/workflows/benchmarks/run_bench.py default.qubit default_qubit.json 
+          python .github/workflows/benchmarks/run_bench.py default.qubit default_qubit.json
 
       - name: Checkout PennyLane-Lightning PR
         uses: actions/checkout@v2
@@ -60,7 +60,7 @@ jobs:
 
       - name: Benchmark lightning PR device
         run: |
-          python .github/workflows/benchmarks/run_bench.py lightning.qubit lightning_pr.json 
+          python .github/workflows/benchmarks/run_bench.py lightning.qubit lightning_pr.json
 
       - name: Plot results
         run: |
