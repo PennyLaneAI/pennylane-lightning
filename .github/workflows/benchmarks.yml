@@ -56,10 +56,6 @@ jobs:
           ref: ${{ github.ref }}
           path: main/pr
 
-      - name: Create main/pr
-        run: |
-          mkdir main/pr
-
       - name: Install lightning.qubit device (PR)
         run: |
           cd main/pr
@@ -67,7 +63,6 @@ jobs:
 
       - name: Benchmark lightning PR device
         run: |
-          cd main
           cd main/pr
           python .github/workflows/benchmarks/run_bench.py lightning.qubit lightning_pr.json
           mv lightning_pr.json ..
