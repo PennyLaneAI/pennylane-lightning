@@ -116,10 +116,6 @@ void Pennylane::YGate::applyKernel(const StateVector& state, const std::vector<s
         shiftedState[indices[0]] = -IMAG * shiftedState[indices[1]];
         shiftedState[indices[1]] = IMAG * v0;
     }
-    for (const size_t& externalIndex : externalIndices) {
-        CplxType* shiftedState = state.arr + externalIndex;
-
-    }
 }
 
 // -------------------------------------------------------------------------------------------------------------
