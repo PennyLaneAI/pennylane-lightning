@@ -13,17 +13,6 @@
 // limitations under the License.
 #include "StateVector.hpp"
 
-Pennylane::StateVector Pennylane::StateVector::create(const pybind11::array_t<CplxType>* numpyArray) {
-    pybind11::buffer_info numpyArrayInfo = numpyArray->request();
-
-    if (numpyArrayInfo.ndim != 1)
-        throw std::invalid_argument("NumPy array must be a 1-dimensional array");
-    if (numpyArrayInfo.itemsize != sizeof(CplxType))
-        throw std::invalid_argument("NumPy array must be a complex128 array");
-
-    return StateVector((CplxType*)numpyArrayInfo.ptr, numpyArrayInfo.shape[0]);
-}
-
 Pennylane::StateVector::StateVector(CplxType* arr, size_t length)
     : arr(arr)
     , length(length)
