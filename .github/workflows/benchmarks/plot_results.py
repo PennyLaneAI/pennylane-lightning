@@ -45,6 +45,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import json
 from parameters import qubits, ops
+import numpy as np
 
 colors = ["darkblue", "tab:orange", "tab:olive"]
 projects = [
@@ -76,6 +77,7 @@ for op, a in zip(ops, ax.flatten()):
 for a, op in zip(axes, op_results.keys()):
     for k, v in enumerate(projects):
         data = op_results[op][k]
+        data = np.array(data) * 1e9
         a.semilogy(qubits, data, "-o", markersize=4, color=COLOR[v], linestyle="None")
 
 plots = []
