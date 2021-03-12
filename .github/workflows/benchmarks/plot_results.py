@@ -43,6 +43,7 @@
 import os
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 import json
 from parameters import qubits, ops
 import numpy as np
@@ -73,6 +74,7 @@ for op, a in zip(ops, ax.flatten()):
     a.set_xlabel("nqubits", size=16)
     a.set_ylabel("ns", size=16)
     a.set_title(op + " gate")
+    a.xaxis.set_major_locator(MaxNLocator(integer=True))
 
 for a, op in zip(axes, op_results.keys()):
     for k, v in enumerate(projects):
