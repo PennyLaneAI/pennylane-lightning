@@ -46,22 +46,22 @@ import matplotlib.pyplot as plt
 import json
 from parameters import qubits, ops
 
-colors = ['darkblue', 'tab:orange', 'tab:olive']
+colors = ["darkblue", "tab:orange", "tab:olive"]
 projects = [
-    'lightning_master.json',
-    'lightning_pr.json',
-    'default_qubit.json',
+    "lightning_master.json",
+    "lightning_pr.json",
+    "default_qubit.json",
 ]
 
 COLOR = dict(zip(projects, colors))
 
-op_results = { o:[] for o in ops}
+op_results = {o: [] for o in ops}
 
 for p in projects:
     with open(p) as f:
         data = json.load(f)
         for k in data.keys():
-            op_results[k].append(data[k] )
+            op_results[k].append(data[k])
 
 fig, ax = plt.subplots(2, 2, figsize=(10, 8))
 ((ax1, ax2), (ax3, ax4)) = ax
@@ -74,10 +74,10 @@ for op, a in zip(ops, ax.flatten()):
     a.set_title(op + " gate")
 
 for a, op in zip(axes, op_results.keys()):
-    for k,v in enumerate(projects):
+    for k, v in enumerate(projects):
         data = op_results[op][k]
-        a.semilogy(qubits, data, '-o', markersize=4, color=COLOR[v], linestyle="None")
-    
+        a.semilogy(qubits, data, "-o", markersize=4, color=COLOR[v], linestyle="None")
+
 plots = []
 plt.tight_layout()
 plt.subplots_adjust(top=0.85)
@@ -88,9 +88,9 @@ lgd = fig.legend(
     loc="upper center",
     ncol=4,
     frameon=False,
-    prop={'size': 15},
+    prop={"size": 15},
     borderaxespad=-0.4,
-    bbox_to_anchor=(0.5, 0.97)
+    bbox_to_anchor=(0.5, 0.97),
 )
 
-plt.savefig('gates.png')
+plt.savefig("gates.png")

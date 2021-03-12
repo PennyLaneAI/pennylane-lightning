@@ -14,6 +14,7 @@
 
 #!/usr/bin/env python3
 
+# pylint: disable=cell-var-from-loop
 # Generate data
 import pennylane as qml
 import timeit
@@ -21,16 +22,19 @@ import json
 import sys
 from parameters import qubits, ops
 
-if len(sys.argv)!=3:
-    raise ValueError("Please provide the device name and the filename as the only arguments.")
+if len(sys.argv) != 3:
+    raise ValueError(
+        "Please provide the device name and the filename as the only arguments."
+    )
 
 device_string, filename = sys.argv[1], sys.argv[2]
 
-op_res = {o:[] for o in ops}
+op_res = {o: [] for o in ops}
 
 for num_q in qubits:
     dev = qml.device(device_string, wires=num_q)
     for gate in ops:
+
         def apply_op():
             # Calling apply to minimize the Python overhead
             pennylane_op = getattr(qml, gate)
@@ -40,8 +44,8 @@ for num_q in qubits:
                 dev.apply([pennylane_op(wires=[0, 1])])
 
         number = 10000
-        res = timeit.timeit(apply_op, number =number)/number
+        res = timeit.timeit(apply_op, number=number) / number
         op_res[gate].append(res)
 
-with open(filename, 'w') as fp:
+with open(filename, "w") as fp:
     json.dump(op_res, fp)
