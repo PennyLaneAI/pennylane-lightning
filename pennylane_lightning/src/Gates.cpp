@@ -555,6 +555,13 @@ void Pennylane::CSWAPGate::applyKernel(const StateVector& state, const std::vect
 }
 
 // -------------------------------------------------------------------------------------------------------------
+// General gates
+
+const string Pennylane::QubitUnitary::label = "QubitUnitary";
+
+Pennylane::QubitUnitary::QubitUnitary(const int numQubits, std::vector<CplxType> const &mx) : AbstractGate(numQubits), matrix(mx) {} ;
+
+// -------------------------------------------------------------------------------------------------------------
 
 template<class GateType>
 static void addToDispatchTable(map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&)>>& dispatchTable) {

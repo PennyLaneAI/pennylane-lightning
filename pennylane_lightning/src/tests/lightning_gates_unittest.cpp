@@ -137,4 +137,12 @@ TEST(DispatchTable, constructGateThrows) {
     EXPECT_THROW_WITH_MESSAGE_SUBSTRING(Pennylane::constructGate(test_gate_name, {}), std::invalid_argument, test_gate_name);
 }
 
+TEST(QubitUnitary, constructGate) {
+    vector<CplxType> mx = {1,0,0,1};
+    Pennylane::QubitUnitary qubit_unitary(1, mx);
+    ASSERT_EQ(qubit_unitary.numQubits, 1);
+    ASSERT_EQ(qubit_unitary.asMatrix(), mx);
+}
+
+
 }

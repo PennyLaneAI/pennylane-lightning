@@ -43,7 +43,7 @@ namespace Pennylane {
         /**
          * Generic matrix-multiplication kernel
          */
-        virtual void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     // Single-qubit gates:
@@ -317,6 +317,20 @@ namespace Pennylane {
     public:
         static const std::string label;
         static CSWAPGate create(const std::vector<double>& parameters);
+        inline const std::vector<CplxType>& asMatrix() {
+            return matrix;
+        }
+        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+    };
+
+    // General gates
+    class QubitUnitary : public AbstractGate {
+    private:
+        const std::vector<CplxType> matrix;
+    public:
+        QubitUnitary(const int numQubits, std::vector<CplxType> const &mx);
+        static const std::string label;
+        static QubitUnitary create(const std::vector<double>& parameters);
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
