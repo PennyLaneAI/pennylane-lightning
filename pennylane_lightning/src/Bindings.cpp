@@ -48,11 +48,11 @@ void apply(
 vector<double> Pennylane::adjointJacobian(
     pybind11::array_t<CplxType>& phiNumpyArray,
     const vector<string>& observables,
-    const vector<vector<unsigned int>>& obsWires,
-    const vector<vector<double>>& obsParams,
+    const vector<vector<unsigned int> >& obsWires,
+    const vector<vector<double> >& obsParams,
     const vector<string>& operations,
-    const vector<vector<unsigned int>>& opWires,
-    const vector<vector<double>>& opParams,
+    const vector<vector<unsigned int> >& opWires,
+    const vector<vector<double> >& opParams,
     const vector<int>& trainableParams,
     int paramNumber
 ) {
