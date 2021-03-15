@@ -83,8 +83,8 @@ namespace Pennylane {
     void apply(
         StateVector& state,
         const std::vector<std::string>& ops,
-        const std::vector<std::vector<unsigned int>>& wires,
-        const std::vector<std::vector<double>>& params,
+        const std::vector<std::vector<unsigned int> >& wires,
+        const std::vector<std::vector<double> >& params,
         const unsigned int qubits
     );
 
@@ -99,9 +99,15 @@ namespace Pennylane {
      * @param trainableParams
      */
     std::vector<double> adjointJacobian(
-        std::vector<std::string> observables,
-        std::vector<std::string> operations,
-        std::vector<int> trainableParams
+        StateVector& phi,
+        const vector<string>& observables,
+        const vector<vector<unsigned int> >& obsWires,
+        const vector<vector<double> >& obsParams,
+        const vector<string>& operations,
+        const vector<vector<unsigned int> >& opWires,
+        const vector<vector<double> >& opParams,
+        const vector<int>& trainableParams,
+        int paramNumber
     );
 
 }

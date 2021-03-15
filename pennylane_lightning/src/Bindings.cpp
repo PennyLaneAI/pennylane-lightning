@@ -45,8 +45,34 @@ void apply(
     Pennylane::apply(state, ops, wires, params, qubits);
 }
 
+vector<double> Pennylane::adjointJacobian(
+    pybind11::array_t<CplxType>& phiNumpyArray,
+    const vector<string>& observables,
+    const vector<vector<unsigned int>>& obsWires,
+    const vector<vector<double>>& obsParams,
+    const vector<string>& operations,
+    const vector<vector<unsigned int>>& opWires,
+    const vector<vector<double>>& opParams,
+    const vector<int>& trainableParams,
+    int paramNumber
+) {
+    StateVector state = create(&phiNumpyArray);
+    Pennylane::adjointJacobian(
+        state,
+        observables,
+        obsWires,
+        obsParams,
+        operations,
+        opWires,
+        opParams,
+        trainableParams,
+        paramNumber
+    )
+}
+
 PYBIND11_MODULE(lightning_qubit_ops, m)
 {
     m.doc() = "lightning.qubit apply() method";
     m.def("apply", apply, "lightning.qubit apply() method");
+    m.def("adjoint_jacobian", adjointJacobian, "lightning.qubit adjoint_jacobian() method");
 }
