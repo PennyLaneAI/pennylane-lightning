@@ -63,9 +63,17 @@ void Pennylane::AbstractGate::applyKernel(const StateVector& state, const std::v
         for (size_t i = 0; i < indices.size(); i++) {
             size_t index = indices[i];
             shiftedState[index] = 0;
-            size_t baseIndex = i * indices.size();
-            for (size_t j = 0; j < indices.size(); j++) {
-                shiftedState[index] += matrix[baseIndex + j] * v[j];
+
+            if (inverse == true) {
+                for (size_t j = 0; j < indices.size(); j++) {
+                    size_t baseIndex = j * indices.size();
+                    shiftedState[index] += conj(matrix[baseIndex + i]) * v[j];
+                }
+            } else {
+                size_t baseIndex = i * indices.size();
+                for (size_t j = 0; j < indices.size(); j++) {
+                    shiftedState[index] += matrix[baseIndex + j] * v[j];
+                }
             }
         }
     }
