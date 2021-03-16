@@ -13,7 +13,7 @@
 // limitations under the License.
 #include "gtest/gtest.h"
 #include "../Optimize.hpp"
-
+#include <iostream>
 
 using std::unique_ptr;
 using std::vector;
@@ -28,7 +28,42 @@ namespace test_optimize{
 TEST(light_optimize, get_extended_matrix) {
     unique_ptr<AbstractGate> paulix = Pennylane::constructGate("PauliX", {});
     vector<CplxType> mx = paulix->asMatrix();
-    get_extended_matrix(std::move(paulix), mx);
+
+    vector<unsigned int> wires1 = {0,1};
+    vector<unsigned int> wires2 = {2,3};
+    vector<unsigned int> wires3 = {4};
+    get_extended_matrix(std::move(paulix), mx, wires1, wires2,wires3);
     ASSERT_EQ(1, 1);
 }
+
+TEST(light_optimize, create_identity) {
+    vector<CplxType> mx = Pennylane::create_identity(2);
+    vector<CplxType> expected = {1,0,0,1};
+
+    ASSERT_EQ(mx, expected);
+}
+
+class CreateIdentity : public ::testing::TestWithParam<std::tuple<unsigned int, vector<CplxType> > > {
+};
+
+TEST_P(CreateIdentity, CreateIdentity) {
+    const unsigned int dim = std::get<0>(GetParam());
+    const vector<CplxType> expected =std::get<1>(GetParam());
+
+    vector<CplxType> mx = Pennylane::create_identity(dim);
+
+    ASSERT_EQ(mx, expected);
+}
+
+INSTANTIATE_TEST_SUITE_P (
+        IdentityTests,
+        CreateIdentity,
+        ::testing::Values(
+                std::make_tuple(2, vector<CplxType>{1,0,0,1}),
+                std::make_tuple(4, vector<CplxType>{1,0,0,0,
+                                                    0,1,0,0,
+                                                    0,0,1,0,
+                                                    0,0,0,1})
+    ));
+
 }
