@@ -74,6 +74,29 @@ class LightningQubit(DefaultQubit):
         "CRot",
     }
 
+    kernel_operations = {
+        "PauliX",
+        "PauliY",
+        "PauliZ",
+        "Hadamard",
+        "Hadamard",
+        "S",
+        "T",
+        "RX",
+        "RY",
+        "RZ",
+        "PhaseShift",
+        "CNOT",
+        "SWAP",
+        "CZ",
+        "CRX",
+        "CRY",
+        "CRZ",
+        "CRot",
+        "Toffoli",
+        "CSWAP",
+    }
+
     observables = {"PauliX", "PauliY", "PauliZ", "Hadamard", "Hermitian", "Identity"}
 
     def __init__(self, wires, *, shots=1000, analytic=True):
