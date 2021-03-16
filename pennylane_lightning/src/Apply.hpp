@@ -23,11 +23,6 @@
 #include <string>
 #include <vector>
 
-#include "pybind11/complex.h"
-#include "pybind11/pybind11.h"
-#include "pybind11/numpy.h"
-#include "pybind11/stl.h"
-
 #include "StateVector.hpp"
 #include "typedefs.hpp"
 
@@ -82,16 +77,16 @@ namespace Pennylane {
     /**
      * Applies specified operations onto an input state of an arbitrary number of qubits.
      *
-     * @param state the multiqubit statevector as a numpy array; modified in place
+     * @param state the multiqubit statevector, modified in place
      * @param ops list of unique string names corresponding to gate types, in the order they should be applied
      * @param wires list of wires on which each gate acts
      * @param params list of parameters that defines the gate parameterisation
      */
     void apply(
-        pybind11::array_t<CplxType>& stateNumpyArray,
-        std::vector<std::string> ops,
-        std::vector<std::vector<unsigned int>> wires,
-        std::vector<std::vector<double>> params,
+        StateVector& state,
+        const std::vector<std::string>& ops,
+        const std::vector<std::vector<unsigned int>>& wires,
+        const std::vector<std::vector<double>>& params,
         const unsigned int qubits
     );
 
