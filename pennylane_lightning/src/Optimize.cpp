@@ -53,27 +53,27 @@ int>& second_remaining_wires) {
     // Thus, the following steps work.
     // 1. Enumerate set B and C. -> Done
     // 2. Generate 2^{|A|+|B|+|C|}-dim identity matrix
-}/*
     size_t new_matrix_qubit_count = (UINT)first_target_wires.size();
     size_t new_matrix_dim = 1ULL << new_matrix_qubit_count;
-    create_identity();
-    matrix = vector<CplxType>::Identity(new_matrix_dim, new_matrix_dim);
+    auto matrix = create_identity(new_matrix_dim);
 
     // 3. Decide correct 2^{|A|+|C|}-dim block matrix from control values.
     ITYPE start_block_basis = (1ULL << (join_from_target.size() + join_from_other_gate.size())) * control_mask;
 
     // 4. Repeat 2^{|C|}-times paste of original gate matrix A .
-    vector<CplxType> org_matrix;
-    gate->set_matrix(org_matrix);
+    vector<CplxType> org_matrix = gate->asMatrix();
+    //gate->set_matrix(org_matrix);
     size_t org_matrix_dim = 1ULL << gate->target_qubit_list.size();
     ITYPE repeat_count = 1ULL << join_from_other_gate.size();
     for (ITYPE repeat_index = 0; repeat_index < repeat_count; ++repeat_index) {
         size_t paste_start = (size_t)(start_block_basis + repeat_index * org_matrix_dim );
+
+        // Set a block
         matrix.block( paste_start, paste_start, org_matrix_dim, org_matrix_dim) = org_matrix;
     }
 
+}/*
 }
-/*
     // 5. Since the order of (C,B,A) is different from that of the other gate, we sort (C,B,A) after generating matrix.
     // We do nothing if it is already sorted
     if (!std::is_sorted(unsorted_new_target_index_list.begin(), unsorted_new_target_index_list.end())) {
