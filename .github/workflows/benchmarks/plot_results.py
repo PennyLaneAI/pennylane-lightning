@@ -35,7 +35,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# Acknowledghing the solution for plotting from the quantum-benchmarks repository
+# Acknowledging the approach for plotting from the quantum-benchmarks repository
 # at https://github.com/Roger-luo/quantum-benchmarks.
 
 
