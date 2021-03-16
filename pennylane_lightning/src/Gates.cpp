@@ -90,9 +90,10 @@ const vector<CplxType> Pennylane::XGate::matrix{
     1, 0 };
 
 void Pennylane::XGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
+    CplxType* shiftedState = state.arr;
+    const size_t j = indices.at(0);
     for (const size_t& externalIndex : externalIndices) {
-        CplxType* shiftedState = state.arr + externalIndex;
-        swap(shiftedState[indices[0]], shiftedState[indices[1]]);
+        swap(shiftedState[externalIndex], shiftedState[externalIndex + j]);
     }
 }
 
