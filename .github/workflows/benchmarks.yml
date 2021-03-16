@@ -55,7 +55,10 @@ jobs:
 
       - name: Install lightning.qubit device (PR)
         run: |
-          cd main/pr
+          cd main
+          make clean
+          pip uninstall pennylane-lightning -y
+          cd pr
           pip install -e .
 
       - name: Benchmark lightning PR device
