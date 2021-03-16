@@ -1,7 +1,11 @@
 #include "Optimize.hpp"
+#include <vector>
+#include <algorithm>
 
 using std::unique_ptr;
 using std::vector;
+using std::string;
+using std::tuple;
 
 using Pennylane::CplxType;
 
@@ -20,9 +24,94 @@ vector<CplxType> Pennylane::create_identity(const unsigned int & dim){
     return identity;
 }
 
+bool wire_is_in(const unsigned int& wire, const INDICES& wires_to_check){
+    return std::find(wires_to_check.begin(), wires_to_check.end(), wire) != wires_to_check.end();
+}
+/*
+void update_target_wires(const string &opLabel, const INDICES& wires, INDICES& target_wires){
+    // We assume that the last wire is the target
+
+    const bool is_two_qubit_controlled = controlled_two_qubit_gates.find(opLabel1) != controlled_two_qubit_gates.end();
+    const bool is_three_qubit_controlled = controlled_three_qubit_gates.find(opLabel1) != controlled_three_qubit_gates.end();
+
+    if (is_two_qubit_controlled || is_three_qubit_controlled){
+        target_wires.push_back(first_wires.back());
+    }
+    else{
+        target_wires.insert(target_wires.end(), first_wires.begin(), first_wires.end());
+    }
+}
+*/
+
+tuple<INDICES, INDICES> Pennylane::separate_control_and_target(const string &opLabel, const INDICES& wires){
+    std::set<std::string> controlled_two_qubit_gates {"CNOT", "CZ", "CRX", "CRY", "CRZ", "CRot"};
+    std::set<std::string> controlled_three_qubit_gates {"Toffoli",  "CSWAP"};
+
+    INDICES control_wires = {};
+    INDICES target_wires = {};
+    const bool is_two_qubit_controlled = controlled_two_qubit_gates.find(opLabel) != controlled_two_qubit_gates.end();
+    const bool is_three_qubit_controlled = controlled_three_qubit_gates.find(opLabel) != controlled_three_qubit_gates.end();
+
+    if (is_two_qubit_controlled){
+        control_wires.push_back(wires.at(0));
+
+        target_wires.push_back(wires.back());
+    }
+    else if (opLabel == "Toffoli"){
+        control_wires.push_back(wires.at(0));
+        control_wires.push_back(wires.at(1));
+
+        target_wires.push_back(wires.back());
+    }
+    else if (opLabel == "CSWAP"){
+        control_wires.push_back(wires.at(0));
+        target_wires.push_back(wires.at(1));
+
+        target_wires.push_back(wires.back());
+    }
+    else{
+        target_wires.insert(target_wires.end(), wires.begin(), wires.end());
+    }
+    return std::make_tuple(control_wires, target_wires);
+}
+/*
+INDICES new_qubit_list(const string &opLabel1, const string &opLabel2, const INDICES& first_wires, const INDICES& second_wires){
+
+    INDICES new_target_wires;
+    INDICES new_control_wires;
+
+
+    //1. operation
+    INDICES first_target_wires;
+    INDICES first_control_wires;
+    tuple<INDICES, INDICES> std::tie(first_control_wires, first_target_wires) = separate_control_and_target(opLabel1, first_wires);
+
+    //2. operation
+    INDICES second_target_wires;
+    INDICES second_control_wires;
+    tuple<INDICES, INDICES> std::tie(second_control_wires, second_target_wires) = separate_control_and_target(opLabel2, second_wires);
+
+    for (auto wire : first_target_wires) {
+        //case 0:
+
+
+        if(wire_is_in(wire, second_target_wires)) {
+            new_target_wires.push_back(wire);
+        }
+        else if(wire_is_in(wire, second_control_wires)){
+            new_control_wires.push_back(wire);
+        }
+        else{
+        }
+
+    }
+    //            INDICES new_control_wires;
+
+}
+
 // Join new qubit indices to target_list according to a given first_target_wires, and set a new matrix to "matrix"
 void Pennylane::get_extended_matrix(unique_ptr<Pennylane::AbstractGate> gate,
-vector<CplxType>& matrix, vector<unsigned int>& first_target_wires, vector<unsigned int>& first_control_wires, vector<unsigned
+vector<CplxType>& matrix, INDICES& first_target_wires, INDICES& first_control_wires, vector<unsigned
 int>& second_remaining_wires) {
 
     // can do QubitUnitary:
@@ -129,7 +218,7 @@ int>& second_remaining_wires) {
     //std::cout << "sorted " << std::endl;
     //for (auto val : unsorted_target_list) std::cout << val << " "; std::cout << std::endl;
     //std::cout << matrix << std::endl;
-    
+
 }
 */
 
@@ -138,8 +227,8 @@ int>& second_remaining_wires) {
 /*
 
 unique_ptr<AbstractGate> get_merged_op(unique_ptr<AbstractGate> gate1,
-    unique_ptr<AbstractGate> gate2, const vector<unsigned int>& wires1, const
-    vector<unsigned int>& wires2){
+    unique_ptr<AbstractGate> gate2, const INDICES& wires1, const
+    INDICES& wires2){
     //TODO: how to release the pointers to the previously created ops? Do we need to do that?
 
     //TODO: we assume that wires1 >= wires2
