@@ -233,6 +233,21 @@ Pennylane::RotationXGate::RotationXGate(double rotationAngle)
       js, c }
 {}
 
+void Pennylane::RotationXGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
+
+    CplxType js_ = js;
+
+    if (inverse == true) {js_ *= -1;}
+
+    for (const size_t& externalIndex : externalIndices) {
+        CplxType* shiftedState = state.arr + externalIndex;
+        CplxType v0 = shiftedState[indices[0]];
+        CplxType v1 = shiftedState[indices[1]];
+        shiftedState[indices[0]] = c * v0 + js_ * v1;
+        shiftedState[indices[1]] = js_ * v0 + c * v1;
+    }
+}
+
 // -------------------------------------------------------------------------------------------------------------
 
 const string Pennylane::RotationYGate::label = "RY";
@@ -249,6 +264,21 @@ Pennylane::RotationYGate::RotationYGate(double rotationAngle)
       c, -s,
       s, c }
 {}
+
+void Pennylane::RotationYGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
+
+    CplxType s_ = s;
+
+    if (inverse == true) {s_ *= -1;}
+
+    for (const size_t& externalIndex : externalIndices) {
+        CplxType* shiftedState = state.arr + externalIndex;
+        CplxType v0 = shiftedState[indices[0]];
+        CplxType v1 = shiftedState[indices[1]];
+        shiftedState[indices[0]] = c * v0 - s_ * v1;
+        shiftedState[indices[1]] = s_ * v0 + c * v1;
+    }
+}
 
 // -------------------------------------------------------------------------------------------------------------
 
