@@ -67,27 +67,6 @@ void Pennylane::constructAndApplyOperation(
     gate->applyKernel(state, internalIndices, externalIndices);
 }
 
-unique_ptr<AbstractGate> get_merged_op(unique_ptr<AbstractGate> gate1,
-    unique_ptr<AbstractGate> gate2, const vector<unsigned int>& wires1, const
-    vector<unsigned int>& wires2){
-    //TODO: how to release the pointers to the previously created ops? Do we need to do that?
-
-    //TODO: we assume that wires1 >= wires2
-    gate->applyKernel(state, internalIndices, externalIndices);
-    auto vector<CplxType> mx1 = gate1->asMatrix();
-    auto vector<CplxType> mx2 = gate2->asMatrix();
-
-    auto dim1 = gate1->length();
-    auto dim2 = gate2->length();
-
-    for (int i = 0; i<mx2.size(); ++i){
-        StateVector state();
-        gate->applyKernel(state, internalIndices, externalIndices);
-    }
-
-    QubitUnitary()
-}
-
 void Pennylane::apply(
     StateVector& state,
     const vector<string>& ops,
@@ -105,8 +84,6 @@ void Pennylane::apply(
     size_t numOperations = ops.size();
     if (numOperations != wires.size() || numOperations != params.size())
         throw std::invalid_argument("Invalid arguments: number of operations, wires, and parameters must all be equal");
-
-    merge_gates(ops, wires, params);
 
     for (int i = 0; i < numOperations; i++) {
         constructAndApplyOperation(state, ops[i], wires[i], params[i], qubits);
