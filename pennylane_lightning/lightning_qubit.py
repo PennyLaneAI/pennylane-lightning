@@ -136,7 +136,8 @@ class LightningQubit(DefaultQubit):
         op_names = [o.name for o in operations]
         op_wires = [self.wires.indices(o.wires) for o in operations]
         op_param = [o.parameters for o in operations]
+        op_inverse = [o.inverse for o in operations]
 
         state_vector = np.ravel(state)
-        apply(state_vector, op_names, op_wires, op_param, self.num_wires)
+        apply(state_vector, op_names, op_wires, op_param, op_inverse, self.num_wires)
         return np.reshape(state_vector, state.shape)

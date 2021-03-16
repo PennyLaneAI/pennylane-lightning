@@ -53,6 +53,7 @@ void Pennylane::constructAndApplyOperation(
     const string& opLabel,
     const vector<unsigned int>& opWires,
     const vector<double>& opParams,
+    bool inverse,
     const unsigned int qubits
 ) {
     unique_ptr<AbstractGate> gate = constructGate(opLabel, opParams);
@@ -72,6 +73,7 @@ void Pennylane::apply(
     const vector<string>& ops,
     const vector<vector<unsigned int>>& wires,
     const vector<vector<double>>& params,
+    const std::vector<bool>& inverse,
     const unsigned int qubits
 ) { 
     if (qubits <= 0)
@@ -86,7 +88,7 @@ void Pennylane::apply(
         throw std::invalid_argument("Invalid arguments: number of operations, wires, and parameters must all be equal");
 
     for (int i = 0; i < numOperations; i++) {
-        constructAndApplyOperation(state, ops[i], wires[i], params[i], qubits);
+        constructAndApplyOperation(state, ops[i], wires[i], params[i], inverse[i], qubits);
     }
 
 }
