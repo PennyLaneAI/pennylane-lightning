@@ -41,7 +41,6 @@
 
 #!/usr/bin/env python3
 import os
-import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 import json
