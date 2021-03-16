@@ -65,7 +65,7 @@ void Pennylane::constructAndApplyOperation(
     vector<unsigned int> externalWires = getIndicesAfterExclusion(opWires, qubits);
     vector<size_t> externalIndices = generateBitPatterns(externalWires, qubits);
 
-    gate->applyKernel(state, internalIndices, externalIndices);
+    gate->applyKernel(state, internalIndices, externalIndices, inverse);
 }
 
 void Pennylane::apply(
