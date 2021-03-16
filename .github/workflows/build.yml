@@ -8,11 +8,7 @@ on:
 jobs:
   cpptests:
     name: C++ tests
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-18.04]
-
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
 
