@@ -28,6 +28,7 @@ using std::string;
 using std::swap;
 using std::unique_ptr;
 using std::vector;
+using std::conj;
 
 using Pennylane::CplxType;
 
@@ -90,6 +91,7 @@ const vector<CplxType> Pennylane::XGate::matrix{
     1, 0 };
 
 void Pennylane::XGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
+    (void)inverse;  // gate is its own inverse
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
         swap(shiftedState[indices[0]], shiftedState[indices[1]]);
@@ -110,6 +112,7 @@ const vector<CplxType> Pennylane::YGate::matrix{
     IMAG, 0 };
 
 void Pennylane::YGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
+    (void)inverse;  // gate is its own inverse
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
         CplxType v0 = shiftedState[indices[0]];
@@ -132,6 +135,7 @@ const std::vector<CplxType> Pennylane::ZGate::matrix{
     0, -1 };
 
 void Pennylane::ZGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
+    (void)inverse;  // gate is its own inverse
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
         shiftedState[indices[1]] *= -1;
@@ -152,6 +156,7 @@ const vector<CplxType> Pennylane::HadamardGate::matrix{
     SQRT2INV, -SQRT2INV };
 
 void Pennylane::HadamardGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
+    (void)inverse;  // gate is its own inverse
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
         CplxType v0 = shiftedState[indices[0]];
@@ -175,9 +180,13 @@ const vector<CplxType> Pennylane::SGate::matrix{
     0, IMAG };
 
 void Pennylane::SGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
+
+    CplxType shift = IMAG;
+    if (inverse == true) {shift *= -1;}
+
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
-        shiftedState[indices[1]] *= IMAG;
+        shiftedState[indices[1]] *= shift;
     }
 }
 
@@ -197,9 +206,13 @@ const vector<CplxType> Pennylane::TGate::matrix{
     0, Pennylane::TGate::shift };
 
 void Pennylane::TGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
+
+    CplxType shift = Pennylane::TGate::shift;
+    if (inverse == true) {shift *= -1;}
+
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
-        shiftedState[indices[1]] *= Pennylane::TGate::shift;
+        shiftedState[indices[1]] *= shift;
     }
 }
 
@@ -255,10 +268,19 @@ Pennylane::RotationZGate::RotationZGate(double rotationAngle)
 {}
 
 void Pennylane::RotationZGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
+
+    CplxType shift1 = first;
+    CplxType shift2 = second;
+
+    if (inverse == true) {
+        shift1 = conj(first);
+        shift2 = conj(second);
+    }
+
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
-        shiftedState[indices[0]] *= first;
-        shiftedState[indices[1]] *= second;
+        shiftedState[indices[0]] *= shift1;
+        shiftedState[indices[1]] *= shift2;
     }
 }
 
@@ -279,9 +301,14 @@ Pennylane::PhaseShiftGate::PhaseShiftGate(double rotationAngle)
 {}
 
 void Pennylane::PhaseShiftGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
+
+    CplxType s = shift;
+
+    if (inverse == true){s *= -1;}
+
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
-        shiftedState[indices[1]] *= shift;
+        shiftedState[indices[1]] *= s;
     }
 }
 
@@ -328,6 +355,7 @@ const std::vector<CplxType> Pennylane::CNOTGate::matrix{
     0, 0, 1, 0 };
 
 void Pennylane::CNOTGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
+    (void)inverse;  // gate is its own inverse
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
         swap(shiftedState[indices[2]], shiftedState[indices[3]]);
@@ -350,6 +378,7 @@ const std::vector<CplxType> Pennylane::SWAPGate::matrix{
     0, 0, 0, 1 };
 
 void Pennylane::SWAPGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
+    (void)inverse;  // gate is its own inverse
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
         swap(shiftedState[indices[1]], shiftedState[indices[2]]);
@@ -372,6 +401,7 @@ const std::vector<CplxType> Pennylane::CZGate::matrix{
     0, 0, 0, -1 };
 
 void Pennylane::CZGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
+    (void)inverse;  // gate is its own inverse
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
         shiftedState[indices[3]] *= -1;
