@@ -24,7 +24,7 @@ all: test
 lightning_util_unittest.o: lightning_util_unittest.cpp
 	$(CC) $^ $(CFLAGS) -c
 
-Gates.o: ../Gates.cpp ../Apply.cpp
+Gates.o: ../Gates.cpp
 	$(CC) $^ $(CFLAGS) -c
 
 StateVector.o:  ../StateVector.cpp
