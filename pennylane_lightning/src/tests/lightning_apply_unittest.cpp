@@ -90,4 +90,4 @@ namespace test_apply_x {
             ::testing::Values(
                     std::make_tuple(vector<CplxType>{1,0}, vector<CplxType>{0,1})
     ));
-
+}
