@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <vector>
+#include <tuple>
 
 #include "StateVector.hpp"
 #include "typedefs.hpp"
@@ -62,7 +63,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        static const tuple<vector<CplxType>, double> generator;
+        static const std::tuple<std::vector<CplxType>, double> generator;
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
@@ -75,7 +76,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        static const tuple<vector<CplxType>, double> generator;
+        static const std::tuple<std::vector<CplxType>, double> generator;
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
@@ -88,7 +89,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        static const tuple<vector<CplxType>, double> generator;
+        static const std::tuple<std::vector<CplxType>, double> generator;
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
@@ -101,7 +102,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        static const tuple<vector<CplxType>, double> generator;
+        static const std::tuple<std::vector<CplxType>, double> generator;
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
@@ -114,7 +115,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        static const tuple<vector<CplxType>, double> generator;
+        static const std::tuple<std::vector<CplxType>, double> generator;
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
@@ -128,7 +129,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        static const tuple<vector<CplxType>, double> generator;
+        static const std::tuple<std::vector<CplxType>, double> generator;
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
@@ -143,7 +144,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        static const tuple<vector<CplxType>, double> generator;
+        static const std::tuple<std::vector<CplxType>, double> generator;
     };
 
     class RotationYGate : public SingleQubitGate {
@@ -157,7 +158,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        static const tuple<vector<CplxType>, double> generator;
+        static const std::tuple<std::vector<CplxType>, double> generator;
     };
 
     class RotationZGate : public SingleQubitGate {
@@ -171,7 +172,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        static const tuple<vector<CplxType>, double> generator;
+        static const std::tuple<std::vector<CplxType>, double> generator;
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
@@ -186,7 +187,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        static const tuple<vector<CplxType>, double> generator;
+        static const std::tuple<std::vector<CplxType>, double> generator;
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
@@ -201,7 +202,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        static const tuple<vector<CplxType>, double> generator;
+        static const std::tuple<std::vector<CplxType>, double> generator;
     };
 
     // Two-qubit gates
@@ -220,7 +221,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        static const tuple<vector<CplxType>, double> generator;
+        static const std::tuple<std::vector<CplxType>, double> generator;
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
@@ -233,7 +234,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        static const tuple<vector<CplxType>, double> generator;
+        static const std::tuple<std::vector<CplxType>, double> generator;
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
@@ -246,7 +247,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        static const tuple<vector<CplxType>, double> generator;
+        static const std::tuple<std::vector<CplxType>, double> generator;
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
@@ -261,7 +262,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        static const tuple<vector<CplxType>, double> generator;
+        static const std::tuple<std::vector<CplxType>, double> generator;
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
@@ -276,7 +277,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        static const tuple<vector<CplxType>, double> generator;
+        static const std::tuple<std::vector<CplxType>, double> generator;
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
@@ -291,7 +292,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        static const tuple<vector<CplxType>, double> generator;
+        static const std::tuple<std::vector<CplxType>, double> generator;
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
@@ -306,7 +307,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        static const tuple<vector<CplxType>, double> generator;
+        static const std::tuple<std::vector<CplxType>, double> generator;
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
@@ -326,7 +327,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        static const tuple<vector<CplxType>, double> generator;
+        static const std::tuple<std::vector<CplxType>, double> generator;
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
@@ -339,7 +340,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        static const tuple<vector<CplxType>, double> generator;
+        static const std::tuple<std::vector<CplxType>, double> generator;
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
