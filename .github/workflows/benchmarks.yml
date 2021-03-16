@@ -48,6 +48,7 @@ jobs:
           python .github/workflows/benchmarks/run_bench.py default.qubit default_qubit.json
 
       - name: Checkout PennyLane-Lightning PR
+        uses: actions/checkout@v2
         run: |
           cd main
           git checkout ${{ github.ref }}
