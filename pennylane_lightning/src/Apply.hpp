@@ -82,7 +82,7 @@ namespace Pennylane {
      * @param wires list of wires on which each gate acts
      * @param params list of parameters that defines the gate parameterisation
      * @param inverse list of bools indicating whether a given gate or its inverse should be applied
-     * @param qubits total number of qubits
+     * @param qubits number of qubits
      */
     void apply(
         StateVector& state,
