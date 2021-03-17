@@ -72,6 +72,8 @@ namespace Pennylane {
         const unsigned int qubits
     );
 
+    void apply_x( StateVector& state, unsigned int opWires, const unsigned int qubits);
+
     /**
      * Applies specified operations onto an input state of an arbitrary number of qubits.
      *

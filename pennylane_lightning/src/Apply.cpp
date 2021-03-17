@@ -67,6 +67,23 @@ void Pennylane::constructAndApplyOperation(
     gate->applyKernel(state, internalIndices, externalIndices);
 }
 
+void Pennylane::apply_x(StateVector& state, unsigned int opWires,
+    const unsigned int qubits
+){
+    CplxType* shiftedStatePtr = state.arr;
+    const size_t j = maxDecimalForQubit(opWires, qubits);
+
+    size_t i = 0;
+    while(i<state.length){
+        size_t k = 0;
+        while(k<j){
+            std::swap(shiftedStatePtr[i + k], shiftedStatePtr[i + j +k]);
+            ++k;
+        }
+        i += k + j;
+    }
+}
+
 void Pennylane::apply(
     StateVector& state,
     const vector<string>& ops,
@@ -86,7 +103,13 @@ void Pennylane::apply(
         throw std::invalid_argument("Invalid arguments: number of operations, wires, and parameters must all be equal");
 
     for (int i = 0; i < numOperations; i++) {
-        constructAndApplyOperation(state, ops[i], wires[i], params[i], qubits);
+
+        if(ops[i] == "PauliX"){
+            apply_x(state, wires[i][0], qubits);
+        }
+        else{
+            constructAndApplyOperation(state, ops[i], wires[i], params[i], qubits);
+        }
     }
 
 }
