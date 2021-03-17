@@ -167,6 +167,5 @@ class LightningQubit(DefaultQubit):
         return np.reshape(state_vector, state.shape)
 
     @staticmethod
-    def _remove_inverse_string(str):
-        return str.split(".")[0]
-
+    def _remove_inverse_string(string):
+        return string.split(".")[0]
