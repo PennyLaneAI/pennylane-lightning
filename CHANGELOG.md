@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Inverse gates are now supported.
+  [(#89)](https://github.com/PennyLaneAI/pennylane-lightning/pull/89)
+
 * Add new lightweight backend with performance improvements.
   [(#57)](https://github.com/PennyLaneAI/pennylane-lightning/pull/57)
 
