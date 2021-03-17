@@ -14,11 +14,13 @@
 """
 Unit tests for the correct application of gates with lightning.qubit
 """
-import pytest
-import pennylane as qml
-from pennylane_lightning import LightningQubit
-import numpy as np
 import itertools
+
+import numpy as np
+import pennylane as qml
+import pytest
+
+from pennylane_lightning import LightningQubit
 
 
 @pytest.fixture
@@ -78,14 +80,34 @@ def test_inverse_unitary_correct(op):
     assert np.allclose(unitary, unitary_expected)
 
 
-random_unitary = np.array([[-0.48401572-0.11012304j, -0.44806504+0.46775911j,
-        -0.36968281+0.19235993j, -0.37561358+0.13887962j],
-       [-0.12838047+0.13992187j,  0.14531831+0.45319438j,
-         0.28902175-0.71158765j, -0.24333677-0.29721109j],
-       [ 0.26400811-0.72519269j,  0.13965687+0.35092711j,
-         0.09141515-0.14367072j,  0.14894673+0.45886629j],
-       [-0.04067799+0.34681783j, -0.45852968-0.03214391j,
-        -0.10528164-0.4431247j ,  0.50251451+0.45476965j]])
+random_unitary = np.array(
+    [
+        [
+            -0.48401572 - 0.11012304j,
+            -0.44806504 + 0.46775911j,
+            -0.36968281 + 0.19235993j,
+            -0.37561358 + 0.13887962j,
+        ],
+        [
+            -0.12838047 + 0.13992187j,
+            0.14531831 + 0.45319438j,
+            0.28902175 - 0.71158765j,
+            -0.24333677 - 0.29721109j,
+        ],
+        [
+            0.26400811 - 0.72519269j,
+            0.13965687 + 0.35092711j,
+            0.09141515 - 0.14367072j,
+            0.14894673 + 0.45886629j,
+        ],
+        [
+            -0.04067799 + 0.34681783j,
+            -0.45852968 - 0.03214391j,
+            -0.10528164 - 0.4431247j,
+            0.50251451 + 0.45476965j,
+        ],
+    ]
+)
 
 
 @pytest.mark.xfail(strict=True)  # needs support for QubitUnitary
