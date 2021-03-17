@@ -371,6 +371,29 @@ Pennylane::GeneralRotationGate::GeneralRotationGate(double phi, double theta, do
       r3, r4 }
 {}
 
+void Pennylane::GeneralRotationGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
+
+    CplxType t1 = r1;
+    CplxType t2 = r2;
+    CplxType t3 = r3;
+    CplxType t4 = r4;
+
+    if (inverse == true) {
+        t1 = conj(r1);
+        t2 *= -1;
+        t3 *= -1;
+        t4 = conj(t4);
+    }
+
+    for (const size_t& externalIndex : externalIndices) {
+        CplxType* shiftedState = state.arr + externalIndex;
+        CplxType v0 = shiftedState[indices[0]];
+        CplxType v1 = shiftedState[indices[1]];
+        shiftedState[indices[0]] = t1 * v0 + t2 * v1;
+        shiftedState[indices[1]] = t3 * v0 + t4 * v1;
+    }
+}
+
 // -------------------------------------------------------------------------------------------------------------
 
 Pennylane::TwoQubitGate::TwoQubitGate()

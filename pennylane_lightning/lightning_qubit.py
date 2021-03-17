@@ -86,6 +86,7 @@ class LightningQubit(DefaultQubit):
         "RY",
         "RZ",
         "PhaseShift",
+        "Rot",
         "CNOT",
         "SWAP",
         "CZ",
