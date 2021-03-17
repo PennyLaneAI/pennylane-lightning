@@ -23,17 +23,22 @@ using std::function;
 using Pennylane::CplxType;
 using Pennylane::AbstractGate;
 
-namespace test_optimize{
 /*
+namespace test_optimize{
 TEST(light_optimize, get_extended_matrix) {
     unique_ptr<AbstractGate> paulix = Pennylane::constructGate("PauliX", {});
-    vector<CplxType> mx = paulix->asMatrix();
+    vector<CplxType> mx;
 
-    vector<unsigned int> wires1 = {0,1};
-    vector<unsigned int> wires2 = {2,3};
-    vector<unsigned int> wires3 = {4};
-    get_extended_matrix(std::move(paulix), mx, wires1, wires2,wires3);
-    ASSERT_EQ(1, 1);
+    vector<unsigned int> new_controls = {};
+    vector<unsigned int> new_targets = {0,1};
+    vector<unsigned int> first_controls = {};
+    vector<unsigned int> first_targets = {0};
+    get_extended_matrix(std::move(paulix), mx, new_controls, new_targets, first_controls, first_targets);
+    auto expected = vector<CplxType>{0,0,1,0,
+                                     0,0,0,1,
+                                     1,0,0,0,
+                                     0,1,0,0};
+    ASSERT_EQ(mx, expected);
 }
 
 TEST(light_optimize, create_identity) {
@@ -186,7 +191,26 @@ INSTANTIATE_TEST_SUITE_P (
                                                                                                                  0,0,0,1})
     ));
 
+class SwapRows : public ::testing::TestWithParam<std::tuple<vector<CplxType>, size_t, size_t, size_t, vector<CplxType> > > {
+};
+
+TEST_P(SwapRows, SwapRows) {
+    auto mx = std::get<0>(GetParam());
+    auto dim = std::get<1>(GetParam());
+
+    auto row1 = std::get<2>(GetParam());
+    auto row2 = std::get<3>(GetParam());
+
+    auto expected = std::get<4>(GetParam());
+
+    Pennylane::swap_rows(mx.data(), dim, row1, row2);
+    ASSERT_EQ(mx, expected);
 }
 
-
-
+INSTANTIATE_TEST_SUITE_P (
+        SwapRowsTests,
+        SwapRows,
+        ::testing::Values(
+                std::make_tuple(vector<CplxType>{1,2,3,4}, 2, 0, 1, vector<CplxType>{3,4,1,2}),
+                std::make_tuple(vector<CplxType>{1,2,3,4}, 2, 1, 0, vector<CplxType>{3,4,1,2})
+    ));

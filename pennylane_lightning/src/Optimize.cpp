@@ -105,7 +105,7 @@ tuple<INDICES, INDICES> Pennylane::get_new_qubit_list(const string &opLabel1, co
 
     for (auto wire : first_control_wires) {
         //case 4:
-        // qubit belongs to first control and second control ->  if control_value is equal, goto new_control_set. If not, goto new_target_set
+        // qubit belongs to first control and second control ->  if control_wireue is equal, goto new_control_set. If not, goto new_target_set
         if(wire_is_in(wire, second_control_wires)){
             new_control_wires.push_back(wire);
         }
@@ -134,6 +134,7 @@ tuple<INDICES, INDICES> Pennylane::get_new_qubit_list(const string &opLabel1, co
 }
 
 void Pennylane::set_block(CplxType* mx, const size_t &dim, const size_t &start_ind, CplxType* block_mx, const size_t &block_dim){
+    //TODO: validate
 
     size_t i = 0;
     for(size_t j = 0; j<block_dim*block_dim; j+=block_dim){
@@ -143,11 +144,18 @@ void Pennylane::set_block(CplxType* mx, const size_t &dim, const size_t &start_i
         i += dim;
     }
 }
+
+void Pennylane::swap_rows(CplxType* mx, const size_t &dim, const size_t row1, const size_t row2){
+    for(size_t i = 0; i<dim; ++i){
+        std::swap(mx[row1 * dim +i], mx[row2 * dim +i]);
+    }
+}
+
 /*
 // Join new qubit indices to target_list according to a given first_target_wires, and set a new matrix to "matrix"
 void Pennylane::get_extended_matrix(unique_ptr<Pennylane::AbstractGate> gate,
-    vector<CplxType>& matrix, INDICES& new_target_wires, INDICES&
-    new_control_wires,INDICES& first_target_wires, INDICES& first_control_wires) {
+vector<CplxType>& matrix, INDICES& new_control_wires, INDICES&
+new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
 
     // can do QubitUnitary:
     //Pennylane::QubitUnitary qubit_unitary(2, matrix);
@@ -159,19 +167,19 @@ void Pennylane::get_extended_matrix(unique_ptr<Pennylane::AbstractGate> gate,
     // Case 1 : If qubit index is in gate_control_index -> named B
     std::vector<UINT> join_from_control;
     ITYPE control_mask = 0;
-    for (auto val : new_target_list) {
-        if (wire_is_in(wire, first_target_wires)) {
-            join_from_control.push_back(val.index());
+    for (auto wire : new_target_wires) {
+        if (wire_is_in(wire, first_control_wires)) {
+            join_from_control.push_back(wire);
 
-            if ((*ite).control_value() == 1)
-                control_mask ^= (1ULL << (join_from_control.size()-1));
+            // PennyLane only has all-up controls
+            control_mask ^= (1ULL << (join_from_control.size()-1));
         }
     }
     // Case 2 : If qubit index is not in both -> named C
     std::vector<UINT> join_from_other_gate;
-    for (auto val : new_target_list) {
+    for (auto wire : new_target_wires) {
         if (wire_is_in(wire, first_target_wires) and wire_is_in(wire, first_control_wires)){
-            join_from_other_gate.push_back(val.index());
+            join_from_other_gate.push_back(wire);
         }
     }
 
@@ -194,27 +202,30 @@ void Pennylane::get_extended_matrix(unique_ptr<Pennylane::AbstractGate> gate,
     // Thus, the following steps work.
     // 1. Enumerate set B and C. -> Done
     // 2. Generate 2^{|A|+|B|+|C|}-dim identity matrix
-    size_t new_matrix_qubit_count = (UINT)first_target_wires.size();
+    size_t new_matrix_qubit_count = (UINT)new_target_wires.size();
     size_t new_matrix_dim = 1ULL << new_matrix_qubit_count;
-    auto matrix = create_identity(new_matrix_dim);
+    matrix = create_identity(new_matrix_dim);
 
-    // 3. Decide correct 2^{|A|+|C|}-dim block matrix from control values.
+    // 3. Decide correct 2^{|A|+|C|}-dim block matrix from control wireues.
     ITYPE start_block_basis = (1ULL << (join_from_target.size() + join_from_other_gate.size())) * control_mask;
 
     // 4. Repeat 2^{|C|}-times paste of original gate matrix A .
     vector<CplxType> org_matrix = gate->asMatrix();
-    //gate->set_matrix(org_matrix);
+    auto org_dim = gate->numQubits;
+
     size_t org_matrix_dim = 1ULL << first_target_wires.size();
     ITYPE repeat_count = 1ULL << join_from_other_gate.size();
     for (ITYPE repeat_index = 0; repeat_index < repeat_count; ++repeat_index) {
         size_t paste_start = (size_t)(start_block_basis + repeat_index * org_matrix_dim );
 
         // Set a block
-        matrix.block( paste_start, paste_start, org_matrix_dim, org_matrix_dim) = org_matrix;
+        Pennylane::set_block(matrix.data(), org_dim, paste_start*paste_start, org_matrix.data(), org_matrix_dim);
     }
+    // ---------------------------------------------
+    // TODO: from this point
+    // ---------------------------------------------
 
-}
-}
+
     // 5. Since the order of (C,B,A) is different from that of the other gate, we sort (C,B,A) after generating matrix.
     // We do nothing if it is already sorted
     if (!std::is_sorted(unsorted_new_target_index_list.begin(), unsorted_new_target_index_list.end())) {
@@ -264,11 +275,11 @@ void Pennylane::get_extended_matrix(unique_ptr<Pennylane::AbstractGate> gate,
     }
 
     //std::cout << "unsorted " << std::endl;
-    //for (auto val : unsorted_target_list) std::cout << val << " "; std::cout << std::endl;
+    //for (auto wire : unsorted_target_list) std::cout << val << " "; std::cout << std::endl;
     //std::cout << matrix << std::endl;
     //sort_target_qubit(unsorted_new_target_index_list, matrix);
     //std::cout << "sorted " << std::endl;
-    //for (auto val : unsorted_target_list) std::cout << val << " "; std::cout << std::endl;
+    //for (auto wire : unsorted_target_list) std::cout << val << " "; std::cout << std::endl;
     //std::cout << matrix << std::endl;
 
 }
