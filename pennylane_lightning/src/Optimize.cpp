@@ -74,6 +74,14 @@ tuple<INDICES, INDICES> Pennylane::separate_control_and_target(const string &opL
     }
     return std::make_tuple(control_wires, target_wires);
 }
+/**
+ * Insert 0 to qubit_index-th bit of basis_index. basis_mask must be 1ULL << qubit_index.
+ */
+inline static ITYPE insert_zero_to_basis_index(ITYPE basis_index, ITYPE basis_mask, UINT qubit_index){
+    ITYPE temp_basis = (basis_index >> qubit_index) << (qubit_index+1);
+    return temp_basis + basis_index % basis_mask;
+}
+
 
 tuple<INDICES, INDICES> Pennylane::get_new_qubit_list(const string &opLabel1, const INDICES& first_wires, const string &opLabel2, const INDICES& second_wires){
 
@@ -125,25 +133,52 @@ tuple<INDICES, INDICES> Pennylane::get_new_qubit_list(const string &opLabel1, co
     return std::make_tuple(new_control_wires, new_target_wires);
 }
 
+void Pennylane::set_block(CplxType* mx, const size_t &dim, const size_t &start_ind, CplxType* block_mx, const size_t &block_dim){
+
+    size_t i = 0;
+    for(size_t j = 0; j<block_dim*block_dim; j+=block_dim){
+        for(size_t k = 0; k<block_dim; ++k){
+            mx[start_ind + i + k] = block_mx[k+j];
+        }
+        i += dim;
+    }
+}
 /*
 // Join new qubit indices to target_list according to a given first_target_wires, and set a new matrix to "matrix"
 void Pennylane::get_extended_matrix(unique_ptr<Pennylane::AbstractGate> gate,
-vector<CplxType>& matrix, INDICES& first_target_wires, INDICES& first_control_wires, vector<unsigned
-int>& second_remaining_wires) {
+    vector<CplxType>& matrix, INDICES& new_target_wires, INDICES&
+    new_control_wires,INDICES& first_target_wires, INDICES& first_control_wires) {
 
     // can do QubitUnitary:
-    Pennylane::QubitUnitary qubit_unitary(2, matrix);
+    //Pennylane::QubitUnitary qubit_unitary(2, matrix);
 
-    //Logic: determine the controlled and the target qubits
+    // New qubits index may be in either gate_target_index, gate_control_index, or it comes from the other gate.
+    // Case 0 : If qubit index is in gate_target_index -> named A
+    std::vector<UINT> join_from_target = first_target_wires;
+
+    // Case 1 : If qubit index is in gate_control_index -> named B
+    std::vector<UINT> join_from_control;
+    ITYPE control_mask = 0;
+    for (auto val : new_target_list) {
+        if (wire_is_in(wire, first_target_wires)) {
+            join_from_control.push_back(val.index());
+
+            if ((*ite).control_value() == 1)
+                control_mask ^= (1ULL << (join_from_control.size()-1));
+        }
+    }
+    // Case 2 : If qubit index is not in both -> named C
+    std::vector<UINT> join_from_other_gate;
+    for (auto val : new_target_list) {
+        if (wire_is_in(wire, first_target_wires) and wire_is_in(wire, first_control_wires)){
+            join_from_other_gate.push_back(val.index());
+        }
+    }
 
     // At first, qubit indices are ordered as (A,C,B)
-    std::vector<UINT> unsorted_new_target_index_list;
-
-    // TODO: is first_target_wires == first_target_wires from qulacs?
-    unsorted_new_target_index_list.reserve( first_target_wires.size() + first_control_wires.size() + second_remaining_wires.size());
-    unsorted_new_target_index_list.insert(unsorted_new_target_index_list.end(), first_target_wires.begin(), first_target_wires.end());
-    unsorted_new_target_index_list.insert(unsorted_new_target_index_list.end(), first_control_wires.begin(), first_control_wires.end());
-    unsorted_new_target_index_list.insert(unsorted_new_target_index_list.end(), second_remaining_wires.begin(), second_remaining_wires.end());
+    std::vector<UINT> unsorted_new_target_index_list = join_from_target;
+    unsorted_new_target_index_list.insert(unsorted_new_target_index_list.end(), join_from_other_gate.begin(), join_from_other_gate.end());
+    unsorted_new_target_index_list.insert(unsorted_new_target_index_list.end(), join_from_control.begin(), join_from_control.end());
 
     // *** NOTE ***
     // Order of tensor product is reversed!!!
@@ -169,7 +204,7 @@ int>& second_remaining_wires) {
     // 4. Repeat 2^{|C|}-times paste of original gate matrix A .
     vector<CplxType> org_matrix = gate->asMatrix();
     //gate->set_matrix(org_matrix);
-    size_t org_matrix_dim = 1ULL << gate->target_qubit_list.size();
+    size_t org_matrix_dim = 1ULL << first_target_wires.size();
     ITYPE repeat_count = 1ULL << join_from_other_gate.size();
     for (ITYPE repeat_index = 0; repeat_index < repeat_count; ++repeat_index) {
         size_t paste_start = (size_t)(start_block_basis + repeat_index * org_matrix_dim );
@@ -178,7 +213,7 @@ int>& second_remaining_wires) {
         matrix.block( paste_start, paste_start, org_matrix_dim, org_matrix_dim) = org_matrix;
     }
 
-}/*
+}
 }
     // 5. Since the order of (C,B,A) is different from that of the other gate, we sort (C,B,A) after generating matrix.
     // We do nothing if it is already sorted

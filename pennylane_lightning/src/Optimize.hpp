@@ -14,6 +14,7 @@ using std::string;
 using Pennylane::CplxType;
 
 typedef vector<unsigned int> INDICES;
+typedef size_t ITYPE;
 
 namespace Pennylane {
 
@@ -27,5 +28,6 @@ second_remaining_wires);
 
 tuple<INDICES, INDICES> separate_control_and_target(const string &opLabel, const INDICES& wires);
 tuple<INDICES, INDICES> get_new_qubit_list(const string &opLabel1, const INDICES& first_wires, const string &opLabel2, const INDICES& second_wires);
+void set_block(CplxType* mx, const size_t &dim, const size_t &start_ind, CplxType* block_mx, const size_t &block_dim);
 
 }
