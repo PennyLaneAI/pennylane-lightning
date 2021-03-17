@@ -27,7 +27,7 @@ def op(op_name):
 
 
 @pytest.mark.parametrize("op_name", LightningQubit.kernel_operations)
-def test_gate_unitary_correct(op, op_name):
+def test_gate_unitary_correct(op):
     """Test if lightning.qubit correctly applies gates by reconstructing the unitary matrix and
     comparing to the expected version"""
     wires = op.num_wires
@@ -53,7 +53,7 @@ def test_gate_unitary_correct(op, op_name):
 
 
 @pytest.mark.parametrize("op_name", LightningQubit.kernel_operations)
-def test_inverse_unitary_correct(op, op_name):
+def test_inverse_unitary_correct(op):
     """Test if lightning.qubit correctly applies inverse gates by reconstructing the unitary matrix
     and comparing to the expected version"""
     wires = op.num_wires
