@@ -96,5 +96,48 @@ INSTANTIATE_TEST_SUITE_P (
                 std::make_tuple("CSWAP", INDICES{2,1,0}, std::make_tuple(INDICES{2}, INDICES{1,0}))
     ));
 
+class GetNewQubitList : public ::testing::TestWithParam<std::tuple<string, INDICES, string, INDICES, INDICES,INDICES > > {
+};
+
+TEST_P(GetNewQubitList, GetNewQubitList) {
+    const string op1 = std::get<0>(GetParam());
+    const INDICES wires1 = std::get<1>(GetParam());
+
+    const string op2 = std::get<2>(GetParam());
+    const INDICES wires2 = std::get<3>(GetParam());
+
+    const INDICES control_expected = std::get<4>(GetParam());
+    const INDICES target_expected = std::get<5>(GetParam());
+
+    auto all_res = Pennylane::get_new_qubit_list(op1, wires1, op2, wires2);
+    const INDICES control_result = std::get<0>(all_res);
+    const INDICES target_result = std::get<1>(all_res);
+
+    //std::tie(control_result, target_result) = all_res;
+
+    ASSERT_EQ(control_result, control_expected);
+    ASSERT_EQ(target_result, target_expected);
 }
+
+INSTANTIATE_TEST_SUITE_P (
+        GetNewQubitListTests,
+        GetNewQubitList,
+        ::testing::Values(
+                std::make_tuple("RY", INDICES{1}, "RY", INDICES{1}, INDICES{}, INDICES{1}),
+                std::make_tuple("CNOT", INDICES{0,1}, "RY", INDICES{1}, INDICES{}, INDICES{1,0}),
+                std::make_tuple("CNOT", INDICES{0,1}, "SWAP", INDICES{1,2}, INDICES{}, INDICES{1,0,2}),
+                std::make_tuple("CNOT", INDICES{0,1}, "SWAP", INDICES{1,0}, INDICES{}, INDICES{1,0})
+                std::make_tuple("Toffoli", INDICES{0,1,2}, "SWAP", INDICES{1,0}, INDICES{}, INDICES{1,0,2})
+                /*
+                std::make_tuple("CNOT", INDICES{1,0}, std::make_tuple(INDICES{1}, INDICES{0})),
+                std::make_tuple("SWAP", INDICES{0,1}, std::make_tuple(INDICES{}, INDICES{0,1})),
+                std::make_tuple("SWAP", INDICES{1,0}, std::make_tuple(INDICES{}, INDICES{1,0})),
+                std::make_tuple("CSWAP", INDICES{0,2,1}, std::make_tuple(INDICES{0}, INDICES{2,1})),
+                std::make_tuple("CSWAP", INDICES{2,1,0}, std::make_tuple(INDICES{2}, INDICES{1,0}))
+            */
+    ));
+
+}
+
+
 

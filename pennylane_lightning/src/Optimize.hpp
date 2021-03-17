@@ -26,5 +26,6 @@ second_remaining_wires);
 */
 
 tuple<INDICES, INDICES> separate_control_and_target(const string &opLabel, const INDICES& wires);
+tuple<INDICES, INDICES> get_new_qubit_list(const string &opLabel1, const INDICES& first_wires, const string &opLabel2, const INDICES& second_wires);
 
 }

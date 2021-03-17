@@ -74,41 +74,58 @@ tuple<INDICES, INDICES> Pennylane::separate_control_and_target(const string &opL
     }
     return std::make_tuple(control_wires, target_wires);
 }
-/*
-INDICES new_qubit_list(const string &opLabel1, const string &opLabel2, const INDICES& first_wires, const INDICES& second_wires){
+
+tuple<INDICES, INDICES> Pennylane::get_new_qubit_list(const string &opLabel1, const INDICES& first_wires, const string &opLabel2, const INDICES& second_wires){
 
     INDICES new_target_wires;
     INDICES new_control_wires;
 
-
     //1. operation
-    INDICES first_target_wires;
-    INDICES first_control_wires;
-    tuple<INDICES, INDICES> std::tie(first_control_wires, first_target_wires) = separate_control_and_target(opLabel1, first_wires);
+    auto res1 = separate_control_and_target(opLabel1, first_wires);
+    const INDICES first_control_wires = std::get<0>(res1);
+    const INDICES first_target_wires = std::get<1>(res1);
 
     //2. operation
-    INDICES second_target_wires;
-    INDICES second_control_wires;
-    tuple<INDICES, INDICES> std::tie(second_control_wires, second_target_wires) = separate_control_and_target(opLabel2, second_wires);
+    auto res2 = separate_control_and_target(opLabel2, second_wires);
+    const INDICES second_control_wires = std::get<0>(res2);
+    const INDICES second_target_wires = std::get<1>(res2);
 
     for (auto wire : first_target_wires) {
-        //case 0:
+        //case 0-2:
+        new_target_wires.push_back(wire);
+    }
 
-
-        if(wire_is_in(wire, second_target_wires)) {
-            new_target_wires.push_back(wire);
-        }
-        else if(wire_is_in(wire, second_control_wires)){
+    for (auto wire : first_control_wires) {
+        //case 4:
+        // qubit belongs to first control and second control ->  if control_value is equal, goto new_control_set. If not, goto new_target_set
+        if(wire_is_in(wire, second_control_wires)){
             new_control_wires.push_back(wire);
         }
+        //case 3: qubit belongs to first control and second target
+        //case 5: qubit belongs to first control and not in second
         else{
+            new_target_wires.push_back(wire);
+        }
+    }
+
+    for (auto wire : second_target_wires) {
+        //case 6: qubit belongs to second target but not in first
+        if(not wire_is_in(wire, first_target_wires) and not wire_is_in(wire, first_control_wires)){
+            new_target_wires.push_back(wire);
         }
 
     }
-    //            INDICES new_control_wires;
+    for (auto wire : second_control_wires) {
+        //case 7: qubit belongs to second control but not in first
+        if(not wire_is_in(wire, first_target_wires) and not wire_is_in(wire, first_control_wires)){
+            new_target_wires.push_back(wire);
+        }
 
+    }
+    return std::make_tuple(new_control_wires, new_target_wires);
 }
 
+/*
 // Join new qubit indices to target_list according to a given first_target_wires, and set a new matrix to "matrix"
 void Pennylane::get_extended_matrix(unique_ptr<Pennylane::AbstractGate> gate,
 vector<CplxType>& matrix, INDICES& first_target_wires, INDICES& first_control_wires, vector<unsigned
