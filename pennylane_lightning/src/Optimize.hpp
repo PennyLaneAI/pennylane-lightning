@@ -24,6 +24,8 @@ tuple<INDICES, INDICES> separate_control_and_target(const string &opLabel, const
 tuple<INDICES, INDICES> get_new_qubit_list(const string &opLabel1, const INDICES& first_wires, const string &opLabel2, const INDICES& second_wires);
 void set_block(CplxType* mx, const size_t &dim, const size_t &start_ind, CplxType* block_mx, const size_t &block_dim);
 void swap_rows(CplxType* mx, const size_t &dim, const size_t row1, const size_t row2);
+void swap_cols(CplxType* mx, const size_t &dim, const size_t column1, const size_t column2);
+
 
 void get_extended_matrix(unique_ptr<Pennylane::AbstractGate> gate,
     vector<CplxType>& matrix, INDICES& new_target_wires, INDICES&
