@@ -342,7 +342,7 @@ void Pennylane::PhaseShiftGate::applyKernel(const StateVector& state, const std:
 
     CplxType s = shift;
 
-    if (inverse == true){s *= -1;}
+    if (inverse == true){s *= conj(shift);}
 
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
