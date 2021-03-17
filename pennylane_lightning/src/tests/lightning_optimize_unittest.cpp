@@ -126,15 +126,8 @@ INSTANTIATE_TEST_SUITE_P (
                 std::make_tuple("RY", INDICES{1}, "RY", INDICES{1}, INDICES{}, INDICES{1}),
                 std::make_tuple("CNOT", INDICES{0,1}, "RY", INDICES{1}, INDICES{}, INDICES{1,0}),
                 std::make_tuple("CNOT", INDICES{0,1}, "SWAP", INDICES{1,2}, INDICES{}, INDICES{1,0,2}),
-                std::make_tuple("CNOT", INDICES{0,1}, "SWAP", INDICES{1,0}, INDICES{}, INDICES{1,0})
-                std::make_tuple("Toffoli", INDICES{0,1,2}, "SWAP", INDICES{1,0}, INDICES{}, INDICES{1,0,2})
-                /*
-                std::make_tuple("CNOT", INDICES{1,0}, std::make_tuple(INDICES{1}, INDICES{0})),
-                std::make_tuple("SWAP", INDICES{0,1}, std::make_tuple(INDICES{}, INDICES{0,1})),
-                std::make_tuple("SWAP", INDICES{1,0}, std::make_tuple(INDICES{}, INDICES{1,0})),
-                std::make_tuple("CSWAP", INDICES{0,2,1}, std::make_tuple(INDICES{0}, INDICES{2,1})),
-                std::make_tuple("CSWAP", INDICES{2,1,0}, std::make_tuple(INDICES{2}, INDICES{1,0}))
-            */
+                std::make_tuple("CNOT", INDICES{0,1}, "SWAP", INDICES{1,0}, INDICES{}, INDICES{1,0}),
+                std::make_tuple("Toffoli", INDICES{0,1,2}, "SWAP", INDICES{1,0}, INDICES{}, INDICES{2,0,1})
     ));
 
 }
