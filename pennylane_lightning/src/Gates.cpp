@@ -216,7 +216,7 @@ const vector<CplxType> Pennylane::TGate::matrix{
 void Pennylane::TGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
 
     CplxType shift = Pennylane::TGate::shift;
-    if (inverse == true) {shift *= -1;}
+    if (inverse == true) {shift = conj(Pennylane::TGate::shift);}
 
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
@@ -342,7 +342,7 @@ void Pennylane::PhaseShiftGate::applyKernel(const StateVector& state, const std:
 
     CplxType s = shift;
 
-    if (inverse == true){s *= conj(shift);}
+    if (inverse == true){s = conj(shift);}
 
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
