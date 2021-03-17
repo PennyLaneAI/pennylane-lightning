@@ -146,12 +146,14 @@ void Pennylane::set_block(CplxType* mx, const size_t &dim, const size_t &start_i
 }
 
 void Pennylane::swap_rows(CplxType* mx, const size_t &dim, const size_t row1, const size_t row2){
+    //TODO: validate
     for(size_t i = 0; i<dim; ++i){
         std::swap(mx[row1 * dim +i], mx[row2 * dim +i]);
     }
 }
 
 void Pennylane::swap_cols(CplxType* mx, const size_t &dim, const size_t column1, const size_t column2){
+    //TODO: validate
     for(size_t i=0; i<dim; ++i){
         auto row_num = i*dim;
         std::swap(mx[row_num +column1], mx[row_num +column2]);
