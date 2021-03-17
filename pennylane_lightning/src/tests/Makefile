@@ -38,6 +38,9 @@ lightning_gates_unittest.o: lightning_gates_unittest.cpp
 lightning_apply_unittest.o: lightning_apply_unittest.cpp
 	$(CC) $^ $(CFLAGS) -c
 
+lightning_optimize_unittest.o: lightning_optimize_unittest.cpp
+	$(CC) $^ $(CFLAGS) -c
+
 gtest_main.o: gtest_main.cpp
 	$(CC) $^ $(CFLAGS) -c
 
