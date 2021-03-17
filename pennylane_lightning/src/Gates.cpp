@@ -18,6 +18,7 @@
 #include <cmath>
 #include <functional>
 #include <map>
+#include <iostream>
 
 #include "Gates.hpp"
 #include "Util.hpp"
@@ -91,10 +92,14 @@ const vector<CplxType> Pennylane::XGate::matrix{
 
 void Pennylane::XGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
     CplxType* shiftedState = state.arr;
-    const size_t j = indices.at(0);
-    for (const size_t& externalIndex : externalIndices) {
-        swap(shiftedState[externalIndex], shiftedState[externalIndex + j]);
-    }
+    const size_t j = indices[0];
+    for (std::vector<size_t>::const_reverse_iterator i = externalIndices.rbegin(); 
+            i != externalIndices.rend(); ++i ) { 
+
+        auto ind = *i;
+        std::cout << ind << " ";
+        swap(shiftedState[ind], shiftedState[ind + j]);
+    } 
 }
 
 // -------------------------------------------------------------------------------------------------------------

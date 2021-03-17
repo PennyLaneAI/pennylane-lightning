@@ -48,6 +48,24 @@ vector<size_t> Pennylane::generateBitPatterns(const vector<unsigned int>& qubitI
     return indices;
 }
 
+void Pennylane::apply_x(StateVector& state, const unsigned int opWires,
+    const unsigned int qubits
+){
+    CplxType* shiftedStatePtr = state.arr;
+    const size_t j = maxDecimalForQubit(opWires, qubits);
+
+    size_t i = 0;
+    while(i<state.length){
+        size_t k = 0;
+        while(k<j){
+            std::swap(shiftedStatePtr[i + k], shiftedStatePtr[i + j +k]);
+            ++k;
+        }
+        i += k + j;
+    }
+}
+
+
 void Pennylane::constructAndApplyOperation(
     StateVector& state,
     const string& opLabel,
@@ -55,41 +73,51 @@ void Pennylane::constructAndApplyOperation(
     const vector<double>& opParams,
     const unsigned int qubits
 ) {
-    unique_ptr<AbstractGate> gate = constructGate(opLabel, opParams);
-    if (gate->numQubits != opWires.size())
-        throw std::invalid_argument(string("The gate of type ") + opLabel + " requires " + std::to_string(gate->numQubits) + " wires, but " + std::to_string(opWires.size()) + " were supplied");
     
-    vector<size_t> internalIndices;
-    vector<size_t> externalIndices;
     if(opLabel == "PauliX") {
 
-        const size_t j = maxDecimalForQubit(opWires.at(0), qubits);
+        CplxType* shiftedStatePtr = state.arr;
+        const size_t j = maxDecimalForQubit(opWires[0], qubits);
+
+        size_t i = 0;
+        while(i<state.length){
+            size_t k = 0;
+            while(k<j){
+                std::swap(shiftedStatePtr[i + k], shiftedStatePtr[i + j +k]);
+                ++k;
+            }
+            i += k + j;
+        }
+
+        //apply_x(state, opWires[0], qubits);
+        /*
+        const size_t j = maxDecimalForQubit(opWires[0], qubits);
         internalIndices.push_back(j);
 
         size_t i = 0;
         while(i<state.length){
             size_t k = 0;
             while(k<j){
-                externalIndices.push_back(i+k);
+                //externalIndices.push_back(i+k);
+                std::swap(state.arr[i+k], state.arr[i + k + j]);
                 ++k;
             }
             i += k + j;
         }
+        */
     }
     else{
-        internalIndices = generateBitPatterns(opWires, qubits);
+        unique_ptr<AbstractGate> gate = constructGate(opLabel, opParams);
+        if (gate->numQubits != opWires.size())
+            throw std::invalid_argument(string("The gate of type ") + opLabel + " requires " + std::to_string(gate->numQubits) + " wires, but " + std::to_string(opWires.size()) + " were supplied");
+        vector<size_t> internalIndices = generateBitPatterns(opWires, qubits);
 
         vector<unsigned int> externalWires = getIndicesAfterExclusion(opWires, qubits);
-        externalIndices = generateBitPatterns(externalWires, qubits);
+        vector<size_t> externalIndices = generateBitPatterns(externalWires, qubits);
+        gate->applyKernel(state, internalIndices, externalIndices);
     }
-    gate->applyKernel(state, internalIndices, externalIndices);
 }
 
-void Pennylane::apply_x(StateVector& state, unsigned int opWires,
-    const unsigned int qubits
-){
-    CplxType* shiftedStatePtr = state.arr;
-}
 
 void Pennylane::apply(
     StateVector& state,
