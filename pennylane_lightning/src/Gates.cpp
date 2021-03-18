@@ -175,7 +175,6 @@ void Pennylane::HadamardGate::applyKernel(const StateVector& state, const std::v
 }
 
 // -------------------------------------------------------------------------------------------------------------
-
 const string Pennylane::SGate::label = "S";
 
 Pennylane::SGate Pennylane::SGate::create(const vector<double>& parameters) {
