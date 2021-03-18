@@ -556,22 +556,25 @@ void Pennylane::CSWAPGate::applyKernel(const StateVector& state, const std::vect
 
 // -------------------------------------------------------------------------------------------------------------
 
+bool IsEven (int i) { return !(i % 2); }
+
 const string Pennylane::ThreeQubitUnitary::label = "QubitUnitary";
 
 Pennylane::ThreeQubitUnitary Pennylane::ThreeQubitUnitary::create(const vector<double>& parameters) {
-//    validateLength(Pennylane::ThreeQubitUnitary::label, parameters, 0);
-    return Pennylane::ThreeQubitUnitary();
+    vector<CplxType> unitary;
+
+    for (int i=0; i<parameters.size(); i+=2)
+    {
+        CplxType elem (parameters[i], parameters[i + 1]);
+        unitary.push_back(elem);
+    }
+
+    return Pennylane::ThreeQubitUnitary(unitary);
 }
 
-const std::vector<CplxType> Pennylane::ThreeQubitUnitary::matrix{
-    1, 0, 0, 0, 0, 0, 0, 0,
-    0, 1, 0, 0, 0, 0, 0, 0,
-    0, 0, 1, 0, 0, 0, 0, 0,
-    0, 0, 0, 1, 0, 0, 0, 0,
-    0, 0, 0, 0, 1, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 1, 0,
-    0, 0, 0, 0, 0, 1, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 1 };
+Pennylane::ThreeQubitUnitary::ThreeQubitUnitary(const std::vector<CplxType>& unitary)
+    : matrix{unitary}
+{}
 
 // -------------------------------------------------------------------------------------------------------------
 

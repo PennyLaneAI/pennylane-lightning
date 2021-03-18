@@ -325,10 +325,11 @@ namespace Pennylane {
 
     class ThreeQubitUnitary : public ThreeQubitGate {
     private:
-        static const std::vector<CplxType> matrix;
+        const std::vector<CplxType> matrix;
     public:
         static const std::string label;
         static ThreeQubitUnitary create(const std::vector<double>& parameters);
+        ThreeQubitUnitary(const std::vector<CplxType>& parameters);
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
