@@ -569,10 +569,10 @@ Pennylane::ThreeQubitUnitary Pennylane::ThreeQubitUnitary::create(const vector<d
         unitary.push_back(elem);
     }
 
-    int numQubits = 0;
-    while (size >>= 1) ++numQubits;
+    int log2size = 0;
+    while (size >>= 1) ++log2size;
 
-    std::cout << numQubits << std::endl;
+    int numQubits = (log2size - 1) / 2;
 
     return Pennylane::ThreeQubitUnitary(numQubits, unitary);
 }
