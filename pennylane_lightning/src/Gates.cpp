@@ -344,8 +344,8 @@ const tuple<vector<CplxType>, double> Pennylane::PhaseShiftGate::generator{
 void Pennylane::PhaseShiftGate::applyDerivative(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
-        shiftedState[indices[0]] *= first;
-        shiftedState[indices[1]] *= -second;
+        shiftedState[indices[0]] = 0;
+        shiftedState[indices[1]] *= shift;
     }
 }
 
