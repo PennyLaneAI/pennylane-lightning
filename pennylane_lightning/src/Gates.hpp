@@ -323,13 +323,13 @@ namespace Pennylane {
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
-    class ThreeQubitUnitary : public AbstractGate {
+    class Unitary : public AbstractGate {
     private:
         const std::vector<CplxType> matrix;
     public:
         static const std::string label;
-        static ThreeQubitUnitary create(const std::vector<double>& parameters);
-        ThreeQubitUnitary(const int numQubits, const std::vector<CplxType>& parameters);
+        static Unitary create(const std::vector<double>& parameters);
+        Unitary(const int numQubits, const std::vector<CplxType>& parameters);
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
