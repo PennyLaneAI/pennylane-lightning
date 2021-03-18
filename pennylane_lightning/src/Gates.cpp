@@ -175,6 +175,7 @@ void Pennylane::HadamardGate::applyKernel(const StateVector& state, const std::v
 }
 
 // -------------------------------------------------------------------------------------------------------------
+
 const string Pennylane::SGate::label = "S";
 
 Pennylane::SGate Pennylane::SGate::create(const vector<double>& parameters) {
@@ -187,7 +188,6 @@ const vector<CplxType> Pennylane::SGate::matrix{
     0, IMAG };
 
 void Pennylane::SGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
-
     CplxType shift = IMAG;
     if (inverse == true) {shift *= -1;}
 
@@ -213,7 +213,6 @@ const vector<CplxType> Pennylane::TGate::matrix{
     0, Pennylane::TGate::shift };
 
 void Pennylane::TGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
-
     CplxType shift = Pennylane::TGate::shift;
     if (inverse == true) {shift = conj(Pennylane::TGate::shift);}
 
@@ -241,7 +240,6 @@ Pennylane::RotationXGate::RotationXGate(double rotationAngle)
 {}
 
 void Pennylane::RotationXGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
-
     CplxType js_ = js;
 
     if (inverse == true) {js_ *= -1;}
@@ -273,7 +271,6 @@ Pennylane::RotationYGate::RotationYGate(double rotationAngle)
 {}
 
 void Pennylane::RotationYGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
-
     CplxType s_ = s;
 
     if (inverse == true) {s_ *= -1;}
@@ -305,7 +302,6 @@ Pennylane::RotationZGate::RotationZGate(double rotationAngle)
 {}
 
 void Pennylane::RotationZGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
-
     CplxType shift1 = first;
     CplxType shift2 = second;
 
@@ -338,7 +334,6 @@ Pennylane::PhaseShiftGate::PhaseShiftGate(double rotationAngle)
 {}
 
 void Pennylane::PhaseShiftGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
-
     CplxType s = shift;
 
     if (inverse == true){s = conj(shift);}
@@ -371,7 +366,6 @@ Pennylane::GeneralRotationGate::GeneralRotationGate(double phi, double theta, do
 {}
 
 void Pennylane::GeneralRotationGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
-
     CplxType t1 = r1;
     CplxType t2 = r2;
     CplxType t3 = r3;
@@ -488,7 +482,6 @@ Pennylane::CRotationXGate::CRotationXGate(double rotationAngle)
 {}
 
 void Pennylane::CRotationXGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
-
     CplxType js_ = js;
 
     if (inverse == true) {js_ *= -1;}
@@ -522,7 +515,6 @@ Pennylane::CRotationYGate::CRotationYGate(double rotationAngle)
 {}
 
 void Pennylane::CRotationYGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
-
     CplxType s_ = s;
 
     if (inverse == true) {s_ *= -1;}
@@ -556,7 +548,6 @@ Pennylane::CRotationZGate::CRotationZGate(double rotationAngle)
 {}
 
 void Pennylane::CRotationZGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
-
     CplxType shift1 = first;
     CplxType shift2 = second;
 
@@ -596,7 +587,6 @@ Pennylane::CGeneralRotationGate::CGeneralRotationGate(double phi, double theta, 
 {}
 
 void Pennylane::CGeneralRotationGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
-
     CplxType t1 = r1;
     CplxType t2 = r2;
     CplxType t3 = r3;
