@@ -48,6 +48,9 @@ Pennylane::AbstractGate::AbstractGate(int numQubits)
 
 const tuple<vector<CplxType>, double> Pennylane::AbstractGate::generator{};
 void Pennylane::AbstractGate::applyDerivative(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
+    (void)state;
+    (void)indices;
+    (void)externalIndices;
     throw NotImplementedException();
 }
 
@@ -338,7 +341,7 @@ const tuple<vector<CplxType>, double> Pennylane::PhaseShiftGate::generator{
     { 0, 0,
       0, 1 }, 1.0};
 
-void Pennylane::RotationZGate::applyDerivative(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
+void Pennylane::PhaseShiftGate::applyDerivative(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
         shiftedState[indices[0]] *= first;
