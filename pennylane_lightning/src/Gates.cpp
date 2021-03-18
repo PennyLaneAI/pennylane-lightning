@@ -556,6 +556,25 @@ void Pennylane::CSWAPGate::applyKernel(const StateVector& state, const std::vect
 
 // -------------------------------------------------------------------------------------------------------------
 
+const string Pennylane::ThreeQubitUnitary::label = "QubitUnitary";
+
+Pennylane::ThreeQubitUnitary Pennylane::ThreeQubitUnitary::create(const vector<double>& parameters) {
+//    validateLength(Pennylane::ThreeQubitUnitary::label, parameters, 0);
+    return Pennylane::ThreeQubitUnitary();
+}
+
+const std::vector<CplxType> Pennylane::ThreeQubitUnitary::matrix{
+    1, 0, 0, 0, 0, 0, 0, 0,
+    0, 1, 0, 0, 0, 0, 0, 0,
+    0, 0, 1, 0, 0, 0, 0, 0,
+    0, 0, 0, 1, 0, 0, 0, 0,
+    0, 0, 0, 0, 1, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 1, 0,
+    0, 0, 0, 0, 0, 1, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 1 };
+
+// -------------------------------------------------------------------------------------------------------------
+
 template<class GateType>
 static void addToDispatchTable(map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&)>>& dispatchTable) {
     dispatchTable.emplace(GateType::label, [](const vector<double>& parameters) { return make_unique<GateType>(GateType::create(parameters)); });
@@ -583,6 +602,7 @@ static map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<dou
     addToDispatchTable<Pennylane::CGeneralRotationGate>(dispatchTable);
     addToDispatchTable<Pennylane::ToffoliGate>(dispatchTable);
     addToDispatchTable<Pennylane::CSWAPGate>(dispatchTable);
+    addToDispatchTable<Pennylane::ThreeQubitUnitary>(dispatchTable);
     return dispatchTable;
 }
 
