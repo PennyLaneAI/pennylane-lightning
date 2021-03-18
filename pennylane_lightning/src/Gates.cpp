@@ -556,24 +556,30 @@ void Pennylane::CSWAPGate::applyKernel(const StateVector& state, const std::vect
 
 // -------------------------------------------------------------------------------------------------------------
 
-bool IsEven (int i) { return !(i % 2); }
-
 const string Pennylane::ThreeQubitUnitary::label = "QubitUnitary";
-
+#include <iostream>
 Pennylane::ThreeQubitUnitary Pennylane::ThreeQubitUnitary::create(const vector<double>& parameters) {
     vector<CplxType> unitary;
 
-    for (int i=0; i<parameters.size(); i+=2)
+    int size = parameters.size();
+
+    for (int i=0; i<size; i+=2)
     {
         CplxType elem (parameters[i], parameters[i + 1]);
         unitary.push_back(elem);
     }
 
-    return Pennylane::ThreeQubitUnitary(unitary);
+    int numQubits = 0;
+    while (size >>= 1) ++numQubits;
+
+    std::cout << numQubits << std::endl;
+
+    return Pennylane::ThreeQubitUnitary(numQubits, unitary);
 }
 
-Pennylane::ThreeQubitUnitary::ThreeQubitUnitary(const std::vector<CplxType>& unitary)
-    : matrix{unitary}
+Pennylane::ThreeQubitUnitary::ThreeQubitUnitary(const int numQubits, const std::vector<CplxType>& unitary)
+    : AbstractGate(numQubits)
+    , matrix{unitary}
 {}
 
 // -------------------------------------------------------------------------------------------------------------
