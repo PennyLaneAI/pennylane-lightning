@@ -16,6 +16,8 @@
 #include "GateData.hpp"
 
 using std::vector;
+using std::string;
+using std::unique_ptr;
 
 const vector<double> ONE_PARAM = {0.123};
 
@@ -91,11 +93,11 @@ TEST_P(applyDerivativeFixture, CheckApplyDerivative) {
     gate->applyDerivative(state, internalIndices, externalIndices);
     EXPECT_EQ(state, expectedState);
 }
-EXPECTED_STATES[][] = {
-    {CmplxType(0.03073062, 0.0), CmplxType(0.0, 0.49905474)},
-    {CmplxType(0.03073062, 0.0), CmplxType(-0.49905474, 0.0)},
-    {CmplxType(0.03073062, 0.49905474), CmplxType(0.0, 0.0)},
-    {CmplxType(0.0, 0.0), CmplxType(0.0, 0.0)}
+CplxType EXPECTED_STATES[][] = {
+    {CplxType(0.03073062, 0.0), CplxType(0.0, 0.49905474)},
+    {CplxType(0.03073062, 0.0), CplxType(-0.49905474, 0.0)},
+    {CplxType(0.03073062, 0.49905474), CplxType(0.0, 0.0)},
+    {CplxType(0.0, 0.0), CplxType(0.0, 0.0)}
 }
 INSTANTIATE_TEST_SUITE_P (
         GateMatrix,
