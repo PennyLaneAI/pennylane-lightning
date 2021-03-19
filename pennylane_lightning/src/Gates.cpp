@@ -556,6 +556,52 @@ void Pennylane::CSWAPGate::applyKernel(const StateVector& state, const std::vect
 
 // -------------------------------------------------------------------------------------------------------------
 
+const string Pennylane::Unitary::label = "QubitUnitary";
+
+Pennylane::Unitary Pennylane::Unitary::create(const vector<double>& parameters) {
+    auto size = parameters.size();
+    unsigned int log2size = 0;
+    while (size >>= 1) ++log2size;
+    unsigned int numQubits = (log2size - 1) / 2;
+
+    return Pennylane::Unitary(numQubits, parameters);
+}
+
+Pennylane::Unitary::Unitary(const int numQubits, const std::vector<double>& real_matrix)
+    : AbstractGate(numQubits)
+    , real_matrix{real_matrix}
+{}
+
+void Pennylane::Unitary::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
+    const vector<double>& real_matrix = asRealMatrix();
+    assert(indices.size() == length);
+
+    vector<CplxType> v(indices.size());
+    for (const size_t& externalIndex : externalIndices) {
+        CplxType* shiftedState = state.arr + externalIndex;
+        // Gather
+        size_t pos = 0;
+        for (const size_t& index : indices) {
+            v[pos] = shiftedState[index];
+            pos++;
+        }
+
+        // Apply + scatter
+        for (size_t i = 0; i < indices.size(); i++) {
+            size_t index = indices[i];
+            shiftedState[index] = 0;
+            size_t baseIndex = i * indices.size();
+            for (size_t j = 0; j < indices.size(); j++) {
+                unsigned int indx = 2 * (baseIndex + j);
+                CplxType matrix_elem(real_matrix[indx], real_matrix[indx + 1]);
+                shiftedState[index] += matrix_elem * v[j];
+            }
+        }
+    }
+}
+
+// -------------------------------------------------------------------------------------------------------------
+
 template<class GateType>
 static void addToDispatchTable(map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&)>>& dispatchTable) {
     dispatchTable.emplace(GateType::label, [](const vector<double>& parameters) { return make_unique<GateType>(GateType::create(parameters)); });
@@ -583,6 +629,7 @@ static map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<dou
     addToDispatchTable<Pennylane::CGeneralRotationGate>(dispatchTable);
     addToDispatchTable<Pennylane::ToffoliGate>(dispatchTable);
     addToDispatchTable<Pennylane::CSWAPGate>(dispatchTable);
+    addToDispatchTable<Pennylane::Unitary>(dispatchTable);
     return dispatchTable;
 }
 

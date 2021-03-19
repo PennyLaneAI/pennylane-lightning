@@ -19,6 +19,7 @@ import math
 
 # pylint: disable=protected-access,cell-var-from-loop
 from unittest import mock
+from scipy.stats import unitary_group, ortho_group
 
 import numpy as np
 import pennylane as qml
@@ -1212,3 +1213,24 @@ class TestTensorSample:
             - 2 * np.cos(theta) * np.sin(phi) * np.sin(2 * varphi)
         ) / 4
         assert np.allclose(var, expected, atol=tol, rtol=0)
+
+
+@pytest.mark.parametrize("real", [True, False])
+@pytest.mark.parametrize("wires", range(2, 10))
+def test_qubit_unitary(wires, real):
+    """Test if lightning.qubit successful applies an arbitrary unitary"""
+
+    if real:
+        unitary = ortho_group.rvs(2 ** wires, random_state=0)
+    else:
+        unitary = unitary_group.rvs(2 ** wires, random_state=0)
+
+    dev = qml.device("lightning.qubit", wires=wires)
+
+    @qml.qnode(dev)
+    def f():
+        qml.QubitUnitary(unitary, wires=range(wires))
+        return qml.state()
+
+    target_state = unitary[:, 0]
+    assert np.allclose(f(), target_state)

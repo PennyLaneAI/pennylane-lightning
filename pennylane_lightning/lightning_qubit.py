@@ -49,9 +49,7 @@ class LightningQubit(DefaultQubit):
     version = __version__
     author = "Xanadu Inc."
 
-    operations = {
-        "BasisState",
-        "QubitStateVector",
+    kernel_operations = {
         "PauliX",
         "PauliY",
         "PauliZ",
@@ -133,9 +131,24 @@ class LightningQubit(DefaultQubit):
         Returns:
             array[complex]: the output state tensor
         """
-        op_names = [o.name for o in operations]
-        op_wires = [self.wires.indices(o.wires) for o in operations]
-        op_param = [o.parameters for o in operations]
+        op_names = []
+        op_wires = []
+        op_param = []
+
+        for o in operations:
+            op_wires.append(self.wires.indices(o.wires))
+            if o.name in self.kernel_operations:
+                op_names.append(o.name)
+                op_param.append(o.parameters)
+            else:
+                op_names.append("QubitUnitary")
+
+                mat = o.matrix
+                if not np.iscomplex(o.matrix).all():
+                    mat = mat.astype(np.complex128)
+
+                unitary_view = mat.ravel().view(np.float64)
+                op_param.append(unitary_view)
 
         state_vector = np.ravel(state)
         apply(state_vector, op_names, op_wires, op_param, self.num_wires)

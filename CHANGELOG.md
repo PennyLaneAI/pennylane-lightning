@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* All the gates supported by `default.qubit` are now supported.
+  [(#91)](https://github.com/PennyLaneAI/pennylane-lightning/pull/91)
+
 * Add new lightweight backend with performance improvements.
   [(#57)](https://github.com/PennyLaneAI/pennylane-lightning/pull/57)
 
