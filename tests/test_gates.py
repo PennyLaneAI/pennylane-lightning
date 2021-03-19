@@ -28,10 +28,14 @@ def op(op_name):
     return getattr(qml, op_name)
 
 
-@pytest.mark.parametrize("op_name", LightningQubit.kernel_operations)
-def test_gate_unitary_correct(op):
+@pytest.mark.parametrize("op_name", LightningQubit.operations)
+def test_gate_unitary_correct(op, op_name):
     """Test if lightning.qubit correctly applies gates by reconstructing the unitary matrix and
     comparing to the expected version"""
+
+    if op_name in ("BasisState", "QubitStateVector"):
+        pytest.skip("Skipping operation because it is a state preparation")
+
     wires = op.num_wires
     dev = qml.device("lightning.qubit", wires=wires)
     num_params = op.num_params
@@ -54,10 +58,14 @@ def test_gate_unitary_correct(op):
     assert np.allclose(unitary, unitary_expected)
 
 
-@pytest.mark.parametrize("op_name", LightningQubit.kernel_operations)
-def test_inverse_unitary_correct(op):
+@pytest.mark.parametrize("op_name", LightningQubit.operations)
+def test_inverse_unitary_correct(op, op_name):
     """Test if lightning.qubit correctly applies inverse gates by reconstructing the unitary matrix
     and comparing to the expected version"""
+
+    if op_name in ("BasisState", "QubitStateVector"):
+        pytest.skip("Skipping operation because it is a state preparation")
+
     wires = op.num_wires
     dev = qml.device("lightning.qubit", wires=wires)
     num_params = op.num_params
