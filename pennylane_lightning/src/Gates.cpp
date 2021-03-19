@@ -236,8 +236,7 @@ const tuple<vector<CplxType>, double> Pennylane::RotationXGate::generator{
 };
 
 void Pennylane::RotationXGate::applyDerivative(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
-    CplxType pref = (std::get<1>(Pennylane::RotationXGate::generator), 1.0);
-
+    CplxType pref = CplxType(0, std::get<1>(Pennylane::RotationXGate::generator));
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
         CplxType v0 = shiftedState[indices[0]];
@@ -270,7 +269,7 @@ const tuple<vector<CplxType>, double> Pennylane::RotationYGate::generator{
 };
 
 void Pennylane::RotationYGate::applyDerivative(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
-    CplxType pref = (std::get<1>(Pennylane::RotationYGate::generator), 1.0);
+    CplxType pref = CplxType(0, std::get<1>(Pennylane::RotationYGate::generator));
 
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
@@ -304,7 +303,7 @@ const tuple<vector<CplxType>, double> Pennylane::RotationZGate::generator{
 };
 
 void Pennylane::RotationZGate::applyDerivative(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
-    CplxType pref = (std::get<1>(Pennylane::RotationZGate::generator), 1.0);
+    CplxType pref = CplxType(0, std::get<1>(Pennylane::RotationZGate::generator));
 
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
@@ -475,7 +474,7 @@ const tuple<vector<CplxType>, double> Pennylane::CRotationXGate::generator{
       0, 0, 1, 0}, -0.5};
 
 void Pennylane::CRotationXGate::applyDerivative(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
-    CplxType pref = (std::get<1>(Pennylane::CRotationXGate::generator), 1.0);
+    CplxType pref = CplxType(0, std::get<1>(Pennylane::CRotationXGate::generator));
 
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
@@ -523,7 +522,7 @@ const tuple<vector<CplxType>, double> Pennylane::CRotationYGate::generator{
       0, 0, 1, 0 }, -0.5};
 
 void Pennylane::CRotationYGate::applyDerivative(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
-    CplxType pref = (std::get<1>(Pennylane::CRotationYGate::generator), 1.0);
+    CplxType pref = CplxType(0, std::get<1>(Pennylane::CRotationYGate::generator));
 
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
@@ -571,7 +570,7 @@ const tuple<vector<CplxType>, double> Pennylane::CRotationZGate::generator{
       0, 0, 0, -1 }, -0.5};
 
 void Pennylane::CRotationZGate::applyDerivative(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
-    CplxType pref = (std::get<1>(Pennylane::CRotationZGate::generator), 1.0);
+    CplxType pref = CplxType(0, std::get<1>(Pennylane::CRotationZGate::generator));
 
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
