@@ -73,49 +73,26 @@ void Pennylane::constructAndApplyOperation(
     const vector<double>& opParams,
     const unsigned int qubits
 ) {
-    
+
+    unique_ptr<AbstractGate> gate = constructGate(opLabel, opParams);
+    if (gate->numQubits != opWires.size())
+        throw std::invalid_argument(string("The gate of type ") + opLabel + " requires " + std::to_string(gate->numQubits) + " wires, but " + std::to_string(opWires.size()) + " were supplied");
+
+    vector<size_t> internalIndices;
+    vector<size_t> externalIndices;
+
     if(opLabel == "PauliX") {
-
-        CplxType* shiftedStatePtr = state.arr;
-        const size_t j = maxDecimalForQubit(opWires[0], qubits);
-
-        size_t i = 0;
-        while(i<state.length){
-            size_t k = 0;
-            while(k<j){
-                std::swap(shiftedStatePtr[i + k], shiftedStatePtr[i + j +k]);
-                ++k;
-            }
-            i += k + j;
-        }
-
-        //apply_x(state, opWires[0], qubits);
-        /*
-        const size_t j = maxDecimalForQubit(opWires[0], qubits);
-        internalIndices.push_back(j);
-
-        size_t i = 0;
-        while(i<state.length){
-            size_t k = 0;
-            while(k<j){
-                //externalIndices.push_back(i+k);
-                std::swap(state.arr[i+k], state.arr[i + k + j]);
-                ++k;
-            }
-            i += k + j;
-        }
-        */
+        size_t wire = size_t(opWires[0]);
+        internalIndices = {wire};
+        externalIndices = {};
     }
     else{
-        unique_ptr<AbstractGate> gate = constructGate(opLabel, opParams);
-        if (gate->numQubits != opWires.size())
-            throw std::invalid_argument(string("The gate of type ") + opLabel + " requires " + std::to_string(gate->numQubits) + " wires, but " + std::to_string(opWires.size()) + " were supplied");
-        vector<size_t> internalIndices = generateBitPatterns(opWires, qubits);
+        internalIndices = generateBitPatterns(opWires, qubits);
 
         vector<unsigned int> externalWires = getIndicesAfterExclusion(opWires, qubits);
-        vector<size_t> externalIndices = generateBitPatterns(externalWires, qubits);
-        gate->applyKernel(state, internalIndices, externalIndices);
+        externalIndices = generateBitPatterns(externalWires, qubits);
     }
+    gate->applyKernel(state, internalIndices, externalIndices);
 }
 
 
@@ -125,7 +102,7 @@ void Pennylane::apply(
     const vector<vector<unsigned int>>& wires,
     const vector<vector<double>>& params,
     const unsigned int qubits
-) { 
+) {
     if (qubits <= 0)
         throw std::invalid_argument("Must specify one or more qubits");
 

@@ -91,15 +91,18 @@ const vector<CplxType> Pennylane::XGate::matrix{
     1, 0 };
 
 void Pennylane::XGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
-    CplxType* shiftedState = state.arr;
-    const size_t j = indices[0];
-    for (std::vector<size_t>::const_reverse_iterator i = externalIndices.rbegin(); 
-            i != externalIndices.rend(); ++i ) { 
+    CplxType* shiftedStatePtr = state.arr;
+    const size_t j = maxDecimalForQubit(indices[0], state.length);
 
-        auto ind = *i;
-        std::cout << ind << " ";
-        swap(shiftedState[ind], shiftedState[ind + j]);
-    } 
+    size_t i = 0;
+    while(i<state.length){
+        size_t k = 0;
+        while(k<j){
+            std::swap(shiftedStatePtr[i + k], shiftedStatePtr[i + j +k]);
+            ++k;
+        }
+        i += k + j;
+    }
 }
 
 // -------------------------------------------------------------------------------------------------------------
