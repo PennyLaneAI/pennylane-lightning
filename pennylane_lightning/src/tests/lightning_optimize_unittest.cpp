@@ -23,7 +23,6 @@ using std::function;
 using Pennylane::CplxType;
 using Pennylane::AbstractGate;
 
-/*
 namespace test_optimize{
 TEST(light_optimize, get_extended_matrix) {
     unique_ptr<AbstractGate> paulix = Pennylane::constructGate("PauliX", {});
@@ -41,6 +40,7 @@ TEST(light_optimize, get_extended_matrix) {
     ASSERT_EQ(mx, expected);
 }
 
+/*
 TEST(light_optimize, create_identity) {
     vector<CplxType> mx = Pennylane::create_identity(2);
     vector<CplxType> expected = {1,0,0,1};
@@ -48,6 +48,7 @@ TEST(light_optimize, create_identity) {
     ASSERT_EQ(mx, expected);
 }
 */
+}
 
 class CreateIdentity : public ::testing::TestWithParam<std::tuple<unsigned int, vector<CplxType> > > {
 };

@@ -161,7 +161,6 @@ void Pennylane::swap_cols(CplxType* mx, const size_t &dim, const size_t column1,
 }
 
 
-/*
 // Join new qubit indices to target_list according to a given first_target_wires, and set a new matrix to "matrix"
 void Pennylane::get_extended_matrix(unique_ptr<Pennylane::AbstractGate> gate,
 vector<CplxType>& matrix, INDICES& new_control_wires, INDICES&
@@ -293,7 +292,6 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
     //std::cout << matrix << std::endl;
 
 }
-*/
 
 
 
