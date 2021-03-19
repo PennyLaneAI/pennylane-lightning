@@ -561,9 +561,9 @@ const string Pennylane::Unitary::label = "QubitUnitary";
 Pennylane::Unitary Pennylane::Unitary::create(const vector<double>& parameters) {
 
     auto size = parameters.size();
-    int log2size = 0;
+    unsigned int log2size = 0;
     while (size >>= 1) ++log2size;
-    int numQubits = (log2size - 1) / 2;
+    unsigned int numQubits = (log2size - 1) / 2;
 
     return Pennylane::Unitary(numQubits, parameters);
 }
@@ -593,7 +593,7 @@ void Pennylane::Unitary::applyKernel(const StateVector& state, const std::vector
             shiftedState[index] = 0;
             size_t baseIndex = i * indices.size();
             for (size_t j = 0; j < indices.size(); j++) {
-                int indx = 2 * (baseIndex + j);
+                unsigned int indx = 2 * (baseIndex + j);
                 CplxType matrix_elem(real_matrix[indx], real_matrix[indx + 1]);
                 shiftedState[index] += matrix_elem * v[j];
             }
