@@ -559,28 +559,47 @@ void Pennylane::CSWAPGate::applyKernel(const StateVector& state, const std::vect
 const string Pennylane::Unitary::label = "QubitUnitary";
 #include <iostream>
 Pennylane::Unitary Pennylane::Unitary::create(const vector<double>& parameters) {
-    vector<CplxType> unitary;
 
     int size = parameters.size();
-
-    for (int i=0; i<size; i+=2)
-    {
-        CplxType elem (parameters[i], parameters[i + 1]);
-        unitary.push_back(elem);
-    }
-
     int log2size = 0;
     while (size >>= 1) ++log2size;
-
     int numQubits = (log2size - 1) / 2;
 
-    return Pennylane::Unitary(numQubits, unitary);
+    return Pennylane::Unitary(numQubits, parameters);
 }
 
-Pennylane::Unitary::Unitary(const int numQubits, const std::vector<CplxType>& unitary)
+Pennylane::Unitary::Unitary(const int numQubits, const std::vector<double>& real_matrix)
     : AbstractGate(numQubits)
-    , matrix{unitary}
+    , real_matrix{real_matrix}
 {}
+
+void Pennylane::Unitary::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
+    const vector<double>& real_matrix = asRealMatrix();
+    assert(indices.size() == length);
+
+    vector<CplxType> v(indices.size());
+    for (const size_t& externalIndex : externalIndices) {
+        CplxType* shiftedState = state.arr + externalIndex;
+        // Gather
+        size_t pos = 0;
+        for (const size_t& index : indices) {
+            v[pos] = shiftedState[index];
+            pos++;
+        }
+
+        // Apply + scatter
+        for (size_t i = 0; i < indices.size(); i++) {
+            size_t index = indices[i];
+            shiftedState[index] = 0;
+            size_t baseIndex = i * indices.size();
+            for (size_t j = 0; j < indices.size(); j++) {
+                int indx = 2 * (baseIndex + j);
+                CplxType matrix_elem(real_matrix[indx], real_matrix[indx + 1]);
+                shiftedState[index] += matrix_elem * v[j];
+            }
+        }
+    }
+}
 
 // -------------------------------------------------------------------------------------------------------------
 
