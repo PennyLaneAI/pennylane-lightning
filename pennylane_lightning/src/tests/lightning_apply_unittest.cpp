@@ -13,6 +13,7 @@
 // limitations under the License.
 #include "gtest/gtest.h"
 #include "../Apply.hpp"
+#include "GateData.hpp"
 
 using std::vector;
 
