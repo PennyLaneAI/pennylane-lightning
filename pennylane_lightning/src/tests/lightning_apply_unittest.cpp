@@ -13,6 +13,8 @@
 // limitations under the License.
 #include "gtest/gtest.h"
 #include "../Apply.hpp"
+#include "../Gates.hpp"
+#include "../StateVector.hpp"
 #include "GateData.hpp"
 
 using std::vector;
@@ -79,7 +81,7 @@ TEST_P(applyDerivativeFixture, CheckApplyDerivative) {
     unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, params);
 
     // two qubits, apply on first
-    CplxType[] stateVec = {1.0, 0.0, 0.0, 0.0};
+    CplxType stateVec[] = {1.0, 0.0, 0.0, 0.0};
     size_t stateVecSize = sizeof(stateVec) / sizeof(stateVec[0]);
     StateVector state = StateVector(stateVec, stateVecSize);
 
