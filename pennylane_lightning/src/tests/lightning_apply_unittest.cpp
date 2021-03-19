@@ -83,14 +83,14 @@ TEST_P(applyDerivativeFixture, CheckApplyDerivative) {
     // two qubits, apply on first
     CplxType stateVec[] = {1.0, 0.0, 0.0, 0.0};
     size_t stateVecSize = sizeof(stateVec) / sizeof(stateVec[0]);
-    StateVector state = StateVector(stateVec, stateVecSize);
+    Pennylane::StateVector state = StateVector(stateVec, stateVecSize);
 
     vector<size_t> internalIndices{0};
     vector<size_t> externalIndices{1};
 
     expectedStateVec = std::get<3>(GetParam());
     size_t expectedStateVecSize = sizeof(expectedStateVec) / sizeof(expectedStateVec[0]);
-    StateVector expectedState = StateVector(expectedStateVec, expectedStateVecSize);
+    Pennylane::StateVector expectedState = StateVector(expectedStateVec, expectedStateVecSize);
 
     gate->applyDerivative(state, internalIndices, externalIndices);
     EXPECT_EQ(state, expectedState);
@@ -100,7 +100,7 @@ CplxType EXPECTED_STATES[][] = {
     {CplxType(0.03073062, 0.0), CplxType(-0.49905474, 0.0)},
     {CplxType(0.03073062, 0.49905474), CplxType(0.0, 0.0)},
     {CplxType(0.0, 0.0), CplxType(0.0, 0.0)}
-}
+};
 INSTANTIATE_TEST_SUITE_P (
         GateMatrix,
         MatrixWithParamsFixture,
