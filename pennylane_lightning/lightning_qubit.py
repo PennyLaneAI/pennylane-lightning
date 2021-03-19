@@ -167,4 +167,12 @@ class LightningQubit(DefaultQubit):
 
     @staticmethod
     def _remove_inverse_string(string):
-        return string.split(".")[0]
+        """Removes the ``.inv`` appended to the end of inverse gates.
+
+        Args:
+            string (str): name of operation
+
+        Returns:
+            str: name of operation with ``.inv`` removed (if present)
+        """
+        return string.replace(".inv", "")
