@@ -557,10 +557,10 @@ void Pennylane::CSWAPGate::applyKernel(const StateVector& state, const std::vect
 // -------------------------------------------------------------------------------------------------------------
 
 const string Pennylane::Unitary::label = "QubitUnitary";
-#include <iostream>
+
 Pennylane::Unitary Pennylane::Unitary::create(const vector<double>& parameters) {
 
-    int size = parameters.size();
+    auto size = parameters.size();
     int log2size = 0;
     while (size >>= 1) ++log2size;
     int numQubits = (log2size - 1) / 2;
