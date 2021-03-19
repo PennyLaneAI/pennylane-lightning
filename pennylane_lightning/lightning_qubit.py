@@ -140,17 +140,15 @@ class LightningQubit(DefaultQubit):
             if o.name in self.kernel_operations:
                 op_names.append(o.name)
                 op_param.append(o.parameters)
-            elif getattr(o, "matrix", None) is not None:
+            else:
                 op_names.append("QubitUnitary")
 
                 mat = o.matrix
-                if np.isreal(o.matrix).all():
+                if not np.iscomplex(o.matrix).all():
                     mat = mat.astype(np.complex128)
 
                 unitary_view = mat.ravel().view(np.float64)
                 op_param.append(unitary_view)
-            else:
-                raise DeviceError(f"Gate {o.name} not supported on device {self.short_name}")
 
         state_vector = np.ravel(state)
         apply(state_vector, op_names, op_wires, op_param, self.num_wires)
