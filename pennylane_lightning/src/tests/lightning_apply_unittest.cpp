@@ -16,6 +16,8 @@
 
 using std::vector;
 
+const vector<double> ONE_PARAM = {0.123};
+
 namespace test_apply {
 
 class getIndicesAfterExclusionTestFixture :public ::testing::TestWithParam<std::tuple<unsigned int, unsigned int>> {
@@ -58,3 +60,51 @@ INSTANTIATE_TEST_SUITE_P (
                 ));
 
 }
+
+// -------------------------------------------------------------------------------------------------------------
+// Test applyDerivative function
+
+class applyDerivativeFixture : public ::testing::TestWithParam<std::tuple<string, pfunc_params, vector<double> >> {
+};
+
+TEST_P(applyDerivativeFixture, CheckApplyDerivative) {
+    const string gate_name = std::get<0>(GetParam());
+    pfunc_params func = std::get<1>(GetParam());
+    const vector<double> params = std::get<2>(GetParam());
+
+
+    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, params);
+
+    // two qubits, apply on first
+    CplxType[] stateVec = {1.0, 0.0, 0.0, 0.0};
+    size_t stateVecSize = sizeof(stateVec) / sizeof(stateVec[0]);
+    StateVector state = StateVector(stateVec, stateVecSize);
+
+    vector<size_t> internalIndices{0};
+    vector<size_t> externalIndices{1};
+
+    expectedStateVec = std::get<3>(GetParam());
+    size_t expectedStateVecSize = sizeof(expectedStateVec) / sizeof(expectedStateVec[0]);
+    StateVector expectedState = StateVector(expectedStateVec, expectedStateVecSize);
+
+    gate->applyDerivative(state, internalIndices, externalIndices);
+    EXPECT_EQ(state, expectedState);
+}
+EXPECTED_STATES[][] = {
+    {CmplxType(0.03073062, 0.0), CmplxType(0.0, 0.49905474)},
+    {CmplxType(0.03073062, 0.0), CmplxType(-0.49905474, 0.0)},
+    {CmplxType(0.03073062, 0.49905474), CmplxType(0.0, 0.0)},
+    {CmplxType(0.0, 0.0), CmplxType(0.0, 0.0)}
+}
+INSTANTIATE_TEST_SUITE_P (
+        GateMatrix,
+        MatrixWithParamsFixture,
+        ::testing::Values(
+                std::make_tuple("RX", RX, ONE_PARAM, EXPECTED_STATES[0]),
+                std::make_tuple("RY", RY, ONE_PARAM, EXPECTED_STATES[0]),
+                std::make_tuple("RZ", RZ, ONE_PARAM, EXPECTED_STATES[0]),
+                std::make_tuple("PhaseShift", PhaseShift, ONE_PARAM, EXPECTED_STATES[0]),
+                // std::make_tuple("CRX", CRX, ONE_PARAM),
+                // std::make_tuple("CRY", CRY, ONE_PARAM),
+                // std::make_tuple("CRZ", CRZ, ONE_PARAM),
+));
