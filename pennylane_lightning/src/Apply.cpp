@@ -73,7 +73,7 @@ void Pennylane::apply(
     const vector<string>& ops,
     const vector<vector<unsigned int>>& wires,
     const vector<vector<double>>& params,
-    const std::vector<bool>& inverse,
+    const vector<bool>& inverse,
     const unsigned int qubits
 ) { 
     if (qubits <= 0)

@@ -79,7 +79,6 @@ class LightningQubit(DefaultQubit):
         "PauliY",
         "PauliZ",
         "Hadamard",
-        "Hadamard",
         "S",
         "T",
         "RX",

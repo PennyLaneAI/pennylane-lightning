@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for the correct application of gates with lightning.qubit
+Unit tests for the correct application of gates with lightning.qubit.
 """
 import itertools
 

@@ -81,7 +81,7 @@ namespace Pennylane {
      * @param ops list of unique string names corresponding to gate types, in the order they should be applied
      * @param wires list of wires on which each gate acts
      * @param params list of parameters that defines the gate parameterisation
-     * @param inverse list of bools indicating whether a given gate or its inverse should be applied
+     * @param inverse list of booleans indicating whether a given gate or its inverse should be applied
      * @param qubits number of qubits
      */
     void apply(
