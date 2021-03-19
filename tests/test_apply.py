@@ -1215,7 +1215,7 @@ class TestTensorSample:
         assert np.allclose(var, expected, atol=tol, rtol=0)
 
 
-@pytest.mark.parametrize("wires", range(2, 5))
+@pytest.mark.parametrize("wires", range(2, 10))
 def test_qubit_unitary(wires):
     """Test if lightning.qubit successful applies an arbitrary unitary"""
 
