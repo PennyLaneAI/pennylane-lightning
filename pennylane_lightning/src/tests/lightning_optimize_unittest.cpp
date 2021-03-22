@@ -156,7 +156,15 @@ INSTANTIATE_TEST_SUITE_P (
             std::make_tuple("CZ", "CZ", INDICES{0, 1}, INDICES{0,1}, vector<CplxType>{1, 0, 0, 0,
                                                                                     0, 1, 0, 0,
                                                                                     0, 0, 1, 0,
-                                                                                    0, 0, 0, 1})
+                                                                                    0, 0, 0, 1}),
+            std::make_tuple("CZ", "PauliX", INDICES{0, 1}, INDICES{2}, vector<CplxType>{ 0,  1,  0,  0,  0,  0,  0,  0,
+                                                                                         1,  0,  0,  0,  0,  0,  0,  0,
+                                                                                         0,  0,  0,  1,  0,  0,  0,  0,
+                                                                                         0,  0,  1,  0,  0,  0,  0,  0,
+                                                                                         0,  0,  0,  0,  0,  1,  0,  0,
+                                                                                         0,  0,  0,  0,  1,  0,  0,  0,
+                                                                                         0,  0,  0,  0,  0,  0,  0, -1,
+                                                                                         0,  0,  0,  0,  0,  0, -1,  0})
     ));
 }
 
