@@ -24,22 +24,57 @@ using Pennylane::CplxType;
 using Pennylane::AbstractGate;
 
 namespace test_optimize{
-TEST(light_optimize, get_extended_matrix) {
-    unique_ptr<AbstractGate> paulix = Pennylane::constructGate("PauliX", {});
+
+class GetExtendedMatrix : public ::testing::TestWithParam<std::tuple<string, INDICES, INDICES, INDICES, INDICES, vector<CplxType>  > > {
+};
+
+TEST_P(GetExtendedMatrix, GetExtendedMatrix) {
+    const string gate_name = std::get<0>(GetParam());
+    unique_ptr<AbstractGate> gate = Pennylane::constructGate(gate_name, {});
     vector<CplxType> mx;
 
-    vector<unsigned int> new_controls = {};
-    vector<unsigned int> new_targets = {0,1};
-    vector<unsigned int> first_controls = {};
-    vector<unsigned int> first_targets = {1};
-    get_extended_matrix(std::move(paulix), mx, new_controls, new_targets, first_controls, first_targets);
-    auto expected = vector<CplxType>{0,0,1,0,
-                                     0,0,0,1,
-                                     1,0,0,0,
-                                     0,1,0,0};
+    INDICES new_controls = std::get<1>(GetParam());
+    INDICES new_targets = std::get<2>(GetParam());
+    INDICES first_controls = std::get<3>(GetParam());
+    INDICES first_targets = std::get<4>(GetParam());
+    Pennylane::get_extended_matrix(std::move(gate), mx, new_controls, new_targets, first_controls, first_targets);
+
+    auto expected = std::get<5>(GetParam());
     ASSERT_EQ(mx, expected);
 }
 
+INSTANTIATE_TEST_SUITE_P (
+        GetExtendedMatrixTests,
+        GetExtendedMatrix,
+        ::testing::Values(
+                std::make_tuple("PauliX", INDICES{},  INDICES{0,1}, INDICES{}, INDICES{0}, vector<CplxType>{0,0,1,0,
+                                                                                                            0,0,0,1,
+                                                                                                            1,0,0,0,
+                                                                                                            0,1,0,0}),
+                std::make_tuple("PauliX", INDICES{},  INDICES{0,1}, INDICES{}, INDICES{1}, vector<CplxType>{0,1,0,0,
+                                                                                                            1,0,0,0,
+                                                                                                            0,0,0,1,
+                                                                                                            0,0,1,0}),
+                std::make_tuple("CNOT", INDICES{},  INDICES{0,1,2}, INDICES{}, INDICES{1,0}, vector<CplxType>{1, 0, 0, 0, 0, 0, 0, 0,
+0, 1, 0, 0, 0, 0, 0, 0,
+0, 0, 1, 0, 0, 0, 0, 0,
+0, 0, 0, 1, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 1, 0,
+0, 0, 0, 0, 0, 0, 0, 1,
+0, 0, 0, 0, 1, 0, 0, 0,
+0, 0, 0, 0, 0, 1, 0, 0
+}),
+                std::make_tuple("CNOT", INDICES{},  INDICES{0,1,2}, INDICES{}, INDICES{0,1}, vector<CplxType>{1, 0, 0, 0, 0, 0, 0, 0,
+0, 1, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 1, 0,
+0, 0, 0, 0, 0, 0, 0, 1,
+0, 0, 0, 0, 1, 0, 0, 0,
+0, 0, 0, 0, 0, 1, 0, 0,
+0, 0, 1, 0, 0, 0, 0, 0,
+0, 0, 0, 1, 0, 0, 0, 0
+})
+
+    ));
 /*
 TEST(light_optimize, create_identity) {
     vector<CplxType> mx = Pennylane::create_identity(2);

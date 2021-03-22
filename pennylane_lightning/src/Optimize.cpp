@@ -238,6 +238,16 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
         Pennylane::set_block(matrix.data(), new_matrix_dim, paste_start_vector_like, org_matrix.data(), org_matrix_dim);
     }
 
+    // Reverse due to qubit ordering
+    // TODO: check: best option?
+    //std::reverse(unsorted_new_target_index_list.begin(), unsorted_new_target_index_list.end());
+    for (auto item: unsorted_new_target_index_list)
+        std::cout << item << " " << std::endl;
+    for (int i = 0; i<unsorted_new_target_index_list.size(); ++i)
+        unsorted_new_target_index_list[i] = new_matrix_qubit_count - unsorted_new_target_index_list[i] - 1;
+    for (auto item: unsorted_new_target_index_list)
+        std::cout << item << " " << std::endl;
+
     // 5. Since the order of (C,B,A) is different from that of the other gate, we sort (C,B,A) after generating matrix.
     // We do nothing if it is already sorted
     if (!std::is_sorted(unsorted_new_target_index_list.begin(), unsorted_new_target_index_list.end())) {
