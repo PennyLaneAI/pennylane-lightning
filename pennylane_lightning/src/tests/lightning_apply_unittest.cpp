@@ -64,8 +64,6 @@ INSTANTIATE_TEST_SUITE_P (
                 std::make_tuple(4, 6)
                 ));
 
-}
-
 // -------------------------------------------------------------------------------------------------------------
 // Test applyDerivative function
 
@@ -114,4 +112,7 @@ INSTANTIATE_TEST_SUITE_P (
                 // std::make_tuple("CRX", CRX, ONE_PARAM),
                 // std::make_tuple("CRY", CRY, ONE_PARAM),
                 // std::make_tuple("CRZ", CRZ, ONE_PARAM),
-));
+        )
+);
+
+}
