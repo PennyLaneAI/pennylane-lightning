@@ -72,7 +72,7 @@ INSTANTIATE_TEST_SUITE_P (
 class applyDerivativeFixture : public ::testing::TestWithParam<std::tuple<string, pfunc_params, vector<double> >> {
 };
 
-CplxType EXPECTED_STATES[][] = {
+CplxType EXPECTED_STATES[][2] = {
     {CplxType(0.03073062, 0.0), CplxType(0.0, 0.49905474)},
     {CplxType(0.03073062, 0.0), CplxType(-0.49905474, 0.0)},
     {CplxType(0.03073062, 0.49905474), CplxType(0.0, 0.0)},
