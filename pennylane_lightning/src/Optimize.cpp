@@ -197,9 +197,9 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
     }
 
     // At first, qubit indices are ordered as (A,C,B)
-    std::vector<UINT> unsorted_new_target_index_list = join_from_target;
-    unsorted_new_target_index_list.insert(unsorted_new_target_index_list.end(), join_from_other_gate.begin(), join_from_other_gate.end());
-    unsorted_new_target_index_list.insert(unsorted_new_target_index_list.end(), join_from_control.begin(), join_from_control.end());
+    std::vector<UINT> unsorted_new_target_index_list = join_from_target; // A
+    unsorted_new_target_index_list.insert(unsorted_new_target_index_list.end(), join_from_other_gate.begin(), join_from_other_gate.end()); // C
+    unsorted_new_target_index_list.insert(unsorted_new_target_index_list.end(), join_from_control.begin(), join_from_control.end()); // B
 
     // *** NOTE ***
     // Order of tensor product is reversed!!!
@@ -219,8 +219,11 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
     size_t new_matrix_dim = 1ULL << new_matrix_qubit_count;
     matrix = create_identity(new_matrix_dim);
 
-    // 3. Decide correct 2^{|A|+|C|}-dim block matrix from control wireues.
+    // 3. Decide correct 2^{|A|+|C|}-dim block matrix from control wires.
     ITYPE start_block_basis = (1ULL << (join_from_target.size() + join_from_other_gate.size())) * control_mask;
+    std::cout << "The base: " << (1ULL << (join_from_target.size() + join_from_other_gate.size()));
+    std::cout << "The control mask: " << control_mask;
+    std::cout << "The start_block_basis: " << start_block_basis;
 
     // 4. Repeat 2^{|C|}-times paste of original gate matrix A .
     vector<CplxType> org_matrix = gate->asMatrix();
@@ -335,21 +338,41 @@ gate_second, const string& label2, const INDICES & wires2) {
         auto all_res = Pennylane::get_new_qubit_list(label1, wires1, label2, wires2);
         INDICES new_control_list = std::get<0>(all_res);
         INDICES new_target_list = std::get<1>(all_res);
+        std::cout << "New control list: ";
+        for (auto it : new_control_list){
+            std::cout << it << " ";
+        }
 
         std::sort(new_target_list.begin(), new_target_list.end());
         std::sort(new_control_list.begin(), new_control_list.end());
 
+        //TODO: revisit separate control and target
+        // This is considering all wires as target with control wires in the beginning
+        new_target_list.insert(new_target_list.begin(), new_control_list.begin(), new_control_list.end());
+        new_control_list = {};
+
+
         // extend gate matrix to whole qubit list
         vector<CplxType> matrix_first, matrix_second;
 
+        //TODO: revisit separate control and target
+        /*
         auto res_wires = Pennylane::separate_control_and_target(label1, wires1);
         INDICES first_control = std::get<0>(res_wires);
         INDICES first_target = std::get<1>(res_wires);
+        */
+        INDICES first_control = {};
+        auto first_target = wires1;
         get_extended_matrix(std::move(gate_first), matrix_first, new_control_list, new_target_list, first_control, first_target);
 
+        //TODO: revisit separate control and target
+        /*
         auto res_wires2 = Pennylane::separate_control_and_target(label2, wires2);
         INDICES second_control = std::get<0>(res_wires2);
         INDICES second_target = std::get<1>(res_wires2);
+        */
+        INDICES second_control = {};
+        auto second_target = wires2;
         get_extended_matrix(std::move(gate_second), matrix_second, new_control_list, new_target_list, second_control, second_target );
 
         std::cout << "first gate is extended from \n";

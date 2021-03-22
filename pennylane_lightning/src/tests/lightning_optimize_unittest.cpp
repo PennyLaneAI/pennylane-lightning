@@ -55,6 +55,14 @@ INSTANTIATE_TEST_SUITE_P (
                                                                                                             1,0,0,0,
                                                                                                             0,0,0,1,
                                                                                                             0,0,1,0}),
+                std::make_tuple("CNOT", INDICES{},  INDICES{0,1}, INDICES{}, INDICES{0, 1}, vector<CplxType>{1,0,0,0,
+                                                                                                             0,1,0,0,
+                                                                                                             0,0,0,1,
+                                                                                                             0,0,1,0}),
+                std::make_tuple("CZ", INDICES{},  INDICES{0,1}, INDICES{}, INDICES{0, 1}, vector<CplxType>{1,0,0,0,
+                                                                                                             0,1,0,0,
+                                                                                                             0,0,1,0,
+                                                                                                             0,0,0,-1}),
                 std::make_tuple("CNOT", INDICES{},  INDICES{0,1,2}, INDICES{}, INDICES{0,1}, vector<CplxType>{1, 0, 0, 0, 0, 0, 0, 0,
                                                                                                             0, 1, 0, 0, 0, 0, 0, 0,
                                                                                                             0, 0, 1, 0, 0, 0, 0, 0,
@@ -140,11 +148,15 @@ INSTANTIATE_TEST_SUITE_P (
             std::make_tuple("PauliX", "PauliX", INDICES{1}, INDICES{0}, vector<CplxType>{0, 0, 0, 1,
                                                                                          0, 0, 1, 0,
                                                                                          0, 1, 0, 0,
-                                                                                         1, 0, 0, 0})/*,
+                                                                                         1, 0, 0, 0}),
+            std::make_tuple("CNOT", "CNOT", INDICES{0, 1}, INDICES{0,1}, vector<CplxType>{1, 0, 0, 0,
+                                                                                    0, 1, 0, 0,
+                                                                                    0, 0, 1, 0,
+                                                                                    0, 0, 0, 1}),
             std::make_tuple("CZ", "CZ", INDICES{0, 1}, INDICES{0,1}, vector<CplxType>{1, 0, 0, 0,
                                                                                     0, 1, 0, 0,
                                                                                     0, 0, 1, 0,
-                                                                                    0, 0, 0, 1})*/
+                                                                                    0, 0, 0, 1})
     ));
 }
 
