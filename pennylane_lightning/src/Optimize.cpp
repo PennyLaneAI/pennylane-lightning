@@ -173,7 +173,11 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
     // Case 0 : If qubit index is in gate_target_index -> named A
     std::vector<UINT> join_from_target = first_target_wires;
 
+    //If multi-qubit gate, reverse qubit indices to conform to the qubit ordering
+    std::reverse(join_from_target.begin(), join_from_target.end());
+
     // Case 1 : If qubit index is in gate_control_index -> named B
+    // TODO: test if >1 join_from_control: do we need reversal?
     std::vector<UINT> join_from_control;
     ITYPE control_mask = 0;
     for (auto wire : new_target_wires) {
@@ -184,7 +188,9 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
             control_mask ^= (1ULL << (join_from_control.size()-1));
         }
     }
+
     // Case 2 : If qubit index is not in both -> named C
+    // TODO: test if >1 join_from_other_gate: do we need reversal?
     std::vector<UINT> join_from_other_gate;
     for (auto wire : new_target_wires) {
         if (not wire_is_in(wire, first_target_wires) and not wire_is_in(wire, first_control_wires)){
@@ -241,12 +247,8 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
     // Reverse due to qubit ordering
     // TODO: check: best option?
     //std::reverse(unsorted_new_target_index_list.begin(), unsorted_new_target_index_list.end());
-    for (auto item: unsorted_new_target_index_list)
-        std::cout << item << " " << std::endl;
     for (int i = 0; i<unsorted_new_target_index_list.size(); ++i)
         unsorted_new_target_index_list[i] = new_matrix_qubit_count - unsorted_new_target_index_list[i] - 1;
-    for (auto item: unsorted_new_target_index_list)
-        std::cout << item << " " << std::endl;
 
     // 5. Since the order of (C,B,A) is different from that of the other gate, we sort (C,B,A) after generating matrix.
     // We do nothing if it is already sorted
