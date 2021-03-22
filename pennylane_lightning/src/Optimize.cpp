@@ -275,8 +275,8 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
                     ITYPE basis_01 = basis_00 ^ min_mask;
                     ITYPE basis_10 = basis_00 ^ max_mask;
 
-                    matrix.col((size_t)basis_01).swap(matrix.col((size_t)basis_10));
-                    matrix.row((size_t)basis_01).swap(matrix.row((size_t)basis_10));
+                    swap_cols(matrix.data(), org_dim, (size_t)basis_01, (size_t)basis_10);
+                    swap_rows(matrix.data(), org_dim, (size_t)basis_01, (size_t)basis_10);
                 }
             }
             else ind1++;
