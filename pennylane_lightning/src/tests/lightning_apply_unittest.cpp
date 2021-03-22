@@ -104,8 +104,8 @@ TEST_P(applyDerivativeFixture, CheckApplyDerivative) {
 }
 
 INSTANTIATE_TEST_SUITE_P (
-        GateMatrix,
-        MatrixWithParamsFixture,
+        applyDerivativeTests,
+        applyDerivativeFixture,
         ::testing::Values(
                 std::make_tuple("RX", RX, ONE_PARAM, EXPECTED_STATES[0]),
                 std::make_tuple("RY", RY, ONE_PARAM, EXPECTED_STATES[0]),
