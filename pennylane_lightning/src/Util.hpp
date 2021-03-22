@@ -50,3 +50,10 @@ template<typename T, typename... Args>
 std::unique_ptr<T> make_unique(Args&&... args) {
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
+
+// Exception for functions that arent't implemented
+class NotImplementedException : public std::logic_error
+{
+public:
+    NotImplementedException() : std::logic_error("Function not yet implemented") { };
+};

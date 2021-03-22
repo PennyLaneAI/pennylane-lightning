@@ -44,6 +44,16 @@ namespace Pennylane {
          * Generic matrix-multiplication kernel
          */
         virtual void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        
+        /**
+         * Generic matrix-multiplication kernel for applying the generator of an operation
+         */
+        virtual void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+
+        /**
+         * Scaling factor applied to the generator operation
+         */
+        static const double generatorScalingFactor;
     };
 
     // Single-qubit gates:
@@ -137,6 +147,8 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        virtual void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        static const double generatorScalingFactor;
     };
 
     class RotationYGate : public SingleQubitGate {
@@ -150,6 +162,8 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        virtual void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        static const double generatorScalingFactor;
     };
 
     class RotationZGate : public SingleQubitGate {
@@ -164,6 +178,8 @@ namespace Pennylane {
             return matrix;
         }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        virtual void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        static const double generatorScalingFactor;
     };
 
     class PhaseShiftGate : public SingleQubitGate {
@@ -178,6 +194,8 @@ namespace Pennylane {
             return matrix;
         }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        virtual void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        static const double generatorScalingFactor;
     };
 
     class GeneralRotationGate : public SingleQubitGate {
@@ -248,6 +266,8 @@ namespace Pennylane {
             return matrix;
         }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        virtual void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        static const double generatorScalingFactor;
     };
 
     class CRotationYGate : public TwoQubitGate {
@@ -262,6 +282,8 @@ namespace Pennylane {
             return matrix;
         }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        virtual void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        static const double generatorScalingFactor;
     };
 
     class CRotationZGate : public TwoQubitGate {
@@ -276,6 +298,8 @@ namespace Pennylane {
             return matrix;
         }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        virtual void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        static const double generatorScalingFactor;
     };
 
     class CGeneralRotationGate : public TwoQubitGate {
