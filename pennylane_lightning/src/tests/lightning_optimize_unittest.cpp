@@ -31,7 +31,7 @@ TEST(light_optimize, get_extended_matrix) {
     vector<unsigned int> new_controls = {};
     vector<unsigned int> new_targets = {0,1};
     vector<unsigned int> first_controls = {};
-    vector<unsigned int> first_targets = {0};
+    vector<unsigned int> first_targets = {1};
     get_extended_matrix(std::move(paulix), mx, new_controls, new_targets, first_controls, first_targets);
     auto expected = vector<CplxType>{0,0,1,0,
                                      0,0,0,1,

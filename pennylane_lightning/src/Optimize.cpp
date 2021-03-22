@@ -187,7 +187,7 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
     // Case 2 : If qubit index is not in both -> named C
     std::vector<UINT> join_from_other_gate;
     for (auto wire : new_target_wires) {
-        if (wire_is_in(wire, first_target_wires) and wire_is_in(wire, first_control_wires)){
+        if (not wire_is_in(wire, first_target_wires) and not wire_is_in(wire, first_control_wires)){
             join_from_other_gate.push_back(wire);
         }
     }
@@ -224,16 +224,19 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
 
     size_t org_matrix_dim = 1ULL << first_target_wires.size();
     ITYPE repeat_count = 1ULL << join_from_other_gate.size();
+
+    // Identity is set well
+
     for (ITYPE repeat_index = 0; repeat_index < repeat_count; ++repeat_index) {
         size_t paste_start = (size_t)(start_block_basis + repeat_index * org_matrix_dim );
 
-        // Set a block
-        Pennylane::set_block(matrix.data(), org_dim, paste_start*paste_start, org_matrix.data(), org_matrix_dim);
-    }
-    // ---------------------------------------------
-    // TODO: from this point
-    // ---------------------------------------------
+        // We would like to paste to the (paste_start, paste_start) coordinate of the matrix
+        // Convert this to a single index of the vector
+        auto paste_start_vector_like = paste_start * new_matrix_dim + paste_start;
 
+        // Set a block
+        Pennylane::set_block(matrix.data(), new_matrix_dim, paste_start_vector_like, org_matrix.data(), org_matrix_dim);
+    }
 
     // 5. Since the order of (C,B,A) is different from that of the other gate, we sort (C,B,A) after generating matrix.
     // We do nothing if it is already sorted
@@ -275,8 +278,8 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
                     ITYPE basis_01 = basis_00 ^ min_mask;
                     ITYPE basis_10 = basis_00 ^ max_mask;
 
-                    swap_cols(matrix.data(), org_dim, (size_t)basis_01, (size_t)basis_10);
-                    swap_rows(matrix.data(), org_dim, (size_t)basis_01, (size_t)basis_10);
+                    swap_cols(matrix.data(), new_matrix_dim, (size_t)basis_01, (size_t)basis_10);
+                    swap_rows(matrix.data(), new_matrix_dim, (size_t)basis_01, (size_t)basis_10);
                 }
             }
             else ind1++;
