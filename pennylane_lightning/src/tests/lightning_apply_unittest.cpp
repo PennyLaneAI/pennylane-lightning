@@ -96,11 +96,11 @@ TEST_P(applyDerivativeFixture, CheckApplyDerivative) {
     vector<size_t> externalIndices{1};
 
     CplxType* expectedStateVec = std::get<3>(GetParam());
-    size_t expectedStateVecSize = sizeof(expectedStateVec) / sizeof(expectedStateVec[0]);
-    Pennylane::StateVector expectedState = Pennylane::StateVector(expectedStateVec, expectedStateVecSize);
+    // size_t expectedStateVecSize = sizeof(expectedStateVec) / sizeof(expectedStateVec[0]);
+    // Pennylane::StateVector expectedState = Pennylane::StateVector(expectedStateVec, expectedStateVecSize);
 
     gate->applyDerivative(state, internalIndices, externalIndices);
-    EXPECT_EQ(state, expectedState);
+    EXPECT_EQ(state.arr, expectedStateVec);
 }
 
 INSTANTIATE_TEST_SUITE_P (
