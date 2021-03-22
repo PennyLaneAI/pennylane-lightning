@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <vector>
+#include <tuple>
 
 #include "StateVector.hpp"
 #include "typedefs.hpp"
@@ -44,6 +45,13 @@ namespace Pennylane {
          * Generic matrix-multiplication kernel
          */
         virtual void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+
+        /**
+         * Generic matrix-multiplication kernel for operation derivatives
+         */
+        virtual void applyDerivative(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+
+        static const std::tuple<std::vector<CplxType>, double> generator;
     };
 
     // Single-qubit gates:
@@ -137,6 +145,8 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        static const std::tuple<std::vector<CplxType>, double> generator;
+        void applyDerivative(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     class RotationYGate : public SingleQubitGate {
@@ -150,6 +160,8 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        static const std::tuple<std::vector<CplxType>, double> generator;
+        void applyDerivative(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     class RotationZGate : public SingleQubitGate {
@@ -163,7 +175,9 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        static const std::tuple<std::vector<CplxType>, double> generator;
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        void applyDerivative(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     class PhaseShiftGate : public SingleQubitGate {
@@ -177,7 +191,9 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        static const std::tuple<std::vector<CplxType>, double> generator;
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        void applyDerivative(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     class GeneralRotationGate : public SingleQubitGate {
@@ -247,6 +263,8 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        static const std::tuple<std::vector<CplxType>, double> generator;
+        void applyDerivative(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
@@ -261,6 +279,8 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        static const std::tuple<std::vector<CplxType>, double> generator;
+        void applyDerivative(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
@@ -275,6 +295,8 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        static const std::tuple<std::vector<CplxType>, double> generator;
+        void applyDerivative(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
