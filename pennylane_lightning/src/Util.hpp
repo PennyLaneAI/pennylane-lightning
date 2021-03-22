@@ -51,7 +51,7 @@ std::unique_ptr<T> make_unique(Args&&... args) {
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
-// Exception for functions that arent't implemented
+// Exception for functions that aren't implemented
 class NotImplementedException : public std::logic_error
 {
 public:
