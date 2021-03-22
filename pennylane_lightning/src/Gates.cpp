@@ -349,9 +349,11 @@ void Pennylane::PhaseShiftGate::applyDerivative(const StateVector& state, const 
 }
 
 void Pennylane::PhaseShiftGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
+    CplxType pref = CplxType(0, std::get<1>(Pennylane::PhaseShiftGate::generator));
+    
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
-        shiftedState[indices[1]] *= shift;
+        shiftedState[indices[1]] *= pref * shift;
     }
 }
 

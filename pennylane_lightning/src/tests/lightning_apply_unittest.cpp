@@ -72,6 +72,13 @@ INSTANTIATE_TEST_SUITE_P (
 class applyDerivativeFixture : public ::testing::TestWithParam<std::tuple<string, pfunc_params, vector<double> >> {
 };
 
+CplxType EXPECTED_STATES[][] = {
+    {CplxType(0.03073062, 0.0), CplxType(0.0, 0.49905474)},
+    {CplxType(0.03073062, 0.0), CplxType(-0.49905474, 0.0)},
+    {CplxType(0.03073062, 0.49905474), CplxType(0.0, 0.0)},
+    {CplxType(0.0, 0.0), CplxType(0.0, 0.0)}
+};
+
 TEST_P(applyDerivativeFixture, CheckApplyDerivative) {
     const string gate_name = std::get<0>(GetParam());
     pfunc_params func = std::get<1>(GetParam());
@@ -95,12 +102,7 @@ TEST_P(applyDerivativeFixture, CheckApplyDerivative) {
     gate->applyDerivative(state, internalIndices, externalIndices);
     EXPECT_EQ(state, expectedState);
 }
-CplxType EXPECTED_STATES[][] = {
-    {CplxType(0.03073062, 0.0), CplxType(0.0, 0.49905474)},
-    {CplxType(0.03073062, 0.0), CplxType(-0.49905474, 0.0)},
-    {CplxType(0.03073062, 0.49905474), CplxType(0.0, 0.0)},
-    {CplxType(0.0, 0.0), CplxType(0.0, 0.0)}
-};
+
 INSTANTIATE_TEST_SUITE_P (
         GateMatrix,
         MatrixWithParamsFixture,
