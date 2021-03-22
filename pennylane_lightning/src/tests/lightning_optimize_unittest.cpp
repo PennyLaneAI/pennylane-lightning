@@ -105,14 +105,16 @@ INSTANTIATE_TEST_SUITE_P (
 
 
     ));
-/*
-TEST(light_optimize, create_identity) {
-    vector<CplxType> mx = Pennylane::create_identity(2);
-    vector<CplxType> expected = {1,0,0,1};
 
-    ASSERT_EQ(mx, expected);
+TEST(merge, merge) {
+    string label1 = "PauliX";
+    string label2 = "PauliX";
+    unique_ptr<AbstractGate> gate1 = Pennylane::constructGate(label1, {});
+    unique_ptr<AbstractGate> gate2 = Pennylane::constructGate(label2, {});
+
+    auto gate = Pennylane::merge(move(gate1), label1, {0}, move(gate2), label2, {1});
 }
-*/
+
 }
 
 class CreateIdentity : public ::testing::TestWithParam<std::tuple<unsigned int, vector<CplxType> > > {

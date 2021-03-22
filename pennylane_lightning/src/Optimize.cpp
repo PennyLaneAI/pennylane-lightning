@@ -166,9 +166,6 @@ void Pennylane::get_extended_matrix(unique_ptr<Pennylane::AbstractGate> gate,
 vector<CplxType>& matrix, INDICES& new_control_wires, INDICES&
 new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
 
-    // can do QubitUnitary:
-    //Pennylane::QubitUnitary qubit_unitary(2, matrix);
-
     // New qubits index may be in either gate_target_index, gate_control_index, or it comes from the other gate.
     // Case 0 : If qubit index is in gate_target_index -> named A
     std::vector<UINT> join_from_target = first_target_wires;
@@ -271,7 +268,7 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
             if (sorted_index[ind1] != ind1) {
                 UINT ind2 = sorted_index[ind1];
 
-                // move to correct position
+                // std::move to correct position
                 std::swap(sorted_index[ind1], sorted_index[ind2]);
                 std::swap(unsorted_new_target_index_list[ind1], unsorted_new_target_index_list[ind2]);
 
@@ -308,27 +305,84 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
 
 }
 
+void matmul(CplxType* mx1, CplxType* mx2, CplxType* res, int dim) {
 
-
-/*
-
-unique_ptr<AbstractGate> get_merged_op(unique_ptr<AbstractGate> gate1,
-    unique_ptr<AbstractGate> gate2, const INDICES& wires1, const
-    INDICES& wires2){
-    //TODO: how to release the pointers to the previously created ops? Do we need to do that?
-
-    //TODO: we assume that wires1 >= wires2
-    gate->applyKernel(state, internalIndices, externalIndices);
-    auto vector<CplxType> mx1 = gate1->asMatrix();
-    auto vector<CplxType> mx2 = gate2->asMatrix();
-
-    auto dim1 = gate1->length();
-    auto dim2 = gate2->length();
-
-    for (int i = 0; i<mx2.size(); ++i){
-        StateVector state();
-        gate->applyKernel(state, internalIndices, externalIndices);
+    CplxType* dstPtr = res;
+    const CplxType* leftPtr = mx1;
+    for (size_t i = 0; i < dim; ++i) {
+        for (size_t j = 0; j < dim; ++j) {
+            const CplxType* rightPtr = mx2 + j;
+            CplxType sum = leftPtr[0] * rightPtr[0];
+            for (size_t n = 1; n < dim; ++n) {
+                rightPtr += dim;
+                sum += leftPtr[n] * rightPtr[0];
+            }
+            *dstPtr++ = sum;
+        }
+        leftPtr += dim;
     }
-
 }
-*/
+
+Pennylane::QubitUnitary Pennylane::merge(unique_ptr<AbstractGate> gate_first,
+const string& label1, const INDICES & wires1, unique_ptr<AbstractGate>
+gate_second, const string& label2, const INDICES & wires2) {
+
+        const vector<CplxType>& orgmat1 = gate_first->asMatrix();
+        const vector<CplxType>& orgmat2 = gate_second->asMatrix();
+
+        // obtain updated qubit information
+        auto all_res = Pennylane::get_new_qubit_list(label1, wires1, label2, wires2);
+        INDICES new_control_list = std::get<0>(all_res);
+        INDICES new_target_list = std::get<1>(all_res);
+
+        std::sort(new_target_list.begin(), new_target_list.end());
+        std::sort(new_control_list.begin(), new_control_list.end());
+
+        // extend gate matrix to whole qubit list
+        vector<CplxType> matrix_first, matrix_second;
+
+        auto res_wires = Pennylane::separate_control_and_target(label1, wires1);
+        INDICES first_control = std::get<0>(res_wires);
+        INDICES first_target = std::get<1>(res_wires);
+        get_extended_matrix(std::move(gate_first), matrix_first, new_control_list, new_target_list, first_control, first_target);
+
+        auto res_wires2 = Pennylane::separate_control_and_target(label2, wires2);
+        INDICES second_control = std::get<0>(res_wires2);
+        INDICES second_target = std::get<1>(res_wires2);
+        get_extended_matrix(std::move(gate_second), matrix_second, new_control_list, new_target_list, second_control, second_target );
+
+        std::cout << "first gate is extended from \n";
+        for (auto it : orgmat1){
+            std::cout << it << " ";
+        }
+        std::cout << "\n\nto\n\n";
+        for (auto it : matrix_first){
+            std::cout << it << " ";
+        }
+        std::cout << "second gate is extended from \n";
+        for (auto it : orgmat2){
+            std::cout << it << " ";
+        }
+        std::cout << "\n\nto\n\n";
+        for (auto it : matrix_second){
+            std::cout << it << " ";
+        }
+
+        vector<CplxType> new_matrix;
+        new_matrix.reserve(matrix_first.size());
+        std::cout << "dim: " << int(new_matrix.size()/2);
+        matmul(matrix_second.data(), matrix_first.data(), new_matrix.data(), int(new_matrix.size()/2));
+
+        // generate new matrix gate
+        // can do QubitUnitary:
+        int new_qubit_num = new_target_list.size() + new_control_list.size();
+        //Pennylane::QubitUnitary qubit_unitary(new_qubit_num, new_matrix);
+
+        std::cout << "result matrix is " << "\n\n";
+
+        for (auto it : new_matrix){
+            std::cout << it << " ";
+        }
+        Pennylane::QubitUnitary qubit_unitary(2, {1,0,0,1});
+        return qubit_unitary;
+    }

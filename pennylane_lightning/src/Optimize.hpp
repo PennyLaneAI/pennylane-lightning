@@ -31,4 +31,8 @@ void get_extended_matrix(unique_ptr<Pennylane::AbstractGate> gate,
     vector<CplxType>& matrix, INDICES& new_target_wires, INDICES&
     new_control_wires,INDICES& first_target_wires, INDICES& first_control_wires);
 
+QubitUnitary merge(unique_ptr<AbstractGate> gate_first, const string& label1,
+const INDICES & wires1, unique_ptr<AbstractGate> gate_second, const string&
+label2, const INDICES & wires2);
+
 }
