@@ -321,7 +321,6 @@ void Pennylane::PhaseShiftGate::applyGenerator(const StateVector& state, const s
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
         shiftedState[indices[0]] = 0;
-        shiftedState[indices[1]] *= shift;
     }
 }
 
@@ -452,11 +451,8 @@ const double Pennylane::CRotationXGate::generatorScalingFactor{ -0.5 };
 void Pennylane::CRotationXGate::applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
-        CplxType v0 = shiftedState[indices[2]];
-        CplxType v1 = shiftedState[indices[3]];
         shiftedState[indices[0]] = shiftedState[indices[1]] = 0;
-        shiftedState[indices[2]] = js * v0 + c * v1;
-        shiftedState[indices[3]] = c * v0 + js * v1;
+        swap(shiftedState[indices[2]], shiftedState[indices[3]]);
     }
 }
 
@@ -494,11 +490,10 @@ const double Pennylane::CRotationYGate::generatorScalingFactor{ -0.5 };
 void Pennylane::CRotationYGate::applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
-        CplxType v0 = shiftedState[indices[2]];
-        CplxType v1 = shiftedState[indices[3]];
+        CplxType v0 = shiftedState[indices[0]];
         shiftedState[indices[0]] = shiftedState[indices[1]] = 0;
-        shiftedState[indices[2]] = - s * v0 - c * v1;
-        shiftedState[indices[3]] = c * v0 - s * v1;
+        shiftedState[indices[2]] = -IMAG * shiftedState[indices[3]];
+        shiftedState[indices[3]] = IMAG * v0;
     }
 }
 
@@ -534,11 +529,8 @@ const double Pennylane::CRotationZGate::generatorScalingFactor{ -0.5 };
 void Pennylane::CRotationZGate::applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
-        CplxType v0 = shiftedState[indices[2]];
-        CplxType v1 = shiftedState[indices[3]];
         shiftedState[indices[0]] = shiftedState[indices[1]] = 0;
-        shiftedState[indices[2]] = first;
-        shiftedState[indices[3]] = -second;
+        shiftedState[indices[3]] *= -1;
     }
 }
 
