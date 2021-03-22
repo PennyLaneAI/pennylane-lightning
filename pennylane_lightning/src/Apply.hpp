@@ -22,7 +22,9 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
+#include "Gates.hpp"
 #include "StateVector.hpp"
 #include "typedefs.hpp"
 
@@ -64,11 +66,10 @@ namespace Pennylane {
      * @param opParams defines the gate parameterisation (may be zero-length for some gates)
      * @param qubits number of qubits
      */
-    void constructAndApplyOperation(
+    void applyOperation(
         StateVector& state,
-        const std::string& opLabel,
+        std::unique_ptr<AbstractGate> gate,
         const std::vector<unsigned int>& opWires,
-        const std::vector<double>& opParams,
         const unsigned int qubits
     );
 
