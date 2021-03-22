@@ -62,6 +62,7 @@ namespace Pennylane {
      * @param opLabel unique string corresponding to a gate type
      * @param opWires index of qubits on which the gate acts
      * @param opParams defines the gate parameterisation (may be zero-length for some gates)
+     * @param inverse boolean indicating whether to apply the gate or its inverse
      * @param qubits number of qubits
      */
     void constructAndApplyOperation(
@@ -69,6 +70,7 @@ namespace Pennylane {
         const std::string& opLabel,
         const std::vector<unsigned int>& opWires,
         const std::vector<double>& opParams,
+        bool inverse,
         const unsigned int qubits
     );
 
@@ -79,12 +81,15 @@ namespace Pennylane {
      * @param ops list of unique string names corresponding to gate types, in the order they should be applied
      * @param wires list of wires on which each gate acts
      * @param params list of parameters that defines the gate parameterisation
+     * @param inverse list of booleans indicating whether a given gate or its inverse should be applied
+     * @param qubits number of qubits
      */
     void apply(
         StateVector& state,
         const std::vector<std::string>& ops,
         const std::vector<std::vector<unsigned int>>& wires,
         const std::vector<std::vector<double>>& params,
+        const std::vector<bool>& inverse,
         const unsigned int qubits
     );
 
