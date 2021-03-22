@@ -1,6 +1,7 @@
 #include "Optimize.hpp"
 #include <vector>
 #include <algorithm>
+#include <math.h>
 
 using std::unique_ptr;
 using std::vector;
@@ -370,19 +371,19 @@ gate_second, const string& label2, const INDICES & wires2) {
 
         vector<CplxType> new_matrix;
         new_matrix.reserve(matrix_first.size());
-        std::cout << "dim: " << int(new_matrix.size()/2);
-        matmul(matrix_second.data(), matrix_first.data(), new_matrix.data(), int(new_matrix.size()/2));
+        auto new_dim = int(sqrt(matrix_first.size()));
+        std::cout << "dim: " << new_dim;
+        matmul(matrix_second.data(), matrix_first.data(), new_matrix.data(), new_dim);
 
         // generate new matrix gate
         // can do QubitUnitary:
         int new_qubit_num = new_target_list.size() + new_control_list.size();
-        //Pennylane::QubitUnitary qubit_unitary(new_qubit_num, new_matrix);
+        Pennylane::QubitUnitary qubit_unitary(new_qubit_num, new_matrix);
 
         std::cout << "result matrix is " << "\n\n";
 
         for (auto it : new_matrix){
             std::cout << it << " ";
         }
-        Pennylane::QubitUnitary qubit_unitary(2, {1,0,0,1});
         return qubit_unitary;
     }
