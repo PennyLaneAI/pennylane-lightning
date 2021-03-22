@@ -106,15 +106,33 @@ INSTANTIATE_TEST_SUITE_P (
 
     ));
 
-TEST(merge, merge) {
-    string label1 = "PauliX";
-    string label2 = "PauliX";
+class Merge : public ::testing::TestWithParam<std::tuple<string, string, INDICES, INDICES, vector<CplxType>  > > {
+};
+
+TEST_P(Merge, Merge) {
+    string label1 = std::get<0>(GetParam());
+    string label2 = std::get<1>(GetParam());
+
+    INDICES wires1 = std::get<2>(GetParam());
+    INDICES wires2 = std::get<3>(GetParam());
+
+    const vector<CplxType> expected = std::get<4>(GetParam());
+
     unique_ptr<AbstractGate> gate1 = Pennylane::constructGate(label1, {});
     unique_ptr<AbstractGate> gate2 = Pennylane::constructGate(label2, {});
 
-    auto gate = Pennylane::merge(move(gate1), label1, {0}, move(gate2), label2, {1});
+    auto gate = Pennylane::merge(move(gate1), label1, wires1, move(gate2), label2, wires2);
+    auto res_matrix = gate.asMatrix();
+
+    ASSERT_EQ(res_matrix, expected);
 }
 
+INSTANTIATE_TEST_SUITE_P (
+        MergeTests,
+        Merge,
+        ::testing::Values(
+            std::make_tuple("PauliX", "PauliX", INDICES{0}, INDICES{0}, vector<CplxType>{1,0,0,1})
+    ));
 }
 
 class CreateIdentity : public ::testing::TestWithParam<std::tuple<unsigned int, vector<CplxType> > > {

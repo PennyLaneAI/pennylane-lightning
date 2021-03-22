@@ -369,8 +369,7 @@ gate_second, const string& label2, const INDICES & wires2) {
             std::cout << it << " ";
         }
 
-        vector<CplxType> new_matrix;
-        new_matrix.reserve(matrix_first.size());
+        vector<CplxType> new_matrix(matrix_first.size());
         auto new_dim = int(sqrt(matrix_first.size()));
         std::cout << "dim: " << new_dim;
         matmul(matrix_second.data(), matrix_first.data(), new_matrix.data(), new_dim);
@@ -382,8 +381,9 @@ gate_second, const string& label2, const INDICES & wires2) {
 
         std::cout << "result matrix is " << "\n\n";
 
-        for (auto it : new_matrix){
-            std::cout << it << " ";
+        for (int i =0; i<new_dim*new_dim; ++i){
+            std::cout << new_matrix[i] << " ";
         }
+        std::cout << "result matrix size " << new_matrix.size() << "\n\n";
         return qubit_unitary;
     }
