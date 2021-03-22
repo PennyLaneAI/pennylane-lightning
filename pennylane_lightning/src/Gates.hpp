@@ -48,7 +48,7 @@ namespace Pennylane {
         /**
          * Generic matrix-multiplication kernel for applying the generator of an operation
          */
-        virtual void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
 
         /**
          * Scaling factor applied to the generator operation
@@ -147,7 +147,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        virtual void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
         static const double generatorScalingFactor;
     };
 
@@ -162,7 +162,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        virtual void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
         static const double generatorScalingFactor;
     };
 
@@ -178,7 +178,7 @@ namespace Pennylane {
             return matrix;
         }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
-        virtual void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
         static const double generatorScalingFactor;
     };
 
@@ -194,7 +194,7 @@ namespace Pennylane {
             return matrix;
         }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
-        virtual void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
         static const double generatorScalingFactor;
     };
 
@@ -266,7 +266,7 @@ namespace Pennylane {
             return matrix;
         }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
-        virtual void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
         static const double generatorScalingFactor;
     };
 
@@ -282,7 +282,7 @@ namespace Pennylane {
             return matrix;
         }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
-        virtual void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
         static const double generatorScalingFactor;
     };
 
@@ -298,7 +298,7 @@ namespace Pennylane {
             return matrix;
         }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
-        virtual void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
         static const double generatorScalingFactor;
     };
 
