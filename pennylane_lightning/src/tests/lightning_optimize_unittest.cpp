@@ -219,6 +219,7 @@ TEST_P(OptimizeLight, OptimizeLight) {
     Pennylane::optimize_light(std::move(gates), gate_names, wires, num_qubits);
     //TODO: adjust
     ASSERT_EQ(gates.size(),1);
+    ASSERT_EQ(gates[0]->asMatrix(), expected_matrices[0]);
 }
 
 INSTANTIATE_TEST_SUITE_P (
