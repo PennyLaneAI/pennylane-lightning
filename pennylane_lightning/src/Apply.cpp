@@ -66,7 +66,7 @@ void Pennylane::applyOperation(
 void Pennylane::apply(
     StateVector& state,
     const vector<string>& ops,
-    const vector<vector<unsigned int>>& wires,
+    vector<vector<unsigned int>>& wires,
     const vector<vector<double>>& params,
     const unsigned int qubits
 ) { 
@@ -91,8 +91,8 @@ void Pennylane::apply(
         gates.push_back(std::move(gate));
     }
 
-    // Merge gates here
-    //Pennylane::optimize_light(std::move(gates), ops, wires, qubits);
+    // Merge gates here, wires are updated
+    Pennylane::optimize_light(std::move(gates), ops, wires, qubits);
 
     for (int i = 0; i < gates.size(); i++) {
         applyOperation(state, std::move(gates[i]), wires[i], qubits);

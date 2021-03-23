@@ -212,7 +212,7 @@ TEST_P(OptimizeLight, OptimizeLight) {
         gates.push_back(std::move(Pennylane::constructGate(gate, {})));
     }
 
-    const vector<INDICES> wires = std::get<1>(GetParam());
+    vector<INDICES> wires = std::get<1>(GetParam());
     const unsigned int num_expected_gates = std::get<2>(GetParam());
     auto expected_matrices = std::get<3>(GetParam());
 
