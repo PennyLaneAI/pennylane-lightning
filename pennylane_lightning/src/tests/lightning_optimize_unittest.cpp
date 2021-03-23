@@ -202,13 +202,13 @@ TEST(MergeThroughPtrs, MergeThroughPtrs) {
     ASSERT_EQ(gate->asMatrix(), expected);
 }
 
-class OptimizeLight : public ::testing::TestWithParam<std::tuple<vector<string>, vector<INDICES> , unsigned int, vector<vector<CplxType> > >> {
+class OptimizeLight : public ::testing::TestWithParam<std::tuple<vector<string>, vector<INDICES> , unsigned int, vector<vector<CplxType> >, vector<INDICES> >> {
 };
 
 TEST_P(OptimizeLight, OptimizeLight) {
     vector<unique_ptr<AbstractGate>> gates;
 
-    const vector<string> gate_names = std::get<0>(GetParam());
+    vector<string> gate_names = std::get<0>(GetParam());
     for (auto gate : gate_names){
         gates.push_back(std::move(Pennylane::constructGate(gate, {})));
     }
@@ -216,24 +216,18 @@ TEST_P(OptimizeLight, OptimizeLight) {
     vector<INDICES> wires = std::get<1>(GetParam());
     const unsigned int num_expected_gates = std::get<2>(GetParam());
     auto expected_matrices = std::get<3>(GetParam());
+    auto expected_wires = std::get<4>(GetParam());
 
     auto num_w1 = wires[0].size();
     auto num_w2 = wires[1].size();
     const unsigned int num_qubits = num_w1 >= num_w2 ? num_w1 : num_w2;
 
     Pennylane::optimize_light(std::move(gates), gate_names, wires, num_qubits);
-    ASSERT_EQ(gates.size(),num_expected_gates);
+    ASSERT_EQ(gates.size(), num_expected_gates);
     ASSERT_EQ(gates[0]->asMatrix(), expected_matrices[0]);
-    if(gates.size()==2){
-        std::cout << "First matrix: \n";
-        for(auto it : gates[0]->asMatrix()){
-            std::cout << it << " ";
-        }
-        std::cout << "Second matrix: \n";
-        for(auto it : gates[1]->asMatrix()){
-            std::cout << it << " ";
-        }
-    }
+
+    ASSERT_EQ(wires.size(), 1);
+    ASSERT_EQ(wires[0], expected_wires[0]);
 }
 
 INSTANTIATE_TEST_SUITE_P (
@@ -241,15 +235,15 @@ INSTANTIATE_TEST_SUITE_P (
         OptimizeLight,
         ::testing::Values(
             // Unitarity
-            std::make_tuple(vector<string>{"PauliX", "PauliX"}, vector<INDICES>{{0}, {0}}, 1, vector<vector<CplxType>>{{1,0,0,1}}),
-            std::make_tuple(vector<string>{"PauliY", "PauliY"}, vector<INDICES>{{0}, {0}}, 1, vector<vector<CplxType>>{{1,0,0,1}}),
-            std::make_tuple(vector<string>{"PauliZ", "PauliZ"}, vector<INDICES>{{0}, {0}}, 1, vector<vector<CplxType>>{{1,0,0,1}}),
+            std::make_tuple(vector<string>{"PauliX", "PauliX"}, vector<INDICES>{{0}, {0}}, 1, vector<vector<CplxType>>{{1,0,0,1}}, vector<INDICES>{{0}}),
+            std::make_tuple(vector<string>{"PauliY", "PauliY"}, vector<INDICES>{{0}, {0}}, 1, vector<vector<CplxType>>{{1,0,0,1}}, vector<INDICES>{{0}}),
+            std::make_tuple(vector<string>{"PauliZ", "PauliZ"}, vector<INDICES>{{0}, {0}}, 1, vector<vector<CplxType>>{{1,0,0,1}}, vector<INDICES>{{0}}),
 
             // Note: we process gates first in first out, so we compute U = v[1] @ v[0]
             // Merging Paulis
-            std::make_tuple(vector<string>{"PauliX", "PauliY"}, vector<INDICES>{{0}, {0}}, 1, vector<vector<CplxType>>{{CplxType(0, -1),0,0,CplxType(0, 1)}}),
-            std::make_tuple(vector<string>{"PauliY", "PauliZ"}, vector<INDICES>{{0}, {0}}, 1, vector<vector<CplxType>>{{0,CplxType(0, -1),CplxType(0, -1),0}}),
-            std::make_tuple(vector<string>{"PauliZ", "PauliX"}, vector<INDICES>{{0}, {0}}, 1, vector<vector<CplxType>>{{0,-1,1,0}}),
+            std::make_tuple(vector<string>{"PauliX", "PauliY"}, vector<INDICES>{{0}, {0}}, 1, vector<vector<CplxType>>{{CplxType(0, -1),0,0,CplxType(0, 1)}}, vector<INDICES>{{0}}),
+            std::make_tuple(vector<string>{"PauliY", "PauliZ"}, vector<INDICES>{{0}, {0}}, 1, vector<vector<CplxType>>{{0,CplxType(0, -1),CplxType(0, -1),0}}, vector<INDICES>{{0}}),
+            std::make_tuple(vector<string>{"PauliZ", "PauliX"}, vector<INDICES>{{0}, {0}}, 1, vector<vector<CplxType>>{{0,-1,1,0}}, vector<INDICES>{{0}}),
 
             // Merging two-qubit with one-qubit gate (note: same target qubits)
             //TODO: separate control targets to allow the following case:
@@ -266,8 +260,51 @@ INSTANTIATE_TEST_SUITE_P (
                                                                                 1,  0,  0,  0,
                                                                                 0,  0,  0, -1,
                                                                                 0,  0,  1,  0
-                                                                                }})
+                                                                                }}, vector<INDICES>{{0,1}})
         ));
+
+class OptimizeLightParamOps : public ::testing::TestWithParam<std::tuple<vector<string>, vector<vector<double>>, vector<INDICES> , unsigned int, vector<vector<CplxType> >, vector<INDICES> >> {
+};
+
+TEST_P(OptimizeLightParamOps, OptimizeLightParametrizedOps) {
+    vector<string> gate_names = std::get<0>(GetParam());
+    vector<vector<double>> params = std::get<1>(GetParam());
+    vector<INDICES> wires = std::get<2>(GetParam());
+
+    const unsigned int num_expected_gates = std::get<3>(GetParam());
+    auto expected_matrices = std::get<4>(GetParam());
+    auto expected_wires = std::get<5>(GetParam());
+
+    vector<unique_ptr<AbstractGate>> gates;
+
+    for (int i=0; i<gate_names.size(); ++i){
+        gates.push_back(std::move(Pennylane::constructGate(gate_names[i], params[i])));
+    }
+
+    auto num_w1 = wires[0].size();
+    auto num_w2 = wires[1].size();
+    const unsigned int num_qubits = num_w1 >= num_w2 ? num_w1 : num_w2;
+
+    Pennylane::optimize_light(std::move(gates), gate_names, wires, num_qubits);
+    ASSERT_EQ(gates.size(), num_expected_gates);
+    ASSERT_EQ(gates[0]->asMatrix(), expected_matrices[0]);
+
+    ASSERT_EQ(wires.size(), 1);
+    ASSERT_EQ(wires[0], expected_wires[0]);
+}
+
+vector<vector<double>> test_params = {{0.5432}, {0.5432}, {0.5432}};
+vector<INDICES> test_wires = {{0}, {0}, {0}};
+vector<INDICES> expected_wires = {{0}};
+
+INSTANTIATE_TEST_SUITE_P (
+        OptimizeLightParamOpsTests,
+        OptimizeLightParamOps,
+        ::testing::Values(
+            // Unitarity
+            std::make_tuple(vector<string>{"RY", "RX", "RY"}, test_params, test_wires, 1, vector<vector<CplxType>>{{1,0,0,1}}, expected_wires)
+        ));
+
 }
 
 class CreateIdentity : public ::testing::TestWithParam<std::tuple<unsigned int, vector<CplxType> > > {

@@ -424,7 +424,7 @@ gate_second, const string& label2, const INDICES & wires2) {
         return gate;
     }
 
-void Pennylane::optimize_light(vector<unique_ptr<AbstractGate>> && gate_list, const vector<string>& labels, vector<vector<UINT>>& wires, const UINT qubit_count) {
+void Pennylane::optimize_light(vector<unique_ptr<AbstractGate>> && gate_list, vector<string>& labels, vector<vector<UINT>>& wires, const UINT qubit_count) {
     std::vector<std::pair<int, std::vector<UINT>>> current_step(qubit_count, std::make_pair(-1, std::vector<UINT>()));
     std::cout << "Things in the current_step: \n";
     for (auto item : current_step) {
@@ -455,9 +455,19 @@ void Pennylane::optimize_light(vector<unique_ptr<AbstractGate>> && gate_list, co
         if(hit!=-1)
             parent_qubits = current_step[hit].second;
         if (std::includes(parent_qubits.begin(), parent_qubits.end(), target_qubits.begin(), target_qubits.end())) {
-            std::cout << " bent vagyok a merge reszeben, pos: " << pos << " ind1: " << ind1;
+            std::cout << "In the merge branch, pos: " << pos << " ind1: " << ind1;
+            std::cout << "Merging the following gates: " << labels[pos] << " with: " << labels[ind1] << std::endl;
 
             auto merged_gate = Pennylane::merge(std::move(gate_list[pos]), labels[pos], wires[pos], std::move(gate), labels[ind1], wires[ind1]);
+
+            std::cout << "First wires: " << "\n\n";
+            for (auto w : wires[pos] ) {
+                std::cout << w << " ";
+            }
+            std::cout << "Second wires: " << "\n\n";
+            for (auto w : wires[ind1] ) {
+                std::cout << w << " ";
+            }
 
             // Remove first merged gate
             vector<unique_ptr<AbstractGate>>::iterator first_gate_it = gate_list.begin() + ind1;
@@ -465,8 +475,15 @@ void Pennylane::optimize_light(vector<unique_ptr<AbstractGate>> && gate_list, co
             gate_list.erase(first_gate_it);
             std::cout << "after first erase: " << gate_list.size();
 
+            // Erase the labels info too
+            vector<string>::iterator first_labels_iterator = labels.begin() + ind1;
+            labels.erase(first_labels_iterator);
+
             vector<unique_ptr<AbstractGate>>::iterator insert_here = gate_list.begin() + pos + 1;
             gate_list.insert(insert_here, std::move(merged_gate));
+
+            vector<string>::iterator new_label_iterator = labels.begin() + pos + 1;
+            labels.insert(new_label_iterator, "QubitUnitary");
             std::cout << "Pushing merged gate: ";
 
             // Remove second merged gate
@@ -475,9 +492,13 @@ void Pennylane::optimize_light(vector<unique_ptr<AbstractGate>> && gate_list, co
             gate_list.erase(second_gate_it);
             std::cout << "after second erase: " << gate_list.size();
 
-            // Erase the wires info too
-            vector<vector<UINT>>::iterator second_wires_iterator = wires.begin() + pos;
+            // Erase the wires info
+            vector<vector<UINT>>::iterator second_wires_iterator = wires.begin() + ind1;
             wires.erase(second_wires_iterator);
+
+            // Erase the labels info too
+            vector<string>::iterator second_labels_iterator = labels.begin() + pos;
+            labels.erase(second_labels_iterator);
 
             ind1--;
 

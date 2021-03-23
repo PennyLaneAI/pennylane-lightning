@@ -38,6 +38,6 @@ string& label1, INDICES & wires1, unique_ptr<AbstractGate> gate_second, const
 string& label2, const INDICES & wires2);
 
 //void optimize_light(vector<unique_ptr<AbstractGate>> gate_list, const vector<INDICES>& wires, const UINT qubit_count);
-void optimize_light(vector<unique_ptr<AbstractGate>> && gate_list, const vector<string>& labels, vector<vector<UINT>>& wires, const UINT qubit_count);
+void optimize_light(vector<unique_ptr<AbstractGate>> && gate_list, vector<string>& labels, vector<vector<UINT>>& wires, const UINT qubit_count);
 
 }

@@ -138,5 +138,6 @@ class LightningQubit(DefaultQubit):
         op_param = [o.parameters for o in operations]
 
         state_vector = np.ravel(state)
+        print("Python: applying the following: ", op_names)
         apply(state_vector, op_names, op_wires, op_param, self.num_wires)
         return np.reshape(state_vector, state.shape)
