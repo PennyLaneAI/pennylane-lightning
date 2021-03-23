@@ -227,9 +227,15 @@ INSTANTIATE_TEST_SUITE_P (
         OptimizeLightNonParamTests,
         OptimizeLight,
         ::testing::Values(
+            // Unitarity
             std::make_tuple(vector<string>{"PauliX", "PauliX"}, vector<INDICES>{{0}, {0}}, 1, 1, vector<vector<CplxType>>{{1,0,0,1}}),
             std::make_tuple(vector<string>{"PauliY", "PauliY"}, vector<INDICES>{{0}, {0}}, 1, 1, vector<vector<CplxType>>{{1,0,0,1}}),
-            std::make_tuple(vector<string>{"PauliZ", "PauliZ"}, vector<INDICES>{{0}, {0}}, 1, 1, vector<vector<CplxType>>{{1,0,0,1}})
+            std::make_tuple(vector<string>{"PauliZ", "PauliZ"}, vector<INDICES>{{0}, {0}}, 1, 1, vector<vector<CplxType>>{{1,0,0,1}}),
+
+            // Merging Paulis: note: FIFO, so we have v[1] @ v[0]
+            std::make_tuple(vector<string>{"PauliX", "PauliY"}, vector<INDICES>{{0}, {0}}, 1, 1, vector<vector<CplxType>>{{CplxType(0, -1),0,0,CplxType(0, 1)}}),
+            std::make_tuple(vector<string>{"PauliY", "PauliZ"}, vector<INDICES>{{0}, {0}}, 1, 1, vector<vector<CplxType>>{{0,CplxType(0, -1),CplxType(0, -1),0}}),
+            std::make_tuple(vector<string>{"PauliZ", "PauliX"}, vector<INDICES>{{0}, {0}}, 1, 1, vector<vector<CplxType>>{{0,-1,1,0}})
         ));
 }
 
