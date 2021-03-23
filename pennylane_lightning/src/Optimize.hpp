@@ -33,11 +33,11 @@ void get_extended_matrix(unique_ptr<Pennylane::AbstractGate> gate,
     vector<CplxType>& matrix, INDICES& new_target_wires, INDICES&
     new_control_wires,INDICES& first_target_wires, INDICES& first_control_wires);
 
-unique_ptr<AbstractGate> merge(unique_ptr<AbstractGate> gate_first, const string& label1,
-const INDICES & wires1, unique_ptr<AbstractGate> gate_second, const string&
-label2, const INDICES & wires2);
+unique_ptr<AbstractGate> merge(unique_ptr<AbstractGate> gate_first, const
+string& label1, INDICES & wires1, unique_ptr<AbstractGate> gate_second, const
+string& label2, const INDICES & wires2);
 
 //void optimize_light(vector<unique_ptr<AbstractGate>> gate_list, const vector<INDICES>& wires, const UINT qubit_count);
-void optimize_light(vector<unique_ptr<AbstractGate>> && gate_list, const vector<string>& labels, vector<vector<unsigned int>>& wires, const UINT qubit_count);
+void optimize_light(vector<unique_ptr<AbstractGate>> && gate_list, const vector<string>& labels, vector<vector<UINT>>& wires, const UINT qubit_count);
 
 }

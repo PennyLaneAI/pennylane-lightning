@@ -182,7 +182,7 @@ INSTANTIATE_TEST_SUITE_P (
 
     ));
 
-unique_ptr<AbstractGate> aux_func(vector<unique_ptr<AbstractGate>> && gates, const string& label, const vector<unsigned int>& wires) {
+unique_ptr<AbstractGate> aux_func(vector<unique_ptr<AbstractGate>> && gates, const string& label, vector<unsigned int>& wires) {
     return Pennylane::merge(std::move(gates[0]), label, wires, std::move(gates[1]), label, wires);
 }
 
@@ -195,7 +195,8 @@ TEST(MergeThroughPtrs, MergeThroughPtrs) {
     gates.push_back(std::move(gate1));
     gates.push_back(std::move(gate2));
 
-    auto gate = aux_func(std::move(gates), label, {0});
+    INDICES wires = {0};
+    auto gate = aux_func(std::move(gates), label, wires);
 
     vector<CplxType> expected = {1,0,0,1};
     ASSERT_EQ(gate->asMatrix(), expected);
