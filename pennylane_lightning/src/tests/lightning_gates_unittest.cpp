@@ -146,9 +146,9 @@ TEST(DispatchTable, constructGateThrows) {
 
 TEST(QubitUnitary, constructGate) {
     vector<CplxType> mx = {1,0,0,1};
-    Pennylane::QubitUnitary qubit_unitary(1, mx);
-    ASSERT_EQ(qubit_unitary.numQubits, 1);
-    ASSERT_EQ(qubit_unitary.asMatrix(), mx);
+    auto qubit_unitary = Pennylane::constructGate(mx);
+    ASSERT_EQ(qubit_unitary->numQubits, 1);
+    ASSERT_EQ(qubit_unitary->asMatrix(), mx);
 }
 
 

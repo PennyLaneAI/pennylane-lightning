@@ -18,6 +18,7 @@
 #include <cmath>
 #include <functional>
 #include <map>
+#include <iostream>
 
 #include "Gates.hpp"
 #include "Util.hpp"
@@ -607,6 +608,6 @@ unique_ptr<Pennylane::AbstractGate> Pennylane::constructGate(const string& label
 
 unique_ptr<Pennylane::AbstractGate> Pennylane::constructGate(const vector<CplxType>& matrix) {
     // TODO: validate
-    auto num_qubits = log2(matrix.size());
+    auto num_qubits = int(log2(matrix.size())/2);
     return make_unique<QubitUnitary>(QubitUnitary(num_qubits, matrix));
 }

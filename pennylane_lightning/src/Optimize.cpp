@@ -219,9 +219,11 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
 
     // 3. Decide correct 2^{|A|+|C|}-dim block matrix from control wires.
     ITYPE start_block_basis = (1ULL << (join_from_target.size() + join_from_other_gate.size())) * control_mask;
+    /*
     std::cout << "The base: " << (1ULL << (join_from_target.size() + join_from_other_gate.size()));
     std::cout << "The control mask: " << control_mask;
     std::cout << "The start_block_basis: " << start_block_basis;
+    */
 
     // 4. Repeat 2^{|C|}-times paste of original gate matrix A .
     vector<CplxType> org_matrix = gate->asMatrix();
@@ -335,10 +337,12 @@ gate_second, const string& label2, const INDICES & wires2) {
         auto all_res = Pennylane::get_new_qubit_list(label1, wires1, label2, wires2);
         INDICES new_control_list = std::get<0>(all_res);
         INDICES new_target_list = std::get<1>(all_res);
+        /*
         std::cout << "New control list: ";
         for (auto it : new_control_list){
             std::cout << it << " ";
         }
+        */
 
         std::sort(new_target_list.begin(), new_target_list.end());
         std::sort(new_control_list.begin(), new_control_list.end());
@@ -372,6 +376,7 @@ gate_second, const string& label2, const INDICES & wires2) {
         auto second_target = wires2;
         get_extended_matrix(std::move(gate_second), matrix_second, new_control_list, new_target_list, second_control, second_target );
 
+        /*
         std::cout << "first gate is extended from \n";
         for (auto it : orgmat1){
             std::cout << it << " ";
@@ -388,10 +393,11 @@ gate_second, const string& label2, const INDICES & wires2) {
         for (auto it : matrix_second){
             std::cout << it << " ";
         }
+        */
 
         vector<CplxType> new_matrix(matrix_first.size());
         auto new_dim = int(sqrt(matrix_first.size()));
-        std::cout << "dim: " << new_dim;
+        //std::cout << "dim: " << new_dim;
         matmul(matrix_second.data(), matrix_first.data(), new_matrix.data(), new_dim);
 
         // generate new matrix gate
@@ -407,8 +413,16 @@ gate_second, const string& label2, const INDICES & wires2) {
         return gate;
     }
 
-void Pennylane::optimize_light(vector<unique_ptr<AbstractGate>> gate_list, const vector<string>& labels, const vector<vector<unsigned int>>& wires, const UINT qubit_count) {
+void Pennylane::optimize_light(vector<unique_ptr<AbstractGate>> && gate_list, const vector<string>& labels, vector<vector<unsigned int>> wires, const UINT qubit_count) {
     std::vector<std::pair<int, std::vector<UINT>>> current_step(qubit_count, std::make_pair(-1, std::vector<UINT>()));
+    std::cout << "Things in the current_step: \n";
+    for (auto item : current_step) {
+        std::cout << "elso, UINT: " << item.first;
+        for (auto ui : item.second) {
+            std::cout << ui << " ";
+        }
+    }
+
     for (UINT ind1 = 0; ind1 < gate_list.size(); ++ind1) {
         unique_ptr<AbstractGate> gate = std::move(gate_list[ind1]);
         std::vector<UINT> target_qubits;
@@ -429,18 +443,24 @@ void Pennylane::optimize_light(vector<unique_ptr<AbstractGate>> gate_list, const
         if(hit!=-1)
             parent_qubits = current_step[hit].second;
         if (std::includes(parent_qubits.begin(), parent_qubits.end(), target_qubits.begin(), target_qubits.end())) {
+            std::cout << " bent vagyok a merge reszeben" ;
+            /*
             auto merged_gate = Pennylane::merge(std::move(gate_list[pos]), labels[pos], wires[pos], std::move(gate), labels[ind1], wires[ind1]);
 
             // Remove first merged gate
             vector<unique_ptr<AbstractGate>>::iterator first_gate_it = gate_list.begin() + ind1;
+            std::cout << "before first erase: " << gate_list.size();
             gate_list.erase(first_gate_it);
+            std::cout << "after first erase: " << gate_list.size();
 
             //gate_list.insert(pos + 1, std::move(merged_gate));
             gate_list.push_back(std::move(merged_gate));
 
             // Remove second merged gate
             vector<unique_ptr<AbstractGate>>::iterator second_gate_it = gate_list.begin() + pos;
+            std::cout << "before second erase: " << gate_list.size();
             gate_list.erase(second_gate_it);
+            std::cout << "after second erase: " << gate_list.size();
 
             ind1--;
 
@@ -449,10 +469,19 @@ void Pennylane::optimize_light(vector<unique_ptr<AbstractGate>> gate_list, const
             //std::cout << " into ";
             //for (auto val : parent_qubits) std::cout << val << " ";
             //std::cout << std::endl;
+            */
         }
         else {
+            std::cout << "bent az else agban";
             for (auto target_qubit : target_qubits) {
-                current_step[target_qubit] = make_pair(ind1, target_qubits);
+                auto pair = std::make_pair(ind1, target_qubits);
+                std::cout << "putting the follwoing pair: ";
+                std::cout << pair.first << std::endl;
+                for (auto item : pair.second){
+                    std::cout << item << "  ";
+                }
+                std::cout << "target qubit: " << target_qubit;
+                current_step[target_qubit] = pair;
             }
         }
     }

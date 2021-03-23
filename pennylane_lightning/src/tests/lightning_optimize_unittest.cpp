@@ -197,7 +197,7 @@ TEST_P(OptimizeLight, OptimizeLight) {
     const unsigned int num_qubits = std::get<2>(GetParam());
     auto expected_matrices = std::get<3>(GetParam());
 
-    Pennylane::optimize_light({}, gate_names, vector<INDICES>{{0}, {0}}, 1);
+    Pennylane::optimize_light(std::move(gates), gate_names, wires, num_qubits);
     ASSERT_EQ(gates.size(),1);
 }
 
