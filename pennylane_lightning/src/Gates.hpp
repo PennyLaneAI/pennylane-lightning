@@ -331,7 +331,6 @@ namespace Pennylane {
         QubitUnitary(const int numQubits, std::vector<CplxType> const &mx);
         static const std::string label;
         static QubitUnitary create(const std::vector<double>& parameters);
-        static QubitUnitary create(const unsigned int qubit_num, const std::vector<CplxType>& matrix) {         Pennylane::QubitUnitary(qubit_num, matrix); };
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }

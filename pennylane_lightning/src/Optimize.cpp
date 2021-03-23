@@ -247,7 +247,7 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
     // Reverse due to qubit ordering
     // TODO: check: best option?
     //std::reverse(unsorted_new_target_index_list.begin(), unsorted_new_target_index_list.end());
-    for (int i = 0; i<unsorted_new_target_index_list.size(); ++i)
+    for (UINT i = 0; i<unsorted_new_target_index_list.size(); ++i)
         unsorted_new_target_index_list[i] = new_matrix_qubit_count - unsorted_new_target_index_list[i] - 1;
 
     // 5. Since the order of (C,B,A) is different from that of the other gate, we sort (C,B,A) after generating matrix.

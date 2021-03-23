@@ -227,7 +227,9 @@ INSTANTIATE_TEST_SUITE_P (
         OptimizeLightNonParamTests,
         OptimizeLight,
         ::testing::Values(
-            std::make_tuple(vector<string>{"PauliX", "PauliX"}, vector<INDICES>{{0}, {0}}, 1, 1, vector<vector<CplxType>>{{1,0,0,1}})
+            std::make_tuple(vector<string>{"PauliX", "PauliX"}, vector<INDICES>{{0}, {0}}, 1, 1, vector<vector<CplxType>>{{1,0,0,1}}),
+            std::make_tuple(vector<string>{"PauliY", "PauliY"}, vector<INDICES>{{0}, {0}}, 1, 1, vector<vector<CplxType>>{{1,0,0,1}}),
+            std::make_tuple(vector<string>{"PauliZ", "PauliZ"}, vector<INDICES>{{0}, {0}}, 1, 1, vector<vector<CplxType>>{{1,0,0,1}})
         ));
 }
 
