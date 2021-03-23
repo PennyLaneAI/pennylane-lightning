@@ -201,7 +201,7 @@ TEST(MergeThroughPtrs, MergeThroughPtrs) {
     ASSERT_EQ(gate->asMatrix(), expected);
 }
 
-class OptimizeLight : public ::testing::TestWithParam<std::tuple<vector<string>, vector<INDICES> , unsigned int, vector<vector<CplxType> > >> {
+class OptimizeLight : public ::testing::TestWithParam<std::tuple<vector<string>, vector<INDICES> , unsigned int, unsigned int, vector<vector<CplxType> > >> {
 };
 
 TEST_P(OptimizeLight, OptimizeLight) {
@@ -214,11 +214,12 @@ TEST_P(OptimizeLight, OptimizeLight) {
 
     const vector<INDICES> wires = std::get<1>(GetParam());
     const unsigned int num_qubits = std::get<2>(GetParam());
-    auto expected_matrices = std::get<3>(GetParam());
+
+    const unsigned int num_expected_gates = std::get<3>(GetParam());
+    auto expected_matrices = std::get<4>(GetParam());
 
     Pennylane::optimize_light(std::move(gates), gate_names, wires, num_qubits);
-    //TODO: adjust
-    ASSERT_EQ(gates.size(),1);
+    ASSERT_EQ(gates.size(),num_expected_gates);
     ASSERT_EQ(gates[0]->asMatrix(), expected_matrices[0]);
 }
 
@@ -226,7 +227,7 @@ INSTANTIATE_TEST_SUITE_P (
         OptimizeLightNonParamTests,
         OptimizeLight,
         ::testing::Values(
-            std::make_tuple(vector<string>{"PauliX", "PauliX"}, vector<INDICES>{{0}, {0}}, 1, vector<vector<CplxType>>{{1,0,0,1}})
+            std::make_tuple(vector<string>{"PauliX", "PauliX"}, vector<INDICES>{{0}, {0}}, 1, 1, vector<vector<CplxType>>{{1,0,0,1}})
         ));
 }
 

@@ -17,6 +17,7 @@
 #include "Gates.hpp"
 #include "StateVector.hpp"
 #include "Util.hpp"
+#include "Optimize.hpp"
 
 using std::set;
 using std::string;
@@ -91,7 +92,7 @@ void Pennylane::apply(
     }
 
     // Merge gates here
-    //optimize_light(gates, wires, qubits);
+    //Pennylane::optimize_light(std::move(gates), ops, wires, qubits);
 
     for (int i = 0; i < gates.size(); i++) {
         applyOperation(state, std::move(gates[i]), wires[i], qubits);
