@@ -561,6 +561,8 @@ const string Pennylane::QubitUnitary::label = "QubitUnitary";
 
 Pennylane::QubitUnitary::QubitUnitary(const int numQubits, std::vector<CplxType> const &mx) : AbstractGate(numQubits), matrix(mx) {} ;
 
+
+
 // -------------------------------------------------------------------------------------------------------------
 
 template<class GateType>
@@ -601,4 +603,10 @@ unique_ptr<Pennylane::AbstractGate> Pennylane::constructGate(const string& label
         throw std::invalid_argument(label + " is not a supported gate type");
 
     return dispatchTableIterator->second(parameters);
+}
+
+unique_ptr<Pennylane::AbstractGate> Pennylane::constructGate(const vector<CplxType>& matrix) {
+    // TODO: validate
+    auto num_qubits = log2(matrix.size());
+    return make_unique<QubitUnitary>(QubitUnitary(num_qubits, matrix));
 }

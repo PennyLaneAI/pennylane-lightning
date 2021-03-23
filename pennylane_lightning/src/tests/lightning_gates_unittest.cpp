@@ -65,6 +65,13 @@ INSTANTIATE_TEST_SUITE_P (
                 std::make_tuple("CSWAP", CSWAP)
 ));
 
+TEST(QubitUnitaryConstruct, QubitUnitaryConstruct) {
+    vector <CplxType> mx = {1,0,0,1};
+
+    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(mx);
+    EXPECT_EQ(gate->asMatrix(), mx);
+}
+
 // -------------------------------------------------------------------------------------------------------------
 // Parametrized gates
 

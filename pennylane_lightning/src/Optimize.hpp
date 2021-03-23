@@ -15,6 +15,8 @@ using Pennylane::CplxType;
 
 typedef vector<unsigned int> INDICES;
 typedef size_t ITYPE;
+typedef unsigned int UINT;
+
 
 namespace Pennylane {
 
@@ -31,8 +33,11 @@ void get_extended_matrix(unique_ptr<Pennylane::AbstractGate> gate,
     vector<CplxType>& matrix, INDICES& new_target_wires, INDICES&
     new_control_wires,INDICES& first_target_wires, INDICES& first_control_wires);
 
-QubitUnitary merge(unique_ptr<AbstractGate> gate_first, const string& label1,
+unique_ptr<AbstractGate> merge(unique_ptr<AbstractGate> gate_first, const string& label1,
 const INDICES & wires1, unique_ptr<AbstractGate> gate_second, const string&
 label2, const INDICES & wires2);
+
+//void optimize_light(vector<unique_ptr<AbstractGate>> gate_list, const vector<INDICES>& wires, const UINT qubit_count);
+void optimize_light(vector<unique_ptr<AbstractGate>> gate_list, const vector<string>& labels, const vector<vector<unsigned int>>& wires, const UINT qubit_count);
 
 }

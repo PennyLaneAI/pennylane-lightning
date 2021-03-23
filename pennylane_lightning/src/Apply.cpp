@@ -91,6 +91,7 @@ void Pennylane::apply(
     }
 
     // Merge gates here
+    //optimize_light(gates, wires, qubits);
 
     for (int i = 0; i < gates.size(); i++) {
         applyOperation(state, std::move(gates[i]), wires[i], qubits);

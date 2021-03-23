@@ -331,6 +331,7 @@ namespace Pennylane {
         QubitUnitary(const int numQubits, std::vector<CplxType> const &mx);
         static const std::string label;
         static QubitUnitary create(const std::vector<double>& parameters);
+        static QubitUnitary create(const unsigned int qubit_num, const std::vector<CplxType>& matrix) {         Pennylane::QubitUnitary(qubit_num, matrix); };
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
@@ -346,5 +347,6 @@ namespace Pennylane {
      * @throws std::invalid_argument thrown if the gate type is not defined, or if the number of parameters to the gate is incorrect
      */
     std::unique_ptr<AbstractGate> constructGate(const std::string& label, const std::vector<double>& parameters);
+    std::unique_ptr<AbstractGate> constructGate(const std::vector<CplxType>& matrix);
 
 }

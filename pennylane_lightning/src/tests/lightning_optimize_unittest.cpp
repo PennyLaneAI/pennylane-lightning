@@ -130,7 +130,7 @@ TEST_P(Merge, Merge) {
     unique_ptr<AbstractGate> gate2 = Pennylane::constructGate(label2, {});
 
     auto gate = Pennylane::merge(move(gate1), label1, wires1, move(gate2), label2, wires2);
-    auto res_matrix = gate.asMatrix();
+    auto res_matrix = gate->asMatrix();
 
     ASSERT_EQ(res_matrix, expected);
 }
@@ -181,6 +181,32 @@ INSTANTIATE_TEST_SUITE_P (
                                                  0,  0,  0, -1,  0,  0,  0,  0})
 
     ));
+
+class OptimizeLight : public ::testing::TestWithParam<std::tuple<vector<string>, vector<INDICES> , unsigned int, vector<vector<CplxType> > >> {
+};
+
+TEST_P(OptimizeLight, OptimizeLight) {
+    vector<unique_ptr<AbstractGate>> gates;
+
+    const vector<string> gate_names = std::get<0>(GetParam());
+    for (auto gate : gate_names){
+        gates.push_back(std::move(Pennylane::constructGate(gate, {})));
+    }
+
+    const vector<INDICES> wires = std::get<1>(GetParam());
+    const unsigned int num_qubits = std::get<2>(GetParam());
+    auto expected_matrices = std::get<3>(GetParam());
+
+    Pennylane::optimize_light({}, gate_names, vector<INDICES>{{0}, {0}}, 1);
+    ASSERT_EQ(gates.size(),1);
+}
+
+INSTANTIATE_TEST_SUITE_P (
+        OptimizeLightNonParamTests,
+        OptimizeLight,
+        ::testing::Values(
+            std::make_tuple(vector<string>{"PauliX", "PauliX"}, vector<INDICES>{{0}, {0}}, 1, vector<vector<CplxType>>{{1,0,0,1}})
+        ));
 }
 
 class CreateIdentity : public ::testing::TestWithParam<std::tuple<unsigned int, vector<CplxType> > > {
