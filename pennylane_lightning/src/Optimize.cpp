@@ -461,6 +461,7 @@ void Pennylane::optimize_light(vector<unique_ptr<AbstractGate>> && gate_list, co
             std::cout << "after first erase: " << gate_list.size();
 
             //gate_list.insert(pos + 1, std::move(merged_gate));
+            std::cout << "Pushing merged gate: ";
             gate_list.push_back(std::move(merged_gate));
 
             // Remove second merged gate
