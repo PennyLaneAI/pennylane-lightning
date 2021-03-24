@@ -147,7 +147,10 @@ vector<vector<double> > Pennylane::adjointJacobian(
             throw std::invalid_argument(string("The") + operations[i] + string("operation is not supported using the adjoint differentiation method"));
         } else if ((operations[i] != "QubitStateVector") && (operations[i] != "BasisState")) {
             // copy |phi> to |mu> before applying Uj*
-            StateVector mu = StateVector(phi.arr, phi.length);
+            int phiSize = sizeof(phi.arr) / sizeof(phi.arr[0]);
+            CplxType* phiCopy[phiSize];
+            std::memcpy(phiCopy, phi.arr, sizeof(phiCopy));
+            StateVector mu = StateVector(*phiCopy, phiSize);
             
             // create |phi'> = Uj*|phi>
             Pennylane::constructAndApplyOperation(
