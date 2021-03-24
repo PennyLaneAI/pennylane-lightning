@@ -43,7 +43,7 @@ namespace Pennylane {
         /**
          * Generic matrix-multiplication kernel
          */
-        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        virtual void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     // Single-qubit gates:
@@ -334,7 +334,6 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
     };
 
     /**
