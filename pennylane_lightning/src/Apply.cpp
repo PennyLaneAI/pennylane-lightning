@@ -131,7 +131,8 @@ vector<double> Pennylane::adjointJacobian(
             observables[i],
             obsWires[i],
             obsParams[i],
-            obsWires[i].size()
+            obsWires[i].size(),
+            false
         );
         lambdas.push_back(state);
     }
@@ -160,7 +161,7 @@ vector<double> Pennylane::adjointJacobian(
                 unique_ptr<AbstractGate> gate = constructGate(*opIt, opParams[i]);
                 Pennylane::applyGateGenerator(
                     mu,
-                    gate,
+                    std::move(gate),
                     opWires[i],
                     opWires[i].size()
                 );
@@ -181,7 +182,7 @@ vector<double> Pennylane::adjointJacobian(
                     *opIt,
                     opWires[i],
                     opParams[i],
-                    opWires[i].size()
+                    opWires[i].size(),
                     true
                 );
             }
