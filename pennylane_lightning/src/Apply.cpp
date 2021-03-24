@@ -127,7 +127,12 @@ vector<vector<double> > Pennylane::adjointJacobian(
     size_t trainableParamNumber = trainableParams.size() - 1;
 
     for (unsigned int i = 0; i < numObservables; i++) {
-        StateVector state = phi;
+        // copy |phi> and apply observables one at a time
+        int phiSize = sizeof(phi.arr) / sizeof(phi.arr[0]);
+        CplxType* phiCopy[phiSize];
+        std::memcpy(phiCopy, phi.arr, sizeof(phiCopy));
+        Pennylane::StateVector state(*phiCopy, phiSize);
+        
         Pennylane:constructAndApplyOperation(
             state,
             observables[i],
@@ -151,7 +156,7 @@ vector<vector<double> > Pennylane::adjointJacobian(
             int phiSize = sizeof(phi.arr) / sizeof(phi.arr[0]);
             CplxType* phiCopy[phiSize];
             std::memcpy(phiCopy, phi.arr, sizeof(phiCopy));
-            StateVector mu(*phiCopy, phiSize);
+            Pennylane::StateVector mu(*phiCopy, phiSize);
             
             // create |phi'> = Uj*|phi>
             Pennylane::constructAndApplyOperation(
