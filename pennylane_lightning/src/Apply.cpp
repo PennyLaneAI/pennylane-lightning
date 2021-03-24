@@ -125,7 +125,7 @@ vector<vector<double> > Pennylane::adjointJacobian(
     size_t numObservables = observables.size();
     size_t trainableParamNumber = trainableParams.size() - 1;
 
-    for (int i = 0; i < numObservables; i++) {
+    for (unsigned int i = 0; i < numObservables; i++) {
         StateVector state = phi;
         Pennylane:constructAndApplyOperation(
             state,
@@ -169,7 +169,7 @@ vector<vector<double> > Pennylane::adjointJacobian(
                     opWires[i].size()
                 );
 
-                for (int j; j < lambdas.size(); j++) {
+                for (unsigned int j; j < lambdas.size(); j++) {
                     int lambdaStateSize = sizeof(lambdas[j].arr)/sizeof(lambdas[j].arr[0]);
                     
                     CplxType sum = 0;
@@ -183,7 +183,7 @@ vector<vector<double> > Pennylane::adjointJacobian(
             }
             paramNumber--;
 
-            for (int i; i < lambdas.size(); i++) {
+            for (unsigned int i; i < lambdas.size(); i++) {
                 StateVector state = lambdas[i];
 
                 Pennylane::constructAndApplyOperation(
