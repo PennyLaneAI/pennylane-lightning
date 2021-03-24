@@ -55,5 +55,5 @@ std::unique_ptr<T> make_unique(Args&&... args) {
 class NotImplementedException : public std::logic_error
 {
 public:
-    NotImplementedException() : std::logic_error("Function not yet implemented") { };
+    NotImplementedException() : std::logic_error("Function is not implemented.") { };
 };

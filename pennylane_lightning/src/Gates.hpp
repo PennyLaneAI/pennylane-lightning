@@ -48,7 +48,7 @@ namespace Pennylane {
         virtual void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
 
         /**
-         * Generic matrix-multiplication kernel for applying the generator of an operation
+         * Kernel for applying the generator of an operation
          */
         void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
 

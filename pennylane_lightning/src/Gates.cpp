@@ -80,10 +80,7 @@ void Pennylane::AbstractGate::applyKernel(const StateVector& state, const std::v
 }
 
 const double Pennylane::AbstractGate::generatorScalingFactor{};
-void Pennylane::AbstractGate::applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
-    (void)state;
-    (void)indices;
-    (void)externalIndices;
+void Pennylane::AbstractGate::applyGenerator(const StateVector&, const std::vector<size_t>&, const std::vector<size_t>&) {
     throw NotImplementedException();
 }
 
