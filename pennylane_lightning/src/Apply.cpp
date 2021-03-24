@@ -14,6 +14,7 @@
 #include <set>
 #include <cmath>
 #include <algorithm>
+#include <cstring>
 
 #include "Apply.hpp"
 #include "Gates.hpp"
