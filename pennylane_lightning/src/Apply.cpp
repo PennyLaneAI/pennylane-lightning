@@ -123,38 +123,52 @@ vector<double> Pennylane::adjointJacobian(
     for (vector<const string>::reverse_iterator opIt = operations.rbegin(); opIt != operations.rend(); ++opIt) {
         int i = std::distance(opIt, operations.rbegin());
 
-        if ((*opIt != "QubitStateVector") && (*opIt != "BasisState")) {
-            Pennylane:constructAndApplyOperation(
+        if (opParams[i].size() > 1) {
+            throw std::invalid_argument(string("The") + *opIt + string("operation is not supported using the adjoint differentiation method"));
+        } else if ((*opIt != "QubitStateVector") && (*opIt != "BasisState")) {
+            // copy |phi> to |mu> before applying Uj*
+            StateVector mu = StateVector(phi.arr, phi.length);
+            
+            // create |phi'> = Uj*|phi>
+            Pennylane::constructAndApplyOperation(
                 phi,
                 *opIt,
                 opWires[i],
                 opParams[i],
-                opWires[i].size()
+                opWires[i].size(),
+                true
             );
 
-            // if (paramNumber in trainableParams) {
-            //     d_op_matrix = ...
-            //     mu = applyUnitary(state, matInv, opWires, qubits)
+            if (std::find(trainableParams.begin(), trainableParams.end(), paramNumber) != trainableParams.end()) {
+                // create iH|phi> = d/d dUj/dtheta Uj* |phi> = dUj/dtheta|phi'>
+                Pennylane::constructAndApplyDerivative(
+                    mu,
+                    *opIt,
+                    opWires[i],
+                    opParams[i],
+                    opWires[i].size(),
+                    true
+                );
 
-            //     calculate jacColumn
-            //     trainableParamNumber--;
-            // }
-            // paramNumber--;
+                // TODO: calculate jacColumn
+                
+                trainableParamNumber--;
+            }
+            paramNumber--;
 
             for (vector<StateVector>::iterator lamIt = lambdas.begin(); lamIt != lambdas.end(); ++lamIt) {
                 StateVector state = *lamIt;
                 int j = std::distance(lamIt, lambdas.begin());
                 // useInverse = true;
 
-                Pennylane:constructAndApplyOperation(
-                state,
-                *opIt,
-                opWires[i],
-                opParams[i],
-                opWires[i].size()
-                // useInverse
-            );
-            lambdas[j] = state;
+                Pennylane::constructAndApplyOperation(
+                    state,
+                    *opIt,
+                    opWires[i],
+                    opParams[i],
+                    opWires[i].size()
+                    true
+                );
             }
         }
     }
