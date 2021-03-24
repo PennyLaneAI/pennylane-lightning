@@ -83,7 +83,7 @@ namespace Pennylane {
      * @param opWires index of qubits on which the gate acts
      * @param qubits number of qubits
      */
-    void Pennylane::applyGateGenerator(
+    void applyGateGenerator(
         StateVector& state,
         std::unique_ptr<AbstractGate> gate,
         const std::vector<unsigned int>& opWires,
