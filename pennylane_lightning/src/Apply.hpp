@@ -76,11 +76,11 @@ namespace Pennylane {
     );
     
     /**
-     * Applies the generator to the gate to the state vector.
+     * Applies the generator of the gate to the state vector.
      * 
      * @param state state vector to which to apply the operation
-     * @param gate unique pointer to gate which is to be applied
-     * @param opWires index of qubits on which the gate acts
+     * @param gate unique pointer to the gate whose generator is to be applied
+     * @param opWires index of qubits on which the operation acts
      * @param qubits number of qubits
      */
     void applyGateGenerator(
