@@ -13,6 +13,7 @@
 // limitations under the License.
 #include <set>
 #include <cmath>
+#include <algorithm>
 
 #include "Apply.hpp"
 #include "Gates.hpp"
@@ -142,7 +143,6 @@ vector<vector<double> > Pennylane::adjointJacobian(
         vector<double>(trainableParamNumber));
 
     for (int i = operations.size() - 1; i >= 0; i--) {
-
         if (opParams[i].size() > 1) {
             throw std::invalid_argument(string("The") + operations[i] + string("operation is not supported using the adjoint differentiation method"));
         } else if ((operations[i] != "QubitStateVector") && (operations[i] != "BasisState")) {
