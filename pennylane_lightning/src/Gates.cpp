@@ -79,6 +79,11 @@ void Pennylane::AbstractGate::applyKernel(const StateVector& state, const std::v
     }
 }
 
+const double Pennylane::AbstractGate::generatorScalingFactor{};
+void Pennylane::AbstractGate::applyGenerator(const StateVector&, const std::vector<size_t>&, const std::vector<size_t>&) {
+    throw NotImplementedException();
+}
+
 // -------------------------------------------------------------------------------------------------------------
 
 Pennylane::SingleQubitGate::SingleQubitGate()
@@ -237,6 +242,13 @@ Pennylane::RotationXGate::RotationXGate(double rotationAngle)
       js, c }
 {}
 
+const double Pennylane::RotationXGate::generatorScalingFactor{ -0.5 };
+
+void Pennylane::RotationXGate::applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
+    unique_ptr<Pennylane::XGate> gate;
+    gate->applyKernel(state, indices, externalIndices, false);
+}
+
 void Pennylane::RotationXGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
     CplxType js_ = (inverse == true) ? -js : js;
 
@@ -265,6 +277,13 @@ Pennylane::RotationYGate::RotationYGate(double rotationAngle)
       c, -s,
       s, c }
 {}
+
+const double Pennylane::RotationYGate::generatorScalingFactor{ -0.5 };
+
+void Pennylane::RotationYGate::applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
+    unique_ptr<Pennylane::YGate> gate;
+    gate->applyKernel(state, indices, externalIndices, false);
+}
 
 void Pennylane::RotationYGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
     CplxType s_ = (inverse == true) ? -s : s;
@@ -311,6 +330,14 @@ void Pennylane::RotationZGate::applyKernel(const StateVector& state, const std::
     }
 }
 
+const double Pennylane::RotationZGate::generatorScalingFactor{ -0.5 };
+
+void Pennylane::RotationZGate::applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
+    unique_ptr<Pennylane::ZGate> gate;
+    gate->applyKernel(state, indices, externalIndices, false);
+}
+
+
 // -------------------------------------------------------------------------------------------------------------
 
 const string Pennylane::PhaseShiftGate::label = "PhaseShift";
@@ -333,6 +360,15 @@ void Pennylane::PhaseShiftGate::applyKernel(const StateVector& state, const std:
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
         shiftedState[indices[1]] *= s;
+    }
+}
+
+const double Pennylane::PhaseShiftGate::generatorScalingFactor{ 1.0 };
+
+void Pennylane::PhaseShiftGate::applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
+    for (const size_t& externalIndex : externalIndices) {
+        CplxType* shiftedState = state.arr + externalIndex;
+        shiftedState[indices[0]] = 0;
     }
 }
 
@@ -485,6 +521,16 @@ void Pennylane::CRotationXGate::applyKernel(const StateVector& state, const std:
     }
 }
 
+const double Pennylane::CRotationXGate::generatorScalingFactor{ -0.5 };
+
+void Pennylane::CRotationXGate::applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
+    for (const size_t& externalIndex : externalIndices) {
+        CplxType* shiftedState = state.arr + externalIndex;
+        shiftedState[indices[0]] = shiftedState[indices[1]] = 0;
+        swap(shiftedState[indices[2]], shiftedState[indices[3]]);
+    }
+}
+
 // -------------------------------------------------------------------------------------------------------------
 
 const string Pennylane::CRotationYGate::label = "CRY";
@@ -513,6 +559,18 @@ void Pennylane::CRotationYGate::applyKernel(const StateVector& state, const std:
         CplxType v1 = shiftedState[indices[3]];
         shiftedState[indices[2]] = c * v0 - s_ * v1;
         shiftedState[indices[3]] = s_ * v0 + c * v1;
+    }
+}
+
+const double Pennylane::CRotationYGate::generatorScalingFactor{ -0.5 };
+
+void Pennylane::CRotationYGate::applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
+    for (const size_t& externalIndex : externalIndices) {
+        CplxType* shiftedState = state.arr + externalIndex;
+        CplxType v0 = shiftedState[indices[0]];
+        shiftedState[indices[0]] = shiftedState[indices[1]] = 0;
+        shiftedState[indices[2]] = -IMAG * shiftedState[indices[3]];
+        shiftedState[indices[3]] = IMAG * v0;
     }
 }
 
@@ -548,6 +606,16 @@ void Pennylane::CRotationZGate::applyKernel(const StateVector& state, const std:
         CplxType* shiftedState = state.arr + externalIndex;
         shiftedState[indices[2]] *= shift1;
         shiftedState[indices[3]] *= shift2;
+    }
+}
+
+const double Pennylane::CRotationZGate::generatorScalingFactor{ -0.5 };
+
+void Pennylane::CRotationZGate::applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
+    for (const size_t& externalIndex : externalIndices) {
+        CplxType* shiftedState = state.arr + externalIndex;
+        shiftedState[indices[0]] = shiftedState[indices[1]] = 0;
+        shiftedState[indices[3]] *= -1;
     }
 }
 
