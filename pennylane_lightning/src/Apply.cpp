@@ -141,19 +141,18 @@ vector<vector<double> > Pennylane::adjointJacobian(
         numOperations,
         vector<double>(trainableParamNumber));
 
-    for (vector<const string>::reverse_iterator opIt = operations.rbegin(); opIt != operations.rend(); ++opIt) {
-        int i = std::distance(opIt, operations.rbegin());
+    for (int i = operations.size() - 1; i >= 0; i--) {
 
         if (opParams[i].size() > 1) {
-            throw std::invalid_argument(string("The") + *opIt + string("operation is not supported using the adjoint differentiation method"));
-        } else if ((*opIt != "QubitStateVector") && (*opIt != "BasisState")) {
+            throw std::invalid_argument(string("The") + operations[i] + string("operation is not supported using the adjoint differentiation method"));
+        } else if ((operations[i] != "QubitStateVector") && (operations[i] != "BasisState")) {
             // copy |phi> to |mu> before applying Uj*
             StateVector mu = StateVector(phi.arr, phi.length);
             
             // create |phi'> = Uj*|phi>
             Pennylane::constructAndApplyOperation(
                 phi,
-                *opIt,
+                operations[i],
                 opWires[i],
                 opParams[i],
                 opWires[i].size(),
@@ -162,7 +161,7 @@ vector<vector<double> > Pennylane::adjointJacobian(
 
             if (std::find(trainableParams.begin(), trainableParams.end(), paramNumber) != trainableParams.end()) {
                 // create iH|phi> = d/d dUj/dtheta Uj* |phi> = dUj/dtheta|phi'>
-                unique_ptr<AbstractGate> gate = constructGate(*opIt, opParams[i]);
+                unique_ptr<AbstractGate> gate = constructGate(operations[i], opParams[i]);
                 Pennylane::applyGateGenerator(
                     mu,
                     std::move(gate),
@@ -170,27 +169,26 @@ vector<vector<double> > Pennylane::adjointJacobian(
                     opWires[i].size()
                 );
 
-                for (int i; i < lambdas.size(); i++) {
-                    int lambdaStateSize = sizeof(lambdas[i].arr)/sizeof(lambdas[i].arr[0]);
+                for (int j; j < lambdas.size(); j++) {
+                    int lambdaStateSize = sizeof(lambdas[j].arr)/sizeof(lambdas[j].arr[0]);
                     
                     CplxType sum = 0;
-                    for (int j; j < lambdaStateSize; j++) {
-                        sum += (std::conj(lambdas[i].arr[j]) * mu.arr[j]);
+                    for (int k; k < lambdaStateSize; k++) {
+                        sum += (std::conj(lambdas[j].arr[k]) * mu.arr[k]);
                     }
-                    jac[i][trainableParamNumber] = 2 * std::real(sum);
+                    jac[j][trainableParamNumber] = 2 * std::real(sum);
                 }
                 
                 trainableParamNumber--;
             }
             paramNumber--;
 
-            for (vector<StateVector>::iterator lamIt = lambdas.begin(); lamIt != lambdas.end(); ++lamIt) {
-                StateVector state = *lamIt;
-                int j = std::distance(lamIt, lambdas.begin());
+            for (int i; i < lambdas.size(); i++) {
+                StateVector state = lambdas[i];
 
                 Pennylane::constructAndApplyOperation(
                     state,
-                    *opIt,
+                    operations[i],
                     opWires[i],
                     opParams[i],
                     opWires[i].size(),
