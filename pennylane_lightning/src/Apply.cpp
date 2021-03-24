@@ -151,7 +151,7 @@ vector<vector<double> > Pennylane::adjointJacobian(
             int phiSize = sizeof(phi.arr) / sizeof(phi.arr[0]);
             CplxType* phiCopy[phiSize];
             std::memcpy(phiCopy, phi.arr, sizeof(phiCopy));
-            StateVector mu = StateVector(*phiCopy, phiSize);
+            StateVector mu(*phiCopy, phiSize);
             
             // create |phi'> = Uj*|phi>
             Pennylane::constructAndApplyOperation(
