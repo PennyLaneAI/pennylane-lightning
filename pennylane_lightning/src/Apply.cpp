@@ -141,13 +141,12 @@ vector<double> Pennylane::adjointJacobian(
 
             if (std::find(trainableParams.begin(), trainableParams.end(), paramNumber) != trainableParams.end()) {
                 // create iH|phi> = d/d dUj/dtheta Uj* |phi> = dUj/dtheta|phi'>
-                Pennylane::constructAndApplyDerivative(
+                unique_ptr<AbstractGate> gate = constructGate(*opIt, opParams[i]);
+                Pennylane::applyGateGenerator(
                     mu,
-                    *opIt,
+                    gate,
                     opWires[i],
-                    opParams[i],
-                    opWires[i].size(),
-                    true
+                    opWires[i].size()
                 );
 
                 // TODO: calculate jacColumn
