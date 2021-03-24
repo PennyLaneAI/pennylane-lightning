@@ -53,6 +53,7 @@ void Pennylane::applyOperation(
     StateVector& state,
     unique_ptr<AbstractGate> gate,
     const vector<unsigned int>& opWires,
+    bool inverse,
     const unsigned int qubits
 ) {
     vector<size_t> internalIndices = generateBitPatterns(opWires, qubits);
@@ -60,7 +61,21 @@ void Pennylane::applyOperation(
     vector<unsigned int> externalWires = getIndicesAfterExclusion(opWires, qubits);
     vector<size_t> externalIndices = generateBitPatterns(externalWires, qubits);
 
-    gate->applyKernel(state, internalIndices, externalIndices);
+    gate->applyKernel(state, internalIndices, externalIndices, inverse);
+}
+
+void Pennylane::applyGateGenerator(
+    StateVector& state,
+    unique_ptr<AbstractGate> gate,
+    const vector<unsigned int>& opWires,
+    const unsigned int qubits
+) {
+    vector<size_t> internalIndices = generateBitPatterns(opWires, qubits);
+
+    vector<unsigned int> externalWires = getIndicesAfterExclusion(opWires, qubits);
+    vector<size_t> externalIndices = generateBitPatterns(externalWires, qubits);
+
+    gate->applyGenerator(state, internalIndices, externalIndices);
 }
 
 void Pennylane::apply(
@@ -68,6 +83,7 @@ void Pennylane::apply(
     vector<string>& ops,
     vector<vector<unsigned int>>& wires,
     const vector<vector<double>>& params,
+    const vector<bool>& inverse,
     const unsigned int qubits
 ) { 
     if (qubits <= 0)
@@ -91,12 +107,13 @@ void Pennylane::apply(
         gates.push_back(std::move(gate));
     }
 
+    // TODO: inverses
     // Merge gates here, wires are updated
     Pennylane::optimize_light(std::move(gates), ops, wires, qubits);
 
     int i = 0;
     for (auto && gate : gates) {
-        applyOperation(state, std::move(gate), wires[i], qubits);
+        applyOperation(state, std::move(gate), wires[i], inverse[i], qubits);
         ++i;
     }
 
