@@ -50,7 +50,7 @@ namespace Pennylane {
         /**
          * Kernel for applying the generator of an operation
          */
-        void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        virtual void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
 
         /**
          * Scaling factor applied to the generator operation
