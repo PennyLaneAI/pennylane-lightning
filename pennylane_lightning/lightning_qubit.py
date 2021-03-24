@@ -164,7 +164,7 @@ class LightningQubit(DefaultQubit):
         observables, obs_params, obs_wires = zip(*obs_data)
 
         jac = adjoint_jacobian(
-            phi,
+            np.ravel(phi),
             observables,
             obs_params,
             obs_wires,

@@ -108,7 +108,7 @@ void Pennylane::apply(
 
 }
 
-vector<double> Pennylane::adjointJacobian(
+vector<vector<double> > Pennylane::adjointJacobian(
     StateVector& phi,
     const vector<string>& observables,
     const vector<vector<unsigned int> >& obsWires,
@@ -136,6 +136,10 @@ vector<double> Pennylane::adjointJacobian(
         );
         lambdas.push_back(state);
     }
+    
+    vector<vector<double> > jac(
+        numOperations,
+        vector<double>(trainableParamNumber));
 
     for (vector<const string>::reverse_iterator opIt = operations.rbegin(); opIt != operations.rend(); ++opIt) {
         int i = std::distance(opIt, operations.rbegin());
@@ -166,7 +170,15 @@ vector<double> Pennylane::adjointJacobian(
                     opWires[i].size()
                 );
 
-                // TODO: calculate jacColumn
+                for (int i; i < lambdas.size(); i++) {
+                    int lambdaStateSize = sizeof(lambdas[i].arr)/sizeof(lambdas[i].arr[0]);
+                    
+                    CplxType sum = 0;
+                    for (int j; j < lambdaStateSize; j++) {
+                        sum += (std::conj(lambdas[i].arr[j]) * mu.arr[j]);
+                    }
+                    jac[i][trainableParamNumber] = 2 * std::real(sum);
+                }
                 
                 trainableParamNumber--;
             }
@@ -175,7 +187,6 @@ vector<double> Pennylane::adjointJacobian(
             for (vector<StateVector>::iterator lamIt = lambdas.begin(); lamIt != lambdas.end(); ++lamIt) {
                 StateVector state = *lamIt;
                 int j = std::distance(lamIt, lambdas.begin());
-                // useInverse = true;
 
                 Pennylane::constructAndApplyOperation(
                     state,
@@ -188,6 +199,5 @@ vector<double> Pennylane::adjointJacobian(
             }
         }
     }
-
-    // return jac;
+    return jac;
 }

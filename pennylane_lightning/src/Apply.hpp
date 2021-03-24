@@ -119,7 +119,7 @@ namespace Pennylane {
      * @param operations
      * @param trainableParams
      */
-    std::vector<double> adjointJacobian(
+    std::vector<std::vector<double> > adjointJacobian(
         StateVector& phi,
         const std::vector<std::string>& observables,
         const std::vector<std::vector<unsigned int> >& obsWires,
