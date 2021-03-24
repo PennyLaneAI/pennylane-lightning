@@ -297,13 +297,21 @@ vector<vector<double>> test_params = {{0.5432}, {0.5432}, {0.5432}};
 vector<INDICES> test_wires = {{0}, {0}, {0}};
 vector<INDICES> expected_wires = {{0}};
 
+CplxType param = 0.5432;
+auto half_param = param/CplxType(2.0);
+CplxType c1 = CplxType(0.5)*(cos(half_param) + cos(CplxType(3.0)*half_param));
+CplxType c2 = -((CplxType(1.0) + CplxType(0, 1)) + cos(param)) + sin(half_param);
+CplxType c3 = CplxType(0.5)*((CplxType(1.0) - CplxType(0, 2))*sin(half_param) + sin(CplxType(3.0)*half_param));
+
+/*
 INSTANTIATE_TEST_SUITE_P (
         OptimizeLightParamOpsTests,
         OptimizeLightParamOps,
         ::testing::Values(
             // Unitarity
-            std::make_tuple(vector<string>{"RY", "RX", "RY"}, test_params, test_wires, 1, vector<vector<CplxType>>{{1,0,0,1}}, expected_wires)
+            std::make_tuple(vector<string>{"RY", "RX", "RY"}, test_params, test_wires, 1, vector<vector<CplxType>>{{c1,c2,c3,c1}}, expected_wires)
         ));
+*/
 
 }
 
