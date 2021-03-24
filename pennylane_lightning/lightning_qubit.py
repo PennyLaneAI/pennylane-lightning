@@ -86,7 +86,7 @@ class LightningQubit(DefaultQubit):
         capabilities.update(
             model="qubit",
             supports_reversible_diff=False,
-            supports_inverse_operations=False,
+            supports_inverse_operations=True,
             supports_analytic_computation=True,
             returns_state=True,
         )
@@ -134,12 +134,13 @@ class LightningQubit(DefaultQubit):
         Returns:
             array[complex]: the output state tensor
         """
-        op_names = [o.name for o in operations]
+        op_names = [self._remove_inverse_string(o.name) for o in operations]
         op_wires = [self.wires.indices(o.wires) for o in operations]
         op_param = [o.parameters for o in operations]
+        op_inverse = [o.inverse for o in operations]
 
         state_vector = np.ravel(state)
-        apply(state_vector, op_names, op_wires, op_param, self.num_wires)
+        apply(state_vector, op_names, op_wires, op_param, op_inverse, self.num_wires)
         return np.reshape(state_vector, state.shape)
 
     def adjoint_jacobian(self, tape):
@@ -174,3 +175,15 @@ class LightningQubit(DefaultQubit):
             param_number,
         )
         return jac
+
+    @staticmethod
+    def _remove_inverse_string(string):
+        """Removes the ``.inv`` appended to the end of inverse gates.
+
+        Args:
+            string (str): name of operation
+
+        Returns:
+            str: name of operation with ``.inv`` removed (if present)
+        """
+        return string.replace(".inv", "")

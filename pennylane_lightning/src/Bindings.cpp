@@ -39,10 +39,11 @@ void apply(
     vector<string> ops,
     vector<vector<unsigned int>> wires,
     vector<vector<double>> params,
+    vector<bool> inverse,
     const unsigned int qubits
 ) {
     StateVector state = create(&stateNumpyArray);
-    Pennylane::apply(state, ops, wires, params, qubits);
+    Pennylane::apply(state, ops, wires, params, inverse, qubits);
 }
 
 vector<double> Pennylane::adjointJacobian(

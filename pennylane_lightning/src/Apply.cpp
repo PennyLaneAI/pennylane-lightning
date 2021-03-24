@@ -54,6 +54,7 @@ void Pennylane::constructAndApplyOperation(
     const string& opLabel,
     const vector<unsigned int>& opWires,
     const vector<double>& opParams,
+    bool inverse,
     const unsigned int qubits
 ) {
     unique_ptr<AbstractGate> gate = constructGate(opLabel, opParams);
@@ -65,14 +66,29 @@ void Pennylane::constructAndApplyOperation(
     vector<unsigned int> externalWires = getIndicesAfterExclusion(opWires, qubits);
     vector<size_t> externalIndices = generateBitPatterns(externalWires, qubits);
 
-    gate->applyKernel(state, internalIndices, externalIndices);
+    gate->applyKernel(state, internalIndices, externalIndices, inverse);
+}
+
+void Pennylane::applyGateGenerator(
+    StateVector& state,
+    unique_ptr<AbstractGate> gate,
+    const vector<unsigned int>& opWires,
+    const unsigned int qubits
+) {
+    vector<size_t> internalIndices = generateBitPatterns(opWires, qubits);
+
+    vector<unsigned int> externalWires = getIndicesAfterExclusion(opWires, qubits);
+    vector<size_t> externalIndices = generateBitPatterns(externalWires, qubits);
+
+    gate->applyGenerator(state, internalIndices, externalIndices);
 }
 
 void Pennylane::apply(
     StateVector& state,
     const vector<string>& ops,
-    const vector<vector<unsigned int> >& wires,
-    const vector<vector<double> >& params,
+    const vector<vector<unsigned int>>& wires,
+    const vector<vector<double>>& params,
+    const vector<bool>& inverse,
     const unsigned int qubits
 ) {
     if (qubits <= 0)
@@ -87,7 +103,7 @@ void Pennylane::apply(
         throw std::invalid_argument("Invalid arguments: number of operations, wires, and parameters must all be equal");
 
     for (int i = 0; i < numOperations; i++) {
-        constructAndApplyOperation(state, ops[i], wires[i], params[i], qubits);
+        constructAndApplyOperation(state, ops[i], wires[i], params[i], inverse[i], qubits);
     }
 
 }

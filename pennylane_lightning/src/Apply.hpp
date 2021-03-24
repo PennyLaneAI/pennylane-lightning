@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 
+#include "Gates.hpp"
 #include "StateVector.hpp"
 #include "typedefs.hpp"
 
@@ -55,13 +56,14 @@ namespace Pennylane {
      */
     std::vector<size_t> generateBitPatterns(const std::vector<unsigned int>& qubitIndices, const unsigned int qubits);
 
-    /*
+    /**
      * Constructs the gate defined by the supplied parameters and applies it to the state vector.
      *
      * @param state state vector to which to apply the operation
      * @param opLabel unique string corresponding to a gate type
      * @param opWires index of qubits on which the gate acts
      * @param opParams defines the gate parameterisation (may be zero-length for some gates)
+     * @param inverse boolean indicating whether to apply the gate or its inverse
      * @param qubits number of qubits
      */
     void constructAndApplyOperation(
@@ -69,6 +71,22 @@ namespace Pennylane {
         const std::string& opLabel,
         const std::vector<unsigned int>& opWires,
         const std::vector<double>& opParams,
+        bool inverse,
+        const unsigned int qubits
+    );
+    
+    /**
+     * Applies the generator of the gate to the state vector.
+     * 
+     * @param state state vector to which to apply the operation
+     * @param gate unique pointer to the gate whose generator is to be applied
+     * @param opWires index of qubits on which the operation acts
+     * @param qubits number of qubits
+     */
+    void applyGateGenerator(
+        StateVector& state,
+        std::unique_ptr<AbstractGate> gate,
+        const std::vector<unsigned int>& opWires,
         const unsigned int qubits
     );
 
@@ -79,12 +97,15 @@ namespace Pennylane {
      * @param ops list of unique string names corresponding to gate types, in the order they should be applied
      * @param wires list of wires on which each gate acts
      * @param params list of parameters that defines the gate parameterisation
+     * @param inverse list of booleans indicating whether a given gate or its inverse should be applied
+     * @param qubits number of qubits
      */
     void apply(
         StateVector& state,
         const std::vector<std::string>& ops,
-        const std::vector<std::vector<unsigned int> >& wires,
-        const std::vector<std::vector<double> >& params,
+        const std::vector<std::vector<unsigned int>>& wires,
+        const std::vector<std::vector<double>>& params,
+        const std::vector<bool>& inverse,
         const unsigned int qubits
     );
 
