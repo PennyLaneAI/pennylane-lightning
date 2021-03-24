@@ -68,6 +68,20 @@ void Pennylane::constructAndApplyOperation(
     gate->applyKernel(state, internalIndices, externalIndices, inverse);
 }
 
+void Pennylane::applyGateGenerator(
+    StateVector& state,
+    unique_ptr<AbstractGate> gate,
+    const vector<unsigned int>& opWires,
+    const unsigned int qubits
+) {
+    vector<size_t> internalIndices = generateBitPatterns(opWires, qubits);
+
+    vector<unsigned int> externalWires = getIndicesAfterExclusion(opWires, qubits);
+    vector<size_t> externalIndices = generateBitPatterns(externalWires, qubits);
+
+    gate->applyGenerator(state, internalIndices, externalIndices);
+}
+
 void Pennylane::apply(
     StateVector& state,
     const vector<string>& ops,
