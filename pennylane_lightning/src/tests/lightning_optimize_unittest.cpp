@@ -287,7 +287,14 @@ TEST_P(OptimizeLightParamOps, OptimizeLightParametrizedOps) {
 
     Pennylane::optimize_light(std::move(gates), gate_names, wires, num_qubits);
     ASSERT_EQ(gates.size(), num_expected_gates);
-    ASSERT_EQ(gates[0]->asMatrix(), expected_matrices[0]);
+
+    auto res_matrix = gates[0]->asMatrix();
+    ASSERT_EQ(res_matrix.size(), expected_matrices[0].size());
+
+    for(int i =0; i<res_matrix.size(); ++i){
+        ASSERT_NEAR(res_matrix[i].real(), expected_matrices[0][i].real(), 1e-10);
+        ASSERT_NEAR(res_matrix[i].imag(), expected_matrices[0][i].imag(), 1e-10);
+    }
 
     ASSERT_EQ(wires.size(), 1);
     ASSERT_EQ(wires[0], expected_wires[0]);
@@ -300,10 +307,9 @@ vector<INDICES> expected_wires = {{0}};
 CplxType param = 0.5432;
 auto half_param = param/CplxType(2.0);
 CplxType c1 = CplxType(0.5)*(cos(half_param) + cos(CplxType(3.0)*half_param));
-CplxType c2 = -((CplxType(1.0) + CplxType(0, 1)) + cos(param)) + sin(half_param);
+CplxType c2 = -((CplxType(1.0) + CplxType(0, 1)) + cos(param)) * sin(half_param);
 CplxType c3 = CplxType(0.5)*((CplxType(1.0) - CplxType(0, 2))*sin(half_param) + sin(CplxType(3.0)*half_param));
 
-/*
 INSTANTIATE_TEST_SUITE_P (
         OptimizeLightParamOpsTests,
         OptimizeLightParamOps,
@@ -311,7 +317,6 @@ INSTANTIATE_TEST_SUITE_P (
             // Unitarity
             std::make_tuple(vector<string>{"RY", "RX", "RY"}, test_params, test_wires, 1, vector<vector<CplxType>>{{c1,c2,c3,c1}}, expected_wires)
         ));
-*/
 
 }
 
