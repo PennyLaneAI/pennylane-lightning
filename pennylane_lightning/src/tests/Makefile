@@ -13,7 +13,6 @@
 # limitations under the License.
 CC = g++
 CFLAGS = -std=c++11 -g -Wall -fopenmp -fPIC -I/usr/include \
-    `python3 -m pybind11 --include` \
 	-I../include -I$(GOOGLETEST_DIR)/include -I$(GOOGLETEST_DIR)/googlemock/include \
 	-march=native
 
