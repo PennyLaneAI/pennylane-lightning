@@ -209,5 +209,4 @@ void Pennylane::adjointJacobian(
     for (int i; i < lambdas.size(); i++) {
         delete[] lambdas[i].arr;
     }
-    
 }
