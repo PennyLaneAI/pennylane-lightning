@@ -109,12 +109,13 @@ void Pennylane::apply(
 
     // TODO: inverses
     // Merge gates here, wires are updated
-    //Pennylane::optimize_light(std::move(gates), ops, wires, qubits);
+    Pennylane::optimize_light(std::move(gates), ops, wires, qubits);
 
     int i = 0;
     for (auto && gate : gates) {
         applyOperation(state, std::move(gate), wires[i], inverse[i], qubits);
         ++i;
     }
-
 }
+
+
