@@ -59,7 +59,7 @@ void adjointJacobian(
     int paramNumber
 ) {
     StateVector state = create(&phiNumpyArray);
-    pybind11::buffer_info jacInfo = jac->request();
+    pybind11::buffer_info jacInfo = jac.request();
     
     Pennylane::adjointJacobian(
         state,
