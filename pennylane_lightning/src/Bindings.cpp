@@ -72,7 +72,7 @@ void adjointJacobian(
         opParams,
         trainableParams,
         paramNumber
-    )
+    );
 }
 
 PYBIND11_MODULE(lightning_qubit_ops, m)
