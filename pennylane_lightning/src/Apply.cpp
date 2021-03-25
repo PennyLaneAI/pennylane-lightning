@@ -131,7 +131,7 @@ void Pennylane::adjointJacobian(
 
     for (unsigned int i = 0; i < numObservables; i++) {
         // copy |phi> and apply observables one at a time
-        CplxType phiCopyArr[phi.length];
+        CplxType* phiCopyArr = new CplxType[phi.length];
         std::memcpy(phiCopyArr, phi.arr, sizeof(phi.arr));
         Pennylane::StateVector phiCopy(phiCopyArr, phi.length);
 
@@ -151,7 +151,7 @@ void Pennylane::adjointJacobian(
             throw std::invalid_argument(string("The") + operations[i] + string("operation is not supported using the adjoint differentiation method"));
         } else if ((operations[i] != "QubitStateVector") && (operations[i] != "BasisState")) {
             // copy |phi> to |mu> before applying Uj*
-            CplxType phiCopyArr[phi.length];
+            CplxType* phiCopyArr = new CplxType[phi.length];
             std::memcpy(phiCopyArr, phi.arr, sizeof(phi));
             Pennylane::StateVector mu(phiCopyArr, phi.length);
 
@@ -186,7 +186,7 @@ void Pennylane::adjointJacobian(
                     // calculate 2 * shift * Real(i * sum) = -2 * shift * Imag(sum)
                     jac[j * trainableParams.size() + trainableParamNumber] = -2 * scalingFactor * std::imag(sum);
                 }
-
+                delete[] phiCopyArr;
                 trainableParamNumber--;
             }
             paramNumber--;
@@ -205,4 +205,9 @@ void Pennylane::adjointJacobian(
             }
         }
     }
+    // delete copied state arrays
+    for (int i; i < lambdas.size(); i++) {
+        delete[] lambdas[i].arr;
+    }
+    
 }
