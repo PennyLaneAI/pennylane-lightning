@@ -126,17 +126,16 @@ void Pennylane::adjointJacobian(
     int paramNumber
 ) {
     vector<Pennylane::StateVector> lambdas;
-    size_t numOperations = operations.size();
     size_t numObservables = observables.size();
     size_t trainableParamNumber = trainableParams.size() - 1;
 
     for (unsigned int i = 0; i < numObservables; i++) {
         // copy |phi> and apply observables one at a time
-        CplxType* phiCopyArr;
+        CplxType phiCopyArr[phi.length];
         std::memcpy(phiCopyArr, phi.arr, sizeof(phi.arr));
         Pennylane::StateVector phiCopy(phiCopyArr, phi.length);
 
-        Pennylane:constructAndApplyOperation(
+        Pennylane::constructAndApplyOperation(
             phiCopy,
             observables[i],
             obsWires[i],
@@ -152,9 +151,9 @@ void Pennylane::adjointJacobian(
             throw std::invalid_argument(string("The") + operations[i] + string("operation is not supported using the adjoint differentiation method"));
         } else if ((operations[i] != "QubitStateVector") && (operations[i] != "BasisState")) {
             // copy |phi> to |mu> before applying Uj*
-            CplxType* phiCopy;
-            std::memcpy(phiCopy, phi.arr, sizeof(phi));
-            Pennylane::StateVector mu(phiCopy, phi.length);
+            CplxType phiCopyArr[phi.length];
+            std::memcpy(phiCopyArr, phi.arr, sizeof(phi));
+            Pennylane::StateVector mu(phiCopyArr, phi.length);
 
             // create |phi'> = Uj*|phi>
             Pennylane::constructAndApplyOperation(
