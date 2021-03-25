@@ -121,7 +121,7 @@ namespace Pennylane {
      */
     void adjointJacobian(
         StateVector& phi,
-        std::vector<std::vector<double> >& jac,
+        double* jac,
         const std::vector<std::string>& observables,
         const std::vector<std::vector<unsigned int> >& obsWires,
         const std::vector<std::vector<double> >& obsParams,

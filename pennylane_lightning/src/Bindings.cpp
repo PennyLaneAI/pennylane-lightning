@@ -63,7 +63,7 @@ void adjointJacobian(
     
     Pennylane::adjointJacobian(
         state,
-        (CplxType*)jacInfo.ptr,
+        (double*)jacInfo.ptr,
         observables,
         obsWires,
         obsParams,

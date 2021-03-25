@@ -162,7 +162,8 @@ class LightningQubit(DefaultQubit):
         obs_data = [(obs.name, obs.params, obs.wires) for obs in tape.observables]
         observables, obs_params, obs_wires = zip(*obs_data)
 
-        jac = np.zeros((len(tape.observables), len(tape.trainable_params)))
+        # send in flattened array of zeros to be populated by adjoint_jacobian
+        jac = np.zeros(len(tape.observables) * len(tape.trainable_params))
         adjoint_jacobian(
             self.state,
             jac,
@@ -175,7 +176,7 @@ class LightningQubit(DefaultQubit):
             tape.trainable_params,
             param_number,
         )
-        return jac
+        return jac.reshape((len(tape.observables), len(tape.trainable_params)))
 
     @staticmethod
     def _remove_inverse_string(string):

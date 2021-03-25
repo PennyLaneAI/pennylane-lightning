@@ -115,7 +115,7 @@ void Pennylane::apply(
 
 void Pennylane::adjointJacobian(
     StateVector& phi,
-    vector<vector<double> >& jac,
+    double* jac,
     const vector<string>& observables,
     const vector<vector<unsigned int> >& obsWires,
     const vector<vector<double> >& obsParams,
@@ -184,7 +184,7 @@ void Pennylane::adjointJacobian(
                         sum += (std::conj(lambdas[j].arr[k]) * mu.arr[k]);
                     }
                     // calculate 2 * shift * Real(i * sum) = -2 * shift * Imag(sum)
-                    jac[j][trainableParamNumber] = -2 * scalingFactor * std::imag(sum);
+                    jac[j * trainableParams.size() + trainableParamNumber] = -2 * scalingFactor * std::imag(sum);
                 }
 
                 trainableParamNumber--;
