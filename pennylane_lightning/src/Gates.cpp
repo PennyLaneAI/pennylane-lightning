@@ -48,9 +48,10 @@ Pennylane::AbstractGate::AbstractGate(int numQubits)
 
 void Pennylane::AbstractGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
     const vector<CplxType>& matrix = asMatrix();
-    assert(indices.size() == length);
+    auto len_indices = indices.size();
+    assert(len_indices == length);
 
-    vector<CplxType> v(indices.size());
+    vector<CplxType> v(len_indices);
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
         // Gather
@@ -61,18 +62,18 @@ void Pennylane::AbstractGate::applyKernel(const StateVector& state, const std::v
         }
 
         // Apply + scatter
-        for (size_t i = 0; i < indices.size(); i++) {
+        for (size_t i = 0; i < len_indices; i++) {
             size_t index = indices[i];
             shiftedState[index] = 0;
 
             if (inverse == true) {
-                for (size_t j = 0; j < indices.size(); j++) {
-                    size_t baseIndex = j * indices.size();
+                for (size_t j = 0; j < len_indices; j++) {
+                    size_t baseIndex = j * len_indices;
                     shiftedState[index] += conj(matrix[baseIndex + i]) * v[j];
                 }
             } else {
-                size_t baseIndex = i * indices.size();
-                for (size_t j = 0; j < indices.size(); j++) {
+                size_t baseIndex = i * len_indices;
+                for (size_t j = 0; j < len_indices; j++) {
                     shiftedState[index] += matrix[baseIndex + j] * v[j];
                 }
             }
