@@ -59,9 +59,11 @@ void adjointJacobian(
     int paramNumber
 ) {
     StateVector state = create(&phiNumpyArray);
+    pybind11::buffer_info jacInfo = jac->request();
+    
     Pennylane::adjointJacobian(
         state,
-        jac,
+        (CplxType*)jacInfo.ptr,
         observables,
         obsWires,
         obsParams,
