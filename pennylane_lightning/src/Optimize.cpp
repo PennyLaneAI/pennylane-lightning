@@ -117,14 +117,14 @@ tuple<INDICES, INDICES> Pennylane::get_new_qubit_list(const string &opLabel1, co
 
     for (auto wire : second_target_wires) {
         //case 6: qubit belongs to second target but not in first
-        if(not wire_is_in(wire, first_target_wires) and not wire_is_in(wire, first_control_wires)){
+        if(!wire_is_in(wire, first_target_wires) && !wire_is_in(wire, first_control_wires)){
             new_target_wires.push_back(wire);
         }
 
     }
     for (auto wire : second_control_wires) {
         //case 7: qubit belongs to second control but not in first
-        if(not wire_is_in(wire, first_target_wires) and not wire_is_in(wire, first_control_wires)){
+        if(!wire_is_in(wire, first_target_wires) && !wire_is_in(wire, first_control_wires)){
             new_target_wires.push_back(wire);
         }
 
@@ -189,7 +189,7 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
     // TODO: test if >1 join_from_other_gate: do we need reversal?
     std::vector<UINT> join_from_other_gate;
     for (auto wire : new_target_wires) {
-        if (not wire_is_in(wire, first_target_wires) and not wire_is_in(wire, first_control_wires)){
+        if (!wire_is_in(wire, first_target_wires) && !wire_is_in(wire, first_control_wires)){
             join_from_other_gate.push_back(wire);
         }
     }
