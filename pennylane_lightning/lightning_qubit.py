@@ -161,7 +161,7 @@ class LightningQubit(DefaultQubit):
 
         obs_data = [(obs.name, obs.params, obs.wires) for obs in tape.observables]
         observables, obs_params, obs_wires = zip(*obs_data)
-        
+
         jac = np.zeros((len(tape.observables), len(tape.trainable_params)))
         adjoint_jacobian(
             self.state,

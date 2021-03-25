@@ -135,7 +135,7 @@ void Pennylane::adjointJacobian(
         CplxType* phiCopyArr;
         std::memcpy(phiCopyArr, phi.arr, sizeof(phi.arr));
         Pennylane::StateVector phiCopy(phiCopyArr, phi.length);
-        
+
         Pennylane:constructAndApplyOperation(
             phiCopy,
             observables[i],
@@ -155,7 +155,7 @@ void Pennylane::adjointJacobian(
             CplxType* phiCopy;
             std::memcpy(phiCopy, phi.arr, sizeof(phi));
             Pennylane::StateVector mu(phiCopy, phi.length);
-            
+
             // create |phi'> = Uj*|phi>
             Pennylane::constructAndApplyOperation(
                 phi,
@@ -179,7 +179,7 @@ void Pennylane::adjointJacobian(
 
                 for (unsigned int j; j < lambdas.size(); j++) {
                     int lambdaStateSize = sizeof(lambdas[j].arr)/sizeof(lambdas[j].arr[0]);
-                    
+
                     CplxType sum = 0;
                     for (int k; k < lambdaStateSize; k++) {
                         sum += (std::conj(lambdas[j].arr[k]) * mu.arr[k]);
@@ -187,7 +187,7 @@ void Pennylane::adjointJacobian(
                     // calculate 2 * shift * Real(i * sum) = -2 * shift * Imag(sum)
                     jac[j][trainableParamNumber] = -2 * scalingFactor * std::imag(sum);
                 }
-                
+
                 trainableParamNumber--;
             }
             paramNumber--;
