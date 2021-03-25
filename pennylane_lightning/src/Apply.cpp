@@ -15,6 +15,7 @@
 #include <cmath>
 #include <algorithm>
 #include <cstring>
+#include <complex>
 
 #include "Apply.hpp"
 #include "Gates.hpp"
@@ -25,6 +26,8 @@ using std::set;
 using std::string;
 using std::unique_ptr;
 using std::vector;
+
+const std::complex<double> im(0.0,1.0);
 
 vector<unsigned int> Pennylane::getIndicesAfterExclusion(const vector<unsigned int>& indicesToExclude, const unsigned int qubits) {
     set<unsigned int> indices;
@@ -110,8 +113,9 @@ void Pennylane::apply(
 
 }
 
-vector<vector<double> > Pennylane::adjointJacobian(
+void Pennylane::adjointJacobian(
     StateVector& phi,
+    vector<vector<double> >& jac,
     const vector<string>& observables,
     const vector<vector<unsigned int> >& obsWires,
     const vector<vector<double> >& obsParams,
@@ -121,42 +125,36 @@ vector<vector<double> > Pennylane::adjointJacobian(
     const vector<int>& trainableParams,
     int paramNumber
 ) {
-    vector<StateVector> lambdas;
+    vector<Pennylane::StateVector> lambdas;
     size_t numOperations = operations.size();
     size_t numObservables = observables.size();
     size_t trainableParamNumber = trainableParams.size() - 1;
 
     for (unsigned int i = 0; i < numObservables; i++) {
         // copy |phi> and apply observables one at a time
-        int phiSize = sizeof(phi.arr) / sizeof(phi.arr[0]);
-        CplxType* phiCopy[phiSize];
-        std::memcpy(phiCopy, phi.arr, sizeof(phiCopy));
-        Pennylane::StateVector state(*phiCopy, phiSize);
+        CplxType* phiCopyArr;
+        std::memcpy(phiCopyArr, phi.arr, sizeof(phi.arr));
+        Pennylane::StateVector phiCopy(phiCopyArr, phi.length);
         
         Pennylane:constructAndApplyOperation(
-            state,
+            phiCopy,
             observables[i],
             obsWires[i],
             obsParams[i],
             obsWires[i].size(),
             false
         );
-        lambdas.push_back(state);
+        lambdas.push_back(phiCopy);
     }
-    
-    vector<vector<double> > jac(
-        numOperations,
-        vector<double>(trainableParamNumber));
 
     for (int i = operations.size() - 1; i >= 0; i--) {
         if (opParams[i].size() > 1) {
             throw std::invalid_argument(string("The") + operations[i] + string("operation is not supported using the adjoint differentiation method"));
         } else if ((operations[i] != "QubitStateVector") && (operations[i] != "BasisState")) {
             // copy |phi> to |mu> before applying Uj*
-            int phiSize = sizeof(phi.arr) / sizeof(phi.arr[0]);
-            CplxType* phiCopy[phiSize];
-            std::memcpy(phiCopy, phi.arr, sizeof(phiCopy));
-            Pennylane::StateVector mu(*phiCopy, phiSize);
+            CplxType* phiCopy;
+            std::memcpy(phiCopy, phi.arr, sizeof(phi));
+            Pennylane::StateVector mu(phiCopy, phi.length);
             
             // create |phi'> = Uj*|phi>
             Pennylane::constructAndApplyOperation(
@@ -171,6 +169,7 @@ vector<vector<double> > Pennylane::adjointJacobian(
             if (std::find(trainableParams.begin(), trainableParams.end(), paramNumber) != trainableParams.end()) {
                 // create iH|phi> = d/d dUj/dtheta Uj* |phi> = dUj/dtheta|phi'>
                 unique_ptr<AbstractGate> gate = constructGate(operations[i], opParams[i]);
+                double scalingFactor = gate->generatorScalingFactor;
                 Pennylane::applyGateGenerator(
                     mu,
                     std::move(gate),
@@ -185,7 +184,8 @@ vector<vector<double> > Pennylane::adjointJacobian(
                     for (int k; k < lambdaStateSize; k++) {
                         sum += (std::conj(lambdas[j].arr[k]) * mu.arr[k]);
                     }
-                    jac[j][trainableParamNumber] = 2 * std::real(sum);
+                    // calculate 2 * shift * Real(i * sum) = -2 * shift * Imag(sum)
+                    jac[j][trainableParamNumber] = -2 * scalingFactor * std::imag(sum);
                 }
                 
                 trainableParamNumber--;
@@ -206,5 +206,4 @@ vector<vector<double> > Pennylane::adjointJacobian(
             }
         }
     }
-    return jac;
 }

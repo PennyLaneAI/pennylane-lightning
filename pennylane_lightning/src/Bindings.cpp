@@ -46,8 +46,9 @@ void apply(
     Pennylane::apply(state, ops, wires, params, inverse, qubits);
 }
 
-vector<double> Pennylane::adjointJacobian(
+void adjointJacobian(
     pybind11::array_t<CplxType>& phiNumpyArray,
+    pybind11::array_t<double>& jac,
     const vector<string>& observables,
     const vector<vector<unsigned int> >& obsWires,
     const vector<vector<double> >& obsParams,
@@ -60,6 +61,7 @@ vector<double> Pennylane::adjointJacobian(
     StateVector state = create(&phiNumpyArray);
     Pennylane::adjointJacobian(
         state,
+        jac,
         observables,
         obsWires,
         obsParams,

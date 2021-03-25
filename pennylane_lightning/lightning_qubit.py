@@ -154,7 +154,6 @@ class LightningQubit(DefaultQubit):
             if not hasattr(m.obs, "base_name"):
                 m.obs.base_name = None  # This is needed for when the observable is a tensor product
 
-        phi = self._reshape(self.state, [2] * self.num_wires)
         param_number = len(tape._par_info) - 1
 
         op_data = [(op.name, op.params, op.wires) for op in tape.operations]
@@ -162,9 +161,11 @@ class LightningQubit(DefaultQubit):
 
         obs_data = [(obs.name, obs.params, obs.wires) for obs in tape.observables]
         observables, obs_params, obs_wires = zip(*obs_data)
-
-        jac = adjoint_jacobian(
-            np.ravel(phi),
+        
+        jac = np.zeros((len(tape.observables), len(tape.trainable_params)))
+        adjoint_jacobian(
+            self.state,
+            jac,
             observables,
             obs_params,
             obs_wires,
