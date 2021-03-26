@@ -96,9 +96,15 @@ Pennylane::SingleQubitGate::SingleQubitGate()
 
 const string Pennylane::XGate::label = "PauliX";
 
-Pennylane::XGate Pennylane::XGate::create(const vector<double>& parameters) {
+Pennylane::XGate::XGate(const vector<unsigned int>& wires)
+    : controlWires({})
+    , targetWires(wires)
+
+{}
+
+Pennylane::XGate Pennylane::XGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::XGate::label, parameters, 0);
-    return Pennylane::XGate();
+    return Pennylane::XGate(wires);
 }
 
 const vector<CplxType> Pennylane::XGate::matrix{
@@ -117,7 +123,7 @@ void Pennylane::XGate::applyKernel(const StateVector& state, const std::vector<s
 
 const string Pennylane::YGate::label = "PauliY";
 
-Pennylane::YGate Pennylane::YGate::create(const vector<double>& parameters) {
+Pennylane::YGate Pennylane::YGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::YGate::label, parameters, 0);
     return Pennylane::YGate();
 }
@@ -140,7 +146,7 @@ void Pennylane::YGate::applyKernel(const StateVector& state, const std::vector<s
 
 const string Pennylane::ZGate::label = "PauliZ";
 
-Pennylane::ZGate Pennylane::ZGate::create(const vector<double>& parameters) {
+Pennylane::ZGate Pennylane::ZGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::ZGate::label, parameters, 0);
     return Pennylane::ZGate();
 }
@@ -161,7 +167,7 @@ void Pennylane::ZGate::applyKernel(const StateVector& state, const std::vector<s
 
 const string Pennylane::HadamardGate::label = "Hadamard";
 
-Pennylane::HadamardGate Pennylane::HadamardGate::create(const vector<double>& parameters) {
+Pennylane::HadamardGate Pennylane::HadamardGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::HadamardGate::label, parameters, 0);
     return Pennylane::HadamardGate();
 }
@@ -185,7 +191,7 @@ void Pennylane::HadamardGate::applyKernel(const StateVector& state, const std::v
 
 const string Pennylane::SGate::label = "S";
 
-Pennylane::SGate Pennylane::SGate::create(const vector<double>& parameters) {
+Pennylane::SGate Pennylane::SGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::SGate::label, parameters, 0);
     return Pennylane::SGate();
 }
@@ -207,7 +213,7 @@ void Pennylane::SGate::applyKernel(const StateVector& state, const std::vector<s
 
 const string Pennylane::TGate::label = "T";
 
-Pennylane::TGate Pennylane::TGate::create(const vector<double>& parameters) {
+Pennylane::TGate Pennylane::TGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::TGate::label, parameters, 0);
     return Pennylane::TGate();
 }
@@ -231,7 +237,7 @@ void Pennylane::TGate::applyKernel(const StateVector& state, const std::vector<s
 
 const string Pennylane::RotationXGate::label = "RX";
 
-Pennylane::RotationXGate Pennylane::RotationXGate::create(const vector<double>& parameters) {
+Pennylane::RotationXGate Pennylane::RotationXGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::RotationXGate::label, parameters, 1);
     return Pennylane::RotationXGate(parameters[0]);
 }
@@ -267,7 +273,7 @@ void Pennylane::RotationXGate::applyKernel(const StateVector& state, const std::
 
 const string Pennylane::RotationYGate::label = "RY";
 
-Pennylane::RotationYGate Pennylane::RotationYGate::create(const vector<double>& parameters) {
+Pennylane::RotationYGate Pennylane::RotationYGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::RotationYGate::label, parameters, 1);
     return Pennylane::RotationYGate(parameters[0]);
 }
@@ -303,7 +309,7 @@ void Pennylane::RotationYGate::applyKernel(const StateVector& state, const std::
 
 const string Pennylane::RotationZGate::label = "RZ";
 
-Pennylane::RotationZGate Pennylane::RotationZGate::create(const vector<double>& parameters) {
+Pennylane::RotationZGate Pennylane::RotationZGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::RotationZGate::label, parameters, 1);
     return Pennylane::RotationZGate(parameters[0]);
 }
@@ -344,7 +350,7 @@ void Pennylane::RotationZGate::applyGenerator(const StateVector& state, const st
 
 const string Pennylane::PhaseShiftGate::label = "PhaseShift";
 
-Pennylane::PhaseShiftGate Pennylane::PhaseShiftGate::create(const vector<double>& parameters) {
+Pennylane::PhaseShiftGate Pennylane::PhaseShiftGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::PhaseShiftGate::label, parameters, 1);
     return Pennylane::PhaseShiftGate(parameters[0]);
 }
@@ -378,7 +384,7 @@ void Pennylane::PhaseShiftGate::applyGenerator(const StateVector& state, const s
 
 const string Pennylane::GeneralRotationGate::label = "Rot";
 
-Pennylane::GeneralRotationGate Pennylane::GeneralRotationGate::create(const vector<double>& parameters) {
+Pennylane::GeneralRotationGate Pennylane::GeneralRotationGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::GeneralRotationGate::label, parameters, 3);
     return Pennylane::GeneralRotationGate(parameters[0], parameters[1], parameters[2]);
 }
@@ -427,7 +433,7 @@ Pennylane::TwoQubitGate::TwoQubitGate()
 
 const string Pennylane::CNOTGate::label = "CNOT";
 
-Pennylane::CNOTGate Pennylane::CNOTGate::create(const vector<double>& parameters) {
+Pennylane::CNOTGate Pennylane::CNOTGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::CNOTGate::label, parameters, 0);
     return Pennylane::CNOTGate();
 }
@@ -450,7 +456,7 @@ void Pennylane::CNOTGate::applyKernel(const StateVector& state, const std::vecto
 
 const string Pennylane::SWAPGate::label = "SWAP";
 
-Pennylane::SWAPGate Pennylane::SWAPGate::create(const vector<double>& parameters) {
+Pennylane::SWAPGate Pennylane::SWAPGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::SWAPGate::label, parameters, 0);
     return Pennylane::SWAPGate();
 }
@@ -473,7 +479,7 @@ void Pennylane::SWAPGate::applyKernel(const StateVector& state, const std::vecto
 
 const string Pennylane::CZGate::label = "CZ";
 
-Pennylane::CZGate Pennylane::CZGate::create(const vector<double>& parameters) {
+Pennylane::CZGate Pennylane::CZGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::CZGate::label, parameters, 0);
     return Pennylane::CZGate();
 }
@@ -496,7 +502,7 @@ void Pennylane::CZGate::applyKernel(const StateVector& state, const std::vector<
 
 const string Pennylane::CRotationXGate::label = "CRX";
 
-Pennylane::CRotationXGate Pennylane::CRotationXGate::create(const vector<double>& parameters) {
+Pennylane::CRotationXGate Pennylane::CRotationXGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::CRotationXGate::label, parameters, 1);
     return Pennylane::CRotationXGate(parameters[0]);
 }
@@ -537,7 +543,7 @@ void Pennylane::CRotationXGate::applyGenerator(const StateVector& state, const s
 
 const string Pennylane::CRotationYGate::label = "CRY";
 
-Pennylane::CRotationYGate Pennylane::CRotationYGate::create(const vector<double>& parameters) {
+Pennylane::CRotationYGate Pennylane::CRotationYGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::CRotationYGate::label, parameters, 1);
     return Pennylane::CRotationYGate(parameters[0]);
 }
@@ -580,7 +586,7 @@ void Pennylane::CRotationYGate::applyGenerator(const StateVector& state, const s
 
 const string Pennylane::CRotationZGate::label = "CRZ";
 
-Pennylane::CRotationZGate Pennylane::CRotationZGate::create(const vector<double>& parameters) {
+Pennylane::CRotationZGate Pennylane::CRotationZGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::CRotationZGate::label, parameters, 1);
     return Pennylane::CRotationZGate(parameters[0]);
 }
@@ -625,7 +631,7 @@ void Pennylane::CRotationZGate::applyGenerator(const StateVector& state, const s
 
 const string Pennylane::CGeneralRotationGate::label = "CRot";
 
-Pennylane::CGeneralRotationGate Pennylane::CGeneralRotationGate::create(const vector<double>& parameters) {
+Pennylane::CGeneralRotationGate Pennylane::CGeneralRotationGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::CGeneralRotationGate::label, parameters, 3);
     return Pennylane::CGeneralRotationGate(parameters[0], parameters[1], parameters[2]);
 }
@@ -676,7 +682,7 @@ Pennylane::ThreeQubitGate::ThreeQubitGate()
 
 const string Pennylane::ToffoliGate::label = "Toffoli";
 
-Pennylane::ToffoliGate Pennylane::ToffoliGate::create(const vector<double>& parameters) {
+Pennylane::ToffoliGate Pennylane::ToffoliGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::ToffoliGate::label, parameters, 0);
     return Pennylane::ToffoliGate();
 }
@@ -703,7 +709,7 @@ void Pennylane::ToffoliGate::applyKernel(const StateVector& state, const std::ve
 
 const string Pennylane::CSWAPGate::label = "CSWAP";
 
-Pennylane::CSWAPGate Pennylane::CSWAPGate::create(const vector<double>& parameters) {
+Pennylane::CSWAPGate Pennylane::CSWAPGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::CSWAPGate::label, parameters, 0);
     return Pennylane::CSWAPGate();
 }
@@ -738,8 +744,8 @@ Pennylane::QubitUnitary::QubitUnitary(const int numQubits, std::vector<CplxType>
 // -------------------------------------------------------------------------------------------------------------
 
 template<class GateType>
-static void addToDispatchTable(map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&)>>& dispatchTable) {
-    dispatchTable.emplace(GateType::label, [](const vector<double>& parameters) { return make_unique<GateType>(GateType::create(parameters)); });
+static void addToDispatchTable(map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&, const vector<unsigned int>&)>>& dispatchTable) {
+    dispatchTable.emplace(GateType::label, [](const vector<double>& parameters, const vector<unsigned int>& wires) { return make_unique<GateType>(GateType::create(parameters, wires)); });
 }
 
 static map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&)>> createDispatchTable() {
@@ -769,12 +775,12 @@ static map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<dou
 
 static const map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&)>> dispatchTable = createDispatchTable();
 
-unique_ptr<Pennylane::AbstractGate> Pennylane::constructGate(const string& label, const vector<double>& parameters) {
+unique_ptr<Pennylane::AbstractGate> Pennylane::constructGate(const string& label, const vector<double>& parameters, const vector<unsigned int>& wires) {
     auto dispatchTableIterator = dispatchTable.find(label);
     if (dispatchTableIterator == dispatchTable.end())
         throw std::invalid_argument(label + " is not a supported gate type");
 
-    return dispatchTableIterator->second(parameters);
+    return dispatchTableIterator->second(parameters, wires);
 }
 
 unique_ptr<Pennylane::AbstractGate> Pennylane::constructGate(const vector<CplxType>& matrix) {
