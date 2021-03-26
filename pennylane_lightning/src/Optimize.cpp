@@ -82,11 +82,14 @@ inline static ITYPE insert_zero_to_basis_index(ITYPE basis_index, ITYPE basis_ma
 }
 
 
-tuple<INDICES, INDICES> Pennylane::get_new_qubit_list(const string &opLabel1, const INDICES& first_wires, const string &opLabel2, const INDICES& second_wires){
+tuple<INDICES, INDICES> Pennylane::get_new_qubit_list(const INDICES
+&first_control_wires, const INDICES &first_target_wires, const INDICES
+&second_control_wires, const INDICES &second_target_wires  ){
 
     INDICES new_target_wires;
     INDICES new_control_wires;
 
+    /*
     //1. operation
     auto res1 = separate_control_and_target(opLabel1, first_wires);
     const INDICES first_control_wires = std::get<0>(res1);
@@ -96,6 +99,7 @@ tuple<INDICES, INDICES> Pennylane::get_new_qubit_list(const string &opLabel1, co
     auto res2 = separate_control_and_target(opLabel2, second_wires);
     const INDICES second_control_wires = std::get<0>(res2);
     const INDICES second_target_wires = std::get<1>(res2);
+    */
 
     for (auto wire : first_target_wires) {
         //case 0-2:
@@ -327,8 +331,8 @@ void matmul(CplxType* mx1, CplxType* mx2, CplxType* res, size_t dim) {
 }
 
 unique_ptr<AbstractGate> Pennylane::merge(unique_ptr<AbstractGate> gate_first,
-const string& label1, INDICES & wires1, unique_ptr<AbstractGate>
-gate_second, const string& label2, const INDICES & wires2) {
+const string& label1, unique_ptr<AbstractGate> gate_second, const string&
+label2) {
 
         for (auto it : gate_first->asMatrix()){
             //std::cout << it << " ";
@@ -337,7 +341,9 @@ gate_second, const string& label2, const INDICES & wires2) {
         vector<CplxType> orgmat2 = gate_second->asMatrix();
 
         // obtain updated qubit information
-        auto all_res = Pennylane::get_new_qubit_list(label1, wires1, label2, wires2);
+        auto first_target = gate_first->getTargetWires();
+        auto second_target = gate_second->getTargetWires();
+        auto all_res = Pennylane::get_new_qubit_list(gate_first->getControlWires(), first_target, gate_second->getControlWires(), second_target);
         INDICES new_control_list = std::get<0>(all_res);
         INDICES new_target_list = std::get<1>(all_res);
         /*
@@ -366,7 +372,6 @@ gate_second, const string& label2, const INDICES & wires2) {
         INDICES first_target = std::get<1>(res_wires);
         */
         INDICES first_control = {};
-        auto first_target = wires1;
         get_extended_matrix(std::move(gate_first), matrix_first, new_control_list, new_target_list, first_control, first_target);
 
         /*
@@ -377,13 +382,8 @@ gate_second, const string& label2, const INDICES & wires2) {
         */
 
         INDICES second_control = {};
-        auto second_target = wires2;
         get_extended_matrix(std::move(gate_second), matrix_second, new_control_list, new_target_list, second_control, second_target );
 
-        //TODO: move wires to the gate classes
-        //Update with the new wires
-        wires1 = new_control_list;
-        wires1.insert(wires1.end(), new_target_list.begin(), new_target_list.end());
         /*
         //std::cout << "first gate is extended from \n";
         for (auto it : orgmat1){
@@ -424,7 +424,7 @@ gate_second, const string& label2, const INDICES & wires2) {
         return gate;
     }
 
-void Pennylane::optimize_light(vector<unique_ptr<AbstractGate>> && gate_list, vector<string>& labels, vector<vector<UINT>>& wires, const UINT qubit_count) {
+void Pennylane::optimize_light(vector<unique_ptr<AbstractGate>> && gate_list, vector<string>& labels, const UINT qubit_count) {
     std::vector<std::pair<int, std::vector<UINT>>> current_step(qubit_count, std::make_pair(-1, std::vector<UINT>()));
     //std::cout << "Things in the current_step: \n";
     for (auto item : current_step) {
@@ -439,7 +439,7 @@ void Pennylane::optimize_light(vector<unique_ptr<AbstractGate>> && gate_list, ve
         std::vector<UINT> target_qubits;
         std::vector<UINT> parent_qubits;
 
-        for (auto val : wires[ind1]) target_qubits.push_back(val);
+        for (auto val : gate_list[ind1]->getTargetWires()) target_qubits.push_back(val);
         //for (auto val : gate->get_control_index_list()) target_qubits.push_back(val);
         std::sort(target_qubits.begin(), target_qubits.end());
 
@@ -457,16 +457,7 @@ void Pennylane::optimize_light(vector<unique_ptr<AbstractGate>> && gate_list, ve
             //std::cout << "In the merge branch, pos: " << pos << " ind1: " << ind1;
             //std::cout << "Merging the following gates: " << labels[pos] << " with: " << labels[ind1] << std::endl;
 
-            auto merged_gate = Pennylane::merge(std::move(gate_list[pos]), labels[pos], wires[pos], std::move(gate_list[ind1]), labels[ind1], wires[ind1]);
-
-            //std::cout << "First wires: " << "\n\n";
-            for (auto w : wires[pos] ) {
-                //std::cout << w << " ";
-            }
-            //std::cout << "Second wires: " << "\n\n";
-            for (auto w : wires[ind1] ) {
-                //std::cout << w << " ";
-            }
+            auto merged_gate = Pennylane::merge(std::move(gate_list[pos]), labels[pos], std::move(gate_list[ind1]), labels[ind1]);
 
             // Remove first merged gate and its label
             vector<unique_ptr<AbstractGate>>::iterator first_gate_it = gate_list.begin() + ind1;
@@ -492,10 +483,6 @@ void Pennylane::optimize_light(vector<unique_ptr<AbstractGate>> && gate_list, ve
 
             vector<string>::iterator second_labels_iterator = labels.begin() + pos;
             labels.erase(second_labels_iterator);
-
-            // Erase the wires info
-            vector<vector<UINT>>::iterator second_wires_iterator = wires.begin() + ind1;
-            wires.erase(second_wires_iterator);
 
             ind1--;
 

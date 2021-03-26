@@ -70,7 +70,6 @@ namespace Pennylane {
     void applyOperation(
         StateVector& state,
         std::unique_ptr<AbstractGate> gate,
-        const std::vector<unsigned int>& opWires,
         bool inverse,
         const unsigned int qubits
     );

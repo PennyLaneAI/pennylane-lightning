@@ -97,7 +97,8 @@ Pennylane::SingleQubitGate::SingleQubitGate()
 const string Pennylane::XGate::label = "PauliX";
 
 Pennylane::XGate::XGate(const vector<unsigned int>& wires)
-    : controlWires({})
+    : allWires(wires),
+      controlWires({})
     , targetWires(wires)
 
 {}
@@ -133,7 +134,8 @@ const vector<CplxType> Pennylane::YGate::matrix{
     IMAG, 0 };
 
 Pennylane::YGate::YGate(const vector<unsigned int>& wires)
-    : controlWires({})
+    : allWires(wires),
+      controlWires({})
     , targetWires(wires)
 
 {}
@@ -162,7 +164,8 @@ const std::vector<CplxType> Pennylane::ZGate::matrix{
     0, -1 };
 
 Pennylane::ZGate::ZGate(const vector<unsigned int>& wires)
-    : controlWires(vector<unsigned int>{})
+    : allWires(wires),
+      controlWires(vector<unsigned int>{})
     , targetWires(wires)
 
 {}
@@ -189,7 +192,8 @@ const vector<CplxType> Pennylane::HadamardGate::matrix{
     SQRT2INV, -SQRT2INV };
 
 Pennylane::HadamardGate::HadamardGate(const vector<unsigned int>& wires)
-    : controlWires({})
+    : allWires(wires),
+      controlWires({})
     , targetWires(wires)
 
 {}
@@ -219,7 +223,8 @@ const vector<CplxType> Pennylane::SGate::matrix{
     0, IMAG };
 
 Pennylane::SGate::SGate(const vector<unsigned int>& wires)
-    : controlWires({})
+    : allWires(wires),
+      controlWires({})
     , targetWires(wires)
 
 {}
@@ -249,7 +254,8 @@ const vector<CplxType> Pennylane::TGate::matrix{
     0, Pennylane::TGate::shift };
 
 Pennylane::TGate::TGate(const vector<unsigned int>& wires)
-    : controlWires({})
+    : allWires(wires),
+      controlWires({})
     , targetWires(wires)
 
 {}
@@ -278,7 +284,8 @@ Pennylane::RotationXGate::RotationXGate(double rotationAngle, const vector<unsig
     , matrix{
       c, js,
       js, c }
-    , controlWires({})
+    , allWires(wires),
+      controlWires({})
     , targetWires(wires)
 {}
 
@@ -316,7 +323,8 @@ Pennylane::RotationYGate::RotationYGate(double rotationAngle, const vector<unsig
     , matrix{
       c, -s,
       s, c }
-    , controlWires({})
+    , allWires(wires),
+      controlWires({})
     , targetWires(wires)
 {}
 
@@ -354,7 +362,8 @@ Pennylane::RotationZGate::RotationZGate(double rotationAngle, const vector<unsig
     , matrix{
       first, 0,
       0, second }
-    , controlWires({})
+    , allWires(wires),
+      controlWires({})
     , targetWires(wires)
 {}
 
@@ -396,7 +405,8 @@ Pennylane::PhaseShiftGate::PhaseShiftGate(double rotationAngle, const vector<uns
     , matrix{
       1, 0,
       0, shift }
-    , controlWires({})
+    , allWires(wires),
+      controlWires({})
     , targetWires(wires)
 {}
 
@@ -437,7 +447,8 @@ Pennylane::GeneralRotationGate::GeneralRotationGate(double phi, double theta, do
     , matrix{
       r1, r2,
       r3, r4 }
-    , controlWires({})
+    , allWires(wires),
+      controlWires({})
     , targetWires(wires)
 {}
 
@@ -485,7 +496,8 @@ const std::vector<CplxType> Pennylane::CNOTGate::matrix{
     0, 0, 1, 0 };
 
 Pennylane::CNOTGate::CNOTGate(const vector<unsigned int>& wires)
-    : controlWires(wires[0])
+    : allWires(wires),
+      controlWires(wires[0])
     , targetWires(wires[1])
 {}
 
@@ -513,7 +525,8 @@ const std::vector<CplxType> Pennylane::SWAPGate::matrix{
     0, 0, 0, 1 };
 
 Pennylane::SWAPGate::SWAPGate(const vector<unsigned int>& wires)
-    : controlWires({})
+    : allWires(wires),
+      controlWires({})
     , targetWires(wires)
 {}
 
@@ -541,7 +554,8 @@ const std::vector<CplxType> Pennylane::CZGate::matrix{
     0, 0, 0, -1 };
 
 Pennylane::CZGate::CZGate(const vector<unsigned int>& wires)
-    : controlWires(wires[0])
+    : allWires(wires),
+      controlWires(wires[0])
     , targetWires(wires[1])
 {}
 
@@ -570,7 +584,8 @@ Pennylane::CRotationXGate::CRotationXGate(double rotationAngle, const vector<uns
       0, 1, 0, 0,
       0, 0, c, js,
       0, 0, js, c }
-    , controlWires(wires[0])
+    , allWires(wires),
+      controlWires(wires[0])
     , targetWires(wires[1])
 {}
 
@@ -613,7 +628,8 @@ Pennylane::CRotationYGate::CRotationYGate(double rotationAngle, const vector<uns
       0, 1, 0, 0,
       0, 0, c, -s,
       0, 0, s, c }
-    , controlWires(wires[0])
+    , allWires(wires),
+      controlWires(wires[0])
     , targetWires(wires[1])
 {}
 
@@ -658,7 +674,8 @@ Pennylane::CRotationZGate::CRotationZGate(double rotationAngle, const vector<uns
       0, 1, 0, 0,
       0, 0, first, 0,
       0, 0, 0, second }
-    , controlWires(wires[0])
+    , allWires(wires),
+      controlWires(wires[0])
     , targetWires(wires[1])
 {}
 
@@ -709,7 +726,8 @@ Pennylane::CGeneralRotationGate::CGeneralRotationGate(double phi, double theta, 
       0, 1, 0, 0,
       0, 0, r1, r2,
       0, 0, r3, r4 }
-    , controlWires(wires[0])
+    , allWires(wires),
+      controlWires(wires[0])
     , targetWires(wires[1])
 {}
 
@@ -761,7 +779,8 @@ const std::vector<CplxType> Pennylane::ToffoliGate::matrix{
     0, 0, 0, 0, 0, 0, 1, 0 };
 
 Pennylane::ToffoliGate::ToffoliGate(const vector<unsigned int>& wires)
-    : controlWires({wires[0], wires[1]})
+    : allWires(wires),
+      controlWires({wires[0], wires[1]})
     , targetWires(wires[2])
 {}
 
@@ -793,7 +812,8 @@ const std::vector<CplxType> Pennylane::CSWAPGate::matrix{
     0, 0, 0, 0, 0, 0, 0, 1 };
 
 Pennylane::CSWAPGate::CSWAPGate(const vector<unsigned int>& wires)
-    : controlWires({wires[0]})
+    : allWires(wires),
+      controlWires({wires[0]})
     , targetWires({wires[1], wires[2]})
 {}
 
@@ -814,7 +834,8 @@ Pennylane::QubitUnitary::QubitUnitary(const int numQubits, std::vector<CplxType>
  : AbstractGate(numQubits),
    matrix(mx),
    controlWires(controlWires),
-   targetWires(targetWires) {} ;
+   targetWires(targetWires),
+   allWires(controlWires) {allWires.insert(allWires.end(), this->targetWires.begin(), this->targetWires.end());} ;
 
 
 
