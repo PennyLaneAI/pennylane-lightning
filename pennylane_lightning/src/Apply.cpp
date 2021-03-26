@@ -81,7 +81,7 @@ void Pennylane::applyGateGenerator(
 void Pennylane::apply(
     StateVector& state,
     vector<string>& ops,
-    vector<vector<unsigned int>>& wires,
+    const vector<vector<unsigned int>>& wires,
     const vector<vector<double>>& params,
     const vector<bool>& inverse,
     const unsigned int qubits
@@ -101,7 +101,7 @@ void Pennylane::apply(
     for (int i = 0; i < numOperations; i++) {
         string opLabel = ops[i];
         vector<unsigned int> opWires = wires[i];
-        unique_ptr<AbstractGate> gate = constructGate(opLabel, params[i]);
+        unique_ptr<AbstractGate> gate = constructGate(opLabel, params[i], wires[i]);
         if (gate->numQubits != opWires.size())
             throw std::invalid_argument(string("The gate of type ") + opLabel + " requires " + std::to_string(gate->numQubits) + " wires, but " + std::to_string(opWires.size()) + " were supplied");
         gates.push_back(std::move(gate));
@@ -109,7 +109,7 @@ void Pennylane::apply(
 
     // TODO: inverses
     // Merge gates here, wires are updated
-    Pennylane::optimize_light(std::move(gates), ops, wires, qubits);
+    //Pennylane::optimize_light(std::move(gates), ops, wires, qubits);
 
     int i = 0;
     for (auto && gate : gates) {

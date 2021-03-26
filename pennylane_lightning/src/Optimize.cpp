@@ -410,7 +410,7 @@ gate_second, const string& label2, const INDICES & wires2) {
 
         // generate new matrix gate
         // can do QubitUnitary:
-        auto gate = Pennylane::constructGate(new_matrix);
+        auto gate = Pennylane::constructGate(new_matrix, new_control_list, new_target_list);
 
         /*
         //std::cout << "result matrix is " << "\n\n";

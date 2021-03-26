@@ -125,12 +125,18 @@ const string Pennylane::YGate::label = "PauliY";
 
 Pennylane::YGate Pennylane::YGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::YGate::label, parameters, 0);
-    return Pennylane::YGate();
+    return Pennylane::YGate(wires);
 }
 
 const vector<CplxType> Pennylane::YGate::matrix{
     0, -IMAG,
     IMAG, 0 };
+
+Pennylane::YGate::YGate(const vector<unsigned int>& wires)
+    : controlWires({})
+    , targetWires(wires)
+
+{}
 
 void Pennylane::YGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
     // gate is its own inverse
@@ -148,12 +154,18 @@ const string Pennylane::ZGate::label = "PauliZ";
 
 Pennylane::ZGate Pennylane::ZGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::ZGate::label, parameters, 0);
-    return Pennylane::ZGate();
+    return Pennylane::ZGate(wires);
 }
 
 const std::vector<CplxType> Pennylane::ZGate::matrix{
     1, 0,
     0, -1 };
+
+Pennylane::ZGate::ZGate(const vector<unsigned int>& wires)
+    : controlWires(vector<unsigned int>{})
+    , targetWires(wires)
+
+{}
 
 void Pennylane::ZGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
     // gate is its own inverse
@@ -169,12 +181,18 @@ const string Pennylane::HadamardGate::label = "Hadamard";
 
 Pennylane::HadamardGate Pennylane::HadamardGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::HadamardGate::label, parameters, 0);
-    return Pennylane::HadamardGate();
+    return Pennylane::HadamardGate(wires);
 }
 
 const vector<CplxType> Pennylane::HadamardGate::matrix{
     SQRT2INV, SQRT2INV,
     SQRT2INV, -SQRT2INV };
+
+Pennylane::HadamardGate::HadamardGate(const vector<unsigned int>& wires)
+    : controlWires({})
+    , targetWires(wires)
+
+{}
 
 void Pennylane::HadamardGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
     // gate is its own inverse
@@ -193,12 +211,18 @@ const string Pennylane::SGate::label = "S";
 
 Pennylane::SGate Pennylane::SGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::SGate::label, parameters, 0);
-    return Pennylane::SGate();
+    return Pennylane::SGate(wires);
 }
 
 const vector<CplxType> Pennylane::SGate::matrix{
     1, 0,
     0, IMAG };
+
+Pennylane::SGate::SGate(const vector<unsigned int>& wires)
+    : controlWires({})
+    , targetWires(wires)
+
+{}
 
 void Pennylane::SGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
     CplxType shift = (inverse == true) ? -IMAG : IMAG;
@@ -215,7 +239,7 @@ const string Pennylane::TGate::label = "T";
 
 Pennylane::TGate Pennylane::TGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::TGate::label, parameters, 0);
-    return Pennylane::TGate();
+    return Pennylane::TGate(wires);
 }
 
 const CplxType Pennylane::TGate::shift = std::pow(M_E, CplxType(0, M_PI / 4));
@@ -223,6 +247,12 @@ const CplxType Pennylane::TGate::shift = std::pow(M_E, CplxType(0, M_PI / 4));
 const vector<CplxType> Pennylane::TGate::matrix{
     1, 0,
     0, Pennylane::TGate::shift };
+
+Pennylane::TGate::TGate(const vector<unsigned int>& wires)
+    : controlWires({})
+    , targetWires(wires)
+
+{}
 
 void Pennylane::TGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
     CplxType shift = (inverse == true) ? conj(Pennylane::TGate::shift) : Pennylane::TGate::shift;
@@ -239,15 +269,17 @@ const string Pennylane::RotationXGate::label = "RX";
 
 Pennylane::RotationXGate Pennylane::RotationXGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::RotationXGate::label, parameters, 1);
-    return Pennylane::RotationXGate(parameters[0]);
+    return Pennylane::RotationXGate(parameters[0], wires);
 }
 
-Pennylane::RotationXGate::RotationXGate(double rotationAngle)
+Pennylane::RotationXGate::RotationXGate(double rotationAngle, const vector<unsigned int>& wires)
     : c(std::cos(rotationAngle / 2), 0)
     , js(0, std::sin(-rotationAngle / 2))
     , matrix{
       c, js,
       js, c }
+    , controlWires({})
+    , targetWires(wires)
 {}
 
 const double Pennylane::RotationXGate::generatorScalingFactor{ -0.5 };
@@ -275,15 +307,17 @@ const string Pennylane::RotationYGate::label = "RY";
 
 Pennylane::RotationYGate Pennylane::RotationYGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::RotationYGate::label, parameters, 1);
-    return Pennylane::RotationYGate(parameters[0]);
+    return Pennylane::RotationYGate(parameters[0], wires);
 }
 
-Pennylane::RotationYGate::RotationYGate(double rotationAngle)
+Pennylane::RotationYGate::RotationYGate(double rotationAngle, const vector<unsigned int>& wires)
     : c(std::cos(rotationAngle / 2), 0)
     , s(std::sin(rotationAngle / 2), 0)
     , matrix{
       c, -s,
       s, c }
+    , controlWires({})
+    , targetWires(wires)
 {}
 
 const double Pennylane::RotationYGate::generatorScalingFactor{ -0.5 };
@@ -311,15 +345,17 @@ const string Pennylane::RotationZGate::label = "RZ";
 
 Pennylane::RotationZGate Pennylane::RotationZGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::RotationZGate::label, parameters, 1);
-    return Pennylane::RotationZGate(parameters[0]);
+    return Pennylane::RotationZGate(parameters[0], wires);
 }
 
-Pennylane::RotationZGate::RotationZGate(double rotationAngle)
+Pennylane::RotationZGate::RotationZGate(double rotationAngle, const vector<unsigned int>& wires)
     : first(std::pow(M_E, CplxType(0, -rotationAngle / 2)))
     , second(std::pow(M_E, CplxType(0, rotationAngle / 2)))
     , matrix{
       first, 0,
       0, second }
+    , controlWires({})
+    , targetWires(wires)
 {}
 
 void Pennylane::RotationZGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
@@ -352,14 +388,16 @@ const string Pennylane::PhaseShiftGate::label = "PhaseShift";
 
 Pennylane::PhaseShiftGate Pennylane::PhaseShiftGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::PhaseShiftGate::label, parameters, 1);
-    return Pennylane::PhaseShiftGate(parameters[0]);
+    return Pennylane::PhaseShiftGate(parameters[0], wires);
 }
 
-Pennylane::PhaseShiftGate::PhaseShiftGate(double rotationAngle)
+Pennylane::PhaseShiftGate::PhaseShiftGate(double rotationAngle, const vector<unsigned int>& wires)
     : shift(std::pow(M_E, CplxType(0, rotationAngle)))
     , matrix{
       1, 0,
       0, shift }
+    , controlWires({})
+    , targetWires(wires)
 {}
 
 void Pennylane::PhaseShiftGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
@@ -386,10 +424,10 @@ const string Pennylane::GeneralRotationGate::label = "Rot";
 
 Pennylane::GeneralRotationGate Pennylane::GeneralRotationGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::GeneralRotationGate::label, parameters, 3);
-    return Pennylane::GeneralRotationGate(parameters[0], parameters[1], parameters[2]);
+    return Pennylane::GeneralRotationGate(parameters[0], parameters[1], parameters[2], wires);
 }
 
-Pennylane::GeneralRotationGate::GeneralRotationGate(double phi, double theta, double omega)
+Pennylane::GeneralRotationGate::GeneralRotationGate(double phi, double theta, double omega, const vector<unsigned int>& wires)
     : c(std::cos(theta / 2), 0)
     , s(std::sin(theta / 2), 0)
     , r1(c* std::pow(M_E, CplxType(0, (-phi - omega) / 2)))
@@ -399,6 +437,8 @@ Pennylane::GeneralRotationGate::GeneralRotationGate(double phi, double theta, do
     , matrix{
       r1, r2,
       r3, r4 }
+    , controlWires({})
+    , targetWires(wires)
 {}
 
 void Pennylane::GeneralRotationGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
@@ -435,7 +475,7 @@ const string Pennylane::CNOTGate::label = "CNOT";
 
 Pennylane::CNOTGate Pennylane::CNOTGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::CNOTGate::label, parameters, 0);
-    return Pennylane::CNOTGate();
+    return Pennylane::CNOTGate(wires);
 }
 
 const std::vector<CplxType> Pennylane::CNOTGate::matrix{
@@ -443,6 +483,11 @@ const std::vector<CplxType> Pennylane::CNOTGate::matrix{
     0, 1, 0, 0,
     0, 0, 0, 1,
     0, 0, 1, 0 };
+
+Pennylane::CNOTGate::CNOTGate(const vector<unsigned int>& wires)
+    : controlWires(wires[0])
+    , targetWires(wires[1])
+{}
 
 void Pennylane::CNOTGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
     // gate is its own inverse
@@ -458,7 +503,7 @@ const string Pennylane::SWAPGate::label = "SWAP";
 
 Pennylane::SWAPGate Pennylane::SWAPGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::SWAPGate::label, parameters, 0);
-    return Pennylane::SWAPGate();
+    return Pennylane::SWAPGate(wires);
 }
 
 const std::vector<CplxType> Pennylane::SWAPGate::matrix{
@@ -466,6 +511,11 @@ const std::vector<CplxType> Pennylane::SWAPGate::matrix{
     0, 0, 1, 0,
     0, 1, 0, 0,
     0, 0, 0, 1 };
+
+Pennylane::SWAPGate::SWAPGate(const vector<unsigned int>& wires)
+    : controlWires({})
+    , targetWires(wires)
+{}
 
 void Pennylane::SWAPGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
     // gate is its own inverse
@@ -481,7 +531,7 @@ const string Pennylane::CZGate::label = "CZ";
 
 Pennylane::CZGate Pennylane::CZGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::CZGate::label, parameters, 0);
-    return Pennylane::CZGate();
+    return Pennylane::CZGate(wires);
 }
 
 const std::vector<CplxType> Pennylane::CZGate::matrix{
@@ -489,6 +539,11 @@ const std::vector<CplxType> Pennylane::CZGate::matrix{
     0, 1, 0, 0,
     0, 0, 1, 0,
     0, 0, 0, -1 };
+
+Pennylane::CZGate::CZGate(const vector<unsigned int>& wires)
+    : controlWires(wires[0])
+    , targetWires(wires[1])
+{}
 
 void Pennylane::CZGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
     // gate is its own inverse
@@ -504,10 +559,10 @@ const string Pennylane::CRotationXGate::label = "CRX";
 
 Pennylane::CRotationXGate Pennylane::CRotationXGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::CRotationXGate::label, parameters, 1);
-    return Pennylane::CRotationXGate(parameters[0]);
+    return Pennylane::CRotationXGate(parameters[0], wires);
 }
 
-Pennylane::CRotationXGate::CRotationXGate(double rotationAngle)
+Pennylane::CRotationXGate::CRotationXGate(double rotationAngle, const vector<unsigned int>& wires)
     : c(std::cos(rotationAngle / 2), 0)
     , js(0, std::sin(-rotationAngle / 2))
     , matrix{
@@ -515,6 +570,8 @@ Pennylane::CRotationXGate::CRotationXGate(double rotationAngle)
       0, 1, 0, 0,
       0, 0, c, js,
       0, 0, js, c }
+    , controlWires(wires[0])
+    , targetWires(wires[1])
 {}
 
 void Pennylane::CRotationXGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
@@ -545,10 +602,10 @@ const string Pennylane::CRotationYGate::label = "CRY";
 
 Pennylane::CRotationYGate Pennylane::CRotationYGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::CRotationYGate::label, parameters, 1);
-    return Pennylane::CRotationYGate(parameters[0]);
+    return Pennylane::CRotationYGate(parameters[0], wires);
 }
 
-Pennylane::CRotationYGate::CRotationYGate(double rotationAngle)
+Pennylane::CRotationYGate::CRotationYGate(double rotationAngle, const vector<unsigned int>& wires)
     : c(std::cos(rotationAngle / 2), 0)
     , s(std::sin(rotationAngle / 2), 0)
     , matrix{
@@ -556,6 +613,8 @@ Pennylane::CRotationYGate::CRotationYGate(double rotationAngle)
       0, 1, 0, 0,
       0, 0, c, -s,
       0, 0, s, c }
+    , controlWires(wires[0])
+    , targetWires(wires[1])
 {}
 
 void Pennylane::CRotationYGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
@@ -588,10 +647,10 @@ const string Pennylane::CRotationZGate::label = "CRZ";
 
 Pennylane::CRotationZGate Pennylane::CRotationZGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::CRotationZGate::label, parameters, 1);
-    return Pennylane::CRotationZGate(parameters[0]);
+    return Pennylane::CRotationZGate(parameters[0], wires);
 }
 
-Pennylane::CRotationZGate::CRotationZGate(double rotationAngle)
+Pennylane::CRotationZGate::CRotationZGate(double rotationAngle, const vector<unsigned int>& wires)
     : first(std::pow(M_E, CplxType(0, -rotationAngle / 2)))
     , second(std::pow(M_E, CplxType(0, rotationAngle / 2)))
     , matrix{
@@ -599,6 +658,8 @@ Pennylane::CRotationZGate::CRotationZGate(double rotationAngle)
       0, 1, 0, 0,
       0, 0, first, 0,
       0, 0, 0, second }
+    , controlWires(wires[0])
+    , targetWires(wires[1])
 {}
 
 void Pennylane::CRotationZGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
@@ -633,10 +694,10 @@ const string Pennylane::CGeneralRotationGate::label = "CRot";
 
 Pennylane::CGeneralRotationGate Pennylane::CGeneralRotationGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::CGeneralRotationGate::label, parameters, 3);
-    return Pennylane::CGeneralRotationGate(parameters[0], parameters[1], parameters[2]);
+    return Pennylane::CGeneralRotationGate(parameters[0], parameters[1], parameters[2], wires);
 }
 
-Pennylane::CGeneralRotationGate::CGeneralRotationGate(double phi, double theta, double omega)
+Pennylane::CGeneralRotationGate::CGeneralRotationGate(double phi, double theta, double omega, const vector<unsigned int>& wires)
     : c(std::cos(theta / 2), 0)
     , s(std::sin(theta / 2), 0)
     , r1(c* std::pow(M_E, CplxType(0, (-phi - omega) / 2)))
@@ -648,6 +709,8 @@ Pennylane::CGeneralRotationGate::CGeneralRotationGate(double phi, double theta, 
       0, 1, 0, 0,
       0, 0, r1, r2,
       0, 0, r3, r4 }
+    , controlWires(wires[0])
+    , targetWires(wires[1])
 {}
 
 void Pennylane::CGeneralRotationGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
@@ -684,7 +747,7 @@ const string Pennylane::ToffoliGate::label = "Toffoli";
 
 Pennylane::ToffoliGate Pennylane::ToffoliGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::ToffoliGate::label, parameters, 0);
-    return Pennylane::ToffoliGate();
+    return Pennylane::ToffoliGate(wires);
 }
 
 const std::vector<CplxType> Pennylane::ToffoliGate::matrix{
@@ -696,6 +759,11 @@ const std::vector<CplxType> Pennylane::ToffoliGate::matrix{
     0, 0, 0, 0, 0, 1, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 1,
     0, 0, 0, 0, 0, 0, 1, 0 };
+
+Pennylane::ToffoliGate::ToffoliGate(const vector<unsigned int>& wires)
+    : controlWires({wires[0], wires[1]})
+    , targetWires(wires[2])
+{}
 
 void Pennylane::ToffoliGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
     // gate is its own inverse
@@ -711,7 +779,7 @@ const string Pennylane::CSWAPGate::label = "CSWAP";
 
 Pennylane::CSWAPGate Pennylane::CSWAPGate::create(const vector<double>& parameters, const vector<unsigned int>& wires) {
     validateLength(Pennylane::CSWAPGate::label, parameters, 0);
-    return Pennylane::CSWAPGate();
+    return Pennylane::CSWAPGate(wires);
 }
 
 const std::vector<CplxType> Pennylane::CSWAPGate::matrix{
@@ -723,6 +791,11 @@ const std::vector<CplxType> Pennylane::CSWAPGate::matrix{
     0, 0, 0, 0, 0, 0, 1, 0,
     0, 0, 0, 0, 0, 1, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 1 };
+
+Pennylane::CSWAPGate::CSWAPGate(const vector<unsigned int>& wires)
+    : controlWires({wires[0]})
+    , targetWires({wires[1], wires[2]})
+{}
 
 void Pennylane::CSWAPGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
     // gate is its own inverse
@@ -737,7 +810,11 @@ void Pennylane::CSWAPGate::applyKernel(const StateVector& state, const std::vect
 
 const string Pennylane::QubitUnitary::label = "QubitUnitary";
 
-Pennylane::QubitUnitary::QubitUnitary(const int numQubits, std::vector<CplxType> const &mx) : AbstractGate(numQubits), matrix(mx) {} ;
+Pennylane::QubitUnitary::QubitUnitary(const int numQubits, std::vector<CplxType> const &mx, const vector<unsigned int>& controlWires, const vector<unsigned int>& targetWires)
+ : AbstractGate(numQubits),
+   matrix(mx),
+   controlWires(controlWires),
+   targetWires(targetWires) {} ;
 
 
 
@@ -748,8 +825,8 @@ static void addToDispatchTable(map<string, function<unique_ptr<Pennylane::Abstra
     dispatchTable.emplace(GateType::label, [](const vector<double>& parameters, const vector<unsigned int>& wires) { return make_unique<GateType>(GateType::create(parameters, wires)); });
 }
 
-static map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&)>> createDispatchTable() {
-    map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&)>> dispatchTable;
+static map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&, const vector<unsigned int>&)>> createDispatchTable() {
+    map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&, const vector<unsigned int>&)>> dispatchTable;
     addToDispatchTable<Pennylane::XGate>(dispatchTable);
     addToDispatchTable<Pennylane::YGate>(dispatchTable);
     addToDispatchTable<Pennylane::ZGate>(dispatchTable);
@@ -773,7 +850,7 @@ static map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<dou
     return dispatchTable;
 }
 
-static const map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&)>> dispatchTable = createDispatchTable();
+static const map<string, function<unique_ptr<Pennylane::AbstractGate>(const vector<double>&, const vector<unsigned int>&)>> dispatchTable = createDispatchTable();
 
 unique_ptr<Pennylane::AbstractGate> Pennylane::constructGate(const string& label, const vector<double>& parameters, const vector<unsigned int>& wires) {
     auto dispatchTableIterator = dispatchTable.find(label);
@@ -783,8 +860,8 @@ unique_ptr<Pennylane::AbstractGate> Pennylane::constructGate(const string& label
     return dispatchTableIterator->second(parameters, wires);
 }
 
-unique_ptr<Pennylane::AbstractGate> Pennylane::constructGate(const vector<CplxType>& matrix) {
+unique_ptr<Pennylane::AbstractGate> Pennylane::constructGate(const vector<CplxType>& matrix, const vector<unsigned int>& controlWires, const vector<unsigned int>& targetWires) {
     // TODO: validate
     auto num_qubits = int(log2(matrix.size())/2);
-    return make_unique<QubitUnitary>(QubitUnitary(num_qubits, matrix));
+    return make_unique<QubitUnitary>(QubitUnitary(num_qubits, matrix, controlWires, targetWires));
 }

@@ -103,7 +103,7 @@ namespace Pennylane {
     void apply(
         StateVector& state,
         std::vector<std::string>& ops,
-        std::vector<std::vector<unsigned int>>& wires,
+        const std::vector<std::vector<unsigned int>>& wires,
         const std::vector<std::vector<double>>& params,
         const std::vector<bool>& inverse,
         const unsigned int qubits
