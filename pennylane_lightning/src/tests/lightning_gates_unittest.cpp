@@ -24,6 +24,7 @@ using std::string;
 using std::function;
 
 using Pennylane::CplxType;
+typedef vector<unsigned int> INDICES;
 
 namespace test_gates{
 
@@ -35,16 +36,17 @@ const vector<double> THREE_PARAMS = {0.123, 2.345, 1.4321};
 // -------------------------------------------------------------------------------------------------------------
 // Non-parametrized gates
 
-class MatrixNoParamFixture : public ::testing::TestWithParam<std::tuple<string, vector<CplxType> > > {
+class MatrixNoParamFixture : public ::testing::TestWithParam<std::tuple<string, vector<CplxType>, INDICES > > {
 };
 
 TEST_P(MatrixNoParamFixture, CheckMatrix) {
     const string gate_name = std::get<0>(GetParam());
     const vector<CplxType> matrix = std::get<1>(GetParam());
+    const INDICES wires = std::get<2>(GetParam());
 
     const vector<double> params = {};
 
-    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, params);
+    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, params, wires);
     EXPECT_EQ(gate->asMatrix(), matrix);
 }
 
@@ -52,39 +54,40 @@ INSTANTIATE_TEST_SUITE_P (
         GateMatrix,
         MatrixNoParamFixture,
         ::testing::Values(
-                std::make_tuple("PauliX", PauliX),
-                std::make_tuple("PauliY", PauliY),
-                std::make_tuple("PauliZ", PauliZ),
-                std::make_tuple("Hadamard", Hadamard),
-                std::make_tuple("S", S),
-                std::make_tuple("T", T),
-                std::make_tuple("CNOT", CNOT),
-                std::make_tuple("SWAP", SWAP),
-                std::make_tuple("CZ", CZ),
-                std::make_tuple("Toffoli", Toffoli),
-                std::make_tuple("CSWAP", CSWAP)
+                std::make_tuple("PauliX", PauliX, INDICES{0}),
+                std::make_tuple("PauliY", PauliY, INDICES{0}),
+                std::make_tuple("PauliZ", PauliZ, INDICES{0}),
+                std::make_tuple("Hadamard", Hadamard, INDICES{0}),
+                std::make_tuple("S", S, INDICES{0}),
+                std::make_tuple("T", T, INDICES{0}),
+                std::make_tuple("CNOT", CNOT, INDICES{0,1}),
+                std::make_tuple("SWAP", SWAP, INDICES{0,1}),
+                std::make_tuple("CZ", CZ, INDICES{0,1,2}),
+                std::make_tuple("Toffoli", Toffoli, INDICES{0,1,2}),
+                std::make_tuple("CSWAP", CSWAP, INDICES{0,1,2})
 ));
 
 TEST(QubitUnitaryConstruct, QubitUnitaryConstruct) {
     vector <CplxType> mx = {1,0,0,1};
 
-    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(mx);
+    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(mx, INDICES{}, INDICES{0});
     EXPECT_EQ(gate->asMatrix(), mx);
 }
 
 // -------------------------------------------------------------------------------------------------------------
 // Parametrized gates
 
-class MatrixWithParamsFixture : public ::testing::TestWithParam<std::tuple<string, pfunc_params, vector<double> >> {
+class MatrixWithParamsFixture : public ::testing::TestWithParam<std::tuple<string, pfunc_params, vector<double>, INDICES >> {
 };
 
 TEST_P(MatrixWithParamsFixture, CheckMatrix) {
     const string gate_name = std::get<0>(GetParam());
     pfunc_params func = std::get<1>(GetParam());
     const vector<double> params = std::get<2>(GetParam());
+    const INDICES wires = std::get<3>(GetParam());
 
 
-    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, params);
+    unique_ptr<Pennylane::AbstractGate> gate = Pennylane::constructGate(gate_name, params, wires);
     EXPECT_EQ(gate->asMatrix(), func(params));
 }
 
@@ -92,15 +95,15 @@ INSTANTIATE_TEST_SUITE_P (
         GateMatrix,
         MatrixWithParamsFixture,
         ::testing::Values(
-                std::make_tuple("RX", RX, ONE_PARAM),
-                std::make_tuple("RY", RY, ONE_PARAM),
-                std::make_tuple("RZ", RZ, ONE_PARAM),
-                std::make_tuple("PhaseShift", PhaseShift, ONE_PARAM),
-                std::make_tuple("Rot", Rot, THREE_PARAMS),
-                std::make_tuple("CRX", CRX, ONE_PARAM),
-                std::make_tuple("CRY", CRY, ONE_PARAM),
-                std::make_tuple("CRZ", CRZ, ONE_PARAM),
-                std::make_tuple("CRot", CRot, THREE_PARAMS)
+                std::make_tuple("RX", RX, ONE_PARAM, INDICES{0}),
+                std::make_tuple("RY", RY, ONE_PARAM, INDICES{0}),
+                std::make_tuple("RZ", RZ, ONE_PARAM, INDICES{0}),
+                std::make_tuple("PhaseShift", PhaseShift, ONE_PARAM, INDICES{0}),
+                std::make_tuple("Rot", Rot, THREE_PARAMS, INDICES{0}),
+                std::make_tuple("CRX", CRX, ONE_PARAM, INDICES{0,1}),
+                std::make_tuple("CRY", CRY, ONE_PARAM, INDICES{0,1}),
+                std::make_tuple("CRZ", CRZ, ONE_PARAM, INDICES{0,1}),
+                std::make_tuple("CRot", CRot, THREE_PARAMS, INDICES{0,1})
 ));
 
 
@@ -114,7 +117,7 @@ TEST_P(NumParamsThrowsFixture, CheckParamLength) {
     const string gate_name = std::get<0>(GetParam());
     const vector<double> params = std::get<1>(GetParam());
 
-    EXPECT_THROW_WITH_MESSAGE_SUBSTRING(Pennylane::constructGate(gate_name, params), std::invalid_argument, gate_name);
+    EXPECT_THROW_WITH_MESSAGE_SUBSTRING(Pennylane::constructGate(gate_name, params, INDICES{}), std::invalid_argument, gate_name);
 }
 
 const vector<string> non_param_gates = {"PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T", "CNOT", "SWAP", "CZ", "Toffoli", "CSWAP"};
@@ -141,12 +144,12 @@ INSTANTIATE_TEST_SUITE_P (
 
 TEST(DispatchTable, constructGateThrows) {
     const string test_gate_name = "Non-existent gate";
-    EXPECT_THROW_WITH_MESSAGE_SUBSTRING(Pennylane::constructGate(test_gate_name, {}), std::invalid_argument, test_gate_name);
+    EXPECT_THROW_WITH_MESSAGE_SUBSTRING(Pennylane::constructGate(test_gate_name, {}, {}), std::invalid_argument, test_gate_name);
 }
 
 TEST(QubitUnitary, constructGate) {
     vector<CplxType> mx = {1,0,0,1};
-    auto qubit_unitary = Pennylane::constructGate(mx);
+    auto qubit_unitary = Pennylane::constructGate(mx, {},{0});
     ASSERT_EQ(qubit_unitary->numQubits, 1);
     ASSERT_EQ(qubit_unitary->asMatrix(), mx);
 }

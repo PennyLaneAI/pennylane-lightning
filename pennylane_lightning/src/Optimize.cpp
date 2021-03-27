@@ -42,6 +42,7 @@ void update_target_wires(const string &opLabel, const INDICES& wires, INDICES& t
 }
 */
 
+/*
 tuple<INDICES, INDICES> Pennylane::separate_control_and_target(const string &opLabel, const INDICES& wires){
     std::set<std::string> controlled_two_qubit_gates {"CNOT", "CZ", "CRX", "CRY", "CRZ", "CRot"};
     std::set<std::string> controlled_three_qubit_gates {"Toffoli",  "CSWAP"};
@@ -73,6 +74,7 @@ tuple<INDICES, INDICES> Pennylane::separate_control_and_target(const string &opL
     }
     return std::make_tuple(control_wires, target_wires);
 }
+*/
 /**
  * Insert 0 to qubit_index-th bit of basis_index. basis_mask must be 1ULL << qubit_index.
  */
@@ -81,6 +83,9 @@ inline static ITYPE insert_zero_to_basis_index(ITYPE basis_index, ITYPE basis_ma
     return temp_basis + basis_index % basis_mask;
 }
 
+inline size_t uexp2(size_t exponent){
+    return 1ULL << exponent;
+}
 
 tuple<INDICES, INDICES> Pennylane::get_new_qubit_list(const INDICES
 &first_control_wires, const INDICES &first_target_wires, const INDICES
@@ -89,17 +94,23 @@ tuple<INDICES, INDICES> Pennylane::get_new_qubit_list(const INDICES
     INDICES new_target_wires;
     INDICES new_control_wires;
 
-    /*
-    //1. operation
-    auto res1 = separate_control_and_target(opLabel1, first_wires);
-    const INDICES first_control_wires = std::get<0>(res1);
-    const INDICES first_target_wires = std::get<1>(res1);
+    std::cout << "First control list: ";
+    for (auto it : first_control_wires){
+        std::cout << it << " ";
+    }
+    std::cout << "First target list: ";
+    for (auto it : first_target_wires){
+        std::cout << it << " ";
+    }
 
-    //2. operation
-    auto res2 = separate_control_and_target(opLabel2, second_wires);
-    const INDICES second_control_wires = std::get<0>(res2);
-    const INDICES second_target_wires = std::get<1>(res2);
-    */
+    std::cout << "2. control list: ";
+    for (auto it : second_control_wires){
+        std::cout << it << " ";
+    }
+    std::cout << "2. target list: ";
+    for (auto it : second_target_wires){
+        std::cout << it << " ";
+    }
 
     for (auto wire : first_target_wires) {
         //case 0-2:
@@ -133,6 +144,7 @@ tuple<INDICES, INDICES> Pennylane::get_new_qubit_list(const INDICES
         }
 
     }
+
     return std::make_tuple(new_control_wires, new_target_wires);
 }
 
@@ -167,7 +179,10 @@ void Pennylane::swap_cols(CplxType* mx, const size_t &dim, const size_t column1,
 // Join new qubit indices to target_list according to a given first_target_wires, and set a new matrix to "matrix"
 void Pennylane::get_extended_matrix(unique_ptr<AbstractGate> gate,
 vector<CplxType>& matrix, INDICES& new_control_wires, INDICES&
-new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
+new_target_wires) {
+
+    const INDICES& first_control_wires = gate->getControlWires();
+    const INDICES& first_target_wires = gate->getTargetWires();
 
     // New qubits index may be in either gate_target_index, gate_control_index, or it comes from the other gate.
     // Case 0 : If qubit index is in gate_target_index -> named A
@@ -185,7 +200,7 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
             join_from_control.push_back(wire);
 
             // PennyLane only has all-up controls
-            control_mask ^= (1ULL << (join_from_control.size()-1));
+            //control_mask ^= (uexp2( (join_from_control.size()-1));
         }
     }
 
@@ -218,13 +233,14 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
     // 1. Enumerate set B and C. -> Done
     // 2. Generate 2^{|A|+|B|+|C|}-dim identity matrix
     size_t new_matrix_qubit_count = (UINT)new_target_wires.size();
-    size_t new_matrix_dim = 1ULL << new_matrix_qubit_count;
+    size_t new_matrix_dim = uexp2(new_matrix_qubit_count);
     matrix = create_identity(new_matrix_dim);
 
     // 3. Decide correct 2^{|A|+|C|}-dim block matrix from control wires.
-    ITYPE start_block_basis = (1ULL << (join_from_target.size() + join_from_other_gate.size())) * control_mask;
+    auto len_join_from_other = join_from_other_gate.size();
+    ITYPE start_block_basis = uexp2(join_from_target.size() + len_join_from_other) * control_mask;
     /*
-    //std::cout << "The base: " << (1ULL << (join_from_target.size() + join_from_other_gate.size()));
+    //std::cout << "The base: " << (uexp2( (join_from_target.size() + join_from_other_gate.size()));
     //std::cout << "The control mask: " << control_mask;
     //std::cout << "The start_block_basis: " << start_block_basis;
     */
@@ -232,8 +248,13 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
     // 4. Repeat 2^{|C|}-times paste of original gate matrix A .
     vector<CplxType> org_matrix = gate->asMatrix();
 
-    size_t org_matrix_dim = 1ULL << first_target_wires.size();
-    ITYPE repeat_count = 1ULL << join_from_other_gate.size();
+    //Following in Qulacs: only target wires matrix is stored?
+    size_t org_matrix_dim = uexp2( first_target_wires.size());
+    auto len_all_wires = first_target_wires.size() + first_control_wires.size();
+    //size_t org_matrix_dim = uexp2( len_all_wires;
+    std::cout << "org matrix dim" << org_matrix_dim;
+    std::cout << "Control wires: " << first_control_wires.size() + first_control_wires.size();
+    ITYPE repeat_count = uexp2( len_join_from_other);
 
     // Identity is set well
 
@@ -243,8 +264,16 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
         // We would like to paste to the (paste_start, paste_start) coordinate of the matrix
         // Convert this to a single index of the vector
         auto paste_start_vector_like = paste_start * new_matrix_dim + paste_start;
+        std::cout << "start_block_basis: " << paste_start_vector_like;
 
-        // Set a block
+        std::cout << "Matrix before setblock: ";
+        for(auto it: matrix){
+            std::cout << it << " ";
+        }
+        std::cout << "Matrix to set block: ";
+        for(auto it: org_matrix){
+            std::cout << it << " ";
+        }
         Pennylane::set_block(matrix.data(), new_matrix_dim, paste_start_vector_like, org_matrix.data(), org_matrix_dim);
     }
 
@@ -282,8 +311,8 @@ new_target_wires, INDICES& first_control_wires, INDICES& first_target_wires) {
                 // create masks
                 const UINT min_index = std::min(ind1, ind2);
                 const UINT max_index = std::max(ind1, ind2);
-                const ITYPE min_mask = 1ULL << min_index;
-                const ITYPE max_mask = 1ULL << max_index;
+                const ITYPE min_mask = uexp2( min_index);
+                const ITYPE max_mask = uexp2( max_index);
 
                 const ITYPE loop_dim = new_matrix_dim >> 2;
 
@@ -334,9 +363,6 @@ unique_ptr<AbstractGate> Pennylane::merge(unique_ptr<AbstractGate> gate_first,
 const string& label1, unique_ptr<AbstractGate> gate_second, const string&
 label2) {
 
-        for (auto it : gate_first->asMatrix()){
-            //std::cout << it << " ";
-        }
         vector<CplxType> orgmat1 = gate_first->asMatrix();
         vector<CplxType> orgmat2 = gate_second->asMatrix();
 
@@ -346,20 +372,18 @@ label2) {
         auto all_res = Pennylane::get_new_qubit_list(gate_first->getControlWires(), first_target, gate_second->getControlWires(), second_target);
         INDICES new_control_list = std::get<0>(all_res);
         INDICES new_target_list = std::get<1>(all_res);
-        /*
         //std::cout << "New control list: ";
         for (auto it : new_control_list){
-            //std::cout << it << " ";
+            std::cout << it << " ";
         }
-        */
 
         std::sort(new_target_list.begin(), new_target_list.end());
         std::sort(new_control_list.begin(), new_control_list.end());
 
         //TODO: revisit separate control and target
         // This is considering all wires as target with control wires in the beginning
-        new_target_list.insert(new_target_list.begin(), new_control_list.begin(), new_control_list.end());
-        new_control_list = {};
+        //new_target_list.insert(new_target_list.begin(), new_control_list.begin(), new_control_list.end());
+        //new_control_list = {};
 
 
         // extend gate matrix to whole qubit list
@@ -372,7 +396,7 @@ label2) {
         INDICES first_target = std::get<1>(res_wires);
         */
         INDICES first_control = {};
-        get_extended_matrix(std::move(gate_first), matrix_first, new_control_list, new_target_list, first_control, first_target);
+        get_extended_matrix(std::move(gate_first), matrix_first, new_control_list, new_target_list);
 
         /*
         //TODO: revisit separate control and target
@@ -382,7 +406,7 @@ label2) {
         */
 
         INDICES second_control = {};
-        get_extended_matrix(std::move(gate_second), matrix_second, new_control_list, new_target_list, second_control, second_target );
+        get_extended_matrix(std::move(gate_second), matrix_second, new_control_list, new_target_list);
 
         /*
         //std::cout << "first gate is extended from \n";

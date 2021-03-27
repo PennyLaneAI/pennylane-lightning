@@ -32,8 +32,8 @@ void swap_cols(CplxType* mx, const size_t &dim, const size_t column1, const size
 
 
 void get_extended_matrix(unique_ptr<Pennylane::AbstractGate> gate,
-    vector<CplxType>& matrix, INDICES& new_target_wires, INDICES&
-    new_control_wires,INDICES& first_target_wires, INDICES& first_control_wires);
+vector<CplxType>& matrix, INDICES& new_target_wires, INDICES&
+new_control_wires);
 
 unique_ptr<AbstractGate> merge(unique_ptr<AbstractGate> gate_first, const
 string& label1, unique_ptr<AbstractGate> gate_second, const string& label2);

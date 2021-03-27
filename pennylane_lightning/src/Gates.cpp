@@ -497,8 +497,8 @@ const std::vector<CplxType> Pennylane::CNOTGate::matrix{
 
 Pennylane::CNOTGate::CNOTGate(const vector<unsigned int>& wires)
     : allWires(wires),
-      controlWires(wires[0])
-    , targetWires(wires[1])
+      controlWires({wires[0]})
+    , targetWires({wires[1]})
 {}
 
 void Pennylane::CNOTGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
@@ -555,8 +555,8 @@ const std::vector<CplxType> Pennylane::CZGate::matrix{
 
 Pennylane::CZGate::CZGate(const vector<unsigned int>& wires)
     : allWires(wires),
-      controlWires(wires[0])
-    , targetWires(wires[1])
+      controlWires({wires[0]})
+    , targetWires({wires[1]})
 {}
 
 void Pennylane::CZGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
@@ -585,8 +585,8 @@ Pennylane::CRotationXGate::CRotationXGate(double rotationAngle, const vector<uns
       0, 0, c, js,
       0, 0, js, c }
     , allWires(wires),
-      controlWires(wires[0])
-    , targetWires(wires[1])
+      controlWires({wires[0]})
+    , targetWires({wires[1]})
 {}
 
 void Pennylane::CRotationXGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
@@ -629,8 +629,8 @@ Pennylane::CRotationYGate::CRotationYGate(double rotationAngle, const vector<uns
       0, 0, c, -s,
       0, 0, s, c }
     , allWires(wires),
-      controlWires(wires[0])
-    , targetWires(wires[1])
+      controlWires({wires[0]})
+    , targetWires({wires[1]})
 {}
 
 void Pennylane::CRotationYGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
@@ -675,8 +675,8 @@ Pennylane::CRotationZGate::CRotationZGate(double rotationAngle, const vector<uns
       0, 0, first, 0,
       0, 0, 0, second }
     , allWires(wires),
-      controlWires(wires[0])
-    , targetWires(wires[1])
+      controlWires({wires[0]})
+    , targetWires({wires[1]})
 {}
 
 void Pennylane::CRotationZGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
@@ -727,8 +727,8 @@ Pennylane::CGeneralRotationGate::CGeneralRotationGate(double phi, double theta, 
       0, 0, r1, r2,
       0, 0, r3, r4 }
     , allWires(wires),
-      controlWires(wires[0])
-    , targetWires(wires[1])
+      controlWires({wires[0]})
+    , targetWires({wires[1]})
 {}
 
 void Pennylane::CGeneralRotationGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
@@ -877,6 +877,11 @@ unique_ptr<Pennylane::AbstractGate> Pennylane::constructGate(const string& label
     auto dispatchTableIterator = dispatchTable.find(label);
     if (dispatchTableIterator == dispatchTable.end())
         throw std::invalid_argument(label + " is not a supported gate type");
+
+    std::cout << "Wires for CNOT: ";
+    for (auto it : wires){
+        std::cout << it << " ";
+    }
 
     return dispatchTableIterator->second(parameters, wires);
 }
