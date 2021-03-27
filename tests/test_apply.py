@@ -422,7 +422,7 @@ class TestExpval:
 
     def test_expval_estimate(self):
         """Test that the expectation value is not analytically calculated"""
-        dev = qml.device("lightning.qubit", wires=1, shots=3, analytic=False)
+        dev = qml.device("lightning.qubit", wires=1, shots=3)
 
         @qml.qnode(dev)
         def circuit():
@@ -476,7 +476,7 @@ class TestVar:
     def test_var_estimate(self):
         """Test that the variance is not analytically calculated"""
 
-        dev = qml.device("lightning.qubit", wires=1, shots=3, analytic=False)
+        dev = qml.device("lightning.qubit", wires=1, shots=3)
 
         @qml.qnode(dev)
         def circuit():
@@ -554,8 +554,7 @@ class TestLightningQubitIntegration:
 
         dev = qml.device("lightning.qubit", wires=2)
         assert dev.num_wires == 2
-        assert dev.shots == 1000
-        assert dev.analytic
+        assert dev.shots is None
         assert dev.short_name == "lightning.qubit"
 
     def test_no_backprop(self):
@@ -617,8 +616,8 @@ class TestLightningQubitIntegration:
     def test_nonzero_shots(self, tol):
         """Test that the default qubit plugin provides correct result for high shot number"""
 
-        shots = 10 ** 5
-        dev = qml.device("lightning.qubit", wires=1)
+        shots = 10 ** 4
+        dev = qml.device("lightning.qubit", wires=1, shots=shots)
 
         p = 0.543
 
@@ -632,7 +631,7 @@ class TestLightningQubitIntegration:
         for _ in range(100):
             runs.append(circuit(p))
 
-        assert np.isclose(np.mean(runs), -np.sin(p), atol=tol, rtol=0)
+        assert np.isclose(np.mean(runs), -np.sin(p), atol=1e-3, rtol=0)
 
     # This test is ran against the state |0> with one Z expval
     @pytest.mark.parametrize(
@@ -1135,7 +1134,7 @@ class TestTensorSample:
 
     def test_paulix_pauliy(self, theta, phi, varphi, monkeypatch, tol):
         """Test that a tensor product involving PauliX and PauliY works correctly"""
-        dev = qml.device("lightning.qubit", wires=3, shots=10000)
+        dev = qml.device("lightning.qubit", wires=3, shots=None)
 
         obs = qml.PauliX(0) @ qml.PauliY(2)
 

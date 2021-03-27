@@ -30,7 +30,7 @@ VARPHI = np.linspace(0.02, 1, 3)
 
 
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-@pytest.mark.parametrize("shots", [8192])
+@pytest.mark.parametrize("shots", [None])
 class TestExpval:
     """Test expectation values"""
 
@@ -130,7 +130,7 @@ class TestExpval:
 
 
 @pytest.mark.parametrize("theta,phi,varphi", list(zip(THETA, PHI, VARPHI)))
-@pytest.mark.parametrize("shots", [8192])
+@pytest.mark.parametrize("shots", [None])
 class TestTensorExpval:
     """Test tensor expectation values"""
 
