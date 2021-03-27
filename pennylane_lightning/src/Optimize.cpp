@@ -175,6 +175,52 @@ void Pennylane::swap_cols(CplxType* mx, const size_t &dim, const size_t column1,
     }
 }
 
+void sort_and_swap_to_correct(std::vector<UINT>& unsorted_new_target_index_list, vector<CplxType>& matrix, size_t new_matrix_dim){
+    // generate ascending index of the INDEX_NUMBER of unsorted_target_qubit_index_list.
+    std::vector<std::pair<UINT,UINT>> sorted_element_position;
+    for (UINT i = 0; i<unsorted_new_target_index_list.size();++i){
+        sorted_element_position.push_back(std::make_pair( unsorted_new_target_index_list[i], i));
+    }
+    std::sort(sorted_element_position.begin(), sorted_element_position.end());
+    std::vector<UINT> sorted_index(sorted_element_position.size(), -1);
+    for (UINT i = 0; i < sorted_index.size(); ++i) sorted_index[ sorted_element_position[i].second ] = i;
+
+    // If target qubit is not in the sorted position, we swap the element to the element in correct position. If not, go next index.
+    // This sort will stop with n-time swap in the worst case, which is smaller than the cost of std::sort.
+    // We cannot directly sort target qubit list in order to swap matrix rows and columns with respect to qubit ordering.
+    UINT ind1 = 0;
+    while (ind1 < sorted_index.size()) {
+        if (sorted_index[ind1] != ind1) {
+            UINT ind2 = sorted_index[ind1];
+
+            // std::move to correct position
+            std::swap(sorted_index[ind1], sorted_index[ind2]);
+            std::swap(unsorted_new_target_index_list[ind1], unsorted_new_target_index_list[ind2]);
+
+            // create masks
+            const UINT min_index = std::min(ind1, ind2);
+            const UINT max_index = std::max(ind1, ind2);
+            const ITYPE min_mask = uexp2( min_index);
+            const ITYPE max_mask = uexp2( max_index);
+
+            const ITYPE loop_dim = new_matrix_dim >> 2;
+
+            for (ITYPE state_index = 0; state_index < loop_dim; ++state_index) {
+                ITYPE basis_00 = state_index;
+                basis_00 = insert_zero_to_basis_index(basis_00, min_mask, min_index);
+                basis_00 = insert_zero_to_basis_index(basis_00, max_mask, max_index);
+                ITYPE basis_01 = basis_00 ^ min_mask;
+                ITYPE basis_10 = basis_00 ^ max_mask;
+
+                Pennylane::swap_cols(matrix.data(), new_matrix_dim, (size_t)basis_01, (size_t)basis_10);
+                Pennylane::swap_rows(matrix.data(), new_matrix_dim, (size_t)basis_01, (size_t)basis_10);
+            }
+        }
+        else ind1++;
+    }
+}
+
+
 
 // Join new qubit indices to target_list according to a given first_target_wires, and set a new matrix to "matrix"
 void Pennylane::get_extended_matrix(unique_ptr<AbstractGate> gate,
@@ -286,49 +332,7 @@ new_target_wires) {
     // 5. Since the order of (C,B,A) is different from that of the other gate, we sort (C,B,A) after generating matrix.
     // We do nothing if it is already sorted
     if (!std::is_sorted(unsorted_new_target_index_list.begin(), unsorted_new_target_index_list.end())) {
-
-        // generate ascending index of the INDEX_NUMBER of unsorted_target_qubit_index_list.
-        std::vector<std::pair<UINT,UINT>> sorted_element_position;
-        for (UINT i = 0; i<unsorted_new_target_index_list.size();++i){
-            sorted_element_position.push_back(std::make_pair( unsorted_new_target_index_list[i], i));
-        }
-        std::sort(sorted_element_position.begin(), sorted_element_position.end());
-        std::vector<UINT> sorted_index(sorted_element_position.size(), -1);
-        for (UINT i = 0; i < sorted_index.size(); ++i) sorted_index[ sorted_element_position[i].second ] = i;
-
-        // If target qubit is not in the sorted position, we swap the element to the element in correct position. If not, go next index.
-        // This sort will stop with n-time swap in the worst case, which is smaller than the cost of std::sort.
-        // We cannot directly sort target qubit list in order to swap matrix rows and columns with respect to qubit ordering.
-        UINT ind1 = 0;
-        while (ind1 < sorted_index.size()) {
-            if (sorted_index[ind1] != ind1) {
-                UINT ind2 = sorted_index[ind1];
-
-                // std::move to correct position
-                std::swap(sorted_index[ind1], sorted_index[ind2]);
-                std::swap(unsorted_new_target_index_list[ind1], unsorted_new_target_index_list[ind2]);
-
-                // create masks
-                const UINT min_index = std::min(ind1, ind2);
-                const UINT max_index = std::max(ind1, ind2);
-                const ITYPE min_mask = uexp2( min_index);
-                const ITYPE max_mask = uexp2( max_index);
-
-                const ITYPE loop_dim = new_matrix_dim >> 2;
-
-                for (ITYPE state_index = 0; state_index < loop_dim; ++state_index) {
-                    ITYPE basis_00 = state_index;
-                    basis_00 = insert_zero_to_basis_index(basis_00, min_mask, min_index);
-                    basis_00 = insert_zero_to_basis_index(basis_00, max_mask, max_index);
-                    ITYPE basis_01 = basis_00 ^ min_mask;
-                    ITYPE basis_10 = basis_00 ^ max_mask;
-
-                    swap_cols(matrix.data(), new_matrix_dim, (size_t)basis_01, (size_t)basis_10);
-                    swap_rows(matrix.data(), new_matrix_dim, (size_t)basis_01, (size_t)basis_10);
-                }
-            }
-            else ind1++;
-        }
+        sort_and_swap_to_correct(unsorted_new_target_index_list, matrix, new_matrix_dim);
     }
 
     ////std::cout << "unsorted " << std::endl;
