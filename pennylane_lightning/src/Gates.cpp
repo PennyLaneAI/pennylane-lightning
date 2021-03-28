@@ -495,6 +495,8 @@ const std::vector<CplxType> Pennylane::CNOTGate::matrix{
     0, 0, 0, 1,
     0, 0, 1, 0 };
 
+const std::vector<CplxType> Pennylane::CNOTGate::targetMatrix = Pennylane::XGate::matrix;
+
 Pennylane::CNOTGate::CNOTGate(const vector<unsigned int>& wires)
     : allWires(wires),
       controlWires({wires[0]})
@@ -553,6 +555,8 @@ const std::vector<CplxType> Pennylane::CZGate::matrix{
     0, 0, 1, 0,
     0, 0, 0, -1 };
 
+const std::vector<CplxType> Pennylane::CZGate::targetMatrix = Pennylane::ZGate::matrix;
+
 Pennylane::CZGate::CZGate(const vector<unsigned int>& wires)
     : allWires(wires),
       controlWires({wires[0]})
@@ -584,6 +588,9 @@ Pennylane::CRotationXGate::CRotationXGate(double rotationAngle, const vector<uns
       0, 1, 0, 0,
       0, 0, c, js,
       0, 0, js, c }
+    , targetMatrix{
+      c, js,
+      js, c }
     , allWires(wires),
       controlWires({wires[0]})
     , targetWires({wires[1]})
@@ -628,6 +635,9 @@ Pennylane::CRotationYGate::CRotationYGate(double rotationAngle, const vector<uns
       0, 1, 0, 0,
       0, 0, c, -s,
       0, 0, s, c }
+    , targetMatrix{
+      c, -s,
+      s, c }
     , allWires(wires),
       controlWires({wires[0]})
     , targetWires({wires[1]})
@@ -674,6 +684,9 @@ Pennylane::CRotationZGate::CRotationZGate(double rotationAngle, const vector<uns
       0, 1, 0, 0,
       0, 0, first, 0,
       0, 0, 0, second }
+    , targetMatrix{
+      first, 0,
+      0, second }
     , allWires(wires),
       controlWires({wires[0]})
     , targetWires({wires[1]})
@@ -726,6 +739,9 @@ Pennylane::CGeneralRotationGate::CGeneralRotationGate(double phi, double theta, 
       0, 1, 0, 0,
       0, 0, r1, r2,
       0, 0, r3, r4 }
+    , targetMatrix{
+      r1, r2,
+      r3, r4 }
     , allWires(wires),
       controlWires({wires[0]})
     , targetWires({wires[1]})
@@ -810,6 +826,8 @@ const std::vector<CplxType> Pennylane::CSWAPGate::matrix{
     0, 0, 0, 0, 0, 0, 1, 0,
     0, 0, 0, 0, 0, 1, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 1 };
+
+const std::vector<CplxType> Pennylane::CSWAPGate::targetMatrix = Pennylane::SWAPGate::matrix;
 
 Pennylane::CSWAPGate::CSWAPGate(const vector<unsigned int>& wires)
     : allWires(wires),

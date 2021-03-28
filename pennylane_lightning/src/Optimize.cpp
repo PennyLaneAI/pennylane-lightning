@@ -246,7 +246,7 @@ new_target_wires) {
             join_from_control.push_back(wire);
 
             // PennyLane only has all-up controls
-            //control_mask ^= (uexp2( (join_from_control.size()-1));
+            control_mask ^= uexp2( (join_from_control.size()-1));
         }
     }
 
@@ -320,6 +320,7 @@ new_target_wires) {
         for(auto it: org_matrix){
             std::cout << it << " ";
         }
+        std::cout << "new_matrix_dim: " << new_matrix_dim;
         Pennylane::set_block(matrix.data(), new_matrix_dim, paste_start_vector_like, org_matrix.data(), org_matrix_dim);
     }
 

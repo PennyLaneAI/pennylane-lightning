@@ -41,6 +41,7 @@ namespace Pennylane {
          * @return the matrix representation for the gate as a one-dimensional vector.
          */
         virtual const std::vector<CplxType>& asMatrix() = 0;
+        virtual const std::vector<CplxType>& targetMatrix() = 0;
         virtual const std::vector<unsigned int>& getAllWires() = 0;
         virtual const std::vector<unsigned int>& getControlWires() = 0;
         virtual const std::vector<unsigned int>& getTargetWires() = 0;
@@ -83,6 +84,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return matrix; }
         const std::vector<unsigned int>& getAllWires() { return allWires; }
         const std::vector<unsigned int>& getControlWires() { return controlWires; }
         const std::vector<unsigned int>& getTargetWires() { return targetWires; }
@@ -103,6 +105,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return matrix; }
         const std::vector<unsigned int>& getAllWires() { return allWires; }
         const std::vector<unsigned int>& getControlWires() { return controlWires; }
         const std::vector<unsigned int>& getTargetWires() { return targetWires; }
@@ -123,6 +126,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return matrix; }
         const std::vector<unsigned int>& getAllWires() { return allWires; }
         const std::vector<unsigned int>& getControlWires() { return controlWires; }
         const std::vector<unsigned int>& getTargetWires() { return targetWires; }
@@ -143,6 +147,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return matrix; }
         const std::vector<unsigned int>& getAllWires() { return allWires; }
         const std::vector<unsigned int>& getControlWires() { return controlWires; }
         const std::vector<unsigned int>& getTargetWires() { return targetWires; }
@@ -163,6 +168,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return matrix; }
         const std::vector<unsigned int>& getAllWires() { return allWires; }
         const std::vector<unsigned int>& getControlWires() { return controlWires; }
         const std::vector<unsigned int>& getTargetWires() { return targetWires; }
@@ -184,6 +190,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return matrix; }
         const std::vector<unsigned int>& getAllWires() { return allWires; }
         const std::vector<unsigned int>& getControlWires() { return controlWires; }
         const std::vector<unsigned int>& getTargetWires() { return targetWires; }
@@ -205,6 +212,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return matrix; }
         void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
         static const double generatorScalingFactor;
         const std::vector<unsigned int>& getAllWires() { return allWires; }
@@ -228,6 +236,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return matrix; }
         void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
         static const double generatorScalingFactor;
         const std::vector<unsigned int>& getAllWires() { return allWires; }
@@ -251,6 +260,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return matrix; }
         const std::vector<unsigned int>& getAllWires() { return allWires; }
         const std::vector<unsigned int>& getControlWires() { return controlWires; }
         const std::vector<unsigned int>& getTargetWires() { return targetWires; }
@@ -274,6 +284,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return matrix; }
         const std::vector<unsigned int>& getAllWires() { return allWires; }
         const std::vector<unsigned int>& getControlWires() { return controlWires; }
         const std::vector<unsigned int>& getTargetWires() { return targetWires; }
@@ -297,6 +308,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return matrix; }
         const std::vector<unsigned int>& getAllWires() { return allWires; }
         const std::vector<unsigned int>& getControlWires() { return controlWires; }
         const std::vector<unsigned int>& getTargetWires() { return targetWires; }
@@ -313,6 +325,7 @@ namespace Pennylane {
     class CNOTGate : public TwoQubitGate {
     private:
         static const std::vector<CplxType> matrix;
+        static const std::vector<CplxType> targetMatrix;
         const std::vector<unsigned int> allWires;
         const std::vector<unsigned int> controlWires;
         const std::vector<unsigned int> targetWires;
@@ -324,6 +337,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return targetMatrix; }
         const std::vector<unsigned int>& getAllWires() { return allWires; }
         const std::vector<unsigned int>& getControlWires() { return controlWires; }
         const std::vector<unsigned int>& getTargetWires() { return targetWires; }
@@ -344,6 +358,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return matrix; }
         const std::vector<unsigned int>& getAllWires() { return allWires; }
         const std::vector<unsigned int>& getControlWires() { return controlWires; }
         const std::vector<unsigned int>& getTargetWires() { return targetWires; }
@@ -353,6 +368,7 @@ namespace Pennylane {
     class CZGate : public TwoQubitGate {
     private:
         static const std::vector<CplxType> matrix;
+        static const std::vector<CplxType> targetMatrix;
         const std::vector<unsigned int> allWires;
         const std::vector<unsigned int> controlWires;
         const std::vector<unsigned int> targetWires;
@@ -364,6 +380,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return targetMatrix; }
         const std::vector<unsigned int>& getAllWires() { return allWires; }
         const std::vector<unsigned int>& getControlWires() { return controlWires; }
         const std::vector<unsigned int>& getTargetWires() { return targetWires; }
@@ -374,6 +391,7 @@ namespace Pennylane {
     private:
         const CplxType c, js;
         const std::vector<CplxType> matrix;
+        const std::vector<CplxType> targetMatrix;
         const std::vector<unsigned int> allWires;
         const std::vector<unsigned int> controlWires;
         const std::vector<unsigned int> targetWires;
@@ -385,6 +403,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return targetMatrix; }
         const std::vector<unsigned int>& getAllWires() { return allWires; }
         const std::vector<unsigned int>& getControlWires() { return controlWires; }
         const std::vector<unsigned int>& getTargetWires() { return targetWires; }
@@ -397,6 +416,7 @@ namespace Pennylane {
     private:
         const CplxType c, s;
         const std::vector<CplxType> matrix;
+        const std::vector<CplxType> targetMatrix;
         const std::vector<unsigned int> allWires;
         const std::vector<unsigned int> controlWires;
         const std::vector<unsigned int> targetWires;
@@ -408,6 +428,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return targetMatrix; }
         const std::vector<unsigned int>& getAllWires() { return allWires; }
         const std::vector<unsigned int>& getControlWires() { return controlWires; }
         const std::vector<unsigned int>& getTargetWires() { return targetWires; }
@@ -420,6 +441,7 @@ namespace Pennylane {
     private:
         const CplxType first, second;
         const std::vector<CplxType> matrix;
+        const std::vector<CplxType> targetMatrix;
         const std::vector<unsigned int> allWires;
         const std::vector<unsigned int> controlWires;
         const std::vector<unsigned int> targetWires;
@@ -431,6 +453,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return targetMatrix; }
         const std::vector<unsigned int>& getAllWires() { return allWires; }
         const std::vector<unsigned int>& getControlWires() { return controlWires; }
         const std::vector<unsigned int>& getTargetWires() { return targetWires; }
@@ -443,6 +466,7 @@ namespace Pennylane {
     private:
         const CplxType c, s, r1, r2, r3, r4;
         const std::vector<CplxType> matrix;
+        const std::vector<CplxType> targetMatrix;
         const std::vector<unsigned int> allWires;
         const std::vector<unsigned int> controlWires;
         const std::vector<unsigned int> targetWires;
@@ -454,6 +478,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return targetMatrix; }
         const std::vector<unsigned int>& getAllWires() { return allWires; }
         const std::vector<unsigned int>& getControlWires() { return controlWires; }
         const std::vector<unsigned int>& getTargetWires() { return targetWires; }
@@ -481,6 +506,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return matrix; }
         const std::vector<unsigned int>& getAllWires() { return allWires; }
         const std::vector<unsigned int>& getControlWires() { return controlWires; }
         const std::vector<unsigned int>& getTargetWires() { return targetWires; }
@@ -490,6 +516,7 @@ namespace Pennylane {
     class CSWAPGate : public ThreeQubitGate {
     private:
         static const std::vector<CplxType> matrix;
+        static const std::vector<CplxType> targetMatrix;
         const std::vector<unsigned int> allWires;
         const std::vector<unsigned int> controlWires;
         const std::vector<unsigned int> targetWires;
@@ -501,6 +528,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return targetMatrix; }
         const std::vector<unsigned int>& getAllWires() { return allWires; }
         const std::vector<unsigned int>& getControlWires() { return controlWires; }
         const std::vector<unsigned int>& getTargetWires() { return targetWires; }
@@ -521,6 +549,7 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
+        inline const std::vector<CplxType>& targetMatrix(){ return matrix; }
         std::vector<unsigned int>& getAllWires() { return allWires; }
         const std::vector<unsigned int>& getControlWires() { return controlWires; }
         const std::vector<unsigned int>& getTargetWires() { return targetWires; }
