@@ -107,10 +107,12 @@ Pennylane::XGate Pennylane::XGate::create(const vector<double>& parameters, cons
     validateLength(Pennylane::XGate::label, parameters, 0);
     return Pennylane::XGate(wires);
 }
-
-const vector<CplxType> Pennylane::XGate::matrix{
+const vector<CplxType> XGateMatrix = {
     0, 1,
     1, 0 };
+
+
+const vector<CplxType> Pennylane::XGate::matrix = XGateMatrix;
 
 void Pennylane::XGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
     // gate is its own inverse
@@ -159,9 +161,11 @@ Pennylane::ZGate Pennylane::ZGate::create(const vector<double>& parameters, cons
     return Pennylane::ZGate(wires);
 }
 
-const std::vector<CplxType> Pennylane::ZGate::matrix{
+const std::vector<CplxType> ZGateMatrix = {
     1, 0,
     0, -1 };
+
+const std::vector<CplxType> Pennylane::ZGate::matrix = ZGateMatrix;
 
 Pennylane::ZGate::ZGate(const vector<unsigned int>& wires)
     : allWires(wires),
@@ -495,7 +499,7 @@ const std::vector<CplxType> Pennylane::CNOTGate::matrix{
     0, 0, 0, 1,
     0, 0, 1, 0 };
 
-const std::vector<CplxType> Pennylane::CNOTGate::targetMatrix = Pennylane::XGate::matrix;
+const std::vector<CplxType> Pennylane::CNOTGate::targetMatrix = XGateMatrix;
 
 Pennylane::CNOTGate::CNOTGate(const vector<unsigned int>& wires)
     : allWires(wires),
@@ -520,11 +524,13 @@ Pennylane::SWAPGate Pennylane::SWAPGate::create(const vector<double>& parameters
     return Pennylane::SWAPGate(wires);
 }
 
-const std::vector<CplxType> Pennylane::SWAPGate::matrix{
+const std::vector<CplxType> SWAPGateMatrix = {
     1, 0, 0, 0,
     0, 0, 1, 0,
     0, 1, 0, 0,
     0, 0, 0, 1 };
+
+const std::vector<CplxType> Pennylane::SWAPGate::matrix = SWAPGateMatrix;
 
 Pennylane::SWAPGate::SWAPGate(const vector<unsigned int>& wires)
     : allWires(wires),
@@ -555,7 +561,7 @@ const std::vector<CplxType> Pennylane::CZGate::matrix{
     0, 0, 1, 0,
     0, 0, 0, -1 };
 
-const std::vector<CplxType> Pennylane::CZGate::targetMatrix = Pennylane::ZGate::matrix;
+const std::vector<CplxType> Pennylane::CZGate::targetMatrix = ZGateMatrix;
 
 Pennylane::CZGate::CZGate(const vector<unsigned int>& wires)
     : allWires(wires),
@@ -827,7 +833,7 @@ const std::vector<CplxType> Pennylane::CSWAPGate::matrix{
     0, 0, 0, 0, 0, 1, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 1 };
 
-const std::vector<CplxType> Pennylane::CSWAPGate::targetMatrix = Pennylane::SWAPGate::matrix;
+const std::vector<CplxType> Pennylane::CSWAPGate::targetMatrix = SWAPGateMatrix;
 
 Pennylane::CSWAPGate::CSWAPGate(const vector<unsigned int>& wires)
     : allWires(wires),

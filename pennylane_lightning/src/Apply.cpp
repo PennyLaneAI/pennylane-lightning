@@ -111,7 +111,7 @@ void Pennylane::apply(
 
     // TODO: inverses
     // Merge gates here, wires are updated
-    Pennylane::optimize_light(std::move(gates), ops, qubits);
+    //Pennylane::optimize_light(std::move(gates), ops, qubits);
 
     int i = 0;
     for (auto && gate : gates) {
