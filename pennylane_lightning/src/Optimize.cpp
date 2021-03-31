@@ -292,7 +292,7 @@ new_target_wires) {
     */
 
     // 4. Repeat 2^{|C|}-times paste of original gate matrix A .
-    vector<CplxType> org_matrix = gate->asMatrix();
+    vector<CplxType> org_matrix = first_control_wires.empty() ? gate->asMatrix() : gate->asTargetMatrix();
 
     //Following in Qulacs: only target wires matrix is stored?
     size_t org_matrix_dim = uexp2( first_target_wires.size());
@@ -373,9 +373,6 @@ label2) {
 
         auto first_target = gate_first->getTargetWires();
         auto second_target = gate_second->getTargetWires();
-
-        vector<CplxType> orgmat1 = first_control.empty() ? gate_first->asMatrix() : gate_first->asTargetMatrix();
-        vector<CplxType> orgmat2 = second_control.empty() ? gate_second->asMatrix() : gate_second->asTargetMatrix();
 
         // obtain updated qubit information
         auto all_res = Pennylane::get_new_qubit_list(first_control, first_target, gate_second->getControlWires(), second_target);
