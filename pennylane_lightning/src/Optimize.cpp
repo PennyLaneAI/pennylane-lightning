@@ -368,13 +368,17 @@ unique_ptr<AbstractGate> Pennylane::merge(unique_ptr<AbstractGate> gate_first,
 const string& label1, unique_ptr<AbstractGate> gate_second, const string&
 label2) {
 
-        vector<CplxType> orgmat1 = gate_first->asMatrix();
-        vector<CplxType> orgmat2 = gate_second->asMatrix();
+        auto first_control = gate_first->getControlWires();
+        auto second_control = gate_second->getControlWires();
 
-        // obtain updated qubit information
         auto first_target = gate_first->getTargetWires();
         auto second_target = gate_second->getTargetWires();
-        auto all_res = Pennylane::get_new_qubit_list(gate_first->getControlWires(), first_target, gate_second->getControlWires(), second_target);
+
+        vector<CplxType> orgmat1 = first_control.empty() ? gate_first->asMatrix() : gate_first->asTargetMatrix();
+        vector<CplxType> orgmat2 = second_control.empty() ? gate_second->asMatrix() : gate_second->asTargetMatrix();
+
+        // obtain updated qubit information
+        auto all_res = Pennylane::get_new_qubit_list(first_control, first_target, gate_second->getControlWires(), second_target);
         INDICES new_control_list = std::get<0>(all_res);
         INDICES new_target_list = std::get<1>(all_res);
         //std::cout << "New control list: ";
@@ -400,7 +404,6 @@ label2) {
         INDICES first_control = std::get<0>(res_wires);
         INDICES first_target = std::get<1>(res_wires);
         */
-        INDICES first_control = {};
         get_extended_matrix(std::move(gate_first), matrix_first, new_control_list, new_target_list);
 
         /*
@@ -410,7 +413,6 @@ label2) {
         INDICES second_target = std::get<1>(res_wires2);
         */
 
-        INDICES second_control = {};
         get_extended_matrix(std::move(gate_second), matrix_second, new_control_list, new_target_list);
 
         /*
