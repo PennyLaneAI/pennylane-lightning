@@ -259,6 +259,7 @@ new_target_wires) {
         }
     }
 
+    std::reverse(join_from_control.begin(), join_from_control.end());
     // At first, qubit indices are ordered as (A,C,B)
     std::vector<UINT> unsorted_new_target_index_list = join_from_target; // A
     unsorted_new_target_index_list.insert(unsorted_new_target_index_list.end(), join_from_other_gate.begin(), join_from_other_gate.end()); // C

@@ -857,6 +857,7 @@ const string Pennylane::QubitUnitary::label = "QubitUnitary";
 Pennylane::QubitUnitary::QubitUnitary(const int numQubits, std::vector<CplxType> const &mx, const vector<unsigned int>& controlWires, const vector<unsigned int>& targetWires)
  : AbstractGate(numQubits),
    matrix(mx),
+   targetMatrix(mx),
    controlWires(controlWires),
    targetWires(targetWires),
    allWires(controlWires) {allWires.insert(allWires.end(), this->targetWires.begin(), this->targetWires.end());} ;

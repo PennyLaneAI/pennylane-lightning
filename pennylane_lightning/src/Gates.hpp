@@ -539,6 +539,7 @@ namespace Pennylane {
     class QubitUnitary : public AbstractGate {
     private:
         const std::vector<CplxType> matrix;
+        const std::vector<CplxType> targetMatrix;
         std::vector<unsigned int> allWires;
         const std::vector<unsigned int> controlWires;
         const std::vector<unsigned int> targetWires;
@@ -547,9 +548,9 @@ namespace Pennylane {
         static const std::string label;
         static QubitUnitary create(const std::vector<double>& parameters, const std::vector<unsigned int>& wires);
         inline const std::vector<CplxType>& asMatrix() {
-            return matrix;
+            return targetMatrix;
         }
-        inline const std::vector<CplxType>& asTargetMatrix(){ return matrix; }
+        inline const std::vector<CplxType>& asTargetMatrix(){ return targetMatrix; }
         std::vector<unsigned int>& getAllWires() { return allWires; }
         const std::vector<unsigned int>& getControlWires() { return controlWires; }
         const std::vector<unsigned int>& getTargetWires() { return targetWires; }

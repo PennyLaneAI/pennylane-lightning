@@ -133,7 +133,7 @@ TEST_P(Merge, Merge) {
     unique_ptr<AbstractGate> gate2 = Pennylane::constructGate(label2, {}, wires2);
 
     auto gate = Pennylane::merge(move(gate1), label1, move(gate2), label2);
-    auto res_matrix = gate->asMatrix();
+    auto res_matrix = gate->asTargetMatrix();
 
     ASSERT_EQ(res_matrix, expected);
 }
@@ -142,6 +142,7 @@ INSTANTIATE_TEST_SUITE_P (
         MergeTests,
         Merge,
         ::testing::Values(
+
             std::make_tuple("PauliX", "PauliX", INDICES{0}, INDICES{0}, vector<CplxType>{1,0,0,1}),
             std::make_tuple("PauliX", "PauliX", INDICES{1}, INDICES{1}, vector<CplxType>{1,0,0,1}),
             std::make_tuple("PauliX", "PauliX", INDICES{0}, INDICES{1}, vector<CplxType>{
@@ -155,33 +156,40 @@ INSTANTIATE_TEST_SUITE_P (
                                                      0, 1, 0, 0,
                                                      1, 0, 0, 0}),
             std::make_tuple("CNOT", "CNOT", INDICES{0, 1}, INDICES{0,1}, vector<CplxType>{
-                                                    1, 0, 0, 0,
-                                                    0, 1, 0, 0,
-                                                    0, 0, 1, 0,
-                                                    0, 0, 0, 1}),
+                                                    1, 0,
+                                                    0, 1}),
             std::make_tuple("CZ", "CZ", INDICES{0, 1}, INDICES{0,1}, vector<CplxType>{
-                                                    1, 0, 0, 0,
-                                                    0, 1, 0, 0,
-                                                    0, 0, 1, 0,
-                                                    0, 0, 0, 1}),
-            std::make_tuple("CZ", "PauliX", INDICES{0, 1}, INDICES{2}, vector<CplxType>{
-                                                 0,  1,  0,  0,  0,  0,  0,  0,
-                                                 1,  0,  0,  0,  0,  0,  0,  0,
-                                                 0,  0,  0,  1,  0,  0,  0,  0,
-                                                 0,  0,  1,  0,  0,  0,  0,  0,
-                                                 0,  0,  0,  0,  0,  1,  0,  0,
-                                                 0,  0,  0,  0,  1,  0,  0,  0,
-                                                 0,  0,  0,  0,  0,  0,  0, -1,
-                                                 0,  0,  0,  0,  0,  0, -1,  0}),
-            std::make_tuple("CZ", "PauliX", INDICES{1,2}, INDICES{0}, vector<CplxType>{
-                                                 0,  0,  0,  0,  1,  0,  0,  0,
-                                                 0,  0,  0,  0,  0,  1,  0,  0,
-                                                 0,  0,  0,  0,  0,  0,  1,  0,
-                                                 0,  0,  0,  0,  0,  0,  0, -1,
-                                                 1,  0,  0,  0,  0,  0,  0,  0,
-                                                 0,  1,  0,  0,  0,  0,  0,  0,
-                                                 0,  0,  1,  0,  0,  0,  0,  0,
-                                                 0,  0,  0, -1,  0,  0,  0,  0})
+                                                    1, 0,
+                                                    0, 1}),
+
+            // Note: multiplication is done in reversed order compared to the
+            // tuple ordering (due to first-in-first-out)
+
+            // CNOT_{0, 1} @ CZ_{0,1}: control remains
+            std::make_tuple("CZ", "CNOT", INDICES{0, 1}, INDICES{0, 1}, vector<CplxType>{
+                                                 0, -1,
+                                                 1,  0}),
+
+            // CNOT_{1, 0} @ CZ_{0,1}: control of CZ and CNOT are target
+            std::make_tuple("CZ", "CNOT", INDICES{0, 1}, INDICES{1,0}, vector<CplxType>{
+                                                 1,  0,  0,  0,
+                                                 0,  0,  0, -1,
+                                                 0,  0,  1,  0,
+                                                 0,  1,  0,  0}),
+
+            // X_{0} x I_{1} @ CZ_{0,1}, control of CZ becomes a target
+            std::make_tuple("CZ", "PauliX", INDICES{0, 1}, INDICES{0}, vector<CplxType>{
+                                                 0,  0,  1,  0,
+                                                 0,  0,  0, -1,
+                                                 1,  0,  0,  0,
+                                                 0,  1,  0,  0}),
+
+            // I_{0} x X_{1} @ CZ_{0,1}, control of CZ becomes a target
+            std::make_tuple("CZ", "PauliX", INDICES{0, 1}, INDICES{1}, vector<CplxType>{
+                                                 0,  1,  0,  0,
+                                                 1,  0,  0,  0,
+                                                 0,  0,  0, -1,
+                                                 0,  0,  1,  0})
 
     ));
 
@@ -202,7 +210,7 @@ TEST(MergeThroughPtrs, MergeThroughPtrs) {
     auto gate = aux_func(std::move(gates), label);
 
     vector<CplxType> expected = {1,0,0,1};
-    ASSERT_EQ(gate->asMatrix(), expected);
+    ASSERT_EQ(gate->asTargetMatrix(), expected);
 }
 
 class OptimizeLight : public ::testing::TestWithParam<std::tuple<vector<string>, vector<INDICES> , unsigned int, vector<vector<CplxType> >, vector<INDICES> >> {
@@ -227,7 +235,7 @@ TEST_P(OptimizeLight, OptimizeLight) {
 
     Pennylane::optimize_light(std::move(gates), gate_names, num_qubits);
     ASSERT_EQ(gates.size(), num_expected_gates);
-    ASSERT_EQ(gates[0]->asMatrix(), expected_matrices[0]);
+    ASSERT_EQ(gates[0]->asTargetMatrix(), expected_matrices[0]);
 
     ASSERT_EQ(wires.size(), 1);
     ASSERT_EQ(wires[0], expected_wires[0]);
@@ -291,7 +299,7 @@ TEST_P(OptimizeLightParamOps, OptimizeLightParametrizedOps) {
     Pennylane::optimize_light(std::move(gates), gate_names, num_qubits);
     ASSERT_EQ(gates.size(), num_expected_gates);
 
-    auto res_matrix = gates[0]->asMatrix();
+    auto res_matrix = gates[0]->asTargetMatrix();
     ASSERT_EQ(res_matrix.size(), expected_matrices[0].size());
 
     for(int i =0; i<res_matrix.size(); ++i){
@@ -317,7 +325,6 @@ INSTANTIATE_TEST_SUITE_P (
         OptimizeLightParamOpsTests,
         OptimizeLightParamOps,
         ::testing::Values(
-            // Unitarity
             std::make_tuple(vector<string>{"RY", "RX", "RY"}, test_params, test_wires, 1, vector<vector<CplxType>>{{c1,c2,c3,c1}}, expected_wires)
         ));
 
