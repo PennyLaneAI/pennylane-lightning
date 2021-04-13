@@ -35,7 +35,7 @@ class LightningQubit(DefaultQubit):
     Args:
         wires (int): the number of wires to initialize the device with
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
-            the expectation values. Defaults to 1000 if not specified. Setting
+            the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
     """
