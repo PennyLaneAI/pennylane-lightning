@@ -74,5 +74,5 @@ jobs:
 
       - name: Run PennyLane shared test suite
         run: |
-          pl-device-test --device lightning.qubit --analytic False --skip-ops --shots=20000
-          pl-device-test --device lightning.qubit --analytic True --skip-ops
+          pl-device-test --device lightning.qubit --skip-ops --shots=20000
+          pl-device-test --device lightning.qubit --shots=None --skip-ops
