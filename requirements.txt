@@ -1,6 +1,6 @@
 flaky
 numpy
-pennylane>=0.12
+git+https://github.com/PennyLaneAI/pennylane.git
 pybind11
 pytest
 pytest-cov
