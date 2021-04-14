@@ -25,7 +25,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Thomas Bromley, Christina Lee, Thomas Loke, Antal Száva.
+Thomas Bromley, Theodor Isacsson, Christina Lee, Thomas Loke, Antal Száva.
 
 ---
 
