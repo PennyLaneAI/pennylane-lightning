@@ -129,7 +129,6 @@ class TestExpval:
 
 
 @pytest.mark.parametrize("theta,phi,varphi", list(zip(THETA, PHI, VARPHI)))
-@pytest.mark.parametrize("shots", [None])
 class TestTensorExpval:
     """Test tensor expectation values"""
 
