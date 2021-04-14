@@ -1,9 +1,5 @@
 # Release 0.15.0
 
-### New features since last release
-
-### Breaking changes
-
 ### Improvements
 
 * For compatibility with PennyLane v0.15, the `analytic` keyword argument
