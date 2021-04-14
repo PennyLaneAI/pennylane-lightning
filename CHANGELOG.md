@@ -1,10 +1,15 @@
-# Release 0.15.0-dev
+# Release 0.15.0
 
 ### New features since last release
 
 ### Breaking changes
 
 ### Improvements
+
+* For compatibility with PennyLane v0.15, the `analytic` keyword argument
+  has been removed. Statistics can still be computed analytically by setting
+  `shots=None`.
+  [(#93)](https://github.com/PennyLaneAI/pennylane-lightning/pull/93)
 
 * Inverse gates are now supported.
   [(#89)](https://github.com/PennyLaneAI/pennylane-lightning/pull/89)
@@ -14,8 +19,6 @@
 
 * Remove the previous Eigen-based backend.
   [(#67)](https://github.com/PennyLaneAI/pennylane-lightning/pull/67)
-
-### Documentation
 
 ### Bug fixes
 
