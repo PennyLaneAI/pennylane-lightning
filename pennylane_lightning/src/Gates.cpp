@@ -803,7 +803,7 @@ const std::vector<CplxType> Pennylane::ToffoliGate::matrix{
 Pennylane::ToffoliGate::ToffoliGate(const vector<unsigned int>& wires)
     : allWires(wires),
       controlWires({wires[0], wires[1]})
-    , targetWires(wires[2])
+    , targetWires({wires[2]})
 {}
 
 void Pennylane::ToffoliGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
