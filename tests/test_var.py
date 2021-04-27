@@ -30,11 +30,10 @@ VARPHI = np.linspace(0.02, 1, 3)
 
 
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-@pytest.mark.parametrize("shots", [8192])
 class TestVar:
     """Tests for the variance"""
 
-    def test_var(self, theta, phi, shots, tol):
+    def test_var(self, theta, phi, tol):
         """Tests for variance calculation"""
         dev = qml.device("lightning.qubit", wires=3)
 
@@ -56,11 +55,10 @@ class TestVar:
 
 
 @pytest.mark.parametrize("theta, phi, varphi", list(zip(THETA, PHI, VARPHI)))
-@pytest.mark.parametrize("shots", [8192])
 class TestTensorVar:
     """Tests for variance of tensor observables"""
 
-    def test_paulix_pauliy(self, theta, phi, varphi, shots, tol):
+    def test_paulix_pauliy(self, theta, phi, varphi, tol):
         """Test that a tensor product involving PauliX and PauliY works correctly"""
         dev = qml.device("lightning.qubit", wires=3)
         obs = qml.PauliX(0) @ qml.PauliY(2)
@@ -89,7 +87,7 @@ class TestTensorVar:
 
         assert np.allclose(res, expected, tol)
 
-    def test_pauliz_hadamard_pauliy(self, theta, phi, varphi, shots, tol):
+    def test_pauliz_hadamard_pauliy(self, theta, phi, varphi, tol):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
         dev = qml.device("lightning.qubit", wires=3)
         obs = qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2)

@@ -36,17 +36,14 @@ class LightningQubit(DefaultQubit):
     Args:
         wires (int): the number of wires to initialize the device with
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
-            the expectation values. Defaults to 1000 if not specified.
-            If ``analytic == True``, then the number of shots is ignored
-            in the calculation of expectation values and variances, and only controls the number
-            of samples returned by ``sample``.
-        analytic (bool): indicates if the device should calculate expectations
-            and variances analytically
+            the expectation values. Defaults to ``None`` if not specified. Setting
+            to ``None`` results in computing statistics like expectation values and
+            variances analytically.
     """
 
     name = "Lightning Qubit PennyLane plugin"
     short_name = "lightning.qubit"
-    pennylane_requires = ">=0.12"
+    pennylane_requires = ">=0.15"
     version = __version__
     author = "Xanadu Inc."
 
@@ -77,8 +74,8 @@ class LightningQubit(DefaultQubit):
 
     observables = {"PauliX", "PauliY", "PauliZ", "Hadamard", "Hermitian", "Identity"}
 
-    def __init__(self, wires, *, shots=1000, analytic=True):
-        super().__init__(wires, shots=shots, analytic=analytic)
+    def __init__(self, wires, *, shots=None):
+        super().__init__(wires, shots=shots)
 
     @classmethod
     def capabilities(cls):
