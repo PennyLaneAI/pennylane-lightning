@@ -172,7 +172,7 @@ else:
     ext_modules = []
 
 requirements = [
-    "numpy",
+    "numpy==1.19.5",
     "pennylane>=0.15",
     "pybind11",
 ]
