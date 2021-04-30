@@ -22,7 +22,6 @@ import numpy as np
 import pennylane as qml
 from pennylane_lightning import LightningQubit
 
-
 # defaults
 TOL = 1e-6
 
