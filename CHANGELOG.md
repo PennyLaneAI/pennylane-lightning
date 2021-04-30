@@ -1,16 +1,16 @@
-# Release 0.16.0-dev
-
-### New features
-
-### Improvements
-
-### Breaking changes
+# Release 0.15.1
 
 ### Bug fixes
+
+* Fixes a bug with numpy where building the wheels with numpy version >1.20
+  would cause installation issues.
+  [(#93)](https://github.com/PennyLaneAI/pennylane-lightning/pull/93)
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Josh Izaac, Antal Száva
 
 ---
 
