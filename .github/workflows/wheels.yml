@@ -17,7 +17,7 @@ env:
   # Python build settings
 
   CIBW_BEFORE_BUILD: |
-    pip install numpy scipy pybind11
+    pip install numpy==1.19.5 scipy pybind11
 
   # Testing of built wheels
 
