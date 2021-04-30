@@ -6,7 +6,7 @@
   compatibility issues with the latest NumPy 1.20 release. See
   [the NumPy release notes](https://numpy.org/doc/stable/release/1.20.0-notes.html#size-of-np-ndarray-and-np-void-changed)
   for more details.
-  [(#93)](https://github.com/PennyLaneAI/pennylane-lightning/pull/93)
+  [(#97)](https://github.com/PennyLaneAI/pennylane-lightning/pull/97)
 
 ### Contributors
 
