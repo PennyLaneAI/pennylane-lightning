@@ -16,9 +16,10 @@ This module contains the :class:`~.LightningQubit` class, a PennyLane simulator 
 interfaces with C++ for fast linear algebra calculations.
 """
 from pennylane.devices import DefaultQubit
-from .lightning_qubit_ops import apply
+from .lightning_qubit_ops import apply, adjoint_jacobian
 import numpy as np
-from pennylane import QubitStateVector, BasisState, DeviceError, QubitUnitary
+from pennylane import QubitStateVector, BasisState, DeviceError, QubitUnitary, QuantumFunctionError
+from pennylane.operation import Expectation
 
 from ._version import __version__
 
@@ -138,6 +139,57 @@ class LightningQubit(DefaultQubit):
         state_vector = np.ravel(state)
         apply(state_vector, op_names, op_wires, op_param, op_inverse, self.num_wires)
         return np.reshape(state_vector, state.shape)
+
+    def adjoint_jacobian(self, tape):
+        for m in tape.measurements:
+            if m.return_type is not Expectation:
+                raise QuantumFunctionError(
+                    "Adjoint differentiation method does not support"
+                    f" measurement {m.return_type.value}"
+                )
+
+            if not hasattr(m.obs, "base_name"):
+                m.obs.base_name = None  # This is needed for when the observable is a tensor product
+
+        param_number = len(tape._par_info) - 1
+
+        def _unwrap(param_list):
+            for i, l in enumerate(param_list):
+                try:
+                    param_list[i] = l.unwrap()
+                    if isinstance(param_list[i], (int, float)):
+                        param_list[i] = [float(param_list[i])]
+                    else:
+                        param_list[i] = list(param_list[i])
+                except AttributeError:
+                    continue
+            # if len(param_list) == 1:
+            #     return param_list[0]
+            return param_list
+
+        op_data = [(self._remove_inverse_string(op.name), _unwrap(op.parameters), op.wires.tolist()) for op in tape.operations]
+        operations, op_params, op_wires = map(list, zip(*op_data))
+
+        obs_data = [(self._remove_inverse_string(obs.name), _unwrap(obs.parameters), obs.wires.tolist()) for obs in tape.observables]
+        observables, obs_params, obs_wires = map(list, zip(*obs_data))
+
+        trainable_params = list(tape.trainable_params)
+
+        # send in flattened array of zeros to be populated by adjoint_jacobian
+        jac = np.zeros(len(tape.observables) * len(tape.trainable_params))
+        adjoint_jacobian(
+            self.state,
+            jac,
+            observables,
+            obs_params,
+            obs_wires,
+            operations,
+            op_params,
+            op_wires,
+            trainable_params,
+            param_number,
+        )
+        return jac.reshape((len(tape.observables), len(tape.trainable_params)))
 
     @staticmethod
     def _remove_inverse_string(string):
