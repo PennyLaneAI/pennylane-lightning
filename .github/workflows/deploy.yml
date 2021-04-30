@@ -19,7 +19,7 @@ env:
 
   # Testing of built wheels
 
-  CIBW_TEST_REQUIRES: numpy==1.19.5 scipy pytest pytest-cov pytest-mock flaky
+  CIBW_TEST_REQUIRES: numpy scipy pytest pytest-cov pytest-mock flaky
 
   # Note: breaking up tests so that no test cases hang on Windows, to be reverted
   CIBW_TEST_COMMAND: |
