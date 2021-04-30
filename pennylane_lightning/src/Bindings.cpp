@@ -50,26 +50,26 @@ void adjointJacobian(
     pybind11::array_t<CplxType>& phiNumpyArray,
     pybind11::array_t<double>& jac,
     const vector<string>& observables,
-    const vector<vector<unsigned int> >& obsWires,
     const vector<vector<double> >& obsParams,
+    const vector<vector<unsigned int> >& obsWires,
     const vector<string>& operations,
-    const vector<vector<unsigned int> >& opWires,
     const vector<vector<double> >& opParams,
+    const vector<vector<unsigned int> >& opWires,
     const vector<int>& trainableParams,
     int paramNumber
 ) {
     StateVector state = create(&phiNumpyArray);
     pybind11::buffer_info jacInfo = jac.request();
-    
+
     Pennylane::adjointJacobian(
         state,
         (double*)jacInfo.ptr,
         observables,
-        obsWires,
         obsParams,
+        obsWires,
         operations,
-        opWires,
         opParams,
+        opWires,
         trainableParams,
         paramNumber
     );

@@ -153,12 +153,26 @@ class LightningQubit(DefaultQubit):
 
         param_number = len(tape._par_info) - 1
 
-        op_data = [(op.name, getattr(op, "params", []), op.wires.tolist()) for op in tape.operations]
+        def _unwrap(param_list):
+            for i, l in enumerate(param_list):
+                try:
+                    param_list[i] = l.unwrap()
+                    if isinstance(param_list[i], (int, float)):
+                        param_list[i] = [float(param_list[i])]
+                    else:
+                        param_list[i] = list(param_list[i])
+                except AttributeError:
+                    continue
+            # if len(param_list) == 1:
+            #     return param_list[0]
+            return param_list
+
+        op_data = [(self._remove_inverse_string(op.name), _unwrap(op.parameters), op.wires.tolist()) for op in tape.operations]
         operations, op_params, op_wires = map(list, zip(*op_data))
 
-        obs_data = [(obs.name, getattr(obs, "params", []), obs.wires.tolist()) for obs in tape.observables]
+        obs_data = [(self._remove_inverse_string(obs.name), _unwrap(obs.parameters), obs.wires.tolist()) for obs in tape.observables]
         observables, obs_params, obs_wires = map(list, zip(*obs_data))
-        
+
         trainable_params = list(tape.trainable_params)
 
         # send in flattened array of zeros to be populated by adjoint_jacobian

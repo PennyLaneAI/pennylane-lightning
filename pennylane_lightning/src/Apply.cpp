@@ -117,11 +117,11 @@ void Pennylane::adjointJacobian(
     StateVector& phi,
     double* jac,
     const vector<string>& observables,
-    const vector<vector<unsigned int> >& obsWires,
     const vector<vector<double> >& obsParams,
+    const vector<vector<unsigned int> >& obsWires,
     const vector<string>& operations,
-    const vector<vector<unsigned int> >& opWires,
     const vector<vector<double> >& opParams,
+    const vector<vector<unsigned int> >& opWires,
     const vector<int>& trainableParams,
     int paramNumber
 ) {
@@ -147,8 +147,8 @@ void Pennylane::adjointJacobian(
     }
 
     for (int i = operations.size() - 1; i >= 0; i--) {
-        if (opParams[i].size() > 1) {
-            throw std::invalid_argument(string("The") + operations[i] + string("operation is not supported using the adjoint differentiation method"));
+        if (trainableParams.size() > 1) {
+            throw std::invalid_argument("The operation is not supported using the adjoint differentiation method");
         } else if ((operations[i] != "QubitStateVector") && (operations[i] != "BasisState")) {
             // copy |phi> to |mu> before applying Uj*
             CplxType* phiCopyArr = new CplxType[phi.length];
@@ -168,7 +168,7 @@ void Pennylane::adjointJacobian(
             if (std::find(trainableParams.begin(), trainableParams.end(), paramNumber) != trainableParams.end()) {
                 // create iH|phi> = d/d dUj/dtheta Uj* |phi> = dUj/dtheta|phi'>
                 unique_ptr<AbstractGate> gate = constructGate(operations[i], opParams[i]);
-                double scalingFactor = gate->generatorScalingFactor;
+                double scalingFactor = gate->getGeneratorScalingFactor();
                 Pennylane::applyGateGenerator(
                     mu,
                     std::move(gate),

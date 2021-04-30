@@ -123,11 +123,11 @@ namespace Pennylane {
         StateVector& phi,
         double* jac,
         const std::vector<std::string>& observables,
-        const std::vector<std::vector<unsigned int> >& obsWires,
         const std::vector<std::vector<double> >& obsParams,
+        const std::vector<std::vector<unsigned int> >& obsWires,
         const std::vector<std::string>& operations,
-        const std::vector<std::vector<unsigned int> >& opWires,
         const std::vector<std::vector<double> >& opParams,
+        const std::vector<std::vector<unsigned int> >& opWires,
         const std::vector<int>& trainableParams,
         int paramNumber
     );
