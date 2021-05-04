@@ -22,6 +22,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "Gates.hpp"
 #include "StateVector.hpp"
@@ -66,11 +67,9 @@ namespace Pennylane {
      * @param inverse boolean indicating whether to apply the gate or its inverse
      * @param qubits number of qubits
      */
-    void constructAndApplyOperation(
+    void applyOperation(
         StateVector& state,
-        const std::string& opLabel,
-        const std::vector<unsigned int>& opWires,
-        const std::vector<double>& opParams,
+        std::unique_ptr<AbstractGate> gate,
         bool inverse,
         const unsigned int qubits
     );
@@ -102,7 +101,7 @@ namespace Pennylane {
      */
     void apply(
         StateVector& state,
-        const std::vector<std::string>& ops,
+        std::vector<std::string>& ops,
         const std::vector<std::vector<unsigned int>>& wires,
         const std::vector<std::vector<double>>& params,
         const std::vector<bool>& inverse,

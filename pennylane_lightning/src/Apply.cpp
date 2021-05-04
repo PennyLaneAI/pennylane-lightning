@@ -17,6 +17,7 @@
 #include "Gates.hpp"
 #include "StateVector.hpp"
 #include "Util.hpp"
+#include "Optimize.hpp"
 
 using std::set;
 using std::string;
@@ -48,18 +49,15 @@ vector<size_t> Pennylane::generateBitPatterns(const vector<unsigned int>& qubitI
     return indices;
 }
 
-void Pennylane::constructAndApplyOperation(
+void Pennylane::applyOperation(
     StateVector& state,
-    const string& opLabel,
-    const vector<unsigned int>& opWires,
-    const vector<double>& opParams,
+    unique_ptr<AbstractGate> gate,
     bool inverse,
     const unsigned int qubits
 ) {
-    unique_ptr<AbstractGate> gate = constructGate(opLabel, opParams);
-    if (gate->numQubits != opWires.size())
-        throw std::invalid_argument(string("The gate of type ") + opLabel + " requires " + std::to_string(gate->numQubits) + " wires, but " + std::to_string(opWires.size()) + " were supplied");
-    
+    //vector<unsigned int> opWires = gate->getControlWires();
+    auto opWires = gate->getAllWires();
+    //opWires.insert( opWires.end(), targetWires.begin(), targetWires.end() );
     vector<size_t> internalIndices = generateBitPatterns(opWires, qubits);
 
     vector<unsigned int> externalWires = getIndicesAfterExclusion(opWires, qubits);
@@ -84,7 +82,7 @@ void Pennylane::applyGateGenerator(
 
 void Pennylane::apply(
     StateVector& state,
-    const vector<string>& ops,
+    vector<string>& ops,
     const vector<vector<unsigned int>>& wires,
     const vector<vector<double>>& params,
     const vector<bool>& inverse,
@@ -101,8 +99,25 @@ void Pennylane::apply(
     if (numOperations != wires.size() || numOperations != params.size())
         throw std::invalid_argument("Invalid arguments: number of operations, wires, and parameters must all be equal");
 
+    vector<unique_ptr<AbstractGate>> gates;
     for (int i = 0; i < numOperations; i++) {
-        constructAndApplyOperation(state, ops[i], wires[i], params[i], inverse[i], qubits);
+        string opLabel = ops[i];
+        vector<unsigned int> opWires = wires[i];
+        unique_ptr<AbstractGate> gate = constructGate(opLabel, params[i], wires[i]);
+        if (gate->numQubits != opWires.size())
+            throw std::invalid_argument(string("The gate of type ") + opLabel + " requires " + std::to_string(gate->numQubits) + " wires, but " + std::to_string(opWires.size()) + " were supplied");
+        gates.push_back(std::move(gate));
     }
 
+    // TODO: inverses
+    // Merge gates here, wires are updated
+    Pennylane::optimize_light(std::move(gates), ops, qubits);
+
+    int i = 0;
+    for (auto && gate : gates) {
+        applyOperation(state, std::move(gate), inverse[i], qubits);
+        ++i;
+    }
 }
+
+

@@ -13,8 +13,7 @@
 # limitations under the License.
 CC = g++
 CFLAGS = -std=c++11 -g -Wall -fopenmp -fPIC -I/usr/include \
-	-I../include -I$(GOOGLETEST_DIR)/include \
-	-march=native
+	-I../include -I$(GOOGLETEST_DIR)/include
 
 LFLAGS = -fopenmp -L$(GOOGLETEST_DIR)/lib -lgtest
 
@@ -26,6 +25,9 @@ lightning_util_unittest.o: lightning_util_unittest.cpp
 Gates.o: ../Gates.cpp
 	$(CC) $^ $(CFLAGS) -c
 
+Optimize.o: ../Optimize.cpp
+	$(CC) $^ $(CFLAGS) -c
+
 Apply.o: ../Apply.cpp
 	$(CC) $^ $(CFLAGS) -c
 
@@ -35,10 +37,13 @@ lightning_gates_unittest.o: lightning_gates_unittest.cpp
 lightning_apply_unittest.o: lightning_apply_unittest.cpp
 	$(CC) $^ $(CFLAGS) -c
 
+lightning_optimize_unittest.o: lightning_optimize_unittest.cpp
+	$(CC) $^ $(CFLAGS) -c
+
 gtest_main.o: gtest_main.cpp
 	$(CC) $^ $(CFLAGS) -c
 
-cpptests: gtest_main.o lightning_util_unittest.o lightning_gates_unittest.o Gates.o lightning_apply_unittest.o Apply.o
+cpptests: gtest_main.o lightning_util_unittest.o lightning_gates_unittest.o Gates.o lightning_apply_unittest.o Apply.o lightning_optimize_unittest.o Optimize.o
 	$(CC) $^ -o $@ $(LFLAGS)
 
 test: cpptests
