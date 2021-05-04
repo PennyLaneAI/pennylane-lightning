@@ -237,7 +237,7 @@ TEST_P(OptimizeLight, OptimizeLight) {
     ASSERT_EQ(gates.size(), num_expected_gates);
     ASSERT_EQ(gates[0]->asTargetMatrix(), expected_matrices[0]);
 
-    ASSERT_EQ(wires.size(), 1);
+    ASSERT_EQ(gates[0]->getAllWires().size(), expected_wires[0].size());
     ASSERT_EQ(wires[0], expected_wires[0]);
 }
 
