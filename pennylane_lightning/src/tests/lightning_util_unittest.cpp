@@ -13,8 +13,12 @@
 // limitations under the License.
 #include "gtest/gtest.h"
 #include "../Util.hpp"
+#include "TestingUtils.hpp"
 
 #include <tuple>
+
+using Pennylane::CplxType;
+using std::vector;
 
 namespace test_utils {
 
@@ -58,3 +62,112 @@ INSTANTIATE_TEST_SUITE_P (
                 std::make_tuple(2, 5, 4)));
 
 }
+
+class SetBlock : public ::testing::TestWithParam<std::tuple<vector<CplxType>, size_t, size_t, vector<CplxType>, size_t, vector<CplxType> > > {
+};
+
+TEST_P(SetBlock, SetBlock) {
+    auto big_mx = std::get<0>(GetParam());
+    auto dim = std::get<1>(GetParam());
+
+    auto start_index = std::get<2>(GetParam());
+
+    auto block_mx = std::get<3>(GetParam());
+    auto block_dim = std::get<4>(GetParam());
+
+    auto expected = std::get<5>(GetParam());
+
+    Pennylane::set_block(big_mx.data(), dim, start_index, block_mx.data(), block_dim);
+    ASSERT_EQ(big_mx, expected);
+}
+
+INSTANTIATE_TEST_SUITE_P (
+        SetBlockTests,
+        SetBlock,
+        ::testing::Values(
+                                              // matrix, dim, start idx, block matrix, block dim, result
+                std::make_tuple(vector<CplxType>{0,0,0,0}, 2, 0, vector<CplxType>{1}, 1, vector<CplxType>{1,0,0,0}),
+                std::make_tuple(vector<CplxType>{0,0,0,0}, 2, 2, vector<CplxType>{1}, 1, vector<CplxType>{0,0,1,0}),
+                std::make_tuple(vector<CplxType>{0,0,0,0}, 2, 0, vector<CplxType>{1,0,0,1}, 2, vector<CplxType>{1,0,0,1}),
+
+                std::make_tuple(vector<CplxType>{0,0,0,0,
+                                                 0,0,0,0,
+                                                 0,0,0,0,
+                                                 0,0,0,0}, 4, 0, vector<CplxType>{1,0,0,1}, 2,
+                                 vector<CplxType>{1,0,0,0,
+                                                  0,1,0,0,
+                                                  0,0,0,0,
+                                                  0,0,0,0}),
+
+
+                std::make_tuple(vector<CplxType>{0,0,0,0,
+                                                 0,0,0,0,
+                                                 0,0,0,0,
+                                                 0,0,0,0}, 4, 2,
+                                vector<CplxType>{1,0,
+                                                 0,1}, 2,
+                                vector<CplxType>{0,0,1,0,
+                                                 0,0,0,1,
+                                                 0,0,0,0,
+                                                 0,0,0,0}),
+
+
+                std::make_tuple(vector<CplxType>{0,0,0,0,
+                                                 0,0,0,0,
+                                                 0,0,0,0,
+                                                 0,0,0,0}, 4, 8,
+                                vector<CplxType>{1,0,
+                                                 0,1}, 2,
+                                vector<CplxType>{0,0,0,0,
+                                                 0,0,0,0,
+                                                 1,0,0,0,
+                                                 0,1,0,0}),
+
+
+                std::make_tuple(vector<CplxType>{0,0,0,0,
+                                                 0,0,0,0,
+                                                 0,0,0,0,
+                                                 0,0,0,0}, 4, 10,
+                                vector<CplxType>{1,0,
+                                                 0,1}, 2,
+                                vector<CplxType>{0,0,0,0,
+                                                 0,0,0,0,
+                                                 0,0,1,0,
+                                                 0,0,0,1}),
+                std::make_tuple(vector<CplxType>{1,0,0,0,
+                                                 0,1,0,0,
+                                                 0,0,1,0,
+                                                 0,0,0,1}, 4, 0,
+                                vector<CplxType>{1,0,0,0,
+                                                 0,1,0,0,
+                                                 0,0,0,1,
+                                                 0,0,1,0}, 4,
+                                vector<CplxType>{1,0,0,0,
+                                                 0,1,0,0,
+                                                 0,0,0,1,
+                                                 0,0,1,0})
+    ));
+
+class SetBlockThrowsFixture : public ::testing::TestWithParam<std::tuple<vector<CplxType>, size_t, size_t, vector<CplxType>, size_t >> {
+};
+
+TEST_P(SetBlockThrowsFixture, OutOfBounds) {
+    auto big_mx = std::get<0>(GetParam());
+    auto dim = std::get<1>(GetParam());
+
+    auto start_index = std::get<2>(GetParam());
+
+    auto block_mx = std::get<3>(GetParam());
+    auto block_dim = std::get<4>(GetParam());
+
+    std::string msg = "The block of the matrix determined by the start index needs to be greater than or equal to the dimension of the submatrix.";
+    EXPECT_THROW_WITH_MESSAGE(Pennylane::set_block(big_mx.data(), dim, start_index, block_mx.data(), block_dim), std::invalid_argument, msg);
+}
+
+INSTANTIATE_TEST_SUITE_P (
+        IncorrectStartingIndexOrSubmatrixSize,
+        SetBlockThrowsFixture,
+        ::testing::Values(
+                std::make_tuple(vector<CplxType>{0,0,0,0}, 2, 2, vector<CplxType>{1,0,0,1}, 2),
+                std::make_tuple(vector<CplxType>{0,0,0,0}, 2, 4, vector<CplxType>{1}, 1)
+                ));

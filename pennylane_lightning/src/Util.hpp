@@ -18,12 +18,16 @@
 #pragma once
 
 #include <assert.h>
+#include <memory>
+#include <iostream>
+
+#include "typedefs.hpp"
 
 namespace Pennylane {
 
     /**
      * Calculates 2^n for some integer n > 0 using bitshifts.
-     * 
+     *
      * @param n the exponent
      * @return value of 2^n
      */
@@ -33,7 +37,7 @@ namespace Pennylane {
 
     /**
      * Calculates the decimal value for a qubit, assuming a big-endian convention.
-     * 
+     *
      * @param qubitIndex the index of the qubit in the range [0, qubits)
      * @param qubits the number of qubits in the circuit
      * @return decimal value for the qubit at specified index
@@ -43,6 +47,16 @@ namespace Pennylane {
         return exp2(qubits - qubitIndex - 1);
     }
 
+    /**
+     * Sets a matrix block with the defined submatrix in-place.
+     *
+     * @param mx pointer to the complex-typed matrix in a row-major vector representation
+     * @param dim the dimension of the matrix
+     * @param start_ind the index from which we set the matrix block
+     * @param block_mx the submatrix to use when setting the block
+     * @param block_dim the dimension of the submatrix
+     */
+    void set_block(Pennylane::CplxType* mx, const size_t &dim, const size_t &start_ind, CplxType* block_mx, const size_t &block_dim);
 }
 
 // Helper similar to std::make_unique from c++14
