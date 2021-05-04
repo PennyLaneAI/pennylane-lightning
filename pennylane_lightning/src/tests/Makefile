@@ -13,8 +13,7 @@
 # limitations under the License.
 CC = g++
 CFLAGS = -std=c++11 -g -Wall -fopenmp -fPIC -I/usr/include \
-	-I../include -I$(GOOGLETEST_DIR)/include \
-	-march=native
+	-I../include -I$(GOOGLETEST_DIR)/include
 
 LFLAGS = -fopenmp -L$(GOOGLETEST_DIR)/lib -lgtest
 
