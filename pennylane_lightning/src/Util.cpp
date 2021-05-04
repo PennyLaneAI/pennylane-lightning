@@ -19,7 +19,6 @@
 #include <math.h> 
 
 void Pennylane::set_block(Pennylane::CplxType* mx, const size_t &dim, const size_t &start_ind, CplxType* block_mx, const size_t &block_dim){
-
     auto row_of_start = floor(start_ind/dim);
     auto col_of_start = start_ind % dim;
 
@@ -36,7 +35,6 @@ void Pennylane::set_block(Pennylane::CplxType* mx, const size_t &dim, const size
 }
 
 void Pennylane::swap_cols(CplxType* mx, const size_t &dim, const size_t column1, const size_t column2){
-
     if (column1 >= dim || column2 >= dim)
         throw std::invalid_argument(std::string("The indices of the columns need to be smaller than the dimension of the matrix."));
 
