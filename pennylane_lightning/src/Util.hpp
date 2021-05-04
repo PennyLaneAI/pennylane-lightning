@@ -57,6 +57,26 @@ namespace Pennylane {
      * @param block_dim the dimension of the submatrix
      */
     void set_block(Pennylane::CplxType* mx, const size_t &dim, const size_t &start_ind, CplxType* block_mx, const size_t &block_dim);
+
+    /**
+     * In-place swaps two columns of a matrix.
+     *
+     * @param mx pointer to the complex-typed matrix in a row-major vector representation
+     * @param dim the dimension of the matrix
+     * @param column1 the index of the first column
+     * @param column2 the index of the second column
+     */
+    void swap_cols(CplxType* mx, const size_t &dim, const size_t column1, const size_t column2);
+
+    /**
+     * In-place swaps two rows of a matrix.
+     *
+     * @param mx pointer to the complex-typed matrix in a row-major vector representation
+     * @param dim the dimension of the matrix
+     * @param row1 the index of the first row
+     * @param row2 the index of the second row
+     */
+    void swap_rows(CplxType* mx, const size_t &dim, const size_t row1, const size_t row2);
 }
 
 // Helper similar to std::make_unique from c++14

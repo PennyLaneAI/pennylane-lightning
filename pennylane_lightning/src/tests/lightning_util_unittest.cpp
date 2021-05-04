@@ -171,3 +171,106 @@ INSTANTIATE_TEST_SUITE_P (
                 std::make_tuple(vector<CplxType>{0,0,0,0}, 2, 2, vector<CplxType>{1,0,0,1}, 2),
                 std::make_tuple(vector<CplxType>{0,0,0,0}, 2, 4, vector<CplxType>{1}, 1)
                 ));
+
+class SwapCols : public ::testing::TestWithParam<std::tuple<vector<CplxType>, size_t, size_t, size_t, vector<CplxType> > > {
+};
+
+TEST_P(SwapCols, SwapCols) {
+    auto mx = std::get<0>(GetParam());
+    auto dim = std::get<1>(GetParam());
+
+    auto col1 = std::get<2>(GetParam());
+    auto col2 = std::get<3>(GetParam());
+
+    auto expected = std::get<4>(GetParam());
+
+    Pennylane::swap_cols(mx.data(), dim, col1, col2);
+    ASSERT_EQ(mx, expected);
+}
+
+INSTANTIATE_TEST_SUITE_P (
+        SwapColsTests,
+        SwapCols,
+        ::testing::Values(
+                std::make_tuple(vector<CplxType>{1,2,
+                                                 3,4},
+                                                 2, 0, 1,
+                                vector<CplxType>{2,1,
+                                                 4,3}),
+
+
+                std::make_tuple(vector<CplxType>{1,2,
+                                                 3,4},
+                                                 2, 1, 0,
+                                vector<CplxType>{2,1,
+                                                 4,3}),
+
+
+                std::make_tuple(vector<CplxType>{1,2,3,
+                                                 4,5,6,
+                                                 7,8,9},
+                                                 3, 0, 2,
+                                vector<CplxType>{3,2,1,
+                                                 6,5,4,
+                                                 9,8,7}),
+
+
+                std::make_tuple(vector<CplxType>{1,2,3,
+                                                 4,5,6,
+                                                 7,8,9},
+                                                 3, 2, 1,
+                                vector<CplxType>{1,3,2,
+                                                 4,6,5,
+                                                 7,9,8})
+    ));
+
+class SwapRows : public ::testing::TestWithParam<std::tuple<vector<CplxType>, size_t, size_t, size_t, vector<CplxType> > > {
+};
+
+TEST_P(SwapRows, SwapRows) {
+    auto mx = std::get<0>(GetParam());
+    auto dim = std::get<1>(GetParam());
+
+    auto row1 = std::get<2>(GetParam());
+    auto row2 = std::get<3>(GetParam());
+
+    auto expected = std::get<4>(GetParam());
+
+    Pennylane::swap_rows(mx.data(), dim, row1, row2);
+    ASSERT_EQ(mx, expected);
+}
+
+INSTANTIATE_TEST_SUITE_P (
+        SwapRowsTests,
+        SwapRows,
+        ::testing::Values(
+                std::make_tuple(vector<CplxType>{1,2,
+                                                 3,4},
+                                                 2, 0, 1,
+                                vector<CplxType>{3,4,
+                                                 1,2}),
+
+
+                std::make_tuple(vector<CplxType>{1,2,
+                                                 3,4},
+                                                 2, 1, 0,
+                                vector<CplxType>{3,4,
+                                                 1,2}),
+
+
+                std::make_tuple(vector<CplxType>{1,2,3,
+                                                 4,5,6,
+                                                 7,8,9},
+                                                 3, 0, 2,
+                                vector<CplxType>{7,8,9,
+                                                 4,5,6,
+                                                 1,2,3}),
+
+                std::make_tuple(vector<CplxType>{1,2,3,
+                                                 4,5,6,
+                                                 7,8,9},
+                                                 3, 2, 1,
+                                vector<CplxType>{1,2,3,
+                                                 7,8,9,
+                                                 4,5,6})
+    ));
