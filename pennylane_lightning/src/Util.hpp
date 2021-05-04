@@ -19,7 +19,7 @@
 
 #include <assert.h>
 #include <memory>
-#include <iostream>
+#include <vector>
 
 #include "typedefs.hpp"
 
@@ -46,6 +46,14 @@ namespace Pennylane {
         assert(qubitIndex < qubits);
         return exp2(qubits - qubitIndex - 1);
     }
+
+    /**
+     * Creates the identity matrix with a specific dimension.
+     *
+     * @param dim the dimension of the matrix
+     * @return the identity matrix of size dim
+     */
+    std::vector<CplxType> create_identity(const size_t & dim);
 
     /**
      * Sets a matrix block with the defined submatrix in-place.

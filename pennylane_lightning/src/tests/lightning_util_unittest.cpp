@@ -63,6 +63,29 @@ INSTANTIATE_TEST_SUITE_P (
 
 }
 
+class CreateIdentity : public ::testing::TestWithParam<std::tuple<unsigned int, vector<CplxType> > > {
+};
+
+TEST_P(CreateIdentity, CreateIdentity) {
+    const unsigned int dim = std::get<0>(GetParam());
+    const vector<CplxType> expected =std::get<1>(GetParam());
+
+    vector<CplxType> mx = Pennylane::create_identity(dim);
+
+    ASSERT_EQ(mx, expected);
+}
+
+INSTANTIATE_TEST_SUITE_P (
+        IdentityTests,
+        CreateIdentity,
+        ::testing::Values(
+                std::make_tuple(2, vector<CplxType>{1,0,0,1}),
+                std::make_tuple(4, vector<CplxType>{1,0,0,0,
+                                                    0,1,0,0,
+                                                    0,0,1,0,
+                                                    0,0,0,1})
+    ));
+
 class SetBlock : public ::testing::TestWithParam<std::tuple<vector<CplxType>, size_t, size_t, vector<CplxType>, size_t, vector<CplxType> > > {
 };
 
