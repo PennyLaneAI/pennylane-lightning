@@ -49,8 +49,9 @@ elseif ("$ENV{USE_OPENBLAS}" OR "${USE_OPENBLAS}")
 endif()
 
 pybind11_add_module(lightning_qubit_ops "pennylane_lightning/src/Apply.cpp"
-	"pennylane_lightning/src/Gates.cpp" "pennylane_lightning/src/Bindings.cpp"
-	"pennylane_lightning/src/StateVector.cpp")
+                                        "pennylane_lightning/src/Bindings.cpp"
+                                        "pennylane_lightning/src/Gates.cpp" 
+                                        "pennylane_lightning/src/StateVector.cpp")
 target_link_libraries(lightning_qubit_ops PRIVATE external_dependency)
 set_target_properties(lightning_qubit_ops PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
