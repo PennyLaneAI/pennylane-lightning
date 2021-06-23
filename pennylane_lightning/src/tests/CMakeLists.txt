@@ -15,7 +15,11 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 enable_testing()
 
-add_executable(cpptests lightning_util_unittest.cpp lightning_gates_unittest.cpp "../Gates.cpp" lightning_apply_unittest.cpp "../Apply.cpp")
+add_executable(cpptests lightning_apply_unittest.cpp
+                        lightning_gates_unittest.cpp
+                        lightning_util_unittest.cpp
+                        "../Apply.cpp"
+                        "../Gates.cpp")
 
 target_link_libraries(cpptests PRIVATE gtest_main)
 if(OpenMP_CXX_FOUND)
