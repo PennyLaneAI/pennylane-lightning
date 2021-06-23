@@ -14,6 +14,24 @@ This release contains contributions from (in alphabetical order):
 
 ---
 
+# Release 0.15.1
+
+### Bug fixes
+
+* The PennyLane-Lightning binaries are now built with NumPy 1.19.5, to avoid ABI
+  compatibility issues with the latest NumPy 1.20 release. See
+  [the NumPy release notes](https://numpy.org/doc/stable/release/1.20.0-notes.html#size-of-np-ndarray-and-np-void-changed)
+  for more details.
+  [(#97)](https://github.com/PennyLaneAI/pennylane-lightning/pull/97)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Josh Izaac, Antal Száva
+
+---
+
 # Release 0.15.0
 
 ### Improvements

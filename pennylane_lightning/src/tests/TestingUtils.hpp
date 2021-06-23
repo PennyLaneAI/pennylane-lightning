@@ -18,7 +18,7 @@
         try { \
             stmt; \
         } catch (const etype& ex) { \
-            EXPECT_EQ(std::string(ex.what()), whatstring); \
+            EXPECT_EQ(whatstring, std::string(ex.what())); \
             throw; \
         } \
     , etype)
