@@ -17,7 +17,7 @@ endfunction()
 
 set_pennylane_lightning_version("${CMAKE_SOURCE_DIR}/pennylane_lightning/_version.py")
 
-message(STATUS "Pennylane_lightning version ${VERSION_STRING}")
+message(STATUS "pennylane_lightning version ${VERSION_STRING}")
 set(PROJECT_VERSION ${VERSION_STRING})
 
 set(CMAKE_CXX_STANDARD 11) # At least C++11 is required
@@ -50,7 +50,7 @@ if (("$ENV{USE_MKL}" OR "${USE_MKL}") AND (DEFINED ENV{MKLROOT}))
 	target_include_directories(external_dependency INTERFACE "$ENV{MKLROOT}/include")
 	target_compile_options(external_dependency INTERFACE "-DMKL=1")
 elseif ("$ENV{USE_LAPACK}" OR "${USE_LAPACK}")
-    message(STATUS "Use LAPACKE")
+      message(STATUS "Use LAPACKE")
 	target_link_libraries(external_dependency INTERFACE lapacke)
 	target_compile_options(external_dependency INTERFACE "-DLAPACKE=1")
 elseif ("$ENV{USE_OPENBLAS}" OR "${USE_OPENBLAS}")
