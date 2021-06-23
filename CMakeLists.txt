@@ -3,9 +3,20 @@ cmake_minimum_required(VERSION 3.14)
 project(pennylane_lightning)
 
 # Read and set pennylane_lightning version
-execute_process(COMMAND "/usr/bin/env" "python"  "-c"
-	"with open('${CMAKE_SOURCE_DIR}/pennylane_lightning/_version.py') as f: print(f.readlines()[-1].split()[-1].strip(\"\\\"'\"), end='')"
-	OUTPUT_VARIABLE VERSION_STRING)
+function(set_pennylane_lightning_version VERSION_FILE_PATH)
+	file(STRINGS ${VERSION_FILE_PATH} VERSION_FILE_STR)
+	foreach (LINE IN LISTS VERSION_FILE_STR)
+	if("${LINE}" MATCHES "__version__.*")
+		set(VERSION_LINE_STR "${LINE}")
+	endif()
+	endforeach()
+
+	string(REGEX REPLACE "__version__ = \"(.*)\"" "\\1" VERSION_STRING ${VERSION_LINE_STR})
+	set(VERSION_STRING ${VERSION_STRING} PARENT_SCOPE)
+endfunction()
+
+set_pennylane_lightning_version("${CMAKE_SOURCE_DIR}/pennylane_lightning/_version.py")
+
 message(STATUS "Pennylane_lightning version ${VERSION_STRING}")
 set(PROJECT_VERSION ${VERSION_STRING})
 
@@ -24,7 +35,7 @@ include(FetchContent)
 FetchContent_Declare(
 	pybind11
 	GIT_REPOSITORY https://github.com/pybind/pybind11.git
-	GIT_TAG        stable 
+	GIT_TAG        v2.6.2
 )
 FetchContent_MakeAvailable(pybind11)
 
