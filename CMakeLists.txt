@@ -1,0 +1,52 @@
+cmake_minimum_required(VERSION 3.14)
+
+project(pennylane_lightning)
+
+# Read and set pennylane_lightning version
+execute_process(COMMAND "/usr/bin/env" "python"  "-c"
+	"with open('${CMAKE_SOURCE_DIR}/pennylane_lightning/_version.py') as f: print(f.readlines()[-1].split()[-1].strip(\"\\\"'\"), end='')"
+	OUTPUT_VARIABLE VERSION_STRING)
+message(STATUS "Pennylane_lightning version ${VERSION_STRING}")
+set(PROJECT_VERSION ${VERSION_STRING})
+
+set(CMAKE_CXX_STANDARD 11) # At least C++11 is required
+find_package(OpenMP) # find OpenMP
+
+if(NOT CMAKE_BUILD_TYPE)
+	set(CMAKE_BUILD_TYPE Release)
+endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -W -DVERSION_INFO=${VERSION_STRING}")
+
+add_subdirectory(pybind11)
+
+add_library(external_dependency INTERFACE)
+
+
+if (("$ENV{USE_MKL}" or "${USE_MKL}") AND (DEFINED ENV{MKLROOT}))
+	message(STATUS "Found MKL")
+	target_link_libraries(external_dependency INTERFACE mkl_intel_lp64 mkl_tbb_thread 
+		mkl_core tbb pthread m dl)
+	target_compile_options(external_dependency INTERFACE "-DMKL=1")
+elseif ("$ENV{USE_LAPACK}" OR "${USE_LAPACK}")
+    message(STATUS "Use LAPACKE")
+	target_link_libraries(external_dependency INTERFACE lapacke)
+	target_compile_options(external_dependency INTERFACE "-DLAPACKE=1")
+elseif ("$ENV{USE_OPENBLAS}" OR "${USE_OPENBLAS}")
+	message(STATUS "Use OPENBLAS")
+	target_link_libraries(external_dependency INTERFACE openblas)
+	target_compile_options(external_dependency INTERFACE "-DOPENBLAS=1")
+endif()
+
+pybind11_add_module(lightning_qubit_ops "pennylane_lightning/src/Apply.cpp"
+	"pennylane_lightning/src/Gates.cpp" "pennylane_lightning/src/Bindings.cpp"
+	"pennylane_lightning/src/StateVector.cpp")
+target_link_libraries(lightning_qubit_ops PRIVATE external_dependency)
+
+if(OpenMP_CXX_FOUND)
+	target_link_libraries(lightning_qubit_ops PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
+if (${BUILD_TESTS})
+	add_subdirectory("pennylane_lightning/src/tests" "tests")
+endif()
