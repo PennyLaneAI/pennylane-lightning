@@ -48,5 +48,6 @@ if(OpenMP_CXX_FOUND)
 endif()
 
 if (${BUILD_TESTS})
+	enable_testing()
 	add_subdirectory("pennylane_lightning/src/tests" "tests")
 endif()
