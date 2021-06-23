@@ -10,7 +10,7 @@ message(STATUS "Pennylane_lightning version ${VERSION_STRING}")
 set(PROJECT_VERSION ${VERSION_STRING})
 
 set(CMAKE_CXX_STANDARD 11) # At least C++11 is required
-find_package(OpenMP) # find OpenMP
+find_package(OpenMP REQUIRED) # find OpenMP
 
 if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
@@ -34,8 +34,9 @@ add_library(external_dependency INTERFACE)
 
 if (("$ENV{USE_MKL}" OR "${USE_MKL}") AND (DEFINED ENV{MKLROOT}))
 	message(STATUS "Found MKL")
-	target_link_libraries(external_dependency INTERFACE mkl_intel_lp64 mkl_tbb_thread 
-		mkl_core tbb pthread m dl)
+	target_link_libraries(external_dependency INTERFACE mkl_intel_lp64 mkl_gnu_thread 
+		mkl_core gomp pthread m dl)
+	target_include_directories(external_dependency INTERFACE "$ENV{MKLROOT}/include")
 	target_compile_options(external_dependency INTERFACE "-DMKL=1")
 elseif ("$ENV{USE_LAPACK}" OR "${USE_LAPACK}")
     message(STATUS "Use LAPACKE")
@@ -53,9 +54,7 @@ pybind11_add_module(lightning_qubit_ops "pennylane_lightning/src/Apply.cpp"
 target_link_libraries(lightning_qubit_ops PRIVATE external_dependency)
 set_target_properties(lightning_qubit_ops PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
-if(OpenMP_CXX_FOUND)
-	target_link_libraries(lightning_qubit_ops PRIVATE OpenMP::OpenMP_CXX)
-endif()
+target_link_libraries(lightning_qubit_ops PRIVATE OpenMP::OpenMP_CXX)
 
 if (${BUILD_TESTS})
 	enable_testing()
