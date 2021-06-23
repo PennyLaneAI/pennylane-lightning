@@ -18,7 +18,16 @@ endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -W -DVERSION_INFO=${VERSION_STRING}")
 
-add_subdirectory(pybind11)
+
+# Add pybind11
+include(FetchContent)
+FetchContent_Declare(
+	pybind11
+	GIT_REPOSITORY https://github.com/pybind/pybind11.git
+	GIT_TAG        stable 
+)
+FetchContent_MakeAvailable(pybind11)
+
 
 add_library(external_dependency INTERFACE)
 
