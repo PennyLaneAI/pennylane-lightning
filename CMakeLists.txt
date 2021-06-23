@@ -6,7 +6,7 @@ project(pennylane_lightning)
 execute_process(COMMAND "/usr/bin/env" "python"  "-c"
 	"with open('${CMAKE_SOURCE_DIR}/pennylane_lightning/_version.py') as f: print(f.readlines()[-1].split()[-1].strip(\"\\\"'\"), end='')"
 	OUTPUT_VARIABLE VERSION_STRING)
-message(STATUS "Pennylane_lightning version ${VERSION_STRING}")
+message(STATUS "pennylane_lightning version ${VERSION_STRING}")
 set(PROJECT_VERSION ${VERSION_STRING})
 
 set(CMAKE_CXX_STANDARD 11) # At least C++11 is required
