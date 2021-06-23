@@ -23,7 +23,7 @@ add_subdirectory(pybind11)
 add_library(external_dependency INTERFACE)
 
 
-if (("$ENV{USE_MKL}" or "${USE_MKL}") AND (DEFINED ENV{MKLROOT}))
+if (("$ENV{USE_MKL}" OR "${USE_MKL}") AND (DEFINED ENV{MKLROOT}))
 	message(STATUS "Found MKL")
 	target_link_libraries(external_dependency INTERFACE mkl_intel_lp64 mkl_tbb_thread 
 		mkl_core tbb pthread m dl)
@@ -42,6 +42,7 @@ pybind11_add_module(lightning_qubit_ops "pennylane_lightning/src/Apply.cpp"
 	"pennylane_lightning/src/Gates.cpp" "pennylane_lightning/src/Bindings.cpp"
 	"pennylane_lightning/src/StateVector.cpp")
 target_link_libraries(lightning_qubit_ops PRIVATE external_dependency)
+set_target_properties(lightning_qubit_ops PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
 if(OpenMP_CXX_FOUND)
 	target_link_libraries(lightning_qubit_ops PRIVATE OpenMP::OpenMP_CXX)
