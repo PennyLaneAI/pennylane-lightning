@@ -178,16 +178,16 @@ class LightningQubit(DefaultQubit):
         # send in flattened array of zeros to be populated by adjoint_jacobian
         jac = np.zeros(len(tape.observables) * len(tape.trainable_params))
         adjoint_jacobian(
-            self.state,
-            jac,
-            observables,
-            obs_params,
-            obs_wires,
-            operations,
-            op_params,
-            op_wires,
-            trainable_params,
-            param_number,
+            self.state,       # numpy.ndarray[numpy.complex128]
+            jac,              # numpy.ndarray[numpy.float64]
+            observables,      # List[str]
+            obs_params,       # List[List[float]]
+            obs_wires,        # List[List[int]]
+            operations,       # List[str]
+            op_params,        # List[List[float]]
+            op_wires,         # List[List[int]]
+            trainable_params, # List[int]
+            param_number,     # int
         )
         return jac.reshape((len(tape.observables), len(tape.trainable_params)))
 

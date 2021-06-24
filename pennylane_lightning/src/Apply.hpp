@@ -85,7 +85,7 @@ namespace Pennylane {
      */
     void applyGateGenerator(
         StateVector& state,
-        std::unique_ptr<AbstractGate> gate,
+        std::unique_ptr<AbstractGate> const &gate,
         const std::vector<unsigned int>& opWires,
         const unsigned int qubits
     );

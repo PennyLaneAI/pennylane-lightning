@@ -76,7 +76,7 @@ void Pennylane::constructAndApplyOperation(
 
 void Pennylane::applyGateGenerator(
     StateVector& state,
-    unique_ptr<AbstractGate> gate,
+    unique_ptr<AbstractGate> const &gate,
     const vector<unsigned int>& opWires,
     const unsigned int qubits
 ) {
@@ -132,7 +132,7 @@ void Pennylane::adjointJacobian(
     for (unsigned int i = 0; i < numObservables; i++) {
         // copy |phi> and apply observables one at a time
         CplxType* phiCopyArr = new CplxType[phi.length];
-        std::memcpy(phiCopyArr, phi.arr, sizeof(phi.arr));
+        std::memcpy(phiCopyArr, phi.arr, sizeof(CplxType)*phi.length);
         Pennylane::StateVector phiCopy(phiCopyArr, phi.length);
 
         Pennylane::constructAndApplyOperation(
@@ -140,19 +140,19 @@ void Pennylane::adjointJacobian(
             observables[i],
             obsWires[i],
             obsParams[i],
-            obsWires[i].size(),
-            false
+            false,
+            obsWires[i].size()
         );
         lambdas.push_back(phiCopy);
     }
 
     for (int i = operations.size() - 1; i >= 0; i--) {
-        if (trainableParams.size() > 1) {
+        if (opParams[i].size() > 1) {
             throw std::invalid_argument("The operation is not supported using the adjoint differentiation method");
         } else if ((operations[i] != "QubitStateVector") && (operations[i] != "BasisState")) {
             // copy |phi> to |mu> before applying Uj*
             CplxType* phiCopyArr = new CplxType[phi.length];
-            std::memcpy(phiCopyArr, phi.arr, sizeof(phi));
+            std::memcpy(phiCopyArr, phi.arr, sizeof(CplxType)*phi.length);
             Pennylane::StateVector mu(phiCopyArr, phi.length);
 
             // create |phi'> = Uj*|phi>
@@ -161,26 +161,26 @@ void Pennylane::adjointJacobian(
                 operations[i],
                 opWires[i],
                 opParams[i],
-                opWires[i].size(),
-                true
+                true,
+                opWires[i].size()
             );
 
             if (std::find(trainableParams.begin(), trainableParams.end(), paramNumber) != trainableParams.end()) {
                 // create iH|phi> = d/d dUj/dtheta Uj* |phi> = dUj/dtheta|phi'>
                 unique_ptr<AbstractGate> gate = constructGate(operations[i], opParams[i]);
-                double scalingFactor = gate->getGeneratorScalingFactor();
+                double scalingFactor = Pennylane::RotationYGate::generatorScalingFactor;
                 Pennylane::applyGateGenerator(
                     mu,
-                    std::move(gate),
+                    gate,
                     opWires[i],
                     opWires[i].size()
                 );
 
-                for (unsigned int j; j < lambdas.size(); j++) {
-                    int lambdaStateSize = sizeof(lambdas[j].arr)/sizeof(lambdas[j].arr[0]);
+                for (unsigned int j = 0; j < lambdas.size(); j++) {
+                    int lambdaStateSize = lambdas[j].length;
 
                     CplxType sum = 0;
-                    for (int k; k < lambdaStateSize; k++) {
+                    for (int k = 0; k < lambdaStateSize; k++) {
                         sum += (std::conj(lambdas[j].arr[k]) * mu.arr[k]);
                     }
                     // calculate 2 * shift * Real(i * sum) = -2 * shift * Imag(sum)
@@ -191,7 +191,7 @@ void Pennylane::adjointJacobian(
             }
             paramNumber--;
 
-            for (unsigned int i; i < lambdas.size(); i++) {
+            for (unsigned int i = 0; i < lambdas.size(); i++) {
                 StateVector state = lambdas[i];
 
                 Pennylane::constructAndApplyOperation(
@@ -199,8 +199,8 @@ void Pennylane::adjointJacobian(
                     operations[i],
                     opWires[i],
                     opParams[i],
-                    opWires[i].size(),
-                    true
+                    true,
+                    opWires[i].size()*2
                 );
             }
         }

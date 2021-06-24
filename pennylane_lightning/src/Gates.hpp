@@ -51,11 +51,6 @@ namespace Pennylane {
          * Kernel for applying the generator of an operation
          */
         virtual void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
-
-        /**
-         * Scaling factor applied to the generator operation
-         */
-        virtual const double getGeneratorScalingFactor();
     };
 
     // Single-qubit gates:
@@ -68,7 +63,6 @@ namespace Pennylane {
     class XGate : public SingleQubitGate {
     private:
         static const std::vector<CplxType> matrix;
-        // const double generatorScalingFactor;
 
     public:
         static const std::string label;
@@ -76,16 +70,12 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        // inline const double getGeneratorScalingFactor(){
-        //     return generatorScalingFactor;
-        // }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
     };
 
     class YGate : public SingleQubitGate {
     private:
         static const std::vector<CplxType> matrix;
-        // const double generatorScalingFactor;
 
     public:
         static const std::string label;
@@ -93,16 +83,12 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        // inline const double getGeneratorScalingFactor(){
-        //     return generatorScalingFactor;
-        // }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
     };
 
     class ZGate : public SingleQubitGate {
     private:
         static const std::vector<CplxType> matrix;
-        // const double generatorScalingFactor;
 
     public:
         static const std::string label;
@@ -110,16 +96,12 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        // inline const double getGeneratorScalingFactor(){
-        //     return generatorScalingFactor;
-        // }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
     };
 
     class HadamardGate : public SingleQubitGate {
     private:
         static const std::vector<CplxType> matrix;
-        // const double generatorScalingFactor;
 
     public:
         static const std::string label;
@@ -127,16 +109,12 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        // inline const double getGeneratorScalingFactor(){
-        //     return generatorScalingFactor;
-        // }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
     };
 
     class SGate : public SingleQubitGate {
     private:
         static const std::vector<CplxType> matrix;
-        // const double generatorScalingFactor;
 
     public:
         static const std::string label;
@@ -144,9 +122,6 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        // inline const double getGeneratorScalingFactor(){
-        //     return generatorScalingFactor;
-        // }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
     };
 
@@ -154,7 +129,6 @@ namespace Pennylane {
     private:
         static const CplxType shift;
         static const std::vector<CplxType> matrix;
-        // const double generatorScalingFactor;
 
     public:
         static const std::string label;
@@ -162,9 +136,6 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        // inline const double getGeneratorScalingFactor(){
-        //     return generatorScalingFactor;
-        // }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
     };
 
@@ -172,7 +143,6 @@ namespace Pennylane {
     private:
         const CplxType c, js;
         const std::vector<CplxType> matrix;
-        const double generatorScalingFactor;
 
     public:
         static const std::string label;
@@ -181,18 +151,15 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        inline const double getGeneratorScalingFactor(){
-            return generatorScalingFactor;
-        }
-        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
         void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        static const double generatorScalingFactor;
+        void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
     };
 
     class RotationYGate : public SingleQubitGate {
     private:
         const CplxType c, s;
         const std::vector<CplxType> matrix;
-        const double generatorScalingFactor;
 
     public:
         static const std::string label;
@@ -201,10 +168,8 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        inline const double getGeneratorScalingFactor(){
-            return generatorScalingFactor;
-        }
         void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        static const double generatorScalingFactor;
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
     };
 
@@ -212,7 +177,6 @@ namespace Pennylane {
     private:
         const CplxType first, second;
         const std::vector<CplxType> matrix;
-        const double generatorScalingFactor;
 
     public:
         static const std::string label;
@@ -221,18 +185,15 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        inline const double getGeneratorScalingFactor(){
-            return generatorScalingFactor;
-        }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
         void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        static const double generatorScalingFactor;
     };
 
     class PhaseShiftGate : public SingleQubitGate {
     private:
         const CplxType shift;
         const std::vector<CplxType> matrix;
-        const double generatorScalingFactor;
 
     public:
         static const std::string label;
@@ -241,18 +202,15 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        inline const double getGeneratorScalingFactor(){
-            return generatorScalingFactor;
-        }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
         void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        static const double generatorScalingFactor;
     };
 
     class GeneralRotationGate : public SingleQubitGate {
     private:
         const CplxType c, s, r1, r2, r3, r4;
         const std::vector<CplxType> matrix;
-        // const double generatorScalingFactor;
 
     public:
         static const std::string label;
@@ -261,9 +219,6 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        // inline const double getGeneratorScalingFactor(){
-        //     return generatorScalingFactor;
-        // }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
     };
 
@@ -277,7 +232,6 @@ namespace Pennylane {
     class CNOTGate : public TwoQubitGate {
     private:
         static const std::vector<CplxType> matrix;
-        // const double generatorScalingFactor;
 
     public:
         static const std::string label;
@@ -285,16 +239,12 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        // inline const double getGeneratorScalingFactor(){
-        //     return generatorScalingFactor;
-        // }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
     };
 
     class SWAPGate : public TwoQubitGate {
     private:
         static const std::vector<CplxType> matrix;
-        // const double generatorScalingFactor;
 
     public:
         static const std::string label;
@@ -302,16 +252,12 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        // inline const double getGeneratorScalingFactor(){
-        //     return generatorScalingFactor;
-        // }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
     };
 
     class CZGate : public TwoQubitGate {
     private:
         static const std::vector<CplxType> matrix;
-        // const double generatorScalingFactor;
 
     public:
         static const std::string label;
@@ -319,9 +265,6 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        // inline const double getGeneratorScalingFactor(){
-        //     return generatorScalingFactor;
-        // }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
     };
 
@@ -329,7 +272,6 @@ namespace Pennylane {
     private:
         const CplxType c, js;
         const std::vector<CplxType> matrix;
-        const double generatorScalingFactor;
 
     public:
         static const std::string label;
@@ -338,18 +280,15 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        inline const double getGeneratorScalingFactor(){
-            return generatorScalingFactor;
-        }
-        void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
+        void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        static const double generatorScalingFactor;
     };
 
     class CRotationYGate : public TwoQubitGate {
     private:
         const CplxType c, s;
         const std::vector<CplxType> matrix;
-        const double generatorScalingFactor;
 
     public:
         static const std::string label;
@@ -358,18 +297,15 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        inline const double getGeneratorScalingFactor(){
-            return generatorScalingFactor;
-        }
-        void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
+        void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        static const double generatorScalingFactor;
     };
 
     class CRotationZGate : public TwoQubitGate {
     private:
         const CplxType first, second;
         const std::vector<CplxType> matrix;
-        const double generatorScalingFactor;
 
     public:
         static const std::string label;
@@ -378,18 +314,15 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        inline const double getGeneratorScalingFactor(){
-            return generatorScalingFactor;
-        }
-        void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
+        void applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices);
+        static const double generatorScalingFactor;
     };
 
     class CGeneralRotationGate : public TwoQubitGate {
     private:
         const CplxType c, s, r1, r2, r3, r4;
         const std::vector<CplxType> matrix;
-        // const double generatorScalingFactor;
 
     public:
         static const std::string label;
@@ -398,9 +331,6 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        // inline const double getGeneratorScalingFactor(){
-        //     return generatorScalingFactor;
-        // }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
     };
 
@@ -409,7 +339,6 @@ namespace Pennylane {
     class ThreeQubitGate : public AbstractGate {
     protected:
         ThreeQubitGate();
-        // const double generatorScalingFactor;
     };
 
     class ToffoliGate : public ThreeQubitGate {
@@ -422,16 +351,12 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        // inline const double getGeneratorScalingFactor(){
-        //     return generatorScalingFactor;
-        // }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
     };
 
     class CSWAPGate : public ThreeQubitGate {
     private:
         static const std::vector<CplxType> matrix;
-        // const double generatorScalingFactor;
 
     public:
         static const std::string label;
@@ -439,9 +364,6 @@ namespace Pennylane {
         inline const std::vector<CplxType>& asMatrix() {
             return matrix;
         }
-        // inline const double getGeneratorScalingFactor(){
-        //     return generatorScalingFactor;
-        // }
         void applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse);
     };
 

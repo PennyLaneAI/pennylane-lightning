@@ -79,7 +79,6 @@ void Pennylane::AbstractGate::applyKernel(const StateVector& state, const std::v
     }
 }
 
-const double getGeneratorScalingFactor(){ return 0; };
 void Pennylane::AbstractGate::applyGenerator(const StateVector&, const std::vector<size_t>&, const std::vector<size_t>&) {
     throw NotImplementedException();
 }
@@ -103,8 +102,6 @@ const vector<CplxType> Pennylane::XGate::matrix{
     0, 1,
     1, 0 };
 
-// const double Pennylane::XGate::generatorScalingFactor{};
-
 void Pennylane::XGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
     // gate is its own inverse
     for (const size_t& externalIndex : externalIndices) {
@@ -125,8 +122,6 @@ Pennylane::YGate Pennylane::YGate::create(const vector<double>& parameters) {
 const vector<CplxType> Pennylane::YGate::matrix{
     0, -IMAG,
     IMAG, 0 };
-
-// const double Pennylane::YGate::generatorScalingFactor{};
 
 void Pennylane::YGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
     // gate is its own inverse
@@ -151,8 +146,6 @@ const std::vector<CplxType> Pennylane::ZGate::matrix{
     1, 0,
     0, -1 };
 
-// const double Pennylane::ZGate::generatorScalingFactor{};
-
 void Pennylane::ZGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
     // gate is its own inverse
     for (const size_t& externalIndex : externalIndices) {
@@ -173,8 +166,6 @@ Pennylane::HadamardGate Pennylane::HadamardGate::create(const vector<double>& pa
 const vector<CplxType> Pennylane::HadamardGate::matrix{
     SQRT2INV, SQRT2INV,
     SQRT2INV, -SQRT2INV };
-
-// const double Pennylane::HadamardGate::generatorScalingFactor{};
 
 void Pennylane::HadamardGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
     // gate is its own inverse
@@ -200,8 +191,6 @@ const vector<CplxType> Pennylane::SGate::matrix{
     1, 0,
     0, IMAG };
 
-// const double Pennylane::SGate::generatorScalingFactor{};
-
 void Pennylane::SGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
     CplxType shift = (inverse == true) ? -IMAG : IMAG;
 
@@ -225,8 +214,6 @@ const CplxType Pennylane::TGate::shift = std::pow(M_E, CplxType(0, M_PI / 4));
 const vector<CplxType> Pennylane::TGate::matrix{
     1, 0,
     0, Pennylane::TGate::shift };
-
-// const double Pennylane::TGate::generatorScalingFactor{};
 
 void Pennylane::TGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
     CplxType shift = (inverse == true) ? conj(Pennylane::TGate::shift) : Pennylane::TGate::shift;
@@ -252,18 +239,13 @@ Pennylane::RotationXGate::RotationXGate(double rotationAngle)
     , matrix{
       c, js,
       js, c }
-    , generatorScalingFactor{ -0.5 }
 {}
 
-// const double Pennylane::RotationXGate::generatorScalingFactor{ -0.5 };
+const double Pennylane::RotationXGate::generatorScalingFactor{ -0.5 };
 
 void Pennylane::RotationXGate::applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
-    // unique_ptr<Pennylane::XGate> gate;
-    // gate->applyKernel(state, indices, externalIndices, false);
-    for (const size_t& externalIndex : externalIndices) {
-        CplxType* shiftedState = state.arr + externalIndex;
-        swap(shiftedState[indices[0]], shiftedState[indices[1]]);
-    }
+    unique_ptr<AbstractGate> gate = constructGate("PauliX", vector<double>());
+    gate->applyKernel(state, indices, externalIndices, false);
 }
 
 void Pennylane::RotationXGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
@@ -293,20 +275,13 @@ Pennylane::RotationYGate::RotationYGate(double rotationAngle)
     , matrix{
       c, -s,
       s, c }
-    , generatorScalingFactor{ -0.5 }
 {}
 
-// const double Pennylane::RotationYGate::generatorScalingFactor{ -0.5 };
+const double Pennylane::RotationYGate::generatorScalingFactor{ -0.5 };
 
 void Pennylane::RotationYGate::applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
-    // unique_ptr<Pennylane::YGate> gate;
-    // gate->applyKernel(state, indices, externalIndices, false);
-    for (const size_t& externalIndex : externalIndices) {
-        CplxType* shiftedState = state.arr + externalIndex;
-        CplxType v0 = shiftedState[indices[0]];
-        shiftedState[indices[0]] = -IMAG * shiftedState[indices[1]];
-        shiftedState[indices[1]] = IMAG * v0;
-    }
+    unique_ptr<AbstractGate> gate = constructGate("PauliY", vector<double>());
+    gate->applyKernel(state, indices, externalIndices, false);
 }
 
 void Pennylane::RotationYGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
@@ -336,7 +311,6 @@ Pennylane::RotationZGate::RotationZGate(double rotationAngle)
     , matrix{
       first, 0,
       0, second }
-    , generatorScalingFactor{ -0.5 }
 {}
 
 void Pennylane::RotationZGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
@@ -355,15 +329,11 @@ void Pennylane::RotationZGate::applyKernel(const StateVector& state, const std::
     }
 }
 
-// const double Pennylane::RotationZGate::generatorScalingFactor{ -0.5 };
+const double Pennylane::RotationZGate::generatorScalingFactor{ -0.5 };
 
 void Pennylane::RotationZGate::applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
-    // unique_ptr<Pennylane::ZGate> gate;
-    // gate->applyKernel(state, indices, externalIndices, false);
-    for (const size_t& externalIndex : externalIndices) {
-        CplxType* shiftedState = state.arr + externalIndex;
-        shiftedState[indices[1]] *= -1;
-    }
+    unique_ptr<AbstractGate> gate = constructGate("PauliZ", vector<double>());
+    gate->applyKernel(state, indices, externalIndices, false);
 }
 
 
@@ -381,7 +351,6 @@ Pennylane::PhaseShiftGate::PhaseShiftGate(double rotationAngle)
     , matrix{
       1, 0,
       0, shift }
-    , generatorScalingFactor{ 1.0 }
 {}
 
 void Pennylane::PhaseShiftGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
@@ -393,7 +362,7 @@ void Pennylane::PhaseShiftGate::applyKernel(const StateVector& state, const std:
     }
 }
 
-// const double Pennylane::PhaseShiftGate::generatorScalingFactor{ 1.0 };
+const double Pennylane::PhaseShiftGate::generatorScalingFactor{ 1.0 };
 
 void Pennylane::PhaseShiftGate::applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
     for (const size_t& externalIndex : externalIndices) {
@@ -422,8 +391,6 @@ Pennylane::GeneralRotationGate::GeneralRotationGate(double phi, double theta, do
       r1, r2,
       r3, r4 }
 {}
-
-// const double Pennylane::GeneralRotationGate::generatorScalingFactor{};
 
 void Pennylane::GeneralRotationGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
     CplxType t1 = r1;
@@ -468,8 +435,6 @@ const std::vector<CplxType> Pennylane::CNOTGate::matrix{
     0, 0, 0, 1,
     0, 0, 1, 0 };
 
-// const double Pennylane::CNOTGate::generatorScalingFactor{};
-
 void Pennylane::CNOTGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
     // gate is its own inverse
     for (const size_t& externalIndex : externalIndices) {
@@ -493,8 +458,6 @@ const std::vector<CplxType> Pennylane::SWAPGate::matrix{
     0, 1, 0, 0,
     0, 0, 0, 1 };
 
-// const double Pennylane::SWAPGate::generatorScalingFactor{};
-
 void Pennylane::SWAPGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
     // gate is its own inverse
     for (const size_t& externalIndex : externalIndices) {
@@ -517,8 +480,6 @@ const std::vector<CplxType> Pennylane::CZGate::matrix{
     0, 1, 0, 0,
     0, 0, 1, 0,
     0, 0, 0, -1 };
-
-// const double Pennylane::CZGate::generatorScalingFactor{};
 
 void Pennylane::CZGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
     // gate is its own inverse
@@ -545,7 +506,6 @@ Pennylane::CRotationXGate::CRotationXGate(double rotationAngle)
       0, 1, 0, 0,
       0, 0, c, js,
       0, 0, js, c }
-    , generatorScalingFactor{ -0.5 }
 {}
 
 void Pennylane::CRotationXGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
@@ -560,7 +520,7 @@ void Pennylane::CRotationXGate::applyKernel(const StateVector& state, const std:
     }
 }
 
-// const double Pennylane::CRotationXGate::generatorScalingFactor{ -0.5 };
+const double Pennylane::CRotationXGate::generatorScalingFactor{ -0.5 };
 
 void Pennylane::CRotationXGate::applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
     for (const size_t& externalIndex : externalIndices) {
@@ -587,7 +547,6 @@ Pennylane::CRotationYGate::CRotationYGate(double rotationAngle)
       0, 1, 0, 0,
       0, 0, c, -s,
       0, 0, s, c }
-    , generatorScalingFactor{ -0.5 }
 {}
 
 void Pennylane::CRotationYGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
@@ -602,7 +561,7 @@ void Pennylane::CRotationYGate::applyKernel(const StateVector& state, const std:
     }
 }
 
-// const double Pennylane::CRotationYGate::generatorScalingFactor{ -0.5 };
+const double Pennylane::CRotationYGate::generatorScalingFactor{ -0.5 };
 
 void Pennylane::CRotationYGate::applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
     for (const size_t& externalIndex : externalIndices) {
@@ -631,7 +590,6 @@ Pennylane::CRotationZGate::CRotationZGate(double rotationAngle)
       0, 1, 0, 0,
       0, 0, first, 0,
       0, 0, 0, second }
-    , generatorScalingFactor{ -0.5 }
 {}
 
 void Pennylane::CRotationZGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
@@ -650,7 +608,7 @@ void Pennylane::CRotationZGate::applyKernel(const StateVector& state, const std:
     }
 }
 
-// const double Pennylane::CRotationZGate::generatorScalingFactor{ -0.5 };
+const double Pennylane::CRotationZGate::generatorScalingFactor{ -0.5 };
 
 void Pennylane::CRotationZGate::applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
     for (const size_t& externalIndex : externalIndices) {
@@ -682,8 +640,6 @@ Pennylane::CGeneralRotationGate::CGeneralRotationGate(double phi, double theta, 
       0, 0, r1, r2,
       0, 0, r3, r4 }
 {}
-
-// const double Pennylane::CGeneralRotationGate::generatorScalingFactor{};
 
 void Pennylane::CGeneralRotationGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool inverse) {
     CplxType t1 = r1;
@@ -732,8 +688,6 @@ const std::vector<CplxType> Pennylane::ToffoliGate::matrix{
     0, 0, 0, 0, 0, 0, 0, 1,
     0, 0, 0, 0, 0, 0, 1, 0 };
 
-// const double Pennylane::ToffoliGate::generatorScalingFactor{};
-
 void Pennylane::ToffoliGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
     // gate is its own inverse
     for (const size_t& externalIndex : externalIndices) {
@@ -760,8 +714,6 @@ const std::vector<CplxType> Pennylane::CSWAPGate::matrix{
     0, 0, 0, 0, 0, 0, 1, 0,
     0, 0, 0, 0, 0, 1, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 1 };
-
-// const double Pennylane::CSWAPGate::generatorScalingFactor{};
 
 void Pennylane::CSWAPGate::applyKernel(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices, bool) {
     // gate is its own inverse
