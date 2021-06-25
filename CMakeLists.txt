@@ -23,11 +23,13 @@ set(PROJECT_VERSION ${VERSION_STRING})
 set(CMAKE_CXX_STANDARD 11) # At least C++11 is required
 find_package(OpenMP REQUIRED) # find OpenMP
 
+
 if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -W -DVERSION_INFO=${VERSION_STRING}")
+
+option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 
 
 # Add pybind11
@@ -43,17 +45,13 @@ FetchContent_MakeAvailable(pybind11)
 add_library(external_dependency INTERFACE)
 
 
-if (("$ENV{USE_MKL}" OR "${USE_MKL}") AND (DEFINED ENV{MKLROOT}))
-	message(STATUS "Found MKL")
-	target_link_libraries(external_dependency INTERFACE mkl_intel_lp64 mkl_gnu_thread 
-		mkl_core gomp pthread m dl)
-	target_include_directories(external_dependency INTERFACE "$ENV{MKLROOT}/include")
-	target_compile_options(external_dependency INTERFACE "-DMKL=1")
-elseif ("$ENV{USE_LAPACK}" OR "${USE_LAPACK}")
-      message(STATUS "Use LAPACKE")
+if ("$ENV{USE_LAPACK}" OR "${USE_LAPACK}")
+	message(STATUS "Use LAPACKE")
 	target_link_libraries(external_dependency INTERFACE lapacke)
 	target_compile_options(external_dependency INTERFACE "-DLAPACKE=1")
-elseif ("$ENV{USE_OPENBLAS}" OR "${USE_OPENBLAS}")
+endif()
+
+if ("$ENV{USE_OPENBLAS}" OR "${USE_OPENBLAS}")
 	message(STATUS "Use OPENBLAS")
 	target_link_libraries(external_dependency INTERFACE openblas)
 	target_compile_options(external_dependency INTERFACE "-DOPENBLAS=1")
@@ -67,6 +65,15 @@ target_link_libraries(lightning_qubit_ops PRIVATE external_dependency)
 set_target_properties(lightning_qubit_ops PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
 target_link_libraries(lightning_qubit_ops PRIVATE OpenMP::OpenMP_CXX)
+target_compile_options(lightning_qubit_ops PRIVATE "$<$<CONFIG:RELEASE>:-W>")
+target_compile_options(lightning_qubit_ops PRIVATE "$<$<CONFIG:DEBUG>:-Wall>")
+target_compile_definitions(lightning_qubit_ops PRIVATE VERSION_INFO=${VERSION_STRING})
+
+if(ENABLE_NATIVE)
+	message(STATUS "ENABLE_NATIVE is ON. Use -march=native for lightning_qubit_ops.")
+	target_compile_options(lightning_qubit_ops PRIVATE -march=native)
+endif()
+
 
 if (${BUILD_TESTS})
 	enable_testing()
