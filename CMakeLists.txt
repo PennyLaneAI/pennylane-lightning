@@ -30,6 +30,7 @@ endif()
 
 
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
+option(BUILD_TESTS "Build cpp tests" OFF)
 
 
 # Add pybind11
@@ -75,7 +76,7 @@ if(ENABLE_NATIVE)
 endif()
 
 
-if (${BUILD_TESTS})
+if (BUILD_TESTS)
 	enable_testing()
 	add_subdirectory("pennylane_lightning/src/tests" "tests")
 endif()
