@@ -129,11 +129,16 @@ void Pennylane::adjointJacobian(
     size_t numObservables = observables.size();
     size_t trainableParamNumber = trainableParams.size() - 1;
 
+    CplxType* lambdaStateArr = new CplxType[phi.length];
+    std::memcpy(lambdaStateArr, phi.arr, sizeof(CplxType)*phi.length);
+    Pennylane::StateVector lambdaState(lambdaStateArr, phi.length);
+    // forward pass on lambda
+
     for (unsigned int i = 0; i < numObservables; i++) {
         // copy |phi> and apply observables one at a time
-        CplxType* phiCopyArr = new CplxType[phi.length];
-        std::memcpy(phiCopyArr, phi.arr, sizeof(CplxType)*phi.length);
-        Pennylane::StateVector phiCopy(phiCopyArr, phi.length);
+        CplxType* phiCopyArr = new CplxType[lambdaState.length];
+        std::memcpy(phiCopyArr, lambdaState.arr, sizeof(CplxType)*lambdaState.length);
+        Pennylane::StateVector phiCopy(phiCopyArr, lambdaState.length);
 
         Pennylane::constructAndApplyOperation(
             phiCopy,
@@ -141,7 +146,7 @@ void Pennylane::adjointJacobian(
             obsWires[i],
             obsParams[i],
             false,
-            obsWires[i].size()
+            obsWires[i].size()  // maybe *2 (didn't apply the whole op otherwise)
         );
         lambdas.push_back(phiCopy);
     }
@@ -168,6 +173,7 @@ void Pennylane::adjointJacobian(
             if (std::find(trainableParams.begin(), trainableParams.end(), paramNumber) != trainableParams.end()) {
                 // create iH|phi> = d/d dUj/dtheta Uj* |phi> = dUj/dtheta|phi'>
                 unique_ptr<AbstractGate> gate = constructGate(operations[i], opParams[i]);
+                // double scalingFactor = gate->generatorScalingFactor;
                 double scalingFactor = Pennylane::RotationYGate::generatorScalingFactor;
                 Pennylane::applyGateGenerator(
                     mu,
@@ -191,16 +197,15 @@ void Pennylane::adjointJacobian(
             }
             paramNumber--;
 
-            for (unsigned int i = 0; i < lambdas.size(); i++) {
-                StateVector state = lambdas[i];
-
+            // if i > 0: (?)
+            for (unsigned int j = 0; j < lambdas.size(); j++) {
                 Pennylane::constructAndApplyOperation(
-                    state,
+                    lambdas[j],
                     operations[i],
                     opWires[i],
                     opParams[i],
                     true,
-                    opWires[i].size()*2
+                    opWires[i].size()
                 );
             }
         }
