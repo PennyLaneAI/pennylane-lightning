@@ -134,6 +134,16 @@ void Pennylane::adjointJacobian(
     Pennylane::StateVector lambdaState(lambdaStateArr, phi.length);
     // forward pass on lambda
 
+    for (int i = 0; i< operations.size(); i++) {
+        Pennylane::constructAndApplyOperation(
+            lambdaState,
+            operations[i],
+            opWires[i],
+            opParams[i],
+            false,
+            opWires[i].size()
+        );
+    }
     for (unsigned int i = 0; i < numObservables; i++) {
         // copy |phi> and apply observables one at a time
         CplxType* phiCopyArr = new CplxType[lambdaState.length];

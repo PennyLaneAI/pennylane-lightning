@@ -102,11 +102,11 @@ class TestAdjointJacobian:
 
         # gradients
         exact = np.cos(par)
-        grad_F = tape.jacobian(dev, method="numeric")
+        #grad_F = tape.jacobian(dev, method="numeric")
         grad_A = dev.adjoint_jacobian(tape)
 
         # different methods must agree
-        assert np.allclose(grad_F, exact, atol=tol, rtol=0)
+        #assert np.allclose(grad_F, exact, atol=tol, rtol=0)
         assert np.allclose(grad_A, exact, atol=tol, rtol=0)
 
     def test_rx_gradient(self, tol, dev):
