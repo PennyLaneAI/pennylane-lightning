@@ -157,8 +157,9 @@ class LightningQubit(DefaultQubit):
             for i, l in enumerate(param_list):
                 try:
                     param_list[i] = l.unwrap()
+                    print(type(l), type(param_list[i]))
                     if isinstance(param_list[i], (int, float)):
-                        param_list[i] = [float(param_list[i])]
+                        param_list[i] = float(param_list[i])
                     else:
                         param_list[i] = list(param_list[i])
                 except AttributeError:
