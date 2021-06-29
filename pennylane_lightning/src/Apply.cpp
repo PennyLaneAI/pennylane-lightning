@@ -21,9 +21,9 @@
 #include "Gates.hpp"
 #include "StateVector.hpp"
 #include "Util.hpp"
-#include <pybind11/pybind11.h>
+//#include <pybind11/pybind11.h>
 
-namespace py = pybind11;
+//namespace py = pybind11;
 
 using std::set;
 using std::string;
@@ -191,8 +191,8 @@ void Pennylane::adjointJacobian(
                 // double scalingFactor = gate->generatorScalingFactor;
                 double scalingFactor = Pennylane::RotationYGate::generatorScalingFactor;
                 for(unsigned int i = 0; i < mu.length; ++i){
-                    py::print(mu.arr[i].real());
-                    py::print(mu.arr[i].imag());
+                    //py::print(mu.arr[i].real());
+                    //py::print(mu.arr[i].imag());
                 }
                 Pennylane::applyGateGenerator(
                     mu,
@@ -201,8 +201,8 @@ void Pennylane::adjointJacobian(
                     2 //opWires[i].size()
                 );
                 for(unsigned int i = 0; i < mu.length; ++i){
-                    py::print(mu.arr[i].real());
-                    py::print(mu.arr[i].imag());
+                    //py::print(mu.arr[i].real());
+                    //py::print(mu.arr[i].imag());
                 }
 
                 for (unsigned int j = 0; j < lambdas.size(); j++) {
@@ -213,7 +213,7 @@ void Pennylane::adjointJacobian(
                         sum += (std::conj(lambdas[j].arr[k]) * mu.arr[k]);
                     }
                     // calculate 2 * shift * Real(i * sum) = -2 * shift * Imag(sum)
-                    py::print(-2 * scalingFactor * std::imag(sum));
+                    //py::print(-2 * scalingFactor * std::imag(sum));
                     jac[j * trainableParams.size() + trainableParamNumber] = -2 * scalingFactor * std::imag(sum);
                 }
                 delete[] phiCopyArr;

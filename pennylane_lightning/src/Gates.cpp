@@ -18,6 +18,7 @@
 #include <cmath>
 #include <functional>
 #include <map>
+#include <iostream>
 
 #include "Gates.hpp"
 #include "Util.hpp"
