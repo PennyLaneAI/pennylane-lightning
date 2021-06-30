@@ -16,6 +16,10 @@
 
 #include <tuple>
 
+using std::vector;
+using Pennylane::CplxType;
+using Pennylane::StateVector;
+
 namespace test_utils {
 
 class Exp2TestFixture :public ::testing::TestWithParam<std::tuple<int, int>> {
@@ -56,5 +60,40 @@ INSTANTIATE_TEST_SUITE_P (
                 std::make_tuple(0, 4, 8),
                 std::make_tuple(2, 4, 2),
                 std::make_tuple(2, 5, 4)));
+
+
+class innerProductFixture :public ::testing::TestWithParam<std::tuple<vector<CplxType>, vector<CplxType>, CplxType>> {
+};
+
+TEST_P(innerProductFixture, innerProductPTest) {
+
+    vector<CplxType> lambda_state = std::get<0>(GetParam());
+    vector<CplxType> mu_state = std::get<1>(GetParam());
+    CplxType expected = std::get<2>(GetParam());
+
+    int length = lambda_state.size();
+
+    Pennylane::StateVector lambda(lambda_state.data(), length);
+    Pennylane::StateVector mu(mu_state.data(), length);
+    auto res = Pennylane::inner_product(lambda, mu);
+    ASSERT_NEAR(expected.real(), res.real(), 1e-10);
+    ASSERT_NEAR(expected.imag(), res.imag(), 1e-10);
+}
+
+INSTANTIATE_TEST_SUITE_P (
+        innerProductTests,
+        innerProductFixture,
+        ::testing::Values(
+                std::make_tuple(vector<CplxType>{1,0}, vector<CplxType>{1,0}, 1),
+                std::make_tuple(vector<CplxType>{1,0}, vector<CplxType>{0,1}, 0),
+                std::make_tuple(vector<CplxType>{1,0,0,0}, vector<CplxType>{1,0,0,0}, 1),
+                std::make_tuple(vector<CplxType>{CplxType(0,1),0}, vector<CplxType>{CplxType(0,1),0}, 1),
+                std::make_tuple(vector<CplxType>{0.5,0.25}, vector<CplxType>{0.1,0.2}, 0.05 + 0.05),
+                std::make_tuple(
+                                vector<CplxType>{CplxType(0.1,0.2), CplxType(0.3,0.4)},
+                                vector<CplxType>{CplxType(0.5,0.6), CplxType(0.7,0.8)},
+                                CplxType(0.7,-0.08)
+                                )
+                ));
 
 }

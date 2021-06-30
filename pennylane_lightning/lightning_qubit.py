@@ -151,13 +151,12 @@ class LightningQubit(DefaultQubit):
             if not hasattr(m.obs, "base_name"):
                 m.obs.base_name = None  # This is needed for when the observable is a tensor product
 
-        param_number = len(tape._par_info) - 1
+        param_number = len(tape._par_info)
 
         def _unwrap(param_list):
             for i, l in enumerate(param_list):
                 try:
                     param_list[i] = l.unwrap()
-                    print(type(l), type(param_list[i]))
                     if isinstance(param_list[i], (int, float)):
                         param_list[i] = float(param_list[i])
                     else:
@@ -174,10 +173,23 @@ class LightningQubit(DefaultQubit):
         obs_data = [(self._remove_inverse_string(obs.name), _unwrap(obs.parameters), obs.wires.tolist()) for obs in tape.observables]
         observables, obs_params, obs_wires = map(list, zip(*obs_data))
 
+        print(tape.trainable_params)
         trainable_params = list(tape.trainable_params)
 
         # send in flattened array of zeros to be populated by adjoint_jacobian
         jac = np.zeros(len(tape.observables) * len(tape.trainable_params))
+        print(
+            self.state,       # numpy.ndarray[numpy.complex128]
+            jac,              # numpy.ndarray[numpy.float64]
+            observables,      # List[str]
+            obs_params,       # List[List[float]]
+            obs_wires,        # List[List[int]]
+            operations,       # List[str]
+            op_params,        # List[List[float]]
+            op_wires,         # List[List[int]]
+            trainable_params, # List[int]
+            param_number,     # int
+        )
         adjoint_jacobian(
             self.state,       # numpy.ndarray[numpy.complex128]
             jac,              # numpy.ndarray[numpy.float64]

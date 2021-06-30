@@ -19,6 +19,12 @@
 
 #include <assert.h>
 
+#include "StateVector.hpp"
+#include "typedefs.hpp"
+
+using Pennylane::CplxType;
+using Pennylane::StateVector;
+
 namespace Pennylane {
 
     /**
@@ -41,6 +47,16 @@ namespace Pennylane {
     inline size_t maxDecimalForQubit(const unsigned int qubitIndex, const unsigned int qubits) {
         assert(qubitIndex < qubits);
         return exp2(qubits - qubitIndex - 1);
+    }
+
+    inline CplxType inner_product(StateVector& lambda, StateVector& mu){
+        CplxType sum = 0;
+
+        int lambdaStateSize = lambda.length;
+        for (int k = 0; k < lambdaStateSize; k++) {
+            sum += (std::conj(lambda.arr[k]) * mu.arr[k]);
+        }
+        return sum;
     }
 
 }

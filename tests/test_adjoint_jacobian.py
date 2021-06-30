@@ -105,7 +105,7 @@ class TestAdjointJacobian:
         #grad_F = tape.jacobian(dev, method="numeric")
         grad_A = dev.adjoint_jacobian(tape)
 
-        default_dev = qml.device('default.qubit', wires=2)
+        default_dev = qml.device('default.qubit', wires=2, shots=None)
 
         res = default_dev.adjoint_jacobian(tape)
         assert np.allclose(res, exact, atol=tol, rtol=0)
@@ -129,7 +129,7 @@ class TestAdjointJacobian:
 
     def test_multiple_rx_gradient(self, tol):
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result."""
-        dev = qml.device("default.qubit", wires=3)
+        dev = qml.device("default.qubit", wires=3, shots=None)
         params = np.array([np.pi, np.pi / 2, np.pi / 3])
 
         with qml.tape.JacobianTape() as tape:
@@ -147,17 +147,17 @@ class TestAdjointJacobian:
 
     qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
     ops = {
-        qml.RX,
-        qml.RY,
-        qml.RZ,
-        qml.PhaseShift,
+        # qml.RX,
+        # qml.RY,
+        # qml.RZ,
+        # qml.PhaseShift,
         qml.CRX,
         qml.CRY,
         qml.CRZ,
-        qml.Rot
+        # qml.Rot
     }
 
-    @pytest.mark.parametrize("obs", [qml.PauliX, qml.PauliY])
+    @pytest.mark.parametrize("obs", [qml.PauliZ, qml.PauliX, qml.PauliY])
     @pytest.mark.parametrize("op", ops)
     def test_gradients(self, op, obs, tol, dev):
         """Tests that the gradients of circuits match between the finite difference and device
@@ -167,30 +167,28 @@ class TestAdjointJacobian:
         #else:
         args = np.array(0.2, requires_grad=True)
 
+        dev = qml.device('lightning.qubit', wires=2, shots=None)
         with qml.tape.JacobianTape() as tape:
             qml.Hadamard(wires=0)
-            qml.RX(0.543, wires=0)
             qml.CNOT(wires=[0, 1])
 
             op(args, wires=range(op.num_wires))
+            # qml.CNOT(wires=[0, 1])
 
-            # qml.Rot(1.3, -2.3, 0.5, wires=[0])
-            qml.RX(1.3, wires=0)
-            qml.RY(-2.3, wires=0)
-            qml.RZ(0.5, wires=0)
+            # # qml.Rot(1.3, -2.3, 0.5, wires=[0])
+            # qml.RX(1.3, wires=0)
+            # qml.RY(-2.3, wires=0)
+            # qml.RZ(0.5, wires=0)
 
-            qml.RZ(-0.5, wires=0)
-            qml.RY(0.5, wires=1).inv()
-            qml.CNOT(wires=[0, 1])
+            # qml.RZ(-0.5, wires=0)
+            # qml.RY(0.5, wires=1).inv()
 
             qml.expval(obs(wires=0))
             qml.expval(qml.PauliZ(wires=1))
 
-        tape.execute(dev)
+        tape.trainable_params = {1}
 
-        tape.trainable_params = set(range(1, 1 + op.num_params))
-
-        default_dev = qml.device('default.qubit', wires=2)
+        default_dev = qml.device('default.qubit', wires=2, shots=None)
 
         grad_D = dev.adjoint_jacobian(tape)
         grad_expected = default_dev.adjoint_jacobian(tape)

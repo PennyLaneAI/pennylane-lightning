@@ -21,9 +21,6 @@
 #include "Gates.hpp"
 #include "StateVector.hpp"
 #include "Util.hpp"
-//#include <pybind11/pybind11.h>
-
-//namespace py = pybind11;
 
 using std::set;
 using std::string;
@@ -128,25 +125,22 @@ void Pennylane::adjointJacobian(
     const vector<int>& trainableParams,
     int paramNumber
 ) {
-    vector<Pennylane::StateVector> lambdas;
+    // TODO: need to generalize
+    int num_qubits = 2;
+
     size_t numObservables = observables.size();
     size_t trainableParamNumber = trainableParams.size() - 1;
 
     CplxType* lambdaStateArr = new CplxType[phi.length];
     std::memcpy(lambdaStateArr, phi.arr, sizeof(CplxType)*phi.length);
     Pennylane::StateVector lambdaState(lambdaStateArr, phi.length);
-    // forward pass on lambda
 
-    for (int i = 0; i< operations.size(); i++) {
-        Pennylane::constructAndApplyOperation(
-            lambdaState,
-            operations[i],
-            opWires[i],
-            opParams[i],
-            false,
-            2
-        );
-    }
+    // 1. Apply the unitaries (\hat{U}_{1:P}) to lambda
+    std::vector<bool> inverses(operations.size(), false);
+    apply(lambdaState, operations, opWires, opParams, inverses, num_qubits);
+
+    // mult_observables();
+    vector<Pennylane::StateVector> lambdas;
     for (unsigned int i = 0; i < numObservables; i++) {
         // copy |phi> and apply observables one at a time
         CplxType* phiCopyArr = new CplxType[lambdaState.length];
@@ -159,7 +153,7 @@ void Pennylane::adjointJacobian(
             obsWires[i],
             obsParams[i],
             false,
-            2  // maybe *2 (didn't apply the whole op otherwise)
+            num_qubits
         );
 
         lambdas.push_back(phiCopy);
@@ -181,47 +175,43 @@ void Pennylane::adjointJacobian(
                 opWires[i],
                 opParams[i],
                 true,
-                2 //opWires[i].size()
+                num_qubits
             );
 
-            if (std::find(trainableParams.begin(), trainableParams.end(), paramNumber) != trainableParams.end()) {
+            // We have a parametrized gate
+            if (!opParams[i].empty()){
+                if (std::find(trainableParams.begin(), trainableParams.end(), paramNumber) != trainableParams.end()) {
 
-                // create iH|phi> = d/d dUj/dtheta Uj* |phi> = dUj/dtheta|phi'>
-                unique_ptr<AbstractGate> gate = constructGate(operations[i], opParams[i]);
-                // double scalingFactor = gate->generatorScalingFactor;
-                double scalingFactor = Pennylane::RotationYGate::generatorScalingFactor;
-                for(unsigned int i = 0; i < mu.length; ++i){
-                    //py::print(mu.arr[i].real());
-                    //py::print(mu.arr[i].imag());
-                }
-                Pennylane::applyGateGenerator(
-                    mu,
-                    gate,
-                    opWires[i],
-                    2 //opWires[i].size()
-                );
-                for(unsigned int i = 0; i < mu.length; ++i){
-                    //py::print(mu.arr[i].real());
-                    //py::print(mu.arr[i].imag());
-                }
+                    // create iH|phi> = d/d dUj/dtheta Uj* |phi> = dUj/dtheta|phi'>
+                    unique_ptr<AbstractGate> gate = constructGate(operations[i], opParams[i]);
+                    // double scalingFactor = gate->generatorScalingFactor;
+                    double scalingFactor = Pennylane::RotationYGate::generatorScalingFactor;
+                    Pennylane::applyGateGenerator(
+                        mu,
+                        gate,
+                        opWires[i],
+                        num_qubits
+                    );
 
-                for (unsigned int j = 0; j < lambdas.size(); j++) {
-                    int lambdaStateSize = lambdas[j].length;
+                    for (unsigned int j = 0; j < lambdas.size(); j++) {
+                        int lambdaStateSize = lambdas[j].length;
 
-                    CplxType sum = 0;
-                    for (int k = 0; k < lambdaStateSize; k++) {
-                        sum += (std::conj(lambdas[j].arr[k]) * mu.arr[k]);
+                        CplxType sum = 0;
+                        for (int k = 0; k < lambdaStateSize; k++) {
+                            sum += (std::conj(lambdas[j].arr[k]) * mu.arr[k]);
+                        }
+                        sum = Pennylane::inner_product(lambdas[j], mu);
+                        // calculate 2 * shift * Real(i * sum) = -2 * shift * Imag(sum)
+                        jac[j * trainableParams.size() + trainableParamNumber] = -2 * scalingFactor * std::imag(sum);
                     }
-                    // calculate 2 * shift * Real(i * sum) = -2 * shift * Imag(sum)
-                    //py::print(-2 * scalingFactor * std::imag(sum));
-                    jac[j * trainableParams.size() + trainableParamNumber] = -2 * scalingFactor * std::imag(sum);
+                    delete[] phiCopyArr;
+                    trainableParamNumber--;
                 }
-                delete[] phiCopyArr;
-                trainableParamNumber--;
-            }
-            paramNumber--;
+                paramNumber--;
+        }
 
-            // if i > 0: (?)
+        // if i > 0: (?)
+        if(i > 0){
             for (unsigned int j = 0; j < lambdas.size(); j++) {
                 Pennylane::constructAndApplyOperation(
                     lambdas[j],
@@ -229,9 +219,10 @@ void Pennylane::adjointJacobian(
                     opWires[i],
                     opParams[i],
                     true,
-                    2 //opWires[i].size()
+                    num_qubits
                 );
             }
+        }
         }
     }
     // delete copied state arrays

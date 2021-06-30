@@ -567,8 +567,9 @@ const double Pennylane::CRotationYGate::generatorScalingFactor{ -0.5 };
 void Pennylane::CRotationYGate::applyGenerator(const StateVector& state, const std::vector<size_t>& indices, const std::vector<size_t>& externalIndices) {
     for (const size_t& externalIndex : externalIndices) {
         CplxType* shiftedState = state.arr + externalIndex;
-        CplxType v0 = shiftedState[indices[0]];
         shiftedState[indices[0]] = shiftedState[indices[1]] = 0;
+
+        CplxType v0 = shiftedState[indices[2]];
         shiftedState[indices[2]] = -IMAG * shiftedState[indices[3]];
         shiftedState[indices[3]] = IMAG * v0;
     }

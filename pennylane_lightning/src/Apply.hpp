@@ -109,6 +109,8 @@ namespace Pennylane {
         const unsigned int qubits
     );
 
+    StateVector copy_state_vector(StateVector& state_to_copy);
+
     /**
      * Implements the adjoint method outlined in `Jones and Gacon <https://arxiv.org/abs/2009.02823>`__.
      * After a forward pass, the circuit is reversed by iteratively applying inverse (adjoint) gates
