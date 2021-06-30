@@ -194,13 +194,7 @@ void Pennylane::adjointJacobian(
                     );
 
                     for (unsigned int j = 0; j < lambdas.size(); j++) {
-                        int lambdaStateSize = lambdas[j].length;
-
-                        CplxType sum = 0;
-                        for (int k = 0; k < lambdaStateSize; k++) {
-                            sum += (std::conj(lambdas[j].arr[k]) * mu.arr[k]);
-                        }
-                        sum = Pennylane::inner_product(lambdas[j], mu);
+                        CplxType sum = Pennylane::inner_product(lambdas[j], mu);
                         // calculate 2 * shift * Real(i * sum) = -2 * shift * Imag(sum)
                         jac[j * trainableParams.size() + trainableParamNumber] = -2 * scalingFactor * std::imag(sum);
                     }
