@@ -152,6 +152,7 @@ class LightningQubit(DefaultQubit):
                 m.obs.base_name = None  # This is needed for when the observable is a tensor product
 
         param_number = len(tape._par_info)
+        qubits = len(self.wires)
 
         def _unwrap(param_list):
             for i, l in enumerate(param_list):
@@ -188,6 +189,7 @@ class LightningQubit(DefaultQubit):
             op_wires,         # List[List[int]]
             trainable_params, # List[int]
             param_number,     # int
+            qubits     # int
         )
         return jac.reshape((len(tape.observables), len(tape.trainable_params)))
 

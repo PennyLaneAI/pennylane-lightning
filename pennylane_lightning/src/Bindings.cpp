@@ -56,7 +56,8 @@ void adjointJacobian(
     const vector<vector<double> >& opParams,
     const vector<vector<unsigned int> >& opWires,
     const vector<int>& trainableParams,
-    int paramNumber
+    int paramNumber,
+    const int qubits
 ) {
     StateVector state = create(&phiNumpyArray);
     pybind11::buffer_info jacInfo = jac.request();
@@ -71,7 +72,8 @@ void adjointJacobian(
         opParams,
         opWires,
         trainableParams,
-        paramNumber
+        paramNumber,
+        qubits
     );
 }
 

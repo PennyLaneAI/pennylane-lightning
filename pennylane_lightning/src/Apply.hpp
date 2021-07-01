@@ -131,7 +131,8 @@ namespace Pennylane {
         const std::vector<std::vector<double> >& opParams,
         const std::vector<std::vector<unsigned int> >& opWires,
         const std::vector<int>& trainableParams,
-        int paramNumber
+        int paramNumber,
+        const unsigned int qubits
     );
 
 }

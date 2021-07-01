@@ -123,10 +123,9 @@ void Pennylane::adjointJacobian(
     const vector<vector<double> >& opParams,
     const vector<vector<unsigned int> >& opWires,
     const vector<int>& trainableParams,
-    int paramNumber
+    int paramNumber,
+    const unsigned int qubits
 ) {
-    int num_qubits = 2;
-
     size_t numObservables = observables.size();
     unsigned int trainableParamNumber = trainableParams.size() - 1;
     int current_param_idx = paramNumber - 1;
@@ -138,7 +137,7 @@ void Pennylane::adjointJacobian(
 
     // 2. Apply the unitaries (\hat{U}_{1:P}) to lambda
     std::vector<bool> inverses(operations.size(), false);
-    apply(lambdaState, operations, opWires, opParams, inverses, num_qubits);
+    apply(lambdaState, operations, opWires, opParams, inverses, qubits);
 
     // 3-4. Copy lambda and apply the observables
     // lambdaState becomes |phi>
@@ -156,7 +155,7 @@ void Pennylane::adjointJacobian(
             obsWires[i],
             obsParams[i],
             false,
-            num_qubits
+            qubits
         );
         lambdas.push_back(phiCopy);
     }
@@ -177,7 +176,7 @@ void Pennylane::adjointJacobian(
                 opWires[i],
                 opParams[i],
                 true,
-                num_qubits
+                qubits
             );
 
 
@@ -193,7 +192,7 @@ void Pennylane::adjointJacobian(
                         mu,
                         gate,
                         opWires[i],
-                        num_qubits
+                        qubits
                     );
 
                     for (unsigned int j = 0; j < lambdas.size(); j++) {
@@ -217,7 +216,7 @@ void Pennylane::adjointJacobian(
                     opWires[i],
                     opParams[i],
                     true,
-                    num_qubits
+                    qubits
                 );
             }
         }

@@ -128,6 +128,7 @@ class adjointJacobianFixture :public ::testing::TestWithParam<std::tuple<
                                         vector<vector<unsigned int> >,
                                         vector<int>,
                                         int,
+                                        int,
                                         vector<double>
                                         >> {};
 
@@ -142,15 +143,16 @@ TEST_P(adjointJacobianFixture, adjointJacobianPTest) {
     vector<vector<unsigned int> > ops_wires = std::get<6>(GetParam());
     vector<int> trainable_params = std::get<7>(GetParam());
     int param_number = std::get<8>(GetParam());
+    int qubits = std::get<9>(GetParam());
 
-    vector<double> expected = std::get<9>(GetParam());
+    vector<double> expected = std::get<10>(GetParam());
 
     Pennylane::StateVector phi(input.data(), input.size());
 
     vector<double> jacobian = {0, 0};
     Pennylane::adjointJacobian(phi, jacobian.data(), obs, obs_params,
                                 obs_wires, ops, ops_params, ops_wires,
-                                trainable_params, param_number);
+                                trainable_params, param_number, qubits);
 
     for(unsigned int i=0; i<jacobian.size(); ++i){
         ASSERT_NEAR(jacobian[i], expected[i], 1e-5);
@@ -172,6 +174,7 @@ INSTANTIATE_TEST_SUITE_P (
                                 vector<vector<unsigned int>>{{0}, {0, 1}, {0, 1}},
                                 vector<int>{0},
                                 1,
+                                2,
                                 vector<double>{0,0.0993346654}
                                 )
                 ));
