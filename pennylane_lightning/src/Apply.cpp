@@ -125,22 +125,25 @@ void Pennylane::adjointJacobian(
     const vector<int>& trainableParams,
     int paramNumber
 ) {
-    // TODO: need to generalize
     int num_qubits = 2;
 
     size_t numObservables = observables.size();
-    size_t trainableParamNumber = trainableParams.size() - 1;
+    unsigned int trainableParamNumber = trainableParams.size() - 1;
+    int current_param_idx = paramNumber - 1;
 
+    // 1. Copy the input state, create lambda
     CplxType* lambdaStateArr = new CplxType[phi.length];
     std::memcpy(lambdaStateArr, phi.arr, sizeof(CplxType)*phi.length);
     Pennylane::StateVector lambdaState(lambdaStateArr, phi.length);
 
-    // 1. Apply the unitaries (\hat{U}_{1:P}) to lambda
+    // 2. Apply the unitaries (\hat{U}_{1:P}) to lambda
     std::vector<bool> inverses(operations.size(), false);
     apply(lambdaState, operations, opWires, opParams, inverses, num_qubits);
 
-    // mult_observables();
+    // 3-4. Copy lambda and apply the observables
+    // lambdaState becomes |phi>
     vector<Pennylane::StateVector> lambdas;
+
     for (unsigned int i = 0; i < numObservables; i++) {
         // copy |phi> and apply observables one at a time
         CplxType* phiCopyArr = new CplxType[lambdaState.length];
@@ -155,7 +158,6 @@ void Pennylane::adjointJacobian(
             false,
             num_qubits
         );
-
         lambdas.push_back(phiCopy);
     }
 
@@ -178,9 +180,10 @@ void Pennylane::adjointJacobian(
                 num_qubits
             );
 
+
             // We have a parametrized gate
             if (!opParams[i].empty()){
-                if (std::find(trainableParams.begin(), trainableParams.end(), paramNumber) != trainableParams.end()) {
+                if (std::find(trainableParams.begin(), trainableParams.end(), current_param_idx) != trainableParams.end()) {
 
                     // create iH|phi> = d/d dUj/dtheta Uj* |phi> = dUj/dtheta|phi'>
                     unique_ptr<AbstractGate> gate = constructGate(operations[i], opParams[i]);
@@ -195,13 +198,14 @@ void Pennylane::adjointJacobian(
 
                     for (unsigned int j = 0; j < lambdas.size(); j++) {
                         CplxType sum = Pennylane::inner_product(lambdas[j], mu);
+
                         // calculate 2 * shift * Real(i * sum) = -2 * shift * Imag(sum)
                         jac[j * trainableParams.size() + trainableParamNumber] = -2 * scalingFactor * std::imag(sum);
                     }
                     delete[] phiCopyArr;
                     trainableParamNumber--;
                 }
-                paramNumber--;
+                current_param_idx--;
         }
 
         // if i > 0: (?)

@@ -140,7 +140,7 @@ class LightningQubit(DefaultQubit):
         apply(state_vector, op_names, op_wires, op_param, op_inverse, self.num_wires)
         return np.reshape(state_vector, state.shape)
 
-    def adjoint_jacobian(self, tape):
+    def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
         for m in tape.measurements:
             if m.return_type is not Expectation:
                 raise QuantumFunctionError(
@@ -173,23 +173,10 @@ class LightningQubit(DefaultQubit):
         obs_data = [(self._remove_inverse_string(obs.name), _unwrap(obs.parameters), obs.wires.tolist()) for obs in tape.observables]
         observables, obs_params, obs_wires = map(list, zip(*obs_data))
 
-        print(tape.trainable_params)
         trainable_params = list(tape.trainable_params)
 
         # send in flattened array of zeros to be populated by adjoint_jacobian
         jac = np.zeros(len(tape.observables) * len(tape.trainable_params))
-        print(
-            self.state,       # numpy.ndarray[numpy.complex128]
-            jac,              # numpy.ndarray[numpy.float64]
-            observables,      # List[str]
-            obs_params,       # List[List[float]]
-            obs_wires,        # List[List[int]]
-            operations,       # List[str]
-            op_params,        # List[List[float]]
-            op_wires,         # List[List[int]]
-            trainable_params, # List[int]
-            param_number,     # int
-        )
         adjoint_jacobian(
             self.state,       # numpy.ndarray[numpy.complex128]
             jac,              # numpy.ndarray[numpy.float64]

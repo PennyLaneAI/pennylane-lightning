@@ -147,7 +147,6 @@ TEST_P(adjointJacobianFixture, adjointJacobianPTest) {
 
     Pennylane::StateVector phi(input.data(), input.size());
 
-    // TODO:
     vector<double> jacobian = {0, 0};
     Pennylane::adjointJacobian(phi, jacobian.data(), obs, obs_params,
                                 obs_wires, ops, ops_params, ops_wires,
@@ -163,18 +162,17 @@ INSTANTIATE_TEST_SUITE_P (
         adjointJacobianFixtureTests,
         adjointJacobianFixture,
         ::testing::Values(
-                // Single-qubit elementary rotations
                 std::make_tuple(
                                 vector<CplxType>{1, 0, 0, 0},
                                 vector<string>{"PauliZ", "PauliZ"},
                                 vector<vector<double>>{{}, {}},
                                 vector<vector<unsigned int>>{{0}, {1}},
-                                vector<string>{"Hadamard", "CNOT", "CRX"},
+                                vector<string>{"Hadamard", "CNOT", "CRY"},
                                 vector<vector<double>>{{}, {}, {0.2}},
                                 vector<vector<unsigned int>>{{0}, {0, 1}, {0, 1}},
-                                vector<int>{1},
+                                vector<int>{0},
                                 1,
-                                vector<double>{0,0}
+                                vector<double>{0,0.0993346654}
                                 )
                 ));
 
