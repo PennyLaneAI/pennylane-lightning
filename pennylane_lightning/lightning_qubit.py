@@ -168,10 +168,16 @@ class LightningQubit(DefaultQubit):
             #     return param_list[0]
             return param_list
 
-        op_data = [(self._remove_inverse_string(op.name), _unwrap(op.parameters), op.wires.tolist()) for op in tape.operations]
+        op_data = [
+            (self._remove_inverse_string(op.name), _unwrap(op.parameters), op.wires.tolist())
+            for op in tape.operations
+        ]
         operations, op_params, op_wires = map(list, zip(*op_data))
 
-        obs_data = [(self._remove_inverse_string(obs.name), _unwrap(obs.parameters), obs.wires.tolist()) for obs in tape.observables]
+        obs_data = [
+            (self._remove_inverse_string(obs.name), _unwrap(obs.parameters), obs.wires.tolist())
+            for obs in tape.observables
+        ]
         observables, obs_params, obs_wires = map(list, zip(*obs_data))
 
         trainable_params = list(tape.trainable_params)
@@ -179,17 +185,17 @@ class LightningQubit(DefaultQubit):
         # send in flattened array of zeros to be populated by adjoint_jacobian
         jac = np.zeros(len(tape.observables) * len(tape.trainable_params))
         adjoint_jacobian(
-            self.state,       # numpy.ndarray[numpy.complex128]
-            jac,              # numpy.ndarray[numpy.float64]
-            observables,      # List[str]
-            obs_params,       # List[List[float]]
-            obs_wires,        # List[List[int]]
-            operations,       # List[str]
-            op_params,        # List[List[float]]
-            op_wires,         # List[List[int]]
-            trainable_params, # List[int]
-            param_number,     # int
-            qubits     # int
+            self.state,  # numpy.ndarray[numpy.complex128]
+            jac,  # numpy.ndarray[numpy.float64]
+            observables,  # List[str]
+            obs_params,  # List[List[float]]
+            obs_wires,  # List[List[int]]
+            operations,  # List[str]
+            op_params,  # List[List[float]]
+            op_wires,  # List[List[int]]
+            trainable_params,  # List[int]
+            param_number,  # int
+            qubits,  # int
         )
         return jac.reshape((len(tape.observables), len(tape.trainable_params)))
 
