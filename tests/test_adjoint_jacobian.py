@@ -147,10 +147,10 @@ class TestAdjointJacobian:
 
     qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
     ops = {
-        # qml.RX,
-        # qml.RY,
-        # qml.RZ,
-        # qml.PhaseShift,
+        qml.RX,
+        qml.RY,
+        qml.RZ,
+        qml.PhaseShift,
         qml.CRX,
         qml.CRY,
         qml.CRZ,
