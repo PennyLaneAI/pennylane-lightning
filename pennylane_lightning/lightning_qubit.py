@@ -20,6 +20,7 @@ from .lightning_qubit_ops import apply, adjoint_jacobian
 import numpy as np
 from pennylane import QubitStateVector, BasisState, DeviceError, QubitUnitary, QuantumFunctionError
 from pennylane.operation import Expectation
+from pennylane.ops.qubit import Rot
 
 from ._version import __version__
 
@@ -168,6 +169,12 @@ class LightningQubit(DefaultQubit):
             #     return param_list[0]
             return param_list
 
+        for idx, op in enumerate(tape._ops):
+            if isinstance(op, Rot) and not op.inverse:
+                new_ops = op.decomposition(*op.parameters, wires=op.wires)
+                tape._ops.remove(op)
+                tape._ops[idx:idx] = new_ops
+
         op_data = [
             (self._remove_inverse_string(op.name), _unwrap(op.parameters), op.wires.tolist())
             for op in tape.operations
@@ -184,6 +191,7 @@ class LightningQubit(DefaultQubit):
 
         # send in flattened array of zeros to be populated by adjoint_jacobian
         jac = np.zeros(len(tape.observables) * len(tape.trainable_params))
+        self.reset()
         adjoint_jacobian(
             self.state,  # numpy.ndarray[numpy.complex128]
             jac,  # numpy.ndarray[numpy.float64]

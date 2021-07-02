@@ -15,6 +15,7 @@
 Tests for the ``adjoint_jacobian`` method of the :mod:`pennylane` :class:`LightningQubit` class.
 """
 import pytest
+import copy
 
 import pennylane as qml
 from pennylane import numpy as np
@@ -154,7 +155,7 @@ class TestAdjointJacobian:
         qml.CRX,
         qml.CRY,
         qml.CRZ,
-        # qml.Rot
+        qml.Rot
     }
 
     @pytest.mark.parametrize("obs", [qml.PauliZ, qml.PauliX, qml.PauliY])
@@ -162,26 +163,27 @@ class TestAdjointJacobian:
     def test_gradients(self, op, obs, tol, dev):
         """Tests that the gradients of circuits match between the finite difference and device
          methods."""
-        #if op.name is "Rot":
-        #    arg1, arg2, arg3 = np.array([0.2, 0.35, 0.5], requires_grad=True)
-        #else:
-        args = np.array(0.2, requires_grad=True)
+
+        if op is qml.Rot:
+            args = np.array([0.2, 0.35, 0.5], requires_grad=True)
+        else:
+            args = [np.array(0.2, requires_grad=True)]
 
         dev = qml.device('lightning.qubit', wires=2, shots=None)
         with qml.tape.JacobianTape() as tape:
             qml.Hadamard(wires=0)
             qml.CNOT(wires=[0, 1])
 
-            op(args, wires=range(op.num_wires))
-            # qml.CNOT(wires=[0, 1])
+            op(*args, wires=range(op.num_wires))
+            qml.CNOT(wires=[0, 1])
 
-            # # qml.Rot(1.3, -2.3, 0.5, wires=[0])
-            # qml.RX(1.3, wires=0)
-            # qml.RY(-2.3, wires=0)
-            # qml.RZ(0.5, wires=0)
+            qml.Rot(1.3, -2.3, 0.5, wires=[0])
+            qml.RX(1.3, wires=0)
+            qml.RY(-2.3, wires=0)
+            qml.RZ(0.5, wires=0)
 
-            # qml.RZ(-0.5, wires=0)
-            # qml.RY(0.5, wires=1).inv()
+            qml.RZ(-0.5, wires=0)
+            qml.RY(0.5, wires=1).inv()
 
             qml.expval(obs(wires=0))
             qml.expval(qml.PauliZ(wires=1))
@@ -195,26 +197,28 @@ class TestAdjointJacobian:
 
         assert np.allclose(grad_D, grad_expected, atol=tol, rtol=0)
 
-    # def test_gradient_gate_with_multiple_parameters(self, tol, dev):
-    #     """Tests that gates with multiple free parameters yield correct gradients."""
-    #     x, y, z = [0.5, 0.3, -0.7]
+    def test_gradient_gate_with_multiple_parameters(self, tol, dev):
+        """Tests that gates with multiple free parameters yield correct gradients."""
+        x, y, z = [0.5, 0.3, -0.7]
 
-    #     with qml.tape.JacobianTape() as tape:
-    #         qml.RX(0.4, wires=[0])
-    #         qml.Rot(x, y, z, wires=[0])
-    #         qml.RY(-0.2, wires=[0])
-    #         qml.expval(qml.PauliZ(0))
+        with qml.tape.JacobianTape() as tape:
+            qml.RX(0.4, wires=[0])
+            qml.Rot(x, y, z, wires=[0])
+            qml.RY(-0.2, wires=[0])
+            qml.expval(qml.PauliZ(0))
 
-    #     tape.trainable_params = {1, 2, 3}
+        tape.trainable_params = {1, 2, 3}
 
-    #     grad_D = dev.adjoint_jacobian(tape)
-    #     grad_F = tape.jacobian(dev, method="numeric")
+        # computing the adjoint mutates the tape, copy it before the computation
+        other_tape = copy.copy(tape)
+        grad_D = dev.adjoint_jacobian(tape)
+        grad_F = other_tape.jacobian(dev, method="numeric")
 
-    #     # gradient has the correct shape and every element is nonzero
-    #     assert grad_D.shape == (1, 3)
-    #     assert np.count_nonzero(grad_D) == 3
-    #     # the different methods agree
-    #     assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
+        # gradient has the correct shape and every element is nonzero
+        assert grad_D.shape == (1, 3)
+        assert np.count_nonzero(grad_D) == 3
+        # the different methods agree
+        assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
 
 
 class TestAdjointJacobianQNode:
@@ -227,20 +231,21 @@ class TestAdjointJacobianQNode:
     def test_qnode(self, mocker, tol, dev):
         """Test that specifying diff_method allows the adjoint method to be selected"""
         args = np.array([0.54, 0.1, 0.5], requires_grad=True)
+        dev = qml.device("lightning.qubit", wires=3)
 
         def circuit(x, y, z):
             qml.Hadamard(wires=0)
             qml.RX(0.543, wires=0)
             qml.CNOT(wires=[0, 1])
 
-            qml.Rot(x, y, z, wires=0)
+            #qml.Rot(x, y, z, wires=0)
 
-            qml.Rot(1.3, -2.3, 0.5, wires=[0])
-            qml.RZ(-0.5, wires=0)
+            #qml.Rot(1.3, -2.3, 0.5, wires=[0])
+            qml.RZ(x, wires=0)
             qml.RY(0.5, wires=1)
             qml.CNOT(wires=[0, 1])
 
-            return qml.expval(qml.PauliX(0) @ qml.PauliZ(1))
+            return qml.expval(qml.PauliX(0))
 
         qnode1 = QNode(circuit, dev, diff_method="adjoint")
         spy = mocker.spy(dev, "adjoint_jacobian")
