@@ -93,10 +93,41 @@ while the C++ code can be tested with
 
 Testing the C++ code requires the `GoogleTest <https://github.com/google/googletest>`__ framework.
 
+CMake Support
+-------------
+
+One can also build the plugin using CMake:
+
+.. code-block:: console
+
+    $ cmake -S. -B build
+    $ cmake --build build
+
+and install 
+    
+.. code-block:: console
+
+    $ pip install -e .
+
+To test the C++ code:
+
+.. code-block:: console
+
+    $ mkdir build && cd build
+    $ cmake -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Debug ..
+    $ make cpptests
+    $ make test
+
+Other supported options are ``-DENABLE_NATIVE=ON`` (for ``-march=native``), ``-DUSE_LAPACK=ON``, and ``-DUSE_OPENBLAS=ON``.
+
+
 .. installation-end-inclusion-marker-do-not-remove
+
 
 Please refer to the `plugin documentation <https://pennylane-lightning.readthedocs.io/>`_ as
 well as to the `PennyLane documentation <https://pennylane.readthedocs.io/>`_ for further reference.
+
+
 
 Contributing
 ============
