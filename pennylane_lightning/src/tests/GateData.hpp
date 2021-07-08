@@ -15,7 +15,9 @@
 #define _USE_MATH_DEFINES
 
 #include "../typedefs.hpp"
+
 #include <cmath>
+#include <functional>
 #include <iostream>
 
 using Pennylane::CplxType;
