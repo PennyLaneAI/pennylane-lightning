@@ -1,6 +1,12 @@
 name: Formatting check
 on:
-- pull_request
+  pull_request:
+    push:
+      branches:
+        - master
+      paths:
+        - "pennylane_lightning/**"
+        - "tests/**"
 
 jobs:
   black:
@@ -25,3 +31,22 @@ jobs:
 
       - name: Run Black
         run: black -l 100 pennylane_lightning/ --check
+
+  format-cpp:
+    name: Format (C++)
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Install dependencies
+        run: sudo apt update && sudo apt -y install clang-format python3
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run formatter
+        run: ./bin/format --check include tests pennylane_lightning/src
