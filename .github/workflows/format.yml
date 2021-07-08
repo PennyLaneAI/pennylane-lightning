@@ -43,10 +43,10 @@ jobs:
           access_token: ${{ github.token }}
 
       - name: Install dependencies
-        run: sudo apt update && sudo apt -y install clang-format python3
+        run: sudo apt update && sudo apt -y install clang-format-11 python3
 
       - name: Checkout code
         uses: actions/checkout@v2
 
       - name: Run formatter
-        run: ./bin/format --check include tests pennylane_lightning/src
+        run: ./bin/format --check tests pennylane_lightning/src
