@@ -13,7 +13,5 @@
 // limitations under the License.
 #include "StateVector.hpp"
 
-Pennylane::StateVector::StateVector(CplxType* arr, size_t length)
-    : arr(arr)
-    , length(length)
-{}
+Pennylane::StateVector::StateVector(CplxType *arr, size_t length)
+    : arr(arr), length(length) {}

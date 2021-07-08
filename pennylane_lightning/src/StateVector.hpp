@@ -21,14 +21,13 @@
 
 namespace Pennylane {
 
-    class StateVector {
+class StateVector {
 
-    public:
-        CplxType* const arr;
-        const size_t length;
+  public:
+    CplxType *const arr;
+    const size_t length;
 
-        StateVector(CplxType* arr, size_t length);
+    StateVector(CplxType *arr, size_t length);
+};
 
-    };
-
-}
+} // namespace Pennylane
