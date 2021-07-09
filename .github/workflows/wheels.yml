@@ -27,6 +27,11 @@ env:
   CIBW_TEST_COMMAND: |
     pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
+  # Add support for Intel and ARM Macs
+  CIBW_ARCHS_MACOS: "x86_64 universal2 arm64"
+
+  # Build x86_64, ARM, and PowerPC linux wheels
+  CIBW_ARCHS_LINUX: "auto aarch64 ppc64le"
 
 jobs:
 
