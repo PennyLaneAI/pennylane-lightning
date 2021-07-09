@@ -5,11 +5,101 @@ on:
       - master
   pull_request:
 
+env:
+  CIBW_BUILD: 'cp37-* cp38-* cp39-*'
+
+  # MacOS specific build settings
+  CIBW_BEFORE_ALL_MACOS: |
+    brew uninstall --force oclint
+    brew install gcc libomp
+
+  # Python build settings
+  CIBW_BEFORE_BUILD: |
+    pip install numpy==1.19.5 scipy pybind11
+
+  # Testing of built wheels
+  CIBW_TEST_REQUIRES: numpy scipy pytest pytest-cov pytest-mock flaky
+
+  # Note: breaking up tests so that no test cases hang on Windows, to be reverted
+  CIBW_TEST_COMMAND: |
+    pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+
+  # Add support for Intel and ARM Macs
+  CIBW_ARCHS_MACOS: "x86_64 arm64"
+
+  # Build x86_64, ARM, and PowerPC linux wheels
+  CIBW_ARCHS_LINUX: "x86_64 aarch64 ppc64le"
+
+  # Will avoid testing on emulated architectures
+  CIBW_TEST_SKIP: "*-manylinux_{aarch64,ppc64le} *-macosx_arm64 *-macosx_universal2:arm64"
+
+  CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
+  CIBW_MANYLINUX_PPC64LE_IMAGE: manylinux2014
+
 jobs:
-  pythontests:
+  win-wheels:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [windows-latest]
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.8'
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v1.12.0
+
+      - uses: actions/upload-artifact@v2
+        if: github.ref == 'refs/heads/master'
+        with:
+          name: ${{ runner.os }}-wheels.zip
+          path: ./wheelhouse/*.whl
+
+
+  mac-wheels:
+    strategy:
+      matrix:
+        os: [macos-latest]
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.8'
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v1.12.0
+
+      - uses: actions/upload-artifact@v2
+        if: github.ref == 'refs/heads/master'
+        with:
+          name: ${{ runner.os }}-wheels.zip
+          path: ./wheelhouse/*.whl
+
+  linux-wheels:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
@@ -31,36 +121,6 @@ jobs:
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v1.12.0
-        env:
-          CIBW_BUILD: 'cp37-* cp38-* cp39-*'
-        
-          # MacOS specific build settings
-          CIBW_BEFORE_ALL_MACOS: |
-            brew uninstall --force oclint
-            brew install gcc libomp
-        
-          # Python build settings
-          CIBW_BEFORE_BUILD: |
-            pip install numpy==1.19.5 scipy pybind11
-        
-          # Testing of built wheels
-          CIBW_TEST_REQUIRES: numpy scipy pytest pytest-cov pytest-mock flaky
-        
-          # Note: breaking up tests so that no test cases hang on Windows, to be reverted
-          CIBW_TEST_COMMAND: |
-            pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
-        
-          # Add support for Intel and ARM Macs
-          CIBW_ARCHS_MACOS: "x86_64 arm64"
-        
-          # Build x86_64, ARM, and PowerPC linux wheels
-          CIBW_ARCHS_LINUX: "x86_64 aarch64 ppc64le"
-        
-          # Will avoid testing on emulated architectures
-          CIBW_TEST_SKIP: "*-manylinux_{aarch64,ppc64le} *-macosx_arm64 *-macosx_universal2:arm64"
-        
-          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
-          CIBW_MANYLINUX_PPC64LE_IMAGE: manylinux2014
 
       - uses: actions/upload-artifact@v2
         if: github.ref == 'refs/heads/master'
