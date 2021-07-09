@@ -34,7 +34,7 @@ jobs:
         
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            python3 -m pip install numpy==1.19.5 scipy pybind11
+            pip install numpy==1.19.5 scipy pybind11
         
           # Testing of built wheels
           CIBW_TEST_REQUIRES: numpy scipy pytest pytest-cov pytest-mock flaky
@@ -47,7 +47,7 @@ jobs:
           CIBW_ARCHS_MACOS: "x86_64 universal2 arm64"
         
           # Build x86_64, ARM, and PowerPC linux wheels
-          CIBW_ARCHS_LINUX: "auto aarch64 ppc64le"
+          CIBW_ARCHS_LINUX: "x86_64 aarch64 ppc64le"
         
           # Will avoid testing on emulated architectures
           CIBW_TEST_SKIP: "*-manylinux_{aarch64,ppc64le} *-macosx_arm64 *-macosx_universal2:arm64"
