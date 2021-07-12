@@ -205,10 +205,8 @@ void Pennylane::adjointJacobian(
                     trainableParamNumber--;
                 }
                 current_param_idx--;
-        }
+            }
 
-        // if i > 0: (?)
-        if(i > 0){
             for (unsigned int j = 0; j < lambdas.size(); j++) {
                 Pennylane::constructAndApplyOperation(
                     lambdas[j],
@@ -219,7 +217,6 @@ void Pennylane::adjointJacobian(
                     qubits
                 );
             }
-        }
         }
     }
     // delete copied state arrays

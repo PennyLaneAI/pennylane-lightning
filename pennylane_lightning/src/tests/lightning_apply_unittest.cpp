@@ -107,6 +107,8 @@ INSTANTIATE_TEST_SUITE_P (
                 std::make_tuple("CRY", vector<double>{3.14}, vector<CplxType>{0,1,0,0}, vector<CplxType>{0,0,0,0}),
                 std::make_tuple("CRY", vector<double>{3.14}, vector<CplxType>{0,0,1,0}, vector<CplxType>{0,0,0,imag}),
                 std::make_tuple("CRY", vector<double>{3.14}, vector<CplxType>{0,0,0,1}, vector<CplxType>{0,0,-imag,0}),
+                std::make_tuple("CRY", vector<double>{3.14}, vector<CplxType>{0,0,1,1}, vector<CplxType>{0,0,-imag,imag}),
+                std::make_tuple("CRY", vector<double>{3.14}, vector<CplxType>{1,1,1,1}, vector<CplxType>{0,0,-imag,imag}),
 
                 std::make_tuple("CRZ", vector<double>{3.14}, vector<CplxType>{1,0,0,0}, vector<CplxType>{0,0,0,0}),
                 std::make_tuple("CRZ", vector<double>{3.14}, vector<CplxType>{0,1,0,0}, vector<CplxType>{0,0,0,0}),
