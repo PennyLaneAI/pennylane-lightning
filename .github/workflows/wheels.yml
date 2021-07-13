@@ -22,7 +22,7 @@ env:
 
   # Note: breaking up tests so that no test cases hang on Windows, to be reverted
   CIBW_TEST_COMMAND: |
-    pip install numpy==1.19.5 scipy # move install to avoid issues with PPC & scipy
+    pip install numpy==1.19.5 scipy
     pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
   # Will avoid testing on emulated architectures
@@ -34,6 +34,7 @@ env:
 jobs:
   win-wheels:
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest]
     name: ${{ matrix.os }}
@@ -63,6 +64,7 @@ jobs:
 
   mac-wheels:
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-latest]
         arch: [x86_64, arm64]
@@ -98,6 +100,7 @@ jobs:
 
   linux-wheels:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest]
         arch: [x86_64, aarch64, ppc64le]
