@@ -25,6 +25,10 @@ env:
     pip install numpy==1.19.5 scipy
     pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
+  # Skip PPC tests due to lack of numpy/scipy wheel support
+  CIBW_TEST_SKIP: "*-manylinux_{ppc64le}"
+
+  # Use Centos 7 wheel-builder for ARM, Debian for PPC
   CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
   CIBW_MANYLINUX_PPC64LE_IMAGE: manylinux_2_24
 
@@ -67,6 +71,7 @@ jobs:
         arch: [x86_64, arm64]
     name: ${{ matrix.os }},${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
+    if: github.ref == 'refs/heads/master' || matrix.arch == 'x86_64'
 
     steps:
       - name: Cancel Previous Runs
@@ -103,6 +108,7 @@ jobs:
         arch: [x86_64, aarch64, ppc64le]
     name: ${{ matrix.os }},${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
+    if: github.ref == 'refs/heads/master' || matrix.arch == 'x86_64'
 
     steps:
       - name: Cancel Previous Runs
