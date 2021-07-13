@@ -68,8 +68,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        arch: [x86_64, arm64]
-    name: ${{ matrix.os }}"::"${{ matrix.arch }}
+        arch: [x86_64]
+    name: ${{ matrix.os }}::${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -99,13 +99,13 @@ jobs:
           name: ${{ runner.os }}-wheels.zip
           path: ./wheelhouse/*.whl
 
-  mac-wheels-alt:
+  mac-wheels-arm64:
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest]
         arch: [arm64]
-    name: ${{ matrix.os }} "::" ${{ matrix.arch }}
+    name: macos-latest::arm64
     runs-on: ${{ matrix.os }}
     if: github.ref == 'refs/heads/master'
 
@@ -173,17 +173,55 @@ jobs:
           name: ${{ runner.os }}-wheels.zip
           path: ./wheelhouse/*.whl
 
-  linux-wheels-alt:
+  linux-wheels-aarch64:
     if: github.ref == 'refs/heads/master'
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        arch: [aarch64, ppc64le]
-    name: ${{ matrix.os }}::${{ matrix.arch }}
+        arch: [aarch64]
+    name: ubuntu-latest::aarch64
     runs-on: ${{ matrix.os }}
-    if: name == "${{ matrix.os }}::${{ matrix.arch }}"
-      name: "Skipped wheel"
+
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/checkout@v2
+
+      - uses: docker/setup-qemu-action@v1
+        name: Set up QEMU
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.7'
+
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==1.12.0
+
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_ARCHS_LINUX: ${{matrix.arch}}
+
+      - uses: actions/upload-artifact@v2
+        if: github.ref == 'refs/heads/master'
+        with:
+          name: ${{ runner.os }}-wheels.zip
+          path: ./wheelhouse/*.whl
+
+  linux-wheels-ppc64le:
+    if: github.ref == 'refs/heads/master'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        arch: [ppc64le]
+    name: ubuntu-latest::ppc64le
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Cancel Previous Runs
