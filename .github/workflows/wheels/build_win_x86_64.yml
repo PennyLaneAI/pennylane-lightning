@@ -1,0 +1,57 @@
+name: Wheels
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+env:
+  CIBW_BUILD: 'cp37-* cp38-* cp39-*'
+
+  # MacOS specific build settings
+  CIBW_BEFORE_ALL_MACOS: |
+    brew uninstall --force oclint
+    brew install gcc libomp
+
+  # Python build settings
+  CIBW_BEFORE_BUILD: |
+    pip install pybind11
+
+  # Testing of built wheels
+  CIBW_TEST_REQUIRES: numpy scipy pytest pytest-cov pytest-mock flaky
+
+  # Note: breaking up tests so that no test cases hang on Windows, to be reverted
+  CIBW_TEST_COMMAND: |
+    pip install numpy==1.19.5 scipy
+    pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+
+jobs:
+  win-wheels:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.7'
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v1.12.0
+
+      - uses: actions/upload-artifact@v2
+        if: github.ref == 'refs/heads/master'
+        with:
+          name: ${{ runner.os }}-wheels.zip
+          path: ./wheelhouse/*.whl
