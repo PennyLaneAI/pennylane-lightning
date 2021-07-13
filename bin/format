@@ -1,0 +1,120 @@
+#!/usr/bin/python3
+
+import argparse
+import json
+import pathlib
+import subprocess
+import sys
+
+CLANG_FMT_BIN = "clang-format"
+CLANG_FMT_STYLE_CFG = {
+    "BasedOnStyle": "llvm",
+    "BreakBeforeBraces": "Attach",
+    "IndentWidth": 4,
+}
+
+SRCFILE_EXT = ("c", "cc", "cpp", "cxx", "h", "hh", "hpp", "hxx", "cu", "cuh")
+IGNORE_PATTERN = "external"
+
+BASE_CMD = ("clang-format", f"-style={json.dumps(CLANG_FMT_STYLE_CFG)}")
+
+
+def check_bin():
+    try:
+        subprocess.run(
+            ("clang-format", "--help"), universal_newlines=True, capture_output=True
+        )
+    except FileNotFoundError as exc:
+        raise FileNotFoundError(
+            "clang-format is not installed or is not in PATH."
+        ) from exc
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Opinionated C/C++ formatter. Based on clang-format"
+    )
+    parser.add_argument(
+        "paths", nargs="+", metavar="DIR", help="paths to the root source directories"
+    )
+    parser.add_argument(
+        "-c",
+        "--check",
+        action="store_true",
+        help="don't write files, just return status. "
+        "A non-zero return code indicates some files would be re-formatted",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="print detailed information about format violations",
+    )
+
+    return parser.parse_args()
+
+
+def get_files(args):
+    files = []
+
+    for path in args.paths:
+        for ext in SRCFILE_EXT:
+            for file_path in pathlib.Path(path).rglob(f"*.{ext}"):
+                files.append(str(file_path))
+
+    return [f for f in files if IGNORE_PATTERN not in f]
+
+
+def fmt(args, files) -> int:
+    cmd = (*BASE_CMD, "-i", *files)
+
+    paths = ", ".join(args.paths)
+    sys.stderr.write(f"Formatting {len(files)} files in {paths}.\n")
+
+    ret = subprocess.run(cmd, capture_output=True, universal_newlines=True)
+    if ret.returncode != 0:
+        sys.stderr.write(ret.stderr)
+        return 1
+
+    return 0
+
+
+def check(args, files) -> int:
+    cmd = (*BASE_CMD, "--dry-run", "-Werror")
+
+    needs_reformatted_ct = 0
+
+    for src_file in files:
+        ret = subprocess.run(
+            (*cmd, src_file), capture_output=True, universal_newlines=True
+        )
+
+        if ret.returncode != 0:
+            sys.stderr.write(f"Error: {src_file} would be reformatted.\n")
+            if args.verbose:
+                sys.stderr.write(ret.stderr)
+
+            needs_reformatted_ct += 1
+
+    sys.stderr.write(f"{needs_reformatted_ct} files would be re-formatted.\n")
+    sys.stderr.write(f"{len(files) - needs_reformatted_ct} would be left unchanged.\n")
+
+    return needs_reformatted_ct
+
+
+if __name__ == "__main__":
+    check_bin()
+    args = parse_args()
+
+    files = get_files(args)
+
+    if len(files) == 0:
+        print("No source files found! Nothing to do.")
+        sys.exit(0)
+
+    if args.check:
+        ret = check(args, files)
+    else:
+        ret = fmt(args, files)
+
+    sys.exit(int(ret > 0))
