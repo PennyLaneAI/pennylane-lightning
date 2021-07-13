@@ -143,7 +143,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         arch: [x86_64]
-    name: ${{ matrix.os }} "::" ${{ matrix.arch }}
+    name: ${{ matrix.os }}::${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -180,8 +180,10 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         arch: [aarch64, ppc64le]
-    name: ${{ matrix.os }} "::" ${{ matrix.arch }}
+    name: ${{ matrix.os }}::${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
+    if: name == "${{ matrix.os }}::${{ matrix.arch }}"
+      name: "Skipped wheel"
 
     steps:
       - name: Cancel Previous Runs
