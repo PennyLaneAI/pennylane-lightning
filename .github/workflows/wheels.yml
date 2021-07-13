@@ -72,7 +72,6 @@ jobs:
         os: [macos-latest]
         arch: [x86_64, arm64]
     name: ${{ matrix.os }}:${{ matrix.arch }}
-    if: ( ${{ github.ref == 'refs/heads/master' }} || ${{ matrix.arch == 'x86_64' }} )
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -109,7 +108,6 @@ jobs:
         os: [ubuntu-latest]
         arch: [x86_64, aarch64, ppc64le]
     name: ${{ matrix.os }}:${{ matrix.arch }}
-    if: ( ${{ github.ref == 'refs/heads/master' }} || ${{ matrix.arch == 'x86_64' }} )
     runs-on: ${{ matrix.os }}
 
     steps:
