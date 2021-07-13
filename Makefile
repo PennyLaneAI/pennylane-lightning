@@ -15,6 +15,7 @@ help:
 	@echo "  test               to run the test suite"
 	@echo "  test-cpp           to run the C++ test suite"
 	@echo "  coverage           to generate a coverage report"
+	@echo "  format [check=1]   to apply C++ formatter; use with 'check=1' to check instead of modify (requires clang-format)"
 
 .PHONY: install
 install:
@@ -62,3 +63,11 @@ coverage:
 test-cpp:
 	make -C pennylane_lightning/src/tests clean
 	GOOGLETEST_DIR=$(HOME)/googletest make -C pennylane_lightning/src/tests test
+
+.PHONY: format
+format:
+ifdef check
+	./bin/format --check pennylane_lightning/src tests
+else
+	./bin/format pennylane_lightning/src tests
+endif
