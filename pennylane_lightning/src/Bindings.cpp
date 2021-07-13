@@ -12,42 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "pybind11/complex.h"
-#include "pybind11/pybind11.h"
 #include "pybind11/numpy.h"
+#include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
 #include "Apply.hpp"
 
-using std::string;
-using std::vector;
 using Pennylane::CplxType;
 using Pennylane::StateVector;
+using std::string;
+using std::vector;
 
-static StateVector create(const pybind11::array_t<CplxType>* numpyArray) {
+static StateVector create(const pybind11::array_t<CplxType> *numpyArray) {
     pybind11::buffer_info numpyArrayInfo = numpyArray->request();
 
     if (numpyArrayInfo.ndim != 1)
-        throw std::invalid_argument("NumPy array must be a 1-dimensional array");
+        throw std::invalid_argument(
+            "NumPy array must be a 1-dimensional array");
     if (numpyArrayInfo.itemsize != sizeof(CplxType))
         throw std::invalid_argument("NumPy array must be a complex128 array");
 
-    return StateVector((CplxType*)numpyArrayInfo.ptr, numpyArrayInfo.shape[0]);
+    return StateVector((CplxType *)numpyArrayInfo.ptr, numpyArrayInfo.shape[0]);
 }
 
-void apply(
-    pybind11::array_t<CplxType>& stateNumpyArray,
-    vector<string> ops,
-    vector<vector<unsigned int>> wires,
-    vector<vector<double>> params,
-    vector<bool> inverse,
-    const unsigned int qubits
-) {
+void apply(pybind11::array_t<CplxType> &stateNumpyArray, vector<string> ops,
+           vector<vector<unsigned int>> wires, vector<vector<double>> params,
+           vector<bool> inverse, const unsigned int qubits) {
     StateVector state = create(&stateNumpyArray);
     Pennylane::apply(state, ops, wires, params, inverse, qubits);
 }
 
-PYBIND11_MODULE(lightning_qubit_ops, m)
-{
+PYBIND11_MODULE(lightning_qubit_ops, m) {
     m.doc() = "lightning.qubit apply() method";
     m.def("apply", apply, "lightning.qubit apply() method");
 }

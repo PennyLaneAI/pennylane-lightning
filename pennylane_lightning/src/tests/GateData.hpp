@@ -14,10 +14,11 @@
 #pragma once
 #define _USE_MATH_DEFINES
 
-#include <iostream>
-#include <cmath>
 #include "../typedefs.hpp"
 
+#include <cmath>
+#include <functional>
+#include <iostream>
 
 using Pennylane::CplxType;
 using std::vector;
@@ -26,27 +27,27 @@ using std::vector;
 const std::complex<double> IMAG(0, 1);
 const std::complex<double> NEGATIVE_IMAG(0, -1);
 const double SQRT_2 = sqrt(2);
-const std::complex<double> EXPONENT(0, M_PI/4);
+const std::complex<double> EXPONENT(0, M_PI / 4);
 
 // Non-parametrized single qubit gates
-static const vector<CplxType> PauliX = {0,1,1,0};
+static const vector<CplxType> PauliX = {0, 1, 1, 0};
 static const vector<CplxType> PauliY = {0, NEGATIVE_IMAG, IMAG, 0};
-static const vector<CplxType> PauliZ = {1,0,0,-1};
-static const vector<CplxType> Hadamard = {1/SQRT_2, 1/SQRT_2, 1/SQRT_2, -1/SQRT_2};
+static const vector<CplxType> PauliZ = {1, 0, 0, -1};
+static const vector<CplxType> Hadamard = {1 / SQRT_2, 1 / SQRT_2, 1 / SQRT_2,
+                                          -1 / SQRT_2};
 static const vector<CplxType> S = {1, 0, 0, IMAG};
 static const vector<CplxType> T = {1, 0, 0, std::pow(M_E, EXPONENT)};
 
-
 // Parametrized single qubit gates
-vector<CplxType> RX(const vector<double> & pars){
+vector<CplxType> RX(const vector<double> &pars) {
     double parameter = pars.at(0);
 
-    const std::complex<double> c (std::cos(parameter / 2), 0);
-    const std::complex<double> js (0, std::sin(-parameter / 2));
+    const std::complex<double> c(std::cos(parameter / 2), 0);
+    const std::complex<double> js(0, std::sin(-parameter / 2));
     return {c, js, js, c};
 }
 
-vector<CplxType> RY(const vector<double> & pars){
+vector<CplxType> RY(const vector<double> &pars) {
     double parameter = pars.at(0);
 
     const double c = std::cos(parameter / 2);
@@ -54,16 +55,16 @@ vector<CplxType> RY(const vector<double> & pars){
     return {c, -s, s, c};
 }
 
-vector<CplxType> RZ(const vector<double> & pars){
+vector<CplxType> RZ(const vector<double> &pars) {
     double parameter = pars.at(0);
-    const std::complex<double> phase(0, -parameter/2);
-    const std::complex<double> phase_second(0, parameter/2);
+    const std::complex<double> phase(0, -parameter / 2);
+    const std::complex<double> phase_second(0, parameter / 2);
     const std::complex<double> first = std::pow(M_E, phase);
     const std::complex<double> second = std::pow(M_E, phase_second);
     return {first, 0, 0, second};
 }
 
-vector<CplxType> PhaseShift(const vector<double> & pars){
+vector<CplxType> PhaseShift(const vector<double> &pars) {
     double parameter = pars.at(0);
 
     const std::complex<double> phase(0, parameter);
@@ -72,15 +73,15 @@ vector<CplxType> PhaseShift(const vector<double> & pars){
     return {1, 0, 0, shift};
 }
 
-vector<CplxType> Rot(const vector<double> & pars){
+vector<CplxType> Rot(const vector<double> &pars) {
     double phi = pars.at(0);
     double theta = pars.at(1);
     double omega = pars.at(2);
 
-    const std::complex<double> e00(0, (-phi - omega)/2);
-    const std::complex<double> e10(0, (-phi + omega)/2);
-    const std::complex<double> e01(0, (phi - omega)/2);
-    const std::complex<double> e11(0, (phi + omega)/2);
+    const std::complex<double> e00(0, (-phi - omega) / 2);
+    const std::complex<double> e10(0, (-phi + omega) / 2);
+    const std::complex<double> e01(0, (phi - omega) / 2);
+    const std::complex<double> e11(0, (phi + omega) / 2);
 
     const std::complex<double> exp00 = std::pow(M_E, e00);
     const std::complex<double> exp10 = std::pow(M_E, e10);
@@ -93,65 +94,52 @@ vector<CplxType> Rot(const vector<double> & pars){
     return {exp00 * c, -exp01 * s, exp10 * s, exp11 * c};
 }
 
-vector<CplxType> CRX(const vector<double> & pars){
+vector<CplxType> CRX(const vector<double> &pars) {
     double parameter = pars.at(0);
 
-    const std::complex<double> c (std::cos(parameter / 2), 0);
-    const std::complex<double> js (0, std::sin(-parameter / 2));
+    const std::complex<double> c(std::cos(parameter / 2), 0);
+    const std::complex<double> js(0, std::sin(-parameter / 2));
 
-    vector<CplxType> matrix = {
-          1, 0, 0, 0,
-          0, 1, 0, 0,
-          0, 0, c, js,
-          0, 0, js, c
-    };
+    vector<CplxType> matrix = {1, 0, 0, 0,  0, 1, 0,  0,
+                               0, 0, c, js, 0, 0, js, c};
 
     return matrix;
 }
 
-vector<CplxType> CRY(const vector<double> & pars){
+vector<CplxType> CRY(const vector<double> &pars) {
     double parameter = pars.at(0);
 
     const double c = std::cos(parameter / 2);
     const double s = std::sin(parameter / 2);
 
-    vector<CplxType> matrix = {
-          1, 0, 0, 0,
-          0, 1, 0, 0,
-          0, 0, c, -s,
-          0, 0, s, c
-    };
+    vector<CplxType> matrix = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, c, -s, 0, 0, s, c};
 
     return matrix;
 }
 
-vector<CplxType> CRZ(const vector<double> & pars){
+vector<CplxType> CRZ(const vector<double> &pars) {
     double parameter = pars.at(0);
 
-    const std::complex<double> phase(0, -parameter/2);
-    const std::complex<double> phase_second(0, parameter/2);
+    const std::complex<double> phase(0, -parameter / 2);
+    const std::complex<double> phase_second(0, parameter / 2);
     const std::complex<double> first = std::pow(M_E, phase);
     const std::complex<double> second = std::pow(M_E, phase_second);
 
-    vector<CplxType> matrix = {
-          1, 0, 0, 0,
-          0, 1, 0, 0,
-          0, 0, first, 0,
-          0, 0, 0, second
-    };
+    vector<CplxType> matrix = {1, 0, 0,     0, 0, 1, 0, 0,
+                               0, 0, first, 0, 0, 0, 0, second};
 
     return matrix;
 }
 
-vector<CplxType> CRot(const vector<double> & pars){
+vector<CplxType> CRot(const vector<double> &pars) {
     double phi = pars.at(0);
     double theta = pars.at(1);
     double omega = pars.at(2);
 
-    const std::complex<double> e00(0, (-phi - omega)/2);
-    const std::complex<double> e10(0, (-phi + omega)/2);
-    const std::complex<double> e01(0, (phi - omega)/2);
-    const std::complex<double> e11(0, (phi + omega)/2);
+    const std::complex<double> e00(0, (-phi - omega) / 2);
+    const std::complex<double> e10(0, (-phi + omega) / 2);
+    const std::complex<double> e01(0, (phi - omega) / 2);
+    const std::complex<double> e11(0, (phi + omega) / 2);
 
     const std::complex<double> exp00 = std::pow(M_E, e00);
     const std::complex<double> exp10 = std::pow(M_E, e10);
@@ -161,54 +149,31 @@ vector<CplxType> CRot(const vector<double> & pars){
     const double c = std::cos(theta / 2);
     const double s = std::sin(theta / 2);
 
-    vector<CplxType> matrix = {
-          1, 0, 0, 0,
-          0, 1, 0, 0,
-          0, 0, exp00 * c, -exp01 * s,
-          0, 0, exp10 * s, exp11 * c
-    };
+    vector<CplxType> matrix = {1, 0, 0,         0,        0,         1,
+                               0, 0, 0,         0,        exp00 * c, -exp01 * s,
+                               0, 0, exp10 * s, exp11 * c};
 
     return matrix;
 }
 
 // Type alias for the functions of parametrized matrices
-using pfunc_params = std::function<vector<CplxType>(const vector<double>&)>;
+using pfunc_params = std::function<vector<CplxType>(const vector<double> &)>;
 
-static const vector<CplxType> CNOT = {
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 0, 1,
-    0, 0, 1, 0};
+static const vector<CplxType> CNOT = {1, 0, 0, 0, 0, 1, 0, 0,
+                                      0, 0, 0, 1, 0, 0, 1, 0};
 
-static const vector<CplxType> SWAP = {
-    1, 0, 0, 0,
-    0, 0, 1, 0,
-    0, 1, 0, 0,
-    0, 0, 0, 1};
+static const vector<CplxType> SWAP = {1, 0, 0, 0, 0, 0, 1, 0,
+                                      0, 1, 0, 0, 0, 0, 0, 1};
 
-static const vector<CplxType> CZ = {
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, -1};
+static const vector<CplxType> CZ = {1, 0, 0, 0, 0, 1, 0, 0,
+                                    0, 0, 1, 0, 0, 0, 0, -1};
 
 static const vector<CplxType> Toffoli = {
-    1, 0, 0, 0, 0, 0, 0, 0,
-    0, 1, 0, 0, 0, 0, 0, 0,
-    0, 0, 1, 0, 0, 0, 0, 0,
-    0, 0, 0, 1, 0, 0, 0, 0,
-    0, 0, 0, 0, 1, 0, 0, 0,
-    0, 0, 0, 0, 0, 1, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 1,
-    0, 0, 0, 0, 0, 0, 1, 0 };
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+    0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+    0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0};
 
 static const vector<CplxType> CSWAP = {
-    1, 0, 0, 0, 0, 0, 0, 0,
-    0, 1, 0, 0, 0, 0, 0, 0,
-    0, 0, 1, 0, 0, 0, 0, 0,
-    0, 0, 0, 1, 0, 0, 0, 0,
-    0, 0, 0, 0, 1, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 1, 0,
-    0, 0, 0, 0, 0, 1, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 1 };
-
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+    0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
