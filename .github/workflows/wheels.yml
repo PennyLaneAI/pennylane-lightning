@@ -69,7 +69,7 @@ jobs:
       matrix:
         os: [macos-latest]
         arch: [x86_64, arm64]
-    name: ${{ matrix.os }}:${{ matrix.arch }}
+    name: ${{ matrix.os }}"::"${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -105,7 +105,7 @@ jobs:
       matrix:
         os: [macos-latest]
         arch: [arm64]
-    name: ${{ matrix.os }}:${{ matrix.arch }}
+    name: ${{ matrix.os }} "::" ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     if: github.ref == 'refs/heads/master'
 
@@ -143,7 +143,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         arch: [x86_64]
-    name: ${{ matrix.os }}:${{ matrix.arch }}
+    name: ${{ matrix.os }} "::" ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -153,10 +153,6 @@ jobs:
           access_token: ${{ github.token }}
 
       - uses: actions/checkout@v2
-
-      - uses: docker/setup-qemu-action@v1
-        if: matrix.arch != 'x86_64'
-        name: Set up QEMU
 
       - uses: actions/setup-python@v2
         name: Install Python
@@ -178,14 +174,14 @@ jobs:
           path: ./wheelhouse/*.whl
 
   linux-wheels-alt:
+    if: github.ref == 'refs/heads/master'
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
         arch: [aarch64, ppc64le]
-    name: ${{ matrix.os }}:${{ matrix.arch }}
+    name: ${{ matrix.os }} "::" ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
-    if: github.ref == 'refs/heads/master'
 
     steps:
       - name: Cancel Previous Runs
@@ -196,7 +192,6 @@ jobs:
       - uses: actions/checkout@v2
 
       - uses: docker/setup-qemu-action@v1
-        if: matrix.arch != 'x86_64'
         name: Set up QEMU
 
       - uses: actions/setup-python@v2
@@ -206,15 +201,9 @@ jobs:
 
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel==1.12.0
-        if: |
-          github.ref == 'refs/heads/master' ||
-          matrix.arch == 'x86_64'
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
-        if: |
-          github.ref == 'refs/heads/master' ||
-          matrix.arch == 'x86_64'
         env:
           CIBW_ARCHS_LINUX: ${{matrix.arch}}
 
