@@ -4,7 +4,7 @@ Please complete the following checklist when submitting a PR:
 
 - [ ] All new features must include a unit test.
       If you've fixed a bug or added code that should be tested, add a test to the
-      [`tests/`](../tests/) directory!
+      [`tests/`](../tests) directory!
 
 - [ ] All new functions and code must be clearly commented and documented.
       If you do make documentation changes, make sure that the docs build and
