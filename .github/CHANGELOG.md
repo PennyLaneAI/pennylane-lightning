@@ -1,8 +1,10 @@
-# Release 0.16.0-dev
+# Release 0.17.0-dev
 
 ### New features
 
 ### Improvements
+
+- Move changelog to `.github` and add a changelog reminder.
 
 ### Breaking changes
 
@@ -11,6 +13,8 @@
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Thomas Bromley
 
 ---
 
