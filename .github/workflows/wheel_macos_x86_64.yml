@@ -32,7 +32,7 @@ jobs:
       matrix:
         os: [macos-latest]
         arch: [x86_64]
-    name: ${{ matrix.os }}::${{ matrix.arch }}
+    name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     steps:
