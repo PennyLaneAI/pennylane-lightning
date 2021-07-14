@@ -23,18 +23,21 @@ using std::string;
 using std::unique_ptr;
 using std::vector;
 
-vector<unsigned int> Pennylane::getIndicesAfterExclusion(const vector<unsigned int>& indicesToExclude, const unsigned int qubits) {
+vector<unsigned int> Pennylane::getIndicesAfterExclusion(
+    const vector<unsigned int> &indicesToExclude, const unsigned int qubits) {
     set<unsigned int> indices;
     for (unsigned int i = 0; i < qubits; i++) {
         indices.insert(indices.end(), i);
     }
-    for (const unsigned int& excludedIndex : indicesToExclude) {
+    for (const unsigned int &excludedIndex : indicesToExclude) {
         indices.erase(excludedIndex);
     }
     return vector<unsigned int>(indices.begin(), indices.end());
 }
 
-vector<size_t> Pennylane::generateBitPatterns(const vector<unsigned int>& qubitIndices, const unsigned int qubits) {
+vector<size_t>
+Pennylane::generateBitPatterns(const vector<unsigned int> &qubitIndices,
+                               const unsigned int qubits) {
     vector<size_t> indices;
     indices.reserve(exp2(qubitIndices.size()));
     indices.push_back(0);
@@ -48,61 +51,63 @@ vector<size_t> Pennylane::generateBitPatterns(const vector<unsigned int>& qubitI
     return indices;
 }
 
-void Pennylane::constructAndApplyOperation(
-    StateVector& state,
-    const string& opLabel,
-    const vector<unsigned int>& opWires,
-    const vector<double>& opParams,
-    bool inverse,
-    const unsigned int qubits
-) {
+void Pennylane::constructAndApplyOperation(StateVector &state,
+                                           const string &opLabel,
+                                           const vector<unsigned int> &opWires,
+                                           const vector<double> &opParams,
+                                           bool inverse,
+                                           const unsigned int qubits) {
     unique_ptr<AbstractGate> gate = constructGate(opLabel, opParams);
     if (gate->numQubits != opWires.size())
-        throw std::invalid_argument(string("The gate of type ") + opLabel + " requires " + std::to_string(gate->numQubits) + " wires, but " + std::to_string(opWires.size()) + " were supplied");
-    
+        throw std::invalid_argument(
+            string("The gate of type ") + opLabel + " requires " +
+            std::to_string(gate->numQubits) + " wires, but " +
+            std::to_string(opWires.size()) + " were supplied");
+
     vector<size_t> internalIndices = generateBitPatterns(opWires, qubits);
 
-    vector<unsigned int> externalWires = getIndicesAfterExclusion(opWires, qubits);
+    vector<unsigned int> externalWires =
+        getIndicesAfterExclusion(opWires, qubits);
     vector<size_t> externalIndices = generateBitPatterns(externalWires, qubits);
 
     gate->applyKernel(state, internalIndices, externalIndices, inverse);
 }
 
-void Pennylane::applyGateGenerator(
-    StateVector& state,
-    unique_ptr<AbstractGate> gate,
-    const vector<unsigned int>& opWires,
-    const unsigned int qubits
-) {
+void Pennylane::applyGateGenerator(StateVector &state,
+                                   unique_ptr<AbstractGate> gate,
+                                   const vector<unsigned int> &opWires,
+                                   const unsigned int qubits) {
     vector<size_t> internalIndices = generateBitPatterns(opWires, qubits);
 
-    vector<unsigned int> externalWires = getIndicesAfterExclusion(opWires, qubits);
+    vector<unsigned int> externalWires =
+        getIndicesAfterExclusion(opWires, qubits);
     vector<size_t> externalIndices = generateBitPatterns(externalWires, qubits);
 
     gate->applyGenerator(state, internalIndices, externalIndices);
 }
 
-void Pennylane::apply(
-    StateVector& state,
-    const vector<string>& ops,
-    const vector<vector<unsigned int>>& wires,
-    const vector<vector<double>>& params,
-    const vector<bool>& inverse,
-    const unsigned int qubits
-) { 
+void Pennylane::apply(StateVector &state, const vector<string> &ops,
+                      const vector<vector<unsigned int>> &wires,
+                      const vector<vector<double>> &params,
+                      const vector<bool> &inverse, const unsigned int qubits) {
     if (qubits <= 0)
         throw std::invalid_argument("Must specify one or more qubits");
 
     size_t expectedLength = exp2(qubits);
     if (state.length != expectedLength)
-        throw std::invalid_argument(string("Input state vector length (") + std::to_string(state.length) + ") does not match the given number of qubits " + std::to_string(qubits));
+        throw std::invalid_argument(
+            string("Input state vector length (") +
+            std::to_string(state.length) +
+            ") does not match the given number of qubits " +
+            std::to_string(qubits));
 
     size_t numOperations = ops.size();
     if (numOperations != wires.size() || numOperations != params.size())
-        throw std::invalid_argument("Invalid arguments: number of operations, wires, and parameters must all be equal");
+        throw std::invalid_argument("Invalid arguments: number of operations, "
+                                    "wires, and parameters must all be equal");
 
     for (int i = 0; i < numOperations; i++) {
-        constructAndApplyOperation(state, ops[i], wires[i], params[i], inverse[i], qubits);
+        constructAndApplyOperation(state, ops[i], wires[i], params[i],
+                                   inverse[i], qubits);
     }
-
 }
