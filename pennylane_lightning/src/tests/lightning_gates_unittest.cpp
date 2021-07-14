@@ -23,9 +23,10 @@ using std::string;
 using std::unique_ptr;
 using std::vector;
 
-using Pennylane::CplxType;
-
 namespace test_gates {
+
+using PrecisionT = double;
+using CplxType = std::complex<PrecisionT>;
 
 const vector<double> ZERO_PARAM = {};
 const vector<double> ONE_PARAM = {0.123};
@@ -51,23 +52,23 @@ TEST_P(MatrixNoParamFixture, CheckMatrix) {
 INSTANTIATE_TEST_SUITE_P(
     GateMatrix, MatrixNoParamFixture,
     ::testing::Values(
-        std::make_tuple("PauliX", PauliX), std::make_tuple("PauliY", PauliY),
-        std::make_tuple("PauliZ", PauliZ),
-        std::make_tuple("Hadamard", Hadamard), std::make_tuple("S", S),
-        std::make_tuple("T", T), std::make_tuple("CNOT", CNOT),
-        std::make_tuple("SWAP", SWAP), std::make_tuple("CZ", CZ),
-        std::make_tuple("Toffoli", Toffoli), std::make_tuple("CSWAP", CSWAP)));
+        std::make_tuple("PauliX", GateUtilities<PrecisionT>::PauliX), std::make_tuple("PauliY", GateUtilities<PrecisionT>::PauliY),
+        std::make_tuple("PauliZ", GateUtilities<PrecisionT>::PauliZ),
+        std::make_tuple("Hadamard", GateUtilities<PrecisionT>::Hadamard), std::make_tuple("S", GateUtilities<PrecisionT>::S),
+        std::make_tuple("T", GateUtilities<PrecisionT>::T), std::make_tuple("CNOT", GateUtilities<PrecisionT>::CNOT),
+        std::make_tuple("SWAP", GateUtilities<PrecisionT>::SWAP), std::make_tuple("CZ", GateUtilities<PrecisionT>::CZ),
+        std::make_tuple("Toffoli", GateUtilities<PrecisionT>::Toffoli), std::make_tuple("CSWAP", GateUtilities<PrecisionT>::CSWAP)));
 
 // -------------------------------------------------------------------------------------------------------------
 // Parametrized gates
 
 class MatrixWithParamsFixture
     : public ::testing::TestWithParam<
-          std::tuple<string, pfunc_params, vector<double>>> {};
+          std::tuple<string, GateUtilities<PrecisionT>::pfunc_params, vector<double>>> {};
 
 TEST_P(MatrixWithParamsFixture, CheckMatrix) {
     const string gate_name = std::get<0>(GetParam());
-    pfunc_params func = std::get<1>(GetParam());
+    GateUtilities<PrecisionT>::pfunc_params func = std::get<1>(GetParam());
     const vector<double> params = std::get<2>(GetParam());
 
     unique_ptr<Pennylane::AbstractGate> gate =
@@ -77,25 +78,25 @@ TEST_P(MatrixWithParamsFixture, CheckMatrix) {
 
 INSTANTIATE_TEST_SUITE_P(
     GateMatrix, MatrixWithParamsFixture,
-    ::testing::Values(std::make_tuple("RX", RX, ONE_PARAM),
-                      std::make_tuple("RY", RY, ONE_PARAM),
-                      std::make_tuple("RZ", RZ, ONE_PARAM),
+    ::testing::Values(std::make_tuple("RX", GateUtilities<PrecisionT>::RX, ONE_PARAM),
+                      std::make_tuple("RY", GateUtilities<PrecisionT>::RY, ONE_PARAM),
+                      std::make_tuple("RZ", GateUtilities<PrecisionT>::RZ, ONE_PARAM),
                       std::make_tuple("PhaseShift", PhaseShift, ONE_PARAM),
-                      std::make_tuple("Rot", Rot, THREE_PARAMS),
-                      std::make_tuple("CRX", CRX, ONE_PARAM),
-                      std::make_tuple("CRY", CRY, ONE_PARAM),
-                      std::make_tuple("CRZ", CRZ, ONE_PARAM),
-                      std::make_tuple("CRot", CRot, THREE_PARAMS)));
+                      std::make_tuple("Rot", GateUtilities<PrecisionT>::Rot, THREE_PARAMS),
+                      std::make_tuple("CRX", GateUtilities<PrecisionT>::CRX, ONE_PARAM),
+                      std::make_tuple("CRY", GateUtilities<PrecisionT>::CRY, ONE_PARAM),
+                      std::make_tuple("CRZ", GateUtilities<PrecisionT>::CRZ, ONE_PARAM),
+                      std::make_tuple("CRot", GateUtilities<PrecisionT>::CRot, THREE_PARAMS)));
 
 // -------------------------------------------------------------------------------------------------------------
 // Parameter length validation
 
 class NumParamsThrowsFixture
-    : public ::testing::TestWithParam<std::tuple<string, vector<double>>> {};
+    : public ::testing::TestWithParam<std::tuple<string, vector<PrecisionT>>> {};
 
 TEST_P(NumParamsThrowsFixture, CheckParamLength) {
     const string gate_name = std::get<0>(GetParam());
-    const vector<double> params = std::get<1>(GetParam());
+    const vector<PrecisionT> params = std::get<1>(GetParam());
 
     EXPECT_THROW_WITH_MESSAGE_SUBSTRING(
         Pennylane::constructGate(gate_name, params), std::invalid_argument,
