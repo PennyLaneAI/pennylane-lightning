@@ -14,15 +14,11 @@ env:
   # Testing of built wheels
   CIBW_TEST_REQUIRES: numpy scipy pytest pytest-cov pytest-mock flaky
 
-  # Note: breaking up tests so that no test cases hang on Windows, to be reverted
   CIBW_TEST_COMMAND: |
     pip install numpy==1.19.5 scipy
     pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
-  # Skip PPC tests due to lack of numpy/scipy wheel support
-  CIBW_TEST_SKIP: "*-manylinux_{aarch64}"
-
-  # Use Centos 7 wheel-builder for ARM, Debian for PPC
+  # Use Centos 7 wheel-builder for ARM
   CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
 
 jobs:
