@@ -22,7 +22,6 @@ env:
 
 jobs:
   linux-wheels-aarch64:
-    if: github.ref == 'refs/heads/master'
     strategy:
       fail-fast: false
       matrix:

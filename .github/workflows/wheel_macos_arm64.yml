@@ -31,7 +31,6 @@ jobs:
         arch: [arm64]
     name: macos-latest::arm64
     runs-on: ${{ matrix.os }}
-    if: github.ref == 'refs/heads/master'
 
     steps:
       - name: Cancel Previous Runs

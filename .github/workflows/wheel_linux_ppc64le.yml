@@ -19,7 +19,6 @@ env:
 
 jobs:
   linux-wheels-ppc64le:
-    if: github.ref == 'refs/heads/master'
     strategy:
       fail-fast: false
       matrix:
