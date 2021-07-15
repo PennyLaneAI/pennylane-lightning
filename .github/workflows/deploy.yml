@@ -4,7 +4,7 @@ on:
     types: [published]
 
 env:
-  CIBW_SKIP: "cp27-* cp34-* cp35-* cp36-* *i686 pp* *win32"
+  CIBW_BUILD: 'cp37-* cp38-* cp39-*'
 
   # MacOS specific build settings
 
