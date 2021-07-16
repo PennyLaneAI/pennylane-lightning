@@ -11,12 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include <functional>
+
 #include "../Gates.hpp"
 #include "GateData.hpp"
 #include "TestingUtils.hpp"
 #include "gtest/gtest.h"
-
-#include <functional>
 
 using std::function;
 using std::string;
@@ -52,19 +52,24 @@ TEST_P(MatrixNoParamFixture, CheckMatrix) {
 INSTANTIATE_TEST_SUITE_P(
     GateMatrix, MatrixNoParamFixture,
     ::testing::Values(
-        std::make_tuple("PauliX", GateUtilities<PrecisionT>::PauliX), std::make_tuple("PauliY", GateUtilities<PrecisionT>::PauliY),
+        std::make_tuple("PauliX", GateUtilities<PrecisionT>::PauliX),
+        std::make_tuple("PauliY", GateUtilities<PrecisionT>::PauliY),
         std::make_tuple("PauliZ", GateUtilities<PrecisionT>::PauliZ),
-        std::make_tuple("Hadamard", GateUtilities<PrecisionT>::Hadamard), std::make_tuple("S", GateUtilities<PrecisionT>::S),
-        std::make_tuple("T", GateUtilities<PrecisionT>::T), std::make_tuple("CNOT", GateUtilities<PrecisionT>::CNOT),
-        std::make_tuple("SWAP", GateUtilities<PrecisionT>::SWAP), std::make_tuple("CZ", GateUtilities<PrecisionT>::CZ),
-        std::make_tuple("Toffoli", GateUtilities<PrecisionT>::Toffoli), std::make_tuple("CSWAP", GateUtilities<PrecisionT>::CSWAP)));
+        std::make_tuple("Hadamard", GateUtilities<PrecisionT>::Hadamard),
+        std::make_tuple("S", GateUtilities<PrecisionT>::S),
+        std::make_tuple("T", GateUtilities<PrecisionT>::T),
+        std::make_tuple("CNOT", GateUtilities<PrecisionT>::CNOT),
+        std::make_tuple("SWAP", GateUtilities<PrecisionT>::SWAP),
+        std::make_tuple("CZ", GateUtilities<PrecisionT>::CZ),
+        std::make_tuple("Toffoli", GateUtilities<PrecisionT>::Toffoli),
+        std::make_tuple("CSWAP", GateUtilities<PrecisionT>::CSWAP)));
 
 // -------------------------------------------------------------------------------------------------------------
 // Parametrized gates
 
 class MatrixWithParamsFixture
-    : public ::testing::TestWithParam<
-          std::tuple<string, GateUtilities<PrecisionT>::pfunc_params, vector<double>>> {};
+    : public ::testing::TestWithParam<std::tuple<
+          string, GateUtilities<PrecisionT>::pfunc_params, vector<double>>> {};
 
 TEST_P(MatrixWithParamsFixture, CheckMatrix) {
     const string gate_name = std::get<0>(GetParam());
@@ -78,21 +83,24 @@ TEST_P(MatrixWithParamsFixture, CheckMatrix) {
 
 INSTANTIATE_TEST_SUITE_P(
     GateMatrix, MatrixWithParamsFixture,
-    ::testing::Values(std::make_tuple("RX", GateUtilities<PrecisionT>::RX, ONE_PARAM),
-                      std::make_tuple("RY", GateUtilities<PrecisionT>::RY, ONE_PARAM),
-                      std::make_tuple("RZ", GateUtilities<PrecisionT>::RZ, ONE_PARAM),
-                      std::make_tuple("PhaseShift", PhaseShift, ONE_PARAM),
-                      std::make_tuple("Rot", GateUtilities<PrecisionT>::Rot, THREE_PARAMS),
-                      std::make_tuple("CRX", GateUtilities<PrecisionT>::CRX, ONE_PARAM),
-                      std::make_tuple("CRY", GateUtilities<PrecisionT>::CRY, ONE_PARAM),
-                      std::make_tuple("CRZ", GateUtilities<PrecisionT>::CRZ, ONE_PARAM),
-                      std::make_tuple("CRot", GateUtilities<PrecisionT>::CRot, THREE_PARAMS)));
+    ::testing::Values(
+        std::make_tuple("RX", GateUtilities<PrecisionT>::RX, ONE_PARAM),
+        std::make_tuple("RY", GateUtilities<PrecisionT>::RY, ONE_PARAM),
+        std::make_tuple("RZ", GateUtilities<PrecisionT>::RZ, ONE_PARAM),
+        std::make_tuple("PhaseShift", PhaseShift, ONE_PARAM),
+        std::make_tuple("Rot", GateUtilities<PrecisionT>::Rot, THREE_PARAMS),
+        std::make_tuple("CRX", GateUtilities<PrecisionT>::CRX, ONE_PARAM),
+        std::make_tuple("CRY", GateUtilities<PrecisionT>::CRY, ONE_PARAM),
+        std::make_tuple("CRZ", GateUtilities<PrecisionT>::CRZ, ONE_PARAM),
+        std::make_tuple("CRot", GateUtilities<PrecisionT>::CRot,
+                        THREE_PARAMS)));
 
 // -------------------------------------------------------------------------------------------------------------
 // Parameter length validation
 
 class NumParamsThrowsFixture
-    : public ::testing::TestWithParam<std::tuple<string, vector<PrecisionT>>> {};
+    : public ::testing::TestWithParam<std::tuple<string, vector<PrecisionT>>> {
+};
 
 TEST_P(NumParamsThrowsFixture, CheckParamLength) {
     const string gate_name = std::get<0>(GetParam());

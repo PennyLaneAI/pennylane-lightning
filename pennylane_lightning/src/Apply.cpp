@@ -11,9 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include "Apply.hpp"
+
 #include <set>
 
-#include "Apply.hpp"
 #include "Gates.hpp"
 #include "StateVector.hpp"
 #include "Util.hpp"
@@ -51,63 +52,38 @@ Pennylane::generateBitPatterns(const vector<unsigned int> &qubitIndices,
     return indices;
 }
 
-void Pennylane::constructAndApplyOperation(StateVector &state,
-                                           const string &opLabel,
-                                           const vector<unsigned int> &opWires,
-                                           const vector<double> &opParams,
-                                           bool inverse,
-                                           const unsigned int qubits) {
-    unique_ptr<AbstractGate> gate = constructGate(opLabel, opParams);
-    if (gate->numQubits != opWires.size())
-        throw std::invalid_argument(
-            string("The gate of type ") + opLabel + " requires " +
-            std::to_string(gate->numQubits) + " wires, but " +
-            std::to_string(opWires.size()) + " were supplied");
+// Explicitly instantiate template functions from header
 
-    vector<size_t> internalIndices = generateBitPatterns(opWires, qubits);
+template void Pennylane::constructAndApplyOperation<double>(
+    StateVector<double> &state, const std::string &opLabel,
+    const std::vector<unsigned int> &opWires,
+    const std::vector<double> &opParams, bool inverse,
+    const unsigned int qubits);
 
-    vector<unsigned int> externalWires =
-        getIndicesAfterExclusion(opWires, qubits);
-    vector<size_t> externalIndices = generateBitPatterns(externalWires, qubits);
+template void Pennylane::constructAndApplyOperation<float>(
+    StateVector<float> &state, const std::string &opLabel,
+    const std::vector<unsigned int> &opWires,
+    const std::vector<double> &opParams, bool inverse,
+    const unsigned int qubits);
 
-    gate->applyKernel(state, internalIndices, externalIndices, inverse);
-}
+template void Pennylane::applyGateGenerator<double>(
+    StateVector<double> &state, unique_ptr<AbstractGate> gate,
+    const vector<unsigned int> &opWires, const unsigned int qubits);
 
-void Pennylane::applyGateGenerator(StateVector &state,
-                                   unique_ptr<AbstractGate> gate,
-                                   const vector<unsigned int> &opWires,
-                                   const unsigned int qubits) {
-    vector<size_t> internalIndices = generateBitPatterns(opWires, qubits);
+template void Pennylane::applyGateGenerator<float>(
+    StateVector<float> &state, unique_ptr<AbstractGate> gate,
+    const vector<unsigned int> &opWires, const unsigned int qubits);
 
-    vector<unsigned int> externalWires =
-        getIndicesAfterExclusion(opWires, qubits);
-    vector<size_t> externalIndices = generateBitPatterns(externalWires, qubits);
+template void
+Pennylane::apply<double>(StateVector<double> &state, const vector<string> &ops,
+                         const vector<vector<unsigned int>> &wires,
+                         const vector<vector<double>> &params,
+                         const vector<bool> &inverse,
+                         const unsigned int qubits);
 
-    gate->applyGenerator(state, internalIndices, externalIndices);
-}
-
-void Pennylane::apply(StateVector &state, const vector<string> &ops,
-                      const vector<vector<unsigned int>> &wires,
-                      const vector<vector<double>> &params,
-                      const vector<bool> &inverse, const unsigned int qubits) {
-    if (qubits <= 0)
-        throw std::invalid_argument("Must specify one or more qubits");
-
-    size_t expectedLength = exp2(qubits);
-    if (state.length != expectedLength)
-        throw std::invalid_argument(
-            string("Input state vector length (") +
-            std::to_string(state.length) +
-            ") does not match the given number of qubits " +
-            std::to_string(qubits));
-
-    size_t numOperations = ops.size();
-    if (numOperations != wires.size() || numOperations != params.size())
-        throw std::invalid_argument("Invalid arguments: number of operations, "
-                                    "wires, and parameters must all be equal");
-
-    for (int i = 0; i < numOperations; i++) {
-        constructAndApplyOperation(state, ops[i], wires[i], params[i],
-                                   inverse[i], qubits);
-    }
-}
+template void Pennylane::apply<float>(StateVector<float> &state,
+                                      const vector<string> &ops,
+                                      const vector<vector<unsigned int>> &wires,
+                                      const vector<vector<double>> &params,
+                                      const vector<bool> &inverse,
+                                      const unsigned int qubits);

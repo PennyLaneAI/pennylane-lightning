@@ -17,17 +17,23 @@
  */
 #pragma once
 
-#include "typedefs.hpp"
+#include <complex>
+#include <vector>
 
 namespace Pennylane {
 
-class StateVector {
+template <class Precision = double> class StateVector {
+    std::complex<Precision>* const arr_;
+    const std::size_t length_;
 
   public:
-    CplxType *const arr;
-    const size_t length;
-
-    StateVector(CplxType *arr, size_t length);
+    StateVector(std::complex<Precision> *arr, size_t length) : arr_{arr}, length_{length};
+    std::complex<Precision>* getData(){
+        return arr_;
+    }
+    std::size_t  getLength(){
+        return length;
+    }
 };
 
 } // namespace Pennylane

@@ -21,6 +21,6 @@
 
 namespace Pennylane {
 
-using CplxType = std::complex<double>;
+// using CplxType = std::complex<double>;
 
 }

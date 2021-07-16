@@ -14,19 +14,19 @@
 #pragma once
 #define _USE_MATH_DEFINES
 
-#include "../typedefs.hpp"
-
 #include <cmath>
 #include <functional>
 #include <iostream>
+#include <type_traits>
+
+#include "../typedefs.hpp"
 
 // using Pennylane::CplxType;
 using std::vector;
 
 namespace {
 
-template <class DataPrecision = double> 
-class GateUtilities {
+template <class DataPrecision = double> class GateUtilities {
     using CplxType = std::complex<DataPrecision>;
 
   public:

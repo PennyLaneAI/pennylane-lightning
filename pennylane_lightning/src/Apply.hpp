@@ -76,10 +76,27 @@ generateBitPatterns(const std::vector<unsigned int> &qubitIndices,
  * @param inverse boolean indicating whether to apply the gate or its inverse
  * @param qubits number of qubits
  */
-void constructAndApplyOperation(StateVector &state, const std::string &opLabel,
+template <class Precision = double>
+void constructAndApplyOperation(StateVector<Precision> &state,
+                                const std::string &opLabel,
                                 const std::vector<unsigned int> &opWires,
                                 const std::vector<double> &opParams,
-                                bool inverse, const unsigned int qubits);
+                                bool inverse, const unsigned int qubits) {
+    unique_ptr<AbstractGate> gate = constructGate(opLabel, opParams);
+    if (gate->numQubits != opWires.size())
+        throw std::invalid_argument(
+            string("The gate of type ") + opLabel + " requires " +
+            std::to_string(gate->numQubits) + " wires, but " +
+            std::to_string(opWires.size()) + " were supplied");
+
+    vector<size_t> internalIndices = generateBitPatterns(opWires, qubits);
+
+    vector<unsigned int> externalWires =
+        getIndicesAfterExclusion(opWires, qubits);
+    vector<size_t> externalIndices = generateBitPatterns(externalWires, qubits);
+
+    gate->applyKernel(state, internalIndices, externalIndices, inverse);
+}
 
 /**
  * Applies the generator of the gate to the state vector.
@@ -89,9 +106,19 @@ void constructAndApplyOperation(StateVector &state, const std::string &opLabel,
  * @param opWires index of qubits on which the operation acts
  * @param qubits number of qubits
  */
-void applyGateGenerator(StateVector &state, std::unique_ptr<AbstractGate> gate,
+template <class Precision = double>
+void applyGateGenerator(StateVector<Precision> &state,
+                        std::unique_ptr<AbstractGate> gate,
                         const std::vector<unsigned int> &opWires,
-                        const unsigned int qubits);
+                        const unsigned int qubits) {
+    vector<size_t> internalIndices = generateBitPatterns(opWires, qubits);
+
+    vector<unsigned int> externalWires =
+        getIndicesAfterExclusion(opWires, qubits);
+    vector<size_t> externalIndices = generateBitPatterns(externalWires, qubits);
+
+    gate->applyGenerator(state, internalIndices, externalIndices);
+}
 
 /**
  * Applies specified operations onto an input state of an arbitrary number of
@@ -106,9 +133,31 @@ void applyGateGenerator(StateVector &state, std::unique_ptr<AbstractGate> gate,
  * inverse should be applied
  * @param qubits number of qubits
  */
-void apply(StateVector &state, const std::vector<std::string> &ops,
+template <class Precision = double>
+void apply(StateVector<Precision> &state, const std::vector<std::string> &ops,
            const std::vector<std::vector<unsigned int>> &wires,
            const std::vector<std::vector<double>> &params,
-           const std::vector<bool> &inverse, const unsigned int qubits);
+           const std::vector<bool> &inverse, const unsigned int qubits) {
+    if (qubits <= 0)
+        throw std::invalid_argument("Must specify one or more qubits");
+
+    size_t expectedLength = exp2(qubits);
+    if (state.length != expectedLength)
+        throw std::invalid_argument(
+            string("Input state vector length (") +
+            std::to_string(state.length) +
+            ") does not match the given number of qubits " +
+            std::to_string(qubits));
+
+    size_t numOperations = ops.size();
+    if (numOperations != wires.size() || numOperations != params.size())
+        throw std::invalid_argument("Invalid arguments: number of operations, "
+                                    "wires, and parameters must all be equal");
+
+    for (int i = 0; i < numOperations; i++) {
+        constructAndApplyOperation(state, ops[i], wires[i], params[i],
+                                   inverse[i], qubits);
+    }
+}
 
 } // namespace Pennylane
