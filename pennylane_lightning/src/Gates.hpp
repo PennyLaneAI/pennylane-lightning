@@ -17,7 +17,10 @@
  */
 #pragma once
 
+#include <functional>
 #include <memory>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "StateVector.hpp"
@@ -25,72 +28,121 @@
 #include "typedefs.hpp"
 
 namespace {
-using namespace Pennylane::Math;
+using namespace Pennylane;
 
 template <class T>
-static void validateLength(const string &errorPrefix, const vector<T> &vec,
-                           int requiredLength) {
+static void validateLength(const std::string &errorPrefix,
+                           const std::vector<T> &vec, int requiredLength) {
     if (vec.size() != requiredLength)
         throw std::invalid_argument(
             errorPrefix + ": requires " + std::to_string(requiredLength) +
             " arguments but got " + std::to_string(vec.size()) +
             " arguments instead");
 }
+
+template <typename T> class HasApplyKernelMethod {
+  private:
+    using Found = char[1];
+    using NotFound = char[2];
+
+    template <typename U> static Found &f(decltype(&U::applyKernel));
+    template <typename U> static NotFound &f(...);
+
+  public:
+    enum { value = sizeof(f<T>(0)) == sizeof(Found) };
+};
+template <typename T> class HasApplyGeneratorMethod {
+  private:
+    using Found = char[1];
+    using NotFound = char[2];
+
+    template <typename U> static Found &f(decltype(&U::applyGenerator));
+    template <typename U> static NotFound &f(...);
+
+  public:
+    enum { value = sizeof(f<T>(0)) == sizeof(Found) };
+};
 } // namespace
 
 namespace Pennylane {
 
-template <class Derived> class AbstractGate {
+template <class Precision> class AbstractGate {
   private:
     const size_t numQubits;
     const size_t length;
 
   protected:
     AbstractGate(size_t numQubits);
-    friend Derived;
 
   public:
     /**
      * @return the matrix representation for the gate as a one-dimensional
      * vector.
      */
-    const std::vector<decltype(Derived::precision_)> &asMatrix() {
-        return static_cast<Derived &>(*this).asMatrix();
-    }
+    virtual const std::vector<std::complex<Precision>> &asMatrix() = 0;
 
     /**
      * Generic matrix-multiplication kernel
      */
-    void applyKernel(const StateVector<Derived::precision_> &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse) {
-        return static_cast<Derived &>(*this).applyKernel(
-            state, indices, externalIndices, inverse);
+    virtual void applyKernel(const StateVector<Precision> &state,
+                             const std::vector<size_t> &indices,
+                             const std::vector<size_t> &externalIndices,
+                             bool inverse) {
+
+        const std::vector<std::complex<Precision>> &matrix = asMatrix();
+        assert(indices.size() == length);
+
+        std::vector<std::complex<Precision>> v(indices.size());
+        for (const size_t &externalIndex : externalIndices) {
+            std::complex<Precision> *shiftedState =
+                state.getData() + externalIndex;
+            // Gather
+            size_t pos = 0;
+            for (const size_t &index : indices) {
+                v[pos] = shiftedState[index];
+                pos++;
+            }
+
+            // Apply + scatter
+            for (size_t i = 0; i < indices.size(); i++) {
+                size_t index = indices[i];
+                shiftedState[index] = 0;
+
+                if (inverse == true) {
+                    for (size_t j = 0; j < indices.size(); j++) {
+                        size_t baseIndex = j * indices.size();
+                        shiftedState[index] +=
+                            conj(matrix[baseIndex + i]) * v[j];
+                    }
+                } else {
+                    size_t baseIndex = i * indices.size();
+                    for (size_t j = 0; j < indices.size(); j++) {
+                        shiftedState[index] += matrix[baseIndex + j] * v[j];
+                    }
+                }
+            }
+        }
     }
 
     /**
      * Kernel for applying the generator of an operation
      */
-    void applyGenerator(const StateVector<Precision> &state,
-                        const std::vector<size_t> &indices,
-                        const std::vector<size_t> &externalIndices) {
-        return static_cast<Derived &>(*this).applyGenerator(state, indices,
-                                                            externalIndices);
+    virtual void applyGenerator(const StateVector<Precision> &state,
+                                const std::vector<size_t> &indices,
+                                const std::vector<size_t> &externalIndices) {
+        throw NotImplementedException();
     };
 
     /**
      * Scaling factor applied to the generator operation
      */
-    static const Derived::precision_ generatorScalingFactor;
+    static const Precision generatorScalingFactor;
 };
 
 // Single-qubit gates:
 
 template <class Precision = double>
-class SingleQubitGate : public AbstractGate<SingleQubitGate<Precision>> {
-  private:
-    using precision_ = Precision;
-
+class SingleQubitGate : public AbstractGate<Precision> {
   protected:
     SingleQubitGate();
 };
@@ -183,9 +235,11 @@ class HadamardGate : public SingleQubitGate<Precision> {
 
   public:
     inline static const std::string label = "Hadamard";
-    static HadamardGate create(const std::vector<Precision> &parameters) {
-        validateLength(Pennylane::HadamardGate::label, parameters, 0);
-        return HadamardGate<Precision>();
+
+    template <class U = Precision>
+    static HadamardGate create(const std::vector<U> &parameters) {
+        validateLength(label, parameters, 0);
+        return HadamardGate<U>();
     }
     inline const std::vector<std::complex<Precision>> &asMatrix() {
         return matrix;
@@ -198,8 +252,8 @@ class HadamardGate : public SingleQubitGate<Precision> {
             std::complex<Precision> *shiftedState =
                 state.getData() + externalIndex;
 
-            const std::complex<Precision> = shiftedState[indices[0]];
-            const std::complex<Precision> = shiftedState[indices[1]];
+            const std::complex<Precision> v0 = shiftedState[indices[0]];
+            const std::complex<Precision> v1 = shiftedState[indices[1]];
 
             shiftedState[indices[0]] = SQRT2INV * (v0 + v1);
             shiftedState[indices[1]] = SQRT2INV * (v0 - v1);
@@ -207,9 +261,8 @@ class HadamardGate : public SingleQubitGate<Precision> {
     }
 
   private:
-    using Pennylane::Math;
-    static constexpr SQRT2INV =
-        std::complex<Precision>{Pennylane::Math::InvSqrt(2), 0};
+    static constexpr std::complex<Precision> SQRT2INV =
+        std::complex<Precision>{InvSqrt(2), 0};
     static constexpr std::vector<std::complex<Precision>> matrix{
         SQRT2INV, SQRT2INV, SQRT2INV, -SQRT2INV};
 };
@@ -222,9 +275,11 @@ class SGate : public SingleQubitGate<Precision> {
 
   public:
     inline static const std::string label = "S";
-    static SGate create(const std::vector<Precision> &parameters) {
-        validateLength(Pennylane::SGate::label, parameters, 0);
-        return SGate<Precision>();
+
+    template <class U = Precision>
+    static SGate create(const std::vector<U> &parameters) {
+        validateLength(label, parameters, 0);
+        return SGate<U>();
     }
     inline const std::vector<std::complex<Precision>> &asMatrix() {
         return matrix;
@@ -246,16 +301,18 @@ template <class Precision = double>
 class TGate : public SingleQubitGate<Precision> {
   private:
     static constexpr std::complex<Precision> shift =
-        Pow(M_E, std::complex<Precision>(0, M_PI / 4));
+        std::pow(M_E, std::complex<Precision>(0, M_PI / 4));
     ;
     static const std::vector<std::complex<Precision>> matrix{ONE(), ZERO(),
                                                              ZERO(), shift};
 
   public:
     inline static const std::string label = "T";
-    static TGate create(const std::vector<Precision> &parameters) {
-        validateLength(Pennylane::TGate::label, parameters, 0);
-        return Pennylane::TGate();
+
+    template <class U = Precision>
+    static TGate create(const std::vector<U> &parameters) {
+        validateLength(label, parameters, 0);
+        return TGate<U>();
     }
     inline const std::vector<std::complex<Precision>> &asMatrix() {
         return matrix;
@@ -282,13 +339,15 @@ class RotationXGate : public SingleQubitGate<Precision> {
 
   public:
     inline static const std::string label = "RX";
-    static RotationXGate create(const std::vector<Precision> &parameters) {
+
+    template <class U = Precision>
+    static RotationXGate create(const std::vector<U> &parameters) {
         validateLength(label, parameters, 1);
-        return Pennylane::RotationXGate(parameters[0]);
+        return RotationXGate<U>(parameters[0]);
     }
     RotationXGate(Precision rotationAngle)
-        : c(Cos<Precision>(rotationAngle / 2), 0),
-          js(0, Sin(-rotationAngle / 2)){};
+        : c(std::cos(rotationAngle / 2), 0),
+          js(0, std::sin(-rotationAngle / 2)){};
     inline const std::vector<std::complex<Precision>> &asMatrix() {
         return matrix;
     }
@@ -326,13 +385,13 @@ class RotationYGate : public SingleQubitGate<Precision> {
     inline static const std::string label = "RY";
 
     template <class U = Precision>
-    static RotationYGate create(const std::vector<Precision> &parameters) {
+    static RotationYGate create(const std::vector<U> &parameters) {
         validateLength(label, parameters, 1);
         return RotationYGate<U>(parameters[0]);
     }
     RotationYGate(Precision rotationAngle)
-        : c(Cos(rotationAngle / 2), 0),
-          s(Sin(rotationAngle / 2), 0), matrix{c, -s, s, c} {}
+        : c(std::cos(rotationAngle / 2), 0),
+          s(std::sin(rotationAngle / 2), 0), matrix{c, -s, s, c} {}
 
     inline const std::vector<std::complex<Precision>> &asMatrix() {
         return matrix;
@@ -340,7 +399,7 @@ class RotationYGate : public SingleQubitGate<Precision> {
     void applyGenerator(const StateVector<Precision> &state,
                         const std::vector<size_t> &indices,
                         const std::vector<size_t> &externalIndices) {
-        unique_ptr<Pennylane::YGate> gate;
+        std::unique_ptr<Pennylane::YGate<Precision>> gate;
         gate->applyKernel(state, indices, externalIndices, false);
     }
     static const Precision generatorScalingFactor{-0.5};
@@ -370,14 +429,14 @@ class RotationZGate : public SingleQubitGate<Precision> {
     inline static const std::string label = "RZ";
 
     template <class U = Precision>
-    static RotationZGate create(const std::vector<Precision> &parameters) {
+    static RotationZGate create(const std::vector<U> &parameters) {
         validateLength(label, parameters, 1);
         return RotationZGate<U>(parameters[0]);
     }
 
     RotationZGate(Precision rotationAngle)
-        : first(Pow(M_E, CplxType(0, -rotationAngle / 2))),
-          second(Pow(M_E, CplxType(0, rotationAngle / 2))),
+        : first(std::pow(M_E, std::complex<Precision>(0, -rotationAngle / 2))),
+          second(std::pow(M_E, std::complex<Precision>(0, rotationAngle / 2))),
           matrix(first, ZERO(), ZERO(), second) {}
     inline const std::vector<std::complex<Precision>> &asMatrix() {
         return matrix;
@@ -404,7 +463,7 @@ class RotationZGate : public SingleQubitGate<Precision> {
     void applyGenerator(const StateVector<Precision> &state,
                         const std::vector<size_t> &indices,
                         const std::vector<size_t> &externalIndices) {
-        unique_ptr<ZGate<Precision>> gate;
+        std::unique_ptr<ZGate<Precision>> gate;
         gate->applyKernel(state, indices, externalIndices, false);
     }
     static const Precision generatorScalingFactor{-0.5};
@@ -420,12 +479,12 @@ class PhaseShiftGate : public SingleQubitGate<Precision> {
     inline static const std::string label = "PhaseShift";
 
     template <class U = Precision>
-    static PhaseShiftGate create(const std::vector<double> &parameters) {
+    static PhaseShiftGate create(const std::vector<U> &parameters) {
         validateLength(label, parameters, 1);
         return PhaseShiftGate<U>(parameters[0]);
     }
     PhaseShiftGate(Precision rotationAngle)
-        : shift(Pow(M_E, std::complex(0, rotationAngle))),
+        : shift(std::pow(M_E, std::complex(0, rotationAngle))),
           matrix(ONE(), ZERO(), ZERO(), shift) {}
     inline const std::vector<std::complex<Precision>> &asMatrix() {
         return matrix;
@@ -469,12 +528,12 @@ class GeneralRotationGate : public SingleQubitGate<Precision> {
                                       parameters[2]);
     }
     GeneralRotationGate(Precision phi, Precision theta, Precision omega)
-        : c(Cos(theta / 2), 0), s(Sin(theta / 2), 0),
-          r1(c * Pow(M_E, std::complex<Precision>(0, (-phi - omega) / 2))),
-          r2(-s * Pow(M_E, std::complex<Precision>(0, (phi - omega) / 2))),
-          r3(s * Pow(M_E, std::complex<Precision>(0, (-phi + omega) / 2))),
-          r4(c * Pow(M_E, std::complex<Precision>(0, (phi + omega) / 2))),
-          matrix(r1, r2, r3, r4){} {}
+        : c(std::cos(theta / 2), 0), s(std::sin(theta / 2), 0),
+          r1(c * std::pow(M_E, std::complex<Precision>(0, (-phi - omega) / 2))),
+          r2(-s * std::pow(M_E, std::complex<Precision>(0, (phi - omega) / 2))),
+          r3(s * std::pow(M_E, std::complex<Precision>(0, (-phi + omega) / 2))),
+          r4(c * std::pow(M_E, std::complex<Precision>(0, (phi + omega) / 2))),
+          matrix(r1, r2, r3, r4) {}
     inline const std::vector<std::complex<Precision>> &asMatrix() {
         return matrix;
     }
@@ -619,7 +678,8 @@ class CRotationXGate : public TwoQubitGate<Precision> {
         return CRotationXGate<U>(parameters[0]);
     }
     CRotationXGate(Precision rotationAngle)
-        : c(Cos(rotationAngle / 2), 0), js(0, Sin(-rotationAngle / 2)),
+        : c(std::cos(rotationAngle / 2), 0),
+          js(0, std::sin(-rotationAngle / 2)),
           matrix(ONE(), ZERO(), ZERO(), ZERO(), ZERO(), ONE(), ZERO(), ZERO(),
                  ZERO(), ZERO(), c, js, ZERO(), ZERO(), js, c){};
     inline const std::vector<std::complex<Precision>> &asMatrix() {
@@ -668,7 +728,7 @@ class CRotationYGate : public TwoQubitGate<Precision> {
     }
 
     CRotationYGate(Precision rotationAngle)
-        : c(Cos(rotationAngle / 2), 0), s(Sin(rotationAngle / 2), 0),
+        : c(std::cos(rotationAngle / 2), 0), s(std::sin(rotationAngle / 2), 0),
           matrix(ONE(), ZERO(), ZERO(), ZERO(), ZERO(), ONE(), ZERO(), ZERO(),
                  ZERO(), ZERO(), c, -s, ZERO(), ZERO(), s, c) {}
 
@@ -720,8 +780,8 @@ class CRotationZGate : public TwoQubitGate<Precision> {
         return CRotationZGate<U>(parameters[0]);
     }
     CRotationZGate(Precision rotationAngle)
-        : first(std::pow(M_E, CplxType(0, -rotationAngle / 2))),
-          second(std::pow(M_E, CplxType(0, rotationAngle / 2))),
+        : first(std::pow(M_E, std::complex<Precision>(0, -rotationAngle / 2))),
+          second(std::pow(M_E, std::complex<Precision>(0, rotationAngle / 2))),
           matrix(ONE(), ZERO(), ZERO(), ZERO(), ZERO(), ONE(), ZERO(), ZERO(),
                  ZERO(), ZERO(), first, ZERO(), ZERO(), ZERO(), ZERO(),
                  second) {}
@@ -752,7 +812,7 @@ class CRotationZGate : public TwoQubitGate<Precision> {
             shiftedState[indices[3]] *= -1;
         }
     }
-    static const double generatorScalingFactor{-0.5};
+    static const Precision generatorScalingFactor{-0.5};
 };
 
 template <class Precision = double>
@@ -771,11 +831,11 @@ class CGeneralRotationGate : public TwoQubitGate<Precision> {
                                        parameters[2]);
     }
     CGeneralRotationGate(Precision phi, Precision theta, Precision omega)
-        : c(Cos(theta / 2), 0), s(Sin(theta / 2), 0),
-          r1(c * Pow(M_E, std::complex<Precision>(0, (-phi - omega) / 2))),
-          r2(-s * Pow(M_E, std::complex<Precision>(0, (phi - omega) / 2))),
-          r3(s * Pow(M_E, std::complex<Precision>(0, (-phi + omega) / 2))),
-          r4(c * Pow(M_E, std::complex<Precision>(0, (phi + omega) / 2))),
+        : c(std::cos(theta / 2), 0), s(std::sin(theta / 2), 0),
+          r1(c * std::pow(M_E, std::complex<Precision>(0, (-phi - omega) / 2))),
+          r2(-s * std::pow(M_E, std::complex<Precision>(0, (phi - omega) / 2))),
+          r3(s * std::pow(M_E, std::complex<Precision>(0, (-phi + omega) / 2))),
+          r4(c * std::pow(M_E, std::complex<Precision>(0, (phi + omega) / 2))),
           matrix{ONE(),  ZERO(), ZERO(), ZERO(), ZERO(), ONE(),  ZERO(), ZERO(),
                  ZERO(), ZERO(), r1,     r2,     ZERO(), ZERO(), r3,     r4} {}
 
@@ -863,9 +923,9 @@ class CSWAPGate : public ThreeQubitGate<Precision> {
         ZERO(), ZERO(), ZERO(), ZERO(), ZERO(), ZERO(), ZERO(), ONE()};
 
   public:
-    static const std::string label = "CSWAP";
+    inline static const std::string label = "CSWAP";
 
-    template<class U = Precision>
+    template <class U = Precision>
     static CSWAPGate create(const std::vector<U> &parameters) {
         validateLength(label, parameters, 0);
         return CSWAPGate<U>();
@@ -878,11 +938,63 @@ class CSWAPGate : public ThreeQubitGate<Precision> {
                      const std::vector<size_t> &externalIndices, bool inverse) {
         // gate is its own inverse
         for (const size_t &externalIndex : externalIndices) {
-            std::complex<Precision> *shiftedState = state.getData() + externalIndex;
+            std::complex<Precision> *shiftedState =
+                state.getData() + externalIndex;
             swap(shiftedState[indices[5]], shiftedState[indices[6]]);
         }
     }
 };
+
+// Use anon namespace to avoid exposing unnecessary functions
+namespace {
+
+static const auto dispatchTable = createDispatchTable();
+
+template <class GateType, class Precision>
+static void addToDispatchTable(
+    std::unordered_map<
+        std::string,
+        std::function<std::unique_ptr<Pennylane::AbstractGate<Precision>>(
+            const std::vector<Precision> &)>> &dispatchTable) {
+    dispatchTable.emplace(
+        GateType::label, [](const std::vector<Precision> &parameters) {
+            return make_unique<GateType>(GateType::create(parameters));
+        });
+}
+
+template <class Precision = double> static auto createDispatchTable() {
+    std::unordered_map<
+        std::string,
+        std::function<std::unique_ptr<Pennylane::AbstractGate<Precision>>(
+            const std::vector<Precision> &)>>
+        dispatchTable;
+    addToDispatchTable<Pennylane::XGate<Precision>>(dispatchTable);
+    addToDispatchTable<Pennylane::YGate<Precision>>(dispatchTable);
+    addToDispatchTable<Pennylane::ZGate<Precision>>(dispatchTable);
+    addToDispatchTable<Pennylane::HadamardGate<Precision>>(dispatchTable);
+    addToDispatchTable<Pennylane::SGate<Precision>>(dispatchTable);
+    addToDispatchTable<Pennylane::TGate<Precision>>(dispatchTable);
+    addToDispatchTable<Pennylane::RotationXGate<Precision>>(dispatchTable);
+    addToDispatchTable<Pennylane::RotationYGate<Precision>>(dispatchTable);
+    addToDispatchTable<Pennylane::RotationZGate<Precision>>(dispatchTable);
+    addToDispatchTable<Pennylane::PhaseShiftGate<Precision>>(dispatchTable);
+    addToDispatchTable<Pennylane::GeneralRotationGate<Precision>>(
+        dispatchTable);
+    addToDispatchTable<Pennylane::CNOTGate<Precision>>(dispatchTable);
+    addToDispatchTable<Pennylane::SWAPGate<Precision>>(dispatchTable);
+    addToDispatchTable<Pennylane::CZGate<Precision>>(dispatchTable);
+    addToDispatchTable<Pennylane::CRotationXGate<Precision>>(dispatchTable);
+    addToDispatchTable<Pennylane::CRotationYGate<Precision>>(dispatchTable);
+    addToDispatchTable<Pennylane::CRotationZGate<Precision>>(dispatchTable);
+    addToDispatchTable<Pennylane::CGeneralRotationGate<Precision>>(
+        dispatchTable);
+    addToDispatchTable<Pennylane::ToffoliGate<Precision>>(dispatchTable);
+    addToDispatchTable<Pennylane::CSWAPGate<Precision>>(dispatchTable);
+    return dispatchTable;
+}
+
+static const auto dispatchTableD = createDispatchTable();
+} // namespace
 
 /**
  * Produces the requested gate, defined by a label and the list of parameters
@@ -894,9 +1006,15 @@ class CSWAPGate : public ThreeQubitGate<Precision> {
  * @throws std::invalid_argument thrown if the gate type is not defined, or if
  * the number of parameters to the gate is incorrect
  */
-template <class Derived>
-std::unique_ptr<AbstractGate<Derived>>
+template <class Precision>
+std::unique_ptr<AbstractGate<Precision>>
 constructGate(const std::string &label,
-              const std::vector<decltype(Derived::precision_)> &parameters);
+              const std::vector<std::complex<Precision>> &parameters) {
+    auto dispatchTableIterator = dispatchTable.find(label);
+    if (dispatchTableIterator == dispatchTable.end())
+        throw std::invalid_argument(label + " is not a supported gate type");
+
+    return dispatchTableIterator->second(parameters);
+}
 
 } // namespace Pennylane

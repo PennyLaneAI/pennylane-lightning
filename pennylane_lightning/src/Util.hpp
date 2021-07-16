@@ -18,6 +18,8 @@
 #pragma once
 
 #include <cassert>
+#include <cmath>
+#include <complex>
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
@@ -45,43 +47,9 @@ inline size_t maxDecimalForQubit(const unsigned int qubitIndex,
     return exp2(qubits - qubitIndex - 1);
 }
 
-namespace Math {
-
-template <class DataPrecision>
-inline static DataPrecision Pow(DataPrecision base, DataPrecision expon) {
-    if constexpr (std::is_same_v<DataPrecision, double>)
-        return std::pow(base, expon);
-    else
-        return std::powf(base, expon);
-}
-template <class DataPrecision>
-inline static DataPrecision Cos(DataPrecision value) {
-    if constexpr (std::is_same_v<DataPrecision, double>)
-        return std::cos(value);
-    else
-        return std::cosf(value);
-}
-template <class DataPrecision>
-inline static DataPrecision Sin(DataPrecision value) {
-    if constexpr (std::is_same_v<DataPrecision, double>)
-        return std::sin(value);
-    else
-        return std::sinf(value);
-}
-template <class DataPrecision>
-inline static DataPrecision Sqrt(DataPrecision value) {
-    if constexpr (std::is_same_v<DataPrecision, double>)
-        return std::sqrt(value);
-    else
-        return std::sqrtf(value);
-}
-
 template <class DataPrecision>
 inline static DataPrecision InvSqrt(DataPrecision value) {
-    if constexpr (std::is_same_v<DataPrecision, double>)
-        return 1 / std::sqrt(value);
-    else
-        return 1 / std::sqrtf(value);
+    return 1 / std::sqrt(value);
 }
 
 template <class DataPrecision = double>
@@ -97,7 +65,6 @@ inline static constexpr DataPrecision IMAG() {
     return std::complex<DataPrecision>{0, 1};
 }
 
-} // namespace Math
 } // namespace Pennylane
 
 // Helper similar to std::make_unique from c++14
