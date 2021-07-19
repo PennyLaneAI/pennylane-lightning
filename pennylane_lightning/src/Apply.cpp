@@ -15,7 +15,7 @@
 
 #include <set>
 
-#include "Gates.hpp"
+//#include "Gates.hpp"
 #include "StateVector.hpp"
 #include "Util.hpp"
 
@@ -24,29 +24,30 @@ using std::string;
 using std::unique_ptr;
 using std::vector;
 
-vector<unsigned int> Pennylane::getIndicesAfterExclusion(
-    const vector<unsigned int> &indicesToExclude, const unsigned int qubits) {
-    set<unsigned int> indices;
-    for (unsigned int i = 0; i < qubits; i++) {
-        indices.insert(indices.end(), i);
+vector<size_t>
+Pennylane::getIndicesAfterExclusion(const vector<size_t> &indicesToExclude,
+                                    const size_t qubits) {
+    set<size_t> indices;
+    for (size_t i = 0; i < qubits; i++) {
+        indices.emplace(indices.end(), i);
     }
-    for (const unsigned int &excludedIndex : indicesToExclude) {
+    for (const size_t &excludedIndex : indicesToExclude) {
         indices.erase(excludedIndex);
     }
-    return vector<unsigned int>(indices.begin(), indices.end());
+    return {indices.begin(), indices.end()};
 }
 
 vector<size_t>
-Pennylane::generateBitPatterns(const vector<unsigned int> &qubitIndices,
-                               const unsigned int qubits) {
+Pennylane::generateBitPatterns(const vector<size_t> &qubitIndices,
+                               const size_t qubits) {
     vector<size_t> indices;
     indices.reserve(exp2(qubitIndices.size()));
-    indices.push_back(0);
+    indices.emplace_back(0);
     for (int i = qubitIndices.size() - 1; i >= 0; i--) {
         size_t value = maxDecimalForQubit(qubitIndices[i], qubits);
         size_t currentSize = indices.size();
         for (size_t j = 0; j < currentSize; j++) {
-            indices.push_back(indices[j] + value);
+            indices.emplace_back(indices[j] + value);
         }
     }
     return indices;
@@ -56,34 +57,33 @@ Pennylane::generateBitPatterns(const vector<unsigned int> &qubitIndices,
 
 template void Pennylane::constructAndApplyOperation<double>(
     StateVector<double> &state, const std::string &opLabel,
-    const std::vector<unsigned int> &opWires,
-    const std::vector<double> &opParams, bool inverse,
-    const unsigned int qubits);
+    const std::vector<size_t> &opWires, const std::vector<double> &opParams,
+    bool inverse, const size_t qubits);
 
 template void Pennylane::constructAndApplyOperation<float>(
     StateVector<float> &state, const std::string &opLabel,
-    const std::vector<unsigned int> &opWires,
-    const std::vector<double> &opParams, bool inverse,
-    const unsigned int qubits);
+    const std::vector<size_t> &opWires, const std::vector<double> &opParams,
+    bool inverse, const size_t qubits);
 
-template void Pennylane::applyGateGenerator<double>(
+/*template void Pennylane::applyGateGenerator<double>(
     StateVector<double> &state, unique_ptr<AbstractGate> gate,
-    const vector<unsigned int> &opWires, const unsigned int qubits);
+    const vector<size_t> &opWires, const size_t qubits);
 
 template void Pennylane::applyGateGenerator<float>(
     StateVector<float> &state, unique_ptr<AbstractGate> gate,
-    const vector<unsigned int> &opWires, const unsigned int qubits);
+    const vector<size_t> &opWires, const size_t qubits);
+*/
 
-template void
-Pennylane::apply<double>(StateVector<double> &state, const vector<string> &ops,
-                         const vector<vector<unsigned int>> &wires,
-                         const vector<vector<double>> &params,
-                         const vector<bool> &inverse,
-                         const unsigned int qubits);
+template void Pennylane::apply<double>(StateVector<double> &state,
+                                       const vector<string> &ops,
+                                       const vector<vector<size_t>> &wires,
+                                       const vector<vector<double>> &params,
+                                       const vector<bool> &inverse,
+                                       const size_t qubits);
 
 template void Pennylane::apply<float>(StateVector<float> &state,
                                       const vector<string> &ops,
-                                      const vector<vector<unsigned int>> &wires,
+                                      const vector<vector<size_t>> &wires,
                                       const vector<vector<double>> &params,
                                       const vector<bool> &inverse,
-                                      const unsigned int qubits);
+                                      const size_t qubits);

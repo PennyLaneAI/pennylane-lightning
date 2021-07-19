@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-#include "Gates.hpp"
+//#include "Gates.hpp"
 #include "StateVector.hpp"
 #include "typedefs.hpp"
 
@@ -38,9 +38,9 @@ namespace Pennylane {
  * @return Set difference of [0, ..., qubits-1] and excludedIndices, in
  * ascending order
  */
-std::vector<unsigned int>
-getIndicesAfterExclusion(const std::vector<unsigned int> &indicesToExclude,
-                         const unsigned int qubits);
+std::vector<size_t>
+getIndicesAfterExclusion(const std::vector<size_t> &indicesToExclude,
+                         const size_t qubits);
 
 /**
  * Produces the decimal values for all possible bit patterns determined by a set
@@ -60,9 +60,8 @@ getIndicesAfterExclusion(const std::vector<unsigned int> &indicesToExclude,
  * @return decimal value corresponding to all possible bit patterns for the
  * given indices
  */
-std::vector<size_t>
-generateBitPatterns(const std::vector<unsigned int> &qubitIndices,
-                    const unsigned int qubits);
+std::vector<size_t> generateBitPatterns(const std::vector<size_t> &qubitIndices,
+                                        const size_t qubits);
 
 /**
  * Constructs the gate defined by the supplied parameters and applies it to the
@@ -79,10 +78,10 @@ generateBitPatterns(const std::vector<unsigned int> &qubitIndices,
 template <class Precision = double>
 void constructAndApplyOperation(StateVector<Precision> &state,
                                 const std::string &opLabel,
-                                const std::vector<unsigned int> &opWires,
+                                const std::vector<size_t> &opWires,
                                 const std::vector<double> &opParams,
-                                bool inverse, const unsigned int qubits) {
-    unique_ptr<AbstractGate> gate = constructGate(opLabel, opParams);
+                                bool inverse, const size_t qubits) {
+    // unique_ptr<AbstractGate> gate = constructGate(opLabel, opParams);
     if (gate->numQubits != opWires.size())
         throw std::invalid_argument(
             string("The gate of type ") + opLabel + " requires " +
@@ -91,8 +90,7 @@ void constructAndApplyOperation(StateVector<Precision> &state,
 
     vector<size_t> internalIndices = generateBitPatterns(opWires, qubits);
 
-    vector<unsigned int> externalWires =
-        getIndicesAfterExclusion(opWires, qubits);
+    vector<size_t> externalWires = getIndicesAfterExclusion(opWires, qubits);
     vector<size_t> externalIndices = generateBitPatterns(externalWires, qubits);
 
     gate->applyKernel(state, internalIndices, externalIndices, inverse);
@@ -109,12 +107,11 @@ void constructAndApplyOperation(StateVector<Precision> &state,
 template <class Precision = double>
 void applyGateGenerator(StateVector<Precision> &state,
                         std::unique_ptr<AbstractGate> gate,
-                        const std::vector<unsigned int> &opWires,
-                        const unsigned int qubits) {
+                        const std::vector<size_t> &opWires,
+                        const size_t qubits) {
     vector<size_t> internalIndices = generateBitPatterns(opWires, qubits);
 
-    vector<unsigned int> externalWires =
-        getIndicesAfterExclusion(opWires, qubits);
+    vector<size_t> externalWires = getIndicesAfterExclusion(opWires, qubits);
     vector<size_t> externalIndices = generateBitPatterns(externalWires, qubits);
 
     gate->applyGenerator(state, internalIndices, externalIndices);
@@ -135,9 +132,9 @@ void applyGateGenerator(StateVector<Precision> &state,
  */
 template <class Precision = double>
 void apply(StateVector<Precision> &state, const std::vector<std::string> &ops,
-           const std::vector<std::vector<unsigned int>> &wires,
+           const std::vector<std::vector<size_t>> &wires,
            const std::vector<std::vector<double>> &params,
-           const std::vector<bool> &inverse, const unsigned int qubits) {
+           const std::vector<bool> &inverse, const size_t qubits) {
     if (qubits <= 0)
         throw std::invalid_argument("Must specify one or more qubits");
 

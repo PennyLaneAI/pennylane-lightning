@@ -37,6 +37,7 @@ template <class fp_t = double> class StateVector {
     const std::size_t length_;
 
   public:
+    StateVector() : arr_{nullptr}, length_{0} {};
     StateVector(CFP_t *arr, size_t length) : arr_{arr}, length_{length} {};
     CFP_t *getData() { return arr_; }
     std::size_t getLength() { return length_; }
@@ -94,20 +95,34 @@ template <class fp_t = double> class StateVector {
     static const std::vector<CFP_t> getPhaseShift(fp_t angle) {
         return {ONE, ZERO, ZERO, std::exp(IMAG * angle)};
     }
+    static const std::vector<CFP_t>
+    getPhaseShift(const std::vector<fp_t> &params) {
+        return getPhaseShift(params.front());
+    }
     static const std::vector<CFP_t> getRX(fp_t angle) {
         const CFP_t c(std::cos(angle / 2), 0);
         const CFP_t js(0, -std::sin(angle / 2));
         return {c, js, js, c};
+    }
+    static const std::vector<CFP_t> getRX(const std::vector<fp_t> &params) {
+        return getRX(params.front());
     }
     static const std::vector<CFP_t> getRY(fp_t angle) {
         const CFP_t c(std::cos(angle / 2), 0);
         const CFP_t s(-std::sin(angle / 2), 0);
         return {c, -s, s, c};
     }
+    static const std::vector<CFP_t> getRY(const std::vector<fp_t> &params) {
+        return getRY(params.front());
+    }
     static const std::vector<CFP_t> getRZ(fp_t angle) {
         return {std::exp(-IMAG * (angle / 2)), ZERO, ZERO,
                 std::exp(IMAG * (angle / 2))};
     }
+    static const std::vector<CFP_t> getRZ(const std::vector<fp_t> &params) {
+        return getRZ(params.front());
+    }
+
     static const std::vector<CFP_t> getRot(fp_t phi, fp_t theta, fp_t omega) {
         const CFP_t c{std::cos(theta / 2), 0}, s{std::sin(theta / 2), 0};
         const fp_t p{phi + omega}, m{phi - omega};
@@ -115,15 +130,25 @@ template <class fp_t = double> class StateVector {
             std::exp(-IMAG * (p / 2)) * c, -std::exp(IMAG * (m / 2)) * s,
             std::exp(-IMAG * (m / 2)) * s, std::exp(IMAG * (p / 2)) * c};
     }
+    static const std::vector<CFP_t> getRot(const std::vector<fp_t> &params) {
+        return getRot(params[0], params[1], params[2]);
+    }
+
     static const std::vector<CFP_t> getCRX(fp_t angle) {
         const CFP_t c{std::cos(angle / 2), 0}, js{0, std::sin(-angle / 2)};
         return {ONE,  ZERO, ZERO, ZERO, ZERO, ONE,  ZERO, ZERO,
                 ZERO, ZERO, c,    js,   ZERO, ZERO, js,   c};
     }
+    static const std::vector<CFP_t> getCRX(const std::vector<fp_t> &params) {
+        return getCRX(params.front());
+    }
     static const std::vector<CFP_t> getCRY(fp_t angle) {
         const CFP_t c{std::cos(angle / 2), 0}, s{std::sin(angle / 2), 0};
         return {ONE,  ZERO, ZERO, ZERO, ZERO, ONE,  ZERO, ZERO,
                 ZERO, ZERO, c,    -s,   ZERO, ZERO, s,    c};
+    }
+    static const std::vector<CFP_t> getCRY(const std::vector<fp_t> &params) {
+        return getCRY(params.front());
     }
     static const std::vector<CFP_t> getCRZ(fp_t angle) {
         const CFP_t first = std::exp(-IMAG * angle * static_cast<fp_t>(0.5));
@@ -131,11 +156,19 @@ template <class fp_t = double> class StateVector {
         return {ONE,  ZERO, ZERO,  ZERO, ZERO, ONE,  ZERO,  ZERO,
                 ZERO, ZERO, first, ZERO, ZERO, ZERO, second};
     }
+    static const std::vector<CFP_t> getCRZ(const std::vector<fp_t> &params) {
+        return getCRZ(params.front());
+    }
+
     static const std::vector<CFP_t> getCRot(fp_t phi, fp_t theta, fp_t omega) {
         const auto rot = getRot(phi, theta, omega);
         return {ONE,  ZERO, ZERO,   ZERO,   ZERO, ONE,  ZERO,   ZERO,
                 ZERO, ZERO, rot[0], rot[1], ZERO, ZERO, rot[2], rot[3]};
     }
+    static const std::vector<CFP_t> getCRot(const std::vector<fp_t> &params) {
+        return getCRot(params[0], params[1], params[2]);
+    }
+
     // Apply Gates
     void applyUnitary(const std::vector<CFP_t> &matrix,
                       const StateVector<CFP_t> &state,
@@ -163,7 +196,7 @@ template <class fp_t = double> class StateVector {
 
                 if (inverse == true) {
                     for (size_t j = 0; j < indices.size(); j++) {
-                        size_t baseIndex = j * indices.size();
+                        const size_t baseIndex = j * indices.size();
                         shiftedState[index] +=
                             conj(matrix[baseIndex + i]) * v[j];
                     }

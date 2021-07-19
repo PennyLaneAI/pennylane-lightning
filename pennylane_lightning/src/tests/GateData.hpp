@@ -15,13 +15,11 @@
 #define _USE_MATH_DEFINES
 
 #include <cmath>
+#include <complex>
 #include <functional>
 #include <iostream>
 #include <type_traits>
 
-#include "../typedefs.hpp"
-
-// using Pennylane::CplxType;
 using std::vector;
 
 namespace {
@@ -34,19 +32,19 @@ template <class DataPrecision = double> class GateUtilities {
     using pfunc_params =
         std::function<vector<CplxType>(const vector<DataPrecision> &)>;
 
-    constexpr vector<CplxType> CNOT{
+    inline static const vector<CplxType> CNOT{
         {1, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {1, 0}, {0, 0}, {0, 0},
         {0, 0}, {0, 0}, {0, 0}, {1, 0}, {0, 0}, {0, 0}, {1, 0}, {0, 0}};
 
-    constexpr vector<CplxType> SWAP{
+    inline static const vector<CplxType> SWAP{
         {1, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {1, 0}, {0, 0},
         {0, 0}, {1, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {1, 0}};
 
-    constexpr vector<CplxType> CZ{
+    inline static const vector<CplxType> CZ{
         {1, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {1, 0}, {0, 0}, {0, 0},
         {0, 0}, {0, 0}, {1, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {-1, 0}};
 
-    constexpr vector<CplxType> Toffoli{
+    inline static const vector<CplxType> Toffoli{
         {1, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
         {0, 0}, {1, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
         {0, 0}, {0, 0}, {1, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
@@ -56,7 +54,7 @@ template <class DataPrecision = double> class GateUtilities {
         {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {1, 0},
         {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {1, 0}, {0, 0}};
 
-    constexpr vector<CplxType> CSWAP{
+    inline static const vector<CplxType> CSWAP{
         {1, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
         {0, 0}, {1, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
         {0, 0}, {0, 0}, {1, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
@@ -66,49 +64,22 @@ template <class DataPrecision = double> class GateUtilities {
         {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {1, 0}, {0, 0}, {0, 0},
         {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {1, 0}};
 
-    constexpr CplxType IMAG{0, 1};
-    constexpr CplxType NEGATIVE_IMAG{0, -1};
-    constexpr DataPrecision SQRT_2{Sqrt(2)};
-    constexpr DataPrecision INV_SQRT_2{1 / SQRT_2};
+    inline static const CplxType IMAG{0, 1};
+    inline static const CplxType NEGATIVE_IMAG{0, -1};
+    inline static const DataPrecision SQRT_2{std::sqrt(2)};
+    inline static const DataPrecision INV_SQRT_2{1 / SQRT_2};
 
     // Non-parametrized single qubit gates
-    constexpr vector<CplxType> PauliX{{0, 0}, {1, 0}, {1, 0}, {0, 0}};
-    constexpr vector<CplxType> PauliY{{0, 0}, NEGATIVE_IMAG, IMAG, {0, 0}};
-    constexpr vector<CplxType> PauliZ{{1, 0}, {0, 0}, {0, 0}, {-1, 0}};
-    constexpr vector<CplxType> Hadamard{
+    inline static const vector<CplxType> PauliX{{0, 0}, {1, 0}, {1, 0}, {0, 0}};
+    inline static const vector<CplxType> PauliY{
+        {0, 0}, NEGATIVE_IMAG, IMAG, {0, 0}};
+    inline static const vector<CplxType> PauliZ{
+        {1, 0}, {0, 0}, {0, 0}, {-1, 0}};
+    inline static const vector<CplxType> Hadamard{
         {INV_SQRT_2, 0}, {INV_SQRT_2, 0}, {INV_SQRT_2, 0}, {-INV_SQRT_2, 0}};
-    constexpr vector<CplxType> S{{1, 0}, 0, 0, IMAG};
-    constexpr vector<CplxType> T{{1, 0}, 0, 0, Pow(M_E, CplxType{0, M_PI / 4})};
-
-    template <class DataPrecisionStatic = DataPrecision>
-    static DataPrecisionStatic Pow(DataPrecisionStatic base,
-                                   DataPrecisionStatic expon) {
-        if constexpr (std::is_same_v<DataPrecisionStatic, double>)
-            return std::pow(base, expon);
-        else
-            return std::powf(base, expon);
-    }
-    template <class DataPrecisionStatic = DataPrecision>
-    static DataPrecisionStatic Cos(DataPrecisionStatic value) {
-        if constexpr (std::is_same_v<DataPrecisionStatic, double>)
-            return std::cos(value);
-        else
-            return std::cosf(value);
-    }
-    template <class DataPrecisionStatic = DataPrecision>
-    static DataPrecisionStatic Sin(DataPrecisionStatic value) {
-        if constexpr (std::is_same_v<DataPrecisionStatic, double>)
-            return std::sin(value);
-        else
-            return std::sinf(value);
-    }
-    template <class DataPrecisionStatic = DataPrecision>
-    static DataPrecisionStatic Sqrt(DataPrecisionStatic value) {
-        if constexpr (std::is_same_v<DataPrecisionStatic, double>)
-            return std::sqrt(value);
-        else
-            return std::sqrtf(value);
-    }
+    inline static const vector<CplxType> S{{1, 0}, 0, 0, IMAG};
+    inline static const vector<CplxType> T{
+        {1, 0}, 0, 0, std::pow(M_E, CplxType{0, M_PI / 4})};
 
     // Parametrized single qubit gates
     template <class DataPrecisionStatic = DataPrecision>
@@ -116,10 +87,8 @@ template <class DataPrecision = double> class GateUtilities {
     RX(const vector<DataPrecisionStatic> &pars) {
         DataPrecisionStatic parameter = pars.at(0);
 
-        const std::complex<DataPrecisionStatic> c{
-            Cos<DataPrecisionStatic>(parameter / 2), 0};
-        const std::complex<DataPrecisionStatic> js{
-            0, Sin<DataPrecisionStatic>(-parameter / 2)};
+        const std::complex<DataPrecisionStatic> c{std::cos(parameter / 2), 0};
+        const std::complex<DataPrecisionStatic> js{0, std::sin(-parameter / 2)};
         return {c, js, js, c};
     }
 
@@ -128,10 +97,8 @@ template <class DataPrecision = double> class GateUtilities {
     RY(const vector<DataPrecision> &pars) {
         DataPrecision parameter = pars.at(0);
 
-        const std::complex<DataPrecisionStatic> c{
-            Cos<DataPrecisionStatic>(parameter / 2), 0};
-        const std::complex<DataPrecisionStatic> s{
-            Sin<DataPrecisionStatic>(parameter / 2), 0};
+        const std::complex<DataPrecisionStatic> c{std::cos(parameter / 2), 0};
+        const std::complex<DataPrecisionStatic> s{std::sin(parameter / 2), 0};
         return {c, -s, s, c};
     }
 
@@ -141,10 +108,9 @@ template <class DataPrecision = double> class GateUtilities {
         DataPrecisionStatic parameter = pars.at(0);
         const std::complex<DataPrecisionStatic> phase{0, -parameter / 2};
         const std::complex<DataPrecisionStatic> phase_second{0, parameter / 2};
-        const std::complex<DataPrecisionStatic> first{
-            Pow<DataPrecisionStatic>(M_E, phase)};
+        const std::complex<DataPrecisionStatic> first{std::pow(M_E, phase)};
         const std::complex<DataPrecisionStatic> second{
-            Pow<DataPrecisionStatic>(M_E, phase_second)};
+            std::pow(M_E, phase_second)};
         return {first, {0, 0}, {0, 0}, second};
     }
 
@@ -154,8 +120,7 @@ template <class DataPrecision = double> class GateUtilities {
         DataPrecisionStatic parameter = pars.at(0);
 
         const std::complex<DataPrecisionStatic> phase{0, parameter};
-        const std::complex<DataPrecisionStatic> shift{
-            Pow<DataPrecisionStatic>(M_E, phase)};
+        const std::complex<DataPrecisionStatic> shift{std::pow(M_E, phase)};
 
         return {{1, 0}, {0, 0}, {0, 0}, shift};
     }
@@ -172,17 +137,13 @@ template <class DataPrecision = double> class GateUtilities {
         const std::complex<DataPrecisionStatic> e01{0, (phi - omega) / 2};
         const std::complex<DataPrecisionStatic> e11{0, (phi + omega) / 2};
 
-        const std::complex<DataPrecisionStatic> exp00{
-            Pow<DataPrecisionStatic>(M_E, e00)};
-        const std::complex<DataPrecisionStatic> exp10{
-            Pow<DataPrecisionStatic>(M_E, e10)};
-        const std::complex<DataPrecisionStatic> exp01{
-            Pow<DataPrecisionStatic>(M_E, e01)};
-        const std::complex<DataPrecisionStatic> exp11{
-            Pow<DataPrecisionStatic>(M_E, e11)};
+        const std::complex<DataPrecisionStatic> exp00{std::pow(M_E, e00)};
+        const std::complex<DataPrecisionStatic> exp10{std::pow(M_E, e10)};
+        const std::complex<DataPrecisionStatic> exp01{std::pow(M_E, e01)};
+        const std::complex<DataPrecisionStatic> exp11{std::pow(M_E, e11)};
 
-        const DataPrecisionStatic c{Cos<DataPrecisionStatic>(theta / 2)};
-        const DataPrecisionStatic s{Sin<DataPrecisionStatic>(theta / 2)};
+        const DataPrecisionStatic c{std::cos(theta / 2)};
+        const DataPrecisionStatic s{std::sin(theta / 2)};
 
         return {exp00 * c, -exp01 * s, exp10 * s, exp11 * c};
     }
@@ -192,10 +153,8 @@ template <class DataPrecision = double> class GateUtilities {
     CRX(const vector<DataPrecisionStatic> &pars) {
         DataPrecisionStatic parameter = pars.at(0);
 
-        const std::complex<DataPrecisionStatic> c{
-            Cos<DataPrecisionStatic>(parameter / 2), 0};
-        const std::complex<DataPrecisionStatic> js{
-            0, Sin<DataPrecisionStatic>(-parameter / 2)};
+        const std::complex<DataPrecisionStatic> c{std::cos(parameter / 2), 0};
+        const std::complex<DataPrecisionStatic> js{0, std::sin(-parameter / 2)};
 
         vector<std::complex<DataPrecisionStatic>> matrix{
             {1, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {1, 0}, {0, 0}, {0, 0},
@@ -209,8 +168,8 @@ template <class DataPrecision = double> class GateUtilities {
     CRY(const vector<DataPrecisionStatic> &pars) {
         DataPrecision parameter = pars.at(0);
 
-        const DataPrecisionStatic c{Cos<DataPrecisionStatic>(parameter / 2)};
-        const DataPrecisionStatic s{Sin<DataPrecisionStatic>(parameter / 2)};
+        const DataPrecisionStatic c{std::cos(parameter / 2)};
+        const DataPrecisionStatic s{std::sin(parameter / 2)};
 
         vector<std::complex<DataPrecisionStatic>> matrix = {
             {1, 0}, {0, 0}, {0, 0}, {0, 0},  {0, 0}, {1, 0}, {0, 0}, {0, 0},
@@ -226,10 +185,9 @@ template <class DataPrecision = double> class GateUtilities {
 
         const std::complex<DataPrecisionStatic> phase{0, -parameter / 2};
         const std::complex<DataPrecisionStatic> phase_second{0, parameter / 2};
-        const std::complex<DataPrecisionStatic> first =
-            Pow<DataPrecisionStatic>(M_E, phase);
+        const std::complex<DataPrecisionStatic> first = std::pow(M_E, phase);
         const std::complex<DataPrecisionStatic> second =
-            Pow<DataPrecisionStatic>(M_E, phase_second);
+            std::pow(M_E, phase_second);
 
         vector<std::complex<DataPrecision>> matrix = {
             {1, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {1, 0}, {0, 0}, {0, 0},
@@ -249,17 +207,13 @@ template <class DataPrecision = double> class GateUtilities {
         const std::complex<DataPrecisionStatic> e01(0, (phi - omega) / 2);
         const std::complex<DataPrecisionStatic> e11(0, (phi + omega) / 2);
 
-        const std::complex<DataPrecisionStatic> exp00 =
-            Pow<DataPrecisionStatic>(M_E, e00);
-        const std::complex<DataPrecisionStatic> exp10 =
-            Pow<DataPrecisionStatic>(M_E, e10);
-        const std::complex<DataPrecisionStatic> exp01 =
-            Pow<DataPrecisionStatic>(M_E, e01);
-        const std::complex<DataPrecisionStatic> exp11 =
-            Pow<DataPrecisionStatic>(M_E, e11);
+        const std::complex<DataPrecisionStatic> exp00 = std::pow(M_E, e00);
+        const std::complex<DataPrecisionStatic> exp10 = std::pow(M_E, e10);
+        const std::complex<DataPrecisionStatic> exp01 = std::pow(M_E, e01);
+        const std::complex<DataPrecisionStatic> exp11 = std::pow(M_E, e11);
 
-        const DataPrecisionStatic c{Cos<DataPrecisionStatic>(theta / 2)};
-        const DataPrecisionStatic s{Sin<DataPrecisionStatic>(theta / 2)};
+        const DataPrecisionStatic c{std::cos(theta / 2)};
+        const DataPrecisionStatic s{std::sin(theta / 2)};
 
         vector<std::complex<DataPrecisionStatic>> matrix = {
             {1, 0}, {0, 0}, {0, 0},    {0, 0},   {0, 0},    {1, 0},
