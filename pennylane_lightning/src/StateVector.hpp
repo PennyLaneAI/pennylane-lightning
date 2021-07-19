@@ -25,23 +25,24 @@
 #include <unordered_map>
 #include <vector>
 
-namespace{
-    using std::string;
-    using std::vector;
-};
+namespace {
+using std::string;
+using std::vector;
+}; // namespace
 
 namespace Pennylane {
 
 template <class fp_t = double> class StateVector {
     using CFP_t = std::complex<fp_t>;
-    using NonParamMap =
-        std::unordered_map<string,
-                           std::function<void(const vector<size_t> &,
-                                              const vector<size_t> &, bool)>>;
-    using ParamMap = std::unordered_map<
-        string,
-        std::function<void(const vector<size_t> &, const vector<size_t> &, bool,
-                           const vector<fp_t> &)>>;
+
+    using NPFunc = void (StateVector::*)(const vector<size_t> &,
+                                         const vector<size_t> &, bool);
+    using PFunc = void (StateVector::*)(const vector<size_t> &,
+                                        const vector<size_t> &, bool,
+                                        const vector<fp_t> &);
+
+    using NonParamMap = std::unordered_map<string, NPFunc>;
+    using ParamMap = std::unordered_map<string, PFunc>;
 
     static constexpr CFP_t ONE{1, 0};
     static constexpr CFP_t ZERO{0, 0};
@@ -57,7 +58,28 @@ template <class fp_t = double> class StateVector {
 
   public:
     StateVector() : arr_{nullptr}, length_{0} {};
-    StateVector(CFP_t *arr, size_t length) : arr_{arr}, length_{length} {};
+    StateVector(CFP_t *arr, size_t length)
+        : arr_{arr}, length_{length},
+          nonparam_gates_{{"PauliX", &StateVector<fp_t>::applyPauliX},
+                          {"PauliY", &StateVector<fp_t>::applyPauliY},
+                          {"PauliZ", &StateVector<fp_t>::applyPauliZ},
+                          {"Hadamard", &StateVector<fp_t>::applyHadamard},
+                          {"S", &StateVector<fp_t>::applyS},
+                          {"T", &StateVector<fp_t>::applyT},
+                          {"CNOT", &StateVector<fp_t>::applyCNOT},
+                          {"SWAP", &StateVector<fp_t>::applySWAP},
+                          {"CSWAP", &StateVector<fp_t>::applyCSWAP},
+                          {"CZ", &StateVector<fp_t>::applyCZ},
+                          {"Toffoli", &StateVector<fp_t>::applyToffoli}},
+          param_gates_{{"PhaseShift", &StateVector<fp_t>::applyPhaseShift},
+                       {"RX", &StateVector<fp_t>::applyRX},
+                       {"RY", &StateVector<fp_t>::applyRY},
+                       {"RZ", &StateVector<fp_t>::applyRZ},
+                       {"Rot", &StateVector<fp_t>::applyRot},
+                       {"CRX", &StateVector<fp_t>::applyCRX},
+                       {"CRY", &StateVector<fp_t>::applyCRY},
+                       {"CRZ", &StateVector<fp_t>::applyCRZ},
+                       {"CRot", &StateVector<fp_t>::applyCRot}} {};
     CFP_t *getData() { return arr_; }
     std::size_t getLength() { return length_; }
 
@@ -302,7 +324,8 @@ template <class fp_t = double> class StateVector {
     void applyRX(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
                  const vector<fp_t> &params) {
-        return StateVector::applyRX(indices, externalIndices, inverse, params[0]);
+        return StateVector::applyRX(indices, externalIndices, inverse,
+                                    params[0]);
     }
 
     void applyRY(const vector<size_t> &indices,
@@ -323,7 +346,8 @@ template <class fp_t = double> class StateVector {
     void applyRY(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
                  const vector<fp_t> &params) {
-        return StateVector::applyRY(indices, externalIndices, inverse, params[0]);
+        return StateVector::applyRY(indices, externalIndices, inverse,
+                                    params[0]);
     }
 
     void applyRZ(const vector<size_t> &indices,
@@ -344,7 +368,8 @@ template <class fp_t = double> class StateVector {
     void applyRZ(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
                  const vector<fp_t> &params) {
-        return StateVector::applyRZ(indices, externalIndices, inverse, params[0]);
+        return StateVector::applyRZ(indices, externalIndices, inverse,
+                                    params[0]);
     }
 
     void applyPhaseShift(const vector<size_t> &indices,
@@ -361,7 +386,8 @@ template <class fp_t = double> class StateVector {
     void applyPhaseShift(const vector<size_t> &indices,
                          const vector<size_t> &externalIndices, bool inverse,
                          const vector<fp_t> &params) {
-        return StateVector::applyPhaseShift(indices, externalIndices, inverse, params[0]);
+        return StateVector::applyPhaseShift(indices, externalIndices, inverse,
+                                            params[0]);
     }
 
     void applyRot(const vector<size_t> &indices,
@@ -385,8 +411,8 @@ template <class fp_t = double> class StateVector {
     void applyRot(const vector<size_t> &indices,
                   const vector<size_t> &externalIndices, bool inverse,
                   const vector<fp_t> &params) {
-        return StateVector::applyRot(indices, externalIndices, inverse, params[0], params[1],
-                        params[2]);
+        return StateVector::applyRot(indices, externalIndices, inverse,
+                                     params[0], params[1], params[2]);
     }
 
     void applyCNOT(const vector<size_t> &indices,
@@ -428,7 +454,8 @@ template <class fp_t = double> class StateVector {
     void applyCRX(const vector<size_t> &indices,
                   const vector<size_t> &externalIndices, bool inverse,
                   const vector<fp_t> &params) {
-        return StateVector::applyCRX(indices, externalIndices, inverse, params[0]);
+        return StateVector::applyCRX(indices, externalIndices, inverse,
+                                     params[0]);
     }
 
     void applyCRY(const vector<size_t> &indices,
@@ -449,7 +476,8 @@ template <class fp_t = double> class StateVector {
     void applyCRY(const vector<size_t> &indices,
                   const vector<size_t> &externalIndices, bool inverse,
                   const vector<fp_t> &params) {
-        return StateVector::applyCRY(indices, externalIndices, inverse, params[0]);
+        return StateVector::applyCRY(indices, externalIndices, inverse,
+                                     params[0]);
     }
 
     void applyCRZ(const vector<size_t> &indices,
@@ -470,7 +498,8 @@ template <class fp_t = double> class StateVector {
     void applyCRZ(const vector<size_t> &indices,
                   const vector<size_t> &externalIndices, bool inverse,
                   const vector<fp_t> &params) {
-        return StateVector::applyCRZ(indices, externalIndices, inverse, params[0]);
+        return StateVector::applyCRZ(indices, externalIndices, inverse,
+                                     params[0]);
     }
 
     void applyCRot(const vector<size_t> &indices,
@@ -494,7 +523,8 @@ template <class fp_t = double> class StateVector {
     void applyCRot(const vector<size_t> &indices,
                    const vector<size_t> &externalIndices, bool inverse,
                    const vector<fp_t> &params) {
-        return StateVector::applyCRot(indices, externalIndices, inverse, params[0], params[1], params[2]);
+        return StateVector::applyCRot(indices, externalIndices, inverse,
+                                      params[0], params[1], params[2]);
     }
     void applyToffoli(const vector<size_t> &indices,
                       const vector<size_t> &externalIndices, bool inverse) {
