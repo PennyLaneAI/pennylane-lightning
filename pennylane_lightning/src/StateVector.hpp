@@ -20,18 +20,37 @@
 
 #include <cmath>
 #include <complex>
+#include <functional>
 #include <stdexcept>
+#include <unordered_map>
 #include <vector>
+
+namespace{
+    using std::string;
+    using std::vector;
+};
 
 namespace Pennylane {
 
 template <class fp_t = double> class StateVector {
     using CFP_t = std::complex<fp_t>;
+    using NonParamMap =
+        std::unordered_map<string,
+                           std::function<void(const vector<size_t> &,
+                                              const vector<size_t> &, bool)>>;
+    using ParamMap = std::unordered_map<
+        string,
+        std::function<void(const vector<size_t> &, const vector<size_t> &, bool,
+                           const vector<fp_t> &)>>;
+
     static constexpr CFP_t ONE{1, 0};
     static constexpr CFP_t ZERO{0, 0};
     static constexpr CFP_t IMAG{0, 1};
     static constexpr CFP_t SQRT2{std::sqrt(2), 0};
     static constexpr CFP_t INVSQRT2{1 / std::sqrt(2), 0};
+
+    const NonParamMap nonparam_gates_;
+    const ParamMap param_gates_;
 
     CFP_t *const arr_;
     const std::size_t length_;
@@ -42,38 +61,34 @@ template <class fp_t = double> class StateVector {
     CFP_t *getData() { return arr_; }
     std::size_t getLength() { return length_; }
 
-    static constexpr std::vector<CFP_t> getPauliX() {
+    static constexpr vector<CFP_t> getPauliX() {
         return {ZERO, ONE, ONE, ZERO};
     }
-    static constexpr std::vector<CFP_t> getPauliY() {
+    static constexpr vector<CFP_t> getPauliY() {
         return {ZERO, -IMAG, IMAG, ZERO};
     }
-    static constexpr std::vector<CFP_t> getPauliZ() {
+    static constexpr vector<CFP_t> getPauliZ() {
         return {ONE, ZERO, ZERO, -ONE};
     }
-    static constexpr std::vector<CFP_t> getHadamard() {
+    static constexpr vector<CFP_t> getHadamard() {
         return {INVSQRT2, INVSQRT2, INVSQRT2, -INVSQRT2};
     }
-    static constexpr std::vector<CFP_t> getS() {
-        return {ONE, ZERO, ZERO, IMAG};
-    }
-    static constexpr std::vector<CFP_t> getT() {
-        return {ONE, ZERO, ZERO, IMAG};
-    }
-    static constexpr std::vector<CFP_t> getCNOT() {
+    static constexpr vector<CFP_t> getS() { return {ONE, ZERO, ZERO, IMAG}; }
+    static constexpr vector<CFP_t> getT() { return {ONE, ZERO, ZERO, IMAG}; }
+    static constexpr vector<CFP_t> getCNOT() {
         return {ONE,  ZERO, ZERO, ZERO, ZERO, ONE,  ZERO, ZERO,
                 ZERO, ZERO, ZERO, ONE,  ZERO, ZERO, ONE,  ZERO};
     }
-    static constexpr std::vector<CFP_t> getSWAP() {
+    static constexpr vector<CFP_t> getSWAP() {
         return {ONE,  ZERO, ZERO, ZERO, ZERO, ZERO, ONE,  ZERO,
                 ZERO, ONE,  ZERO, ZERO, ZERO, ZERO, ZERO, ONE};
     }
-    static constexpr std::vector<CFP_t> getCZ() {
+    static constexpr vector<CFP_t> getCZ() {
         return {ONE,  ZERO, ZERO, ZERO, ZERO, ONE,  ZERO, ZERO,
                 ZERO, ZERO, ONE,  ZERO, ZERO, ZERO, ZERO, -ONE};
     }
 
-    static constexpr std::vector<CFP_t> getCSWAP() {
+    static constexpr vector<CFP_t> getCSWAP() {
         return {ONE,  ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ONE,
                 ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ONE,  ZERO,
                 ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ONE,  ZERO, ZERO,
@@ -82,7 +97,7 @@ template <class fp_t = double> class StateVector {
                 ZERO, ZERO, ZERO, ONE,  ZERO, ZERO, ZERO, ZERO, ZERO, ZERO,
                 ZERO, ZERO, ZERO, ONE};
     }
-    static constexpr std::vector<CFP_t> getToffoli() {
+    static constexpr vector<CFP_t> getToffoli() {
         return {ONE,  ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ONE,
                 ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ONE,  ZERO,
                 ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ZERO, ONE,  ZERO, ZERO,
@@ -92,94 +107,92 @@ template <class fp_t = double> class StateVector {
                 ZERO, ZERO, ONE,  ZERO};
     }
 
-    static const std::vector<CFP_t> getPhaseShift(fp_t angle) {
+    static const vector<CFP_t> getPhaseShift(fp_t angle) {
         return {ONE, ZERO, ZERO, std::exp(IMAG * angle)};
     }
-    static const std::vector<CFP_t>
-    getPhaseShift(const std::vector<fp_t> &params) {
-        return getPhaseShift(params.front());
+    static const vector<CFP_t> getPhaseShift(const vector<fp_t> &params) {
+        return StateVector::getPhaseShift(params.front());
     }
-    static const std::vector<CFP_t> getRX(fp_t angle) {
+    static const vector<CFP_t> getRX(fp_t angle) {
         const CFP_t c(std::cos(angle / 2), 0);
         const CFP_t js(0, -std::sin(angle / 2));
         return {c, js, js, c};
     }
-    static const std::vector<CFP_t> getRX(const std::vector<fp_t> &params) {
-        return getRX(params.front());
+    static const vector<CFP_t> getRX(const vector<fp_t> &params) {
+        return StateVector::getRX(params.front());
     }
-    static const std::vector<CFP_t> getRY(fp_t angle) {
+    static const vector<CFP_t> getRY(fp_t angle) {
         const CFP_t c(std::cos(angle / 2), 0);
         const CFP_t s(-std::sin(angle / 2), 0);
         return {c, -s, s, c};
     }
-    static const std::vector<CFP_t> getRY(const std::vector<fp_t> &params) {
-        return getRY(params.front());
+    static const vector<CFP_t> getRY(const vector<fp_t> &params) {
+        return StateVector::getRY(params.front());
     }
-    static const std::vector<CFP_t> getRZ(fp_t angle) {
+    static const vector<CFP_t> getRZ(fp_t angle) {
         return {std::exp(-IMAG * (angle / 2)), ZERO, ZERO,
                 std::exp(IMAG * (angle / 2))};
     }
-    static const std::vector<CFP_t> getRZ(const std::vector<fp_t> &params) {
-        return getRZ(params.front());
+    static const vector<CFP_t> getRZ(const vector<fp_t> &params) {
+        return StateVector::getRZ(params.front());
     }
 
-    static const std::vector<CFP_t> getRot(fp_t phi, fp_t theta, fp_t omega) {
+    static const vector<CFP_t> getRot(fp_t phi, fp_t theta, fp_t omega) {
         const CFP_t c{std::cos(theta / 2), 0}, s{std::sin(theta / 2), 0};
         const fp_t p{phi + omega}, m{phi - omega};
-        return std::vector<CFP_t>{
+        return vector<CFP_t>{
             std::exp(-IMAG * (p / 2)) * c, -std::exp(IMAG * (m / 2)) * s,
             std::exp(-IMAG * (m / 2)) * s, std::exp(IMAG * (p / 2)) * c};
     }
-    static const std::vector<CFP_t> getRot(const std::vector<fp_t> &params) {
-        return getRot(params[0], params[1], params[2]);
+    static const vector<CFP_t> getRot(const vector<fp_t> &params) {
+        return StateVector::getRot(params[0], params[1], params[2]);
     }
 
-    static const std::vector<CFP_t> getCRX(fp_t angle) {
+    static const vector<CFP_t> getCRX(fp_t angle) {
         const CFP_t c{std::cos(angle / 2), 0}, js{0, std::sin(-angle / 2)};
         return {ONE,  ZERO, ZERO, ZERO, ZERO, ONE,  ZERO, ZERO,
                 ZERO, ZERO, c,    js,   ZERO, ZERO, js,   c};
     }
-    static const std::vector<CFP_t> getCRX(const std::vector<fp_t> &params) {
-        return getCRX(params.front());
+    static const vector<CFP_t> getCRX(const vector<fp_t> &params) {
+        return StateVector::getCRX(params.front());
     }
-    static const std::vector<CFP_t> getCRY(fp_t angle) {
+    static const vector<CFP_t> getCRY(fp_t angle) {
         const CFP_t c{std::cos(angle / 2), 0}, s{std::sin(angle / 2), 0};
         return {ONE,  ZERO, ZERO, ZERO, ZERO, ONE,  ZERO, ZERO,
                 ZERO, ZERO, c,    -s,   ZERO, ZERO, s,    c};
     }
-    static const std::vector<CFP_t> getCRY(const std::vector<fp_t> &params) {
-        return getCRY(params.front());
+    static const vector<CFP_t> getCRY(const vector<fp_t> &params) {
+        return StateVector::getCRY(params.front());
     }
-    static const std::vector<CFP_t> getCRZ(fp_t angle) {
+    static const vector<CFP_t> getCRZ(fp_t angle) {
         const CFP_t first = std::exp(-IMAG * angle * static_cast<fp_t>(0.5));
         const CFP_t second = std::exp(IMAG * angle * static_cast<fp_t>(0.5));
         return {ONE,  ZERO, ZERO,  ZERO, ZERO, ONE,  ZERO,  ZERO,
                 ZERO, ZERO, first, ZERO, ZERO, ZERO, second};
     }
-    static const std::vector<CFP_t> getCRZ(const std::vector<fp_t> &params) {
-        return getCRZ(params.front());
+    static const vector<CFP_t> getCRZ(const vector<fp_t> &params) {
+        return StateVector::getCRZ(params.front());
     }
 
-    static const std::vector<CFP_t> getCRot(fp_t phi, fp_t theta, fp_t omega) {
+    static const vector<CFP_t> getCRot(fp_t phi, fp_t theta, fp_t omega) {
         const auto rot = getRot(phi, theta, omega);
         return {ONE,  ZERO, ZERO,   ZERO,   ZERO, ONE,  ZERO,   ZERO,
                 ZERO, ZERO, rot[0], rot[1], ZERO, ZERO, rot[2], rot[3]};
     }
-    static const std::vector<CFP_t> getCRot(const std::vector<fp_t> &params) {
-        return getCRot(params[0], params[1], params[2]);
+    static const vector<CFP_t> getCRot(const vector<fp_t> &params) {
+        return StateVector::getCRot(params[0], params[1], params[2]);
     }
 
     // Apply Gates
-    void applyUnitary(const std::vector<CFP_t> &matrix,
+    void applyUnitary(const vector<CFP_t> &matrix,
                       const StateVector<CFP_t> &state,
-                      const std::vector<size_t> &indices,
-                      const std::vector<size_t> &externalIndices,
-                      bool inverse) {
+                      const vector<size_t> &indices,
+                      const vector<size_t> &externalIndices, bool inverse) {
         if (indices.size() != length_)
             throw std::out_of_range(
                 "The given indices do not match the state-vector length.");
 
-        std::vector<CFP_t> v(indices.size());
+        vector<CFP_t> v(indices.size());
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             // Gather
@@ -210,15 +223,15 @@ template <class fp_t = double> class StateVector {
         }
     }
 
-    void applyPauliX(const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse) {
+    void applyPauliX(const vector<size_t> &indices,
+                     const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             std::swap(shiftedState[indices[0]], shiftedState[indices[1]]);
         }
     }
-    void applyPauliY(const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse) {
+    void applyPauliY(const vector<size_t> &indices,
+                     const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             CFP_t v0 = shiftedState[indices[0]];
@@ -226,17 +239,16 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[1]] = IMAG * v0;
         }
     }
-    void applyPauliZ(const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse) {
+    void applyPauliZ(const vector<size_t> &indices,
+                     const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             shiftedState[indices[1]] *= -1;
         }
     }
 
-    void applyHadamard(const std::vector<size_t> &indices,
-                       const std::vector<size_t> &externalIndices,
-                       bool inverse) {
+    void applyHadamard(const vector<size_t> &indices,
+                       const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
 
@@ -248,8 +260,8 @@ template <class fp_t = double> class StateVector {
         }
     }
 
-    void applyS(const std::vector<size_t> &indices,
-                const std::vector<size_t> &externalIndices, bool inverse) {
+    void applyS(const vector<size_t> &indices,
+                const vector<size_t> &externalIndices, bool inverse) {
         const CFP_t shift = (inverse == true) ? -IMAG : IMAG;
 
         for (const size_t &externalIndex : externalIndices) {
@@ -258,8 +270,8 @@ template <class fp_t = double> class StateVector {
         }
     }
 
-    void applyT(const std::vector<size_t> &indices,
-                const std::vector<size_t> &externalIndices, bool inverse) {
+    void applyT(const vector<size_t> &indices,
+                const vector<size_t> &externalIndices, bool inverse) {
 
         const CFP_t shift = (inverse == true)
                                 ? std::conj(std::exp(CFP_t{0, M_PI / 4}))
@@ -271,8 +283,8 @@ template <class fp_t = double> class StateVector {
         }
     }
 
-    void applyRX(const std::vector<size_t> &indices,
-                 const std::vector<size_t> &externalIndices, bool inverse,
+    void applyRX(const vector<size_t> &indices,
+                 const vector<size_t> &externalIndices, bool inverse,
                  fp_t angle) {
         const CFP_t c(std::cos(angle / 2), 0);
 
@@ -287,9 +299,14 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[1]] = js * v0 + c * v1;
         }
     }
+    void applyRX(const vector<size_t> &indices,
+                 const vector<size_t> &externalIndices, bool inverse,
+                 const vector<fp_t> &params) {
+        return StateVector::applyRX(indices, externalIndices, inverse, params[0]);
+    }
 
-    void applyRY(const std::vector<size_t> &indices,
-                 const std::vector<size_t> &externalIndices, bool inverse,
+    void applyRY(const vector<size_t> &indices,
+                 const vector<size_t> &externalIndices, bool inverse,
                  fp_t angle) {
         const CFP_t c(std::cos(angle / 2), 0);
         const CFP_t s = (inverse == true) ? CFP_t{-std::sin(angle / 2), 0}
@@ -303,9 +320,14 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[1]] = s * v0 + c * v1;
         }
     }
+    void applyRY(const vector<size_t> &indices,
+                 const vector<size_t> &externalIndices, bool inverse,
+                 const vector<fp_t> &params) {
+        return StateVector::applyRY(indices, externalIndices, inverse, params[0]);
+    }
 
-    void applyRZ(const std::vector<size_t> &indices,
-                 const std::vector<size_t> &externalIndices, bool inverse,
+    void applyRZ(const vector<size_t> &indices,
+                 const vector<size_t> &externalIndices, bool inverse,
                  fp_t angle) {
 
         const CFP_t first = std::exp(CFP_t{0, -angle / 2});
@@ -319,9 +341,15 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[1]] *= shift2;
         }
     }
-    void applyPhaseShift(const std::vector<size_t> &indices,
-                         const std::vector<size_t> &externalIndices,
-                         bool inverse, fp_t angle) {
+    void applyRZ(const vector<size_t> &indices,
+                 const vector<size_t> &externalIndices, bool inverse,
+                 const vector<fp_t> &params) {
+        return StateVector::applyRZ(indices, externalIndices, inverse, params[0]);
+    }
+
+    void applyPhaseShift(const vector<size_t> &indices,
+                         const vector<size_t> &externalIndices, bool inverse,
+                         fp_t angle) {
         const CFP_t s = (inverse == true) ? conj(std::exp(CFP_t{0, angle}))
                                           : std::exp(CFP_t{0, angle});
 
@@ -330,9 +358,15 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[1]] *= s;
         }
     }
-    void applyRot(const std::vector<size_t> &indices,
-                  const std::vector<size_t> &externalIndices, bool inverse,
-                  fp_t phi, fp_t theta, fp_t omega) {
+    void applyPhaseShift(const vector<size_t> &indices,
+                         const vector<size_t> &externalIndices, bool inverse,
+                         const vector<fp_t> &params) {
+        return StateVector::applyPhaseShift(indices, externalIndices, inverse, params[0]);
+    }
+
+    void applyRot(const vector<size_t> &indices,
+                  const vector<size_t> &externalIndices, bool inverse, fp_t phi,
+                  fp_t theta, fp_t omega) {
         const auto rot = getRot(phi, theta, omega);
 
         const CFP_t t1 = (inverse == true) ? conj(rot[0]) : rot[0];
@@ -348,29 +382,36 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[1]] = t3 * v0 + t4 * v1;
         }
     }
-    void applyCNOT(const std::vector<size_t> &indices,
-                   const std::vector<size_t> &externalIndices, bool inverse) {
+    void applyRot(const vector<size_t> &indices,
+                  const vector<size_t> &externalIndices, bool inverse,
+                  const vector<fp_t> &params) {
+        return StateVector::applyRot(indices, externalIndices, inverse, params[0], params[1],
+                        params[2]);
+    }
+
+    void applyCNOT(const vector<size_t> &indices,
+                   const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             std::swap(shiftedState[indices[2]], shiftedState[indices[3]]);
         }
     }
-    void applySWAP(const std::vector<size_t> &indices,
-                   const std::vector<size_t> &externalIndices, bool inverse) {
+    void applySWAP(const vector<size_t> &indices,
+                   const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             swap(shiftedState[indices[1]], shiftedState[indices[2]]);
         }
     }
-    void applyCZ(const std::vector<size_t> &indices,
-                 const std::vector<size_t> &externalIndices, bool inverse) {
+    void applyCZ(const vector<size_t> &indices,
+                 const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             shiftedState[indices[3]] *= -1;
         }
     }
-    void applyCRX(const std::vector<size_t> &indices,
-                  const std::vector<size_t> &externalIndices, bool inverse,
+    void applyCRX(const vector<size_t> &indices,
+                  const vector<size_t> &externalIndices, bool inverse,
                   fp_t angle) {
         const CFP_t c{std::cos(angle / 2), 0};
         const CFP_t js = (inverse == true) ? CFP_t{0, -std::sin(-angle / 2)}
@@ -384,8 +425,14 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[3]] = js * v0 + c * v1;
         }
     }
-    void applyCRY(const std::vector<size_t> &indices,
-                  const std::vector<size_t> &externalIndices, bool inverse,
+    void applyCRX(const vector<size_t> &indices,
+                  const vector<size_t> &externalIndices, bool inverse,
+                  const vector<fp_t> &params) {
+        return StateVector::applyCRX(indices, externalIndices, inverse, params[0]);
+    }
+
+    void applyCRY(const vector<size_t> &indices,
+                  const vector<size_t> &externalIndices, bool inverse,
                   fp_t angle) {
         const CFP_t c{std::cos(angle / 2), 0};
         const CFP_t s = (inverse == true) ? CFP_t{-std::sin(angle / 2), 0}
@@ -399,8 +446,14 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[3]] = s * v0 + c * v1;
         }
     }
-    void applyCRZ(const std::vector<size_t> &indices,
-                  const std::vector<size_t> &externalIndices, bool inverse,
+    void applyCRY(const vector<size_t> &indices,
+                  const vector<size_t> &externalIndices, bool inverse,
+                  const vector<fp_t> &params) {
+        return StateVector::applyCRY(indices, externalIndices, inverse, params[0]);
+    }
+
+    void applyCRZ(const vector<size_t> &indices,
+                  const vector<size_t> &externalIndices, bool inverse,
                   fp_t angle) {
         const CFP_t m00 = (inverse == true)
                               ? std::conj(std::exp(CFP_t{0, -angle / 2}))
@@ -414,8 +467,14 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[3]] *= m11;
         }
     }
-    void applyCRot(const std::vector<size_t> &indices,
-                   const std::vector<size_t> &externalIndices, bool inverse,
+    void applyCRZ(const vector<size_t> &indices,
+                  const vector<size_t> &externalIndices, bool inverse,
+                  const vector<fp_t> &params) {
+        return StateVector::applyCRZ(indices, externalIndices, inverse, params[0]);
+    }
+
+    void applyCRot(const vector<size_t> &indices,
+                   const vector<size_t> &externalIndices, bool inverse,
                    fp_t phi, fp_t theta, fp_t omega) {
         const auto rot = getRot(phi, theta, omega);
 
@@ -432,17 +491,21 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[3]] = t3 * v0 + t4 * v1;
         }
     }
-    void applyToffoli(const std::vector<size_t> &indices,
-                      const std::vector<size_t> &externalIndices,
-                      bool inverse) {
+    void applyCRot(const vector<size_t> &indices,
+                   const vector<size_t> &externalIndices, bool inverse,
+                   const vector<fp_t> &params) {
+        return StateVector::applyCRot(indices, externalIndices, inverse, params[0], params[1], params[2]);
+    }
+    void applyToffoli(const vector<size_t> &indices,
+                      const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             std::swap(shiftedState[indices[6]], shiftedState[indices[7]]);
         }
     }
 
-    void applyCSWAP(const std::vector<size_t> &indices,
-                    const std::vector<size_t> &externalIndices, bool inverse) {
+    void applyCSWAP(const vector<size_t> &indices,
+                    const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             std::swap(shiftedState[indices[5]], shiftedState[indices[6]]);
