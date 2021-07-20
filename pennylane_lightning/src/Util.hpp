@@ -42,7 +42,7 @@ namespace Util {
 inline size_t exp2(const size_t &n) { return static_cast<size_t>(1) << n; }
 
 constexpr inline size_t fast_log2(size_t value) {
-#ifdef _WIN32
+#ifndef _WIN32
     return static_cast<size_t>(std::numeric_limits<size_t>::digits -
                                __builtin_clzll((value)) - 1ULL);
 #else
