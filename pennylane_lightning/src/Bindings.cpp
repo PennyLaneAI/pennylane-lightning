@@ -11,40 +11,37 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "Apply.hpp"
+#include "StateVector.hpp"
 #include "pybind11/complex.h"
 #include "pybind11/numpy.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-using Pennylane::CplxType;
 using Pennylane::StateVector;
+using std::complex;
 using std::string;
 using std::vector;
 
-template <class Precision = double>
-static StateVector
-create(const pybind11::array_t<std::complex<Precision>> *numpyArray) {
+template <class T = double>
+static StateVector<T> create(const pybind11::array_t<complex<T>> *numpyArray) {
     pybind11::buffer_info numpyArrayInfo = numpyArray->request();
 
     if (numpyArrayInfo.ndim != 1)
         throw std::invalid_argument(
             "NumPy array must be a 1-dimensional array");
-    if (numpyArrayInfo.itemsize != sizeof(std::complex<Precision>))
+    if (numpyArrayInfo.itemsize != sizeof(complex<T>))
         throw std::invalid_argument(
             "NumPy array must be of type np.complex64 or np.complex128");
-    const std::complex<Precision> *data_ptr =
-        static_cast<std::complex<Precision> *>(buf1.ptr);
-    return StateVector<Precision>({data_ptr, data_ptr + buf1.shape[0]});
+    complex<T> *data_ptr = static_cast<complex<T> *>(numpyArrayInfo.ptr);
+    return StateVector<T>({data_ptr, numpyArrayInfo.shape[0]});
 }
 
-template <class Precision = double>
-void apply(pybind11::array_t<std::complex<Precision>> &stateNumpyArray,
-           vector<string> ops, vector<vector<unsigned int>> wires,
-           vector<vector<Precision>> params, vector<bool> inverse,
-           const unsigned int qubits) {
-    StateVector<Precision> state = create(&stateNumpyArray);
-    Pennylane::apply(state, ops, wires, params, inverse, qubits);
+template <class T = double>
+void apply(pybind11::array_t<complex<T>> &stateNumpyArray, const vector<string> &ops,
+           const vector<vector<size_t>> &wires, const vector<bool> &inverse,
+           const vector<vector<T>> &params ) {
+    auto state = create<T>(&stateNumpyArray);
+    state.applyOperations(ops, wires, inverse, params);
 }
 
 PYBIND11_MODULE(lightning_qubit_ops, m) {
