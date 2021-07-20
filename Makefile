@@ -54,7 +54,7 @@ clean-docs:
 	make -C doc clean
 
 test:
-	$(PYTHON) $(TESTRUNNER)
+	$(PYTHON) -I $(TESTRUNNER)
 
 coverage:
 	@echo "Generating coverage report..."
