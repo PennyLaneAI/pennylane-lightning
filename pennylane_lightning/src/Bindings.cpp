@@ -37,9 +37,9 @@ static StateVector<T> create(const pybind11::array_t<complex<T>> *numpyArray) {
 }
 
 template <class T = double>
-void apply(pybind11::array_t<complex<T>> &stateNumpyArray, const vector<string> &ops,
-           const vector<vector<size_t>> &wires, const vector<bool> &inverse,
-           const vector<vector<T>> &params ) {
+void apply(pybind11::array_t<complex<T>> &stateNumpyArray,
+           const vector<string> &ops, const vector<vector<size_t>> &wires,
+           const vector<bool> &inverse, const vector<vector<T>> &params) {
     auto state = create<T>(&stateNumpyArray);
     state.applyOperations(ops, wires, inverse, params);
 }
