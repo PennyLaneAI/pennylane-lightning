@@ -47,7 +47,7 @@ constexpr inline size_t fast_log2(size_t value) {
                                __builtin_clzll((value)) - 1ULL);
 #else
     return static_cast<size_t>(std::numeric_limits<size_t>::digits -
-                               __lzcnt64((value)) - 1ULL);
+                               _BitScanReverse64((value)) - 1ULL);
 
 #endif
 }
