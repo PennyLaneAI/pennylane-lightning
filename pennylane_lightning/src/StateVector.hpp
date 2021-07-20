@@ -65,10 +65,9 @@ template <class fp_t = double> class StateVector {
     const size_t num_qubits_;
 
     vector<size_t>
-    getIndicesAfterExclusion(const vector<size_t> &indicesToExclude,
-                             size_t qubits) {
+    getIndicesAfterExclusion(const vector<size_t> &indicesToExclude) {
         std::set<size_t> indices;
-        for (size_t i = 0; i < qubits; i++) {
+        for (size_t i = 0; i < num_qubits_; i++) {
             indices.emplace(i);
         }
         for (const size_t &excludedIndex : indicesToExclude) {
@@ -77,13 +76,13 @@ template <class fp_t = double> class StateVector {
         return {indices.begin(), indices.end()};
     }
 
-    vector<size_t> generateBitPatterns(const vector<size_t> &qubitIndices,
-                                       size_t qubits) {
+    vector<size_t> generateBitPatterns(const vector<size_t> &qubitIndices) {
         vector<size_t> indices;
         indices.reserve(Util::exp2(qubitIndices.size()));
         indices.emplace_back(0);
         for (int i = qubitIndices.size() - 1; i >= 0; i--) {
-            size_t value = Util::maxDecimalForQubit(qubitIndices[i], qubits);
+            size_t value =
+                Util::maxDecimalForQubit(qubitIndices[i], num_qubits_);
             size_t currentSize = indices.size();
             for (size_t j = 0; j < currentSize; j++) {
                 indices.emplace_back(indices[j] + value);
@@ -137,8 +136,16 @@ template <class fp_t = double> class StateVector {
     CFP_t *getData() { return arr_; }
     std::size_t getLength() { return length_; }
 
-    void apply(const string &opName, const vector<size_t> &wires,
-               const vector<fp_t> &params, bool inverse) {
+    /**
+     * @brief Apply a single gate to the state-vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Optional parameter list for parametric gates.
+     */
+    void applyOperation(const string &opName, const vector<size_t> &wires,
+                        bool inverse = false, const vector<fp_t> &params = {}) {
         const auto gate = gates_.at(opName);
         if (gate_wires_.at(opName) != wires.size())
             throw std::invalid_argument(
@@ -147,61 +154,36 @@ template <class fp_t = double> class StateVector {
                 std::to_string(wires.size()) + " were supplied");
 
         // assume copy elision
-        const vector<size_t> internalIndices =
-            generateBitPatterns(wires, num_qubits_);
-        const vector<size_t> externalWires =
-            getIndicesAfterExclusion(wires, num_qubits_);
+        const vector<size_t> internalIndices = generateBitPatterns(wires);
+        const vector<size_t> externalWires = getIndicesAfterExclusion(wires);
         const vector<size_t> externalIndices =
-            generateBitPatterns(externalWires, num_qubits_);
+            generateBitPatterns(externalWires);
 
-        // To be relplaced with variadic function; additionally, SFINAE may
-        // assist
-        /*if (params.size() > 0)
-            applyParametric(opName, internalIndices, externalIndices, inverse,
-                            params);
-        else
-            applyNonParametric(opName, internalIndices, externalIndices,
-                               inverse);*/
+        gate(internalIndices, externalIndices, inverse, params);
     }
-    /*
-        void apply(const string &opName, const vector<size_t> &wires,
-                   const vector<fp_t> &params, bool inverse) {
-            if (num_qubits_ != wires.size())
-                throw std::invalid_argument(
-                    string("The gate of type ") + opName + " requires " +
-                    std::to_string(num_qubits_) + " wires, but " +
-                    std::to_string(wires.size()) + " were supplied");
 
-            // assume copy elision
-            const vector<size_t> internalIndices =
-                generateBitPatterns(wires, num_qubits_);
-            const vector<size_t> externalWires =
-                getIndicesAfterExclusion(wires, num_qubits_);
-            const vector<size_t> externalIndices =
-                generateBitPatterns(externalWires, num_qubits_);
+    /**
+     * @brief Apply multiple gates to the state-vector.
+     *
+     * @param ops Vector of gate names to be applied in order.
+     * @param wires Vector of wires on which to apply index-matched gate name.
+     * @param inverse Indicates whether gate at matched index is to be inverted.
+     * @param params Optional parameter data for index matched gates.
+     */
+    void applyOperations(const vector<string> &ops,
+                         const vector<vector<size_t>> &wires,
+                         const vector<bool> &inverse,
+                         const vector<vector<fp_t>> &params = {{}}) {
+        const size_t numOperations = ops.size();
+        if (numOperations != wires.size() || numOperations != params.size())
+            throw std::invalid_argument(
+                "Invalid arguments: number of operations, wires, and "
+                "parameters must all be equal");
 
-            // To be relplaced with variadic function; additionally, SFINAE may
-            // assist
-            if (params.size() > 0)
-                applyParametric(opName, internalIndices, externalIndices,
-       inverse, params); else applyNonParametric(opName, internalIndices,
-       externalIndices, inverse);
+        for (size_t i = 0; i < numOperations; i++) {
+            applyOperation(ops[i], wires[i], inverse[i], params[i]);
         }
-
-        void applyNonParametric(const string &opName,
-                                const vector<size_t> &internalIndices,
-                                const vector<size_t> &externalIndices,
-                                bool inverse) {
-            const auto fptr = nonparam_gates_.at(opName);
-            fptr(internalIndices, externalIndices, inverse);
-        }
-        void applyParametric(const string &opName,
-                             const vector<size_t> &internalIndices,
-                             const vector<size_t> &externalIndices, bool
-       inverse, const vector<fp_t> &params) { const auto fptr =
-       param_gates_.at(opName); fptr(internalIndices, externalIndices, inverse,
-       params);
-        }*/
+    }
 
     static constexpr vector<CFP_t> getPauliX() {
         return {ZERO, ONE, ONE, ZERO};
