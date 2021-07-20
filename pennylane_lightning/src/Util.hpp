@@ -22,9 +22,12 @@
 #include <complex>
 #include <cstddef>
 #include <memory>
+#include <numeric>
 #include <stdexcept>
 
 namespace Pennylane {
+
+namespace Util {
 
 /**
  * Calculates 2^n for some integer n > 0 using bitshifts.
@@ -32,7 +35,12 @@ namespace Pennylane {
  * @param n the exponent
  * @return value of 2^n
  */
-inline size_t exp2(const unsigned int &n) { return (size_t)1 << n; }
+inline size_t exp2(const size_t &n) { return static_cast<size_t>(1) << n; }
+
+constexpr inline size_t fast_log2(size_t value) {
+    return static_cast<size_t>(std::numeric_limits<size_t>::digits -
+                               __builtin_clzll((value)) - 1ULL);
+}
 
 /**
  * Calculates the decimal value for a qubit, assuming a big-endian convention.
@@ -41,8 +49,7 @@ inline size_t exp2(const unsigned int &n) { return (size_t)1 << n; }
  * @param qubits the number of qubits in the circuit
  * @return decimal value for the qubit at specified index
  */
-inline size_t maxDecimalForQubit(const unsigned int qubitIndex,
-                                 const unsigned int qubits) {
+inline size_t maxDecimalForQubit(size_t qubitIndex, size_t qubits) {
     assert(qubitIndex < qubits);
     return exp2(qubits - qubitIndex - 1);
 }
@@ -65,6 +72,7 @@ inline static constexpr DataPrecision IMAG() {
     return std::complex<DataPrecision>{0, 1};
 }
 
+} // namespace Util
 } // namespace Pennylane
 
 // Helper similar to std::make_unique from c++14
@@ -76,6 +84,7 @@ std::unique_ptr<T> make_unique(Args &&...args) {
 // Exception for functions that aren't implemented
 class NotImplementedException : public std::logic_error {
   public:
-    NotImplementedException()
-        : std::logic_error("Function is not implemented."){};
+    NotImplementedException(std::string fname = "")
+        : std::logic_error(std::string("Function is not implemented. ") +
+                           fname){};
 };
