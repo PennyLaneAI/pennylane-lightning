@@ -25,7 +25,6 @@
 
 #include "StateVector.hpp"
 #include "Util.hpp"
-#include "typedefs.hpp"
 
 namespace {
 using namespace Pennylane;
