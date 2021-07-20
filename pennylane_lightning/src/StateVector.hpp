@@ -448,7 +448,6 @@ template <class fp_t = double> class StateVector {
     void applyRZ(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
                  fp_t angle) {
-
         const CFP_t first = std::exp(CFP_t{0, -angle / 2});
         const CFP_t second = std::exp(CFP_t{0, angle / 2});
         const CFP_t shift1 = (inverse == true) ? std::conj(first) : first;
