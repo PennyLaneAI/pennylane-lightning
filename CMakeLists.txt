@@ -20,9 +20,8 @@ set_pennylane_lightning_version("${CMAKE_SOURCE_DIR}/pennylane_lightning/_versio
 message(STATUS "pennylane_lightning version ${VERSION_STRING}")
 set(PROJECT_VERSION ${VERSION_STRING})
 
-set(CMAKE_CXX_STANDARD 11) # At least C++11 is required
+set(CMAKE_CXX_STANDARD 17) # At least C++17 is required
 find_package(OpenMP REQUIRED) # find OpenMP
-
 
 if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
@@ -58,10 +57,8 @@ if ("$ENV{USE_OPENBLAS}" OR "${USE_OPENBLAS}")
 	target_compile_options(external_dependency INTERFACE "-DOPENBLAS=1")
 endif()
 
-pybind11_add_module(lightning_qubit_ops "pennylane_lightning/src/Apply.cpp"
-                                        "pennylane_lightning/src/Bindings.cpp"
-                                        "pennylane_lightning/src/Gates.cpp" 
-                                        "pennylane_lightning/src/StateVector.cpp")
+pybind11_add_module(lightning_qubit_ops "pennylane_lightning/src/StateVector.cpp"
+                                        "pennylane_lightning/src/Bindings.cpp")
 target_link_libraries(lightning_qubit_ops PRIVATE external_dependency)
 set_target_properties(lightning_qubit_ops PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
