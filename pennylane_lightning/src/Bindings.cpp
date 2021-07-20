@@ -33,7 +33,8 @@ static StateVector<T> create(const pybind11::array_t<complex<T>> *numpyArray) {
         throw std::invalid_argument(
             "NumPy array must be of type np.complex64 or np.complex128");
     complex<T> *data_ptr = static_cast<complex<T> *>(numpyArrayInfo.ptr);
-    return StateVector<T>({data_ptr, numpyArrayInfo.shape[0]});
+    return StateVector<T>(
+        {data_ptr, static_cast<size_t>(numpyArrayInfo.shape[0])});
 }
 
 template <class T = double>
