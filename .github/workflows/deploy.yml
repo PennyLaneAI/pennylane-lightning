@@ -4,7 +4,7 @@ on:
     types: [published]
 
 env:
-  CIBW_SKIP: "cp27-* cp34-* cp35-* cp36-* *i686 pp* *win32"
+  CIBW_BUILD: 'cp37-* cp38-* cp39-*'
 
   # MacOS specific build settings
 
@@ -18,10 +18,8 @@ env:
     pip install numpy==1.19.5 scipy pybind11
 
   # Testing of built wheels
-
   CIBW_TEST_REQUIRES: numpy scipy pytest pytest-cov pytest-mock flaky
 
-  # Note: breaking up tests so that no test cases hang on Windows, to be reverted
   CIBW_TEST_COMMAND: |
     pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
