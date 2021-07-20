@@ -25,6 +25,10 @@
 #include <memory>
 #include <stdexcept>
 
+#ifdef _WIN32
+#include <intrin.h>
+#endif
+
 namespace Pennylane {
 
 namespace Util {
@@ -38,8 +42,14 @@ namespace Util {
 inline size_t exp2(const size_t &n) { return static_cast<size_t>(1) << n; }
 
 constexpr inline size_t fast_log2(size_t value) {
+#ifdef _WIN32
     return static_cast<size_t>(std::numeric_limits<size_t>::digits -
                                __builtin_clzll((value)) - 1ULL);
+#else
+    return static_cast<size_t>(std::numeric_limits<size_t>::digits -
+                               __lzcnt64((value)) - 1ULL);
+
+#endif
 }
 
 /**
