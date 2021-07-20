@@ -25,7 +25,7 @@
 #include <memory>
 #include <stdexcept>
 
-#ifdef _WIN32
+#ifdef _WIN64
 #include <intrin.h>
 #endif
 
@@ -41,15 +41,8 @@ namespace Util {
  */
 inline size_t exp2(const size_t &n) { return static_cast<size_t>(1) << n; }
 
-constexpr inline size_t fast_log2(size_t value) {
-#ifndef _WIN32
-    return static_cast<size_t>(std::numeric_limits<size_t>::digits -
-                               __builtin_clzll((value)) - 1ULL);
-#else
-    return static_cast<size_t>(std::numeric_limits<size_t>::digits -
-                               _BitScanReverse64((value)) - 1ULL);
-
-#endif
+constexpr inline size_t log2(size_t value) {
+    return std::log2(value);
 }
 
 /**
