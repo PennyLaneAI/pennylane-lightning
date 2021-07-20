@@ -21,8 +21,8 @@
 #include <cmath>
 #include <complex>
 #include <cstddef>
+#include <limits>
 #include <memory>
-#include <numeric>
 #include <stdexcept>
 
 namespace Pennylane {
