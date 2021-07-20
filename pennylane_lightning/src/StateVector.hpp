@@ -21,11 +21,19 @@
 #include <cmath>
 #include <complex>
 #include <functional>
+#include <set>
 #include <stdexcept>
 #include <unordered_map>
+#include <utility>
+#include <variant>
 #include <vector>
 
+#include "Util.hpp"
+
 namespace {
+using namespace std::placeholders;
+
+using std::size_t;
 using std::string;
 using std::vector;
 }; // namespace
@@ -33,55 +41,167 @@ using std::vector;
 namespace Pennylane {
 
 template <class fp_t = double> class StateVector {
+  private:
     using CFP_t = std::complex<fp_t>;
 
-    using NPFunc = void (StateVector::*)(const vector<size_t> &,
-                                         const vector<size_t> &, bool);
-    using PFunc = void (StateVector::*)(const vector<size_t> &,
-                                        const vector<size_t> &, bool,
-                                        const vector<fp_t> &);
+    using Func =
+        std::function<void(const vector<size_t> &, const vector<size_t> &, bool,
+                           const vector<fp_t> &)>;
 
-    using NonParamMap = std::unordered_map<string, NPFunc>;
-    using ParamMap = std::unordered_map<string, PFunc>;
+    using FMap = std::unordered_map<string, Func>;
 
-    static constexpr CFP_t ONE{1, 0};
-    static constexpr CFP_t ZERO{0, 0};
-    static constexpr CFP_t IMAG{0, 1};
-    static constexpr CFP_t SQRT2{std::sqrt(2), 0};
-    static constexpr CFP_t INVSQRT2{1 / std::sqrt(2), 0};
+    static constexpr CFP_t ONE = {1, 0};
+    static constexpr CFP_t ZERO = {0, 0};
+    static constexpr CFP_t IMAG = {0, 1};
+    inline static const CFP_t SQRT2 = {static_cast<fp_t>(std::sqrt(2)), 0};
+    inline static const CFP_t INVSQRT2 = {static_cast<fp_t>(1 / std::sqrt(2)),
+                                          0};
 
-    const NonParamMap nonparam_gates_;
-    const ParamMap param_gates_;
+    const FMap gates_;
+    const std::unordered_map<string, size_t> gate_wires_;
 
     CFP_t *const arr_;
-    const std::size_t length_;
+    const size_t length_;
+    const size_t num_qubits_;
+
+    vector<size_t>
+    getIndicesAfterExclusion(const vector<size_t> &indicesToExclude,
+                             size_t qubits) {
+        std::set<size_t> indices;
+        for (size_t i = 0; i < qubits; i++) {
+            indices.emplace(i);
+        }
+        for (const size_t &excludedIndex : indicesToExclude) {
+            indices.erase(excludedIndex);
+        }
+        return {indices.begin(), indices.end()};
+    }
+
+    vector<size_t> generateBitPatterns(const vector<size_t> &qubitIndices,
+                                       size_t qubits) {
+        vector<size_t> indices;
+        indices.reserve(Util::exp2(qubitIndices.size()));
+        indices.emplace_back(0);
+        for (int i = qubitIndices.size() - 1; i >= 0; i--) {
+            size_t value = Util::maxDecimalForQubit(qubitIndices[i], qubits);
+            size_t currentSize = indices.size();
+            for (size_t j = 0; j < currentSize; j++) {
+                indices.emplace_back(indices[j] + value);
+            }
+        }
+        return indices;
+    }
 
   public:
-    StateVector() : arr_{nullptr}, length_{0} {};
+    StateVector() : arr_{nullptr}, length_{0}, num_qubits_{0} {};
     StateVector(CFP_t *arr, size_t length)
-        : arr_{arr}, length_{length},
-          nonparam_gates_{{"PauliX", &StateVector<fp_t>::applyPauliX},
-                          {"PauliY", &StateVector<fp_t>::applyPauliY},
-                          {"PauliZ", &StateVector<fp_t>::applyPauliZ},
-                          {"Hadamard", &StateVector<fp_t>::applyHadamard},
-                          {"S", &StateVector<fp_t>::applyS},
-                          {"T", &StateVector<fp_t>::applyT},
-                          {"CNOT", &StateVector<fp_t>::applyCNOT},
-                          {"SWAP", &StateVector<fp_t>::applySWAP},
-                          {"CSWAP", &StateVector<fp_t>::applyCSWAP},
-                          {"CZ", &StateVector<fp_t>::applyCZ},
-                          {"Toffoli", &StateVector<fp_t>::applyToffoli}},
-          param_gates_{{"PhaseShift", &StateVector<fp_t>::applyPhaseShift},
-                       {"RX", &StateVector<fp_t>::applyRX},
-                       {"RY", &StateVector<fp_t>::applyRY},
-                       {"RZ", &StateVector<fp_t>::applyRZ},
-                       {"Rot", &StateVector<fp_t>::applyRot},
-                       {"CRX", &StateVector<fp_t>::applyCRX},
-                       {"CRY", &StateVector<fp_t>::applyCRY},
-                       {"CRZ", &StateVector<fp_t>::applyCRZ},
-                       {"CRot", &StateVector<fp_t>::applyCRot}} {};
+        : arr_{arr}, length_{length}, num_qubits_{Util::fast_log2(length_)},
+          gate_wires_{
+              {"PauliX", 1}, {"PauliY", 1}, {"PauliZ", 1},     {"Hadamard", 1},
+              {"T", 1},      {"S", 1},      {"RX", 1},         {"RY", 1},
+              {"RZ", 1},     {"Rot", 1},    {"PhaseShift", 1}, {"CNOT", 2},
+              {"SWAP", 2},   {"CZ", 2},     {"CRX", 2},        {"CRY", 2},
+              {"CRZ", 2},    {"CRot", 2},   {"CSWAP", 3},      {"Toffoli", 3}},
+          gates_{
+              {"PauliX",
+               std::bind(&StateVector::applyPauliX_, this, _1, _2, _3, _4)},
+              {"PauliY",
+               std::bind(&StateVector::applyPauliY_, this, _1, _2, _3, _4)},
+              {"PauliZ",
+               std::bind(&StateVector::applyPauliZ_, this, _1, _2, _3, _4)},
+              {"Hadamard",
+               std::bind(&StateVector::applyHadamard_, this, _1, _2, _3, _4)},
+              {"S", std::bind(&StateVector::applyS_, this, _1, _2, _3, _4)},
+              {"T", std::bind(&StateVector::applyT_, this, _1, _2, _3, _4)},
+              {"CNOT",
+               std::bind(&StateVector::applyCNOT_, this, _1, _2, _3, _4)},
+              {"SWAP",
+               std::bind(&StateVector::applySWAP_, this, _1, _2, _3, _4)},
+              {"CSWAP",
+               std::bind(&StateVector::applyCSWAP_, this, _1, _2, _3, _4)},
+              {"CZ", std::bind(&StateVector::applyCZ_, this, _1, _2, _3, _4)},
+              {"Toffoli",
+               std::bind(&StateVector::applyToffoli_, this, _1, _2, _3, _4)},
+              {"PhaseShift",
+               std::bind(&StateVector::applyPhaseShift_, this, _1, _2, _3, _4)},
+              {"RX", std::bind(&StateVector::applyRX_, this, _1, _2, _3, _4)},
+              {"RY", std::bind(&StateVector::applyRY_, this, _1, _2, _3, _4)},
+              {"RZ", std::bind(&StateVector::applyRZ_, this, _1, _2, _3, _4)},
+              {"Rot", std::bind(&StateVector::applyRot_, this, _1, _2, _3, _4)},
+              {"CRX", std::bind(&StateVector::applyCRX_, this, _1, _2, _3, _4)},
+              {"CRY", std::bind(&StateVector::applyCRY_, this, _1, _2, _3, _4)},
+              {"CRZ", std::bind(&StateVector::applyCRZ_, this, _1, _2, _3, _4)},
+              {"CRot",
+               std::bind(&StateVector::applyCRot_, this, _1, _2, _3, _4)}} {};
+
     CFP_t *getData() { return arr_; }
     std::size_t getLength() { return length_; }
+
+    void apply(const string &opName, const vector<size_t> &wires,
+               const vector<fp_t> &params, bool inverse) {
+        const auto gate = gates_.at(opName);
+        if (gate_wires_.at(opName) != wires.size())
+            throw std::invalid_argument(
+                string("The gate of type ") + opName + " requires " +
+                std::to_string(gate_wires_.at(opName)) + " wires, but " +
+                std::to_string(wires.size()) + " were supplied");
+
+        // assume copy elision
+        const vector<size_t> internalIndices =
+            generateBitPatterns(wires, num_qubits_);
+        const vector<size_t> externalWires =
+            getIndicesAfterExclusion(wires, num_qubits_);
+        const vector<size_t> externalIndices =
+            generateBitPatterns(externalWires, num_qubits_);
+
+        // To be relplaced with variadic function; additionally, SFINAE may
+        // assist
+        /*if (params.size() > 0)
+            applyParametric(opName, internalIndices, externalIndices, inverse,
+                            params);
+        else
+            applyNonParametric(opName, internalIndices, externalIndices,
+                               inverse);*/
+    }
+    /*
+        void apply(const string &opName, const vector<size_t> &wires,
+                   const vector<fp_t> &params, bool inverse) {
+            if (num_qubits_ != wires.size())
+                throw std::invalid_argument(
+                    string("The gate of type ") + opName + " requires " +
+                    std::to_string(num_qubits_) + " wires, but " +
+                    std::to_string(wires.size()) + " were supplied");
+
+            // assume copy elision
+            const vector<size_t> internalIndices =
+                generateBitPatterns(wires, num_qubits_);
+            const vector<size_t> externalWires =
+                getIndicesAfterExclusion(wires, num_qubits_);
+            const vector<size_t> externalIndices =
+                generateBitPatterns(externalWires, num_qubits_);
+
+            // To be relplaced with variadic function; additionally, SFINAE may
+            // assist
+            if (params.size() > 0)
+                applyParametric(opName, internalIndices, externalIndices,
+       inverse, params); else applyNonParametric(opName, internalIndices,
+       externalIndices, inverse);
+        }
+
+        void applyNonParametric(const string &opName,
+                                const vector<size_t> &internalIndices,
+                                const vector<size_t> &externalIndices,
+                                bool inverse) {
+            const auto fptr = nonparam_gates_.at(opName);
+            fptr(internalIndices, externalIndices, inverse);
+        }
+        void applyParametric(const string &opName,
+                             const vector<size_t> &internalIndices,
+                             const vector<size_t> &externalIndices, bool
+       inverse, const vector<fp_t> &params) { const auto fptr =
+       param_gates_.at(opName); fptr(internalIndices, externalIndices, inverse,
+       params);
+        }*/
 
     static constexpr vector<CFP_t> getPauliX() {
         return {ZERO, ONE, ONE, ZERO};
@@ -252,6 +372,7 @@ template <class fp_t = double> class StateVector {
             std::swap(shiftedState[indices[0]], shiftedState[indices[1]]);
         }
     }
+
     void applyPauliY(const vector<size_t> &indices,
                      const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
@@ -321,12 +442,6 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[1]] = js * v0 + c * v1;
         }
     }
-    void applyRX(const vector<size_t> &indices,
-                 const vector<size_t> &externalIndices, bool inverse,
-                 const vector<fp_t> &params) {
-        return StateVector::applyRX(indices, externalIndices, inverse,
-                                    params[0]);
-    }
 
     void applyRY(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
@@ -342,12 +457,6 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[0]] = c * v0 - s * v1;
             shiftedState[indices[1]] = s * v0 + c * v1;
         }
-    }
-    void applyRY(const vector<size_t> &indices,
-                 const vector<size_t> &externalIndices, bool inverse,
-                 const vector<fp_t> &params) {
-        return StateVector::applyRY(indices, externalIndices, inverse,
-                                    params[0]);
     }
 
     void applyRZ(const vector<size_t> &indices,
@@ -365,12 +474,6 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[1]] *= shift2;
         }
     }
-    void applyRZ(const vector<size_t> &indices,
-                 const vector<size_t> &externalIndices, bool inverse,
-                 const vector<fp_t> &params) {
-        return StateVector::applyRZ(indices, externalIndices, inverse,
-                                    params[0]);
-    }
 
     void applyPhaseShift(const vector<size_t> &indices,
                          const vector<size_t> &externalIndices, bool inverse,
@@ -382,12 +485,6 @@ template <class fp_t = double> class StateVector {
             CFP_t *shiftedState = arr_ + externalIndex;
             shiftedState[indices[1]] *= s;
         }
-    }
-    void applyPhaseShift(const vector<size_t> &indices,
-                         const vector<size_t> &externalIndices, bool inverse,
-                         const vector<fp_t> &params) {
-        return StateVector::applyPhaseShift(indices, externalIndices, inverse,
-                                            params[0]);
     }
 
     void applyRot(const vector<size_t> &indices,
@@ -408,12 +505,6 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[1]] = t3 * v0 + t4 * v1;
         }
     }
-    void applyRot(const vector<size_t> &indices,
-                  const vector<size_t> &externalIndices, bool inverse,
-                  const vector<fp_t> &params) {
-        return StateVector::applyRot(indices, externalIndices, inverse,
-                                     params[0], params[1], params[2]);
-    }
 
     void applyCNOT(const vector<size_t> &indices,
                    const vector<size_t> &externalIndices, bool inverse) {
@@ -422,6 +513,7 @@ template <class fp_t = double> class StateVector {
             std::swap(shiftedState[indices[2]], shiftedState[indices[3]]);
         }
     }
+
     void applySWAP(const vector<size_t> &indices,
                    const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
@@ -451,12 +543,6 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[3]] = js * v0 + c * v1;
         }
     }
-    void applyCRX(const vector<size_t> &indices,
-                  const vector<size_t> &externalIndices, bool inverse,
-                  const vector<fp_t> &params) {
-        return StateVector::applyCRX(indices, externalIndices, inverse,
-                                     params[0]);
-    }
 
     void applyCRY(const vector<size_t> &indices,
                   const vector<size_t> &externalIndices, bool inverse,
@@ -473,12 +559,6 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[3]] = s * v0 + c * v1;
         }
     }
-    void applyCRY(const vector<size_t> &indices,
-                  const vector<size_t> &externalIndices, bool inverse,
-                  const vector<fp_t> &params) {
-        return StateVector::applyCRY(indices, externalIndices, inverse,
-                                     params[0]);
-    }
 
     void applyCRZ(const vector<size_t> &indices,
                   const vector<size_t> &externalIndices, bool inverse,
@@ -494,12 +574,6 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[2]] *= m00;
             shiftedState[indices[3]] *= m11;
         }
-    }
-    void applyCRZ(const vector<size_t> &indices,
-                  const vector<size_t> &externalIndices, bool inverse,
-                  const vector<fp_t> &params) {
-        return StateVector::applyCRZ(indices, externalIndices, inverse,
-                                     params[0]);
     }
 
     void applyCRot(const vector<size_t> &indices,
@@ -520,12 +594,7 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[3]] = t3 * v0 + t4 * v1;
         }
     }
-    void applyCRot(const vector<size_t> &indices,
-                   const vector<size_t> &externalIndices, bool inverse,
-                   const vector<fp_t> &params) {
-        return StateVector::applyCRot(indices, externalIndices, inverse,
-                                      params[0], params[1], params[2]);
-    }
+
     void applyToffoli(const vector<size_t> &indices,
                       const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
@@ -540,6 +609,113 @@ template <class fp_t = double> class StateVector {
             CFP_t *shiftedState = arr_ + externalIndex;
             std::swap(shiftedState[indices[5]], shiftedState[indices[6]]);
         }
+    }
+
+    //***********************************************************************//
+    //  Internal utility functions for opName dispatch use only.
+    //***********************************************************************//
+  private:
+    inline void applyPauliX_(const vector<size_t> &indices,
+                             const vector<size_t> &externalIndices,
+                             bool inverse, const vector<fp_t> &params) {
+        applyPauliX(indices, externalIndices, inverse);
+    }
+    inline void applyPauliY_(const vector<size_t> &indices,
+                             const vector<size_t> &externalIndices,
+                             bool inverse, const vector<fp_t> &params) {
+        applyPauliY(indices, externalIndices, inverse);
+    }
+    inline void applyPauliZ_(const vector<size_t> &indices,
+                             const vector<size_t> &externalIndices,
+                             bool inverse, const vector<fp_t> &params) {
+        applyPauliZ(indices, externalIndices, inverse);
+    }
+    inline void applyHadamard_(const vector<size_t> &indices,
+                               const vector<size_t> &externalIndices,
+                               bool inverse, const vector<fp_t> &params) {
+        applyHadamard(indices, externalIndices, inverse);
+    }
+    inline void applyS_(const vector<size_t> &indices,
+                        const vector<size_t> &externalIndices, bool inverse,
+                        const vector<fp_t> &params) {
+        applyS(indices, externalIndices, inverse);
+    }
+    inline void applyT_(const vector<size_t> &indices,
+                        const vector<size_t> &externalIndices, bool inverse,
+                        const vector<fp_t> &params) {
+        applyT(indices, externalIndices, inverse);
+    }
+    inline void applyRX_(const vector<size_t> &indices,
+                         const vector<size_t> &externalIndices, bool inverse,
+                         const vector<fp_t> &params) {
+        applyRX(indices, externalIndices, inverse, params[0]);
+    }
+    inline void applyRY_(const vector<size_t> &indices,
+                         const vector<size_t> &externalIndices, bool inverse,
+                         const vector<fp_t> &params) {
+        applyRY(indices, externalIndices, inverse, params[0]);
+    }
+    inline void applyRZ_(const vector<size_t> &indices,
+                         const vector<size_t> &externalIndices, bool inverse,
+                         const vector<fp_t> &params) {
+        applyRZ(indices, externalIndices, inverse, params[0]);
+    }
+    inline void applyPhaseShift_(const vector<size_t> &indices,
+                                 const vector<size_t> &externalIndices,
+                                 bool inverse, const vector<fp_t> &params) {
+        applyPhaseShift(indices, externalIndices, inverse, params[0]);
+    }
+    inline void applyRot_(const vector<size_t> &indices,
+                          const vector<size_t> &externalIndices, bool inverse,
+                          const vector<fp_t> &params) {
+        applyRot(indices, externalIndices, inverse, params[0], params[1],
+                 params[2]);
+    }
+    inline void applyCNOT_(const vector<size_t> &indices,
+                           const vector<size_t> &externalIndices, bool inverse,
+                           const vector<fp_t> &params) {
+        applyCNOT(indices, externalIndices, inverse);
+    }
+    inline void applySWAP_(const vector<size_t> &indices,
+                           const vector<size_t> &externalIndices, bool inverse,
+                           const vector<fp_t> &params) {
+        applySWAP(indices, externalIndices, inverse);
+    }
+    inline void applyCZ_(const vector<size_t> &indices,
+                         const vector<size_t> &externalIndices, bool inverse,
+                         const vector<fp_t> &params) {
+        applyCZ(indices, externalIndices, inverse);
+    }
+    inline void applyCRX_(const vector<size_t> &indices,
+                          const vector<size_t> &externalIndices, bool inverse,
+                          const vector<fp_t> &params) {
+        applyCRX(indices, externalIndices, inverse, params[0]);
+    }
+    inline void applyCRY_(const vector<size_t> &indices,
+                          const vector<size_t> &externalIndices, bool inverse,
+                          const vector<fp_t> &params) {
+        applyCRY(indices, externalIndices, inverse, params[0]);
+    }
+    inline void applyCRZ_(const vector<size_t> &indices,
+                          const vector<size_t> &externalIndices, bool inverse,
+                          const vector<fp_t> &params) {
+        applyCRZ(indices, externalIndices, inverse, params[0]);
+    }
+    inline void applyCRot_(const vector<size_t> &indices,
+                           const vector<size_t> &externalIndices, bool inverse,
+                           const vector<fp_t> &params) {
+        applyCRot(indices, externalIndices, inverse, params[0], params[1],
+                  params[2]);
+    }
+    inline void applyToffoli_(const vector<size_t> &indices,
+                              const vector<size_t> &externalIndices,
+                              bool inverse, const vector<fp_t> &params) {
+        applyToffoli(indices, externalIndices, inverse);
+    }
+    inline void applyCSWAP_(const vector<size_t> &indices,
+                            const vector<size_t> &externalIndices, bool inverse,
+                            const vector<fp_t> &params) {
+        applyCSWAP(indices, externalIndices, inverse);
     }
 };
 
