@@ -148,16 +148,11 @@ if not os.environ.get("MOCK_DOCS", False):
         Extension(
             "lightning_qubit_ops",
             sources=[
-                "pennylane_lightning/src/Apply.cpp",
-                #"pennylane_lightning/src/Gates.cpp",
-                "pennylane_lightning/src/Bindings.cpp",
                 "pennylane_lightning/src/StateVector.cpp",
+                "pennylane_lightning/src/Bindings.cpp",
             ],
             depends=[
-                "pennylane_lightning/src/Apply.hpp",
-                #"pennylane_lightning/src/Gates.hpp",
                 "pennylane_lightning/src/StateVector.hpp",
-                "pennylane_lightning/src/typedefs.hpp",
                 "pennylane_lightning/src/Util.hpp",
             ],
             include_dirs=include_dirs,
