@@ -25,14 +25,13 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include "Util.hpp"
 
 namespace {
 using namespace std::placeholders;
-
+using std::bind;
 using std::size_t;
 using std::string;
 using std::vector;
@@ -92,7 +91,7 @@ template <class fp_t = double> class StateVector {
     }
 
   public:
-    StateVector() : arr_{nullptr}, length_{0}, num_qubits_{0} {};
+    StateVector() : arr_{nullptr}, length_{0}, num_qubits_{0}, gate_wires_{}, gates_{} {};
     StateVector(CFP_t *arr, size_t length)
         : arr_{arr}, length_{length}, num_qubits_{Util::fast_log2(length_)},
           gate_wires_{
@@ -103,35 +102,39 @@ template <class fp_t = double> class StateVector {
               {"CRZ", 2},    {"CRot", 2},   {"CSWAP", 3},      {"Toffoli", 3}},
           gates_{
               {"PauliX",
-               std::bind(&StateVector::applyPauliX_, this, _1, _2, _3, _4)},
+               bind(&StateVector<fp_t>::applyPauliX_, this, _1, _2, _3, _4)},
               {"PauliY",
-               std::bind(&StateVector::applyPauliY_, this, _1, _2, _3, _4)},
+               bind(&StateVector<fp_t>::applyPauliY_, this, _1, _2, _3, _4)},
               {"PauliZ",
-               std::bind(&StateVector::applyPauliZ_, this, _1, _2, _3, _4)},
+               bind(&StateVector<fp_t>::applyPauliZ_, this, _1, _2, _3, _4)},
               {"Hadamard",
-               std::bind(&StateVector::applyHadamard_, this, _1, _2, _3, _4)},
-              {"S", std::bind(&StateVector::applyS_, this, _1, _2, _3, _4)},
-              {"T", std::bind(&StateVector::applyT_, this, _1, _2, _3, _4)},
+               bind(&StateVector<fp_t>::applyHadamard_, this, _1, _2, _3, _4)},
+              {"S", bind(&StateVector<fp_t>::applyS_, this, _1, _2, _3, _4)},
+              {"T", bind(&StateVector<fp_t>::applyT_, this, _1, _2, _3, _4)},
               {"CNOT",
-               std::bind(&StateVector::applyCNOT_, this, _1, _2, _3, _4)},
+               bind(&StateVector<fp_t>::applyCNOT_, this, _1, _2, _3, _4)},
               {"SWAP",
-               std::bind(&StateVector::applySWAP_, this, _1, _2, _3, _4)},
+               bind(&StateVector<fp_t>::applySWAP_, this, _1, _2, _3, _4)},
               {"CSWAP",
-               std::bind(&StateVector::applyCSWAP_, this, _1, _2, _3, _4)},
-              {"CZ", std::bind(&StateVector::applyCZ_, this, _1, _2, _3, _4)},
+               bind(&StateVector<fp_t>::applyCSWAP_, this, _1, _2, _3, _4)},
+              {"CZ", bind(&StateVector<fp_t>::applyCZ_, this, _1, _2, _3, _4)},
               {"Toffoli",
-               std::bind(&StateVector::applyToffoli_, this, _1, _2, _3, _4)},
-              {"PhaseShift",
-               std::bind(&StateVector::applyPhaseShift_, this, _1, _2, _3, _4)},
-              {"RX", std::bind(&StateVector::applyRX_, this, _1, _2, _3, _4)},
-              {"RY", std::bind(&StateVector::applyRY_, this, _1, _2, _3, _4)},
-              {"RZ", std::bind(&StateVector::applyRZ_, this, _1, _2, _3, _4)},
-              {"Rot", std::bind(&StateVector::applyRot_, this, _1, _2, _3, _4)},
-              {"CRX", std::bind(&StateVector::applyCRX_, this, _1, _2, _3, _4)},
-              {"CRY", std::bind(&StateVector::applyCRY_, this, _1, _2, _3, _4)},
-              {"CRZ", std::bind(&StateVector::applyCRZ_, this, _1, _2, _3, _4)},
+               bind(&StateVector<fp_t>::applyToffoli_, this, _1, _2, _3, _4)},
+              {"PhaseShift", bind(&StateVector<fp_t>::applyPhaseShift_, this,
+                                  _1, _2, _3, _4)},
+              {"RX", bind(&StateVector<fp_t>::applyRX_, this, _1, _2, _3, _4)},
+              {"RY", bind(&StateVector<fp_t>::applyRY_, this, _1, _2, _3, _4)},
+              {"RZ", bind(&StateVector<fp_t>::applyRZ_, this, _1, _2, _3, _4)},
+              {"Rot",
+               bind(&StateVector<fp_t>::applyRot_, this, _1, _2, _3, _4)},
+              {"CRX",
+               bind(&StateVector<fp_t>::applyCRX_, this, _1, _2, _3, _4)},
+              {"CRY",
+               bind(&StateVector<fp_t>::applyCRY_, this, _1, _2, _3, _4)},
+              {"CRZ",
+               bind(&StateVector<fp_t>::applyCRZ_, this, _1, _2, _3, _4)},
               {"CRot",
-               std::bind(&StateVector::applyCRot_, this, _1, _2, _3, _4)}} {};
+               bind(&StateVector<fp_t>::applyCRot_, this, _1, _2, _3, _4)}} {};
 
     CFP_t *getData() { return arr_; }
     std::size_t getLength() { return length_; }
