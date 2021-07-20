@@ -94,7 +94,7 @@ template <class fp_t = double> class StateVector {
     StateVector()
         : arr_{nullptr}, length_{0}, num_qubits_{0}, gate_wires_{}, gates_{} {};
     StateVector(CFP_t *arr, size_t length)
-        : arr_{arr}, length_{length}, num_qubits_{Util::fast_log2(length_)},
+        : arr_{arr}, length_{length}, num_qubits_{Util::log2(length_)},
           gate_wires_{
               {"PauliX", 1}, {"PauliY", 1}, {"PauliZ", 1},     {"Hadamard", 1},
               {"T", 1},      {"S", 1},      {"RX", 1},         {"RY", 1},
