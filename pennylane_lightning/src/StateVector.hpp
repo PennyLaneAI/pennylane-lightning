@@ -63,33 +63,6 @@ template <class fp_t = double> class StateVector {
     const size_t length_;
     const size_t num_qubits_;
 
-    vector<size_t>
-    getIndicesAfterExclusion(const vector<size_t> &indicesToExclude) {
-        std::set<size_t> indices;
-        for (size_t i = 0; i < num_qubits_; i++) {
-            indices.emplace(i);
-        }
-        for (const size_t &excludedIndex : indicesToExclude) {
-            indices.erase(excludedIndex);
-        }
-        return {indices.begin(), indices.end()};
-    }
-
-    vector<size_t> generateBitPatterns(const vector<size_t> &qubitIndices) {
-        vector<size_t> indices;
-        indices.reserve(Util::exp2(qubitIndices.size()));
-        indices.emplace_back(0);
-        for (int i = qubitIndices.size() - 1; i >= 0; i--) {
-            size_t value =
-                Util::maxDecimalForQubit(qubitIndices[i], num_qubits_);
-            size_t currentSize = indices.size();
-            for (size_t j = 0; j < currentSize; j++) {
-                indices.emplace_back(indices[j] + value);
-            }
-        }
-        return indices;
-    }
-
   public:
     StateVector()
         : arr_{nullptr}, length_{0}, num_qubits_{0}, gate_wires_{}, gates_{} {};
@@ -157,7 +130,6 @@ template <class fp_t = double> class StateVector {
                 std::to_string(gate_wires_.at(opName)) + " wires, but " +
                 std::to_string(wires.size()) + " were supplied");
 
-        // assume copy elision
         const vector<size_t> internalIndices = generateBitPatterns(wires);
         const vector<size_t> externalWires = getIndicesAfterExclusion(wires);
         const vector<size_t> externalIndices =
@@ -187,6 +159,45 @@ template <class fp_t = double> class StateVector {
         for (size_t i = 0; i < numOperations; i++) {
             applyOperation(ops[i], wires[i], inverse[i], params[i]);
         }
+    }
+
+    /**
+     * @brief Get indices not participating in operation.
+     *
+     * @param indicesToExclude
+     * @return vector<size_t>
+     */
+    vector<size_t>
+    getIndicesAfterExclusion(const vector<size_t> &indicesToExclude) {
+        std::set<size_t> indices;
+        for (size_t i = 0; i < num_qubits_; i++) {
+            indices.emplace(i);
+        }
+        for (const size_t &excludedIndex : indicesToExclude) {
+            indices.erase(excludedIndex);
+        }
+        return {indices.begin(), indices.end()};
+    }
+
+    /**
+     * @brief Generate bit patterns for applying operations.
+     *
+     * @param qubitIndices Indices of the qubits to apply operations.
+     * @return vector<size_t>
+     */
+    vector<size_t> generateBitPatterns(const vector<size_t> &qubitIndices) {
+        vector<size_t> indices;
+        indices.reserve(Util::exp2(qubitIndices.size()));
+        indices.emplace_back(0);
+        for (int i = qubitIndices.size() - 1; i >= 0; i--) {
+            size_t value =
+                Util::maxDecimalForQubit(qubitIndices[i], num_qubits_);
+            size_t currentSize = indices.size();
+            for (size_t j = 0; j < currentSize; j++) {
+                indices.emplace_back(indices[j] + value);
+            }
+        }
+        return indices;
     }
 
     static constexpr vector<CFP_t> getPauliX() {
