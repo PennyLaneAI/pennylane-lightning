@@ -21,6 +21,7 @@
 #include <cmath>
 #include <complex>
 #include <functional>
+#include <iostream>
 #include <set>
 #include <stdexcept>
 #include <unordered_map>
@@ -135,7 +136,9 @@ template <class fp_t = double> class StateVector {
               {"CRZ",
                bind(&StateVector<fp_t>::applyCRZ_, this, _1, _2, _3, _4)},
               {"CRot",
-               bind(&StateVector<fp_t>::applyCRot_, this, _1, _2, _3, _4)}} {};
+               bind(&StateVector<fp_t>::applyCRot_, this, _1, _2, _3, _4)}} {
+        std::cout << "Created " << sizeof(fp_t) << " float size" << std::endl;
+    };
 
     CFP_t *getData() { return arr_; }
     std::size_t getLength() { return length_; }
@@ -239,7 +242,7 @@ template <class fp_t = double> class StateVector {
         return {ONE, ZERO, ZERO, std::exp(IMAG * angle)};
     }
     static const vector<CFP_t> getPhaseShift(const vector<fp_t> &params) {
-        return StateVector::getPhaseShift(params.front());
+        return StateVector<fp_t>::getPhaseShift(params.front());
     }
     static const vector<CFP_t> getRX(fp_t angle) {
         const CFP_t c(std::cos(angle / 2), 0);
@@ -247,7 +250,7 @@ template <class fp_t = double> class StateVector {
         return {c, js, js, c};
     }
     static const vector<CFP_t> getRX(const vector<fp_t> &params) {
-        return StateVector::getRX(params.front());
+        return StateVector<fp_t>::getRX(params.front());
     }
     static const vector<CFP_t> getRY(fp_t angle) {
         const CFP_t c(std::cos(angle / 2), 0);
@@ -255,25 +258,29 @@ template <class fp_t = double> class StateVector {
         return {c, -s, s, c};
     }
     static const vector<CFP_t> getRY(const vector<fp_t> &params) {
-        return StateVector::getRY(params.front());
+        return StateVector<fp_t>::getRY(params.front());
     }
     static const vector<CFP_t> getRZ(fp_t angle) {
         return {std::exp(-IMAG * (angle / 2)), ZERO, ZERO,
                 std::exp(IMAG * (angle / 2))};
     }
     static const vector<CFP_t> getRZ(const vector<fp_t> &params) {
-        return StateVector::getRZ(params.front());
+        return StateVector<fp_t>::getRZ(params.front());
     }
 
-    static const vector<CFP_t> getRot(fp_t phi, fp_t theta, fp_t omega) {
+    template <typename Param_t = fp_t>
+    static const vector<CFP_t> getRot(Param_t phi, Param_t theta,
+                                      Param_t omega) {
         const CFP_t c{std::cos(theta / 2), 0}, s{std::sin(theta / 2), 0};
         const fp_t p{phi + omega}, m{phi - omega};
         return vector<CFP_t>{
             std::exp(-IMAG * (p / 2)) * c, -std::exp(IMAG * (m / 2)) * s,
             std::exp(-IMAG * (m / 2)) * s, std::exp(IMAG * (p / 2)) * c};
     }
-    static const vector<CFP_t> getRot(const vector<fp_t> &params) {
-        return StateVector::getRot(params[0], params[1], params[2]);
+    template <typename Param_t = fp_t>
+    static const vector<CFP_t> getRot(const vector<Param_t> &params) {
+        return StateVector<fp_t>::getRot<Param_t>(params[0], params[1],
+                                                  params[2]);
     }
 
     static const vector<CFP_t> getCRX(fp_t angle) {
@@ -282,7 +289,7 @@ template <class fp_t = double> class StateVector {
                 ZERO, ZERO, c,    js,   ZERO, ZERO, js,   c};
     }
     static const vector<CFP_t> getCRX(const vector<fp_t> &params) {
-        return StateVector::getCRX(params.front());
+        return StateVector<fp_t>::getCRX(params.front());
     }
     static const vector<CFP_t> getCRY(fp_t angle) {
         const CFP_t c{std::cos(angle / 2), 0}, s{std::sin(angle / 2), 0};
@@ -290,7 +297,7 @@ template <class fp_t = double> class StateVector {
                 ZERO, ZERO, c,    -s,   ZERO, ZERO, s,    c};
     }
     static const vector<CFP_t> getCRY(const vector<fp_t> &params) {
-        return StateVector::getCRY(params.front());
+        return StateVector<fp_t>::getCRY(params.front());
     }
     static const vector<CFP_t> getCRZ(fp_t angle) {
         const CFP_t first = std::exp(-IMAG * angle * static_cast<fp_t>(0.5));
@@ -299,21 +306,20 @@ template <class fp_t = double> class StateVector {
                 ZERO, ZERO, first, ZERO, ZERO, ZERO, second};
     }
     static const vector<CFP_t> getCRZ(const vector<fp_t> &params) {
-        return StateVector::getCRZ(params.front());
+        return StateVector<fp_t>::getCRZ(params.front());
     }
 
     static const vector<CFP_t> getCRot(fp_t phi, fp_t theta, fp_t omega) {
-        const auto rot = getRot(phi, theta, omega);
+        const vector<CFP_t> rot = getRot(phi, theta, omega);
         return {ONE,  ZERO, ZERO,   ZERO,   ZERO, ONE,  ZERO,   ZERO,
                 ZERO, ZERO, rot[0], rot[1], ZERO, ZERO, rot[2], rot[3]};
     }
     static const vector<CFP_t> getCRot(const vector<fp_t> &params) {
-        return StateVector::getCRot(params[0], params[1], params[2]);
+        return StateVector<fp_t>::getCRot(params[0], params[1], params[2]);
     }
 
     // Apply Gates
     void applyUnitary(const vector<CFP_t> &matrix,
-                      const StateVector<CFP_t> &state,
                       const vector<size_t> &indices,
                       const vector<size_t> &externalIndices, bool inverse) {
         if (indices.size() != length_)
@@ -412,9 +418,10 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    template <typename Param_t = fp_t>
     void applyRX(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
-                 fp_t angle) {
+                 Param_t angle) {
         const CFP_t c(std::cos(angle / 2), 0);
 
         const CFP_t js = (inverse == true) ? CFP_t{0, -std::sin(-angle / 2)}
@@ -429,9 +436,10 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    template <typename Param_t = fp_t>
     void applyRY(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
-                 fp_t angle) {
+                 Param_t angle) {
         const CFP_t c(std::cos(angle / 2), 0);
         const CFP_t s = (inverse == true) ? CFP_t{-std::sin(angle / 2), 0}
                                           : CFP_t{std::sin(angle / 2), 0};
@@ -445,9 +453,10 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    template <typename Param_t = fp_t>
     void applyRZ(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
-                 fp_t angle) {
+                 Param_t angle) {
         const CFP_t first = std::exp(CFP_t{0, -angle / 2});
         const CFP_t second = std::exp(CFP_t{0, angle / 2});
         const CFP_t shift1 = (inverse == true) ? std::conj(first) : first;
@@ -460,9 +469,10 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    template <typename Param_t = fp_t>
     void applyPhaseShift(const vector<size_t> &indices,
                          const vector<size_t> &externalIndices, bool inverse,
-                         fp_t angle) {
+                         Param_t angle) {
         const CFP_t s = (inverse == true) ? conj(std::exp(CFP_t{0, angle}))
                                           : std::exp(CFP_t{0, angle});
 
@@ -472,10 +482,11 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    template <typename Param_t = fp_t>
     void applyRot(const vector<size_t> &indices,
-                  const vector<size_t> &externalIndices, bool inverse, fp_t phi,
-                  fp_t theta, fp_t omega) {
-        const auto rot = getRot(phi, theta, omega);
+                  const vector<size_t> &externalIndices, bool inverse,
+                  Param_t phi, Param_t theta, Param_t omega) {
+        const vector<CFP_t> rot = getRot(phi, theta, omega);
 
         const CFP_t t1 = (inverse == true) ? conj(rot[0]) : rot[0];
         const CFP_t t2 = (inverse == true) ? -rot[1] : rot[1];
@@ -513,9 +524,11 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[3]] *= -1;
         }
     }
+
+    template <typename Param_t = fp_t>
     void applyCRX(const vector<size_t> &indices,
                   const vector<size_t> &externalIndices, bool inverse,
-                  fp_t angle) {
+                  Param_t angle) {
         const CFP_t c{std::cos(angle / 2), 0};
         const CFP_t js = (inverse == true) ? CFP_t{0, -std::sin(-angle / 2)}
                                            : CFP_t{0, std::sin(-angle / 2)};
@@ -529,9 +542,10 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    template <typename Param_t = fp_t>
     void applyCRY(const vector<size_t> &indices,
                   const vector<size_t> &externalIndices, bool inverse,
-                  fp_t angle) {
+                  Param_t angle) {
         const CFP_t c{std::cos(angle / 2), 0};
         const CFP_t s = (inverse == true) ? CFP_t{-std::sin(angle / 2), 0}
                                           : CFP_t{std::sin(angle / 2), 0};
@@ -545,9 +559,10 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    template <typename Param_t = fp_t>
     void applyCRZ(const vector<size_t> &indices,
                   const vector<size_t> &externalIndices, bool inverse,
-                  fp_t angle) {
+                  Param_t angle) {
         const CFP_t m00 = (inverse == true)
                               ? std::conj(std::exp(CFP_t{0, -angle / 2}))
                               : std::exp(CFP_t{0, -angle / 2});
@@ -561,9 +576,10 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    template <typename Param_t = fp_t>
     void applyCRot(const vector<size_t> &indices,
                    const vector<size_t> &externalIndices, bool inverse,
-                   fp_t phi, fp_t theta, fp_t omega) {
+                   Param_t phi, Param_t theta, Param_t omega) {
         const auto rot = getRot(phi, theta, omega);
 
         const CFP_t t1 = (inverse == true) ? conj(rot[0]) : rot[0];
