@@ -682,6 +682,40 @@ void Pennylane::CGeneralRotationGate::applyKernel(
 
 // -------------------------------------------------------------------------------------------------------------
 
+const string Pennylane::CPhaseShiftGate::label = "CPhaseShift";
+
+Pennylane::CPhaseShiftGate
+Pennylane::CPhaseShiftGate::create(const vector<double> &parameters) 
+{
+    validateLength(Pennylane::CPhaseShiftGate::label, 
+                parameters, 
+                1);
+    return Pennylane::CPhaseShiftGate(parameters[0]);
+}
+
+Pennylane::CPhaseShiftGate::CPhaseShiftGate(double phi): 
+    shift(std::pow(M_E, CplxType(0, phi))), 
+    matrix{ 1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, shift} { }
+    
+void Pennylane::CPhaseShiftGate::applyKernel(
+    const StateVector &state, 
+    const std::vector<size_t> &indices,
+    const std::vector<size_t> &externalIndices, 
+    bool inverse) 
+{
+    CplxType s = inverse ? conj(shift) : shift; 
+
+    for (const size_t &externalIndex : externalIndices) {
+        CplxType *shiftedState = state.arr + externalIndex;
+        shiftedState[indices[3]] *= s;
+    }       
+}
+
+// -------------------------------------------------------------------------------------------------------------
+
 Pennylane::ThreeQubitGate::ThreeQubitGate() : AbstractGate(3) {}
 
 // -------------------------------------------------------------------------------------------------------------
@@ -771,6 +805,7 @@ createDispatchTable() {
     addToDispatchTable<Pennylane::CRotationYGate>(dispatchTable);
     addToDispatchTable<Pennylane::CRotationZGate>(dispatchTable);
     addToDispatchTable<Pennylane::CGeneralRotationGate>(dispatchTable);
+    addToDispatchTable<Pennylane::CPhaseShiftGate>(dispatchTable);
     addToDispatchTable<Pennylane::ToffoliGate>(dispatchTable);
     addToDispatchTable<Pennylane::CSWAPGate>(dispatchTable);
     return dispatchTable;

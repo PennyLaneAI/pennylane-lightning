@@ -359,8 +359,40 @@ class CGeneralRotationGate : public TwoQubitGate {
                      const std::vector<size_t> &externalIndices, bool inverse);
 };
 
-// Three-qubit gates
+/**
+ * Controlled Phase Shift Gate
+ * 
+ * This 2-qubit gate is:
+ * CPHASE(\phi) = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & e^{i\phi}
+            \end{bmatrix}.
+ * 
+ * It shifts the phase \phi only if it acts on the state (1, 1):
+ * for a=b=1 : (a, b) => (a, e^{i \phi} b),
+ * otherwise : (a, b) => (a, b). 
+ * 
+ */
+class CPhaseShiftGate : public TwoQubitGate {
+  private:
+    const CplxType shift; 
+    const std::vector<CplxType> matrix;
+  
+  public:
+    static const std::string label;
+    static CPhaseShiftGate create(const std::vector<double> &parameters);
+    CPhaseShiftGate(double phi);
+    inline const std::vector<CplxType> &asMatrix() { return matrix; }
+    void applyKernel(const StateVector &state,
+                     const std::vector<size_t> &indices,
+                     const std::vector<size_t> &externalIndices, 
+                     bool inverse);
+};
 
+
+// Three-qubit gates
 class ThreeQubitGate : public AbstractGate {
   protected:
     ThreeQubitGate();
