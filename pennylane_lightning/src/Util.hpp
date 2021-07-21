@@ -25,25 +25,19 @@
 #include <memory>
 #include <stdexcept>
 
-#ifdef _WIN64
-#include <intrin.h>
-#endif
-
 namespace Pennylane {
 
 namespace Util {
 
 /**
- * Calculates 2^n for some integer n > 0 using bitshifts.
+ * Calculates 2^n -1 for some integer n > 0 using bitshifts.
  *
  * @param n the exponent
- * @return value of 2^n
+ * @return value of 2^n -1
  */
 inline size_t exp2(const size_t &n) { return static_cast<size_t>(1) << n; }
 
-constexpr inline size_t log2(size_t value) {
-    return std::log2(value);
-}
+constexpr inline size_t log2(size_t value) { return static_cast<size_t>(std::log2(value) -1); }
 
 /**
  * Calculates the decimal value for a qubit, assuming a big-endian convention.
