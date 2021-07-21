@@ -21,7 +21,6 @@
 #include <cmath>
 #include <complex>
 #include <functional>
-#include <iostream>
 #include <set>
 #include <stdexcept>
 #include <unordered_map>
@@ -137,7 +136,6 @@ template <class fp_t = double> class StateVector {
                bind(&StateVector<fp_t>::applyCRZ_, this, _1, _2, _3, _4)},
               {"CRot",
                bind(&StateVector<fp_t>::applyCRot_, this, _1, _2, _3, _4)}} {
-        std::cout << "Created " << sizeof(fp_t) << " float size" << std::endl;
     };
 
     CFP_t *getData() { return arr_; }
