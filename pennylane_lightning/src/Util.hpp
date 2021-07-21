@@ -37,7 +37,7 @@ namespace Util {
  */
 inline size_t exp2(const size_t &n) { return static_cast<size_t>(1) << n; }
 
-constexpr inline size_t log2(size_t value) { return static_cast<size_t>(std::log2(value) -1); }
+constexpr inline size_t log2(size_t value) { return static_cast<size_t>(std::log2(value) ); }
 
 /**
  * Calculates the decimal value for a qubit, assuming a big-endian convention.
