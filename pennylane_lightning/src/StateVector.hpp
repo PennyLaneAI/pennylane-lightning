@@ -149,7 +149,7 @@ template <class fp_t = double> class StateVector {
     void applyOperations(const vector<string> &ops,
                          const vector<vector<size_t>> &wires,
                          const vector<bool> &inverse,
-                         const vector<vector<fp_t>> &params = {{}}) {
+                         const vector<vector<fp_t>> &params) {
         const size_t numOperations = ops.size();
         if (numOperations != wires.size() || numOperations != params.size())
             throw std::invalid_argument(
@@ -158,6 +158,28 @@ template <class fp_t = double> class StateVector {
 
         for (size_t i = 0; i < numOperations; i++) {
             applyOperation(ops[i], wires[i], inverse[i], params[i]);
+        }
+    }
+    /**
+     * @brief Apply multiple gates to the state-vector.
+     *
+     * @param ops Vector of gate names to be applied in order.
+     * @param wires Vector of wires on which to apply index-matched gate name.
+     * @param inverse Indicates whether gate at matched index is to be inverted.
+     * @param params Optional parameter data for index matched gates.
+     */
+    void applyOperations(const vector<string> &ops,
+                         const vector<vector<size_t>> &wires,
+                         const vector<bool> &inverse
+                         ) {
+        const size_t numOperations = ops.size();
+        if (numOperations != wires.size())
+            throw std::invalid_argument(
+                "Invalid arguments: number of operations, wires, and "
+                "parameters must all be equal");
+
+        for (size_t i = 0; i < numOperations; i++) {
+            applyOperation(ops[i], wires[i], inverse[i] );
         }
     }
 
