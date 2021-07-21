@@ -65,7 +65,7 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
 
 template <class PrecisionT> void lightning_class_bindings(py::module &m) {
     // Enable module name to be based on size of complex datatype
-    const std::string bitsize = std::to_string(sizeof(PrecisionT) * 8 * 2 );
+    const std::string bitsize = std::to_string(sizeof(PrecisionT) * 8 * 2);
     const std::string class_name = "StateVectorC" + bitsize;
     py::class_<StateVecBinder<PrecisionT>>(m, class_name.c_str())
         .def(py::init<

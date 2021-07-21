@@ -135,8 +135,7 @@ template <class fp_t = double> class StateVector {
               {"CRZ",
                bind(&StateVector<fp_t>::applyCRZ_, this, _1, _2, _3, _4)},
               {"CRot",
-               bind(&StateVector<fp_t>::applyCRot_, this, _1, _2, _3, _4)}} {
-    };
+               bind(&StateVector<fp_t>::applyCRot_, this, _1, _2, _3, _4)}} {};
 
     CFP_t *getData() { return arr_; }
     std::size_t getLength() { return length_; }
@@ -617,31 +616,37 @@ template <class fp_t = double> class StateVector {
     inline void applyPauliX_(const vector<size_t> &indices,
                              const vector<size_t> &externalIndices,
                              bool inverse, const vector<fp_t> &params) {
+        static_cast<void>(params);
         applyPauliX(indices, externalIndices, inverse);
     }
     inline void applyPauliY_(const vector<size_t> &indices,
                              const vector<size_t> &externalIndices,
                              bool inverse, const vector<fp_t> &params) {
+        static_cast<void>(params);
         applyPauliY(indices, externalIndices, inverse);
     }
     inline void applyPauliZ_(const vector<size_t> &indices,
                              const vector<size_t> &externalIndices,
                              bool inverse, const vector<fp_t> &params) {
+        static_cast<void>(params);
         applyPauliZ(indices, externalIndices, inverse);
     }
     inline void applyHadamard_(const vector<size_t> &indices,
                                const vector<size_t> &externalIndices,
                                bool inverse, const vector<fp_t> &params) {
+        static_cast<void>(params);
         applyHadamard(indices, externalIndices, inverse);
     }
     inline void applyS_(const vector<size_t> &indices,
                         const vector<size_t> &externalIndices, bool inverse,
                         const vector<fp_t> &params) {
+        static_cast<void>(params);
         applyS(indices, externalIndices, inverse);
     }
     inline void applyT_(const vector<size_t> &indices,
                         const vector<size_t> &externalIndices, bool inverse,
                         const vector<fp_t> &params) {
+        static_cast<void>(params);
         applyT(indices, externalIndices, inverse);
     }
     inline void applyRX_(const vector<size_t> &indices,
@@ -673,16 +678,19 @@ template <class fp_t = double> class StateVector {
     inline void applyCNOT_(const vector<size_t> &indices,
                            const vector<size_t> &externalIndices, bool inverse,
                            const vector<fp_t> &params) {
+        static_cast<void>(params);
         applyCNOT(indices, externalIndices, inverse);
     }
     inline void applySWAP_(const vector<size_t> &indices,
                            const vector<size_t> &externalIndices, bool inverse,
                            const vector<fp_t> &params) {
+        static_cast<void>(params);
         applySWAP(indices, externalIndices, inverse);
     }
     inline void applyCZ_(const vector<size_t> &indices,
                          const vector<size_t> &externalIndices, bool inverse,
                          const vector<fp_t> &params) {
+        static_cast<void>(params);
         applyCZ(indices, externalIndices, inverse);
     }
     inline void applyCRX_(const vector<size_t> &indices,
@@ -709,11 +717,13 @@ template <class fp_t = double> class StateVector {
     inline void applyToffoli_(const vector<size_t> &indices,
                               const vector<size_t> &externalIndices,
                               bool inverse, const vector<fp_t> &params) {
+        static_cast<void>(params);
         applyToffoli(indices, externalIndices, inverse);
     }
     inline void applyCSWAP_(const vector<size_t> &indices,
                             const vector<size_t> &externalIndices, bool inverse,
                             const vector<fp_t> &params) {
+        static_cast<void>(params);
         applyCSWAP(indices, externalIndices, inverse);
     }
 };
