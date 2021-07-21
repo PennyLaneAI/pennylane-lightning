@@ -22,9 +22,11 @@ using std::complex;
 using std::string;
 using std::vector;
 
+namespace py = pybind11;
+
 template <class T = double>
-static StateVector<T> create(const pybind11::array_t<complex<T>> *numpyArray) {
-    pybind11::buffer_info numpyArrayInfo = numpyArray->request();
+static StateVector<T> create(const py::array_t<complex<T>> *numpyArray) {
+    py::buffer_info numpyArrayInfo = numpyArray->request();
 
     if (numpyArrayInfo.ndim != 1)
         throw std::invalid_argument(
@@ -38,15 +40,75 @@ static StateVector<T> create(const pybind11::array_t<complex<T>> *numpyArray) {
 }
 
 template <class T = double>
-void apply(pybind11::array_t<complex<T>> &stateNumpyArray,
-           const vector<string> &ops, const vector<vector<size_t>> &wires,
-           const vector<bool> &inverse, const vector<vector<T>> &params) {
+void apply(py::array_t<complex<T>> &stateNumpyArray, const vector<string> &ops,
+           const vector<vector<size_t>> &wires, const vector<bool> &inverse,
+           const vector<vector<T>> &params) {
     auto state = create<T>(&stateNumpyArray);
     state.applyOperations(ops, wires, inverse, params);
+}
+
+template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
+  public:
+    // StateVector<fp_t> sv;
+
+    StateVecBinder(const py::array_t<complex<fp_t>> &stateNumpyArray)
+        : StateVector<fp_t>(
+              static_cast<complex<fp_t> *>(stateNumpyArray.request().ptr),
+              static_cast<size_t>(stateNumpyArray.request().shape[0])) {}
+
+    void apply(const vector<string> &ops, const vector<vector<size_t>> &wires,
+               const vector<bool> &inverse,
+               const vector<vector<fp_t>> &params) {
+        this->applyOperations(ops, wires, inverse, params);
+    }
+};
+
+template <class PrecisionT> void lightning_class_bindings(py::module &m) {
+    const std::string bitsize = std::to_string(sizeof(PrecisionT) * 8);
+    const std::string class_name = "StateVectorC" + bitsize;
+    py::class_<StateVecBinder<PrecisionT>>(m, class_name.c_str())
+        .def(py::init<
+             py::array_t<complex<PrecisionT>,
+                         py::array::c_style | py::array::forcecast> &>())
+        .def("apply", &StateVecBinder<PrecisionT>::apply)
+        .def("PauliX", &StateVecBinder<PrecisionT>::applyPauliX)
+        .def("PauliY", &StateVecBinder<PrecisionT>::applyPauliY)
+        .def("PauliZ", &StateVecBinder<PrecisionT>::applyPauliZ)
+        .def("Hadamard", &StateVecBinder<PrecisionT>::applyHadamard)
+        .def("S", &StateVecBinder<PrecisionT>::applyS)
+        .def("T", &StateVecBinder<PrecisionT>::applyT)
+        .def("CNOT", &StateVecBinder<PrecisionT>::applyCNOT)
+        .def("SWAP", &StateVecBinder<PrecisionT>::applySWAP)
+        .def("CSWAP", &StateVecBinder<PrecisionT>::applyCSWAP)
+        .def("Toffoli", &StateVecBinder<PrecisionT>::applyToffoli)
+        .def("CZ", &StateVecBinder<PrecisionT>::applyCZ)
+        .def("PhaseShift",
+             &StateVecBinder<PrecisionT>::template applyPhaseShift<float>)
+        .def("PhaseShift",
+             &StateVecBinder<PrecisionT>::template applyPhaseShift<double>)
+        .def("RX", &StateVecBinder<PrecisionT>::template applyRX<float>)
+        .def("RX", &StateVecBinder<PrecisionT>::template applyRX<double>)
+        .def("RY", &StateVecBinder<PrecisionT>::template applyRY<float>)
+        .def("RY", &StateVecBinder<PrecisionT>::template applyRY<double>)
+        .def("RZ", &StateVecBinder<PrecisionT>::template applyRZ<float>)
+        .def("RZ", &StateVecBinder<PrecisionT>::template applyRZ<double>)
+        .def("Rot", &StateVecBinder<PrecisionT>::template applyRot<float>)
+        .def("Rot", &StateVecBinder<PrecisionT>::template applyRot<double>)
+        .def("CRX", &StateVecBinder<PrecisionT>::template applyCRX<float>)
+        .def("CRX", &StateVecBinder<PrecisionT>::template applyCRX<double>)
+        .def("CRY", &StateVecBinder<PrecisionT>::template applyCRY<float>)
+        .def("CRY", &StateVecBinder<PrecisionT>::template applyCRY<double>)
+        .def("CRZ", &StateVecBinder<PrecisionT>::template applyCRZ<float>)
+        .def("CRZ", &StateVecBinder<PrecisionT>::template applyCRZ<double>)
+        .def("CRot", &StateVecBinder<PrecisionT>::template applyCRot<float>)
+        .def("CRot", &StateVecBinder<PrecisionT>::template applyCRot<double>);
 }
 
 PYBIND11_MODULE(lightning_qubit_ops, m) {
     m.doc() = "lightning.qubit apply() method";
     m.def("apply", apply<double>, "lightning.qubit apply() method");
     m.def("apply", apply<float>, "lightning.qubit apply() method");
+
+    lightning_class_bindings<float>(m);
+    lightning_class_bindings<double>(m);
 }
