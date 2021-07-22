@@ -26,7 +26,7 @@ jobs:
       - name: Build and run unit tests
         run: |
             cd pennylane_lightning/src/tests
-            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=1 
+            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=1
             cmake --build ./Build
             ./Build/tests/runner --order lex --reporter junit --out Build/test/results/report.xml
 
@@ -36,7 +36,7 @@ jobs:
         with:
           name: ubuntu-test-report
           path: Build/test/results/report.xml
-    
+
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@v1
         if: always()

@@ -720,7 +720,6 @@ TEMPLATE_TEST_CASE("StateVector::applySWAP", "[StateVector]", float, double) {
     }
     SECTION("Apply using dispatcher") {
         SECTION("SWAP0,1 |+10> -> |1+0>") {
-
             std::vector<cp_t> expected{
                 {0, 0},           {0, 0}, {0, 0},           {0, 0},
                 {1 / sqrt(2), 0}, {0, 0}, {1 / sqrt(2), 0}, {0, 0}};
@@ -833,7 +832,6 @@ TEMPLATE_TEST_CASE("StateVector::applyCZ", "[StateVector]", float, double) {
     }
     SECTION("Apply using dispatcher") {
         SECTION("CZ0,1 |+10> -> |1+0>") {
-
             std::vector<cp_t> expected{
                 {0, 0}, {0, 0}, {1 / sqrt(2), 0},  {0, 0},
                 {0, 0}, {0, 0}, {-1 / sqrt(2), 0}, {0, 0}};
@@ -994,7 +992,6 @@ TEMPLATE_TEST_CASE("StateVector::applyCSWAP", "[StateVector]", float, double) {
             std::vector<cp_t> expected{{0, 0}, {0, 0}, {1 / sqrt(2), 0},
                                        {0, 0}, {0, 0}, {1 / sqrt(2), 0},
                                        {0, 0}, {0, 0}};
-
             SVData<TestType> svdat012{num_qubits, init_state};
 
             svdat012.sv.applyCSWAP(svdat.getInternalIndices({0, 1, 2}),
@@ -1032,7 +1029,6 @@ TEMPLATE_TEST_CASE("StateVector::applyCSWAP", "[StateVector]", float, double) {
             std::vector<cp_t> expected{{0, 0}, {0, 0}, {1 / sqrt(2), 0},
                                        {0, 0}, {0, 0}, {1 / sqrt(2), 0},
                                        {0, 0}, {0, 0}};
-
             SVData<TestType> svdat012{num_qubits, init_state};
 
             svdat012.sv.applyOperation("CSWAP", {0, 1, 2});
