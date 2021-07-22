@@ -49,7 +49,7 @@ inline size_t maxDecimalForQubit(const unsigned int qubitIndex,
 
 // Helper similar to std::make_unique from c++14
 template <typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args &&...args) {
+std::unique_ptr<T> make_unique(Args &&... args) {
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 

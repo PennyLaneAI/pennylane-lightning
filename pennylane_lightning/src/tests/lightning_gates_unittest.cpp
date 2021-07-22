@@ -85,8 +85,9 @@ INSTANTIATE_TEST_SUITE_P(
                       std::make_tuple("CRX", CRX, ONE_PARAM),
                       std::make_tuple("CRY", CRY, ONE_PARAM),
                       std::make_tuple("CRZ", CRZ, ONE_PARAM),
-                      std::make_tuple("CRot", CRot, THREE_PARAMS), 
-                      std::make_tuple("CPhaseShift", CPhaseShift, ONE_PARAM)));
+                      std::make_tuple("CRot", CRot, THREE_PARAMS),
+                      std::make_tuple("ControlledPhaseShift", CPhaseShift,
+                                      ONE_PARAM)));
 
 // -------------------------------------------------------------------------------------------------------------
 // Parameter length validation
@@ -113,8 +114,9 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Combine(::testing::ValuesIn(non_param_gates),
                        ::testing::ValuesIn(many_params)));
 
-const vector<string> param_gates = {"RX",  "RY",  "RZ",  "PhaseShift", "Rot",
-                                    "CRX", "CRY", "CRZ", "CRot", "CPhaseShift"};
+const vector<string> param_gates = {
+    "RX",  "RY",  "RZ",  "PhaseShift", "Rot",
+    "CRX", "CRY", "CRZ", "CRot",       "ControlledPhaseShift"};
 const vector<vector<double>> zero_params = {ZERO_PARAM};
 
 INSTANTIATE_TEST_SUITE_P(ParametrizedGateChecks, NumParamsThrowsFixture,

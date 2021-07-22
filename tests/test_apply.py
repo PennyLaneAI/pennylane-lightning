@@ -327,6 +327,24 @@ class TestApply:
             [0, 1 / math.sqrt(2), 0, -1 / 2 + 1j / 2],
             [-math.pi / 2, math.pi, math.pi],
         ),
+        (
+            qml.ControlledPhaseShift,
+            [1, 0, 0, 0],
+            [1, 0, 0, 0],
+            [math.pi/2],
+        ),
+        (
+            qml.ControlledPhaseShift,
+            [0, 1, 0, 0],
+            [0, 1, 0, 0],
+            [math.pi/2],
+        ),
+        (
+            qml.ControlledPhaseShift,
+            [0, 0, 1, 0],
+            [0, 0, 1, 0],
+            [math.pi/2],
+        ),
     ]
 
     @pytest.mark.parametrize(
@@ -880,7 +898,7 @@ class TestLightningQubitIntegration:
     def test_supported_gate_two_wires_with_parameters(
         self, qubit_device_2_wires, tol, name, par, expected_output
     ):
-        """Tests supported gates that act on two wires wires that are parameterized"""
+        """Tests supported gates that act on two wires that are parameterized"""
 
         op = getattr(qml.ops, name)
 

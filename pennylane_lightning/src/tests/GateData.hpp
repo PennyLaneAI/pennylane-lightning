@@ -79,10 +79,7 @@ vector<CplxType> CPhaseShift(const vector<double> &pars) {
     const std::complex<double> phase(0, parameter);
     const std::complex<double> shift = std::pow(M_E, phase);
 
-    return {1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, shift};
+    return {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, shift};
 }
 
 vector<CplxType> Rot(const vector<double> &pars) {
