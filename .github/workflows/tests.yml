@@ -13,21 +13,36 @@ jobs:
       matrix:
         os: [ubuntu-18.04]
     steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
       - uses: actions/checkout@v2
 
       - name: Install dependencies
         run: sudo apt-get -y -q install cmake gcc
 
-      - name: Install Google Test
-        run: |
-            wget -qO - https://github.com/google/googletest/archive/release-1.10.0.tar.gz | tar -xz
-            cmake -D CMAKE_INSTALL_PREFIX:PATH=$HOME/googletest -D CMAKE_BUILD_TYPE=Release googletest-release-1.10.0
-            make install
-
       - name: Build and run unit tests
         run: |
             cd pennylane_lightning/src/tests
-            GOOGLETEST_DIR=$HOME/googletest make test
+            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=1 
+            cmake --build ./Build
+            ./Build/tests/runner --order lex --reporter junit --out Build/test/results/report.xml
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: ubuntu-test-report
+          path: Build/test/results/report.xml
+    
+      - name: Publish test results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          check_name: Test Report (C++) on Ubuntu
+          files: Build/test/results/report.xml
 
   pythontests:
     name: Python tests
