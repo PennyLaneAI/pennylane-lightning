@@ -255,3 +255,81 @@ TEMPLATE_TEST_CASE("StateVector::applyPauliZ", "[StateVector]", float, double) {
         }
     }
 }
+
+TEMPLATE_TEST_CASE("StateVector::applyS", "[StateVector]", float, double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 3;
+    SVData<TestType> svdat{num_qubits};
+    // Test using |+++> state
+    svdat.sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                             {{0}, {1}, {2}}, {{false}, {false}, {false}});
+
+    cp_t r = {1 / (2 * std::sqrt(2)), 0};
+    cp_t i = {0, 1 / (2 * std::sqrt(2))};
+
+    const std::vector<std::vector<cp_t>> expected_results = {
+        {r, r, r, r, i, i, i, i},
+        {r, r, i, i, r, r, i, i},
+        {r, i, r, i, r, i, r, i}};
+
+    const auto init_state = svdat.cdata;
+    SECTION("Apply directly") {
+        for (size_t index = 0; index < num_qubits; index++) {
+            SVData<TestType> svdat{num_qubits, init_state};
+            auto int_idx = svdat.getInternalIndices({index});
+            auto ext_idx = svdat.getExternalIndices({index});
+
+            CHECK(svdat.cdata == init_state);
+            svdat.sv.applyS(int_idx, ext_idx, false);
+
+            CHECK(isApproxEqual(svdat.cdata, expected_results[index]));
+        }
+    }
+    SECTION("Apply using dispatcher") {
+        for (size_t index = 0; index < num_qubits; index++) {
+            SVData<TestType> svdat{num_qubits, init_state};
+            CHECK(svdat.cdata == init_state);
+            svdat.sv.applyOperation("S", {index}, false);
+            CHECK(isApproxEqual(svdat.cdata, expected_results[index]));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVector::applyT", "[StateVector]", float, double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 3;
+    SVData<TestType> svdat{num_qubits};
+    // Test using |+++> state
+    svdat.sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                             {{0}, {1}, {2}}, {{false}, {false}, {false}});
+
+    cp_t r = {1 / (2 * std::sqrt(2)), 0};
+    cp_t i = {1.0 / 4, 1.0 / 4};
+
+    const std::vector<std::vector<cp_t>> expected_results = {
+        {r, r, r, r, i, i, i, i},
+        {r, r, i, i, r, r, i, i},
+        {r, i, r, i, r, i, r, i}};
+
+    const auto init_state = svdat.cdata;
+    SECTION("Apply directly") {
+        for (size_t index = 0; index < num_qubits; index++) {
+            SVData<TestType> svdat{num_qubits, init_state};
+            auto int_idx = svdat.getInternalIndices({index});
+            auto ext_idx = svdat.getExternalIndices({index});
+
+            CHECK(svdat.cdata == init_state);
+            svdat.sv.applyT(int_idx, ext_idx, false);
+
+            CHECK(isApproxEqual(svdat.cdata, expected_results[index]));
+        }
+    }
+    SECTION("Apply using dispatcher") {
+        for (size_t index = 0; index < num_qubits; index++) {
+            SVData<TestType> svdat{num_qubits, init_state};
+            CHECK(svdat.cdata == init_state);
+            svdat.sv.applyOperation("T", {index}, false);
+            CHECK(isApproxEqual(svdat.cdata, expected_results[index]));
+        }
+    }
+}
