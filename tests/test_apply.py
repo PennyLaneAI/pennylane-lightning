@@ -22,6 +22,7 @@ from unittest import mock
 
 import numpy as np
 import pennylane as qml
+from pennylane.ops.qubit import ControlledPhaseShift
 import pennylane_lightning
 import pytest
 from pennylane import DeviceError
@@ -877,7 +878,7 @@ class TestLightningQubitIntegration:
     # This test is ran against the state 1/2|00>+sqrt(3)/2|11> with two Z expvals
     @pytest.mark.parametrize(
         "name,par,expected_output",
-        [
+        [   
             ("CRX", [0], [-1 / 2, -1 / 2]),
             ("CRX", [-math.pi], [-1 / 2, 1]),
             ("CRX", [math.pi / 2], [-1 / 2, 1 / 4]),
@@ -893,6 +894,8 @@ class TestLightningQubitIntegration:
             ("CRot", [math.pi / 2, 0, -math.pi], [-1 / 2, -1 / 2]),
             ("CRot", [0, math.pi / 2, -math.pi], [-1 / 2, 1 / 4]),
             ("CRot", [-math.pi, 0, math.pi / 2], [-1 / 2, -1 / 2]),
+            ("ControlledPhaseShift", [0], [-1 / 2, -1 / 2]),
+            ("ControlledPhaseShift", [-math.pi], [-1 / 2, -1 / 2]),
         ],
     )
     def test_supported_gate_two_wires_with_parameters(
