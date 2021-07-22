@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <complex>
 #include <iostream>
+#include <limits>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -22,14 +23,16 @@ using namespace Pennylane;
  * @return false Data are not approximately equal.
  */
 template <class Data_t>
-inline bool isApproxEqual(const std::vector<Data_t> &data1,
-                          const std::vector<Data_t> &data2) {
+inline bool isApproxEqual(
+    const std::vector<Data_t> &data1, const std::vector<Data_t> &data2,
+    const typename Data_t::value_type eps =
+        std::numeric_limits<typename Data_t::value_type>::epsilon() * 100) {
     if (data1.size() != data2.size())
         return false;
 
     for (size_t i = 0; i < data1.size(); i++) {
-        if (data1[i].real() != Approx(data2[i].real()) ||
-            data1[i].imag() != Approx(data2[i].imag())) {
+        if (data1[i].real() != Approx(data2[i].real()).epsilon(eps) ||
+            data1[i].imag() != Approx(data2[i].imag()).epsilon(eps)) {
             return false;
         }
     }
@@ -41,21 +44,43 @@ template <class Data_t> vector<std::complex<Data_t>> RX(Data_t parameter) {
     const std::complex<Data_t> js{0, std::sin(-parameter / 2)};
     return {c, js, js, c};
 }
+
 template <class Data_t> vector<std::complex<Data_t>> RY(Data_t parameter) {
     const std::complex<Data_t> c{std::cos(parameter / 2), 0};
     const std::complex<Data_t> s{std::sin(parameter / 2), 0};
     return {c, s, s, c};
 }
+
 template <class Data_t> vector<std::complex<Data_t>> RZ(Data_t parameter) {
     return {std::exp(std::complex<Data_t>{0, -parameter / 2}),
             {0, 0},
             {0, 0},
             std::exp(std::complex<Data_t>{0, parameter / 2})};
 }
+
 template <class Data_t> vector<std::complex<Data_t>> Phase(Data_t parameter) {
     return {
         {1, 0}, {0, 0}, {0, 0}, std::exp(std::complex<Data_t>{0, parameter})};
 }
+
+template <class Data_t>
+vector<std::complex<Data_t>> Rot(Data_t phi, Data_t theta, Data_t omega) {
+    const std::complex<Data_t> e00{0, (-phi - omega) / 2};
+    const std::complex<Data_t> e10{0, (-phi + omega) / 2};
+    const std::complex<Data_t> e01{0, (phi - omega) / 2};
+    const std::complex<Data_t> e11{0, (phi + omega) / 2};
+
+    const std::complex<Data_t> exp00{std::pow(M_E, e00)};
+    const std::complex<Data_t> exp10{std::pow(M_E, e10)};
+    const std::complex<Data_t> exp01{std::pow(M_E, e01)};
+    const std::complex<Data_t> exp11{std::pow(M_E, e11)};
+
+    const Data_t c{std::cos(theta / 2)};
+    const Data_t s{std::sin(theta / 2)};
+
+    return {exp00 * c, -exp01 * s, exp10 * s, exp11 * c};
+}
+
 template <class Data_t>
 void scaleVector(std::vector<std::complex<Data_t>> &data,
                  std::complex<Data_t> scalar) {
@@ -546,6 +571,49 @@ TEMPLATE_TEST_CASE("StateVector::applyPhaseShift", "[StateVector]", float,
             SVData<TestType> svdat{num_qubits, init_state};
             svdat.sv.applyOperation("PhaseShift", {index}, false,
                                     {angles[index]});
+            CHECK(isApproxEqual(svdat.cdata, expected_results[index]));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVector::applyRot", "[StateVector]", float, double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 3;
+    SVData<TestType> svdat{num_qubits};
+
+    const std::vector<std::vector<TestType>> angles{
+        std::vector<TestType>{0.3, 0.8, 2.4},
+        std::vector<TestType>{0.5, 1.1, 3.0},
+        std::vector<TestType>{2.3, 0.1, 0.4}};
+
+    std::vector<std::vector<cp_t>> expected_results{
+        std::vector<cp_t>(0b1 << num_qubits),
+        std::vector<cp_t>(0b1 << num_qubits),
+        std::vector<cp_t>(0b1 << num_qubits)};
+
+    for (size_t i = 0; i < angles.size(); i++) {
+        const auto rot_mat = Rot(angles[i][0], angles[i][1], angles[i][2]);
+        expected_results[i][0] = rot_mat[0];
+        expected_results[i][0b1 << (num_qubits - i - 1)] = rot_mat[2];
+    }
+
+    SECTION("Apply directly") {
+        for (size_t index = 0; index < num_qubits; index++) {
+            SVData<TestType> svdat{num_qubits};
+            auto int_idx = svdat.getInternalIndices({index});
+            auto ext_idx = svdat.getExternalIndices({index});
+            svdat.sv.applyRot(int_idx, ext_idx, false, angles[index][0],
+                              angles[index][1], angles[index][2]);
+            CAPTURE(svdat.cdata);
+            CAPTURE(expected_results[index]);
+
+            CHECK(isApproxEqual(svdat.cdata, expected_results[index]));
+        }
+    }
+    SECTION("Apply using dispatcher") {
+        for (size_t index = 0; index < num_qubits; index++) {
+            SVData<TestType> svdat{num_qubits};
+            svdat.sv.applyOperation("Rot", {index}, false, angles[index]);
             CHECK(isApproxEqual(svdat.cdata, expected_results[index]));
         }
     }
