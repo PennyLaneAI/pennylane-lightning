@@ -36,6 +36,29 @@ inline bool isApproxEqual(const std::vector<Data_t> &data1,
     return true;
 }
 
+template <class Data_t> vector<std::complex<Data_t>> RX(Data_t parameter) {
+    const std::complex<Data_t> c{std::cos(parameter / 2), 0};
+    const std::complex<Data_t> js{0, std::sin(-parameter / 2)};
+    return {c, js, js, c};
+}
+template <class Data_t> vector<std::complex<Data_t>> RY(Data_t parameter) {
+    const std::complex<Data_t> c{std::cos(parameter / 2), 0};
+    const std::complex<Data_t> s{std::sin(parameter / 2), 0};
+    return {c, s, s, c};
+}
+template <class Data_t> vector<std::complex<Data_t>> RZ(Data_t parameter) {
+    return {std::exp(std::complex<Data_t>{0, -parameter / 2}),
+            {0, 0},
+            {0, 0},
+            std::exp(std::complex<Data_t>{0, parameter / 2})};
+}
+template <class Data_t>
+void scaleVector(std::vector<std::complex<Data_t>> &data,
+                 std::complex<Data_t> scalar) {
+    for (auto &a : data)
+        a *= scalar;
+}
+
 /**
  * @brief Tests the constructability of the StateVector class.
  *
@@ -329,6 +352,136 @@ TEMPLATE_TEST_CASE("StateVector::applyT", "[StateVector]", float, double) {
             SVData<TestType> svdat{num_qubits, init_state};
             CHECK(svdat.cdata == init_state);
             svdat.sv.applyOperation("T", {index}, false);
+            CHECK(isApproxEqual(svdat.cdata, expected_results[index]));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVector::applyRX", "[StateVector]", float, double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 3;
+    SVData<TestType> svdat{num_qubits};
+
+    const std::vector<TestType> angles{0.1, 0.6, 2.1};
+    std::vector<std::vector<cp_t>> expected_results{
+        std::vector<cp_t>(8), std::vector<cp_t>(8), std::vector<cp_t>(8)};
+
+    for (size_t i = 0; i < angles.size(); i++) {
+        const auto rx_mat = RX(angles[i]);
+        expected_results[i][0] = rx_mat[0];
+        expected_results[i][0b1 << (num_qubits - i - 1)] = rx_mat[1];
+    }
+
+    const auto init_state = svdat.cdata;
+    SECTION("Apply directly") {
+        for (size_t index = 0; index < num_qubits; index++) {
+            SVData<TestType> svdat{num_qubits};
+            auto int_idx = svdat.getInternalIndices({index});
+            auto ext_idx = svdat.getExternalIndices({index});
+
+            svdat.sv.applyRX(int_idx, ext_idx, false, {angles[index]});
+
+            CHECK(isApproxEqual(svdat.cdata, expected_results[index]));
+        }
+    }
+    SECTION("Apply using dispatcher") {
+        for (size_t index = 0; index < num_qubits; index++) {
+            SVData<TestType> svdat{num_qubits};
+            svdat.sv.applyOperation("RX", {index}, false, {angles[index]});
+            CHECK(isApproxEqual(svdat.cdata, expected_results[index]));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVector::applyRY", "[StateVector]", float, double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 3;
+    SVData<TestType> svdat{num_qubits};
+
+    const std::vector<TestType> angles{0.2, 0.7, 2.9};
+    std::vector<std::vector<cp_t>> expected_results{
+        std::vector<cp_t>(8), std::vector<cp_t>(8), std::vector<cp_t>(8)};
+
+    for (size_t i = 0; i < angles.size(); i++) {
+        const auto ry_mat = RY(angles[i]);
+        expected_results[i][0] = ry_mat[0];
+        expected_results[i][0b1 << (num_qubits - i - 1)] = ry_mat[2];
+    }
+
+    const auto init_state = svdat.cdata;
+    SECTION("Apply directly") {
+        for (size_t index = 0; index < num_qubits; index++) {
+            SVData<TestType> svdat{num_qubits};
+            auto int_idx = svdat.getInternalIndices({index});
+            auto ext_idx = svdat.getExternalIndices({index});
+
+            svdat.sv.applyRY(int_idx, ext_idx, false, {angles[index]});
+
+            CHECK(isApproxEqual(svdat.cdata, expected_results[index]));
+        }
+    }
+    SECTION("Apply using dispatcher") {
+        for (size_t index = 0; index < num_qubits; index++) {
+            SVData<TestType> svdat{num_qubits};
+            svdat.sv.applyOperation("RY", {index}, false, {angles[index]});
+            CHECK(isApproxEqual(svdat.cdata, expected_results[index]));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVector::applyRZ", "[StateVector]", float, double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 3;
+    SVData<TestType> svdat{num_qubits};
+
+    // Test using |+++> state
+    svdat.sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                             {{0}, {1}, {2}}, {{false}, {false}, {false}});
+
+    const std::vector<TestType> angles{0.2, 0.7, 2.9};
+    const cp_t coef = {1 / (2 * std::sqrt(2)), 0};
+
+    std::vector<std::vector<cp_t>> rz_data;
+    for (auto &a : angles) {
+        rz_data.push_back(RZ(a));
+    }
+
+    std::vector<std::vector<cp_t>> expected_results = {
+        {rz_data[0][0], rz_data[0][0], rz_data[0][0], rz_data[0][0],
+         rz_data[0][3], rz_data[0][3], rz_data[0][3], rz_data[0][3]},
+        {
+            rz_data[1][0],
+            rz_data[1][0],
+            rz_data[1][3],
+            rz_data[1][3],
+            rz_data[1][0],
+            rz_data[1][0],
+            rz_data[1][3],
+            rz_data[1][3],
+        },
+        {rz_data[2][0], rz_data[2][3], rz_data[2][0], rz_data[2][3],
+         rz_data[2][0], rz_data[2][3], rz_data[2][0], rz_data[2][3]}};
+
+    for (auto &vec : expected_results) {
+        scaleVector(vec, coef);
+    }
+
+    const auto init_state = svdat.cdata;
+    SECTION("Apply directly") {
+        for (size_t index = 0; index < num_qubits; index++) {
+            SVData<TestType> svdat{num_qubits, init_state};
+            auto int_idx = svdat.getInternalIndices({index});
+            auto ext_idx = svdat.getExternalIndices({index});
+
+            svdat.sv.applyRZ(int_idx, ext_idx, false, {angles[index]});
+
+            CHECK(isApproxEqual(svdat.cdata, expected_results[index]));
+        }
+    }
+    SECTION("Apply using dispatcher") {
+        for (size_t index = 0; index < num_qubits; index++) {
+            SVData<TestType> svdat{num_qubits, init_state};
+            svdat.sv.applyOperation("RZ", {index}, false, {angles[index]});
             CHECK(isApproxEqual(svdat.cdata, expected_results[index]));
         }
     }
