@@ -52,6 +52,10 @@ template <class Data_t> vector<std::complex<Data_t>> RZ(Data_t parameter) {
             {0, 0},
             std::exp(std::complex<Data_t>{0, parameter / 2})};
 }
+template <class Data_t> vector<std::complex<Data_t>> Phase(Data_t parameter) {
+    return {
+        {1, 0}, {0, 0}, {0, 0}, std::exp(std::complex<Data_t>{0, parameter})};
+}
 template <class Data_t>
 void scaleVector(std::vector<std::complex<Data_t>> &data,
                  std::complex<Data_t> scalar) {
@@ -482,6 +486,66 @@ TEMPLATE_TEST_CASE("StateVector::applyRZ", "[StateVector]", float, double) {
         for (size_t index = 0; index < num_qubits; index++) {
             SVData<TestType> svdat{num_qubits, init_state};
             svdat.sv.applyOperation("RZ", {index}, false, {angles[index]});
+            CHECK(isApproxEqual(svdat.cdata, expected_results[index]));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVector::applyPhaseShift", "[StateVector]", float,
+                   double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 3;
+    SVData<TestType> svdat{num_qubits};
+
+    // Test using |+++> state
+    svdat.sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                             {{0}, {1}, {2}}, {{false}, {false}, {false}});
+
+    const std::vector<TestType> angles{0.3, 0.8, 2.4};
+    const cp_t coef = {1 / (2 * std::sqrt(2)), 0};
+
+    std::vector<std::vector<cp_t>> ps_data;
+    for (auto &a : angles) {
+        ps_data.push_back(Phase(a));
+    }
+
+    std::vector<std::vector<cp_t>> expected_results = {
+        {ps_data[0][0], ps_data[0][0], ps_data[0][0], ps_data[0][0],
+         ps_data[0][3], ps_data[0][3], ps_data[0][3], ps_data[0][3]},
+        {
+            ps_data[1][0],
+            ps_data[1][0],
+            ps_data[1][3],
+            ps_data[1][3],
+            ps_data[1][0],
+            ps_data[1][0],
+            ps_data[1][3],
+            ps_data[1][3],
+        },
+        {ps_data[2][0], ps_data[2][3], ps_data[2][0], ps_data[2][3],
+         ps_data[2][0], ps_data[2][3], ps_data[2][0], ps_data[2][3]}};
+
+    for (auto &vec : expected_results) {
+        scaleVector(vec, coef);
+    }
+
+    const auto init_state = svdat.cdata;
+    SECTION("Apply directly") {
+        for (size_t index = 0; index < num_qubits; index++) {
+            SVData<TestType> svdat{num_qubits, init_state};
+            auto int_idx = svdat.getInternalIndices({index});
+            auto ext_idx = svdat.getExternalIndices({index});
+
+            svdat.sv.applyPhaseShift(int_idx, ext_idx, false, {angles[index]});
+
+            CHECK(isApproxEqual(svdat.cdata, expected_results[index]));
+        }
+    }
+    SECTION("Apply using dispatcher") {
+        for (size_t index = 0; index < num_qubits; index++) {
+            SVData<TestType> svdat{num_qubits, init_state};
+            svdat.sv.applyOperation("PhaseShift", {index}, false,
+                                    {angles[index]});
             CHECK(isApproxEqual(svdat.cdata, expected_results[index]));
         }
     }
