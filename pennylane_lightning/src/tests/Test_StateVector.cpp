@@ -630,22 +630,414 @@ TEMPLATE_TEST_CASE("StateVector::applyCNOT", "[StateVector]", float, double) {
         SVData<TestType> svdat{num_qubits, init_state};
 
         for (size_t index = 1; index < num_qubits; index++) {
-            auto int_idx = svdat.getInternalIndices({index-1, index});
-            auto ext_idx = svdat.getExternalIndices({index-1, index});
+            auto int_idx = svdat.getInternalIndices({index - 1, index});
+            auto ext_idx = svdat.getExternalIndices({index - 1, index});
 
             svdat.sv.applyCNOT(int_idx, ext_idx, false);
-            CAPTURE(svdat.cdata);
         }
-        CHECK(svdat.cdata.front() == cp_t{1/sqrt(2), 0});
-        CHECK(svdat.cdata.back() == cp_t{1/sqrt(2), 0});
+        CHECK(svdat.cdata.front() == cp_t{1 / sqrt(2), 0});
+        CHECK(svdat.cdata.back() == cp_t{1 / sqrt(2), 0});
     }
+
     SECTION("Apply using dispatcher") {
         SVData<TestType> svdat{num_qubits, init_state};
 
         for (size_t index = 1; index < num_qubits; index++) {
-            svdat.sv.applyOperation("CNOT", {index-1, index}, false);
+            svdat.sv.applyOperation("CNOT", {index - 1, index}, false);
         }
-        CHECK(svdat.cdata.front() == cp_t{1/sqrt(2), 0});
-        CHECK(svdat.cdata.back() == cp_t{1/sqrt(2), 0});
+        CHECK(svdat.cdata.front() == cp_t{1 / sqrt(2), 0});
+        CHECK(svdat.cdata.back() == cp_t{1 / sqrt(2), 0});
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVector::applySWAP", "[StateVector]", float, double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 3;
+    SVData<TestType> svdat{num_qubits};
+
+    // Test using |+10> state
+    svdat.sv.applyOperations({{"Hadamard"}, {"PauliX"}}, {{0}, {1}},
+                             {false, false});
+    const auto init_state = svdat.cdata;
+
+    SECTION("Apply directly") {
+        CHECK(svdat.cdata == std::vector<cp_t>{{0, 0},
+                                               {0, 0},
+                                               {1 / sqrt(2), 0},
+                                               {0, 0},
+                                               {0, 0},
+                                               {0, 0},
+                                               {1 / sqrt(2), 0},
+                                               {0, 0}});
+
+        SECTION("SWAP0,1 |+10> -> |1+0>") {
+            std::vector<cp_t> expected{
+                {0, 0},           {0, 0}, {0, 0},           {0, 0},
+                {1 / sqrt(2), 0}, {0, 0}, {1 / sqrt(2), 0}, {0, 0}};
+
+            SVData<TestType> svdat01{num_qubits, init_state};
+            SVData<TestType> svdat10{num_qubits, init_state};
+
+            svdat01.sv.applySWAP(svdat.getInternalIndices({0, 1}),
+                                 svdat.getExternalIndices({0, 1}), false);
+            svdat10.sv.applySWAP(svdat.getInternalIndices({1, 0}),
+                                 svdat.getExternalIndices({1, 0}), false);
+
+            CHECK(svdat01.cdata == expected);
+            CHECK(svdat10.cdata == expected);
+        }
+
+        SECTION("SWAP0,2 |+10> -> |01+>") {
+            std::vector<cp_t> expected{
+                {0, 0}, {0, 0}, {1 / sqrt(2), 0}, {1 / sqrt(2), 0},
+                {0, 0}, {0, 0}, {0, 0},           {0, 0}};
+
+            SVData<TestType> svdat02{num_qubits, init_state};
+            SVData<TestType> svdat20{num_qubits, init_state};
+
+            svdat02.sv.applySWAP(svdat.getInternalIndices({0, 2}),
+                                 svdat.getExternalIndices({0, 2}), false);
+            svdat20.sv.applySWAP(svdat.getInternalIndices({2, 0}),
+                                 svdat.getExternalIndices({2, 0}), false);
+            CHECK(svdat02.cdata == expected);
+            CHECK(svdat20.cdata == expected);
+        }
+        SECTION("SWAP1,2 |+10> -> |+01>") {
+            std::vector<cp_t> expected{
+                {0, 0}, {1 / sqrt(2), 0}, {0, 0}, {0, 0},
+                {0, 0}, {1 / sqrt(2), 0}, {0, 0}, {0, 0}};
+
+            SVData<TestType> svdat12{num_qubits, init_state};
+            SVData<TestType> svdat21{num_qubits, init_state};
+
+            svdat12.sv.applySWAP(svdat.getInternalIndices({1, 2}),
+                                 svdat.getExternalIndices({1, 2}), false);
+            svdat21.sv.applySWAP(svdat.getInternalIndices({2, 1}),
+                                 svdat.getExternalIndices({2, 1}), false);
+            CHECK(svdat12.cdata == expected);
+            CHECK(svdat21.cdata == expected);
+        }
+    }
+    SECTION("Apply using dispatcher") {
+        SECTION("SWAP0,1 |+10> -> |1+0>") {
+
+            std::vector<cp_t> expected{
+                {0, 0},           {0, 0}, {0, 0},           {0, 0},
+                {1 / sqrt(2), 0}, {0, 0}, {1 / sqrt(2), 0}, {0, 0}};
+
+            SVData<TestType> svdat01{num_qubits, init_state};
+            SVData<TestType> svdat10{num_qubits, init_state};
+
+            svdat01.sv.applyOperation("SWAP", {0, 1});
+            svdat10.sv.applyOperation("SWAP", {1, 0});
+
+            CHECK(svdat01.cdata == expected);
+            CHECK(svdat10.cdata == expected);
+        }
+
+        SECTION("SWAP0,2 |+10> -> |01+>") {
+            std::vector<cp_t> expected{
+                {0, 0}, {0, 0}, {1 / sqrt(2), 0}, {1 / sqrt(2), 0},
+                {0, 0}, {0, 0}, {0, 0},           {0, 0}};
+
+            SVData<TestType> svdat02{num_qubits, init_state};
+            SVData<TestType> svdat20{num_qubits, init_state};
+
+            svdat02.sv.applyOperation("SWAP", {0, 2});
+            svdat20.sv.applyOperation("SWAP", {2, 0});
+
+            CHECK(svdat02.cdata == expected);
+            CHECK(svdat20.cdata == expected);
+        }
+        SECTION("SWAP1,2 |+10> -> |+01>") {
+            std::vector<cp_t> expected{
+                {0, 0}, {1 / sqrt(2), 0}, {0, 0}, {0, 0},
+                {0, 0}, {1 / sqrt(2), 0}, {0, 0}, {0, 0}};
+
+            SVData<TestType> svdat12{num_qubits, init_state};
+            SVData<TestType> svdat21{num_qubits, init_state};
+
+            svdat12.sv.applyOperation("SWAP", {1, 2});
+            svdat21.sv.applyOperation("SWAP", {2, 1});
+
+            CHECK(svdat12.cdata == expected);
+            CHECK(svdat21.cdata == expected);
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVector::applyCZ", "[StateVector]", float, double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 3;
+    SVData<TestType> svdat{num_qubits};
+
+    // Test using |+10> state
+    svdat.sv.applyOperations({{"Hadamard"}, {"PauliX"}}, {{0}, {1}},
+                             {false, false});
+    const auto init_state = svdat.cdata;
+
+    SECTION("Apply directly") {
+        CHECK(svdat.cdata == std::vector<cp_t>{{0, 0},
+                                               {0, 0},
+                                               {1 / sqrt(2), 0},
+                                               {0, 0},
+                                               {0, 0},
+                                               {0, 0},
+                                               {1 / sqrt(2), 0},
+                                               {0, 0}});
+
+        SECTION("CZ0,1 |+10> -> |-10>") {
+            std::vector<cp_t> expected{
+                {0, 0}, {0, 0}, {1 / sqrt(2), 0},  {0, 0},
+                {0, 0}, {0, 0}, {-1 / sqrt(2), 0}, {0, 0}};
+
+            SVData<TestType> svdat01{num_qubits, init_state};
+            SVData<TestType> svdat10{num_qubits, init_state};
+
+            svdat01.sv.applyCZ(svdat.getInternalIndices({0, 1}),
+                               svdat.getExternalIndices({0, 1}), false);
+            svdat10.sv.applyCZ(svdat.getInternalIndices({1, 0}),
+                               svdat.getExternalIndices({1, 0}), false);
+
+            CHECK(svdat01.cdata == expected);
+            CHECK(svdat10.cdata == expected);
+        }
+
+        SECTION("CZ0,2 |+10> -> |+10>") {
+            std::vector<cp_t> expected{init_state};
+
+            SVData<TestType> svdat02{num_qubits, init_state};
+            SVData<TestType> svdat20{num_qubits, init_state};
+
+            svdat02.sv.applyCZ(svdat.getInternalIndices({0, 2}),
+                               svdat.getExternalIndices({0, 2}), false);
+            svdat20.sv.applyCZ(svdat.getInternalIndices({2, 0}),
+                               svdat.getExternalIndices({2, 0}), false);
+            CHECK(svdat02.cdata == expected);
+            CHECK(svdat20.cdata == expected);
+        }
+        SECTION("CZ1,2 |+10> -> |+10>") {
+            std::vector<cp_t> expected{init_state};
+
+            SVData<TestType> svdat12{num_qubits, init_state};
+            SVData<TestType> svdat21{num_qubits, init_state};
+
+            svdat12.sv.applyCZ(svdat.getInternalIndices({1, 2}),
+                               svdat.getExternalIndices({1, 2}), false);
+            svdat21.sv.applyCZ(svdat.getInternalIndices({2, 1}),
+                               svdat.getExternalIndices({2, 1}), false);
+
+            CHECK(svdat12.cdata == expected);
+            CHECK(svdat21.cdata == expected);
+        }
+    }
+    SECTION("Apply using dispatcher") {
+        SECTION("CZ0,1 |+10> -> |1+0>") {
+
+            std::vector<cp_t> expected{
+                {0, 0}, {0, 0}, {1 / sqrt(2), 0},  {0, 0},
+                {0, 0}, {0, 0}, {-1 / sqrt(2), 0}, {0, 0}};
+
+            SVData<TestType> svdat01{num_qubits, init_state};
+            SVData<TestType> svdat10{num_qubits, init_state};
+
+            svdat01.sv.applyOperation("CZ", {0, 1});
+            svdat10.sv.applyOperation("CZ", {1, 0});
+
+            CHECK(svdat01.cdata == expected);
+            CHECK(svdat10.cdata == expected);
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVector::applyCRot", "[StateVector]", float, double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 3;
+    SVData<TestType> svdat{num_qubits};
+
+    const std::vector<TestType> angles{0.3, 0.8, 2.4};
+
+    std::vector<cp_t> expected_results(8);
+    const auto rot_mat = Rot(angles[0], angles[1], angles[2]);
+    expected_results[0b1 << (num_qubits - 1)] = rot_mat[0];
+    expected_results[(0b1 << num_qubits) - 2] = rot_mat[2];
+
+    const auto init_state = svdat.cdata;
+
+    SECTION("Apply directly") {
+        SECTION("CRot0,1 |000> -> |000>") {
+            SVData<TestType> svdat{num_qubits};
+            auto int_idx = svdat.getInternalIndices({0, 1});
+            auto ext_idx = svdat.getExternalIndices({0, 1});
+            svdat.sv.applyCRot(int_idx, ext_idx, false, angles[0], angles[1],
+                               angles[2]);
+
+            CHECK(isApproxEqual(svdat.cdata, init_state));
+        }
+        SECTION("CRot0,1 |100> -> |1>(a|0>+b|1>)|0>") {
+            SVData<TestType> svdat{num_qubits};
+            svdat.sv.applyOperation("PauliX", {0});
+
+            auto int_idx = svdat.getInternalIndices({0, 1});
+            auto ext_idx = svdat.getExternalIndices({0, 1});
+
+            svdat.sv.applyCRot(int_idx, ext_idx, false, angles[0], angles[1],
+                               angles[2]);
+
+            CHECK(isApproxEqual(svdat.cdata, expected_results));
+        }
+    }
+    SECTION("Apply using dispatcher") {
+        SECTION("CRot0,1 |100> -> |1>(a|0>+b|1>)|0>") {
+            SVData<TestType> svdat{num_qubits};
+            svdat.sv.applyOperation("PauliX", {0});
+
+            svdat.sv.applyOperation("CRot", {0, 1}, false, angles);
+            CHECK(isApproxEqual(svdat.cdata, expected_results));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVector::applyToffoli", "[StateVector]", float,
+                   double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 3;
+    SVData<TestType> svdat{num_qubits};
+
+    // Test using |+10> state
+    svdat.sv.applyOperations({{"Hadamard"}, {"PauliX"}}, {{0}, {1}},
+                             {false, false});
+    const auto init_state = svdat.cdata;
+
+    SECTION("Apply directly") {
+        SECTION("Toffoli 0,1,2 |+10> -> |010> + |111>") {
+            std::vector<cp_t> expected{
+                {0, 0}, {0, 0}, {1 / sqrt(2), 0}, {0, 0},
+                {0, 0}, {0, 0}, {0, 0},           {1 / sqrt(2), 0}};
+
+            SVData<TestType> svdat012{num_qubits, init_state};
+
+            svdat012.sv.applyToffoli(svdat.getInternalIndices({0, 1, 2}),
+                                     svdat.getExternalIndices({0, 1, 2}),
+                                     false);
+
+            CHECK(svdat012.cdata == expected);
+        }
+
+        SECTION("Toffoli 1,0,2 |+10> -> |010> + |111>") {
+            std::vector<cp_t> expected{
+                {0, 0}, {0, 0}, {1 / sqrt(2), 0}, {0, 0},
+                {0, 0}, {0, 0}, {0, 0},           {1 / sqrt(2), 0}};
+
+            SVData<TestType> svdat102{num_qubits, init_state};
+
+            svdat102.sv.applyToffoli(svdat.getInternalIndices({1, 0, 2}),
+                                     svdat.getExternalIndices({1, 0, 2}),
+                                     false);
+
+            CHECK(svdat102.cdata == expected);
+        }
+        SECTION("Toffoli 0,2,1 |+10> -> |+10>") {
+            std::vector<cp_t> expected{init_state};
+
+            SVData<TestType> svdat021{num_qubits, init_state};
+
+            svdat021.sv.applyToffoli(svdat.getInternalIndices({0, 2, 1}),
+                                     svdat.getExternalIndices({0, 2, 1}),
+                                     false);
+
+            CHECK(svdat021.cdata == expected);
+        }
+        SECTION("Toffoli 1,2,0 |+10> -> |+10>") {
+            std::vector<cp_t> expected{init_state};
+
+            SVData<TestType> svdat120{num_qubits, init_state};
+
+            svdat120.sv.applyToffoli(svdat.getInternalIndices({1, 2, 0}),
+                                     svdat.getExternalIndices({1, 2, 0}),
+                                     false);
+
+            CHECK(svdat120.cdata == expected);
+        }
+    }
+    SECTION("Apply using dispatcher") {
+        SECTION("Toffoli [0,1,2], [1,0,2] |+10> -> |+1+>") {
+
+            std::vector<cp_t> expected{
+                {0, 0}, {0, 0}, {1 / sqrt(2), 0}, {0, 0},
+                {0, 0}, {0, 0}, {0, 0},           {1 / sqrt(2), 0}};
+
+            SVData<TestType> svdat012{num_qubits, init_state};
+            SVData<TestType> svdat102{num_qubits, init_state};
+
+            svdat012.sv.applyOperation("Toffoli", {0, 1, 2});
+            svdat102.sv.applyOperation("Toffoli", {1, 0, 2});
+
+            CHECK(svdat012.cdata == expected);
+            CHECK(svdat102.cdata == expected);
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVector::applyCSWAP", "[StateVector]", float, double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 3;
+    SVData<TestType> svdat{num_qubits};
+
+    // Test using |+10> state
+    svdat.sv.applyOperations({{"Hadamard"}, {"PauliX"}}, {{0}, {1}},
+                             {false, false});
+    const auto init_state = svdat.cdata;
+
+    SECTION("Apply directly") {
+        SECTION("CSWAP 0,1,2 |+10> -> |010> + |101>") {
+            std::vector<cp_t> expected{{0, 0}, {0, 0}, {1 / sqrt(2), 0},
+                                       {0, 0}, {0, 0}, {1 / sqrt(2), 0},
+                                       {0, 0}, {0, 0}};
+
+            SVData<TestType> svdat012{num_qubits, init_state};
+
+            svdat012.sv.applyCSWAP(svdat.getInternalIndices({0, 1, 2}),
+                                   svdat.getExternalIndices({0, 1, 2}), false);
+
+            CHECK(svdat012.cdata == expected);
+        }
+
+        SECTION("CSWAP 1,0,2 |+10> -> |01+>") {
+            std::vector<cp_t> expected{
+                {0, 0}, {0, 0}, {1 / sqrt(2), 0}, {1 / sqrt(2), 0},
+                {0, 0}, {0, 0}, {0, 0},           {0, 0}};
+
+            SVData<TestType> svdat102{num_qubits, init_state};
+
+            svdat102.sv.applyCSWAP(svdat.getInternalIndices({1, 0, 2}),
+                                   svdat.getExternalIndices({1, 0, 2}), false);
+
+            CHECK(svdat102.cdata == expected);
+        }
+        SECTION("CSWAP 2,1,0 |+10> -> |+10>") {
+            std::vector<cp_t> expected{init_state};
+
+            SVData<TestType> svdat021{num_qubits, init_state};
+
+            svdat021.sv.applyCSWAP(svdat.getInternalIndices({2, 1, 0}),
+                                   svdat.getExternalIndices({2, 1, 0}), false);
+
+            CHECK(svdat021.cdata == expected);
+        }
+    }
+    SECTION("Apply using dispatcher") {
+        SECTION("CSWAP 0,1,2 |+10> -> |010> + |101>") {
+
+            std::vector<cp_t> expected{{0, 0}, {0, 0}, {1 / sqrt(2), 0},
+                                       {0, 0}, {0, 0}, {1 / sqrt(2), 0},
+                                       {0, 0}, {0, 0}};
+
+            SVData<TestType> svdat012{num_qubits, init_state};
+
+            svdat012.sv.applyOperation("CSWAP", {0, 1, 2});
+
+            CHECK(svdat012.cdata == expected);
+        }
     }
 }
