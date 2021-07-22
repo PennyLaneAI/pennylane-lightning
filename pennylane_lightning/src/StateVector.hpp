@@ -170,8 +170,7 @@ template <class fp_t = double> class StateVector {
      */
     void applyOperations(const vector<string> &ops,
                          const vector<vector<size_t>> &wires,
-                         const vector<bool> &inverse
-                         ) {
+                         const vector<bool> &inverse) {
         const size_t numOperations = ops.size();
         if (numOperations != wires.size())
             throw std::invalid_argument(
@@ -179,7 +178,7 @@ template <class fp_t = double> class StateVector {
                 "parameters must all be equal");
 
         for (size_t i = 0; i < numOperations; i++) {
-            applyOperation(ops[i], wires[i], inverse[i] );
+            applyOperation(ops[i], wires[i], inverse[i]);
         }
     }
 
