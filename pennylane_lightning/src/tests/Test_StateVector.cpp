@@ -604,8 +604,6 @@ TEMPLATE_TEST_CASE("StateVector::applyRot", "[StateVector]", float, double) {
             auto ext_idx = svdat.getExternalIndices({index});
             svdat.sv.applyRot(int_idx, ext_idx, false, angles[index][0],
                               angles[index][1], angles[index][2]);
-            CAPTURE(svdat.cdata);
-            CAPTURE(expected_results[index]);
 
             CHECK(isApproxEqual(svdat.cdata, expected_results[index]));
         }
@@ -616,5 +614,38 @@ TEMPLATE_TEST_CASE("StateVector::applyRot", "[StateVector]", float, double) {
             svdat.sv.applyOperation("Rot", {index}, false, angles[index]);
             CHECK(isApproxEqual(svdat.cdata, expected_results[index]));
         }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVector::applyCNOT", "[StateVector]", float, double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 3;
+    SVData<TestType> svdat{num_qubits};
+
+    // Test using |+00> state to generate 3-qubit GHZ state
+    svdat.sv.applyOperation("Hadamard", {0});
+    const auto init_state = svdat.cdata;
+
+    SECTION("Apply directly") {
+        SVData<TestType> svdat{num_qubits, init_state};
+
+        for (size_t index = 1; index < num_qubits; index++) {
+            auto int_idx = svdat.getInternalIndices({index-1, index});
+            auto ext_idx = svdat.getExternalIndices({index-1, index});
+
+            svdat.sv.applyCNOT(int_idx, ext_idx, false);
+            CAPTURE(svdat.cdata);
+        }
+        CHECK(svdat.cdata.front() == cp_t{1/sqrt(2), 0});
+        CHECK(svdat.cdata.back() == cp_t{1/sqrt(2), 0});
+    }
+    SECTION("Apply using dispatcher") {
+        SVData<TestType> svdat{num_qubits, init_state};
+
+        for (size_t index = 1; index < num_qubits; index++) {
+            svdat.sv.applyOperation("CNOT", {index-1, index}, false);
+        }
+        CHECK(svdat.cdata.front() == cp_t{1/sqrt(2), 0});
+        CHECK(svdat.cdata.back() == cp_t{1/sqrt(2), 0});
     }
 }
