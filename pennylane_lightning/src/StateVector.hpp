@@ -55,9 +55,10 @@ template <class fp_t = double> class StateVector {
     static constexpr CFP_t ONE = {1, 0};
     static constexpr CFP_t ZERO = {0, 0};
     static constexpr CFP_t IMAG = {0, 1};
-    inline static const CFP_t SQRT2 = {static_cast<fp_t>(std::sqrt(2)), 0};
-    inline static const CFP_t INVSQRT2 = {static_cast<fp_t>(1 / std::sqrt(2)),
-                                          0};
+    inline static const fp_t SQRT2 = {static_cast<fp_t>(std::sqrt(2))};
+    inline static const fp_t INVSQRT2 = {
+        static_cast<fp_t>(1 / std::sqrt(2)),
+    };
 
     const FMap gates_;
     const std::unordered_map<string, size_t> gate_wires_;
@@ -427,6 +428,7 @@ template <class fp_t = double> class StateVector {
 
     void applyHadamard(const vector<size_t> &indices,
                        const vector<size_t> &externalIndices, bool inverse) {
+
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
 
