@@ -188,16 +188,20 @@ template <class fp_t = double> class StateVector {
      * @param indicesToExclude
      * @return vector<size_t>
      */
-    vector<size_t>
-    getIndicesAfterExclusion(const vector<size_t> &indicesToExclude) {
+    vector<size_t> static getIndicesAfterExclusion(
+        const vector<size_t> &indicesToExclude, size_t num_qubits) {
         std::set<size_t> indices;
-        for (size_t i = 0; i < num_qubits_; i++) {
+        for (size_t i = 0; i < num_qubits; i++) {
             indices.emplace(i);
         }
         for (const size_t &excludedIndex : indicesToExclude) {
             indices.erase(excludedIndex);
         }
         return {indices.begin(), indices.end()};
+    }
+    vector<size_t>
+    getIndicesAfterExclusion(const vector<size_t> &indicesToExclude) {
+        return getIndicesAfterExclusion(indicesToExclude, num_qubits_);
     }
 
     /**
@@ -206,19 +210,26 @@ template <class fp_t = double> class StateVector {
      * @param qubitIndices Indices of the qubits to apply operations.
      * @return vector<size_t>
      */
-    vector<size_t> generateBitPatterns(const vector<size_t> &qubitIndices) {
+    static vector<size_t>
+    generateBitPatterns(const vector<size_t> &qubitIndices, size_t num_qubits) {
         vector<size_t> indices;
         indices.reserve(Util::exp2(qubitIndices.size()));
         indices.emplace_back(0);
-        for (int i = qubitIndices.size() - 1; i >= 0; i--) {
-            size_t value =
-                Util::maxDecimalForQubit(qubitIndices[i], num_qubits_);
-            size_t currentSize = indices.size();
+
+        for (auto index_it = qubitIndices.rbegin();
+             index_it != qubitIndices.rend(); index_it++) {
+            const size_t value =
+                Util::maxDecimalForQubit(*index_it, num_qubits);
+            const size_t currentSize = indices.size();
             for (size_t j = 0; j < currentSize; j++) {
                 indices.emplace_back(indices[j] + value);
             }
         }
         return indices;
+    }
+
+    vector<size_t> generateBitPatterns(const vector<size_t> &qubitIndices) {
+        return generateBitPatterns(qubitIndices, num_qubits_);
     }
 
     static constexpr vector<CFP_t> getPauliX() {
