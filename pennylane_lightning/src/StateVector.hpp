@@ -18,6 +18,9 @@
 
 #pragma once
 
+// Required for compilation with MSVC
+#define _USE_MATH_DEFINES
+
 #include <cmath>
 #include <complex>
 #include <functional>
