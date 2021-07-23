@@ -101,23 +101,23 @@ TEMPLATE_TEST_CASE("StateVector::StateVector", "[StateVector]", float, double) {
     }
     SECTION("StateVector<TestType> {std::complex<TestType>, size_t}") {
         REQUIRE(std::is_constructible<StateVector<TestType>,
-                                      std::complex<TestType>*, size_t>::value);
+                                      std::complex<TestType> *, size_t>::value);
     }
     SECTION("StateVector<TestType> cross types") {
         if constexpr (!std::is_same_v<TestType, double>) {
             REQUIRE_FALSE(
                 std::is_constructible<StateVector<TestType>,
-                                      std::complex<double>*, size_t>::value);
+                                      std::complex<double> *, size_t>::value);
             REQUIRE_FALSE(
                 std::is_constructible<StateVector<double>,
-                                      std::complex<TestType>*, size_t>::value);
+                                      std::complex<TestType> *, size_t>::value);
         } else if constexpr (!std::is_same_v<TestType, float>) {
             REQUIRE_FALSE(
                 std::is_constructible<StateVector<TestType>,
-                                      std::complex<float>*, size_t>::value);
+                                      std::complex<float> *, size_t>::value);
             REQUIRE_FALSE(
                 std::is_constructible<StateVector<float>,
-                                      std::complex<TestType>*, size_t>::value);
+                                      std::complex<TestType> *, size_t>::value);
         }
     }
 }
@@ -197,14 +197,14 @@ TEST_CASE("StateVector::generateBitPatterns", "[StateVector]") {
 TEST_CASE("StateVector::getIndicesAfterExclusion", "[StateVector]") {
     const size_t num_qubits = 4;
     SECTION("Qubit indices {}") {
-        std::vector<size_t> expected{0,1,2,3};
+        std::vector<size_t> expected{0, 1, 2, 3};
         auto indices = StateVector<>::getIndicesAfterExclusion({}, num_qubits);
         CHECK(indices == expected);
     }
     SECTION("Qubit indices {i}") {
         for (size_t i = 0; i < num_qubits; i++) {
-            std::vector<size_t> expected{0,1,2,3};
-            expected.erase(expected.begin()+i);
+            std::vector<size_t> expected{0, 1, 2, 3};
+            expected.erase(expected.begin() + i);
 
             auto indices =
                 StateVector<>::getIndicesAfterExclusion({i}, num_qubits);
