@@ -25,24 +25,23 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            cd pennylane_lightning/src/tests
             cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=1
             cmake --build ./Build
-            ./Build/tests/runner --order lex --reporter junit --out Build/test/results/report.xml
+            ./Build/tests/runner --order lex --reporter junit --out Build/tests/results/report.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v2
         if: always()
         with:
           name: ubuntu-test-report
-          path: Build/test/results/report.xml
+          path: Build/tests/results/report.xml
 
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@v1
         if: always()
         with:
           check_name: Test Report (C++) on Ubuntu
-          files: Build/test/results/report.xml
+          files: Build/tests/results/report.xml
 
   pythontests:
     name: Python tests
