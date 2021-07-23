@@ -428,7 +428,6 @@ template <class fp_t = double> class StateVector {
 
     void applyHadamard(const vector<size_t> &indices,
                        const vector<size_t> &externalIndices, bool inverse) {
-
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
 
