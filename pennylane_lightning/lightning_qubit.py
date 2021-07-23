@@ -94,14 +94,10 @@ class LightningQubit(DefaultQubit):
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
             if isinstance(operations[0], QubitStateVector):
-                self._apply_state_vector(
-                    operations[0].parameters[0].copy(), operations[0].wires
-                )
+                self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
                 del operations[0]
             elif isinstance(operations[0], BasisState):
-                self._apply_basis_state(
-                    operations[0].parameters[0], operations[0].wires
-                )
+                self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 del operations[0]
 
         for operation in operations:
@@ -120,9 +116,7 @@ class LightningQubit(DefaultQubit):
             if any(isinstance(r, QubitUnitary) for r in rotations):
                 super().apply(operations=[], rotations=rotations)
             else:
-                self._state = self.apply_lightning(
-                    np.copy(self._pre_rotated_state), rotations
-                )
+                self._state = self.apply_lightning(np.copy(self._pre_rotated_state), rotations)
         else:
             self._state = self._pre_rotated_state
 
