@@ -27,7 +27,8 @@ jobs:
         run: |
             cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=1
             cmake --build ./Build
-            ./Build/tests/runner --order lex --reporter junit --out Build/tests/results/report.xml
+            mkdir -p ./Build/tests/results
+            ./Build/tests/runner --order lex --reporter junit --out ./Build/tests/results/report.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v2
