@@ -359,18 +359,6 @@ class CGeneralRotationGate : public TwoQubitGate {
                      const std::vector<size_t> &externalIndices, bool inverse);
 };
 
-/**
- * Controlled Phase Shift Gate
- *
- * This 2-qubit gate is:
- * CPHASE(\phi) = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 \\
-                0 & 0 & 1 & 0 \\
-                0 & 0 & 0 & e^{i\phi}
-            \end{bmatrix}.
- *
- */
 class CPhaseShiftGate : public TwoQubitGate {
   private:
     const CplxType shift;

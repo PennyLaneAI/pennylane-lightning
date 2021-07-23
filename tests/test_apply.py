@@ -22,7 +22,6 @@ from unittest import mock
 
 import numpy as np
 import pennylane as qml
-from pennylane.ops.qubit import ControlledPhaseShift
 import pennylane_lightning
 import pytest
 from pennylane import DeviceError
@@ -213,6 +212,7 @@ class TestApply:
 
         assert np.allclose(qubit_device_2_wires.state, np.array(expected_output), atol=tol, rtol=0)
 
+    """ operation,input,expected_output,par """
     test_data_single_wire_with_parameters = [
         (qml.PhaseShift, [1, 0], [1, 0], [math.pi / 2]),
         (qml.PhaseShift, [0, 1], [0, 1j], [math.pi / 2]),
@@ -278,6 +278,7 @@ class TestApply:
 
         assert np.allclose(qubit_device_1_wire.state, np.array(expected_output), atol=tol, rtol=0)
 
+    """ operation,input,expected_output,par """
     test_data_two_wires_with_parameters = [
         (qml.CRX, [0, 1, 0, 0], [0, 1, 0, 0], [math.pi / 2]),
         (qml.CRX, [0, 0, 0, 1], [0, 0, -1j, 0], [math.pi]),
@@ -332,19 +333,25 @@ class TestApply:
             qml.ControlledPhaseShift,
             [1, 0, 0, 0],
             [1, 0, 0, 0],
-            [math.pi/2],
+            [math.pi / 2],
         ),
         (
             qml.ControlledPhaseShift,
             [0, 1, 0, 0],
             [0, 1, 0, 0],
-            [math.pi/2],
+            [math.pi / 2],
         ),
         (
             qml.ControlledPhaseShift,
             [0, 0, 1, 0],
             [0, 0, 1, 0],
-            [math.pi/2],
+            [math.pi / 2],
+        ),
+        (
+            qml.ControlledPhaseShift,
+            [1 / math.sqrt(2), 1 / math.sqrt(2), 1 / math.sqrt(2), 1 / math.sqrt(2)],
+            [1 / math.sqrt(2), 1 / math.sqrt(2), 1 / math.sqrt(2), 1 / 2 + 1j / 2],
+            [math.pi / 4],
         ),
     ]
 
@@ -896,6 +903,8 @@ class TestLightningQubitIntegration:
             ("CRot", [-math.pi, 0, math.pi / 2], [-1 / 2, -1 / 2]),
             ("ControlledPhaseShift", [0], [-1 / 2, -1 / 2]),
             ("ControlledPhaseShift", [-math.pi], [-1 / 2, -1 / 2]),
+            ("ControlledPhaseShift", [math.pi / 2], [-1 / 2, -1 / 2]),
+            ("ControlledPhaseShift", [math.pi], [-1 / 2, -1 / 2]),
         ],
     )
     def test_supported_gate_two_wires_with_parameters(

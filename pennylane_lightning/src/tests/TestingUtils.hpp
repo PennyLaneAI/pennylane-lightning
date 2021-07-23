@@ -16,17 +16,20 @@
 // Helper macro to check if an exception is thrown with the correct complete
 // error message
 #define EXPECT_THROW_WITH_MESSAGE(stmt, etype, whatstring)                     \
-    EXPECT_THROW(try { stmt; } catch (const etype &ex) {                       \
-        EXPECT_EQ(whatstring, std::string(ex.what()));                         \
-        throw;                                                                 \
-    },                                                                         \
-                 etype)
+    EXPECT_THROW(                                                              \
+        try { stmt; } catch (const etype &ex) {                                \
+            EXPECT_EQ(whatstring, std::string(ex.what()));                     \
+            throw;                                                             \
+        },                                                                     \
+        etype)
 
 // Helper macro to check if an exception is thrown with the correct error
 // message substring
 #define EXPECT_THROW_WITH_MESSAGE_SUBSTRING(stmt, etype, whatstring)           \
-    EXPECT_THROW(try { stmt; } catch (const etype &ex) {                       \
-        EXPECT_NE(std::string(ex.what()).find(whatstring), std::string::npos); \
-        throw;                                                                 \
-    },                                                                         \
-                 etype)
+    EXPECT_THROW(                                                              \
+        try { stmt; } catch (const etype &ex) {                                \
+            EXPECT_NE(std::string(ex.what()).find(whatstring),                 \
+                      std::string::npos);                                      \
+            throw;                                                             \
+        },                                                                     \
+        etype)
