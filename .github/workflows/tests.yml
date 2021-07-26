@@ -11,12 +11,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-18.04]
+        os: [ubuntu-20.04]
     steps:
       - uses: actions/checkout@v2
 
       - name: Install dependencies
-        run: sudo apt-get -y -q install cmake gcc
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc
 
       - name: Install Google Test
         run: |
@@ -34,7 +34,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-18.04]
+        os: [ubuntu-20.04]
 
     steps:
 
@@ -49,7 +49,7 @@ jobs:
           python-version: '3.7'
 
       - name: Install dependencies
-        run: sudo apt-get -y -q install cmake gcc
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc
 
       - name: Get required Python packages
         run: |
