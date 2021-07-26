@@ -1045,7 +1045,6 @@ TEMPLATE_TEST_CASE("StateVector::applyToffoli", "[StateVector]", float,
     }
     SECTION("Apply using dispatcher") {
         SECTION("Toffoli [0,1,2], [1,0,2] |+10> -> |+1+>") {
-
             std::vector<cp_t> expected{
                 {0, 0}, {0, 0}, {1 / sqrt(2), 0}, {0, 0},
                 {0, 0}, {0, 0}, {0, 0},           {1 / sqrt(2), 0}};
@@ -1110,7 +1109,6 @@ TEMPLATE_TEST_CASE("StateVector::applyCSWAP", "[StateVector]", float, double) {
     }
     SECTION("Apply using dispatcher") {
         SECTION("CSWAP 0,1,2 |+10> -> |010> + |101>") {
-
             std::vector<cp_t> expected{{0, 0}, {0, 0}, {1 / sqrt(2), 0},
                                        {0, 0}, {0, 0}, {1 / sqrt(2), 0},
                                        {0, 0}, {0, 0}};
