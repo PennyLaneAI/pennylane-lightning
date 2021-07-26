@@ -24,10 +24,61 @@
 #include <limits>
 #include <memory>
 #include <stdexcept>
+#include <type_traits>
 
 namespace Pennylane {
 
 namespace Util {
+
+/**
+ * @brief Return complex value 1+0i in the given precision.
+ *
+ * @tparam T Floating point precision type. Accepts `double` and `float`.
+ * @return constexpr std::complex<T>{1,0}
+ */
+template <class T> inline static constexpr std::complex<T> ONE(){return {1, 0}};
+
+/**
+ * @brief Return complex value 0+0i in the given precision.
+ *
+ * @tparam T Floating point precision type. Accepts `double` and `float`.
+ * @return constexpr std::complex<T>{0,0}
+ */
+template <class T>
+inline static constexpr std::complex<T> ZERO(){return {0, 0}};
+
+/**
+ * @brief Return complex value 0+1i in the given precision.
+ *
+ * @tparam T Floating point precision type. Accepts `double` and `float`.
+ * @return constexpr std::complex<T>{0,1}
+ */
+template <class T>
+inline static constexpr std::complex<T> IMAG(){return {0, 1}};
+
+/**
+ * @brief Returns sqrt(2) as a compile-time constant.
+ *
+ * @tparam T Precision of result. `double`, `float` are accepted values.
+ * @return constexpr T sqrt(2)
+ */
+template <class T> inline static constexpr T SQRT2() {
+    if constexpr (std::is_same_v<T, float>) {
+        return {0x1.6a09e6p+0f};
+    } else {
+        return {0x1.6a09e667f3bcdp+0};
+    }
+}
+
+/**
+ * @brief Returns inverse sqrt(2) as a compile-time constant.
+ *
+ * @tparam T Precision of result. `double`, `float` are accepted values.
+ * @return constexpr T 1/sqrt(2)
+ */
+template <class T> inline static constexpr T INVSQRT2() {
+    return {1 / SQRT2<T>()};
+}
 
 /**
  * Calculates 2^n -1 for some integer n > 0 using bitshifts.
@@ -37,6 +88,12 @@ namespace Util {
  */
 inline size_t exp2(const size_t &n) { return static_cast<size_t>(1) << n; }
 
+/**
+ * @brief
+ *
+ * @param value
+ * @return size_t
+ */
 inline size_t log2(size_t value) {
     return static_cast<size_t>(std::log2(value));
 }
@@ -51,24 +108,6 @@ inline size_t log2(size_t value) {
 inline size_t maxDecimalForQubit(size_t qubitIndex, size_t qubits) {
     assert(qubitIndex < qubits);
     return exp2(qubits - qubitIndex - 1);
-}
-
-template <class DataPrecision>
-inline static DataPrecision InvSqrt(DataPrecision value) {
-    return 1 / std::sqrt(value);
-}
-
-template <class DataPrecision = double>
-inline static constexpr DataPrecision ONE() {
-    return std::complex<DataPrecision>{1, 0};
-}
-template <class DataPrecision = double>
-inline static constexpr DataPrecision ZERO() {
-    return std::complex<DataPrecision>{0, 0};
-}
-template <class DataPrecision = double>
-inline static constexpr DataPrecision IMAG() {
-    return std::complex<DataPrecision>{0, 1};
 }
 
 } // namespace Util
