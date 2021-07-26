@@ -4,17 +4,21 @@
 
 ### Improvements
 
+- Static versions of jQuery and Bootstrap are no longer included in the CSS theme. [(#)](https://github.com/XanaduAI/jet/pull/)
+
 - Move changelog to `.github` and add a changelog reminder.
 
 ### Breaking changes
 
 ### Bug fixes
 
+
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Thomas Bromley
+Thomas Bromley, Lee James O'Riordan
 
 ---
 
