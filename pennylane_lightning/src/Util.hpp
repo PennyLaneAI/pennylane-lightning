@@ -83,7 +83,7 @@ std::unique_ptr<T> make_unique(Args &&...args) {
 // Exception for functions that aren't implemented
 class NotImplementedException : public std::logic_error {
   public:
-    NotImplementedException(std::string fname = "")
+    explicit NotImplementedException(const std::string &fname)
         : std::logic_error(std::string("Function is not implemented. ") +
                            fname){};
 };

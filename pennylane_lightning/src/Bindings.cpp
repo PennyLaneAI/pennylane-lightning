@@ -49,9 +49,7 @@ void apply(py::array_t<complex<T>> &stateNumpyArray, const vector<string> &ops,
 
 template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
   public:
-    // StateVector<fp_t> sv;
-
-    StateVecBinder(const py::array_t<complex<fp_t>> &stateNumpyArray)
+    explicit StateVecBinder(const py::array_t<complex<fp_t>> &stateNumpyArray)
         : StateVector<fp_t>(
               static_cast<complex<fp_t> *>(stateNumpyArray.request().ptr),
               static_cast<size_t>(stateNumpyArray.request().shape[0])) {}
