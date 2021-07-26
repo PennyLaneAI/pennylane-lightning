@@ -18,6 +18,9 @@
 
 #pragma once
 
+// Required for compilation with MSVC
+#define _USE_MATH_DEFINES
+
 #include <cmath>
 #include <complex>
 #include <functional>
@@ -52,9 +55,10 @@ template <class fp_t = double> class StateVector {
     static constexpr CFP_t ONE = {1, 0};
     static constexpr CFP_t ZERO = {0, 0};
     static constexpr CFP_t IMAG = {0, 1};
-    inline static const CFP_t SQRT2 = {static_cast<fp_t>(std::sqrt(2)), 0};
-    inline static const CFP_t INVSQRT2 = {static_cast<fp_t>(1 / std::sqrt(2)),
-                                          0};
+    inline static const fp_t SQRT2 = {static_cast<fp_t>(std::sqrt(2))};
+    inline static const fp_t INVSQRT2 = {
+        static_cast<fp_t>(1 / std::sqrt(2)),
+    };
 
     const FMap gates_;
     const std::unordered_map<string, size_t> gate_wires_;
@@ -62,33 +66,6 @@ template <class fp_t = double> class StateVector {
     CFP_t *const arr_;
     const size_t length_;
     const size_t num_qubits_;
-
-    vector<size_t>
-    getIndicesAfterExclusion(const vector<size_t> &indicesToExclude) {
-        std::set<size_t> indices;
-        for (size_t i = 0; i < num_qubits_; i++) {
-            indices.emplace(i);
-        }
-        for (const size_t &excludedIndex : indicesToExclude) {
-            indices.erase(excludedIndex);
-        }
-        return {indices.begin(), indices.end()};
-    }
-
-    vector<size_t> generateBitPatterns(const vector<size_t> &qubitIndices) {
-        vector<size_t> indices;
-        indices.reserve(Util::exp2(qubitIndices.size()));
-        indices.emplace_back(0);
-        for (int i = qubitIndices.size() - 1; i >= 0; i--) {
-            size_t value =
-                Util::maxDecimalForQubit(qubitIndices[i], num_qubits_);
-            size_t currentSize = indices.size();
-            for (size_t j = 0; j < currentSize; j++) {
-                indices.emplace_back(indices[j] + value);
-            }
-        }
-        return indices;
-    }
 
   public:
     StateVector()
@@ -157,7 +134,6 @@ template <class fp_t = double> class StateVector {
                 std::to_string(gate_wires_.at(opName)) + " wires, but " +
                 std::to_string(wires.size()) + " were supplied");
 
-        // assume copy elision
         const vector<size_t> internalIndices = generateBitPatterns(wires);
         const vector<size_t> externalWires = getIndicesAfterExclusion(wires);
         const vector<size_t> externalIndices =
@@ -177,7 +153,7 @@ template <class fp_t = double> class StateVector {
     void applyOperations(const vector<string> &ops,
                          const vector<vector<size_t>> &wires,
                          const vector<bool> &inverse,
-                         const vector<vector<fp_t>> &params = {{}}) {
+                         const vector<vector<fp_t>> &params) {
         const size_t numOperations = ops.size();
         if (numOperations != wires.size() || numOperations != params.size())
             throw std::invalid_argument(
@@ -187,6 +163,77 @@ template <class fp_t = double> class StateVector {
         for (size_t i = 0; i < numOperations; i++) {
             applyOperation(ops[i], wires[i], inverse[i], params[i]);
         }
+    }
+    /**
+     * @brief Apply multiple gates to the state-vector.
+     *
+     * @param ops Vector of gate names to be applied in order.
+     * @param wires Vector of wires on which to apply index-matched gate name.
+     * @param inverse Indicates whether gate at matched index is to be inverted.
+     * @param params Optional parameter data for index matched gates.
+     */
+    void applyOperations(const vector<string> &ops,
+                         const vector<vector<size_t>> &wires,
+                         const vector<bool> &inverse) {
+        const size_t numOperations = ops.size();
+        if (numOperations != wires.size())
+            throw std::invalid_argument(
+                "Invalid arguments: number of operations, wires, and "
+                "parameters must all be equal");
+
+        for (size_t i = 0; i < numOperations; i++) {
+            applyOperation(ops[i], wires[i], inverse[i]);
+        }
+    }
+
+    /**
+     * @brief Get indices not participating in operation.
+     *
+     * @param indicesToExclude
+     * @return vector<size_t>
+     */
+    vector<size_t> static getIndicesAfterExclusion(
+        const vector<size_t> &indicesToExclude, size_t num_qubits) {
+        std::set<size_t> indices;
+        for (size_t i = 0; i < num_qubits; i++) {
+            indices.emplace(i);
+        }
+        for (const size_t &excludedIndex : indicesToExclude) {
+            indices.erase(excludedIndex);
+        }
+        return {indices.begin(), indices.end()};
+    }
+    vector<size_t>
+    getIndicesAfterExclusion(const vector<size_t> &indicesToExclude) {
+        return getIndicesAfterExclusion(indicesToExclude, num_qubits_);
+    }
+
+    /**
+     * @brief Generate bit patterns for applying operations.
+     *
+     * @param qubitIndices Indices of the qubits to apply operations.
+     * @return vector<size_t>
+     */
+    static vector<size_t>
+    generateBitPatterns(const vector<size_t> &qubitIndices, size_t num_qubits) {
+        vector<size_t> indices;
+        indices.reserve(Util::exp2(qubitIndices.size()));
+        indices.emplace_back(0);
+
+        for (auto index_it = qubitIndices.rbegin();
+             index_it != qubitIndices.rend(); index_it++) {
+            const size_t value =
+                Util::maxDecimalForQubit(*index_it, num_qubits);
+            const size_t currentSize = indices.size();
+            for (size_t j = 0; j < currentSize; j++) {
+                indices.emplace_back(indices[j] + value);
+            }
+        }
+        return indices;
+    }
+
+    vector<size_t> generateBitPatterns(const vector<size_t> &qubitIndices) {
+        return generateBitPatterns(qubitIndices, num_qubits_);
     }
 
     static constexpr vector<CFP_t> getPauliX() {
@@ -268,8 +315,8 @@ template <class fp_t = double> class StateVector {
     template <typename Param_t = fp_t>
     static const vector<CFP_t> getRot(Param_t phi, Param_t theta,
                                       Param_t omega) {
-        const CFP_t c{std::cos(theta / 2), 0}, s{std::sin(theta / 2), 0};
-        const fp_t p{phi + omega}, m{phi - omega};
+        const CFP_t c(std::cos(theta / 2), 0), s(std::sin(theta / 2), 0);
+        const fp_t p(phi + omega), m(phi - omega);
         return vector<CFP_t>{
             std::exp(-IMAG * (p / 2)) * c, -std::exp(IMAG * (m / 2)) * s,
             std::exp(-IMAG * (m / 2)) * s, std::exp(IMAG * (p / 2)) * c};
@@ -406,8 +453,8 @@ template <class fp_t = double> class StateVector {
                 const vector<size_t> &externalIndices, bool inverse) {
 
         const CFP_t shift = (inverse == true)
-                                ? std::conj(std::exp(CFP_t{0, M_PI / 4}))
-                                : std::exp(CFP_t{0, M_PI / 4});
+                                ? std::conj(std::exp(CFP_t(0, M_PI / 4)))
+                                : std::exp(CFP_t(0, M_PI / 4));
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -421,8 +468,8 @@ template <class fp_t = double> class StateVector {
                  Param_t angle) {
         const CFP_t c(std::cos(angle / 2), 0);
 
-        const CFP_t js = (inverse == true) ? CFP_t{0, -std::sin(-angle / 2)}
-                                           : CFP_t{0, std::sin(-angle / 2)};
+        const CFP_t js = (inverse == true) ? CFP_t(0, -std::sin(-angle / 2))
+                                           : CFP_t(0, std::sin(-angle / 2));
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -438,8 +485,8 @@ template <class fp_t = double> class StateVector {
                  const vector<size_t> &externalIndices, bool inverse,
                  Param_t angle) {
         const CFP_t c(std::cos(angle / 2), 0);
-        const CFP_t s = (inverse == true) ? CFP_t{-std::sin(angle / 2), 0}
-                                          : CFP_t{std::sin(angle / 2), 0};
+        const CFP_t s = (inverse == true) ? CFP_t(-std::sin(angle / 2), 0)
+                                          : CFP_t(std::sin(angle / 2), 0);
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -454,8 +501,8 @@ template <class fp_t = double> class StateVector {
     void applyRZ(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
                  Param_t angle) {
-        const CFP_t first = std::exp(CFP_t{0, -angle / 2});
-        const CFP_t second = std::exp(CFP_t{0, angle / 2});
+        const CFP_t first = std::exp(CFP_t(0, -angle / 2));
+        const CFP_t second = std::exp(CFP_t(0, angle / 2));
         const CFP_t shift1 = (inverse == true) ? std::conj(first) : first;
         const CFP_t shift2 = (inverse == true) ? std::conj(second) : second;
 
@@ -470,8 +517,8 @@ template <class fp_t = double> class StateVector {
     void applyPhaseShift(const vector<size_t> &indices,
                          const vector<size_t> &externalIndices, bool inverse,
                          Param_t angle) {
-        const CFP_t s = (inverse == true) ? conj(std::exp(CFP_t{0, angle}))
-                                          : std::exp(CFP_t{0, angle});
+        const CFP_t s = (inverse == true) ? conj(std::exp(CFP_t(0, angle)))
+                                          : std::exp(CFP_t(0, angle));
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -526,9 +573,9 @@ template <class fp_t = double> class StateVector {
     void applyCRX(const vector<size_t> &indices,
                   const vector<size_t> &externalIndices, bool inverse,
                   Param_t angle) {
-        const CFP_t c{std::cos(angle / 2), 0};
-        const CFP_t js = (inverse == true) ? CFP_t{0, -std::sin(-angle / 2)}
-                                           : CFP_t{0, std::sin(-angle / 2)};
+        const CFP_t c(std::cos(angle / 2), 0);
+        const CFP_t js = (inverse == true) ? CFP_t(0, -std::sin(-angle / 2))
+                                           : CFP_t(0, std::sin(-angle / 2));
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -543,9 +590,9 @@ template <class fp_t = double> class StateVector {
     void applyCRY(const vector<size_t> &indices,
                   const vector<size_t> &externalIndices, bool inverse,
                   Param_t angle) {
-        const CFP_t c{std::cos(angle / 2), 0};
-        const CFP_t s = (inverse == true) ? CFP_t{-std::sin(angle / 2), 0}
-                                          : CFP_t{std::sin(angle / 2), 0};
+        const CFP_t c(std::cos(angle / 2), 0);
+        const CFP_t s = (inverse == true) ? CFP_t(-std::sin(angle / 2), 0)
+                                          : CFP_t(std::sin(angle / 2), 0);
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -561,11 +608,11 @@ template <class fp_t = double> class StateVector {
                   const vector<size_t> &externalIndices, bool inverse,
                   Param_t angle) {
         const CFP_t m00 = (inverse == true)
-                              ? std::conj(std::exp(CFP_t{0, -angle / 2}))
-                              : std::exp(CFP_t{0, -angle / 2});
+                              ? std::conj(std::exp(CFP_t(0, -angle / 2)))
+                              : std::exp(CFP_t(0, -angle / 2));
         const CFP_t m11 = (inverse == true)
-                              ? std::conj(std::exp(CFP_t{0, angle / 2}))
-                              : std::exp(CFP_t{0, angle / 2});
+                              ? std::conj(std::exp(CFP_t(0, angle / 2)))
+                              : std::exp(CFP_t(0, angle / 2));
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             shiftedState[indices[2]] *= m00;

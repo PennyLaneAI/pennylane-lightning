@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
-
 project(pennylane_lightning_tests)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 find_package(OpenMP)
 
 # Default build type for test code is Debug
@@ -10,39 +9,36 @@ if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 
+Include(FetchContent)
 
-include(FetchContent)
 FetchContent_Declare(
-  googletest
-  GIT_REPOSITORY https://github.com/google/googletest.git 
-  GIT_TAG release-1.11.0
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        v2.13.1
 )
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-enable_testing()
 
-add_executable(cpptests lightning_apply_unittest.cpp
-                        lightning_gates_unittest.cpp
-                        lightning_util_unittest.cpp
-                        "../Apply.cpp"
-                        "../Gates.cpp")
+FetchContent_MakeAvailable(Catch2)
 
-target_link_libraries(cpptests PRIVATE gtest_main)
-if(OpenMP_CXX_FOUND)
-	target_link_libraries(cpptests PRIVATE OpenMP::OpenMP_CXX)
-endif()
+# Required for catch_discover_tests().
+list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/contrib)
 
-target_compile_options(cpptests PRIVATE "$<$<CONFIG:DEBUG>:-Wall>")
+# Modify `ctest` to only run the supported subset of tests.
+include(CTest)
+include(Catch)
+
+add_executable(runner runner_main.cpp)
+target_link_libraries(runner pennylane_lightning Catch2::Catch2)
+
+target_sources(runner PRIVATE Test_StateVector.cpp
+                              Test_Bindings.cpp)
+
+target_compile_options(runner PRIVATE "$<$<CONFIG:DEBUG>:-Wall>")
 
 if(ENABLE_NATIVE)
-	message(STATUS "ENABLE_NATIVE is ON. Use -march=native for cpptests.")
-	target_compile_options(cpptests PRIVATE -march=native)
+    message(STATUS "ENABLE_NATIVE is ON. Use -march=native for cpptests.")
+    target_compile_options(runner PRIVATE -march=native)
 endif()
 
-
-include(GoogleTest)
-gtest_discover_tests(cpptests)
+catch_discover_tests(runner)
