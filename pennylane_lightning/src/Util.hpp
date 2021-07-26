@@ -36,7 +36,9 @@ namespace Util {
  * @tparam T Floating point precision type. Accepts `double` and `float`.
  * @return constexpr std::complex<T>{1,0}
  */
-template <class T> inline static constexpr std::complex<T> ONE(){return {1, 0}};
+template <class T> inline static constexpr std::complex<T> ONE() {
+    return {1, 0};
+}
 
 /**
  * @brief Return complex value 0+0i in the given precision.
@@ -44,8 +46,9 @@ template <class T> inline static constexpr std::complex<T> ONE(){return {1, 0}};
  * @tparam T Floating point precision type. Accepts `double` and `float`.
  * @return constexpr std::complex<T>{0,0}
  */
-template <class T>
-inline static constexpr std::complex<T> ZERO(){return {0, 0}};
+template <class T> inline static constexpr std::complex<T> ZERO() {
+    return {0, 0};
+}
 
 /**
  * @brief Return complex value 0+1i in the given precision.
@@ -53,8 +56,9 @@ inline static constexpr std::complex<T> ZERO(){return {0, 0}};
  * @tparam T Floating point precision type. Accepts `double` and `float`.
  * @return constexpr std::complex<T>{0,1}
  */
-template <class T>
-inline static constexpr std::complex<T> IMAG(){return {0, 1}};
+template <class T> inline static constexpr std::complex<T> IMAG() {
+    return {0, 1};
+}
 
 /**
  * @brief Returns sqrt(2) as a compile-time constant.
