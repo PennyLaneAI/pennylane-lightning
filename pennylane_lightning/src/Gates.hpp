@@ -108,7 +108,7 @@ static const std::vector<std::complex<T>> getRX(const std::vector<U> &params) {
 template <class T, class U = T>
 static const std::vector<std::complex<T>> getRY(U angle) {
     const std::complex<T> c(std::cos(angle / 2), 0);
-    const std::complex<T> s(-std::sin(angle / 2), 0);
+    const std::complex<T> s(std::sin(angle / 2), 0);
     return {c, -s, s, c};
 }
 
