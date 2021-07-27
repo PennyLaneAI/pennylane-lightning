@@ -31,6 +31,26 @@ namespace Pennylane {
 namespace Util {
 
 /**
+ * @brief Compile-time scalar real times complex number.
+ *
+ * @tparam T Precision of complex value and result.
+ * @tparam U Precision of real value.
+ * @param a Real scalar value.
+ * @param b Complex scalar value.
+ * @return constexpr std::complex<T>
+ */
+template <class T, class U = T>
+inline static constexpr std::complex<T> ConstMult(U a, std::complex<T> b) {
+    return {a * b.real(), a * b.imag()};
+}
+template <class T, class U = T>
+inline static constexpr std::complex<T> ConstMult(std::complex<U> a,
+                                                  std::complex<T> b) {
+    return {a.real() * b.real() - a.imag() * b.imag(),
+            a.real() * b.imag() + a.imag() * b.real()};
+}
+
+/**
  * @brief Return complex value 1+0i in the given precision.
  *
  * @tparam T Floating point precision type. Accepts `double` and `float`.
