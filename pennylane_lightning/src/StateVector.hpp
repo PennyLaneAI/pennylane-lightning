@@ -147,11 +147,12 @@ template <class fp_t = double> class StateVector {
     void applyOperation(const std::vector<CFP_t> &matrix,
                         const vector<size_t> &wires, bool inverse = false,
                         const vector<fp_t> &params = {}) {
-        if (Util::log2(matrix.size()) != wires.size())
+        if (Util::log2(sqrt(matrix.size())) != wires.size())
             throw std::invalid_argument(
                 string("The supplied gate requires ") +
-                std::to_string(Util::log2(matrix.size())) + " wires, but " +
-                std::to_string(wires.size()) + " were supplied.");
+                std::to_string(Util::log2(sqrt(matrix.size()))) +
+                " wires, but " + std::to_string(wires.size()) +
+                " were supplied.");
 
         const vector<size_t> internalIndices = generateBitPatterns(wires);
         const vector<size_t> externalWires = getIndicesAfterExclusion(wires);
