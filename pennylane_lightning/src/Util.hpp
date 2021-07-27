@@ -26,6 +26,12 @@
 #include <stdexcept>
 #include <type_traits>
 
+#if defined ENABLE_MKL
+#include <mkl.h>
+#else
+#include <cblas.h>
+#endif
+
 namespace Pennylane {
 
 namespace Util {
@@ -105,10 +111,10 @@ template <class T> inline static constexpr T INVSQRT2() {
 }
 
 /**
- * Calculates 2^n -1 for some integer n > 0 using bitshifts.
+ * Calculates 2^n for some integer n > 0 using bitshifts.
  *
  * @param n the exponent
- * @return value of 2^n -1
+ * @return value of 2^n
  */
 inline size_t exp2(const size_t &n) { return static_cast<size_t>(1) << n; }
 
@@ -134,14 +140,69 @@ inline size_t maxDecimalForQubit(size_t qubitIndex, size_t qubits) {
     return exp2(qubits - qubitIndex - 1);
 }
 
+/**
+ * @brief Returns the number of wires supported by a given qubit gate.
+ *
+ * @tparam T Floating point precision type.
+ * @param data Gate matrix data.
+ * @return size_t Number of wires.
+ */
+template <class T> inline size_t dimSize(const std::vector<T> &data) {
+    return log2(sqrt(data.size()));
+}
+
+/**
+ * @brief Multiply the given gate data.
+ *
+ * @tparam T Floating point precision type.
+ * @param left Left matrix.
+ * @param right Right matrix.
+ * @param out Output matrix data.
+ */
+template <typename T>
+constexpr void GateMult(const std::vector<T> &left, const std::vector<T> &right,
+                        std::vector<T> &out) {
+    if (left.size() != right.size())
+        throw std::invalid_argument("The supplied gates have incompatible sizes");
+
+    T alpha = ONE<T>();
+    T beta = ZERO<T>();
+
+    auto A_data = left.data();
+    auto B_data = right.data();
+    auto C_data = out.data();
+
+    // The following are assumed to be equal.
+    size_t m = dimSize(left);
+    size_t n = dimSize(right);
+    size_t k = m;
+
+    if constexpr (std::is_same_v<T, std::complex<float>>)
+        cblas_cgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, k, &alpha,
+                    A_data, m, B_data, n, &beta, C_data, k);
+    else if constexpr (std::is_same_v<T, std::complex<double>>)
+        cblas_zgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, k, &alpha,
+                    A_data, m, B_data, n, &beta, C_data, k);
+}
+
+/**
+ * @brief Multiply the given gate data.
+ *
+ * @tparam T Floating point precision type.
+ * @param left Left matrix.
+ * @param right Right matrix.
+ */
+template <class T>
+inline static const std::vector<std::complex<T>>
+GateMult(const std::vector<std::complex<T>> &left,
+         const std::vector<std::complex<T>> &right) {
+    std::vector<std::complex<T>> out(left.size());
+    GateMult<T>(left, right, out);
+    return out;
+}
+
 } // namespace Util
 } // namespace Pennylane
-
-// Helper similar to std::make_unique from c++14
-template <typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args &&...args) {
-    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
 
 // Exception for functions that aren't implemented
 class NotImplementedException : public std::logic_error {
