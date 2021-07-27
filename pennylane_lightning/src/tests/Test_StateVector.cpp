@@ -12,41 +12,9 @@
 #include "StateVector.hpp"
 #include "Util.hpp"
 
+#include "TestHelpers.hpp"
+
 using namespace Pennylane;
-
-/**
- * @brief Utility function to compare complex statevector data.
- *
- * @tparam Data_t Floating point data-type.
- * @param data1 StateVector data 1.
- * @param data2 StateVector data 2.
- * @return true Data are approximately equal.
- * @return false Data are not approximately equal.
- */
-template <class Data_t>
-inline bool isApproxEqual(
-    const std::vector<Data_t> &data1, const std::vector<Data_t> &data2,
-    const typename Data_t::value_type eps =
-        std::numeric_limits<typename Data_t::value_type>::epsilon() * 100) {
-    if (data1.size() != data2.size())
-        return false;
-
-    for (size_t i = 0; i < data1.size(); i++) {
-        if (data1[i].real() != Approx(data2[i].real()).epsilon(eps) ||
-            data1[i].imag() != Approx(data2[i].imag()).epsilon(eps)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-template <class Data_t>
-void scaleVector(std::vector<std::complex<Data_t>> &data,
-                 std::complex<Data_t> scalar) {
-    std::transform(
-        data.begin(), data.end(), data.begin(),
-        [scalar](const std::complex<Data_t> &c) { return c * scalar; });
-}
 
 /**
  * @brief Tests the constructability of the StateVector class.
@@ -1116,7 +1084,7 @@ TEMPLATE_TEST_CASE("StateVector::applyCSWAP", "[StateVector]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("StateVector::applyUnitary", "[StateVector]", float,
+TEMPLATE_TEST_CASE("StateVector::applyUnitary 1 wire", "[StateVector]", float,
                    double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 5;
@@ -1154,8 +1122,7 @@ TEMPLATE_TEST_CASE("StateVector::applyUnitary", "[StateVector]", float,
                 svdat_expected.sv.applyPauliX(int_idx, ext_idx, false);
                 svdat_expected.sv.applyPauliZ(int_idx, ext_idx, false);
             }
-            CAPTURE(svdat.cdata);
-            CAPTURE(svdat_expected.cdata);
+
             CHECK(isApproxEqual(svdat.cdata, svdat_expected.cdata));
         }
         SECTION("Apply using dispatcher") {
@@ -1163,8 +1130,9 @@ TEMPLATE_TEST_CASE("StateVector::applyUnitary", "[StateVector]", float,
             SVData<TestType> svdat_expected{num_qubits};
 
             for (size_t index = 0; index < num_qubits; index++) {
-                svdat_expected.sv.applyOperations(
-                    {{"PauliX", "PauliZ"}}, {{index, index}}, {false, false});
+                svdat_expected.sv.applyOperations({{"PauliX"}, {"PauliZ"}},
+                                                  {{index}, {index}},
+                                                  {false, false});
                 svdat.sv.applyOperation(xz_gate, {index}, false);
             }
 
@@ -1191,8 +1159,9 @@ TEMPLATE_TEST_CASE("StateVector::applyUnitary", "[StateVector]", float,
             SVData<TestType> svdat_expected{num_qubits};
 
             for (size_t index = 0; index < num_qubits; index++) {
-                svdat_expected.sv.applyOperations(
-                    {{"PauliZ", "PauliX"}}, {{index}, {index}}, {false, false});
+                svdat_expected.sv.applyOperations({{"PauliZ"}, {"PauliX"}},
+                                                  {{index}, {index}},
+                                                  {false, false});
                 svdat.sv.applyOperation(zx_gate, {index}, false);
             }
             CHECK(isApproxEqual(svdat.cdata, svdat_expected.cdata));
@@ -1218,8 +1187,9 @@ TEMPLATE_TEST_CASE("StateVector::applyUnitary", "[StateVector]", float,
             SVData<TestType> svdat_expected{num_qubits};
 
             for (size_t index = 0; index < num_qubits; index++) {
-                svdat_expected.sv.applyOperations(
-                    {{"PauliX", "PauliY"}}, {{index}, {index}}, {false, false});
+                svdat_expected.sv.applyOperations({{"PauliX"}, {"PauliY"}},
+                                                  {{index}, {index}},
+                                                  {false, false});
                 svdat.sv.applyOperation(xy_gate, {index}, false);
             }
             CHECK(isApproxEqual(svdat.cdata, svdat_expected.cdata));
@@ -1245,8 +1215,9 @@ TEMPLATE_TEST_CASE("StateVector::applyUnitary", "[StateVector]", float,
             SVData<TestType> svdat_expected{num_qubits};
 
             for (size_t index = 0; index < num_qubits; index++) {
-                svdat_expected.sv.applyOperations(
-                    {{"PauliY", "PauliX"}}, {{index}, {index}}, {false, false});
+                svdat_expected.sv.applyOperations({{"PauliY"}, {"PauliX"}},
+                                                  {{index}, {index}},
+                                                  {false, false});
                 svdat.sv.applyOperation(yx_gate, {index}, false);
             }
             CHECK(isApproxEqual(svdat.cdata, svdat_expected.cdata));
@@ -1272,8 +1243,9 @@ TEMPLATE_TEST_CASE("StateVector::applyUnitary", "[StateVector]", float,
             SVData<TestType> svdat_expected{num_qubits};
 
             for (size_t index = 0; index < num_qubits; index++) {
-                svdat_expected.sv.applyOperations(
-                    {{"PauliY", "PauliZ"}}, {{index}, {index}}, {false, false});
+                svdat_expected.sv.applyOperations({{"PauliY"}, {"PauliZ"}},
+                                                  {{index}, {index}},
+                                                  {false, false});
                 svdat.sv.applyOperation(yz_gate, {index}, false);
             }
             CHECK(isApproxEqual(svdat.cdata, svdat_expected.cdata));
@@ -1299,11 +1271,38 @@ TEMPLATE_TEST_CASE("StateVector::applyUnitary", "[StateVector]", float,
             SVData<TestType> svdat_expected{num_qubits};
 
             for (size_t index = 0; index < num_qubits; index++) {
-                svdat_expected.sv.applyOperations(
-                    {{"PauliZ", "PauliY"}}, {{index}, {index}}, {false, false});
+                svdat_expected.sv.applyOperations({{"PauliZ"}, {"PauliY"}},
+                                                  {{index}, {index}},
+                                                  {false, false});
                 svdat.sv.applyOperation(zy_gate, {index}, false);
             }
             CHECK(isApproxEqual(svdat.cdata, svdat_expected.cdata));
         }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVector::applyUnitary multiple wires", "[StateVector]",
+                   float, double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 3;
+
+    SVData<TestType> svdat_init{num_qubits};
+    svdat_init.sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                                  {{0}, {1}, {2}}, {false, false, false});
+
+    const auto cz_gate = Gates::getCZ<TestType>();
+    const auto tof_gate = Gates::getToffoli<TestType>();
+    const auto arb_gate = Gates::getToffoli<TestType>();
+
+    SECTION("Apply CZ gate") {
+        SVData<TestType> svdat{num_qubits, svdat_init.cdata};
+        SVData<TestType> svdat_expected{num_qubits, svdat_init.cdata};
+
+        svdat_expected.sv.applyOperations(
+            {{"Hadamard"}, {"CNOT"}, {"Hadamard"}}, {{1}, {0, 1}, {1}},
+            {false, false, false});
+        svdat.sv.applyOperation(cz_gate, {0, 1}, false);
+
+        CHECK(isApproxEqual(svdat.cdata, svdat_expected.cdata));
     }
 }
