@@ -148,6 +148,16 @@ inline size_t maxDecimalForQubit(size_t qubitIndex, size_t qubits) {
  * @return size_t Number of wires.
  */
 template <class T> inline size_t dimSize(const std::vector<T> &data) {
+    const size_t s = data.size();
+    const size_t s_sqrt = std::sqrt(s);
+
+    if (s < 4)
+        throw std::invalid_argument("The dataset must be at least 2x2.");
+    if (((s == 0) || (s & (s - 1))))
+        throw std::invalid_argument("The dataset must be a power of 2");
+    if (s_sqrt * s_sqrt != s)
+        throw std::invalid_argument("The dataset must be a perfect square");
+
     return log2(sqrt(data.size()));
 }
 
@@ -163,7 +173,8 @@ template <typename T>
 constexpr void GateMult(const std::vector<T> &left, const std::vector<T> &right,
                         std::vector<T> &out) {
     if (left.size() != right.size())
-        throw std::invalid_argument("The supplied gates have incompatible sizes");
+        throw std::invalid_argument(
+            "The supplied gates have incompatible sizes");
 
     T alpha = ONE<T>();
     T beta = ZERO<T>();
