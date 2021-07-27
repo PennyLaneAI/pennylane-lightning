@@ -2,11 +2,25 @@
 
 ### New features
 
+- C++ layer now supports float (32-bit) and double (64-bit) templated complex data ([#113](https://github.com/PennyLaneAI/pennylane-lightning/pull/113))
+
 ### Improvements
+
+- C++ tests have been ported to use Catch2 framework. ([#115](https://github.com/PennyLaneAI/pennylane-lightning/pull/115))
+
+- Testing now exists for both float and double precision methods in C++ layer. ([#113](https://github.com/PennyLaneAI/pennylane-lightning/pull/113),[#115](https://github.com/PennyLaneAI/pennylane-lightning/pull/115))
+
+- Compile-time utility methods with `constexpr` have been added. ([#113](https://github.com/PennyLaneAI/pennylane-lightning/pull/113))
+
+- Wheel-build support for ARM64 (Linux and MacOS) and PowerPC (Linux) added. ([#110](https://github.com/PennyLaneAI/pennylane-lightning/pull/110))
 
 - Move changelog to `.github` and add a changelog reminder.
 
 ### Breaking changes
+
+- Compilers with C++17 support are now required to build C++ module. ([#113](https://github.com/PennyLaneAI/pennylane-lightning/pull/113))
+
+- Gate classes have been removed with functionality added to StateVector class. ([#113](https://github.com/PennyLaneAI/pennylane-lightning/pull/113))
 
 ### Bug fixes
 
@@ -14,7 +28,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Thomas Bromley
+Thomas Bromley, Lee J. O'Riordan
 
 ---
 
