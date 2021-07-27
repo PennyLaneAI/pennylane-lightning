@@ -121,6 +121,7 @@ template <class fp_t = double> class StateVector {
     void applyOperation(const string &opName, const vector<size_t> &wires,
                         bool inverse = false, const vector<fp_t> &params = {}) {
         const auto gate = gates_.at(opName);
+
         if (gate_wires_.at(opName) != wires.size())
             throw std::invalid_argument(
                 string("The gate of type ") + opName + " requires " +
@@ -133,6 +134,31 @@ template <class fp_t = double> class StateVector {
             generateBitPatterns(externalWires);
 
         gate(internalIndices, externalIndices, inverse, params);
+    }
+
+    /**
+     * @brief Apply a single gate to the state-vector.
+     *
+     * @param matrix Arbitrary unitary gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Optional parameter list for parametric gates.
+     */
+    void applyOperation(const std::vector<CFP_t> &matrix,
+                        const vector<size_t> &wires, bool inverse = false,
+                        const vector<fp_t> &params = {}) {
+        if (Util::log2(matrix.size()) != wires.size())
+            throw std::invalid_argument(
+                string("The supplied gate requires ") +
+                std::to_string(Util::log2(matrix.size())) + " wires, but " +
+                std::to_string(wires.size()) + " were supplied.");
+
+        const vector<size_t> internalIndices = generateBitPatterns(wires);
+        const vector<size_t> externalWires = getIndicesAfterExclusion(wires);
+        const vector<size_t> externalIndices =
+            generateBitPatterns(externalWires);
+
+        applyUnitary(matrix, internalIndices, externalIndices, inverse);
     }
 
     /**
@@ -233,7 +259,10 @@ template <class fp_t = double> class StateVector {
     void applyUnitary(const vector<CFP_t> &matrix,
                       const vector<size_t> &indices,
                       const vector<size_t> &externalIndices, bool inverse) {
-        if (indices.size() != length_)
+
+        if (static_cast<size_t>(0b1 << (Util::log2(indices.size()) +
+                                        Util::log2(externalIndices.size()))) !=
+            length_)
             throw std::out_of_range(
                 "The given indices do not match the state-vector length.");
 

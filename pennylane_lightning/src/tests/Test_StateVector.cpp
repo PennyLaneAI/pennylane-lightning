@@ -493,8 +493,6 @@ TEMPLATE_TEST_CASE("StateVector::applyRY", "[StateVector]", float, double) {
             auto ext_idx = svdat_direct.getExternalIndices({index});
 
             svdat_direct.sv.applyRY(int_idx, ext_idx, false, {angles[index]});
-            CAPTURE(svdat_direct.cdata);
-            CAPTURE(expected_results[index]);
 
             CHECK(isApproxEqual(svdat_direct.cdata, expected_results[index]));
         }
@@ -1114,6 +1112,198 @@ TEMPLATE_TEST_CASE("StateVector::applyCSWAP", "[StateVector]", float, double) {
             svdat012.sv.applyOperation("CSWAP", {0, 1, 2});
 
             CHECK(svdat012.cdata == expected);
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVector::applyUnitary", "[StateVector]", float,
+                   double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 5;
+
+    // Note: gates are defined as right-to-left order
+    const std::vector<cp_t> zx_gate{
+        Util::ZERO<TestType>(), -Util::ONE<TestType>(), Util::ONE<TestType>(),
+        Util::ZERO<TestType>()};
+    const std::vector<cp_t> xz_gate{
+        Util::ZERO<TestType>(), Util::ONE<TestType>(), -Util::ONE<TestType>(),
+        Util::ZERO<TestType>()};
+    const std::vector<cp_t> yx_gate{
+        Util::IMAG<TestType>(), Util::ZERO<TestType>(), Util::ZERO<TestType>(),
+        -Util::IMAG<TestType>()};
+    const std::vector<cp_t> xy_gate{
+        -Util::IMAG<TestType>(), Util::ZERO<TestType>(), Util::ZERO<TestType>(),
+        Util::IMAG<TestType>()};
+    const std::vector<cp_t> zy_gate{
+        Util::ZERO<TestType>(), Util::IMAG<TestType>(), Util::IMAG<TestType>(),
+        Util::ZERO<TestType>()};
+    const std::vector<cp_t> yz_gate{
+        Util::ZERO<TestType>(), -Util::IMAG<TestType>(),
+        -Util::IMAG<TestType>(), Util::ZERO<TestType>()};
+
+    SECTION("Apply XZ gate") {
+        SECTION("Apply directly") {
+            SVData<TestType> svdat{num_qubits};
+            SVData<TestType> svdat_expected{num_qubits};
+
+            for (size_t index = 0; index < num_qubits; index++) {
+                auto int_idx = svdat.getInternalIndices({index});
+                auto ext_idx = svdat.getExternalIndices({index});
+                svdat.sv.applyUnitary(xz_gate, int_idx, ext_idx, false);
+
+                svdat_expected.sv.applyPauliX(int_idx, ext_idx, false);
+                svdat_expected.sv.applyPauliZ(int_idx, ext_idx, false);
+            }
+            CAPTURE(svdat.cdata);
+            CAPTURE(svdat_expected.cdata);
+            CHECK(isApproxEqual(svdat.cdata, svdat_expected.cdata));
+        }
+        SECTION("Apply using dispatcher") {
+            SVData<TestType> svdat{num_qubits};
+            SVData<TestType> svdat_expected{num_qubits};
+
+            for (size_t index = 0; index < num_qubits; index++) {
+                svdat_expected.sv.applyOperations(
+                    {{"PauliX", "PauliZ"}}, {{index, index}}, {false, false});
+                svdat.sv.applyOperation(xz_gate, {index}, false);
+            }
+
+            CHECK(isApproxEqual(svdat.cdata, svdat_expected.cdata));
+        }
+    }
+    SECTION("Apply ZX gate") {
+        SECTION("Apply directly") {
+            SVData<TestType> svdat{num_qubits};
+            SVData<TestType> svdat_expected{num_qubits};
+
+            for (size_t index = 0; index < num_qubits; index++) {
+                auto int_idx = svdat.getInternalIndices({index});
+                auto ext_idx = svdat.getExternalIndices({index});
+                svdat.sv.applyUnitary(zx_gate, int_idx, ext_idx, false);
+
+                svdat_expected.sv.applyPauliZ(int_idx, ext_idx, false);
+                svdat_expected.sv.applyPauliX(int_idx, ext_idx, false);
+            }
+            CHECK(isApproxEqual(svdat.cdata, svdat_expected.cdata));
+        }
+        SECTION("Apply using dispatcher") {
+            SVData<TestType> svdat{num_qubits};
+            SVData<TestType> svdat_expected{num_qubits};
+
+            for (size_t index = 0; index < num_qubits; index++) {
+                svdat_expected.sv.applyOperations(
+                    {{"PauliZ", "PauliX"}}, {{index}, {index}}, {false, false});
+                svdat.sv.applyOperation(zx_gate, {index}, false);
+            }
+            CHECK(isApproxEqual(svdat.cdata, svdat_expected.cdata));
+        }
+    }
+    SECTION("Apply XY gate") {
+        SECTION("Apply directly") {
+            SVData<TestType> svdat{num_qubits};
+            SVData<TestType> svdat_expected{num_qubits};
+
+            for (size_t index = 0; index < num_qubits; index++) {
+                auto int_idx = svdat.getInternalIndices({index});
+                auto ext_idx = svdat.getExternalIndices({index});
+                svdat.sv.applyUnitary(xy_gate, int_idx, ext_idx, false);
+
+                svdat_expected.sv.applyPauliX(int_idx, ext_idx, false);
+                svdat_expected.sv.applyPauliY(int_idx, ext_idx, false);
+            }
+            CHECK(isApproxEqual(svdat.cdata, svdat_expected.cdata));
+        }
+        SECTION("Apply using dispatcher") {
+            SVData<TestType> svdat{num_qubits};
+            SVData<TestType> svdat_expected{num_qubits};
+
+            for (size_t index = 0; index < num_qubits; index++) {
+                svdat_expected.sv.applyOperations(
+                    {{"PauliX", "PauliY"}}, {{index}, {index}}, {false, false});
+                svdat.sv.applyOperation(xy_gate, {index}, false);
+            }
+            CHECK(isApproxEqual(svdat.cdata, svdat_expected.cdata));
+        }
+    }
+    SECTION("Apply YX gate") {
+        SECTION("Apply directly") {
+            SVData<TestType> svdat{num_qubits};
+            SVData<TestType> svdat_expected{num_qubits};
+
+            for (size_t index = 0; index < num_qubits; index++) {
+                auto int_idx = svdat.getInternalIndices({index});
+                auto ext_idx = svdat.getExternalIndices({index});
+                svdat.sv.applyUnitary(yx_gate, int_idx, ext_idx, false);
+
+                svdat_expected.sv.applyPauliY(int_idx, ext_idx, false);
+                svdat_expected.sv.applyPauliX(int_idx, ext_idx, false);
+            }
+            CHECK(isApproxEqual(svdat.cdata, svdat_expected.cdata));
+        }
+        SECTION("Apply using dispatcher") {
+            SVData<TestType> svdat{num_qubits};
+            SVData<TestType> svdat_expected{num_qubits};
+
+            for (size_t index = 0; index < num_qubits; index++) {
+                svdat_expected.sv.applyOperations(
+                    {{"PauliY", "PauliX"}}, {{index}, {index}}, {false, false});
+                svdat.sv.applyOperation(yx_gate, {index}, false);
+            }
+            CHECK(isApproxEqual(svdat.cdata, svdat_expected.cdata));
+        }
+    }
+    SECTION("Apply YZ gate") {
+        SECTION("Apply directly") {
+            SVData<TestType> svdat{num_qubits};
+            SVData<TestType> svdat_expected{num_qubits};
+
+            for (size_t index = 0; index < num_qubits; index++) {
+                auto int_idx = svdat.getInternalIndices({index});
+                auto ext_idx = svdat.getExternalIndices({index});
+                svdat.sv.applyUnitary(yz_gate, int_idx, ext_idx, false);
+
+                svdat_expected.sv.applyPauliY(int_idx, ext_idx, false);
+                svdat_expected.sv.applyPauliZ(int_idx, ext_idx, false);
+            }
+            CHECK(isApproxEqual(svdat.cdata, svdat_expected.cdata));
+        }
+        SECTION("Apply using dispatcher") {
+            SVData<TestType> svdat{num_qubits};
+            SVData<TestType> svdat_expected{num_qubits};
+
+            for (size_t index = 0; index < num_qubits; index++) {
+                svdat_expected.sv.applyOperations(
+                    {{"PauliY", "PauliZ"}}, {{index}, {index}}, {false, false});
+                svdat.sv.applyOperation(yz_gate, {index}, false);
+            }
+            CHECK(isApproxEqual(svdat.cdata, svdat_expected.cdata));
+        }
+    }
+    SECTION("Apply ZY gate") {
+        SECTION("Apply directly") {
+            SVData<TestType> svdat{num_qubits};
+            SVData<TestType> svdat_expected{num_qubits};
+
+            for (size_t index = 0; index < num_qubits; index++) {
+                auto int_idx = svdat.getInternalIndices({index});
+                auto ext_idx = svdat.getExternalIndices({index});
+                svdat.sv.applyUnitary(zy_gate, int_idx, ext_idx, false);
+
+                svdat_expected.sv.applyPauliZ(int_idx, ext_idx, false);
+                svdat_expected.sv.applyPauliY(int_idx, ext_idx, false);
+            }
+            CHECK(isApproxEqual(svdat.cdata, svdat_expected.cdata));
+        }
+        SECTION("Apply using dispatcher") {
+            SVData<TestType> svdat{num_qubits};
+            SVData<TestType> svdat_expected{num_qubits};
+
+            for (size_t index = 0; index < num_qubits; index++) {
+                svdat_expected.sv.applyOperations(
+                    {{"PauliZ", "PauliY"}}, {{index}, {index}}, {false, false});
+                svdat.sv.applyOperation(zy_gate, {index}, false);
+            }
+            CHECK(isApproxEqual(svdat.cdata, svdat_expected.cdata));
         }
     }
 }
