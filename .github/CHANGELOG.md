@@ -4,7 +4,7 @@
 
 ### Improvements
 
-- Static versions of jQuery and Bootstrap are no longer included in the CSS theme. [(#)](https://github.com/XanaduAI/jet/pull/)
+- Static versions of jQuery and Bootstrap are no longer included in the CSS theme. [(118)](https://github.com/PennyLaneAI/pennylane-lightning/pull/118)
 
 - Move changelog to `.github` and add a changelog reminder.
 
