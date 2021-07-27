@@ -4,18 +4,18 @@ project(pennylane_lightning)
 
 # Read and set pennylane_lightning version
 function(set_pennylane_lightning_version VERSION_FILE_PATH)
-	file(STRINGS ${VERSION_FILE_PATH} VERSION_FILE_STR)
-	foreach (LINE IN LISTS VERSION_FILE_STR)
-	if("${LINE}" MATCHES "__version__.*")
-		set(VERSION_LINE_STR "${LINE}")
-	endif()
-	endforeach()
+    file(STRINGS ${VERSION_FILE_PATH} VERSION_FILE_STR)
+    foreach (LINE IN LISTS VERSION_FILE_STR)
+    if("${LINE}" MATCHES "__version__.*")
+        set(VERSION_LINE_STR "${LINE}")
+    endif()
+    endforeach()
 
-	string(REGEX REPLACE "__version__ = \"(.*)\"" "\\1" VERSION_STRING ${VERSION_LINE_STR})
-	set(VERSION_STRING ${VERSION_STRING} PARENT_SCOPE)
+    string(REGEX REPLACE "__version__ = \"(.*)\"" "\\1" VERSION_STRING ${VERSION_LINE_STR})
+    set(VERSION_STRING ${VERSION_STRING} PARENT_SCOPE)
 endfunction()
 
-set_pennylane_lightning_version("${CMAKE_SOURCE_DIR}/pennylane_lightning/_version.py")
+set_pennylane_lightning_version(${PROJECT_SOURCE_DIR}/pennylane_lightning/_version.py)
 
 message(STATUS "pennylane_lightning version ${VERSION_STRING}")
 set(PROJECT_VERSION ${VERSION_STRING})
@@ -24,13 +24,11 @@ set(CMAKE_CXX_STANDARD 17) # At least C++17 is required
 find_package(OpenMP REQUIRED) # find OpenMP
 
 if(NOT CMAKE_BUILD_TYPE)
-	set(CMAKE_BUILD_TYPE Release)
+    set(CMAKE_BUILD_TYPE Release)
 endif()
-
 
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(BUILD_TESTS "Build cpp tests" OFF)
-
 
 # Add pybind11
 include(FetchContent)
