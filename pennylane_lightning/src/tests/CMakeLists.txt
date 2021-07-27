@@ -31,8 +31,10 @@ include(Catch)
 add_executable(runner runner_main.cpp)
 target_link_libraries(runner pennylane_lightning Catch2::Catch2)
 
-target_sources(runner PRIVATE Test_StateVector.cpp
-                              Test_Bindings.cpp)
+target_sources(runner PRIVATE   Test_Bindings.cpp
+                                Test_StateVector.cpp 
+                                Test_Util.cpp
+)
 
 target_compile_options(runner PRIVATE "$<$<CONFIG:DEBUG>:-Wall>")
 
