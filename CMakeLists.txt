@@ -44,12 +44,6 @@ target_include_directories(pennylane_lightning INTERFACE "pennylane_lightning/sr
 
 add_library(external_dependency INTERFACE)
 
-if ("$ENV{USE_LAPACK}" OR "${USE_LAPACK}")
-    message(STATUS "Use LAPACKE")
-    target_link_libraries(external_dependency INTERFACE lapacke)
-    target_compile_options(external_dependency INTERFACE "-DLAPACKE=1")
-endif()
-
 if ("$ENV{USE_OPENBLAS}" OR "${USE_OPENBLAS}")
     message(STATUS "Use OPENBLAS")
     target_link_libraries(external_dependency INTERFACE openblas)
