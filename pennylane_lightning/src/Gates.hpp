@@ -199,7 +199,7 @@ getCRot(const std::vector<U> &params) {
 }
 
 template <class T, class U = T>
-static const std::vector<std::complex<T>> getCPhaseShift(U angle) {
+static const std::vector<std::complex<T>> getControlledPhaseShift(U angle) {
     return {ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(),
             ZERO<T>(), ONE<T>(),  ZERO<T>(), ZERO<T>(),
             ZERO<T>(), ZERO<T>(), ONE<T>(),  ZERO<T>(),
@@ -208,8 +208,8 @@ static const std::vector<std::complex<T>> getCPhaseShift(U angle) {
 
 template <class T, class U = T>
 static const std::vector<std::complex<T>>
-getCPhaseShift(const std::vector<U> &params) {
-    return getCPhaseShift<T>(params.front());
+getControlledPhaseShift(const std::vector<U> &params) {
+    return getControlledPhaseShift<T>(params.front());
 }
 
 } // namespace Gates
