@@ -41,12 +41,8 @@ class TestExpval:
         O2 = qml.Identity(wires=[1])
 
         dev.apply(
-            [
-                qml.RX(theta, wires=[0]),
-                qml.RX(phi, wires=[1]),
-                qml.CNOT(wires=[0, 1])
-            ],
-            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()]
+            [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
+            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
         )
 
         res = np.array([dev.expval(O1), dev.expval(O2)])
@@ -59,12 +55,8 @@ class TestExpval:
         O2 = qml.PauliZ(wires=[1])
 
         dev.apply(
-            [
-                qml.RX(theta, wires=[0]),
-                qml.RX(phi, wires=[1]),
-                qml.CNOT(wires=[0, 1])
-            ],
-            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()]
+            [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
+            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
         )
 
         res = np.array([dev.expval(O1), dev.expval(O2)])
@@ -77,12 +69,8 @@ class TestExpval:
         O2 = qml.PauliX(wires=[1])
 
         dev.apply(
-            [
-                qml.RY(theta, wires=[0]),
-                qml.RY(phi, wires=[1]),
-                qml.CNOT(wires=[0, 1])
-            ],
-            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()]
+            [qml.RY(theta, wires=[0]), qml.RY(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
+            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
         )
 
         res = np.array([dev.expval(O1), dev.expval(O2)])
@@ -95,12 +83,8 @@ class TestExpval:
         O2 = qml.PauliY(wires=[1])
 
         dev.apply(
-            [
-                qml.RX(theta, wires=[0]),
-                qml.RX(phi, wires=[1]),
-                qml.CNOT(wires=[0, 1])
-            ],
-            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()]
+            [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
+            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
         )
 
         res = np.array([dev.expval(O1), dev.expval(O2)])
@@ -113,12 +97,8 @@ class TestExpval:
         O2 = qml.Hadamard(wires=[1])
 
         dev.apply(
-            [
-                qml.RY(theta, wires=[0]),
-                qml.RY(phi, wires=[1]),
-                qml.CNOT(wires=[0, 1])
-            ],
-            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()]
+            [qml.RY(theta, wires=[0]), qml.RY(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
+            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
         )
 
         res = np.array([dev.expval(O1), dev.expval(O2)])
@@ -144,9 +124,9 @@ class TestTensorExpval:
                 qml.RX(phi, wires=[1]),
                 qml.RX(varphi, wires=[2]),
                 qml.CNOT(wires=[0, 1]),
-                qml.CNOT(wires=[1, 2])
+                qml.CNOT(wires=[1, 2]),
             ],
-            rotations=obs.diagonalizing_gates()
+            rotations=obs.diagonalizing_gates(),
         )
         res = dev.expval(obs)
 
@@ -166,14 +146,14 @@ class TestTensorExpval:
                 qml.RX(phi, wires=[1]),
                 qml.RX(varphi, wires=[2]),
                 qml.CNOT(wires=[0, 1]),
-                qml.CNOT(wires=[1, 2])
+                qml.CNOT(wires=[1, 2]),
             ],
-            rotations=obs.diagonalizing_gates()
+            rotations=obs.diagonalizing_gates(),
         )
 
         res = dev.expval(obs)
 
-        expected = np.cos(varphi)*np.cos(phi)
+        expected = np.cos(varphi) * np.cos(phi)
 
         assert np.allclose(res, expected, tol)
 
@@ -189,9 +169,9 @@ class TestTensorExpval:
                 qml.RX(phi, wires=[1]),
                 qml.RX(varphi, wires=[2]),
                 qml.CNOT(wires=[0, 1]),
-                qml.CNOT(wires=[1, 2])
+                qml.CNOT(wires=[1, 2]),
             ],
-            rotations=obs.diagonalizing_gates()
+            rotations=obs.diagonalizing_gates(),
         )
 
         res = dev.expval(obs)

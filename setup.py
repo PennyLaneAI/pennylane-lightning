@@ -59,23 +59,22 @@ def has_flag(compiler, flagname):
 
 
 def cpp_flag(compiler):
-    """Return the -std=c++[11/14/17] compiler flag.
-    The newer version is prefered over c++11 (when it is available).
+    """Return the -std=c++17 compiler flag.
     """
-    flags = ["-std=c++17", "-std=c++14", "-std=c++11"]
+    flags = ["-std=c++17"]
 
     for flag in flags:
         if has_flag(compiler, flag):
             return flag
 
-    raise RuntimeError("Unsupported compiler -- at least C++11 support is needed!")
+    raise RuntimeError("Unsupported compiler -- at least C++17 support is needed!")
 
 
 class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
 
     c_opts = {
-        "msvc": ["-EHsc", "-O2", "-W1", "-std:c++11"],
+        "msvc": ["-EHsc", "-O2", "-W1", "-std:c++17"],
         "unix": ["-O3", "-W", "-fPIC", "-shared", "-fopenmp"],
     }
 
@@ -148,16 +147,11 @@ if not os.environ.get("MOCK_DOCS", False):
         Extension(
             "lightning_qubit_ops",
             sources=[
-                "pennylane_lightning/src/Apply.cpp",
-                "pennylane_lightning/src/Gates.cpp",
-                "pennylane_lightning/src/Bindings.cpp",
                 "pennylane_lightning/src/StateVector.cpp",
+                "pennylane_lightning/src/Bindings.cpp",
             ],
             depends=[
-                "pennylane_lightning/src/Apply.hpp",
-                "pennylane_lightning/src/Gates.hpp",
                 "pennylane_lightning/src/StateVector.hpp",
-                "pennylane_lightning/src/typedefs.hpp",
                 "pennylane_lightning/src/Util.hpp",
             ],
             include_dirs=include_dirs,

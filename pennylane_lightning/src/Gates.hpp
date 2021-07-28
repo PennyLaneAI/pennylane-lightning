@@ -1,426 +1,216 @@
-// Copyright 2021 Xanadu Quantum Technologies Inc.
-
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-/**
- * @file
- * Defines quantum gates and their actions.
- */
 #pragma once
 
-#include <memory>
+#include <cmath>
+#include <complex>
 #include <vector>
 
-#include "StateVector.hpp"
-#include "typedefs.hpp"
+#include "Util.hpp"
+
+namespace {
+using namespace Pennylane::Util;
+}
 
 namespace Pennylane {
+namespace Gates {
 
-const double SQRT2INV = 0.7071067811865475;
-const CplxType IMAG = CplxType(0, 1);
+template <class T> static constexpr std::vector<std::complex<T>> getPauliX() {
+    return {ZERO<T>(), ONE<T>(), ONE<T>(), ZERO<T>()};
+}
 
-class AbstractGate {
-  public:
-    const int numQubits;
-    const size_t length;
+template <class T> static constexpr std::vector<std::complex<T>> getPauliY() {
+    return {ZERO<T>(), -IMAG<T>(), IMAG<T>(), ZERO<T>()};
+}
 
-  protected:
-    AbstractGate(int numQubits);
+template <class T> static constexpr std::vector<std::complex<T>> getPauliZ() {
+    return {ONE<T>(), ZERO<T>(), ZERO<T>(), -ONE<T>()};
+}
 
-  public:
-    /**
-     * @return the matrix representation for the gate as a one-dimensional
-     * vector.
-     */
-    virtual const std::vector<CplxType> &asMatrix() = 0;
+template <class T> static constexpr std::vector<std::complex<T>> getHadamard() {
+    return {INVSQRT2<T>(), INVSQRT2<T>(), INVSQRT2<T>(), -INVSQRT2<T>()};
+}
 
-    /**
-     * Generic matrix-multiplication kernel
-     */
-    virtual void applyKernel(const StateVector &state,
-                             const std::vector<size_t> &indices,
-                             const std::vector<size_t> &externalIndices,
-                             bool inverse);
+template <class T> static constexpr std::vector<std::complex<T>> getS() {
+    return {ONE<T>(), ZERO<T>(), ZERO<T>(), IMAG<T>()};
+}
 
-    /**
-     * Kernel for applying the generator of an operation
-     */
-    virtual void applyGenerator(const StateVector &state,
-                                const std::vector<size_t> &indices,
-                                const std::vector<size_t> &externalIndices);
+template <class T> static constexpr std::vector<std::complex<T>> getT() {
+    return {ONE<T>(), ZERO<T>(), ZERO<T>(), IMAG<T>()};
+}
 
-    /**
-     * Scaling factor applied to the generator operation
-     */
-    static const double generatorScalingFactor;
-};
+template <class T> static constexpr std::vector<std::complex<T>> getCNOT() {
+    return {ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),
+            ZERO<T>(), ZERO<T>(), ONE<T>(),  ZERO<T>()};
+}
 
-// Single-qubit gates:
+template <class T> static constexpr std::vector<std::complex<T>> getSWAP() {
+    return {ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(),
+            ONE<T>(),  ZERO<T>(), ZERO<T>(), ONE<T>(),  ZERO<T>(), ZERO<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>()};
+}
 
-class SingleQubitGate : public AbstractGate {
-  protected:
-    SingleQubitGate();
-};
+template <class T> static constexpr std::vector<std::complex<T>> getCZ() {
+    return {ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),  ZERO<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), -ONE<T>()};
+}
 
-class XGate : public SingleQubitGate {
-  private:
-    static const std::vector<CplxType> matrix;
+template <class T> static constexpr std::vector<std::complex<T>> getCSWAP() {
+    return {ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),  ZERO<T>(), ZERO<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(),
+            ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),  ZERO<T>(), ZERO<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(),
+            ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),  ZERO<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>()};
+}
+template <class T> static constexpr std::vector<std::complex<T>> getToffoli() {
+    return {ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),  ZERO<T>(), ZERO<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(),
+            ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),  ZERO<T>(), ZERO<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(),
+            ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),  ZERO<T>(), ZERO<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(),
+            ZERO<T>(), ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(),
+            ZERO<T>(), ZERO<T>(), ONE<T>(),  ZERO<T>()};
+}
 
-  public:
-    static const std::string label;
-    static XGate create(const std::vector<double> &parameters);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-};
+template <class T, class U = T>
+static const std::vector<std::complex<T>> getPhaseShift(U angle) {
+    return {ONE<T>(), ZERO<T>(), ZERO<T>(), std::exp(IMAG<T>() * angle)};
+}
 
-class YGate : public SingleQubitGate {
-  private:
-    static const std::vector<CplxType> matrix;
+template <class T, class U = T>
+static const std::vector<std::complex<T>>
+getPhaseShift(const std::vector<U> &params) {
+    return getPhaseShift<T>(params.front());
+}
 
-  public:
-    static const std::string label;
-    static YGate create(const std::vector<double> &parameters);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-};
+template <class T, class U = T>
+static const std::vector<std::complex<T>> getRX(U angle) {
+    const std::complex<T> c(std::cos(angle / 2), 0);
+    const std::complex<T> js(0, -std::sin(angle / 2));
+    return {c, js, js, c};
+}
 
-class ZGate : public SingleQubitGate {
-  private:
-    static const std::vector<CplxType> matrix;
+template <class T, class U = T>
+static const std::vector<std::complex<T>> getRX(const std::vector<U> &params) {
+    return getRX<T>(params.front());
+}
 
-  public:
-    static const std::string label;
-    static ZGate create(const std::vector<double> &parameters);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-};
+template <class T, class U = T>
+static const std::vector<std::complex<T>> getRY(U angle) {
+    const std::complex<T> c(std::cos(angle / 2), 0);
+    const std::complex<T> s(std::sin(angle / 2), 0);
+    return {c, -s, s, c};
+}
 
-class HadamardGate : public SingleQubitGate {
-  private:
-    static const std::vector<CplxType> matrix;
+template <class T, class U = T>
+static const std::vector<std::complex<T>> getRY(const std::vector<U> &params) {
+    return getRY<T>(params.front());
+}
 
-  public:
-    static const std::string label;
-    static HadamardGate create(const std::vector<double> &parameters);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-};
+template <class T, class U = T>
+static const std::vector<std::complex<T>> getRZ(U angle) {
+    return {std::exp(-IMAG<T>() * (angle / 2)), ZERO<T>(), ZERO<T>(),
+            std::exp(IMAG<T>() * (angle / 2))};
+}
 
-class SGate : public SingleQubitGate {
-  private:
-    static const std::vector<CplxType> matrix;
+template <class T, class U = T>
+static const std::vector<T> getRZ(const std::vector<U> &params) {
+    return getRZ<T>(params.front());
+}
 
-  public:
-    static const std::string label;
-    static SGate create(const std::vector<double> &parameters);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-};
+template <class T, class U = T>
+static const std::vector<std::complex<T>> getRot(U phi, U theta, U omega) {
+    const std::complex<T> c(std::cos(theta / 2), 0), s(std::sin(theta / 2), 0);
+    const U p{phi + omega}, m{phi - omega};
+    return {std::exp(static_cast<T>(p / 2) * (-IMAG<T>())) * c,
+            -std::exp(static_cast<T>(m / 2) * IMAG<T>()) * s,
+            std::exp(static_cast<T>(m / 2) * (-IMAG<T>())) * s,
+            std::exp(static_cast<T>(p / 2) * IMAG<T>()) * c};
+}
 
-class TGate : public SingleQubitGate {
-  private:
-    static const CplxType shift;
-    static const std::vector<CplxType> matrix;
+template <class T, class U = T>
+static const std::vector<std::complex<T>> getRot(const std::vector<U> &params) {
+    return getRot<T>(params[0], params[1], params[2]);
+}
 
-  public:
-    static const std::string label;
-    static TGate create(const std::vector<double> &parameters);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-};
+template <class T, class U = T>
+static const std::vector<std::complex<T>> getCRX(U angle) {
+    const std::complex<T> c(std::cos(angle / 2), 0),
+        js(0, std::sin(-angle / 2));
+    return {ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), c,         js,
+            ZERO<T>(), ZERO<T>(), js,        c};
+}
 
-class RotationXGate : public SingleQubitGate {
-  private:
-    const CplxType c, js;
-    const std::vector<CplxType> matrix;
+template <class T, class U = T>
+static const std::vector<std::complex<T>> getCRX(const std::vector<U> &params) {
+    return getCRX<T>(params.front());
+}
 
-  public:
-    static const std::string label;
-    static RotationXGate create(const std::vector<double> &parameters);
-    RotationXGate(double rotationAngle);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyGenerator(const StateVector &state,
-                        const std::vector<size_t> &indices,
-                        const std::vector<size_t> &externalIndices);
-    static const double generatorScalingFactor;
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-};
+template <class T, class U = T>
+static const std::vector<std::complex<T>> getCRY(U angle) {
+    const std::complex<T> c(std::cos(angle / 2), 0), s(std::sin(angle / 2), 0);
+    return {ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), c,         -s,
+            ZERO<T>(), ZERO<T>(), s,         c};
+}
 
-class RotationYGate : public SingleQubitGate {
-  private:
-    const CplxType c, s;
-    const std::vector<CplxType> matrix;
+template <class T, class U = T>
+static const std::vector<std::complex<T>> getCRY(const std::vector<U> &params) {
+    return getCRY<T>(params.front());
+}
 
-  public:
-    static const std::string label;
-    static RotationYGate create(const std::vector<double> &parameters);
-    RotationYGate(double rotationAngle);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyGenerator(const StateVector &state,
-                        const std::vector<size_t> &indices,
-                        const std::vector<size_t> &externalIndices);
-    static const double generatorScalingFactor;
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-};
+template <class T, class U = T>
+static const std::vector<std::complex<T>> getCRZ(U angle) {
+    const std::complex<T> first = std::exp(-IMAG<T>() * (angle / 2));
+    const std::complex<T> second = std::exp(IMAG<T>() * (angle / 2));
+    return {ONE<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(),
+            ONE<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(),
+            first,    ZERO<T>(), ZERO<T>(), ZERO<T>(), second};
+}
 
-class RotationZGate : public SingleQubitGate {
-  private:
-    const CplxType first, second;
-    const std::vector<CplxType> matrix;
+template <class T, class U = T>
+static const std::vector<std::complex<T>> getCRZ(const std::vector<U> &params) {
+    return getCRZ<T>(params.front());
+}
 
-  public:
-    static const std::string label;
-    static RotationZGate create(const std::vector<double> &parameters);
-    RotationZGate(double rotationAngle);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-    void applyGenerator(const StateVector &state,
-                        const std::vector<size_t> &indices,
-                        const std::vector<size_t> &externalIndices);
-    static const double generatorScalingFactor;
-};
+template <class T, class U = T>
+static const std::vector<std::complex<T>> getCRot(U phi, U theta, U omega) {
+    const std::vector<std::complex<T>> rot = getRot<T>(phi, theta, omega);
+    return {ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), rot[0],    rot[1],
+            ZERO<T>(), ZERO<T>(), rot[2],    rot[3]};
+}
 
-class PhaseShiftGate : public SingleQubitGate {
-  private:
-    const CplxType shift;
-    const std::vector<CplxType> matrix;
+template <class T, class U = T>
+static const std::vector<std::complex<T>>
+getCRot(const std::vector<U> &params) {
+    return getCRot<T>(params[0], params[1], params[2]);
+}
 
-  public:
-    static const std::string label;
-    static PhaseShiftGate create(const std::vector<double> &parameters);
-    PhaseShiftGate(double rotationAngle);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-    void applyGenerator(const StateVector &state,
-                        const std::vector<size_t> &indices,
-                        const std::vector<size_t> &externalIndices);
-    static const double generatorScalingFactor;
-};
+template <class T, class U = T>
+static const std::vector<std::complex<T>> getControlledPhaseShift(U angle) {
+    return {ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(),
+            ZERO<T>(), ONE<T>(),  ZERO<T>(), ZERO<T>(),
+            ZERO<T>(), ZERO<T>(), ONE<T>(),  ZERO<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), std::exp(IMAG<T>() * angle)};
+}
 
-class GeneralRotationGate : public SingleQubitGate {
-  private:
-    const CplxType c, s, r1, r2, r3, r4;
-    const std::vector<CplxType> matrix;
+template <class T, class U = T>
+static const std::vector<std::complex<T>>
+getControlledPhaseShift(const std::vector<U> &params) {
+    return getControlledPhaseShift<T>(params.front());
+}
 
-  public:
-    static const std::string label;
-    static GeneralRotationGate create(const std::vector<double> &parameters);
-    GeneralRotationGate(double phi, double theta, double omega);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-};
-
-// Two-qubit gates
-
-class TwoQubitGate : public AbstractGate {
-  protected:
-    TwoQubitGate();
-};
-
-class CNOTGate : public TwoQubitGate {
-  private:
-    static const std::vector<CplxType> matrix;
-
-  public:
-    static const std::string label;
-    static CNOTGate create(const std::vector<double> &parameters);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-};
-
-class SWAPGate : public TwoQubitGate {
-  private:
-    static const std::vector<CplxType> matrix;
-
-  public:
-    static const std::string label;
-    static SWAPGate create(const std::vector<double> &parameters);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-};
-
-class CZGate : public TwoQubitGate {
-  private:
-    static const std::vector<CplxType> matrix;
-
-  public:
-    static const std::string label;
-    static CZGate create(const std::vector<double> &parameters);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-};
-
-class CRotationXGate : public TwoQubitGate {
-  private:
-    const CplxType c, js;
-    const std::vector<CplxType> matrix;
-
-  public:
-    static const std::string label;
-    static CRotationXGate create(const std::vector<double> &parameters);
-    CRotationXGate(double rotationAngle);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-    void applyGenerator(const StateVector &state,
-                        const std::vector<size_t> &indices,
-                        const std::vector<size_t> &externalIndices);
-    static const double generatorScalingFactor;
-};
-
-class CRotationYGate : public TwoQubitGate {
-  private:
-    const CplxType c, s;
-    const std::vector<CplxType> matrix;
-
-  public:
-    static const std::string label;
-    static CRotationYGate create(const std::vector<double> &parameters);
-    CRotationYGate(double rotationAngle);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-    void applyGenerator(const StateVector &state,
-                        const std::vector<size_t> &indices,
-                        const std::vector<size_t> &externalIndices);
-    static const double generatorScalingFactor;
-};
-
-class CRotationZGate : public TwoQubitGate {
-  private:
-    const CplxType first, second;
-    const std::vector<CplxType> matrix;
-
-  public:
-    static const std::string label;
-    static CRotationZGate create(const std::vector<double> &parameters);
-    CRotationZGate(double rotationAngle);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-    void applyGenerator(const StateVector &state,
-                        const std::vector<size_t> &indices,
-                        const std::vector<size_t> &externalIndices);
-    static const double generatorScalingFactor;
-};
-
-class CGeneralRotationGate : public TwoQubitGate {
-  private:
-    const CplxType c, s, r1, r2, r3, r4;
-    const std::vector<CplxType> matrix;
-
-  public:
-    static const std::string label;
-    static CGeneralRotationGate create(const std::vector<double> &parameters);
-    CGeneralRotationGate(double phi, double theta, double omega);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-};
-
-class CPhaseShiftGate : public TwoQubitGate {
-  private:
-    const CplxType shift;
-    const std::vector<CplxType> matrix;
-
-  public:
-    static const std::string label;
-    static CPhaseShiftGate create(const std::vector<double> &parameters);
-    CPhaseShiftGate(double phi);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-    void applyGenerator(const StateVector &state,
-                        const std::vector<size_t> &indices,
-                        const std::vector<size_t> &externalIndices);
-    static const double generatorScalingFactor;
-};
-
-// Three-qubit gates
-class ThreeQubitGate : public AbstractGate {
-  protected:
-    ThreeQubitGate();
-};
-
-class ToffoliGate : public ThreeQubitGate {
-  private:
-    static const std::vector<CplxType> matrix;
-
-  public:
-    static const std::string label;
-    static ToffoliGate create(const std::vector<double> &parameters);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-};
-
-class CSWAPGate : public ThreeQubitGate {
-  private:
-    static const std::vector<CplxType> matrix;
-
-  public:
-    static const std::string label;
-    static CSWAPGate create(const std::vector<double> &parameters);
-    inline const std::vector<CplxType> &asMatrix() { return matrix; }
-    void applyKernel(const StateVector &state,
-                     const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse);
-};
-
-/**
- * Produces the requested gate, defined by a label and the list of parameters
- *
- * @param label unique string corresponding to a gate type
- * @param parameters defines the gate parameterisation (may be zero-length for
- * some gates)
- * @return the gate wrapped in std::unique_ptr
- * @throws std::invalid_argument thrown if the gate type is not defined, or if
- * the number of parameters to the gate is incorrect
- */
-std::unique_ptr<AbstractGate>
-constructGate(const std::string &label, const std::vector<double> &parameters);
-
+} // namespace Gates
 } // namespace Pennylane
