@@ -85,6 +85,12 @@ template <class PrecisionT> void lightning_class_bindings(py::module &m) {
              &StateVecBinder<PrecisionT>::template applyPhaseShift<float>)
         .def("PhaseShift",
              &StateVecBinder<PrecisionT>::template applyPhaseShift<double>)
+        .def("ControlledPhaseShift",
+             &StateVecBinder<PrecisionT>::template applyControlledPhaseShift<
+                 float>)
+        .def("ControlledPhaseShift",
+             &StateVecBinder<PrecisionT>::template applyControlledPhaseShift<
+                 double>)
         .def("RX", &StateVecBinder<PrecisionT>::template applyRX<float>)
         .def("RX", &StateVecBinder<PrecisionT>::template applyRX<double>)
         .def("RY", &StateVecBinder<PrecisionT>::template applyRY<float>)
