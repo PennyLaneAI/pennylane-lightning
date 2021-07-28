@@ -4,9 +4,12 @@
 
 ### Improvements
 
-- Static versions of jQuery and Bootstrap are no longer included in the CSS theme. [(118)](https://github.com/PennyLaneAI/pennylane-lightning/pull/118)
+* Static versions of jQuery and Bootstrap are no longer included in the CSS theme. [(118)](https://github.com/PennyLaneAI/pennylane-lightning/pull/118)
 
-- Move changelog to `.github` and add a changelog reminder.
+* Add support for Controlled Phase Gate (CPhaseShift).
+  [(#112)](https://github.com/PennyLaneAI/pennylane-lightning/issues/112)
+
+* Move changelog to `.github` and add a changelog reminder.
 
 ### Breaking changes
 
@@ -16,7 +19,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Thomas Bromley, Lee James O'Riordan
+Ali Asadi, Thomas Bromley, Lee James O'Riordan
 
 ---
 
