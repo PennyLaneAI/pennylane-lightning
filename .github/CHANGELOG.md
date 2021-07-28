@@ -14,6 +14,9 @@
 
 - Wheel-build support for ARM64 (Linux and MacOS) and PowerPC (Linux) added. ([#110](https://github.com/PennyLaneAI/pennylane-lightning/pull/110))
 
+- Add support for Controlled Phase Gate (CPhaseShift).
+  [(#112)](https://github.com/PennyLaneAI/pennylane-lightning/issues/112)
+
 - Move changelog to `.github` and add a changelog reminder.
 
 ### Breaking changes
@@ -28,7 +31,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Thomas Bromley, Lee J. O'Riordan
+Ali Asadi, Thomas Bromley, Lee J. O'Riordan
 
 ---
 

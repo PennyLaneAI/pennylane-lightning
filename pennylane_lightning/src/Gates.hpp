@@ -198,5 +198,18 @@ getCRot(const std::vector<U> &params) {
     return getCRot<T>(params[0], params[1], params[2]);
 }
 
+template <class T, class U = T>
+static const std::vector<std::complex<T>> getCPhaseShift(U angle) {
+    return {ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),  ZERO<T>(),
+            ZERO<T>(), ZERO<T>(), ZERO<T>(), std::exp(IMAG<T>() * angle)};
+}
+
+template <class T, class U = T>
+static const std::vector<std::complex<T>>
+getCPhaseShift(const std::vector<U> &params) {
+    return getCPhaseShift<T>(params.front());
+}
+
 } // namespace Gates
 } // namespace Pennylane
