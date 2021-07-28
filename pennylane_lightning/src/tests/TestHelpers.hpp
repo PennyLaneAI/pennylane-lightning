@@ -37,17 +37,17 @@ inline bool isApproxEqual(
  * @return false Data are not approximately equal.
  */
 template <class Data_t>
-inline bool isApproxEqual(
-    const Data_t &data1, const Data_t &data2,
-    const typename Data_t::value_type eps =
-        std::numeric_limits<typename Data_t::value_type>::epsilon() * 100) {
+inline bool
+isApproxEqual(const Data_t &data1, const Data_t &data2,
+              const typename Data_t::value_type eps =
+                  std::numeric_limits<typename Data_t::value_type>::epsilon() *
+                  100) {
     if (data1.real() != Approx(data2.real()).epsilon(eps) ||
         data1.imag() != Approx(data2.imag()).epsilon(eps)) {
         return false;
     }
     return true;
 }
-
 
 template <class Data_t>
 void scaleVector(std::vector<std::complex<Data_t>> &data,
