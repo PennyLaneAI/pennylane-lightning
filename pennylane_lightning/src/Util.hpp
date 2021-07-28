@@ -170,7 +170,7 @@ template <class T> inline size_t dimSize(const std::vector<T> &data) {
  * @param out Output matrix data.
  */
 template <typename T>
-constexpr void GateMult(const std::vector<T> &left, const std::vector<T> &right,
+void GateMult(const std::vector<T> &left, const std::vector<T> &right,
                         std::vector<T> &out) {
     if (left.size() != right.size())
         throw std::invalid_argument(
@@ -204,7 +204,7 @@ constexpr void GateMult(const std::vector<T> &left, const std::vector<T> &right,
  * @param right Right matrix.
  */
 template <class T>
-inline static const std::vector<std::complex<T>>
+inline static std::vector<std::complex<T>>
 GateMult(const std::vector<std::complex<T>> &left,
          const std::vector<std::complex<T>> &right) {
     std::vector<std::complex<T>> out(left.size());
