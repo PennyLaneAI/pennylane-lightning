@@ -66,11 +66,13 @@ template <class fp_t = double> class StateVector {
     StateVector(CFP_t *arr, size_t length)
         : arr_{arr}, length_{length}, num_qubits_{Util::log2(length_)},
           gate_wires_{
-              {"PauliX", 1}, {"PauliY", 1}, {"PauliZ", 1},     {"Hadamard", 1},
-              {"T", 1},      {"S", 1},      {"RX", 1},         {"RY", 1},
-              {"RZ", 1},     {"Rot", 1},    {"PhaseShift", 1}, {"CNOT", 2},
-              {"SWAP", 2},   {"CZ", 2},     {"CRX", 2},        {"CRY", 2},
-              {"CRZ", 2},    {"CRot", 2},   {"CSWAP", 3},      {"Toffoli", 3}},
+              {"PauliX", 1},   {"PauliY", 1},     {"PauliZ", 1},
+              {"Hadamard", 1}, {"T", 1},          {"S", 1},
+              {"RX", 1},       {"RY", 1},         {"RZ", 1},
+              {"Rot", 1},      {"PhaseShift", 1}, {"ControlledPhaseShift", 2},
+              {"CNOT", 2},     {"SWAP", 2},       {"CZ", 2},
+              {"CRX", 2},      {"CRY", 2},        {"CRZ", 2},
+              {"CRot", 2},     {"CSWAP", 3},      {"Toffoli", 3}},
           gates_{
               {"PauliX",
                bind(&StateVector<fp_t>::applyPauliX_, this, _1, _2, _3, _4)},
@@ -93,6 +95,9 @@ template <class fp_t = double> class StateVector {
                bind(&StateVector<fp_t>::applyToffoli_, this, _1, _2, _3, _4)},
               {"PhaseShift", bind(&StateVector<fp_t>::applyPhaseShift_, this,
                                   _1, _2, _3, _4)},
+              {"ControlledPhaseShift",
+               bind(&StateVector<fp_t>::applyControlledPhaseShift_, this, _1,
+                    _2, _3, _4)},
               {"RX", bind(&StateVector<fp_t>::applyRX_, this, _1, _2, _3, _4)},
               {"RY", bind(&StateVector<fp_t>::applyRY_, this, _1, _2, _3, _4)},
               {"RZ", bind(&StateVector<fp_t>::applyRZ_, this, _1, _2, _3, _4)},
@@ -386,12 +391,23 @@ template <class fp_t = double> class StateVector {
     void applyPhaseShift(const vector<size_t> &indices,
                          const vector<size_t> &externalIndices, bool inverse,
                          Param_t angle) {
-        const CFP_t s = (inverse == true) ? conj(std::exp(CFP_t(0, angle)))
-                                          : std::exp(CFP_t(0, angle));
-
+        const CFP_t s = inverse ? conj(std::exp(CFP_t(0, angle)))
+                                : std::exp(CFP_t(0, angle));
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             shiftedState[indices[1]] *= s;
+        }
+    }
+
+    template <typename Param_t = fp_t>
+    void applyControlledPhaseShift(const std::vector<size_t> &indices,
+                                   const std::vector<size_t> &externalIndices,
+                                   bool inverse, Param_t angle) {
+        const CFP_t s = inverse ? conj(std::exp(CFP_t(0, angle)))
+                                : std::exp(CFP_t(0, angle));
+        for (const size_t &externalIndex : externalIndices) {
+            CFP_t *shiftedState = arr_ + externalIndex;
+            shiftedState[indices[3]] *= s;
         }
     }
 
@@ -584,6 +600,12 @@ template <class fp_t = double> class StateVector {
                                  const vector<size_t> &externalIndices,
                                  bool inverse, const vector<fp_t> &params) {
         applyPhaseShift(indices, externalIndices, inverse, params[0]);
+    }
+    inline void
+    applyControlledPhaseShift_(const vector<size_t> &indices,
+                               const vector<size_t> &externalIndices,
+                               bool inverse, const vector<fp_t> &params) {
+        applyControlledPhaseShift(indices, externalIndices, inverse, params[0]);
     }
     inline void applyRot_(const vector<size_t> &indices,
                           const vector<size_t> &externalIndices, bool inverse,

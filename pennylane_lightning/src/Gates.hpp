@@ -200,8 +200,9 @@ getCRot(const std::vector<U> &params) {
 
 template <class T, class U = T>
 static const std::vector<std::complex<T>> getCPhaseShift(U angle) {
-    return {ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),
-            ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),  ZERO<T>(),
+    return {ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(),
+            ZERO<T>(), ONE<T>(),  ZERO<T>(), ZERO<T>(),
+            ZERO<T>(), ZERO<T>(), ONE<T>(),  ZERO<T>(),
             ZERO<T>(), ZERO<T>(), ZERO<T>(), std::exp(IMAG<T>() * angle)};
 }
 

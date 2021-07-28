@@ -349,6 +349,12 @@ class TestApply:
         ),
         (
             qml.ControlledPhaseShift,
+            [0, 0, 0, 1],
+            [0, 0, 0, 1 / math.sqrt(2) + 1j / math.sqrt(2)],
+            [math.pi / 4],
+        ),
+        (
+            qml.ControlledPhaseShift,
             [1 / math.sqrt(2), 1 / math.sqrt(2), 1 / math.sqrt(2), 1 / math.sqrt(2)],
             [1 / math.sqrt(2), 1 / math.sqrt(2), 1 / math.sqrt(2), 1 / 2 + 1j / 2],
             [math.pi / 4],
@@ -588,6 +594,7 @@ class TestLightningQubitIntegration:
         differentiation method."""
 
         dev = qml.device("lightning.qubit", wires=2)
+
         def circuit():
             """Simple quantum function."""
             return qml.expval(qml.PauliZ(0))
@@ -599,6 +606,7 @@ class TestLightningQubitIntegration:
         """Test that the best differentiation method returns lightning
         qubit."""
         dev = qml.device("lightning.qubit", wires=2)
+
         def circuit():
             """Simple quantum function."""
             return qml.expval(qml.PauliZ(0))
@@ -885,7 +893,7 @@ class TestLightningQubitIntegration:
     # This test is ran against the state 1/2|00>+sqrt(3)/2|11> with two Z expvals
     @pytest.mark.parametrize(
         "name,par,expected_output",
-        [   
+        [
             ("CRX", [0], [-1 / 2, -1 / 2]),
             ("CRX", [-math.pi], [-1 / 2, 1]),
             ("CRX", [math.pi / 2], [-1 / 2, 1 / 4]),
@@ -1209,7 +1217,9 @@ class TestTensorSample:
         ) / 16
         assert np.allclose(var, expected, atol=tolerance, rtol=0)
 
-    def test_pauliz_hadamard(self, theta, phi, varphi, monkeypatch, shots, qubit_device_3_wires, tol):
+    def test_pauliz_hadamard(
+        self, theta, phi, varphi, monkeypatch, shots, qubit_device_3_wires, tol
+    ):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
         tolerance = tol if shots is None else TOL_STOCHASTIC
         dev = qubit_device_3_wires

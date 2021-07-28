@@ -629,6 +629,54 @@ TEMPLATE_TEST_CASE("StateVector::applyPhaseShift", "[StateVector]", float,
     }
 }
 
+TEMPLATE_TEST_CASE("StateVector::applyControlledPhaseShift", "[StateVector]",
+                   float, double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 3;
+    SVData<TestType> svdat{num_qubits};
+
+    // Test using |+++> state
+    svdat.sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                             {{0}, {1}, {2}}, {{false}, {false}, {false}});
+
+    const std::vector<TestType> angles{0.3, 2.4};
+    const cp_t coef = {1 / (2 * std::sqrt(2)), 0};
+
+    std::vector<std::vector<cp_t>> ps_data;
+    for (auto &a : angles) {
+        ps_data.push_back(Gates::getPhaseShift<TestType>(a));
+    }
+
+    std::vector<std::vector<cp_t>> expected_results = {
+        {ps_data[0][0], ps_data[0][0], ps_data[0][0], ps_data[0][0],
+         ps_data[0][0], ps_data[0][0], ps_data[0][3], ps_data[0][3]},
+        {ps_data[1][0], ps_data[1][0], ps_data[1][0], ps_data[1][3],
+         ps_data[1][0], ps_data[1][0], ps_data[1][0], ps_data[1][3]}};
+
+    for (auto &vec : expected_results) {
+        scaleVector(vec, coef);
+    }
+
+    const auto init_state = svdat.cdata;
+    SECTION("Apply directly") {
+        SVData<TestType> svdat_direct{num_qubits, init_state};
+        auto int_idx = svdat_direct.getInternalIndices({0, 1});
+        auto ext_idx = svdat_direct.getExternalIndices({0, 1});
+
+        svdat_direct.sv.applyControlledPhaseShift(int_idx, ext_idx, false,
+                                                  {angles[0]});
+        CAPTURE(svdat_direct.cdata);
+        CHECK(isApproxEqual(svdat_direct.cdata, expected_results[0]));
+    }
+    SECTION("Apply using dispatcher") {
+        SVData<TestType> svdat_dispatch{num_qubits, init_state};
+        svdat_dispatch.sv.applyOperation("ControlledPhaseShift", {1, 2}, false,
+                                         {angles[1]});
+        CAPTURE(svdat_dispatch.cdata);
+        CHECK(isApproxEqual(svdat_dispatch.cdata, expected_results[1]));
+    }
+}
+
 TEMPLATE_TEST_CASE("StateVector::applyRot", "[StateVector]", float, double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
