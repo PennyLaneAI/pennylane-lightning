@@ -16,9 +16,9 @@ This module contains the :class:`~.LightningQubit` class, a PennyLane simulator 
 interfaces with C++ for fast linear algebra calculations.
 """
 from pennylane.devices import DefaultQubit
-from .lightning_qubit_ops import apply
 import numpy as np
 from pennylane import QubitStateVector, BasisState, DeviceError, QubitUnitary
+from .lightning_qubit_ops import apply, StateVectorC64, StateVectorC128
 
 from ._version import __version__
 
@@ -137,7 +137,7 @@ class LightningQubit(DefaultQubit):
         op_inverse = [o.inverse for o in operations]
 
         state_vector = np.ravel(state)
-        apply(state_vector, op_names, op_wires, op_param, op_inverse, self.num_wires)
+        apply(state_vector, op_names, op_wires, op_inverse, op_param)
         return np.reshape(state_vector, state.shape)
 
     @staticmethod
