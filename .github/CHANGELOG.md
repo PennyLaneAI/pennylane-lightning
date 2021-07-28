@@ -4,7 +4,10 @@
 
 ### Improvements
 
-- Move changelog to `.github` and add a changelog reminder.
+* Move changelog to `.github` and add a changelog reminder.
+
+* Add support for Controlled Phase Gate (CPhaseShift).
+  [(#112)](https://github.com/PennyLaneAI/pennylane-lightning/issues/112)
 
 ### Breaking changes
 
@@ -14,7 +17,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Thomas Bromley
+Ali Asadi, Thomas Bromley
 
 ---
 

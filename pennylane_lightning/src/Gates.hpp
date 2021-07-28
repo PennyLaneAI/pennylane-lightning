@@ -359,8 +359,26 @@ class CGeneralRotationGate : public TwoQubitGate {
                      const std::vector<size_t> &externalIndices, bool inverse);
 };
 
-// Three-qubit gates
+class CPhaseShiftGate : public TwoQubitGate {
+  private:
+    const CplxType shift;
+    const std::vector<CplxType> matrix;
 
+  public:
+    static const std::string label;
+    static CPhaseShiftGate create(const std::vector<double> &parameters);
+    CPhaseShiftGate(double phi);
+    inline const std::vector<CplxType> &asMatrix() { return matrix; }
+    void applyKernel(const StateVector &state,
+                     const std::vector<size_t> &indices,
+                     const std::vector<size_t> &externalIndices, bool inverse);
+    void applyGenerator(const StateVector &state,
+                        const std::vector<size_t> &indices,
+                        const std::vector<size_t> &externalIndices);
+    static const double generatorScalingFactor;
+};
+
+// Three-qubit gates
 class ThreeQubitGate : public AbstractGate {
   protected:
     ThreeQubitGate();

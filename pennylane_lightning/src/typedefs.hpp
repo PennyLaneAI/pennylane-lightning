@@ -22,5 +22,4 @@
 namespace Pennylane {
 
 using CplxType = std::complex<double>;
-
 }
