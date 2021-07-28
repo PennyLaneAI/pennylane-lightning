@@ -69,6 +69,7 @@ class LightningQubit(DefaultQubit):
         "CRY",
         "CRZ",
         "CRot",
+        "ControlledPhaseShift",
     }
 
     observables = {"PauliX", "PauliY", "PauliZ", "Hadamard", "Hermitian", "Identity"}
