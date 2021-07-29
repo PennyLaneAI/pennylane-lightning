@@ -155,57 +155,6 @@ template <class T> inline size_t dimSize(const std::vector<T> &data) {
     return log2(sqrt(data.size()));
 }
 
-/**
- * @brief Multiply the given gate data.
- *
- * @tparam T Floating point precision type.
- * @param left Left matrix.
- * @param right Right matrix.
- * @param out Output matrix data.
- */
-template <typename T>
-void GateMult(const std::vector<T> &left, const std::vector<T> &right,
-              std::vector<T> &out) {
-    if (left.size() != right.size())
-        throw std::invalid_argument(
-            "The supplied gates have incompatible sizes");
-
-    T alpha = ONE<T>();
-    T beta = ZERO<T>();
-
-    auto A_data = left.data();
-    auto B_data = right.data();
-    auto C_data = out.data();
-
-    // The following are assumed to be equal.
-    size_t m = dimSize(left);
-    size_t n = dimSize(right);
-    size_t k = m;
-
-    if constexpr (std::is_same_v<T, std::complex<float>>)
-        cblas_cgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, k, &alpha,
-                    A_data, m, B_data, n, &beta, C_data, k);
-    else if constexpr (std::is_same_v<T, std::complex<double>>)
-        cblas_zgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, k, &alpha,
-                    A_data, m, B_data, n, &beta, C_data, k);
-}
-
-/**
- * @brief Multiply the given gate data.
- *
- * @tparam T Floating point precision type.
- * @param left Left matrix.
- * @param right Right matrix.
- */
-template <class T>
-inline static std::vector<std::complex<T>>
-GateMult(const std::vector<std::complex<T>> &left,
-         const std::vector<std::complex<T>> &right) {
-    std::vector<std::complex<T>> out(left.size());
-    GateMult<T>(left, right, out);
-    return out;
-}
-
 } // namespace Util
 } // namespace Pennylane
 
