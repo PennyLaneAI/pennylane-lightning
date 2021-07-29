@@ -2,17 +2,26 @@
 
 ### New features
 
-* C++ layer now supports float (32-bit) and double (64-bit) templated complex data ([#113](https://github.com/PennyLaneAI/pennylane-lightning/pull/113))
+* C++ layer now supports float (32-bit) and double (64-bit) templated complex data 
+  [#113](https://github.com/PennyLaneAI/pennylane-lightning/pull/113)
 
 ### Improvements
 
-* C++ tests have been ported to use Catch2 framework. ([#115](https://github.com/PennyLaneAI/pennylane-lightning/pull/115))
+* Static versions of jQuery and Bootstrap are no longer included in the CSS theme. 
+  [(118)](https://github.com/PennyLaneAI/pennylane-lightning/pull/118)
 
-* Testing now exists for both float and double precision methods in C++ layer. ([#113](https://github.com/PennyLaneAI/pennylane-lightning/pull/113),[#115](https://github.com/PennyLaneAI/pennylane-lightning/pull/115))
+* C++ tests have been ported to use Catch2 framework.
+  [#115](https://github.com/PennyLaneAI/pennylane-lightning/pull/115)
 
-* Compile-time utility methods with `constexpr` have been added. ([#113](https://github.com/PennyLaneAI/pennylane-lightning/pull/113))
+* Testing now exists for both float and double precision methods in C++ layer. 
+  [#113](https://github.com/PennyLaneAI/pennylane-lightning/pull/113)
+  [#115](https://github.com/PennyLaneAI/pennylane-lightning/pull/115)
 
-* Wheel-build support for ARM64 (Linux and MacOS) and PowerPC (Linux) added. ([#110](https://github.com/PennyLaneAI/pennylane-lightning/pull/110))
+* Compile-time utility methods with `constexpr` have been added.
+  [#113](https://github.com/PennyLaneAI/pennylane-lightning/pull/113)
+
+* Wheel-build support for ARM64 (Linux and MacOS) and PowerPC (Linux) added. 
+  [#110](https://github.com/PennyLaneAI/pennylane-lightning/pull/110)
 
 * Add support for Controlled Phase Gate (CPhaseShift).
   [(#112)](https://github.com/PennyLaneAI/pennylane-lightning/issues/112)
@@ -21,19 +30,22 @@
 
 ### Breaking changes
 
-* Compilers with C++17 support are now required to build C++ module. ([#113](https://github.com/PennyLaneAI/pennylane-lightning/pull/113))
+* Compilers with C++17 support are now required to build C++ module.
+  [#113](https://github.com/PennyLaneAI/pennylane-lightning/pull/113)
 
-* Gate classes have been removed with functionality added to StateVector class. ([#113](https://github.com/PennyLaneAI/pennylane-lightning/pull/113))
+* Gate classes have been removed with functionality added to StateVector class.
+  [#113](https://github.com/PennyLaneAI/pennylane-lightning/pull/113)
 
 ### Bug fixes
 
-* PowerPC wheel-builder now successfully compiles modules ([#120](https://github.com/PennyLaneAI/pennylane-lightning/pull/120)).
+* PowerPC wheel-builder now successfully compiles modules.
+  [#120](https://github.com/PennyLaneAI/pennylane-lightning/pull/120)
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Thomas Bromley, Lee J. O'Riordan
+Ali Asadi, Thomas Bromley, Lee James O'Riordan
 
 ---
 
