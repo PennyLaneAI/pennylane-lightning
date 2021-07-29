@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #include "StateVector.hpp"
 #include "pybind11/complex.h"
 #include "pybind11/numpy.h"
@@ -59,6 +60,10 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
                const vector<vector<fp_t>> &params) {
         this->applyOperations(ops, wires, inverse, params);
     }
+    void applyUnitaryGate(const std::vector<std::complex<fp_t>> &matrix,
+                          const vector<size_t> &wires, const bool &inverse) {
+        this->applyOperation(matrix, wires, inverse);
+    }
 };
 
 template <class PrecisionT> void lightning_class_bindings(py::module &m) {
@@ -70,6 +75,7 @@ template <class PrecisionT> void lightning_class_bindings(py::module &m) {
              py::array_t<complex<PrecisionT>,
                          py::array::c_style | py::array::forcecast> &>())
         .def("apply", &StateVecBinder<PrecisionT>::apply)
+        .def("applyUnitary", &StateVecBinder<PrecisionT>::applyUnitaryGate)
         .def("PauliX", &StateVecBinder<PrecisionT>::applyPauliX)
         .def("PauliY", &StateVecBinder<PrecisionT>::applyPauliY)
         .def("PauliZ", &StateVecBinder<PrecisionT>::applyPauliZ)

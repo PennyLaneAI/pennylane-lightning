@@ -171,7 +171,7 @@ template <class T> inline size_t dimSize(const std::vector<T> &data) {
  */
 template <typename T>
 void GateMult(const std::vector<T> &left, const std::vector<T> &right,
-                        std::vector<T> &out) {
+              std::vector<T> &out) {
     if (left.size() != right.size())
         throw std::invalid_argument(
             "The supplied gates have incompatible sizes");

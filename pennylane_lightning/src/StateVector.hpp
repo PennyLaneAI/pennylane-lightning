@@ -147,6 +147,13 @@ template <class fp_t = double> class StateVector {
     void applyOperation(const std::vector<CFP_t> &matrix,
                         const vector<size_t> &wires, bool inverse = false,
                         const vector<fp_t> &params = {}) {
+        const size_t s = matrix.size();
+        const size_t s_sqrt = std::sqrt(s);
+
+        if (s_sqrt * s_sqrt != s) {
+            throw std::invalid_argument(
+                string("The supplied gate is not a perfect square."));
+        }
         if (Util::log2(sqrt(matrix.size())) != wires.size())
             throw std::invalid_argument(
                 string("The supplied gate requires ") +
