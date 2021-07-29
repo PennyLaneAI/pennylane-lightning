@@ -2,7 +2,7 @@
 
 ### New features
 
-* C++ layer now supports float (32-bit) and double (64-bit) templated complex data 
+* C++ layer now supports float (32-bit) and double (64-bit) templated complex data.
   [#113](https://github.com/PennyLaneAI/pennylane-lightning/pull/113)
 
 ### Improvements
