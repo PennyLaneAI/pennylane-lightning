@@ -18,7 +18,6 @@ IGNORE_PATTERN = "external"
 
 BASE_CMD = ("clang-format", f"-style={json.dumps(CLANG_FMT_STYLE_CFG)}")
 
-
 def check_bin():
     try:
         subprocess.run(

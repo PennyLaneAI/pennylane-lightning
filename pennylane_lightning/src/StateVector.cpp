@@ -11,7 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #include "StateVector.hpp"
 
-Pennylane::StateVector::StateVector(CplxType *arr, size_t length)
-    : arr(arr), length(length) {}
+// explicit instantiation
+template class Pennylane::StateVector<float>;
+template class Pennylane::StateVector<double>;
