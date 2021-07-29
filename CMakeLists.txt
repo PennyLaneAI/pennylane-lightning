@@ -66,6 +66,7 @@ if(ENABLE_NATIVE)
     target_compile_options(lightning_qubit_ops PRIVATE -march=native)
 endif()
 
+
 if (BUILD_TESTS)
     enable_testing()
     add_subdirectory("pennylane_lightning/src/tests" "tests")

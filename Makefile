@@ -61,8 +61,10 @@ coverage:
 	$(PYTHON) $(TESTRUNNER) $(COVERAGE)
 
 test-cpp:
-	make -C pennylane_lightning/src/tests clean
-	GOOGLETEST_DIR=$(HOME)/googletest make -C pennylane_lightning/src/tests test
+	rm -rf ./BuildTests
+	cmake . -BBuildTests -DBUILD_TESTS=1
+	cmake --build ./BuildTests
+	./BuildTests/tests/runner
 
 .PHONY: format
 format:

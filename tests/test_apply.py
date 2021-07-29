@@ -212,6 +212,7 @@ class TestApply:
 
         assert np.allclose(qubit_device_2_wires.state, np.array(expected_output), atol=tol, rtol=0)
 
+    """ operation,input,expected_output,par """
     test_data_single_wire_with_parameters = [
         (qml.PhaseShift, [1, 0], [1, 0], [math.pi / 2]),
         (qml.PhaseShift, [0, 1], [0, 1j], [math.pi / 2]),
@@ -277,6 +278,7 @@ class TestApply:
 
         assert np.allclose(qubit_device_1_wire.state, np.array(expected_output), atol=tol, rtol=0)
 
+    """ operation,input,expected_output,par """
     test_data_two_wires_with_parameters = [
         (qml.CRX, [0, 1, 0, 0], [0, 1, 0, 0], [math.pi / 2]),
         (qml.CRX, [0, 0, 0, 1], [0, 0, -1j, 0], [math.pi]),
@@ -326,6 +328,36 @@ class TestApply:
             [0, 1 / math.sqrt(2), 1 / math.sqrt(2), 0],
             [0, 1 / math.sqrt(2), 0, -1 / 2 + 1j / 2],
             [-math.pi / 2, math.pi, math.pi],
+        ),
+        (
+            qml.ControlledPhaseShift,
+            [1, 0, 0, 0],
+            [1, 0, 0, 0],
+            [math.pi / 2],
+        ),
+        (
+            qml.ControlledPhaseShift,
+            [0, 1, 0, 0],
+            [0, 1, 0, 0],
+            [math.pi / 2],
+        ),
+        (
+            qml.ControlledPhaseShift,
+            [0, 0, 1, 0],
+            [0, 0, 1, 0],
+            [math.pi / 2],
+        ),
+        (
+            qml.ControlledPhaseShift,
+            [0, 0, 0, 1],
+            [0, 0, 0, 1 / math.sqrt(2) + 1j / math.sqrt(2)],
+            [math.pi / 4],
+        ),
+        (
+            qml.ControlledPhaseShift,
+            [1 / math.sqrt(2), 1 / math.sqrt(2), 1 / math.sqrt(2), 1 / math.sqrt(2)],
+            [1 / math.sqrt(2), 1 / math.sqrt(2), 1 / math.sqrt(2), 1 / 2 + 1j / 2],
+            [math.pi / 4],
         ),
     ]
 
@@ -562,6 +594,7 @@ class TestLightningQubitIntegration:
         differentiation method."""
 
         dev = qml.device("lightning.qubit", wires=2)
+
         def circuit():
             """Simple quantum function."""
             return qml.expval(qml.PauliZ(0))
@@ -573,6 +606,7 @@ class TestLightningQubitIntegration:
         """Test that the best differentiation method returns lightning
         qubit."""
         dev = qml.device("lightning.qubit", wires=2)
+
         def circuit():
             """Simple quantum function."""
             return qml.expval(qml.PauliZ(0))
@@ -875,12 +909,16 @@ class TestLightningQubitIntegration:
             ("CRot", [math.pi / 2, 0, -math.pi], [-1 / 2, -1 / 2]),
             ("CRot", [0, math.pi / 2, -math.pi], [-1 / 2, 1 / 4]),
             ("CRot", [-math.pi, 0, math.pi / 2], [-1 / 2, -1 / 2]),
+            ("ControlledPhaseShift", [0], [-1 / 2, -1 / 2]),
+            ("ControlledPhaseShift", [-math.pi], [-1 / 2, -1 / 2]),
+            ("ControlledPhaseShift", [math.pi / 2], [-1 / 2, -1 / 2]),
+            ("ControlledPhaseShift", [math.pi], [-1 / 2, -1 / 2]),
         ],
     )
     def test_supported_gate_two_wires_with_parameters(
         self, qubit_device_2_wires, tol, name, par, expected_output
     ):
-        """Tests supported gates that act on two wires wires that are parameterized"""
+        """Tests supported gates that act on two wires that are parameterized"""
 
         op = getattr(qml.ops, name)
 
@@ -1179,7 +1217,9 @@ class TestTensorSample:
         ) / 16
         assert np.allclose(var, expected, atol=tolerance, rtol=0)
 
-    def test_pauliz_hadamard(self, theta, phi, varphi, monkeypatch, shots, qubit_device_3_wires, tol):
+    def test_pauliz_hadamard(
+        self, theta, phi, varphi, monkeypatch, shots, qubit_device_3_wires, tol
+    ):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
         tolerance = tol if shots is None else TOL_STOCHASTIC
         dev = qubit_device_3_wires

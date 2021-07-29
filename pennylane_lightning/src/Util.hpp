@@ -26,12 +26,6 @@
 #include <stdexcept>
 #include <type_traits>
 
-#if defined ENABLE_MKL
-#include <mkl.h>
-#else
-#include <cblas.h>
-#endif
-
 namespace Pennylane {
 
 namespace Util {
