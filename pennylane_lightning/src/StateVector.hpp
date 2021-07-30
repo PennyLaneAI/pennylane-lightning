@@ -150,7 +150,7 @@ template <class fp_t = double> class StateVector {
      */
     void applyOperation(const std::vector<CFP_t> &matrix,
                         const vector<size_t> &wires, bool inverse = false,
-                        const vector<fp_t> &params = {}) {
+                        [[maybe_unused]] const vector<fp_t> &params = {}) {
         const size_t s = matrix.size();
         const size_t s_sqrt = std::sqrt(s);
 
@@ -158,7 +158,7 @@ template <class fp_t = double> class StateVector {
             throw std::invalid_argument(
                 string("The supplied gate is not a perfect square."));
         }
-        if (Util::log2(sqrt(matrix.size())) != wires.size())
+        if (Util::log2(s_sqrt) != wires.size())
             throw std::invalid_argument(
                 string("The supplied gate requires ") +
                 std::to_string(Util::log2(sqrt(matrix.size()))) +
@@ -170,7 +170,7 @@ template <class fp_t = double> class StateVector {
         const vector<size_t> externalIndices =
             generateBitPatterns(externalWires);
 
-        applyUnitary(matrix, internalIndices, externalIndices, inverse);
+        applyMatrix(matrix, internalIndices, externalIndices, inverse);
     }
 
     /**
@@ -267,10 +267,16 @@ template <class fp_t = double> class StateVector {
         return generateBitPatterns(qubitIndices, num_qubits_);
     }
 
-    // Apply Gates
-    void applyUnitary(const vector<CFP_t> &matrix,
-                      const vector<size_t> &indices,
-                      const vector<size_t> &externalIndices, bool inverse) {
+    /**
+     * @brief Apply a given matrix directly to the statevector.
+     *
+     * @param matrix Perfect square matrix in row-major order.
+     * @param indices Internal indices participating in the operation.
+     * @param externalIndices External indices unaffected by the operation.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    void applyMatrix(const vector<CFP_t> &matrix, const vector<size_t> &indices,
+                     const vector<size_t> &externalIndices, bool inverse) {
 
         if (static_cast<size_t>(0b1 << (Util::log2(indices.size()) +
                                         Util::log2(externalIndices.size()))) !=

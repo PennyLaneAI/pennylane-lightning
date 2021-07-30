@@ -1132,7 +1132,7 @@ TEMPLATE_TEST_CASE("StateVector::applyCSWAP", "[StateVector]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("StateVector::applyUnitary 1 wire", "[StateVector]", float,
+TEMPLATE_TEST_CASE("StateVector::applyMatrix 1 wire", "[StateVector]", float,
                    double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 5;
@@ -1165,7 +1165,7 @@ TEMPLATE_TEST_CASE("StateVector::applyUnitary 1 wire", "[StateVector]", float,
             for (size_t index = 0; index < num_qubits; index++) {
                 auto int_idx = svdat.getInternalIndices({index});
                 auto ext_idx = svdat.getExternalIndices({index});
-                svdat.sv.applyUnitary(xz_gate, int_idx, ext_idx, false);
+                svdat.sv.applyMatrix(xz_gate, int_idx, ext_idx, false);
 
                 svdat_expected.sv.applyPauliX(int_idx, ext_idx, false);
                 svdat_expected.sv.applyPauliZ(int_idx, ext_idx, false);
@@ -1195,7 +1195,7 @@ TEMPLATE_TEST_CASE("StateVector::applyUnitary 1 wire", "[StateVector]", float,
             for (size_t index = 0; index < num_qubits; index++) {
                 auto int_idx = svdat.getInternalIndices({index});
                 auto ext_idx = svdat.getExternalIndices({index});
-                svdat.sv.applyUnitary(zx_gate, int_idx, ext_idx, false);
+                svdat.sv.applyMatrix(zx_gate, int_idx, ext_idx, false);
 
                 svdat_expected.sv.applyPauliZ(int_idx, ext_idx, false);
                 svdat_expected.sv.applyPauliX(int_idx, ext_idx, false);
@@ -1223,7 +1223,7 @@ TEMPLATE_TEST_CASE("StateVector::applyUnitary 1 wire", "[StateVector]", float,
             for (size_t index = 0; index < num_qubits; index++) {
                 auto int_idx = svdat.getInternalIndices({index});
                 auto ext_idx = svdat.getExternalIndices({index});
-                svdat.sv.applyUnitary(xy_gate, int_idx, ext_idx, false);
+                svdat.sv.applyMatrix(xy_gate, int_idx, ext_idx, false);
 
                 svdat_expected.sv.applyPauliX(int_idx, ext_idx, false);
                 svdat_expected.sv.applyPauliY(int_idx, ext_idx, false);
@@ -1251,7 +1251,7 @@ TEMPLATE_TEST_CASE("StateVector::applyUnitary 1 wire", "[StateVector]", float,
             for (size_t index = 0; index < num_qubits; index++) {
                 auto int_idx = svdat.getInternalIndices({index});
                 auto ext_idx = svdat.getExternalIndices({index});
-                svdat.sv.applyUnitary(yx_gate, int_idx, ext_idx, false);
+                svdat.sv.applyMatrix(yx_gate, int_idx, ext_idx, false);
 
                 svdat_expected.sv.applyPauliY(int_idx, ext_idx, false);
                 svdat_expected.sv.applyPauliX(int_idx, ext_idx, false);
@@ -1279,7 +1279,7 @@ TEMPLATE_TEST_CASE("StateVector::applyUnitary 1 wire", "[StateVector]", float,
             for (size_t index = 0; index < num_qubits; index++) {
                 auto int_idx = svdat.getInternalIndices({index});
                 auto ext_idx = svdat.getExternalIndices({index});
-                svdat.sv.applyUnitary(yz_gate, int_idx, ext_idx, false);
+                svdat.sv.applyMatrix(yz_gate, int_idx, ext_idx, false);
 
                 svdat_expected.sv.applyPauliY(int_idx, ext_idx, false);
                 svdat_expected.sv.applyPauliZ(int_idx, ext_idx, false);
@@ -1307,7 +1307,7 @@ TEMPLATE_TEST_CASE("StateVector::applyUnitary 1 wire", "[StateVector]", float,
             for (size_t index = 0; index < num_qubits; index++) {
                 auto int_idx = svdat.getInternalIndices({index});
                 auto ext_idx = svdat.getExternalIndices({index});
-                svdat.sv.applyUnitary(zy_gate, int_idx, ext_idx, false);
+                svdat.sv.applyMatrix(zy_gate, int_idx, ext_idx, false);
 
                 svdat_expected.sv.applyPauliZ(int_idx, ext_idx, false);
                 svdat_expected.sv.applyPauliY(int_idx, ext_idx, false);
@@ -1329,7 +1329,7 @@ TEMPLATE_TEST_CASE("StateVector::applyUnitary 1 wire", "[StateVector]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("StateVector::applyUnitary multiple wires", "[StateVector]",
+TEMPLATE_TEST_CASE("StateVector::applyMatrix multiple wires", "[StateVector]",
                    float, double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
