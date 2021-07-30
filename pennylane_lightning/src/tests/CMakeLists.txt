@@ -33,7 +33,8 @@ add_executable(runner runner_main.cpp)
 target_link_libraries(runner pennylane_lightning Catch2::Catch2)
 
 target_sources(runner PRIVATE   Test_Bindings.cpp
-                                Test_StateVector.cpp 
+                                Test_StateVector_Nonparam.cpp 
+                                Test_StateVector_Param.cpp 
                                 Test_Util.cpp
 )
 
