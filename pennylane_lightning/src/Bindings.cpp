@@ -65,14 +65,33 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
         this->applyOperations(ops, wires, inverse);
     }
     /**
-     * @brief Directly apply a given matrix to the specified wires.
+     * @brief Directly apply a given matrix to the specified wires. Matrix data
+     * in 1D row-major format.
      *
      * @param matrix
      * @param wires
      */
     void applyMatrixWires(const std::vector<std::complex<fp_t>> &matrix,
-                          const vector<size_t> &wires) {
-        this->applyOperation(matrix, wires, false);
+                          const vector<size_t> &wires, bool inverse = false) {
+        this->applyOperation(matrix, wires, inverse);
+    }
+    /**
+     * @brief Directly apply a given matrix to the specified wires. Data in 1/2D
+     * numpy complex array format.
+     *
+     * @param matrix
+     * @param wires
+     * @param inverse
+     */
+    void applyMatrixWires(const py::array_t<complex<fp_t>> &matrix,
+                          const vector<size_t> &wires, bool inverse = false) {
+        const vector<size_t> internalIndices = this->generateBitPatterns(wires);
+        const vector<size_t> externalWires =
+            this->getIndicesAfterExclusion(wires);
+        const vector<size_t> externalIndices =
+            this->generateBitPatterns(externalWires);
+        this->applyMatrix(static_cast<complex<fp_t> *>(matrix.request().ptr),
+                          internalIndices, externalIndices, inverse);
     }
 };
 
@@ -94,7 +113,14 @@ template <class PrecisionT> void lightning_class_bindings(py::module &m) {
                                         const vector<vector<size_t>> &,
                                         const vector<bool> &>(
                           &StateVecBinder<PrecisionT>::apply))
-        .def("applyMatrix", &StateVecBinder<PrecisionT>::applyMatrixWires)
+        .def("applyMatrix",
+             py::overload_cast<const std::vector<std::complex<PrecisionT>> &,
+                               const vector<size_t> &, bool>(
+                 &StateVecBinder<PrecisionT>::applyMatrixWires))
+        .def("applyMatrix",
+             py::overload_cast<const py::array_t<complex<PrecisionT>> &,
+                               const vector<size_t> &, bool>(
+                 &StateVecBinder<PrecisionT>::applyMatrixWires))
         .def("PauliX", &StateVecBinder<PrecisionT>::applyPauliX)
         .def("PauliY", &StateVecBinder<PrecisionT>::applyPauliY)
         .def("PauliZ", &StateVecBinder<PrecisionT>::applyPauliZ)
