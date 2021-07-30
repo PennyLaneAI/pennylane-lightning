@@ -1138,26 +1138,12 @@ TEMPLATE_TEST_CASE("StateVector::applyMatrix 1 wire", "[StateVector]", float,
     const size_t num_qubits = 5;
 
     // Note: gates are defined as right-to-left order
-    const std::vector<cp_t> zx_gate{
-        Util::ZERO<TestType>(), -Util::ONE<TestType>(), Util::ONE<TestType>(),
-        Util::ZERO<TestType>()};
-    const std::vector<cp_t> xz_gate{
-        Util::ZERO<TestType>(), Util::ONE<TestType>(), -Util::ONE<TestType>(),
-        Util::ZERO<TestType>()};
-    const std::vector<cp_t> yx_gate{
-        Util::IMAG<TestType>(), Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-        -Util::IMAG<TestType>()};
-    const std::vector<cp_t> xy_gate{
-        -Util::IMAG<TestType>(), Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-        Util::IMAG<TestType>()};
-    const std::vector<cp_t> zy_gate{
-        Util::ZERO<TestType>(), Util::IMAG<TestType>(), Util::IMAG<TestType>(),
-        Util::ZERO<TestType>()};
-    const std::vector<cp_t> yz_gate{
-        Util::ZERO<TestType>(), -Util::IMAG<TestType>(),
-        -Util::IMAG<TestType>(), Util::ZERO<TestType>()};
 
     SECTION("Apply XZ gate") {
+        const std::vector<cp_t> xz_gate{
+            Util::ZERO<TestType>(), Util::ONE<TestType>(),
+            -Util::ONE<TestType>(), Util::ZERO<TestType>()};
+
         SECTION("Apply directly") {
             SVData<TestType> svdat{num_qubits};
             SVData<TestType> svdat_expected{num_qubits};
@@ -1188,6 +1174,9 @@ TEMPLATE_TEST_CASE("StateVector::applyMatrix 1 wire", "[StateVector]", float,
         }
     }
     SECTION("Apply ZX gate") {
+        const std::vector<cp_t> zx_gate{
+            Util::ZERO<TestType>(), -Util::ONE<TestType>(),
+            Util::ONE<TestType>(), Util::ZERO<TestType>()};
         SECTION("Apply directly") {
             SVData<TestType> svdat{num_qubits};
             SVData<TestType> svdat_expected{num_qubits};
@@ -1216,6 +1205,9 @@ TEMPLATE_TEST_CASE("StateVector::applyMatrix 1 wire", "[StateVector]", float,
         }
     }
     SECTION("Apply XY gate") {
+        const std::vector<cp_t> xy_gate{
+            -Util::IMAG<TestType>(), Util::ZERO<TestType>(),
+            Util::ZERO<TestType>(), Util::IMAG<TestType>()};
         SECTION("Apply directly") {
             SVData<TestType> svdat{num_qubits};
             SVData<TestType> svdat_expected{num_qubits};
@@ -1244,6 +1236,9 @@ TEMPLATE_TEST_CASE("StateVector::applyMatrix 1 wire", "[StateVector]", float,
         }
     }
     SECTION("Apply YX gate") {
+        const std::vector<cp_t> yx_gate{
+            Util::IMAG<TestType>(), Util::ZERO<TestType>(),
+            Util::ZERO<TestType>(), -Util::IMAG<TestType>()};
         SECTION("Apply directly") {
             SVData<TestType> svdat{num_qubits};
             SVData<TestType> svdat_expected{num_qubits};
@@ -1272,6 +1267,9 @@ TEMPLATE_TEST_CASE("StateVector::applyMatrix 1 wire", "[StateVector]", float,
         }
     }
     SECTION("Apply YZ gate") {
+        const std::vector<cp_t> yz_gate{
+            Util::ZERO<TestType>(), -Util::IMAG<TestType>(),
+            -Util::IMAG<TestType>(), Util::ZERO<TestType>()};
         SECTION("Apply directly") {
             SVData<TestType> svdat{num_qubits};
             SVData<TestType> svdat_expected{num_qubits};
@@ -1300,6 +1298,9 @@ TEMPLATE_TEST_CASE("StateVector::applyMatrix 1 wire", "[StateVector]", float,
         }
     }
     SECTION("Apply ZY gate") {
+        const std::vector<cp_t> zy_gate{
+            Util::ZERO<TestType>(), Util::IMAG<TestType>(),
+            Util::IMAG<TestType>(), Util::ZERO<TestType>()};
         SECTION("Apply directly") {
             SVData<TestType> svdat{num_qubits};
             SVData<TestType> svdat_expected{num_qubits};
