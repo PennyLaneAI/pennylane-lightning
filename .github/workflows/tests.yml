@@ -84,8 +84,8 @@ jobs:
         run: |
           cd main/
           pytest tests/ $COVERAGE_FLAGS
-          pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS
-          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS
+          pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1.0.12
