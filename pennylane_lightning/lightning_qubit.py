@@ -103,14 +103,33 @@ class LightningQubit(DefaultQubit):
         Returns:
             array[complex]: the output state tensor
         """
-        op_names = [self._remove_inverse_string(o.name) for o in operations]
-        op_wires = [self.wires.indices(o.wires) for o in operations]
-        op_param = [o.parameters for o in operations]
-        op_inverse = [o.inverse for o in operations]
-
+        assert state.dtype == np.complex128
         state_vector = np.ravel(state)
-        apply(state_vector, op_names, op_wires, op_inverse, op_param)
+        sim = StateVectorC128(state_vector)
+
+        for o in operations:
+            method = getattr(sim, o.name, None)
+
+            name = o.name
+            wires = self.wires.indices(o.wires)
+            param = o.parameters
+            inv = o.inverse
+
+            if method is None:
+                unitary = np.ravel(o.matrix)
+                sim.applyMatrix(unitary, wires, inv)
+            else:
+                sim.apply([name], [wires], [inv], [param])
+
         return np.reshape(state_vector, state.shape)
+        # op_names = [self._remove_inverse_string(o.name) for o in operations]
+        # op_wires = [self.wires.indices(o.wires) for o in operations]
+        # op_param = [o.parameters for o in operations]
+        # op_inverse = [o.inverse for o in operations]
+        #
+        # state_vector = np.ravel(state)
+        # apply(state_vector, op_names, op_wires, op_inverse, op_param)
+        # return np.reshape(state_vector, state.shape)
 
     @staticmethod
     def _remove_inverse_string(string):
