@@ -35,18 +35,26 @@ def test_gate_unitary_correct(op, op_name):
 
     if op_name in ("BasisState", "QubitStateVector"):
         pytest.skip("Skipping operation because it is a state preparation")
+    if op_name in ("ControlledQubitUnitary", "QubitUnitary", "MultiControlledX", "DiagonalQubitUnitary"):
+        pytest.skip("Skipping operation.")
 
-    wires = op.num_wires
+    wires = int(op.num_wires)
+
+    if wires == -1:  # This occurs for operations that do not have a predefined number of wires
+        wires = 4
+
     dev = qml.device("lightning.qubit", wires=wires)
     num_params = op.num_params
     p = [0.1] * num_params
+
+    if op_name == "DiagonalQubitUnitary": p = np.ones(wires)
 
     @qml.qnode(dev)
     def output(input):
         qml.BasisState(input, wires=range(wires))
         op(*p, wires=range(wires))
         return qml.state()
-
+    # print(wires)
     unitary = np.zeros((2 ** wires, 2 ** wires), dtype=np.complex128)
 
     for i, input in enumerate(itertools.product([0, 1], repeat=wires)):
