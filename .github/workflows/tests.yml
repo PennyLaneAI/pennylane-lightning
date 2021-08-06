@@ -5,6 +5,9 @@ on:
       - master
   pull_request:
 
+env:
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:../coverage.xml --no-flaky-report -p no:warnings --tb=native"
+
 jobs:
   cpptests:
     name: C++ tests
@@ -80,14 +83,11 @@ jobs:
       - name: Run PennyLane-Lightning unit tests
         run: |
           cd main/
-          pytest tests/ --cov=pennylane_lightning --cov-report term-missing --cov-report=xml:../coverage.xml
+          pytest tests/ $COVERAGE_FLAGS
+          pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS
+          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1.0.12
         with:
           file: coverage.xml
-
-      - name: Run PennyLane shared test suite
-        run: |
-          pl-device-test --device lightning.qubit --skip-ops --shots=20000
-          pl-device-test --device lightning.qubit --shots=None --skip-ops
