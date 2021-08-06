@@ -46,34 +46,6 @@ class LightningQubit(DefaultQubit):
     version = __version__
     author = "Xanadu Inc."
 
-    operations = {
-        "BasisState",
-        "QubitStateVector",
-        "PauliX",
-        "PauliY",
-        "PauliZ",
-        "Hadamard",
-        "S",
-        "T",
-        "CNOT",
-        "SWAP",
-        "CSWAP",
-        "Toffoli",
-        "CZ",
-        "PhaseShift",
-        "RX",
-        "RY",
-        "RZ",
-        "Rot",
-        "CRX",
-        "CRY",
-        "CRZ",
-        "CRot",
-        "ControlledPhaseShift",
-    }
-
-    observables = {"PauliX", "PauliY", "PauliZ", "Hadamard", "Hermitian", "Identity"}
-
     def __init__(self, wires, *, shots=None):
         super().__init__(wires, shots=shots)
 
