@@ -53,12 +53,22 @@ clean-docs:
 	rm -rf doc/code/api
 	make -C doc clean
 
-test:
+test-builtin:
 	$(PYTHON) -I $(TESTRUNNER)
+
+test-suite:
+	pl-device-test --device lightning.qubit --skip-ops --shots=20000
+	pl-device-test --device lightning.qubit --shots=None --skip-ops
+
+test-python: test-builtin test-suite
+	test-builtin
+	test-suite
 
 coverage:
 	@echo "Generating coverage report..."
 	$(PYTHON) $(TESTRUNNER) $(COVERAGE)
+	pl-device-test --device lightning.qubit --skip-ops --shots=20000 $(COVERAGE) --cov-append
+	pl-device-test --device lightning.qubit --shots=None --skip-ops $(COVERAGE) --cov-append
 
 test-cpp:
 	rm -rf ./BuildTests

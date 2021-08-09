@@ -7,6 +7,9 @@
 
 ### Improvements
 
+* The PennyLane device test suite is now included in coverage reports.
+  [(123)](https://github.com/PennyLaneAI/pennylane-lightning/pull/123)
+
 * Static versions of jQuery and Bootstrap are no longer included in the CSS theme. 
   [(118)](https://github.com/PennyLaneAI/pennylane-lightning/pull/118)
 
