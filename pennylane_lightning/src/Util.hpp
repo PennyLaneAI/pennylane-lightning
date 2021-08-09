@@ -105,10 +105,10 @@ template <class T> inline static constexpr T INVSQRT2() {
 }
 
 /**
- * Calculates 2^n -1 for some integer n > 0 using bitshifts.
+ * Calculates 2^n for some integer n > 0 using bitshifts.
  *
  * @param n the exponent
- * @return value of 2^n -1
+ * @return value of 2^n
  */
 inline size_t exp2(const size_t &n) { return static_cast<size_t>(1) << n; }
 
@@ -134,14 +134,29 @@ inline size_t maxDecimalForQubit(size_t qubitIndex, size_t qubits) {
     return exp2(qubits - qubitIndex - 1);
 }
 
+/**
+ * @brief Returns the number of wires supported by a given qubit gate.
+ *
+ * @tparam T Floating point precision type.
+ * @param data Gate matrix data.
+ * @return size_t Number of wires.
+ */
+template <class T> inline size_t dimSize(const std::vector<T> &data) {
+    const size_t s = data.size();
+    const size_t s_sqrt = std::sqrt(s);
+
+    if (s < 4)
+        throw std::invalid_argument("The dataset must be at least 2x2.");
+    if (((s == 0) || (s & (s - 1))))
+        throw std::invalid_argument("The dataset must be a power of 2");
+    if (s_sqrt * s_sqrt != s)
+        throw std::invalid_argument("The dataset must be a perfect square");
+
+    return log2(sqrt(data.size()));
+}
+
 } // namespace Util
 } // namespace Pennylane
-
-// Helper similar to std::make_unique from c++14
-template <typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args &&...args) {
-    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
 
 // Exception for functions that aren't implemented
 class NotImplementedException : public std::logic_error {
