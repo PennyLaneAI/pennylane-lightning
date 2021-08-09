@@ -141,6 +141,34 @@ template <class fp_t = double> class StateVector {
     }
 
     /**
+     * @brief Apply a single gate to the state-vector.
+     *
+     * @param matrix Arbitrary unitary gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Optional parameter list for parametric gates.
+     */
+    void applyOperation(const std::vector<CFP_t> &matrix,
+                        const vector<size_t> &wires, bool inverse = false,
+                        [[maybe_unused]] const vector<fp_t> &params = {}) {
+
+        auto dim = Util::dimSize(matrix);
+
+        if (dim != wires.size())
+            throw std::invalid_argument(string("The supplied gate requires ") +
+                                        std::to_string(dim) + " wires, but " +
+                                        std::to_string(wires.size()) +
+                                        " were supplied.");
+
+        const vector<size_t> internalIndices = generateBitPatterns(wires);
+        const vector<size_t> externalWires = getIndicesAfterExclusion(wires);
+        const vector<size_t> externalIndices =
+            generateBitPatterns(externalWires);
+
+        applyMatrix(matrix, internalIndices, externalIndices, inverse);
+    }
+
+    /**
      * @brief Apply multiple gates to the state-vector.
      *
      * @param ops Vector of gate names to be applied in order.
@@ -234,11 +262,67 @@ template <class fp_t = double> class StateVector {
         return generateBitPatterns(qubitIndices, num_qubits_);
     }
 
-    // Apply Gates
-    void applyUnitary(const vector<CFP_t> &matrix,
-                      const vector<size_t> &indices,
-                      const vector<size_t> &externalIndices, bool inverse) {
-        if (indices.size() != length_)
+    /**
+     * @brief Apply a given matrix directly to the statevector.
+     *
+     * @param matrix Perfect square matrix in row-major order.
+     * @param indices Internal indices participating in the operation.
+     * @param externalIndices External indices unaffected by the operation.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    void applyMatrix(const vector<CFP_t> &matrix, const vector<size_t> &indices,
+                     const vector<size_t> &externalIndices, bool inverse) {
+        if (static_cast<size_t>(0b1 << (Util::log2(indices.size()) +
+                                        Util::log2(externalIndices.size()))) !=
+            length_)
+            throw std::out_of_range(
+                "The given indices do not match the state-vector length.");
+
+        vector<CFP_t> v(indices.size());
+        for (const size_t &externalIndex : externalIndices) {
+            CFP_t *shiftedState = arr_ + externalIndex;
+            // Gather
+            size_t pos = 0;
+            for (const size_t &index : indices) {
+                v[pos] = shiftedState[index];
+                pos++;
+            }
+
+            // Apply + scatter
+            for (size_t i = 0; i < indices.size(); i++) {
+                size_t index = indices[i];
+                shiftedState[index] = 0;
+
+                if (inverse == true) {
+                    for (size_t j = 0; j < indices.size(); j++) {
+                        const size_t baseIndex = j * indices.size();
+                        shiftedState[index] +=
+                            conj(matrix[baseIndex + i]) * v[j];
+                    }
+                } else {
+                    const size_t baseIndex = i * indices.size();
+                    for (size_t j = 0; j < indices.size(); j++) {
+                        shiftedState[index] += matrix[baseIndex + j] * v[j];
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * @brief Apply a given matrix directly to the statevector read directly
+     * from numpy data. Data can be in 1D or 2D format.
+     *
+     * @param matrix Pointer from numpy data.
+     * @param indices Internal indices participating in the operation.
+     * @param externalIndices External indices unaffected by the operation.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    void applyMatrix(const CFP_t *matrix, const vector<size_t> &indices,
+                     const vector<size_t> &externalIndices, bool inverse) {
+        if (static_cast<size_t>(0b1 << (Util::log2(indices.size()) +
+                                        Util::log2(externalIndices.size()))) !=
+            length_)
             throw std::out_of_range(
                 "The given indices do not match the state-vector length.");
 
@@ -325,7 +409,6 @@ template <class fp_t = double> class StateVector {
 
     void applyT(const vector<size_t> &indices,
                 const vector<size_t> &externalIndices, bool inverse) {
-
         const CFP_t shift = (inverse == true)
                                 ? std::conj(std::exp(CFP_t(0, M_PI / 4)))
                                 : std::exp(CFP_t(0, M_PI / 4));

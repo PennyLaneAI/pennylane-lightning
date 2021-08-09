@@ -12,47 +12,16 @@
 #include "StateVector.hpp"
 #include "Util.hpp"
 
+#include "TestHelpers.hpp"
+
 using namespace Pennylane;
-
-/**
- * @brief Utility function to compare complex statevector data.
- *
- * @tparam Data_t Floating point data-type.
- * @param data1 StateVector data 1.
- * @param data2 StateVector data 2.
- * @return true Data are approximately equal.
- * @return false Data are not approximately equal.
- */
-template <class Data_t>
-inline bool isApproxEqual(
-    const std::vector<Data_t> &data1, const std::vector<Data_t> &data2,
-    const typename Data_t::value_type eps =
-        std::numeric_limits<typename Data_t::value_type>::epsilon() * 100) {
-    if (data1.size() != data2.size())
-        return false;
-
-    for (size_t i = 0; i < data1.size(); i++) {
-        if (data1[i].real() != Approx(data2[i].real()).epsilon(eps) ||
-            data1[i].imag() != Approx(data2[i].imag()).epsilon(eps)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-template <class Data_t>
-void scaleVector(std::vector<std::complex<Data_t>> &data,
-                 std::complex<Data_t> scalar) {
-    std::transform(
-        data.begin(), data.end(), data.begin(),
-        [scalar](const std::complex<Data_t> &c) { return c * scalar; });
-}
 
 /**
  * @brief Tests the constructability of the StateVector class.
  *
  */
-TEMPLATE_TEST_CASE("StateVector::StateVector", "[StateVector]", float, double) {
+TEMPLATE_TEST_CASE("StateVector::StateVector", "[StateVector_Nonparam]", float,
+                   double) {
     SECTION("StateVector") {
         REQUIRE(std::is_constructible<StateVector<>>::value);
     }
@@ -81,6 +50,8 @@ TEMPLATE_TEST_CASE("StateVector::StateVector", "[StateVector]", float, double) {
         }
     }
 }
+
+namespace {
 
 /**
  * @brief Utility data-structure to assist with testing StateVector class
@@ -113,8 +84,9 @@ template <typename fp_t> struct SVData {
         return externalIndices;
     }
 };
+} // namespace
 
-TEST_CASE("StateVector::generateBitPatterns", "[StateVector]") {
+TEST_CASE("StateVector::generateBitPatterns", "[StateVector_Nonparam]") {
     const size_t num_qubits = 4;
     SECTION("Qubit indices {}") {
         auto bit_pattern = StateVector<>::generateBitPatterns({}, num_qubits);
@@ -154,7 +126,7 @@ TEST_CASE("StateVector::generateBitPatterns", "[StateVector]") {
     }
 }
 
-TEST_CASE("StateVector::getIndicesAfterExclusion", "[StateVector]") {
+TEST_CASE("StateVector::getIndicesAfterExclusion", "[StateVector_Nonparam]") {
     const size_t num_qubits = 4;
     SECTION("Qubit indices {}") {
         std::vector<size_t> expected{0, 1, 2, 3};
@@ -198,8 +170,8 @@ TEST_CASE("StateVector::getIndicesAfterExclusion", "[StateVector]") {
     }
 }
 
-TEMPLATE_TEST_CASE("StateVector::applyHadamard", "[StateVector]", float,
-                   double) {
+TEMPLATE_TEST_CASE("StateVector::applyHadamard", "[StateVector_Nonparam]",
+                   float, double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
     SECTION("Apply directly") {
@@ -248,7 +220,8 @@ TEMPLATE_TEST_CASE("StateVector::applyHadamard", "[StateVector]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("StateVector::applyPauliX", "[StateVector]", float, double) {
+TEMPLATE_TEST_CASE("StateVector::applyPauliX", "[StateVector_Nonparam]", float,
+                   double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
     SECTION("Apply directly") {
@@ -275,7 +248,8 @@ TEMPLATE_TEST_CASE("StateVector::applyPauliX", "[StateVector]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("StateVector::applyPauliY", "[StateVector]", float, double) {
+TEMPLATE_TEST_CASE("StateVector::applyPauliY", "[StateVector_Nonparam]", float,
+                   double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
     SVData<TestType> svdat{num_qubits};
@@ -316,7 +290,8 @@ TEMPLATE_TEST_CASE("StateVector::applyPauliY", "[StateVector]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("StateVector::applyPauliZ", "[StateVector]", float, double) {
+TEMPLATE_TEST_CASE("StateVector::applyPauliZ", "[StateVector_Nonparam]", float,
+                   double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
     SVData<TestType> svdat{num_qubits};
@@ -355,7 +330,8 @@ TEMPLATE_TEST_CASE("StateVector::applyPauliZ", "[StateVector]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("StateVector::applyS", "[StateVector]", float, double) {
+TEMPLATE_TEST_CASE("StateVector::applyS", "[StateVector_Nonparam]", float,
+                   double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
     SVData<TestType> svdat{num_qubits};
@@ -394,7 +370,8 @@ TEMPLATE_TEST_CASE("StateVector::applyS", "[StateVector]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("StateVector::applyT", "[StateVector]", float, double) {
+TEMPLATE_TEST_CASE("StateVector::applyT", "[StateVector_Nonparam]", float,
+                   double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
     SVData<TestType> svdat{num_qubits};
@@ -433,294 +410,8 @@ TEMPLATE_TEST_CASE("StateVector::applyT", "[StateVector]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("StateVector::applyRX", "[StateVector]", float, double) {
-    using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
-    SVData<TestType> svdat{num_qubits};
-
-    const std::vector<TestType> angles{0.1, 0.6, 2.1};
-    std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(8), std::vector<cp_t>(8), std::vector<cp_t>(8)};
-
-    for (size_t i = 0; i < angles.size(); i++) {
-        const auto rx_mat = Gates::getRX<TestType>(angles[i]);
-        expected_results[i][0] = rx_mat[0];
-        expected_results[i][0b1 << (num_qubits - i - 1)] = rx_mat[1];
-    }
-
-    const auto init_state = svdat.cdata;
-    SECTION("Apply directly") {
-        for (size_t index = 0; index < num_qubits; index++) {
-            SVData<TestType> svdat_direct{num_qubits};
-            auto int_idx = svdat_direct.getInternalIndices({index});
-            auto ext_idx = svdat_direct.getExternalIndices({index});
-
-            svdat_direct.sv.applyRX(int_idx, ext_idx, false, {angles[index]});
-
-            CHECK(isApproxEqual(svdat_direct.cdata, expected_results[index]));
-        }
-    }
-    SECTION("Apply using dispatcher") {
-        for (size_t index = 0; index < num_qubits; index++) {
-            SVData<TestType> svdat_dispatch{num_qubits};
-            svdat_dispatch.sv.applyOperation("RX", {index}, false,
-                                             {angles[index]});
-            CHECK(isApproxEqual(svdat_dispatch.cdata, expected_results[index]));
-        }
-    }
-}
-
-TEMPLATE_TEST_CASE("StateVector::applyRY", "[StateVector]", float, double) {
-    using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
-    SVData<TestType> svdat{num_qubits};
-
-    const std::vector<TestType> angles{0.2, 0.7, 2.9};
-    std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(8), std::vector<cp_t>(8), std::vector<cp_t>(8)};
-
-    for (size_t i = 0; i < angles.size(); i++) {
-        const auto ry_mat = Gates::getRY<TestType>(angles[i]);
-        expected_results[i][0] = ry_mat[0];
-        expected_results[i][0b1 << (num_qubits - i - 1)] = ry_mat[2];
-    }
-
-    const auto init_state = svdat.cdata;
-    SECTION("Apply directly") {
-        for (size_t index = 0; index < num_qubits; index++) {
-            SVData<TestType> svdat_direct{num_qubits};
-            auto int_idx = svdat_direct.getInternalIndices({index});
-            auto ext_idx = svdat_direct.getExternalIndices({index});
-
-            svdat_direct.sv.applyRY(int_idx, ext_idx, false, {angles[index]});
-            CAPTURE(svdat_direct.cdata);
-            CAPTURE(expected_results[index]);
-
-            CHECK(isApproxEqual(svdat_direct.cdata, expected_results[index]));
-        }
-    }
-    SECTION("Apply using dispatcher") {
-        for (size_t index = 0; index < num_qubits; index++) {
-            SVData<TestType> svdat_dispatch{num_qubits};
-            svdat_dispatch.sv.applyOperation("RY", {index}, false,
-                                             {angles[index]});
-            CHECK(isApproxEqual(svdat_dispatch.cdata, expected_results[index]));
-        }
-    }
-}
-
-TEMPLATE_TEST_CASE("StateVector::applyRZ", "[StateVector]", float, double) {
-    using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
-    SVData<TestType> svdat{num_qubits};
-
-    // Test using |+++> state
-    svdat.sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                             {{0}, {1}, {2}}, {{false}, {false}, {false}});
-
-    const std::vector<TestType> angles{0.2, 0.7, 2.9};
-    const cp_t coef = {1 / (2 * std::sqrt(2)), 0};
-
-    std::vector<std::vector<cp_t>> rz_data;
-    for (auto &a : angles) {
-        rz_data.push_back(Gates::getRZ<TestType>(a));
-    }
-
-    std::vector<std::vector<cp_t>> expected_results = {
-        {rz_data[0][0], rz_data[0][0], rz_data[0][0], rz_data[0][0],
-         rz_data[0][3], rz_data[0][3], rz_data[0][3], rz_data[0][3]},
-        {
-            rz_data[1][0],
-            rz_data[1][0],
-            rz_data[1][3],
-            rz_data[1][3],
-            rz_data[1][0],
-            rz_data[1][0],
-            rz_data[1][3],
-            rz_data[1][3],
-        },
-        {rz_data[2][0], rz_data[2][3], rz_data[2][0], rz_data[2][3],
-         rz_data[2][0], rz_data[2][3], rz_data[2][0], rz_data[2][3]}};
-
-    for (auto &vec : expected_results) {
-        scaleVector(vec, coef);
-    }
-
-    const auto init_state = svdat.cdata;
-    SECTION("Apply directly") {
-        for (size_t index = 0; index < num_qubits; index++) {
-            SVData<TestType> svdat_direct{num_qubits, init_state};
-            auto int_idx = svdat_direct.getInternalIndices({index});
-            auto ext_idx = svdat_direct.getExternalIndices({index});
-
-            svdat_direct.sv.applyRZ(int_idx, ext_idx, false, {angles[index]});
-
-            CHECK(isApproxEqual(svdat_direct.cdata, expected_results[index]));
-        }
-    }
-    SECTION("Apply using dispatcher") {
-        for (size_t index = 0; index < num_qubits; index++) {
-            SVData<TestType> svdat_dispatch{num_qubits, init_state};
-            svdat_dispatch.sv.applyOperation("RZ", {index}, false,
-                                             {angles[index]});
-            CHECK(isApproxEqual(svdat_dispatch.cdata, expected_results[index]));
-        }
-    }
-}
-
-TEMPLATE_TEST_CASE("StateVector::applyPhaseShift", "[StateVector]", float,
+TEMPLATE_TEST_CASE("StateVector::applyCNOT", "[StateVector_Nonparam]", float,
                    double) {
-    using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
-    SVData<TestType> svdat{num_qubits};
-
-    // Test using |+++> state
-    svdat.sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                             {{0}, {1}, {2}}, {{false}, {false}, {false}});
-
-    const std::vector<TestType> angles{0.3, 0.8, 2.4};
-    const cp_t coef = {1 / (2 * std::sqrt(2)), 0};
-
-    std::vector<std::vector<cp_t>> ps_data;
-    for (auto &a : angles) {
-        ps_data.push_back(Gates::getPhaseShift<TestType>(a));
-    }
-
-    std::vector<std::vector<cp_t>> expected_results = {
-        {ps_data[0][0], ps_data[0][0], ps_data[0][0], ps_data[0][0],
-         ps_data[0][3], ps_data[0][3], ps_data[0][3], ps_data[0][3]},
-        {
-            ps_data[1][0],
-            ps_data[1][0],
-            ps_data[1][3],
-            ps_data[1][3],
-            ps_data[1][0],
-            ps_data[1][0],
-            ps_data[1][3],
-            ps_data[1][3],
-        },
-        {ps_data[2][0], ps_data[2][3], ps_data[2][0], ps_data[2][3],
-         ps_data[2][0], ps_data[2][3], ps_data[2][0], ps_data[2][3]}};
-
-    for (auto &vec : expected_results) {
-        scaleVector(vec, coef);
-    }
-
-    const auto init_state = svdat.cdata;
-    SECTION("Apply directly") {
-        for (size_t index = 0; index < num_qubits; index++) {
-            SVData<TestType> svdat_direct{num_qubits, init_state};
-            auto int_idx = svdat_direct.getInternalIndices({index});
-            auto ext_idx = svdat_direct.getExternalIndices({index});
-
-            svdat_direct.sv.applyPhaseShift(int_idx, ext_idx, false,
-                                            {angles[index]});
-
-            CHECK(isApproxEqual(svdat_direct.cdata, expected_results[index]));
-        }
-    }
-    SECTION("Apply using dispatcher") {
-        for (size_t index = 0; index < num_qubits; index++) {
-            SVData<TestType> svdat_dispatch{num_qubits, init_state};
-            svdat_dispatch.sv.applyOperation("PhaseShift", {index}, false,
-                                             {angles[index]});
-            CHECK(isApproxEqual(svdat_dispatch.cdata, expected_results[index]));
-        }
-    }
-}
-
-TEMPLATE_TEST_CASE("StateVector::applyControlledPhaseShift", "[StateVector]",
-                   float, double) {
-    using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
-    SVData<TestType> svdat{num_qubits};
-
-    // Test using |+++> state
-    svdat.sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                             {{0}, {1}, {2}}, {{false}, {false}, {false}});
-
-    const std::vector<TestType> angles{0.3, 2.4};
-    const cp_t coef = {1 / (2 * std::sqrt(2)), 0};
-
-    std::vector<std::vector<cp_t>> ps_data;
-    for (auto &a : angles) {
-        ps_data.push_back(Gates::getPhaseShift<TestType>(a));
-    }
-
-    std::vector<std::vector<cp_t>> expected_results = {
-        {ps_data[0][0], ps_data[0][0], ps_data[0][0], ps_data[0][0],
-         ps_data[0][0], ps_data[0][0], ps_data[0][3], ps_data[0][3]},
-        {ps_data[1][0], ps_data[1][0], ps_data[1][0], ps_data[1][3],
-         ps_data[1][0], ps_data[1][0], ps_data[1][0], ps_data[1][3]}};
-
-    for (auto &vec : expected_results) {
-        scaleVector(vec, coef);
-    }
-
-    const auto init_state = svdat.cdata;
-    SECTION("Apply directly") {
-        SVData<TestType> svdat_direct{num_qubits, init_state};
-        auto int_idx = svdat_direct.getInternalIndices({0, 1});
-        auto ext_idx = svdat_direct.getExternalIndices({0, 1});
-
-        svdat_direct.sv.applyControlledPhaseShift(int_idx, ext_idx, false,
-                                                  {angles[0]});
-        CAPTURE(svdat_direct.cdata);
-        CHECK(isApproxEqual(svdat_direct.cdata, expected_results[0]));
-    }
-    SECTION("Apply using dispatcher") {
-        SVData<TestType> svdat_dispatch{num_qubits, init_state};
-        svdat_dispatch.sv.applyOperation("ControlledPhaseShift", {1, 2}, false,
-                                         {angles[1]});
-        CAPTURE(svdat_dispatch.cdata);
-        CHECK(isApproxEqual(svdat_dispatch.cdata, expected_results[1]));
-    }
-}
-
-TEMPLATE_TEST_CASE("StateVector::applyRot", "[StateVector]", float, double) {
-    using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
-    SVData<TestType> svdat{num_qubits};
-
-    const std::vector<std::vector<TestType>> angles{
-        std::vector<TestType>{0.3, 0.8, 2.4},
-        std::vector<TestType>{0.5, 1.1, 3.0},
-        std::vector<TestType>{2.3, 0.1, 0.4}};
-
-    std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(0b1 << num_qubits),
-        std::vector<cp_t>(0b1 << num_qubits),
-        std::vector<cp_t>(0b1 << num_qubits)};
-
-    for (size_t i = 0; i < angles.size(); i++) {
-        const auto rot_mat =
-            Gates::getRot<TestType>(angles[i][0], angles[i][1], angles[i][2]);
-        expected_results[i][0] = rot_mat[0];
-        expected_results[i][0b1 << (num_qubits - i - 1)] = rot_mat[2];
-    }
-
-    SECTION("Apply directly") {
-        for (size_t index = 0; index < num_qubits; index++) {
-            SVData<TestType> svdat_direct{num_qubits};
-            auto int_idx = svdat_direct.getInternalIndices({index});
-            auto ext_idx = svdat_direct.getExternalIndices({index});
-            svdat_direct.sv.applyRot(int_idx, ext_idx, false, angles[index][0],
-                                     angles[index][1], angles[index][2]);
-
-            CHECK(isApproxEqual(svdat_direct.cdata, expected_results[index]));
-        }
-    }
-    SECTION("Apply using dispatcher") {
-        for (size_t index = 0; index < num_qubits; index++) {
-            SVData<TestType> svdat_dispatch{num_qubits};
-            svdat_dispatch.sv.applyOperation("Rot", {index}, false,
-                                             angles[index]);
-            CHECK(isApproxEqual(svdat_dispatch.cdata, expected_results[index]));
-        }
-    }
-}
-
-TEMPLATE_TEST_CASE("StateVector::applyCNOT", "[StateVector]", float, double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
     SVData<TestType> svdat{num_qubits};
@@ -753,7 +444,8 @@ TEMPLATE_TEST_CASE("StateVector::applyCNOT", "[StateVector]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("StateVector::applySWAP", "[StateVector]", float, double) {
+TEMPLATE_TEST_CASE("StateVector::applySWAP", "[StateVector_Nonparam]", float,
+                   double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
     SVData<TestType> svdat{num_qubits};
@@ -878,7 +570,8 @@ TEMPLATE_TEST_CASE("StateVector::applySWAP", "[StateVector]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("StateVector::applyCZ", "[StateVector]", float, double) {
+TEMPLATE_TEST_CASE("StateVector::applyCZ", "[StateVector_Nonparam]", float,
+                   double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
     SVData<TestType> svdat{num_qubits};
@@ -965,56 +658,7 @@ TEMPLATE_TEST_CASE("StateVector::applyCZ", "[StateVector]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("StateVector::applyCRot", "[StateVector]", float, double) {
-    using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
-    SVData<TestType> svdat{num_qubits};
-
-    const std::vector<TestType> angles{0.3, 0.8, 2.4};
-
-    std::vector<cp_t> expected_results(8);
-    const auto rot_mat =
-        Gates::getRot<TestType>(angles[0], angles[1], angles[2]);
-    expected_results[0b1 << (num_qubits - 1)] = rot_mat[0];
-    expected_results[(0b1 << num_qubits) - 2] = rot_mat[2];
-
-    const auto init_state = svdat.cdata;
-
-    SECTION("Apply directly") {
-        SECTION("CRot0,1 |000> -> |000>") {
-            SVData<TestType> svdat_direct{num_qubits};
-            auto int_idx = svdat_direct.getInternalIndices({0, 1});
-            auto ext_idx = svdat_direct.getExternalIndices({0, 1});
-            svdat_direct.sv.applyCRot(int_idx, ext_idx, false, angles[0],
-                                      angles[1], angles[2]);
-
-            CHECK(isApproxEqual(svdat_direct.cdata, init_state));
-        }
-        SECTION("CRot0,1 |100> -> |1>(a|0>+b|1>)|0>") {
-            SVData<TestType> svdat_direct{num_qubits};
-            svdat_direct.sv.applyOperation("PauliX", {0});
-
-            auto int_idx = svdat_direct.getInternalIndices({0, 1});
-            auto ext_idx = svdat_direct.getExternalIndices({0, 1});
-
-            svdat_direct.sv.applyCRot(int_idx, ext_idx, false, angles[0],
-                                      angles[1], angles[2]);
-
-            CHECK(isApproxEqual(svdat_direct.cdata, expected_results));
-        }
-    }
-    SECTION("Apply using dispatcher") {
-        SECTION("CRot0,1 |100> -> |1>(a|0>+b|1>)|0>") {
-            SVData<TestType> svdat_direct{num_qubits};
-            svdat_direct.sv.applyOperation("PauliX", {0});
-
-            svdat_direct.sv.applyOperation("CRot", {0, 1}, false, angles);
-            CHECK(isApproxEqual(svdat_direct.cdata, expected_results));
-        }
-    }
-}
-
-TEMPLATE_TEST_CASE("StateVector::applyToffoli", "[StateVector]", float,
+TEMPLATE_TEST_CASE("StateVector::applyToffoli", "[StateVector_Nonparam]", float,
                    double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
@@ -1100,7 +744,8 @@ TEMPLATE_TEST_CASE("StateVector::applyToffoli", "[StateVector]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("StateVector::applyCSWAP", "[StateVector]", float, double) {
+TEMPLATE_TEST_CASE("StateVector::applyCSWAP", "[StateVector_Nonparam]", float,
+                   double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
     SVData<TestType> svdat{num_qubits};
