@@ -151,19 +151,14 @@ template <class fp_t = double> class StateVector {
     void applyOperation(const std::vector<CFP_t> &matrix,
                         const vector<size_t> &wires, bool inverse = false,
                         [[maybe_unused]] const vector<fp_t> &params = {}) {
-        const size_t s = matrix.size();
-        const size_t s_sqrt = std::sqrt(s);
 
-        if (s_sqrt * s_sqrt != s) {
-            throw std::invalid_argument(
-                string("The supplied gate is not a perfect square."));
-        }
-        if (Util::log2(s_sqrt) != wires.size())
-            throw std::invalid_argument(
-                string("The supplied gate requires ") +
-                std::to_string(Util::log2(sqrt(matrix.size()))) +
-                " wires, but " + std::to_string(wires.size()) +
-                " were supplied.");
+        auto dim = Util::dimSize(matrix);
+
+        if (dim != wires.size())
+            throw std::invalid_argument(string("The supplied gate requires ") +
+                                        std::to_string(dim) + " wires, but " +
+                                        std::to_string(wires.size()) +
+                                        " were supplied.");
 
         const vector<size_t> internalIndices = generateBitPatterns(wires);
         const vector<size_t> externalWires = getIndicesAfterExclusion(wires);
