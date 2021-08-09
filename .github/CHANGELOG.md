@@ -2,7 +2,7 @@
 
 ### New features
 
-* PennyLane-Lightning now supports all of the operations and observables of `default.qubit`
+* PennyLane-Lightning now supports all of the operations and observables of `default.qubit`.
   [#124](https://github.com/PennyLaneAI/pennylane-lightning/pull/124)
 
 * C++ layer now supports float (32-bit) and double (64-bit) templated complex data.
