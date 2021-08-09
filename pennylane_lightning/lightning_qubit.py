@@ -112,12 +112,13 @@ class LightningQubit(DefaultQubit):
             method = getattr(sim, name, None)
 
             wires = self.wires.indices(o.wires)
-            param = o.parameters
-            inv = o.inverse
 
             if method is None:
-                sim.applyMatrix(o.matrix, wires, inv)
+                # Inverse can be set to False since o.matrix is already in inverted form
+                sim.applyMatrix(o.matrix, wires, False)
             else:
+                param = o.parameters
+                inv = o.inverse
                 sim.apply([name], [wires], [inv], [param])
 
         return np.reshape(state_vector, state.shape)
