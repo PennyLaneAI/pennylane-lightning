@@ -129,8 +129,6 @@ random_unitary = np.array(
     ]
 )
 
-
-@pytest.mark.xfail(strict=True)  # needs support for QubitUnitary
 def test_arbitrary_unitary_correct():
     """Test if lightning.qubit correctly applies an arbitrary unitary by reconstructing its
     matrix"""
@@ -152,7 +150,6 @@ def test_arbitrary_unitary_correct():
     assert np.allclose(unitary, random_unitary)
 
 
-@pytest.mark.xfail(strict=True)  # needs support for QubitUnitary
 def test_arbitrary_inv_unitary_correct():
     """Test if lightning.qubit correctly applies the inverse of an arbitrary unitary by
     reconstructing its matrix"""
