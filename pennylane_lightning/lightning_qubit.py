@@ -116,8 +116,7 @@ class LightningQubit(DefaultQubit):
             inv = o.inverse
 
             if method is None:
-                unitary = np.ravel(o.matrix)
-                sim.applyMatrix(unitary, wires, inv)
+                sim.applyMatrix(o.matrix, wires, inv)
             else:
                 sim.apply([name], [wires], [inv], [param])
 
