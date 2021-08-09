@@ -49,6 +49,14 @@ isApproxEqual(const Data_t &data1, const Data_t &data2,
     return true;
 }
 
+/**
+ * @brief Multiplies every value in a dataset by a given complex scalar value.
+ *
+ * @tparam Data_t Precision of complex data type. Supports float and double
+ * data.
+ * @param data Data to be scaled.
+ * @param scalar Scalar value.
+ */
 template <class Data_t>
 void scaleVector(std::vector<std::complex<Data_t>> &data,
                  std::complex<Data_t> scalar) {
