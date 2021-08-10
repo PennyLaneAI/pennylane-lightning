@@ -250,8 +250,10 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
      * @param wires
      * @param inverse
      */
-    void applyMatrixWires(const py::array_t<complex<fp_t>> &matrix,
-                          const vector<size_t> &wires, bool inverse = false) {
+    void applyMatrixWires(
+        const py::array_t<complex<fp_t>,
+                          py::array::c_style | py::array::forcecast> &matrix,
+        const vector<size_t> &wires, bool inverse = false) {
         const vector<size_t> internalIndices = this->generateBitPatterns(wires);
         const vector<size_t> externalWires =
             this->getIndicesAfterExclusion(wires);
@@ -360,8 +362,10 @@ void lightning_class_bindings(py::module &m) {
                                const vector<size_t> &, bool>(
                  &StateVecBinder<PrecisionT>::applyMatrixWires))
         .def("applyMatrix",
-             py::overload_cast<const py::array_t<complex<PrecisionT>> &,
-                               const vector<size_t> &, bool>(
+             py::overload_cast<
+                 const py::array_t<complex<PrecisionT>,
+                                   py::array::c_style | py::array::forcecast> &,
+                 const vector<size_t> &, bool>(
                  &StateVecBinder<PrecisionT>::applyMatrixWires))
 
         .def("ControlledPhaseShift",
