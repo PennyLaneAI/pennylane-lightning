@@ -10,6 +10,12 @@
 
 ### Improvements
 
+* The C++-backed Python bound methods can now be directly called with wires and supplied parameters.
+  [(125)](https://github.com/PennyLaneAI/pennylane-lightning/pull/125)
+
+* Lightning supports arbitrary unitary and non-unitary gate-calls from Python to C++ layer.
+  [(121)](https://github.com/PennyLaneAI/pennylane-lightning/pull/121)
+
 * The PennyLane device test suite is now included in coverage reports.
   [(123)](https://github.com/PennyLaneAI/pennylane-lightning/pull/123)
 
