@@ -108,7 +108,7 @@ class LightningQubit(DefaultQubit):
         sim = StateVectorC128(state_vector)
 
         for o in operations:
-            name = o.name.split(".")[0]  # The split is because some gates have .inv appended
+            name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
             method = getattr(sim, name, None)
 
             wires = self.wires.indices(o.wires)
