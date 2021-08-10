@@ -114,6 +114,7 @@ template <class fp_t = double> class StateVector {
 
     CFP_t *getData() { return arr_; }
     std::size_t getLength() { return length_; }
+    std::size_t getNumQubits() { return num_qubits_; }
 
     /**
      * @brief Apply a single gate to the state-vector.
