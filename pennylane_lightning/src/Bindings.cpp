@@ -215,6 +215,7 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
             idx.internal, idx.external, inverse, params[0], params[1],
             params[2]);
     }
+
     template <class Param_t = fp_t>
     void applyCRot(const std::vector<size_t> &wires, bool inverse,
                    const std::vector<Param_t> &params) {
@@ -222,11 +223,13 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
         StateVector<fp_t>::template applyCRot<Param_t>(
             idx.internal, idx.external, inverse, params[0], params[1],
             params[2]);
+    }
 
     void apply(const vector<string> &ops, const vector<vector<size_t>> &wires,
                const vector<bool> &inverse) {
         this->applyOperations(ops, wires, inverse);
     }
+
     /**
      * @brief Directly apply a given matrix to the specified wires. Matrix data
      * in 1D row-major format.
@@ -238,6 +241,7 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
                           const vector<size_t> &wires, bool inverse = false) {
         this->applyOperation(matrix, wires, inverse);
     }
+
     /**
      * @brief Directly apply a given matrix to the specified wires. Data in 1/2D
      * numpy complex array format.
@@ -346,6 +350,7 @@ void lightning_class_bindings(py::module &m) {
                  const vector<string> &, const vector<vector<size_t>> &,
                  const vector<bool> &, const vector<vector<PrecisionT>> &>(
                  &StateVecBinder<PrecisionT>::apply))
+
         .def("apply", py::overload_cast<const vector<string> &,
                                         const vector<vector<size_t>> &,
                                         const vector<bool> &>(
@@ -412,8 +417,7 @@ void lightning_class_bindings(py::module &m) {
              py::overload_cast<const std::vector<size_t> &, bool,
                                const std::vector<Param_t> &>(
                  &StateVecBinder<PrecisionT>::template applyCRot<Param_t>),
-             "Apply the CRot gate.")
-        ;
+             "Apply the CRot gate.");
 }
 
 PYBIND11_MODULE(lightning_qubit_ops, m) {
@@ -422,7 +426,5 @@ PYBIND11_MODULE(lightning_qubit_ops, m) {
     m.def("apply", apply<float>, "lightning.qubit apply() method");
 
     lightning_class_bindings<float, float>(m);
-    lightning_class_bindings<float, double>(m);
-    lightning_class_bindings<double, float>(m);
     lightning_class_bindings<double, double>(m);
 }
