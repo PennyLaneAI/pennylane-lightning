@@ -63,7 +63,10 @@ jobs:
   build-pure-python-wheel:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v2
+        with:
+          path: main
 
       - uses: actions/setup-python@v2
         with:
@@ -71,6 +74,7 @@ jobs:
 
       - name: Build wheels
         run: |
+          cd main
           python setup.py bdist_wheel
         env:
           SKIP_COMPILATION: True
