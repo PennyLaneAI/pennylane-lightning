@@ -44,6 +44,7 @@ clean:
 	rm -rf .coverage coverage_html_report/
 	rm -rf tmp
 	rm -rf *.dat
+	rm pennylane_lightning/lightning_qubit_ops*
 
 docs:
 	make -C doc html
