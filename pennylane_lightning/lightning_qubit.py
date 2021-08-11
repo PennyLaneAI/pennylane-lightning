@@ -23,6 +23,7 @@ from pennylane import QubitStateVector, BasisState, DeviceError, QubitUnitary
 
 try:
     from .lightning_qubit_ops import apply, StateVectorC64, StateVectorC128
+
     BINARY_AVAILABLE = True
 except ModuleNotFoundError:
     BINARY_AVAILABLE = False
@@ -132,6 +133,7 @@ class LightningQubit(DefaultQubit):
 
 
 if not BINARY_AVAILABLE:
+
     class LightningQubit(DefaultQubit):
 
         name = "Lightning Qubit PennyLane plugin"
@@ -141,8 +143,11 @@ if not BINARY_AVAILABLE:
         author = "Xanadu Inc."
 
         def __init__(self, *args, **kwargs):
-            warn("Pre-compiled binaries for lightning.qubit are not available. Falling back to "
-                 "using the Python-based default.qubit implementation. To manually compile from"
-                 "source, follow the instructions at "
-                 "https://pennylane-lightning.readthedocs.io/en/latest/installation.html.")
+            warn(
+                "Pre-compiled binaries for lightning.qubit are not available. Falling back to "
+                "using the Python-based default.qubit implementation. To manually compile from "
+                "source, follow the instructions at "
+                "https://pennylane-lightning.readthedocs.io/en/latest/installation.html.",
+                UserWarning,
+            )
             super().__init__(*args, **kwargs)

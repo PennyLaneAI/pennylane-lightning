@@ -666,7 +666,7 @@ class TestLightningQubitIntegration:
         for _ in range(100):
             runs.append(circuit(p))
 
-        assert np.isclose(np.mean(runs), -np.sin(p), atol=1e-3, rtol=0)
+        assert np.isclose(np.mean(runs), -np.sin(p), atol=1e-2, rtol=0)
 
     # This test is ran against the state |0> with one Z expval
     @pytest.mark.parametrize(
@@ -1257,3 +1257,12 @@ class TestTensorSample:
             - 2 * np.cos(theta) * np.sin(phi) * np.sin(2 * varphi)
         ) / 4
         assert np.allclose(var, expected, atol=tolerance, rtol=0)
+
+
+def test_warning():
+    """Tests if a warning is raised when lightning.qubit binaries are not available"""
+    if BINARY_AVAILABLE:
+        pytest.skip("Test only applies when binaries are unavailable")
+
+    with pytest.warns(UserWarning, match="Pre-compiled binaries for lightning.qubit"):
+        qml.device("lightning.qubit", wires=1)
