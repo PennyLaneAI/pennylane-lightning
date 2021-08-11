@@ -52,6 +52,9 @@
 
 ### Bug fixes
 
+* Column-major data in numpy is now correctly converted to row-major upon pass to the C++ layer.
+  [(#126)](https://github.com/PennyLaneAI/pennylane-lightning/pull/126)
+
 * PowerPC wheel-builder now successfully compiles modules.
   [(#120)](https://github.com/PennyLaneAI/pennylane-lightning/pull/120)
 
