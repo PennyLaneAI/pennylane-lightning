@@ -83,4 +83,4 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: pure-python-wheels.zip
-          path: ./dist/*.whl
+          path: main/dist/*.whl
