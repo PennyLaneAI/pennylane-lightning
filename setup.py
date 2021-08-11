@@ -168,7 +168,6 @@ else:
 requirements = [
     "numpy",
     "pennylane>=0.15",
-    "pybind11",
 ]
 
 
