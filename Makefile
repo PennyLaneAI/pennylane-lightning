@@ -61,8 +61,6 @@ test-suite:
 	pl-device-test --device lightning.qubit --shots=None --skip-ops
 
 test-python: test-builtin test-suite
-	test-builtin
-	test-suite
 
 coverage:
 	@echo "Generating coverage report..."
