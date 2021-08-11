@@ -74,6 +74,7 @@ jobs:
 
       - name: Build wheels
         run: |
+          pip install wheel
           cd main
           python setup.py bdist_wheel
         env:
