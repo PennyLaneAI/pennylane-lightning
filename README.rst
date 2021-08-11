@@ -45,7 +45,7 @@ Features
 Installation
 ============
 
-PennyLane-Lightning requires Python version 3.6 and above. It can be installed using ``pip``:
+PennyLane-Lightning requires Python version 3.7 and above. It can be installed using ``pip``:
 
 .. code-block:: console
 
@@ -83,7 +83,7 @@ repository:
 
 .. code-block:: console
 
-    $ make test
+    $ make test-python
 
 while the C++ code can be tested with
 
