@@ -23,7 +23,7 @@ import pytest
 from pennylane import DeviceError
 
 from pennylane_lightning import LightningQubit
-from pennylane_lightning.lightning_qubit import BINARY_AVAILABLE
+from pennylane_lightning.lightning_qubit import CPP_BINARY_AVAILABLE
 
 U2 = np.array(
     [
@@ -588,7 +588,7 @@ class TestLightningQubitIntegration:
     def test_no_backprop(self):
         """Test that lightning.qubit does not support the backprop
         differentiation method."""
-        if not BINARY_AVAILABLE:
+        if not CPP_BINARY_AVAILABLE:
             pytest.skip("Skipping test because lightning.qubit is behaving like default.qubit")
 
         dev = qml.device("lightning.qubit", wires=2)
@@ -603,7 +603,7 @@ class TestLightningQubitIntegration:
     def test_best_gets_lightning(self):
         """Test that the best differentiation method returns lightning
         qubit."""
-        if not BINARY_AVAILABLE:
+        if not CPP_BINARY_AVAILABLE:
             pytest.skip("Skipping test because lightning.qubit is behaving like default.qubit")
 
         dev = qml.device("lightning.qubit", wires=2)
@@ -1261,7 +1261,7 @@ class TestTensorSample:
 
 def test_warning():
     """Tests if a warning is raised when lightning.qubit binaries are not available"""
-    if BINARY_AVAILABLE:
+    if CPP_BINARY_AVAILABLE:
         pytest.skip("Test only applies when binaries are unavailable")
 
     with pytest.warns(UserWarning, match="Pre-compiled binaries for lightning.qubit"):

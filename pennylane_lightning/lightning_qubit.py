@@ -24,9 +24,9 @@ from pennylane import QubitStateVector, BasisState, DeviceError, QubitUnitary
 try:
     from .lightning_qubit_ops import apply, StateVectorC64, StateVectorC128
 
-    BINARY_AVAILABLE = True
+    CPP_BINARY_AVAILABLE = True
 except ModuleNotFoundError:
-    BINARY_AVAILABLE = False
+    CPP_BINARY_AVAILABLE = False
 
 from ._version import __version__
 
@@ -132,7 +132,7 @@ class LightningQubit(DefaultQubit):
         return np.reshape(state_vector, state.shape)
 
 
-if not BINARY_AVAILABLE:
+if not CPP_BINARY_AVAILABLE:
 
     class LightningQubit(DefaultQubit):
 
