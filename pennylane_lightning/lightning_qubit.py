@@ -15,10 +15,17 @@ r"""
 This module contains the :class:`~.LightningQubit` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
+from warnings import warn
+
 from pennylane.devices import DefaultQubit
 import numpy as np
 from pennylane import QubitStateVector, BasisState, DeviceError, QubitUnitary
-from .lightning_qubit_ops import apply, StateVectorC64, StateVectorC128
+
+try:
+    from .lightning_qubit_ops import apply, StateVectorC64, StateVectorC128
+    BINARY_AVAILABLE = True
+except ModuleNotFoundError:
+    BINARY_AVAILABLE = False
 
 from ._version import __version__
 
@@ -122,3 +129,20 @@ class LightningQubit(DefaultQubit):
                 method(wires, inv, param)
 
         return np.reshape(state_vector, state.shape)
+
+
+if not BINARY_AVAILABLE:
+    class LightningQubit(DefaultQubit):
+
+        name = "Lightning Qubit PennyLane plugin"
+        short_name = "lightning.qubit"
+        pennylane_requires = ">=0.15"
+        version = __version__
+        author = "Xanadu Inc."
+
+        def __init__(self, *args, **kwargs):
+            warn("Pre-compiled binaries for lightning.qubit are not available. Falling back to "
+                 "using the Python-based default.qubit implementation. To manually compile from"
+                 "source, follow the instructions at "
+                 "https://pennylane-lightning.readthedocs.io/en/latest/installation.html.")
+            super().__init__(*args, **kwargs)
