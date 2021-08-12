@@ -12,7 +12,7 @@
 
 * PennyLane-Lightning can now be installed without compiling its C++ binaries and will fall back
   to using the `default.qubit` implementation. Skipping compilation is achieved by setting the
-  `SKIP_COMPILATION` environment variable, e.g., `export SKIP_COMPILATION=True`. This feature
+  `SKIP_COMPILATION` environment variable, e.g., Linux/MacOS: `export SKIP_COMPILATION=True`, Windows: `set SKIP_COMPILATION=True`. This feature
   is intended for building a pure-Python wheel of PennyLane-Lightning as a backup for platforms
   without a dedicated wheel.
   [(129)](https://github.com/PennyLaneAI/pennylane-lightning/pull/129)
