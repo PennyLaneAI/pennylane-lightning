@@ -57,6 +57,7 @@ Alternatively, to build PennyLane-Lightning from source you can run
 
     $ git clone https://github.com/XanaduAI/pennylane-lightning.git
     $ cd pennylane-lightning
+    $ pip install -r requirements.txt
     $ pip install -e .
 
 Note that subsequent calls to ``pip install -e .`` will use cached binaries stored in the
