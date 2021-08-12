@@ -216,8 +216,8 @@ template <class fp_t = double> class StateVecBinder : public StateVector<fp_t> {
     /**
      * @brief Apply SWAP gate to the given wires.
      *
-     * @param wires Wires to apply operation. First index for control wire,
-     * second index for target wire.
+     * @param wires Wires to apply operation. First and second indices for
+     * target wires.
      * @param inverse Indicate whether to use adjoint of operation.
      */
     template <class Param_t = fp_t>
