@@ -14,20 +14,16 @@
 """
 Unit tests for the :mod:`pennylane_lightning.LightningQubit` device.
 """
-import cmath
-import math
-
 # pylint: disable=protected-access,cell-var-from-loop
-from unittest import mock
+import math
 
 import numpy as np
 import pennylane as qml
-import pennylane_lightning
 import pytest
 from pennylane import DeviceError
-from pennylane.devices.default_qubit import DefaultQubit
 
 from pennylane_lightning import LightningQubit
+from pennylane_lightning.lightning_qubit import CPP_BINARY_AVAILABLE
 
 U2 = np.array(
     [
@@ -592,6 +588,8 @@ class TestLightningQubitIntegration:
     def test_no_backprop(self):
         """Test that lightning.qubit does not support the backprop
         differentiation method."""
+        if not CPP_BINARY_AVAILABLE:
+            pytest.skip("Skipping test because lightning.qubit is behaving like default.qubit")
 
         dev = qml.device("lightning.qubit", wires=2)
 
@@ -605,6 +603,9 @@ class TestLightningQubitIntegration:
     def test_best_gets_lightning(self):
         """Test that the best differentiation method returns lightning
         qubit."""
+        if not CPP_BINARY_AVAILABLE:
+            pytest.skip("Skipping test because lightning.qubit is behaving like default.qubit")
+
         dev = qml.device("lightning.qubit", wires=2)
 
         def circuit():
@@ -665,7 +666,7 @@ class TestLightningQubitIntegration:
         for _ in range(100):
             runs.append(circuit(p))
 
-        assert np.isclose(np.mean(runs), -np.sin(p), atol=1e-3, rtol=0)
+        assert np.isclose(np.mean(runs), -np.sin(p), atol=1e-2, rtol=0)
 
     # This test is ran against the state |0> with one Z expval
     @pytest.mark.parametrize(
@@ -1256,3 +1257,12 @@ class TestTensorSample:
             - 2 * np.cos(theta) * np.sin(phi) * np.sin(2 * varphi)
         ) / 4
         assert np.allclose(var, expected, atol=tolerance, rtol=0)
+
+
+def test_warning():
+    """Tests if a warning is raised when lightning.qubit binaries are not available"""
+    if CPP_BINARY_AVAILABLE:
+        pytest.skip("Test only applies when binaries are unavailable")
+
+    with pytest.warns(UserWarning, match="Pre-compiled binaries for lightning.qubit"):
+        qml.device("lightning.qubit", wires=1)
