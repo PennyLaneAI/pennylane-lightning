@@ -33,7 +33,7 @@ namespace py = pybind11;
  * @return StateVector<T> `%StateVector` object.
  */
 template <class fp_t = double>
-static StateVector<T> create(const py::array_t<complex<fp_t>> *numpyArray) {
+static StateVector<fp_t> create(const py::array_t<complex<fp_t>> *numpyArray) {
     py::buffer_info numpyArrayInfo = numpyArray->request();
 
     if (numpyArrayInfo.ndim != 1)
@@ -632,6 +632,15 @@ PYBIND11_MODULE(lightning_qubit_ops, m) {
     m.doc() = "lightning.qubit apply() method";
     m.def("apply", apply<double>, "lightning.qubit apply() method");
     m.def("apply", apply<float>, "lightning.qubit apply() method");
+
+    m.def("generateBitPatterns",
+          py::overload_cast<const vector<size_t> &, size_t>(
+              &StateVector<double>::generateBitPatterns),
+          "Get statevector indices for gate application");
+    m.def("getIndicesAfterExclusion",
+          py::overload_cast<const vector<size_t> &, size_t>(
+              &StateVector<double>::getIndicesAfterExclusion),
+          "Get statevector indices for gate application");
 
     lightning_class_bindings<float, float>(m);
     lightning_class_bindings<double, double>(m);

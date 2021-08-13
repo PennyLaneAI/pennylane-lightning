@@ -350,7 +350,7 @@ static const std::vector<std::complex<T>> getRot(const std::vector<U> &params) {
  */
 template <class T, class U = T>
 static const std::vector<std::complex<T>> getCRX(U angle) {
-    const std::complex<T> rx{RX<T>(angle)};
+    const std::complex<T> rx{getRX<T>(angle)};
     return {ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),
             ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), rx[0],     rx[1],
             ZERO<T>(), ZERO<T>(), rx[2],     rx[3]};
