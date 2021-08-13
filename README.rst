@@ -51,7 +51,23 @@ PennyLane-Lightning requires Python version 3.6 and above. It can be installed u
 
     $ pip install pennylane-lightning
 
-Alternatively, to build PennyLane-Lightning from source you can run
+To build PennyLane-Lightning from source you can run
+
+.. code-block:: console
+
+    $ pip install pybind11 pennylane-lightning --no-binary :all:
+
+A C++ compiler such as ``g++``, ``clang``, or ``MSVC`` is required. On Debian-based systems, this
+can be installed via ``apt``:
+
+.. code-block:: console
+
+    $ sudo apt install g++
+
+The `pybind11 <https://pybind11.readthedocs.io/en/stable/>`_ library is also used for binding the
+C++ functionality to Python.
+
+Alternatively, for development and testing, you can install by cloning the repository:
 
 .. code-block:: console
 
@@ -62,19 +78,6 @@ Alternatively, to build PennyLane-Lightning from source you can run
 
 Note that subsequent calls to ``pip install -e .`` will use cached binaries stored in the
 ``build`` folder. Run ``make clean`` if you would like to recompile.
-
-The following dependencies are required to install PennyLane-Lightning:
-
-* A C++ compiler, such as ``g++``, ``clang``, or ``MSVC``.
-* `pybind11 <https://pybind11.readthedocs.io/en/stable/>`_ a library for binding C++
-  functionality to Python.
-
-On Debian-based systems, these can be installed via ``apt`` and ``pip``:
-
-.. code-block:: console
-
-    $ sudo apt install g++
-    $ pip install pybind11
 
 Testing
 -------
