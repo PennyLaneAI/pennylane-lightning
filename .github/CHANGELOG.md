@@ -42,6 +42,9 @@
 
 ### Breaking changes
 
+* Removes support for Python 3.6 and adds support for Python 3.9.
+  [#128](https://github.com/PennyLaneAI/pennylane-lightning/pull/128)
+
 * Compilers with C++17 support are now required to build C++ module.
   [#113](https://github.com/PennyLaneAI/pennylane-lightning/pull/113)
 
