@@ -6,9 +6,11 @@
 
 #include "Util.hpp"
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::Util;
 }
+/// @endcond
 
 namespace Pennylane {
 namespace Gates {

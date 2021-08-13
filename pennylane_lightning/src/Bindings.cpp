@@ -18,12 +18,15 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
+/// @cond DEV
+namespace {
 using Pennylane::StateVector;
 using std::complex;
 using std::string;
 using std::vector;
-
 namespace py = pybind11;
+} // namespace
+/// @endcond
 
 /**
  * @brief Create a `%StateVector` object from a 1D numpy complex data array.

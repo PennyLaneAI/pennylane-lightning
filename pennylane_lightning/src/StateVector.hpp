@@ -33,6 +33,7 @@
 #include "Gates.hpp"
 #include "Util.hpp"
 
+/// @cond DEV
 namespace {
 using namespace std::placeholders;
 using std::bind;
@@ -40,6 +41,7 @@ using std::size_t;
 using std::string;
 using std::vector;
 }; // namespace
+/// @endcond
 
 namespace Pennylane {
 
