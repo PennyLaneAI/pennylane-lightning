@@ -253,7 +253,6 @@ template <class fp_t = double> class StateVector {
      * @param ops Vector of gate names to be applied in order.
      * @param wires Vector of wires on which to apply index-matched gate name.
      * @param inverse Indicates whether gate at matched index is to be inverted.
-     * @param params Optional parameter data for index matched gates.
      */
     void applyOperations(const vector<string> &ops,
                          const vector<vector<size_t>> &wires,
