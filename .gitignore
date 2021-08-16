@@ -2,6 +2,7 @@ venv/
 doc/_build/
 PennyLane_Lightning.egg-info/
 build/
+BuildTests/
 dist/
 tests/__pycache__/
 .idea
