@@ -15,7 +15,7 @@ System(python, "Python", "Python 3.7+")
 System(pennylane, "PennyLane", "PennyLane quantum simulation library")
 
 System_Boundary(pennylane, "PennyLane") {
-    Container(other, "Other", "Catch-all for full PennyLane library and tools")
+    Container(other, "Other", "Catch-all for rest of PennyLane library and tooling")
     Container(default_qubit, "default.qubit", "PennyLane Python-only simulation device")
 
     Container_Boundary(lightning, "lightning-qubit") {
@@ -29,22 +29,22 @@ System_Boundary(pennylane, "PennyLane") {
 }
 
 Rel(lightning_qubit, bindings, "Uses", "Bound methods wrapped to interface with PennyLane library")
-Rel(bindings, statevector, "Uses", "Wraps statevector to manipulate data using C++")
-Rel_Neighbor(statevector, utils, "Uses")
+Rel_Neighbor(bindings, statevector, "Uses", "Wraps statevector to manipulate data using C++")
+Rel(statevector, utils, "Uses")
 
 System_Ext(tests, "Tests", "C++, CMake, Catch2")
-Rel(tests, bindings, "Uses")
+Rel(tests, statevector, "Uses")
 Rel(tests, gates, "Uses")
 
-Rel_Neighbor(default_qubit, other, "Returns results")
-Rel_Neighbor(other, default_qubit, "Uses")
+Rel_Neighbor(other, default_qubit, "Uses", "Quantum circuit \n backends")
+Lay_L(other, default_qubit)
 
+Lay_D(python, other)
 
-Rel(developer, python, "Uses", "Win/MacOS/Lnx")
+Rel_Neighbor(developer, python, "Uses", "Win/MacOS/Lnx")
 
-Rel(python, pennylane, "Uses")
-Rel(pennylane, python, "Experiment results")
+Rel(python, other, "Uses")
 
-Rel(default_qubit, lightning_qubit, "Uses", "Inherits from")
+Rel(default_qubit, lightning_qubit, "Ops and data pointer", "Provides default \n Python plugin methods")
 
 @enduml

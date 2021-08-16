@@ -33,7 +33,7 @@ namespace py = pybind11;
  *
  * @tparam fp_t Precision data type
  * @param numpyArray Numpy data array.
- * @return StateVector<T> `%StateVector` object.
+ * @return StateVector<fp_t> `%StateVector` object.
  */
 template <class fp_t = double>
 static StateVector<fp_t> create(const py::array_t<complex<fp_t>> *numpyArray) {

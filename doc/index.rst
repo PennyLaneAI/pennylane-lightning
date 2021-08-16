@@ -29,6 +29,7 @@ PennyLane-Lightning provides the following device:
 
    installation
    support
+   Architecture <arch/arch_overview>
 
 .. toctree::
    :maxdepth: 2
@@ -44,4 +45,3 @@ PennyLane-Lightning provides the following device:
 
    code/__init__
    C++ API <api/library_root>
-   Architecture overview <arch/overview>

@@ -3,3 +3,4 @@ sphinx
 sphinx-automodapi
 breathe
 exhale
+pybind11

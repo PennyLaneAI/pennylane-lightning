@@ -7,7 +7,7 @@ Architecture overview
 
 Lightning's purpose is to provide direct C++ kernels to manipulate the statevector data as created with PennyLane. Our design extends that of the "default.qubit" device in PennyLane, allowing direct access to the complex C-backed Numpy array data. This ensures we maintain all existing compatibility with PennyLane plugins, as only the gate-application is offloaded to C++.
 
-The following diagram represents the current architecture of Lightning using an adaption of the C4 context model.
+The following diagram represents the current architecture of Lightning using an adaption of the C4 container model.
 
 |br|
 
@@ -19,7 +19,7 @@ The following diagram represents the current architecture of Lightning using an 
 |br|
 
 
-To understand the relationships between PennyLane, Lightning, and its components, we also present a component diagram. 
+To understand the relationships between PennyLane, Lightning, and its components, we also present a component-level diagram. 
 
 |br|
 
