@@ -77,6 +77,12 @@
 
 ### Documentation
 
+* Added preliminary architecture diagram for package.
+  [(#131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/131)
+
+* C++ API built as part of docs generation.
+  [(#131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/131)
+
 * Added community guidelines.
   [(#109)](https://github.com/PennyLaneAI/pennylane-lightning/pull/109)
 
