@@ -1,12 +1,11 @@
-# Release 0.17.0-dev
+# Release 0.18.0-dev
 
-### New features
+### New features since last release
 
 * PennyLane-Lightning now supports all of the operations and observables of `default.qubit`.
   [#124](https://github.com/PennyLaneAI/pennylane-lightning/pull/124)
 
-* C++ layer now supports float (32-bit) and double (64-bit) templated complex data.
-  [(#113)](https://github.com/PennyLaneAI/pennylane-lightning/pull/113)
+### Breaking changes
 
 ### Improvements
 
@@ -22,6 +21,36 @@
 
 * Lightning supports arbitrary unitary and non-unitary gate-calls from Python to C++ layer.
   [(121)](https://github.com/PennyLaneAI/pennylane-lightning/pull/121)
+
+### Documentation
+
+* Added preliminary architecture diagram for package.
+  [(#131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/131)
+
+* C++ API built as part of docs generation.
+  [(#131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/131)
+
+### Bug fixes
+
+* Column-major data in numpy is now correctly converted to row-major upon pass to the C++ layer.
+  [(#126)](https://github.com/PennyLaneAI/pennylane-lightning/pull/126)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Thomas Bromley, Lee James O'Riordan
+
+---
+
+# Release 0.17.0
+
+### New features
+
+* C++ layer now supports float (32-bit) and double (64-bit) templated complex data.
+  [(#113)](https://github.com/PennyLaneAI/pennylane-lightning/pull/113)
+
+### Improvements
 
 * The PennyLane device test suite is now included in coverage reports.
   [(#123)](https://github.com/PennyLaneAI/pennylane-lightning/pull/123)
@@ -69,19 +98,10 @@
 
 ### Bug fixes
 
-* Column-major data in numpy is now correctly converted to row-major upon pass to the C++ layer.
-  [(#126)](https://github.com/PennyLaneAI/pennylane-lightning/pull/126)
-
 * PowerPC wheel-builder now successfully compiles modules.
   [(#120)](https://github.com/PennyLaneAI/pennylane-lightning/pull/120)
 
 ### Documentation
-
-* Added preliminary architecture diagram for package.
-  [(#131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/131)
-
-* C++ API built as part of docs generation.
-  [(#131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/131)
 
 * Added community guidelines.
   [(#109)](https://github.com/PennyLaneAI/pennylane-lightning/pull/109)
