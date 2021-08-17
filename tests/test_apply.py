@@ -562,6 +562,7 @@ class TestSample:
         # initialized during reset
         qubit_device_2_wires.reset()
 
+        qubit_device_2_wires.shots = 1000
         qubit_device_2_wires.apply([qml.RX(1.5708, wires=[0])])
         qubit_device_2_wires._wires_measured = {0}
         qubit_device_2_wires._samples = qubit_device_2_wires.generate_samples()
@@ -996,6 +997,7 @@ class TestLightningQubitIntegration:
         """
 
         dev = qubit_device_2_wires
+        dev.shots = 1000
 
         @qml.qnode(dev)
         def circuit():
@@ -1015,7 +1017,7 @@ class TestLightningQubitIntegration:
         the correct dimensions
         """
 
-        dev = qml.device("lightning.qubit", wires=num_wires)
+        dev = qml.device("lightning.qubit", wires=num_wires, shots=1000)
 
         @qml.qnode(dev)
         def circuit():
@@ -1237,7 +1239,7 @@ class TestTensorSample:
         )
 
         dev._wires_measured = {0, 1, 2}
-        dev._samples = dev.generate_samples() if shots is not None else None
+        dev._samples = dev.generate_samples() if dev.shots is not None else None
 
         s1 = obs.eigvals
         p = dev.marginal_prob(dev.probability(), wires=obs.wires)
