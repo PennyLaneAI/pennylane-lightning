@@ -87,7 +87,7 @@ repository:
 
 .. code-block:: console
 
-    $ make test
+    $ make test-python
 
 while the C++ code can be tested with
 
