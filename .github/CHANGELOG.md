@@ -2,10 +2,26 @@
 
 ### New features
 
+* PennyLane-Lightning now supports all of the operations and observables of `default.qubit`.
+  [#124](https://github.com/PennyLaneAI/pennylane-lightning/pull/124)
+
 * C++ layer now supports float (32-bit) and double (64-bit) templated complex data.
   [(#113)](https://github.com/PennyLaneAI/pennylane-lightning/pull/113)
 
 ### Improvements
+
+* PennyLane-Lightning can now be installed without compiling its C++ binaries and will fall back
+  to using the `default.qubit` implementation. Skipping compilation is achieved by setting the
+  `SKIP_COMPILATION` environment variable, e.g., Linux/MacOS: `export SKIP_COMPILATION=True`,
+  Windows: `set SKIP_COMPILATION=True`. This feature is intended for building a pure-Python wheel of
+  PennyLane-Lightning as a backup for platforms without a dedicated wheel.
+  [(129)](https://github.com/PennyLaneAI/pennylane-lightning/pull/129)
+
+* The C++-backed Python bound methods can now be directly called with wires and supplied parameters.
+  [(125)](https://github.com/PennyLaneAI/pennylane-lightning/pull/125)
+
+* Lightning supports arbitrary unitary and non-unitary gate-calls from Python to C++ layer.
+  [(121)](https://github.com/PennyLaneAI/pennylane-lightning/pull/121)
 
 * The PennyLane device test suite is now included in coverage reports.
   [(#123)](https://github.com/PennyLaneAI/pennylane-lightning/pull/123)
@@ -38,8 +54,9 @@
 
 ### Breaking changes
 
-* Removes support for Python 3.6.
+* Removes support for Python 3.6 and adds support for Python 3.9.
   [(#127)](https://github.com/PennyLaneAI/pennylane-lightning/pull/127)
+  [(#128)](https://github.com/PennyLaneAI/pennylane-lightning/pull/128)
 
 * Compilers with C++17 support are now required to build C++ module.
   [(#113)](https://github.com/PennyLaneAI/pennylane-lightning/pull/113)

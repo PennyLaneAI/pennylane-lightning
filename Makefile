@@ -44,6 +44,7 @@ clean:
 	rm -rf .coverage coverage_html_report/
 	rm -rf tmp
 	rm -rf *.dat
+	rm -rf pennylane_lightning/lightning_qubit_ops*
 
 docs:
 	make -C doc html
@@ -61,8 +62,6 @@ test-suite:
 	pl-device-test --device lightning.qubit --shots=None --skip-ops
 
 test-python: test-builtin test-suite
-	test-builtin
-	test-suite
 
 coverage:
 	@echo "Generating coverage report..."

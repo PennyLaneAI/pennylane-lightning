@@ -15,10 +15,18 @@ r"""
 This module contains the :class:`~.LightningQubit` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
+from warnings import warn
+
 from pennylane.devices import DefaultQubit
 import numpy as np
 from pennylane import QubitStateVector, BasisState, DeviceError, QubitUnitary
-from .lightning_qubit_ops import apply, StateVectorC64, StateVectorC128
+
+try:
+    from .lightning_qubit_ops import apply, StateVectorC64, StateVectorC128
+
+    CPP_BINARY_AVAILABLE = True
+except ModuleNotFoundError:
+    CPP_BINARY_AVAILABLE = False
 
 from ._version import __version__
 
@@ -45,34 +53,6 @@ class LightningQubit(DefaultQubit):
     pennylane_requires = ">=0.15"
     version = __version__
     author = "Xanadu Inc."
-
-    operations = {
-        "BasisState",
-        "QubitStateVector",
-        "PauliX",
-        "PauliY",
-        "PauliZ",
-        "Hadamard",
-        "S",
-        "T",
-        "CNOT",
-        "SWAP",
-        "CSWAP",
-        "Toffoli",
-        "CZ",
-        "PhaseShift",
-        "RX",
-        "RY",
-        "RZ",
-        "Rot",
-        "CRX",
-        "CRY",
-        "CRZ",
-        "CRot",
-        "ControlledPhaseShift",
-    }
-
-    observables = {"PauliX", "PauliY", "PauliZ", "Hadamard", "Hermitian", "Identity"}
 
     def __init__(self, wires, *, shots=None):
         super().__init__(wires, shots=shots)
@@ -131,23 +111,43 @@ class LightningQubit(DefaultQubit):
         Returns:
             array[complex]: the output state tensor
         """
-        op_names = [self._remove_inverse_string(o.name) for o in operations]
-        op_wires = [self.wires.indices(o.wires) for o in operations]
-        op_param = [o.parameters for o in operations]
-        op_inverse = [o.inverse for o in operations]
-
+        assert state.dtype == np.complex128
         state_vector = np.ravel(state)
-        apply(state_vector, op_names, op_wires, op_inverse, op_param)
+        sim = StateVectorC128(state_vector)
+
+        for o in operations:
+            name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
+            method = getattr(sim, name, None)
+
+            wires = self.wires.indices(o.wires)
+
+            if method is None:
+                # Inverse can be set to False since o.matrix is already in inverted form
+                sim.applyMatrix(o.matrix, wires, False)
+            else:
+                inv = o.inverse
+                param = o.parameters
+                method(wires, inv, param)
+
         return np.reshape(state_vector, state.shape)
 
-    @staticmethod
-    def _remove_inverse_string(string):
-        """Removes the ``.inv`` appended to the end of inverse gates.
 
-        Args:
-            string (str): name of operation
+if not CPP_BINARY_AVAILABLE:
 
-        Returns:
-            str: name of operation with ``.inv`` removed (if present)
-        """
-        return string.replace(".inv", "")
+    class LightningQubit(DefaultQubit):
+
+        name = "Lightning Qubit PennyLane plugin"
+        short_name = "lightning.qubit"
+        pennylane_requires = ">=0.15"
+        version = __version__
+        author = "Xanadu Inc."
+
+        def __init__(self, *args, **kwargs):
+            warn(
+                "Pre-compiled binaries for lightning.qubit are not available. Falling back to "
+                "using the Python-based default.qubit implementation. To manually compile from "
+                "source, follow the instructions at "
+                "https://pennylane-lightning.readthedocs.io/en/latest/installation.html.",
+                UserWarning,
+            )
+            super().__init__(*args, **kwargs)

@@ -14,20 +14,16 @@
 """
 Unit tests for the :mod:`pennylane_lightning.LightningQubit` device.
 """
-import cmath
-import math
-
 # pylint: disable=protected-access,cell-var-from-loop
-from unittest import mock
+import math
 
 import numpy as np
 import pennylane as qml
-import pennylane_lightning
 import pytest
 from pennylane import DeviceError
-from pennylane.devices.default_qubit import DefaultQubit
 
 from pennylane_lightning import LightningQubit
+from pennylane_lightning.lightning_qubit import CPP_BINARY_AVAILABLE
 
 U2 = np.array(
     [
@@ -566,6 +562,7 @@ class TestSample:
         # initialized during reset
         qubit_device_2_wires.reset()
 
+        qubit_device_2_wires.shots = 1000
         qubit_device_2_wires.apply([qml.RX(1.5708, wires=[0])])
         qubit_device_2_wires._wires_measured = {0}
         qubit_device_2_wires._samples = qubit_device_2_wires.generate_samples()
@@ -592,6 +589,8 @@ class TestLightningQubitIntegration:
     def test_no_backprop(self):
         """Test that lightning.qubit does not support the backprop
         differentiation method."""
+        if not CPP_BINARY_AVAILABLE:
+            pytest.skip("Skipping test because lightning.qubit is behaving like default.qubit")
 
         dev = qml.device("lightning.qubit", wires=2)
 
@@ -605,6 +604,9 @@ class TestLightningQubitIntegration:
     def test_best_gets_lightning(self):
         """Test that the best differentiation method returns lightning
         qubit."""
+        if not CPP_BINARY_AVAILABLE:
+            pytest.skip("Skipping test because lightning.qubit is behaving like default.qubit")
+
         dev = qml.device("lightning.qubit", wires=2)
 
         def circuit():
@@ -665,7 +667,7 @@ class TestLightningQubitIntegration:
         for _ in range(100):
             runs.append(circuit(p))
 
-        assert np.isclose(np.mean(runs), -np.sin(p), atol=1e-3, rtol=0)
+        assert np.isclose(np.mean(runs), -np.sin(p), atol=1e-2, rtol=0)
 
     # This test is ran against the state |0> with one Z expval
     @pytest.mark.parametrize(
@@ -995,6 +997,7 @@ class TestLightningQubitIntegration:
         """
 
         dev = qubit_device_2_wires
+        dev.shots = 1000
 
         @qml.qnode(dev)
         def circuit():
@@ -1014,7 +1017,7 @@ class TestLightningQubitIntegration:
         the correct dimensions
         """
 
-        dev = qml.device("lightning.qubit", wires=num_wires)
+        dev = qml.device("lightning.qubit", wires=num_wires, shots=1000)
 
         @qml.qnode(dev)
         def circuit():
@@ -1236,7 +1239,7 @@ class TestTensorSample:
         )
 
         dev._wires_measured = {0, 1, 2}
-        dev._samples = dev.generate_samples() if shots is not None else None
+        dev._samples = dev.generate_samples() if dev.shots is not None else None
 
         s1 = obs.eigvals
         p = dev.marginal_prob(dev.probability(), wires=obs.wires)
@@ -1256,3 +1259,12 @@ class TestTensorSample:
             - 2 * np.cos(theta) * np.sin(phi) * np.sin(2 * varphi)
         ) / 4
         assert np.allclose(var, expected, atol=tolerance, rtol=0)
+
+
+def test_warning():
+    """Tests if a warning is raised when lightning.qubit binaries are not available"""
+    if CPP_BINARY_AVAILABLE:
+        pytest.skip("Test only applies when binaries are unavailable")
+
+    with pytest.warns(UserWarning, match="Pre-compiled binaries for lightning.qubit"):
+        qml.device("lightning.qubit", wires=1)

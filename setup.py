@@ -116,7 +116,7 @@ class BuildExt(build_ext):
         build_ext.build_extensions(self)
 
 
-if not os.environ.get("MOCK_DOCS", False):
+if not os.environ.get("SKIP_COMPILATION", False):
 
     include_dirs = [
         get_pybind_include(),
@@ -168,7 +168,6 @@ else:
 requirements = [
     "numpy",
     "pennylane>=0.15",
-    "pybind11",
 ]
 
 
@@ -210,6 +209,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Scientific/Engineering :: Physics",
 ]
