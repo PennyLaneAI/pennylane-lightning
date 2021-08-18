@@ -4,7 +4,7 @@ on:
     types: [published]
 
 env:
-  CIBW_BUILD: 'cp37-* cp38-* cp39-*'
+  CIBW_SKIP: "*-win32 *-manylinux_i686"
 
   # MacOS specific build settings
 
@@ -13,25 +13,40 @@ env:
     brew install gcc libomp
 
   # Python build settings
-
   CIBW_BEFORE_BUILD: |
-    pip install numpy==1.19.5 scipy pybind11
+    pip install pybind11
 
   # Testing of built wheels
-  CIBW_TEST_REQUIRES: numpy scipy pytest pytest-cov pytest-mock flaky
+  CIBW_TEST_REQUIRES: numpy==1.19.5 scipy pytest pytest-cov pytest-mock flaky
 
   CIBW_TEST_COMMAND: |
     pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
+  # Skip ppc tests due to lack of scipy wheel
+  CIBW_TEST_SKIP: "*-manylinux_{ppc64le}"
+
+  # Use Centos 7 wheel-builder for ARM
+  CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
+  CIBW_MANYLINUX_PPC64LE_IMAGE: manylinux2014
 
 jobs:
-
-  build-wheels:
+  build-compiled-wheels:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+        cibw_archs: [auto64]
+        py_version: ["cp37-*", "cp38-*", "cp39-*"]
+
+        include:
+          - os: ubuntu-latest
+            cibw_archs: aarch64
+          - os: ubuntu-latest
+            cibw_archs: ppc64le
+          - os: macos-latest
+            cibw_archs: arm64
+
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.4.1
@@ -40,6 +55,10 @@ jobs:
 
       - uses: actions/checkout@v2
 
+      - uses: docker/setup-qemu-action@v1
+        name: Set up QEMU
+        if: ${{ matrix.cibw_archs == 'aarch64' || matrix.cibw_archs == 'ppc64le' }}
+
       - uses: actions/setup-python@v2
         with:
           python-version: '3.7'
@@ -47,16 +66,19 @@ jobs:
       - name: Install cibuildwheel
         run: |
           python -m pip install --upgrade pip
-          python -m pip install cibuildwheel==1.5.5
+          python -m pip install cibuildwheel==2.1.1
 
       - name: Build wheels
         run: |
-          python -m cibuildwheel --output-dir wheelhouse
+          python -m cibuildwheel --output-dir dist
+        env:
+          CIBW_ARCHS: ${{ matrix.cibw_archs }}
+          CIBW_BUILD: ${{ matrix.py_version }}
 
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{ runner.os }}-wheels.zip
-          path: ./wheelhouse/*.whl
+          name: ${{ matrix.os }}-${{ matrix.cibw_archs }}-${{ matrix.py_version }}-wheel
+          path: ./dist/*.whl
 
   build-pure-python-wheel:
     runs-on: ubuntu-latest
@@ -80,16 +102,19 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: pure-python-wheels.zip
+          name: pure-python-wheels
           path: main/dist/*.whl
 
   upload-wheels:
     runs-on: ubuntu-latest
-    needs: [build-wheels, build-pure-python-wheel]
+    needs: [build-compiled-wheels, build-pure-python-wheel]
     steps:
       - uses: actions/download-artifact@v2
         with:
           path: dist/
+      
+      - name: Extract wheels from zip
+
 
       - name: Publish
         uses: pypa/gh-action-pypi-publish@master
@@ -99,7 +124,7 @@ jobs:
 
   upload-source:
     runs-on: ubuntu-latest
-    needs: [build-wheels, build-pure-python-wheel]
+    needs: [build-compiled-wheels, build-pure-python-wheel]
     steps:
       - uses: actions/checkout@v2
 
