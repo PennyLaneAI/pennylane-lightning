@@ -26,6 +26,13 @@
 #include <stdexcept>
 #include <type_traits>
 
+#if __has_include(<cblas.h>) && defined _ENABLE_BLAS
+#include <cblas.h>
+#define USE_CBLAS 1
+#else
+#define USE_CBLAS 0
+#endif
+
 namespace Pennylane {
 
 namespace Util {
@@ -48,6 +55,12 @@ inline static constexpr std::complex<T> ConstMult(std::complex<U> a,
                                                   std::complex<T> b) {
     return {a.real() * b.real() - a.imag() * b.imag(),
             a.real() * b.imag() + a.imag() * b.real()};
+}
+
+template <class T, class U = T>
+inline static constexpr std::complex<T> ConstSum(std::complex<U> a,
+                                                 std::complex<T> b) {
+    return a + b;
 }
 
 /**
@@ -153,6 +166,38 @@ template <class T> inline size_t dimSize(const std::vector<T> &data) {
         throw std::invalid_argument("The dataset must be a perfect square");
 
     return log2(sqrt(data.size()));
+}
+
+/**
+ * @brief Calculates the inner-product using the best available method.
+ *
+ * @tparam T Floating point precision type.
+ * @param data_1 Complex data array 1.
+ * @param data_2 Complex data array 2.
+ * @return std::complex<T> Result of inner product operation.
+ */
+template <class T>
+std::complex<T> innerProd(const std::complex<T> *data_1,
+                          const std::complex<T> *data_2,
+                          const size_t data_size) {
+    std::complex<T> result(0, 0);
+
+    if constexpr (USE_CBLAS) {
+        if constexpr (std::is_same_v<T, float>)
+            cblas_cdotc_sub(data_size, data_1, 1, data_2, 1, &result);
+        else if constexpr (std::is_same_v<T, double>)
+            cblas_zdotc_sub(data_size, data_1, 1, data_2, 1, &result);
+    } else {
+        std::inner_product(data_1, data_1 + data_size, data_2,
+                           std::complex<T>(0, 0), ConstSum<T>, ConstMult<T>);
+    }
+    return result;
+}
+
+template <class T>
+inline std::complex<T> innerProd(const std::vector<std::complex<T>> &data_1,
+                                 const std::vector<std::complex<T>> &data_2) {
+    return innerProd(data_1.data(), data_2.data(), data_1.size());
 }
 
 } // namespace Util
