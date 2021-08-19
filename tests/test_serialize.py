@@ -161,19 +161,20 @@ class TestSerializeObs:
 
     def test_integration(self):
         """Test for a comprehensive range of returns"""
+        wires_dict = {"a": 0, 1: 1, "b": 2, -1: 3, 3.141: 4, "five": 5, 6: 6, 77: 7, 9: 8}
         I = np.eye(2)
         X = qml.PauliX.matrix
         Y = qml.PauliY.matrix
         Z = qml.PauliZ.matrix
 
         with qml.tape.QuantumTape() as tape:
-            qml.expval(qml.PauliZ(0) @ qml.PauliX(2))
+            qml.expval(qml.PauliZ("a") @ qml.PauliX("b"))
             qml.expval(qml.Hermitian(I, wires=1))
-            qml.expval(qml.PauliZ(3) @ qml.Hermitian(X, wires=4) @ qml.Hadamard(5))
-            qml.expval(qml.Projector([1, 1], wires=[6, 7]) @ qml.Hermitian(Y, wires=8))
-            qml.expval(qml.Hermitian(Z, wires=0) @ qml.Identity(1))
+            qml.expval(qml.PauliZ(-1) @ qml.Hermitian(X, wires=3.141) @ qml.Hadamard("five"))
+            qml.expval(qml.Projector([1, 1], wires=[6, 77]) @ qml.Hermitian(Y, wires=9))
+            qml.expval(qml.Hermitian(Z, wires="a") @ qml.Identity(1))
 
-        s = _serialize_obs(tape, self.wires_dict)
+        s = _serialize_obs(tape, wires_dict)
         s_expected = (
             [["PauliZ", "PauliX"], ["Hermitian"], ["PauliZ", "Hermitian", "Hadamard"], ["Projector", "Hermitian"], ["Hermitian", "Identity"]],
             [I, X, Y, Z],
