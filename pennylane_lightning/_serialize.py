@@ -1,0 +1,75 @@
+# Copyright 2021 Xanadu Quantum Technologies Inc.
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+r"""
+Helper functions for serializing quantum tapes.
+"""
+from typing import List, Tuple
+
+import numpy as np
+
+from pennylane import Observable, Hadamard, Projector
+from pennylane.grouping import is_pauli_word
+from pennylane.operation import Tensor
+from pennylane.tape import QuantumTape
+
+
+def obs_has_kernel(obs: Observable) -> bool:
+    """Returns True if the input observable has a supported kernel in the C++ backend.
+
+    Args:
+        obs (Observable): the input observable
+
+    Returns:
+        bool: indicating whether ``obs`` has a dedicated kernel in the backend
+    """
+    if is_pauli_word(obs):
+        return True
+    if isinstance(obs, (Hadamard, Projector)):
+        return True
+    return False
+
+
+def serialize_obs(tape: QuantumTape, wires_map: dict) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]]]:
+    """Serializes the observables of an input tape.
+
+    Args:
+        tape (QuantumTape): the input quantum tape
+        wires_map (dict): a dictionary mapping input wires to the device's backend wires
+
+    Returns:
+        Tuple[list, list, list]: A serialization of the observables, containing a list of observable
+        names, a list of observable parameters for the observables that do not have a dedicated
+        kernel, and a list of observable wires.
+    """
+    names = []
+    params = []
+    wires = []
+
+    for o in tape.observables:
+        is_tensor = isinstance(o, Tensor)
+
+        wires_list = o.wires.tolist()
+        wires.append([wires_map[w] for w in wires_list])
+        name = o.name if is_tensor else [o.name]
+        names.append(name)
+
+        if not obs_has_kernel(o):
+            if is_tensor:
+                for o_ in o.obs:
+                    if not obs_has_kernel(o_):
+                        params.append(o_.matrix)
+            else:
+                params.append(o.matrix)
+
+    return names, params, wires
