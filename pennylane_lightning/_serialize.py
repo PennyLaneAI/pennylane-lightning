@@ -45,7 +45,9 @@ def obs_has_kernel(obs: Observable) -> bool:
     return False
 
 
-def _serialize_obs(tape: QuantumTape, wires_map: dict) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]]]:
+def _serialize_obs(
+    tape: QuantumTape, wires_map: dict
+) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]]]:
     """Serializes the observables of an input tape.
 
     Args:
@@ -80,7 +82,9 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict) -> Tuple[List[List[str]],
     return names, params, wires
 
 
-def _serialize_ops(tape: QuantumTape, wires_map: dict) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]], List[bool], List[np.ndarray]]:
+def _serialize_ops(
+    tape: QuantumTape, wires_map: dict
+) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]], List[bool], List[np.ndarray]]:
     """Serializes the operations of an input tape.
 
     The state preparation operations are not included.

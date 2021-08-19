@@ -17,12 +17,14 @@ interfaces with C++ for fast linear algebra calculations.
 """
 from warnings import warn
 
-from pennylane.devices import DefaultQubit
 import numpy as np
-from pennylane import QubitStateVector, BasisState, DeviceError, QubitUnitary, QuantumFunctionError
+from pennylane import (BasisState, DeviceError, QuantumFunctionError,
+                       QubitStateVector, QubitUnitary)
+from pennylane.devices import DefaultQubit
 from pennylane.operation import Expectation
 
 from ._serialize import _serialize_obs, _serialize_ops
+from ._version import __version__
 
 try:
     from .lightning_qubit_ops import apply, StateVectorC64, StateVectorC128
@@ -31,7 +33,6 @@ try:
 except ModuleNotFoundError:
     CPP_BINARY_AVAILABLE = False
 
-from ._version import __version__
 
 
 class LightningQubit(DefaultQubit):
@@ -165,13 +166,14 @@ class LightningQubit(DefaultQubit):
         obs_serialized = _serialize_obs(tape, self.wire_map)
         ops_serialized = _serialize_ops(tape, self.wire_map)
 
-        jac = adj.adjoint_jacobian(*obs_serialized, *ops_serialized, tape.trainable_params, tape.num_params)
+        jac = adj.adjoint_jacobian(
+            *obs_serialized, *ops_serialized, tape.trainable_params, tape.num_params
+        )
 
         return super().adjoint_jacobian(tape, starting_state, use_device_state)
 
 
 class AdjointJacobian:  # TODO: Replace with C++ version
-
     def __init__(self, state):
         ...
 
