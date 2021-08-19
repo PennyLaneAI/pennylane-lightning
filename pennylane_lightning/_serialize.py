@@ -18,10 +18,15 @@ from typing import List, Tuple
 
 import numpy as np
 
-from pennylane import Hadamard, Projector
+from pennylane import Hadamard, Projector, BasisState, QubitStateVector
 from pennylane.grouping import is_pauli_word
 from pennylane.operation import Observable, Tensor
 from pennylane.tape import QuantumTape
+
+try:
+    from .lightning_qubit_ops import StateVectorC128
+except ImportError:
+    pass
 
 
 def obs_has_kernel(obs: Observable) -> bool:
@@ -40,7 +45,7 @@ def obs_has_kernel(obs: Observable) -> bool:
     return False
 
 
-def serialize_obs(tape: QuantumTape, wires_map: dict) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]]]:
+def _serialize_obs(tape: QuantumTape, wires_map: dict) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]]]:
     """Serializes the observables of an input tape.
 
     Args:
@@ -73,3 +78,46 @@ def serialize_obs(tape: QuantumTape, wires_map: dict) -> Tuple[List[List[str]], 
                 params.append(o.matrix)
 
     return names, params, wires
+
+
+def _serialize_ops(tape: QuantumTape, wires_map: dict) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]], List[bool], List[np.ndarray]]:
+    """Serializes the operations of an input tape.
+
+    The state preparation operations are not included.
+
+    Args:
+        tape (QuantumTape): the input quantum tape
+        wires_map (dict): a dictionary mapping input wires to the device's backend wires
+
+    Returns:
+        Tuple[list, list, list, list, list]: A serialization of the operations, containing a list
+        of operation names, a list of operation parameters, a list of observable wires, a list of
+        inverses, and a list of matrices for the operations that do not have a dedicated kernel.
+    """
+    names = []
+    params = []
+    wires = []
+    inverses = []
+    mats = []
+
+    for o in tape.operations:
+        if isinstance(o, (BasisState, QubitStateVector)):
+            continue
+
+        is_inverse = o.inverse
+
+        name = o.name if not is_inverse else o.name[:-4]
+        names.append(name)
+
+        if getattr(StateVectorC128, name, None) is None:
+            params.append([])
+            mats.append(o.matrix)
+        else:
+            params.append(o.parameters)
+            mats.append([])
+
+        wires_list = o.wires.tolist()
+        wires.append([wires_map[w] for w in wires_list])
+        inverses.append(is_inverse)
+
+    return names, params, wires, inverses, mats
