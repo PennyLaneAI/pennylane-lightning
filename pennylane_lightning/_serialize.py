@@ -17,8 +17,7 @@ Helper functions for serializing quantum tapes.
 from typing import List, Tuple
 
 import numpy as np
-
-from pennylane import Hadamard, Projector, BasisState, QubitStateVector
+from pennylane import BasisState, Hadamard, Projector, QubitStateVector
 from pennylane.grouping import is_pauli_word
 from pennylane.operation import Observable, Tensor
 from pennylane.tape import QuantumTape
@@ -118,6 +117,9 @@ def _serialize_ops(
         if getattr(StateVectorC128, name, None) is None:
             params.append([])
             mats.append(o.matrix)
+
+            if is_inverse:
+                is_inverse = False
         else:
             params.append(o.parameters)
             mats.append([])

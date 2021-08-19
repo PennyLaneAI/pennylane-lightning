@@ -34,7 +34,6 @@ except ModuleNotFoundError:
     CPP_BINARY_AVAILABLE = False
 
 
-
 class LightningQubit(DefaultQubit):
     """PennyLane Lightning device.
 
