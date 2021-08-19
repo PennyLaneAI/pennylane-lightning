@@ -18,9 +18,9 @@ from typing import List, Tuple
 
 import numpy as np
 
-from pennylane import Observable, Hadamard, Projector
+from pennylane import Hadamard, Projector
 from pennylane.grouping import is_pauli_word
-from pennylane.operation import Tensor
+from pennylane.operation import Observable, Tensor
 from pennylane.tape import QuantumTape
 
 

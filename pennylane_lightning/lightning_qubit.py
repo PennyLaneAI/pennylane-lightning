@@ -22,7 +22,7 @@ import numpy as np
 from pennylane import QubitStateVector, BasisState, DeviceError, QubitUnitary, QuantumFunctionError
 from pennylane.operation import Expectation
 
-from .._serialize import serialize_obs
+from ._serialize import serialize_obs
 
 try:
     from .lightning_qubit_ops import apply, StateVectorC64, StateVectorC128
