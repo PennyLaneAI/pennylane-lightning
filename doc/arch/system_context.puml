@@ -1,0 +1,33 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+' uncomment the following line and comment the first to use locally
+' !include C4_Context.puml
+
+LAYOUT_TOP_DOWN()
+
+title System-level component diagram for PennyLane using Lightning Qubit device
+
+Person(developer, "Quantum software developer")
+System(python, "Python", "Python 3.7+")
+System(pennylane, "PennyLane", "PennyLane quantum simulation library")
+
+System_Boundary(pennylane, "PennyLane") {
+    Container(other, "Other", "Catch-all for rest of PennyLane library and tooling")
+    Container(default_qubit, "default.qubit", "PennyLane Python-only simulation device")
+
+    Container(lightning, "lightning.qubit", "PennyLane Lightning C++ simulation library ⚡")
+}
+
+System_Ext(tests, "Tests", "C++, CMake, Catch2")
+
+Rel_Neighbor(developer, python, "Uses", "Win/MacOS/Lnx")
+
+Rel_D(python, other, "Uses")
+
+Rel_Neighbor(default_qubit, other, "Catch-all for rest of PennyLane library and tools")
+Rel_D(default_qubit, lightning, "Ops and data pointer", "Provides default \n Python plugin methods")
+Rel(tests, lightning, "Uses", "Tests for C++ gate kernels")
+
+
+@enduml

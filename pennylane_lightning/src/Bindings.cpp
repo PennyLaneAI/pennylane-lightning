@@ -18,45 +18,65 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
+/// @cond DEV
+namespace {
 using Pennylane::StateVector;
 using std::complex;
 using std::string;
 using std::vector;
-
 namespace py = pybind11;
 
-template <class T = double>
-static StateVector<T> create(const py::array_t<complex<T>> *numpyArray) {
+/**
+ * @brief Create a `%StateVector` object from a 1D numpy complex data array.
+ *
+ * @tparam fp_t Precision data type
+ * @param numpyArray Numpy data array.
+ * @return StateVector<fp_t> `%StateVector` object.
+ */
+template <class fp_t = double>
+static StateVector<fp_t> create(const py::array_t<complex<fp_t>> *numpyArray) {
     py::buffer_info numpyArrayInfo = numpyArray->request();
 
     if (numpyArrayInfo.ndim != 1)
         throw std::invalid_argument(
             "NumPy array must be a 1-dimensional array");
-    if (numpyArrayInfo.itemsize != sizeof(complex<T>))
+    if (numpyArrayInfo.itemsize != sizeof(complex<fp_t>))
         throw std::invalid_argument(
             "NumPy array must be of type np.complex64 or np.complex128");
-    complex<T> *data_ptr = static_cast<complex<T> *>(numpyArrayInfo.ptr);
-    return StateVector<T>(
+    complex<fp_t> *data_ptr = static_cast<complex<fp_t> *>(numpyArrayInfo.ptr);
+    return StateVector<fp_t>(
         {data_ptr, static_cast<size_t>(numpyArrayInfo.shape[0])});
 }
 
-template <class T = double>
-void apply(py::array_t<complex<T>> &stateNumpyArray, const vector<string> &ops,
-           const vector<vector<size_t>> &wires, const vector<bool> &inverse,
-           const vector<vector<T>> &params) {
-    auto state = create<T>(&stateNumpyArray);
+/**
+ * @brief Apply given list of operations to Numpy data array using C++
+ * `%StateVector` class.
+ *
+ * @tparam fp_t Precision data type
+ * @param stateNumpyArray Complex numpy data array representing statevector.
+ * @param ops Operations to apply to the statevector using the C++ backend.
+ * @param wires Wires on which to apply each operation from `ops`.
+ * @param inverse Indicate whether a given operation is an inverse.
+ * @param params Parameters for each given operation in `ops`.
+ */
+template <class fp_t = double>
+void apply(py::array_t<complex<fp_t>> &stateNumpyArray,
+           const vector<string> &ops, const vector<vector<size_t>> &wires,
+           const vector<bool> &inverse, const vector<vector<fp_t>> &params) {
+    auto state = create<fp_t>(&stateNumpyArray);
     state.applyOperations(ops, wires, inverse, params);
 }
 
 /**
- * @brief Binding class for exposing C++ methods to Python
+ * @brief Binding class for exposing C++ methods to Python.
  *
  * @tparam fp_t Floating point precision type.
  */
-template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
+template <class fp_t = double> class StateVecBinder : public StateVector<fp_t> {
   private:
     /**
-     * @brief Internal utility struct to track indices of application.
+     * @brief Internal utility struct to track data indices of application for
+     * operations.
      *
      */
     struct GateIndices {
@@ -72,35 +92,84 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
     };
 
   public:
+    /**
+     * @brief Construct a binding class inheriting from `%StateVector`.
+     *
+     * @param stateNumpyArray Complex numpy statevector data array.
+     */
     explicit StateVecBinder(const py::array_t<complex<fp_t>> &stateNumpyArray)
         : StateVector<fp_t>(
               static_cast<complex<fp_t> *>(stateNumpyArray.request().ptr),
               static_cast<size_t>(stateNumpyArray.request().shape[0])) {}
 
+    /**
+     * @brief Apply the given operations to the statevector data array.
+     *
+     * @param ops Operations to apply to the statevector.
+     * @param wires Wires on which to apply each operation from `ops`.
+     * @param inverse Indicate whether a given operation is an inverse.
+     * @param params Parameters for each given operation in `ops`.
+     */
     void apply(const vector<string> &ops, const vector<vector<size_t>> &wires,
                const vector<bool> &inverse,
                const vector<vector<fp_t>> &params) {
         this->applyOperations(ops, wires, inverse, params);
     }
 
+    /**
+     * @brief Apply the given operations to the statevector data array.
+     *
+     * @param ops Operations to apply to the statevector.
+     * @param wires Wires on which to apply each operation from `ops`.
+     * @param inverse Indicate whether a given operation is an inverse.
+     */
+    void apply(const vector<string> &ops, const vector<vector<size_t>> &wires,
+               const vector<bool> &inverse) {
+        this->applyOperations(ops, wires, inverse);
+    }
+
+    /**
+     * @brief Apply PauliX gate to the given wires.
+     *
+     * @param wires Wires to apply operation.
+     * @param inverse Indicate whether to use adjoint of operation.
+     */
     template <class Param_t = fp_t>
     void applyPauliX(const std::vector<size_t> &wires, bool inverse,
                      [[maybe_unused]] const std::vector<Param_t> params = {}) {
         const GateIndices idx(wires, this->getNumQubits());
         StateVector<fp_t>::applyPauliX(idx.internal, idx.external, inverse);
     }
+    /**
+     * @brief Apply PauliY gate to the given wires.
+     *
+     * @param wires Wires to apply operation.
+     * @param inverse Indicate whether to use adjoint of operation.
+     */
     template <class Param_t = fp_t>
     void applyPauliY(const std::vector<size_t> &wires, bool inverse,
                      [[maybe_unused]] const std::vector<Param_t> params = {}) {
         const GateIndices idx(wires, this->getNumQubits());
         StateVector<fp_t>::applyPauliY(idx.internal, idx.external, inverse);
     }
+    /**
+     * @brief Apply PauliZ gate to the given wires.
+     *
+     * @param wires Wires to apply operation.
+     * @param inverse Indicate whether to use adjoint of operation.
+     */
     template <class Param_t = fp_t>
     void applyPauliZ(const std::vector<size_t> &wires, bool inverse,
                      [[maybe_unused]] const std::vector<Param_t> params = {}) {
         const GateIndices idx(wires, this->getNumQubits());
         StateVector<fp_t>::applyPauliZ(idx.internal, idx.external, inverse);
     }
+    /**
+     * @brief Apply Hadamard gate to the given wires.
+     *
+     * @param wires Wires to apply operation.
+     * @param inverse Indicate whether to use adjoint of operation.
+     */
     template <class Param_t = fp_t>
     void
     applyHadamard(const std::vector<size_t> &wires, bool inverse,
@@ -108,48 +177,102 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
         const GateIndices idx(wires, this->getNumQubits());
         StateVector<fp_t>::applyHadamard(idx.internal, idx.external, inverse);
     }
+    /**
+     * @brief Apply S gate to the given wires.
+     *
+     * @param wires Wires to apply operation.
+     * @param inverse Indicate whether to use adjoint of operation.
+     */
     template <class Param_t = fp_t>
     void applyS(const std::vector<size_t> &wires, bool inverse,
                 [[maybe_unused]] const std::vector<Param_t> params = {}) {
         const GateIndices idx(wires, this->getNumQubits());
         StateVector<fp_t>::applyS(idx.internal, idx.external, inverse);
     }
+    /**
+     * @brief Apply T gate to the given wires.
+     *
+     * @param wires Wires to apply operation.
+     * @param inverse Indicate whether to use adjoint of operation.
+     */
     template <class Param_t = fp_t>
     void applyT(const std::vector<size_t> &wires, bool inverse,
                 [[maybe_unused]] const std::vector<Param_t> params = {}) {
         const GateIndices idx(wires, this->getNumQubits());
         StateVector<fp_t>::applyT(idx.internal, idx.external, inverse);
     }
+    /**
+     * @brief Apply CNOT (CX) gate to the given wires.
+     *
+     * @param wires Wires to apply operation. First index for control wire,
+     * second index for target wire.
+     * @param inverse Indicate whether to use adjoint of operation.
+     */
     template <class Param_t = fp_t>
     void applyCNOT(const std::vector<size_t> &wires, bool inverse,
                    [[maybe_unused]] const std::vector<Param_t> params = {}) {
         const GateIndices idx(wires, this->getNumQubits());
         StateVector<fp_t>::applyCNOT(idx.internal, idx.external, inverse);
     }
+    /**
+     * @brief Apply SWAP gate to the given wires.
+     *
+     * @param wires Wires to apply operation. First and second indices for
+     * target wires.
+     * @param inverse Indicate whether to use adjoint of operation.
+     */
     template <class Param_t = fp_t>
     void applySWAP(const std::vector<size_t> &wires, bool inverse,
                    [[maybe_unused]] const std::vector<Param_t> params = {}) {
         const GateIndices idx(wires, this->getNumQubits());
         StateVector<fp_t>::applySWAP(idx.internal, idx.external, inverse);
     }
+    /**
+     * @brief Apply CZ gate to the given wires.
+     *
+     * @param wires Wires to apply operation. First index for control wire,
+     * second index for target wire.
+     * @param inverse Indicate whether to use adjoint of operation.
+     */
     template <class Param_t = fp_t>
     void applyCZ(const std::vector<size_t> &wires, bool inverse,
                  [[maybe_unused]] const std::vector<Param_t> params = {}) {
         const GateIndices idx(wires, this->getNumQubits());
         StateVector<fp_t>::applyCZ(idx.internal, idx.external, inverse);
     }
+    /**
+     * @brief Apply CSWAP gate to the given wires.
+     *
+     * @param wires Wires to apply operation. First index for control wire,
+     * second and third indices for target wires.
+     * @param inverse Indicate whether to use adjoint of operation.
+     */
     template <class Param_t = fp_t>
     void applyCSWAP(const std::vector<size_t> &wires, bool inverse,
                     [[maybe_unused]] const std::vector<Param_t> params = {}) {
         const GateIndices idx(wires, this->getNumQubits());
         StateVector<fp_t>::applyCSWAP(idx.internal, idx.external, inverse);
     }
+    /**
+     * @brief Apply Toffoli (CCX) gate to the given wires.
+     *
+     * @param wires Wires to apply operation. First index and second indices for
+     * control wires, third index for target wire.
+     * @param inverse Indicate whether to use adjoint of operation.
+     */
     template <class Param_t = fp_t>
     void applyToffoli(const std::vector<size_t> &wires, bool inverse,
                       [[maybe_unused]] const std::vector<Param_t> params = {}) {
         const GateIndices idx(wires, this->getNumQubits());
         StateVector<fp_t>::applyToffoli(idx.internal, idx.external, inverse);
     }
+    /**
+     * @brief Apply Phase-shift (\f$\textrm{diag}(1, \exp(i\theta))\f$) gate to
+     * the given wires.
+     *
+     * @param wires Wires to apply operation.
+     * @param inverse Indicate whether to use adjoint of operation.
+     */
     template <class Param_t = fp_t>
     void applyPhaseShift(const std::vector<size_t> &wires, bool inverse,
                          const std::vector<Param_t> &params) {
@@ -157,6 +280,14 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
         StateVector<fp_t>::template applyPhaseShift<Param_t>(
             idx.internal, idx.external, inverse, params[0]);
     }
+    /**
+     * @brief Apply controlled phase-shift
+     * (\f$\textrm{diag}(1,1,1,\exp(i\theta))\f$) gate to the given wires.
+     *
+     * @param wires Wires to apply operation. First index for control wire,
+     * second index for target wire.
+     * @param inverse Indicate whether to use adjoint of operation.
+     */
     template <class Param_t = fp_t>
     void applyControlledPhaseShift(const std::vector<size_t> &wires,
                                    bool inverse,
@@ -165,6 +296,15 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
         StateVector<fp_t>::template applyControlledPhaseShift<Param_t>(
             idx.internal, idx.external, inverse, params[0]);
     }
+
+    /**
+     * @brief Apply RX (\f$exp(-i\theta\sigma_x/2)\f$) gate to the given wires.
+     *
+     * @tparam Param_t Type of parameter data.
+     * @param wires Wires to apply operation.
+     * @param inverse Indicate whether to use adjoint of operation.
+     * @param params Parameter(s) for given gate. First parameter used only.
+     */
     template <class Param_t = fp_t>
     void applyRX(const std::vector<size_t> &wires, bool inverse,
                  const std::vector<Param_t> &params) {
@@ -172,6 +312,14 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
         StateVector<fp_t>::template applyRX<Param_t>(idx.internal, idx.external,
                                                      inverse, params[0]);
     }
+    /**
+     * @brief Apply RY (\f$exp(-i\theta\sigma_y/2)\f$) gate to the given wires.
+     *
+     * @tparam Param_t Type of parameter data.
+     * @param wires Wires to apply operation.
+     * @param inverse Indicate whether to use adjoint of operation.
+     * @param params Parameter(s) for given gate. First parameter used only.
+     */
     template <class Param_t = fp_t>
     void applyRY(const std::vector<size_t> &wires, bool inverse,
                  const std::vector<Param_t> &params) {
@@ -179,6 +327,14 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
         StateVector<fp_t>::template applyRY<Param_t>(idx.internal, idx.external,
                                                      inverse, params[0]);
     }
+    /**
+     * @brief Apply RZ (\f$exp(-i\theta\sigma_z/2)\f$) gate to the given wires.
+     *
+     * @tparam Param_t Type of parameter data.
+     * @param wires Wires to apply operation.
+     * @param inverse Indicate whether to use adjoint of operation.
+     * @param params Parameter(s) for given gate. First parameter used only.
+     */
     template <class Param_t = fp_t>
     void applyRZ(const std::vector<size_t> &wires, bool inverse,
                  const std::vector<Param_t> &params) {
@@ -186,6 +342,15 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
         StateVector<fp_t>::template applyRZ<Param_t>(idx.internal, idx.external,
                                                      inverse, params[0]);
     }
+    /**
+     * @brief Apply controlled RX gate to the given wires.
+     *
+     * @tparam Param_t Type of parameter data.
+     * @param wires Wires to apply operation. First index for control wire,
+     * second index for target wire.
+     * @param inverse Indicate whether to use adjoint of operation.
+     * @param params Parameter(s) for given gate. First parameter used only.
+     */
     template <class Param_t = fp_t>
     void applyCRX(const std::vector<size_t> &wires, bool inverse,
                   const std::vector<Param_t> &params) {
@@ -193,6 +358,15 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
         StateVector<fp_t>::template applyCRX<Param_t>(
             idx.internal, idx.external, inverse, params[0]);
     }
+    /**
+     * @brief Apply controlled RY gate to the given wires.
+     *
+     * @tparam Param_t Type of parameter data.
+     * @param wires Wires to apply operation. First index for control wire,
+     * second index for target wire.
+     * @param inverse Indicate whether to use adjoint of operation.
+     * @param params Parameter(s) for given gate. First parameter used only.
+     */
     template <class Param_t = fp_t>
     void applyCRY(const std::vector<size_t> &wires, bool inverse,
                   const std::vector<Param_t> &params) {
@@ -200,6 +374,15 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
         StateVector<fp_t>::template applyCRY<Param_t>(
             idx.internal, idx.external, inverse, params[0]);
     }
+    /**
+     * @brief Apply controlled RZ gate to the given wires.
+     *
+     * @tparam Param_t Type of parameter data.
+     * @param wires Wires to apply operation. First index for control wire,
+     * second index for target wire.
+     * @param inverse Indicate whether to use adjoint of operation.
+     * @param params Parameter(s) for given gate. First parameter used only.
+     */
     template <class Param_t = fp_t>
     void applyCRZ(const std::vector<size_t> &wires, bool inverse,
                   const std::vector<Param_t> &params) {
@@ -207,6 +390,14 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
         StateVector<fp_t>::template applyCRZ<Param_t>(
             idx.internal, idx.external, inverse, params[0]);
     }
+    /**
+     * @brief Apply Rot gate to the given wires.
+     *
+     * @tparam Param_t Type of parameter data.
+     * @param wires Wires to apply operation.
+     * @param inverse Indicate whether to use adjoint of operation.
+     * @param params Parameters for given gate. Requires 3 values.
+     */
     template <class Param_t = fp_t>
     void applyRot(const std::vector<size_t> &wires, bool inverse,
                   const std::vector<Param_t> &params) {
@@ -215,7 +406,15 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
             idx.internal, idx.external, inverse, params[0], params[1],
             params[2]);
     }
-
+    /**
+     * @brief Apply controlled Rot gate to the given wires.
+     *
+     * @tparam Param_t Type of parameter data.
+     * @param wires Wires to apply operation. First index for control wire,
+     * second index for target wire.
+     * @param inverse Indicate whether to use adjoint of operation.
+     * @param params Parameters for given gate. Requires 3 values.
+     */
     template <class Param_t = fp_t>
     void applyCRot(const std::vector<size_t> &wires, bool inverse,
                    const std::vector<Param_t> &params) {
@@ -225,17 +424,12 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
             params[2]);
     }
 
-    void apply(const vector<string> &ops, const vector<vector<size_t>> &wires,
-               const vector<bool> &inverse) {
-        this->applyOperations(ops, wires, inverse);
-    }
-
     /**
      * @brief Directly apply a given matrix to the specified wires. Matrix data
      * in 1D row-major format.
      *
-     * @param matrix
-     * @param wires
+     * @param matrix Matrix data to apply.
+     * @param wires Wires to apply matrix.
      */
     void applyMatrixWires(const std::vector<std::complex<fp_t>> &matrix,
                           const vector<size_t> &wires, bool inverse = false) {
@@ -246,9 +440,9 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
      * @brief Directly apply a given matrix to the specified wires. Data in 1/2D
      * numpy complex array format.
      *
-     * @param matrix
-     * @param wires
-     * @param inverse
+     * @param matrix Numpy complex data representing matrix to apply.
+     * @param wires Wires to apply given matrix.
+     * @param inverse Indicate whether to take adjoint.
      */
     void applyMatrixWires(
         const py::array_t<complex<fp_t>,
@@ -264,6 +458,13 @@ template <class fp_t> class StateVecBinder : public StateVector<fp_t> {
     }
 };
 
+/**
+ * @brief Templated class to build all required precisions for Python module.
+ *
+ * @tparam PrecisionT Precision of the statevector data.
+ * @tparam Param_t Precision of the parameter data.
+ * @param m Pybind11 module.
+ */
 template <class PrecisionT, class Param_t>
 void lightning_class_bindings(py::module &m) {
     // Enable module name to be based on size of complex datatype
@@ -424,11 +625,41 @@ void lightning_class_bindings(py::module &m) {
              "Apply the CRot gate.");
 }
 
+/**
+ * @brief Add C++ classes, methods and functions to Python module.
+ */
 PYBIND11_MODULE(lightning_qubit_ops, m) {
+    // Suppress doxygen autogenerated signatures
+    py::options options;
+    options.disable_function_signatures();
+
     m.doc() = "lightning.qubit apply() method";
-    m.def("apply", apply<double>, "lightning.qubit apply() method");
-    m.def("apply", apply<float>, "lightning.qubit apply() method");
+    m.def(
+        "apply",
+        py::overload_cast<py::array_t<complex<double>> &,
+                          const vector<string> &,
+                          const vector<vector<size_t>> &, const vector<bool> &,
+                          const vector<vector<double>> &>(apply<double>),
+        "lightning.qubit apply() method");
+    m.def(
+        "apply",
+        py::overload_cast<py::array_t<complex<float>> &, const vector<string> &,
+                          const vector<vector<size_t>> &, const vector<bool> &,
+                          const vector<vector<float>> &>(apply<float>),
+        "lightning.qubit apply() method");
+
+    m.def("generateBitPatterns",
+          py::overload_cast<const vector<size_t> &, size_t>(
+              &StateVector<double>::generateBitPatterns),
+          "Get statevector indices for gate application");
+    m.def("getIndicesAfterExclusion",
+          py::overload_cast<const vector<size_t> &, size_t>(
+              &StateVector<double>::getIndicesAfterExclusion),
+          "Get statevector indices for gate application");
 
     lightning_class_bindings<float, float>(m);
     lightning_class_bindings<double, double>(m);
 }
+
+} // namespace
+  /// @endcond
