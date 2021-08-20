@@ -1,5 +1,8 @@
 project(lightning_algorithms LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 
-add_library(lightning_algorithms INTERFACE)
-target_include_directories(lightning_algorithms INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+set(ALGORITHM_FILES AdjointDiff.hpp AdjointDiff.cpp CACHE INTERNAL "" FORCE)
+add_library(lightning_algorithms STATIC ${ALGORITHM_FILES})
+
+target_include_directories(lightning_algorithms PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} )
+target_link_libraries(lightning_algorithms PRIVATE lightning_simulator lightning_utils)
