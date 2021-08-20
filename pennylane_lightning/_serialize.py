@@ -28,7 +28,7 @@ except ImportError:
     pass
 
 
-def obs_has_kernel(obs: Observable) -> bool:
+def _obs_has_kernel(obs: Observable) -> bool:
     """Returns True if the input observable has a supported kernel in the C++ backend.
 
     Args:
@@ -42,7 +42,7 @@ def obs_has_kernel(obs: Observable) -> bool:
     if isinstance(obs, (Hadamard, Projector)):
         return True
     if isinstance(obs, Tensor):
-        return all(obs_has_kernel(o) for o in obs.obs)
+        return all(_obs_has_kernel(o) for o in obs.obs)
     return False
 
 
@@ -72,10 +72,10 @@ def _serialize_obs(
         name = o.name if is_tensor else [o.name]
         names.append(name)
 
-        if not obs_has_kernel(o):
+        if not _obs_has_kernel(o):
             if is_tensor:
                 for o_ in o.obs:
-                    if not obs_has_kernel(o_):
+                    if not _obs_has_kernel(o_):
                         params.append(o_.matrix)
             else:
                 params.append(o.matrix)
