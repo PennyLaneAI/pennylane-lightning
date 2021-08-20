@@ -112,9 +112,9 @@ template <class fp_t = double> class StateVector {
               {"CRot",
                bind(&StateVector<fp_t>::applyCRot_, this, _1, _2, _3, _4)}} {};
 
-    CFP_t *getData() { return arr_; }
-    std::size_t getLength() { return length_; }
-    std::size_t getNumQubits() { return num_qubits_; }
+    CFP_t *getData() const { return arr_; }
+    std::size_t getLength() const { return length_; }
+    std::size_t getNumQubits() const { return num_qubits_; }
 
     /**
      * @brief Apply a single gate to the state-vector.
@@ -749,5 +749,21 @@ template <class fp_t = double> class StateVector {
         applyCSWAP(indices, externalIndices, inverse);
     }
 };
+
+template <class T>
+inline std::ostream &operator<<(std::ostream &out, const StateVector<T> &sv) {
+    const auto num_qubits = sv.getNumQubits();
+    const auto length = sv.getLength();
+    const auto data_ptr = sv.getData();
+    out << "num_qubits=" << num_qubits << std::endl;
+    out << "data=[";
+    out << data_ptr[0];
+    for (size_t i = 1; i < length - 1; i++) {
+        out << "," << data_ptr[i];
+    }
+    out << "," << data_ptr[length - 1] << "]";
+
+    return out;
+}
 
 } // namespace Pennylane

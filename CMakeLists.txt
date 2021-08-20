@@ -21,7 +21,6 @@ message(STATUS "pennylane_lightning version ${VERSION_STRING}")
 set(PROJECT_VERSION ${VERSION_STRING})
 
 set(CMAKE_CXX_STANDARD 17) # At least C++17 is required
-find_package(OpenMP REQUIRED) # find OpenMP
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
@@ -39,7 +38,12 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(pybind11)
 
-add_library(pennylane_lightning SHARED "pennylane_lightning/src/StateVector.cpp")
+add_subdirectory(pennylane_lightning/src)
+
+add_library(pennylane_lightning INTERFACE)
+target_link_libraries(pennylane_lightning INTERFACE     lightning_utils 
+                                                        lightning_simulator 
+                                                        lightning_algorithms)
 target_include_directories(pennylane_lightning INTERFACE "pennylane_lightning/src")
 
 add_library(external_dependency INTERFACE)
@@ -50,12 +54,10 @@ if ("$ENV{USE_OPENBLAS}" OR "${USE_OPENBLAS}")
     target_compile_options(external_dependency INTERFACE "-DOPENBLAS=1")
 endif()
 
-pybind11_add_module(lightning_qubit_ops "pennylane_lightning/src/StateVector.cpp"
-                                        "pennylane_lightning/src/Bindings.cpp")
-target_link_libraries(lightning_qubit_ops PRIVATE external_dependency)
+pybind11_add_module(lightning_qubit_ops     "pennylane_lightning/src/Bindings.cpp")
+target_link_libraries(lightning_qubit_ops PRIVATE pennylane_lightning external_dependency)
 set_target_properties(lightning_qubit_ops PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
-target_link_libraries(lightning_qubit_ops PRIVATE OpenMP::OpenMP_CXX)
 target_compile_options(lightning_qubit_ops PRIVATE "$<$<CONFIG:RELEASE>:-W>")
 target_compile_options(lightning_qubit_ops PRIVATE "$<$<CONFIG:DEBUG>:-Wall>")
 target_compile_definitions(lightning_qubit_ops PRIVATE VERSION_INFO=${VERSION_STRING})
@@ -66,8 +68,7 @@ if(ENABLE_NATIVE)
     target_compile_options(lightning_qubit_ops PRIVATE -march=native)
 endif()
 
-
 if (BUILD_TESTS)
     enable_testing()
-    add_subdirectory("pennylane_lightning/src/tests" "tests")
+    #add_subdirectory("pennylane_lightning/src/tests" "tests")
 endif()

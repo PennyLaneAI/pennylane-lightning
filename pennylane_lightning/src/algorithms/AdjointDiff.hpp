@@ -8,8 +8,10 @@
 #include <utility>
 #include <vector>
 
-#include "../StateVector.hpp"
-#include "../Util.hpp"
+#include "StateVector.hpp"
+#include "Util.hpp"
+
+#include <iostream>
 
 // Generators not needed outside this translation unit
 namespace {
@@ -120,7 +122,7 @@ template <class T = double> class AdjointJacobian {
         Pennylane::StateVector<T> &sv,
         const std::vector<size_t> &wires); // function pointer type
 
-    inline const std::unordered_map<std::string, GeneratorFunc> generator_map{
+    const std::unordered_map<std::string, GeneratorFunc> generator_map{
         {"RX", &::applyGeneratorRX<T>},
         {"RY", &::applyGeneratorRY<T>},
         {"RZ", &::applyGeneratorRZ<T>},
@@ -130,7 +132,7 @@ template <class T = double> class AdjointJacobian {
         {"CRZ", &::applyGeneratorCRZ<T>},
         {"ControlledPhaseShift", &::applyGeneratorControlledPhaseShift<T>}};
 
-    inline const std::unordered_map<std::string, T> scaling_factors{
+    const std::unordered_map<std::string, T> scaling_factors{
         {"RX", -0.5},  {"RY", -0.5},
         {"RZ", -0.5},  {"PhaseShift", 1},
         {"CRX", -0.5}, {"CRY", -0.5},
@@ -139,7 +141,6 @@ template <class T = double> class AdjointJacobian {
   public:
     AdjointJacobian() {}
 
-    template <class T = double>
     void adjointJacobian(StateVector<T> &phi, T *jac,
                          const vector<string> &observables,
                          const vector<vector<T>> &obsParams,
@@ -148,11 +149,11 @@ template <class T = double> class AdjointJacobian {
                          const vector<vector<T>> &opParams,
                          const vector<vector<size_t>> &opWires,
                          const vector<size_t> &trainableParams,
-                         size_t paramNumber) {
+                         size_t num_params) {
 
         size_t numObservables = observables.size();
         int trainableParamNumber = trainableParams.size() - 1;
-        int current_param_idx = paramNumber - 1;
+        int current_param_idx = num_params - 1;
 
         const size_t num_elements = phi.getLength();
 
@@ -161,7 +162,7 @@ template <class T = double> class AdjointJacobian {
             new std::complex<T>[num_elements]);
         std::copy(phi.getData(), phi.getData() + num_elements,
                   SV_lambda_data.get());
-        StateVector<T> SV_lambda(SV_lambda_data.data(), num_elements);
+        StateVector<T> SV_lambda(SV_lambda_data.get(), num_elements);
 
         // 2. Apply the unitaries (\hat{U}_{1:P}) to lambda
         std::vector<bool> inverses(operations.size(), false);
@@ -169,26 +170,29 @@ template <class T = double> class AdjointJacobian {
 
         // 3-4. Copy lambda and apply the observables
         // SV_lambda becomes |phi>
-        std::vector<StateVector<T>> lambdas(numObservables);
+        std::vector<StateVector<T>> lambdas;
+        lambdas.reserve(numObservables);
         std::vector<std::unique_ptr<std::complex<T>[]>> lambdas_data;
+        lambdas_data.reserve(numObservables);
+        for (int i = 0; i < numObservables; ++i) {
+            lambdas_data.emplace_back(new std::complex<T>[num_elements]);
+            lambdas.emplace_back(
+                StateVector<T>(lambdas_data[i].get(), num_elements));
+        }
 
-#pragma omp parallel for
+        //#pragma omp parallel for
         for (size_t i = 0; i < numObservables; i++) {
             // copy |phi> and apply observables one at a time
-            lambdas_data.emplace_back(new std::complex<T>[num_elements]));
             std::copy(SV_lambda_data.get(), SV_lambda_data.get() + num_elements,
-                      lambdas_data.back().get());
+                      lambdas_data[i].get());
 
-            StateVector<T> phiCopy(lambdas_data.back().get(), num_elements);
-
-            phiCopy.applyOperation(observables[i], obsWires[i], false,
-                                   obsParams[i]);
-
-            lambdas[i] = std::move(phiCopy);
+            lambdas[i].applyOperation(observables[i], obsWires[i], false,
+                                      obsParams[i]);
         }
 
         // replace with reverse iterator over values?
         for (int i = operations.size() - 1; i >= 0; i--) {
+
             if (opParams[i].size() > 1) {
                 throw std::invalid_argument(
                     "The operation is not supported using "
@@ -210,6 +214,7 @@ template <class T = double> class AdjointJacobian {
 
                 // We have a parametrized gate
                 if (!opParams[i].empty()) {
+
                     if (std::find(trainableParams.begin(),
                                   trainableParams.end(),
                                   current_param_idx) != trainableParams.end()) {
@@ -220,14 +225,24 @@ template <class T = double> class AdjointJacobian {
                             scaling_factors.at(operations[i]);
 
                         generator_map.at(operations[i])(mu, opWires[i]);
+                        std::cout << "mu::{\n\t" << mu << "\n}" << std::endl;
 
                         for (size_t j = 0; j < lambdas.size(); j++) {
+                            std::cout << "lambdas[" << j << "]::{\n\t"
+                                      << lambdas[j] << "\n}" << std::endl;
+
                             std::complex<T> sum =
-                                innerProd(lambdas[j].getData(), mu.getData(),
-                                          num_elements);
+                                innerProdC(lambdas[j].getData(), mu.getData(),
+                                           num_elements);
 
                             // calculate 2 * shift * Real(i * sum) = -2 * shift
                             // * Imag(sum)
+                            std::cout << "sum[" << current_param_idx
+                                      << "]=" << sum << ", " << num_elements
+                                      << ", "
+                                      << j * trainableParams.size() +
+                                             trainableParamNumber
+                                      << std::endl;
                             jac[j * trainableParams.size() +
                                 trainableParamNumber] =
                                 -2 * scalingFactor * std::imag(sum);
@@ -237,17 +252,12 @@ template <class T = double> class AdjointJacobian {
                     current_param_idx--;
                 }
 
-                for (unsigned int j = 0; j < lambdas.size(); j++) {
-                    Pennylane::constructAndApplyOperation(
-                        lambdas[j], operations[i], opWires[i], opParams[i],
-                        true, phi.getNumQubits());
+                for (size_t j = 0; j < lambdas.size(); j++) {
+                    lambdas[j].applyOperation(operations[i], opWires[i], true,
+                                              opParams[i]);
                 }
             }
             /// missing else?
-        }
-        // delete copied state arrays
-        for (int i; i < lambdas.size(); i++) {
-            delete[] lambdas[i].arr;
         }
     }
 };

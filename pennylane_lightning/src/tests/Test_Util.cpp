@@ -94,4 +94,50 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             }
         }
     }
+    SECTION("innerProd") {
+        SECTION("Iterative increment") {
+            for (size_t i = 0; i < 12; i++) {
+                std::vector<std::complex<double>> data1(1UL << i, {1, 1});
+                std::vector<std::complex<double>> data2(1UL << i, {1, 1});
+                std::complex<double> expected_result(0, 1UL << (i + 1));
+                std::complex<double> result = Util::innerProd(data1, data2);
+                CHECK(isApproxEqual(result, expected_result));
+            }
+        }
+        SECTION("Random complex") {
+            std::vector<std::complex<double>> data1{
+                {0.326417, 0},  {-0, 0.343918}, {0, 0.508364}, {-0.53562, -0},
+                {0, -0.178322}, {0.187883, -0}, {0.277721, 0}, {-0, 0.292611}};
+            std::vector<std::complex<double>> data2{
+                {0, -0.479426}, {0, 0}, {2.77556e-17, 0}, {0, 0},
+                {0.877583, 0},  {0, 0}, {0, 0},           {0, 0}};
+            std::complex<double> expected_result(0, -0.312985152368);
+            std::complex<double> result = Util::innerProd(data1, data2);
+            CHECK(isApproxEqual(result, expected_result));
+        }
+    }
+    SECTION("innerProdC") {
+        SECTION("Iterative increment") {
+            for (size_t i = 0; i < 12; i++) {
+                std::vector<std::complex<double>> data1(1UL << i, {1, 1});
+                std::vector<std::complex<double>> data2(1UL << i, {1, 1});
+                std::complex<double> expected_result(1UL << (i + 1), 0);
+                std::complex<double> result = Util::innerProdC(data1, data2);
+
+                CHECK(isApproxEqual(result, expected_result));
+            }
+        }
+        SECTION("Random complex") {
+            std::vector<std::complex<double>> data1{
+                {0, -0.479426}, {0, 0}, {2.77556e-17, 0}, {0, 0},
+                {0.877583, 0},  {0, 0}, {0, 0},           {0, 0}};
+            std::vector<std::complex<double>> data2{
+                {0.326417, 0},  {-0, 0.343918}, {0, 0.508364}, {-0.53562, -0},
+                {0, -0.178322}, {0.187883, -0}, {0.277721, 0}, {-0, 0.292611}};
+            std::complex<double> expected_result(0, 4.40916e-7);
+            std::complex<double> result = Util::innerProdC(data1, data2);
+            CAPTURE(result);
+            CHECK(isApproxEqual(result, expected_result, 1e-5));
+        }
+    }
 }
