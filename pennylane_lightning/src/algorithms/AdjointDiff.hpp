@@ -172,9 +172,10 @@ template <class T = double> class AdjointJacobian {
         lambdas.reserve(numObservables);
         std::vector<std::unique_ptr<std::complex<T>[]>> lambdas_data;
         lambdas_data.reserve(numObservables);
-        for (int i = 0; i < numObservables; ++i){
+        for (int i = 0; i < numObservables; ++i) {
             lambdas_data.emplace_back(new std::complex<T>[num_elements]);
-            lambdas.emplace_back(StateVector<T>(lambdas_data[i].get(), num_elements));
+            lambdas.emplace_back(
+                StateVector<T>(lambdas_data[i].get(), num_elements));
         }
 
 #pragma omp parallel for
@@ -184,7 +185,7 @@ template <class T = double> class AdjointJacobian {
                       lambdas_data[i].get());
 
             lambdas[i].applyOperation(observables[i], obsWires[i], false,
-                                   obsParams[i]);
+                                      obsParams[i]);
         }
 
         // replace with reverse iterator over values?

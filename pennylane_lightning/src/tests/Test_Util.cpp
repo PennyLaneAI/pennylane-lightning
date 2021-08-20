@@ -94,4 +94,15 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             }
         }
     }
+    SECTION("innerProd") {
+        for (size_t i = 0; i < 12; i++) {
+            std::vector<std::complex<double>> data1(1UL << i, {1, 1});
+            std::vector<std::complex<double>> data2(1UL << i, {1, 1});
+            std::complex<double> expected_result(1UL << (i + 1), 0);
+            std::complex<double> result = Util::innerProd(data1, data2);
+            CAPTURE(result);
+            CAPTURE(expected_result);
+            CHECK(isApproxEqual(result, expected_result));
+        }
+    }
 }
