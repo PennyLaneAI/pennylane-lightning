@@ -11,6 +11,8 @@
 #include "StateVector.hpp"
 #include "Util.hpp"
 
+#include <iostream>
+
 // Generators not needed outside this translation unit
 namespace {
 
@@ -147,11 +149,11 @@ template <class T = double> class AdjointJacobian {
                          const vector<vector<T>> &opParams,
                          const vector<vector<size_t>> &opWires,
                          const vector<size_t> &trainableParams,
-                         size_t paramNumber) {
+                         size_t num_params) {
 
         size_t numObservables = observables.size();
         int trainableParamNumber = trainableParams.size() - 1;
-        int current_param_idx = paramNumber - 1;
+        int current_param_idx = num_params - 1;
 
         const size_t num_elements = phi.getLength();
 
@@ -178,7 +180,7 @@ template <class T = double> class AdjointJacobian {
                 StateVector<T>(lambdas_data[i].get(), num_elements));
         }
 
-#pragma omp parallel for
+        //#pragma omp parallel for
         for (size_t i = 0; i < numObservables; i++) {
             // copy |phi> and apply observables one at a time
             std::copy(SV_lambda_data.get(), SV_lambda_data.get() + num_elements,
@@ -190,6 +192,7 @@ template <class T = double> class AdjointJacobian {
 
         // replace with reverse iterator over values?
         for (int i = operations.size() - 1; i >= 0; i--) {
+
             if (opParams[i].size() > 1) {
                 throw std::invalid_argument(
                     "The operation is not supported using "
@@ -211,6 +214,7 @@ template <class T = double> class AdjointJacobian {
 
                 // We have a parametrized gate
                 if (!opParams[i].empty()) {
+
                     if (std::find(trainableParams.begin(),
                                   trainableParams.end(),
                                   current_param_idx) != trainableParams.end()) {
@@ -221,14 +225,24 @@ template <class T = double> class AdjointJacobian {
                             scaling_factors.at(operations[i]);
 
                         generator_map.at(operations[i])(mu, opWires[i]);
+                        std::cout << "mu::{\n\t" << mu << "\n}" << std::endl;
 
                         for (size_t j = 0; j < lambdas.size(); j++) {
+                            std::cout << "lambdas[" << j << "]::{\n\t"
+                                      << lambdas[j] << "\n}" << std::endl;
+
                             std::complex<T> sum =
-                                innerProd(lambdas[j].getData(), mu.getData(),
-                                          num_elements);
+                                innerProdC(lambdas[j].getData(), mu.getData(),
+                                           num_elements);
 
                             // calculate 2 * shift * Real(i * sum) = -2 * shift
                             // * Imag(sum)
+                            std::cout << "sum[" << current_param_idx
+                                      << "]=" << sum << ", " << num_elements
+                                      << ", "
+                                      << j * trainableParams.size() +
+                                             trainableParamNumber
+                                      << std::endl;
                             jac[j * trainableParams.size() +
                                 trainableParamNumber] =
                                 -2 * scalingFactor * std::imag(sum);
