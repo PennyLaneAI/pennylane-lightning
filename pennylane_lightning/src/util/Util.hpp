@@ -190,7 +190,7 @@ std::complex<T> innerProd(const std::complex<T> *data_1,
             cblas_zdotc_sub(data_size, data_1, 1, data_2, 1, &result);
     } else {
         std::inner_product(data_1, data_1 + data_size, data_2,
-                           std::complex<T>(0, 0), ConstSum<T>, ConstMult<T>);
+                           std::complex<T>(0, 0), ConstSum<T>, static_cast<std::complex<T>(*)(std::complex<T>,std::complex<T>)>(&ConstMult<T>));
     }
     return result;
 }
