@@ -27,7 +27,6 @@
 #include <type_traits>
 
 namespace Pennylane {
-
 namespace Util {
 
 /**
@@ -43,6 +42,16 @@ template <class T, class U = T>
 inline static constexpr std::complex<T> ConstMult(U a, std::complex<T> b) {
     return {a * b.real(), a * b.imag()};
 }
+
+/**
+ * @brief Compile-time scalar complex times complex.
+ *
+ * @tparam T Precision of complex value `a` and result.
+ * @tparam U Precision of complex value `b`.
+ * @param a Complex scalar value.
+ * @param b Complex scalar value.
+ * @return constexpr std::complex<T>
+ */
 template <class T, class U = T>
 inline static constexpr std::complex<T> ConstMult(std::complex<U> a,
                                                   std::complex<T> b) {
@@ -155,13 +164,16 @@ template <class T> inline size_t dimSize(const std::vector<T> &data) {
     return log2(sqrt(data.size()));
 }
 
-} // namespace Util
-} // namespace Pennylane
-
-// Exception for functions that aren't implemented
+/**
+ * @brief Exception for functions that are not yet implemented.
+ *
+ */
 class NotImplementedException : public std::logic_error {
   public:
     explicit NotImplementedException(const std::string &fname)
         : std::logic_error(std::string("Function is not implemented. ") +
                            fname){};
 };
+
+} // namespace Util
+} // namespace Pennylane

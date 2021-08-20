@@ -24,6 +24,12 @@
 
 ### Documentation
 
+* Added preliminary architecture diagram for package.
+  [(#131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/131)
+
+* C++ API built as part of docs generation.
+  [(#131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/131)
+
 ### Bug fixes
 
 * Column-major data in numpy is now correctly converted to row-major upon pass to the C++ layer.
@@ -104,7 +110,7 @@ Thomas Bromley, Lee James O'Riordan
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Thomas Bromley, Lee James O'Riordan
+Ali Asadi, Christina Lee, Thomas Bromley, Lee James O'Riordan
 
 ---
 
