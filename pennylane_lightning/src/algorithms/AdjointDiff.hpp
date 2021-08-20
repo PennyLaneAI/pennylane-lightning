@@ -171,19 +171,22 @@ template <class T = double> class AdjointJacobian {
         // SV_lambda becomes |phi>
         std::vector<StateVector<T>> lambdas(numObservables);
         std::vector<std::unique_ptr<std::complex<T>[]>> lambdas_data;
+        lambdas_data.reserve(10);
+        for (int i = 0; i < 10; ++i)
+            lambdas_data.emplace_back(new std::complex<T>[num_elements]));
 
 #pragma omp parallel for
         for (size_t i = 0; i < numObservables; i++) {
             // copy |phi> and apply observables one at a time
-            lambdas_data.emplace_back(new std::complex<T>[num_elements]));
             std::copy(SV_lambda_data.get(), SV_lambda_data.get() + num_elements,
-                      lambdas_data.back().get());
+                      lambdas_data[i].get());
 
-            StateVector<T> phiCopy(lambdas_data.back().get(), num_elements);
+            StateVector<T> phiCopy(lambdas_data[i].get(), num_elements);
 
             phiCopy.applyOperation(observables[i], obsWires[i], false,
                                    obsParams[i]);
 
+            // Potentially to be replaced with an emplace operation
             lambdas[i] = std::move(phiCopy);
         }
 
@@ -237,17 +240,12 @@ template <class T = double> class AdjointJacobian {
                     current_param_idx--;
                 }
 
-                for (unsigned int j = 0; j < lambdas.size(); j++) {
-                    Pennylane::constructAndApplyOperation(
-                        lambdas[j], operations[i], opWires[i], opParams[i],
-                        true, phi.getNumQubits());
+                for (size_t j = 0; j < lambdas.size(); j++) {
+                    lambdas[j].applyOperation(operations[i], opWires[i], true,
+                                              opParams[i]);
                 }
             }
             /// missing else?
-        }
-        // delete copied state arrays
-        for (int i; i < lambdas.size(); i++) {
-            delete[] lambdas[i].arr;
         }
     }
 };

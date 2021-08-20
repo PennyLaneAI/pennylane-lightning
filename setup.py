@@ -121,6 +121,9 @@ if not os.environ.get("SKIP_COMPILATION", False):
     include_dirs = [
         get_pybind_include(),
         "./include",
+        "pennylane_lightning/src/algorithms",
+        "pennylane_lightning/src/simulator",
+        "pennylane_lightning/src/util"
     ]
 
     library_dirs = [i for i in os.environ.get("LD_LIBRARY_PATH", "").split(":") if i]
@@ -147,12 +150,13 @@ if not os.environ.get("SKIP_COMPILATION", False):
         Extension(
             "lightning_qubit_ops",
             sources=[
-                "pennylane_lightning/src/StateVector.cpp",
+                "pennylane_lightning/src/simulator/StateVector.cpp",
                 "pennylane_lightning/src/Bindings.cpp",
             ],
             depends=[
-                "pennylane_lightning/src/StateVector.hpp",
-                "pennylane_lightning/src/Util.hpp",
+                "pennylane_lightning/src/algorithms/AdjointDiff.hpp",
+                "pennylane_lightning/src/simulator/StateVector.hpp",
+                "pennylane_lightning/src/util/Util.hpp",
             ],
             include_dirs=include_dirs,
             language="c++",
