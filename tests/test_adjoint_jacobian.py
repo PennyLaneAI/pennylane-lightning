@@ -63,7 +63,7 @@ class TestAdjointJacobian:
 
     @pytest.fixture
     def dev(self):
-        return qml.device("default.qubit", wires=2)
+        return qml.device("lightning.qubit", wires=2)
 
     def test_not_expval(self, dev):
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
@@ -79,7 +79,7 @@ class TestAdjointJacobian:
     def test_finite_shots_warns(self):
         """Tests warning raised when finite shots specified"""
 
-        dev = qml.device("default.qubit", wires=1, shots=1)
+        dev = qml.device("lightning.qubit", wires=1, shots=1)
 
         with qml.tape.JacobianTape() as tape:
             qml.expval(qml.PauliZ(0))
@@ -171,7 +171,7 @@ class TestAdjointJacobian:
 
     def test_multiple_rx_gradient(self, tol):
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result."""
-        dev = qml.device("default.qubit", wires=3)
+        dev = qml.device("lightning.qubit", wires=3)
         params = np.array([np.pi, np.pi / 2, np.pi / 3])
 
         with qml.tape.JacobianTape() as tape:
@@ -287,12 +287,12 @@ class TestAdjointJacobianQNode:
 
     @pytest.fixture
     def dev(self):
-        return qml.device("default.qubit", wires=2)
+        return qml.device("lightning.qubit", wires=2)
 
     def test_finite_shots_warning(self):
         """Tests that a warning is raised when computing the adjoint diff on a device with finite shots"""
 
-        dev = qml.device("default.qubit", wires=1, shots=1)
+        dev = qml.device("lightning.qubit", wires=1, shots=1)
 
         with pytest.warns(
             UserWarning, match="Requested adjoint differentiation to be computed with finite shots."
@@ -482,7 +482,7 @@ class TestAdjointJacobianQNode:
         assert np.allclose(grad_adjoint, grad_fd)
 
     def test_interface_jax(self, dev):
-        """Test if the gradients agree between adjoint and backprop methods in the
+        """Test if the gradients agree between adjoint and finite-difference methods in the
         jax interface"""
         jax = pytest.importorskip("jax")
 
@@ -496,9 +496,9 @@ class TestAdjointJacobianQNode:
         params2 = jax.numpy.array(0.4)
 
         qnode_adjoint = QNode(f, dev, interface="jax", diff_method="adjoint")
-        qnode_backprop = QNode(f, dev, interface="jax", diff_method="backprop")
+        qnode_fd = QNode(f, dev, interface="jax", diff_method="finite-diff")
 
         grad_adjoint = jax.grad(qnode_adjoint)(params1, params2)
-        grad_backprop = jax.grad(qnode_backprop)(params1, params2)
+        grad_fd = jax.grad(qnode_fd)(params1, params2)
 
-        assert np.allclose(grad_adjoint, grad_backprop)
+        assert np.allclose(grad_adjoint, grad_fd)
