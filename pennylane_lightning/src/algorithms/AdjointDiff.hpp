@@ -8,8 +8,8 @@
 #include <utility>
 #include <vector>
 
-#include "../StateVector.hpp"
-#include "../Util.hpp"
+#include "StateVector.hpp"
+#include "Util.hpp"
 
 // Generators not needed outside this translation unit
 namespace {
@@ -120,7 +120,7 @@ template <class T = double> class AdjointJacobian {
         Pennylane::StateVector<T> &sv,
         const std::vector<size_t> &wires); // function pointer type
 
-    inline const std::unordered_map<std::string, GeneratorFunc> generator_map{
+    const std::unordered_map<std::string, GeneratorFunc> generator_map{
         {"RX", &::applyGeneratorRX<T>},
         {"RY", &::applyGeneratorRY<T>},
         {"RZ", &::applyGeneratorRZ<T>},
@@ -130,7 +130,7 @@ template <class T = double> class AdjointJacobian {
         {"CRZ", &::applyGeneratorCRZ<T>},
         {"ControlledPhaseShift", &::applyGeneratorControlledPhaseShift<T>}};
 
-    inline const std::unordered_map<std::string, T> scaling_factors{
+    const std::unordered_map<std::string, T> scaling_factors{
         {"RX", -0.5},  {"RY", -0.5},
         {"RZ", -0.5},  {"PhaseShift", 1},
         {"CRX", -0.5}, {"CRY", -0.5},
@@ -139,7 +139,6 @@ template <class T = double> class AdjointJacobian {
   public:
     AdjointJacobian() {}
 
-    template <class T = double>
     void adjointJacobian(StateVector<T> &phi, T *jac,
                          const vector<string> &observables,
                          const vector<vector<T>> &obsParams,
@@ -161,7 +160,7 @@ template <class T = double> class AdjointJacobian {
             new std::complex<T>[num_elements]);
         std::copy(phi.getData(), phi.getData() + num_elements,
                   SV_lambda_data.get());
-        StateVector<T> SV_lambda(SV_lambda_data.data(), num_elements);
+        StateVector<T> SV_lambda(SV_lambda_data.get(), num_elements);
 
         // 2. Apply the unitaries (\hat{U}_{1:P}) to lambda
         std::vector<bool> inverses(operations.size(), false);
@@ -169,11 +168,14 @@ template <class T = double> class AdjointJacobian {
 
         // 3-4. Copy lambda and apply the observables
         // SV_lambda becomes |phi>
-        std::vector<StateVector<T>> lambdas(numObservables);
+        std::vector<StateVector<T>> lambdas;
+        lambdas.reserve(numObservables);
         std::vector<std::unique_ptr<std::complex<T>[]>> lambdas_data;
-        lambdas_data.reserve(10);
-        for (int i = 0; i < 10; ++i)
-            lambdas_data.emplace_back(new std::complex<T>[num_elements]));
+        lambdas_data.reserve(numObservables);
+        for (int i = 0; i < numObservables; ++i){
+            lambdas_data.emplace_back(new std::complex<T>[num_elements]);
+            lambdas.emplace_back(StateVector<T>(lambdas_data[i].get(), num_elements));
+        }
 
 #pragma omp parallel for
         for (size_t i = 0; i < numObservables; i++) {
@@ -181,13 +183,8 @@ template <class T = double> class AdjointJacobian {
             std::copy(SV_lambda_data.get(), SV_lambda_data.get() + num_elements,
                       lambdas_data[i].get());
 
-            StateVector<T> phiCopy(lambdas_data[i].get(), num_elements);
-
-            phiCopy.applyOperation(observables[i], obsWires[i], false,
+            lambdas[i].applyOperation(observables[i], obsWires[i], false,
                                    obsParams[i]);
-
-            // Potentially to be replaced with an emplace operation
-            lambdas[i] = std::move(phiCopy);
         }
 
         // replace with reverse iterator over values?
