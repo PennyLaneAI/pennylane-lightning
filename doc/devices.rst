@@ -26,10 +26,16 @@ Supported operations and observables
 
     ~pennylane.BasisState
     ~pennylane.CNOT
+    ~pennylane.CRot
+    ~pennylane.CRX
+    ~pennylane.CRY
+    ~pennylane.CRZ
     ~pennylane.Hadamard
     ~pennylane.PauliX
     ~pennylane.PauliY
     ~pennylane.PauliZ
+    ~pennylane.PhaseShift
+    ~pennylane.ControlledPhaseShift
     ~pennylane.QubitStateVector
     ~pennylane.Rot
     ~pennylane.RX

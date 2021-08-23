@@ -11,7 +11,7 @@
 #
 # All configuration values have a default; values that are commented out
 # serve to show the default.
-import sys, os, re
+import sys, os, re, inspect
 from unittest.mock import MagicMock
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -45,6 +45,8 @@ needs_sphinx = '1.6'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "breathe",
+    "exhale",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.todo",
@@ -64,6 +66,38 @@ autosummary_generate = True
 autosummary_imported_members = False
 automodapi_toctreedirnm = "code/api"
 automodsumm_inherited_members = True
+
+# Breathe extension
+breathe_projects = {"Lightning-Qubit": "./doxyoutput/xml"}
+breathe_default_project = "Lightning-Qubit"
+
+# Exhale extension
+# Setup the exhale extension
+exhale_args = {
+    # These arguments are required
+    "containmentFolder": "./api",
+    "rootFileName": "library_root.rst",
+    "rootFileTitle": "Overview",
+    "doxygenStripFromPath": "..",
+    # Suggested optional arguments
+    "createTreeView": True,
+    # TIP: if using the sphinx-bootstrap-theme, you need
+    # "treeViewIsBootstrap": True,
+    "exhaleExecutesDoxygen": True,
+    "exhaleDoxygenStdin": (
+        "INPUT = "
+        "../pennylane_lightning/src/Bindings.cpp "
+        "../pennylane_lightning/src/Gates.hpp "
+        "../pennylane_lightning/src/StateVector.hpp "
+        "../pennylane_lightning/src/Util.hpp"
+        "EXCLUDE_SYMBOLS = std::* "
+    ),
+    "afterTitleDescription": inspect.cleandoc(
+        """
+        The Pennylane Lightning C++ API is intended to be called from Python through Pybind11. Direct use of the C++ API is currently unsupported and is provided for reference only.
+        """
+    ),
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates', 'xanadu_theme']

@@ -73,7 +73,7 @@ test-cpp:
 	rm -rf ./BuildTests
 	cmake . -BBuildTests -DBUILD_TESTS=1
 	cmake --build ./BuildTests
-	./BuildTests/tests/runner
+	./BuildTests/pennylane_lightning/src/tests/runner
 
 .PHONY: format
 format:
