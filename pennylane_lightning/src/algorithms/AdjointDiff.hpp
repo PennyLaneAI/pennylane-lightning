@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <complex>
+#include <cstring>
 #include <memory>
 #include <numeric>
 #include <unordered_map>
@@ -141,7 +142,7 @@ template <class T = double> class AdjointJacobian {
   public:
     AdjointJacobian() {}
 
-    void adjointJacobian(StateVector<T> &phi, T *jac,
+    void adjointJacobian(StateVector<T> &psi, std::vector<T> &jac,
                          const vector<string> &observables,
                          const vector<vector<T>> &obsParams,
                          const vector<vector<size_t>> &obsWires,
@@ -155,12 +156,12 @@ template <class T = double> class AdjointJacobian {
         int trainableParamNumber = trainableParams.size() - 1;
         int current_param_idx = num_params - 1;
 
-        const size_t num_elements = phi.getLength();
+        const size_t num_elements = psi.getLength();
 
         // 1. Copy the input state, create lambda
         std::unique_ptr<std::complex<T>[]> SV_lambda_data(
             new std::complex<T>[num_elements]);
-        std::copy(phi.getData(), phi.getData() + num_elements,
+        std::copy(psi.getData(), psi.getData() + num_elements,
                   SV_lambda_data.get());
         StateVector<T> SV_lambda(SV_lambda_data.get(), num_elements);
 
@@ -174,7 +175,7 @@ template <class T = double> class AdjointJacobian {
         lambdas.reserve(numObservables);
         std::vector<std::unique_ptr<std::complex<T>[]>> lambdas_data;
         lambdas_data.reserve(numObservables);
-        for (int i = 0; i < numObservables; ++i) {
+        for (size_t i = 0; i < numObservables; i++) {
             lambdas_data.emplace_back(new std::complex<T>[num_elements]);
             lambdas.emplace_back(
                 StateVector<T>(lambdas_data[i].get(), num_elements));
@@ -199,7 +200,6 @@ template <class T = double> class AdjointJacobian {
                     "the adjoint differentiation method");
             } else if ((operations[i] != "QubitStateVector") &&
                        (operations[i] != "BasisState")) {
-                // copy |phi> to |mu> before applying Uj*
 
                 std::unique_ptr<std::complex<T>[]> phiCopyArr(
                     new std::complex<T>[num_elements]);
@@ -225,11 +225,8 @@ template <class T = double> class AdjointJacobian {
                             scaling_factors.at(operations[i]);
 
                         generator_map.at(operations[i])(mu, opWires[i]);
-                        std::cout << "mu::{\n\t" << mu << "\n}" << std::endl;
 
                         for (size_t j = 0; j < lambdas.size(); j++) {
-                            std::cout << "lambdas[" << j << "]::{\n\t"
-                                      << lambdas[j] << "\n}" << std::endl;
 
                             std::complex<T> sum =
                                 innerProdC(lambdas[j].getData(), mu.getData(),
@@ -237,12 +234,7 @@ template <class T = double> class AdjointJacobian {
 
                             // calculate 2 * shift * Real(i * sum) = -2 * shift
                             // * Imag(sum)
-                            std::cout << "sum[" << current_param_idx
-                                      << "]=" << sum << ", " << num_elements
-                                      << ", "
-                                      << j * trainableParams.size() +
-                                             trainableParamNumber
-                                      << std::endl;
+
                             jac[j * trainableParams.size() +
                                 trainableParamNumber] =
                                 -2 * scalingFactor * std::imag(sum);
@@ -260,6 +252,109 @@ template <class T = double> class AdjointJacobian {
             /// missing else?
         }
     }
+
+    /*
+    void adjointJacobian(
+        StateVector<T>& phi,
+        double* jac,
+        const vector<string>& observables,
+        const vector<vector<T> >& obsParams,
+        const vector<vector<size_t> >& obsWires,
+        const vector<string>& operations,
+        const vector<vector<T> >& opParams,
+        const vector<vector<size_t> >& opWires,
+        const vector<size_t>& trainableParams,
+        int paramNumber
+    ) {
+        using CplxType = std::complex<T>;
+        std::vector<StateVector<T>> lambdas;
+        size_t numObservables = observables.size();
+        size_t trainableParamNumber = trainableParams.size() - 1;
+
+        CplxType* lambdaStateArr = new std::complex<T>[phi.getLength()];
+        std::memcpy(lambdaStateArr, phi.getData(),
+    sizeof(CplxType)*phi.getLength()); StateVector<T>
+    lambdaState(lambdaStateArr, phi.getLength());
+        // forward pass on lambda
+
+        for (unsigned int i = 0; i < numObservables; i++) {
+            // copy |phi> and apply observables one at a time
+            CplxType* phiCopyArr = new CplxType[lambdaState.getLength()];
+            std::memcpy(phiCopyArr, lambdaState.getData(),
+    sizeof(CplxType)*lambdaState.getLength()); StateVector<T>
+    phiCopy(phiCopyArr, lambdaState.getLength());
+            phiCopy.applyOperation(observables[i], obsWires[i], false,
+                                          obsParams[i]);
+
+            lambdas.push_back(phiCopy);
+        }
+
+        for (int i = operations.size() - 1; i >= 0; i--) {
+            if (opParams[i].size() > 1) {
+                throw std::invalid_argument("The operation is not supported
+    using the adjoint differentiation method"); } else if ((operations[i] !=
+    "QubitStateVector") && (operations[i] != "BasisState")) {
+                // copy |phi> to |mu> before applying Uj*
+                CplxType* phiCopyArr = new CplxType[phi.getLength()];
+                std::memcpy(phiCopyArr, phi.getData(),
+    sizeof(CplxType)*phi.getLength()); StateVector<T> mu(phiCopyArr,
+    phi.getLength());
+                // create |phi'> = Uj*|phi>
+                phi.applyOperation(operations[i], opWires[i], true,
+    opParams[i]);
+
+
+                if (std::find(trainableParams.begin(), trainableParams.end(),
+    paramNumber) != trainableParams.end()) {
+                    // create iH|phi> = d/d dUj/dtheta Uj* |phi> =
+    dUj/dtheta|phi'>
+                    //std::unique_ptr<AbstractGate> gate =
+    constructGate(operations[i], opParams[i]);
+                    // double scalingFactor = gate->generatorScalingFactor;
+                    //double scalingFactor =
+    Pennylane::RotationYGate::generatorScalingFactor; const T scalingFactor =
+                                scaling_factors.at(operations[i]);
+
+                    generator_map.at(operations[i])(mu, opWires[i]);
+
+                    for (unsigned int j = 0; j < lambdas.size(); j++) {
+                        int lambdaStateSize = lambdas[j].getLength();
+
+                        CplxType sum = 0;
+                        for (int k = 0; k < lambdaStateSize; k++) {
+                            sum += (std::conj(lambdas[j].getData()[k]) *
+    mu.getData()[k]);
+                        }
+                        // calculate 2 * shift * Real(i * sum) = -2 * shift *
+    Imag(sum) jac[j * trainableParams.size() + trainableParamNumber] = -2 *
+    scalingFactor * std::imag(sum);
+                    }
+                    delete[] phiCopyArr;
+                    trainableParamNumber--;
+                }
+                paramNumber--;
+
+                // if i > 0: (?)
+                for (unsigned int j = 0; j < lambdas.size(); j++) {
+                    lambdas[i].applyOperation(operations[i], opWires[i], true,
+    opParams[i]);
+                    /*Pennylane::constructAndApplyOperation(
+                        lambdas[j],
+                        operations[i],
+                        opWires[i],
+                        opParams[i],
+                        true,
+                        opWires[i].size()
+                    );
+                }
+            }
+        }
+        // delete copied state arrays
+        for (int i; i < lambdas.size(); i++) {
+            delete[] lambdas[i].getData();
+        }
+    }
+    */
 };
 
 } // namespace Algorithms
