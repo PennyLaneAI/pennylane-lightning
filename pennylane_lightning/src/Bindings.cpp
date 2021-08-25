@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include<tuple>
+#include <tuple>
 
 #include "AdjointDiff.hpp"
 #include "StateVector.hpp"
@@ -463,45 +463,41 @@ template <class fp_t = double> class StateVecBinder : public StateVector<fp_t> {
     }
 };
 
-
 /**
  * @brief Binding class for exposing C++ AdjointJaconian class to Python.
  *
  * @tparam fp_t Floating point precision type.
  */
-template <class fp_t = double> class AdjJacBinder : public AdjointJacobian<fp_t> {
-    private:
-    using ObsTuple = std::tuple<
-        std::vector<std::vector<std::string>>, 
-        std::vector<std::vector<fp_t>>,
-        std::vector<std::vector<size_t>>
-    >;
-    using OpsTuple = std::tuple<
-        std::vector<std::string>, 
-        std::vector<std::vector<fp_t>>,
-        std::vector<std::vector<size_t>>,
-        std::vector<bool>,
-        std::vector<std::vector<std::complex<fp_t>>>
-    >;
+template <class fp_t = double>
+class AdjJacBinder : public AdjointJacobian<fp_t> {
+  private:
+    using ObsTuple = std::tuple<std::vector<std::vector<std::string>>,
+                                std::vector<std::vector<fp_t>>,
+                                std::vector<std::vector<size_t>>>;
+    using OpsTuple =
+        std::tuple<std::vector<std::string>, std::vector<std::vector<fp_t>>,
+                   std::vector<std::vector<size_t>>, std::vector<bool>,
+                   std::vector<std::vector<std::complex<fp_t>>>>;
 
-//names, params, wires, inverses, mats
-    public:
-    explicit AdjJacBinder()
-        : AdjointJacobian<fp_t>() {}
+    // names, params, wires, inverses, mats
+  public:
+    explicit AdjJacBinder() : AdjointJacobian<fp_t>() {}
 
-    void adjoint_jacobian_py(const ObsTuple& obs, const OpsTuple& ops, const std::vector<size_t>& trainableParamIndices,  size_t num_params){
-        //std::get<0>(obs)
-
+    void adjoint_jacobian_py(const ObsTuple &obs, const OpsTuple &ops,
+                             const std::vector<size_t> &trainableParamIndices,
+                             size_t num_params) {
+        // std::get<0>(obs)
     }
 };
 
 /****
- * 
+ *
  *        jac = adj.adjoint_jacobian(
-            *obs_serialized, *ops_serialized, tape.trainable_params, tape.num_params
-        ) 
- * 
- * 
+            *obs_serialized, *ops_serialized, tape.trainable_params,
+tape.num_params
+        )
+ *
+ *
  /
 
 
@@ -671,22 +667,21 @@ void lightning_class_bindings(py::module &m) {
                                const std::vector<Param_t> &>(
                  &StateVecBinder<PrecisionT>::template applyCRot<Param_t>),
              "Apply the CRot gate.");
-    
+
     class_name = "ObsStructC" + bitsize;
     py::class_<ObsDatum<PrecisionT>>(m, class_name.c_str())
-        .def(py::init<
-                    const std::vector<std::string>&, 
-                    const std::vector<std::vector<Param_t>>&, 
-                    const std::vector<std::vector<size_t>>&>());
+        .def(py::init<const std::vector<std::string> &,
+                      const std::vector<std::vector<Param_t>> &,
+                      const std::vector<std::vector<size_t>> &>());
 
     class_name = "OpsStructC" + bitsize;
     py::class_<OpsData<PrecisionT>>(m, class_name.c_str())
         .def(py::init<
-                    const std::vector<std::string>&, 
-                    const std::vector<std::vector<Param_t>>&, 
-                    const std::vector<std::vector<size_t>>&, 
-                    const std::vector<bool>&,
-                    const std::vector<std::vector<std::complex<PrecisionT>>>& >());
+             const std::vector<std::string> &,
+             const std::vector<std::vector<Param_t>> &,
+             const std::vector<std::vector<size_t>> &,
+             const std::vector<bool> &,
+             const std::vector<std::vector<std::complex<PrecisionT>>> &>());
 
     class_name = "AdjointJacobianC" + bitsize;
     py::class_<AdjointJacobian<PrecisionT>>(m, class_name.c_str())
@@ -694,17 +689,18 @@ void lightning_class_bindings(py::module &m) {
         .def("create_obs", &AdjointJacobian<PrecisionT>::createObs)
         .def("create_ops_list", &AdjointJacobian<PrecisionT>::createOpsData)
         .def("adjoint_jacobian", &AdjointJacobian<PrecisionT>::adjointJacobian)
-        .def("adjoint_jacobian", 
-            []( AdjointJacobian<PrecisionT>& adj, 
+        .def("adjoint_jacobian",
+             [](AdjointJacobian<PrecisionT> &adj,
                 const StateVecBinder<PrecisionT> &sv,
-                const std::vector<ObsDatum<PrecisionT>> &observables, 
-                const OpsData<PrecisionT> &operations, 
-                const vector<size_t> &trainableParams,
-                size_t num_params) {
-                    std::vector<PrecisionT> jac(num_params*observables.size());
-                    adj.adjointJacobian(sv.getData(), sv.getLength(), jac, observables, operations, trainableParams, num_params);
-                    return jac;
-                });
+                const std::vector<ObsDatum<PrecisionT>> &observables,
+                const OpsData<PrecisionT> &operations,
+                const vector<size_t> &trainableParams, size_t num_params) {
+                 std::vector<PrecisionT> jac(num_params * observables.size());
+                 adj.adjointJacobian(sv.getData(), sv.getLength(), jac,
+                                     observables, operations, trainableParams,
+                                     num_params);
+                 return jac;
+             });
 }
 
 /**
