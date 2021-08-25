@@ -44,17 +44,18 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
         const size_t num_params = 1;
         const size_t num_obs = 1;
 
-        auto obs = adj.createObsDS({{"PauliZ"}}, {{}}, {{0}});
+        auto obs = adj.createObs({"PauliZ"}, {{}}, {{0}});
 
         for (const auto &p : param) {
+            auto ops = adj.createOpsData({"RX"}, {{p}}, {{0}}, {false});
+
             std::vector<double> jacobian(num_obs * num_params, 0.0);
 
             std::vector<std::complex<double>> cdata(0b1 << num_qubits);
             StateVector<double> psi(cdata.data(), cdata.size());
             cdata[0] = std::complex<double>{1, 0};
 
-            adj.adjointJacobian(psi, jacobian, {obs}, {"RX"}, {{p}}, {{0}}, {0},
-                                1);
+            adj.adjointJacobian(psi, jacobian, {obs}, ops, {0}, 1);
             CAPTURE(jacobian);
             CHECK(-sin(p) == Approx(jacobian.front()));
         }
@@ -65,17 +66,19 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
         const size_t num_params = 1;
         const size_t num_obs = 1;
 
-        auto obs = adj.createObsDS({"PauliX"}, {{}}, {{0}});
+        auto obs = adj.createObs({"PauliX"}, {{}}, {{0}});
 
         for (const auto &p : param) {
+            auto ops = adj.createOpsData({"RY"}, {{p}}, {{0}}, {false});
+
             std::vector<double> jacobian(num_obs * num_params, 0.0);
 
             std::vector<std::complex<double>> cdata(0b1 << num_qubits);
             StateVector<double> psi(cdata.data(), cdata.size());
             cdata[0] = std::complex<double>{1, 0};
 
-            adj.adjointJacobian(psi, jacobian, {obs}, {"RY"}, {{p}}, {{0}}, {0},
-                                1);
+            adj.adjointJacobian(psi, jacobian, {obs}, ops, {0}, 1);
+
             CAPTURE(jacobian);
             CHECK(cos(p) == Approx(jacobian.front()).margin(1e-7));
         }
@@ -90,15 +93,15 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
         StateVector<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
-        auto obs1 = adj.createObsDS({"PauliZ"}, {{}}, {{0}});
-        auto obs2 = adj.createObsDS({"PauliZ"}, {{}}, {{1}});
-        auto obs3 = adj.createObsDS({"PauliZ"}, {{}}, {{2}});
+        auto obs1 = adj.createObs({"PauliZ"}, {{}}, {{0}});
+        auto obs2 = adj.createObs({"PauliZ"}, {{}}, {{1}});
+        auto obs3 = adj.createObs({"PauliZ"}, {{}}, {{2}});
 
-        adj.adjointJacobian(psi, jacobian, {obs1, obs2, obs3}, {"RX"},
-                            {{param[0]}}, {{0}}, {0}, num_params);
+        auto ops = adj.createOpsData({"RX"}, {{param[0]}}, {{0}}, {false});
 
-        // jacobian = adj.adj_jac(psi, {"PauliZ", "PauliZ", "PauliZ"}, {{0},
-        // {1}, {2}}, {"RX"}, {{0}}, {false}, {{0.234}} );
+        adj.adjointJacobian(psi, jacobian, {obs1, obs2, obs3}, ops, {0},
+                            num_params);
+
         CAPTURE(jacobian);
         CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
     }
@@ -112,21 +115,17 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
         StateVector<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
-        auto obs1 = adj.createObsDS({"PauliZ"}, {{}}, {{0}});
-        auto obs2 = adj.createObsDS({"PauliZ"}, {{}}, {{1}});
-        auto obs3 = adj.createObsDS({"PauliZ"}, {{}}, {{2}});
+        auto obs1 = adj.createObs({"PauliZ"}, {{}}, {{0}});
+        auto obs2 = adj.createObs({"PauliZ"}, {{}}, {{1}});
+        auto obs3 = adj.createObs({"PauliZ"}, {{}}, {{2}});
 
-        adj.adjointJacobian(psi, jacobian, {obs1, obs2, obs3},
-                            {"RX", "RX", "RX"},
-                            {{param[0]}, {param[1]}, {param[2]}},
-                            {{0}, {1}, {2}}, {0, 1, 2}, num_params);
+        auto ops = adj.createOpsData({"RX", "RX", "RX"},
+                                     {{param[0]}, {param[1]}, {param[2]}},
+                                     {{0}, {1}, {2}}, {false, false, false});
 
-        // adj.adjointJacobian(psi, jacobian, obs, {"RX", "RX", "RX"},
-        //                    {{param[0]}, {param[1]}, {param[2]}},
-        //                    {{0}, {1}, {2}}, {0, 1, 2}, num_params);
+        adj.adjointJacobian(psi, jacobian, {obs1, obs2, obs3}, ops, {0, 1, 2},
+                            num_params);
 
-        // jacobian = adj.adj_jac(psi, {"PauliZ", "PauliZ", "PauliZ"}, {{0},
-        // {1}, {2}}, {"RX"}, {{0}}, {false}, {{0.234}} );
         CAPTURE(jacobian);
         CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
     }
@@ -140,12 +139,13 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
         StateVector<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
-        auto obs = adj.createObsDS({"PauliZ", "PauliZ", "PauliZ"}, {{}},
-                                   {{0}, {1}, {2}});
+        auto obs = adj.createObs({"PauliZ", "PauliZ", "PauliZ"}, {{}},
+                                 {{0}, {1}, {2}});
+        auto ops = adj.createOpsData({"RX", "RX", "RX"},
+                                     {{param[0]}, {param[1]}, {param[2]}},
+                                     {{0}, {1}, {2}}, {false, false, false});
 
-        adj.adjointJacobian(psi, jacobian, {obs}, {"RX", "RX", "RX"},
-                            {{param[0]}, {param[1]}, {param[2]}},
-                            {{0}, {1}, {2}}, {0, 1, 2}, num_params);
+        adj.adjointJacobian(psi, jacobian, {obs}, ops, {0, 1, 2}, num_params);
         CAPTURE(jacobian);
         for (size_t i = 0; i < num_params; i++) {
             CHECK(-sin(param[i]) ==

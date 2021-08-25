@@ -184,16 +184,16 @@ template <class T = double> class AdjointJacobian {
         {"CRZ", -0.5}, {"ControlledPhaseShift", 1}};
 
     /**
-     * @brief Utility struct for a single local or tensor observable
+     * @brief Utility struct for a observable operations
      *
      */
-    struct ObsData {
+    struct ObsDatum {
         const std::vector<std::string> obs_name_;
         const std::vector<std::vector<T>> obs_params_;
         const std::vector<std::vector<size_t>> obs_wires_;
-        ObsData(const std::vector<std::string> &obs_name,
-                const std::vector<std::vector<T>> &obs_params,
-                const std::vector<std::vector<size_t>> &obs_wires)
+        ObsDatum(const std::vector<std::string> &obs_name,
+                 const std::vector<std::vector<T>> &obs_params,
+                 const std::vector<std::vector<size_t>> &obs_wires)
             : obs_name_{obs_name}, obs_params_{obs_params}, obs_wires_{
                                                                 obs_wires} {};
         size_t getSize() const { return obs_name_.size(); }
@@ -205,76 +205,63 @@ template <class T = double> class AdjointJacobian {
             return obs_wires_;
         }
     };
+    struct OpsData {
+        const std::vector<std::string> ops_name_;
+        const std::vector<std::vector<T>> ops_params_;
+        const std::vector<std::vector<size_t>> ops_wires_;
+        const std::vector<bool> ops_inverses_;
+        const std::vector<std::vector<std::complex<T>>> ops_matrices_;
+
+        OpsData(const std::vector<std::string> &ops_name,
+                const std::vector<std::vector<T>> &ops_params,
+                const std::vector<std::vector<size_t>> &ops_wires,
+                const std::vector<bool> &ops_inverses,
+                const std::vector<std::vector<std::complex<T>>> &ops_matrices =
+                    {{}})
+            : ops_name_{ops_name}, ops_params_{ops_params},
+              ops_wires_{ops_wires}, ops_inverses_{ops_inverses},
+              ops_matrices_{ops_matrices} {};
+
+        size_t getSize() const { return ops_name_.size(); }
+        const std::vector<std::string> &getOpsName() const { return ops_name_; }
+        const std::vector<std::vector<T>> &getOpsParams() const {
+            return ops_params_;
+        }
+        const std::vector<std::vector<size_t>> &getOpsWires() const {
+            return ops_wires_;
+        }
+        const std::vector<bool> &getOpsInverses() const {
+            return ops_inverses_;
+        }
+        const std::vector<std::vector<std::complex<T>>> &
+        getOpsMatrices() const {
+            return ops_matrices_;
+        }
+    };
 
   public:
     AdjointJacobian() {}
 
-    const ObsData
-    createObsDS(const std::vector<std::string> &obs_name,
-                const std::vector<std::vector<T>> &obs_params,
-                const std::vector<std::vector<size_t>> &obs_wires) {
-        return ObsData(obs_name, obs_params, obs_wires);
+    const ObsDatum
+    createObs(const std::vector<std::string> &obs_name,
+              const std::vector<std::vector<T>> &obs_params,
+              const std::vector<std::vector<size_t>> &obs_wires) {
+        return ObsDatum(obs_name, obs_params, obs_wires);
     }
 
-    std::vector<T> adj_jac(const StateVector<T> &psi,
-                           const vector<string> &observables,
-                           const vector<vector<size_t>> &obsWires,
-                           const vector<string> &operations,
-                           const vector<vector<size_t>> &opWires,
-                           const vector<bool> &opInverse,
-                           const vector<vector<T>> &opParams) {
-
-        const size_t num_observables = observables.size();
-        const size_t num_params = opParams.size();
-        const size_t num_elements = psi.getLength();
-
-        std::vector<T> jacobian(observables.size());
-        SVUnique<T> lambda(psi);
-        // std::cout << lambda << std::endl;
-
-        for (size_t op_idx = 0; op_idx < operations.size(); op_idx++) {
-            lambda.applyOperation(operations[op_idx], opWires[op_idx],
-                                  opInverse[op_idx], opParams[op_idx]);
-        }
-        std::vector<SVUnique<T>> H_lambda;
-
-        for (size_t h_i = 0; h_i < num_observables; h_i++) {
-            H_lambda.push_back(lambda);
-            H_lambda[h_i].applyOperation(observables[h_i], obsWires[h_i], false,
-                                         {});
-            // std::cout << H_lambda[h_i] << std::endl;
-        }
-
-        SVUnique<T> phi(lambda);
-        for (int op_idx = operations.size() - 1; op_idx >= 0; op_idx--) {
-            phi.applyOperation(operations[op_idx], opWires[op_idx],
-                               !opInverse[op_idx], opParams[op_idx]);
-            SVUnique<T> mu(phi);
-            generator_map.at(operations[op_idx])(mu, opWires[op_idx]);
-            const T scalingFactor = scaling_factors.at(operations[op_idx]);
-            for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
-                jacobian[obs_idx * operations.size() + obs_idx] =
-                    -2 * scalingFactor *
-                    std::imag(innerProdC(H_lambda[obs_idx].getData(),
-                                         mu.getData(), num_elements));
-                if (op_idx > 0) {
-                    H_lambda[obs_idx].applyOperation(
-                        operations[op_idx], opWires[op_idx], !opInverse[op_idx],
-                        opParams[op_idx]);
-                }
-            }
-        }
-        return jacobian;
+    const OpsData createOpsData(
+        const std::vector<std::string> &ops_name,
+        const std::vector<std::vector<T>> &ops_params,
+        const std::vector<std::vector<size_t>> &ops_wires,
+        const std::vector<bool> &ops_inverses,
+        const std::vector<std::vector<std::complex<T>>> &ops_matrices = {{}}) {
+        return OpsData(ops_name, ops_params, ops_wires, ops_inverses,
+                       ops_matrices);
     }
 
     void adjointJacobian(StateVector<T> &psi, std::vector<T> &jac,
-                         const std::vector<ObsData> observables,
-                         // const vector<vector<string>> &observables,
-                         // const vector<vector<T>> &obsParams,
-                         // const vector<vector<size_t>> &obsWires,
-                         const vector<string> &operations,
-                         const vector<vector<T>> &opParams,
-                         const vector<vector<size_t>> &opWires,
+                         const std::vector<ObsDatum> &observables,
+                         const OpsData &operations,
                          const vector<size_t> &trainableParams,
                          size_t num_params) {
 
@@ -292,8 +279,9 @@ template <class T = double> class AdjointJacobian {
         StateVector<T> SV_lambda(SV_lambda_data.get(), num_elements);
 
         // 2. Apply the unitaries (\hat{U}_{1:P}) to lambda
-        std::vector<bool> inverses(operations.size(), false);
-        SV_lambda.applyOperations(operations, opWires, inverses, opParams);
+        SV_lambda.applyOperations(
+            operations.getOpsName(), operations.getOpsWires(),
+            operations.getOpsInverses(), operations.getOpsParams());
 
         // 3-4. Copy lambda and apply the observables
         // SV_lambda becomes |phi>
@@ -321,14 +309,6 @@ template <class T = double> class AdjointJacobian {
                       lambdas_data[i].get());
 
             for (size_t j = 0; j < observables[i].getSize(); j++) {
-                // std::cout << "i=" << i << ", j=" << j << std::endl;
-                // std::cout << "observables[i].getObsName()[j]=" <<
-                // observables[i].getObsName()[j] << std::endl; std::cout <<
-                // "observables[i].getObsWires()[j]=" <<
-                // observables[i].getObsWires()[j][0] << std::endl; std::cout <<
-                // "observables[i].getObsParams()[j]=" <<
-                // observables[i].getObsParams()[j][0] << std::endl;
-
                 lambdas[i].applyOperation(observables[i].getObsName()[j],
                                           observables[i].getObsWires()[j],
                                           false,
@@ -337,14 +317,14 @@ template <class T = double> class AdjointJacobian {
         }
 
         // replace with reverse iterator over values?
-        for (int i = operations.size() - 1; i >= 0; i--) {
+        for (int i = operations.getOpsName().size() - 1; i >= 0; i--) {
 
-            if (opParams[i].size() > 1) {
+            if (operations.getOpsParams()[i].size() > 1) {
                 throw std::invalid_argument(
                     "The operation is not supported using "
                     "the adjoint differentiation method");
-            } else if ((operations[i] != "QubitStateVector") &&
-                       (operations[i] != "BasisState")) {
+            } else if ((operations.getOpsName()[i] != "QubitStateVector") &&
+                       (operations.getOpsName()[i] != "BasisState")) {
 
                 std::unique_ptr<std::complex<T>[]> mu_data(
                     new std::complex<T>[num_elements]);
@@ -354,11 +334,13 @@ template <class T = double> class AdjointJacobian {
                 StateVector<T> mu(mu_data.get(), num_elements);
 
                 // create |phi'> = Uj*|phi>
-                phi_1.applyOperation(operations[i], opWires[i], true,
-                                     opParams[i]);
+                phi_1.applyOperation(operations.getOpsName()[i],
+                                     operations.getOpsWires()[i],
+                                     !operations.getOpsInverses()[i],
+                                     operations.getOpsParams()[i]);
 
                 // We have a parametrized gate
-                if (!opParams[i].empty()) {
+                if (!operations.getOpsParams()[i].empty()) {
 
                     if (std::find(trainableParams.begin(),
                                   trainableParams.end(),
@@ -367,34 +349,17 @@ template <class T = double> class AdjointJacobian {
                         // create iH|phi> = d/d dUj/dtheta Uj* |phi> =
                         // dUj/dtheta|phi'>
                         const T scalingFactor =
-                            scaling_factors.at(operations[i]);
+                            scaling_factors.at(operations.getOpsName()[i]);
 
-                        generator_map.at(operations[i])(mu, opWires[i]);
-
-                        /*std::transform(
-                            mu_data.get(), mu_data.get() + num_elements,
-                            mu_data.get(),
-                            [](std::complex<T> c) -> std::complex<T> {
-                                return {-c.imag(), c.real()};
-                            });*/
-
+                        generator_map.at(operations.getOpsName()[i])(
+                            mu, operations.getOpsWires()[i]);
                         for (size_t j = 0; j < lambdas.size(); j++) {
 
                             std::complex<T> sum =
                                 innerProdC(lambdas[j].getData(), mu.getData(),
                                            num_elements);
-
-                            // calculate 2 * shift * Real(i * sum) = -2 * shift
-                            // * Imag(sum)
-                            // std::cout << "L[" << i << ", " << j
-                            //          << "]=" << lambdas[j] << std::endl;
-                            // std::cout << "mu[" << i << ", " << j << "]=" <<
-                            // mu
-                            //          << std::endl
-                            //          << std::endl;
                             jac[j * trainableParams.size() +
                                 trainableParamNumber] =
-                                //    2 * scalingFactor * std::real(sum);
                                 -2 * scalingFactor * std::imag(sum);
                         }
                         trainableParamNumber--;
@@ -403,11 +368,12 @@ template <class T = double> class AdjointJacobian {
                 }
 
                 for (size_t j = 0; j < lambdas.size(); j++) {
-                    lambdas[j].applyOperation(operations[i], opWires[i], true,
-                                              opParams[i]);
+                    lambdas[j].applyOperation(operations.getOpsName()[i],
+                                              operations.getOpsWires()[i],
+                                              !operations.getOpsInverses()[i],
+                                              operations.getOpsParams()[i]);
                 }
             }
-            /// missing else?
         }
     }
 };
@@ -539,3 +505,56 @@ template <class T = double> class AdjointJacobian {
         }
     }
     */
+
+/*
+ std::vector<T> adj_jac(const StateVector<T> &psi,
+                        const vector<string> &observables,
+                        const vector<vector<size_t>> &obsWires,
+                        const vector<string> &operations,
+                        const vector<vector<size_t>> &opWires,
+                        const vector<bool> &opInverse,
+                        const vector<vector<T>> &opParams) {
+
+     const size_t num_observables = observables.size();
+     const size_t num_params = opParams.size();
+     const size_t num_elements = psi.getLength();
+
+     std::vector<T> jacobian(observables.size());
+     SVUnique<T> lambda(psi);
+     // std::cout << lambda << std::endl;
+
+     for (size_t op_idx = 0; op_idx < operations.size(); op_idx++) {
+         lambda.applyOperation(operations[op_idx], opWires[op_idx],
+                               opInverse[op_idx], opParams[op_idx]);
+     }
+     std::vector<SVUnique<T>> H_lambda;
+
+     for (size_t h_i = 0; h_i < num_observables; h_i++) {
+         H_lambda.push_back(lambda);
+         H_lambda[h_i].applyOperation(observables[h_i], obsWires[h_i],
+false,
+                                      {});
+         // std::cout << H_lambda[h_i] << std::endl;
+     }
+
+     SVUnique<T> phi(lambda);
+     for (int op_idx = operations.size() - 1; op_idx >= 0; op_idx--) {
+         phi.applyOperation(operations[op_idx], opWires[op_idx],
+                            !opInverse[op_idx], opParams[op_idx]);
+         SVUnique<T> mu(phi);
+         generator_map.at(operations[op_idx])(mu, opWires[op_idx]);
+         const T scalingFactor = scaling_factors.at(operations[op_idx]);
+         for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
+             jacobian[obs_idx * operations.size() + obs_idx] =
+                 -2 * scalingFactor *
+                 std::imag(innerProdC(H_lambda[obs_idx].getData(),
+                                      mu.getData(), num_elements));
+             if (op_idx > 0) {
+                 H_lambda[obs_idx].applyOperation(
+                     operations[op_idx], opWires[op_idx],
+!opInverse[op_idx], opParams[op_idx]);
+             }
+         }
+     }
+     return jacobian;
+ }*/
