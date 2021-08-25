@@ -55,7 +55,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
             StateVector<double> psi(cdata.data(), cdata.size());
             cdata[0] = std::complex<double>{1, 0};
 
-            adj.adjointJacobian(psi, jacobian, {obs}, ops, {0}, 1);
+            adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian, {obs},
+                                ops, {0}, 1);
             CAPTURE(jacobian);
             CHECK(-sin(p) == Approx(jacobian.front()));
         }
@@ -77,7 +78,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
             StateVector<double> psi(cdata.data(), cdata.size());
             cdata[0] = std::complex<double>{1, 0};
 
-            adj.adjointJacobian(psi, jacobian, {obs}, ops, {0}, 1);
+            adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian, {obs},
+                                ops, {0}, 1);
 
             CAPTURE(jacobian);
             CHECK(cos(p) == Approx(jacobian.front()).margin(1e-7));
@@ -99,8 +101,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
 
         auto ops = adj.createOpsData({"RX"}, {{param[0]}}, {{0}}, {false});
 
-        adj.adjointJacobian(psi, jacobian, {obs1, obs2, obs3}, ops, {0},
-                            num_params);
+        adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian,
+                            {obs1, obs2, obs3}, ops, {0}, num_params);
 
         CAPTURE(jacobian);
         CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
@@ -123,8 +125,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
                                      {{param[0]}, {param[1]}, {param[2]}},
                                      {{0}, {1}, {2}}, {false, false, false});
 
-        adj.adjointJacobian(psi, jacobian, {obs1, obs2, obs3}, ops, {0, 1, 2},
-                            num_params);
+        adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian,
+                            {obs1, obs2, obs3}, ops, {0, 1, 2}, num_params);
 
         CAPTURE(jacobian);
         CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
@@ -145,7 +147,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
                                      {{param[0]}, {param[1]}, {param[2]}},
                                      {{0}, {1}, {2}}, {false, false, false});
 
-        adj.adjointJacobian(psi, jacobian, {obs}, ops, {0, 1, 2}, num_params);
+        adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian, {obs},
+                            ops, {0, 1, 2}, num_params);
         CAPTURE(jacobian);
         for (size_t i = 0; i < num_params; i++) {
             CHECK(-sin(param[i]) ==

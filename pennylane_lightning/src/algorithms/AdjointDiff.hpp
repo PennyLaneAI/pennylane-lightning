@@ -161,6 +161,65 @@ void applyGeneratorControlledPhaseShift(Pennylane::StateVector<T> &sv,
 namespace Pennylane {
 namespace Algorithms {
 
+/**
+ * @brief Utility struct for a observable operations used by AdjointJacobian
+ * class.
+ *
+ */
+template <class T = double> struct ObsDatum {
+    const std::vector<std::string> obs_name_;
+    const std::vector<std::vector<T>> obs_params_;
+    const std::vector<std::vector<size_t>> obs_wires_;
+    ObsDatum(const std::vector<std::string> &obs_name,
+             const std::vector<std::vector<T>> &obs_params,
+             const std::vector<std::vector<size_t>> &obs_wires)
+        : obs_name_{obs_name}, obs_params_{obs_params}, obs_wires_{
+                                                            obs_wires} {};
+    size_t getSize() const { return obs_name_.size(); }
+    const std::vector<std::string> &getObsName() const { return obs_name_; }
+    const std::vector<std::vector<T>> &getObsParams() const {
+        return obs_params_;
+    }
+    const std::vector<std::vector<size_t>> &getObsWires() const {
+        return obs_wires_;
+    }
+};
+
+/**
+ * @brief Utility class for encapsulating operations used by AdjointJacobian
+ * class.
+ *
+ */
+template <class T> struct OpsData {
+    const std::vector<std::string> ops_name_;
+    const std::vector<std::vector<T>> ops_params_;
+    const std::vector<std::vector<size_t>> ops_wires_;
+    const std::vector<bool> ops_inverses_;
+    const std::vector<std::vector<std::complex<T>>> ops_matrices_;
+
+    OpsData(
+        const std::vector<std::string> &ops_name,
+        const std::vector<std::vector<T>> &ops_params,
+        const std::vector<std::vector<size_t>> &ops_wires,
+        const std::vector<bool> &ops_inverses,
+        const std::vector<std::vector<std::complex<T>>> &ops_matrices = {{}})
+        : ops_name_{ops_name}, ops_params_{ops_params}, ops_wires_{ops_wires},
+          ops_inverses_{ops_inverses}, ops_matrices_{ops_matrices} {};
+
+    size_t getSize() const { return ops_name_.size(); }
+    const std::vector<std::string> &getOpsName() const { return ops_name_; }
+    const std::vector<std::vector<T>> &getOpsParams() const {
+        return ops_params_;
+    }
+    const std::vector<std::vector<size_t>> &getOpsWires() const {
+        return ops_wires_;
+    }
+    const std::vector<bool> &getOpsInverses() const { return ops_inverses_; }
+    const std::vector<std::vector<std::complex<T>>> &getOpsMatrices() const {
+        return ops_matrices_;
+    }
+};
+
 template <class T = double> class AdjointJacobian {
   private:
     typedef void (*GeneratorFunc)(
@@ -183,85 +242,30 @@ template <class T = double> class AdjointJacobian {
         {"CRX", -0.5}, {"CRY", -0.5},
         {"CRZ", -0.5}, {"ControlledPhaseShift", 1}};
 
-    /**
-     * @brief Utility struct for a observable operations
-     *
-     */
-    struct ObsDatum {
-        const std::vector<std::string> obs_name_;
-        const std::vector<std::vector<T>> obs_params_;
-        const std::vector<std::vector<size_t>> obs_wires_;
-        ObsDatum(const std::vector<std::string> &obs_name,
-                 const std::vector<std::vector<T>> &obs_params,
-                 const std::vector<std::vector<size_t>> &obs_wires)
-            : obs_name_{obs_name}, obs_params_{obs_params}, obs_wires_{
-                                                                obs_wires} {};
-        size_t getSize() const { return obs_name_.size(); }
-        const std::vector<std::string> &getObsName() const { return obs_name_; }
-        const std::vector<std::vector<T>> &getObsParams() const {
-            return obs_params_;
-        }
-        const std::vector<std::vector<size_t>> &getObsWires() const {
-            return obs_wires_;
-        }
-    };
-    struct OpsData {
-        const std::vector<std::string> ops_name_;
-        const std::vector<std::vector<T>> ops_params_;
-        const std::vector<std::vector<size_t>> ops_wires_;
-        const std::vector<bool> ops_inverses_;
-        const std::vector<std::vector<std::complex<T>>> ops_matrices_;
-
-        OpsData(const std::vector<std::string> &ops_name,
-                const std::vector<std::vector<T>> &ops_params,
-                const std::vector<std::vector<size_t>> &ops_wires,
-                const std::vector<bool> &ops_inverses,
-                const std::vector<std::vector<std::complex<T>>> &ops_matrices =
-                    {{}})
-            : ops_name_{ops_name}, ops_params_{ops_params},
-              ops_wires_{ops_wires}, ops_inverses_{ops_inverses},
-              ops_matrices_{ops_matrices} {};
-
-        size_t getSize() const { return ops_name_.size(); }
-        const std::vector<std::string> &getOpsName() const { return ops_name_; }
-        const std::vector<std::vector<T>> &getOpsParams() const {
-            return ops_params_;
-        }
-        const std::vector<std::vector<size_t>> &getOpsWires() const {
-            return ops_wires_;
-        }
-        const std::vector<bool> &getOpsInverses() const {
-            return ops_inverses_;
-        }
-        const std::vector<std::vector<std::complex<T>>> &
-        getOpsMatrices() const {
-            return ops_matrices_;
-        }
-    };
-
   public:
     AdjointJacobian() {}
 
-    const ObsDatum
+    const ObsDatum<T>
     createObs(const std::vector<std::string> &obs_name,
               const std::vector<std::vector<T>> &obs_params,
               const std::vector<std::vector<size_t>> &obs_wires) {
-        return ObsDatum(obs_name, obs_params, obs_wires);
+        return ObsDatum<T>(obs_name, obs_params, obs_wires);
     }
 
-    const OpsData createOpsData(
+    const OpsData<T> createOpsData(
         const std::vector<std::string> &ops_name,
         const std::vector<std::vector<T>> &ops_params,
         const std::vector<std::vector<size_t>> &ops_wires,
         const std::vector<bool> &ops_inverses,
         const std::vector<std::vector<std::complex<T>>> &ops_matrices = {{}}) {
-        return OpsData(ops_name, ops_params, ops_wires, ops_inverses,
-                       ops_matrices);
+        return OpsData<T>(ops_name, ops_params, ops_wires, ops_inverses,
+                          ops_matrices);
     }
 
-    void adjointJacobian(StateVector<T> &psi, std::vector<T> &jac,
-                         const std::vector<ObsDatum> &observables,
-                         const OpsData &operations,
+    void adjointJacobian(const std::complex<T> *psi, size_t num_elements,
+                         std::vector<T> &jac,
+                         const std::vector<ObsDatum<T>> &observables,
+                         const OpsData<T> &operations,
                          const vector<size_t> &trainableParams,
                          size_t num_params) {
 
@@ -269,13 +273,10 @@ template <class T = double> class AdjointJacobian {
         int trainableParamNumber = trainableParams.size() - 1;
         int current_param_idx = num_params - 1;
 
-        const size_t num_elements = psi.getLength();
-
         // 1. Copy the input state, create lambda
         std::unique_ptr<std::complex<T>[]> SV_lambda_data(
             new std::complex<T>[num_elements]);
-        std::copy(psi.getData(), psi.getData() + num_elements,
-                  SV_lambda_data.get());
+        std::copy(psi, psi + num_elements, SV_lambda_data.get());
         StateVector<T> SV_lambda(SV_lambda_data.get(), num_elements);
 
         // 2. Apply the unitaries (\hat{U}_{1:P}) to lambda
