@@ -19,50 +19,6 @@ namespace {
 
 using namespace Pennylane::Util;
 
-template <class fp_t = double>
-class SVUnique : public Pennylane::StateVector<fp_t> {
-  private:
-    std::unique_ptr<std::complex<fp_t>> arr_;
-    size_t length_;
-    size_t num_qubits_;
-
-  public:
-    SVUnique(size_t data_size)
-        : arr_{new std::complex<fp_t>[data_size]}, length_{data_size},
-          num_qubits_{log2(length_)}, Pennylane::StateVector<fp_t>{arr_.get(),
-                                                                   data_size} {}
-
-    SVUnique(const Pennylane::StateVector<fp_t> &sv)
-        : SVUnique(sv.getLength()) {
-        std::copy(sv.getData(), sv.getData() + sv.getLength(), arr_.get());
-        length_ = sv.getLength();
-        num_qubits_ = sv.getNumQubits();
-    };
-
-    SVUnique(const SVUnique<fp_t> &sv) : SVUnique(sv.getLength()) {
-        std::copy(sv.getData(), sv.getData() + sv.getLength(), arr_.get());
-    };
-
-    std::complex<fp_t> *getData() { return arr_.get(); }
-    std::complex<fp_t> *getData() const { return arr_.get(); }
-};
-
-template <class T>
-inline std::ostream &operator<<(std::ostream &out, const SVUnique<T> &sv) {
-    const size_t num_qubits = sv.getNumQubits();
-    const size_t length = sv.getLength();
-    const auto data_ptr = sv.getData();
-    out << "num_qubits=" << num_qubits << std::endl;
-    out << "data=[";
-    out << data_ptr[0];
-    for (size_t i = 1; i < length - 1; i++) {
-        out << "," << data_ptr[i];
-    }
-    out << "," << data_ptr[length - 1] << "]";
-
-    return out;
-}
-
 template <class T> static constexpr std::vector<std::complex<T>> getP00() {
     return {ONE<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>()};
 }
@@ -508,6 +464,51 @@ template <class T = double> class AdjointJacobian {
     */
 
 /*
+
+template <class fp_t = double>
+class SVUnique : public Pennylane::StateVector<fp_t> {
+  private:
+    std::unique_ptr<std::complex<fp_t>> arr_;
+    size_t length_;
+    size_t num_qubits_;
+
+  public:
+    SVUnique(size_t data_size)
+        : arr_{new std::complex<fp_t>[data_size]}, length_{data_size},
+          num_qubits_{log2(length_)}, Pennylane::StateVector<fp_t>{arr_.get(),
+                                                                   data_size} {}
+
+    SVUnique(const Pennylane::StateVector<fp_t> &sv)
+        : SVUnique(sv.getLength()) {
+        std::copy(sv.getData(), sv.getData() + sv.getLength(), arr_.get());
+        length_ = sv.getLength();
+        num_qubits_ = sv.getNumQubits();
+    };
+
+    SVUnique(const SVUnique<fp_t> &sv) : SVUnique(sv.getLength()) {
+        std::copy(sv.getData(), sv.getData() + sv.getLength(), arr_.get());
+    };
+
+    std::complex<fp_t> *getData() { return arr_.get(); }
+    std::complex<fp_t> *getData() const { return arr_.get(); }
+};
+
+template <class T>
+inline std::ostream &operator<<(std::ostream &out, const SVUnique<T> &sv) {
+    const size_t num_qubits = sv.getNumQubits();
+    const size_t length = sv.getLength();
+    const auto data_ptr = sv.getData();
+    out << "num_qubits=" << num_qubits << std::endl;
+    out << "data=[";
+    out << data_ptr[0];
+    for (size_t i = 1; i < length - 1; i++) {
+        out << "," << data_ptr[i];
+    }
+    out << "," << data_ptr[length - 1] << "]";
+
+    return out;
+}
+
  std::vector<T> adj_jac(const StateVector<T> &psi,
                         const vector<string> &observables,
                         const vector<vector<size_t>> &obsWires,
