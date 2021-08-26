@@ -19,7 +19,7 @@
 #pragma once
 
 // Required for compilation with MSVC
-#define _USE_MATH_DEFINES 
+#define _USE_MATH_DEFINES // for C++
 
 #include <cmath>
 #include <complex>
@@ -29,6 +29,8 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+#include <iostream>
 
 #include "Gates.hpp"
 #include "Util.hpp"
@@ -196,6 +198,21 @@ template <class fp_t = double> class StateVector {
                 std::to_string(gate_wires_.at(opName)) + " wires, but " +
                 std::to_string(wires.size()) + " were supplied");
 
+        std::cout << "[SVADDR::" << arr_ << "]";
+        std::cout << "[GATE_CALL::" << opName << "][WIRES::";
+        for (auto &w : wires) {
+            std::cout << w << ",";
+        }
+        std::cout << "][INVERT::" << inverse << "][PARAMS::";
+        if (!params.empty()) {
+            for (auto &p : params) {
+                std::cout << p << ",";
+            }
+        } else {
+            std::cout << "EMPTY";
+        }
+        std::cout << "]" << std::endl;
+
         const vector<size_t> internalIndices = generateBitPatterns(wires);
         const vector<size_t> externalWires = getIndicesAfterExclusion(wires);
         const vector<size_t> externalIndices =
@@ -215,7 +232,6 @@ template <class fp_t = double> class StateVector {
     void applyOperation(const std::vector<CFP_t> &matrix,
                         const vector<size_t> &wires, bool inverse = false,
                         [[maybe_unused]] const vector<fp_t> &params = {}) {
-
         auto dim = Util::dimSize(matrix);
 
         if (dim != wires.size())
@@ -572,10 +588,11 @@ template <class fp_t = double> class StateVector {
     void applyRX(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
                  Param_t angle) {
-        const CFP_t c(std::cos(angle / 2), 0);
 
-        const CFP_t js = (inverse == true) ? CFP_t(0, -std::sin(-angle / 2))
-                                           : CFP_t(0, std::sin(-angle / 2));
+        const Param_t angle_ = (inverse == true) ? -angle : angle;
+        const CFP_t c(std::cos(angle_ / 2), 0);
+
+        const CFP_t js(0, -std::sin(angle_ / 2));
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;

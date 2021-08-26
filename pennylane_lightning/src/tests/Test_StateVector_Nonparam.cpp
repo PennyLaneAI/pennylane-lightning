@@ -183,7 +183,7 @@ TEMPLATE_TEST_CASE("StateVector::applyHadamard", "[StateVector_Nonparam]",
             CHECK(svdat.cdata[0] == cp_t{1, 0});
             svdat.sv.applyHadamard(int_idx, ext_idx, false);
 
-            cp_t expected = {1 / std::sqrt(2), 0};
+            cp_t expected = (1 / std::sqrt(2), 0);
             CHECK(expected.real() == Approx(svdat.cdata[0].real()));
             CHECK(expected.imag() == Approx(svdat.cdata[0].imag()));
 
@@ -203,7 +203,7 @@ TEMPLATE_TEST_CASE("StateVector::applyHadamard", "[StateVector_Nonparam]",
             CHECK(svdat.cdata[0] == cp_t{1, 0});
             svdat.sv.applyOperation("Hadamard", {index}, false);
 
-            cp_t expected = {1 / std::sqrt(2), 0};
+            cp_t expected = (1 / std::sqrt(2), 0);
 
             CHECK(expected.real() == Approx(svdat.cdata[0].real()));
             CHECK(expected.imag() == Approx(svdat.cdata[0].imag()));
@@ -379,8 +379,8 @@ TEMPLATE_TEST_CASE("StateVector::applyT", "[StateVector_Nonparam]", float,
     svdat.sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                              {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
-    cp_t r = {1 / (2 * std::sqrt(2)), 0};
-    cp_t i = {1.0 / 4, 1.0 / 4};
+    cp_t r = (1 / (2 * std::sqrt(2)), 0);
+    cp_t i = (1.0 / 4, 1.0 / 4);
 
     const std::vector<std::vector<cp_t>> expected_results = {
         {r, r, r, r, i, i, i, i},
@@ -467,8 +467,8 @@ TEMPLATE_TEST_CASE("StateVector::applySWAP", "[StateVector_Nonparam]", float,
             std::vector<cp_t> expected{
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-                {1 / sqrt(2), 0},       Util::ZERO<TestType>(),
-                {1 / sqrt(2), 0},       Util::ZERO<TestType>()};
+                (1 / sqrt(2), 0),       Util::ZERO<TestType>(),
+                (1 / sqrt(2), 0),       Util::ZERO<TestType>()};
 
             SVData<TestType> svdat01{num_qubits, init_state};
             SVData<TestType> svdat10{num_qubits, init_state};
@@ -485,7 +485,7 @@ TEMPLATE_TEST_CASE("StateVector::applySWAP", "[StateVector_Nonparam]", float,
         SECTION("SWAP0,2 |+10> -> |01+>") {
             std::vector<cp_t> expected{
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-                {1 / sqrt(2), 0},       {1 / sqrt(2), 0},
+                (1 / sqrt(2), 0),       (1 / sqrt(2), 0),
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
                 Util::ZERO<TestType>(), Util::ZERO<TestType>()};
 
@@ -501,9 +501,9 @@ TEMPLATE_TEST_CASE("StateVector::applySWAP", "[StateVector_Nonparam]", float,
         }
         SECTION("SWAP1,2 |+10> -> |+01>") {
             std::vector<cp_t> expected{
-                Util::ZERO<TestType>(), {1 / sqrt(2), 0},
+                Util::ZERO<TestType>(), (1 / sqrt(2), 0),
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-                Util::ZERO<TestType>(), {1 / sqrt(2), 0},
+                Util::ZERO<TestType>(), (1 / sqrt(2), 0),
                 Util::ZERO<TestType>(), Util::ZERO<TestType>()};
 
             SVData<TestType> svdat12{num_qubits, init_state};
@@ -522,8 +522,8 @@ TEMPLATE_TEST_CASE("StateVector::applySWAP", "[StateVector_Nonparam]", float,
             std::vector<cp_t> expected{
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-                {1 / sqrt(2), 0},       Util::ZERO<TestType>(),
-                {1 / sqrt(2), 0},       Util::ZERO<TestType>()};
+                (1 / sqrt(2), 0),       Util::ZERO<TestType>(),
+                (1 / sqrt(2), 0),       Util::ZERO<TestType>()};
 
             SVData<TestType> svdat01{num_qubits, init_state};
             SVData<TestType> svdat10{num_qubits, init_state};
@@ -538,7 +538,7 @@ TEMPLATE_TEST_CASE("StateVector::applySWAP", "[StateVector_Nonparam]", float,
         SECTION("SWAP0,2 |+10> -> |01+>") {
             std::vector<cp_t> expected{
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-                {1 / sqrt(2), 0},       {1 / sqrt(2), 0},
+                (1 / sqrt(2), 0),       (1 / sqrt(2), 0),
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
                 Util::ZERO<TestType>(), Util::ZERO<TestType>()};
 
@@ -553,9 +553,9 @@ TEMPLATE_TEST_CASE("StateVector::applySWAP", "[StateVector_Nonparam]", float,
         }
         SECTION("SWAP1,2 |+10> -> |+01>") {
             std::vector<cp_t> expected{
-                Util::ZERO<TestType>(), {1 / sqrt(2), 0},
+                Util::ZERO<TestType>(), (1 / sqrt(2), 0),
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-                Util::ZERO<TestType>(), {1 / sqrt(2), 0},
+                Util::ZERO<TestType>(), (1 / sqrt(2), 0),
                 Util::ZERO<TestType>(), Util::ZERO<TestType>()};
 
             SVData<TestType> svdat12{num_qubits, init_state};
@@ -582,21 +582,18 @@ TEMPLATE_TEST_CASE("StateVector::applyCZ", "[StateVector_Nonparam]", float,
     const auto init_state = svdat.cdata;
 
     SECTION("Apply directly") {
-        CHECK(svdat.cdata == std::vector<cp_t>{Util::ZERO<TestType>(),
-                                               Util::ZERO<TestType>(),
-                                               {1 / sqrt(2), 0},
-                                               Util::ZERO<TestType>(),
-                                               Util::ZERO<TestType>(),
-                                               Util::ZERO<TestType>(),
-                                               {1 / sqrt(2), 0},
-                                               Util::ZERO<TestType>()});
+        CHECK(svdat.cdata ==
+              std::vector<cp_t>{Util::ZERO<TestType>(), Util::ZERO<TestType>(),
+                                (1 / sqrt(2), 0), Util::ZERO<TestType>(),
+                                Util::ZERO<TestType>(), Util::ZERO<TestType>(),
+                                (1 / sqrt(2), 0), Util::ZERO<TestType>()});
 
         SECTION("CZ0,1 |+10> -> |-10>") {
             std::vector<cp_t> expected{
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-                {1 / sqrt(2), 0},       Util::ZERO<TestType>(),
+                (1 / sqrt(2), 0),       Util::ZERO<TestType>(),
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-                {-1 / sqrt(2), 0},      Util::ZERO<TestType>()};
+                (-1 / sqrt(2), 0),      Util::ZERO<TestType>()};
 
             SVData<TestType> svdat01{num_qubits, init_state};
             SVData<TestType> svdat10{num_qubits, init_state};
@@ -642,9 +639,9 @@ TEMPLATE_TEST_CASE("StateVector::applyCZ", "[StateVector_Nonparam]", float,
         SECTION("CZ0,1 |+10> -> |1+0>") {
             std::vector<cp_t> expected{
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-                {1 / sqrt(2), 0},       Util::ZERO<TestType>(),
+                (1 / sqrt(2), 0),       Util::ZERO<TestType>(),
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-                {-1 / sqrt(2), 0},      Util::ZERO<TestType>()};
+                (-1 / sqrt(2), 0),      Util::ZERO<TestType>()};
 
             SVData<TestType> svdat01{num_qubits, init_state};
             SVData<TestType> svdat10{num_qubits, init_state};
@@ -673,9 +670,9 @@ TEMPLATE_TEST_CASE("StateVector::applyToffoli", "[StateVector_Nonparam]", float,
         SECTION("Toffoli 0,1,2 |+10> -> |010> + |111>") {
             std::vector<cp_t> expected{
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-                {1 / sqrt(2), 0},       Util::ZERO<TestType>(),
+                (1 / sqrt(2), 0),       Util::ZERO<TestType>(),
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-                Util::ZERO<TestType>(), {1 / sqrt(2), 0}};
+                Util::ZERO<TestType>(), (1 / sqrt(2), 0)};
 
             SVData<TestType> svdat012{num_qubits, init_state};
 
@@ -689,9 +686,9 @@ TEMPLATE_TEST_CASE("StateVector::applyToffoli", "[StateVector_Nonparam]", float,
         SECTION("Toffoli 1,0,2 |+10> -> |010> + |111>") {
             std::vector<cp_t> expected{
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-                {1 / sqrt(2), 0},       Util::ZERO<TestType>(),
+                (1 / sqrt(2), 0),       Util::ZERO<TestType>(),
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-                Util::ZERO<TestType>(), {1 / sqrt(2), 0}};
+                Util::ZERO<TestType>(), (1 / sqrt(2), 0)};
 
             SVData<TestType> svdat102{num_qubits, init_state};
 
@@ -728,9 +725,9 @@ TEMPLATE_TEST_CASE("StateVector::applyToffoli", "[StateVector_Nonparam]", float,
         SECTION("Toffoli [0,1,2], [1,0,2] |+10> -> |+1+>") {
             std::vector<cp_t> expected{
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-                {1 / sqrt(2), 0},       Util::ZERO<TestType>(),
+                (1 / sqrt(2), 0),       Util::ZERO<TestType>(),
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-                Util::ZERO<TestType>(), {1 / sqrt(2), 0}};
+                Util::ZERO<TestType>(), (1 / sqrt(2), 0)};
 
             SVData<TestType> svdat012{num_qubits, init_state};
             SVData<TestType> svdat102{num_qubits, init_state};
@@ -759,8 +756,8 @@ TEMPLATE_TEST_CASE("StateVector::applyCSWAP", "[StateVector_Nonparam]", float,
         SECTION("CSWAP 0,1,2 |+10> -> |010> + |101>") {
             std::vector<cp_t> expected{
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-                {1 / sqrt(2), 0},       Util::ZERO<TestType>(),
-                Util::ZERO<TestType>(), {1 / sqrt(2), 0},
+                (1 / sqrt(2), 0),       Util::ZERO<TestType>(),
+                Util::ZERO<TestType>(), (1 / sqrt(2), 0),
                 Util::ZERO<TestType>(), Util::ZERO<TestType>()};
             SVData<TestType> svdat012{num_qubits, init_state};
 
@@ -773,7 +770,7 @@ TEMPLATE_TEST_CASE("StateVector::applyCSWAP", "[StateVector_Nonparam]", float,
         SECTION("CSWAP 1,0,2 |+10> -> |01+>") {
             std::vector<cp_t> expected{
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-                {1 / sqrt(2), 0},       {1 / sqrt(2), 0},
+                (1 / sqrt(2), 0),       (1 / sqrt(2), 0),
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
                 Util::ZERO<TestType>(), Util::ZERO<TestType>()};
 
@@ -799,8 +796,8 @@ TEMPLATE_TEST_CASE("StateVector::applyCSWAP", "[StateVector_Nonparam]", float,
         SECTION("CSWAP 0,1,2 |+10> -> |010> + |101>") {
             std::vector<cp_t> expected{
                 Util::ZERO<TestType>(), Util::ZERO<TestType>(),
-                {1 / sqrt(2), 0},       Util::ZERO<TestType>(),
-                Util::ZERO<TestType>(), {1 / sqrt(2), 0},
+                (1 / sqrt(2), 0),       Util::ZERO<TestType>(),
+                Util::ZERO<TestType>(), (1 / sqrt(2), 0),
                 Util::ZERO<TestType>(), Util::ZERO<TestType>()};
             SVData<TestType> svdat012{num_qubits, init_state};
 
