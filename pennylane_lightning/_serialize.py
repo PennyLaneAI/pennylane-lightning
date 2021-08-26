@@ -23,7 +23,7 @@ from pennylane.operation import Observable, Tensor
 from pennylane.tape import QuantumTape
 
 try:
-    from .lightning_qubit_ops import StateVectorC128, ObsStructC128
+    from .lightning_qubit_ops import StateVectorC128
 except ImportError:
     pass
 
@@ -48,7 +48,7 @@ def _obs_has_kernel(obs: Observable) -> bool:
 
 def _serialize_obs(
     tape: QuantumTape, wires_map: dict
-) -> List[ObsStructC128]:
+) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]]]:
     """Serializes the observables of an input tape.
 
     Args:
@@ -56,18 +56,21 @@ def _serialize_obs(
         wires_map (dict): a dictionary mapping input wires to the device's backend wires
 
     Returns:
-        list(ObsStructC128): A list of observable objects compatible with the C++ backend
+        Tuple[list, list, list]: A serialization of the observables, containing a list of observable
+        names, a list of observable parameters for the observables that do not have a dedicated
+        kernel, and a list of observable wires.
     """
-    obs = []
+    names = []
+    params = []
+    wires = []
 
     for o in tape.observables:
         is_tensor = isinstance(o, Tensor)
 
         wires_list = o.wires.tolist()
-        wires = [wires_map[w] for w in wires_list]
+        wires.append([wires_map[w] for w in wires_list])
         name = o.name if is_tensor else [o.name]
-
-        params = []
+        names.append(name)
 
         if not _obs_has_kernel(o):
             if is_tensor:
@@ -77,10 +80,7 @@ def _serialize_obs(
             else:
                 params.append(o.matrix)
 
-        ob = ObsStructC128(name, params, [wires])
-        obs.append(ob)
-
-    return obs
+    return names, params, wires
 
 
 def _serialize_ops(
