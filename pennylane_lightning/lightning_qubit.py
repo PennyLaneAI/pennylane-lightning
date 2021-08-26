@@ -161,15 +161,16 @@ class LightningQubit(DefaultQubit):
 
         # TODO: How to accommodate for tensor product observables?
         adj = AdjointJacobianC128()
+        jac = np.zeros((len(tape.observables), len(tape.trainable_params)))
 
         obs_serialized = _serialize_obs(tape, self.wire_map)
         ops_serialized = _serialize_ops(tape, self.wire_map)
 
         ops_serialized = adj.create_ops_list(*ops_serialized)
 
-        # jac = adj.adjoint_jacobian(
-        #     *obs_serialized, *ops_serialized, tape.trainable_params, tape.num_params
-        # )
+        adj.adjoint_jacobian(
+            jac, ket, obs_serialized, ops_serialized, tape.trainable_params, tape.num_params
+        )
 
         return super().adjoint_jacobian(tape, starting_state, use_device_state)
 
