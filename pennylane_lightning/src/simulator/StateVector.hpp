@@ -19,7 +19,7 @@
 #pragma once
 
 // Required for compilation with MSVC
-#define _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES // for C++
 
 #include <cmath>
 #include <complex>
@@ -30,9 +30,12 @@
 #include <utility>
 #include <vector>
 
+#include <iostream>
+
 #include "Gates.hpp"
 #include "Util.hpp"
 
+/// @cond DEV
 namespace {
 using namespace std::placeholders;
 using std::bind;
@@ -40,12 +43,34 @@ using std::size_t;
 using std::string;
 using std::vector;
 }; // namespace
+/// @endcond
 
 namespace Pennylane {
 
+/**
+ * @brief State-vector operations class.
+ *
+ * This class binds to a given statevector data array, and defines all
+ * operations to manipulate the statevector data for quantum circuit simulation.
+ * We define gates as methods to allow direct manipulation of the bound data, as
+ * well as through a string-based function dispatch. The bound data is assumed
+ * to be complex, and is required to be in either 32-bit (64-bit
+ * `complex<float>`) or 64-bit (128-bit `complex<double>`) floating point
+ * representation.
+ *
+ * @tparam fp_t Floating point precision of underlying statevector data.
+ */
 template <class fp_t = double> class StateVector {
   private:
     using CFP_t = std::complex<fp_t>;
+
+    /***********************************************************************
+     *
+     * @brief The function dispatching implementation allow the gates to be
+     *called directly using a string representation of their names. This enables
+     *simplifcation of the call process from Python.
+     *
+     ***********************************************************************/
 
     using Func =
         std::function<void(const vector<size_t> &, const vector<size_t> &, bool,
@@ -56,6 +81,8 @@ template <class fp_t = double> class StateVector {
     const FMap gates_;
     const std::unordered_map<string, size_t> gate_wires_;
 
+    //***********************************************************************//
+
     CFP_t *const arr_;
     const size_t length_;
     const size_t num_qubits_;
@@ -63,9 +90,19 @@ template <class fp_t = double> class StateVector {
   public:
     StateVector()
         : arr_{nullptr}, length_{0}, num_qubits_{0}, gate_wires_{}, gates_{} {};
+
+    /**
+     * @brief Construct a new `%StateVector` object from a given complex data
+     * array.
+     *
+     * @param arr Pointer to the complex data array.
+     * @param length Number of elements in complex data array. Must be
+     * power-of-2 (qubits only).
+     */
     StateVector(CFP_t *arr, size_t length)
         : arr_{arr}, length_{length}, num_qubits_{Util::log2(length_)},
           gate_wires_{
+              // Add mapping from function name to required wires.
               {"PauliX", 1},   {"PauliY", 1},     {"PauliZ", 1},
               {"Hadamard", 1}, {"T", 1},          {"S", 1},
               {"RX", 1},       {"RY", 1},         {"RZ", 1},
@@ -74,6 +111,10 @@ template <class fp_t = double> class StateVector {
               {"CRX", 2},      {"CRY", 2},        {"CRZ", 2},
               {"CRot", 2},     {"CSWAP", 3},      {"Toffoli", 3}},
           gates_{
+              // Add mapping from function name to generalised signature for
+              // dispatch. Methods exist with the same signatures to simplify
+              // dispatch. Non-parametric gate-calls will ignore the parameter
+              // arguments if unused.
               {"PauliX",
                bind(&StateVector<fp_t>::applyPauliX_, this, _1, _2, _3, _4)},
               {"PauliY",
@@ -112,8 +153,32 @@ template <class fp_t = double> class StateVector {
               {"CRot",
                bind(&StateVector<fp_t>::applyCRot_, this, _1, _2, _3, _4)}} {};
 
+    /**
+     * @brief Get the underlying data pointer.
+     *
+     * @return const CFP_t* Pointer to statevector data.
+     */
     CFP_t *getData() const { return arr_; }
+
+    /**
+     * @brief Get the underlying data pointer.
+     *
+     * @return CFP_t* Pointer to statevector data.
+     */
+    CFP_t *getData() { return arr_; }
+
+    /**
+     * @brief Get the number of data elements in the statevector array.
+     *
+     * @return std::size_t
+     */
     std::size_t getLength() const { return length_; }
+
+    /**
+     * @brief Get the number of qubits represented by the statevector data.
+     *
+     * @return std::size_t
+     */
     std::size_t getNumQubits() const { return num_qubits_; }
 
     /**
@@ -132,6 +197,21 @@ template <class fp_t = double> class StateVector {
                 string("The gate of type ") + opName + " requires " +
                 std::to_string(gate_wires_.at(opName)) + " wires, but " +
                 std::to_string(wires.size()) + " were supplied");
+
+        std::cout << "[SVADDR::" << arr_ << "]";
+        std::cout << "[GATE_CALL::" << opName << "][WIRES::";
+        for (auto &w : wires) {
+            std::cout << w << ",";
+        }
+        std::cout << "][INVERT::" << inverse << "][PARAMS::";
+        if (!params.empty()) {
+            for (auto &p : params) {
+                std::cout << p << ",";
+            }
+        } else {
+            std::cout << "EMPTY";
+        }
+        std::cout << "]" << std::endl;
 
         const vector<size_t> internalIndices = generateBitPatterns(wires);
         const vector<size_t> externalWires = getIndicesAfterExclusion(wires);
@@ -152,7 +232,6 @@ template <class fp_t = double> class StateVector {
     void applyOperation(const std::vector<CFP_t> &matrix,
                         const vector<size_t> &wires, bool inverse = false,
                         [[maybe_unused]] const vector<fp_t> &params = {}) {
-
         auto dim = Util::dimSize(matrix);
 
         if (dim != wires.size())
@@ -197,7 +276,6 @@ template <class fp_t = double> class StateVector {
      * @param ops Vector of gate names to be applied in order.
      * @param wires Vector of wires on which to apply index-matched gate name.
      * @param inverse Indicates whether gate at matched index is to be inverted.
-     * @param params Optional parameter data for index matched gates.
      */
     void applyOperations(const vector<string> &ops,
                          const vector<vector<size_t>> &wires,
@@ -214,9 +292,11 @@ template <class fp_t = double> class StateVector {
     }
 
     /**
-     * @brief Get indices not participating in operation.
+     * @brief Get indices of statevector data not participating in application
+     * operation.
      *
-     * @param indicesToExclude
+     * @param indicesToExclude Indices to exclude from this call.
+     * @param num_qubits Total number of qubits for statevector.
      * @return vector<size_t>
      */
     vector<size_t> static getIndicesAfterExclusion(
@@ -230,15 +310,26 @@ template <class fp_t = double> class StateVector {
         }
         return {indices.begin(), indices.end()};
     }
+    /**
+     * @brief Get indices of statevector data not participating in application
+     operation.
+     *
+     * @see `getIndicesAfterExclusion(
+        const vector<size_t> &indicesToExclude, size_t num_qubits)`
+     */
     vector<size_t>
     getIndicesAfterExclusion(const vector<size_t> &indicesToExclude) {
         return getIndicesAfterExclusion(indicesToExclude, num_qubits_);
     }
 
     /**
-     * @brief Generate bit patterns for applying operations.
+     * @brief Generate indices for applying operations.
+     *
+     * This method will return the statevector indices participating in the
+     * application of a gate to a given set of qubits.
      *
      * @param qubitIndices Indices of the qubits to apply operations.
+     * @param num_qubits Number of qubits in register.
      * @return vector<size_t>
      */
     static vector<size_t>
@@ -259,6 +350,12 @@ template <class fp_t = double> class StateVector {
         return indices;
     }
 
+    /**
+     * @brief Generate indices for applying operations.
+     *
+     * @see `generateBitPatterns(const vector<size_t> &qubitIndices, size_t
+     * num_qubits)`.
+     */
     vector<size_t> generateBitPatterns(const vector<size_t> &qubitIndices) {
         return generateBitPatterns(qubitIndices, num_qubits_);
     }
@@ -358,6 +455,15 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    /**
+     * @brief Apply PauliX gate operation to given indices of statevector.
+     *
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     */
     void applyPauliX(const vector<size_t> &indices,
                      const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
@@ -366,6 +472,15 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    /**
+     * @brief Apply PauliY gate operation to given indices of statevector.
+     *
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     */
     void applyPauliY(const vector<size_t> &indices,
                      const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
@@ -376,6 +491,16 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[1]] = Util::IMAG<fp_t>() * v0;
         }
     }
+
+    /**
+     * @brief Apply PauliZ gate operation to given indices of statevector.
+     *
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     */
     void applyPauliZ(const vector<size_t> &indices,
                      const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
@@ -384,6 +509,15 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    /**
+     * @brief Apply Hadamard gate operation to given indices of statevector.
+     *
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     */
     void applyHadamard(const vector<size_t> &indices,
                        const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
@@ -397,6 +531,15 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    /**
+     * @brief Apply S gate operation to given indices of statevector.
+     *
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     */
     void applyS(const vector<size_t> &indices,
                 const vector<size_t> &externalIndices, bool inverse) {
         const CFP_t shift =
@@ -408,6 +551,15 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    /**
+     * @brief Apply T gate operation to given indices of statevector.
+     *
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     */
     void applyT(const vector<size_t> &indices,
                 const vector<size_t> &externalIndices, bool inverse) {
         const CFP_t shift = (inverse == true)
@@ -420,14 +572,27 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    /**
+     * @brief Apply RX gate operation to given indices of statevector.
+     *
+     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * `float` and `double`.
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     * @param angle Rotation angle of gate.
+     */
     template <typename Param_t = fp_t>
     void applyRX(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
                  Param_t angle) {
-        const CFP_t c(std::cos(angle / 2), 0);
 
-        const CFP_t js = (inverse == true) ? CFP_t(0, -std::sin(-angle / 2))
-                                           : CFP_t(0, std::sin(-angle / 2));
+        const Param_t angle_ = (inverse == true) ? -angle : angle;
+        const CFP_t c(std::cos(angle_ / 2), 0);
+
+        const CFP_t js(0, -std::sin(angle_ / 2));
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -437,7 +602,18 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[1]] = js * v0 + c * v1;
         }
     }
-
+    /**
+     * @brief Apply RY gate operation to given indices of statevector.
+     *
+     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * `float` and `double`.
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     * @param angle Rotation angle of gate.
+     */
     template <typename Param_t = fp_t>
     void applyRY(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
@@ -454,7 +630,18 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[1]] = s * v0 + c * v1;
         }
     }
-
+    /**
+     * @brief Apply RZ gate operation to given indices of statevector.
+     *
+     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * `float` and `double`.
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     * @param angle Rotation angle of gate.
+     */
     template <typename Param_t = fp_t>
     void applyRZ(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
@@ -470,7 +657,18 @@ template <class fp_t = double> class StateVector {
             shiftedState[indices[1]] *= shift2;
         }
     }
-
+    /**
+     * @brief Apply phase shift gate operation to given indices of statevector.
+     *
+     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * `float` and `double`.
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     * @param angle Phase shift angle.
+     */
     template <typename Param_t = fp_t>
     void applyPhaseShift(const vector<size_t> &indices,
                          const vector<size_t> &externalIndices, bool inverse,
@@ -483,6 +681,19 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    /**
+     * @brief Apply controlled phase shift gate operation to given indices of
+     * statevector.
+     *
+     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * `float` and `double`.
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     * @param angle Phase shift angle.
+     */
     template <typename Param_t = fp_t>
     void applyControlledPhaseShift(const std::vector<size_t> &indices,
                                    const std::vector<size_t> &externalIndices,
@@ -495,6 +706,21 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    /**
+     * @brief Apply Rot gate \f$RZ(\omega)RY(\theta)RZ(\phi)\f$ to given indices
+     * of statevector.
+     *
+     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * `float` and `double`.
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     * @param phi Gate rotation parameter \f$\phi\f$.
+     * @param theta Gate rotation parameter \f$\theta\f$.
+     * @param omega Gate rotation parameter \f$\omega\f$.
+     */
     template <typename Param_t = fp_t>
     void applyRot(const vector<size_t> &indices,
                   const vector<size_t> &externalIndices, bool inverse,
@@ -515,6 +741,15 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    /**
+     * @brief Apply CNOT (CX) gate to given indices of statevector.
+     *
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     */
     void applyCNOT(const vector<size_t> &indices,
                    const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
@@ -523,6 +758,15 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    /**
+     * @brief Apply SWAP gate to given indices of statevector.
+     *
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     */
     void applySWAP(const vector<size_t> &indices,
                    const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
@@ -530,6 +774,15 @@ template <class fp_t = double> class StateVector {
             swap(shiftedState[indices[1]], shiftedState[indices[2]]);
         }
     }
+    /**
+     * @brief Apply CZ gate to given indices of statevector.
+     *
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     */
     void applyCZ(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
@@ -538,6 +791,18 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    /**
+     * @brief Apply CRX gate to given indices of statevector.
+     *
+     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * `float` and `double`.
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     * @param angle Rotation angle of gate.
+     */
     template <typename Param_t = fp_t>
     void applyCRX(const vector<size_t> &indices,
                   const vector<size_t> &externalIndices, bool inverse,
@@ -555,6 +820,18 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    /**
+     * @brief Apply CRY gate to given indices of statevector.
+     *
+     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * `float` and `double`.
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     * @param angle Rotation angle of gate.
+     */
     template <typename Param_t = fp_t>
     void applyCRY(const vector<size_t> &indices,
                   const vector<size_t> &externalIndices, bool inverse,
@@ -572,6 +849,18 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    /**
+     * @brief Apply CRZ gate to given indices of statevector.
+     *
+     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * `float` and `double`.
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     * @param angle Rotation angle of gate.
+     */
     template <typename Param_t = fp_t>
     void applyCRZ(const vector<size_t> &indices,
                   const vector<size_t> &externalIndices, bool inverse,
@@ -589,6 +878,21 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    /**
+     * @brief Apply CRot gate (controlled \f$RZ(\omega)RY(\theta)RZ(\phi)\f$) to
+     * given indices of statevector.
+     *
+     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * `float` and `double`.
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     * @param phi Gate rotation parameter \f$\phi\f$.
+     * @param theta Gate rotation parameter \f$\theta\f$.
+     * @param omega Gate rotation parameter \f$\omega\f$.
+     */
     template <typename Param_t = fp_t>
     void applyCRot(const vector<size_t> &indices,
                    const vector<size_t> &externalIndices, bool inverse,
@@ -609,6 +913,15 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    /**
+     * @brief Apply Toffoli (CCX) gate to given indices of statevector.
+     *
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     */
     void applyToffoli(const vector<size_t> &indices,
                       const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
@@ -617,6 +930,15 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    /**
+     * @brief Apply CSWAP gate to given indices of statevector.
+     *
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     */
     void applyCSWAP(const vector<size_t> &indices,
                     const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
@@ -625,10 +947,10 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+  private:
     //***********************************************************************//
     //  Internal utility functions for opName dispatch use only.
     //***********************************************************************//
-  private:
     inline void applyPauliX_(const vector<size_t> &indices,
                              const vector<size_t> &externalIndices,
                              bool inverse, const vector<fp_t> &params) {
@@ -752,8 +1074,8 @@ template <class fp_t = double> class StateVector {
 
 template <class T>
 inline std::ostream &operator<<(std::ostream &out, const StateVector<T> &sv) {
-    const auto num_qubits = sv.getNumQubits();
-    const auto length = sv.getLength();
+    const size_t num_qubits = sv.getNumQubits();
+    const size_t length = sv.getLength();
     const auto data_ptr = sv.getData();
     out << "num_qubits=" << num_qubits << std::endl;
     out << "data=[";

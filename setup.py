@@ -151,6 +151,7 @@ if not os.environ.get("SKIP_COMPILATION", False):
             "lightning_qubit_ops",
             sources=[
                 "pennylane_lightning/src/simulator/StateVector.cpp",
+                "pennylane_lightning/src/algorithms/AdjointDiff.cpp",
                 "pennylane_lightning/src/Bindings.cpp",
             ],
             depends=[
