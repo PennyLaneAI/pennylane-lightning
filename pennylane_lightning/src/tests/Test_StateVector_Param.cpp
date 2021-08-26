@@ -138,7 +138,7 @@ TEMPLATE_TEST_CASE("StateVector::applyRZ", "[StateVector_Param]", float,
                              {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
     const std::vector<TestType> angles{0.2, 0.7, 2.9};
-    const cp_t coef = (1 / (2 * std::sqrt(2)), 0);
+    const cp_t coef(1.0 / (2 * std::sqrt(2)), 0);
 
     std::vector<std::vector<cp_t>> rz_data;
     for (auto &a : angles) {
@@ -198,7 +198,7 @@ TEMPLATE_TEST_CASE("StateVector::applyPhaseShift", "[StateVector_Param]", float,
                              {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
     const std::vector<TestType> angles{0.3, 0.8, 2.4};
-    const cp_t coef = (1 / (2 * std::sqrt(2)), 0);
+    const cp_t coef(1.0 / (2 * std::sqrt(2)), 0);
 
     std::vector<std::vector<cp_t>> ps_data;
     for (auto &a : angles) {
@@ -259,7 +259,7 @@ TEMPLATE_TEST_CASE("StateVector::applyControlledPhaseShift",
                              {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
     const std::vector<TestType> angles{0.3, 2.4};
-    const cp_t coef = (1 / (2 * std::sqrt(2)), 0);
+    const cp_t coef(1.0 / (2 * std::sqrt(2)), 0);
 
     std::vector<std::vector<cp_t>> ps_data;
     for (auto &a : angles) {
