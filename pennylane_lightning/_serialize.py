@@ -14,15 +14,16 @@
 r"""
 Helper functions for serializing quantum tapes.
 """
-from typing import List
+from typing import List, Tuple
 
+import numpy as np
 from pennylane import BasisState, Hadamard, Projector, QubitStateVector
 from pennylane.grouping import is_pauli_word
 from pennylane.operation import Observable, Tensor
 from pennylane.tape import QuantumTape
 
 try:
-    from .lightning_qubit_ops import StateVectorC128, ObsStructC128, OpsStructC128
+    from .lightning_qubit_ops import StateVectorC128, ObsStructC128
 except ImportError:
     pass
 
@@ -47,7 +48,7 @@ def _obs_has_kernel(obs: Observable) -> bool:
 
 def _serialize_obs(
     tape: QuantumTape, wires_map: dict
-) -> List:
+) -> List[ObsStructC128]:
     """Serializes the observables of an input tape.
 
     Args:
@@ -84,7 +85,7 @@ def _serialize_obs(
 
 def _serialize_ops(
     tape: QuantumTape, wires_map: dict
-):
+) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]], List[bool], List[np.ndarray]]:
     """Serializes the operations of an input tape.
 
     The state preparation operations are not included.
@@ -94,8 +95,9 @@ def _serialize_ops(
         wires_map (dict): a dictionary mapping input wires to the device's backend wires
 
     Returns:
-        OpsStructC128: A C++-backend-compatible object containing a serialization of the input tape
-        operations
+        Tuple[list, list, list, list, list]: A serialization of the operations, containing a list
+        of operation names, a list of operation parameters, a list of observable wires, a list of
+        inverses, and a list of matrices for the operations that do not have a dedicated kernel.
     """
     names = []
     params = []
@@ -126,4 +128,4 @@ def _serialize_ops(
         wires.append([wires_map[w] for w in wires_list])
         inverses.append(is_inverse)
 
-    return OpsStructC128(names, params, wires, inverses, mats)
+    return names, params, wires, inverses, mats
