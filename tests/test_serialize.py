@@ -19,12 +19,6 @@ from pennylane import numpy as np
 
 from pennylane_lightning._serialize import (_serialize_obs, _serialize_ops,
                                             _obs_has_kernel)
-import pytest
-
-try:
-    from pennylane_lightning.lightning_qubit_ops import ObsStructC128, OpsStructC128
-except ImportError:
-    pytestmark = pytest.mark.skip
 
 
 class TestOpsHasKernel:
