@@ -27,7 +27,7 @@ from ._serialize import _serialize_obs, _serialize_ops
 from ._version import __version__
 
 try:
-    from .lightning_qubit_ops import apply, StateVectorC64, StateVectorC128
+    from .lightning_qubit_ops import apply, StateVectorC64, StateVectorC128, AdjointJacobianC128
 
     CPP_BINARY_AVAILABLE = True
 except ModuleNotFoundError:
@@ -160,24 +160,18 @@ class LightningQubit(DefaultQubit):
             ket = self._pre_rotated_state
 
         # TODO: How to accommodate for tensor product observables?
-        adj = AdjointJacobian(ket)
+        adj = AdjointJacobianC128()
 
         obs_serialized = _serialize_obs(tape, self.wire_map)
         ops_serialized = _serialize_ops(tape, self.wire_map)
 
-        jac = adj.adjoint_jacobian(
-            *obs_serialized, *ops_serialized, tape.trainable_params, tape.num_params
-        )
+        ops_serialized = adj.create_ops_list(*ops_serialized)
+
+        # jac = adj.adjoint_jacobian(
+        #     *obs_serialized, *ops_serialized, tape.trainable_params, tape.num_params
+        # )
 
         return super().adjoint_jacobian(tape, starting_state, use_device_state)
-
-
-class AdjointJacobian:  # TODO: Replace with C++ version
-    def __init__(self, state):
-        ...
-
-    def adjoint_jacobian(self, *args, **kwargs):
-        return None
 
 
 if not CPP_BINARY_AVAILABLE:
