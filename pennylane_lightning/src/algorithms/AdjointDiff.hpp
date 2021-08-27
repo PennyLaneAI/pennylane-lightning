@@ -274,16 +274,16 @@ template <class T = double> class AdjointJacobian {
         applyOperations(lambda, operations);
 
         // 2. Create observable-applied state-vectors
-        std::vector<StateVectorManaged<T>> H_lambda;
+        std::vector<StateVectorManaged<T>> H_lambda(num_observables,
+                                                    {lambda.getNumQubits()});
 
-        //#pragma omp parallel for
-        //{
-        for (size_t h_i = 0; h_i < num_observables; h_i++) {
-            H_lambda.push_back(lambda);
-            applyObservable(H_lambda[h_i], observables[h_i]);
+#pragma omp parallel for
+        {
+            for (size_t h_i = 0; h_i < num_observables; h_i++) {
+                H_lambda[h_i].updateData(lambda.getDataVector());
+                applyObservable(H_lambda[h_i], observables[h_i]);
+            }
         }
-
-        //}
         StateVectorManaged<T> mu(lambda.getNumQubits());
 
         for (int op_idx = operations.getOpsName().size() - 1; op_idx >= 0;
@@ -325,12 +325,17 @@ template <class T = double> class AdjointJacobian {
                     }
                     current_param_idx--;
                 }
-                for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
-                    H_lambda[obs_idx].applyOperation(
-                        operations.getOpsName()[op_idx],
-                        operations.getOpsWires()[op_idx],
-                        !operations.getOpsInverses()[op_idx],
-                        operations.getOpsParams()[op_idx]);
+
+#pragma omp parallel for
+                {
+                    for (size_t obs_idx = 0; obs_idx < num_observables;
+                         obs_idx++) {
+                        H_lambda[obs_idx].applyOperation(
+                            operations.getOpsName()[op_idx],
+                            operations.getOpsWires()[op_idx],
+                            !operations.getOpsInverses()[op_idx],
+                            operations.getOpsParams()[op_idx]);
+                    }
                 }
             }
         }

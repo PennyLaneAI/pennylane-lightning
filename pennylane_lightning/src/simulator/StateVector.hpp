@@ -85,8 +85,8 @@ template <class fp_t = double> class StateVector {
     //***********************************************************************//
 
     CFP_t *arr_;
-    const size_t length_;
-    const size_t num_qubits_;
+    size_t length_;
+    size_t num_qubits_;
 
   public:
     StateVector()
@@ -169,6 +169,14 @@ template <class fp_t = double> class StateVector {
     CFP_t *getData() { return arr_; }
 
     void setData(CFP_t *data_ptr) { arr_ = data_ptr; }
+    void setLength(size_t length) {
+        length_ = length;
+        num_qubits_ = Util::log2(length_);
+    }
+    void setNumQubits(size_t qubits) {
+        num_qubits_ = qubits;
+        Util::exp2(num_qubits_);
+    }
 
     /**
      * @brief Get the number of data elements in the statevector array.
@@ -577,10 +585,10 @@ template <class fp_t = double> class StateVector {
                  const vector<size_t> &externalIndices, bool inverse,
                  Param_t angle) {
 
-        const Param_t angle_ = (inverse == true) ? -angle : angle;
-        const CFP_t c(std::cos(angle_ / 2), 0);
+        const CFP_t c(std::cos(angle / 2), 0);
 
-        const CFP_t js(0, -std::sin(angle_ / 2));
+        const CFP_t js = (inverse == true) ? CFP_t(0, -std::sin(-angle / 2))
+                                           : CFP_t(0, std::sin(-angle / 2));
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -607,10 +615,9 @@ template <class fp_t = double> class StateVector {
                  const vector<size_t> &externalIndices, bool inverse,
                  Param_t angle) {
 
-        const Param_t angle_ = (inverse == true) ? -angle : angle;
-
-        const CFP_t c(std::cos(angle_ / 2), 0);
-        const CFP_t s(std::sin(angle_ / 2), 0);
+        const CFP_t c(std::cos(angle / 2), 0);
+        const CFP_t s = (inverse == true) ? CFP_t(-std::sin(angle / 2), 0)
+                                          : CFP_t(std::sin(angle / 2), 0);
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -1104,6 +1111,18 @@ class StateVectorManaged : public StateVector<fp_t> {
         StateVector<fp_t>::setData(data_.data());
     }
 
+    StateVectorManaged &operator=(const StateVectorManaged<fp_t> &other) {
+        if (this != &other) {
+            if (data_.size() != other.getLength()) {
+                data_.resize(other.getLength());
+                StateVector<fp_t>::setData(data_.data());
+                StateVector<fp_t>::setLength(other.getLength());
+            }
+            std::copy(other.data_.data(),
+                      other.data_.data() + other.getLength(), data_.data());
+        }
+        return *this;
+    }
     std::vector<CFP_t> &getDataVector() { return data_; }
     const std::vector<CFP_t> &getDataVector() const { return data_; }
 
