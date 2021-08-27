@@ -18,8 +18,13 @@ interfaces with C++ for fast linear algebra calculations.
 from warnings import warn
 
 import numpy as np
-from pennylane import (BasisState, DeviceError, QuantumFunctionError,
-                       QubitStateVector, QubitUnitary)
+from pennylane import (
+    BasisState,
+    DeviceError,
+    QuantumFunctionError,
+    QubitStateVector,
+    QubitUnitary,
+)
 from pennylane.devices import DefaultQubit
 from pennylane.operation import Expectation
 
@@ -27,7 +32,12 @@ from ._serialize import _serialize_obs, _serialize_ops
 from ._version import __version__
 
 try:
-    from .lightning_qubit_ops import apply, StateVectorC64, StateVectorC128, AdjointJacobianC128
+    from .lightning_qubit_ops import (
+        apply,
+        StateVectorC64,
+        StateVectorC128,
+        AdjointJacobianC128,
+    )
 
     CPP_BINARY_AVAILABLE = True
 except ModuleNotFoundError:
@@ -78,10 +88,14 @@ class LightningQubit(DefaultQubit):
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
             if isinstance(operations[0], QubitStateVector):
-                self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
+                self._apply_state_vector(
+                    operations[0].parameters[0].copy(), operations[0].wires
+                )
                 del operations[0]
             elif isinstance(operations[0], BasisState):
-                self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
+                self._apply_basis_state(
+                    operations[0].parameters[0], operations[0].wires
+                )
                 del operations[0]
 
         for operation in operations:
@@ -100,7 +114,9 @@ class LightningQubit(DefaultQubit):
             if any(isinstance(r, QubitUnitary) for r in rotations):
                 super().apply(operations=[], rotations=rotations)
             else:
-                self._state = self.apply_lightning(np.copy(self._pre_rotated_state), rotations)
+                self._state = self.apply_lightning(
+                    np.copy(self._pre_rotated_state), rotations
+                )
         else:
             self._state = self._pre_rotated_state
 
@@ -119,7 +135,9 @@ class LightningQubit(DefaultQubit):
         sim = StateVectorC128(state_vector)
 
         for o in operations:
-            name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
+            name = o.name.split(".")[
+                0
+            ]  # The split is because inverse gates have .inv appended
             method = getattr(sim, name, None)
 
             wires = self.wires.indices(o.wires)
@@ -161,18 +179,21 @@ class LightningQubit(DefaultQubit):
 
         # TODO: How to accommodate for tensor product observables?
         adj = AdjointJacobianC128()
-        jac = np.zeros((len(tape.observables), len(tape.trainable_params)))
 
         obs_serialized = _serialize_obs(tape, self.wire_map)
         ops_serialized = _serialize_ops(tape, self.wire_map)
 
         ops_serialized = adj.create_ops_list(*ops_serialized)
 
-        adj.adjoint_jacobian(
-            jac, ket, obs_serialized, ops_serialized, tape.trainable_params, tape.num_params
+        jac = adj.adjoint_jacobian(
+            StateVectorC128(ket),
+            obs_serialized,
+            ops_serialized,
+            list(tape.trainable_params),
+            tape.num_params,
         )
 
-        return super().adjoint_jacobian(tape, starting_state, use_device_state)
+        return jac # super().adjoint_jacobian(tape, starting_state, use_device_state)
 
 
 if not CPP_BINARY_AVAILABLE:
