@@ -37,6 +37,7 @@ target_sources(runner PRIVATE   Test_AdjDiff.cpp
                                 Test_StateVector_Nonparam.cpp 
                                 Test_StateVector_Param.cpp 
                                 Test_StateVectorManaged_Nonparam.cpp 
+                                Test_StateVectorManaged_Param.cpp 
                                 Test_Util.cpp
 )
 
