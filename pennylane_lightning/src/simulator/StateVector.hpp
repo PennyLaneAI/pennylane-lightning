@@ -30,10 +30,10 @@
 #include <utility>
 #include <vector>
 
-#include <iostream>
-
 #include "Gates.hpp"
 #include "Util.hpp"
+
+#include <iostream>
 
 /// @cond DEV
 namespace {
@@ -83,7 +83,7 @@ template <class fp_t = double> class StateVector {
 
     //***********************************************************************//
 
-    CFP_t *const arr_;
+    CFP_t *arr_;
     const size_t length_;
     const size_t num_qubits_;
 
@@ -167,6 +167,8 @@ template <class fp_t = double> class StateVector {
      */
     CFP_t *getData() { return arr_; }
 
+    void setData(CFP_t *data_ptr) { arr_ = data_ptr; }
+
     /**
      * @brief Get the number of data elements in the statevector array.
      *
@@ -197,21 +199,6 @@ template <class fp_t = double> class StateVector {
                 string("The gate of type ") + opName + " requires " +
                 std::to_string(gate_wires_.at(opName)) + " wires, but " +
                 std::to_string(wires.size()) + " were supplied");
-
-        std::cout << "[SVADDR::" << arr_ << "]";
-        std::cout << "[GATE_CALL::" << opName << "][WIRES::";
-        for (auto &w : wires) {
-            std::cout << w << ",";
-        }
-        std::cout << "][INVERT::" << inverse << "][PARAMS::";
-        if (!params.empty()) {
-            for (auto &p : params) {
-                std::cout << p << ",";
-            }
-        } else {
-            std::cout << "EMPTY";
-        }
-        std::cout << "]" << std::endl;
 
         const vector<size_t> internalIndices = generateBitPatterns(wires);
         const vector<size_t> externalWires = getIndicesAfterExclusion(wires);
@@ -618,9 +605,11 @@ template <class fp_t = double> class StateVector {
     void applyRY(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
                  Param_t angle) {
-        const CFP_t c(std::cos(angle / 2), 0);
-        const CFP_t s = (inverse == true) ? CFP_t(-std::sin(angle / 2), 0)
-                                          : CFP_t(std::sin(angle / 2), 0);
+
+        const Param_t angle_ = (inverse == true) ? -angle : angle;
+
+        const CFP_t c(std::cos(angle_ / 2), 0);
+        const CFP_t s(std::sin(angle_ / 2), 0);
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -1069,6 +1058,68 @@ template <class fp_t = double> class StateVector {
                             const vector<fp_t> &params) {
         static_cast<void>(params);
         applyCSWAP(indices, externalIndices, inverse);
+    }
+};
+
+/**
+ * @brief Managed memory version of StateVector class. Memory ownership resides
+ * within class.
+ *
+ * @tparam fp_t
+ */
+template <class fp_t = double>
+class StateVectorManaged : public StateVector<fp_t> {
+  private:
+    using CFP_t = std::complex<fp_t>;
+
+    std::vector<CFP_t> data_;
+
+  public:
+    StateVectorManaged() : StateVector<fp_t>() {}
+    StateVectorManaged(size_t num_qubits)
+        : data_(static_cast<size_t>(Util::exp2(num_qubits)), CFP_t{0, 0}),
+          StateVector<fp_t>(nullptr,
+                            static_cast<size_t>(Util::exp2(num_qubits))) {
+        StateVector<fp_t>::setData(data_.data());
+        data_[0] = {1, 0};
+    }
+    StateVectorManaged(const StateVector<fp_t> other)
+        : data_{other.getData(), other.getData() + other.getLength()},
+          StateVector<fp_t>(nullptr, data_.size()) {
+        StateVector<fp_t>::setData(data_.data());
+    }
+    StateVectorManaged(const std::vector<CFP_t> &other_data)
+        : data_{other_data}, StateVector<fp_t>(nullptr, other_data.size()) {
+        StateVector<fp_t>::setData(data_.data());
+    }
+    StateVectorManaged(const CFP_t *other_data, size_t other_size)
+        : data_{other_data, other_data + other_size}, StateVector<fp_t>(
+                                                          nullptr,
+                                                          data_.size()) {
+        StateVector<fp_t>::setData(data_.data());
+    }
+    StateVectorManaged(const StateVectorManaged<fp_t> &other)
+        : data_{other.data_}, StateVector<fp_t>(nullptr, data_.size()) {
+        StateVector<fp_t>::setData(data_.data());
+    }
+
+    std::vector<CFP_t> &getDataVector() { return data_; }
+    std::vector<CFP_t> &getDataVector() const { return data_; }
+
+    std::vector<size_t>
+    getInternalIndices(const std::vector<size_t> &qubit_indices) {
+        return StateVector<fp_t>::generateBitPatterns(qubit_indices,
+                                                      Util::log2(data_.size()));
+    }
+    std::vector<size_t>
+    getExternalIndices(const std::vector<size_t> &qubit_indices) {
+        std::vector<size_t> externalWires =
+            StateVector<fp_t>::getIndicesAfterExclusion(
+                qubit_indices, Util::log2(data_.size()));
+        std::vector<size_t> externalIndices =
+            StateVector<fp_t>::generateBitPatterns(externalWires,
+                                                   Util::log2(data_.size()));
+        return externalIndices;
     }
 };
 
