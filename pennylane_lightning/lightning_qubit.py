@@ -17,18 +17,21 @@ interfaces with C++ for fast linear algebra calculations.
 """
 from warnings import warn
 
-from pennylane.devices import DefaultQubit
 import numpy as np
-from pennylane import QubitStateVector, BasisState, DeviceError, QubitUnitary
+from pennylane import (BasisState, DeviceError, QuantumFunctionError,
+                       QubitStateVector, QubitUnitary)
+from pennylane.devices import DefaultQubit
+from pennylane.operation import Expectation
+
+from ._serialize import _serialize_obs, _serialize_ops
+from ._version import __version__
 
 try:
-    from .lightning_qubit_ops import apply, StateVectorC64, StateVectorC128
+    from .lightning_qubit_ops import apply, StateVectorC64, StateVectorC128, AdjointJacobianC128
 
     CPP_BINARY_AVAILABLE = True
 except ModuleNotFoundError:
     CPP_BINARY_AVAILABLE = False
-
-from ._version import __version__
 
 
 class LightningQubit(DefaultQubit):
@@ -130,6 +133,46 @@ class LightningQubit(DefaultQubit):
                 method(wires, inv, param)
 
         return np.reshape(state_vector, state.shape)
+
+    def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
+
+        if self.shots is not None:
+            warn(
+                "Requested adjoint differentiation to be computed with finite shots."
+                " The derivative is always exact when using the adjoint differentiation method.",
+                UserWarning,
+            )
+
+        for m in tape.measurements:
+            if m.return_type is not Expectation:
+                raise QuantumFunctionError(
+                    "Adjoint differentiation method does not support"
+                    f" measurement {m.return_type.value}"
+                )
+
+        # Initialization of state
+        if starting_state is not None:
+            ket = np.ravel(starting_state)
+        else:
+            if not use_device_state:
+                self.reset()
+                self.execute(tape)
+            ket = self._pre_rotated_state
+
+        # TODO: How to accommodate for tensor product observables?
+        adj = AdjointJacobianC128()
+        jac = np.zeros((len(tape.observables), len(tape.trainable_params)))
+
+        obs_serialized = _serialize_obs(tape, self.wire_map)
+        ops_serialized = _serialize_ops(tape, self.wire_map)
+
+        ops_serialized = adj.create_ops_list(*ops_serialized)
+
+        adj.adjoint_jacobian(
+            jac, ket, obs_serialized, ops_serialized, tape.trainable_params, tape.num_params
+        )
+
+        return super().adjoint_jacobian(tape, starting_state, use_device_state)
 
 
 if not CPP_BINARY_AVAILABLE:
