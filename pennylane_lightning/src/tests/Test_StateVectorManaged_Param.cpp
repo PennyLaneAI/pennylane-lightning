@@ -16,8 +16,8 @@
 
 using namespace Pennylane;
 
-TEMPLATE_TEST_CASE("StateVectorManaged::applyRX", "[StateVectorManaged_Param]", float,
-                   double) {
+TEMPLATE_TEST_CASE("StateVectorManaged::applyRX", "[StateVectorManaged_Param]",
+                   float, double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
     StateVectorManaged<TestType> svdat{num_qubits};
@@ -41,21 +41,23 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyRX", "[StateVectorManaged_Param]", 
 
             svdat_direct.applyRX(int_idx, ext_idx, false, {angles[index]});
 
-            CHECK(isApproxEqual(svdat_direct.getDataVector(), expected_results[index]));
+            CHECK(isApproxEqual(svdat_direct.getDataVector(),
+                                expected_results[index]));
         }
     }
     SECTION("Apply using dispatcher") {
         for (size_t index = 0; index < num_qubits; index++) {
             StateVectorManaged<TestType> svdat_dispatch{num_qubits};
             svdat_dispatch.applyOperation("RX", {index}, false,
-                                             {angles[index]});
-            CHECK(isApproxEqual(svdat_dispatch.getDataVector(), expected_results[index]));
+                                          {angles[index]});
+            CHECK(isApproxEqual(svdat_dispatch.getDataVector(),
+                                expected_results[index]));
         }
     }
 }
 
-TEMPLATE_TEST_CASE("StateVectorManaged::applyRY", "[StateVectorManaged_Param]", float,
-                   double) {
+TEMPLATE_TEST_CASE("StateVectorManaged::applyRY", "[StateVectorManaged_Param]",
+                   float, double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
     StateVectorManaged<TestType> svdat{num_qubits};
@@ -79,28 +81,30 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyRY", "[StateVectorManaged_Param]", 
 
             svdat_direct.applyRY(int_idx, ext_idx, false, {angles[index]});
 
-            CHECK(isApproxEqual(svdat_direct.getDataVector(), expected_results[index]));
+            CHECK(isApproxEqual(svdat_direct.getDataVector(),
+                                expected_results[index]));
         }
     }
     SECTION("Apply using dispatcher") {
         for (size_t index = 0; index < num_qubits; index++) {
             StateVectorManaged<TestType> svdat_dispatch{num_qubits};
             svdat_dispatch.applyOperation("RY", {index}, false,
-                                             {angles[index]});
-            CHECK(isApproxEqual(svdat_dispatch.getDataVector(), expected_results[index]));
+                                          {angles[index]});
+            CHECK(isApproxEqual(svdat_dispatch.getDataVector(),
+                                expected_results[index]));
         }
     }
 }
 
-TEMPLATE_TEST_CASE("StateVectorManaged::applyRZ", "[StateVectorManaged_Param]", float,
-                   double) {
+TEMPLATE_TEST_CASE("StateVectorManaged::applyRZ", "[StateVectorManaged_Param]",
+                   float, double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
     StateVectorManaged<TestType> svdat{num_qubits};
 
     // Test using |+++> state
     svdat.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                             {{0}, {1}, {2}}, {{false}, {false}, {false}});
+                          {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
     const std::vector<TestType> angles{0.2, 0.7, 2.9};
     const cp_t coef(1.0 / (2 * std::sqrt(2)), 0);
@@ -139,28 +143,30 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyRZ", "[StateVectorManaged_Param]", 
 
             svdat_direct.applyRZ(int_idx, ext_idx, false, {angles[index]});
 
-            CHECK(isApproxEqual(svdat_direct.getDataVector(), expected_results[index]));
+            CHECK(isApproxEqual(svdat_direct.getDataVector(),
+                                expected_results[index]));
         }
     }
     SECTION("Apply using dispatcher") {
         for (size_t index = 0; index < num_qubits; index++) {
             StateVectorManaged<TestType> svdat_dispatch{init_state};
             svdat_dispatch.applyOperation("RZ", {index}, false,
-                                             {angles[index]});
-            CHECK(isApproxEqual(svdat_dispatch.getDataVector(), expected_results[index]));
+                                          {angles[index]});
+            CHECK(isApproxEqual(svdat_dispatch.getDataVector(),
+                                expected_results[index]));
         }
     }
 }
 
-TEMPLATE_TEST_CASE("StateVectorManaged::applyPhaseShift", "[StateVectorManaged_Param]", float,
-                   double) {
+TEMPLATE_TEST_CASE("StateVectorManaged::applyPhaseShift",
+                   "[StateVectorManaged_Param]", float, double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
     StateVectorManaged<TestType> svdat{num_qubits};
 
     // Test using |+++> state
     svdat.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                             {{0}, {1}, {2}}, {{false}, {false}, {false}});
+                          {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
     const std::vector<TestType> angles{0.3, 0.8, 2.4};
     const cp_t coef(1.0 / (2 * std::sqrt(2)), 0);
@@ -198,17 +204,19 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyPhaseShift", "[StateVectorManaged_P
             auto ext_idx = svdat_direct.getExternalIndices({index});
 
             svdat_direct.applyPhaseShift(int_idx, ext_idx, false,
-                                            {angles[index]});
+                                         {angles[index]});
 
-            CHECK(isApproxEqual(svdat_direct.getDataVector(), expected_results[index]));
+            CHECK(isApproxEqual(svdat_direct.getDataVector(),
+                                expected_results[index]));
         }
     }
     SECTION("Apply using dispatcher") {
         for (size_t index = 0; index < num_qubits; index++) {
             StateVectorManaged<TestType> svdat_dispatch{init_state};
             svdat_dispatch.applyOperation("PhaseShift", {index}, false,
-                                             {angles[index]});
-            CHECK(isApproxEqual(svdat_dispatch.getDataVector(), expected_results[index]));
+                                          {angles[index]});
+            CHECK(isApproxEqual(svdat_dispatch.getDataVector(),
+                                expected_results[index]));
         }
     }
 }
@@ -221,7 +229,7 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyControlledPhaseShift",
 
     // Test using |+++> state
     svdat.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                             {{0}, {1}, {2}}, {{false}, {false}, {false}});
+                          {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
     const std::vector<TestType> angles{0.3, 2.4};
     const cp_t coef(1.0 / (2 * std::sqrt(2)), 0);
@@ -248,21 +256,22 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyControlledPhaseShift",
         auto ext_idx = svdat_direct.getExternalIndices({0, 1});
 
         svdat_direct.applyControlledPhaseShift(int_idx, ext_idx, false,
-                                                  {angles[0]});
+                                               {angles[0]});
         CAPTURE(svdat_direct.getDataVector());
         CHECK(isApproxEqual(svdat_direct.getDataVector(), expected_results[0]));
     }
     SECTION("Apply using dispatcher") {
         StateVectorManaged<TestType> svdat_dispatch{init_state};
         svdat_dispatch.applyOperation("ControlledPhaseShift", {1, 2}, false,
-                                         {angles[1]});
+                                      {angles[1]});
         CAPTURE(svdat_dispatch.getDataVector());
-        CHECK(isApproxEqual(svdat_dispatch.getDataVector(), expected_results[1]));
+        CHECK(
+            isApproxEqual(svdat_dispatch.getDataVector(), expected_results[1]));
     }
 }
 
-TEMPLATE_TEST_CASE("StateVectorManaged::applyRot", "[StateVectorManaged_Param]", float,
-                   double) {
+TEMPLATE_TEST_CASE("StateVectorManaged::applyRot", "[StateVectorManaged_Param]",
+                   float, double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
     StateVectorManaged<TestType> svdat{num_qubits};
@@ -290,23 +299,24 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyRot", "[StateVectorManaged_Param]",
             auto int_idx = svdat_direct.getInternalIndices({index});
             auto ext_idx = svdat_direct.getExternalIndices({index});
             svdat_direct.applyRot(int_idx, ext_idx, false, angles[index][0],
-                                     angles[index][1], angles[index][2]);
+                                  angles[index][1], angles[index][2]);
 
-            CHECK(isApproxEqual(svdat_direct.getDataVector(), expected_results[index]));
+            CHECK(isApproxEqual(svdat_direct.getDataVector(),
+                                expected_results[index]));
         }
     }
     SECTION("Apply using dispatcher") {
         for (size_t index = 0; index < num_qubits; index++) {
             StateVectorManaged<TestType> svdat_dispatch{num_qubits};
-            svdat_dispatch.applyOperation("Rot", {index}, false,
-                                             angles[index]);
-            CHECK(isApproxEqual(svdat_dispatch.getDataVector(), expected_results[index]));
+            svdat_dispatch.applyOperation("Rot", {index}, false, angles[index]);
+            CHECK(isApproxEqual(svdat_dispatch.getDataVector(),
+                                expected_results[index]));
         }
     }
 }
 
-TEMPLATE_TEST_CASE("StateVectorManaged::applyCRot", "[StateVectorManaged_Param]", float,
-                   double) {
+TEMPLATE_TEST_CASE("StateVectorManaged::applyCRot",
+                   "[StateVectorManaged_Param]", float, double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
     StateVectorManaged<TestType> svdat{num_qubits};
@@ -327,7 +337,7 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyCRot", "[StateVectorManaged_Param]"
             auto int_idx = svdat_direct.getInternalIndices({0, 1});
             auto ext_idx = svdat_direct.getExternalIndices({0, 1});
             svdat_direct.applyCRot(int_idx, ext_idx, false, angles[0],
-                                      angles[1], angles[2]);
+                                   angles[1], angles[2]);
 
             CHECK(isApproxEqual(svdat_direct.getDataVector(), init_state));
         }
@@ -339,9 +349,10 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyCRot", "[StateVectorManaged_Param]"
             auto ext_idx = svdat_direct.getExternalIndices({0, 1});
 
             svdat_direct.applyCRot(int_idx, ext_idx, false, angles[0],
-                                      angles[1], angles[2]);
+                                   angles[1], angles[2]);
 
-            CHECK(isApproxEqual(svdat_direct.getDataVector(), expected_results));
+            CHECK(
+                isApproxEqual(svdat_direct.getDataVector(), expected_results));
         }
     }
     SECTION("Apply using dispatcher") {
@@ -350,13 +361,14 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyCRot", "[StateVectorManaged_Param]"
             svdat_direct.applyOperation("PauliX", {0});
 
             svdat_direct.applyOperation("CRot", {0, 1}, false, angles);
-            CHECK(isApproxEqual(svdat_direct.getDataVector(), expected_results));
+            CHECK(
+                isApproxEqual(svdat_direct.getDataVector(), expected_results));
         }
     }
 }
 
-TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix 1 wire", "[StateVectorManaged_Param]",
-                   float, double) {
+TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix 1 wire",
+                   "[StateVectorManaged_Param]", float, double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 5;
 
@@ -380,7 +392,8 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix 1 wire", "[StateVectorManage
                 svdat_expected.applyPauliZ(int_idx, ext_idx, false);
             }
 
-            CHECK(isApproxEqual(svdat.getDataVector(), svdat_expected.getDataVector()));
+            CHECK(isApproxEqual(svdat.getDataVector(),
+                                svdat_expected.getDataVector()));
         }
         SECTION("Apply using dispatcher") {
             StateVectorManaged<TestType> svdat{num_qubits};
@@ -388,12 +401,13 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix 1 wire", "[StateVectorManage
 
             for (size_t index = 0; index < num_qubits; index++) {
                 svdat_expected.applyOperations({{"PauliX"}, {"PauliZ"}},
-                                                  {{index}, {index}},
-                                                  {false, false});
+                                               {{index}, {index}},
+                                               {false, false});
                 svdat.applyOperation(xz_gate, {index}, false);
             }
 
-            CHECK(isApproxEqual(svdat.getDataVector(), svdat_expected.getDataVector()));
+            CHECK(isApproxEqual(svdat.getDataVector(),
+                                svdat_expected.getDataVector()));
         }
     }
     SECTION("Apply ZX gate") {
@@ -412,7 +426,8 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix 1 wire", "[StateVectorManage
                 svdat_expected.applyPauliZ(int_idx, ext_idx, false);
                 svdat_expected.applyPauliX(int_idx, ext_idx, false);
             }
-            CHECK(isApproxEqual(svdat.getDataVector(), svdat_expected.getDataVector()));
+            CHECK(isApproxEqual(svdat.getDataVector(),
+                                svdat_expected.getDataVector()));
         }
         SECTION("Apply using dispatcher") {
             StateVectorManaged<TestType> svdat{num_qubits};
@@ -420,11 +435,12 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix 1 wire", "[StateVectorManage
 
             for (size_t index = 0; index < num_qubits; index++) {
                 svdat_expected.applyOperations({{"PauliZ"}, {"PauliX"}},
-                                                  {{index}, {index}},
-                                                  {false, false});
+                                               {{index}, {index}},
+                                               {false, false});
                 svdat.applyOperation(zx_gate, {index}, false);
             }
-            CHECK(isApproxEqual(svdat.getDataVector(), svdat_expected.getDataVector()));
+            CHECK(isApproxEqual(svdat.getDataVector(),
+                                svdat_expected.getDataVector()));
         }
     }
     SECTION("Apply XY gate") {
@@ -443,7 +459,8 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix 1 wire", "[StateVectorManage
                 svdat_expected.applyPauliX(int_idx, ext_idx, false);
                 svdat_expected.applyPauliY(int_idx, ext_idx, false);
             }
-            CHECK(isApproxEqual(svdat.getDataVector(), svdat_expected.getDataVector()));
+            CHECK(isApproxEqual(svdat.getDataVector(),
+                                svdat_expected.getDataVector()));
         }
         SECTION("Apply using dispatcher") {
             StateVectorManaged<TestType> svdat{num_qubits};
@@ -451,11 +468,12 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix 1 wire", "[StateVectorManage
 
             for (size_t index = 0; index < num_qubits; index++) {
                 svdat_expected.applyOperations({{"PauliX"}, {"PauliY"}},
-                                                  {{index}, {index}},
-                                                  {false, false});
+                                               {{index}, {index}},
+                                               {false, false});
                 svdat.applyOperation(xy_gate, {index}, false);
             }
-            CHECK(isApproxEqual(svdat.getDataVector(), svdat_expected.getDataVector()));
+            CHECK(isApproxEqual(svdat.getDataVector(),
+                                svdat_expected.getDataVector()));
         }
     }
     SECTION("Apply YX gate") {
@@ -474,7 +492,8 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix 1 wire", "[StateVectorManage
                 svdat_expected.applyPauliY(int_idx, ext_idx, false);
                 svdat_expected.applyPauliX(int_idx, ext_idx, false);
             }
-            CHECK(isApproxEqual(svdat.getDataVector(), svdat_expected.getDataVector()));
+            CHECK(isApproxEqual(svdat.getDataVector(),
+                                svdat_expected.getDataVector()));
         }
         SECTION("Apply using dispatcher") {
             StateVectorManaged<TestType> svdat{num_qubits};
@@ -482,11 +501,12 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix 1 wire", "[StateVectorManage
 
             for (size_t index = 0; index < num_qubits; index++) {
                 svdat_expected.applyOperations({{"PauliY"}, {"PauliX"}},
-                                                  {{index}, {index}},
-                                                  {false, false});
+                                               {{index}, {index}},
+                                               {false, false});
                 svdat.applyOperation(yx_gate, {index}, false);
             }
-            CHECK(isApproxEqual(svdat.getDataVector(), svdat_expected.getDataVector()));
+            CHECK(isApproxEqual(svdat.getDataVector(),
+                                svdat_expected.getDataVector()));
         }
     }
     SECTION("Apply YZ gate") {
@@ -505,7 +525,8 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix 1 wire", "[StateVectorManage
                 svdat_expected.applyPauliY(int_idx, ext_idx, false);
                 svdat_expected.applyPauliZ(int_idx, ext_idx, false);
             }
-            CHECK(isApproxEqual(svdat.getDataVector(), svdat_expected.getDataVector()));
+            CHECK(isApproxEqual(svdat.getDataVector(),
+                                svdat_expected.getDataVector()));
         }
         SECTION("Apply using dispatcher") {
             StateVectorManaged<TestType> svdat{num_qubits};
@@ -513,11 +534,12 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix 1 wire", "[StateVectorManage
 
             for (size_t index = 0; index < num_qubits; index++) {
                 svdat_expected.applyOperations({{"PauliY"}, {"PauliZ"}},
-                                                  {{index}, {index}},
-                                                  {false, false});
+                                               {{index}, {index}},
+                                               {false, false});
                 svdat.applyOperation(yz_gate, {index}, false);
             }
-            CHECK(isApproxEqual(svdat.getDataVector(), svdat_expected.getDataVector()));
+            CHECK(isApproxEqual(svdat.getDataVector(),
+                                svdat_expected.getDataVector()));
         }
     }
     SECTION("Apply ZY gate") {
@@ -536,7 +558,8 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix 1 wire", "[StateVectorManage
                 svdat_expected.applyPauliZ(int_idx, ext_idx, false);
                 svdat_expected.applyPauliY(int_idx, ext_idx, false);
             }
-            CHECK(isApproxEqual(svdat.getDataVector(), svdat_expected.getDataVector()));
+            CHECK(isApproxEqual(svdat.getDataVector(),
+                                svdat_expected.getDataVector()));
         }
         SECTION("Apply using dispatcher") {
             StateVectorManaged<TestType> svdat{num_qubits};
@@ -544,11 +567,12 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix 1 wire", "[StateVectorManage
 
             for (size_t index = 0; index < num_qubits; index++) {
                 svdat_expected.applyOperations({{"PauliZ"}, {"PauliY"}},
-                                                  {{index}, {index}},
-                                                  {false, false});
+                                               {{index}, {index}},
+                                               {false, false});
                 svdat.applyOperation(zy_gate, {index}, false);
             }
-            CHECK(isApproxEqual(svdat.getDataVector(), svdat_expected.getDataVector()));
+            CHECK(isApproxEqual(svdat.getDataVector(),
+                                svdat_expected.getDataVector()));
         }
     }
 }
@@ -560,7 +584,7 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix multiple wires",
 
     StateVectorManaged<TestType> svdat_init{num_qubits};
     svdat_init.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                                  {{0}, {1}, {2}}, {false, false, false});
+                               {{0}, {1}, {2}}, {false, false, false});
 
     const auto cz_gate = Gates::getCZ<TestType>();
     const auto tof_gate = Gates::getToffoli<TestType>();
@@ -570,11 +594,12 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix multiple wires",
         StateVectorManaged<TestType> svdat{svdat_init.getDataVector()};
         StateVectorManaged<TestType> svdat_expected{svdat_init.getDataVector()};
 
-        svdat_expected.applyOperations(
-            {{"Hadamard"}, {"CNOT"}, {"Hadamard"}}, {{1}, {0, 1}, {1}},
-            {false, false, false});
+        svdat_expected.applyOperations({{"Hadamard"}, {"CNOT"}, {"Hadamard"}},
+                                       {{1}, {0, 1}, {1}},
+                                       {false, false, false});
         svdat.applyOperation(cz_gate, {0, 1}, false);
 
-        CHECK(isApproxEqual(svdat.getDataVector(), svdat_expected.getDataVector()));
+        CHECK(isApproxEqual(svdat.getDataVector(),
+                            svdat_expected.getDataVector()));
     }
 }

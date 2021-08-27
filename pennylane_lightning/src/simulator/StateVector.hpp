@@ -30,6 +30,7 @@
 #include <utility>
 #include <vector>
 
+#include "Error.hpp"
 #include "Gates.hpp"
 #include "Util.hpp"
 
@@ -1083,7 +1084,7 @@ class StateVectorManaged : public StateVector<fp_t> {
         StateVector<fp_t>::setData(data_.data());
         data_[0] = {1, 0};
     }
-    StateVectorManaged(const StateVector<fp_t> other)
+    StateVectorManaged(const StateVector<fp_t> &other)
         : data_{other.getData(), other.getData() + other.getLength()},
           StateVector<fp_t>(nullptr, data_.size()) {
         StateVector<fp_t>::setData(data_.data());
@@ -1094,17 +1095,17 @@ class StateVectorManaged : public StateVector<fp_t> {
     }
     StateVectorManaged(const CFP_t *other_data, size_t other_size)
         : data_{other_data, other_data + other_size}, StateVector<fp_t>(
-                                                          nullptr,
-                                                          data_.size()) {
+                                                          nullptr, other_size) {
         StateVector<fp_t>::setData(data_.data());
     }
     StateVectorManaged(const StateVectorManaged<fp_t> &other)
-        : data_{other.data_}, StateVector<fp_t>(nullptr, data_.size()) {
+        : data_{other.data_}, StateVector<fp_t>(nullptr,
+                                                other.getDataVector().size()) {
         StateVector<fp_t>::setData(data_.data());
     }
 
     std::vector<CFP_t> &getDataVector() { return data_; }
-    std::vector<CFP_t> &getDataVector() const { return data_; }
+    const std::vector<CFP_t> &getDataVector() const { return data_; }
 
     std::vector<size_t>
     getInternalIndices(const std::vector<size_t> &qubit_indices) {
@@ -1120,6 +1121,11 @@ class StateVectorManaged : public StateVector<fp_t> {
             StateVector<fp_t>::generateBitPatterns(externalWires,
                                                    Util::log2(data_.size()));
         return externalIndices;
+    }
+    void updateData(const std::vector<CFP_t> &new_data) {
+        PL_ABORT_IF_NOT(data_.size() == new_data.size(),
+                        "New data must be the same size as old data.")
+        std::copy(new_data.begin(), new_data.end(), data_.begin());
     }
 };
 

@@ -43,20 +43,18 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
 
     SECTION("RX gradient") {
         const size_t num_qubits = 1;
-        const size_t num_params = 1;
+        const size_t num_params = 3;
         const size_t num_obs = 1;
-
         auto obs = adj.createObs({"PauliZ"}, {{}}, {{0}});
+        std::vector<double> jacobian(num_obs * num_params, 0.0);
 
         for (const auto &p : param) {
             auto ops = adj.createOpsData({"RX"}, {{p}}, {{0}}, {false});
 
-            std::vector<double> jacobian(num_obs * num_params, 0.0);
-
             std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-            StateVector<double> psi(cdata.data(), cdata.size());
             cdata[0] = std::complex<double>{1, 0};
 
+            StateVector<double> psi(cdata.data(), cdata.size());
             adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian, {obs},
                                 ops, {0}, 1);
             CAPTURE(jacobian);
@@ -66,19 +64,19 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
 
     SECTION("RY gradient") {
         const size_t num_qubits = 1;
-        const size_t num_params = 1;
+        const size_t num_params = 3;
         const size_t num_obs = 1;
 
         auto obs = adj.createObs({"PauliX"}, {{}}, {{0}});
+        std::vector<double> jacobian(num_obs * num_params, 0.0);
 
         for (const auto &p : param) {
             auto ops = adj.createOpsData({"RY"}, {{p}}, {{0}}, {false});
 
-            std::vector<double> jacobian(num_obs * num_params, 0.0);
-
             std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-            StateVector<double> psi(cdata.data(), cdata.size());
             cdata[0] = std::complex<double>{1, 0};
+
+            StateVector<double> psi(cdata.data(), cdata.size());
 
             adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian, {obs},
                                 ops, {0}, 1);
@@ -107,6 +105,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
 
         CAPTURE(jacobian);
         CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
+        CHECK(0.0 == Approx(jacobian[1]).margin(1e-7));
     }
     SECTION("Multiple RX gradient, single expval per wire") {
         const size_t num_qubits = 3;
@@ -130,7 +129,12 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
                             {obs1, obs2, obs3}, ops, {0, 1, 2}, num_params);
 
         CAPTURE(jacobian);
-        CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
+        CHECK(-sin(param[0]) ==
+              Approx(jacobian[0 * num_params + 0]).margin(1e-7));
+        CHECK(-sin(param[1]) ==
+              Approx(jacobian[1 * num_params + 1]).margin(1e-7));
+        CHECK(-sin(param[2]) ==
+              Approx(jacobian[2 * num_params + 2]).margin(1e-7));
     }
     SECTION("Multiple RX gradient, tensor expval") {
         const size_t num_qubits = 3;
@@ -168,29 +172,31 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
         StateVector<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
-        auto obs = adj.createObs({"PauliZ", "PauliZ", "PauliZ"}, {{}, {}, {}},
+        auto obs = adj.createObs({"PauliX", "PauliX", "PauliX"}, {{}, {}, {}},
                                  {{0}, {1}, {2}});
-        auto ops =
-            adj.createOpsData({"RX", "RX", "RX", "RY", "RY", "RY"},
-                              {{param[0]},
-                               {param[1]},
-                               {param[2]},
-                               {param[0]},
-                               {param[1]},
-                               {param[2]}},
-                              {{0}, {1}, {2}, {0}, {1}, {2}},
-                              {false, false, false, false, false, false});
+        auto ops = adj.createOpsData(
+            {"RZ", "RY", "RZ", "CNOT", "CNOT", "RZ", "RY", "RZ"},
+            {{param[0]},
+             {param[1]},
+             {param[2]},
+             {},
+             {},
+             {param[0]},
+             {param[1]},
+             {param[2]}},
+            {{0}, {0}, {0}, {0, 1}, {1, 2}, {1}, {1}, {1}},
+            {false, false, false, false, false, false, false, false});
 
         adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian, {obs},
                             ops, {0, 1, 2, 3, 4, 5}, num_params);
         CAPTURE(jacobian);
 
-        // Computed with parameter shift
-        CHECK(0.06396442 == Approx(jacobian[0]).margin(1e-7));
-        CHECK(-0.09650191 == Approx(jacobian[1]).margin(1e-7));
-        CHECK(0.23005702 == Approx(jacobian[2]).margin(1e-7));
-        CHECK(0.06396442 == Approx(jacobian[3]).margin(1e-7));
-        CHECK(-0.09650191 == Approx(jacobian[4]).margin(1e-7));
-        CHECK(0.23005702 == Approx(jacobian[5]).margin(1e-7));
+        // Computed with PennyLane using default.qubit.adjoint_jacobian
+        CHECK(0.0 == Approx(jacobian[0]).margin(1e-7));
+        CHECK(-0.674214427 == Approx(jacobian[1]).margin(1e-7));
+        CHECK(0.275139672 == Approx(jacobian[2]).margin(1e-7));
+        CHECK(0.275139672 == Approx(jacobian[3]).margin(1e-7));
+        CHECK(-0.0129093062 == Approx(jacobian[4]).margin(1e-7));
+        CHECK(0.323846156 == Approx(jacobian[5]).margin(1e-7));
     }
 }
