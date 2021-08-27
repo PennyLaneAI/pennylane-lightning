@@ -17,7 +17,7 @@ Helper functions for serializing quantum tapes.
 from typing import List, Tuple
 
 import numpy as np
-from pennylane import BasisState, Hadamard, Projector, QubitStateVector
+from pennylane import BasisState, Hadamard, Projector, QubitStateVector, Rot
 from pennylane.grouping import is_pauli_word
 from pennylane.operation import Observable, Tensor
 from pennylane.tape import QuantumTape
@@ -83,9 +83,7 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict) -> List[ObsStructC128]:
 
 def _serialize_ops(
     tape: QuantumTape, wires_map: dict
-) -> Tuple[
-    List[List[str]], List[np.ndarray], List[List[int]], List[bool], List[np.ndarray]
-]:
+) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]], List[bool], List[np.ndarray]]:
     """Serializes the operations of an input tape.
 
     The state preparation operations are not included.
@@ -108,24 +106,28 @@ def _serialize_ops(
     for o in tape.operations:
         if isinstance(o, (BasisState, QubitStateVector)):
             continue
-
-        is_inverse = o.inverse
-
-        name = o.name if not is_inverse else o.name[:-4]
-        names.append(name)
-
-        if getattr(StateVectorC128, name, None) is None:
-            params.append([])
-            mats.append(o.matrix)
-
-            if is_inverse:
-                is_inverse = False
+        elif isinstance(o, Rot):
+            op_list = o.expand().operations
         else:
-            params.append(o.parameters)
-            mats.append([])
+            op_list = [o]
 
-        wires_list = o.wires.tolist()
-        wires.append([wires_map[w] for w in wires_list])
-        inverses.append(is_inverse)
+        for single_op in op_list:
+            is_inverse = single_op.inverse
 
+            name = single_op.name if not is_inverse else single_op.name[:-4]
+            names.append(name)
+
+            if getattr(StateVectorC128, name, None) is None:
+                params.append([])
+                mats.append(single_op.matrix)
+
+                if is_inverse:
+                    is_inverse = False
+            else:
+                params.append(single_op.parameters)
+                mats.append([])
+
+            wires_list = single_op.wires.tolist()
+            wires.append([wires_map[w] for w in wires_list])
+            inverses.append(is_inverse)
     return names, params, wires, inverses, mats

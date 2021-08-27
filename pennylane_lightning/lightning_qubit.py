@@ -88,14 +88,10 @@ class LightningQubit(DefaultQubit):
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
             if isinstance(operations[0], QubitStateVector):
-                self._apply_state_vector(
-                    operations[0].parameters[0].copy(), operations[0].wires
-                )
+                self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
                 del operations[0]
             elif isinstance(operations[0], BasisState):
-                self._apply_basis_state(
-                    operations[0].parameters[0], operations[0].wires
-                )
+                self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 del operations[0]
 
         for operation in operations:
@@ -114,9 +110,7 @@ class LightningQubit(DefaultQubit):
             if any(isinstance(r, QubitUnitary) for r in rotations):
                 super().apply(operations=[], rotations=rotations)
             else:
-                self._state = self.apply_lightning(
-                    np.copy(self._pre_rotated_state), rotations
-                )
+                self._state = self.apply_lightning(np.copy(self._pre_rotated_state), rotations)
         else:
             self._state = self._pre_rotated_state
 
@@ -135,9 +129,7 @@ class LightningQubit(DefaultQubit):
         sim = StateVectorC128(state_vector)
 
         for o in operations:
-            name = o.name.split(".")[
-                0
-            ]  # The split is because inverse gates have .inv appended
+            name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
             method = getattr(sim, name, None)
 
             wires = self.wires.indices(o.wires)
@@ -193,7 +185,7 @@ class LightningQubit(DefaultQubit):
             tape.num_params,
         )
 
-        return jac # super().adjoint_jacobian(tape, starting_state, use_device_state)
+        return jac  # super().adjoint_jacobian(tape, starting_state, use_device_state)
 
 
 if not CPP_BINARY_AVAILABLE:
