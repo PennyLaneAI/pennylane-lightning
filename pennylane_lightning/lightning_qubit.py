@@ -167,9 +167,8 @@ class LightningQubit(DefaultQubit):
             if not use_device_state:
                 self.reset()
                 self.execute(tape)
-            ket = self._pre_rotated_state
+            ket = np.ravel(self._pre_rotated_state)
 
-        # TODO: How to accommodate for tensor product observables?
         adj = AdjointJacobianC128()
 
         obs_serialized = _serialize_obs(tape, self.wire_map)
