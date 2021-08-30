@@ -257,10 +257,7 @@ template <class T>
 inline std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
     os << '[';
     for (size_t i = 0; i < vec.size(); i++) {
-        if (i > 0 && i < vec.size() - 1) {
-            os << ",";
-        }
-        os << vec[i];
+        os << vec[i] << ",";
     }
     os << ']';
     return os;
