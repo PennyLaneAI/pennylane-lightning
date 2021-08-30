@@ -1,9 +1,7 @@
 #pragma once
 
-#include <cmath>
 #include <complex>
 #include <cstring>
-#include <memory>
 #include <numeric>
 #include <unordered_map>
 #include <utility>
