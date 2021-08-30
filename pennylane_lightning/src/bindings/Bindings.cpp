@@ -662,18 +662,19 @@ void lightning_class_bindings(py::module &m) {
         .def(py::init<const std::vector<std::string> &,
                       const std::vector<std::vector<Param_t>> &,
                       const std::vector<std::vector<size_t>> &>())
-        .def("__repr__", [](const ObsDatum<PrecisionT>& obs){
+        .def("__repr__", [](const ObsDatum<PrecisionT> &obs) {
             using namespace Pennylane::Util;
             std::ostringstream obs_stream;
             std::string obs_name = obs.getObsName()[0];
-            for(size_t o = 1; o < obs.getObsName().size(); o++){
-                if(o < obs.getObsName().size())
+            for (size_t o = 1; o < obs.getObsName().size(); o++) {
+                if (o < obs.getObsName().size())
                     obs_name += " @ ";
                 obs_name += obs.getObsName()[o];
             }
             obs_stream << "'wires' : " << obs.getObsWires();
-            return "Observable: { 'name' : " + obs_name + ", " + obs_stream.str() + " }";
-         });
+            return "Observable: { 'name' : " + obs_name + ", " +
+                   obs_stream.str() + " }";
+        });
 
     class_name = "OpsStructC" + bitsize;
     py::class_<OpsData<PrecisionT>>(m, class_name.c_str())
@@ -683,13 +684,13 @@ void lightning_class_bindings(py::module &m) {
              const std::vector<std::vector<size_t>> &,
              const std::vector<bool> &,
              const std::vector<std::vector<std::complex<PrecisionT>>> &>())
-        .def("__repr__", [](const OpsData<PrecisionT>& ops){
+        .def("__repr__", [](const OpsData<PrecisionT> &ops) {
             using namespace Pennylane::Util;
             std::ostringstream ops_stream;
-            for(size_t op = 0; op < ops.getSize(); op++){
+            for (size_t op = 0; op < ops.getSize(); op++) {
                 ops_stream << "{'name': " << ops.getOpsName()[op];
                 ops_stream << ", 'params': " << ops.getOpsParams()[op] << "}";
-                if(op < ops.getSize()-1)
+                if (op < ops.getSize() - 1)
                     ops_stream << ",";
             }
             return "Operations: [" + ops_stream.str() + "]";
