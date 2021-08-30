@@ -15,7 +15,6 @@
 
 #include <iostream>
 
-// Generators not needed outside this translation unit
 namespace {
 
 using namespace Pennylane;
@@ -147,7 +146,6 @@ template <class T> struct OpsData {
     const std::vector<std::vector<size_t>> ops_wires_;
     const std::vector<bool> ops_inverses_;
     const std::vector<std::vector<std::complex<T>>> ops_matrices_;
-
     OpsData(const std::vector<std::string> &ops_name,
             const std::vector<std::vector<T>> &ops_params,
             const std::vector<std::vector<size_t>> &ops_wires,
@@ -263,7 +261,6 @@ template <class T = double> class AdjointJacobian {
                          const OpsData<T> &operations,
                          const vector<size_t> &trainableParams,
                          size_t num_params) {
-
         const size_t num_observables = observables.size();
         unsigned int trainableParamNumber = trainableParams.size() - 1;
         int current_param_idx = num_params - 1;

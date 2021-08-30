@@ -54,7 +54,7 @@ if ("$ENV{USE_OPENBLAS}" OR "${USE_OPENBLAS}")
     target_compile_options(external_dependency INTERFACE "-DOPENBLAS=1")
 endif()
 
-pybind11_add_module(lightning_qubit_ops     "pennylane_lightning/src/Bindings.cpp")
+pybind11_add_module(lightning_qubit_ops     "pennylane_lightning/src/bindings/Bindings.cpp")
 target_link_libraries(lightning_qubit_ops PRIVATE pennylane_lightning external_dependency)
 set_target_properties(lightning_qubit_ops PROPERTIES CXX_VISIBILITY_PRESET hidden)
 

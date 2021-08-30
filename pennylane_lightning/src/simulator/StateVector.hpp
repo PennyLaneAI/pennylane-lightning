@@ -152,7 +152,7 @@ template <class fp_t = double> class StateVector {
               {"CRZ",
                bind(&StateVector<fp_t>::applyCRZ_, this, _1, _2, _3, _4)},
               {"CRot",
-               bind(&StateVector<fp_t>::applyCRot_, this, _1, _2, _3, _4)}} {};
+               bind(&StateVector<fp_t>::applyCRot_, this, _1, _2, _3, _4)}}{};
 
     /**
      * @brief Get the underlying data pointer.
@@ -614,7 +614,6 @@ template <class fp_t = double> class StateVector {
     void applyRY(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
                  Param_t angle) {
-
         const CFP_t c(std::cos(angle / 2), 0);
         const CFP_t s = (inverse == true) ? CFP_t(-std::sin(angle / 2), 0)
                                           : CFP_t(std::sin(angle / 2), 0);
