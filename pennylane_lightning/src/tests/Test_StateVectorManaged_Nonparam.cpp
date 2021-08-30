@@ -9,7 +9,7 @@
 #include <catch2/catch.hpp>
 
 #include "Gates.hpp"
-#include "StateVector.hpp"
+#include "StateVectorManaged.hpp"
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"

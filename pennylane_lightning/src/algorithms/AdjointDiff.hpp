@@ -11,6 +11,7 @@
 
 #include "Error.hpp"
 #include "StateVector.hpp"
+#include "StateVectorManaged.hpp"
 #include "Util.hpp"
 
 #include <iostream>
@@ -286,7 +287,6 @@ template <class T = double> class AdjointJacobian {
             PL_ABORT_IF(operations.getOpsParams()[op_idx].size() > 1,
                         "The operation is not supported using the adjoint "
                         "differentiation method");
-
             if ((operations.getOpsName()[op_idx] != "QubitStateVector") &&
                 (operations.getOpsName()[op_idx] != "BasisState")) {
 

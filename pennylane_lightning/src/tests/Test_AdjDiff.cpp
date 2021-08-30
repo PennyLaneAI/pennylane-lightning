@@ -36,7 +36,6 @@ TEMPLATE_TEST_CASE("AdjointJacobian::AdjointJacobian", "[AdjointJacobian]",
 }
 
 TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
-
     AdjointJacobian<double> adj;
     // std::vector<double> param{1, -2, 1.623, -0.051, 0};
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
