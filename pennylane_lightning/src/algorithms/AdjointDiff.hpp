@@ -115,20 +115,53 @@ namespace Algorithms {
  * class.
  *
  */
-template <class T = double> struct ObsDatum {
+template <class T = double> class ObsDatum {
+  private:
     const std::vector<std::string> obs_name_;
     const std::vector<std::vector<T>> obs_params_;
     const std::vector<std::vector<size_t>> obs_wires_;
+
+  public:
+    /**
+     * @brief Construct an ObsDatum object, representing a given observable.
+     *
+     * @param obs_name Name of each operation of the observable. Tensor product
+     * observables have more than one operation.
+     * @param obs_params Parameters for a given obserable opeartion ({} if
+     * optional).
+     * @param ops_wires Wires upon which to apply operation. Each observable
+     * operation will eb a separate nested list.
+     */
     ObsDatum(const std::vector<std::string> &obs_name,
              const std::vector<std::vector<T>> &obs_params,
              const std::vector<std::vector<size_t>> &obs_wires)
         : obs_name_{obs_name}, obs_params_{obs_params}, obs_wires_{
                                                             obs_wires} {};
+    /**
+     * @brief Get the number of operations in observable.
+     *
+     * @return size_t
+     */
     size_t getSize() const { return obs_name_.size(); }
+    /**
+     * @brief Get the name of the observable operations.
+     *
+     * @return const std::vector<std::string>&
+     */
     const std::vector<std::string> &getObsName() const { return obs_name_; }
+    /**
+     * @brief Get the parameters for the observable operations.
+     *
+     * @return const std::vector<std::vector<T>>&
+     */
     const std::vector<std::vector<T>> &getObsParams() const {
         return obs_params_;
     }
+    /**
+     * @brief Get the wires for each observable operation.
+     *
+     * @return const std::vector<std::vector<size_t>>&
+     */
     const std::vector<std::vector<size_t>> &getObsWires() const {
         return obs_wires_;
     }
@@ -145,6 +178,19 @@ template <class T> struct OpsData {
     const std::vector<std::vector<size_t>> ops_wires_;
     const std::vector<bool> ops_inverses_;
     const std::vector<std::vector<std::complex<T>>> ops_matrices_;
+
+    /**
+     * @brief Construct an OpsData object, representing the serialized
+     * operations to apply upon the `%StateVector`.
+     *
+     * @param ops_name Name of each operation to apply.
+     * @param ops_params Parameters for a given operation ({} if optional).
+     * @param ops_wires Wires upon which to apply operation
+     * @param ops_inverses Value to represent whether given operation is
+     * adjoint.
+     * @param ops_matrices Numerical representation of given matrix if not
+     * supported.
+     */
     OpsData(const std::vector<std::string> &ops_name,
             const std::vector<std::vector<T>> &ops_params,
             const std::vector<std::vector<size_t>> &ops_wires,
@@ -153,6 +199,16 @@ template <class T> struct OpsData {
         : ops_name_{ops_name}, ops_params_{ops_params}, ops_wires_{ops_wires},
           ops_inverses_{ops_inverses}, ops_matrices_{ops_matrices} {};
 
+    /**
+     * @brief Construct an OpsData object, representing the serialized
+     operations to apply upon the `%StateVector`.
+     *
+     * @see  OpsData(const std::vector<std::string> &ops_name,
+            const std::vector<std::vector<T>> &ops_params,
+            const std::vector<std::vector<size_t>> &ops_wires,
+            const std::vector<bool> &ops_inverses,
+            const std::vector<std::vector<std::complex<T>>> &ops_matrices)
+     */
     OpsData(const std::vector<std::string> &ops_name,
             const std::vector<std::vector<T>> &ops_params,
             const std::vector<std::vector<size_t>> &ops_wires,
@@ -160,26 +216,66 @@ template <class T> struct OpsData {
         : ops_name_{ops_name}, ops_params_{ops_params}, ops_wires_{ops_wires},
           ops_inverses_{ops_inverses}, ops_matrices_(ops_name.size()){};
 
+    /**
+     * @brief Get the number of operations to be applied.
+     *
+     * @return size_t Number of operations.
+     */
     size_t getSize() const { return ops_name_.size(); }
+
+    /**
+     * @brief Get the names of the operations to be applied.
+     *
+     * @return const std::vector<std::string>&
+     */
     const std::vector<std::string> &getOpsName() const { return ops_name_; }
+    /**
+     * @brief Get the (optional) parameters for each operation. Given entries
+     * are empty ({}) if not required.
+     *
+     * @return const std::vector<std::vector<T>>&
+     */
     const std::vector<std::vector<T>> &getOpsParams() const {
         return ops_params_;
     }
+    /**
+     * @brief Get the wires for each operation.
+     *
+     * @return const std::vector<std::vector<size_t>>&
+     */
     const std::vector<std::vector<size_t>> &getOpsWires() const {
         return ops_wires_;
     }
+    /**
+     * @brief Get the adjoint flag for each operation.
+     *
+     * @return const std::vector<bool>&
+     */
     const std::vector<bool> &getOpsInverses() const { return ops_inverses_; }
+    /**
+     * @brief Get the numerical matrix for a given unsupported operation. Given
+     * entries are empty ({}) if not required.
+     *
+     * @return const std::vector<std::vector<std::complex<T>>>&
+     */
     const std::vector<std::vector<std::complex<T>>> &getOpsMatrices() const {
         return ops_matrices_;
     }
 };
 
+/**
+ * @brief Represent the logic for the adjoint Jacobian method of
+ * arXiV:2009.02823
+ *
+ * @tparam T Floating-point precision.
+ */
 template <class T = double> class AdjointJacobian {
   private:
     typedef void (*GeneratorFunc)(
         StateVectorManaged<T> &sv,
         const std::vector<size_t> &wires); // function pointer type
 
+    // Holds the mapping from gate labels to associated generator functions.
     const std::unordered_map<std::string, GeneratorFunc> generator_map{
         {"RX", &::applyGeneratorRX<T, StateVectorManaged<T>>},
         {"RY", &::applyGeneratorRY<T, StateVectorManaged<T>>},
@@ -191,12 +287,24 @@ template <class T = double> class AdjointJacobian {
         {"ControlledPhaseShift",
          &::applyGeneratorControlledPhaseShift<T, StateVectorManaged<T>>}};
 
+    // Holds the mappings from gate labels to associated generator coefficients.
     const std::unordered_map<std::string, T> scaling_factors{
         {"RX", -0.5},  {"RY", -0.5},
         {"RZ", -0.5},  {"PhaseShift", 1},
         {"CRX", -0.5}, {"CRY", -0.5},
         {"CRZ", -0.5}, {"ControlledPhaseShift", 1}};
 
+    /**
+     * @brief Utility method to update the Jacobian at a given index by
+     * calculating the overlap between two given states.
+     *
+     * @param sv1 Statevector <sv1|. Each datum will be conjugated.
+     * @param sv2 Statevector |sv2>
+     * @param jac Jacobian receiving the values.
+     * @param num_elements Length of statevectors
+     * @param scaling_coeff Generator coefficient for given gate derivative.
+     * @param index Position of Jacobian to update.
+     */
     inline void updateJacobian(const std::complex<T> *sv1,
                                const std::complex<T> *sv2, std::vector<T> &jac,
                                size_t num_elements, T scaling_coeff,
@@ -204,6 +312,15 @@ template <class T = double> class AdjointJacobian {
         jac[index] =
             -2 * scaling_coeff * std::imag(innerProdC(sv1, sv2, num_elements));
     }
+    /**
+     * @brief Utility method to update the Jacobian at a given index by
+     calculating the overlap between two given states.
+     *
+     * @see updateJacobian(const std::complex<T> *sv1,
+                               const std::complex<T> *sv2, std::vector<T> &jac,
+                               size_t num_elements, T scaling_coeff,
+                               size_t index)
+     */
     inline void updateJacobian(const std::vector<std::complex<T>> &sv1,
                                const std::vector<std::complex<T>> &sv2,
                                std::vector<T> &jac, size_t num_elements,
@@ -211,6 +328,14 @@ template <class T = double> class AdjointJacobian {
         PL_ASSERT(index < jac.size());
         jac[index] = -2 * scaling_coeff * std::imag(innerProdC(sv1, sv2));
     }
+
+    /**
+     * @brief Utility method to apply all operations from given `%OpsData<T>`
+     * object to `%StateVectorManaged<T>`
+     *
+     * @param state Statevector to be updated.
+     * @param operations Operations to apply.
+     */
     inline void applyOperations(StateVectorManaged<T> &state,
                                 const OpsData<T> &operations) {
         for (size_t op_idx = 0; op_idx < operations.getOpsName().size();
@@ -221,6 +346,13 @@ template <class T = double> class AdjointJacobian {
                                  operations.getOpsParams()[op_idx]);
         }
     }
+    /**
+     * @brief Utility method to apply a given operations from given
+     * `%ObsDatum<T>` object to `%StateVectorManaged<T>`
+     *
+     * @param state Statevector to be updated.
+     * @param observable Observable to apply.
+     */
     inline void applyObservable(StateVectorManaged<T> &state,
                                 const ObsDatum<T> &observable) {
         for (size_t j = 0; j < observable.getSize(); j++) {
@@ -233,6 +365,14 @@ template <class T = double> class AdjointJacobian {
   public:
     AdjointJacobian() {}
 
+    /**
+     * @brief Utility to create a given observable object.
+     *
+     * @param obs_name
+     * @param obs_params
+     * @param obs_wires
+     * @return const ObsDatum<T>
+     */
     const ObsDatum<T>
     createObs(const std::vector<std::string> &obs_name,
               const std::vector<std::vector<T>> &obs_params,
@@ -240,6 +380,16 @@ template <class T = double> class AdjointJacobian {
         return {obs_name, obs_params, obs_wires};
     }
 
+    /**
+     * @brief Utility to create a given operations object.
+     *
+     * @param ops_name
+     * @param ops_params
+     * @param ops_wires
+     * @param ops_inverses
+     * @param ops_matrices
+     * @return const OpsData<T>
+     */
     const OpsData<T> createOpsData(
         const std::vector<std::string> &ops_name,
         const std::vector<std::vector<T>> &ops_params,
@@ -249,11 +399,40 @@ template <class T = double> class AdjointJacobian {
         return {ops_name, ops_params, ops_wires, ops_inverses, ops_matrices};
     }
 
+    /**
+     * @brief Copies complex data array into a `%vector` of the same dimension.
+     *
+     * @param input_state
+     * @param state_length
+     * @return std::vector<std::complex<T>>
+     */
     std::vector<std::complex<T>>
     copyStateData(const std::complex<T> *input_state, size_t state_length) {
         return {input_state, input_state + state_length};
     }
 
+    /**
+     * @brief Calculates the Jacobian for the statevector for the selected set
+     * of parametric gates.
+     *
+     * For the statevector data associated with `psi` of length `num_elements`,
+     * we make internal copies to a `%StateVectorManaged<T>` object, with one
+     * per required observable. The `operations` will be applied to the internal
+     * statevector copies, with the operation indices participating in the
+     * gradient calculations given in `trainableParams`, and the overall number
+     * of parameters for the gradient calculation provided within `num_params`.
+     * The resulting row-major ordered `jac` matrix representation will be of
+     * size `trainableParams.size() * observables.size()`. OpenMP is used to
+     * enable independent operations to be offloaded to threads.
+     *
+     * @param psi
+     * @param num_elements
+     * @param jac
+     * @param observables
+     * @param operations
+     * @param trainableParams
+     * @param num_params
+     */
     void adjointJacobian(const std::complex<T> *psi, size_t num_elements,
                          std::vector<T> &jac,
                          const std::vector<ObsDatum<T>> &observables,
@@ -332,7 +511,6 @@ template <class T = double> class AdjointJacobian {
             }
         }
     }
-    // return jacobian;
 };
 
 } // namespace Algorithms
