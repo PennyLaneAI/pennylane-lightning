@@ -28,7 +28,6 @@ from pennylane import (
 from pennylane.devices import DefaultQubit
 from pennylane.operation import Expectation
 
-from ._serialize import _serialize_obs, _serialize_ops
 from ._version import __version__
 
 try:
@@ -38,6 +37,7 @@ try:
         StateVectorC128,
         AdjointJacobianC128,
     )
+    from ._serialize import _serialize_obs, _serialize_ops
 
     CPP_BINARY_AVAILABLE = True
 except ModuleNotFoundError:
@@ -145,6 +145,8 @@ class LightningQubit(DefaultQubit):
         return np.reshape(state_vector, state.shape)
 
     def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
+        if not CPP_BINARY_AVAILABLE:
+            return super().adjoint_jacobian(tape, starting_state, use_device_state)
 
         if self.shots is not None:
             warn(
