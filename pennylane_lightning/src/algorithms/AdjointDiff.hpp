@@ -270,7 +270,6 @@ template <class T = double> class AdjointJacobian {
 
         // 1. Create $U_{1:p}\vert \lambda \rangle$
         StateVectorManaged<T> lambda(psi, num_elements);
-
         applyOperations(lambda, operations);
 
         // 2. Create observable-applied state-vectors
@@ -278,12 +277,11 @@ template <class T = double> class AdjointJacobian {
                                                     {lambda.getNumQubits()});
 
 #pragma omp parallel for
-        {
-            for (size_t h_i = 0; h_i < num_observables; h_i++) {
-                H_lambda[h_i].updateData(lambda.getDataVector());
-                applyObservable(H_lambda[h_i], observables[h_i]);
-            }
+        for (size_t h_i = 0; h_i < num_observables; h_i++) {
+            H_lambda[h_i].updateData(lambda.getDataVector());
+            applyObservable(H_lambda[h_i], observables[h_i]);
         }
+
         StateVectorManaged<T> mu(lambda.getNumQubits());
 
         for (int op_idx = operations.getOpsName().size() - 1; op_idx >= 0;
@@ -306,13 +304,14 @@ template <class T = double> class AdjointJacobian {
                     if (std::find(trainableParams.begin(),
                                   trainableParams.end(),
                                   current_param_idx) != trainableParams.end()) {
-
+                        // Apply generator function
                         generator_map.at(operations.getOpsName()[op_idx])(
                             mu, operations.getOpsWires()[op_idx]);
                         const T scalingFactor =
                             scaling_factors.at(operations.getOpsName()[op_idx]);
 
                         size_t index;
+#pragma omp parallel for
                         for (size_t obs_idx = 0; obs_idx < num_observables;
                              obs_idx++) {
                             index = obs_idx * trainableParams.size() +
@@ -321,21 +320,19 @@ template <class T = double> class AdjointJacobian {
                                            mu.getData(), jac, num_elements,
                                            scalingFactor, index);
                         }
+
                         trainableParamNumber--;
                     }
                     current_param_idx--;
                 }
 
 #pragma omp parallel for
-                {
-                    for (size_t obs_idx = 0; obs_idx < num_observables;
-                         obs_idx++) {
-                        H_lambda[obs_idx].applyOperation(
-                            operations.getOpsName()[op_idx],
-                            operations.getOpsWires()[op_idx],
-                            !operations.getOpsInverses()[op_idx],
-                            operations.getOpsParams()[op_idx]);
-                    }
+                for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
+                    H_lambda[obs_idx].applyOperation(
+                        operations.getOpsName()[op_idx],
+                        operations.getOpsWires()[op_idx],
+                        !operations.getOpsInverses()[op_idx],
+                        operations.getOpsParams()[op_idx]);
                 }
             }
         }
