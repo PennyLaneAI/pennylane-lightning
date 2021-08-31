@@ -24,8 +24,11 @@
 #include <limits>
 #include <memory>
 #include <numeric>
+#include <set>
 #include <stdexcept>
 #include <type_traits>
+
+#include <iostream>
 
 #if __has_include(<cblas.h>) && defined _ENABLE_BLAS
 #include <cblas.h>
@@ -261,6 +264,25 @@ inline std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
     }
     os << ']';
     return os;
+}
+
+template <class T>
+inline std::ostream &operator<<(std::ostream &os, const std::set<T> &s) {
+    os << '{';
+    for (const auto &e : s) {
+        os << e << ",";
+    }
+    os << '}';
+    return os;
+}
+
+template <class T> std::vector<T> linspace(T start, T end, size_t num_points) {
+    std::vector<T> data(num_points);
+    T step = (end - start) / (num_points - 1);
+    for (size_t i = 0; i < num_points; i++) {
+        data[i] = start + (step * i);
+    }
+    return data;
 }
 
 /**
