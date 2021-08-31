@@ -182,7 +182,7 @@ class LightningQubit(DefaultQubit):
             StateVectorC128(ket),
             obs_serialized,
             ops_serialized,
-            list(tape.trainable_params),
+            tape.trainable_params,
             tape.num_params,
         )
 
