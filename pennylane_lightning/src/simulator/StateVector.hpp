@@ -89,6 +89,8 @@ template <class fp_t = double> class StateVector {
     size_t num_qubits_;
 
   public:
+    using scalar_type_t = fp_t;
+
     StateVector()
         : arr_{nullptr}, length_{0}, num_qubits_{0}, gate_wires_{}, gates_{} {};
 
@@ -1067,19 +1069,18 @@ template <class fp_t = double> class StateVector {
         applyCSWAP(indices, externalIndices, inverse);
     }
 };
-
 template <class T>
 inline std::ostream &operator<<(std::ostream &out, const StateVector<T> &sv) {
-    const size_t num_qubits = sv.getNumQubits();
-    const size_t length = sv.getLength();
-    const auto data_ptr = sv.getData();
-    out << "num_qubits=" << num_qubits << std::endl;
+    const auto length = sv.getLength();
+    const auto qubits = sv.getNumQubits();
+    const auto data = sv.getData();
+    out << "num_qubits=" << qubits << std::endl;
     out << "data=[";
-    out << data_ptr[0];
+    out << data[0];
     for (size_t i = 1; i < length - 1; i++) {
-        out << "," << data_ptr[i];
+        out << "," << data[i];
     }
-    out << "," << data_ptr[length - 1] << "]";
+    out << "," << data[length - 1] << "]";
 
     return out;
 }
