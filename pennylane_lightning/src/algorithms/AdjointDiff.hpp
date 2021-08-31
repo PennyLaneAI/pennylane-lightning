@@ -3,6 +3,7 @@
 #include <complex>
 #include <cstring>
 #include <numeric>
+#include <set>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -437,17 +438,23 @@ template <class T = double> class AdjointJacobian {
                          std::vector<T> &jac,
                          const std::vector<ObsDatum<T>> &observables,
                          const OpsData<T> &operations,
-                         const vector<size_t> &trainableParams,
-                         size_t num_params) {
-        const size_t num_observables = observables.size();
-        unsigned int trainableParamNumber = trainableParams.size() - 1;
+                         const std::set<size_t> &trainableParams,
+                         size_t num_params, bool apply_operations = false) {
+        PL_ABORT_IF(trainableParams.empty(),
+                    "No trainable parameters provided.");
+
+        size_t num_observables = observables.size();
+        size_t trainableParamNumber = trainableParams.size() - 1;
         int current_param_idx = num_params - 1;
 
-        // 1. Create $U_{1:p}\vert \lambda \rangle$
+        // Create $U_{1:p}\vert \lambda \rangle$
         StateVectorManaged<T> lambda(psi, num_elements);
-        applyOperations(lambda, operations);
 
-        // 2. Create observable-applied state-vectors
+        // Apply given operations to statevector if requested
+        if (apply_operations)
+            applyOperations(lambda, operations);
+
+        // Create observable-applied state-vectors
         std::vector<StateVectorManaged<T>> H_lambda(num_observables,
                                                     {lambda.getNumQubits()});
 
@@ -456,11 +463,13 @@ template <class T = double> class AdjointJacobian {
             H_lambda[h_i].updateData(lambda.getDataVector());
             applyObservable(H_lambda[h_i], observables[h_i]);
         }
-
         StateVectorManaged<T> mu(lambda.getNumQubits());
+
+        auto it = trainableParams.end();
 
         for (int op_idx = operations.getOpsName().size() - 1; op_idx >= 0;
              op_idx--) {
+
             PL_ABORT_IF(operations.getOpsParams()[op_idx].size() > 1,
                         "The operation is not supported using the adjoint "
                         "differentiation method");
@@ -475,9 +484,10 @@ template <class T = double> class AdjointJacobian {
                                       operations.getOpsParams()[op_idx]);
 
                 if (!operations.getOpsParams()[op_idx].empty()) {
-                    if (std::find(trainableParams.begin(),
-                                  trainableParams.end(),
-                                  current_param_idx) != trainableParams.end()) {
+
+                    if (std::find(trainableParams.begin(), it,
+                                  current_param_idx) != it) {
+
                         // Apply generator function
                         generator_map.at(operations.getOpsName()[op_idx])(
                             mu, operations.getOpsWires()[op_idx]);
@@ -494,8 +504,8 @@ template <class T = double> class AdjointJacobian {
                                            mu.getData(), jac, num_elements,
                                            scalingFactor, index);
                         }
-
                         trainableParamNumber--;
+                        std::advance(it, -1);
                     }
                     current_param_idx--;
                 }

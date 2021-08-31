@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <set>
 #include <tuple>
+#include <vector>
 
 #include "AdjointDiff.hpp"
 #include "StateVector.hpp"
@@ -26,6 +28,7 @@ namespace {
 using namespace Pennylane::Algorithms;
 using Pennylane::StateVector;
 using std::complex;
+using std::set;
 using std::string;
 using std::vector;
 
@@ -707,7 +710,7 @@ void lightning_class_bindings(py::module &m) {
                 const StateVecBinder<PrecisionT> &sv,
                 const std::vector<ObsDatum<PrecisionT>> &observables,
                 const OpsData<PrecisionT> &operations,
-                const vector<size_t> &trainableParams, size_t num_params) {
+                const set<size_t> &trainableParams, size_t num_params) {
                  std::vector<PrecisionT> jac(num_params * observables.size());
                  adj.adjointJacobian(sv.getData(), sv.getLength(), jac,
                                      observables, operations, trainableParams,
