@@ -173,13 +173,15 @@ template <class T = double> class ObsDatum {
  * class.
  *
  */
-template <class T> struct OpsData {
+template <class T> class OpsData {
+  private:
     const std::vector<std::string> ops_name_;
     const std::vector<std::vector<T>> ops_params_;
     const std::vector<std::vector<size_t>> ops_wires_;
     const std::vector<bool> ops_inverses_;
     const std::vector<std::vector<std::complex<T>>> ops_matrices_;
 
+  public:
     /**
      * @brief Construct an OpsData object, representing the serialized
      * operations to apply upon the `%StateVector`.
@@ -262,6 +264,10 @@ template <class T> struct OpsData {
     const std::vector<std::vector<std::complex<T>>> &getOpsMatrices() const {
         return ops_matrices_;
     }
+
+    inline bool hasParams(size_t index) const {
+        return !ops_params_[index].empty();
+    }
 };
 
 /**
@@ -299,7 +305,7 @@ template <class T = double> class AdjointJacobian {
      * @brief Utility method to update the Jacobian at a given index by
      * calculating the overlap between two given states.
      *
-     * @param sv1 Statevector <sv1|. Each datum will be conjugated.
+     * @param sv1 Statevector <sv1|. Data will be conjugated.
      * @param sv2 Statevector |sv2>
      * @param jac Jacobian receiving the values.
      * @param num_elements Length of statevectors
@@ -328,6 +334,24 @@ template <class T = double> class AdjointJacobian {
                                T scaling_coeff, size_t index) {
         PL_ASSERT(index < jac.size());
         jac[index] = -2 * scaling_coeff * std::imag(innerProdC(sv1, sv2));
+    }
+    /**
+     * @brief Utility method to update the Jacobian at a given index by
+     calculating the overlap between two given states.
+     *
+     * @see updateJacobian(const std::complex<T> *sv1,
+                               const std::complex<T> *sv2, std::vector<T> &jac,
+                               size_t num_elements, T scaling_coeff,
+                               size_t index)
+     */
+    inline void updateJacobian(const StateVectorManaged<T> &sv1,
+                               const StateVectorManaged<T> &sv2,
+                               std::vector<T> &jac, size_t num_elements,
+                               T scaling_coeff, size_t index) {
+        PL_ASSERT(index < jac.size());
+        jac[index] =
+            -2 * scaling_coeff *
+            std::imag(innerProdC(sv1.getDataVector(), sv2.getDataVector()));
     }
 
     /**
@@ -413,6 +437,22 @@ template <class T = double> class AdjointJacobian {
     }
 
     /**
+     * @brief Applies the gate generator for a given parameteric gate. Returns
+     * the associated scaling coefficient.
+     *
+     * @param sv Statevector data to operate upon.
+     * @param op_name Name of parametric gate.
+     * @param wires Wires to operate upon.
+     * @return T Generator scaling coefficient.
+     */
+    inline T applyGenerator(StateVectorManaged<T> &sv,
+                            const std::string &op_name,
+                            const std::vector<size_t> &wires) {
+        generator_map.at(op_name)(sv, wires);
+        return scaling_factors.at(op_name);
+    }
+
+    /**
      * @brief Calculates the Jacobian for the statevector for the selected set
      * of parametric gates.
      *
@@ -465,7 +505,7 @@ template <class T = double> class AdjointJacobian {
         }
         StateVectorManaged<T> mu(lambda.getNumQubits());
 
-        auto it = trainableParams.end();
+        auto tp_it = trainableParams.end();
 
         for (int op_idx = operations.getOpsName().size() - 1; op_idx >= 0;
              op_idx--) {
@@ -483,16 +523,13 @@ template <class T = double> class AdjointJacobian {
                                       !operations.getOpsInverses()[op_idx],
                                       operations.getOpsParams()[op_idx]);
 
-                if (!operations.getOpsParams()[op_idx].empty()) {
+                if (operations.hasParams(op_idx)) {
+                    if (std::find(trainableParams.begin(), tp_it,
+                                  current_param_idx) != tp_it) {
 
-                    if (std::find(trainableParams.begin(), it,
-                                  current_param_idx) != it) {
-
-                        // Apply generator function
-                        generator_map.at(operations.getOpsName()[op_idx])(
-                            mu, operations.getOpsWires()[op_idx]);
                         const T scalingFactor =
-                            scaling_factors.at(operations.getOpsName()[op_idx]);
+                            applyGenerator(mu, operations.getOpsName()[op_idx],
+                                           operations.getOpsWires()[op_idx]);
 
                         size_t index;
 #pragma omp parallel for
@@ -500,12 +537,11 @@ template <class T = double> class AdjointJacobian {
                              obs_idx++) {
                             index = obs_idx * trainableParams.size() +
                                     trainableParamNumber;
-                            updateJacobian(H_lambda[obs_idx].getData(),
-                                           mu.getData(), jac, num_elements,
-                                           scalingFactor, index);
+                            updateJacobian(H_lambda[obs_idx], mu, jac,
+                                           num_elements, scalingFactor, index);
                         }
                         trainableParamNumber--;
-                        std::advance(it, -1);
+                        std::advance(tp_it, -1);
                     }
                     current_param_idx--;
                 }
