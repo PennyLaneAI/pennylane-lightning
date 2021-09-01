@@ -661,81 +661,69 @@ void lightning_class_bindings(py::module &m) {
              "Apply the CRot gate.");
 
     //***********************************************************************//
-    //                        Observable::complex params
-    //***********************************************************************//
-    /*
-        class_name = "ObsC" + bitsize;
-        py::class_<ObsDatum<std::complex<Param_t>>>(m, class_name.c_str())
-            .def(py::init<const std::vector<std::string> &,
-                          // const
-       std::vector<py::array<std::complex<Param_t>>>&, const
-       std::vector<std::vector<std::complex<Param_t>>> &, const
-       std::vector<std::vector<size_t>> &>()) .def(py::init(
-                [](const std::vector<std::string> &opnames,
-                   const std::vector<
-                        py::array_t<
-                            std::complex<Param_t>, py::array::c_style |
-       py::array::forcecast
-                        >
-                    > &opmatrix,
-                   const std::vector<std::vector<size_t>> &opwires) {
-
-                    return ObsDatum<std::complex<Param_t>>{{opnames},
-       {opmatrix.data(), opmatrix.}, {opwires}
-                    };
-                }))
-            .def("__repr__",
-                 [](const ObsDatum<std::complex<Param_t>> &obs) {
-                     using namespace Pennylane::Util;
-                     std::ostringstream obs_stream;
-                     std::string obs_name = obs.getObsName()[0];
-                     for (size_t o = 1; o < obs.getObsName().size(); o++) {
-                         if (o < obs.getObsName().size())
-                             obs_name += " @ ";
-                         obs_name += obs.getObsName()[o];
-                     }
-                     obs_stream << "'wires' : " << obs.getObsWires();
-                     return "Observable: { 'name' : " + obs_name + ", " +
-                            obs_stream.str() + " }";
-                 })
-            .def("as_tuple", [](const ObsDatum<std::complex<Param_t>> &obs) {
-                return std::tuple<const std::vector<std::string>,
-                                  //
-       std::vector<py::array<std::complex<Param_t>>>,
-                                  std::vector<std::vector<std::complex<Param_t>>>,
-                                  std::vector<std::vector<size_t>>>{
-                    obs.getObsName(), obs.getObsParams(), obs.getObsWires()};
-            });*/
-
-    //***********************************************************************//
-    //                        Observable::real params
+    //                              Observable
     //***********************************************************************//
 
-    class_name = "Obs" + bitsize;
+    class_name = "ObsC" + bitsize;
+    using np_arr_c = py::array_t<std::complex<Param_t>,
+                                 py::array::c_style | py::array::forcecast>;
+    using np_arr_r =
+        py::array_t<Param_t, py::array::c_style | py::array::forcecast>;
+
+    using obs_data_var = std::variant<std::monostate, np_arr_r, np_arr_c>;
     py::class_<ObsDatum<PrecisionT>>(m, class_name.c_str())
-        .def(py::init<
-             const std::vector<std::string> &,
-             const std::vector<typename ObsDatum<PrecisionT>::param_var_t> &,
-             const std::vector<std::vector<size_t>> &>())
-        .def("__repr__", [](const ObsDatum<PrecisionT> &obs) {
-            using namespace Pennylane::Util;
-            std::ostringstream obs_stream;
-            std::string obs_name = obs.getObsName()[0];
-            for (size_t o = 1; o < obs.getObsName().size(); o++) {
-                if (o < obs.getObsName().size())
-                    obs_name += " @ ";
-                obs_name += obs.getObsName()[o];
+        .def(py::init([](const std::vector<std::string> &names,
+                         const std::vector<obs_data_var> &params,
+                         const std::vector<std::vector<size_t>> &wires) {
+            std::vector<typename ObsDatum<PrecisionT>::param_var_t> conv_params(
+                params.size());
+            for (size_t p_idx = 0; p_idx < params.size(); p_idx++) {
+                std::visit(
+                    [&](const auto &param) {
+                        using p_t = std::decay_t<decltype(param)>;
+                        auto buffer = param.request();
+
+                        if constexpr (std::is_same_v<p_t, np_arr_c>) {
+                            auto ptr = static_cast<std::complex<Param_t> *>(
+                                buffer.ptr);
+                            conv_params[p_idx] =
+                                std::vector<std::complex<Param_t>>{
+                                    ptr, ptr + buffer.size};
+                        } else if constexpr (std::is_same_v<p_t, np_arr_r>) {
+                            auto ptr = static_cast<Param_t *>(buffer.ptr);
+                            conv_params[p_idx] =
+                                std::vector<Param_t>{ptr, ptr + buffer.size};
+                        } else {
+                            PL_ABORT(
+                                "Parameter datatype not current supported");
+                        }
+                    },
+                    params[p_idx]);
             }
-            obs_stream << "'wires' : " << obs.getObsWires();
-            return "Observable: { 'name' : " + obs_name + ", " +
-                   obs_stream.str() + " }";
+            return ObsDatum<PrecisionT>(names, conv_params, wires);
+        }))
+        .def("__repr__",
+             [](const ObsDatum<PrecisionT> &obs) {
+                 using namespace Pennylane::Util;
+                 std::ostringstream obs_stream;
+                 std::string obs_name = obs.getObsName()[0];
+                 for (size_t o = 1; o < obs.getObsName().size(); o++) {
+                     if (o < obs.getObsName().size())
+                         obs_name += " @ ";
+                     obs_name += obs.getObsName()[o];
+                 }
+                 obs_stream << "'wires' : " << obs.getObsWires();
+                 return "Observable: { 'name' : " + obs_name + ", " +
+                        obs_stream.str() + " }";
+             })
+        .def("as_tuple", [](const ObsDatum<PrecisionT> &obs) {
+            using tup_t = std::tuple<
+                const std::vector<std::string>,
+                std::vector<typename ObsDatum<PrecisionT>::param_var_t>,
+                std::vector<std::vector<size_t>>>;
+            return tup_t{obs.getObsName(), obs.getObsParams(),
+                         obs.getObsWires()};
         });
-    //.def("as_tuple", [](const ObsDatum<PrecisionT> &obs) {
-    //    return std::tuple<const std::vector<std::string>,
-    //                      std::vector<std::vector<Param_t>>,
-    //                      std::vector<std::vector<size_t>>>{
-    //        obs.getObsName(), obs.getObsParams(), obs.getObsWires()};
-    //});
 
     //***********************************************************************//
     //                              Operations
