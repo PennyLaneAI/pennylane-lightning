@@ -46,7 +46,7 @@ def _obs_has_kernel(obs: Observable) -> bool:
     return False
 
 
-def _serialize_obs(tape: QuantumTape, wires_map: dict) -> List[ObsStructC128]:
+def _serialize_obs(tape: QuantumTape, wires_map: dict) -> List:
     """Serializes the observables of an input tape.
 
     Args:
