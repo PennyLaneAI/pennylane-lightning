@@ -148,6 +148,9 @@ class LightningQubit(DefaultQubit):
         if not CPP_BINARY_AVAILABLE:
             return super().adjoint_jacobian(tape, starting_state, use_device_state)
 
+        if len(tape.trainable_params) == 0:
+            return np.array(0)
+
         if self.shots is not None:
             warn(
                 "Requested adjoint differentiation to be computed with finite shots."
