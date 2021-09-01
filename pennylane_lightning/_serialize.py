@@ -61,8 +61,18 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict) -> List:
     for o in tape.observables:
         is_tensor = isinstance(o, Tensor)
 
-        wires_list = o.wires.tolist()
-        wires = [wires_map[w] for w in wires_list]
+        wires = []
+
+        if is_tensor:
+            for o_ in o.obs:
+                wires_list = o_.wires.tolist()
+                w = [wires_map[w] for w in wires_list]
+                wires.append(w)
+        else:
+            wires_list = o.wires.tolist()
+            w = [wires_map[w] for w in wires_list]
+            wires.append(w)
+
         name = o.name if is_tensor else [o.name]
 
         params = []
@@ -75,11 +85,7 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict) -> List:
             else:
                 params.append(o.matrix.ravel())
 
-        ob = (
-            ObsStructC128(name, params, [[w] for w in wires])
-            if is_tensor
-            else ObsStructC128(name, params, [wires])
-        )
+        ob = ObsStructC128(name, params, wires)
         obs.append(ob)
 
     return obs
