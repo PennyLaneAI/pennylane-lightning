@@ -24,6 +24,7 @@ from pennylane import (
     QuantumFunctionError,
     QubitStateVector,
     QubitUnitary,
+    Rot,
 )
 from pennylane.devices import DefaultQubit
 from pennylane.operation import Expectation
@@ -163,6 +164,13 @@ class LightningQubit(DefaultQubit):
                 raise QuantumFunctionError(
                     "Adjoint differentiation method does not support"
                     f" measurement {m.return_type.value}"
+                )
+
+        for op in tape.operations:
+            if op.num_params > 1 and not isinstance(op, Rot):
+                raise QuantumFunctionError(
+                    f"The {op.name} operation is not supported using "
+                    'the "adjoint" differentiation method'
                 )
 
         # Initialization of state
