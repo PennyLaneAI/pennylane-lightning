@@ -152,7 +152,7 @@ class TestSerializeObs:
 
         s = mock_obs.call_args[0]
         s_expected = (["Hermitian"], [np.eye(4)], [[0, 1]])
-        # ObsStructC128(*s_expected)
+        ObsStructC128(*s_expected)
 
         assert s[0] == s_expected[0]
         assert np.allclose(s[1], s_expected[1])
@@ -171,7 +171,7 @@ class TestSerializeObs:
 
         s = mock_obs.call_args[0]
         s_expected = (["Hermitian", "Hermitian"], [np.eye(4), np.eye(2)], [[0], [1], [2]])
-        # ObsStructC128(*s_expected)
+        ObsStructC128(*s_expected)
 
         assert s[0] == s_expected[0]
         assert np.allclose(s[1][0], s_expected[1][0])
@@ -191,7 +191,7 @@ class TestSerializeObs:
 
         s = mock_obs.call_args[0]
         s_expected = (["Hermitian", "PauliY"], [np.eye(4)], [[0], [1], [2]])
-        # ObsStructC128(*s_expected)
+        ObsStructC128(*s_expected)
 
         assert s[0] == s_expected[0]
         assert np.allclose(s[1][0], s_expected[1][0])
@@ -227,7 +227,7 @@ class TestSerializeObs:
             (["Projector", "Hermitian"], [Y], [[6], [7], [8]]),
             (["Hermitian", "Identity"], [Z], [[0], [1]]),
         ]
-        # [ObsStructC128(*s_expected) for s_expected in s_expected]
+        [ObsStructC128(*s_expected) for s_expected in s_expected]
 
         assert all(s1[0][0] == s2[0] for s1, s2 in zip(s, s_expected))
         assert all(np.allclose(s1[0][1], s2[1]) for s1, s2 in zip(s, s_expected))
