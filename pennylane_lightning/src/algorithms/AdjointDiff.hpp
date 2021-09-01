@@ -4,8 +4,10 @@
 #include <cstring>
 #include <numeric>
 #include <set>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "Error.hpp"
@@ -117,12 +119,11 @@ namespace Algorithms {
  *
  */
 template <class T = double> class ObsDatum {
-  private:
-    const std::vector<std::string> obs_name_;
-    const std::vector<std::vector<T>> obs_params_;
-    const std::vector<std::vector<size_t>> obs_wires_;
-
   public:
+    using param_var_t =
+        std::variant<std::monostate, std::vector<std::complex<T>>,
+                     std::vector<T>>;
+
     /**
      * @brief Construct an ObsDatum object, representing a given observable.
      *
@@ -134,10 +135,17 @@ template <class T = double> class ObsDatum {
      * operation will eb a separate nested list.
      */
     ObsDatum(const std::vector<std::string> &obs_name,
-             const std::vector<std::vector<T>> &obs_params,
+             const std::vector<param_var_t> &obs_params,
              const std::vector<std::vector<size_t>> &obs_wires)
-        : obs_name_{obs_name}, obs_params_{obs_params}, obs_wires_{
-                                                            obs_wires} {};
+        : obs_name_{obs_name},
+          obs_params_(obs_params), obs_wires_{obs_wires} {};
+
+    ObsDatum(std::vector<std::string> &&obs_name,
+             std::vector<param_var_t> &&obs_params,
+             std::vector<std::vector<size_t>> &&obs_wires)
+        : obs_name_{std::move(obs_name)}, obs_params_{std::move(obs_params)},
+          obs_wires_{std::move(obs_wires)} {};
+
     /**
      * @brief Get the number of operations in observable.
      *
@@ -155,9 +163,7 @@ template <class T = double> class ObsDatum {
      *
      * @return const std::vector<std::vector<T>>&
      */
-    const std::vector<std::vector<T>> &getObsParams() const {
-        return obs_params_;
-    }
+    const std::vector<param_var_t> &getObsParams() const { return obs_params_; }
     /**
      * @brief Get the wires for each observable operation.
      *
@@ -166,6 +172,11 @@ template <class T = double> class ObsDatum {
     const std::vector<std::vector<size_t>> &getObsWires() const {
         return obs_wires_;
     }
+
+  private:
+    const std::vector<std::string> obs_name_;
+    const std::vector<param_var_t> obs_params_;
+    const std::vector<std::vector<size_t>> obs_wires_;
 };
 
 /**
@@ -408,9 +419,32 @@ template <class T = double> class AdjointJacobian {
     inline void applyObservable(StateVectorManaged<T> &state,
                                 const ObsDatum<T> &observable) {
         for (size_t j = 0; j < observable.getSize(); j++) {
-            state.applyOperation(observable.getObsName()[j],
-                                 observable.getObsWires()[j], false,
-                                 observable.getObsParams()[j]);
+            std::visit(
+                [&](const auto &param) {
+                    using p_t = std::decay_t<decltype(param)>;
+
+                    // Apply supported gate with given params
+                    if constexpr (std::is_same_v<p_t, std::vector<T>>) {
+                        state.applyOperation(observable.getObsName()[j],
+                                             observable.getObsWires()[j], false,
+                                             param);
+                    }
+                    // Apply provided matrix
+                    else if constexpr (std::is_same_v<
+                                           p_t, std::vector<std::complex<T>>>) {
+                        state.applyOperation(param, observable.getObsWires()[j],
+                                             false);
+                    }
+                    // No params provided, offload to SV dispatcher
+                    else if constexpr (std::is_same_v<p_t, std::monostate>) {
+                        state.applyOperation(observable.getObsName()[j],
+                                             observable.getObsWires()[j],
+                                             false);
+                    } else {
+                        PL_ABORT("Parameter type not supported");
+                    }
+                },
+                observable.getObsParams()[j]);
         }
     }
 
@@ -425,12 +459,12 @@ template <class T = double> class AdjointJacobian {
      * @param obs_wires
      * @return const ObsDatum<T>
      */
-    const ObsDatum<T>
+    /*const ObsDatum<T>
     createObs(const std::vector<std::string> &obs_name,
               const std::vector<std::vector<T>> &obs_params,
               const std::vector<std::vector<size_t>> &obs_wires) {
-        return {obs_name, obs_params, obs_wires};
-    }
+        return ObsDatum<T>{obs_name, obs_params, obs_wires};
+    }*/
 
     /**
      * @brief Utility to create a given operations object.

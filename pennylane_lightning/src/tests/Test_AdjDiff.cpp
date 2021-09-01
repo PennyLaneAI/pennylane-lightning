@@ -35,36 +35,6 @@ TEMPLATE_TEST_CASE("AdjointJacobian::AdjointJacobian", "[AdjointJacobian]",
     }
 }
 
-TEMPLATE_TEST_CASE("ObsDatum::ObsDatum", "[AdjointJacobian]", float, double) {
-    SECTION("ObsDatum") {
-        REQUIRE_FALSE(std::is_constructible<ObsDatum<>>::value);
-    }
-    SECTION("ObsDatum<TestType> {}") {
-        REQUIRE_FALSE(std::is_constructible<ObsDatum<TestType>>::value);
-    }
-    SECTION("ObsDatum<std::complex<TestType>> {}") {
-        REQUIRE_FALSE(
-            std::is_constructible<ObsDatum<std::complex<TestType>>>::value);
-    }
-    SECTION("ObsDatum<TestType> {const std::vector<std::string> &, const "
-            "std::vector<std::vector<TestType>> &, const "
-            "std::vector<std::vector<size_t>> &}") {
-        REQUIRE(std::is_constructible<
-                ObsDatum<TestType>, const std::vector<std::string> &,
-                const std::vector<std::vector<TestType>> &,
-                const std::vector<std::vector<size_t>> &>::value);
-    }
-    SECTION("ObsDatum<std::complex<TestType>> {const std::vector<std::string> "
-            "&, const std::vector<std::vector<std::complex<TestType>>> &, "
-            "const std::vector<std::vector<size_t>> &}") {
-        REQUIRE(std::is_constructible<
-                ObsDatum<std::complex<TestType>>,
-                const std::vector<std::string> &,
-                const std::vector<std::vector<std::complex<TestType>>> &,
-                const std::vector<std::vector<size_t>> &>::value);
-    }
-}
-
 TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
     AdjointJacobian<double> adj;
     // std::vector<double> param{1, -2, 1.623, -0.051, 0};
@@ -74,7 +44,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
         const size_t num_qubits = 1;
         const size_t num_params = 3;
         const size_t num_obs = 1;
-        auto obs = adj.createObs({"PauliZ"}, {{}}, {{0}});
+        auto obs = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
         std::vector<double> jacobian(num_obs * num_params, 0.0);
 
         for (const auto &p : param) {
@@ -96,7 +66,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
         const size_t num_params = 3;
         const size_t num_obs = 1;
 
-        auto obs = adj.createObs({"PauliX"}, {{}}, {{0}});
+        auto obs = ObsDatum<double>({"PauliX"}, {{}}, {{0}});
         std::vector<double> jacobian(num_obs * num_params, 0.0);
 
         for (const auto &p : param) {
@@ -124,8 +94,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
         StateVector<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
-        auto obs1 = adj.createObs({"PauliZ"}, {{}}, {{0}});
-        auto obs2 = adj.createObs({"PauliZ"}, {{}}, {{1}});
+        auto obs1 = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
+        auto obs2 = ObsDatum<double>({"PauliZ"}, {{}}, {{1}});
 
         auto ops = adj.createOpsData({"RX"}, {{param[0]}}, {{0}}, {false});
 
@@ -146,9 +116,9 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
         StateVector<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
-        auto obs1 = adj.createObs({"PauliZ"}, {{}}, {{0}});
-        auto obs2 = adj.createObs({"PauliZ"}, {{}}, {{1}});
-        auto obs3 = adj.createObs({"PauliZ"}, {{}}, {{2}});
+        auto obs1 = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
+        auto obs2 = ObsDatum<double>({"PauliZ"}, {{}}, {{1}});
+        auto obs3 = ObsDatum<double>({"PauliZ"}, {{}}, {{2}});
 
         auto ops = adj.createOpsData({"RX", "RX", "RX"},
                                      {{param[0]}, {param[1]}, {param[2]}},
@@ -177,9 +147,9 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
         StateVector<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
-        auto obs1 = adj.createObs({"PauliZ"}, {{}}, {{0}});
-        auto obs2 = adj.createObs({"PauliZ"}, {{}}, {{1}});
-        auto obs3 = adj.createObs({"PauliZ"}, {{}}, {{2}});
+        auto obs1 = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
+        auto obs2 = ObsDatum<double>({"PauliZ"}, {{}}, {{1}});
+        auto obs3 = ObsDatum<double>({"PauliZ"}, {{}}, {{2}});
 
         auto ops = adj.createOpsData({"RX", "RX", "RX"},
                                      {{param[0]}, {param[1]}, {param[2]}},
@@ -206,8 +176,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
         StateVector<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
-        auto obs = adj.createObs({"PauliZ", "PauliZ", "PauliZ"}, {{}, {}, {}},
-                                 {{0}, {1}, {2}});
+        auto obs = ObsDatum<double>({"PauliZ", "PauliZ", "PauliZ"},
+                                    {{}, {}, {}}, {{0}, {1}, {2}});
         auto ops = adj.createOpsData({"RX", "RX", "RX"},
                                      {{param[0]}, {param[1]}, {param[2]}},
                                      {{0}, {1}, {2}}, {false, false, false});
@@ -232,8 +202,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
         StateVector<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
-        auto obs = adj.createObs({"PauliX", "PauliX", "PauliX"}, {{}, {}, {}},
-                                 {{0}, {1}, {2}});
+        auto obs = ObsDatum<double>({"PauliX", "PauliX", "PauliX"},
+                                    {{}, {}, {}}, {{0}, {1}, {2}});
         auto ops = adj.createOpsData(
             {"RZ", "RY", "RZ", "CNOT", "CNOT", "RZ", "RY", "RZ"},
             {{param[0]},
@@ -284,7 +254,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
                                                     -INVSQRT2<double>()};
             StateVector<double> psi(cdata.data(), cdata.size());
 
-            auto obs = adj.createObs({"PauliZ"}, {{}}, {{0}});
+            auto obs = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
             auto ops = adj.createOpsData(
                 {"RZ", "RY", "RZ"},
                 {{local_params[0]}, {local_params[1]}, {local_params[2]}},
