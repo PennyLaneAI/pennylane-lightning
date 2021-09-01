@@ -71,9 +71,9 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict) -> List[ObsStructC128]:
             if is_tensor:
                 for o_ in o.obs:
                     if not _obs_has_kernel(o_):
-                        params.append(o_.matrix)
+                        params.append(o_.matrix.ravel())
             else:
-                params.append(o.matrix)
+                params.append(o.matrix.ravel())
 
         ob = (
             ObsStructC128(name, params, [[w] for w in wires])

@@ -151,7 +151,7 @@ class TestSerializeObs:
             _serialize_obs(tape, self.wires_dict)
 
         s = mock_obs.call_args[0]
-        s_expected = (["Hermitian"], [np.eye(4)], [[0, 1]])
+        s_expected = (["Hermitian"], [np.eye(4).ravel()], [[0, 1]])
         ObsStructC128(*s_expected)
 
         assert s[0] == s_expected[0]
@@ -170,7 +170,7 @@ class TestSerializeObs:
             _serialize_obs(tape, self.wires_dict)
 
         s = mock_obs.call_args[0]
-        s_expected = (["Hermitian", "Hermitian"], [np.eye(4), np.eye(2)], [[0], [1], [2]])
+        s_expected = (["Hermitian", "Hermitian"], [np.eye(4).ravel(), np.eye(2).ravel()], [[0], [1], [2]])
         ObsStructC128(*s_expected)
 
         assert s[0] == s_expected[0]
@@ -190,7 +190,7 @@ class TestSerializeObs:
             _serialize_obs(tape, self.wires_dict)
 
         s = mock_obs.call_args[0]
-        s_expected = (["Hermitian", "PauliY"], [np.eye(4)], [[0], [1], [2]])
+        s_expected = (["Hermitian", "PauliY"], [np.eye(4).ravel()], [[0], [1], [2]])
         ObsStructC128(*s_expected)
 
         assert s[0] == s_expected[0]
@@ -222,10 +222,10 @@ class TestSerializeObs:
 
         s_expected = [
             (["PauliZ", "PauliX"], [], [[0], [2]]),
-            (['Hermitian'], [I], [[1]]),
-            (["PauliZ", "Hermitian", "Hadamard"], [X], [[3], [4], [5]]),
-            (["Projector", "Hermitian"], [Y], [[6], [7], [8]]),
-            (["Hermitian", "Identity"], [Z], [[0], [1]]),
+            (['Hermitian'], [I.ravel()], [[1]]),
+            (["PauliZ", "Hermitian", "Hadamard"], [X.ravel()], [[3], [4], [5]]),
+            (["Projector", "Hermitian"], [Y.ravel()], [[6], [7], [8]]),
+            (["Hermitian", "Identity"], [Z.ravel()], [[0], [1]]),
         ]
         [ObsStructC128(*s_expected) for s_expected in s_expected]
 
