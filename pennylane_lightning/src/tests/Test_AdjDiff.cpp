@@ -22,7 +22,7 @@ using namespace Pennylane;
 using namespace Pennylane::Algorithms;
 
 /**
- * @brief Tests the constructability of the StateVector class.
+ * @brief Tests the constructability of the AdjointDiff.hpp classes.
  *
  */
 TEMPLATE_TEST_CASE("AdjointJacobian::AdjointJacobian", "[AdjointJacobian]",
@@ -32,6 +32,36 @@ TEMPLATE_TEST_CASE("AdjointJacobian::AdjointJacobian", "[AdjointJacobian]",
     }
     SECTION("AdjointJacobian<TestType> {}") {
         REQUIRE(std::is_constructible<AdjointJacobian<TestType>>::value);
+    }
+}
+
+TEMPLATE_TEST_CASE("ObsDatum::ObsDatum", "[AdjointJacobian]", float, double) {
+    SECTION("ObsDatum") {
+        REQUIRE_FALSE(std::is_constructible<ObsDatum<>>::value);
+    }
+    SECTION("ObsDatum<TestType> {}") {
+        REQUIRE_FALSE(std::is_constructible<ObsDatum<TestType>>::value);
+    }
+    SECTION("ObsDatum<std::complex<TestType>> {}") {
+        REQUIRE_FALSE(
+            std::is_constructible<ObsDatum<std::complex<TestType>>>::value);
+    }
+    SECTION("ObsDatum<TestType> {const std::vector<std::string> &, const "
+            "std::vector<std::vector<TestType>> &, const "
+            "std::vector<std::vector<size_t>> &}") {
+        REQUIRE(std::is_constructible<
+                ObsDatum<TestType>, const std::vector<std::string> &,
+                const std::vector<std::vector<TestType>> &,
+                const std::vector<std::vector<size_t>> &>::value);
+    }
+    SECTION("ObsDatum<std::complex<TestType>> {const std::vector<std::string> "
+            "&, const std::vector<std::vector<std::complex<TestType>>> &, "
+            "const std::vector<std::vector<size_t>> &}") {
+        REQUIRE(std::is_constructible<
+                ObsDatum<std::complex<TestType>>,
+                const std::vector<std::string> &,
+                const std::vector<std::vector<std::complex<TestType>>> &,
+                const std::vector<std::vector<size_t>> &>::value);
     }
 }
 
