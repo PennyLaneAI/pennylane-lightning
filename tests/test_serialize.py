@@ -76,8 +76,8 @@ class TestSerializeObs:
             qml.expval(qml.PauliZ(0))
 
         s = _serialize_obs(tape, self.wires_dict)
-        s_expected = ([["PauliZ"]], [], [[0]])
-        assert s == s_expected
+        s_expected = (["PauliZ"], [], [[0]],)
+        assert s[0].as_tuple() == s_expected
 
     def test_tensor_return(self):
         """Test expected serialization for a tensor product return"""
@@ -85,8 +85,8 @@ class TestSerializeObs:
             qml.expval(qml.PauliZ(0) @ qml.PauliZ(1))
 
         s = _serialize_obs(tape, self.wires_dict)
-        s_expected = ([["PauliZ", "PauliZ"]], [], [[0, 1]])
-        assert s == s_expected
+        s_expected = (["PauliZ", "PauliZ"], [], [[0], [1]],)
+        assert s[0].as_tuple() == s_expected
 
     def test_tensor_non_tensor_return(self):
         """Test expected serialization for a mixture of tensor product and non-tensor product
@@ -96,8 +96,12 @@ class TestSerializeObs:
             qml.expval(qml.Hadamard(1))
 
         s = _serialize_obs(tape, self.wires_dict)
-        s_expected = ([["PauliZ", "PauliX"], ["Hadamard"]], [], [[0, 1], [1]])
-        assert s == s_expected
+        s_expected = [
+            (["PauliZ", "PauliX"], [], [[0], [1]]), 
+            (["Hadamard"], [], [[1]]), 
+        ]
+
+        assert [ob.as_tuple() for ob in s] == s_expected
 
     def test_hermitian_return(self):
         """Test expected serialization for a Hermitian return"""

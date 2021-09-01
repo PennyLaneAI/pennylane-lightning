@@ -12,7 +12,6 @@ if(OpenMP_FOUND)
     target_link_libraries(lightning_algorithms PRIVATE OpenMP::OpenMP_CXX)
 endif()
 
-
 set_property(TARGET lightning_algorithms PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 if(ENABLE_NATIVE)

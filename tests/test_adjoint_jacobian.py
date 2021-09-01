@@ -97,7 +97,7 @@ class TestAdjointJacobian:
             qml.CRot(0.1, 0.2, 0.3, wires=[0, 1])
             qml.expval(qml.PauliZ(0))
 
-        with pytest.raises(qml.QuantumFunctionError, match="The CRot operation is not"):
+        with pytest.raises(qml.QuantumFunctionError, match=".*Error in PennyLane Lightning: The operation is not.*"):
             dev.adjoint_jacobian(tape)
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
@@ -113,7 +113,7 @@ class TestAdjointJacobian:
         tape.trainable_params = {1}
 
         calculated_val = dev.adjoint_jacobian(tape)
-
+        
         # compare to finite differences
         numeric_val = tape.jacobian(dev, method="numeric")
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
