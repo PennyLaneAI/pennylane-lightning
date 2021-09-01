@@ -265,6 +265,13 @@ template <class T> class OpsData {
         return ops_matrices_;
     }
 
+    /**
+     * @brief Notify if the operation at a given index is parametric.
+     *
+     * @param index Operation index.
+     * @return true Gate is parametric (has parameters).
+     * @return false Gate in non-parametric.
+     */
     inline bool hasParams(size_t index) const {
         return !ops_params_[index].empty();
     }
@@ -360,17 +367,37 @@ template <class T = double> class AdjointJacobian {
      *
      * @param state Statevector to be updated.
      * @param operations Operations to apply.
+     * @param adj Take the adjoint of the given operations.
      */
     inline void applyOperations(StateVectorManaged<T> &state,
-                                const OpsData<T> &operations) {
+                                const OpsData<T> &operations,
+                                bool adj = false) {
+
         for (size_t op_idx = 0; op_idx < operations.getOpsName().size();
              op_idx++) {
             state.applyOperation(operations.getOpsName()[op_idx],
                                  operations.getOpsWires()[op_idx],
-                                 operations.getOpsInverses()[op_idx],
+                                 operations.getOpsInverses()[op_idx] ^ adj,
                                  operations.getOpsParams()[op_idx]);
         }
     }
+    /**
+     * @brief Utility method to apply all operations from given `%OpsData<T>`
+     * object to `%StateVectorManaged<T>`
+     *
+     * @param state Statevector to be updated.
+     * @param operations Operations to apply.
+     * @param adj Take the adjoint of the given operations.
+     */
+    inline void applyOperation(StateVectorManaged<T> &state,
+                               const OpsData<T> &operations, size_t op_idx,
+                               bool adj = false) {
+        state.applyOperation(operations.getOpsName()[op_idx],
+                             operations.getOpsWires()[op_idx],
+                             operations.getOpsInverses()[op_idx] ^ adj,
+                             operations.getOpsParams()[op_idx]);
+    }
+
     /**
      * @brief Utility method to apply a given operations from given
      * `%ObsDatum<T>` object to `%StateVectorManaged<T>`
@@ -452,6 +479,11 @@ template <class T = double> class AdjointJacobian {
         return scaling_factors.at(op_name);
     }
 
+    inline size_t getJacIndex(size_t obs_index, size_t tp_index,
+                              size_t tp_size) {
+        return obs_index * tp_size + tp_index;
+    }
+
     /**
      * @brief Calculates the Jacobian for the statevector for the selected set
      * of parametric gates.
@@ -483,9 +515,11 @@ template <class T = double> class AdjointJacobian {
         PL_ABORT_IF(trainableParams.empty(),
                     "No trainable parameters provided.");
 
+        // Track positions within par and non-par operations
         size_t num_observables = observables.size();
         size_t trainableParamNumber = trainableParams.size() - 1;
         int current_param_idx = num_params - 1;
+        auto tp_it = trainableParams.end();
 
         // Create $U_{1:p}\vert \lambda \rangle$
         StateVectorManaged<T> lambda(psi, num_elements);
@@ -503,13 +537,11 @@ template <class T = double> class AdjointJacobian {
             H_lambda[h_i].updateData(lambda.getDataVector());
             applyObservable(H_lambda[h_i], observables[h_i]);
         }
-        StateVectorManaged<T> mu(lambda.getNumQubits());
 
-        auto tp_it = trainableParams.end();
+        StateVectorManaged<T> mu(lambda.getNumQubits());
 
         for (int op_idx = operations.getOpsName().size() - 1; op_idx >= 0;
              op_idx--) {
-
             PL_ABORT_IF(operations.getOpsParams()[op_idx].size() > 1,
                         "The operation is not supported using the adjoint "
                         "differentiation method");
@@ -518,10 +550,7 @@ template <class T = double> class AdjointJacobian {
 
                 mu.updateData(lambda.getDataVector());
 
-                lambda.applyOperation(operations.getOpsName()[op_idx],
-                                      operations.getOpsWires()[op_idx],
-                                      !operations.getOpsInverses()[op_idx],
-                                      operations.getOpsParams()[op_idx]);
+                applyOperation(lambda, operations, op_idx, true);
 
                 if (operations.hasParams(op_idx)) {
                     if (std::find(trainableParams.begin(), tp_it,
@@ -535,8 +564,8 @@ template <class T = double> class AdjointJacobian {
 #pragma omp parallel for
                         for (size_t obs_idx = 0; obs_idx < num_observables;
                              obs_idx++) {
-                            index = obs_idx * trainableParams.size() +
-                                    trainableParamNumber;
+                            index = getJacIndex(obs_idx, trainableParamNumber,
+                                                trainableParams.size());
                             updateJacobian(H_lambda[obs_idx], mu, jac,
                                            num_elements, scalingFactor, index);
                         }
@@ -548,11 +577,7 @@ template <class T = double> class AdjointJacobian {
 
 #pragma omp parallel for
                 for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
-                    H_lambda[obs_idx].applyOperation(
-                        operations.getOpsName()[op_idx],
-                        operations.getOpsWires()[op_idx],
-                        !operations.getOpsInverses()[op_idx],
-                        operations.getOpsParams()[op_idx]);
+                    applyOperation(H_lambda[obs_idx], operations, op_idx, true);
                 }
             }
         }
