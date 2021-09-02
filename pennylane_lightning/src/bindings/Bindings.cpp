@@ -482,15 +482,12 @@ class AdjJacBinder : public AdjointJacobian<fp_t> {
                    std::vector<std::vector<size_t>>, std::vector<bool>,
                    std::vector<std::vector<std::complex<fp_t>>>>;
 
-    // names, params, wires, inverses, mats
   public:
     explicit AdjJacBinder() : AdjointJacobian<fp_t>() {}
 
     void adjoint_jacobian_py(const ObsTuple &obs, const OpsTuple &ops,
                              const std::vector<size_t> &trainableParamIndices,
-                             size_t num_params) {
-        // std::get<0>(obs)
-    }
+                             size_t num_params) {}
 };
 
 /**
@@ -664,7 +661,7 @@ void lightning_class_bindings(py::module &m) {
     //                              Observable
     //***********************************************************************//
 
-    class_name = "ObsC" + bitsize;
+    class_name = "ObsStructC" + bitsize;
     using np_arr_c = py::array_t<std::complex<Param_t>,
                                  py::array::c_style | py::array::forcecast>;
     using np_arr_r =
@@ -678,21 +675,25 @@ void lightning_class_bindings(py::module &m) {
             std::vector<typename ObsDatum<PrecisionT>::param_var_t> conv_params(
                 params.size());
             for (size_t p_idx = 0; p_idx < params.size(); p_idx++) {
+
                 std::visit(
                     [&](const auto &param) {
                         using p_t = std::decay_t<decltype(param)>;
-                        auto buffer = param.request();
-
                         if constexpr (std::is_same_v<p_t, np_arr_c>) {
+                            auto buffer = param.request();
                             auto ptr = static_cast<std::complex<Param_t> *>(
                                 buffer.ptr);
-                            conv_params[p_idx] =
-                                std::vector<std::complex<Param_t>>{
-                                    ptr, ptr + buffer.size};
+                            if (buffer.size > 0)
+                                conv_params[p_idx] =
+                                    std::vector<std::complex<Param_t>>{
+                                        ptr, ptr + buffer.size};
                         } else if constexpr (std::is_same_v<p_t, np_arr_r>) {
+                            auto buffer = param.request();
+
                             auto ptr = static_cast<Param_t *>(buffer.ptr);
-                            conv_params[p_idx] =
-                                std::vector<Param_t>{ptr, ptr + buffer.size};
+                            if (buffer.size > 0)
+                                conv_params[p_idx] = std::vector<Param_t>{
+                                    ptr, ptr + buffer.size};
                         } else {
                             PL_ABORT(
                                 "Parameter datatype not current supported");
@@ -752,7 +753,7 @@ void lightning_class_bindings(py::module &m) {
     py::class_<AdjointJacobian<PrecisionT>>(m, class_name.c_str())
         .def(py::init<>())
         //.def("create_obs", &AdjointJacobian<PrecisionT>::createObs)
-        //.def("create_ops_list", &AdjointJacobian<PrecisionT>::createOpsData)
+        .def("create_ops_list", &AdjointJacobian<PrecisionT>::createOpsData)
         .def("adjoint_jacobian", &AdjointJacobian<PrecisionT>::adjointJacobian)
         .def("adjoint_jacobian",
              [](AdjointJacobian<PrecisionT> &adj,

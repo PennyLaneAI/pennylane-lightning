@@ -120,9 +120,8 @@ namespace Algorithms {
  */
 template <class T = double> class ObsDatum {
   public:
-    using param_var_t =
-        std::variant<std::monostate, std::vector<std::complex<T>>,
-                     std::vector<T>>;
+    using param_var_t = std::variant<std::monostate, std::vector<T>,
+                                     std::vector<std::complex<T>>>;
 
     /**
      * @brief Construct an ObsDatum object, representing a given observable.
@@ -419,32 +418,34 @@ template <class T = double> class AdjointJacobian {
     inline void applyObservable(StateVectorManaged<T> &state,
                                 const ObsDatum<T> &observable) {
         for (size_t j = 0; j < observable.getSize(); j++) {
-            std::visit(
-                [&](const auto &param) {
-                    using p_t = std::decay_t<decltype(param)>;
-
-                    // Apply supported gate with given params
-                    if constexpr (std::is_same_v<p_t, std::vector<T>>) {
-                        state.applyOperation(observable.getObsName()[j],
-                                             observable.getObsWires()[j], false,
-                                             param);
-                    }
-                    // Apply provided matrix
-                    else if constexpr (std::is_same_v<
-                                           p_t, std::vector<std::complex<T>>>) {
-                        state.applyOperation(param, observable.getObsWires()[j],
-                                             false);
-                    }
-                    // No params provided, offload to SV dispatcher
-                    else if constexpr (std::is_same_v<p_t, std::monostate>) {
-                        state.applyOperation(observable.getObsName()[j],
-                                             observable.getObsWires()[j],
-                                             false);
-                    } else {
-                        PL_ABORT("Parameter type not supported");
-                    }
-                },
-                observable.getObsParams()[j]);
+            if (observable.getObsParams().size() > 0) {
+                std::visit(
+                    [&](const auto param) {
+                        using p_t = std::decay_t<decltype(param)>;
+                        // Apply supported gate with given params
+                        if constexpr (std::is_same_v<p_t, std::vector<T>>) {
+                            state.applyOperation(observable.getObsName()[j],
+                                                 observable.getObsWires()[j],
+                                                 false, param);
+                        }
+                        // Apply provided matrix
+                        else if constexpr (std::is_same_v<
+                                               p_t,
+                                               std::vector<std::complex<T>>>) {
+                            state.applyOperation(
+                                param, observable.getObsWires()[j], false);
+                        } else { // Monostate: vector entry with an empty
+                                 // parameter list
+                            state.applyOperation(observable.getObsName()[j],
+                                                 observable.getObsWires()[j],
+                                                 false);
+                        }
+                    },
+                    observable.getObsParams()[j]);
+            } else { // Offloat to SV dispatcher if no parameters provided
+                state.applyOperation(observable.getObsName()[j],
+                                     observable.getObsWires()[j], false);
+            }
         }
     }
 
