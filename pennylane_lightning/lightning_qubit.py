@@ -185,15 +185,17 @@ class LightningQubit(DefaultQubit):
         adj = AdjointJacobianC128()
 
         obs_serialized = _serialize_obs(tape, self.wire_map)
-        ops_serialized = _serialize_ops(tape, self.wire_map)
+        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map)
 
         ops_serialized = adj.create_ops_list(*ops_serialized)
+
+        tp_shift = tape.trainable_params if not use_sp else {i - 1 for i in tape.trainable_params}
 
         jac = adj.adjoint_jacobian(
             StateVectorC128(ket),
             obs_serialized,
             ops_serialized,
-            tape.trainable_params,
+            tp_shift,
             tape.num_params,
         )
 

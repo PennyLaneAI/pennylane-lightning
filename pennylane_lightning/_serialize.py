@@ -113,8 +113,11 @@ def _serialize_ops(
     inverses = []
     mats = []
 
+    uses_stateprep = False
+
     for o in tape.operations:
         if isinstance(o, (BasisState, QubitStateVector)):
+            uses_stateprep = True
             continue
         elif isinstance(o, Rot):
             op_list = o.expand().operations
@@ -140,4 +143,4 @@ def _serialize_ops(
             wires_list = single_op.wires.tolist()
             wires.append([wires_map[w] for w in wires_list])
             inverses.append(is_inverse)
-    return names, params, wires, inverses, mats
+    return (names, params, wires, inverses, mats), uses_stateprep
