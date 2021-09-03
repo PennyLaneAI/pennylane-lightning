@@ -204,8 +204,9 @@ template <class fp_t = double> class StateVector {
      */
     void applyOperation(const string &opName, const vector<size_t> &wires,
                         bool inverse = false, const vector<fp_t> &params = {}) {
-                            using namespace Pennylane::Util;
-                            //std::cout << "GOT HERE WITH=" << opName << " and " << wires << " and paramsize=" << params.size() << std::endl;
+        using namespace Pennylane::Util;
+        // std::cout << "GOT HERE WITH=" << opName << " and " << wires << " and
+        // paramsize=" << params.size() << std::endl;
         const auto gate = gates_.at(opName);
         if (gate_wires_.at(opName) != wires.size())
             throw std::invalid_argument(
@@ -217,9 +218,9 @@ template <class fp_t = double> class StateVector {
         const vector<size_t> externalWires = getIndicesAfterExclusion(wires);
         const vector<size_t> externalIndices =
             generateBitPatterns(externalWires);
-//std::cout << "internalIndices=" << internalIndices << std::endl;
-//std::cout << "externalWires=" << externalWires << std::endl;
-//std::cout << "externalIndices=" << externalIndices << std::endl;
+        // std::cout << "internalIndices=" << internalIndices << std::endl;
+        // std::cout << "externalWires=" << externalWires << std::endl;
+        // std::cout << "externalIndices=" << externalIndices << std::endl;
         gate(internalIndices, externalIndices, inverse, params);
     }
 
@@ -470,11 +471,13 @@ template <class fp_t = double> class StateVector {
                      const vector<size_t> &externalIndices, bool inverse) {
         std::cout << "I am here" << std::endl;
         for (const size_t &externalIndex : externalIndices) {
-        std::cout << "externalIndex=" << externalIndex << std::endl;
+            std::cout << "externalIndex=" << externalIndex << std::endl;
 
             CFP_t *shiftedState = arr_ + externalIndex;
-        std::cout << "shiftedState0=" << shiftedState[indices[0]] << std::endl;
-        std::cout << "shiftedState1=" << shiftedState[indices[1]] << std::endl;
+            std::cout << "shiftedState0=" << shiftedState[indices[0]]
+                      << std::endl;
+            std::cout << "shiftedState1=" << shiftedState[indices[1]]
+                      << std::endl;
 
             std::swap(shiftedState[indices[0]], shiftedState[indices[1]]);
         }

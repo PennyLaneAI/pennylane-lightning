@@ -760,7 +760,9 @@ void lightning_class_bindings(py::module &m) {
                 const std::vector<ObsDatum<PrecisionT>> &observables,
                 const OpsData<PrecisionT> &operations,
                 const set<size_t> &trainableParams, size_t num_params) {
-                 std::vector<std::vector<PrecisionT>> jac(observables.size(), std::vector<PrecisionT>(num_params, 0));
+                 std::vector<std::vector<PrecisionT>> jac(
+                     observables.size(),
+                     std::vector<PrecisionT>(num_params, 0));
                  adj.adjointJacobian(sv.getData(), sv.getLength(), jac,
                                      observables, operations, trainableParams,
                                      num_params);
