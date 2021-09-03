@@ -6,9 +6,9 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(OpenMP)
 
 # Default build type for test code is Debug
-#if(NOT CMAKE_BUILD_TYPE)
-set(CMAKE_BUILD_TYPE Debug)
-#endif()
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
 
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 

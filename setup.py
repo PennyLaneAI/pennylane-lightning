@@ -75,12 +75,12 @@ class BuildExt(build_ext):
 
     c_opts = {
         "msvc": ["-EHsc", "-O2", "-W1", "-std:c++17", "-D_USE_MATH_DEFINES"],
-        "unix": ["-O0", "-g", "-W", "-fPIC", "-shared", "-fopenmp"],
+        "unix": ["-O3", "-W", "-fPIC", "-shared", "-fopenmp"],
     }
 
     l_opts = {
         "msvc": [],
-        "unix": ["-O0", "-g", "-W", "-fPIC", "-shared", "-fopenmp"],
+        "unix": ["-O3", "-W", "-fPIC", "-shared", "-fopenmp"],
     }
 
     if platform.system() == "Darwin":
