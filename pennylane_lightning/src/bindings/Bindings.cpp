@@ -751,7 +751,6 @@ void lightning_class_bindings(py::module &m) {
     class_name = "AdjointJacobianC" + bitsize;
     py::class_<AdjointJacobian<PrecisionT>>(m, class_name.c_str())
         .def(py::init<>())
-        //.def("create_obs", &AdjointJacobian<PrecisionT>::createObs)
         .def("create_ops_list", &AdjointJacobian<PrecisionT>::createOpsData)
         .def("adjoint_jacobian", &AdjointJacobian<PrecisionT>::adjointJacobian)
         .def("adjoint_jacobian",
@@ -766,7 +765,6 @@ void lightning_class_bindings(py::module &m) {
                  adj.adjointJacobian(sv.getData(), sv.getLength(), jac,
                                      observables, operations, trainableParams,
                                      num_params);
-                 // return jac;
                  return py::array_t<Param_t>(py::cast(jac));
              });
 }
