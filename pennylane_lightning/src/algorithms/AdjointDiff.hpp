@@ -574,7 +574,14 @@ using namespace Pennylane::Util;
         // Track positions within par and non-par operations
         size_t num_observables = observables.size();
         size_t trainableParamNumber = trainableParams.size() - 1;
-        int current_param_idx = num_params - 1;
+        size_t current_param_idx = 0; //num_params - 1; // number of parametric ops
+
+        for(const auto& op : operations.getOpsParams()){
+            if(op.size() > 0){
+                current_param_idx++;
+            }
+        }
+        current_param_idx--;
         auto tp_it = trainableParams.end();
 
         // Create $U_{1:p}\vert \lambda \rangle$
@@ -611,12 +618,13 @@ using namespace Pennylane::Util;
                 mu.updateData(lambda.getDataVector());
 
                 applyOperation(lambda, operations, op_idx, true);
-//std::cout << "Here 3" << std::endl;
+std::cout << "operations.hasParams(op_idx)=" << operations.hasParams(op_idx) << std::endl;
 
                 if (operations.hasParams(op_idx)) {
+std::cout << "std::find(trainableParams.begin(), tp_it, current_param_idx) != tp_it=" << (std::find(trainableParams.begin(), tp_it, current_param_idx) != tp_it) << "; it="<< *tp_it<< std::endl;
+
                     if (std::find(trainableParams.begin(), tp_it,
                                   current_param_idx) != tp_it) {
-//std::cout << "Here 4" << std::endl;
 
                         const T scalingFactor =
                             applyGenerator(mu, operations.getOpsName()[op_idx],
@@ -630,9 +638,13 @@ using namespace Pennylane::Util;
                             updateJacobian(H_lambda[obs_idx], mu, jac,
                                            num_elements, scalingFactor, obs_idx, trainableParamNumber);
                         }
+std::cout << "trainableParamNumber" << trainableParamNumber << std::endl;
+
                         trainableParamNumber--;
                         std::advance(tp_it, -1);
                     }
+std::cout << "current_param_idx" << current_param_idx << std::endl;
+
                     current_param_idx--;
                 }
 
