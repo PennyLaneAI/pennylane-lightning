@@ -330,10 +330,10 @@ template <class T = double> class AdjointJacobian {
      * @param index Position of Jacobian to update.
      */
     inline void updateJacobian(const std::complex<T> *sv1,
-                               const std::complex<T> *sv2, std::vector<T> &jac,
+                               const std::complex<T> *sv2, std::vector<std::vector<T>> &jac,
                                size_t num_elements, T scaling_coeff,
-                               size_t index) {
-        jac[index] =
+                               size_t obs_index, size_t param_index) {
+        jac[obs_index][param_index] =
             -2 * scaling_coeff * std::real(innerProdC(sv1, sv2, num_elements));
     }
     /**
@@ -347,10 +347,9 @@ template <class T = double> class AdjointJacobian {
      */
     inline void updateJacobian(const std::vector<std::complex<T>> &sv1,
                                const std::vector<std::complex<T>> &sv2,
-                               std::vector<T> &jac, size_t num_elements,
-                               T scaling_coeff, size_t index) {
-        PL_ASSERT(index < jac.size());
-        jac[index] = -2 * scaling_coeff * std::imag(innerProdC(sv1, sv2));
+                               std::vector<std::vector<T>> &jac, size_t num_elements,
+                               T scaling_coeff, size_t obs_index, size_t param_index) {
+        jac[obs_index][param_index] = -2 * scaling_coeff * std::imag(innerProdC(sv1, sv2));
     }
     /**
      * @brief Utility method to update the Jacobian at a given index by
@@ -363,10 +362,9 @@ template <class T = double> class AdjointJacobian {
      */
     inline void updateJacobian(const StateVectorManaged<T> &sv1,
                                const StateVectorManaged<T> &sv2,
-                               std::vector<T> &jac, size_t num_elements,
-                               T scaling_coeff, size_t index) {
-        PL_ASSERT(index < jac.size());
-        jac[index] =
+                               std::vector<std::vector<T>> &jac, size_t num_elements,
+                               T scaling_coeff, size_t obs_index, size_t param_index) {
+        jac[obs_index][param_index] =
             -2 * scaling_coeff *
             std::imag(innerProdC(sv1.getDataVector(), sv2.getDataVector()));
     }
@@ -417,13 +415,20 @@ template <class T = double> class AdjointJacobian {
      */
     inline void applyObservable(StateVectorManaged<T> &state,
                                 const ObsDatum<T> &observable) {
+                                using namespace Pennylane::Util;
         for (size_t j = 0; j < observable.getSize(); j++) {
+            //std::cout << "OBSIDX=" << j << std::endl;
+            //std::cout << "OBSNAME=" << observable.getObsName()[j] << std::endl;
+            //std::cout << "OBSWIRES=" << observable.getObsWires()[j] << std::endl;
+            //std::cout << "OBSPARAMS=" << observable.getObsParams().size() << std::endl;
             if (observable.getObsParams().size() > 0) {
                 std::visit(
-                    [&](const auto param) {
+                    [&](const auto& param) {
                         using p_t = std::decay_t<decltype(param)>;
                         // Apply supported gate with given params
                         if constexpr (std::is_same_v<p_t, std::vector<T>>) {
+                                        //std::cout << "HEREr" << std::endl;
+
                             state.applyOperation(observable.getObsName()[j],
                                                  observable.getObsWires()[j],
                                                  false, param);
@@ -432,17 +437,27 @@ template <class T = double> class AdjointJacobian {
                         else if constexpr (std::is_same_v<
                                                p_t,
                                                std::vector<std::complex<T>>>) {
+                                //std::cout << "HEREc" << std::endl;
+
                             state.applyOperation(
                                 param, observable.getObsWires()[j], false);
                         } else { // Monostate: vector entry with an empty
                                  // parameter list
+                            //const std::vector<T> param_empty{};
+                            //std::cout << "HEREm" << std::endl;
+                            //std::cout << "Sate=" << state.getDataVector() << std::endl;
+                            //std::cout << "NAME=" << observable.getObsName()[j] << std::endl;
+                            //std::cout << "Wires=" << observable.getObsWires()[j] << std::endl;
                             state.applyOperation(observable.getObsName()[j],
                                                  observable.getObsWires()[j],
                                                  false);
+                            //std::cout << "DID I GET HERE?" << std::endl;
                         }
                     },
                     observable.getObsParams()[j]);
             } else { // Offloat to SV dispatcher if no parameters provided
+                                            //std::cout << "HEREo" << std::endl;
+
                 state.applyOperation(observable.getObsName()[j],
                                      observable.getObsWires()[j], false);
             }
@@ -542,13 +557,19 @@ template <class T = double> class AdjointJacobian {
      * @param num_params
      */
     void adjointJacobian(const std::complex<T> *psi, size_t num_elements,
-                         std::vector<T> &jac,
+                         std::vector<std::vector<T>> &jac,
                          const std::vector<ObsDatum<T>> &observables,
                          const OpsData<T> &operations,
                          const std::set<size_t> &trainableParams,
                          size_t num_params, bool apply_operations = false) {
         PL_ABORT_IF(trainableParams.empty(),
                     "No trainable parameters provided.");
+
+using namespace Pennylane::Util;
+//std::cout <<"TP=" << trainableParams << std::endl;
+//std::cout << "OPS="<< operations.getOpsName() << std::endl;
+//for(auto& a : operations.getOpsParams())
+//std::cout << "OP_P=" << a << std::endl;
 
         // Track positions within par and non-par operations
         size_t num_observables = observables.size();
@@ -563,16 +584,21 @@ template <class T = double> class AdjointJacobian {
         if (apply_operations)
             applyOperations(lambda, operations);
 
+//std::cout << "Here 1" << std::endl;
         // Create observable-applied state-vectors
         std::vector<StateVectorManaged<T>> H_lambda(num_observables,
                                                     {lambda.getNumQubits()});
 
-#pragma omp parallel for
+//#pragma omp parallel for
         for (size_t h_i = 0; h_i < num_observables; h_i++) {
             H_lambda[h_i].updateData(lambda.getDataVector());
+//std::cout << "Here 1a" << std::endl;
+
             applyObservable(H_lambda[h_i], observables[h_i]);
         }
+        std::cout << "NOW I GOT HERE" << std::endl;
         StateVectorManaged<T> mu(lambda.getNumQubits());
+//std::cout << "Here 2" << std::endl;
 
         for (int op_idx = operations.getOpsName().size() - 1; op_idx >= 0;
              op_idx--) {
@@ -585,22 +611,24 @@ template <class T = double> class AdjointJacobian {
                 mu.updateData(lambda.getDataVector());
 
                 applyOperation(lambda, operations, op_idx, true);
+//std::cout << "Here 3" << std::endl;
 
                 if (operations.hasParams(op_idx)) {
                     if (std::find(trainableParams.begin(), tp_it,
                                   current_param_idx) != tp_it) {
+//std::cout << "Here 4" << std::endl;
 
                         const T scalingFactor =
                             applyGenerator(mu, operations.getOpsName()[op_idx],
                                            operations.getOpsWires()[op_idx]);
                         size_t index;
-#pragma omp parallel for
+//#pragma omp parallel for
                         for (size_t obs_idx = 0; obs_idx < num_observables;
                              obs_idx++) {
-                            index = getJacIndex(obs_idx, trainableParamNumber,
-                                                trainableParams.size());
+                            //index = getJacIndex(obs_idx, trainableParamNumber,
+                            //                    trainableParams.size());
                             updateJacobian(H_lambda[obs_idx], mu, jac,
-                                           num_elements, scalingFactor, index);
+                                           num_elements, scalingFactor, obs_idx, trainableParamNumber);
                         }
                         trainableParamNumber--;
                         std::advance(tp_it, -1);
@@ -608,7 +636,7 @@ template <class T = double> class AdjointJacobian {
                     current_param_idx--;
                 }
 
-#pragma omp parallel for
+//#pragma omp parallel for
                 for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
                     applyOperation(H_lambda[obs_idx], operations, op_idx, true);
                 }

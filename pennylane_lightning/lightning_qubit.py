@@ -199,7 +199,7 @@ class LightningQubit(DefaultQubit):
             tape.num_params,
         )
 
-        return jac.reshape((1,jac.size)) # super().adjoint_jacobian(tape, starting_state, use_device_state)
+        return jac # .reshape((1,jac.size)) # super().adjoint_jacobian(tape, starting_state, use_device_state)
 
 
 if not CPP_BINARY_AVAILABLE:

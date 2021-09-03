@@ -185,7 +185,7 @@ class TestAdjointJacobian:
         # circuit jacobians
         dev_jacobian = dev.adjoint_jacobian(tape)
         expected_jacobian = -np.diag(np.sin(params))
-        assert np.allclose(dev_jacobian, expected_jacobian.ravel(), atol=tol, rtol=0)
+        assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
 
     qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
     ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
@@ -220,7 +220,7 @@ class TestAdjointJacobian:
         grad_D = dev.adjoint_jacobian(tape)
         print(grad_D, grad_F)
 
-        assert np.allclose(grad_D, grad_F.ravel(), atol=tol, rtol=0)
+        assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
 
     def test_gradient_gate_with_multiple_parameters(self, tol, dev):
         """Tests that gates with multiple free parameters yield correct gradients."""
