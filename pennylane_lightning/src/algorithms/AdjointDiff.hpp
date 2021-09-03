@@ -72,7 +72,7 @@ void applyGeneratorCRY(SVType &sv, const std::vector<size_t> &wires) {
         sv.generateBitPatterns(externalWires);
     for (const size_t &externalIndex : externalIndices) {
         std::complex<T> *shiftedState = sv.getData() + externalIndex;
-        std::complex<T> v0 = shiftedState[internalIndices[0]];
+        std::complex<T> v0 = shiftedState[internalIndices[2]];
         shiftedState[internalIndices[0]] = shiftedState[internalIndices[1]] = 0;
         shiftedState[internalIndices[2]] =
             -IMAG<T>() * shiftedState[internalIndices[3]];
