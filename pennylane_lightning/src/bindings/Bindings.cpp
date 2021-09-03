@@ -764,7 +764,8 @@ void lightning_class_bindings(py::module &m) {
                  adj.adjointJacobian(sv.getData(), sv.getLength(), jac,
                                      observables, operations, trainableParams,
                                      num_params);
-                 return jac;
+                 // return jac;
+                 return py::array_t<Param_t>(py::cast(jac));
              });
 }
 
