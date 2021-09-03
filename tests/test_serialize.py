@@ -247,13 +247,13 @@ class TestSerializeOps:
             qml.CNOT(wires=[0, 1])
 
         s = _serialize_ops(tape, self.wires_dict)
-        s_expected = (
+        s_expected = ((
             ["RX", "RY", "CNOT"],
             [[0.4], [0.6], []],
             [[0], [1], [0, 1]],
             [False, False, False],
             [[], [], []],
-        )
+        ), False)
         assert s == s_expected
 
     def test_skips_prep_circuit(self):
@@ -267,13 +267,13 @@ class TestSerializeOps:
             qml.CNOT(wires=[0, 1])
 
         s = _serialize_ops(tape, self.wires_dict)
-        s_expected = (
+        s_expected = ((
             ["RX", "RY", "CNOT"],
             [[0.4], [0.6], []],
             [[0], [1], [0, 1]],
             [False, False, False],
             [[], [], []],
-        )
+        ), True)
         assert s == s_expected
 
     def test_inverse_circuit(self):
@@ -284,13 +284,13 @@ class TestSerializeOps:
             qml.CNOT(wires=[0, 1])
 
         s = _serialize_ops(tape, self.wires_dict)
-        s_expected = (
+        s_expected = ((
             ["RX", "RY", "CNOT"],
             [[0.4], [0.6], []],
             [[0], [1], [0, 1]],
             [False, True, False],
             [[], [], []],
-        )
+        ), False)
         assert s == s_expected
 
     def test_unsupported_kernel_circuit(self):
@@ -303,7 +303,7 @@ class TestSerializeOps:
             qml.RZ(0.2, wires=2)
 
         s = _serialize_ops(tape, self.wires_dict)
-        s_expected = (
+        s_expected = ((
             ["SingleExcitationPlus", "SingleExcitationMinus", "CNOT", "RZ"],
             [[], [], [], [0.2]],
             [[0, 1], [1, 2], [0, 1], [2]],
@@ -314,13 +314,13 @@ class TestSerializeOps:
                 [],
                 [],
             ],
-        )
-        assert s[0] == s_expected[0]
-        assert s[1] == s_expected[1]
-        assert s[2] == s_expected[2]
-        assert s[3] == s_expected[3]
+        ), False)
+        assert s[0][0] == s_expected[0][0]
+        assert s[0][1] == s_expected[0][1]
+        assert s[0][2] == s_expected[0][2]
+        assert s[0][3] == s_expected[0][3]
 
-        assert all(np.allclose(s1, s2) for s1, s2 in zip(s[4], s_expected[4]))
+        assert all(np.allclose(s1, s2) for s1, s2 in zip(s[0][4], s_expected[0][4]))
 
     def test_custom_wires_circuit(self):
         """Test expected serialization for a simple circuit with custom wire labels"""
@@ -331,13 +331,13 @@ class TestSerializeOps:
             qml.CNOT(wires=["a", 3.2])
 
         s = _serialize_ops(tape, wires_dict)
-        s_expected = (
+        s_expected = ((
             ["RX", "RY", "CNOT"],
             [[0.4], [0.6], []],
             [[0], [1], [0, 1]],
             [False, False, False],
             [[], [], []],
-        )
+        ), False)
         assert s == s_expected
 
     def test_integration(self):
@@ -347,11 +347,11 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1).inv().inv()
             qml.CNOT(wires=[0, 1])
             qml.QubitUnitary(np.eye(4), wires=[0, 1])
-            qml.templates.QFT(wires=[0, 1, 2]).inv()
+            qml.QFT(wires=[0, 1, 2]).inv()
             qml.DoubleExcitation(0.555, wires=[3, 2, 1, 0])
 
         s = _serialize_ops(tape, self.wires_dict)
-        s_expected = (
+        s_expected = ((
             ["RX", "RY", "CNOT", "QubitUnitary", "QFT", "DoubleExcitation"],
             [[0.4], [0.6], [], [], [], []],
             [[0], [1], [0, 1], [0, 1], [0, 1, 2], [3, 2, 1, 0]],
@@ -360,14 +360,15 @@ class TestSerializeOps:
                 [],
                 [],
                 [],
-                qml.QubitUnitary(np.eye(4), wires=[0, 1]).matrix,
-                qml.templates.QFT(wires=[0, 1, 2]).inv().matrix,
+                qml.QubitUnitary(np.eye(4, dtype=np.complex128), wires=[0, 1]).matrix,
+                qml.QFT(wires=[0, 1, 2]).inv().matrix,
                 qml.DoubleExcitation(0.555, wires=[3, 2, 1, 0]).matrix,
             ],
-        )
-        assert s[0] == s_expected[0]
+        ), False)
+        assert s[0][0] == s_expected[0][0]
+        assert s[0][1] == s_expected[0][1]
+        assert s[0][2] == s_expected[0][2]
+        assert s[0][3] == s_expected[0][3]
         assert s[1] == s_expected[1]
-        assert s[2] == s_expected[2]
-        assert s[3] == s_expected[3]
 
-        assert all(np.allclose(s1, s2) for s1, s2 in zip(s[4], s_expected[4]))
+        assert all(np.allclose(s1, s2) for s1, s2 in zip(s[0][4], s_expected[0][4]))
