@@ -14,7 +14,7 @@
 r"""
 Helper functions for serializing quantum tapes.
 """
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
 import numpy as np
 from pennylane import BasisState, Hadamard, Projector, QubitStateVector, Rot
@@ -46,7 +46,7 @@ def _obs_has_kernel(obs: Observable) -> bool:
     return False
 
 
-def _serialize_obs(tape: QuantumTape, wires_map: dict) -> List[ObsStructC128]:
+def _serialize_obs(tape: QuantumTape, wires_map: dict) -> List:
     """Serializes the observables of an input tape.
 
     Args:
@@ -60,9 +60,19 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict) -> List[ObsStructC128]:
 
     for o in tape.observables:
         is_tensor = isinstance(o, Tensor)
-        
-        wires_list = o.wires.tolist()
-        wires = [wires_map[w] for w in wires_list]
+
+        wires = []
+
+        if is_tensor:
+            for o_ in o.obs:
+                wires_list = o_.wires.tolist()
+                w = [wires_map[w] for w in wires_list]
+                wires.append(w)
+        else:
+            wires_list = o.wires.tolist()
+            w = [wires_map[w] for w in wires_list]
+            wires.append(w)
+
         name = o.name if is_tensor else [o.name]
 
         params = []
@@ -71,15 +81,11 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict) -> List[ObsStructC128]:
             if is_tensor:
                 for o_ in o.obs:
                     if not _obs_has_kernel(o_):
-                        params.append(o_.matrix)
+                        params.append(o_.matrix.ravel())
             else:
-                params.append(o.matrix)
+                params.append(o.matrix.ravel())
 
-        ob = (
-            ObsStructC128(name, params, [[w] for w in wires])
-            if is_tensor
-            else ObsStructC128(name, params, [wires])
-        )
+        ob = ObsStructC128(name, params, wires)
         obs.append(ob)
 
     return obs
@@ -107,8 +113,11 @@ def _serialize_ops(
     inverses = []
     mats = []
 
+    uses_stateprep = False
+
     for o in tape.operations:
         if isinstance(o, (BasisState, QubitStateVector)):
+            uses_stateprep = True
             continue
         elif isinstance(o, Rot):
             op_list = o.expand().operations
@@ -134,4 +143,4 @@ def _serialize_ops(
             wires_list = single_op.wires.tolist()
             wires.append([wires_map[w] for w in wires_list])
             inverses.append(is_inverse)
-    return names, params, wires, inverses, mats
+    return (names, params, wires, inverses, mats), uses_stateprep

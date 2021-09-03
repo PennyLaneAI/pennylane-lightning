@@ -204,6 +204,7 @@ template <class fp_t = double> class StateVector {
      */
     void applyOperation(const string &opName, const vector<size_t> &wires,
                         bool inverse = false, const vector<fp_t> &params = {}) {
+        using namespace Pennylane::Util;
         const auto gate = gates_.at(opName);
         if (gate_wires_.at(opName) != wires.size())
             throw std::invalid_argument(
@@ -215,7 +216,6 @@ template <class fp_t = double> class StateVector {
         const vector<size_t> externalWires = getIndicesAfterExclusion(wires);
         const vector<size_t> externalIndices =
             generateBitPatterns(externalWires);
-
         gate(internalIndices, externalIndices, inverse, params);
     }
 
@@ -465,6 +465,7 @@ template <class fp_t = double> class StateVector {
     void applyPauliX(const vector<size_t> &indices,
                      const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
+
             CFP_t *shiftedState = arr_ + externalIndex;
             std::swap(shiftedState[indices[0]], shiftedState[indices[1]]);
         }

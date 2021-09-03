@@ -675,7 +675,6 @@ void lightning_class_bindings(py::module &m) {
             std::vector<typename ObsDatum<PrecisionT>::param_var_t> conv_params(
                 params.size());
             for (size_t p_idx = 0; p_idx < params.size(); p_idx++) {
-
                 std::visit(
                     [&](const auto &param) {
                         using p_t = std::decay_t<decltype(param)>;
@@ -752,7 +751,6 @@ void lightning_class_bindings(py::module &m) {
     class_name = "AdjointJacobianC" + bitsize;
     py::class_<AdjointJacobian<PrecisionT>>(m, class_name.c_str())
         .def(py::init<>())
-        //.def("create_obs", &AdjointJacobian<PrecisionT>::createObs)
         .def("create_ops_list", &AdjointJacobian<PrecisionT>::createOpsData)
         .def("adjoint_jacobian", &AdjointJacobian<PrecisionT>::adjointJacobian)
         .def("adjoint_jacobian",
@@ -761,11 +759,13 @@ void lightning_class_bindings(py::module &m) {
                 const std::vector<ObsDatum<PrecisionT>> &observables,
                 const OpsData<PrecisionT> &operations,
                 const set<size_t> &trainableParams, size_t num_params) {
-                 std::vector<PrecisionT> jac(num_params * observables.size());
+                 std::vector<std::vector<PrecisionT>> jac(
+                     observables.size(),
+                     std::vector<PrecisionT>(num_params, 0));
                  adj.adjointJacobian(sv.getData(), sv.getLength(), jac,
                                      observables, operations, trainableParams,
                                      num_params);
-                 return jac;
+                 return py::array_t<Param_t>(py::cast(jac));
              });
 }
 

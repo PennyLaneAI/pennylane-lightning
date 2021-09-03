@@ -24,6 +24,7 @@ from pennylane import (
     QuantumFunctionError,
     QubitStateVector,
     QubitUnitary,
+    Rot,
 )
 from pennylane.devices import DefaultQubit
 from pennylane.operation import Expectation
@@ -155,11 +156,21 @@ class LightningQubit(DefaultQubit):
                 UserWarning,
             )
 
+        if len(tape.trainable_params) == 0:
+            return np.array(0)
+
         for m in tape.measurements:
             if m.return_type is not Expectation:
                 raise QuantumFunctionError(
                     "Adjoint differentiation method does not support"
                     f" measurement {m.return_type.value}"
+                )
+
+        for op in tape.operations:
+            if op.num_params > 1 and not isinstance(op, Rot):
+                raise QuantumFunctionError(
+                    f"The {op.name} operation is not supported using "
+                    'the "adjoint" differentiation method'
                 )
 
         # Initialization of state
@@ -174,19 +185,21 @@ class LightningQubit(DefaultQubit):
         adj = AdjointJacobianC128()
 
         obs_serialized = _serialize_obs(tape, self.wire_map)
-        ops_serialized = _serialize_ops(tape, self.wire_map)
+        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map)
 
         ops_serialized = adj.create_ops_list(*ops_serialized)
+
+        tp_shift = tape.trainable_params if not use_sp else {i - 1 for i in tape.trainable_params}
 
         jac = adj.adjoint_jacobian(
             StateVectorC128(ket),
             obs_serialized,
             ops_serialized,
-            tape.trainable_params,
+            tp_shift,
             tape.num_params,
         )
 
-        return jac  # super().adjoint_jacobian(tape, starting_state, use_device_state)
+        return jac  # .reshape((1,jac.size)) # super().adjoint_jacobian(tape, starting_state, use_device_state)
 
 
 if not CPP_BINARY_AVAILABLE:
