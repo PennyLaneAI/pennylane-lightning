@@ -20,6 +20,7 @@ import pytest
 import pennylane as qml
 from pennylane import numpy as np
 from pennylane import QNode, qnode
+from scipy.stats import unitary_group
 
 
 I, X, Y, Z = np.eye(2), qml.PauliX.matrix, qml.PauliY.matrix, qml.PauliZ.matrix
@@ -503,3 +504,61 @@ class TestAdjointJacobianQNode:
         grad_fd = jax.grad(qnode_fd)(params1, params2)
 
         assert np.allclose(grad_adjoint, grad_fd)
+
+
+class TestAdjointIntegration:
+    """Integration tests for the adjoint jacobian"""
+
+    def test_big_circuit(self):
+        """Compare to default.qubit for a large circuit containing parametrized operations"""
+        wires = 4
+
+        dev_def = qml.device("default.qubit", wires=wires)
+        dev_lightning = qml.device("lightning.qubit", wires=wires)
+
+        u = unitary_group.rvs(2 ** wires)
+
+        def circuit(params):
+            qml.QubitStateVector(u[0], wires=range(wires))
+            qml.RX(params[0], wires=0)
+            qml.RY(params[1], wires=1)
+        #     qml.RX(params[2], wires=2).inv()
+            qml.RZ(params[0], wires=3)
+            qml.CRX(params[3], wires=[3, 0])
+            qml.PhaseShift(params[4], wires=2)
+            qml.CRY(params[5], wires=[2, 1])
+            qml.CRZ(params[5], wires=[0, 3]).inv()
+            qml.PhaseShift(params[6], wires=0).inv()
+        #     qml.Rot(params[6], params[7], params[8], wires=0)
+        #     qml.Rot(params[8], params[8], params[9], wires=1).inv()
+        #     qml.MultiRZ(params[11], wires=[0, 1])
+        #     qml.PauliRot(params[12], "XXYZ", wires=[0, 1, 2, 3])
+            qml.CPhase(params[12], wires=[3, 2])
+        #     qml.IsingXX(params[13], wires=[1, 0])
+        #     qml.IsingYY(params[14], wires=[3, 2])
+        #     qml.IsingZZ(params[14], wires=[2, 1])
+            qml.U1(params[15], wires=0)
+        #     qml.U2(params[16], params[17], wires=0)
+            qml.U3(params[18], params[19], params[20], wires=1)
+        #     qml.CRot(params[21], params[22], params[23], wires=[1, 2]).inv()  # expected to fail
+        #     qml.SingleExcitation(params[24], wires=[2, 0])
+        #     qml.DoubleExcitation(params[25], wires=[2, 0, 1, 3])
+        #     qml.SingleExcitationPlus(params[26], wires=[0, 2])
+        #     qml.SingleExcitationMinus(params[27], wires=[0, 2])
+        #     qml.DoubleExcitationPlus(params[27], wires=[2, 0, 1, 3])
+        #     qml.DoubleExcitationMinus(params[27], wires=[2, 0, 1, 3])
+        #     qml.RX(params[28], wires=0)
+            qml.RX(params[29], wires=1)
+
+            return qml.expval(qml.PauliZ(0) @ qml.PauliX(1))
+
+        n_params = 30
+        params = np.linspace(0, 10, n_params)
+
+        qnode_def = qml.QNode(circuit, dev_def)
+        qnode_lightning = qml.QNode(circuit, dev_lightning, diff_method="adjoint")
+
+        j_def = qml.jacobian(qnode_def)(params)
+        j_lightning = qml.jacobian(qnode_lightning)(params)
+
+        assert np.allclose(j_def, j_lightning)
