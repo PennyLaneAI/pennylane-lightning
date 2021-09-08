@@ -1,11 +1,9 @@
-# Release 0.18.0-dev
+# Release 0.18.0
 
 ### New features since last release
 
 * PennyLane-Lightning now supports all of the operations and observables of `default.qubit`.
   [#124](https://github.com/PennyLaneAI/pennylane-lightning/pull/124)
-
-### Breaking changes
 
 ### Improvements
 
