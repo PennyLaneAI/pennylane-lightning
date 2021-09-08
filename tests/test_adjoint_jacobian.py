@@ -98,7 +98,19 @@ class TestAdjointJacobian:
             qml.CRot(0.1, 0.2, 0.3, wires=[0, 1])
             qml.expval(qml.PauliZ(0))
 
-        with pytest.raises(qml.QuantumFunctionError, match="The CRot operation is not supported using the"):
+        with pytest.raises(
+            qml.QuantumFunctionError, match="The CRot operation is not supported using the"
+        ):
+            dev.adjoint_jacobian(tape)
+
+        with qml.tape.JacobianTape() as tape:
+            qml.SingleExcitation(0.1, wires=[0, 1])
+            qml.expval(qml.PauliZ(0))
+
+        with pytest.raises(
+            qml.QuantumFunctionError,
+            match="The SingleExcitation operation is not supported using the",
+        ):
             dev.adjoint_jacobian(tape)
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
@@ -114,7 +126,7 @@ class TestAdjointJacobian:
         tape.trainable_params = {1}
 
         calculated_val = dev.adjoint_jacobian(tape)
-        
+
         # compare to finite differences
         numeric_val = tape.jacobian(dev, method="numeric")
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
@@ -522,32 +534,32 @@ class TestAdjointIntegration:
             qml.QubitStateVector(u[0], wires=range(wires))
             qml.RX(params[0], wires=0)
             qml.RY(params[1], wires=1)
-        #     qml.RX(params[2], wires=2).inv()
+            #     qml.RX(params[2], wires=2).inv()
             qml.RZ(params[0], wires=3)
             qml.CRX(params[3], wires=[3, 0])
             qml.PhaseShift(params[4], wires=2)
             qml.CRY(params[5], wires=[2, 1])
             qml.CRZ(params[5], wires=[0, 3]).inv()
             qml.PhaseShift(params[6], wires=0).inv()
-        #     qml.Rot(params[6], params[7], params[8], wires=0)
-        #     qml.Rot(params[8], params[8], params[9], wires=1).inv()
-        #     qml.MultiRZ(params[11], wires=[0, 1])
-        #     qml.PauliRot(params[12], "XXYZ", wires=[0, 1, 2, 3])
+            #     qml.Rot(params[6], params[7], params[8], wires=0)
+            #     qml.Rot(params[8], params[8], params[9], wires=1).inv()
+            #     qml.MultiRZ(params[11], wires=[0, 1])
+            #     qml.PauliRot(params[12], "XXYZ", wires=[0, 1, 2, 3])
             qml.CPhase(params[12], wires=[3, 2])
-        #     qml.IsingXX(params[13], wires=[1, 0])
-        #     qml.IsingYY(params[14], wires=[3, 2])
-        #     qml.IsingZZ(params[14], wires=[2, 1])
+            #     qml.IsingXX(params[13], wires=[1, 0])
+            #     qml.IsingYY(params[14], wires=[3, 2])
+            #     qml.IsingZZ(params[14], wires=[2, 1])
             qml.U1(params[15], wires=0)
-        #     qml.U2(params[16], params[17], wires=0)
+            #     qml.U2(params[16], params[17], wires=0)
             qml.U3(params[18], params[19], params[20], wires=1)
-        #     qml.CRot(params[21], params[22], params[23], wires=[1, 2]).inv()  # expected to fail
-        #     qml.SingleExcitation(params[24], wires=[2, 0])
-        #     qml.DoubleExcitation(params[25], wires=[2, 0, 1, 3])
-        #     qml.SingleExcitationPlus(params[26], wires=[0, 2])
-        #     qml.SingleExcitationMinus(params[27], wires=[0, 2])
-        #     qml.DoubleExcitationPlus(params[27], wires=[2, 0, 1, 3])
-        #     qml.DoubleExcitationMinus(params[27], wires=[2, 0, 1, 3])
-        #     qml.RX(params[28], wires=0)
+            #     qml.CRot(params[21], params[22], params[23], wires=[1, 2]).inv()  # expected to fail
+            #     qml.SingleExcitation(params[24], wires=[2, 0])
+            #     qml.DoubleExcitation(params[25], wires=[2, 0, 1, 3])
+            #     qml.SingleExcitationPlus(params[26], wires=[0, 2])
+            #     qml.SingleExcitationMinus(params[27], wires=[0, 2])
+            #     qml.DoubleExcitationPlus(params[27], wires=[2, 0, 1, 3])
+            #     qml.DoubleExcitationMinus(params[27], wires=[2, 0, 1, 3])
+            #     qml.RX(params[28], wires=0)
             qml.RX(params[29], wires=1)
 
             return qml.expval(qml.PauliZ(0) @ qml.PauliX(1))
