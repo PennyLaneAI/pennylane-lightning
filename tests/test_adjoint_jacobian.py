@@ -231,7 +231,6 @@ class TestAdjointJacobian:
 
         grad_F = tape.jacobian(dev, method="numeric")
         grad_D = dev.adjoint_jacobian(tape)
-        print(grad_D, grad_F)
 
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
 
