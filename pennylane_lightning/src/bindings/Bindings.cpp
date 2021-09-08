@@ -752,6 +752,28 @@ void lightning_class_bindings(py::module &m) {
     py::class_<AdjointJacobian<PrecisionT>>(m, class_name.c_str())
         .def(py::init<>())
         .def("create_ops_list", &AdjointJacobian<PrecisionT>::createOpsData)
+        .def("create_ops_list",
+             [](AdjointJacobian<PrecisionT> &adj, const std::vector<std::string> &ops_name,
+                const std::vector<np_arr_r> &ops_params,
+                const std::vector<std::vector<size_t>> &ops_wires,
+                const std::vector<bool> &ops_inverses,
+                const std::vector<np_arr_c> &ops_matrices) {
+                    std::vector<std::vector<PrecisionT>> conv_params(ops_params.size());
+                    std::vector<std::vector<std::complex<PrecisionT>>> conv_matrices(ops_matrices.size());
+                    for(size_t op = 0; op < ops_name.size(); op++){
+                        const auto p_buffer = ops_params[op].request();
+                        const auto m_buffer = ops_matrices[op].request();
+                        if(p_buffer.size > 0){
+                            const auto p_ptr = static_cast<const Param_t*>(p_buffer.ptr);
+                            conv_params[op] = std::vector<Param_t>{p_ptr, p_ptr + p_buffer.size};
+                        }
+                        if(m_buffer.size > 0){
+                            const auto m_ptr = static_cast<const std::complex<Param_t>*>(m_buffer.ptr);
+                            conv_matrices[op] = std::vector<std::complex<Param_t>>{m_ptr, m_ptr + m_buffer.size};
+                        }
+                    }
+                    return OpsData<PrecisionT>{ops_name, conv_params, ops_wires, ops_inverses, conv_matrices};
+             })
         .def("adjoint_jacobian", &AdjointJacobian<PrecisionT>::adjointJacobian)
         .def("adjoint_jacobian",
              [](AdjointJacobian<PrecisionT> &adj,
