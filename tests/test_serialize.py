@@ -347,7 +347,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1).inv().inv()
             qml.CNOT(wires=[0, 1])
             qml.QubitUnitary(np.eye(4), wires=[0, 1])
-            qml.QFT(wires=[0, 1, 2]).inv()
+            qml.templates.QFT(wires=[0, 1, 2]).inv()
             qml.DoubleExcitation(0.555, wires=[3, 2, 1, 0])
 
         s = _serialize_ops(tape, self.wires_dict)
@@ -361,7 +361,7 @@ class TestSerializeOps:
                 [],
                 [],
                 qml.QubitUnitary(np.eye(4, dtype=np.complex128), wires=[0, 1]).matrix,
-                qml.QFT(wires=[0, 1, 2]).inv().matrix,
+                qml.templates.QFT(wires=[0, 1, 2]).inv().matrix,
                 qml.DoubleExcitation(0.555, wires=[3, 2, 1, 0]).matrix,
             ],
         ), False)
