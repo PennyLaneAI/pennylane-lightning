@@ -83,7 +83,7 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict) -> List:
                     if not _obs_has_kernel(o_):
                         params.append(o_.matrix.ravel())
             else:
-                params.append(o.matrix.ravel())
+                params.append(o.matrix.ravel().astype(np.complex128))
 
         ob = ObsStructC128(name, params, wires)
         obs.append(ob)
