@@ -741,7 +741,9 @@ void lightning_class_bindings(py::module &m) {
             std::ostringstream ops_stream;
             for (size_t op = 0; op < ops.getSize(); op++) {
                 ops_stream << "{'name': " << ops.getOpsName()[op];
-                ops_stream << ", 'params': " << ops.getOpsParams()[op] << "}";
+                ops_stream << ", 'params': " << ops.getOpsParams()[op];
+                ops_stream << ", 'inv': " << ops.getOpsInverses()[op];
+                ops_stream << "}";
                 if (op < ops.getSize() - 1)
                     ops_stream << ",";
             }
