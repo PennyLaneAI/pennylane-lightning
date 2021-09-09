@@ -715,15 +715,7 @@ void lightning_class_bindings(py::module &m) {
                  obs_stream << "'wires' : " << obs.getObsWires();
                  return "Observable: { 'name' : " + obs_name + ", " +
                         obs_stream.str() + " }";
-             })
-        .def("as_tuple", [](const ObsDatum<PrecisionT> &obs) {
-            using tup_t = std::tuple<
-                const std::vector<std::string>,
-                std::vector<typename ObsDatum<PrecisionT>::param_var_t>,
-                std::vector<std::vector<size_t>>>;
-            return tup_t{obs.getObsName(), obs.getObsParams(),
-                         obs.getObsWires()};
-        });
+             });
 
     //***********************************************************************//
     //                              Operations

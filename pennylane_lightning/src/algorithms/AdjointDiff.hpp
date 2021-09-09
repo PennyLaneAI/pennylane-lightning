@@ -425,7 +425,7 @@ template <class T = double> class AdjointJacobian {
                                 const ObsDatum<T> &observable) {
         using namespace Pennylane::Util;
         for (size_t j = 0; j < observable.getSize(); j++) {
-            if (observable.getObsParams().size() > 0) {
+            if (!observable.getObsParams().empty()) {
                 std::visit(
                     [&](const auto &param) {
                         using p_t = std::decay_t<decltype(param)>;
@@ -457,21 +457,6 @@ template <class T = double> class AdjointJacobian {
 
   public:
     AdjointJacobian() {}
-
-    /**
-     * @brief Utility to create a given observable object.
-     *
-     * @param obs_name
-     * @param obs_params
-     * @param obs_wires
-     * @return const ObsDatum<T>
-     */
-    /*const ObsDatum<T>
-    createObs(const std::vector<std::string> &obs_name,
-              const std::vector<std::vector<T>> &obs_params,
-              const std::vector<std::vector<size_t>> &obs_wires) {
-        return ObsDatum<T>{obs_name, obs_params, obs_wires};
-    }*/
 
     /**
      * @brief Utility to create a given operations object.
