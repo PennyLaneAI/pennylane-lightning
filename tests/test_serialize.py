@@ -203,10 +203,10 @@ class TestSerializeObs:
     def test_integration(self, monkeypatch):
         """Test for a comprehensive range of returns"""
         wires_dict = {"a": 0, 1: 1, "b": 2, -1: 3, 3.141: 4, "five": 5, 6: 6, 77: 7, 9: 8}
-        I = np.eye(2)
-        X = qml.PauliX.matrix
-        Y = qml.PauliY.matrix
-        Z = qml.PauliZ.matrix
+        I = np.eye(2).astype(np.complex128)
+        X = qml.PauliX.matrix.astype(np.complex128)
+        Y = qml.PauliY.matrix.astype(np.complex128)
+        Z = qml.PauliZ.matrix.astype(np.complex128)
 
         mock_obs = mock.MagicMock()
 
@@ -214,7 +214,7 @@ class TestSerializeObs:
             qml.expval(qml.PauliZ("a") @ qml.PauliX("b"))
             qml.expval(qml.Hermitian(I, wires=1))
             qml.expval(qml.PauliZ(-1) @ qml.Hermitian(X, wires=3.141) @ qml.Hadamard("five"))
-            qml.expval(qml.Projector([1, 1], wires=[6, 77]) @ qml.Hermitian(Y, wires=9))
+            #qml.expval(qml.Projector([1, 1], wires=[6, 77]) @ qml.Hermitian(Y, wires=9))
             qml.expval(qml.Hermitian(Z, wires="a") @ qml.Identity(1))
 
         with monkeypatch.context() as m:
@@ -224,11 +224,11 @@ class TestSerializeObs:
         s = mock_obs.call_args_list
 
         s_expected = [
-            (["PauliZ", "PauliX"], [], [[0], [2]]),
+            (["PauliZ", "PauliX"], [[],[]], [[0], [2]]),
             (["Hermitian"], [I.ravel()], [[1]]),
-            (["PauliZ", "Hermitian", "Hadamard"], [X.ravel()], [[3], [4], [5]]),
-            (["Projector", "Hermitian"], [Y.ravel()], [[6, 7], [8]]),
-            (["Hermitian", "Identity"], [Z.ravel()], [[0], [1]]),
+            (["PauliZ", "Hermitian", "Hadamard"], [[],X.ravel(),[]], [[3], [4], [5]]),
+            #(["Projector", "Hermitian"], [[],Y.ravel().astype(np.complex128)], [[6, 7], [8]]),
+            (["Hermitian", "Identity"], [Z.ravel(),[]], [[0], [1]]),
         ]
         [ObsStructC128(*s_expected) for s_expected in s_expected]
 
