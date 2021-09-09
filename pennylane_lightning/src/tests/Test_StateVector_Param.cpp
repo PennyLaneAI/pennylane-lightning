@@ -29,14 +29,20 @@ template <typename fp_t> struct SVData {
     StateVector<fp_t> sv;
 
     explicit SVData(size_t num_qubits)
-        : num_qubits{num_qubits}, // qubit_indices{num_qubits},
-          cdata(0b1 << num_qubits), sv{cdata.data(), cdata.size()} {
+        : num_qubits{num_qubits},
+          cdata(0b1 << num_qubits, std::complex<fp_t>{0, 0}),
+          sv{StateVector<fp_t>(nullptr,
+                               static_cast<size_t>(Util::exp2(num_qubits)))} {
         cdata[0] = std::complex<fp_t>{1, 0};
+        sv.setData(cdata.data());
     }
     explicit SVData(size_t num_qubits,
                     const std::vector<std::complex<fp_t>> &cdata_input)
-        : num_qubits{num_qubits}, // qubit_indices{num_qubits},
-          cdata(cdata_input), sv{cdata.data(), cdata.size()} {}
+        : num_qubits{num_qubits}, cdata{cdata_input.begin(), cdata_input.end()},
+          sv{StateVector<fp_t>(nullptr,
+                               static_cast<size_t>(Util::exp2(num_qubits)))} {
+        sv.setData(cdata.data());
+    }
     vector<size_t>
     getInternalIndices(const std::vector<size_t> &qubit_indices) {
         return sv.generateBitPatterns(qubit_indices);
@@ -48,43 +54,75 @@ template <typename fp_t> struct SVData {
         vector<size_t> externalIndices = sv.generateBitPatterns(externalWires);
         return externalIndices;
     }
+    void setCData() {}
 };
 } // namespace
 
-TEMPLATE_TEST_CASE("StateVector::applyRX", "[StateVector_Param]", float,
-                   double) {
+TEMPLATE_TEST_CASE("StateVector::applyRX", "[StateVector_Param]", double) {
     using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
+    const size_t num_qubits = 1;
     SVData<TestType> svdat{num_qubits};
 
-    const std::vector<TestType> angles{0.1, 0.6, 2.1};
+    const std::vector<TestType> angles{{0.1}, {0.6}};
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(8), std::vector<cp_t>(8), std::vector<cp_t>(8)};
+        std::vector<cp_t>{{0.9987502603949663, 0.0},
+                          {0.0, -0.04997916927067834}},
+        std::vector<cp_t>{{0.9553364891256061, 0.0}, {0, -0.2955202066613395}},
+        std::vector<cp_t>{{0.49757104789172696, 0.0}, {0, -0.867423225594017}}};
 
-    for (size_t i = 0; i < angles.size(); i++) {
-        const auto rx_mat = Gates::getRX<TestType>(angles[i]);
-        expected_results[i][0] = rx_mat[0];
-        expected_results[i][0b1 << (num_qubits - i - 1)] = rx_mat[1];
-    }
+    std::vector<std::vector<cp_t>> expected_results_adj{
+        std::vector<cp_t>{{0.9987502603949663, 0.0},
+                          {0.0, 0.04997916927067834}},
+        std::vector<cp_t>{{0.9553364891256061, 0.0}, {0, 0.2955202066613395}},
+        std::vector<cp_t>{{0.49757104789172696, 0.0}, {0, 0.867423225594017}}};
 
     const auto init_state = svdat.cdata;
-    SECTION("Apply directly") {
-        for (size_t index = 0; index < num_qubits; index++) {
-            SVData<TestType> svdat_direct{num_qubits};
-            auto int_idx = svdat_direct.getInternalIndices({index});
-            auto ext_idx = svdat_direct.getExternalIndices({index});
+    SECTION("adj = false") {
+        SECTION("Apply directly") {
+            for (size_t index = 0; index < angles.size(); index++) {
+                SVData<TestType> svdat_direct{num_qubits, init_state};
 
-            svdat_direct.sv.applyRX(int_idx, ext_idx, false, {angles[index]});
+                auto int_idx = svdat_direct.getInternalIndices({0});
+                auto ext_idx = svdat_direct.getExternalIndices({0});
 
-            CHECK(isApproxEqual(svdat_direct.cdata, expected_results[index]));
+                svdat_direct.sv.applyRX(int_idx, ext_idx, false, angles[index]);
+
+                CHECK(isApproxEqual(svdat_direct.cdata, expected_results[index],
+                                    1e-7));
+            }
+        }
+        SECTION("Apply using dispatcher") {
+            for (size_t index = 0; index < angles.size(); index++) {
+                SVData<TestType> svdat_dispatch{num_qubits, init_state};
+                svdat_dispatch.sv.applyOperation("RX", {0}, false,
+                                                 {angles[index]});
+
+                CHECK(isApproxEqual(svdat_dispatch.cdata,
+                                    expected_results[index], 1e-7));
+            }
         }
     }
-    SECTION("Apply using dispatcher") {
-        for (size_t index = 0; index < num_qubits; index++) {
-            SVData<TestType> svdat_dispatch{num_qubits};
-            svdat_dispatch.sv.applyOperation("RX", {index}, false,
-                                             {angles[index]});
-            CHECK(isApproxEqual(svdat_dispatch.cdata, expected_results[index]));
+    SECTION("adj = true") {
+        SECTION("Apply directly") {
+            for (size_t index = 0; index < angles.size(); index++) {
+                SVData<TestType> svdat_direct{num_qubits, init_state};
+                auto int_idx = svdat_direct.getInternalIndices({0});
+                auto ext_idx = svdat_direct.getExternalIndices({0});
+
+                svdat_direct.sv.applyRX(int_idx, ext_idx, true,
+                                        {angles[index]});
+                CHECK(isApproxEqual(svdat_direct.cdata,
+                                    expected_results_adj[index], 1e-7));
+            }
+        }
+        SECTION("Apply using dispatcher") {
+            for (size_t index = 0; index < angles.size(); index++) {
+                SVData<TestType> svdat_dispatch{num_qubits, init_state};
+                svdat_dispatch.sv.applyOperation("RX", {0}, true,
+                                                 {angles[index]});
+                CHECK(isApproxEqual(svdat_dispatch.cdata,
+                                    expected_results_adj[index], 1e-7));
+            }
         }
     }
 }
@@ -92,37 +130,71 @@ TEMPLATE_TEST_CASE("StateVector::applyRX", "[StateVector_Param]", float,
 TEMPLATE_TEST_CASE("StateVector::applyRY", "[StateVector_Param]", float,
                    double) {
     using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
+    const size_t num_qubits = 1;
     SVData<TestType> svdat{num_qubits};
 
     const std::vector<TestType> angles{0.2, 0.7, 2.9};
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(8), std::vector<cp_t>(8), std::vector<cp_t>(8)};
+        std::vector<cp_t>{{0.8731983044562817, 0.04786268954660339},
+                          {0.0876120655431924, -0.47703040785184303}},
+        std::vector<cp_t>{{0.8243771119105122, 0.16439396602553008},
+                          {0.3009211363333468, -0.45035926880694604}},
+        std::vector<cp_t>{{0.10575112905629831, 0.47593196040758534},
+                          {0.8711876098966215, -0.0577721051072477}}};
+    std::vector<std::vector<cp_t>> expected_results_adj{
+        std::vector<cp_t>{{0.8731983044562817, -0.04786268954660339},
+                          {-0.0876120655431924, -0.47703040785184303}},
+        std::vector<cp_t>{{0.8243771119105122, -0.16439396602553008},
+                          {-0.3009211363333468, -0.45035926880694604}},
+        std::vector<cp_t>{{0.10575112905629831, -0.47593196040758534},
+                          {-0.8711876098966215, -0.0577721051072477}}};
 
-    for (size_t i = 0; i < angles.size(); i++) {
-        const auto ry_mat = Gates::getRY<TestType>(angles[i]);
-        expected_results[i][0] = ry_mat[0];
-        expected_results[i][0b1 << (num_qubits - i - 1)] = ry_mat[2];
-    }
+    const std::vector<cp_t> init_state{{0.8775825618903728, 0.0},
+                                       {0.0, -0.47942553860420306}};
+    SECTION("adj = false") {
+        SECTION("Apply directly") {
+            for (size_t index = 0; index < angles.size(); index++) {
+                SVData<TestType> svdat_direct{num_qubits, init_state};
+                auto int_idx = svdat_direct.getInternalIndices({0});
+                auto ext_idx = svdat_direct.getExternalIndices({0});
 
-    const auto init_state = svdat.cdata;
-    SECTION("Apply directly") {
-        for (size_t index = 0; index < num_qubits; index++) {
-            SVData<TestType> svdat_direct{num_qubits};
-            auto int_idx = svdat_direct.getInternalIndices({index});
-            auto ext_idx = svdat_direct.getExternalIndices({index});
-
-            svdat_direct.sv.applyRY(int_idx, ext_idx, false, {angles[index]});
-
-            CHECK(isApproxEqual(svdat_direct.cdata, expected_results[index]));
+                svdat_direct.sv.applyRY(int_idx, ext_idx, false,
+                                        {angles[index]});
+                CHECK(isApproxEqual(svdat_direct.cdata, expected_results[index],
+                                    1e-5));
+            }
+        }
+        SECTION("Apply using dispatcher") {
+            for (size_t index = 0; index < angles.size(); index++) {
+                SVData<TestType> svdat_dispatch{num_qubits, init_state};
+                svdat_dispatch.sv.applyOperation("RY", {0}, false,
+                                                 {angles[index]});
+                CHECK(isApproxEqual(svdat_dispatch.cdata,
+                                    expected_results[index], 1e-5));
+            }
         }
     }
-    SECTION("Apply using dispatcher") {
-        for (size_t index = 0; index < num_qubits; index++) {
-            SVData<TestType> svdat_dispatch{num_qubits};
-            svdat_dispatch.sv.applyOperation("RY", {index}, false,
-                                             {angles[index]});
-            CHECK(isApproxEqual(svdat_dispatch.cdata, expected_results[index]));
+    SECTION("adj = true") {
+        SECTION("Apply directly") {
+            for (size_t index = 0; index < angles.size(); index++) {
+                SVData<TestType> svdat_direct{num_qubits, init_state};
+                auto int_idx = svdat_direct.getInternalIndices({0});
+                auto ext_idx = svdat_direct.getExternalIndices({0});
+
+                svdat_direct.sv.applyRY(int_idx, ext_idx, true,
+                                        {angles[index]});
+                CHECK(isApproxEqual(svdat_direct.cdata,
+                                    expected_results_adj[index], 1e-5));
+            }
+        }
+        SECTION("Apply using dispatcher") {
+            for (size_t index = 0; index < angles.size(); index++) {
+                SVData<TestType> svdat_dispatch{num_qubits, init_state};
+                svdat_dispatch.sv.applyOperation("RY", {0}, true,
+                                                 {angles[index]});
+                CHECK(isApproxEqual(svdat_dispatch.cdata,
+                                    expected_results_adj[index], 1e-5));
+            }
         }
     }
 }
