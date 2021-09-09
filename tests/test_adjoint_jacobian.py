@@ -113,6 +113,17 @@ class TestAdjointJacobian:
         ):
             dev.adjoint_jacobian(tape)
 
+    def test_proj_unsupported(self, dev):
+        """Test if a QuantumFunctionError is raised for a Projector observable"""
+        with qml.tape.JacobianTape() as tape:
+            qml.CRX(0.1, wires=[0, 1])
+            qml.expval(qml.Projector([0, 1], wires=[0, 1]))
+
+        with pytest.raises(
+            qml.QuantumFunctionError, match="differentiation method does not support the Projector"
+        ):
+            dev.adjoint_jacobian(tape)
+
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
     @pytest.mark.parametrize("G", [qml.RX, qml.RY, qml.RZ])
     def test_pauli_rotation_gradient(self, G, theta, tol, dev):

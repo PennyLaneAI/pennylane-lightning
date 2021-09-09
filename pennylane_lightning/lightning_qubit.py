@@ -178,6 +178,10 @@ class LightningQubit(DefaultQubit):
                     "Adjoint differentiation method does not support"
                     f" measurement {m.return_type.value}"
                 )
+            if isinstance(m.obs, qml.Projector):
+                raise QuantumFunctionError(
+                    "Adjoint differentiation method does not support the Projector observable"
+                )
 
         for op in tape.operations:
             if (
