@@ -31,27 +31,32 @@ template <class T> static constexpr std::vector<std::complex<T>> getP11() {
 }
 
 template <class T = double, class SVType = Pennylane::StateVector<T>>
-void applyGeneratorRX(SVType &sv, const std::vector<size_t> &wires) {
-    sv.applyOperation("PauliX", wires, false);
+void applyGeneratorRX(SVType &sv, const std::vector<size_t> &wires,
+                      const bool adj = false) {
+    sv.applyOperation("PauliX", wires, adj);
 }
 
 template <class T = double, class SVType = Pennylane::StateVector<T>>
-void applyGeneratorRY(SVType &sv, const std::vector<size_t> &wires) {
-    sv.applyOperation("PauliY", wires, false);
+void applyGeneratorRY(SVType &sv, const std::vector<size_t> &wires,
+                      const bool adj = false) {
+    sv.applyOperation("PauliY", wires, adj);
 }
 
 template <class T = double, class SVType = Pennylane::StateVector<T>>
-void applyGeneratorRZ(SVType &sv, const std::vector<size_t> &wires) {
-    sv.applyOperation("PauliZ", wires, false);
+void applyGeneratorRZ(SVType &sv, const std::vector<size_t> &wires,
+                      const bool adj = false) {
+    sv.applyOperation("PauliZ", wires, adj);
 }
 
 template <class T = double, class SVType = Pennylane::StateVector<T>>
-void applyGeneratorPhaseShift(SVType &sv, const std::vector<size_t> &wires) {
-    sv.applyOperation(getP11<T>(), wires, false);
+void applyGeneratorPhaseShift(SVType &sv, const std::vector<size_t> &wires,
+                              const bool adj = false) {
+    sv.applyOperation(getP11<T>(), wires, adj);
 }
 
 template <class T = double, class SVType = Pennylane::StateVector<T>>
-void applyGeneratorCRX(SVType &sv, const std::vector<size_t> &wires) {
+void applyGeneratorCRX(SVType &sv, const std::vector<size_t> &wires,
+                       const bool adj = false) {
     const vector<size_t> internalIndices = sv.generateBitPatterns(wires);
     const vector<size_t> externalWires = sv.getIndicesAfterExclusion(wires);
     const vector<size_t> externalIndices =
@@ -65,7 +70,8 @@ void applyGeneratorCRX(SVType &sv, const std::vector<size_t> &wires) {
 }
 
 template <class T = double, class SVType = Pennylane::StateVector<T>>
-void applyGeneratorCRY(SVType &sv, const std::vector<size_t> &wires) {
+void applyGeneratorCRY(SVType &sv, const std::vector<size_t> &wires,
+                       const bool adj = false) {
     const vector<size_t> internalIndices = sv.generateBitPatterns(wires);
     const vector<size_t> externalWires = sv.getIndicesAfterExclusion(wires);
     const vector<size_t> externalIndices =
@@ -73,7 +79,8 @@ void applyGeneratorCRY(SVType &sv, const std::vector<size_t> &wires) {
     for (const size_t &externalIndex : externalIndices) {
         std::complex<T> *shiftedState = sv.getData() + externalIndex;
         std::complex<T> v0 = shiftedState[internalIndices[2]];
-        shiftedState[internalIndices[0]] = shiftedState[internalIndices[1]] = 0;
+        shiftedState[internalIndices[0]] = ZERO<T>();
+        shiftedState[internalIndices[1]] = ZERO<T>();
         shiftedState[internalIndices[2]] =
             -IMAG<T>() * shiftedState[internalIndices[3]];
         shiftedState[internalIndices[3]] = IMAG<T>() * v0;
@@ -81,7 +88,8 @@ void applyGeneratorCRY(SVType &sv, const std::vector<size_t> &wires) {
 }
 
 template <class T = double, class SVType = Pennylane::StateVector<T>>
-void applyGeneratorCRZ(SVType &sv, const std::vector<size_t> &wires) {
+void applyGeneratorCRZ(SVType &sv, const std::vector<size_t> &wires,
+                       const bool adj = false) {
     const vector<size_t> internalIndices = sv.generateBitPatterns(wires);
     const vector<size_t> externalWires = sv.getIndicesAfterExclusion(wires);
     const vector<size_t> externalIndices =
@@ -95,7 +103,8 @@ void applyGeneratorCRZ(SVType &sv, const std::vector<size_t> &wires) {
 
 template <class T = double, class SVType = Pennylane::StateVector<T>>
 void applyGeneratorControlledPhaseShift(SVType &sv,
-                                        const std::vector<size_t> &wires) {
+                                        const std::vector<size_t> &wires,
+                                        const bool adj = false) {
     const vector<size_t> internalIndices = sv.generateBitPatterns(wires);
     const vector<size_t> externalWires = sv.getIndicesAfterExclusion(wires);
     const vector<size_t> externalIndices =
@@ -327,9 +336,9 @@ template <class T> class OpsData {
  */
 template <class T = double> class AdjointJacobian {
   private:
-    typedef void (*GeneratorFunc)(
-        StateVectorManaged<T> &sv,
-        const std::vector<size_t> &wires); // function pointer type
+    typedef void (*GeneratorFunc)(StateVectorManaged<T> &sv,
+                                  const std::vector<size_t> &wires,
+                                  const bool adj); // function pointer type
 
     // Holds the mapping from gate labels to associated generator functions.
     const std::unordered_map<std::string, GeneratorFunc> generator_map{
@@ -357,49 +366,14 @@ template <class T = double> class AdjointJacobian {
      * @param sv1 Statevector <sv1|. Data will be conjugated.
      * @param sv2 Statevector |sv2>
      * @param jac Jacobian receiving the values.
-     * @param num_elements Length of statevectors
      * @param scaling_coeff Generator coefficient for given gate derivative.
      * @param index Position of Jacobian to update.
-     */
-    inline void updateJacobian(const std::complex<T> *sv1,
-                               const std::complex<T> *sv2,
-                               std::vector<std::vector<T>> &jac,
-                               size_t num_elements, T scaling_coeff,
-                               size_t obs_index, size_t param_index) {
-        jac[obs_index][param_index] =
-            -2 * scaling_coeff * std::real(innerProdC(sv1, sv2, num_elements));
-    }
-    /**
-     * @brief Utility method to update the Jacobian at a given index by
-     calculating the overlap between two given states.
-     *
-     * @see updateJacobian(const std::complex<T> *sv1,
-                               const std::complex<T> *sv2, std::vector<T> &jac,
-                               size_t num_elements, T scaling_coeff,
-                               size_t index)
-     */
-    inline void updateJacobian(const std::vector<std::complex<T>> &sv1,
-                               const std::vector<std::complex<T>> &sv2,
-                               std::vector<std::vector<T>> &jac,
-                               size_t num_elements, T scaling_coeff,
-                               size_t obs_index, size_t param_index) {
-        jac[obs_index][param_index] =
-            -2 * scaling_coeff * std::imag(innerProdC(sv1, sv2));
-    }
-    /**
-     * @brief Utility method to update the Jacobian at a given index by
-     calculating the overlap between two given states.
-     *
-     * @see updateJacobian(const std::complex<T> *sv1,
-                               const std::complex<T> *sv2, std::vector<T> &jac,
-                               size_t num_elements, T scaling_coeff,
-                               size_t index)
      */
     inline void updateJacobian(const StateVectorManaged<T> &sv1,
                                const StateVectorManaged<T> &sv2,
                                std::vector<std::vector<T>> &jac,
-                               size_t num_elements, T scaling_coeff,
-                               size_t obs_index, size_t param_index) {
+                               T scaling_coeff, size_t obs_index,
+                               size_t param_index) {
         jac[obs_index][param_index] =
             -2 * scaling_coeff *
             std::imag(innerProdC(sv1.getDataVector(), sv2.getDataVector()));
@@ -416,7 +390,6 @@ template <class T = double> class AdjointJacobian {
     inline void applyOperations(StateVectorManaged<T> &state,
                                 const OpsData<T> &operations,
                                 bool adj = false) {
-
         for (size_t op_idx = 0; op_idx < operations.getOpsName().size();
              op_idx++) {
             state.applyOperation(operations.getOpsName()[op_idx],
@@ -433,12 +406,11 @@ template <class T = double> class AdjointJacobian {
      * @param operations Operations to apply.
      * @param adj Take the adjoint of the given operations.
      */
-    inline void applyOperation(StateVectorManaged<T> &state,
-                               const OpsData<T> &operations, size_t op_idx,
-                               bool adj = false) {
+    inline void applyOperationAdj(StateVectorManaged<T> &state,
+                                  const OpsData<T> &operations, size_t op_idx) {
         state.applyOperation(operations.getOpsName()[op_idx],
                              operations.getOpsWires()[op_idx],
-                             operations.getOpsInverses()[op_idx] ^ adj,
+                             !operations.getOpsInverses()[op_idx],
                              operations.getOpsParams()[op_idx]);
     }
 
@@ -543,8 +515,8 @@ template <class T = double> class AdjointJacobian {
      */
     inline T applyGenerator(StateVectorManaged<T> &sv,
                             const std::string &op_name,
-                            const std::vector<size_t> &wires) {
-        generator_map.at(op_name)(sv, wires);
+                            const std::vector<size_t> &wires, const bool adj) {
+        generator_map.at(op_name)(sv, wires, adj);
         return scaling_factors.at(op_name);
     }
 
@@ -620,20 +592,25 @@ template <class T = double> class AdjointJacobian {
                 (operations.getOpsName()[op_idx] != "BasisState")) {
 
                 mu.updateData(lambda.getDataVector());
-                applyOperation(lambda, operations, op_idx, true);
+                applyOperationAdj(lambda, operations, op_idx);
 
                 if (operations.hasParams(op_idx)) {
                     if (std::find(trainableParams.begin(), tp_it,
                                   current_param_idx) != tp_it) {
+
                         const T scalingFactor =
-                            applyGenerator(mu, operations.getOpsName()[op_idx],
-                                           operations.getOpsWires()[op_idx]);
+                            applyGenerator(
+                                mu, operations.getOpsName()[op_idx],
+                                operations.getOpsWires()[op_idx],
+                                !operations.getOpsInverses()[op_idx]) *
+                            (2 * (0b1 ^ operations.getOpsInverses()[op_idx]) -
+                             1);
                         size_t index;
 #pragma omp parallel for
                         for (size_t obs_idx = 0; obs_idx < num_observables;
                              obs_idx++) {
                             updateJacobian(H_lambda[obs_idx], mu, jac,
-                                           num_elements, scalingFactor, obs_idx,
+                                           scalingFactor, obs_idx,
                                            trainableParamNumber);
                         }
                         trainableParamNumber--;
@@ -644,7 +621,7 @@ template <class T = double> class AdjointJacobian {
 
 #pragma omp parallel for
                 for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
-                    applyOperation(H_lambda[obs_idx], operations, op_idx, true);
+                    applyOperationAdj(H_lambda[obs_idx], operations, op_idx);
                 }
             }
         }
