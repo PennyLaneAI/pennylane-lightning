@@ -17,8 +17,7 @@ Unit tests for the serialization helper functions
 import pennylane as qml
 from pennylane import numpy as np
 
-from pennylane_lightning._serialize import (_serialize_obs, _serialize_ops,
-                                            _obs_has_kernel)
+from pennylane_lightning._serialize import _serialize_obs, _serialize_ops, _obs_has_kernel
 
 import pytest
 
@@ -131,8 +130,8 @@ class TestSerializeObs:
         s = mock_obs.call_args_list
 
         s_expected = [
-            (['PauliZ', 'PauliX'], [], [[0], [1]]),
-            (['Hadamard'], [], [[1]]),
+            (["PauliZ", "PauliX"], [], [[0], [1]]),
+            (["Hadamard"], [], [[1]]),
         ]
         [ObsStructC128(*s_expected) for s_expected in s_expected]
 
@@ -170,7 +169,11 @@ class TestSerializeObs:
             _serialize_obs(tape, self.wires_dict)
 
         s = mock_obs.call_args[0]
-        s_expected = (["Hermitian", "Hermitian"], [np.eye(4).ravel(), np.eye(2).ravel()], [[0, 1], [2]])
+        s_expected = (
+            ["Hermitian", "Hermitian"],
+            [np.eye(4).ravel(), np.eye(2).ravel()],
+            [[0, 1], [2]],
+        )
         ObsStructC128(*s_expected)
 
         assert s[0] == s_expected[0]
@@ -222,7 +225,7 @@ class TestSerializeObs:
 
         s_expected = [
             (["PauliZ", "PauliX"], [], [[0], [2]]),
-            (['Hermitian'], [I.ravel()], [[1]]),
+            (["Hermitian"], [I.ravel()], [[1]]),
             (["PauliZ", "Hermitian", "Hadamard"], [X.ravel()], [[3], [4], [5]]),
             (["Projector", "Hermitian"], [Y.ravel()], [[6, 7], [8]]),
             (["Hermitian", "Identity"], [Z.ravel()], [[0], [1]]),
@@ -247,13 +250,16 @@ class TestSerializeOps:
             qml.CNOT(wires=[0, 1])
 
         s = _serialize_ops(tape, self.wires_dict)
-        s_expected = ((
-            ["RX", "RY", "CNOT"],
-            [[0.4], [0.6], []],
-            [[0], [1], [0, 1]],
-            [False, False, False],
-            [[], [], []],
-        ), False)
+        s_expected = (
+            (
+                ["RX", "RY", "CNOT"],
+                [[0.4], [0.6], []],
+                [[0], [1], [0, 1]],
+                [False, False, False],
+                [[], [], []],
+            ),
+            False,
+        )
         assert s == s_expected
 
     def test_skips_prep_circuit(self):
@@ -267,13 +273,16 @@ class TestSerializeOps:
             qml.CNOT(wires=[0, 1])
 
         s = _serialize_ops(tape, self.wires_dict)
-        s_expected = ((
-            ["RX", "RY", "CNOT"],
-            [[0.4], [0.6], []],
-            [[0], [1], [0, 1]],
-            [False, False, False],
-            [[], [], []],
-        ), True)
+        s_expected = (
+            (
+                ["RX", "RY", "CNOT"],
+                [[0.4], [0.6], []],
+                [[0], [1], [0, 1]],
+                [False, False, False],
+                [[], [], []],
+            ),
+            True,
+        )
         assert s == s_expected
 
     def test_inverse_circuit(self):
@@ -284,13 +293,16 @@ class TestSerializeOps:
             qml.CNOT(wires=[0, 1])
 
         s = _serialize_ops(tape, self.wires_dict)
-        s_expected = ((
-            ["RX", "RY", "CNOT"],
-            [[0.4], [0.6], []],
-            [[0], [1], [0, 1]],
-            [False, True, False],
-            [[], [], []],
-        ), False)
+        s_expected = (
+            (
+                ["RX", "RY", "CNOT"],
+                [[0.4], [0.6], []],
+                [[0], [1], [0, 1]],
+                [False, True, False],
+                [[], [], []],
+            ),
+            False,
+        )
         assert s == s_expected
 
     def test_unsupported_kernel_circuit(self):
@@ -303,18 +315,21 @@ class TestSerializeOps:
             qml.RZ(0.2, wires=2)
 
         s = _serialize_ops(tape, self.wires_dict)
-        s_expected = ((
-            ["SingleExcitationPlus", "SingleExcitationMinus", "CNOT", "RZ"],
-            [[], [], [], [0.2]],
-            [[0, 1], [1, 2], [0, 1], [2]],
-            [False, False, False, False],
-            [
-                qml.SingleExcitationPlus(0.4, wires=[0, 1]).matrix,
-                qml.SingleExcitationMinus(0.5, wires=[1, 2]).inv().matrix,
-                [],
-                [],
-            ],
-        ), False)
+        s_expected = (
+            (
+                ["SingleExcitationPlus", "SingleExcitationMinus", "CNOT", "RZ"],
+                [[], [], [], [0.2]],
+                [[0, 1], [1, 2], [0, 1], [2]],
+                [False, False, False, False],
+                [
+                    qml.SingleExcitationPlus(0.4, wires=[0, 1]).matrix,
+                    qml.SingleExcitationMinus(0.5, wires=[1, 2]).inv().matrix,
+                    [],
+                    [],
+                ],
+            ),
+            False,
+        )
         assert s[0][0] == s_expected[0][0]
         assert s[0][1] == s_expected[0][1]
         assert s[0][2] == s_expected[0][2]
@@ -331,13 +346,16 @@ class TestSerializeOps:
             qml.CNOT(wires=["a", 3.2])
 
         s = _serialize_ops(tape, wires_dict)
-        s_expected = ((
-            ["RX", "RY", "CNOT"],
-            [[0.4], [0.6], []],
-            [[0], [1], [0, 1]],
-            [False, False, False],
-            [[], [], []],
-        ), False)
+        s_expected = (
+            (
+                ["RX", "RY", "CNOT"],
+                [[0.4], [0.6], []],
+                [[0], [1], [0, 1]],
+                [False, False, False],
+                [[], [], []],
+            ),
+            False,
+        )
         assert s == s_expected
 
     def test_integration(self):
@@ -351,20 +369,23 @@ class TestSerializeOps:
             qml.DoubleExcitation(0.555, wires=[3, 2, 1, 0])
 
         s = _serialize_ops(tape, self.wires_dict)
-        s_expected = ((
-            ["RX", "RY", "CNOT", "QubitUnitary", "QFT", "DoubleExcitation"],
-            [[0.4], [0.6], [], [], [], []],
-            [[0], [1], [0, 1], [0, 1], [0, 1, 2], [3, 2, 1, 0]],
-            [False, False, False, False, False, False],
-            [
-                [],
-                [],
-                [],
-                qml.QubitUnitary(np.eye(4, dtype=np.complex128), wires=[0, 1]).matrix,
-                qml.templates.QFT(wires=[0, 1, 2]).inv().matrix,
-                qml.DoubleExcitation(0.555, wires=[3, 2, 1, 0]).matrix,
-            ],
-        ), False)
+        s_expected = (
+            (
+                ["RX", "RY", "CNOT", "QubitUnitary", "QFT", "DoubleExcitation"],
+                [[0.4], [0.6], [], [], [], []],
+                [[0], [1], [0, 1], [0, 1], [0, 1, 2], [3, 2, 1, 0]],
+                [False, False, False, False, False, False],
+                [
+                    [],
+                    [],
+                    [],
+                    qml.QubitUnitary(np.eye(4, dtype=np.complex128), wires=[0, 1]).matrix,
+                    qml.templates.QFT(wires=[0, 1, 2]).inv().matrix,
+                    qml.DoubleExcitation(0.555, wires=[3, 2, 1, 0]).matrix,
+                ],
+            ),
+            False,
+        )
         assert s[0][0] == s_expected[0][0]
         assert s[0][1] == s_expected[0][1]
         assert s[0][2] == s_expected[0][2]

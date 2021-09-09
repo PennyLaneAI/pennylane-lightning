@@ -208,10 +208,18 @@ class LightningQubit(DefaultQubit):
 
         ops_serialized = adj.create_ops_list(*ops_serialized)
 
-        tp_shift = tape.trainable_params if not use_sp else {i - 1 for i in tape.trainable_params.difference({0})} #exclude first index if explicitly setting sv
+        tp_shift = (
+            tape.trainable_params
+            if not use_sp
+            else {i - 1 for i in tape.trainable_params.difference({0})}
+        )  # exclude first index if explicitly setting sv
 
         jac = adj.adjoint_jacobian(
-            StateVectorC128(ket), obs_serialized, ops_serialized, tp_shift, tape.num_params,
+            StateVectorC128(ket),
+            obs_serialized,
+            ops_serialized,
+            tp_shift,
+            tape.num_params,
         )
         return jac
 
