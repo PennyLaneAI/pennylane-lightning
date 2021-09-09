@@ -522,15 +522,15 @@ def circuit_ansatz(params, wires):
     qml.QubitStateVector(unitary_group.rvs(2 ** 4, random_state=0)[0], wires=wires)
     qml.RX(params[0], wires=wires[0])
     qml.RY(params[1], wires=wires[1])
-    #     qml.RX(params[2], wires=wires[2]).inv()
+    qml.RX(params[2], wires=wires[2]).inv()
     qml.RZ(params[0], wires=wires[3])
     qml.CRX(params[3], wires=[wires[3], wires[0]])
     qml.PhaseShift(params[4], wires=wires[2])
     qml.CRY(params[5], wires=[wires[2], wires[1]])
     qml.CRZ(params[5], wires=[wires[0], wires[3]]).inv()
     qml.PhaseShift(params[6], wires=wires[0]).inv()
-    #     qml.Rot(params[6], params[7], params[8], wires=wires[0])
-    #     qml.Rot(params[8], params[8], params[9], wires=wires[1]).inv()
+    qml.Rot(params[6], params[7], params[8], wires=wires[0])
+    # #     qml.Rot(params[8], params[8], params[9], wires=wires[1]).inv()
     # #     qml.MultiRZ(params[11], wires=[wires[0], wires[1]])
     # #     qml.PauliRot(params[12], "XXYZ", wires=[wires[0], wires[1], wires[2], wires[3]])
     qml.CPhase(params[12], wires=[wires[3], wires[2]])
@@ -538,7 +538,7 @@ def circuit_ansatz(params, wires):
     # #     qml.IsingYY(params[14], wires=[wires[3], wires[2]])
     # #     qml.IsingZZ(params[14], wires=[wires[2], wires[1]])
     qml.U1(params[15], wires=wires[0])
-    #     qml.U2(params[16], params[17], wires=wires[0])
+    qml.U2(params[16], params[17], wires=wires[0])
     qml.U3(params[18], params[19], params[20], wires=wires[1])
     # #     qml.CRot(params[21], params[22], params[23], wires=[wires[1], wires[2]]).inv()  # expected tofail
     # #     qml.SingleExcitation(params[24], wires=[wires[2], wires[0]])
@@ -547,7 +547,7 @@ def circuit_ansatz(params, wires):
     # #     qml.SingleExcitationMinus(params[27], wires=[wires[0], wires[2]])
     # #     qml.DoubleExcitationPlus(params[27], wires=[wires[2], wires[0], wires[1], wires[3]])
     # #     qml.DoubleExcitationMinus(params[27], wires=[wires[2], wires[0], wires[1], wires[3]])
-    #     qml.RX(params[28], wires=wires[0])
+    qml.RX(params[28], wires=wires[0])
     qml.RX(params[29], wires=wires[1])
 
 
@@ -556,13 +556,13 @@ def circuit_ansatz(params, wires):
     [
         qml.PauliZ(0),
         qml.PauliX(2),
-        # qml.PauliZ(0) @ qml.PauliY(3),
+        qml.PauliZ(0) @ qml.PauliY(3),
         qml.Hadamard(2),
-        # qml.Hadamard(3) @ qml.PauliZ(2),
+        qml.Hadamard(3) @ qml.PauliZ(2),
         # qml.Projector([0, 1], wires=[0, 2]) @ qml.Hadamard(3)
         # qml.Projector([0, 0], wires=[2, 0])
-        # qml.PauliX(0) @ qml.PauliY(3),
-        # qml.PauliY(0) @ qml.PauliY(2) @ qml.PauliY(3),
+        qml.PauliX(0) @ qml.PauliY(3),
+        qml.PauliY(0) @ qml.PauliY(2) @ qml.PauliY(3),
         # qml.Hermitian(qml.PauliX.matrix, wires=0),
         # qml.Hermitian(np.kron(qml.PauliY.matrix, qml.PauliZ.matrix), wires=[3, 2])
     ],
@@ -597,13 +597,13 @@ custom_wires = ["alice", 3.14, -1, 0]
     [
         qml.PauliZ(custom_wires[0]),
         qml.PauliX(custom_wires[2]),
-        # qml.PauliZ(custom_wires[0]) @ qml.PauliY(custom_wires[3]),
+        qml.PauliZ(custom_wires[0]) @ qml.PauliY(custom_wires[3]),
         qml.Hadamard(custom_wires[2]),
-        # qml.Hadamard(custom_wires[3]) @ qml.PauliZ(custom_wires[2]),
+        qml.Hadamard(custom_wires[3]) @ qml.PauliZ(custom_wires[2]),
         # qml.Projector([0, 1], wires=[custom_wires[0], custom_wires[2]]) @ qml.Hadamard(custom_wires[3])
         # qml.Projector([0, 0], wires=[custom_wires[2], custom_wires[0]])
-        # qml.PauliX(custom_wires[0]) @ qml.PauliY(custom_wires[3]),
-        # qml.PauliY(custom_wires[0]) @ qml.PauliY(custom_wires[2]) @ qml.PauliY(custom_wires[3]),
+        qml.PauliX(custom_wires[0]) @ qml.PauliY(custom_wires[3]),
+        qml.PauliY(custom_wires[0]) @ qml.PauliY(custom_wires[2]) @ qml.PauliY(custom_wires[3]),
         # qml.Hermitian(qml.PauliX.matrix, wires=custom_wires[0]),
         # qml.Hermitian(np.kron(qml.PauliY.matrix, qml.PauliZ.matrix), wires=[custom_wires[3], custom_wires[2]])
     ],
