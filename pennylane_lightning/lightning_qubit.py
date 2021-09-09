@@ -24,8 +24,8 @@ from pennylane import (
     QuantumFunctionError,
     QubitStateVector,
     QubitUnitary,
-    Rot,
 )
+import pennylane as qml
 from pennylane.devices import DefaultQubit
 from pennylane.operation import Expectation
 
@@ -43,6 +43,19 @@ try:
     CPP_BINARY_AVAILABLE = True
 except ModuleNotFoundError:
     CPP_BINARY_AVAILABLE = False
+
+UNSUPPORTED_PARAM_GATES_ADJOINT = (
+    "MultiRZ",
+    "IsingXX",
+    "IsingYY",
+    "IsingZZ",
+    "SingleExcitation",
+    "SingleExcitationPlus",
+    "SingleExcitationMinus",
+    "DoubleExcitation",
+    "DoubleExcitationPlus",
+    "DoubleExcitationMinus",
+)
 
 
 class LightningQubit(DefaultQubit):
@@ -167,7 +180,9 @@ class LightningQubit(DefaultQubit):
                 )
 
         for op in tape.operations:
-            if op.num_params > 1 and not isinstance(op, Rot):
+            if (
+                op.num_params > 1 and not isinstance(op, qml.Rot)
+            ) or op.name in UNSUPPORTED_PARAM_GATES_ADJOINT:
                 raise QuantumFunctionError(
                     f"The {op.name} operation is not supported using "
                     'the "adjoint" differentiation method'
@@ -192,11 +207,7 @@ class LightningQubit(DefaultQubit):
         tp_shift = tape.trainable_params if not use_sp else {i - 1 for i in tape.trainable_params}
 
         jac = adj.adjoint_jacobian(
-            StateVectorC128(ket),
-            obs_serialized,
-            ops_serialized,
-            tp_shift,
-            tape.num_params,
+            StateVectorC128(ket), obs_serialized, ops_serialized, tp_shift, tape.num_params,
         )
 
         return jac  # .reshape((1,jac.size)) # super().adjoint_jacobian(tape, starting_state, use_device_state)

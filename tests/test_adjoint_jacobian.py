@@ -98,7 +98,19 @@ class TestAdjointJacobian:
             qml.CRot(0.1, 0.2, 0.3, wires=[0, 1])
             qml.expval(qml.PauliZ(0))
 
-        with pytest.raises(qml.QuantumFunctionError, match="The CRot operation is not supported using the"):
+        with pytest.raises(
+            qml.QuantumFunctionError, match="The CRot operation is not supported using the"
+        ):
+            dev.adjoint_jacobian(tape)
+
+        with qml.tape.JacobianTape() as tape:
+            qml.SingleExcitation(0.1, wires=[0, 1])
+            qml.expval(qml.PauliZ(0))
+
+        with pytest.raises(
+            qml.QuantumFunctionError,
+            match="The SingleExcitation operation is not supported using the",
+        ):
             dev.adjoint_jacobian(tape)
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
@@ -114,7 +126,7 @@ class TestAdjointJacobian:
         tape.trainable_params = {1}
 
         calculated_val = dev.adjoint_jacobian(tape)
-        
+
         # compare to finite differences
         numeric_val = tape.jacobian(dev, method="numeric")
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
@@ -219,7 +231,6 @@ class TestAdjointJacobian:
 
         grad_F = tape.jacobian(dev, method="numeric")
         grad_D = dev.adjoint_jacobian(tape)
-        print(grad_D, grad_F)
 
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
 
@@ -506,59 +517,114 @@ class TestAdjointJacobianQNode:
         assert np.allclose(grad_adjoint, grad_fd)
 
 
-class TestAdjointIntegration:
-    """Integration tests for the adjoint jacobian"""
+def circuit_ansatz(params, wires):
+    """Circuit ansatz containing all the parametrized gates"""
+    qml.QubitStateVector(unitary_group.rvs(2 ** 4, random_state=0)[0], wires=wires)
+    qml.RX(params[0], wires=wires[0])
+    qml.RY(params[1], wires=wires[1])
+    #     qml.RX(params[2], wires=wires[2]).inv()
+    qml.RZ(params[0], wires=wires[3])
+    qml.CRX(params[3], wires=[wires[3], wires[0]])
+    qml.PhaseShift(params[4], wires=wires[2])
+    qml.CRY(params[5], wires=[wires[2], wires[1]])
+    qml.CRZ(params[5], wires=[wires[0], wires[3]]).inv()
+    qml.PhaseShift(params[6], wires=wires[0]).inv()
+    #     qml.Rot(params[6], params[7], params[8], wires=wires[0])
+    #     qml.Rot(params[8], params[8], params[9], wires=wires[1]).inv()
+    # #     qml.MultiRZ(params[11], wires=[wires[0], wires[1]])
+    # #     qml.PauliRot(params[12], "XXYZ", wires=[wires[0], wires[1], wires[2], wires[3]])
+    qml.CPhase(params[12], wires=[wires[3], wires[2]])
+    # #     qml.IsingXX(params[13], wires=[wires[1], wires[0]])
+    # #     qml.IsingYY(params[14], wires=[wires[3], wires[2]])
+    # #     qml.IsingZZ(params[14], wires=[wires[2], wires[1]])
+    qml.U1(params[15], wires=wires[0])
+    #     qml.U2(params[16], params[17], wires=wires[0])
+    qml.U3(params[18], params[19], params[20], wires=wires[1])
+    # #     qml.CRot(params[21], params[22], params[23], wires=[wires[1], wires[2]]).inv()  # expected tofail
+    # #     qml.SingleExcitation(params[24], wires=[wires[2], wires[0]])
+    # #     qml.DoubleExcitation(params[25], wires=[wires[2], wires[0], wires[1], wires[3]])
+    # #     qml.SingleExcitationPlus(params[26], wires=[wires[0], wires[2]])
+    # #     qml.SingleExcitationMinus(params[27], wires=[wires[0], wires[2]])
+    # #     qml.DoubleExcitationPlus(params[27], wires=[wires[2], wires[0], wires[1], wires[3]])
+    # #     qml.DoubleExcitationMinus(params[27], wires=[wires[2], wires[0], wires[1], wires[3]])
+    #     qml.RX(params[28], wires=wires[0])
+    qml.RX(params[29], wires=wires[1])
 
-    def test_big_circuit(self):
-        """Compare to default.qubit for a large circuit containing parametrized operations"""
-        wires = 4
 
-        dev_def = qml.device("default.qubit", wires=wires)
-        dev_lightning = qml.device("lightning.qubit", wires=wires)
+@pytest.mark.parametrize(
+    "returns",
+    [
+        qml.PauliZ(0),
+        qml.PauliX(2),
+        # qml.PauliZ(0) @ qml.PauliY(3),
+        qml.Hadamard(2),
+        # qml.Hadamard(3) @ qml.PauliZ(2),
+        # qml.Projector([0, 1], wires=[0, 2]) @ qml.Hadamard(3)
+        # qml.Projector([0, 0], wires=[2, 0])
+        # qml.PauliX(0) @ qml.PauliY(3),
+        # qml.PauliY(0) @ qml.PauliY(2) @ qml.PauliY(3),
+        # qml.Hermitian(qml.PauliX.matrix, wires=0),
+        # qml.Hermitian(np.kron(qml.PauliY.matrix, qml.PauliZ.matrix), wires=[3, 2])
+    ],
+)
+def test_integration(returns):
+    """Integration tests that compare to default.qubit for a large circuit containing parametrized
+    operations"""
+    dev_def = qml.device("default.qubit", wires=range(4))
+    dev_lightning = qml.device("lightning.qubit", wires=range(4))
 
-        u = unitary_group.rvs(2 ** wires)
+    def circuit(params):
+        circuit_ansatz(params, wires=range(4))
+        return qml.expval(returns), qml.expval(qml.PauliY(1))
 
-        def circuit(params):
-            qml.QubitStateVector(u[0], wires=range(wires))
-            qml.RX(params[0], wires=0)
-            qml.RY(params[1], wires=1)
-        #     qml.RX(params[2], wires=2).inv()
-            qml.RZ(params[0], wires=3)
-            qml.CRX(params[3], wires=[3, 0])
-            qml.PhaseShift(params[4], wires=2)
-            qml.CRY(params[5], wires=[2, 1])
-            qml.CRZ(params[5], wires=[0, 3]).inv()
-            qml.PhaseShift(params[6], wires=0).inv()
-        #     qml.Rot(params[6], params[7], params[8], wires=0)
-        #     qml.Rot(params[8], params[8], params[9], wires=1).inv()
-        #     qml.MultiRZ(params[11], wires=[0, 1])
-        #     qml.PauliRot(params[12], "XXYZ", wires=[0, 1, 2, 3])
-            qml.CPhase(params[12], wires=[3, 2])
-        #     qml.IsingXX(params[13], wires=[1, 0])
-        #     qml.IsingYY(params[14], wires=[3, 2])
-        #     qml.IsingZZ(params[14], wires=[2, 1])
-            qml.U1(params[15], wires=0)
-        #     qml.U2(params[16], params[17], wires=0)
-            qml.U3(params[18], params[19], params[20], wires=1)
-        #     qml.CRot(params[21], params[22], params[23], wires=[1, 2]).inv()  # expected to fail
-        #     qml.SingleExcitation(params[24], wires=[2, 0])
-        #     qml.DoubleExcitation(params[25], wires=[2, 0, 1, 3])
-        #     qml.SingleExcitationPlus(params[26], wires=[0, 2])
-        #     qml.SingleExcitationMinus(params[27], wires=[0, 2])
-        #     qml.DoubleExcitationPlus(params[27], wires=[2, 0, 1, 3])
-        #     qml.DoubleExcitationMinus(params[27], wires=[2, 0, 1, 3])
-        #     qml.RX(params[28], wires=0)
-            qml.RX(params[29], wires=1)
+    n_params = 30
+    params = np.linspace(0, 10, n_params)
 
-            return qml.expval(qml.PauliZ(0) @ qml.PauliX(1))
+    qnode_def = qml.QNode(circuit, dev_def)
+    qnode_lightning = qml.QNode(circuit, dev_lightning, diff_method="adjoint")
 
-        n_params = 30
-        params = np.linspace(0, 10, n_params)
+    j_def = qml.jacobian(qnode_def)(params)
+    j_lightning = qml.jacobian(qnode_lightning)(params)
 
-        qnode_def = qml.QNode(circuit, dev_def)
-        qnode_lightning = qml.QNode(circuit, dev_lightning, diff_method="adjoint")
+    assert np.allclose(j_def, j_lightning)
 
-        j_def = qml.jacobian(qnode_def)(params)
-        j_lightning = qml.jacobian(qnode_lightning)(params)
 
-        assert np.allclose(j_def, j_lightning)
+custom_wires = ["alice", 3.14, -1, 0]
+
+
+@pytest.mark.parametrize(
+    "returns",
+    [
+        qml.PauliZ(custom_wires[0]),
+        qml.PauliX(custom_wires[2]),
+        # qml.PauliZ(custom_wires[0]) @ qml.PauliY(custom_wires[3]),
+        qml.Hadamard(custom_wires[2]),
+        # qml.Hadamard(custom_wires[3]) @ qml.PauliZ(custom_wires[2]),
+        # qml.Projector([0, 1], wires=[custom_wires[0], custom_wires[2]]) @ qml.Hadamard(custom_wires[3])
+        # qml.Projector([0, 0], wires=[custom_wires[2], custom_wires[0]])
+        # qml.PauliX(custom_wires[0]) @ qml.PauliY(custom_wires[3]),
+        # qml.PauliY(custom_wires[0]) @ qml.PauliY(custom_wires[2]) @ qml.PauliY(custom_wires[3]),
+        # qml.Hermitian(qml.PauliX.matrix, wires=custom_wires[0]),
+        # qml.Hermitian(np.kron(qml.PauliY.matrix, qml.PauliZ.matrix), wires=[custom_wires[3], custom_wires[2]])
+    ],
+)
+def test_integration_custom_wires(returns):
+    """Integration tests that compare to default.qubit for a large circuit containing parametrized
+    operations and when using custom wire labels"""
+    dev_def = qml.device("default.qubit", wires=custom_wires)
+    dev_lightning = qml.device("lightning.qubit", wires=custom_wires)
+
+    def circuit(params):
+        circuit_ansatz(params, wires=custom_wires)
+        return qml.expval(returns), qml.expval(qml.PauliY(custom_wires[1]))
+
+    n_params = 30
+    params = np.linspace(0, 10, n_params)
+
+    qnode_def = qml.QNode(circuit, dev_def)
+    qnode_lightning = qml.QNode(circuit, dev_lightning, diff_method="adjoint")
+
+    j_def = qml.jacobian(qnode_def)(params)
+    j_lightning = qml.jacobian(qnode_lightning)(params)
+
+    assert np.allclose(j_def, j_lightning)
