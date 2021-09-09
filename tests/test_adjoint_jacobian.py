@@ -576,6 +576,7 @@ def circuit_ansatz(params, wires):
         qml.PauliY(0) @ qml.PauliY(2) @ qml.PauliY(3),
         # qml.Hermitian(qml.PauliX.matrix, wires=0),
         # qml.Hermitian(np.kron(qml.PauliY.matrix, qml.PauliZ.matrix), wires=[3, 2])
+        # qml.Hermitian(qml.PauliX.matrix, wires=0) @ qml.PauliZ(2),
     ],
 )
 def test_integration(returns):
@@ -617,6 +618,7 @@ custom_wires = ["alice", 3.14, -1, 0]
         qml.PauliY(custom_wires[0]) @ qml.PauliY(custom_wires[2]) @ qml.PauliY(custom_wires[3]),
         # qml.Hermitian(qml.PauliX.matrix, wires=custom_wires[0]),
         # qml.Hermitian(np.kron(qml.PauliY.matrix, qml.PauliZ.matrix), wires=[custom_wires[3], custom_wires[2]])
+        # qml.Hermitian(qml.PauliX.matrix, wires=custom_wires[0]) @ qml.PauliZ(custom_wires[2]),
     ],
 )
 def test_integration_custom_wires(returns):
