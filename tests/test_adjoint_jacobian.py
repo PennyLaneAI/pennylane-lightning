@@ -61,6 +61,7 @@ def Rz(theta):
 
 class TestAdjointJacobian:
     """Tests for the adjoint_jacobian method"""
+    from pennylane_lightning import LightningQubit as lq
 
     @pytest.fixture
     def dev(self):
@@ -124,6 +125,7 @@ class TestAdjointJacobian:
         ):
             dev.adjoint_jacobian(tape)
 
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_unsupported_hermitian_expectation(self, dev):
         obs = np.array([[1, 0], [0, -1]], dtype=np.complex128, requires_grad=False)
 
