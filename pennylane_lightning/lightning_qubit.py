@@ -80,6 +80,7 @@ class LightningQubit(DefaultQubit):
     pennylane_requires = ">=0.15"
     version = __version__
     author = "Xanadu Inc."
+    _CPP_BINARY_AVAILABLE = True
 
     def __init__(self, wires, *, shots=None):
         super().__init__(wires, shots=shots)
@@ -159,7 +160,7 @@ class LightningQubit(DefaultQubit):
         return np.reshape(state_vector, state.shape)
 
     def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
-        if not CPP_BINARY_AVAILABLE:
+        if not self._CPP_BINARY_AVAILABLE:
             return super().adjoint_jacobian(tape, starting_state, use_device_state)
 
         if self.shots is not None:
@@ -247,6 +248,7 @@ if not CPP_BINARY_AVAILABLE:
         pennylane_requires = ">=0.15"
         version = __version__
         author = "Xanadu Inc."
+        _CPP_BINARY_AVAILABLE = False
 
         def __init__(self, *args, **kwargs):
             warn(
