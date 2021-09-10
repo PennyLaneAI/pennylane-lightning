@@ -735,11 +735,10 @@ void lightning_class_bindings(py::module &m) {
                                                  p_t, std::vector<Param_t>>) {
                             params.append(
                                 py::array_t<Param_t>(py::cast(param)));
-                        } else if constexpr (std::is_same_v<
-                                                 p_t, std::monostate>){
+                        } else if constexpr (std::is_same_v<p_t,
+                                                            std::monostate>) {
                             params.append(py::list{});
-                        }
-                        else{
+                        } else {
                             throw("Unsupported data type");
                         }
                     },
