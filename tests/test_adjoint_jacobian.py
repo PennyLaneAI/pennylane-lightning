@@ -61,6 +61,7 @@ def Rz(theta):
 
 class TestAdjointJacobian:
     """Tests for the adjoint_jacobian method"""
+
     from pennylane_lightning import LightningQubit as lq
 
     @pytest.fixture
@@ -91,6 +92,7 @@ class TestAdjointJacobian:
         ):
             dev.adjoint_jacobian(tape)
 
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_unsupported_op(self, dev):
         """Test if a QuantumFunctionError is raised for an unsupported operation, i.e.,
         multi-parameter operations that are not qml.Rot"""
@@ -114,6 +116,7 @@ class TestAdjointJacobian:
         ):
             dev.adjoint_jacobian(tape)
 
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_proj_unsupported(self, dev):
         """Test if a QuantumFunctionError is raised for a Projector observable"""
         with qml.tape.JacobianTape() as tape:
