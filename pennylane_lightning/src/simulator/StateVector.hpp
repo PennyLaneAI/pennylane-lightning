@@ -204,7 +204,6 @@ template <class fp_t = double> class StateVector {
      */
     void applyOperation(const string &opName, const vector<size_t> &wires,
                         bool inverse = false, const vector<fp_t> &params = {}) {
-        using namespace Pennylane::Util;
         const auto gate = gates_.at(opName);
         if (gate_wires_.at(opName) != wires.size())
             throw std::invalid_argument(

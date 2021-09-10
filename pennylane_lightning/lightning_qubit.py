@@ -24,8 +24,8 @@ from pennylane import (
     QuantumFunctionError,
     QubitStateVector,
     QubitUnitary,
-    Rot,
 )
+import pennylane as qml
 from pennylane.devices import DefaultQubit
 from pennylane.operation import Expectation
 
@@ -43,6 +43,19 @@ try:
     CPP_BINARY_AVAILABLE = True
 except ModuleNotFoundError:
     CPP_BINARY_AVAILABLE = False
+
+UNSUPPORTED_PARAM_GATES_ADJOINT = (
+    "MultiRZ",
+    "IsingXX",
+    "IsingYY",
+    "IsingZZ",
+    "SingleExcitation",
+    "SingleExcitationPlus",
+    "SingleExcitationMinus",
+    "DoubleExcitation",
+    "DoubleExcitationPlus",
+    "DoubleExcitationMinus",
+)
 
 
 class LightningQubit(DefaultQubit):
@@ -67,6 +80,7 @@ class LightningQubit(DefaultQubit):
     pennylane_requires = ">=0.15"
     version = __version__
     author = "Xanadu Inc."
+    _CPP_BINARY_AVAILABLE = True
 
     def __init__(self, wires, *, shots=None):
         super().__init__(wires, shots=shots)
@@ -146,7 +160,7 @@ class LightningQubit(DefaultQubit):
         return np.reshape(state_vector, state.shape)
 
     def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
-        if not CPP_BINARY_AVAILABLE:
+        if not self._CPP_BINARY_AVAILABLE:
             return super().adjoint_jacobian(tape, starting_state, use_device_state)
 
         if self.shots is not None:
@@ -165,9 +179,29 @@ class LightningQubit(DefaultQubit):
                     "Adjoint differentiation method does not support"
                     f" measurement {m.return_type.value}"
                 )
+            if not isinstance(m.obs, qml.operation.Tensor):
+                if isinstance(m.obs, qml.Projector):
+                    raise QuantumFunctionError(
+                        "Adjoint differentiation method does not support the Projector observable"
+                    )
+                if isinstance(m.obs, qml.Hermitian):
+                    raise QuantumFunctionError(
+                        "Lightning adjoint differentiation method does not currently support the Hermitian observable"
+                    )
+            else:
+                if any([isinstance(o, qml.Projector) for o in m.obs.non_identity_obs]):
+                    raise QuantumFunctionError(
+                        "Adjoint differentiation method does not support the Projector observable"
+                    )
+                if any([isinstance(o, qml.Hermitian) for o in m.obs.non_identity_obs]):
+                    raise QuantumFunctionError(
+                        "Lightning adjoint differentiation method does not currently support the Hermitian observable"
+                    )
 
         for op in tape.operations:
-            if op.num_params > 1 and not isinstance(op, Rot):
+            if (
+                op.num_params > 1 and not isinstance(op, qml.Rot)
+            ) or op.name in UNSUPPORTED_PARAM_GATES_ADJOINT:
                 raise QuantumFunctionError(
                     f"The {op.name} operation is not supported using "
                     'the "adjoint" differentiation method'
@@ -189,7 +223,11 @@ class LightningQubit(DefaultQubit):
 
         ops_serialized = adj.create_ops_list(*ops_serialized)
 
-        tp_shift = tape.trainable_params if not use_sp else {i - 1 for i in tape.trainable_params}
+        tp_shift = (
+            tape.trainable_params
+            if not use_sp
+            else {i - 1 for i in tape.trainable_params.difference({0})}
+        )  # exclude first index if explicitly setting sv
 
         jac = adj.adjoint_jacobian(
             StateVectorC128(ket),
@@ -198,8 +236,7 @@ class LightningQubit(DefaultQubit):
             tp_shift,
             tape.num_params,
         )
-
-        return jac  # .reshape((1,jac.size)) # super().adjoint_jacobian(tape, starting_state, use_device_state)
+        return jac
 
 
 if not CPP_BINARY_AVAILABLE:
@@ -211,6 +248,7 @@ if not CPP_BINARY_AVAILABLE:
         pennylane_requires = ">=0.15"
         version = __version__
         author = "Xanadu Inc."
+        _CPP_BINARY_AVAILABLE = False
 
         def __init__(self, *args, **kwargs):
             warn(
