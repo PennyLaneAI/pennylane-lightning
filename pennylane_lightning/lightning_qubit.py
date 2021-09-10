@@ -178,10 +178,24 @@ class LightningQubit(DefaultQubit):
                     "Adjoint differentiation method does not support"
                     f" measurement {m.return_type.value}"
                 )
-            if isinstance(m.obs, qml.Projector):
-                raise QuantumFunctionError(
-                    "Adjoint differentiation method does not support the Projector observable"
-                )
+            if not isinstance(m.obs, qml.operation.Tensor):
+                if isinstance(m.obs, qml.Projector):
+                    raise QuantumFunctionError(
+                        "Adjoint differentiation method does not support the Projector observable"
+                    )
+                if isinstance(m.obs, qml.Hermitian):
+                    raise QuantumFunctionError(
+                        "Lightning adjoint differentiation method does not currently support the Hermitian observable"
+                    )
+            else:
+                if any([isinstance(o, qml.Projector) for o in m.obs.non_identity_obs]):
+                    raise QuantumFunctionError(
+                        "Adjoint differentiation method does not support the Projector observable"
+                    )
+                if any([isinstance(o, qml.Hermitian) for o in m.obs.non_identity_obs]):
+                    raise QuantumFunctionError(
+                        "Lightning adjoint differentiation method does not currently support the Hermitian observable"
+                    )
 
         for op in tape.operations:
             if (
@@ -222,7 +236,6 @@ class LightningQubit(DefaultQubit):
             tape.num_params,
         )
         return jac
-
 
 if not CPP_BINARY_AVAILABLE:
 
