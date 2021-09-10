@@ -124,6 +124,18 @@ class TestAdjointJacobian:
         ):
             dev.adjoint_jacobian(tape)
 
+    def test_unsupported_hermitian_expectation(self, dev):
+        obs = np.array([[1, 0], [0, -1]], dtype=np.complex128, requires_grad=False)
+
+        with qml.tape.JacobianTape() as tape:
+            qml.RY(0.1, wires=(0,))
+            qml.expval(qml.Hermitian(obs, wires=(0,)))
+
+        with pytest.raises(
+            qml.QuantumFunctionError, match="Lightning adjoint differentiation method does not"
+        ):
+            dev.adjoint_jacobian(tape)
+
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
     @pytest.mark.parametrize("G", [qml.RX, qml.RY, qml.RZ])
     def test_pauli_rotation_gradient(self, G, theta, tol, dev):
@@ -574,9 +586,9 @@ def circuit_ansatz(params, wires):
         # qml.Projector([0, 0], wires=[2, 0])
         qml.PauliX(0) @ qml.PauliY(3),
         qml.PauliY(0) @ qml.PauliY(2) @ qml.PauliY(3),
-        qml.Hermitian(qml.PauliX.matrix, wires=0),
-        qml.Hermitian(np.kron(qml.PauliY.matrix, qml.PauliZ.matrix), wires=[3, 2]),
-        qml.Hermitian(qml.PauliX.matrix, wires=0) @ qml.PauliZ(2),
+        # qml.Hermitian(np.kron(qml.PauliY.matrix, qml.PauliZ.matrix), wires=[3, 2]),
+        # qml.Hermitian(np.array([[0,1],[1,0]], requires_grad=False), wires=0),
+        # qml.Hermitian(np.array([[0,1],[1,0]], requires_grad=False), wires=0) @ qml.PauliZ(2),
     ],
 )
 def test_integration(returns):
@@ -616,9 +628,9 @@ custom_wires = ["alice", 3.14, -1, 0]
         # qml.Projector([0, 0], wires=[custom_wires[2], custom_wires[0]])
         qml.PauliX(custom_wires[0]) @ qml.PauliY(custom_wires[3]),
         qml.PauliY(custom_wires[0]) @ qml.PauliY(custom_wires[2]) @ qml.PauliY(custom_wires[3]),
-        qml.Hermitian(qml.PauliX.matrix, wires=custom_wires[0]),
-        qml.Hermitian(np.kron(qml.PauliY.matrix, qml.PauliZ.matrix), wires=[custom_wires[3], custom_wires[2]]),
-        qml.Hermitian(qml.PauliX.matrix, wires=custom_wires[0]) @ qml.PauliZ(custom_wires[2]),
+        # qml.Hermitian(np.array([[0,1],[1,0]], requires_grad=False), wires=custom_wires[0]),
+        # qml.Hermitian(np.kron(qml.PauliY.matrix, qml.PauliZ.matrix), wires=[custom_wires[3], custom_wires[2]]),
+        # qml.Hermitian(np.array([[0,1],[1,0]], requires_grad=False), wires=custom_wires[0]) @ qml.PauliZ(custom_wires[2]),
     ],
 )
 def test_integration_custom_wires(returns):

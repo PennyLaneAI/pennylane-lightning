@@ -237,6 +237,7 @@ class LightningQubit(DefaultQubit):
         )
         return jac
 
+
 if not CPP_BINARY_AVAILABLE:
 
     class LightningQubit(DefaultQubit):

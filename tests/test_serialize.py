@@ -214,7 +214,7 @@ class TestSerializeObs:
             qml.expval(qml.PauliZ("a") @ qml.PauliX("b"))
             qml.expval(qml.Hermitian(I, wires=1))
             qml.expval(qml.PauliZ(-1) @ qml.Hermitian(X, wires=3.141) @ qml.Hadamard("five"))
-            #qml.expval(qml.Projector([1, 1], wires=[6, 77]) @ qml.Hermitian(Y, wires=9))
+            # qml.expval(qml.Projector([1, 1], wires=[6, 77]) @ qml.Hermitian(Y, wires=9))
             qml.expval(qml.Hermitian(Z, wires="a") @ qml.Identity(1))
 
         with monkeypatch.context() as m:
@@ -226,17 +226,18 @@ class TestSerializeObs:
         s_expected = [
             (["PauliZ", "PauliX"], [], [[0], [2]]),
             (["Hermitian"], [I.ravel()], [[1]]),
-            (["PauliZ", "Hermitian", "Hadamard"], [[],X.ravel(),[]], [[3], [4], [5]]),
-            #(["Projector", "Hermitian"], [[],Y.ravel().astype(np.complex128)], [[6, 7], [8]]),
-            (["Hermitian", "Identity"], [Z.ravel(),[]], [[0], [1]]),
+            (["PauliZ", "Hermitian", "Hadamard"], [[], X.ravel(), []], [[3], [4], [5]]),
+            # (["Projector", "Hermitian"], [[],Y.ravel().astype(np.complex128)], [[6, 7], [8]]),
+            (["Hermitian", "Identity"], [Z.ravel(), []], [[0], [1]]),
         ]
         [ObsStructC128(*s_expected) for s_expected in s_expected]
 
-        assert all(s1[0][0] == s2[0]            for s1, s2 in zip(s, s_expected))
+        assert all(s1[0][0] == s2[0] for s1, s2 in zip(s, s_expected))
         for s1, s2 in zip(s, s_expected):
-            for v1,v2 in zip(s1[0][1], s2[1]):
-                assert np.allclose(v1,v2)
-        assert all(s1[0][2] == s2[2]            for s1, s2 in zip(s, s_expected))
+            for v1, v2 in zip(s1[0][1], s2[1]):
+                assert np.allclose(v1, v2)
+        assert all(s1[0][2] == s2[2] for s1, s2 in zip(s, s_expected))
+
 
 class TestSerializeOps:
     """Tests for the _serialize_ops function"""
