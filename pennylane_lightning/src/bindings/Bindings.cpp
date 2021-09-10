@@ -715,7 +715,38 @@ void lightning_class_bindings(py::module &m) {
                  obs_stream << "'wires' : " << obs.getObsWires();
                  return "Observable: { 'name' : " + obs_name + ", " +
                         obs_stream.str() + " }";
-             });
+             })
+        .def("get_name",
+             [](const ObsDatum<PrecisionT> &obs) { return obs.getObsName(); })
+        .def("get_wires",
+             [](const ObsDatum<PrecisionT> &obs) { return obs.getObsWires(); })
+        .def("get_params", [](const ObsDatum<PrecisionT> &obs) {
+            py::list params;
+            for (size_t i = 0; i < obs.getObsParams().size(); i++) {
+                std::visit(
+                    [&](const auto &param) {
+                        using p_t = std::decay_t<decltype(param)>;
+                        if constexpr (std::is_same_v<
+                                          p_t,
+                                          std::vector<std::complex<Param_t>>>) {
+                            params.append(py::array_t<std::complex<Param_t>>(
+                                py::cast(param)));
+                        } else if constexpr (std::is_same_v<
+                                                 p_t, std::vector<Param_t>>) {
+                            params.append(
+                                py::array_t<Param_t>(py::cast(param)));
+                        } else if constexpr (std::is_same_v<
+                                                 p_t, std::monostate>){
+                            params.append(py::list{});
+                        }
+                        else{
+                            throw("Unsupported data type");
+                        }
+                    },
+                    obs.getObsParams()[i]);
+            }
+            return params;
+        });
 
     //***********************************************************************//
     //                              Operations
