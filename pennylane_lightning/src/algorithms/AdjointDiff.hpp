@@ -153,7 +153,7 @@ template <class T = double> class ObsDatum {
      * @param obs_params Parameters for a given obserable operation ({} if
      * optional).
      * @param ops_wires Wires upon which to apply operation. Each observable
-     * operation will eb a separate nested list.
+     * operation will be a separate nested list.
      */
     ObsDatum(const std::vector<std::string> &obs_name,
              const std::vector<param_var_t> &obs_params,
