@@ -19,7 +19,7 @@
 #pragma once
 
 // Required for compilation with MSVC
-#define _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES // for C++
 
 #include <cmath>
 #include <complex>
@@ -30,8 +30,11 @@
 #include <utility>
 #include <vector>
 
+#include "Error.hpp"
 #include "Gates.hpp"
 #include "Util.hpp"
+
+#include <iostream>
 
 /// @cond DEV
 namespace {
@@ -81,11 +84,13 @@ template <class fp_t = double> class StateVector {
 
     //***********************************************************************//
 
-    CFP_t *const arr_;
-    const size_t length_;
-    const size_t num_qubits_;
+    CFP_t *arr_;
+    size_t length_;
+    size_t num_qubits_;
 
   public:
+    using scalar_type_t = fp_t;
+
     StateVector()
         : arr_{nullptr}, length_{0}, num_qubits_{0}, gate_wires_{}, gates_{} {};
 
@@ -156,21 +161,38 @@ template <class fp_t = double> class StateVector {
      *
      * @return const CFP_t* Pointer to statevector data.
      */
-    const CFP_t *getData() { return arr_; }
+    CFP_t *getData() const { return arr_; }
+
+    /**
+     * @brief Get the underlying data pointer.
+     *
+     * @return CFP_t* Pointer to statevector data.
+     */
+    CFP_t *getData() { return arr_; }
+
+    void setData(CFP_t *data_ptr) { arr_ = data_ptr; }
+    void setLength(size_t length) {
+        length_ = length;
+        num_qubits_ = Util::log2(length_);
+    }
+    void setNumQubits(size_t qubits) {
+        num_qubits_ = qubits;
+        Util::exp2(num_qubits_);
+    }
 
     /**
      * @brief Get the number of data elements in the statevector array.
      *
      * @return std::size_t
      */
-    std::size_t getLength() { return length_; }
+    std::size_t getLength() const { return length_; }
 
     /**
      * @brief Get the number of qubits represented by the statevector data.
      *
      * @return std::size_t
      */
-    std::size_t getNumQubits() { return num_qubits_; }
+    std::size_t getNumQubits() const { return num_qubits_; }
 
     /**
      * @brief Apply a single gate to the state-vector.
@@ -193,7 +215,6 @@ template <class fp_t = double> class StateVector {
         const vector<size_t> externalWires = getIndicesAfterExclusion(wires);
         const vector<size_t> externalIndices =
             generateBitPatterns(externalWires);
-
         gate(internalIndices, externalIndices, inverse, params);
     }
 
@@ -208,7 +229,6 @@ template <class fp_t = double> class StateVector {
     void applyOperation(const std::vector<CFP_t> &matrix,
                         const vector<size_t> &wires, bool inverse = false,
                         [[maybe_unused]] const vector<fp_t> &params = {}) {
-
         auto dim = Util::dimSize(matrix);
 
         if (dim != wires.size())
@@ -444,6 +464,7 @@ template <class fp_t = double> class StateVector {
     void applyPauliX(const vector<size_t> &indices,
                      const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
+
             CFP_t *shiftedState = arr_ + externalIndex;
             std::swap(shiftedState[indices[0]], shiftedState[indices[1]]);
         }
@@ -565,6 +586,7 @@ template <class fp_t = double> class StateVector {
     void applyRX(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
                  Param_t angle) {
+
         const CFP_t c(std::cos(angle / 2), 0);
 
         const CFP_t js = (inverse == true) ? CFP_t(0, -std::sin(-angle / 2))
@@ -1047,5 +1069,20 @@ template <class fp_t = double> class StateVector {
         applyCSWAP(indices, externalIndices, inverse);
     }
 };
+template <class T>
+inline std::ostream &operator<<(std::ostream &out, const StateVector<T> &sv) {
+    const auto length = sv.getLength();
+    const auto qubits = sv.getNumQubits();
+    const auto data = sv.getData();
+    out << "num_qubits=" << qubits << std::endl;
+    out << "data=[";
+    out << data[0];
+    for (size_t i = 1; i < length - 1; i++) {
+        out << "," << data[i];
+    }
+    out << "," << data[length - 1] << "]";
+
+    return out;
+}
 
 } // namespace Pennylane
