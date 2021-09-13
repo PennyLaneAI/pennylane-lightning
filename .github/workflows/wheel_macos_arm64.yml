@@ -10,10 +10,7 @@ env:
   # MacOS specific build settings
   CIBW_BEFORE_ALL_MACOS: |
     brew uninstall --force oclint
-    brew install gcc libomp
-
-  # Required for C++17 support
-  CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.14 
+    brew install llvm libomp
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
@@ -56,6 +53,8 @@ jobs:
 
         env:
           CIBW_ARCHS_MACOS: ${{ matrix.arch }}
+          CC: /usr/local/opt/llvm/bin/clang
+          CXX: /usr/local/opt/llvm/bin/clang++
 
       - uses: actions/upload-artifact@v2
         if: github.ref == 'refs/heads/master'
