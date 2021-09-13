@@ -136,7 +136,7 @@ namespace Pennylane {
 namespace Algorithms {
 
 /**
- * @brief Utility struct for a observable operations used by AdjointJacobian
+ * @brief Utility struct for observable operations used by AdjointJacobian
  * class.
  *
  */
