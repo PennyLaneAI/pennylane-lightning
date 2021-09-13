@@ -128,6 +128,15 @@ class TestAdjointJacobian:
         ):
             dev.adjoint_jacobian(tape)
 
+        with qml.tape.JacobianTape() as tape:
+            qml.CRX(0.1, wires=[0, 1])
+            qml.expval(qml.Projector([0], wires=[0]) @ qml.PauliZ(0))
+
+        with pytest.raises(
+            qml.QuantumFunctionError, match="differentiation method does not support the Projector"
+        ):
+            dev.adjoint_jacobian(tape)
+
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_unsupported_hermitian_expectation(self, dev):
         obs = np.array([[1, 0], [0, -1]], dtype=np.complex128, requires_grad=False)
@@ -135,6 +144,15 @@ class TestAdjointJacobian:
         with qml.tape.JacobianTape() as tape:
             qml.RY(0.1, wires=(0,))
             qml.expval(qml.Hermitian(obs, wires=(0,)))
+
+        with pytest.raises(
+            qml.QuantumFunctionError, match="Lightning adjoint differentiation method does not"
+        ):
+            dev.adjoint_jacobian(tape)
+
+        with qml.tape.JacobianTape() as tape:
+            qml.RY(0.1, wires=(0,))
+            qml.expval(qml.Hermitian(obs, wires=(0,)) @ qml.PauliZ(wires=1))
 
         with pytest.raises(
             qml.QuantumFunctionError, match="Lightning adjoint differentiation method does not"
