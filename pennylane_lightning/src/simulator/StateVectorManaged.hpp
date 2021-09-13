@@ -93,20 +93,4 @@ class StateVectorManaged : public StateVector<fp_t> {
     }
 };
 
-/*
-template<class T>
-inline std::ostream& operator<<(std::ostream& out, const StateVectorManaged<T>&
-sv){ const auto length = sv.getLength(); const auto qubits = sv.getNumQubits();
-    const auto data = sv.getData();
-    out << "num_qubits=" << qubits << std::endl;
-    out << "data=[";
-    out << data[0];
-    for (size_t i = 1; i < length - 1; i++) {
-        out << "," << data[i];
-    }
-    out << "," << data[length - 1] << "]";
-
-    return out;
-}*/
-
 } // namespace Pennylane
