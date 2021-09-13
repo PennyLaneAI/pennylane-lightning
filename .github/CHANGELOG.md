@@ -7,6 +7,17 @@
 
 ### Improvements
 
+* A new state-vector class `StateVectorManaged` was added, enabling memory use to be bound to 
+  statevector lifetime.
+  [(136)](https://github.com/PennyLaneAI/pennylane-lightning/pull/136)
+
+* The repository now has a well-defined component hierarchy, allowing each indepedent unit to be 
+  compiled and linked separately.
+  [(136)](https://github.com/PennyLaneAI/pennylane-lightning/pull/136)
+
+* PennyLane-Lightning now has support for the adjoint Jacobian method of http://arxiv.org/abs/2009.02823.
+  [(136)](https://github.com/PennyLaneAI/pennylane-lightning/pull/136)
+
 * PennyLane-Lightning can now be installed without compiling its C++ binaries and will fall back
   to using the `default.qubit` implementation. Skipping compilation is achieved by setting the
   `SKIP_COMPILATION` environment variable, e.g., Linux/MacOS: `export SKIP_COMPILATION=True`,
@@ -29,6 +40,8 @@
   [(#131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/131)
 
 ### Bug fixes
+
+* An indexing error in the CRY gate is fixed. [(#136)](https://github.com/PennyLaneAI/pennylane-lightning/pull/136)
 
 * Column-major data in numpy is now correctly converted to row-major upon pass to the C++ layer.
   [(#126)](https://github.com/PennyLaneAI/pennylane-lightning/pull/126)

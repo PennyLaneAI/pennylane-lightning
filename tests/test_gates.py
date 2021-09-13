@@ -35,7 +35,12 @@ def test_gate_unitary_correct(op, op_name):
 
     if op_name in ("BasisState", "QubitStateVector"):
         pytest.skip("Skipping operation because it is a state preparation")
-    if op_name in ("ControlledQubitUnitary", "QubitUnitary", "MultiControlledX", "DiagonalQubitUnitary"):
+    if op_name in (
+        "ControlledQubitUnitary",
+        "QubitUnitary",
+        "MultiControlledX",
+        "DiagonalQubitUnitary",
+    ):
         pytest.skip("Skipping operation.")  # These are tested in the device test-suite
 
     wires = op.num_wires
@@ -71,7 +76,12 @@ def test_inverse_unitary_correct(op, op_name):
 
     if op_name in ("BasisState", "QubitStateVector"):
         pytest.skip("Skipping operation because it is a state preparation")
-    if op_name in ("ControlledQubitUnitary", "QubitUnitary", "MultiControlledX", "DiagonalQubitUnitary"):
+    if op_name in (
+        "ControlledQubitUnitary",
+        "QubitUnitary",
+        "MultiControlledX",
+        "DiagonalQubitUnitary",
+    ):
         pytest.skip("Skipping operation.")  # These are tested in the device test-suite
 
     wires = op.num_wires
@@ -128,6 +138,7 @@ random_unitary = np.array(
         ],
     ]
 )
+
 
 def test_arbitrary_unitary_correct():
     """Test if lightning.qubit correctly applies an arbitrary unitary by reconstructing its
