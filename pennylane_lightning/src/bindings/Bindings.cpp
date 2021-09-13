@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <set>
+#include <tuple>
+#include <vector>
+
+#include "AdjointDiff.hpp"
 #include "StateVector.hpp"
 #include "pybind11/complex.h"
 #include "pybind11/numpy.h"
@@ -20,10 +25,13 @@
 
 /// @cond DEV
 namespace {
+using namespace Pennylane::Algorithms;
 using Pennylane::StateVector;
 using std::complex;
+using std::set;
 using std::string;
 using std::vector;
+
 namespace py = pybind11;
 
 /**
@@ -459,6 +467,30 @@ template <class fp_t = double> class StateVecBinder : public StateVector<fp_t> {
 };
 
 /**
+ * @brief Binding class for exposing C++ AdjointJaconian class to Python.
+ *
+ * @tparam fp_t Floating point precision type.
+ */
+template <class fp_t = double>
+class AdjJacBinder : public AdjointJacobian<fp_t> {
+  private:
+    using ObsTuple = std::tuple<std::vector<std::vector<std::string>>,
+                                std::vector<std::vector<fp_t>>,
+                                std::vector<std::vector<size_t>>>;
+    using OpsTuple =
+        std::tuple<std::vector<std::string>, std::vector<std::vector<fp_t>>,
+                   std::vector<std::vector<size_t>>, std::vector<bool>,
+                   std::vector<std::vector<std::complex<fp_t>>>>;
+
+  public:
+    explicit AdjJacBinder() : AdjointJacobian<fp_t>() {}
+
+    void adjoint_jacobian_py(const ObsTuple &obs, const OpsTuple &ops,
+                             const std::vector<size_t> &trainableParamIndices,
+                             size_t num_params) {}
+};
+
+/**
  * @brief Templated class to build all required precisions for Python module.
  *
  * @tparam PrecisionT Precision of the statevector data.
@@ -470,7 +502,8 @@ void lightning_class_bindings(py::module &m) {
     // Enable module name to be based on size of complex datatype
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
-    const std::string class_name = "StateVectorC" + bitsize;
+    std::string class_name = "StateVectorC" + bitsize;
+
     py::class_<StateVecBinder<PrecisionT>>(m, class_name.c_str())
         .def(py::init<
              py::array_t<complex<PrecisionT>,
@@ -623,6 +656,172 @@ void lightning_class_bindings(py::module &m) {
                                const std::vector<Param_t> &>(
                  &StateVecBinder<PrecisionT>::template applyCRot<Param_t>),
              "Apply the CRot gate.");
+
+    //***********************************************************************//
+    //                              Observable
+    //***********************************************************************//
+
+    class_name = "ObsStructC" + bitsize;
+    using np_arr_c = py::array_t<std::complex<Param_t>,
+                                 py::array::c_style | py::array::forcecast>;
+    using np_arr_r =
+        py::array_t<Param_t, py::array::c_style | py::array::forcecast>;
+
+    using obs_data_var = std::variant<std::monostate, np_arr_r, np_arr_c>;
+    py::class_<ObsDatum<PrecisionT>>(m, class_name.c_str())
+        .def(py::init([](const std::vector<std::string> &names,
+                         const std::vector<obs_data_var> &params,
+                         const std::vector<std::vector<size_t>> &wires) {
+            std::vector<typename ObsDatum<PrecisionT>::param_var_t> conv_params(
+                params.size());
+            for (size_t p_idx = 0; p_idx < params.size(); p_idx++) {
+                std::visit(
+                    [&](const auto &param) {
+                        using p_t = std::decay_t<decltype(param)>;
+                        if constexpr (std::is_same_v<p_t, np_arr_c>) {
+                            auto buffer = param.request();
+                            auto ptr = static_cast<std::complex<Param_t> *>(
+                                buffer.ptr);
+                            if (buffer.size > 0)
+                                conv_params[p_idx] =
+                                    std::vector<std::complex<Param_t>>{
+                                        ptr, ptr + buffer.size};
+                        } else if constexpr (std::is_same_v<p_t, np_arr_r>) {
+                            auto buffer = param.request();
+
+                            auto ptr = static_cast<Param_t *>(buffer.ptr);
+                            if (buffer.size > 0)
+                                conv_params[p_idx] = std::vector<Param_t>{
+                                    ptr, ptr + buffer.size};
+                        } else {
+                            PL_ABORT(
+                                "Parameter datatype not current supported");
+                        }
+                    },
+                    params[p_idx]);
+            }
+            return ObsDatum<PrecisionT>(names, conv_params, wires);
+        }))
+        .def("__repr__",
+             [](const ObsDatum<PrecisionT> &obs) {
+                 using namespace Pennylane::Util;
+                 std::ostringstream obs_stream;
+                 std::string obs_name = obs.getObsName()[0];
+                 for (size_t o = 1; o < obs.getObsName().size(); o++) {
+                     if (o < obs.getObsName().size())
+                         obs_name += " @ ";
+                     obs_name += obs.getObsName()[o];
+                 }
+                 obs_stream << "'wires' : " << obs.getObsWires();
+                 return "Observable: { 'name' : " + obs_name + ", " +
+                        obs_stream.str() + " }";
+             })
+        .def("get_name",
+             [](const ObsDatum<PrecisionT> &obs) { return obs.getObsName(); })
+        .def("get_wires",
+             [](const ObsDatum<PrecisionT> &obs) { return obs.getObsWires(); })
+        .def("get_params", [](const ObsDatum<PrecisionT> &obs) {
+            py::list params;
+            for (size_t i = 0; i < obs.getObsParams().size(); i++) {
+                std::visit(
+                    [&](const auto &param) {
+                        using p_t = std::decay_t<decltype(param)>;
+                        if constexpr (std::is_same_v<
+                                          p_t,
+                                          std::vector<std::complex<Param_t>>>) {
+                            params.append(py::array_t<std::complex<Param_t>>(
+                                py::cast(param)));
+                        } else if constexpr (std::is_same_v<
+                                                 p_t, std::vector<Param_t>>) {
+                            params.append(
+                                py::array_t<Param_t>(py::cast(param)));
+                        } else if constexpr (std::is_same_v<p_t,
+                                                            std::monostate>) {
+                            params.append(py::list{});
+                        } else {
+                            throw("Unsupported data type");
+                        }
+                    },
+                    obs.getObsParams()[i]);
+            }
+            return params;
+        });
+
+    //***********************************************************************//
+    //                              Operations
+    //***********************************************************************//
+    class_name = "OpsStructC" + bitsize;
+    py::class_<OpsData<PrecisionT>>(m, class_name.c_str())
+        .def(py::init<
+             const std::vector<std::string> &,
+             const std::vector<std::vector<Param_t>> &,
+             const std::vector<std::vector<size_t>> &,
+             const std::vector<bool> &,
+             const std::vector<std::vector<std::complex<PrecisionT>>> &>())
+        .def("__repr__", [](const OpsData<PrecisionT> &ops) {
+            using namespace Pennylane::Util;
+            std::ostringstream ops_stream;
+            for (size_t op = 0; op < ops.getSize(); op++) {
+                ops_stream << "{'name': " << ops.getOpsName()[op];
+                ops_stream << ", 'params': " << ops.getOpsParams()[op];
+                ops_stream << ", 'inv': " << ops.getOpsInverses()[op];
+                ops_stream << "}";
+                if (op < ops.getSize() - 1)
+                    ops_stream << ",";
+            }
+            return "Operations: [" + ops_stream.str() + "]";
+        });
+
+    class_name = "AdjointJacobianC" + bitsize;
+    py::class_<AdjointJacobian<PrecisionT>>(m, class_name.c_str())
+        .def(py::init<>())
+        .def("create_ops_list", &AdjointJacobian<PrecisionT>::createOpsData)
+        .def("create_ops_list",
+             [](AdjointJacobian<PrecisionT> &adj,
+                const std::vector<std::string> &ops_name,
+                const std::vector<np_arr_r> &ops_params,
+                const std::vector<std::vector<size_t>> &ops_wires,
+                const std::vector<bool> &ops_inverses,
+                const std::vector<np_arr_c> &ops_matrices) {
+                 std::vector<std::vector<PrecisionT>> conv_params(
+                     ops_params.size());
+                 std::vector<std::vector<std::complex<PrecisionT>>>
+                     conv_matrices(ops_matrices.size());
+                 for (size_t op = 0; op < ops_name.size(); op++) {
+                     const auto p_buffer = ops_params[op].request();
+                     const auto m_buffer = ops_matrices[op].request();
+                     if (p_buffer.size > 0) {
+                         const auto p_ptr =
+                             static_cast<const Param_t *>(p_buffer.ptr);
+                         conv_params[op] =
+                             std::vector<Param_t>{p_ptr, p_ptr + p_buffer.size};
+                     }
+                     if (m_buffer.size > 0) {
+                         const auto m_ptr =
+                             static_cast<const std::complex<Param_t> *>(
+                                 m_buffer.ptr);
+                         conv_matrices[op] = std::vector<std::complex<Param_t>>{
+                             m_ptr, m_ptr + m_buffer.size};
+                     }
+                 }
+                 return OpsData<PrecisionT>{ops_name, conv_params, ops_wires,
+                                            ops_inverses, conv_matrices};
+             })
+        .def("adjoint_jacobian", &AdjointJacobian<PrecisionT>::adjointJacobian)
+        .def("adjoint_jacobian",
+             [](AdjointJacobian<PrecisionT> &adj,
+                const StateVecBinder<PrecisionT> &sv,
+                const std::vector<ObsDatum<PrecisionT>> &observables,
+                const OpsData<PrecisionT> &operations,
+                const set<size_t> &trainableParams, size_t num_params) {
+                 std::vector<std::vector<PrecisionT>> jac(
+                     observables.size(),
+                     std::vector<PrecisionT>(num_params, 0));
+                 adj.adjointJacobian(sv.getData(), sv.getLength(), jac,
+                                     observables, operations, trainableParams,
+                                     num_params);
+                 return py::array_t<Param_t>(py::cast(jac));
+             });
 }
 
 /**
@@ -630,6 +829,7 @@ void lightning_class_bindings(py::module &m) {
  */
 PYBIND11_MODULE(lightning_qubit_ops, m) {
     // Suppress doxygen autogenerated signatures
+
     py::options options;
     options.disable_function_signatures();
 

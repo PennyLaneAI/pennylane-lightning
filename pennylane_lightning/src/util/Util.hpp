@@ -23,10 +23,22 @@
 #include <cstddef>
 #include <limits>
 #include <memory>
+#include <numeric>
+#include <set>
 #include <stdexcept>
 #include <type_traits>
 
+#include <iostream>
+
+#if __has_include(<cblas.h>) && defined _ENABLE_BLAS
+#include <cblas.h>
+#define USE_CBLAS 1
+#else
+#define USE_CBLAS 0
+#endif
+
 namespace Pennylane {
+
 namespace Util {
 
 /**
@@ -57,6 +69,18 @@ inline static constexpr std::complex<T> ConstMult(std::complex<U> a,
                                                   std::complex<T> b) {
     return {a.real() * b.real() - a.imag() * b.imag(),
             a.real() * b.imag() + a.imag() * b.real()};
+}
+template <class T, class U = T>
+inline static constexpr std::complex<T> ConstMultConj(std::complex<U> a,
+                                                      std::complex<T> b) {
+    return {a.real() * b.real() + a.imag() * b.imag(),
+            -a.imag() * b.real() + a.real() * b.imag()};
+}
+
+template <class T, class U = T>
+inline static constexpr std::complex<T> ConstSum(std::complex<U> a,
+                                                 std::complex<T> b) {
+    return a + b;
 }
 
 /**
@@ -162,6 +186,103 @@ template <class T> inline size_t dimSize(const std::vector<T> &data) {
         throw std::invalid_argument("The dataset must be a perfect square");
 
     return log2(sqrt(data.size()));
+}
+
+/**
+ * @brief Calculates the inner-product using the best available method.
+ *
+ * @tparam T Floating point precision type.
+ * @param data_1 Complex data array 1.
+ * @param data_2 Complex data array 2.
+ * @return std::complex<T> Result of inner product operation.
+ */
+template <class T>
+std::complex<T> innerProd(const std::complex<T> *data_1,
+                          const std::complex<T> *data_2,
+                          const size_t data_size) {
+    std::complex<T> result(0, 0);
+
+    if constexpr (USE_CBLAS) {
+        if constexpr (std::is_same_v<T, float>)
+            result = cblas_cdotu_sub(data_size, data_1, 1, data_2, 1, &result);
+        else if constexpr (std::is_same_v<T, double>)
+            result = cblas_zdotu_sub(data_size, data_1, 1, data_2, 1, &result);
+    } else {
+        result = std::inner_product(
+            data_1, data_1 + data_size, data_2, std::complex<T>(), ConstSum<T>,
+            static_cast<std::complex<T> (*)(std::complex<T>, std::complex<T>)>(
+                &ConstMult<T>));
+    }
+    return result;
+}
+
+/**
+ * @brief Calculates the inner-product using the best available method with the
+ * first dataset conjugated.
+ *
+ * @tparam T Floating point precision type.
+ * @param data_1 Complex data array 1; conjugated before application.
+ * @param data_2 Complex data array 2.
+ * @return std::complex<T> Result of inner product operation.
+ */
+template <class T>
+std::complex<T> innerProdC(const std::complex<T> *data_1,
+                           const std::complex<T> *data_2,
+                           const size_t data_size) {
+    std::complex<T> result(0, 0);
+
+    if constexpr (USE_CBLAS) {
+        if constexpr (std::is_same_v<T, float>)
+            result = cblas_cdotc_sub(data_size, data_1, 1, data_2, 1, &result);
+        else if constexpr (std::is_same_v<T, double>)
+            result = cblas_zdotc_sub(data_size, data_1, 1, data_2, 1, &result);
+    } else {
+        result = std::inner_product(data_1, data_1 + data_size, data_2,
+                                    std::complex<T>(), ConstSum<T>,
+                                    ConstMultConj<T>);
+    }
+    return result;
+}
+
+template <class T>
+inline std::complex<T> innerProd(const std::vector<std::complex<T>> &data_1,
+                                 const std::vector<std::complex<T>> &data_2) {
+    return innerProd(data_1.data(), data_2.data(), data_1.size());
+}
+
+template <class T>
+inline std::complex<T> innerProdC(const std::vector<std::complex<T>> &data_1,
+                                  const std::vector<std::complex<T>> &data_2) {
+    return innerProdC(data_1.data(), data_2.data(), data_1.size());
+}
+
+template <class T>
+inline std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
+    os << '[';
+    for (size_t i = 0; i < vec.size(); i++) {
+        os << vec[i] << ",";
+    }
+    os << ']';
+    return os;
+}
+
+template <class T>
+inline std::ostream &operator<<(std::ostream &os, const std::set<T> &s) {
+    os << '{';
+    for (const auto &e : s) {
+        os << e << ",";
+    }
+    os << '}';
+    return os;
+}
+
+template <class T> std::vector<T> linspace(T start, T end, size_t num_points) {
+    std::vector<T> data(num_points);
+    T step = (end - start) / (num_points - 1);
+    for (size_t i = 0; i < num_points; i++) {
+        data[i] = start + (step * i);
+    }
+    return data;
 }
 
 /**

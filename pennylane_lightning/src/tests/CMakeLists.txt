@@ -7,7 +7,7 @@ find_package(OpenMP)
 
 # Default build type for test code is Debug
 if(NOT CMAKE_BUILD_TYPE)
-	set(CMAKE_BUILD_TYPE Debug)
+    set(CMAKE_BUILD_TYPE Debug)
 endif()
 
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
@@ -30,11 +30,14 @@ include(CTest)
 include(Catch)
 
 add_executable(runner runner_main.cpp)
-target_link_libraries(runner pennylane_lightning Catch2::Catch2)
+target_link_libraries(runner lightning_simulator lightning_utils lightning_algorithms Catch2::Catch2)
 
-target_sources(runner PRIVATE   Test_Bindings.cpp
+target_sources(runner PRIVATE   Test_AdjDiff.cpp
+                                Test_Bindings.cpp
                                 Test_StateVector_Nonparam.cpp 
                                 Test_StateVector_Param.cpp 
+                                Test_StateVectorManaged_Nonparam.cpp 
+                                Test_StateVectorManaged_Param.cpp 
                                 Test_Util.cpp
 )
 

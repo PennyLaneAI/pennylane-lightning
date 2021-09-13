@@ -17,18 +17,45 @@ interfaces with C++ for fast linear algebra calculations.
 """
 from warnings import warn
 
-from pennylane.devices import DefaultQubit
 import numpy as np
-from pennylane import QubitStateVector, BasisState, DeviceError, QubitUnitary
+from pennylane import (
+    BasisState,
+    DeviceError,
+    QuantumFunctionError,
+    QubitStateVector,
+    QubitUnitary,
+)
+import pennylane as qml
+from pennylane.devices import DefaultQubit
+from pennylane.operation import Expectation
+
+from ._version import __version__
 
 try:
-    from .lightning_qubit_ops import apply, StateVectorC64, StateVectorC128
+    from .lightning_qubit_ops import (
+        apply,
+        StateVectorC64,
+        StateVectorC128,
+        AdjointJacobianC128,
+    )
+    from ._serialize import _serialize_obs, _serialize_ops
 
     CPP_BINARY_AVAILABLE = True
 except ModuleNotFoundError:
     CPP_BINARY_AVAILABLE = False
 
-from ._version import __version__
+UNSUPPORTED_PARAM_GATES_ADJOINT = (
+    "MultiRZ",
+    "IsingXX",
+    "IsingYY",
+    "IsingZZ",
+    "SingleExcitation",
+    "SingleExcitationPlus",
+    "SingleExcitationMinus",
+    "DoubleExcitation",
+    "DoubleExcitationPlus",
+    "DoubleExcitationMinus",
+)
 
 
 class LightningQubit(DefaultQubit):
@@ -53,6 +80,7 @@ class LightningQubit(DefaultQubit):
     pennylane_requires = ">=0.15"
     version = __version__
     author = "Xanadu Inc."
+    _CPP_BINARY_AVAILABLE = True
 
     def __init__(self, wires, *, shots=None):
         super().__init__(wires, shots=shots)
@@ -131,6 +159,82 @@ class LightningQubit(DefaultQubit):
 
         return np.reshape(state_vector, state.shape)
 
+    def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
+        if self.shots is not None:
+            warn(
+                "Requested adjoint differentiation to be computed with finite shots."
+                " The derivative is always exact when using the adjoint differentiation method.",
+                UserWarning,
+            )
+
+        if len(tape.trainable_params) == 0:
+            return np.array(0)
+
+        for m in tape.measurements:
+            if m.return_type is not Expectation:
+                raise QuantumFunctionError(
+                    "Adjoint differentiation method does not support"
+                    f" measurement {m.return_type.value}"
+                )
+            if not isinstance(m.obs, qml.operation.Tensor):
+                if isinstance(m.obs, qml.Projector):
+                    raise QuantumFunctionError(
+                        "Adjoint differentiation method does not support the Projector observable"
+                    )
+                if isinstance(m.obs, qml.Hermitian):
+                    raise QuantumFunctionError(
+                        "Lightning adjoint differentiation method does not currently support the Hermitian observable"
+                    )
+            else:
+                if any([isinstance(o, qml.Projector) for o in m.obs.non_identity_obs]):
+                    raise QuantumFunctionError(
+                        "Adjoint differentiation method does not support the Projector observable"
+                    )
+                if any([isinstance(o, qml.Hermitian) for o in m.obs.non_identity_obs]):
+                    raise QuantumFunctionError(
+                        "Lightning adjoint differentiation method does not currently support the Hermitian observable"
+                    )
+
+        for op in tape.operations:
+            if (
+                op.num_params > 1 and not isinstance(op, qml.Rot)
+            ) or op.name in UNSUPPORTED_PARAM_GATES_ADJOINT:
+                raise QuantumFunctionError(
+                    f"The {op.name} operation is not supported using "
+                    'the "adjoint" differentiation method'
+                )
+
+        # Initialization of state
+        if starting_state is not None:
+            ket = np.ravel(starting_state)
+        else:
+            if not use_device_state:
+                self.reset()
+                self.execute(tape)
+            ket = np.ravel(self._pre_rotated_state)
+
+        adj = AdjointJacobianC128()
+
+        obs_serialized = _serialize_obs(tape, self.wire_map)
+        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map)
+
+        ops_serialized = adj.create_ops_list(*ops_serialized)
+
+        tp_shift = (
+            tape.trainable_params
+            if not use_sp
+            else {i - 1 for i in tape.trainable_params.difference({0})}
+        )  # exclude first index if explicitly setting sv
+
+        jac = adj.adjoint_jacobian(
+            StateVectorC128(ket),
+            obs_serialized,
+            ops_serialized,
+            tp_shift,
+            tape.num_params,
+        )
+        return jac
+
 
 if not CPP_BINARY_AVAILABLE:
 
@@ -141,6 +245,7 @@ if not CPP_BINARY_AVAILABLE:
         pennylane_requires = ">=0.15"
         version = __version__
         author = "Xanadu Inc."
+        _CPP_BINARY_AVAILABLE = False
 
         def __init__(self, *args, **kwargs):
             warn(
