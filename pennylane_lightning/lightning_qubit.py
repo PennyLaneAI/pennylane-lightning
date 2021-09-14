@@ -46,7 +46,6 @@ except ModuleNotFoundError:
 
 UNSUPPORTED_PARAM_GATES_ADJOINT = (
     "MultiRZ",
-    "SingleExcitation",
     "SingleExcitationPlus",
     "SingleExcitationMinus",
     "DoubleExcitation",

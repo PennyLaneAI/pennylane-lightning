@@ -478,6 +478,21 @@ template <class fp_t = double> class StateVecBinder : public StateVector<fp_t> {
     }
 
     /**
+     * @brief Apply SingleExcitation gate to the given wires.
+     *
+     * @tparam Param_t Type of parameter data.
+     * @param wires Wires to apply operation.
+     * @param inverse Indicate whether to use adjoint of operation.
+     * @param params Parameter(s) for given gate. First parameter used only.
+     */
+    template <class Param_t = fp_t>
+    void applySingleExcitation(const std::vector<size_t> &wires, bool inverse,
+                               const std::vector<Param_t> &params) {
+        const GateIndices idx(wires, this->getNumQubits());
+        StateVector<fp_t>::template applySingleExcitation<Param_t>(
+            idx.internal, idx.external, inverse, params.front());
+    }
+    /**
      * @brief Directly apply a given matrix to the specified wires. Matrix data
      * in 1D row-major format.
      *
@@ -716,7 +731,13 @@ void lightning_class_bindings(py::module &m) {
              py::overload_cast<const std::vector<size_t> &, bool,
                                const std::vector<Param_t> &>(
                  &StateVecBinder<PrecisionT>::template applyIsingZZ<Param_t>),
-             "Apply the IsingZZ gate.");
+             "Apply the IsingZZ gate.")
+        .def("SingleExcitation",
+             py::overload_cast<const std::vector<size_t> &, bool,
+                               const std::vector<Param_t> &>(
+                 &StateVecBinder<PrecisionT>::template applySingleExcitation<
+                     Param_t>),
+             "Apply the SingleExcitation gate.");
 
     //***********************************************************************//
     //                              Observable

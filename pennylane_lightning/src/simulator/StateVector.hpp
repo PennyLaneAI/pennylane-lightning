@@ -104,17 +104,32 @@ template <class fp_t = double> class StateVector {
      */
     StateVector(CFP_t *arr, size_t length)
         : arr_{arr}, length_{length}, num_qubits_{Util::log2(length_)},
-          gate_wires_{
-              // Add mapping from function name to required wires.
-              {"PauliX", 1},   {"PauliY", 1},     {"PauliZ", 1},
-              {"Hadamard", 1}, {"T", 1},          {"S", 1},
-              {"RX", 1},       {"RY", 1},         {"RZ", 1},
-              {"Rot", 1},      {"PhaseShift", 1}, {"ControlledPhaseShift", 2},
-              {"CNOT", 2},     {"SWAP", 2},       {"CZ", 2},
-              {"CRX", 2},      {"CRY", 2},        {"CRZ", 2},
-              {"CRot", 2},     {"CSWAP", 3},      {"Toffoli", 3},
-              {"IsingXX", 2},  {"IsingYY", 2},    {"IsingZZ", 2},
-          },
+          gate_wires_{// Add mapping from function name to required wires.
+                      {"PauliX", 1},
+                      {"PauliY", 1},
+                      {"PauliZ", 1},
+                      {"Hadamard", 1},
+                      {"T", 1},
+                      {"S", 1},
+                      {"RX", 1},
+                      {"RY", 1},
+                      {"RZ", 1},
+                      {"Rot", 1},
+                      {"PhaseShift", 1},
+                      {"ControlledPhaseShift", 2},
+                      {"CNOT", 2},
+                      {"SWAP", 2},
+                      {"CZ", 2},
+                      {"CRX", 2},
+                      {"CRY", 2},
+                      {"CRZ", 2},
+                      {"CRot", 2},
+                      {"CSWAP", 3},
+                      {"Toffoli", 3},
+                      {"IsingXX", 2},
+                      {"IsingYY", 2},
+                      {"IsingZZ", 2},
+                      {"SingleExcitation", 2}},
           gates_{
               // Add mapping from function name to generalised signature for
               // dispatch. Methods exist with the same signatures to simplify
@@ -161,8 +176,11 @@ template <class fp_t = double> class StateVector {
                bind(&StateVector<fp_t>::applyIsingXX_, this, _1, _2, _3, _4)},
               {"IsingYY",
                bind(&StateVector<fp_t>::applyIsingYY_, this, _1, _2, _3, _4)},
-              {"IsingZZ", bind(&StateVector<fp_t>::applyIsingZZ_, this, _1, _2,
-                               _3, _4)}} {};
+              {"IsingZZ",
+               bind(&StateVector<fp_t>::applyIsingZZ_, this, _1, _2, _3, _4)},
+              {"SingleExcitation",
+               bind(&StateVector<fp_t>::applySingleExcitation_, this, _1, _2,
+                    _3, _4)}} {};
 
     /**
      * @brief Get the underlying data pointer.
@@ -1015,6 +1033,22 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    template <typename Param_t = fp_t>
+    void applySingleExcitation(const vector<size_t> &indices,
+                               const vector<size_t> &externalIndices,
+                               bool inverse, Param_t angle) {
+        const CFP_t c(std::cos(angle / 2), 0);
+        const CFP_t s = (inverse == true) ? CFP_t(-std::sin(angle / 2), 0)
+                                          : CFP_t(std::sin(angle / 2), 0);
+        for (const size_t &externalIndex : externalIndices) {
+            CFP_t *shiftedState = arr_ + externalIndex;
+            const CFP_t v1 = shiftedState[indices[1]];
+            const CFP_t v2 = shiftedState[indices[2]];
+            shiftedState[indices[1]] = c * v1 - s * v2;
+            shiftedState[indices[2]] = s * v1 + c * v2;
+        }
+    }
+
   private:
     //***********************************************************************//
     //  Internal utility functions for opName dispatch use only.
@@ -1154,7 +1188,15 @@ template <class fp_t = double> class StateVector {
                               bool inverse, const vector<fp_t> &params) {
         applyIsingZZ(indices, externalIndices, inverse, params.front());
     }
+    inline void applySingleExcitation_(const vector<size_t> &indices,
+                                       const vector<size_t> &externalIndices,
+                                       bool inverse,
+                                       const vector<fp_t> &params) {
+        applySingleExcitation(indices, externalIndices, inverse,
+                              params.front());
+    }
 };
+
 template <class T>
 inline std::ostream &operator<<(std::ostream &out, const StateVector<T> &sv) {
     const auto length = sv.getLength();

@@ -106,16 +106,6 @@ class TestAdjointJacobian:
         ):
             dev.adjoint_jacobian(tape)
 
-        with qml.tape.JacobianTape() as tape:
-            qml.SingleExcitation(0.1, wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
-
-        with pytest.raises(
-            qml.QuantumFunctionError,
-            match="The SingleExcitation operation is not supported using the",
-        ):
-            dev.adjoint_jacobian(tape)
-
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_proj_unsupported(self, dev):
         """Test if a QuantumFunctionError is raised for a Projector observable"""
@@ -247,7 +237,19 @@ class TestAdjointJacobian:
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
 
     qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
-    ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot, qml.IsingXX, qml.IsingYY, qml.IsingZZ}
+    ops = {
+        qml.RX,
+        qml.RY,
+        qml.RZ,
+        qml.PhaseShift,
+        qml.CRX,
+        qml.CRY,
+        qml.CRZ,
+        qml.Rot,
+        qml.IsingXX,
+        qml.IsingYY,
+        qml.IsingZZ,
+    }
 
     @pytest.mark.parametrize("obs", [qml.PauliX, qml.PauliY])
     @pytest.mark.parametrize("op", ops)
@@ -587,7 +589,7 @@ def circuit_ansatz(params, wires):
     qml.U2(params[16], params[17], wires=wires[0])
     qml.U3(params[18], params[19], params[20], wires=wires[1])
     # #     qml.CRot(params[21], params[22], params[23], wires=[wires[1], wires[2]]).inv()  # expected tofail
-    # #     qml.SingleExcitation(params[24], wires=[wires[2], wires[0]])
+    qml.SingleExcitation(params[24], wires=[wires[2], wires[0]])
     # #     qml.DoubleExcitation(params[25], wires=[wires[2], wires[0], wires[1], wires[3]])
     # #     qml.SingleExcitationPlus(params[26], wires=[wires[0], wires[2]])
     # #     qml.SingleExcitationMinus(params[27], wires=[wires[0], wires[2]])
