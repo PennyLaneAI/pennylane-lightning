@@ -685,3 +685,186 @@ TEMPLATE_TEST_CASE("StateVector::applyMatrix multiple wires",
         CHECK(isApproxEqual(svdat.cdata, svdat_expected.cdata));
     }
 }
+
+TEMPLATE_TEST_CASE("StateVector::applyIsingXX", "[StateVector_Param]", float,
+                   double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 3;
+    SVData<TestType> svdat{num_qubits};
+
+    std::vector<std::vector<TestType>> prep_angles{
+        {0.88498334, 0.8805699, 4.84746475},
+        {0.05629037, 0.7345746, 3.86457312},
+        {4.5776703, 0.75551312, 4.35318664}};
+
+    // Test using |+++> state
+    for (size_t i = 0; i < prep_angles.size(); i++) {
+        svdat.sv.applyOperations({{"Hadamard"}}, {{i}}, {{false}});
+        svdat.sv.applyOperations(
+            {{"RX"}, {"RY"}, {"RZ"}}, {{i}, {i}, {i}},
+            {{false}, {false}, {false}},
+            {{prep_angles[i][0]}, {prep_angles[i][1]}, {prep_angles[i][2]}});
+    }
+    std::vector<TestType> xx_angles{0.91623018, 5.11657618, 2.29175204};
+
+    // Assessed using Pennylane for above circuit
+    std::vector<cp_t> expected_results{
+        {-0.1002434993154343, 0.24773118171274847},
+        {0.2719774085278122, 0.05392830793002973},
+        {0.3669096331711632, -0.4347940936132319},
+        {-0.05949927878202582, 0.3964125644764306},
+        {-0.46618136552093525, -0.10340806671486859},
+        {-0.05537690825810851, 0.06329511958479332},
+        {0.24643641832091362, 0.15133466008810564},
+        {0.21373474995301955, 0.054240779796538297}};
+
+    const auto init_state = svdat.cdata;
+    SECTION("Apply directly") {
+        SVData<TestType> svdat_direct{num_qubits, init_state};
+
+        for (size_t index = 0; index < num_qubits; index++) {
+            auto int_idx = svdat_direct.getInternalIndices(
+                {index, (index + 1) % num_qubits});
+            auto ext_idx = svdat_direct.getExternalIndices(
+                {index, (index + 1) % num_qubits});
+
+            svdat_direct.sv.applyIsingXX(int_idx, ext_idx, false,
+                                         {xx_angles[index]});
+        }
+        CAPTURE(svdat_direct.cdata);
+        CAPTURE(expected_results);
+        CHECK(isApproxEqual(svdat_direct.cdata, expected_results, 1e-6));
+    }
+    SECTION("Apply using dispatcher") {
+        SVData<TestType> svdat_dispatch{num_qubits, init_state};
+
+        for (size_t index = 0; index < num_qubits; index++) {
+            svdat_dispatch.sv.applyOperation("IsingXX",
+                                             {index, (index + 1) % num_qubits},
+                                             false, {xx_angles[index]});
+        }
+        CHECK(isApproxEqual(svdat_dispatch.cdata, expected_results, 1e-5));
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVector::applyIsingYY", "[StateVector_Param]", float,
+                   double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 3;
+    SVData<TestType> svdat{num_qubits};
+
+    std::vector<std::vector<TestType>> prep_angles{
+        {0.88498334, 0.8805699, 4.84746475},
+        {0.05629037, 0.7345746, 3.86457312},
+        {4.5776703, 0.75551312, 4.35318664}};
+
+    // Test using |+++> state
+    for (size_t i = 0; i < prep_angles.size(); i++) {
+        svdat.sv.applyOperations({{"Hadamard"}}, {{i}}, {{false}});
+        svdat.sv.applyOperations(
+            {{"RX"}, {"RY"}, {"RZ"}}, {{i}, {i}, {i}},
+            {{false}, {false}, {false}},
+            {{prep_angles[i][0]}, {prep_angles[i][1]}, {prep_angles[i][2]}});
+    }
+    std::vector<TestType> yy_angles{0.91623018, 5.11657618, 2.29175204};
+
+    // Assessed using Pennylane for above circuit
+    std::vector<cp_t> expected_results{
+        {0.13675702319078192, -0.2672427238066717},
+        {-0.4434639615041528, -0.17170201335485313},
+        {-0.39687039565317744, 0.34078031092846245},
+        {-0.02025868507410289, 0.3792736063416071},
+        {0.1522671803445773, -0.04942967695625308},
+        {-0.07604547995137037, 0.13547582093138114},
+        {0.19565657413134338, 0.16127738943568473},
+        {0.3864518127375937, -0.049382865675062976}};
+
+    const auto init_state = svdat.cdata;
+    SECTION("Apply directly") {
+        SVData<TestType> svdat_direct{num_qubits, init_state};
+
+        for (size_t index = 0; index < num_qubits; index++) {
+            auto int_idx = svdat_direct.getInternalIndices(
+                {index, (index + 1) % num_qubits});
+            auto ext_idx = svdat_direct.getExternalIndices(
+                {index, (index + 1) % num_qubits});
+
+            svdat_direct.sv.applyIsingYY(int_idx, ext_idx, false,
+                                         {yy_angles[index]});
+        }
+        CAPTURE(svdat_direct.cdata);
+        CAPTURE(expected_results);
+        CHECK(isApproxEqual(svdat_direct.cdata, expected_results, 1e-5));
+    }
+    SECTION("Apply using dispatcher") {
+        SVData<TestType> svdat_dispatch{num_qubits, init_state};
+
+        for (size_t index = 0; index < num_qubits; index++) {
+            svdat_dispatch.sv.applyOperation("IsingYY",
+                                             {index, (index + 1) % num_qubits},
+                                             false, {yy_angles[index]});
+        }
+        CHECK(isApproxEqual(svdat_dispatch.cdata, expected_results, 1e-5));
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVector::applyIsingZZ", "[StateVector_Param]", float,
+                   double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 3;
+    SVData<TestType> svdat{num_qubits};
+
+    std::vector<std::vector<TestType>> prep_angles{
+        {0.88498334, 0.8805699, 4.84746475},
+        {0.05629037, 0.7345746, 3.86457312},
+        {4.5776703, 0.75551312, 4.35318664}};
+
+    // Test using |+++> state
+    for (size_t i = 0; i < prep_angles.size(); i++) {
+        svdat.sv.applyOperations({{"Hadamard"}}, {{i}}, {{false}});
+        svdat.sv.applyOperations(
+            {{"RX"}, {"RY"}, {"RZ"}}, {{i}, {i}, {i}},
+            {{false}, {false}, {false}},
+            {{prep_angles[i][0]}, {prep_angles[i][1]}, {prep_angles[i][2]}});
+    }
+    std::vector<TestType> zz_angles{0.91623018, 5.11657618, 2.29175204};
+
+    // Assessed using Pennylane for above circuit
+    std::vector<cp_t> expected_results{
+        {0.03436067188916225, -0.042248007619793436},
+        {-0.015353476158743343, -0.12516900285882326},
+        {-0.11214226150633207, 0.04946102771591396},
+        {-0.12545140640357233, -0.2545980617535298},
+        {0.09601593716007409, 0.11716191970929063},
+        {-0.07254044701733618, 0.3432019659271356},
+        {-0.30309685834905586, 0.15610046214340245},
+        {0.7304797092137546, -0.29953227905021174}};
+
+    const auto init_state = svdat.cdata;
+    SECTION("Apply directly") {
+        SVData<TestType> svdat_direct{num_qubits, init_state};
+
+        for (size_t index = 0; index < num_qubits; index++) {
+            auto int_idx = svdat_direct.getInternalIndices(
+                {index, (index + 1) % num_qubits});
+            auto ext_idx = svdat_direct.getExternalIndices(
+                {index, (index + 1) % num_qubits});
+
+            svdat_direct.sv.applyIsingZZ(int_idx, ext_idx, false,
+                                         {zz_angles[index]});
+        }
+        CAPTURE(svdat_direct.cdata);
+        CAPTURE(expected_results);
+        CHECK(isApproxEqual(svdat_direct.cdata, expected_results, 1e-5));
+    }
+    SECTION("Apply using dispatcher") {
+        SVData<TestType> svdat_dispatch{num_qubits, init_state};
+
+        for (size_t index = 0; index < num_qubits; index++) {
+            svdat_dispatch.sv.applyOperation("IsingZZ",
+                                             {index, (index + 1) % num_qubits},
+                                             false, {zz_angles[index]});
+        }
+        CHECK(isApproxEqual(svdat_dispatch.cdata, expected_results, 1e-5));
+    }
+}

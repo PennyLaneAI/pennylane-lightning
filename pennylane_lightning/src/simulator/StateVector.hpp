@@ -112,7 +112,9 @@ template <class fp_t = double> class StateVector {
               {"Rot", 1},      {"PhaseShift", 1}, {"ControlledPhaseShift", 2},
               {"CNOT", 2},     {"SWAP", 2},       {"CZ", 2},
               {"CRX", 2},      {"CRY", 2},        {"CRZ", 2},
-              {"CRot", 2},     {"CSWAP", 3},      {"Toffoli", 3}},
+              {"CRot", 2},     {"CSWAP", 3},      {"Toffoli", 3},
+              {"IsingXX", 2},  {"IsingYY", 2},    {"IsingZZ", 2},
+          },
           gates_{
               // Add mapping from function name to generalised signature for
               // dispatch. Methods exist with the same signatures to simplify
@@ -154,7 +156,13 @@ template <class fp_t = double> class StateVector {
               {"CRZ",
                bind(&StateVector<fp_t>::applyCRZ_, this, _1, _2, _3, _4)},
               {"CRot",
-               bind(&StateVector<fp_t>::applyCRot_, this, _1, _2, _3, _4)}} {};
+               bind(&StateVector<fp_t>::applyCRot_, this, _1, _2, _3, _4)},
+              {"IsingXX",
+               bind(&StateVector<fp_t>::applyIsingXX_, this, _1, _2, _3, _4)},
+              {"IsingYY",
+               bind(&StateVector<fp_t>::applyIsingYY_, this, _1, _2, _3, _4)},
+              {"IsingZZ", bind(&StateVector<fp_t>::applyIsingZZ_, this, _1, _2,
+                               _3, _4)}} {};
 
     /**
      * @brief Get the underlying data pointer.
@@ -1129,6 +1137,22 @@ template <class fp_t = double> class StateVector {
                             const vector<fp_t> &params) {
         static_cast<void>(params);
         applyCSWAP(indices, externalIndices, inverse);
+    }
+
+    inline void applyIsingXX_(const vector<size_t> &indices,
+                              const vector<size_t> &externalIndices,
+                              bool inverse, const vector<fp_t> &params) {
+        applyIsingXX(indices, externalIndices, inverse, params.front());
+    }
+    inline void applyIsingYY_(const vector<size_t> &indices,
+                              const vector<size_t> &externalIndices,
+                              bool inverse, const vector<fp_t> &params) {
+        applyIsingYY(indices, externalIndices, inverse, params.front());
+    }
+    inline void applyIsingZZ_(const vector<size_t> &indices,
+                              const vector<size_t> &externalIndices,
+                              bool inverse, const vector<fp_t> &params) {
+        applyIsingZZ(indices, externalIndices, inverse, params.front());
     }
 };
 template <class T>
