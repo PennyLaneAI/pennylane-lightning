@@ -130,6 +130,54 @@ void applyGeneratorControlledPhaseShift(SVType &sv,
     }
 }
 
+template <class T = double, class SVType = Pennylane::StateVector<T>>
+void applyGeneratorIsingXX(SVType &sv, const std::vector<size_t> &wires,
+                           const bool adj = false) {
+    const vector<size_t> internalIndices = sv.generateBitPatterns(wires);
+    const vector<size_t> externalWires = sv.getIndicesAfterExclusion(wires);
+    const vector<size_t> externalIndices =
+        sv.generateBitPatterns(externalWires);
+    for (const size_t &externalIndex : externalIndices) {
+        std::complex<T> *shiftedState = sv.getData() + externalIndex;
+        std::swap(shiftedState[internalIndices[0]],
+                  shiftedState[internalIndices[3]]);
+        std::swap(shiftedState[internalIndices[1]],
+                  shiftedState[internalIndices[2]]);
+    }
+}
+
+template <class T = double, class SVType = Pennylane::StateVector<T>>
+void applyGeneratorIsingYY(SVType &sv, const std::vector<size_t> &wires,
+                           const bool adj = false) {
+    const vector<size_t> internalIndices = sv.generateBitPatterns(wires);
+    const vector<size_t> externalWires = sv.getIndicesAfterExclusion(wires);
+    const vector<size_t> externalIndices =
+        sv.generateBitPatterns(externalWires);
+    for (const size_t &externalIndex : externalIndices) {
+        std::complex<T> *shiftedState = sv.getData() + externalIndex;
+        shiftedState[internalIndices[0]] *= -1;
+        shiftedState[internalIndices[3]] *= -1;
+        std::swap(shiftedState[internalIndices[0]],
+                  shiftedState[internalIndices[3]]);
+        std::swap(shiftedState[internalIndices[1]],
+                  shiftedState[internalIndices[2]]);
+    }
+}
+
+template <class T = double, class SVType = Pennylane::StateVector<T>>
+void applyGeneratorIsingZZ(SVType &sv, const std::vector<size_t> &wires,
+                           const bool adj = false) {
+    const vector<size_t> internalIndices = sv.generateBitPatterns(wires);
+    const vector<size_t> externalWires = sv.getIndicesAfterExclusion(wires);
+    const vector<size_t> externalIndices =
+        sv.generateBitPatterns(externalWires);
+    for (const size_t &externalIndex : externalIndices) {
+        std::complex<T> *shiftedState = sv.getData() + externalIndex;
+        shiftedState[internalIndices[1]] *= -1;
+        shiftedState[internalIndices[2]] *= -1;
+    }
+}
+
 } // namespace
 
 namespace Pennylane {
@@ -362,15 +410,25 @@ template <class T = double> class AdjointJacobian {
         {"CRX", &::applyGeneratorCRX<T, StateVectorManaged<T>>},
         {"CRY", &::applyGeneratorCRY<T, StateVectorManaged<T>>},
         {"CRZ", &::applyGeneratorCRZ<T, StateVectorManaged<T>>},
+        {"IsingXX", &::applyGeneratorIsingXX<T, StateVectorManaged<T>>},
+        {"IsingYY", &::applyGeneratorIsingYY<T, StateVectorManaged<T>>},
+        {"IsingZZ", &::applyGeneratorIsingZZ<T, StateVectorManaged<T>>},
         {"ControlledPhaseShift",
          &::applyGeneratorControlledPhaseShift<T, StateVectorManaged<T>>}};
 
     // Holds the mappings from gate labels to associated generator coefficients.
     const std::unordered_map<std::string, T> scaling_factors{
-        {"RX", -0.5},  {"RY", -0.5},
-        {"RZ", -0.5},  {"PhaseShift", 1},
-        {"CRX", -0.5}, {"CRY", -0.5},
-        {"CRZ", -0.5}, {"ControlledPhaseShift", 1}};
+        {"RX", -0.5},
+        {"RY", -0.5},
+        {"RZ", -0.5},
+        {"PhaseShift", 1},
+        {"CRX", -0.5},
+        {"CRY", -0.5},
+        {"CRZ", -0.5},
+        {"IsingXX", -0.5},
+        {"IsingYY", -0.5},
+        {"IsingZZ", -0.5},
+        {"ControlledPhaseShift", 1}};
 
     /**
      * @brief Utility method to update the Jacobian at a given index by

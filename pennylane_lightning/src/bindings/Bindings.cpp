@@ -431,6 +431,51 @@ template <class fp_t = double> class StateVecBinder : public StateVector<fp_t> {
             idx.internal, idx.external, inverse, params[0], params[1],
             params[2]);
     }
+    /**
+     * @brief Apply XX gate to the given wires.
+     *
+     * @tparam Param_t Type of parameter data.
+     * @param wires Wires to apply operation.
+     * @param inverse Indicate whether to use adjoint of operation.
+     * @param params Parameter(s) for given gate. First parameter used only.
+     */
+    template <class Param_t = fp_t>
+    void applyIsingXX(const std::vector<size_t> &wires, bool inverse,
+                      const std::vector<Param_t> &params) {
+        const GateIndices idx(wires, this->getNumQubits());
+        StateVector<fp_t>::template applyIsingXX<Param_t>(
+            idx.internal, idx.external, inverse, params.front());
+    }
+    /**
+     * @brief Apply IsingYY gate to the given wires.
+     *
+     * @tparam Param_t Type of parameter data.
+     * @param wires Wires to apply operation.
+     * @param inverse Indicate whether to use adjoint of operation.
+     * @param params Parameter(s) for given gate. First parameter used only.
+     */
+    template <class Param_t = fp_t>
+    void applyIsingYY(const std::vector<size_t> &wires, bool inverse,
+                      const std::vector<Param_t> &params) {
+        const GateIndices idx(wires, this->getNumQubits());
+        StateVector<fp_t>::template applyIsingYY<Param_t>(
+            idx.internal, idx.external, inverse, params.front());
+    }
+    /**
+     * @brief Apply IsingZZ gate to the given wires.
+     *
+     * @tparam Param_t Type of parameter data.
+     * @param wires Wires to apply operation.
+     * @param inverse Indicate whether to use adjoint of operation.
+     * @param params Parameter(s) for given gate. First parameter used only.
+     */
+    template <class Param_t = fp_t>
+    void applyIsingZZ(const std::vector<size_t> &wires, bool inverse,
+                      const std::vector<Param_t> &params) {
+        const GateIndices idx(wires, this->getNumQubits());
+        StateVector<fp_t>::template applyIsingZZ<Param_t>(
+            idx.internal, idx.external, inverse, params.front());
+    }
 
     /**
      * @brief Directly apply a given matrix to the specified wires. Matrix data
@@ -655,7 +700,23 @@ void lightning_class_bindings(py::module &m) {
              py::overload_cast<const std::vector<size_t> &, bool,
                                const std::vector<Param_t> &>(
                  &StateVecBinder<PrecisionT>::template applyCRot<Param_t>),
-             "Apply the CRot gate.");
+             "Apply the CRot gate.")
+
+        .def("IsingXX",
+             py::overload_cast<const std::vector<size_t> &, bool,
+                               const std::vector<Param_t> &>(
+                 &StateVecBinder<PrecisionT>::template applyIsingXX<Param_t>),
+             "Apply the IsingXX gate.")
+        .def("IsingYY",
+             py::overload_cast<const std::vector<size_t> &, bool,
+                               const std::vector<Param_t> &>(
+                 &StateVecBinder<PrecisionT>::template applyIsingYY<Param_t>),
+             "Apply the IsingYY gate.")
+        .def("IsingZZ",
+             py::overload_cast<const std::vector<size_t> &, bool,
+                               const std::vector<Param_t> &>(
+                 &StateVecBinder<PrecisionT>::template applyIsingZZ<Param_t>),
+             "Apply the IsingZZ gate.");
 
     //***********************************************************************//
     //                              Observable

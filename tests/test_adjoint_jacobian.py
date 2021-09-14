@@ -247,7 +247,7 @@ class TestAdjointJacobian:
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
 
     qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
-    ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
+    ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot, qml.IsingXX, qml.IsingYY, qml.IsingZZ}
 
     @pytest.mark.parametrize("obs", [qml.PauliX, qml.PauliY])
     @pytest.mark.parametrize("op", ops)
@@ -580,9 +580,9 @@ def circuit_ansatz(params, wires):
     # #     qml.MultiRZ(params[11], wires=[wires[0], wires[1]])
     # #     qml.PauliRot(params[12], "XXYZ", wires=[wires[0], wires[1], wires[2], wires[3]])
     qml.CPhase(params[12], wires=[wires[3], wires[2]])
-    # #     qml.IsingXX(params[13], wires=[wires[1], wires[0]])
-    # #     qml.IsingYY(params[14], wires=[wires[3], wires[2]])
-    # #     qml.IsingZZ(params[14], wires=[wires[2], wires[1]])
+    qml.IsingXX(params[13], wires=[wires[1], wires[0]])
+    qml.IsingYY(params[14], wires=[wires[3], wires[2]])
+    qml.IsingZZ(params[14], wires=[wires[2], wires[1]])
     qml.U1(params[15], wires=wires[0])
     qml.U2(params[16], params[17], wires=wires[0])
     qml.U3(params[18], params[19], params[20], wires=wires[1])
