@@ -945,6 +945,68 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    template <typename Param_t = fp_t>
+    void applyIsingXX(const vector<size_t> &indices,
+                      const vector<size_t> &externalIndices, bool inverse,
+                      Param_t angle) {
+        const CFP_t c(std::cos(angle / 2), 0);
+        const CFP_t js = (inverse == true) ? CFP_t(0, -std::sin(-angle / 2))
+                                           : CFP_t(0, std::sin(-angle / 2));
+
+        for (const size_t &externalIndex : externalIndices) {
+            CFP_t *shiftedState = arr_ + externalIndex;
+            const CFP_t v0 = shiftedState[indices[0]];
+            const CFP_t v1 = shiftedState[indices[1]];
+            const CFP_t v2 = shiftedState[indices[2]];
+            const CFP_t v3 = shiftedState[indices[3]];
+            shiftedState[indices[0]] = c * v0 + js * v3;
+            shiftedState[indices[1]] = c * v1 + js * v2;
+            shiftedState[indices[2]] = c * v2 + js * v1;
+            shiftedState[indices[3]] = c * v3 + js * v0;
+        }
+    }
+
+    template <typename Param_t = fp_t>
+    void applyIsingYY(const vector<size_t> &indices,
+                      const vector<size_t> &externalIndices, bool inverse,
+                      Param_t angle) {
+        const CFP_t c(std::cos(angle / 2), 0);
+        const CFP_t js = (inverse == true) ? CFP_t(0, std::sin(-angle / 2))
+                                           : CFP_t(0, -std::sin(-angle / 2));
+
+        for (const size_t &externalIndex : externalIndices) {
+            CFP_t *shiftedState = arr_ + externalIndex;
+            const CFP_t v0 = shiftedState[indices[0]];
+            const CFP_t v1 = shiftedState[indices[1]];
+            const CFP_t v2 = shiftedState[indices[2]];
+            const CFP_t v3 = shiftedState[indices[3]];
+            shiftedState[indices[0]] = c * v0 + js * v3;
+            shiftedState[indices[1]] = c * v1 - js * v2;
+            shiftedState[indices[2]] = c * v2 - js * v1;
+            shiftedState[indices[3]] = c * v3 + js * v0;
+        }
+    }
+
+    template <typename Param_t = fp_t>
+    void applyIsingZZ(const vector<size_t> &indices,
+                      const vector<size_t> &externalIndices, bool inverse,
+                      Param_t angle) {
+        const CFP_t outer = (inverse == true)
+                                ? std::conj(std::exp(CFP_t(0, -angle / 2)))
+                                : std::exp(CFP_t(0, -angle / 2));
+        const CFP_t inner = (inverse == true)
+                                ? std::conj(std::exp(CFP_t(0, angle / 2)))
+                                : std::exp(CFP_t(0, angle / 2));
+
+        for (const size_t &externalIndex : externalIndices) {
+            CFP_t *shiftedState = arr_ + externalIndex;
+            shiftedState[indices[0]] *= outer;
+            shiftedState[indices[1]] *= inner;
+            shiftedState[indices[2]] *= inner;
+            shiftedState[indices[3]] *= outer;
+        }
+    }
+
   private:
     //***********************************************************************//
     //  Internal utility functions for opName dispatch use only.

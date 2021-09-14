@@ -488,5 +488,135 @@ getControlledPhaseShift(const std::vector<U> &params) {
     return getControlledPhaseShift<T>(params.front());
 }
 
+/**
+ * @brief Create a matrix representation of the Ising XX gate data in row-major
+format.
+ *
+ * The gate is defined as:
+ * \f$\begin{split}XX(\phi) = \begin{bmatrix}
+\cos(\phi / 2) & 0 & 0 & -i \sin(\phi / 2) \\
+0 & \cos(\phi / 2) & -i \sin(\phi / 2) & 0 \\
+0 & -i \sin(\phi / 2) & \cos(\phi / 2) & 0 \\
+-i \sin(\phi / 2) & 0 & 0 & \cos(\phi / 2)
+\end{bmatrix}.\end{split}\f$
+ *
+ * @tparam T Required precision of gate (`float` or `double`).
+ * @tparam U Required precision of parameter (`float` or `double`).
+ * @param angle Phase shift angle.
+ * @return const std::vector<std::complex<T>> Return const Ising XX gate data.
+ */
+template <class T, class U = T>
+static const std::vector<std::complex<T>> getIsingXX(U angle) {
+    const U phi_2 = angle / 2;
+    return {
+        {cos(phi_2), 0},  ZERO<T>(),        ZERO<T>(),        {0, -sin(phi_2)},
+        ZERO<T>(),        {cos(phi_2), 0},  {0, -sin(phi_2)}, ZERO<T>(),
+        ZERO<T>(),        {0, -sin(phi_2)}, {cos(phi_2), 0},  ZERO<T>(),
+        {0, -sin(phi_2)}, ZERO<T>(),        ZERO<T>(),        {cos(phi_2), 0}};
+}
+
+/**
+ * @brief Create a matrix representation of the Ising XX gate data in row-major
+ * format.
+ *
+ * @see `getIsingXX(U angle)`.
+ */
+template <class T, class U = T>
+static const std::vector<std::complex<T>>
+getIsingXX(const std::vector<U> &params) {
+    const U phi_2 = params.front() / 2;
+    return {
+        {cos(phi_2), 0},  ZERO<T>(),        ZERO<T>(),        {0, -sin(phi_2)},
+        ZERO<T>(),        {cos(phi_2), 0},  {0, -sin(phi_2)}, ZERO<T>(),
+        ZERO<T>(),        {0, -sin(phi_2)}, {cos(phi_2), 0},  ZERO<T>(),
+        {0, -sin(phi_2)}, ZERO<T>(),        ZERO<T>(),        {cos(phi_2), 0}};
+}
+
+/**
+ * @brief Create a matrix representation of the Ising YY gate data in row-major
+format.
+ *
+ * The gate is defined as:
+ * \f$\begin{split}YY(\phi) = \begin{bmatrix}
+\cos(\phi / 2) & 0 & 0 & i \sin(\phi / 2) \\
+0 & \cos(\phi / 2) & -i \sin(\phi / 2) & 0 \\
+0 & -i \sin(\phi / 2) & \cos(\phi / 2) & 0 \\
+i \sin(\phi / 2) & 0 & 0 & \cos(\phi / 2)
+\end{bmatrix}.\end{split}\f$
+ *
+ * @tparam T Required precision of gate (`float` or `double`).
+ * @tparam U Required precision of parameter (`float` or `double`).
+ * @param angle Phase shift angle.
+ * @return const std::vector<std::complex<T>> Return const Ising YY gate data.
+ */
+template <class T, class U = T>
+static const std::vector<std::complex<T>> getIsingYY(U angle) {
+    const U phi_2 = angle / 2;
+    return {
+        {cos(phi_2), 0}, ZERO<T>(),        ZERO<T>(),        {0, sin(phi_2)},
+        ZERO<T>(),       {cos(phi_2), 0},  {0, -sin(phi_2)}, ZERO<T>(),
+        ZERO<T>(),       {0, -sin(phi_2)}, {cos(phi_2), 0},  ZERO<T>(),
+        {0, sin(phi_2)}, ZERO<T>(),        ZERO<T>(),        {cos(phi_2), 0}};
+}
+
+/**
+ * @brief Create a matrix representation of the Ising YY gate data in row-major
+ * format.
+ *
+ * @see `getIsingYY(U angle)`.
+ */
+template <class T, class U = T>
+static const std::vector<std::complex<T>>
+getIsingYY(const std::vector<U> &params) {
+    const U phi_2 = params.front() / 2;
+    return {
+        {cos(phi_2), 0}, ZERO<T>(),        ZERO<T>(),        {0, sin(phi_2)},
+        ZERO<T>(),       {cos(phi_2), 0},  {0, -sin(phi_2)}, ZERO<T>(),
+        ZERO<T>(),       {0, -sin(phi_2)}, {cos(phi_2), 0},  ZERO<T>(),
+        {0, sin(phi_2)}, ZERO<T>(),        ZERO<T>(),        {cos(phi_2), 0}};
+}
+
+/**
+ * @brief Create a matrix representation of the Ising ZZ gate data in row-major
+format.
+ *
+ * The gate is defined as:
+ * \f$\begin{split}XX(\phi) = \begin{bmatrix}
+\exp(-i\phi / 2) & 0 & 0 & 0 \\
+0 & \exp(i\phi / 2) & 0 & 0 \\
+0 & 0 & \exp(i\phi / 2) & 0 \\
+0 & 0 & 0 & \exp(-i\phi / 2)
+\end{bmatrix}.\end{split}\f$
+ *
+ * @tparam T Required precision of gate (`float` or `double`).
+ * @tparam U Required precision of parameter (`float` or `double`).
+ * @param angle Phase shift angle.
+ * @return const std::vector<std::complex<T>> Return const Ising ZZ gate data.
+ */
+template <class T, class U = T>
+static const std::vector<std::complex<T>> getIsingZZ(U angle) {
+    const std::complex<U> iphi_2({0, angle / 2});
+    return {{exp(-iphi_2)}, ZERO<T>(),     ZERO<T>(),     ZERO<T>(),
+            ZERO<T>(),      {exp(iphi_2)}, ZERO<T>(),     ZERO<T>(),
+            ZERO<T>(),      ZERO<T>(),     {exp(iphi_2)}, ZERO<T>(),
+            ZERO<T>(),      ZERO<T>(),     ZERO<T>(),     {exp(-iphi_2)}};
+}
+
+/**
+ * @brief Create a matrix representation of the Ising ZZ gate data in row-major
+ * format.
+ *
+ * @see `getIsingZZ(U angle)`.
+ */
+template <class T, class U = T>
+static const std::vector<std::complex<T>>
+getIsingZZ(const std::vector<U> &params) {
+    const std::complex<U> iphi_2({0, params.front() / 2});
+    return {{exp(-iphi_2)}, ZERO<T>(),     ZERO<T>(),     ZERO<T>(),
+            ZERO<T>(),      {exp(iphi_2)}, ZERO<T>(),     ZERO<T>(),
+            ZERO<T>(),      ZERO<T>(),     {exp(iphi_2)}, ZERO<T>(),
+            ZERO<T>(),      ZERO<T>(),     ZERO<T>(),     {exp(-iphi_2)}};
+}
+
 } // namespace Gates
 } // namespace Pennylane
