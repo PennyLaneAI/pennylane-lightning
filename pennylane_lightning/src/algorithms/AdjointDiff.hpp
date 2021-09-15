@@ -208,14 +208,14 @@ void applyGeneratorDoubleExcitation(SVType &sv,
         std::complex<T> *shiftedState = sv.getData() + externalIndex;
         const std::complex<T> v3 = shiftedState[internalIndices[3]];
         const std::complex<T> v12 = shiftedState[internalIndices[12]];
-        //for(size_t index=0; index < 16; index++){
-        //    shiftedState[internalIndices[index]] = 0;
-        //}
+
+        // Faster to be explicit and avoid branching in a loop.
         std::swap(shiftedState[internalIndices[3]],
                   shiftedState[internalIndices[12]]);
         shiftedState[internalIndices[0]] = 0;
         shiftedState[internalIndices[1]] = 0;
         shiftedState[internalIndices[2]] = 0;
+        shiftedState[internalIndices[3]] *= -IMAG<T>();
         shiftedState[internalIndices[4]] = 0;
         shiftedState[internalIndices[5]] = 0;
         shiftedState[internalIndices[6]] = 0;
@@ -224,13 +224,10 @@ void applyGeneratorDoubleExcitation(SVType &sv,
         shiftedState[internalIndices[9]] = 0;
         shiftedState[internalIndices[10]] = 0;
         shiftedState[internalIndices[11]] = 0;
+        shiftedState[internalIndices[12]] *= IMAG<T>();
         shiftedState[internalIndices[13]] = 0;
         shiftedState[internalIndices[14]] = 0;
         shiftedState[internalIndices[15]] = 0;
-
-
-        shiftedState[internalIndices[3]] *= -IMAG<T>();
-        shiftedState[internalIndices[12]] *= IMAG<T>();
     }
 }
 
