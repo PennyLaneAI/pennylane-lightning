@@ -196,6 +196,44 @@ void applyGeneratorSingleExcitation(SVType &sv,
     }
 }
 
+template <class T = double, class SVType = Pennylane::StateVector<T>>
+void applyGeneratorDoubleExcitation(SVType &sv,
+                                    const std::vector<size_t> &wires,
+                                    const bool adj = false) {
+    const vector<size_t> internalIndices = sv.generateBitPatterns(wires);
+    const vector<size_t> externalWires = sv.getIndicesAfterExclusion(wires);
+    const vector<size_t> externalIndices =
+        sv.generateBitPatterns(externalWires);
+    for (const size_t &externalIndex : externalIndices) {
+        std::complex<T> *shiftedState = sv.getData() + externalIndex;
+        const std::complex<T> v3 = shiftedState[internalIndices[3]];
+        const std::complex<T> v12 = shiftedState[internalIndices[12]];
+        //for(size_t index=0; index < 16; index++){
+        //    shiftedState[internalIndices[index]] = 0;
+        //}
+        std::swap(shiftedState[internalIndices[3]],
+                  shiftedState[internalIndices[12]]);
+        shiftedState[internalIndices[0]] = 0;
+        shiftedState[internalIndices[1]] = 0;
+        shiftedState[internalIndices[2]] = 0;
+        shiftedState[internalIndices[4]] = 0;
+        shiftedState[internalIndices[5]] = 0;
+        shiftedState[internalIndices[6]] = 0;
+        shiftedState[internalIndices[7]] = 0;
+        shiftedState[internalIndices[8]] = 0;
+        shiftedState[internalIndices[9]] = 0;
+        shiftedState[internalIndices[10]] = 0;
+        shiftedState[internalIndices[11]] = 0;
+        shiftedState[internalIndices[13]] = 0;
+        shiftedState[internalIndices[14]] = 0;
+        shiftedState[internalIndices[15]] = 0;
+
+
+        shiftedState[internalIndices[3]] *= -IMAG<T>();
+        shiftedState[internalIndices[12]] *= IMAG<T>();
+    }
+}
+
 } // namespace
 
 namespace Pennylane {
@@ -433,6 +471,8 @@ template <class T = double> class AdjointJacobian {
         {"IsingZZ", &::applyGeneratorIsingZZ<T, StateVectorManaged<T>>},
         {"SingleExcitation",
          &::applyGeneratorSingleExcitation<T, StateVectorManaged<T>>},
+        {"DoubleExcitation",
+         &::applyGeneratorDoubleExcitation<T, StateVectorManaged<T>>},
         {"ControlledPhaseShift",
          &::applyGeneratorControlledPhaseShift<T, StateVectorManaged<T>>}};
 
@@ -449,6 +489,7 @@ template <class T = double> class AdjointJacobian {
         {"IsingYY", -0.5},
         {"IsingZZ", -0.5},
         {"SingleExcitation", -0.5},
+        {"DoubleExcitation", -0.5},
         {"ControlledPhaseShift", 1}};
 
     /**

@@ -48,7 +48,6 @@ UNSUPPORTED_PARAM_GATES_ADJOINT = (
     "MultiRZ",
     "SingleExcitationPlus",
     "SingleExcitationMinus",
-    "DoubleExcitation",
     "DoubleExcitationPlus",
     "DoubleExcitationMinus",
 )

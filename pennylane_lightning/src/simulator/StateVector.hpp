@@ -129,7 +129,8 @@ template <class fp_t = double> class StateVector {
                       {"IsingXX", 2},
                       {"IsingYY", 2},
                       {"IsingZZ", 2},
-                      {"SingleExcitation", 2}},
+                      {"SingleExcitation", 2},
+                      {"DoubleExcitation", 4}},
           gates_{
               // Add mapping from function name to generalised signature for
               // dispatch. Methods exist with the same signatures to simplify
@@ -180,7 +181,12 @@ template <class fp_t = double> class StateVector {
                bind(&StateVector<fp_t>::applyIsingZZ_, this, _1, _2, _3, _4)},
               {"SingleExcitation",
                bind(&StateVector<fp_t>::applySingleExcitation_, this, _1, _2,
-                    _3, _4)}} {};
+                    _3, _4)},
+              {"DoubleExcitation",
+               bind(&StateVector<fp_t>::applyDoubleExcitation_, this, _1, _2,
+                    _3, _4)}
+                    
+                    } {};
 
     /**
      * @brief Get the underlying data pointer.
@@ -1049,6 +1055,22 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    template <typename Param_t = fp_t>
+    void applyDoubleExcitation(const vector<size_t> &indices,
+                               const vector<size_t> &externalIndices,
+                               bool inverse, Param_t angle) {
+        const CFP_t c(std::cos(angle / 2), 0);
+        const CFP_t s = (inverse == true) ? CFP_t(-std::sin(angle / 2), 0)
+                                          : CFP_t(std::sin(angle / 2), 0);
+        for (const size_t &externalIndex : externalIndices) {
+            CFP_t *shiftedState = arr_ + externalIndex;
+            const CFP_t v3 = shiftedState[indices[3]];
+            const CFP_t v12 = shiftedState[indices[12]];
+            shiftedState[indices[3]] = c * v3 - s * v12;
+            shiftedState[indices[12]] = s * v3 + c * v12;
+        }
+    }
+
   private:
     //***********************************************************************//
     //  Internal utility functions for opName dispatch use only.
@@ -1193,6 +1215,13 @@ template <class fp_t = double> class StateVector {
                                        bool inverse,
                                        const vector<fp_t> &params) {
         applySingleExcitation(indices, externalIndices, inverse,
+                              params.front());
+    }
+    inline void applyDoubleExcitation_(const vector<size_t> &indices,
+                                       const vector<size_t> &externalIndices,
+                                       bool inverse,
+                                       const vector<fp_t> &params) {
+        applyDoubleExcitation(indices, externalIndices, inverse,
                               params.front());
     }
 };

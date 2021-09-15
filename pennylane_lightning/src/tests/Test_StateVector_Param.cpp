@@ -929,3 +929,72 @@ TEMPLATE_TEST_CASE("StateVector::applySingleExcitation", "[StateVector_Param]",
         CHECK(isApproxEqual(svdat_dispatch.cdata, expected_results, 1e-5));
     }
 }
+
+TEMPLATE_TEST_CASE("StateVector::applyDoubleExcitation", "[StateVector_Param]",
+                   float, double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 4;
+    SVData<TestType> svdat{num_qubits};
+
+    std::vector<std::vector<TestType>> prep_angles{
+        {0.88498334, 0.8805699, 4.84746475},
+        {0.05629037, 0.7345746, 3.86457312},
+        {4.5776703, 0.75551312, 4.35318664}};
+
+    // Test using |+++> state
+    for (size_t i = 0; i < prep_angles.size(); i++) {
+        svdat.sv.applyOperations({{"Hadamard"}}, {{i}}, {{false}});
+        svdat.sv.applyOperations(
+            {{"RX"}, {"RY"}, {"RZ"}}, {{i}, {i}, {i}},
+            {{false}, {false}, {false}},
+            {{prep_angles[i][0]}, {prep_angles[i][1]}, {prep_angles[i][2]}});
+    }
+    std::vector<TestType> de_angles{0.91623018, 5.11657618, 2.29175204, 0.123456789};
+
+    // Assessed using Pennylane for above circuit
+    std::vector<cp_t> expected_results{
+{-0.05397813815945236,-0.007204895651975997},
+{0.0,0.0},
+{0.028320725950970675,0.12288590231771596},
+{0.18102760457154746,-0.11861557785534943},
+{0.08036732348352965,0.09253849682463335},
+{0.0,0.0},
+{-0.1080313362172693,0.19941909862113083},
+{0.0,0.0},
+{-0.040078550701073225,0.1460810918373595},
+{-0.08128237435280211,0.15004218585819912},
+{0.34931916276157515,-0.03202855596616666},
+{0.0,0.0},
+{0.22034114392155824,-0.14437517511996173},
+{0.0,0.0},
+{-0.6372222027340653,-0.4661202163699524},
+{0.0,0.0}};
+
+    const auto init_state = svdat.cdata;
+    SECTION("Apply directly") {
+        SVData<TestType> svdat_direct{num_qubits, init_state};
+
+        for (size_t index = 0; index < num_qubits; index++) {
+            auto int_idx = svdat_direct.getInternalIndices(
+                {index, (index + 1) % num_qubits, (index + 2) % num_qubits, (index + 3) % num_qubits});
+            auto ext_idx = svdat_direct.getExternalIndices(
+                {index, (index + 1) % num_qubits, (index + 2) % num_qubits, (index + 3) % num_qubits});
+
+            svdat_direct.sv.applyDoubleExcitation(int_idx, ext_idx, false,
+                                                  {de_angles[index]});
+        }
+        CAPTURE(svdat_direct.cdata);
+        CAPTURE(expected_results);
+        CHECK(isApproxEqual(svdat_direct.cdata, expected_results, 1e-5));
+    }
+    SECTION("Apply using dispatcher") {
+        SVData<TestType> svdat_dispatch{num_qubits, init_state};
+
+        for (size_t index = 0; index < num_qubits; index++) {
+            svdat_dispatch.sv.applyOperation("DoubleExcitation",
+                                             {index, (index + 1) % num_qubits, (index + 2) % num_qubits, (index + 3) % num_qubits},
+                                             false, {de_angles[index]});
+        }
+        CHECK(isApproxEqual(svdat_dispatch.cdata, expected_results, 1e-5));
+    }
+}
