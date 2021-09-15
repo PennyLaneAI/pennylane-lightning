@@ -86,10 +86,12 @@ exhale_args = {
     "exhaleExecutesDoxygen": True,
     "exhaleDoxygenStdin": (
         "INPUT = "
-        "../pennylane_lightning/src/Bindings.cpp "
-        "../pennylane_lightning/src/Gates.hpp "
-        "../pennylane_lightning/src/StateVector.hpp "
-        "../pennylane_lightning/src/Util.hpp"
+        "../pennylane_lightning/src/algorithms/AdjointDiff.hpp "
+        "../pennylane_lightning/src/bindings/Bindings.cpp "
+        "../pennylane_lightning/src/simulator/Gates.hpp "
+        "../pennylane_lightning/src/simulator/StateVector.hpp "
+        "../pennylane_lightning/src/util/Util.hpp "
+        "../pennylane_lightning/src/util/Error.hpp "
         "EXCLUDE_SYMBOLS = std::* "
     ),
     "afterTitleDescription": inspect.cleandoc(
@@ -113,7 +115,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'PennyLane-Lightning'
-copyright = "Copyright 2020"
+copyright = "Copyright 2021"
 author = 'Xanadu Inc.'
 
 add_module_names = False
