@@ -949,26 +949,27 @@ TEMPLATE_TEST_CASE("StateVector::applyDoubleExcitation", "[StateVector_Param]",
             {{false}, {false}, {false}},
             {{prep_angles[i][0]}, {prep_angles[i][1]}, {prep_angles[i][2]}});
     }
-    std::vector<TestType> de_angles{0.91623018, 5.11657618, 2.29175204, 0.123456789};
+    std::vector<TestType> de_angles{0.91623018, 5.11657618, 2.29175204,
+                                    0.123456789};
 
     // Assessed using Pennylane for above circuit
     std::vector<cp_t> expected_results{
-{-0.05397813815945236,-0.007204895651975997},
-{0.0,0.0},
-{0.028320725950970675,0.12288590231771596},
-{0.18102760457154746,-0.11861557785534943},
-{0.08036732348352965,0.09253849682463335},
-{0.0,0.0},
-{-0.1080313362172693,0.19941909862113083},
-{0.0,0.0},
-{-0.040078550701073225,0.1460810918373595},
-{-0.08128237435280211,0.15004218585819912},
-{0.34931916276157515,-0.03202855596616666},
-{0.0,0.0},
-{0.22034114392155824,-0.14437517511996173},
-{0.0,0.0},
-{-0.6372222027340653,-0.4661202163699524},
-{0.0,0.0}};
+        {-0.05397813815945236, -0.007204895651975997},
+        {0.0, 0.0},
+        {0.028320725950970675, 0.12288590231771596},
+        {0.18102760457154746, -0.11861557785534943},
+        {0.08036732348352965, 0.09253849682463335},
+        {0.0, 0.0},
+        {-0.1080313362172693, 0.19941909862113083},
+        {0.0, 0.0},
+        {-0.040078550701073225, 0.1460810918373595},
+        {-0.08128237435280211, 0.15004218585819912},
+        {0.34931916276157515, -0.03202855596616666},
+        {0.0, 0.0},
+        {0.22034114392155824, -0.14437517511996173},
+        {0.0, 0.0},
+        {-0.6372222027340653, -0.4661202163699524},
+        {0.0, 0.0}};
 
     const auto init_state = svdat.cdata;
     SECTION("Apply directly") {
@@ -976,9 +977,11 @@ TEMPLATE_TEST_CASE("StateVector::applyDoubleExcitation", "[StateVector_Param]",
 
         for (size_t index = 0; index < num_qubits; index++) {
             auto int_idx = svdat_direct.getInternalIndices(
-                {index, (index + 1) % num_qubits, (index + 2) % num_qubits, (index + 3) % num_qubits});
+                {index, (index + 1) % num_qubits, (index + 2) % num_qubits,
+                 (index + 3) % num_qubits});
             auto ext_idx = svdat_direct.getExternalIndices(
-                {index, (index + 1) % num_qubits, (index + 2) % num_qubits, (index + 3) % num_qubits});
+                {index, (index + 1) % num_qubits, (index + 2) % num_qubits,
+                 (index + 3) % num_qubits});
 
             svdat_direct.sv.applyDoubleExcitation(int_idx, ext_idx, false,
                                                   {de_angles[index]});
@@ -992,7 +995,9 @@ TEMPLATE_TEST_CASE("StateVector::applyDoubleExcitation", "[StateVector_Param]",
 
         for (size_t index = 0; index < num_qubits; index++) {
             svdat_dispatch.sv.applyOperation("DoubleExcitation",
-                                             {index, (index + 1) % num_qubits, (index + 2) % num_qubits, (index + 3) % num_qubits},
+                                             {index, (index + 1) % num_qubits,
+                                              (index + 2) % num_qubits,
+                                              (index + 3) % num_qubits},
                                              false, {de_angles[index]});
         }
         CHECK(isApproxEqual(svdat_dispatch.cdata, expected_results, 1e-5));

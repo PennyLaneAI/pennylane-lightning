@@ -91,12 +91,13 @@ void applyGeneratorCRY(SVType &sv, const std::vector<size_t> &wires,
         sv.generateBitPatterns(externalWires);
     for (const size_t &externalIndex : externalIndices) {
         std::complex<T> *shiftedState = sv.getData() + externalIndex;
-        std::complex<T> v0 = shiftedState[internalIndices[2]];
-        shiftedState[internalIndices[0]] = ZERO<T>();
-        shiftedState[internalIndices[1]] = ZERO<T>();
-        shiftedState[internalIndices[2]] =
-            -IMAG<T>() * shiftedState[internalIndices[3]];
-        shiftedState[internalIndices[3]] = IMAG<T>() * v0;
+        const std::complex<T> v0 = shiftedState[internalIndices[2]];
+        shiftedState[internalIndices[0]] = 0;
+        shiftedState[internalIndices[1]] = 0;
+        shiftedState[internalIndices[2]] = {
+            shiftedState[internalIndices[3]].imag(),
+            -shiftedState[internalIndices[3]].real()};
+        shiftedState[internalIndices[3]] = {-v0.imag(), v0.real()};
     }
 }
 
@@ -110,7 +111,7 @@ void applyGeneratorCRZ(SVType &sv, const std::vector<size_t> &wires,
     for (const size_t &externalIndex : externalIndices) {
         std::complex<T> *shiftedState = sv.getData() + externalIndex;
         shiftedState[internalIndices[0]] = shiftedState[internalIndices[1]] = 0;
-        shiftedState[internalIndices[3]] *= -1;
+        shiftedState[internalIndices[3]] = -shiftedState[internalIndices[3]];
     }
 }
 
@@ -173,8 +174,8 @@ void applyGeneratorIsingZZ(SVType &sv, const std::vector<size_t> &wires,
         sv.generateBitPatterns(externalWires);
     for (const size_t &externalIndex : externalIndices) {
         std::complex<T> *shiftedState = sv.getData() + externalIndex;
-        shiftedState[internalIndices[1]] *= -1;
-        shiftedState[internalIndices[2]] *= -1;
+        shiftedState[internalIndices[1]] = -shiftedState[internalIndices[1]];
+        shiftedState[internalIndices[2]] = -shiftedState[internalIndices[2]];
     }
 }
 
@@ -191,8 +192,12 @@ void applyGeneratorSingleExcitation(SVType &sv,
         shiftedState[internalIndices[0]] = shiftedState[internalIndices[3]] = 0;
         std::swap(shiftedState[internalIndices[1]],
                   shiftedState[internalIndices[2]]);
-        shiftedState[internalIndices[1]] *= -IMAG<T>();
-        shiftedState[internalIndices[2]] *= IMAG<T>();
+        shiftedState[internalIndices[1]] = {
+            shiftedState[internalIndices[1]].imag(),
+            -shiftedState[internalIndices[1]].real()};
+        shiftedState[internalIndices[2]] = {
+            -shiftedState[internalIndices[2]].imag(),
+            shiftedState[internalIndices[2]].real()};
     }
 }
 
@@ -206,16 +211,16 @@ void applyGeneratorDoubleExcitation(SVType &sv,
         sv.generateBitPatterns(externalWires);
     for (const size_t &externalIndex : externalIndices) {
         std::complex<T> *shiftedState = sv.getData() + externalIndex;
-        const std::complex<T> v3 = shiftedState[internalIndices[3]];
-        const std::complex<T> v12 = shiftedState[internalIndices[12]];
-
-        // Faster to be explicit and avoid branching in a loop.
         std::swap(shiftedState[internalIndices[3]],
                   shiftedState[internalIndices[12]]);
+
+        // Faster to be explicit and avoid branching in a loop.
         shiftedState[internalIndices[0]] = 0;
         shiftedState[internalIndices[1]] = 0;
         shiftedState[internalIndices[2]] = 0;
-        shiftedState[internalIndices[3]] *= -IMAG<T>();
+        shiftedState[internalIndices[3]] = {
+            shiftedState[internalIndices[3]].imag(),
+            -shiftedState[internalIndices[3]].real()};
         shiftedState[internalIndices[4]] = 0;
         shiftedState[internalIndices[5]] = 0;
         shiftedState[internalIndices[6]] = 0;
@@ -224,7 +229,9 @@ void applyGeneratorDoubleExcitation(SVType &sv,
         shiftedState[internalIndices[9]] = 0;
         shiftedState[internalIndices[10]] = 0;
         shiftedState[internalIndices[11]] = 0;
-        shiftedState[internalIndices[12]] *= IMAG<T>();
+        shiftedState[internalIndices[12]] = {
+            -shiftedState[internalIndices[12]].imag(),
+            shiftedState[internalIndices[12]].real()};
         shiftedState[internalIndices[13]] = 0;
         shiftedState[internalIndices[14]] = 0;
         shiftedState[internalIndices[15]] = 0;
