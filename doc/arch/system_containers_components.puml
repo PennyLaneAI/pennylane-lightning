@@ -25,16 +25,20 @@ System_Boundary(pennylane, "PennyLane") {
         Component(utils, "Utils", "C++", "Helper utilities for C++ operations")
         Component(gates, "Gates", "C++", "const/constexpr numerical representations of gates")
         Component(bindings, "Bindings", "C++, Pybind11", "Binds C++ classes, methods and functions to Python layer.")
+        Component(algorithms, "Algorithms", "C++, Pybind11", "Defines the algorithms and methods using the statevector implementation.")
     }
 }
 
-Rel(lightning_qubit, bindings, "Uses", "Bound methods wrapped to interface with PennyLane library")
-Rel_Neighbor(bindings, statevector, "Uses", "Wraps statevector to manipulate data using C++")
+Rel_Neighbor(lightning_qubit, bindings, "Uses", "Bound methods wrapped to interface with PennyLane library")
+Rel(bindings, statevector, "Uses", "Wraps statevector to manipulate data using C++")
+Rel(bindings, algorithms, "Uses", "Ensures offloading of statevector for given algorithms")
 Rel(statevector, utils, "Uses")
+Rel(statevector, gates, "Uses", "Used for creation of specific gate application kernels")
+Rel(algorithms, utils, "Uses")
+Rel_Neighbor(algorithms, statevector, "Uses", "Algorithms use the available gate methods provided by the statevector")
 
 System_Ext(tests, "Tests", "C++, CMake, Catch2")
-Rel(tests, statevector, "Uses")
-Rel(tests, gates, "Uses")
+Rel(tests, lightning, "Uses")
 
 Rel_Neighbor(other, default_qubit, "Uses", "Quantum circuit \n backends")
 Lay_L(other, default_qubit)
