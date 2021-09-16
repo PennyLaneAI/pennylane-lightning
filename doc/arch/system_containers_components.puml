@@ -25,7 +25,7 @@ System_Boundary(pennylane, "PennyLane") {
         Component(utils, "Utils", "C++", "Helper utilities for C++ operations")
         Component(gates, "Gates", "C++", "const/constexpr numerical representations of gates")
         Component(bindings, "Bindings", "C++, Pybind11", "Binds C++ classes, methods and functions to Python layer.")
-        Component(algorithms, "Algorithms", "C++, Pybind11", "Defines the algorithms and methods using the statevector imeplementation.")
+        Component(algorithms, "Algorithms", "C++, Pybind11", "Defines the algorithms and methods using the statevector implementation.")
     }
 }
 
