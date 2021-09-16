@@ -319,7 +319,7 @@ inline std::ostream &operator<<(std::ostream &os, const std::set<T> &s) {
 }
 
 /**
- * @brief Define linearly space data [start, end]
+ * @brief Define linearly spaced data [start, end]
  *
  * @tparam T Data type.
  * @param start Start position.
