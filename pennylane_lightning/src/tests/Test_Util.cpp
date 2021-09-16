@@ -79,7 +79,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
                 CHECK_THROWS_AS(Util::dimSize(data), std::invalid_argument);
                 CHECK_THROWS_WITH(
                     Util::dimSize(data),
-                    Contains("The dataset must be at least 2x2."));
+                    Contains("The dataset must be at least 2x2"));
             } else if (rem != 0.0 && i >= 4 && (i & (i - 1))) {
                 CHECK_THROWS_AS(Util::dimSize(data), std::invalid_argument);
                 CHECK_THROWS_WITH(Util::dimSize(data),
