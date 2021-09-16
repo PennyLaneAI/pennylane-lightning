@@ -777,7 +777,7 @@ void lightning_class_bindings(py::module &m) {
         .def(py::init<>())
         .def("create_ops_list", &AdjointJacobian<PrecisionT>::createOpsData)
         .def("create_ops_list",
-                [](AdjointJacobian<PrecisionT> &adj,
+             [](AdjointJacobian<PrecisionT> &adj,
                 const std::vector<std::string> &ops_name,
                 const std::vector<np_arr_r> &ops_params,
                 const std::vector<std::vector<size_t>> &ops_wires,

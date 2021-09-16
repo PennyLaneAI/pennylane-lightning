@@ -201,16 +201,16 @@ std::complex<T> innerProd(const std::complex<T> *data_1,
     std::complex<T> result(0, 0);
 
 #ifdef USE_CBLAS
-        if constexpr (std::is_same_v<T, float>)
-            result = cblas_cdotu_sub(data_size, data_1, 1, data_2, 1, &result);
-        else if constexpr (std::is_same_v<T, double>)
-            result = cblas_zdotu_sub(data_size, data_1, 1, data_2, 1, &result);
+    if constexpr (std::is_same_v<T, float>)
+        result = cblas_cdotu_sub(data_size, data_1, 1, data_2, 1, &result);
+    else if constexpr (std::is_same_v<T, double>)
+        result = cblas_zdotu_sub(data_size, data_1, 1, data_2, 1, &result);
 #else
-        result = std::inner_product(
-            data_1, data_1 + data_size, data_2, std::complex<T>(), ConstSum<T>,
-            static_cast<std::complex<T> (*)(std::complex<T>, std::complex<T>)>(
-                &ConstMult<T>));
-#endif 
+    result = std::inner_product(
+        data_1, data_1 + data_size, data_2, std::complex<T>(), ConstSum<T>,
+        static_cast<std::complex<T> (*)(std::complex<T>, std::complex<T>)>(
+            &ConstMult<T>));
+#endif
     return result;
 }
 
@@ -230,14 +230,14 @@ std::complex<T> innerProdC(const std::complex<T> *data_1,
     std::complex<T> result(0, 0);
 
 #ifdef USE_CBLAS
-        if constexpr (std::is_same_v<T, float>)
-            result = cblas_cdotc_sub(data_size, data_1, 1, data_2, 1, &result);
-        else if constexpr (std::is_same_v<T, double>)
-            result = cblas_zdotc_sub(data_size, data_1, 1, data_2, 1, &result);
+    if constexpr (std::is_same_v<T, float>)
+        result = cblas_cdotc_sub(data_size, data_1, 1, data_2, 1, &result);
+    else if constexpr (std::is_same_v<T, double>)
+        result = cblas_zdotc_sub(data_size, data_1, 1, data_2, 1, &result);
 #else
-        result = std::inner_product(data_1, data_1 + data_size, data_2,
-                                    std::complex<T>(), ConstSum<T>,
-                                    ConstMultConj<T>);
+    result =
+        std::inner_product(data_1, data_1 + data_size, data_2,
+                           std::complex<T>(), ConstSum<T>, ConstMultConj<T>);
 #endif
     return result;
 }

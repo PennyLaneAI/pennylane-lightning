@@ -462,7 +462,7 @@ template <class fp_t = double> class StateVector {
      * @param inverse Take adjoint of given operation.
      */
     void applyPauliX(const vector<size_t> &indices,
-                     const vector<size_t> &externalIndices, 
+                     const vector<size_t> &externalIndices,
                      [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
 

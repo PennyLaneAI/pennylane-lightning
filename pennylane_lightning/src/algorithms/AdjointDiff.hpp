@@ -115,9 +115,9 @@ void applyGeneratorCRZ(SVType &sv, const std::vector<size_t> &wires,
 }
 
 template <class T = double, class SVType = Pennylane::StateVector<T>>
-void applyGeneratorControlledPhaseShift(SVType &sv,
-                                        const std::vector<size_t> &wires,
-                                        [[maybe_unused]] const bool adj = false) {
+void applyGeneratorControlledPhaseShift(
+    SVType &sv, const std::vector<size_t> &wires,
+    [[maybe_unused]] const bool adj = false) {
     const vector<size_t> internalIndices = sv.generateBitPatterns(wires);
     const vector<size_t> externalWires = sv.getIndicesAfterExclusion(wires);
     const vector<size_t> externalIndices =
@@ -601,9 +601,10 @@ template <class T = double> class AdjointJacobian {
                                 mu, operations.getOpsName()[op_idx],
                                 operations.getOpsWires()[op_idx],
                                 !operations.getOpsInverses()[op_idx]) *
-                            (2 * (0b1 ^ operations.getOpsInverses()[op_idx]) - 1);
+                            (2 * (0b1 ^ operations.getOpsInverses()[op_idx]) -
+                             1);
 
-                        #pragma omp parallel for
+#pragma omp parallel for
                         for (size_t obs_idx = 0; obs_idx < num_observables;
                              obs_idx++) {
                             updateJacobian(H_lambda[obs_idx], mu, jac,
@@ -616,7 +617,7 @@ template <class T = double> class AdjointJacobian {
                     current_param_idx--;
                 }
 
-                #pragma omp parallel for
+#pragma omp parallel for
                 for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
                     applyOperationAdj(H_lambda[obs_idx], operations, op_idx);
                 }
