@@ -32,9 +32,7 @@
 
 #if __has_include(<cblas.h>) && defined _ENABLE_BLAS
 #include <cblas.h>
-#define USE_CBLAS 1
-#else
-#define USE_CBLAS 0
+#define USE_CBLAS ;
 #endif
 
 namespace Pennylane {
@@ -44,8 +42,8 @@ namespace Util {
 /**
  * @brief Compile-time scalar real times complex number.
  *
- * @tparam T Precision of complex value and result.
- * @tparam U Precision of real value.
+ * @tparam U Precision of real value `a`.
+ * @tparam T Precision of complex value `b` and result.
  * @param a Real scalar value.
  * @param b Complex scalar value.
  * @return constexpr std::complex<T>
@@ -58,8 +56,8 @@ inline static constexpr std::complex<T> ConstMult(U a, std::complex<T> b) {
 /**
  * @brief Compile-time scalar complex times complex.
  *
- * @tparam T Precision of complex value `a` and result.
- * @tparam U Precision of complex value `b`.
+ * @tparam U Precision of complex value `a`.
+ * @tparam T Precision of complex value `b` and result.
  * @param a Complex scalar value.
  * @param b Complex scalar value.
  * @return constexpr std::complex<T>
@@ -179,7 +177,7 @@ template <class T> inline size_t dimSize(const std::vector<T> &data) {
     const size_t s_sqrt = std::sqrt(s);
 
     if (s < 4)
-        throw std::invalid_argument("The dataset must be at least 2x2.");
+        throw std::invalid_argument("The dataset must be at least 2x2");
     if (((s == 0) || (s & (s - 1))))
         throw std::invalid_argument("The dataset must be a power of 2");
     if (s_sqrt * s_sqrt != s)
@@ -202,17 +200,17 @@ std::complex<T> innerProd(const std::complex<T> *data_1,
                           const size_t data_size) {
     std::complex<T> result(0, 0);
 
-    if constexpr (USE_CBLAS) {
+#ifdef USE_CBLAS
         if constexpr (std::is_same_v<T, float>)
             result = cblas_cdotu_sub(data_size, data_1, 1, data_2, 1, &result);
         else if constexpr (std::is_same_v<T, double>)
             result = cblas_zdotu_sub(data_size, data_1, 1, data_2, 1, &result);
-    } else {
+#else
         result = std::inner_product(
             data_1, data_1 + data_size, data_2, std::complex<T>(), ConstSum<T>,
             static_cast<std::complex<T> (*)(std::complex<T>, std::complex<T>)>(
                 &ConstMult<T>));
-    }
+#endif 
     return result;
 }
 
@@ -231,16 +229,16 @@ std::complex<T> innerProdC(const std::complex<T> *data_1,
                            const size_t data_size) {
     std::complex<T> result(0, 0);
 
-    if constexpr (USE_CBLAS) {
+#ifdef USE_CBLAS
         if constexpr (std::is_same_v<T, float>)
             result = cblas_cdotc_sub(data_size, data_1, 1, data_2, 1, &result);
         else if constexpr (std::is_same_v<T, double>)
             result = cblas_zdotc_sub(data_size, data_1, 1, data_2, 1, &result);
-    } else {
+#else
         result = std::inner_product(data_1, data_1 + data_size, data_2,
                                     std::complex<T>(), ConstSum<T>,
                                     ConstMultConj<T>);
-    }
+#endif
     return result;
 }
 
