@@ -618,14 +618,12 @@ template <class T = double> class AdjointJacobian {
                         "differentiation method");
             if ((operations.getOpsName()[op_idx] != "QubitStateVector") &&
                 (operations.getOpsName()[op_idx] != "BasisState")) {
-
                 mu.updateData(lambda.getDataVector());
                 applyOperationAdj(lambda, operations, op_idx);
 
                 if (operations.hasParams(op_idx)) {
                     if (std::find(trainableParams.begin(), tp_it,
                                   current_param_idx) != tp_it) {
-
                         const T scalingFactor =
                             applyGenerator(
                                 mu, operations.getOpsName()[op_idx],

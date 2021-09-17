@@ -486,7 +486,6 @@ template <class fp_t = double> class StateVector {
     void applyPauliX(const vector<size_t> &indices,
                      const vector<size_t> &externalIndices, bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
-
             CFP_t *shiftedState = arr_ + externalIndex;
             std::swap(shiftedState[indices[0]], shiftedState[indices[1]]);
         }
@@ -608,9 +607,7 @@ template <class fp_t = double> class StateVector {
     void applyRX(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
                  Param_t angle) {
-
         const CFP_t c(std::cos(angle / 2), 0);
-
         const CFP_t js = (inverse == true) ? CFP_t(0, -std::sin(-angle / 2))
                                            : CFP_t(0, std::sin(-angle / 2));
 
