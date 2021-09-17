@@ -9,7 +9,7 @@
   the version provided by `lightning.qubit` integrates with the C++ backend and is more performant.
   [(136)](https://github.com/PennyLaneAI/pennylane-lightning/pull/136)
 
-  <img src="https://raw.githubusercontent.com/PennyLaneAI/pennylane-lightning/3a76169733576eb2ebf03688e759400c8773db86/doc/_static/lightning_adjoint.png" width=50%/>
+  <img src="https://raw.githubusercontent.com/PennyLaneAI/pennylane-lightning/3a76169733576eb2ebf03688e759400c8773db86/doc/_static/lightning_adjoint.png" width=70%/>
 
 * PennyLane-Lightning now supports all of the operations and observables of `default.qubit`.
   [#124](https://github.com/PennyLaneAI/pennylane-lightning/pull/124)
