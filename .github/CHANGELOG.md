@@ -1,6 +1,15 @@
-# Release 0.18.0
+# Release 0.18.0 (current release)
 
 ### New features since last release
+
+* PennyLane-Lightning now provides a high-performance
+  [adjoint Jacobian](http://arxiv.org/abs/2009.02823) method for differentiating quantum circuits.
+  This method operates after a forward pass by iteratively applying inverse gates to scan backwards
+  through the circuit. The adjoint method is already available in PennyLane's `default.qubit`, but
+  the version provided by `lightning.qubit` integrates with the C++ backend and is more performant.
+  [(136)](https://github.com/PennyLaneAI/pennylane-lightning/pull/136)
+
+  <img src="https://raw.githubusercontent.com/PennyLaneAI/pennylane-lightning/3a76169733576eb2ebf03688e759400c8773db86/doc/_static/lightning_adjoint.png" width=50%/>
 
 * PennyLane-Lightning now supports all of the operations and observables of `default.qubit`.
   [#124](https://github.com/PennyLaneAI/pennylane-lightning/pull/124)
@@ -13,9 +22,6 @@
 
 * The repository now has a well-defined component hierarchy, allowing each indepedent unit to be 
   compiled and linked separately.
-  [(136)](https://github.com/PennyLaneAI/pennylane-lightning/pull/136)
-
-* PennyLane-Lightning now has support for the adjoint Jacobian method of http://arxiv.org/abs/2009.02823.
   [(136)](https://github.com/PennyLaneAI/pennylane-lightning/pull/136)
 
 * PennyLane-Lightning can now be installed without compiling its C++ binaries and will fall back
