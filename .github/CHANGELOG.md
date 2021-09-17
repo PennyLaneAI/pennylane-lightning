@@ -4,12 +4,53 @@
 
 * PennyLane-Lightning now provides a high-performance
   [adjoint Jacobian](http://arxiv.org/abs/2009.02823) method for differentiating quantum circuits.
-  This method operates after a forward pass by iteratively applying inverse gates to scan backwards
-  through the circuit. The adjoint method is already available in PennyLane's `default.qubit`, but
-  the version provided by `lightning.qubit` integrates with the C++ backend and is more performant.
   [(136)](https://github.com/PennyLaneAI/pennylane-lightning/pull/136)
+  
+  The adjoint method operates after a forward pass by iteratively applying inverse gates to scan
+  backwards through the circuit. The method is already available in PennyLane's
+  `default.qubit` device, but the version provided by `lightning.qubit` integrates with the C++
+  backend and is more performant, as shown in the plot below:
 
-  <img src="https://raw.githubusercontent.com/PennyLaneAI/pennylane-lightning/3a76169733576eb2ebf03688e759400c8773db86/doc/_static/lightning_adjoint.png" width=70%/>
+  <img src="https://raw.githubusercontent.com/PennyLaneAI/pennylane-lightning/master/doc/_static/lightning_adjoint.png" width=70%/>
+  
+  The plot compares the average runtime of `lightning.qubit` and `default.qubit` for calculating the
+  Jacobian of a circuit using the adjoint method for a range of qubit numbers. The circuit
+  consists of ten `BasicEntanglerLayers` with a `PauliZ` expectation value calculated on each wire,
+  repeated over ten runs. We see that `lightning.qubit` provides a speedup of around two to eight
+  times, depending on the number of qubits.
+  
+  The adjoint method can be accessed using the standard interface. Consider the following circuit:
+  
+  ```python
+  import pennylane as qml
+
+  wires = 3
+  layers = 2
+  dev = qml.device("lightning.qubit", wires=wires)
+
+  @qml.qnode(dev, diff_method="adjoint")
+  def circuit(weights):
+      qml.templates.StronglyEntanglingLayers(weights, wires=range(wires))
+      return qml.expval(qml.PauliZ(0))
+
+  weights = qml.init.strong_ent_layers_normal(layers, wires, seed=1967)
+  ```
+  
+  The circuit can be executed and its gradient calculated using:
+  
+    ```pycon
+  >>> print(f"Circuit evaluated: {circuit(weights)}")
+  Circuit evaluated: 0.9801286266677633
+  >>> print(f"Circuit gradient:\n{qml.grad(circuit)(weights)}")
+  Circuit gradient:
+  [[[-1.11022302e-16 -1.63051504e-01 -4.14810501e-04]
+    [ 1.11022302e-16 -1.50136528e-04 -1.77922957e-04]
+    [ 0.00000000e+00 -3.92874550e-02  8.14523075e-05]]
+
+   [[-1.14472273e-04  3.85963953e-02  0.00000000e+00]
+    [-5.76791765e-05 -9.78478343e-02  0.00000000e+00]
+    [-5.55111512e-17  0.00000000e+00 -1.11022302e-16]]]  
+  ```
 
 * PennyLane-Lightning now supports all of the operations and observables of `default.qubit`.
   [#124](https://github.com/PennyLaneAI/pennylane-lightning/pull/124)
