@@ -4,7 +4,7 @@
 
 * PennyLane-Lightning now provides a high-performance
   [adjoint Jacobian](http://arxiv.org/abs/2009.02823) method for differentiating quantum circuits.
-  [(136)](https://github.com/PennyLaneAI/pennylane-lightning/pull/136)
+  [(#136)](https://github.com/PennyLaneAI/pennylane-lightning/pull/136)
   
   The adjoint method operates after a forward pass by iteratively applying inverse gates to scan
   backwards through the circuit. The method is already available in PennyLane's
@@ -53,30 +53,30 @@
   ```
 
 * PennyLane-Lightning now supports all of the operations and observables of `default.qubit`.
-  [#124](https://github.com/PennyLaneAI/pennylane-lightning/pull/124)
+  [(#124)](https://github.com/PennyLaneAI/pennylane-lightning/pull/124)
 
 ### Improvements
 
 * A new state-vector class `StateVectorManaged` was added, enabling memory use to be bound to 
   statevector lifetime.
-  [(136)](https://github.com/PennyLaneAI/pennylane-lightning/pull/136)
+  [(#136)](https://github.com/PennyLaneAI/pennylane-lightning/pull/136)
 
 * The repository now has a well-defined component hierarchy, allowing each indepedent unit to be 
   compiled and linked separately.
-  [(136)](https://github.com/PennyLaneAI/pennylane-lightning/pull/136)
+  [(#136)](https://github.com/PennyLaneAI/pennylane-lightning/pull/136)
 
 * PennyLane-Lightning can now be installed without compiling its C++ binaries and will fall back
   to using the `default.qubit` implementation. Skipping compilation is achieved by setting the
   `SKIP_COMPILATION` environment variable, e.g., Linux/MacOS: `export SKIP_COMPILATION=True`,
   Windows: `set SKIP_COMPILATION=True`. This feature is intended for building a pure-Python wheel of
   PennyLane-Lightning as a backup for platforms without a dedicated wheel.
-  [(129)](https://github.com/PennyLaneAI/pennylane-lightning/pull/129)
+  [(#129)](https://github.com/PennyLaneAI/pennylane-lightning/pull/129)
 
 * The C++-backed Python bound methods can now be directly called with wires and supplied parameters.
-  [(125)](https://github.com/PennyLaneAI/pennylane-lightning/pull/125)
+  [(#125)](https://github.com/PennyLaneAI/pennylane-lightning/pull/125)
 
 * Lightning supports arbitrary unitary and non-unitary gate-calls from Python to C++ layer.
-  [(121)](https://github.com/PennyLaneAI/pennylane-lightning/pull/121)
+  [(#121)](https://github.com/PennyLaneAI/pennylane-lightning/pull/121)
 
 ### Documentation
 
