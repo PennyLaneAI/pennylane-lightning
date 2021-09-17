@@ -11,7 +11,7 @@ env:
 
   CIBW_BEFORE_ALL_MACOS: |
     brew cask uninstall --force oclint
-    brew install gcc libomp
+    brew install clang libomp
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
@@ -29,6 +29,11 @@ env:
   # Use Centos 7 wheel-builder for ARM
   CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
   CIBW_MANYLINUX_PPC64LE_IMAGE: manylinux2014
+
+  # Ensure modern compiler available for MacOS wheelbuilding
+  CIBW_ENVIRONMENT_MACOS: |
+    CC=/usr/local/opt/llvm/bin/clang
+    CXX=/usr/local/opt/llvm/bin/clang++
 
 jobs:
   build-compiled-wheels:
