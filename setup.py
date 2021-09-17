@@ -95,6 +95,9 @@ class BuildExt(build_ext):
             "-lomp",
             "-mmacosx-version-min=10.9",
         ]
+        if platform.machine() in ["aarch64", "arm64"]:
+            darwin_opts.remove("-mmacosx-version-min=10.9")
+            darwin_opts.append("-mmacosx-version-min=10.14")
         c_opts["unix"] += darwin_opts
         l_opts["unix"] += darwin_opts
 
