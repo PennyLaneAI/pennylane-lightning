@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+  pull_request:
 
 env:
   CIBW_BUILD: 'cp37-* cp38-* cp39-*'
@@ -21,6 +22,8 @@ env:
 
   CIBW_TEST_COMMAND: |
     pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+
+  MACOSX_DEPLOYMENT_TARGET: 10.14
 
 jobs:
   mac-wheels-arm64:
@@ -53,8 +56,6 @@ jobs:
 
         env:
           CIBW_ARCHS_MACOS: ${{ matrix.arch }}
-          CC: /usr/local/opt/llvm/bin/clang
-          CXX: /usr/local/opt/llvm/bin/clang++
 
       - uses: actions/upload-artifact@v2
         if: github.ref == 'refs/heads/master'
