@@ -93,7 +93,7 @@ class BuildExt(build_ext):
             "-Xpreprocessor",
             "-fopenmp",
             "-lomp",
-            "-mmacosx-version-min=10.9",
+            "-mmacosx-version-min=10.14",
         ]
         c_opts["unix"] += darwin_opts
         l_opts["unix"] += darwin_opts

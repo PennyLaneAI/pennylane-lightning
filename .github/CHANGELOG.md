@@ -86,6 +86,11 @@
 * C++ API built as part of docs generation.
   [(#131)](https://github.com/PennyLaneAI/pennylane-lightning/pull/131)
 
+### Breaking changes
+
+* Wheels for MacOS <= 10.13 will no longer be provided due to XCode SDK C++17 support requirements.
+  [(#149)](https://github.com/PennyLaneAI/pennylane-lightning/pull/149)
+
 ### Bug fixes
 
 * An indexing error in the CRY gate is fixed. [(#136)](https://github.com/PennyLaneAI/pennylane-lightning/pull/136)
