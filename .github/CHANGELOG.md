@@ -1,4 +1,20 @@
-# Release 0.18.0 (current release)
+# Release 0.19.0-dev (development release)
+
+### New features since last release
+
+### Improvements
+
+### Documentation
+
+### Breaking changes
+
+### Bug fixes
+
+### Contributors
+
+---
+
+# Release 0.18.0
 
 ### New features since last release
 
