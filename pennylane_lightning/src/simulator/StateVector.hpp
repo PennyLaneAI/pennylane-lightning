@@ -79,14 +79,13 @@ template <class fp_t = double> class StateVector {
 
     using FMap = std::unordered_map<string, Func>;
 
-    const FMap gates_;
-    const std::unordered_map<string, size_t> gate_wires_;
-
     //***********************************************************************//
 
     CFP_t *arr_;
     size_t length_;
     size_t num_qubits_;
+    const std::unordered_map<string, size_t> gate_wires_;
+    const FMap gates_;
 
   public:
     using scalar_type_t = fp_t;
