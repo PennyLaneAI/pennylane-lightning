@@ -11,7 +11,7 @@ env:
 
   CIBW_BEFORE_ALL_MACOS: |
     brew cask uninstall --force oclint
-    brew install gcc libomp
+    brew install clang libomp
 
   # Python build settings
   CIBW_BEFORE_BUILD: |

@@ -30,10 +30,12 @@
 
 #include <iostream>
 
+/// @cond DEV
 #if __has_include(<cblas.h>) && defined _ENABLE_BLAS
 #include <cblas.h>
 #define USE_CBLAS ;
 #endif
+/// @endcond
 
 namespace Pennylane {
 
@@ -75,6 +77,15 @@ inline static constexpr std::complex<T> ConstMultConj(std::complex<U> a,
             -a.imag() * b.real() + a.real() * b.imag()};
 }
 
+/**
+ * @brief Compile-time scalar complex summation.
+ *
+ * @tparam T Precision of complex value `a` and result.
+ * @tparam U Precision of complex value `b`.
+ * @param a Complex scalar value.
+ * @param b Complex scalar value.
+ * @return constexpr std::complex<T>
+ */
 template <class T, class U = T>
 inline static constexpr std::complex<T> ConstSum(std::complex<U> a,
                                                  std::complex<T> b) {
@@ -144,9 +155,9 @@ template <class T> inline static constexpr T INVSQRT2() {
 inline size_t exp2(const size_t &n) { return static_cast<size_t>(1) << n; }
 
 /**
- * @brief
+ * @brief Log2 calculation.
  *
- * @param value
+ * @param value Value to calculate for.
  * @return size_t
  */
 inline size_t log2(size_t value) {
@@ -192,6 +203,7 @@ template <class T> inline size_t dimSize(const std::vector<T> &data) {
  * @tparam T Floating point precision type.
  * @param data_1 Complex data array 1.
  * @param data_2 Complex data array 2.
+ * @param data_size Size of data arrays.
  * @return std::complex<T> Result of inner product operation.
  */
 template <class T>
@@ -221,6 +233,7 @@ std::complex<T> innerProd(const std::complex<T> *data_1,
  * @tparam T Floating point precision type.
  * @param data_1 Complex data array 1; conjugated before application.
  * @param data_2 Complex data array 2.
+ * @param data_size Size of data arrays.
  * @return std::complex<T> Result of inner product operation.
  */
 template <class T>
@@ -242,18 +255,39 @@ std::complex<T> innerProdC(const std::complex<T> *data_1,
     return result;
 }
 
+/**
+ * @brief Calculates the inner-product using the best available method.
+ *
+ * @see innerProd(const std::complex<T> *data_1, const std::complex<T> *data_2,
+ * const size_t data_size)
+ */
 template <class T>
 inline std::complex<T> innerProd(const std::vector<std::complex<T>> &data_1,
                                  const std::vector<std::complex<T>> &data_2) {
     return innerProd(data_1.data(), data_2.data(), data_1.size());
 }
 
+/**
+ * @brief Calculates the inner-product using the best available method with the
+ * first dataset conjugated.
+ *
+ * @see innerProdC(const std::complex<T> *data_1, const std::complex<T> *data_2,
+ * const size_t data_size)
+ */
 template <class T>
 inline std::complex<T> innerProdC(const std::vector<std::complex<T>> &data_1,
                                   const std::vector<std::complex<T>> &data_2) {
     return innerProdC(data_1.data(), data_2.data(), data_1.size());
 }
 
+/**
+ * @brief Streaming operator for vector data.
+ *
+ * @tparam T Vector data type.
+ * @param os Output stream.
+ * @param vec Vector data.
+ * @return std::ostream&
+ */
 template <class T>
 inline std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
     os << '[';
@@ -264,6 +298,14 @@ inline std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
     return os;
 }
 
+/**
+ * @brief Streaming operator for set data.
+ *
+ * @tparam T Vector data type.
+ * @param os Output stream.
+ * @param s Set data.
+ * @return std::ostream&
+ */
 template <class T>
 inline std::ostream &operator<<(std::ostream &os, const std::set<T> &s) {
     os << '{';
@@ -274,6 +316,15 @@ inline std::ostream &operator<<(std::ostream &os, const std::set<T> &s) {
     return os;
 }
 
+/**
+ * @brief Define linearly spaced data [start, end]
+ *
+ * @tparam T Data type.
+ * @param start Start position.
+ * @param end End position.
+ * @param num_points Number of data-points in range.
+ * @return std::vector<T>
+ */
 template <class T> std::vector<T> linspace(T start, T end, size_t num_points) {
     std::vector<T> data(num_points);
     T step = (end - start) / (num_points - 1);
@@ -289,6 +340,11 @@ template <class T> std::vector<T> linspace(T start, T end, size_t num_points) {
  */
 class NotImplementedException : public std::logic_error {
   public:
+    /**
+     * @brief Construct a NotImplementedException exception object.
+     *
+     * @param fname Function name to indicate not imeplemented.
+     */
     explicit NotImplementedException(const std::string &fname)
         : std::logic_error(std::string("Function is not implemented. ") +
                            fname){};
