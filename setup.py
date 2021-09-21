@@ -83,6 +83,10 @@ class BuildExt(build_ext):
         "unix": ["-O3", "-W", "-fPIC", "-shared", "-fopenmp"],
     }
 
+    if os.environ.get("ENABLE_WARNINGS", False):
+        c_opts["unix"].extend(["-Wall", "-Wextra", "-Werror"])
+        l_opts["unix"].extend(["-Wall", "-Wextra", "-Werror"])
+
     if platform.system() == "Darwin":
         for opts in (c_opts, l_opts):
             opts["unix"].remove("-fopenmp")
