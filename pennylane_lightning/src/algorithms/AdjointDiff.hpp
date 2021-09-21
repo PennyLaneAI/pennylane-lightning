@@ -602,8 +602,9 @@ template <class T = double> class AdjointJacobian {
         // Create observable-applied state-vectors
         std::vector<StateVectorManaged<T>> H_lambda(num_observables,
                                                     {lambda.getNumQubits()});
-
+#if defined _OPENMP
 #pragma omp parallel for
+#endif
         for (size_t h_i = 0; h_i < num_observables; h_i++) {
             H_lambda[h_i].updateData(lambda.getDataVector());
             applyObservable(H_lambda[h_i], observables[h_i]);
@@ -631,8 +632,9 @@ template <class T = double> class AdjointJacobian {
                                 !operations.getOpsInverses()[op_idx]) *
                             (2 * (0b1 ^ operations.getOpsInverses()[op_idx]) -
                              1);
-
+#if defined _OPENMP
 #pragma omp parallel for
+#endif
                         for (size_t obs_idx = 0; obs_idx < num_observables;
                              obs_idx++) {
                             updateJacobian(H_lambda[obs_idx], mu, jac,
@@ -644,8 +646,9 @@ template <class T = double> class AdjointJacobian {
                     }
                     current_param_idx--;
                 }
-
+#if defined _OPENMP
 #pragma omp parallel for
+#endif
                 for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
                     applyOperationAdj(H_lambda[obs_idx], operations, op_idx);
                 }
