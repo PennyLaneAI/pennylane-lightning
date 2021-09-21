@@ -33,7 +33,9 @@
 /// @cond DEV
 #if __has_include(<cblas.h>) && defined _ENABLE_BLAS
 #include <cblas.h>
-#define USE_CBLAS ;
+#define USE_CBLAS 1
+#else
+#define USE_CBLAS 0
 #endif
 /// @endcond
 
@@ -212,17 +214,17 @@ std::complex<T> innerProd(const std::complex<T> *data_1,
                           const size_t data_size) {
     std::complex<T> result(0, 0);
 
-#ifdef USE_CBLAS
-    if constexpr (std::is_same_v<T, float>)
-        cblas_cdotu_sub(data_size, data_1, 1, data_2, 1, &result);
-    else if constexpr (std::is_same_v<T, double>)
-        cblas_zdotu_sub(data_size, data_1, 1, data_2, 1, &result);
-#else
-    result = std::inner_product(
-        data_1, data_1 + data_size, data_2, std::complex<T>(), ConstSum<T>,
-        static_cast<std::complex<T> (*)(std::complex<T>, std::complex<T>)>(
-            &ConstMult<T>));
-#endif
+    if constexpr (USE_CBLAS) {
+        if constexpr (std::is_same_v<T, float>)
+            cblas_cdotu_sub(data_size, data_1, 1, data_2, 1, &result);
+        else if constexpr (std::is_same_v<T, double>)
+            cblas_zdotu_sub(data_size, data_1, 1, data_2, 1, &result);
+    } else {
+        result = std::inner_product(
+            data_1, data_1 + data_size, data_2, std::complex<T>(), ConstSum<T>,
+            static_cast<std::complex<T> (*)(std::complex<T>, std::complex<T>)>(
+                &ConstMult<T>));
+    }
     return result;
 }
 
@@ -242,16 +244,16 @@ std::complex<T> innerProdC(const std::complex<T> *data_1,
                            const size_t data_size) {
     std::complex<T> result(0, 0);
 
-#ifdef USE_CBLAS
-    if constexpr (std::is_same_v<T, float>)
-        cblas_cdotc_sub(data_size, data_1, 1, data_2, 1, &result);
-    else if constexpr (std::is_same_v<T, double>)
-        cblas_zdotc_sub(data_size, data_1, 1, data_2, 1, &result);
-#else
-    result =
-        std::inner_product(data_1, data_1 + data_size, data_2,
-                           std::complex<T>(), ConstSum<T>, ConstMultConj<T>);
-#endif
+    if constexpr (USE_CBLAS) {
+        if constexpr (std::is_same_v<T, float>)
+            cblas_cdotc_sub(data_size, data_1, 1, data_2, 1, &result);
+        else if constexpr (std::is_same_v<T, double>)
+            cblas_zdotc_sub(data_size, data_1, 1, data_2, 1, &result);
+    } else {
+        result = std::inner_product(data_1, data_1 + data_size, data_2,
+                                    std::complex<T>(), ConstSum<T>,
+                                    ConstMultConj<T>);
+    }
     return result;
 }
 

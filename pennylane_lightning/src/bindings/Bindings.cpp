@@ -787,6 +787,7 @@ void lightning_class_bindings(py::module &m) {
                      ops_params.size());
                  std::vector<std::vector<std::complex<PrecisionT>>>
                      conv_matrices(ops_matrices.size());
+                 static_cast<void>(adj);
                  for (size_t op = 0; op < ops_name.size(); op++) {
                      const auto p_buffer = ops_params[op].request();
                      const auto m_buffer = ops_matrices[op].request();
