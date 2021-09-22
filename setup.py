@@ -83,12 +83,12 @@ class BuildExt(build_ext):
         "unix": ["-O3", "-W", "-fPIC", "-shared", "-fopenmp"],
     }
 
-    if os.environ.get("ENABLE_WARNINGS", False):
-        c_opts["msvc"].extend(["-Wall", "-WX"])
-        c_opts["unix"].extend(["-Wall", "-Wextra", "-Werror"])
+    # if os.environ.get("ENABLE_WARNINGS", False):
+    c_opts["msvc"].extend(["-Wall", "-WX"])
+    c_opts["unix"].extend(["-Wall", "-Wextra", "-Werror"])
 
-        l_opts["msvc"].extend(["-WX"])
-        l_opts["unix"].extend(["-Wall", "-Wextra", "-Werror"])
+    l_opts["msvc"].extend(["-WX"])
+    l_opts["unix"].extend(["-Wall", "-Wextra", "-Werror"])
 
     if platform.system() == "Darwin":
         for opts in (c_opts, l_opts):
