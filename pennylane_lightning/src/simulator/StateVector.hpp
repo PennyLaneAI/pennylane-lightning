@@ -18,8 +18,10 @@
 
 #pragma once
 
+/// @cond DEV
 // Required for compilation with MSVC
 #define _USE_MATH_DEFINES // for C++
+/// @endcond
 
 #include <cmath>
 #include <complex>
@@ -89,6 +91,9 @@ template <class fp_t = double> class StateVector {
     size_t num_qubits_;
 
   public:
+    /**
+     * @brief StateVector complex precision type.
+     */
     using scalar_type_t = fp_t;
 
     StateVector()
@@ -209,14 +214,31 @@ template <class fp_t = double> class StateVector {
      */
     CFP_t *getData() { return arr_; }
 
+    /**
+     * @brief Redefine statevector data pointer.
+     *
+     * @param data_ptr New data pointer.
+     */
     void setData(CFP_t *data_ptr) { arr_ = data_ptr; }
+
+    /**
+     * @brief Redefine the length of the statevector and number of qubits.
+     *
+     * @param length New number of elements in statevector.
+     */
     void setLength(size_t length) {
         length_ = length;
         num_qubits_ = Util::log2(length_);
     }
+    /**
+     * @brief Redefine the number of qubits in the statevector and number of
+     * elements.
+     *
+     * @param qubits New number of qubits represented by statevector.
+     */
     void setNumQubits(size_t qubits) {
         num_qubits_ = qubits;
-        Util::exp2(num_qubits_);
+        length_ = Util::exp2(num_qubits_);
     }
 
     /**
@@ -624,7 +646,6 @@ template <class fp_t = double> class StateVector {
     void applyRX(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
                  Param_t angle) {
-
         const fp_t c = std::cos(angle / 2);
         const fp_t js =
             (inverse == true) ? -std::sin(-angle / 2) : std::sin(-angle / 2);
@@ -1345,7 +1366,14 @@ template <class fp_t = double> class StateVector {
                 params[2]);
     }
 };
-
+/**
+ * @brief Streaming operator for StateVector data.
+ *
+ * @tparam T StateVector data precision.
+ * @param out Output stream.
+ * @param sv StateVector to stream.
+ * @return std::ostream&
+ */
 template <class T>
 inline std::ostream &operator<<(std::ostream &out, const StateVector<T> &sv) {
     const auto length = sv.getLength();

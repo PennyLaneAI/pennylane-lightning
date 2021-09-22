@@ -55,7 +55,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
 
             StateVector<double> psi(cdata.data(), cdata.size());
             adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian, {obs},
-                                ops, {0}, 1, true);
+                                ops, {0}, true);
             CAPTURE(jacobian);
             CHECK(-sin(p) == Approx(jacobian[0].front()));
         }
@@ -79,7 +79,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
             StateVector<double> psi(cdata.data(), cdata.size());
 
             adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian, {obs},
-                                ops, {0}, 1, true);
+                                ops, {0}, true);
 
             CAPTURE(jacobian);
             CHECK(cos(p) == Approx(jacobian[0].front()).margin(1e-7));
@@ -102,7 +102,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
         auto ops = adj.createOpsData({"RX"}, {{param[0]}}, {{0}}, {false});
 
         adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian,
-                            {obs1, obs2}, ops, {0}, num_params, true);
+                            {obs1, obs2}, ops, {0}, true);
 
         CAPTURE(jacobian);
         CHECK(-sin(param[0]) == Approx(jacobian[0][0]).margin(1e-7));
@@ -128,8 +128,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
                                      {{0}, {1}, {2}}, {false, false, false});
 
         adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian,
-                            {obs1, obs2, obs3}, ops, {0, 1, 2}, num_params,
-                            true);
+                            {obs1, obs2, obs3}, ops, {0, 1, 2}, true);
 
         CAPTURE(jacobian);
         CHECK(-sin(param[0]) == Approx(jacobian[0][0]).margin(1e-7));
@@ -157,8 +156,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
                                      {{0}, {1}, {2}}, {false, false, false});
 
         adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian,
-                            {obs1, obs2, obs3}, ops, t_params, num_params,
-                            true);
+                            {obs1, obs2, obs3}, ops, t_params, true);
 
         CAPTURE(jacobian);
         CHECK(-sin(param[0]) == Approx(jacobian[0][0]).margin(1e-7));
@@ -183,7 +181,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
                                      {{0}, {1}, {2}}, {false, false, false});
 
         adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian, {obs},
-                            ops, {0, 1, 2}, num_params, true);
+                            ops, {0, 1, 2}, true);
         CAPTURE(jacobian);
 
         // Computed with parameter shift
@@ -219,7 +217,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
             {false, false, false, false, false, false, false, false});
 
         adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian, {obs},
-                            ops, {0, 1, 2, 3, 4, 5}, num_params, true);
+                            ops, {0, 1, 2, 3, 4, 5}, true);
         CAPTURE(jacobian);
 
         // Computed with PennyLane using default.qubit.adjoint_jacobian
@@ -263,7 +261,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
                 {{0}, {0}, {0}}, {false, false, false});
 
             adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian, {obs},
-                                ops, {0, 1, 2}, num_params, true);
+                                ops, {0, 1, 2}, true);
             CAPTURE(theta);
             CAPTURE(jacobian);
 
@@ -313,7 +311,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
              false, false, false});
 
         adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian, {obs},
-                            ops, t_params, t_params.size(), true);
+                            ops, t_params, true);
         CAPTURE(jacobian);
 
         // Computed with PennyLane using default.qubit

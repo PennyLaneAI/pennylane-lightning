@@ -30,6 +30,7 @@
 
 #include <iostream>
 
+/// @cond DEV
 namespace {
 
 using namespace Pennylane;
@@ -355,6 +356,7 @@ void applyGeneratorU3_lambda(SVType &sv, const std::vector<size_t> &wires,
 }
 
 } // namespace
+/// @endcond
 
 namespace Pennylane {
 namespace Algorithms {
@@ -366,17 +368,21 @@ namespace Algorithms {
  */
 template <class T = double> class ObsDatum {
   public:
+    /**
+     * @brief Variant type of stored parameter data.
+     */
     using param_var_t = std::variant<std::monostate, std::vector<T>,
                                      std::vector<std::complex<T>>>;
 
     /**
-     * @brief Construct an ObsDatum object, representing a given observable.
+     * @brief Copy constructor for an ObsDatum object, representing a given
+     * observable.
      *
      * @param obs_name Name of each operation of the observable. Tensor product
      * observables have more than one operation.
      * @param obs_params Parameters for a given obserable operation ({} if
      * optional).
-     * @param ops_wires Wires upon which to apply operation. Each observable
+     * @param obs_wires Wires upon which to apply operation. Each observable
      * operation will be a separate nested list.
      */
     ObsDatum(const std::vector<std::string> &obs_name,
@@ -385,6 +391,17 @@ template <class T = double> class ObsDatum {
         : obs_name_{obs_name},
           obs_params_(obs_params), obs_wires_{obs_wires} {};
 
+    /**
+     * @brief Move constructor for an ObsDatum object, representing a given
+     * observable.
+     *
+     * @param obs_name Name of each operation of the observable. Tensor product
+     * observables have more than one operation.
+     * @param obs_params Parameters for a given obserable operation ({} if
+     * optional).
+     * @param obs_wires Wires upon which to apply operation. Each observable
+     * operation will be a separate nested list.
+     */
     ObsDatum(std::vector<std::string> &&obs_name,
              std::vector<param_var_t> &&obs_params,
              std::vector<std::vector<size_t>> &&obs_wires)
@@ -632,7 +649,8 @@ template <class T = double> class AdjointJacobian {
      * @param sv2 Statevector |sv2>
      * @param jac Jacobian receiving the values.
      * @param scaling_coeff Generator coefficient for given gate derivative.
-     * @param index Position of Jacobian to update.
+     * @param obs_index Observable index position of Jacobian to update.
+     * @param param_index Parameter index position of Jacobian to update.
      */
     inline void updateJacobian(const StateVectorManaged<T> &sv1,
                                const StateVectorManaged<T> &sv2,
@@ -664,12 +682,12 @@ template <class T = double> class AdjointJacobian {
         }
     }
     /**
-     * @brief Utility method to apply all operations from given `%OpsData<T>`
-     * object to `%StateVectorManaged<T>`
+     * @brief Utility method to apply the adjoint indexed operation from
+     * `%OpsData<T>` object to `%StateVectorManaged<T>`.
      *
      * @param state Statevector to be updated.
      * @param operations Operations to apply.
-     * @param adj Take the adjoint of the given operations.
+     * @param op_idx Adjointed operation index to apply.
      */
     inline void applyOperationAdj(StateVectorManaged<T> &state,
                                   const OpsData<T> &operations, size_t op_idx) {
@@ -720,26 +738,17 @@ template <class T = double> class AdjointJacobian {
         }
     }
 
-  public:
-    AdjointJacobian() {}
-
     /**
-     * @brief Utility to create a given operations object.
+     * @brief Inline utility to assist with getting the Jacobian index offset.
      *
-     * @param ops_name
-     * @param ops_params
-     * @param ops_wires
-     * @param ops_inverses
-     * @param ops_matrices
-     * @return const OpsData<T>
+     * @param obs_index
+     * @param tp_index
+     * @param tp_size
+     * @return size_t
      */
-    const OpsData<T> createOpsData(
-        const std::vector<std::string> &ops_name,
-        const std::vector<std::vector<T>> &ops_params,
-        const std::vector<std::vector<size_t>> &ops_wires,
-        const std::vector<bool> &ops_inverses,
-        const std::vector<std::vector<std::complex<T>>> &ops_matrices = {{}}) {
-        return {ops_name, ops_params, ops_wires, ops_inverses, ops_matrices};
+    inline size_t getJacIndex(size_t obs_index, size_t tp_index,
+                              size_t tp_size) {
+        return obs_index * tp_size + tp_index;
     }
 
     /**
@@ -761,6 +770,7 @@ template <class T = double> class AdjointJacobian {
      * @param sv Statevector data to operate upon.
      * @param op_name Name of parametric gate.
      * @param wires Wires to operate upon.
+     * @param adj Indicate whether to take the adjoint of the operation.
      * @return T Generator scaling coefficient.
      */
     inline T applyGenerator(StateVectorManaged<T> &sv,
@@ -770,9 +780,27 @@ template <class T = double> class AdjointJacobian {
         return scaling_factors.at(op_name);
     }
 
-    inline size_t getJacIndex(size_t obs_index, size_t tp_index,
-                              size_t tp_size) {
-        return obs_index * tp_size + tp_index;
+  public:
+    AdjointJacobian() {}
+
+    /**
+     * @brief Utility to create a given operations object.
+     *
+     * @param ops_name Name of operations.
+     * @param ops_params Parameters for each operation in ops_name.
+     * @param ops_wires Wires for each operation in ops_name.
+     * @param ops_inverses Indicate whether to take adjoint of each operation in
+     * ops_name.
+     * @param ops_matrices Matrix definition of an operation if unsupported.
+     * @return const OpsData<T>
+     */
+    const OpsData<T> createOpsData(
+        const std::vector<std::string> &ops_name,
+        const std::vector<std::vector<T>> &ops_params,
+        const std::vector<std::vector<size_t>> &ops_wires,
+        const std::vector<bool> &ops_inverses,
+        const std::vector<std::vector<std::complex<T>>> &ops_matrices = {{}}) {
+        return {ops_name, ops_params, ops_wires, ops_inverses, ops_matrices};
     }
 
     /**
@@ -789,20 +817,22 @@ template <class T = double> class AdjointJacobian {
      * size `trainableParams.size() * observables.size()`. OpenMP is used to
      * enable independent operations to be offloaded to threads.
      *
-     * @param psi
-     * @param num_elements
-     * @param jac
-     * @param observables
-     * @param operations
-     * @param trainableParams
-     * @param num_params
+     * @param psi Pointer to the statevector data.
+     * @param num_elements Length of the statevector data.
+     * @param jac Preallocated vector for Jacobian data results.
+     * @param observables Observables for which to calculate Jacobian.
+     * @param operations Operations used to create given state.
+     * @param trainableParams List of parameters participating in Jacobian
+     * calculation.
+     * @param apply_operations Indicate whether to apply operations to psi prior
+     * to calculation.
      */
     void adjointJacobian(const std::complex<T> *psi, size_t num_elements,
                          std::vector<std::vector<T>> &jac,
                          const std::vector<ObsDatum<T>> &observables,
                          const OpsData<T> &operations,
                          const std::set<size_t> &trainableParams,
-                         size_t num_params, bool apply_operations = false) {
+                         bool apply_operations = false) {
         PL_ABORT_IF(trainableParams.empty(),
                     "No trainable parameters provided.");
 
@@ -840,14 +870,12 @@ template <class T = double> class AdjointJacobian {
                         "differentiation method");
             if ((operations.getOpsName()[op_idx] != "QubitStateVector") &&
                 (operations.getOpsName()[op_idx] != "BasisState")) {
-
                 mu.updateData(lambda.getDataVector());
                 applyOperationAdj(lambda, operations, op_idx);
 
                 if (operations.hasParams(op_idx)) {
                     if (std::find(trainableParams.begin(), tp_it,
                                   current_param_idx) != tp_it) {
-
                         const T scalingFactor =
                             applyGenerator(
                                 mu, operations.getOpsName()[op_idx],

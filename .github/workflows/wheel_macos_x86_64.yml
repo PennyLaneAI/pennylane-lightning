@@ -13,9 +13,6 @@ env:
     brew uninstall --force oclint
     brew install llvm libomp
 
-  # Required for C++17 support
-  CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.14
-
   # Python build settings
   CIBW_BEFORE_BUILD: |
     pip install pybind11
