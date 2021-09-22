@@ -84,7 +84,10 @@ class BuildExt(build_ext):
     }
 
     if os.environ.get("ENABLE_WARNINGS", False):
+        c_opts["msvc"].extend(["-Wall", "-WX"])
         c_opts["unix"].extend(["-Wall", "-Wextra", "-Werror"])
+
+        l_opts["msvc"].extend(["-WX"])
         l_opts["unix"].extend(["-Wall", "-Wextra", "-Werror"])
 
     if platform.system() == "Darwin":
