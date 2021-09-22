@@ -238,6 +238,122 @@ void applyGeneratorDoubleExcitation(SVType &sv,
     }
 }
 
+template <class T = double, class SVType = Pennylane::StateVector<T>>
+void applyGeneratorU1(SVType &sv, const std::vector<size_t> &wires,
+                      const bool adj = false) {
+    sv.applyOperation(getP11<T>(), wires, adj);
+}
+
+template <class T = double, class SVType = Pennylane::StateVector<T>>
+void applyGeneratorU2_phi(SVType &sv, const std::vector<size_t> &wires,
+                          const bool adj = false) {
+    const std::vector<size_t> internalIndices = sv.generateBitPatterns(wires);
+    const std::vector<size_t> externalWires =
+        sv.getIndicesAfterExclusion(wires);
+    const std::vector<size_t> externalIndices =
+        sv.generateBitPatterns(externalWires);
+    for (const size_t &externalIndex : externalIndices) {
+        std::complex<T> *shiftedState = sv.getData() + externalIndex;
+        const CFP_t v0 = shiftedState[indices[0]];
+        const CFP_t v1 = shiftedState[indices[1]];
+        shiftedState[indices[0]] = 0;
+        shiftedState[indices[1]] = 1;
+    }
+}
+template <class T = double, class SVType = Pennylane::StateVector<T>>
+void applyGeneratorU2_lambda(SVType &sv, const std::vector<size_t> &wires,
+                             const bool adj = false,
+                             const std::vector<T> &params) {
+    const CFP_t m01 = (adj == true) ? -std::exp(CFP_t(0, -params.front()))
+                                    : -std::exp(CFP_t(0, params.front()));
+    const CFP_t m10 = (adj == true) ? -std::exp(CFP_t(0, params.front()))
+                                    : -std::exp(CFP_t(0, -params.front()));
+    const std::vector<size_t> internalIndices = sv.generateBitPatterns(wires);
+    const std::vector<size_t> externalWires =
+        sv.getIndicesAfterExclusion(wires);
+    const std::vector<size_t> externalIndices =
+        sv.generateBitPatterns(externalWires);
+    for (const size_t &externalIndex : externalIndices) {
+        std::complex<T> *shiftedState = sv.getData() + externalIndex;
+        const CFP_t v0 = shiftedState[indices[0]];
+        const CFP_t v1 = shiftedState[indices[1]];
+        shiftedState[indices[0]] = v0 - m01 * v1;
+        shiftedState[indices[1]] = m10 * v0 + v1;
+    }
+}
+
+template <class T = double, class SVType = Pennylane::StateVector<T>>
+void applyGeneratorU3_theta(SVType &sv, const std::vector<size_t> &wires,
+                            const bool adj = false,
+                            const std::vector<T> &params) {
+    // [0 -e^{-itheta/2}; e^{itheta/2} 0] // No i prefactor here, be careful
+    // with signs
+    const CFP_t m01 = (adj == true)
+                          ? std::exp(CFP_t(0, params.front() / 2)) * IMAG<T>()
+                          : std::exp(CFP_t(0, -params.front() / 2)) * IMAG<T>();
+    const CFP_t m10 = (adj == true)
+                          ? -std::exp(CFP_t(0, -params.front() / 2)) * IMAG<T>()
+                          : std::exp(CFP_t(0, params.front() / 2)) * IMAG<T>();
+    const std::vector<size_t> internalIndices = sv.generateBitPatterns(wires);
+    const std::vector<size_t> externalWires =
+        sv.getIndicesAfterExclusion(wires);
+    const std::vector<size_t> externalIndices =
+        sv.generateBitPatterns(externalWires);
+    for (const size_t &externalIndex : externalIndices) {
+        std::complex<T> *shiftedState = sv.getData() + externalIndex;
+        const CFP_t v0 = shiftedState[indices[0]] * m10;
+        const CFP_t v1 = shiftedState[indices[1]] * m01;
+        shiftedState[indices[0]] = v1;
+        shiftedState[indices[1]] = v0;
+    }
+}
+template <class T = double, class SVType = Pennylane::StateVector<T>>
+void applyGeneratorU3_phi(SVType &sv, const std::vector<size_t> &wires,
+                          const bool adj = false,
+                          const std::vector<T> &params) {
+    // [0 0;0 1i]
+    const std::vector<size_t> internalIndices = sv.generateBitPatterns(wires);
+    const std::vector<size_t> externalWires =
+        sv.getIndicesAfterExclusion(wires);
+    const std::vector<size_t> externalIndices =
+        sv.generateBitPatterns(externalWires);
+    for (const size_t &externalIndex : externalIndices) {
+        std::complex<T> *shiftedState = sv.getData() + externalIndex;
+        shiftedState[indices[0]] = 0;
+        shiftedState[indices[1]] = 1;
+    }
+}
+template <class T = double, class SVType = Pennylane::StateVector<T>>
+void applyGeneratorU3_lambda(SVType &sv, const std::vector<size_t> &wires,
+                             const bool adj = false,
+                             const std::vector<T> &params) {
+    const T c2_theta_2 = std::cos(params[0] / 2);
+    c2_theta_2 *= c2_theta_2;
+    const T s2_theta_2 =
+        (adj == true) ? std::sin(-params[0] / 2) : std::sin(params[0] / 2);
+    s2_theta_2 *= s2_theta_2;
+    const T s_theta =
+        (adj == true) ? std::sin(-params[0]) : std::sin(params[0]);
+    const CFP_t m01_phi = (adj == true) ? std::exp(CFP_t(0, params[1]))
+                                        : std::exp(CFP_t(0, -params[1]));
+    const CFP_t m10_phi = (adj == true) ? std::exp(CFP_t(0, -params[1]))
+                                        : std::exp(CFP_t(0, params[1]));
+    const std::vector<size_t> internalIndices = sv.generateBitPatterns(wires);
+    const std::vector<size_t> externalWires =
+        sv.getIndicesAfterExclusion(wires);
+    const std::vector<size_t> externalIndices =
+        sv.generateBitPatterns(externalWires);
+    for (const size_t &externalIndex : externalIndices) {
+        std::complex<T> *shiftedState = sv.getData() + externalIndex;
+        const CFP_t v0 = shiftedState[indices[0]];
+        const CFP_t v1 = shiftedState[indices[1]];
+        shiftedState[indices[0]] =
+            (v0 * s2_theta_2) - (0.5 * v1 * m01_phi * s_theta);
+        shiftedState[indices[1]] =
+            -(0.5 * v0 * m10_phi * s_theta) + (v1 * c2_theta_2);
+    }
+}
+
 } // namespace
 
 namespace Pennylane {
@@ -457,12 +573,17 @@ template <class T> class OpsData {
  */
 template <class T = double> class AdjointJacobian {
   private:
-    typedef void (*GeneratorFunc)(StateVectorManaged<T> &sv,
-                                  const std::vector<size_t> &wires,
-                                  const bool adj); // function pointer type
+    typedef void (*GeneratorFunc)(
+        StateVectorManaged<T> &sv, const std::vector<size_t> &wires,
+        const bool adj); // non-parametric function pointer type
+    typedef void (*GeneratorFuncP)(
+        StateVectorManaged<T> &sv, const std::vector<size_t> &wires,
+        const bool adj,
+        const std::vector<T> params); // parametric function pointer type
+    using fvar_t = std::variant<GeneratorFunc, GeneratorFuncP>;
 
     // Holds the mapping from gate labels to associated generator functions.
-    const std::unordered_map<std::string, GeneratorFunc> generator_map{
+    const std::unordered_map<std::string, fvar_t> generator_map{
         {"RX", &::applyGeneratorRX<T, StateVectorManaged<T>>},
         {"RY", &::applyGeneratorRY<T, StateVectorManaged<T>>},
         {"RZ", &::applyGeneratorRZ<T, StateVectorManaged<T>>},
@@ -478,7 +599,11 @@ template <class T = double> class AdjointJacobian {
         {"DoubleExcitation",
          &::applyGeneratorDoubleExcitation<T, StateVectorManaged<T>>},
         {"ControlledPhaseShift",
-         &::applyGeneratorControlledPhaseShift<T, StateVectorManaged<T>>}};
+         &::applyGeneratorControlledPhaseShift<T, StateVectorManaged<T>>},
+        {"U1", &::applyGeneratorU1<T, StateVectorManaged<T>>},
+        {"U2_phi", &::applyGeneratorU2_phi<T, StateVectorManaged<T>>},
+        {"U2_lambda", &::applyGeneratorU2_lambda<T, StateVectorManaged<T>>},
+    };
 
     // Holds the mappings from gate labels to associated generator coefficients.
     const std::unordered_map<std::string, T> scaling_factors{
@@ -494,7 +619,10 @@ template <class T = double> class AdjointJacobian {
         {"IsingZZ", -0.5},
         {"SingleExcitation", -0.5},
         {"DoubleExcitation", -0.5},
-        {"ControlledPhaseShift", 1}};
+        {"ControlledPhaseShift", 1} {"U1", 1},
+        {"U2", 0.5},
+        {"IsingZZ", -0.5},
+    };
 
     /**
      * @brief Utility method to update the Jacobian at a given index by

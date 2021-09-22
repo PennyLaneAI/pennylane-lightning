@@ -104,33 +104,38 @@ template <class fp_t = double> class StateVector {
      */
     StateVector(CFP_t *arr, size_t length)
         : arr_{arr}, length_{length}, num_qubits_{Util::log2(length_)},
-          gate_wires_{// Add mapping from function name to required wires.
-                      {"PauliX", 1},
-                      {"PauliY", 1},
-                      {"PauliZ", 1},
-                      {"Hadamard", 1},
-                      {"T", 1},
-                      {"S", 1},
-                      {"RX", 1},
-                      {"RY", 1},
-                      {"RZ", 1},
-                      {"Rot", 1},
-                      {"PhaseShift", 1},
-                      {"ControlledPhaseShift", 2},
-                      {"CNOT", 2},
-                      {"SWAP", 2},
-                      {"CZ", 2},
-                      {"CRX", 2},
-                      {"CRY", 2},
-                      {"CRZ", 2},
-                      {"CRot", 2},
-                      {"CSWAP", 3},
-                      {"Toffoli", 3},
-                      {"IsingXX", 2},
-                      {"IsingYY", 2},
-                      {"IsingZZ", 2},
-                      {"SingleExcitation", 2},
-                      {"DoubleExcitation", 4}},
+          gate_wires_{
+              // Add mapping from function name to required wires.
+              {"PauliX", 1},
+              {"PauliY", 1},
+              {"PauliZ", 1},
+              {"Hadamard", 1},
+              {"T", 1},
+              {"S", 1},
+              {"RX", 1},
+              {"RY", 1},
+              {"RZ", 1},
+              {"Rot", 1},
+              {"PhaseShift", 1},
+              {"ControlledPhaseShift", 2},
+              {"CNOT", 2},
+              {"SWAP", 2},
+              {"CZ", 2},
+              {"CRX", 2},
+              {"CRY", 2},
+              {"CRZ", 2},
+              {"CRot", 2},
+              {"CSWAP", 3},
+              {"Toffoli", 3},
+              {"IsingXX", 2},
+              {"IsingYY", 2},
+              {"IsingZZ", 2},
+              {"SingleExcitation", 2},
+              {"DoubleExcitation", 4},
+              {"U1", 1},
+              {"U2", 1},
+              {"U3", 1},
+          },
           gates_{
               // Add mapping from function name to generalised signature for
               // dispatch. Methods exist with the same signatures to simplify
@@ -184,9 +189,11 @@ template <class fp_t = double> class StateVector {
                     _3, _4)},
               {"DoubleExcitation",
                bind(&StateVector<fp_t>::applyDoubleExcitation_, this, _1, _2,
-                    _3, _4)}
-
-          } {};
+                    _3, _4)},
+              {"U1", bind(&StateVector<fp_t>::applyU1_, this, _1, _2, _3, _4)},
+              {"U2", bind(&StateVector<fp_t>::applyU2_, this, _1, _2, _3, _4)},
+              {"U3",
+               bind(&StateVector<fp_t>::applyU3_, this, _1, _2, _3, _4)}} {};
 
     /**
      * @brief Get the underlying data pointer.
@@ -604,7 +611,7 @@ template <class fp_t = double> class StateVector {
     /**
      * @brief Apply RX gate operation to given indices of statevector.
      *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * @tparam Param_t Precision type for gate parameter. Accepted types are
      * `float` and `double`.
      * @param indices Local amplitude indices participating in given gate
      * application for fixed sets of non-participating qubit indices.
@@ -635,7 +642,7 @@ template <class fp_t = double> class StateVector {
     /**
      * @brief Apply RY gate operation to given indices of statevector.
      *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * @tparam Param_t Precision type for gate parameter. Accepted types are
      * `float` and `double`.
      * @param indices Local amplitude indices participating in given gate
      * application for fixed sets of non-participating qubit indices.
@@ -663,7 +670,7 @@ template <class fp_t = double> class StateVector {
     /**
      * @brief Apply RZ gate operation to given indices of statevector.
      *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * @tparam Param_t Precision type for gate parameter. Accepted types are
      * `float` and `double`.
      * @param indices Local amplitude indices participating in given gate
      * application for fixed sets of non-participating qubit indices.
@@ -690,7 +697,7 @@ template <class fp_t = double> class StateVector {
     /**
      * @brief Apply phase shift gate operation to given indices of statevector.
      *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * @tparam Param_t Precision type for gate parameter. Accepted types are
      * `float` and `double`.
      * @param indices Local amplitude indices participating in given gate
      * application for fixed sets of non-participating qubit indices.
@@ -715,7 +722,7 @@ template <class fp_t = double> class StateVector {
      * @brief Apply controlled phase shift gate operation to given indices of
      * statevector.
      *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * @tparam Param_t Precision type for gate parameter. Accepted types are
      * `float` and `double`.
      * @param indices Local amplitude indices participating in given gate
      * application for fixed sets of non-participating qubit indices.
@@ -740,7 +747,7 @@ template <class fp_t = double> class StateVector {
      * @brief Apply Rot gate \f$RZ(\omega)RY(\theta)RZ(\phi)\f$ to given indices
      * of statevector.
      *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * @tparam Param_t Precision type for gate parameter. Accepted types are
      * `float` and `double`.
      * @param indices Local amplitude indices participating in given gate
      * application for fixed sets of non-participating qubit indices.
@@ -824,7 +831,7 @@ template <class fp_t = double> class StateVector {
     /**
      * @brief Apply CRX gate to given indices of statevector.
      *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * @tparam Param_t Precision type for gate parameter. Accepted types are
      * `float` and `double`.
      * @param indices Local amplitude indices participating in given gate
      * application for fixed sets of non-participating qubit indices.
@@ -855,7 +862,7 @@ template <class fp_t = double> class StateVector {
     /**
      * @brief Apply CRY gate to given indices of statevector.
      *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * @tparam Param_t Precision type for gate parameter. Accepted types are
      * `float` and `double`.
      * @param indices Local amplitude indices participating in given gate
      * application for fixed sets of non-participating qubit indices.
@@ -884,7 +891,7 @@ template <class fp_t = double> class StateVector {
     /**
      * @brief Apply CRZ gate to given indices of statevector.
      *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * @tparam Param_t Precision type for gate parameter. Accepted types are
      * `float` and `double`.
      * @param indices Local amplitude indices participating in given gate
      * application for fixed sets of non-participating qubit indices.
@@ -914,7 +921,7 @@ template <class fp_t = double> class StateVector {
      * @brief Apply CRot gate (controlled \f$RZ(\omega)RY(\theta)RZ(\phi)\f$) to
      * given indices of statevector.
      *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * @tparam Param_t Precision type for gate parameter. Accepted types are
      * `float` and `double`.
      * @param indices Local amplitude indices participating in given gate
      * application for fixed sets of non-participating qubit indices.
@@ -1081,6 +1088,93 @@ template <class fp_t = double> class StateVector {
         }
     }
 
+    /**
+     * @brief Apply U1 gate operation to given indices of statevector.
+     *
+     * @tparam Param_t Precision type for gate parameter. Accepted types are
+     * `float` and `double`.
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     * @param angle Rotation angle of gate.
+     */
+    template <typename Param_t = fp_t>
+    void applyU1(const vector<size_t> &indices,
+                 const vector<size_t> &externalIndices, bool inverse,
+                 Param_t angle) {
+        applyPhaseShift(indices, externalIndices, inverse, angle);
+    }
+
+    /**
+     * @brief Apply U2 gate operation to given indices of statevector.
+     *
+     * @tparam Param_t Precision type for gate parameter. Accepted types are
+     * `float` and `double`.
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     * @param angle Rotation angle of gate.
+     */
+    template <typename Param_t = fp_t>
+    void applyU2(const vector<size_t> &indices,
+                 const vector<size_t> &externalIndices, bool inverse,
+                 Param_t phi, Param_t lambda) {
+        const CFP_t m01 = (inverse == true) ? -std::exp(CFP_t(0, -lambda))
+                                            : -std::exp(CFP_t(0, lambda));
+        const CFP_t m10 = (inverse == true) ? std::exp(CFP_t(0, -phi))
+                                            : std::exp(CFP_t(0, phi));
+        const CFP_t m11 = (inverse == true)
+                              ? std::exp(CFP_t(0, -(phi + lambda)))
+                              : std::exp(CFP_t(0, phi + lambda));
+        for (const size_t &externalIndex : externalIndices) {
+            CFP_t *shiftedState = arr_ + externalIndex;
+            const CFP_t v0 = shiftedState[indices[0]];
+            const CFP_t v1 = shiftedState[indices[1]];
+            shiftedState[indices[0]] =
+                INVSQRT2<fp_t>() * (shiftedState[indices[0]] + (m01 * v1));
+            shiftedState[indices[1]] = INVSQRT2<fp_t>() * (m10 * v0 + m11 * v1);
+        }
+    }
+
+    /**
+     * @brief Apply U3 gate operation to given indices of statevector.
+     *
+     * @tparam Param_t Precision type for gate parameter. Accepted types are
+     * `float` and `double`.
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     * @param angle Rotation angle of gate.
+     */
+    template <typename Param_t = fp_t>
+    void applyU3(const vector<size_t> &indices,
+                 const vector<size_t> &externalIndices, bool inverse,
+                 Param_t theta, Param_t phi, Param_t lambda) {
+        const fp_t c = std::cos(phi / 2);
+        const fp_t s =
+            (inverse == true) ? std::sin(-phi / 2) : std::sin(phi / 2);
+        const CFP_t m01 = (inverse == true) ? -std::exp(CFP_t(0, -lambda))
+                                            : -std::exp(CFP_t(0, lambda));
+        const CFP_t m10 = (inverse == true) ? std::exp(CFP_t(0, -phi))
+                                            : std::exp(CFP_t(0, phi));
+        const CFP_t m11 = (inverse == true)
+                              ? std::exp(CFP_t(0, -(phi + lambda)))
+                              : std::exp(CFP_t(0, phi + lambda));
+        for (const size_t &externalIndex : externalIndices) {
+            CFP_t *shiftedState = arr_ + externalIndex;
+            const CFP_t v0 = shiftedState[indices[0]];
+            const CFP_t v1 = shiftedState[indices[1]];
+            shiftedState[indices[0]] = (c * v0) + (m01 * s * v1);
+            shiftedState[indices[1]] = (m10 * s * v0) + (m11 * c * v1);
+        }
+    }
+
   private:
     //***********************************************************************//
     //  Internal utility functions for opName dispatch use only.
@@ -1233,6 +1327,22 @@ template <class fp_t = double> class StateVector {
                                        const vector<fp_t> &params) {
         applyDoubleExcitation(indices, externalIndices, inverse,
                               params.front());
+    }
+    inline void applyU1_(const vector<size_t> &indices,
+                         const vector<size_t> &externalIndices, bool inverse,
+                         const vector<fp_t> &params) {
+        applyU1(indices, externalIndices, inverse, params.front());
+    }
+    inline void applyU2_(const vector<size_t> &indices,
+                         const vector<size_t> &externalIndices, bool inverse,
+                         const vector<fp_t> &params) {
+        applyU2(indices, externalIndices, inverse, params[0], params[1]);
+    }
+    inline void applyU3_(const vector<size_t> &indices,
+                         const vector<size_t> &externalIndices, bool inverse,
+                         const vector<fp_t> &params) {
+        applyU3(indices, externalIndices, inverse, params[0], params[1],
+                params[2]);
     }
 };
 
