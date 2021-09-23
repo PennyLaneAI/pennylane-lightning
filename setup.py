@@ -99,7 +99,6 @@ class BuildExt(build_ext):
             "-stdlib=libc++",
             "-Xpreprocessor",
             "-fopenmp",
-            "-lomp",
             "-mmacosx-version-min=10.14",
         ]
         c_opts["unix"] += darwin_opts
