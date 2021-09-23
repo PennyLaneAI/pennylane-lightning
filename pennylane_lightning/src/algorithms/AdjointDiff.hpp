@@ -616,8 +616,8 @@ template <class T = double> class AdjointJacobian {
 
         StateVectorManaged<T> mu(lambda.getNumQubits());
 
-        for (int op_idx = operations.getOpsName().size() - 1; op_idx >= 0;
-             op_idx--) {
+        for (int op_idx = static_cast<int>(operations.getOpsName().size() - 1);
+             op_idx >= 0; op_idx--) {
             PL_ABORT_IF(operations.getOpsParams()[op_idx].size() > 1,
                         "The operation is not supported using the adjoint "
                         "differentiation method");
