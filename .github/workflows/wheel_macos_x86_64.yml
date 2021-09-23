@@ -60,7 +60,6 @@ jobs:
           CIBW_ARCHS_MACOS: ${{matrix.arch}}
 
       - uses: actions/upload-artifact@v2
-        if: github.ref == 'refs/heads/master'
         with:
           name: ${{ runner.os }}-wheels.zip
           path: ./wheelhouse/*.whl
