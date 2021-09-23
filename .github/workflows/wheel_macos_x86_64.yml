@@ -35,7 +35,7 @@ jobs:
       matrix:
         os: [macos-10.14]
         arch: [x86_64]
-    name: macos-latest
+    name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     steps:
