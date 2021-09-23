@@ -584,9 +584,10 @@ template <class fp_t = double> class StateVector {
      */
     void applyT(const vector<size_t> &indices,
                 const vector<size_t> &externalIndices, bool inverse) {
-        const CFP_t shift = (inverse == true)
-                                ? std::conj(std::exp(CFP_t(0, M_PI / 4)))
-                                : std::exp(CFP_t(0, M_PI / 4));
+        const CFP_t shift =
+            (inverse == true)
+                ? std::conj(std::exp(CFP_t(0, static_cast<fp_t>(M_PI / 4))))
+                : std::exp(CFP_t(0, static_cast<fp_t>(M_PI / 4)));
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;

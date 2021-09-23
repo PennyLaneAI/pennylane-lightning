@@ -187,7 +187,7 @@ inline size_t maxDecimalForQubit(size_t qubitIndex, size_t qubits) {
  */
 template <class T> inline size_t dimSize(const std::vector<T> &data) {
     const size_t s = data.size();
-    const size_t s_sqrt = std::sqrt(s);
+    const size_t s_sqrt = static_cast<size_t>(std::floor(std::sqrt(s)));
 
     if (s < 4)
         throw std::invalid_argument("The dataset must be at least 2x2");

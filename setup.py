@@ -74,7 +74,7 @@ class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
 
     c_opts = {
-        "msvc": ["/EHsc", "/O3", "/W4", "/WX", "/std:c++17"],
+        "msvc": ["/EHsc", "/O2", "/W4", "/WX", "/std:c++17"],
         "unix": ["-O3", "-fPIC", "-shared", "-fopenmp", "-Wall", "-Wextra", "-Werror"],
     }
 
