@@ -150,7 +150,6 @@ if not os.environ.get("SKIP_COMPILATION", False):
         include_dirs += ["/usr/local/opt/libomp/include"]
         library_dirs += ["/usr/local/opt/libomp/lib"]
         libraries += ["omp"]
-        extra_link_args += ["/usr/local/opt/libomp/lib/libomp.a"] # Ensure static linkage
 
 
     ext_modules = [
@@ -181,7 +180,6 @@ requirements = [
     "numpy",
     "pennylane>=0.15",
 ]
-
 
 info = {
     "name": "PennyLane-Lightning",
