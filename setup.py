@@ -74,21 +74,15 @@ class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
 
     c_opts = {
-        "msvc": ["-EHsc", "-O2", "-W1", "-std:c++17", "-D_USE_MATH_DEFINES"],
-        "unix": ["-O3", "-W", "-fPIC", "-shared", "-fopenmp"],
+        "msvc": ["/EHsc", "/O3", "/W4", "/WX", "/std:c++17"],
+        "unix": ["-O3", "-fPIC", "-shared", "-fopenmp", "-Wall", "-Wextra", "-Werror"],
     }
 
     l_opts = {
-        "msvc": [],
-        "unix": ["-O3", "-W", "-fPIC", "-shared", "-fopenmp"],
+        "msvc": ["/WX"],
+        "unix": ["-O3", "-fPIC", "-shared", "-fopenmp", "-Wall", "-Wextra", "-Werror"],
     }
 
-    # if os.environ.get("ENABLE_WARNINGS", False):
-    c_opts["msvc"].extend(["-Wall", "-WX"])
-    c_opts["unix"].extend(["-Wall", "-Wextra", "-Werror"])
-
-    l_opts["msvc"].extend(["-WX"])
-    l_opts["unix"].extend(["-Wall", "-Wextra", "-Werror"])
 
     if platform.system() == "Darwin":
         for opts in (c_opts, l_opts):
