@@ -20,7 +20,9 @@
 
 /// @cond DEV
 // Required for compilation with MSVC
+#ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES // for C++
+#endif
 /// @endcond
 
 #include <cmath>
