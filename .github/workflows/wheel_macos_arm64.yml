@@ -31,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest]
+        os: [macos-11]
         arch: [arm64]
     name: macos-latest::arm64
     runs-on: ${{ matrix.os }}
