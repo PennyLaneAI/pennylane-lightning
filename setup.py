@@ -83,7 +83,6 @@ class BuildExt(build_ext):
         "unix": ["-O3", "-fPIC", "-shared", "-fopenmp", "-Wall", "-Wextra", "-Werror"],
     }
 
-
     if platform.system() == "Darwin":
         for opts in (c_opts, l_opts):
             opts["unix"].remove("-fopenmp")

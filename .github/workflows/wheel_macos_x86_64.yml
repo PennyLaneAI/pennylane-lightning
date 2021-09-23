@@ -23,6 +23,10 @@ env:
   CIBW_TEST_COMMAND: |
     pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
+  CIBW_BUILD_VERBOSITY: 1
+
+  MACOSX_DEPLOYMENT_TARGET: 10.14
+
 jobs:
   mac-wheels-x86:
     strategy:

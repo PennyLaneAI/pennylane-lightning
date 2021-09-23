@@ -196,7 +196,7 @@ template <class T> inline size_t dimSize(const std::vector<T> &data) {
     if (s_sqrt * s_sqrt != s)
         throw std::invalid_argument("The dataset must be a perfect square");
 
-    return log2(sqrt(data.size()));
+    return static_cast<size_t>(log2(s_sqrt));
 }
 
 /**
