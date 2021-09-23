@@ -390,8 +390,8 @@ template <class fp_t = double> class StateVector {
      */
     void applyMatrix(const vector<CFP_t> &matrix, const vector<size_t> &indices,
                      const vector<size_t> &externalIndices, bool inverse) {
-        if (static_cast<size_t>(0b1 << (Util::log2(indices.size()) +
-                                        Util::log2(externalIndices.size()))) !=
+        if (static_cast<size_t>(1ULL << (Util::log2(indices.size()) +
+                                         Util::log2(externalIndices.size()))) !=
             length_)
             throw std::out_of_range(
                 "The given indices do not match the state-vector length.");
@@ -438,8 +438,8 @@ template <class fp_t = double> class StateVector {
      */
     void applyMatrix(const CFP_t *matrix, const vector<size_t> &indices,
                      const vector<size_t> &externalIndices, bool inverse) {
-        if (static_cast<size_t>(0b1 << (Util::log2(indices.size()) +
-                                        Util::log2(externalIndices.size()))) !=
+        if (static_cast<size_t>(1ULL << (Util::log2(indices.size()) +
+                                         Util::log2(externalIndices.size()))) !=
             length_)
             throw std::out_of_range(
                 "The given indices do not match the state-vector length.");
