@@ -384,10 +384,14 @@ template <class T = double> class AdjointJacobian {
 
     // Holds the mappings from gate labels to associated generator coefficients.
     const std::unordered_map<std::string, T> scaling_factors{
-        {"RX", -0.5},  {"RY", -0.5},
-        {"RZ", -0.5},  {"PhaseShift", 1},
-        {"CRX", -0.5}, {"CRY", -0.5},
-        {"CRZ", -0.5}, {"ControlledPhaseShift", 1}};
+        {"RX", -static_cast<T>(0.5)},
+        {"RY", -static_cast<T>(0.5)},
+        {"RZ", -static_cast<T>(0.5)},
+        {"PhaseShift", static_cast<T>(1)},
+        {"CRX", -static_cast<T>(0.5)},
+        {"CRY", -static_cast<T>(0.5)},
+        {"CRZ", -static_cast<T>(0.5)},
+        {"ControlledPhaseShift", static_cast<T>(1)}};
 
     /**
      * @brief Utility method to update the Jacobian at a given index by

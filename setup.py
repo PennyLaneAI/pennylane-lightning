@@ -92,8 +92,14 @@ class BuildExt(build_ext):
             "-stdlib=libc++",
             "-Xpreprocessor",
             "-fopenmp",
-            "-mmacosx-version-min=10.14",
         ]
+        if platform.machine() == "x86_64":
+            # Min version for x86 on MacOS
+            darwin_opts.append("-mmacosx-version-min=10.14")
+        else:
+            # Min version for ARM on MacOS
+            darwin_opts.append("-mmacosx-version-min=11.0")
+
         c_opts["unix"] += darwin_opts
         l_opts["unix"] += darwin_opts
 

@@ -33,7 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-10.15]
+        os: [macos-10.14]
         arch: [x86_64]
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
