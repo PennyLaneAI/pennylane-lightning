@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+  pull_request:
 
 env:
   CIBW_BUILD: 'cp37-* cp38-* cp39-*'
@@ -10,7 +11,7 @@ env:
   # MacOS specific build settings
   CIBW_BEFORE_ALL_MACOS: |
     brew uninstall --force oclint
-    brew install llvm libomp
+    brew install libomp
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
@@ -52,7 +53,6 @@ jobs:
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
-
         env:
           CIBW_ARCHS_MACOS: ${{ matrix.arch }}
 

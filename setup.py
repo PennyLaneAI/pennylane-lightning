@@ -151,7 +151,9 @@ if not os.environ.get("SKIP_COMPILATION", False):
     if platform.system() == "Darwin":
         include_dirs += ["/usr/local/opt/libomp/include"]
         library_dirs += ["/usr/local/opt/libomp/lib"]
-        libraries += ["omp"]
+        #libraries += ["omp"]
+        extra_link_args += ["libomp.a"] # Ensure static linkage
+
 
     ext_modules = [
         Extension(
