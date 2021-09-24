@@ -11,9 +11,7 @@ env:
   # MacOS specific build settings
   CIBW_BEFORE_ALL_MACOS: |
     brew uninstall --force oclint
-    arch -arm64 brew install libomp
-    arch
-    arch -arm64 brew install libomp
+    brew install libomp
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
@@ -54,7 +52,9 @@ jobs:
         run: python -m pip install cibuildwheel==1.12.0
 
       - name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
+        run: |
+          arch
+          python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ARCHS_MACOS: ${{ matrix.arch }}
 
