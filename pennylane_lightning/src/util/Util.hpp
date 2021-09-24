@@ -36,6 +36,16 @@
 #define USE_CBLAS 1
 #else
 #define USE_CBLAS 0
+
+#include <mutex>
+#include <thread>
+
+static std::mutex barrier;
+#define STD_NUM_THREADS (2)
+#define INNER_PROD_THRESHOLD (1 << 10)
+#define MATVEC_PROD_THRESHOLD (1 << 10)
+#define MATMAT_PROD_THRESHOLD (1 << 10)
+
 #endif
 /// @endcond
 
@@ -200,6 +210,79 @@ template <class T> inline size_t dimSize(const std::vector<T> &data) {
 }
 
 /**
+ * @brief Returns a partitioning for [0, data_size) of size `n_parts`.
+ *
+ * @param n_parts Number of partitions.
+ * @param data_size The upper-bound for the interval [0, data_size)
+ * @return a std::vector<std::size_t> of partitions.
+ */
+inline static std::vector<std::size_t> getBounds(std::size_t n_parts,
+                                                 std::size_t data_size) {
+    std::vector<std::size_t> bnd;
+    std::size_t d = data_size / n_parts;
+    std::size_t i, n1 = 0, n2 = 0;
+    bnd.push_back(n1);
+    for (i = 0; i < n_parts; ++i) {
+        n2 = n1 + d;
+        if (i == n_parts - 1) {
+            n2 = data_size;
+        }
+        bnd.push_back(n2);
+        n1 = n2;
+    }
+    return bnd;
+}
+
+/**
+ * @brief This calls by inner_product_thread
+ */
+template <class T>
+inline void _inner_product_mutex(const std::complex<T> *v1,
+                                 const std::complex<T> *v2,
+                                 std::complex<T> &result, std::size_t left,
+                                 std::size_t right) {
+    std::complex<T> s{0, 0};
+    for (std::size_t i = left; i < right; ++i) {
+        s += *(v1 + i) * *(v2 + i);
+    }
+
+    std::lock_guard<std::mutex> block_threads_until_finish_this_job(barrier);
+    result += s;
+}
+
+/**
+ * @brief Calculates the inner-product using std::thread and std::mutex
+ *
+ * @tparam T Floating point precision type.
+ * @param data_1 Complex data array 1.
+ * @param data_2 Complex data array 2.
+ * @param data_size Size of data arrays.
+ * @param nthreads Number of threads (2 is default).
+ * @return std::complex<T> Result of inner product operation.
+ */
+template <class T>
+inline std::complex<T> inner_product_thread(const std::complex<T> *data_1,
+                                            const std::complex<T> *data_2,
+                                            std::size_t data_size,
+                                            std::size_t nthreads = 2) {
+    std::complex<T> res(0, 0);
+    std::vector<std::size_t> bnd = getBounds(nthreads, data_size);
+
+    std::vector<std::thread> threads;
+    for (std::size_t i = 0; i < nthreads; ++i) {
+        threads.push_back(std::thread(_inner_product_mutex<T>, std::ref(data_1),
+                                      std::ref(data_2), std::ref(res), bnd[i],
+                                      bnd[i + 1]));
+    }
+
+    for (auto &h : threads) {
+        h.join();
+    }
+
+    return res;
+}
+
+/**
  * @brief Calculates the inner-product using the best available method.
  *
  * @tparam T Floating point precision type.
@@ -220,10 +303,17 @@ std::complex<T> innerProd(const std::complex<T> *data_1,
         else if constexpr (std::is_same_v<T, double>)
             cblas_zdotu_sub(data_size, data_1, 1, data_2, 1, &result);
     } else {
-        result = std::inner_product(
-            data_1, data_1 + data_size, data_2, std::complex<T>(), ConstSum<T>,
-            static_cast<std::complex<T> (*)(std::complex<T>, std::complex<T>)>(
-                &ConstMult<T>));
+        if (data_size < INNER_PROD_THRESHOLD) {
+            result = std::inner_product(
+                data_1, data_1 + data_size, data_2, std::complex<T>(),
+                ConstSum<T>,
+                static_cast<std::complex<T> (*)(
+                    std::complex<T>, std::complex<T>)>(&ConstMult<T>));
+        } else {
+            result =
+                inner_product_thread(data_1, data_2, data_size,
+                                     static_cast<std::size_t>(STD_NUM_THREADS));
+        }
     }
     return result;
 }
