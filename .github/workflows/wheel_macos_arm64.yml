@@ -53,7 +53,6 @@ jobs:
 
       - name: Build wheels
         run: |
-          arch
           python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ARCHS_MACOS: ${{ matrix.arch }}
