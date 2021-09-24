@@ -70,7 +70,7 @@ void applyGeneratorPhaseShift(SVType &sv, const std::vector<size_t> &wires,
 
 template <class T = double, class SVType = Pennylane::StateVector<T>>
 void applyGeneratorCRX(SVType &sv, const std::vector<size_t> &wires,
-                       const bool adj = false) {
+                       [[maybe_unused]] const bool adj = false) {
     const vector<size_t> internalIndices = sv.generateBitPatterns(wires);
     const vector<size_t> externalWires = sv.getIndicesAfterExclusion(wires);
     const vector<size_t> externalIndices =
@@ -85,7 +85,7 @@ void applyGeneratorCRX(SVType &sv, const std::vector<size_t> &wires,
 
 template <class T = double, class SVType = Pennylane::StateVector<T>>
 void applyGeneratorCRY(SVType &sv, const std::vector<size_t> &wires,
-                       const bool adj = false) {
+                       [[maybe_unused]] const bool adj = false) {
     const vector<size_t> internalIndices = sv.generateBitPatterns(wires);
     const vector<size_t> externalWires = sv.getIndicesAfterExclusion(wires);
     const vector<size_t> externalIndices =
@@ -103,7 +103,7 @@ void applyGeneratorCRY(SVType &sv, const std::vector<size_t> &wires,
 
 template <class T = double, class SVType = Pennylane::StateVector<T>>
 void applyGeneratorCRZ(SVType &sv, const std::vector<size_t> &wires,
-                       const bool adj = false) {
+                       [[maybe_unused]] const bool adj = false) {
     const vector<size_t> internalIndices = sv.generateBitPatterns(wires);
     const vector<size_t> externalWires = sv.getIndicesAfterExclusion(wires);
     const vector<size_t> externalIndices =
@@ -116,9 +116,9 @@ void applyGeneratorCRZ(SVType &sv, const std::vector<size_t> &wires,
 }
 
 template <class T = double, class SVType = Pennylane::StateVector<T>>
-void applyGeneratorControlledPhaseShift(SVType &sv,
-                                        const std::vector<size_t> &wires,
-                                        const bool adj = false) {
+void applyGeneratorControlledPhaseShift(
+    SVType &sv, const std::vector<size_t> &wires,
+    [[maybe_unused]] const bool adj = false) {
     const vector<size_t> internalIndices = sv.generateBitPatterns(wires);
     const vector<size_t> externalWires = sv.getIndicesAfterExclusion(wires);
     const vector<size_t> externalIndices =
@@ -384,10 +384,14 @@ template <class T = double> class AdjointJacobian {
 
     // Holds the mappings from gate labels to associated generator coefficients.
     const std::unordered_map<std::string, T> scaling_factors{
-        {"RX", -0.5},  {"RY", -0.5},
-        {"RZ", -0.5},  {"PhaseShift", 1},
-        {"CRX", -0.5}, {"CRY", -0.5},
-        {"CRZ", -0.5}, {"ControlledPhaseShift", 1}};
+        {"RX", -static_cast<T>(0.5)},
+        {"RY", -static_cast<T>(0.5)},
+        {"RZ", -static_cast<T>(0.5)},
+        {"PhaseShift", static_cast<T>(1)},
+        {"CRX", -static_cast<T>(0.5)},
+        {"CRY", -static_cast<T>(0.5)},
+        {"CRZ", -static_cast<T>(0.5)},
+        {"ControlledPhaseShift", static_cast<T>(1)}};
 
     /**
      * @brief Utility method to update the Jacobian at a given index by
@@ -602,8 +606,9 @@ template <class T = double> class AdjointJacobian {
         // Create observable-applied state-vectors
         std::vector<StateVectorManaged<T>> H_lambda(num_observables,
                                                     {lambda.getNumQubits()});
-
+#if defined _OPENMP
 #pragma omp parallel for
+#endif
         for (size_t h_i = 0; h_i < num_observables; h_i++) {
             H_lambda[h_i].updateData(lambda.getDataVector());
             applyObservable(H_lambda[h_i], observables[h_i]);
@@ -611,8 +616,8 @@ template <class T = double> class AdjointJacobian {
 
         StateVectorManaged<T> mu(lambda.getNumQubits());
 
-        for (int op_idx = operations.getOpsName().size() - 1; op_idx >= 0;
-             op_idx--) {
+        for (int op_idx = static_cast<int>(operations.getOpsName().size() - 1);
+             op_idx >= 0; op_idx--) {
             PL_ABORT_IF(operations.getOpsParams()[op_idx].size() > 1,
                         "The operation is not supported using the adjoint "
                         "differentiation method");
@@ -631,8 +636,9 @@ template <class T = double> class AdjointJacobian {
                                 !operations.getOpsInverses()[op_idx]) *
                             (2 * (0b1 ^ operations.getOpsInverses()[op_idx]) -
                              1);
-                        size_t index;
+#if defined _OPENMP
 #pragma omp parallel for
+#endif
                         for (size_t obs_idx = 0; obs_idx < num_observables;
                              obs_idx++) {
                             updateJacobian(H_lambda[obs_idx], mu, jac,
@@ -644,8 +650,9 @@ template <class T = double> class AdjointJacobian {
                     }
                     current_param_idx--;
                 }
-
+#if defined _OPENMP
 #pragma omp parallel for
+#endif
                 for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
                     applyOperationAdj(H_lambda[obs_idx], operations, op_idx);
                 }

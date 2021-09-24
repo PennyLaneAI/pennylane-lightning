@@ -20,7 +20,9 @@
 
 /// @cond DEV
 // Required for compilation with MSVC
+#ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES // for C++
+#endif
 /// @endcond
 
 #include <cmath>
@@ -81,14 +83,13 @@ template <class fp_t = double> class StateVector {
 
     using FMap = std::unordered_map<string, Func>;
 
-    const FMap gates_;
-    const std::unordered_map<string, size_t> gate_wires_;
-
     //***********************************************************************//
 
     CFP_t *arr_;
     size_t length_;
     size_t num_qubits_;
+    const std::unordered_map<string, size_t> gate_wires_;
+    const FMap gates_;
 
   public:
     /**
@@ -389,8 +390,8 @@ template <class fp_t = double> class StateVector {
      */
     void applyMatrix(const vector<CFP_t> &matrix, const vector<size_t> &indices,
                      const vector<size_t> &externalIndices, bool inverse) {
-        if (static_cast<size_t>(0b1 << (Util::log2(indices.size()) +
-                                        Util::log2(externalIndices.size()))) !=
+        if (static_cast<size_t>(1ULL << (Util::log2(indices.size()) +
+                                         Util::log2(externalIndices.size()))) !=
             length_)
             throw std::out_of_range(
                 "The given indices do not match the state-vector length.");
@@ -414,7 +415,7 @@ template <class fp_t = double> class StateVector {
                     for (size_t j = 0; j < indices.size(); j++) {
                         const size_t baseIndex = j * indices.size();
                         shiftedState[index] +=
-                            conj(matrix[baseIndex + i]) * v[j];
+                            std::conj(matrix[baseIndex + i]) * v[j];
                     }
                 } else {
                     const size_t baseIndex = i * indices.size();
@@ -437,8 +438,8 @@ template <class fp_t = double> class StateVector {
      */
     void applyMatrix(const CFP_t *matrix, const vector<size_t> &indices,
                      const vector<size_t> &externalIndices, bool inverse) {
-        if (static_cast<size_t>(0b1 << (Util::log2(indices.size()) +
-                                        Util::log2(externalIndices.size()))) !=
+        if (static_cast<size_t>(1ULL << (Util::log2(indices.size()) +
+                                         Util::log2(externalIndices.size()))) !=
             length_)
             throw std::out_of_range(
                 "The given indices do not match the state-vector length.");
@@ -462,7 +463,7 @@ template <class fp_t = double> class StateVector {
                     for (size_t j = 0; j < indices.size(); j++) {
                         const size_t baseIndex = j * indices.size();
                         shiftedState[index] +=
-                            conj(matrix[baseIndex + i]) * v[j];
+                            std::conj(matrix[baseIndex + i]) * v[j];
                     }
                 } else {
                     const size_t baseIndex = i * indices.size();
@@ -484,7 +485,8 @@ template <class fp_t = double> class StateVector {
      * @param inverse Take adjoint of given operation.
      */
     void applyPauliX(const vector<size_t> &indices,
-                     const vector<size_t> &externalIndices, bool inverse) {
+                     const vector<size_t> &externalIndices,
+                     [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             std::swap(shiftedState[indices[0]], shiftedState[indices[1]]);
@@ -501,7 +503,8 @@ template <class fp_t = double> class StateVector {
      * @param inverse Take adjoint of given operation.
      */
     void applyPauliY(const vector<size_t> &indices,
-                     const vector<size_t> &externalIndices, bool inverse) {
+                     const vector<size_t> &externalIndices,
+                     [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             CFP_t v0 = shiftedState[indices[0]];
@@ -521,7 +524,8 @@ template <class fp_t = double> class StateVector {
      * @param inverse Take adjoint of given operation.
      */
     void applyPauliZ(const vector<size_t> &indices,
-                     const vector<size_t> &externalIndices, bool inverse) {
+                     const vector<size_t> &externalIndices,
+                     [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             shiftedState[indices[1]] *= -1;
@@ -538,7 +542,8 @@ template <class fp_t = double> class StateVector {
      * @param inverse Take adjoint of given operation.
      */
     void applyHadamard(const vector<size_t> &indices,
-                       const vector<size_t> &externalIndices, bool inverse) {
+                       const vector<size_t> &externalIndices,
+                       [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
 
@@ -581,9 +586,10 @@ template <class fp_t = double> class StateVector {
      */
     void applyT(const vector<size_t> &indices,
                 const vector<size_t> &externalIndices, bool inverse) {
-        const CFP_t shift = (inverse == true)
-                                ? std::conj(std::exp(CFP_t(0, M_PI / 4)))
-                                : std::exp(CFP_t(0, M_PI / 4));
+        const CFP_t shift =
+            (inverse == true)
+                ? std::conj(std::exp(CFP_t(0, static_cast<fp_t>(M_PI / 4))))
+                : std::exp(CFP_t(0, static_cast<fp_t>(M_PI / 4)));
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -690,7 +696,7 @@ template <class fp_t = double> class StateVector {
     void applyPhaseShift(const vector<size_t> &indices,
                          const vector<size_t> &externalIndices, bool inverse,
                          Param_t angle) {
-        const CFP_t s = inverse ? conj(std::exp(CFP_t(0, angle)))
+        const CFP_t s = inverse ? std::conj(std::exp(CFP_t(0, angle)))
                                 : std::exp(CFP_t(0, angle));
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -715,7 +721,7 @@ template <class fp_t = double> class StateVector {
     void applyControlledPhaseShift(const std::vector<size_t> &indices,
                                    const std::vector<size_t> &externalIndices,
                                    bool inverse, Param_t angle) {
-        const CFP_t s = inverse ? conj(std::exp(CFP_t(0, angle)))
+        const CFP_t s = inverse ? std::conj(std::exp(CFP_t(0, angle)))
                                 : std::exp(CFP_t(0, angle));
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -744,10 +750,10 @@ template <class fp_t = double> class StateVector {
                   Param_t phi, Param_t theta, Param_t omega) {
         const vector<CFP_t> rot = Gates::getRot<fp_t>(phi, theta, omega);
 
-        const CFP_t t1 = (inverse == true) ? conj(rot[0]) : rot[0];
+        const CFP_t t1 = (inverse == true) ? std::conj(rot[0]) : rot[0];
         const CFP_t t2 = (inverse == true) ? -rot[1] : rot[1];
         const CFP_t t3 = (inverse == true) ? -rot[2] : rot[2];
-        const CFP_t t4 = (inverse == true) ? conj(rot[3]) : rot[3];
+        const CFP_t t4 = (inverse == true) ? std::conj(rot[3]) : rot[3];
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -768,7 +774,8 @@ template <class fp_t = double> class StateVector {
      * @param inverse Take adjoint of given operation.
      */
     void applyCNOT(const vector<size_t> &indices,
-                   const vector<size_t> &externalIndices, bool inverse) {
+                   const vector<size_t> &externalIndices,
+                   [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             std::swap(shiftedState[indices[2]], shiftedState[indices[3]]);
@@ -785,10 +792,11 @@ template <class fp_t = double> class StateVector {
      * @param inverse Take adjoint of given operation.
      */
     void applySWAP(const vector<size_t> &indices,
-                   const vector<size_t> &externalIndices, bool inverse) {
+                   const vector<size_t> &externalIndices,
+                   [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
-            swap(shiftedState[indices[1]], shiftedState[indices[2]]);
+            std::swap(shiftedState[indices[1]], shiftedState[indices[2]]);
         }
     }
     /**
@@ -801,7 +809,8 @@ template <class fp_t = double> class StateVector {
      * @param inverse Take adjoint of given operation.
      */
     void applyCZ(const vector<size_t> &indices,
-                 const vector<size_t> &externalIndices, bool inverse) {
+                 const vector<size_t> &externalIndices,
+                 [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             shiftedState[indices[3]] *= -1;
@@ -916,10 +925,10 @@ template <class fp_t = double> class StateVector {
                    Param_t phi, Param_t theta, Param_t omega) {
         const auto rot = Gates::getRot<fp_t>(phi, theta, omega);
 
-        const CFP_t t1 = (inverse == true) ? conj(rot[0]) : rot[0];
+        const CFP_t t1 = (inverse == true) ? std::conj(rot[0]) : rot[0];
         const CFP_t t2 = (inverse == true) ? -rot[1] : rot[1];
         const CFP_t t3 = (inverse == true) ? -rot[2] : rot[2];
-        const CFP_t t4 = (inverse == true) ? conj(rot[3]) : rot[3];
+        const CFP_t t4 = (inverse == true) ? std::conj(rot[3]) : rot[3];
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -940,7 +949,8 @@ template <class fp_t = double> class StateVector {
      * @param inverse Take adjoint of given operation.
      */
     void applyToffoli(const vector<size_t> &indices,
-                      const vector<size_t> &externalIndices, bool inverse) {
+                      const vector<size_t> &externalIndices,
+                      [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             std::swap(shiftedState[indices[6]], shiftedState[indices[7]]);
@@ -957,7 +967,8 @@ template <class fp_t = double> class StateVector {
      * @param inverse Take adjoint of given operation.
      */
     void applyCSWAP(const vector<size_t> &indices,
-                    const vector<size_t> &externalIndices, bool inverse) {
+                    const vector<size_t> &externalIndices,
+                    [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             std::swap(shiftedState[indices[5]], shiftedState[indices[6]]);

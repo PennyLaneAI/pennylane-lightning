@@ -74,13 +74,13 @@ class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
 
     c_opts = {
-        "msvc": ["-EHsc", "-O2", "-W1", "-std:c++17", "-D_USE_MATH_DEFINES"],
-        "unix": ["-O3", "-W", "-fPIC", "-shared", "-fopenmp"],
+        "msvc": ["/EHsc", "/O2", "/W4", "/WX", "/std:c++17", "-D_USE_MATH_DEFINES"],
+        "unix": ["-O3", "-fPIC", "-shared", "-fopenmp", "-Wall", "-Wextra", "-Werror"],
     }
 
     l_opts = {
-        "msvc": [],
-        "unix": ["-O3", "-W", "-fPIC", "-shared", "-fopenmp"],
+        "msvc": ["/WX"],
+        "unix": ["-O3", "-fPIC", "-shared", "-fopenmp", "-Wall", "-Wextra", "-Werror"],
     }
 
     if platform.system() == "Darwin":
@@ -92,9 +92,9 @@ class BuildExt(build_ext):
             "-stdlib=libc++",
             "-Xpreprocessor",
             "-fopenmp",
-            "-lomp",
-            "-mmacosx-version-min=10.14",
         ]
+        darwin_opts.append("-mmacosx-version-min=10.14")
+        
         c_opts["unix"] += darwin_opts
         l_opts["unix"] += darwin_opts
 
@@ -146,6 +146,7 @@ if not os.environ.get("SKIP_COMPILATION", False):
         library_dirs += ["/usr/local/opt/libomp/lib"]
         libraries += ["omp"]
 
+
     ext_modules = [
         Extension(
             "lightning_qubit_ops",
@@ -174,7 +175,6 @@ requirements = [
     "numpy",
     "pennylane>=0.15",
 ]
-
 
 info = {
     "name": "PennyLane-Lightning",
