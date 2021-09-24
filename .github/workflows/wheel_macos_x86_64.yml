@@ -11,7 +11,7 @@ env:
   # MacOS specific build settings
   CIBW_BEFORE_ALL_MACOS: |
     brew uninstall --force oclint
-    brew install llvm libomp
+    brew install libomp
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
@@ -23,12 +23,16 @@ env:
   CIBW_TEST_COMMAND: |
     pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
+  CIBW_BUILD_VERBOSITY: 1
+
+  MACOSX_DEPLOYMENT_TARGET: 10.14
+
 jobs:
   mac-wheels-x86:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest]
+        os: [macos-10.14]
         arch: [x86_64]
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}

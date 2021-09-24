@@ -30,29 +30,30 @@ class StateVectorManaged : public StateVector<fp_t> {
   public:
     StateVectorManaged() : StateVector<fp_t>() {}
     StateVectorManaged(size_t num_qubits)
-        : data_(static_cast<size_t>(Util::exp2(num_qubits)), CFP_t{0, 0}),
-          StateVector<fp_t>(nullptr,
-                            static_cast<size_t>(Util::exp2(num_qubits))) {
+        : StateVector<fp_t>(nullptr,
+                            static_cast<size_t>(Util::exp2(num_qubits))),
+          data_(static_cast<size_t>(Util::exp2(num_qubits)), CFP_t{0, 0}) {
         StateVector<fp_t>::setData(data_.data());
         data_[0] = {1, 0};
     }
     StateVectorManaged(const StateVector<fp_t> &other)
-        : data_{other.getData(), other.getData() + other.getLength()},
-          StateVector<fp_t>(nullptr, data_.size()) {
+        : StateVector<fp_t>(nullptr, data_.size()),
+          data_{other.getData(), other.getData() + other.getLength()} {
         StateVector<fp_t>::setData(data_.data());
     }
     StateVectorManaged(const std::vector<CFP_t> &other_data)
-        : data_{other_data}, StateVector<fp_t>(nullptr, other_data.size()) {
+        : StateVector<fp_t>(nullptr, other_data.size()), data_{other_data} {
         StateVector<fp_t>::setData(data_.data());
     }
     StateVectorManaged(const CFP_t *other_data, size_t other_size)
-        : data_{other_data, other_data + other_size}, StateVector<fp_t>(
-                                                          nullptr, other_size) {
+        : StateVector<fp_t>(nullptr, other_size), data_{other_data,
+                                                        other_data +
+                                                            other_size} {
         StateVector<fp_t>::setData(data_.data());
     }
     StateVectorManaged(const StateVectorManaged<fp_t> &other)
-        : data_{other.data_}, StateVector<fp_t>(nullptr,
-                                                other.getDataVector().size()) {
+        : StateVector<fp_t>(nullptr, other.getDataVector().size()),
+          data_{other.data_} {
         StateVector<fp_t>::setData(data_.data());
     }
 

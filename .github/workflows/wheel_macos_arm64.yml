@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+  pull_request:
 
 env:
   CIBW_BUILD: 'cp37-* cp38-* cp39-*'
@@ -10,7 +11,7 @@ env:
   # MacOS specific build settings
   CIBW_BEFORE_ALL_MACOS: |
     brew uninstall --force oclint
-    brew install llvm libomp
+    brew install libomp
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
@@ -22,14 +23,14 @@ env:
   CIBW_TEST_COMMAND: |
     pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
-  MACOSX_DEPLOYMENT_TARGET: 10.14
+  CIBW_BUILD_VERBOSITY: 1
 
 jobs:
   mac-wheels-arm64:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest]
+        os: [macos-11]
         arch: [arm64]
     name: macos-latest::arm64
     runs-on: ${{ matrix.os }}
@@ -51,8 +52,8 @@ jobs:
         run: python -m pip install cibuildwheel==1.12.0
 
       - name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
-
+        run: |
+          python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ARCHS_MACOS: ${{ matrix.arch }}
 

@@ -467,30 +467,6 @@ template <class fp_t = double> class StateVecBinder : public StateVector<fp_t> {
 };
 
 /**
- * @brief Binding class for exposing C++ AdjointJaconian class to Python.
- *
- * @tparam fp_t Floating point precision type.
- */
-template <class fp_t = double>
-class AdjJacBinder : public AdjointJacobian<fp_t> {
-  private:
-    using ObsTuple = std::tuple<std::vector<std::vector<std::string>>,
-                                std::vector<std::vector<fp_t>>,
-                                std::vector<std::vector<size_t>>>;
-    using OpsTuple =
-        std::tuple<std::vector<std::string>, std::vector<std::vector<fp_t>>,
-                   std::vector<std::vector<size_t>>, std::vector<bool>,
-                   std::vector<std::vector<std::complex<fp_t>>>>;
-
-  public:
-    explicit AdjJacBinder() : AdjointJacobian<fp_t>() {}
-
-    void adjoint_jacobian_py(const ObsTuple &obs, const OpsTuple &ops,
-                             const std::vector<size_t> &trainableParamIndices,
-                             size_t num_params) {}
-};
-
-/**
  * @brief Templated class to build all required precisions for Python module.
  *
  * @tparam PrecisionT Precision of the statevector data.
@@ -787,6 +763,7 @@ void lightning_class_bindings(py::module &m) {
                      ops_params.size());
                  std::vector<std::vector<std::complex<PrecisionT>>>
                      conv_matrices(ops_matrices.size());
+                 static_cast<void>(adj);
                  for (size_t op = 0; op < ops_name.size(); op++) {
                      const auto p_buffer = ops_params[op].request();
                      const auto m_buffer = ops_matrices[op].request();

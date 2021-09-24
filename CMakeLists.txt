@@ -28,6 +28,7 @@ endif()
 
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(BUILD_TESTS "Build cpp tests" OFF)
+option(ENABLE_WARNINGS "Enable warnings" ON)
 
 # Add pybind11
 include(FetchContent)
@@ -59,8 +60,11 @@ target_link_libraries(lightning_qubit_ops PRIVATE pennylane_lightning external_d
 set_target_properties(lightning_qubit_ops PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
 target_compile_options(lightning_qubit_ops PRIVATE "$<$<CONFIG:RELEASE>:-W>")
-target_compile_options(lightning_qubit_ops PRIVATE "$<$<CONFIG:DEBUG>:-Wall>")
 target_compile_definitions(lightning_qubit_ops PRIVATE VERSION_INFO=${VERSION_STRING})
+
+if(ENABLE_WARNINGS)
+  target_compile_options(pennylane_lightning INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Werror>)
+endif()
 
 if(ENABLE_NATIVE)
     message(STATUS "ENABLE_NATIVE is ON. Using -march=native")
