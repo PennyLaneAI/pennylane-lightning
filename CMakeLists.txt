@@ -29,6 +29,16 @@ endif()
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(BUILD_TESTS "Build cpp tests" OFF)
 option(ENABLE_WARNINGS "Enable warnings" ON)
+option(ENABLE_CLANG_TIDY "Enable clang-tidy build checks" OFF)
+
+if(ENABLE_CLANG_TIDY)
+    set(CMAKE_CXX_CLANG_TIDY clang-tidy;
+                            -extra-arg=-std=c++17;
+                            -warnings-as-errors=*;
+                            -header-filter=.*;
+                            -checks=-*,-llvmlibc-*,modernize-*,clang-analyzer-cplusplus*,openmp-*,performance-*,portability-*,readability-*;
+    )
+endif()
 
 # Add pybind11
 include(FetchContent)
