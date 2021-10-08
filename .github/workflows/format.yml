@@ -49,7 +49,7 @@ jobs:
 
       - name: Run clang-tidy compilation
         run: |
-          cmake -BBuild -DENABLE_CLANG_TIDY=on -DCLANT_TIDY_BINARY=clang-tidy-11 .
+          cmake -BBuild -DENABLE_CLANG_TIDY=on -DCLANG_TIDY_BINARY=clang-tidy-11 .
           cmake --build ./Build
 
   format-cpp:
