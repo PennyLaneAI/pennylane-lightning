@@ -40,7 +40,6 @@
 /// @endcond
 
 namespace Pennylane {
-
 namespace Util {
 
 /**
@@ -53,7 +52,8 @@ namespace Util {
  * @return constexpr std::complex<T>
  */
 template <class T, class U = T>
-inline static constexpr std::complex<T> ConstMult(U a, std::complex<T> b) {
+inline static constexpr auto ConstMult(U a, std::complex<T> b)
+    -> std::complex<T> {
     return {a * b.real(), a * b.imag()};
 }
 
@@ -67,14 +67,14 @@ inline static constexpr std::complex<T> ConstMult(U a, std::complex<T> b) {
  * @return constexpr std::complex<T>
  */
 template <class T, class U = T>
-inline static constexpr std::complex<T> ConstMult(std::complex<U> a,
-                                                  std::complex<T> b) {
+inline static constexpr auto ConstMult(std::complex<U> a, std::complex<T> b)
+    -> std::complex<T> {
     return {a.real() * b.real() - a.imag() * b.imag(),
             a.real() * b.imag() + a.imag() * b.real()};
 }
 template <class T, class U = T>
-inline static constexpr std::complex<T> ConstMultConj(std::complex<U> a,
-                                                      std::complex<T> b) {
+inline static constexpr auto ConstMultConj(std::complex<U> a, std::complex<T> b)
+    -> std::complex<T> {
     return {a.real() * b.real() + a.imag() * b.imag(),
             -a.imag() * b.real() + a.real() * b.imag()};
 }
@@ -89,8 +89,8 @@ inline static constexpr std::complex<T> ConstMultConj(std::complex<U> a,
  * @return constexpr std::complex<T>
  */
 template <class T, class U = T>
-inline static constexpr std::complex<T> ConstSum(std::complex<U> a,
-                                                 std::complex<T> b) {
+inline static constexpr auto ConstSum(std::complex<U> a, std::complex<T> b)
+    -> std::complex<T> {
     return a + b;
 }
 
@@ -100,7 +100,7 @@ inline static constexpr std::complex<T> ConstSum(std::complex<U> a,
  * @tparam T Floating point precision type. Accepts `double` and `float`.
  * @return constexpr std::complex<T>{1,0}
  */
-template <class T> inline static constexpr std::complex<T> ONE() {
+template <class T> inline static constexpr auto ONE() -> std::complex<T> {
     return {1, 0};
 }
 
@@ -110,7 +110,7 @@ template <class T> inline static constexpr std::complex<T> ONE() {
  * @tparam T Floating point precision type. Accepts `double` and `float`.
  * @return constexpr std::complex<T>{0,0}
  */
-template <class T> inline static constexpr std::complex<T> ZERO() {
+template <class T> inline static constexpr auto ZERO() -> std::complex<T> {
     return {0, 0};
 }
 
@@ -120,7 +120,7 @@ template <class T> inline static constexpr std::complex<T> ZERO() {
  * @tparam T Floating point precision type. Accepts `double` and `float`.
  * @return constexpr std::complex<T>{0,1}
  */
-template <class T> inline static constexpr std::complex<T> IMAG() {
+template <class T> inline static constexpr auto IMAG() -> std::complex<T> {
     return {0, 1};
 }
 
@@ -130,9 +130,9 @@ template <class T> inline static constexpr std::complex<T> IMAG() {
  * @tparam T Precision of result. `double`, `float` are accepted values.
  * @return constexpr T sqrt(2)
  */
-template <class T> inline static constexpr T SQRT2() {
+template <class T> inline static constexpr auto SQRT2() -> T {
     if constexpr (std::is_same_v<T, float>) {
-        return {0x1.6a09e6p+0f};
+        return {0x1.6a09e6p+0F};
     } else {
         return {0x1.6a09e667f3bcdp+0};
     }
@@ -144,7 +144,7 @@ template <class T> inline static constexpr T SQRT2() {
  * @tparam T Precision of result. `double`, `float` are accepted values.
  * @return constexpr T 1/sqrt(2)
  */
-template <class T> inline static constexpr T INVSQRT2() {
+template <class T> inline static constexpr auto INVSQRT2() -> T {
     return {1 / SQRT2<T>()};
 }
 
@@ -154,7 +154,9 @@ template <class T> inline static constexpr T INVSQRT2() {
  * @param n the exponent
  * @return value of 2^n
  */
-inline size_t exp2(const size_t &n) { return static_cast<size_t>(1) << n; }
+inline auto exp2(const size_t &n) -> size_t {
+    return static_cast<size_t>(1) << n;
+}
 
 /**
  * @brief Log2 calculation.
@@ -162,7 +164,7 @@ inline size_t exp2(const size_t &n) { return static_cast<size_t>(1) << n; }
  * @param value Value to calculate for.
  * @return size_t
  */
-inline size_t log2(size_t value) {
+inline auto log2(size_t value) -> size_t {
     return static_cast<size_t>(std::log2(value));
 }
 
@@ -173,7 +175,7 @@ inline size_t log2(size_t value) {
  * @param qubits the number of qubits in the circuit
  * @return decimal value for the qubit at specified index
  */
-inline size_t maxDecimalForQubit(size_t qubitIndex, size_t qubits) {
+inline auto maxDecimalForQubit(size_t qubitIndex, size_t qubits) -> size_t {
     assert(qubitIndex < qubits);
     return exp2(qubits - qubitIndex - 1);
 }
@@ -185,16 +187,19 @@ inline size_t maxDecimalForQubit(size_t qubitIndex, size_t qubits) {
  * @param data Gate matrix data.
  * @return size_t Number of wires.
  */
-template <class T> inline size_t dimSize(const std::vector<T> &data) {
+template <class T> inline auto dimSize(const std::vector<T> &data) -> size_t {
     const size_t s = data.size();
-    const size_t s_sqrt = static_cast<size_t>(std::floor(std::sqrt(s)));
+    const auto s_sqrt = static_cast<size_t>(std::floor(std::sqrt(s)));
 
-    if (s < 4)
+    if (s < 4) {
         throw std::invalid_argument("The dataset must be at least 2x2");
-    if (((s == 0) || (s & (s - 1))))
+    }
+    if (((s == 0) || (s & (s - 1)))) {
         throw std::invalid_argument("The dataset must be a power of 2");
-    if (s_sqrt * s_sqrt != s)
+    }
+    if (s_sqrt * s_sqrt != s) {
         throw std::invalid_argument("The dataset must be a perfect square");
+    }
 
     return static_cast<size_t>(log2(s_sqrt));
 }
@@ -209,16 +214,16 @@ template <class T> inline size_t dimSize(const std::vector<T> &data) {
  * @return std::complex<T> Result of inner product operation.
  */
 template <class T>
-std::complex<T> innerProd(const std::complex<T> *data_1,
-                          const std::complex<T> *data_2,
-                          const size_t data_size) {
+auto innerProd(const std::complex<T> *data_1, const std::complex<T> *data_2,
+               const size_t data_size) -> std::complex<T> {
     std::complex<T> result(0, 0);
 
     if constexpr (USE_CBLAS) {
-        if constexpr (std::is_same_v<T, float>)
+        if constexpr (std::is_same_v<T, float>) {
             cblas_cdotu_sub(data_size, data_1, 1, data_2, 1, &result);
-        else if constexpr (std::is_same_v<T, double>)
+        } else if constexpr (std::is_same_v<T, double>) {
             cblas_zdotu_sub(data_size, data_1, 1, data_2, 1, &result);
+        }
     } else {
         result = std::inner_product(
             data_1, data_1 + data_size, data_2, std::complex<T>(), ConstSum<T>,
@@ -239,16 +244,16 @@ std::complex<T> innerProd(const std::complex<T> *data_1,
  * @return std::complex<T> Result of inner product operation.
  */
 template <class T>
-std::complex<T> innerProdC(const std::complex<T> *data_1,
-                           const std::complex<T> *data_2,
-                           const size_t data_size) {
+auto innerProdC(const std::complex<T> *data_1, const std::complex<T> *data_2,
+                const size_t data_size) -> std::complex<T> {
     std::complex<T> result(0, 0);
 
     if constexpr (USE_CBLAS) {
-        if constexpr (std::is_same_v<T, float>)
+        if constexpr (std::is_same_v<T, float>) {
             cblas_cdotc_sub(data_size, data_1, 1, data_2, 1, &result);
-        else if constexpr (std::is_same_v<T, double>)
+        } else if constexpr (std::is_same_v<T, double>) {
             cblas_zdotc_sub(data_size, data_1, 1, data_2, 1, &result);
+        }
     } else {
         result = std::inner_product(data_1, data_1 + data_size, data_2,
                                     std::complex<T>(), ConstSum<T>,
@@ -264,8 +269,9 @@ std::complex<T> innerProdC(const std::complex<T> *data_1,
  * const size_t data_size)
  */
 template <class T>
-inline std::complex<T> innerProd(const std::vector<std::complex<T>> &data_1,
-                                 const std::vector<std::complex<T>> &data_2) {
+inline auto innerProd(const std::vector<std::complex<T>> &data_1,
+                      const std::vector<std::complex<T>> &data_2)
+    -> std::complex<T> {
     return innerProd(data_1.data(), data_2.data(), data_1.size());
 }
 
@@ -277,8 +283,9 @@ inline std::complex<T> innerProd(const std::vector<std::complex<T>> &data_1,
  * const size_t data_size)
  */
 template <class T>
-inline std::complex<T> innerProdC(const std::vector<std::complex<T>> &data_1,
-                                  const std::vector<std::complex<T>> &data_2) {
+inline auto innerProdC(const std::vector<std::complex<T>> &data_1,
+                       const std::vector<std::complex<T>> &data_2)
+    -> std::complex<T> {
     return innerProdC(data_1.data(), data_2.data(), data_1.size());
 }
 
@@ -291,7 +298,8 @@ inline std::complex<T> innerProdC(const std::vector<std::complex<T>> &data_1,
  * @return std::ostream&
  */
 template <class T>
-inline std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
+inline auto operator<<(std::ostream &os, const std::vector<T> &vec)
+    -> std::ostream & {
     os << '[';
     for (size_t i = 0; i < vec.size(); i++) {
         os << vec[i] << ",";
@@ -309,7 +317,8 @@ inline std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec) {
  * @return std::ostream&
  */
 template <class T>
-inline std::ostream &operator<<(std::ostream &os, const std::set<T> &s) {
+inline auto operator<<(std::ostream &os, const std::set<T> &s)
+    -> std::ostream & {
     os << '{';
     for (const auto &e : s) {
         os << e << ",";
@@ -327,7 +336,8 @@ inline std::ostream &operator<<(std::ostream &os, const std::set<T> &s) {
  * @param num_points Number of data-points in range.
  * @return std::vector<T>
  */
-template <class T> std::vector<T> linspace(T start, T end, size_t num_points) {
+template <class T>
+auto linspace(T start, T end, size_t num_points) -> std::vector<T> {
     std::vector<T> data(num_points);
     T step = (end - start) / (num_points - 1);
     for (size_t i = 0; i < num_points; i++) {
