@@ -32,7 +32,10 @@ option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_CLANG_TIDY "Enable clang-tidy build checks" OFF)
 
 if(ENABLE_CLANG_TIDY)
-    set(CMAKE_CXX_CLANG_TIDY clang-tidy;
+    if (NOT DEFINED CLANG_TIDY_BINARY)
+        set(CLANG_TIDY_BINARY clang-tidy)
+    endif()
+    set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY_BINARY};
                             -extra-arg=-std=c++17;
                             -warnings-as-errors=*;
                             -header-filter=.*;

@@ -44,13 +44,14 @@ jobs:
 
       - name: Install dependencies
         run: sudo apt update && sudo apt -y install clang-tidy-11 python3 cmake g++
+        env: DEBIAN_FRONTEND=noninteractive
 
       - name: Checkout code
         uses: actions/checkout@v2
 
       - name: Run clang-tidy compilation
         run: |
-          cmake -BBuild -DENABLE_CLANG_TIDY=on . 
+          cmake -BBuild -DENABLE_CLANG_TIDY=on -DCLANT_TIDY_BINARY=clang-tidy-11 .
           cmake --build ./Build
 
   format-cpp:
