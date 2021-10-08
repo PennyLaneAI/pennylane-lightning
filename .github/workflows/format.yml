@@ -1,12 +1,15 @@
 name: Formatting check
 on:
   pull_request:
-    push:
-      branches:
-        - master
-      paths:
-        - "pennylane_lightning/**"
-        - "tests/**"
+    paths:
+      - "pennylane_lightning/**"
+      - "tests/**"
+  push:
+    branches:
+      - master
+    paths:
+      - "pennylane_lightning/**"
+      - "tests/**"
 
 jobs:
   black:
