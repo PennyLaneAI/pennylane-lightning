@@ -85,11 +85,11 @@ template <class fp_t = double> class StateVector {
 
     //***********************************************************************//
 
-    CFP_t *arr_;
-    size_t length_;
-    size_t num_qubits_;
+    CFP_t *arr_{nullptr};
+    size_t length_{0};
+    size_t num_qubits_{0};
     const std::unordered_map<string, size_t> gate_wires_;
-    const FMap gates_;
+    const FMap gates_{};
 
   public:
     /**
@@ -97,8 +97,7 @@ template <class fp_t = double> class StateVector {
      */
     using scalar_type_t = fp_t;
 
-    StateVector()
-        : arr_{nullptr}, length_{0}, num_qubits_{0}, gate_wires_{}, gates_{} {};
+    StateVector() : gate_wires_{} {};
 
     /**
      * @brief Construct a new `%StateVector` object from a given complex data
@@ -125,56 +124,165 @@ template <class fp_t = double> class StateVector {
               // dispatch. Non-parametric gate-calls will ignore the parameter
               // arguments if unused.
               {"PauliX",
-               bind(&StateVector<fp_t>::applyPauliX_, this, _1, _2, _3, _4)},
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyPauliX_(std::forward<decltype(PH1)>(PH1),
+                                std::forward<decltype(PH2)>(PH2),
+                                std::forward<decltype(PH3)>(PH3),
+                                std::forward<decltype(PH4)>(PH4));
+               }},
               {"PauliY",
-               bind(&StateVector<fp_t>::applyPauliY_, this, _1, _2, _3, _4)},
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyPauliY_(std::forward<decltype(PH1)>(PH1),
+                                std::forward<decltype(PH2)>(PH2),
+                                std::forward<decltype(PH3)>(PH3),
+                                std::forward<decltype(PH4)>(PH4));
+               }},
               {"PauliZ",
-               bind(&StateVector<fp_t>::applyPauliZ_, this, _1, _2, _3, _4)},
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyPauliZ_(std::forward<decltype(PH1)>(PH1),
+                                std::forward<decltype(PH2)>(PH2),
+                                std::forward<decltype(PH3)>(PH3),
+                                std::forward<decltype(PH4)>(PH4));
+               }},
               {"Hadamard",
-               bind(&StateVector<fp_t>::applyHadamard_, this, _1, _2, _3, _4)},
-              {"S", bind(&StateVector<fp_t>::applyS_, this, _1, _2, _3, _4)},
-              {"T", bind(&StateVector<fp_t>::applyT_, this, _1, _2, _3, _4)},
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyHadamard_(std::forward<decltype(PH1)>(PH1),
+                                  std::forward<decltype(PH2)>(PH2),
+                                  std::forward<decltype(PH3)>(PH3),
+                                  std::forward<decltype(PH4)>(PH4));
+               }},
+              {"S",
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyS_(std::forward<decltype(PH1)>(PH1),
+                           std::forward<decltype(PH2)>(PH2),
+                           std::forward<decltype(PH3)>(PH3),
+                           std::forward<decltype(PH4)>(PH4));
+               }},
+              {"T",
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyT_(std::forward<decltype(PH1)>(PH1),
+                           std::forward<decltype(PH2)>(PH2),
+                           std::forward<decltype(PH3)>(PH3),
+                           std::forward<decltype(PH4)>(PH4));
+               }},
               {"CNOT",
-               bind(&StateVector<fp_t>::applyCNOT_, this, _1, _2, _3, _4)},
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyCNOT_(std::forward<decltype(PH1)>(PH1),
+                              std::forward<decltype(PH2)>(PH2),
+                              std::forward<decltype(PH3)>(PH3),
+                              std::forward<decltype(PH4)>(PH4));
+               }},
               {"SWAP",
-               bind(&StateVector<fp_t>::applySWAP_, this, _1, _2, _3, _4)},
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applySWAP_(std::forward<decltype(PH1)>(PH1),
+                              std::forward<decltype(PH2)>(PH2),
+                              std::forward<decltype(PH3)>(PH3),
+                              std::forward<decltype(PH4)>(PH4));
+               }},
               {"CSWAP",
-               bind(&StateVector<fp_t>::applyCSWAP_, this, _1, _2, _3, _4)},
-              {"CZ", bind(&StateVector<fp_t>::applyCZ_, this, _1, _2, _3, _4)},
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyCSWAP_(std::forward<decltype(PH1)>(PH1),
+                               std::forward<decltype(PH2)>(PH2),
+                               std::forward<decltype(PH3)>(PH3),
+                               std::forward<decltype(PH4)>(PH4));
+               }},
+              {"CZ",
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyCZ_(std::forward<decltype(PH1)>(PH1),
+                            std::forward<decltype(PH2)>(PH2),
+                            std::forward<decltype(PH3)>(PH3),
+                            std::forward<decltype(PH4)>(PH4));
+               }},
               {"Toffoli",
-               bind(&StateVector<fp_t>::applyToffoli_, this, _1, _2, _3, _4)},
-              {"PhaseShift", bind(&StateVector<fp_t>::applyPhaseShift_, this,
-                                  _1, _2, _3, _4)},
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyToffoli_(std::forward<decltype(PH1)>(PH1),
+                                 std::forward<decltype(PH2)>(PH2),
+                                 std::forward<decltype(PH3)>(PH3),
+                                 std::forward<decltype(PH4)>(PH4));
+               }},
+              {"PhaseShift",
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyPhaseShift_(std::forward<decltype(PH1)>(PH1),
+                                    std::forward<decltype(PH2)>(PH2),
+                                    std::forward<decltype(PH3)>(PH3),
+                                    std::forward<decltype(PH4)>(PH4));
+               }},
               {"ControlledPhaseShift",
-               bind(&StateVector<fp_t>::applyControlledPhaseShift_, this, _1,
-                    _2, _3, _4)},
-              {"RX", bind(&StateVector<fp_t>::applyRX_, this, _1, _2, _3, _4)},
-              {"RY", bind(&StateVector<fp_t>::applyRY_, this, _1, _2, _3, _4)},
-              {"RZ", bind(&StateVector<fp_t>::applyRZ_, this, _1, _2, _3, _4)},
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyControlledPhaseShift_(std::forward<decltype(PH1)>(PH1),
+                                              std::forward<decltype(PH2)>(PH2),
+                                              std::forward<decltype(PH3)>(PH3),
+                                              std::forward<decltype(PH4)>(PH4));
+               }},
+              {"RX",
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyRX_(std::forward<decltype(PH1)>(PH1),
+                            std::forward<decltype(PH2)>(PH2),
+                            std::forward<decltype(PH3)>(PH3),
+                            std::forward<decltype(PH4)>(PH4));
+               }},
+              {"RY",
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyRY_(std::forward<decltype(PH1)>(PH1),
+                            std::forward<decltype(PH2)>(PH2),
+                            std::forward<decltype(PH3)>(PH3),
+                            std::forward<decltype(PH4)>(PH4));
+               }},
+              {"RZ",
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyRZ_(std::forward<decltype(PH1)>(PH1),
+                            std::forward<decltype(PH2)>(PH2),
+                            std::forward<decltype(PH3)>(PH3),
+                            std::forward<decltype(PH4)>(PH4));
+               }},
               {"Rot",
-               bind(&StateVector<fp_t>::applyRot_, this, _1, _2, _3, _4)},
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyRot_(std::forward<decltype(PH1)>(PH1),
+                             std::forward<decltype(PH2)>(PH2),
+                             std::forward<decltype(PH3)>(PH3),
+                             std::forward<decltype(PH4)>(PH4));
+               }},
               {"CRX",
-               bind(&StateVector<fp_t>::applyCRX_, this, _1, _2, _3, _4)},
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyCRX_(std::forward<decltype(PH1)>(PH1),
+                             std::forward<decltype(PH2)>(PH2),
+                             std::forward<decltype(PH3)>(PH3),
+                             std::forward<decltype(PH4)>(PH4));
+               }},
               {"CRY",
-               bind(&StateVector<fp_t>::applyCRY_, this, _1, _2, _3, _4)},
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyCRY_(std::forward<decltype(PH1)>(PH1),
+                             std::forward<decltype(PH2)>(PH2),
+                             std::forward<decltype(PH3)>(PH3),
+                             std::forward<decltype(PH4)>(PH4));
+               }},
               {"CRZ",
-               bind(&StateVector<fp_t>::applyCRZ_, this, _1, _2, _3, _4)},
-              {"CRot",
-               bind(&StateVector<fp_t>::applyCRot_, this, _1, _2, _3, _4)}} {};
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyCRZ_(std::forward<decltype(PH1)>(PH1),
+                             std::forward<decltype(PH2)>(PH2),
+                             std::forward<decltype(PH3)>(PH3),
+                             std::forward<decltype(PH4)>(PH4));
+               }},
+              {"CRot", [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyCRot_(std::forward<decltype(PH1)>(PH1),
+                              std::forward<decltype(PH2)>(PH2),
+                              std::forward<decltype(PH3)>(PH3),
+                              std::forward<decltype(PH4)>(PH4));
+               }}} {};
 
     /**
      * @brief Get the underlying data pointer.
      *
      * @return const CFP_t* Pointer to statevector data.
      */
-    CFP_t *getData() const { return arr_; }
+    auto getData() const -> CFP_t * { return arr_; }
 
     /**
      * @brief Get the underlying data pointer.
      *
      * @return CFP_t* Pointer to statevector data.
      */
-    CFP_t *getData() { return arr_; }
+    auto getData() -> CFP_t * { return arr_; }
 
     /**
      * @brief Redefine statevector data pointer.
@@ -208,14 +316,14 @@ template <class fp_t = double> class StateVector {
      *
      * @return std::size_t
      */
-    std::size_t getLength() const { return length_; }
+    auto getLength() const -> std::size_t { return length_; }
 
     /**
      * @brief Get the number of qubits represented by the statevector data.
      *
      * @return std::size_t
      */
-    std::size_t getNumQubits() const { return num_qubits_; }
+    auto getNumQubits() const -> std::size_t { return num_qubits_; }
 
     /**
      * @brief Apply a single gate to the state-vector.
@@ -228,11 +336,12 @@ template <class fp_t = double> class StateVector {
     void applyOperation(const string &opName, const vector<size_t> &wires,
                         bool inverse = false, const vector<fp_t> &params = {}) {
         const auto gate = gates_.at(opName);
-        if (gate_wires_.at(opName) != wires.size())
+        if (gate_wires_.at(opName) != wires.size()) {
             throw std::invalid_argument(
                 string("The gate of type ") + opName + " requires " +
                 std::to_string(gate_wires_.at(opName)) + " wires, but " +
                 std::to_string(wires.size()) + " were supplied");
+        }
 
         const vector<size_t> internalIndices = generateBitPatterns(wires);
         const vector<size_t> externalWires = getIndicesAfterExclusion(wires);
@@ -254,11 +363,12 @@ template <class fp_t = double> class StateVector {
                         [[maybe_unused]] const vector<fp_t> &params = {}) {
         auto dim = Util::dimSize(matrix);
 
-        if (dim != wires.size())
+        if (dim != wires.size()) {
             throw std::invalid_argument(string("The supplied gate requires ") +
                                         std::to_string(dim) + " wires, but " +
                                         std::to_string(wires.size()) +
                                         " were supplied.");
+        }
 
         const vector<size_t> internalIndices = generateBitPatterns(wires);
         const vector<size_t> externalWires = getIndicesAfterExclusion(wires);
@@ -281,10 +391,11 @@ template <class fp_t = double> class StateVector {
                          const vector<bool> &inverse,
                          const vector<vector<fp_t>> &params) {
         const size_t numOperations = ops.size();
-        if (numOperations != wires.size() || numOperations != params.size())
+        if (numOperations != wires.size() || numOperations != params.size()) {
             throw std::invalid_argument(
                 "Invalid arguments: number of operations, wires, and "
                 "parameters must all be equal");
+        }
 
         for (size_t i = 0; i < numOperations; i++) {
             applyOperation(ops[i], wires[i], inverse[i], params[i]);
@@ -301,10 +412,11 @@ template <class fp_t = double> class StateVector {
                          const vector<vector<size_t>> &wires,
                          const vector<bool> &inverse) {
         const size_t numOperations = ops.size();
-        if (numOperations != wires.size())
+        if (numOperations != wires.size()) {
             throw std::invalid_argument(
                 "Invalid arguments: number of operations, wires, and "
                 "parameters must all be equal");
+        }
 
         for (size_t i = 0; i < numOperations; i++) {
             applyOperation(ops[i], wires[i], inverse[i]);
@@ -319,8 +431,8 @@ template <class fp_t = double> class StateVector {
      * @param num_qubits Total number of qubits for statevector.
      * @return vector<size_t>
      */
-    vector<size_t> static getIndicesAfterExclusion(
-        const vector<size_t> &indicesToExclude, size_t num_qubits) {
+    auto static getIndicesAfterExclusion(const vector<size_t> &indicesToExclude,
+                                         size_t num_qubits) -> vector<size_t> {
         std::set<size_t> indices;
         for (size_t i = 0; i < num_qubits; i++) {
             indices.emplace(i);
@@ -337,8 +449,8 @@ template <class fp_t = double> class StateVector {
      * @see `getIndicesAfterExclusion(
         const vector<size_t> &indicesToExclude, size_t num_qubits)`
      */
-    vector<size_t>
-    getIndicesAfterExclusion(const vector<size_t> &indicesToExclude) {
+    auto getIndicesAfterExclusion(const vector<size_t> &indicesToExclude)
+        -> vector<size_t> {
         return getIndicesAfterExclusion(indicesToExclude, num_qubits_);
     }
 
@@ -352,8 +464,8 @@ template <class fp_t = double> class StateVector {
      * @param num_qubits Number of qubits in register.
      * @return vector<size_t>
      */
-    static vector<size_t>
-    generateBitPatterns(const vector<size_t> &qubitIndices, size_t num_qubits) {
+    static auto generateBitPatterns(const vector<size_t> &qubitIndices,
+                                    size_t num_qubits) -> vector<size_t> {
         vector<size_t> indices;
         indices.reserve(Util::exp2(qubitIndices.size()));
         indices.emplace_back(0);
@@ -376,7 +488,8 @@ template <class fp_t = double> class StateVector {
      * @see `generateBitPatterns(const vector<size_t> &qubitIndices, size_t
      * num_qubits)`.
      */
-    vector<size_t> generateBitPatterns(const vector<size_t> &qubitIndices) {
+    auto generateBitPatterns(const vector<size_t> &qubitIndices)
+        -> vector<size_t> {
         return generateBitPatterns(qubitIndices, num_qubits_);
     }
 
@@ -392,9 +505,10 @@ template <class fp_t = double> class StateVector {
                      const vector<size_t> &externalIndices, bool inverse) {
         if (static_cast<size_t>(1ULL << (Util::log2(indices.size()) +
                                          Util::log2(externalIndices.size()))) !=
-            length_)
+            length_) {
             throw std::out_of_range(
                 "The given indices do not match the state-vector length.");
+        }
 
         vector<CFP_t> v(indices.size());
         for (const size_t &externalIndex : externalIndices) {
@@ -411,7 +525,7 @@ template <class fp_t = double> class StateVector {
                 size_t index = indices[i];
                 shiftedState[index] = 0;
 
-                if (inverse == true) {
+                if (inverse) {
                     for (size_t j = 0; j < indices.size(); j++) {
                         const size_t baseIndex = j * indices.size();
                         shiftedState[index] +=
@@ -440,9 +554,10 @@ template <class fp_t = double> class StateVector {
                      const vector<size_t> &externalIndices, bool inverse) {
         if (static_cast<size_t>(1ULL << (Util::log2(indices.size()) +
                                          Util::log2(externalIndices.size()))) !=
-            length_)
+            length_) {
             throw std::out_of_range(
                 "The given indices do not match the state-vector length.");
+        }
 
         vector<CFP_t> v(indices.size());
         for (const size_t &externalIndex : externalIndices) {
@@ -459,7 +574,7 @@ template <class fp_t = double> class StateVector {
                 size_t index = indices[i];
                 shiftedState[index] = 0;
 
-                if (inverse == true) {
+                if (inverse) {
                     for (size_t j = 0; j < indices.size(); j++) {
                         const size_t baseIndex = j * indices.size();
                         shiftedState[index] +=
@@ -567,7 +682,7 @@ template <class fp_t = double> class StateVector {
     void applyS(const vector<size_t> &indices,
                 const vector<size_t> &externalIndices, bool inverse) {
         const CFP_t shift =
-            (inverse == true) ? -Util::IMAG<fp_t>() : Util::IMAG<fp_t>();
+            (inverse) ? -Util::IMAG<fp_t>() : Util::IMAG<fp_t>();
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -587,7 +702,7 @@ template <class fp_t = double> class StateVector {
     void applyT(const vector<size_t> &indices,
                 const vector<size_t> &externalIndices, bool inverse) {
         const CFP_t shift =
-            (inverse == true)
+            (inverse)
                 ? std::conj(std::exp(CFP_t(0, static_cast<fp_t>(M_PI / 4))))
                 : std::exp(CFP_t(0, static_cast<fp_t>(M_PI / 4)));
 
@@ -614,8 +729,8 @@ template <class fp_t = double> class StateVector {
                  const vector<size_t> &externalIndices, bool inverse,
                  Param_t angle) {
         const CFP_t c(std::cos(angle / 2), 0);
-        const CFP_t js = (inverse == true) ? CFP_t(0, -std::sin(-angle / 2))
-                                           : CFP_t(0, std::sin(-angle / 2));
+        const CFP_t js = (inverse) ? CFP_t(0, -std::sin(-angle / 2))
+                                   : CFP_t(0, std::sin(-angle / 2));
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -642,8 +757,8 @@ template <class fp_t = double> class StateVector {
                  const vector<size_t> &externalIndices, bool inverse,
                  Param_t angle) {
         const CFP_t c(std::cos(angle / 2), 0);
-        const CFP_t s = (inverse == true) ? CFP_t(-std::sin(angle / 2), 0)
-                                          : CFP_t(std::sin(angle / 2), 0);
+        const CFP_t s = (inverse) ? CFP_t(-std::sin(angle / 2), 0)
+                                  : CFP_t(std::sin(angle / 2), 0);
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -671,8 +786,8 @@ template <class fp_t = double> class StateVector {
                  Param_t angle) {
         const CFP_t first = std::exp(CFP_t(0, -angle / 2));
         const CFP_t second = std::exp(CFP_t(0, angle / 2));
-        const CFP_t shift1 = (inverse == true) ? std::conj(first) : first;
-        const CFP_t shift2 = (inverse == true) ? std::conj(second) : second;
+        const CFP_t shift1 = (inverse) ? std::conj(first) : first;
+        const CFP_t shift2 = (inverse) ? std::conj(second) : second;
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -750,10 +865,10 @@ template <class fp_t = double> class StateVector {
                   Param_t phi, Param_t theta, Param_t omega) {
         const vector<CFP_t> rot = Gates::getRot<fp_t>(phi, theta, omega);
 
-        const CFP_t t1 = (inverse == true) ? std::conj(rot[0]) : rot[0];
-        const CFP_t t2 = (inverse == true) ? -rot[1] : rot[1];
-        const CFP_t t3 = (inverse == true) ? -rot[2] : rot[2];
-        const CFP_t t4 = (inverse == true) ? std::conj(rot[3]) : rot[3];
+        const CFP_t t1 = (inverse) ? std::conj(rot[0]) : rot[0];
+        const CFP_t t2 = (inverse) ? -rot[1] : rot[1];
+        const CFP_t t3 = (inverse) ? -rot[2] : rot[2];
+        const CFP_t t4 = (inverse) ? std::conj(rot[3]) : rot[3];
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -834,8 +949,8 @@ template <class fp_t = double> class StateVector {
                   const vector<size_t> &externalIndices, bool inverse,
                   Param_t angle) {
         const CFP_t c(std::cos(angle / 2), 0);
-        const CFP_t js = (inverse == true) ? CFP_t(0, -std::sin(-angle / 2))
-                                           : CFP_t(0, std::sin(-angle / 2));
+        const CFP_t js = (inverse) ? CFP_t(0, -std::sin(-angle / 2))
+                                   : CFP_t(0, std::sin(-angle / 2));
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -863,8 +978,8 @@ template <class fp_t = double> class StateVector {
                   const vector<size_t> &externalIndices, bool inverse,
                   Param_t angle) {
         const CFP_t c(std::cos(angle / 2), 0);
-        const CFP_t s = (inverse == true) ? CFP_t(-std::sin(angle / 2), 0)
-                                          : CFP_t(std::sin(angle / 2), 0);
+        const CFP_t s = (inverse) ? CFP_t(-std::sin(angle / 2), 0)
+                                  : CFP_t(std::sin(angle / 2), 0);
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -891,12 +1006,10 @@ template <class fp_t = double> class StateVector {
     void applyCRZ(const vector<size_t> &indices,
                   const vector<size_t> &externalIndices, bool inverse,
                   Param_t angle) {
-        const CFP_t m00 = (inverse == true)
-                              ? std::conj(std::exp(CFP_t(0, -angle / 2)))
-                              : std::exp(CFP_t(0, -angle / 2));
-        const CFP_t m11 = (inverse == true)
-                              ? std::conj(std::exp(CFP_t(0, angle / 2)))
-                              : std::exp(CFP_t(0, angle / 2));
+        const CFP_t m00 = (inverse) ? std::conj(std::exp(CFP_t(0, -angle / 2)))
+                                    : std::exp(CFP_t(0, -angle / 2));
+        const CFP_t m11 = (inverse) ? std::conj(std::exp(CFP_t(0, angle / 2)))
+                                    : std::exp(CFP_t(0, angle / 2));
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             shiftedState[indices[2]] *= m00;
@@ -925,10 +1038,10 @@ template <class fp_t = double> class StateVector {
                    Param_t phi, Param_t theta, Param_t omega) {
         const auto rot = Gates::getRot<fp_t>(phi, theta, omega);
 
-        const CFP_t t1 = (inverse == true) ? std::conj(rot[0]) : rot[0];
-        const CFP_t t2 = (inverse == true) ? -rot[1] : rot[1];
-        const CFP_t t3 = (inverse == true) ? -rot[2] : rot[2];
-        const CFP_t t4 = (inverse == true) ? std::conj(rot[3]) : rot[3];
+        const CFP_t t1 = (inverse) ? std::conj(rot[0]) : rot[0];
+        const CFP_t t2 = (inverse) ? -rot[1] : rot[1];
+        const CFP_t t3 = (inverse) ? -rot[2] : rot[2];
+        const CFP_t t4 = (inverse) ? std::conj(rot[3]) : rot[3];
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -951,9 +1064,13 @@ template <class fp_t = double> class StateVector {
     void applyToffoli(const vector<size_t> &indices,
                       const vector<size_t> &externalIndices,
                       [[maybe_unused]] bool inverse) {
+        // Participating swapped indices
+        static const size_t op_idx0 = 6;
+        static const size_t op_idx1 = 7;
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
-            std::swap(shiftedState[indices[6]], shiftedState[indices[7]]);
+            std::swap(shiftedState[indices[op_idx0]],
+                      shiftedState[indices[op_idx1]]);
         }
     }
 
@@ -969,9 +1086,13 @@ template <class fp_t = double> class StateVector {
     void applyCSWAP(const vector<size_t> &indices,
                     const vector<size_t> &externalIndices,
                     [[maybe_unused]] bool inverse) {
+        // Participating swapped indices
+        static const size_t op_idx0 = 5;
+        static const size_t op_idx1 = 6;
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
-            std::swap(shiftedState[indices[5]], shiftedState[indices[6]]);
+            std::swap(shiftedState[indices[op_idx0]],
+                      shiftedState[indices[op_idx1]]);
         }
     }
 
@@ -1108,7 +1229,8 @@ template <class fp_t = double> class StateVector {
  * @return std::ostream&
  */
 template <class T>
-inline std::ostream &operator<<(std::ostream &out, const StateVector<T> &sv) {
+inline auto operator<<(std::ostream &out, const StateVector<T> &sv)
+    -> std::ostream & {
     const auto length = sv.getLength();
     const auto qubits = sv.getNumQubits();
     const auto data = sv.getData();
