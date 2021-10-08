@@ -193,7 +193,7 @@ static constexpr auto getToffoli() -> std::vector<std::complex<T>> {
  * data.
  */
 template <class T, class U = T>
-static auto getPhaseShift(U angle) -> const std::vector<std::complex<T>> {
+static auto getPhaseShift(U angle) -> std::vector<std::complex<T>> {
     return {ONE<T>(), ZERO<T>(), ZERO<T>(), std::exp(IMAG<T>() * angle)};
 }
 
@@ -209,7 +209,7 @@ static auto getPhaseShift(U angle) -> const std::vector<std::complex<T>> {
  */
 template <class T, class U = T>
 static auto getPhaseShift(const std::vector<U> &params)
-    -> const std::vector<std::complex<T>> {
+    -> std::vector<std::complex<T>> {
     return getPhaseShift<T>(params.front());
 }
 
@@ -223,7 +223,7 @@ static auto getPhaseShift(const std::vector<U> &params)
  * @return const std::vector<std::complex<T>> Return const RX gate data.
  */
 template <class T, class U = T>
-static auto getRX(U angle) -> const std::vector<std::complex<T>> {
+static auto getRX(U angle) -> std::vector<std::complex<T>> {
     const std::complex<T> c(std::cos(angle / 2), 0);
     const std::complex<T> js(0, -std::sin(angle / 2));
     return {c, js, js, c};
@@ -240,7 +240,7 @@ static auto getRX(U angle) -> const std::vector<std::complex<T>> {
  */
 template <class T, class U = T>
 static auto getRX(const std::vector<U> &params)
-    -> const std::vector<std::complex<T>> {
+    -> std::vector<std::complex<T>> {
     return getRX<T>(params.front());
 }
 
@@ -254,7 +254,7 @@ static auto getRX(const std::vector<U> &params)
  * @return const std::vector<std::complex<T>> Return const RY gate data.
  */
 template <class T, class U = T>
-static auto getRY(U angle) -> const std::vector<std::complex<T>> {
+static auto getRY(U angle) -> std::vector<std::complex<T>> {
     const std::complex<T> c(std::cos(angle / 2), 0);
     const std::complex<T> s(std::sin(angle / 2), 0);
     return {c, -s, s, c};
@@ -271,7 +271,7 @@ static auto getRY(U angle) -> const std::vector<std::complex<T>> {
  */
 template <class T, class U = T>
 static auto getRY(const std::vector<U> &params)
-    -> const std::vector<std::complex<T>> {
+    -> std::vector<std::complex<T>> {
     return getRY<T>(params.front());
 }
 
@@ -285,7 +285,7 @@ static auto getRY(const std::vector<U> &params)
  * @return const std::vector<std::complex<T>> Return const RZ gate data.
  */
 template <class T, class U = T>
-static auto getRZ(U angle) -> const std::vector<std::complex<T>> {
+static auto getRZ(U angle) -> std::vector<std::complex<T>> {
     return {std::exp(-IMAG<T>() * (angle / 2)), ZERO<T>(), ZERO<T>(),
             std::exp(IMAG<T>() * (angle / 2))};
 }
@@ -300,7 +300,7 @@ static auto getRZ(U angle) -> const std::vector<std::complex<T>> {
  * @return const std::vector<std::complex<T>> Return const RZ gate data.
  */
 template <class T, class U = T>
-static auto getRZ(const std::vector<U> &params) -> const std::vector<T> {
+static auto getRZ(const std::vector<U> &params) -> std::vector<T> {
     return getRZ<T>(params.front());
 }
 
@@ -323,10 +323,9 @@ e^{-i(\phi-\omega)/2}\sin(\theta/2) & e^{i(\phi+\omega)/2}\cos(\theta/2)
  * @return const std::vector<std::complex<T>> Return const Rot gate data.
  */
 template <class T, class U = T>
-static auto getRot(U phi, U theta, U omega)
-    -> const std::vector<std::complex<T>> {
-    const std::complex<T> c(std::cos(theta / 2), 0);
-    const std::complex<T> s(std::sin(theta / 2), 0);
+static auto getRot(U phi, U theta, U omega) -> std::vector<std::complex<T>> {
+    const T c = std::cos(theta / 2);
+    const T s = std::sin(theta / 2);
     const U p{phi + omega};
     const U m{phi - omega};
     return {std::exp(static_cast<T>(p / 2) * (-IMAG<T>())) * c,
@@ -354,7 +353,7 @@ e^{-i(\phi-\omega)/2}\sin(\theta/2) & e^{i(\phi+\omega)/2}\cos(\theta/2)
  */
 template <class T, class U = T>
 static auto getRot(const std::vector<U> &params)
-    -> const std::vector<std::complex<T>> {
+    -> std::vector<std::complex<T>> {
     return getRot<T>(params[0], params[1], params[2]);
 }
 
@@ -368,7 +367,7 @@ static auto getRot(const std::vector<U> &params)
  * @return const std::vector<std::complex<T>> Return const RX gate data.
  */
 template <class T, class U = T>
-static auto getCRX(U angle) -> const std::vector<std::complex<T>> {
+static auto getCRX(U angle) -> std::vector<std::complex<T>> {
     const std::complex<T> rx{getRX<T>(angle)};
     return {ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),
             ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), rx[0],     rx[1],
@@ -386,7 +385,7 @@ static auto getCRX(U angle) -> const std::vector<std::complex<T>> {
  */
 template <class T, class U = T>
 static auto getCRX(const std::vector<U> &params)
-    -> const std::vector<std::complex<T>> {
+    -> std::vector<std::complex<T>> {
     return getCRX<T>(params.front());
 }
 
@@ -400,7 +399,7 @@ static auto getCRX(const std::vector<U> &params)
  * @return const std::vector<std::complex<T>> Return const RY gate data.
  */
 template <class T, class U = T>
-static auto getCRY(U angle) -> const std::vector<std::complex<T>> {
+static auto getCRY(U angle) -> std::vector<std::complex<T>> {
     const std::complex<T> ry{getRY<T>(angle)};
     return {ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),
             ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ry[0],     ry[1],
@@ -418,7 +417,7 @@ static auto getCRY(U angle) -> const std::vector<std::complex<T>> {
  */
 template <class T, class U = T>
 static auto getCRY(const std::vector<U> &params)
-    -> const std::vector<std::complex<T>> {
+    -> std::vector<std::complex<T>> {
     return getCRY<T>(params.front());
 }
 
@@ -432,7 +431,7 @@ static auto getCRY(const std::vector<U> &params)
  * @return const std::vector<std::complex<T>> Return const RZ gate data.
  */
 template <class T, class U = T>
-static auto getCRZ(U angle) -> const std::vector<std::complex<T>> {
+static auto getCRZ(U angle) -> std::vector<std::complex<T>> {
     const std::complex<T> first = std::exp(-IMAG<T>() * (angle / 2));
     const std::complex<T> second = std::exp(IMAG<T>() * (angle / 2));
     return {ONE<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(),
@@ -451,7 +450,7 @@ static auto getCRZ(U angle) -> const std::vector<std::complex<T>> {
  */
 template <class T, class U = T>
 static auto getCRZ(const std::vector<U> &params)
-    -> const std::vector<std::complex<T>> {
+    -> std::vector<std::complex<T>> {
     return getCRZ<T>(params.front());
 }
 
@@ -462,8 +461,7 @@ row-major format.
  * @see `getRot<T,U>(U phi, U theta, U omega)`.
  */
 template <class T, class U = T>
-static auto getCRot(U phi, U theta, U omega)
-    -> const std::vector<std::complex<T>> {
+static auto getCRot(U phi, U theta, U omega) -> std::vector<std::complex<T>> {
     const std::vector<std::complex<T>> rot{
         std::move(getRot<T>(phi, theta, omega))};
     return {ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>(),
@@ -479,7 +477,7 @@ row-major format.
  */
 template <class T, class U = T>
 static auto getCRot(const std::vector<U> &params)
-    -> const std::vector<std::complex<T>> {
+    -> std::vector<std::complex<T>> {
     return getCRot<T>(params[0], params[1], params[2]);
 }
 
@@ -490,8 +488,7 @@ in row-major format.
  * @see `getPhaseShift<T,U>(U angle)`.
  */
 template <class T, class U = T>
-static auto getControlledPhaseShift(U angle)
-    -> const std::vector<std::complex<T>> {
+static auto getControlledPhaseShift(U angle) -> std::vector<std::complex<T>> {
     return {ONE<T>(),  ZERO<T>(), ZERO<T>(), ZERO<T>(),
             ZERO<T>(), ONE<T>(),  ZERO<T>(), ZERO<T>(),
             ZERO<T>(), ZERO<T>(), ONE<T>(),  ZERO<T>(),
@@ -506,7 +503,7 @@ in row-major format.
  */
 template <class T, class U = T>
 static auto getControlledPhaseShift(const std::vector<U> &params)
-    -> const std::vector<std::complex<T>> {
+    -> std::vector<std::complex<T>> {
     return getControlledPhaseShift<T>(params.front());
 }
 
