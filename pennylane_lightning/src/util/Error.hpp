@@ -13,6 +13,8 @@
 #include <exception>
 #include <iostream>
 #include <sstream>
+#include <string>
+#include <type_traits>
 #include <utility>
 
 /**
@@ -62,14 +64,26 @@ namespace Pennylane::Util {
  *
  */
 class LightningException : public std::exception {
+  private:
+    const std::string err_msg;
+    template <class T> struct remove_cvref {
+        using type = std::remove_cv_t<std::remove_reference_t<T>>;
+    };
+    template <class T> using remove_cvref_t = typename remove_cvref<T>::type;
+
   public:
     /**
      * @brief Constructs a new `%LightningException` exception.
      *
      * @param err_msg Error message explaining the exception condition.
      */
-    explicit LightningException(std::string err_msg) noexcept
-        : err_msg(std::move(err_msg)) {}
+
+    template <
+        typename T,
+        std::enable_if_t<std::is_convertible_v<remove_cvref_t<T>, std::string>,
+                         int> = 0>
+    explicit LightningException(T &&err_msg) noexcept
+        : err_msg{std::forward<T>(err_msg)} {}
 
     /**
      * @brief Destroys the `%LightningException` object.
@@ -82,12 +96,9 @@ class LightningException : public std::exception {
      *
      * @return Exception message.
      */
-    [[nodiscard]] auto what() const noexcept override -> const char * {
+    [[nodiscard]] auto what() const noexcept -> const char * override {
         return err_msg.c_str();
     }
-
-  private:
-    std::string err_msg;
 };
 
 /**
