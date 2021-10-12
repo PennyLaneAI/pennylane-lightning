@@ -36,16 +36,10 @@
 #define USE_CBLAS 1
 #else
 #define USE_CBLAS 0
-
-#include <mutex>
+#define DOTU_STD_CROSSOVER (1 << 20)
 #include <thread>
-
+#include <mutex>
 static std::mutex barrier;
-#define STD_NUM_THREADS (2)
-#define INNER_PROD_THRESHOLD (1 << 10)
-#define MATVEC_PROD_THRESHOLD (1 << 10)
-#define MATMAT_PROD_THRESHOLD (1 << 10)
-
 #endif
 /// @endcond
 
@@ -195,7 +189,8 @@ inline size_t maxDecimalForQubit(size_t qubitIndex, size_t qubits) {
  * @param data Gate matrix data.
  * @return size_t Number of wires.
  */
-template <class T> inline size_t dimSize(const std::vector<T> &data) {
+template <class T> 
+inline size_t dimSize(const std::vector<T> &data) {
     const size_t s = data.size();
     const size_t s_sqrt = static_cast<size_t>(std::floor(std::sqrt(s)));
 
@@ -210,163 +205,92 @@ template <class T> inline size_t dimSize(const std::vector<T> &data) {
 }
 
 /**
- * @brief Returns a partitioning for [0, data_size) of size `n_parts`.
- *
- * @param n_parts Number of partitions.
- * @param data_size The upper-bound for the interval [0, data_size)
- * @return a std::vector<std::size_t> of partitions.
+ * @brief Partition [0, data_size] into n subset of size data_size/n. 
+ * 
+ * @param n Number of partitions.
+ * @param data_size Size of data array. 
+ * @return std::vector of partitions indices. 
+ *  
+ * @note the last index sets to data_size.
  */
-inline static std::vector<std::size_t> getBounds(std::size_t n_parts,
-                                                 std::size_t data_size) {
-    std::vector<std::size_t> bnd;
-    std::size_t d = data_size / n_parts;
-    std::size_t i, n1 = 0, n2 = 0;
-    bnd.push_back(n1);
-    for (i = 0; i < n_parts; ++i) {
-        n2 = n1 + d;
-        if (i == n_parts - 1) {
-            n2 = data_size;
-        }
-        bnd.push_back(n2);
-        n1 = n2;
-    }
-    return bnd;
+inline static std::vector<std::size_t> partition (std::size_t n, std::size_t data_size)
+{
+	std::vector<std::size_t> bnd;
+	if (n == 1) {
+		bnd.push_back(0);
+		bnd.push_back(data_size);
+		return bnd;
+	}
+	std::size_t d = data_size / n;
+	std::size_t i, n1 = 0, n2 = 0;
+	bnd.push_back(n1);
+	for (i=0; i<n; ++i) {
+		n2 = n1 + d; 
+		if (i == n - 1)
+			n2 = data_size;
+		bnd.push_back(n2);
+		n1 = n2;
+	}
+	return bnd;
 }
 
-/**
- * @brief This calls by inner_product_thread
- */
 template <class T>
-inline void _inner_product_mutex(const std::complex<T> *v1,
-                                 const std::complex<T> *v2,
-                                 std::complex<T> &result, std::size_t left,
-                                 std::size_t right) {
-    std::complex<T> s{0, 0};
-    for (std::size_t i = left; i < right; ++i) {
-        s += *(v1 + i) * *(v2 + i);
-    }
+inline static void _innerProd (const std::complex<T> *v1, 
+					const std::complex<T> *v2,
+					std::complex<T> &result, 
+					std::size_t l, 
+					std::size_t r) {
+	std::complex<T> s {0, 0};
+	for (std::size_t i=l; i<r; ++i) 
+		s += *(v1 + i) * *(v2 + i);
 
-    std::lock_guard<std::mutex> block_threads_until_finish_this_job(barrier);
-    result += s;
-}
-
-/**
- * @brief Calculates the inner-product using std::thread and std::mutex
- *
- * @tparam T Floating point precision type.
- * @param data_1 Complex data array 1.
- * @param data_2 Complex data array 2.
- * @param data_size Size of data arrays.
- * @param nthreads Number of threads (2 is default).
- * @return std::complex<T> Result of inner product operation.
- */
-template <class T>
-inline std::complex<T> inner_product_thread(const std::complex<T> *data_1,
-                                            const std::complex<T> *data_2,
-                                            std::size_t data_size,
-                                            std::size_t nthreads = 2) {
-    std::complex<T> res(0, 0);
-    std::vector<std::size_t> bnd = getBounds(nthreads, data_size);
-
-    std::vector<std::thread> threads;
-    for (std::size_t i = 0; i < nthreads; ++i) {
-        threads.push_back(std::thread(_inner_product_mutex<T>, std::ref(data_1),
-                                      std::ref(data_2), std::ref(res), bnd[i],
-                                      bnd[i + 1]));
-    }
-
-    for (auto &h : threads) {
-        h.join();
-    }
-
-    return res;
+	std::lock_guard<std::mutex> block_threads_until_finish_this_job(barrier);
+	result += s;
 }
 
 /**
  * @brief Calculates the inner-product using the best available method.
  *
  * @tparam T Floating point precision type.
- * @param data_1 Complex data array 1.
- * @param data_2 Complex data array 2.
+ * @param v1 Complex data array 1.
+ * @param v2 Complex data array 2.
  * @param data_size Size of data arrays.
  * @return std::complex<T> Result of inner product operation.
  */
 template <class T>
-std::complex<T> innerProd(const std::complex<T> *data_1,
-                          const std::complex<T> *data_2,
-                          const size_t data_size) {
+std::complex<T> innerProd(const std::complex<T> *v1,
+                          const std::complex<T> *v2,
+                          const size_t data_size, 
+                          size_t nthreads=2) {
     std::complex<T> result(0, 0);
 
     if constexpr (USE_CBLAS) {
         if constexpr (std::is_same_v<T, float>)
-            cblas_cdotu_sub(data_size, data_1, 1, data_2, 1, &result);
+            cblas_cdotu_sub(data_size, v1, 1, v2, 1, &result);
         else if constexpr (std::is_same_v<T, double>)
-            cblas_zdotu_sub(data_size, data_1, 1, data_2, 1, &result);
+            cblas_zdotu_sub(data_size, v1, 1, v2, 1, &result);
     } else {
-        if (data_size < INNER_PROD_THRESHOLD) {
-            result = std::inner_product(
-                data_1, data_1 + data_size, data_2, std::complex<T>(),
-                ConstSum<T>,
-                static_cast<std::complex<T> (*)(
-                    std::complex<T>, std::complex<T>)>(&ConstMult<T>));
+        if (data_size > DOTU_STD_CROSSOVER) {
+            result = std::inner_product(v1, 
+                            v1 + data_size, 
+                            v2, 
+                            std::complex<T>(),
+                            ConstSum<T>,
+                            static_cast<std::complex<T> (*)(std::complex<T>, std::complex<T>)>(&ConstMult<T>));
         } else {
-            result =
-                inner_product_thread(data_1, data_2, data_size,
-                                     static_cast<std::size_t>(STD_NUM_THREADS));
-            }
+            const std::vector<std::size_t> bnd = partition(nthreads, data_size);
+            std::vector<std::thread> threads;
+            for (std::size_t i=0; i<nthreads; ++i) 
+                threads.push_back(std::thread(_innerProd<T>,
+                                    std::ref(v1),
+                                    std::ref(v2),
+                                    std::ref(result),
+                                    bnd[i], bnd[i+1]));
+            for (auto &h : threads)
+                h.join();
+        }
     }
     return result;
-}
-
-
-/**
- * @brief This calls by inner_product_conj_thread
- */
-template <class T>
-inline void _inner_product_conj_mutex(const std::complex<T> *v1,
-                                 const std::complex<T> *v2,
-                                 std::complex<T> &result, std::size_t left,
-                                 std::size_t right) {
-    std::complex<T> s{0, 0};
-    for (std::size_t i = left; i < right; ++i) {
-        s += std::conj(*(v1 + i)) * *(v2 + i);
-    }
-
-    std::lock_guard<std::mutex> block_threads_until_finish_this_job(barrier);
-    result += s;
-}
-
-/**
- * @brief Calculates the inner-product using std::thread and std::mutex with 
- * the first dataset conjugated. 
- *
- * @tparam T Floating point precision type.
- * @param data_1 Complex data array 1.
- * @param data_2 Complex data array 2.
- * @param data_size Size of data arrays.
- * @param nthreads Number of threads (2 is default).
- * @return std::complex<T> Result of inner product operation.
- */
-template <class T>
-inline std::complex<T> inner_product_conj_thread(const std::complex<T> *data_1,
-                                            const std::complex<T> *data_2,
-                                            std::size_t data_size,
-                                            std::size_t nthreads = 2) {
-    std::complex<T> res(0, 0);
-    std::vector<std::size_t> bnd = getBounds(nthreads, data_size);
-
-    std::vector<std::thread> threads;
-    for (std::size_t i = 0; i < nthreads; ++i) {
-        threads.push_back(std::thread(_inner_product_conj_mutex<T>, std::ref(data_1),
-                                      std::ref(data_2), std::ref(res), bnd[i],
-                                      bnd[i + 1]));
-    }
-
-    for (auto &h : threads) {
-        h.join();
-    }
-
-    return res;
 }
 
 /**
@@ -374,33 +298,26 @@ inline std::complex<T> inner_product_conj_thread(const std::complex<T> *data_1,
  * first dataset conjugated.
  *
  * @tparam T Floating point precision type.
- * @param data_1 Complex data array 1; conjugated before application.
- * @param data_2 Complex data array 2.
+ * @param v1 Complex data array 1; conjugated before application.
+ * @param v2 Complex data array 2.
  * @param data_size Size of data arrays.
  * @return std::complex<T> Result of inner product operation.
  */
 template <class T>
-std::complex<T> innerProdC(const std::complex<T> *data_1,
-                           const std::complex<T> *data_2,
+std::complex<T> innerProdC(const std::complex<T> *v1,
+                           const std::complex<T> *v2,
                            const size_t data_size) {
     std::complex<T> result(0, 0);
 
     if constexpr (USE_CBLAS) {
         if constexpr (std::is_same_v<T, float>)
-            cblas_cdotc_sub(data_size, data_1, 1, data_2, 1, &result);
+            cblas_cdotc_sub(data_size, v1, 1, v2, 1, &result);
         else if constexpr (std::is_same_v<T, double>)
-            cblas_zdotc_sub(data_size, data_1, 1, data_2, 1, &result);
+            cblas_zdotc_sub(data_size, v1, 1, v2, 1, &result);
     } else {
-        if (data_size < INNER_PROD_THRESHOLD) {
-            result = std::inner_product(data_1, data_1 + data_size, data_2,
-                                    std::complex<T>(), ConstSum<T>,
-                                    ConstMultConj<T>);
-        } else {
-            result =
-                inner_product_conj_thread(data_1, data_2, data_size,
-                                     static_cast<std::size_t>(STD_NUM_THREADS));
-
-        }
+        result = std::inner_product(v1, v1 + data_size, v2,
+                                std::complex<T>(), ConstSum<T>,
+                                ConstMultConj<T>);
     }
     return result;
 }
@@ -408,26 +325,26 @@ std::complex<T> innerProdC(const std::complex<T> *data_1,
 /**
  * @brief Calculates the inner-product using the best available method.
  *
- * @see innerProd(const std::complex<T> *data_1, const std::complex<T> *data_2,
+ * @see innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
  * const size_t data_size)
  */
 template <class T>
-inline std::complex<T> innerProd(const std::vector<std::complex<T>> &data_1,
-                                 const std::vector<std::complex<T>> &data_2) {
-    return innerProd(data_1.data(), data_2.data(), data_1.size());
+inline std::complex<T> innerProd(const std::vector<std::complex<T>> &v1,
+                                 const std::vector<std::complex<T>> &v2) {
+    return innerProd(v1.data(), v2.data(), v1.size());
 }
 
 /**
  * @brief Calculates the inner-product using the best available method with the
  * first dataset conjugated.
  *
- * @see innerProdC(const std::complex<T> *data_1, const std::complex<T> *data_2,
+ * @see innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
  * const size_t data_size)
  */
 template <class T>
-inline std::complex<T> innerProdC(const std::vector<std::complex<T>> &data_1,
-                                  const std::vector<std::complex<T>> &data_2) {
-    return innerProdC(data_1.data(), data_2.data(), data_1.size());
+inline std::complex<T> innerProdC(const std::vector<std::complex<T>> &v1,
+                                  const std::vector<std::complex<T>> &v2) {
+    return innerProdC(v1.data(), v2.data(), v1.size());
 }
 
 /**
