@@ -57,7 +57,7 @@ class StateVectorManaged : public StateVector<fp_t> {
         StateVector<fp_t>::setData(data_.data());
     }
 
-    StateVectorManaged &operator=(const StateVectorManaged<fp_t> &other) {
+    auto operator=(const StateVectorManaged<fp_t> &other) -> StateVectorManaged & {
         if (this != &other) {
             if (data_.size() != other.getLength()) {
                 data_.resize(other.getLength());
@@ -69,16 +69,16 @@ class StateVectorManaged : public StateVector<fp_t> {
         }
         return *this;
     }
-    std::vector<CFP_t> &getDataVector() { return data_; }
-    const std::vector<CFP_t> &getDataVector() const { return data_; }
+    auto getDataVector() -> std::vector<CFP_t> & { return data_; }
+    auto getDataVector() const -> const std::vector<CFP_t> & { return data_; }
 
-    std::vector<size_t>
-    getInternalIndices(const std::vector<size_t> &qubit_indices) {
+    auto
+    getInternalIndices(const std::vector<size_t> &qubit_indices) -> std::vector<size_t> {
         return StateVector<fp_t>::generateBitPatterns(qubit_indices,
                                                       Util::log2(data_.size()));
     }
-    std::vector<size_t>
-    getExternalIndices(const std::vector<size_t> &qubit_indices) {
+    auto
+    getExternalIndices(const std::vector<size_t> &qubit_indices) -> std::vector<size_t> {
         std::vector<size_t> externalWires =
             StateVector<fp_t>::getIndicesAfterExclusion(
                 qubit_indices, Util::log2(data_.size()));
