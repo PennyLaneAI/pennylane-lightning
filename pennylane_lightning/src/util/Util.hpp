@@ -37,8 +37,8 @@
 #else
 #define USE_CBLAS 0
 #define DOTU_STD_CROSSOVER (1 << 20)
-#include <thread>
 #include <mutex>
+#include <thread>
 static std::mutex barrier;
 #endif
 /// @endcond
@@ -189,8 +189,7 @@ inline size_t maxDecimalForQubit(size_t qubitIndex, size_t qubits) {
  * @param data Gate matrix data.
  * @return size_t Number of wires.
  */
-template <class T> 
-inline size_t dimSize(const std::vector<T> &data) {
+template <class T> inline size_t dimSize(const std::vector<T> &data) {
     const size_t s = data.size();
     const size_t s_sqrt = static_cast<size_t>(std::floor(std::sqrt(s)));
 
@@ -205,47 +204,45 @@ inline size_t dimSize(const std::vector<T> &data) {
 }
 
 /**
- * @brief Partition [0, data_size] into n subset of size data_size/n. 
- * 
+ * @brief Partition [0, data_size] into n subset of size data_size/n.
+ *
  * @param n Number of partitions.
- * @param data_size Size of data array. 
- * @return std::vector of partitions indices. 
- *  
+ * @param data_size Size of data array.
+ * @return std::vector of partitions indices.
+ *
  * @note the last index sets to data_size.
  */
-inline static std::vector<std::size_t> partition (std::size_t n, std::size_t data_size)
-{
-	std::vector<std::size_t> bnd;
-	if (n == 1) {
-		bnd.push_back(0);
-		bnd.push_back(data_size);
-		return bnd;
-	}
-	std::size_t d = data_size / n;
-	std::size_t i, n1 = 0, n2 = 0;
-	bnd.push_back(n1);
-	for (i=0; i<n; ++i) {
-		n2 = n1 + d; 
-		if (i == n - 1)
-			n2 = data_size;
-		bnd.push_back(n2);
-		n1 = n2;
-	}
-	return bnd;
+inline static std::vector<std::size_t> partition(std::size_t n,
+                                                 std::size_t data_size) {
+    std::vector<std::size_t> bnd;
+    if (n == 1) {
+        bnd.push_back(0);
+        bnd.push_back(data_size);
+        return bnd;
+    }
+    std::size_t d = data_size / n;
+    std::size_t i, n1 = 0, n2 = 0;
+    bnd.push_back(n1);
+    for (i = 0; i < n; ++i) {
+        n2 = n1 + d;
+        if (i == n - 1)
+            n2 = data_size;
+        bnd.push_back(n2);
+        n1 = n2;
+    }
+    return bnd;
 }
 
 template <class T>
-inline static void _innerProd (const std::complex<T> *v1, 
-					const std::complex<T> *v2,
-					std::complex<T> &result, 
-					std::size_t l, 
-					std::size_t r) {
-	std::complex<T> s {0, 0};
-	for (std::size_t i=l; i<r; ++i) 
-		s += *(v1 + i) * *(v2 + i);
+inline static void
+_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
+           std::complex<T> &result, std::size_t l, std::size_t r) {
+    std::complex<T> s{0, 0};
+    for (std::size_t i = l; i < r; ++i)
+        s += *(v1 + i) * *(v2 + i);
 
-	std::lock_guard<std::mutex> block_threads_until_finish_this_job(barrier);
-	result += s;
+    std::lock_guard<std::mutex> block_threads_until_finish_this_job(barrier);
+    result += s;
 }
 
 /**
@@ -258,10 +255,8 @@ inline static void _innerProd (const std::complex<T> *v1,
  * @return std::complex<T> Result of inner product operation.
  */
 template <class T>
-std::complex<T> innerProd(const std::complex<T> *v1,
-                          const std::complex<T> *v2,
-                          const size_t data_size, 
-                          size_t nthreads=2) {
+std::complex<T> innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
+                          const size_t data_size, size_t nthreads = 2) {
     std::complex<T> result(0, 0);
 
     if constexpr (USE_CBLAS) {
@@ -271,21 +266,17 @@ std::complex<T> innerProd(const std::complex<T> *v1,
             cblas_zdotu_sub(data_size, v1, 1, v2, 1, &result);
     } else {
         if (data_size > DOTU_STD_CROSSOVER) {
-            result = std::inner_product(v1, 
-                            v1 + data_size, 
-                            v2, 
-                            std::complex<T>(),
-                            ConstSum<T>,
-                            static_cast<std::complex<T> (*)(std::complex<T>, std::complex<T>)>(&ConstMult<T>));
+            result = std::inner_product(
+                v1, v1 + data_size, v2, std::complex<T>(), ConstSum<T>,
+                static_cast<std::complex<T> (*)(
+                    std::complex<T>, std::complex<T>)>(&ConstMult<T>));
         } else {
             const std::vector<std::size_t> bnd = partition(nthreads, data_size);
             std::vector<std::thread> threads;
-            for (std::size_t i=0; i<nthreads; ++i) 
-                threads.push_back(std::thread(_innerProd<T>,
-                                    std::ref(v1),
-                                    std::ref(v2),
-                                    std::ref(result),
-                                    bnd[i], bnd[i+1]));
+            for (std::size_t i = 0; i < nthreads; ++i)
+                threads.push_back(std::thread(_innerProd<T>, std::ref(v1),
+                                              std::ref(v2), std::ref(result),
+                                              bnd[i], bnd[i + 1]));
             for (auto &h : threads)
                 h.join();
         }
@@ -304,8 +295,7 @@ std::complex<T> innerProd(const std::complex<T> *v1,
  * @return std::complex<T> Result of inner product operation.
  */
 template <class T>
-std::complex<T> innerProdC(const std::complex<T> *v1,
-                           const std::complex<T> *v2,
+std::complex<T> innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
                            const size_t data_size) {
     std::complex<T> result(0, 0);
 
@@ -315,9 +305,8 @@ std::complex<T> innerProdC(const std::complex<T> *v1,
         else if constexpr (std::is_same_v<T, double>)
             cblas_zdotc_sub(data_size, v1, 1, v2, 1, &result);
     } else {
-        result = std::inner_product(v1, v1 + data_size, v2,
-                                std::complex<T>(), ConstSum<T>,
-                                ConstMultConj<T>);
+        result = std::inner_product(v1, v1 + data_size, v2, std::complex<T>(),
+                                    ConstSum<T>, ConstMultConj<T>);
     }
     return result;
 }
