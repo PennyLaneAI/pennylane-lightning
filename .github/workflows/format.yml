@@ -41,7 +41,7 @@ jobs:
 
       - name: Install dependencies
         run: sudo apt update && sudo apt -y install clang-tidy-11 python3 cmake g++
-        env: 
+        env:
           DEBIAN_FRONTEND: noninteractive
 
       - name: Checkout code
