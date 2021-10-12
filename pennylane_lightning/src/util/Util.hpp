@@ -35,10 +35,11 @@
 #include <cblas.h>
 #define USE_CBLAS 1
 #else
-#define USE_CBLAS 0
-#define DOTU_STD_CROSSOVER (1 << 20)
 #include <mutex>
 #include <thread>
+#define USE_CBLAS 0
+#define DOTU_STD_CROSSOVER (1 << 20)
+#define DOTC_STD_CROSSOVER (1 << 20)
 static std::mutex barrier;
 #endif
 /// @endcond
@@ -339,7 +340,7 @@ std::complex<T> innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
         else if constexpr (std::is_same_v<T, double>)
             cblas_zdotc_sub(data_size, v1, 1, v2, 1, &result);
     } else {
-        if (data_size > DOTU_STD_CROSSOVER) {
+        if (data_size > DOTC_STD_CROSSOVER) {
             result =
                 std::inner_product(v1, v1 + data_size, v2, std::complex<T>(),
                                    ConstSum<T>, ConstMultConj<T>);
