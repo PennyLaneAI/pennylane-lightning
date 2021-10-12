@@ -42,16 +42,19 @@ namespace py = pybind11;
  * @return StateVector<fp_t> `%StateVector` object.
  */
 template <class fp_t = double>
-static StateVector<fp_t> create(const py::array_t<complex<fp_t>> *numpyArray) {
+static auto create(const py::array_t<complex<fp_t>> *numpyArray)
+    -> StateVector<fp_t> {
     py::buffer_info numpyArrayInfo = numpyArray->request();
 
-    if (numpyArrayInfo.ndim != 1)
+    if (numpyArrayInfo.ndim != 1) {
         throw std::invalid_argument(
             "NumPy array must be a 1-dimensional array");
-    if (numpyArrayInfo.itemsize != sizeof(complex<fp_t>))
+    }
+    if (numpyArrayInfo.itemsize != sizeof(complex<fp_t>)) {
         throw std::invalid_argument(
             "NumPy array must be of type np.complex64 or np.complex128");
-    complex<fp_t> *data_ptr = static_cast<complex<fp_t> *>(numpyArrayInfo.ptr);
+    }
+    auto *data_ptr = static_cast<complex<fp_t> *>(numpyArrayInfo.ptr);
     return StateVector<fp_t>(
         {data_ptr, static_cast<size_t>(numpyArrayInfo.shape[0])});
 }
@@ -658,17 +661,21 @@ void lightning_class_bindings(py::module &m) {
                             auto buffer = param.request();
                             auto ptr = static_cast<std::complex<Param_t> *>(
                                 buffer.ptr);
-                            if (buffer.size > 0)
+                            if (buffer.size > 0) {
                                 conv_params[p_idx] =
-                                    std::vector<std::complex<Param_t>>{
-                                        ptr, ptr + buffer.size};
+                                    std::vector<std::complex<Param_t>> {
+                                    ptr, ptr + buffer.size
+                                }
+                            };
                         } else if constexpr (std::is_same_v<p_t, np_arr_r>) {
                             auto buffer = param.request();
 
-                            auto ptr = static_cast<Param_t *>(buffer.ptr);
-                            if (buffer.size > 0)
-                                conv_params[p_idx] = std::vector<Param_t>{
-                                    ptr, ptr + buffer.size};
+                            auto *ptr = static_cast<Param_t *>(buffer.ptr);
+                            if (buffer.size > 0) {
+                                conv_params[p_idx] = std::vector<Param_t> {
+                                    ptr, ptr + buffer.size
+                                }
+                            };
                         } else {
                             PL_ABORT(
                                 "Parameter datatype not current supported");
@@ -684,8 +691,9 @@ void lightning_class_bindings(py::module &m) {
                  std::ostringstream obs_stream;
                  std::string obs_name = obs.getObsName()[0];
                  for (size_t o = 1; o < obs.getObsName().size(); o++) {
-                     if (o < obs.getObsName().size())
+                     if (o < obs.getObsName().size()) {
                          obs_name += " @ ";
+                     }
                      obs_name += obs.getObsName()[o];
                  }
                  obs_stream << "'wires' : " << obs.getObsWires();
@@ -742,8 +750,9 @@ void lightning_class_bindings(py::module &m) {
                 ops_stream << ", 'params': " << ops.getOpsParams()[op];
                 ops_stream << ", 'inv': " << ops.getOpsInverses()[op];
                 ops_stream << "}";
-                if (op < ops.getSize() - 1)
+                if (op < ops.getSize() - 1) {
                     ops_stream << ",";
+                }
             }
             return "Operations: [" + ops_stream.str() + "]";
         });
@@ -768,7 +777,7 @@ void lightning_class_bindings(py::module &m) {
                      const auto p_buffer = ops_params[op].request();
                      const auto m_buffer = ops_matrices[op].request();
                      if (p_buffer.size > 0) {
-                         const auto p_ptr =
+                         const auto *const p_ptr =
                              static_cast<const Param_t *>(p_buffer.ptr);
                          conv_params[op] =
                              std::vector<Param_t>{p_ptr, p_ptr + p_buffer.size};
