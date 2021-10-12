@@ -78,8 +78,10 @@ class LightningException : public std::exception {
 
     template <
         typename T,
-        std::enable_if_t<std::is_convertible<typename Pennylane::Util::remove_cvref<T>::type, std::string>::value,
-                         int> = 0>
+        std::enable_if_t<
+            std::is_convertible<typename Pennylane::Util::remove_cvref<T>::type,
+                                std::string>::value,
+            int> = 0>
     explicit LightningException(T &&err_msg) noexcept
         : err_msg{std::forward<T>(err_msg)} {}
 

@@ -323,7 +323,9 @@ template <class fp_t = double> class StateVector {
      *
      * @return std::size_t
      */
-    [[nodiscard]] auto getNumQubits() const -> std::size_t { return num_qubits_; }
+    [[nodiscard]] auto getNumQubits() const -> std::size_t {
+        return num_qubits_;
+    }
 
     /**
      * @brief Apply a single gate to the state-vector.

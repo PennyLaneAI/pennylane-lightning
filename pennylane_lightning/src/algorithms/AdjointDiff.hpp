@@ -37,11 +37,13 @@ namespace {
 using namespace Pennylane;
 using namespace Pennylane::Util;
 
-template <class T> static constexpr auto getP00() -> std::vector<std::complex<T>> {
+template <class T>
+static constexpr auto getP00() -> std::vector<std::complex<T>> {
     return {ONE<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>()};
 }
 
-template <class T> static constexpr auto getP11() -> std::vector<std::complex<T>> {
+template <class T>
+static constexpr auto getP11() -> std::vector<std::complex<T>> {
     return {ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>()};
 }
 
@@ -166,7 +168,8 @@ template <class T = double> class ObsDatum {
              std::vector<param_var_t> obs_params,
              std::vector<std::vector<size_t>> obs_wires)
         : obs_name_{std::move(obs_name)},
-          obs_params_(std::move(obs_params)), obs_wires_{std::move(obs_wires)} {};
+          obs_params_(std::move(obs_params)), obs_wires_{
+                                                  std::move(obs_wires)} {};
 
     /**
      * @brief Move constructor for an ObsDatum object, representing a given
@@ -196,19 +199,25 @@ template <class T = double> class ObsDatum {
      *
      * @return const std::vector<std::string>&
      */
-    [[nodiscard]] auto getObsName() const -> const std::vector<std::string> & { return obs_name_; }
+    [[nodiscard]] auto getObsName() const -> const std::vector<std::string> & {
+        return obs_name_;
+    }
     /**
      * @brief Get the parameters for the observable operations.
      *
      * @return const std::vector<std::vector<T>>&
      */
-    [[nodiscard]] auto getObsParams() const -> const std::vector<param_var_t> & { return obs_params_; }
+    [[nodiscard]] auto getObsParams() const
+        -> const std::vector<param_var_t> & {
+        return obs_params_;
+    }
     /**
      * @brief Get the wires for each observable operation.
      *
      * @return const std::vector<std::vector<size_t>>&
      */
-    [[nodiscard]] auto getObsWires() const -> const std::vector<std::vector<size_t>> & {
+    [[nodiscard]] auto getObsWires() const
+        -> const std::vector<std::vector<size_t>> & {
         return obs_wires_;
     }
 
@@ -251,8 +260,10 @@ template <class T> class OpsData {
             std::vector<std::vector<size_t>> ops_wires,
             std::vector<bool> ops_inverses,
             std::vector<std::vector<std::complex<T>>> ops_matrices)
-        : ops_name_{std::move(ops_name)}, ops_params_{ops_params}, ops_wires_{std::move(ops_wires)},
-          ops_inverses_{std::move(ops_inverses)}, ops_matrices_{std::move(ops_matrices)} {
+        : ops_name_{std::move(ops_name)}, ops_params_{ops_params},
+          ops_wires_{std::move(ops_wires)},
+          ops_inverses_{std::move(ops_inverses)}, ops_matrices_{
+                                                      std::move(ops_matrices)} {
         num_par_ops_ = 0;
         for (const auto &p : ops_params) {
             if (p.size() > 0) {
@@ -276,8 +287,10 @@ template <class T> class OpsData {
             const std::vector<std::vector<T>> &ops_params,
             std::vector<std::vector<size_t>> ops_wires,
             std::vector<bool> ops_inverses)
-        : ops_name_{ops_name}, ops_params_{ops_params}, ops_wires_{std::move(ops_wires)},
-          ops_inverses_{std::move(ops_inverses)}, ops_matrices_(ops_name.size()) {
+        : ops_name_{ops_name}, ops_params_{ops_params},
+          ops_wires_{std::move(ops_wires)}, ops_inverses_{std::move(
+                                                ops_inverses)},
+          ops_matrices_(ops_name.size()) {
         num_par_ops_ = 0;
         for (const auto &p : ops_params) {
             if (p.size() > 0) {
@@ -299,14 +312,17 @@ template <class T> class OpsData {
      *
      * @return const std::vector<std::string>&
      */
-    [[nodiscard]] auto getOpsName() const -> const std::vector<std::string> & { return ops_name_; }
+    [[nodiscard]] auto getOpsName() const -> const std::vector<std::string> & {
+        return ops_name_;
+    }
     /**
      * @brief Get the (optional) parameters for each operation. Given entries
      * are empty ({}) if not required.
      *
      * @return const std::vector<std::vector<T>>&
      */
-    [[nodiscard]] auto getOpsParams() const -> const std::vector<std::vector<T>> & {
+    [[nodiscard]] auto getOpsParams() const
+        -> const std::vector<std::vector<T>> & {
         return ops_params_;
     }
     /**
@@ -314,7 +330,8 @@ template <class T> class OpsData {
      *
      * @return const std::vector<std::vector<size_t>>&
      */
-    [[nodiscard]] auto getOpsWires() const -> const std::vector<std::vector<size_t>> & {
+    [[nodiscard]] auto getOpsWires() const
+        -> const std::vector<std::vector<size_t>> & {
         return ops_wires_;
     }
     /**
@@ -322,14 +339,17 @@ template <class T> class OpsData {
      *
      * @return const std::vector<bool>&
      */
-    [[nodiscard]] auto getOpsInverses() const -> const std::vector<bool> & { return ops_inverses_; }
+    [[nodiscard]] auto getOpsInverses() const -> const std::vector<bool> & {
+        return ops_inverses_;
+    }
     /**
      * @brief Get the numerical matrix for a given unsupported operation. Given
      * entries are empty ({}) if not required.
      *
      * @return const std::vector<std::vector<std::complex<T>>>&
      */
-    [[nodiscard]] auto getOpsMatrices() const -> const std::vector<std::vector<std::complex<T>>> & {
+    [[nodiscard]] auto getOpsMatrices() const
+        -> const std::vector<std::vector<std::complex<T>>> & {
         return ops_matrices_;
     }
 
@@ -356,7 +376,9 @@ template <class T> class OpsData {
      *
      * @return size_t
      */
-    [[nodiscard]] auto getNumNonParOps() const -> size_t { return num_nonpar_ops_; }
+    [[nodiscard]] auto getNumNonParOps() const -> size_t {
+        return num_nonpar_ops_;
+    }
 };
 
 /**
@@ -367,7 +389,9 @@ template <class T> class OpsData {
  */
 template <class T = double> class AdjointJacobian {
   private:
-    using GeneratorFunc = void (*)(StateVectorManaged<T> &, const std::vector<size_t> &, const bool); // function pointer type
+    using GeneratorFunc = void (*)(StateVectorManaged<T> &,
+                                   const std::vector<size_t> &,
+                                   const bool); // function pointer type
 
     // Holds the mapping from gate labels to associated generator functions.
     const std::unordered_map<std::string, GeneratorFunc> generator_map{
@@ -497,8 +521,8 @@ template <class T = double> class AdjointJacobian {
      * @param tp_size
      * @return size_t
      */
-    inline auto getJacIndex(size_t obs_index, size_t tp_index,
-                              size_t tp_size) -> size_t {
+    inline auto getJacIndex(size_t obs_index, size_t tp_index, size_t tp_size)
+        -> size_t {
         return obs_index * tp_size + tp_index;
     }
 
@@ -509,8 +533,8 @@ template <class T = double> class AdjointJacobian {
      * @param state_length
      * @return std::vector<std::complex<T>>
      */
-    auto
-    copyStateData(const std::complex<T> *input_state, size_t state_length) -> std::vector<std::complex<T>> {
+    auto copyStateData(const std::complex<T> *input_state, size_t state_length)
+        -> std::vector<std::complex<T>> {
         return {input_state, input_state + state_length};
     }
 
@@ -525,8 +549,9 @@ template <class T = double> class AdjointJacobian {
      * @return T Generator scaling coefficient.
      */
     inline auto applyGenerator(StateVectorManaged<T> &sv,
-                            const std::string &op_name,
-                            const std::vector<size_t> &wires, const bool adj) -> T {
+                               const std::string &op_name,
+                               const std::vector<size_t> &wires, const bool adj)
+        -> T {
         generator_map.at(op_name)(sv, wires, adj);
         return scaling_factors.at(op_name);
     }
@@ -550,7 +575,8 @@ template <class T = double> class AdjointJacobian {
         const std::vector<std::vector<T>> &ops_params,
         const std::vector<std::vector<size_t>> &ops_wires,
         const std::vector<bool> &ops_inverses,
-        const std::vector<std::vector<std::complex<T>>> &ops_matrices = {{}}) -> OpsData<T> {
+        const std::vector<std::vector<std::complex<T>>> &ops_matrices = {{}})
+        -> OpsData<T> {
         return {ops_name, ops_params, ops_wires, ops_inverses, ops_matrices};
     }
 
@@ -607,36 +633,37 @@ template <class T = double> class AdjointJacobian {
         std::vector<StateVectorManaged<T>> H_lambda(num_observables,
                                                     {lambda.getNumQubits()});
 
-        // See https://www.openmp.org/wp-content/uploads/openmp-examples-4.5.0.pdf
+        // See
+        // https://www.openmp.org/wp-content/uploads/openmp-examples-4.5.0.pdf
         std::exception_ptr ex = nullptr;
 
 #if defined _OPENMP
-#pragma omp parallel default(none) shared(H_lambda, lambda, observables, num_observables, ex)
-{
+#pragma omp parallel default(none)                                             \
+    shared(H_lambda, lambda, observables, num_observables, ex)
+        {
 #pragma omp for
 #endif
-        for (size_t h_i = 0; h_i < num_observables; h_i++) {
-            try {
-                H_lambda[h_i].updateData(lambda.getDataVector());
-                applyObservable(H_lambda[h_i], observables[h_i]);
-            }
-            catch(...){
+            for (size_t h_i = 0; h_i < num_observables; h_i++) {
+                try {
+                    H_lambda[h_i].updateData(lambda.getDataVector());
+                    applyObservable(H_lambda[h_i], observables[h_i]);
+                } catch (...) {
 #if defined _OPENMP
 #pragma omp critical
 #endif
-                ex = std::current_exception();
+                    ex = std::current_exception();
 #if defined _OPENMP
 #pragma omp cancel for
 #endif
+                }
+            }
+#if defined _OPENMP
+            if (ex) {
+#pragma omp cancel parallel
             }
         }
-#if defined _OPENMP
-        if(ex){
-            #pragma omp cancel parallel
-        }
-}
 #endif
-        if(ex){
+        if (ex) {
             std::rethrow_exception(ex);
         }
 
@@ -663,7 +690,9 @@ template <class T = double> class AdjointJacobian {
                             (2 * (0b1 ^ operations.getOpsInverses()[op_idx]) -
                              1);
 #if defined _OPENMP
-#pragma omp parallel for default(none) shared(H_lambda, jac, mu, scalingFactor, trainableParamNumber, tp_it, num_observables)
+#pragma omp parallel for default(none)                                         \
+    shared(H_lambda, jac, mu, scalingFactor, trainableParamNumber, tp_it,      \
+           num_observables)
 #endif
                         for (size_t obs_idx = 0; obs_idx < num_observables;
                              obs_idx++) {
@@ -677,31 +706,33 @@ template <class T = double> class AdjointJacobian {
                     current_param_idx--;
                 }
 #if defined _OPENMP
-#pragma omp parallel default(none) shared(H_lambda, operations, op_idx, num_observables, ex)
-{
-#pragma omp for 
+#pragma omp parallel default(none)                                             \
+    shared(H_lambda, operations, op_idx, num_observables, ex)
+                {
+#pragma omp for
 #endif
-                for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
-                    try{
-                        applyOperationAdj(H_lambda[obs_idx], operations, op_idx);
-                    }
-                    catch(...){
+                    for (size_t obs_idx = 0; obs_idx < num_observables;
+                         obs_idx++) {
+                        try {
+                            applyOperationAdj(H_lambda[obs_idx], operations,
+                                              op_idx);
+                        } catch (...) {
 #if defined _OPENMP
 #pragma omp critical
 #endif
-                        ex = std::current_exception();
+                            ex = std::current_exception();
 #if defined _OPENMP
 #pragma omp cancel for
 #endif
+                        }
+                    }
+#if defined _OPENMP
+                    if (ex) {
+#pragma omp cancel parallel
                     }
                 }
-#if defined _OPENMP
-                if(ex){
-                    #pragma omp cancel parallel
-                }
-}
 #endif
-                if(ex){
+                if (ex) {
                     std::rethrow_exception(ex);
                 }
             }
