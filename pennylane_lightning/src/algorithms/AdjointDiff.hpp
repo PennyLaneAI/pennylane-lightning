@@ -266,7 +266,7 @@ template <class T> class OpsData {
                                                       std::move(ops_matrices)} {
         num_par_ops_ = 0;
         for (const auto &p : ops_params) {
-            if (p.size() > 0) {
+            if (p.empty()) {
                 num_par_ops_++;
             }
         }
