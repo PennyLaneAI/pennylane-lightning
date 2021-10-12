@@ -76,14 +76,8 @@ class LightningException : public std::exception {
      * @param err_msg Error message explaining the exception condition.
      */
 
-    template <
-        typename T,
-        std::enable_if_t<
-            std::is_convertible<typename Pennylane::Util::remove_cvref<T>::type,
-                                std::string>::value,
-            int> = 0>
-    explicit LightningException(T &&err_msg) noexcept
-        : err_msg{std::forward<T>(err_msg)} {}
+    explicit LightningException(std::string err_msg) noexcept
+        : err_msg{std::move(err_msg)} {}
 
     /**
      * @brief Destroys the `%LightningException` object.
