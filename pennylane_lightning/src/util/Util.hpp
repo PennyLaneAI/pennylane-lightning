@@ -131,12 +131,10 @@ template <class T> inline static constexpr auto IMAG() -> std::complex<T> {
  * @return constexpr T sqrt(2)
  */
 template <class T> inline static constexpr auto SQRT2() -> T {
-    constexpr auto f = 0x1.6a09e6p+0F;
-    constexpr auto d = 0x1.6a09e667f3bcdp+0;
     if constexpr (std::is_same_v<T, float>) {
-        return f;
+        return 0x1.6a09e6p+0F; // NOLINT: To be replaced in C++20
     } else {
-        return d;
+        return 0x1.6a09e667f3bcdp+0; // NOLINT: To be replaced in C++20
     }
 }
 
