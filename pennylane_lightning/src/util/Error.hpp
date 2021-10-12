@@ -17,6 +17,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "Util.hpp"
+
 /**
  * @brief Macro that throws `%LightningException` with given message.
  *
@@ -66,10 +68,6 @@ namespace Pennylane::Util {
 class LightningException : public std::exception {
   private:
     const std::string err_msg;
-    template <class T> struct remove_cvref {
-        using type = std::remove_cv_t<std::remove_reference_t<T>>;
-    };
-    template <class T> using remove_cvref_t = typename remove_cvref<T>::type;
 
   public:
     /**
@@ -80,7 +78,7 @@ class LightningException : public std::exception {
 
     template <
         typename T,
-        std::enable_if_t<std::is_convertible_v<remove_cvref_t<T>, std::string>,
+        std::enable_if_t<std::is_convertible<typename Pennylane::Util::remove_cvref<T>::type, std::string>::value,
                          int> = 0>
     explicit LightningException(T &&err_msg) noexcept
         : err_msg{std::forward<T>(err_msg)} {}
