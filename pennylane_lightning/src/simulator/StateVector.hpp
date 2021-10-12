@@ -89,7 +89,7 @@ template <class fp_t = double> class StateVector {
     size_t length_{0};
     size_t num_qubits_{0};
     const std::unordered_map<string, size_t> gate_wires_;
-    const FMap gates_{};
+    const FMap gates_;
 
   public:
     /**
@@ -316,14 +316,14 @@ template <class fp_t = double> class StateVector {
      *
      * @return std::size_t
      */
-    auto getLength() const -> std::size_t { return length_; }
+    [[nodiscard]] auto getLength() const -> std::size_t { return length_; }
 
     /**
      * @brief Get the number of qubits represented by the statevector data.
      *
      * @return std::size_t
      */
-    auto getNumQubits() const -> std::size_t { return num_qubits_; }
+    [[nodiscard]] auto getNumQubits() const -> std::size_t { return num_qubits_; }
 
     /**
      * @brief Apply a single gate to the state-vector.
