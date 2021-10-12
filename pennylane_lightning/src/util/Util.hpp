@@ -153,7 +153,7 @@ template <class T> inline static constexpr T INVSQRT2() {
 }
 
 /**
- * Calculates 2^n for some integer n > 0 using bitshifts.
+ * @brief Calculates 2^n for some integer n > 0 using bitshifts.
  *
  * @param n the exponent
  * @return value of 2^n
@@ -171,7 +171,7 @@ inline size_t log2(size_t value) {
 }
 
 /**
- * Calculates the decimal value for a qubit, assuming a big-endian convention.
+ * @brief Calculates the decimal value for a qubit, assuming a big-endian convention.
  *
  * @param qubitIndex the index of the qubit in the range [0, qubits)
  * @param qubits the number of qubits in the circuit
@@ -233,6 +233,16 @@ inline static std::vector<std::size_t> partition(std::size_t n,
     return bnd;
 }
 
+/**
+ * @brief Calculates the partial inner-product of input arrays naively. 
+ * 
+ * @tparam T Floating point precision type.
+ * @param v1 Complex data array 1.
+ * @param v2 Complex data array 2.
+ * @param result Calculated inner-product of v1 and v2 for the range [0, r).
+ * @param l lower-bound index in the for-loop.
+ * @param r upper-bound index in the for-loop.
+ */
 template <class T>
 inline static void
 _innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
@@ -256,7 +266,7 @@ _innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
  */
 template <class T>
 std::complex<T> innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
-                          const size_t data_size, size_t nthreads = 2) {
+                          const size_t data_size, const size_t nthreads = 2) {
     std::complex<T> result(0, 0);
 
     if constexpr (USE_CBLAS) {
@@ -285,8 +295,31 @@ std::complex<T> innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
 }
 
 /**
- * @brief Calculates the inner-product using the best available method with the
- * first dataset conjugated.
+ * @brief Calculates the partial inner-product of input arrays naively 
+ * with the the first dataset conjugated.
+ * 
+ * @tparam T Floating point precision type.
+ * @param v1 Complex data array 1.
+ * @param v2 Complex data array 2.
+ * @param result Calculated inner-product of v1 and v2 for the range [0, r).
+ * @param l lower-bound index in the for-loop.
+ * @param r upper-bound index in the for-loop.
+ */
+template <class T>
+inline static void
+_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
+           std::complex<T> &result, std::size_t l, std::size_t r) {
+    std::complex<T> s{0, 0};
+    for (std::size_t i = l; i < r; ++i)
+        s += std::conj(*(v1 + i)) * *(v2 + i);
+
+    std::lock_guard<std::mutex> block_threads_until_finish_this_job(barrier);
+    result += s;
+}
+
+/**
+ * @brief Calculates the inner-product using the best available method 
+ * with the first dataset conjugated.
  *
  * @tparam T Floating point precision type.
  * @param v1 Complex data array 1; conjugated before application.
@@ -296,7 +329,7 @@ std::complex<T> innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
  */
 template <class T>
 std::complex<T> innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
-                           const size_t data_size) {
+                           const size_t data_size, const size_t nthreads = 2) {
     std::complex<T> result(0, 0);
 
     if constexpr (USE_CBLAS) {
@@ -305,8 +338,19 @@ std::complex<T> innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
         else if constexpr (std::is_same_v<T, double>)
             cblas_zdotc_sub(data_size, v1, 1, v2, 1, &result);
     } else {
-        result = std::inner_product(v1, v1 + data_size, v2, std::complex<T>(),
+        if (data_size > DOTU_STD_CROSSOVER) {
+            result = std::inner_product(v1, v1 + data_size, v2, std::complex<T>(),
                                     ConstSum<T>, ConstMultConj<T>);
+        } else {
+            const std::vector<std::size_t> bnd = partition(nthreads, data_size);
+            std::vector<std::thread> threads;
+            for (std::size_t i = 0; i < nthreads; ++i)
+                threads.push_back(std::thread(_innerProdC<T>, std::ref(v1),
+                                              std::ref(v2), std::ref(result),
+                                              bnd[i], bnd[i + 1]));
+            for (auto &h : threads)
+                h.join();
+        }
     }
     return result;
 }
