@@ -37,9 +37,6 @@ if(ENABLE_CLANG_TIDY)
     endif()
     set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY_BINARY};
                             -extra-arg=-std=c++17;
-                            -warnings-as-errors=*;
-                            -header-filter=.*;
-                            -checks=-*,-llvmlibc-*,modernize-*,clang-analyzer-cplusplus*,openmp-*,performance-*,portability-*,readability-*;
     )
 endif()
 
