@@ -364,5 +364,10 @@ class NotImplementedException : public std::logic_error {
                            fname){};
 };
 
+// Enable until C++20 support is explicitly allowed
+template <class T> struct remove_cvref {
+    using type = std::remove_cv_t<std::remove_reference_t<T>>;
+};
+
 } // namespace Util
 } // namespace Pennylane
