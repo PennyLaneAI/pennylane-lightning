@@ -2,6 +2,8 @@
 
 ### New features since last release
 
+* Add Cache-Friendly DOTC, GEMV, GEMM along with BLAS Support 
+
 ### Improvements
 
 ### Documentation
@@ -11,6 +13,10 @@
 ### Bug fixes
 
 ### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Ali Asadi
 
 ---
 
