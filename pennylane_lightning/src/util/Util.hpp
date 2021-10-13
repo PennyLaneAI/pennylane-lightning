@@ -506,6 +506,35 @@ inline void Transpose(const std::complex<T> *mat, std::complex<T> *mat_t,
     CFTranspose(mat, mat_t, m, n, 0, m, 0, n);
 }
 
+template <class T>
+inline static void _matrixMatProd_tp (const std::complex<T> *m_left,
+							const std::complex<T> *m_right,
+							std::complex<T> *m_out,
+							std::size_t m, std::size_t n, std::size_t k, 
+							std::size_t left, 
+						 	std::size_t right) {
+	std::size_t r, c, b;
+    for (r = left; r < right; ++r)
+        for (c = 0; c < n; ++c)
+            for (b = 0; b < k; ++b) 
+                m_out[r*n+c] += m_left[r*k+b] * m_right[c*n+b];
+}
+
+template <class T>
+inline static void _matrixMatProd (const std::complex<T> *m_left,
+							const std::complex<T> *m_right_tp,
+							std::complex<T> *m_out,
+							std::size_t m, std::size_t n, std::size_t k, 
+							std::size_t left, 
+						 	std::size_t right) {
+	std::size_t r, c, b;
+    for (r = left; r < right; ++r)
+        for (c = 0; c < n; ++c)
+            for (b = 0; b < k; ++b) 
+                m_out[r*n+c] += m_left[r*k+b] * m_right[b*n+c];
+
+}
+
 /**
  * @brief Calculates matrix-matrix product using the best avaiable method.
  *
@@ -537,7 +566,17 @@ matrixMatProd(const std::complex<T> *m_left, const std::complex<T> *m_right,
         cblas_zgemm(CblasRowMajor, tr, CblasNoTrans, m, n, k, &co, m_left, k,
                     m_right, n, &cz, m_out, n);
 #else
-
+    std::vector<std::size_t> bnd = partition(nthreads, m);
+	std::vector<std::thread> threads;		
+	for (std::size_t i=0; i<nthreads; ++i)
+		threads.push_back(std::thread(_matrixMatProd<T>, 
+							std::ref(m_left), 
+							std::ref(m_right), 
+							std::ref(m_out),
+							m, n, k, 
+							bnd[i], bnd[i+1]));
+	for (auto &h : threads)
+		h.join();
 #endif
 }
 
