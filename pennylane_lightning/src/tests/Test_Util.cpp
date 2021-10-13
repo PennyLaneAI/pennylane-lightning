@@ -150,8 +150,11 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
                     m, {0, static_cast<double>(2 * m)});
                 std::vector<std::complex<double>> v_out =
                     Util::matrixVecProd(mat, v_in, m, m);
-                for (size_t i = 0; i < m; ++i)
+                CAPTURE(v_out);
+                CAPTURE(v_expected);
+                for (size_t i = 0; i < m; ++i) {
                     CHECK(isApproxEqual(v_out[i], v_expected[i]));
+                }
             }
         }
         SECTION("Random Complex") {
@@ -174,18 +177,34 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
                                                          {-0.305997, 1.83881}};
             std::vector<std::complex<double>> v_out =
                 Util::matrixVecProd(mat, v_in, 4, 4);
+            CAPTURE(v_out);
             for (size_t i = 0; i < 4; ++i)
                 CHECK(isApproxEqual(v_out[i], v_out[i]));
+        }
+        SECTION("Invalid Arguments") {
+            using namespace Catch::Matchers;
+            std::vector<std::complex<double>> mat(2 * 3, {1, 1});
+            std::vector<std::complex<double>> v_in(2, {1, 1});
+            CHECK_THROWS_AS(Util::matrixVecProd(mat, v_in, 2, 3),
+                            std::invalid_argument);
+            CHECK_THROWS_WITH(Util::matrixVecProd(mat, v_in, 2, 3),
+                              Contains("Invalid size for the input vector"));
+            CHECK_THROWS_AS(Util::matrixVecProd(mat, v_in, 2, 2),
+                            std::invalid_argument);
+            CHECK_THROWS_WITH(Util::matrixVecProd(mat, v_in, 2, 2),
+                              Contains("Invalid m & n for the input matrix"));
         }
     }
     SECTION("Transpose") {
         SECTION("Simple Matrix") {
-            for (size_t m = 2; m < 4; ++m) {
+            for (size_t m = 2; m < 5; ++m) {
                 std::vector<std::complex<double>> mat(m * m, {0, 0});
                 for (size_t i = 0; i < m; ++i)
                     mat[i * m + i] = {1, 1};
                 std::vector<std::complex<double>> mat_t =
                     Util::Transpose(mat, m, m);
+                CAPTURE(mat_t);
+                CAPTURE(mat);
                 for (size_t i = 0; i < m * m; ++i)
                     CHECK(isApproxEqual(mat[i], mat_t[i]));
             }
@@ -200,7 +219,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
                 {0.530623, 0.463644},  {0.868736, 0.760685},
                 {0.258175, 0.836569},  {0.495012, 0.667726},
                 {0.298962, 0.384992},  {0.659472, 0.232696}};
-            std::vector<std::complex<double>> mat_t_expected{
+            std::vector<std::complex<double>> mat_t_exp{
                 {0.417876, 0.27448},  {0.0431741, 0.593319},
                 {0.378397, 0.894381}, {0.258175, 0.836569},
                 {0.601209, 0.723548}, {0.224124, 0.130335},
@@ -211,8 +230,17 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
                 {0.868736, 0.760685}, {0.659472, 0.232696}};
             std::vector<std::complex<double>> mat_t =
                 Util::Transpose(mat, 4, 4);
+            CAPTURE(mat_t);
+            CAPTURE(mat_t_exp);
             for (size_t i = 0; i < 16; ++i)
-                CHECK(isApproxEqual(mat_t[i], mat_t_expected[i]));
+                CHECK(isApproxEqual(mat_t[i], mat_t_exp[i]));
+        }
+        SECTION("Invalid Arguments") {
+            using namespace Catch::Matchers;
+            std::vector<std::complex<double>> mat(2 * 3, {1, 1});
+            CHECK_THROWS_AS(Util::Transpose(mat, 2, 2), std::invalid_argument);
+            CHECK_THROWS_WITH(Util::Transpose(mat, 2, 2),
+                              Contains("Invalid m & n for the input matrix"));
         }
     }
     SECTION("matrixMatProd") {
@@ -220,40 +248,71 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             for (size_t m = 2; m < 5; ++m) {
                 std::vector<std::complex<double>> m_left(m * m, {1, 1});
                 std::vector<std::complex<double>> m_right(m * m, {1, 1});
-                std::vector<std::complex<double>> m_out_expected(
-                    m * m, {0, static_cast<double>(2*m)});
+                std::vector<std::complex<double>> m_out_exp(
+                    m * m, {0, static_cast<double>(2 * m)});
                 std::vector<std::complex<double>> m_out =
                     Util::matrixMatProd(m_left, m_right, m, m, m, 1, true);
+                CAPTURE(m_out);
+                CAPTURE(m_out_exp);
                 for (size_t i = 0; i < m * m; ++i)
-                    CHECK(isApproxEqual(m_out[i], m_out_expected[i]));
+                    CHECK(isApproxEqual(m_out[i], m_out_exp[i]));
             }
         }
         SECTION("Random Complex") {
             std::vector<std::complex<double>> m_left{
-                (0.94007, 0.424517),  (0.256163, 0.0615097),
-                (0.505297, 0.343107), (0.729021, 0.241991),
-                (0.860825, 0.633264), (0.987668, 0.195166),
-                (0.606897, 0.144482), (0.0183697, 0.375071),
-                (0.355853, 0.152383), (0.985341, 0.0888863),
-                (0.608352, 0.653375), (0.268477, 0.58398),
-                (0.960381, 0.786669), (0.498357, 0.185307),
-                (0.283511, 0.844801), (0.269318, 0.792981)};
+                {0.94007, 0.424517},  {0.256163, 0.0615097},
+                {0.505297, 0.343107}, {0.729021, 0.241991},
+                {0.860825, 0.633264}, {0.987668, 0.195166},
+                {0.606897, 0.144482}, {0.0183697, 0.375071},
+                {0.355853, 0.152383}, {0.985341, 0.0888863},
+                {0.608352, 0.653375}, {0.268477, 0.58398},
+                {0.960381, 0.786669}, {0.498357, 0.185307},
+                {0.283511, 0.844801}, {0.269318, 0.792981}};
             std::vector<std::complex<double>> m_right{
-                (0.94007, 0.424517),  (0.256163, 0.0615097),
-                (0.505297, 0.343107), (0.729021, 0.241991),
-                (0.860825, 0.633264), (0.987668, 0.195166),
-                (0.606897, 0.144482), (0.0183697, 0.375071),
-                (0.355853, 0.152383), (0.985341, 0.0888863),
-                (0.608352, 0.653375), (0.268477, 0.58398),
-                (0.960381, 0.786669), (0.498357, 0.185307),
-                (0.283511, 0.844801), (0.269318, 0.792981)};
+                {0.94007, 0.424517},  {0.256163, 0.0615097},
+                {0.505297, 0.343107}, {0.729021, 0.241991},
+                {0.860825, 0.633264}, {0.987668, 0.195166},
+                {0.606897, 0.144482}, {0.0183697, 0.375071},
+                {0.355853, 0.152383}, {0.985341, 0.0888863},
+                {0.608352, 0.653375}, {0.268477, 0.58398},
+                {0.960381, 0.786669}, {0.498357, 0.185307},
+                {0.283511, 0.844801}, {0.269318, 0.792981}};
+            std::vector<std::complex<double>> m_out_exp{
+                {1.52238, 2.01832},  {1.24156, 0.915996}, {0.561409, 1.83476},
+                {0.503974, 1.66465}, {1.18356, 2.27276},  {1.64377, 0.987318},
+                {0.752063, 1.48277}, {0.205344, 1.55279}, {0.977117, 2.09207},
+                {1.60457, 1.37967},  {0.238648, 1.58274}, {-0.401698, 1.46926},
+                {0.48751, 2.93959},  {0.845207, 1.84358}, {-0.48201, 2.063},
+                {-0.524095, 1.81573}};
             std::vector<std::complex<double>> m_out_1 =
                 Util::matrixMatProd(m_left, m_right, 4, 4, 4, 1, true);
             std::vector<std::complex<double>> m_out_2 =
                 Util::matrixMatProd(m_left, m_right, 4, 4, 4, 1, false);
-            for (size_t i = 0; i < 16; ++i) {
+            std::vector<std::complex<double>> m_out_3 =
+                Util::matrixMatProd(m_left, m_right, 4, 4, 4, 2, true);
+            CAPTURE(m_out_1);
+            CAPTURE(m_out_2);
+            CAPTURE(m_out_3);
+            CAPTURE(m_out_exp);
+            for (size_t i = 0; i < 16; ++i)
                 CHECK(isApproxEqual(m_out_1[i], m_out_2[i]));
-            }
+            for (size_t i = 0; i < 16; ++i)
+                CHECK(isApproxEqual(m_out_2[i], m_out_3[i]));
+        }
+        SECTION("Invalid Arguments") {
+            using namespace Catch::Matchers;
+            std::vector<std::complex<double>> m_left(2 * 3, {1, 1});
+            std::vector<std::complex<double>> m_right(3 * 4, {1, 1});
+            CHECK_THROWS_AS(Util::matrixMatProd(m_left, m_right, 2, 3, 4),
+                            std::invalid_argument);
+            CHECK_THROWS_WITH(
+                Util::matrixMatProd(m_left, m_right, 2, 3, 4),
+                Contains("Invalid m & k for the input left matrix"));
+            CHECK_THROWS_AS(Util::matrixMatProd(m_left, m_right, 2, 3, 3),
+                            std::invalid_argument);
+            CHECK_THROWS_WITH(
+                Util::matrixMatProd(m_left, m_right, 2, 3, 3),
+                Contains("Invalid k & n for the input right matrix"));
         }
     }
 }

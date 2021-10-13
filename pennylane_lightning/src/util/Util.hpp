@@ -615,8 +615,8 @@ inline void matrixMatProd(const std::complex<T> *m_left,
  * *m_right, std::complex<T> *m_out, size_t m, size_t n, size_t k, size_t
  * nthreads = 1, bool transpose = false)
  *
- * @note No need to transpose m_right a priori in case of transpose=ture.
- * Also, consider transpose=true, to get a performance as close to CBLAS.
+ * @note No need to transpose m_right a priori in case of transpose=ture;
+ * also, consider transpose=true, to get a performance as close to CBLAS.
  */
 template <class T>
 inline std::vector<std::complex<T>>
