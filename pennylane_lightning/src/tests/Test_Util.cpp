@@ -141,4 +141,43 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             CHECK(isApproxEqual(result, expected_result, 1e-5));
         }
     }
+    SECTION("matrixVecProd") {
+        SECTION("Simple Iterative") {
+            for (size_t m = 2; m < 8; ++m) {
+                std::vector<std::complex<double>> mat(m * m, {1, 1});
+                std::vector<std::complex<double>> v_in(m, {1, 1});
+                std::vector<std::complex<double>> v_expected(
+                    m, {0, static_cast<double>(2 * m)});
+                std::vector<std::complex<double>> v_out =
+                    Util::matrixVecProd(mat, v_in, m, m);
+                for (size_t i = 0; i < m; ++i)
+                    CHECK(isApproxEqual(v_out[i], v_expected[i]));
+            }
+        }
+        SECTION("Random Complex") {
+            std::vector<std::complex<double>> mat{
+                {0.417876, 0.27448},   {0.601209, 0.723548},
+                {0.781624, 0.538222},  {0.0597232, 0.27755},
+                {0.0431741, 0.593319}, {0.224124, 0.130335},
+                {0.237877, 0.01557},   {0.931634, 0.786367},
+                {0.378397, 0.894381},  {0.840747, 0.889789},
+                {0.530623, 0.463644},  {0.868736, 0.760685},
+                {0.258175, 0.836569},  {0.495012, 0.667726},
+                {0.298962, 0.384992},  {0.659472, 0.232696}};
+            std::vector<std::complex<double>> v_in{{0.417876, 0.27448},
+                                                   {0.601209, 0.723548},
+                                                   {0.781624, 0.538222},
+                                                   {0.0597232, 0.27755}};
+            std::vector<std::complex<double>> v_expected{{0.184998, 1.97393},
+                                                         {-0.0894368, 0.946047},
+                                                         {-0.219747, 2.55541},
+                                                         {-0.305997, 1.83881}};
+            std::vector<std::complex<double>> v_out =
+                Util::matrixVecProd(mat, v_in, 4, 4);
+            for (size_t i = 0; i < 4; ++i) {
+                std::cerr << v_out[i] << " ?= " << v_expected[i] << std::endl;
+                CHECK(isApproxEqual(v_out[i], v_expected[i]));
+            }
+        }
+    }
 }
