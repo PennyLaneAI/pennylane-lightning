@@ -552,7 +552,7 @@ _matrixMatProd(const std::complex<T> *m_left, const std::complex<T> *m_right,
  * @param k Number of rows of `m_right`.
  * @param nthreads Number of threads.
  * @param transpose If `true`, requires transposed version of `m_right`.
- * 
+ *
  * @note Consider transpose=true, to get a performance as close to CBLAS.
  */
 template <class T>
