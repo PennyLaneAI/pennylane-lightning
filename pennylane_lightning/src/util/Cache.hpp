@@ -29,17 +29,15 @@
 #include <limits>
 #include <utility>
 
-typedef std::pair<std::vector<size_t>, size_t> key_type;
-typedef std::vector<size_t> stored_type;
-typedef std::unordered_map<key_type, stored_type>::const_iterator
-    const_iterator_type;
-
 namespace Pennylane {
+
+namespace Util {
 
 // Boost implementation of a hash combine:
 // https://www.boost.org/doc/libs/1_35_0/doc/html/boost/hash_combine_id241013.html
 struct pair_hash {
-    std::size_t operator()(const key_type &key) const {
+    std::size_t
+    operator()(const std::pair<std::vector<size_t>, size_t> &key) const {
         std::size_t combined_hash_value = 0;
 
         for (auto &term : key.first) {
@@ -64,34 +62,30 @@ struct pair_hash {
  * calculation.
  *
  */
-class LRU_cache {
+template <class key_type, class stored_type> class LRU_cache {
   private:
+    using const_iterator_map_type =
+        typename std::unordered_map<key_type, stored_type>::const_iterator;
+    using const_iterator_list_type =
+        typename std::list<key_type>::const_iterator;
+
     size_t max_size;
     std::list<key_type> lru_queue;
     std::unordered_map<key_type, stored_type, pair_hash> cache_map;
-    std::unordered_map<key_type, std::list<key_type>::iterator, pair_hash>
-        key_ring;
+    std::unordered_map<key_type, const_iterator_list_type, pair_hash> key_ring;
 
     void clear() {
-        max_size = {};
         lru_queue.clear();
         cache_map.clear();
     }
 
+    size_t cache_size = 10;
+
   public:
     /**
      * @brief Construct a new LRU_cache object.
-     *
-     * The default cache size is 1.
-     * If set to 0, the size will be reescaled to the maximum possible size.
-     *
-     * @param asked_max_size Maximum size of the cache object.
      */
-    LRU_cache(size_t asked_max_size = 1) : max_size{asked_max_size} {
-        if (max_size == 0) {
-            max_size = std::numeric_limits<size_t>::max();
-        }
-    };
+    LRU_cache(){};
 
     /**
      * @brief Iterator for the map element.
@@ -113,7 +107,9 @@ class LRU_cache {
      */
     void insert(const key_type &new_key, const stored_type &new_value) {
         // opening a slot.
-        if (cache_map.size() >= max_size) {
+        if (cache_size == 0)
+            return;
+        if (cache_map.size() >= cache_size) {
             auto lru_key = lru_queue.back();
             cache_map.erase(lru_key);
             lru_queue.pop_back();
@@ -122,6 +118,20 @@ class LRU_cache {
         cache_map[new_key] = new_value;
         lru_queue.emplace_front(new_key);
         key_ring[new_key] = lru_queue.begin();
+    };
+
+    /**
+     * @brief Change the cache storage size.
+     *
+     * @param new_size is the new size desired.
+     */
+    void set_cache_size(size_t new_size) {
+        cache_size = new_size;
+        while (cache_map.size() > cache_size) {
+            auto lru_key = lru_queue.back();
+            cache_map.erase(lru_key);
+            lru_queue.pop_back();
+        }
     };
 
     /**
@@ -139,7 +149,7 @@ class LRU_cache {
      * @param element_it iterator to the element.
      * @return stored element.
      */
-    stored_type get(const_iterator_type element_it) {
+    stored_type get(const_iterator_map_type element_it) {
         renew(element_it->first);
         return element_it->second;
     };
@@ -150,7 +160,7 @@ class LRU_cache {
      * @param element_it iterator to the element.
      * @return stored element key.
      */
-    key_type get_key(const_iterator_type element_it) {
+    key_type get_key(const_iterator_map_type element_it) {
         return element_it->first;
     };
 
@@ -158,13 +168,13 @@ class LRU_cache {
      * @brief Iterator for the first element in the storage.
      *
      */
-    const_iterator_type begin() const { return cache_map.begin(); }
+    const_iterator_map_type begin() const { return cache_map.begin(); }
 
     /**
      * @brief Iterator for the last element in the storage.
      *
      */
-    const_iterator_type end() const { return cache_map.end(); }
+    const_iterator_map_type end() const { return cache_map.end(); }
 
     /**
      * @brief Returns the occupancy of the cache storage.
@@ -175,4 +185,5 @@ class LRU_cache {
     ~LRU_cache() { clear(); }
 };
 
+} // namespace Util
 } // namespace Pennylane
