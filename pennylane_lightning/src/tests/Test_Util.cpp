@@ -174,9 +174,87 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
                                                          {-0.305997, 1.83881}};
             std::vector<std::complex<double>> v_out =
                 Util::matrixVecProd(mat, v_in, 4, 4);
-            for (size_t i = 0; i < 4; ++i) {
-                std::cerr << v_out[i] << " ?= " << v_expected[i] << std::endl;
-                CHECK(isApproxEqual(v_out[i], v_expected[i]));
+            for (size_t i = 0; i < 4; ++i)
+                CHECK(isApproxEqual(v_out[i], v_out[i]));
+        }
+    }
+    SECTION("Transpose") {
+        SECTION("Simple Matrix") {
+            for (size_t m = 2; m < 4; ++m) {
+                std::vector<std::complex<double>> mat(m * m, {0, 0});
+                for (size_t i = 0; i < m; ++i)
+                    mat[i * m + i] = {1, 1};
+                std::vector<std::complex<double>> mat_t =
+                    Util::Transpose(mat, m, m);
+                for (size_t i = 0; i < m * m; ++i)
+                    CHECK(isApproxEqual(mat[i], mat_t[i]));
+            }
+        }
+        SECTION("Random Complex") {
+            std::vector<std::complex<double>> mat{
+                {0.417876, 0.27448},   {0.601209, 0.723548},
+                {0.781624, 0.538222},  {0.0597232, 0.27755},
+                {0.0431741, 0.593319}, {0.224124, 0.130335},
+                {0.237877, 0.01557},   {0.931634, 0.786367},
+                {0.378397, 0.894381},  {0.840747, 0.889789},
+                {0.530623, 0.463644},  {0.868736, 0.760685},
+                {0.258175, 0.836569},  {0.495012, 0.667726},
+                {0.298962, 0.384992},  {0.659472, 0.232696}};
+            std::vector<std::complex<double>> mat_t_expected{
+                {0.417876, 0.27448},  {0.0431741, 0.593319},
+                {0.378397, 0.894381}, {0.258175, 0.836569},
+                {0.601209, 0.723548}, {0.224124, 0.130335},
+                {0.840747, 0.889789}, {0.495012, 0.667726},
+                {0.781624, 0.538222}, {0.237877, 0.01557},
+                {0.530623, 0.463644}, {0.298962, 0.384992},
+                {0.0597232, 0.27755}, {0.931634, 0.786367},
+                {0.868736, 0.760685}, {0.659472, 0.232696}};
+            std::vector<std::complex<double>> mat_t =
+                Util::Transpose(mat, 4, 4);
+            for (size_t i = 0; i < 16; ++i)
+                CHECK(isApproxEqual(mat_t[i], mat_t_expected[i]));
+        }
+    }
+    SECTION("matrixMatProd") {
+        SECTION("Simple Iterative") {
+            for (size_t m = 2; m < 4; ++m) {
+                std::vector<std::complex<double>> m_left(m * m, {1, 1});
+                std::vector<std::complex<double>> m_right(m * m, {1, 1});
+                std::vector<std::complex<double>> m_out_expected(
+                    m * m, {static_cast<double>(m), 0});
+                std::vector<std::complex<double>> m_out =
+                    Util::matrixMatProd(m_left, m_right, m, m, m, 1, true);
+                for (size_t i = 0; i < m * m; ++i)
+                    CHECK(isApproxEqual(m_out[i], m_out_expected[i]));
+            }
+        }
+        SECTION("Random Complex") {
+            std::vector<std::complex<double>> m_left{
+                (0.94007, 0.424517),  (0.256163, 0.0615097),
+                (0.505297, 0.343107), (0.729021, 0.241991),
+                (0.860825, 0.633264), (0.987668, 0.195166),
+                (0.606897, 0.144482), (0.0183697, 0.375071),
+                (0.355853, 0.152383), (0.985341, 0.0888863),
+                (0.608352, 0.653375), (0.268477, 0.58398),
+                (0.960381, 0.786669), (0.498357, 0.185307),
+                (0.283511, 0.844801), (0.269318, 0.792981)};
+            std::vector<std::complex<double>> m_right{
+                (0.94007, 0.424517),  (0.256163, 0.0615097),
+                (0.505297, 0.343107), (0.729021, 0.241991),
+                (0.860825, 0.633264), (0.987668, 0.195166),
+                (0.606897, 0.144482), (0.0183697, 0.375071),
+                (0.355853, 0.152383), (0.985341, 0.0888863),
+                (0.608352, 0.653375), (0.268477, 0.58398),
+                (0.960381, 0.786669), (0.498357, 0.185307),
+                (0.283511, 0.844801), (0.269318, 0.792981)};
+            std::vector<std::complex<double>> m_out_1 =
+                Util::matrixMatProd(m_left, m_right, 4, 4, 4, 1, true);
+            std::vector<std::complex<double>> m_out_2 =
+                Util::matrixMatProd(m_left, m_right, 4, 4, 4, 1, false);
+            for (size_t i = 0; i < 16; ++i) {
+                std::cerr << "m_out_1[" << i << "] = " << m_out_1[i]
+                          << std::endl;
+                CHECK(isApproxEqual(m_out_1[i], m_out_2[i]));
             }
         }
     }

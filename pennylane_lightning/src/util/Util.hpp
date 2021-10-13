@@ -460,7 +460,7 @@ inline void matrixVecProd(const std::complex<T> *mat,
 /**
  * @brief Calculates the matrix-vector product using the best available method.
  *
- * @see inline void matrixVecProd(const std::complex<T> *mat, const
+ * @see void matrixVecProd(const std::complex<T> *mat, const
  * std::complex<T> *v_in, std::complex<T> *v_out, size_t m, size_t n, size_t
  * nthreads = 1, bool transpose = false)
  */
@@ -511,20 +511,24 @@ tail:
 }
 
 /**
- * @brief Transpose a matrix of size m * n to n * m using the
+ * @brief Transpose a matrix of shape m * n to n * m using the
  * best available method.
  *
- *
  * @tparam T Floating point precision type.
- * @param mat Row-wise flatten matrix of size m * n.
- * @param mat_t Pre-allocated row-wise flatten matrix of size n * m.
+ * @param mat Row-wise flatten matrix of shape m * n.
  * @param m Number of rows of `mat`.
  * @param n Number of columns of `mat`.
+ * @return mat transpose of shape n * m.
  */
 template <class T>
-inline void Transpose(const std::complex<T> *mat, std::complex<T> *mat_t,
-                      size_t m, size_t n) {
-    CFTranspose(mat, mat_t, m, n, 0, m, 0, n);
+inline std::vector<std::complex<T>>
+Transpose(const std::vector<std::complex<T>> mat, size_t m, size_t n) {
+    if (mat.size() != m * n)
+        throw std::invalid_argument("Invalid m & n for the input matrix");
+
+    std::vector<std::complex<T>> mat_t(n * m);
+    CFTranspose(mat.data(), mat_t.data(), m, n, 0, m, 0, n);
+    return mat_t;
 }
 
 /**
@@ -602,6 +606,38 @@ inline void matrixMatProd(const std::complex<T> *m_left,
     for (auto &h : threads)
         h.join();
 #endif
+}
+
+/**
+ * @brief Calculates the matrix-matrix product using the best available method.
+ *
+ * @see void matrixMatProd(const std::complex<T> *m_left, const std::complex<T>
+ * *m_right, std::complex<T> *m_out, size_t m, size_t n, size_t k, size_t
+ * nthreads = 1, bool transpose = false)
+ *
+ * @note No need to transpose m_right a priori in case of transpose=ture.
+ * Also, consider transpose=true, to get a performance as close to CBLAS.
+ */
+template <class T>
+inline std::vector<std::complex<T>>
+matrixMatProd(const std::vector<std::complex<T>> m_left,
+              const std::vector<std::complex<T>> m_right, size_t m, size_t n,
+              size_t k, size_t nthreads = 1, bool transpose = true) {
+    if (m_left.size() != m * k)
+        throw std::invalid_argument("Invalid m & k for the input left matrix");
+    else if (m_right.size() != k * n)
+        throw std::invalid_argument("Invalid k & n for the input right matrix");
+
+    std::vector<std::complex<T>> m_out(m * n);
+    if (transpose) {
+        std::vector<std::complex<T>> m_right_tp = Transpose(m_right, k, n);
+        matrixMatProd(m_left.data(), m_right_tp.data(), m_out.data(), m, n, k,
+                      nthreads, true);
+    } else {
+        matrixMatProd(m_left.data(), m_right.data(), m_out.data(), m, n, k,
+                      nthreads, false);
+    }
+    return m_out;
 }
 
 /**
