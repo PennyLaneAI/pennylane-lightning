@@ -441,11 +441,11 @@ inline void matrixVecProd(const std::complex<T> *mat,
     constexpr std::complex<T> cz{0, 0};
     const auto tr = (transpose) ? CblasTrans : CblasNoTrans;
     if constexpr (std::is_same_v<T, float>)
-        cblas_cgemv(CblasRowMajor, tr, m, n, &co, mat, m, v_in, 1,
-                    &cz, v_out, 1);
+        cblas_cgemv(CblasRowMajor, tr, m, n, &co, mat, m, v_in, 1, &cz, v_out,
+                    1);
     else if constexpr (std::is_same_v<T, double>)
-        cblas_zgemv(CblasRowMajor, tr, m, n, &co, mat, m, v_in, 1,
-                    &cz, v_out, 1);
+        cblas_zgemv(CblasRowMajor, tr, m, n, &co, mat, m, v_in, 1, &cz, v_out,
+                    1);
 #else
     const std::vector<std::size_t> bnd = partition(nthreads, m);
     std::vector<std::thread> threads;
@@ -458,121 +458,88 @@ inline void matrixVecProd(const std::complex<T> *mat,
 #endif
 }
 
-
 /**
- * @brief Calculates transpose of a matrix recursively and Cache-Friendly 
+ * @brief Calculates transpose of a matrix recursively and Cache-Friendly
  * using blacking and Cache-optimized techniques.
  */
 template <class T>
-inline static void CFTranspose (const std::complex<T> *mat, 
-							std::complex<T> *mat_t,
-							std::size_t m,  std::size_t n,
-							std::size_t m1, std::size_t m2,
-							std::size_t n1, std::size_t n2)
-{
-	constexpr std::size_t BLOCK_THRESHOLD = 16; 
-	std::size_t r, s, r1, s1, r2, s2;
-	tail:
-	r1 = m2 - m1;
-	s1 = n2 - n1; 
-	if (r1 >= s1 && r1 > BLOCK_THRESHOLD) {
-		r2 = (m1 + m2)/2;
-		CFTranspose(mat, 
-                    mat_t,
-                    m, n,
-                    m1, r2,
-                    n1, n2);
-		m1 = r2; 
-		goto tail;
-	} else if (s1 > BLOCK_THRESHOLD) {
-		s2 = (n1 + n2)/2;
-		CFTranspose(mat,
-                    mat_t,
-                    m, n,
-                    m1, m2,
-                    n1, s2);
-		n1 = s2;
-		goto tail;
-	} else {
-		for (r=m1; r<m2; ++r)
-			for (s=n1; s<n2; ++s) 
-				mat_t[s*m+r] = mat[r*n+s];
-	}
+inline static void CFTranspose(const std::complex<T> *mat,
+                               std::complex<T> *mat_t, std::size_t m,
+                               std::size_t n, std::size_t m1, std::size_t m2,
+                               std::size_t n1, std::size_t n2) {
+    constexpr std::size_t BLOCK_THRESHOLD = 16;
+    std::size_t r, s, r1, s1, r2, s2;
+tail:
+    r1 = m2 - m1;
+    s1 = n2 - n1;
+    if (r1 >= s1 && r1 > BLOCK_THRESHOLD) {
+        r2 = (m1 + m2) / 2;
+        CFTranspose(mat, mat_t, m, n, m1, r2, n1, n2);
+        m1 = r2;
+        goto tail;
+    } else if (s1 > BLOCK_THRESHOLD) {
+        s2 = (n1 + n2) / 2;
+        CFTranspose(mat, mat_t, m, n, m1, m2, n1, s2);
+        n1 = s2;
+        goto tail;
+    } else {
+        for (r = m1; r < m2; ++r)
+            for (s = n1; s < n2; ++s)
+                mat_t[s * m + r] = mat[r * n + s];
+    }
 }
 
 /**
- * @brief Transpose a matrix of size m * n to n * m using the 
+ * @brief Transpose a matrix of size m * n to n * m using the
  * best available method.
- * 
- * 
+ *
+ *
  * @tparam T Floating point precision type.
- * @param mat Row-wise flatten matrix of size m * n. 
+ * @param mat Row-wise flatten matrix of size m * n.
  * @param mat_t Pre-allocated row-wise flatten matrix of size n * m.
  * @param m Number of rows of `mat`.
  * @param n Number of columns of `mat`.
  */
 template <class T>
-inline void Transpose (const std::complex<T> *mat, std::complex<T> *mat_t, std::size_t m, std::size_t n) {
-	CFTranspose(mat, mat_t, m, n, 0, m, 0, n);
+inline void Transpose(const std::complex<T> *mat, std::complex<T> *mat_t,
+                      std::size_t m, std::size_t n) {
+    CFTranspose(mat, mat_t, m, n, 0, m, 0, n);
 }
 
 /**
  * @brief Calculates matrix-matrix product using the best avaiable method.
- * 
+ *
  * @tparam T Floating point precision type.
- * @param m_left
- * @param m_right 
- * @param m_out 
- * @param m
- * @param n
- * @param n
+ * @param m_left Row-wise flatten matrix of size m * k.
+ * @param m_right Row-wise flatten matrix of size k * n.
+ * @param m_out Pre-allocated row-wise flatten matrix of size m * n.
+ * @param m Number of rows of `m_left`.
+ * @param n Number of columns of `m_right`.
+ * @param k Number of rows of `m_right`.
  * @param nthreads Number of threads.
  * @param transpose If `true`, considers transposed version of `mat`.
  */
 template <class T>
-inline void matrixMatProd (const std::complex<T> *m_left, // m * k
-                		const std::complex<T> *m_right,  // k * n 
-                		std::complex<T> *m_out, // m * n
-                		std::size_t m, std::size_t n, std::size_t k, 
-                		std::size_t nthreads = 1,
-                        bool transpose = false) {
-	if (!m_out)
-		return;
+inline void
+matrixMatProd(const std::complex<T> *m_left, const std::complex<T> *m_right,
+              std::complex<T> *m_out, std::size_t m, std::size_t n,
+              std::size_t k, std::size_t nthreads = 1, bool transpose = false) {
+    if (!m_out)
+        return;
 #if defined(USE_CBLAS) && USE_CBLAS
-	constexpr std::complex<T> co {1, 0};
-	constexpr std::complex<T> cz {0, 0};
+    constexpr std::complex<T> co{1, 0};
+    constexpr std::complex<T> cz{0, 0};
     const auto tr = (transpose) ? CblasTrans : CblasNoTrans;
     if constexpr (std::is_same_v<T, float>)
-        cblas_cgemm(CblasRowMajor, 
-        			tr, 
-        			CblasNoTrans, 
-        			m, n, k, 
-        			&co, 
-        			m_left,
-                    k, 
-                    m_right, 
-                    n, 
-                    &cz,
-                    m_out, 
-                    n);
+        cblas_cgemm(CblasRowMajor, tr, CblasNoTrans, m, n, k, &co, m_left, k,
+                    m_right, n, &cz, m_out, n);
     else if constexpr (std::is_same_v<T, double>)
-        cblas_zgemm(CblasRowMajor, 
-        			tr, 
-        			CblasNoTrans, 
-        			m, n, k, 
-        			&co, 
-        			m_left,
-                    k, 
-                    m_right, 
-                    n, 
-                    &cz,
-                    m_out,
-                    n);
+        cblas_zgemm(CblasRowMajor, tr, CblasNoTrans, m, n, k, &co, m_left, k,
+                    m_right, n, &cz, m_out, n);
 #else
 
 #endif
-
-} 
+}
 
 /**
  * @brief Streaming operator for vector data.
