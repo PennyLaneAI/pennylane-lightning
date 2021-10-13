@@ -506,6 +506,20 @@ inline void Transpose(const std::complex<T> *mat, std::complex<T> *mat_t,
     CFTranspose(mat, mat_t, m, n, 0, m, 0, n);
 }
 
+/**
+ * @brief Calculates matrix-matrix product partially.
+ *
+ * @tparam T Floating point precision type.
+ * @param m_left Row-wise flatten matrix of size m * k.
+ * @param m_right Row-wise flatten matrix of size k * n.
+ * @param m_out Pre-allocated row-wise flatten matrix of size m * n.
+ * @param m Number of rows of `m_left`.
+ * @param n Number of columns of `m_right`.
+ * @param k Number of rows of `m_right`.
+ * @param left Lower-bound of the for-loop.
+ * @param right Upper-bound of the for-loop.
+ * @param transpose If `true`, requires transposed version of `m_right`.
+ */
 template <class T>
 inline static void
 _matrixMatProd(const std::complex<T> *m_left, const std::complex<T> *m_right,
@@ -538,6 +552,8 @@ _matrixMatProd(const std::complex<T> *m_left, const std::complex<T> *m_right,
  * @param k Number of rows of `m_right`.
  * @param nthreads Number of threads.
  * @param transpose If `true`, requires transposed version of `m_right`.
+ * 
+ * @note Consider transpose=true, to get a performance as close to CBLAS.
  */
 template <class T>
 inline void
