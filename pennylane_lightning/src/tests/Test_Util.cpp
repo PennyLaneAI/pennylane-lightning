@@ -217,15 +217,17 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
     }
     SECTION("matrixMatProd") {
         SECTION("Simple Iterative") {
-            for (size_t m = 2; m < 4; ++m) {
+            for (size_t m = 2; m < 5; ++m) {
                 std::vector<std::complex<double>> m_left(m * m, {1, 1});
                 std::vector<std::complex<double>> m_right(m * m, {1, 1});
                 std::vector<std::complex<double>> m_out_expected(
-                    m * m, {static_cast<double>(m), 0});
+                    m * m, {0, static_cast<double>(2*m)});
                 std::vector<std::complex<double>> m_out =
                     Util::matrixMatProd(m_left, m_right, m, m, m, 1, true);
-                for (size_t i = 0; i < m * m; ++i)
+                for (size_t i = 0; i < m * m; ++i) {
+                    std::cerr << m_out[i] << " ?= " << m_out_expected[i] << std::endl;
                     CHECK(isApproxEqual(m_out[i], m_out_expected[i]));
+                }
             }
         }
         SECTION("Random Complex") {
@@ -252,8 +254,6 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             std::vector<std::complex<double>> m_out_2 =
                 Util::matrixMatProd(m_left, m_right, 4, 4, 4, 1, false);
             for (size_t i = 0; i < 16; ++i) {
-                std::cerr << "m_out_1[" << i << "] = " << m_out_1[i]
-                          << std::endl;
                 CHECK(isApproxEqual(m_out_1[i], m_out_2[i]));
             }
         }
