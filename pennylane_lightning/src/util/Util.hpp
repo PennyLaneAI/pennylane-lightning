@@ -578,7 +578,7 @@ inline auto Transpose(const std::vector<std::complex<T>> mat, size_t m,
 }
 
 /**
- * @brief Calculates matrix-matrix product partially.
+ * @brief Calculates matrix-matrix product using OpenMP.
  *
  * @tparam T Floating point precision type.
  * @param m_left Row-wise flatten matrix of size m * k.
@@ -587,33 +587,41 @@ inline auto Transpose(const std::vector<std::complex<T>> mat, size_t m,
  * @param m Number of rows of `m_left`.
  * @param n Number of columns of `m_right`.
  * @param k Number of rows of `m_right`.
- * @param left Lower-bound of the for-loop.
- * @param right Upper-bound of the for-loop.
  * @param transpose If `true`, requires transposed version of `m_right`.
+ *
+ * @note Consider transpose=true, to get a performance as close to CBLAS.
  */
 template <class T>
-inline static void
-_matrixMatProd(const std::complex<T> *m_left, const std::complex<T> *m_right,
-               std::complex<T> *m_out, size_t m, size_t n, size_t k,
-               size_t left, size_t right, bool transpose) {
-    size_t r, c, b;
-    if (transpose) {
-        for (r = left; r < right; ++r) {
-            for (c = 0; c < n; ++c) {
-                for (b = 0; b < k; ++b) {
-                    m_out[r * n + c] += m_left[r * k + b] * m_right[c * n + b];
-                }
-            }
-        }
-    } else {
-        for (r = left; r < right; ++r) {
-            for (c = 0; c < n; ++c) {
-                for (b = 0; b < k; ++b) {
-                    m_out[r * n + c] += m_left[r * k + b] * m_right[b * n + c];
-                }
-            }
-        }
+inline void omp_matrixMatProd(const std::complex<T> *m_left,
+                          const std::complex<T> *m_right,
+                          std::complex<T> *m_out, size_t m, 
+                          size_t n, size_t k, bool transpose = false) {
+    if (!m_out) {
+        return;
     }
+    #pragma omp parallel default(none) 
+	{
+		std::size_t r, c, b;
+        if (transpose) {
+            #pragma omp for 	
+            for (r = 0; r < m; ++r) {
+                for (c = 0; c < n; ++c) {
+                    for (b = 0; b < k; ++b) {
+                        m_out[r*n+c] += m_left[r*k+b] * m_right[c*n+b];
+                    }
+                }
+            }
+        } else {
+            #pragma omp for 	
+            for (r = 0; r < m; ++r) {
+                for (c = 0; c < n; ++c) {
+                    for (b = 0; b < k; ++b) {
+                        m_out[r*n+c] += m_left[r*k+b] * m_right[b*n+c];
+                    }
+                }
+            }
+        }
+	}    
 }
 
 /**
@@ -626,7 +634,6 @@ _matrixMatProd(const std::complex<T> *m_left, const std::complex<T> *m_right,
  * @param m Number of rows of `m_left`.
  * @param n Number of columns of `m_right`.
  * @param k Number of rows of `m_right`.
- * @param nthreads Number of threads.
  * @param transpose If `true`, requires transposed version of `m_right`.
  *
  * @note Consider transpose=true, to get a performance as close to CBLAS.
@@ -635,7 +642,7 @@ template <class T>
 inline void matrixMatProd(const std::complex<T> *m_left,
                           const std::complex<T> *m_right,
                           std::complex<T> *m_out, size_t m, size_t n, size_t k,
-                          size_t nthreads = 1, bool transpose = false) {
+                          bool transpose = false) {
     if (!m_out) {
         return;
     }
@@ -651,16 +658,7 @@ inline void matrixMatProd(const std::complex<T> *m_left,
                     m_right, n, &cz, m_out, n);
     }
 #else
-    std::vector<size_t> bnd = partition(nthreads, m);
-    std::vector<std::thread> threads;
-    for (size_t i = 0; i < nthreads; ++i) {
-        threads.push_back(std::thread(_matrixMatProd<T>, std::ref(m_left),
-                                      std::ref(m_right), std::ref(m_out), m, n,
-                                      k, bnd[i], bnd[i + 1], transpose));
-    }
-    for (auto &h : threads) {
-        h.join();
-    }
+    omp_matrixMatProd(m_left, m_right, m_out, m, n, k, transpose);
 #endif
 }
 
@@ -677,8 +675,7 @@ inline void matrixMatProd(const std::complex<T> *m_left,
 template <class T>
 inline auto matrixMatProd(const std::vector<std::complex<T>> m_left,
                           const std::vector<std::complex<T>> m_right, size_t m,
-                          size_t n, size_t k, size_t nthreads = 1,
-                          bool transpose = true)
+                          size_t n, size_t k, bool transpose = true)
     -> std::vector<std::complex<T>> {
     if (m_left.size() != m * k) {
         throw std::invalid_argument("Invalid m & k for the input left matrix");
@@ -689,11 +686,10 @@ inline auto matrixMatProd(const std::vector<std::complex<T>> m_left,
     std::vector<std::complex<T>> m_out(m * n);
     if (transpose) {
         std::vector<std::complex<T>> m_right_tp = Transpose(m_right, k, n);
-        matrixMatProd(m_left.data(), m_right_tp.data(), m_out.data(), m, n, k,
-                      nthreads, true);
+        matrixMatProd(m_left.data(), m_right_tp.data(), m_out.data(), m, n, k, true);
+        // free m_right_tp
     } else {
-        matrixMatProd(m_left.data(), m_right.data(), m_out.data(), m, n, k,
-                      nthreads, false);
+        matrixMatProd(m_left.data(), m_right.data(), m_out.data(), m, n, k, false);
     }
     return m_out;
 }

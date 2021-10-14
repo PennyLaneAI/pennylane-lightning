@@ -255,7 +255,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
                 std::vector<std::complex<double>> m_out_exp(
                     m * m, {0, static_cast<double>(2 * m)});
                 std::vector<std::complex<double>> m_out =
-                    Util::matrixMatProd(m_left, m_right, m, m, m, 1, true);
+                    Util::matrixMatProd(m_left, m_right, m, m, m, true);
                 CAPTURE(m_out);
                 CAPTURE(m_out_exp);
                 for (size_t i = 0; i < m * m; ++i) {
@@ -290,11 +290,11 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
                 {0.48751, 2.93959},  {0.845207, 1.84358}, {-0.48201, 2.063},
                 {-0.524095, 1.81573}};
             std::vector<std::complex<double>> m_out_1 =
-                Util::matrixMatProd(m_left, m_right, 4, 4, 4, 1, true);
+                Util::matrixMatProd(m_left, m_right, 4, 4, 4, true);
             std::vector<std::complex<double>> m_out_2 =
-                Util::matrixMatProd(m_left, m_right, 4, 4, 4, 1, false);
+                Util::matrixMatProd(m_left, m_right, 4, 4, 4, false);
             std::vector<std::complex<double>> m_out_3 =
-                Util::matrixMatProd(m_left, m_right, 4, 4, 4, 2, true);
+                Util::matrixMatProd(m_left, m_right, 4, 4, 4, true);
             CAPTURE(m_out_1);
             CAPTURE(m_out_2);
             CAPTURE(m_out_3);
