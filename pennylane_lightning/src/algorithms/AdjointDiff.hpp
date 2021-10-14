@@ -172,23 +172,6 @@ template <class T = double> class ObsDatum {
                                                   std::move(obs_wires)} {};
 
     /**
-     * @brief Move constructor for an ObsDatum object, representing a given
-     * observable.
-     *
-     * @param obs_name Name of each operation of the observable. Tensor product
-     * observables have more than one operation.
-     * @param obs_params Parameters for a given obserable operation ({} if
-     * optional).
-     * @param obs_wires Wires upon which to apply operation. Each observable
-     * operation will be a separate nested list.
-     */
-    /*ObsDatum(std::vector<std::string> &&obs_name,
-             std::vector<param_var_t> &&obs_params,
-             std::vector<std::vector<size_t>> &&obs_wires)
-        : obs_name_{std::move(obs_name)}, obs_params_{std::move(obs_params)},
-          obs_wires_{std::move(obs_wires)} {};*/
-
-    /**
      * @brief Get the number of operations in observable.
      *
      * @return size_t
