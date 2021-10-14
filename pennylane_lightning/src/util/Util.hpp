@@ -214,7 +214,8 @@ template <class T> inline size_t dimSize(const std::vector<T> &data) {
  *
  * @note the last index sets to data_size.
  */
-inline static std::vector<size_t> partition(size_t n, size_t data_size) {
+inline static auto partition(size_t n, size_t data_size)
+    -> std::vector<size_t> {
     std::vector<size_t> bnd;
     if (n == 1) {
         bnd.push_back(0);
@@ -226,8 +227,9 @@ inline static std::vector<size_t> partition(size_t n, size_t data_size) {
     bnd.push_back(n1);
     for (i = 0; i < n; ++i) {
         n2 = n1 + d;
-        if (i == n - 1)
+        if (i == n - 1) {
             n2 = data_size;
+        }
         bnd.push_back(n2);
         n1 = n2;
     }
@@ -249,8 +251,9 @@ inline static void _innerProd(const std::complex<T> *v1,
                               const std::complex<T> *v2,
                               std::complex<T> &result, size_t l, size_t r) {
     std::complex<T> s{0, 0};
-    for (size_t i = l; i < r; ++i)
+    for (size_t i = l; i < r; ++i) {
         s += *(v1 + i) * *(v2 + i);
+    }
 
     std::lock_guard<std::mutex> block_threads_until_finish_this_job(barrier);
     result += s;
@@ -267,16 +270,17 @@ inline static void _innerProd(const std::complex<T> *v1,
  * @return std::complex<T> Result of inner product operation.
  */
 template <class T>
-inline std::complex<T>
-innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
-          const size_t data_size, const size_t nthreads = 2) {
+inline auto innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
+                      const size_t data_size, const size_t nthreads = 2)
+    -> std::complex<T> {
     std::complex<T> result(0, 0);
 
     if constexpr (USE_CBLAS) {
-        if constexpr (std::is_same_v<T, float>)
+        if constexpr (std::is_same_v<T, float>) {
             cblas_cdotu_sub(data_size, v1, 1, v2, 1, &result);
-        else if constexpr (std::is_same_v<T, double>)
+        } else if constexpr (std::is_same_v<T, double>) {
             cblas_zdotu_sub(data_size, v1, 1, v2, 1, &result);
+        }
     } else {
         if (data_size > DOTU_STD_CROSSOVER) {
             result = std::inner_product(
@@ -286,12 +290,14 @@ innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
         } else {
             const std::vector<size_t> bnd = partition(nthreads, data_size);
             std::vector<std::thread> threads;
-            for (size_t i = 0; i < nthreads; ++i)
+            for (size_t i = 0; i < nthreads; ++i) {
                 threads.push_back(std::thread(_innerProd<T>, std::ref(v1),
                                               std::ref(v2), std::ref(result),
                                               bnd[i], bnd[i + 1]));
-            for (auto &h : threads)
+            }
+            for (auto &h : threads) {
                 h.join();
+            }
         }
     }
     return result;
@@ -313,8 +319,9 @@ inline static void _innerProdC(const std::complex<T> *v1,
                                const std::complex<T> *v2,
                                std::complex<T> &result, size_t l, size_t r) {
     std::complex<T> s{0, 0};
-    for (size_t i = l; i < r; ++i)
+    for (size_t i = l; i < r; ++i) {
         s += std::conj(*(v1 + i)) * *(v2 + i);
+    }
 
     std::lock_guard<std::mutex> block_threads_until_finish_this_job(barrier);
     result += s;
@@ -332,16 +339,17 @@ inline static void _innerProdC(const std::complex<T> *v1,
  * @return std::complex<T> Result of inner product operation.
  */
 template <class T>
-inline std::complex<T>
-innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
-           const size_t data_size, const size_t nthreads = 2) {
+inline auto innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
+                       const size_t data_size, const size_t nthreads = 2)
+    -> std::complex<T> {
     std::complex<T> result(0, 0);
 
 #if defined(USE_CBLAS) && USE_CBLAS
-    if constexpr (std::is_same_v<T, float>)
+    if constexpr (std::is_same_v<T, float>) {
         cblas_cdotc_sub(data_size, v1, 1, v2, 1, &result);
-    else if constexpr (std::is_same_v<T, double>)
+    } else if constexpr (std::is_same_v<T, double>) {
         cblas_zdotc_sub(data_size, v1, 1, v2, 1, &result);
+    }
 #else
     if (data_size > DOTC_STD_CROSSOVER) {
         result = std::inner_product(v1, v1 + data_size, v2, std::complex<T>(),
@@ -349,12 +357,14 @@ innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
     } else {
         const std::vector<size_t> bnd = partition(nthreads, data_size);
         std::vector<std::thread> threads;
-        for (size_t i = 0; i < nthreads; ++i)
+        for (size_t i = 0; i < nthreads; ++i) {
             threads.push_back(std::thread(_innerProdC<T>, std::ref(v1),
                                           std::ref(v2), std::ref(result),
                                           bnd[i], bnd[i + 1]));
-        for (auto &h : threads)
+        }
+        for (auto &h : threads) {
             h.join();
+        }
     }
 #endif
     return result;
@@ -367,8 +377,9 @@ innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
  * const size_t data_size)
  */
 template <class T>
-inline std::complex<T> innerProd(const std::vector<std::complex<T>> &v1,
-                                 const std::vector<std::complex<T>> &v2) {
+inline auto innerProd(const std::vector<std::complex<T>> &v1,
+                      const std::vector<std::complex<T>> &v2)
+    -> std::complex<T> {
     return innerProd(v1.data(), v2.data(), v1.size());
 }
 
@@ -380,8 +391,9 @@ inline std::complex<T> innerProd(const std::vector<std::complex<T>> &v1,
  * const size_t data_size)
  */
 template <class T>
-inline std::complex<T> innerProdC(const std::vector<std::complex<T>> &v1,
-                                  const std::vector<std::complex<T>> &v2) {
+inline auto innerProdC(const std::vector<std::complex<T>> &v1,
+                       const std::vector<std::complex<T>> &v2)
+    -> std::complex<T> {
     return innerProdC(v1.data(), v2.data(), v1.size());
 }
 
@@ -406,13 +418,17 @@ _matrixVecProd(const std::complex<T> *mat, const std::complex<T> *v_in,
                size_t right, bool transpose = false) {
     size_t r, c;
     if (transpose) {
-        for (r = left; r < right; ++r)
-            for (c = 0; c < n; ++c)
+        for (r = left; r < right; ++r) {
+            for (c = 0; c < n; ++c) {
                 v_out[r] += mat[c * m + r] * v_in[c];
+            }
+        }
     } else {
-        for (r = left; r < right; ++r)
-            for (c = 0; c < n; ++c)
+        for (r = left; r < right; ++r) {
+            for (c = 0; c < n; ++c) {
                 v_out[r] += mat[r * n + c] * v_in[c];
+            }
+        }
     }
 }
 
@@ -433,27 +449,31 @@ inline void matrixVecProd(const std::complex<T> *mat,
                           const std::complex<T> *v_in, std::complex<T> *v_out,
                           size_t m, size_t n, size_t nthreads = 1,
                           bool transpose = false) {
-    if (!v_out)
+    if (!v_out) {
         return;
+    }
 #if defined(USE_CBLAS) && USE_CBLAS
     constexpr std::complex<T> co{1, 0};
     constexpr std::complex<T> cz{0, 0};
     const auto tr = (transpose) ? CblasTrans : CblasNoTrans;
-    if constexpr (std::is_same_v<T, float>)
+    if constexpr (std::is_same_v<T, float>) {
         cblas_cgemv(CblasRowMajor, tr, m, n, &co, mat, m, v_in, 1, &cz, v_out,
                     1);
-    else if constexpr (std::is_same_v<T, double>)
+    } else if constexpr (std::is_same_v<T, double>) {
         cblas_zgemv(CblasRowMajor, tr, m, n, &co, mat, m, v_in, 1, &cz, v_out,
                     1);
+    }
 #else
     const std::vector<size_t> bnd = partition(nthreads, m);
     std::vector<std::thread> threads;
-    for (size_t i = 0; i < nthreads; ++i)
+    for (size_t i = 0; i < nthreads; ++i) {
         threads.push_back(std::thread(_matrixVecProd<T>, std::ref(mat),
                                       std::ref(v_in), std::ref(v_out), m, n,
                                       bnd[i], bnd[i + 1], transpose));
-    for (auto &h : threads)
+    }
+    for (auto &h : threads) {
         h.join();
+    }
 #endif
 }
 
@@ -465,14 +485,15 @@ inline void matrixVecProd(const std::complex<T> *mat,
  * nthreads = 1, bool transpose = false)
  */
 template <class T>
-inline std::vector<std::complex<T>>
-matrixVecProd(const std::vector<std::complex<T>> mat,
-              const std::vector<std::complex<T>> v_in, size_t m, size_t n,
-              size_t nthreads = 1, bool transpose = false) {
-    if (mat.size() != m * n)
+inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
+                          const std::vector<std::complex<T>> v_in, size_t m,
+                          size_t n, size_t nthreads = 1, bool transpose = false)
+    -> std::vector<std::complex<T>> {
+    if (mat.size() != m * n) {
         throw std::invalid_argument("Invalid m & n for the input matrix");
-    else if (v_in.size() != n)
+    } else if (v_in.size() != n) {
         throw std::invalid_argument("Invalid size for the input vector");
+    }
 
     std::vector<std::complex<T>> v_out(m);
     matrixVecProd(mat.data(), v_in.data(), v_out.data(), m, n, nthreads,
@@ -504,9 +525,11 @@ tail:
         n1 = s2;
         goto tail;
     } else {
-        for (r = m1; r < m2; ++r)
-            for (s = n1; s < n2; ++s)
+        for (r = m1; r < m2; ++r) {
+            for (s = n1; s < n2; ++s) {
                 mat_t[s * m + r] = mat[r * n + s];
+            }
+        }
     }
 }
 
@@ -521,10 +544,11 @@ tail:
  * @return mat transpose of shape n * m.
  */
 template <class T>
-inline std::vector<std::complex<T>>
-Transpose(const std::vector<std::complex<T>> mat, size_t m, size_t n) {
-    if (mat.size() != m * n)
+inline auto Transpose(const std::vector<std::complex<T>> mat, size_t m,
+                      size_t n) -> std::vector<std::complex<T>> {
+    if (mat.size() != m * n) {
         throw std::invalid_argument("Invalid m & n for the input matrix");
+    }
 
     std::vector<std::complex<T>> mat_t(n * m);
     CFTranspose(mat.data(), mat_t.data(), m, n, 0, m, 0, n);
@@ -552,15 +576,21 @@ _matrixMatProd(const std::complex<T> *m_left, const std::complex<T> *m_right,
                size_t left, size_t right, bool transpose) {
     size_t r, c, b;
     if (transpose) {
-        for (r = left; r < right; ++r)
-            for (c = 0; c < n; ++c)
-                for (b = 0; b < k; ++b)
+        for (r = left; r < right; ++r) {
+            for (c = 0; c < n; ++c) {
+                for (b = 0; b < k; ++b) {
                     m_out[r * n + c] += m_left[r * k + b] * m_right[c * n + b];
+                }
+            }
+        }
     } else {
-        for (r = left; r < right; ++r)
-            for (c = 0; c < n; ++c)
-                for (b = 0; b < k; ++b)
+        for (r = left; r < right; ++r) {
+            for (c = 0; c < n; ++c) {
+                for (b = 0; b < k; ++b) {
                     m_out[r * n + c] += m_left[r * k + b] * m_right[b * n + c];
+                }
+            }
+        }
     }
 }
 
@@ -584,27 +614,31 @@ inline void matrixMatProd(const std::complex<T> *m_left,
                           const std::complex<T> *m_right,
                           std::complex<T> *m_out, size_t m, size_t n, size_t k,
                           size_t nthreads = 1, bool transpose = false) {
-    if (!m_out)
+    if (!m_out) {
         return;
+    }
 #if defined(USE_CBLAS) && USE_CBLAS
     constexpr std::complex<T> co{1, 0};
     constexpr std::complex<T> cz{0, 0};
     const auto tr = (transpose) ? CblasTrans : CblasNoTrans;
-    if constexpr (std::is_same_v<T, float>)
+    if constexpr (std::is_same_v<T, float>) {
         cblas_cgemm(CblasRowMajor, tr, CblasNoTrans, m, n, k, &co, m_left, k,
                     m_right, n, &cz, m_out, n);
-    else if constexpr (std::is_same_v<T, double>)
+    } else if constexpr (std::is_same_v<T, double>) {
         cblas_zgemm(CblasRowMajor, tr, CblasNoTrans, m, n, k, &co, m_left, k,
                     m_right, n, &cz, m_out, n);
+    }
 #else
     std::vector<size_t> bnd = partition(nthreads, m);
     std::vector<std::thread> threads;
-    for (size_t i = 0; i < nthreads; ++i)
+    for (size_t i = 0; i < nthreads; ++i) {
         threads.push_back(std::thread(_matrixMatProd<T>, std::ref(m_left),
                                       std::ref(m_right), std::ref(m_out), m, n,
                                       k, bnd[i], bnd[i + 1], transpose));
-    for (auto &h : threads)
+    }
+    for (auto &h : threads) {
         h.join();
+    }
 #endif
 }
 
@@ -619,14 +653,16 @@ inline void matrixMatProd(const std::complex<T> *m_left,
  * also, consider transpose=true, to get a performance as close to CBLAS.
  */
 template <class T>
-inline std::vector<std::complex<T>>
-matrixMatProd(const std::vector<std::complex<T>> m_left,
-              const std::vector<std::complex<T>> m_right, size_t m, size_t n,
-              size_t k, size_t nthreads = 1, bool transpose = true) {
-    if (m_left.size() != m * k)
+inline auto matrixMatProd(const std::vector<std::complex<T>> m_left,
+                          const std::vector<std::complex<T>> m_right, size_t m,
+                          size_t n, size_t k, size_t nthreads = 1,
+                          bool transpose = true)
+    -> std::vector<std::complex<T>> {
+    if (m_left.size() != m * k) {
         throw std::invalid_argument("Invalid m & k for the input left matrix");
-    else if (m_right.size() != k * n)
+    } else if (m_right.size() != k * n) {
         throw std::invalid_argument("Invalid k & n for the input right matrix");
+    }
 
     std::vector<std::complex<T>> m_out(m * n);
     if (transpose) {

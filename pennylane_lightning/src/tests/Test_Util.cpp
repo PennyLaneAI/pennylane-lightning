@@ -178,8 +178,9 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             std::vector<std::complex<double>> v_out =
                 Util::matrixVecProd(mat, v_in, 4, 4);
             CAPTURE(v_out);
-            for (size_t i = 0; i < 4; ++i)
+            for (size_t i = 0; i < 4; ++i) {
                 CHECK(isApproxEqual(v_out[i], v_out[i]));
+            }
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
@@ -199,14 +200,16 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
         SECTION("Simple Matrix") {
             for (size_t m = 2; m < 5; ++m) {
                 std::vector<std::complex<double>> mat(m * m, {0, 0});
-                for (size_t i = 0; i < m; ++i)
+                for (size_t i = 0; i < m; ++i) {
                     mat[i * m + i] = {1, 1};
+                }
                 std::vector<std::complex<double>> mat_t =
                     Util::Transpose(mat, m, m);
                 CAPTURE(mat_t);
                 CAPTURE(mat);
-                for (size_t i = 0; i < m * m; ++i)
+                for (size_t i = 0; i < m * m; ++i) {
                     CHECK(isApproxEqual(mat[i], mat_t[i]));
+                }
             }
         }
         SECTION("Random Complex") {
@@ -232,8 +235,9 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
                 Util::Transpose(mat, 4, 4);
             CAPTURE(mat_t);
             CAPTURE(mat_t_exp);
-            for (size_t i = 0; i < 16; ++i)
+            for (size_t i = 0; i < 16; ++i) {
                 CHECK(isApproxEqual(mat_t[i], mat_t_exp[i]));
+            }
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
@@ -254,8 +258,9 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
                     Util::matrixMatProd(m_left, m_right, m, m, m, 1, true);
                 CAPTURE(m_out);
                 CAPTURE(m_out_exp);
-                for (size_t i = 0; i < m * m; ++i)
+                for (size_t i = 0; i < m * m; ++i) {
                     CHECK(isApproxEqual(m_out[i], m_out_exp[i]));
+                }
             }
         }
         SECTION("Random Complex") {
@@ -294,10 +299,12 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             CAPTURE(m_out_2);
             CAPTURE(m_out_3);
             CAPTURE(m_out_exp);
-            for (size_t i = 0; i < 16; ++i)
+            for (size_t i = 0; i < 16; ++i) {
                 CHECK(isApproxEqual(m_out_1[i], m_out_2[i]));
-            for (size_t i = 0; i < 16; ++i)
+            }
+            for (size_t i = 0; i < 16; ++i) {
                 CHECK(isApproxEqual(m_out_2[i], m_out_3[i]));
+            }
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
