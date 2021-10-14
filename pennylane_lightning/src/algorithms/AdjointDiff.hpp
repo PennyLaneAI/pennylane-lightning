@@ -754,7 +754,7 @@ template <class T = double> class AdjointJacobian {
                                 !operations.getOpsInverses()[op_idx]) *
                             (2 * (0b1 ^ operations.getOpsInverses()[op_idx]) -
                              1);
-// clang-format off
+                        // clang-format off
                         #if defined _OPENMP
                             #pragma omp parallel for default(none)   \
                             shared(H_lambda, jac, mu, scalingFactor, \
