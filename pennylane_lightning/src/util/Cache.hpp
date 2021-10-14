@@ -35,7 +35,7 @@ namespace Util {
 
 // Boost implementation of a hash combine:
 // https://www.boost.org/doc/libs/1_35_0/doc/html/boost/hash_combine_id241013.html
-struct pair_hash {
+struct hash_function {
     std::size_t
     operator()(const std::pair<std::vector<size_t>, size_t> &key) const {
         std::size_t combined_hash_value = 0;
@@ -70,22 +70,23 @@ template <class key_type, class stored_type> class LRU_cache {
         typename std::list<key_type>::const_iterator;
 
     size_t max_size;
-    std::list<key_type> lru_queue;
-    std::unordered_map<key_type, stored_type, pair_hash> cache_map;
-    std::unordered_map<key_type, const_iterator_list_type, pair_hash> key_ring;
+    std::list<key_type> lru_queue_;
+    std::unordered_map<key_type, stored_type, hash_function> cache_map_;
+    std::unordered_map<key_type, const_iterator_list_type, hash_function>
+        key_ring_;
 
     void clear() {
-        lru_queue.clear();
-        cache_map.clear();
+        lru_queue_.clear();
+        cache_map_.clear();
     }
 
-    size_t cache_size = 10;
+    size_t cache_size_;
 
   public:
     /**
      * @brief Construct a new LRU_cache object.
      */
-    LRU_cache(){};
+    LRU_cache(size_t cache_size = 0) : cache_size_{cache_size} {};
 
     /**
      * @brief Iterator for the map element.
@@ -96,7 +97,7 @@ template <class key_type, class stored_type> class LRU_cache {
      */
     typename std::unordered_map<key_type, stored_type>::const_iterator
     check_cache(const key_type &new_key) {
-        return cache_map.find(new_key);
+        return cache_map_.find(new_key);
     };
 
     /**
@@ -107,17 +108,17 @@ template <class key_type, class stored_type> class LRU_cache {
      */
     void insert(const key_type &new_key, const stored_type &new_value) {
         // opening a slot.
-        if (cache_size == 0)
+        if (cache_size_ == 0)
             return;
-        if (cache_map.size() >= cache_size) {
-            auto lru_key = lru_queue.back();
-            cache_map.erase(lru_key);
-            lru_queue.pop_back();
+        if (cache_map_.size() >= cache_size_) {
+            auto lru_key = lru_queue_.back();
+            cache_map_.erase(lru_key);
+            lru_queue_.pop_back();
         }
         // inserting new element.
-        cache_map[new_key] = new_value;
-        lru_queue.emplace_front(new_key);
-        key_ring[new_key] = lru_queue.begin();
+        cache_map_[new_key] = new_value;
+        lru_queue_.emplace_front(new_key);
+        key_ring_[new_key] = lru_queue_.begin();
     };
 
     /**
@@ -126,11 +127,11 @@ template <class key_type, class stored_type> class LRU_cache {
      * @param new_size is the new size desired.
      */
     void set_cache_size(size_t new_size) {
-        cache_size = new_size;
-        while (cache_map.size() > cache_size) {
-            auto lru_key = lru_queue.back();
-            cache_map.erase(lru_key);
-            lru_queue.pop_back();
+        cache_size_ = new_size;
+        while (cache_map_.size() > cache_size_) {
+            auto lru_key = lru_queue_.back();
+            cache_map_.erase(lru_key);
+            lru_queue_.pop_back();
         }
     };
 
@@ -140,7 +141,7 @@ template <class key_type, class stored_type> class LRU_cache {
      * @param key is the key to the element.
      */
     void renew(const key_type &key) {
-        lru_queue.splice(lru_queue.begin(), lru_queue, key_ring[key]);
+        lru_queue_.splice(lru_queue_.begin(), lru_queue_, key_ring_[key]);
     };
 
     /**
@@ -168,19 +169,25 @@ template <class key_type, class stored_type> class LRU_cache {
      * @brief Iterator for the first element in the storage.
      *
      */
-    const_iterator_map_type begin() const { return cache_map.begin(); }
+    const_iterator_map_type begin() const { return cache_map_.begin(); }
 
     /**
      * @brief Iterator for the last element in the storage.
      *
      */
-    const_iterator_map_type end() const { return cache_map.end(); }
+    const_iterator_map_type end() const { return cache_map_.end(); }
 
     /**
      * @brief Returns the occupancy of the cache storage.
      *
      */
-    size_t size() const { return cache_map.size(); }
+    size_t size() const { return cache_map_.size(); }
+
+    /**
+     * @brief Returns the capacity of the cache storage.
+     *
+     */
+    size_t capacity() const { return cache_size_; }
 
     ~LRU_cache() { clear(); }
 };
