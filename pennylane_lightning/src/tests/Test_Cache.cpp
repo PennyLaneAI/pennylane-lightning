@@ -7,7 +7,6 @@ using namespace Pennylane::Util;
 namespace {
 
 TEST_CASE("LRU_Cache", "[Caching_Indices]") {
-
     LRU_cache<std::pair<const std::vector<size_t>, size_t>, std::vector<size_t>>
         cache_container{10};
 
