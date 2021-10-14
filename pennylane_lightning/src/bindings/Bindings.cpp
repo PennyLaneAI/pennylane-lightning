@@ -661,7 +661,7 @@ void lightning_class_bindings(py::module &m) {
                             auto buffer = param.request();
                             auto ptr = static_cast<std::complex<Param_t> *>(
                                 buffer.ptr);
-                            if (buffer.size > 0) {
+                            if (buffer.size) {
                                 conv_params[p_idx] =
                                     std::vector<std::complex<Param_t>>{
                                         ptr, ptr + buffer.size};
@@ -670,7 +670,7 @@ void lightning_class_bindings(py::module &m) {
                             auto buffer = param.request();
 
                             auto *ptr = static_cast<Param_t *>(buffer.ptr);
-                            if (buffer.size > 0) {
+                            if (buffer.size) {
                                 conv_params[p_idx] = std::vector<Param_t>{
                                     ptr, ptr + buffer.size};
                             }
@@ -774,13 +774,13 @@ void lightning_class_bindings(py::module &m) {
                  for (size_t op = 0; op < ops_name.size(); op++) {
                      const auto p_buffer = ops_params[op].request();
                      const auto m_buffer = ops_matrices[op].request();
-                     if (p_buffer.size > 0) {
+                     if (p_buffer.size) {
                          const auto *const p_ptr =
                              static_cast<const Param_t *>(p_buffer.ptr);
                          conv_params[op] =
                              std::vector<Param_t>{p_ptr, p_ptr + p_buffer.size};
                      }
-                     if (m_buffer.size > 0) {
+                     if (m_buffer.size) {
                          const auto m_ptr =
                              static_cast<const std::complex<Param_t> *>(
                                  m_buffer.ptr);
