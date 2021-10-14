@@ -384,35 +384,83 @@ inline auto innerProdC(const std::vector<std::complex<T>> &v1,
 }
 
 /**
- * @brief Calculates the matrix-vector product partially.
+ * @brief Calculates the matrix-vector product using OpenMP.
  *
  * @tparam T Floating point precision type.
  * @param mat Complex data array repr. a flatten (row-wise) matrix m * n.
  * @param v_in Complex data array repr. a vector of shape n * 1.
- * @param v_out Pre-allocated complex data array to store the result of shape m
- * * 1.
- * @param m Number of rows of mat.
- * @param n Number of columns of mat.
- * @param left Lower-bound of the for-loop.
- * @param right Upper-bound of the for-loop.
+ * @param v_out Pre-allocated complex data array to store the result.
+ * @param m Number of rows of `mat`.
+ * @param n Number of columns of `mat`.
  * @param transpose If `true`, considers transposed version of `mat`.
+ * @param omp_critical If `true`, uses column-wise parallel-for, otherwise
+ * row-wise.
  */
 template <class T>
 inline static void
-_matrixVecProd(const std::complex<T> *mat, const std::complex<T> *v_in,
-               std::complex<T> *v_out, size_t m, size_t n, size_t left,
-               size_t right, bool transpose = false) {
-    size_t r, c;
-    if (transpose) {
-        for (r = left; r < right; ++r) {
-            for (c = 0; c < n; ++c) {
-                v_out[r] += mat[c * m + r] * v_in[c];
+omp_matrixVecProd(const std::complex<T> *mat, const std::complex<T> *v_in,
+                  std::complex<T> *v_out, size_t m, size_t n,
+                  bool transpose = false, bool omp_critical = false) {
+    if (!v_out) {
+        return;
+    }
+
+    std::size_t r, c;
+    if (omp_critical) {
+#if defined _OPENMP
+#pragma omp parallel default(shared) private(r, c)
+#endif
+        {
+            std::complex<T> lv_out[m]{};
+            if (transpose) {
+                for (r = 0; r < m; ++r) {
+#if defined _OPENMP
+#pragma omp for
+#endif
+                    for (c = 0; c < n; ++c) {
+                        lv_out[r] += mat[c * m + r] * v_in[c];
+                    }
+                }
+            } else {
+                for (r = 0; r < m; ++r) {
+#if defined _OPENMP
+#pragma omp for
+#endif
+                    for (c = 0; c < n; ++c) {
+                        lv_out[r] += mat[r * n + c] * v_in[c];
+                    }
+                }
+            }
+#if defined _OPENMP
+#pragma omp critical
+#endif
+            for (r = 0; r < m; ++r) {
+                v_out[r] += lv_out[r];
             }
         }
     } else {
-        for (r = left; r < right; ++r) {
-            for (c = 0; c < n; ++c) {
-                v_out[r] += mat[r * n + c] * v_in[c];
+#if defined _OPENMP
+#pragma omp parallel default(shared) private(r, c)
+#endif
+        {
+            if (transpose) {
+#if defined _OPENMP
+#pragma omp for
+#endif
+                for (r = 0; r < m; ++r) {
+                    for (c = 0; c < n; ++c) {
+                        v_out[r] += mat[c * m + r] * v_in[c];
+                    }
+                }
+            } else {
+#if defined _OPENMP
+#pragma omp for
+#endif
+                for (r = 0; r < m; ++r) {
+                    for (c = 0; c < n; ++c) {
+                        v_out[r] += mat[r * n + c] * v_in[c];
+                    }
+                }
             }
         }
     }
@@ -427,14 +475,12 @@ _matrixVecProd(const std::complex<T> *mat, const std::complex<T> *v_in,
  * @param v_out Pre-allocated complex data array to store the result.
  * @param m Number of rows of `mat`.
  * @param n Number of columns of `mat`.
- * @param nthreads Number of threads.
  * @param transpose If `true`, considers transposed version of `mat`.
  */
 template <class T>
 inline void matrixVecProd(const std::complex<T> *mat,
                           const std::complex<T> *v_in, std::complex<T> *v_out,
-                          size_t m, size_t n, size_t nthreads = 1,
-                          bool transpose = false) {
+                          size_t m, size_t n, bool transpose = false) {
     if (!v_out) {
         return;
     }
@@ -450,16 +496,7 @@ inline void matrixVecProd(const std::complex<T> *mat,
                     1);
     }
 #else
-    const std::vector<size_t> bnd = partition(nthreads, m);
-    std::vector<std::thread> threads;
-    for (size_t i = 0; i < nthreads; ++i) {
-        threads.push_back(std::thread(_matrixVecProd<T>, std::ref(mat),
-                                      std::ref(v_in), std::ref(v_out), m, n,
-                                      bnd[i], bnd[i + 1], transpose));
-    }
-    for (auto &h : threads) {
-        h.join();
-    }
+    omp_matrixVecProd(mat, v_in, v_out, m, n, transpose);
 #endif
 }
 
@@ -473,7 +510,7 @@ inline void matrixVecProd(const std::complex<T> *mat,
 template <class T>
 inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
                           const std::vector<std::complex<T>> v_in, size_t m,
-                          size_t n, size_t nthreads = 1, bool transpose = false)
+                          size_t n, bool transpose = false)
     -> std::vector<std::complex<T>> {
     if (mat.size() != m * n) {
         throw std::invalid_argument("Invalid m & n for the input matrix");
@@ -482,8 +519,7 @@ inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
     }
 
     std::vector<std::complex<T>> v_out(m);
-    matrixVecProd(mat.data(), v_in.data(), v_out.data(), m, n, nthreads,
-                  transpose);
+    matrixVecProd(mat.data(), v_in.data(), v_out.data(), m, n, transpose);
     return v_out;
 }
 
