@@ -593,35 +593,43 @@ inline auto Transpose(const std::vector<std::complex<T>> mat, size_t m,
  */
 template <class T>
 inline void omp_matrixMatProd(const std::complex<T> *m_left,
-                          const std::complex<T> *m_right,
-                          std::complex<T> *m_out, size_t m, 
-                          size_t n, size_t k, bool transpose = false) {
+                              const std::complex<T> *m_right,
+                              std::complex<T> *m_out, size_t m, size_t n,
+                              size_t k, bool transpose = false) {
     if (!m_out) {
         return;
     }
-    #pragma omp parallel default(none) 
-	{
-		std::size_t r, c, b;
+#if defined _OPENMP
+#pragma omp parallel
+#endif
+    {
+        std::size_t r, c, b;
         if (transpose) {
-            #pragma omp for 	
+#if defined _OPENMP
+#pragma omp for
+#endif
             for (r = 0; r < m; ++r) {
                 for (c = 0; c < n; ++c) {
                     for (b = 0; b < k; ++b) {
-                        m_out[r*n+c] += m_left[r*k+b] * m_right[c*n+b];
+                        m_out[r * n + c] +=
+                            m_left[r * k + b] * m_right[c * n + b];
                     }
                 }
             }
         } else {
-            #pragma omp for 	
+#if defined _OPENMP
+#pragma omp for
+#endif
             for (r = 0; r < m; ++r) {
                 for (c = 0; c < n; ++c) {
                     for (b = 0; b < k; ++b) {
-                        m_out[r*n+c] += m_left[r*k+b] * m_right[b*n+c];
+                        m_out[r * n + c] +=
+                            m_left[r * k + b] * m_right[b * n + c];
                     }
                 }
             }
         }
-	}    
+    }
 }
 
 /**
@@ -686,10 +694,12 @@ inline auto matrixMatProd(const std::vector<std::complex<T>> m_left,
     std::vector<std::complex<T>> m_out(m * n);
     if (transpose) {
         std::vector<std::complex<T>> m_right_tp = Transpose(m_right, k, n);
-        matrixMatProd(m_left.data(), m_right_tp.data(), m_out.data(), m, n, k, true);
+        matrixMatProd(m_left.data(), m_right_tp.data(), m_out.data(), m, n, k,
+                      true);
         // free m_right_tp
     } else {
-        matrixMatProd(m_left.data(), m_right.data(), m_out.data(), m, n, k, false);
+        matrixMatProd(m_left.data(), m_right.data(), m_out.data(), m, n, k,
+                      false);
     }
     return m_out;
 }
