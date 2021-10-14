@@ -38,8 +38,8 @@
 #include <mutex>
 #include <thread>
 #define USE_CBLAS 0
-#define DOTU_STD_CROSSOVER (1 << 20)
-#define DOTC_STD_CROSSOVER (1 << 20)
+#define DOTU_STD_CROSSOVER (1 << 1)
+#define DOTC_STD_CROSSOVER (1 << 1)
 static std::mutex barrier;
 #endif
 /// @endcond
@@ -237,26 +237,30 @@ inline static auto partition(size_t n, size_t data_size)
 }
 
 /**
- * @brief Calculates the partial inner-product of input arrays naively.
+ * @brief Calculates the inner-product using OpenMP.
  *
  * @tparam T Floating point precision type.
  * @param v1 Complex data array 1.
  * @param v2 Complex data array 2.
- * @param result Calculated inner-product of v1 and v2 for the range [0, r).
- * @param l lower-bound index in the for-loop.
- * @param r upper-bound index in the for-loop.
+ * @param result Calculated inner-product of v1 and v2.
+ * @param data_size Size of data arrays.
  */
 template <class T>
-inline static void _innerProd(const std::complex<T> *v1,
-                              const std::complex<T> *v2,
-                              std::complex<T> &result, size_t l, size_t r) {
-    std::complex<T> s{0, 0};
-    for (size_t i = l; i < r; ++i) {
-        s += *(v1 + i) * *(v2 + i);
-    }
+inline static void
+omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
+              std::complex<T> &result, const size_t data_size) {
+#if defined _OPENMP
+#pragma omp declare \
+            reduction (sm:std::complex<T>:omp_out=ConstSum(omp_out, omp_in)) \
+            initializer(omp_priv=std::complex<T> {0, 0})
+#endif
 
-    std::lock_guard<std::mutex> block_threads_until_finish_this_job(barrier);
-    result += s;
+#if defined _OPENMP
+#pragma omp parallel for default(shared) reduction(sm : result)
+#endif
+    for (std::size_t i = 0; i < data_size; ++i) {
+        result = ConstSum(result, *(v1 + i) * *(v2 + i));
+    }
 }
 
 /**
@@ -266,65 +270,58 @@ inline static void _innerProd(const std::complex<T> *v1,
  * @param v1 Complex data array 1.
  * @param v2 Complex data array 2.
  * @param data_size Size of data arrays.
- * @param nthreads Number of threads.
  * @return std::complex<T> Result of inner product operation.
  */
 template <class T>
 inline auto innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
-                      const size_t data_size, const size_t nthreads = 2)
-    -> std::complex<T> {
+                      const size_t data_size) -> std::complex<T> {
     std::complex<T> result(0, 0);
 
-    if constexpr (USE_CBLAS) {
-        if constexpr (std::is_same_v<T, float>) {
-            cblas_cdotu_sub(data_size, v1, 1, v2, 1, &result);
-        } else if constexpr (std::is_same_v<T, double>) {
-            cblas_zdotu_sub(data_size, v1, 1, v2, 1, &result);
-        }
-    } else {
-        if (data_size > DOTU_STD_CROSSOVER) {
-            result = std::inner_product(
-                v1, v1 + data_size, v2, std::complex<T>(), ConstSum<T>,
-                static_cast<std::complex<T> (*)(
-                    std::complex<T>, std::complex<T>)>(&ConstMult<T>));
-        } else {
-            const std::vector<size_t> bnd = partition(nthreads, data_size);
-            std::vector<std::thread> threads;
-            for (size_t i = 0; i < nthreads; ++i) {
-                threads.push_back(std::thread(_innerProd<T>, std::ref(v1),
-                                              std::ref(v2), std::ref(result),
-                                              bnd[i], bnd[i + 1]));
-            }
-            for (auto &h : threads) {
-                h.join();
-            }
-        }
+#if defined(USE_CBLAS) && USE_CBLAS
+    if constexpr (std::is_same_v<T, float>) {
+        cblas_cdotu_sub(data_size, v1, 1, v2, 1, &result);
+    } else if constexpr (std::is_same_v<T, double>) {
+        cblas_zdotu_sub(data_size, v1, 1, v2, 1, &result);
     }
+#else
+    if (data_size > DOTU_STD_CROSSOVER) {
+        result = std::inner_product(
+            v1, v1 + data_size, v2, std::complex<T>(), ConstSum<T>,
+            static_cast<std::complex<T> (*)(std::complex<T>, std::complex<T>)>(
+                &ConstMult<T>));
+    } else {
+        omp_innerProd(v1, v2, result, data_size);
+    }
+#endif
     return result;
 }
 
 /**
- * @brief Calculates the partial inner-product of input arrays naively
+ * @brief Calculates the inner-product using OpenMP.
  * with the the first dataset conjugated.
  *
  * @tparam T Floating point precision type.
  * @param v1 Complex data array 1.
  * @param v2 Complex data array 2.
- * @param result Calculated inner-product of v1 and v2 for the range [0, r).
- * @param l lower-bound index in the for-loop.
- * @param r upper-bound index in the for-loop.
+ * @param result Calculated inner-product of v1 and v2.
+ * @param data_size Size of data arrays.
  */
 template <class T>
-inline static void _innerProdC(const std::complex<T> *v1,
-                               const std::complex<T> *v2,
-                               std::complex<T> &result, size_t l, size_t r) {
-    std::complex<T> s{0, 0};
-    for (size_t i = l; i < r; ++i) {
-        s += std::conj(*(v1 + i)) * *(v2 + i);
-    }
+inline static void
+omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
+               std::complex<T> &result, const size_t data_size) {
+#if defined _OPENMP
+#pragma omp declare \
+            reduction (sm:std::complex<T>:omp_out=ConstSum(omp_out, omp_in)) \
+            initializer(omp_priv=std::complex<T> {0, 0})
+#endif
 
-    std::lock_guard<std::mutex> block_threads_until_finish_this_job(barrier);
-    result += s;
+#if defined _OPENMP
+#pragma omp parallel for default(shared) reduction(sm : result)
+#endif
+    for (std::size_t i = 0; i < data_size; ++i) {
+        result = ConstSum(result, std::conj(*(v1 + i)) * *(v2 + i));
+    }
 }
 
 /**
@@ -335,13 +332,11 @@ inline static void _innerProdC(const std::complex<T> *v1,
  * @param v1 Complex data array 1; conjugated before application.
  * @param v2 Complex data array 2.
  * @param data_size Size of data arrays.
- * @param nthreads Number of threads.
  * @return std::complex<T> Result of inner product operation.
  */
 template <class T>
 inline auto innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
-                       const size_t data_size, const size_t nthreads = 2)
-    -> std::complex<T> {
+                       const size_t data_size) -> std::complex<T> {
     std::complex<T> result(0, 0);
 
 #if defined(USE_CBLAS) && USE_CBLAS
@@ -355,16 +350,7 @@ inline auto innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
         result = std::inner_product(v1, v1 + data_size, v2, std::complex<T>(),
                                     ConstSum<T>, ConstMultConj<T>);
     } else {
-        const std::vector<size_t> bnd = partition(nthreads, data_size);
-        std::vector<std::thread> threads;
-        for (size_t i = 0; i < nthreads; ++i) {
-            threads.push_back(std::thread(_innerProdC<T>, std::ref(v1),
-                                          std::ref(v2), std::ref(result),
-                                          bnd[i], bnd[i + 1]));
-        }
-        for (auto &h : threads) {
-            h.join();
-        }
+        omp_innerProdC(v1, v2, result, data_size);
     }
 #endif
     return result;
