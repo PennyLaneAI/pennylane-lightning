@@ -34,6 +34,7 @@ target_link_libraries(runner lightning_simulator lightning_utils lightning_algor
 
 target_sources(runner PRIVATE   Test_AdjDiff.cpp
                                 Test_Bindings.cpp
+                                Test_Cache.cpp 
                                 Test_StateVector_Nonparam.cpp 
                                 Test_StateVector_Param.cpp 
                                 Test_StateVectorManaged_Nonparam.cpp 
