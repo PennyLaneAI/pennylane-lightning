@@ -345,6 +345,7 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyCNOT",
     }
 }
 
+// NOLINTNEXTLINE: Avoiding complexity errors
 TEMPLATE_TEST_CASE("StateVectorManaged::applySWAP",
                    "[StateVectorManaged_Nonparam]", float, double) {
     using cp_t = std::complex<TestType>;
@@ -532,7 +533,7 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyCZ",
         }
 
         SECTION("CZ0,2 |+10> -> |+10>") {
-            std::vector<cp_t> expected{init_state};
+            const std::vector<cp_t> &expected{init_state};
 
             StateVectorManaged<TestType> svdat02{init_state};
             StateVectorManaged<TestType> svdat20{init_state};
@@ -545,7 +546,7 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyCZ",
             CHECK(svdat20.getDataVector() == expected);
         }
         SECTION("CZ1,2 |+10> -> |+10>") {
-            std::vector<cp_t> expected{init_state};
+            const std::vector<cp_t> &expected{init_state};
 
             StateVectorManaged<TestType> svdat12{init_state};
             StateVectorManaged<TestType> svdat21{init_state};
@@ -632,7 +633,7 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyToffoli",
             CHECK(svdat102.getDataVector() == expected);
         }
         SECTION("Toffoli 0,2,1 |+10> -> |+10>") {
-            std::vector<cp_t> expected{init_state};
+            const std::vector<cp_t> &expected{init_state};
 
             StateVectorManaged<TestType> svdat021{init_state};
 
@@ -642,7 +643,7 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyToffoli",
             CHECK(svdat021.getDataVector() == expected);
         }
         SECTION("Toffoli 1,2,0 |+10> -> |+10>") {
-            std::vector<cp_t> expected{init_state};
+            const std::vector<cp_t> &expected{init_state};
 
             StateVectorManaged<TestType> svdat120{init_state};
 
@@ -723,7 +724,7 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyCSWAP",
             CHECK(svdat102.getDataVector() == expected);
         }
         SECTION("CSWAP 2,1,0 |+10> -> |+10>") {
-            std::vector<cp_t> expected{init_state};
+            const std::vector<cp_t> &expected{init_state};
 
             StateVectorManaged<TestType> svdat021{init_state};
 

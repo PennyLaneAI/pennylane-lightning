@@ -1,12 +1,9 @@
 name: Formatting check
 on:
   pull_request:
-    push:
-      branches:
-        - master
-      paths:
-        - "pennylane_lightning/**"
-        - "tests/**"
+  push:
+    branches:
+      - master
 
 jobs:
   black:
@@ -20,7 +17,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: 3.7
 
       - name: Install dependencies
         run:
@@ -31,6 +28,34 @@ jobs:
 
       - name: Run Black
         run: black -l 100 pennylane_lightning/ --check
+
+  tidy-cpp:
+    name: Tidy (C++)
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      - name: Install dependencies
+        run: sudo apt update && sudo apt -y install clang-tidy-11 cmake g++
+        env:
+          DEBIAN_FRONTEND: noninteractive
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run clang-tidy compilation
+        run: |
+          cmake -BBuild -DENABLE_CLANG_TIDY=on -DCLANG_TIDY_BINARY=clang-tidy-11 .
+          cmake --build ./Build
 
   format-cpp:
     name: Format (C++)
