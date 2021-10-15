@@ -17,6 +17,7 @@
 #include <cstring>
 #include <numeric>
 #include <set>
+#include <stdexcept>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -36,11 +37,13 @@ namespace {
 using namespace Pennylane;
 using namespace Pennylane::Util;
 
-template <class T> static constexpr std::vector<std::complex<T>> getP00() {
+template <class T>
+static constexpr auto getP00() -> std::vector<std::complex<T>> {
     return {ONE<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>()};
 }
 
-template <class T> static constexpr std::vector<std::complex<T>> getP11() {
+template <class T>
+static constexpr auto getP11() -> std::vector<std::complex<T>> {
     return {ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>()};
 }
 
@@ -161,53 +164,43 @@ template <class T = double> class ObsDatum {
      * @param obs_wires Wires upon which to apply operation. Each observable
      * operation will be a separate nested list.
      */
-    ObsDatum(const std::vector<std::string> &obs_name,
-             const std::vector<param_var_t> &obs_params,
-             const std::vector<std::vector<size_t>> &obs_wires)
-        : obs_name_{obs_name},
-          obs_params_(obs_params), obs_wires_{obs_wires} {};
-
-    /**
-     * @brief Move constructor for an ObsDatum object, representing a given
-     * observable.
-     *
-     * @param obs_name Name of each operation of the observable. Tensor product
-     * observables have more than one operation.
-     * @param obs_params Parameters for a given obserable operation ({} if
-     * optional).
-     * @param obs_wires Wires upon which to apply operation. Each observable
-     * operation will be a separate nested list.
-     */
-    ObsDatum(std::vector<std::string> &&obs_name,
-             std::vector<param_var_t> &&obs_params,
-             std::vector<std::vector<size_t>> &&obs_wires)
-        : obs_name_{std::move(obs_name)}, obs_params_{std::move(obs_params)},
-          obs_wires_{std::move(obs_wires)} {};
+    ObsDatum(std::vector<std::string> obs_name,
+             std::vector<param_var_t> obs_params,
+             std::vector<std::vector<size_t>> obs_wires)
+        : obs_name_{std::move(obs_name)},
+          obs_params_(std::move(obs_params)), obs_wires_{
+                                                  std::move(obs_wires)} {};
 
     /**
      * @brief Get the number of operations in observable.
      *
      * @return size_t
      */
-    size_t getSize() const { return obs_name_.size(); }
+    [[nodiscard]] auto getSize() const -> size_t { return obs_name_.size(); }
     /**
      * @brief Get the name of the observable operations.
      *
      * @return const std::vector<std::string>&
      */
-    const std::vector<std::string> &getObsName() const { return obs_name_; }
+    [[nodiscard]] auto getObsName() const -> const std::vector<std::string> & {
+        return obs_name_;
+    }
     /**
      * @brief Get the parameters for the observable operations.
      *
      * @return const std::vector<std::vector<T>>&
      */
-    const std::vector<param_var_t> &getObsParams() const { return obs_params_; }
+    [[nodiscard]] auto getObsParams() const
+        -> const std::vector<param_var_t> & {
+        return obs_params_;
+    }
     /**
      * @brief Get the wires for each observable operation.
      *
      * @return const std::vector<std::vector<size_t>>&
      */
-    const std::vector<std::vector<size_t>> &getObsWires() const {
+    [[nodiscard]] auto getObsWires() const
+        -> const std::vector<std::vector<size_t>> & {
         return obs_wires_;
     }
 
@@ -245,16 +238,18 @@ template <class T> class OpsData {
      * @param ops_matrices Numerical representation of given matrix if not
      * supported.
      */
-    OpsData(const std::vector<std::string> &ops_name,
+    OpsData(std::vector<std::string> ops_name,
             const std::vector<std::vector<T>> &ops_params,
-            const std::vector<std::vector<size_t>> &ops_wires,
-            const std::vector<bool> &ops_inverses,
-            const std::vector<std::vector<std::complex<T>>> &ops_matrices)
-        : ops_name_{ops_name}, ops_params_{ops_params}, ops_wires_{ops_wires},
-          ops_inverses_{ops_inverses}, ops_matrices_{ops_matrices} {
+            std::vector<std::vector<size_t>> ops_wires,
+            std::vector<bool> ops_inverses,
+            std::vector<std::vector<std::complex<T>>> ops_matrices)
+        : ops_name_{std::move(ops_name)}, ops_params_{ops_params},
+          ops_wires_{std::move(ops_wires)},
+          ops_inverses_{std::move(ops_inverses)}, ops_matrices_{
+                                                      std::move(ops_matrices)} {
         num_par_ops_ = 0;
         for (const auto &p : ops_params) {
-            if (p.size() > 0) {
+            if (!p.empty()) {
                 num_par_ops_++;
             }
         }
@@ -273,10 +268,12 @@ template <class T> class OpsData {
      */
     OpsData(const std::vector<std::string> &ops_name,
             const std::vector<std::vector<T>> &ops_params,
-            const std::vector<std::vector<size_t>> &ops_wires,
-            const std::vector<bool> &ops_inverses)
-        : ops_name_{ops_name}, ops_params_{ops_params}, ops_wires_{ops_wires},
-          ops_inverses_{ops_inverses}, ops_matrices_(ops_name.size()) {
+            std::vector<std::vector<size_t>> ops_wires,
+            std::vector<bool> ops_inverses)
+        : ops_name_{ops_name}, ops_params_{ops_params},
+          ops_wires_{std::move(ops_wires)}, ops_inverses_{std::move(
+                                                ops_inverses)},
+          ops_matrices_(ops_name.size()) {
         num_par_ops_ = 0;
         for (const auto &p : ops_params) {
             if (p.size() > 0) {
@@ -291,21 +288,24 @@ template <class T> class OpsData {
      *
      * @return size_t Number of operations.
      */
-    size_t getSize() const { return ops_name_.size(); }
+    [[nodiscard]] auto getSize() const -> size_t { return ops_name_.size(); }
 
     /**
      * @brief Get the names of the operations to be applied.
      *
      * @return const std::vector<std::string>&
      */
-    const std::vector<std::string> &getOpsName() const { return ops_name_; }
+    [[nodiscard]] auto getOpsName() const -> const std::vector<std::string> & {
+        return ops_name_;
+    }
     /**
      * @brief Get the (optional) parameters for each operation. Given entries
      * are empty ({}) if not required.
      *
      * @return const std::vector<std::vector<T>>&
      */
-    const std::vector<std::vector<T>> &getOpsParams() const {
+    [[nodiscard]] auto getOpsParams() const
+        -> const std::vector<std::vector<T>> & {
         return ops_params_;
     }
     /**
@@ -313,7 +313,8 @@ template <class T> class OpsData {
      *
      * @return const std::vector<std::vector<size_t>>&
      */
-    const std::vector<std::vector<size_t>> &getOpsWires() const {
+    [[nodiscard]] auto getOpsWires() const
+        -> const std::vector<std::vector<size_t>> & {
         return ops_wires_;
     }
     /**
@@ -321,14 +322,17 @@ template <class T> class OpsData {
      *
      * @return const std::vector<bool>&
      */
-    const std::vector<bool> &getOpsInverses() const { return ops_inverses_; }
+    [[nodiscard]] auto getOpsInverses() const -> const std::vector<bool> & {
+        return ops_inverses_;
+    }
     /**
      * @brief Get the numerical matrix for a given unsupported operation. Given
      * entries are empty ({}) if not required.
      *
      * @return const std::vector<std::vector<std::complex<T>>>&
      */
-    const std::vector<std::vector<std::complex<T>>> &getOpsMatrices() const {
+    [[nodiscard]] auto getOpsMatrices() const
+        -> const std::vector<std::vector<std::complex<T>>> & {
         return ops_matrices_;
     }
 
@@ -339,7 +343,7 @@ template <class T> class OpsData {
      * @return true Gate is parametric (has parameters).
      * @return false Gate in non-parametric.
      */
-    inline bool hasParams(size_t index) const {
+    [[nodiscard]] inline auto hasParams(size_t index) const -> bool {
         return !ops_params_[index].empty();
     }
 
@@ -348,14 +352,16 @@ template <class T> class OpsData {
      *
      * @return size_t
      */
-    size_t getNumParOps() const { return num_par_ops_; }
+    [[nodiscard]] auto getNumParOps() const -> size_t { return num_par_ops_; }
 
     /**
      * @brief Get the number of non-parametric ops.
      *
      * @return size_t
      */
-    size_t getNumNonParOps() const { return num_nonpar_ops_; }
+    [[nodiscard]] auto getNumNonParOps() const -> size_t {
+        return num_nonpar_ops_;
+    }
 };
 
 /**
@@ -366,9 +372,9 @@ template <class T> class OpsData {
  */
 template <class T = double> class AdjointJacobian {
   private:
-    typedef void (*GeneratorFunc)(StateVectorManaged<T> &sv,
-                                  const std::vector<size_t> &wires,
-                                  const bool adj); // function pointer type
+    using GeneratorFunc = void (*)(StateVectorManaged<T> &,
+                                   const std::vector<size_t> &,
+                                   const bool); // function pointer type
 
     // Holds the mapping from gate labels to associated generator functions.
     const std::unordered_map<std::string, GeneratorFunc> generator_map{
@@ -491,6 +497,104 @@ template <class T = double> class AdjointJacobian {
     }
 
     /**
+     * @brief OpenMP accelerated application of observables to given
+     * statevectors
+     *
+     * @param states Vector of statevector copies, one per observable.
+     * @param reference_state Reference statevector
+     * @param observables Vector of observables to apply to each statevector.
+     */
+    inline void applyObservables(std::vector<StateVectorManaged<T>> &states,
+                                 const StateVectorManaged<T> &reference_state,
+                                 const std::vector<ObsDatum<T>> &observables) {
+        // clang-format off
+        // Globally scoped exception value to be captured within OpenMP block.
+        // See the following for OpenMP design decisions:
+        // https://www.openmp.org/wp-content/uploads/openmp-examples-4.5.0.pdf
+        std::exception_ptr ex = nullptr;
+        size_t num_observables = observables.size();
+        #if defined _OPENMP
+            #pragma omp parallel default(none)                                 \
+            shared(states, reference_state, observables, ex, num_observables)
+        {
+            #pragma omp for
+        #endif
+            for (size_t h_i = 0; h_i < num_observables; h_i++) {
+                try {
+                    states[h_i].updateData(reference_state.getDataVector());
+                    applyObservable(states[h_i], observables[h_i]);
+                } catch (...) {
+                    #if defined _OPENMP
+                        #pragma omp critical
+                    #endif
+                    ex = std::current_exception();
+                    #if defined _OPENMP
+                        #pragma omp cancel for
+                    #endif
+                }
+            }
+        #if defined _OPENMP
+            if (ex) {
+                #pragma omp cancel parallel
+            }
+        }
+        #endif
+        if (ex) {
+            std::rethrow_exception(ex);
+        }
+        // clang-format on
+    }
+
+    /**
+     * @brief OpenMP accelerated application of adjoint operations to
+     * statevectors.
+     *
+     * @param states Vector of all statevectors; 1 per observable
+     * @param operations Operations list.
+     * @param op_idx Index of given operation within operations list to take
+     * adjoint of.
+     */
+    inline void applyOperationsAdj(std::vector<StateVectorManaged<T>> &states,
+                                   const OpsData<T> &operations,
+                                   size_t op_idx) {
+        // clang-format off
+        // Globally scoped exception value to be captured within OpenMP block.
+        // See the following for OpenMP design decisions:
+        // https://www.openmp.org/wp-content/uploads/openmp-examples-4.5.0.pdf
+        std::exception_ptr ex = nullptr;
+        size_t num_states = states.size();
+        #if defined _OPENMP
+            #pragma omp parallel default(none)                                 \
+                shared(states, operations, op_idx, ex, num_states)
+        {
+            #pragma omp for
+        #endif
+            for (size_t obs_idx = 0; obs_idx < num_states; obs_idx++) {
+                try {
+                    applyOperationAdj(states[obs_idx], operations, op_idx);
+                } catch (...) {
+                    #if defined _OPENMP
+                        #pragma omp critical
+                    #endif
+                    ex = std::current_exception();
+                    #if defined _OPENMP
+                        #pragma omp cancel for
+                    #endif
+                }
+            }
+        #if defined _OPENMP
+            if (ex) {
+                #pragma omp cancel parallel
+            }
+        }
+        #endif
+        if (ex) {
+            std::rethrow_exception(ex);
+        }
+        // clang-format on
+    }
+
+    /**
      * @brief Inline utility to assist with getting the Jacobian index offset.
      *
      * @param obs_index
@@ -498,8 +602,8 @@ template <class T = double> class AdjointJacobian {
      * @param tp_size
      * @return size_t
      */
-    inline size_t getJacIndex(size_t obs_index, size_t tp_index,
-                              size_t tp_size) {
+    inline auto getJacIndex(size_t obs_index, size_t tp_index, size_t tp_size)
+        -> size_t {
         return obs_index * tp_size + tp_index;
     }
 
@@ -510,8 +614,8 @@ template <class T = double> class AdjointJacobian {
      * @param state_length
      * @return std::vector<std::complex<T>>
      */
-    std::vector<std::complex<T>>
-    copyStateData(const std::complex<T> *input_state, size_t state_length) {
+    auto copyStateData(const std::complex<T> *input_state, size_t state_length)
+        -> std::vector<std::complex<T>> {
         return {input_state, input_state + state_length};
     }
 
@@ -525,15 +629,16 @@ template <class T = double> class AdjointJacobian {
      * @param adj Indicate whether to take the adjoint of the operation.
      * @return T Generator scaling coefficient.
      */
-    inline T applyGenerator(StateVectorManaged<T> &sv,
-                            const std::string &op_name,
-                            const std::vector<size_t> &wires, const bool adj) {
+    inline auto applyGenerator(StateVectorManaged<T> &sv,
+                               const std::string &op_name,
+                               const std::vector<size_t> &wires, const bool adj)
+        -> T {
         generator_map.at(op_name)(sv, wires, adj);
         return scaling_factors.at(op_name);
     }
 
   public:
-    AdjointJacobian() {}
+    AdjointJacobian() = default;
 
     /**
      * @brief Utility to create a given operations object.
@@ -546,12 +651,13 @@ template <class T = double> class AdjointJacobian {
      * @param ops_matrices Matrix definition of an operation if unsupported.
      * @return const OpsData<T>
      */
-    const OpsData<T> createOpsData(
+    auto createOpsData(
         const std::vector<std::string> &ops_name,
         const std::vector<std::vector<T>> &ops_params,
         const std::vector<std::vector<size_t>> &ops_wires,
         const std::vector<bool> &ops_inverses,
-        const std::vector<std::vector<std::complex<T>>> &ops_matrices = {{}}) {
+        const std::vector<std::vector<std::complex<T>>> &ops_matrices = {{}})
+        -> OpsData<T> {
         return {ops_name, ops_params, ops_wires, ops_inverses, ops_matrices};
     }
 
@@ -600,19 +706,14 @@ template <class T = double> class AdjointJacobian {
         StateVectorManaged<T> lambda(psi, num_elements);
 
         // Apply given operations to statevector if requested
-        if (apply_operations)
+        if (apply_operations) {
             applyOperations(lambda, operations);
+        }
 
         // Create observable-applied state-vectors
         std::vector<StateVectorManaged<T>> H_lambda(num_observables,
                                                     {lambda.getNumQubits()});
-#if defined _OPENMP
-#pragma omp parallel for
-#endif
-        for (size_t h_i = 0; h_i < num_observables; h_i++) {
-            H_lambda[h_i].updateData(lambda.getDataVector());
-            applyObservable(H_lambda[h_i], observables[h_i]);
-        }
+        applyObservables(H_lambda, lambda, observables);
 
         StateVectorManaged<T> mu(lambda.getNumQubits());
 
@@ -636,9 +737,16 @@ template <class T = double> class AdjointJacobian {
                                 !operations.getOpsInverses()[op_idx]) *
                             (2 * (0b1 ^ operations.getOpsInverses()[op_idx]) -
                              1);
-#if defined _OPENMP
-#pragma omp parallel for
-#endif
+                        // clang-format off
+
+                        #if defined _OPENMP
+                            #pragma omp parallel for default(none)   \
+                            shared(H_lambda, jac, mu, scalingFactor, \
+                                trainableParamNumber, tp_it,         \
+                                num_observables)
+                        #endif
+
+                        // clang-format on
                         for (size_t obs_idx = 0; obs_idx < num_observables;
                              obs_idx++) {
                             updateJacobian(H_lambda[obs_idx], mu, jac,
@@ -650,12 +758,8 @@ template <class T = double> class AdjointJacobian {
                     }
                     current_param_idx--;
                 }
-#if defined _OPENMP
-#pragma omp parallel for
-#endif
-                for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
-                    applyOperationAdj(H_lambda[obs_idx], operations, op_idx);
-                }
+                applyOperationsAdj(H_lambda, operations,
+                                   static_cast<size_t>(op_idx));
             }
         }
     }

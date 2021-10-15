@@ -213,6 +213,7 @@ TEMPLATE_TEST_CASE("StateVector::applyRZ", "[StateVector_Param]", float,
     const cp_t coef(1.0 / (2 * std::sqrt(2)), 0);
 
     std::vector<std::vector<cp_t>> rz_data;
+    rz_data.reserve(angles.size());
     for (auto &a : angles) {
         rz_data.push_back(Gates::getRZ<TestType>(a));
     }
@@ -273,6 +274,7 @@ TEMPLATE_TEST_CASE("StateVector::applyPhaseShift", "[StateVector_Param]", float,
     const cp_t coef(1.0 / (2 * std::sqrt(2)), 0);
 
     std::vector<std::vector<cp_t>> ps_data;
+    ps_data.reserve(angles.size());
     for (auto &a : angles) {
         ps_data.push_back(Gates::getPhaseShift<TestType>(a));
     }
@@ -334,6 +336,7 @@ TEMPLATE_TEST_CASE("StateVector::applyControlledPhaseShift",
     const cp_t coef(1.0 / (2 * std::sqrt(2)), 0);
 
     std::vector<std::vector<cp_t>> ps_data;
+    ps_data.reserve(angles.size());
     for (auto &a : angles) {
         ps_data.push_back(Gates::getPhaseShift<TestType>(a));
     }
@@ -462,6 +465,7 @@ TEMPLATE_TEST_CASE("StateVector::applyCRot", "[StateVector_Param]", float,
     }
 }
 
+// NOLINTNEXTLINE: Avoid complexity errors
 TEMPLATE_TEST_CASE("StateVector::applyMatrix 1 wire", "[StateVector_Param]",
                    float, double) {
     using cp_t = std::complex<TestType>;
