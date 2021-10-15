@@ -558,16 +558,16 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
     {
         size_t row;
         size_t col;
-        size_t b;
+        size_t blk;
         if (transpose) {
 #if defined _OPENMP
 #pragma omp for
 #endif
             for (row = 0; row < m; row++) {
                 for (col = 0; col < n; col++) {
-                    for (b = 0; b < k; b++) {
+                    for (blk = 0; blk < k; blk++) {
                         m_out[row * n + col] +=
-                            m_left[row * k + b] * m_right[col * n + b];
+                            m_left[row * k + blk] * m_right[col * n + blk];
                     }
                 }
             }
@@ -582,12 +582,13 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
 #endif
             for (row = 0; row < m; row += stride) {
                 for (col = 0; col < n; col += stride) {
-                    for (b = 0; b < k; b += stride) {
+                    for (blk = 0; blk < k; blk += stride) {
                         // cache-blocking:
                         for (i = row; i < std::min(row + stride, m); i++) {
                             for (j = col; j < std::min(col + stride, n); j++) {
                                 t = 0;
-                                for (l = b; l < std::min(b + stride, k); l++) {
+                                for (l = blk; l < std::min(blk + stride, k);
+                                     l++) {
                                     t += m_left[i * k + l] * m_right[l * n + j];
                                 }
                                 m_out[i * n + j] += t;
