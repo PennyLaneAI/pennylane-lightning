@@ -35,12 +35,9 @@
 #include <cblas.h>
 #define USE_CBLAS 1
 #else
-#include <mutex>
-#include <thread>
 #define USE_CBLAS 0
 #define DOTU_STD_CROSSOVER (1 << 10)
 #define DOTC_STD_CROSSOVER (1 << 10)
-static std::mutex barrier;
 #endif
 /// @endcond
 
