@@ -19,7 +19,7 @@
 #pragma once
 
 /* ======================================================= */
-/* LRU Library Header */
+/* Cache Library Header */
 /* ======================================================= */
 
 #include <list>
@@ -32,26 +32,6 @@
 namespace Pennylane {
 
 namespace Util {
-
-// Boost implementation of a hash combine:
-// https://www.boost.org/doc/libs/1_35_0/doc/html/boost/hash_combine_id241013.html
-struct hash_function {
-    std::size_t
-    operator()(const std::pair<std::vector<size_t>, size_t> &key) const {
-        std::size_t combined_hash_value = 0;
-
-        for (auto &term : key.first) {
-            combined_hash_value ^= std::hash<size_t>()(term) + 0x9e3779b9 +
-                                   (combined_hash_value << 6) +
-                                   (combined_hash_value >> 2);
-        };
-        combined_hash_value ^= std::hash<size_t>()(key.second) + 0x9e3779b9 +
-                               (combined_hash_value << 6) +
-                               (combined_hash_value >> 2);
-        return combined_hash_value;
-    }
-};
-
 /**
  * @brief Least Recently Updated (LRU) cache policy class.
  *
@@ -61,8 +41,14 @@ struct hash_function {
  * representing respectively, the wires and number of qubits involved in the
  * calculation.
  *
+ * @tparam key_type Type of the key associated with the value to be stored.
+ * @tparam stored_type Type of the value to be stored.
+ * @tparam hash_function Struct providing the hash function (optional
+ * parameter).
  */
-template <class key_type, class stored_type> class LRU_cache {
+template <class key_type, class stored_type,
+          typename hash_function = std::hash<key_type>>
+class LRU_cache {
   private:
     using const_iterator_map_type =
         typename std::unordered_map<key_type, stored_type>::const_iterator;
