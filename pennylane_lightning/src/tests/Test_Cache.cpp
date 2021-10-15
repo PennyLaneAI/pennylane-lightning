@@ -24,7 +24,6 @@ struct hash_function {
 };
 
 TEST_CASE("LRU_Cache for doubles, with sise_t keys", "[Caching_Doubles]") {
-
     LRU_cache<size_t, double> cache_container{10};
 
     REQUIRE(cache_container.size() == 0);
@@ -152,7 +151,6 @@ TEST_CASE("LRU_Cache for doubles, with sise_t keys", "[Caching_Doubles]") {
 }
 
 TEST_CASE("LRU_Cache for StateVector indices", "[Caching_Indices]") {
-
     LRU_cache<std::pair<const std::vector<size_t>, size_t>, std::vector<size_t>,
               hash_function>
         cache_container{10};
