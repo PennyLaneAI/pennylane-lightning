@@ -4,6 +4,11 @@
 
 ### Improvements
 
+* PennyLane-Lightning has been updated to conform with clang-tidy recommendations for modernization, offering performance improvements across all use-cases.
+[(#153)](https://github.com/PennyLaneAI/pennylane-lightning/pull/153)
+
+* PennyLane-Lightning now provides LRU (Least recently used) caching support for index operations. This update improves performance, avoiding some repeated work, by storing results of frequent operations in memory. [(#154)](https://github.com/PennyLaneAI/pennylane-lightning/pull/154)
+
 ### Documentation
 
 ### Breaking changes
@@ -12,7 +17,9 @@
 
 ### Contributors
 
----
+This release contains contributions from (in alphabetical order):
+
+Amintor Dusko, Lee James O'Riordan
 
 # Release 0.18.0
 
