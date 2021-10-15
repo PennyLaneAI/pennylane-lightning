@@ -478,26 +478,28 @@ template <class T>
 inline static void CFTranspose(const std::complex<T> *mat,
                                std::complex<T> *mat_t, size_t m, size_t n,
                                size_t m1, size_t m2, size_t n1, size_t n2) {
-    constexpr size_t BLOCK_THRESHOLD = 16;
+    constexpr size_t BLOCK_THRESHOLD = 32;
+
     size_t r;
     size_t s;
     size_t r1;
     size_t s1;
     size_t r2;
     size_t s2;
-tail:
+
     r1 = m2 - m1;
     s1 = n2 - n1;
+
     if (r1 >= s1 && r1 > BLOCK_THRESHOLD) {
         r2 = (m1 + m2) / 2;
         CFTranspose(mat, mat_t, m, n, m1, r2, n1, n2);
         m1 = r2;
-        goto tail;
+        CFTranspose(mat, mat_t, m, n, m1, m2, n1, n2);
     } else if (s1 > BLOCK_THRESHOLD) {
         s2 = (n1 + n2) / 2;
         CFTranspose(mat, mat_t, m, n, m1, m2, n1, s2);
         n1 = s2;
-        goto tail;
+        CFTranspose(mat, mat_t, m, n, m1, m2, n1, n2);
     } else {
         for (r = m1; r < m2; r++) {
             for (s = n1; s < n2; s++) {

@@ -199,7 +199,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
     }
     SECTION("Transpose") {
         SECTION("Simple Matrix") {
-            for (size_t m = 2; m < 5; m++) {
+            for (size_t m = 2; m < 8; m++) {
                 std::vector<std::complex<double>> mat(m * m, {0, 0});
                 for (size_t i = 0; i < m; i++) {
                     mat[i * m + i] = {1, 1};
@@ -250,7 +250,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
     }
     SECTION("matrixMatProd") {
         SECTION("Simple Iterative") {
-            for (size_t m = 2; m < 5; m++) {
+            for (size_t m = 2; m < 8; m++) {
                 std::vector<std::complex<double>> m_left(m * m, {1, 1});
                 std::vector<std::complex<double>> m_right(m * m, {1, 1});
                 std::vector<std::complex<double>> m_out_exp(
