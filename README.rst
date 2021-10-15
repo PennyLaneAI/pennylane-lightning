@@ -122,7 +122,8 @@ To test the C++ code:
     $ make cpptests
     $ make test
 
-Other supported options are ``-DENABLE_NATIVE=ON`` (for ``-march=native``), ``-DUSE_LAPACK=ON``, and ``-DUSE_OPENBLAS=ON``.
+Other supported options are ``-DENABLE_NATIVE=ON`` (for ``-march=native``), ``-DUSE_LAPACK=ON``, ``-DUSE_OPENBLAS=ON``,
+``-DENABLE_CLANG_TIDY=ON``, and ``-DCLANG_TIDY_BINARY=clang-tidy-11``.
 
 
 .. installation-end-inclusion-marker-do-not-remove
