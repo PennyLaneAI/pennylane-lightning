@@ -18,6 +18,8 @@ env:
   CIBW_TEST_COMMAND: |
     pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
+  CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+
 jobs:
   linux-wheels-x86-64:
     strategy:

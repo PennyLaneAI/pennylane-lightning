@@ -69,9 +69,9 @@ template <typename fp_t> struct SVData {
         cdata[0] = std::complex<fp_t>{1, 0};
     }
     explicit SVData(size_t num_qubits,
-                    const std::vector<std::complex<fp_t>> &cdata_input)
+                    std::vector<std::complex<fp_t>> cdata_input)
         : num_qubits{num_qubits}, // qubit_indices{num_qubits},
-          cdata(cdata_input), sv{cdata.data(), cdata.size()} {}
+          cdata(std::move(cdata_input)), sv{cdata.data(), cdata.size()} {}
     vector<size_t>
     getInternalIndices(const std::vector<size_t> &qubit_indices) {
         return sv.generateBitPatterns(qubit_indices);
@@ -444,6 +444,7 @@ TEMPLATE_TEST_CASE("StateVector::applyCNOT", "[StateVector_Nonparam]", float,
     }
 }
 
+// NOLINTNEXTLINE: Avoiding complexity errors
 TEMPLATE_TEST_CASE("StateVector::applySWAP", "[StateVector_Nonparam]", float,
                    double) {
     using cp_t = std::complex<TestType>;
@@ -588,6 +589,7 @@ TEMPLATE_TEST_CASE("StateVector::applySWAP", "[StateVector_Nonparam]", float,
     }
 }
 
+// NOLINTNEXTLINE: Avoiding complexity errors
 TEMPLATE_TEST_CASE("StateVector::applyCZ", "[StateVector_Nonparam]", float,
                    double) {
     using cp_t = std::complex<TestType>;
@@ -631,7 +633,7 @@ TEMPLATE_TEST_CASE("StateVector::applyCZ", "[StateVector_Nonparam]", float,
         }
 
         SECTION("CZ0,2 |+10> -> |+10>") {
-            std::vector<cp_t> expected{init_state};
+            const std::vector<cp_t> &expected{init_state};
 
             SVData<TestType> svdat02{num_qubits, init_state};
             SVData<TestType> svdat20{num_qubits, init_state};
@@ -644,7 +646,7 @@ TEMPLATE_TEST_CASE("StateVector::applyCZ", "[StateVector_Nonparam]", float,
             CHECK(svdat20.cdata == expected);
         }
         SECTION("CZ1,2 |+10> -> |+10>") {
-            std::vector<cp_t> expected{init_state};
+            const std::vector<cp_t> &expected{init_state};
 
             SVData<TestType> svdat12{num_qubits, init_state};
             SVData<TestType> svdat21{num_qubits, init_state};
@@ -681,6 +683,7 @@ TEMPLATE_TEST_CASE("StateVector::applyCZ", "[StateVector_Nonparam]", float,
     }
 }
 
+// NOLINTNEXTLINE: Avoiding complexity errors
 TEMPLATE_TEST_CASE("StateVector::applyToffoli", "[StateVector_Nonparam]", float,
                    double) {
     using cp_t = std::complex<TestType>;
@@ -733,7 +736,7 @@ TEMPLATE_TEST_CASE("StateVector::applyToffoli", "[StateVector_Nonparam]", float,
             CHECK(svdat102.cdata == expected);
         }
         SECTION("Toffoli 0,2,1 |+10> -> |+10>") {
-            std::vector<cp_t> expected{init_state};
+            const std::vector<cp_t> &expected{init_state};
 
             SVData<TestType> svdat021{num_qubits, init_state};
 
@@ -744,7 +747,7 @@ TEMPLATE_TEST_CASE("StateVector::applyToffoli", "[StateVector_Nonparam]", float,
             CHECK(svdat021.cdata == expected);
         }
         SECTION("Toffoli 1,2,0 |+10> -> |+10>") {
-            std::vector<cp_t> expected{init_state};
+            const std::vector<cp_t> &expected{init_state};
 
             SVData<TestType> svdat120{num_qubits, init_state};
 
@@ -779,6 +782,7 @@ TEMPLATE_TEST_CASE("StateVector::applyToffoli", "[StateVector_Nonparam]", float,
     }
 }
 
+// NOLINTNEXTLINE: Avoiding complexity errors
 TEMPLATE_TEST_CASE("StateVector::applyCSWAP", "[StateVector_Nonparam]", float,
                    double) {
     using cp_t = std::complex<TestType>;
@@ -826,7 +830,7 @@ TEMPLATE_TEST_CASE("StateVector::applyCSWAP", "[StateVector_Nonparam]", float,
             CHECK(svdat102.cdata == expected);
         }
         SECTION("CSWAP 2,1,0 |+10> -> |+10>") {
-            std::vector<cp_t> expected{init_state};
+            const std::vector<cp_t> &expected{init_state};
 
             SVData<TestType> svdat021{num_qubits, init_state};
 
