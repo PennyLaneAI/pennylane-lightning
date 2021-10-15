@@ -143,7 +143,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
     }
     SECTION("matrixVecProd") {
         SECTION("Simple Iterative") {
-            for (size_t m = 2; m < 8; ++m) {
+            for (size_t m = 2; m < 8; m++) {
                 std::vector<std::complex<double>> mat(m * m, {1, 1});
                 std::vector<std::complex<double>> v_in(m, {1, 1});
                 std::vector<std::complex<double>> v_expected(
@@ -152,7 +152,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
                     Util::matrixVecProd(mat, v_in, m, m);
                 CAPTURE(v_out);
                 CAPTURE(v_expected);
-                for (size_t i = 0; i < m; ++i) {
+                for (size_t i = 0; i < m; i++) {
                     CHECK(isApproxEqual(v_out[i], v_expected[i]));
                 }
             }
@@ -178,7 +178,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             std::vector<std::complex<double>> v_out =
                 Util::matrixVecProd(mat, v_in, 4, 4);
             CAPTURE(v_out);
-            for (size_t i = 0; i < 4; ++i) {
+            for (size_t i = 0; i < 4; i++) {
                 CHECK(isApproxEqual(v_out[i], v_out[i]));
             }
         }
@@ -198,16 +198,16 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
     }
     SECTION("Transpose") {
         SECTION("Simple Matrix") {
-            for (size_t m = 2; m < 5; ++m) {
+            for (size_t m = 2; m < 5; m++) {
                 std::vector<std::complex<double>> mat(m * m, {0, 0});
-                for (size_t i = 0; i < m; ++i) {
+                for (size_t i = 0; i < m; i++) {
                     mat[i * m + i] = {1, 1};
                 }
                 std::vector<std::complex<double>> mat_t =
                     Util::Transpose(mat, m, m);
                 CAPTURE(mat_t);
                 CAPTURE(mat);
-                for (size_t i = 0; i < m * m; ++i) {
+                for (size_t i = 0; i < m * m; i++) {
                     CHECK(isApproxEqual(mat[i], mat_t[i]));
                 }
             }
@@ -235,7 +235,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
                 Util::Transpose(mat, 4, 4);
             CAPTURE(mat_t);
             CAPTURE(mat_t_exp);
-            for (size_t i = 0; i < 16; ++i) {
+            for (size_t i = 0; i < 16; i++) {
                 CHECK(isApproxEqual(mat_t[i], mat_t_exp[i]));
             }
         }
@@ -249,7 +249,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
     }
     SECTION("matrixMatProd") {
         SECTION("Simple Iterative") {
-            for (size_t m = 2; m < 5; ++m) {
+            for (size_t m = 2; m < 5; m++) {
                 std::vector<std::complex<double>> m_left(m * m, {1, 1});
                 std::vector<std::complex<double>> m_right(m * m, {1, 1});
                 std::vector<std::complex<double>> m_out_exp(
@@ -258,7 +258,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
                     Util::matrixMatProd(m_left, m_right, m, m, m, true);
                 CAPTURE(m_out);
                 CAPTURE(m_out_exp);
-                for (size_t i = 0; i < m * m; ++i) {
+                for (size_t i = 0; i < m * m; i++) {
                     CHECK(isApproxEqual(m_out[i], m_out_exp[i]));
                 }
             }
@@ -315,10 +315,10 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             CAPTURE(m_out_1);
             CAPTURE(m_out_2);
             CAPTURE(m_out_exp);
-            for (size_t i = 0; i < 16; ++i) {
+            for (size_t i = 0; i < 16; i++) {
                 CHECK(isApproxEqual(m_out_1[i], m_out_2[i]));
             }
-            for (size_t i = 0; i < 16; ++i) {
+            for (size_t i = 0; i < 16; i++) {
                 CHECK(isApproxEqual(m_out_1[i], m_out_exp[i]));
             }
         }

@@ -206,37 +206,6 @@ template <class T> inline size_t dimSize(const std::vector<T> &data) {
 }
 
 /**
- * @brief Partition [0, data_size] into n subset of size data_size/n.
- *
- * @param n Number of partitions.
- * @param data_size Size of data array.
- * @return std::vector of partitions indices.
- *
- * @note the last index sets to data_size.
- */
-inline static auto partition(size_t n, size_t data_size)
-    -> std::vector<size_t> {
-    std::vector<size_t> bnd;
-    if (n == 1) {
-        bnd.push_back(0);
-        bnd.push_back(data_size);
-        return bnd;
-    }
-    size_t d = data_size / n;
-    size_t i, n1 = 0, n2 = 0;
-    bnd.push_back(n1);
-    for (i = 0; i < n; ++i) {
-        n2 = n1 + d;
-        if (i == n - 1) {
-            n2 = data_size;
-        }
-        bnd.push_back(n2);
-        n1 = n2;
-    }
-    return bnd;
-}
-
-/**
  * @brief Calculates the inner-product using OpenMP.
  *
  * @tparam T Floating point precision type.
@@ -258,7 +227,7 @@ omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
 #if defined _OPENMP
 #pragma omp parallel for default(shared) reduction(sm : result)
 #endif
-    for (std::size_t i = 0; i < data_size; ++i) {
+    for (std::size_t i = 0; i < data_size; i++) {
         result = ConstSum(result, *(v1 + i) * *(v2 + i));
     }
 }
@@ -319,7 +288,7 @@ omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
 #if defined _OPENMP
 #pragma omp parallel for default(shared) reduction(sm : result)
 #endif
-    for (std::size_t i = 0; i < data_size; ++i) {
+    for (std::size_t i = 0; i < data_size; i++) {
         result = ConstSum(result, std::conj(*(v1 + i)) * *(v2 + i));
     }
 }
@@ -405,61 +374,28 @@ omp_matrixVecProd(const std::complex<T> *mat, const std::complex<T> *v_in,
         return;
     }
 
-    std::size_t r, c;
-    if (omp_critical) {
+    std::size_t row, col;
+
 #if defined _OPENMP
-#pragma omp parallel default(shared) private(r, c)
+#pragma omp parallel default(shared) private(row, col)
 #endif
-        {
-            std::complex<T> lv_out[m]{};
-            if (transpose) {
-                for (r = 0; r < m; ++r) {
+    {
+        if (transpose) {
 #if defined _OPENMP
 #pragma omp for
 #endif
-                    for (c = 0; c < n; ++c) {
-                        lv_out[r] += mat[c * m + r] * v_in[c];
-                    }
-                }
-            } else {
-                for (r = 0; r < m; ++r) {
-#if defined _OPENMP
-#pragma omp for
-#endif
-                    for (c = 0; c < n; ++c) {
-                        lv_out[r] += mat[r * n + c] * v_in[c];
-                    }
+            for (row = 0; row < m; row++) {
+                for (col = 0; col < n; col++) {
+                    v_out[row] += mat[col * m + row] * v_in[col];
                 }
             }
-#if defined _OPENMP
-#pragma omp critical
-#endif
-            for (r = 0; r < m; ++r) {
-                v_out[r] += lv_out[r];
-            }
-        }
-    } else {
-#if defined _OPENMP
-#pragma omp parallel default(shared) private(r, c)
-#endif
-        {
-            if (transpose) {
+        } else {
 #if defined _OPENMP
 #pragma omp for
 #endif
-                for (r = 0; r < m; ++r) {
-                    for (c = 0; c < n; ++c) {
-                        v_out[r] += mat[c * m + r] * v_in[c];
-                    }
-                }
-            } else {
-#if defined _OPENMP
-#pragma omp for
-#endif
-                for (r = 0; r < m; ++r) {
-                    for (c = 0; c < n; ++c) {
-                        v_out[r] += mat[r * n + c] * v_in[c];
-                    }
+            for (row = 0; row < m; row++) {
+                for (col = 0; col < n; col++) {
+                    v_out[row] += mat[row * n + col] * v_in[col];
                 }
             }
         }
@@ -547,8 +483,8 @@ tail:
         n1 = s2;
         goto tail;
     } else {
-        for (r = m1; r < m2; ++r) {
-            for (s = n1; s < n2; ++s) {
+        for (r = m1; r < m2; r++) {
+            for (s = n1; s < n2; s++) {
                 mat_t[s * m + r] = mat[r * n + s];
             }
         }
@@ -589,7 +525,8 @@ inline auto Transpose(const std::vector<std::complex<T>> mat, size_t m,
  * @param k Number of rows of `m_right`.
  * @param transpose If `true`, requires transposed version of `m_right`.
  *
- * @note Consider transpose=true, to get a performance as close to CBLAS.
+ * @note Consider transpose=true, to get a better performance.
+ *  To transpose a matrix efficiently, check Util::Transpose
  */
 template <class T>
 inline void omp_matrixMatProd(const std::complex<T> *m_left,
@@ -603,34 +540,34 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
 #pragma omp parallel default(none)
 #endif
     {
-        std::size_t r, c, b;
+        std::size_t row, col, b;
         if (transpose) {
 #if defined _OPENMP
 #pragma omp for
 #endif
-            for (r = 0; r < m; ++r) {
-                for (c = 0; c < n; ++c) {
-                    for (b = 0; b < k; ++b) {
-                        m_out[r * n + c] +=
-                            m_left[r * k + b] * m_right[c * n + b];
+            for (row = 0; row < m; row++) {
+                for (col = 0; col < n; col++) {
+                    for (b = 0; b < k; b++) {
+                        m_out[row * n + col] +=
+                            m_left[row * k + b] * m_right[col * n + b];
                     }
                 }
             }
         } else {
             std::size_t i, j, l;
-            std::size_t s = 2; // stride
+            std::size_t stride = 2;
             std::complex<T> t;
 #if defined _OPENMP
 #pragma omp for
 #endif
-            for (r = 0; r < m; r += s) {
-                for (c = 0; c < n; c += s) {
-                    for (b = 0; b < k; b += s) {
+            for (row = 0; row < m; row += stride) {
+                for (col = 0; col < n; col += stride) {
+                    for (b = 0; b < k; b += stride) {
                         // cache-blocking:
-                        for (i = r; i < std::min(r + s, m); ++i) {
-                            for (j = c; j < std::min(c + s, n); ++j) {
+                        for (i = row; i < std::min(row + stride, m); i++) {
+                            for (j = col; j < std::min(col + stride, n); j++) {
                                 t = 0;
-                                for (l = b; l < std::min(b + s, k); ++l) {
+                                for (l = b; l < std::min(b + stride, k); l++) {
                                     t += m_left[i * k + l] * m_right[l * n + j];
                                 }
                                 m_out[i * n + j] += t;
