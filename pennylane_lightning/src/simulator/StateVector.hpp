@@ -137,6 +137,8 @@ template <class fp_t = double> class StateVector {
      * @param arr Pointer to the complex data array.
      * @param length Number of elements in complex data array. Must be
      * power-of-2 (qubits only).
+     * @param cache_size Cache size to store most calculated indices throughout
+     * operations.
      */
     StateVector(CFP_t *arr, size_t length, size_t cache_size = 10)
         : arr_{arr}, length_{length}, num_qubits_{Util::log2(length_)},
