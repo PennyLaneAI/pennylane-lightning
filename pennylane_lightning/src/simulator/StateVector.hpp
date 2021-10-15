@@ -48,6 +48,26 @@ using std::bind;
 using std::size_t;
 using std::string;
 using std::vector;
+
+// Boost implementation of a hash combine:
+// https://www.boost.org/doc/libs/1_35_0/doc/html/boost/hash_combine_id241013.html
+struct hash_function {
+    std::size_t
+    operator()(const std::pair<std::vector<size_t>, size_t> &key) const {
+        std::size_t combined_hash_value = 0;
+
+        for (auto &term : key.first) {
+            combined_hash_value ^= std::hash<size_t>()(term) + 0x9e3779b9 +
+                                   (combined_hash_value << 6) +
+                                   (combined_hash_value >> 2);
+        };
+        combined_hash_value ^= std::hash<size_t>()(key.second) + 0x9e3779b9 +
+                               (combined_hash_value << 6) +
+                               (combined_hash_value >> 2);
+        return combined_hash_value;
+    }
+};
+
 }; // namespace
 /// @endcond
 
@@ -92,10 +112,12 @@ template <class fp_t = double> class StateVector {
     const std::unordered_map<string, size_t> gate_wires_;
     const FMap gates_;
 
-    LRU_cache<std::pair<const std::vector<size_t>, size_t>, std::vector<size_t>>
+    LRU_cache<std::pair<const std::vector<size_t>, size_t>, std::vector<size_t>,
+              hash_function>
         cache_BitPatterns_;
 
-    LRU_cache<std::pair<const std::vector<size_t>, size_t>, std::vector<size_t>>
+    LRU_cache<std::pair<const std::vector<size_t>, size_t>, std::vector<size_t>,
+              hash_function>
         cache_IndicesAfterExclusion_;
 
   public:
