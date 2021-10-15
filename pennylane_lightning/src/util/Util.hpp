@@ -230,10 +230,12 @@ omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
 #endif
 
 #if defined _OPENMP
-#pragma omp parallel for default(shared) reduction(sm : result)
+#pragma omp parallel for default(none) shared(v1, v2, data_size)               \
+    reduction(sm                                                               \
+              : result)
 #endif
-    for (std::size_t i = 0; i < data_size; i++) {
-        result = ConstSum(result, *(v1 + i) * *(v2 + i));
+    for (size_t i = 0; i < data_size; i++) {
+        result = ConstSum(result, ConstMult(*(v1 + i), *(v2 + i)));
     }
 }
 
@@ -291,10 +293,12 @@ omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
 #endif
 
 #if defined _OPENMP
-#pragma omp parallel for default(shared) reduction(sm : result)
+#pragma omp parallel for default(none) shared(v1, v2, data_size)               \
+    reduction(sm                                                               \
+              : result)
 #endif
-    for (std::size_t i = 0; i < data_size; i++) {
-        result = ConstSum(result, std::conj(*(v1 + i)) * *(v2 + i));
+    for (size_t i = 0; i < data_size; i++) {
+        result = ConstSum(result, ConstMultConj(*(v1 + i), *(v2 + i)));
     }
 }
 
@@ -379,10 +383,11 @@ omp_matrixVecProd(const std::complex<T> *mat, const std::complex<T> *v_in,
         return;
     }
 
-    std::size_t row, col;
+    size_t row;
+    size_t col;
 
 #if defined _OPENMP
-#pragma omp parallel default(shared) private(row, col)
+#pragma omp parallel default(none) private(row, col)
 #endif
     {
         if (transpose) {
@@ -455,7 +460,8 @@ inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
     -> std::vector<std::complex<T>> {
     if (mat.size() != m * n) {
         throw std::invalid_argument("Invalid m & n for the input matrix");
-    } else if (v_in.size() != n) {
+    }
+    if (v_in.size() != n) {
         throw std::invalid_argument("Invalid size for the input vector");
     }
 
@@ -473,7 +479,12 @@ inline static void CFTranspose(const std::complex<T> *mat,
                                std::complex<T> *mat_t, size_t m, size_t n,
                                size_t m1, size_t m2, size_t n1, size_t n2) {
     constexpr size_t BLOCK_THRESHOLD = 16;
-    size_t r, s, r1, s1, r2, s2;
+    size_t r;
+    size_t s;
+    size_t r1;
+    size_t s1;
+    size_t r2;
+    size_t s2;
 tail:
     r1 = m2 - m1;
     s1 = n2 - n1;
@@ -545,7 +556,9 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
 #pragma omp parallel default(none)
 #endif
     {
-        std::size_t row, col, b;
+        size_t row;
+        size_t col;
+        size_t b;
         if (transpose) {
 #if defined _OPENMP
 #pragma omp for
@@ -559,8 +572,10 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
                 }
             }
         } else {
-            std::size_t i, j, l;
-            std::size_t stride = 2;
+            size_t i;
+            size_t j;
+            size_t l;
+            size_t stride = 2;
             std::complex<T> t;
 #if defined _OPENMP
 #pragma omp for
@@ -641,7 +656,8 @@ inline auto matrixMatProd(const std::vector<std::complex<T>> m_left,
     -> std::vector<std::complex<T>> {
     if (m_left.size() != m * k) {
         throw std::invalid_argument("Invalid m & k for the input left matrix");
-    } else if (m_right.size() != k * n) {
+    }
+    if (m_right.size() != k * n) {
         throw std::invalid_argument("Invalid k & n for the input right matrix");
     }
 
