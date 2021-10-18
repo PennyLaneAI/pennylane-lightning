@@ -74,6 +74,8 @@ class LRU_cache {
      */
     LRU_cache(size_t cache_size = 0) : cache_size_{cache_size} {};
 
+    ~LRU_cache() { clear(); }
+
     /**
      * @brief Iterator for the map element.
      *
@@ -94,8 +96,9 @@ class LRU_cache {
      */
     void insert(const key_type &new_key, const stored_type &new_value) {
         // opening a slot.
-        if (cache_size_ == 0)
+        if (cache_size_ == 0) {
             return;
+        }
         if (cache_map_.size() >= cache_size_) {
             auto lru_key = lru_queue_.back();
             cache_map_.erase(lru_key);
@@ -167,15 +170,13 @@ class LRU_cache {
      * @brief Returns the occupancy of the cache storage.
      *
      */
-    size_t size() const { return cache_map_.size(); }
+    [[nodiscard]] size_t size() const { return cache_map_.size(); }
 
     /**
      * @brief Returns the capacity of the cache storage.
      *
      */
-    size_t capacity() const { return cache_size_; }
-
-    ~LRU_cache() { clear(); }
+    [[nodiscard]] size_t capacity() const { return cache_size_; }
 };
 
 } // namespace Util

@@ -35,11 +35,12 @@ TEMPLATE_TEST_CASE("AdjointJacobian::AdjointJacobian", "[AdjointJacobian]",
     }
 }
 
-TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
+TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=Z",
+          "[AdjointJacobian]") {
     AdjointJacobian<double> adj;
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
 
-    SECTION("RX gradient") {
+    {
         const size_t num_qubits = 1;
         const size_t num_params = 3;
         const size_t num_obs = 1;
@@ -60,8 +61,12 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
             CHECK(-sin(p) == Approx(jacobian[0].front()));
         }
     }
-
-    SECTION("RY gradient") {
+}
+TEST_CASE("AdjointJacobian::adjointJacobian Op=RY, Obs=X",
+          "[AdjointJacobian]") {
+    AdjointJacobian<double> adj;
+    std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+    {
         const size_t num_qubits = 1;
         const size_t num_params = 3;
         const size_t num_obs = 1;
@@ -85,7 +90,12 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
             CHECK(cos(p) == Approx(jacobian[0].front()).margin(1e-7));
         }
     }
-    SECTION("Single RX gradient, 2 expval") {
+}
+TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=[Z,Z]",
+          "[AdjointJacobian]") {
+    AdjointJacobian<double> adj;
+    std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+    {
         const size_t num_qubits = 2;
         const size_t num_params = 1;
         const size_t num_obs = 2;
@@ -108,7 +118,12 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
         CHECK(-sin(param[0]) == Approx(jacobian[0][0]).margin(1e-7));
         CHECK(0.0 == Approx(jacobian[1][1]).margin(1e-7));
     }
-    SECTION("Multiple RX gradient, single expval per wire") {
+}
+TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z]",
+          "[AdjointJacobian]") {
+    AdjointJacobian<double> adj;
+    std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+    {
         const size_t num_qubits = 3;
         const size_t num_params = 3;
         const size_t num_obs = 3;
@@ -135,7 +150,13 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
         CHECK(-sin(param[1]) == Approx(jacobian[1][1]).margin(1e-7));
         CHECK(-sin(param[2]) == Approx(jacobian[2][2]).margin(1e-7));
     }
-    SECTION("Multiple RX gradient, single expval per wire, subset of params") {
+}
+TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z], "
+          "TParams=[0,2]",
+          "[AdjointJacobian]") {
+    AdjointJacobian<double> adj;
+    std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+    {
         const size_t num_qubits = 3;
         const size_t num_params = 3;
         const size_t num_obs = 3;
@@ -163,7 +184,12 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
         CHECK(0 == Approx(jacobian[1][1]).margin(1e-7));
         CHECK(-sin(param[2]) == Approx(jacobian[2][1]).margin(1e-7));
     }
-    SECTION("Multiple RX gradient, tensor expval") {
+}
+TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
+          "[AdjointJacobian]") {
+    AdjointJacobian<double> adj;
+    std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+    {
         const size_t num_qubits = 3;
         const size_t num_params = 3;
         const size_t num_obs = 1;
@@ -189,8 +215,12 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
         CHECK(0.26478810666384334 == Approx(jacobian[0][1]).margin(1e-7));
         CHECK(-0.6312451595102775 == Approx(jacobian[0][2]).margin(1e-7));
     }
-
-    SECTION("Mixed gradient, tensor expval") {
+}
+TEST_CASE("AdjointJacobian::adjointJacobian Op=Mixed, Obs=[XXX]",
+          "[AdjointJacobian]") {
+    AdjointJacobian<double> adj;
+    std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+    {
         const size_t num_qubits = 3;
         const size_t num_params = 6;
         const size_t num_obs = 1;
@@ -228,8 +258,13 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
         CHECK(-0.0129093062 == Approx(jacobian[0][4]).margin(1e-7));
         CHECK(0.323846156 == Approx(jacobian[0][5]).margin(1e-7));
     }
-
-    SECTION("Decomposed Rot gate, non computational basis state") {
+}
+TEST_CASE("AdjointJacobian::adjointJacobian Decomposed Rot gate, non "
+          "computational basis state",
+          "[AdjointJacobian]") {
+    AdjointJacobian<double> adj;
+    std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+    {
         const size_t num_qubits = 1;
         const size_t num_params = 3;
         const size_t num_obs = 1;
@@ -274,7 +309,12 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
                   Approx(jacobian[0][2]).margin(1e-7));
         }
     }
-    SECTION("Trainable params subset") {
+}
+TEST_CASE("AdjointJacobian::adjointJacobian Mixed Ops, Obs and TParams",
+          "[AdjointJacobian]") {
+    AdjointJacobian<double> adj;
+    std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+    {
         const size_t num_qubits = 2;
         const std::set<size_t> t_params{1, 2, 3};
         const size_t num_obs = 1;
@@ -312,11 +352,11 @@ TEST_CASE("AdjointJacobian::adjointJacobian", "[AdjointJacobian]") {
 
         adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian, {obs},
                             ops, t_params, true);
-        CAPTURE(jacobian);
 
+        std::vector<double> expected{-0.71429188, 0.04998561, -0.71904837};
         // Computed with PennyLane using default.qubit
-        CHECK(-0.71429188 == Approx(jacobian[0][0]));
-        CHECK(0.04998561 == Approx(jacobian[0][1]));
-        CHECK(-0.71904837 == Approx(jacobian[0][2]));
+        CHECK(expected[0] == Approx(jacobian[0][0]));
+        CHECK(expected[1] == Approx(jacobian[0][1]));
+        CHECK(expected[2] == Approx(jacobian[0][2]));
     }
 }
