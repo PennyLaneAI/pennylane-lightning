@@ -21,6 +21,8 @@ This release contains contributions from (in alphabetical order):
 
 Amintor Dusko, Lee James O'Riordan
 
+---
+
 # Release 0.18.0
 
 ### New features since last release

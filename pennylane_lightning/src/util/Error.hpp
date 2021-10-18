@@ -13,6 +13,11 @@
 #include <exception>
 #include <iostream>
 #include <sstream>
+#include <string>
+#include <type_traits>
+#include <utility>
+
+#include "Util.hpp"
 
 /**
  * @brief Macro that throws `%LightningException` with given message.
@@ -61,19 +66,23 @@ namespace Pennylane::Util {
  *
  */
 class LightningException : public std::exception {
+  private:
+    const std::string err_msg;
+
   public:
     /**
      * @brief Constructs a new `%LightningException` exception.
      *
      * @param err_msg Error message explaining the exception condition.
      */
-    explicit LightningException(const std::string &err_msg) noexcept
-        : err_msg(err_msg) {}
+
+    explicit LightningException(std::string err_msg) noexcept
+        : err_msg{std::move(err_msg)} {}
 
     /**
      * @brief Destroys the `%LightningException` object.
      */
-    virtual ~LightningException() = default;
+    ~LightningException() override = default;
 
     /**
      * @brief Returns a string containing the exception message. Overrides
@@ -81,10 +90,9 @@ class LightningException : public std::exception {
      *
      * @return Exception message.
      */
-    const char *what() const noexcept { return err_msg.c_str(); }
-
-  private:
-    std::string err_msg;
+    [[nodiscard]] auto what() const noexcept -> const char * override {
+        return err_msg.c_str();
+    }
 };
 
 /**
