@@ -257,7 +257,7 @@ inline auto innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
         cblas_zdotu_sub(data_size, v1, 1, v2, 1, &result);
     }
 #else
-    if (data_size > DOTU_STD_CROSSOVER) {
+    if (data_size < DOTU_STD_CROSSOVER) {
         result = std::inner_product(
             v1, v1 + data_size, v2, std::complex<T>(), ConstSum<T>,
             static_cast<std::complex<T> (*)(std::complex<T>, std::complex<T>)>(
@@ -321,7 +321,7 @@ inline auto innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
         cblas_zdotc_sub(data_size, v1, 1, v2, 1, &result);
     }
 #else
-    if (data_size > DOTC_STD_CROSSOVER) {
+    if (data_size < DOTC_STD_CROSSOVER) {
         result = std::inner_product(v1, v1 + data_size, v2, std::complex<T>(),
                                     ConstSum<T>, ConstMultConj<T>);
     } else {
@@ -368,14 +368,13 @@ inline auto innerProdC(const std::vector<std::complex<T>> &v1,
  * @param m Number of rows of `mat`.
  * @param n Number of columns of `mat`.
  * @param transpose If `true`, considers transposed version of `mat`.
- * @param omp_critical If `true`, uses column-wise parallel-for, otherwise
  * row-wise.
  */
 template <class T>
-inline static void
-omp_matrixVecProd(const std::complex<T> *mat, const std::complex<T> *v_in,
-                  std::complex<T> *v_out, size_t m, size_t n,
-                  bool transpose = false, bool omp_critical = false) {
+inline static void omp_matrixVecProd(const std::complex<T> *mat,
+                                     const std::complex<T> *v_in,
+                                     std::complex<T> *v_out, size_t m, size_t n,
+                                     bool transpose = false) {
     if (!v_out) {
         return;
     }
