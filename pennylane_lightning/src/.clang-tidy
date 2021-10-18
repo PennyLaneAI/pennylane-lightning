@@ -24,7 +24,7 @@ CheckOptions:
   - key:             readability-inconsistent-declaration-parameter-name.Strict
     value:           'false'
   - key:             readability-magic-numbers.IgnoredIntegerValues
-    value:           '1;2;3;4;'
+    value:           '1;2;3;4;5;6;7;8;9;10;'
   - key:             modernize-use-default-member-init.UseAssignment
     value:           'false'
   - key:             readability-function-size.NestingThreshold

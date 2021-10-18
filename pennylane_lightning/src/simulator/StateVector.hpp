@@ -55,15 +55,18 @@ struct hash_function {
     std::size_t
     operator()(const std::pair<std::vector<size_t>, size_t> &key) const {
         std::size_t combined_hash_value = 0;
+        static const size_t offset_value = 0x9e3779b9;
+        static const size_t l_shift_val = 6;
+        static const size_t r_shift_val = 2;
 
-        for (auto &term : key.first) {
-            combined_hash_value ^= std::hash<size_t>()(term) + 0x9e3779b9 +
-                                   (combined_hash_value << 6) +
-                                   (combined_hash_value >> 2);
+        for (const auto &term : key.first) {
+            combined_hash_value ^= std::hash<size_t>()(term) + offset_value +
+                                   (combined_hash_value << l_shift_val) +
+                                   (combined_hash_value >> r_shift_val);
         };
-        combined_hash_value ^= std::hash<size_t>()(key.second) + 0x9e3779b9 +
-                               (combined_hash_value << 6) +
-                               (combined_hash_value >> 2);
+        combined_hash_value ^= std::hash<size_t>()(key.second) + offset_value +
+                               (combined_hash_value << l_shift_val) +
+                               (combined_hash_value >> r_shift_val);
         return combined_hash_value;
     }
 };
@@ -126,8 +129,7 @@ template <class fp_t = double> class StateVector {
      */
     using scalar_type_t = fp_t;
 
-    StateVector()
-        : gate_wires_{}, cache_BitPatterns_{}, cache_IndicesAfterExclusion_{} {};
+    StateVector() : gate_wires_{} {};
 
     /**
      * @brief Construct a new `%StateVector` object from a given complex data
@@ -295,12 +297,14 @@ template <class fp_t = double> class StateVector {
                              std::forward<decltype(PH3)>(PH3),
                              std::forward<decltype(PH4)>(PH4));
                }},
-              {"CRot", [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+              {"CRot",
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
                    applyCRot_(std::forward<decltype(PH1)>(PH1),
                               std::forward<decltype(PH2)>(PH2),
                               std::forward<decltype(PH3)>(PH3),
                               std::forward<decltype(PH4)>(PH4));
-               }}},cache_BitPatterns_{cache_size}, cache_IndicesAfterExclusion_{
+               }}},
+          cache_BitPatterns_{cache_size}, cache_IndicesAfterExclusion_{
                                               cache_size} {};
 
     /**

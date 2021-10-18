@@ -10,20 +10,22 @@ struct hash_function {
     std::size_t
     operator()(const std::pair<std::vector<size_t>, size_t> &key) const {
         std::size_t combined_hash_value = 0;
+        static const size_t offset = 0x9e3779b9;
 
-        for (auto &term : key.first) {
-            combined_hash_value ^= std::hash<size_t>()(term) + 0x9e3779b9 +
+        for (const auto &term : key.first) {
+            combined_hash_value ^= std::hash<size_t>()(term) + offset +
                                    (combined_hash_value << 6) +
                                    (combined_hash_value >> 2);
         };
-        combined_hash_value ^= std::hash<size_t>()(key.second) + 0x9e3779b9 +
+        combined_hash_value ^= std::hash<size_t>()(key.second) + offset +
                                (combined_hash_value << 6) +
                                (combined_hash_value >> 2);
         return combined_hash_value;
     }
 };
 
-TEST_CASE("LRU_Cache for doubles, with size_t keys", "[Caching_Doubles]") {
+// NOLINTNEXTLINE
+TEST_CASE("LRU_Cache for doubles, with size_t keys", "[Cache]") {
     LRU_cache<size_t, double> cache_container{10};
 
     REQUIRE(cache_container.size() == 0);
@@ -150,7 +152,8 @@ TEST_CASE("LRU_Cache for doubles, with size_t keys", "[Caching_Doubles]") {
     }
 }
 
-TEST_CASE("LRU_Cache for StateVector indices", "[Caching_Indices]") {
+// NOLINTNEXTLINE
+TEST_CASE("LRU_Cache for StateVector indices", "[Cache]") {
     LRU_cache<std::pair<const std::vector<size_t>, size_t>, std::vector<size_t>,
               hash_function>
         cache_container{10};
