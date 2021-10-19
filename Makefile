@@ -16,7 +16,7 @@ help:
 	@echo "  test-cpp           to run the C++ test suite"
 	@echo "  coverage           to generate a coverage report"
 	@echo "  format [check=1]   to apply C++ formatter; use with 'check=1' to check instead of modify (requires clang-format)"
-	@echo "  check-tidy         to build PennyLane-Lightning with ENABLE_CLANG_TIDY=ON"
+	@echo "  check-tidy         to build PennyLane-Lightning with ENABLE_CLANG_TIDY=ON (requires clang-tidy & CMake)"
 
 .PHONY: install
 install:
