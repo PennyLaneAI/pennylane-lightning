@@ -25,6 +25,41 @@ struct hash_function {
 };
 
 // NOLINTNEXTLINE
+TEST_CASE("LRU_Cache, no caching", "[Cache]") {
+    LRU_cache<size_t, double> cache_container{0};
+
+    REQUIRE(cache_container.size() == 0);
+    REQUIRE(cache_container.capacity() == 0);
+
+    std::vector<size_t> keys = {1, 2,  3,  4,  5,  6,  7, 8,
+                                9, 10, 11, 12, 13, 14, 15};
+
+    std::vector<double> values_to_store = {1.2,  2.3,  3.4,  4.5,  5.6,
+                                           6.7,  7.8,  8.9,  9.1,  10.2,
+                                           11.3, 12.4, 13.5, 14.6, 15.7};
+
+    size_t number_of_values = values_to_store.size();
+
+    size_t value_index = 0;
+    for (auto &term : keys) {
+        auto element_it = cache_container.check_cache(term);
+        if (element_it == cache_container.end()) {
+            cache_container.insert(term, values_to_store[value_index++]);
+        }
+    }
+
+    SECTION("Introducing elements in the cache. [beyond capacity] ") {
+        REQUIRE(cache_container.size() == 0);
+        REQUIRE(cache_container.capacity() == 0);
+    }
+
+    SECTION("Asking for the most recent value.") {
+        auto element_it = cache_container.check_cache(keys.back());
+        REQUIRE(element_it == cache_container.end());
+    }
+}
+
+// NOLINTNEXTLINE
 TEST_CASE("LRU_Cache for doubles, with size_t keys", "[Cache]") {
     LRU_cache<size_t, double> cache_container{10};
 
