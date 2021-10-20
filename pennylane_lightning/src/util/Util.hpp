@@ -39,18 +39,18 @@ constexpr bool USE_CBLAS = false;
 #endif
 
 #ifndef CBLAS_TRANSPOSE
-typedef enum CBLAS_TRANSPOSE {
+using CBLAS_TRANSPOSE = enum CBLAS_TRANSPOSE {
     CblasNoTrans = 111,
     CblasTrans = 112,
     CblasConjTrans = 113
-} CBLAS_TRANSPOSE;
+};
 #endif
 
 #ifndef CBLAS_LAYOUT
-typedef enum CBLAS_LAYOUT {
+using CBLAS_LAYOUT = enum CBLAS_LAYOUT {
     CblasRowMajor = 101,
     CblasColMajor = 102
-} CBLAS_LAYOUT;
+};
 #endif
 /// @endcond
 
@@ -253,12 +253,14 @@ omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
  * @brief Calculates the inner-product using the best available method.
  *
  * @tparam T Floating point precision type.
+ * @tparam STD_CROSSOVER Threshold for using OpenMP method
  * @param v1 Complex data array 1.
  * @param v2 Complex data array 2.
  * @param data_size Size of data arrays.
  * @return std::complex<T> Result of inner product operation.
  */
-template <class T, size_t STD_CROSSOVER = 1024>
+template <class T,
+          size_t STD_CROSSOVER = 1024> // NOLINT(readability-magic-numbers)
 inline auto innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
                       const size_t data_size) -> std::complex<T> {
     std::complex<T> result(0, 0);
@@ -317,12 +319,14 @@ omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
  * with the first dataset conjugated.
  *
  * @tparam T Floating point precision type.
+ * @tparam STD_CROSSOVER Threshold for using OpenMP method
  * @param v1 Complex data array 1; conjugated before application.
  * @param v2 Complex data array 2.
  * @param data_size Size of data arrays.
  * @return std::complex<T> Result of inner product operation.
  */
-template <class T, size_t STD_CROSSOVER = 1024>
+template <class T,
+          size_t STD_CROSSOVER = 1024> // NOLINT(readability-magic-numbers)
 inline auto innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
                        const size_t data_size) -> std::complex<T> {
     std::complex<T> result(0, 0);
@@ -485,12 +489,13 @@ inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
  * @brief Calculates transpose of a matrix recursively and Cache-Friendly
  * using blacking and Cache-optimized techniques.
  */
-template <class T, size_t BLOCK = 32>
+template <class T, size_t BLOCKSIZE = 32> // NOLINT(readability-magic-numbers)
 inline static void CFTranspose(const std::complex<T> *mat,
                                std::complex<T> *mat_t, size_t m, size_t n,
                                size_t m1, size_t m2, size_t n1, size_t n2) {
     size_t r;
     size_t s;
+
     size_t r1;
     size_t s1;
     size_t r2;
@@ -499,12 +504,12 @@ inline static void CFTranspose(const std::complex<T> *mat,
     r1 = m2 - m1;
     s1 = n2 - n1;
 
-    if (r1 >= s1 && r1 > BLOCK) {
+    if (r1 >= s1 && r1 > BLOCKSIZE) {
         r2 = (m1 + m2) / 2;
         CFTranspose(mat, mat_t, m, n, m1, r2, n1, n2);
         m1 = r2;
         CFTranspose(mat, mat_t, m, n, m1, m2, n1, n2);
-    } else if (s1 > BLOCK) {
+    } else if (s1 > BLOCKSIZE) {
         s2 = (n1 + n2) / 2;
         CFTranspose(mat, mat_t, m, n, m1, m2, n1, s2);
         n1 = s2;
@@ -544,6 +549,7 @@ inline auto Transpose(const std::vector<std::complex<T>> mat, size_t m,
  * @brief Calculates matrix-matrix product using OpenMP.
  *
  * @tparam T Floating point precision type.
+ * @tparam STRIDE Size of stride in the cache-blocking technique
  * @param m_left Row-wise flatten matrix of size m * k.
  * @param m_right Row-wise flatten matrix of size k * n.
  * @param m_out Pre-allocated row-wise flatten matrix of size m * n.
@@ -555,7 +561,7 @@ inline auto Transpose(const std::vector<std::complex<T>> mat, size_t m,
  * @note Consider transpose=true, to get a better performance.
  *  To transpose a matrix efficiently, check Util::Transpose
  */
-template <class T>
+template <class T, size_t STRIDE = 2> // NOLINT(readability-magic-numbers)
 inline void omp_matrixMatProd(const std::complex<T> *m_left,
                               const std::complex<T> *m_right,
                               std::complex<T> *m_out, size_t m, size_t n,
@@ -583,7 +589,6 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
                 }
             }
         } else {
-            constexpr size_t stride = 2;
             size_t i;
             size_t j;
             size_t l;
@@ -591,14 +596,14 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
 #if defined(_OPENMP)
 #pragma omp for
 #endif
-            for (row = 0; row < m; row += stride) {
-                for (col = 0; col < n; col += stride) {
-                    for (blk = 0; blk < k; blk += stride) {
+            for (row = 0; row < m; row += STRIDE) {
+                for (col = 0; col < n; col += STRIDE) {
+                    for (blk = 0; blk < k; blk += STRIDE) {
                         // cache-blocking:
-                        for (i = row; i < std::min(row + stride, m); i++) {
-                            for (j = col; j < std::min(col + stride, n); j++) {
+                        for (i = row; i < std::min(row + STRIDE, m); i++) {
+                            for (j = col; j < std::min(col + STRIDE, n); j++) {
                                 t = 0;
-                                for (l = blk; l < std::min(blk + stride, k);
+                                for (l = blk; l < std::min(blk + STRIDE, k);
                                      l++) {
                                     t += m_left[i * k + l] * m_right[l * n + j];
                                 }
