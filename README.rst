@@ -34,6 +34,7 @@ learning, automatic differentiation, and optimization of hybrid quantum-classica
 
 .. header-end-inclusion-marker-do-not-remove
 
+
 Features
 ========
 
@@ -41,6 +42,7 @@ Features
   automatic differentiation and optimization.
 
 .. installation-start-inclusion-marker-do-not-remove
+
 
 Installation
 ============
@@ -122,15 +124,14 @@ To test the C++ code:
     $ make cpptests
     $ make test
 
-Other supported options are ``-DENABLE_NATIVE=ON`` (for ``-march=native``), ``-DUSE_LAPACK=ON``, and ``-DUSE_OPENBLAS=ON``.
-
+Other supported options are ``-DENABLE_NATIVE=ON`` (for ``-march=native``),
+``-DUSE_LAPACK=ON``, ``-DUSE_OPENBLAS=ON``, and
+``-DENABLE_CLANG_TIDY=ON``.
 
 .. installation-end-inclusion-marker-do-not-remove
 
-
 Please refer to the `plugin documentation <https://pennylane-lightning.readthedocs.io/>`_ as
 well as to the `PennyLane documentation <https://pennylane.readthedocs.io/>`_ for further reference.
-
 
 
 Contributing
@@ -142,6 +143,7 @@ All contributers to this plugin will be listed as authors on the releases.
 
 We also encourage bug reports, suggestions for new features and enhancements, and even links to cool projects
 or applications built on PennyLane.
+
 
 Authors
 =======
@@ -157,6 +159,7 @@ If you are doing research using PennyLane and PennyLane-Lightning, please cite `
 
 .. support-start-inclusion-marker-do-not-remove
 
+
 Support
 =======
 
@@ -169,6 +172,7 @@ by asking a question in the forum.
 
 .. support-end-inclusion-marker-do-not-remove
 .. license-start-inclusion-marker-do-not-remove
+
 
 License
 =======
