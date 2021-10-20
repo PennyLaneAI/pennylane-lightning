@@ -33,16 +33,24 @@
 /// @cond DEV
 #if __has_include(<cblas.h>) && defined _ENABLE_BLAS
 #include <cblas.h>
-#define USE_CBLAS 1
+constexpr bool USE_CBLAS = true;
 #else
-#define USE_CBLAS 0
+constexpr bool USE_CBLAS = false;
+#endif
 
-#define CblasTrans 0
-#define CblasNoTrans 0
-#define CblasRowMajor 0
+#ifndef CBLAS_TRANSPOSE
+typedef enum CBLAS_TRANSPOSE {
+    CblasNoTrans = 111,
+    CblasTrans = 112,
+    CblasConjTrans = 113
+} CBLAS_TRANSPOSE;
+#endif
 
-#define DOTU_STD_CROSSOVER (1 << 10)
-#define DOTC_STD_CROSSOVER (1 << 10)
+#ifndef CBLAS_LAYOUT
+typedef enum CBLAS_LAYOUT {
+    CblasRowMajor = 101,
+    CblasColMajor = 102
+} CBLAS_LAYOUT;
 #endif
 /// @endcond
 
@@ -225,13 +233,13 @@ template <class T>
 inline static void
 omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
               std::complex<T> &result, const size_t data_size) {
-#if defined _OPENMP
+#if defined(_OPENMP)
 #pragma omp declare \
             reduction (sm:std::complex<T>:omp_out=ConstSum(omp_out, omp_in)) \
             initializer(omp_priv=std::complex<T> {0, 0})
 #endif
 
-#if defined _OPENMP
+#if defined(_OPENMP)
 #pragma omp parallel for default(none) shared(v1, v2, data_size)               \
     reduction(sm                                                               \
               : result)
@@ -250,7 +258,7 @@ omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
  * @param data_size Size of data arrays.
  * @return std::complex<T> Result of inner product operation.
  */
-template <class T>
+template <class T, size_t STD_CROSSOVER = 1024>
 inline auto innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
                       const size_t data_size) -> std::complex<T> {
     std::complex<T> result(0, 0);
@@ -262,7 +270,7 @@ inline auto innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
             cblas_zdotu_sub(data_size, v1, 1, v2, 1, &result);
         }
     } else {
-        if (data_size < DOTU_STD_CROSSOVER) {
+        if (data_size < STD_CROSSOVER) {
             result = std::inner_product(
                 v1, v1 + data_size, v2, std::complex<T>(), ConstSum<T>,
                 static_cast<std::complex<T> (*)(
@@ -288,13 +296,13 @@ template <class T>
 inline static void
 omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
                std::complex<T> &result, const size_t data_size) {
-#if defined _OPENMP
+#if defined(_OPENMP)
 #pragma omp declare \
             reduction (sm:std::complex<T>:omp_out=ConstSum(omp_out, omp_in)) \
             initializer(omp_priv=std::complex<T> {0, 0})
 #endif
 
-#if defined _OPENMP
+#if defined(_OPENMP)
 #pragma omp parallel for default(none) shared(v1, v2, data_size)               \
     reduction(sm                                                               \
               : result)
@@ -314,7 +322,7 @@ omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
  * @param data_size Size of data arrays.
  * @return std::complex<T> Result of inner product operation.
  */
-template <class T>
+template <class T, size_t STD_CROSSOVER = 1024>
 inline auto innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
                        const size_t data_size) -> std::complex<T> {
     std::complex<T> result(0, 0);
@@ -326,7 +334,7 @@ inline auto innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
             cblas_zdotc_sub(data_size, v1, 1, v2, 1, &result);
         }
     } else {
-        if (data_size < DOTC_STD_CROSSOVER) {
+        if (data_size < STD_CROSSOVER) {
             result =
                 std::inner_product(v1, v1 + data_size, v2, std::complex<T>(),
                                    ConstSum<T>, ConstMultConj<T>);
@@ -388,12 +396,12 @@ inline static void omp_matrixVecProd(const std::complex<T> *mat,
     size_t row;
     size_t col;
 
-#if defined _OPENMP
+#if defined(_OPENMP)
 #pragma omp parallel default(none) private(row, col)
 #endif
     {
         if (transpose) {
-#if defined _OPENMP
+#if defined(_OPENMP)
 #pragma omp for
 #endif
             for (row = 0; row < m; row++) {
@@ -402,7 +410,7 @@ inline static void omp_matrixVecProd(const std::complex<T> *mat,
                 }
             }
         } else {
-#if defined _OPENMP
+#if defined(_OPENMP)
 #pragma omp for
 #endif
             for (row = 0; row < m; row++) {
@@ -477,12 +485,10 @@ inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
  * @brief Calculates transpose of a matrix recursively and Cache-Friendly
  * using blacking and Cache-optimized techniques.
  */
-template <class T>
+template <class T, size_t BLOCK = 32>
 inline static void CFTranspose(const std::complex<T> *mat,
                                std::complex<T> *mat_t, size_t m, size_t n,
                                size_t m1, size_t m2, size_t n1, size_t n2) {
-    constexpr size_t BLOCK_THRESHOLD = 32;
-
     size_t r;
     size_t s;
     size_t r1;
@@ -493,12 +499,12 @@ inline static void CFTranspose(const std::complex<T> *mat,
     r1 = m2 - m1;
     s1 = n2 - n1;
 
-    if (r1 >= s1 && r1 > BLOCK_THRESHOLD) {
+    if (r1 >= s1 && r1 > BLOCK) {
         r2 = (m1 + m2) / 2;
         CFTranspose(mat, mat_t, m, n, m1, r2, n1, n2);
         m1 = r2;
         CFTranspose(mat, mat_t, m, n, m1, m2, n1, n2);
-    } else if (s1 > BLOCK_THRESHOLD) {
+    } else if (s1 > BLOCK) {
         s2 = (n1 + n2) / 2;
         CFTranspose(mat, mat_t, m, n, m1, m2, n1, s2);
         n1 = s2;
@@ -557,7 +563,7 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
     if (!m_out) {
         return;
     }
-#if defined _OPENMP
+#if defined(_OPENMP)
 #pragma omp parallel default(none)
 #endif
     {
@@ -565,7 +571,7 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
         size_t col;
         size_t blk;
         if (transpose) {
-#if defined _OPENMP
+#if defined(_OPENMP)
 #pragma omp for
 #endif
             for (row = 0; row < m; row++) {
@@ -577,12 +583,12 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
                 }
             }
         } else {
+            constexpr size_t stride = 2;
             size_t i;
             size_t j;
             size_t l;
-            size_t stride = 2;
             std::complex<T> t;
-#if defined _OPENMP
+#if defined(_OPENMP)
 #pragma omp for
 #endif
             for (row = 0; row < m; row += stride) {
