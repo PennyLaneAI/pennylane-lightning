@@ -36,6 +36,11 @@
 #define USE_CBLAS 1
 #else
 #define USE_CBLAS 0
+
+#define CblasTrans 0
+#define CblasNoTrans 0
+#define CblasRowMajor 0
+
 #define DOTU_STD_CROSSOVER (1 << 10)
 #define DOTC_STD_CROSSOVER (1 << 10)
 #endif
@@ -250,22 +255,22 @@ inline auto innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
                       const size_t data_size) -> std::complex<T> {
     std::complex<T> result(0, 0);
 
-#if defined(USE_CBLAS) && USE_CBLAS
-    if constexpr (std::is_same_v<T, float>) {
-        cblas_cdotu_sub(data_size, v1, 1, v2, 1, &result);
-    } else if constexpr (std::is_same_v<T, double>) {
-        cblas_zdotu_sub(data_size, v1, 1, v2, 1, &result);
-    }
-#else
-    if (data_size < DOTU_STD_CROSSOVER) {
-        result = std::inner_product(
-            v1, v1 + data_size, v2, std::complex<T>(), ConstSum<T>,
-            static_cast<std::complex<T> (*)(std::complex<T>, std::complex<T>)>(
-                &ConstMult<T>));
+    if constexpr (USE_CBLAS) {
+        if constexpr (std::is_same_v<T, float>) {
+            cblas_cdotu_sub(data_size, v1, 1, v2, 1, &result);
+        } else if constexpr (std::is_same_v<T, double>) {
+            cblas_zdotu_sub(data_size, v1, 1, v2, 1, &result);
+        }
     } else {
-        omp_innerProd(v1, v2, result, data_size);
+        if (data_size < DOTU_STD_CROSSOVER) {
+            result = std::inner_product(
+                v1, v1 + data_size, v2, std::complex<T>(), ConstSum<T>,
+                static_cast<std::complex<T> (*)(
+                    std::complex<T>, std::complex<T>)>(&ConstMult<T>));
+        } else {
+            omp_innerProd(v1, v2, result, data_size);
+        }
     }
-#endif
     return result;
 }
 
@@ -314,20 +319,21 @@ inline auto innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
                        const size_t data_size) -> std::complex<T> {
     std::complex<T> result(0, 0);
 
-#if defined(USE_CBLAS) && USE_CBLAS
-    if constexpr (std::is_same_v<T, float>) {
-        cblas_cdotc_sub(data_size, v1, 1, v2, 1, &result);
-    } else if constexpr (std::is_same_v<T, double>) {
-        cblas_zdotc_sub(data_size, v1, 1, v2, 1, &result);
-    }
-#else
-    if (data_size < DOTC_STD_CROSSOVER) {
-        result = std::inner_product(v1, v1 + data_size, v2, std::complex<T>(),
-                                    ConstSum<T>, ConstMultConj<T>);
+    if constexpr (USE_CBLAS) {
+        if constexpr (std::is_same_v<T, float>) {
+            cblas_cdotc_sub(data_size, v1, 1, v2, 1, &result);
+        } else if constexpr (std::is_same_v<T, double>) {
+            cblas_zdotc_sub(data_size, v1, 1, v2, 1, &result);
+        }
     } else {
-        omp_innerProdC(v1, v2, result, data_size);
+        if (data_size < DOTC_STD_CROSSOVER) {
+            result =
+                std::inner_product(v1, v1 + data_size, v2, std::complex<T>(),
+                                   ConstSum<T>, ConstMultConj<T>);
+        } else {
+            omp_innerProdC(v1, v2, result, data_size);
+        }
     }
-#endif
     return result;
 }
 
@@ -426,20 +432,21 @@ inline void matrixVecProd(const std::complex<T> *mat,
     if (!v_out) {
         return;
     }
-#if defined(USE_CBLAS) && USE_CBLAS
-    constexpr std::complex<T> co{1, 0};
-    constexpr std::complex<T> cz{0, 0};
-    const auto tr = (transpose) ? CblasTrans : CblasNoTrans;
-    if constexpr (std::is_same_v<T, float>) {
-        cblas_cgemv(CblasRowMajor, tr, m, n, &co, mat, m, v_in, 1, &cz, v_out,
-                    1);
-    } else if constexpr (std::is_same_v<T, double>) {
-        cblas_zgemv(CblasRowMajor, tr, m, n, &co, mat, m, v_in, 1, &cz, v_out,
-                    1);
+
+    if constexpr (USE_CBLAS) {
+        constexpr std::complex<T> co{1, 0};
+        constexpr std::complex<T> cz{0, 0};
+        const auto tr = (transpose) ? CblasTrans : CblasNoTrans;
+        if constexpr (std::is_same_v<T, float>) {
+            cblas_cgemv(CblasRowMajor, tr, m, n, &co, mat, m, v_in, 1, &cz,
+                        v_out, 1);
+        } else if constexpr (std::is_same_v<T, double>) {
+            cblas_zgemv(CblasRowMajor, tr, m, n, &co, mat, m, v_in, 1, &cz,
+                        v_out, 1);
+        }
+    } else {
+        omp_matrixVecProd(mat, v_in, v_out, m, n, transpose);
     }
-#else
-    omp_matrixVecProd(mat, v_in, v_out, m, n, transpose);
-#endif
 }
 
 /**
@@ -622,20 +629,20 @@ inline void matrixMatProd(const std::complex<T> *m_left,
     if (!m_out) {
         return;
     }
-#if defined(USE_CBLAS) && USE_CBLAS
-    constexpr std::complex<T> co{1, 0};
-    constexpr std::complex<T> cz{0, 0};
-    const auto tr = (transpose) ? CblasTrans : CblasNoTrans;
-    if constexpr (std::is_same_v<T, float>) {
-        cblas_cgemm(CblasRowMajor, tr, CblasNoTrans, m, n, k, &co, m_left, k,
-                    m_right, n, &cz, m_out, n);
-    } else if constexpr (std::is_same_v<T, double>) {
-        cblas_zgemm(CblasRowMajor, tr, CblasNoTrans, m, n, k, &co, m_left, k,
-                    m_right, n, &cz, m_out, n);
+    if constexpr (USE_CBLAS) {
+        constexpr std::complex<T> co{1, 0};
+        constexpr std::complex<T> cz{0, 0};
+        const auto tr = (transpose) ? CblasTrans : CblasNoTrans;
+        if constexpr (std::is_same_v<T, float>) {
+            cblas_cgemm(CblasRowMajor, tr, CblasNoTrans, m, n, k, &co, m_left,
+                        k, m_right, n, &cz, m_out, n);
+        } else if constexpr (std::is_same_v<T, double>) {
+            cblas_zgemm(CblasRowMajor, tr, CblasNoTrans, m, n, k, &co, m_left,
+                        k, m_right, n, &cz, m_out, n);
+        }
+    } else {
+        omp_matrixMatProd(m_left, m_right, m_out, m, n, k, transpose);
     }
-#else
-    omp_matrixMatProd(m_left, m_right, m_out, m, n, k, transpose);
-#endif
 }
 
 /**
