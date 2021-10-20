@@ -141,7 +141,7 @@ template <class fp_t = double> class StateVector {
      * @param cache_size Cache size to store most calculated indices throughout
      * operations.
      */
-    StateVector(CFP_t *arr, size_t length, size_t cache_size = 10)
+    StateVector(CFP_t *arr, size_t length, size_t cache_size = 0)
         : arr_{arr}, length_{length}, num_qubits_{Util::log2(length_)},
           gate_wires_{
               // Add mapping from function name to required wires.
