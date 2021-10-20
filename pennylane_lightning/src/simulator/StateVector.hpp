@@ -488,11 +488,19 @@ template <class fp_t = double> class StateVector {
      * @see `getIndicesAfterExclusion(
         const vector<size_t> &indicesToExclude, size_t num_qubits)`
      */
-    auto getIndicesAfterExclusion(const vector<size_t> &indicesToExclude)
-        -> vector<size_t> {
-        return getIndicesAfterExclusion(indicesToExclude, num_qubits_);
-    }
-
+    auto getIndicesAfterExclusion(const vector<size_t> &indicesToExclude) -> vector<size_t>{
+        auto element_it = cache_IndicesAfterExclusion_.check_cache(
+            {indicesToExclude, num_qubits_});
+        if (element_it == cache_IndicesAfterExclusion_.end()) {
+            std::vector<size_t> indices =
+                getIndicesAfterExclusion(indicesToExclude, num_qubits_);
+            cache_IndicesAfterExclusion_.insert({indicesToExclude, num_qubits_},
+                                                indices);
+            return indices;
+        }
+        return cache_IndicesAfterExclusion_.get(element_it);
+    };
+    
     /**
      * @brief Generate indices for applying operations.
      *
@@ -527,11 +535,19 @@ template <class fp_t = double> class StateVector {
      * @see `generateBitPatterns(const vector<size_t> &qubitIndices, size_t
      * num_qubits)`.
      */
-    auto generateBitPatterns(const vector<size_t> &qubitIndices)
-        -> vector<size_t> {
-        return generateBitPatterns(qubitIndices, num_qubits_);
-    }
+    auto generateBitPatterns(const vector<size_t> &qubitIndices) -> vector<size_t> {
+        auto element_it =
+            cache_BitPatterns_.check_cache({qubitIndices, num_qubits_});
+        if (element_it == cache_BitPatterns_.end()) {
+            vector<size_t> indices =
+                generateBitPatterns(qubitIndices, num_qubits_);
 
+            cache_BitPatterns_.insert({qubitIndices, num_qubits_}, indices);
+            return indices;
+        }
+        return cache_BitPatterns_.get(element_it);
+    };
+    
     /**
      * @brief Apply a given matrix directly to the statevector.
      *
