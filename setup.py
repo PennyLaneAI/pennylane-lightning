@@ -82,6 +82,9 @@ class BuildExt(build_ext):
         "msvc": ["/WX"],
         "unix": ["-O3", "-fPIC", "-shared", "-fopenmp", "-Wall", "-Wextra", "-Werror"],
     }
+    if platform.system() == "Linux" and platform.machine() == "x86_64":
+        c_opts["unix"].append("-mavx")
+        l_opts["unix"].append("-mavx")
 
     if platform.system() == "Darwin":
         for opts in (c_opts, l_opts):

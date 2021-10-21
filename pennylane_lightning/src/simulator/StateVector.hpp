@@ -678,9 +678,9 @@ template <class fp_t = double> class StateVector {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             CFP_t v0 = shiftedState[indices[0]];
-            shiftedState[indices[0]] =
-                -Util::IMAG<fp_t>() * shiftedState[indices[1]];
-            shiftedState[indices[1]] = Util::IMAG<fp_t>() * v0;
+            shiftedState[indices[0]] = CFP_t{shiftedState[indices[1]].imag(),
+                                             -shiftedState[indices[1]].real()};
+            shiftedState[indices[1]] = CFP_t{-v0.imag(), v0.real()};
         }
     }
 
@@ -698,7 +698,7 @@ template <class fp_t = double> class StateVector {
                      [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
-            shiftedState[indices[1]] *= -1;
+            shiftedState[indices[1]] = -shiftedState[indices[1]];
         }
     }
 
@@ -783,16 +783,18 @@ template <class fp_t = double> class StateVector {
     void applyRX(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
                  Param_t angle) {
-        const CFP_t c(std::cos(angle / 2), 0);
-        const CFP_t js = (inverse) ? CFP_t(0, -std::sin(-angle / 2))
-                                   : CFP_t(0, std::sin(-angle / 2));
+        const Param_t c = std::cos(angle / 2);
+        const Param_t js =
+            (inverse) ? -std::sin(-angle / 2) : std::sin(-angle / 2);
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             const CFP_t v0 = shiftedState[indices[0]];
             const CFP_t v1 = shiftedState[indices[1]];
-            shiftedState[indices[0]] = c * v0 + js * v1;
-            shiftedState[indices[1]] = js * v0 + c * v1;
+            shiftedState[indices[0]] =
+                c * v0 + js * CFP_t{-v1.imag(), v1.real()};
+            shiftedState[indices[1]] =
+                js * CFP_t{-v0.imag(), v0.real()} + c * v1;
         }
     }
     /**
@@ -811,9 +813,9 @@ template <class fp_t = double> class StateVector {
     void applyRY(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
                  Param_t angle) {
-        const CFP_t c(std::cos(angle / 2), 0);
-        const CFP_t s = (inverse) ? CFP_t(-std::sin(angle / 2), 0)
-                                  : CFP_t(std::sin(angle / 2), 0);
+        const Param_t c = std::cos(angle / 2);
+        const Param_t s =
+            (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -839,8 +841,8 @@ template <class fp_t = double> class StateVector {
     void applyRZ(const vector<size_t> &indices,
                  const vector<size_t> &externalIndices, bool inverse,
                  Param_t angle) {
-        const CFP_t first = std::exp(CFP_t(0, -angle / 2));
-        const CFP_t second = std::exp(CFP_t(0, angle / 2));
+        const CFP_t first = CFP_t(std::cos(angle / 2), -std::sin(angle / 2));
+        const CFP_t second = CFP_t(std::cos(angle / 2), std::sin(angle / 2));
         const CFP_t shift1 = (inverse) ? std::conj(first) : first;
         const CFP_t shift2 = (inverse) ? std::conj(second) : second;
 
@@ -1003,16 +1005,18 @@ template <class fp_t = double> class StateVector {
     void applyCRX(const vector<size_t> &indices,
                   const vector<size_t> &externalIndices, bool inverse,
                   Param_t angle) {
-        const CFP_t c(std::cos(angle / 2), 0);
-        const CFP_t js = (inverse) ? CFP_t(0, -std::sin(-angle / 2))
-                                   : CFP_t(0, std::sin(-angle / 2));
+        const Param_t c = std::cos(angle / 2);
+        const Param_t js =
+            (inverse) ? -std::sin(-angle / 2) : std::sin(-angle / 2);
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             const CFP_t v0 = shiftedState[indices[2]];
             const CFP_t v1 = shiftedState[indices[3]];
-            shiftedState[indices[2]] = c * v0 + js * v1;
-            shiftedState[indices[3]] = js * v0 + c * v1;
+            shiftedState[indices[2]] =
+                c * v0 + js * CFP_t{-v1.imag(), v1.real()};
+            shiftedState[indices[3]] =
+                js * CFP_t{-v0.imag(), v0.real()} + c * v1;
         }
     }
 
@@ -1032,9 +1036,9 @@ template <class fp_t = double> class StateVector {
     void applyCRY(const vector<size_t> &indices,
                   const vector<size_t> &externalIndices, bool inverse,
                   Param_t angle) {
-        const CFP_t c(std::cos(angle / 2), 0);
-        const CFP_t s = (inverse) ? CFP_t(-std::sin(angle / 2), 0)
-                                  : CFP_t(std::sin(angle / 2), 0);
+        const Param_t c = std::cos(angle / 2);
+        const Param_t s =
+            (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
 
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -1061,10 +1065,12 @@ template <class fp_t = double> class StateVector {
     void applyCRZ(const vector<size_t> &indices,
                   const vector<size_t> &externalIndices, bool inverse,
                   Param_t angle) {
-        const CFP_t m00 = (inverse) ? std::conj(std::exp(CFP_t(0, -angle / 2)))
-                                    : std::exp(CFP_t(0, -angle / 2));
-        const CFP_t m11 = (inverse) ? std::conj(std::exp(CFP_t(0, angle / 2)))
-                                    : std::exp(CFP_t(0, angle / 2));
+        const CFP_t m00 =
+            (inverse) ? CFP_t(std::cos(angle / 2), std::sin(angle / 2))
+                      : CFP_t(std::cos(angle / 2), -std::sin(angle / 2));
+        const CFP_t m11 = (inverse)
+                              ? CFP_t(std::cos(angle / 2), -std::sin(angle / 2))
+                              : CFP_t(std::cos(angle / 2), std::sin(angle / 2));
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             shiftedState[indices[2]] *= m00;
