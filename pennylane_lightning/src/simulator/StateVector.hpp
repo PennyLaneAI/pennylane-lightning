@@ -488,7 +488,8 @@ template <class fp_t = double> class StateVector {
      * @see `getIndicesAfterExclusion(
         const vector<size_t> &indicesToExclude, size_t num_qubits)`
      */
-    auto getIndicesAfterExclusion(const vector<size_t> &indicesToExclude) -> vector<size_t>{
+    auto getIndicesAfterExclusion(const vector<size_t> &indicesToExclude)
+        -> vector<size_t> {
         auto element_it = cache_IndicesAfterExclusion_.check_cache(
             {indicesToExclude, num_qubits_});
         if (element_it == cache_IndicesAfterExclusion_.end()) {
@@ -500,7 +501,7 @@ template <class fp_t = double> class StateVector {
         }
         return cache_IndicesAfterExclusion_.get(element_it);
     };
-    
+
     /**
      * @brief Generate indices for applying operations.
      *
@@ -535,7 +536,8 @@ template <class fp_t = double> class StateVector {
      * @see `generateBitPatterns(const vector<size_t> &qubitIndices, size_t
      * num_qubits)`.
      */
-    auto generateBitPatterns(const vector<size_t> &qubitIndices) -> vector<size_t> {
+    auto generateBitPatterns(const vector<size_t> &qubitIndices)
+        -> vector<size_t> {
         auto element_it =
             cache_BitPatterns_.check_cache({qubitIndices, num_qubits_});
         if (element_it == cache_BitPatterns_.end()) {
@@ -547,7 +549,7 @@ template <class fp_t = double> class StateVector {
         }
         return cache_BitPatterns_.get(element_it);
     };
-    
+
     /**
      * @brief Apply a given matrix directly to the statevector.
      *
