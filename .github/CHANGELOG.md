@@ -2,9 +2,16 @@
 
 ### New features since last release
 
-* Add Cache-Friendly DOTC, GEMV, GEMM along with BLAS Support 
+* Add Cache-Friendly DOTC, GEMV, GEMM along with BLAS Support.
+[(#155)](https://github.com/PennyLaneAI/pennylane-lightning/pull/155)
 
 ### Improvements
+
+* The performance of parametric gates has been improved.
+[(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
+
+* AVX support is enabled for Linux users on Intel/AMD platforms.
+[(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
 
 * PennyLane-Lightning has been updated to conform with clang-tidy recommendations for modernization, offering performance improvements across all use-cases.
 [(#153)](https://github.com/PennyLaneAI/pennylane-lightning/pull/153)
@@ -13,13 +20,16 @@
 
 ### Breaking changes
 
+* Linux users on x86_64 must have a CPU supporting AVX.
+[(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
+
 ### Bug fixes
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi
+Ali Asadi, Lee James O'Riordan
 
 ---
 
