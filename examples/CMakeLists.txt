@@ -1,9 +1,8 @@
-# cmake_minimum_required(VERSION 3.14)
-# project(gate_benchmark)
 #############################
 ## I. Set project details
 #############################
 cmake_minimum_required(VERSION 3.14)
+cmake_policy(VERSION 3.14)
 
 project("gate_benchmark"
         VERSION 0.1.0
