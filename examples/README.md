@@ -1,0 +1,2 @@
+Run "bash run_gate_benchmark.sh" in the terminal. The script will automatically build the gate_benchmark project.
+It will set the CXX and CMAKE_CXX_FLAGS environment variables to "which clang++" and "-O3".
