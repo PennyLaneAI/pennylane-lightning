@@ -18,8 +18,8 @@ if __name__ == "__main__":
 
     # Plot absolute values in lin-lin plot
     plt.title("Averaged Absolute Time vs Number of Qubits\n")
-    plt.xlabel("Number of Qubits $[1]$")
-    plt.ylabel("Time $[ms]$")
+    plt.xlabel("Number of Qubits in $[1]$")
+    plt.ylabel("Time in $[ms]$")
     plt.grid(linestyle=':')
     plt.plot(data[:, num_qubits_idx], data[:, time_idx], "b+")
     plt.plot(data[:, num_qubits_idx], avg_time_arr, "rX")
@@ -30,8 +30,8 @@ if __name__ == "__main__":
 
     # Plot relative values in log-log plot
     plt.title("Scaling Behaviour: Relative Time vs Number of Qubits")
-    plt.xlabel("$\log($Number of Qubits$)$ $[1]$")
-    plt.ylabel("$\log($Relative Average Time$)$ $[1]$")
+    plt.xlabel("Number of Qubits in $[1]$")
+    plt.ylabel("Relative Time (compared to 1 qubit) in $[1]$")
     plt.grid(linestyle=':')
     plt.loglog(data[:, num_qubits_idx], data[:, time_idx]/avg_time_arr[0], "b+")
     plt.loglog(data[:, num_qubits_idx], avg_time_arr/avg_time_arr[0], "rX")
