@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd # Needed to read .csv file
 
 if __name__ == "__main__":
-    assert len(sys.argv) == 3, "Usage: $PYTHON3_PATH " + sys.argv[0] + " $PATH_TO_CSV"
+    assert len(sys.argv) == 3, "Usage: $PYTHON3_PATH " + sys.argv[0] + " $PATH_TO_CSV $PATH_TO_COMPILER_INFO"
     
     data_df = pd.read_csv(sys.argv[1])
     num_gates_idx = data_df.columns.get_loc("Num Gate Reptitions")
