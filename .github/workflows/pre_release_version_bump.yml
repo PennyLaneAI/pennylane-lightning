@@ -1,11 +1,7 @@
 name: Manually Triggered Version Bumps
 
 on:
-  push:
-    branches:
-      - version_bump_error
-
-#   workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
   pre_release_version_bump:
@@ -33,7 +29,6 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
-          # token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: pre release version bump
           title: Version Bump
           body: updated changelog and _version.py
