@@ -26,7 +26,7 @@ jobs:
         run: >
           python .github/workflows/vb_script.py
           --version_path "./pennylane_lightning/_version.py"
-          --changelog_path "./.github/CHANGELOG.md" --post_release --post_pl_release
+          --changelog_path "./.github/CHANGELOG.md" --post_release
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
