@@ -66,7 +66,7 @@ int main(int argc, char *argv[]){
             svdat.applyRY(int_idx, ext_idx, false, angle);
             svdat.applyRZ(int_idx, ext_idx, false, angle);
 
-            // Aplly two qubit parametric operations
+            // Apply two qubit parametric operations
             svdat.applyCRX(two_qubit_int_idx, two_qubit_ext_idx, false, angle);
             svdat.applyCRY(two_qubit_int_idx, two_qubit_ext_idx, false, angle);
             svdat.applyCRZ(two_qubit_int_idx, two_qubit_ext_idx, false, angle);
@@ -74,7 +74,7 @@ int main(int argc, char *argv[]){
     }
     t_end = std::chrono::high_resolution_clock::now();
     
-    // Output walltime in csv format (Num Gate Repititions, Num Qubits, Time (microseconds))
+    // Output walltime in csv format (Num Gate Repititions, Num Qubits, Time (milliseconds))
     const auto walltime = 0.001 * ((std::chrono::duration_cast<std::chrono::microseconds>(t_end - t_start)).count());
     std::cout << num_gate_reps << ", " << num_qubits << ", " << walltime << std::endl;
     
