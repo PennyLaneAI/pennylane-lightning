@@ -2,8 +2,9 @@
 
 crt_dir=$(pwd)
 
+# Export env variables in case cmake reverts to default values
 export CXX=$(which clang++)
-export CMAKE_CXX_FLAGS=-O3
+export CMAKE_CXX_FLAGS=-O3 # Flags passed via bash only for ease of use; would normally set in CMakeLists.txt
 
 # Compiler version & optimization
 compiler_file_name=compiler_info.txt
@@ -15,7 +16,7 @@ echo $CMAKE_CXX_FLAGS >> $path_to_compiler_file
 # CMake & make
 mkdir build
 cd build
-cmake .. && make
+cmake -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_CXX_FLAGS="$CMAKE_CXX_FLAGS" .. && make
 cd ..
 
 # Parameter initialization
