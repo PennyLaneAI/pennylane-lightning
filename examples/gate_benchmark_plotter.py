@@ -24,7 +24,7 @@ if __name__ == "__main__":
     plt.plot(data[:, num_qubits_idx], data[:, time_idx], "b+")
     plt.plot(data[:, num_qubits_idx], avg_time_arr, "rX")
     plt.legend(["Single Runs", "Averaged Time"])
-    plt.figtext(0.05,0.0, ("Compiler:\t" + compiler_info[0] + "Optimization:\t" + compiler_info[1]).expandtabs(), fontsize=8, va="bottom", ha="left")
+    plt.figtext(0.05,0.0, ("Compiler:\t" + compiler_info[0] + "Optimization:\t" + compiler_info[1]).expandtabs(), fontsize=7, va="bottom", ha="left")
     plt.subplots_adjust(bottom=0.2)
     plt.show()
 
@@ -36,6 +36,6 @@ if __name__ == "__main__":
     plt.loglog(data[:, num_qubits_idx], data[:, time_idx]/avg_time_arr[0], "b+")
     plt.loglog(data[:, num_qubits_idx], avg_time_arr/avg_time_arr[0], "rX")
     plt.legend(["Single Runs", "Averaged Time"])
-    plt.figtext(0.05,0.0, ("Compiler:\t" + compiler_info[0] + "Optimization:\t" + compiler_info[1]).expandtabs(), fontsize=8, va="bottom", ha="left")
+    plt.figtext(0.05,0.0, ("Compiler:\t" + compiler_info[0] + "Optimization:\t" + compiler_info[1]).expandtabs(), fontsize=7, va="bottom", ha="left")
     plt.subplots_adjust(bottom=0.2)
     plt.show()
