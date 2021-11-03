@@ -3,18 +3,20 @@
 ### Improvements
 
 * The performance of parametric gates has been improved.
-[(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
+  [(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
 
 * AVX support is enabled for Linux users on Intel/AMD platforms.
-[(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
+  [(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
 
-* PennyLane-Lightning has been updated to conform with clang-tidy recommendations for modernization, offering performance improvements across all use-cases.
-[(#153)](https://github.com/PennyLaneAI/pennylane-lightning/pull/153)
+* PennyLane-Lightning has been updated to conform with clang-tidy
+  recommendations for modernization, offering performance improvements across
+  all use-cases.
+  [(#153)](https://github.com/PennyLaneAI/pennylane-lightning/pull/153)
 
 ### Breaking changes
 
-* Linux users on x86_64 must have a CPU supporting AVX.
-[(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
+* Linux users on `x86_64` must have a CPU supporting AVX.
+  [(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
 
 ### Contributors
 
