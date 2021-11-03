@@ -34,4 +34,4 @@ jobs:
           body: updated changelog and _version.py
           branch: pre-release-version-bump
           reviewers: antalszava
-          base: main
+          base: master
