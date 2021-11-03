@@ -1,4 +1,4 @@
-# Release 0.19.0-dev (development release)
+# Release 0.19.0-dev
 
 ### New features since last release
 
