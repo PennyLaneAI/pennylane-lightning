@@ -7,8 +7,7 @@ if __name__ == "__main__":
     assert len(sys.argv) == 3, "Usage: $PYTHON3_PATH " + sys.argv[0] + " $PATH_TO_CSV $PATH_TO_COMPILER_INFO"
     
     data_df = pd.read_csv(sys.argv[1])
-    num_gates_idx = data_df.columns.get_loc("Num Gate Reptitions")
-    num_qubits_idx = data_df.columns.get_loc(" Num Qubits")
+    num_qubits_idx = data_df.columns.get_loc("Num Qubits")
     time_idx = data_df.columns.get_loc(" Time (milliseconds)")
     
     compiler_info = open(sys.argv[2], 'r').readlines()
@@ -21,9 +20,7 @@ if __name__ == "__main__":
     plt.xlabel("Number of Qubits in $[1]$")
     plt.ylabel("Time in $[ms]$")
     plt.grid(linestyle=':')
-    plt.plot(data[:, num_qubits_idx], data[:, time_idx], "b+")
     plt.plot(data[:, num_qubits_idx], avg_time_arr, "rX")
-    plt.legend(["Single Runs", "Averaged Time"])
     plt.figtext(0.05,0.0, ("Compiler:\t" + compiler_info[0] + "Optimization:\t" + compiler_info[1]).expandtabs(), fontsize=7, va="bottom", ha="left")
     plt.subplots_adjust(bottom=0.2)
     plt.show()
@@ -33,9 +30,7 @@ if __name__ == "__main__":
     plt.xlabel("Number of Qubits in $[1]$")
     plt.ylabel("Relative Time (compared to 1 qubit) in $[1]$")
     plt.grid(linestyle=':')
-    plt.loglog(data[:, num_qubits_idx], data[:, time_idx]/avg_time_arr[0], "b+")
     plt.loglog(data[:, num_qubits_idx], avg_time_arr/avg_time_arr[0], "rX")
-    plt.legend(["Single Runs", "Averaged Time"])
     plt.figtext(0.05,0.0, ("Compiler:\t" + compiler_info[0] + "Optimization:\t" + compiler_info[1]).expandtabs(), fontsize=7, va="bottom", ha="left")
     plt.subplots_adjust(bottom=0.2)
     plt.show()
