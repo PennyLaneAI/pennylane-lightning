@@ -23,8 +23,7 @@ cd ..
 min_num_qubits=6
 max_num_qubits=22
 num_qubits_increment=2
-num_gate_reps=1
-num_runs=3
+num_gate_reps=3
 
 # Creating data file
 data_file_name=gate_benchmark.csv
@@ -33,14 +32,12 @@ binary_name=gate_benchmark
 path_to_binary=$binary_dir/$binary_name
 path_to_csv=$crt_dir/$data_file_name
 echo "Creating $path_to_csv"
-echo "Num Gate Reptitions, Num Qubits, Time (milliseconds)" > $path_to_csv
+echo "Num Qubits, Time (milliseconds)" > $path_to_csv
 
 # Generate data
 for ((num_qubits=$min_num_qubits; num_qubits<$max_num_qubits+1; num_qubits+=$num_qubits_increment)); do
-    for ((run=0; run<$num_runs; run++)); do
-        printf "Run number %1d with %2d qubits \n" "$run" "$num_qubits"
-        $path_to_binary ${num_gate_reps} ${num_qubits} >> $path_to_csv
-    done
+    printf "Run with %1d gate repitions and %2d qubits \n" "$num_gate_reps" "$num_qubits"
+    $path_to_binary ${num_gate_reps} ${num_qubits} >> $path_to_csv
 done
 
 # Plot results
