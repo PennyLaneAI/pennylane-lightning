@@ -23,7 +23,8 @@ if __name__ == "__main__":
     plt.plot(data[:, num_qubits_idx], avg_time_arr, "rX")
     plt.figtext(0.05,0.0, ("Compiler:\t" + compiler_info[0] + "Optimization:\t" + compiler_info[1]).expandtabs(), fontsize=7, va="bottom", ha="left")
     plt.subplots_adjust(bottom=0.2)
-    plt.show()
+    plt.savefig("avg_time.png", dpi=200)
+    plt.close()
 
     # Plot relative values in log-log plot
     plt.title("Scaling Behaviour: Relative Time vs Number of Qubits")
@@ -33,4 +34,5 @@ if __name__ == "__main__":
     plt.loglog(data[:, num_qubits_idx], avg_time_arr/avg_time_arr[0], "rX")
     plt.figtext(0.05,0.0, ("Compiler:\t" + compiler_info[0] + "Optimization:\t" + compiler_info[1]).expandtabs(), fontsize=7, va="bottom", ha="left")
     plt.subplots_adjust(bottom=0.2)
-    plt.show()
+    plt.savefig("scaling.png", dpi=200)
+    plt.close()

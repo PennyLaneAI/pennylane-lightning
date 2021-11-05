@@ -1,3 +1,4 @@
 *.csv
 compiler_info.txt
 */build/*
+*.png
