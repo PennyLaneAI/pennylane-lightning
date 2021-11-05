@@ -1,3 +1,5 @@
+* Added examples folder containing aggregate gate performance test
+
 # Release 0.19.0-dev (development release)
 
 ### New features since last release
