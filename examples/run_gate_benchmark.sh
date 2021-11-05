@@ -15,9 +15,9 @@ echo $CMAKE_CXX_FLAGS >> $path_to_compiler_file
 
 # CMake & make
 mkdir build
-cd build
+pushd ./build
 cmake -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_CXX_FLAGS="$CMAKE_CXX_FLAGS" .. && make
-cd ..
+popd
 
 # Parameter initialization
 min_num_qubits=6
