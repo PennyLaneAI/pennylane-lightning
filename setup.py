@@ -14,165 +14,80 @@
 import os
 import platform
 import setuptools
+import sys
+import subprocess
+from pathlib import Path
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
+
+from distutils.util import get_platform
+
+# Convert distutils Windows platform specifiers to CMake -A arguments
+
+class CMakeExtension(Extension):
+    def __init__(self, name, sourcedir = ""):
+        Extension.__init__(self, name, sources = [])
+        self.sourcedir = Path(sourcedir).absolute()
+
+
+class CMakeBuild(build_ext):
+    """
+    This class is built upon https://github.com/diegoferigo/cmake-build-extension/blob/master/src/cmake_build_extension/build_extension.py and https://github.com/pybind/cmake_example/blob/master/setup.py
+    """
+
+    user_options = build_ext.user_options + [
+        ("define=", "D", "Define variables for CMake")
+    ]
+
+    def initialize_options(self):
+        super().initialize_options()
+        self.define = None
+
+    def finalize_options(self):
+        # Parse the custom CMake options and store them in a new attribute
+        defines = [] if self.define is None else self.define.split(";")
+        self.cmake_defines = [f"-D{define}" for define in defines]
+
+        super().finalize_options()
+
+    def build_extension(self, ext: CMakeExtension):
+        extdir = Path(self.get_ext_fullpath(ext.name)).parent.absolute()
+
+        debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
+        cfg = "Debug" if debug else "Release"
+
+        # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
+        cmake_args = [
+            f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
+            f"-DPYTHON_EXECUTABLE={sys.executable}",
+            f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
+        ]
+        
+        build_args = []
+
+        if platform.system() == "Darwin":
+            cmake_args += []
+        elif platform.system() == "Linux":
+            cmake_args += []
+        elif platform.system() == "Windows":
+            cmake_args += []
+        else:
+            raise RuntimeError(f"Unsupported '{platform.system()}' platform")
+
+        if not Path(self.build_temp).exists():
+            os.makedirs(self.build_temp)
+        
+        subprocess.check_call(
+            ["cmake", ext.sourcedir] + cmake_args, cwd = self.build_temp
+        )
+        subprocess.check_call(
+            ["cmake", "--build", "."] + build_args, cwd = self.build_temp
+        )
 
 
 with open("pennylane_lightning/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
-
-class get_pybind_include(object):
-    """Helper class to determine the pybind11 include path
-    The purpose of this class is to postpone importing pybind11
-    until it is actually installed, so that the ``get_include()``
-    method can be invoked."""
-
-    def __str__(self):
-        import pybind11
-
-        return pybind11.get_include()
-
-
-def has_flag(compiler, flagname):
-    """Return a boolean indicating whether a flag name is supported on
-    the specified compiler.
-    """
-    import tempfile
-    import os
-
-    with tempfile.NamedTemporaryFile("w", suffix=".cpp", delete=False) as f:
-        f.write("int main (int argc, char **argv) { return 0; }")
-        fname = f.name
-
-    try:
-        compiler.compile([fname], extra_postargs=[flagname])
-    except setuptools.distutils.errors.CompileError:
-        return False
-    finally:
-        try:
-            os.remove(fname)
-        except OSError:
-            pass
-
-    return True
-
-
-def cpp_flag(compiler):
-    """Return the -std=c++17 compiler flag.
-    """
-    flags = ["-std=c++17"]
-
-    for flag in flags:
-        if has_flag(compiler, flag):
-            return flag
-
-    raise RuntimeError("Unsupported compiler -- at least C++17 support is needed!")
-
-
-class BuildExt(build_ext):
-    """A custom build extension for adding compiler-specific options."""
-
-    c_opts = {
-        "msvc": ["/EHsc", "/O2", "/W4", "/WX", "/std:c++17", "-D_USE_MATH_DEFINES"],
-        "unix": ["-O3", "-fPIC", "-shared", "-fopenmp", "-Wall", "-Wextra", "-Werror"],
-    }
-
-    l_opts = {
-        "msvc": ["/WX"],
-        "unix": ["-O3", "-fPIC", "-shared", "-fopenmp", "-Wall", "-Wextra", "-Werror"],
-    }
-    if platform.system() == "Linux" and platform.machine() == "x86_64":
-        c_opts["unix"].append("-mavx")
-        l_opts["unix"].append("-mavx")
-
-    if platform.system() == "Darwin":
-        for opts in (c_opts, l_opts):
-            opts["unix"].remove("-fopenmp")
-            opts["unix"].remove("-shared")
-
-        darwin_opts = [
-            "-stdlib=libc++",
-            "-Xpreprocessor",
-            "-fopenmp",
-        ]
-        darwin_opts.append("-mmacosx-version-min=10.14")
-        
-        c_opts["unix"] += darwin_opts
-        l_opts["unix"] += darwin_opts
-
-    def build_extensions(self):
-        ct = self.compiler.compiler_type
-        opts = self.c_opts.get(ct, [])
-        link_opts = self.l_opts.get(ct, [])
-
-        if ct == "unix":
-            opts.append(cpp_flag(self.compiler))
-            if has_flag(self.compiler, "-fvisibility=hidden"):
-                opts.append("-fvisibility=hidden")
-
-        for ext in self.extensions:
-            ext.define_macros = [("VERSION_INFO", '"{}"'.format(self.distribution.get_version()))]
-            ext.extra_compile_args = opts
-            ext.extra_link_args = link_opts
-
-        build_ext.build_extensions(self)
-
-
-if not os.environ.get("SKIP_COMPILATION", False):
-
-    include_dirs = [
-        get_pybind_include(),
-        "./include",
-        "pennylane_lightning/src/algorithms",
-        "pennylane_lightning/src/simulator",
-        "pennylane_lightning/src/util"
-    ]
-
-    library_dirs = [i for i in os.environ.get("LD_LIBRARY_PATH", "").split(":") if i]
-    libraries = []
-    extra_compile_args = []
-    extra_link_args = []
-
-    if os.environ.get("USE_LAPACK", False):
-        extra_compile_args += [" -llapacke -DLAPACKE=1"]
-        libraries += ["lapacke"]
-        extra_link_args += ["-llapacke"]
-
-    if os.environ.get("USE_OPENBLAS", False):
-        extra_compile_args += [" -lopenblas -DLAPACKE=1"]
-        libraries += ["openblas"]
-        extra_link_args += ["-lopenblas"]
-
-    if platform.system() == "Darwin":
-        include_dirs += ["/usr/local/opt/libomp/include"]
-        library_dirs += ["/usr/local/opt/libomp/lib"]
-        libraries += ["omp"]
-
-
-    ext_modules = [
-        Extension(
-            "lightning_qubit_ops",
-            sources=[
-                "pennylane_lightning/src/simulator/StateVector.cpp",
-                "pennylane_lightning/src/algorithms/AdjointDiff.cpp",
-                "pennylane_lightning/src/bindings/Bindings.cpp",
-            ],
-            depends=[
-                "pennylane_lightning/src/algorithms/AdjointDiff.hpp",
-                "pennylane_lightning/src/simulator/StateVector.hpp",
-                "pennylane_lightning/src/util/Util.hpp",
-            ],
-            include_dirs=include_dirs,
-            language="c++",
-            libraries=libraries,
-            library_dirs=library_dirs,
-            extra_compile_args=extra_compile_args,
-            extra_link_args=extra_link_args,
-        ),
-    ]
-else:
-    ext_modules = []
 
 requirements = [
     "numpy",
@@ -198,9 +113,9 @@ info = {
     "long_description_content_type": "text/x-rst",
     "provides": ["pennylane_lightning"],
     "install_requires": requirements,
-    "ext_modules": ext_modules,
+    "ext_modules": [CMakeExtension("lightning_qubit_ops")],
+    "cmdclass": {"build_ext": CMakeBuild},
     "ext_package": "pennylane_lightning",
-    "cmdclass": {"build_ext": BuildExt},
 }
 
 classifiers = [
