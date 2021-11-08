@@ -18,6 +18,12 @@
 * Linux users on `x86_64` must have a CPU supporting AVX.
   [(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
 
+### Bug fixes
+
+* OpenMP built with Intel MacOS CI runners causes failures on M1 Macs. OpenMP is currently
+  disabled in the built wheels until this can be resolved with Github Actions runners.
+  [(#)]
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
