@@ -22,7 +22,7 @@
 
 * OpenMP built with Intel MacOS CI runners causes failures on M1 Macs. OpenMP is currently
   disabled in the built wheels until this can be resolved with Github Actions runners.
-  [(#)]
+  [(#166)](https://github.com/PennyLaneAI/pennylane-lightning/pull/166)
 
 ### Contributors
 
