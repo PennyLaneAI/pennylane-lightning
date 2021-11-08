@@ -4,6 +4,8 @@ on:
     branches:
       - master
   pull_request:
+  release:
+    types: [published]
 
 env:
   CIBW_BUILD: 'cp37-* cp38-* cp39-*'
