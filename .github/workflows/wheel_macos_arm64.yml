@@ -10,7 +10,6 @@ env:
   # MacOS specific build settings
   CIBW_BEFORE_ALL_MACOS: |
     brew uninstall --force oclint
-    brew install libomp
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
