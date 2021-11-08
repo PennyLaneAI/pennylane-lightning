@@ -10,8 +10,7 @@ env:
   # MacOS specific build settings
 
   CIBW_BEFORE_ALL_MACOS: |
-    brew cask uninstall --force oclint
-    brew install clang libomp
+    brew install libomp
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
@@ -45,6 +44,7 @@ jobs:
             cibw_archs: ppc64le
           - os: macos-latest
             cibw_archs: arm64
+            enable_omp: 0
 
     steps:
       - name: Cancel Previous Runs
@@ -72,6 +72,7 @@ jobs:
           python -m cibuildwheel --output-dir dist
         env:
           CIBW_ARCHS: ${{ matrix.cibw_archs }}
+          USE_OMP: ${{ matrix.enable_omp }} # Disabled for MacOS
 
       - uses: actions/upload-artifact@v2
         with:
