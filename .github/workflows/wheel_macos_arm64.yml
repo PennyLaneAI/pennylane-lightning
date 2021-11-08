@@ -1,10 +1,9 @@
-name: Wheels
+name: Wheel::MacOS::ARM
 on:
   push:
     branches:
       - master
   release:
-    types: [published]
 
 env:
   CIBW_BUILD: 'cp37-* cp38-* cp39-*'
