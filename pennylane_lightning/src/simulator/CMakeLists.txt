@@ -7,6 +7,17 @@ add_library(lightning_simulator STATIC ${SIMULATOR_FILES})
 find_package(OpenMP)
 
 target_include_directories(lightning_simulator PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} )
+
+if(ENABLE_CUDA)
+    enable_language(CUDA)
+    add_library(lightning_simulator_gpu OBJECT StateVectorGPU.cu )
+    target_include_directories(lightning_simulator_gpu PUBLIC ${CUDA_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(lightning_simulator_gpu PRIVATE lightning_utils)
+    set_target_properties(lightning_simulator_gpu PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    set_target_properties(lightning_simulator_gpu PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+    target_link_libraries(lightning_simulator PRIVATE lightning_simulator_gpu ${CUDA_LIBRARIES})
+endif()
+
 target_link_libraries(lightning_simulator PRIVATE lightning_utils)
 
 if(OpenMP_FOUND)
