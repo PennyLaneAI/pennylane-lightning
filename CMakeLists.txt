@@ -66,8 +66,6 @@ target_link_libraries(pennylane_lightning INTERFACE     lightning_utils
                                                         lightning_algorithms)
 target_include_directories(pennylane_lightning INTERFACE "pennylane_lightning/src")
 
-#add_library(external_dependency INTERFACE)
-
 pybind11_add_module(lightning_qubit_ops "pennylane_lightning/src/bindings/Bindings.cpp")
 target_link_libraries(lightning_qubit_ops PRIVATE pennylane_lightning) #external_dependency)
 set_target_properties(lightning_qubit_ops PROPERTIES CXX_VISIBILITY_PRESET hidden)
@@ -109,9 +107,6 @@ if(ENABLE_BLAS)
 	else()
 		message(FATAL_ERROR "BLAS is enabled but not found.")
 	endif()
-
-	message(STATUS "BLAS_LINKER_FLAGS=${BLAS_LINKER_FLAGS}")
-	message(STATUS "BLAS_LIBRARIES=${BLAS_LIBRARIES}")
 
 	target_link_libraries(lightning_qubit_ops PRIVATE "${BLAS_LIBRARIES}")
 	target_link_options(lightning_qubit_ops PRIVATE "${BLAS_LINKER_FLAGS}")
