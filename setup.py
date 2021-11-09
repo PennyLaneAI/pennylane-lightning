@@ -149,7 +149,7 @@ if not os.environ.get("SKIP_COMPILATION", False):
         libraries += ["openblas"]
         extra_link_args += ["-lopenblas"]
 
-    if platform.system() == "Darwin":
+    if platform.system() == "Darwin" and os.environ.get("USE_OMP"):
         include_dirs += ["/usr/local/opt/libomp/include"]
         library_dirs += ["/usr/local/opt/libomp/lib"]
         libraries += ["omp"]
