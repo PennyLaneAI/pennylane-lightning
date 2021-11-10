@@ -16,6 +16,15 @@ import pennylane as qml
 pl_version = '"' + qml.version() + '"'
 
 
+def remove_quotes(my_str):
+    """ A helper function to remove the quote chars (',")
+    from the provided str.
+    """
+    clean_str = my_str.replace('"', '')  # remove "
+    clean_str = clean_str.replace("'", "")  # remove '
+    return clean_str
+
+
 def bump_version(version_line, pre_release):
     """ A helper function which takes the current version string and
     replaces it with the bumped version depending on the pre/post
@@ -46,7 +55,9 @@ def bump_version(version_line, pre_release):
 
     bumped_version = ".".join(split_version)
     data[-1] = bumped_version
-    return " ".join(data), bumped_version
+    clean_bumped_version = remove_quotes(bumped_version)
+
+    return " ".join(data), clean_bumped_version
 
 
 def update_version_file(path, pre_release=True):
