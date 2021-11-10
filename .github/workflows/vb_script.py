@@ -42,7 +42,7 @@ def bump_version(version_line, pre_release):
         bumped_version (string): The bumped version string.
     """
     data = version_line.split(" ")
-    curr_version = data[-1]
+    curr_version = data[-1].replace('\n', '')  # remove any newline characters
 
     if pre_release:
         curr_version = pl_version  # get current Pennylane version
@@ -78,7 +78,7 @@ def update_version_file(path, pre_release=True):
         for line in lines:
             if "__version__" in line.split(' '):
                 new_line, new_version = bump_version(line, pre_release)
-                f.write(new_line)
+                f.write(new_line + '\n')
             else:
                 f.write(line)
     return new_version
