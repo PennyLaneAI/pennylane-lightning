@@ -18,8 +18,6 @@ This release contains contributions from (in alphabetical order):
 
 # Release 0.19.0
 
-### New features since last release
-
 ### Improvements
 
 * The performance of parametric gates has been improved.
