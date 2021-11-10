@@ -1,7 +1,10 @@
 name: Automated Release Version Bumps
 
 on:
-  workflow_dispatch:
+    push:
+    branches:
+      - patch_vb_script
+      
   release:
     types: [published]
 
