@@ -1,9 +1,8 @@
 name: Automated Release Version Bumps
 
 on:
-    push:
-        branches:
-            - patch_vb_script
+    release:
+        types: [published]
 
 jobs:
   post_release_version_bump:
