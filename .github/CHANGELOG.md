@@ -1,6 +1,4 @@
-# Release 0.19.0-dev
-
-### New features since last release
+# Release 0.20.0
 
 ### Improvements
 
@@ -13,14 +11,10 @@
 * PennyLane-Lightning has been updated to conform with clang-tidy recommendations for modernization, offering performance improvements across all use-cases.
 [(#153)](https://github.com/PennyLaneAI/pennylane-lightning/pull/153)
 
-### Documentation
-
 ### Breaking changes
 
 * Linux users on x86_64 must have a CPU supporting AVX.
 [(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
-
-### Bug fixes
 
 ### Contributors
 
