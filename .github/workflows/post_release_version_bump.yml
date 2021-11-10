@@ -1,8 +1,8 @@
 name: Automated Release Version Bumps
 
 on:
-   release:
-      types: [published]
+  release:
+    types: [published]
 
 jobs:
   post_release_version_bump:
