@@ -1,6 +1,7 @@
 name: Automated Release Version Bumps
 
 on:
+  workflow_dispatch:
   release:
     types: [published]
 
