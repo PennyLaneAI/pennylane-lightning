@@ -84,7 +84,7 @@ endif()
 
 if(ENABLE_OPENMP)
     message(STATUS "ENABLE_OPENMP is ON. Using OpenMP.")
-    find_package(OpenMP IMPORTED)
+    find_package(OpenMP)
 
     if(NOT OpenMP_CXX_FOUND)
         message(FATAL_ERROR "OpenMP is enabled but not found.\n"
