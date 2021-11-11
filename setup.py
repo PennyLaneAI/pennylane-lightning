@@ -57,20 +57,22 @@ class CMakeBuild(build_ext):
         cfg = "Debug" if debug else "Release"
 
         # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
-        cmake_args = [
+        configure_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
             f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
         ]
+
+        configure_args += self.cmake_defines
         
         build_args = []
 
         if platform.system() == "Darwin":
-            cmake_args += []
+            configure_args += []
         elif platform.system() == "Linux":
-            cmake_args += []
+            configure_args += []
         elif platform.system() == "Windows":
-            cmake_args += []
+            configure_args += []
         else:
             raise RuntimeError(f"Unsupported '{platform.system()}' platform")
 
@@ -78,7 +80,7 @@ class CMakeBuild(build_ext):
             os.makedirs(self.build_temp)
         
         subprocess.check_call(
-            ["cmake", ext.sourcedir] + cmake_args, cwd = self.build_temp
+            ["cmake", ext.sourcedir] + configure_args, cwd = self.build_temp
         )
         subprocess.check_call(
             ["cmake", "--build", "."] + build_args, cwd = self.build_temp

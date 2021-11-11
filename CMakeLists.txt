@@ -99,7 +99,7 @@ if(ENABLE_OPENMP)
 endif()
 
 if(ENABLE_BLAS)
-	message(STATUS "ENABLE_OPENBLAS is On. Find BLAS.")
+	message(STATUS "ENABLE_OPENBLAS is ON. Find BLAS.")
 	find_package(BLAS)
 
 	if(BLAS_FOUND)
