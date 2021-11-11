@@ -75,7 +75,10 @@ class CMakeBuild(build_ext):
         elif platform.system() == "Linux":
             configure_args += []
         elif platform.system() == "Windows":
-            configure_args += []
+            configure_args += [
+                "-DENABLE_OPENMP=OFF",
+                "-DENABLE_BLAS=OFF"
+            ]
         else:
             raise RuntimeError(f"Unsupported '{platform.system()}' platform")
 
