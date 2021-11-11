@@ -98,7 +98,7 @@ with open("pennylane_lightning/_version.py") as f:
 
 
 requirements = [
-    "ninja==1.10.2", # other versions do not work in Windows
+    "ninja", # other versions do not work in Windows
     "numpy",
     "pennylane>=0.15",
 ]
