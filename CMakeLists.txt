@@ -58,7 +58,62 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(pybind11)
 
-add_subdirectory(pennylane_lightning/src)
+
+# Set compile flags and library dependencies
+add_library(pennylane_lightning_compile_options INTERFACE)
+add_library(pennylane_lightning_external_libs INTERFACE)
+
+if(MSVC) # For M_PI
+    target_compile_options(pennylane_lightning_compile_options INTERFACE /D_USE_MATH_DEFINES)
+endif()
+
+if(ENABLE_WARNINGS)
+    message(STATUS "ENABLE_WARNINGS is ON.")
+    if(MSVC)
+        target_compile_options(pennylane_lightning_compile_options INTERFACE $<$<COMPILE_LANGUAGE:CXX>:/W4;/WX>)
+    else() 
+        target_compile_options(pennylane_lightning_compile_options INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Werror>)
+    endif()
+endif()
+
+if(ENABLE_NATIVE)
+    message(STATUS "ENABLE_NATIVE is ON. Using -march=native.")
+    target_add_compile_options(pennylane_lightning_compile_options INTERFACE -march=native)
+endif()
+
+
+if(ENABLE_OPENMP)
+    message(STATUS "ENABLE_OPENMP is ON. Using OpenMP.")
+    find_package(OpenMP IMPORTED)
+
+    if(NOT OpenMP_CXX_FOUND)
+        message(FATAL_ERROR "OpenMP is enabled but not found.\n"
+            "Install OpenMP or set ENABLE_OPENMP OFF.")
+    endif()
+
+    target_link_libraries(pennylane_lightning_external_libs INTERFACE OpenMP::OpenMP_CXX)
+endif()
+
+
+if(ENABLE_BLAS)
+    message(STATUS "ENABLE_BLAS is ON. Find BLAS.")
+    find_package(BLAS)
+
+    if(BLAS_FOUND)
+        message(STATUS "Use BLAS from ${BLA_VENDOR}.")
+    else()
+        message(FATAL_ERROR "BLAS is enabled but not found.")
+    endif()
+
+    target_link_libraries(pennylane_lightning_external_libs INTERFACE "${BLAS_LIBRARIES}")
+    target_link_options(pennylane_lightning_external_libs INTERFACE "${BLAS_LINKER_FLAGS}")
+    target_compile_options(pennylane_lightning_compile_options INTERFACE "-DBLAS=1")
+endif()
+
+
+# All CMakeLists.txt in subdirectories use pennylane_lightning_compile_options and pennylane_lightning_external_libs
+add_subdirectory(pennylane_lightning/src) 
+
 
 add_library(pennylane_lightning INTERFACE)
 target_link_libraries(pennylane_lightning INTERFACE     lightning_utils 
@@ -67,51 +122,14 @@ target_link_libraries(pennylane_lightning INTERFACE     lightning_utils
 target_include_directories(pennylane_lightning INTERFACE "pennylane_lightning/src")
 
 pybind11_add_module(lightning_qubit_ops "pennylane_lightning/src/bindings/Bindings.cpp")
-target_link_libraries(lightning_qubit_ops PRIVATE pennylane_lightning) #external_dependency)
+target_link_libraries(lightning_qubit_ops PRIVATE pennylane_lightning 
+                                                  pennylane_lightning_compile_options
+                                                  pennylane_lightning_external_libs)
 set_target_properties(lightning_qubit_ops PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
 target_compile_options(lightning_qubit_ops PRIVATE "$<$<CONFIG:RELEASE>:-W>")
 target_compile_definitions(lightning_qubit_ops PRIVATE VERSION_INFO=${VERSION_STRING})
 
-if(ENABLE_WARNINGS)
-  target_compile_options(pennylane_lightning INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Werror>)
-endif()
-
-
-if(ENABLE_NATIVE)
-    message(STATUS "ENABLE_NATIVE is ON. Using -march=native.")
-    add_compile_options(-march=native)
-    target_compile_options(pennylane_lightning INTERFACE -march=native)
-    target_compile_options(lightning_qubit_ops PRIVATE -march=native)
-endif()
-
-if(ENABLE_OPENMP)
-	message(STATUS "ENABLE_OPENMP is ON. Using OpenMP.")
-	find_package(OpenMP)
-
-	if(NOT OpenMP_CXX_FOUND)
-		message(FATAL_ERROR "OpenMP is enabled but not found.\n"
-			"Install OpenMP or set ENABLE_OPENMP OFF.")
-	endif()
-
-    target_link_libraries(pennylane_lightning INTERFACE OpenMP::OpenMP_CXX)
-    target_link_libraries(lightning_qubit_ops PRIVATE OpenMP::OpenMP_CXX)
-endif()
-
-if(ENABLE_BLAS)
-	message(STATUS "ENABLE_OPENBLAS is ON. Find BLAS.")
-	find_package(BLAS)
-
-	if(BLAS_FOUND)
-		message(STATUS "Use BLAS from ${BLA_VENDOR}.")
-	else()
-		message(FATAL_ERROR "BLAS is enabled but not found.")
-	endif()
-
-	target_link_libraries(lightning_qubit_ops PRIVATE "${BLAS_LIBRARIES}")
-	target_link_options(lightning_qubit_ops PRIVATE "${BLAS_LINKER_FLAGS}")
-	target_compile_options(lightning_qubit_ops PRIVATE "-DOPENBLAS=1")
-endif()
 
 if(BUILD_TESTS)
     enable_testing()
