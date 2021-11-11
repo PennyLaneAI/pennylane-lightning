@@ -99,9 +99,7 @@ if(ENABLE_BLAS)
     message(STATUS "ENABLE_BLAS is ON. Find BLAS.")
     find_package(BLAS)
 
-    if(BLAS_FOUND)
-        message(STATUS "Use BLAS from ${BLA_VENDOR}.")
-    else()
+    if(NOT BLAS_FOUND)
         message(FATAL_ERROR "BLAS is enabled but not found.")
     endif()
 
