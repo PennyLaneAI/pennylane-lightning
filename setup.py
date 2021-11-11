@@ -16,6 +16,7 @@ import platform
 import setuptools
 import sys
 import subprocess
+import shutil
 from pathlib import Path
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
@@ -58,9 +59,11 @@ class CMakeBuild(build_ext):
 
         # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
         configure_args = [
+            "-GNinja",
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
             f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
+            f"-DCMAKE_MAKE_PROGRAM={shutil.which('ninja')}",
         ]
 
         configure_args += self.cmake_defines
@@ -92,6 +95,7 @@ with open("pennylane_lightning/_version.py") as f:
 
 
 requirements = [
+    "ninja==1.10.2", # other versions do not work in Windows
     "numpy",
     "pennylane>=0.15",
 ]

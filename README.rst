@@ -127,7 +127,7 @@ To test the C++ code:
 Other supported options are ``-DENABLE_WARNINGS=ON``,
  ``-DENABLE_NATIVE=ON`` (for ``-march=native``), 
  ``-DENALBE_OPENMP=ON``, ``-DENALBE_BLAS=ON``, and
-``-DENABLE_CLANG_TIDY=ON``.
+ ``-DENABLE_CLANG_TIDY=ON``.
 
 .. installation-end-inclusion-marker-do-not-remove
 
