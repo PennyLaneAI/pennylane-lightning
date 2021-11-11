@@ -140,14 +140,15 @@ We recommend to use ``[x64 (or x86)] Native Tools Command Prompt for VS [version
 
 .. code-block:: console
 
-   $ cmake --version
-   $ python --version
+    $ cmake --version
+    $ python --version
 
 Then a common command will work.
 
 .. code-block:: console
 
-   $ pip install -e .
+    $ pip install -r requirements.txt
+    $ pip install -e .
 
 Note that OpenMP and BLAS are disabled in this setting.
 
