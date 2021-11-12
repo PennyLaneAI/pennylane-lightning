@@ -40,6 +40,9 @@ jobs:
         with:
           python-version: '3.7'
 
+      - users: actions/get-cmake@latest
+        name: Install CMake
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v1.12.0
 
