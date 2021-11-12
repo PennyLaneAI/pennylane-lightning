@@ -13,7 +13,7 @@ python:
   system_packages: true
 
 build:
-  image: latest
+  os: ubuntu-20.04
   apt_packages:
     - cmake
     - build-essential
