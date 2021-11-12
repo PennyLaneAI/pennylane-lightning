@@ -23,8 +23,6 @@ from setuptools.command.build_ext import build_ext
 
 from distutils.util import get_platform
 
-# Convert distutils Windows platform specifiers to CMake -A arguments
-
 class CMakeExtension(Extension):
     def __init__(self, name, sourcedir = ""):
         Extension.__init__(self, name, sources = [])

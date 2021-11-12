@@ -10,11 +10,11 @@ env:
   # MacOS specific build settings
   CIBW_BEFORE_ALL_MACOS: |
     brew uninstall --force oclint
-    brew install libomp
+    brew install libomp openblas
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
-    pip install pybind11
+    pip install pybind11 ninja
 
   # Testing of built wheels
   CIBW_TEST_REQUIRES: numpy==1.19.5 scipy pytest pytest-cov pytest-mock flaky
