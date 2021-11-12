@@ -17,5 +17,5 @@ build:
   apt_packages:
     - cmake
     - build-essential
-    - libopenblas
+    - libopenblas-base
     - libopenblas-dev
