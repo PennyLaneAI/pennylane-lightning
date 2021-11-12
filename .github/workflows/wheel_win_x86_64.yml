@@ -7,7 +7,7 @@ on:
 
 env:
   CIBW_BUILD: 'cp37-* cp38-* cp39-*'
-  
+
   CIBW_ARCHS_WINDOWS: "AMD64"
 
   # Python build settings
@@ -16,6 +16,9 @@ env:
 
   # Testing of built wheels
   CIBW_TEST_REQUIRES: numpy==1.19.5 scipy pytest pytest-cov pytest-mock flaky
+
+  CIBW_BEFORE_TEST: |
+    call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
 
   CIBW_TEST_COMMAND: |
     pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
