@@ -7,6 +7,8 @@ on:
 
 env:
   CIBW_BUILD: 'cp37-* cp38-* cp39-*'
+  
+  CIBW_ARCHS_WINDOWS: "AMD64"
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
