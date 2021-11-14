@@ -16,6 +16,7 @@ This module contains the :class:`~.LightningQubit` class, a PennyLane simulator 
 interfaces with C++ for fast linear algebra calculations.
 """
 from warnings import warn
+import platform, os
 
 import numpy as np
 from pennylane import (
@@ -32,9 +33,8 @@ from pennylane.operation import Expectation
 from ._version import __version__
 
 try:
-    import platform
     if platform.system() == 'Windows':
-        """
+        r"""
         Add the current directory to DLL path.
         See https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew
         """
