@@ -32,6 +32,15 @@ from pennylane.operation import Expectation
 from ._version import __version__
 
 try:
+    import platform
+    if platform.system() == 'Windows':
+        """
+        Add the current directory to DLL path.
+        See https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew
+        """
+        os.add_dll_directory(os.path.dirname(os.path.abspath(__file__)))
+
+
     from .lightning_qubit_ops import (
         apply,
         StateVectorC64,
