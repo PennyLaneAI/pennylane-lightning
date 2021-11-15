@@ -513,7 +513,7 @@ template <class T = double> class AdjointJacobian {
         // https://www.openmp.org/wp-content/uploads/openmp-examples-4.5.0.pdf
         std::exception_ptr ex = nullptr;
         size_t num_observables = observables.size();
-        #if defined _OPENMP
+        #if defined(_OPENMP)
             #pragma omp parallel default(none)                                 \
             shared(states, reference_state, observables, ex, num_observables)
         {
@@ -524,16 +524,16 @@ template <class T = double> class AdjointJacobian {
                     states[h_i].updateData(reference_state.getDataVector());
                     applyObservable(states[h_i], observables[h_i]);
                 } catch (...) {
-                    #if defined _OPENMP
+                    #if defined(_OPENMP)
                         #pragma omp critical
                     #endif
                     ex = std::current_exception();
-                    #if defined _OPENMP
+                    #if defined(_OPENMP)
                         #pragma omp cancel for
                     #endif
                 }
             }
-        #if defined _OPENMP
+        #if defined(_OPENMP)
             if (ex) {
                 #pragma omp cancel parallel
             }
@@ -563,7 +563,7 @@ template <class T = double> class AdjointJacobian {
         // https://www.openmp.org/wp-content/uploads/openmp-examples-4.5.0.pdf
         std::exception_ptr ex = nullptr;
         size_t num_states = states.size();
-        #if defined _OPENMP
+        #if defined(_OPENMP)
             #pragma omp parallel default(none)                                 \
                 shared(states, operations, op_idx, ex, num_states)
         {
@@ -573,16 +573,16 @@ template <class T = double> class AdjointJacobian {
                 try {
                     applyOperationAdj(states[obs_idx], operations, op_idx);
                 } catch (...) {
-                    #if defined _OPENMP
+                    #if defined(_OPENMP)
                         #pragma omp critical
                     #endif
                     ex = std::current_exception();
-                    #if defined _OPENMP
+                    #if defined(_OPENMP)
                         #pragma omp cancel for
                     #endif
                 }
             }
-        #if defined _OPENMP
+        #if defined(_OPENMP)
             if (ex) {
                 #pragma omp cancel parallel
             }
@@ -739,7 +739,7 @@ template <class T = double> class AdjointJacobian {
                              1);
                         // clang-format off
 
-                        #if defined _OPENMP
+                        #if defined(_OPENMP)
                             #pragma omp parallel for default(none)   \
                             shared(H_lambda, jac, mu, scalingFactor, \
                                 trainableParamNumber, tp_it,         \

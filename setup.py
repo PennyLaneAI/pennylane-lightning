@@ -64,7 +64,6 @@ class CMakeBuild(build_ext):
             f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
             f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
         ]
-
         configure_args += self.cmake_defines
         
         build_args = []
@@ -97,7 +96,6 @@ class CMakeBuild(build_ext):
 
 with open("pennylane_lightning/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
-
 
 requirements = [
     "ninja", 

@@ -72,7 +72,7 @@ if(ENABLE_WARNINGS)
     message(STATUS "ENABLE_WARNINGS is ON.")
     if(MSVC)
         target_compile_options(pennylane_lightning_compile_options INTERFACE $<$<COMPILE_LANGUAGE:CXX>:/W4;/WX>)
-    else() 
+    else()
         target_compile_options(pennylane_lightning_compile_options INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Werror>)
     endif()
 endif()
@@ -115,17 +115,17 @@ endif()
 
 
 # All CMakeLists.txt in subdirectories use pennylane_lightning_compile_options and pennylane_lightning_external_libs
-add_subdirectory(pennylane_lightning/src) 
+add_subdirectory(pennylane_lightning/src)
 
 
 add_library(pennylane_lightning INTERFACE)
-target_link_libraries(pennylane_lightning INTERFACE     lightning_utils 
-                                                        lightning_simulator 
+target_link_libraries(pennylane_lightning INTERFACE     lightning_utils
+                                                        lightning_simulator
                                                         lightning_algorithms)
 target_include_directories(pennylane_lightning INTERFACE "pennylane_lightning/src")
 
 pybind11_add_module(lightning_qubit_ops "pennylane_lightning/src/bindings/Bindings.cpp")
-target_link_libraries(lightning_qubit_ops PRIVATE pennylane_lightning 
+target_link_libraries(lightning_qubit_ops PRIVATE pennylane_lightning
                                                   pennylane_lightning_compile_options
                                                   pennylane_lightning_external_libs)
 set_target_properties(lightning_qubit_ops PROPERTIES CXX_VISIBILITY_PRESET hidden)

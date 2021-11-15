@@ -1,8 +1,9 @@
-name: Wheels
+name: Wheel::MacOS::ARM
 on:
   push:
     branches:
       - master
+  release:
 
 env:
   CIBW_BUILD: 'cp37-* cp38-* cp39-*'
@@ -10,7 +11,6 @@ env:
   # MacOS specific build settings
   CIBW_BEFORE_ALL_MACOS: |
     brew uninstall --force oclint
-    brew install libomp
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
@@ -57,7 +57,7 @@ jobs:
           CIBW_ARCHS_MACOS: ${{ matrix.arch }}
 
       - uses: actions/upload-artifact@v2
-        if: github.ref == 'refs/heads/master'
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
         with:
           name: ${{ runner.os }}-wheels.zip
           path: ./wheelhouse/*.whl

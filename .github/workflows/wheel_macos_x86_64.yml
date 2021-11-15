@@ -1,9 +1,10 @@
-name: Wheels
+name: Wheel::MacOS::Intel
 on:
   push:
     branches:
       - master
   pull_request:
+  release:
 
 env:
   CIBW_BUILD: 'cp37-* cp38-* cp39-*'
@@ -57,9 +58,10 @@ jobs:
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ARCHS_MACOS: ${{matrix.arch}}
+          USE_OMP: 1
 
       - uses: actions/upload-artifact@v2
-        if: github.ref == 'refs/heads/master'
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
         with:
           name: ${{ runner.os }}-wheels.zip
           path: ./wheelhouse/*.whl
