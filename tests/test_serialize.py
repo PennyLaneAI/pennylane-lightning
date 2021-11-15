@@ -22,7 +22,7 @@ from pennylane_lightning._serialize import _serialize_obs, _serialize_ops, _obs_
 import pytest
 
 try:
-    from pennylane_lightning.lightning_qubit_ops import ObsStructC128
+    from pennylane_lightning.lightning_qubit_ops import ObsStructC64
 except ImportError:
     pytestmark = pytest.mark.skip
 
@@ -88,12 +88,12 @@ class TestSerializeObs:
         mock_obs = mock.MagicMock()
 
         with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, "ObsStructC128", mock_obs)
+            m.setattr(pennylane_lightning._serialize, "ObsStructC64", mock_obs)
             _serialize_obs(tape, self.wires_dict)
 
         s = mock_obs.call_args[0]
         s_expected = (["PauliZ"], [], [[0]])
-        ObsStructC128(*s_expected)
+        ObsStructC64(*s_expected)
 
         assert s == s_expected
 
@@ -105,12 +105,12 @@ class TestSerializeObs:
         mock_obs = mock.MagicMock()
 
         with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, "ObsStructC128", mock_obs)
+            m.setattr(pennylane_lightning._serialize, "ObsStructC64", mock_obs)
             _serialize_obs(tape, self.wires_dict)
 
         s = mock_obs.call_args[0]
         s_expected = (["PauliZ", "PauliZ"], [], [[0], [1]])
-        ObsStructC128(*s_expected)
+        ObsStructC64(*s_expected)
 
         assert s == s_expected
 
@@ -124,7 +124,7 @@ class TestSerializeObs:
         mock_obs = mock.MagicMock()
 
         with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, "ObsStructC128", mock_obs)
+            m.setattr(pennylane_lightning._serialize, "ObsStructC64", mock_obs)
             _serialize_obs(tape, self.wires_dict)
 
         s = mock_obs.call_args_list
@@ -133,7 +133,7 @@ class TestSerializeObs:
             (["PauliZ", "PauliX"], [], [[0], [1]]),
             (["Hadamard"], [], [[1]]),
         ]
-        [ObsStructC128(*s_expected) for s_expected in s_expected]
+        [ObsStructC64(*s_expected) for s_expected in s_expected]
 
         assert s[0][0] == s_expected[0]
         assert s[1][0] == s_expected[1]
@@ -146,12 +146,12 @@ class TestSerializeObs:
         mock_obs = mock.MagicMock()
 
         with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, "ObsStructC128", mock_obs)
+            m.setattr(pennylane_lightning._serialize, "ObsStructC64", mock_obs)
             _serialize_obs(tape, self.wires_dict)
 
         s = mock_obs.call_args[0]
         s_expected = (["Hermitian"], [np.eye(4).ravel()], [[0, 1]])
-        ObsStructC128(*s_expected)
+        ObsStructC64(*s_expected)
 
         assert s[0] == s_expected[0]
         assert np.allclose(s[1], s_expected[1])
@@ -165,7 +165,7 @@ class TestSerializeObs:
         mock_obs = mock.MagicMock()
 
         with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, "ObsStructC128", mock_obs)
+            m.setattr(pennylane_lightning._serialize, "ObsStructC64", mock_obs)
             _serialize_obs(tape, self.wires_dict)
 
         s = mock_obs.call_args[0]
@@ -174,7 +174,7 @@ class TestSerializeObs:
             [np.eye(4).ravel(), np.eye(2).ravel()],
             [[0, 1], [2]],
         )
-        ObsStructC128(*s_expected)
+        ObsStructC64(*s_expected)
 
         assert s[0] == s_expected[0]
         assert np.allclose(s[1][0], s_expected[1][0])
@@ -189,12 +189,12 @@ class TestSerializeObs:
         mock_obs = mock.MagicMock()
 
         with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, "ObsStructC128", mock_obs)
+            m.setattr(pennylane_lightning._serialize, "ObsStructC64", mock_obs)
             _serialize_obs(tape, self.wires_dict)
 
         s = mock_obs.call_args[0]
         s_expected = (["Hermitian", "PauliY"], [np.eye(4).ravel()], [[0, 1], [2]])
-        ObsStructC128(*s_expected)
+        ObsStructC64(*s_expected)
 
         assert s[0] == s_expected[0]
         assert np.allclose(s[1][0], s_expected[1][0])
@@ -203,10 +203,10 @@ class TestSerializeObs:
     def test_integration(self, monkeypatch):
         """Test for a comprehensive range of returns"""
         wires_dict = {"a": 0, 1: 1, "b": 2, -1: 3, 3.141: 4, "five": 5, 6: 6, 77: 7, 9: 8}
-        I = np.eye(2).astype(np.complex128)
-        X = qml.PauliX.matrix.astype(np.complex128)
-        Y = qml.PauliY.matrix.astype(np.complex128)
-        Z = qml.PauliZ.matrix.astype(np.complex128)
+        I = np.eye(2).astype(np.complex64)
+        X = qml.PauliX.matrix.astype(np.complex64)
+        Y = qml.PauliY.matrix.astype(np.complex64)
+        Z = qml.PauliZ.matrix.astype(np.complex64)
 
         mock_obs = mock.MagicMock()
 
@@ -218,7 +218,7 @@ class TestSerializeObs:
             qml.expval(qml.Hermitian(Z, wires="a") @ qml.Identity(1))
 
         with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, "ObsStructC128", mock_obs)
+            m.setattr(pennylane_lightning._serialize, "ObsStructC64", mock_obs)
             _serialize_obs(tape, wires_dict)
 
         s = mock_obs.call_args_list
@@ -227,10 +227,10 @@ class TestSerializeObs:
             (["PauliZ", "PauliX"], [], [[0], [2]]),
             (["Hermitian"], [I.ravel()], [[1]]),
             (["PauliZ", "Hermitian", "Hadamard"], [[], X.ravel(), []], [[3], [4], [5]]),
-            # (["Projector", "Hermitian"], [[],Y.ravel().astype(np.complex128)], [[6, 7], [8]]),
+            # (["Projector", "Hermitian"], [[],Y.ravel().astype(np.complex64)], [[6, 7], [8]]),
             (["Hermitian", "Identity"], [Z.ravel(), []], [[0], [1]]),
         ]
-        [ObsStructC128(*s_expected) for s_expected in s_expected]
+        [ObsStructC64(*s_expected) for s_expected in s_expected]
 
         assert all(s1[0][0] == s2[0] for s1, s2 in zip(s, s_expected))
         for s1, s2 in zip(s, s_expected):
@@ -381,7 +381,7 @@ class TestSerializeOps:
                     [],
                     [],
                     [],
-                    qml.QubitUnitary(np.eye(4, dtype=np.complex128), wires=[0, 1]).matrix,
+                    qml.QubitUnitary(np.eye(4, dtype=np.complex64), wires=[0, 1]).matrix,
                     qml.templates.QFT(wires=[0, 1, 2]).inv().matrix,
                     qml.DoubleExcitation(0.555, wires=[3, 2, 1, 0]).matrix,
                 ],

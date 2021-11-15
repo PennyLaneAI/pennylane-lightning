@@ -73,8 +73,8 @@ class TestExpval:
             rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
         )
 
-        res = np.array([dev.expval(O1), dev.expval(O2)])
-        assert np.allclose(res, np.array([np.sin(theta) * np.sin(phi), np.sin(phi)]), tol)
+        res = np.array([dev.expval(O1), dev.expval(O2)], dtype=np.complex64)
+        assert np.allclose(res, np.array([np.sin(theta) * np.sin(phi), np.sin(phi)], dtype=np.complex64))
 
     def test_pauliy_expectation(self, theta, phi, qubit_device_3_wires, tol):
         """Test that PauliY expectation value is correct"""
@@ -132,7 +132,7 @@ class TestTensorExpval:
 
         expected = np.sin(theta) * np.sin(phi) * np.sin(varphi)
 
-        assert np.allclose(res, expected, tol)
+        assert np.allclose(res, expected)
 
     def test_pauliz_identity(self, theta, phi, varphi, qubit_device_3_wires, tol):
         """Test that a tensor product involving PauliZ and Identity works

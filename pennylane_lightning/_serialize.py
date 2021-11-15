@@ -23,7 +23,7 @@ from pennylane.operation import Observable, Tensor
 from pennylane.tape import QuantumTape
 
 try:
-    from .lightning_qubit_ops import StateVectorC128, ObsStructC128
+    from .lightning_qubit_ops import StateVectorC128, ObsStructC128, StateVectorC64, ObsStructC64
 except ImportError:
     pass
 
@@ -81,13 +81,14 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict) -> List:
             if is_tensor:
                 for o_ in o.obs:
                     if not _obs_has_kernel(o_):
-                        params.append(o_.matrix.ravel().astype(np.complex128))
+                        params.append(o_.matrix.ravel().astype(np.complex64))
                     else:
                         params.append([])
             else:
-                params.append(o.matrix.ravel().astype(np.complex128))
+                params.append(o.matrix.ravel().astype(np.complex64))
 
-        ob = ObsStructC128(name, params, wires)
+        # ob = ObsStructC128(name, params, wires)
+        ob = ObsStructC64(name, params, wires)
         obs.append(ob)
 
     return obs
@@ -132,7 +133,7 @@ def _serialize_ops(
             name = single_op.name if not is_inverse else single_op.name[:-4]
             names.append(name)
 
-            if getattr(StateVectorC128, name, None) is None:
+            if getattr(StateVectorC64, name, None) is None:
                 params.append([])
                 mats.append(single_op.matrix)
 

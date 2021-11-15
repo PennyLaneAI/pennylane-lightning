@@ -139,7 +139,7 @@ class TestAdjointJacobian:
 
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_unsupported_hermitian_expectation(self, dev):
-        obs = np.array([[1, 0], [0, -1]], dtype=np.complex128, requires_grad=False)
+        obs = np.array([[1, 0], [0, -1]], dtype=np.complex64, requires_grad=False)
 
         with qml.tape.JacobianTape() as tape:
             qml.RY(0.1, wires=(0,))
@@ -175,6 +175,8 @@ class TestAdjointJacobian:
 
         # compare to finite differences
         numeric_val = tape.jacobian(dev, method="numeric")
+        print(calculated_val)
+        print(numeric_val)
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))

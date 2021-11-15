@@ -36,6 +36,7 @@ try:
         apply,
         StateVectorC64,
         StateVectorC128,
+        AdjointJacobianC64,
         AdjointJacobianC128,
     )
     from ._serialize import _serialize_obs, _serialize_ops
@@ -139,9 +140,10 @@ class LightningQubit(DefaultQubit):
         Returns:
             array[complex]: the output state tensor
         """
-        assert state.dtype == np.complex128
-        state_vector = np.ravel(state)
-        sim = StateVectorC128(state_vector)
+        # assert state.dtype == np.complex128
+        state_vector = np.ravel(state).astype(np.complex64)
+        # sim = StateVectorC128(state_vector)
+        sim = StateVectorC64(state_vector)
 
         for o in operations:
             name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
@@ -213,7 +215,8 @@ class LightningQubit(DefaultQubit):
                 self.execute(tape)
             ket = np.ravel(self._pre_rotated_state)
 
-        adj = AdjointJacobianC128()
+        # adj = AdjointJacobianC128()
+        adj = AdjointJacobianC64()
 
         obs_serialized = _serialize_obs(tape, self.wire_map)
         ops_serialized, use_sp = _serialize_ops(tape, self.wire_map)
@@ -227,7 +230,7 @@ class LightningQubit(DefaultQubit):
         )  # exclude first index if explicitly setting sv
 
         jac = adj.adjoint_jacobian(
-            StateVectorC128(ket),
+            StateVectorC64(ket),
             obs_serialized,
             ops_serialized,
             tp_shift,
