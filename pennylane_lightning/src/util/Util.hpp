@@ -242,8 +242,9 @@ omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
 
 #if defined(_OPENMP)
     size_t nthreads = data_size / NTERMS;
-    if (nthreads < 1)
+    if (nthreads < 1) {
         nthreads = 1;
+    }
 #endif
 
 #if defined(_OPENMP)
@@ -315,8 +316,9 @@ omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
 
 #if defined(_OPENMP)
     size_t nthreads = data_size / NTERMS;
-    if (nthreads < 1)
+    if (nthreads < 1) {
         nthreads = 1;
+    }
 #endif
 
 #if defined(_OPENMP)
