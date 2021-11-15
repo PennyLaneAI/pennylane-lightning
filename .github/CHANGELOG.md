@@ -16,29 +16,31 @@ This release contains contributions from (in alphabetical order):
 
 ---
 
-# Release 0.19.0-dev
-
-### New features since last release
+# Release 0.19.0
 
 ### Improvements
 
 * The performance of parametric gates has been improved.
-[(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
+  [(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
 
 * AVX support is enabled for Linux users on Intel/AMD platforms.
-[(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
+  [(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
 
-* PennyLane-Lightning has been updated to conform with clang-tidy recommendations for modernization, offering performance improvements across all use-cases.
-[(#153)](https://github.com/PennyLaneAI/pennylane-lightning/pull/153)
-
-### Documentation
+* PennyLane-Lightning has been updated to conform with clang-tidy
+  recommendations for modernization, offering performance improvements across
+  all use-cases.
+  [(#153)](https://github.com/PennyLaneAI/pennylane-lightning/pull/153)
 
 ### Breaking changes
 
-* Linux users on x86_64 must have a CPU supporting AVX.
-[(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
+* Linux users on `x86_64` must have a CPU supporting AVX.
+  [(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
 
 ### Bug fixes
+
+* OpenMP built with Intel MacOS CI runners causes failures on M1 Macs. OpenMP is currently
+  disabled in the built wheels until this can be resolved with Github Actions runners.
+  [(#166)](https://github.com/PennyLaneAI/pennylane-lightning/pull/166)
 
 ### Contributors
 
