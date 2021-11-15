@@ -18,6 +18,9 @@ This release contains contributions from (in alphabetical order):
 
 # Release 0.19.0
 
+* Add Cache-Friendly DOTC, GEMV, GEMM along with BLAS Support.
+[(#155)](https://github.com/PennyLaneAI/pennylane-lightning/pull/155)
+
 ### Improvements
 
 * The performance of parametric gates has been improved.
@@ -46,7 +49,7 @@ This release contains contributions from (in alphabetical order):
 
 This release contains contributions from (in alphabetical order):
 
-Lee James O'Riordan
+Ali Asadi, Lee James O'Riordan
 
 ---
 
