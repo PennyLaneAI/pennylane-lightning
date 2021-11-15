@@ -36,8 +36,6 @@
 constexpr bool USE_CBLAS = true;
 #else
 constexpr bool USE_CBLAS = false;
-#endif
-
 #ifndef CBLAS_TRANSPOSE
 using CBLAS_TRANSPOSE = enum CBLAS_TRANSPOSE {
     CblasNoTrans = 111,
@@ -51,6 +49,7 @@ using CBLAS_LAYOUT = enum CBLAS_LAYOUT {
     CblasRowMajor = 101,
     CblasColMajor = 102
 };
+#endif
 #endif
 /// @endcond
 
@@ -224,12 +223,14 @@ template <class T> inline auto dimSize(const std::vector<T> &data) -> size_t {
  * @brief Calculates the inner-product using OpenMP.
  *
  * @tparam T Floating point precision type.
+ * @tparam NTERMS Number of terms proceeds by each thread
  * @param v1 Complex data array 1.
  * @param v2 Complex data array 2.
  * @param result Calculated inner-product of v1 and v2.
  * @param data_size Size of data arrays.
  */
-template <class T>
+template <class T,
+          size_t NTERMS = (1 << 19)> // NOLINT(readability-magic-numbers)
 inline static void
 omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
               std::complex<T> &result, const size_t data_size) {
@@ -240,9 +241,15 @@ omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
 #endif
 
 #if defined(_OPENMP)
-#pragma omp parallel for default(none) shared(v1, v2, data_size)               \
-    reduction(sm                                                               \
-              : result)
+    size_t nthreads = data_size / NTERMS;
+    if (nthreads < 1)
+        nthreads = 1;
+#endif
+
+#if defined(_OPENMP)
+#pragma omp parallel for num_threads(nthreads) default(none)                   \
+    shared(v1, v2, data_size) reduction(sm                                     \
+                                        : result)
 #endif
     for (size_t i = 0; i < data_size; i++) {
         result = ConstSum(result, ConstMult(*(v1 + i), *(v2 + i)));
@@ -260,7 +267,7 @@ omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
  * @return std::complex<T> Result of inner product operation.
  */
 template <class T,
-          size_t STD_CROSSOVER = 1024> // NOLINT(readability-magic-numbers)
+          size_t STD_CROSSOVER = (1 << 20)> // NOLINT(readability-magic-numbers)
 inline auto innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
                       const size_t data_size) -> std::complex<T> {
     std::complex<T> result(0, 0);
@@ -289,12 +296,14 @@ inline auto innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
  * with the the first dataset conjugated.
  *
  * @tparam T Floating point precision type.
+ * @tparam NTERMS Number of terms proceeds by each thread
  * @param v1 Complex data array 1.
  * @param v2 Complex data array 2.
  * @param result Calculated inner-product of v1 and v2.
  * @param data_size Size of data arrays.
  */
-template <class T>
+template <class T,
+          size_t NTERMS = (1 << 19)> // NOLINT(readability-magic-numbers)
 inline static void
 omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
                std::complex<T> &result, const size_t data_size) {
@@ -305,9 +314,15 @@ omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
 #endif
 
 #if defined(_OPENMP)
-#pragma omp parallel for default(none) shared(v1, v2, data_size)               \
-    reduction(sm                                                               \
-              : result)
+    size_t nthreads = data_size / NTERMS;
+    if (nthreads < 1)
+        nthreads = 1;
+#endif
+
+#if defined(_OPENMP)
+#pragma omp parallel for num_threads(nthreads) default(none)                   \
+    shared(v1, v2, data_size) reduction(sm                                     \
+                                        : result)
 #endif
     for (size_t i = 0; i < data_size; i++) {
         result = ConstSum(result, ConstMultConj(*(v1 + i), *(v2 + i)));
@@ -326,7 +341,7 @@ omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
  * @return std::complex<T> Result of inner product operation.
  */
 template <class T,
-          size_t STD_CROSSOVER = 1024> // NOLINT(readability-magic-numbers)
+          size_t STD_CROSSOVER = (1 << 20)> // NOLINT(readability-magic-numbers)
 inline auto innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
                        const size_t data_size) -> std::complex<T> {
     std::complex<T> result(0, 0);
