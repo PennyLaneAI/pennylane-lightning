@@ -8,7 +8,7 @@
 
 ### Documentation
 
-* Compile guide for MSVC  is added.
+* Compile guide for MSVC is added.
 [(#176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/176)
 
 ### Bug fixes
