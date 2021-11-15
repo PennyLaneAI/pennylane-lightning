@@ -227,10 +227,10 @@ class LightningQubit(DefaultQubit):
         )  # exclude first index if explicitly setting sv
 
         jac = adj.adjoint_jacobian(
-            StateVectorC128(ket), 
-            obs_serialized, 
-            ops_serialized, 
-            tp_shift, 
+            StateVectorC128(ket),
+            obs_serialized,
+            ops_serialized,
+            tp_shift,
             tape.num_params,
         )
         return jac
