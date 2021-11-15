@@ -72,7 +72,10 @@ class CMakeBuild(build_ext):
         if platform.system() == "Darwin":
             configure_args += []
         elif platform.system() == "Linux":
-            configure_args += []
+            if platform.machine() == "x86_64":
+                configure_args += [
+                    "-DENABLE_AVX=ON"
+                ] # Enable AVX if x64 on Linux
         elif platform.system() == "Windows":
             configure_args += [
                 "-DENABLE_OPENMP=OFF",

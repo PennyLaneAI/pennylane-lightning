@@ -34,8 +34,9 @@ option(ENABLE_CLANG_TIDY "Enable clang-tidy build checks" OFF)
 # Compile options
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
+option(ENABLE_AVX "Enable AVX support" ON)
 option(ENABLE_OPENMP "Enable OpenMP" ON)
-option(ENABLE_BLAS "Enable BLAS" ON)
+option(ENABLE_BLAS "Enable BLAS" OFF)
 
 # Other build options
 option(BUILD_TESTS "Build cpp tests" OFF)
@@ -78,9 +79,13 @@ endif()
 
 if(ENABLE_NATIVE)
     message(STATUS "ENABLE_NATIVE is ON. Using -march=native.")
-    target_add_compile_options(pennylane_lightning_compile_options INTERFACE -march=native)
+    target_compile_options(pennylane_lightning_compile_options INTERFACE -march=native)
 endif()
 
+if(ENABLE_AVX)
+    message(STATUS "ENABLE_AVX is ON.")
+    target_compile_options(pennylane_lightning_compile_options INTERFACE -mavx)
+endif()
 
 if(ENABLE_OPENMP)
     message(STATUS "ENABLE_OPENMP is ON. Using OpenMP.")
