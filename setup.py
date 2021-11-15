@@ -91,11 +91,16 @@ class BuildExt(build_ext):
             opts["unix"].remove("-fopenmp")
             opts["unix"].remove("-shared")
 
-        darwin_opts = [
-            "-stdlib=libc++",
-            "-Xpreprocessor",
-            "-fopenmp",
-        ]
+        darwin_opts = ["-stdlib=libc++"]
+
+        # Used to enable OpenMP only on Intel 
+        # Macs due to CI available of M1
+        if os.environ.get("USE_OMP"):
+            darwin_opts.extend([
+                "-Xpreprocessor",
+                "-fopenmp",
+            ])
+
         darwin_opts.append("-mmacosx-version-min=10.14")
         
         c_opts["unix"] += darwin_opts
@@ -144,7 +149,7 @@ if not os.environ.get("SKIP_COMPILATION", False):
         libraries += ["openblas"]
         extra_link_args += ["-lopenblas"]
 
-    if platform.system() == "Darwin":
+    if platform.system() == "Darwin" and os.environ.get("USE_OMP"):
         include_dirs += ["/usr/local/opt/libomp/include"]
         library_dirs += ["/usr/local/opt/libomp/lib"]
         libraries += ["omp"]

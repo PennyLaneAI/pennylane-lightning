@@ -1,8 +1,10 @@
-name: Wheels
+name: Wheel::Linux::ARM
 on:
   push:
     branches:
       - master
+  release:
+    types: [published]
 
 env:
   CIBW_BUILD: 'cp37-* cp38-* cp39-*'
@@ -55,7 +57,7 @@ jobs:
           CIBW_ARCHS_LINUX: ${{matrix.arch}}
 
       - uses: actions/upload-artifact@v2
-        if: github.ref == 'refs/heads/master'
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
         with:
           name: ${{ runner.os }}-wheels.zip
           path: ./wheelhouse/*.whl
