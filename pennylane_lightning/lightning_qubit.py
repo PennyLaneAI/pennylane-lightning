@@ -18,6 +18,7 @@ interfaces with C++ for fast linear algebra calculations.
 from warnings import warn
 
 import numpy as np
+from numpy.core.fromnumeric import transpose
 from pennylane import (
     BasisState,
     DeviceError,
@@ -220,11 +221,12 @@ class LightningQubit(DefaultQubit):
 
         ops_serialized = adj.create_ops_list(*ops_serialized)
 
-        tape_trainable_params_set = set(tape.trainable_params)
+        # tape_trainable_params_set = set(tape.trainable_params)
+        trainable_params = sorted(tape.trainable_params)
+        first_elem = 1 if trainable_params[0] == 0 else 0
+
         tp_shift = (
-            tape_trainable_params_set
-            if not use_sp
-            else {i - 1 for i in tape_trainable_params_set.difference({0})}
+            trainable_params if not use_sp else [i - 1 for i in trainable_params[first_elem:]]
         )  # exclude first index if explicitly setting sv
 
         jac = adj.adjoint_jacobian(
