@@ -77,7 +77,6 @@ def op(op_name):
         "QubitCarry": qml.QubitCarry(wires=[0, 1, 2, 3]),
         "QubitUnitary": qml.QubitUnitary(np.eye(2) * 1j, wires=0),
     }
-    # return getattr(qml, op_name)
     return ops_list.get(op_name)
 
 
