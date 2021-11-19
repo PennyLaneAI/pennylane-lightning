@@ -43,13 +43,15 @@ def test_gate_unitary_correct(op, op_name):
     ):
         pytest.skip("Skipping operation.")  # These are tested in the device test-suite
 
-    wires = op.num_wires
+    # wires = op.num_wires
+    wires = 1
 
     if wires == -1:  # This occurs for operations that do not have a predefined number of wires
         wires = 4
 
     dev = qml.device("lightning.qubit", wires=wires)
-    num_params = op.num_params
+    # num_params = op.num_params
+    num_params = 1
     p = [0.1] * num_params
 
     @qml.qnode(dev)
