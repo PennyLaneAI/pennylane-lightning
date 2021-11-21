@@ -10,6 +10,18 @@ project("gate_benchmark"
         LANGUAGES CXX
 )
 
+option(ENABLE_WARNINGS "Enable warnings" ON)
+option(ENABLE_CLANG_TIDY "Enable clang-tidy build checks" OFF)
+
+if(ENABLE_CLANG_TIDY)
+    if (NOT DEFINED CLANG_TIDY_BINARY)
+        set(CLANG_TIDY_BINARY clang-tidy)
+    endif()
+    set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY_BINARY};
+                            -extra-arg=-std=c++17;
+    )
+endif()
+
 #############################
 ## II. Fetch project
 #############################
@@ -28,7 +40,7 @@ FetchContent_MakeAvailable(Pennylane-lightning)
 #############################
 
 set(CMAKE_CXX_STANDARD 17) # At least C++17 is required
-# set(CMAKE_CXX_FLAGS "-O3") # Not including flags here as I pass them via commandline args in bash script (I would normally set it here)
+set(CMAKE_CXX_FLAGS "-O3") # Not including flags here as I pass them via commandline args in bash script (I would normally set it here)
 
 add_executable(gate_benchmark gate_benchmark.cpp)
 target_link_libraries(gate_benchmark pennylane_lightning)
