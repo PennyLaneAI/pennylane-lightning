@@ -1,3 +1,4 @@
+
 ### New features since last release
 
 * Added examples folder containing aggregate gate performance test.
@@ -11,27 +12,15 @@ Isidor Schoch
 
 ---
 
-# Release 0.19.0-dev
+# Release 0.20.0-dev
 
 ### New features since last release
 
-### Improvements
-
-* The performance of parametric gates has been improved.
-[(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
-
-* AVX support is enabled for Linux users on Intel/AMD platforms.
-[(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
-
-* PennyLane-Lightning has been updated to conform with clang-tidy recommendations for modernization, offering performance improvements across all use-cases.
-[(#153)](https://github.com/PennyLaneAI/pennylane-lightning/pull/153)
-
-### Documentation
-
 ### Breaking changes
 
-* Linux users on x86_64 must have a CPU supporting AVX.
-[(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
+### Improvements
+
+### Documentation
 
 ### Bug fixes
 
@@ -39,7 +28,42 @@ Isidor Schoch
 
 This release contains contributions from (in alphabetical order):
 
-Lee James O'Riordan
+---
+
+# Release 0.19.0
+
+* Add Cache-Friendly DOTC, GEMV, GEMM along with BLAS Support.
+[(#155)](https://github.com/PennyLaneAI/pennylane-lightning/pull/155)
+
+### Improvements
+
+* The performance of parametric gates has been improved.
+  [(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
+
+* AVX support is enabled for Linux users on Intel/AMD platforms.
+  [(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
+
+* PennyLane-Lightning has been updated to conform with clang-tidy
+  recommendations for modernization, offering performance improvements across
+  all use-cases.
+  [(#153)](https://github.com/PennyLaneAI/pennylane-lightning/pull/153)
+
+### Breaking changes
+
+* Linux users on `x86_64` must have a CPU supporting AVX.
+  [(#157)](https://github.com/PennyLaneAI/pennylane-lightning/pull/157)
+
+### Bug fixes
+
+* OpenMP built with Intel MacOS CI runners causes failures on M1 Macs. OpenMP is currently
+  disabled in the built wheels until this can be resolved with Github Actions runners.
+  [(#166)](https://github.com/PennyLaneAI/pennylane-lightning/pull/166)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Ali Asadi, Lee James O'Riordan
 
 ---
 

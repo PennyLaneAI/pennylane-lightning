@@ -142,4 +142,201 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             CHECK(isApproxEqual(result, expected_result, 1e-5));
         }
     }
+    SECTION("matrixVecProd") {
+        SECTION("Simple Iterative") {
+            for (size_t m = 2; m < 8; m++) {
+                std::vector<std::complex<double>> mat(m * m, {1, 1});
+                std::vector<std::complex<double>> v_in(m, {1, 1});
+                std::vector<std::complex<double>> v_expected(
+                    m, {0, static_cast<double>(2 * m)});
+                std::vector<std::complex<double>> v_out =
+                    Util::matrixVecProd(mat, v_in, m, m);
+                CAPTURE(v_out);
+                CAPTURE(v_expected);
+                for (size_t i = 0; i < m; i++) {
+                    CHECK(isApproxEqual(v_out[i], v_expected[i]));
+                }
+            }
+        }
+        SECTION("Random Complex") {
+            std::vector<std::complex<double>> mat{
+                {0.417876, 0.27448},   {0.601209, 0.723548},
+                {0.781624, 0.538222},  {0.0597232, 0.27755},
+                {0.0431741, 0.593319}, {0.224124, 0.130335},
+                {0.237877, 0.01557},   {0.931634, 0.786367},
+                {0.378397, 0.894381},  {0.840747, 0.889789},
+                {0.530623, 0.463644},  {0.868736, 0.760685},
+                {0.258175, 0.836569},  {0.495012, 0.667726},
+                {0.298962, 0.384992},  {0.659472, 0.232696}};
+            std::vector<std::complex<double>> v_in{{0.417876, 0.27448},
+                                                   {0.601209, 0.723548},
+                                                   {0.781624, 0.538222},
+                                                   {0.0597232, 0.27755}};
+            std::vector<std::complex<double>> v_expected{{0.184998, 1.97393},
+                                                         {-0.0894368, 0.946047},
+                                                         {-0.219747, 2.55541},
+                                                         {-0.305997, 1.83881}};
+            std::vector<std::complex<double>> v_out =
+                Util::matrixVecProd(mat, v_in, 4, 4);
+            CAPTURE(v_out);
+            for (size_t i = 0; i < 4; i++) {
+                CHECK(isApproxEqual(v_out[i], v_out[i]));
+            }
+        }
+        SECTION("Invalid Arguments") {
+            using namespace Catch::Matchers;
+            std::vector<std::complex<double>> mat(2 * 3, {1, 1});
+            std::vector<std::complex<double>> v_in(2, {1, 1});
+            CHECK_THROWS_AS(Util::matrixVecProd(mat, v_in, 2, 3),
+                            std::invalid_argument);
+            CHECK_THROWS_WITH(Util::matrixVecProd(mat, v_in, 2, 3),
+                              Contains("Invalid size for the input vector"));
+            CHECK_THROWS_AS(Util::matrixVecProd(mat, v_in, 2, 2),
+                            std::invalid_argument);
+            CHECK_THROWS_WITH(Util::matrixVecProd(mat, v_in, 2, 2),
+                              Contains("Invalid m & n for the input matrix"));
+        }
+    }
+    SECTION("Transpose") {
+        SECTION("Simple Matrix") {
+            for (size_t m = 2; m < 8; m++) {
+                std::vector<std::complex<double>> mat(m * m, {0, 0});
+                for (size_t i = 0; i < m; i++) {
+                    mat[i * m + i] = {1, 1};
+                }
+                std::vector<std::complex<double>> mat_t =
+                    Util::Transpose(mat, m, m);
+                CAPTURE(mat_t);
+                CAPTURE(mat);
+                for (size_t i = 0; i < m * m; i++) {
+                    CHECK(isApproxEqual(mat[i], mat_t[i]));
+                }
+            }
+        }
+        SECTION("Random Complex") {
+            std::vector<std::complex<double>> mat{
+                {0.417876, 0.27448},   {0.601209, 0.723548},
+                {0.781624, 0.538222},  {0.0597232, 0.27755},
+                {0.0431741, 0.593319}, {0.224124, 0.130335},
+                {0.237877, 0.01557},   {0.931634, 0.786367},
+                {0.378397, 0.894381},  {0.840747, 0.889789},
+                {0.530623, 0.463644},  {0.868736, 0.760685},
+                {0.258175, 0.836569},  {0.495012, 0.667726},
+                {0.298962, 0.384992},  {0.659472, 0.232696}};
+            std::vector<std::complex<double>> mat_t_exp{
+                {0.417876, 0.27448},  {0.0431741, 0.593319},
+                {0.378397, 0.894381}, {0.258175, 0.836569},
+                {0.601209, 0.723548}, {0.224124, 0.130335},
+                {0.840747, 0.889789}, {0.495012, 0.667726},
+                {0.781624, 0.538222}, {0.237877, 0.01557},
+                {0.530623, 0.463644}, {0.298962, 0.384992},
+                {0.0597232, 0.27755}, {0.931634, 0.786367},
+                {0.868736, 0.760685}, {0.659472, 0.232696}};
+            std::vector<std::complex<double>> mat_t =
+                Util::Transpose(mat, 4, 4);
+            CAPTURE(mat_t);
+            CAPTURE(mat_t_exp);
+            for (size_t i = 0; i < 16; i++) {
+                CHECK(isApproxEqual(mat_t[i], mat_t_exp[i]));
+            }
+        }
+        SECTION("Invalid Arguments") {
+            using namespace Catch::Matchers;
+            std::vector<std::complex<double>> mat(2 * 3, {1, 1});
+            CHECK_THROWS_AS(Util::Transpose(mat, 2, 2), std::invalid_argument);
+            CHECK_THROWS_WITH(Util::Transpose(mat, 2, 2),
+                              Contains("Invalid m & n for the input matrix"));
+        }
+    }
+    SECTION("matrixMatProd") {
+        SECTION("Simple Iterative") {
+            for (size_t m = 2; m < 8; m++) {
+                std::vector<std::complex<double>> m_left(m * m, {1, 1});
+                std::vector<std::complex<double>> m_right(m * m, {1, 1});
+                std::vector<std::complex<double>> m_out_exp(
+                    m * m, {0, static_cast<double>(2 * m)});
+                std::vector<std::complex<double>> m_out =
+                    Util::matrixMatProd(m_left, m_right, m, m, m, true);
+                CAPTURE(m_out);
+                CAPTURE(m_out_exp);
+                for (size_t i = 0; i < m * m; i++) {
+                    CHECK(isApproxEqual(m_out[i], m_out_exp[i]));
+                }
+            }
+        }
+        SECTION("Random Complex") {
+            std::vector<std::complex<double>> m_left{
+                {0.94007, 0.424517},  {0.256163, 0.0615097},
+                {0.505297, 0.343107}, {0.729021, 0.241991},
+                {0.860825, 0.633264}, {0.987668, 0.195166},
+                {0.606897, 0.144482}, {0.0183697, 0.375071},
+                {0.355853, 0.152383}, {0.985341, 0.0888863},
+                {0.608352, 0.653375}, {0.268477, 0.58398},
+                {0.960381, 0.786669}, {0.498357, 0.185307},
+                {0.283511, 0.844801}, {0.269318, 0.792981}};
+            std::vector<std::complex<double>> m_right{
+                {0.94007, 0.424517},  {0.256163, 0.0615097},
+                {0.505297, 0.343107}, {0.729021, 0.241991},
+                {0.860825, 0.633264}, {0.987668, 0.195166},
+                {0.606897, 0.144482}, {0.0183697, 0.375071},
+                {0.355853, 0.152383}, {0.985341, 0.0888863},
+                {0.608352, 0.653375}, {0.268477, 0.58398},
+                {0.960381, 0.786669}, {0.498357, 0.185307},
+                {0.283511, 0.844801}, {0.269318, 0.792981}};
+            std::vector<std::complex<double>> m_right_tp{
+                {0.94007, 0.424517},   {0.860825, 0.633264},
+                {0.355853, 0.152383},  {0.960381, 0.786669},
+                {0.256163, 0.0615097}, {0.987668, 0.195166},
+                {0.985341, 0.0888863}, {0.498357, 0.185307},
+                {0.505297, 0.343107},  {0.606897, 0.144482},
+                {0.608352, 0.653375},  {0.283511, 0.844801},
+                {0.729021, 0.241991},  {0.0183697, 0.375071},
+                {0.268477, 0.58398},   {0.269318, 0.792981}};
+            std::vector<std::complex<double>> m_out_exp{
+                {1.522375435807200, 2.018315393556500},
+                {1.241561065671800, 0.915996420839700},
+                {0.561409446565600, 1.834755796266900},
+                {0.503973820211400, 1.664651528374090},
+                {1.183556828429700, 2.272762769584300},
+                {1.643767359748500, 0.987318478828500},
+                {0.752063484100700, 1.482770126810700},
+                {0.205343773497200, 1.552791421044900},
+                {0.977117116888800, 2.092066653216500},
+                {1.604565422784600, 1.379671036009100},
+                {0.238648365886400, 1.582741563052100},
+                {-0.401698027789600, 1.469264325654110},
+                {0.487510164243000, 2.939585667799000},
+                {0.845207296911400, 1.843583823364000},
+                {-0.482010055957000, 2.062995137499000},
+                {-0.524094900662100, 1.815727577737900}};
+            std::vector<std::complex<double>> m_out_1 =
+                Util::matrixMatProd(m_left, m_right_tp, 4, 4, 4, true);
+            std::vector<std::complex<double>> m_out_2 =
+                Util::matrixMatProd(m_left, m_right, 4, 4, 4, false);
+            CAPTURE(m_out_1);
+            CAPTURE(m_out_2);
+            CAPTURE(m_out_exp);
+            for (size_t i = 0; i < 16; i++) {
+                CHECK(isApproxEqual(m_out_1[i], m_out_2[i]));
+            }
+            for (size_t i = 0; i < 16; i++) {
+                CHECK(isApproxEqual(m_out_1[i], m_out_exp[i]));
+            }
+        }
+        SECTION("Invalid Arguments") {
+            using namespace Catch::Matchers;
+            std::vector<std::complex<double>> m_left(2 * 3, {1, 1});
+            std::vector<std::complex<double>> m_right(3 * 4, {1, 1});
+            CHECK_THROWS_AS(Util::matrixMatProd(m_left, m_right, 2, 3, 4),
+                            std::invalid_argument);
+            CHECK_THROWS_WITH(
+                Util::matrixMatProd(m_left, m_right, 2, 3, 4),
+                Contains("Invalid m & k for the input left matrix"));
+            CHECK_THROWS_AS(Util::matrixMatProd(m_left, m_right, 2, 3, 3),
+                            std::invalid_argument);
+            CHECK_THROWS_WITH(
+                Util::matrixMatProd(m_left, m_right, 2, 3, 3),
+                Contains("Invalid k & n for the input right matrix"));
+        }
+    }
 }
