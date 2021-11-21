@@ -3,20 +3,22 @@
 crt_dir=$(pwd)
 
 # Export env variables in case cmake reverts to default values
-export CXX=$(which clang++)
-export CMAKE_CXX_FLAGS=-O3 # Flags passed via bash only for ease of use; would normally set in CMakeLists.txt
+export CXX=$1
+if [ $# -eq 0 ]; then
+    echo "Usage: bash $0 CXX_COMPILER"
+    exit 1
+fi
 
 # Compiler version & optimization
 compiler_file_name=compiler_info.txt
 path_to_compiler_file=$crt_dir/$compiler_file_name
 echo "Creating $path_to_compiler_file"
 $CXX --version | head -n 1 > $path_to_compiler_file
-echo $CMAKE_CXX_FLAGS >> $path_to_compiler_file
 
 # CMake & make
 mkdir build
 pushd ./build
-cmake -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_CXX_FLAGS="$CMAKE_CXX_FLAGS" .. && make
+cmake -DCMAKE_CXX_COMPILER=$CXX .. && make
 popd
 
 # Parameter initialization
