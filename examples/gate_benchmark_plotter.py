@@ -11,6 +11,7 @@ if __name__ == "__main__":
     time_idx = data_df.columns.get_loc(" Time (milliseconds)")
     
     compiler_info = open(sys.argv[2], 'r').readlines()
+    optimization = "-O3"
 
     data = data_df.to_numpy()
     avg_time_arr = [np.average(data[data[:, num_qubits_idx]==num_qubits][:, time_idx]) for num_qubits in data[:, num_qubits_idx]]
@@ -21,7 +22,7 @@ if __name__ == "__main__":
     plt.ylabel("Time in $[ms]$")
     plt.grid(linestyle=':')
     plt.plot(data[:, num_qubits_idx], avg_time_arr, "rX")
-    plt.figtext(0.05,0.0, ("Compiler:\t" + compiler_info[0] + "Optimization:\t" + compiler_info[1]).expandtabs(), fontsize=7, va="bottom", ha="left")
+    plt.figtext(0.05,0.0, ("Compiler:\t" + compiler_info[0] + "Optimization:\t" + optimization).expandtabs(), fontsize=7, va="bottom", ha="left")
     plt.subplots_adjust(bottom=0.2)
     plt.savefig("avg_time.png", dpi=200)
     plt.close()
@@ -32,7 +33,7 @@ if __name__ == "__main__":
     plt.ylabel("Relative Time (compared to 1 qubit) in $[1]$")
     plt.grid(linestyle=':')
     plt.loglog(data[:, num_qubits_idx], avg_time_arr/avg_time_arr[0], "rX")
-    plt.figtext(0.05,0.0, ("Compiler:\t" + compiler_info[0] + "Optimization:\t" + compiler_info[1]).expandtabs(), fontsize=7, va="bottom", ha="left")
+    plt.figtext(0.05,0.0, ("Compiler:\t" + compiler_info[0] + "Optimization:\t" + optimization).expandtabs(), fontsize=7, va="bottom", ha="left")
     plt.subplots_adjust(bottom=0.2)
     plt.savefig("scaling.png", dpi=200)
     plt.close()
