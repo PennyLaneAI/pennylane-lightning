@@ -81,6 +81,12 @@ Alternatively, for development and testing, you can install by cloning the repos
 Note that subsequent calls to ``pip install -e .`` will use cached binaries stored in the
 ``build`` folder. Run ``make clean`` if you would like to recompile.
 
+You can also pass ``cmake`` options with ``build_ext``:
+
+.. code-block:: console
+
+    $ python3 setup.py build_ext --define="-DENABLE_OPENMP=OFF;-DENABLE_NATIVE=ON"
+
 Testing
 -------
 
