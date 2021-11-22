@@ -10,7 +10,7 @@ endif()
 if ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM"))
     target_compile_options(pennylane_lightning_compile_options INTERFACE
         $<$<COMPILE_LANGUAGE:CXX>:-fwrapv;-fno-plt>)
-# Add -fwrapv, -fno-plt, -pipe in Clang
+# Add -fwrapv, -fno-plt, -pipe in GCC
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(pennylane_lightning_compile_options INTERFACE
         $<$<COMPILE_LANGUAGE:CXX>:-fwrapv;-fno-plt;-pipe>)
