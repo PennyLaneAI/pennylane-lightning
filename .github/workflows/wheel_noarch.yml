@@ -31,7 +31,7 @@ jobs:
           SKIP_COMPILATION: True
 
       - uses: actions/upload-artifact@v2
-        # if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
         with:
           name: pure-python-wheels
           path: main/dist/*.whl

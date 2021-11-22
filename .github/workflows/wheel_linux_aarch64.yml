@@ -57,7 +57,7 @@ jobs:
           CIBW_ARCHS_LINUX: ${{matrix.arch}}
 
       - uses: actions/upload-artifact@v2
-        # if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
         with:
           name: ${{ runner.os }}-wheels.zip
           path: ./wheelhouse/*.whl

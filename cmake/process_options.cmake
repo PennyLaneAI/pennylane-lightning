@@ -1,10 +1,19 @@
-
 # Set compile flags and library dependencies
 add_library(pennylane_lightning_compile_options INTERFACE)
 add_library(pennylane_lightning_external_libs INTERFACE)
 
 if(MSVC) # For M_PI
     target_compile_options(pennylane_lightning_compile_options INTERFACE /D_USE_MATH_DEFINES)
+endif()
+
+# Add -fwrapv, -fno-plt in Clang
+if ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM"))
+    target_compile_options(pennylane_lightning_compile_options INTERFACE
+        $<$<COMPILE_LANGUAGE:CXX>:-fwrapv;-fno-plt>)
+# Add -fwrapv, -fno-plt, -pipe in Clang
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(pennylane_lightning_compile_options INTERFACE
+        $<$<COMPILE_LANGUAGE:CXX>:-fwrapv;-fno-plt;-pipe>)
 endif()
 
 if(ENABLE_WARNINGS)

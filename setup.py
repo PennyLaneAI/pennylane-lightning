@@ -68,13 +68,14 @@ class CMakeBuild(build_ext):
         
         build_args = []
 
+
+        # Add more platform dependent options
         if platform.system() == "Darwin":
             # Disable OpenMP in M1 Macs
             if os.environ.get("USE_OMP"):
                 configure_args += []
             else:
                 configure_args += ["-DENABLE_OPENMP=OFF"]
-
         elif platform.system() == "Linux":
             if platform.machine() == "x86_64":
                 configure_args += [

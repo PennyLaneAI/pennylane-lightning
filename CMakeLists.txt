@@ -50,6 +50,9 @@ if(ENABLE_CLANG_TIDY)
     )
 endif()
 
+# Process compile options
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
+
 # Add pybind11
 include(FetchContent)
 FetchContent_Declare(
@@ -58,8 +61,6 @@ FetchContent_Declare(
     GIT_TAG        v2.6.2
 )
 FetchContent_MakeAvailable(pybind11)
-
-include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
 
 # All CMakeLists.txt in subdirectories use pennylane_lightning_compile_options and pennylane_lightning_external_libs
 add_subdirectory(pennylane_lightning/src)
