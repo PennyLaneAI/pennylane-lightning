@@ -10,9 +10,14 @@
 
 ### Bug fixes
 
+* Update PL-Lightning to support new features in PL.
+[(#179)](https://github.com/PennyLaneAI/pennylane-lightning/pull/179)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Ali Asadi
 
 ---
 
