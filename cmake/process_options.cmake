@@ -58,7 +58,7 @@ if(ENABLE_BLAS)
 
     target_link_libraries(pennylane_lightning_external_libs INTERFACE "${BLAS_LIBRARIES}")
     target_link_options(pennylane_lightning_external_libs INTERFACE "${BLAS_LINKER_FLAGS}")
-    target_compile_options(pennylane_lightning_compile_options INTERFACE "-DBLAS=1")
+    target_compile_options(pennylane_lightning_compile_options INTERFACE "-D_ENABLE_BLAS=1")
 endif()
 
 

@@ -114,12 +114,6 @@ One can also build the plugin using CMake:
     $ cmake -S. -B build
     $ cmake --build build
 
-and install 
-    
-.. code-block:: console
-
-    $ pip install -e .
-
 To test the C++ code:
 
 .. code-block:: console
