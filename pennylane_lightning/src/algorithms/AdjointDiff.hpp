@@ -16,7 +16,6 @@
 #include <complex>
 #include <cstring>
 #include <numeric>
-#include <set>
 #include <stdexcept>
 #include <type_traits>
 #include <unordered_map>
@@ -689,7 +688,7 @@ template <class T = double> class AdjointJacobian {
                          std::vector<std::vector<T>> &jac,
                          const std::vector<ObsDatum<T>> &observables,
                          const OpsData<T> &operations,
-                         const std::set<size_t> &trainableParams,
+                         const std::vector<size_t> &trainableParams,
                          bool apply_operations = false) {
         PL_ABORT_IF(trainableParams.empty(),
                     "No trainable parameters provided.");

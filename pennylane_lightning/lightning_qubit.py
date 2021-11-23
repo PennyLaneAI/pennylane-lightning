@@ -233,10 +233,11 @@ class LightningQubit(DefaultQubit):
 
         ops_serialized = adj.create_ops_list(*ops_serialized)
 
+        trainable_params = sorted(tape.trainable_params)
+        first_elem = 1 if trainable_params[0] == 0 else 0
+
         tp_shift = (
-            tape.trainable_params
-            if not use_sp
-            else {i - 1 for i in tape.trainable_params.difference({0})}
+            trainable_params if not use_sp else [i - 1 for i in trainable_params[first_elem:]]
         )  # exclude first index if explicitly setting sv
 
         jac = adj.adjoint_jacobian(
