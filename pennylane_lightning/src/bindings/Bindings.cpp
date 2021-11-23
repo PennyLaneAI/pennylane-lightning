@@ -797,7 +797,7 @@ void lightning_class_bindings(py::module &m) {
                 const StateVecBinder<PrecisionT> &sv,
                 const std::vector<ObsDatum<PrecisionT>> &observables,
                 const OpsData<PrecisionT> &operations,
-                const set<size_t> &trainableParams, size_t num_params) {
+                const std::vector<size_t> &trainableParams, size_t num_params) {
                  std::vector<std::vector<PrecisionT>> jac(
                      observables.size(),
                      std::vector<PrecisionT>(num_params, 0));
