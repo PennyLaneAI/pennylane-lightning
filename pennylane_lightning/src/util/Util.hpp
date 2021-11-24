@@ -30,7 +30,6 @@
 #include <type_traits>
 #include <vector>
 
-
 /// @cond DEV
 #if __has_include(<cblas.h>) && defined _ENABLE_BLAS
 #include <cblas.h>
