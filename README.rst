@@ -85,7 +85,7 @@ You can also pass ``cmake`` options with ``build_ext``:
 
 .. code-block:: console
 
-    $ python3 setup.py build_ext --define="ENABLE_OPENMP=OFF;ENABLE_NATIVE=ON"
+    $ python3 setup.py build_ext -i --define="ENABLE_OPENMP=OFF;ENABLE_NATIVE=ON"
 
 and install the compilied library with
 
