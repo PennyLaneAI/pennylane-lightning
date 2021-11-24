@@ -507,6 +507,117 @@ inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
  * using blacking and Cache-optimized techniques.
  */
 template <class T, size_t BLOCKSIZE = 32> // NOLINT(readability-magic-numbers)
+inline static void CFTranspose(const T *mat,
+                               T *mat_t, size_t m, size_t n,
+                               size_t m1, size_t m2, size_t n1, size_t n2) {
+    size_t r;
+    size_t s;
+
+    size_t r1;
+    size_t s1;
+    size_t r2;
+    size_t s2;
+
+    r1 = m2 - m1;
+    s1 = n2 - n1;
+
+    if (r1 >= s1 && r1 > BLOCKSIZE) {
+        r2 = (m1 + m2) / 2;
+        CFTranspose(mat, mat_t, m, n, m1, r2, n1, n2);
+        m1 = r2;
+        CFTranspose(mat, mat_t, m, n, m1, m2, n1, n2);
+    } else if (s1 > BLOCKSIZE) {
+        s2 = (n1 + n2) / 2;
+        CFTranspose(mat, mat_t, m, n, m1, m2, n1, s2);
+        n1 = s2;
+        CFTranspose(mat, mat_t, m, n, m1, m2, n1, n2);
+    } else {
+        for (r = m1; r < m2; r++) {
+            for (s = n1; s < n2; s++) {
+                mat_t[s * m + r] = mat[r * n + s];
+            }
+        }
+    }
+}
+
+/**
+ * @brief Calculates vector-matrix product.
+ *
+ * @tparam T Floating point precision type.
+ * @param v_in Data array repr. a vector of shape m * 1.
+ * @param mat Data array repr. a flatten (row-wise) matrix m * n.
+ * @param v_out Pre-allocated data array to store the result that is
+ *              `mat_t \times v_in` where `mat_t` is transpose of `mat`.
+ * @param m Number of rows of `mat`.
+ * @param n Number of columns of `mat`.
+ */
+template <class T>
+inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, 
+                        size_t m, size_t n) {
+    if (!v_out) {
+        return;
+    }
+
+    // v_in m * 1
+    // mat m * n
+    // return  mat'[n*m] * v_in[m*1]  
+    // v_out n * 1
+    size_t i;
+    size_t j;
+    
+    T z = static_cast<T>(0.0);
+    bool allzero = true;
+    for (j = 0; j < m; j++) {
+        if (v_in[j] != z) {
+            allzero = false;
+            break;
+        }
+    }
+
+    if (allzero) {
+        return;
+    }
+
+    T *mat_t = new T[m*n];
+    CFTranspose(mat, mat_t, m, n, 0, m, 0, n);
+
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < m; j++) {
+            v_out[i] += mat_t[i*m+j] * v_in[j];
+        }
+    }
+
+    delete[] mat_t;
+}
+
+/**
+ * @brief Calculates the vactor-matrix product using the best available method.
+ *
+ * @see template <class T> inline void vecMatrixProd(const T *v_in, 
+ * const T *mat, T *v_out, size_t m, size_t n)
+ */
+template <class T>
+inline auto vecMatrixProd(const std::vector<T> v_in,
+                        const std::vector<T> mat, 
+                        size_t m, size_t n)
+    -> std::vector<T> {
+    if (v_in.size() != m) {
+        throw std::invalid_argument("Invalid size for the input vector");
+    }
+    if (mat.size() != m * n) {
+        throw std::invalid_argument("Invalid m & n for the input matrix");
+    }
+
+    std::vector<T> v_out(n);
+    vecMatrixProd(v_in.data(), mat.data(), v_out.data(), m, n);
+    return v_out;
+}
+
+/**
+ * @brief Calculates transpose of a matrix recursively and Cache-Friendly
+ * using blacking and Cache-optimized techniques.
+ */
+template <class T, size_t BLOCKSIZE = 32> // NOLINT(readability-magic-numbers)
 inline static void CFTranspose(const std::complex<T> *mat,
                                std::complex<T> *mat_t, size_t m, size_t n,
                                size_t m1, size_t m2, size_t n1, size_t n2) {
