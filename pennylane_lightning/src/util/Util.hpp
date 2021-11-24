@@ -21,14 +21,14 @@
 #include <cmath>
 #include <complex>
 #include <cstddef>
+#include <iostream>
 #include <limits>
 #include <memory>
 #include <numeric>
 #include <set>
 #include <stdexcept>
 #include <type_traits>
-
-#include <iostream>
+#include <vector>
 
 /// @cond DEV
 #if __has_include(<cblas.h>) && defined _ENABLE_BLAS
