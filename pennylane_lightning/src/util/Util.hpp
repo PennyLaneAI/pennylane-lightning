@@ -546,7 +546,7 @@ inline static void CFTranspose(const T *mat, T *mat_t, size_t m, size_t n,
  * @param v_in Data array repr. a vector of shape m * 1.
  * @param mat Data array repr. a flatten (row-wise) matrix m * n.
  * @param v_out Pre-allocated data array to store the result that is
- *              `mat_t \times v_in` where `mat_t` is transpose of `mat`.
+ *              `mat_t \times v_in` where `mat_t` is transposed of `mat`.
  * @param m Number of rows of `mat`.
  * @param n Number of columns of `mat`.
  */
@@ -560,7 +560,7 @@ inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, size_t m,
     size_t i;
     size_t j;
 
-    T z = static_cast<T>(0.0);
+    constexpr T z = static_cast<T>(0.0);
     bool allzero = true;
     for (j = 0; j < m; j++) {
         if (v_in[j] != z) {
@@ -588,11 +588,11 @@ inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, size_t m,
 /**
  * @brief Calculates the vactor-matrix product using the best available method.
  *
- * @see template <class T> inline void vecMatrixProd(const T *v_in,
+ * @see inline void vecMatrixProd(const T *v_in,
  * const T *mat, T *v_out, size_t m, size_t n)
  */
 template <class T>
-inline auto vecMatrixProd(const std::vector<T> v_in, const std::vector<T> mat,
+inline auto vecMatrixProd(const std::vector<T> &v_in, const std::vector<T> &mat,
                           size_t m, size_t n) -> std::vector<T> {
     if (v_in.size() != m) {
         throw std::invalid_argument("Invalid size for the input vector");
@@ -603,7 +603,31 @@ inline auto vecMatrixProd(const std::vector<T> v_in, const std::vector<T> mat,
 
     std::vector<T> v_out(n);
     vecMatrixProd(v_in.data(), mat.data(), v_out.data(), m, n);
+
     return v_out;
+}
+
+/**
+ * @brief Calculates the vactor-matrix product using the best available method.
+ *
+ * @see inline void vecMatrixProd(const T *v_in,
+ * const T *mat, T *v_out, size_t m, size_t n)
+ */
+template <class T>
+inline void vecMatrixProd(std::vector<T> &v_out, const std::vector<T> &v_in,
+                          const std::vector<T> &mat, size_t m, size_t n) {
+    if (mat.size() != m * n) {
+        throw std::invalid_argument("Invalid m & n for the input matrix");
+    }
+    if (v_in.size() != m) {
+        throw std::invalid_argument("Invalid size for the input vector");
+    }
+    if (v_out.size() != n) {
+        throw std::invalid_argument(
+            "Invalid pre-allocated size for the result");
+    }
+
+    vecMatrixProd(v_in.data(), mat.data(), v_out.data(), m, n);
 }
 
 /**
