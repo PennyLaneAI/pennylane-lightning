@@ -557,10 +557,6 @@ inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, size_t m,
         return;
     }
 
-    // v_in m * 1
-    // mat m * n
-    // return  mat'[n*m] * v_in[m*1]
-    // v_out n * 1
     size_t i;
     size_t j;
 

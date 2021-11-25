@@ -762,7 +762,95 @@ template <class T = double> class AdjointJacobian {
             }
         }
     }
-};
+}; // class AdjointJacobian
+
+/**
+ * @brief Represent the class to compute the vector-Jacobian products
+ * following the implementation in Pennylane.
+ *
+ * @tparam T Floating-point precision.
+ */
+template <class T = double> class VectorJacobianProduct {
+  private:
+    void getRowMajor(std::vector<T> &res,
+                     const std::vector<std::vector<T>> &jac, size_t len = 0) {
+        if (!jac.size()) {
+            return;
+        }
+
+        const size_t r_len = jac.size();
+        const size_t c_len = jac.front().size();
+        const size_t t_len = len ? len : r_len * c_len;
+
+        if (res.size() != t_len) {
+            res.resize(t_len);
+        }
+
+        size_t k = 0;
+        for (size_t i = 0; i < r_len; i++) {
+            for (size_t j = 0; j < c_len; j++) {
+                res[k] = jac[i][j];
+                k++;
+            }
+        }
+    }
+
+  public:
+    VectorJacobianProduct() = default;
+
+    /**
+     * @brief Computes the vector-Jacobian product for a given vector of
+     * gradient outputs and a Jacobian.
+     *
+     * @param jac Jacobian matrix from `AdjointJacobian`.
+     * @param dy Gradient-output vector.
+     */
+    auto tensorDot(const std::vector<std::vector<T>> &jac,
+                   const std::vector<T> &dy) -> std::vector<T> {
+
+        const size_t r_len = jac.size();
+        const size_t c_len = jac.front().size();
+        const size_t t_len = r_len * c_len;
+
+        std::vector<T> jac_row(t_len);
+        getRowMajor(jac_row, jac, t_len);
+
+        return Util::vecMatrixProd(dy, jac_row, r_len, c_len);
+    }
+
+    /**
+     * @brief Calculates the VectorJacobianProduct for the statevector
+     * for the selected set of parametric gates using `AdjointJacobian`.
+     *
+     * @param vjp Preallocated vector for vector-jacobian product data results.
+     * @param psi Pointer to the statevector data.
+     * @param num_elements Length of the statevector data.
+     * @param dy Gradient-output vector.
+     * @param observables Observables for which to calculate Jacobian.
+     * @param operations Operations used to create given state.
+     * @param trainableParams List of parameters participating in Jacobian
+     * calculation.
+     * @param apply_operations Indicate whether to apply operations to psi prior
+     * to calculation.
+     */
+    void vectorJacobianProduct(std::vector<T> &vjp, const std::complex<T> *psi,
+                               size_t num_elements, const std::vector<T> &dy,
+                               const std::vector<ObsDatum<T>> &observables,
+                               const OpsData<T> &operations,
+                               const std::vector<size_t> &trainableParams,
+                               bool apply_operations = false) {
+        if (!vjp.size() || !dy.size()) {
+            return;
+        }
+
+        AdjointJacobian<T> adj;
+        std::vector<std::vector<T>> jac(dy.size());
+        adj.adjointJacobian(psi, num_elements, jac, observables, operations,
+                            trainableParams, apply_operations);
+        vjp = tensorDot(jac, dy);
+    }
+
+}; // class VectorJacobianProduct
 
 } // namespace Algorithms
 } // namespace Pennylane

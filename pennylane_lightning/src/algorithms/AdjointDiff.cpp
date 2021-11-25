@@ -18,6 +18,9 @@
 template class Pennylane::Algorithms::AdjointJacobian<float>;
 template class Pennylane::Algorithms::AdjointJacobian<double>;
 
+template class Pennylane::Algorithms::VectorJacobianProduct<float>;
+template class Pennylane::Algorithms::VectorJacobianProduct<double>;
+
 template class Pennylane::Algorithms::ObsDatum<float>;
 template class Pennylane::Algorithms::ObsDatum<double>;
 template class Pennylane::Algorithms::ObsDatum<std::complex<float>>;
