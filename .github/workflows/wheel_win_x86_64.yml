@@ -9,12 +9,17 @@ on:
 env:
   CIBW_BUILD: 'cp37-* cp38-* cp39-*'
 
+  CIBW_ARCHS_WINDOWS: "AMD64"
+
   # Python build settings
   CIBW_BEFORE_BUILD: |
-    pip install pybind11
+    call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && pip install pybind11 ninja
 
   # Testing of built wheels
   CIBW_TEST_REQUIRES: numpy==1.19.5 scipy pytest pytest-cov pytest-mock flaky
+
+  CIBW_BEFORE_TEST: |
+    call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && python -c "import sys; print(sys.path)"
 
   CIBW_TEST_COMMAND: |
     pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
