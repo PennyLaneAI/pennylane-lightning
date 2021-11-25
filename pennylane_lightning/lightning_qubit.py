@@ -18,6 +18,7 @@ interfaces with C++ for fast linear algebra calculations.
 from warnings import warn
 
 import numpy as np
+from numpy.lib.function_base import vectorize
 from pennylane import (
     BasisState,
     DeviceError,
@@ -26,6 +27,7 @@ from pennylane import (
     QubitUnitary,
 )
 import pennylane as qml
+from pennylane import math
 from pennylane.devices import DefaultQubit
 from pennylane.operation import Expectation
 
@@ -236,6 +238,138 @@ class LightningQubit(DefaultQubit):
         )
         return jac
 
+    def _compute_vjp_tensordot(self, dy, jac, num=None):
+        if jac is None:
+            return None
+        
+        dy_reshaped = math.reshape(dy, [-1])
+        num = math.shape(dy_reshaped)[0] if num is None else num
+        jac = math.convert_like(jac, dy_reshaped) if not isinstance(dy_reshaped, np.ndarray) else jac
+        jac = math.reshape(jac, [num, -1])
+
+        try:
+            if math.allclose(dy, 0):
+                return math.convert_like(np.zeros([jac.shape[1]]), dy)
+        except (AttributeError, TypeError):
+            pass
+
+        return math.tensordot(jac, dy_reshaped, [[0], [0]])
+
+    def vector_jacobian_product(self, tape, dy, num=None, starting_state=None, use_device_state=False):
+        """Generate the the vector-Jacobian products of a tape.
+        
+        Consider a function :math:`\mathbf{f}(\mathbf{x})`. The Jacobian is given by
+        .. math::
+            \mathbf{J}_{\mathbf{f}}(\mathbf{x}) = \begin{pmatrix}
+                \frac{\partial f_1}{\partial x_1} &\cdots &\frac{\partial f_1}{\partial x_n}\\
+                \vdots &\ddots &\vdots\\
+                \frac{\partial f_m}{\partial x_1} &\cdots &\frac{\partial f_m}{\partial x_n}\\
+            \end{pmatrix}.
+        During backpropagation, the chain rule is applied. For example, consider the
+        cost function :math:`h = y\circ f: \mathbb{R}^n \rightarrow \mathbb{R}`,
+        where :math:`y: \mathbb{R}^m \rightarrow \mathbb{R}`.
+        The gradient is:
+        .. math::
+            \nabla h(\mathbf{x}) = \frac{\partial y}{\partial \mathbf{f}} \frac{\partial \mathbf{f}}{\partial \mathbf{x}}
+            = \frac{\partial y}{\partial \mathbf{f}} \mathbf{J}_{\mathbf{f}}(\mathbf{x}).
+        Denote :math:`d\mathbf{y} = \frac{\partial y}{\partial \mathbf{f}}`; we can write this in the form
+        of a matrix multiplication:
+        .. math:: \left[\nabla h(\mathbf{x})\right]_{j} = \sum_{i=0}^m d\mathbf{y}_i ~ \mathbf{J}_{ij}.
+        Thus, we can see that the gradient of the cost function is given by the so-called
+        **vector-Jacobian product**; the product of the row-vector :math:`d\mathbf{y}`, representing
+        the gradient of subsequent components of the cost function, and :math:`\mathbf{J}`,
+        the Jacobian of the current node of interest.
+
+        Args:
+            tape (.QuantumTape): quantum tape to differentiate
+            dy (tensor_like): Gradient-output vector. Must have shape
+                matching the output shape of the corresponding tape.
+            num (int): The length of the flattened ``dy`` argument. This is an
+            optional argument, but can be useful to provide if ``dy`` potentially
+            has no shape (for example, due to tracing or just-in-time compilation).
+            starting_state (): ...
+            use_device_state (): ...
+        Returns:
+            tensor_like or None: Vector-Jacobian product. Returns None if the tape
+            has no trainable parameters.  
+        """
+        num_params = len(tape.trainable_params)
+        if num_params == 0:
+            # The tape has no trainable parameters; the VJP
+            # is simply none.
+            return None
+        
+        try:
+            # If the dy vector is zero, then the
+            # corresponding element of the VJP will be zero,
+            # and we can avoid a quantum computation.
+            if math.allclose(dy, 0):
+                return math.convert_like(np.zeros([num_params]), dy)
+        except (AttributeError, TypeError):
+            pass
+        
+        jac = self.adjoint_jacobian(tape, starting_state=starting_state, use_device_state=use_device_state)
+
+        return self._compute_vjp_tensordot(dy, jac, num=num)
+
+    def batch_vector_jacobian_product(self, tapes, dys, num=None, reduction="append", starting_state=None, use_device_state=False):
+        """Generate the the vector-Jacobian products of a batch of tapes.
+        
+        Consider a function :math:`\mathbf{f}(\mathbf{x})`. The Jacobian is given by
+        .. math::
+            \mathbf{J}_{\mathbf{f}}(\mathbf{x}) = \begin{pmatrix}
+                \frac{\partial f_1}{\partial x_1} &\cdots &\frac{\partial f_1}{\partial x_n}\\
+                \vdots &\ddots &\vdots\\
+                \frac{\partial f_m}{\partial x_1} &\cdots &\frac{\partial f_m}{\partial x_n}\\
+            \end{pmatrix}.
+        During backpropagation, the chain rule is applied. For example, consider the
+        cost function :math:`h = y\circ f: \mathbb{R}^n \rightarrow \mathbb{R}`,
+        where :math:`y: \mathbb{R}^m \rightarrow \mathbb{R}`.
+        The gradient is:
+        .. math::
+            \nabla h(\mathbf{x}) = \frac{\partial y}{\partial \mathbf{f}} \frac{\partial \mathbf{f}}{\partial \mathbf{x}}
+            = \frac{\partial y}{\partial \mathbf{f}} \mathbf{J}_{\mathbf{f}}(\mathbf{x}).
+        Denote :math:`d\mathbf{y} = \frac{\partial y}{\partial \mathbf{f}}`; we can write this in the form
+        of a matrix multiplication:
+        .. math:: \left[\nabla h(\mathbf{x})\right]_{j} = \sum_{i=0}^m d\mathbf{y}_i ~ \mathbf{J}_{ij}.
+        Thus, we can see that the gradient of the cost function is given by the so-called
+        **vector-Jacobian product**; the product of the row-vector :math:`d\mathbf{y}`, representing
+        the gradient of subsequent components of the cost function, and :math:`\mathbf{J}`,
+        the Jacobian of the current node of interest.
+
+        Args:
+            tapes (Sequence[.QuantumTape]): sequence of quantum tapes to differentiate
+            dys (Sequence[tensor_like]): Sequence of gradient-output vectors ``dy``. Must be the
+                same length as ``tapes``. Each ``dy`` tensor should have shape
+                matching the output shape of the corresponding tape.
+            num (int): The length of the flattened ``dy`` argument. This is an
+            optional argument, but can be useful to provide if ``dy`` potentially
+            has no shape (for example, due to tracing or just-in-time compilation).
+            reduction (str): Determines how the vector-Jacobian products are returned.
+                If ``append``, then the output of the function will be of the form
+                ``List[tensor_like]``, with each element corresponding to the VJP of each
+            starting_state (): ...
+            use_device_state (): ...
+                input tape. If ``extend``, then the output VJPs will be concatenated.
+        Returns:
+            List[tensor_like or None]: list of vector-Jacobian products. ``None`` elements corresponds
+            to tapes with no trainable parameters.
+        """
+        vjps = []
+
+        # Loop through the tapes and dys vector
+        for tape, dy in zip(tapes, dys):
+            vjp = self.vector_jacobian_product(tape, dy, num=num, starting_state=starting_state, use_device_state=use_device_state)
+            if vjp is None:
+                if reduction == "append":
+                    vjps.append(None)
+                continue
+            if isinstance(reduction, str):
+                getattr(vjps, reduction)(vjp)
+            elif callable(reduction):
+                reduction(vjps, vjp)
+
+        return vjps
 
 if not CPP_BINARY_AVAILABLE:
 
