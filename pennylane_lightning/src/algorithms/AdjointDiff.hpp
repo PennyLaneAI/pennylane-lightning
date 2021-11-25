@@ -807,7 +807,6 @@ template <class T = double> class VectorJacobianProduct {
      */
     auto tensorDot(const std::vector<std::vector<T>> &jac,
                    const std::vector<T> &dy) -> std::vector<T> {
-
         const size_t r_len = jac.size();
         const size_t c_len = jac.front().size();
         const size_t t_len = r_len * c_len;
@@ -849,7 +848,6 @@ template <class T = double> class VectorJacobianProduct {
                             trainableParams, apply_operations);
         vjp = tensorDot(jac, dy);
     }
-
 }; // class VectorJacobianProduct
 
 } // namespace Algorithms
