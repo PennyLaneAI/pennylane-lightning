@@ -507,8 +507,7 @@ inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
  * using blacking and Cache-optimized techniques.
  */
 template <class T, size_t BLOCKSIZE = 32> // NOLINT(readability-magic-numbers)
-inline static void CFTranspose(const T *mat,
-                               T *mat_t, size_t m, size_t n,
+inline static void CFTranspose(const T *mat, T *mat_t, size_t m, size_t n,
                                size_t m1, size_t m2, size_t n1, size_t n2) {
     size_t r;
     size_t s;
@@ -552,19 +551,19 @@ inline static void CFTranspose(const T *mat,
  * @param n Number of columns of `mat`.
  */
 template <class T>
-inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, 
-                        size_t m, size_t n) {
+inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, size_t m,
+                          size_t n) {
     if (!v_out) {
         return;
     }
 
     // v_in m * 1
     // mat m * n
-    // return  mat'[n*m] * v_in[m*1]  
+    // return  mat'[n*m] * v_in[m*1]
     // v_out n * 1
     size_t i;
     size_t j;
-    
+
     T z = static_cast<T>(0.0);
     bool allzero = true;
     for (j = 0; j < m; j++) {
@@ -578,12 +577,12 @@ inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out,
         return;
     }
 
-    T *mat_t = new T[m*n];
+    T *mat_t = new T[m * n];
     CFTranspose(mat, mat_t, m, n, 0, m, 0, n);
 
     for (i = 0; i < n; i++) {
         for (j = 0; j < m; j++) {
-            v_out[i] += mat_t[i*m+j] * v_in[j];
+            v_out[i] += mat_t[i * m + j] * v_in[j];
         }
     }
 
@@ -593,14 +592,12 @@ inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out,
 /**
  * @brief Calculates the vactor-matrix product using the best available method.
  *
- * @see template <class T> inline void vecMatrixProd(const T *v_in, 
+ * @see template <class T> inline void vecMatrixProd(const T *v_in,
  * const T *mat, T *v_out, size_t m, size_t n)
  */
 template <class T>
-inline auto vecMatrixProd(const std::vector<T> v_in,
-                        const std::vector<T> mat, 
-                        size_t m, size_t n)
-    -> std::vector<T> {
+inline auto vecMatrixProd(const std::vector<T> v_in, const std::vector<T> mat,
+                          size_t m, size_t n) -> std::vector<T> {
     if (v_in.size() != m) {
         throw std::invalid_argument("Invalid size for the input vector");
     }

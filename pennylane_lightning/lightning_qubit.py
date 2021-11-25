@@ -241,10 +241,12 @@ class LightningQubit(DefaultQubit):
     def _compute_vjp_tensordot(self, dy, jac, num=None):
         if jac is None:
             return None
-        
+
         dy_reshaped = math.reshape(dy, [-1])
         num = math.shape(dy_reshaped)[0] if num is None else num
-        jac = math.convert_like(jac, dy_reshaped) if not isinstance(dy_reshaped, np.ndarray) else jac
+        jac = (
+            math.convert_like(jac, dy_reshaped) if not isinstance(dy_reshaped, np.ndarray) else jac
+        )
         jac = math.reshape(jac, [num, -1])
 
         try:
@@ -255,7 +257,9 @@ class LightningQubit(DefaultQubit):
 
         return math.tensordot(jac, dy_reshaped, [[0], [0]])
 
-    def vector_jacobian_product(self, tape, dy, num=None, starting_state=None, use_device_state=False):
+    def vector_jacobian_product(
+        self, tape, dy, num=None, starting_state=None, use_device_state=False
+    ):
         """Generate the the vector-Jacobian products of a tape.
         
         Consider a function :math:`\mathbf{f}(\mathbf{x})`. The Jacobian is given by
@@ -298,7 +302,7 @@ class LightningQubit(DefaultQubit):
             # The tape has no trainable parameters; the VJP
             # is simply none.
             return None
-        
+
         try:
             # If the dy vector is zero, then the
             # corresponding element of the VJP will be zero,
@@ -307,12 +311,16 @@ class LightningQubit(DefaultQubit):
                 return math.convert_like(np.zeros([num_params]), dy)
         except (AttributeError, TypeError):
             pass
-        
-        jac = self.adjoint_jacobian(tape, starting_state=starting_state, use_device_state=use_device_state)
+
+        jac = self.adjoint_jacobian(
+            tape, starting_state=starting_state, use_device_state=use_device_state
+        )
 
         return self._compute_vjp_tensordot(dy, jac, num=num)
 
-    def batch_vector_jacobian_product(self, tapes, dys, num=None, reduction="append", starting_state=None, use_device_state=False):
+    def batch_vector_jacobian_product(
+        self, tapes, dys, num=None, reduction="append", starting_state=None, use_device_state=False
+    ):
         """Generate the the vector-Jacobian products of a batch of tapes.
         
         Consider a function :math:`\mathbf{f}(\mathbf{x})`. The Jacobian is given by
@@ -359,7 +367,9 @@ class LightningQubit(DefaultQubit):
 
         # Loop through the tapes and dys vector
         for tape, dy in zip(tapes, dys):
-            vjp = self.vector_jacobian_product(tape, dy, num=num, starting_state=starting_state, use_device_state=use_device_state)
+            vjp = self.vector_jacobian_product(
+                tape, dy, num=num, starting_state=starting_state, use_device_state=use_device_state
+            )
             if vjp is None:
                 if reduction == "append":
                     vjps.append(None)
@@ -370,6 +380,7 @@ class LightningQubit(DefaultQubit):
                 reduction(vjps, vjp)
 
         return vjps
+
 
 if not CPP_BINARY_AVAILABLE:
 

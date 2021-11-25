@@ -202,8 +202,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             for (size_t m = 2; m < 8; m++) {
                 std::vector<double> mat(m * m, 1);
                 std::vector<double> v_in(m, 1);
-                std::vector<double> v_expected(
-                    m, m);
+                std::vector<double> v_expected(m, m);
                 std::vector<double> v_out =
                     Util::vecMatrixProd(v_in, mat, m, m);
                 CAPTURE(v_out);
@@ -217,8 +216,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             for (size_t m = 2; m < 8; m++) {
                 std::vector<double> mat(m * m, 1);
                 std::vector<double> v_in(m, 0);
-                std::vector<double> v_expected(
-                    m, 0);
+                std::vector<double> v_expected(m, 0);
                 std::vector<double> v_out =
                     Util::vecMatrixProd(v_in, mat, m, m);
                 CAPTURE(v_out);
@@ -229,17 +227,11 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             }
         }
         SECTION("Random Matrix") {
-            std::vector<float> v_in{
-                1.0, 2.0, 3.0, 4.0};
-            std::vector<float> mat{
-                1.0 ,  0.1,  0.2,
-                0.2,  0.6,  0.1,
-                0.4, -0.7,  1.2,
-                -0.5, -0.6,  0.7};
-            std::vector<float> v_expected{
-                0.6, -3.2,  6.8};
-            std::vector<float> v_out = 
-                Util::vecMatrixProd(v_in, mat, 4, 3);
+            std::vector<float> v_in{1.0, 2.0, 3.0, 4.0};
+            std::vector<float> mat{1.0, 0.1,  0.2, 0.2,  0.6,  0.1,
+                                   0.4, -0.7, 1.2, -0.5, -0.6, 0.7};
+            std::vector<float> v_expected{0.6, -3.2, 6.8};
+            std::vector<float> v_out = Util::vecMatrixProd(v_in, mat, 4, 3);
             CAPTURE(v_out);
             CAPTURE(v_expected);
             for (size_t i = 0; i < 3; i++) {

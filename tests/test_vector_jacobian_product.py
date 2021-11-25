@@ -19,6 +19,7 @@ import pytest
 import pennylane as qml
 from pennylane import numpy as np
 
+
 class TestComputeVJPTensordot:
     """Tests for the numeric computation of VJPs' Tensordots"""
 
@@ -74,7 +75,7 @@ class TestVectorJacobianProduct:
         dy = np.array([1.0])
         vjp = dev.vector_jacobian_product(tape, dy)
 
-        assert vjp is None 
+        assert vjp is None
 
     def test_zero_dy(self, dev):
         """A zero dy vector will return no tapes and a zero matrix"""
@@ -153,6 +154,7 @@ class TestVectorJacobianProduct:
         with pytest.raises(qml.QuantumFunctionError, match="Adjoint differentiation method does"):
             dev.vector_jacobian_product(tape, dy)
 
+
 class TestBatchVectorJacobianProduct:
     """Tests for the batch_vector_jacobian_product function"""
 
@@ -208,7 +210,7 @@ class TestBatchVectorJacobianProduct:
         vjps = dev.batch_vector_jacobian_product(tapes, dys)
 
         assert vjps[0] is None
-        assert vjps[1] is None 
+        assert vjps[1] is None
 
     def test_zero_dy(self, dev):
         """A zero dy vector will return no tapes and a zero matrix"""
@@ -233,7 +235,6 @@ class TestBatchVectorJacobianProduct:
         vjps = dev.batch_vector_jacobian_product(tapes, dys)
 
         assert np.allclose(vjps[0], 0)
-
 
     def test_reduction_append(self, dev):
         """Test the 'append' reduction strategy"""
