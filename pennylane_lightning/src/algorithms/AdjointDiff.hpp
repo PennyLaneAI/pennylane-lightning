@@ -773,14 +773,14 @@ template <class T = double> class AdjointJacobian {
 template <class T = double> class VectorJacobianProduct {
   private:
     void getRowMajor(std::vector<T> &res,
-                     const std::vector<std::vector<T>> &jac, size_t len = 0) {
-        if (!jac.size()) {
+                     const std::vector<std::vector<T>> &jac, size_t len = 0u) {
+        if (jac.empty()) {
             return;
         }
 
         const size_t r_len = jac.size();
         const size_t c_len = jac.front().size();
-        const size_t t_len = len ? len : r_len * c_len;
+        const size_t t_len = len == 0u ? len : r_len * c_len;
 
         if (res.size() != t_len) {
             res.resize(t_len);
@@ -838,7 +838,7 @@ template <class T = double> class VectorJacobianProduct {
                                const OpsData<T> &operations,
                                const std::vector<size_t> &trainableParams,
                                bool apply_operations = false) {
-        if (!vjp.size() || !dy.size()) {
+        if (vjp.empty() || dy.empty()) {
             return;
         }
 
