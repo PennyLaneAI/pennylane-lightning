@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version")
+
 project(pennylane_lightning)
 
 # Read and set pennylane_lightning version
@@ -26,19 +28,30 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
-option(BUILD_TESTS "Build cpp tests" OFF)
-option(ENABLE_WARNINGS "Enable warnings" ON)
+# Clang-tidy
 option(ENABLE_CLANG_TIDY "Enable clang-tidy build checks" OFF)
 
+# Compile options
+option(ENABLE_WARNINGS "Enable warnings" ON)
+option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
+option(ENABLE_AVX "Enable AVX support" ON)
+option(ENABLE_OPENMP "Enable OpenMP" ON)
+option(ENABLE_BLAS "Enable BLAS" OFF)
+
+# Other build options
+option(BUILD_TESTS "Build cpp tests" OFF)
+
 if(ENABLE_CLANG_TIDY)
-    if (NOT DEFINED CLANG_TIDY_BINARY)
+    if(NOT DEFINED CLANG_TIDY_BINARY)
         set(CLANG_TIDY_BINARY clang-tidy)
     endif()
     set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY_BINARY};
                             -extra-arg=-std=c++17;
     )
 endif()
+
+# Process compile options
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
 
 # Add pybind11
 include(FetchContent)
@@ -49,40 +62,31 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(pybind11)
 
+# All CMakeLists.txt in subdirectories use pennylane_lightning_compile_options and pennylane_lightning_external_libs
 add_subdirectory(pennylane_lightning/src)
 
+
 add_library(pennylane_lightning INTERFACE)
-target_link_libraries(pennylane_lightning INTERFACE     lightning_utils 
-                                                        lightning_simulator 
+target_link_libraries(pennylane_lightning INTERFACE     lightning_utils
+                                                        lightning_simulator
                                                         lightning_algorithms)
 target_include_directories(pennylane_lightning INTERFACE "pennylane_lightning/src")
 
-add_library(external_dependency INTERFACE)
-
-if ("$ENV{USE_OPENBLAS}" OR "${USE_OPENBLAS}")
-    message(STATUS "Use OPENBLAS")
-    target_link_libraries(external_dependency INTERFACE openblas)
-    target_compile_options(external_dependency INTERFACE "-DOPENBLAS=1")
-endif()
-
-pybind11_add_module(lightning_qubit_ops     "pennylane_lightning/src/bindings/Bindings.cpp")
-target_link_libraries(lightning_qubit_ops PRIVATE pennylane_lightning external_dependency)
+pybind11_add_module(lightning_qubit_ops "pennylane_lightning/src/bindings/Bindings.cpp")
+target_link_libraries(lightning_qubit_ops PRIVATE pennylane_lightning
+                                                  pennylane_lightning_compile_options
+                                                  pennylane_lightning_external_libs)
 set_target_properties(lightning_qubit_ops PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
-target_compile_options(lightning_qubit_ops PRIVATE "$<$<CONFIG:RELEASE>:-W>")
+if (MSVC)
+    target_compile_options(lightning_qubit_ops PRIVATE "$<$<CONFIG:RELEASE>:/w>")
+else()
+    target_compile_options(lightning_qubit_ops PRIVATE "$<$<CONFIG:RELEASE>:-W>")
+endif()
+
 target_compile_definitions(lightning_qubit_ops PRIVATE VERSION_INFO=${VERSION_STRING})
 
-if(ENABLE_WARNINGS)
-  target_compile_options(pennylane_lightning INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Werror>)
-endif()
 
-if(ENABLE_NATIVE)
-    message(STATUS "ENABLE_NATIVE is ON. Using -march=native")
-    add_compile_options(-march=native)
-    target_compile_options(pennylane_lightning INTERFACE -march=native)
-    target_compile_options(lightning_qubit_ops PRIVATE -march=native)
-endif()
-
-if (BUILD_TESTS)
+if(BUILD_TESTS)
     enable_testing()
 endif()
