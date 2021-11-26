@@ -19,7 +19,6 @@ from warnings import warn
 import platform, os, sys
 
 import numpy as np
-from numpy.lib.function_base import vectorize
 from pennylane import (
     BasisState,
     DeviceError,
@@ -272,13 +271,7 @@ class LightningQubit(DefaultQubit):
         return math.tensordot(jac, dy_reshaped, [[0], [0]])
 
     def vector_jacobian_product(
-        self,
-        tape,
-        dy,
-        num=None,
-        starting_state=None,
-        use_device_state=False,
-        vjp_pybind=True,
+        self, tape, dy, num=None, starting_state=None, use_device_state=False, vjp_pybind=True
     ):
         """Generate the the vector-Jacobian products of a tape.
         

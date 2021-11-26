@@ -870,11 +870,6 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
             return;
         }
 
-        // std::vector<T> dy_row;
-        // const size_t t_len = dy.size() * dy.front().size();
-        // dy_row.resize(t_len);
-        // getRowMajor(dy_row, dy, t_len);
-
         const bool allzero =
             std::all_of(dy.cbegin(), dy.cend(), [](T e) { return e == 0; });
         if (allzero) {
