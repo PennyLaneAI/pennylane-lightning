@@ -770,7 +770,8 @@ template <class T = double> class AdjointJacobian {
  *
  * @tparam T Floating-point precision.
  */
-template <class T = double> class VectorJacobianProduct {
+template <class T = double>
+class VectorJacobianProduct : public AdjointJacobian<T> {
   private:
     /**
      * @brief Computes the vector-Jacobian product for a given vector of
@@ -813,30 +814,36 @@ template <class T = double> class VectorJacobianProduct {
      *
      * @param vjp Preallocated vector for vector-jacobian product data results.
      * @param jac Jacobian matrix from `AdjointJacobian`.
-     * @param dy Gradient-output vector.
+     * @param dy_row Gradient-output vector.
      */
     void tensorDot(std::vector<T> &vjp, const std::vector<std::vector<T>> &jac,
-                   const std::vector<T> &dy) {
-        if (jac.empty() || dy.empty()) {
+                   const std::vector<T> &dy_row) {
+        if (jac.empty() || dy_row.empty()) {
             vjp.clear();
             return;
         }
 
-        const size_t r_len = jac.size();
-        const size_t c_len = jac.front().size();
-        const size_t t_len = r_len * c_len;
+        const size_t jac_len[2]{jac.size(), jac.front().size()};
+        if (dy_row.size() != jac_len[0]) {
+            throw std::invalid_argument(
+                "Invalid size for gradient-output vector");
+        }
 
+        const size_t t_len = jac_len[0] * jac_len[1];
         std::vector<T> jac_row(t_len);
         getRowMajor(jac_row, jac, t_len);
 
-        Util::vecMatrixProd(vjp, dy, jac_row, r_len, c_len);
+        Util::vecMatrixProd(vjp, dy_row, jac_row, jac_len[0], jac_len[1]);
     }
 
     /**
      * @brief Calculates the VectorJacobianProduct for the statevector
      * for the selected set of parametric gates using `AdjointJacobian`.
      *
-     * @param vjp Preallocated vector for vector-jacobian product data results.
+     * @param vjp Preallocated vector for vector-jacobian product data results
+     * of size `trainableParams.size()`.
+     * @param jac Preallocated Jacobian matrix from `AdjointJacobian` of size
+     * `observables.size() * trainableParams.size()`.
      * @param psi Pointer to the statevector data.
      * @param num_elements Length of the statevector data.
      * @param dy Gradient-output vector.
@@ -847,40 +854,60 @@ template <class T = double> class VectorJacobianProduct {
      * @param apply_operations Indicate whether to apply operations to psi prior
      * to calculation.
      */
-    void vectorJacobianProduct(std::vector<T> &vjp, const std::complex<T> *psi,
-                               size_t num_elements, const std::vector<T> &dy,
+    void vectorJacobianProduct(std::vector<T> &vjp,
+                               std::vector<std::vector<T>> &jac,
+                               const std::vector<std::vector<T>> &dy,
+                               const std::complex<T> *psi, size_t num_elements,
                                const std::vector<ObsDatum<T>> &observables,
                                const OpsData<T> &operations,
                                const std::vector<size_t> &trainableParams,
                                bool apply_operations = false) {
-        size_t num_params = trainableParams.size();
-        size_t num_obs = observables.size();
+        const size_t num_params = trainableParams.size();
 
-        if (dy.size() != num_obs) {
-            throw std::invalid_argument(
-                "Invalid size for the gradient-output vector");
-        }
-        if (num_params == 0U) {
+        if (num_params == 0U || dy.empty()) {
             vjp.clear();
             return;
         }
-        if (vjp.size() != num_params) {
-            vjp.resize(num_params);
-        }
 
-        const bool allzero =
-            std::all_of(dy.cbegin(), dy.cend(), [](T e) { return e == 0; });
+        const size_t t_len = dy.size() * dy.front().size();
+        std::vector<T> dy_row(t_len);
+        getRowMajor(dy_row, dy, t_len);
+
+        const bool allzero = std::all_of(dy_row.cbegin(), dy_row.cend(),
+                                         [](T e) { return e == 0; });
         if (allzero) {
+            vjp.resize(num_params);
             return;
         }
 
-        std::vector<std::vector<T>> jac(num_obs, std::vector<T>(num_params, 0));
+        this->adjointJacobian(psi, num_elements, jac, observables, operations,
+                              trainableParams, apply_operations);
 
-        AdjointJacobian<T> adj;
-        adj.adjointJacobian(psi, num_elements, jac, observables, operations,
-                            trainableParams, apply_operations);
+        // // -- debug -- // //
+        // const size_t num_obs = observables.size();
+        // std::cerr << "num_params: " << num_params << std::endl;
+        // std::cerr << "num_obs: " << num_obs << std::endl;
+        // std::cerr << "vjp.size(): " << vjp.size() << std::endl;
+        // std::cerr << "jac.size(): " << jac.size() << std::endl;
+        // std::cerr << "jac.front().size(): " << jac.front().size() <<
+        // std::endl; std::cerr << "dy.size(): " << dy.size() << std::endl;
+        // std::cerr << "dy.front().size(): " << dy.front().size() << std::endl;
+        // for (auto &j: jac) {
+        //     for (auto &i: j) {
+        //         std::cerr << "jac[i]: " << i << std::endl;
+        //     }
+        // }
+        // std::cerr << "------------------------------" << std::endl;
+        // // -- debug -- // //
 
-        tensorDot(vjp, jac, dy);
+        tensorDot(vjp, jac, dy_row);
+
+        // // -- debug -- // //
+        // for (auto &j: jac) {
+        //     std::cerr << "vjp[j]: " << j << std::endl;
+        // }
+        // std::cerr << "------------------------------" << std::endl;
+        // // -- debug -- // //
     }
 }; // class VectorJacobianProduct
 

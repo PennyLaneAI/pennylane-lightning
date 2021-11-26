@@ -623,8 +623,7 @@ inline void vecMatrixProd(std::vector<T> &v_out, const std::vector<T> &v_in,
         throw std::invalid_argument("Invalid size for the input vector");
     }
     if (v_out.size() != n) {
-        throw std::invalid_argument(
-            "Invalid pre-allocated size for the result");
+        throw std::invalid_argument("Invalid preallocated size for the result");
     }
 
     vecMatrixProd(v_in.data(), mat.data(), v_out.data(), m, n);
