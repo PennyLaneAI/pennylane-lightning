@@ -177,7 +177,7 @@ class TestVectorJacobianProduct:
 
 
 class TestBatchVectorJacobianProduct:
-    """Tests for the batch_vector_jacobian_product function"""
+    """Tests for the batch_vjp function"""
 
     @pytest.fixture
     def dev(self):
@@ -204,7 +204,7 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        vjps = dev.batch_vector_jacobian_product(tapes, dys, vjp_pybind=vjp_pybind)
+        vjps = dev.batch_vjp(tapes, dys, vjp_pybind=vjp_pybind)
 
         assert vjps[0] is None
         assert vjps[1] is not None
@@ -230,7 +230,7 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        vjps = dev.batch_vector_jacobian_product(tapes, dys, vjp_pybind=vjp_pybind)
+        vjps = dev.batch_vjp(tapes, dys, vjp_pybind=vjp_pybind)
 
         assert vjps[0] is None
         assert vjps[1] is None
@@ -256,7 +256,7 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([0.0]), np.array([1.0])]
 
-        vjps = dev.batch_vector_jacobian_product(tapes, dys, vjp_pybind=vjp_pybind)
+        vjps = dev.batch_vjp(tapes, dys, vjp_pybind=vjp_pybind)
 
         assert np.allclose(vjps[0], 0)
 
@@ -281,7 +281,7 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        vjps = dev.batch_vector_jacobian_product(tapes, dys, vjp_pybind=vjp_pybind)
+        vjps = dev.batch_vjp(tapes, dys, vjp_pybind=vjp_pybind)
 
         assert len(vjps) == 2
         assert all(isinstance(v, np.ndarray) for v in vjps)
@@ -308,6 +308,6 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        vjps = dev.batch_vector_jacobian_product(tapes, dys, vjp_pybind=vjp_pybind)
+        vjps = dev.batch_vjp(tapes, dys, vjp_pybind=vjp_pybind)
 
         assert sum(len(t) for t in vjps) == sum(len(t.trainable_params) for t in tapes)

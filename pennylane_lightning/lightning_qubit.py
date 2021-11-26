@@ -415,7 +415,7 @@ class LightningQubit(DefaultQubit):
         )
         return vjp_res
 
-    def batch_vector_jacobian_product(
+    def batch_vjp(
         self,
         tapes,
         dys,

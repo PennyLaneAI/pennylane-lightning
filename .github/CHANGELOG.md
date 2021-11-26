@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add VJP support to PL-Lightning.
+[(#181)](https://github.com/PennyLaneAI/pennylane-lightning/pull/181)
+
 ### Breaking changes
 
 ### Improvements
