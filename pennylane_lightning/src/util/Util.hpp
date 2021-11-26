@@ -568,21 +568,20 @@ inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, size_t m,
             break;
         }
     }
-
     if (allzero) {
         return;
     }
 
-    T *mat_t = new T[m * n];
-    CFTranspose(mat, mat_t, m, n, 0, m, 0, n);
+    std::vector<T> mat_t(m*n);
+    CFTranspose(mat, mat_t.data(), m, n, 0, m, 0, n);
 
     for (i = 0; i < n; i++) {
+        T t = z;
         for (j = 0; j < m; j++) {
-            v_out[i] += mat_t[i * m + j] * v_in[j];
+            t += mat_t[i * m + j] * v_in[j];
         }
+        v_out[i] = t;
     }
-
-    delete[] mat_t;
 }
 
 /**
