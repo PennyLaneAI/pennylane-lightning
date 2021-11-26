@@ -81,6 +81,18 @@ Alternatively, for development and testing, you can install by cloning the repos
 Note that subsequent calls to ``pip install -e .`` will use cached binaries stored in the
 ``build`` folder. Run ``make clean`` if you would like to recompile.
 
+You can also pass ``cmake`` options with ``build_ext``:
+
+.. code-block:: console
+
+    $ python3 setup.py build_ext -i --define="ENABLE_OPENMP=OFF;ENABLE_NATIVE=ON"
+
+and install the compilied library with
+
+.. code-block:: console
+
+    $ python3 setup.py develop
+
 Testing
 -------
 
@@ -97,7 +109,6 @@ while the C++ code can be tested with
 
     $ make test-cpp
 
-Testing the C++ code requires the `GoogleTest <https://github.com/google/googletest>`__ framework.
 
 CMake Support
 -------------
@@ -109,29 +120,51 @@ One can also build the plugin using CMake:
     $ cmake -S. -B build
     $ cmake --build build
 
-and install 
-    
-.. code-block:: console
-
-    $ pip install -e .
-
 To test the C++ code:
 
 .. code-block:: console
 
     $ mkdir build && cd build
     $ cmake -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Debug ..
-    $ make cpptests
-    $ make test
+    $ make
 
-Other supported options are ``-DENABLE_NATIVE=ON`` (for ``-march=native``),
-``-DUSE_LAPACK=ON``, ``-DUSE_OPENBLAS=ON``, and
+Other supported options are ``-DENABLE_WARNINGS=ON``,
+``-DENABLE_NATIVE=ON`` (for ``-march=native``), 
+``-DENALBE_OPENMP=ON``, ``-DENALBE_BLAS=ON``, and
 ``-DENABLE_CLANG_TIDY=ON``.
+
+
+
+Compile on Windows with MSVC
+----------------------------
+
+You can also compile Pennylane-Lightning on Windows using `Microsoft Visual C++ <https://visualstudio.microsoft.com/vs/features/cplusplus/>`_ compiler. You need `cmake <https://cmake.org/download/>`_ and appropriate Python environment (e.g. using `Anaconda <https://www.anaconda.com/>`_).
+
+
+We recommend to use ``[x64 (or x86)] Native Tools Command Prompt for VS [version]`` for compiling the library. Be sure that ``cmake`` and ``python`` can be called within the prompt.
+
+
+.. code-block:: console
+
+    $ cmake --version
+    $ python --version
+
+Then a common command will work.
+
+.. code-block:: console
+
+    $ pip install -r requirements.txt
+    $ pip install -e .
+
+Note that OpenMP and BLAS are disabled in this setting.
+
 
 .. installation-end-inclusion-marker-do-not-remove
 
+
 Please refer to the `plugin documentation <https://pennylane-lightning.readthedocs.io/>`_ as
 well as to the `PennyLane documentation <https://pennylane.readthedocs.io/>`_ for further reference.
+
 
 
 Contributing
