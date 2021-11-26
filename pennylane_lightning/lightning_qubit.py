@@ -272,7 +272,13 @@ class LightningQubit(DefaultQubit):
         return math.tensordot(jac, dy_reshaped, [[0], [0]])
 
     def vector_jacobian_product(
-        self, tape, dy, num=None, starting_state=None, use_device_state=False, pybind=False,
+        self,
+        tape,
+        dy,
+        num=None,
+        starting_state=None,
+        use_device_state=False,
+        pybind=False,
     ):
         """Generate the the vector-Jacobian products of a tape.
         
@@ -339,7 +345,7 @@ class LightningQubit(DefaultQubit):
             )
 
             return self._compute_vjp_tensordot(dy, jac, num=num)
-        
+
         for m in tape.measurements:
             if m.return_type is not Expectation:
                 raise QuantumFunctionError(
@@ -413,7 +419,7 @@ class LightningQubit(DefaultQubit):
             tp_shift,
             tape.num_params,
         )
-        return vjp_res        
+        return vjp_res
 
     def batch_vector_jacobian_product(
         self, tapes, dys, num=None, reduction="append", starting_state=None, use_device_state=False
