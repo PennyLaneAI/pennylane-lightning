@@ -845,7 +845,7 @@ void lightning_class_bindings(py::module &m) {
              })
         .def("vjp", &VectorJacobianProduct<PrecisionT>::vectorJacobianProduct)
         .def("vjp", [](VectorJacobianProduct<PrecisionT> &v,
-                       const std::vector<std::vector<PrecisionT>> &dy,
+                       const std::vector<PrecisionT> &dy,
                        const StateVecBinder<PrecisionT> &sv,
                        const std::vector<ObsDatum<PrecisionT>> &observables,
                        const OpsData<PrecisionT> &operations,

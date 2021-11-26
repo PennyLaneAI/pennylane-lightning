@@ -48,7 +48,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={0}",
         std::vector<std::vector<double>> jacobian(
             num_obs, std::vector<double>(num_params, 0));
         std::vector<double> vjp_res(num_params);
-        std::vector<std::vector<double>> dy(1, std::vector<double>(num_obs, 0));
+        std::vector<double> dy(num_obs, 0);
 
         for (const auto &p : param) {
             auto ops = VJP.createOpsData({"RX"}, {{p}}, {{0}}, {false});
@@ -83,8 +83,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={1}",
         std::vector<std::vector<double>> jacobian(
             num_obs, std::vector<double>(num_params, 0));
         std::vector<double> vjp_res(num_params);
-        std::vector<std::vector<double>> dy(1,
-                                            std::vector<double>(num_obs, 1.0));
+        std::vector<double> dy(num_obs, 1.0);
 
         for (const auto &p : param) {
             auto ops = VJP.createOpsData({"RX"}, {{p}}, {{0}}, {false});
@@ -119,8 +118,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={0.4}",
         std::vector<std::vector<double>> jacobian(
             num_obs, std::vector<double>(num_params, 0));
         std::vector<double> vjp_res(num_params);
-        std::vector<std::vector<double>> dy(1,
-                                            std::vector<double>(num_obs, 0.4));
+        std::vector<double> dy(num_obs, 0.4);
 
         for (const auto &p : param) {
             auto ops = VJP.createOpsData({"RX"}, {{p}}, {{0}}, {false});
@@ -156,8 +154,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RY, Obs=X dy={0.4}",
         std::vector<std::vector<double>> jacobian(
             num_obs, std::vector<double>(num_params, 0));
         std::vector<double> vjp_res(num_params);
-        std::vector<std::vector<double>> dy(1,
-                                            std::vector<double>(num_obs, 0.4));
+        std::vector<double> dy(num_obs, 0.4);
 
         for (const auto &p : param) {
             auto ops = VJP.createOpsData({"RY"}, {{p}}, {{0}}, {false});
@@ -192,7 +189,7 @@ TEST_CASE(
         std::vector<std::vector<double>> jacobian(
             num_obs, std::vector<double>(num_params, 0));
         std::vector<double> vjp_res(num_params);
-        std::vector<std::vector<double>> dy(1, std::vector<double>(num_obs, 1));
+        std::vector<double> dy(num_obs, 1);
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
         StateVector<double> psi(cdata.data(), cdata.size());
@@ -228,8 +225,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=[RX,RX,RX], "
         std::vector<std::vector<double>> jacobian(
             num_obs, std::vector<double>(num_params, 0));
         std::vector<double> vjp_res(num_params);
-        std::vector<std::vector<double>> dy(1,
-                                            std::vector<double>(num_obs, 0.4));
+        std::vector<double> dy(num_obs, 0.4);
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
         StateVector<double> psi(cdata.data(), cdata.size());
@@ -273,8 +269,7 @@ TEST_CASE(
             num_obs, std::vector<double>(num_params, 0));
         std::vector<size_t> t_params{0, 2};
         std::vector<double> vjp_res(num_params);
-        std::vector<std::vector<double>> dy(1,
-                                            std::vector<double>(num_obs, 1.0));
+        std::vector<double> dy(num_obs, 1);
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
         StateVector<double> psi(cdata.data(), cdata.size());
@@ -316,8 +311,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=[RX,RX,RX], "
         std::vector<std::vector<double>> jacobian(
             num_obs, std::vector<double>(num_params, 0));
         std::vector<double> vjp_res(num_params);
-        std::vector<std::vector<double>> dy(1,
-                                            std::vector<double>(num_obs, 0.4));
+        std::vector<double> dy(num_obs, 0.4);
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
         StateVector<double> psi(cdata.data(), cdata.size());
@@ -356,8 +350,7 @@ TEST_CASE(
         std::vector<std::vector<double>> jacobian(
             num_obs, std::vector<double>(num_params, 0));
         std::vector<double> vjp_res(num_params);
-        std::vector<std::vector<double>> dy(1,
-                                            std::vector<double>(num_obs, 1.0));
+        std::vector<double> dy(num_obs, 1);
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
         StateVector<double> psi(cdata.data(), cdata.size());
@@ -412,8 +405,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=Mixed, Obs=[XXX], "
         std::vector<std::vector<double>> jacobian(
             num_obs, std::vector<double>(num_params, 0));
         std::vector<double> vjp_res(num_params);
-        std::vector<std::vector<double>> dy(1,
-                                            std::vector<double>(num_obs, -0.2));
+        std::vector<double> dy(num_obs, -0.2);
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
         StateVector<double> psi(cdata.data(), cdata.size());
@@ -484,8 +476,7 @@ TEST_CASE(
             std::vector<std::vector<double>> jacobian(
                 num_obs, std::vector<double>(num_params, 0));
             std::vector<double> vjp_res(num_params);
-            std::vector<std::vector<double>> dy(
-                1, std::vector<double>(num_obs, 1.0));
+            std::vector<double> dy(num_obs, 1);
 
             std::vector<std::complex<double>> cdata{INVSQRT2<double>(),
                                                     -INVSQRT2<double>()};
@@ -535,8 +526,7 @@ TEST_CASE(
         std::vector<std::vector<double>> jacobian(
             num_obs, std::vector<double>(t_params.size(), 0));
         std::vector<double> vjp_res(t_params.size());
-        std::vector<std::vector<double>> dy(1,
-                                            std::vector<double>(num_obs, 1.0));
+        std::vector<double> dy(num_obs, 1);
 
         std::vector<std::complex<double>> cdata{ONE<double>(), ZERO<double>(),
                                                 ZERO<double>(), ZERO<double>()};
@@ -594,8 +584,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Mixed Ops, Obs and "
         std::vector<std::vector<double>> jacobian(
             num_obs, std::vector<double>(t_params.size(), 0));
         std::vector<double> vjp_res(t_params.size());
-        std::vector<std::vector<double>> dy(1,
-                                            std::vector<double>(num_obs, -0.5));
+        std::vector<double> dy(num_obs, -0.5);
 
         std::vector<std::complex<double>> cdata{ONE<double>(), ZERO<double>(),
                                                 ZERO<double>(), ZERO<double>()};

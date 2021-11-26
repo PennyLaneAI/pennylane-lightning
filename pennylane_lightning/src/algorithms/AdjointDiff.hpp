@@ -857,7 +857,7 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
      */
     void vectorJacobianProduct(std::vector<T> &vjp,
                                std::vector<std::vector<T>> &jac,
-                               const std::vector<std::vector<T>> &dy,
+                               const std::vector<T> &dy,
                                const std::complex<T> *psi, size_t num_elements,
                                const std::vector<ObsDatum<T>> &observables,
                                const OpsData<T> &operations,
@@ -870,12 +870,13 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
             return;
         }
 
-        const size_t t_len = dy.size() * dy.front().size();
-        std::vector<T> dy_row(t_len);
-        getRowMajor(dy_row, dy, t_len);
+        // std::vector<T> dy_row;
+        // const size_t t_len = dy.size() * dy.front().size();
+        // dy_row.resize(t_len);
+        // getRowMajor(dy_row, dy, t_len);
 
-        const bool allzero = std::all_of(dy_row.cbegin(), dy_row.cend(),
-                                         [](T e) { return e == 0; });
+        const bool allzero =
+            std::all_of(dy.cbegin(), dy.cend(), [](T e) { return e == 0; });
         if (allzero) {
             vjp.resize(num_params);
             return;
@@ -884,7 +885,7 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
         this->adjointJacobian(psi, num_elements, jac, observables, operations,
                               trainableParams, apply_operations);
 
-        tensorDot(vjp, jac, dy_row);
+        tensorDot(vjp, jac, dy);
     }
 }; // class VectorJacobianProduct
 

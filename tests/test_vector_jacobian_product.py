@@ -62,7 +62,8 @@ class TestVectorJacobianProduct:
     def dev(self):
         return qml.device("lightning.qubit", wires=2)
 
-    def test_no_trainable_parameters(self, dev):
+    @pytest.mark.parametrize("vjp_pybind", [True, False])
+    def test_no_trainable_parameters(self, dev, vjp_pybind):
         """A tape with no trainable parameters will simply return None"""
         x = 0.4
 
@@ -73,11 +74,28 @@ class TestVectorJacobianProduct:
 
         tape.trainable_params = {}
         dy = np.array([1.0])
-        vjp = dev.vector_jacobian_product(tape, dy)
+        vjp = dev.vector_jacobian_product(tape, dy, vjp_pybind=vjp_pybind)
 
         assert vjp is None
 
-    def test_zero_dy(self, dev):
+    @pytest.mark.parametrize("vjp_pybind", [True, False])
+    def test_no_trainable_parameters_(self, dev, vjp_pybind):
+        """A tape with no trainable parameters will simply return None"""
+        x = 0.4
+
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(x, wires=0)
+            qml.CNOT(wires=[0, 1])
+            qml.expval(qml.PauliZ(0))
+
+        tape.trainable_params = {}
+        dy = np.array([1.0])
+        vjp = dev.vector_jacobian_product(tape, dy, vjp_pybind=vjp_pybind)
+
+        assert vjp is None
+
+    @pytest.mark.parametrize("vjp_pybind", [True, False])
+    def test_zero_dy(self, dev, vjp_pybind):
         """A zero dy vector will return no tapes and a zero matrix"""
         x = 0.4
         y = 0.6
@@ -90,11 +108,12 @@ class TestVectorJacobianProduct:
 
         tape.trainable_params = {0, 1}
         dy = np.array([0.0])
-        vjp = dev.vector_jacobian_product(tape, dy)
+        vjp = dev.vector_jacobian_product(tape, dy, vjp_pybind=vjp_pybind)
 
         assert np.all(vjp == np.zeros([len(tape.trainable_params)]))
 
-    def test_single_expectation_value(self, tol, dev):
+    @pytest.mark.parametrize("vjp_pybind", [True, False])
+    def test_single_expectation_value(self, tol, dev, vjp_pybind):
         """Tests correct output shape and evaluation for a tape
         with a single expval output"""
         x = 0.543
@@ -109,12 +128,13 @@ class TestVectorJacobianProduct:
         tape.trainable_params = {0, 1}
         dy = np.array([1.0])
 
-        vjp = dev.vector_jacobian_product(tape, dy)
+        vjp = dev.vector_jacobian_product(tape, dy, vjp_pybind=vjp_pybind)
 
         expected = np.array([-np.sin(y) * np.sin(x), np.cos(y) * np.cos(x)])
         assert np.allclose(vjp, expected, atol=tol, rtol=0)
 
-    def test_multiple_expectation_values(self, tol, dev):
+    @pytest.mark.parametrize("vjp_pybind", [True, False])
+    def test_multiple_expectation_values(self, tol, dev, vjp_pybind):
         """Tests correct output shape and evaluation for a tape
         with multiple expval outputs"""
         x = 0.543
@@ -130,12 +150,13 @@ class TestVectorJacobianProduct:
         tape.trainable_params = {0, 1}
         dy = np.array([1.0, 2.0])
 
-        vjp = dev.vector_jacobian_product(tape, dy)
+        vjp = dev.vector_jacobian_product(tape, dy, vjp_pybind=vjp_pybind)
 
         expected = np.array([-np.sin(x), 2 * np.cos(y)])
         assert np.allclose(vjp, expected, atol=tol, rtol=0)
 
-    def test_prob_expectation_values(self, tol, dev):
+    @pytest.mark.parametrize("vjp_pybind", [True, False])
+    def test_prob_expectation_values(self, dev, vjp_pybind):
         """Tests correct output shape and evaluation for a tape
         with prob and expval outputs"""
         x = 0.543
@@ -152,7 +173,7 @@ class TestVectorJacobianProduct:
         dy = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
 
         with pytest.raises(qml.QuantumFunctionError, match="Adjoint differentiation method does"):
-            dev.vector_jacobian_product(tape, dy)
+            dev.vector_jacobian_product(tape, dy, vjp_pybind=vjp_pybind)
 
 
 class TestBatchVectorJacobianProduct:
@@ -162,7 +183,8 @@ class TestBatchVectorJacobianProduct:
     def dev(self):
         return qml.device("lightning.qubit", wires=2)
 
-    def test_one_tape_no_trainable_parameters(self, dev):
+    @pytest.mark.parametrize("vjp_pybind", [True, False])
+    def test_one_tape_no_trainable_parameters(self, dev, vjp_pybind):
         """A tape with no trainable parameters will simply return None"""
 
         with qml.tape.QuantumTape() as tape1:
@@ -182,12 +204,13 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        vjps = dev.batch_vector_jacobian_product(tapes, dys)
+        vjps = dev.batch_vector_jacobian_product(tapes, dys, vjp_pybind=vjp_pybind)
 
         assert vjps[0] is None
         assert vjps[1] is not None
 
-    def test_all_tapes_no_trainable_parameters(self, dev):
+    @pytest.mark.parametrize("vjp_pybind", [True, False])
+    def test_all_tapes_no_trainable_parameters(self, dev, vjp_pybind):
         """If all tapes have no trainable parameters all outputs will be None"""
 
         with qml.tape.QuantumTape() as tape1:
@@ -207,12 +230,13 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        vjps = dev.batch_vector_jacobian_product(tapes, dys)
+        vjps = dev.batch_vector_jacobian_product(tapes, dys, vjp_pybind=vjp_pybind)
 
         assert vjps[0] is None
         assert vjps[1] is None
 
-    def test_zero_dy(self, dev):
+    @pytest.mark.parametrize("vjp_pybind", [True, False])
+    def test_zero_dy(self, dev, vjp_pybind):
         """A zero dy vector will return no tapes and a zero matrix"""
 
         with qml.tape.QuantumTape() as tape1:
@@ -232,11 +256,12 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([0.0]), np.array([1.0])]
 
-        vjps = dev.batch_vector_jacobian_product(tapes, dys)
+        vjps = dev.batch_vector_jacobian_product(tapes, dys, vjp_pybind=vjp_pybind)
 
         assert np.allclose(vjps[0], 0)
 
-    def test_reduction_append(self, dev):
+    @pytest.mark.parametrize("vjp_pybind", [True, False])
+    def test_reduction_append(self, dev, vjp_pybind):
         """Test the 'append' reduction strategy"""
 
         with qml.tape.JacobianTape() as tape1:
@@ -256,13 +281,14 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        vjps = dev.batch_vector_jacobian_product(tapes, dys)
+        vjps = dev.batch_vector_jacobian_product(tapes, dys, vjp_pybind=vjp_pybind)
 
         assert len(vjps) == 2
         assert all(isinstance(v, np.ndarray) for v in vjps)
         assert all(len(v) == len(t.trainable_params) for t, v in zip(tapes, vjps))
 
-    def test_reduction_extend(self, dev):
+    @pytest.mark.parametrize("vjp_pybind", [True, False])
+    def test_reduction_extend(self, dev, vjp_pybind):
         """Test the 'extend' reduction strategy"""
 
         with qml.tape.JacobianTape() as tape1:
@@ -282,6 +308,6 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        vjps = dev.batch_vector_jacobian_product(tapes, dys)
+        vjps = dev.batch_vector_jacobian_product(tapes, dys, vjp_pybind=vjp_pybind)
 
         assert sum(len(t) for t in vjps) == sum(len(t.trainable_params) for t in tapes)

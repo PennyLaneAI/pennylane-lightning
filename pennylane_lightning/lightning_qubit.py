@@ -278,7 +278,7 @@ class LightningQubit(DefaultQubit):
         num=None,
         starting_state=None,
         use_device_state=False,
-        pybind=False,
+        vjp_pybind=True,
     ):
         """Generate the the vector-Jacobian products of a tape.
         
@@ -309,11 +309,12 @@ class LightningQubit(DefaultQubit):
             dy (tensor_like): Gradient-output vector. Must have shape
                 matching the output shape of the corresponding tape.
             num (int): The length of the flattened ``dy`` argument. This is an
-            optional argument, but can be useful to provide if ``dy`` potentially
-            has no shape (for example, due to tracing or just-in-time compilation).
-            starting_state (): ...
-            use_device_state (): ...
-            pybind (bool): 
+                optional argument, but can be useful to provide if ``dy`` potentially
+                has no shape (for example, due to tracing or just-in-time compilation).
+            starting_state (array[int]): Starting state indeces.
+            use_device_state (bool): Use device if `True` in case of `starting_state=None`.  
+            vjp_pybind (bool): Use the `VectorJacobianProduct` class in `lighting.qubit` if `True`, 
+                otherwise `adjoint_jacobian` will be called to compute vjp. 
         Returns:
             tensor_like or None: Vector-Jacobian product. Returns None if the tape
             has no trainable parameters.  
@@ -339,7 +340,7 @@ class LightningQubit(DefaultQubit):
         except (AttributeError, TypeError):
             pass
 
-        if not pybind:
+        if not vjp_pybind:
             jac = self.adjoint_jacobian(
                 tape, starting_state=starting_state, use_device_state=use_device_state
             )
@@ -404,15 +405,8 @@ class LightningQubit(DefaultQubit):
             trainable_params if not use_sp else [i - 1 for i in trainable_params[first_elem:]]
         )  # exclude first index if explicitly setting sv
 
-        # jac = adj.adjoint_jacobian(
-        #     StateVectorC128(ket),
-        #     obs_serialized,
-        #     ops_serialized,
-        #     tp_shift,
-        #     tape.num_params,
-        # )
         vjp_res = VJP.vjp(
-            dy,
+            math.reshape(dy, [-1]),
             StateVectorC128(ket),
             obs_serialized,
             ops_serialized,
@@ -422,7 +416,14 @@ class LightningQubit(DefaultQubit):
         return vjp_res
 
     def batch_vector_jacobian_product(
-        self, tapes, dys, num=None, reduction="append", starting_state=None, use_device_state=False
+        self,
+        tapes,
+        dys,
+        num=None,
+        reduction="append",
+        starting_state=None,
+        use_device_state=False,
+        vjp_pybind=True,
     ):
         """Generate the the vector-Jacobian products of a batch of tapes.
         
@@ -459,9 +460,11 @@ class LightningQubit(DefaultQubit):
             reduction (str): Determines how the vector-Jacobian products are returned.
                 If ``append``, then the output of the function will be of the form
                 ``List[tensor_like]``, with each element corresponding to the VJP of each
-            starting_state (): ...
-            use_device_state (): ...
                 input tape. If ``extend``, then the output VJPs will be concatenated.
+            starting_state (array[int]): Starting state indeces.
+            use_device_state (bool): Use device if `True` in case of `starting_state=None`.  
+            vjp_pybind (bool): Use the `VectorJacobianProduct` class in `lighting.qubit` if `True`, 
+                otherwise `adjoint_jacobian` will be called to compute vjp. 
         Returns:
             List[tensor_like or None]: list of vector-Jacobian products. ``None`` elements corresponds
             to tapes with no trainable parameters.
@@ -471,7 +474,12 @@ class LightningQubit(DefaultQubit):
         # Loop through the tapes and dys vector
         for tape, dy in zip(tapes, dys):
             vjp = self.vector_jacobian_product(
-                tape, dy, num=num, starting_state=starting_state, use_device_state=use_device_state
+                tape,
+                dy,
+                num=num,
+                starting_state=starting_state,
+                use_device_state=use_device_state,
+                vjp_pybind=vjp_pybind,
             )
             if vjp is None:
                 if reduction == "append":
