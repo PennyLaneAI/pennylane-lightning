@@ -572,7 +572,7 @@ inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, size_t m,
         return;
     }
 
-    std::vector<T> mat_t(m*n);
+    std::vector<T> mat_t(m * n);
     CFTranspose(mat, mat_t.data(), m, n, 0, m, 0, n);
 
     for (i = 0; i < n; i++) {
