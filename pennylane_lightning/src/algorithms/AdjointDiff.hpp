@@ -833,6 +833,7 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
         std::vector<T> jac_row(t_len);
         getRowMajor(jac_row, jac, t_len);
 
+
         Util::vecMatrixProd(vjp, dy_row, jac_row, jac_len[0], jac_len[1]);
     }
 
@@ -873,41 +874,42 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
         std::vector<T> dy_row(t_len);
         getRowMajor(dy_row, dy, t_len);
 
-        const bool allzero = std::all_of(dy_row.cbegin(), dy_row.cend(),
-                                         [](T e) { return e == 0; });
+        const bool allzero =
+            std::all_of(dy_row.cbegin(), dy_row.cend(), [](T e) { return e == 0; });
         if (allzero) {
             vjp.resize(num_params);
             return;
         }
 
         this->adjointJacobian(psi, num_elements, jac, observables, operations,
-                              trainableParams, apply_operations);
+                            trainableParams, apply_operations);
 
         // // -- debug -- // //
-        // const size_t num_obs = observables.size();
-        // std::cerr << "num_params: " << num_params << std::endl;
-        // std::cerr << "num_obs: " << num_obs << std::endl;
-        // std::cerr << "vjp.size(): " << vjp.size() << std::endl;
-        // std::cerr << "jac.size(): " << jac.size() << std::endl;
-        // std::cerr << "jac.front().size(): " << jac.front().size() <<
-        // std::endl; std::cerr << "dy.size(): " << dy.size() << std::endl;
-        // std::cerr << "dy.front().size(): " << dy.front().size() << std::endl;
-        // for (auto &j: jac) {
-        //     for (auto &i: j) {
-        //         std::cerr << "jac[i]: " << i << std::endl;
-        //     }
-        // }
-        // std::cerr << "------------------------------" << std::endl;
+        const size_t num_obs = observables.size();
+        std::cerr << "num_params: " << num_params << std::endl;
+        std::cerr << "num_obs: " << num_obs << std::endl;
+        std::cerr << "vjp.size(): " << vjp.size() << std::endl;
+        std::cerr << "jac.size(): " << jac.size() << std::endl;
+        std::cerr << "jac.front().size(): " << jac.front().size() << std::endl;
+        std::cerr << "dy.size(): " << dy.size() << std::endl;
+        std::cerr << "dy.front().size(): " << dy.front().size() << std::endl;
+        for (auto &j: jac) {
+            for (auto &i: j) {
+                std::cerr << "jac[i]: " << i << std::endl; 
+            }
+        }
+        std::cerr << "------------------------------" << std::endl;
         // // -- debug -- // //
 
         tensorDot(vjp, jac, dy_row);
 
+
+        for (auto &j: jac) {
+            std::cerr << "vjp[j]: " << j << std::endl;
+        }
+        std::cerr << "------------------------------" << std::endl;
         // // -- debug -- // //
-        // for (auto &j: jac) {
-        //     std::cerr << "vjp[j]: " << j << std::endl;
-        // }
-        // std::cerr << "------------------------------" << std::endl;
-        // // -- debug -- // //
+
     }
 }; // class VectorJacobianProduct
 
