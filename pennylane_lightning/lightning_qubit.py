@@ -44,6 +44,7 @@ try:
             StateVectorC64,
             StateVectorC128,
             AdjointJacobianC128,
+            VectorJacobianProductC128,
         )
     else:
         from .lightning_qubit_ops import (
@@ -51,6 +52,7 @@ try:
             StateVectorC64,
             StateVectorC128,
             AdjointJacobianC128,
+            VectorJacobianProductC128,
         )
     from ._serialize import _serialize_obs, _serialize_ops
 
@@ -270,7 +272,7 @@ class LightningQubit(DefaultQubit):
         return math.tensordot(jac, dy_reshaped, [[0], [0]])
 
     def vector_jacobian_product(
-        self, tape, dy, num=None, starting_state=None, use_device_state=False
+        self, tape, dy, num=None, starting_state=None, use_device_state=False, pybind=False,
     ):
         """Generate the the vector-Jacobian products of a tape.
         
@@ -305,10 +307,17 @@ class LightningQubit(DefaultQubit):
             has no shape (for example, due to tracing or just-in-time compilation).
             starting_state (): ...
             use_device_state (): ...
+            pybind (bool): 
         Returns:
             tensor_like or None: Vector-Jacobian product. Returns None if the tape
             has no trainable parameters.  
         """
+        if self.shots is not None:
+            warn(
+                "Requested adjoint differentiation to be computed with finite shots."
+                " The derivative is always exact when using the adjoint differentiation method.",
+                UserWarning,
+            )
         num_params = len(tape.trainable_params)
         if num_params == 0:
             # The tape has no trainable parameters; the VJP
@@ -324,11 +333,87 @@ class LightningQubit(DefaultQubit):
         except (AttributeError, TypeError):
             pass
 
-        jac = self.adjoint_jacobian(
-            tape, starting_state=starting_state, use_device_state=use_device_state
-        )
+        if not pybind:
+            jac = self.adjoint_jacobian(
+                tape, starting_state=starting_state, use_device_state=use_device_state
+            )
 
-        return self._compute_vjp_tensordot(dy, jac, num=num)
+            return self._compute_vjp_tensordot(dy, jac, num=num)
+        
+        for m in tape.measurements:
+            if m.return_type is not Expectation:
+                raise QuantumFunctionError(
+                    "Adjoint differentiation method does not support"
+                    f" measurement {m.return_type.value}"
+                )
+            if not isinstance(m.obs, qml.operation.Tensor):
+                if isinstance(m.obs, qml.Projector):
+                    raise QuantumFunctionError(
+                        "Adjoint differentiation method does not support the Projector observable"
+                    )
+                if isinstance(m.obs, qml.Hermitian):
+                    raise QuantumFunctionError(
+                        "Lightning adjoint differentiation method does not currently support the Hermitian observable"
+                    )
+            else:
+                if any([isinstance(o, qml.Projector) for o in m.obs.non_identity_obs]):
+                    raise QuantumFunctionError(
+                        "Adjoint differentiation method does not support the Projector observable"
+                    )
+                if any([isinstance(o, qml.Hermitian) for o in m.obs.non_identity_obs]):
+                    raise QuantumFunctionError(
+                        "Lightning adjoint differentiation method does not currently support the Hermitian observable"
+                    )
+
+        for op in tape.operations:
+            if (
+                op.num_params > 1 and not isinstance(op, qml.Rot)
+            ) or op.name in UNSUPPORTED_PARAM_GATES_ADJOINT:
+                raise QuantumFunctionError(
+                    f"The {op.name} operation is not supported using "
+                    'the "adjoint" differentiation method'
+                )
+
+        # Initialization of state
+        if starting_state is not None:
+            ket = np.ravel(starting_state)
+        else:
+            if not use_device_state:
+                self.reset()
+                self.execute(tape)
+            ket = np.ravel(self._pre_rotated_state)
+
+        # adj = AdjointJacobianC128()
+        VJP = VectorJacobianProductC128()
+
+        obs_serialized = _serialize_obs(tape, self.wire_map)
+        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map)
+
+        ops_serialized = VJP.create_ops_list(*ops_serialized)
+
+        trainable_params = sorted(tape.trainable_params)
+        first_elem = 1 if trainable_params[0] == 0 else 0
+
+        tp_shift = (
+            trainable_params if not use_sp else [i - 1 for i in trainable_params[first_elem:]]
+        )  # exclude first index if explicitly setting sv
+
+        # jac = adj.adjoint_jacobian(
+        #     StateVectorC128(ket),
+        #     obs_serialized,
+        #     ops_serialized,
+        #     tp_shift,
+        #     tape.num_params,
+        # )
+        vjp_res = VJP.vjp(
+            dy,
+            StateVectorC128(ket),
+            obs_serialized,
+            ops_serialized,
+            tp_shift,
+            tape.num_params,
+        )
+        return vjp_res        
 
     def batch_vector_jacobian_product(
         self, tapes, dys, num=None, reduction="append", starting_state=None, use_device_state=False
