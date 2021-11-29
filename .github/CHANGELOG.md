@@ -20,13 +20,23 @@ Isidor Schoch
 
 ### Improvements
 
+* Update PL-Lightning to support new features in PL.
+[(#179)](https://github.com/PennyLaneAI/pennylane-lightning/pull/179)
+
 ### Documentation
+
+* Compile guide for MSVC is added.
+[(#176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/176)
 
 ### Bug fixes
 
 ### Contributors
 
+Chae-Yeun Park
+
 This release contains contributions from (in alphabetical order):
+
+Ali Asadi
 
 ---
 

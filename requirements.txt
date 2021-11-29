@@ -1,3 +1,4 @@
+ninja
 flaky
 numpy
 pennylane>=0.15

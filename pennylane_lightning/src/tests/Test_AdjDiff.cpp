@@ -162,7 +162,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z], "
         const size_t num_obs = 3;
         std::vector<std::vector<double>> jacobian(
             num_obs, std::vector<double>(num_params, 0));
-        std::set<size_t> t_params{0, 2};
+        std::vector<size_t> t_params{0, 2};
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
         StateVector<double> psi(cdata.data(), cdata.size());
@@ -316,7 +316,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Mixed Ops, Obs and TParams",
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     {
         const size_t num_qubits = 2;
-        const std::set<size_t> t_params{1, 2, 3};
+        const std::vector<size_t> t_params{1, 2, 3};
         const size_t num_obs = 1;
 
         const auto thetas = Util::linspace(-2 * M_PI, 2 * M_PI, 8);

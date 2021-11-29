@@ -16,6 +16,7 @@ This module contains the :class:`~.LightningQubit` class, a PennyLane simulator 
 interfaces with C++ for fast linear algebra calculations.
 """
 from warnings import warn
+import platform, os, sys
 
 import numpy as np
 from pennylane import (
@@ -32,12 +33,23 @@ from pennylane.operation import Expectation
 from ._version import __version__
 
 try:
-    from .lightning_qubit_ops import (
-        apply,
-        StateVectorC64,
-        StateVectorC128,
-        AdjointJacobianC128,
-    )
+    if platform.system() == "Windows" and sys.version_info[:2] >= (3, 8):  # pragma: no cover
+        # Add the current directory to DLL path.
+        # See https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew
+        os.add_dll_directory(os.path.dirname(os.path.abspath(__file__)))
+        from lightning_qubit_ops import (
+            apply,
+            StateVectorC64,
+            StateVectorC128,
+            AdjointJacobianC128,
+        )
+    else:
+        from .lightning_qubit_ops import (
+            apply,
+            StateVectorC64,
+            StateVectorC128,
+            AdjointJacobianC128,
+        )
     from ._serialize import _serialize_obs, _serialize_ops
 
     CPP_BINARY_AVAILABLE = True
@@ -220,10 +232,11 @@ class LightningQubit(DefaultQubit):
 
         ops_serialized = adj.create_ops_list(*ops_serialized)
 
+        trainable_params = sorted(tape.trainable_params)
+        first_elem = 1 if trainable_params[0] == 0 else 0
+
         tp_shift = (
-            tape.trainable_params
-            if not use_sp
-            else {i - 1 for i in tape.trainable_params.difference({0})}
+            trainable_params if not use_sp else [i - 1 for i in trainable_params[first_elem:]]
         )  # exclude first index if explicitly setting sv
 
         jac = adj.adjoint_jacobian(
