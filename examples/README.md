@@ -2,8 +2,7 @@
 Run `bash run_gate_benchmark.sh $CXX_COMPILER`, where `$CXX_COMPILER` is the compiler you wish to use, in the terminal (e.g. `bash run_gate_benchmark.sh clang++`). The script will automatically build the gate_benchmark project.
 It will set the CXX environment variable to "$CXX_COMPILER".
 
-Some comments on the implementation:
-General comments: 
+## Implementation details: 
 * The compile-time options are controlled by the bash script `run_gate_benchmark.sh`
 * The lightning code is run in the cpp file
 * Plotting is done with the python script `gate_benchmark_plotter.py`
