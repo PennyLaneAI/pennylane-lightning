@@ -13,6 +13,7 @@
 #include <catch2/catch.hpp>
 
 #include "AdjointDiff.hpp"
+#include "JacobianProd.hpp"
 #include "StateVector.hpp"
 #include "Util.hpp"
 

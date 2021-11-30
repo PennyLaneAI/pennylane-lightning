@@ -251,47 +251,34 @@ class LightningQubit(DefaultQubit):
         )
         return jac
 
-    def _compute_vjp_tensordot(self, dy, jac, num=None):
-        if jac is None:
-            return None
-
-        dy_reshaped = math.reshape(dy, [-1])
-        num = math.shape(dy_reshaped)[0] if num is None else num
-        jac = (
-            math.convert_like(jac, dy_reshaped) if not isinstance(dy_reshaped, np.ndarray) else jac
-        )
-        jac = math.reshape(jac, [num, -1])
-
-        try:
-            if math.allclose(dy, 0):
-                return math.convert_like(np.zeros([jac.shape[1]]), dy)
-        except (AttributeError, TypeError):
-            pass
-
-        return math.tensordot(jac, dy_reshaped, [[0], [0]])
-
-    def vector_jacobian_product(
-        self, tape, dy, num=None, starting_state=None, use_device_state=False, vjp_pybind=True
-    ):
+    def vector_jacobian_product(self, tape, dy, starting_state=None, use_device_state=False):
         """Generate the the vector-Jacobian products of a tape.
         
         Consider a function :math:`\mathbf{f}(\mathbf{x})`. The Jacobian is given by
+
         .. math::
+
             \mathbf{J}_{\mathbf{f}}(\mathbf{x}) = \begin{pmatrix}
                 \frac{\partial f_1}{\partial x_1} &\cdots &\frac{\partial f_1}{\partial x_n}\\
                 \vdots &\ddots &\vdots\\
                 \frac{\partial f_m}{\partial x_1} &\cdots &\frac{\partial f_m}{\partial x_n}\\
             \end{pmatrix}.
+
         During backpropagation, the chain rule is applied. For example, consider the
         cost function :math:`h = y\circ f: \mathbb{R}^n \rightarrow \mathbb{R}`,
         where :math:`y: \mathbb{R}^m \rightarrow \mathbb{R}`.
         The gradient is:
+
         .. math::
+
             \nabla h(\mathbf{x}) = \frac{\partial y}{\partial \mathbf{f}} \frac{\partial \mathbf{f}}{\partial \mathbf{x}}
             = \frac{\partial y}{\partial \mathbf{f}} \mathbf{J}_{\mathbf{f}}(\mathbf{x}).
+
         Denote :math:`d\mathbf{y} = \frac{\partial y}{\partial \mathbf{f}}`; we can write this in the form
         of a matrix multiplication:
+
         .. math:: \left[\nabla h(\mathbf{x})\right]_{j} = \sum_{i=0}^m d\mathbf{y}_i ~ \mathbf{J}_{ij}.
+
         Thus, we can see that the gradient of the cost function is given by the so-called
         **vector-Jacobian product**; the product of the row-vector :math:`d\mathbf{y}`, representing
         the gradient of subsequent components of the cost function, and :math:`\mathbf{J}`,
@@ -301,13 +288,14 @@ class LightningQubit(DefaultQubit):
             tape (.QuantumTape): quantum tape to differentiate
             dy (tensor_like): Gradient-output vector. Must have shape
                 matching the output shape of the corresponding tape.
-            num (int): The length of the flattened ``dy`` argument. This is an
-                optional argument, but can be useful to provide if ``dy`` potentially
-                has no shape (for example, due to tracing or just-in-time compilation).
-            starting_state (array[int]): Starting state indeces.
-            use_device_state (bool): Use device if `True` in case of `starting_state=None`.  
-            vjp_pybind (bool): Use the `VectorJacobianProduct` class in `lighting.qubit` if `True`, 
-                otherwise `adjoint_jacobian` will be called to compute vjp. 
+
+        Keyword Args:
+            starting_state (tensor_like): post-forward pass state to start execution with. It should be
+                complex-valued. Takes precedence over ``use_device_state``.
+            use_device_state (bool): use current device state to initialize. A forward pass of the same
+                circuit should be the last thing the device has executed. If a ``starting_state`` is
+                provided, that takes precedence.
+
         Returns:
             tensor_like or None: Vector-Jacobian product. Returns None if the tape
             has no trainable parameters.  
@@ -324,21 +312,11 @@ class LightningQubit(DefaultQubit):
             # is simply none.
             return None
 
-        try:
-            # If the dy vector is zero, then the
-            # corresponding element of the VJP will be zero,
-            # and we can avoid a quantum computation.
-            if math.allclose(dy, 0):
-                return math.convert_like(np.zeros([num_params]), dy)
-        except (AttributeError, TypeError):
-            pass
-
-        if not vjp_pybind:
-            jac = self.adjoint_jacobian(
-                tape, starting_state=starting_state, use_device_state=use_device_state
-            )
-
-            return self._compute_vjp_tensordot(dy, jac, num=num)
+        # If the dy vector is zero, then the
+        # corresponding element of the VJP will be zero,
+        # and we can avoid a quantum computation.
+        if math.allclose(dy, 0):
+            return math.convert_like(np.zeros([num_params]), dy)
 
         for m in tape.measurements:
             if m.return_type is not Expectation:
@@ -383,7 +361,6 @@ class LightningQubit(DefaultQubit):
                 self.execute(tape)
             ket = np.ravel(self._pre_rotated_state)
 
-        # adj = AdjointJacobianC128()
         VJP = VectorJacobianProductC128()
 
         obs_serialized = _serialize_obs(tape, self.wire_map)
@@ -398,7 +375,7 @@ class LightningQubit(DefaultQubit):
             trainable_params if not use_sp else [i - 1 for i in trainable_params[first_elem:]]
         )  # exclude first index if explicitly setting sv
 
-        vjp_res = VJP.vjp(
+        vjp_tensor = VJP.vjp(
             math.reshape(dy, [-1]),
             StateVectorC128(ket),
             obs_serialized,
@@ -406,37 +383,38 @@ class LightningQubit(DefaultQubit):
             tp_shift,
             tape.num_params,
         )
-        return vjp_res
+        return vjp_tensor
 
     def batch_vjp(
-        self,
-        tapes,
-        dys,
-        num=None,
-        reduction="append",
-        starting_state=None,
-        use_device_state=False,
-        vjp_pybind=True,
+        self, tapes, dys, reduction="append", starting_state=None, use_device_state=False
     ):
         """Generate the the vector-Jacobian products of a batch of tapes.
-        
+
         Consider a function :math:`\mathbf{f}(\mathbf{x})`. The Jacobian is given by
+
         .. math::
+
             \mathbf{J}_{\mathbf{f}}(\mathbf{x}) = \begin{pmatrix}
                 \frac{\partial f_1}{\partial x_1} &\cdots &\frac{\partial f_1}{\partial x_n}\\
                 \vdots &\ddots &\vdots\\
                 \frac{\partial f_m}{\partial x_1} &\cdots &\frac{\partial f_m}{\partial x_n}\\
             \end{pmatrix}.
+
         During backpropagation, the chain rule is applied. For example, consider the
         cost function :math:`h = y\circ f: \mathbb{R}^n \rightarrow \mathbb{R}`,
         where :math:`y: \mathbb{R}^m \rightarrow \mathbb{R}`.
         The gradient is:
+
         .. math::
+
             \nabla h(\mathbf{x}) = \frac{\partial y}{\partial \mathbf{f}} \frac{\partial \mathbf{f}}{\partial \mathbf{x}}
             = \frac{\partial y}{\partial \mathbf{f}} \mathbf{J}_{\mathbf{f}}(\mathbf{x}).
+
         Denote :math:`d\mathbf{y} = \frac{\partial y}{\partial \mathbf{f}}`; we can write this in the form
         of a matrix multiplication:
+
         .. math:: \left[\nabla h(\mathbf{x})\right]_{j} = \sum_{i=0}^m d\mathbf{y}_i ~ \mathbf{J}_{ij}.
+
         Thus, we can see that the gradient of the cost function is given by the so-called
         **vector-Jacobian product**; the product of the row-vector :math:`d\mathbf{y}`, representing
         the gradient of subsequent components of the cost function, and :math:`\mathbf{J}`,
@@ -447,17 +425,18 @@ class LightningQubit(DefaultQubit):
             dys (Sequence[tensor_like]): Sequence of gradient-output vectors ``dy``. Must be the
                 same length as ``tapes``. Each ``dy`` tensor should have shape
                 matching the output shape of the corresponding tape.
-            num (int): The length of the flattened ``dy`` argument. This is an
-            optional argument, but can be useful to provide if ``dy`` potentially
-            has no shape (for example, due to tracing or just-in-time compilation).
+
+        Keyword Args:
             reduction (str): Determines how the vector-Jacobian products are returned.
                 If ``append``, then the output of the function will be of the form
                 ``List[tensor_like]``, with each element corresponding to the VJP of each
                 input tape. If ``extend``, then the output VJPs will be concatenated.
-            starting_state (array[int]): Starting state indeces.
-            use_device_state (bool): Use device if `True` in case of `starting_state=None`.  
-            vjp_pybind (bool): Use the `VectorJacobianProduct` class in `lighting.qubit` if `True`, 
-                otherwise `adjoint_jacobian` will be called to compute vjp. 
+            starting_state (tensor_like): post-forward pass state to start execution with. It should be
+                complex-valued. Takes precedence over ``use_device_state``.
+            use_device_state (bool): use current device state to initialize. A forward pass of the same
+                circuit should be the last thing the device has executed. If a ``starting_state`` is
+                provided, that takes precedence.
+
         Returns:
             List[tensor_like or None]: list of vector-Jacobian products. ``None`` elements corresponds
             to tapes with no trainable parameters.
@@ -469,10 +448,8 @@ class LightningQubit(DefaultQubit):
             vjp = self.vector_jacobian_product(
                 tape,
                 dy,
-                num=num,
                 starting_state=starting_state,
                 use_device_state=use_device_state,
-                vjp_pybind=vjp_pybind,
             )
             if vjp is None:
                 if reduction == "append":

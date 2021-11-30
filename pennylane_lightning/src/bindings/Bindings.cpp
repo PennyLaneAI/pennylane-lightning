@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "AdjointDiff.hpp"
+#include "JacobianProd.hpp"
 #include "StateVector.hpp"
 #include "pybind11/complex.h"
 #include "pybind11/numpy.h"

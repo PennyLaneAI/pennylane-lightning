@@ -504,7 +504,18 @@ inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
 
 /**
  * @brief Calculates transpose of a matrix recursively and Cache-Friendly
- * using blacking and Cache-optimized techniques.
+ * using blocking and Cache-optimized techniques.
+ *
+ * @tparam T Floating point precision type.
+ * @tparam BLOCKSIZE Size of submatrices in the blocking techinque.
+ * @param mat Data array repr. a flatten (row-wise) matrix m * n.
+ * @param mat_t Pre-allocated data array to store the transpose of `mat`.
+ * @param m Number of rows of `mat`.
+ * @param n Number of columns of `mat`.
+ * @param m1 Index of the first row.
+ * @param m2 Index of the last row.
+ * @param n1 Index of the first column.
+ * @param n2 Index of the last column.
  */
 template <class T, size_t BLOCKSIZE = 32> // NOLINT(readability-magic-numbers)
 inline static void CFTranspose(const T *mat, T *mat_t, size_t m, size_t n,
@@ -609,8 +620,8 @@ inline auto vecMatrixProd(const std::vector<T> &v_in, const std::vector<T> &mat,
 /**
  * @brief Calculates the vactor-matrix product using the best available method.
  *
- * @see inline void vecMatrixProd(const T *v_in,
- * const T *mat, T *v_out, size_t m, size_t n)
+ * @see inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, size_t
+ * m, size_t n)
  */
 template <class T>
 inline void vecMatrixProd(std::vector<T> &v_out, const std::vector<T> &v_in,
@@ -630,7 +641,18 @@ inline void vecMatrixProd(std::vector<T> &v_out, const std::vector<T> &v_in,
 
 /**
  * @brief Calculates transpose of a matrix recursively and Cache-Friendly
- * using blacking and Cache-optimized techniques.
+ * using blocking and Cache-optimized techniques.
+ *
+ * @tparam T Floating point precision type.
+ * @tparam BLOCKSIZE Size of submatrices in the blocking techinque.
+ * @param mat Data array repr. a flatten (row-wise) matrix m * n.
+ * @param mat_t Pre-allocated data array to store the transpose of `mat`.
+ * @param m Number of rows of `mat`.
+ * @param n Number of columns of `mat`.
+ * @param m1 Index of the first row.
+ * @param m2 Index of the last row.
+ * @param n1 Index of the first column.
+ * @param n2 Index of the last column.
  */
 template <class T, size_t BLOCKSIZE = 32> // NOLINT(readability-magic-numbers)
 inline static void CFTranspose(const std::complex<T> *mat,
