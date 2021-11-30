@@ -16,4 +16,4 @@ It will set the CXX environment variable to "$CXX_COMPILER".
 gate_benchmark_plotter.py:
 * The first plot shows the absolute runtime
 * The second plot is on a loglog scale which better depicts the exponential scaling of the relative runtime with respect to the number of simulated qubits
-* We plot the time needed to execute the gate sequence averaged over the repititions
+* We plot the time needed to execute the gate sequence averaged over the repetitions
