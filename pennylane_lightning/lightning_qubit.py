@@ -112,8 +112,7 @@ class LightningQubit(DefaultQubit):
         capabilities.pop("passthru_devices", None)
         return capabilities
 
-    def apply(self, operations, rotations=None, **kwargs):
-
+    def apply(self, operations, dtype=np.complex128, rotations=None, **kwargs):
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
             if isinstance(operations[0], QubitStateVector):
@@ -131,7 +130,7 @@ class LightningQubit(DefaultQubit):
                 )
 
         if operations:
-            self._pre_rotated_state = self.apply_lightning(self._state, operations)
+            self._pre_rotated_state = self.apply_lightning(self._state, operations, dtype=dtype)
         else:
             self._pre_rotated_state = self._state
 
@@ -139,11 +138,11 @@ class LightningQubit(DefaultQubit):
             if any(isinstance(r, QubitUnitary) for r in rotations):
                 super().apply(operations=[], rotations=rotations)
             else:
-                self._state = self.apply_lightning(np.copy(self._pre_rotated_state), rotations)
+                self._state = self.apply_lightning(np.copy(self._pre_rotated_state), rotations, dtype=dtype)
         else:
             self._state = self._pre_rotated_state
 
-    def apply_lightning(self, state, operations):
+    def apply_lightning(self, state, operations, dtype=np.complex64):
         """Apply a list of operations to the state tensor.
 
         Args:
@@ -153,10 +152,14 @@ class LightningQubit(DefaultQubit):
         Returns:
             array[complex]: the output state tensor
         """
-        # assert state.dtype == np.complex128
-        state_vector = np.ravel(state).astype(np.complex64)
-        # sim = StateVectorC128(state_vector)
-        sim = StateVectorC64(state_vector)
+        state_vector = np.ravel(state).astype(dtype)
+        if dtype == np.complex64:
+            sim = StateVectorC64(state_vector)
+        elif dtype == np.complex128:
+            sim = StateVectorC128(state_vector)
+        else:
+            # TODO
+            sim = StateVectorC128(state_vector)
 
         for o in operations:
             name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
