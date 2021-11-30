@@ -6,7 +6,7 @@ It will set the CXX environment variable to "$CXX_COMPILER".
 * The compile-time options are controlled by the bash script `run_gate_benchmark.sh`
 * The PennyLane-Lightning benchmark is provided in the `gate_benchmark.cpp` file
 * Plotting is done with the python script `gate_benchmark_plotter.py`
-* The number of gate repitions is set to 3 and can be changed in the bash script `run_gate_benchmark.sh` by changing the `num_gate_reps` variable
+* The number of gate repetitions is set to 3 and can be changed in the bash script `run_gate_benchmark.sh` by modifying the `num_gate_reps` variable
 
 gate_benchmark.cpp:
 * A single random angle is generated per gate repetition and qubit; the same random angle is used once for all of the parameterised gates
