@@ -71,7 +71,7 @@ class StateVectorManaged : public StateVector<fp_t> {
         return *this;
     }
     auto getDataVector() -> std::vector<CFP_t> & { return data_; }
-    auto getDataVector() const -> const std::vector<CFP_t> & { return data_; }
+    [[nodiscard]] auto getDataVector() const -> const std::vector<CFP_t> & { return data_; }
 
     auto getInternalIndices(const std::vector<size_t> &qubit_indices)
         -> std::vector<size_t> {
