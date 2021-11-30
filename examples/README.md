@@ -8,7 +8,7 @@ It will set the CXX environment variable to "$CXX_COMPILER".
 * Plotting is done with the python script `gate_benchmark_plotter.py`
 * The number of gate repetitions is set to 3 and can be changed in the bash script `run_gate_benchmark.sh` by modifying the `num_gate_reps` variable
 
-gate_benchmark.cpp:
+### `gate_benchmark.cpp`:
 * A single random angle is generated per gate repetition and qubit; the same random angle is used once for all of the parameterised gates
 * The gates are applied in the order X, Y, Z, H, CNOT, CZ, RX, RY, RZ, CRX, CRY, CRZ
 * The above order is repeated `num_gate_reps`-times
