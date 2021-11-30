@@ -53,8 +53,7 @@ using CBLAS_LAYOUT = enum CBLAS_LAYOUT {
 #endif
 /// @endcond
 
-namespace Pennylane {
-namespace Util {
+namespace Pennylane::Util {
 
 /**
  * @brief Compile-time scalar real times complex number.
@@ -780,5 +779,4 @@ template <class T> struct remove_cvref {
     using type = std::remove_cv_t<std::remove_reference_t<T>>;
 };
 
-} // namespace Util
-} // namespace Pennylane
+} // namespace Pennylane::Util
