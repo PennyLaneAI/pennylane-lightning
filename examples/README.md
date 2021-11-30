@@ -1,3 +1,4 @@
+# Gate aggregate performance tests
 Run `bash run_gate_benchmark.sh $CXX_COMPILER`, where `$CXX_COMPILER` is the compiler you wish to use, in the terminal (e.g. `bash run_gate_benchmark.sh clang++`). The script will automatically build the gate_benchmark project.
 It will set the CXX environment variable to "$CXX_COMPILER".
 
