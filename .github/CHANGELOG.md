@@ -1,20 +1,9 @@
+# Release 0.20.0-dev
 
 ### New features since last release
 
 * Added examples folder containing aggregate gate performance test.
 [(#165)](https://github.com/PennyLaneAI/pennylane-lightning/pull/165)
-
-### Contributors
-
-This release contains contributions from (in alphabetical order):
-
-Isidor Schoch
-
----
-
-# Release 0.20.0-dev
-
-### New features since last release
 
 ### Breaking changes
 
@@ -36,7 +25,7 @@ Chae-Yeun Park
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi
+Ali Asadi, Isidor Schoch
 
 ---
 
