@@ -174,17 +174,15 @@ class LightningQubit(DefaultQubit):
 
         return np.reshape(state_vector, state.shape)
 
-    def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
-        if self.shots is not None:
-            warn(
-                "Requested adjoint differentiation to be computed with finite shots."
-                " The derivative is always exact when using the adjoint differentiation method.",
-                UserWarning,
-            )
+    def adjoint_diff_support_check(self, tape):
+        """Check Lightning adjoint differentiation method support for a tape.
 
-        if len(tape.trainable_params) == 0:
-            return np.array(0)
+        Raise ``QuantumFunctionError`` in case of not supported measurements, observables,
+        or operations in the Lightning adjoint differentiation method for a given tape.
 
+        Args:
+            tape (.QuantumTape): quantum tape to differentiate
+        """
         for m in tape.measurements:
             if m.return_type is not Expectation:
                 raise QuantumFunctionError(
@@ -218,6 +216,20 @@ class LightningQubit(DefaultQubit):
                     f"The {op.name} operation is not supported using "
                     'the "adjoint" differentiation method'
                 )
+
+    def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
+        if self.shots is not None:
+            warn(
+                "Requested adjoint differentiation to be computed with finite shots."
+                " The derivative is always exact when using the adjoint differentiation method.",
+                UserWarning,
+            )
+
+        if len(tape.trainable_params) == 0:
+            return np.array(0)
+
+        # Check adjoint diff support
+        self.adjoint_diff_support_check(tape)
 
         # Initialization of state
         if starting_state is not None:
@@ -285,39 +297,8 @@ class LightningQubit(DefaultQubit):
         if math.allclose(dy, 0):
             return math.convert_like(np.zeros([num_params]), dy)
 
-        for m in tape.measurements:
-            if m.return_type is not Expectation:
-                raise QuantumFunctionError(
-                    "Adjoint differentiation method does not support"
-                    f" measurement {m.return_type.value}"
-                )
-            if not isinstance(m.obs, qml.operation.Tensor):
-                if isinstance(m.obs, qml.Projector):
-                    raise QuantumFunctionError(
-                        "Adjoint differentiation method does not support the Projector observable"
-                    )
-                if isinstance(m.obs, qml.Hermitian):
-                    raise QuantumFunctionError(
-                        "Lightning adjoint differentiation method does not currently support the Hermitian observable"
-                    )
-            else:
-                if any([isinstance(o, qml.Projector) for o in m.obs.non_identity_obs]):
-                    raise QuantumFunctionError(
-                        "Adjoint differentiation method does not support the Projector observable"
-                    )
-                if any([isinstance(o, qml.Hermitian) for o in m.obs.non_identity_obs]):
-                    raise QuantumFunctionError(
-                        "Lightning adjoint differentiation method does not currently support the Hermitian observable"
-                    )
-
-        for op in tape.operations:
-            if (
-                op.num_params > 1 and not isinstance(op, qml.Rot)
-            ) or op.name in UNSUPPORTED_PARAM_GATES_ADJOINT:
-                raise QuantumFunctionError(
-                    f"The {op.name} operation is not supported using "
-                    'the "adjoint" differentiation method'
-                )
+        # Check adjoint diff support
+        self.adjoint_diff_support_check(tape)
 
         # Initialization of state
         if starting_state is not None:
