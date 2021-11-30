@@ -382,7 +382,7 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        vjps = dev.batch_vjp(tapes, dys)
+        vjps = dev.batch_vjp(tapes, dys, reduction="append")
 
         assert len(vjps) == 2
         assert all(isinstance(v, np.ndarray) for v in vjps)
@@ -408,6 +408,6 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        vjps = dev.batch_vjp(tapes, dys)
+        vjps = dev.batch_vjp(tapes, dys, reduction="extend")
 
-        assert sum(len(t) for t in vjps) == sum(len(t.trainable_params) for t in tapes)
+        assert len(vjps) == sum(len(t.trainable_params) for t in tapes)
