@@ -276,15 +276,12 @@ class LightningQubit(DefaultQubit):
                 " The derivative is always exact when using the adjoint differentiation method.",
                 UserWarning,
             )
+
         num_params = len(tape.trainable_params)
+
         if num_params == 0:
-            # The tape has no trainable parameters; the VJP
-            # is simply none.
             return None
 
-        # If the dy vector is zero, then the
-        # corresponding element of the VJP will be zero,
-        # and we can avoid a quantum computation.
         if math.allclose(dy, 0):
             return math.convert_like(np.zeros([num_params]), dy)
 
@@ -345,7 +342,7 @@ class LightningQubit(DefaultQubit):
             trainable_params if not use_sp else [i - 1 for i in trainable_params[first_elem:]]
         )  # exclude first index if explicitly setting sv
 
-        vjp_tensor = VJP.vjp(
+        return VJP.vjp(
             math.reshape(dy, [-1]),
             StateVectorC128(ket),
             obs_serialized,
@@ -353,7 +350,6 @@ class LightningQubit(DefaultQubit):
             tp_shift,
             tape.num_params,
         )
-        return vjp_tensor
 
     def batch_vjp(
         self, tapes, dys, reduction="append", starting_state=None, use_device_state=False
