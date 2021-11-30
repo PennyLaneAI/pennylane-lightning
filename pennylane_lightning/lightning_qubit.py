@@ -252,7 +252,7 @@ class LightningQubit(DefaultQubit):
         return jac
 
     def vector_jacobian_product(self, tape, dy, starting_state=None, use_device_state=False):
-        """Generate the the vector-Jacobian products of a tape.
+        r"""Generate the the vector-Jacobian products of a tape.
         
         Consider a function :math:`\mathbf{f}(\mathbf{x})`. The Jacobian is given by
 
@@ -388,7 +388,7 @@ class LightningQubit(DefaultQubit):
     def batch_vjp(
         self, tapes, dys, reduction="append", starting_state=None, use_device_state=False
     ):
-        """Generate the the vector-Jacobian products of a batch of tapes.
+        r"""Generate the the vector-Jacobian products of a batch of tapes.
 
         Consider a function :math:`\mathbf{f}(\mathbf{x})`. The Jacobian is given by
 
