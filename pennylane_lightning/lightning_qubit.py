@@ -20,6 +20,7 @@ import platform, os, sys
 
 import numpy as np
 from pennylane import (
+    math,
     BasisState,
     DeviceError,
     QuantumFunctionError,
@@ -27,7 +28,6 @@ from pennylane import (
     QubitUnitary,
 )
 import pennylane as qml
-from pennylane import math
 from pennylane.devices import DefaultQubit
 from pennylane.operation import Expectation
 
@@ -177,8 +177,8 @@ class LightningQubit(DefaultQubit):
     def adjoint_diff_support_check(self, tape):
         """Check Lightning adjoint differentiation method support for a tape.
 
-        Raise ``QuantumFunctionError`` in case of not supported measurements, observables,
-        or operations in the Lightning adjoint differentiation method for a given tape.
+        Raise ``QuantumFunctionError`` if ``tape`` contains not supported measurements,
+        observables, or operations by the Lightning adjoint differentiation method.
 
         Args:
             tape (.QuantumTape): quantum tape to differentiate

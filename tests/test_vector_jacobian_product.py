@@ -388,6 +388,32 @@ class TestBatchVectorJacobianProduct:
         assert all(isinstance(v, np.ndarray) for v in vjps)
         assert all(len(v) == len(t.trainable_params) for t, v in zip(tapes, vjps))
 
+    def test_reduction_append_callable(self, dev):
+        """Test the 'append' reduction strategy"""
+
+        with qml.tape.JacobianTape() as tape1:
+            qml.RX(0.4, wires=0)
+            qml.CNOT(wires=[0, 1])
+            qml.expval(qml.PauliZ(0))
+
+        with qml.tape.JacobianTape() as tape2:
+            qml.RX(0.4, wires=0)
+            qml.RX(0.6, wires=0)
+            qml.CNOT(wires=[0, 1])
+            qml.expval(qml.PauliZ(0))
+
+        tape1.trainable_params = {0}
+        tape2.trainable_params = {0, 1}
+
+        tapes = [tape1, tape2]
+        dys = [np.array([1.0]), np.array([1.0])]
+
+        vjps = dev.batch_vjp(tapes, dys, reduction=list.append)
+
+        assert len(vjps) == 2
+        assert all(isinstance(v, np.ndarray) for v in vjps)
+        assert all(len(v) == len(t.trainable_params) for t, v in zip(tapes, vjps))
+
     def test_reduction_extend(self, dev):
         """Test the 'extend' reduction strategy"""
 
@@ -409,5 +435,29 @@ class TestBatchVectorJacobianProduct:
         dys = [np.array([1.0]), np.array([1.0])]
 
         vjps = dev.batch_vjp(tapes, dys, reduction="extend")
+
+        assert len(vjps) == sum(len(t.trainable_params) for t in tapes)
+
+    def test_reduction_extend_callable(self, dev):
+        """Test the 'extend' reduction strategy"""
+
+        with qml.tape.JacobianTape() as tape1:
+            qml.RX(0.4, wires=0)
+            qml.CNOT(wires=[0, 1])
+            qml.expval(qml.PauliZ(0))
+
+        with qml.tape.JacobianTape() as tape2:
+            qml.RX(0.4, wires=0)
+            qml.RX(0.6, wires=0)
+            qml.CNOT(wires=[0, 1])
+            qml.expval(qml.PauliZ(0))
+
+        tape1.trainable_params = {0}
+        tape2.trainable_params = {0, 1}
+
+        tapes = [tape1, tape2]
+        dys = [np.array([1.0]), np.array([1.0])]
+
+        vjps = dev.batch_vjp(tapes, dys, reduction=list.extend)
 
         assert len(vjps) == sum(len(t.trainable_params) for t in tapes)
