@@ -9,7 +9,7 @@
 #include "StateVectorManaged.hpp"
 
 /**
- * @brief Outputs walltime for gate-benchmark.
+ * @brief Outputs wall-time for gate-benchmark.
  * @param argc Number of arguments + 1 passed by user.
  * @param argv Binary name followed by number of times gate is repeated and
  * number of qubits.
