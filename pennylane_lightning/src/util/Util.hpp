@@ -491,7 +491,8 @@ inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
                           size_t n, bool transpose = false)
     -> std::vector<std::complex<T>> {
     if (mat.size() != m * n) {
-        throw std::invalid_argument("Invalid m & n for the input matrix");
+        throw std::invalid_argument(
+            "Invalid number of rows and columns for the input matrix");
     }
     if (v_in.size() != n) {
         throw std::invalid_argument("Invalid size for the input vector");
@@ -608,7 +609,8 @@ inline auto vecMatrixProd(const std::vector<T> &v_in, const std::vector<T> &mat,
         throw std::invalid_argument("Invalid size for the input vector");
     }
     if (mat.size() != m * n) {
-        throw std::invalid_argument("Invalid m & n for the input matrix");
+        throw std::invalid_argument(
+            "Invalid number of rows and columns for the input matrix");
     }
 
     std::vector<T> v_out(n);
@@ -627,7 +629,8 @@ template <class T>
 inline void vecMatrixProd(std::vector<T> &v_out, const std::vector<T> &v_in,
                           const std::vector<T> &mat, size_t m, size_t n) {
     if (mat.size() != m * n) {
-        throw std::invalid_argument("Invalid m & n for the input matrix");
+        throw std::invalid_argument(
+            "Invalid number of rows and columns for the input matrix");
     }
     if (v_in.size() != m) {
         throw std::invalid_argument("Invalid size for the input vector");
@@ -702,7 +705,8 @@ template <class T>
 inline auto Transpose(const std::vector<std::complex<T>> mat, size_t m,
                       size_t n) -> std::vector<std::complex<T>> {
     if (mat.size() != m * n) {
-        throw std::invalid_argument("Invalid m & n for the input matrix");
+        throw std::invalid_argument(
+            "Invalid number of rows and columns for the input matrix");
     }
 
     std::vector<std::complex<T>> mat_t(n * m);
@@ -715,9 +719,9 @@ inline auto Transpose(const std::vector<std::complex<T>> mat, size_t m,
  *
  * @tparam T Floating point precision type.
  * @tparam STRIDE Size of stride in the cache-blocking technique
- * @param m_left Row-wise flatten matrix of size m * k.
- * @param m_right Row-wise flatten matrix of size k * n.
- * @param m_out Pre-allocated row-wise flatten matrix of size m * n.
+ * @param m_left Row-wise flatten matrix of shape m * k.
+ * @param m_right Row-wise flatten matrix of shape k * n.
+ * @param m_out Pre-allocated row-wise flatten matrix of shape m * n.
  * @param m Number of rows of `m_left`.
  * @param n Number of columns of `m_right`.
  * @param k Number of rows of `m_right`.
@@ -786,9 +790,9 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
  * @brief Calculates matrix-matrix product using the best avaiable method.
  *
  * @tparam T Floating point precision type.
- * @param m_left Row-wise flatten matrix of size m * k.
- * @param m_right Row-wise flatten matrix of size k * n.
- * @param m_out Pre-allocated row-wise flatten matrix of size m * n.
+ * @param m_left Row-wise flatten matrix of shape m * k.
+ * @param m_right Row-wise flatten matrix of shape k * n.
+ * @param m_out Pre-allocated row-wise flatten matrix of shape m * n.
  * @param m Number of rows of `m_left`.
  * @param n Number of columns of `m_right`.
  * @param k Number of rows of `m_right`.
@@ -837,10 +841,12 @@ inline auto matrixMatProd(const std::vector<std::complex<T>> m_left,
                           size_t n, size_t k, bool transpose = false)
     -> std::vector<std::complex<T>> {
     if (m_left.size() != m * k) {
-        throw std::invalid_argument("Invalid m & k for the input left matrix");
+        throw std::invalid_argument(
+            "Invalid number of rows and columns for the input left matrix");
     }
     if (m_right.size() != k * n) {
-        throw std::invalid_argument("Invalid k & n for the input right matrix");
+        throw std::invalid_argument(
+            "Invalid number of rows and columns for the input right matrix");
     }
 
     std::vector<std::complex<T>> m_out(m * n);

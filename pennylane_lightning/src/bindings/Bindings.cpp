@@ -844,6 +844,16 @@ void lightning_class_bindings(py::module &m) {
                  return OpsData<PrecisionT>{ops_name, conv_params, ops_wires,
                                             ops_inverses, conv_matrices};
              })
+        .def("compute_vjp_from_jac",
+             &VectorJacobianProduct<PrecisionT>::computeVJP)
+        .def("compute_vjp_from_jac",
+             [](VectorJacobianProduct<PrecisionT> &v,
+                const std::vector<PrecisionT> &jac,
+                const std::vector<PrecisionT> &dy_row, size_t m, size_t n) {
+                 std::vector<PrecisionT> vjp_res(n);
+                 v._computeVJP(vjp_res, jac, dy_row, m, n);
+                 return py::array_t<Param_t>(py::cast(vjp_res));
+             })
         .def("vjp", &VectorJacobianProduct<PrecisionT>::vectorJacobianProduct)
         .def("vjp", [](VectorJacobianProduct<PrecisionT> &v,
                        const std::vector<PrecisionT> &dy,
@@ -858,7 +868,8 @@ void lightning_class_bindings(py::module &m) {
             v.vectorJacobianProduct(vjp_res, jac, dy, sv.getData(),
                                     sv.getLength(), observables, operations,
                                     trainableParams);
-            return py::array_t<Param_t>(py::cast(vjp_res));
+            return py::make_tuple(py::array_t<Param_t>(py::cast(jac)),
+                                  py::array_t<Param_t>(py::cast(vjp_res)));
         });
 }
 

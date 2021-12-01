@@ -279,8 +279,8 @@ class LightningQubit(DefaultQubit):
                 provided, that takes precedence.
 
         Returns:
-            tensor_like or None: Vector-Jacobian product. Returns None if the tape
-            has no trainable parameters.
+            tuple[array or None, tensor_like or None]: A tuple of the adjoint-jacobian and the Vector-Jacobian
+            product. Returns ``None`` if the tape has no trainable parameters.
         """
         if self.shots is not None:
             warn(
@@ -292,10 +292,10 @@ class LightningQubit(DefaultQubit):
         num_params = len(tape.trainable_params)
 
         if num_params == 0:
-            return None
+            return None, None
 
         if math.allclose(dy, 0):
-            return math.convert_like(np.zeros([num_params]), dy)
+            return None, math.convert_like(np.zeros([num_params]), dy)
 
         # Check adjoint diff support
         self.adjoint_diff_support_check(tape)
@@ -323,7 +323,7 @@ class LightningQubit(DefaultQubit):
             trainable_params if not use_sp else [i - 1 for i in trainable_params[first_elem:]]
         )  # exclude first index if explicitly setting sv
 
-        return VJP.vjp(
+        jac, vjp = VJP.vjp(
             math.reshape(dy, [-1]),
             StateVectorC128(ket),
             obs_serialized,
@@ -331,6 +331,52 @@ class LightningQubit(DefaultQubit):
             tp_shift,
             tape.num_params,
         )
+        return jac, vjp
+
+    def compute_vjp(self, dy, jac, num=None):
+        """Convenience function to compute the vector-Jacobian product for a given
+        vector of gradient outputs and a Jacobian.
+
+        Args:
+            dy (tensor_like): vector of gradient outputs
+            jac (tensor_like): Jacobian matrix. For an n-dimensional ``dy``
+                vector, the first n-dimensions of ``jac`` should match
+                the shape of ``dy``.
+
+        Keyword Args:
+        num (int): The length of the flattened ``dy`` argument. This is an
+            optional argument, but can be useful to provide if ``dy`` potentially
+            has no shape (for example, due to tracing or just-in-time compilation).
+
+        Returns:
+            tensor_like: the vector-Jacobian product
+        """
+        if jac is None:
+            return None
+
+        dy_row = math.reshape(dy, [-1])
+
+        if num is None:
+            num = math.shape(dy_row)[0]
+
+        if not isinstance(dy_row, np.ndarray):
+            jac = math.convert_like(jac, dy_row)
+
+        jac = math.reshape(jac, [num, -1])
+        num_params = jac.shape[1]
+
+        if math.allclose(dy, 0):
+            return math.convert_like(np.zeros([num_params]), dy)
+
+        VJP = VectorJacobianProductC128()
+
+        vjp_tensor = VJP.compute_vjp_from_jac(
+            math.reshape(jac, [-1]),
+            dy_row,
+            num,
+            num_params,
+        )
+        return vjp_tensor
 
     def batch_vjp(
         self, tapes, dys, reduction="append", starting_state=None, use_device_state=False
@@ -355,14 +401,16 @@ class LightningQubit(DefaultQubit):
                 provided, that takes precedence.
 
         Returns:
-            List[tensor_like or None]: list of vector-Jacobian products. ``None`` elements corresponds
+            tuple[List[array or None], List[tensor_like or None]]: A tuple containing a list
+            of adjoint-jacobians and a list of vector-Jacobian products. ``None`` elements corresponds
             to tapes with no trainable parameters.
         """
         vjps = []
+        jacs = []
 
         # Loop through the tapes and dys vector
         for tape, dy in zip(tapes, dys):
-            vjp = self.vector_jacobian_product(
+            jac, vjp = self.vector_jacobian_product(
                 tape,
                 dy,
                 starting_state=starting_state,
@@ -371,13 +419,16 @@ class LightningQubit(DefaultQubit):
             if vjp is None:
                 if reduction == "append":
                     vjps.append(None)
+                    jacs.append(jac)
                 continue
             if isinstance(reduction, str):
                 getattr(vjps, reduction)(vjp)
+                getattr(jacs, reduction)(jac)
             elif callable(reduction):
                 reduction(vjps, vjp)
+                reduction(jacs, jac)
 
-        return vjps
+        return jacs, vjps
 
 
 if not CPP_BINARY_AVAILABLE:

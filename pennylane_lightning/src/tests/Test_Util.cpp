@@ -193,8 +193,10 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
                               Contains("Invalid size for the input vector"));
             CHECK_THROWS_AS(Util::matrixVecProd(mat, v_in, 2, 2),
                             std::invalid_argument);
-            CHECK_THROWS_WITH(Util::matrixVecProd(mat, v_in, 2, 2),
-                              Contains("Invalid m & n for the input matrix"));
+            CHECK_THROWS_WITH(
+                Util::matrixVecProd(mat, v_in, 2, 2),
+                Contains(
+                    "Invalid number of rows and columns for the input matrix"));
         }
     }
     SECTION("vecMatrixProd") {
@@ -286,8 +288,10 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             using namespace Catch::Matchers;
             std::vector<std::complex<double>> mat(2 * 3, {1, 1});
             CHECK_THROWS_AS(Util::Transpose(mat, 2, 2), std::invalid_argument);
-            CHECK_THROWS_WITH(Util::Transpose(mat, 2, 2),
-                              Contains("Invalid m & n for the input matrix"));
+            CHECK_THROWS_WITH(
+                Util::Transpose(mat, 2, 2),
+                Contains(
+                    "Invalid number of rows and columns for the input matrix"));
         }
     }
     SECTION("matrixMatProd") {
@@ -371,14 +375,14 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             std::vector<std::complex<double>> m_right(3 * 4, {1, 1});
             CHECK_THROWS_AS(Util::matrixMatProd(m_left, m_right, 2, 3, 4),
                             std::invalid_argument);
-            CHECK_THROWS_WITH(
-                Util::matrixMatProd(m_left, m_right, 2, 3, 4),
-                Contains("Invalid m & k for the input left matrix"));
+            CHECK_THROWS_WITH(Util::matrixMatProd(m_left, m_right, 2, 3, 4),
+                              Contains("Invalid number of rows and columns for "
+                                       "the input left matrix"));
             CHECK_THROWS_AS(Util::matrixMatProd(m_left, m_right, 2, 3, 3),
                             std::invalid_argument);
-            CHECK_THROWS_WITH(
-                Util::matrixMatProd(m_left, m_right, 2, 3, 3),
-                Contains("Invalid k & n for the input right matrix"));
+            CHECK_THROWS_WITH(Util::matrixMatProd(m_left, m_right, 2, 3, 3),
+                              Contains("Invalid number of rows and columns for "
+                                       "the input right matrix"));
         }
     }
 }

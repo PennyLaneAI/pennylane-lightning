@@ -70,8 +70,8 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
      * @param jac Jacobian matrix from `AdjointJacobian`.
      * @param dy_row Gradient-output vector.
      */
-    void tensorDot(std::vector<T> &vjp, const std::vector<std::vector<T>> &jac,
-                   const std::vector<T> &dy_row) {
+    void computeVJP(std::vector<T> &vjp, const std::vector<std::vector<T>> &jac,
+                    const std::vector<T> &dy_row) {
         if (jac.empty() || dy_row.empty()) {
             vjp.clear();
             return;
@@ -81,7 +81,7 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
         const size_t c_len = jac.front().size();
         if (dy_row.size() != r_len) {
             throw std::invalid_argument(
-                "Invalid size for gradient-output vector");
+                "Invalid size for the gradient-output vector");
         }
 
         const size_t t_len = r_len * c_len;
@@ -89,6 +89,31 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
         getRowMajor(jac_row, jac, t_len);
 
         Util::vecMatrixProd(vjp, dy_row, jac_row, r_len, c_len);
+    }
+
+    /**
+     * @brief Computes the vector-Jacobian product for a given vector of
+     * gradient outputs and a Jacobian.
+     *
+     * @param vjp Preallocated vector for vector-jacobian product data results.
+     * @param jac Row-wise flatten Jacobian matrix of shape m * n.
+     * @param dy_row Gradient-output vector.
+     * @param m Number of rows of `jac`.
+     * @param n Number of columns of `jac`.
+     */
+    void _computeVJP(std::vector<T> &vjp, const std::vector<T> &jac,
+                     const std::vector<T> &dy_row, size_t m, size_t n) {
+        if (jac.empty() || dy_row.empty()) {
+            vjp.clear();
+            return;
+        }
+
+        if (dy_row.size() != m) {
+            throw std::invalid_argument(
+                "Invalid size for the gradient-output vector");
+        }
+
+        Util::vecMatrixProd(vjp, dy_row, jac, m, n);
     }
 
     /**
@@ -134,7 +159,7 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
         this->adjointJacobian(psi, num_elements, jac, observables, operations,
                               trainableParams, apply_operations);
 
-        tensorDot(vjp, jac, dy);
+        computeVJP(vjp, jac, dy);
     }
 }; // class VectorJacobianProduct
 

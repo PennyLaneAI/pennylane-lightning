@@ -20,6 +20,59 @@ import pennylane as qml
 from pennylane import numpy as np
 
 
+class TestComputeVJP:
+    """Tests for the numeric computation of VJPs"""
+
+    @pytest.fixture
+    def dev(self):
+        return qml.device("lightning.qubit", wires=2)
+
+    def test_computation(self, dev):
+        """Test that the correct VJP is returned"""
+        dy = np.array([[1.0, 2.0], [3.0, 4.0]])
+        jac = np.array([[[1.0, 0.1, 0.2], [0.2, 0.6, 0.1]], [[0.4, -0.7, 1.2], [-0.5, -0.6, 0.7]]])
+
+        vjp = dev.compute_vjp(dy, jac)
+
+        assert vjp.shape == (3,)
+        assert np.all(vjp == np.tensordot(dy, jac, axes=[[0, 1], [0, 1]]))
+
+    def test_computation_num(self, dev):
+        """Test that the correct VJP is returned"""
+        dy = np.array([[1.0, 2.0], [3.0, 4.0]])
+        jac = np.array([[[1.0, 0.1, 0.2], [0.2, 0.6, 0.1]], [[0.4, -0.7, 1.2], [-0.5, -0.6, 0.7]]])
+
+        vjp = dev.compute_vjp(dy, jac, num=4)
+
+        assert vjp.shape == (3,)
+        assert np.all(vjp == np.tensordot(dy, jac, axes=[[0, 1], [0, 1]]))
+
+    def test_computation_num_error(self, dev):
+        """Test that the correct VJP is returned"""
+        dy = np.array([[1.0, 2.0], [3.0, 4.0]])
+        jac = np.array([[[1.0, 0.1, 0.2], [0.2, 0.6, 0.1]], [[0.4, -0.7, 1.2], [-0.5, -0.6, 0.7]]])
+
+        with pytest.raises(ValueError, match="Invalid size for the gradient-output vector"):
+            dev.compute_vjp(dy, jac, num=3)
+
+    def test_jacobian_is_none(self, dev):
+        """A None Jacobian returns a None VJP"""
+
+        dy = np.array([[1.0, 2.0], [3.0, 4.0]])
+        jac = None
+
+        vjp = dev.compute_vjp(dy, jac)
+        assert vjp is None
+
+    def test_zero_dy(self, dev):
+        """A zero dy vector will return a zero matrix"""
+        dy = np.zeros([2, 2])
+        jac = np.array([[[1.0, 0.1, 0.2], [0.2, 0.6, 0.1]], [[0.4, -0.7, 1.2], [-0.5, -0.6, 0.7]]])
+
+        vjp = dev.compute_vjp(dy, jac)
+        assert np.all(vjp == np.zeros([3]))
+
+
 class TestVectorJacobianProduct:
     """Tests for the vector_jacobian_product function"""
 
@@ -42,12 +95,13 @@ class TestVectorJacobianProduct:
 
         dy = np.array([1.0])
 
-        vjp1 = dev.vector_jacobian_product(tape, dy)
+        jac1, vjp1 = dev.vector_jacobian_product(tape, dy)
 
         tape.execute(dev)
-        vjp2 = dev.vector_jacobian_product(tape, dy, use_device_state=True)
+        jac2, vjp2 = dev.vector_jacobian_product(tape, dy, use_device_state=True)
 
         assert np.allclose(vjp1, vjp2, atol=tol, rtol=0)
+        assert np.allclose(jac1, jac2, atol=tol, rtol=0)
 
     def test_provide_starting_state(self, tol, dev):
         """Tests provides correct answer when provided starting state."""
@@ -63,12 +117,13 @@ class TestVectorJacobianProduct:
 
         dy = np.array([1.0])
 
-        vjp1 = dev.vector_jacobian_product(tape, dy)
+        jac1, vjp1 = dev.vector_jacobian_product(tape, dy)
 
         tape.execute(dev)
-        vjp2 = dev.vector_jacobian_product(tape, dy, starting_state=dev._pre_rotated_state)
+        jac2, vjp2 = dev.vector_jacobian_product(tape, dy, starting_state=dev._pre_rotated_state)
 
         assert np.allclose(vjp1, vjp2, atol=tol, rtol=0)
+        assert np.allclose(jac1, jac2, atol=tol, rtol=0)
 
     def test_not_expval(self, dev):
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
@@ -184,9 +239,10 @@ class TestVectorJacobianProduct:
 
         tape.trainable_params = {}
         dy = np.array([1.0])
-        vjp = dev.vector_jacobian_product(tape, dy)
+        jac, vjp = dev.vector_jacobian_product(tape, dy)
 
         assert vjp is None
+        assert jac is None
 
     def test_no_trainable_parameters_(self, dev):
         """A tape with no trainable parameters will simply return None"""
@@ -199,9 +255,10 @@ class TestVectorJacobianProduct:
 
         tape.trainable_params = {}
         dy = np.array([1.0])
-        vjp = dev.vector_jacobian_product(tape, dy)
+        jac, vjp = dev.vector_jacobian_product(tape, dy)
 
         assert vjp is None
+        assert jac is None
 
     def test_zero_dy(self, dev):
         """A zero dy vector will return no tapes and a zero matrix"""
@@ -216,9 +273,10 @@ class TestVectorJacobianProduct:
 
         tape.trainable_params = {0, 1}
         dy = np.array([0.0])
-        vjp = dev.vector_jacobian_product(tape, dy)
+        jac, vjp = dev.vector_jacobian_product(tape, dy)
 
         assert np.all(vjp == np.zeros([len(tape.trainable_params)]))
+        assert jac is None
 
     def test_single_expectation_value(self, tol, dev):
         """Tests correct output shape and evaluation for a tape
@@ -235,10 +293,13 @@ class TestVectorJacobianProduct:
         tape.trainable_params = {0, 1}
         dy = np.array([1.0])
 
-        vjp = dev.vector_jacobian_product(tape, dy)
+        jac1, vjp = dev.vector_jacobian_product(tape, dy)
+
+        jac2 = dev.adjoint_jacobian(tape)
 
         expected = np.array([-np.sin(y) * np.sin(x), np.cos(y) * np.cos(x)])
         assert np.allclose(vjp, expected, atol=tol, rtol=0)
+        assert np.allclose(jac1, jac2, atol=tol, rtol=0)
 
     def test_multiple_expectation_values(self, tol, dev):
         """Tests correct output shape and evaluation for a tape
@@ -256,10 +317,13 @@ class TestVectorJacobianProduct:
         tape.trainable_params = {0, 1}
         dy = np.array([1.0, 2.0])
 
-        vjp = dev.vector_jacobian_product(tape, dy)
+        jac1, vjp = dev.vector_jacobian_product(tape, dy)
+
+        jac2 = dev.adjoint_jacobian(tape)
 
         expected = np.array([-np.sin(x), 2 * np.cos(y)])
         assert np.allclose(vjp, expected, atol=tol, rtol=0)
+        assert np.allclose(jac1, jac2, atol=tol, rtol=0)
 
     def test_prob_expectation_values(self, dev):
         """Tests correct output shape and evaluation for a tape
@@ -308,10 +372,13 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        vjps = dev.batch_vjp(tapes, dys)
+        jacs, vjps = dev.batch_vjp(tapes, dys)
 
         assert vjps[0] is None
         assert vjps[1] is not None
+
+        assert jacs[0] is None
+        assert jacs[1] is not None
 
     def test_all_tapes_no_trainable_parameters(self, dev):
         """If all tapes have no trainable parameters all outputs will be None"""
@@ -333,10 +400,13 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        vjps = dev.batch_vjp(tapes, dys)
+        jacs, vjps = dev.batch_vjp(tapes, dys)
 
         assert vjps[0] is None
         assert vjps[1] is None
+
+        assert jacs[0] is None
+        assert jacs[1] is None
 
     def test_zero_dy(self, dev):
         """A zero dy vector will return no tapes and a zero matrix"""
@@ -358,9 +428,10 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([0.0]), np.array([1.0])]
 
-        vjps = dev.batch_vjp(tapes, dys)
+        jacs, vjps = dev.batch_vjp(tapes, dys)
 
         assert np.allclose(vjps[0], 0)
+        assert jacs[0] is None
 
     def test_reduction_append(self, dev):
         """Test the 'append' reduction strategy"""
@@ -382,11 +453,17 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        vjps = dev.batch_vjp(tapes, dys, reduction="append")
+        jacs, vjps = dev.batch_vjp(tapes, dys, reduction="append")
+
+        jac0 = dev.adjoint_jacobian(tape1)
+        jac1 = dev.adjoint_jacobian(tape2)
 
         assert len(vjps) == 2
         assert all(isinstance(v, np.ndarray) for v in vjps)
         assert all(len(v) == len(t.trainable_params) for t, v in zip(tapes, vjps))
+
+        assert np.allclose(jacs[0], jac0)
+        assert np.allclose(jacs[1], jac1)
 
     def test_reduction_append_callable(self, dev):
         """Test the 'append' reduction strategy"""
@@ -408,11 +485,17 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        vjps = dev.batch_vjp(tapes, dys, reduction=list.append)
+        jacs, vjps = dev.batch_vjp(tapes, dys, reduction=list.append)
+
+        jac0 = dev.adjoint_jacobian(tape1)
+        jac1 = dev.adjoint_jacobian(tape2)
 
         assert len(vjps) == 2
         assert all(isinstance(v, np.ndarray) for v in vjps)
         assert all(len(v) == len(t.trainable_params) for t, v in zip(tapes, vjps))
+
+        assert np.allclose(jacs[0], jac0)
+        assert np.allclose(jacs[1], jac1)
 
     def test_reduction_extend(self, dev):
         """Test the 'extend' reduction strategy"""
@@ -434,9 +517,15 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        vjps = dev.batch_vjp(tapes, dys, reduction="extend")
+        jacs, vjps = dev.batch_vjp(tapes, dys, reduction="extend")
+
+        jac0 = dev.adjoint_jacobian(tape1)
+        jac1 = dev.adjoint_jacobian(tape2)
 
         assert len(vjps) == sum(len(t.trainable_params) for t in tapes)
+
+        assert np.allclose(jacs[0], jac0)
+        assert np.allclose(jacs[1], jac1)
 
     def test_reduction_extend_callable(self, dev):
         """Test the 'extend' reduction strategy"""
@@ -458,6 +547,6 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        vjps = dev.batch_vjp(tapes, dys, reduction=list.extend)
+        _, vjps = dev.batch_vjp(tapes, dys, reduction=list.extend)
 
         assert len(vjps) == sum(len(t.trainable_params) for t in tapes)
