@@ -27,25 +27,27 @@ class TestComputeVJP:
     def dev(self):
         return qml.device("lightning.qubit", wires=2)
 
-    def test_computation(self, dev):
+    def test_computation(self, tol, dev):
         """Test that the correct VJP is returned"""
         dy = np.array([[1.0, 2.0], [3.0, 4.0]])
         jac = np.array([[[1.0, 0.1, 0.2], [0.2, 0.6, 0.1]], [[0.4, -0.7, 1.2], [-0.5, -0.6, 0.7]]])
 
         vjp = dev.compute_vjp(dy, jac)
+        expected = np.tensordot(dy, jac, axes=[[0, 1], [0, 1]])
 
         assert vjp.shape == (3,)
-        assert np.all(vjp == np.tensordot(dy, jac, axes=[[0, 1], [0, 1]]))
+        assert np.allclose(vjp, expected, atol=tol, rtol=0)
 
-    def test_computation_num(self, dev):
+    def test_computation_num(self, tol, dev):
         """Test that the correct VJP is returned"""
         dy = np.array([[1.0, 2.0], [3.0, 4.0]])
         jac = np.array([[[1.0, 0.1, 0.2], [0.2, 0.6, 0.1]], [[0.4, -0.7, 1.2], [-0.5, -0.6, 0.7]]])
 
         vjp = dev.compute_vjp(dy, jac, num=4)
+        expected = np.tensordot(dy, jac, axes=[[0, 1], [0, 1]])
 
         assert vjp.shape == (3,)
-        assert np.all(vjp == np.tensordot(dy, jac, axes=[[0, 1], [0, 1]]))
+        assert np.allclose(vjp, expected, atol=tol, rtol=0)
 
     def test_computation_num_error(self, dev):
         """Test that the correct VJP is returned"""
