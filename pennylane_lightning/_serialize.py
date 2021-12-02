@@ -63,6 +63,7 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict, use_csingle=False) -> Lis
     Args:
         tape (QuantumTape): the input quantum tape
         wires_map (dict): a dictionary mapping input wires to the device's backend wires
+        use_csingle (bool): whether to use np.complex64 instead of np.complex128
 
     Returns:
         list(ObsStructC128 or ObsStructC64): A list of observable objects compatible with the C++ backend
@@ -121,6 +122,7 @@ def _serialize_ops(
     Args:
         tape (QuantumTape): the input quantum tape
         wires_map (dict): a dictionary mapping input wires to the device's backend wires
+        use_csingle (bool): whether to use np.complex64 instead of np.complex128
 
     Returns:
         Tuple[list, list, list, list, list]: A serialization of the operations, containing a list
