@@ -38,19 +38,17 @@ try:
         # See https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew
         os.add_dll_directory(os.path.dirname(os.path.abspath(__file__)))
         from lightning_qubit_ops import (
-            apply,
             StateVectorC64,
+            AdjointJacobianC64,
             StateVectorC128,
             AdjointJacobianC128,
-            AdjointJacobianC64,
         )
     else:
         from .lightning_qubit_ops import (
-            apply,
             StateVectorC64,
+            AdjointJacobianC64,
             StateVectorC128,
             AdjointJacobianC128,
-            AdjointJacobianC64,
         )
     from ._serialize import _serialize_obs, _serialize_ops
 
@@ -112,7 +110,7 @@ class LightningQubit(DefaultQubit):
         capabilities.pop("passthru_devices", None)
         return capabilities
 
-    def apply(self, operations, dtype=np.complex128, rotations=None, **kwargs):
+    def apply(self, operations, rotations=None, **kwargs):
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
             if isinstance(operations[0], QubitStateVector):
@@ -130,7 +128,7 @@ class LightningQubit(DefaultQubit):
                 )
 
         if operations:
-            self._pre_rotated_state = self.apply_lightning(self._state, operations, dtype=dtype)
+            self._pre_rotated_state = self.apply_lightning(self._state, operations)
         else:
             self._pre_rotated_state = self._state
 
@@ -138,11 +136,11 @@ class LightningQubit(DefaultQubit):
             if any(isinstance(r, QubitUnitary) for r in rotations):
                 super().apply(operations=[], rotations=rotations)
             else:
-                self._state = self.apply_lightning(np.copy(self._pre_rotated_state), rotations, dtype=dtype)
+                self._state = self.apply_lightning(np.copy(self._pre_rotated_state), rotations)
         else:
             self._state = self._pre_rotated_state
 
-    def apply_lightning(self, state, operations, dtype=np.complex64):
+    def apply_lightning(self, state, operations):
         """Apply a list of operations to the state tensor.
 
         Args:
@@ -152,13 +150,11 @@ class LightningQubit(DefaultQubit):
         Returns:
             array[complex]: the output state tensor
         """
-        state_vector = np.ravel(state).astype(dtype)
-        if dtype == np.complex64:
+        state_vector = np.ravel(state)
+
+        if state.dtype == np.csingle:
             sim = StateVectorC64(state_vector)
-        elif dtype == np.complex128:
-            sim = StateVectorC128(state_vector)
         else:
-            # TODO
             sim = StateVectorC128(state_vector)
 
         for o in operations:
@@ -177,7 +173,9 @@ class LightningQubit(DefaultQubit):
 
         return np.reshape(state_vector, state.shape)
 
-    def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
+    def adjoint_jacobian(
+        self, tape, starting_state=None, use_device_state=False, use_csingle=False
+    ):
         if self.shots is not None:
             warn(
                 "Requested adjoint differentiation to be computed with finite shots."
@@ -231,11 +229,14 @@ class LightningQubit(DefaultQubit):
                 self.execute(tape)
             ket = np.ravel(self._pre_rotated_state)
 
-        # adj = AdjointJacobianC128()
-        adj = AdjointJacobianC64()
+        if use_csingle:
+            adj = AdjointJacobianC64()
+            ket = ket.astype(np.complex64)
+        else:
+            adj = AdjointJacobianC128()
 
-        obs_serialized = _serialize_obs(tape, self.wire_map)
-        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map)
+        obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=use_csingle)
+        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map, use_csingle=use_csingle)
 
         ops_serialized = adj.create_ops_list(*ops_serialized)
 
@@ -246,8 +247,10 @@ class LightningQubit(DefaultQubit):
             trainable_params if not use_sp else [i - 1 for i in trainable_params[first_elem:]]
         )  # exclude first index if explicitly setting sv
 
+        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
+
         jac = adj.adjoint_jacobian(
-            StateVectorC64(ket),
+            state_vector,
             obs_serialized,
             ops_serialized,
             tp_shift,

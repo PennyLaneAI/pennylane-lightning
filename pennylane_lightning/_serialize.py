@@ -17,13 +17,24 @@ Helper functions for serializing quantum tapes.
 from typing import List, Tuple
 
 import numpy as np
-from pennylane import BasisState, Hadamard, Projector, QubitStateVector, Rot
+from pennylane import (
+    BasisState,
+    Hadamard,
+    Projector,
+    QubitStateVector,
+    Rot,
+)
 from pennylane.grouping import is_pauli_word
 from pennylane.operation import Observable, Tensor
 from pennylane.tape import QuantumTape
 
 try:
-    from .lightning_qubit_ops import StateVectorC128, ObsStructC128, StateVectorC64, ObsStructC64
+    from .lightning_qubit_ops import (
+        StateVectorC64,
+        ObsStructC64,
+        StateVectorC128,
+        ObsStructC128,
+    )
 except ImportError:
     pass
 
@@ -46,7 +57,7 @@ def _obs_has_kernel(obs: Observable) -> bool:
     return False
 
 
-def _serialize_obs(tape: QuantumTape, wires_map: dict) -> List:
+def _serialize_obs(tape: QuantumTape, wires_map: dict, use_csingle=False) -> List:
     """Serializes the observables of an input tape.
 
     Args:
@@ -54,7 +65,7 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict) -> List:
         wires_map (dict): a dictionary mapping input wires to the device's backend wires
 
     Returns:
-        list(ObsStructC128): A list of observable objects compatible with the C++ backend
+        list(ObsStructC128 or ObsStructC64): A list of observable objects compatible with the C++ backend
     """
     obs = []
 
@@ -81,21 +92,27 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict) -> List:
             if is_tensor:
                 for o_ in o.obs:
                     if not _obs_has_kernel(o_):
-                        params.append(o_.matrix.ravel().astype(np.complex64))
+                        params.append(
+                            o_.matrix.ravel().astype(np.complex64 if use_csingle else np.complex128)
+                        )
                     else:
                         params.append([])
             else:
-                params.append(o.matrix.ravel().astype(np.complex64))
+                params.append(
+                    o.matrix.ravel().astype(np.complex64 if use_csingle else np.complex128)
+                )
 
-        # ob = ObsStructC128(name, params, wires)
-        ob = ObsStructC64(name, params, wires)
+        if use_csingle:
+            ob = ObsStructC64(name, params, wires)
+        else:
+            ob = ObsStructC128(name, params, wires)
         obs.append(ob)
 
     return obs
 
 
 def _serialize_ops(
-    tape: QuantumTape, wires_map: dict
+    tape: QuantumTape, wires_map: dict, use_csingle=False
 ) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]], List[bool], List[np.ndarray]]:
     """Serializes the operations of an input tape.
 
@@ -133,7 +150,7 @@ def _serialize_ops(
             name = single_op.name if not is_inverse else single_op.name[:-4]
             names.append(name)
 
-            if getattr(StateVectorC64, name, None) is None:
+            if getattr(StateVectorC64 if use_csingle else StateVectorC128, name, None) is None:
                 params.append([])
                 mats.append(single_op.matrix)
 
@@ -146,4 +163,5 @@ def _serialize_ops(
             wires_list = single_op.wires.tolist()
             wires.append([wires_map[w] for w in wires_list])
             inverses.append(is_inverse)
+
     return (names, params, wires, inverses, mats), uses_stateprep
