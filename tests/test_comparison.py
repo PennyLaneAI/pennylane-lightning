@@ -201,13 +201,14 @@ class TestComparison:
         """Test an n-qubit circuit"""
 
         vec = np.array([1] * (2 ** wires)) / np.sqrt(2 ** wires)
-        w = qml.init.strong_ent_layers_uniform(2, wires)
+        shape = qml.StronglyEntanglingLayers.shape(2, wires)
+        w = np.random.uniform(high=2*np.pi, size=shape)
 
         def circuit():
             """Prepares the equal superposition state and then applies StronglyEntanglingLayers
             and concludes with a simple PauliZ measurement"""
             qml.QubitStateVector(vec, wires=range(wires))
-            qml.templates.StronglyEntanglingLayers(w, wires=range(wires))
+            qml.StronglyEntanglingLayers(w, wires=range(wires))
             return qml.expval(qml.PauliZ(0))
 
         lightning = qml.QNode(circuit, lightning_qubit_dev)
