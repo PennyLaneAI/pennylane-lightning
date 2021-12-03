@@ -18,6 +18,7 @@ Unit tests for the :mod:`pennylane_lightning.LightningQubit` device.
 import math
 
 import numpy as np
+from numpy.core.arrayprint import dtype_short_repr
 import pennylane as qml
 import pytest
 from pennylane import DeviceError
@@ -107,13 +108,14 @@ class TestApply:
     ]
 
     @pytest.mark.parametrize("operation,input,expected_output", test_data_no_parameters)
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_single_wire_no_parameters(
-        self, qubit_device_1_wire, tol, operation, input, expected_output
+        self, qubit_device_1_wire, tol, operation, input, expected_output, C
     ):
         """Tests that applying an operation yields the expected output state for single wire
         operations that have no parameters."""
 
-        qubit_device_1_wire._state = np.array(input).astype(np.complex128)
+        qubit_device_1_wire._state = np.array(input).astype(C)
         qubit_device_1_wire.apply([operation(wires=[0])])
 
         assert np.allclose(qubit_device_1_wire._state, np.array(expected_output), atol=tol, rtol=0)
@@ -143,12 +145,13 @@ class TestApply:
     ]
 
     @pytest.mark.parametrize("operation,input,expected_output", test_data_two_wires_no_parameters)
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_two_wires_no_parameters(
-        self, qubit_device_2_wires, tol, operation, input, expected_output
+        self, qubit_device_2_wires, tol, operation, input, expected_output, C
     ):
         """Tests that applying an operation yields the expected output state for two wire
         operations that have no parameters."""
-        qubit_device_2_wires._state = np.array(input).reshape(2 * [2]).astype(np.complex128)
+        qubit_device_2_wires._state = np.array(input).reshape(2 * [2]).astype(C)
         qubit_device_2_wires.apply([operation(wires=[0, 1])])
 
         assert np.allclose(qubit_device_2_wires.state, np.array(expected_output), atol=tol, rtol=0)
@@ -164,13 +167,14 @@ class TestApply:
     ]
 
     @pytest.mark.parametrize("operation,input,expected_output", test_data_three_wires_no_parameters)
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_three_wires_no_parameters(
-        self, qubit_device_3_wires, tol, operation, input, expected_output
+        self, qubit_device_3_wires, tol, operation, input, expected_output, C
     ):
         """Tests that applying an operation yields the expected output state for three wire
         operations that have no parameters."""
 
-        qubit_device_3_wires._state = np.array(input).reshape(3 * [2]).astype(np.complex128)
+        qubit_device_3_wires._state = np.array(input).reshape(3 * [2]).astype(C)
         qubit_device_3_wires.apply([operation(wires=[0, 1, 2])])
 
         assert np.allclose(qubit_device_3_wires.state, np.array(expected_output), atol=tol, rtol=0)
@@ -262,13 +266,14 @@ class TestApply:
     @pytest.mark.parametrize(
         "operation,input,expected_output,par", test_data_single_wire_with_parameters
     )
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_single_wire_with_parameters(
-        self, qubit_device_1_wire, tol, operation, input, expected_output, par
+        self, qubit_device_1_wire, tol, operation, input, expected_output, par, C
     ):
         """Tests that applying an operation yields the expected output state for single wire
         operations that have parameters."""
 
-        qubit_device_1_wire._state = np.array(input).astype(np.complex128)
+        qubit_device_1_wire._state = np.array(input).astype(C)
 
         qubit_device_1_wire.apply([operation(*par, wires=[0])])
 
@@ -360,13 +365,14 @@ class TestApply:
     @pytest.mark.parametrize(
         "operation,input,expected_output,par", test_data_two_wires_with_parameters
     )
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_two_wires_with_parameters(
-        self, qubit_device_2_wires, tol, operation, input, expected_output, par
+        self, qubit_device_2_wires, tol, operation, input, expected_output, par, C
     ):
         """Tests that applying an operation yields the expected output state for two wire
         operations that have parameters."""
 
-        qubit_device_2_wires._state = np.array(input).reshape(2 * [2]).astype(np.complex128)
+        qubit_device_2_wires._state = np.array(input).reshape(2 * [2]).astype(C)
         qubit_device_2_wires.apply([operation(*par, wires=[0, 1])])
 
         assert np.allclose(qubit_device_2_wires.state, np.array(expected_output), atol=tol, rtol=0)

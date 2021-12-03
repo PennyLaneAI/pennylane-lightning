@@ -127,8 +127,12 @@ class LightningQubit(DefaultQubit):
                     "applied on a {} device.".format(operation.name, self.short_name)
                 )
 
+        # Get the Type of self._state
+        # as the reference type
+        dtype = self._state.dtype
+
         if operations:
-            self._pre_rotated_state = self.apply_lightning(self._state, operations)
+            self._pre_rotated_state = self.apply_lightning(self._state, operations, dtype=dtype)
         else:
             self._pre_rotated_state = self._state
 
@@ -136,25 +140,31 @@ class LightningQubit(DefaultQubit):
             if any(isinstance(r, QubitUnitary) for r in rotations):
                 super().apply(operations=[], rotations=rotations)
             else:
-                self._state = self.apply_lightning(np.copy(self._pre_rotated_state), rotations)
+                self._state = self.apply_lightning(
+                    np.copy(self._pre_rotated_state), rotations, dtype=dtype
+                )
         else:
             self._state = self._pre_rotated_state
 
-    def apply_lightning(self, state, operations):
+    def apply_lightning(self, state, operations, dtype=np.complex128):
         """Apply a list of operations to the state tensor.
 
         Args:
             state (array[complex]): the input state tensor
             operations (list[~pennylane.operation.Operation]): operations to apply
+            dtype (type): Type of numpy ``complex`` to be used. Can be important
+            to specify for large systems for memory allocation purposes.
 
         Returns:
             array[complex]: the output state tensor
         """
         state_vector = np.ravel(state)
 
-        if state.dtype == np.csingle:
+        if dtype == np.complex64:
+            # use_csingle
             sim = StateVectorC64(state_vector)
         else:
+            # self.C_DTYPE is np.complex128 by default
             sim = StateVectorC128(state_vector)
 
         for o in operations:
@@ -173,9 +183,7 @@ class LightningQubit(DefaultQubit):
 
         return np.reshape(state_vector, state.shape)
 
-    def adjoint_jacobian(
-        self, tape, starting_state=None, use_device_state=False, use_csingle=False
-    ):
+    def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
         if self.shots is not None:
             warn(
                 "Requested adjoint differentiation to be computed with finite shots."
@@ -228,6 +236,9 @@ class LightningQubit(DefaultQubit):
                 self.reset()
                 self.execute(tape)
             ket = np.ravel(self._pre_rotated_state)
+
+        # To support np.complex64 based on the type of self._state
+        use_csingle = True if self._state.dtype == np.complex64 else False
 
         if use_csingle:
             adj = AdjointJacobianC64()
