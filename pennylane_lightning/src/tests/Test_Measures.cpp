@@ -100,7 +100,6 @@ TEST_CASE("Expected Values", "[Measures]") {
     }
 
     SECTION("Testing list of operators defined by a matrix:") {
-
         vector<std::complex<double>> PauliX = {0, 1, 1, 0};
         vector<std::complex<double>> PauliY = {0, {0, -1}, {0, 1}, 0};
         vector<std::complex<double>> PauliZ = {1, 0, 0, -1};
@@ -171,7 +170,6 @@ TEST_CASE("Variances", "[Measures]") {
     }
 
     SECTION("Testing list of operators defined by a matrix:") {
-
         vector<std::complex<double>> PauliX = {0, 1, 1, 0};
         vector<std::complex<double>> PauliY = {0, {0, -1}, {0, 1}, 0};
         vector<std::complex<double>> PauliZ = {1, 0, 0, -1};
