@@ -219,4 +219,4 @@ class TestComparison:
 
         default()
         default_state = default_qubit_dev.state
-        assert np.allclose(lightning_state, default_state)  # will PASS for atol= 1e-4
+        assert np.allclose(lightning_state, default_state)
