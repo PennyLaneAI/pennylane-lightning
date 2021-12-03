@@ -112,7 +112,6 @@ template <class fp_t = double> class Measures {
      */
     template <typename op_type>
     fp_t expval(const op_type &operation, const vector<size_t> &wires) {
-
         size_t data_size = measured_statevector.getLength();
 
         // Copying the original state vector, for the application of the
@@ -143,7 +142,6 @@ template <class fp_t = double> class Measures {
     template <typename op_type>
     vector<fp_t> expval(const vector<op_type> &operations_list,
                         const vector<vector<size_t>> &wires_list) {
-
         if (operations_list.size() != wires_list.size()) {
             throw std::out_of_range("The lengths of the list of operations and "
                                     "wires do not match.");
@@ -169,7 +167,6 @@ template <class fp_t = double> class Measures {
      */
     template <typename op_type>
     fp_t var(const op_type &operation, const vector<size_t> &wires) {
-
         size_t data_size = measured_statevector.getLength();
         // Copying the original state vector, for the application of the
         // observable operator.
@@ -202,7 +199,6 @@ template <class fp_t = double> class Measures {
     template <typename op_type>
     vector<fp_t> var(const vector<op_type> &operations_list,
                      const vector<vector<size_t>> &wires_list) {
-
         if (operations_list.size() != wires_list.size()) {
             throw std::out_of_range("The lengths of the list of operations and "
                                     "wires do not match.");
@@ -217,7 +213,6 @@ template <class fp_t = double> class Measures {
 
         return expected_value_list;
     };
-
 }; // class Measures
 
 } // namespace Pennylane
