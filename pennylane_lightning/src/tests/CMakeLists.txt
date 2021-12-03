@@ -39,6 +39,7 @@ target_sources(runner PRIVATE   Test_AdjDiff.cpp
                                 Test_StateVectorManaged_Nonparam.cpp 
                                 Test_StateVectorManaged_Param.cpp 
                                 Test_Util.cpp
+                                Test_Measures.cpp
 )
 
 target_compile_options(runner PRIVATE "$<$<CONFIG:DEBUG>:-Wall>")

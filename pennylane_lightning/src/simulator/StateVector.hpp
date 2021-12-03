@@ -73,7 +73,7 @@ template <class fp_t = double> class StateVector {
      *
      * @brief The function dispatching implementation allow the gates to be
      *called directly using a string representation of their names. This enables
-     *simplifcation of the call process from Python.
+     *simplification of the call process from Python.
      *
      ***********************************************************************/
 

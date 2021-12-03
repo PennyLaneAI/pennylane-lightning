@@ -714,8 +714,11 @@ template <class T>
 inline auto operator<<(std::ostream &os, const std::vector<T> &vec)
     -> std::ostream & {
     os << '[';
-    for (size_t i = 0; i < vec.size(); i++) {
-        os << vec[i] << ",";
+    if (!vec.empty()){
+        for (size_t i = 0; i < vec.size()-1; i++) {
+            os  << vec[i] << ", ";
+        }
+        os << vec.back();
     }
     os << ']';
     return os;
@@ -768,7 +771,7 @@ class NotImplementedException : public std::logic_error {
     /**
      * @brief Construct a NotImplementedException exception object.
      *
-     * @param fname Function name to indicate not imeplemented.
+     * @param fname Function name to indicate not implemented.
      */
     explicit NotImplementedException(const std::string &fname)
         : std::logic_error(std::string("Function is not implemented. ") +
