@@ -714,9 +714,9 @@ template <class T>
 inline auto operator<<(std::ostream &os, const std::vector<T> &vec)
     -> std::ostream & {
     os << '[';
-    if (!vec.empty()){
-        for (size_t i = 0; i < vec.size()-1; i++) {
-            os  << vec[i] << ", ";
+    if (!vec.empty()) {
+        for (size_t i = 0; i < vec.size() - 1; i++) {
+            os << vec[i] << ", ";
         }
         os << vec.back();
     }
