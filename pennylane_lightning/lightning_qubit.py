@@ -228,6 +228,9 @@ class LightningQubit(DefaultQubit):
                     'the "adjoint" differentiation method'
                 )
 
+        # To support np.complex64 based on the type of self._state
+        use_csingle = True if self._state.dtype == np.complex64 else False
+
         # Initialization of state
         if starting_state is not None:
             ket = np.ravel(starting_state)
@@ -236,9 +239,6 @@ class LightningQubit(DefaultQubit):
                 self.reset()
                 self.execute(tape)
             ket = np.ravel(self._pre_rotated_state)
-
-        # To support np.complex64 based on the type of self._state
-        use_csingle = True if self._state.dtype == np.complex64 else False
 
         if use_csingle:
             adj = AdjointJacobianC64()

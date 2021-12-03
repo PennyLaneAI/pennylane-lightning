@@ -166,8 +166,8 @@ class TestAdjointJacobian:
     def test_pauli_rotation_gradient(self, G, theta, tol, dev, C):
         """Tests that the automatic gradients of Pauli rotations are correct."""
 
-        # Test adjoint_jacobian for complex type C
-        dev._state = dev._state.astype(C)
+        # Test adjoint_jacobian for type C
+        dev._state = dev._asarray(dev._state, C)
 
         with qml.tape.JacobianTape() as tape:
             qml.QubitStateVector(np.array([1.0, -1.0]) / np.sqrt(2), wires=0)
@@ -190,7 +190,7 @@ class TestAdjointJacobian:
         correct."""
         params = np.array([theta, theta ** 3, np.sqrt(2) * theta])
 
-        # Test adjoint_jacobian for complex type C
+        # Test adjoint_jacobian for type C
         dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
@@ -212,7 +212,7 @@ class TestAdjointJacobian:
     def test_ry_gradient(self, par, tol, dev, C):
         """Test that the gradient of the RY gate matches the exact analytic formula."""
 
-        # Test adjoint_jacobian for complex type C
+        # Test adjoint_jacobian for type C
         dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
@@ -235,7 +235,7 @@ class TestAdjointJacobian:
         """Test that the gradient of the RX gate matches the known formula."""
         a = 0.7418
 
-        # Test adjoint_jacobian for complex type C
+        # Test adjoint_jacobian for type C
         dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
@@ -253,7 +253,7 @@ class TestAdjointJacobian:
         dev = qml.device("lightning.qubit", wires=3)
         params = np.array([np.pi, np.pi / 2, np.pi / 3])
 
-        # Test adjoint_jacobian for complex type C
+        # Test adjoint_jacobian for type C
         dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
@@ -290,7 +290,7 @@ class TestAdjointJacobian:
         """Tests that the gradients of circuits match between the finite difference and device
         methods."""
 
-        # Test adjoint_jacobian for complex type C
+        # Test adjoint_jacobian for type C
         dev._state = dev._state.astype(C)
 
         # op.num_wires and op.num_params must be initialized a priori
@@ -323,7 +323,7 @@ class TestAdjointJacobian:
         """Tests that gates with multiple free parameters yield correct gradients."""
         x, y, z = [0.5, 0.3, -0.7]
 
-        # Test adjoint_jacobian for complex type C
+        # Test adjoint_jacobian for type C
         dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
@@ -349,7 +349,7 @@ class TestAdjointJacobian:
 
         x, y, z = [0.5, 0.3, -0.7]
 
-        # Test adjoint_jacobian for complex type C
+        # Test adjoint_jacobian for type C
         dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
@@ -372,7 +372,7 @@ class TestAdjointJacobian:
         """Tests provides correct answer when provided starting state."""
         x, y, z = [0.5, 0.3, -0.7]
 
-        # Test adjoint_jacobian for complex type C
+        # Test adjoint_jacobian for type C
         dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:

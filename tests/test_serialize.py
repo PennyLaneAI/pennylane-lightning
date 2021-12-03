@@ -90,9 +90,12 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
+        use_csingle = True if ObsFunc == ObsStructC64 else False
+        obs_str = "ObsStructC64" if ObsFunc == ObsStructC64 else "ObsStructC128"
+
         with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, "ObsStructC128", mock_obs)
-            _serialize_obs(tape, self.wires_dict)
+            m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
+            _serialize_obs(tape, self.wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args[0]
         s_expected = (["PauliZ"], [], [[0]])
@@ -108,9 +111,12 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
+        use_csingle = True if ObsFunc == ObsStructC64 else False
+        obs_str = "ObsStructC64" if ObsFunc == ObsStructC64 else "ObsStructC128"
+
         with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, "ObsStructC128", mock_obs)
-            _serialize_obs(tape, self.wires_dict)
+            m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
+            _serialize_obs(tape, self.wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args[0]
         s_expected = (["PauliZ", "PauliZ"], [], [[0], [1]])
@@ -128,9 +134,12 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
+        use_csingle = True if ObsFunc == ObsStructC64 else False
+        obs_str = "ObsStructC64" if ObsFunc == ObsStructC64 else "ObsStructC128"
+
         with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, "ObsStructC128", mock_obs)
-            _serialize_obs(tape, self.wires_dict)
+            m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
+            _serialize_obs(tape, self.wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args_list
 
@@ -151,9 +160,12 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
+        use_csingle = True if ObsFunc == ObsStructC64 else False
+        obs_str = "ObsStructC64" if ObsFunc == ObsStructC64 else "ObsStructC128"
+
         with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, "ObsStructC128", mock_obs)
-            _serialize_obs(tape, self.wires_dict)
+            m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
+            _serialize_obs(tape, self.wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args[0]
         s_expected = (["Hermitian"], [np.eye(4).ravel()], [[0, 1]])
@@ -171,9 +183,12 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
+        use_csingle = True if ObsFunc == ObsStructC64 else False
+        obs_str = "ObsStructC64" if ObsFunc == ObsStructC64 else "ObsStructC128"
+
         with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, "ObsStructC128", mock_obs)
-            _serialize_obs(tape, self.wires_dict)
+            m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
+            _serialize_obs(tape, self.wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args[0]
         s_expected = (
@@ -196,9 +211,12 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
+        use_csingle = True if ObsFunc == ObsStructC64 else False
+        obs_str = "ObsStructC64" if ObsFunc == ObsStructC64 else "ObsStructC128"
+
         with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, "ObsStructC128", mock_obs)
-            _serialize_obs(tape, self.wires_dict)
+            m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
+            _serialize_obs(tape, self.wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args[0]
         s_expected = (["Hermitian", "PauliY"], [np.eye(4).ravel()], [[0, 1], [2]])
@@ -219,6 +237,9 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
+        use_csingle = True if ObsFunc == ObsStructC64 else False
+        obs_str = "ObsStructC64" if ObsFunc == ObsStructC64 else "ObsStructC128"
+
         with qml.tape.QuantumTape() as tape:
             qml.expval(qml.PauliZ("a") @ qml.PauliX("b"))
             qml.expval(qml.Hermitian(I, wires=1))
@@ -227,8 +248,8 @@ class TestSerializeObs:
             qml.expval(qml.Hermitian(Z, wires="a") @ qml.Identity(1))
 
         with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, "ObsStructC128", mock_obs)
-            _serialize_obs(tape, wires_dict)
+            m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
+            _serialize_obs(tape, wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args_list
 
