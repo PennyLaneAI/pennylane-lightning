@@ -15,7 +15,7 @@
 Tests for the ``adjoint_jacobian`` method of LightningQubit.
 """
 import math
-from numpy.core.arrayprint import dtype_short_repr
+from pennylane.operation import WiresEnum
 import pytest
 
 import pennylane as qml
@@ -160,13 +160,27 @@ class TestAdjointJacobian:
         ):
             dev.adjoint_jacobian(tape)
 
+    def test_unsupported_complex_type(self, dev):
+        dev._state = dev._asarray(dev._state, np.complex256)
+
+        with qml.tape.JacobianTape() as tape:
+            qml.QubitStateVector(np.array([1.0, -1.0]) / np.sqrt(2), wires=0)
+            qml.RX(0.3, wires=[0])
+            qml.expval(qml.PauliZ(0))
+
+        tape.trainable_params = {1}
+
+        with pytest.raises(
+            TypeError, match="Unsupported complex Type: complex256"
+        ):
+            dev.adjoint_jacobian(tape)
+
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
     @pytest.mark.parametrize("G", [qml.RX, qml.RY, qml.RZ])
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_pauli_rotation_gradient(self, G, theta, tol, dev, C):
         """Tests that the automatic gradients of Pauli rotations are correct."""
 
-        # Test adjoint_jacobian for type C
         dev._state = dev._asarray(dev._state, C)
 
         with qml.tape.JacobianTape() as tape:
@@ -190,7 +204,6 @@ class TestAdjointJacobian:
         correct."""
         params = np.array([theta, theta ** 3, np.sqrt(2) * theta])
 
-        # Test adjoint_jacobian for type C
         dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
@@ -212,7 +225,6 @@ class TestAdjointJacobian:
     def test_ry_gradient(self, par, tol, dev, C):
         """Test that the gradient of the RY gate matches the exact analytic formula."""
 
-        # Test adjoint_jacobian for type C
         dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
@@ -235,7 +247,6 @@ class TestAdjointJacobian:
         """Test that the gradient of the RX gate matches the known formula."""
         a = 0.7418
 
-        # Test adjoint_jacobian for type C
         dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
@@ -253,7 +264,6 @@ class TestAdjointJacobian:
         dev = qml.device("lightning.qubit", wires=3)
         params = np.array([np.pi, np.pi / 2, np.pi / 3])
 
-        # Test adjoint_jacobian for type C
         dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
@@ -290,7 +300,6 @@ class TestAdjointJacobian:
         """Tests that the gradients of circuits match between the finite difference and device
         methods."""
 
-        # Test adjoint_jacobian for type C
         dev._state = dev._state.astype(C)
 
         # op.num_wires and op.num_params must be initialized a priori
@@ -323,7 +332,6 @@ class TestAdjointJacobian:
         """Tests that gates with multiple free parameters yield correct gradients."""
         x, y, z = [0.5, 0.3, -0.7]
 
-        # Test adjoint_jacobian for type C
         dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
@@ -349,7 +357,6 @@ class TestAdjointJacobian:
 
         x, y, z = [0.5, 0.3, -0.7]
 
-        # Test adjoint_jacobian for type C
         dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
@@ -372,7 +379,6 @@ class TestAdjointJacobian:
         """Tests provides correct answer when provided starting state."""
         x, y, z = [0.5, 0.3, -0.7]
 
-        # Test adjoint_jacobian for type C
         dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
@@ -541,8 +547,8 @@ class TestAdjointJacobianQNode:
             qml.RY(tf.cos(params2), wires=[0])
             return qml.expval(qml.PauliZ(0))
 
-        params1 = tf.Variable(0.3, dtype=tf.float128)
-        params2 = tf.Variable(0.4, dtype=tf.float128)
+        params1 = tf.Variable(0.3, dtype=tf.float64)
+        params2 = tf.Variable(0.4, dtype=tf.float64)
 
         qnode1 = QNode(f, dev, interface="tf", diff_method="adjoint")
         qnode2 = QNode(f, dev, interface="tf", diff_method="finite-diff")

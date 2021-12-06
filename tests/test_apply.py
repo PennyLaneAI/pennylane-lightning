@@ -18,7 +18,6 @@ Unit tests for the :mod:`pennylane_lightning.LightningQubit` device.
 import math
 
 import numpy as np
-from numpy.core.arrayprint import dtype_short_repr
 import pennylane as qml
 import pytest
 from pennylane import DeviceError
@@ -87,6 +86,16 @@ class TestApply:
     """Tests that operations of certain operations are applied correctly or
     that the proper errors are raised.
     """
+
+    def test_apply_operation_raise_type_error(
+        self, qubit_device_1_wire
+    ):
+        """Tests that applying an operation yields the expected output state for single wire
+        operations that have no parameters."""
+
+        with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
+            qubit_device_1_wire._state = np.array([1, 0]).astype(np.complex256)
+            qubit_device_1_wire.apply([qml.PauliX(wires=[0])])
 
     test_data_no_parameters = [
         (qml.PauliX, [1, 0], np.array([0, 1])),
@@ -424,19 +433,19 @@ class TestExpval:
         [
             (qml.PauliX, [1 / math.sqrt(2), 1 / math.sqrt(2)], 1),
             (qml.PauliX, [1 / math.sqrt(2), -1 / math.sqrt(2)], -1),
-            # (qml.PauliX, [1, 0], 0),
-            # (qml.PauliY, [1 / math.sqrt(2), 1j / math.sqrt(2)], 1),
-            # (qml.PauliY, [1 / math.sqrt(2), -1j / math.sqrt(2)], -1),
-            # (qml.PauliY, [1, 0], 0),
-            # (qml.PauliZ, [1, 0], 1),
-            # (qml.PauliZ, [0, 1], -1),
-            # (qml.PauliZ, [1 / math.sqrt(2), 1 / math.sqrt(2)], 0),
-            # (qml.Hadamard, [1, 0], 1 / math.sqrt(2)),
-            # (qml.Hadamard, [0, 1], -1 / math.sqrt(2)),
-            # (qml.Hadamard, [1 / math.sqrt(2), 1 / math.sqrt(2)], 1 / math.sqrt(2)),
-            # (qml.Identity, [1, 0], 1),
-            # (qml.Identity, [0, 1], 1),
-            # (qml.Identity, [1 / math.sqrt(2), -1 / math.sqrt(2)], 1),
+            (qml.PauliX, [1, 0], 0),
+            (qml.PauliY, [1 / math.sqrt(2), 1j / math.sqrt(2)], 1),
+            (qml.PauliY, [1 / math.sqrt(2), -1j / math.sqrt(2)], -1),
+            (qml.PauliY, [1, 0], 0),
+            (qml.PauliZ, [1, 0], 1),
+            (qml.PauliZ, [0, 1], -1),
+            (qml.PauliZ, [1 / math.sqrt(2), 1 / math.sqrt(2)], 0),
+            (qml.Hadamard, [1, 0], 1 / math.sqrt(2)),
+            (qml.Hadamard, [0, 1], -1 / math.sqrt(2)),
+            (qml.Hadamard, [1 / math.sqrt(2), 1 / math.sqrt(2)], 1 / math.sqrt(2)),
+            (qml.Identity, [1, 0], 1),
+            (qml.Identity, [0, 1], 1),
+            (qml.Identity, [1 / math.sqrt(2), -1 / math.sqrt(2)], 1),
         ],
     )
     def test_expval_single_wire_no_parameters(

@@ -12,8 +12,7 @@ using namespace Pennylane::Util;
 }
 /// @endcond
 
-namespace Pennylane {
-namespace Gates {
+namespace Pennylane::Gates {
 
 /**
  * @brief Create a matrix representation of the PauliX gate data in row-major
@@ -507,5 +506,4 @@ static auto getControlledPhaseShift(const std::vector<U> &params)
     return getControlledPhaseShift<T>(params.front());
 }
 
-} // namespace Gates
-} // namespace Pennylane
+} // namespace Pennylane::Gates

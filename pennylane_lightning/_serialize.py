@@ -57,7 +57,7 @@ def _obs_has_kernel(obs: Observable) -> bool:
     return False
 
 
-def _serialize_obs(tape: QuantumTape, wires_map: dict, use_csingle=False) -> List:
+def _serialize_obs(tape: QuantumTape, wires_map: dict, use_csingle: bool=False) -> List:
     """Serializes the observables of an input tape.
 
     Args:
@@ -69,6 +69,13 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict, use_csingle=False) -> Lis
         list(ObsStructC128 or ObsStructC64): A list of observable objects compatible with the C++ backend
     """
     obs = []
+
+    if use_csingle:
+        ctype = np.complex64
+        obs_py = ObsStructC64
+    else:
+        ctype = np.complex128
+        obs_py = ObsStructC128
 
     for o in tape.observables:
         is_tensor = isinstance(o, Tensor)
@@ -94,26 +101,23 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict, use_csingle=False) -> Lis
                 for o_ in o.obs:
                     if not _obs_has_kernel(o_):
                         params.append(
-                            o_.matrix.ravel().astype(np.complex64 if use_csingle else np.complex128)
+                            o_.matrix.ravel().astype(ctype)
                         )
                     else:
                         params.append([])
             else:
                 params.append(
-                    o.matrix.ravel().astype(np.complex64 if use_csingle else np.complex128)
+                    o.matrix.ravel().astype(ctype)
                 )
 
-        if use_csingle:
-            ob = ObsStructC64(name, params, wires)
-        else:
-            ob = ObsStructC128(name, params, wires)
+        ob = obs_py(name, params, wires)
         obs.append(ob)
 
     return obs
 
 
 def _serialize_ops(
-    tape: QuantumTape, wires_map: dict, use_csingle=False
+    tape: QuantumTape, wires_map: dict, use_csingle: bool=False
 ) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]], List[bool], List[np.ndarray]]:
     """Serializes the operations of an input tape.
 
@@ -135,6 +139,8 @@ def _serialize_ops(
     inverses = []
     mats = []
 
+    sv_py = StateVectorC64 if use_csingle else StateVectorC128
+
     uses_stateprep = False
 
     for o in tape.operations:
@@ -152,7 +158,7 @@ def _serialize_ops(
             name = single_op.name if not is_inverse else single_op.name[:-4]
             names.append(name)
 
-            if getattr(StateVectorC64 if use_csingle else StateVectorC128, name, None) is None:
+            if getattr(sv_py, name, None) is None:
                 params.append([])
                 mats.append(single_op.matrix)
 

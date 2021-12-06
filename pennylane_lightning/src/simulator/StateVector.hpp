@@ -275,7 +275,7 @@ template <class fp_t = double> class StateVector {
      *
      * @return const CFP_t* Pointer to statevector data.
      */
-    auto getData() const -> CFP_t * { return arr_; }
+    [[nodiscard]] auto getData() const -> CFP_t * { return arr_; }
 
     /**
      * @brief Get the underlying data pointer.
