@@ -136,8 +136,7 @@ void applyGeneratorControlledPhaseShift(
 } // namespace
 /// @endcond
 
-namespace Pennylane {
-namespace Algorithms {
+namespace Pennylane::Algorithms {
 
 /**
  * @brief Utility struct for observable operations used by AdjointJacobian
@@ -764,5 +763,4 @@ template <class T = double> class AdjointJacobian {
     }
 };
 
-} // namespace Algorithms
-} // namespace Pennylane
+} // namespace Pennylane::Algorithms
