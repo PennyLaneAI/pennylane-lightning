@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add wheel-builder support for Python 3.10.
+[(#186)](https://github.com/PennyLaneAI/pennylane-lightning/pull/186)
+
 * Add VJP support to PL-Lightning.
 [(#181)](https://github.com/PennyLaneAI/pennylane-lightning/pull/181)
 
@@ -26,7 +29,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Chae-Yeun Park, Isidor Schoch
+Ali Asadi, Chae-Yeun Park, Lee J. O'Riordan, Isidor Schoch
 
 ---
 
