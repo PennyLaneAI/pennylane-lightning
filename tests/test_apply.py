@@ -87,9 +87,7 @@ class TestApply:
     that the proper errors are raised.
     """
 
-    def test_apply_operation_raise_type_error(
-        self, qubit_device_1_wire
-    ):
+    def test_apply_operation_raise_type_error(self, qubit_device_1_wire):
         """Tests that applying an operation yields the expected output state for single wire
         operations that have no parameters."""
 

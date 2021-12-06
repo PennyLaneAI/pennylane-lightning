@@ -310,6 +310,7 @@ class TestSerializeObs:
                 assert np.allclose(v1, v2)
         assert all(s1[0][2] == s2[2] for s1, s2 in zip(s, s_expected))
 
+
 class TestSerializeOps:
     """Tests for the _serialize_ops function"""
 

@@ -57,7 +57,7 @@ def _obs_has_kernel(obs: Observable) -> bool:
     return False
 
 
-def _serialize_obs(tape: QuantumTape, wires_map: dict, use_csingle: bool=False) -> List:
+def _serialize_obs(tape: QuantumTape, wires_map: dict, use_csingle: bool = False) -> List:
     """Serializes the observables of an input tape.
 
     Args:
@@ -100,15 +100,11 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict, use_csingle: bool=False) 
             if is_tensor:
                 for o_ in o.obs:
                     if not _obs_has_kernel(o_):
-                        params.append(
-                            o_.matrix.ravel().astype(ctype)
-                        )
+                        params.append(o_.matrix.ravel().astype(ctype))
                     else:
                         params.append([])
             else:
-                params.append(
-                    o.matrix.ravel().astype(ctype)
-                )
+                params.append(o.matrix.ravel().astype(ctype))
 
         ob = obs_py(name, params, wires)
         obs.append(ob)
@@ -117,7 +113,7 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict, use_csingle: bool=False) 
 
 
 def _serialize_ops(
-    tape: QuantumTape, wires_map: dict, use_csingle: bool=False
+    tape: QuantumTape, wires_map: dict, use_csingle: bool = False
 ) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]], List[bool], List[np.ndarray]]:
     """Serializes the operations of an input tape.
 

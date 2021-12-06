@@ -170,9 +170,7 @@ class TestAdjointJacobian:
 
         tape.trainable_params = {1}
 
-        with pytest.raises(
-            TypeError, match="Unsupported complex Type: complex256"
-        ):
+        with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
             dev.adjoint_jacobian(tape)
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
