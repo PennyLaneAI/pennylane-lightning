@@ -193,8 +193,52 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
                               Contains("Invalid size for the input vector"));
             CHECK_THROWS_AS(Util::matrixVecProd(mat, v_in, 2, 2),
                             std::invalid_argument);
-            CHECK_THROWS_WITH(Util::matrixVecProd(mat, v_in, 2, 2),
-                              Contains("Invalid m & n for the input matrix"));
+            CHECK_THROWS_WITH(
+                Util::matrixVecProd(mat, v_in, 2, 2),
+                Contains(
+                    "Invalid number of rows and columns for the input matrix"));
+        }
+    }
+    SECTION("vecMatrixProd") {
+        SECTION("Simple Iterative") {
+            for (size_t m = 2; m < 8; m++) {
+                std::vector<double> mat(m * m, 1);
+                std::vector<double> v_in(m, 1);
+                std::vector<double> v_expected(m, m);
+                std::vector<double> v_out =
+                    Util::vecMatrixProd(v_in, mat, m, m);
+                CAPTURE(v_out);
+                CAPTURE(v_expected);
+                for (size_t i = 0; i < m; i++) {
+                    CHECK(v_out[i] == v_expected[i]);
+                }
+            }
+        }
+        SECTION("Zero Vector") {
+            for (size_t m = 2; m < 8; m++) {
+                std::vector<double> mat(m * m, 1);
+                std::vector<double> v_in(m, 0);
+                std::vector<double> v_expected(m, 0);
+                std::vector<double> v_out =
+                    Util::vecMatrixProd(v_in, mat, m, m);
+                CAPTURE(v_out);
+                CAPTURE(v_expected);
+                for (size_t i = 0; i < m; i++) {
+                    CHECK(v_out[i] == v_expected[i]);
+                }
+            }
+        }
+        SECTION("Random Matrix") {
+            std::vector<float> v_in{1.0, 2.0, 3.0, 4.0};
+            std::vector<float> mat{1.0, 0.1,  0.2, 0.2,  0.6,  0.1,
+                                   0.4, -0.7, 1.2, -0.5, -0.6, 0.7};
+            std::vector<float> v_expected{0.6, -3.2, 6.8};
+            std::vector<float> v_out = Util::vecMatrixProd(v_in, mat, 4, 3);
+            CAPTURE(v_out);
+            CAPTURE(v_expected);
+            for (size_t i = 0; i < 3; i++) {
+                CHECK(std::abs(v_out[i] - v_expected[i]) < 0.000001);
+            }
         }
     }
     SECTION("Transpose") {
@@ -244,8 +288,10 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             using namespace Catch::Matchers;
             std::vector<std::complex<double>> mat(2 * 3, {1, 1});
             CHECK_THROWS_AS(Util::Transpose(mat, 2, 2), std::invalid_argument);
-            CHECK_THROWS_WITH(Util::Transpose(mat, 2, 2),
-                              Contains("Invalid m & n for the input matrix"));
+            CHECK_THROWS_WITH(
+                Util::Transpose(mat, 2, 2),
+                Contains(
+                    "Invalid number of rows and columns for the input matrix"));
         }
     }
     SECTION("matrixMatProd") {
@@ -329,14 +375,14 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             std::vector<std::complex<double>> m_right(3 * 4, {1, 1});
             CHECK_THROWS_AS(Util::matrixMatProd(m_left, m_right, 2, 3, 4),
                             std::invalid_argument);
-            CHECK_THROWS_WITH(
-                Util::matrixMatProd(m_left, m_right, 2, 3, 4),
-                Contains("Invalid m & k for the input left matrix"));
+            CHECK_THROWS_WITH(Util::matrixMatProd(m_left, m_right, 2, 3, 4),
+                              Contains("Invalid number of rows and columns for "
+                                       "the input left matrix"));
             CHECK_THROWS_AS(Util::matrixMatProd(m_left, m_right, 2, 3, 3),
                             std::invalid_argument);
-            CHECK_THROWS_WITH(
-                Util::matrixMatProd(m_left, m_right, 2, 3, 3),
-                Contains("Invalid k & n for the input right matrix"));
+            CHECK_THROWS_WITH(Util::matrixMatProd(m_left, m_right, 2, 3, 3),
+                              Contains("Invalid number of rows and columns for "
+                                       "the input right matrix"));
         }
     }
 }

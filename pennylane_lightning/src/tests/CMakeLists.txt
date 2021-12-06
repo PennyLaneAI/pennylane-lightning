@@ -40,6 +40,7 @@ target_sources(runner PRIVATE   Test_AdjDiff.cpp
                                 Test_StateVectorManaged_Param.cpp 
                                 Test_Util.cpp
                                 Test_Measures.cpp
+                                Test_VectorJacobianProduct.cpp
 )
 
 target_compile_options(runner PRIVATE "$<$<CONFIG:DEBUG>:-Wall>")
