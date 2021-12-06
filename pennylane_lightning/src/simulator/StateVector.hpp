@@ -451,7 +451,7 @@ template <class fp_t = double> class StateVector {
      * @see `getIndicesAfterExclusion(
         const vector<size_t> &indicesToExclude, size_t num_qubits)`
      */
-    auto getIndicesAfterExclusion(const vector<size_t> &indicesToExclude)
+    auto getIndicesAfterExclusion(const vector<size_t> &indicesToExclude) const
         -> vector<size_t> {
         return getIndicesAfterExclusion(indicesToExclude, num_qubits_);
     }
@@ -490,7 +490,7 @@ template <class fp_t = double> class StateVector {
      * @see `generateBitPatterns(const vector<size_t> &qubitIndices, size_t
      * num_qubits)`.
      */
-    auto generateBitPatterns(const vector<size_t> &qubitIndices)
+    auto generateBitPatterns(const vector<size_t> &qubitIndices) const
         -> vector<size_t> {
         return generateBitPatterns(qubitIndices, num_qubits_);
     }

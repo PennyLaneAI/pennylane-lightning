@@ -20,11 +20,13 @@
 
 #pragma once
 
+#include <algorithm>
 #include <complex>
 #include <stdio.h>
 #include <vector>
 
 #include "StateVector.hpp"
+#include "StateVectorManaged.hpp"
 #include "Util.hpp"
 
 /// @cond DEV
@@ -46,13 +48,14 @@ using namespace Util;
  *
  * @tparam fp_t Floating point precision of underlying measurements.
  */
-template <class fp_t = double> class Measures {
+template <class fp_t = double, class SVType = StateVector<fp_t>>
+class Measures {
   private:
-    StateVector<fp_t> measured_statevector;
+    const SVType &original_statevector;
 
   public:
-    Measures(StateVector<fp_t> provided_statevector)
-        : measured_statevector{provided_statevector} {};
+    Measures(const SVType &provided_statevector)
+        : original_statevector{provided_statevector} {};
 
     /**
      * @brief Probabilities of each computational basis state.
@@ -61,11 +64,14 @@ template <class fp_t = double> class Measures {
      * in lexicographic order according to wires.
      */
     vector<fp_t> probs() {
-        complex<fp_t> *arr_data = measured_statevector.getData();
-        vector<double> basis_probs(measured_statevector.getLength(), 0);
-        for (size_t ind = 0; ind < 8; ind++) {
-            basis_probs[ind] = std::pow(std::abs(arr_data[ind]), 2.0);
-        }
+        const complex<fp_t> *arr_data = original_statevector.getData();
+        vector<double> basis_probs(original_statevector.getLength(), 0);
+
+        std::transform(
+            arr_data, arr_data + original_statevector.getLength(),
+            basis_probs.begin(),
+            [](const std::complex<fp_t> &z) -> fp_t { return std::norm(z); });
+
         return basis_probs;
     };
 
@@ -78,27 +84,22 @@ template <class fp_t = double> class Measures {
      * in lexicographic order according to wires.
      */
     vector<fp_t> probs(const vector<size_t> &wires) {
-        complex<fp_t> *arr_data = measured_statevector.getData();
-        vector<double> basis_probs(measured_statevector.getLength(), 0);
-        for (size_t ind = 0; ind < 8; ind++) {
-            basis_probs[ind] = std::pow(std::abs(arr_data[ind]), 2.0);
-        }
+        const complex<fp_t> *arr_data = original_statevector.getData();
 
         vector<size_t> all_indices =
-            measured_statevector.generateBitPatterns(wires);
-        vector<size_t> all_offsets = measured_statevector.generateBitPatterns(
-            measured_statevector.getIndicesAfterExclusion(wires));
+            original_statevector.generateBitPatterns(wires);
+        vector<size_t> all_offsets = original_statevector.generateBitPatterns(
+            original_statevector.getIndicesAfterExclusion(wires));
 
         vector<fp_t> probabilities(all_indices.size(), 0);
 
         size_t ind_probs = 0;
         for (auto index : all_indices) {
             for (auto offset : all_offsets) {
-                probabilities[ind_probs] += basis_probs[index + offset];
+                probabilities[ind_probs] += std::norm(arr_data[index + offset]);
             }
             ind_probs++;
         }
-
         return probabilities;
     };
 
@@ -112,21 +113,15 @@ template <class fp_t = double> class Measures {
      */
     template <typename op_type>
     fp_t expval(const op_type &operation, const vector<size_t> &wires) {
-        size_t data_size = measured_statevector.getLength();
-
         // Copying the original state vector, for the application of the
         // observable operator.
-        complex<double> *original_data;
-        original_data = new complex<double>[data_size];
-        std::copy(measured_statevector.getData(),
-                  measured_statevector.getData() + data_size, original_data);
-        StateVector<double> operator_statevector(original_data, data_size);
+        StateVectorManaged<fp_t> operator_statevector(original_statevector);
 
         operator_statevector.applyOperation(operation, wires);
 
-        complex<fp_t> expected_value =
-            innerProdC(measured_statevector.getData(),
-                       operator_statevector.getData(), data_size);
+        complex<fp_t> expected_value = innerProdC(
+            original_statevector.getData(), operator_statevector.getData(),
+            original_statevector.getLength());
         return std::real(expected_value);
     };
 
@@ -167,23 +162,18 @@ template <class fp_t = double> class Measures {
      */
     template <typename op_type>
     fp_t var(const op_type &operation, const vector<size_t> &wires) {
-        size_t data_size = measured_statevector.getLength();
         // Copying the original state vector, for the application of the
         // observable operator.
-        complex<double> *original_data;
-        original_data = new complex<double>[data_size];
-        std::copy(measured_statevector.getData(),
-                  measured_statevector.getData() + data_size, original_data);
-        StateVector<double> operator_statevector(original_data, data_size);
+        StateVectorManaged<fp_t> operator_statevector(original_statevector);
 
-        measured_statevector.applyOperation(operation, wires);
+        operator_statevector.applyOperation(operation, wires);
 
-        fp_t mean_square =
-            std::real(innerProdC(measured_statevector.getData(),
-                                 measured_statevector.getData(), data_size));
-        fp_t squared_mean =
-            std::real(innerProdC(operator_statevector.getData(),
-                                 measured_statevector.getData(), data_size));
+        fp_t mean_square = std::real(innerProdC(
+            operator_statevector.getData(), operator_statevector.getData(),
+            original_statevector.getLength()));
+        fp_t squared_mean = std::real(innerProdC(
+            original_statevector.getData(), operator_statevector.getData(),
+            original_statevector.getLength()));
         squared_mean = std::pow(squared_mean, 2);
         return (mean_square - squared_mean);
     };

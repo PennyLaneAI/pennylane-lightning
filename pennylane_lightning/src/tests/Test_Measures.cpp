@@ -4,26 +4,24 @@
 
 #include "Measures.hpp"
 #include "StateVector.hpp"
+#include "StateVectorManaged.hpp"
 #include "Util.hpp"
 
 #include <catch2/catch.hpp>
 
 using namespace Pennylane;
-StateVector<double> Initializing_StateVector() {
+StateVectorManaged<double> Initializing_StateVector() {
     // Defining a StateVector in a non-trivial configuration:
     size_t num_qubits = 3;
     size_t data_size = std::pow(2, num_qubits);
 
-    std::complex<double> *arr;
-    arr = new complex<double>[data_size]();
+    std::vector<std::complex<double>> arr(data_size, 0);
     arr[0] = 1;
-
-    double alpha = 0.7, beta = 0.5, gamma = 0.2;
-
-    Pennylane::StateVector<double> Measured_StateVector(arr, data_size);
+    StateVectorManaged<double> Measured_StateVector(arr.data(), data_size);
 
     std::vector<size_t> wires;
 
+    double alpha = 0.7, beta = 0.5, gamma = 0.2;
     Measured_StateVector.applyOperations(
         {"RX", "RY", "RX", "RY", "RX", "RY"}, {{0}, {0}, {1}, {1}, {2}, {2}},
         {{false}, {false}, {false}, {false}, {false}, {false}},
@@ -52,11 +50,12 @@ TEST_CASE("Probabilities", "[Measures]") {
         {0, 1, 2}, {2, 1, 0}, {0, 1}, {0, 2}, {1, 2}, {2, 1}, {0}, {1}, {2}};
 
     // Defining the State Vector that will be measured.
-    StateVector<double> Measured_StateVector = Initializing_StateVector();
+    StateVectorManaged<double> Measured_StateVector =
+        Initializing_StateVector();
 
     // Initializing the measures class.
     // It will attach to the StateVector, allowing measures to keep been taken.
-    Pennylane::Measures<double> Measurer(Measured_StateVector);
+    Measures<double, StateVectorManaged<double>> Measurer(Measured_StateVector);
 
     vector<double> probabilities;
 
@@ -78,11 +77,12 @@ TEST_CASE("Probabilities", "[Measures]") {
 
 TEST_CASE("Expected Values", "[Measures]") {
     // Defining the State Vector that will be measured.
-    StateVector<double> Measured_StateVector = Initializing_StateVector();
+    StateVectorManaged<double> Measured_StateVector =
+        Initializing_StateVector();
 
     // Initializing the measures class.
     // It will attach to the StateVector, allowing measures to keep been taken.
-    Pennylane::Measures<double> Measurer(Measured_StateVector);
+    Measures<double, StateVectorManaged<double>> Measurer(Measured_StateVector);
 
     SECTION("Testing single operation defined by a matrix:") {
         vector<std::complex<double>> PauliX = {0, 1, 1, 0};
@@ -148,11 +148,12 @@ TEST_CASE("Expected Values", "[Measures]") {
 
 TEST_CASE("Variances", "[Measures]") {
     // Defining the State Vector that will be measured.
-    StateVector<double> Measured_StateVector = Initializing_StateVector();
+    StateVectorManaged<double> Measured_StateVector =
+        Initializing_StateVector();
 
     // Initializing the measures class.
     // It will attach to the StateVector, allowing measures to keep been taken.
-    Pennylane::Measures<double> Measurer(Measured_StateVector);
+    Measures<double, StateVectorManaged<double>> Measurer(Measured_StateVector);
 
     SECTION("Testing single operation defined by a matrix:") {
         vector<std::complex<double>> PauliX = {0, 1, 1, 0};
