@@ -14,7 +14,7 @@ env:
     pip install pybind11 ninja && yum install -y cmake gcc gcc-c++
 
   # Testing of built wheels
-  CIBW_TEST_REQUIRES: numpy==1.19.5 scipy pytest pytest-cov pytest-mock flaky
+  CIBW_TEST_REQUIRES: numpy~=1.21 scipy pytest pytest-cov pytest-mock flaky
 
   CIBW_TEST_COMMAND: |
     pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
