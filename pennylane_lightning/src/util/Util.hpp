@@ -490,7 +490,8 @@ inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
                           size_t n, bool transpose = false)
     -> std::vector<std::complex<T>> {
     if (mat.size() != m * n) {
-        throw std::invalid_argument("Invalid m & n for the input matrix");
+        throw std::invalid_argument(
+            "Invalid number of rows and columns for the input matrix");
     }
     if (v_in.size() != n) {
         throw std::invalid_argument("Invalid size for the input vector");
@@ -503,7 +504,157 @@ inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
 
 /**
  * @brief Calculates transpose of a matrix recursively and Cache-Friendly
- * using blacking and Cache-optimized techniques.
+ * using blocking and Cache-optimized techniques.
+ *
+ * @tparam T Floating point precision type.
+ * @tparam BLOCKSIZE Size of submatrices in the blocking techinque.
+ * @param mat Data array repr. a flatten (row-wise) matrix m * n.
+ * @param mat_t Pre-allocated data array to store the transpose of `mat`.
+ * @param m Number of rows of `mat`.
+ * @param n Number of columns of `mat`.
+ * @param m1 Index of the first row.
+ * @param m2 Index of the last row.
+ * @param n1 Index of the first column.
+ * @param n2 Index of the last column.
+ */
+template <class T, size_t BLOCKSIZE = 32> // NOLINT(readability-magic-numbers)
+inline static void CFTranspose(const T *mat, T *mat_t, size_t m, size_t n,
+                               size_t m1, size_t m2, size_t n1, size_t n2) {
+    size_t r;
+    size_t s;
+
+    size_t r1;
+    size_t s1;
+    size_t r2;
+    size_t s2;
+
+    r1 = m2 - m1;
+    s1 = n2 - n1;
+
+    if (r1 >= s1 && r1 > BLOCKSIZE) {
+        r2 = (m1 + m2) / 2;
+        CFTranspose(mat, mat_t, m, n, m1, r2, n1, n2);
+        m1 = r2;
+        CFTranspose(mat, mat_t, m, n, m1, m2, n1, n2);
+    } else if (s1 > BLOCKSIZE) {
+        s2 = (n1 + n2) / 2;
+        CFTranspose(mat, mat_t, m, n, m1, m2, n1, s2);
+        n1 = s2;
+        CFTranspose(mat, mat_t, m, n, m1, m2, n1, n2);
+    } else {
+        for (r = m1; r < m2; r++) {
+            for (s = n1; s < n2; s++) {
+                mat_t[s * m + r] = mat[r * n + s];
+            }
+        }
+    }
+}
+
+/**
+ * @brief Calculates vector-matrix product.
+ *
+ * @tparam T Floating point precision type.
+ * @param v_in Data array repr. a vector of shape m * 1.
+ * @param mat Data array repr. a flatten (row-wise) matrix m * n.
+ * @param v_out Pre-allocated data array to store the result that is
+ *              `mat_t \times v_in` where `mat_t` is transposed of `mat`.
+ * @param m Number of rows of `mat`.
+ * @param n Number of columns of `mat`.
+ */
+template <class T>
+inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, size_t m,
+                          size_t n) {
+    if (!v_out) {
+        return;
+    }
+
+    size_t i;
+    size_t j;
+
+    constexpr T z = static_cast<T>(0.0);
+    bool allzero = true;
+    for (j = 0; j < m; j++) {
+        if (v_in[j] != z) {
+            allzero = false;
+            break;
+        }
+    }
+    if (allzero) {
+        return;
+    }
+
+    std::vector<T> mat_t(m * n);
+    CFTranspose(mat, mat_t.data(), m, n, 0, m, 0, n);
+
+    for (i = 0; i < n; i++) {
+        T t = z;
+        for (j = 0; j < m; j++) {
+            t += mat_t[i * m + j] * v_in[j];
+        }
+        v_out[i] = t;
+    }
+}
+
+/**
+ * @brief Calculates the vactor-matrix product using the best available method.
+ *
+ * @see inline void vecMatrixProd(const T *v_in,
+ * const T *mat, T *v_out, size_t m, size_t n)
+ */
+template <class T>
+inline auto vecMatrixProd(const std::vector<T> &v_in, const std::vector<T> &mat,
+                          size_t m, size_t n) -> std::vector<T> {
+    if (v_in.size() != m) {
+        throw std::invalid_argument("Invalid size for the input vector");
+    }
+    if (mat.size() != m * n) {
+        throw std::invalid_argument(
+            "Invalid number of rows and columns for the input matrix");
+    }
+
+    std::vector<T> v_out(n);
+    vecMatrixProd(v_in.data(), mat.data(), v_out.data(), m, n);
+
+    return v_out;
+}
+
+/**
+ * @brief Calculates the vactor-matrix product using the best available method.
+ *
+ * @see inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, size_t
+ * m, size_t n)
+ */
+template <class T>
+inline void vecMatrixProd(std::vector<T> &v_out, const std::vector<T> &v_in,
+                          const std::vector<T> &mat, size_t m, size_t n) {
+    if (mat.size() != m * n) {
+        throw std::invalid_argument(
+            "Invalid number of rows and columns for the input matrix");
+    }
+    if (v_in.size() != m) {
+        throw std::invalid_argument("Invalid size for the input vector");
+    }
+    if (v_out.size() != n) {
+        throw std::invalid_argument("Invalid preallocated size for the result");
+    }
+
+    vecMatrixProd(v_in.data(), mat.data(), v_out.data(), m, n);
+}
+
+/**
+ * @brief Calculates transpose of a matrix recursively and Cache-Friendly
+ * using blocking and Cache-optimized techniques.
+ *
+ * @tparam T Floating point precision type.
+ * @tparam BLOCKSIZE Size of submatrices in the blocking techinque.
+ * @param mat Data array repr. a flatten (row-wise) matrix m * n.
+ * @param mat_t Pre-allocated data array to store the transpose of `mat`.
+ * @param m Number of rows of `mat`.
+ * @param n Number of columns of `mat`.
+ * @param m1 Index of the first row.
+ * @param m2 Index of the last row.
+ * @param n1 Index of the first column.
+ * @param n2 Index of the last column.
  */
 template <class T, size_t BLOCKSIZE = 32> // NOLINT(readability-magic-numbers)
 inline static void CFTranspose(const std::complex<T> *mat,
@@ -553,7 +704,8 @@ template <class T>
 inline auto Transpose(const std::vector<std::complex<T>> mat, size_t m,
                       size_t n) -> std::vector<std::complex<T>> {
     if (mat.size() != m * n) {
-        throw std::invalid_argument("Invalid m & n for the input matrix");
+        throw std::invalid_argument(
+            "Invalid number of rows and columns for the input matrix");
     }
 
     std::vector<std::complex<T>> mat_t(n * m);
@@ -566,9 +718,9 @@ inline auto Transpose(const std::vector<std::complex<T>> mat, size_t m,
  *
  * @tparam T Floating point precision type.
  * @tparam STRIDE Size of stride in the cache-blocking technique
- * @param m_left Row-wise flatten matrix of size m * k.
- * @param m_right Row-wise flatten matrix of size k * n.
- * @param m_out Pre-allocated row-wise flatten matrix of size m * n.
+ * @param m_left Row-wise flatten matrix of shape m * k.
+ * @param m_right Row-wise flatten matrix of shape k * n.
+ * @param m_out Pre-allocated row-wise flatten matrix of shape m * n.
  * @param m Number of rows of `m_left`.
  * @param n Number of columns of `m_right`.
  * @param k Number of rows of `m_right`.
@@ -637,9 +789,9 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
  * @brief Calculates matrix-matrix product using the best avaiable method.
  *
  * @tparam T Floating point precision type.
- * @param m_left Row-wise flatten matrix of size m * k.
- * @param m_right Row-wise flatten matrix of size k * n.
- * @param m_out Pre-allocated row-wise flatten matrix of size m * n.
+ * @param m_left Row-wise flatten matrix of shape m * k.
+ * @param m_right Row-wise flatten matrix of shape k * n.
+ * @param m_out Pre-allocated row-wise flatten matrix of shape m * n.
  * @param m Number of rows of `m_left`.
  * @param n Number of columns of `m_right`.
  * @param k Number of rows of `m_right`.
@@ -688,10 +840,12 @@ inline auto matrixMatProd(const std::vector<std::complex<T>> m_left,
                           size_t n, size_t k, bool transpose = false)
     -> std::vector<std::complex<T>> {
     if (m_left.size() != m * k) {
-        throw std::invalid_argument("Invalid m & k for the input left matrix");
+        throw std::invalid_argument(
+            "Invalid number of rows and columns for the input left matrix");
     }
     if (m_right.size() != k * n) {
-        throw std::invalid_argument("Invalid k & n for the input right matrix");
+        throw std::invalid_argument(
+            "Invalid number of rows and columns for the input right matrix");
     }
 
     std::vector<std::complex<T>> m_out(m * n);

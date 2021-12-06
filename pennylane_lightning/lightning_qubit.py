@@ -20,6 +20,7 @@ import platform, os, sys
 
 import numpy as np
 from pennylane import (
+    math,
     BasisState,
     DeviceError,
     QuantumFunctionError,
@@ -42,6 +43,7 @@ try:
             StateVectorC64,
             StateVectorC128,
             AdjointJacobianC128,
+            VectorJacobianProductC128,
         )
     else:
         from .lightning_qubit_ops import (
@@ -49,6 +51,7 @@ try:
             StateVectorC64,
             StateVectorC128,
             AdjointJacobianC128,
+            VectorJacobianProductC128,
         )
     from ._serialize import _serialize_obs, _serialize_ops
 
@@ -171,17 +174,15 @@ class LightningQubit(DefaultQubit):
 
         return np.reshape(state_vector, state.shape)
 
-    def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
-        if self.shots is not None:
-            warn(
-                "Requested adjoint differentiation to be computed with finite shots."
-                " The derivative is always exact when using the adjoint differentiation method.",
-                UserWarning,
-            )
+    def adjoint_diff_support_check(self, tape):
+        """Check Lightning adjoint differentiation method support for a tape.
 
-        if len(tape.trainable_params) == 0:
-            return np.array(0)
+        Raise ``QuantumFunctionError`` if ``tape`` contains not supported measurements,
+        observables, or operations by the Lightning adjoint differentiation method.
 
+        Args:
+            tape (.QuantumTape): quantum tape to differentiate
+        """
         for m in tape.measurements:
             if m.return_type is not Expectation:
                 raise QuantumFunctionError(
@@ -216,6 +217,20 @@ class LightningQubit(DefaultQubit):
                     'the "adjoint" differentiation method'
                 )
 
+    def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
+        if self.shots is not None:
+            warn(
+                "Requested adjoint differentiation to be computed with finite shots."
+                " The derivative is always exact when using the adjoint differentiation method.",
+                UserWarning,
+            )
+
+        if len(tape.trainable_params) == 0:
+            return np.array(0)
+
+        # Check adjoint diff support
+        self.adjoint_diff_support_check(tape)
+
         # Initialization of state
         if starting_state is not None:
             ket = np.ravel(starting_state)
@@ -247,6 +262,173 @@ class LightningQubit(DefaultQubit):
             tape.num_params,
         )
         return jac
+
+    def vector_jacobian_product(self, tape, dy, starting_state=None, use_device_state=False):
+        """Generate the the vector-Jacobian products of a tape.
+
+        Args:
+            tape (.QuantumTape): quantum tape to differentiate
+            dy (tensor_like): Gradient-output vector. Must have shape
+                matching the output shape of the corresponding tape.
+
+        Keyword Args:
+            starting_state (tensor_like): post-forward pass state to start execution with. It should be
+                complex-valued. Takes precedence over ``use_device_state``.
+            use_device_state (bool): use current device state to initialize. A forward pass of the same
+                circuit should be the last thing the device has executed. If a ``starting_state`` is
+                provided, that takes precedence.
+
+        Returns:
+            tuple[array or None, tensor_like or None]: A tuple of the adjoint-jacobian and the Vector-Jacobian
+            product. Returns ``None`` if the tape has no trainable parameters.
+        """
+        if self.shots is not None:
+            warn(
+                "Requested adjoint differentiation to be computed with finite shots."
+                " The derivative is always exact when using the adjoint differentiation method.",
+                UserWarning,
+            )
+
+        num_params = len(tape.trainable_params)
+
+        if num_params == 0:
+            return None, None
+
+        if math.allclose(dy, 0):
+            return None, math.convert_like(np.zeros([num_params]), dy)
+
+        # Check adjoint diff support
+        self.adjoint_diff_support_check(tape)
+
+        # Initialization of state
+        if starting_state is not None:
+            ket = np.ravel(starting_state)
+        else:
+            if not use_device_state:
+                self.reset()
+                self.execute(tape)
+            ket = np.ravel(self._pre_rotated_state)
+
+        VJP = VectorJacobianProductC128()
+
+        obs_serialized = _serialize_obs(tape, self.wire_map)
+        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map)
+
+        ops_serialized = VJP.create_ops_list(*ops_serialized)
+
+        trainable_params = sorted(tape.trainable_params)
+        first_elem = 1 if trainable_params[0] == 0 else 0
+
+        tp_shift = (
+            trainable_params if not use_sp else [i - 1 for i in trainable_params[first_elem:]]
+        )  # exclude first index if explicitly setting sv
+
+        jac, vjp = VJP.vjp(
+            math.reshape(dy, [-1]),
+            StateVectorC128(ket),
+            obs_serialized,
+            ops_serialized,
+            tp_shift,
+            tape.num_params,
+        )
+        return jac, vjp
+
+    def compute_vjp(self, dy, jac, num=None):
+        """Convenience function to compute the vector-Jacobian product for a given
+        vector of gradient outputs and a Jacobian.
+
+        Args:
+            dy (tensor_like): vector of gradient outputs
+            jac (tensor_like): Jacobian matrix. For an n-dimensional ``dy``
+                vector, the first n-dimensions of ``jac`` should match
+                the shape of ``dy``.
+
+        Keyword Args:
+        num (int): The length of the flattened ``dy`` argument. This is an
+            optional argument, but can be useful to provide if ``dy`` potentially
+            has no shape (for example, due to tracing or just-in-time compilation).
+
+        Returns:
+            tensor_like: the vector-Jacobian product
+        """
+        if jac is None:
+            return None
+
+        dy_row = math.reshape(dy, [-1])
+
+        if num is None:
+            num = math.shape(dy_row)[0]
+
+        if not isinstance(dy_row, np.ndarray):
+            jac = math.convert_like(jac, dy_row)
+
+        jac = math.reshape(jac, [num, -1])
+        num_params = jac.shape[1]
+
+        if math.allclose(dy, 0):
+            return math.convert_like(np.zeros([num_params]), dy)
+
+        VJP = VectorJacobianProductC128()
+
+        vjp_tensor = VJP.compute_vjp_from_jac(
+            math.reshape(jac, [-1]),
+            dy_row,
+            num,
+            num_params,
+        )
+        return vjp_tensor
+
+    def batch_vjp(
+        self, tapes, dys, reduction="append", starting_state=None, use_device_state=False
+    ):
+        """Generate the the vector-Jacobian products of a batch of tapes.
+
+        Args:
+            tapes (Sequence[.QuantumTape]): sequence of quantum tapes to differentiate
+            dys (Sequence[tensor_like]): Sequence of gradient-output vectors ``dy``. Must be the
+                same length as ``tapes``. Each ``dy`` tensor should have shape
+                matching the output shape of the corresponding tape.
+
+        Keyword Args:
+            reduction (str): Determines how the vector-Jacobian products are returned.
+                If ``append``, then the output of the function will be of the form
+                ``List[tensor_like]``, with each element corresponding to the VJP of each
+                input tape. If ``extend``, then the output VJPs will be concatenated.
+            starting_state (tensor_like): post-forward pass state to start execution with. It should be
+                complex-valued. Takes precedence over ``use_device_state``.
+            use_device_state (bool): use current device state to initialize. A forward pass of the same
+                circuit should be the last thing the device has executed. If a ``starting_state`` is
+                provided, that takes precedence.
+
+        Returns:
+            tuple[List[array or None], List[tensor_like or None]]: A tuple containing a list
+            of adjoint-jacobians and a list of vector-Jacobian products. ``None`` elements corresponds
+            to tapes with no trainable parameters.
+        """
+        vjps = []
+        jacs = []
+
+        # Loop through the tapes and dys vector
+        for tape, dy in zip(tapes, dys):
+            jac, vjp = self.vector_jacobian_product(
+                tape,
+                dy,
+                starting_state=starting_state,
+                use_device_state=use_device_state,
+            )
+            if vjp is None:
+                if reduction == "append":
+                    vjps.append(None)
+                    jacs.append(jac)
+                continue
+            if isinstance(reduction, str):
+                getattr(vjps, reduction)(vjp)
+                getattr(jacs, reduction)(jac)
+            elif callable(reduction):
+                reduction(vjps, vjp)
+                reduction(jacs, jac)
+
+        return jacs, vjps
 
 
 if not CPP_BINARY_AVAILABLE:
