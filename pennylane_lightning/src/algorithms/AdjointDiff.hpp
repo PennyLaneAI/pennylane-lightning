@@ -761,6 +761,6 @@ template <class T = double> class AdjointJacobian {
             }
         }
     }
-};
+}; // class AdjointJacobian
 
 } // namespace Pennylane::Algorithms
