@@ -8,6 +8,6 @@ target_link_libraries(lightning_simulator PRIVATE pennylane_lightning_compile_op
                                                    pennylane_lightning_external_libs)
                     
 target_include_directories(lightning_simulator PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} )
-target_link_libraries(lightning_simulator PRIVATE lightning_utils)
+target_link_libraries(lightning_simulator PUBLIC lightning_utils)
 
 set_property(TARGET lightning_simulator PROPERTY POSITION_INDEPENDENT_CODE ON)

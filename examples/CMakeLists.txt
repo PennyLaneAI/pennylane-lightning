@@ -10,6 +10,9 @@ project("gate_benchmark"
         LANGUAGES CXX
 )
 
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
+
+option(ENABLE_NATIVE "Enable warnings" ON)
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_CLANG_TIDY "Enable clang-tidy build checks" OFF)
 
@@ -26,14 +29,16 @@ endif()
 ## II. Fetch project
 #############################
 
-Include(FetchContent)
+add_subdirectory(.. BUILD)
 
-FetchContent_Declare(
-    Pennylane-lightning
-    GIT_REPOSITORY  https://github.com/PennyLaneAI/pennylane-lightning
-    GIT_TAG         master
-)
-FetchContent_MakeAvailable(Pennylane-lightning)
+#Include(FetchContent)
+
+#FetchContent_Declare(
+#    Pennylane-lightning
+#    GIT_REPOSITORY  https://github.com/PennyLaneAI/pennylane-lightning
+#    GIT_TAG         master
+#)
+#FetchContent_MakeAvailable(Pennylane-lightning)
 
 #############################
 ## III. Create project target
@@ -43,4 +48,4 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-O3")
 
 add_executable(gate_benchmark gate_benchmark.cpp)
-target_link_libraries(gate_benchmark pennylane_lightning)
+target_link_libraries(gate_benchmark lightning_simulator)

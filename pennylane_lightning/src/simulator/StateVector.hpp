@@ -28,6 +28,7 @@
 #include <cmath>
 #include <complex>
 #include <functional>
+#include <memory_resource>
 #include <set>
 #include <stdexcept>
 #include <unordered_map>
@@ -65,9 +66,14 @@ namespace Pennylane {
  *
  * @tparam fp_t Floating point precision of underlying statevector data.
  */
-template <class fp_t = double> class StateVector {
+template <class fp_t = double, std::size_t STACK_BYTES = 8388608>
+class StateVector {
   private:
     using CFP_t = std::complex<fp_t>;
+
+    // Used as as internal resource with pmr structures
+    std::byte buffer_[STACK_BYTES];
+    std::pmr::monotonic_buffer_resource mbr_{buffer_};
 
     /***********************************************************************
      *
@@ -77,9 +83,9 @@ template <class fp_t = double> class StateVector {
      *
      ***********************************************************************/
 
-    using Func =
-        std::function<void(const vector<size_t> &, const vector<size_t> &, bool,
-                           const vector<fp_t> &)>;
+    using Func = std::function<void(const std::pmr::vector<size_t> &,
+                                    const std::pmr::vector<size_t> &, bool,
+                                    const vector<fp_t> &)>;
 
     using FMap = std::unordered_map<string, Func>;
 
@@ -97,7 +103,7 @@ template <class fp_t = double> class StateVector {
      */
     using scalar_type_t = fp_t;
 
-    StateVector() : gate_wires_{} {};
+    StateVector() : mbr_{buffer_, sizeof(buffer_)}, gate_wires_{} {};
 
     /**
      * @brief Construct a new `%StateVector` object from a given complex data
@@ -108,7 +114,8 @@ template <class fp_t = double> class StateVector {
      * power-of-2 (qubits only).
      */
     StateVector(CFP_t *arr, size_t length)
-        : arr_{arr}, length_{length}, num_qubits_{Util::log2(length_)},
+        : mbr_{buffer_, sizeof buffer_}, arr_{arr}, length_{length},
+          num_qubits_{Util::log2(length_)},
           gate_wires_{
               // Add mapping from function name to required wires.
               {"PauliX", 1},   {"PauliY", 1},     {"PauliZ", 1},
@@ -284,6 +291,8 @@ template <class fp_t = double> class StateVector {
      */
     auto getData() -> CFP_t * { return arr_; }
 
+    auto getMBR() -> std::pmr::monotonic_buffer_resource & { return mbr_; }
+
     /**
      * @brief Redefine statevector data pointer.
      *
@@ -345,10 +354,9 @@ template <class fp_t = double> class StateVector {
                 std::to_string(wires.size()) + " were supplied");
         }
 
-        const vector<size_t> internalIndices = generateBitPatterns(wires);
-        const vector<size_t> externalWires = getIndicesAfterExclusion(wires);
-        const vector<size_t> externalIndices =
-            generateBitPatterns(externalWires);
+        const auto internalIndices = generateBitPatterns(wires);
+        const auto externalWires = getIndicesAfterExclusion(wires);
+        const auto externalIndices = generateBitPatterns(externalWires);
         gate(internalIndices, externalIndices, inverse, params);
     }
 
@@ -372,10 +380,9 @@ template <class fp_t = double> class StateVector {
                                         " were supplied.");
         }
 
-        const vector<size_t> internalIndices = generateBitPatterns(wires);
-        const vector<size_t> externalWires = getIndicesAfterExclusion(wires);
-        const vector<size_t> externalIndices =
-            generateBitPatterns(externalWires);
+        const auto internalIndices{generateBitPatterns(wires)};
+        const auto externalWires{getIndicesAfterExclusion(wires)};
+        const auto externalIndices{generateBitPatterns(externalWires)};
 
         applyMatrix(matrix, internalIndices, externalIndices, inverse);
     }
@@ -434,7 +441,8 @@ template <class fp_t = double> class StateVector {
      * @return vector<size_t>
      */
     auto static getIndicesAfterExclusion(const vector<size_t> &indicesToExclude,
-                                         size_t num_qubits) -> vector<size_t> {
+                                         size_t num_qubits)
+        -> std::vector<size_t> {
         std::set<size_t> indices;
         for (size_t i = 0; i < num_qubits; i++) {
             indices.emplace(i);
@@ -451,9 +459,17 @@ template <class fp_t = double> class StateVector {
      * @see `getIndicesAfterExclusion(
         const vector<size_t> &indicesToExclude, size_t num_qubits)`
      */
-    auto getIndicesAfterExclusion(const vector<size_t> &indicesToExclude)
-        -> vector<size_t> {
-        return getIndicesAfterExclusion(indicesToExclude, num_qubits_);
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    auto getIndicesAfterExclusion(const VecType &indicesToExclude)
+        -> std::pmr::vector<size_t> {
+        std::pmr::set<size_t> indices{&mbr_};
+        for (size_t i = 0; i < num_qubits_; i++) {
+            indices.emplace(i);
+        }
+        for (const size_t &excludedIndex : indicesToExclude) {
+            indices.erase(excludedIndex);
+        }
+        return {indices.begin(), indices.end(), &mbr_};
     }
 
     /**
@@ -466,9 +482,10 @@ template <class fp_t = double> class StateVector {
      * @param num_qubits Number of qubits in register.
      * @return vector<size_t>
      */
-    static auto generateBitPatterns(const vector<size_t> &qubitIndices,
-                                    size_t num_qubits) -> vector<size_t> {
-        vector<size_t> indices;
+    template <class VecType = std::vector<std::size_t>>
+    static auto generateBitPatterns(const VecType &qubitIndices,
+                                    size_t num_qubits) -> std::vector<size_t> {
+        std::vector<size_t> indices;
         indices.reserve(Util::exp2(qubitIndices.size()));
         indices.emplace_back(0);
 
@@ -490,9 +507,23 @@ template <class fp_t = double> class StateVector {
      * @see `generateBitPatterns(const vector<size_t> &qubitIndices, size_t
      * num_qubits)`.
      */
-    auto generateBitPatterns(const vector<size_t> &qubitIndices)
-        -> vector<size_t> {
-        return generateBitPatterns(qubitIndices, num_qubits_);
+    template <class VecType = std::pmr::vector<std::size_t>>
+    auto generateBitPatterns(const VecType &qubitIndices)
+        -> std::pmr::vector<size_t> {
+        std::pmr::vector<size_t> indices{&mbr_};
+        indices.reserve(Util::exp2(qubitIndices.size()));
+        indices.emplace_back(0);
+
+        for (auto index_it = qubitIndices.rbegin();
+             index_it != qubitIndices.rend(); index_it++) {
+            const size_t value =
+                Util::maxDecimalForQubit(*index_it, num_qubits_);
+            const size_t currentSize = indices.size();
+            for (size_t j = 0; j < currentSize; j++) {
+                indices.emplace_back(indices[j] + value);
+            }
+        }
+        return indices;
     }
 
     /**
@@ -503,8 +534,9 @@ template <class fp_t = double> class StateVector {
      * @param externalIndices External indices unaffected by the operation.
      * @param inverse Indicate whether inverse should be taken.
      */
-    void applyMatrix(const vector<CFP_t> &matrix, const vector<size_t> &indices,
-                     const vector<size_t> &externalIndices, bool inverse) {
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    void applyMatrix(const vector<CFP_t> &matrix, const VecType &indices,
+                     const VecType &externalIndices, bool inverse) {
         if (static_cast<size_t>(1ULL << (Util::log2(indices.size()) +
                                          Util::log2(externalIndices.size()))) !=
             length_) {
@@ -552,7 +584,8 @@ template <class fp_t = double> class StateVector {
      * @param externalIndices External indices unaffected by the operation.
      * @param inverse Indicate whether inverse should be taken.
      */
-    void applyMatrix(const CFP_t *matrix, const vector<size_t> &indices,
+    template <typename VecType = std::vector<std::size_t>>
+    void applyMatrix(const CFP_t *matrix, const VecType &indices,
                      const vector<size_t> &externalIndices, bool inverse) {
         if (static_cast<size_t>(1ULL << (Util::log2(indices.size()) +
                                          Util::log2(externalIndices.size()))) !=
@@ -561,7 +594,7 @@ template <class fp_t = double> class StateVector {
                 "The given indices do not match the state-vector length.");
         }
 
-        vector<CFP_t> v(indices.size());
+        std::pmr::vector<CFP_t> v(indices.size(), &mbr_);
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             // Gather
@@ -601,8 +634,8 @@ template <class fp_t = double> class StateVector {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyPauliX(const vector<size_t> &indices,
-                     const vector<size_t> &externalIndices,
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    void applyPauliX(const VecType &indices, const VecType &externalIndices,
                      [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -619,8 +652,8 @@ template <class fp_t = double> class StateVector {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyPauliY(const vector<size_t> &indices,
-                     const vector<size_t> &externalIndices,
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    void applyPauliY(const VecType &indices, const VecType &externalIndices,
                      [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -640,8 +673,8 @@ template <class fp_t = double> class StateVector {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyPauliZ(const vector<size_t> &indices,
-                     const vector<size_t> &externalIndices,
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    void applyPauliZ(const VecType &indices, const VecType &externalIndices,
                      [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -658,8 +691,8 @@ template <class fp_t = double> class StateVector {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyHadamard(const vector<size_t> &indices,
-                       const vector<size_t> &externalIndices,
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    void applyHadamard(const VecType &indices, const VecType &externalIndices,
                        [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -681,8 +714,9 @@ template <class fp_t = double> class StateVector {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyS(const vector<size_t> &indices,
-                const vector<size_t> &externalIndices, bool inverse) {
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    void applyS(const VecType &indices, const VecType &externalIndices,
+                bool inverse) {
         const CFP_t shift =
             (inverse) ? -Util::IMAG<fp_t>() : Util::IMAG<fp_t>();
 
@@ -701,8 +735,9 @@ template <class fp_t = double> class StateVector {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyT(const vector<size_t> &indices,
-                const vector<size_t> &externalIndices, bool inverse) {
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    void applyT(const VecType &indices, const VecType &externalIndices,
+                bool inverse) {
         const CFP_t shift =
             (inverse)
                 ? std::conj(std::exp(CFP_t(0, static_cast<fp_t>(M_PI / 4))))
@@ -726,10 +761,10 @@ template <class fp_t = double> class StateVector {
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
-    template <typename Param_t = fp_t>
-    void applyRX(const vector<size_t> &indices,
-                 const vector<size_t> &externalIndices, bool inverse,
-                 Param_t angle) {
+    template <typename Param_t = fp_t,
+              typename VecType = std::pmr::vector<std::size_t>>
+    void applyRX(const VecType &indices, const VecType &externalIndices,
+                 bool inverse, Param_t angle) {
         const Param_t c = std::cos(angle / 2);
         const Param_t js =
             (inverse) ? -std::sin(-angle / 2) : std::sin(-angle / 2);
@@ -756,10 +791,10 @@ template <class fp_t = double> class StateVector {
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
-    template <typename Param_t = fp_t>
-    void applyRY(const vector<size_t> &indices,
-                 const vector<size_t> &externalIndices, bool inverse,
-                 Param_t angle) {
+    template <typename Param_t = fp_t,
+              typename VecType = std::pmr::vector<std::size_t>>
+    void applyRY(const VecType &indices, const VecType &externalIndices,
+                 bool inverse, Param_t angle) {
         const Param_t c = std::cos(angle / 2);
         const Param_t s =
             (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
@@ -784,10 +819,10 @@ template <class fp_t = double> class StateVector {
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
-    template <typename Param_t = fp_t>
-    void applyRZ(const vector<size_t> &indices,
-                 const vector<size_t> &externalIndices, bool inverse,
-                 Param_t angle) {
+    template <typename Param_t = fp_t,
+              typename VecType = std::pmr::vector<std::size_t>>
+    void applyRZ(const VecType &indices, const VecType &externalIndices,
+                 bool inverse, Param_t angle) {
         const CFP_t first = CFP_t(std::cos(angle / 2), -std::sin(angle / 2));
         const CFP_t second = CFP_t(std::cos(angle / 2), std::sin(angle / 2));
         const CFP_t shift1 = (inverse) ? std::conj(first) : first;
@@ -811,10 +846,10 @@ template <class fp_t = double> class StateVector {
      * @param inverse Take adjoint of given operation.
      * @param angle Phase shift angle.
      */
-    template <typename Param_t = fp_t>
-    void applyPhaseShift(const vector<size_t> &indices,
-                         const vector<size_t> &externalIndices, bool inverse,
-                         Param_t angle) {
+    template <typename Param_t = fp_t,
+              typename VecType = std::pmr::vector<std::size_t>>
+    void applyPhaseShift(const VecType &indices, const VecType &externalIndices,
+                         bool inverse, Param_t angle) {
         const CFP_t s = inverse ? std::conj(std::exp(CFP_t(0, angle)))
                                 : std::exp(CFP_t(0, angle));
         for (const size_t &externalIndex : externalIndices) {
@@ -836,10 +871,11 @@ template <class fp_t = double> class StateVector {
      * @param inverse Take adjoint of given operation.
      * @param angle Phase shift angle.
      */
-    template <typename Param_t = fp_t>
-    void applyControlledPhaseShift(const std::vector<size_t> &indices,
-                                   const std::vector<size_t> &externalIndices,
-                                   bool inverse, Param_t angle) {
+    template <typename Param_t = fp_t,
+              typename VecType = std::pmr::vector<std::size_t>>
+    void applyControlledPhaseShift(const VecType &indices,
+                                   const VecType &externalIndices, bool inverse,
+                                   Param_t angle) {
         const CFP_t s = inverse ? std::conj(std::exp(CFP_t(0, angle)))
                                 : std::exp(CFP_t(0, angle));
         for (const size_t &externalIndex : externalIndices) {
@@ -863,11 +899,11 @@ template <class fp_t = double> class StateVector {
      * @param theta Gate rotation parameter \f$\theta\f$.
      * @param omega Gate rotation parameter \f$\omega\f$.
      */
-    template <typename Param_t = fp_t>
-    void applyRot(const vector<size_t> &indices,
-                  const vector<size_t> &externalIndices, bool inverse,
-                  Param_t phi, Param_t theta, Param_t omega) {
-        const vector<CFP_t> rot = Gates::getRot<fp_t>(phi, theta, omega);
+    template <typename Param_t = fp_t,
+              typename VecType = std::pmr::vector<std::size_t>>
+    void applyRot(const VecType &indices, const VecType &externalIndices,
+                  bool inverse, Param_t phi, Param_t theta, Param_t omega) {
+        const auto rot = Gates::getRot<fp_t>(phi, theta, omega);
 
         const CFP_t t1 = (inverse) ? std::conj(rot[0]) : rot[0];
         const CFP_t t2 = (inverse) ? -rot[1] : rot[1];
@@ -892,8 +928,8 @@ template <class fp_t = double> class StateVector {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyCNOT(const vector<size_t> &indices,
-                   const vector<size_t> &externalIndices,
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    void applyCNOT(const VecType &indices, const VecType &externalIndices,
                    [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -910,8 +946,8 @@ template <class fp_t = double> class StateVector {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applySWAP(const vector<size_t> &indices,
-                   const vector<size_t> &externalIndices,
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    void applySWAP(const VecType &indices, const VecType &externalIndices,
                    [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -927,8 +963,8 @@ template <class fp_t = double> class StateVector {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyCZ(const vector<size_t> &indices,
-                 const vector<size_t> &externalIndices,
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    void applyCZ(const VecType &indices, const VecType &externalIndices,
                  [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -948,10 +984,10 @@ template <class fp_t = double> class StateVector {
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
-    template <typename Param_t = fp_t>
-    void applyCRX(const vector<size_t> &indices,
-                  const vector<size_t> &externalIndices, bool inverse,
-                  Param_t angle) {
+    template <typename Param_t = fp_t,
+              typename VecType = std::pmr::vector<std::size_t>>
+    void applyCRX(const VecType &indices, const VecType &externalIndices,
+                  bool inverse, Param_t angle) {
         const Param_t c = std::cos(angle / 2);
         const Param_t js =
             (inverse) ? -std::sin(-angle / 2) : std::sin(-angle / 2);
@@ -979,10 +1015,10 @@ template <class fp_t = double> class StateVector {
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
-    template <typename Param_t = fp_t>
-    void applyCRY(const vector<size_t> &indices,
-                  const vector<size_t> &externalIndices, bool inverse,
-                  Param_t angle) {
+    template <typename Param_t = fp_t,
+              typename VecType = std::pmr::vector<std::size_t>>
+    void applyCRY(const VecType &indices, const VecType &externalIndices,
+                  bool inverse, Param_t angle) {
         const Param_t c = std::cos(angle / 2);
         const Param_t s =
             (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
@@ -1008,10 +1044,10 @@ template <class fp_t = double> class StateVector {
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
-    template <typename Param_t = fp_t>
-    void applyCRZ(const vector<size_t> &indices,
-                  const vector<size_t> &externalIndices, bool inverse,
-                  Param_t angle) {
+    template <typename Param_t = fp_t,
+              typename VecType = std::pmr::vector<std::size_t>>
+    void applyCRZ(const VecType &indices, const VecType &externalIndices,
+                  bool inverse, Param_t angle) {
         const CFP_t m00 =
             (inverse) ? CFP_t(std::cos(angle / 2), std::sin(angle / 2))
                       : CFP_t(std::cos(angle / 2), -std::sin(angle / 2));
@@ -1040,10 +1076,10 @@ template <class fp_t = double> class StateVector {
      * @param theta Gate rotation parameter \f$\theta\f$.
      * @param omega Gate rotation parameter \f$\omega\f$.
      */
-    template <typename Param_t = fp_t>
-    void applyCRot(const vector<size_t> &indices,
-                   const vector<size_t> &externalIndices, bool inverse,
-                   Param_t phi, Param_t theta, Param_t omega) {
+    template <typename Param_t = fp_t,
+              typename VecType = std::pmr::vector<std::size_t>>
+    void applyCRot(const VecType &indices, const VecType &externalIndices,
+                   bool inverse, Param_t phi, Param_t theta, Param_t omega) {
         const auto rot = Gates::getRot<fp_t>(phi, theta, omega);
 
         const CFP_t t1 = (inverse) ? std::conj(rot[0]) : rot[0];
@@ -1069,8 +1105,8 @@ template <class fp_t = double> class StateVector {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyToffoli(const vector<size_t> &indices,
-                      const vector<size_t> &externalIndices,
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    void applyToffoli(const VecType &indices, const VecType &externalIndices,
                       [[maybe_unused]] bool inverse) {
         // Participating swapped indices
         static const size_t op_idx0 = 6;
@@ -1091,8 +1127,8 @@ template <class fp_t = double> class StateVector {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyCSWAP(const vector<size_t> &indices,
-                    const vector<size_t> &externalIndices,
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    void applyCSWAP(const VecType &indices, const VecType &externalIndices,
                     [[maybe_unused]] bool inverse) {
         // Participating swapped indices
         static const size_t op_idx0 = 5;
@@ -1108,121 +1144,136 @@ template <class fp_t = double> class StateVector {
     //***********************************************************************//
     //  Internal utility functions for opName dispatch use only.
     //***********************************************************************//
-    inline void applyPauliX_(const vector<size_t> &indices,
-                             const vector<size_t> &externalIndices,
-                             bool inverse, const vector<fp_t> &params) {
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applyPauliX_(const VecType &indices,
+                             const VecType &externalIndices, bool inverse,
+                             const vector<fp_t> &params) {
         static_cast<void>(params);
         applyPauliX(indices, externalIndices, inverse);
     }
-    inline void applyPauliY_(const vector<size_t> &indices,
-                             const vector<size_t> &externalIndices,
-                             bool inverse, const vector<fp_t> &params) {
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applyPauliY_(const VecType &indices,
+                             const VecType &externalIndices, bool inverse,
+                             const vector<fp_t> &params) {
         static_cast<void>(params);
         applyPauliY(indices, externalIndices, inverse);
     }
-    inline void applyPauliZ_(const vector<size_t> &indices,
-                             const vector<size_t> &externalIndices,
-                             bool inverse, const vector<fp_t> &params) {
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applyPauliZ_(const VecType &indices,
+                             const VecType &externalIndices, bool inverse,
+                             const vector<fp_t> &params) {
         static_cast<void>(params);
         applyPauliZ(indices, externalIndices, inverse);
     }
-    inline void applyHadamard_(const vector<size_t> &indices,
-                               const vector<size_t> &externalIndices,
-                               bool inverse, const vector<fp_t> &params) {
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applyHadamard_(const VecType &indices,
+                               const VecType &externalIndices, bool inverse,
+                               const vector<fp_t> &params) {
         static_cast<void>(params);
         applyHadamard(indices, externalIndices, inverse);
     }
-    inline void applyS_(const vector<size_t> &indices,
-                        const vector<size_t> &externalIndices, bool inverse,
-                        const vector<fp_t> &params) {
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applyS_(const VecType &indices, const VecType &externalIndices,
+                        bool inverse, const vector<fp_t> &params) {
         static_cast<void>(params);
         applyS(indices, externalIndices, inverse);
     }
-    inline void applyT_(const vector<size_t> &indices,
-                        const vector<size_t> &externalIndices, bool inverse,
-                        const vector<fp_t> &params) {
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applyT_(const VecType &indices, const VecType &externalIndices,
+                        bool inverse, const vector<fp_t> &params) {
         static_cast<void>(params);
         applyT(indices, externalIndices, inverse);
     }
-    inline void applyRX_(const vector<size_t> &indices,
-                         const vector<size_t> &externalIndices, bool inverse,
-                         const vector<fp_t> &params) {
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applyRX_(const VecType &indices, const VecType &externalIndices,
+                         bool inverse, const vector<fp_t> &params) {
         applyRX(indices, externalIndices, inverse, params[0]);
     }
-    inline void applyRY_(const vector<size_t> &indices,
-                         const vector<size_t> &externalIndices, bool inverse,
-                         const vector<fp_t> &params) {
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applyRY_(const VecType &indices, const VecType &externalIndices,
+                         bool inverse, const vector<fp_t> &params) {
         applyRY(indices, externalIndices, inverse, params[0]);
     }
-    inline void applyRZ_(const vector<size_t> &indices,
-                         const vector<size_t> &externalIndices, bool inverse,
-                         const vector<fp_t> &params) {
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applyRZ_(const VecType &indices, const VecType &externalIndices,
+                         bool inverse, const vector<fp_t> &params) {
         applyRZ(indices, externalIndices, inverse, params[0]);
     }
-    inline void applyPhaseShift_(const vector<size_t> &indices,
-                                 const vector<size_t> &externalIndices,
-                                 bool inverse, const vector<fp_t> &params) {
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applyPhaseShift_(const VecType &indices,
+                                 const VecType &externalIndices, bool inverse,
+                                 const vector<fp_t> &params) {
         applyPhaseShift(indices, externalIndices, inverse, params[0]);
     }
-    inline void
-    applyControlledPhaseShift_(const vector<size_t> &indices,
-                               const vector<size_t> &externalIndices,
-                               bool inverse, const vector<fp_t> &params) {
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applyControlledPhaseShift_(const VecType &indices,
+                                           const VecType &externalIndices,
+                                           bool inverse,
+                                           const vector<fp_t> &params) {
         applyControlledPhaseShift(indices, externalIndices, inverse, params[0]);
     }
-    inline void applyRot_(const vector<size_t> &indices,
-                          const vector<size_t> &externalIndices, bool inverse,
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applyRot_(const VecType &indices,
+                          const VecType &externalIndices, bool inverse,
                           const vector<fp_t> &params) {
         applyRot(indices, externalIndices, inverse, params[0], params[1],
                  params[2]);
     }
-    inline void applyCNOT_(const vector<size_t> &indices,
-                           const vector<size_t> &externalIndices, bool inverse,
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applyCNOT_(const VecType &indices,
+                           const VecType &externalIndices, bool inverse,
                            const vector<fp_t> &params) {
         static_cast<void>(params);
         applyCNOT(indices, externalIndices, inverse);
     }
-    inline void applySWAP_(const vector<size_t> &indices,
-                           const vector<size_t> &externalIndices, bool inverse,
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applySWAP_(const VecType &indices,
+                           const VecType &externalIndices, bool inverse,
                            const vector<fp_t> &params) {
         static_cast<void>(params);
         applySWAP(indices, externalIndices, inverse);
     }
-    inline void applyCZ_(const vector<size_t> &indices,
-                         const vector<size_t> &externalIndices, bool inverse,
-                         const vector<fp_t> &params) {
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applyCZ_(const VecType &indices, const VecType &externalIndices,
+                         bool inverse, const vector<fp_t> &params) {
         static_cast<void>(params);
         applyCZ(indices, externalIndices, inverse);
     }
-    inline void applyCRX_(const vector<size_t> &indices,
-                          const vector<size_t> &externalIndices, bool inverse,
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applyCRX_(const VecType &indices,
+                          const VecType &externalIndices, bool inverse,
                           const vector<fp_t> &params) {
         applyCRX(indices, externalIndices, inverse, params[0]);
     }
-    inline void applyCRY_(const vector<size_t> &indices,
-                          const vector<size_t> &externalIndices, bool inverse,
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applyCRY_(const VecType &indices,
+                          const VecType &externalIndices, bool inverse,
                           const vector<fp_t> &params) {
         applyCRY(indices, externalIndices, inverse, params[0]);
     }
-    inline void applyCRZ_(const vector<size_t> &indices,
-                          const vector<size_t> &externalIndices, bool inverse,
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applyCRZ_(const VecType &indices,
+                          const VecType &externalIndices, bool inverse,
                           const vector<fp_t> &params) {
         applyCRZ(indices, externalIndices, inverse, params[0]);
     }
-    inline void applyCRot_(const vector<size_t> &indices,
-                           const vector<size_t> &externalIndices, bool inverse,
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applyCRot_(const VecType &indices,
+                           const VecType &externalIndices, bool inverse,
                            const vector<fp_t> &params) {
         applyCRot(indices, externalIndices, inverse, params[0], params[1],
                   params[2]);
     }
-    inline void applyToffoli_(const vector<size_t> &indices,
-                              const vector<size_t> &externalIndices,
-                              bool inverse, const vector<fp_t> &params) {
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applyToffoli_(const VecType &indices,
+                              const VecType &externalIndices, bool inverse,
+                              const vector<fp_t> &params) {
         static_cast<void>(params);
         applyToffoli(indices, externalIndices, inverse);
     }
-    inline void applyCSWAP_(const vector<size_t> &indices,
-                            const vector<size_t> &externalIndices, bool inverse,
+    template <typename VecType = std::pmr::vector<std::size_t>>
+    inline void applyCSWAP_(const VecType &indices,
+                            const VecType &externalIndices, bool inverse,
                             const vector<fp_t> &params) {
         static_cast<void>(params);
         applyCSWAP(indices, externalIndices, inverse);
