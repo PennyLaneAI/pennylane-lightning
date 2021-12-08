@@ -1,4 +1,4 @@
-# Release 0.20.0-dev
+# Release 0.20.0
 
 ### New features since last release
 
@@ -7,6 +7,9 @@
 
 * Added examples folder containing aggregate gate performance test.
 [(#165)](https://github.com/PennyLaneAI/pennylane-lightning/pull/165)
+
+* Add VJP support to PL-Lightning.
+[(#181)](https://github.com/PennyLaneAI/pennylane-lightning/pull/181)
 
 ### Breaking changes
 
