@@ -55,7 +55,7 @@ jobs:
       - uses: actions-ecosystem/action-regex-match@v2
         id: rc_build
         with:
-          text: ${{ github.ref }}
+          text: ${{ github.event.pull_request.head.ref }}
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-]?rc[0-9]+'
 
       - uses: actions/upload-artifact@v2
