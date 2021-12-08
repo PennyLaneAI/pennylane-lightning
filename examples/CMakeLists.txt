@@ -12,9 +12,11 @@ project("gate_benchmark"
 
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
+option(ENABLE_PYTHON "Enable warnings" OFF)
 option(ENABLE_NATIVE "Enable warnings" ON)
-option(ENABLE_WARNINGS "Enable warnings" ON)
+option(ENABLE_WARNINGS "Enable warnings" OFF)
 option(ENABLE_CLANG_TIDY "Enable clang-tidy build checks" OFF)
+set(CXX_STANDARD 17)
 
 if(ENABLE_CLANG_TIDY)
     if (NOT DEFINED CLANG_TIDY_BINARY)

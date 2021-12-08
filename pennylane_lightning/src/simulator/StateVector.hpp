@@ -66,14 +66,14 @@ namespace Pennylane {
  *
  * @tparam fp_t Floating point precision of underlying statevector data.
  */
-template <class fp_t = double, std::size_t STACK_BYTES = 8388608>
+template <class fp_t = double, std::size_t STACK_BYTES = 8192>
 class StateVector {
   private:
     using CFP_t = std::complex<fp_t>;
 
     // Used as as internal resource with pmr structures
     std::byte buffer_[STACK_BYTES];
-    std::pmr::monotonic_buffer_resource mbr_{buffer_};
+    std::pmr::monotonic_buffer_resource mbr_;
 
     /***********************************************************************
      *

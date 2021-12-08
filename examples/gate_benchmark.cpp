@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
         });
 
     // Run each gate specified number of times and measure walltime
-    Pennylane::StateVectorManaged<TestType, 8388608> svdat{num_qubits};
+    Pennylane::StateVectorManaged<TestType> svdat{num_qubits};
     std::chrono::time_point<std::chrono::high_resolution_clock> t_start, t_end;
     t_start = std::chrono::high_resolution_clock::now();
     for (size_t gate_rep = 0; gate_rep < num_gate_reps; gate_rep++) {

@@ -37,6 +37,7 @@ option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_AVX "Enable AVX support" OFF)
 option(ENABLE_OPENMP "Enable OpenMP" ON)
 option(ENABLE_BLAS "Enable BLAS" OFF)
+option(ENABLE_PYTHON "Enable Python bindings" ON)
 
 # Other build options
 option(BUILD_TESTS "Build cpp tests" OFF)
@@ -72,6 +73,7 @@ target_link_libraries(pennylane_lightning INTERFACE     lightning_utils
                                                         lightning_algorithms)
 target_include_directories(pennylane_lightning INTERFACE "pennylane_lightning/src")
 
+if(ENABLE_PYTHON)
 pybind11_add_module(lightning_qubit_ops "pennylane_lightning/src/bindings/Bindings.cpp")
 target_link_libraries(lightning_qubit_ops PRIVATE pennylane_lightning
                                                   pennylane_lightning_compile_options
@@ -85,7 +87,7 @@ else()
 endif()
 
 target_compile_definitions(lightning_qubit_ops PRIVATE VERSION_INFO=${VERSION_STRING})
-
+endif()
 
 if(BUILD_TESTS)
     enable_testing()

@@ -20,7 +20,7 @@ namespace Pennylane {
  *
  * @tparam fp_t
  */
-template <class fp_t = double, std::size_t STACK_BYTES = 8388608>
+template <class fp_t = double, std::size_t STACK_BYTES = 8192>
 class StateVectorManaged : public StateVector<fp_t, STACK_BYTES> {
   private:
     using CFP_t = std::complex<fp_t>;
@@ -28,7 +28,7 @@ class StateVectorManaged : public StateVector<fp_t, STACK_BYTES> {
     std::vector<CFP_t> data_;
 
   public:
-    StateVectorManaged() : StateVector<fp_t>() {}
+    StateVectorManaged() : StateVector<fp_t, STACK_BYTES>() {}
     StateVectorManaged(size_t num_qubits)
         : StateVector<fp_t, STACK_BYTES>(
               nullptr, static_cast<size_t>(Util::exp2(num_qubits))),
