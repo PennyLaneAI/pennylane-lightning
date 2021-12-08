@@ -61,7 +61,7 @@ jobs:
           USE_OMP: 1
 
       - uses: actions/upload-artifact@v2
-        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || contains(github.ref, '[0-9]+.[0-9]+.[0-9]+[-]?rc[0-9]+')}}
         with:
           name: ${{ runner.os }}-wheels.zip
           path: ./wheelhouse/*.whl
