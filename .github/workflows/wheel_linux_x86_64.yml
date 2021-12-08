@@ -52,8 +52,14 @@ jobs:
         env:
           CIBW_ARCHS_LINUX: ${{matrix.arch}}
 
+      - uses: actions-ecosystem/action-regex-match@v2
+        id: rc_build
+        with:
+          text: ${{ github.ref_name }}
+          regex: '.*[0-9]+.[0-9]+.[0-9]+[-]?rc[0-9]+'
+
       - uses: actions/upload-artifact@v2
-        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || contains(${GITHUB_REF##*/}, '[0-9]+.[0-9]+.[0-9]+[-]?rc[0-9]+')}}
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         with:
           name: ${{ runner.os }}-wheels.zip
           path: ./wheelhouse/*.whl
