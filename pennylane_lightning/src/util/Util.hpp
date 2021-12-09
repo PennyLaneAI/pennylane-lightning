@@ -923,7 +923,8 @@ auto linspace(T start, T end, size_t num_points) -> std::vector<T> {
  * @return a vector with indices that would sort the array.
  */
 template <typename T>
-std::vector<size_t> sorting_indexes(const T &arr, size_t length) {
+inline auto sorting_indexes(const T &arr, size_t length)
+                            -> std::vector<size_t>  {
   std::vector<size_t> indexes(length);
   iota(indexes.begin(), indexes.end(), 0);
 
@@ -942,7 +943,8 @@ std::vector<size_t> sorting_indexes(const T &arr, size_t length) {
  * @return a vector with indices that would sort the vector.
  */
 template <typename T>
-inline std::vector<size_t> sorting_indexes(const std::vector<T> &vec) {
+inline auto sorting_indexes(const std::vector<T> &vec) 
+                            -> std::vector<size_t> {
   return sorting_indexes(vec.data(), vec.size());
 }
 
@@ -954,7 +956,9 @@ inline std::vector<size_t> sorting_indexes(const std::vector<T> &vec) {
  * @param new_axes new axes distribution.
  * @return unsigned int with the new transposed index.
  */
-size_t tranposed_state_index (size_t ind, const std::vector<size_t> &new_axes){
+inline auto transposed_state_index (  size_t ind, 
+                                        const std::vector<size_t> &new_axes)
+                                    -> size_t {
     size_t new_index=0;
     for (std::vector<size_t>::const_reverse_iterator axis = new_axes.rbegin(); 
             axis != new_axes.rend(); ++axis){
@@ -974,12 +978,13 @@ size_t tranposed_state_index (size_t ind, const std::vector<size_t> &new_axes){
  * @return Transposed Tensor.
  */
 template <typename T>
-std::vector<T> transpose_state_tensor( 
+auto transpose_state_tensor( 
                             const std::vector<T> &tensor, 
-                            const std::vector<size_t> &new_axes) {
+                            const std::vector<size_t> &new_axes)
+                            -> std::vector<T> {
     std::vector<T> transposed_tensor(tensor.size());
     for (size_t ind=0; ind<tensor.size(); ind++){
-        transposed_tensor[ind]=tensor[tranposed_state_index(ind, new_axes)];
+        transposed_tensor[ind]=tensor[transposed_state_index(ind, new_axes)];
     }
   return transposed_tensor;
 }

@@ -68,7 +68,8 @@ class Measures {
         vector<double> basis_probs(original_statevector.getLength(), 0);
 
         std::transform(
-            arr_data, arr_data + original_statevector.getLength(),
+            arr_data, 
+            arr_data + original_statevector.getLength(),
             basis_probs.begin(),
             [](const std::complex<fp_t> &z) -> fp_t { return std::norm(z); });
 
