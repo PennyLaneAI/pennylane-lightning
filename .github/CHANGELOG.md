@@ -5,6 +5,9 @@
 * Add VJP support to PL-Lightning.
 [(#181)](https://github.com/PennyLaneAI/pennylane-lightning/pull/181)
 
+* Add complex64 support in PL-Lightning.
+[(#177)](https://github.com/PennyLaneAI/pennylane-lightning/pull/177)
+
 * Added examples folder containing aggregate gate performance test.
 [(#165)](https://github.com/PennyLaneAI/pennylane-lightning/pull/165)
 
