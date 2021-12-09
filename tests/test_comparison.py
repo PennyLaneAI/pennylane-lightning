@@ -200,7 +200,7 @@ class TestComparison:
     def test_n_qubit_circuit(self, wires, lightning_qubit_dev, default_qubit_dev):
         """Test an n-qubit circuit"""
 
-        vec = np.array([1] * (2 ** wires)) / np.sqrt(2 ** wires, dtype=np.complex64)
+        vec = np.array([1] * (2 ** wires)) / np.sqrt(2 ** wires)
         shape = qml.StronglyEntanglingLayers.shape(2, wires)
         w = np.random.uniform(high=2 * np.pi, size=shape)
 
