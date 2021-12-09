@@ -61,7 +61,7 @@ class Measures {
      * @brief Probabilities of each computational basis state.
      *
      * @return Floating point std::vector with probabilities
-     * in lexicographic order according to wires.
+     * in lexicographic order.
      */
     vector<fp_t> probs() {
         const complex<fp_t> *arr_data = original_statevector.getData();
@@ -80,29 +80,39 @@ class Measures {
      *
      * @param wires Wires will restrict probabilities to a subset of the full
      * system.
-     * @return Floating point std::vector with probabilities
-     * in lexicographic order according to wires.
+     * @return Floating point std::vector with probabilities.
+     * The basis columns are rearranged according to wires.
      */
     vector<fp_t> probs(const vector<size_t> &wires) {
-        const complex<fp_t> *arr_data = original_statevector.getData();
-
+        //Determining index that would sort the vector.
+        //This information is needed later.
+        vector<size_t> sorted_ind_wires=sorting_indexes(wires);
+        //Sorting wires.
+        vector<size_t> sorted_wires(wires.size());
+        for (size_t pos=0; pos<wires.size(); pos++){
+            sorted_wires[pos]=wires[sorted_ind_wires[pos]];
+        }
+        //Determining probabilities for the sorted wires.
+        complex<fp_t> *arr_data = original_statevector.getData();
+  
         vector<size_t> all_indices =
-            original_statevector.generateBitPatterns(wires);
+            original_statevector.generateBitPatterns(sorted_wires);
         vector<size_t> all_offsets = original_statevector.generateBitPatterns(
-            original_statevector.getIndicesAfterExclusion(wires));
+            original_statevector.getIndicesAfterExclusion(sorted_wires));
 
         vector<fp_t> probabilities(all_indices.size(), 0);
 
         size_t ind_probs = 0;
         for (auto index : all_indices) {
             for (auto offset : all_offsets) {
-                probabilities[ind_probs] += std::norm(arr_data[index + offset]);
+                probabilities[ind_probs] += std::pow(std::abs(arr_data[index + offset]), 2.0);
             }
             ind_probs++;
         }
+        //Transposing the probabilites tensor with the indexes determined at the begining.
+        probabilities=transpose_state_tensor(probabilities, sorted_ind_wires);
         return probabilities;
-    };
-
+    }
     /**
      * @brief Expected value of an observable.
      *
