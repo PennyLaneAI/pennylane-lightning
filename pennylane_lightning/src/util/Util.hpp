@@ -959,8 +959,7 @@ inline auto transposed_state_index(size_t ind,
                                    const std::vector<size_t> &new_axes)
     -> size_t {
     size_t new_index = 0;
-    for (std::vector<size_t>::const_reverse_iterator axis = new_axes.rbegin();
-         axis != new_axes.rend(); ++axis) {
+    for (auto axis = new_axes.rbegin(); axis != new_axes.rend(); ++axis) {
         new_index += (ind % 2) * pow(2, (new_axes.size() - 1) - (*axis));
         ind /= 2;
     }
