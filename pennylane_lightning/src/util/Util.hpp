@@ -923,16 +923,16 @@ auto linspace(T start, T end, size_t num_points) -> std::vector<T> {
  * @return a vector with indices that would sort the array.
  */
 template <typename T>
-inline auto sorting_indexes(const T &arr, size_t length)
+inline auto sorting_indices(const T &arr, size_t length)
     -> std::vector<size_t> {
-    std::vector<size_t> indexes(length);
-    iota(indexes.begin(), indexes.end(), 0);
+    std::vector<size_t> indices(length);
+    iota(indices.begin(), indices.end(), 0);
 
-    // indexes will be sorted in accordance to the array provided.
-    sort(indexes.begin(), indexes.end(),
+    // indices will be sorted in accordance to the array provided.
+    sort(indices.begin(), indices.end(),
          [&arr](size_t i1, size_t i2) { return arr[i1] < arr[i2]; });
 
-    return indexes;
+    return indices;
 }
 
 /**
@@ -943,8 +943,8 @@ inline auto sorting_indexes(const T &arr, size_t length)
  * @return a vector with indices that would sort the vector.
  */
 template <typename T>
-inline auto sorting_indexes(const std::vector<T> &vec) -> std::vector<size_t> {
-    return sorting_indexes(vec.data(), vec.size());
+inline auto sorting_indices(const std::vector<T> &vec) -> std::vector<size_t> {
+    return sorting_indices(vec.data(), vec.size());
 }
 
 /**
@@ -959,8 +959,8 @@ inline auto transposed_state_index(size_t ind,
                                    const std::vector<size_t> &new_axes)
     -> size_t {
     size_t new_index = 0;
-    for (auto axis = new_axes.rbegin(); axis != new_axes.rend(); ++axis) {
-        new_index += (ind % 2) * pow(2, (new_axes.size() - 1) - (*axis));
+    for (auto axis = new_axes.rbegin(); axis != new_axes.rend(); axis++) {
+        new_index += (ind % 2) << ((new_axes.size() - 1) - (*axis));
         ind /= 2;
     }
     return new_index;

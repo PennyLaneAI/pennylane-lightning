@@ -65,7 +65,7 @@ class Measures {
      */
     vector<fp_t> probs() {
         const complex<fp_t> *arr_data = original_statevector.getData();
-        vector<double> basis_probs(original_statevector.getLength(), 0);
+        vector<fp_t> basis_probs(original_statevector.getLength(), 0);
 
         std::transform(
             arr_data, arr_data + original_statevector.getLength(),
@@ -86,14 +86,14 @@ class Measures {
     vector<fp_t> probs(const vector<size_t> &wires) {
         // Determining index that would sort the vector.
         // This information is needed later.
-        vector<size_t> sorted_ind_wires = sorting_indexes(wires);
+        vector<size_t> sorted_ind_wires(sorting_indices(wires));
         // Sorting wires.
         vector<size_t> sorted_wires(wires.size());
         for (size_t pos = 0; pos < wires.size(); pos++) {
             sorted_wires[pos] = wires[sorted_ind_wires[pos]];
         }
         // Determining probabilities for the sorted wires.
-        complex<fp_t> *arr_data = original_statevector.getData();
+        const complex<fp_t> *arr_data = original_statevector.getData();
 
         vector<size_t> all_indices =
             original_statevector.generateBitPatterns(sorted_wires);
@@ -105,14 +105,16 @@ class Measures {
         size_t ind_probs = 0;
         for (auto index : all_indices) {
             for (auto offset : all_offsets) {
-                probabilities[ind_probs] +=
-                    std::pow(std::abs(arr_data[index + offset]), 2.0);
+                probabilities[ind_probs] += std::norm(arr_data[index + offset]);
             }
             ind_probs++;
         }
-        // Transposing the probabilites tensor with the indexes determined at
+        // Transposing the probabilites tensor with the indices determined at
         // the begining.
-        probabilities = transpose_state_tensor(probabilities, sorted_ind_wires);
+        if (wires != sorted_wires) {
+            probabilities =
+                transpose_state_tensor(probabilities, sorted_ind_wires);
+        }
         return probabilities;
     }
     /**
