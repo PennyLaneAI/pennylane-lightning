@@ -959,8 +959,8 @@ inline auto transposed_state_index(size_t ind,
                                    const std::vector<size_t> &new_axes)
     -> size_t {
     size_t new_index = 0;
-    for (auto axis = new_axes.rbegin(); axis != new_axes.rend(); axis++) {
-        new_index += (ind % 2) << ((new_axes.size() - 1) - (*axis));
+    for (auto axis = new_axes.begin(); axis != new_axes.end(); axis++) {
+        new_index += (ind % 2) << (*axis);
         ind /= 2;
     }
     return new_index;
@@ -981,7 +981,9 @@ auto transpose_state_tensor(const std::vector<T> &tensor,
     -> std::vector<T> {
     std::vector<T> transposed_tensor(tensor.size());
     for (size_t ind = 0; ind < tensor.size(); ind++) {
-        transposed_tensor[ind] = tensor[transposed_state_index(ind, new_axes)];
+        // transposed_tensor[ind] = tensor[transposed_state_index(ind,
+        // new_axes)];
+        transposed_tensor[transposed_state_index(ind, new_axes)] = tensor[ind];
     }
     return transposed_tensor;
 }
