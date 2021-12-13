@@ -948,10 +948,10 @@ inline auto sorting_indices(const std::vector<T> &vec) -> std::vector<size_t> {
 }
 
 /**
- * @brief Determines a new index for a transposed tensor stored linearly.
+ * @brief Determines the transposed index of a tensor stored linearly.
  *  This function assumes each axis will have a length of 2 (|0>, |1>).
  *
- * @param ind index before.
+ * @param ind index after transposition.
  * @param new_axes new axes distribution.
  * @return unsigned int with the new transposed index.
  */
@@ -959,8 +959,8 @@ inline auto transposed_state_index(size_t ind,
                                    const std::vector<size_t> &new_axes)
     -> size_t {
     size_t new_index = 0;
-    for (auto axis = new_axes.begin(); axis != new_axes.end(); axis++) {
-        new_index += (ind % 2) << (*axis);
+    for (unsigned long axis : new_axes) {
+        new_index += (ind % 2) << axis;
         ind /= 2;
     }
     return new_index;
@@ -981,8 +981,6 @@ auto transpose_state_tensor(const std::vector<T> &tensor,
     -> std::vector<T> {
     std::vector<T> transposed_tensor(tensor.size());
     for (size_t ind = 0; ind < tensor.size(); ind++) {
-        // transposed_tensor[ind] = tensor[transposed_state_index(ind,
-        // new_axes)];
         transposed_tensor[transposed_state_index(ind, new_axes)] = tensor[ind];
     }
     return transposed_tensor;
