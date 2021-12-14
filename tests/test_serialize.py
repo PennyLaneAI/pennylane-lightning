@@ -25,6 +25,10 @@ try:
         ObsStructC64,
         ObsStructC128,
     )
+
+    # ObsStructC64 = pytest.importorskip("ObsStructC64")
+    # ObsStructC128 = pytest.importorskip("ObsStructC128")
+
 except ImportError:
     pytestmark = pytest.mark.skip
 
