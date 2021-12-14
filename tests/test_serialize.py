@@ -82,6 +82,10 @@ class TestSerializeObs:
 
     wires_dict = {i: i for i in range(10)}
 
+    @pytest.mark.skipif(
+        "ObsStructC128" and "ObsStructC64" not in dir(pennylane_lightning.lightning_qubit_ops),
+        reason="ObsStructC128 and ObsStructC64 are required",
+    )
     @pytest.mark.parametrize("ObsFunc", [ObsStructC128, ObsStructC64])
     def test_basic_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a simple return"""
@@ -103,6 +107,10 @@ class TestSerializeObs:
 
         assert s == s_expected
 
+    @pytest.mark.skipif(
+        "ObsStructC128" and "ObsStructC64" not in dir(pennylane_lightning.lightning_qubit_ops),
+        reason="ObsStructC128 and ObsStructC64 are required",
+    )
     @pytest.mark.parametrize("ObsFunc", [ObsStructC128, ObsStructC64])
     def test_tensor_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a tensor product return"""
@@ -124,6 +132,10 @@ class TestSerializeObs:
 
         assert s == s_expected
 
+    @pytest.mark.skipif(
+        "ObsStructC128" and "ObsStructC64" not in dir(pennylane_lightning.lightning_qubit_ops),
+        reason="ObsStructC128 and ObsStructC64 are required",
+    )
     @pytest.mark.parametrize("ObsFunc", [ObsStructC128, ObsStructC64])
     def test_tensor_non_tensor_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a mixture of tensor product and non-tensor product
@@ -152,6 +164,10 @@ class TestSerializeObs:
         assert s[0][0] == s_expected[0]
         assert s[1][0] == s_expected[1]
 
+    @pytest.mark.skipif(
+        "ObsStructC128" and "ObsStructC64" not in dir(pennylane_lightning.lightning_qubit_ops),
+        reason="ObsStructC128 and ObsStructC64 are required",
+    )
     @pytest.mark.parametrize("ObsFunc", [ObsStructC128, ObsStructC64])
     def test_hermitian_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a Hermitian return"""
@@ -175,6 +191,10 @@ class TestSerializeObs:
         assert np.allclose(s[1], s_expected[1])
         assert s[2] == s_expected[2]
 
+    @pytest.mark.skipif(
+        "ObsStructC128" and "ObsStructC64" not in dir(pennylane_lightning.lightning_qubit_ops),
+        reason="ObsStructC128 and ObsStructC64 are required",
+    )
     @pytest.mark.parametrize("ObsFunc", [ObsStructC128, ObsStructC64])
     def test_hermitian_tensor_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a Hermitian return"""
@@ -203,6 +223,10 @@ class TestSerializeObs:
         assert np.allclose(s[1][1], s_expected[1][1])
         assert s[2] == s_expected[2]
 
+    @pytest.mark.skipif(
+        "ObsStructC128" and "ObsStructC64" not in dir(pennylane_lightning.lightning_qubit_ops),
+        reason="ObsStructC128 and ObsStructC64 are required",
+    )
     @pytest.mark.parametrize("ObsFunc", [ObsStructC128, ObsStructC64])
     def test_mixed_tensor_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a mixture of Hermitian and Pauli return"""
@@ -226,6 +250,10 @@ class TestSerializeObs:
         assert np.allclose(s[1][0], s_expected[1][0])
         assert s[2] == s_expected[2]
 
+    @pytest.mark.skipif(
+        "ObsStructC128" and "ObsStructC64" not in dir(pennylane_lightning.lightning_qubit_ops),
+        reason="ObsStructC128 and ObsStructC64 are required",
+    )
     @pytest.mark.parametrize("ObsFunc", [ObsStructC128, ObsStructC64])
     def test_integration_c64(self, monkeypatch, ObsFunc):
         """Test for a comprehensive range of returns"""
@@ -268,6 +296,10 @@ class TestSerializeObs:
                 assert np.allclose(v1, v2)
         assert all(s1[0][2] == s2[2] for s1, s2 in zip(s, s_expected))
 
+    @pytest.mark.skipif(
+        "ObsStructC128" and "ObsStructC64" not in dir(pennylane_lightning.lightning_qubit_ops),
+        reason="ObsStructC128 and ObsStructC64 are required",
+    )
     @pytest.mark.parametrize("ObsFunc", [ObsStructC128, ObsStructC64])
     def test_integration_c128(self, monkeypatch, ObsFunc):
         """Test for a comprehensive range of returns"""
