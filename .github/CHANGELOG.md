@@ -1,3 +1,13 @@
+# Release 0.20.1
+
+### Bug fixes
+
+* Fix missing header-files causing build errors in algorithms module.
+[(#193)](https://github.com/PennyLaneAI/pennylane-lightning/pull/193)
+
+* Fix failed tests for the non-binary wheel.
+[(#191)](https://github.com/PennyLaneAI/pennylane-lightning/pull/191)
+
 # Release 0.20.0
 
 ### New features since last release
@@ -26,10 +36,7 @@
 * Lightning setup.py build process uses CMake.
 [(#176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/176)
 
-### Bug fixes
 
-* Fix failed tests for the non-binary wheel.
-[(#191)](https://github.com/PennyLaneAI/pennylane-lightning/pull/191)
 
 ### Contributors
 
