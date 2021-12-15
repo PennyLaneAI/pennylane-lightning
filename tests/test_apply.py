@@ -22,6 +22,7 @@ import pennylane as qml
 import pytest
 from pennylane import DeviceError
 
+import pennylane_lightning as lq
 from pennylane_lightning import LightningQubit
 from pennylane_lightning.lightning_qubit import CPP_BINARY_AVAILABLE
 
@@ -87,6 +88,9 @@ class TestApply:
     that the proper errors are raised.
     """
 
+    from pennylane_lightning import LightningQubit as lq
+
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_apply_operation_raise_type_error(self, qubit_device_1_wire):
         """Tests that applying an operation yields the expected output state for single wire
         operations that have no parameters."""

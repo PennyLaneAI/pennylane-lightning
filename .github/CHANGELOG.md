@@ -16,6 +16,18 @@ This release contains contributions from (in alphabetical order):
 
 ---
 
+# Release 0.20.1
+
+### Bug fixes
+
+* Fix missing header-files causing build errors in algorithms module.
+[(#193)](https://github.com/PennyLaneAI/pennylane-lightning/pull/193)
+
+* Fix failed tests for the non-binary wheel.
+[(#191)](https://github.com/PennyLaneAI/pennylane-lightning/pull/191)
+
+---
+
 # Release 0.20.0
 
 ### New features since last release
@@ -29,6 +41,9 @@ This release contains contributions from (in alphabetical order):
 * Added examples folder containing aggregate gate performance test.
 [(#165)](https://github.com/PennyLaneAI/pennylane-lightning/pull/165)
 
+* Add VJP support to PL-Lightning.
+[(#181)](https://github.com/PennyLaneAI/pennylane-lightning/pull/181)
+
 ### Breaking changes
 
 ### Improvements
@@ -41,16 +56,12 @@ This release contains contributions from (in alphabetical order):
 * Lightning setup.py build process uses CMake.
 [(#176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/176)
 
-### Bug fixes
-
-* Fix failed tests for the non-binary wheel.
-[(#191)](https://github.com/PennyLaneAI/pennylane-lightning/pull/191)
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Chae-Yeun Park, Isidor Schoch
+Ali Asadi, Chae-Yeun Park, Isidor Schoch, Lee James O'Riordan
 
 ---
 
