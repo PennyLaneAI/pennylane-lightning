@@ -15,6 +15,7 @@
 Tests for the ``adjoint_jacobian`` method of LightningQubit.
 """
 import math
+from pennylane.operation import WiresEnum
 import pytest
 
 import pennylane as qml
@@ -159,10 +160,26 @@ class TestAdjointJacobian:
         ):
             dev.adjoint_jacobian(tape)
 
+    def test_unsupported_complex_type(self, dev):
+        dev._state = dev._asarray(dev._state, np.complex256)
+
+        with qml.tape.JacobianTape() as tape:
+            qml.QubitStateVector(np.array([1.0, -1.0]) / np.sqrt(2), wires=0)
+            qml.RX(0.3, wires=[0])
+            qml.expval(qml.PauliZ(0))
+
+        tape.trainable_params = {1}
+
+        with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
+            dev.adjoint_jacobian(tape)
+
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
     @pytest.mark.parametrize("G", [qml.RX, qml.RY, qml.RZ])
-    def test_pauli_rotation_gradient(self, G, theta, tol, dev):
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_pauli_rotation_gradient(self, G, theta, tol, dev, C):
         """Tests that the automatic gradients of Pauli rotations are correct."""
+
+        dev._state = dev._asarray(dev._state, C)
 
         with qml.tape.JacobianTape() as tape:
             qml.QubitStateVector(np.array([1.0, -1.0]) / np.sqrt(2), wires=0)
@@ -179,10 +196,13 @@ class TestAdjointJacobian:
         assert np.allclose(calculated_val, numeric_val[0][2], atol=tol, rtol=0)
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
-    def test_Rot_gradient(self, theta, tol, dev):
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_Rot_gradient(self, theta, tol, dev, C):
         """Tests that the device gradient of an arbitrary Euler-angle-parameterized gate is
         correct."""
         params = np.array([theta, theta ** 3, np.sqrt(2) * theta])
+
+        dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
             qml.QubitStateVector(np.array([1.0, -1.0]) / np.sqrt(2), wires=0)
@@ -199,8 +219,11 @@ class TestAdjointJacobian:
         assert np.allclose(calculated_val, numeric_val[0][2:], atol=tol, rtol=0)
 
     @pytest.mark.parametrize("par", [1, -2, 1.623, -0.051, 0])  # integers, floats, zero
-    def test_ry_gradient(self, par, tol, dev):
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_ry_gradient(self, par, tol, dev, C):
         """Test that the gradient of the RY gate matches the exact analytic formula."""
+
+        dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
             qml.RY(par, wires=[0])
@@ -217,9 +240,12 @@ class TestAdjointJacobian:
         assert np.allclose(grad_F, exact, atol=tol, rtol=0)
         assert np.allclose(grad_A, exact, atol=tol, rtol=0)
 
-    def test_rx_gradient(self, tol, dev):
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_rx_gradient(self, tol, dev, C):
         """Test that the gradient of the RX gate matches the known formula."""
         a = 0.7418
+
+        dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
             qml.RX(a, wires=0)
@@ -230,10 +256,13 @@ class TestAdjointJacobian:
         expected_jacobian = -np.sin(a)
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
 
-    def test_multiple_rx_gradient(self, tol):
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_multiple_rx_gradient(self, tol, C):
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result."""
         dev = qml.device("lightning.qubit", wires=3)
         params = np.array([np.pi, np.pi / 2, np.pi / 3])
+
+        dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
             qml.RX(params[0], wires=0)
@@ -264,9 +293,12 @@ class TestAdjointJacobian:
             qml.Rot(0.2, -0.1, 0.2, wires=0),
         ],
     )
-    def test_gradients(self, op, obs, tol, dev):
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_gradients(self, op, obs, tol, dev, C):
         """Tests that the gradients of circuits match between the finite difference and device
         methods."""
+
+        dev._state = dev._state.astype(C)
 
         # op.num_wires and op.num_params must be initialized a priori
         with qml.tape.JacobianTape() as tape:
@@ -293,9 +325,12 @@ class TestAdjointJacobian:
 
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
 
-    def test_gradient_gate_with_multiple_parameters(self, tol, dev):
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_gradient_gate_with_multiple_parameters(self, tol, dev, C):
         """Tests that gates with multiple free parameters yield correct gradients."""
         x, y, z = [0.5, 0.3, -0.7]
+
+        dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
             qml.RX(0.4, wires=[0])
@@ -314,10 +349,13 @@ class TestAdjointJacobian:
         # the different methods agree
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
 
-    def test_use_device_state(self, tol, dev):
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_use_device_state(self, tol, dev, C):
         """Tests that when using the device state, the correct answer is still returned."""
 
         x, y, z = [0.5, 0.3, -0.7]
+
+        dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
             qml.RX(0.4, wires=[0])
@@ -334,9 +372,12 @@ class TestAdjointJacobian:
 
         assert np.allclose(dM1, dM2, atol=tol, rtol=0)
 
-    def test_provide_starting_state(self, tol, dev):
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_provide_starting_state(self, tol, dev, C):
         """Tests provides correct answer when provided starting state."""
         x, y, z = [0.5, 0.3, -0.7]
+
+        dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
             qml.RX(0.4, wires=[0])

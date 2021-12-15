@@ -202,7 +202,7 @@ class TestComparison:
 
         vec = np.array([1] * (2 ** wires)) / np.sqrt(2 ** wires)
         shape = qml.StronglyEntanglingLayers.shape(2, wires)
-        w = np.random.uniform(high=2*np.pi, size=shape)
+        w = np.random.uniform(high=2 * np.pi, size=shape)
 
         def circuit():
             """Prepares the equal superposition state and then applies StronglyEntanglingLayers

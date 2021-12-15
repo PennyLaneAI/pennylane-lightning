@@ -39,16 +39,18 @@ try:
         # See https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew
         os.add_dll_directory(os.path.dirname(os.path.abspath(__file__)))
         from lightning_qubit_ops import (
-            apply,
             StateVectorC64,
+            AdjointJacobianC64,
+            VectorJacobianProductC64,
             StateVectorC128,
             AdjointJacobianC128,
             VectorJacobianProductC128,
         )
     else:
         from .lightning_qubit_ops import (
-            apply,
             StateVectorC64,
+            AdjointJacobianC64,
+            VectorJacobianProductC64,
             StateVectorC128,
             AdjointJacobianC128,
             VectorJacobianProductC128,
@@ -114,7 +116,6 @@ class LightningQubit(DefaultQubit):
         return capabilities
 
     def apply(self, operations, rotations=None, **kwargs):
-
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
             if isinstance(operations[0], QubitStateVector):
@@ -131,8 +132,12 @@ class LightningQubit(DefaultQubit):
                     "applied on a {} device.".format(operation.name, self.short_name)
                 )
 
+        # Get the Type of self._state
+        # as the reference type
+        dtype = self._state.dtype
+
         if operations:
-            self._pre_rotated_state = self.apply_lightning(self._state, operations)
+            self._pre_rotated_state = self.apply_lightning(self._state, operations, dtype=dtype)
         else:
             self._pre_rotated_state = self._state
 
@@ -140,23 +145,34 @@ class LightningQubit(DefaultQubit):
             if any(isinstance(r, QubitUnitary) for r in rotations):
                 super().apply(operations=[], rotations=rotations)
             else:
-                self._state = self.apply_lightning(np.copy(self._pre_rotated_state), rotations)
+                self._state = self.apply_lightning(
+                    np.copy(self._pre_rotated_state), rotations, dtype=dtype
+                )
         else:
             self._state = self._pre_rotated_state
 
-    def apply_lightning(self, state, operations):
+    def apply_lightning(self, state, operations, dtype=np.complex128):
         """Apply a list of operations to the state tensor.
 
         Args:
             state (array[complex]): the input state tensor
             operations (list[~pennylane.operation.Operation]): operations to apply
+            dtype (type): Type of numpy ``complex`` to be used. Can be important
+            to specify for large systems for memory allocation purposes.
 
         Returns:
             array[complex]: the output state tensor
         """
-        assert state.dtype == np.complex128
         state_vector = np.ravel(state)
-        sim = StateVectorC128(state_vector)
+
+        if dtype == np.complex64:
+            # use_csingle
+            sim = StateVectorC64(state_vector)
+        elif dtype == np.complex128:
+            # self.C_DTYPE is np.complex128 by default
+            sim = StateVectorC128(state_vector)
+        else:
+            raise TypeError(f"Unsupported complex Type: {dtype}")
 
         for o in operations:
             name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
@@ -225,6 +241,15 @@ class LightningQubit(DefaultQubit):
                 UserWarning,
             )
 
+        # To support np.complex64 based on the type of self._state
+        dtype = self._state.dtype
+        if dtype == np.complex64:
+            use_csingle = True
+        elif dtype == np.complex128:
+            use_csingle = False
+        else:
+            raise TypeError(f"Unsupported complex Type: {dtype}")
+
         if len(tape.trainable_params) == 0:
             return np.array(0)
 
@@ -240,10 +265,14 @@ class LightningQubit(DefaultQubit):
                 self.execute(tape)
             ket = np.ravel(self._pre_rotated_state)
 
-        adj = AdjointJacobianC128()
+        if use_csingle:
+            adj = AdjointJacobianC64()
+            ket = ket.astype(np.complex64)
+        else:
+            adj = AdjointJacobianC128()
 
-        obs_serialized = _serialize_obs(tape, self.wire_map)
-        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map)
+        obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=use_csingle)
+        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map, use_csingle=use_csingle)
 
         ops_serialized = adj.create_ops_list(*ops_serialized)
 
@@ -254,8 +283,10 @@ class LightningQubit(DefaultQubit):
             trainable_params if not use_sp else [i - 1 for i in trainable_params[first_elem:]]
         )  # exclude first index if explicitly setting sv
 
+        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
+
         jac = adj.adjoint_jacobian(
-            StateVectorC128(ket),
+            state_vector,
             obs_serialized,
             ops_serialized,
             tp_shift,
@@ -297,6 +328,15 @@ class LightningQubit(DefaultQubit):
         if math.allclose(dy, 0):
             return None, math.convert_like(np.zeros([num_params]), dy)
 
+        # To support np.complex64 based on the type of self._state
+        dtype = self._state.dtype
+        if dtype == np.complex64:
+            use_csingle = True
+        elif dtype == np.complex128:
+            use_csingle = False
+        else:
+            raise TypeError(f"Unsupported complex Type: {dtype}")
+
         # Check adjoint diff support
         self.adjoint_diff_support_check(tape)
 
@@ -309,10 +349,14 @@ class LightningQubit(DefaultQubit):
                 self.execute(tape)
             ket = np.ravel(self._pre_rotated_state)
 
-        VJP = VectorJacobianProductC128()
+        if use_csingle:
+            VJP = VectorJacobianProductC64()
+            ket = ket.astype(np.complex64)
+        else:
+            VJP = VectorJacobianProductC128()
 
-        obs_serialized = _serialize_obs(tape, self.wire_map)
-        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map)
+        obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=use_csingle)
+        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map, use_csingle=use_csingle)
 
         ops_serialized = VJP.create_ops_list(*ops_serialized)
 
@@ -323,9 +367,11 @@ class LightningQubit(DefaultQubit):
             trainable_params if not use_sp else [i - 1 for i in trainable_params[first_elem:]]
         )  # exclude first index if explicitly setting sv
 
+        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
+
         jac, vjp = VJP.vjp(
             math.reshape(dy, [-1]),
-            StateVectorC128(ket),
+            state_vector,
             obs_serialized,
             ops_serialized,
             tp_shift,
@@ -368,7 +414,14 @@ class LightningQubit(DefaultQubit):
         if math.allclose(dy, 0):
             return math.convert_like(np.zeros([num_params]), dy)
 
-        VJP = VectorJacobianProductC128()
+        # To support np.complex64 based on the type of self._state
+        dtype = self._state.dtype
+        if dtype == np.complex64:
+            VJP = VectorJacobianProductC64()
+        elif dtype == np.complex128:
+            VJP = VectorJacobianProductC128()
+        else:
+            raise TypeError(f"Unsupported complex Type: {dtype}")
 
         vjp_tensor = VJP.compute_vjp_from_jac(
             math.reshape(jac, [-1]),
