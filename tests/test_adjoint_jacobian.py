@@ -159,6 +159,7 @@ class TestAdjointJacobian:
         ):
             dev.adjoint_jacobian(tape)
 
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_unsupported_complex_type(self, dev):
         dev._state = dev._asarray(dev._state, np.complex256)
 
