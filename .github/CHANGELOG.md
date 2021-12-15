@@ -1,3 +1,21 @@
+# Release 0.21.0-dev
+
+### New features since last release
+
+### Breaking changes
+
+### Improvements
+
+### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+---
+
 # Release 0.20.1
 
 ### Bug fixes
@@ -7,6 +25,8 @@
 
 * Fix failed tests for the non-binary wheel.
 [(#191)](https://github.com/PennyLaneAI/pennylane-lightning/pull/191)
+
+---
 
 # Release 0.20.0
 
@@ -35,7 +55,6 @@
 
 * Lightning setup.py build process uses CMake.
 [(#176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/176)
-
 
 
 ### Contributors
