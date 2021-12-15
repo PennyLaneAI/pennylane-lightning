@@ -1,6 +1,8 @@
 # Release 0.21.0-dev
 
 ### New features since last release
+* Direct support to probability, expectation value and variance calculation in PL-Lightning.
+[(#185)](https://github.com/PennyLaneAI/pennylane-lightning/pull/185)
 
 ### Breaking changes
 
@@ -13,6 +15,8 @@
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Amintor Dusko, Lee James O'Riordan
 
 ---
 

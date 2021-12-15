@@ -37,7 +37,7 @@ class StateVectorManaged : public StateVector<fp_t> {
         data_[0] = {1, 0};
     }
     StateVectorManaged(const StateVector<fp_t> &other)
-        : StateVector<fp_t>(nullptr, data_.size()),
+        : StateVector<fp_t>(nullptr, other.getLength()),
           data_{other.getData(), other.getData() + other.getLength()} {
         StateVector<fp_t>::setData(data_.data());
     }
