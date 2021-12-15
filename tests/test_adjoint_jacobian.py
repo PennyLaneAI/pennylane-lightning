@@ -15,7 +15,6 @@
 Tests for the ``adjoint_jacobian`` method of LightningQubit.
 """
 import math
-from pennylane.operation import WiresEnum
 import pytest
 
 import pennylane as qml
@@ -160,6 +159,7 @@ class TestAdjointJacobian:
         ):
             dev.adjoint_jacobian(tape)
 
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_unsupported_complex_type(self, dev):
         dev._state = dev._asarray(dev._state, np.complex256)
 
