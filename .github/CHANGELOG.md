@@ -61,7 +61,7 @@ This release contains contributions from (in alphabetical order):
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Chae-Yeun Park, Isidor Schoch
+Ali Asadi, Chae-Yeun Park, Isidor Schoch, Lee James O'Riordan
 
 ---
 
