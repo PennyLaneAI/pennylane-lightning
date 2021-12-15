@@ -43,6 +43,9 @@ This release contains contributions from (in alphabetical order):
 
 ### Bug fixes
 
+* Fix failed tests for the non-binary wheel.
+[(#191)](https://github.com/PennyLaneAI/pennylane-lightning/pull/191)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
