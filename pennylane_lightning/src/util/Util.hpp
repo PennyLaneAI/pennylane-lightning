@@ -867,8 +867,11 @@ template <class T>
 inline auto operator<<(std::ostream &os, const std::vector<T> &vec)
     -> std::ostream & {
     os << '[';
-    for (size_t i = 0; i < vec.size(); i++) {
-        os << vec[i] << ",";
+    if (!vec.empty()) {
+        for (size_t i = 0; i < vec.size() - 1; i++) {
+            os << vec[i] << ", ";
+        }
+        os << vec.back();
     }
     os << ']';
     return os;
@@ -913,6 +916,77 @@ auto linspace(T start, T end, size_t num_points) -> std::vector<T> {
 }
 
 /**
+ * @brief Determines the indices that would sort an array.
+ *
+ * @tparam T vector data type.
+ * @param arr Array to be inspected.
+ * @return a vector with indices that would sort the array.
+ */
+template <typename T>
+inline auto sorting_indices(const T &arr, size_t length)
+    -> std::vector<size_t> {
+    std::vector<size_t> indices(length);
+    iota(indices.begin(), indices.end(), 0);
+
+    // indices will be sorted in accordance to the array provided.
+    sort(indices.begin(), indices.end(),
+         [&arr](size_t i1, size_t i2) { return arr[i1] < arr[i2]; });
+
+    return indices;
+}
+
+/**
+ * @brief Determines the indices that would sort a vector.
+ *
+ * @tparam T array data type.
+ * @param vec Vector to be inspected.
+ * @return a vector with indices that would sort the vector.
+ */
+template <typename T>
+inline auto sorting_indices(const std::vector<T> &vec) -> std::vector<size_t> {
+    return sorting_indices(vec.data(), vec.size());
+}
+
+/**
+ * @brief Determines the transposed index of a tensor stored linearly.
+ *  This function assumes each axis will have a length of 2 (|0>, |1>).
+ *
+ * @param ind index after transposition.
+ * @param new_axes new axes distribution.
+ * @return unsigned int with the new transposed index.
+ */
+inline auto transposed_state_index(size_t ind,
+                                   const std::vector<size_t> &new_axes)
+    -> size_t {
+    size_t new_index = 0;
+    for (unsigned long axis : new_axes) {
+        new_index += (ind % 2) << axis;
+        ind /= 2;
+    }
+    return new_index;
+}
+
+/**
+ * @brief Template for the transposition of state tensors,
+ * axes are assumed to have a length of 2 (|0>, |1>).
+ *
+ * @tparam T tensor data type.
+ * @param tensor Tensor to be transposed.
+ * @param new_axes new axes distribution.
+ * @return Transposed Tensor.
+ */
+template <typename T>
+auto transpose_state_tensor(const std::vector<T> &tensor,
+                            const std::vector<size_t> &new_axes)
+    -> std::vector<T> {
+    std::vector<T> transposed_tensor(tensor.size());
+    for (size_t ind = 0; ind < tensor.size(); ind++) {
+        transposed_tensor[transposed_state_index(ind, new_axes)] = tensor[ind];
+    }
+    return transposed_tensor;
+}
+
+/**
  * @brief Exception for functions that are not yet implemented.
  *
  */
@@ -921,7 +995,7 @@ class NotImplementedException : public std::logic_error {
     /**
      * @brief Construct a NotImplementedException exception object.
      *
-     * @param fname Function name to indicate not imeplemented.
+     * @param fname Function name to indicate not implemented.
      */
     explicit NotImplementedException(const std::string &fname)
         : std::logic_error(std::string("Function is not implemented. ") +
