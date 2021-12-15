@@ -164,7 +164,6 @@ class TestSerializeObs:
         assert s[0][0] == s_expected[0]
         assert s[1][0] == s_expected[1]
 
-
     @pytest.mark.skipif(
         "ObsStructC128" and "ObsStructC64" not in dir(pennylane_lightning.lightning_qubit_ops),
         reason="ObsStructC128 and ObsStructC64 are required",
