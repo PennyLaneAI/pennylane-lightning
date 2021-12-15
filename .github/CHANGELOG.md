@@ -1,4 +1,4 @@
-# Release 0.21.0-dev
+# Release 0.21.1-dev
 
 ### New features since last release
 
@@ -7,6 +7,16 @@
 ### Improvements
 
 ### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+---
+
+# Release 0.20.1
 
 ### Bug fixes
 
