@@ -1,3 +1,21 @@
+# Release 0.21.0-dev
+
+### New features since last release
+
+### Breaking changes
+
+### Improvements
+
+### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+---
+
 # Release 0.20.0
 
 ### New features since last release
@@ -10,9 +28,6 @@
 
 * Added examples folder containing aggregate gate performance test.
 [(#165)](https://github.com/PennyLaneAI/pennylane-lightning/pull/165)
-
-* Add VJP support to PL-Lightning.
-[(#181)](https://github.com/PennyLaneAI/pennylane-lightning/pull/181)
 
 ### Breaking changes
 
@@ -27,6 +42,9 @@
 [(#176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/176)
 
 ### Bug fixes
+
+* Fix failed tests for the non-binary wheel.
+[(#191)](https://github.com/PennyLaneAI/pennylane-lightning/pull/191)
 
 ### Contributors
 
