@@ -16,21 +16,19 @@ Unit tests for the serialization helper functions
 """
 import pennylane as qml
 from pennylane import numpy as np
+import pennylane_lightning
 
 from pennylane_lightning._serialize import _serialize_obs, _serialize_ops, _obs_has_kernel
 import pytest
+from unittest import mock
 
 try:
     from pennylane_lightning.lightning_qubit_ops import (
         ObsStructC64,
         ObsStructC128,
     )
-except ImportError:
-    pytestmark = pytest.mark.skip
-
-from unittest import mock
-
-import pennylane_lightning
+except (ImportError, ModuleNotFoundError):
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
 class TestOpsHasKernel:
