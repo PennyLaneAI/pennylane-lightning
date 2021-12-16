@@ -101,7 +101,8 @@ int main(int argc, char *argv[]) {
                   << " inputs. "
                   << "Usage: " + std::string(argv[0]) +
                          " num_gate_reps num_qubits [gate_lists]\n"
-                         "\tExample: " << argv[0] << " 1000 10 [PauliX, CNOT]"
+                         "\tExample: "
+                  << argv[0] << " 1000 10 [PauliX, CNOT]"
                   << std::endl; // Change to std::format in C++20
         return -1;
     }
@@ -122,8 +123,7 @@ int main(int argc, char *argv[]) {
     std::string op_list_s;
     {
         std::ostringstream ss;
-        for (int idx = 3; idx < argc; ++idx)
-        {
+        for (int idx = 3; idx < argc; ++idx) {
             ss << argv[idx] << " ";
         }
         op_list_s = ss.str();
@@ -161,17 +161,16 @@ int main(int argc, char *argv[]) {
     }
 
     // Log genereated sequence if LOG is turned on
-    const char* env_p = std::getenv("LOG");
+    const char *env_p = std::getenv("LOG");
     try {
-        if(env_p && std::stoi(env_p) != 0) {
+        if (env_p && std::stoi(env_p) != 0) {
             for (size_t gate_rep = 0; gate_rep < num_gate_reps; gate_rep++) {
-                std::cerr << random_gate_names[gate_rep] << ", " << 
-                    random_gate_wires[gate_rep] << ", " << 
-                    random_gate_parameters[gate_rep] << std::endl;
+                std::cerr << random_gate_names[gate_rep] << ", "
+                          << random_gate_wires[gate_rep] << ", "
+                          << random_gate_parameters[gate_rep] << std::endl;
             }
         }
-    } catch (std::exception& e)
-    {
+    } catch (std::exception &e) {
         // Just do not pring log
     }
 
