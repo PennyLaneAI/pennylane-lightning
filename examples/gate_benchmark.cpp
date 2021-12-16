@@ -5,8 +5,79 @@
 #include <random>
 #include <stdexcept>
 #include <string>
+#include <map>
 
 #include "StateVectorManaged.hpp"
+
+std::string_view strip(std::string_view str) {
+    auto start = str.find_first_not_of(" \t");
+    auto end = str.find_last_not_of(" \t");
+    return str.substr(start, end - start + 1);
+}
+
+std::vector<std::pair<std::string_view, size_t>> parseGateLists(std::string_view arg) {
+    const static std::map<std::string, size_t> available_gates_wires = {
+        /* Single-qubit gates */
+        {"PauliX", 1},
+        {"PauliY", 1},
+        {"PauliZ", 1},
+        {"Hadamard", 1},
+        {"S", 1},
+        {"T", 1},
+        {"RX", 1},
+        {"RY", 1},
+        {"RZ", 1},
+        {"Rot", 1},
+        {"PhaseShift", 1},
+        /* Two-qubit gates */
+        {"CNOT", 2},
+        {"SWAP", 2},
+        {"ControlledPhaseShift", 2},
+        {"CRX", 2},
+        {"CRY", 2},
+        {"CRZ", 2},
+        {"CRot", 2},
+        /* Three-qubit gates */
+        {"Toffoli", 3},
+        {"CSWAP", 3}
+    };
+
+    
+    if (arg.empty())
+        return std::vector<std::pair<std::string_view, size_t>>(available_gates_wires.begin(),
+                available_gates_wires.end());
+
+    std::vector<std::pair<std::string_view, size_t>> ops;
+
+    if (auto pos = arg.find_first_of("["); pos != std::string_view::npos)
+    {  
+        // arg is a list "[...]"
+        auto start = pos + 1;
+        auto end = arg.find_last_of("]");
+        if (end == std::string_view::npos) {
+            throw std::invalid_argument("Argument must contain operators within square brackets [].");
+        }
+        arg = arg.substr(start, end - start);
+    }
+        
+    size_t start;
+    size_t end = 0;
+    while ((start = arg.find_first_not_of(",", end)) != string::npos)
+    {
+        end = arg.find(",", start);
+        auto op_name = strip(arg.substr(start, end - start));
+
+        auto iter = available_gates_wires.find(std::string(op_name));
+
+        if (iter == available_gates_wires.end()) {
+            std::ostringstream ss;
+            ss << "Given gate " << op_name << " is not availabe"; // Change to std::format in C++20
+            throw std::invalid_argument(ss.str());
+        }
+        ops.emplace_back(*iter);
+    }
+    return ops;
+}
 
 /**
  * @brief Outputs wall-time for gate-benchmark.
@@ -19,26 +90,51 @@ int main(int argc, char *argv[]) {
     using TestType = double;
 
     // Handle input
-    try {
-        if (argc != 3) {
-            throw argc;
-        }
-    } catch (int e) {
-        std::cerr << "Wrong number of inputs. User provided " << e - 1
+    if ((argc != 3) && (argc != 4)) {
+        std::cerr << "Wrong number of inputs. User provided " << argc - 1
                   << " inputs. "
                   << "Usage: " + std::string(argv[0]) +
-                         " $num_gate_reps $num_qubits"
-                  << std::endl;
+                         " num_gate_reps num_qubits [gate_lists]"
+                  << std::endl; // Change to std::format in C++20
         return -1;
     }
-    const size_t num_gate_reps = std::stoi(argv[1]);
-    const size_t num_qubits = std::stoi(argv[2]);
+
+    size_t num_gate_reps;
+    size_t num_qubits;
+
+    try {
+        num_gate_reps = std::stoi(argv[1]);
+        num_qubits = std::stoi(argv[2]);
+    }
+    catch(std::exception& e) {
+        std::cerr << "Arguements num_gate_reps and num_qubits must be integers." << std::endl;
+        return -1;
+    }
+    
+    // Gate list is provided
+    std::string_view op_list_s;
+    if(argc == 3) {
+        op_list_s = "";
+    } else { // if argc == 4
+        op_list_s = argv[3];
+    }
+
+    auto op_list = parseGateLists(op_list_s);
+    for(const auto& [op_name, op_wire]: op_list) {
+        std::cout << op_name << "\t" << op_wire << std::endl;
+    }
+
 
     // Generate random values for parametric gates
     std::random_device rd;
     std::default_random_engine eng(rd());
     std::uniform_real_distribution<TestType> distr(0.0, 1.0);
-    std::vector<std::vector<TestType>> random_parameter_vector(num_gate_reps);
+    std::vector<TestType> random_parameters(num_gate_reps);
+
+    for(uint32_t k = 0; k < num_gate_reps; ++k)
+    {
+    }
+
     std::for_each(
         random_parameter_vector.begin(), random_parameter_vector.end(),
         [num_qubits, &eng, &distr](std::vector<TestType> &vec) {
@@ -91,6 +187,5 @@ int main(int argc, char *argv[]) {
                      .count());
     std::cout << num_qubits << ", "
               << walltime / static_cast<double>(num_gate_reps) << std::endl;
-
     return 0;
 }
