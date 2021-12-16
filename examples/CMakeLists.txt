@@ -2,7 +2,7 @@
 ## I. Set project details
 #############################
 cmake_minimum_required(VERSION 3.14)
-set(CMAKE_POLICY_DEFAULT_CMP0127 NEW)
+#set(CMAKE_POLICY_DEFAULT_CMP0127 NEW)
 
 project("gate_benchmark"
         VERSION 0.1.0
@@ -10,7 +10,8 @@ project("gate_benchmark"
         LANGUAGES CXX
 )
 
-option(ENABLE_WARNINGS "Enable warnings" ON)
+set(CMAKE_CXX_STANDARD 17)
+
 option(ENABLE_CLANG_TIDY "Enable clang-tidy build checks" OFF)
 
 if(ENABLE_CLANG_TIDY)
@@ -22,25 +23,10 @@ if(ENABLE_CLANG_TIDY)
     )
 endif()
 
-#############################
-## II. Fetch project
-#############################
-
-Include(FetchContent)
-
-FetchContent_Declare(
-    Pennylane-lightning
-    GIT_REPOSITORY  https://github.com/PennyLaneAI/pennylane-lightning
-    GIT_TAG         master
-)
-FetchContent_MakeAvailable(Pennylane-lightning)
-
-#############################
-## III. Create project target
-#############################
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-O3")
-
 add_executable(gate_benchmark gate_benchmark.cpp)
-target_link_libraries(gate_benchmark pennylane_lightning)
+target_link_libraries(gate_benchmark lightning_utils lightning_simulator lightning_algorithms
+    pennylane_lightning_compile_options pennylane_lightning_external_libs)
+
+add_executable(gate_benchmark_oplist gate_benchmark_oplist.cpp)
+target_link_libraries(gate_benchmark_oplist lightning_utils lightning_simulator lightning_algorithms
+    pennylane_lightning_compile_options pennylane_lightning_external_libs)

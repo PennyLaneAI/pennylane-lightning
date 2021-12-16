@@ -40,6 +40,7 @@ option(ENABLE_BLAS "Enable BLAS" OFF)
 
 # Other build options
 option(BUILD_TESTS "Build cpp tests" OFF)
+option(BUILD_EXAMPLES "Build cpp examples" OFF)
 
 if(ENABLE_CLANG_TIDY)
     if(NOT DEFINED CLANG_TIDY_BINARY)
@@ -89,4 +90,8 @@ target_compile_definitions(lightning_qubit_ops PRIVATE VERSION_INFO=${VERSION_ST
 
 if(BUILD_TESTS)
     enable_testing()
+endif()
+
+if(BUILD_EXAMPLES)
+    add_subdirectory(examples)
 endif()

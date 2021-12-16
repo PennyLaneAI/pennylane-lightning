@@ -1,3 +1,6 @@
+# Include this file only once
+include_guard()
+
 # Set compile flags and library dependencies
 add_library(pennylane_lightning_compile_options INTERFACE)
 add_library(pennylane_lightning_external_libs INTERFACE)

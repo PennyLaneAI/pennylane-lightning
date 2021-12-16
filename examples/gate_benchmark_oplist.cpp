@@ -92,22 +92,16 @@ std::vector<size_t> generateDistinctWires(RandomEngine &re, size_t num_qubits,
     return std::vector<size_t>(v.begin(), v.begin() + num_wires);
 }
 
-/**
- * @brief Outputs wall-time for gate-benchmark.
- * @param argc Number of arguments + 1 passed by user.
- * @param argv Binary name followed by number of times gate is repeated and
- * number of qubits.
- * @return Returns 0 if completed successfully.
- */
 int main(int argc, char *argv[]) {
     using TestType = double;
 
     // Handle input
-    if ((argc != 3) && (argc != 4)) {
+    if (argc < 3) {
         std::cerr << "Wrong number of inputs. User provided " << argc - 1
                   << " inputs. "
                   << "Usage: " + std::string(argv[0]) +
-                         " num_gate_reps num_qubits [gate_lists]"
+                         " num_gate_reps num_qubits [gate_lists]\n"
+                         "\tExample: " << argv[0] << " 1000 10 [PauliX, CNOT]"
                   << std::endl; // Change to std::format in C++20
         return -1;
     }
@@ -125,11 +119,14 @@ int main(int argc, char *argv[]) {
     }
 
     // Gate list is provided
-    std::string_view op_list_s;
-    if (argc == 3) {
-        op_list_s = "";
-    } else { // if argc == 4
-        op_list_s = argv[3];
+    std::string op_list_s;
+    {
+        std::ostringstream ss;
+        for (int idx = 3; idx < argc; ++idx)
+        {
+            ss << argv[idx] << " ";
+        }
+        op_list_s = ss.str();
     }
 
     auto op_list = parseGateLists(op_list_s);
@@ -153,7 +150,7 @@ int main(int argc, char *argv[]) {
     for (uint32_t k = 0; k < num_gate_reps; ++k) {
         auto [op_name, gate_desc] = op_list[gate_dist(re)];
 
-        std::vector<TestType> gate_params(gate_desc.n_params);
+        std::vector<TestType> gate_params(gate_desc.n_params, 0.0);
         std::generate(gate_params.begin(), gate_params.end(), gen_param);
 
         random_gate_names.emplace_back(op_name);
@@ -163,7 +160,22 @@ int main(int argc, char *argv[]) {
         random_gate_parameters.emplace_back(std::move(gate_params));
     }
 
-    // Run each gate specified number of times and measure walltime
+    // Log genereated sequence if LOG is turned on
+    const char* env_p = std::getenv("LOG");
+    try {
+        if(env_p && std::stoi(env_p) != 0) {
+            for (size_t gate_rep = 0; gate_rep < num_gate_reps; gate_rep++) {
+                std::cerr << random_gate_names[gate_rep] << ", " << 
+                    random_gate_wires[gate_rep] << ", " << 
+                    random_gate_parameters[gate_rep] << std::endl;
+            }
+        }
+    } catch (std::exception& e)
+    {
+        // Just do not pring log
+    }
+
+    // Run benchmark. Total num_gate_reps number of gates is used.
     Pennylane::StateVectorManaged<TestType> svdat{num_qubits};
     std::chrono::time_point<std::chrono::high_resolution_clock> t_start, t_end;
     t_start = std::chrono::high_resolution_clock::now();
