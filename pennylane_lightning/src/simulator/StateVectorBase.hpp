@@ -37,72 +37,42 @@
 #include "Error.hpp"
 #include "Gates.hpp"
 #include "Util.hpp"
-#include "StateVectorBase.hpp"
+#include "ApplyOperations.hpp"
 
 #include <iostream>
 
 namespace Pennylane {
 
 /**
- * @brief State-vector operations class.
+ * @brief State-vector base class.
  *
- * This class binds to a given statevector data array, and defines all
- * operations to manipulate the statevector data for quantum circuit simulation.
- * We define gates as methods to allow direct manipulation of the bound data, as
- * well as through a string-based function dispatch. The bound data is assumed
- * to be complex, and is required to be in either 32-bit (64-bit
+ * This class combines a data array managed by a derived class (CRTP) and an implementation
+ * of gate operations proviede by GateOperationType (Policy-based design).
+ * The bound data is assumed to be complex, and is required to be in either 32-bit (64-bit
  * `complex<float>`) or 64-bit (128-bit `complex<double>`) floating point
  * representation.
  *
  * @tparam fp_t Floating point precision of underlying statevector data.
  */
-template <class fp_t, template <class> class GateOperationType> 
-class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVectorRaw>{
+template <class fp_t, template<class> class GateOperationType, class Derived>
+class StateVectorBase {
   public:
+    using scalar_type_t = fp_t;
+    /**
+     * @brief StateVector complex precision type.
+     */
     using CFP_t = std::complex<fp_t>;
 
   private:
-    CFP_t* data_;
+    size_t num_qubits_{0};
+
+  protected:
+    StateVectorBase() = default;
+    StateVectorBase(size_t num_qubits)
+        : num_qubits_{num_qubits} 
+    {}
 
   public:
-    StateVectorRaw(CFP_t* data, size_t length) 
-        : data_{data}
-    {
-        // check length is perfect power of 2
-        
-
-    }
-
-    /**
-     * @brief Get the underlying data pointer.
-     *
-     * @return const CFP_t* Pointer to statevector data.
-     */
-    [[nodiscard]] auto getData() const -> CFP_t * { return arr_; }
-
-    /**
-     * @brief Get the underlying data pointer.
-     *
-     * @return CFP_t* Pointer to statevector data.
-     */
-    auto getData() -> CFP_t * { return arr_; }
-
-    /**
-     * @brief Redefine statevector data pointer.
-     *
-     * @param data_ptr New data pointer.
-     */
-    void setData(CFP_t *data_ptr) { arr_ = data_ptr; }
-
-    /**
-     * @brief Redefine the length of the statevector and number of qubits.
-     *
-     * @param length New number of elements in statevector.
-     */
-    void setLength(size_t length) {
-        length_ = length;
-        num_qubits_ = Util::log2(length_);
-    }
     /**
      * @brief Redefine the number of qubits in the statevector and number of
      * elements.
@@ -111,15 +81,7 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      */
     void setNumQubits(size_t qubits) {
         num_qubits_ = qubits;
-        length_ = Util::exp2(num_qubits_);
     }
-
-    /**
-     * @brief Get the number of data elements in the statevector array.
-     *
-     * @return std::size_t
-     */
-    [[nodiscard]] auto getLength() const -> std::size_t { return length_; }
 
     /**
      * @brief Get the number of qubits represented by the statevector data.
@@ -130,6 +92,18 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
         return num_qubits_;
     }
 
+    size_t getLength() const {
+        return static_cast<size_t>(Util::exp2(num_qubits_));
+    }
+
+    inline auto getData() -> CFP_t {
+        return static_cast<Derived*>(this)->getData();
+    }
+
+    inline auto getData() const -> const CFP_t* {
+        return static_cast<const Derived*>(this)->getData();
+    }
+
     /**
      * @brief Apply a single gate to the state-vector.
      *
@@ -138,21 +112,11 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * @param inverse Indicates whether to use inverse of gate.
      * @param params Optional parameter list for parametric gates.
      */
-    void applyOperation(const string &opName, const vector<size_t> &wires,
-                        bool inverse = false, const vector<fp_t> &params = {}) {
-        const auto gate = gates_.at(opName);
-        if (gate_wires_.at(opName) != wires.size()) {
-            throw std::invalid_argument(
-                string("The gate of type ") + opName + " requires " +
-                std::to_string(gate_wires_.at(opName)) + " wires, but " +
-                std::to_string(wires.size()) + " were supplied");
-        }
+    void applyOperation(const std::string &opName, const std::vector<size_t> &wires,
+                        bool inverse = false, const std::vector<fp_t> &params = {}) {
 
-        const vector<size_t> internalIndices = generateBitPatterns(wires);
-        const vector<size_t> externalWires = getIndicesAfterExclusion(wires);
-        const vector<size_t> externalIndices =
-            generateBitPatterns(externalWires);
-        gate(internalIndices, externalIndices, inverse, params);
+        ApplyOperations<fp_t, GateOperationType>::getInstance().
+            applyOperation(*this, opName, wires, inverse, params);
     }
 
     /**
@@ -164,23 +128,19 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * @param params Optional parameter list for parametric gates.
      */
     void applyOperation(const std::vector<CFP_t> &matrix,
-                        const vector<size_t> &wires, bool inverse = false,
-                        [[maybe_unused]] const vector<fp_t> &params = {}) {
+                        const std::vector<size_t> &wires, bool inverse = false,
+                        [[maybe_unused]] const std::vector<fp_t> &params = {}) {
         auto dim = Util::dimSize(matrix);
 
         if (dim != wires.size()) {
-            throw std::invalid_argument(string("The supplied gate requires ") +
+            throw std::invalid_argument(std::string("The supplied gate requires ") +
                                         std::to_string(dim) + " wires, but " +
                                         std::to_string(wires.size()) +
-                                        " were supplied.");
+                                        " were supplied."); // TODO: change to std::format in C++20
         }
 
-        const vector<size_t> internalIndices = generateBitPatterns(wires);
-        const vector<size_t> externalWires = getIndicesAfterExclusion(wires);
-        const vector<size_t> externalIndices =
-            generateBitPatterns(externalWires);
-
-        applyMatrix(matrix, internalIndices, externalIndices, inverse);
+        GateOperationType<fp_t>::applyOperation(this->getData(), num_qubits_, matrix,
+                wires, inverse, params);
     }
 
     /**
@@ -191,21 +151,14 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * @param inverse Indicates whether gate at matched index is to be inverted.
      * @param params Optional parameter data for index matched gates.
      */
-    void applyOperations(const vector<string> &ops,
-                         const vector<vector<size_t>> &wires,
-                         const vector<bool> &inverse,
-                         const vector<vector<fp_t>> &params) {
-        const size_t numOperations = ops.size();
-        if (numOperations != wires.size() || numOperations != params.size()) {
-            throw std::invalid_argument(
-                "Invalid arguments: number of operations, wires, and "
-                "parameters must all be equal");
-        }
-
-        for (size_t i = 0; i < numOperations; i++) {
-            applyOperation(ops[i], wires[i], inverse[i], params[i]);
-        }
+    void applyOperations(const std::vector<std::string> &ops,
+                         const std::vector<std::vector<size_t>> &wires,
+                         const std::vector<bool> &inverse,
+                         const std::vector<std::vector<fp_t>> &params) {
+        ApplyOperations<fp_t, GateOperationType>::getInstance()
+            .applyOperation(*this, num_qubits_, wires, inverse, params);
     }
+
     /**
      * @brief Apply multiple gates to the state-vector.
      *
@@ -213,89 +166,11 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * @param wires Vector of wires on which to apply index-matched gate name.
      * @param inverse Indicates whether gate at matched index is to be inverted.
      */
-    void applyOperations(const vector<string> &ops,
-                         const vector<vector<size_t>> &wires,
-                         const vector<bool> &inverse) {
-        const size_t numOperations = ops.size();
-        if (numOperations != wires.size()) {
-            throw std::invalid_argument(
-                "Invalid arguments: number of operations, wires, and "
-                "parameters must all be equal");
-        }
-
-        for (size_t i = 0; i < numOperations; i++) {
-            applyOperation(ops[i], wires[i], inverse[i]);
-        }
-    }
-
-    /**
-     * @brief Get indices of statevector data not participating in application
-     * operation.
-     *
-     * @param indicesToExclude Indices to exclude from this call.
-     * @param num_qubits Total number of qubits for statevector.
-     * @return vector<size_t>
-     */
-    auto static getIndicesAfterExclusion(const vector<size_t> &indicesToExclude,
-                                         size_t num_qubits) -> vector<size_t> {
-        std::set<size_t> indices;
-        for (size_t i = 0; i < num_qubits; i++) {
-            indices.emplace(i);
-        }
-        for (const size_t &excludedIndex : indicesToExclude) {
-            indices.erase(excludedIndex);
-        }
-        return {indices.begin(), indices.end()};
-    }
-    /**
-     * @brief Get indices of statevector data not participating in application
-     operation.
-     *
-     * @see `getIndicesAfterExclusion(
-        const vector<size_t> &indicesToExclude, size_t num_qubits)`
-     */
-    auto getIndicesAfterExclusion(const vector<size_t> &indicesToExclude) const
-        -> vector<size_t> {
-        return getIndicesAfterExclusion(indicesToExclude, num_qubits_);
-    }
-
-    /**
-     * @brief Generate indices for applying operations.
-     *
-     * This method will return the statevector indices participating in the
-     * application of a gate to a given set of qubits.
-     *
-     * @param qubitIndices Indices of the qubits to apply operations.
-     * @param num_qubits Number of qubits in register.
-     * @return vector<size_t>
-     */
-    static auto generateBitPatterns(const vector<size_t> &qubitIndices,
-                                    size_t num_qubits) -> vector<size_t> {
-        vector<size_t> indices;
-        indices.reserve(Util::exp2(qubitIndices.size()));
-        indices.emplace_back(0);
-
-        for (auto index_it = qubitIndices.rbegin();
-             index_it != qubitIndices.rend(); index_it++) {
-            const size_t value =
-                Util::maxDecimalForQubit(*index_it, num_qubits);
-            const size_t currentSize = indices.size();
-            for (size_t j = 0; j < currentSize; j++) {
-                indices.emplace_back(indices[j] + value);
-            }
-        }
-        return indices;
-    }
-
-    /**
-     * @brief Generate indices for applying operations.
-     *
-     * @see `generateBitPatterns(const vector<size_t> &qubitIndices, size_t
-     * num_qubits)`.
-     */
-    auto generateBitPatterns(const vector<size_t> &qubitIndices) const
-        -> vector<size_t> {
-        return generateBitPatterns(qubitIndices, num_qubits_);
+    void applyOperations(const std::vector<std::string> &ops,
+                         const std::vector<std::vector<size_t>> &wires,
+                         const std::vector<bool> &inverse) {
+        ApplyOperations<fp_t, GateOperationType>::getInstance()
+            .applyOperation(*this, num_qubits_, wires, inverse);
     }
 
     /**
@@ -306,8 +181,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * @param externalIndices External indices unaffected by the operation.
      * @param inverse Indicate whether inverse should be taken.
      */
-    void applyMatrix(const vector<CFP_t> &matrix, const vector<size_t> &indices,
-                     const vector<size_t> &externalIndices, bool inverse) {
+    void applyMatrix(const std::vector<CFP_t> &matrix, const std::vector<size_t> &indices,
+                     const std::vector<size_t> &externalIndices, bool inverse) {
         if (static_cast<size_t>(1ULL << (Util::log2(indices.size()) +
                                          Util::log2(externalIndices.size()))) !=
             length_) {
@@ -315,7 +190,7 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
                 "The given indices do not match the state-vector length.");
         }
 
-        vector<CFP_t> v(indices.size());
+        std::vector<CFP_t> v(indices.size());
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             // Gather
@@ -355,8 +230,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * @param externalIndices External indices unaffected by the operation.
      * @param inverse Indicate whether inverse should be taken.
      */
-    void applyMatrix(const CFP_t *matrix, const vector<size_t> &indices,
-                     const vector<size_t> &externalIndices, bool inverse) {
+    void applyMatrix(const CFP_t *matrix, const std::vector<size_t> &indices,
+                     const std::vector<size_t> &externalIndices, bool inverse) {
         if (static_cast<size_t>(1ULL << (Util::log2(indices.size()) +
                                          Util::log2(externalIndices.size()))) !=
             length_) {
@@ -364,7 +239,7 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
                 "The given indices do not match the state-vector length.");
         }
 
-        vector<CFP_t> v(indices.size());
+        std::vector<CFP_t> v(indices.size());
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
             // Gather
@@ -404,8 +279,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyPauliX(const vector<size_t> &indices,
-                     const vector<size_t> &externalIndices,
+    void applyPauliX(const std::vector<size_t> &indices,
+                     const std::vector<size_t> &externalIndices,
                      [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -422,8 +297,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyPauliY(const vector<size_t> &indices,
-                     const vector<size_t> &externalIndices,
+    void applyPauliY(const std::vector<size_t> &indices,
+                     const std::vector<size_t> &externalIndices,
                      [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -443,8 +318,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyPauliZ(const vector<size_t> &indices,
-                     const vector<size_t> &externalIndices,
+    void applyPauliZ(const std::vector<size_t> &indices,
+                     const std::vector<size_t> &externalIndices,
                      [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -461,8 +336,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyHadamard(const vector<size_t> &indices,
-                       const vector<size_t> &externalIndices,
+    void applyHadamard(const std::vector<size_t> &indices,
+                       const std::vector<size_t> &externalIndices,
                        [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -484,8 +359,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyS(const vector<size_t> &indices,
-                const vector<size_t> &externalIndices, bool inverse) {
+    void applyS(const std::vector<size_t> &indices,
+                const std::vector<size_t> &externalIndices, bool inverse) {
         const CFP_t shift =
             (inverse) ? -Util::IMAG<fp_t>() : Util::IMAG<fp_t>();
 
@@ -504,8 +379,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyT(const vector<size_t> &indices,
-                const vector<size_t> &externalIndices, bool inverse) {
+    void applyT(const std::vector<size_t> &indices,
+                const std::vector<size_t> &externalIndices, bool inverse) {
         const CFP_t shift =
             (inverse)
                 ? std::conj(std::exp(CFP_t(0, static_cast<fp_t>(M_PI / 4))))
@@ -530,8 +405,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * @param angle Rotation angle of gate.
      */
     template <typename Param_t = fp_t>
-    void applyRX(const vector<size_t> &indices,
-                 const vector<size_t> &externalIndices, bool inverse,
+    void applyRX(const std::vector<size_t> &indices,
+                 const std::vector<size_t> &externalIndices, bool inverse,
                  Param_t angle) {
         const Param_t c = std::cos(angle / 2);
         const Param_t js =
@@ -560,8 +435,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * @param angle Rotation angle of gate.
      */
     template <typename Param_t = fp_t>
-    void applyRY(const vector<size_t> &indices,
-                 const vector<size_t> &externalIndices, bool inverse,
+    void applyRY(const std::vector<size_t> &indices,
+                 const std::vector<size_t> &externalIndices, bool inverse,
                  Param_t angle) {
         const Param_t c = std::cos(angle / 2);
         const Param_t s =
@@ -588,8 +463,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * @param angle Rotation angle of gate.
      */
     template <typename Param_t = fp_t>
-    void applyRZ(const vector<size_t> &indices,
-                 const vector<size_t> &externalIndices, bool inverse,
+    void applyRZ(const std::vector<size_t> &indices,
+                 const std::vector<size_t> &externalIndices, bool inverse,
                  Param_t angle) {
         const CFP_t first = CFP_t(std::cos(angle / 2), -std::sin(angle / 2));
         const CFP_t second = CFP_t(std::cos(angle / 2), std::sin(angle / 2));
@@ -615,8 +490,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * @param angle Phase shift angle.
      */
     template <typename Param_t = fp_t>
-    void applyPhaseShift(const vector<size_t> &indices,
-                         const vector<size_t> &externalIndices, bool inverse,
+    void applyPhaseShift(const std::vector<size_t> &indices,
+                         const std::vector<size_t> &externalIndices, bool inverse,
                          Param_t angle) {
         const CFP_t s = inverse ? std::conj(std::exp(CFP_t(0, angle)))
                                 : std::exp(CFP_t(0, angle));
@@ -667,10 +542,10 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * @param omega Gate rotation parameter \f$\omega\f$.
      */
     template <typename Param_t = fp_t>
-    void applyRot(const vector<size_t> &indices,
-                  const vector<size_t> &externalIndices, bool inverse,
+    void applyRot(const std::vector<size_t> &indices,
+                  const std::vector<size_t> &externalIndices, bool inverse,
                   Param_t phi, Param_t theta, Param_t omega) {
-        const vector<CFP_t> rot = Gates::getRot<fp_t>(phi, theta, omega);
+        const std::vector<CFP_t> rot = Gates::getRot<fp_t>(phi, theta, omega);
 
         const CFP_t t1 = (inverse) ? std::conj(rot[0]) : rot[0];
         const CFP_t t2 = (inverse) ? -rot[1] : rot[1];
@@ -695,8 +570,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyCNOT(const vector<size_t> &indices,
-                   const vector<size_t> &externalIndices,
+    void applyCNOT(const std::vector<size_t> &indices,
+                   const std::vector<size_t> &externalIndices,
                    [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -713,8 +588,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applySWAP(const vector<size_t> &indices,
-                   const vector<size_t> &externalIndices,
+    void applySWAP(const std::vector<size_t> &indices,
+                   const std::vector<size_t> &externalIndices,
                    [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -730,8 +605,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyCZ(const vector<size_t> &indices,
-                 const vector<size_t> &externalIndices,
+    void applyCZ(const std::vector<size_t> &indices,
+                 const std::vector<size_t> &externalIndices,
                  [[maybe_unused]] bool inverse) {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr_ + externalIndex;
@@ -752,8 +627,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * @param angle Rotation angle of gate.
      */
     template <typename Param_t = fp_t>
-    void applyCRX(const vector<size_t> &indices,
-                  const vector<size_t> &externalIndices, bool inverse,
+    void applyCRX(const std::vector<size_t> &indices,
+                  const std::vector<size_t> &externalIndices, bool inverse,
                   Param_t angle) {
         const Param_t c = std::cos(angle / 2);
         const Param_t js =
@@ -783,8 +658,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * @param angle Rotation angle of gate.
      */
     template <typename Param_t = fp_t>
-    void applyCRY(const vector<size_t> &indices,
-                  const vector<size_t> &externalIndices, bool inverse,
+    void applyCRY(const std::vector<size_t> &indices,
+                  const std::vector<size_t> &externalIndices, bool inverse,
                   Param_t angle) {
         const Param_t c = std::cos(angle / 2);
         const Param_t s =
@@ -812,8 +687,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * @param angle Rotation angle of gate.
      */
     template <typename Param_t = fp_t>
-    void applyCRZ(const vector<size_t> &indices,
-                  const vector<size_t> &externalIndices, bool inverse,
+    void applyCRZ(const std::vector<size_t> &indices,
+                  const std::vector<size_t> &externalIndices, bool inverse,
                   Param_t angle) {
         const CFP_t m00 =
             (inverse) ? CFP_t(std::cos(angle / 2), std::sin(angle / 2))
@@ -844,8 +719,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * @param omega Gate rotation parameter \f$\omega\f$.
      */
     template <typename Param_t = fp_t>
-    void applyCRot(const vector<size_t> &indices,
-                   const vector<size_t> &externalIndices, bool inverse,
+    void applyCRot(const std::vector<size_t> &indices,
+                   const std::vector<size_t> &externalIndices, bool inverse,
                    Param_t phi, Param_t theta, Param_t omega) {
         const auto rot = Gates::getRot<fp_t>(phi, theta, omega);
 
@@ -872,8 +747,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyToffoli(const vector<size_t> &indices,
-                      const vector<size_t> &externalIndices,
+    void applyToffoli(const std::vector<size_t> &indices,
+                      const std::vector<size_t> &externalIndices,
                       [[maybe_unused]] bool inverse) {
         // Participating swapped indices
         static const size_t op_idx0 = 6;
@@ -894,8 +769,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyCSWAP(const vector<size_t> &indices,
-                    const vector<size_t> &externalIndices,
+    void applyCSWAP(const std::vector<size_t> &indices,
+                    const std::vector<size_t> &externalIndices,
                     [[maybe_unused]] bool inverse) {
         // Participating swapped indices
         static const size_t op_idx0 = 5;
@@ -906,131 +781,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
                       shiftedState[indices[op_idx1]]);
         }
     }
-
-  private:
-    //***********************************************************************//
-    //  Internal utility functions for opName dispatch use only.
-    //***********************************************************************//
-    inline void applyPauliX_(const vector<size_t> &indices,
-                             const vector<size_t> &externalIndices,
-                             bool inverse, const vector<fp_t> &params) {
-        static_cast<void>(params);
-        applyPauliX(indices, externalIndices, inverse);
-    }
-    inline void applyPauliY_(const vector<size_t> &indices,
-                             const vector<size_t> &externalIndices,
-                             bool inverse, const vector<fp_t> &params) {
-        static_cast<void>(params);
-        applyPauliY(indices, externalIndices, inverse);
-    }
-    inline void applyPauliZ_(const vector<size_t> &indices,
-                             const vector<size_t> &externalIndices,
-                             bool inverse, const vector<fp_t> &params) {
-        static_cast<void>(params);
-        applyPauliZ(indices, externalIndices, inverse);
-    }
-    inline void applyHadamard_(const vector<size_t> &indices,
-                               const vector<size_t> &externalIndices,
-                               bool inverse, const vector<fp_t> &params) {
-        static_cast<void>(params);
-        applyHadamard(indices, externalIndices, inverse);
-    }
-    inline void applyS_(const vector<size_t> &indices,
-                        const vector<size_t> &externalIndices, bool inverse,
-                        const vector<fp_t> &params) {
-        static_cast<void>(params);
-        applyS(indices, externalIndices, inverse);
-    }
-    inline void applyT_(const vector<size_t> &indices,
-                        const vector<size_t> &externalIndices, bool inverse,
-                        const vector<fp_t> &params) {
-        static_cast<void>(params);
-        applyT(indices, externalIndices, inverse);
-    }
-    inline void applyRX_(const vector<size_t> &indices,
-                         const vector<size_t> &externalIndices, bool inverse,
-                         const vector<fp_t> &params) {
-        applyRX(indices, externalIndices, inverse, params[0]);
-    }
-    inline void applyRY_(const vector<size_t> &indices,
-                         const vector<size_t> &externalIndices, bool inverse,
-                         const vector<fp_t> &params) {
-        applyRY(indices, externalIndices, inverse, params[0]);
-    }
-    inline void applyRZ_(const vector<size_t> &indices,
-                         const vector<size_t> &externalIndices, bool inverse,
-                         const vector<fp_t> &params) {
-        applyRZ(indices, externalIndices, inverse, params[0]);
-    }
-    inline void applyPhaseShift_(const vector<size_t> &indices,
-                                 const vector<size_t> &externalIndices,
-                                 bool inverse, const vector<fp_t> &params) {
-        applyPhaseShift(indices, externalIndices, inverse, params[0]);
-    }
-    inline void
-    applyControlledPhaseShift_(const vector<size_t> &indices,
-                               const vector<size_t> &externalIndices,
-                               bool inverse, const vector<fp_t> &params) {
-        applyControlledPhaseShift(indices, externalIndices, inverse, params[0]);
-    }
-    inline void applyRot_(const vector<size_t> &indices,
-                          const vector<size_t> &externalIndices, bool inverse,
-                          const vector<fp_t> &params) {
-        applyRot(indices, externalIndices, inverse, params[0], params[1],
-                 params[2]);
-    }
-    inline void applyCNOT_(const vector<size_t> &indices,
-                           const vector<size_t> &externalIndices, bool inverse,
-                           const vector<fp_t> &params) {
-        static_cast<void>(params);
-        applyCNOT(indices, externalIndices, inverse);
-    }
-    inline void applySWAP_(const vector<size_t> &indices,
-                           const vector<size_t> &externalIndices, bool inverse,
-                           const vector<fp_t> &params) {
-        static_cast<void>(params);
-        applySWAP(indices, externalIndices, inverse);
-    }
-    inline void applyCZ_(const vector<size_t> &indices,
-                         const vector<size_t> &externalIndices, bool inverse,
-                         const vector<fp_t> &params) {
-        static_cast<void>(params);
-        applyCZ(indices, externalIndices, inverse);
-    }
-    inline void applyCRX_(const vector<size_t> &indices,
-                          const vector<size_t> &externalIndices, bool inverse,
-                          const vector<fp_t> &params) {
-        applyCRX(indices, externalIndices, inverse, params[0]);
-    }
-    inline void applyCRY_(const vector<size_t> &indices,
-                          const vector<size_t> &externalIndices, bool inverse,
-                          const vector<fp_t> &params) {
-        applyCRY(indices, externalIndices, inverse, params[0]);
-    }
-    inline void applyCRZ_(const vector<size_t> &indices,
-                          const vector<size_t> &externalIndices, bool inverse,
-                          const vector<fp_t> &params) {
-        applyCRZ(indices, externalIndices, inverse, params[0]);
-    }
-    inline void applyCRot_(const vector<size_t> &indices,
-                           const vector<size_t> &externalIndices, bool inverse,
-                           const vector<fp_t> &params) {
-        applyCRot(indices, externalIndices, inverse, params[0], params[1],
-                  params[2]);
-    }
-    inline void applyToffoli_(const vector<size_t> &indices,
-                              const vector<size_t> &externalIndices,
-                              bool inverse, const vector<fp_t> &params) {
-        static_cast<void>(params);
-        applyToffoli(indices, externalIndices, inverse);
-    }
-    inline void applyCSWAP_(const vector<size_t> &indices,
-                            const vector<size_t> &externalIndices, bool inverse,
-                            const vector<fp_t> &params) {
-        static_cast<void>(params);
-        applyCSWAP(indices, externalIndices, inverse);
-    }
 };
+
 /**
  * @brief Streaming operator for StateVector data.
  *
@@ -1039,13 +791,13 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
  * @param sv StateVector to stream.
  * @return std::ostream&
  */
-template <class T>
-inline auto operator<<(std::ostream &out, const StateVector<T> &sv)
+template <class T, class Derived>
+inline auto operator<<(std::ostream &out, const StateVectorBase<T, Derived>& sv)
     -> std::ostream & {
-    const auto length = sv.getLength();
-    const auto qubits = sv.getNumQubits();
+    const auto num_qubits = sv.getNumQubits();
     const auto data = sv.getData();
-    out << "num_qubits=" << qubits << std::endl;
+    const auto length = 1U << num_qubits;
+    out << "num_qubits=" << num_qubits << std::endl;
     out << "data=[";
     out << data[0];
     for (size_t i = 1; i < length - 1; i++) {

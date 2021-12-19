@@ -53,6 +53,69 @@ using CBLAS_LAYOUT = enum CBLAS_LAYOUT {
 #endif
 /// @endcond
 
+
+namespace Pennylane::Util::Internal {
+// NOLINTBEGIN(readability-magic-numbers)
+constexpr auto countBit1(uint32_t n) -> int {
+    n = (n & 0x55555555U) + ((n >> 1) & 0x55555555U);
+    n = (n & 0x33333333U) + ((n >> 2) & 0x33333333U);
+    n = (n & 0x0F0F0F0FU) + ((n >> 4) & 0x0F0F0F0FU);
+    n = (n & 0X00FF00FFU) + ((n >> 8) & 0x00FF00FFU);
+    n = (n & 0X0000FFFFU) + ((n >>16) & 0x0000FFFFU);
+    return n;
+}
+
+constexpr auto countBit1(uint64_t n) -> int {
+    return countBit1(static_cast<uint32_t>(n & 0xFFFFFFFFU)) +
+        countBit1(static_cast<uint32_t>(n >> 32)) ;
+}
+
+constexpr auto countTrailing0(uint8_t n) -> int {
+    constexpr std::array<uint8_t, 256> lookup_table = {
+      0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+      4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+      5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+      4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+      6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+      4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+      5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+      4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+      7, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+      4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+      5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+      4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+      6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+      4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+      5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+      4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
+    };
+    return lookup_table[n];
+}
+
+constexpr auto countTrailing0(uint16_t n) -> int {
+    if (auto mod = (n & 0xFFU); mod != 0) {
+        return countTrailing0(static_cast<uint8_t>(mod));
+    }
+    return countTrailing0(static_cast<uint8_t>(n >> 8)) + 8;
+}
+
+constexpr auto countTrailing0(uint32_t n) -> int {
+    if (auto mod = (n & 0xFFFFU); mod != 0) {
+        return countTrailing0(static_cast<uint16_t>(mod));
+    }
+    return countTrailing0(static_cast<uint16_t>(n >> 16)) + 16;
+}
+
+constexpr auto countTrailing0(uint64_t n) -> int {
+    if (auto mod = (n & 0xFFFFFFFFU); mod != 0) {
+        return countTrailing0(static_cast<uint32_t>(mod));
+    }
+    return countTrailing0(static_cast<uint32_t>(n >> 32)) + 32;
+}
+
+// NOLINTEND(readability-magic-numbers)
+} // namespace Pennylane::Util::Internal
+
 namespace Pennylane::Util {
 
 /**
@@ -179,6 +242,80 @@ inline auto exp2(const size_t &n) -> size_t {
  */
 inline auto log2(size_t value) -> size_t {
     return static_cast<size_t>(std::log2(value));
+}
+
+/**
+ * @brief Define popcount for multiple compilers as well as different types.
+ *
+ * TODO: change to std::popcount in C++20
+ */
+///@{
+#if defined(_MSC_VER)
+constexpr auto popcount(uint32_t val) -> int {
+    return __popcnt(val);
+}
+constexpr auto popcount(uint64_t val) -> int {
+    return __popcnt(val);
+}
+#elif defined(__GNUC__) || defined(__clang__)
+constexpr auto popcount(unsigned int val) -> int {
+    return __builtin_popcount(val);
+}
+constexpr auto popcount(unsigned long val) -> int {
+    return __builtin_popcountl(val);
+}
+#else
+constexpr auto popcount(unsigned int val) -> int {
+    return Internal::countBit1(val);
+}
+constexpr auto popcount(unsigned long val) -> int {
+    return Internal::countBit1(val);
+}
+#endif
+///@}
+
+/**
+ * @brief Faster log2 when the value is the perferct power of 2.
+ * 
+ * If the value is the perfect power of 2, using a system provided bit operation is much 
+ * faster than using std::log2
+ * 
+ * TODO: change to std::countr_zero in C++20
+ */
+///@{
+#if defined(_MSC_VER)
+constexpr auto log2PerfectPower(uint32_t val) -> int {
+    return 31 - __lzcnt(val);
+}
+constexpr auto log2PerfectPower(uint64_t val) -> int {
+    return 63 - __lzcnt64(val);
+}
+#elif defined(__GNUC__) || defined(__clang__)
+constexpr auto log2PerfectPower(unsigned int val) -> int {
+    return __builtin_ctz(val);
+}
+constexpr auto log2PerfectPower(unsigned long val) -> int {
+    return __builtin_ctzl(val);
+}
+#else
+constexpr auto log2PerfectPower(unsigned int val) -> int {
+    return Internal::countTrailing0(val);
+}
+constexpr auto log2PerfectPower(unsigned long val) -> int {
+    return Internal::countTrailing0(val);
+}
+#endif
+///@}
+
+
+/**
+ * @brief Check if there is a positive integer n such that value == 2^n.
+ *
+ * @param value Value to calculate for.
+ * @return bool
+ */
+inline auto isPerfectPowerOf2(size_t value) -> bool{
+    return popcount(value) == 1;
 }
 
 /**

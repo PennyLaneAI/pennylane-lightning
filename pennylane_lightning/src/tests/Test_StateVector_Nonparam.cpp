@@ -23,10 +23,10 @@ using namespace Pennylane;
 TEMPLATE_TEST_CASE("StateVector::StateVector", "[StateVector_Nonparam]", float,
                    double) {
     SECTION("StateVector") {
-        REQUIRE(std::is_constructible<StateVector<>>::value);
+        REQUIRE_FALSE(std::is_constructible<StateVector<>>::value);
     }
     SECTION("StateVector<TestType> {}") {
-        REQUIRE(std::is_constructible<StateVector<TestType>>::value);
+        REQUIRE_FALSE(std::is_constructible<StateVector<TestType>>::value);
     }
     SECTION("StateVector<TestType> {std::complex<TestType>, size_t}") {
         REQUIRE(std::is_constructible<StateVector<TestType>,

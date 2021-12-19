@@ -30,17 +30,20 @@ include(CTest)
 include(Catch)
 
 add_executable(runner runner_main.cpp)
-target_link_libraries(runner lightning_simulator lightning_utils lightning_algorithms Catch2::Catch2)
 
-target_sources(runner PRIVATE   Test_AdjDiff.cpp
-                                Test_Bindings.cpp
-                                Test_StateVector_Nonparam.cpp 
-                                Test_StateVector_Param.cpp 
-                                Test_StateVectorManaged_Nonparam.cpp 
-                                Test_StateVectorManaged_Param.cpp 
+# TODO: Recover before push
+#target_link_libraries(runner lightning_simulator lightning_utils lightning_algorithms Catch2::Catch2)
+target_link_libraries(runner lightning_utils Catch2::Catch2)
+
+target_sources(runner PRIVATE   #Test_AdjDiff.cpp
+                                #Test_Bindings.cpp
+                                #Test_StateVector_Nonparam.cpp 
+                                #Test_StateVector_Param.cpp 
+                                #Test_StateVectorManaged_Nonparam.cpp 
+                                #Test_StateVectorManaged_Param.cpp 
                                 Test_Util.cpp
-                                Test_Measures.cpp
-                                Test_VectorJacobianProduct.cpp
+                                #Test_Measures.cpp
+                                #Test_VectorJacobianProduct.cpp
 )
 
 target_compile_options(runner PRIVATE "$<$<CONFIG:DEBUG>:-Wall>")

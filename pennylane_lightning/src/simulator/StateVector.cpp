@@ -17,3 +17,14 @@
 // explicit instantiation
 template class Pennylane::StateVector<float>;
 template class Pennylane::StateVector<double>;
+
+template<>
+const std::unordered_map<string, size_t > Pennylane::StateVector<float>::gate_wires_ = {
+              // Add mapping from function name to required wires.
+              {"PauliX", 1},   {"PauliY", 1},     {"PauliZ", 1},
+              {"Hadamard", 1}, {"T", 1},          {"S", 1},
+              {"RX", 1},       {"RY", 1},         {"RZ", 1},
+              {"Rot", 1},      {"PhaseShift", 1}, {"ControlledPhaseShift", 2},
+              {"CNOT", 2},     {"SWAP", 2},       {"CZ", 2},
+              {"CRX", 2},      {"CRY", 2},        {"CRZ", 2},
+              {"CRot", 2},     {"CSWAP", 3},      {"Toffoli", 3}};
