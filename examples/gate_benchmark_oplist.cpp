@@ -171,7 +171,7 @@ int main(int argc, char *argv[]) {
             }
         }
     } catch (std::exception &e) {
-        // Just do not pring log
+        // Just do not print log
     }
 
     // Run benchmark. Total num_gate_reps number of gates is used.
