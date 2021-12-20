@@ -97,9 +97,9 @@ std::vector<size_t> generateDistinctWires(RandomEngine &re, size_t num_qubits,
  * Example usage:
  *
  *     $ gate_benchmark_oplist 10 22 # Benchmark using 10 random gates (sampled
- * evenly from all possible gates) for 22 qubits $ gate_benchmark_oplist 100 20
- * [PauliX, CNOT] # Benchmark using 100 random gates (where each gate is PauliX
- * or CNOT) for 20 qubits
+ * evenly from all possible gates) for 22 qubits
+ *     $ gate_benchmark_oplist 100 20 [PauliX, CNOT] # Benchmark using 100
+ * random gates (where each gate is PauliX or CNOT) for 20 qubits
  *
  * The whole supported gates are PauliX, PauliY, PauliZ, Hadamard, S, T, RX, RY,
  * RZ, Rot, PhaseShift, CNOT, SWAP, ControlledPhaseShift, CRX, CRY, CRZ, CRot,
