@@ -75,7 +75,7 @@ parseGateLists(std::string_view arg) {
         if (iter == available_gates_wires.end()) {
             std::ostringstream ss;
             ss << "Given gate " << op_name
-               << " is not availabe"; // Change to std::format in C++20
+               << " is not availabe"; // TODO: Change to std::format in C++20
             throw std::invalid_argument(ss.str());
         }
         ops.emplace_back(*iter);
@@ -91,7 +91,24 @@ std::vector<size_t> generateDistinctWires(RandomEngine &re, size_t num_qubits,
     shuffle(v.begin(), v.end(), re);
     return std::vector<size_t>(v.begin(), v.begin() + num_wires);
 }
-
+/**
+ * @brief Benchmark Pennylane-Lightning for a given gate set
+ *
+ * Example usage:
+ *
+ *     $ gate_benchmark_oplist 10 22 # Benchmark using 10 random gates (sampled
+ * evenly from all possible gates) for 22 qubits $ gate_benchmark_oplist 100 20
+ * [PauliX, CNOT] # Benchmark using 100 random gates (where each gate is PauliX
+ * or CNOT) for 20 qubits
+ *
+ * The whole supported gates are PauliX, PauliY, PauliZ, Hadamard, S, T, RX, RY,
+ * RZ, Rot, PhaseShift, CNOT, SWAP, ControlledPhaseShift, CRX, CRY, CRZ, CRot,
+ * Toffoli and CSWAP.
+ *
+ * @param argc Number of arguments
+ * @param argv Command line arguments
+ * @return Returns 0 is completed successfully
+ */
 int main(int argc, char *argv[]) {
     using TestType = double;
 
@@ -129,7 +146,13 @@ int main(int argc, char *argv[]) {
         op_list_s = ss.str();
     }
 
-    auto op_list = parseGateLists(op_list_s);
+    std::vector<std::pair<std::string_view, GateDesc>> op_list;
+    try {
+        op_list = parseGateLists(op_list_s);
+    } catch (std::exception &e) {
+        std::cerr << e.what() << std::endl;
+        return 1;
+    }
 
     // Generate random gate sequences
     std::random_device rd;
