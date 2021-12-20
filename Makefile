@@ -79,9 +79,9 @@ test-cpp:
 .PHONY: format
 format:
 ifdef check
-	./bin/format --check pennylane_lightning/src/* tests
+	./bin/format --check pennylane_lightning/src/* examples tests 
 else
-	./bin/format pennylane_lightning/src/* tests
+	./bin/format pennylane_lightning/src/* examples tests
 endif
 
 .PHONY: check-tidy
