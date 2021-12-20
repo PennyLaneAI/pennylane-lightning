@@ -54,6 +54,8 @@ endif()
 # Process compile options
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
 
+
+set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 # Add pybind11
 include(FetchContent)
 FetchContent_Declare(

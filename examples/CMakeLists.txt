@@ -2,7 +2,6 @@
 ## I. Set project details
 #############################
 cmake_minimum_required(VERSION 3.14)
-#set(CMAKE_POLICY_DEFAULT_CMP0127 NEW)
 
 project("gate_benchmark"
         VERSION 0.1.0
