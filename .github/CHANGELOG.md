@@ -10,6 +10,9 @@
 
 ### Improvements
 
+* Ensure debug info is built into dynamic libraries.
+[(#201)](https://github.com/PennyLaneAI/pennylane-lightning/pull/201)
+
 ### Documentation
 
 ### Bug fixes
