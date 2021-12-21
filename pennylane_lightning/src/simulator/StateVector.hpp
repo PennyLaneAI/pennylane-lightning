@@ -270,6 +270,8 @@ template <class fp_t = double> class StateVector {
                               std::forward<decltype(PH4)>(PH4));
                }}} {};
 
+    virtual ~StateVector() = default;
+
     /**
      * @brief Get the underlying data pointer.
      *
