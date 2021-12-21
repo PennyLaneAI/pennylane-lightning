@@ -4,7 +4,8 @@
 * Direct support to probability, expectation value and variance calculation in PL-Lightning.
 [(#185)](https://github.com/PennyLaneAI/pennylane-lightning/pull/185)
 
-* Add C++ only benchmark for a given list of gates ([#199](https://github.com/PennyLaneAI/pennylane-lightning/pull/199))
+* Add C++ only benchmark for a given list of gates.
+[(#199)](https://github.com/PennyLaneAI/pennylane-lightning/pull/199)
 
 ### Breaking changes
 
@@ -13,6 +14,9 @@
 ### Documentation
 
 ### Bug fixes
+
+* Add virtual destructor to C++ state-vector classes.
+[(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
 
 ### Contributors
 
