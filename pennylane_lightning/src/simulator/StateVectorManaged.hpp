@@ -57,7 +57,7 @@ class StateVectorManaged : public StateVector<fp_t> {
         StateVector<fp_t>::setData(data_.data());
     }
 
-    virtual ~StateVectorManaged() = default;
+    ~StateVectorManaged() = default;
 
     auto operator=(const StateVectorManaged<fp_t> &other)
         -> StateVectorManaged & {
