@@ -73,6 +73,8 @@ class StateVectorRaw : public StateVectorBase<fp_t GateOperationType, StateVecto
 
     }
 
+    virtual ~StateVector() = default;
+
     /**
      * @brief Get the underlying data pointer.
      *

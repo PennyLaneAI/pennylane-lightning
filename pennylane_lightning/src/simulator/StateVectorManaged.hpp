@@ -60,6 +60,8 @@ class StateVectorManaged : public StateVectorBase<fp_t, GateOperationType, State
         StateVector<fp_t>::setData(data_.data());
     }
 
+    ~StateVectorManaged() override = default;
+
     auto operator=(const StateVectorManaged<fp_t> &other)
         -> StateVectorManaged & {
         if (this != &other) {
