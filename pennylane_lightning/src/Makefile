@@ -8,5 +8,3 @@ help:
 clean:
 	rm -rf ./build/* 
 
-format:
-	@./build_utils/format_cpp.sh
