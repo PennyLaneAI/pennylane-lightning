@@ -21,10 +21,14 @@
 #include "GateOperationsLM.hpp"
 
 #include <array>
+#include <functional>
 
 namespace Pennylane {
 /**
  * @brief enum class for all gate operations
+ *
+ * When you add a gate in this enum, please sure that GATE_NUM_PARAMS is also updated 
+ * accordingly.
  * */
 enum class GateOperations: int {
     /* Single-qubit gates */
@@ -57,8 +61,32 @@ enum class GateOperations: int {
     END
 };
 
-enum class KernelType {PI, LM};
+constexpr std::array<int, static_cast<int>(GateOperations::END) - 1>
+GATE_NUM_PARAMS = {
+    /* PuliX                = */ 0,
+    /* PuliY                = */ 0,
+    /* PuliZ                = */ 0,
+    /* Hadamard             = */ 0,
+    /* S                    = */ 0,
+    /* T                    = */ 0,
+    /* RX                   = */ 1,
+    /* RY                   = */ 1,
+    /* RZ                   = */ 1,
+    /* PhaseShift           = */ 1,
+    /* Rot                  = */ 3,
+    /* ControlledPhaseShift = */ 1,
+    /* CNOT                 = */ 0,
+    /* CZ                   = */ 0,
+    /* SWAP                 = */ 0,
+    /* CRX                  = */ 1,
+    /* CRY                  = */ 1,
+    /* CRZ                  = */ 1,
+    /* CRot                 = */ 3,
+    /* Toffoli              = */ 0,
+    /* CSWAP                = */ 0
+};
 
+enum class KernelType {PI, LM};
 
 /**
  * @brief Define which kernel to use for each operation
@@ -67,7 +95,7 @@ enum class KernelType {PI, LM};
  *   1) StateVector apply##GATE_NAME methods. The kernel function is statically binded to the 
  *   given kernel and cannot be modified.
  *   2) Default kernel functions of StateVector applyOperation(opName, ...) methods. The 
- *   kernel function is dynamically binded and can be changed using ApplyOperation singleton
+ *   kernel function is dynamically binded and can be changed using DynamicDispatcher singleton
  *   class.
  *   3) Python binding. 
  */
@@ -97,6 +125,13 @@ DEFAULT_KERNEL_FOR_OPS = {
     /* Matrix               = */ KernelType::PI,
 };
 
+
+template<class fp_t>
+using KernelFuncType = std::function<void(std::complex<fp_t>* /*data*/, size_t /*num_qubits*/,
+                                          const std::vector<size_t>& /*wires*/, 
+                                          bool /*inverse*/,
+                                          const std::vector<fp_t>& /*params*/)>;
+
 template<class fp_t, KernelType kernel_type>
 class SelectGateOps {};
 
@@ -106,3 +141,11 @@ template<class fp_t>
 class SelectGateOps<fp_t, KernelType::LM> : public GateOperationsLM<fp_t> {};
 
 } // namespace Pennylane
+
+template<>
+struct std::hash<Pennylane::GateOperations> {
+    size_t operator()(Pennylane::GateOperations gate_operation) {
+        return std::hash<int>()(static_cast<int>(gate_operation));
+    }
+};
+

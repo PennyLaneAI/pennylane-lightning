@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "ApplyOperations.hpp"
+#include "DynamicDispatcher.hpp"
 #include "Error.hpp"
 #include "Gates.hpp"
 #include "Util.hpp"
@@ -138,7 +138,7 @@ class StateVectorBase {
                         bool inverse = false, const std::vector<fp_t> &params = {}) {
         
         auto* arr = getData();
-        ApplyOperations<fp_t>::getInstance().
+        DynamicDispatcher<fp_t>::getInstance().
             applyOperation(arr, num_qubits_, opName, wires, inverse, params);
     }
 
@@ -162,7 +162,7 @@ class StateVectorBase {
                                         " were supplied."); // TODO: change to std::format in C++20
         }
         auto* arr = getData();
-        ApplyOperations<fp_t>::applyOperation(this->getData(), num_qubits_, matrix,
+        DynamicDispatcher<fp_t>::applyOperation(this->getData(), num_qubits_, matrix,
                 wires, inverse, params);
     }
 
@@ -178,7 +178,7 @@ class StateVectorBase {
                          const std::vector<std::vector<size_t>> &wires,
                          const std::vector<bool> &inverse,
                          const std::vector<std::vector<fp_t>> &params) {
-        ApplyOperations<fp_t>::getInstance()
+        DynamicDispatcher<fp_t>::getInstance()
             .applyOperation(*this, num_qubits_, wires, inverse, params);
     }
 
@@ -192,7 +192,7 @@ class StateVectorBase {
     void applyOperations(const std::vector<std::string> &ops,
                          const std::vector<std::vector<size_t>> &wires,
                          const std::vector<bool> &inverse) {
-        ApplyOperations<fp_t>::getInstance()
+        DynamicDispatcher<fp_t>::getInstance()
             .applyOperation(*this, num_qubits_, wires, inverse);
     }
 

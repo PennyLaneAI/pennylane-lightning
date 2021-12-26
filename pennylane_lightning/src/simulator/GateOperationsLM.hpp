@@ -293,7 +293,7 @@ class GateOperationsLM {
     }
 
 
-    static void applyTofolli(CFP_t* arr, size_t num_qubits, const std::vector<size_t>& wires,
+    static void applyToffoli(CFP_t* arr, size_t num_qubits, const std::vector<size_t>& wires,
             [[maybe_unused]] bool inverse) {
         PL_ABORT("GaterOperationsLM::applyTofolli is not implemented yet");
     }
