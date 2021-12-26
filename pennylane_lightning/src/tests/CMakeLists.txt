@@ -29,28 +29,42 @@ list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/contrib)
 include(CTest)
 include(Catch)
 
-add_executable(runner runner_main.cpp)
 
-# TODO: Recover before push
-#target_link_libraries(runner lightning_simulator lightning_utils lightning_algorithms Catch2::Catch2)
-target_link_libraries(runner lightning_utils Catch2::Catch2)
+################################################################################
+# Define compile options and library
+################################################################################
 
-target_sources(runner PRIVATE   #Test_AdjDiff.cpp
-                                #Test_Bindings.cpp
-                                #Test_StateVector_Nonparam.cpp 
-                                #Test_StateVector_Param.cpp 
-                                #Test_StateVectorManaged_Nonparam.cpp 
-                                #Test_StateVectorManaged_Param.cpp 
-                                Test_Util.cpp
-                                #Test_Measures.cpp
-                                #Test_VectorJacobianProduct.cpp
-)
-
-target_compile_options(runner PRIVATE "$<$<CONFIG:DEBUG>:-Wall>")
+add_library(lightning_tests_dependency INTERFACE)
+target_link_libraries(lightning_tests_dependency INTERFACE Catch2::Catch2)
+target_compile_options(lightning_tests_dependency INTERFACE "$<$<CONFIG:DEBUG>:-Wall>")
+target_sources(lightning_tests_dependency INTERFACE runner_main.cpp)
 
 if(ENABLE_NATIVE)
     message(STATUS "ENABLE_NATIVE is ON. Use -march=native for cpptests.")
     target_compile_options(runner PRIVATE -march=native)
 endif()
 
-catch_discover_tests(runner)
+################################################################################
+# Define targets
+################################################################################
+
+add_executable(Test_Util Test_Util.cpp)
+target_link_libraries(Test_Util PRIVATE lightning_tests_dependency 
+                                        lightning_utils)
+catch_discover_tests(Test_Util)
+
+add_executable(Test_IndicesUtil Test_IndicesUtil.cpp)
+target_link_libraries(Test_IndicesUtil PRIVATE lightning_tests_dependency 
+                                        lightning_utils 
+                                        lightning_simulator)
+catch_discover_tests(Test_IndicesUtil)
+
+add_executable(Test_GateOperations Test_GateOperations_Single_Nonparam.cpp)
+target_link_libraries(Test_GateOperations PRIVATE lightning_tests_dependency 
+                                        lightning_utils 
+                                        lightning_simulator)
+catch_discover_tests(Test_GateOperations)
+
+
+# TODO: Recover before push
+#target_link_libraries(runner lightning_simulator lightning_utils lightning_algorithms Catch2::Catch2)

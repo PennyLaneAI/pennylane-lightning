@@ -1,5 +1,8 @@
+#include <algorithm>
 #include <complex>
 #include <vector>
+
+#include <catch2/catch.hpp>
 
 /**
  * @brief Utility function to compare complex statevector data.
