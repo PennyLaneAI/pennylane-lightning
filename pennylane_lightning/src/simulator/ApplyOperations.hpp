@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "SelectGateOps.hpp"
+
 #include <complex>
 #include <string>
 #include <unordered_map>
@@ -25,48 +27,39 @@
 #include <variant>
 #include <functional>
 
-
 #define PENNYLANE_GATEOP_PAIR_PARAMS0(GATE_NAME)                                           \
     {#GATE_NAME, [](CFP_t* data, size_t num_qubits, const std::vector<size_t>& wires,      \
                 bool inverse, const std::vector<fp_t>& params) {                           \
             assert(params.empty());                                                        \
             (void)params;                                                                  \
-            GateOperationType<fp_t>::apply##GATE_NAME(data, num_qubits, wires, inverse);   \
+            SelectGateOps<fp_t, DEFAULT_KERNEL_FOR_OPS[static_cast<int>(GateOperations::GATE_NAME)]>::apply##GATE_NAME(      \
+                    data, num_qubits, wires, inverse);                                     \
         }}
 #define PENNYLANE_GATEOP_PAIR_PARAMS1(GATE_NAME)                                           \
     {#GATE_NAME, [](CFP_t* data, size_t num_qubits, const std::vector<size_t>& wires,      \
                 bool inverse, const std::vector<fp_t>& params) {                           \
             assert(params.size() == 1);                                                    \
             (void)params;                                                                  \
-            GateOperationType<fp_t>::apply##GATE_NAME(data, num_qubits, wires, inverse,    \
+            SelectGateOps<fp_t, DEFAULT_KERNEL_FOR_OPS[static_cast<int>(GateOperations::GATE_NAME)]>::apply##GATE_NAME(      \
+                    data, num_qubits, wires, inverse,                                      \
                     params[0]);                                                            \
-        }}
-#define PENNYLANE_GATEOP_PAIR_PARAMS2(GATE_NAME)                                           \
-    {#GATE_NAME, [](CFP_t* data, size_t num_qubits, const std::vector<size_t>& wires,      \
-                bool inverse, const std::vector<fp_t>& params) {                           \
-            assert(params.size() == 2);                                                    \
-            (void)params;                                                                  \
-            GateOperationType<fp_t>::apply##GATE_NAME(data, num_qubits, wires, inverse,    \
-                    params[0], params[1]);                                                 \
         }}
 #define PENNYLANE_GATEOP_PAIR_PARAMS3(GATE_NAME)                                           \
     {#GATE_NAME, [](CFP_t* data, size_t num_qubits, const std::vector<size_t>& wires,      \
                 bool inverse, const std::vector<fp_t>& params) {                           \
             assert(params.size() == 3);                                                    \
             (void)params;                                                                  \
-            GateOperationType<fp_t>::apply##GATE_NAME(data, num_qubits, wires, inverse,    \
+            SelectGateOps<fp_t, DEFAULT_KERNEL_FOR_OPS[static_cast<int>(GateOperations::GATE_NAME)]>::apply##GATE_NAME(      \
+                    data, num_qubits, wires, inverse,                                      \
                     params[0], params[1], params[2]);                                      \
         }}
 #define PENNYLANE_GATEOP_PAIR(GATE_NAME, NUM_PARAMS) \
     PENNYLANE_GATEOP_PAIR_PARAMS##NUM_PARAMS(GATE_NAME)
 
+
 namespace Pennylane {
 
-/* forward declaration */
-template<typename fp_t, template<class> class GateOperationType, class Derived>
-class StateVectorBase;
-
-template<typename fp_t, template <class> class GateOperationType>
+template<typename fp_t>
 class ApplyOperations {
   public:
     using scalar_type_t = fp_t;
@@ -77,15 +70,17 @@ class ApplyOperations {
         void(CFP_t* /*data*/, size_t /*num_qubits*/, const std::vector<size_t>& /*wires*/,
             bool /*inverse*/, const std::vector<fp_t>& /*params*/)>;
     const std::unordered_map<std::string, size_t> gate_wires_{
-        {"PauliX", 1},   {"PauliY", 1},     {"PauliZ", 1},
-        {"Hadamard", 1}, {"T", 1},          {"S", 1},
-        {"RX", 1},       {"RY", 1},         {"RZ", 1},
-        {"Rot", 1},      {"PhaseShift", 1}, {"ControlledPhaseShift", 2},
-        {"CNOT", 2},     {"SWAP", 2},       {"CZ", 2},
-        {"CRX", 2},      {"CRY", 2},        {"CRZ", 2},
-        {"CRot", 2},     {"CSWAP", 3},      {"Toffoli", 3}};
+        {"PauliX", 1},    {"PauliY", 1},   {"PauliZ", 1},
+        {"Hadamard", 1},  {"S", 1},        {"T", 1},
+        {"RX", 1},        {"RY", 1},       {"RZ", 1},
+        {"PhaseShift", 1},{"Rot", 1},      {"ControlledPhaseShift", 2},
+        {"CNOT", 2},      {"SZ", 2}  ,     {"SWAP", 2},
+        {"CRX", 2},       {"CRY", 2},      {"CRZ", 2},
+        {"CRot", 2},      {"Toffoli", 3},  {"CSWAP", 3}
+    };
 
     std::unordered_map<std::string, Func> gates_;
+
     ApplyOperations() {
         // single-qubit gates
         gates_.emplace(PENNYLANE_GATEOP_PAIR(PauliX, 0));
@@ -118,7 +113,10 @@ class ApplyOperations {
         static ApplyOperations singleton;
         return singleton;
     }
-    
+
+    /**
+     * @brief Register a new gate operation for the operation. 
+     */
     template<typename FunctionType>
     void registerGateOperation(std::string opName, FunctionType&& func) {
         gates_.emplace(std::move(opName), func);
@@ -127,10 +125,9 @@ class ApplyOperations {
     /**
      * @berief call the corresponding operation function from GateOperations
      */
-    template<class Derived>
-    void applyOperation(StateVectorBase<fp_t, GateOperationType, Derived>& sv,
-            const std::string& opName, const std::vector<size_t>& wires,
-            bool inverse, const std::vector<fp_t>& params) {
+    void applyOperation(CFP_t* data, size_t num_qubits,
+                        const std::string& opName, const std::vector<size_t>& wires,
+                        bool inverse, const std::vector<fp_t>& params) {
 
         const auto iter = gates_.find(opName);
         if (iter == gates_.end()) {
@@ -145,11 +142,11 @@ class ApplyOperations {
                                         std::to_string(wires.size()) +
                                         " were supplied.");
         }
-        (iter->second)(sv.getData(), sv.getNumQubits(), wires, inverse, params);
+        (iter->second)(data, num_qubits, wires, inverse, params);
     }
 
     template<class Derived>
-    void applyOperations(StateVectorBase<fp_t, GateOperationType, Derived>& sv,
+    void applyOperations(CFP_t* data, size_t num_qubits,
                          const std::vector<std::string> &ops,
                          const std::vector<std::vector<size_t>> &wires,
                          const std::vector<bool> &inverse,
@@ -162,12 +159,12 @@ class ApplyOperations {
         }
 
         for (size_t i = 0; i < numOperations; i++) {
-            applyOperation(sv, ops[i], wires[i], inverse[i], params[i]);
+            applyOperation(data, num_qubits, ops[i], wires[i], inverse[i], params[i]);
         }
     }
 
     template<class Derived>
-    void applyOperations(StateVectorBase<fp_t, GateOperationType, Derived>& sv,
+    void applyOperations(CFP_t* data, size_t num_qubits,
                          const std::vector<std::string> &ops,
                          const std::vector<std::vector<size_t>> &wires,
                          const std::vector<bool> &inverse) {
@@ -179,7 +176,7 @@ class ApplyOperations {
         }
 
         for (size_t i = 0; i < numOperations; i++) {
-            applyOperation(sv, ops[i], wires[i], inverse[i], {});
+            applyOperation(data, num_qubits, ops[i], wires[i], inverse[i], {});
         }
     }
 };

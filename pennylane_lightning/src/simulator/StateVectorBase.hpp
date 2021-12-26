@@ -18,6 +18,12 @@
 
 #pragma once
 
+#include "ApplyOperations.hpp"
+#include "Error.hpp"
+#include "Gates.hpp"
+#include "Util.hpp"
+#include "SelectGateOps.hpp"
+
 /// @cond DEV
 // Required for compilation with MSVC
 #ifndef _USE_MATH_DEFINES
@@ -33,13 +39,29 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include "Error.hpp"
-#include "Gates.hpp"
-#include "Util.hpp"
-#include "ApplyOperations.hpp"
-
 #include <iostream>
+
+/**
+ * @brief This macro defines methods for State-vector class. The kernel_type template
+ * argument choose the kernel to run.
+ */
+#define PENNYLANE_STATEVECTOR_DEFINE_OPS(GATE_NAME)                                \
+    template<KernelType kernel_type, typename... Ts>                               \
+    inline void apply##GATE_NAME##_(const std::vector<size_t>& wires,                \
+                                               bool inverse, Ts... args) {         \
+        auto* arr = getData();                                                     \
+        SelectGateOps<fp_t, kernel_type>::apply##GATE_NAME(                        \
+                    arr, num_qubits_, wires, inverse, std::forward<Ts>(args)...);  \
+    }
+
+#define PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GATE_NAME)                         \
+    template<typename... Ts>                                                        \
+    inline void apply##GATE_NAME(const std::vector<size_t>& wires, bool inverse,    \
+            Ts... args) {                                                           \
+        apply##GATE_NAME##_<DEFAULT_KERNEL_FOR_OPS[ \
+        static_cast<int>(GateOperations::GATE_NAME)]>(wires, \
+                inverse, std::forward<Ts>(args)...);                                \
+    }
 
 namespace Pennylane {
 
@@ -54,7 +76,7 @@ namespace Pennylane {
  *
  * @tparam fp_t Floating point precision of underlying statevector data.
  */
-template <class fp_t, template<class> class GateOperationType, class Derived>
+template <class fp_t, class Derived>
 class StateVectorBase {
   public:
     using scalar_type_t = fp_t;
@@ -92,11 +114,11 @@ class StateVectorBase {
         return num_qubits_;
     }
 
-    size_t getLength() const {
+    [[nodiscard]] size_t getLength() const {
         return static_cast<size_t>(Util::exp2(num_qubits_));
     }
 
-    inline auto getData() -> CFP_t {
+    inline auto getData() -> CFP_t* {
         return static_cast<Derived*>(this)->getData();
     }
 
@@ -114,9 +136,10 @@ class StateVectorBase {
      */
     void applyOperation(const std::string &opName, const std::vector<size_t> &wires,
                         bool inverse = false, const std::vector<fp_t> &params = {}) {
-
-        ApplyOperations<fp_t, GateOperationType>::getInstance().
-            applyOperation(*this, opName, wires, inverse, params);
+        
+        auto* arr = getData();
+        ApplyOperations<fp_t>::getInstance().
+            applyOperation(arr, num_qubits_, opName, wires, inverse, params);
     }
 
     /**
@@ -155,7 +178,7 @@ class StateVectorBase {
                          const std::vector<std::vector<size_t>> &wires,
                          const std::vector<bool> &inverse,
                          const std::vector<std::vector<fp_t>> &params) {
-        ApplyOperations<fp_t, GateOperationType>::getInstance()
+        ApplyOperations<fp_t>::getInstance()
             .applyOperation(*this, num_qubits_, wires, inverse, params);
     }
 
@@ -169,105 +192,36 @@ class StateVectorBase {
     void applyOperations(const std::vector<std::string> &ops,
                          const std::vector<std::vector<size_t>> &wires,
                          const std::vector<bool> &inverse) {
-        ApplyOperations<fp_t, GateOperationType>::getInstance()
+        ApplyOperations<fp_t>::getInstance()
             .applyOperation(*this, num_qubits_, wires, inverse);
-    }
-
-    /**
-     * @brief Apply a given matrix directly to the statevector.
-     *
-     * @param matrix Perfect square matrix in row-major order.
-     * @param indices Internal indices participating in the operation.
-     * @param externalIndices External indices unaffected by the operation.
-     * @param inverse Indicate whether inverse should be taken.
-     */
-    void applyMatrix(const std::vector<CFP_t> &matrix, const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse) {
-        if (static_cast<size_t>(1ULL << (Util::log2(indices.size()) +
-                                         Util::log2(externalIndices.size()))) !=
-            length_) {
-            throw std::out_of_range(
-                "The given indices do not match the state-vector length.");
-        }
-
-        std::vector<CFP_t> v(indices.size());
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            // Gather
-            size_t pos = 0;
-            for (const size_t &index : indices) {
-                v[pos] = shiftedState[index];
-                pos++;
-            }
-
-            // Apply + scatter
-            for (size_t i = 0; i < indices.size(); i++) {
-                size_t index = indices[i];
-                shiftedState[index] = 0;
-
-                if (inverse) {
-                    for (size_t j = 0; j < indices.size(); j++) {
-                        const size_t baseIndex = j * indices.size();
-                        shiftedState[index] +=
-                            std::conj(matrix[baseIndex + i]) * v[j];
-                    }
-                } else {
-                    const size_t baseIndex = i * indices.size();
-                    for (size_t j = 0; j < indices.size(); j++) {
-                        shiftedState[index] += matrix[baseIndex + j] * v[j];
-                    }
-                }
-            }
-        }
     }
 
     /**
      * @brief Apply a given matrix directly to the statevector read directly
      * from numpy data. Data can be in 1D or 2D format.
      *
-     * @param matrix Pointer from numpy data.
+     * @param matrix Pointer to the array data.
      * @param indices Internal indices participating in the operation.
      * @param externalIndices External indices unaffected by the operation.
      * @param inverse Indicate whether inverse should be taken.
      */
-    void applyMatrix(const CFP_t *matrix, const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices, bool inverse) {
-        if (static_cast<size_t>(1ULL << (Util::log2(indices.size()) +
-                                         Util::log2(externalIndices.size()))) !=
-            length_) {
-            throw std::out_of_range(
-                "The given indices do not match the state-vector length.");
-        }
-
-        std::vector<CFP_t> v(indices.size());
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            // Gather
-            size_t pos = 0;
-            for (const size_t &index : indices) {
-                v[pos] = shiftedState[index];
-                pos++;
-            }
-
-            // Apply + scatter
-            for (size_t i = 0; i < indices.size(); i++) {
-                size_t index = indices[i];
-                shiftedState[index] = 0;
-
-                if (inverse) {
-                    for (size_t j = 0; j < indices.size(); j++) {
-                        const size_t baseIndex = j * indices.size();
-                        shiftedState[index] +=
-                            std::conj(matrix[baseIndex + i]) * v[j];
-                    }
-                } else {
-                    const size_t baseIndex = i * indices.size();
-                    for (size_t j = 0; j < indices.size(); j++) {
-                        shiftedState[index] += matrix[baseIndex + j] * v[j];
-                    }
-                }
-            }
-        }
+    template<KernelType kernel_type>
+    inline void applyMatrix_(const CFP_t* matrix, const std::vector<size_t>& wires, bool inverse) {
+        auto* arr = getData();
+        SelectGateOps<fp_t, kernel_type>::applyMatrix(arr, num_qubits_, matrix, wires, inverse);
+    }
+    inline void applyMatrix(const CFP_t* matrix, const std::vector<size_t>& wires, bool inverse) {
+        applyMatrix_<DEFAULT_KERNEL_FOR_OPS[static_cast<int>(GateOperations::Matrix)]>(matrix, wires, inverse);
+    }
+    template<KernelType kernel_type>
+    inline void applyMatrix_(const std::vector<CFP_t>& matrix, 
+                             const std::vector<size_t>& wires, bool inverse) {
+        auto* arr = getData();
+        SelectGateOps<fp_t, kernel_type>::applyMatrix(arr, num_qubits_, matrix, wires, inverse);
+    }
+    inline void applyMatrix(const std::vector<CFP_t>& matrix, 
+                            const std::vector<size_t>& wires, bool inverse) {
+        applyMatrix_<DEFAULT_KERNEL_FOR_OPS[static_cast<int>(GateOperations::Matrix)]>(matrix, wires, inverse);
     }
 
     /**
@@ -279,14 +233,8 @@ class StateVectorBase {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyPauliX(const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices,
-                     [[maybe_unused]] bool inverse) {
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            std::swap(shiftedState[indices[0]], shiftedState[indices[1]]);
-        }
-    }
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(PauliX)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(PauliX)
 
     /**
      * @brief Apply PauliY gate operation to given indices of statevector.
@@ -297,17 +245,8 @@ class StateVectorBase {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyPauliY(const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices,
-                     [[maybe_unused]] bool inverse) {
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            CFP_t v0 = shiftedState[indices[0]];
-            shiftedState[indices[0]] = CFP_t{shiftedState[indices[1]].imag(),
-                                             -shiftedState[indices[1]].real()};
-            shiftedState[indices[1]] = CFP_t{-v0.imag(), v0.real()};
-        }
-    }
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(PauliY)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(PauliY)
 
     /**
      * @brief Apply PauliZ gate operation to given indices of statevector.
@@ -318,14 +257,8 @@ class StateVectorBase {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyPauliZ(const std::vector<size_t> &indices,
-                     const std::vector<size_t> &externalIndices,
-                     [[maybe_unused]] bool inverse) {
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            shiftedState[indices[1]] = -shiftedState[indices[1]];
-        }
-    }
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(PauliZ)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(PauliZ)
 
     /**
      * @brief Apply Hadamard gate operation to given indices of statevector.
@@ -336,19 +269,8 @@ class StateVectorBase {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyHadamard(const std::vector<size_t> &indices,
-                       const std::vector<size_t> &externalIndices,
-                       [[maybe_unused]] bool inverse) {
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-
-            const CFP_t v0 = shiftedState[indices[0]];
-            const CFP_t v1 = shiftedState[indices[1]];
-
-            shiftedState[indices[0]] = Util::INVSQRT2<fp_t>() * (v0 + v1);
-            shiftedState[indices[1]] = Util::INVSQRT2<fp_t>() * (v0 - v1);
-        }
-    }
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(Hadamard)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(Hadamard)
 
     /**
      * @brief Apply S gate operation to given indices of statevector.
@@ -359,16 +281,8 @@ class StateVectorBase {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyS(const std::vector<size_t> &indices,
-                const std::vector<size_t> &externalIndices, bool inverse) {
-        const CFP_t shift =
-            (inverse) ? -Util::IMAG<fp_t>() : Util::IMAG<fp_t>();
-
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            shiftedState[indices[1]] *= shift;
-        }
-    }
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(S)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(S)
 
     /**
      * @brief Apply T gate operation to given indices of statevector.
@@ -379,18 +293,8 @@ class StateVectorBase {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyT(const std::vector<size_t> &indices,
-                const std::vector<size_t> &externalIndices, bool inverse) {
-        const CFP_t shift =
-            (inverse)
-                ? std::conj(std::exp(CFP_t(0, static_cast<fp_t>(M_PI / 4))))
-                : std::exp(CFP_t(0, static_cast<fp_t>(M_PI / 4)));
-
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            shiftedState[indices[1]] *= shift;
-        }
-    }
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(T)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(T)
 
     /**
      * @brief Apply RX gate operation to given indices of statevector.
@@ -404,24 +308,9 @@ class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
-    template <typename Param_t = fp_t>
-    void applyRX(const std::vector<size_t> &indices,
-                 const std::vector<size_t> &externalIndices, bool inverse,
-                 Param_t angle) {
-        const Param_t c = std::cos(angle / 2);
-        const Param_t js =
-            (inverse) ? -std::sin(-angle / 2) : std::sin(-angle / 2);
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(RX)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(RX)
 
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            const CFP_t v0 = shiftedState[indices[0]];
-            const CFP_t v1 = shiftedState[indices[1]];
-            shiftedState[indices[0]] =
-                c * v0 + js * CFP_t{-v1.imag(), v1.real()};
-            shiftedState[indices[1]] =
-                js * CFP_t{-v0.imag(), v0.real()} + c * v1;
-        }
-    }
     /**
      * @brief Apply RY gate operation to given indices of statevector.
      *
@@ -434,22 +323,9 @@ class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
-    template <typename Param_t = fp_t>
-    void applyRY(const std::vector<size_t> &indices,
-                 const std::vector<size_t> &externalIndices, bool inverse,
-                 Param_t angle) {
-        const Param_t c = std::cos(angle / 2);
-        const Param_t s =
-            (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(RY)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(RY)
 
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            const CFP_t v0 = shiftedState[indices[0]];
-            const CFP_t v1 = shiftedState[indices[1]];
-            shiftedState[indices[0]] = c * v0 - s * v1;
-            shiftedState[indices[1]] = s * v0 + c * v1;
-        }
-    }
     /**
      * @brief Apply RZ gate operation to given indices of statevector.
      *
@@ -462,21 +338,9 @@ class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
-    template <typename Param_t = fp_t>
-    void applyRZ(const std::vector<size_t> &indices,
-                 const std::vector<size_t> &externalIndices, bool inverse,
-                 Param_t angle) {
-        const CFP_t first = CFP_t(std::cos(angle / 2), -std::sin(angle / 2));
-        const CFP_t second = CFP_t(std::cos(angle / 2), std::sin(angle / 2));
-        const CFP_t shift1 = (inverse) ? std::conj(first) : first;
-        const CFP_t shift2 = (inverse) ? std::conj(second) : second;
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(RZ)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(RZ)
 
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            shiftedState[indices[0]] *= shift1;
-            shiftedState[indices[1]] *= shift2;
-        }
-    }
     /**
      * @brief Apply phase shift gate operation to given indices of statevector.
      *
@@ -489,44 +353,10 @@ class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      * @param angle Phase shift angle.
      */
-    template <typename Param_t = fp_t>
-    void applyPhaseShift(const std::vector<size_t> &indices,
-                         const std::vector<size_t> &externalIndices, bool inverse,
-                         Param_t angle) {
-        const CFP_t s = inverse ? std::conj(std::exp(CFP_t(0, angle)))
-                                : std::exp(CFP_t(0, angle));
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            shiftedState[indices[1]] *= s;
-        }
-    }
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(PhaseShift)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(PhaseShift)
 
-    /**
-     * @brief Apply controlled phase shift gate operation to given indices of
-     * statevector.
-     *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
-     * `float` and `double`.
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
-     * @param inverse Take adjoint of given operation.
-     * @param angle Phase shift angle.
-     */
-    template <typename Param_t = fp_t>
-    void applyControlledPhaseShift(const std::vector<size_t> &indices,
-                                   const std::vector<size_t> &externalIndices,
-                                   bool inverse, Param_t angle) {
-        const CFP_t s = inverse ? std::conj(std::exp(CFP_t(0, angle)))
-                                : std::exp(CFP_t(0, angle));
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            shiftedState[indices[3]] *= s;
-        }
-    }
-
-    /**
+    /*
      * @brief Apply Rot gate \f$RZ(\omega)RY(\theta)RZ(\phi)\f$ to given indices
      * of statevector.
      *
@@ -541,25 +371,24 @@ class StateVectorBase {
      * @param theta Gate rotation parameter \f$\theta\f$.
      * @param omega Gate rotation parameter \f$\omega\f$.
      */
-    template <typename Param_t = fp_t>
-    void applyRot(const std::vector<size_t> &indices,
-                  const std::vector<size_t> &externalIndices, bool inverse,
-                  Param_t phi, Param_t theta, Param_t omega) {
-        const std::vector<CFP_t> rot = Gates::getRot<fp_t>(phi, theta, omega);
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(Rot)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(Rot)
 
-        const CFP_t t1 = (inverse) ? std::conj(rot[0]) : rot[0];
-        const CFP_t t2 = (inverse) ? -rot[1] : rot[1];
-        const CFP_t t3 = (inverse) ? -rot[2] : rot[2];
-        const CFP_t t4 = (inverse) ? std::conj(rot[3]) : rot[3];
-
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            const CFP_t v0 = shiftedState[indices[0]];
-            const CFP_t v1 = shiftedState[indices[1]];
-            shiftedState[indices[0]] = t1 * v0 + t2 * v1;
-            shiftedState[indices[1]] = t3 * v0 + t4 * v1;
-        }
-    }
+    /**
+     * @brief Apply controlled phase shift gate operation to given indices of
+     * statevector.
+     *
+     * @tparam Param_t Precision type for gate parameter. Accepted type are
+     * `float` and `double`.
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     * @param angle Phase shift angle.
+     */
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(ControlledPhaseShift)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(ControlledPhaseShift)
 
     /**
      * @brief Apply CNOT (CX) gate to given indices of statevector.
@@ -570,14 +399,20 @@ class StateVectorBase {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyCNOT(const std::vector<size_t> &indices,
-                   const std::vector<size_t> &externalIndices,
-                   [[maybe_unused]] bool inverse) {
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            std::swap(shiftedState[indices[2]], shiftedState[indices[3]]);
-        }
-    }
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(CNOT)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CNOT)
+
+    /**
+     * @brief Apply CZ gate to given indices of statevector.
+     *
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     */
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(CZ)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CZ)
 
     /**
      * @brief Apply SWAP gate to given indices of statevector.
@@ -588,31 +423,8 @@ class StateVectorBase {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applySWAP(const std::vector<size_t> &indices,
-                   const std::vector<size_t> &externalIndices,
-                   [[maybe_unused]] bool inverse) {
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            std::swap(shiftedState[indices[1]], shiftedState[indices[2]]);
-        }
-    }
-    /**
-     * @brief Apply CZ gate to given indices of statevector.
-     *
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
-     * @param inverse Take adjoint of given operation.
-     */
-    void applyCZ(const std::vector<size_t> &indices,
-                 const std::vector<size_t> &externalIndices,
-                 [[maybe_unused]] bool inverse) {
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            shiftedState[indices[3]] *= -1;
-        }
-    }
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(SWAP)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(SWAP)
 
     /**
      * @brief Apply CRX gate to given indices of statevector.
@@ -626,24 +438,8 @@ class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
-    template <typename Param_t = fp_t>
-    void applyCRX(const std::vector<size_t> &indices,
-                  const std::vector<size_t> &externalIndices, bool inverse,
-                  Param_t angle) {
-        const Param_t c = std::cos(angle / 2);
-        const Param_t js =
-            (inverse) ? -std::sin(-angle / 2) : std::sin(-angle / 2);
-
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            const CFP_t v0 = shiftedState[indices[2]];
-            const CFP_t v1 = shiftedState[indices[3]];
-            shiftedState[indices[2]] =
-                c * v0 + js * CFP_t{-v1.imag(), v1.real()};
-            shiftedState[indices[3]] =
-                js * CFP_t{-v0.imag(), v0.real()} + c * v1;
-        }
-    }
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(CRX)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CRX)
 
     /**
      * @brief Apply CRY gate to given indices of statevector.
@@ -657,22 +453,8 @@ class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
-    template <typename Param_t = fp_t>
-    void applyCRY(const std::vector<size_t> &indices,
-                  const std::vector<size_t> &externalIndices, bool inverse,
-                  Param_t angle) {
-        const Param_t c = std::cos(angle / 2);
-        const Param_t s =
-            (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
-
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            const CFP_t v0 = shiftedState[indices[2]];
-            const CFP_t v1 = shiftedState[indices[3]];
-            shiftedState[indices[2]] = c * v0 - s * v1;
-            shiftedState[indices[3]] = s * v0 + c * v1;
-        }
-    }
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(CRY)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CRY)
 
     /**
      * @brief Apply CRZ gate to given indices of statevector.
@@ -686,22 +468,8 @@ class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
-    template <typename Param_t = fp_t>
-    void applyCRZ(const std::vector<size_t> &indices,
-                  const std::vector<size_t> &externalIndices, bool inverse,
-                  Param_t angle) {
-        const CFP_t m00 =
-            (inverse) ? CFP_t(std::cos(angle / 2), std::sin(angle / 2))
-                      : CFP_t(std::cos(angle / 2), -std::sin(angle / 2));
-        const CFP_t m11 = (inverse)
-                              ? CFP_t(std::cos(angle / 2), -std::sin(angle / 2))
-                              : CFP_t(std::cos(angle / 2), std::sin(angle / 2));
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            shiftedState[indices[2]] *= m00;
-            shiftedState[indices[3]] *= m11;
-        }
-    }
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(CRZ)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CRZ)
 
     /**
      * @brief Apply CRot gate (controlled \f$RZ(\omega)RY(\theta)RZ(\phi)\f$) to
@@ -718,25 +486,8 @@ class StateVectorBase {
      * @param theta Gate rotation parameter \f$\theta\f$.
      * @param omega Gate rotation parameter \f$\omega\f$.
      */
-    template <typename Param_t = fp_t>
-    void applyCRot(const std::vector<size_t> &indices,
-                   const std::vector<size_t> &externalIndices, bool inverse,
-                   Param_t phi, Param_t theta, Param_t omega) {
-        const auto rot = Gates::getRot<fp_t>(phi, theta, omega);
-
-        const CFP_t t1 = (inverse) ? std::conj(rot[0]) : rot[0];
-        const CFP_t t2 = (inverse) ? -rot[1] : rot[1];
-        const CFP_t t3 = (inverse) ? -rot[2] : rot[2];
-        const CFP_t t4 = (inverse) ? std::conj(rot[3]) : rot[3];
-
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            const CFP_t v0 = shiftedState[indices[2]];
-            const CFP_t v1 = shiftedState[indices[3]];
-            shiftedState[indices[2]] = t1 * v0 + t2 * v1;
-            shiftedState[indices[3]] = t3 * v0 + t4 * v1;
-        }
-    }
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(CRot)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CRot)
 
     /**
      * @brief Apply Toffoli (CCX) gate to given indices of statevector.
@@ -747,18 +498,8 @@ class StateVectorBase {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyToffoli(const std::vector<size_t> &indices,
-                      const std::vector<size_t> &externalIndices,
-                      [[maybe_unused]] bool inverse) {
-        // Participating swapped indices
-        static const size_t op_idx0 = 6;
-        static const size_t op_idx1 = 7;
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            std::swap(shiftedState[indices[op_idx0]],
-                      shiftedState[indices[op_idx1]]);
-        }
-    }
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(Toffoli)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(Toffoli)
 
     /**
      * @brief Apply CSWAP gate to given indices of statevector.
@@ -769,18 +510,8 @@ class StateVectorBase {
      * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
-    void applyCSWAP(const std::vector<size_t> &indices,
-                    const std::vector<size_t> &externalIndices,
-                    [[maybe_unused]] bool inverse) {
-        // Participating swapped indices
-        static const size_t op_idx0 = 5;
-        static const size_t op_idx1 = 6;
-        for (const size_t &externalIndex : externalIndices) {
-            CFP_t *shiftedState = arr_ + externalIndex;
-            std::swap(shiftedState[indices[op_idx0]],
-                      shiftedState[indices[op_idx1]]);
-        }
-    }
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(CSWAP)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CSWAP)
 };
 
 /**

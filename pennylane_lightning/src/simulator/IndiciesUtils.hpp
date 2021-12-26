@@ -29,7 +29,7 @@
  * of gate operations. However, as using bit operations within a for loop is usually better
  * performing, consider to use other options before using functions below.
  */
-namespace Pennylane::IndicesHelper {
+namespace Pennylane::IndicesUtils {
 
 /**
  * @brief Get indices of statevector data not participating in application
@@ -77,4 +77,18 @@ auto generateBitPatterns(const std::vector<size_t> &qubitIndices,
     }
     return indices;
 }
+
+/**
+ * @brief Internal utility struct to track data indices of application for
+ * operations.
+ *
+ */
+struct GateIndices {
+    const std::vector<size_t> internal;
+    const std::vector<size_t> external;
+    GateIndices(const std::vector<size_t> &wires, size_t num_qubits)
+        : internal{generateBitPatterns(wires, num_qubits)},
+          external{generateBitPatterns(getIndicesAfterExclusion(wires, num_qubits),
+                                       num_qubits)} {}
+};
 } // namespace Pennylane::IndicesHelper

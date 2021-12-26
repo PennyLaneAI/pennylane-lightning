@@ -24,6 +24,7 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
+
 /// @cond DEV
 namespace {
 using namespace Pennylane::Algorithms;
@@ -85,24 +86,6 @@ void apply(py::array_t<complex<fp_t>> &stateNumpyArray,
  * @tparam fp_t Floating point precision type.
  */
 template <class fp_t = double> class StateVecBinder : public StateVector<fp_t> {
-  private:
-    /**
-     * @brief Internal utility struct to track data indices of application for
-     * operations.
-     *
-     */
-    struct GateIndices {
-        const std::vector<size_t> internal;
-        const std::vector<size_t> external;
-        GateIndices(const std::vector<size_t> &wires, size_t num_qubits)
-            : internal{std::move(
-                  StateVector<fp_t>::generateBitPatterns(wires, num_qubits))},
-              external{std::move(StateVector<fp_t>::generateBitPatterns(
-                  StateVector<fp_t>::getIndicesAfterExclusion(wires,
-                                                              num_qubits),
-                  num_qubits))} {}
-    };
-
   public:
     /**
      * @brief Construct a binding class inheriting from `%StateVector`.
@@ -470,6 +453,17 @@ template <class fp_t = double> class StateVecBinder : public StateVector<fp_t> {
     }
 };
 
+auto kernel_to_string(KernelType kernel_type) -> std::string_view {
+    switch(kernel_type) {
+    case KernelType::PI:
+        return "PI";
+    case KernelType::LM:
+        return "LM";
+    }
+    PL_ABORT("Unreachable");
+}
+
+
 /**
  * @brief Templated class to build all required precisions for Python module.
  *
@@ -477,17 +471,21 @@ template <class fp_t = double> class StateVecBinder : public StateVector<fp_t> {
  * @tparam Param_t Precision of the parameter data.
  * @param m Pybind11 module.
  */
-template <class PrecisionT, class Param_t>
+template <class PrecisionT>
 void lightning_class_bindings(py::module &m) {
+    using Param_t = PrecisionT;
+
     // Enable module name to be based on size of complex datatype
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
     std::string class_name = "StateVectorC" + bitsize;
 
-    py::class_<StateVecBinder<PrecisionT>>(m, class_name.c_str())
-        .def(py::init<
-             py::array_t<complex<PrecisionT>,
-                         py::array::c_style | py::array::forcecast> &>())
+    for(auto kernel_type: {KernelType::PI, KernelType::LM})
+    {
+        auto pyclass = py::class_<StateVecBinder<PrecisionT>>(m, class_name.c_str());
+        pyclass.def(py::init<py::array_t<complex<PrecisionT>,
+                         py::array::c_style | py::array::forcecast> &>());
+
         .def("PauliX",
              py::overload_cast<const std::vector<size_t> &, bool,
                                const std::vector<Param_t>>(
