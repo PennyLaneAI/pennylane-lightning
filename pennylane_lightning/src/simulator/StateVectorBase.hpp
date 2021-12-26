@@ -118,11 +118,11 @@ class StateVectorBase {
         return static_cast<size_t>(Util::exp2(num_qubits_));
     }
 
-    inline auto getData() -> CFP_t* {
+    [[nodiscard]] inline auto getData() -> CFP_t* {
         return static_cast<Derived*>(this)->getData();
     }
 
-    inline auto getData() const -> const CFP_t* {
+    [[nodiscard]] inline auto getData() const -> const CFP_t* {
         return static_cast<const Derived*>(this)->getData();
     }
 
@@ -161,8 +161,8 @@ class StateVectorBase {
                                         std::to_string(wires.size()) +
                                         " were supplied."); // TODO: change to std::format in C++20
         }
-
-        GateOperationType<fp_t>::applyOperation(this->getData(), num_qubits_, matrix,
+        auto* arr = getData();
+        ApplyOperations<fp_t>::applyOperation(this->getData(), num_qubits_, matrix,
                 wires, inverse, params);
     }
 

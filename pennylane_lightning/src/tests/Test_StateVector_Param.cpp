@@ -302,7 +302,7 @@ TEMPLATE_TEST_CASE("StateVector::applyPhaseShift", "[StateVector_Param]", float,
     const auto init_state = svdat.cdata;
     SECTION("Apply directly") {
         for (size_t index = 0; index < num_qubits; index++) {
-            SVData<TestType> svdat_direct{num_qubits, init_state};
+            SVData<TestType> svdaCFP_tt_direct{num_qubits, init_state};
             auto int_idx = svdat_direct.getInternalIndices({index});
             auto ext_idx = svdat_direct.getExternalIndices({index});
 

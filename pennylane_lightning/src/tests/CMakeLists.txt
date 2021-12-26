@@ -59,7 +59,7 @@ target_link_libraries(Test_IndicesUtil PRIVATE lightning_tests_dependency
                                         lightning_simulator)
 catch_discover_tests(Test_IndicesUtil)
 
-add_executable(Test_GateOperations Test_GateOperations_Single_Nonparam.cpp)
+add_executable(Test_GateOperations Test_GateOperations_Single_Nonparam.cpp Test_GateOperations_Single_Param.cpp)
 target_link_libraries(Test_GateOperations PRIVATE lightning_tests_dependency 
                                         lightning_utils 
                                         lightning_simulator)

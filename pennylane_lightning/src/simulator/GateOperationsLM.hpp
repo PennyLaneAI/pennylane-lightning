@@ -187,7 +187,7 @@ class GateOperationsLM {
 
         const std::array<CFP_t, 4> RXMat = {
                 c, Util::IMAG<fp_t>()*js,
-                Util::IMAG<fp_t>*js, c
+                Util::IMAG<fp_t>()*js, c
             };
         applySingleQubitOp(arr, num_qubits, RXMat.data(), wires[0]);
     }

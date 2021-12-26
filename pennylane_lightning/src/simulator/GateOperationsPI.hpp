@@ -17,7 +17,16 @@
  */
 #pragma once
 
-#include "IndiciesUtils.hpp"
+/// @cond DEV
+// Required for compilation with MSVC
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES // for C++
+#endif
+/// @endcond
+
+
+
+#include "IndicesUtil.hpp"
 #include "Gates.hpp"
 
 #include <complex>
@@ -32,7 +41,7 @@ namespace Pennylane {
 template<class fp_t>
 class GateOperationsPI {
   private:
-    using GateIndices = IndicesUtils::GateIndices;
+    using GateIndices = IndicesUtil::GateIndices;
 
   public:
     using scalar_type_t = fp_t;

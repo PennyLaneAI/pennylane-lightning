@@ -55,22 +55,22 @@ using CBLAS_LAYOUT = enum CBLAS_LAYOUT {
 
 
 namespace Pennylane::Util::Internal {
-// NOLINTBEGIN(readability-magic-numbers)
 constexpr auto countBit1(uint32_t n) -> int {
-    n = (n & 0x55555555U) + ((n >> 1) & 0x55555555U);
-    n = (n & 0x33333333U) + ((n >> 2) & 0x33333333U);
-    n = (n & 0x0F0F0F0FU) + ((n >> 4) & 0x0F0F0F0FU);
-    n = (n & 0X00FF00FFU) + ((n >> 8) & 0x00FF00FFU);
-    n = (n & 0X0000FFFFU) + ((n >>16) & 0x0000FFFFU);
+    n = (n & 0x55555555U) + ((n >> 1) & 0x55555555U); // NOLINT(readability-magic-numbers)
+    n = (n & 0x33333333U) + ((n >> 2) & 0x33333333U); // NOLINT(readability-magic-numbers)
+    n = (n & 0x0F0F0F0FU) + ((n >> 4) & 0x0F0F0F0FU); // NOLINT(readability-magic-numbers)
+    n = (n & 0X00FF00FFU) + ((n >> 8) & 0x00FF00FFU); // NOLINT(readability-magic-numbers)
+    n = (n & 0X0000FFFFU) + ((n >>16) & 0x0000FFFFU); // NOLINT(readability-magic-numbers)
     return n;
 }
 
 constexpr auto countBit1(uint64_t n) -> int {
-    return countBit1(static_cast<uint32_t>(n & 0xFFFFFFFFU)) +
-        countBit1(static_cast<uint32_t>(n >> 32)) ;
+    return countBit1(static_cast<uint32_t>(n & 0xFFFFFFFFU)) + // NOLINT(readability-magic-numbers)
+        countBit1(static_cast<uint32_t>(n >> 32)) ; // NOLINT(readability-magic-numbers)
 }
 
 constexpr auto countTrailing0(uint8_t n) -> int {
+    // NOLINTNEXTLINE (readability-magic-numbers)
     constexpr std::array<uint8_t, 256> lookup_table = {
       0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
       4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
@@ -93,27 +93,32 @@ constexpr auto countTrailing0(uint8_t n) -> int {
 }
 
 constexpr auto countTrailing0(uint16_t n) -> int {
+    // NOLINTNEXTLINE (readability-magic-numbers)
     if (auto mod = (n & 0xFFU); mod != 0) {
         return countTrailing0(static_cast<uint8_t>(mod));
     }
+    // NOLINTNEXTLINE (readability-magic-numbers)
     return countTrailing0(static_cast<uint8_t>(n >> 8)) + 8;
 }
 
 constexpr auto countTrailing0(uint32_t n) -> int {
+    // NOLINTNEXTLINE (readability-magic-numbers)
     if (auto mod = (n & 0xFFFFU); mod != 0) {
         return countTrailing0(static_cast<uint16_t>(mod));
     }
+    // NOLINTNEXTLINE (readability-magic-numbers)
     return countTrailing0(static_cast<uint16_t>(n >> 16)) + 16;
 }
 
 constexpr auto countTrailing0(uint64_t n) -> int {
+    // NOLINTNEXTLINE (readability-magic-numbers)
     if (auto mod = (n & 0xFFFFFFFFU); mod != 0) {
         return countTrailing0(static_cast<uint32_t>(mod));
     }
+    // NOLINTNEXTLINE (readability-magic-numbers)
     return countTrailing0(static_cast<uint32_t>(n >> 32)) + 32;
 }
 
-// NOLINTEND(readability-magic-numbers)
 } // namespace Pennylane::Util::Internal
 
 namespace Pennylane::Util {
