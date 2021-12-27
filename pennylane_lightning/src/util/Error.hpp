@@ -25,7 +25,7 @@
  * @param message string literal describing error
  */
 #define PL_ABORT(message)                                                      \
-    Pennylane::Util::Abort(message, __FILE__, __LINE__, __func__)
+    Pennylane::Util::Abort((message), __FILE__, __LINE__, __func__)
 /**
  * @brief Macro that throws `%LightningException` if expression evaluates to
  * true.
@@ -107,6 +107,25 @@ class LightningException : public std::exception {
  * @param function_name function in which error occured
  */
 inline void Abort(const char *message, const char *file_name, int line,
+                  const char *function_name) {
+    std::stringstream err_msg;
+    err_msg << "[" << file_name << "][Line:" << line
+            << "][Method:" << function_name
+            << "]: Error in PennyLane Lightning: " << message;
+    throw LightningException(err_msg.str());
+}
+/**
+ * @brief Throws a `%LightningException` with the given error message.
+ *
+ * This function should not be called directly - use one of the `PL_ASSERT()`
+ * or `PL_ABORT()` macros, which provide the source location at compile time.
+ *
+ * @param message string literal describing the error
+ * @param file_name source file where error occured
+ * @param line line of source file
+ * @param function_name function in which error occured
+ */
+inline void Abort(const std::string& message, const char *file_name, int line,
                   const char *function_name) {
     std::stringstream err_msg;
     err_msg << "[" << file_name << "][Line:" << line

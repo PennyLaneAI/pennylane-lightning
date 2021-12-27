@@ -48,7 +48,7 @@ namespace Pennylane {
  *
  * @tparam fp_t Floating point precision of underlying statevector data.
  */
-template <class fp_t> 
+template <class fp_t = double>
 class StateVectorRaw : public StateVectorBase<fp_t, StateVectorRaw<fp_t>>{
   public:
     using CFP_t = std::complex<fp_t>;
@@ -64,9 +64,9 @@ class StateVectorRaw : public StateVectorBase<fp_t, StateVectorRaw<fp_t>>{
     {
         // check length is perfect power of 2
         if (!Util::isPerfectPowerOf2(length)) {
-            throw std::invalid_argument("The length of the array for StateVector must be "
-                                        "a perfect power of 2. But " + std::to_string(length) +
-                                        " is given."); // TODO: change to std::format in C++20
+            PL_ABORT("The length of the array for StateVector must be "
+                     "a perfect power of 2. But " + std::to_string(length) +
+                     " is given."); // TODO: change to std::format in C++20
         }
 
     }
@@ -99,9 +99,9 @@ class StateVectorRaw : public StateVectorBase<fp_t, StateVectorRaw<fp_t>>{
      */
     void setLength(size_t length) {
         if (!Util::isPerfectPowerOf2(length)) {
-            throw std::invalid_argument("The length of the array for StateVector must be "
-                                        "a perfect power of 2. But " + std::to_string(length) +
-                                        " is given."); // TODO: change to std::format in C++20
+            PL_ABORT("The length of the array for StateVector must be "
+                     "a perfect power of 2. But " + std::to_string(length) +
+                     " is given."); // TODO: change to std::format in C++20
         }
         length_ = length;
         setNumQubits(Util::log2PerfectPower(length_));

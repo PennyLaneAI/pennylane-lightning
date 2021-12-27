@@ -91,7 +91,7 @@ class DynamicDispatcher {
 
     DynamicDispatcher() {
         for(const auto& [gate_op, gate_name]: GATE_NAMES) {
-            kernel_map_.emplace(gate_name, DEFAULT_KERNEL_FOR_OPS[static_cast<int>(gate_op)]);
+            kernel_map_.emplace(gate_name, dynamic_lookup(DEFAULT_KERNEL_FOR_OPS, gate_op));
         }
     }
 
@@ -105,14 +105,14 @@ class DynamicDispatcher {
      * @brief Register a new gate operation for the operation. Can pass a custom kernel
      */
     template<typename FunctionType>
-    void registerGateOperation(std::string op_name, KernelType kernel, 
+    void registerGateOperation(const std::string& op_name, KernelType kernel, 
                                FunctionType&& func) {
-        gates_.emplace(std::make_pair(std::move(op_name), kernel), func);
+        gates_.emplace(std::make_pair(op_name, kernel), func);
     }
 
     template<typename FunctionType>
-    void updateKernelForOps(std::string op_name, KernelType kernel) {
-        kernel_map_.emplace(std::move(op_name), kernel);
+    void updateKernelForOps(const std::string& op_name, KernelType kernel) {
+        kernel_map_.emplace(op_name, kernel);
     }
 
     /**
@@ -159,7 +159,6 @@ class DynamicDispatcher {
                 params);
     }
 
-    template<class Derived>
     void applyOperations(CFP_t* data, size_t num_qubits,
                          const std::vector<std::string> &ops,
                          const std::vector<std::vector<size_t>> &wires,
@@ -177,7 +176,6 @@ class DynamicDispatcher {
         }
     }
 
-    template<class Derived>
     void applyOperations(CFP_t* data, size_t num_qubits,
                          const std::vector<std::string> &ops,
                          const std::vector<std::vector<size_t>> &wires,

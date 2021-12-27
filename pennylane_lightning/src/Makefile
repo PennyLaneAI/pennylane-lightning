@@ -1,4 +1,4 @@
-.PHONY: help clean format
+.PHONY: help clean test format
 
 help:
 	@echo "Please use \`make <target>\` where <target> is one of"
@@ -11,5 +11,4 @@ clean:
 test:
 	rm -rf ./BuildTests
 	cmake . -BBuildTests -DBUILD_TESTS=1
-	cmake --build ./BuildTests
-
+	cmake --build ./BuildTests --target check

@@ -22,7 +22,7 @@ namespace Pennylane {
  *
  * @tparam fp_t
  */
-template <class fp_t>
+template <class fp_t = double>
 class StateVectorManaged : public StateVectorBase<fp_t, StateVectorManaged<fp_t>> {
   public:
     using scalar_type_t = fp_t;
@@ -62,7 +62,7 @@ class StateVectorManaged : public StateVectorBase<fp_t, StateVectorManaged<fp_t>
 
     StateVectorManaged(const StateVectorManaged<fp_t> &other) = default;
 
-    auto operator=(const StateVectorManaged<fp_t> &other) = default;
+    auto operator=(const StateVectorManaged<fp_t> &other) -> StateVectorManaged<fp_t>& = default;
 
     auto getDataVector() -> std::vector<CFP_t> & { return data_; }
     [[nodiscard]] auto getDataVector() const -> const std::vector<CFP_t> & {

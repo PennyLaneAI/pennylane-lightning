@@ -24,7 +24,6 @@
 #include <vector>
 
 #include "Error.hpp"
-#include "StateVector.hpp"
 #include "StateVectorManaged.hpp"
 #include "Util.hpp"
 
@@ -46,92 +45,80 @@ static constexpr auto getP11() -> std::vector<std::complex<T>> {
     return {ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>()};
 }
 
-template <class T = double, class SVType = Pennylane::StateVector<T>>
+template <class T = double, class SVType>
 void applyGeneratorRX(SVType &sv, const std::vector<size_t> &wires,
                       const bool adj = false) {
     sv.applyOperation("PauliX", wires, adj);
 }
 
-template <class T = double, class SVType = Pennylane::StateVector<T>>
+template <class T = double, class SVType>
 void applyGeneratorRY(SVType &sv, const std::vector<size_t> &wires,
                       const bool adj = false) {
     sv.applyOperation("PauliY", wires, adj);
 }
 
-template <class T = double, class SVType = Pennylane::StateVector<T>>
+template <class T = double, class SVType>
 void applyGeneratorRZ(SVType &sv, const std::vector<size_t> &wires,
                       const bool adj = false) {
     sv.applyOperation("PauliZ", wires, adj);
 }
 
-template <class T = double, class SVType = Pennylane::StateVector<T>>
+template <class T, class SVType>
 void applyGeneratorPhaseShift(SVType &sv, const std::vector<size_t> &wires,
                               const bool adj = false) {
-    sv.applyOperation(getP11<T>(), wires, adj);
+    sv.applyMatrix(getP11<T>(), wires, adj);
 }
 
-template <class T = double, class SVType = Pennylane::StateVector<T>>
+template <class T, class SVType>
 void applyGeneratorCRX(SVType &sv, const std::vector<size_t> &wires,
                        [[maybe_unused]] const bool adj = false) {
-    const vector<size_t> internalIndices = sv.generateBitPatterns(wires);
-    const vector<size_t> externalWires = sv.getIndicesAfterExclusion(wires);
-    const vector<size_t> externalIndices =
-        sv.generateBitPatterns(externalWires);
-    for (const size_t &externalIndex : externalIndices) {
-        std::complex<T> *shiftedState = sv.getData() + externalIndex;
-        shiftedState[internalIndices[0]] = shiftedState[internalIndices[1]] = 0;
-        std::swap(shiftedState[internalIndices[2]],
-                  shiftedState[internalIndices[3]]);
-    }
+    using CFP_t = std::complex<T>;
+    static const std::array<CFP_t, 16> matrix = {
+        CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0},
+        CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{1.0},
+        CFP_t{0.0}, CFP_t{0.0}, CFP_t{1.0}, CFP_t{0.0},
+    };
+    sv.applyMatrix(matrix.data(), wires, false);
 }
 
-template <class T = double, class SVType = Pennylane::StateVector<T>>
+template <class T, class SVType>
 void applyGeneratorCRY(SVType &sv, const std::vector<size_t> &wires,
                        [[maybe_unused]] const bool adj = false) {
-    const vector<size_t> internalIndices = sv.generateBitPatterns(wires);
-    const vector<size_t> externalWires = sv.getIndicesAfterExclusion(wires);
-    const vector<size_t> externalIndices =
-        sv.generateBitPatterns(externalWires);
-    for (const size_t &externalIndex : externalIndices) {
-        std::complex<T> *shiftedState = sv.getData() + externalIndex;
-        std::complex<T> v0 = shiftedState[internalIndices[2]];
-        shiftedState[internalIndices[0]] = ZERO<T>();
-        shiftedState[internalIndices[1]] = ZERO<T>();
-        shiftedState[internalIndices[2]] =
-            -IMAG<T>() * shiftedState[internalIndices[3]];
-        shiftedState[internalIndices[3]] = IMAG<T>() * v0;
-    }
+    using CFP_t = std::complex<T>;
+    static const std::array<CFP_t, 16> matrix = {
+        CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0},
+        CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, -IMAG<T>(),
+        CFP_t{0.0}, CFP_t{0.0}, IMAG<T>(),  CFP_t{0.0},
+    };
+    sv.applyMatrix(matrix.data(), wires, false);
 }
 
-template <class T = double, class SVType = Pennylane::StateVector<T>>
+template <class T, class SVType>
 void applyGeneratorCRZ(SVType &sv, const std::vector<size_t> &wires,
                        [[maybe_unused]] const bool adj = false) {
-    const vector<size_t> internalIndices = sv.generateBitPatterns(wires);
-    const vector<size_t> externalWires = sv.getIndicesAfterExclusion(wires);
-    const vector<size_t> externalIndices =
-        sv.generateBitPatterns(externalWires);
-    for (const size_t &externalIndex : externalIndices) {
-        std::complex<T> *shiftedState = sv.getData() + externalIndex;
-        shiftedState[internalIndices[0]] = shiftedState[internalIndices[1]] = 0;
-        shiftedState[internalIndices[3]] *= -1;
-    }
+    using CFP_t = std::complex<T>;
+    static const std::array<CFP_t, 16> matrix = {
+        CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0},  CFP_t{0.0}, CFP_t{0.0},
+        CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0},  CFP_t{1.0}, CFP_t{0.0},
+        CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{-1.0},
+    };
+    sv.applyMatrix(matrix.data(), wires, false);
 }
 
-template <class T = double, class SVType = Pennylane::StateVector<T>>
+template <class T, class SVType>
 void applyGeneratorControlledPhaseShift(
     SVType &sv, const std::vector<size_t> &wires,
     [[maybe_unused]] const bool adj = false) {
-    const vector<size_t> internalIndices = sv.generateBitPatterns(wires);
-    const vector<size_t> externalWires = sv.getIndicesAfterExclusion(wires);
-    const vector<size_t> externalIndices =
-        sv.generateBitPatterns(externalWires);
-    for (const size_t &externalIndex : externalIndices) {
-        std::complex<T> *shiftedState = sv.getData() + externalIndex;
-        shiftedState[internalIndices[0]] = 0;
-        shiftedState[internalIndices[1]] = 0;
-        shiftedState[internalIndices[2]] = 0;
-    }
+    using CFP_t = std::complex<T>;
+    static const std::array<CFP_t, 16> matrix = {
+        CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0},
+        CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0},
+        CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{1.0},
+    };
+    sv.applyMatrix(matrix.data(), wires, false);
 }
+
+
 
 } // namespace
 /// @endcond
@@ -478,7 +465,7 @@ template <class T = double> class AdjointJacobian {
                         else if constexpr (std::is_same_v<
                                                p_t,
                                                std::vector<std::complex<T>>>) {
-                            state.applyOperation(
+                            state.applyMatrix(
                                 param, observable.getObsWires()[j], false);
                         } else {
                             state.applyOperation(observable.getObsName()[j],

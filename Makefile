@@ -71,10 +71,7 @@ coverage:
 	pl-device-test --device lightning.qubit --shots=None --skip-ops $(COVERAGE) --cov-append
 
 test-cpp:
-	rm -rf ./BuildTests
-	cmake . -BBuildTests -DBUILD_TESTS=1
-	cmake --build ./BuildTests
-	./BuildTests/pennylane_lightning/src/tests/runner
+	$(MAKE) -C pennylane_lightning/src/ test
 
 .PHONY: format
 format:

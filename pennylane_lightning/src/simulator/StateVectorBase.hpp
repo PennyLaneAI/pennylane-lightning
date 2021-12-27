@@ -59,7 +59,7 @@
     inline void apply##GATE_NAME(const std::vector<size_t>& wires, bool inverse,   \
             Ts... args) {                                                          \
         apply##GATE_NAME##_<\
-            DEFAULT_KERNEL_FOR_OPS[static_cast<int>(GateOperations::GATE_NAME)]>(  \
+            static_lookup<GateOperations::GATE_NAME>(DEFAULT_KERNEL_FOR_OPS)>(     \
                 wires, inverse, std::forward<Ts>(args)...);                        \
     }
 
@@ -73,6 +73,7 @@ namespace Pennylane {
  * The bound data is assumed to be complex, and is required to be in either 32-bit (64-bit
  * `complex<float>`) or 64-bit (128-bit `complex<double>`) floating point
  * representation.
+ * As this is the base class, we do not add default template arguments.
  *
  * @tparam fp_t Floating point precision of underlying statevector data.
  */
@@ -143,30 +144,6 @@ class StateVectorBase {
     }
 
     /**
-     * @brief Apply a single gate to the state-vector.
-     *
-     * @param matrix Arbitrary unitary gate to apply.
-     * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use inverse of gate.
-     * @param params Optional parameter list for parametric gates.
-     */
-    void applyOperation(const std::vector<CFP_t> &matrix,
-                        const std::vector<size_t> &wires, bool inverse = false,
-                        [[maybe_unused]] const std::vector<fp_t> &params = {}) {
-        auto dim = Util::dimSize(matrix);
-
-        if (dim != wires.size()) {
-            throw std::invalid_argument(std::string("The supplied gate requires ") +
-                                        std::to_string(dim) + " wires, but " +
-                                        std::to_string(wires.size()) +
-                                        " were supplied."); // TODO: change to std::format in C++20
-        }
-        auto* arr = getData();
-        DynamicDispatcher<fp_t>::applyOperation(this->getData(), num_qubits_, matrix,
-                wires, inverse, params);
-    }
-
-    /**
      * @brief Apply multiple gates to the state-vector.
      *
      * @param ops Vector of gate names to be applied in order.
@@ -178,8 +155,9 @@ class StateVectorBase {
                          const std::vector<std::vector<size_t>> &wires,
                          const std::vector<bool> &inverse,
                          const std::vector<std::vector<fp_t>> &params) {
+        auto* arr = getData();
         DynamicDispatcher<fp_t>::getInstance()
-            .applyOperation(*this, num_qubits_, wires, inverse, params);
+            .applyOperations(arr, num_qubits_, ops, wires, inverse, params);
     }
 
     /**
@@ -192,8 +170,9 @@ class StateVectorBase {
     void applyOperations(const std::vector<std::string> &ops,
                          const std::vector<std::vector<size_t>> &wires,
                          const std::vector<bool> &inverse) {
+        auto* arr = getData();
         DynamicDispatcher<fp_t>::getInstance()
-            .applyOperation(*this, num_qubits_, wires, inverse);
+            .applyOperations(arr, num_qubits_, ops, wires, inverse);
     }
 
     /**
@@ -211,7 +190,8 @@ class StateVectorBase {
         SelectGateOps<fp_t, kernel>::applyMatrix(arr, num_qubits_, matrix, wires, inverse);
     }
     inline void applyMatrix(const CFP_t* matrix, const std::vector<size_t>& wires, bool inverse) {
-        applyMatrix_<DEFAULT_KERNEL_FOR_OPS[static_cast<int>(GateOperations::Matrix)]>(matrix, wires, inverse);
+        applyMatrix_<static_lookup<GateOperations::Matrix>(DEFAULT_KERNEL_FOR_OPS)>
+                (matrix, wires, inverse);
     }
     template<KernelType kernel>
     inline void applyMatrix_(const std::vector<CFP_t>& matrix, 
@@ -221,7 +201,8 @@ class StateVectorBase {
     }
     inline void applyMatrix(const std::vector<CFP_t>& matrix, 
                             const std::vector<size_t>& wires, bool inverse) {
-        applyMatrix_<DEFAULT_KERNEL_FOR_OPS[static_cast<int>(GateOperations::Matrix)]>(matrix, wires, inverse);
+        applyMatrix_<static_lookup<GateOperations::Matrix>(DEFAULT_KERNEL_FOR_OPS)>
+            (matrix, wires, inverse);
     }
 
     /**

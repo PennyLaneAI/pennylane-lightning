@@ -13,7 +13,31 @@
 // limitations under the License.
 /**
  * @file 
- * Defines possible kernel types as enum
+ * Defines possible kernel types as enum and define python export.
  */
 #pragma once
+#include "Error.hpp"
+
+#include <array>
+#include <string>
+
+namespace Pennylane {
 enum class KernelType {PI, LM};
+
+constexpr std::array<KernelType, 2> KERNELS_TO_PYEXPORT = {
+    KernelType::PI, KernelType::LM,
+};
+
+constexpr auto kernel_to_string(KernelType kernel) -> std::string_view {
+    switch(kernel) {
+    case KernelType::PI:
+        return "PI";
+    case KernelType::LM:
+        return "LM";
+    }
+    PL_ABORT("Unreachable");
+    return "";
+}
+
+} // namespace Pennylane
+

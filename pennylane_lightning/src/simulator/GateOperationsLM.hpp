@@ -78,11 +78,21 @@ class GateOperationsLM {
 
     static void applyMatrix(CFP_t* arr, size_t num_qubits, const CFP_t* matrix,
                             const std::vector<size_t>& wires, [[maybe_unused]] bool inverse) {
+        (void)arr;
+        (void)num_qubits;
+        (void)matrix;
+        (void)wires;
+        (void)inverse;
         PL_ABORT("GaterOperationsLM::applyMatrix is not implemented yet");
     }
 
     static void applyMatrix(CFP_t* arr, size_t num_qubits, const std::vector<CFP_t>& matrix,
                             const std::vector<size_t>& wires, [[maybe_unused]] bool inverse) {
+        (void)arr;
+        (void)num_qubits;
+        (void)matrix;
+        (void)wires;
+        (void)inverse;
         PL_ABORT("GaterOperationsLM::applyMatrix is not implemented yet");
     }
 
@@ -179,8 +189,9 @@ class GateOperationsLM {
         }
     }
     
+    template<class Param_t = fp_t>
     static void applyRX(CFP_t *arr, const size_t num_qubits, const std::vector<size_t>& wires,
-            bool inverse, fp_t angle) {
+            bool inverse, Param_t angle) {
         assert(wires.size() == 1);
         
         const fp_t c = std::cos(angle / 2);
@@ -194,8 +205,9 @@ class GateOperationsLM {
         applySingleQubitOp(arr, num_qubits, RXMat.data(), wires[0]);
     }
 
+    template<class Param_t = fp_t>
     static void applyRY(CFP_t *arr, const size_t num_qubits, const std::vector<size_t>& wires,
-            bool inverse, fp_t angle) {
+            bool inverse, Param_t angle) {
         assert(wires.size() == 1);
         
         const fp_t c = std::cos(angle / 2);
@@ -209,8 +221,9 @@ class GateOperationsLM {
         applySingleQubitOp(arr, num_qubits, RYMat.data(), wires[0]);
     }
 
+    template<class Param_t = fp_t>
     static void applyRZ(CFP_t *arr, const size_t num_qubits, const std::vector<size_t>& wires,
-            bool inverse, fp_t angle) {
+            bool inverse, Param_t angle) {
         assert(wires.size() == 1);
 
         const CFP_t first = CFP_t(std::cos(angle / 2), -std::sin(angle / 2));
@@ -226,8 +239,9 @@ class GateOperationsLM {
         }
     }
 
+    template<class Param_t = fp_t>
     static void applyPhaseShift(CFP_t *arr, const size_t num_qubits, 
-            const std::vector<size_t>& wires, bool inverse, fp_t angle) {
+            const std::vector<size_t>& wires, bool inverse, Param_t angle) {
         assert(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
         const size_t wire_parity = fillTrailingZeros(rev_wire);
@@ -243,9 +257,10 @@ class GateOperationsLM {
         }
     }
 
+    template<class Param_t = fp_t>
     static void applyRot(CFP_t* arr, const size_t num_qubits,
             const std::vector<size_t>& wires, bool inverse, 
-            fp_t phi, fp_t theta, fp_t omega) {
+            Param_t phi, Param_t theta, Param_t omega) {
         assert(wires.size() == 1);
 
         const auto rotMat = (inverse)?Gates::getRot<fp_t>(-omega, -theta, -phi):
@@ -278,8 +293,9 @@ class GateOperationsLM {
         PL_ABORT("GaterOperationsLM::applyCZ is not implemented yet");
     }
 
+    template<class Param_t = fp_t>
     static void applyControlledPhaseShift(CFP_t* arr, size_t num_qubits, 
-            const std::vector<size_t>& wires, [[maybe_unused]] bool inverse, fp_t angle) {
+            const std::vector<size_t>& wires, [[maybe_unused]] bool inverse, Param_t angle) {
         (void)arr;
         (void)num_qubits;
         (void)wires;
@@ -287,8 +303,9 @@ class GateOperationsLM {
         PL_ABORT("GaterOperationsLM::applyControlledPhaseShift is not implemented yet");
     }
 
+    template<class Param_t = fp_t>
     static void applyCRX(CFP_t* arr, size_t num_qubits, const std::vector<size_t>& wires,
-            [[maybe_unused]] bool inverse, fp_t angle) {
+            [[maybe_unused]] bool inverse, Param_t angle) {
         (void)arr;
         (void)num_qubits;
         (void)wires;
@@ -296,8 +313,9 @@ class GateOperationsLM {
         PL_ABORT("GaterOperationsLM::applyCRX is not implemented yet");
     }
 
+    template<class Param_t = fp_t>
     static void applyCRY(CFP_t* arr, size_t num_qubits, const std::vector<size_t>& wires,
-            [[maybe_unused]] bool inverse, fp_t angle) {
+            [[maybe_unused]] bool inverse, Param_t angle) {
         (void)arr;
         (void)num_qubits;
         (void)wires;
@@ -305,8 +323,9 @@ class GateOperationsLM {
         PL_ABORT("GaterOperationsLM::applyCRY is not implemented yet");
     }
 
+    template<class Param_t = fp_t>
     static void applyCRZ(CFP_t* arr, size_t num_qubits, const std::vector<size_t>& wires,
-            [[maybe_unused]] bool inverse, fp_t angle) {
+            [[maybe_unused]] bool inverse, Param_t angle) {
         (void)arr;
         (void)num_qubits;
         (void)wires;
@@ -314,8 +333,9 @@ class GateOperationsLM {
         PL_ABORT("GaterOperationsLM::applyCRZ is not implemented yet");
     }
 
+    template<class Param_t = fp_t>
     static void applyCRot(CFP_t* arr, size_t num_qubits, const std::vector<size_t>& wires,
-            [[maybe_unused]] bool inverse, fp_t phi, fp_t theta, fp_t omega) {
+            [[maybe_unused]] bool inverse, Param_t phi, Param_t theta, Param_t omega) {
         (void)arr;
         (void)num_qubits;
         (void)wires;

@@ -69,13 +69,26 @@ target_link_libraries(Test_GateOperations PRIVATE lightning_tests_dependency
                                                   lightning_simulator)
 catch_discover_tests(Test_GateOperations)
 
+
 add_executable(Test_SelectGateOps Test_SelectGateOps.cpp)
 target_link_libraries(Test_SelectGateOps PRIVATE lightning_tests_dependency 
-                                                  lightning_utils 
-                                                  lightning_simulator)
+                                                 lightning_utils 
+                                                 lightning_simulator)
 catch_discover_tests(Test_SelectGateOps)
 
 
+
+add_executable(Test_AdjDiff Test_AdjDiff.cpp)
+target_link_libraries(Test_AdjDiff PRIVATE lightning_tests_dependency 
+                                           lightning_utils 
+                                           lightning_simulator
+                                           lightning_algorithms)
+catch_discover_tests(Test_AdjDiff)
+
+
+# As default make test does not build test executables
+add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND}
+                  DEPENDS Test_Util Test_IndicesUtil Test_GateOperations Test_SelectGateOps Test_AdjDiff)
 
 # TODO: Recover before push
 #target_link_libraries(runner lightning_simulator lightning_utils lightning_algorithms Catch2::Catch2)

@@ -24,8 +24,6 @@
 #include <array>
 #include <functional>
 
-#define PENNYLANE_GATE_NAME_PAIR(GATE_NAME) std::pair{GateOperations::GATE_NAME, #GATE_NAME}
-
 namespace Pennylane {
 /**
  * @brief enum class for all gate operations
@@ -65,62 +63,34 @@ enum class GateOperations: int {
 };
 
 /**
- * TODO: Change to constexpr Map(https://www.youtube.com/watch?v=INn3xa4pMfg&list=WL&index=9)
- * in C++20 or implement custom constexpr find_if
- */
-constexpr std::array<int, static_cast<int>(GateOperations::END) - 1>
-GATE_NUM_PARAMS = {
-    /* PuliX                = */ 0,
-    /* PuliY                = */ 0,
-    /* PuliZ                = */ 0,
-    /* Hadamard             = */ 0,
-    /* S                    = */ 0,
-    /* T                    = */ 0,
-    /* RX                   = */ 1,
-    /* RY                   = */ 1,
-    /* RZ                   = */ 1,
-    /* PhaseShift           = */ 1,
-    /* Rot                  = */ 3,
-    /* ControlledPhaseShift = */ 1,
-    /* CNOT                 = */ 0,
-    /* CZ                   = */ 0,
-    /* SWAP                 = */ 0,
-    /* CRX                  = */ 1,
-    /* CRY                  = */ 1,
-    /* CRZ                  = */ 1,
-    /* CRot                 = */ 3,
-    /* Toffoli              = */ 0,
-    /* CSWAP                = */ 0
-};
-
-/**
  * This variable is only used in runtime. Thus constructing std::map in a runtim is sufficient
  * and do not need constexpr Map.
  */
 constexpr std::array<std::pair<GateOperations, std::string_view>,
-                     static_cast<int>(GateOperations::END)-1>
+                     static_cast<int>(GateOperations::END)>
 GATE_NAMES = {
-    PENNYLANE_GATE_NAME_PAIR(PauliX),
-    PENNYLANE_GATE_NAME_PAIR(PauliY),
-    PENNYLANE_GATE_NAME_PAIR(PauliZ),
-    PENNYLANE_GATE_NAME_PAIR(Hadamard),
-    PENNYLANE_GATE_NAME_PAIR(S),
-    PENNYLANE_GATE_NAME_PAIR(T),
-    PENNYLANE_GATE_NAME_PAIR(RX),
-    PENNYLANE_GATE_NAME_PAIR(RY),
-    PENNYLANE_GATE_NAME_PAIR(RZ),
-    PENNYLANE_GATE_NAME_PAIR(PhaseShift),
-    PENNYLANE_GATE_NAME_PAIR(Rot),
-    PENNYLANE_GATE_NAME_PAIR(ControlledPhaseShift),
-    PENNYLANE_GATE_NAME_PAIR(CNOT),
-    PENNYLANE_GATE_NAME_PAIR(CZ),
-    PENNYLANE_GATE_NAME_PAIR(SWAP),
-    PENNYLANE_GATE_NAME_PAIR(CRX),
-    PENNYLANE_GATE_NAME_PAIR(CRY),
-    PENNYLANE_GATE_NAME_PAIR(CRZ),
-    PENNYLANE_GATE_NAME_PAIR(CRot),
-    PENNYLANE_GATE_NAME_PAIR(Toffoli),
-    PENNYLANE_GATE_NAME_PAIR(CSWAP)
+    std::pair{GateOperations::PauliX, "PauliX"},
+    std::pair{GateOperations::PauliY, "PauliY"},
+    std::pair{GateOperations::PauliZ, "PauliZ"},
+    std::pair{GateOperations::Hadamard, "Hadamard"},
+    std::pair{GateOperations::S, "S"},
+    std::pair{GateOperations::T, "T"},
+    std::pair{GateOperations::RX, "RX"},
+    std::pair{GateOperations::RY, "RY"},
+    std::pair{GateOperations::RZ, "RZ"},
+    std::pair{GateOperations::PhaseShift, "PhaseShift"},
+    std::pair{GateOperations::Rot, "Rot"},
+    std::pair{GateOperations::ControlledPhaseShift, "ControlledPhaseShift"},
+    std::pair{GateOperations::CNOT, "CNOT"},
+    std::pair{GateOperations::CZ, "CZ"},
+    std::pair{GateOperations::SWAP, "SWAP"},
+    std::pair{GateOperations::CRX, "CRX"},
+    std::pair{GateOperations::CRY, "CRY"},
+    std::pair{GateOperations::CRZ, "CRZ"},
+    std::pair{GateOperations::CRot, "CRot"},
+    std::pair{GateOperations::Toffoli, "Toffoli"},
+    std::pair{GateOperations::CSWAP, "CSWAP"},
+    std::pair{GateOperations::Matrix, "Matrix"}
 };
 
 /**
@@ -135,34 +105,61 @@ GATE_NAMES = {
  *   3) Python binding. 
  *
  * TODO: Change to constexpr Map(https://www.youtube.com/watch?v=INn3xa4pMfg&list=WL&index=9)
- * in C++20 or implement custom constexpr find_if
+ * in C++20?
  */
-constexpr std::array<KernelType, static_cast<int>(GateOperations::END)>
+constexpr std::array<std::pair<GateOperations, KernelType>, 
+                     static_cast<int>(GateOperations::END)>
 DEFAULT_KERNEL_FOR_OPS = {
-    /* PuliX                = */ KernelType::PI,
-    /* PuliY                = */ KernelType::PI,
-    /* PuliZ                = */ KernelType::PI,
-    /* Hadamard             = */ KernelType::PI,
-    /* S                    = */ KernelType::PI,
-    /* T                    = */ KernelType::PI,
-    /* RX                   = */ KernelType::PI,
-    /* RY                   = */ KernelType::PI,
-    /* RZ                   = */ KernelType::PI,
-    /* PhaseShift           = */ KernelType::PI,
-    /* Rot                  = */ KernelType::PI,
-    /* ControlledPhaseShift = */ KernelType::PI,
-    /* CNOT                 = */ KernelType::PI,
-    /* CZ                   = */ KernelType::PI,
-    /* SWAP                 = */ KernelType::PI,
-    /* CRX                  = */ KernelType::PI,
-    /* CRY                  = */ KernelType::PI,
-    /* CRZ                  = */ KernelType::PI,
-    /* CRot                 = */ KernelType::PI,
-    /* Toffoli              = */ KernelType::PI,
-    /* CSWAP                = */ KernelType::PI,
-    /* Matrix               = */ KernelType::PI,
+    std::pair{GateOperations::PauliX, KernelType::LM},
+    std::pair{GateOperations::PauliY, KernelType::LM},
+    std::pair{GateOperations::PauliZ, KernelType::LM},
+    std::pair{GateOperations::Hadamard, KernelType::LM},
+    std::pair{GateOperations::S, KernelType::LM},
+    std::pair{GateOperations::T, KernelType::LM},
+    std::pair{GateOperations::RX, KernelType::LM},
+    std::pair{GateOperations::RY, KernelType::LM},
+    std::pair{GateOperations::RZ, KernelType::LM},
+    std::pair{GateOperations::PhaseShift, KernelType::LM},
+    std::pair{GateOperations::Rot, KernelType::PI},
+    std::pair{GateOperations::ControlledPhaseShift, KernelType::PI},
+    std::pair{GateOperations::CNOT, KernelType::PI},
+    std::pair{GateOperations::CZ, KernelType::PI},
+    std::pair{GateOperations::SWAP, KernelType::PI},
+    std::pair{GateOperations::CRX, KernelType::PI},
+    std::pair{GateOperations::CRY, KernelType::PI},
+    std::pair{GateOperations::CRZ, KernelType::PI},
+    std::pair{GateOperations::CRot, KernelType::PI},
+    std::pair{GateOperations::Toffoli, KernelType::PI},
+    std::pair{GateOperations::CSWAP, KernelType::PI},
+    std::pair{GateOperations::Matrix, KernelType::PI},
 };
 
+template <GateOperations op, typename T, size_t size>
+constexpr auto static_lookup(const std::array<std::pair<GateOperations, T>, size>& arr) -> T {
+    for (size_t idx = 0; idx < size; ++idx) {
+        if (std::get<0>(arr[idx]) == op) {
+            return std::get<1>(arr[idx]);
+        }
+    }
+    static_assert("The given key (gate operation) does not exists.");
+    return static_cast<KernelType>(0);
+};
+
+/**
+ * @brief lookup value for key op
+ *
+ * This function is only for very small array
+ */
+template<typename T, size_t size>
+auto dynamic_lookup(const std::array<std::pair<GateOperations, T>, size>& arr, GateOperations op) -> T {
+    for(const auto& [k, v]: arr) {
+        if (k == op) {
+            return v;
+        }
+    }
+    PL_ABORT("Dynamic lookup failed");
+    return T{};
+}
 
 template<class fp_t>
 using KernelFuncType = std::function<void(std::complex<fp_t>* /*data*/, size_t /*num_qubits*/,
@@ -177,6 +174,7 @@ template<class fp_t>
 class SelectGateOps<fp_t, KernelType::PI> : public GateOperationsPI<fp_t> {};
 template<class fp_t>
 class SelectGateOps<fp_t, KernelType::LM> : public GateOperationsLM<fp_t> {};
+
 
 } // namespace Pennylane
 

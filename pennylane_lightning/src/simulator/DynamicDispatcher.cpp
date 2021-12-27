@@ -20,7 +20,7 @@
 #define PENNYLANE_REGISTER_GATE_OP_PARAMS0(GATE_NAME, KERNEL_TYPE)                          \
     dispatcher.registerGateOperation(#GATE_NAME, KERNEL_TYPE,                               \
             [](CFP_t* data, size_t num_qubits, const std::vector<size_t>& wires,            \
-               bool inverse, const std::vector<fp_t>& params) {                             \
+               bool inverse, [[maybe_unused]] const std::vector<fp_t>& params) {            \
                assert(params.empty());                                                      \
                SelectGateOps<fp_t, KERNEL_TYPE>::apply##GATE_NAME(data, num_qubits, wires,  \
                                                                   inverse);                 \
@@ -86,6 +86,12 @@ template<class fp_t, KernelType kernel>
 struct registerBeforeMain {
     static const int dummy;
 };
+
+/* Explicit instantiations */
+template struct registerBeforeMain<float, KernelType::PI>;
+template struct registerBeforeMain<float, KernelType::LM>;
+template struct registerBeforeMain<double, KernelType::PI>;
+template struct registerBeforeMain<double, KernelType::LM>;
 
 template<>
 const int registerBeforeMain<float, KernelType::PI>::dummy = 
