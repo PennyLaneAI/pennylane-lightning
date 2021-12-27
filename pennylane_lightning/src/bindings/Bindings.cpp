@@ -31,16 +31,8 @@
         std::string name = (#GATE_NAME "_") + kernel_name;                                    \
         std::string doc = ("Apply the " #GATE_NAME " gate using ") + kernel_name + " kernel.";\
         pyclass.def(name.c_str(),                                                             \
-            py::overload_cast<const std::vector<size_t> &, bool, const std::vector<Param_t>&>(\
-                    &StateVecBinder<PrecisionT>::template apply##GATE_NAME<kernel>),          \
-                doc.c_str());                                                                 \
-    }
-
-#define PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL_WITH_PARAM(GATE_NAME) {                      \
-        std::string name = (#GATE_NAME "_") + kernel_name;                                    \
-        std::string doc = ("Apply the " #GATE_NAME " gate using ") + kernel_name + " kernel.";\
-        pyclass.def(name.c_str(),                                                             \
-            py::overload_cast<const std::vector<size_t> &, bool, const std::vector<Param_t>&>(\
+            py::overload_cast<const std::vector<size_t> &, bool,                              \
+                              const std::vector<Param_t>&>(                                   \
                     &StateVecBinder<PrecisionT>::template apply##GATE_NAME<kernel, Param_t>), \
                 doc.c_str());                                                                 \
     }
@@ -214,9 +206,9 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * @param wires Wires to apply operation.
      * @param inverse Indicate whether to use adjoint of operation.
      */
-    template<KernelType kernel>
+    template<KernelType kernel, class Param_t = fp_t>
     void applyPauliX(const std::vector<size_t> &wires, bool inverse,
-                     [[maybe_unused]] const std::vector<fp_t>& params = {}) {
+                     [[maybe_unused]] const std::vector<Param_t>& params = {}) {
         Base::template applyPauliX_<kernel>(wires, inverse);
     }
 
@@ -537,20 +529,20 @@ void registerKernelFunctions_(PyClass&& pyclass)
     PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(Hadamard)
     PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(S)
     PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(T)
-    PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL_WITH_PARAM(RX)
-    PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL_WITH_PARAM(RY)
-    PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL_WITH_PARAM(RZ)
-    PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL_WITH_PARAM(PhaseShift)
-    PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL_WITH_PARAM(Rot)
+    PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(RX)
+    PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(RY)
+    PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(RZ)
+    PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(PhaseShift)
+    PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(Rot)
     /* Two-qubit gates */
-    PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL_WITH_PARAM(ControlledPhaseShift)
+    PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(ControlledPhaseShift)
     PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(CNOT)
     PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(CZ)
     PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(SWAP)
-    PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL_WITH_PARAM(CRX)
-    PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL_WITH_PARAM(CRY)
-    PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL_WITH_PARAM(CRZ)
-    PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL_WITH_PARAM(CRot)
+    PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(CRX)
+    PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(CRY)
+    PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(CRZ)
+    PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(CRot)
     /* Three-qubit gates */
     PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(Toffoli)
     PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(CSWAP)
