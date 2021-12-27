@@ -42,25 +42,25 @@
 #include <iostream>
 
 /**
- * @brief This macro defines methods for State-vector class. The kernel_type template
+ * @brief This macro defines methods for State-vector class. The kernel template
  * argument choose the kernel to run.
  */
 #define PENNYLANE_STATEVECTOR_DEFINE_OPS(GATE_NAME)                                \
-    template<KernelType kernel_type, typename... Ts>                               \
-    inline void apply##GATE_NAME##_(const std::vector<size_t>& wires,                \
-                                               bool inverse, Ts... args) {         \
+    template<KernelType kernel, typename... Ts>                                    \
+    inline void apply##GATE_NAME##_(const std::vector<size_t>& wires,              \
+            bool inverse, Ts... args) {                                            \
         auto* arr = getData();                                                     \
-        SelectGateOps<fp_t, kernel_type>::apply##GATE_NAME(                        \
-                    arr, num_qubits_, wires, inverse, std::forward<Ts>(args)...);  \
+        SelectGateOps<fp_t, kernel>::apply##GATE_NAME(                             \
+                arr, num_qubits_, wires, inverse, std::forward<Ts>(args)...);      \
     }
 
-#define PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GATE_NAME)                         \
-    template<typename... Ts>                                                        \
-    inline void apply##GATE_NAME(const std::vector<size_t>& wires, bool inverse,    \
-            Ts... args) {                                                           \
-        apply##GATE_NAME##_<DEFAULT_KERNEL_FOR_OPS[ \
-        static_cast<int>(GateOperations::GATE_NAME)]>(wires, \
-                inverse, std::forward<Ts>(args)...);                                \
+#define PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GATE_NAME)                        \
+    template<typename... Ts>                                                       \
+    inline void apply##GATE_NAME(const std::vector<size_t>& wires, bool inverse,   \
+            Ts... args) {                                                          \
+        apply##GATE_NAME##_<\
+            DEFAULT_KERNEL_FOR_OPS[static_cast<int>(GateOperations::GATE_NAME)]>(  \
+                wires, inverse, std::forward<Ts>(args)...);                        \
     }
 
 namespace Pennylane {
@@ -205,19 +205,19 @@ class StateVectorBase {
      * @param externalIndices External indices unaffected by the operation.
      * @param inverse Indicate whether inverse should be taken.
      */
-    template<KernelType kernel_type>
+    template<KernelType kernel>
     inline void applyMatrix_(const CFP_t* matrix, const std::vector<size_t>& wires, bool inverse) {
         auto* arr = getData();
-        SelectGateOps<fp_t, kernel_type>::applyMatrix(arr, num_qubits_, matrix, wires, inverse);
+        SelectGateOps<fp_t, kernel>::applyMatrix(arr, num_qubits_, matrix, wires, inverse);
     }
     inline void applyMatrix(const CFP_t* matrix, const std::vector<size_t>& wires, bool inverse) {
         applyMatrix_<DEFAULT_KERNEL_FOR_OPS[static_cast<int>(GateOperations::Matrix)]>(matrix, wires, inverse);
     }
-    template<KernelType kernel_type>
+    template<KernelType kernel>
     inline void applyMatrix_(const std::vector<CFP_t>& matrix, 
                              const std::vector<size_t>& wires, bool inverse) {
         auto* arr = getData();
-        SelectGateOps<fp_t, kernel_type>::applyMatrix(arr, num_qubits_, matrix, wires, inverse);
+        SelectGateOps<fp_t, kernel>::applyMatrix(arr, num_qubits_, matrix, wires, inverse);
     }
     inline void applyMatrix(const std::vector<CFP_t>& matrix, 
                             const std::vector<size_t>& wires, bool inverse) {

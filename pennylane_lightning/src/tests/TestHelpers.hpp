@@ -65,3 +65,25 @@ void scaleVector(std::vector<std::complex<Data_t>> &data,
         data.begin(), data.end(), data.begin(),
         [scalar](const std::complex<Data_t> &c) { return c * scalar; });
 }
+
+/**
+ * @brief create |0>^N
+ */
+template<typename fp_t>
+auto create_zero_state(size_t num_qubits) -> std::vector<std::complex<fp_t>> {
+    std::vector<std::complex<fp_t>> res(1U << num_qubits, 0.0);
+    res[0] = std::complex<fp_t>{1.0, 0.0};
+    return res;
+}
+
+/**
+ * @brief create |+>^N
+ */
+template<typename fp_t>
+auto create_plus_state(size_t num_qubits) -> std::vector<std::complex<fp_t>> {
+    std::vector<std::complex<fp_t>> res(1U << num_qubits, 1.0);
+    for(auto& elt: res) {
+        elt /= std::sqrt(1U << num_qubits);
+    }
+    return res;
+}

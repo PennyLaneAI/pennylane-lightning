@@ -49,40 +49,40 @@
 
 namespace Pennylane {
 
-template<class fp_t, KernelType kernel_type>
+template<class fp_t, KernelType kernel>
 int registerAllGateOps() {
     using CFP_t = std::complex<fp_t>;
     auto& dispatcher = DynamicDispatcher<fp_t>::getInstance();
 
     /* Single-qubit gates */
-    PENNYLANE_REGISTER_GATE_OP(PauliX, kernel_type, 0);
-    PENNYLANE_REGISTER_GATE_OP(PauliY, kernel_type, 0);
-    PENNYLANE_REGISTER_GATE_OP(PauliZ, kernel_type, 0);
-    PENNYLANE_REGISTER_GATE_OP(Hadamard, kernel_type, 0);
-    PENNYLANE_REGISTER_GATE_OP(S, kernel_type, 0);
-    PENNYLANE_REGISTER_GATE_OP(T, kernel_type, 0);
-    PENNYLANE_REGISTER_GATE_OP(RX, kernel_type, 1);
-    PENNYLANE_REGISTER_GATE_OP(RY, kernel_type, 1);
-    PENNYLANE_REGISTER_GATE_OP(RZ, kernel_type, 1);
-    PENNYLANE_REGISTER_GATE_OP(PhaseShift, kernel_type, 1);
-    PENNYLANE_REGISTER_GATE_OP(Rot, kernel_type, 3);
+    PENNYLANE_REGISTER_GATE_OP(PauliX, kernel, 0);
+    PENNYLANE_REGISTER_GATE_OP(PauliY, kernel, 0);
+    PENNYLANE_REGISTER_GATE_OP(PauliZ, kernel, 0);
+    PENNYLANE_REGISTER_GATE_OP(Hadamard, kernel, 0);
+    PENNYLANE_REGISTER_GATE_OP(S, kernel, 0);
+    PENNYLANE_REGISTER_GATE_OP(T, kernel, 0);
+    PENNYLANE_REGISTER_GATE_OP(RX, kernel, 1);
+    PENNYLANE_REGISTER_GATE_OP(RY, kernel, 1);
+    PENNYLANE_REGISTER_GATE_OP(RZ, kernel, 1);
+    PENNYLANE_REGISTER_GATE_OP(PhaseShift, kernel, 1);
+    PENNYLANE_REGISTER_GATE_OP(Rot, kernel, 3);
     /* Two-qubit gates */
-    PENNYLANE_REGISTER_GATE_OP(ControlledPhaseShift, kernel_type, 1);
-    PENNYLANE_REGISTER_GATE_OP(CNOT, kernel_type, 0);
-    PENNYLANE_REGISTER_GATE_OP(CZ, kernel_type, 0);
-    PENNYLANE_REGISTER_GATE_OP(SWAP, kernel_type, 0);
-    PENNYLANE_REGISTER_GATE_OP(CRX, kernel_type, 1);
-    PENNYLANE_REGISTER_GATE_OP(CRY, kernel_type, 1);
-    PENNYLANE_REGISTER_GATE_OP(CRZ, kernel_type, 1);
-    PENNYLANE_REGISTER_GATE_OP(CRot, kernel_type, 3);
+    PENNYLANE_REGISTER_GATE_OP(ControlledPhaseShift, kernel, 1);
+    PENNYLANE_REGISTER_GATE_OP(CNOT, kernel, 0);
+    PENNYLANE_REGISTER_GATE_OP(CZ, kernel, 0);
+    PENNYLANE_REGISTER_GATE_OP(SWAP, kernel, 0);
+    PENNYLANE_REGISTER_GATE_OP(CRX, kernel, 1);
+    PENNYLANE_REGISTER_GATE_OP(CRY, kernel, 1);
+    PENNYLANE_REGISTER_GATE_OP(CRZ, kernel, 1);
+    PENNYLANE_REGISTER_GATE_OP(CRot, kernel, 3);
     /* Three-qubit gates */
-    PENNYLANE_REGISTER_GATE_OP(Toffoli, kernel_type, 0);
-    PENNYLANE_REGISTER_GATE_OP(CSWAP, kernel_type, 0);
+    PENNYLANE_REGISTER_GATE_OP(Toffoli, kernel, 0);
+    PENNYLANE_REGISTER_GATE_OP(CSWAP, kernel, 0);
 
     return 0;
 }
 
-template<class fp_t, KernelType kernel_type>
+template<class fp_t, KernelType kernel>
 struct registerBeforeMain {
     static const int dummy;
 };

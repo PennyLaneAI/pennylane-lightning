@@ -18,29 +18,35 @@ namespace Pennylane {
  * @brief Managed memory version of StateVector class. Memory ownership resides
  * within class.
  *
+ * This class is only internally used in C++ code.
+ *
  * @tparam fp_t
  */
-template <class fp_t, template <class> class GateOperationType>
-class StateVectorManaged : public StateVectorBase<fp_t, GateOperationType, StateVectorManaged> {
-  private:
-    using BaseType = StateVectorBase<fp_t, GateOperationType, StateVectorManaged>;
+template <class fp_t>
+class StateVectorManaged : public StateVectorBase<fp_t, StateVectorManaged<fp_t>> {
+  public:
+    using scalar_type_t = fp_t;
     using CFP_t = std::complex<fp_t>;
+
+  private:
+    using BaseType = StateVectorBase<fp_t, StateVectorManaged>;
 
     std::vector<CFP_t> data_;
 
   public:
-    StateVectorManaged() : StateVectorBase<fp_t, GateOperationType, StateVectorManaged>() {}
+    StateVectorManaged() : StateVectorBase<fp_t, StateVectorManaged>() {}
     StateVectorManaged(size_t num_qubits)
         : BaseType(num_qubits),
           data_(static_cast<size_t>(Util::exp2(num_qubits)), CFP_t{0, 0}) {
         data_[0] = {1, 0};
     }
 
-    template<template <class> class OtherGateOperationType, class OtherDerived>
-    StateVectorManaged(const StateVectorBase<fp_t, OtherGateOperationType, OtherDerived> &other)
+    template<class OtherDerived>
+    StateVectorManaged(const StateVectorBase<fp_t, OtherDerived> &other)
         : BaseType(other.getNumQubits()),
           data_{other.getData(), other.getData() + other.getLength()} {
     }
+
     StateVectorManaged(const std::vector<CFP_t> &other_data)
         : BaseType(Util::log2(other_data.size())), data_{other_data} {
         PL_ABORT_IF_NOT(Util::isPerfectPowerOf2(other_data.size()), 
@@ -50,34 +56,25 @@ class StateVectorManaged : public StateVectorBase<fp_t, GateOperationType, State
     StateVectorManaged(const CFP_t *other_data, size_t other_size)
         : BaseType(Util::log2(other_size)), data_{other_data, other_data +  other_size} {
 
-        if (!Util::isPerfectPowerOf2(other_data.size())) {
-            throw ;
-        }
-    }
-    StateVectorManaged(const StateVectorManaged<fp_t> &other)
-        : StateVector<fp_t>(nullptr, other.getDataVector().size()),
-          data_{other.data_} {
-        StateVector<fp_t>::setData(data_.data());
+        PL_ABORT_IF_NOT(Util::isPerfectPowerOf2(other_size), 
+                "The size of provided data must be a power of 2.")
     }
 
-    ~StateVectorManaged() override = default;
+    StateVectorManaged(const StateVectorManaged<fp_t> &other) = default;
 
-    auto operator=(const StateVectorManaged<fp_t> &other)
-        -> StateVectorManaged & {
-        if (this != &other) {
-            if (data_.size() != other.getLength()) {
-                data_.resize(other.getLength());
-                StateVector<fp_t>::setData(data_.data());
-                StateVector<fp_t>::setLength(other.getLength());
-            }
-            std::copy(other.data_.data(),
-                      other.data_.data() + other.getLength(), data_.data());
-        }
-        return *this;
-    }
+    auto operator=(const StateVectorManaged<fp_t> &other) = default;
+
     auto getDataVector() -> std::vector<CFP_t> & { return data_; }
     [[nodiscard]] auto getDataVector() const -> const std::vector<CFP_t> & {
         return data_;
+    }
+
+    [[nodiscard]] auto getData() -> CFP_t* {
+        return data_.data();
+    }
+
+    [[nodiscard]] auto getData() const -> const CFP_t* {
+        return data_.data();
     }
 
     void updateData(const std::vector<CFP_t> &new_data) {

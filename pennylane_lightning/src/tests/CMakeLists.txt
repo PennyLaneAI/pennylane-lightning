@@ -41,7 +41,7 @@ target_sources(lightning_tests_dependency INTERFACE runner_main.cpp)
 
 if(ENABLE_NATIVE)
     message(STATUS "ENABLE_NATIVE is ON. Use -march=native for cpptests.")
-    target_compile_options(runner PRIVATE -march=native)
+    target_compile_options(lightning_tests_dependency PRIVATE -march=native)
 endif()
 
 ################################################################################
@@ -55,15 +55,26 @@ catch_discover_tests(Test_Util)
 
 add_executable(Test_IndicesUtil Test_IndicesUtil.cpp)
 target_link_libraries(Test_IndicesUtil PRIVATE lightning_tests_dependency 
-                                        lightning_utils 
-                                        lightning_simulator)
+                                               lightning_utils 
+                                               lightning_simulator)
 catch_discover_tests(Test_IndicesUtil)
 
-add_executable(Test_GateOperations Test_GateOperations_Single_Nonparam.cpp Test_GateOperations_Single_Param.cpp)
+add_executable(Test_GateOperations Test_GateOperations_Single_Nonparam.cpp
+                                   Test_GateOperations_Single_Param.cpp
+                                   Test_GateOperations_Two_Nonparam.cpp
+                                   Test_GateOperations_Two_Param.cpp)
+
 target_link_libraries(Test_GateOperations PRIVATE lightning_tests_dependency 
-                                        lightning_utils 
-                                        lightning_simulator)
+                                                  lightning_utils 
+                                                  lightning_simulator)
 catch_discover_tests(Test_GateOperations)
+
+add_executable(Test_SelectGateOps Test_SelectGateOps.cpp)
+target_link_libraries(Test_SelectGateOps PRIVATE lightning_tests_dependency 
+                                                  lightning_utils 
+                                                  lightning_simulator)
+catch_discover_tests(Test_SelectGateOps)
+
 
 
 # TODO: Recover before push

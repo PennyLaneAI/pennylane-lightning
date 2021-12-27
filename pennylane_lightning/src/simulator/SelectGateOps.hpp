@@ -17,11 +17,14 @@
  */
 #pragma once
 
+#include "KernelType.hpp"
 #include "GateOperationsPI.hpp"
 #include "GateOperationsLM.hpp"
 
 #include <array>
 #include <functional>
+
+#define PENNYLANE_GATE_NAME_PAIR(GATE_NAME) std::pair{GateOperations::GATE_NAME, #GATE_NAME}
 
 namespace Pennylane {
 /**
@@ -61,6 +64,10 @@ enum class GateOperations: int {
     END
 };
 
+/**
+ * TODO: Change to constexpr Map(https://www.youtube.com/watch?v=INn3xa4pMfg&list=WL&index=9)
+ * in C++20 or implement custom constexpr find_if
+ */
 constexpr std::array<int, static_cast<int>(GateOperations::END) - 1>
 GATE_NUM_PARAMS = {
     /* PuliX                = */ 0,
@@ -86,7 +93,35 @@ GATE_NUM_PARAMS = {
     /* CSWAP                = */ 0
 };
 
-enum class KernelType {PI, LM};
+/**
+ * This variable is only used in runtime. Thus constructing std::map in a runtim is sufficient
+ * and do not need constexpr Map.
+ */
+constexpr std::array<std::pair<GateOperations, std::string_view>,
+                     static_cast<int>(GateOperations::END)-1>
+GATE_NAMES = {
+    PENNYLANE_GATE_NAME_PAIR(PauliX),
+    PENNYLANE_GATE_NAME_PAIR(PauliY),
+    PENNYLANE_GATE_NAME_PAIR(PauliZ),
+    PENNYLANE_GATE_NAME_PAIR(Hadamard),
+    PENNYLANE_GATE_NAME_PAIR(S),
+    PENNYLANE_GATE_NAME_PAIR(T),
+    PENNYLANE_GATE_NAME_PAIR(RX),
+    PENNYLANE_GATE_NAME_PAIR(RY),
+    PENNYLANE_GATE_NAME_PAIR(RZ),
+    PENNYLANE_GATE_NAME_PAIR(PhaseShift),
+    PENNYLANE_GATE_NAME_PAIR(Rot),
+    PENNYLANE_GATE_NAME_PAIR(ControlledPhaseShift),
+    PENNYLANE_GATE_NAME_PAIR(CNOT),
+    PENNYLANE_GATE_NAME_PAIR(CZ),
+    PENNYLANE_GATE_NAME_PAIR(SWAP),
+    PENNYLANE_GATE_NAME_PAIR(CRX),
+    PENNYLANE_GATE_NAME_PAIR(CRY),
+    PENNYLANE_GATE_NAME_PAIR(CRZ),
+    PENNYLANE_GATE_NAME_PAIR(CRot),
+    PENNYLANE_GATE_NAME_PAIR(Toffoli),
+    PENNYLANE_GATE_NAME_PAIR(CSWAP)
+};
 
 /**
  * @brief Define which kernel to use for each operation
@@ -98,6 +133,9 @@ enum class KernelType {PI, LM};
  *   kernel function is dynamically binded and can be changed using DynamicDispatcher singleton
  *   class.
  *   3) Python binding. 
+ *
+ * TODO: Change to constexpr Map(https://www.youtube.com/watch?v=INn3xa4pMfg&list=WL&index=9)
+ * in C++20 or implement custom constexpr find_if
  */
 constexpr std::array<KernelType, static_cast<int>(GateOperations::END)>
 DEFAULT_KERNEL_FOR_OPS = {
@@ -132,7 +170,7 @@ using KernelFuncType = std::function<void(std::complex<fp_t>* /*data*/, size_t /
                                           bool /*inverse*/,
                                           const std::vector<fp_t>& /*params*/)>;
 
-template<class fp_t, KernelType kernel_type>
+template<class fp_t, KernelType kernel>
 class SelectGateOps {};
 
 template<class fp_t>
@@ -148,4 +186,3 @@ struct std::hash<Pennylane::GateOperations> {
         return std::hash<int>()(static_cast<int>(gate_operation));
     }
 };
-

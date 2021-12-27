@@ -19,6 +19,7 @@
 #pragma once
 
 #include "SelectGateOps.hpp"
+#include "Error.hpp"
 
 #include <complex>
 #include <string>
@@ -86,11 +87,11 @@ class DynamicDispatcher {
 
     std::unordered_map<std::pair<std::string, KernelType>, Func, PairHash> gates_;
     
-    std::unordered_map<std::string, KernelType> kernel_for_ops_;
+    std::unordered_map<std::string, KernelType> kernel_map_;
 
     DynamicDispatcher() {
-        for(int idx = 0; idx < static_cast<int>(GateOperations::END); ++idx) {
-            kernel_for_ops_[gate_names_[idx]] = DEFAULT_KERNEL_FOR_OPS[idx];
+        for(const auto& [gate_op, gate_name]: GATE_NAMES) {
+            kernel_map_.emplace(gate_name, DEFAULT_KERNEL_FOR_OPS[static_cast<int>(gate_op)]);
         }
     }
 
@@ -104,25 +105,32 @@ class DynamicDispatcher {
      * @brief Register a new gate operation for the operation. Can pass a custom kernel
      */
     template<typename FunctionType>
-    void registerGateOperation(std::string op_name, KernelType kernel_type, 
+    void registerGateOperation(std::string op_name, KernelType kernel, 
                                FunctionType&& func) {
-        gates_.emplace(std::make_pair(std::move(op_name), kernel_type), func);
+        gates_.emplace(std::make_pair(std::move(op_name), kernel), func);
     }
 
     template<typename FunctionType>
-    void updateKernelForOps(std::string op_name, KernelType kernel_type) {
-        kernel_for_ops_.emplace(std::move(op_name), kernel_type);
+    void updateKernelForOps(std::string op_name, KernelType kernel) {
+        kernel_map_.emplace(std::move(op_name), kernel);
     }
 
     /**
-     * @brief call the corresponding operation function from GateOperations
+     * @brief Apply a single gate to the state-vector using the given kernel.
+     *
+     * @param kernel Lernel to run the gate operation.
+     * @param data Pointer to data.
+     * @param num_qubits Number of qubits.
+     * @param op_name Gate operation name.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Optional parameter list for parametric gates.
      */
-    void applyOperation(CFP_t* data, size_t num_qubits,
+    void applyOperation(KernelType kernel, CFP_t* data, size_t num_qubits,
                         const std::string& op_name, const std::vector<size_t>& wires,
-                        bool inverse, const std::vector<fp_t>& params) {
-
-        const auto iter = gates_.find(std::make_pair(op_name, kernel_for_ops_[op_name]));
-        if (iter == gates_.end()) {
+                        bool inverse, const std::vector<fp_t>& params) const {
+        const auto iter = gates_.find(std::make_pair(op_name, kernel));
+        if (iter == gates_.cend()) {
             throw std::invalid_argument("Cannot find a gate with a given name \"" 
                     + op_name + "\".");
         }
@@ -135,6 +143,20 @@ class DynamicDispatcher {
                                         " were supplied.");
         }
         (iter->second)(data, num_qubits, wires, inverse, params);
+    }
+
+    /**
+     */
+    inline void applyOperation(CFP_t* data, size_t num_qubits,
+                        const std::string& op_name, const std::vector<size_t>& wires,
+                        bool inverse, const std::vector<fp_t>& params) const {
+        const auto kernel_iter = kernel_map_.find(op_name);
+        if(kernel_iter == kernel_map_.end()) {
+            PL_ABORT("Kernel for gate " + op_name + " is not registered.");
+        }
+
+        applyOperation(kernel_iter->second, data, num_qubits, op_name, wires, inverse,
+                params);
     }
 
     template<class Derived>

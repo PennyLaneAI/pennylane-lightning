@@ -17,14 +17,15 @@
  */
 #pragma once
 
+#include "Error.hpp"
+#include "Gates.hpp"
+#include "KernelType.hpp"
+#include "Util.hpp"
+
 #include <cassert>
 #include <complex>
 #include <climits>
 #include <vector>
-
-#include "Error.hpp"
-#include "Gates.hpp"
-#include "Util.hpp"
 
 namespace Pennylane {
 /**
@@ -73,6 +74,7 @@ class GateOperationsLM {
     }
 
   public:
+    constexpr static KernelType kernel_id = KernelType::LM;
 
     static void applyMatrix(CFP_t* arr, size_t num_qubits, const CFP_t* matrix,
                             const std::vector<size_t>& wires, [[maybe_unused]] bool inverse) {
@@ -254,52 +256,89 @@ class GateOperationsLM {
 
     static void applyCNOT(CFP_t* arr, size_t num_qubits, const std::vector<size_t>& wires,
             [[maybe_unused]] bool inverse) {
+        (void)arr;
+        (void)num_qubits;
+        (void)wires;
         PL_ABORT("GaterOperationsLM::applyCNOT is not implemented yet");
     }
 
     static void applySWAP(CFP_t* arr, size_t num_qubits, const std::vector<size_t>& wires,
             [[maybe_unused]] bool inverse) {
+        (void)arr;
+        (void)num_qubits;
+        (void)wires;
         PL_ABORT("GaterOperationsLM::applySWAP is not implemented yet");
     }
 
     static void applyCZ(CFP_t* arr, size_t num_qubits, const std::vector<size_t>& wires,
             [[maybe_unused]] bool inverse) {
+        (void)arr;
+        (void)num_qubits;
+        (void)wires;
         PL_ABORT("GaterOperationsLM::applyCZ is not implemented yet");
     }
 
     static void applyControlledPhaseShift(CFP_t* arr, size_t num_qubits, 
             const std::vector<size_t>& wires, [[maybe_unused]] bool inverse, fp_t angle) {
+        (void)arr;
+        (void)num_qubits;
+        (void)wires;
+        (void)angle;
         PL_ABORT("GaterOperationsLM::applyControlledPhaseShift is not implemented yet");
     }
 
     static void applyCRX(CFP_t* arr, size_t num_qubits, const std::vector<size_t>& wires,
             [[maybe_unused]] bool inverse, fp_t angle) {
+        (void)arr;
+        (void)num_qubits;
+        (void)wires;
+        (void)angle;
         PL_ABORT("GaterOperationsLM::applyCRX is not implemented yet");
     }
 
     static void applyCRY(CFP_t* arr, size_t num_qubits, const std::vector<size_t>& wires,
             [[maybe_unused]] bool inverse, fp_t angle) {
+        (void)arr;
+        (void)num_qubits;
+        (void)wires;
+        (void)angle;
         PL_ABORT("GaterOperationsLM::applyCRY is not implemented yet");
     }
 
     static void applyCRZ(CFP_t* arr, size_t num_qubits, const std::vector<size_t>& wires,
             [[maybe_unused]] bool inverse, fp_t angle) {
+        (void)arr;
+        (void)num_qubits;
+        (void)wires;
+        (void)angle;
         PL_ABORT("GaterOperationsLM::applyCRZ is not implemented yet");
     }
 
     static void applyCRot(CFP_t* arr, size_t num_qubits, const std::vector<size_t>& wires,
-            [[maybe_unused]] bool inverse, fp_t pho, fp_t theta, fp_t omega) {
+            [[maybe_unused]] bool inverse, fp_t phi, fp_t theta, fp_t omega) {
+        (void)arr;
+        (void)num_qubits;
+        (void)wires;
+        (void)phi;
+        (void)theta;
+        (void)omega;
         PL_ABORT("GaterOperationsLM::applyCRot is not implemented yet");
     }
 
 
     static void applyToffoli(CFP_t* arr, size_t num_qubits, const std::vector<size_t>& wires,
             [[maybe_unused]] bool inverse) {
+        (void)arr;
+        (void)num_qubits;
+        (void)wires;
         PL_ABORT("GaterOperationsLM::applyTofolli is not implemented yet");
     }
 
     static void applyCSWAP(CFP_t* arr, size_t num_qubits, const std::vector<size_t>& wires,
             [[maybe_unused]] bool inverse) {
+        (void)arr;
+        (void)num_qubits;
+        (void)wires;
         PL_ABORT("GaterOperationsLM::applyCSWAP is not implemented yet");
     }
 };

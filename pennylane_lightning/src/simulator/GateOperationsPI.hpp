@@ -24,10 +24,9 @@
 #endif
 /// @endcond
 
-
-
-#include "IndicesUtil.hpp"
 #include "Gates.hpp"
+#include "IndicesUtil.hpp"
+#include "KernelType.hpp"
 
 #include <complex>
 #include <vector>
@@ -47,6 +46,7 @@ class GateOperationsPI {
     using scalar_type_t = fp_t;
     using CFP_t = std::complex<fp_t>;
 
+    constexpr static KernelType kernel_id = KernelType::PI;
 
     /**
      * @brief Apply a given matrix directly to the statevector.

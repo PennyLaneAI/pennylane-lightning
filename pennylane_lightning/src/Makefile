@@ -8,3 +8,8 @@ help:
 clean:
 	rm -rf ./build/* 
 
+test:
+	rm -rf ./BuildTests
+	cmake . -BBuildTests -DBUILD_TESTS=1
+	cmake --build ./BuildTests
+

@@ -386,11 +386,14 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
         }
     }
 }
+
 int popcount_slow(uint64_t x) {
     int c = 0;
-    for (; x != 0; x >>= 1)
-        if (x & 1)
+    for (; x != 0; x >>= 1) {
+        if ((x & 1U) != 0U) {
             c++;
+        }
+    }
     return c;
 }
 
@@ -402,7 +405,7 @@ int ctz_slow(uint64_t x) {
     }
     return c;
 }
-
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_CASE("Utility bit operations", "[Util]") {
     SECTION("Internal::countBit1Fast") {
         { // for uint32_t

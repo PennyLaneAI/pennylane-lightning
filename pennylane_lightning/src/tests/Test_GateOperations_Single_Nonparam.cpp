@@ -14,31 +14,16 @@
 #include <utility>
 #include <vector>
 
+/**
+ * @file This file contains tests for single qubit non-parameterized gates. List of such gates
+ * are [PauliX, PauliY, PauliZ, Hadamard, S, T]
+ */
+
+
 using namespace Pennylane;
 
 namespace {
     using std::vector;
-    /**
-     * @brief create |0>^N
-     */
-    template<typename fp_t>
-    auto create_zero_state(size_t num_qubits) -> std::vector<std::complex<fp_t>> {
-        std::vector<std::complex<fp_t>> res(1U << num_qubits, 0.0);
-        res[0] = std::complex<fp_t>{1.0, 0.0};
-        return res;
-    }
-
-    /**
-     * @brief create |+>^N
-     */
-    template<typename fp_t>
-    auto create_plus_state(size_t num_qubits) -> std::vector<std::complex<fp_t>> {
-        std::vector<std::complex<fp_t>> res(1U << num_qubits, 1.0);
-        for(auto& elt: res) {
-            elt /= std::sqrt(1U << num_qubits);
-        }
-        return res;
-    }
 }
 
 /*******************************************************************************

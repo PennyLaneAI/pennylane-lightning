@@ -14,33 +14,13 @@
 #include <utility>
 #include <vector>
 
+/**
+ * @file This file contains tests for single qubit parameterized gates. List of such gates is
+ * [RX, RY, RZ, PhaseShift, Rot]
+ */
+
+
 using namespace Pennylane;
-
-namespace {
-    using std::vector;
-    /**
-     * @brief create |0>^N
-     */
-    template<typename fp_t>
-    auto create_zero_state(size_t num_qubits) -> std::vector<std::complex<fp_t>> {
-        std::vector<std::complex<fp_t>> res(1U << num_qubits, 0.0);
-        res[0] = std::complex<fp_t>{1.0, 0.0};
-        return res;
-    }
-
-    /**
-     * @brief create |+>^N
-     */
-    template<typename fp_t>
-    auto create_plus_state(size_t num_qubits) -> std::vector<std::complex<fp_t>> {
-        std::vector<std::complex<fp_t>> res(1U << num_qubits, 1.0);
-        for(auto& elt: res) {
-            elt /= std::sqrt(1U << num_qubits);
-        }
-        return res;
-    }
-}
-
 
 TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyRX", "[GateOperations_Single_Param]",
                            (GateOperationsPI, GateOperationsLM), (float, double)) {
@@ -210,6 +190,39 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyPhaseShift", "[GateOperations_S
         auto st = create_plus_state<fp_t>(num_qubits);
 
         TestType::applyPhaseShift(st.data(), num_qubits, {index}, false, {angles[index]});
+
+        CHECK(isApproxEqual(st, expected_results[index]));
+    }
+}
+
+TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyRot", "[GateOperations_Single_Param]",
+                           (GateOperationsPI, GateOperationsLM), (float, double)) {
+    using fp_t = typename TestType::scalar_type_t;
+    using CFP_t = typename TestType::CFP_t;
+    const size_t num_qubits = 3;
+    auto ini_st = create_zero_state<fp_t>(num_qubits);
+
+    const std::vector<std::vector<fp_t>> angles{
+        std::vector<fp_t>{0.3, 0.8, 2.4},
+        std::vector<fp_t>{0.5, 1.1, 3.0},
+        std::vector<fp_t>{2.3, 0.1, 0.4}};
+
+    std::vector<std::vector<CFP_t>> expected_results{
+        std::vector<CFP_t>(0b1 << num_qubits),
+        std::vector<CFP_t>(0b1 << num_qubits),
+        std::vector<CFP_t>(0b1 << num_qubits)};
+
+    for (size_t i = 0; i < angles.size(); i++) {
+        const auto rot_mat =
+            Gates::getRot<fp_t>(angles[i][0], angles[i][1], angles[i][2]);
+        expected_results[i][0] = rot_mat[0];
+        expected_results[i][0b1 << (num_qubits - i - 1)] = rot_mat[2];
+    }
+
+    for (size_t index = 0; index < num_qubits; index++) {
+        auto st = create_zero_state<fp_t>(num_qubits);
+        TestType::applyRot(st.data(), num_qubits, {index}, false, angles[index][0],
+                           angles[index][1], angles[index][2]);
 
         CHECK(isApproxEqual(st, expected_results[index]));
     }
