@@ -50,7 +50,7 @@ jobs:
       - name: Checkout PennyLane-Lightning PR
         uses: actions/checkout@v2
         with:
-          ref: ${{ github.ref_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
           path: main/pr
 
       - name: Install lightning.qubit device (PR)
