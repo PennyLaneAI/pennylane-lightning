@@ -105,9 +105,9 @@ class LightningQubit(DefaultQubit):
     version = __version__
     author = "Xanadu Inc."
     _CPP_BINARY_AVAILABLE = True
-    _kernel_for_ops = DEFAULT_KERNEL_FOR_OPS
 
     def __init__(self, wires, *, kernel_for_ops = None, shots=None):
+        self._kernel_for_ops = DEFAULT_KERNEL_FOR_OPS
         if kernel_for_ops is not None:
             if not isinstance(kernel_for_ops, dict):
                 raise ValueError('Argument kernel_for_ops must be a dictionary.')
