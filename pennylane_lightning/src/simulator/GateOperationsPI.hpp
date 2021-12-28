@@ -108,7 +108,7 @@ class GateOperationsPI {
     static void applyMatrix(CFP_t* arr, size_t num_qubits, 
                      const std::vector<CFP_t>& matrix, const std::vector<size_t> &wires,
                      bool inverse) {
-        if (matrix.size() != Util::exp2(wires.size())) {
+        if (matrix.size() != Util::exp2(2*wires.size())) {
             throw std::invalid_argument("The size of matrix does not match with the given "
                                         "number of wires");
         }  

@@ -36,10 +36,9 @@ dist:
 .PHONY : clean
 clean:
 	$(PYTHON) setup.py clean --all
-	rm -rf pennylane_lightning/__pycache__
-	rm -rf pennylane_lightning/src/__pycache__
-	rm -rf tests/__pycache__
-	rm -rf pennylane_lightning/src/tests/__pycache__
+	$(MAKE) -C pennylane_lightning/src/ clean
+	$(MAKE) -C doc clean
+	find . -type d -name '__pycache__' -exec rm -r {} \+
 	rm -rf dist
 	rm -rf build
 	rm -rf .coverage coverage_html_report/

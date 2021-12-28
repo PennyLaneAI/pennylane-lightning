@@ -16,6 +16,8 @@
 #include <tuple>
 #include <vector>
 
+#include <iostream>
+
 #include "AdjointDiff.hpp"
 #include "IndicesUtil.hpp"
 #include "JacobianProd.hpp"
@@ -117,6 +119,7 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
     explicit StateVecBinder(const py::array_t<CFP_t> &stateNumpyArray)
         : Base(Util::log2PerfectPower(
                     static_cast<size_t>(stateNumpyArray.request().shape[0]))) {
+        length_ = static_cast<size_t>(stateNumpyArray.request().shape[0]);
         data_ = static_cast<CFP_t*>(stateNumpyArray.request().ptr);
     }
 
@@ -872,6 +875,13 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
           py::overload_cast<const vector<size_t> &, size_t>(
               &IndicesUtil::getIndicesAfterExclusion),
           "Get statevector indices for gate application");
+
+    /* Add EXPORTED_KERNELS */
+    std::vector<std::string> exported_kernels;
+    for(auto kernel: KERNELS_TO_PYEXPORT) {
+        exported_kernels.emplace_back(std::string(kernel_to_string(kernel)));
+    }
+    m.attr("EXPORTED_KERNELS") = py::cast(exported_kernels);
     
     /* Add DEFAULT_KERNEL_FOR_OPS */
     std::map<std::string, std::string> default_kernel_ops_map;

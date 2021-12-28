@@ -45,6 +45,8 @@ try:
             StateVectorC128,
             AdjointJacobianC128,
             VectorJacobianProductC128,
+            DEFAULT_KERNEL_FOR_OPS,
+            EXPORTED_KERNELS
         )
     else:
         from .lightning_qubit_ops import (
@@ -54,6 +56,8 @@ try:
             StateVectorC128,
             AdjointJacobianC128,
             VectorJacobianProductC128,
+            DEFAULT_KERNEL_FOR_OPS,
+            EXPORTED_KERNELS
         )
     from ._serialize import _serialize_obs, _serialize_ops
 
@@ -86,6 +90,9 @@ class LightningQubit(DefaultQubit):
 
     Args:
         wires (int): the number of wires to initialize the device with
+        kernel_for_ops (dict): Optional argument which kernel to run for a gate operation. 
+            For example, if {'PauliX': 'LM', 'RX': 'PI'} is passed, the less memory (LM) kernel
+            is used for PauliX whereas precomputed indices (PI) kernel is used for RX.
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
             the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
@@ -98,8 +105,20 @@ class LightningQubit(DefaultQubit):
     version = __version__
     author = "Xanadu Inc."
     _CPP_BINARY_AVAILABLE = True
+    _kernel_for_ops = DEFAULT_KERNEL_FOR_OPS
 
-    def __init__(self, wires, *, shots=None):
+    def __init__(self, wires, *, kernel_for_ops = None, shots=None):
+        if kernel_for_ops is not None:
+            if not isinstance(kernel_for_ops, dict):
+                raise ValueError('Argument kernel_for_ops must be a dictionary.')
+
+            for k, v in kernel_for_ops.items():
+                if k not in kernel_for_ops:
+                    raise ValueError('The provided gate operation {} is unknown.'.format(k))
+                if v not in EXPORTED_KERNELS:
+                    raise ValueError('The given kernel {} is unknown'.format(v))
+                self._kernel_for_ops[k] = v
+
         super().__init__(wires, shots=shots)
 
     @classmethod
@@ -176,13 +195,17 @@ class LightningQubit(DefaultQubit):
 
         for o in operations:
             name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
-            method = getattr(sim, name, None)
+            if name in self._kernel_for_ops:
+                method = getattr(sim, name + '_{}'.format(self._kernel_for_ops[name]), None)
+            else:
+                method = None
 
             wires = self.wires.indices(o.wires)
 
             if method is None:
                 # Inverse can be set to False since o.matrix is already in inverted form
-                sim.applyMatrix(o.matrix, wires, False)
+                method = getattr(sim, "applyMatrix_{}".format(self._kernel_for_ops['Matrix']))
+                method(o.matrix, wires, False)
             else:
                 inv = o.inverse
                 param = o.parameters
