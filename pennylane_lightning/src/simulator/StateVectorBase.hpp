@@ -133,7 +133,6 @@ template <class fp_t, class Derived> class StateVectorBase {
     void applyOperation(const std::string &opName,
                         const std::vector<size_t> &wires, bool inverse = false,
                         const std::vector<fp_t> &params = {}) {
-
         auto *arr = getData();
         DynamicDispatcher<fp_t>::getInstance().applyOperation(
             arr, num_qubits_, opName, wires, inverse, params);

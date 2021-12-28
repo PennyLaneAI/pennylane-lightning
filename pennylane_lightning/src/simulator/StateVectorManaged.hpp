@@ -54,15 +54,14 @@ class StateVectorManaged
               Util::isPerfectPowerOf2(other_data.size()),
               "The size of provided data must be a power of 2.")}
 
-          StateVectorManaged(const CFP_t *other_data, size_t other_size)
+    StateVectorManaged(const CFP_t *other_data, size_t other_size)
         : BaseType(Util::log2(other_size)),
           data_{other_data, other_data + other_size} {
-
               PL_ABORT_IF_NOT(
                   Util::isPerfectPowerOf2(other_size),
                   "The size of provided data must be a power of 2.")}
 
-          StateVectorManaged(const StateVectorManaged<fp_t> &other) = default;
+    StateVectorManaged(const StateVectorManaged<fp_t> &other) = default;
 
     auto operator=(const StateVectorManaged<fp_t> &other)
         -> StateVectorManaged<fp_t> & = default;

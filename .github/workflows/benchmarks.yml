@@ -50,7 +50,7 @@ jobs:
       - name: Checkout PennyLane-Lightning PR
         uses: actions/checkout@v2
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ github.ref_name }}
           path: main/pr
 
       - name: Install lightning.qubit device (PR)
@@ -59,7 +59,6 @@ jobs:
           make clean || true
           pip uninstall pennylane-lightning -y
           cd pr
-          git branch --show # For logging purpose
           pip install -e .
 
       - name: Benchmark lightning PR device
