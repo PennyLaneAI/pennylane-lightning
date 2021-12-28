@@ -76,7 +76,7 @@ constexpr auto countBit1(uint64_t n) -> int {
 }
 
 // NOLINTNEXTLINE (readability-magic-numbers)
-constexpr std::array<uint8_t, 256> TRAILING_ZERO_LOOKUP_TABLE = {
+constexpr uint8_t TRAILING_ZERO_LOOKUP_TABLE[256] = {
     0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0,
     3, 0, 1, 0, 2, 0, 1, 0, 5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
     4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 6, 0, 1, 0, 2, 0, 1, 0,

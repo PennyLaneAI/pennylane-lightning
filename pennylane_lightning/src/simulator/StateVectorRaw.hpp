@@ -51,6 +51,7 @@ namespace Pennylane {
 template <class fp_t = double>
 class StateVectorRaw : public StateVectorBase<fp_t, StateVectorRaw<fp_t>> {
   public:
+    using Base = StateVectorBase<fp_t, StateVectorRaw<fp_t>>;
     using CFP_t = std::complex<fp_t>;
 
   private:
@@ -105,7 +106,7 @@ class StateVectorRaw : public StateVectorBase<fp_t, StateVectorRaw<fp_t>> {
                      " is given."); // TODO: change to std::format in C++20
         }
         length_ = length;
-        setNumQubits(Util::log2PerfectPower(length_));
+        Base::setNumQubits(Util::log2PerfectPower(length_));
     }
     /**
      * @brief Redefine the number of qubits in the statevector and number of
@@ -114,7 +115,7 @@ class StateVectorRaw : public StateVectorBase<fp_t, StateVectorRaw<fp_t>> {
      * @param qubits New number of qubits represented by statevector.
      */
     void setNumQubits(size_t num_qubits) {
-        setNumQubits(num_qubits);
+        Base::setNumQubits(num_qubits);
         length_ = Util::exp2(num_qubits);
     }
 
