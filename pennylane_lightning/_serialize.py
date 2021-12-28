@@ -17,13 +17,7 @@ Helper functions for serializing quantum tapes.
 from typing import List, Tuple
 
 import numpy as np
-from pennylane import (
-    BasisState,
-    Hadamard,
-    Projector,
-    QubitStateVector,
-    Rot,
-)
+from pennylane import BasisState, Hadamard, Projector, QubitStateVector, Rot
 from pennylane.grouping import is_pauli_word
 from pennylane.operation import Observable, Tensor
 from pennylane.tape import QuantumTape
@@ -39,10 +33,12 @@ try:
 except ImportError:
     pass
 
+
 def _is_lightning_gate(gate_name):
-    if gate_name == 'Matrix':
+    if gate_name == "Matrix":
         return False
     return gate_name in DEFAULT_KERNEL_FOR_OPS
+
 
 def _obs_has_kernel(obs: Observable) -> bool:
     """Returns True if the input observable has a supported kernel in the C++ backend.

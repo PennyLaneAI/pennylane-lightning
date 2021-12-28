@@ -46,7 +46,7 @@ try:
             AdjointJacobianC128,
             VectorJacobianProductC128,
             DEFAULT_KERNEL_FOR_OPS,
-            EXPORTED_KERNELS
+            EXPORTED_KERNELS,
         )
     else:
         from .lightning_qubit_ops import (
@@ -57,7 +57,7 @@ try:
             AdjointJacobianC128,
             VectorJacobianProductC128,
             DEFAULT_KERNEL_FOR_OPS,
-            EXPORTED_KERNELS
+            EXPORTED_KERNELS,
         )
     from ._serialize import _serialize_obs, _serialize_ops
 
@@ -106,17 +106,17 @@ class LightningQubit(DefaultQubit):
     author = "Xanadu Inc."
     _CPP_BINARY_AVAILABLE = True
 
-    def __init__(self, wires, *, kernel_for_ops = None, shots=None):
+    def __init__(self, wires, *, kernel_for_ops=None, shots=None):
         self._kernel_for_ops = DEFAULT_KERNEL_FOR_OPS
         if kernel_for_ops is not None:
             if not isinstance(kernel_for_ops, dict):
-                raise ValueError('Argument kernel_for_ops must be a dictionary.')
+                raise ValueError("Argument kernel_for_ops must be a dictionary.")
 
             for k, v in kernel_for_ops.items():
                 if k not in kernel_for_ops:
-                    raise ValueError('The provided gate operation {} is unknown.'.format(k))
+                    raise ValueError("The provided gate operation {} is unknown.".format(k))
                 if v not in EXPORTED_KERNELS:
-                    raise ValueError('The given kernel {} is unknown'.format(v))
+                    raise ValueError("The given kernel {} is unknown".format(v))
                 self._kernel_for_ops[k] = v
 
         super().__init__(wires, shots=shots)
@@ -196,7 +196,7 @@ class LightningQubit(DefaultQubit):
         for o in operations:
             name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
             if name in self._kernel_for_ops:
-                method = getattr(sim, name + '_{}'.format(self._kernel_for_ops[name]), None)
+                method = getattr(sim, name + "_{}".format(self._kernel_for_ops[name]), None)
             else:
                 method = None
 
@@ -204,7 +204,7 @@ class LightningQubit(DefaultQubit):
 
             if method is None:
                 # Inverse can be set to False since o.matrix is already in inverted form
-                method = getattr(sim, "applyMatrix_{}".format(self._kernel_for_ops['Matrix']))
+                method = getattr(sim, "applyMatrix_{}".format(self._kernel_for_ops["Matrix"]))
                 method(o.matrix, wires, False)
             else:
                 inv = o.inverse
@@ -309,11 +309,7 @@ class LightningQubit(DefaultQubit):
         state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
 
         jac = adj.adjoint_jacobian(
-            state_vector,
-            obs_serialized,
-            ops_serialized,
-            tp_shift,
-            tape.num_params,
+            state_vector, obs_serialized, ops_serialized, tp_shift, tape.num_params
         )
         return jac
 
@@ -446,12 +442,7 @@ class LightningQubit(DefaultQubit):
         else:
             raise TypeError(f"Unsupported complex Type: {dtype}")
 
-        vjp_tensor = VJP.compute_vjp_from_jac(
-            math.reshape(jac, [-1]),
-            dy_row,
-            num,
-            num_params,
-        )
+        vjp_tensor = VJP.compute_vjp_from_jac(math.reshape(jac, [-1]), dy_row, num, num_params)
         return vjp_tensor
 
     def batch_vjp(
@@ -487,10 +478,7 @@ class LightningQubit(DefaultQubit):
         # Loop through the tapes and dys vector
         for tape, dy in zip(tapes, dys):
             jac, vjp = self.vector_jacobian_product(
-                tape,
-                dy,
-                starting_state=starting_state,
-                use_device_state=use_device_state,
+                tape, dy, starting_state=starting_state, use_device_state=use_device_state
             )
             if vjp is None:
                 if reduction == "append":
