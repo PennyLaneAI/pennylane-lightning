@@ -21,8 +21,8 @@
 #include "DynamicDispatcher.hpp"
 #include "Error.hpp"
 #include "Gates.hpp"
-#include "Util.hpp"
 #include "SelectGateOps.hpp"
+#include "Util.hpp"
 
 /// @cond DEV
 // Required for compilation with MSVC
@@ -34,33 +34,33 @@
 #include <cmath>
 #include <complex>
 #include <functional>
+#include <iostream>
 #include <set>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <iostream>
 
 /**
  * @brief This macro defines methods for State-vector class. The kernel template
  * argument choose the kernel to run.
  */
-#define PENNYLANE_STATEVECTOR_DEFINE_OPS(GATE_NAME)                                \
-    template<KernelType kernel, typename... Ts>                                    \
-    inline void apply##GATE_NAME##_(const std::vector<size_t>& wires,              \
-            bool inverse, Ts&&... args) {                                            \
-        auto* arr = getData();                                                     \
-        SelectGateOps<fp_t, kernel>::apply##GATE_NAME(                             \
-                arr, num_qubits_, wires, inverse, std::forward<Ts>(args)...);      \
+#define PENNYLANE_STATEVECTOR_DEFINE_OPS(GATE_NAME)                            \
+    template <KernelType kernel, typename... Ts>                               \
+    inline void apply##GATE_NAME##_(const std::vector<size_t> &wires,          \
+                                    bool inverse, Ts &&... args) {             \
+        auto *arr = getData();                                                 \
+        SelectGateOps<fp_t, kernel>::apply##GATE_NAME(                         \
+            arr, num_qubits_, wires, inverse, std::forward<Ts>(args)...);      \
     }
 
-#define PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GATE_NAME)                        \
-    template<typename... Ts>                                                       \
-    inline void apply##GATE_NAME(const std::vector<size_t>& wires, bool inverse,   \
-            Ts&&... args) {                                                          \
-        apply##GATE_NAME##_<\
-            static_lookup<GateOperations::GATE_NAME>(DEFAULT_KERNEL_FOR_OPS)>(     \
-                wires, inverse, std::forward<Ts>(args)...);                        \
+#define PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GATE_NAME)                    \
+    template <typename... Ts>                                                  \
+    inline void apply##GATE_NAME(const std::vector<size_t> &wires,             \
+                                 bool inverse, Ts &&... args) {                \
+        apply##GATE_NAME##_<static_lookup<GateOperations::GATE_NAME>(          \
+            DEFAULT_KERNEL_FOR_OPS)>(wires, inverse,                           \
+                                     std::forward<Ts>(args)...);               \
     }
 
 namespace Pennylane {
@@ -68,17 +68,16 @@ namespace Pennylane {
 /**
  * @brief State-vector base class.
  *
- * This class combines a data array managed by a derived class (CRTP) and an implementation
- * of gate operations proviede by GateOperationType (Policy-based design).
- * The bound data is assumed to be complex, and is required to be in either 32-bit (64-bit
- * `complex<float>`) or 64-bit (128-bit `complex<double>`) floating point
- * representation.
- * As this is the base class, we do not add default template arguments.
+ * This class combines a data array managed by a derived class (CRTP) and an
+ * implementation of gate operations proviede by GateOperationType (Policy-based
+ * design). The bound data is assumed to be complex, and is required to be in
+ * either 32-bit (64-bit `complex<float>`) or 64-bit (128-bit `complex<double>`)
+ * floating point representation. As this is the base class, we do not add
+ * default template arguments.
  *
  * @tparam fp_t Floating point precision of underlying statevector data.
  */
-template <class fp_t, class Derived>
-class StateVectorBase {
+template <class fp_t, class Derived> class StateVectorBase {
   public:
     using scalar_type_t = fp_t;
     /**
@@ -91,9 +90,7 @@ class StateVectorBase {
 
   protected:
     StateVectorBase() = default;
-    StateVectorBase(size_t num_qubits)
-        : num_qubits_{num_qubits} 
-    {}
+    StateVectorBase(size_t num_qubits) : num_qubits_{num_qubits} {}
 
   public:
     /**
@@ -102,9 +99,7 @@ class StateVectorBase {
      *
      * @param qubits New number of qubits represented by statevector.
      */
-    void setNumQubits(size_t qubits) {
-        num_qubits_ = qubits;
-    }
+    void setNumQubits(size_t qubits) { num_qubits_ = qubits; }
 
     /**
      * @brief Get the number of qubits represented by the statevector data.
@@ -119,12 +114,12 @@ class StateVectorBase {
         return static_cast<size_t>(Util::exp2(num_qubits_));
     }
 
-    [[nodiscard]] inline auto getData() -> CFP_t* {
-        return static_cast<Derived*>(this)->getData();
+    [[nodiscard]] inline auto getData() -> CFP_t * {
+        return static_cast<Derived *>(this)->getData();
     }
 
-    [[nodiscard]] inline auto getData() const -> const CFP_t* {
-        return static_cast<const Derived*>(this)->getData();
+    [[nodiscard]] inline auto getData() const -> const CFP_t * {
+        return static_cast<const Derived *>(this)->getData();
     }
 
     /**
@@ -135,12 +130,13 @@ class StateVectorBase {
      * @param inverse Indicates whether to use inverse of gate.
      * @param params Optional parameter list for parametric gates.
      */
-    void applyOperation(const std::string &opName, const std::vector<size_t> &wires,
-                        bool inverse = false, const std::vector<fp_t> &params = {}) {
-        
-        auto* arr = getData();
-        DynamicDispatcher<fp_t>::getInstance().
-            applyOperation(arr, num_qubits_, opName, wires, inverse, params);
+    void applyOperation(const std::string &opName,
+                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<fp_t> &params = {}) {
+
+        auto *arr = getData();
+        DynamicDispatcher<fp_t>::getInstance().applyOperation(
+            arr, num_qubits_, opName, wires, inverse, params);
     }
 
     /**
@@ -155,9 +151,9 @@ class StateVectorBase {
                          const std::vector<std::vector<size_t>> &wires,
                          const std::vector<bool> &inverse,
                          const std::vector<std::vector<fp_t>> &params) {
-        auto* arr = getData();
-        DynamicDispatcher<fp_t>::getInstance()
-            .applyOperations(arr, num_qubits_, ops, wires, inverse, params);
+        auto *arr = getData();
+        DynamicDispatcher<fp_t>::getInstance().applyOperations(
+            arr, num_qubits_, ops, wires, inverse, params);
     }
 
     /**
@@ -170,9 +166,9 @@ class StateVectorBase {
     void applyOperations(const std::vector<std::string> &ops,
                          const std::vector<std::vector<size_t>> &wires,
                          const std::vector<bool> &inverse) {
-        auto* arr = getData();
-        DynamicDispatcher<fp_t>::getInstance()
-            .applyOperations(arr, num_qubits_, ops, wires, inverse);
+        auto *arr = getData();
+        DynamicDispatcher<fp_t>::getInstance().applyOperations(
+            arr, num_qubits_, ops, wires, inverse);
     }
 
     /**
@@ -184,25 +180,29 @@ class StateVectorBase {
      * @param externalIndices External indices unaffected by the operation.
      * @param inverse Indicate whether inverse should be taken.
      */
-    template<KernelType kernel>
-    inline void applyMatrix_(const CFP_t* matrix, const std::vector<size_t>& wires, bool inverse) {
-        auto* arr = getData();
-        SelectGateOps<fp_t, kernel>::applyMatrix(arr, num_qubits_, matrix, wires, inverse);
+    template <KernelType kernel>
+    inline void applyMatrix_(const CFP_t *matrix,
+                             const std::vector<size_t> &wires, bool inverse) {
+        auto *arr = getData();
+        SelectGateOps<fp_t, kernel>::applyMatrix(arr, num_qubits_, matrix,
+                                                 wires, inverse);
     }
-    inline void applyMatrix(const CFP_t* matrix, const std::vector<size_t>& wires, bool inverse) {
-        applyMatrix_<static_lookup<GateOperations::Matrix>(DEFAULT_KERNEL_FOR_OPS)>
-                (matrix, wires, inverse);
+    inline void applyMatrix(const CFP_t *matrix,
+                            const std::vector<size_t> &wires, bool inverse) {
+        applyMatrix_<static_lookup<GateOperations::Matrix>(
+            DEFAULT_KERNEL_FOR_OPS)>(matrix, wires, inverse);
     }
-    template<KernelType kernel>
-    inline void applyMatrix_(const std::vector<CFP_t>& matrix, 
-                             const std::vector<size_t>& wires, bool inverse) {
-        auto* arr = getData();
-        SelectGateOps<fp_t, kernel>::applyMatrix(arr, num_qubits_, matrix, wires, inverse);
+    template <KernelType kernel>
+    inline void applyMatrix_(const std::vector<CFP_t> &matrix,
+                             const std::vector<size_t> &wires, bool inverse) {
+        auto *arr = getData();
+        SelectGateOps<fp_t, kernel>::applyMatrix(arr, num_qubits_, matrix,
+                                                 wires, inverse);
     }
-    inline void applyMatrix(const std::vector<CFP_t>& matrix, 
-                            const std::vector<size_t>& wires, bool inverse) {
-        applyMatrix_<static_lookup<GateOperations::Matrix>(DEFAULT_KERNEL_FOR_OPS)>
-            (matrix, wires, inverse);
+    inline void applyMatrix(const std::vector<CFP_t> &matrix,
+                            const std::vector<size_t> &wires, bool inverse) {
+        applyMatrix_<static_lookup<GateOperations::Matrix>(
+            DEFAULT_KERNEL_FOR_OPS)>(matrix, wires, inverse);
     }
 
     /**
@@ -504,7 +504,7 @@ class StateVectorBase {
  * @return std::ostream&
  */
 template <class T, class Derived>
-inline auto operator<<(std::ostream &out, const StateVectorBase<T, Derived>& sv)
+inline auto operator<<(std::ostream &out, const StateVectorBase<T, Derived> &sv)
     -> std::ostream & {
     const auto num_qubits = sv.getNumQubits();
     const auto data = sv.getData();

@@ -25,9 +25,10 @@
 #include "Util.hpp"
 
 /**
- * This namespace defines helper functions that calculate indices appears in implementations
- * of gate operations. However, as using bit operations within a for loop is usually better
- * performing, consider to use other options before using functions below.
+ * This namespace defines helper functions that calculate indices appears in
+ * implementations of gate operations. However, as using bit operations within a
+ * for loop is usually better performing, consider to use other options before
+ * using functions below.
  */
 namespace Pennylane::IndicesUtil {
 
@@ -65,7 +66,7 @@ struct GateIndices {
     const std::vector<size_t> external;
     GateIndices(const std::vector<size_t> &wires, size_t num_qubits)
         : internal{generateBitPatterns(wires, num_qubits)},
-          external{generateBitPatterns(getIndicesAfterExclusion(wires, num_qubits),
-                                       num_qubits)} {}
+          external{generateBitPatterns(
+              getIndicesAfterExclusion(wires, num_qubits), num_qubits)} {}
 };
-} // namespace Pennylane::IndicesHelper
+} // namespace Pennylane::IndicesUtil

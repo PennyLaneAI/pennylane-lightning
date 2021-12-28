@@ -118,8 +118,6 @@ void applyGeneratorControlledPhaseShift(
     sv.applyMatrix(matrix.data(), wires, false);
 }
 
-
-
 } // namespace
 /// @endcond
 

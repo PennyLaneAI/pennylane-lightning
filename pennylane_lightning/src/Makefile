@@ -6,7 +6,7 @@ help:
 	@echo "  format"
 
 clean:
-	rm -rf ./build/* 
+	rm -rf ./build/* BuildTests
 
 test:
 	rm -rf ./BuildTests

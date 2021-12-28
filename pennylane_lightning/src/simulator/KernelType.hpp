@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file 
+ * @file
  * Defines possible kernel types as enum and define python export.
  */
 #pragma once
@@ -22,14 +22,15 @@
 #include <string>
 
 namespace Pennylane {
-enum class KernelType {PI, LM};
+enum class KernelType { PI, LM };
 
 constexpr std::array<KernelType, 2> KERNELS_TO_PYEXPORT = {
-    KernelType::PI, KernelType::LM,
+    KernelType::PI,
+    KernelType::LM,
 };
 
 constexpr auto kernel_to_string(KernelType kernel) -> std::string_view {
-    switch(kernel) {
+    switch (kernel) {
     case KernelType::PI:
         return "PI";
     case KernelType::LM:
@@ -40,4 +41,3 @@ constexpr auto kernel_to_string(KernelType kernel) -> std::string_view {
 }
 
 } // namespace Pennylane
-

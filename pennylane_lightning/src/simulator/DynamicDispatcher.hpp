@@ -13,26 +13,26 @@
 // limitations under the License.
 /**
  * @file
- * Defines 
+ * Defines
  */
 
 #pragma once
 
-#include "SelectGateOps.hpp"
 #include "Error.hpp"
+#include "SelectGateOps.hpp"
 
 #include <complex>
+#include <functional>
 #include <string>
 #include <unordered_map>
-#include <vector>
 #include <variant>
-#include <functional>
+#include <vector>
 
 namespace Pennylane {
 
 struct PairHash {
-    size_t operator()(const std::pair<std::string, KernelType>& p) const {
-        return std::hash<std::string>()(p.first) ^ 
+    size_t operator()(const std::pair<std::string, KernelType> &p) const {
+        return std::hash<std::string>()(p.first) ^
                std::hash<int>()(static_cast<int>(p.second));
     }
 };
@@ -41,23 +41,21 @@ struct PairHash {
  *
  * This class controls all dynamic <-> static conversions.
  */
-template<typename fp_t>
-class DynamicDispatcher {
+template <typename fp_t> class DynamicDispatcher {
   public:
     using scalar_type_t = fp_t;
     using CFP_t = std::complex<scalar_type_t>;
-    
+
   private:
     using Func = KernelFuncType<fp_t>;
     const std::unordered_map<std::string, size_t> gate_wires_{
-        {"PauliX", 1},    {"PauliY", 1},   {"PauliZ", 1},
-        {"Hadamard", 1},  {"S", 1},        {"T", 1},
-        {"RX", 1},        {"RY", 1},       {"RZ", 1},
-        {"PhaseShift", 1},{"Rot", 1},      {"ControlledPhaseShift", 2},
-        {"CNOT", 2},      {"SZ", 2}  ,     {"SWAP", 2},
-        {"CRX", 2},       {"CRY", 2},      {"CRZ", 2},
-        {"CRot", 2},      {"Toffoli", 3},  {"CSWAP", 3}
-    };
+        {"PauliX", 1},     {"PauliY", 1},  {"PauliZ", 1},
+        {"Hadamard", 1},   {"S", 1},       {"T", 1},
+        {"RX", 1},         {"RY", 1},      {"RZ", 1},
+        {"PhaseShift", 1}, {"Rot", 1},     {"ControlledPhaseShift", 2},
+        {"CNOT", 2},       {"SZ", 2},      {"SWAP", 2},
+        {"CRX", 2},        {"CRY", 2},     {"CRZ", 2},
+        {"CRot", 2},       {"Toffoli", 3}, {"CSWAP", 3}};
     const std::vector<std::string> gate_names_{
         /* Single-qubit gates */
         "PauliX",
@@ -85,33 +83,36 @@ class DynamicDispatcher {
         "CSWAP",
     };
 
-    std::unordered_map<std::pair<std::string, KernelType>, Func, PairHash> gates_;
-    
+    std::unordered_map<std::pair<std::string, KernelType>, Func, PairHash>
+        gates_;
+
     std::unordered_map<std::string, KernelType> kernel_map_;
 
     DynamicDispatcher() {
-        for(const auto& [gate_op, gate_name]: GATE_NAMES) {
-            kernel_map_.emplace(gate_name, dynamic_lookup(DEFAULT_KERNEL_FOR_OPS, gate_op));
+        for (const auto &[gate_op, gate_name] : GATE_NAMES) {
+            kernel_map_.emplace(
+                gate_name, dynamic_lookup(DEFAULT_KERNEL_FOR_OPS, gate_op));
         }
     }
 
   public:
-    static DynamicDispatcher& getInstance() {
+    static DynamicDispatcher &getInstance() {
         static DynamicDispatcher singleton;
         return singleton;
     }
 
     /**
-     * @brief Register a new gate operation for the operation. Can pass a custom kernel
+     * @brief Register a new gate operation for the operation. Can pass a custom
+     * kernel
      */
-    template<typename FunctionType>
-    void registerGateOperation(const std::string& op_name, KernelType kernel, 
-                               FunctionType&& func) {
+    template <typename FunctionType>
+    void registerGateOperation(const std::string &op_name, KernelType kernel,
+                               FunctionType &&func) {
         gates_.emplace(std::make_pair(op_name, kernel), func);
     }
 
-    template<typename FunctionType>
-    void updateKernelForOps(const std::string& op_name, KernelType kernel) {
+    template <typename FunctionType>
+    void updateKernelForOps(const std::string &op_name, KernelType kernel) {
         kernel_map_.emplace(op_name, kernel);
     }
 
@@ -126,40 +127,42 @@ class DynamicDispatcher {
      * @param inverse Indicates whether to use inverse of gate.
      * @param params Optional parameter list for parametric gates.
      */
-    void applyOperation(KernelType kernel, CFP_t* data, size_t num_qubits,
-                        const std::string& op_name, const std::vector<size_t>& wires,
-                        bool inverse, const std::vector<fp_t>& params) const {
+    void applyOperation(KernelType kernel, CFP_t *data, size_t num_qubits,
+                        const std::string &op_name,
+                        const std::vector<size_t> &wires, bool inverse,
+                        const std::vector<fp_t> &params) const {
         const auto iter = gates_.find(std::make_pair(op_name, kernel));
         if (iter == gates_.cend()) {
-            throw std::invalid_argument("Cannot find a gate with a given name \"" 
-                    + op_name + "\".");
+            throw std::invalid_argument(
+                "Cannot find a gate with a given name \"" + op_name + "\".");
         }
 
-        if (const auto requiredWires = gate_wires_.at(op_name); requiredWires != wires.size())
-        {
-            throw std::invalid_argument(std::string("The supplied gate requires ") +
-                                        std::to_string(requiredWires) + " wires, but " +
-                                        std::to_string(wires.size()) +
-                                        " were supplied.");
+        if (const auto requiredWires = gate_wires_.at(op_name);
+            requiredWires != wires.size()) {
+            throw std::invalid_argument(
+                std::string("The supplied gate requires ") +
+                std::to_string(requiredWires) + " wires, but " +
+                std::to_string(wires.size()) + " were supplied.");
         }
         (iter->second)(data, num_qubits, wires, inverse, params);
     }
 
     /**
      */
-    inline void applyOperation(CFP_t* data, size_t num_qubits,
-                        const std::string& op_name, const std::vector<size_t>& wires,
-                        bool inverse, const std::vector<fp_t>& params) const {
+    inline void applyOperation(CFP_t *data, size_t num_qubits,
+                               const std::string &op_name,
+                               const std::vector<size_t> &wires, bool inverse,
+                               const std::vector<fp_t> &params) const {
         const auto kernel_iter = kernel_map_.find(op_name);
-        if(kernel_iter == kernel_map_.end()) {
+        if (kernel_iter == kernel_map_.end()) {
             PL_ABORT("Kernel for gate " + op_name + " is not registered.");
         }
 
-        applyOperation(kernel_iter->second, data, num_qubits, op_name, wires, inverse,
-                params);
+        applyOperation(kernel_iter->second, data, num_qubits, op_name, wires,
+                       inverse, params);
     }
 
-    void applyOperations(CFP_t* data, size_t num_qubits,
+    void applyOperations(CFP_t *data, size_t num_qubits,
                          const std::vector<std::string> &ops,
                          const std::vector<std::vector<size_t>> &wires,
                          const std::vector<bool> &inverse,
@@ -172,11 +175,12 @@ class DynamicDispatcher {
         }
 
         for (size_t i = 0; i < numOperations; i++) {
-            applyOperation(data, num_qubits, ops[i], wires[i], inverse[i], params[i]);
+            applyOperation(data, num_qubits, ops[i], wires[i], inverse[i],
+                           params[i]);
         }
     }
 
-    void applyOperations(CFP_t* data, size_t num_qubits,
+    void applyOperations(CFP_t *data, size_t num_qubits,
                          const std::vector<std::string> &ops,
                          const std::vector<std::vector<size_t>> &wires,
                          const std::vector<bool> &inverse) {

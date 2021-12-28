@@ -53,42 +53,42 @@ using CBLAS_LAYOUT = enum CBLAS_LAYOUT {
 #endif
 /// @endcond
 
-
 namespace Pennylane::Util::Internal {
 constexpr auto countBit1(uint32_t n) -> int {
-    n = (n & 0x55555555U) + ((n >> 1) & 0x55555555U); // NOLINT(readability-magic-numbers)
-    n = (n & 0x33333333U) + ((n >> 2) & 0x33333333U); // NOLINT(readability-magic-numbers)
-    n = (n & 0x0F0F0F0FU) + ((n >> 4) & 0x0F0F0F0FU); // NOLINT(readability-magic-numbers)
-    n = (n & 0X00FF00FFU) + ((n >> 8) & 0x00FF00FFU); // NOLINT(readability-magic-numbers)
-    n = (n & 0X0000FFFFU) + ((n >>16) & 0x0000FFFFU); // NOLINT(readability-magic-numbers)
+    n = (n & 0x55555555U) +
+        ((n >> 1) & 0x55555555U); // NOLINT(readability-magic-numbers)
+    n = (n & 0x33333333U) +
+        ((n >> 2) & 0x33333333U); // NOLINT(readability-magic-numbers)
+    n = (n & 0x0F0F0F0FU) +
+        ((n >> 4) & 0x0F0F0F0FU); // NOLINT(readability-magic-numbers)
+    n = (n & 0X00FF00FFU) +
+        ((n >> 8) & 0x00FF00FFU); // NOLINT(readability-magic-numbers)
+    n = (n & 0X0000FFFFU) +
+        ((n >> 16) & 0x0000FFFFU); // NOLINT(readability-magic-numbers)
     return n;
 }
 
 constexpr auto countBit1(uint64_t n) -> int {
-    return countBit1(static_cast<uint32_t>(n & 0xFFFFFFFFU)) + // NOLINT(readability-magic-numbers)
-        countBit1(static_cast<uint32_t>(n >> 32)) ; // NOLINT(readability-magic-numbers)
+    return countBit1(static_cast<uint32_t>(
+               n & 0xFFFFFFFFU)) + // NOLINT(readability-magic-numbers)
+           countBit1(static_cast<uint32_t>(
+               n >> 32)); // NOLINT(readability-magic-numbers)
 }
 
 constexpr auto countTrailing0(uint8_t n) -> int {
     // NOLINTNEXTLINE (readability-magic-numbers)
     constexpr std::array<uint8_t, 256> lookup_table = {
-      0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-      4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-      5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-      4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-      6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-      4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-      5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-      4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-      7, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-      4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-      5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-      4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-      6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-      4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-      5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-      4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
-    };
+        0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0,
+        3, 0, 1, 0, 2, 0, 1, 0, 5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+        4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 6, 0, 1, 0, 2, 0, 1, 0,
+        3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+        5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0,
+        3, 0, 1, 0, 2, 0, 1, 0, 7, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+        4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 5, 0, 1, 0, 2, 0, 1, 0,
+        3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+        6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0,
+        3, 0, 1, 0, 2, 0, 1, 0, 5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+        4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0};
     return lookup_table[n];
 }
 
@@ -256,9 +256,7 @@ inline auto log2(size_t value) -> size_t {
  */
 ///@{
 #if defined(_MSC_VER)
-constexpr auto popcount(uint64_t val) -> int {
-    return __popcnt(val);
-}
+constexpr auto popcount(uint64_t val) -> int { return __popcnt(val); }
 #elif defined(__GNUC__) || defined(__clang__)
 constexpr auto popcount(unsigned long val) -> int {
     return __builtin_popcountl(val);
@@ -272,10 +270,10 @@ constexpr auto popcount(unsigned long val) -> int {
 
 /**
  * @brief Faster log2 when the value is the perferct power of 2.
- * 
- * If the value is the perfect power of 2, using a system provided bit operation is much 
- * faster than using std::log2
- * 
+ *
+ * If the value is the perfect power of 2, using a system provided bit operation
+ * is much faster than using std::log2
+ *
  * TODO: change to std::countr_zero in C++20
  */
 ///@{
@@ -294,14 +292,13 @@ constexpr auto log2PerfectPower(unsigned long val) -> int {
 #endif
 ///@}
 
-
 /**
  * @brief Check if there is a positive integer n such that value == 2^n.
  *
  * @param value Value to calculate for.
  * @return bool
  */
-inline auto isPerfectPowerOf2(size_t value) -> bool{
+inline auto isPerfectPowerOf2(size_t value) -> bool {
     return popcount(value) == 1;
 }
 

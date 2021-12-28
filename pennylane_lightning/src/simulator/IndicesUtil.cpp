@@ -22,10 +22,9 @@ auto generateBitPatterns(const std::vector<size_t> &qubitIndices,
     indices.reserve(Util::exp2(qubitIndices.size()));
     indices.emplace_back(0);
 
-    for (auto index_it = qubitIndices.rbegin();
-         index_it != qubitIndices.rend(); index_it++) {
-        const size_t value =
-            Util::maxDecimalForQubit(*index_it, num_qubits);
+    for (auto index_it = qubitIndices.rbegin(); index_it != qubitIndices.rend();
+         index_it++) {
+        const size_t value = Util::maxDecimalForQubit(*index_it, num_qubits);
         const size_t currentSize = indices.size();
         for (size_t j = 0; j < currentSize; j++) {
             indices.emplace_back(indices[j] + value);

@@ -14,6 +14,6 @@
 
 #include "StateVectorRaw.hpp"
 
-//explcit instantiation
+// explcit instantiation
 template class Pennylane::StateVectorRaw<float>;
 template class Pennylane::StateVectorRaw<double>;

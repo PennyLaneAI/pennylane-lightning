@@ -29,14 +29,18 @@
 #include "pybind11/stl.h"
 #include "pybind11/stl_bind.h"
 
-#define PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(GATE_NAME) {                                 \
-        std::string name = (#GATE_NAME "_") + kernel_name;                                    \
-        std::string doc = ("Apply the " #GATE_NAME " gate using ") + kernel_name + " kernel.";\
-        pyclass.def(name.c_str(),                                                             \
-            py::overload_cast<const std::vector<size_t> &, bool,                              \
-                              const std::vector<Param_t>&>(                                   \
-                    &StateVecBinder<PrecisionT>::template apply##GATE_NAME<kernel, Param_t>), \
-                doc.c_str());                                                                 \
+#define PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(GATE_NAME)                    \
+    {                                                                          \
+        std::string name = (#GATE_NAME "_") + kernel_name;                     \
+        std::string doc = ("Apply the " #GATE_NAME " gate using ") +           \
+                          kernel_name + " kernel.";                            \
+        pyclass.def(                                                           \
+            name.c_str(),                                                      \
+            py::overload_cast<const std::vector<size_t> &, bool,               \
+                              const std::vector<Param_t> &>(                   \
+                &StateVecBinder<PrecisionT>::template apply##GATE_NAME<        \
+                    kernel, Param_t>),                                         \
+            doc.c_str());                                                      \
     }
 
 /// @cond DEV
@@ -59,7 +63,7 @@ namespace py = pybind11;
  * @return StateVector<fp_t> `%StateVector` object.
  */
 template <class fp_t = double>
-static auto create(py::array_t<complex<fp_t>>& numpyArray)
+static auto create(py::array_t<complex<fp_t>> &numpyArray)
     -> StateVectorRaw<fp_t> {
     py::buffer_info numpyArrayInfo = numpyArray.request();
 
@@ -100,14 +104,15 @@ void apply(py::array_t<complex<fp_t>> &stateNumpyArray,
  *
  * @tparam fp_t Floating point precision type.
  */
-template <class fp_t = double> 
+template <class fp_t = double>
 class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
   public:
     using scalar_type_t = fp_t;
     using CFP_t = std::complex<fp_t>;
     using Base = StateVectorBase<fp_t, StateVecBinder<fp_t>>;
+
   private:
-    CFP_t* data_;
+    CFP_t *data_;
     size_t length_;
 
   public:
@@ -118,9 +123,9 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      */
     explicit StateVecBinder(const py::array_t<CFP_t> &stateNumpyArray)
         : Base(Util::log2PerfectPower(
-                    static_cast<size_t>(stateNumpyArray.request().shape[0]))) {
+              static_cast<size_t>(stateNumpyArray.request().shape[0]))) {
         length_ = static_cast<size_t>(stateNumpyArray.request().shape[0]);
-        data_ = static_cast<CFP_t*>(stateNumpyArray.request().ptr);
+        data_ = static_cast<CFP_t *>(stateNumpyArray.request().ptr);
     }
 
     /**
@@ -152,7 +157,8 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
     void setLength(size_t length) {
         if (!Util::isPerfectPowerOf2(length)) {
             PL_ABORT("The length of the array for StateVector must be "
-                     "a perfect power of 2. But " + std::to_string(length) +
+                     "a perfect power of 2. But " +
+                     std::to_string(length) +
                      " is given."); // TODO: change to std::format in C++20
         }
         length_ = length;
@@ -209,9 +215,9 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * @param wires Wires to apply operation.
      * @param inverse Indicate whether to use adjoint of operation.
      */
-    template<KernelType kernel, class Param_t = fp_t>
+    template <KernelType kernel, class Param_t = fp_t>
     void applyPauliX(const std::vector<size_t> &wires, bool inverse,
-                     [[maybe_unused]] const std::vector<Param_t>& params = {}) {
+                     [[maybe_unused]] const std::vector<Param_t> &params = {}) {
         Base::template applyPauliX_<kernel>(wires, inverse);
     }
 
@@ -222,9 +228,9 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * @param wires Wires to apply operation.
      * @param inverse Indicate whether to use adjoint of operation.
      */
-    template<KernelType kernel, class Param_t = fp_t>
+    template <KernelType kernel, class Param_t = fp_t>
     void applyPauliY(const std::vector<size_t> &wires, bool inverse,
-                     [[maybe_unused]] const std::vector<Param_t>& params = {}) {
+                     [[maybe_unused]] const std::vector<Param_t> &params = {}) {
         Base::template applyPauliY_<kernel>(wires, inverse);
     }
     /**
@@ -236,7 +242,7 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      */
     template <KernelType kernel, class Param_t = fp_t>
     void applyPauliZ(const std::vector<size_t> &wires, bool inverse,
-                     [[maybe_unused]] const std::vector<Param_t>& params = {}) {
+                     [[maybe_unused]] const std::vector<Param_t> &params = {}) {
         Base::template applyPauliZ_<kernel>(wires, inverse);
     }
     /**
@@ -246,9 +252,10 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * @param wires Wires to apply operation.
      * @param inverse Indicate whether to use adjoint of operation.
      */
-    template<KernelType kernel, class Param_t = fp_t>
-    void applyHadamard(const std::vector<size_t> &wires, bool inverse,
-                       [[maybe_unused]] const std::vector<Param_t>& params = {}) {
+    template <KernelType kernel, class Param_t = fp_t>
+    void
+    applyHadamard(const std::vector<size_t> &wires, bool inverse,
+                  [[maybe_unused]] const std::vector<Param_t> &params = {}) {
         Base::template applyHadamard_<kernel>(wires, inverse);
     }
     /**
@@ -258,9 +265,9 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * @param wires Wires to apply operation.
      * @param inverse Indicate whether to use adjoint of operation.
      */
-    template<KernelType kernel, class Param_t = fp_t>
+    template <KernelType kernel, class Param_t = fp_t>
     void applyS(const std::vector<size_t> &wires, bool inverse,
-                [[maybe_unused]] const std::vector<Param_t>& params = {}) {
+                [[maybe_unused]] const std::vector<Param_t> &params = {}) {
         Base::template applyS_<kernel>(wires, inverse);
     }
     /**
@@ -270,9 +277,9 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * @param wires Wires to apply operation.
      * @param inverse Indicate whether to use adjoint of operation.
      */
-    template<KernelType kernel, class Param_t = fp_t>
+    template <KernelType kernel, class Param_t = fp_t>
     void applyT(const std::vector<size_t> &wires, bool inverse,
-                [[maybe_unused]] const std::vector<Param_t>& params = {}) {
+                [[maybe_unused]] const std::vector<Param_t> &params = {}) {
         Base::template applyT_<kernel>(wires, inverse);
     }
     /**
@@ -283,9 +290,9 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * second index for target wire.
      * @param inverse Indicate whether to use adjoint of operation.
      */
-    template<KernelType kernel, class Param_t = fp_t>
+    template <KernelType kernel, class Param_t = fp_t>
     void applyCNOT(const std::vector<size_t> &wires, bool inverse,
-                   [[maybe_unused]] const std::vector<Param_t>& params = {}) {
+                   [[maybe_unused]] const std::vector<Param_t> &params = {}) {
         Base::template applyCNOT_<kernel>(wires, inverse);
     }
     /**
@@ -296,9 +303,9 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * target wires.
      * @param inverse Indicate whether to use adjoint of operation.
      */
-    template<KernelType kernel, class Param_t = fp_t>
+    template <KernelType kernel, class Param_t = fp_t>
     void applySWAP(const std::vector<size_t> &wires, bool inverse,
-                   [[maybe_unused]] const std::vector<Param_t>& params = {}) {
+                   [[maybe_unused]] const std::vector<Param_t> &params = {}) {
         Base::template applySWAP_<kernel>(wires, inverse);
     }
     /**
@@ -309,9 +316,9 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * second index for target wire.
      * @param inverse Indicate whether to use adjoint of operation.
      */
-    template<KernelType kernel, class Param_t = fp_t>
+    template <KernelType kernel, class Param_t = fp_t>
     void applyCZ(const std::vector<size_t> &wires, bool inverse,
-                 [[maybe_unused]] const std::vector<Param_t>& params = {}) {
+                 [[maybe_unused]] const std::vector<Param_t> &params = {}) {
         Base::template applyCZ_<kernel>(wires, inverse);
     }
 
@@ -323,9 +330,9 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * second and third indices for target wires.
      * @param inverse Indicate whether to use adjoint of operation.
      */
-    template<KernelType kernel, class Param_t = fp_t>
+    template <KernelType kernel, class Param_t = fp_t>
     void applyCSWAP(const std::vector<size_t> &wires, bool inverse,
-                    [[maybe_unused]] const std::vector<Param_t>& params = {}) {
+                    [[maybe_unused]] const std::vector<Param_t> &params = {}) {
         Base::template applyCSWAP_<kernel>(wires, inverse);
     }
 
@@ -337,9 +344,10 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * control wires, third index for target wire.
      * @param inverse Indicate whether to use adjoint of operation.
      */
-    template<KernelType kernel, class Param_t = fp_t>
-    void applyToffoli(const std::vector<size_t> &wires, bool inverse,
-                      [[maybe_unused]] const std::vector<Param_t>& params = {}) {
+    template <KernelType kernel, class Param_t = fp_t>
+    void
+    applyToffoli(const std::vector<size_t> &wires, bool inverse,
+                 [[maybe_unused]] const std::vector<Param_t> &params = {}) {
         Base::template applyToffoli_<kernel>(wires, inverse);
     }
 
@@ -351,11 +359,10 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * @param wires Wires to apply operation.
      * @param inverse Indicate whether to use adjoint of operation.
      */
-    template<KernelType kernel, class Param_t = fp_t>
+    template <KernelType kernel, class Param_t = fp_t>
     void applyPhaseShift(const std::vector<size_t> &wires, bool inverse,
-                         const std::vector<Param_t>& params) {
-        Base::template applyPhaseShift_<kernel>(
-            wires, inverse, params[0]);
+                         const std::vector<Param_t> &params) {
+        Base::template applyPhaseShift_<kernel>(wires, inverse, params[0]);
     }
 
     /**
@@ -367,12 +374,12 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * second index for target wire.
      * @param inverse Indicate whether to use adjoint of operation.
      */
-    template<KernelType kernel, class Param_t = fp_t>
+    template <KernelType kernel, class Param_t = fp_t>
     void applyControlledPhaseShift(const std::vector<size_t> &wires,
                                    bool inverse,
                                    const std::vector<Param_t> &params) {
-        Base::template applyControlledPhaseShift_<kernel>(
-            wires, inverse, params[0]);
+        Base::template applyControlledPhaseShift_<kernel>(wires, inverse,
+                                                          params[0]);
     }
 
     /**
@@ -384,7 +391,7 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * @param inverse Indicate whether to use adjoint of operation.
      * @param params Parameter(s) for given gate. First parameter used only.
      */
-    template<KernelType kernel, class Param_t = fp_t>
+    template <KernelType kernel, class Param_t = fp_t>
     void applyRX(const std::vector<size_t> &wires, bool inverse,
                  const std::vector<Param_t> &params) {
         Base::template applyRX_<kernel>(wires, inverse, params[0]);
@@ -399,7 +406,7 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * @param inverse Indicate whether to use adjoint of operation.
      * @param params Parameter(s) for given gate. First parameter used only.
      */
-    template<KernelType kernel, class Param_t = fp_t>
+    template <KernelType kernel, class Param_t = fp_t>
     void applyRY(const std::vector<size_t> &wires, bool inverse,
                  const std::vector<Param_t> &params) {
         Base::template applyRY_<kernel>(wires, inverse, params[0]);
@@ -414,7 +421,7 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * @param inverse Indicate whether to use adjoint of operation.
      * @param params Parameter(s) for given gate. First parameter used only.
      */
-    template<KernelType kernel, class Param_t = fp_t>
+    template <KernelType kernel, class Param_t = fp_t>
     void applyRZ(const std::vector<size_t> &wires, bool inverse,
                  const std::vector<Param_t> &params) {
         Base::template applyRZ_<kernel>(wires, inverse, params[0]);
@@ -430,7 +437,7 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * @param inverse Indicate whether to use adjoint of operation.
      * @param params Parameter(s) for given gate. First parameter used only.
      */
-    template<KernelType kernel, class Param_t = fp_t>
+    template <KernelType kernel, class Param_t = fp_t>
     void applyCRX(const std::vector<size_t> &wires, bool inverse,
                   const std::vector<Param_t> &params) {
         Base::template applyCRX_<kernel>(wires, inverse, params[0]);
@@ -446,7 +453,7 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * @param inverse Indicate whether to use adjoint of operation.
      * @param params Parameter(s) for given gate. First parameter used only.
      */
-    template<KernelType kernel, class Param_t = fp_t>
+    template <KernelType kernel, class Param_t = fp_t>
     void applyCRY(const std::vector<size_t> &wires, bool inverse,
                   const std::vector<Param_t> &params) {
         Base::template applyCRY_<kernel>(wires, inverse, params[0]);
@@ -462,7 +469,7 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * @param inverse Indicate whether to use adjoint of operation.
      * @param params Parameter(s) for given gate. First parameter used only.
      */
-    template<KernelType kernel, class Param_t = fp_t>
+    template <KernelType kernel, class Param_t = fp_t>
     void applyCRZ(const std::vector<size_t> &wires, bool inverse,
                   const std::vector<Param_t> &params) {
         Base::template applyCRZ_<kernel>(wires, inverse, params[0]);
@@ -477,12 +484,11 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * @param inverse Indicate whether to use adjoint of operation.
      * @param params Parameters for given gate. Requires 3 values.
      */
-    template<KernelType kernel, class Param_t = fp_t>
+    template <KernelType kernel, class Param_t = fp_t>
     void applyRot(const std::vector<size_t> &wires, bool inverse,
                   const std::vector<Param_t> &params) {
-        Base::template applyRot_<kernel>(
-            wires, inverse, params[0], params[1],
-            params[2]);
+        Base::template applyRot_<kernel>(wires, inverse, params[0], params[1],
+                                         params[2]);
     }
     /**
      * @brief Apply controlled Rot gate to the given wires.
@@ -494,12 +500,11 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * @param inverse Indicate whether to use adjoint of operation.
      * @param params Parameters for given gate. Requires 3 values.
      */
-    template<KernelType kernel, class Param_t = fp_t>
+    template <KernelType kernel, class Param_t = fp_t>
     void applyCRot(const std::vector<size_t> &wires, bool inverse,
                    const std::vector<Param_t> &params) {
-        Base::template applyCRot_<kernel>(
-            wires, inverse, params[0], params[1],
-            params[2]);
+        Base::template applyCRot_<kernel>(wires, inverse, params[0], params[1],
+                                          params[2]);
     }
 
     /**
@@ -511,20 +516,19 @@ class StateVecBinder : public StateVectorBase<fp_t, StateVecBinder<fp_t>> {
      * @param wires Wires to apply given matrix.
      * @param inverse Indicate whether to take adjoint.
      */
-    template<KernelType kernel>
-    void applyMatrix(
-        const py::array_t<CFP_t,
-                          py::array::c_style | py::array::forcecast> &matrix,
-        const vector<size_t> &wires, bool inverse = false) {
-        Base::template applyMatrix_<kernel>(static_cast<CFP_t*>(matrix.request().ptr), wires, inverse);
+    template <KernelType kernel>
+    void applyMatrix(const py::array_t<CFP_t, py::array::c_style |
+                                                  py::array::forcecast> &matrix,
+                     const vector<size_t> &wires, bool inverse = false) {
+        Base::template applyMatrix_<kernel>(
+            static_cast<CFP_t *>(matrix.request().ptr), wires, inverse);
     }
 };
 
-template<KernelType kernel, class PrecisionT, class Param_t, class PyClass>
-void registerKernelFunctions_(PyClass&& pyclass)
-{
+template <KernelType kernel, class PrecisionT, class Param_t, class PyClass>
+void registerKernelFunctions_(PyClass &&pyclass) {
     auto kernel_name = std::string(kernel_to_string(kernel));
-    
+
     /* Single-qubit gates */
     PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(PauliX)
     PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(PauliY)
@@ -549,36 +553,36 @@ void registerKernelFunctions_(PyClass&& pyclass)
     /* Three-qubit gates */
     PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(Toffoli)
     PENNYLANE_BIND_PYCLASS_METHOD_FOR_KERNEL(CSWAP)
-    
+
     { // applyMatrix
         std::string name = "applyMatrix_" + kernel_name;
-        pyclass.def(name.c_str(),
+        pyclass.def(
+            name.c_str(),
             py::overload_cast<
                 const py::array_t<complex<PrecisionT>,
-                py::array::c_style | py::array::forcecast> &,
+                                  py::array::c_style | py::array::forcecast> &,
                 const vector<size_t> &, bool>(
-                    &StateVecBinder<PrecisionT>::template applyMatrix<kernel>),
-                "Apply a given matrix to wires.");
+                &StateVecBinder<PrecisionT>::template applyMatrix<kernel>),
+            "Apply a given matrix to wires.");
     }
 }
 
 /**
  * TODO: change to constexpr st::foreach in C++20
  * */
-template<size_t idx, class PrecisionT, class Param_t, class PyClass>
-void registerKernelFunctionsIter(PyClass&& pyclass) {
-    if constexpr (idx < KERNELS_TO_PYEXPORT.size())
-    {
-        registerKernelFunctions_<KERNELS_TO_PYEXPORT[idx], PrecisionT, Param_t>(pyclass);
-        registerKernelFunctionsIter<idx+1, PrecisionT, Param_t>(pyclass);
+template <size_t idx, class PrecisionT, class Param_t, class PyClass>
+void registerKernelFunctionsIter(PyClass &&pyclass) {
+    if constexpr (idx < KERNELS_TO_PYEXPORT.size()) {
+        registerKernelFunctions_<KERNELS_TO_PYEXPORT[idx], PrecisionT, Param_t>(
+            pyclass);
+        registerKernelFunctionsIter<idx + 1, PrecisionT, Param_t>(pyclass);
     }
 }
 
-template<class PrecisionT, class Param_t, class PyClass>
-void registerKernelFunctions(PyClass&& pyclass) {
+template <class PrecisionT, class Param_t, class PyClass>
+void registerKernelFunctions(PyClass &&pyclass) {
     registerKernelFunctionsIter<0, PrecisionT, Param_t>(pyclass);
 }
-
 
 /**
  * @brief Templated class to build all required precisions for Python module.
@@ -589,7 +593,6 @@ void registerKernelFunctions(PyClass&& pyclass) {
  */
 template <class PrecisionT, class Param_t>
 void lightning_class_bindings(py::module &m) {
-
     // Enable module name to be based on size of complex datatype
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
@@ -599,10 +602,11 @@ void lightning_class_bindings(py::module &m) {
     //                              StateVector
     //***********************************************************************//
 
-    auto pyclass = py::class_<StateVecBinder<PrecisionT>>(m, class_name.c_str());
-    pyclass.def(py::init<
-            py::array_t<complex<PrecisionT>, 
-                        py::array::c_style | py::array::forcecast> &>());
+    auto pyclass =
+        py::class_<StateVecBinder<PrecisionT>>(m, class_name.c_str());
+    pyclass.def(
+        py::init<py::array_t<complex<PrecisionT>,
+                             py::array::c_style | py::array::forcecast> &>());
 
     registerKernelFunctions<PrecisionT, Param_t>(pyclass);
 
@@ -878,16 +882,17 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
 
     /* Add EXPORTED_KERNELS */
     std::vector<std::string> exported_kernels;
-    for(auto kernel: KERNELS_TO_PYEXPORT) {
+    for (auto kernel : KERNELS_TO_PYEXPORT) {
         exported_kernels.emplace_back(std::string(kernel_to_string(kernel)));
     }
     m.attr("EXPORTED_KERNELS") = py::cast(exported_kernels);
-    
+
     /* Add DEFAULT_KERNEL_FOR_OPS */
     std::map<std::string, std::string> default_kernel_ops_map;
-    for(const auto& [gate_op, name]: GATE_NAMES) {
+    for (const auto &[gate_op, name] : GATE_NAMES) {
         auto kernel = dynamic_lookup(DEFAULT_KERNEL_FOR_OPS, gate_op);
-        default_kernel_ops_map.emplace(std::string(name), std::string(kernel_to_string(kernel)));
+        default_kernel_ops_map.emplace(std::string(name),
+                                       std::string(kernel_to_string(kernel)));
     }
     m.attr("DEFAULT_KERNEL_FOR_OPS") = py::cast(default_kernel_ops_map);
 

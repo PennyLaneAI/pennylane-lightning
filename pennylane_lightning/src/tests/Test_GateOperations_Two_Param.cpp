@@ -18,13 +18,14 @@
 using namespace Pennylane;
 
 /**
- * @file This file contains tests for gate operations with parameteriezed two-qubits gates.
- * Such gates are [ControlledPhaseShift, CRX, CRY, CRZ, CRot].
+ * @file This file contains tests for gate operations with parameteriezed
+ * two-qubits gates. Such gates are [ControlledPhaseShift, CRX, CRY, CRZ, CRot].
  */
 
-
-TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyControlledPhaseShift", "[GateOperations_Two_Param]",
-        (GateOperationsPI, GateOperationsLM), (float, double)) {
+TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyControlledPhaseShift",
+                           "[GateOperations_Two_Param]",
+                           (GateOperationsPI, GateOperationsLM),
+                           (float, double)) {
     using fp_t = typename TestType::scalar_type_t;
     using CFP_t = typename TestType::CFP_t;
 
@@ -56,17 +57,21 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyControlledPhaseShift", "[GateOp
     if constexpr (TestType::kernel_id == KernelType::PI) {
         auto st = ini_st;
 
-        TestType::applyControlledPhaseShift(st.data(), num_qubits, {0, 1}, false, {angles[0]});
+        TestType::applyControlledPhaseShift(st.data(), num_qubits, {0, 1},
+                                            false, {angles[0]});
         CAPTURE(st);
         CHECK(isApproxEqual(st, expected_results[0]));
     } else {
         auto st = ini_st;
-        CHECK_THROWS(TestType::applyControlledPhaseShift(st.data(), num_qubits, {0, 1}, false, {angles[0]}));
+        CHECK_THROWS(TestType::applyControlledPhaseShift(
+            st.data(), num_qubits, {0, 1}, false, {angles[0]}));
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCRot", "[GateOperations_Two_Param]",
-        (GateOperationsPI, GateOperationsLM), (float, double)) {
+TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCRot",
+                           "[GateOperations_Two_Param]",
+                           (GateOperationsPI, GateOperationsLM),
+                           (float, double)) {
     using fp_t = typename TestType::scalar_type_t;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
@@ -76,8 +81,7 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCRot", "[GateOperations_Two_Par
     const std::vector<fp_t> angles{0.3, 0.8, 2.4};
 
     std::vector<CFP_t> expected_results(8);
-    const auto rot_mat =
-        Gates::getRot<fp_t>(angles[0], angles[1], angles[2]);
+    const auto rot_mat = Gates::getRot<fp_t>(angles[0], angles[1], angles[2]);
     expected_results[0b1 << (num_qubits - 1)] = rot_mat[0];
     expected_results[(0b1 << num_qubits) - 2] = rot_mat[2];
 
@@ -85,8 +89,8 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCRot", "[GateOperations_Two_Par
     if constexpr (TestType::kernel_id == KernelType::PI) {
         SECTION("CRot0,1 |000> -> |000>") {
             auto st = create_zero_state<fp_t>(num_qubits);
-            TestType::applyCRot(st.data(), num_qubits, {0, 1}, false, 
-                                angles[0], angles[1], angles[2]);
+            TestType::applyCRot(st.data(), num_qubits, {0, 1}, false, angles[0],
+                                angles[1], angles[2]);
 
             CHECK(isApproxEqual(st, ini_st));
         }
@@ -95,13 +99,13 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCRot", "[GateOperations_Two_Par
             TestType::applyPauliX(st.data(), num_qubits, {0}, false);
 
             TestType::applyCRot(st.data(), num_qubits, {0, 1}, false, angles[0],
-                                      angles[1], angles[2]);
+                                angles[1], angles[2]);
 
             CHECK(isApproxEqual(st, expected_results));
         }
     } else {
         auto st = ini_st;
-        CHECK_THROWS(TestType::applyCRot(st.data(), num_qubits, {0, 1}, false, 
-                    angles[0], angles[1], angles[2]));
+        CHECK_THROWS(TestType::applyCRot(st.data(), num_qubits, {0, 1}, false,
+                                         angles[0], angles[1], angles[2]));
     }
 }

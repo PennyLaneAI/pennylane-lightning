@@ -399,7 +399,7 @@ int popcount_slow(uint64_t x) {
 
 int ctz_slow(uint64_t x) {
     int c = 0;
-    while((x & 1) == 0) {
+    while ((x & 1) == 0) {
         x >>= 1;
         ++c;
     }
@@ -411,8 +411,7 @@ TEST_CASE("Utility bit operations", "[Util]") {
         { // for uint32_t
             uint32_t n = 0;
             CHECK(Util::Internal::countBit1(n) == 0);
-            for(int k = 0; k < 100; k++)
-            {
+            for (int k = 0; k < 100; k++) {
                 n <<= 1;
                 n ^= 1;
                 CHECK(Util::Internal::countBit1(n) == popcount_slow(n));
@@ -421,8 +420,7 @@ TEST_CASE("Utility bit operations", "[Util]") {
         { // for uint64_t
             uint64_t n = 0;
             CHECK(Util::Internal::countBit1(n) == 0);
-            for(int k = 0; k < 100; k++)
-            {
+            for (int k = 0; k < 100; k++) {
                 n <<= 1;
                 n ^= 1;
                 CHECK(Util::Internal::countBit1(n) == popcount_slow(n));
@@ -433,7 +431,7 @@ TEST_CASE("Utility bit operations", "[Util]") {
     SECTION("isPerfectPowerOf2") {
         size_t n = 1;
         CHECK(Util::isPerfectPowerOf2(n));
-        for(size_t k = 0; k < sizeof(size_t)-2; ++k) {
+        for (size_t k = 0; k < sizeof(size_t) - 2; ++k) {
             n *= 2;
             CHECK(Util::isPerfectPowerOf2(n));
             CHECK(!Util::isPerfectPowerOf2(n + 1));
@@ -452,17 +450,17 @@ TEST_CASE("Utility bit operations", "[Util]") {
 
     SECTION("Internal::countTrailing0") {
         { // for uint32_t
-            for(int c = 0; c < 31; ++c)
-            {
-                uint32_t n = static_cast<uint32_t>(1U) << static_cast<uint32_t>(c);
+            for (int c = 0; c < 31; ++c) {
+                uint32_t n = static_cast<uint32_t>(1U)
+                             << static_cast<uint32_t>(c);
                 CHECK(Util::Internal::countTrailing0(n) == c);
                 CHECK(Util::Internal::countTrailing0(n | (1U << 31)) == c);
             }
         }
         { // for uint64_t
-            for(int c = 0; c < 63; ++c)
-            {
-                uint64_t n = static_cast<uint64_t>(1U) << static_cast<uint64_t>(c);
+            for (int c = 0; c < 63; ++c) {
+                uint64_t n = static_cast<uint64_t>(1U)
+                             << static_cast<uint64_t>(c);
                 CHECK(Util::Internal::countTrailing0(n) == c);
                 CHECK(Util::Internal::countTrailing0(n | (1UL << 63)) == c);
             }
@@ -471,14 +469,16 @@ TEST_CASE("Utility bit operations", "[Util]") {
 
     SECTION("log2PerfectPower") {
         { // for uint32_t
-            for(int c = 0; c < 32; ++c) {
-                uint32_t n = static_cast<uint32_t>(1U) << static_cast<uint64_t>(c);
+            for (int c = 0; c < 32; ++c) {
+                uint32_t n = static_cast<uint32_t>(1U)
+                             << static_cast<uint64_t>(c);
                 CHECK(Util::log2PerfectPower(n) == c);
             }
         }
         { // for uint64_t
-            for(int c = 0; c < 32; ++c) {
-                uint32_t n = static_cast<uint64_t>(1U) << static_cast<uint64_t>(c);
+            for (int c = 0; c < 32; ++c) {
+                uint32_t n = static_cast<uint64_t>(1U)
+                             << static_cast<uint64_t>(c);
                 CHECK(Util::log2PerfectPower(n) == c);
             }
         }

@@ -17,8 +17,10 @@
 
 using namespace Pennylane;
 
-TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCNOT", "[GateOperations_Two_Nonparam]",
-        (GateOperationsPI, GateOperationsLM), (float, double)) {
+TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCNOT",
+                           "[GateOperations_Two_Nonparam]",
+                           (GateOperationsPI, GateOperationsLM),
+                           (float, double)) {
     using fp_t = typename TestType::scalar_type_t;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
@@ -26,11 +28,12 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCNOT", "[GateOperations_Two_Non
 
     // Test using |+00> state to generate 3-qubit GHZ state
     TestType::applyHadamard(st.data(), num_qubits, {0}, false);
-    
+
     // correct this when LM kernels are fully developed
     if constexpr (TestType::kernel_id == KernelType::PI) {
         for (size_t index = 1; index < num_qubits; index++) {
-            TestType::applyCNOT(st.data(), num_qubits, {index - 1, index}, false);
+            TestType::applyCNOT(st.data(), num_qubits, {index - 1, index},
+                                false);
         }
         CHECK(st.front() == Util::INVSQRT2<fp_t>());
         CHECK(st.back() == Util::INVSQRT2<fp_t>());
@@ -40,8 +43,10 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCNOT", "[GateOperations_Two_Non
 }
 
 // NOLINTNEXTLINE: Avoiding complexity errors
-TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applySWAP", "[GateOperations_Two_Nonparam]", 
-        (GateOperationsPI, GateOperationsLM), (float, double)) {
+TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applySWAP",
+                           "[GateOperations_Two_Nonparam]",
+                           (GateOperationsPI, GateOperationsLM),
+                           (float, double)) {
     using fp_t = typename TestType::scalar_type_t;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
@@ -54,21 +59,20 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applySWAP", "[GateOperations_Two_Non
     // correct this when LM kernels are fully developed
     if constexpr (TestType::kernel_id == KernelType::PI) {
         CHECK(ini_st ==
-              std::vector<CFP_t>{
-                  Util::ZERO<fp_t>(), Util::ZERO<fp_t>(),
-                  Util::INVSQRT2<fp_t>(), Util::ZERO<fp_t>(),
-                  Util::ZERO<fp_t>(), Util::ZERO<fp_t>(),
-                  Util::INVSQRT2<fp_t>(), Util::ZERO<fp_t>()});
+              std::vector<CFP_t>{Util::ZERO<fp_t>(), Util::ZERO<fp_t>(),
+                                 Util::INVSQRT2<fp_t>(), Util::ZERO<fp_t>(),
+                                 Util::ZERO<fp_t>(), Util::ZERO<fp_t>(),
+                                 Util::INVSQRT2<fp_t>(), Util::ZERO<fp_t>()});
 
         SECTION("SWAP0,1 |+10> -> |1+0>") {
             std::vector<CFP_t> expected{Util::ZERO<fp_t>(),
-                                       Util::ZERO<fp_t>(),
-                                       Util::ZERO<fp_t>(),
-                                       Util::ZERO<fp_t>(),
-                                       std::complex<fp_t>(1.0 / sqrt(2), 0),
-                                       Util::ZERO<fp_t>(),
-                                       std::complex<fp_t>(1.0 / sqrt(2), 0),
-                                       Util::ZERO<fp_t>()};
+                                        Util::ZERO<fp_t>(),
+                                        Util::ZERO<fp_t>(),
+                                        Util::ZERO<fp_t>(),
+                                        std::complex<fp_t>(1.0 / sqrt(2), 0),
+                                        Util::ZERO<fp_t>(),
+                                        std::complex<fp_t>(1.0 / sqrt(2), 0),
+                                        Util::ZERO<fp_t>()};
             auto sv01 = ini_st;
             auto sv10 = ini_st;
 
@@ -81,14 +85,14 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applySWAP", "[GateOperations_Two_Non
 
         SECTION("SWAP0,2 |+10> -> |01+>") {
             std::vector<CFP_t> expected{Util::ZERO<fp_t>(),
-                                       Util::ZERO<fp_t>(),
-                                       std::complex<fp_t>(1.0 / sqrt(2), 0),
-                                       std::complex<fp_t>(1.0 / sqrt(2), 0),
-                                       Util::ZERO<fp_t>(),
-                                       Util::ZERO<fp_t>(),
-                                       Util::ZERO<fp_t>(),
-                                       Util::ZERO<fp_t>()};
-            
+                                        Util::ZERO<fp_t>(),
+                                        std::complex<fp_t>(1.0 / sqrt(2), 0),
+                                        std::complex<fp_t>(1.0 / sqrt(2), 0),
+                                        Util::ZERO<fp_t>(),
+                                        Util::ZERO<fp_t>(),
+                                        Util::ZERO<fp_t>(),
+                                        Util::ZERO<fp_t>()};
+
             auto sv02 = ini_st;
             auto sv20 = ini_st;
 
@@ -99,15 +103,12 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applySWAP", "[GateOperations_Two_Non
             CHECK(sv20 == expected);
         }
         SECTION("SWAP1,2 |+10> -> |+01>") {
-            std::vector<CFP_t> expected{Util::ZERO<fp_t>(),
-                                       std::complex<fp_t>(1.0 / sqrt(2), 0),
-                                       Util::ZERO<fp_t>(),
-                                       Util::ZERO<fp_t>(),
-                                       Util::ZERO<fp_t>(),
-                                       std::complex<fp_t>(1.0 / sqrt(2), 0),
-                                       Util::ZERO<fp_t>(),
-                                       Util::ZERO<fp_t>()};
-            
+            std::vector<CFP_t> expected{
+                Util::ZERO<fp_t>(), std::complex<fp_t>(1.0 / sqrt(2), 0),
+                Util::ZERO<fp_t>(), Util::ZERO<fp_t>(),
+                Util::ZERO<fp_t>(), std::complex<fp_t>(1.0 / sqrt(2), 0),
+                Util::ZERO<fp_t>(), Util::ZERO<fp_t>()};
+
             auto sv12 = ini_st;
             auto sv21 = ini_st;
 
@@ -123,8 +124,10 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applySWAP", "[GateOperations_Two_Non
     }
 }
 // NOLINTNEXTLINE: Avoiding complexity errors
-TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCZ", "[GateOperations_Two_Nonparam]", 
-        (GateOperationsPI, GateOperationsLM), (float, double)) {
+TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCZ",
+                           "[GateOperations_Two_Nonparam]",
+                           (GateOperationsPI, GateOperationsLM),
+                           (float, double)) {
     using fp_t = typename TestType::scalar_type_t;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
@@ -138,23 +141,22 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCZ", "[GateOperations_Two_Nonpa
     // correct this when LM kernels are fully developed
     if constexpr (TestType::kernel_id == KernelType::PI) {
         auto st = ini_st;
-        CHECK(st ==
-              std::vector<CFP_t>{Util::ZERO<fp_t>(), Util::ZERO<fp_t>(),
-                                std::complex<fp_t>(1.0 / sqrt(2), 0),
-                                Util::ZERO<fp_t>(), Util::ZERO<fp_t>(),
-                                Util::ZERO<fp_t>(),
-                                std::complex<fp_t>(1.0 / sqrt(2), 0),
-                                Util::ZERO<fp_t>()});
+        CHECK(st == std::vector<CFP_t>{Util::ZERO<fp_t>(), Util::ZERO<fp_t>(),
+                                       std::complex<fp_t>(1.0 / sqrt(2), 0),
+                                       Util::ZERO<fp_t>(), Util::ZERO<fp_t>(),
+                                       Util::ZERO<fp_t>(),
+                                       std::complex<fp_t>(1.0 / sqrt(2), 0),
+                                       Util::ZERO<fp_t>()});
 
         SECTION("CZ0,1 |+10> -> |-10>") {
             std::vector<CFP_t> expected{Util::ZERO<fp_t>(),
-                                       Util::ZERO<fp_t>(),
-                                       std::complex<fp_t>(1.0 / sqrt(2), 0),
-                                       Util::ZERO<fp_t>(),
-                                       Util::ZERO<fp_t>(),
-                                       Util::ZERO<fp_t>(),
-                                       std::complex<fp_t>(-1 / sqrt(2), 0),
-                                       Util::ZERO<fp_t>()};
+                                        Util::ZERO<fp_t>(),
+                                        std::complex<fp_t>(1.0 / sqrt(2), 0),
+                                        Util::ZERO<fp_t>(),
+                                        Util::ZERO<fp_t>(),
+                                        Util::ZERO<fp_t>(),
+                                        std::complex<fp_t>(-1 / sqrt(2), 0),
+                                        Util::ZERO<fp_t>()};
 
             auto sv01 = ini_st;
             auto sv10 = ini_st;

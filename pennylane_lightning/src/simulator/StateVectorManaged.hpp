@@ -23,7 +23,8 @@ namespace Pennylane {
  * @tparam fp_t
  */
 template <class fp_t = double>
-class StateVectorManaged : public StateVectorBase<fp_t, StateVectorManaged<fp_t>> {
+class StateVectorManaged
+    : public StateVectorBase<fp_t, StateVectorManaged<fp_t>> {
   public:
     using scalar_type_t = fp_t;
     using CFP_t = std::complex<fp_t>;
@@ -41,41 +42,39 @@ class StateVectorManaged : public StateVectorBase<fp_t, StateVectorManaged<fp_t>
         data_[0] = {1, 0};
     }
 
-    template<class OtherDerived>
+    template <class OtherDerived>
     StateVectorManaged(const StateVectorBase<fp_t, OtherDerived> &other)
-        : BaseType(other.getNumQubits()),
-          data_{other.getData(), other.getData() + other.getLength()} {
-    }
+        : BaseType(other.getNumQubits()), data_{other.getData(),
+                                                other.getData() +
+                                                    other.getLength()} {}
 
     StateVectorManaged(const std::vector<CFP_t> &other_data)
-        : BaseType(Util::log2(other_data.size())), data_{other_data} {
-        PL_ABORT_IF_NOT(Util::isPerfectPowerOf2(other_data.size()), 
-                "The size of provided data must be a power of 2.")
-    }
+        : BaseType(Util::log2(other_data.size())),
+          data_{other_data} {PL_ABORT_IF_NOT(
+              Util::isPerfectPowerOf2(other_data.size()),
+              "The size of provided data must be a power of 2.")}
 
-    StateVectorManaged(const CFP_t *other_data, size_t other_size)
-        : BaseType(Util::log2(other_size)), data_{other_data, other_data +  other_size} {
+          StateVectorManaged(const CFP_t *other_data, size_t other_size)
+        : BaseType(Util::log2(other_size)),
+          data_{other_data, other_data + other_size} {
 
-        PL_ABORT_IF_NOT(Util::isPerfectPowerOf2(other_size), 
-                "The size of provided data must be a power of 2.")
-    }
+              PL_ABORT_IF_NOT(
+                  Util::isPerfectPowerOf2(other_size),
+                  "The size of provided data must be a power of 2.")}
 
-    StateVectorManaged(const StateVectorManaged<fp_t> &other) = default;
+          StateVectorManaged(const StateVectorManaged<fp_t> &other) = default;
 
-    auto operator=(const StateVectorManaged<fp_t> &other) -> StateVectorManaged<fp_t>& = default;
+    auto operator=(const StateVectorManaged<fp_t> &other)
+        -> StateVectorManaged<fp_t> & = default;
 
     auto getDataVector() -> std::vector<CFP_t> & { return data_; }
     [[nodiscard]] auto getDataVector() const -> const std::vector<CFP_t> & {
         return data_;
     }
 
-    [[nodiscard]] auto getData() -> CFP_t* {
-        return data_.data();
-    }
+    [[nodiscard]] auto getData() -> CFP_t * { return data_.data(); }
 
-    [[nodiscard]] auto getData() const -> const CFP_t* {
-        return data_.data();
-    }
+    [[nodiscard]] auto getData() const -> const CFP_t * { return data_.data(); }
 
     void updateData(const std::vector<CFP_t> &new_data) {
         PL_ABORT_IF_NOT(data_.size() == new_data.size(),
