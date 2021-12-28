@@ -256,23 +256,14 @@ inline auto log2(size_t value) -> size_t {
  */
 ///@{
 #if defined(_MSC_VER)
-constexpr auto popcount(uint32_t val) -> int {
-    return __popcnt(val);
-}
 constexpr auto popcount(uint64_t val) -> int {
     return __popcnt(val);
 }
 #elif defined(__GNUC__) || defined(__clang__)
-constexpr auto popcount(unsigned int val) -> int {
-    return __builtin_popcount(val);
-}
 constexpr auto popcount(unsigned long val) -> int {
     return __builtin_popcountl(val);
 }
 #else
-constexpr auto popcount(unsigned int val) -> int {
-    return Internal::countBit1(val);
-}
 constexpr auto popcount(unsigned long val) -> int {
     return Internal::countBit1(val);
 }
@@ -289,23 +280,14 @@ constexpr auto popcount(unsigned long val) -> int {
  */
 ///@{
 #if defined(_MSC_VER)
-constexpr auto log2PerfectPower(uint32_t val) -> int {
-    return 31 - __lzcnt(val);
-}
 constexpr auto log2PerfectPower(uint64_t val) -> int {
     return 63 - __lzcnt64(val);
 }
 #elif defined(__GNUC__) || defined(__clang__)
-constexpr auto log2PerfectPower(unsigned int val) -> int {
-    return __builtin_ctz(val);
-}
 constexpr auto log2PerfectPower(unsigned long val) -> int {
     return __builtin_ctzl(val);
 }
 #else
-constexpr auto log2PerfectPower(unsigned int val) -> int {
-    return Internal::countTrailing0(val);
-}
 constexpr auto log2PerfectPower(unsigned long val) -> int {
     return Internal::countTrailing0(val);
 }

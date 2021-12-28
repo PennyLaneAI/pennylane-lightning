@@ -35,7 +35,7 @@ constexpr auto kernel_to_string(KernelType kernel) -> std::string_view {
     case KernelType::LM:
         return "LM";
     }
-    PL_ABORT("Unreachable");
+    static_assert(true, "Unreachable code");
     return "";
 }
 
