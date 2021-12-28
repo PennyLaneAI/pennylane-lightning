@@ -51,21 +51,21 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-          path: main/pr
+          path: pr
 
       - name: Install lightning.qubit device (PR)
         run: |
           cd main
           make clean || true
           pip uninstall pennylane-lightning -y
-          cd pr
+          cd ../pr
           pip install -e .
 
       - name: Benchmark lightning PR device
         run: |
-          cd main/pr
+          cd pr
           python .github/workflows/benchmarks/run_bench.py lightning.qubit lightning_pr.json
-          mv lightning_pr.json ..
+          mv lightning_pr.json ../main
 
       - name: Plot results
         run: |
