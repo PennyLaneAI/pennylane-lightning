@@ -90,7 +90,7 @@ class LightningQubit(DefaultQubit):
 
     Args:
         wires (int): the number of wires to initialize the device with
-        kernel_for_ops (dict): Optional argument which kernel to run for a gate operation. 
+        kernel_for_ops (dict): Optional argument which kernel to run for a gate operation.
             For example, if {'PauliX': 'LM', 'RX': 'PI'} is passed, the less memory (LM) kernel
             is used for PauliX whereas precomputed indices (PI) kernel is used for RX.
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
