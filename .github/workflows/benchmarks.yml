@@ -59,6 +59,7 @@ jobs:
           make clean || true
           pip uninstall pennylane-lightning -y
           cd pr
+          git branch --show # For logging purpose
           pip install -e .
 
       - name: Benchmark lightning PR device
