@@ -1,0 +1,22 @@
+#!/usr/bin/python3
+
+from pathlib import Path
+import sys
+from conf import (CPP_SOURCE_DIRS_FORMAT, CPP_SOURCE_DIRS_DOCUMENTS)
+from utils import get_cpp_files
+
+if __name__ == '__main__':
+    import argparse
+    import json
+
+    if len(sys.argv) != 2 or sys.argv[1] not in ['--documents', '--format']:
+        print('Usage: {} [--documents | --format]'.format(sys.argv[0]))
+        sys.exit(1)
+    
+    if sys.argv[1] == '--documents':
+        paths = CPP_SOURCE_DIRS_DOCUMENTS
+    elif sys.argv[1] == '--format':
+        paths = CPP_SOURCE_DIRS_FORMAT
+
+    files = get_cpp_files(paths)
+    json.dump(files, sys.stdout)

@@ -4,6 +4,8 @@ PYTHON := python3
 COVERAGE := --cov=pennylane_lightning --cov-report term-missing --cov-report=html:coverage_html_report
 TESTRUNNER := -m pytest tests --tb=short
 
+LIGHTNING_CPP_DIR := pennylane_lightning/src/
+
 .PHONY: help
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -36,7 +38,7 @@ dist:
 .PHONY : clean
 clean:
 	$(PYTHON) setup.py clean --all
-	$(MAKE) -C pennylane_lightning/src/ clean
+	$(MAKE) -C $(LIGHTNING_CPP_DIR) clean
 	$(MAKE) -C doc clean
 	find . -type d -name '__pycache__' -exec rm -r {} \+
 	rm -rf dist
@@ -47,12 +49,11 @@ clean:
 	rm -rf pennylane_lightning/lightning_qubit_ops*
 
 docs:
-	make -C doc html
+	$(MAKE) -C doc html
 
 .PHONY : clean-docs
 clean-docs:
-	rm -rf doc/code/api
-	make -C doc clean
+	$(MAKE) -C doc clean
 
 test-builtin:
 	$(PYTHON) -I $(TESTRUNNER)
@@ -70,14 +71,23 @@ coverage:
 	pl-device-test --device lightning.qubit --shots=None --skip-ops $(COVERAGE) --cov-append
 
 test-cpp:
-	$(MAKE) -C pennylane_lightning/src/ test
+	$(MAKE) -C $(LIGHTNING_CPP_DIR) test
 
-.PHONY: format
-format:
+.PHONY: format format-cpp format-python
+format: format-cpp format-python
+
+format-cpp:
 ifdef check
-	./bin/format --check pennylane_lightning/src/* examples tests 
+	./bin/format --check
 else
-	./bin/format pennylane_lightning/src/* examples tests
+	./bin/format
+endif
+
+format-python:
+ifdef check
+	black -l 100 pennylane_lightning/ --check
+else
+	black -l 100 pennylane_lightning/
 endif
 
 .PHONY: check-tidy

@@ -11,4 +11,5 @@ clean:
 test:
 	rm -rf ./BuildTests
 	cmake . -BBuildTests -DBUILD_TESTS=1
-	cmake --build ./BuildTests --target check
+	cmake --build ./BuildTests --target runner
+	cmake --build ./BuildTests --target test

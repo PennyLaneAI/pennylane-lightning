@@ -5,6 +5,8 @@ import json
 import pathlib
 import subprocess
 import sys
+from utils import get_cpp_files
+from conf import CPP_SOURCE_DIRS_FORMAT
 
 CLANG_FMT_BIN = "clang-format"
 CLANG_FMT_STYLE_CFG = {
@@ -14,10 +16,11 @@ CLANG_FMT_STYLE_CFG = {
     "IndentPPDirectives": "None",
 }
 
-SRCFILE_EXT = ("c", "cc", "cpp", "cxx", "h", "hh", "hpp", "hxx", "cu", "cuh")
-IGNORE_PATTERN = "external"
+IGNORE_PATTERNS = ["external"]
 
 BASE_CMD = ("clang-format", f"-style={json.dumps(CLANG_FMT_STYLE_CFG)}")
+
+CPP_FILES_TO_FORMAT = get_cpp_files(CPP_SOURCE_DIRS_FORMAT, IGNORE_PATTERNS)
 
 def check_bin():
     try:
@@ -35,9 +38,6 @@ def parse_args():
         description="Opinionated C/C++ formatter. Based on clang-format"
     )
     parser.add_argument(
-        "paths", nargs="+", metavar="DIR", help="paths to the root source directories"
-    )
-    parser.add_argument(
         "-c",
         "--check",
         action="store_true",
@@ -53,23 +53,10 @@ def parse_args():
 
     return parser.parse_args()
 
+def fmt(args) -> int:
+    cmd = (*BASE_CMD, "-i", *CPP_FILES_TO_FORMAT)
 
-def get_files(args):
-    files = []
-
-    for path in args.paths:
-        for ext in SRCFILE_EXT:
-            for file_path in pathlib.Path(path).rglob(f"*.{ext}"):
-                files.append(str(file_path))
-
-    return [f for f in files if IGNORE_PATTERN not in f]
-
-
-def fmt(args, files) -> int:
-    cmd = (*BASE_CMD, "-i", *files)
-
-    paths = ", ".join(args.paths)
-    sys.stderr.write(f"Formatting {len(files)} files in {paths}.\n")
+    sys.stderr.write(f"Formatting {len(CPP_FILES_TO_FORMAT)} files in {CPP_SOURCE_DIRS_FORMAT}.\n")
 
     ret = subprocess.run(cmd, capture_output=True, universal_newlines=True)
     if ret.returncode != 0:
@@ -79,12 +66,12 @@ def fmt(args, files) -> int:
     return 0
 
 
-def check(args, files) -> int:
+def check(args) -> int:
     cmd = (*BASE_CMD, "--dry-run", "-Werror")
 
     needs_reformatted_ct = 0
 
-    for src_file in files:
+    for src_file in CPP_FILES_TO_FORMAT:
         ret = subprocess.run(
             (*cmd, src_file), capture_output=True, universal_newlines=True
         )
@@ -106,15 +93,9 @@ if __name__ == "__main__":
     check_bin()
     args = parse_args()
 
-    files = get_files(args)
-
-    if len(files) == 0:
-        print("No source files found! Nothing to do.")
-        sys.exit(0)
-
     if args.check:
-        ret = check(args, files)
+        ret = check(args)
     else:
-        ret = fmt(args, files)
+        ret = fmt(args)
 
     sys.exit(int(ret > 0))

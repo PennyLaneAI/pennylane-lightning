@@ -3,13 +3,21 @@
 #include <vector>
 
 #include "Measures.hpp"
-#include "StateVector.hpp"
+#include "StateVectorRaw.hpp"
 #include "StateVectorManaged.hpp"
 #include "Util.hpp"
 
 #include <catch2/catch.hpp>
 
 using namespace Pennylane;
+
+namespace {
+using std::complex;
+using std::size_t;
+using std::vector;
+using std::string;
+}; // namespace
+
 StateVectorManaged<double> Initializing_StateVector() {
     // Defining a StateVector in a non-trivial configuration:
     size_t num_qubits = 3;

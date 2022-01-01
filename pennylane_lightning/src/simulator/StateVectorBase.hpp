@@ -68,12 +68,11 @@ namespace Pennylane {
 /**
  * @brief State-vector base class.
  *
- * This class combines a data array managed by a derived class (CRTP) and an
- * implementation of gate operations proviede by GateOperationType (Policy-based
- * design). The bound data is assumed to be complex, and is required to be in
- * either 32-bit (64-bit `complex<float>`) or 64-bit (128-bit `complex<double>`)
- * floating point representation. As this is the base class, we do not add
- * default template arguments.
+ * This class combines a data array managed by a derived class (CRTP) and
+ * implementations of gate operations. The bound data is assumed to be complex,
+ * and is required to be in either 32-bit (64-bit `complex<float>`) or
+ * 64-bit (128-bit `complex<double>`) floating point representation.
+ * As this is the base class, we do not add default template arguments.
  *
  * @tparam fp_t Floating point precision of underlying statevector data.
  */
@@ -181,25 +180,25 @@ template <class fp_t, class Derived> class StateVectorBase {
      */
     template <KernelType kernel>
     inline void applyMatrix_(const CFP_t *matrix,
-                             const std::vector<size_t> &wires, bool inverse) {
+                             const std::vector<size_t> &wires, bool inverse = false) {
         auto *arr = getData();
         SelectGateOps<fp_t, kernel>::applyMatrix(arr, num_qubits_, matrix,
                                                  wires, inverse);
     }
     inline void applyMatrix(const CFP_t *matrix,
-                            const std::vector<size_t> &wires, bool inverse) {
+                            const std::vector<size_t> &wires, bool inverse = false) {
         applyMatrix_<static_lookup<GateOperations::Matrix>(
             DEFAULT_KERNEL_FOR_OPS)>(matrix, wires, inverse);
     }
     template <KernelType kernel>
     inline void applyMatrix_(const std::vector<CFP_t> &matrix,
-                             const std::vector<size_t> &wires, bool inverse) {
+                             const std::vector<size_t> &wires, bool inverse = false) {
         auto *arr = getData();
         SelectGateOps<fp_t, kernel>::applyMatrix(arr, num_qubits_, matrix,
                                                  wires, inverse);
     }
     inline void applyMatrix(const std::vector<CFP_t> &matrix,
-                            const std::vector<size_t> &wires, bool inverse) {
+                            const std::vector<size_t> &wires, bool inverse = false) {
         applyMatrix_<static_lookup<GateOperations::Matrix>(
             DEFAULT_KERNEL_FOR_OPS)>(matrix, wires, inverse);
     }
@@ -214,6 +213,11 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(PauliX)
+
+    /**
+     * @brief Apply PauliX gate operation using a kernel given in
+     * DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(PauliX)
 
     /**
@@ -226,6 +230,11 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(PauliY)
+
+    /**
+     * @brief Apply PauliY gate operation using a kernel given in
+     * DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(PauliY)
 
     /**
@@ -238,6 +247,10 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(PauliZ)
+    /**
+     * @brief Apply PauliZ gate operation using a kernel given in
+     * DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(PauliZ)
 
     /**
@@ -250,6 +263,10 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(Hadamard)
+    /**
+     * @brief Apply Hadamard gate operation using a kernel given in
+     * DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(Hadamard)
 
     /**
@@ -262,6 +279,10 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(S)
+    /**
+     * @brief Apply S gate operation using a kernel given in
+     * DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(S)
 
     /**
@@ -274,6 +295,10 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(T)
+    /**
+     * @brief Apply T gate operation using a kernel given in
+     * DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(T)
 
     /**
@@ -289,6 +314,10 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param angle Rotation angle of gate.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(RX)
+    /**
+     * @brief Apply RX gate operation using a kernel given in
+     * DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(RX)
 
     /**
@@ -304,6 +333,10 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param angle Rotation angle of gate.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(RY)
+    /**
+     * @brief Apply RY gate operation using a kernel given in
+     * DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(RY)
 
     /**
@@ -319,6 +352,10 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param angle Rotation angle of gate.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(RZ)
+    /**
+     * @brief Apply RZ gate operation using a kernel given in
+     * DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(RZ)
 
     /**
@@ -334,6 +371,10 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param angle Phase shift angle.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(PhaseShift)
+    /**
+     * @brief Apply PhaseShift gate operation using a kernel given in
+     * DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(PhaseShift)
 
     /*
@@ -352,6 +393,10 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param omega Gate rotation parameter \f$\omega\f$.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(Rot)
+    /**
+     * @brief Apply Rot gate operation using a kernel given in
+     * DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(Rot)
 
     /**
@@ -368,6 +413,10 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param angle Phase shift angle.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(ControlledPhaseShift)
+    /**
+     * @brief Apply controlled phase shift gate operation using a kernel given
+     * in DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(ControlledPhaseShift)
 
     /**
@@ -380,6 +429,10 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(CNOT)
+    /**
+     * @brief Apply CNOT gate operation using a kernel given in
+     * DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CNOT)
 
     /**
@@ -392,6 +445,10 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(CZ)
+    /**
+     * @brief Apply CZ gate operation using a kernel given in
+     * DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CZ)
 
     /**
@@ -404,6 +461,10 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(SWAP)
+    /**
+     * @brief Apply SWAP gate operation using a kernel given in
+     * DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(SWAP)
 
     /**
@@ -419,6 +480,10 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param angle Rotation angle of gate.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(CRX)
+    /**
+     * @brief Apply CRX gate operation using a kernel given in
+     * DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CRX)
 
     /**
@@ -434,6 +499,10 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param angle Rotation angle of gate.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(CRY)
+    /**
+     * @brief Apply CRY gate operation using a kernel given in
+     * DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CRY)
 
     /**
@@ -449,6 +518,10 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param angle Rotation angle of gate.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(CRZ)
+    /**
+     * @brief Apply CRZ gate operation using a kernel given in
+     * DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CRZ)
 
     /**
@@ -467,6 +540,10 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param omega Gate rotation parameter \f$\omega\f$.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(CRot)
+    /**
+     * @brief Apply CRot gate operation using a kernel given in
+     * DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CRot)
 
     /**
@@ -479,6 +556,10 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(Toffoli)
+    /**
+     * @brief Apply Toffoli gate operation using a kernel given in
+     * DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(Toffoli)
 
     /**
@@ -491,6 +572,10 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(CSWAP)
+    /**
+     * @brief Apply CSWAP gate operation using a kernel given in
+     * DEFAULT_KERNEL_FOR_OPS
+     */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CSWAP)
 };
 
