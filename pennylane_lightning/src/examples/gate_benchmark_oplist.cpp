@@ -9,6 +9,8 @@
 
 #include "StateVectorManaged.hpp"
 
+using namespace Pennylane;
+
 std::string_view strip(std::string_view str) {
     auto start = str.find_first_not_of(" \t");
     auto end = str.find_last_not_of(" \t");
@@ -37,6 +39,7 @@ parseGateLists(std::string_view arg) {
         {"PhaseShift", {1, 1}},
         /* Two-qubit gates */
         {"CNOT", {2, 0}},
+        {"CZ", {2, 0}},
         {"SWAP", {2, 0}},
         {"ControlledPhaseShift", {2, 1}},
         {"CRX", {2, 1}},
@@ -47,16 +50,17 @@ parseGateLists(std::string_view arg) {
         {"Toffoli", {3, 0}},
         {"CSWAP", {3, 0}}};
 
-    if (arg.empty())
+    if (arg.empty()) {
         return std::vector<std::pair<std::string_view, GateDesc>>(
             available_gates_wires.begin(), available_gates_wires.end());
+    }
 
     std::vector<std::pair<std::string_view, GateDesc>> ops;
 
-    if (auto pos = arg.find_first_of("["); pos != std::string_view::npos) {
+    if (auto pos = arg.find_first_of('['); pos != std::string_view::npos) {
         // arg is a list "[...]"
         auto start = pos + 1;
-        auto end = arg.find_last_of("]");
+        auto end = arg.find_last_of(']');
         if (end == std::string_view::npos) {
             throw std::invalid_argument(
                 "Argument must contain operators within square brackets [].");
@@ -66,8 +70,8 @@ parseGateLists(std::string_view arg) {
 
     size_t start;
     size_t end = 0;
-    while ((start = arg.find_first_not_of(",", end)) != string::npos) {
-        end = arg.find(",", start);
+    while ((start = arg.find_first_not_of(',', end)) != std::string::npos) {
+        end = arg.find(',', start);
         auto op_name = strip(arg.substr(start, end - start));
 
         auto iter = available_gates_wires.find(std::string(op_name));
@@ -91,6 +95,7 @@ std::vector<size_t> generateDistinctWires(RandomEngine &re, size_t num_qubits,
     shuffle(v.begin(), v.end(), re);
     return std::vector<size_t>(v.begin(), v.begin() + num_wires);
 }
+
 /**
  * @brief Benchmark Pennylane-Lightning for a given gate set
  *
@@ -113,13 +118,13 @@ int main(int argc, char *argv[]) {
     using TestType = double;
 
     // Handle input
-    if (argc < 3) {
+    if (argc < 4) {
         std::cerr << "Wrong number of inputs. User provided " << argc - 1
                   << " inputs. "
                   << "Usage: " + std::string(argv[0]) +
-                         " num_gate_reps num_qubits [gate_lists]\n"
+                         " num_gate_reps num_qubits kernel [gate_lists]\n"
                          "\tExample: "
-                  << argv[0] << " 1000 10 [PauliX, CNOT]"
+                  << argv[0] << " 1000 10 PI [PauliX, CNOT]"
                   << std::endl; // Change to std::format in C++20
         return -1;
     }
@@ -136,11 +141,14 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    std::string_view kernel_name = argv[3];
+    KernelType kernel = string_to_kernel(kernel_name);
+
     // Gate list is provided
     std::string op_list_s;
     {
         std::ostringstream ss;
-        for (int idx = 3; idx < argc; ++idx) {
+        for (int idx = 4; idx < argc; ++idx) {
             ss << argv[idx] << " ";
         }
         op_list_s = ss.str();
@@ -199,11 +207,12 @@ int main(int argc, char *argv[]) {
 
     // Run benchmark. Total num_gate_reps number of gates is used.
     Pennylane::StateVectorManaged<TestType> svdat{num_qubits};
-    std::chrono::time_point<std::chrono::high_resolution_clock> t_start, t_end;
+    std::chrono::time_point<std::chrono::high_resolution_clock> t_start;
+    std::chrono::time_point<std::chrono::high_resolution_clock> t_end;
     t_start = std::chrono::high_resolution_clock::now();
 
     for (size_t gate_rep = 0; gate_rep < num_gate_reps; gate_rep++) {
-        svdat.applyOperation(std::string(random_gate_names[gate_rep]),
+        svdat.applyOperation(kernel, std::string(random_gate_names[gate_rep]),
                              random_gate_wires[gate_rep],
                              random_inverses[gate_rep],
                              random_gate_parameters[gate_rep]);

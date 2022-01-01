@@ -17,69 +17,104 @@
  */
 #include "DynamicDispatcher.hpp"
 
-#define PENNYLANE_REGISTER_GATE_OP_PARAMS0(GATE_NAME, KERNEL_TYPE)             \
-    dispatcher.registerGateOperation(                                          \
-        #GATE_NAME, KERNEL_TYPE,                                               \
-        [](CFP_t *data, size_t num_qubits, const std::vector<size_t> &wires,   \
-           bool inverse, [[maybe_unused]] const std::vector<fp_t> &params) {   \
-            assert(params.empty());                                            \
-            SelectGateOps<fp_t, KERNEL_TYPE>::apply##GATE_NAME(                \
-                data, num_qubits, wires, inverse);                             \
-        });
-#define PENNYLANE_REGISTER_GATE_OP_PARAMS1(GATE_NAME, KERNEL_TYPE)             \
-    dispatcher.registerGateOperation(                                          \
-        #GATE_NAME, KERNEL_TYPE,                                               \
-        [](CFP_t *data, size_t num_qubits, const std::vector<size_t> &wires,   \
-           bool inverse, const std::vector<fp_t> &params) {                    \
-            assert(params.size() == 1);                                        \
-            SelectGateOps<fp_t, KERNEL_TYPE>::apply##GATE_NAME(                \
-                data, num_qubits, wires, inverse, params[0]);                  \
-        });
-#define PENNYLANE_REGISTER_GATE_OP_PARAMS3(GATE_NAME, KERNEL_TYPE)             \
-    dispatcher.registerGateOperation(                                          \
-        #GATE_NAME, KERNEL_TYPE,                                               \
-        [](CFP_t *data, size_t num_qubits, const std::vector<size_t> &wires,   \
-           bool inverse, const std::vector<fp_t> &params) {                    \
-            assert(params.size() == 1);                                        \
-            SelectGateOps<fp_t, KERNEL_TYPE>::apply##GATE_NAME(                \
-                data, num_qubits, wires, inverse, params[0], params[1],        \
-                params[2]);                                                    \
-        });
+namespace {
+    using Pennylane::KernelType;
+    using Pennylane::GateOperations;
+    using Pennylane::SelectGateOps;
+    using Pennylane::DynamicDispatcher;
 
-#define PENNYLANE_REGISTER_GATE_OP(GATE_NAME, KERNEL_TYPE, NUM_PARAMS)         \
-    PENNYLANE_REGISTER_GATE_OP_PARAMS##NUM_PARAMS(GATE_NAME, KERNEL_TYPE)
+    using Pennylane::GATE_NAMES;
+}
 
-namespace Pennylane {
+#define PENNYLANE_SPECIALIZE_TO_FUNCTOR_PARAMS0(GATE_NAME)                                 \
+template <class fp_t, KernelType kernel>                                                   \
+struct toFunctor<fp_t, kernel, GateOperations::GATE_NAME> {                                \
+    void operator()(std::complex<fp_t>* data, size_t num_qubits,                           \
+                    const std::vector<size_t>& wires, bool inverse,                        \
+                    [[maybe_unused]] const std::vector<fp_t>& params) {                    \
+        assert(params.empty());                                                            \
+        SelectGateOps<fp_t, kernel>::apply##GATE_NAME(data, num_qubits, wires, inverse);   \
+    }                                                                                      \
+};
+#define PENNYLANE_SPECIALIZE_TO_FUNCTOR_PARAMS1(GATE_NAME)                                 \
+template <class fp_t, KernelType kernel>                                                   \
+struct toFunctor<fp_t, kernel, GateOperations::GATE_NAME> {                                \
+    void operator()(std::complex<fp_t>* data, size_t num_qubits,                           \
+                    const std::vector<size_t>& wires, bool inverse,                        \
+                    const std::vector<fp_t>& params) {                                     \
+        assert(params.size() == 1);                                                        \
+        SelectGateOps<fp_t, kernel>::apply##GATE_NAME(data, num_qubits, wires, inverse,    \
+                                                      params[0]);                          \
+    }                                                                                      \
+};
+#define PENNYLANE_SPECIALIZE_TO_FUNCTOR_PARAMS3(GATE_NAME)                                 \
+template <class fp_t, KernelType kernel>                                                   \
+struct toFunctor<fp_t, kernel, GateOperations::GATE_NAME> {                                \
+    void operator()(std::complex<fp_t>* data, size_t num_qubits,                           \
+                    const std::vector<size_t>& wires, bool inverse,                        \
+                    const std::vector<fp_t>& params) {                                     \
+        assert(params.size() == 3);                                                        \
+        SelectGateOps<fp_t, kernel>::apply##GATE_NAME(data, num_qubits, wires, inverse,    \
+                                                      params[0], params[1], params[2]);    \
+    }                                                                                      \
+};
+#define PENNYLANE_SPECIALIZE_TO_FUNCTOR(GATE_NAME, NUM_PARAMS) \
+        PENNYLANE_SPECIALIZE_TO_FUNCTOR_PARAMS##NUM_PARAMS(GATE_NAME)
 
-template <class fp_t, KernelType kernel> int registerAllGateOps() {
-    using CFP_t = std::complex<fp_t>;
+template <class fp_t, KernelType kernel, GateOperations op>
+struct toFunctor {
+    void operator()(std::complex<fp_t>* data, size_t num_qubits, 
+                    const std::vector<size_t>& wires, bool inverse, 
+                    const std::vector<fp_t>& params);
+};
+
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(PauliX, 0)
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(PauliY, 0)
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(PauliZ, 0)
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(Hadamard, 0)
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(S, 0)
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(T, 0)
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(RX, 1)
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(RY, 1)
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(RZ, 1)
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(PhaseShift, 1)
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(Rot, 3)
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(ControlledPhaseShift, 1)
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(CNOT, 0)
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(CZ, 0)
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(SWAP, 0)
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(CRX, 1)
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(CRY, 1)
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(CRZ, 1)
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(CRot, 3)
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(Toffoli, 0)
+PENNYLANE_SPECIALIZE_TO_FUNCTOR(CSWAP, 0)
+
+template <class fp_t, KernelType kernel, GateOperations op>
+constexpr auto toFunctorTuple() -> 
+std::tuple<std::string_view, KernelType, typename DynamicDispatcher<fp_t>::FunctionType>
+{
+    return std::make_tuple(lookup(GATE_NAMES, op), kernel, toFunctor<fp_t, kernel, op>());
+}
+
+template <class fp_t, KernelType kernel, size_t idx>
+void registerImplementedGateIter(DynamicDispatcher<fp_t>& dispatcher) {
+    if constexpr (idx == SelectGateOps<fp_t, kernel>::implemented_gates.size()) {
+        return;
+    }
+    else {
+        constexpr auto op = SelectGateOps<fp_t, kernel>::implemented_gates[idx];
+        const auto name = std::string(lookup(GATE_NAMES, op));
+        dispatcher.registerGateOperation(name,
+                                         kernel, toFunctor<fp_t, kernel, op>());
+
+        registerImplementedGateIter<fp_t, kernel, idx + 1>(dispatcher);
+    }
+}
+
+template <class fp_t, KernelType kernel> int registerAllImplementedGateOps() {
     auto &dispatcher = DynamicDispatcher<fp_t>::getInstance();
-
-    /* Single-qubit gates */
-    PENNYLANE_REGISTER_GATE_OP(PauliX, kernel, 0);
-    PENNYLANE_REGISTER_GATE_OP(PauliY, kernel, 0);
-    PENNYLANE_REGISTER_GATE_OP(PauliZ, kernel, 0);
-    PENNYLANE_REGISTER_GATE_OP(Hadamard, kernel, 0);
-    PENNYLANE_REGISTER_GATE_OP(S, kernel, 0);
-    PENNYLANE_REGISTER_GATE_OP(T, kernel, 0);
-    PENNYLANE_REGISTER_GATE_OP(RX, kernel, 1);
-    PENNYLANE_REGISTER_GATE_OP(RY, kernel, 1);
-    PENNYLANE_REGISTER_GATE_OP(RZ, kernel, 1);
-    PENNYLANE_REGISTER_GATE_OP(PhaseShift, kernel, 1);
-    PENNYLANE_REGISTER_GATE_OP(Rot, kernel, 3);
-    /* Two-qubit gates */
-    PENNYLANE_REGISTER_GATE_OP(ControlledPhaseShift, kernel, 1);
-    PENNYLANE_REGISTER_GATE_OP(CNOT, kernel, 0);
-    PENNYLANE_REGISTER_GATE_OP(CZ, kernel, 0);
-    PENNYLANE_REGISTER_GATE_OP(SWAP, kernel, 0);
-    PENNYLANE_REGISTER_GATE_OP(CRX, kernel, 1);
-    PENNYLANE_REGISTER_GATE_OP(CRY, kernel, 1);
-    PENNYLANE_REGISTER_GATE_OP(CRZ, kernel, 1);
-    PENNYLANE_REGISTER_GATE_OP(CRot, kernel, 3);
-    /* Three-qubit gates */
-    PENNYLANE_REGISTER_GATE_OP(Toffoli, kernel, 0);
-    PENNYLANE_REGISTER_GATE_OP(CSWAP, kernel, 0);
-
+    registerImplementedGateIter<fp_t, kernel, 0>(dispatcher);
     return 0;
 }
 
@@ -95,17 +130,16 @@ template struct registerBeforeMain<double, KernelType::LM>;
 
 template <>
 const int registerBeforeMain<float, KernelType::PI>::dummy =
-    registerAllGateOps<float, KernelType::PI>();
+    registerAllImplementedGateOps<float, KernelType::PI>();
 
 template <>
 const int registerBeforeMain<float, KernelType::LM>::dummy =
-    registerAllGateOps<float, KernelType::LM>();
+    registerAllImplementedGateOps<float, KernelType::LM>();
 
 template <>
 const int registerBeforeMain<double, KernelType::PI>::dummy =
-    registerAllGateOps<double, KernelType::PI>();
+    registerAllImplementedGateOps<double, KernelType::PI>();
 
 template <>
 const int registerBeforeMain<double, KernelType::LM>::dummy =
-    registerAllGateOps<double, KernelType::LM>();
-} // namespace Pennylane
+    registerAllImplementedGateOps<double, KernelType::LM>();

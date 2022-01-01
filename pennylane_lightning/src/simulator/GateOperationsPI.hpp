@@ -24,6 +24,7 @@
 #endif
 /// @endcond
 
+#include "GateOperations.hpp"
 #include "Gates.hpp"
 #include "IndicesUtil.hpp"
 #include "KernelType.hpp"
@@ -46,6 +47,30 @@ template <class fp_t> class GateOperationsPI {
     using CFP_t = std::complex<fp_t>;
 
     constexpr static KernelType kernel_id = KernelType::PI;
+
+    constexpr static std::array implemented_gates = {
+        GateOperations::PauliX,
+        GateOperations::PauliY,
+        GateOperations::PauliZ,
+        GateOperations::Hadamard,
+        GateOperations::S,
+        GateOperations::T,
+        GateOperations::RX,
+        GateOperations::RY,
+        GateOperations::RZ,
+        GateOperations::PhaseShift,
+        GateOperations::Rot,
+        GateOperations::ControlledPhaseShift,
+        GateOperations::CNOT,
+        GateOperations::CZ,
+        GateOperations::SWAP,
+        GateOperations::CRX,
+        GateOperations::CRY,
+        GateOperations::CRZ,
+        GateOperations::CRot,
+        GateOperations::Toffoli,
+        GateOperations::CSWAP,
+    };
 
     /**
      * @brief Apply a given matrix directly to the statevector.

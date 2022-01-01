@@ -30,15 +30,13 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCNOT",
     TestType::applyHadamard(st.data(), num_qubits, {0}, false);
 
     // correct this when LM kernels are fully developed
-    if constexpr (TestType::kernel_id == KernelType::PI) {
+    if constexpr (array_has(TestType::implemented_gates, GateOperations::CNOT)) {
         for (size_t index = 1; index < num_qubits; index++) {
             TestType::applyCNOT(st.data(), num_qubits, {index - 1, index},
                                 false);
         }
         CHECK(st.front() == Util::INVSQRT2<fp_t>());
         CHECK(st.back() == Util::INVSQRT2<fp_t>());
-    } else {
-        CHECK_THROWS(TestType::applyCNOT(st.data(), num_qubits, {0, 1}, false));
     }
 }
 
@@ -57,7 +55,7 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applySWAP",
     TestType::applyPauliX(ini_st.data(), num_qubits, {1}, false);
 
     // correct this when LM kernels are fully developed
-    if constexpr (TestType::kernel_id == KernelType::PI) {
+    if constexpr (array_has(TestType::implemented_gates, GateOperations::SWAP)) {
         CHECK(ini_st ==
               std::vector<CFP_t>{Util::ZERO<fp_t>(), Util::ZERO<fp_t>(),
                                  Util::INVSQRT2<fp_t>(), Util::ZERO<fp_t>(),
@@ -118,11 +116,9 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applySWAP",
             CHECK(sv12 == expected);
             CHECK(sv21 == expected);
         }
-    } else {
-        auto st = ini_st;
-        CHECK_THROWS(TestType::applySWAP(st.data(), num_qubits, {0, 1}, false));
     }
 }
+
 // NOLINTNEXTLINE: Avoiding complexity errors
 TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCZ",
                            "[GateOperations_Two_Nonparam]",
@@ -139,7 +135,7 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCZ",
     TestType::applyPauliX(ini_st.data(), num_qubits, {1}, false);
 
     // correct this when LM kernels are fully developed
-    if constexpr (TestType::kernel_id == KernelType::PI) {
+    if constexpr (array_has(TestType::implemented_gates, GateOperations::CZ)) {
         auto st = ini_st;
         CHECK(st == std::vector<CFP_t>{Util::ZERO<fp_t>(), Util::ZERO<fp_t>(),
                                        std::complex<fp_t>(1.0 / sqrt(2), 0),
@@ -192,8 +188,5 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCZ",
             CHECK(sv12 == expected);
             CHECK(sv21 == expected);
         }
-    } else {
-        auto st = ini_st;
-        CHECK_THROWS(TestType::applySWAP(st.data(), num_qubits, {0, 1}, false));
     }
 }

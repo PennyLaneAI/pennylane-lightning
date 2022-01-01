@@ -45,22 +45,22 @@
  * @brief This macro defines methods for State-vector class. The kernel template
  * argument choose the kernel to run.
  */
-#define PENNYLANE_STATEVECTOR_DEFINE_OPS(GATE_NAME)                            \
-    template <KernelType kernel, typename... Ts>                               \
-    inline void apply##GATE_NAME##_(const std::vector<size_t> &wires,          \
-                                    bool inverse, Ts &&...args) {              \
-        auto *arr = getData();                                                 \
-        SelectGateOps<fp_t, kernel>::apply##GATE_NAME(                         \
-            arr, num_qubits_, wires, inverse, std::forward<Ts>(args)...);      \
+#define PENNYLANE_STATEVECTOR_DEFINE_OPS(GATE_NAME)                              \
+    template <KernelType kernel, typename... Ts>                                 \
+    inline void apply##GATE_NAME##_(const std::vector<size_t> &wires,            \
+                                    bool inverse, Ts &&...args) {                \
+        auto *arr = getData();                                                   \
+        SelectGateOps<fp_t, kernel>::apply##GATE_NAME(                           \
+            arr, num_qubits_, wires, inverse, std::forward<Ts>(args)...);        \
     }
 
-#define PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GATE_NAME)                    \
-    template <typename... Ts>                                                  \
-    inline void apply##GATE_NAME(const std::vector<size_t> &wires,             \
-                                 bool inverse, Ts &&...args) {                 \
-        apply##GATE_NAME##_<static_lookup<GateOperations::GATE_NAME>(          \
-            DEFAULT_KERNEL_FOR_OPS)>(wires, inverse,                           \
-                                     std::forward<Ts>(args)...);               \
+#define PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GATE_NAME)                      \
+    template <typename... Ts>                                                    \
+    inline void apply##GATE_NAME(const std::vector<size_t> &wires,               \
+                                 bool inverse, Ts &&...args) {                   \
+        apply##GATE_NAME##_<lookup(                                              \
+            DEFAULT_KERNEL_FOR_OPS, GateOperations::GATE_NAME)>(wires, inverse,  \
+                                     std::forward<Ts>(args)...);                 \
     }
 
 namespace Pennylane {
@@ -119,6 +119,23 @@ template <class fp_t, class Derived> class StateVectorBase {
 
     [[nodiscard]] inline auto getData() const -> const CFP_t * {
         return static_cast<const Derived *>(this)->getData();
+    }
+
+    /**
+     * @brief Apply a single gate to the state-vector using a given kernel.
+     *
+     * @param kernel Kernel to run the operation
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Optional parameter list for parametric gates.
+     */
+    void applyOperation(KernelType kernel, const std::string &opName,
+                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<fp_t> &params = {}) {
+        auto *arr = getData();
+        DynamicDispatcher<fp_t>::getInstance().applyOperation(
+            kernel, arr, num_qubits_, opName, wires, inverse, params);
     }
 
     /**
@@ -186,12 +203,6 @@ template <class fp_t, class Derived> class StateVectorBase {
         SelectGateOps<fp_t, kernel>::applyMatrix(arr, num_qubits_, matrix,
                                                  wires, inverse);
     }
-    inline void applyMatrix(const CFP_t *matrix,
-                            const std::vector<size_t> &wires,
-                            bool inverse = false) {
-        applyMatrix_<static_lookup<GateOperations::Matrix>(
-            DEFAULT_KERNEL_FOR_OPS)>(matrix, wires, inverse);
-    }
     template <KernelType kernel>
     inline void applyMatrix_(const std::vector<CFP_t> &matrix,
                              const std::vector<size_t> &wires,
@@ -199,6 +210,13 @@ template <class fp_t, class Derived> class StateVectorBase {
         auto *arr = getData();
         SelectGateOps<fp_t, kernel>::applyMatrix(arr, num_qubits_, matrix,
                                                  wires, inverse);
+    }
+
+    inline void applyMatrix(const CFP_t *matrix,
+                            const std::vector<size_t> &wires,
+                            bool inverse = false) {
+        applyMatrix_<static_lookup<GateOperations::Matrix>(
+            DEFAULT_KERNEL_FOR_OPS)>(matrix, wires, inverse);
     }
     inline void applyMatrix(const std::vector<CFP_t> &matrix,
                             const std::vector<size_t> &wires,

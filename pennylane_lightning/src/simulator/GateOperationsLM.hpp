@@ -18,6 +18,7 @@
 #pragma once
 
 #include "Error.hpp"
+#include "GateOperations.hpp"
 #include "Gates.hpp"
 #include "KernelType.hpp"
 #include "Util.hpp"
@@ -31,7 +32,7 @@ namespace Pennylane {
 /**
  * @brief Fill ones from LSB to rev_wire
  */
-auto constexpr fillTrailingZeros(size_t pos) -> size_t {
+auto constexpr fillTrailingOnes(size_t pos) -> size_t {
     return (pos == 0) ? 0 : (~size_t(0) >> (CHAR_BIT * sizeof(size_t) - pos));
 }
 /**
@@ -48,12 +49,30 @@ template <class fp_t> class GateOperationsLM {
   public:
     using scalar_type_t = fp_t;
     using CFP_t = std::complex<fp_t>;
+    
+    constexpr static KernelType kernel_id = KernelType::LM;
+
+    constexpr static std::array implemented_gates = {
+        GateOperations::PauliX,
+        GateOperations::PauliY,
+        GateOperations::PauliZ,
+        GateOperations::Hadamard,
+        GateOperations::S,
+        GateOperations::T,
+        GateOperations::RX,
+        GateOperations::RY,
+        GateOperations::RZ,
+        GateOperations::PhaseShift,
+        GateOperations::Rot,
+        GateOperations::CZ,
+        GateOperations::CNOT
+    };
 
   private:
     static void applySingleQubitOp(CFP_t *arr, size_t num_qubits,
                                    const CFP_t *op_matrix, size_t wire) {
         size_t rev_wire = num_qubits - wire - 1;
-        const size_t wire_parity = fillTrailingZeros(rev_wire);
+        const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
         for (size_t n = 0; n < Util::exp2(num_qubits - 1); ++n) {
@@ -70,37 +89,13 @@ template <class fp_t> class GateOperationsLM {
     }
 
   public:
-    constexpr static KernelType kernel_id = KernelType::LM;
-
-    static void applyMatrix(CFP_t *arr, size_t num_qubits, const CFP_t *matrix,
-                            const std::vector<size_t> &wires,
-                            [[maybe_unused]] bool inverse) {
-        (void)arr;
-        (void)num_qubits;
-        (void)matrix;
-        (void)wires;
-        (void)inverse;
-        PL_ABORT("GaterOperationsLM::applyMatrix is not implemented yet");
-    }
-
-    static void applyMatrix(CFP_t *arr, size_t num_qubits,
-                            const std::vector<CFP_t> &matrix,
-                            const std::vector<size_t> &wires,
-                            [[maybe_unused]] bool inverse) {
-        (void)arr;
-        (void)num_qubits;
-        (void)matrix;
-        (void)wires;
-        (void)inverse;
-        PL_ABORT("GaterOperationsLM::applyMatrix is not implemented yet");
-    }
 
     static void applyPauliX(CFP_t *arr, const size_t num_qubits,
                             const std::vector<size_t> &wires,
                             [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
-        const size_t wire_parity = fillTrailingZeros(rev_wire);
+        const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
         for (size_t k = 0; k < Util::exp2(num_qubits - 1); ++k) {
@@ -115,7 +110,7 @@ template <class fp_t> class GateOperationsLM {
                             [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
-        const size_t wire_parity = fillTrailingZeros(rev_wire);
+        const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
         fp_t *data_z = reinterpret_cast<fp_t *>(arr);
@@ -140,8 +135,13 @@ template <class fp_t> class GateOperationsLM {
                             [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
-        for (size_t n = 0; n < Util::exp2(num_qubits); ++n) {
-            arr[n] *= 1 - 2 * int((n >> rev_wire) & 1U);
+        const size_t wire_parity = fillTrailingOnes(rev_wire);
+        const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
+
+        for (size_t k = 0; k < Util::exp2(num_qubits - 1); ++k) {
+            const size_t i0 = ((k << 1) & wire_parity_inv) | (wire_parity & k);
+            const size_t i1 = i0 | (1 << rev_wire);
+            arr[i1] *= -1;
         }
     }
 
@@ -161,7 +161,7 @@ template <class fp_t> class GateOperationsLM {
                        [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
-        const size_t wire_parity = fillTrailingZeros(rev_wire);
+        const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
         const CFP_t shift =
@@ -179,7 +179,7 @@ template <class fp_t> class GateOperationsLM {
                        [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
-        const size_t wire_parity = fillTrailingZeros(rev_wire);
+        const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
         const CFP_t shift =
@@ -247,7 +247,7 @@ template <class fp_t> class GateOperationsLM {
                                 Param_t angle) {
         assert(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
-        const size_t wire_parity = fillTrailingZeros(rev_wire);
+        const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
         const CFP_t s =
@@ -273,109 +273,45 @@ template <class fp_t> class GateOperationsLM {
         applySingleQubitOp(arr, num_qubits, rotMat.data(), wires[0]);
     }
 
-    static void applyCNOT(CFP_t *arr, size_t num_qubits,
-                          const std::vector<size_t> &wires,
-                          [[maybe_unused]] bool inverse) {
-        (void)arr;
-        (void)num_qubits;
-        (void)wires;
-        PL_ABORT("GaterOperationsLM::applyCNOT is not implemented yet");
+    static void applyCNOT(CFP_t* arr, const size_t num_qubits, 
+                          const std::vector<size_t>& wires, [[maybe_unused]] bool inverse) {
+        assert (wires.size() == 2);
+        
+        const size_t rev_wire0 = num_qubits - wires[1] - 1;
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+
+        const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
+        const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
+        const size_t parity_low = fillTrailingOnes(rev_wire_min);
+        const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
+        const size_t parity_middle = fillLeadingOnes(rev_wire_min + 1) &
+                                     fillTrailingOnes(rev_wire_max);
+        /* This is faster than iterate over all indices */
+        for (size_t k = 0; k < Util::exp2(num_qubits-2); ++k) {
+            const size_t i00 = ((k << 2) & parity_high) | ((k << 1) & parity_middle) | (k & parity_low);
+            const size_t i10 = i00 | (1U << rev_wire1);
+            const size_t i11 = i00 | (1U << rev_wire1) | (1U << rev_wire0);
+
+            std::swap(arr[i10], arr[i11]);
+        }
     }
 
-    static void applySWAP(CFP_t *arr, size_t num_qubits,
-                          const std::vector<size_t> &wires,
-                          [[maybe_unused]] bool inverse) {
-        (void)arr;
-        (void)num_qubits;
-        (void)wires;
-        PL_ABORT("GaterOperationsLM::applySWAP is not implemented yet");
-    }
-
-    static void applyCZ(CFP_t *arr, size_t num_qubits,
-                        const std::vector<size_t> &wires,
-                        [[maybe_unused]] bool inverse) {
-        (void)arr;
-        (void)num_qubits;
-        (void)wires;
-        PL_ABORT("GaterOperationsLM::applyCZ is not implemented yet");
-    }
-
-    template <class Param_t = fp_t>
-    static void applyControlledPhaseShift(CFP_t *arr, size_t num_qubits,
-                                          const std::vector<size_t> &wires,
-                                          [[maybe_unused]] bool inverse,
-                                          Param_t angle) {
-        (void)arr;
-        (void)num_qubits;
-        (void)wires;
-        (void)angle;
-        PL_ABORT("GaterOperationsLM::applyControlledPhaseShift is not "
-                 "implemented yet");
-    }
-
-    template <class Param_t = fp_t>
-    static void applyCRX(CFP_t *arr, size_t num_qubits,
-                         const std::vector<size_t> &wires,
-                         [[maybe_unused]] bool inverse, Param_t angle) {
-        (void)arr;
-        (void)num_qubits;
-        (void)wires;
-        (void)angle;
-        PL_ABORT("GaterOperationsLM::applyCRX is not implemented yet");
-    }
-
-    template <class Param_t = fp_t>
-    static void applyCRY(CFP_t *arr, size_t num_qubits,
-                         const std::vector<size_t> &wires,
-                         [[maybe_unused]] bool inverse, Param_t angle) {
-        (void)arr;
-        (void)num_qubits;
-        (void)wires;
-        (void)angle;
-        PL_ABORT("GaterOperationsLM::applyCRY is not implemented yet");
-    }
-
-    template <class Param_t = fp_t>
-    static void applyCRZ(CFP_t *arr, size_t num_qubits,
-                         const std::vector<size_t> &wires,
-                         [[maybe_unused]] bool inverse, Param_t angle) {
-        (void)arr;
-        (void)num_qubits;
-        (void)wires;
-        (void)angle;
-        PL_ABORT("GaterOperationsLM::applyCRZ is not implemented yet");
-    }
-
-    template <class Param_t = fp_t>
-    static void applyCRot(CFP_t *arr, size_t num_qubits,
-                          const std::vector<size_t> &wires,
-                          [[maybe_unused]] bool inverse, Param_t phi,
-                          Param_t theta, Param_t omega) {
-        (void)arr;
-        (void)num_qubits;
-        (void)wires;
-        (void)phi;
-        (void)theta;
-        (void)omega;
-        PL_ABORT("GaterOperationsLM::applyCRot is not implemented yet");
-    }
-
-    static void applyToffoli(CFP_t *arr, size_t num_qubits,
-                             const std::vector<size_t> &wires,
-                             [[maybe_unused]] bool inverse) {
-        (void)arr;
-        (void)num_qubits;
-        (void)wires;
-        PL_ABORT("GaterOperationsLM::applyTofolli is not implemented yet");
-    }
-
-    static void applyCSWAP(CFP_t *arr, size_t num_qubits,
-                           const std::vector<size_t> &wires,
-                           [[maybe_unused]] bool inverse) {
-        (void)arr;
-        (void)num_qubits;
-        (void)wires;
-        PL_ABORT("GaterOperationsLM::applyCSWAP is not implemented yet");
+    static void applyCZ(CFP_t* arr, const size_t num_qubits, 
+                          const std::vector<size_t>& wires, [[maybe_unused]] bool inverse) {
+        assert (wires.size() == 2);
+        
+        const size_t rev_wire_min = std::min(num_qubits - wires[0] - 1, num_qubits - wires[1] - 1);
+        const size_t rev_wire_max = std::max(num_qubits - wires[0] - 1, num_qubits - wires[1] - 1);
+        const size_t parity_low = fillTrailingOnes(rev_wire_min);
+        const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
+        const size_t parity_middle = fillLeadingOnes(rev_wire_min + 1) &
+                                     fillTrailingOnes(rev_wire_max);
+        /* This is faster than iterate over all indices */
+        for (size_t k = 0; k < Util::exp2(num_qubits-2); ++k) {
+            const size_t i00 = ((k << 2) & parity_high) | ((k << 1) & parity_middle) | (k & parity_low);
+            const size_t i11 = i00 | (1U << rev_wire_min) | (1U << rev_wire_max);
+            arr[i11] *= -1; 
+        }
     }
 };
 

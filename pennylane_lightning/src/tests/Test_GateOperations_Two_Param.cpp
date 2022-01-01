@@ -53,18 +53,13 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyControlledPhaseShift",
         scaleVector(vec, coef);
     }
 
-    // correct this when LM kernels are fully developed
-    if constexpr (TestType::kernel_id == KernelType::PI) {
+    if constexpr (array_has(TestType::implemented_gates, GateOperations::ControlledPhaseShift)) {
         auto st = ini_st;
 
         TestType::applyControlledPhaseShift(st.data(), num_qubits, {0, 1},
                                             false, {angles[0]});
         CAPTURE(st);
         CHECK(isApproxEqual(st, expected_results[0]));
-    } else {
-        auto st = ini_st;
-        CHECK_THROWS(TestType::applyControlledPhaseShift(
-            st.data(), num_qubits, {0, 1}, false, {angles[0]}));
     }
 }
 
@@ -86,7 +81,7 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCRot",
     expected_results[(0b1 << num_qubits) - 2] = rot_mat[2];
 
     // correct this when LM kernels are fully developed
-    if constexpr (TestType::kernel_id == KernelType::PI) {
+    if constexpr (array_has(TestType::implemented_gates, GateOperations::CRot)) {
         SECTION("CRot0,1 |000> -> |000>") {
             auto st = create_zero_state<fp_t>(num_qubits);
             TestType::applyCRot(st.data(), num_qubits, {0, 1}, false, angles[0],
@@ -103,9 +98,5 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCRot",
 
             CHECK(isApproxEqual(st, expected_results));
         }
-    } else {
-        auto st = ini_st;
-        CHECK_THROWS(TestType::applyCRot(st.data(), num_qubits, {0, 1}, false,
-                                         angles[0], angles[1], angles[2]));
     }
 }

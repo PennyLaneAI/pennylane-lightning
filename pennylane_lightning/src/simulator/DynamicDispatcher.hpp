@@ -28,14 +28,21 @@
 #include <variant>
 #include <vector>
 
-namespace Pennylane {
 
+namespace Pennylane::Internal {
 struct PairHash {
     size_t operator()(const std::pair<std::string, KernelType> &p) const {
         return std::hash<std::string>()(p.first) ^
                std::hash<int>()(static_cast<int>(p.second));
     }
 };
+
+} // namespace Pennylane::Internal
+
+namespace Pennylane {
+
+
+
 /**
  * @brief DynamicDispatcher class
  *
@@ -47,43 +54,21 @@ template <typename fp_t> class DynamicDispatcher {
     using CFP_t = std::complex<scalar_type_t>;
 
   private:
-    using Func = KernelFuncType<fp_t>;
+    using Func = std::function<void(std::complex<fp_t> * /*data*/, size_t /*num_qubits*/,
+                               const std::vector<size_t> & /*wires*/, bool /*inverse*/,
+                               const std::vector<fp_t> & /*params*/)>;
+
+
     const std::unordered_map<std::string, size_t> gate_wires_{
         {"PauliX", 1},     {"PauliY", 1},  {"PauliZ", 1},
         {"Hadamard", 1},   {"S", 1},       {"T", 1},
         {"RX", 1},         {"RY", 1},      {"RZ", 1},
         {"PhaseShift", 1}, {"Rot", 1},     {"ControlledPhaseShift", 2},
-        {"CNOT", 2},       {"SZ", 2},      {"SWAP", 2},
+        {"CNOT", 2},       {"CZ", 2},      {"SWAP", 2},
         {"CRX", 2},        {"CRY", 2},     {"CRZ", 2},
         {"CRot", 2},       {"Toffoli", 3}, {"CSWAP", 3}};
-    const std::vector<std::string> gate_names_{
-        /* Single-qubit gates */
-        "PauliX",
-        "PauliY",
-        "PauliZ",
-        "Hadamard",
-        "S",
-        "T",
-        "RX",
-        "RY",
-        "RZ",
-        "PhaseShift",
-        "Rot",
-        /* Two-qubit gates */
-        "ControlledPhaseShift",
-        "CNOT",
-        "CZ",
-        "SWAP",
-        "CRX",
-        "CRY",
-        "CRZ",
-        "CRot",
-        /* Three-qubit gates */
-        "Toffoli",
-        "CSWAP",
-    };
 
-    std::unordered_map<std::pair<std::string, KernelType>, Func, PairHash>
+    std::unordered_map<std::pair<std::string, KernelType>, Func, Internal::PairHash>
         gates_;
 
     std::unordered_map<std::string, KernelType> kernel_map_;
@@ -91,7 +76,7 @@ template <typename fp_t> class DynamicDispatcher {
     DynamicDispatcher() {
         for (const auto &[gate_op, gate_name] : GATE_NAMES) {
             kernel_map_.emplace(
-                gate_name, dynamic_lookup(DEFAULT_KERNEL_FOR_OPS, gate_op));
+                gate_name, lookup(DEFAULT_KERNEL_FOR_OPS, gate_op));
         }
     }
 
@@ -111,6 +96,9 @@ template <typename fp_t> class DynamicDispatcher {
         gates_.emplace(std::make_pair(op_name, kernel), func);
     }
 
+    /**
+     * @brief Update a functor for a key (op_name, kernel)
+     */
     template <typename FunctionType>
     void updateKernelForOps(const std::string &op_name, KernelType kernel) {
         kernel_map_.emplace(op_name, kernel);
@@ -148,6 +136,14 @@ template <typename fp_t> class DynamicDispatcher {
     }
 
     /**
+     * @brief Apply a single gate to the state-vector using a registered kernel
+     *
+     * @param data Pointer to data.
+     * @param num_qubits Number of qubits.
+     * @param op_name Gate operation name.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Optional parameter list for parametric gates.
      */
     inline void applyOperation(CFP_t *data, size_t num_qubits,
                                const std::string &op_name,
@@ -162,6 +158,16 @@ template <typename fp_t> class DynamicDispatcher {
                        inverse, params);
     }
 
+    /**
+     * @brief Apply multiple gates to the state-vector using a registered kernel
+     *
+     * @param data Pointer to data.
+     * @param num_qubits Number of qubits.
+     * @param ops List of Gate operation names.
+     * @param wires List of wires to apply each gate to.
+     * @param inverse List of inverses
+     * @param params List of parameters
+     */
     void applyOperations(CFP_t *data, size_t num_qubits,
                          const std::vector<std::string> &ops,
                          const std::vector<std::vector<size_t>> &wires,
@@ -180,6 +186,17 @@ template <typename fp_t> class DynamicDispatcher {
         }
     }
 
+    /**
+     * @brief Apply multiple (non-paramterized) gates to the state-vector 
+     * using a registered kernel
+     *
+     * @param data Pointer to data.
+     * @param num_qubits Number of qubits.
+     * @param ops List of Gate operation names.
+     * @param wires List of wires to apply each gate to.
+     * @param inverse List of inverses
+     * @param params List of parameters
+     */
     void applyOperations(CFP_t *data, size_t num_qubits,
                          const std::vector<std::string> &ops,
                          const std::vector<std::vector<size_t>> &wires,

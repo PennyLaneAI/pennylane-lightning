@@ -17,27 +17,33 @@
  */
 #pragma once
 #include "Error.hpp"
+#include "Util.hpp"
 
 #include <array>
 #include <string>
+#include <string_view>
+#include <utility>
 
 namespace Pennylane {
-enum class KernelType { PI, LM };
+enum class KernelType { PI, LM, Unknown };
 
-constexpr std::array<KernelType, 2> KERNELS_TO_PYEXPORT = {
+constexpr std::array AVAILABLE_KERNELS = {
+    std::pair<KernelType, std::string_view>{KernelType::PI, "PI"},
+    std::pair<KernelType, std::string_view>{KernelType::LM, "LM"},
+};
+
+[[maybe_unused]] constexpr std::array KERNELS_TO_PYEXPORT = {
     KernelType::PI,
     KernelType::LM,
 };
 
-constexpr auto kernel_to_string(KernelType kernel) -> std::string_view {
-    switch (kernel) {
-    case KernelType::PI:
-        return "PI";
-    case KernelType::LM:
-        return "LM";
+constexpr auto string_to_kernel(std::string_view str) -> KernelType {
+    for(const auto& [k, v]: AVAILABLE_KERNELS) {
+        if (v == str) {
+            return k;
+        }
     }
-    static_assert(true, "Unreachable code");
-    return "";
+    //PL_ABORT("Kernel " + std::string(str) + " is unknown."); TODO: this will be allowed in C++20
+    return KernelType::Unknown;
 }
-
 } // namespace Pennylane

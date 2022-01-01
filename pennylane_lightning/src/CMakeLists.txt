@@ -15,14 +15,14 @@ if(ENABLE_CLANG_TIDY)
     )
 endif()
 
-if (BUILD_TESTS)
-    enable_testing()
-endif()
+
 
 ###############################################################################
 # Process options
 ###############################################################################
 include("${PROJECT_SOURCE_DIR}/../../cmake/process_options.cmake")
+
+
 
 
 ###############################################################################
@@ -37,5 +37,10 @@ foreach(COMP ${COMPONENT_SUBDIRS})
 endforeach()
 
 if (BUILD_TESTS)
+    enable_testing()
     add_subdirectory("tests" "tests")
+endif()
+
+if (BUILD_EXAMPLES)
+    add_subdirectory("examples" "examples")
 endif()
