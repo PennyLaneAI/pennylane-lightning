@@ -84,7 +84,7 @@ def check(args) -> int:
             needs_reformatted_ct += 1
 
     sys.stderr.write(f"{needs_reformatted_ct} files would be re-formatted.\n")
-    sys.stderr.write(f"{len(files) - needs_reformatted_ct} would be left unchanged.\n")
+    sys.stderr.write(f"{len(CPP_FILES_TO_FORMAT) - needs_reformatted_ct} would be left unchanged.\n")
 
     return needs_reformatted_ct
 

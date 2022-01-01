@@ -55,15 +55,15 @@ using CBLAS_LAYOUT = enum CBLAS_LAYOUT {
 
 namespace Pennylane::Util::Internal {
 constexpr auto countBit1(uint32_t n) -> int {
-    n = (n & 0x55555555U) +// NOLINT(readability-magic-numbers)
-        ((n >> 1) & 0x55555555U); // NOLINT(readability-magic-numbers)
-    n = (n & 0x33333333U) +// NOLINT(readability-magic-numbers)
-        ((n >> 2) & 0x33333333U); // NOLINT(readability-magic-numbers)
-    n = (n & 0x0F0F0F0FU) +// NOLINT(readability-magic-numbers)
-        ((n >> 4) & 0x0F0F0F0FU); // NOLINT(readability-magic-numbers)
-    n = (n & 0X00FF00FFU) +// NOLINT(readability-magic-numbers)
-        ((n >> 8) & 0x00FF00FFU); // NOLINT(readability-magic-numbers)
-    n = (n & 0X0000FFFFU) +// NOLINT(readability-magic-numbers)
+    n = (n & 0x55555555U) +        // NOLINT(readability-magic-numbers)
+        ((n >> 1) & 0x55555555U);  // NOLINT(readability-magic-numbers)
+    n = (n & 0x33333333U) +        // NOLINT(readability-magic-numbers)
+        ((n >> 2) & 0x33333333U);  // NOLINT(readability-magic-numbers)
+    n = (n & 0x0F0F0F0FU) +        // NOLINT(readability-magic-numbers)
+        ((n >> 4) & 0x0F0F0F0FU);  // NOLINT(readability-magic-numbers)
+    n = (n & 0X00FF00FFU) +        // NOLINT(readability-magic-numbers)
+        ((n >> 8) & 0x00FF00FFU);  // NOLINT(readability-magic-numbers)
+    n = (n & 0X0000FFFFU) +        // NOLINT(readability-magic-numbers)
         ((n >> 16) & 0x0000FFFFU); // NOLINT(readability-magic-numbers)
     return n;
 }
