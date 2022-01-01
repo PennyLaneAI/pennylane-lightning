@@ -180,25 +180,29 @@ template <class fp_t, class Derived> class StateVectorBase {
      */
     template <KernelType kernel>
     inline void applyMatrix_(const CFP_t *matrix,
-                             const std::vector<size_t> &wires, bool inverse = false) {
+                             const std::vector<size_t> &wires,
+                             bool inverse = false) {
         auto *arr = getData();
         SelectGateOps<fp_t, kernel>::applyMatrix(arr, num_qubits_, matrix,
                                                  wires, inverse);
     }
     inline void applyMatrix(const CFP_t *matrix,
-                            const std::vector<size_t> &wires, bool inverse = false) {
+                            const std::vector<size_t> &wires,
+                            bool inverse = false) {
         applyMatrix_<static_lookup<GateOperations::Matrix>(
             DEFAULT_KERNEL_FOR_OPS)>(matrix, wires, inverse);
     }
     template <KernelType kernel>
     inline void applyMatrix_(const std::vector<CFP_t> &matrix,
-                             const std::vector<size_t> &wires, bool inverse = false) {
+                             const std::vector<size_t> &wires,
+                             bool inverse = false) {
         auto *arr = getData();
         SelectGateOps<fp_t, kernel>::applyMatrix(arr, num_qubits_, matrix,
                                                  wires, inverse);
     }
     inline void applyMatrix(const std::vector<CFP_t> &matrix,
-                            const std::vector<size_t> &wires, bool inverse = false) {
+                            const std::vector<size_t> &wires,
+                            bool inverse = false) {
         applyMatrix_<static_lookup<GateOperations::Matrix>(
             DEFAULT_KERNEL_FOR_OPS)>(matrix, wires, inverse);
     }

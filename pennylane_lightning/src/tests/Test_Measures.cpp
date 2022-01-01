@@ -3,8 +3,8 @@
 #include <vector>
 
 #include "Measures.hpp"
-#include "StateVectorRaw.hpp"
 #include "StateVectorManaged.hpp"
+#include "StateVectorRaw.hpp"
 #include "Util.hpp"
 
 #include <catch2/catch.hpp>
@@ -14,8 +14,8 @@ using namespace Pennylane;
 namespace {
 using std::complex;
 using std::size_t;
-using std::vector;
 using std::string;
+using std::vector;
 }; // namespace
 
 StateVectorManaged<double> Initializing_StateVector() {
