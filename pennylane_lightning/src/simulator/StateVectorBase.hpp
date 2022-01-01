@@ -48,7 +48,7 @@
 #define PENNYLANE_STATEVECTOR_DEFINE_OPS(GATE_NAME)                            \
     template <KernelType kernel, typename... Ts>                               \
     inline void apply##GATE_NAME##_(const std::vector<size_t> &wires,          \
-                                    bool inverse, Ts &&... args) {             \
+                                    bool inverse, Ts &&...args) {              \
         auto *arr = getData();                                                 \
         SelectGateOps<fp_t, kernel>::apply##GATE_NAME(                         \
             arr, num_qubits_, wires, inverse, std::forward<Ts>(args)...);      \
@@ -57,7 +57,7 @@
 #define PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GATE_NAME)                    \
     template <typename... Ts>                                                  \
     inline void apply##GATE_NAME(const std::vector<size_t> &wires,             \
-                                 bool inverse, Ts &&... args) {                \
+                                 bool inverse, Ts &&...args) {                 \
         apply##GATE_NAME##_<static_lookup<GateOperations::GATE_NAME>(          \
             DEFAULT_KERNEL_FOR_OPS)>(wires, inverse,                           \
                                      std::forward<Ts>(args)...);               \
