@@ -90,12 +90,26 @@ PENNYLANE_SPECIALIZE_TO_FUNCTOR(CRot, 3)
 PENNYLANE_SPECIALIZE_TO_FUNCTOR(Toffoli, 0)
 PENNYLANE_SPECIALIZE_TO_FUNCTOR(CSWAP, 0)
 
+/*
+ * TODO: In C++20, it may be possible to replace the template for and generate the all
+ * tuples statically.
+ *
 template <class fp_t, KernelType kernel, GateOperations op>
 constexpr auto toFunctorTuple() -> 
 std::tuple<std::string_view, KernelType, typename DynamicDispatcher<fp_t>::FunctionType>
 {
     return std::make_tuple(lookup(GATE_NAMES, op), kernel, toFunctor<fp_t, kernel, op>());
 }
+template <class fp_t, KernelType kernel>
+constexpr auto allImplementedGateOpsTuples() {
+    using Tuple = std::tuple<std::string_view, KernelType, typename DynamicDispatcher<fp_t>::FunctionType>;
+
+    std::vector<Tuple> res;
+    for (GateOperations op: SelectGateOps<fp_t, kernel>::implemeted_gates) {
+    }
+
+}
+*/
 
 template <class fp_t, KernelType kernel, size_t idx>
 void registerImplementedGateIter(DynamicDispatcher<fp_t>& dispatcher) {
