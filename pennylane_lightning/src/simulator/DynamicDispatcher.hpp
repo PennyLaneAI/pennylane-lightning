@@ -41,8 +41,6 @@ struct PairHash {
 
 namespace Pennylane {
 
-
-
 /**
  * @brief DynamicDispatcher class
  *
@@ -53,12 +51,11 @@ template <typename fp_t> class DynamicDispatcher {
     using scalar_type_t = fp_t;
     using CFP_t = std::complex<scalar_type_t>;
 
-  private:
     using Func = std::function<void(std::complex<fp_t> * /*data*/, size_t /*num_qubits*/,
                                const std::vector<size_t> & /*wires*/, bool /*inverse*/,
                                const std::vector<fp_t> & /*params*/)>;
 
-
+  private:
     const std::unordered_map<std::string, size_t> gate_wires_{
         {"PauliX", 1},     {"PauliY", 1},  {"PauliZ", 1},
         {"Hadamard", 1},   {"S", 1},       {"T", 1},
