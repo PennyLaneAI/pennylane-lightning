@@ -22,7 +22,6 @@ import pennylane as qml
 import pytest
 from pennylane import DeviceError
 
-import pennylane_lightning as lq
 from pennylane_lightning import LightningQubit
 from pennylane_lightning.lightning_qubit import CPP_BINARY_AVAILABLE
 
@@ -595,6 +594,8 @@ class TestLightningQubitIntegration:
     """Integration tests for lightning.qubit. This test ensures it integrates
     properly with the PennyLane interface, in particular QNode."""
 
+    from pennylane_lightning import LightningQubit as lq
+
     def test_load_default_qubit_device(self):
         """Test that the default plugin loads correctly"""
 
@@ -603,6 +604,7 @@ class TestLightningQubitIntegration:
         assert dev.shots is None
         assert dev.short_name == "lightning.qubit"
 
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_load_default_qubit_device_with_valid_kernel(self):
         for gate in ['PauliX', 'CRot', 'CSWAP']:
             dev = qml.device("lightning.qubit",  kernel_for_ops={gate: 'PI'}, wires=2)
@@ -611,12 +613,14 @@ class TestLightningQubitIntegration:
             assert dev.shots is None
             assert dev.short_name == "lightning.qubit"
     
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_load_default_qubit_device_with_invalid_kernel(self):
         for gate in ['PauliX', 'CRot', 'CSWAP']:
             with pytest.raises(ValueError, 
                     match=f"The given kernel Unknown does not implement {gate} gate."):
                 dev = qml.device("lightning.qubit", kernel_for_ops={gate: 'Unknown'}, wires=2)
 
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_load_default_qubit_device_with_invalied_param(self):
         with pytest.raises(ValueError, 
                 match=f"Argument kernel_for_ops must be a dictionary."):
