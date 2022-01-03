@@ -39,7 +39,6 @@ def _is_lightning_gate(gate_name):
         return False
     return gate_name in DEFAULT_KERNEL_FOR_OPS
 
-
 def _obs_has_kernel(obs: Observable) -> bool:
     """Returns True if the input observable has a supported kernel in the C++ backend.
 

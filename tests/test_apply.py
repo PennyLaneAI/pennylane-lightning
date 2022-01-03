@@ -603,6 +603,25 @@ class TestLightningQubitIntegration:
         assert dev.shots is None
         assert dev.short_name == "lightning.qubit"
 
+    def test_load_default_qubit_device_with_valid_kernel(self):
+        for gate in ['PauliX', 'CRot', 'CSWAP']:
+            dev = qml.device("lightning.qubit",  kernel_for_ops={gate: 'PI'}, wires=2)
+
+            assert dev.num_wires == 2
+            assert dev.shots is None
+            assert dev.short_name == "lightning.qubit"
+    
+    def test_load_default_qubit_device_with_invalid_kernel(self):
+        for gate in ['PauliX', 'CRot', 'CSWAP']:
+            with pytest.raises(ValueError, 
+                    match=f"The given kernel Unknown does not implement {gate} gate."):
+                dev = qml.device("lightning.qubit", kernel_for_ops={gate: 'Unknown'}, wires=2)
+
+    def test_load_default_qubit_device_with_invalied_param(self):
+        with pytest.raises(ValueError, 
+                match=f"Argument kernel_for_ops must be a dictionary."):
+            dev = qml.device("lightning.qubit", kernel_for_ops=['I am a list'], wires=2)
+
     def test_no_backprop(self):
         """Test that lightning.qubit does not support the backprop
         differentiation method."""
