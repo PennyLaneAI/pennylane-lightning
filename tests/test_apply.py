@@ -606,7 +606,7 @@ class TestLightningQubitIntegration:
 
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_load_default_qubit_device_with_valid_kernel(self):
-        for gate in ['PauliX', 'CRot', 'CSWAP']:
+        for gate in ['PauliX', 'CRot', 'CSWAP', 'Matrix']:
             dev = qml.device("lightning.qubit",  kernel_for_ops={gate: 'PI'}, wires=2)
 
             assert dev.num_wires == 2
@@ -615,7 +615,7 @@ class TestLightningQubitIntegration:
     
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_load_default_qubit_device_with_invalid_kernel(self):
-        for gate in ['PauliX', 'CRot', 'CSWAP']:
+        for gate in ['PauliX', 'CRot', 'CSWAP', 'Matrix']:
             with pytest.raises(ValueError, 
                     match=f"The given kernel Unknown does not implement {gate} gate."):
                 dev = qml.device("lightning.qubit", kernel_for_ops={gate: 'Unknown'}, wires=2)
