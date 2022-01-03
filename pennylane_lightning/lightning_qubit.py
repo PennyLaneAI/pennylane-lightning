@@ -46,7 +46,7 @@ try:
             AdjointJacobianC128,
             VectorJacobianProductC128,
             DEFAULT_KERNEL_FOR_OPS,
-            EXPORTED_KERNELS,
+            EXPORTED_KERNEL_OPS,
         )
     else:
         from .lightning_qubit_ops import (
@@ -57,7 +57,7 @@ try:
             AdjointJacobianC128,
             VectorJacobianProductC128,
             DEFAULT_KERNEL_FOR_OPS,
-            EXPORTED_KERNELS,
+            EXPORTED_KERNEL_OPS,
         )
     from ._serialize import _serialize_obs, _serialize_ops
 
@@ -112,12 +112,12 @@ class LightningQubit(DefaultQubit):
             if not isinstance(kernel_for_ops, dict):
                 raise ValueError("Argument kernel_for_ops must be a dictionary.")
 
-            for k, v in kernel_for_ops.items():
-                if k not in kernel_for_ops:
-                    raise ValueError("The provided gate operation {} is unknown.".format(k))
-                if v not in EXPORTED_KERNELS:
-                    raise ValueError("The given kernel {} is unknown".format(v))
-                self._kernel_for_ops[k] = v
+            for gate_op, kernel in kernel_for_ops.items():
+                if (kernel, gate_op) not in EXPORTED_KERNEL_OPS:
+                    raise ValueError(
+                        f"The given kernel {kernel} does not implement {gate_op} gate."
+                    )
+                self._kernel_for_ops[gate_op] = kernel
 
         super().__init__(wires, shots=shots)
 

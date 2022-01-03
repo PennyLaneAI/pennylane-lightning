@@ -50,10 +50,10 @@
     inline void apply##GATE_NAME##_(const std::vector<size_t> &wires,          \
                                     bool inverse, Ts &&...args) {              \
         auto *arr = getData();                                                 \
-        static_assert(                                                         \
-            array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,      \
-                          GateOperations::GATE_NAME),                          \
-            "The given kernel does not implements the given gate");            \
+        static_assert(static_lookup<GateOperations::GATE_NAME>(                \
+                          GATE_NUM_PARAMS) == sizeof...(Ts),                   \
+                      "The provided number of parameters for gate " #GATE_NAME \
+                      " is wrong.");                                           \
         SelectGateOps<fp_t, kernel>::apply##GATE_NAME(                         \
             arr, num_qubits_, wires, inverse, std::forward<Ts>(args)...);      \
     }
@@ -62,9 +62,15 @@
     template <typename... Ts>                                                  \
     inline void apply##GATE_NAME(const std::vector<size_t> &wires,             \
                                  bool inverse, Ts &&...args) {                 \
-        apply##GATE_NAME##_<static_lookup<GateOperations::GATE_NAME>(          \
-            DEFAULT_KERNEL_FOR_OPS)>(wires, inverse,                           \
-                                     std::forward<Ts>(args)...);               \
+        constexpr auto kernel =                                                \
+            static_lookup<GateOperations::GATE_NAME>(DEFAULT_KERNEL_FOR_OPS);  \
+        static_assert(                                                         \
+            array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,      \
+                          GateOperations::GATE_NAME),                          \
+            "The default kernel for gate " #GATE_NAME                          \
+            "does not implement it.");                                         \
+        apply##GATE_NAME##_<kernel>(wires, inverse,                            \
+                                    std::forward<Ts>(args)...);                \
     }
 
 namespace Pennylane {
@@ -203,10 +209,6 @@ template <class fp_t, class Derived> class StateVectorBase {
     inline void applyMatrix_(const CFP_t *matrix,
                              const std::vector<size_t> &wires,
                              bool inverse = false) {
-        static_assert(
-            array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,
-                          GateOperations::Matrix),
-            "The given kernel does not implement applyMatrix.");
         auto *arr = getData();
         SelectGateOps<fp_t, kernel>::applyMatrix(arr, num_qubits_, matrix,
                                                  wires, inverse);
@@ -215,10 +217,6 @@ template <class fp_t, class Derived> class StateVectorBase {
     inline void applyMatrix_(const std::vector<CFP_t> &matrix,
                              const std::vector<size_t> &wires,
                              bool inverse = false) {
-        static_assert(
-            array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,
-                          GateOperations::Matrix),
-            "The given kernel does not implement applyMatrix.");
         auto *arr = getData();
         SelectGateOps<fp_t, kernel>::applyMatrix(arr, num_qubits_, matrix,
                                                  wires, inverse);
@@ -227,14 +225,24 @@ template <class fp_t, class Derived> class StateVectorBase {
     inline void applyMatrix(const CFP_t *matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
-        applyMatrix_<static_lookup<GateOperations::Matrix>(
-            DEFAULT_KERNEL_FOR_OPS)>(matrix, wires, inverse);
+        constexpr auto kernel =
+            static_lookup<GateOperations::Matrix>(DEFAULT_KERNEL_FOR_OPS);
+        static_assert(
+            array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,
+                          GateOperations::Matrix),
+            "The default kernel for applyMatrix does not implement it.");
+        applyMatrix_<kernel>(matrix, wires, inverse);
     }
     inline void applyMatrix(const std::vector<CFP_t> &matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
-        applyMatrix_<static_lookup<GateOperations::Matrix>(
-            DEFAULT_KERNEL_FOR_OPS)>(matrix, wires, inverse);
+        constexpr auto kernel =
+            static_lookup<GateOperations::Matrix>(DEFAULT_KERNEL_FOR_OPS);
+        static_assert(
+            array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,
+                          GateOperations::Matrix),
+            "The default kernel for applyMatrix does not implement it.");
+        applyMatrix_<kernel>(matrix, wires, inverse);
     }
 
     /**

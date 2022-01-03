@@ -131,7 +131,8 @@ TEMPLATE_TEST_CASE("StateVectorRaw::setData", "[StateVectorRaw]", float,
                       params[1], params[2]);                                   \
             auto sv_data = ini_st;                                             \
             StateVectorRaw sv(sv_data.data(), sv_data.size());                 \
-            sv.apply##GATE_NAME(wires, false, params[0], params[1], params[2]);\
+            sv.apply##GATE_NAME(wires, false, params[0], params[1],            \
+                                params[2]);                                    \
             REQUIRE(isApproxEqual(sv_data, expected));                         \
         }                                                                      \
         template <KernelType kernel>                                           \

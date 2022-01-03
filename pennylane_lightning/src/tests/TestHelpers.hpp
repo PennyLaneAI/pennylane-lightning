@@ -103,10 +103,10 @@ auto create_random_state(RandomEngine &re, size_t num_qubits)
         res[idx] = {dist(re), dist(re)};
     }
 
-    fp_t norm = std::transform_reduce(
+    fp_t squared_norm = std::transform_reduce(
         std::cbegin(res), std::cend(res), fp_t{}, std::plus<fp_t>(),
-        [](std::complex<fp_t> z) { return std::norm<fp_t>(z); });
+        static_cast<fp_t (*)(const std::complex<fp_t> &)>(&std::norm<fp_t>));
 
-    scaleVector(res, std::complex<fp_t>{1.0} / std::sqrt(norm));
+    scaleVector(res, std::complex<fp_t>{1.0} / std::sqrt(squared_norm));
     return res;
 }
