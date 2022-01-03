@@ -45,24 +45,26 @@
  * @brief This macro defines methods for State-vector class. The kernel template
  * argument choose the kernel to run.
  */
-#define PENNYLANE_STATEVECTOR_DEFINE_OPS(GATE_NAME)                              \
-    template <KernelType kernel, typename... Ts>                                 \
-    inline void apply##GATE_NAME##_(const std::vector<size_t> &wires,            \
-                                    bool inverse, Ts &&...args) {                \
-        auto *arr = getData();                                                   \
-        static_assert(array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates, GateOperations::GATE_NAME),\
-                "The given kernel does not implements the given gate"); \
-        SelectGateOps<fp_t, kernel>::apply##GATE_NAME(                           \
-            arr, num_qubits_, wires, inverse, std::forward<Ts>(args)...);        \
+#define PENNYLANE_STATEVECTOR_DEFINE_OPS(GATE_NAME)                            \
+    template <KernelType kernel, typename... Ts>                               \
+    inline void apply##GATE_NAME##_(const std::vector<size_t> &wires,          \
+                                    bool inverse, Ts &&...args) {              \
+        auto *arr = getData();                                                 \
+        static_assert(                                                         \
+            array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,      \
+                          GateOperations::GATE_NAME),                          \
+            "The given kernel does not implements the given gate");            \
+        SelectGateOps<fp_t, kernel>::apply##GATE_NAME(                         \
+            arr, num_qubits_, wires, inverse, std::forward<Ts>(args)...);      \
     }
 
-#define PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GATE_NAME)                      \
-    template <typename... Ts>                                                    \
-    inline void apply##GATE_NAME(const std::vector<size_t> &wires,               \
-                                 bool inverse, Ts &&...args) {                   \
-        apply##GATE_NAME##_<static_lookup<GateOperations::GATE_NAME>(            \
-            DEFAULT_KERNEL_FOR_OPS)>(wires, inverse,  \
-                                     std::forward<Ts>(args)...);                 \
+#define PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GATE_NAME)                    \
+    template <typename... Ts>                                                  \
+    inline void apply##GATE_NAME(const std::vector<size_t> &wires,             \
+                                 bool inverse, Ts &&...args) {                 \
+        apply##GATE_NAME##_<static_lookup<GateOperations::GATE_NAME>(          \
+            DEFAULT_KERNEL_FOR_OPS)>(wires, inverse,                           \
+                                     std::forward<Ts>(args)...);               \
     }
 
 namespace Pennylane {
@@ -201,8 +203,10 @@ template <class fp_t, class Derived> class StateVectorBase {
     inline void applyMatrix_(const CFP_t *matrix,
                              const std::vector<size_t> &wires,
                              bool inverse = false) {
-        static_assert(array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates, 
-                    GateOperations::Matrix), "The given kernel does not implement applyMatrix.");
+        static_assert(
+            array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,
+                          GateOperations::Matrix),
+            "The given kernel does not implement applyMatrix.");
         auto *arr = getData();
         SelectGateOps<fp_t, kernel>::applyMatrix(arr, num_qubits_, matrix,
                                                  wires, inverse);
@@ -211,8 +215,10 @@ template <class fp_t, class Derived> class StateVectorBase {
     inline void applyMatrix_(const std::vector<CFP_t> &matrix,
                              const std::vector<size_t> &wires,
                              bool inverse = false) {
-        static_assert(array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates, 
-                    GateOperations::Matrix), "The given kernel does not implement applyMatrix.");
+        static_assert(
+            array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,
+                          GateOperations::Matrix),
+            "The given kernel does not implement applyMatrix.");
         auto *arr = getData();
         SelectGateOps<fp_t, kernel>::applyMatrix(arr, num_qubits_, matrix,
                                                  wires, inverse);
@@ -605,19 +611,18 @@ template <class fp_t, class Derived> class StateVectorBase {
      * DEFAULT_KERNEL_FOR_OPS
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CSWAP)
-    
 
     /**
      * @brief compare two state-vector.
      */
     template <class RhsDerived>
-    bool operator==(const StateVectorBase<fp_t, RhsDerived>& rhs) {
+    bool operator==(const StateVectorBase<fp_t, RhsDerived> &rhs) {
         if (num_qubits_ != rhs.getNumQubits()) {
             return false;
         }
-        const CFP_t* data1 = getData();
-        const CFP_t* data2 = rhs.getData();
-        for(size_t k = 0; k < getLength(); ++k) {
+        const CFP_t *data1 = getData();
+        const CFP_t *data2 = rhs.getData();
+        for (size_t k = 0; k < getLength(); ++k) {
             if (data1[k] != data2[k]) {
                 return false;
             }

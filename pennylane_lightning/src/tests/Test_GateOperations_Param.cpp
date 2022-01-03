@@ -15,7 +15,7 @@
 #include <vector>
 
 /**
- * @file This file contains tests for parameterized gates. List of such gates is 
+ * @file This file contains tests for parameterized gates. List of such gates is
  * [RX, RY, RZ, PhaseShift, Rot, ControlledPhaseShift, CRX, CRY, CRZ, CRot]
  */
 
@@ -32,8 +32,7 @@ using namespace Pennylane;
 
 TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyRX",
                            "[GateOperations_Param],[single-qubit]",
-                           ALL_GATE_OPERATIONS,
-                           (float, double)) {
+                           ALL_GATE_OPERATIONS, (float, double)) {
     using fp_t = typename TestType::scalar_type_t;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 1;
@@ -76,8 +75,7 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyRX",
 
 TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyRY",
                            "[GateOperations_Param],[single-qubit]",
-                           ALL_GATE_OPERATIONS,
-                           (float, double)) {
+                           ALL_GATE_OPERATIONS, (float, double)) {
     using fp_t = typename TestType::scalar_type_t;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 1;
@@ -122,8 +120,7 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyRY",
 
 TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyRZ",
                            "[GateOperations_Param],[single-qubit]",
-                           ALL_GATE_OPERATIONS,
-                           (float, double)) {
+                           ALL_GATE_OPERATIONS, (float, double)) {
     using fp_t = typename TestType::scalar_type_t;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
@@ -171,8 +168,7 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyRZ",
 
 TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyPhaseShift",
                            "[GateOperations_Param],[single-qubit]",
-                           ALL_GATE_OPERATIONS,
-                           (float, double)) {
+                           ALL_GATE_OPERATIONS, (float, double)) {
     using fp_t = typename TestType::scalar_type_t;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
@@ -220,8 +216,7 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyPhaseShift",
 
 TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyRot",
                            "[GateOperations_Param],[single-qubit]",
-                           ALL_GATE_OPERATIONS,
-                           (float, double)) {
+                           ALL_GATE_OPERATIONS, (float, double)) {
     using fp_t = typename TestType::scalar_type_t;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
@@ -253,16 +248,13 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyRot",
     }
 }
 
-
 /*******************************************************************************
  * Two-qubit gates
  ******************************************************************************/
 
-
 TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyControlledPhaseShift",
                            "[GateOperations_Param],[two-qubit]",
-                           ALL_GATE_OPERATIONS,
-                           (float, double)) {
+                           ALL_GATE_OPERATIONS, (float, double)) {
     using fp_t = typename TestType::scalar_type_t;
     using CFP_t = typename TestType::CFP_t;
 
@@ -290,7 +282,8 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyControlledPhaseShift",
         scaleVector(vec, coef);
     }
 
-    if constexpr (array_has_elt(TestType::implemented_gates, GateOperations::ControlledPhaseShift)) {
+    if constexpr (array_has_elt(TestType::implemented_gates,
+                                GateOperations::ControlledPhaseShift)) {
         auto st = ini_st;
 
         TestType::applyControlledPhaseShift(st.data(), num_qubits, {0, 1},
@@ -302,8 +295,7 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyControlledPhaseShift",
 
 TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCRot",
                            "[GateOperations_Param],[two-qubit]",
-                           ALL_GATE_OPERATIONS,
-                           (float, double)) {
+                           ALL_GATE_OPERATIONS, (float, double)) {
     using fp_t = typename TestType::scalar_type_t;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
@@ -318,7 +310,8 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCRot",
     expected_results[(0b1 << num_qubits) - 2] = rot_mat[2];
 
     // correct this when LM kernels are fully developed
-    if constexpr (array_has_elt(TestType::implemented_gates, GateOperations::CRot)) {
+    if constexpr (array_has_elt(TestType::implemented_gates,
+                                GateOperations::CRot)) {
         SECTION("CRot0,1 |000> -> |000>") {
             auto st = create_zero_state<fp_t>(num_qubits);
             TestType::applyCRot(st.data(), num_qubits, {0, 1}, false, angles[0],

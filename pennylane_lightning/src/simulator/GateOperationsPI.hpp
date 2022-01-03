@@ -49,29 +49,17 @@ template <class fp_t> class GateOperationsPI {
     constexpr static KernelType kernel_id = KernelType::PI;
 
     constexpr static std::array implemented_gates = {
-        GateOperations::PauliX,
-        GateOperations::PauliY,
-        GateOperations::PauliZ,
-        GateOperations::Hadamard,
-        GateOperations::S,
-        GateOperations::T,
-        GateOperations::RX,
-        GateOperations::RY,
-        GateOperations::RZ,
-        GateOperations::PhaseShift,
-        GateOperations::Rot,
-        GateOperations::ControlledPhaseShift,
-        GateOperations::CNOT,
-        GateOperations::CZ,
-        GateOperations::SWAP,
-        GateOperations::CRX,
-        GateOperations::CRY,
-        GateOperations::CRZ,
-        GateOperations::CRot,
-        GateOperations::Toffoli,
-        GateOperations::CSWAP,
-        GateOperations::Matrix
-    };
+        GateOperations::PauliX, GateOperations::PauliY,
+        GateOperations::PauliZ, GateOperations::Hadamard,
+        GateOperations::S,      GateOperations::T,
+        GateOperations::RX,     GateOperations::RY,
+        GateOperations::RZ,     GateOperations::PhaseShift,
+        GateOperations::Rot,    GateOperations::ControlledPhaseShift,
+        GateOperations::CNOT,   GateOperations::CZ,
+        GateOperations::SWAP,   GateOperations::CRX,
+        GateOperations::CRY,    GateOperations::CRZ,
+        GateOperations::CRot,   GateOperations::Toffoli,
+        GateOperations::CSWAP,  GateOperations::Matrix};
 
     /**
      * @brief Apply a given matrix directly to the statevector.

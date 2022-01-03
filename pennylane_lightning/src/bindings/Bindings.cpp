@@ -579,8 +579,7 @@ void registerKernelFunctionsIter(PyClass &&pyclass) {
     }
 }
 
-constexpr auto createTupleForPybind() {
-}
+constexpr auto createTupleForPybind() {}
 
 template <class PrecisionT, class Param_t, class PyClass>
 void registerKernelFunctions(PyClass &&pyclass) {

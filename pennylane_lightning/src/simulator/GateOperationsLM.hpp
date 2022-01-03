@@ -49,25 +49,17 @@ template <class fp_t> class GateOperationsLM {
   public:
     using scalar_type_t = fp_t;
     using CFP_t = std::complex<fp_t>;
-    
+
     constexpr static KernelType kernel_id = KernelType::LM;
 
     constexpr static std::array implemented_gates = {
-        GateOperations::PauliX,
-        GateOperations::PauliY,
-        GateOperations::PauliZ,
-        GateOperations::Hadamard,
-        GateOperations::S,
-        GateOperations::T,
-        GateOperations::RX,
-        GateOperations::RY,
-        GateOperations::RZ,
-        GateOperations::PhaseShift,
-        GateOperations::Rot,
-        GateOperations::CZ,
-        GateOperations::CNOT,
-        GateOperations::SWAP
-    };
+        GateOperations::PauliX, GateOperations::PauliY,
+        GateOperations::PauliZ, GateOperations::Hadamard,
+        GateOperations::S,      GateOperations::T,
+        GateOperations::RX,     GateOperations::RY,
+        GateOperations::RZ,     GateOperations::PhaseShift,
+        GateOperations::Rot,    GateOperations::CZ,
+        GateOperations::CNOT,   GateOperations::SWAP};
 
   private:
     static void applySingleQubitOp(CFP_t *arr, size_t num_qubits,
@@ -90,7 +82,6 @@ template <class fp_t> class GateOperationsLM {
     }
 
   public:
-
     static void applyMatrix(CFP_t *arr, size_t num_qubits, const CFP_t *matrix,
                             const std::vector<size_t> &wires, bool inverse) {
         (void)arr;
@@ -284,10 +275,11 @@ template <class fp_t> class GateOperationsLM {
         applySingleQubitOp(arr, num_qubits, rotMat.data(), wires[0]);
     }
 
-    static void applyCNOT(CFP_t* arr, const size_t num_qubits, 
-                          const std::vector<size_t>& wires, [[maybe_unused]] bool inverse) {
-        assert (wires.size() == 2);
-        
+    static void applyCNOT(CFP_t *arr, const size_t num_qubits,
+                          const std::vector<size_t> &wires,
+                          [[maybe_unused]] bool inverse) {
+        assert(wires.size() == 2);
+
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
 
@@ -295,11 +287,12 @@ template <class fp_t> class GateOperationsLM {
         const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
         const size_t parity_low = fillTrailingOnes(rev_wire_min);
         const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
-        const size_t parity_middle = fillLeadingOnes(rev_wire_min + 1) &
-                                     fillTrailingOnes(rev_wire_max);
+        const size_t parity_middle =
+            fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
         /* This is faster than iterate over all indices */
-        for (size_t k = 0; k < Util::exp2(num_qubits-2); ++k) {
-            const size_t i00 = ((k << 2) & parity_high) | ((k << 1) & parity_middle) | (k & parity_low);
+        for (size_t k = 0; k < Util::exp2(num_qubits - 2); ++k) {
+            const size_t i00 = ((k << 2) & parity_high) |
+                               ((k << 1) & parity_middle) | (k & parity_low);
             const size_t i10 = i00 | (1U << rev_wire1);
             const size_t i11 = i00 | (1U << rev_wire1) | (1U << rev_wire0);
 
@@ -307,36 +300,45 @@ template <class fp_t> class GateOperationsLM {
         }
     }
 
-    static void applyCZ(CFP_t* arr, const size_t num_qubits, 
-                          const std::vector<size_t>& wires, [[maybe_unused]] bool inverse) {
-        assert (wires.size() == 2);
-        
-        const size_t rev_wire_min = std::min(num_qubits - wires[0] - 1, num_qubits - wires[1] - 1);
-        const size_t rev_wire_max = std::max(num_qubits - wires[0] - 1, num_qubits - wires[1] - 1);
+    static void applyCZ(CFP_t *arr, const size_t num_qubits,
+                        const std::vector<size_t> &wires,
+                        [[maybe_unused]] bool inverse) {
+        assert(wires.size() == 2);
+
+        const size_t rev_wire_min =
+            std::min(num_qubits - wires[0] - 1, num_qubits - wires[1] - 1);
+        const size_t rev_wire_max =
+            std::max(num_qubits - wires[0] - 1, num_qubits - wires[1] - 1);
         const size_t parity_low = fillTrailingOnes(rev_wire_min);
         const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
-        const size_t parity_middle = fillLeadingOnes(rev_wire_min + 1) &
-                                     fillTrailingOnes(rev_wire_max);
+        const size_t parity_middle =
+            fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
         /* This is faster than iterate over all indices */
-        for (size_t k = 0; k < Util::exp2(num_qubits-2); ++k) {
-            const size_t i00 = ((k << 2) & parity_high) | ((k << 1) & parity_middle) | (k & parity_low);
-            const size_t i11 = i00 | (1U << rev_wire_min) | (1U << rev_wire_max);
-            arr[i11] *= -1; 
+        for (size_t k = 0; k < Util::exp2(num_qubits - 2); ++k) {
+            const size_t i00 = ((k << 2) & parity_high) |
+                               ((k << 1) & parity_middle) | (k & parity_low);
+            const size_t i11 =
+                i00 | (1U << rev_wire_min) | (1U << rev_wire_max);
+            arr[i11] *= -1;
         }
     }
 
     static void applySWAP(CFP_t *arr, size_t num_qubits,
-            const std::vector<size_t> &wires, [[maybe_unused]] bool inverse) {
-        assert (wires.size() == 2);
-        
-        const size_t rev_wire_min = std::min(num_qubits - wires[0] - 1, num_qubits - wires[1] - 1);
-        const size_t rev_wire_max = std::max(num_qubits - wires[0] - 1, num_qubits - wires[1] - 1);
+                          const std::vector<size_t> &wires,
+                          [[maybe_unused]] bool inverse) {
+        assert(wires.size() == 2);
+
+        const size_t rev_wire_min =
+            std::min(num_qubits - wires[0] - 1, num_qubits - wires[1] - 1);
+        const size_t rev_wire_max =
+            std::max(num_qubits - wires[0] - 1, num_qubits - wires[1] - 1);
         const size_t parity_low = fillTrailingOnes(rev_wire_min);
         const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
-        const size_t parity_middle = fillLeadingOnes(rev_wire_min + 1) &
-                                     fillTrailingOnes(rev_wire_max);
-        for (size_t k = 0; k < Util::exp2(num_qubits-2); ++k) {
-            const size_t i00 = ((k << 2) & parity_high) | ((k << 1) & parity_middle) | (k & parity_low);
+        const size_t parity_middle =
+            fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
+        for (size_t k = 0; k < Util::exp2(num_qubits - 2); ++k) {
+            const size_t i00 = ((k << 2) & parity_high) |
+                               ((k << 1) & parity_middle) | (k & parity_low);
             const size_t i10 = i00 | (1U << rev_wire_min);
             const size_t i01 = i00 | (1U << rev_wire_max);
             std::swap(arr[i10], arr[i01]);
@@ -420,7 +422,6 @@ template <class fp_t> class GateOperationsLM {
         (void)wires;
         PL_ABORT("GaterOperationsLM::applyCSWAP is not implemented yet");
     }
-
 };
 
 } // namespace Pennylane

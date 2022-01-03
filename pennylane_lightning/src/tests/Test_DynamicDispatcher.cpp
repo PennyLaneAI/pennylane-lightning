@@ -21,100 +21,125 @@ using namespace Pennylane;
  * @file This file contains tests for DynamicDispatcher class
  */
 
-#define PENNYLANE_TEST_DYNAMIC_DISPATCH(GATE_NAME) \
-template <class fp_t, KernelType kernel, int num_params> \
-struct testDispatch##GATE_NAME##ForKernel {\
-    template<class RandomEngine> \
-    static void test(RandomEngine& re, size_t num_qubits){ \
-        static_assert((num_params <= 1) || (num_params == 3), "Cannot find the given num_params."); \
-    }\
-};\
-template <class fp_t, KernelType kernel> \
-struct testDispatch##GATE_NAME##ForKernel<fp_t, kernel, 0> {\
-    template<class RandomEngine>\
-    static void test(RandomEngine& re, size_t num_qubits) { \
-        using CFP_t = std::complex<fp_t>; \
-        std::vector<CFP_t> ini_st = create_random_state<fp_t>(re, num_qubits); \
-        std::vector<CFP_t> expected = ini_st; \
-        std::vector<size_t> wires = createWires(GateOperations::GATE_NAME);\
-        std::vector<fp_t> params = createParams<fp_t>(GateOperations::GATE_NAME);\
-        SelectGateOps<fp_t, KernelType::PI>::apply##GATE_NAME(expected.data(), \
-                    num_qubits, wires, false);\
-        auto test_st = ini_st; \
-        if constexpr (array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,  \
-                      GateOperations::GATE_NAME)) { \
-            DynamicDispatcher<fp_t>::getInstance().applyOperation(kernel, \
-                    test_st.data(), num_qubits, #GATE_NAME, wires, false, params); \
-            REQUIRE(isApproxEqual(test_st, expected)); \
-        } else { \
-            REQUIRE_THROWS(DynamicDispatcher<fp_t>::getInstance().applyOperation(kernel,  \
-                        test_st.data(), num_qubits, #GATE_NAME, wires, false, params)); \
-        }\
-    }\
-};\
-template <class fp_t, KernelType kernel> \
-struct testDispatch##GATE_NAME##ForKernel<fp_t, kernel, 1> {\
-    template<class RandomEngine>\
-    static void test(RandomEngine& re, size_t num_qubits) { \
-        using CFP_t = std::complex<fp_t>; \
-        std::vector<CFP_t> ini_st = create_random_state<fp_t>(re, num_qubits); \
-        std::vector<CFP_t> expected = ini_st; \
-        std::vector<size_t> wires = createWires(GateOperations::GATE_NAME);\
-        std::vector<fp_t> params = createParams<fp_t>(GateOperations::GATE_NAME);\
-        SelectGateOps<fp_t, KernelType::PI>::apply##GATE_NAME(expected.data(), \
-                    num_qubits, wires, false, params[0]);\
-        auto test_st = ini_st; \
-        if constexpr (array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,  \
-                      GateOperations::GATE_NAME)) { \
-            DynamicDispatcher<fp_t>::getInstance().applyOperation(kernel, \
-                    test_st.data(), num_qubits, #GATE_NAME, wires, false, params); \
-            REQUIRE(isApproxEqual(test_st, expected)); \
-        } else { \
-            REQUIRE_THROWS(DynamicDispatcher<fp_t>::getInstance().applyOperation(kernel,  \
-                        test_st.data(), num_qubits, #GATE_NAME, wires, false, params)); \
-        }\
-    }\
-};\
-template <class fp_t, KernelType kernel> \
-struct testDispatch##GATE_NAME##ForKernel<fp_t, kernel, 3> {\
-    template<class RandomEngine>\
-    static void test(RandomEngine& re, size_t num_qubits) { \
-        using CFP_t = std::complex<fp_t>; \
-        std::vector<CFP_t> ini_st = create_random_state<fp_t>(re, num_qubits); \
-        std::vector<CFP_t> expected = ini_st; \
-        std::vector<size_t> wires = createWires(GateOperations::GATE_NAME);\
-        std::vector<fp_t> params = createParams<fp_t>(GateOperations::GATE_NAME);\
-        SelectGateOps<fp_t, KernelType::PI>::apply##GATE_NAME(expected.data(), \
-                    num_qubits, wires, false, params[0], params[1], params[2]);\
-        auto test_st = ini_st; \
-        if constexpr (array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,  \
-                      GateOperations::GATE_NAME)) { \
-            DynamicDispatcher<fp_t>::getInstance().applyOperation(kernel, \
-                    test_st.data(), num_qubits, #GATE_NAME, wires, false, params); \
-            REQUIRE(isApproxEqual(test_st, expected)); \
-        } else { \
-            REQUIRE_THROWS(DynamicDispatcher<fp_t>::getInstance().applyOperation(kernel,  \
-                        test_st.data(), num_qubits, #GATE_NAME, wires, false, params)); \
-        }\
-    }\
-};\
-template <class fp_t, int idx, class RandomEngine>\
-void testDispatch##GATE_NAME##Iter(RandomEngine&& re, size_t num_qubits) {\
-    if constexpr (idx == AVAILABLE_KERNELS.size()) {\
-        return ;\
-    } else {\
-        testDispatch##GATE_NAME##ForKernel<fp_t, std::get<0>(AVAILABLE_KERNELS[idx]),  \
-            static_lookup<GateOperations::GATE_NAME>(GATE_NUM_PARAMS)>::test(re, num_qubits);\
-        testDispatch##GATE_NAME##Iter<fp_t, idx+1>(re, num_qubits);\
-    }\
-}\
-template <class fp_t, class RandomEngine> \
-void testDispatch##GATE_NAME(RandomEngine&& re, size_t num_qubits) {\
-    testDispatch##GATE_NAME##Iter<fp_t, 0>(re, num_qubits);\
-}
+#define PENNYLANE_TEST_DYNAMIC_DISPATCH(GATE_NAME)                             \
+    template <class fp_t, KernelType kernel, int num_params>                   \
+    struct testDispatch##GATE_NAME##ForKernel {                                \
+        template <class RandomEngine>                                          \
+        static void test(RandomEngine &re, size_t num_qubits) {                \
+            static_assert((num_params <= 1) || (num_params == 3),              \
+                          "Cannot find the given num_params.");                \
+        }                                                                      \
+    };                                                                         \
+    template <class fp_t, KernelType kernel>                                   \
+    struct testDispatch##GATE_NAME##ForKernel<fp_t, kernel, 0> {               \
+        template <class RandomEngine>                                          \
+        static void test(RandomEngine &re, size_t num_qubits) {                \
+            using CFP_t = std::complex<fp_t>;                                  \
+            std::vector<CFP_t> ini_st =                                        \
+                create_random_state<fp_t>(re, num_qubits);                     \
+            std::vector<CFP_t> expected = ini_st;                              \
+            std::vector<size_t> wires =                                        \
+                createWires(GateOperations::GATE_NAME);                        \
+            std::vector<fp_t> params =                                         \
+                createParams<fp_t>(GateOperations::GATE_NAME);                 \
+            SelectGateOps<fp_t, KernelType::PI>::apply##GATE_NAME(             \
+                expected.data(), num_qubits, wires, false);                    \
+            auto test_st = ini_st;                                             \
+            if constexpr (array_has_elt(                                       \
+                              SelectGateOps<fp_t, kernel>::implemented_gates,  \
+                              GateOperations::GATE_NAME)) {                    \
+                DynamicDispatcher<fp_t>::getInstance().applyOperation(         \
+                    kernel, test_st.data(), num_qubits, #GATE_NAME, wires,     \
+                    false, params);                                            \
+                REQUIRE(isApproxEqual(test_st, expected));                     \
+            } else {                                                           \
+                REQUIRE_THROWS(                                                \
+                    DynamicDispatcher<fp_t>::getInstance().applyOperation(     \
+                        kernel, test_st.data(), num_qubits, #GATE_NAME, wires, \
+                        false, params));                                       \
+            }                                                                  \
+        }                                                                      \
+    };                                                                         \
+    template <class fp_t, KernelType kernel>                                   \
+    struct testDispatch##GATE_NAME##ForKernel<fp_t, kernel, 1> {               \
+        template <class RandomEngine>                                          \
+        static void test(RandomEngine &re, size_t num_qubits) {                \
+            using CFP_t = std::complex<fp_t>;                                  \
+            std::vector<CFP_t> ini_st =                                        \
+                create_random_state<fp_t>(re, num_qubits);                     \
+            std::vector<CFP_t> expected = ini_st;                              \
+            std::vector<size_t> wires =                                        \
+                createWires(GateOperations::GATE_NAME);                        \
+            std::vector<fp_t> params =                                         \
+                createParams<fp_t>(GateOperations::GATE_NAME);                 \
+            SelectGateOps<fp_t, KernelType::PI>::apply##GATE_NAME(             \
+                expected.data(), num_qubits, wires, false, params[0]);         \
+            auto test_st = ini_st;                                             \
+            if constexpr (array_has_elt(                                       \
+                              SelectGateOps<fp_t, kernel>::implemented_gates,  \
+                              GateOperations::GATE_NAME)) {                    \
+                DynamicDispatcher<fp_t>::getInstance().applyOperation(         \
+                    kernel, test_st.data(), num_qubits, #GATE_NAME, wires,     \
+                    false, params);                                            \
+                REQUIRE(isApproxEqual(test_st, expected));                     \
+            } else {                                                           \
+                REQUIRE_THROWS(                                                \
+                    DynamicDispatcher<fp_t>::getInstance().applyOperation(     \
+                        kernel, test_st.data(), num_qubits, #GATE_NAME, wires, \
+                        false, params));                                       \
+            }                                                                  \
+        }                                                                      \
+    };                                                                         \
+    template <class fp_t, KernelType kernel>                                   \
+    struct testDispatch##GATE_NAME##ForKernel<fp_t, kernel, 3> {               \
+        template <class RandomEngine>                                          \
+        static void test(RandomEngine &re, size_t num_qubits) {                \
+            using CFP_t = std::complex<fp_t>;                                  \
+            std::vector<CFP_t> ini_st =                                        \
+                create_random_state<fp_t>(re, num_qubits);                     \
+            std::vector<CFP_t> expected = ini_st;                              \
+            std::vector<size_t> wires =                                        \
+                createWires(GateOperations::GATE_NAME);                        \
+            std::vector<fp_t> params =                                         \
+                createParams<fp_t>(GateOperations::GATE_NAME);                 \
+            SelectGateOps<fp_t, KernelType::PI>::apply##GATE_NAME(             \
+                expected.data(), num_qubits, wires, false, params[0],          \
+                params[1], params[2]);                                         \
+            auto test_st = ini_st;                                             \
+            if constexpr (array_has_elt(                                       \
+                              SelectGateOps<fp_t, kernel>::implemented_gates,  \
+                              GateOperations::GATE_NAME)) {                    \
+                DynamicDispatcher<fp_t>::getInstance().applyOperation(         \
+                    kernel, test_st.data(), num_qubits, #GATE_NAME, wires,     \
+                    false, params);                                            \
+                REQUIRE(isApproxEqual(test_st, expected));                     \
+            } else {                                                           \
+                REQUIRE_THROWS(                                                \
+                    DynamicDispatcher<fp_t>::getInstance().applyOperation(     \
+                        kernel, test_st.data(), num_qubits, #GATE_NAME, wires, \
+                        false, params));                                       \
+            }                                                                  \
+        }                                                                      \
+    };                                                                         \
+    template <class fp_t, int idx, class RandomEngine>                         \
+    void testDispatch##GATE_NAME##Iter(RandomEngine &&re, size_t num_qubits) { \
+        if constexpr (idx == AVAILABLE_KERNELS.size()) {                       \
+            return;                                                            \
+        } else {                                                               \
+            testDispatch##GATE_NAME##ForKernel<                                \
+                fp_t, std::get<0>(AVAILABLE_KERNELS[idx]),                     \
+                static_lookup<GateOperations::GATE_NAME>(                      \
+                    GATE_NUM_PARAMS)>::test(re, num_qubits);                   \
+            testDispatch##GATE_NAME##Iter<fp_t, idx + 1>(re, num_qubits);      \
+        }                                                                      \
+    }                                                                          \
+    template <class fp_t, class RandomEngine>                                  \
+    void testDispatch##GATE_NAME(RandomEngine &&re, size_t num_qubits) {       \
+        testDispatch##GATE_NAME##Iter<fp_t, 0>(re, num_qubits);                \
+    }
 
 std::vector<size_t> createWires(GateOperations op) {
-    switch(lookup(GATE_WIRES, op)) {
+    switch (lookup(GATE_WIRES, op)) {
     case 1:
         return {0};
     case 2:
@@ -126,9 +151,8 @@ std::vector<size_t> createWires(GateOperations op) {
     }
 }
 
-template<class fp_t>
-std::vector<fp_t> createParams(GateOperations op) {
-    switch(lookup(GATE_NUM_PARAMS, op)) {
+template <class fp_t> std::vector<fp_t> createParams(GateOperations op) {
+    switch (lookup(GATE_NUM_PARAMS, op)) {
     case 0:
         return {};
     case 1:
@@ -162,7 +186,8 @@ PENNYLANE_TEST_DYNAMIC_DISPATCH(CRot)
 PENNYLANE_TEST_DYNAMIC_DISPATCH(Toffoli)
 PENNYLANE_TEST_DYNAMIC_DISPATCH(CSWAP)
 
-TEMPLATE_TEST_CASE("DynamicDispatcher::applyOperation", "[DynamicDispatcher]", float, double) {
+TEMPLATE_TEST_CASE("DynamicDispatcher::applyOperation", "[DynamicDispatcher]",
+                   float, double) {
     std::default_random_engine re{1337};
     testDispatchPauliX<TestType>(re, 4);
     testDispatchPauliY<TestType>(re, 4);

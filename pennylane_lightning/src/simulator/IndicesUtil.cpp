@@ -33,5 +33,4 @@ auto generateBitPatterns(const std::vector<size_t> &qubitIndices,
     return indices;
 }
 
-
 } // namespace Pennylane::IndicesUtil

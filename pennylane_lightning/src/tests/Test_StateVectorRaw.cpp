@@ -14,7 +14,8 @@ constexpr auto referenceKernel = KernelType::PI;
 
 std::default_random_engine re{1337};
 
-TEMPLATE_TEST_CASE("StateVectorRaw::StateVectorRaw", "[StateVectorRaw]", float, double) {
+TEMPLATE_TEST_CASE("StateVectorRaw::StateVectorRaw", "[StateVectorRaw]", float,
+                   double) {
     using fp_t = TestType;
 
     SECTION("StateVectorRaw<TestType> {std::complex<TestType>*, size_t}") {
@@ -28,7 +29,8 @@ TEMPLATE_TEST_CASE("StateVectorRaw::StateVectorRaw", "[StateVectorRaw]", float, 
     }
 }
 
-TEMPLATE_TEST_CASE("StateVectorRaw::setData", "[StateVectorRaw]", float, double) {
+TEMPLATE_TEST_CASE("StateVectorRaw::setData", "[StateVectorRaw]", float,
+                   double) {
     using fp_t = TestType;
 
     auto st_data = create_random_state<fp_t>(re, 4);
@@ -42,104 +44,123 @@ TEMPLATE_TEST_CASE("StateVectorRaw::setData", "[StateVectorRaw]", float, double)
     REQUIRE(sv.getLength() == (1U << 8));
 }
 
-#define PENNYLANE_TEST_STATIC_DISPATCH(GATE_NAME)                                             \
-template <typename fp_t, int num_params>                                   \
-struct TestGateOps##GATE_NAME {                                                               \
-    static void test() {                                                                      \
-        static_assert((num_params != 2) || (num_params > 3),\
-                "Unsupported number of parameters for gate " #GATE_NAME ".");    \
-    }                                                                                         \
-};                                                                                            \
-template <typename fp_t>                                                   \
-struct TestGateOps##GATE_NAME<fp_t, 0> {                                              \
-    constexpr static GateOperations op = GateOperations::GATE_NAME;                           \
-    template<KernelType kernel>                                                               \
-    static std::enable_if_t<array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,     \
-            op), void> test() {                                                               \
-        const size_t num_qubits = 4;                                                          \
-        auto ini_st = create_random_state<fp_t>(re, num_qubits);                              \
-        auto num_wires = lookup(GATE_WIRES, op);                                              \
-        std::vector<size_t> wires;                                                            \
-        wires.resize(num_wires);                                                              \
-        std::iota(wires.begin(), wires.end(), 0);                                             \
-        auto expected = ini_st;                                                               \
-        SelectGateOps<fp_t, referenceKernel>::apply##GATE_NAME(expected.data(),               \
-            num_qubits, wires, false);                                                        \
-        auto sv_data = ini_st;                                                                \
-        StateVectorRaw sv(sv_data.data(), sv_data.size());                                    \
-        sv.apply##GATE_NAME(wires, false);                                                    \
-        REQUIRE(isApproxEqual(sv_data, expected));                                            \
-    }                                                                                         \
-    template<KernelType kernel>                                                               \
-    static std::enable_if_t<!array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,    \
-            op), void> test() {  /* do nothing */ }                                           \
-};                                                                                            \
-template <typename fp_t>                                                   \
-struct TestGateOps##GATE_NAME<fp_t, 1> {                                              \
-    constexpr static GateOperations op = GateOperations::GATE_NAME;                           \
-    constexpr static std::array<fp_t, 1> params = {0.312};                                           \
-    template<KernelType kernel>                                                               \
-    static std::enable_if_t<array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,     \
-            op), void> test() {                                                               \
-        const size_t num_qubits = 4;                                                          \
-        auto ini_st = create_random_state<fp_t>(re, num_qubits);                              \
-        auto num_wires = lookup(GATE_WIRES, op);                                              \
-        std::vector<size_t> wires;                                                            \
-        wires.resize(num_wires);                                                              \
-        std::iota(wires.begin(), wires.end(), 0);                                             \
-        auto expected = ini_st;                                                               \
-        SelectGateOps<fp_t, referenceKernel>::template apply##GATE_NAME<fp_t>(expected.data(),\
-            num_qubits, wires, false, params[0]);                                             \
-        auto sv_data = ini_st;                                                                \
-        StateVectorRaw sv(sv_data.data(), sv_data.size());                         \
-        sv.apply##GATE_NAME(wires, false, params[0]);                                                    \
-        REQUIRE(isApproxEqual(sv_data, expected));                                            \
-    }                                                                                         \
-    template<KernelType kernel>                                                               \
-    static std::enable_if_t<!array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,    \
-            op), void> test() {  /* do nothing */ }                                           \
-};                                                                                            \
-template <typename fp_t>                                                   \
-struct TestGateOps##GATE_NAME<fp_t, 3> {                                              \
-    constexpr static GateOperations op = GateOperations::GATE_NAME;                           \
-    constexpr static std::array<fp_t, 3> params = {0.128, -0.563, 1.414};                            \
-    template<KernelType kernel>                                                               \
-    static std::enable_if_t<array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,     \
-            op), void> test() {                                                               \
-        const size_t num_qubits = 4;                                                          \
-        auto ini_st = create_random_state<fp_t>(re, num_qubits);                              \
-        auto num_wires = lookup(GATE_WIRES, op);                                              \
-        std::vector<size_t> wires;                                                            \
-        wires.resize(num_wires);                                                              \
-        std::iota(wires.begin(), wires.end(), 0);                                             \
-        auto expected = ini_st;                                                               \
-        SelectGateOps<fp_t, referenceKernel>::template apply##GATE_NAME<fp_t>(expected.data(),\
-            num_qubits, wires, false, params[0], params[1], params[2]);                       \
-        auto sv_data = ini_st;                                                                \
-        StateVectorRaw sv(sv_data.data(), sv_data.size());                                    \
-        sv.apply##GATE_NAME(wires, false);                                                    \
-        REQUIRE(isApproxEqual(sv_data, expected));                                            \
-    }                                                                                         \
-    template<KernelType kernel>                                                               \
-    static std::enable_if_t<!array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,    \
-            op), void> test() {  /* do nothing */ }                                           \
-};                                                                                            \
-template <typename fp_t, size_t idx>                                                          \
-void testStateVectorApply##GATE_NAME##Iter() {                                                \
-    if constexpr (idx == AVAILABLE_KERNELS.size()) {                                          \
-    } else {                                                                                  \
-        constexpr auto kernel = std::get<0>(AVAILABLE_KERNELS[idx]);                      \
-        TestGateOps##GATE_NAME<fp_t, \
-            static_lookup<GateOperations::GATE_NAME>(GATE_NUM_PARAMS)>::template test<kernel>();            \
-        testStateVectorApply##GATE_NAME##Iter<fp_t, idx+1>();                                 \
-    }                                                                                         \
-}                                                                                             \
-template <typename fp_t>                                                                      \
-void testStateVectorApply##GATE_NAME() { testStateVectorApply##GATE_NAME##Iter<fp_t, 0>(); }  \
-TEMPLATE_TEST_CASE("StateVectorRaw::" #GATE_NAME, "[StateVectorRaw]", float, double) {        \
-    using fp_t = TestType;                                                                    \
-    testStateVectorApply##GATE_NAME<fp_t>();                                                  \
-}
+#define PENNYLANE_TEST_STATIC_DISPATCH(GATE_NAME)                              \
+    template <typename fp_t, int num_params> struct TestGateOps##GATE_NAME {   \
+        static void test() {                                                   \
+            static_assert(                                                     \
+                (num_params != 2) || (num_params > 3),                         \
+                "Unsupported number of parameters for gate " #GATE_NAME ".");  \
+        }                                                                      \
+    };                                                                         \
+    template <typename fp_t> struct TestGateOps##GATE_NAME<fp_t, 0> {          \
+        constexpr static GateOperations op = GateOperations::GATE_NAME;        \
+        template <KernelType kernel>                                           \
+        static std::enable_if_t<                                               \
+            array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates, op), \
+            void>                                                              \
+        test() {                                                               \
+            const size_t num_qubits = 4;                                       \
+            auto ini_st = create_random_state<fp_t>(re, num_qubits);           \
+            auto num_wires = lookup(GATE_WIRES, op);                           \
+            std::vector<size_t> wires;                                         \
+            wires.resize(num_wires);                                           \
+            std::iota(wires.begin(), wires.end(), 0);                          \
+            auto expected = ini_st;                                            \
+            SelectGateOps<fp_t, referenceKernel>::apply##GATE_NAME(            \
+                expected.data(), num_qubits, wires, false);                    \
+            auto sv_data = ini_st;                                             \
+            StateVectorRaw sv(sv_data.data(), sv_data.size());                 \
+            sv.apply##GATE_NAME(wires, false);                                 \
+            REQUIRE(isApproxEqual(sv_data, expected));                         \
+        }                                                                      \
+        template <KernelType kernel>                                           \
+        static std::enable_if_t<                                               \
+            !array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,     \
+                           op),                                                \
+            void>                                                              \
+        test() { /* do nothing */                                              \
+        }                                                                      \
+    };                                                                         \
+    template <typename fp_t> struct TestGateOps##GATE_NAME<fp_t, 1> {          \
+        constexpr static GateOperations op = GateOperations::GATE_NAME;        \
+        constexpr static std::array<fp_t, 1> params = {0.312};                 \
+        template <KernelType kernel>                                           \
+        static std::enable_if_t<                                               \
+            array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates, op), \
+            void>                                                              \
+        test() {                                                               \
+            const size_t num_qubits = 4;                                       \
+            auto ini_st = create_random_state<fp_t>(re, num_qubits);           \
+            auto num_wires = lookup(GATE_WIRES, op);                           \
+            std::vector<size_t> wires;                                         \
+            wires.resize(num_wires);                                           \
+            std::iota(wires.begin(), wires.end(), 0);                          \
+            auto expected = ini_st;                                            \
+            SelectGateOps<fp_t, referenceKernel>::template apply##GATE_NAME<   \
+                fp_t>(expected.data(), num_qubits, wires, false, params[0]);   \
+            auto sv_data = ini_st;                                             \
+            StateVectorRaw sv(sv_data.data(), sv_data.size());                 \
+            sv.apply##GATE_NAME(wires, false, params[0]);                      \
+            REQUIRE(isApproxEqual(sv_data, expected));                         \
+        }                                                                      \
+        template <KernelType kernel>                                           \
+        static std::enable_if_t<                                               \
+            !array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,     \
+                           op),                                                \
+            void>                                                              \
+        test() { /* do nothing */                                              \
+        }                                                                      \
+    };                                                                         \
+    template <typename fp_t> struct TestGateOps##GATE_NAME<fp_t, 3> {          \
+        constexpr static GateOperations op = GateOperations::GATE_NAME;        \
+        constexpr static std::array<fp_t, 3> params = {0.128, -0.563, 1.414};  \
+        template <KernelType kernel>                                           \
+        static std::enable_if_t<                                               \
+            array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates, op), \
+            void>                                                              \
+        test() {                                                               \
+            const size_t num_qubits = 4;                                       \
+            auto ini_st = create_random_state<fp_t>(re, num_qubits);           \
+            auto num_wires = lookup(GATE_WIRES, op);                           \
+            std::vector<size_t> wires;                                         \
+            wires.resize(num_wires);                                           \
+            std::iota(wires.begin(), wires.end(), 0);                          \
+            auto expected = ini_st;                                            \
+            SelectGateOps<fp_t, referenceKernel>::template apply##GATE_NAME<   \
+                fp_t>(expected.data(), num_qubits, wires, false, params[0],    \
+                      params[1], params[2]);                                   \
+            auto sv_data = ini_st;                                             \
+            StateVectorRaw sv(sv_data.data(), sv_data.size());                 \
+            sv.apply##GATE_NAME(wires, false);                                 \
+            REQUIRE(isApproxEqual(sv_data, expected));                         \
+        }                                                                      \
+        template <KernelType kernel>                                           \
+        static std::enable_if_t<                                               \
+            !array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,     \
+                           op),                                                \
+            void>                                                              \
+        test() { /* do nothing */                                              \
+        }                                                                      \
+    };                                                                         \
+    template <typename fp_t, size_t idx>                                       \
+    void testStateVectorApply##GATE_NAME##Iter() {                             \
+        if constexpr (idx == AVAILABLE_KERNELS.size()) {                       \
+        } else {                                                               \
+            constexpr auto kernel = std::get<0>(AVAILABLE_KERNELS[idx]);       \
+            TestGateOps##GATE_NAME<                                            \
+                fp_t, static_lookup<GateOperations::GATE_NAME>(                \
+                          GATE_NUM_PARAMS)>::template test<kernel>();          \
+            testStateVectorApply##GATE_NAME##Iter<fp_t, idx + 1>();            \
+        }                                                                      \
+    }                                                                          \
+    template <typename fp_t> void testStateVectorApply##GATE_NAME() {          \
+        testStateVectorApply##GATE_NAME##Iter<fp_t, 0>();                      \
+    }                                                                          \
+    TEMPLATE_TEST_CASE("StateVectorRaw::" #GATE_NAME, "[StateVectorRaw]",      \
+                       float, double) {                                        \
+        using fp_t = TestType;                                                 \
+        testStateVectorApply##GATE_NAME<fp_t>();                               \
+    }
 
 PENNYLANE_TEST_STATIC_DISPATCH(PauliX)
 PENNYLANE_TEST_STATIC_DISPATCH(PauliY)

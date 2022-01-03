@@ -100,13 +100,14 @@ std::vector<size_t> generateDistinctWires(RandomEngine &re, size_t num_qubits,
 }
 
 template <typename RandomEngine>
-std::vector<size_t> generateNeighboringWires(RandomEngine &re, size_t num_qubits,
-                                          size_t num_wires) {
+std::vector<size_t> generateNeighboringWires(RandomEngine &re,
+                                             size_t num_qubits,
+                                             size_t num_wires) {
     std::vector<size_t> v;
     v.reserve(num_wires);
     std::uniform_int_distribution<size_t> idist(0, num_qubits - 1);
     size_t start_idx = idist(re);
-    for(size_t k = 0; k < num_wires; ++k) {
+    for (size_t k = 0; k < num_wires; ++k) {
         v.emplace_back((start_idx + k) % num_qubits);
     }
     return v;
@@ -210,15 +211,17 @@ int main(int argc, char *argv[]) {
 
         random_gate_names.emplace_back(op_name);
         random_inverses.emplace_back(static_cast<bool>(inverse_dist(re)));
-        //random_gate_wires.emplace_back(generateDistinctWires(re, num_qubits, gate_desc.n_wires));
-        random_gate_wires.emplace_back(generateNeighboringWires(re, num_qubits, gate_desc.n_wires));
+        // random_gate_wires.emplace_back(generateDistinctWires(re, num_qubits,
+        // gate_desc.n_wires));
+        random_gate_wires.emplace_back(
+            generateNeighboringWires(re, num_qubits, gate_desc.n_wires));
         random_gate_parameters.emplace_back(std::move(gate_params));
     }
 
     // Log genereated sequence if LOG is turned on
     const char *env_p = std::getenv("LOG");
     try {
-        if (env_p && std::stoi(env_p) != 0) {
+        if (env_p != nullptr && std::stoi(env_p) != 0) {
             for (size_t gate_rep = 0; gate_rep < num_gate_reps; gate_rep++) {
                 std::cerr << random_gate_names[gate_rep] << ", "
                           << random_gate_wires[gate_rep] << ", "

@@ -78,11 +78,11 @@ class StateVectorRaw : public StateVectorBase<fp_t, StateVectorRaw<fp_t>> {
         }
     }
 
-    StateVectorRaw(const StateVectorRaw& ) = default;
-    StateVectorRaw(StateVectorRaw&& ) noexcept = default;
+    StateVectorRaw(const StateVectorRaw &) = default;
+    StateVectorRaw(StateVectorRaw &&) noexcept = default;
 
-    auto operator=(const StateVectorRaw& ) -> StateVectorRaw& = default;
-    auto operator=(StateVectorRaw&& ) noexcept -> StateVectorRaw& = default;
+    auto operator=(const StateVectorRaw &) -> StateVectorRaw & = default;
+    auto operator=(StateVectorRaw &&) noexcept -> StateVectorRaw & = default;
 
     /**
      * @brief Get the underlying data pointer.
@@ -103,14 +103,14 @@ class StateVectorRaw : public StateVectorBase<fp_t, StateVectorRaw<fp_t>> {
      *
      * @param data_ptr New data pointer.
      */
-    void setData(CFP_t *data, size_t length) { 
-        if(!Util::isPerfectPowerOf2(length)) {
+    void setData(CFP_t *data, size_t length) {
+        if (!Util::isPerfectPowerOf2(length)) {
             PL_ABORT("The length of the array for StateVector must be "
                      "a perfect power of 2. But " +
                      std::to_string(length) +
                      " is given."); // TODO: change to std::format in C++20
         }
-        data_ = data; 
+        data_ = data;
         Base::setNumQubits(Util::log2PerfectPower(length));
         length_ = length;
     }

@@ -1133,8 +1133,8 @@ template <class T> struct remove_cvref {
  * @brief Lookup key in constexpr array pair. For a constexpr map-like behavior.
  */
 template <typename Key, typename Value, size_t size>
-constexpr auto lookup(const std::array<std::pair<Key, Value>, size> &arr, 
-                      const Key& key) -> Value {
+constexpr auto lookup(const std::array<std::pair<Key, Value>, size> &arr,
+                      const Key &key) -> Value {
     for (size_t idx = 0; idx < size; ++idx) {
         if (std::get<0>(arr[idx]) == key) {
             return std::get<1>(arr[idx]);
@@ -1144,13 +1144,12 @@ constexpr auto lookup(const std::array<std::pair<Key, Value>, size> &arr,
     return Value{};
 };
 
-
 /**
  * @brief Check an array has an element
  */
 template <typename U, size_t size>
-constexpr auto
-array_has_elt(const std::array<U, size> &arr, const U& elt) -> bool {
+constexpr auto array_has_elt(const std::array<U, size> &arr, const U &elt)
+    -> bool {
     for (size_t idx = 0; idx < size; ++idx) {
         if (arr[idx] == elt) {
             return true;

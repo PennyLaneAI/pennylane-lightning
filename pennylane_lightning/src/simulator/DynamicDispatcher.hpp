@@ -28,7 +28,6 @@
 #include <variant>
 #include <vector>
 
-
 namespace Pennylane::Internal {
 struct PairHash {
     size_t operator()(const std::pair<std::string, KernelType> &p) const {
@@ -51,32 +50,34 @@ template <typename fp_t> class DynamicDispatcher {
     using scalar_type_t = fp_t;
     using CFP_t = std::complex<scalar_type_t>;
 
-    using Func = std::function<void(std::complex<fp_t> * /*data*/, size_t /*num_qubits*/,
-                               const std::vector<size_t> & /*wires*/, bool /*inverse*/,
-                               const std::vector<fp_t> & /*params*/)>;
+    using Func = std::function<void(
+        std::complex<fp_t> * /*data*/, size_t /*num_qubits*/,
+        const std::vector<size_t> & /*wires*/, bool /*inverse*/,
+        const std::vector<fp_t> & /*params*/)>;
 
   private:
     std::unordered_map<std::string, size_t> gate_wires_;
     std::unordered_map<std::string, KernelType> kernel_map_;
 
-    std::unordered_map<std::pair<std::string, KernelType>, Func, Internal::PairHash>
+    std::unordered_map<std::pair<std::string, KernelType>, Func,
+                       Internal::PairHash>
         gates_;
 
     DynamicDispatcher() {
-        for(const auto& [gate_op, n_wires]: GATE_WIRES) {
+        for (const auto &[gate_op, n_wires] : GATE_WIRES) {
             gate_wires_.emplace(lookup(GATE_NAMES, gate_op), n_wires);
         }
         for (const auto &[gate_op, gate_name] : GATE_NAMES) {
             KernelType kernel = lookup(DEFAULT_KERNEL_FOR_OPS, gate_op);
             auto implemented_gates = implementedGatesForKernel<fp_t>(kernel);
-            if (std::find(std::cbegin(implemented_gates), std::cend(implemented_gates), 
+            if (std::find(std::cbegin(implemented_gates),
+                          std::cend(implemented_gates),
                           gate_op) == std::cend(implemented_gates)) {
-                PL_ABORT("Default kernel for " + std::string(gate_name) + 
-                        " does not implement the gate.");
+                PL_ABORT("Default kernel for " + std::string(gate_name) +
+                         " does not implement the gate.");
             }
             kernel_map_.emplace(gate_name, kernel);
         }
-
     }
 
   public:
@@ -84,7 +85,7 @@ template <typename fp_t> class DynamicDispatcher {
         static DynamicDispatcher singleton;
         return singleton;
     }
-    
+
     /**
      * @brief Register a new gate operation for the operation. Can pass a custom
      * kernel
@@ -186,7 +187,7 @@ template <typename fp_t> class DynamicDispatcher {
     }
 
     /**
-     * @brief Apply multiple (non-paramterized) gates to the state-vector 
+     * @brief Apply multiple (non-paramterized) gates to the state-vector
      * using a registered kernel
      *
      * @param data Pointer to data.

@@ -9,17 +9,16 @@
 
 #include <catch2/catch.hpp>
 
-#include "StateVectorRaw.hpp"
 #include "StateVectorManaged.hpp"
+#include "StateVectorRaw.hpp"
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"
 
 using namespace Pennylane;
 
-
-TEMPLATE_TEST_CASE("StateVectorManaged::StateVectorManaged", "[StateVectorRaw]", 
-        float, double) {
+TEMPLATE_TEST_CASE("StateVectorManaged::StateVectorManaged", "[StateVectorRaw]",
+                   float, double) {
     using fp_t = TestType;
 
     SECTION("StateVectorManaged") {
@@ -38,10 +37,11 @@ TEMPLATE_TEST_CASE("StateVectorManaged::StateVectorManaged", "[StateVectorRaw]",
         REQUIRE(sv.getDataVector().size() == 16);
     }
     SECTION("StateVectorManaged<TestType> {const StateVectorRaw<TestType>&}") {
-        REQUIRE(std::is_constructible_v<StateVectorManaged<TestType>, 
-                                      const StateVectorRaw<TestType>&>);
+        REQUIRE(std::is_constructible_v<StateVectorManaged<TestType>,
+                                        const StateVectorRaw<TestType> &>);
     }
-    SECTION("StateVectorManaged<TestType> {const StateVectorManaged<TestType>&}") {
+    SECTION(
+        "StateVectorManaged<TestType> {const StateVectorManaged<TestType>&}") {
         REQUIRE(std::is_copy_constructible_v<StateVectorManaged<TestType>>);
     }
     SECTION("StateVectorManaged<TestType> {StateVectorManaged<TestType>&&}") {
