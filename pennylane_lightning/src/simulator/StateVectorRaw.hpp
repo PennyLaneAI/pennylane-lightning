@@ -59,6 +59,12 @@ class StateVectorRaw : public StateVectorBase<fp_t, StateVectorRaw<fp_t>> {
     size_t length_;
 
   public:
+    /**
+     * @brief Construct state-vector from a raw data pointer.
+     *
+     * @param data raw data pointer.
+     * @param length the size of the data, i.e. 2^(number of qubits).
+     */
     StateVectorRaw(CFP_t *data, size_t length)
         : StateVectorBase<fp_t, StateVectorRaw<fp_t>>(
               Util::log2PerfectPower(length)),
@@ -71,6 +77,12 @@ class StateVectorRaw : public StateVectorBase<fp_t, StateVectorRaw<fp_t>> {
                      " is given."); // TODO: change to std::format in C++20
         }
     }
+
+    StateVectorRaw(const StateVectorRaw& ) = default;
+    StateVectorRaw(StateVectorRaw&& ) noexcept = default;
+
+    auto operator=(const StateVectorRaw& ) -> StateVectorRaw& = default;
+    auto operator=(StateVectorRaw&& ) noexcept -> StateVectorRaw& = default;
 
     /**
      * @brief Get the underlying data pointer.
@@ -91,32 +103,16 @@ class StateVectorRaw : public StateVectorBase<fp_t, StateVectorRaw<fp_t>> {
      *
      * @param data_ptr New data pointer.
      */
-    void setData(CFP_t *data) { data_ = data; }
-
-    /**
-     * @brief Redefine the length of the statevector and number of qubits.
-     *
-     * @param length New number of elements in statevector.
-     */
-    void setLength(size_t length) {
-        if (!Util::isPerfectPowerOf2(length)) {
+    void setData(CFP_t *data, size_t length) { 
+        if(!Util::isPerfectPowerOf2(length)) {
             PL_ABORT("The length of the array for StateVector must be "
                      "a perfect power of 2. But " +
                      std::to_string(length) +
                      " is given."); // TODO: change to std::format in C++20
         }
+        data_ = data; 
+        Base::setNumQubits(Util::log2PerfectPower(length));
         length_ = length;
-        Base::setNumQubits(Util::log2PerfectPower(length_));
-    }
-    /**
-     * @brief Redefine the number of qubits in the statevector and number of
-     * elements.
-     *
-     * @param qubits New number of qubits represented by statevector.
-     */
-    void setNumQubits(size_t num_qubits) {
-        Base::setNumQubits(num_qubits);
-        length_ = Util::exp2(num_qubits);
     }
 
     /**

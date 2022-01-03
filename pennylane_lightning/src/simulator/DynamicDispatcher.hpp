@@ -56,25 +56,27 @@ template <typename fp_t> class DynamicDispatcher {
                                const std::vector<fp_t> & /*params*/)>;
 
   private:
-    const std::unordered_map<std::string, size_t> gate_wires_{
-        {"PauliX", 1},     {"PauliY", 1},  {"PauliZ", 1},
-        {"Hadamard", 1},   {"S", 1},       {"T", 1},
-        {"RX", 1},         {"RY", 1},      {"RZ", 1},
-        {"PhaseShift", 1}, {"Rot", 1},     {"ControlledPhaseShift", 2},
-        {"CNOT", 2},       {"CZ", 2},      {"SWAP", 2},
-        {"CRX", 2},        {"CRY", 2},     {"CRZ", 2},
-        {"CRot", 2},       {"Toffoli", 3}, {"CSWAP", 3}};
+    std::unordered_map<std::string, size_t> gate_wires_;
+    std::unordered_map<std::string, KernelType> kernel_map_;
 
     std::unordered_map<std::pair<std::string, KernelType>, Func, Internal::PairHash>
         gates_;
 
-    std::unordered_map<std::string, KernelType> kernel_map_;
-
     DynamicDispatcher() {
-        for (const auto &[gate_op, gate_name] : GATE_NAMES) {
-            kernel_map_.emplace(
-                gate_name, lookup(DEFAULT_KERNEL_FOR_OPS, gate_op));
+        for(const auto& [gate_op, n_wires]: GATE_WIRES) {
+            gate_wires_.emplace(lookup(GATE_NAMES, gate_op), n_wires);
         }
+        for (const auto &[gate_op, gate_name] : GATE_NAMES) {
+            KernelType kernel = lookup(DEFAULT_KERNEL_FOR_OPS, gate_op);
+            auto implemented_gates = implementedGatesForKernel<fp_t>(kernel);
+            if (std::find(std::cbegin(implemented_gates), std::cend(implemented_gates), 
+                          gate_op) == std::cend(implemented_gates)) {
+                PL_ABORT("Default kernel for " + std::string(gate_name) + 
+                        " does not implement the gate.");
+            }
+            kernel_map_.emplace(gate_name, kernel);
+        }
+
     }
 
   public:
@@ -82,7 +84,7 @@ template <typename fp_t> class DynamicDispatcher {
         static DynamicDispatcher singleton;
         return singleton;
     }
-
+    
     /**
      * @brief Register a new gate operation for the operation. Can pass a custom
      * kernel
@@ -115,7 +117,7 @@ template <typename fp_t> class DynamicDispatcher {
     void applyOperation(KernelType kernel, CFP_t *data, size_t num_qubits,
                         const std::string &op_name,
                         const std::vector<size_t> &wires, bool inverse,
-                        const std::vector<fp_t> &params) const {
+                        const std::vector<fp_t> &params = {}) const {
         const auto iter = gates_.find(std::make_pair(op_name, kernel));
         if (iter == gates_.cend()) {
             throw std::invalid_argument(
@@ -145,7 +147,7 @@ template <typename fp_t> class DynamicDispatcher {
     inline void applyOperation(CFP_t *data, size_t num_qubits,
                                const std::string &op_name,
                                const std::vector<size_t> &wires, bool inverse,
-                               const std::vector<fp_t> &params) const {
+                               const std::vector<fp_t> &params = {}) const {
         const auto kernel_iter = kernel_map_.find(op_name);
         if (kernel_iter == kernel_map_.end()) {
             PL_ABORT("Kernel for gate " + op_name + " is not registered.");

@@ -23,121 +23,106 @@ namespace {
     using Pennylane::SelectGateOps;
     using Pennylane::DynamicDispatcher;
 
+    using Pennylane::AVAILABLE_KERNELS;
     using Pennylane::GATE_NAMES;
 }
 
-#define PENNYLANE_SPECIALIZE_TO_FUNCTOR_PARAMS0(GATE_NAME)                                 \
-template <class fp_t, KernelType kernel>                                                   \
-struct toFunctor<fp_t, kernel, GateOperations::GATE_NAME> {                                \
-    void operator()(std::complex<fp_t>* data, size_t num_qubits,                           \
+#define PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA_PARAMS0(GATE_NAME)                              \
+    case GateOperations::GATE_NAME:                                                        \
+        return [](std::complex<fp_t>* data, size_t num_qubits,                             \
                     const std::vector<size_t>& wires, bool inverse,                        \
                     [[maybe_unused]] const std::vector<fp_t>& params) {                    \
         assert(params.empty());                                                            \
         SelectGateOps<fp_t, kernel>::apply##GATE_NAME(data, num_qubits, wires, inverse);   \
-    }                                                                                      \
-};
-#define PENNYLANE_SPECIALIZE_TO_FUNCTOR_PARAMS1(GATE_NAME)                                 \
-template <class fp_t, KernelType kernel>                                                   \
-struct toFunctor<fp_t, kernel, GateOperations::GATE_NAME> {                                \
-    void operator()(std::complex<fp_t>* data, size_t num_qubits,                           \
-                    const std::vector<size_t>& wires, bool inverse,                        \
-                    const std::vector<fp_t>& params) {                                     \
+    };
+#define PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA_PARAMS1(GATE_NAME)                              \
+    case GateOperations::GATE_NAME:                                                        \
+        return [](std::complex<fp_t>* data, size_t num_qubits,                             \
+                  const std::vector<size_t>& wires, bool inverse,                          \
+                  [[maybe_unused]] const std::vector<fp_t>& params) {                      \
         assert(params.size() == 1);                                                        \
         SelectGateOps<fp_t, kernel>::apply##GATE_NAME(data, num_qubits, wires, inverse,    \
                                                       params[0]);                          \
-    }                                                                                      \
-};
-#define PENNYLANE_SPECIALIZE_TO_FUNCTOR_PARAMS3(GATE_NAME)                                 \
-template <class fp_t, KernelType kernel>                                                   \
-struct toFunctor<fp_t, kernel, GateOperations::GATE_NAME> {                                \
-    void operator()(std::complex<fp_t>* data, size_t num_qubits,                           \
+    };
+#define PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA_PARAMS3(GATE_NAME)                              \
+    case GateOperations::GATE_NAME:                                                        \
+        return [](std::complex<fp_t>* data, size_t num_qubits,                             \
                     const std::vector<size_t>& wires, bool inverse,                        \
-                    const std::vector<fp_t>& params) {                                     \
+                    [[maybe_unused]] const std::vector<fp_t>& params) {                    \
         assert(params.size() == 3);                                                        \
         SelectGateOps<fp_t, kernel>::apply##GATE_NAME(data, num_qubits, wires, inverse,    \
                                                       params[0], params[1], params[2]);    \
-    }                                                                                      \
-};
-#define PENNYLANE_SPECIALIZE_TO_FUNCTOR(GATE_NAME, NUM_PARAMS) \
-        PENNYLANE_SPECIALIZE_TO_FUNCTOR_PARAMS##NUM_PARAMS(GATE_NAME)
+    };
+#define PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(GATE_NAME, NUM_PARAMS)                          \
+        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA_PARAMS##NUM_PARAMS(GATE_NAME)
 
-template <class fp_t, KernelType kernel, GateOperations op>
-struct toFunctor {
-    void operator()(std::complex<fp_t>* data, size_t num_qubits, 
-                    const std::vector<size_t>& wires, bool inverse, 
-                    const std::vector<fp_t>& params);
-};
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
+template<class fp_t, KernelType kernel> constexpr auto createFunctor(GateOperations op)
+    -> typename DynamicDispatcher<fp_t>::Func {
+    switch(op) { 
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(PauliX, 0)
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(PauliY, 0)
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(PauliZ, 0)
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(Hadamard, 0)
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(S, 0)
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(T, 0)
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(RX, 1)
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(RY, 1)
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(RZ, 1)
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(PhaseShift, 1)
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(Rot, 3)
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(ControlledPhaseShift, 1)
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(CNOT, 0)
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(CZ, 0)
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(SWAP, 0)
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(CRX, 1)
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(CRY, 1)
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(CRZ, 1)
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(CRot, 3)
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(Toffoli, 0)
+    PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(CSWAP, 0)
 
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(PauliX, 0)
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(PauliY, 0)
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(PauliZ, 0)
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(Hadamard, 0)
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(S, 0)
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(T, 0)
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(RX, 1)
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(RY, 1)
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(RZ, 1)
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(PhaseShift, 1)
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(Rot, 3)
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(ControlledPhaseShift, 1)
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(CNOT, 0)
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(CZ, 0)
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(SWAP, 0)
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(CRX, 1)
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(CRY, 1)
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(CRZ, 1)
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(CRot, 3)
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(Toffoli, 0)
-PENNYLANE_SPECIALIZE_TO_FUNCTOR(CSWAP, 0)
-
-/*
- * TODO: In C++20, it may be possible to replace the template loop with std::for_each.
- *
-*/
-
-template <class fp_t, KernelType kernel, size_t idx>
-void registerImplementedGateIter(DynamicDispatcher<fp_t>& dispatcher) {
-    if constexpr (idx == SelectGateOps<fp_t, kernel>::implemented_gates.size()) {
-        return;
-    }
-    else {
-        constexpr auto op = SelectGateOps<fp_t, kernel>::implemented_gates[idx];
-        const auto name = std::string(lookup(GATE_NAMES, op));
-        dispatcher.registerGateOperation(name,
-                                         kernel, toFunctor<fp_t, kernel, op>());
-
-        registerImplementedGateIter<fp_t, kernel, idx + 1>(dispatcher);
+    default:
+        return nullptr;
     }
 }
 
-template <class fp_t, KernelType kernel> int registerAllImplementedGateOps() {
+template <class fp_t, KernelType kernel>
+void registerAllImplementedGateOps() {
     auto &dispatcher = DynamicDispatcher<fp_t>::getInstance();
-    registerImplementedGateIter<fp_t, kernel, 0>(dispatcher);
+
+    for (const auto gate_op: SelectGateOps<fp_t, kernel>::implemented_gates) {
+        const auto name = std::string(lookup(GATE_NAMES, gate_op));
+        dispatcher.registerGateOperation(name, kernel, createFunctor<fp_t, kernel>(gate_op));
+    }
+}
+
+template <class fp_t, size_t idx>
+void registerKernelIter() {
+    if constexpr (idx == AVAILABLE_KERNELS.size()) {
+        return;
+    } else {
+        registerAllImplementedGateOps<fp_t, std::get<0>(AVAILABLE_KERNELS[idx])>();
+        registerKernelIter<fp_t, idx+1>();
+    }
+}
+
+template<class fp_t>
+constexpr auto registerAllAvailableKernels() -> int {
+    registerKernelIter<fp_t, 0>();
     return 0;
 }
 
-template <class fp_t, KernelType kernel> struct registerBeforeMain {
+
+template <class fp_t> 
+struct registerBeforeMain {
     static const int dummy;
 };
 
-/* Explicit instantiations */
-template struct registerBeforeMain<float, KernelType::PI>;
-template struct registerBeforeMain<float, KernelType::LM>;
-template struct registerBeforeMain<double, KernelType::PI>;
-template struct registerBeforeMain<double, KernelType::LM>;
+template <>
+const int registerBeforeMain<float>::dummy =
+    registerAllAvailableKernels<float>();
 
 template <>
-const int registerBeforeMain<float, KernelType::PI>::dummy =
-    registerAllImplementedGateOps<float, KernelType::PI>();
-
-template <>
-const int registerBeforeMain<float, KernelType::LM>::dummy =
-    registerAllImplementedGateOps<float, KernelType::LM>();
-
-template <>
-const int registerBeforeMain<double, KernelType::PI>::dummy =
-    registerAllImplementedGateOps<double, KernelType::PI>();
-
-template <>
-const int registerBeforeMain<double, KernelType::LM>::dummy =
-    registerAllImplementedGateOps<double, KernelType::LM>();
+const int registerBeforeMain<double>::dummy =
+    registerAllAvailableKernels<double>();

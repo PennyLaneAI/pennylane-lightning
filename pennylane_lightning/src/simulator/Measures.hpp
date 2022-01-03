@@ -22,7 +22,7 @@
 
 #include <algorithm>
 #include <complex>
-#include <stdio.h>
+#include <cstdio>
 #include <vector>
 
 #include "StateVectorManaged.hpp"

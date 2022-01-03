@@ -52,7 +52,7 @@ constexpr std::array<std::pair<GateOperations, KernelType>,
         std::pair{GateOperations::RY, KernelType::LM},
         std::pair{GateOperations::RZ, KernelType::LM},
         std::pair{GateOperations::PhaseShift, KernelType::LM},
-        std::pair{GateOperations::Rot, KernelType::PI},
+        std::pair{GateOperations::Rot, KernelType::LM},
         std::pair{GateOperations::ControlledPhaseShift, KernelType::PI},
         std::pair{GateOperations::CNOT, KernelType::PI},
         std::pair{GateOperations::CZ, KernelType::PI},
@@ -68,8 +68,8 @@ constexpr std::array<std::pair<GateOperations, KernelType>,
 /**
  * @brief For lookup from any array of pair whose first elements are GateOperations. 
  *
- * Note that Util::lookup can be used in constexpr context, thus this function is redundant 
- * (by the standard). But GCC 9 still does not accept Util::lookup in constexpr.
+ * As Util::lookup can be used in constexpr context, this function is redundant 
+ * (by the standard). But GCC 9 still does not accept Util::lookup in constexpr some cases.
  */
 template<GateOperations op, class T, size_t size>
 constexpr auto 
@@ -89,6 +89,42 @@ template <class fp_t>
 class SelectGateOps<fp_t, KernelType::PI> : public GateOperationsPI<fp_t> {};
 template <class fp_t>
 class SelectGateOps<fp_t, KernelType::LM> : public GateOperationsLM<fp_t> {};
+
+
+namespace Internal {
+template <typename fp_t, size_t idx>
+std::vector<GateOperations> implementedGatesForKernelIter(KernelType kernel) {
+    if constexpr (idx == AVAILABLE_KERNELS.size()) {
+        return {};
+    } else if (kernel == std::get<0>(AVAILABLE_KERNELS[idx])) {
+        const auto& arr = SelectGateOps<fp_t, std::get<0>(AVAILABLE_KERNELS[idx])>
+            ::implemented_gates;
+        return std::vector(arr.begin(), arr.end());
+    } else {
+        return implementedGatesForKernelIter<fp_t, idx+1>(kernel);
+    }
+}
+}
+
+template<class fp_t>
+std::vector<GateOperations> implementedGatesForKernel(KernelType kernel) {
+    return Internal::implementedGatesForKernelIter<fp_t, 0>(kernel);
+}
+
+template<typename fp_t>
+constexpr auto check_default_kernel_for_ops() -> bool {
+    // TODO: change to constexpr std::all_of in C++20
+    // NOLINTNEXTLINE (readability-use-anyofallof)
+    for(const auto& [gate_op, kernel]: DEFAULT_KERNEL_FOR_OPS) {
+        if (!is_available_kernel(kernel)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static_assert(check_default_kernel_for_ops<double>(), 
+        "DEFAULT_KERNEL_FOR_OPS contains an unavailable kernel");
 
 } // namespace Pennylane
 

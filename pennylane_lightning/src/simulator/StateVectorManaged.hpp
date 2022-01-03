@@ -36,7 +36,8 @@ class StateVectorManaged
 
   public:
     StateVectorManaged() : StateVectorBase<fp_t, StateVectorManaged>() {}
-    StateVectorManaged(size_t num_qubits)
+
+    explicit StateVectorManaged(size_t num_qubits)
         : BaseType(num_qubits),
           data_(static_cast<size_t>(Util::exp2(num_qubits)), CFP_t{0, 0}) {
         data_[0] = {1, 0};
@@ -62,8 +63,11 @@ class StateVectorManaged
     }
 
     StateVectorManaged(const StateVectorManaged<fp_t> &other) = default;
+    StateVectorManaged(StateVectorManaged<fp_t> &&other) noexcept = default;
 
     auto operator=(const StateVectorManaged<fp_t> &other)
+        -> StateVectorManaged<fp_t> & = default;
+    auto operator=(StateVectorManaged<fp_t> &&other) noexcept
         -> StateVectorManaged<fp_t> & = default;
 
     auto getDataVector() -> std::vector<CFP_t> & { return data_; }

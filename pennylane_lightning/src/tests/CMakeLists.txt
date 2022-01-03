@@ -41,7 +41,7 @@ target_sources(lightning_tests_dependency INTERFACE runner_main.cpp)
 
 if(ENABLE_NATIVE)
     message(STATUS "ENABLE_NATIVE is ON. Use -march=native for cpptests.")
-    target_compile_options(lightning_tests_dependency PRIVATE -march=native)
+    target_compile_options(lightning_tests_dependency INTERFACE -march=native)
 endif()
 
 ################################################################################
@@ -50,13 +50,14 @@ endif()
 
 set(TEST_SOURCES Test_AdjDiff.cpp
                  Test_Bindings.cpp
-                 Test_GateOperations_Single_Nonparam.cpp
-                 Test_GateOperations_Single_Param.cpp
-                 Test_GateOperations_Two_Nonparam.cpp
-                 Test_GateOperations_Two_Param.cpp
+                 Test_DynamicDispatcher.cpp
+                 Test_GateOperations_Nonparam.cpp
+                 Test_GateOperations_Param.cpp
                  Test_IndicesUtil.cpp
                  Test_Measures.cpp
                  Test_SelectGateOps.cpp
+                 Test_StateVectorManaged.cpp
+                 Test_StateVectorRaw.cpp
                  Test_Util.cpp
                  Test_VectorJacobianProduct.cpp)
 

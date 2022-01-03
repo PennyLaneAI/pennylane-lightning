@@ -70,6 +70,7 @@ template <class fp_t> class GateOperationsPI {
         GateOperations::CRot,
         GateOperations::Toffoli,
         GateOperations::CSWAP,
+        GateOperations::Matrix
     };
 
     /**

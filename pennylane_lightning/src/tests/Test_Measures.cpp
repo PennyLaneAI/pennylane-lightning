@@ -1,5 +1,5 @@
 #include <complex>
-#include <stdio.h>
+#include <cstdio>
 #include <vector>
 
 #include "Measures.hpp"
@@ -29,7 +29,9 @@ StateVectorManaged<double> Initializing_StateVector() {
 
     std::vector<size_t> wires;
 
-    double alpha = 0.7, beta = 0.5, gamma = 0.2;
+    double alpha = 0.7;
+    double beta = 0.5;
+    double gamma = 0.2;
     Measured_StateVector.applyOperations(
         {"RX", "RY", "RX", "RY", "RX", "RY"}, {{0}, {0}, {1}, {1}, {2}, {2}},
         {{false}, {false}, {false}, {false}, {false}, {false}},
@@ -117,7 +119,8 @@ TEST_CASE("Expected Values", "[Measures]") {
         vector<std::complex<double>> PauliY = {0, {0, -1}, {0, 1}, 0};
         vector<std::complex<double>> PauliZ = {1, 0, 0, -1};
 
-        vector<double> exp_values, exp_values_ref;
+        vector<double> exp_values;
+        vector<double> exp_values_ref;
         vector<vector<size_t>> wires_list = {{0}, {1}, {2}};
         vector<vector<std::complex<double>>> operations_list;
 
@@ -138,7 +141,8 @@ TEST_CASE("Expected Values", "[Measures]") {
     }
 
     SECTION("Testing list of operators defined by its name:") {
-        vector<double> exp_values, exp_values_ref;
+        vector<double> exp_values;
+        vector<double> exp_values_ref;
         vector<vector<size_t>> wires_list = {{0}, {1}, {2}};
         vector<string> operations_list;
 
@@ -188,7 +192,8 @@ TEST_CASE("Variances", "[Measures]") {
         vector<std::complex<double>> PauliY = {0, {0, -1}, {0, 1}, 0};
         vector<std::complex<double>> PauliZ = {1, 0, 0, -1};
 
-        vector<double> variances, variances_ref;
+        vector<double> variances;
+        vector<double> variances_ref;
         vector<vector<size_t>> wires_list = {{0}, {1}, {2}};
         vector<vector<std::complex<double>>> operations_list;
 
@@ -209,7 +214,8 @@ TEST_CASE("Variances", "[Measures]") {
     }
 
     SECTION("Testing list of operators defined by its name:") {
-        vector<double> variances, variances_ref;
+        vector<double> variances;
+        vector<double> variances_ref;
         vector<vector<size_t>> wires_list = {{0}, {1}, {2}};
         vector<string> operations_list;
 

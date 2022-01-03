@@ -579,6 +579,9 @@ void registerKernelFunctionsIter(PyClass &&pyclass) {
     }
 }
 
+constexpr auto createTupleForPybind() {
+}
+
 template <class PrecisionT, class Param_t, class PyClass>
 void registerKernelFunctions(PyClass &&pyclass) {
     registerKernelFunctionsIter<0, PrecisionT, Param_t>(pyclass);
@@ -883,7 +886,8 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
     /* Add EXPORTED_KERNELS */
     std::vector<std::string> exported_kernels;
     for (auto kernel : KERNELS_TO_PYEXPORT) {
-        exported_kernels.emplace_back(std::string(kernel_to_string(kernel)));
+        auto kernel_name = std::string(lookup(AVAILABLE_KERNELS, kernel));
+        exported_kernels.emplace_back(kernel_name);
     }
     m.attr("EXPORTED_KERNELS") = py::cast(exported_kernels);
 
@@ -891,8 +895,8 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
     std::map<std::string, std::string> default_kernel_ops_map;
     for (const auto &[gate_op, name] : GATE_NAMES) {
         auto kernel = dynamic_lookup(DEFAULT_KERNEL_FOR_OPS, gate_op);
-        default_kernel_ops_map.emplace(std::string(name),
-                                       std::string(kernel_to_string(kernel)));
+        auto kernel_name = std::string(lookup(AVAILABLE_KERNELS, kernel));
+        default_kernel_ops_map.emplace(std::string(name), kernel_name);
     }
     m.attr("DEFAULT_KERNEL_FOR_OPS") = py::cast(default_kernel_ops_map);
 

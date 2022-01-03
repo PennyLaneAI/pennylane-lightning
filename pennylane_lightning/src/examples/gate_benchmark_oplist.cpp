@@ -51,8 +51,11 @@ parseGateLists(std::string_view arg) {
         {"CSWAP", {3, 0}}};
 
     if (arg.empty()) {
+        /*
         return std::vector<std::pair<std::string_view, GateDesc>>(
             available_gates_wires.begin(), available_gates_wires.end());
+        */
+        return {};
     }
 
     std::vector<std::pair<std::string_view, GateDesc>> ops;
@@ -96,6 +99,18 @@ std::vector<size_t> generateDistinctWires(RandomEngine &re, size_t num_qubits,
     return std::vector<size_t>(v.begin(), v.begin() + num_wires);
 }
 
+template <typename RandomEngine>
+std::vector<size_t> generateNeighboringWires(RandomEngine &re, size_t num_qubits,
+                                          size_t num_wires) {
+    std::vector<size_t> v;
+    v.reserve(num_wires);
+    std::uniform_int_distribution<size_t> idist(0, num_qubits - 1);
+    size_t start_idx = idist(re);
+    for(size_t k = 0; k < num_wires; ++k) {
+        v.emplace_back((start_idx + k) % num_qubits);
+    }
+    return v;
+}
 /**
  * @brief Benchmark Pennylane-Lightning for a given gate set
  *
@@ -143,6 +158,10 @@ int main(int argc, char *argv[]) {
 
     std::string_view kernel_name = argv[3];
     KernelType kernel = string_to_kernel(kernel_name);
+    if (kernel == KernelType::Unknown) {
+        std::cerr << "Kernel " << kernel_name << " is unknown." << std::endl;
+        return 1;
+    }
 
     // Gate list is provided
     std::string op_list_s;
@@ -159,6 +178,11 @@ int main(int argc, char *argv[]) {
         op_list = parseGateLists(op_list_s);
     } catch (std::exception &e) {
         std::cerr << e.what() << std::endl;
+        return 1;
+    }
+
+    if (op_list.empty()) {
+        std::cerr << "Please provide a gate list." << std::endl;
         return 1;
     }
 
@@ -186,8 +210,8 @@ int main(int argc, char *argv[]) {
 
         random_gate_names.emplace_back(op_name);
         random_inverses.emplace_back(static_cast<bool>(inverse_dist(re)));
-        random_gate_wires.emplace_back(
-            generateDistinctWires(re, num_qubits, gate_desc.n_wires));
+        //random_gate_wires.emplace_back(generateDistinctWires(re, num_qubits, gate_desc.n_wires));
+        random_gate_wires.emplace_back(generateNeighboringWires(re, num_qubits, gate_desc.n_wires));
         random_gate_parameters.emplace_back(std::move(gate_params));
     }
 

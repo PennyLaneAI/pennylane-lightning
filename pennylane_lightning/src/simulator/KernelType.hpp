@@ -34,7 +34,7 @@ constexpr std::array AVAILABLE_KERNELS = {
 
 [[maybe_unused]] constexpr std::array KERNELS_TO_PYEXPORT = {
     KernelType::PI,
-    KernelType::LM,
+    KernelType::LM
 };
 
 constexpr auto string_to_kernel(std::string_view str) -> KernelType {
@@ -46,4 +46,27 @@ constexpr auto string_to_kernel(std::string_view str) -> KernelType {
     //PL_ABORT("Kernel " + std::string(str) + " is unknown."); TODO: this will be allowed in C++20
     return KernelType::Unknown;
 }
+
+constexpr auto is_available_kernel(KernelType kernel) -> bool {
+    // TODO: change to constexpr std::any_of in C++20
+    // NOLINTNEXTLINE (readability-use-anyofallof)
+    for(const auto& [avail_kernel, avail_kernel_name] : AVAILABLE_KERNELS) {
+        if (kernel == avail_kernel) {
+            return true;
+        } 
+    }
+    return false;
+}
+
+constexpr auto check_available_gates() -> bool {
+    // TODO: change to constexpr std::any_of in C++20
+    // NOLINTNEXTLINE (readability-use-anyofallof)
+    for (const auto& kernel: KERNELS_TO_PYEXPORT) {
+        if (!is_available_kernel(kernel)) {
+            return false;
+        }
+    }
+    return true;
+}
+static_assert(check_available_gates(), "Some of Kernels in Python export is not available.");
 } // namespace Pennylane
