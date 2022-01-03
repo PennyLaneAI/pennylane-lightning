@@ -131,7 +131,7 @@ TEMPLATE_TEST_CASE("StateVectorRaw::setData", "[StateVectorRaw]", float,
                       params[1], params[2]);                                   \
             auto sv_data = ini_st;                                             \
             StateVectorRaw sv(sv_data.data(), sv_data.size());                 \
-            sv.apply##GATE_NAME(wires, false);                                 \
+            sv.apply##GATE_NAME(wires, false, params[0], params[1], params[2]);\
             REQUIRE(isApproxEqual(sv_data, expected));                         \
         }                                                                      \
         template <KernelType kernel>                                           \
@@ -169,7 +169,6 @@ PENNYLANE_TEST_STATIC_DISPATCH(Hadamard)
 PENNYLANE_TEST_STATIC_DISPATCH(S)
 PENNYLANE_TEST_STATIC_DISPATCH(T)
 PENNYLANE_TEST_STATIC_DISPATCH(PhaseShift)
-/*
 PENNYLANE_TEST_STATIC_DISPATCH(RX)
 PENNYLANE_TEST_STATIC_DISPATCH(RY)
 PENNYLANE_TEST_STATIC_DISPATCH(RZ)
@@ -184,4 +183,3 @@ PENNYLANE_TEST_STATIC_DISPATCH(CRZ)
 PENNYLANE_TEST_STATIC_DISPATCH(CRot)
 PENNYLANE_TEST_STATIC_DISPATCH(Toffoli)
 PENNYLANE_TEST_STATIC_DISPATCH(CSWAP)
-*/

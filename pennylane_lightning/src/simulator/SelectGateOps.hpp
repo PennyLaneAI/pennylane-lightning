@@ -129,7 +129,7 @@ static_assert(check_default_kernel_for_ops<double>(),
 } // namespace Pennylane
 
 template <> struct std::hash<Pennylane::GateOperations> {
-    size_t operator()(Pennylane::GateOperations gate_operation) {
+    size_t operator()(Pennylane::GateOperations gate_operation) const {
         return std::hash<int>()(static_cast<int>(gate_operation));
     }
 };

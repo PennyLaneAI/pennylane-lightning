@@ -17,14 +17,19 @@
  */
 #include "DynamicDispatcher.hpp"
 
+#include <unordered_set>
+
 namespace {
 using Pennylane::DynamicDispatcher;
 using Pennylane::GateOperations;
 using Pennylane::KernelType;
 using Pennylane::SelectGateOps;
 
+using Pennylane::static_lookup;
+
 using Pennylane::AVAILABLE_KERNELS;
 using Pennylane::GATE_NAMES;
+using Pennylane::GATE_NUM_PARAMS;
 } // namespace
 
 #define PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA_PARAMS0(GATE_NAME)                  \
@@ -58,45 +63,117 @@ using Pennylane::GATE_NAMES;
 #define PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(GATE_NAME, NUM_PARAMS)              \
     PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA_PARAMS##NUM_PARAMS(GATE_NAME)
 
-template <class fp_t, KernelType kernel>
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
-constexpr auto createFunctor(GateOperations op) ->
-    typename DynamicDispatcher<fp_t>::Func {
-    switch (op) {
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(PauliX, 0)
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(PauliY, 0)
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(PauliZ, 0)
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(Hadamard, 0)
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(S, 0)
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(T, 0)
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(RX, 1)
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(RY, 1)
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(RZ, 1)
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(PhaseShift, 1)
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(Rot, 3)
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(ControlledPhaseShift, 1)
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(CNOT, 0)
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(CZ, 0)
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(SWAP, 0)
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(CRX, 1)
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(CRY, 1)
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(CRZ, 1)
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(CRot, 3)
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(Toffoli, 0)
-        PENNYLANE_KERNEL_CASE_OP_TO_LAMBDA(CSWAP, 0)
 
-    default:
-        return nullptr;
-    }
-}
+
+
+#define PENNYLANE_APPLY_OPS_TO_LAMBDA(GATE_NAME) \
+template <class fp_t, KernelType kernel, int num_params> \
+struct Apply##GATE_NAME##ToLambda { \
+        static_assert((num_params <= 1) || (num_params == 3),  \
+                "The given number of parameters is not supported."); \
+};\
+template <class fp_t, KernelType kernel>\
+struct Apply##GATE_NAME##ToLambda<fp_t, kernel, 0> { \
+    static auto createFunctor() -> typename DynamicDispatcher<fp_t>::Func { \
+        return [](std::complex<fp_t> *data, size_t num_qubits, \
+                  const std::vector<size_t> &wires, bool inverse, \
+                  [[maybe_unused]] const std::vector<fp_t> &params) { \
+            assert(params.empty()); \
+            SelectGateOps<fp_t, kernel>::apply##GATE_NAME(data, num_qubits, \
+                                                     wires, inverse); \
+        }; \
+    }\
+};\
+template <class fp_t, KernelType kernel>\
+struct Apply##GATE_NAME##ToLambda<fp_t, kernel, 1> { \
+    static auto createFunctor() -> typename DynamicDispatcher<fp_t>::Func { \
+        return [](std::complex<fp_t> *data, size_t num_qubits, \
+                  const std::vector<size_t> &wires, bool inverse, \
+                  [[maybe_unused]] const std::vector<fp_t> &params) { \
+            assert(params.size() == 1); \
+            SelectGateOps<fp_t, kernel>::apply##GATE_NAME(data, num_qubits, \
+                                                     wires, inverse, params[0]); \
+        }; \
+    } \
+}; \
+template <class fp_t, KernelType kernel>\
+struct Apply##GATE_NAME##ToLambda<fp_t, kernel, 3> { \
+    static auto createFunctor() -> typename DynamicDispatcher<fp_t>::Func { \
+        return [](std::complex<fp_t> *data, size_t num_qubits, \
+                  const std::vector<size_t> &wires, bool inverse, \
+                  [[maybe_unused]] const std::vector<fp_t> &params) { \
+            assert(params.size() == 3); \
+            SelectGateOps<fp_t, kernel>::apply##GATE_NAME(data, num_qubits, \
+                                                     wires, inverse, params[0], \
+                                                     params[1], params[2]); \
+        }; \
+    } \
+}; \
+
+
+
+PENNYLANE_APPLY_OPS_TO_LAMBDA(PauliX)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(PauliY)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(PauliZ)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(Hadamard)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(S)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(T)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(RX)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(RY)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(RZ)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(PhaseShift)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(Rot)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(ControlledPhaseShift)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(CNOT)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(CZ)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(SWAP)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(CRX)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(CRY)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(CRZ)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(CRot)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(Toffoli)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(CSWAP)
+
+#define PENNYLANE_GATE_OP_FUNCTOR_PAIR(GATE_NAME) \
+        {GateOperations::GATE_NAME, Apply##GATE_NAME##ToLambda<fp_t, kernel, \
+            static_lookup<GateOperations::GATE_NAME>(GATE_NUM_PARAMS)>::createFunctor()}
 
 template <class fp_t, KernelType kernel> void registerAllImplementedGateOps() {
     auto &dispatcher = DynamicDispatcher<fp_t>::getInstance();
 
-    for (const auto gate_op : SelectGateOps<fp_t, kernel>::implemented_gates) {
-        const auto name = std::string(lookup(GATE_NAMES, gate_op));
-        dispatcher.registerGateOperation(name, kernel,
-                                         createFunctor<fp_t, kernel>(gate_op));
+    std::vector<std::pair<GateOperations, typename DynamicDispatcher<fp_t>::Func>> all_gate_ops{
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(PauliX),
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(PauliY),
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(PauliZ),
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(Hadamard),
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(S),
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(T),
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(RX),
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(RY),
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(RZ),
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(PhaseShift),
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(Rot),
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(ControlledPhaseShift),
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(CNOT),
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(CZ),
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(SWAP),
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(CRX),
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(CRY),
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(CRZ),
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(CRot),
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(Toffoli),
+        PENNYLANE_GATE_OP_FUNCTOR_PAIR(CSWAP),
+    };
+
+    const std::unordered_set implemented_gates(
+            std::cbegin(SelectGateOps<fp_t, kernel>::implemented_gates),
+            std::cend(SelectGateOps<fp_t, kernel>::implemented_gates));
+
+    for (const auto& [gate_op, func]: all_gate_ops) {
+        if (implemented_gates.find(gate_op) != implemented_gates.end()) {
+            const auto name = std::string(lookup(GATE_NAMES, gate_op));
+            dispatcher.registerGateOperation(name, kernel, func);
+        }
     }
 }
 
