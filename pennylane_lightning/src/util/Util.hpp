@@ -1150,7 +1150,7 @@ constexpr auto lookup(const std::array<std::pair<Key, Value>, size> &arr,
 template <typename U, size_t size>
 constexpr auto array_has_elt(const std::array<U, size> &arr, const U &elt)
     -> bool {
-    for (size_t idx = 0; idx < size; ++idx) {
+    for (size_t idx = 0; idx < size; idx++) {
         if (arr[idx] == elt) {
             return true;
         }
