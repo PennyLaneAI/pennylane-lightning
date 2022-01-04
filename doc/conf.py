@@ -36,7 +36,7 @@ def obtain_cpp_files():
         print('The project directory structure is corrupted.')
         sys.exit(1)
 
-    p = subprocess.run([str(script_path), '--documents'], capture_output = True)
+    p = subprocess.run([str(script_path)], capture_output = True)
     file_list = json.loads(p.stdout)
 
     file_list = ['../' + str(Path(f).relative_to(PROJECT_SOURCE_DIR)) for f in file_list]

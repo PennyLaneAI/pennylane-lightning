@@ -8,7 +8,6 @@ import shutil
 import subprocess
 import sys
 from utils import get_cpp_files
-from conf import CPP_SOURCE_DIRS_FORMAT
 
 CLANG_FMT_BIN = "clang-format"
 CLANG_FMT_STYLE_CFG = {
@@ -24,7 +23,6 @@ DEFAULT_CLANG_FORMAT_VERSION=11
 
 BASE_ARGS = [f"-style={json.dumps(CLANG_FMT_STYLE_CFG)}"]
 
-CPP_FILES_TO_FORMAT = get_cpp_files(CPP_SOURCE_DIRS_FORMAT, IGNORE_PATTERNS)
 
 def parse_version(version_string):
     version_rgx = "version (\d+)"
@@ -77,10 +75,11 @@ def parse_args():
 
     return parser.parse_args()
 
-def fmt(command, files) -> int:
+def fmt(command, paths) -> int:
+    files = get_cpp_files(paths)
     cmd = (command, *BASE_ARGS, "-i", *files)
 
-    sys.stderr.write(f"Formatting {len(CPP_FILES_TO_FORMAT)} files in {CPP_SOURCE_DIRS_FORMAT}.\n")
+    sys.stderr.write(f"Formatting {len(files)} files in {paths}.\n")
 
     ret = subprocess.run(cmd, capture_output=True, universal_newlines=True)
     if ret.returncode != 0:
@@ -90,10 +89,11 @@ def fmt(command, files) -> int:
     return 0
 
 
-def check(command, files, is_verbose) -> int:
+def check(command, paths, is_verbose) -> int:
     cmd = (command, *BASE_ARGS, "--dry-run", "-Werror")
 
     needs_reformatted_ct = 0
+    files = get_cpp_files(paths)
 
     for src_file in files:
         ret = subprocess.run(
@@ -108,7 +108,7 @@ def check(command, files, is_verbose) -> int:
             needs_reformatted_ct += 1
 
     sys.stderr.write(f"{needs_reformatted_ct} files would be re-formatted.\n")
-    sys.stderr.write(f"{len(CPP_FILES_TO_FORMAT) - needs_reformatted_ct} would be left unchanged.\n")
+    sys.stderr.write(f"{len(files) - needs_reformatted_ct} would be left unchanged.\n")
 
     return needs_reformatted_ct
 
@@ -117,11 +117,10 @@ if __name__ == "__main__":
     command = clang_format_command()
     args = parse_args()
 
-    files = get_cpp_files(args.paths)
 
     if args.check:
-        ret = check(command, files, args.verbose)
+        ret = check(command, args.paths, args.verbose)
     else:
-        ret = fmt(command, files)
+        ret = fmt(command, args.paths)
 
     sys.exit(int(ret > 0))
