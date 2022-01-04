@@ -694,8 +694,8 @@ template <class T = double> class AdjointJacobian {
         }
 
         // Create observable-applied state-vectors
-        std::vector<StateVectorManaged<T>> H_lambda(num_observables,
-                                                    StateVectorManaged<T>{lambda.getNumQubits()});
+        std::vector<StateVectorManaged<T>> H_lambda(
+            num_observables, StateVectorManaged<T>{lambda.getNumQubits()});
         applyObservables(H_lambda, lambda, observables);
 
         StateVectorManaged<T> mu(lambda.getNumQubits());

@@ -47,8 +47,9 @@ def clang_format_command():
             version = parse_version(p.stdout)
 
             if version < DEFAULT_CLANG_FORMAT_VERSION:
-                print(f"clang-format version {version} is found. "
-                       "Note that this is lower than the default version. ")
+                print(f"Using clang-format version {version}. \
+                        As this version is lower than the version for the CI, \
+                        the CI still may raise error even after formatting.")
 
     return command
 
@@ -56,6 +57,9 @@ def clang_format_command():
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Opinionated C/C++ formatter. Based on clang-format"
+    )
+    parser.add_argument(
+        "paths", nargs="+", metavar="DIR", help="paths to the root source directories"
     )
     parser.add_argument(
         "-c",
@@ -73,8 +77,8 @@ def parse_args():
 
     return parser.parse_args()
 
-def fmt(command) -> int:
-    cmd = (command, *BASE_ARGS, "-i", *CPP_FILES_TO_FORMAT)
+def fmt(command, files) -> int:
+    cmd = (command, *BASE_ARGS, "-i", *files)
 
     sys.stderr.write(f"Formatting {len(CPP_FILES_TO_FORMAT)} files in {CPP_SOURCE_DIRS_FORMAT}.\n")
 
@@ -86,12 +90,12 @@ def fmt(command) -> int:
     return 0
 
 
-def check(command, is_verbose) -> int:
+def check(command, files, is_verbose) -> int:
     cmd = (command, *BASE_ARGS, "--dry-run", "-Werror")
 
     needs_reformatted_ct = 0
 
-    for src_file in CPP_FILES_TO_FORMAT:
+    for src_file in files:
         ret = subprocess.run(
             (*cmd, src_file), capture_output=True, universal_newlines=True
         )
@@ -113,9 +117,12 @@ if __name__ == "__main__":
     command = clang_format_command()
     args = parse_args()
 
+    print(args.paths)
+    files = get_cpp_files(args.paths)
+
     if args.check:
-        ret = check(command, args.verbose)
+        ret = check(command, files, args.verbose)
     else:
-        ret = fmt(command)
+        ret = fmt(command, files)
 
     sys.exit(int(ret > 0))

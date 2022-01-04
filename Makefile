@@ -78,9 +78,9 @@ format: format-cpp format-python
 
 format-cpp:
 ifdef check
-	./bin/format --check
+	./bin/format --check ./pennylane_lightning/src
 else
-	./bin/format
+	./bin/format ./pennylane_lightning/src
 endif
 
 format-python:

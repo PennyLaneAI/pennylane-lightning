@@ -1,2 +1,6 @@
-tags
+# Do not change lines beblow. It is also read by /bin/format.
+build/*
+BuildTests/*
 BuildBench/*
+
+tags
