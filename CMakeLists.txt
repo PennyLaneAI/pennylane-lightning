@@ -79,12 +79,3 @@ else()
 endif()
 
 target_compile_definitions(lightning_qubit_ops PRIVATE VERSION_INFO=${VERSION_STRING})
-
-
-if(BUILD_TESTS)
-    enable_testing()
-endif()
-
-if(BUILD_EXAMPLES)
-    add_subdirectory(examples)
-endif()
