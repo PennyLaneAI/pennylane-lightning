@@ -68,7 +68,7 @@ template <class fp_t> class GateOperationsLM {
         const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
-        for (size_t n = 0; n < Util::exp2(num_qubits - 1); ++n) {
+        for (size_t n = 0; n < Util::exp2(num_qubits - 1); n++) {
             const size_t k = n;
             const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             const size_t i1 = i0 | (1U << rev_wire);
