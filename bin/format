@@ -3,6 +3,8 @@
 import argparse
 import json
 import pathlib
+import re
+import shutil
 import subprocess
 import sys
 from utils import get_cpp_files
@@ -18,19 +20,37 @@ CLANG_FMT_STYLE_CFG = {
 
 IGNORE_PATTERNS = ["external"]
 
-BASE_CMD = ("clang-format-11", f"-style={json.dumps(CLANG_FMT_STYLE_CFG)}")
+DEFAULT_CLANG_FORMAT_VERSION=11
+
+BASE_ARGS = [f"-style={json.dumps(CLANG_FMT_STYLE_CFG)}"]
 
 CPP_FILES_TO_FORMAT = get_cpp_files(CPP_SOURCE_DIRS_FORMAT, IGNORE_PATTERNS)
 
-def check_bin():
-    try:
-        subprocess.run(
-            ("clang-format", "--help"), universal_newlines=True, capture_output=True
-        )
-    except FileNotFoundError as exc:
-        raise FileNotFoundError(
-            "clang-format is not installed or is not in PATH."
-        ) from exc
+def parse_version(version_string):
+    version_rgx = "version (\d+)"
+
+    m = re.search(version_rgx, version_string)
+    return int(m.group(1))
+
+def clang_format_command():
+    command = f"clang-format-{DEFAULT_CLANG_FORMAT_VERSION}"
+
+    if shutil.which(command) is None:
+        print(f"{command} is not found. Find default clang-format instead.")
+        command = "clang-format"
+        if shutil.which(command) is None:
+            print(f"Default clang-format is not found.")
+            raise FileNotFoundError("clang-format is not installed or is not in PATH.")
+        else:
+            p = subprocess.run([command, "--version"], stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT, universal_newlines=True)
+            version = parse_version(p.stdout)
+
+            if version < DEFAULT_CLANG_FORMAT_VERSION:
+                print(f"clang-format version {version} is found. "
+                       "Note that this is lower than the default version. ")
+
+    return command
 
 
 def parse_args():
@@ -53,8 +73,8 @@ def parse_args():
 
     return parser.parse_args()
 
-def fmt(args) -> int:
-    cmd = (*BASE_CMD, "-i", *CPP_FILES_TO_FORMAT)
+def fmt(command) -> int:
+    cmd = (command, *BASE_ARGS, "-i", *CPP_FILES_TO_FORMAT)
 
     sys.stderr.write(f"Formatting {len(CPP_FILES_TO_FORMAT)} files in {CPP_SOURCE_DIRS_FORMAT}.\n")
 
@@ -66,8 +86,8 @@ def fmt(args) -> int:
     return 0
 
 
-def check(args) -> int:
-    cmd = (*BASE_CMD, "--dry-run", "-Werror")
+def check(command, is_verbose) -> int:
+    cmd = (command, *BASE_ARGS, "--dry-run", "-Werror")
 
     needs_reformatted_ct = 0
 
@@ -90,12 +110,12 @@ def check(args) -> int:
 
 
 if __name__ == "__main__":
-    check_bin()
+    command = clang_format_command()
     args = parse_args()
 
     if args.check:
-        ret = check(args)
+        ret = check(command, args.verbose)
     else:
-        ret = fmt(args)
+        ret = fmt(command)
 
     sys.exit(int(ret > 0))
