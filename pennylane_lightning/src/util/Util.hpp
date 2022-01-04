@@ -1135,7 +1135,7 @@ template <class T> struct remove_cvref {
 template <typename Key, typename Value, size_t size>
 constexpr auto lookup(const std::array<std::pair<Key, Value>, size> &arr,
                       const Key &key) -> Value {
-    for (size_t idx = 0; idx < size; ++idx) {
+    for (size_t idx = 0; idx < size; idx++) {
         if (std::get<0>(arr[idx]) == key) {
             return std::get<1>(arr[idx]);
         }
