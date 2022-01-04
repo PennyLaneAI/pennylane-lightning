@@ -199,7 +199,7 @@ class StateVecBinder
     /**
      * @brief Apply PauliX gate to the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @param wires Wires to apply operation.
      * @param inverse Indicate whether to use adjoint of operation.
      */
