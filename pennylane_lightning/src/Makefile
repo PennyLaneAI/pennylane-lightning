@@ -15,6 +15,7 @@ test:
 	cmake --build ./BuildTests --target test
 
 benchmark:
+	cmake --build BuildBench --target clean || true
 	rm -rf ./BBuildBench/CMakeCache.txt
-	cmake . -BBuildBench -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_RUNTIME_OUTPUT_DIRECTORY="${PWD}/BuildBench"
+	cmake . -BBuildBench -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_AVX=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY="${PWD}/BuildBench"
 	cmake --build ./BuildBench
