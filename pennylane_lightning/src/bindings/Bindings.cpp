@@ -559,9 +559,8 @@ void registerKernelFunctions_(PyClass &&pyclass) {
         auto gate_name = std::string(lookup(GATE_NAMES, gate_op));
         auto iter = all_op_kernel_pairs.find(gate_op);
         if (iter == all_op_kernel_pairs.cend()) {
-            PL_ABORT(
-                "The given gate " + gate_name +
-                " is not found; Please check the provided gate name.");
+            PL_ABORT("The given gate " + gate_name +
+                     " is not found; Please check the provided gate name.");
         }
         const std::string name = gate_name + "_" + kernel_name;
         // TODO: Change to std::format in C++20

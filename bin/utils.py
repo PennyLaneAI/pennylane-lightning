@@ -54,7 +54,6 @@ def get_cpp_files(paths, ignore_patterns = None, use_gitignore = True):
         ignore_patterns: patterns to ignore
         use_gitignore: find ignore patterns from .gitignore
     """
-
     files = set()
     for path in paths:
         files |= get_cpp_files_from_path(path, ignore_patterns, use_gitignore)

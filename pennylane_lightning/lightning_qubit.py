@@ -308,9 +308,15 @@ class LightningQubit(DefaultQubit):
 
         state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
 
+        # fmt: off
         jac = adj.adjoint_jacobian(
-            state_vector, obs_serialized, ops_serialized, tp_shift, tape.num_params
+            state_vector,
+            obs_serialized,
+            ops_serialized,
+            tp_shift,
+            tape.num_params
         )
+        # fmt: on
         return jac
 
     def vector_jacobian_product(self, tape, dy, starting_state=None, use_device_state=False):

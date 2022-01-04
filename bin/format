@@ -112,11 +112,9 @@ def check(command, paths, is_verbose) -> int:
 
     return needs_reformatted_ct
 
-
 if __name__ == "__main__":
     command = clang_format_command()
     args = parse_args()
-
 
     if args.check:
         ret = check(command, args.paths, args.verbose)

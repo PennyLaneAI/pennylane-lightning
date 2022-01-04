@@ -1,20 +1,32 @@
 #!/usr/bin/python3
 
-from pathlib import Path
+import argparse
+import json
 import sys
-from conf import CPP_SOURCE_DIRS_DOCUMENTS
+
+from pathlib import Path
 from utils import get_cpp_files
 
 
 if __name__ == '__main__':
     """
-    This program output a json list of all C++ source files for documentation.
-    If you want to add more C++ files in the documents, please change 
-    CPP_SOURCE_DIRS_DOCUMENTS in conf.py.
+    This program output a json list of all C++ source files.
     """
-    import argparse
-    import json
+    parser = argparse.ArgumentParser(
+        description="Output C/C++ files in json list"
+    )
+    parser.add_argument(
+        "paths", nargs="+", metavar="DIR", help="paths to the root source directories"
+    )
+    parser.add_argument(
+        "--exclude-dirs", dest="exclude_dirs", nargs="*", metavar="DIR", help="paths exclude from"
+    )
 
-    paths = CPP_SOURCE_DIRS_DOCUMENTS
-    files = get_cpp_files(paths)
-    json.dump(files, sys.stdout)
+    args = parser.parse_args()
+
+    files = set(get_cpp_files(args.paths))
+    if args.exclude_dirs:
+        files_excludes = set(get_cpp_files(args.exclude_dirs))
+        files -= files_excludes
+
+    json.dump(list(files), sys.stdout)

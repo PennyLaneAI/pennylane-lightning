@@ -28,6 +28,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath('doc')), 'doc'))
 # For obtaining all relevant C++ source files
 currdir = Path(__file__).resolve().parent # PROJECT_SOURCE_DIR/docs
 PROJECT_SOURCE_DIR = currdir.parent
+CPP_SOURCE_DIR = PROJECT_SOURCE_DIR.joinpath('pennylane_lightning/src')
+CPP_EXCLUDE_DIRS = ['examples', 'tests'] # relative to CPP_SOURCE_DIR
 
 def obtain_cpp_files():
     script_path = PROJECT_SOURCE_DIR.joinpath('bin/cpp-files')
@@ -36,7 +38,9 @@ def obtain_cpp_files():
         print('The project directory structure is corrupted.')
         sys.exit(1)
 
-    p = subprocess.run([str(script_path)], capture_output = True)
+    exclude_dirs = [CPP_SOURCE_DIR.joinpath(exclude_dir) for exclude_dir in CPP_EXCLUDE_DIRS]
+
+    p = subprocess.run([str(script_path), CPP_SOURCE_DIR, '--exclude-dirs', *exclude_dirs], capture_output = True)
     file_list = json.loads(p.stdout)
 
     file_list = ['../' + str(Path(f).relative_to(PROJECT_SOURCE_DIR)) for f in file_list]
