@@ -15,13 +15,15 @@ num_gate_reps=10000
 kernel="$1"
 gate="$2"
 
+compiler_info=$(<compiler_info.txt)
+
 # Creating data file
 binary_name="./gate_benchmark_oplist"
 path_to_binary="$currdir/$binary_name"
 
-resdir="$currdir/res"
+resdir="$currdir/res_${compiler_info}"
 mkdir -p $resdir
-data_file_name="benchmark_res_${kernel}_${gate}.csv"
+data_file_name="benchmark_${kernel}_${gate}.csv"
 path_to_csv="$resdir/$data_file_name"
 echo "Creating $path_to_csv"
 echo "Num Qubits, Time (milliseconds)" > $path_to_csv

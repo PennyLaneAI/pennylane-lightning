@@ -1,4 +1,4 @@
-.PHONY: help clean test format
+.PHONY: help clean test benchmark
 
 help:
 	@echo "Please use \`make <target>\` where <target> is one of"
@@ -16,6 +16,10 @@ test:
 
 benchmark:
 	cmake --build BuildBench --target clean || true
-	rm -rf ./BBuildBench/CMakeCache.txt
+	rm -rf ./BuildBench/CMakeCache.txt ./BuildBench/compiler_info.txt
+ifdef CXX
+	CXX=${CXX} cmake . -BBuildBench -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_AVX=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY="${PWD}/BuildBench"
+else
 	cmake . -BBuildBench -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_AVX=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY="${PWD}/BuildBench"
+endif
 	cmake --build ./BuildBench
