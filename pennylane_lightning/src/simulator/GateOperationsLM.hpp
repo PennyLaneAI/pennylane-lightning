@@ -70,8 +70,8 @@ template <class fp_t> class GateOperationsLM {
 
         for (size_t n = 0; n < Util::exp2(num_qubits - 1); ++n) {
             const size_t k = n;
-            const size_t i0 = ((k << 1) & wire_parity_inv) | (wire_parity & k);
-            const size_t i1 = i0 | (1 << rev_wire);
+            const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
+            const size_t i1 = i0 | (1U << rev_wire);
             const CFP_t v0 = arr[i0];
             const CFP_t v1 = arr[i1];
             arr[i0] = op_matrix[0B00] * v0 +
@@ -101,8 +101,8 @@ template <class fp_t> class GateOperationsLM {
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
         for (size_t k = 0; k < Util::exp2(num_qubits - 1); ++k) {
-            const size_t i0 = ((k << 1) & wire_parity_inv) | (wire_parity & k);
-            const size_t i1 = i0 | (1 << rev_wire);
+            const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
+            const size_t i1 = i0 | (1U << rev_wire);
             std::swap(arr[i0], arr[i1]);
         }
     }
@@ -115,20 +115,13 @@ template <class fp_t> class GateOperationsLM {
         const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
-        fp_t *data_z = reinterpret_cast<fp_t *>(arr);
-
         for (size_t k = 0; k < Util::exp2(num_qubits - 1); ++k) {
             const size_t i0 = ((k << 1) & wire_parity_inv) | (wire_parity & k);
             const size_t i1 = i0 | (1 << rev_wire);
-            const auto v0_r = data_z[2 * i0];
-            const auto v0_i = data_z[2 * i0 + 1];
-            const auto v1_r = data_z[2 * i1];
-            const auto v1_i = data_z[2 * i1 + 1];
-
-            data_z[2 * i0] = v1_i;
-            data_z[2 * i0 + 1] = -v1_r;
-            data_z[2 * i1] = -v0_i;
-            data_z[2 * i1 + 1] = v0_r;
+            const auto v0 = arr[i0];
+            const auto v1 = arr[i1];
+            arr[i0] = {std::imag(v1), -std::real(v1)};
+            arr[i1] = {-std::imag(v0), std::real(v0)};
         }
     }
 

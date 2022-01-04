@@ -71,7 +71,7 @@ template <class fp_t> class GateOperationsPI {
      */
     static void applyMatrix(CFP_t *arr, size_t num_qubits, const CFP_t *matrix,
                             const std::vector<size_t> &wires, bool inverse) {
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
 
         std::vector<CFP_t> v(indices.size());
@@ -134,7 +134,7 @@ template <class fp_t> class GateOperationsPI {
                             const std::vector<size_t> &wires,
                             [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
 
         for (const size_t &externalIndex : externalIndices) {
@@ -147,7 +147,7 @@ template <class fp_t> class GateOperationsPI {
                             const std::vector<size_t> &wires,
                             [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
 
         for (const size_t &externalIndex : externalIndices) {
@@ -163,7 +163,7 @@ template <class fp_t> class GateOperationsPI {
                             const std::vector<size_t> &wires,
                             [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
 
         for (const size_t &externalIndex : externalIndices) {
@@ -176,7 +176,7 @@ template <class fp_t> class GateOperationsPI {
                               const std::vector<size_t> &wires,
                               [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
 
         for (const size_t &externalIndex : externalIndices) {
@@ -193,7 +193,7 @@ template <class fp_t> class GateOperationsPI {
     static void applyS(CFP_t *arr, size_t num_qubits,
                        const std::vector<size_t> &wires, bool inverse) {
         assert(wires.size() == 1);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
         const CFP_t shift =
             (inverse) ? -Util::IMAG<fp_t>() : Util::IMAG<fp_t>();
@@ -207,7 +207,7 @@ template <class fp_t> class GateOperationsPI {
     static void applyT(CFP_t *arr, size_t num_qubits,
                        const std::vector<size_t> &wires, bool inverse) {
         assert(wires.size() == 1);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
 
         const CFP_t shift =
@@ -227,7 +227,7 @@ template <class fp_t> class GateOperationsPI {
                         const std::vector<size_t> &wires, bool inverse,
                         Param_t angle) {
         assert(wires.size() == 1);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
 
         const fp_t c = std::cos(angle / 2);
@@ -250,7 +250,7 @@ template <class fp_t> class GateOperationsPI {
                         const std::vector<size_t> &wires, bool inverse,
                         Param_t angle) {
         assert(wires.size() == 1);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
 
         const fp_t c = std::cos(angle / 2);
@@ -270,7 +270,7 @@ template <class fp_t> class GateOperationsPI {
                         const std::vector<size_t> &wires, bool inverse,
                         Param_t angle) {
         assert(wires.size() == 1);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
 
         const CFP_t first = CFP_t(std::cos(angle / 2), -std::sin(angle / 2));
@@ -290,7 +290,7 @@ template <class fp_t> class GateOperationsPI {
                                 const std::vector<size_t> &wires, bool inverse,
                                 Param_t angle) {
         assert(wires.size() == 1);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
         const CFP_t s = inverse ? std::conj(std::exp(CFP_t(0, angle)))
                                 : std::exp(CFP_t(0, angle));
@@ -305,7 +305,7 @@ template <class fp_t> class GateOperationsPI {
                          const std::vector<size_t> &wires, bool inverse,
                          Param_t phi, Param_t theta, Param_t omega) {
         assert(wires.size() == 1);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
 
         const std::vector<CFP_t> rot = Gates::getRot<fp_t>(phi, theta, omega);
@@ -329,7 +329,7 @@ template <class fp_t> class GateOperationsPI {
                           const std::vector<size_t> &wires,
                           [[maybe_unused]] bool inverse) {
         assert(wires.size() == 2);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr + externalIndex;
@@ -341,7 +341,7 @@ template <class fp_t> class GateOperationsPI {
                           const std::vector<size_t> &wires,
                           [[maybe_unused]] bool inverse) {
         assert(wires.size() == 2);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr + externalIndex;
@@ -353,7 +353,7 @@ template <class fp_t> class GateOperationsPI {
                         const std::vector<size_t> &wires,
                         [[maybe_unused]] bool inverse) {
         assert(wires.size() == 2);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr + externalIndex;
@@ -367,7 +367,7 @@ template <class fp_t> class GateOperationsPI {
                                           const std::vector<size_t> &wires,
                                           bool inverse, Param_t angle) {
         assert(wires.size() == 2);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
 
         const CFP_t s = inverse ? std::conj(std::exp(CFP_t(0, angle)))
@@ -383,7 +383,7 @@ template <class fp_t> class GateOperationsPI {
                          const std::vector<size_t> &wires, bool inverse,
                          Param_t angle) {
         assert(wires.size() == 2);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
 
         const fp_t c = std::cos(angle / 2);
@@ -406,7 +406,7 @@ template <class fp_t> class GateOperationsPI {
                          const std::vector<size_t> &wires, bool inverse,
                          Param_t angle) {
         assert(wires.size() == 2);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
 
         const fp_t c = std::cos(angle / 2);
@@ -426,7 +426,7 @@ template <class fp_t> class GateOperationsPI {
                          const std::vector<size_t> &wires, bool inverse,
                          Param_t angle) {
         assert(wires.size() == 2);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
         const CFP_t m00 =
             (inverse) ? CFP_t(std::cos(angle / 2), std::sin(angle / 2))
@@ -446,7 +446,7 @@ template <class fp_t> class GateOperationsPI {
                           const std::vector<size_t> &wires, bool inverse,
                           Param_t phi, Param_t theta, Param_t omega) {
         assert(wires.size() == 2);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
         const auto rot = Gates::getRot<fp_t>(phi, theta, omega);
 
@@ -469,7 +469,7 @@ template <class fp_t> class GateOperationsPI {
                              const std::vector<size_t> &wires,
                              [[maybe_unused]] bool inverse) {
         assert(wires.size() == 3);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
         // Participating swapped indices
         static const size_t op_idx0 = 6;
@@ -485,7 +485,7 @@ template <class fp_t> class GateOperationsPI {
                            const std::vector<size_t> &wires,
                            [[maybe_unused]] bool inverse) {
         assert(wires.size() == 3);
-        const auto &&[indices, externalIndices] =
+        const auto [indices, externalIndices] =
             GateIndices(wires, num_qubits);
         // Participating swapped indices
         static const size_t op_idx0 = 5;
