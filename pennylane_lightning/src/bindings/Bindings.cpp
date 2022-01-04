@@ -563,7 +563,7 @@ void registerKernelFunctions_(PyClass &&pyclass) {
                 "The given gate " + gate_name +
                 " is not found in all_op_kernel_pairs; Check this variable.");
         }
-       const  std::string name = gate_name + "_" + kernel_name;
+        const std::string name = gate_name + "_" + kernel_name;
         // TODO: Change to std::format in C++20
         std::string doc = "Apply the " + gate_name + " gate using " +
                           kernel_name + " kernel.";

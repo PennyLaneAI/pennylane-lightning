@@ -102,7 +102,7 @@ def check(command, files, is_verbose) -> int:
 
         if ret.returncode != 0:
             sys.stderr.write(f"Error: {src_file} would be reformatted.\n")
-            if args.verbose:
+            if is_verbose:
                 sys.stderr.write(ret.stderr)
 
             needs_reformatted_ct += 1
@@ -117,7 +117,6 @@ if __name__ == "__main__":
     command = clang_format_command()
     args = parse_args()
 
-    print(args.paths)
     files = get_cpp_files(args.paths)
 
     if args.check:
