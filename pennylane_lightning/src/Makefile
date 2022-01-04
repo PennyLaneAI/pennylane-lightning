@@ -16,10 +16,10 @@ test:
 
 benchmark:
 	cmake --build BuildBench --target clean || true
-	rm -rf ./BuildBench/CMakeCache.txt ./BuildBench/compiler_info.txt
+	rm -rf ./BuildBench/CMakeCache.txt ./BuildBench/compiler_info.txt ./BuildBench/run_gate_benchmark.sh
 ifdef CXX
-	CXX=${CXX} cmake . -BBuildBench -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_AVX=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY="${PWD}/BuildBench"
+	CXX=${CXX} cmake . -BBuildBench -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_AVX=ON
 else
-	cmake . -BBuildBench -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_AVX=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY="${PWD}/BuildBench"
+	cmake . -BBuildBench -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_AVX=ON
 endif
 	cmake --build ./BuildBench
