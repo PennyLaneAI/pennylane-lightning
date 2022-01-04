@@ -212,7 +212,7 @@ class StateVecBinder
     /**
      * @brief Apply PauliY gate to the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @param wires Wires to apply operation.
      * @param inverse Indicate whether to use adjoint of operation.
      */
@@ -224,7 +224,7 @@ class StateVecBinder
     /**
      * @brief Apply PauliZ gate to the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @param wires Wires to apply operation.
      * @param inverse Indicate whether to use adjoint of operation.
      */
@@ -236,7 +236,7 @@ class StateVecBinder
     /**
      * @brief Apply Hadamard gate to the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @param wires Wires to apply operation.
      * @param inverse Indicate whether to use adjoint of operation.
      */
@@ -249,7 +249,7 @@ class StateVecBinder
     /**
      * @brief Apply S gate to the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @param wires Wires to apply operation.
      * @param inverse Indicate whether to use adjoint of operation.
      */
@@ -261,7 +261,7 @@ class StateVecBinder
     /**
      * @brief Apply T gate to the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @param wires Wires to apply operation.
      * @param inverse Indicate whether to use adjoint of operation.
      */
@@ -273,7 +273,7 @@ class StateVecBinder
     /**
      * @brief Apply CNOT (CX) gate to the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @param wires Wires to apply operation. First index for control wire,
      * second index for target wire.
      * @param inverse Indicate whether to use adjoint of operation.
@@ -286,7 +286,7 @@ class StateVecBinder
     /**
      * @brief Apply SWAP gate to the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @param wires Wires to apply operation. First and second indices for
      * target wires.
      * @param inverse Indicate whether to use adjoint of operation.
@@ -299,7 +299,7 @@ class StateVecBinder
     /**
      * @brief Apply CZ gate to the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @param wires Wires to apply operation. First index for control wire,
      * second index for target wire.
      * @param inverse Indicate whether to use adjoint of operation.
@@ -313,7 +313,7 @@ class StateVecBinder
     /**
      * @brief Apply CSWAP gate to the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @param wires Wires to apply operation. First index for control wire,
      * second and third indices for target wires.
      * @param inverse Indicate whether to use adjoint of operation.
@@ -327,7 +327,7 @@ class StateVecBinder
     /**
      * @brief Apply Toffoli (CCX) gate to the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @param wires Wires to apply operation. First index and second indices for
      * control wires, third index for target wire.
      * @param inverse Indicate whether to use adjoint of operation.
@@ -342,7 +342,7 @@ class StateVecBinder
      * @brief Apply Phase-shift (\f$\textrm{diag}(1, \exp(i\theta))\f$) gate to
      * the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @param wires Wires to apply operation.
      * @param inverse Indicate whether to use adjoint of operation.
      */
@@ -356,7 +356,7 @@ class StateVecBinder
      * @brief Apply controlled phase-shift
      * (\f$\textrm{diag}(1,1,1,\exp(i\theta))\f$) gate to the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @param wires Wires to apply operation. First index for control wire,
      * second index for target wire.
      * @param inverse Indicate whether to use adjoint of operation.
@@ -372,7 +372,7 @@ class StateVecBinder
     /**
      * @brief Apply RX (\f$exp(-i\theta\sigma_x/2)\f$) gate to the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @tparam ParamT Type of parameter data.
      * @param wires Wires to apply operation.
      * @param inverse Indicate whether to use adjoint of operation.
@@ -387,7 +387,7 @@ class StateVecBinder
     /**
      * @brief Apply RY (\f$exp(-i\theta\sigma_y/2)\f$) gate to the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @tparam ParamT Type of parameter data.
      * @param wires Wires to apply operation.
      * @param inverse Indicate whether to use adjoint of operation.
@@ -402,7 +402,7 @@ class StateVecBinder
     /**
      * @brief Apply RZ (\f$exp(-i\theta\sigma_z/2)\f$) gate to the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @tparam ParamT Type of parameter data.
      * @param wires Wires to apply operation.
      * @param inverse Indicate whether to use adjoint of operation.
@@ -417,7 +417,7 @@ class StateVecBinder
     /**
      * @brief Apply controlled RX gate to the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @tparam ParamT Type of parameter data.
      * @param wires Wires to apply operation. First index for control wire,
      * second index for target wire.
@@ -433,7 +433,7 @@ class StateVecBinder
     /**
      * @brief Apply controlled RY gate to the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @tparam ParamT Type of parameter data.
      * @param wires Wires to apply operation. First index for control wire,
      * second index for target wire.
@@ -449,7 +449,7 @@ class StateVecBinder
     /**
      * @brief Apply controlled RZ gate to the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @tparam ParamT Type of parameter data.
      * @param wires Wires to apply operation. First index for control wire,
      * second index for target wire.
@@ -465,7 +465,7 @@ class StateVecBinder
     /**
      * @brief Apply Rot gate to the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @tparam ParamT Type of parameter data.
      * @param wires Wires to apply operation.
      * @param inverse Indicate whether to use adjoint of operation.
@@ -480,7 +480,7 @@ class StateVecBinder
     /**
      * @brief Apply controlled Rot gate to the given wires.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @tparam ParamT Type of parameter data.
      * @param wires Wires to apply operation. First index for control wire,
      * second index for target wire.
@@ -498,7 +498,7 @@ class StateVecBinder
      * @brief Directly apply a given matrix to the specified wires. Data in 1/2D
      * numpy complex array format.
      *
-     * @tparam kenel Kernel to run the operation
+     * @tparam kernel Kernel to run the operation
      * @param matrix Numpy complex data representing matrix to apply.
      * @param wires Wires to apply given matrix.
      * @param inverse Indicate whether to take adjoint.
