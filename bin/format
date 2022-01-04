@@ -46,8 +46,8 @@ def clang_format_command():
 
             if version < DEFAULT_CLANG_FORMAT_VERSION:
                 print(f"Using clang-format version {version}. \
-                        As this version is lower than the version for the CI, \
-                        the CI still may raise error even after formatting.")
+                        As this is lower than the version used for the CI, \
+                        the CI may fail even after formatting.")
 
     return command
 
