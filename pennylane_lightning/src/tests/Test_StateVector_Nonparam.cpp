@@ -590,6 +590,101 @@ TEMPLATE_TEST_CASE("StateVector::applySWAP", "[StateVector_Nonparam]", float,
 }
 
 // NOLINTNEXTLINE: Avoiding complexity errors
+TEMPLATE_TEST_CASE("StateVector::applyCY", "[StateVector_Nonparam]", float,
+                   double) {
+    using cp_t = std::complex<TestType>;
+    const size_t num_qubits = 3;
+    SVData<TestType> svdat{num_qubits};
+
+    // Test using |+10> state
+    svdat.sv.applyOperations({{"Hadamard"}, {"PauliX"}}, {{0}, {1}},
+                             {false, false});
+    const auto init_state = svdat.cdata;
+
+    SECTION("Apply directly") {
+        CHECK(svdat.cdata ==
+              std::vector<cp_t>{Util::ZERO<TestType>(), Util::ZERO<TestType>(),
+                                std::complex<TestType>(1.0 / sqrt(2), 0),
+                                Util::ZERO<TestType>(), Util::ZERO<TestType>(),
+                                Util::ZERO<TestType>(),
+                                std::complex<TestType>(1.0 / sqrt(2), 0),
+                                Util::ZERO<TestType>()});
+
+        SECTION("CY 0,1 |+10> -> i|100>") {
+            std::vector<cp_t> expected{Util::ZERO<TestType>(),
+                                       Util::ZERO<TestType>(),
+                                       std::complex<TestType>(1.0 / sqrt(2), 0),
+                                       Util::ZERO<TestType>(),
+                                       std::complex<TestType>(0, -1 / sqrt(2)),
+                                       Util::ZERO<TestType>(),
+                                       Util::ZERO<TestType>(),
+                                       Util::ZERO<TestType>()};
+
+            SVData<TestType> svdat01{num_qubits, init_state};
+
+            svdat01.sv.applyCY(svdat.getInternalIndices({0, 1}),
+                               svdat.getExternalIndices({0, 1}), false);
+
+            CHECK(svdat01.cdata == expected);
+        }
+
+        SECTION("CY 0,2 |+10> -> |010> + i |111>") {
+            std::vector<cp_t> expected{
+                Util::ZERO<TestType>(),
+                Util::ZERO<TestType>(),
+                std::complex<TestType>(1.0 / sqrt(2), 0.0),
+                Util::ZERO<TestType>(),
+                Util::ZERO<TestType>(),
+                Util::ZERO<TestType>(),
+                Util::ZERO<TestType>(),
+                std::complex<TestType>(0.0, 1 / sqrt(2))};
+
+            SVData<TestType> svdat02{num_qubits, init_state};
+
+            svdat02.sv.applyCY(svdat.getInternalIndices({0, 2}),
+                               svdat.getExternalIndices({0, 2}), false);
+            CHECK(svdat02.cdata == expected);
+        }
+        SECTION("CY 1,2 |+10> -> i|+11>") {
+            std::vector<cp_t> expected{
+                Util::ZERO<TestType>(),
+                Util::ZERO<TestType>(),
+                Util::ZERO<TestType>(),
+                std::complex<TestType>(0.0, 1.0 / sqrt(2)),
+                Util::ZERO<TestType>(),
+                Util::ZERO<TestType>(),
+                Util::ZERO<TestType>(),
+                std::complex<TestType>(0.0, 1 / sqrt(2))};
+
+            SVData<TestType> svdat12{num_qubits, init_state};
+
+            svdat12.sv.applyCY(svdat.getInternalIndices({1, 2}),
+                               svdat.getExternalIndices({1, 2}), false);
+
+            CHECK(svdat12.cdata == expected);
+        }
+    }
+    SECTION("Apply using dispatcher") {
+        SECTION("CY0,1 |+10> -> |1+0>") {
+            std::vector<cp_t> expected{Util::ZERO<TestType>(),
+                                       Util::ZERO<TestType>(),
+                                       std::complex<TestType>(1.0 / sqrt(2), 0),
+                                       Util::ZERO<TestType>(),
+                                       std::complex<TestType>(0, -1 / sqrt(2)),
+                                       Util::ZERO<TestType>(),
+                                       Util::ZERO<TestType>(),
+                                       Util::ZERO<TestType>()};
+
+            SVData<TestType> svdat01{num_qubits, init_state};
+
+            svdat01.sv.applyOperation("CY", {0, 1});
+
+            CHECK(svdat01.cdata == expected);
+        }
+    }
+}
+
+// NOLINTNEXTLINE: Avoiding complexity errors
 TEMPLATE_TEST_CASE("StateVector::applyCZ", "[StateVector_Nonparam]", float,
                    double) {
     using cp_t = std::complex<TestType>;
