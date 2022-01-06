@@ -2,6 +2,13 @@
 
 ### Bug fixes
 
+* Introduce CY kernel to Lightning to avoid issues with decomposition.
+[(#203)](https://github.com/PennyLaneAI/pennylane-lightning/pull/203)
+
+# Release 0.20.1
+
+### Bug fixes
+
 * Fix missing header-files causing build errors in algorithms module.
 [(#193)](https://github.com/PennyLaneAI/pennylane-lightning/pull/193)
 
