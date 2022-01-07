@@ -1,18 +1,43 @@
 # Release 0.21.0-dev
 
 ### New features since last release
+* Direct support to probability, expectation value and variance calculation in PL-Lightning.
+[(#185)](https://github.com/PennyLaneAI/pennylane-lightning/pull/185)
+
+* Add C++ only benchmark for a given list of gates.
+[(#199)](https://github.com/PennyLaneAI/pennylane-lightning/pull/199)
 
 ### Breaking changes
 
 ### Improvements
 
+* Ensure debug info is built into dynamic libraries.
+[(#201)](https://github.com/PennyLaneAI/pennylane-lightning/pull/201)
+
 ### Documentation
 
 ### Bug fixes
 
+* Add virtual destructor to C++ state-vector classes.
+[(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Amintor Dusko, Chae-Yeun Park, Lee James O'Riordan
+
+---
+
+# Release 0.20.1
+
+### Bug fixes
+
+* Fix missing header-files causing build errors in algorithms module.
+[(#193)](https://github.com/PennyLaneAI/pennylane-lightning/pull/193)
+
+* Fix failed tests for the non-binary wheel.
+[(#191)](https://github.com/PennyLaneAI/pennylane-lightning/pull/191)
 
 ---
 # Release 0.20.2
@@ -66,13 +91,11 @@ Lee J. O'Riordan
 * Lightning setup.py build process uses CMake.
 [(#176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/176)
 
-
-
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Chae-Yeun Park, Isidor Schoch
+Ali Asadi, Chae-Yeun Park, Isidor Schoch, Lee James O'Riordan
 
 ---
 
