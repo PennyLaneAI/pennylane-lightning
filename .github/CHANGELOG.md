@@ -15,6 +15,18 @@
 This release contains contributions from (in alphabetical order):
 
 ---
+# Release 0.20.2
+
+### Bug fixes
+
+* Introduce CY kernel to Lightning to avoid issues with decomposition.
+[(#203)](https://github.com/PennyLaneAI/pennylane-lightning/pull/203)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Lee J. O'Riordan
 
 # Release 0.20.1
 
@@ -25,8 +37,6 @@ This release contains contributions from (in alphabetical order):
 
 * Fix failed tests for the non-binary wheel.
 [(#191)](https://github.com/PennyLaneAI/pennylane-lightning/pull/191)
-
----
 
 # Release 0.20.0
 
@@ -57,11 +67,12 @@ This release contains contributions from (in alphabetical order):
 [(#176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/176)
 
 
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Chae-Yeun Park, Isidor Schoch, Lee James O'Riordan
+Ali Asadi, Chae-Yeun Park, Isidor Schoch
 
 ---
 

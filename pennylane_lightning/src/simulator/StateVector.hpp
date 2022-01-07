@@ -115,9 +115,10 @@ template <class fp_t = double> class StateVector {
               {"Hadamard", 1}, {"T", 1},          {"S", 1},
               {"RX", 1},       {"RY", 1},         {"RZ", 1},
               {"Rot", 1},      {"PhaseShift", 1}, {"ControlledPhaseShift", 2},
-              {"CNOT", 2},     {"SWAP", 2},       {"CZ", 2},
-              {"CRX", 2},      {"CRY", 2},        {"CRZ", 2},
-              {"CRot", 2},     {"CSWAP", 3},      {"Toffoli", 3}},
+              {"CNOT", 2},     {"SWAP", 2},       {"CY", 2},
+              {"CZ", 2},       {"CRX", 2},        {"CRY", 2},
+              {"CRZ", 2},      {"CRot", 2},       {"CSWAP", 3},
+              {"Toffoli", 3}},
           gates_{
               // Add mapping from function name to generalised signature for
               // dispatch. Methods exist with the same signatures to simplify
@@ -185,6 +186,13 @@ template <class fp_t = double> class StateVector {
                                std::forward<decltype(PH2)>(PH2),
                                std::forward<decltype(PH3)>(PH3),
                                std::forward<decltype(PH4)>(PH4));
+               }},
+              {"CY",
+               [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
+                   applyCY_(std::forward<decltype(PH1)>(PH1),
+                            std::forward<decltype(PH2)>(PH2),
+                            std::forward<decltype(PH3)>(PH3),
+                            std::forward<decltype(PH4)>(PH4));
                }},
               {"CZ",
                [this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4) {
@@ -918,6 +926,28 @@ template <class fp_t = double> class StateVector {
             std::swap(shiftedState[indices[1]], shiftedState[indices[2]]);
         }
     }
+
+    /**
+     * @brief Apply CY gate to given indices of statevector.
+     *
+     * @param indices Local amplitude indices participating in given gate
+     * application for fixed sets of non-participating qubit indices.
+     * @param externalIndices Non-participating qubit amplitude index offsets
+     * for given operation for global application.
+     * @param inverse Take adjoint of given operation.
+     */
+    void applyCY(const vector<size_t> &indices,
+                 const vector<size_t> &externalIndices,
+                 [[maybe_unused]] bool inverse) {
+        for (const size_t &externalIndex : externalIndices) {
+            CFP_t *shiftedState = arr_ + externalIndex;
+            CFP_t v2 = shiftedState[indices[2]];
+            shiftedState[indices[2]] = CFP_t{shiftedState[indices[3]].imag(),
+                                             -shiftedState[indices[3]].real()};
+            shiftedState[indices[3]] = CFP_t{-v2.imag(), v2.real()};
+        }
+    }
+
     /**
      * @brief Apply CZ gate to given indices of statevector.
      *
@@ -1187,6 +1217,12 @@ template <class fp_t = double> class StateVector {
                            const vector<fp_t> &params) {
         static_cast<void>(params);
         applySWAP(indices, externalIndices, inverse);
+    }
+    inline void applyCY_(const vector<size_t> &indices,
+                         const vector<size_t> &externalIndices, bool inverse,
+                         const vector<fp_t> &params) {
+        static_cast<void>(params);
+        applyCY(indices, externalIndices, inverse);
     }
     inline void applyCZ_(const vector<size_t> &indices,
                          const vector<size_t> &externalIndices, bool inverse,
