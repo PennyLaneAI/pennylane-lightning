@@ -240,6 +240,19 @@ template <class fp_t = double> class StateVecBinder : public StateVector<fp_t> {
         StateVector<fp_t>::applySWAP(idx.internal, idx.external, inverse);
     }
     /**
+     * @brief Apply CY gate to the given wires.
+     *
+     * @param wires Wires to apply operation. First index for control wire,
+     * second index for target wire.
+     * @param inverse Indicate whether to use adjoint of operation.
+     */
+    template <class Param_t = fp_t>
+    void applyCY(const std::vector<size_t> &wires, bool inverse,
+                 [[maybe_unused]] const std::vector<Param_t> params = {}) {
+        const GateIndices idx(wires, this->getNumQubits());
+        StateVector<fp_t>::applyCY(idx.internal, idx.external, inverse);
+    }
+    /**
      * @brief Apply CZ gate to the given wires.
      *
      * @param wires Wires to apply operation. First index for control wire,
@@ -548,6 +561,11 @@ void lightning_class_bindings(py::module &m) {
                  &StateVecBinder<PrecisionT>::template applyToffoli<Param_t>),
              "Apply the Toffoli gate.")
 
+        .def("CY",
+             py::overload_cast<const std::vector<size_t> &, bool,
+                               const std::vector<Param_t>>(
+                 &StateVecBinder<PrecisionT>::template applyCY<Param_t>),
+             "Apply the CZ gate.")
         .def("CZ",
              py::overload_cast<const std::vector<size_t> &, bool,
                                const std::vector<Param_t>>(
