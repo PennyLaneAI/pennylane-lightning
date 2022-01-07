@@ -40,6 +40,28 @@ Amintor Dusko, Chae-Yeun Park, Lee James O'Riordan
 [(#191)](https://github.com/PennyLaneAI/pennylane-lightning/pull/191)
 
 ---
+# Release 0.20.2
+
+### Bug fixes
+
+* Introduce CY kernel to Lightning to avoid issues with decomposition.
+[(#203)](https://github.com/PennyLaneAI/pennylane-lightning/pull/203)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Lee J. O'Riordan
+
+# Release 0.20.1
+
+### Bug fixes
+
+* Fix missing header-files causing build errors in algorithms module.
+[(#193)](https://github.com/PennyLaneAI/pennylane-lightning/pull/193)
+
+* Fix failed tests for the non-binary wheel.
+[(#191)](https://github.com/PennyLaneAI/pennylane-lightning/pull/191)
 
 # Release 0.20.0
 
@@ -68,7 +90,6 @@ Amintor Dusko, Chae-Yeun Park, Lee James O'Riordan
 
 * Lightning setup.py build process uses CMake.
 [(#176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/176)
-
 
 ### Contributors
 
