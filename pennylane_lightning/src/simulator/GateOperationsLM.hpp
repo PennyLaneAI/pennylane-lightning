@@ -53,13 +53,21 @@ template <class fp_t> class GateOperationsLM {
     constexpr static KernelType kernel_id = KernelType::LM;
 
     constexpr static std::array implemented_gates = {
-        GateOperations::PauliX, GateOperations::PauliY,
-        GateOperations::PauliZ, GateOperations::Hadamard,
-        GateOperations::S,      GateOperations::T,
-        GateOperations::RX,     GateOperations::RY,
-        GateOperations::RZ,     GateOperations::PhaseShift,
-        GateOperations::Rot,    GateOperations::CZ,
-        GateOperations::CNOT,   GateOperations::SWAP};
+        GateOperations::PauliX,
+        GateOperations::PauliY,
+        GateOperations::PauliZ,
+        GateOperations::Hadamard,
+        GateOperations::S,
+        GateOperations::T,
+        GateOperations::RX,
+        GateOperations::RY,
+        GateOperations::RZ,
+        GateOperations::PhaseShift,
+        GateOperations::Rot,
+        GateOperations::CZ,
+        GateOperations::CNOT,
+        GateOperations::SWAP,
+        GateOperations::GeneratorPhaseShift};
 
   private:
     static void applySingleQubitOp(CFP_t *arr, size_t num_qubits,
@@ -84,11 +92,11 @@ template <class fp_t> class GateOperationsLM {
   public:
     static void applyMatrix(CFP_t *arr, size_t num_qubits, const CFP_t *matrix,
                             const std::vector<size_t> &wires, bool inverse) {
-        (void)arr;
-        (void)num_qubits;
-        (void)matrix;
-        (void)wires;
-        (void)inverse;
+        static_cast<void>(arr);
+        static_cast<void>(num_qubits);
+        static_cast<void>(matrix);
+        static_cast<void>(wires);
+        static_cast<void>(inverse);
         PL_ABORT("Called unimplemented gate operation applyMatrix.");
     }
 
@@ -343,10 +351,10 @@ template <class fp_t> class GateOperationsLM {
                                           const std::vector<size_t> &wires,
                                           [[maybe_unused]] bool inverse,
                                           Param_t angle) {
-        (void)arr;
-        (void)num_qubits;
-        (void)wires;
-        (void)angle;
+        static_cast<void>(arr);
+        static_cast<void>(num_qubits);
+        static_cast<void>(wires);
+        static_cast<void>(angle);
         PL_ABORT("GaterOperationsLM::applyControlledPhaseShift is not "
                  "implemented yet");
     }
@@ -355,10 +363,10 @@ template <class fp_t> class GateOperationsLM {
     static void applyCRX(CFP_t *arr, size_t num_qubits,
                          const std::vector<size_t> &wires,
                          [[maybe_unused]] bool inverse, Param_t angle) {
-        (void)arr;
-        (void)num_qubits;
-        (void)wires;
-        (void)angle;
+        static_cast<void>(arr);
+        static_cast<void>(num_qubits);
+        static_cast<void>(wires);
+        static_cast<void>(angle);
         PL_ABORT("GaterOperationsLM::applyCRX is not implemented yet");
     }
 
@@ -366,10 +374,10 @@ template <class fp_t> class GateOperationsLM {
     static void applyCRY(CFP_t *arr, size_t num_qubits,
                          const std::vector<size_t> &wires,
                          [[maybe_unused]] bool inverse, Param_t angle) {
-        (void)arr;
-        (void)num_qubits;
-        (void)wires;
-        (void)angle;
+        static_cast<void>(arr);
+        static_cast<void>(num_qubits);
+        static_cast<void>(wires);
+        static_cast<void>(angle);
         PL_ABORT("GaterOperationsLM::applyCRY is not implemented yet");
     }
 
@@ -377,10 +385,10 @@ template <class fp_t> class GateOperationsLM {
     static void applyCRZ(CFP_t *arr, size_t num_qubits,
                          const std::vector<size_t> &wires,
                          [[maybe_unused]] bool inverse, Param_t angle) {
-        (void)arr;
-        (void)num_qubits;
-        (void)wires;
-        (void)angle;
+        static_cast<void>(arr);
+        static_cast<void>(num_qubits);
+        static_cast<void>(wires);
+        static_cast<void>(angle);
         PL_ABORT("GaterOperationsLM::applyCRZ is not implemented yet");
     }
 
@@ -389,31 +397,81 @@ template <class fp_t> class GateOperationsLM {
                           const std::vector<size_t> &wires,
                           [[maybe_unused]] bool inverse, Param_t phi,
                           Param_t theta, Param_t omega) {
-        (void)arr;
-        (void)num_qubits;
-        (void)wires;
-        (void)phi;
-        (void)theta;
-        (void)omega;
+        static_cast<void>(arr);
+        static_cast<void>(num_qubits);
+        static_cast<void>(wires);
+        static_cast<void>(phi);
+        static_cast<void>(theta);
+        static_cast<void>(omega);
         PL_ABORT("GaterOperationsLM::applyCRot is not implemented yet");
     }
 
     static void applyToffoli(CFP_t *arr, size_t num_qubits,
                              const std::vector<size_t> &wires,
                              [[maybe_unused]] bool inverse) {
-        (void)arr;
-        (void)num_qubits;
-        (void)wires;
+        static_cast<void>(arr);
+        static_cast<void>(num_qubits);
+        static_cast<void>(wires);
         PL_ABORT("GaterOperationsLM::applyTofolli is not implemented yet");
     }
 
     static void applyCSWAP(CFP_t *arr, size_t num_qubits,
                            const std::vector<size_t> &wires,
                            [[maybe_unused]] bool inverse) {
-        (void)arr;
-        (void)num_qubits;
-        (void)wires;
+        static_cast<void>(arr);
+        static_cast<void>(num_qubits);
+        static_cast<void>(wires);
         PL_ABORT("GaterOperationsLM::applyCSWAP is not implemented yet");
+    }
+
+    static void applyGeneratorPhaseShift(CFP_t *arr, size_t num_qubits,
+                                         const std::vector<size_t> &wires,
+                                         [[maybe_unused]] bool inverse) {
+        assert(wires.size() == 1);
+        const size_t rev_wire = num_qubits - wires[0] - 1;
+        const size_t wire_parity = fillTrailingOnes(rev_wire);
+        const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
+
+        for (size_t k = 0; k < Util::exp2(num_qubits - 1); ++k) {
+            const size_t i0 = ((k << 1) & wire_parity_inv) | (wire_parity & k);
+            arr[i0] = Util::ZERO<fp_t>();
+        }
+    }
+
+    static void applyGeneratorCRX(CFP_t *arr, size_t num_qubits,
+                                  const std::vector<size_t> &wires,
+                                  [[maybe_unused]] bool inverse) {
+        static_cast<void>(arr);
+        static_cast<void>(num_qubits);
+        static_cast<void>(wires);
+        PL_ABORT("GaterOperationsLM::applyGeneratorCRX is not implemented yet");
+    }
+
+    static void applyGeneratorCRY(CFP_t *arr, size_t num_qubits,
+                                  const std::vector<size_t> &wires,
+                                  [[maybe_unused]] bool inverse) {
+        static_cast<void>(arr);
+        static_cast<void>(num_qubits);
+        static_cast<void>(wires);
+        PL_ABORT("GaterOperationsLM::applyGeneratorCRY is not implemented yet");
+    }
+    static void applyGeneratorCRZ(CFP_t *arr, size_t num_qubits,
+                                  const std::vector<size_t> &wires,
+                                  [[maybe_unused]] bool inverse) {
+        static_cast<void>(arr);
+        static_cast<void>(num_qubits);
+        static_cast<void>(wires);
+        PL_ABORT("GaterOperationsLM::applyGeneratorCRZ is not implemented yet");
+    }
+    static void
+    applyGeneratorControlledPhaseShift(CFP_t *arr, size_t num_qubits,
+                                       const std::vector<size_t> &wires,
+                                       [[maybe_unused]] bool inverse) {
+        static_cast<void>(arr);
+        static_cast<void>(num_qubits);
+        static_cast<void>(wires);
+        PL_ABORT("GaterOperationsLM::applyGeneratorControlledPhaseShift is not "
+                 "implemented yet");
     }
 };
 

@@ -64,12 +64,14 @@ template <typename fp_t> class DynamicDispatcher {
         gates_;
 
     DynamicDispatcher() {
-        for (const auto &[gate_op, n_wires] : GATE_WIRES) {
-            gate_wires_.emplace(lookup(GATE_NAMES, gate_op), n_wires);
+        for (const auto &[gate_op, n_wires] : Constant::gate_wires) {
+            gate_wires_.emplace(lookup(Constant::gate_names, gate_op), n_wires);
         }
-        for (const auto &[gate_op, gate_name] : GATE_NAMES) {
-            KernelType kernel = lookup(DEFAULT_KERNEL_FOR_OPS, gate_op);
-            auto implemented_gates = implementedGatesForKernel<fp_t>(kernel);
+        for (const auto &[gate_op, gate_name] : Constant::gate_names) {
+            KernelType kernel =
+                lookup(Constant::default_kernel_for_ops, gate_op);
+            auto implemented_gates =
+                Internal::implementedGatesForKernel<fp_t>(kernel);
             if (std::find(std::cbegin(implemented_gates),
                           std::cend(implemented_gates),
                           gate_op) == std::cend(implemented_gates)) {
@@ -93,15 +95,8 @@ template <typename fp_t> class DynamicDispatcher {
     template <typename FunctionType>
     void registerGateOperation(const std::string &op_name, KernelType kernel,
                                FunctionType &&func) {
+        // TODO: Add mutex when we go to multithreading
         gates_.emplace(std::make_pair(op_name, kernel), func);
-    }
-
-    /**
-     * @brief Update a functor for a key (op_name, kernel)
-     */
-    template <typename FunctionType>
-    void updateKernelForOps(const std::string &op_name, KernelType kernel) {
-        kernel_map_.emplace(op_name, kernel);
     }
 
     /**

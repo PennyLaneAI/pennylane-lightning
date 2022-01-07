@@ -123,13 +123,11 @@ using namespace Pennylane;
     };                                                                         \
     template <class fp_t, int idx, class RandomEngine>                         \
     void testDispatch##GATE_NAME##Iter(RandomEngine &&re, size_t num_qubits) { \
-        if constexpr (idx == AVAILABLE_KERNELS.size()) {                       \
-            return;                                                            \
-        } else {                                                               \
+        if constexpr (idx < Constant::available_kernels.size()) {              \
             testDispatch##GATE_NAME##ForKernel<                                \
-                fp_t, std::get<0>(AVAILABLE_KERNELS[idx]),                     \
+                fp_t, std::get<0>(Constant::available_kernels[idx]),           \
                 static_lookup<GateOperations::GATE_NAME>(                      \
-                    GATE_NUM_PARAMS)>::test(re, num_qubits);                   \
+                    Constant::gate_num_params)>::test(re, num_qubits);         \
             testDispatch##GATE_NAME##Iter<fp_t, idx + 1>(re, num_qubits);      \
         }                                                                      \
     }                                                                          \
@@ -139,7 +137,7 @@ using namespace Pennylane;
     }
 
 std::vector<size_t> createWires(GateOperations op) {
-    switch (lookup(GATE_WIRES, op)) {
+    switch (lookup(Constant::gate_wires, op)) {
     case 1:
         return {0};
     case 2:
@@ -152,7 +150,7 @@ std::vector<size_t> createWires(GateOperations op) {
 }
 
 template <class fp_t> std::vector<fp_t> createParams(GateOperations op) {
-    switch (lookup(GATE_NUM_PARAMS, op)) {
+    switch (lookup(Constant::gate_num_params, op)) {
     case 0:
         return {};
     case 1:

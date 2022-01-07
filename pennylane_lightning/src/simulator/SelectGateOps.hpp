@@ -26,6 +26,8 @@
 #include <functional>
 
 namespace Pennylane {
+
+namespace Constant {
 /**
  * @brief Define which kernel to use for each operation
  *
@@ -41,7 +43,7 @@ namespace Pennylane {
  */
 constexpr std::array<std::pair<GateOperations, KernelType>,
                      static_cast<int>(GateOperations::END)>
-    DEFAULT_KERNEL_FOR_OPS = {
+    default_kernel_for_ops = {
         std::pair{GateOperations::PauliX, KernelType::LM},
         std::pair{GateOperations::PauliY, KernelType::LM},
         std::pair{GateOperations::PauliZ, KernelType::LM},
@@ -64,7 +66,15 @@ constexpr std::array<std::pair<GateOperations, KernelType>,
         std::pair{GateOperations::Toffoli, KernelType::PI},
         std::pair{GateOperations::CSWAP, KernelType::PI},
         std::pair{GateOperations::Matrix, KernelType::PI},
+        std::pair{GateOperations::GeneratorPhaseShift, KernelType::PI},
+        std::pair{GateOperations::GeneratorCRX, KernelType::PI},
+        std::pair{GateOperations::GeneratorCRY, KernelType::PI},
+        std::pair{GateOperations::GeneratorCRZ, KernelType::PI},
+        std::pair{GateOperations::GeneratorControlledPhaseShift,
+                  KernelType::PI},
 };
+} // namespace Constant
+
 /**
  * @brief For lookup from any array of pair whose first elements are
  * GateOperations.
@@ -84,6 +94,12 @@ static_lookup(const std::array<std::pair<GateOperations, T>, size> &arr) -> T {
     return T{};
 }
 
+/**
+ * @brief This class is for choosing a gate implementation at the compile time.
+ *
+ * When someone wants to add another gate implementation, one needs to add a key
+ * in KernelType and assign it to SelectGateOps by template specialization.
+ */
 template <class fp_t, KernelType kernel> class SelectGateOps {};
 
 template <class fp_t>
@@ -91,31 +107,37 @@ class SelectGateOps<fp_t, KernelType::PI> : public GateOperationsPI<fp_t> {};
 template <class fp_t>
 class SelectGateOps<fp_t, KernelType::LM> : public GateOperationsLM<fp_t> {};
 
-namespace Internal {
+} // namespace Pennylane
+
+/**
+ * @brief Functions below are used to check consistency in compile time.
+ */
+namespace Pennylane::Internal {
 template <typename fp_t, size_t idx>
 std::vector<GateOperations> implementedGatesForKernelIter(KernelType kernel) {
-    if constexpr (idx == AVAILABLE_KERNELS.size()) {
+    if constexpr (idx == Constant::available_kernels.size()) {
         return {};
-    } else if (kernel == std::get<0>(AVAILABLE_KERNELS[idx])) {
+    } else if (kernel == std::get<0>(Constant::available_kernels[idx])) {
         const auto &arr =
-            SelectGateOps<fp_t, std::get<0>(
-                                    AVAILABLE_KERNELS[idx])>::implemented_gates;
+            SelectGateOps<fp_t, std::get<0>(Constant::available_kernels[idx])>::
+                implemented_gates;
         return std::vector(arr.begin(), arr.end());
     } else {
         return implementedGatesForKernelIter<fp_t, idx + 1>(kernel);
     }
 }
-} // namespace Internal
 
 template <class fp_t>
 std::vector<GateOperations> implementedGatesForKernel(KernelType kernel) {
     return Internal::implementedGatesForKernelIter<fp_t, 0>(kernel);
 }
 
-template <typename fp_t> constexpr auto check_default_kernel_for_ops() -> bool {
+template <typename fp_t>
+constexpr auto check_default_kernels_are_available() -> bool {
     // TODO: change to constexpr std::all_of in C++20
+    // which is not constexpr in C++17.
     // NOLINTNEXTLINE (readability-use-anyofallof)
-    for (const auto &[gate_op, kernel] : DEFAULT_KERNEL_FOR_OPS) {
+    for (const auto &[gate_op, kernel] : Constant::default_kernel_for_ops) {
         if (!is_available_kernel(kernel)) {
             return false;
         }
@@ -123,10 +145,9 @@ template <typename fp_t> constexpr auto check_default_kernel_for_ops() -> bool {
     return true;
 }
 
-static_assert(check_default_kernel_for_ops<double>(),
-              "DEFAULT_KERNEL_FOR_OPS contains an unavailable kernel");
-
-} // namespace Pennylane
+static_assert(check_default_kernels_are_available<double>(),
+              "default_kernel_for_ops contains an unavailable kernel");
+} // namespace Pennylane::Internal
 
 template <> struct std::hash<Pennylane::GateOperations> {
     size_t operator()(Pennylane::GateOperations gate_operation) const {

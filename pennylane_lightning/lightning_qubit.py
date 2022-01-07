@@ -59,7 +59,7 @@ try:
             DEFAULT_KERNEL_FOR_OPS,
             EXPORTED_KERNEL_OPS,
         )
-    from ._serialize import _serialize_obs, _serialize_ops
+    from ._serialize import _serialize_obs, _serialize_ops, _is_lightning_gate
 
     CPP_BINARY_AVAILABLE = True
 except ModuleNotFoundError:
@@ -195,8 +195,9 @@ class LightningQubit(DefaultQubit):
 
         for o in operations:
             name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
-            if name in self._kernel_for_ops:
-                method = getattr(sim, name + "_{}".format(self._kernel_for_ops[name]), None)
+            if _is_lightning_gate(name):
+                kernel = self._kernel_for_ops[name]
+                method = getattr(sim, f"{name}_{kernel}".format(), None)
             else:
                 method = None
 

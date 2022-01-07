@@ -48,74 +48,50 @@ static constexpr auto getP11() -> std::vector<std::complex<T>> {
 template <class T = double, class SVType>
 void applyGeneratorRX(SVType &sv, const std::vector<size_t> &wires,
                       const bool adj = false) {
-    sv.applyOperation("PauliX", wires, adj);
+    sv.applyPauliX(wires, adj);
 }
 
 template <class T = double, class SVType>
 void applyGeneratorRY(SVType &sv, const std::vector<size_t> &wires,
                       const bool adj = false) {
-    sv.applyOperation("PauliY", wires, adj);
+    sv.applyPauliY(wires, adj);
 }
 
 template <class T = double, class SVType>
 void applyGeneratorRZ(SVType &sv, const std::vector<size_t> &wires,
                       const bool adj = false) {
-    sv.applyOperation("PauliZ", wires, adj);
+    sv.applyPauliZ(wires, adj);
 }
 
 template <class T, class SVType>
 void applyGeneratorPhaseShift(SVType &sv, const std::vector<size_t> &wires,
                               const bool adj = false) {
-    sv.applyMatrix(getP11<T>(), wires, adj);
+    sv.applyGeneratorPhaseShift(wires, adj);
 }
 
 template <class T, class SVType>
 void applyGeneratorCRX(SVType &sv, const std::vector<size_t> &wires,
                        [[maybe_unused]] const bool adj = false) {
-    using CFP_t = std::complex<T>;
-    static const std::array<CFP_t, 16> matrix = {
-        CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0},
-        CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{1.0},
-        CFP_t{0.0}, CFP_t{0.0}, CFP_t{1.0}, CFP_t{0.0},
-    };
-    sv.applyMatrix(matrix.data(), wires, false);
+    sv.applyGeneratorCRX(wires, adj);
 }
 
 template <class T, class SVType>
 void applyGeneratorCRY(SVType &sv, const std::vector<size_t> &wires,
                        [[maybe_unused]] const bool adj = false) {
-    using CFP_t = std::complex<T>;
-    static const std::array<CFP_t, 16> matrix = {
-        CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0},
-        CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, -IMAG<T>(),
-        CFP_t{0.0}, CFP_t{0.0}, IMAG<T>(),  CFP_t{0.0},
-    };
-    sv.applyMatrix(matrix.data(), wires, false);
+    sv.applyGeneratorCRY(wires, adj);
 }
 
 template <class T, class SVType>
 void applyGeneratorCRZ(SVType &sv, const std::vector<size_t> &wires,
                        [[maybe_unused]] const bool adj = false) {
-    using CFP_t = std::complex<T>;
-    static const std::array<CFP_t, 16> matrix = {
-        CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0},  CFP_t{0.0}, CFP_t{0.0},
-        CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0},  CFP_t{1.0}, CFP_t{0.0},
-        CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{-1.0},
-    };
-    sv.applyMatrix(matrix.data(), wires, false);
+    sv.applyGeneratorCRZ(wires, adj);
 }
 
 template <class T, class SVType>
-void applyGeneratorControlledPhaseShift(
-    SVType &sv, const std::vector<size_t> &wires,
-    [[maybe_unused]] const bool adj = false) {
-    using CFP_t = std::complex<T>;
-    static const std::array<CFP_t, 16> matrix = {
-        CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0},
-        CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0},
-        CFP_t{0.0}, CFP_t{0.0}, CFP_t{0.0}, CFP_t{1.0},
-    };
-    sv.applyMatrix(matrix.data(), wires, false);
+void applyGeneratorControlledPhaseShift(SVType &sv,
+                                        const std::vector<size_t> &wires,
+                                        const bool adj = false) {
+    sv.applyGeneratorControlledPhaseShift(wires, adj);
 }
 
 } // namespace

@@ -35,6 +35,11 @@ except ImportError:
 
 
 def _is_lightning_gate(gate_name):
+    """Returns True if the the gate is implemented and exported from lightning
+
+    Args:
+        gate_name (str): the name of gate
+    """
     if gate_name == "Matrix":
         return False
     return gate_name in DEFAULT_KERNEL_FOR_OPS

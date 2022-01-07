@@ -28,9 +28,9 @@ using Pennylane::SelectGateOps;
 
 using Pennylane::static_lookup;
 
-using Pennylane::AVAILABLE_KERNELS;
-using Pennylane::GATE_NAMES;
-using Pennylane::GATE_NUM_PARAMS;
+using Pennylane::Constant::available_kernels;
+using Pennylane::Constant::gate_names;
+using Pennylane::Constant::gate_num_params;
 } // namespace
 
 #define PENNYLANE_APPLY_OPS_TO_LAMBDA(GATE_NAME)                               \
@@ -101,6 +101,11 @@ PENNYLANE_APPLY_OPS_TO_LAMBDA(CRZ)
 PENNYLANE_APPLY_OPS_TO_LAMBDA(CRot)
 PENNYLANE_APPLY_OPS_TO_LAMBDA(Toffoli)
 PENNYLANE_APPLY_OPS_TO_LAMBDA(CSWAP)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(GeneratorPhaseShift)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(GeneratorCRX)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(GeneratorCRY)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(GeneratorCRZ)
+PENNYLANE_APPLY_OPS_TO_LAMBDA(GeneratorControlledPhaseShift)
 
 #define PENNYLANE_GATE_OP_FUNCTOR_PAIR(GATE_NAME)                              \
     {                                                                          \
@@ -108,7 +113,7 @@ PENNYLANE_APPLY_OPS_TO_LAMBDA(CSWAP)
             Apply##GATE_NAME##ToLambda<                                        \
                 fp_t, kernel,                                                  \
                 static_lookup<GateOperations::GATE_NAME>(                      \
-                    GATE_NUM_PARAMS)>::createFunctor()                         \
+                    gate_num_params)>::createFunctor()                         \
     }
 
 template <class fp_t, KernelType kernel> void registerAllImplementedGateOps() {
@@ -138,6 +143,11 @@ template <class fp_t, KernelType kernel> void registerAllImplementedGateOps() {
             PENNYLANE_GATE_OP_FUNCTOR_PAIR(CRot),
             PENNYLANE_GATE_OP_FUNCTOR_PAIR(Toffoli),
             PENNYLANE_GATE_OP_FUNCTOR_PAIR(CSWAP),
+            PENNYLANE_GATE_OP_FUNCTOR_PAIR(GeneratorPhaseShift),
+            PENNYLANE_GATE_OP_FUNCTOR_PAIR(GeneratorCRX),
+            PENNYLANE_GATE_OP_FUNCTOR_PAIR(GeneratorCRY),
+            PENNYLANE_GATE_OP_FUNCTOR_PAIR(GeneratorCRZ),
+            PENNYLANE_GATE_OP_FUNCTOR_PAIR(GeneratorControlledPhaseShift),
         };
 
     for (const auto gate_op : SelectGateOps<fp_t, kernel>::implemented_gates) {
@@ -146,7 +156,7 @@ template <class fp_t, KernelType kernel> void registerAllImplementedGateOps() {
             continue;
         }
         auto iter = all_gate_ops.find(gate_op);
-        std::string op_name = std::string(lookup(GATE_NAMES, gate_op));
+        std::string op_name = std::string(lookup(gate_names, gate_op));
         if (iter == all_gate_ops.cend()) {
             // implemented gates is not in all_gate_ops; something wrong.
             PL_ABORT("An implemented gate " + op_name +
@@ -158,11 +168,11 @@ template <class fp_t, KernelType kernel> void registerAllImplementedGateOps() {
 }
 
 template <class fp_t, size_t idx> void registerKernelIter() {
-    if constexpr (idx == AVAILABLE_KERNELS.size()) {
+    if constexpr (idx == available_kernels.size()) {
         return;
     } else {
         registerAllImplementedGateOps<fp_t,
-                                      std::get<0>(AVAILABLE_KERNELS[idx])>();
+                                      std::get<0>(available_kernels[idx])>();
         registerKernelIter<fp_t, idx + 1>();
     }
 }

@@ -27,10 +27,10 @@ checkKernelId() {
 }
 
 template <class fp_t, size_t idx> void checkAllAvailableKernelsIter() {
-    if constexpr (idx == AVAILABLE_KERNELS.size()) {
+    if constexpr (idx == Constant::available_kernels.size()) {
         // do nothing
     } else {
-        checkKernelId<fp_t, std::get<0>(AVAILABLE_KERNELS[idx])>();
+        checkKernelId<fp_t, std::get<0>(Constant::available_kernels[idx])>();
         checkAllAvailableKernelsIter<fp_t, idx + 1>();
     }
 }
@@ -40,5 +40,17 @@ template <class fp_t> void checkAllAvailableKernels() {
 }
 
 TEMPLATE_TEST_CASE("SelectGateOps", "[SelectGateOps]", float, double) {
-    checkAllAvailableKernels<TestType>();
+    SECTION(
+        "Check all available gate implementations have correct kernel ids.") {
+        checkAllAvailableKernels<TestType>();
+    }
+
+    SECTION("Check all gate operations have default kernels") {
+        // TODO: This can be done in compile time...
+        std::set<GateOperations> gate_ops_set;
+        for (const auto &[gate_op, kernel] : Constant::default_kernel_for_ops) {
+            gate_ops_set.emplace(gate_op);
+        }
+        REQUIRE(gate_ops_set.size() == static_cast<int>(GateOperations::END));
+    }
 }

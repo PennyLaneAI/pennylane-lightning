@@ -12,10 +12,12 @@ help:
 	@echo "  install            to install PennyLane-Lightning"
 	@echo "  wheel              to build the PennyLane-Lightning wheel"
 	@echo "  dist               to package the source distribution"
+	@echo "  docs               to generate documents
 	@echo "  clean              to delete all temporary, cache, and build files"
 	@echo "  clean-docs         to delete all built documentation"
 	@echo "  test               to run the test suite"
 	@echo "  test-cpp           to run the C++ test suite"
+	@echo "  test-python        to run the Python test suite"
 	@echo "  coverage           to generate a coverage report"
 	@echo "  format [check=1]   to apply C++ formatter; use with 'check=1' to check instead of modify (requires clang-format)"
 	@echo "  check-tidy         to build PennyLane-Lightning with ENABLE_CLANG_TIDY=ON (requires clang-tidy & CMake)"

@@ -51,7 +51,7 @@
                                     bool inverse, Ts &&...args) {              \
         auto *arr = getData();                                                 \
         static_assert(static_lookup<GateOperations::GATE_NAME>(                \
-                          GATE_NUM_PARAMS) == sizeof...(Ts),                   \
+                          Constant::gate_num_params) == sizeof...(Ts),         \
                       "The provided number of parameters for gate " #GATE_NAME \
                       " is wrong.");                                           \
         SelectGateOps<fp_t, kernel>::apply##GATE_NAME(                         \
@@ -62,8 +62,8 @@
     template <typename... Ts>                                                  \
     inline void apply##GATE_NAME(const std::vector<size_t> &wires,             \
                                  bool inverse, Ts &&...args) {                 \
-        constexpr auto kernel =                                                \
-            static_lookup<GateOperations::GATE_NAME>(DEFAULT_KERNEL_FOR_OPS);  \
+        constexpr auto kernel = static_lookup<GateOperations::GATE_NAME>(      \
+            Constant::default_kernel_for_ops);                                 \
         static_assert(                                                         \
             array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,      \
                           GateOperations::GATE_NAME),                          \
@@ -129,6 +129,27 @@ template <class fp_t, class Derived> class StateVectorBase {
 
     [[nodiscard]] inline auto getData() const -> const CFP_t * {
         return static_cast<const Derived *>(this)->getData();
+    }
+
+    /**
+     * @brief compare two state-vectors.
+     *
+     * @tparam RhsDerived the derived class of another vector
+     * @param rhs another vector to compare
+     */
+    template <class RhsDerived>
+    bool operator==(const StateVectorBase<fp_t, RhsDerived> &rhs) {
+        if (num_qubits_ != rhs.getNumQubits()) {
+            return false;
+        }
+        const CFP_t *data1 = getData();
+        const CFP_t *data2 = rhs.getData();
+        for (size_t k = 0; k < getLength(); ++k) {
+            if (data1[k] != data2[k]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -201,8 +222,6 @@ template <class fp_t, class Derived> class StateVectorBase {
      * from numpy data. Data can be in 1D or 2D format.
      *
      * @param matrix Pointer to the array data.
-     * @param indices Internal indices participating in the operation.
-     * @param externalIndices External indices unaffected by the operation.
      * @param inverse Indicate whether inverse should be taken.
      */
     template <KernelType kernel>
@@ -225,8 +244,8 @@ template <class fp_t, class Derived> class StateVectorBase {
     inline void applyMatrix(const CFP_t *matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
-        constexpr auto kernel =
-            static_lookup<GateOperations::Matrix>(DEFAULT_KERNEL_FOR_OPS);
+        constexpr auto kernel = static_lookup<GateOperations::Matrix>(
+            Constant::default_kernel_for_ops);
         static_assert(
             array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,
                           GateOperations::Matrix),
@@ -236,8 +255,8 @@ template <class fp_t, class Derived> class StateVectorBase {
     inline void applyMatrix(const std::vector<CFP_t> &matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
-        constexpr auto kernel =
-            static_lookup<GateOperations::Matrix>(DEFAULT_KERNEL_FOR_OPS);
+        constexpr auto kernel = static_lookup<GateOperations::Matrix>(
+            Constant::default_kernel_for_ops);
         static_assert(
             array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,
                           GateOperations::Matrix),
@@ -248,174 +267,135 @@ template <class fp_t, class Derived> class StateVectorBase {
     /**
      * @brief Apply PauliX gate operation to given indices of statevector.
      *
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(PauliX)
 
     /**
      * @brief Apply PauliX gate operation using a kernel given in
-     * DEFAULT_KERNEL_FOR_OPS
+     * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(PauliX)
 
     /**
      * @brief Apply PauliY gate operation to given indices of statevector.
      *
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(PauliY)
 
     /**
      * @brief Apply PauliY gate operation using a kernel given in
-     * DEFAULT_KERNEL_FOR_OPS
+     * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(PauliY)
 
     /**
      * @brief Apply PauliZ gate operation to given indices of statevector.
      *
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(PauliZ)
     /**
      * @brief Apply PauliZ gate operation using a kernel given in
-     * DEFAULT_KERNEL_FOR_OPS
+     * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(PauliZ)
 
     /**
      * @brief Apply Hadamard gate operation to given indices of statevector.
      *
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(Hadamard)
     /**
      * @brief Apply Hadamard gate operation using a kernel given in
-     * DEFAULT_KERNEL_FOR_OPS
+     * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(Hadamard)
 
     /**
      * @brief Apply S gate operation to given indices of statevector.
      *
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(S)
     /**
      * @brief Apply S gate operation using a kernel given in
-     * DEFAULT_KERNEL_FOR_OPS
+     * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(S)
 
     /**
      * @brief Apply T gate operation to given indices of statevector.
      *
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(T)
     /**
      * @brief Apply T gate operation using a kernel given in
-     * DEFAULT_KERNEL_FOR_OPS
+     * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(T)
 
     /**
      * @brief Apply RX gate operation to given indices of statevector.
      *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
-     * `float` and `double`.
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(RX)
     /**
      * @brief Apply RX gate operation using a kernel given in
-     * DEFAULT_KERNEL_FOR_OPS
+     * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(RX)
 
     /**
      * @brief Apply RY gate operation to given indices of statevector.
      *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
-     * `float` and `double`.
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(RY)
     /**
      * @brief Apply RY gate operation using a kernel given in
-     * DEFAULT_KERNEL_FOR_OPS
+     * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(RY)
 
     /**
      * @brief Apply RZ gate operation to given indices of statevector.
      *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
-     * `float` and `double`.
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(RZ)
     /**
      * @brief Apply RZ gate operation using a kernel given in
-     * DEFAULT_KERNEL_FOR_OPS
+     * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(RZ)
 
     /**
      * @brief Apply phase shift gate operation to given indices of statevector.
      *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
-     * `float` and `double`.
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      * @param angle Phase shift angle.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(PhaseShift)
     /**
      * @brief Apply PhaseShift gate operation using a kernel given in
-     * DEFAULT_KERNEL_FOR_OPS
+     * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(PhaseShift)
 
@@ -423,12 +403,7 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @brief Apply Rot gate \f$RZ(\omega)RY(\theta)RZ(\phi)\f$ to given indices
      * of statevector.
      *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
-     * `float` and `double`.
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      * @param phi Gate rotation parameter \f$\phi\f$.
      * @param theta Gate rotation parameter \f$\theta\f$.
@@ -437,7 +412,7 @@ template <class fp_t, class Derived> class StateVectorBase {
     PENNYLANE_STATEVECTOR_DEFINE_OPS(Rot)
     /**
      * @brief Apply Rot gate operation using a kernel given in
-     * DEFAULT_KERNEL_FOR_OPS
+     * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(Rot)
 
@@ -445,124 +420,95 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @brief Apply controlled phase shift gate operation to given indices of
      * statevector.
      *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
-     * `float` and `double`.
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      * @param angle Phase shift angle.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(ControlledPhaseShift)
     /**
      * @brief Apply controlled phase shift gate operation using a kernel given
-     * in DEFAULT_KERNEL_FOR_OPS
+     * in default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(ControlledPhaseShift)
 
     /**
      * @brief Apply CNOT (CX) gate to given indices of statevector.
      *
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(CNOT)
     /**
      * @brief Apply CNOT gate operation using a kernel given in
-     * DEFAULT_KERNEL_FOR_OPS
+     * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CNOT)
 
     /**
      * @brief Apply CZ gate to given indices of statevector.
      *
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(CZ)
     /**
      * @brief Apply CZ gate operation using a kernel given in
-     * DEFAULT_KERNEL_FOR_OPS
+     * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CZ)
 
     /**
      * @brief Apply SWAP gate to given indices of statevector.
      *
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(SWAP)
     /**
      * @brief Apply SWAP gate operation using a kernel given in
-     * DEFAULT_KERNEL_FOR_OPS
+     * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(SWAP)
 
     /**
      * @brief Apply CRX gate to given indices of statevector.
      *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
-     * `float` and `double`.
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(CRX)
     /**
      * @brief Apply CRX gate operation using a kernel given in
-     * DEFAULT_KERNEL_FOR_OPS
+     * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CRX)
 
     /**
      * @brief Apply CRY gate to given indices of statevector.
      *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
-     * `float` and `double`.
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(CRY)
     /**
      * @brief Apply CRY gate operation using a kernel given in
-     * DEFAULT_KERNEL_FOR_OPS
+     * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CRY)
 
     /**
      * @brief Apply CRZ gate to given indices of statevector.
      *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
-     * `float` and `double`.
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(CRZ)
     /**
      * @brief Apply CRZ gate operation using a kernel given in
-     * DEFAULT_KERNEL_FOR_OPS
+     * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CRZ)
 
@@ -570,12 +516,7 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @brief Apply CRot gate (controlled \f$RZ(\omega)RY(\theta)RZ(\phi)\f$) to
      * given indices of statevector.
      *
-     * @tparam Param_t Precision type for gate parameter. Accepted type are
-     * `float` and `double`.
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      * @param phi Gate rotation parameter \f$\phi\f$.
      * @param theta Gate rotation parameter \f$\theta\f$.
@@ -584,59 +525,101 @@ template <class fp_t, class Derived> class StateVectorBase {
     PENNYLANE_STATEVECTOR_DEFINE_OPS(CRot)
     /**
      * @brief Apply CRot gate operation using a kernel given in
-     * DEFAULT_KERNEL_FOR_OPS
+     * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CRot)
 
     /**
      * @brief Apply Toffoli (CCX) gate to given indices of statevector.
      *
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(Toffoli)
     /**
      * @brief Apply Toffoli gate operation using a kernel given in
-     * DEFAULT_KERNEL_FOR_OPS
+     * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(Toffoli)
 
     /**
      * @brief Apply CSWAP gate to given indices of statevector.
      *
-     * @param indices Local amplitude indices participating in given gate
-     * application for fixed sets of non-participating qubit indices.
-     * @param externalIndices Non-participating qubit amplitude index offsets
-     * for given operation for global application.
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_OPS(CSWAP)
     /**
      * @brief Apply CSWAP gate operation using a kernel given in
-     * DEFAULT_KERNEL_FOR_OPS
+     * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CSWAP)
 
     /**
-     * @brief compare two state-vector.
+     * @brief Apply PhaseShift generator to given indices of statevector.
+     *
+     * @param wires Wires to apply gate to.
+     * @param inverse Take adjoint of given operation.
      */
-    template <class RhsDerived>
-    bool operator==(const StateVectorBase<fp_t, RhsDerived> &rhs) {
-        if (num_qubits_ != rhs.getNumQubits()) {
-            return false;
-        }
-        const CFP_t *data1 = getData();
-        const CFP_t *data2 = rhs.getData();
-        for (size_t k = 0; k < getLength(); ++k) {
-            if (data1[k] != data2[k]) {
-                return false;
-            }
-        }
-        return true;
-    }
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(GeneratorPhaseShift)
+    /**
+     * @brief Apply PhaseShift generator operation using a kernel given in
+     * default_kernel_for_ops
+     */
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GeneratorPhaseShift)
+
+    /**
+     * @brief Apply CRX generator to given indices of statevector.
+     *
+     * @param wires Wires to apply gate to.
+     * @param inverse Take adjoint of given operation.
+     */
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(GeneratorCRX)
+    /**
+     * @brief Apply CRX generator operation using a kernel given in
+     * default_kernel_for_ops
+     */
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GeneratorCRX)
+
+    /**
+     * @brief Apply CRY generator to given indices of statevector.
+     *
+     * @param wires Wires to apply gate to.
+     * @param inverse Take adjoint of given operation.
+     */
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(GeneratorCRY)
+    /**
+     * @brief Apply CRY generator opertation using a kernel given in
+     * default_kernel_for_ops
+     */
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GeneratorCRY)
+
+    /**
+     * @brief Apply CRZ generator to given indices of statevector.
+     *
+     * @param wires Wires to apply gate to.
+     * @param inverse Take adjoint of given operation.
+     */
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(GeneratorCRZ)
+    /**
+     * @brief Apply CRZ generator operation using a kernel given in
+     * default_kernel_for_ops
+     */
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GeneratorCRZ)
+
+    /**
+     * @brief Apply controlled phase shift generator to given indices of
+     * statevector.
+     *
+     * @param wires Wires to apply gate to.
+     * @param inverse Take adjoint of given operation.
+     */
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(GeneratorControlledPhaseShift)
+    /**
+     * @brief Apply controlled phase shift operation using a kernel given in
+     * default_kernel_for_ops
+     */
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GeneratorControlledPhaseShift)
 };
 
 /**

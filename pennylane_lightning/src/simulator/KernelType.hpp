@@ -27,16 +27,18 @@
 namespace Pennylane {
 enum class KernelType { PI, LM, Unknown };
 
-constexpr std::array AVAILABLE_KERNELS = {
+namespace Constant {
+constexpr std::array available_kernels = {
     std::pair<KernelType, std::string_view>{KernelType::PI, "PI"},
     std::pair<KernelType, std::string_view>{KernelType::LM, "LM"},
 };
 
-[[maybe_unused]] constexpr std::array KERNELS_TO_PYEXPORT = {KernelType::PI,
+[[maybe_unused]] constexpr std::array kernels_to_pyexport = {KernelType::PI,
                                                              KernelType::LM};
+} // namespace Constant
 
 constexpr auto string_to_kernel(std::string_view str) -> KernelType {
-    for (const auto &[k, v] : AVAILABLE_KERNELS) {
+    for (const auto &[k, v] : Constant::available_kernels) {
         if (v == str) {
             return k;
         }
@@ -49,7 +51,8 @@ constexpr auto string_to_kernel(std::string_view str) -> KernelType {
 constexpr auto is_available_kernel(KernelType kernel) -> bool {
     // TODO: change to constexpr std::any_of in C++20
     // NOLINTNEXTLINE (readability-use-anyofallof)
-    for (const auto &[avail_kernel, avail_kernel_name] : AVAILABLE_KERNELS) {
+    for (const auto &[avail_kernel, avail_kernel_name] :
+         Constant::available_kernels) {
         if (kernel == avail_kernel) {
             return true;
         }
@@ -60,7 +63,7 @@ constexpr auto is_available_kernel(KernelType kernel) -> bool {
 constexpr auto check_available_gates() -> bool {
     // TODO: change to constexpr std::any_of in C++20
     // NOLINTNEXTLINE (readability-use-anyofallof)
-    for (const auto &kernel : KERNELS_TO_PYEXPORT) {
+    for (const auto &kernel : Constant::kernels_to_pyexport) {
         if (!is_available_kernel(kernel)) {
             return false;
         }

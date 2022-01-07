@@ -49,17 +49,33 @@ template <class fp_t> class GateOperationsPI {
     constexpr static KernelType kernel_id = KernelType::PI;
 
     constexpr static std::array implemented_gates = {
-        GateOperations::PauliX, GateOperations::PauliY,
-        GateOperations::PauliZ, GateOperations::Hadamard,
-        GateOperations::S,      GateOperations::T,
-        GateOperations::RX,     GateOperations::RY,
-        GateOperations::RZ,     GateOperations::PhaseShift,
-        GateOperations::Rot,    GateOperations::ControlledPhaseShift,
-        GateOperations::CNOT,   GateOperations::CZ,
-        GateOperations::SWAP,   GateOperations::CRX,
-        GateOperations::CRY,    GateOperations::CRZ,
-        GateOperations::CRot,   GateOperations::Toffoli,
-        GateOperations::CSWAP,  GateOperations::Matrix};
+        GateOperations::PauliX,
+        GateOperations::PauliY,
+        GateOperations::PauliZ,
+        GateOperations::Hadamard,
+        GateOperations::S,
+        GateOperations::T,
+        GateOperations::RX,
+        GateOperations::RY,
+        GateOperations::RZ,
+        GateOperations::PhaseShift,
+        GateOperations::Rot,
+        GateOperations::ControlledPhaseShift,
+        GateOperations::CNOT,
+        GateOperations::CZ,
+        GateOperations::SWAP,
+        GateOperations::CRX,
+        GateOperations::CRY,
+        GateOperations::CRZ,
+        GateOperations::CRot,
+        GateOperations::Toffoli,
+        GateOperations::CSWAP,
+        GateOperations::Matrix,
+        GateOperations::GeneratorPhaseShift,
+        GateOperations::GeneratorCRX,
+        GateOperations::GeneratorCRY,
+        GateOperations::GeneratorCRZ,
+        GateOperations::GeneratorControlledPhaseShift};
 
     /**
      * @brief Apply a given matrix directly to the statevector.
@@ -472,6 +488,78 @@ template <class fp_t> class GateOperationsPI {
             CFP_t *shiftedState = arr + externalIndex;
             std::swap(shiftedState[indices[op_idx0]],
                       shiftedState[indices[op_idx1]]);
+        }
+    }
+
+    /* Gate generators */
+    static void applyGeneratorPhaseShift(CFP_t *arr, size_t num_qubits,
+                                         const std::vector<size_t> &wires,
+                                         [[maybe_unused]] bool adj) {
+        assert(wires.size() == 1);
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+        for (const size_t &externalIndex : externalIndices) {
+            CFP_t *shiftedState = arr + externalIndex;
+            shiftedState[indices[0]] = CFP_t{0.0, 0.0};
+        }
+    }
+
+    static void applyGeneratorCRX(CFP_t *arr, size_t num_qubits,
+                                  const std::vector<size_t> &wires,
+                                  [[maybe_unused]] bool adj) {
+        assert(wires.size() == 2);
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+
+        for (const size_t &externalIndex : externalIndices) {
+            CFP_t *shiftedState = arr + externalIndex;
+            shiftedState[indices[0]] = Util::ZERO<fp_t>();
+            shiftedState[indices[1]] = Util::ZERO<fp_t>();
+
+            std::swap(shiftedState[indices[2]], shiftedState[indices[3]]);
+        }
+    }
+
+    static void applyGeneratorCRY(CFP_t *arr, size_t num_qubits,
+                                  const std::vector<size_t> &wires,
+                                  [[maybe_unused]] bool adj) {
+        assert(wires.size() == 2);
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+
+        for (const size_t &externalIndex : externalIndices) {
+            CFP_t *shiftedState = arr + externalIndex;
+            const auto v0 = shiftedState[indices[2]];
+            shiftedState[indices[0]] = Util::ZERO<fp_t>();
+            shiftedState[indices[1]] = Util::ZERO<fp_t>();
+            shiftedState[indices[2]] = -IMAG<fp_t>() * shiftedState[indices[3]];
+            shiftedState[indices[3]] = IMAG<fp_t>() * v0;
+        }
+    }
+
+    static void applyGeneratorCRZ(CFP_t *arr, size_t num_qubits,
+                                  const std::vector<size_t> &wires,
+                                  [[maybe_unused]] bool adj) {
+        assert(wires.size() == 2);
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+
+        for (const size_t &externalIndex : externalIndices) {
+            CFP_t *shiftedState = arr + externalIndex;
+            shiftedState[indices[0]] = Util::ZERO<fp_t>();
+            shiftedState[indices[1]] = Util::ZERO<fp_t>();
+            shiftedState[indices[3]] *= -1;
+        }
+    }
+
+    static void
+    applyGeneratorControlledPhaseShift(CFP_t *arr, size_t num_qubits,
+                                       const std::vector<size_t> &wires,
+                                       [[maybe_unused]] bool adj) {
+        assert(wires.size() == 2);
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+
+        for (const size_t &externalIndex : externalIndices) {
+            CFP_t *shiftedState = arr + externalIndex;
+            shiftedState[indices[0]] = 0;
+            shiftedState[indices[1]] = 0;
+            shiftedState[indices[2]] = 0;
         }
     }
 };

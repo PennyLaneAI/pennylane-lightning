@@ -61,7 +61,7 @@ TEMPLATE_TEST_CASE("StateVectorRaw::setData", "[StateVectorRaw]", float,
         test() {                                                               \
             const size_t num_qubits = 4;                                       \
             auto ini_st = create_random_state<fp_t>(re, num_qubits);           \
-            auto num_wires = lookup(GATE_WIRES, op);                           \
+            auto num_wires = lookup(Constant::gate_wires, op);                 \
             std::vector<size_t> wires;                                         \
             wires.resize(num_wires);                                           \
             std::iota(wires.begin(), wires.end(), 0);                          \
@@ -91,7 +91,7 @@ TEMPLATE_TEST_CASE("StateVectorRaw::setData", "[StateVectorRaw]", float,
         test() {                                                               \
             const size_t num_qubits = 4;                                       \
             auto ini_st = create_random_state<fp_t>(re, num_qubits);           \
-            auto num_wires = lookup(GATE_WIRES, op);                           \
+            auto num_wires = lookup(Constant::gate_wires, op);                 \
             std::vector<size_t> wires;                                         \
             wires.resize(num_wires);                                           \
             std::iota(wires.begin(), wires.end(), 0);                          \
@@ -121,7 +121,7 @@ TEMPLATE_TEST_CASE("StateVectorRaw::setData", "[StateVectorRaw]", float,
         test() {                                                               \
             const size_t num_qubits = 4;                                       \
             auto ini_st = create_random_state<fp_t>(re, num_qubits);           \
-            auto num_wires = lookup(GATE_WIRES, op);                           \
+            auto num_wires = lookup(Constant::gate_wires, op);                 \
             std::vector<size_t> wires;                                         \
             wires.resize(num_wires);                                           \
             std::iota(wires.begin(), wires.end(), 0);                          \
@@ -145,12 +145,13 @@ TEMPLATE_TEST_CASE("StateVectorRaw::setData", "[StateVectorRaw]", float,
     };                                                                         \
     template <typename fp_t, size_t idx>                                       \
     void testStateVectorApply##GATE_NAME##Iter() {                             \
-        if constexpr (idx == AVAILABLE_KERNELS.size()) {                       \
-        } else {                                                               \
-            constexpr auto kernel = std::get<0>(AVAILABLE_KERNELS[idx]);       \
+        if constexpr (idx < Constant::available_kernels.size()) {              \
+            constexpr auto kernel =                                            \
+                std::get<0>(Constant::available_kernels[idx]);                 \
             TestGateOps##GATE_NAME<                                            \
-                fp_t, static_lookup<GateOperations::GATE_NAME>(                \
-                          GATE_NUM_PARAMS)>::template test<kernel>();          \
+                fp_t,                                                          \
+                static_lookup<GateOperations::GATE_NAME>(                      \
+                    Constant::gate_num_params)>::template test<kernel>();      \
             testStateVectorApply##GATE_NAME##Iter<fp_t, idx + 1>();            \
         }                                                                      \
     }                                                                          \
@@ -184,3 +185,8 @@ PENNYLANE_TEST_STATIC_DISPATCH(CRZ)
 PENNYLANE_TEST_STATIC_DISPATCH(CRot)
 PENNYLANE_TEST_STATIC_DISPATCH(Toffoli)
 PENNYLANE_TEST_STATIC_DISPATCH(CSWAP)
+PENNYLANE_TEST_STATIC_DISPATCH(GeneratorPhaseShift)
+PENNYLANE_TEST_STATIC_DISPATCH(GeneratorCRX)
+PENNYLANE_TEST_STATIC_DISPATCH(GeneratorCRY)
+PENNYLANE_TEST_STATIC_DISPATCH(GeneratorCRZ)
+PENNYLANE_TEST_STATIC_DISPATCH(GeneratorControlledPhaseShift)
