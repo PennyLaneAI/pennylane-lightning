@@ -2,6 +2,7 @@
 #include "GateOperationsPI.hpp"
 #include "Gates.hpp"
 #include "TestHelpers.hpp"
+#include "TestMacros.hpp"
 #include "Util.hpp"
 
 #include <catch2/catch.hpp>
@@ -18,11 +19,6 @@
  * @file This file contains tests for parameterized gates. List of such gates is
  * [RX, RY, RZ, PhaseShift, Rot, ControlledPhaseShift, CRX, CRY, CRZ, CRot]
  */
-
-/**
- * Change this when a kernel is added
- */
-#define ALL_GATE_OPERATIONS (GateOperationsPI, GateOperationsLM)
 
 using namespace Pennylane;
 

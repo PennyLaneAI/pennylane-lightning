@@ -1158,4 +1158,34 @@ constexpr auto array_has_elt(const std::array<U, size> &arr, const U &elt)
     return false;
 };
 
+/**
+ * @brief extract first elements from the array of pairs
+ */
+template <typename T, typename U, size_t size>
+constexpr std::array<T, size>
+first_elts_of(const std::array<std::pair<T, U>, size> &arr) {
+    // TODO: change to std::transform in C++20
+    std::array<T, size> res = {
+        T{},
+    };
+    for (size_t i = 0; i < size; i++) {
+        res[i] = std::get<0>(arr[i]);
+    }
+    return res;
+}
+/**
+ * @brief extract second elements from the array of pairs
+ */
+template <typename T, typename U, size_t size>
+constexpr std::array<T, size>
+second_elts_of(const std::array<std::pair<T, U>, size> &arr) {
+    // TODO: change to std::transform in C++20
+    std::array<T, size> res = {
+        T{},
+    };
+    for (size_t i = 0; i < size; i++) {
+        res[i] = std::get<0>(arr[i]);
+    }
+    return res;
+}
 } // namespace Pennylane::Util

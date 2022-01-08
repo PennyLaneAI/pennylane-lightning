@@ -2,6 +2,7 @@
 #include "GateOperationsPI.hpp"
 #include "Gates.hpp"
 #include "TestHelpers.hpp"
+#include "TestMacros.hpp"
 #include "Util.hpp"
 
 #include <catch2/catch.hpp>
@@ -19,12 +20,6 @@
  * gates are [PauliX, PauliY, PauliZ, Hadamard, S, T, CNOT, SWAP, CZ, Toffoli,
  * CSWAP].
  */
-
-/**
- * Change this when a kernel is added
- */
-#define ALL_GATE_OPERATIONS (GateOperationsPI, GateOperationsLM)
-
 using namespace Pennylane;
 
 namespace {

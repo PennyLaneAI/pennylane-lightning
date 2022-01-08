@@ -28,6 +28,7 @@ namespace Pennylane {
  * updated accordingly.
  * */
 enum class GateOperations : int {
+    BEGIN = 0,
     /* Single-qubit gates */
     PauliX = 0,
     PauliY,

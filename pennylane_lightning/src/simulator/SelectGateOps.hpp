@@ -21,9 +21,11 @@
 #include "GateOperationsLM.hpp"
 #include "GateOperationsPI.hpp"
 #include "KernelType.hpp"
+#include "Macros.hpp"
 
 #include <array>
 #include <functional>
+#include <variant>
 
 namespace Pennylane {
 
@@ -109,10 +111,137 @@ class SelectGateOps<fp_t, KernelType::LM> : public GateOperationsLM<fp_t> {};
 
 } // namespace Pennylane
 
-/**
- * @brief Functions below are used to check consistency in compile time.
- */
 namespace Pennylane::Internal {
+
+template <class PrecisionT, class ParamT, KernelType kernel, size_t num_params>
+struct GateFuncPtrPairs {
+    static_assert(num_params < 2 || num_params == 3,
+                  "The given num_params is not supported.");
+};
+
+/**
+ * @brief List of all gate operation and funciont pointer pairs without
+ * parameters
+ */
+template <class PrecisionT, class ParamT, KernelType kernel>
+struct GateFuncPtrPairs<PrecisionT, ParamT, kernel, 0> {
+    constexpr static std::array value = {
+        std::pair{GateOperations::PauliX,
+                  &SelectGateOps<PrecisionT, kernel>::applyPauliX},
+        std::pair{GateOperations::PauliY,
+                  &SelectGateOps<PrecisionT, kernel>::applyPauliY},
+        std::pair{GateOperations::PauliZ,
+                  &SelectGateOps<PrecisionT, kernel>::applyPauliZ},
+        std::pair{GateOperations::Hadamard,
+                  &SelectGateOps<PrecisionT, kernel>::applyHadamard},
+        std::pair{GateOperations::S,
+                  &SelectGateOps<PrecisionT, kernel>::applyS},
+        std::pair{GateOperations::T,
+                  &SelectGateOps<PrecisionT, kernel>::applyT},
+        std::pair{GateOperations::CNOT,
+                  &SelectGateOps<PrecisionT, kernel>::applyCNOT},
+        std::pair{GateOperations::CZ,
+                  &SelectGateOps<PrecisionT, kernel>::applyCZ},
+        std::pair{GateOperations::SWAP,
+                  &SelectGateOps<PrecisionT, kernel>::applySWAP},
+        std::pair{GateOperations::Toffoli,
+                  &SelectGateOps<PrecisionT, kernel>::applyToffoli},
+        std::pair{GateOperations::CSWAP,
+                  &SelectGateOps<PrecisionT, kernel>::applyCSWAP},
+        std::pair{GateOperations::GeneratorPhaseShift,
+                  &SelectGateOps<PrecisionT, kernel>::applyGeneratorPhaseShift},
+        std::pair{GateOperations::GeneratorCRX,
+                  &SelectGateOps<PrecisionT, kernel>::applyGeneratorCRX},
+        std::pair{GateOperations::GeneratorCRY,
+                  &SelectGateOps<PrecisionT, kernel>::applyGeneratorCRY},
+        std::pair{GateOperations::GeneratorCRZ,
+                  &SelectGateOps<PrecisionT, kernel>::applyGeneratorCRZ},
+        std::pair{GateOperations::GeneratorControlledPhaseShift,
+                  &SelectGateOps<PrecisionT,
+                                 kernel>::applyGeneratorControlledPhaseShift}};
+};
+
+/**
+ * @brief List of all gate operation and funciont pointer pairs with a single
+ * paramter
+ */
+template <class PrecisionT, class ParamT, KernelType kernel>
+struct GateFuncPtrPairs<PrecisionT, ParamT, kernel, 1> {
+    constexpr static std::array value = {
+        std::pair{GateOperations::RX,
+                  &SelectGateOps<PrecisionT, kernel>::template applyRX<ParamT>},
+        std::pair{GateOperations::RY,
+                  &SelectGateOps<PrecisionT, kernel>::template applyRY<ParamT>},
+        std::pair{GateOperations::RZ,
+                  &SelectGateOps<PrecisionT, kernel>::template applyRZ<ParamT>},
+        std::pair{GateOperations::PhaseShift,
+                  &SelectGateOps<PrecisionT,
+                                 kernel>::template applyPhaseShift<ParamT>},
+        std::pair{
+            GateOperations::CRX,
+            &SelectGateOps<PrecisionT, kernel>::template applyCRX<ParamT>},
+        std::pair{
+            GateOperations::CRY,
+            &SelectGateOps<PrecisionT, kernel>::template applyCRY<ParamT>},
+        std::pair{
+            GateOperations::CRZ,
+            &SelectGateOps<PrecisionT, kernel>::template applyCRZ<ParamT>},
+        std::pair{GateOperations::ControlledPhaseShift,
+                  &SelectGateOps<PrecisionT, kernel>::
+                      template applyControlledPhaseShift<ParamT>}};
+};
+
+/**
+ * @brief List of all gate operation and funciont pointer pairs with three
+ * paramters
+ */
+template <class PrecisionT, class ParamT, KernelType kernel>
+struct GateFuncPtrPairs<PrecisionT, ParamT, kernel, 3> {
+    constexpr static std::array value = {
+        std::pair{
+            GateOperations::Rot,
+            &SelectGateOps<PrecisionT, kernel>::template applyRot<ParamT>},
+        std::pair{
+            GateOperations::CRot,
+            &SelectGateOps<PrecisionT, kernel>::template applyCRot<ParamT>}};
+};
+
+template <class fp_t, class ParamT, int num_params> struct CallKernelFunc {
+    static_assert(num_params < 2 || num_params == 3,
+                  "Unsupported number of parameters.");
+};
+
+template <class fp_t, class ParamT> struct CallKernelFunc<fp_t, ParamT, 0> {
+    template <class Func>
+    inline static void call(Func &&func, std::complex<fp_t> *data,
+                            size_t num_qubits, const std::vector<size_t> &wires,
+                            bool inverse,
+                            [[maybe_unused]] const std::vector<fp_t> &params) {
+        assert(params.empty());
+        func(data, num_qubits, wires, inverse);
+    }
+};
+
+template <class fp_t, class ParamT> struct CallKernelFunc<fp_t, ParamT, 1> {
+    template <class Func>
+    inline static void call(Func &&func, std::complex<fp_t> *data,
+                            size_t num_qubits, const std::vector<size_t> &wires,
+                            bool inverse, const std::vector<fp_t> &params) {
+        assert(params.size() == 1);
+        func(data, num_qubits, wires, inverse, params[0]);
+    }
+};
+
+template <class fp_t, class ParamT> struct CallKernelFunc<fp_t, ParamT, 3> {
+    template <class Func>
+    inline static void call(Func &&func, std::complex<fp_t> *data,
+                            size_t num_qubits, const std::vector<size_t> &wires,
+                            bool inverse, const std::vector<fp_t> &params) {
+        assert(params.size() == 3);
+        func(data, num_qubits, wires, inverse, params[0], params[1], params[2]);
+    }
+};
+
 template <typename fp_t, size_t idx>
 std::vector<GateOperations> implementedGatesForKernelIter(KernelType kernel) {
     if constexpr (idx == Constant::available_kernels.size()) {
@@ -127,11 +256,23 @@ std::vector<GateOperations> implementedGatesForKernelIter(KernelType kernel) {
     }
 }
 
+/**
+ * @brief return implemented_gates constexpr member variables for a given kernel
+ *
+ * This function interfaces the runtime variable kernel with the constant time
+ * variable implemented_gates
+ *
+ * TODO: Change to constexpr function in C++20
+ */
 template <class fp_t>
 std::vector<GateOperations> implementedGatesForKernel(KernelType kernel) {
     return Internal::implementedGatesForKernelIter<fp_t, 0>(kernel);
 }
 
+/********************************************************************
+ * Functions below are only used in a compile time to check
+ * consistency.
+ ********************************************************************/
 template <typename fp_t>
 constexpr auto check_default_kernels_are_available() -> bool {
     // TODO: change to constexpr std::all_of in C++20

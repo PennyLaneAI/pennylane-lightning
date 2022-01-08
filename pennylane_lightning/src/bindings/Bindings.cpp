@@ -67,7 +67,8 @@ class StateVecBinder
      *
      * @param stateNumpyArray Complex numpy statevector data array.
      */
-    explicit StateVecBinder(const pybind11::array_t<ComplexPrecisionT> &stateNumpyArray)
+    explicit StateVecBinder(
+        const py::array_t<ComplexPrecisionT> &stateNumpyArray)
         : Base(Util::log2PerfectPower(
               static_cast<size_t>(stateNumpyArray.request().shape[0]))) {
         length_ = static_cast<size_t>(stateNumpyArray.request().shape[0]);
@@ -464,68 +465,84 @@ class StateVecBinder
      * @param inverse Indicate whether to take adjoint.
      */
     template <KernelType kernel>
-    void applyMatrix(const pybind11::array_t<ComplexPrecisionT, py::array::c_style |
-                                                  pybind11::array::forcecast> &matrix,
-                     const std::vector<size_t> &wires, bool inverse = false) {
+    void applyMatrix(
+        const py::array_t<ComplexPrecisionT,
+                          py::array::c_style | py::array::forcecast> &matrix,
+        const std::vector<size_t> &wires, bool inverse = false) {
         Base::template applyMatrix_<kernel>(
-            static_cast<ComplexPrecisionT *>(matrix.request().ptr), wires, inverse);
+            static_cast<ComplexPrecisionT *>(matrix.request().ptr), wires,
+            inverse);
     }
 };
 
-template<class PrecisionT, class ParamT>
-using BinderGateOps = void (StateVecBinder<PrecisionT>::*)(
-    const std::vector<size_t> &, bool, const std::vector<ParamT> &);
-
-template<KernelType kernel, class PrecisionT, class ParamT>
-constexpr auto getFuncPointer(GateOperations gate_op) -> BinderGateOps<PrecisionT, ParamT> {
-    switch(gate_op) {
-    case GateOperations::PauliX: 
-        return &StateVecBinder<PrecisionT>::template applyPauliX<kernel, ParamT>;
-    case GateOperations::PauliY: 
-        return &StateVecBinder<PrecisionT>::template applyPauliY<kernel, ParamT>;
-    case GateOperations::PauliZ: 
-        return &StateVecBinder<PrecisionT>::template applyPauliZ<kernel, ParamT>;
-    case GateOperations::Hadamard: 
-        return &StateVecBinder<PrecisionT>::template applyHadamard<kernel, ParamT>;
-    case GateOperations::S: 
-        return &StateVecBinder<PrecisionT>::template applyS<kernel, ParamT>;
-    case GateOperations::T: 
-        return &StateVecBinder<PrecisionT>::template applyT<kernel, ParamT>;
-    case GateOperations::PhaseShift: 
-        return &StateVecBinder<PrecisionT>::template applyPhaseShift<kernel, ParamT>;
-    case GateOperations::RX: 
-        return &StateVecBinder<PrecisionT>::template applyRX<kernel, ParamT>;
-    case GateOperations::RY: 
-        return &StateVecBinder<PrecisionT>::template applyRY<kernel, ParamT>;
-    case GateOperations::RZ: 
-        return &StateVecBinder<PrecisionT>::template applyRZ<kernel, ParamT>;
-    case GateOperations::Rot: 
-        return &StateVecBinder<PrecisionT>::template applyRot<kernel, ParamT>;
-    case GateOperations::CNOT: 
-        return &StateVecBinder<PrecisionT>::template applyCNOT<kernel, ParamT>;
-    case GateOperations::CZ: 
-        return &StateVecBinder<PrecisionT>::template applyCZ<kernel, ParamT>;
-    case GateOperations::SWAP: 
-        return &StateVecBinder<PrecisionT>::template applySWAP<kernel, ParamT>;
-    case GateOperations::ControlledPhaseShift: 
-        return &StateVecBinder<PrecisionT>::template applyControlledPhaseShift<kernel, ParamT>;
-    case GateOperations::CRX: 
-        return &StateVecBinder<PrecisionT>::template applyCRX<kernel, ParamT>;
-    case GateOperations::CRY: 
-        return &StateVecBinder<PrecisionT>::template applyCRY<kernel, ParamT>;
-    case GateOperations::CRZ: 
-        return &StateVecBinder<PrecisionT>::template applyCRZ<kernel, ParamT>;
-    case GateOperations::CRot: 
-        return &StateVecBinder<PrecisionT>::template applyCRot<kernel, ParamT>;
-    case GateOperations::Toffoli: 
-        return &StateVecBinder<PrecisionT>::template applyToffoli<kernel, ParamT>;
-    case GateOperations::CSWAP: 
-        return &StateVecBinder<PrecisionT>::template applyCSWAP<kernel, ParamT>;
-    default:
-        /* Not supported gates */
-        return nullptr;
-    }
-}
+template <class PrecisionT, class ParamT, KernelType kernel>
+struct AllBinderGateOpPairs {
+    constexpr static std::array value = {
+        std::pair{
+            GateOperations::PauliX,
+            &StateVecBinder<PrecisionT>::template applyPauliX<kernel, ParamT>},
+        std::pair{
+            GateOperations::PauliY,
+            &StateVecBinder<PrecisionT>::template applyPauliY<kernel, ParamT>},
+        std::pair{
+            GateOperations::PauliZ,
+            &StateVecBinder<PrecisionT>::template applyPauliZ<kernel, ParamT>},
+        std::pair{GateOperations::Hadamard,
+                  &StateVecBinder<PrecisionT>::template applyHadamard<kernel,
+                                                                      ParamT>},
+        std::pair{GateOperations::S,
+                  &StateVecBinder<PrecisionT>::template applyS<kernel, ParamT>},
+        std::pair{GateOperations::T,
+                  &StateVecBinder<PrecisionT>::template applyT<kernel, ParamT>},
+        std::pair{
+            GateOperations::PhaseShift,
+            &StateVecBinder<PrecisionT>::template applyPhaseShift<kernel,
+                                                                  ParamT>},
+        std::pair{
+            GateOperations::RX,
+            &StateVecBinder<PrecisionT>::template applyRX<kernel, ParamT>},
+        std::pair{
+            GateOperations::RY,
+            &StateVecBinder<PrecisionT>::template applyRY<kernel, ParamT>},
+        std::pair{
+            GateOperations::RZ,
+            &StateVecBinder<PrecisionT>::template applyRZ<kernel, ParamT>},
+        std::pair{
+            GateOperations::Rot,
+            &StateVecBinder<PrecisionT>::template applyRot<kernel, ParamT>},
+        std::pair{
+            GateOperations::CNOT,
+            &StateVecBinder<PrecisionT>::template applyCNOT<kernel, ParamT>},
+        std::pair{
+            GateOperations::CZ,
+            &StateVecBinder<PrecisionT>::template applyCZ<kernel, ParamT>},
+        std::pair{
+            GateOperations::SWAP,
+            &StateVecBinder<PrecisionT>::template applySWAP<kernel, ParamT>},
+        std::pair{
+            GateOperations::ControlledPhaseShift,
+            &StateVecBinder<PrecisionT>::template applyControlledPhaseShift<
+                kernel, ParamT>},
+        std::pair{
+            GateOperations::CRX,
+            &StateVecBinder<PrecisionT>::template applyCRX<kernel, ParamT>},
+        std::pair{
+            GateOperations::CRY,
+            &StateVecBinder<PrecisionT>::template applyCRY<kernel, ParamT>},
+        std::pair{
+            GateOperations::CRZ,
+            &StateVecBinder<PrecisionT>::template applyCRZ<kernel, ParamT>},
+        std::pair{
+            GateOperations::CRot,
+            &StateVecBinder<PrecisionT>::template applyCRot<kernel, ParamT>},
+        std::pair{
+            GateOperations::Toffoli,
+            &StateVecBinder<PrecisionT>::template applyToffoli<kernel, ParamT>},
+        std::pair{
+            GateOperations::CSWAP,
+            &StateVecBinder<PrecisionT>::template applyCSWAP<kernel, ParamT>},
+    };
+};
 
 /**
  * @brief Create a `%StateVector` object from a 1D numpy complex data array.
@@ -573,16 +590,20 @@ void apply(py::array_t<complex<PrecisionT>> &stateNumpyArray,
 }
 
 /**
- * @brief For given kernel, register all implemented gate operations (+ matrix).
+ * @brief For given kernel, register all implemented gate operations and apply
+ * matrix.
  *
- * @tparam kernel Kernel to register
  * @tparam PrecisionT type for state-vector precision
  * @tparam ParamT type for parameters for the gate operation
+ * @tparam kernel Kernel to register
  * @tparam PyClass pybind11 class type
  */
-template <KernelType kernel, class PrecisionT, class ParamT, class PyClass>
+template <class PrecisionT, class ParamT, KernelType kernel, class PyClass>
 void registerKernelGateOps(PyClass &&pyclass) {
-    auto kernel_name = std::string(lookup(Constant::available_kernels, kernel));
+    const auto kernel_name =
+        std::string(lookup(Constant::available_kernels, kernel));
+    const auto gate_op_pairs =
+        AllBinderGateOpPairs<PrecisionT, ParamT, kernel>::value;
 
     for (auto gate_op : SelectGateOps<PrecisionT, kernel>::implemented_gates) {
         if (std::find(std::begin(Constant::gates_to_pyexport),
@@ -603,16 +624,13 @@ void registerKernelGateOps(PyClass &&pyclass) {
                     &StateVecBinder<PrecisionT>::template applyMatrix<kernel>),
                 "Apply a given matrix to wires.");
         } else {
-            const auto gate_name = std::string(lookup(Constant::gate_names, gate_op));
-            auto func = getFuncPointer<kernel, PrecisionT, ParamT>(gate_op);
-            if (func == nullptr) {
-                PL_ABORT("The given gate " + gate_name +
-                         " is not found; Please check the provided gate name.");
-            }
+            const auto gate_name =
+                std::string(lookup(Constant::gate_names, gate_op));
+            auto func = lookup(gate_op_pairs, gate_op);
             const std::string name = gate_name + "_" + kernel_name;
             // TODO: Change to std::format in C++20
             const std::string doc = "Apply the " + gate_name + " gate using " +
-                              kernel_name + " kernel.";
+                                    kernel_name + " kernel.";
             pyclass.def(name.c_str(), func, doc.c_str());
         }
     }
@@ -621,18 +639,21 @@ void registerKernelGateOps(PyClass &&pyclass) {
 /**
  * TODO: change to constexpr st::foreach in C++20
  * */
-template <size_t idx, class PrecisionT, class ParamT, class PyClass>
+template <class PrecisionT, class ParamT, size_t idx, class PyClass>
 void registerKernelsToPyexportIter(PyClass &&pyclass) {
     if constexpr (idx < Constant::kernels_to_pyexport.size()) {
-        registerKernelGateOps<Constant::kernels_to_pyexport[idx], PrecisionT,
-                                 ParamT>(pyclass);
-        registerKernelsToPyexportIter<idx + 1, PrecisionT, ParamT>(pyclass);
+        registerKernelGateOps<PrecisionT, ParamT,
+                              Constant::kernels_to_pyexport[idx]>(pyclass);
+        registerKernelsToPyexportIter<PrecisionT, ParamT, idx + 1>(pyclass);
     }
 }
 
+/**
+ * @brief register gates for each kernel in kernels_to_pyexport
+ */
 template <class PrecisionT, class ParamT, class PyClass>
 void registerKernelsToPyexport(PyClass &&pyclass) {
-    registerKernelsToPyexportIter<0, PrecisionT, ParamT>(pyclass);
+    registerKernelsToPyexportIter<PrecisionT, ParamT, 0>(pyclass);
 }
 
 /**
@@ -951,7 +972,7 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
 
     m.attr("EXPORTED_KERNEL_OPS") = py::cast(exported_kernel_ops);
 
-    /* Add default_kernel_for_ops */
+    /* Add DEFAULT_KERNEL_FOR_OPS */
     std::map<std::string, std::string> default_kernel_ops_map;
     for (const auto &[gate_op, name] : Constant::gate_names) {
         auto kernel = lookup(Constant::default_kernel_for_ops, gate_op);
@@ -964,3 +985,56 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
     lightning_class_bindings<float, float>(m);
     lightning_class_bindings<double, double>(m);
 }
+
+#ifndef NDEBUG // if debug
+
+/**
+ * @brief Test whether BinderGateOpPairs are defined for all gates in pyexport
+ */
+template <typename PrecisionT, typename ParamT, KernelType kernel, size_t idx>
+constexpr void testBinderGateOpPairsForKernelIter() {
+    if constexpr (idx < Constant::gates_to_pyexport.size()) {
+        constexpr auto op_pairs =
+            AllBinderGateOpPairs<PrecisionT, ParamT, kernel>::value;
+        constexpr auto gate_op = Constant::gates_to_pyexport[idx];
+        static_assert(array_has_elt(Util::first_elts_of(op_pairs), gate_op) ||
+                          gate_op == GateOperations::Matrix,
+                      "AllBinderGateOpPairs should have elementes for all gate "
+                      "operations to pyexport.");
+        testBinderGateOpPairsForKernelIter<PrecisionT, ParamT, kernel,
+                                           idx + 1>();
+    }
+}
+
+template <typename PrecisionT, typename ParamT, KernelType kernel>
+constexpr void testBinderGateOpPairsForKernel() {
+    testBinderGateOpPairsForKernelIter<PrecisionT, ParamT, kernel, 0>();
+}
+
+/**
+ * @brief
+ */
+template <typename PrecisionT, typename ParamT, size_t idx>
+constexpr void testBinderGateOpPairsIter() {
+    if constexpr (idx < Constant::kernels_to_pyexport.size()) {
+        testBinderGateOpPairsForKernel<PrecisionT, ParamT,
+                                       Constant::kernels_to_pyexport[idx]>();
+        testBinderGateOpPairsIter<PrecisionT, ParamT, idx + 1>();
+    }
+}
+
+template <typename PrecisionT, typename ParamT>
+constexpr bool testBinderGateOpPairs() {
+    testBinderGateOpPairsIter<PrecisionT, ParamT, 0>();
+    return true;
+}
+
+static_assert(
+    testBinderGateOpPairs<float, float>(),
+    "AllBinderGateOpPairs should be well defined for all kernels to pyexport.");
+
+static_assert(
+    testBinderGateOpPairs<double, double>(),
+    "AllBinderGateOpPairs should be well defined for all kernels to pyexport.");
+
+#endif
