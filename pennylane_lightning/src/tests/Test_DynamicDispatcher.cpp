@@ -18,7 +18,7 @@
 using namespace Pennylane;
 
 using Pennylane::Internal::callGateOps;
-using Pennylane::Internal::GateFuncPtrPairs;
+using Pennylane::Internal::GateOpsFuncPtrPairs;
 
 /**
  * @file This file contains tests for DynamicDispatcher class
@@ -67,10 +67,10 @@ struct testDispatchForKernel {
             static_lookup<gate_op>(Constant::gate_num_params);
 
         auto gate_func = static_lookup<gate_op>(
-            GateFuncPtrPairs<PrecisionT, ParamT, kernel, num_params>::value);
+            GateOpsFuncPtrPairs<PrecisionT, ParamT, kernel, num_params>::value);
 
-        callGateOps<PrecisionT, ParamT, kernel>(
-            gate_func, expected.data(), num_qubits, wires, false, params);
+        callGateOps(gate_func, expected.data(), num_qubits, wires, false,
+                    params);
 
         const auto gate_name =
             std::string(static_lookup<gate_op>(Constant::gate_names));
@@ -80,8 +80,8 @@ struct testDispatchForKernel {
                           SelectGateOps<PrecisionT, kernel>::implemented_gates,
                           gate_op)) {
             DynamicDispatcher<PrecisionT>::getInstance().applyOperation(
-                kernel, test_st.data(), num_qubits, gate_name, wires,
-                false, params);
+                kernel, test_st.data(), num_qubits, gate_name, wires, false,
+                params);
             REQUIRE(isApproxEqual(test_st, expected));
         } else {
             REQUIRE_THROWS(

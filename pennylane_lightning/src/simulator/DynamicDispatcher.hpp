@@ -43,7 +43,7 @@ namespace Pennylane {
 /**
  * @brief DynamicDispatcher class
  *
- * This class controls all dynamic <-> static conversions.
+ * This class is used to call a gate operation dynamically
  */
 template <typename fp_t> class DynamicDispatcher {
   public:

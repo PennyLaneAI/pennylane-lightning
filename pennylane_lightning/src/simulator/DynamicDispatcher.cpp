@@ -29,7 +29,7 @@ using Pennylane::SelectGateOps;
 using Pennylane::static_lookup;
 
 using Pennylane::Internal::callGateOps;
-using Pennylane::Internal::GateFuncPtrPairs;
+using Pennylane::Internal::GateOpsFuncPtrPairs;
 
 using Pennylane::Constant::available_kernels;
 using Pennylane::Constant::gate_names;
@@ -39,51 +39,81 @@ using Pennylane::Constant::gate_num_params;
 /**
  * @brief return a lambda function for the given gate operation
  *
- * TODO: gate_op can be a function parameter (instead of template parameter).
+ * As we want the lamba function to be stateless, gate_op is a template
+ * paramter.
  */
 template <class fp_t, class ParamT, KernelType kernel, GateOperations gate_op>
-constexpr auto getFunctor() {
+constexpr auto gateOpToFunctor() {
     return [](std::complex<fp_t> *data, size_t num_qubits,
               const std::vector<size_t> &wires, bool inverse,
               const std::vector<fp_t> &params) {
         constexpr size_t num_params = static_lookup<gate_op>(gate_num_params);
         auto &&func = static_lookup<gate_op>(
-            GateFuncPtrPairs<fp_t, ParamT, kernel, num_params>::value);
-        callGateOps<fp_t, ParamT, kernel>(
-            std::forward<decltype(func)>(func), data, num_qubits, wires,
-            inverse, params);
+            GateOpsFuncPtrPairs<fp_t, ParamT, kernel, num_params>::value);
+        callGateOps(std::forward<decltype(func)>(func), data, num_qubits, wires,
+                    inverse, params);
     };
 }
 
-/**
- * TODO: This function can be changed into usual constexpr function in C++20
- *
- * std::transform from implementaed gates to getFunctor will work
- * */
-template <class fp_t, class ParamT, KernelType kernel> struct FunctorArray {
-    static inline std::array<
-        typename DynamicDispatcher<fp_t>::Func,
-        SelectGateOps<fp_t, kernel>::implemented_gates.size()>
-        value;
+/// @cond DEV
+template <class T, class Tuple, std::size_t... I>
+constexpr auto
+prepend_tuple_helper(T &&elt, Tuple &&t,
+                     [[maybe_unused]] std::index_sequence<I...> dummy) {
+    return std::make_tuple(elt, std::get<I>(std::forward<Tuple>(t))...);
+}
 
-    template <size_t idx> static void constexpr constructIter() {
-        constexpr auto gates = SelectGateOps<fp_t, kernel>::implemented_gates;
-        if constexpr (idx < gates.size()) {
-            value[idx] = getFunctor<fp_t, ParamT, kernel, gates[idx]>();
-            constructIter<idx + 1>();
-        }
+template <class T, class Tuple>
+constexpr auto prepend_tuple(T &&elt, Tuple &&t) {
+    return prepend_tuple_helper(
+        std::forward<T>(elt), std::forward<Tuple>(t),
+        std::make_index_sequence<
+            std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
+}
+
+template <class fp_t, class ParamT, KernelType kernel, size_t gate_idx>
+constexpr auto ConstructFunctorTupleIter() {
+    if constexpr (gate_idx ==
+                  SelectGateOps<fp_t, kernel>::implemented_gates.size()) {
+        return std::tuple{};
+    } else if (gate_idx <
+               SelectGateOps<fp_t, kernel>::implemented_gates.size()) {
+        constexpr auto gate_op =
+            SelectGateOps<fp_t, kernel>::implemented_gates[gate_idx];
+        return prepend_tuple(
+            gateOpToFunctor<fp_t, ParamT, kernel, gate_op>(),
+            ConstructFunctorTupleIter<fp_t, ParamT, kernel, gate_idx + 1>());
     }
+};
+/// @endcond
 
-    static void constexpr construct() { constructIter<0>(); }
+/**
+ * @brief Generate array of all functors
+ *
+ * TODO: use std::vector and std::transform in C++20 which become constexpr
+ */
+template <class fp_t, class ParamT, KernelType kernel>
+constexpr auto ConstructFunctorTuple() {
+    return ConstructFunctorTupleIter<fp_t, ParamT, kernel, 0>();
 };
 
-template <class fp_t, KernelType kernel> void registerAllImplementedGateOps() {
+/**
+ * @brief Register all implemented gates for a given kernel
+ */
+template <class fp_t, class ParamT, KernelType kernel>
+void registerAllImplementedGateOps() {
     auto &dispatcher = DynamicDispatcher<fp_t>::getInstance();
-
-    FunctorArray<fp_t, fp_t, kernel>::construct();
 
     constexpr auto num_gates =
         SelectGateOps<fp_t, kernel>::implemented_gates.size();
+
+    constexpr auto functorTuple = ConstructFunctorTuple<fp_t, ParamT, kernel>();
+    const auto functorArray = std::apply(
+        [](auto... n) {
+            return std::array<typename DynamicDispatcher<fp_t>::Func,
+                              sizeof...(n)>{n...};
+        },
+        functorTuple);
     for (size_t i = 0; i < num_gates; i++) {
         const auto gate_op = SelectGateOps<fp_t, kernel>::implemented_gates[i];
         if (gate_op == GateOperations::Matrix) {
@@ -91,33 +121,32 @@ template <class fp_t, KernelType kernel> void registerAllImplementedGateOps() {
             continue;
         }
         std::string op_name = std::string(lookup(gate_names, gate_op));
-        dispatcher.registerGateOperation(
-            op_name, kernel, FunctorArray<fp_t, fp_t, kernel>::value[i]);
+        dispatcher.registerGateOperation(op_name, kernel, functorArray[i]);
     }
 }
 
-template <class fp_t, size_t idx> void registerKernelIter() {
+template <class fp_t, class ParamT, size_t idx> void registerKernelIter() {
     if constexpr (idx == available_kernels.size()) {
         return;
     } else {
-        registerAllImplementedGateOps<fp_t,
+        registerAllImplementedGateOps<fp_t, ParamT,
                                       std::get<0>(available_kernels[idx])>();
-        registerKernelIter<fp_t, idx + 1>();
+        registerKernelIter<fp_t, ParamT, idx + 1>();
     }
 }
 
-template <class fp_t> constexpr auto registerAllAvailableKernels() -> int {
-    registerKernelIter<fp_t, 0>();
+template <class fp_t, class ParamT> auto registerAllAvailableKernels() -> int {
+    registerKernelIter<fp_t, ParamT, 0>();
     return 0;
 }
 
 template <class fp_t> struct registerBeforeMain { static const int dummy; };
 
 template <>
-const int
-    registerBeforeMain<float>::dummy = registerAllAvailableKernels<float>();
+const int registerBeforeMain<float>::dummy =
+    registerAllAvailableKernels<float, float>();
 
 template <>
-const int
-    registerBeforeMain<double>::dummy = registerAllAvailableKernels<double>();
+const int registerBeforeMain<double>::dummy =
+    registerAllAvailableKernels<double, double>();
 /// @endcond

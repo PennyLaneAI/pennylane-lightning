@@ -109,8 +109,8 @@ void testGateFuncPtrPair() {
     // TODO: This also can be done in compile time
     std::set<GateOperations> gate_ops_set;
     for (const auto &[gate_op, func] :
-         Pennylane::Internal::GateFuncPtrPairs<fp_t, fp_t, kernel,
-                                               num_params>::value) {
+         Pennylane::Internal::GateOpsFuncPtrPairs<fp_t, fp_t, kernel,
+                                                  num_params>::value) {
         gate_ops_set.emplace(gate_op);
     }
 
@@ -126,23 +126,24 @@ void testGateFuncPtrPair() {
 
 template <class fp_t, size_t kernel_idx, size_t num_params>
 constexpr void testGateFuncPtrPairIter() {
-    using Pennylane::Internal::GateFuncPtrPairs;
+    using Pennylane::Internal::GateOpsFuncPtrPairs;
     if constexpr (kernel_idx < Constant::available_kernels.size()) {
         const auto kernel =
             std::get<0>(Constant::available_kernels[kernel_idx]);
 
         static_assert(
             count_unique(Util::first_elts_of(
-                GateFuncPtrPairs<fp_t, fp_t, kernel, num_params>::value)) ==
+                GateOpsFuncPtrPairs<fp_t, fp_t, kernel, num_params>::value)) ==
             CountGatesWithNumParams<num_params>::value);
         static_assert(
             count_unique(Util::second_elts_of(
-                GateFuncPtrPairs<fp_t, fp_t, kernel, num_params>::value)) ==
+                GateOpsFuncPtrPairs<fp_t, fp_t, kernel, num_params>::value)) ==
             CountGatesWithNumParams<num_params>::value);
     }
 }
 
-TEMPLATE_TEST_CASE("GateFuncPtrPairs", "[GateFuncPtrPairs]", float, double) {
+TEMPLATE_TEST_CASE("GateOpsFuncPtrPairs", "[GateOpsFuncPtrPairs]", float,
+                   double) {
     testGateFuncPtrPairIter<TestType, 0, 0>();
     testGateFuncPtrPairIter<TestType, 0, 1>();
     // The following line must not be compiled

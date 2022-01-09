@@ -38,7 +38,7 @@ using Pennylane::StateVectorRaw;
 using Pennylane::Internal::callGateOps;
 using Pennylane::Internal::implementedGatesForKernel;
 
-using Pennylane::Internal::GateFuncPtrPairs;
+using Pennylane::Internal::GateOpsFuncPtrPairs;
 
 using std::complex;
 using std::set;
@@ -48,7 +48,6 @@ using std::vector;
 /// @endcond
 
 namespace py = pybind11;
-
 
 /**
  * @brief Create a `%StateVector` object from a 1D numpy complex data array.
@@ -95,64 +94,71 @@ void apply(py::array_t<complex<PrecisionT>> &stateNumpyArray,
     state.applyOperations(ops, wires, inverse, params);
 }
 
-
 /**
  * @brief
  */
-template <class PrecisionT, class ParamT, KernelType kernel, GateOperations gate_op>
+template <class PrecisionT, class ParamT, KernelType kernel,
+          GateOperations gate_op>
 struct KernelGateOp {
-    static_assert(array_has_elt(SelectGateOps<PrecisionT, kernel>::implemented_gates, gate_op),
-            "The operator to register must be implemented.");
+    static_assert(
+        array_has_elt(SelectGateOps<PrecisionT, kernel>::implemented_gates,
+                      gate_op),
+        "The operator to register must be implemented.");
 
-    constexpr static size_t num_params = static_lookup<gate_op>(Constant::gate_num_params);
+    constexpr static size_t num_params =
+        static_lookup<gate_op>(Constant::gate_num_params);
 
-    constexpr static auto func = [](StateVectorRaw<PrecisionT>& st,
-                   const std::vector<size_t> &wires, bool inverse,
-                   const std::vector<ParamT> &params) {
-        auto func_ptr = static_lookup<gate_op>(GateFuncPtrPairs<PrecisionT, ParamT, 
-                                               kernel, num_params>::value);
-        callGateOps<PrecisionT, ParamT, kernel>(
-                func_ptr, st.getData(), st.getNumQubits(),
-                wires, inverse, params
-        );
+    constexpr static auto func = [](StateVectorRaw<PrecisionT> &st,
+                                    const std::vector<size_t> &wires,
+                                    bool inverse,
+                                    const std::vector<ParamT> &params) {
+        auto func_ptr = static_lookup<gate_op>(
+            GateOpsFuncPtrPairs<PrecisionT, ParamT, kernel, num_params>::value);
+        callGateOps(func_ptr, st.getData(), st.getNumQubits(), wires, inverse,
+                    params);
     };
 };
 
 template <class PrecisionT, class ParamT, KernelType kernel>
 struct KernelGateOp<PrecisionT, ParamT, kernel, GateOperations::Matrix> {
-    constexpr static auto func = [](StateVectorRaw<PrecisionT>& st,
-                   const py::array_t<std::complex<PrecisionT>,
-                   py::array::c_style | py::array::forcecast> &matrix,
-        const std::vector<size_t> &wires, bool inverse = false) {
-        st.template applyMatrix_<kernel>(
-            static_cast<std::complex<PrecisionT>*>(matrix.request().ptr), wires,
-            inverse); 
-    };
+    constexpr static auto func =
+        [](StateVectorRaw<PrecisionT> &st,
+           const py::array_t<std::complex<PrecisionT>,
+                             py::array::c_style | py::array::forcecast> &matrix,
+           const std::vector<size_t> &wires, bool inverse = false) {
+            st.template applyMatrix_<kernel>(
+                static_cast<std::complex<PrecisionT> *>(matrix.request().ptr),
+                wires, inverse);
+        };
 };
 
-template <class PrecisionT, class ParamT, KernelType kernel, size_t gate_idx, class PyClass>
-void registerKernelGateOpsIter(PyClass& pyclass) {
-    if constexpr (gate_idx < SelectGateOps<PrecisionT, kernel>::implemented_gates.size()) {
+template <class PrecisionT, class ParamT, KernelType kernel, size_t gate_idx,
+          class PyClass>
+void registerKernelGateOpsIter(PyClass &pyclass) {
+    if constexpr (gate_idx <
+                  SelectGateOps<PrecisionT, kernel>::implemented_gates.size()) {
         const auto kernel_name =
             std::string(lookup(Constant::available_kernels, kernel));
-        constexpr auto gate_op = SelectGateOps<PrecisionT, kernel>::implemented_gates[gate_idx];
+        constexpr auto gate_op =
+            SelectGateOps<PrecisionT, kernel>::implemented_gates[gate_idx];
 
-        constexpr auto func = KernelGateOp<PrecisionT, ParamT, kernel, gate_op>::func;
+        constexpr auto func =
+            KernelGateOp<PrecisionT, ParamT, kernel, gate_op>::func;
         if constexpr (gate_op == GateOperations::Matrix) {
             const std::string name = "applyMatrix_" + kernel_name;
             const std::string doc = "Apply a given matrix to wires.";
             pyclass.def(name.c_str(), func, doc.c_str());
-        }
-        else {
+        } else {
             const auto gate_name =
                 std::string(lookup(Constant::gate_names, gate_op));
-            //auto func = lookup(gate_op_pairs, gate_op);
+            // auto func = lookup(gate_op_pairs, gate_op);
             const std::string name = gate_name + "_" + kernel_name;
             const std::string doc = "Apply the " + gate_name + " gate using " +
                                     kernel_name + " kernel.";
             pyclass.def(name.c_str(), func, doc.c_str());
         }
-        registerKernelGateOpsIter<PrecisionT, ParamT, kernel, gate_idx+1>(pyclass);
+        registerKernelGateOpsIter<PrecisionT, ParamT, kernel, gate_idx + 1>(
+            pyclass);
     }
 }
 
@@ -166,7 +172,7 @@ void registerKernelGateOpsIter(PyClass& pyclass) {
  * @tparam PyClass pybind11 class type
  */
 template <class PrecisionT, class ParamT, KernelType kernel, class PyClass>
-void registerKernelGateOps(PyClass& pyclass) {
+void registerKernelGateOps(PyClass &pyclass) {
     registerKernelGateOpsIter<PrecisionT, ParamT, kernel, 0>(pyclass);
 }
 
@@ -174,11 +180,13 @@ void registerKernelGateOps(PyClass& pyclass) {
  * TODO: change to constexpr st::foreach in C++20
  * */
 template <class PrecisionT, class ParamT, size_t kernel_idx, class PyClass>
-void registerKernelsToPyexportIter(PyClass& pyclass) {
+void registerKernelsToPyexportIter(PyClass &pyclass) {
     if constexpr (kernel_idx < Constant::kernels_to_pyexport.size()) {
         registerKernelGateOps<PrecisionT, ParamT,
-                              Constant::kernels_to_pyexport[kernel_idx]>(pyclass);
-        registerKernelsToPyexportIter<PrecisionT, ParamT, kernel_idx + 1>(pyclass);
+                              Constant::kernels_to_pyexport[kernel_idx]>(
+            pyclass);
+        registerKernelsToPyexportIter<PrecisionT, ParamT, kernel_idx + 1>(
+            pyclass);
     }
 }
 
@@ -186,7 +194,7 @@ void registerKernelsToPyexportIter(PyClass& pyclass) {
  * @brief register gates for each kernel in kernels_to_pyexport
  */
 template <class PrecisionT, class ParamT, class PyClass>
-void registerKernelsToPyexport(PyClass& pyclass) {
+void registerKernelsToPyexport(PyClass &pyclass) {
     registerKernelsToPyexportIter<PrecisionT, ParamT, 0>(pyclass);
 }
 
@@ -210,8 +218,7 @@ void lightning_class_bindings(py::module &m) {
     std::string class_name = "StateVectorC" + bitsize;
     auto pyclass =
         py::class_<StateVectorRaw<PrecisionT>>(m, class_name.c_str());
-    pyclass.def(
-        py::init(&create<PrecisionT>));
+    pyclass.def(py::init(&create<PrecisionT>));
 
     registerKernelsToPyexport<PrecisionT, ParamT>(pyclass);
 
