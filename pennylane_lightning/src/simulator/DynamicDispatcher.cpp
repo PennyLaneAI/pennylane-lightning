@@ -57,7 +57,7 @@ constexpr auto gateOpToFunctor() {
 
 /// @cond DEV
 template <class fp_t, class ParamT, KernelType kernel, size_t gate_idx>
-constexpr auto ConstructFunctorTupleIter() {
+constexpr auto constructGateOpsFunctorTupleIter() {
     if constexpr (gate_idx ==
                   SelectGateOps<fp_t, kernel>::implemented_gates.size()) {
         return std::tuple{};
@@ -65,9 +65,14 @@ constexpr auto ConstructFunctorTupleIter() {
                SelectGateOps<fp_t, kernel>::implemented_gates.size()) {
         constexpr auto gate_op =
             SelectGateOps<fp_t, kernel>::implemented_gates[gate_idx];
-        return prepend_to_tuple(
-            gateOpToFunctor<fp_t, ParamT, kernel, gate_op>(),
-            ConstructFunctorTupleIter<fp_t, ParamT, kernel, gate_idx + 1>());
+        if constexpr (gate_op == GateOperations::Matrix) {
+            /* GateOperations::Matrix is not supported for dynamic dispatch now */
+            return constructGateOpsFunctorTupleIter<fp_t, ParamT, kernel, gate_idx + 1>();
+        } else {
+            return prepend_to_tuple(
+                std::pair{gate_op, gateOpToFunctor<fp_t, ParamT, kernel, gate_op>()},
+                constructGateOpsFunctorTupleIter<fp_t, ParamT, kernel, gate_idx + 1>());
+        }
     }
 }
 /// @endcond
@@ -78,8 +83,8 @@ constexpr auto ConstructFunctorTupleIter() {
  * TODO: use std::vector and std::transform in C++20 which become constexpr
  */
 template <class fp_t, class ParamT, KernelType kernel>
-constexpr auto ConstructFunctorTuple() {
-    return ConstructFunctorTupleIter<fp_t, ParamT, kernel, 0>();
+constexpr auto constructGateOpsFunctorTuple() {
+    return constructGateOpsFunctorTupleIter<fp_t, ParamT, kernel, 0>();
 };
 
 /**
@@ -89,21 +94,18 @@ template <class fp_t, class ParamT, KernelType kernel>
 void registerAllImplementedGateOps() {
     auto &dispatcher = DynamicDispatcher<fp_t>::getInstance();
 
-    constexpr auto num_gates =
-        SelectGateOps<fp_t, kernel>::implemented_gates.size();
+    constexpr auto gateFunctorPairs = constructGateOpsFunctorTuple<fp_t, ParamT, kernel>();
 
-    constexpr auto functorTuple = ConstructFunctorTuple<fp_t, ParamT, kernel>();
-    const auto functorArray =
-        tuple_to_array<typename DynamicDispatcher<fp_t>::Func>(functorTuple);
-    for (size_t i = 0; i < num_gates; i++) {
-        const auto gate_op = SelectGateOps<fp_t, kernel>::implemented_gates[i];
-        if (gate_op == GateOperations::Matrix) {
-            // applyMatrix is not supported by this dynamic dispatcher
-            continue;
-        }
+    auto registerGateToDispatcher = [&dispatcher] (auto&& gate_op_func_pair) {
+        const auto& [gate_op, func] = gate_op_func_pair;
         std::string op_name = std::string(lookup(gate_names, gate_op));
-        dispatcher.registerGateOperation(op_name, kernel, functorArray[i]);
-    }
+        dispatcher.registerGateOperation(op_name, kernel, func);
+        return gate_op;
+    };
+
+    std::apply([&registerGateToDispatcher](auto... elt) {
+        std::make_tuple(registerGateToDispatcher(elt)...);
+    }, gateFunctorPairs);
 }
 
 template <class fp_t, class ParamT, size_t idx> void registerKernelIter() {

@@ -198,7 +198,7 @@ void registerImplementedGatesForKernel(PyClass &pyclass) {
 
     const auto registeredGateOps =
         std::apply([&registerToPyclass](
-                       auto... x) { std::make_tuple(registerToPyclass(x)...); },
+                       auto... elt) { std::make_tuple(registerToPyclass(elt)...); },
                    gate_op_lambda_pairs);
 
     assert(tuple_to_array<GateOperations>(registeredGateOps) ==
@@ -526,19 +526,14 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
     /* Add EXPORTED_KERNELS */
     std::vector<std::pair<std::string, std::string>> exported_kernel_ops;
 
-    std::set<GateOperations> gates_to_pyexport(
-        std::begin(Constant::gates_to_pyexport),
-        std::end(Constant::gates_to_pyexport));
     for (auto kernel : Constant::kernels_to_pyexport) {
         auto kernel_name =
             std::string(lookup(Constant::available_kernels, kernel));
-        auto implemeted_gates = implementedGatesForKernel<float>(kernel);
-        for (auto gate_op : implemeted_gates) {
-            if (gates_to_pyexport.count(gate_op) != 0) {
-                auto gate_name =
-                    std::string(lookup(Constant::gate_names, gate_op));
-                exported_kernel_ops.emplace_back(kernel_name, gate_name);
-            }
+        auto implemented_gates = implementedGatesForKernel<float>(kernel);
+        for (auto gate_op : implemented_gates) {
+            auto gate_name =
+                std::string(lookup(Constant::gate_names, gate_op));
+            exported_kernel_ops.emplace_back(kernel_name, gate_name);
         }
     }
 
@@ -557,59 +552,3 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
     lightning_class_bindings<float, float>(m);
     lightning_class_bindings<double, double>(m);
 }
-
-#ifndef NDEBUG // if debug
-
-/// @cond DEV
-template <typename PrecisionT, typename ParamT, KernelType kernel, size_t idx>
-constexpr void testBinderGateOpPairsForKernelIter() {
-    if constexpr (idx < Constant::gates_to_pyexport.size()) {
-        constexpr auto op_pairs =
-            AllBinderGateOpPairs<PrecisionT, ParamT, kernel>::value;
-        constexpr auto gate_op = Constant::gates_to_pyexport[idx];
-        static_assert(array_has_elt(Util::first_elts_of(op_pairs), gate_op) ||
-                          gate_op == GateOperations::Matrix,
-                      "AllBinderGateOpPairs should have elementes for all gate "
-                      "operations to pyexport.");
-        testBinderGateOpPairsForKernelIter<PrecisionT, ParamT, kernel,
-                                           idx + 1>();
-    }
-}
-/// @endcond
-/**
- * @brief Test whether BinderGateOpPairs are defined for all gates to export
- * Python
- */
-template <typename PrecisionT, typename ParamT, KernelType kernel>
-constexpr void testBinderGateOpPairsForKernel() {
-    testBinderGateOpPairsForKernelIter<PrecisionT, ParamT, kernel, 0>();
-}
-/// @cond DEV
-template <typename PrecisionT, typename ParamT, size_t idx>
-constexpr void testBinderGateOpPairsIter() {
-    if constexpr (idx < Constant::kernels_to_pyexport.size()) {
-        testBinderGateOpPairsForKernel<PrecisionT, ParamT,
-                                       Constant::kernels_to_pyexport[idx]>();
-        testBinderGateOpPairsIter<PrecisionT, ParamT, idx + 1>();
-    }
-}
-/// @endcond
-
-/**
- * @brief Test for all kernels to export Python
- */
-template <typename PrecisionT, typename ParamT>
-constexpr bool testBinderGateOpPairs() {
-    testBinderGateOpPairsIter<PrecisionT, ParamT, 0>();
-    return true;
-}
-
-static_assert(
-    testBinderGateOpPairs<float, float>(),
-    "AllBinderGateOpPairs should be well defined for all kernels to pyexport.");
-
-static_assert(
-    testBinderGateOpPairs<double, double>(),
-    "AllBinderGateOpPairs should be well defined for all kernels to pyexport.");
-
-#endif

@@ -301,6 +301,15 @@ template <class fp_t> class GateOperationsLM {
         }
     }
 
+    static void applyCY(CFP_t *arr, const size_t num_qubits,
+                        const std::vector<size_t> &wires,
+                        [[maybe_unused]] bool inverse) {
+        static_cast<void>(arr);
+        static_cast<void>(num_qubits);
+        static_cast<void>(wires);
+        PL_ABORT("GaterOperationsLM::applyCY is not implemented yet");
+    }
+
     static void applyCZ(CFP_t *arr, const size_t num_qubits,
                         const std::vector<size_t> &wires,
                         [[maybe_unused]] bool inverse) {

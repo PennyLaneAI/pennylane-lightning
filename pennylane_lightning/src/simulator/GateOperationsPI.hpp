@@ -62,6 +62,7 @@ template <class fp_t> class GateOperationsPI {
         GateOperations::Rot,
         GateOperations::ControlledPhaseShift,
         GateOperations::CNOT,
+        GateOperations::CY,
         GateOperations::CZ,
         GateOperations::SWAP,
         GateOperations::CRX,
@@ -348,6 +349,20 @@ template <class fp_t> class GateOperationsPI {
         for (const size_t &externalIndex : externalIndices) {
             CFP_t *shiftedState = arr + externalIndex;
             std::swap(shiftedState[indices[1]], shiftedState[indices[2]]);
+        }
+    }
+
+    static void applyCY(CFP_t* arr, size_t num_qubits,
+                 const std::vector<size_t> &wires,
+                 [[maybe_unused]] bool inverse) {
+        assert(wires.size() == 2);
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+        for (const size_t &externalIndex : externalIndices) {
+            CFP_t *shiftedState = arr + externalIndex;
+            CFP_t v2 = shiftedState[indices[2]];
+            shiftedState[indices[2]] = CFP_t{shiftedState[indices[3]].imag(),
+                                             -shiftedState[indices[3]].real()};
+            shiftedState[indices[3]] = CFP_t{-v2.imag(), v2.real()};
         }
     }
 

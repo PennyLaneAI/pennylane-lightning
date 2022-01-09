@@ -110,3 +110,22 @@ auto create_random_state(RandomEngine &re, size_t num_qubits)
     scaleVector(res, std::complex<fp_t>{1.0} / std::sqrt(squared_norm));
     return res;
 }
+
+template <typename T, size_t size>
+constexpr size_t count_unique(const std::array<T, size> &arr) {
+    size_t res = 0;
+
+    for (size_t i = 0; i < size; i++) {
+        bool counted = false;
+        for (size_t j = 0; j < i; j++) {
+            if (arr[j] == arr[i]) {
+                counted = true;
+                break;
+            }
+        }
+        if (!counted) {
+            ++res;
+        }
+    }
+    return res;
+}
