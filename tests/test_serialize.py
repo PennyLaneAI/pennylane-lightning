@@ -36,7 +36,7 @@ class TestIsLightningGate:
     def test_gates(self):
         """Test if returns true for some gates"""
         for gate in ["PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T", "PhaseShift",
-                "RX", "RY", "RZ", "Rot", "CNOT", "CZ", "SWAP", "ControlledPhaseShift",
+                "RX", "RY", "RZ", "Rot", "CNOT", "CY", "CZ", "SWAP", "ControlledPhaseShift",
                 "CRX", "CRY", "CRZ", "CRot", "Toffoli", "CSWAP"]:
             assert _is_lightning_gate(gate)
 
