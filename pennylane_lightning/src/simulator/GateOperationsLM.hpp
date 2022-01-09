@@ -43,7 +43,9 @@ auto constexpr fillLeadingOnes(size_t pos) -> size_t {
 }
 
 /**
- * @brief
+ * @brief A gate operation implementation with less memory.
+ *
+ * @tparam fp_t Floating point precision of underlying statevector data
  */
 template <class fp_t> class GateOperationsLM {
   public:

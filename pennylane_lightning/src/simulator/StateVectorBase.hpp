@@ -54,6 +54,10 @@
                           Constant::gate_num_params) == sizeof...(Ts),         \
                       "The provided number of parameters for gate " #GATE_NAME \
                       " is wrong.");                                           \
+        static_assert(                                                         \
+            array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,      \
+                          GateOperations::GATE_NAME),                          \
+            "The kernel does not implement the gate.");                        \
         SelectGateOps<fp_t, kernel>::apply##GATE_NAME(                         \
             arr, num_qubits_, wires, inverse, std::forward<Ts>(args)...);      \
     }
@@ -64,11 +68,6 @@
                                  bool inverse, Ts &&...args) {                 \
         constexpr auto kernel = static_lookup<GateOperations::GATE_NAME>(      \
             Constant::default_kernel_for_ops);                                 \
-        static_assert(                                                         \
-            array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,      \
-                          GateOperations::GATE_NAME),                          \
-            "The default kernel for gate " #GATE_NAME                          \
-            "does not implement it.");                                         \
         apply##GATE_NAME##_<kernel>(wires, inverse,                            \
                                     std::forward<Ts>(args)...);                \
     }
@@ -443,6 +442,19 @@ template <class fp_t, class Derived> class StateVectorBase {
      * default_kernel_for_ops
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CNOT)
+
+    /**
+     * @brief Apply CY gate to given indices of statevector.
+     *
+     * @param wires Wires to apply gate to.
+     * @param inverse Take adjoint of given operation.
+     */
+    PENNYLANE_STATEVECTOR_DEFINE_OPS(CY)
+    /**
+     * @brief Apply CY gate operation using a kernel given in
+     * default_kernel_for_ops
+     */
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CY)
 
     /**
      * @brief Apply CZ gate to given indices of statevector.
