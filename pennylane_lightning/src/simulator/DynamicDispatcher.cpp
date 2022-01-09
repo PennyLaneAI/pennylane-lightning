@@ -28,7 +28,7 @@ using Pennylane::SelectGateOps;
 
 using Pennylane::static_lookup;
 
-using Pennylane::Internal::CallKernelFunc;
+using Pennylane::Internal::callGateOps;
 using Pennylane::Internal::GateFuncPtrPairs;
 
 using Pennylane::Constant::available_kernels;
@@ -49,7 +49,7 @@ constexpr auto getFunctor() {
         constexpr size_t num_params = static_lookup<gate_op>(gate_num_params);
         auto &&func = static_lookup<gate_op>(
             GateFuncPtrPairs<fp_t, ParamT, kernel, num_params>::value);
-        CallKernelFunc<fp_t, ParamT, num_params>::call(
+        callGateOps<fp_t, ParamT, kernel>(
             std::forward<decltype(func)>(func), data, num_qubits, wires,
             inverse, params);
     };

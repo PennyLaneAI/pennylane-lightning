@@ -17,7 +17,7 @@
 
 using namespace Pennylane;
 
-using Pennylane::Internal::CallKernelFunc;
+using Pennylane::Internal::callGateOps;
 using Pennylane::Internal::GateFuncPtrPairs;
 
 /**
@@ -69,7 +69,7 @@ struct testDispatchForKernel {
         auto gate_func = static_lookup<gate_op>(
             GateFuncPtrPairs<PrecisionT, ParamT, kernel, num_params>::value);
 
-        CallKernelFunc<PrecisionT, ParamT, num_params>::call(
+        callGateOps<PrecisionT, ParamT, kernel>(
             gate_func, expected.data(), num_qubits, wires, false, params);
 
         const auto gate_name =
@@ -80,7 +80,7 @@ struct testDispatchForKernel {
                           SelectGateOps<PrecisionT, kernel>::implemented_gates,
                           gate_op)) {
             DynamicDispatcher<PrecisionT>::getInstance().applyOperation(
-                kernel, test_st.data(), num_qubits, gate_name.c_str(), wires,
+                kernel, test_st.data(), num_qubits, gate_name, wires,
                 false, params);
             REQUIRE(isApproxEqual(test_st, expected));
         } else {
