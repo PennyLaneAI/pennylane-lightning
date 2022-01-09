@@ -274,8 +274,8 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applySWAP",
 
 // NOLINTNEXTLINE: Avoiding complexity errors
 TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCY",
-        "[GateOperations_Nonparam],[two-qubit]", 
-        ALL_GATE_OPERATIONS, (float, double)) {
+                           "[GateOperations_Nonparam],[two-qubit]",
+                           ALL_GATE_OPERATIONS, (float, double)) {
     using fp_t = typename TestType::scalar_type_t;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
@@ -288,38 +288,36 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCY",
     if constexpr (array_has_elt(TestType::implemented_gates,
                                 GateOperations::CY)) {
         CHECK(ini_st ==
-              std::vector<CFP_t>{Util::ZERO<fp_t>(), Util::ZERO<fp_t>(),
-                                 std::complex<fp_t>(1.0 / sqrt(2), 0),
-                                 Util::ZERO<fp_t>(), Util::ZERO<fp_t>(),
-                                 Util::ZERO<fp_t>(),
-                                 std::complex<fp_t>(1.0 / sqrt(2), 0),
-                                 Util::ZERO<fp_t>()});
+              std::vector<CFP_t>{
+                  Util::ZERO<fp_t>(), Util::ZERO<fp_t>(),
+                  std::complex<fp_t>(1.0 / sqrt(2), 0), Util::ZERO<fp_t>(),
+                  Util::ZERO<fp_t>(), Util::ZERO<fp_t>(),
+                  std::complex<fp_t>(1.0 / sqrt(2), 0), Util::ZERO<fp_t>()});
 
         SECTION("CY 0,1 |+10> -> i|100>") {
             std::vector<CFP_t> expected{Util::ZERO<fp_t>(),
-                                       Util::ZERO<fp_t>(),
-                                       std::complex<fp_t>(1.0 / sqrt(2), 0),
-                                       Util::ZERO<fp_t>(),
-                                       std::complex<fp_t>(0, -1 / sqrt(2)),
-                                       Util::ZERO<fp_t>(),
-                                       Util::ZERO<fp_t>(),
-                                       Util::ZERO<fp_t>()};
-            
+                                        Util::ZERO<fp_t>(),
+                                        std::complex<fp_t>(1.0 / sqrt(2), 0),
+                                        Util::ZERO<fp_t>(),
+                                        std::complex<fp_t>(0, -1 / sqrt(2)),
+                                        Util::ZERO<fp_t>(),
+                                        Util::ZERO<fp_t>(),
+                                        Util::ZERO<fp_t>()};
+
             auto sv01 = ini_st;
             TestType::applyCY(sv01.data(), num_qubits, {0, 1}, false);
             CHECK(sv01 == expected);
         }
 
         SECTION("CY 0,2 |+10> -> |010> + i |111>") {
-            std::vector<CFP_t> expected{
-                Util::ZERO<fp_t>(),
-                Util::ZERO<fp_t>(),
-                std::complex<fp_t>(1.0 / sqrt(2), 0.0),
-                Util::ZERO<fp_t>(),
-                Util::ZERO<fp_t>(),
-                Util::ZERO<fp_t>(),
-                Util::ZERO<fp_t>(),
-                std::complex<fp_t>(0.0, 1 / sqrt(2))};
+            std::vector<CFP_t> expected{Util::ZERO<fp_t>(),
+                                        Util::ZERO<fp_t>(),
+                                        std::complex<fp_t>(1.0 / sqrt(2), 0.0),
+                                        Util::ZERO<fp_t>(),
+                                        Util::ZERO<fp_t>(),
+                                        Util::ZERO<fp_t>(),
+                                        Util::ZERO<fp_t>(),
+                                        std::complex<fp_t>(0.0, 1 / sqrt(2))};
 
             auto sv02 = ini_st;
 
@@ -328,14 +326,10 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCY",
         }
         SECTION("CY 1,2 |+10> -> i|+11>") {
             std::vector<CFP_t> expected{
-                Util::ZERO<fp_t>(),
-                Util::ZERO<fp_t>(),
-                Util::ZERO<fp_t>(),
-                std::complex<fp_t>(0.0, 1.0 / sqrt(2)),
-                Util::ZERO<fp_t>(),
-                Util::ZERO<fp_t>(),
-                Util::ZERO<fp_t>(),
-                std::complex<fp_t>(0.0, 1 / sqrt(2))};
+                Util::ZERO<fp_t>(), Util::ZERO<fp_t>(),
+                Util::ZERO<fp_t>(), std::complex<fp_t>(0.0, 1.0 / sqrt(2)),
+                Util::ZERO<fp_t>(), Util::ZERO<fp_t>(),
+                Util::ZERO<fp_t>(), std::complex<fp_t>(0.0, 1 / sqrt(2))};
 
             auto sv12 = ini_st;
 

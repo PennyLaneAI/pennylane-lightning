@@ -352,9 +352,9 @@ template <class fp_t> class GateOperationsPI {
         }
     }
 
-    static void applyCY(CFP_t* arr, size_t num_qubits,
-                 const std::vector<size_t> &wires,
-                 [[maybe_unused]] bool inverse) {
+    static void applyCY(CFP_t *arr, size_t num_qubits,
+                        const std::vector<size_t> &wires,
+                        [[maybe_unused]] bool inverse) {
         assert(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
         for (const size_t &externalIndex : externalIndices) {

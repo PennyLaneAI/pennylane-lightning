@@ -83,17 +83,19 @@ template <size_t num_params> struct CountGatesWithNumParams {
 };
 
 /**
- * TODO: replace all CountGatewWithNumParams template struct to below constexpr function
+ * TODO: replace all CountGatewWithNumParams template struct to below constexpr
+ * function
  * */
 constexpr static size_t countGatesWithNumParams(size_t num_params) {
     size_t cnt = 0;
-    for(size_t idx = 0; idx < static_cast<int>(GateOperations::END) - 1; ++idx) {
+    for (size_t idx = 0; idx < static_cast<int>(GateOperations::END) - 1;
+         ++idx) {
         const auto gate_op = static_cast<GateOperations>(idx);
         if (gate_op == GateOperations::Matrix) {
             continue;
         }
         if (lookup(Constant::gate_num_params, gate_op) == num_params) {
-            cnt ++;
+            cnt++;
         }
     }
     return cnt;
@@ -129,12 +131,12 @@ constexpr void testGateFuncPtrPairIter() {
         static_assert(
             count_unique(Util::first_elts_of(
                 GateOpsFuncPtrPairs<fp_t, fp_t, kernel, num_params>::value)) ==
-            CountGatesWithNumParams<num_params>::value,
+                CountGatesWithNumParams<num_params>::value,
             "Gate operations in GateOpsFuncPtrPairs are not distinct");
         static_assert(
             count_unique(Util::second_elts_of(
                 GateOpsFuncPtrPairs<fp_t, fp_t, kernel, num_params>::value)) ==
-            CountGatesWithNumParams<num_params>::value,
+                CountGatesWithNumParams<num_params>::value,
             "Function pointers in GateOpsFuncPtrPairs are not distinct");
     }
 }

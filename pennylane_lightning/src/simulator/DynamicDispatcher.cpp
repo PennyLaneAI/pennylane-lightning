@@ -66,12 +66,16 @@ constexpr auto constructGateOpsFunctorTupleIter() {
         constexpr auto gate_op =
             SelectGateOps<fp_t, kernel>::implemented_gates[gate_idx];
         if constexpr (gate_op == GateOperations::Matrix) {
-            /* GateOperations::Matrix is not supported for dynamic dispatch now */
-            return constructGateOpsFunctorTupleIter<fp_t, ParamT, kernel, gate_idx + 1>();
+            /* GateOperations::Matrix is not supported for dynamic dispatch now
+             */
+            return constructGateOpsFunctorTupleIter<fp_t, ParamT, kernel,
+                                                    gate_idx + 1>();
         } else {
             return prepend_to_tuple(
-                std::pair{gate_op, gateOpToFunctor<fp_t, ParamT, kernel, gate_op>()},
-                constructGateOpsFunctorTupleIter<fp_t, ParamT, kernel, gate_idx + 1>());
+                std::pair{gate_op,
+                          gateOpToFunctor<fp_t, ParamT, kernel, gate_op>()},
+                constructGateOpsFunctorTupleIter<fp_t, ParamT, kernel,
+                                                 gate_idx + 1>());
         }
     }
 }
@@ -94,18 +98,21 @@ template <class fp_t, class ParamT, KernelType kernel>
 void registerAllImplementedGateOps() {
     auto &dispatcher = DynamicDispatcher<fp_t>::getInstance();
 
-    constexpr auto gateFunctorPairs = constructGateOpsFunctorTuple<fp_t, ParamT, kernel>();
+    constexpr auto gateFunctorPairs =
+        constructGateOpsFunctorTuple<fp_t, ParamT, kernel>();
 
-    auto registerGateToDispatcher = [&dispatcher] (auto&& gate_op_func_pair) {
-        const auto& [gate_op, func] = gate_op_func_pair;
+    auto registerGateToDispatcher = [&dispatcher](auto &&gate_op_func_pair) {
+        const auto &[gate_op, func] = gate_op_func_pair;
         std::string op_name = std::string(lookup(gate_names, gate_op));
         dispatcher.registerGateOperation(op_name, kernel, func);
         return gate_op;
     };
 
-    std::apply([&registerGateToDispatcher](auto... elt) {
-        std::make_tuple(registerGateToDispatcher(elt)...);
-    }, gateFunctorPairs);
+    std::apply(
+        [&registerGateToDispatcher](auto... elt) {
+            std::make_tuple(registerGateToDispatcher(elt)...);
+        },
+        gateFunctorPairs);
 }
 
 template <class fp_t, class ParamT, size_t idx> void registerKernelIter() {

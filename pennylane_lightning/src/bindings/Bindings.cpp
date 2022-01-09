@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cassert>
 #include <set>
 #include <tuple>
 #include <vector>
@@ -178,8 +179,8 @@ void registerImplementedGatesForKernel(PyClass &pyclass) {
     constexpr auto gate_op_lambda_pairs =
         getGateOpLambdaPairs<PrecisionT, ParamT, kernel>();
 
-    auto registerToPyclass = [&pyclass,
-                              &kernel_name](auto &&gate_op_lambda_pair) {
+    auto registerToPyclass =
+        [&pyclass, &kernel_name](auto &&gate_op_lambda_pair) -> GateOperations {
         const auto &[gate_op, func] = gate_op_lambda_pair;
         if (gate_op == GateOperations::Matrix) {
             const std::string name = "applyMatrix_" + kernel_name;
@@ -196,14 +197,9 @@ void registerImplementedGatesForKernel(PyClass &pyclass) {
         return gate_op;
     };
 
-    const auto registeredGateOps =
-        std::apply([&registerToPyclass](
-                       auto... elt) { std::make_tuple(registerToPyclass(elt)...); },
-                   gate_op_lambda_pairs);
-
-    assert(tuple_to_array<GateOperations>(registeredGateOps) ==
-           SelectGateOps<fp_t, kernel>::implemented_gates); // double check in
-                                                            // debug mode
+    std::apply([&registerToPyclass](
+                   auto... elt) { std::make_tuple(registerToPyclass(elt)...); },
+               gate_op_lambda_pairs);
 }
 
 /// @cond DEV
@@ -531,8 +527,7 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
             std::string(lookup(Constant::available_kernels, kernel));
         auto implemented_gates = implementedGatesForKernel<float>(kernel);
         for (auto gate_op : implemented_gates) {
-            auto gate_name =
-                std::string(lookup(Constant::gate_names, gate_op));
+            auto gate_name = std::string(lookup(Constant::gate_names, gate_op));
             exported_kernel_ops.emplace_back(kernel_name, gate_name);
         }
     }
