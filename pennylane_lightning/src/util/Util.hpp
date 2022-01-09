@@ -27,6 +27,7 @@
 #include <numeric>
 #include <set>
 #include <stdexcept>
+#include <tuple>
 #include <type_traits>
 #include <vector>
 
@@ -1187,5 +1188,31 @@ second_elts_of(const std::array<std::pair<T, U>, size> &arr) {
         res[i] = std::get<0>(arr[i]);
     }
     return res;
+}
+
+/// @cond DEV
+namespace Internal {
+template <class T, class Tuple, std::size_t... I>
+constexpr auto
+prepend_to_tuple_helper(T &&elt, Tuple &&t,
+                     [[maybe_unused]] std::index_sequence<I...> dummy) {
+    return std::make_tuple(elt, std::get<I>(std::forward<Tuple>(t))...);
+}
+} // namespace Internal
+/// @endcond
+
+template <class T, class Tuple>
+constexpr auto prepend_to_tuple(T &&elt, Tuple &&t) {
+    return Internal::prepend_to_tuple_helper(
+        std::forward<T>(elt), std::forward<Tuple>(t),
+        std::make_index_sequence<
+            std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
+}
+
+template <class T, class Tuple>
+constexpr auto tuple_to_array(Tuple&& tuple) {
+    return std::apply([](auto... n) {
+            return std::array<T, sizeof...(n)>{n...};
+    }, std::forward<Tuple>(tuple));
 }
 } // namespace Pennylane::Util

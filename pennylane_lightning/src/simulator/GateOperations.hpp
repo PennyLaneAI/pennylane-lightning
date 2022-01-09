@@ -64,7 +64,6 @@ enum class GateOperations : int {
     /* END */
     END
 };
-
 } // namespace Pennylane
 
 namespace Pennylane::Constant {

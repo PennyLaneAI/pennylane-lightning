@@ -37,10 +37,10 @@ using Pennylane::Constant::gate_num_params;
 } // namespace
 
 /**
- * @brief return a lambda function for the given gate operation
+ * @brief return a lambda function for the given kernel and gate operation
  *
- * As we want the lamba function to be stateless, gate_op is a template
- * paramter.
+ * As we want the lamba function to be stateless, kernel and gate_op are template
+ * paramters. In C++20, one may use a template lambda function instead.
  */
 template <class fp_t, class ParamT, KernelType kernel, GateOperations gate_op>
 constexpr auto gateOpToFunctor() {
@@ -56,21 +56,6 @@ constexpr auto gateOpToFunctor() {
 }
 
 /// @cond DEV
-template <class T, class Tuple, std::size_t... I>
-constexpr auto
-prepend_tuple_helper(T &&elt, Tuple &&t,
-                     [[maybe_unused]] std::index_sequence<I...> dummy) {
-    return std::make_tuple(elt, std::get<I>(std::forward<Tuple>(t))...);
-}
-
-template <class T, class Tuple>
-constexpr auto prepend_tuple(T &&elt, Tuple &&t) {
-    return prepend_tuple_helper(
-        std::forward<T>(elt), std::forward<Tuple>(t),
-        std::make_index_sequence<
-            std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
-}
-
 template <class fp_t, class ParamT, KernelType kernel, size_t gate_idx>
 constexpr auto ConstructFunctorTupleIter() {
     if constexpr (gate_idx ==
@@ -80,11 +65,11 @@ constexpr auto ConstructFunctorTupleIter() {
                SelectGateOps<fp_t, kernel>::implemented_gates.size()) {
         constexpr auto gate_op =
             SelectGateOps<fp_t, kernel>::implemented_gates[gate_idx];
-        return prepend_tuple(
+        return prepend_to_tuple(
             gateOpToFunctor<fp_t, ParamT, kernel, gate_op>(),
             ConstructFunctorTupleIter<fp_t, ParamT, kernel, gate_idx + 1>());
     }
-};
+}
 /// @endcond
 
 /**
@@ -108,12 +93,8 @@ void registerAllImplementedGateOps() {
         SelectGateOps<fp_t, kernel>::implemented_gates.size();
 
     constexpr auto functorTuple = ConstructFunctorTuple<fp_t, ParamT, kernel>();
-    const auto functorArray = std::apply(
-        [](auto... n) {
-            return std::array<typename DynamicDispatcher<fp_t>::Func,
-                              sizeof...(n)>{n...};
-        },
-        functorTuple);
+    const auto functorArray = tuple_to_array<
+            typename DynamicDispatcher<fp_t>::Func>(functorTuple);
     for (size_t i = 0; i < num_gates; i++) {
         const auto gate_op = SelectGateOps<fp_t, kernel>::implemented_gates[i];
         if (gate_op == GateOperations::Matrix) {
