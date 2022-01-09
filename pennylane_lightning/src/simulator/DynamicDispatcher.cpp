@@ -39,8 +39,8 @@ using Pennylane::Constant::gate_num_params;
 /**
  * @brief return a lambda function for the given kernel and gate operation
  *
- * As we want the lamba function to be stateless, kernel and gate_op are template
- * paramters. In C++20, one may use a template lambda function instead.
+ * As we want the lamba function to be stateless, kernel and gate_op are
+ * template paramters. In C++20, one may use a template lambda function instead.
  */
 template <class fp_t, class ParamT, KernelType kernel, GateOperations gate_op>
 constexpr auto gateOpToFunctor() {
@@ -93,8 +93,8 @@ void registerAllImplementedGateOps() {
         SelectGateOps<fp_t, kernel>::implemented_gates.size();
 
     constexpr auto functorTuple = ConstructFunctorTuple<fp_t, ParamT, kernel>();
-    const auto functorArray = tuple_to_array<
-            typename DynamicDispatcher<fp_t>::Func>(functorTuple);
+    const auto functorArray =
+        tuple_to_array<typename DynamicDispatcher<fp_t>::Func>(functorTuple);
     for (size_t i = 0; i < num_gates; i++) {
         const auto gate_op = SelectGateOps<fp_t, kernel>::implemented_gates[i];
         if (gate_op == GateOperations::Matrix) {

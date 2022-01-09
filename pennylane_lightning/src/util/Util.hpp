@@ -1195,7 +1195,7 @@ namespace Internal {
 template <class T, class Tuple, std::size_t... I>
 constexpr auto
 prepend_to_tuple_helper(T &&elt, Tuple &&t,
-                     [[maybe_unused]] std::index_sequence<I...> dummy) {
+                        [[maybe_unused]] std::index_sequence<I...> dummy) {
     return std::make_tuple(elt, std::get<I>(std::forward<Tuple>(t))...);
 }
 } // namespace Internal
@@ -1209,10 +1209,9 @@ constexpr auto prepend_to_tuple(T &&elt, Tuple &&t) {
             std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
 }
 
-template <class T, class Tuple>
-constexpr auto tuple_to_array(Tuple&& tuple) {
-    return std::apply([](auto... n) {
-            return std::array<T, sizeof...(n)>{n...};
-    }, std::forward<Tuple>(tuple));
+template <class T, class Tuple> constexpr auto tuple_to_array(Tuple &&tuple) {
+    return std::apply(
+        [](auto... n) { return std::array<T, sizeof...(n)>{n...}; },
+        std::forward<Tuple>(tuple));
 }
 } // namespace Pennylane::Util

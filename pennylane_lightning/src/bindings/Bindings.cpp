@@ -95,14 +95,15 @@ void apply(py::array_t<complex<PrecisionT>> &stateNumpyArray,
 }
 
 /**
- * @brief Return a specific lambda function to return 
+ * @brief Return a specific lambda function for the given kernel and gate
+ * operation
  *
- * We do not expect template paramters kernel and gate_op can be
- * function paramters as we want the lambe function to be a stateless.
+ * We do not expect template paramters kernel and gate_op can be function
+ * paramters as we want the lambda function to be a stateless.
  */
 template <class PrecisionT, class ParamT, KernelType kernel,
           GateOperations gate_op>
-constexpr auto getLambdaForKernelGateOp () {
+constexpr auto getLambdaForKernelGateOp() {
     static_assert(
         array_has_elt(SelectGateOps<PrecisionT, kernel>::implemented_gates,
                       gate_op),
@@ -112,19 +113,20 @@ constexpr auto getLambdaForKernelGateOp () {
         constexpr size_t num_params =
             static_lookup<gate_op>(Constant::gate_num_params);
 
-        return [](StateVectorRaw<PrecisionT> &st,
-                                        const std::vector<size_t> &wires,
-                                        bool inverse,
-                                        const std::vector<ParamT> &params) {
-            auto func_ptr = static_lookup<gate_op>(
-                GateOpsFuncPtrPairs<PrecisionT, ParamT, kernel, num_params>::value);
-            callGateOps(func_ptr, st.getData(), st.getNumQubits(), wires, inverse,
-                        params);
-        };
+        return
+            [](StateVectorRaw<PrecisionT> &st, const std::vector<size_t> &wires,
+               bool inverse, const std::vector<ParamT> &params) {
+                auto func_ptr = static_lookup<gate_op>(
+                    GateOpsFuncPtrPairs<PrecisionT, ParamT, kernel,
+                                        num_params>::value);
+                callGateOps(func_ptr, st.getData(), st.getNumQubits(), wires,
+                            inverse, params);
+            };
     } else {
         return [](StateVectorRaw<PrecisionT> &st,
                   const py::array_t<std::complex<PrecisionT>,
-                             py::array::c_style | py::array::forcecast> &matrix,
+                                    py::array::c_style | py::array::forcecast>
+                      &matrix,
                   const std::vector<size_t> &wires, bool inverse = false) {
             st.template applyMatrix_<kernel>(
                 static_cast<std::complex<PrecisionT> *>(matrix.request().ptr),
@@ -136,11 +138,15 @@ constexpr auto getLambdaForKernelGateOp () {
 /// @cond DEV
 template <class PrecisionT, class ParamT, KernelType kernel, size_t gate_idx>
 constexpr auto getGateOpLambdaPairsIter() {
-    if constexpr (gate_idx < SelectGateOps<PrecisionT, kernel>::implemented_gates.size()) {
-        constexpr auto gate_op = SelectGateOps<PrecisionT, kernel>::implemented_gates[gate_idx];
+    if constexpr (gate_idx <
+                  SelectGateOps<PrecisionT, kernel>::implemented_gates.size()) {
+        constexpr auto gate_op =
+            SelectGateOps<PrecisionT, kernel>::implemented_gates[gate_idx];
         return prepend_to_tuple(
-                std::pair{gate_op, getLambdaForKernelGateOp<PrecisionT, ParamT, kernel, gate_op>()},
-                getGateOpLambdaPairsIter<PrecisionT, ParamT, kernel, gate_idx+1>());
+            std::pair{gate_op, getLambdaForKernelGateOp<PrecisionT, ParamT,
+                                                        kernel, gate_op>()},
+            getGateOpLambdaPairsIter<PrecisionT, ParamT, kernel,
+                                     gate_idx + 1>());
     } else {
         return std::tuple{};
     }
@@ -169,11 +175,12 @@ void registerImplementedGatesForKernel(PyClass &pyclass) {
     const auto kernel_name =
         std::string(lookup(Constant::available_kernels, kernel));
 
-    constexpr auto gate_op_lambda_pairs = getGateOpLambdaPairs<PrecisionT, ParamT,
-              kernel>();
+    constexpr auto gate_op_lambda_pairs =
+        getGateOpLambdaPairs<PrecisionT, ParamT, kernel>();
 
-    auto registerToPyclass = [&pyclass, &kernel_name] (auto&& gate_op_lambda_pair) {
-        const auto& [gate_op, func] = gate_op_lambda_pair;
+    auto registerToPyclass = [&pyclass,
+                              &kernel_name](auto &&gate_op_lambda_pair) {
+        const auto &[gate_op, func] = gate_op_lambda_pair;
         if (gate_op == GateOperations::Matrix) {
             const std::string name = "applyMatrix_" + kernel_name;
             const std::string doc = "Apply a given matrix to wires.";
@@ -181,7 +188,6 @@ void registerImplementedGatesForKernel(PyClass &pyclass) {
         } else {
             const auto gate_name =
                 std::string(lookup(Constant::gate_names, gate_op));
-            // auto func = lookup(gate_op_pairs, gate_op);
             const std::string name = gate_name + "_" + kernel_name;
             const std::string doc = "Apply the " + gate_name + " gate using " +
                                     kernel_name + " kernel.";
@@ -190,15 +196,17 @@ void registerImplementedGatesForKernel(PyClass &pyclass) {
         return gate_op;
     };
 
-    const auto registeredGateOps = 
-        std::apply([&registerToPyclass](auto ...x){
-            std::make_tuple(registerToPyclass(x)...);
-        }, gate_op_lambda_pairs);
+    const auto registeredGateOps =
+        std::apply([&registerToPyclass](
+                       auto... x) { std::make_tuple(registerToPyclass(x)...); },
+                   gate_op_lambda_pairs);
 
-    assert(tuple_to_array<GateOperations>(registeredGateOps) == 
-           SelectGateOps<fp_t, kernel>::implemented_gates); // double check in debug mode
+    assert(tuple_to_array<GateOperations>(registeredGateOps) ==
+           SelectGateOps<fp_t, kernel>::implemented_gates); // double check in
+                                                            // debug mode
 }
 
+/// @cond DEV
 template <class PrecisionT, class ParamT, size_t kernel_idx, class PyClass>
 void registerKernelsToPyexportIter(PyClass &pyclass) {
     if constexpr (kernel_idx < Constant::kernels_to_pyexport.size()) {
@@ -208,9 +216,14 @@ void registerKernelsToPyexportIter(PyClass &pyclass) {
             pyclass);
     }
 }
+/// @endcond
 
 /**
  * @brief register gates for each kernel in kernels_to_pyexport
+ *
+ * @tparam PrecisionT precision of the state-vector data
+ * @tparam ParamT Precision of the parameter data
+ * @tparam PyClass Pyclass type
  */
 template <class PrecisionT, class ParamT, class PyClass>
 void registerKernelsToPyexport(PyClass &pyclass) {
@@ -220,7 +233,7 @@ void registerKernelsToPyexport(PyClass &pyclass) {
 /**
  * @brief Templated class to build all required precisions for Python module.
  *
- * @tparam PrecisionT Precision of the statevector data.
+ * @tparam PrecisionT Precision of the state-vector data.
  * @tparam ParamT Precision of the parameter data.
  * @param m Pybind11 module.
  */
@@ -564,7 +577,8 @@ constexpr void testBinderGateOpPairsForKernelIter() {
 }
 /// @endcond
 /**
- * @brief Test whether BinderGateOpPairs are defined for all gates to export Python
+ * @brief Test whether BinderGateOpPairs are defined for all gates to export
+ * Python
  */
 template <typename PrecisionT, typename ParamT, KernelType kernel>
 constexpr void testBinderGateOpPairsForKernel() {
