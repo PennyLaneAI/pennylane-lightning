@@ -1,4 +1,4 @@
-# Do not change lines beblow. It is also read by /bin/format.
+# Do not change lines below. It is also read by /bin/format.
 build/*
 BuildTests/*
 BuildBench/*
