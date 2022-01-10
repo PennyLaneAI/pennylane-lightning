@@ -60,7 +60,7 @@ constexpr size_t count_elt(int begin, int end, UnaryPredicate p) {
     size_t count = 0;
     for (int i = begin; i < end; i++) {
         if (p(i)) {
-            ++count;
+            count++;
         }
     }
     return count;
@@ -89,7 +89,7 @@ template <size_t num_params> struct CountGatesWithNumParams {
 constexpr static size_t countGatesWithNumParams(size_t num_params) {
     size_t cnt = 0;
     for (size_t idx = 0; idx < static_cast<int>(GateOperations::END) - 1;
-         ++idx) {
+         idx++) {
         const auto gate_op = static_cast<GateOperations>(idx);
         if (gate_op == GateOperations::Matrix) {
             continue;

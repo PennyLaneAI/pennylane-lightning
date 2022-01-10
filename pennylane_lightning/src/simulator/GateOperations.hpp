@@ -62,7 +62,7 @@ enum class GateOperations : int {
     GeneratorControlledPhaseShift,
     /* General matrix */
     Matrix,
-    /* END */
+    /* END (placeholder) */
     END
 };
 } // namespace Pennylane

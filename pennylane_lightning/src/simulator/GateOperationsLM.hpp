@@ -23,7 +23,6 @@
 #include "KernelType.hpp"
 #include "Util.hpp"
 
-#include <cassert>
 #include <climits>
 #include <complex>
 #include <vector>
@@ -110,7 +109,7 @@ template <class fp_t> class GateOperationsLM {
         const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
-        for (size_t k = 0; k < Util::exp2(num_qubits - 1); ++k) {
+        for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             const size_t i1 = i0 | (1U << rev_wire);
             std::swap(arr[i0], arr[i1]);
@@ -125,7 +124,7 @@ template <class fp_t> class GateOperationsLM {
         const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
-        for (size_t k = 0; k < Util::exp2(num_qubits - 1); ++k) {
+        for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1) & wire_parity_inv) | (wire_parity & k);
             const size_t i1 = i0 | (1 << rev_wire);
             const auto v0 = arr[i0];
@@ -143,7 +142,7 @@ template <class fp_t> class GateOperationsLM {
         const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
-        for (size_t k = 0; k < Util::exp2(num_qubits - 1); ++k) {
+        for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1) & wire_parity_inv) | (wire_parity & k);
             const size_t i1 = i0 | (1 << rev_wire);
             arr[i1] *= -1;
@@ -172,7 +171,7 @@ template <class fp_t> class GateOperationsLM {
         const CFP_t shift =
             (inverse) ? -Util::IMAG<fp_t>() : Util::IMAG<fp_t>();
 
-        for (size_t k = 0; k < Util::exp2(num_qubits - 1); ++k) {
+        for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1) & wire_parity_inv) | (wire_parity & k);
             const size_t i1 = i0 | (1 << rev_wire);
             arr[i1] *= shift;
@@ -192,7 +191,7 @@ template <class fp_t> class GateOperationsLM {
                 ? std::conj(std::exp(CFP_t(0, static_cast<fp_t>(M_PI / 4))))
                 : std::exp(CFP_t(0, static_cast<fp_t>(M_PI / 4)));
 
-        for (size_t k = 0; k < Util::exp2(num_qubits - 1); ++k) {
+        for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1) & wire_parity_inv) | (wire_parity & k);
             const size_t i1 = i0 | (1 << rev_wire);
             arr[i1] *= shift;
@@ -241,7 +240,7 @@ template <class fp_t> class GateOperationsLM {
             (inverse) ? std::conj(second) : second};
         const size_t rev_wire = num_qubits - wires[0] - 1;
 
-        for (size_t k = 0; k < Util::exp2(num_qubits); ++k) {
+        for (size_t k = 0; k < Util::exp2(num_qubits); k++) {
             arr[k] *= shifts[(k >> rev_wire) & 1];
         }
     }
@@ -258,7 +257,7 @@ template <class fp_t> class GateOperationsLM {
         const CFP_t s =
             inverse ? std::exp(-CFP_t(0, angle)) : std::exp(CFP_t(0, angle));
 
-        for (size_t k = 0; k < Util::exp2(num_qubits - 1); ++k) {
+        for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1) & wire_parity_inv) | (wire_parity & k);
             const size_t i1 = i0 | (1 << rev_wire);
             arr[i1] *= s;
@@ -293,7 +292,7 @@ template <class fp_t> class GateOperationsLM {
         const size_t parity_middle =
             fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
         /* This is faster than iterate over all indices */
-        for (size_t k = 0; k < Util::exp2(num_qubits - 2); ++k) {
+        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2) & parity_high) |
                                ((k << 1) & parity_middle) | (k & parity_low);
             const size_t i10 = i00 | (1U << rev_wire1);
@@ -326,7 +325,7 @@ template <class fp_t> class GateOperationsLM {
         const size_t parity_middle =
             fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
         /* This is faster than iterate over all indices */
-        for (size_t k = 0; k < Util::exp2(num_qubits - 2); ++k) {
+        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2) & parity_high) |
                                ((k << 1) & parity_middle) | (k & parity_low);
             const size_t i11 =
@@ -348,7 +347,7 @@ template <class fp_t> class GateOperationsLM {
         const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
         const size_t parity_middle =
             fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
-        for (size_t k = 0; k < Util::exp2(num_qubits - 2); ++k) {
+        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2) & parity_high) |
                                ((k << 1) & parity_middle) | (k & parity_low);
             const size_t i10 = i00 | (1U << rev_wire_min);
@@ -443,7 +442,7 @@ template <class fp_t> class GateOperationsLM {
         const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
-        for (size_t k = 0; k < Util::exp2(num_qubits - 1); ++k) {
+        for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1) & wire_parity_inv) | (wire_parity & k);
             arr[i0] = Util::ZERO<fp_t>();
         }

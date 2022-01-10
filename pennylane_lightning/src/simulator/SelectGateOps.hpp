@@ -89,7 +89,7 @@ constexpr std::array<std::pair<GateOperations, KernelType>,
 template <GateOperations op, class T, size_t size>
 constexpr auto
 static_lookup(const std::array<std::pair<GateOperations, T>, size> &arr) -> T {
-    for (size_t idx = 0; idx < size; ++idx) {
+    for (size_t idx = 0; idx < size; idx++) {
         if (std::get<0>(arr[idx]) == op) {
             return std::get<1>(arr[idx]);
         }

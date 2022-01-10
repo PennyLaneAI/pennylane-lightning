@@ -143,7 +143,7 @@ template <class fp_t, class Derived> class StateVectorBase {
         }
         const CFP_t *data1 = getData();
         const CFP_t *data2 = rhs.getData();
-        for (size_t k = 0; k < getLength(); ++k) {
+        for (size_t k = 0; k < getLength(); k++) {
             if (data1[k] != data2[k]) {
                 return false;
             }

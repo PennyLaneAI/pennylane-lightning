@@ -99,7 +99,7 @@ auto create_random_state(RandomEngine &re, size_t num_qubits)
     -> std::vector<std::complex<fp_t>> {
     std::vector<std::complex<fp_t>> res(1U << num_qubits, 0.0);
     std::normal_distribution<fp_t> dist;
-    for (size_t idx = 0; idx < (1U << num_qubits); ++idx) {
+    for (size_t idx = 0; idx < (1U << num_qubits); idx++) {
         res[idx] = {dist(re), dist(re)};
     }
 
@@ -124,7 +124,7 @@ constexpr size_t count_unique(const std::array<T, size> &arr) {
             }
         }
         if (!counted) {
-            ++res;
+            res++;
         }
     }
     return res;

@@ -107,7 +107,7 @@ std::vector<size_t> generateNeighboringWires(RandomEngine &re,
     v.reserve(num_wires);
     std::uniform_int_distribution<size_t> idist(0, num_qubits - 1);
     size_t start_idx = idist(re);
-    for (size_t k = 0; k < num_wires; ++k) {
+    for (size_t k = 0; k < num_wires; k++) {
         v.emplace_back((start_idx + k) % num_qubits);
     }
     return v;
@@ -168,7 +168,7 @@ int main(int argc, char *argv[]) {
     std::string op_list_s;
     {
         std::ostringstream ss;
-        for (int idx = 4; idx < argc; ++idx) {
+        for (int idx = 4; idx < argc; idx++) {
             ss << argv[idx] << " ";
         }
         op_list_s = ss.str();
@@ -203,7 +203,7 @@ int main(int argc, char *argv[]) {
 
     auto gen_param = [&param_dist, &re]() { return param_dist(re); };
 
-    for (uint32_t k = 0; k < num_gate_reps; ++k) {
+    for (uint32_t k = 0; k < num_gate_reps; k++) {
         auto [op_name, gate_desc] = op_list[gate_dist(re)];
 
         std::vector<TestType> gate_params(gate_desc.n_params, 0.0);
