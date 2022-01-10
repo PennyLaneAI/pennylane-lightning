@@ -284,7 +284,7 @@ template <class fp_t> class GateOperationsLM {
         assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
         const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
         const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
