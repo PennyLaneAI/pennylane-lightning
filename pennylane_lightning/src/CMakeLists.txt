@@ -23,8 +23,6 @@ endif()
 include("${PROJECT_SOURCE_DIR}/../../cmake/process_options.cmake")
 
 
-
-
 ###############################################################################
 # Include all nested sources directories
 ###############################################################################
