@@ -41,10 +41,7 @@ class TestVar:
         observable = qml.PauliZ(wires=[0])
 
         dev.apply(
-            [
-                qml.RX(phi, wires=[0]),
-                qml.RY(theta, wires=[0]),
-            ],
+            [qml.RX(phi, wires=[0]), qml.RY(theta, wires=[0])],
             rotations=[*observable.diagonalizing_gates()],
         )
 

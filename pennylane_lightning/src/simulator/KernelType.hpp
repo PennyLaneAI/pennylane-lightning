@@ -43,8 +43,7 @@ constexpr auto string_to_kernel(std::string_view str) -> KernelType {
             return k;
         }
     }
-    // PL_ABORT("Kernel " + std::string(str) + " is unknown."); TODO: this will
-    // be allowed in C++20
+    // TODO: Throw exception or call PL_ABORT in GCC >= 9
     return KernelType::Unknown;
 }
 

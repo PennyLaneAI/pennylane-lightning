@@ -13,7 +13,8 @@
 // limitations under the License.
 /**
  * @file DynamicDispatcher.hpp
- * Defines DynamicDispatcher class. Can be used to call a gate operation by string.
+ * Defines DynamicDispatcher class. Can be used to call a gate operation by
+ * string.
  */
 
 #pragma once

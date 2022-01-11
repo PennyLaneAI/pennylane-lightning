@@ -25,7 +25,7 @@ using namespace Pennylane::Algorithms;
 using std::complex;
 using std::string;
 using std::vector;
-}
+} // namespace
 /// @endcond
 
 namespace py = pybind11;

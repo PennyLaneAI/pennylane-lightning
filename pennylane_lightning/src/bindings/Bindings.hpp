@@ -49,7 +49,8 @@ static auto create(pybind11::array_t<std::complex<PrecisionT>> &numpyArray)
         throw std::invalid_argument(
             "NumPy array must be of type np.complex64 or np.complex128");
     }
-    auto *data_ptr = static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
+    auto *data_ptr =
+        static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
     return StateVectorRaw<PrecisionT>(
         {data_ptr, static_cast<size_t>(numpyArrayInfo.shape[0])});
 }
@@ -104,10 +105,11 @@ constexpr auto getLambdaForKernelGateOp() {
                 constexpr auto func_ptr = static_lookup<gate_op>(
                     GateOpsFuncPtrPairs<PrecisionT, ParamT, kernel,
                                         num_params>::value);
-                // The line below is added as static_lookup cannot raise exception in
-                // GCC 9
-                static_assert(func_ptr != nullptr, "Function pointer for the gate is not "
-                    "included in GateOpsFuncPtrPairs.");
+                // The line below is added as static_lookup cannot raise
+                // exception in GCC 9
+                static_assert(func_ptr != nullptr,
+                              "Function pointer for the gate is not "
+                              "included in GateOpsFuncPtrPairs.");
                 callGateOps(func_ptr, st.getData(), st.getNumQubits(), wires,
                             inverse, params);
             };

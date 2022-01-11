@@ -48,7 +48,8 @@ using Pennylane::Constant::gate_num_params;
  * @tparam kernel Kernel for the gate operation
  * @tparam gate_op Gate operation to make a functor
  */
-template <class PrecisionT, class ParamT, KernelType kernel, GateOperations gate_op>
+template <class PrecisionT, class ParamT, KernelType kernel,
+          GateOperations gate_op>
 constexpr auto gateOpToFunctor() {
     return [](std::complex<PrecisionT> *data, size_t num_qubits,
               const std::vector<size_t> &wires, bool inverse,
@@ -58,8 +59,9 @@ constexpr auto gateOpToFunctor() {
             GateOpsFuncPtrPairs<PrecisionT, ParamT, kernel, num_params>::value);
         // This line is added as static_lookup cannnot raise exception
         // statically in GCC 9.
-        static_assert(func_ptr != nullptr, "Function pointer for the gate is not "
-                "included in GateOpsFuncPtrPairs.");
+        static_assert(func_ptr != nullptr,
+                      "Function pointer for the gate is not "
+                      "included in GateOpsFuncPtrPairs.");
         callGateOps(func_ptr, data, num_qubits, wires, inverse, params);
     };
 }
@@ -84,8 +86,9 @@ constexpr auto constructGateOpsFunctorTupleIter() {
                                                     gate_idx + 1>();
         } else {
             return prepend_to_tuple(
-                std::pair{gate_op,
-                          gateOpToFunctor<PrecisionT, ParamT, kernel, gate_op>()},
+                std::pair{
+                    gate_op,
+                    gateOpToFunctor<PrecisionT, ParamT, kernel, gate_op>()},
                 constructGateOpsFunctorTupleIter<PrecisionT, ParamT, kernel,
                                                  gate_idx + 1>());
         }
@@ -135,10 +138,11 @@ void registerAllImplementedGateOps() {
 
 /// @cond DEV
 /**
- * @brief Internal function to iterate over all available kerenls in 
- * the compile time 
+ * @brief Internal function to iterate over all available kerenls in
+ * the compile time
  */
-template <class PrecisionT, class ParamT, size_t idx> void registerKernelIter() {
+template <class PrecisionT, class ParamT, size_t idx>
+void registerKernelIter() {
     if constexpr (idx == available_kernels.size()) {
         return;
     } else {
@@ -155,12 +159,15 @@ template <class PrecisionT, class ParamT, size_t idx> void registerKernelIter() 
  * @tparam PrecisionT Floating point precision of underlying statevector data.
  * @tparam ParamT Floating point type for parameters
  */
-template <class PrecisionT, class ParamT> auto registerAllAvailableKernels() -> int {
+template <class PrecisionT, class ParamT>
+auto registerAllAvailableKernels() -> int {
     registerKernelIter<PrecisionT, ParamT, 0>();
     return 0;
 }
 
-template <class PrecisionT> struct registerBeforeMain { static const int dummy; };
+template <class PrecisionT> struct registerBeforeMain {
+    static const int dummy;
+};
 
 template <>
 const int registerBeforeMain<float>::dummy =

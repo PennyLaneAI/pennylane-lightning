@@ -18,26 +18,50 @@ import pennylane as qml
 from pennylane import numpy as np
 import pennylane_lightning
 
-from pennylane_lightning._serialize import _serialize_obs, _serialize_ops, _obs_has_kernel, _is_lightning_gate
+from pennylane_lightning._serialize import (
+    _serialize_obs,
+    _serialize_ops,
+    _obs_has_kernel,
+    _is_lightning_gate,
+)
 import pytest
 from unittest import mock
 
 try:
-    from pennylane_lightning.lightning_qubit_ops import (
-        ObsStructC64,
-        ObsStructC128,
-    )
+    from pennylane_lightning.lightning_qubit_ops import ObsStructC64, ObsStructC128
 except (ImportError, ModuleNotFoundError):
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
 class TestIsLightningGate:
     """Tests for the _is_lightning_gate"""
+
     def test_gates(self):
         """Test if returns true for some gates"""
-        for gate in ["PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T", "PhaseShift",
-                "RX", "RY", "RZ", "Rot", "CNOT", "CY", "CZ", "SWAP", "ControlledPhaseShift",
-                "CRX", "CRY", "CRZ", "CRot", "Toffoli", "CSWAP"]:
+        for gate in [
+            "PauliX",
+            "PauliY",
+            "PauliZ",
+            "Hadamard",
+            "S",
+            "T",
+            "PhaseShift",
+            "RX",
+            "RY",
+            "RZ",
+            "Rot",
+            "CNOT",
+            "CY",
+            "CZ",
+            "SWAP",
+            "ControlledPhaseShift",
+            "CRX",
+            "CRY",
+            "CRZ",
+            "CRot",
+            "Toffoli",
+            "CSWAP",
+        ]:
             assert _is_lightning_gate(gate)
 
     def test_matrix(self):
@@ -46,6 +70,7 @@ class TestIsLightningGate:
     def test_non_gates(self):
         for gate in ["Quantum", "computing", "in", "2022", "with", "Pennylane", "Lightning"]:
             assert not _is_lightning_gate(gate)
+
 
 class TestObsHasKernel:
     """Tests for the _obs_has_kernel function"""
@@ -169,10 +194,7 @@ class TestSerializeObs:
 
         s = mock_obs.call_args_list
 
-        s_expected = [
-            (["PauliZ", "PauliX"], [], [[0], [1]]),
-            (["Hadamard"], [], [[1]]),
-        ]
+        s_expected = [(["PauliZ", "PauliX"], [], [[0], [1]]), (["Hadamard"], [], [[1]])]
         [ObsFunc(*s_expected) for s_expected in s_expected]
 
         assert s[0][0] == s_expected[0]

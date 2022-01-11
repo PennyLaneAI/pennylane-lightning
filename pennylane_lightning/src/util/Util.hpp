@@ -61,16 +61,16 @@ namespace Pennylane::Util::Internal {
  * @param n Unsigned 32 bit integer
  */
 constexpr auto countBit1(uint32_t n) -> int {
-    n = (n & 0x55555555U) +        // NOLINT(readability-magic-numbers)
-        ((n >> 1) & 0x55555555U);  // NOLINT(readability-magic-numbers)
-    n = (n & 0x33333333U) +        // NOLINT(readability-magic-numbers)
-        ((n >> 2) & 0x33333333U);  // NOLINT(readability-magic-numbers)
-    n = (n & 0x0F0F0F0FU) +        // NOLINT(readability-magic-numbers)
-        ((n >> 4) & 0x0F0F0F0FU);  // NOLINT(readability-magic-numbers)
-    n = (n & 0X00FF00FFU) +        // NOLINT(readability-magic-numbers)
-        ((n >> 8) & 0x00FF00FFU);  // NOLINT(readability-magic-numbers)
-    n = (n & 0X0000FFFFU) +        // NOLINT(readability-magic-numbers)
-        ((n >> 16) & 0x0000FFFFU); // NOLINT(readability-magic-numbers)
+    n = (n & 0x55555555U) +         // NOLINT(readability-magic-numbers)
+        ((n >> 1U) & 0x55555555U);  // NOLINT(readability-magic-numbers)
+    n = (n & 0x33333333U) +         // NOLINT(readability-magic-numbers)
+        ((n >> 2U) & 0x33333333U);  // NOLINT(readability-magic-numbers)
+    n = (n & 0x0F0F0F0FU) +         // NOLINT(readability-magic-numbers)
+        ((n >> 4U) & 0x0F0F0F0FU);  // NOLINT(readability-magic-numbers)
+    n = (n & 0X00FF00FFU) +         // NOLINT(readability-magic-numbers)
+        ((n >> 8U) & 0x00FF00FFU);  // NOLINT(readability-magic-numbers)
+    n = (n & 0X0000FFFFU) +         // NOLINT(readability-magic-numbers)
+        ((n >> 16U) & 0x0000FFFFU); // NOLINT(readability-magic-numbers)
     return n;
 }
 
@@ -83,9 +83,8 @@ constexpr auto countBit1(uint64_t n) -> int {
     return countBit1(static_cast<uint32_t>(
                n & 0xFFFFFFFFU)) + // NOLINT(readability-magic-numbers)
            countBit1(static_cast<uint32_t>(
-               n >> 32)); // NOLINT(readability-magic-numbers)
+               n >> 32U)); // NOLINT(readability-magic-numbers)
 }
-
 
 /**
  * @brief Lookup table for number of trailing zeros in the binary
@@ -384,7 +383,7 @@ template <class T> inline auto dimSize(const std::vector<T> &data) -> size_t {
  * @param data_size Size of data arrays.
  */
 template <class T,
-          size_t NTERMS = (1 << 19)> // NOLINT(readability-magic-numbers)
+          size_t NTERMS = (1U << 19U)> // NOLINT(readability-magic-numbers)
 inline static void
 omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
               std::complex<T> &result, const size_t data_size) {
@@ -422,7 +421,8 @@ omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
  * @return std::complex<T> Result of inner product operation.
  */
 template <class T,
-          size_t STD_CROSSOVER = (1 << 20)> // NOLINT(readability-magic-numbers)
+          size_t STD_CROSSOVER = (1U
+                                  << 20U)> // NOLINT(readability-magic-numbers)
 inline auto innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
                       const size_t data_size) -> std::complex<T> {
     std::complex<T> result(0, 0);
@@ -458,7 +458,7 @@ inline auto innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
  * @param data_size Size of data arrays.
  */
 template <class T,
-          size_t NTERMS = (1 << 19)> // NOLINT(readability-magic-numbers)
+          size_t NTERMS = (1U << 19U)> // NOLINT(readability-magic-numbers)
 inline static void
 omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
                std::complex<T> &result, const size_t data_size) {
@@ -497,7 +497,8 @@ omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
  * @return std::complex<T> Result of inner product operation.
  */
 template <class T,
-          size_t STD_CROSSOVER = (1 << 20)> // NOLINT(readability-magic-numbers)
+          size_t STD_CROSSOVER = (1U
+                                  << 20U)> // NOLINT(readability-magic-numbers)
 inline auto innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
                        const size_t data_size) -> std::complex<T> {
     std::complex<T> result(0, 0);

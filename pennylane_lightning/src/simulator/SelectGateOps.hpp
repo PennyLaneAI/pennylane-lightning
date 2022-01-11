@@ -98,9 +98,9 @@ static_lookup(const std::array<std::pair<GateOperations, T>, size> &arr) -> T {
 }
 
 /**
- * @brief This class is for choosing a gate implementation at the compile time.
+ * @brief This class chooses a gate implementation at the compile time.
  *
- * When someone wants to add another gate implementation, one needs to add a key
+ * When one adds another gate implementation, one needs to add a key
  * in KernelType and assign it to SelectGateOps by template specialization.
  *
  * Even though it is impossible to convert this into a constexpr function,

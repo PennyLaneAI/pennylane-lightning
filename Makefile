@@ -87,9 +87,9 @@ endif
 
 format-python:
 ifdef check
-	black -l 100 pennylane_lightning/ --check
+	black -l 100 ./pennylane_lightning/ ./tests --check
 else
-	black -l 100 pennylane_lightning/
+	black -l 100 ./pennylane_lightning/ ./tests
 endif
 
 .PHONY: check-tidy
