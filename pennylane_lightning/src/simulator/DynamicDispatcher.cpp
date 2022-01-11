@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file
- * Defines
+ * @file DynamicDispatcher.cpp
+ * Register gate operations to dynamic dispatcher.
  */
 #include "DynamicDispatcher.hpp"
 
@@ -40,41 +40,53 @@ using Pennylane::Constant::gate_num_params;
  * @brief return a lambda function for the given kernel and gate operation
  *
  * As we want the lamba function to be stateless, kernel and gate_op are
- * template paramters. In C++20, one may use a template lambda function instead.
+ * template paramters (or the functions can be consteval in C++20).
+ * In C++20, one also may use a template lambda function instead.
+ *
+ * @tparam PrecisionT Floating point precision of underlying statevector data.
+ * @tparam ParamT Floating point type for parameters
+ * @tparam kernel Kernel for the gate operation
+ * @tparam gate_op Gate operation to make a functor
  */
-template <class fp_t, class ParamT, KernelType kernel, GateOperations gate_op>
+template <class PrecisionT, class ParamT, KernelType kernel, GateOperations gate_op>
 constexpr auto gateOpToFunctor() {
-    return [](std::complex<fp_t> *data, size_t num_qubits,
+    return [](std::complex<PrecisionT> *data, size_t num_qubits,
               const std::vector<size_t> &wires, bool inverse,
-              const std::vector<fp_t> &params) {
+              const std::vector<PrecisionT> &params) {
         constexpr size_t num_params = static_lookup<gate_op>(gate_num_params);
-        auto &&func = static_lookup<gate_op>(
-            GateOpsFuncPtrPairs<fp_t, ParamT, kernel, num_params>::value);
-        callGateOps(std::forward<decltype(func)>(func), data, num_qubits, wires,
-                    inverse, params);
+        constexpr auto func_ptr = static_lookup<gate_op>(
+            GateOpsFuncPtrPairs<PrecisionT, ParamT, kernel, num_params>::value);
+        // This line is added as static_lookup cannnot raise exception
+        // statically in GCC 9.
+        static_assert(func_ptr != nullptr, "Function pointer for the gate is not "
+                "included in GateOpsFuncPtrPairs.");
+        callGateOps(func_ptr, data, num_qubits, wires, inverse, params);
     };
 }
 
 /// @cond DEV
-template <class fp_t, class ParamT, KernelType kernel, size_t gate_idx>
+/**
+ * @brief Internal recursion function for constructGateOpsFunctorTuple
+ */
+template <class PrecisionT, class ParamT, KernelType kernel, size_t gate_idx>
 constexpr auto constructGateOpsFunctorTupleIter() {
     if constexpr (gate_idx ==
-                  SelectGateOps<fp_t, kernel>::implemented_gates.size()) {
+                  SelectGateOps<PrecisionT, kernel>::implemented_gates.size()) {
         return std::tuple{};
     } else if (gate_idx <
-               SelectGateOps<fp_t, kernel>::implemented_gates.size()) {
+               SelectGateOps<PrecisionT, kernel>::implemented_gates.size()) {
         constexpr auto gate_op =
-            SelectGateOps<fp_t, kernel>::implemented_gates[gate_idx];
+            SelectGateOps<PrecisionT, kernel>::implemented_gates[gate_idx];
         if constexpr (gate_op == GateOperations::Matrix) {
             /* GateOperations::Matrix is not supported for dynamic dispatch now
              */
-            return constructGateOpsFunctorTupleIter<fp_t, ParamT, kernel,
+            return constructGateOpsFunctorTupleIter<PrecisionT, ParamT, kernel,
                                                     gate_idx + 1>();
         } else {
             return prepend_to_tuple(
                 std::pair{gate_op,
-                          gateOpToFunctor<fp_t, ParamT, kernel, gate_op>()},
-                constructGateOpsFunctorTupleIter<fp_t, ParamT, kernel,
+                          gateOpToFunctor<PrecisionT, ParamT, kernel, gate_op>()},
+                constructGateOpsFunctorTupleIter<PrecisionT, ParamT, kernel,
                                                  gate_idx + 1>());
         }
     }
@@ -82,24 +94,30 @@ constexpr auto constructGateOpsFunctorTupleIter() {
 /// @endcond
 
 /**
- * @brief Generate array of all functors
+ * @brief Generate a tuple of gate operation and function pointer pairs.
  *
- * TODO: use std::vector and std::transform in C++20 which become constexpr
+ * @tparam PrecisionT Floating point precision of underlying statevector data
+ * @tparam ParamT Floating point type of gate parameters
+ * @tparam kernel Kernel to construct tuple
  */
-template <class fp_t, class ParamT, KernelType kernel>
+template <class PrecisionT, class ParamT, KernelType kernel>
 constexpr auto constructGateOpsFunctorTuple() {
-    return constructGateOpsFunctorTupleIter<fp_t, ParamT, kernel, 0>();
+    return constructGateOpsFunctorTupleIter<PrecisionT, ParamT, kernel, 0>();
 };
 
 /**
  * @brief Register all implemented gates for a given kernel
+ *
+ * @tparam PrecisionT Floating point precision of underlying statevector data
+ * @tparam ParamT Floating point type of gate parameters
+ * @tparam kernel Kernel to construct tuple
  */
-template <class fp_t, class ParamT, KernelType kernel>
+template <class PrecisionT, class ParamT, KernelType kernel>
 void registerAllImplementedGateOps() {
-    auto &dispatcher = DynamicDispatcher<fp_t>::getInstance();
+    auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
 
     constexpr auto gateFunctorPairs =
-        constructGateOpsFunctorTuple<fp_t, ParamT, kernel>();
+        constructGateOpsFunctorTuple<PrecisionT, ParamT, kernel>();
 
     auto registerGateToDispatcher = [&dispatcher](auto &&gate_op_func_pair) {
         const auto &[gate_op, func] = gate_op_func_pair;
@@ -115,22 +133,34 @@ void registerAllImplementedGateOps() {
         gateFunctorPairs);
 }
 
-template <class fp_t, class ParamT, size_t idx> void registerKernelIter() {
+/// @cond DEV
+/**
+ * @brief Internal function to iterate over all available kerenls in 
+ * the compile time 
+ */
+template <class PrecisionT, class ParamT, size_t idx> void registerKernelIter() {
     if constexpr (idx == available_kernels.size()) {
         return;
     } else {
-        registerAllImplementedGateOps<fp_t, ParamT,
+        registerAllImplementedGateOps<PrecisionT, ParamT,
                                       std::get<0>(available_kernels[idx])>();
-        registerKernelIter<fp_t, ParamT, idx + 1>();
+        registerKernelIter<PrecisionT, ParamT, idx + 1>();
     }
 }
+/// @endcond
 
-template <class fp_t, class ParamT> auto registerAllAvailableKernels() -> int {
-    registerKernelIter<fp_t, ParamT, 0>();
+/**
+ * @brief Register all implemented gates for all available kernels.
+ *
+ * @tparam PrecisionT Floating point precision of underlying statevector data.
+ * @tparam ParamT Floating point type for parameters
+ */
+template <class PrecisionT, class ParamT> auto registerAllAvailableKernels() -> int {
+    registerKernelIter<PrecisionT, ParamT, 0>();
     return 0;
 }
 
-template <class fp_t> struct registerBeforeMain { static const int dummy; };
+template <class PrecisionT> struct registerBeforeMain { static const int dummy; };
 
 template <>
 const int registerBeforeMain<float>::dummy =

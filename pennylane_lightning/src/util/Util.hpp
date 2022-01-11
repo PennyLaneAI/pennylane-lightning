@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file
+ * @file Util.hpp
  * Contains uncategorised utility functions.
  */
 #pragma once
@@ -55,6 +55,11 @@ using CBLAS_LAYOUT = enum CBLAS_LAYOUT {
 /// @endcond
 
 namespace Pennylane::Util::Internal {
+/**
+ * @brief Count the number of 1s in the binary representation of n.
+ *
+ * @param n Unsigned 32 bit integer
+ */
 constexpr auto countBit1(uint32_t n) -> int {
     n = (n & 0x55555555U) +        // NOLINT(readability-magic-numbers)
         ((n >> 1) & 0x55555555U);  // NOLINT(readability-magic-numbers)
@@ -69,6 +74,11 @@ constexpr auto countBit1(uint32_t n) -> int {
     return n;
 }
 
+/**
+ * @brief Count the number of 1s in the binary representation of n.
+ *
+ * @param n Unsigned 64 bit integer
+ */
 constexpr auto countBit1(uint64_t n) -> int {
     return countBit1(static_cast<uint32_t>(
                n & 0xFFFFFFFFU)) + // NOLINT(readability-magic-numbers)
@@ -76,6 +86,11 @@ constexpr auto countBit1(uint64_t n) -> int {
                n >> 32)); // NOLINT(readability-magic-numbers)
 }
 
+
+/**
+ * @brief Lookup table for number of trailing zeros in the binary
+ * representation for 0 to 255 (8 bit integers).
+ */
 // NOLINTNEXTLINE (readability-magic-numbers)
 constexpr uint8_t TRAILING_ZERO_LOOKUP_TABLE[256] = {
     0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0,
@@ -90,31 +105,48 @@ constexpr uint8_t TRAILING_ZERO_LOOKUP_TABLE[256] = {
     3, 0, 1, 0, 2, 0, 1, 0, 5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
     4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0};
 
+/**
+ * @brief Number of trailing zeros (starting from LSB) in the binary
+ * representation of n.
+ *
+ * @param n Unsigned 8 bit integer
+ */
 constexpr auto countTrailing0(uint8_t n) -> int {
     return TRAILING_ZERO_LOOKUP_TABLE[n];
 }
 
+/**
+ * @brief Number of trailing zeros (starting from LSB) in the binary
+ * representation of n.
+ *
+ * @param n Unsigned 16 bit integer
+ */
 constexpr auto countTrailing0(uint16_t n) -> int {
     // NOLINTNEXTLINE (readability-magic-numbers)
-    if (auto mod = (n & 0xFFU); mod != 0) {
+    if (const auto mod = (n & 0xFFU); mod != 0) {
         return countTrailing0(static_cast<uint8_t>(mod));
     }
     // NOLINTNEXTLINE (readability-magic-numbers)
     return countTrailing0(static_cast<uint8_t>(n >> 8)) + 8;
 }
 
+/**
+ * @brief Number of trailing zeros (starting from LSB) in the binary
+ * representation of n.
+ *
+ * @param n Unsigned 32 bit integer
+ */
 constexpr auto countTrailing0(uint32_t n) -> int {
     // NOLINTNEXTLINE (readability-magic-numbers)
-    if (auto mod = (n & 0xFFFFU); mod != 0) {
+    if (const auto mod = (n & 0xFFFFU); mod != 0) {
         return countTrailing0(static_cast<uint16_t>(mod));
     }
     // NOLINTNEXTLINE (readability-magic-numbers)
     return countTrailing0(static_cast<uint16_t>(n >> 16)) + 16;
 }
-
 constexpr auto countTrailing0(uint64_t n) -> int {
     // NOLINTNEXTLINE (readability-magic-numbers)
-    if (auto mod = (n & 0xFFFFFFFFU); mod != 0) {
+    if (const auto mod = (n & 0xFFFFFFFFU); mod != 0) {
         return countTrailing0(static_cast<uint32_t>(mod));
     }
     // NOLINTNEXTLINE (readability-magic-numbers)
@@ -274,7 +306,7 @@ constexpr auto popcount(unsigned long val) -> int {
  * @brief Faster log2 when the value is the perferct power of 2.
  *
  * If the value is the perfect power of 2, using a system provided bit operation
- * is much faster than using std::log2
+ * is much faster than std::log2
  *
  * TODO: change to std::countr_zero in C++20
  */
@@ -1131,7 +1163,13 @@ template <class T> struct remove_cvref {
 };
 
 /**
- * @brief Lookup key in constexpr array pair. For a constexpr map-like behavior.
+ * @brief Lookup key in array of pairs. For a constexpr map-like behavior.
+ *
+ * @tparam Key Type of keys
+ * @tparam Value Type of values
+ * @tparam size Size of std::array
+ * @param arr Array to lookup
+ * @param key Key to find
  */
 template <typename Key, typename Value, size_t size>
 constexpr auto lookup(const std::array<std::pair<Key, Value>, size> &arr,
@@ -1142,11 +1180,15 @@ constexpr auto lookup(const std::array<std::pair<Key, Value>, size> &arr,
         }
     }
     throw std::range_error("The given key does not exist.");
-    return Value{};
 };
 
 /**
- * @brief Check an array has an element
+ * @brief Check an array has an element.
+ *
+ * @tparam U Type of array elements
+ * @tparam size Size of array
+ * @param arr Array to check
+ * @param elt Element to find
  */
 template <typename U, size_t size>
 constexpr auto array_has_elt(const std::array<U, size> &arr, const U &elt)
@@ -1160,7 +1202,12 @@ constexpr auto array_has_elt(const std::array<U, size> &arr, const U &elt)
 };
 
 /**
- * @brief extract first elements from the array of pairs
+ * @brief Extract first elements from the array of pairs.
+ *
+ * @tparam T Type of the first elements
+ * @tparam U Type of the second elements
+ * @tparam size Size of the array
+ * @arr Array to extract
  */
 template <typename T, typename U, size_t size>
 constexpr std::array<T, size>
@@ -1176,6 +1223,11 @@ first_elts_of(const std::array<std::pair<T, U>, size> &arr) {
 }
 /**
  * @brief extract second elements from the array of pairs
+ *
+ * @tparam T Type of the first elements
+ * @tparam U Type of the second elements
+ * @tparam size Size of the array
+ * @arr Array to extract
  */
 template <typename T, typename U, size_t size>
 constexpr std::array<T, size>
@@ -1192,6 +1244,9 @@ second_elts_of(const std::array<std::pair<T, U>, size> &arr) {
 
 /// @cond DEV
 namespace Internal {
+/**
+ * @brief Helper function for prepend_to_tuple
+ */
 template <class T, class Tuple, std::size_t... I>
 constexpr auto
 prepend_to_tuple_helper(T &&elt, Tuple &&t,
@@ -1201,6 +1256,14 @@ prepend_to_tuple_helper(T &&elt, Tuple &&t,
 } // namespace Internal
 /// @endcond
 
+/**
+ * @brief Prepent an element to a tuple
+ * @tparam T Type of element
+ * @tparam Tuple type of the tuple (usually std::tuple)
+ *
+ * @param elt Element to prepend
+ * @param t Tuple to add an element
+ */
 template <class T, class Tuple>
 constexpr auto prepend_to_tuple(T &&elt, Tuple &&t) {
     return Internal::prepend_to_tuple_helper(
@@ -1209,6 +1272,16 @@ constexpr auto prepend_to_tuple(T &&elt, Tuple &&t) {
             std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
 }
 
+/**
+ * @brief Transform a tuple to an array
+ *
+ * This function only works when all elements of the tuple are the same
+ * type or convertible to the same type.
+ *
+ * @tparam T Type of the elements. This type usually needs to be specified.
+ * @tparam Tuple Type of the tuple.
+ * @param tuple Tuple to transform
+ */
 template <class T, class Tuple> constexpr auto tuple_to_array(Tuple &&tuple) {
     return std::apply(
         [](auto... n) { return std::array<T, sizeof...(n)>{n...}; },

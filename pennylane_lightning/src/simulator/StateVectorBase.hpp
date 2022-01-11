@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file
+ * @file StateVectorBase.hpp
  * Defines the class representation for quantum state vectors.
  */
 
@@ -84,6 +84,7 @@ namespace Pennylane {
  * As this is the base class, we do not add default template arguments.
  *
  * @tparam fp_t Floating point precision of underlying statevector data.
+ * @tparam Derived Type of a derived class
  */
 template <class fp_t, class Derived> class StateVectorBase {
   public:
