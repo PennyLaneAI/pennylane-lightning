@@ -12,7 +12,7 @@ help:
 	@echo "  install            to install PennyLane-Lightning"
 	@echo "  wheel              to build the PennyLane-Lightning wheel"
 	@echo "  dist               to package the source distribution"
-	@echo "  docs               to generate documents
+	@echo "  docs               to generate documents"
 	@echo "  clean              to delete all temporary, cache, and build files"
 	@echo "  clean-docs         to delete all built documentation"
 	@echo "  test               to run the test suite"
