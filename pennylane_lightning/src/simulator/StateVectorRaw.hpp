@@ -101,7 +101,8 @@ class StateVectorRaw : public StateVectorBase<fp_t, StateVectorRaw<fp_t>> {
     /**
      * @brief Redefine statevector data pointer.
      *
-     * @param data New data pointer.
+     * @param data New raw data pointer.
+     * @param length The size of the data, i.e. 2^(number of qubits).
      */
     void setData(CFP_t *data, size_t length) {
         if (!Util::isPerfectPowerOf2(length)) {
