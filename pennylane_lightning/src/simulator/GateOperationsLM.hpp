@@ -13,7 +13,7 @@
 // limitations under the License.
 /**
  * @file GateOperationsLM.hpp
- * Defines kernel functiosn with less memory (and fast)
+ * Defines kernel functions with less memory (and fast)
  */
 #pragma once
 
@@ -110,8 +110,8 @@ template <class fp_t> class GateOperationsLM {
         const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
-        for (size_t k = 0; k < Util::exp2(num_qubits - 1); ++k) {
-            const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
+        for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
+            const size_t i0 = ((k << 1) & wire_parity_inv) | (wire_parity & k);
             const size_t i1 = i0 | (1U << rev_wire);
             std::swap(arr[i0], arr[i1]);
         }
@@ -127,7 +127,7 @@ template <class fp_t> class GateOperationsLM {
 
         for (size_t k = 0; k < Util::exp2(num_qubits - 1); ++k) {
             const size_t i0 = ((k << 1) & wire_parity_inv) | (wire_parity & k);
-            const size_t i1 = i0 | (1 << rev_wire);
+            const size_t i1 = i0 | (1U << rev_wire);
             const auto v0 = arr[i0];
             const auto v1 = arr[i1];
             arr[i0] = {std::imag(v1), -std::real(v1)};
