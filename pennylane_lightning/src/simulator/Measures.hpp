@@ -89,9 +89,9 @@ class Measures {
 
         size_t num_qubits = original_statevector.getNumQubits();
 
-        std::vector<size_t> all_indices =
+        const std::vector<size_t> all_indices =
             IndicesUtil::generateBitPatterns(sorted_wires, num_qubits);
-        std::vector<size_t> all_offsets = IndicesUtil::generateBitPatterns(
+        const std::vector<size_t> all_offsets = IndicesUtil::generateBitPatterns(
             IndicesUtil::getIndicesAfterExclusion(sorted_wires, num_qubits),
             num_qubits);
 

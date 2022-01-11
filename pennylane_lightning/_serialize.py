@@ -35,7 +35,7 @@ except ImportError:
 
 
 def _is_lightning_gate(gate_name):
-    """Returns True if the the gate (besides Matrix) is implemented
+    """Returns True if the gate (besides Matrix) is implemented
     and exported from lightning.
 
     Args:
