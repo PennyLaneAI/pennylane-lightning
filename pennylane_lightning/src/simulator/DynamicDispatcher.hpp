@@ -102,7 +102,7 @@ template <typename fp_t> class DynamicDispatcher {
     /**
      * @brief Apply a single gate to the state-vector using the given kernel.
      *
-     * @param kernel Lernel to run the gate operation.
+     * @param kernel Kernel to run the gate operation.
      * @param data Pointer to data.
      * @param num_qubits Number of qubits.
      * @param op_name Gate operation name.
