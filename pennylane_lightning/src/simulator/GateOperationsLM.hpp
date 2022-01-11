@@ -74,7 +74,7 @@ template <class fp_t> class GateOperationsLM {
   private:
     static void applySingleQubitOp(CFP_t *arr, size_t num_qubits,
                                    const CFP_t *op_matrix, size_t wire) {
-        size_t rev_wire = num_qubits - wire - 1;
+        const size_t rev_wire = num_qubits - wire - 1;
         const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
