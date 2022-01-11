@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from pathlib import Path
 from utils import get_cpp_files
 
 CLANG_FMT_BIN = "clang-format"
