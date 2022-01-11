@@ -30,7 +30,7 @@
 
 namespace Pennylane::Internal {
 struct PairHash {
-    size_t operator()(const std::pair<const std::string, KernelType> &p) const {
+    size_t operator()(const std::pair<std::string, KernelType> &p) const {
         return std::hash<std::string>()(p.first) ^
                std::hash<int>()(static_cast<int>(p.second));
     }
