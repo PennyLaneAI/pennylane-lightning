@@ -78,7 +78,7 @@ class Measures {
     std::vector<fp_t> probs(const std::vector<size_t> &wires) {
         // Determining index that would sort the vector.
         // This information is needed later.
-        std::vector<size_t> sorted_ind_wires(sorting_indices(wires));
+        const std::vector<size_t> sorted_ind_wires(sorting_indices(wires));
         // Sorting wires.
         std::vector<size_t> sorted_wires(wires.size());
         for (size_t pos = 0; pos < wires.size(); pos++) {
