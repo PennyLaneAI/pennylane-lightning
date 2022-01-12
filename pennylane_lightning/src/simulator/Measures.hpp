@@ -136,7 +136,7 @@ class Measures {
     /**
      * @brief Expected value of an observable.
      *
-     * @param operation string with the operator name.
+     * @param operation String with the operator name.
      * @param wires Wires where to apply the operator.
      * @return Floating point expected value of the observable.
      */

@@ -47,6 +47,11 @@ constexpr auto string_to_kernel(std::string_view str) -> KernelType {
     return KernelType::Unknown;
 }
 
+/// @cond DEV
+/*******************************************************************************
+ * The functions below are only used in the compile time to check
+ * internal consistency.
+ ******************************************************************************/
 constexpr auto is_available_kernel(KernelType kernel) -> bool {
     // TODO: change to constexpr std::any_of in C++20
     // NOLINTNEXTLINE (readability-use-anyofallof)
@@ -59,7 +64,7 @@ constexpr auto is_available_kernel(KernelType kernel) -> bool {
     return false;
 }
 
-constexpr auto check_available_gates() -> bool {
+constexpr auto check_kernels_to_pyexport() -> bool {
     // TODO: change to constexpr std::any_of in C++20
     // NOLINTNEXTLINE (readability-use-anyofallof)
     for (const auto &kernel : Constant::kernels_to_pyexport) {
@@ -69,6 +74,7 @@ constexpr auto check_available_gates() -> bool {
     }
     return true;
 }
-static_assert(check_available_gates(),
+static_assert(check_kernels_to_pyexport(),
               "Some of Kernels in Python export is not available.");
+/// @endcond
 } // namespace Pennylane

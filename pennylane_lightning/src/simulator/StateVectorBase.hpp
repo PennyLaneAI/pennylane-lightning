@@ -132,10 +132,10 @@ template <class fp_t, class Derived> class StateVectorBase {
     }
 
     /**
-     * @brief compare two state-vectors.
+     * @brief Compare two statevectors.
      *
-     * @tparam RhsDerived the derived class of another vector
-     * @param rhs another vector to compare
+     * @tparam RhsDerived The derived class for another statevector
+     * @param rhs Another statevector to compare
      */
     template <class RhsDerived>
     bool operator==(const StateVectorBase<fp_t, RhsDerived> &rhs) {

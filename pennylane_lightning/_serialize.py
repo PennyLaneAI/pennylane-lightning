@@ -17,7 +17,13 @@ Helper functions for serializing quantum tapes.
 from typing import List, Tuple
 
 import numpy as np
-from pennylane import BasisState, Hadamard, Projector, QubitStateVector, Rot
+from pennylane import (
+    BasisState,
+    Hadamard,
+    Projector,
+    QubitStateVector,
+    Rot,
+)
 from pennylane.grouping import is_pauli_word
 from pennylane.operation import Observable, Tensor
 from pennylane.tape import QuantumTape

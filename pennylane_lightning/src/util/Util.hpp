@@ -1074,7 +1074,7 @@ auto linspace(T start, T end, size_t num_points) -> std::vector<T> {
 /**
  * @brief Determines the indices that would sort an array.
  *
- * @tparam T vector data type.
+ * @tparam T Vector data type.
  * @param arr Array to be inspected.
  * @return a vector with indices that would sort the array.
  */
@@ -1094,7 +1094,7 @@ inline auto sorting_indices(const T &arr, size_t length)
 /**
  * @brief Determines the indices that would sort a vector.
  *
- * @tparam T array data type.
+ * @tparam T Array data type.
  * @param vec Vector to be inspected.
  * @return a vector with indices that would sort the vector.
  */
@@ -1126,7 +1126,7 @@ inline auto transposed_state_index(size_t ind,
  * @brief Template for the transposition of state tensors,
  * axes are assumed to have a length of 2 (|0>, |1>).
  *
- * @tparam T tensor data type.
+ * @tparam T Tensor data type.
  * @param tensor Tensor to be transposed.
  * @param new_axes new axes distribution.
  * @return Transposed Tensor.
@@ -1260,7 +1260,7 @@ prepend_to_tuple_helper(T &&elt, Tuple &&t,
 /**
  * @brief Prepent an element to a tuple
  * @tparam T Type of element
- * @tparam Tuple type of the tuple (usually std::tuple)
+ * @tparam Tuple Type of the tuple (usually std::tuple)
  *
  * @param elt Element to prepend
  * @param t Tuple to add an element

@@ -11,7 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
+/**
+ * @file Bindings.hpp
+ * Defines operations to export to Python and other utility functions
+ * interfacing with Pybind11
+ */
+#pragma once
 #include "AdjointDiff.hpp"
 #include "IndicesUtil.hpp"
 #include "JacobianProd.hpp"
@@ -82,6 +87,11 @@ void apply(pybind11::array_t<std::complex<PrecisionT>> &stateNumpyArray,
  *
  * We do not expect template paramters kernel and gate_op can be function
  * paramters as we want the lambda function to be a stateless.
+ *
+ * @tparam PrecisionT Floating point precision of underlying statevector data
+ * @tparam ParamT Floating point type of gate parameters
+ * @tparam kernel Kernel to register
+ * @tparam gate_op Gate operation
  */
 template <class PrecisionT, class ParamT, KernelType kernel,
           GateOperations gate_op>
@@ -146,6 +156,10 @@ constexpr auto getGateOpLambdaPairsIter() {
 
 /**
  * @brief Create a tuple of lambda functions to bind
+ *
+ * @tparam PrecisionT Floating point precision of underlying statevector data
+ * @tparam ParamT Floating point type of gate parameters
+ * @tparam kernel Kernel to register
  */
 template <class PrecisionT, class ParamT, KernelType kernel>
 constexpr auto getGateOpLambdaPairs() {
@@ -158,8 +172,8 @@ constexpr auto getGateOpLambdaPairs() {
  *
  * @tparam PrecisionT Floating point precision of underlying statevector data
  * @tparam ParamT Floating point type of gate parameters
- * @tparam kernel Kernel to register
- * @tparam PyClass pybind11 class type
+ * @tparam Kernel Kernel to register
+ * @tparam PyClass Pybind11 class type
  */
 template <class PrecisionT, class ParamT, KernelType kernel, class PyClass>
 void registerImplementedGatesForKernel(PyClass &pyclass) {
@@ -207,8 +221,9 @@ void registerKernelsToPyexportIter(PyClass &pyclass) {
 /**
  * @brief register gates for each kernel in kernels_to_pyexport
  *
- * @tparam PrecisionT precision of the state-vector data
- * @tparam ParamT Precision of the parameter data
+ *
+ * @tparam PrecisionT Floating point precision of underlying statevector data
+ * @tparam ParamT Floating point type of gate parameters
  * @tparam PyClass Pyclass type
  */
 template <class PrecisionT, class ParamT, class PyClass>

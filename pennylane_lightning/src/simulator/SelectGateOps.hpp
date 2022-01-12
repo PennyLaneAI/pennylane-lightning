@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file
+ * @file SelectGateOps.hpp
  * Defines a template class for choosing a Gate operations
  */
 #pragma once
@@ -264,10 +264,10 @@ struct GateOpsFuncPtrPairs<PrecisionT, ParamT, kernel, 3> {
  * @tparam fp_t floating point type for the state-vector
  * @tparam ParamT floating point type for the gate paramters
  * @param func Function pointer for the gate operation
- * @param num_qubits the number of qubits of the state-vector
- * @param wires wires the gate applies to
- * @param inverse if true, we apply the inverse of the gate
- * @param params the list of gate paramters
+ * @param num_qubits The number of qubits of the state-vector
+ * @param wires Wires the gate applies to
+ * @param inverse If true, we apply the inverse of the gate
+ * @param params The list of gate paramters
  */
 /// @{
 /**

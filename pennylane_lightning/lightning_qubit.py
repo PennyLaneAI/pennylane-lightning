@@ -309,15 +309,13 @@ class LightningQubit(DefaultQubit):
 
         state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
 
-        # fmt: off
         jac = adj.adjoint_jacobian(
             state_vector,
             obs_serialized,
             ops_serialized,
             tp_shift,
-            tape.num_params
+            tape.num_params,
         )
-        # fmt: on
         return jac
 
     def vector_jacobian_product(self, tape, dy, starting_state=None, use_device_state=False):
@@ -449,7 +447,12 @@ class LightningQubit(DefaultQubit):
         else:
             raise TypeError(f"Unsupported complex Type: {dtype}")
 
-        vjp_tensor = VJP.compute_vjp_from_jac(math.reshape(jac, [-1]), dy_row, num, num_params)
+        vjp_tensor = VJP.compute_vjp_from_jac(
+            math.reshape(jac, [-1]),
+            dy_row,
+            num,
+            num_params,
+        )
         return vjp_tensor
 
     def batch_vjp(
@@ -485,7 +488,10 @@ class LightningQubit(DefaultQubit):
         # Loop through the tapes and dys vector
         for tape, dy in zip(tapes, dys):
             jac, vjp = self.vector_jacobian_product(
-                tape, dy, starting_state=starting_state, use_device_state=use_device_state
+                tape,
+                dy,
+                starting_state=starting_state,
+                use_device_state=use_device_state,
             )
             if vjp is None:
                 if reduction == "append":
