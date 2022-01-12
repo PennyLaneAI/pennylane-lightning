@@ -297,7 +297,7 @@ class LightningQubit(DefaultQubit):
 
     def jacobian(self, tape, starting_state=None, use_device_state=False):
         return self.adjoint_jacobian(tape, starting_state, use_device_state)
-    
+
     def vector_jacobian_product(self, tape, dy, starting_state=None, use_device_state=False):
         """Generate the the vector-Jacobian products of a tape.
 

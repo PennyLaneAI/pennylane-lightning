@@ -11,6 +11,9 @@
 
 ### Improvements
 
+* Force "best" method to point to "adjoint"
+[(#207)](https://github.com/PennyLaneAI/pennylane-lightning/pull/207)
+
 * Ensure debug info is built into dynamic libraries.
 [(#201)](https://github.com/PennyLaneAI/pennylane-lightning/pull/201)
 
