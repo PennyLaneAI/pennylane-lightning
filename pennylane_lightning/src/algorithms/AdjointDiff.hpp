@@ -694,7 +694,7 @@ template <class T = double> class AdjointJacobian {
                                 mu, operations.getOpsName()[op_idx],
                                 operations.getOpsWires()[op_idx],
                                 !operations.getOpsInverses()[op_idx]) *
-                            (2 * (0b1U ^ operations.getOpsInverses()[op_idx]) -
+                            (2 * (operations.getOpsInverses()[op_idx] ? 0 : 1) -
                              1);
                         // clang-format off
 
