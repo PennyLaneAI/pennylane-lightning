@@ -28,7 +28,10 @@ import pytest
 from unittest import mock
 
 try:
-    from pennylane_lightning.lightning_qubit_ops import ObsStructC64, ObsStructC128
+    from pennylane_lightning.lightning_qubit_ops import (
+        ObsStructC64,
+        ObsStructC128,
+    )
 except (ImportError, ModuleNotFoundError):
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
@@ -194,7 +197,10 @@ class TestSerializeObs:
 
         s = mock_obs.call_args_list
 
-        s_expected = [(["PauliZ", "PauliX"], [], [[0], [1]]), (["Hadamard"], [], [[1]])]
+        s_expected = [
+            (["PauliZ", "PauliX"], [], [[0], [1]]),
+            (["Hadamard"], [], [[1]]),
+        ]
         [ObsFunc(*s_expected) for s_expected in s_expected]
 
         assert s[0][0] == s_expected[0]
