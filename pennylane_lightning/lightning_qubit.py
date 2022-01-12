@@ -111,6 +111,7 @@ class LightningQubit(DefaultQubit):
             supports_inverse_operations=True,
             supports_analytic_computation=True,
             returns_state=True,
+            provides_jacobian=True,
         )
         capabilities.pop("passthru_devices", None)
         return capabilities
@@ -294,6 +295,9 @@ class LightningQubit(DefaultQubit):
         )
         return jac
 
+    def jacobian(self, tape, starting_state=None, use_device_state=False):
+        return self.adjoint_jacobian(tape, starting_state, use_device_state)
+    
     def vector_jacobian_product(self, tape, dy, starting_state=None, use_device_state=False):
         """Generate the the vector-Jacobian products of a tape.
 
