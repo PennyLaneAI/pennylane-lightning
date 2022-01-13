@@ -40,11 +40,11 @@ dist:
 .PHONY : clean
 clean:
 	$(PYTHON) setup.py clean --all
-	$(MAKE) -C $(LIGHTNING_CPP_DIR) clean
 	$(MAKE) -C doc clean
 	find . -type d -name '__pycache__' -exec rm -r {} \+
 	rm -rf dist
 	rm -rf build
+	rm -rf BuildTests BuildBench
 	rm -rf .coverage coverage_html_report/
 	rm -rf tmp
 	rm -rf *.dat
@@ -73,7 +73,22 @@ coverage:
 	pl-device-test --device lightning.qubit --shots=None --skip-ops $(COVERAGE) --cov-append
 
 test-cpp:
-	$(MAKE) -C $(LIGHTNING_CPP_DIR) test
+	rm -rf ./BuildTests
+	cmake . -BBuildTests -DBUILD_TESTS=ON
+	cmake --build ./BuildTests --target runner
+	cmake --build ./BuildTests --target test
+
+
+.PHONY: benchmark
+benchmark:
+	cmake --build BuildBench --target clean || true
+	rm -rf ./BuildBench/CMakeCache.txt ./BuildBench/compiler_info.txt ./BuildBench/run_gate_benchmark.sh
+ifdef CXX
+	CXX=${CXX} cmake $(LIGHTNING_CPP_DIR) -BBuildBench -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_AVX=ON
+else
+	cmake . -BBuildBench -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_AVX=ON
+endif
+	cmake --build ./BuildBench
 
 .PHONY: format format-cpp format-python
 format: format-cpp format-python
