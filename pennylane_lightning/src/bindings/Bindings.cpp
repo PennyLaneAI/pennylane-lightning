@@ -330,12 +330,13 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
     /* Add EXPORTED_KERNELS */
     std::vector<std::pair<std::string, std::string>> exported_kernel_ops;
 
-    for (auto kernel : Constant::kernels_to_pyexport) {
-        auto kernel_name =
+    for (const auto kernel : Constant::kernels_to_pyexport) {
+        const auto kernel_name =
             std::string(lookup(Constant::available_kernels, kernel));
-        auto implemented_gates = implementedGatesForKernel<float>(kernel);
-        for (auto gate_op : implemented_gates) {
-            auto gate_name = std::string(lookup(Constant::gate_names, gate_op));
+        const auto implemented_gates = implementedGatesForKernel<float>(kernel);
+        for (const auto gate_op : implemented_gates) {
+            const auto gate_name =
+                std::string(lookup(Constant::gate_names, gate_op));
             exported_kernel_ops.emplace_back(kernel_name, gate_name);
         }
     }
@@ -345,8 +346,8 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
     /* Add DEFAULT_KERNEL_FOR_OPS */
     std::map<std::string, std::string> default_kernel_ops_map;
     for (const auto &[gate_op, name] : Constant::gate_names) {
-        auto kernel = lookup(Constant::default_kernel_for_ops, gate_op);
-        auto kernel_name =
+        const auto kernel = lookup(Constant::default_kernel_for_ops, gate_op);
+        const auto kernel_name =
             std::string(lookup(Constant::available_kernels, kernel));
         default_kernel_ops_map.emplace(std::string(name), kernel_name);
     }

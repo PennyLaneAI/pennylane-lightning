@@ -29,8 +29,8 @@ enum class KernelType { PI, LM, Unknown };
 
 namespace Constant {
 constexpr std::array available_kernels = {
-    std::pair<KernelType, std::string_view>{KernelType::PI, "PI"},
     std::pair<KernelType, std::string_view>{KernelType::LM, "LM"},
+    std::pair<KernelType, std::string_view>{KernelType::PI, "PI"},
 };
 
 [[maybe_unused]] constexpr std::array kernels_to_pyexport = {KernelType::PI,
