@@ -134,8 +134,9 @@ template <class fp_t, class Derived> class StateVectorBase {
     /**
      * @brief Compare two statevectors.
      *
-     * @tparam RhsDerived The derived class for another statevector
-     * @param rhs Another statevector to compare
+     * @tparam RhsDerived The derived class for another statevector.
+     * @param rhs Another statevector to compare.
+     * @return bool
      */
     template <class RhsDerived>
     bool operator==(const StateVectorBase<fp_t, RhsDerived> &rhs) {
@@ -155,7 +156,7 @@ template <class fp_t, class Derived> class StateVectorBase {
     /**
      * @brief Apply a single gate to the state-vector using a given kernel.
      *
-     * @param kernel Kernel to run the operation
+     * @param kernel Kernel to run the operation.
      * @param opName Name of gate to apply.
      * @param wires Wires to apply gate to.
      * @param inverse Indicates whether to use inverse of gate.
