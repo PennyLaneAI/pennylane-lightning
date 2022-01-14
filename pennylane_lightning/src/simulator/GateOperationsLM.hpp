@@ -157,9 +157,9 @@ template <class fp_t> class GateOperationsLM {
                               const std::vector<size_t> &wires,
                               [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
-        constexpr fp_t isqrt2 = Util::INVSQRT2<fp_t>(); 
-        constexpr static std::array<CFP_t, 4> hadamardMat = {
-        isqrt2, isqrt2, isqrt2, -isqrt2};
+        constexpr fp_t isqrt2 = Util::INVSQRT2<fp_t>();
+        constexpr static std::array<CFP_t, 4> hadamardMat = {isqrt2, isqrt2,
+                                                             isqrt2, -isqrt2};
         applySingleQubitOp(arr, num_qubits, hadamardMat.data(), wires[0]);
     }
 
@@ -345,8 +345,7 @@ template <class fp_t> class GateOperationsLM {
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
-            const size_t i11 =
-                i00 | rev_wire0_shift | rev_wire1_shift;
+            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
             arr[i11] *= -1;
         }
     }
