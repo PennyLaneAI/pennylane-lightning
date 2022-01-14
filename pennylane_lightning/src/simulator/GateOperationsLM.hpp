@@ -153,10 +153,9 @@ template <class fp_t> class GateOperationsLM {
                               const std::vector<size_t> &wires,
                               [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
-        using Util::INVSQRT2;
+        constexpr fp_t isqrt2 = Util::INVSQRT2<fp_t>(); 
         constexpr static std::array<CFP_t, 4> hadamardMat = {
-            INVSQRT2<fp_t>(), INVSQRT2<fp_t>(), INVSQRT2<fp_t>(),
-            -INVSQRT2<fp_t>()};
+        isqrt2, isqrt2, isqrt2, -isqrt2};
         applySingleQubitOp(arr, num_qubits, hadamardMat.data(), wires[0]);
     }
 
@@ -284,6 +283,8 @@ template <class fp_t> class GateOperationsLM {
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+        const size_t rev_wire0_shift = 1U << rev_wire0;
+        const size_t rev_wire1_shift = 1U << rev_wire1;
 
         const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
         const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
@@ -295,8 +296,8 @@ template <class fp_t> class GateOperationsLM {
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
-            const size_t i10 = i00 | (1U << rev_wire1);
-            const size_t i11 = i00 | (1U << rev_wire1) | (1U << rev_wire0);
+            const size_t i10 = i00 | rev_wire1_shift;
+            const size_t i11 = i00 | rev_wire1_shift | rev_wire0_shift;
 
             std::swap(arr[i10], arr[i11]);
         }
