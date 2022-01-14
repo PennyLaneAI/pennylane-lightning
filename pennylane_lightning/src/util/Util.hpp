@@ -289,13 +289,13 @@ inline auto log2(size_t value) -> size_t {
  */
 ///@{
 #if defined(_MSC_VER)
-constexpr auto popcount(uint64_t val) -> int { return __popcnt(val); }
+constexpr inline auto popcount(uint64_t val) -> int { return __popcnt(val); }
 #elif defined(__GNUC__) || defined(__clang__)
-constexpr auto popcount(unsigned long val) -> int {
+constexpr inline auto popcount(unsigned long val) -> int {
     return __builtin_popcountl(val);
 }
 #else
-constexpr auto popcount(unsigned long val) -> int {
+constexpr inline auto popcount(unsigned long val) -> int {
     return Internal::countBit1(val);
 }
 #endif
@@ -311,15 +311,15 @@ constexpr auto popcount(unsigned long val) -> int {
  */
 ///@{
 #if defined(_MSC_VER)
-constexpr auto log2PerfectPower(uint64_t val) -> int {
+constexpr inline auto log2PerfectPower(uint64_t val) -> int {
     return 63 - __lzcnt64(val);
 }
 #elif defined(__GNUC__) || defined(__clang__)
-constexpr auto log2PerfectPower(unsigned long val) -> int {
+constexpr inline auto log2PerfectPower(unsigned long val) -> int {
     return __builtin_ctzl(val);
 }
 #else
-constexpr auto log2PerfectPower(unsigned long val) -> int {
+constexpr inline auto log2PerfectPower(unsigned long val) -> int {
     return Internal::countTrailing0(val);
 }
 #endif
@@ -1186,10 +1186,10 @@ constexpr auto lookup(const std::array<std::pair<Key, Value>, size> &arr,
 /**
  * @brief Check an array has an element.
  *
- * @tparam U Type of array elements
- * @tparam size Size of array
- * @param arr Array to check
- * @param elt Element to find
+ * @tparam U Type of array elements.
+ * @tparam size Size of array.
+ * @param arr Array to check.
+ * @param elt Element to find.
  */
 template <typename U, size_t size>
 constexpr auto array_has_elt(const std::array<U, size> &arr, const U &elt)
@@ -1205,10 +1205,10 @@ constexpr auto array_has_elt(const std::array<U, size> &arr, const U &elt)
 /**
  * @brief Extract first elements from the array of pairs.
  *
- * @tparam T Type of the first elements
- * @tparam U Type of the second elements
- * @tparam size Size of the array
- * @arr Array to extract
+ * @tparam T Type of the first elements.
+ * @tparam U Type of the second elements.
+ * @tparam size Size of the array.
+ * @param arr Array to extract.
  */
 template <typename T, typename U, size_t size>
 constexpr std::array<T, size>
@@ -1223,12 +1223,12 @@ first_elts_of(const std::array<std::pair<T, U>, size> &arr) {
     return res;
 }
 /**
- * @brief extract second elements from the array of pairs
+ * @brief Extract second elements from the array of pairs.
  *
- * @tparam T Type of the first elements
- * @tparam U Type of the second elements
- * @tparam size Size of the array
- * @arr Array to extract
+ * @tparam T Type of the first elements.
+ * @tparam U Type of the second elements.
+ * @tparam size Size of the array.
+ * @param arr Array to extract.
  */
 template <typename T, typename U, size_t size>
 constexpr std::array<T, size>
@@ -1239,6 +1239,35 @@ second_elts_of(const std::array<std::pair<T, U>, size> &arr) {
     };
     for (size_t i = 0; i < size; i++) {
         res[i] = std::get<0>(arr[i]);
+    }
+    return res;
+}
+
+/**
+ * @brief Count the number of unique elements in the array.
+ *
+ * Current runtime is O(n^2).
+ * TODO: count using sorted array in C++20 using constexpr std::sort.
+ *
+ * @tparam T Type of array elements
+ * @tparam size Size of the array
+ * @return size_t
+ */
+template <typename T, size_t size>
+constexpr size_t count_unique(const std::array<T, size> &arr) {
+    size_t res = 0;
+
+    for (size_t i = 0; i < size; i++) {
+        bool counted = false;
+        for (size_t j = 0; j < i; j++) {
+            if (arr[j] == arr[i]) {
+                counted = true;
+                break;
+            }
+        }
+        if (!counted) {
+            res++;
+        }
     }
     return res;
 }

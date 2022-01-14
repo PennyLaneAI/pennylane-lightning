@@ -60,6 +60,16 @@ auto generateBitPatterns(const std::vector<size_t> &qubitIndices,
  * @brief Internal utility struct to track data indices of application for
  * operations.
  *
+ * Each external index represents a bitstring outside of wires. For example, if
+ * we have four qubits and wires = {1,2}, external indices are {0000B, 0001B,
+ * 1000B, 1001B}. For each external index, internal indices are bitstrings for
+ * the wires. In the example, we have internal indices {0000B, 0010B, 0100B,
+ * 0110B}.
+ *
+ * @var internal Internal indices. For the given wires with size n_wire, the
+ * output size is 2^n_wire.
+ * @var external External indices. For the given wires with size n_wire, the
+ * output size is 2^(num_qubits - n_wires).
  */
 struct GateIndices {
     const std::vector<size_t> internal;

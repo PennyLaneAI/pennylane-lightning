@@ -46,12 +46,9 @@ TEMPLATE_TEST_CASE("SelectGateOps", "[SelectGateOps]", float, double) {
     }
 
     SECTION("Check all gate operations have default kernels") {
-        // TODO: This can be done in compile time...
-        std::set<GateOperations> gate_ops_set;
-        for (const auto &[gate_op, kernel] : Constant::default_kernel_for_ops) {
-            gate_ops_set.emplace(gate_op);
-        }
-        REQUIRE(gate_ops_set.size() == static_cast<int>(GateOperations::END));
+        static_assert(
+            count_unique(first_elts_of(Constant::default_kernel_for_ops)) ==
+            static_cast<int>(GateOperations::END));
     }
 }
 

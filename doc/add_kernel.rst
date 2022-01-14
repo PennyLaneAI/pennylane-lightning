@@ -115,7 +115,8 @@ To make your gate implementation default, you need to change ``default_kernel_fo
         ...
     }
 
- to 
+to 
+
 .. code-block:: cpp
 
     constexpr std::array<std::pair<GateOperations, KernelType>,

@@ -358,6 +358,10 @@ constexpr auto check_default_kernels_are_available() -> bool {
 
 static_assert(check_default_kernels_are_available<double>(),
               "default_kernel_for_ops contains an unavailable kernel");
+static_assert(count_unique(first_elts_of(Constant::default_kernel_for_ops)) ==
+                  static_cast<int>(GateOperations::END),
+              "All gate operations must be defined in default_kernel_for_ops");
+
 } // namespace Pennylane::Internal
 
 /**

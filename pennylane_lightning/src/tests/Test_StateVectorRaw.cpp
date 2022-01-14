@@ -27,6 +27,10 @@ TEMPLATE_TEST_CASE("StateVectorRaw::StateVectorRaw", "[StateVectorRaw]", float,
         REQUIRE(sv.getData() == st_data.data());
         REQUIRE(sv.getLength() == 16);
     }
+    SECTION("StateVectorRaw<TestType> {std::complex<TestType>*, size_t}") {
+        std::vector<std::complex<TestType>> st_data(14, 0.0);
+        REQUIRE_THROWS(StateVectorRaw<fp_t>(st_data.data(), st_data.size()));
+    }
 }
 
 TEMPLATE_TEST_CASE("StateVectorRaw::setData", "[StateVectorRaw]", float,

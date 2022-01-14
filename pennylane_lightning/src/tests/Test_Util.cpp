@@ -387,6 +387,11 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
     }
 }
 
+/**
+ * @brief Count number of 1s in the binary representation of x
+ *
+ * This is a slow version of countBit1 defined in Util.hpp
+ */
 int popcount_slow(uint64_t x) {
     int c = 0;
     for (; x != 0; x >>= 1) {
@@ -397,6 +402,11 @@ int popcount_slow(uint64_t x) {
     return c;
 }
 
+/**
+ * @brief Count number of trailing zeros in the binary representation of x
+ *
+ * This is a slow version of countTrailing0 defined in Util.hpp
+ */
 int ctz_slow(uint64_t x) {
     int c = 0;
     while ((x & 1) == 0) {
