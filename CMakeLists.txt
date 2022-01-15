@@ -42,9 +42,14 @@ option(ENABLE_BLAS "Enable BLAS" OFF)
 option(BUILD_TESTS "Build cpp tests" OFF)
 option(BUILD_EXAMPLES "Build cpp examples" OFF)
 
-
 # Process compile options
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
+
+# For MSVC
+if (MSVC)
+    target_compile_options(pennylane_lightning_compile_options INTERFACE
+        $<$<COMPILE_LANGUAGE:CXX>:/d2FH4->)
+endif()
 
 
 set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
