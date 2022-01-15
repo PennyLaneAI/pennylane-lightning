@@ -106,7 +106,7 @@ constexpr auto getLambdaForKernelGateOp() {
         "The operator to register must be implemented.");
 
     if constexpr (gate_op != GateOperations::Matrix) {
-        
+
         return
             [](StateVectorRaw<PrecisionT> &st, const std::vector<size_t> &wires,
                bool inverse, const std::vector<ParamT> &params) {
@@ -203,8 +203,9 @@ void registerImplementedGatesForKernel(PyClass &pyclass) {
 
     [[maybe_unused]] const auto registerd_gate_ops = std::apply(
         [&registerToPyclass](auto... elt) {
-            return std::make_tuple(registerToPyclass(elt)...); 
-    }, gate_op_lambda_pairs);
+            return std::make_tuple(registerToPyclass(elt)...);
+        },
+        gate_op_lambda_pairs);
 }
 
 /// @cond DEV
