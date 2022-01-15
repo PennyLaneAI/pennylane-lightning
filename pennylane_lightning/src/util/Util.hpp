@@ -60,7 +60,7 @@ namespace Pennylane::Util::Internal {
  *
  * @param n Unsigned 32 bit integer
  */
-constexpr auto countBit1(uint32_t n) -> int {
+constexpr auto countBit1(uint32_t n) -> size_t {
     n = (n & 0x55555555U) +         // NOLINT(readability-magic-numbers)
         ((n >> 1U) & 0x55555555U);  // NOLINT(readability-magic-numbers)
     n = (n & 0x33333333U) +         // NOLINT(readability-magic-numbers)
@@ -79,7 +79,7 @@ constexpr auto countBit1(uint32_t n) -> int {
  *
  * @param n Unsigned 64 bit integer
  */
-constexpr auto countBit1(uint64_t n) -> int {
+constexpr auto countBit1(uint64_t n) -> size_t {
     return countBit1(static_cast<uint32_t>(
                n & 0xFFFFFFFFU)) + // NOLINT(readability-magic-numbers)
            countBit1(static_cast<uint32_t>(
@@ -110,7 +110,7 @@ constexpr uint8_t TRAILING_ZERO_LOOKUP_TABLE[256] = {
  *
  * @param n Unsigned 8 bit integer
  */
-constexpr auto countTrailing0(uint8_t n) -> int {
+constexpr auto countTrailing0(uint8_t n) -> size_t {
     return TRAILING_ZERO_LOOKUP_TABLE[n];
 }
 
@@ -120,13 +120,13 @@ constexpr auto countTrailing0(uint8_t n) -> int {
  *
  * @param n Unsigned 16 bit integer
  */
-constexpr auto countTrailing0(uint16_t n) -> int {
+constexpr auto countTrailing0(uint16_t n) -> size_t {
     // NOLINTNEXTLINE (readability-magic-numbers)
     if (const auto mod = (n & 0xFFU); mod != 0) {
         return countTrailing0(static_cast<uint8_t>(mod));
     }
     // NOLINTNEXTLINE (readability-magic-numbers)
-    return countTrailing0(static_cast<uint8_t>(n >> 8)) + 8;
+    return countTrailing0(static_cast<uint8_t>(n >> 8U)) + 8U;
 }
 
 /**
@@ -135,21 +135,21 @@ constexpr auto countTrailing0(uint16_t n) -> int {
  *
  * @param n Unsigned 32 bit integer
  */
-constexpr auto countTrailing0(uint32_t n) -> int {
+constexpr auto countTrailing0(uint32_t n) -> size_t {
     // NOLINTNEXTLINE (readability-magic-numbers)
     if (const auto mod = (n & 0xFFFFU); mod != 0) {
         return countTrailing0(static_cast<uint16_t>(mod));
     }
     // NOLINTNEXTLINE (readability-magic-numbers)
-    return countTrailing0(static_cast<uint16_t>(n >> 16)) + 16;
+    return countTrailing0(static_cast<uint16_t>(n >> 16U)) + 16U;
 }
-constexpr auto countTrailing0(uint64_t n) -> int {
+constexpr auto countTrailing0(uint64_t n) -> size_t {
     // NOLINTNEXTLINE (readability-magic-numbers)
     if (const auto mod = (n & 0xFFFFFFFFU); mod != 0) {
         return countTrailing0(static_cast<uint32_t>(mod));
     }
     // NOLINTNEXTLINE (readability-magic-numbers)
-    return countTrailing0(static_cast<uint32_t>(n >> 32)) + 32;
+    return countTrailing0(static_cast<uint32_t>(n >> 32U)) + 32U;
 }
 
 } // namespace Pennylane::Util::Internal
@@ -322,7 +322,7 @@ inline auto log2PerfectPower(unsigned long val) -> size_t {
 }
 #else
 inline auto log2PerfectPower(unsigned long val) -> size_t {
-    return static_cast<size_t>(Internal::countTrailing0(val));
+    return Internal::countTrailing0(val);
 }
 #endif
 ///@}
