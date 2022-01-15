@@ -129,9 +129,9 @@ void registerAllImplementedGateOps() {
         return gate_op;
     };
 
-    std::apply(
+    [[maybe_unused]] const auto registerd_gate_ops = std::apply(
         [&registerGateToDispatcher](auto... elt) {
-            std::make_tuple(registerGateToDispatcher(elt)...);
+            return std::make_tuple(registerGateToDispatcher(elt)...);
         },
         gateFunctorPairs);
 }

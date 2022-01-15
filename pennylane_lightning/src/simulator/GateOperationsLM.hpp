@@ -74,7 +74,7 @@ template <class fp_t> class GateOperationsLM {
     static void applySingleQubitOp(CFP_t *arr, size_t num_qubits,
                                    const CFP_t *op_matrix, size_t wire) {
         const size_t rev_wire = num_qubits - wire - 1;
-        const size_t rev_wire_shift = (1U << rev_wire);
+        const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
         const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
@@ -107,7 +107,7 @@ template <class fp_t> class GateOperationsLM {
                             [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
-        const size_t rev_wire_shift = (1U << rev_wire);
+        const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
         const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
@@ -123,7 +123,7 @@ template <class fp_t> class GateOperationsLM {
                             [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
-        const size_t rev_wire_shift = (1U << rev_wire);
+        const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
         const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
@@ -142,7 +142,7 @@ template <class fp_t> class GateOperationsLM {
                             [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
-        const size_t rev_wire_shift = (1U << rev_wire);
+        const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
         const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
@@ -168,7 +168,7 @@ template <class fp_t> class GateOperationsLM {
                        [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
-        const size_t rev_wire_shift = (1U << rev_wire);
+        const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
         const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
@@ -187,7 +187,7 @@ template <class fp_t> class GateOperationsLM {
                        [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
-        const size_t rev_wire_shift = (1U << rev_wire);
+        const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
         const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
@@ -256,7 +256,7 @@ template <class fp_t> class GateOperationsLM {
                                 Param_t angle) {
         assert(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
-        const size_t rev_wire_shift = (1U << rev_wire);
+        const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
         const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
@@ -291,8 +291,8 @@ template <class fp_t> class GateOperationsLM {
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
 
-        const size_t rev_wire0_shift = 1U << rev_wire0;
-        const size_t rev_wire1_shift = 1U << rev_wire1;
+        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
+        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
 
         const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
         const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
@@ -330,8 +330,8 @@ template <class fp_t> class GateOperationsLM {
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
 
-        const size_t rev_wire0_shift = 1U << rev_wire0;
-        const size_t rev_wire1_shift = 1U << rev_wire1;
+        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
+        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
 
         const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
         const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
@@ -358,8 +358,8 @@ template <class fp_t> class GateOperationsLM {
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
 
-        const size_t rev_wire0_shift = 1U << rev_wire0;
-        const size_t rev_wire1_shift = 1U << rev_wire1;
+        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
+        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
 
         const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
         const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);

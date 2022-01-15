@@ -289,14 +289,16 @@ inline auto log2(size_t value) -> size_t {
  */
 ///@{
 #if defined(_MSC_VER)
-constexpr inline auto popcount(uint64_t val) -> int { return __popcnt(val); }
+inline auto popcount(uint64_t val) -> size_t {
+    return static_cast<size_t>(__popcnt64(val));
+}
 #elif defined(__GNUC__) || defined(__clang__)
-constexpr inline auto popcount(unsigned long val) -> int {
-    return __builtin_popcountl(val);
+inline auto popcount(unsigned long val) -> size_t {
+    return static_cast<size_t>(__builtin_popcountl(val));
 }
 #else
-constexpr inline auto popcount(unsigned long val) -> int {
-    return Internal::countBit1(val);
+inline auto popcount(unsigned long val) -> size_t {
+    return static_cast<size_t>(Internal::countBit1(val));
 }
 #endif
 ///@}
@@ -311,16 +313,16 @@ constexpr inline auto popcount(unsigned long val) -> int {
  */
 ///@{
 #if defined(_MSC_VER)
-constexpr inline auto log2PerfectPower(uint64_t val) -> int {
-    return 63 - __lzcnt64(val);
+inline auto log2PerfectPower(uint64_t val) -> size_t {
+    return static_cast<size_t>(63 - __lzcnt64(val));
 }
 #elif defined(__GNUC__) || defined(__clang__)
-constexpr inline auto log2PerfectPower(unsigned long val) -> int {
-    return __builtin_ctzl(val);
+inline auto log2PerfectPower(unsigned long val) -> size_t {
+    return static_cast<size_t>(__builtin_ctzl(val));
 }
 #else
-constexpr inline auto log2PerfectPower(unsigned long val) -> int {
-    return Internal::countTrailing0(val);
+inline auto log2PerfectPower(unsigned long val) -> size_t {
+    return static_cast<size_t>(Internal::countTrailing0(val));
 }
 #endif
 ///@}
@@ -1115,7 +1117,7 @@ inline auto transposed_state_index(size_t ind,
                                    const std::vector<size_t> &new_axes)
     -> size_t {
     size_t new_index = 0;
-    for (unsigned long axis : new_axes) {
+    for (size_t axis : new_axes) {
         new_index += (ind % 2) << axis;
         ind /= 2;
     }

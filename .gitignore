@@ -20,3 +20,7 @@ cpptests
 
 .vscode/*
 .ycm_extra_conf.py
+/.vs
+/pennylane_lightning/.vs
+/pennylane_lightning/lightning_qubit_ops.cp39-win_amd64.pyd
+/pennylane_lightning/lightning_qubit_ops.cp38-win_amd64.pyd
