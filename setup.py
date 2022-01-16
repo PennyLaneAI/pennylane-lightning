@@ -61,13 +61,14 @@ class CMakeBuild(build_ext):
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
             f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
+            "-DENABLE_WARNINGS=OFF", # Ignore warnings for building wheels
         ]
 
         if debug:
             configure_args += ["-DCMAKE_BUILD_TYPE=Debug"]
         configure_args += self.cmake_defines
         
-        build_args = ["-DENABLE_WARNINGS=OFF"] # Ignore warnings for building wheels
+        build_args = []
 
         # Add more platform dependent options
         if platform.system() == "Darwin":
