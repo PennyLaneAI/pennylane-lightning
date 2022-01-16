@@ -14,6 +14,7 @@
 """Top level PennyLane-Lightning module."""
 
 import platform, os, sys
+from warnings import warn
 
 
 def _load_lightning_ops():
