@@ -49,6 +49,7 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
 if (MSVC)
     target_compile_options(pennylane_lightning_compile_options INTERFACE
         $<$<COMPILE_LANGUAGE:CXX>:/d2FH4->)
+    set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
 endif()
 
 
