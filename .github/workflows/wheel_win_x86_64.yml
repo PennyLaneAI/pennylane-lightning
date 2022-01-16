@@ -54,7 +54,7 @@ jobs:
         with:
           python-version: '3.7'
 
-      - name: Configure MSVC for amd64
+      - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64
@@ -69,7 +69,7 @@ jobs:
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-]?rc[0-9]+'
 
       - uses: actions/upload-artifact@v2
-        #if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         with:
           name: ${{ runner.os }}-wheels.zip
           path: ./wheelhouse/*.whl
