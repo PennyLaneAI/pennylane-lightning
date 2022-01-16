@@ -81,12 +81,6 @@ target_link_libraries(lightning_qubit_ops PRIVATE pennylane_lightning
                                                   pennylane_lightning_external_libs)
 set_target_properties(lightning_qubit_ops PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
-if (MSVC)
-    target_compile_options(lightning_qubit_ops PRIVATE "$<$<CONFIG:RELEASE>:/w>")
-else()
-    target_compile_options(lightning_qubit_ops PRIVATE "$<$<CONFIG:RELEASE>:-W>")
-endif()
-
 target_compile_definitions(lightning_qubit_ops PRIVATE VERSION_INFO=${VERSION_STRING})
 
 

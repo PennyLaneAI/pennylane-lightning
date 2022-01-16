@@ -67,8 +67,7 @@ class CMakeBuild(build_ext):
             configure_args += ["-DCMAKE_BUILD_TYPE=Debug"]
         configure_args += self.cmake_defines
         
-        build_args = []
-
+        build_args = ["-DENABLE_WARNINGS=OFF"] # Ignore warnings for building wheels
 
         # Add more platform dependent options
         if platform.system() == "Darwin":
