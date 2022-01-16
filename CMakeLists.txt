@@ -42,19 +42,9 @@ option(ENABLE_BLAS "Enable BLAS" OFF)
 option(BUILD_TESTS "Build cpp tests" OFF)
 option(BUILD_EXAMPLES "Build cpp examples" OFF)
 
+
 # Process compile options
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
-
-if (WIN32)
-    message(STATUS "Compile on Windows. Use CXX=${CMAKE_CXX_COMPILER_ID}")
-endif()
-
-# For MSVC
-if (MSVC)
-    target_compile_options(pennylane_lightning_compile_options INTERFACE
-        $<$<COMPILE_LANGUAGE:CXX>:/d2FH4->)
-endif()
-
 
 set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 # Add pybind11
@@ -68,7 +58,7 @@ FetchContent_MakeAvailable(pybind11)
 # All CMakeLists.txt in subdirectories use pennylane_lightning_compile_options and pennylane_lightning_external_libs
 add_subdirectory(pennylane_lightning/src)
 
-
+# Define pennylane_lightning target
 add_library(pennylane_lightning INTERFACE)
 target_link_libraries(pennylane_lightning INTERFACE     lightning_utils
                                                         lightning_simulator
