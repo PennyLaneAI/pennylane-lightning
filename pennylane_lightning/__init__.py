@@ -15,7 +15,8 @@
 
 import platform, os, sys
 
-def load_lightning_ops():
+
+def _load_lightning_ops():
     """Load lightning_qubit_ops shared object. Supports different Python versions as well as
     different platforms. We suppose this function is only called once.
     """
@@ -31,7 +32,8 @@ def load_lightning_ops():
         except ModuleNotFoundError:
             pass  # Just cannot find a module
         except ImportError:
-            # This error means Python cannot load lightning_qubit_ops dependencies
+            # This error implies that Python found lightning_qubit_ops but cannot
+            # load lightning_qubit_ops dependencies
             warn(
                 "Pre-compiled binaries are found but failed to load DLLs "
                 "the library depends on. Check DLL paths. ",
@@ -50,11 +52,12 @@ def load_lightning_ops():
             return None
     try:
         return importlib.import_module(".lightning_qubit_ops", __name__)
-    except ModuleNotFoundError:  # ImportError is raises when DLL load is failed
+    except ModuleNotFoundError:
         pass
     return None
 
-lightning_ops_module = load_lightning_ops()
+
+lightning_ops_module = _load_lightning_ops()
 
 from ._version import __version__
 from .lightning_qubit import LightningQubit

@@ -42,6 +42,7 @@ if lightning_ops_module is not None:
 else:
     pass
 
+
 def _obs_has_kernel(obs: Observable) -> bool:
     """Returns True if the input observable has a supported kernel in the C++ backend.
 
