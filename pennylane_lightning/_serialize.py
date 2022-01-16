@@ -28,16 +28,19 @@ from pennylane.grouping import is_pauli_word
 from pennylane.operation import Observable, Tensor
 from pennylane.tape import QuantumTape
 
-try:
-    from .lightning_qubit_ops import (
-        StateVectorC64,
-        ObsStructC64,
-        StateVectorC128,
-        ObsStructC128,
-    )
-except ImportError:
-    pass
+from pennylane_lightning import lightning_ops_module
 
+if lightning_ops_module is not None:
+    submodules = [
+        "StateVectorC64",
+        "ObsStructC64",
+        "StateVectorC128",
+        "ObsStructC128",
+    ]
+    for submodule in submodules:
+        globals()[submodule] = getattr(lightning_ops_module, submodule)
+else:
+    pass
 
 def _obs_has_kernel(obs: Observable) -> bool:
     """Returns True if the input observable has a supported kernel in the C++ backend.
