@@ -20,6 +20,9 @@ from warnings import warn
 def _load_lightning_ops():
     """Load lightning_qubit_ops shared object. Supports different Python versions as well as
     different platforms. We suppose this function is only called once.
+
+    Returns:
+        loaded lightning_qubit_ops module
     """
     import importlib
 
@@ -45,9 +48,8 @@ def _load_lightning_ops():
         # (see e.g. https://github.com/zeromq/pyzmq/pull/1498). In This case,
         # we add libdir directly to env["PATH"].
         try:
-            sys.path.insert(0, libdir)
+            sys.path.append(libdir)
             lightning_ops_module = importlib.import_module("lightning_qubit_ops")
-            sys.path = sys.path[1:]
             return lightning_ops_module
         except ModuleNotFoundError:
             return None
