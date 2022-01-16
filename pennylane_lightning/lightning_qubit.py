@@ -70,7 +70,6 @@ def load_lightning_ops():
         pass
     return None
 
-
 lightning_ops_module = load_lightning_ops()
 
 if lightning_ops_module is not None:
