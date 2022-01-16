@@ -45,11 +45,14 @@ option(BUILD_EXAMPLES "Build cpp examples" OFF)
 # Process compile options
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
 
+if (WIN32)
+    message(STATUS "Compile on Windows. Use CXX=${CMAKE_CXX_COMPILER_ID}")
+endif()
+
 # For MSVC
 if (MSVC)
     target_compile_options(pennylane_lightning_compile_options INTERFACE
         $<$<COMPILE_LANGUAGE:CXX>:/d2FH4->)
-    target_link_libraries(pennylane_lightning_external_libs INTERFACE -static-libgcc -static-libstdc++)
 endif()
 
 

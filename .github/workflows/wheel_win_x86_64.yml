@@ -24,8 +24,6 @@ env:
   CIBW_TEST_COMMAND: |
     pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
-  CXX: cl.exe
-
 jobs:
   win-wheels:
     strategy:
