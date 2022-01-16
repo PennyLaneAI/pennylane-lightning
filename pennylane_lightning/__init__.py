@@ -36,8 +36,8 @@ def _load_lightning_ops():
             # This error implies that Python found lightning_qubit_ops but cannot
             # load lightning_qubit_ops dependencies
             warn(
-                "Pre-compiled binaries are found but failed to load DLLs "
-                "the library depends on. Check DLL paths. ",
+                "Pre-compiled binaries are found but failed to dependencies. "
+                "Check DLL paths.",
                 UserWarning,
             )
             return None
