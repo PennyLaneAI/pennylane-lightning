@@ -49,7 +49,7 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
 if (MSVC)
     target_compile_options(pennylane_lightning_compile_options INTERFACE
         $<$<COMPILE_LANGUAGE:CXX>:/d2FH4->)
-    target_link_options(pennylane_lightning_external_libs INTERFACE -static-libgcc -static-libstdc++)
+    target_link_libraries(pennylane_lightning_external_libs INTERFACE -static-libgcc -static-libstdc++)
 endif()
 
 
