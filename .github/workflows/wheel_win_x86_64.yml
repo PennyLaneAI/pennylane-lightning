@@ -24,9 +24,7 @@ env:
   CIBW_TEST_COMMAND: |
     pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
-  DISTUTILS_USE_SDK: 1
-
-  MSSdk: 1
+  CXX: 'cl.exe'
 
 jobs:
   win-wheels:
@@ -62,6 +60,9 @@ jobs:
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          DISTUTILS_USE_SDK: 1
+          MSSdk: 1
 
       - uses: actions-ecosystem/action-regex-match@v2
         id: rc_build
