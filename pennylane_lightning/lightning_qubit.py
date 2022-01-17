@@ -41,7 +41,7 @@ try:
         AdjointJacobianC128,
         VectorJacobianProductC128,
     )
-    
+
     from ._serialize import _serialize_obs, _serialize_ops
 
     CPP_BINARY_AVAILABLE = True
