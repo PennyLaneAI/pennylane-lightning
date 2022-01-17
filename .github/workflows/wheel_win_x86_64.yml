@@ -13,13 +13,13 @@ env:
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
-    pip install pybind11 ninja
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && pip install pybind11 ninja CMake
 
   # Testing of built wheels
   CIBW_TEST_REQUIRES: numpy==1.19.5 scipy pytest pytest-cov pytest-mock flaky
 
   CIBW_BEFORE_TEST: |
-    python -c "import sys; print(sys.path)"
+    call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && python -c "import sys; print(sys.path)"
 
   CIBW_TEST_COMMAND: |
     pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
@@ -36,6 +36,9 @@ jobs:
         os: [windows-latest]
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: cmd
 
     steps:
       - name: Cancel Previous Runs
@@ -53,11 +56,6 @@ jobs:
         name: Install Python
         with:
           python-version: '3.7'
-
-      - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: amd64
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.3.1
