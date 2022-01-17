@@ -30,27 +30,24 @@ import pennylane as qml
 from pennylane.devices import DefaultQubit
 from pennylane.operation import Expectation
 
-from pennylane_lightning import lightning_ops_module
 from ._version import __version__
 
-if lightning_ops_module is not None:
-    submodules = [
-        "StateVectorC64",
-        "AdjointJacobianC64",
-        "VectorJacobianProductC64",
-        "StateVectorC128",
-        "AdjointJacobianC128",
-        "VectorJacobianProductC128",
-        "DEFAULT_KERNEL_FOR_OPS",
-        "EXPORTED_KERNEL_OPS",
-    ]
-    for submodule in submodules:
-        globals()[submodule] = getattr(lightning_ops_module, submodule)
+try:
+    from .lightning_qubit_ops import (
+        StateVectorC64,
+        AdjointJacobianC64,
+        VectorJacobianProductC64,
+        StateVectorC128,
+        AdjointJacobianC128,
+        VectorJacobianProductC128,
+        DEFAULT_KERNEL_FOR_OPS,
+        EXPORTED_KERNEL_OPS,
+    )
 
     from ._serialize import _serialize_obs, _serialize_ops, _is_lightning_gate
 
     CPP_BINARY_AVAILABLE = True
-else:
+except ModuleNotFoundError:
     CPP_BINARY_AVAILABLE = False
 
 

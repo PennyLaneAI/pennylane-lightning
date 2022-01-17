@@ -61,7 +61,7 @@ class CMakeBuild(build_ext):
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
             f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
-            "-DENABLE_WARNINGS=OFF", # Ignore warnings for building wheels
+            "-DENABLE_WARNINGS=OFF", # Ignore warnings
         ]
 
         if debug:
