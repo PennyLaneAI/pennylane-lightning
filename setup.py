@@ -57,10 +57,10 @@ class CMakeBuild(build_ext):
 
         # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
         configure_args = [
-            #"-GNinja",
+            "-GNinja",
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
-            #f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
+            f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
             "-DENABLE_WARNINGS=OFF", # Ignore warnings
         ]
 
@@ -85,9 +85,7 @@ class CMakeBuild(build_ext):
         elif platform.system() == "Windows":
             configure_args += [
                 "-DENABLE_OPENMP=OFF",
-                "-DENABLE_BLAS=OFF",
-                "-G \"Visual Studio 16 2019\"",
-                "-A x64"
+                "-DENABLE_BLAS=OFF"
             ]
         else:
             raise RuntimeError(f"Unsupported '{platform.system()}' platform")
