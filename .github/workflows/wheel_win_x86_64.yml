@@ -13,7 +13,7 @@ env:
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
-    call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && pip install pybind11 ninja && where cl.exe
+    call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && pip install pybind11 ninja
 
   # Testing of built wheels
   CIBW_TEST_REQUIRES: numpy==1.19.5 scipy pytest pytest-cov pytest-mock flaky
@@ -24,7 +24,7 @@ env:
   CIBW_TEST_COMMAND: |
     pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
-  CXX: 'cl.exe'
+  CXX: 'C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.29.30133\bin\Hostx64\x64\cl.exe'
 
 jobs:
   win-wheels:
