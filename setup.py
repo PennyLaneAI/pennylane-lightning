@@ -60,7 +60,7 @@ class CMakeBuild(build_ext):
             #"-GNinja",
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
-            f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
+            #f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
             "-DENABLE_WARNINGS=OFF", # Ignore warnings
         ]
 
