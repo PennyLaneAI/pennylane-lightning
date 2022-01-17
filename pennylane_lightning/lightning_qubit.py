@@ -45,7 +45,7 @@ try:
     from ._serialize import _serialize_obs, _serialize_ops
 
     CPP_BINARY_AVAILABLE = True
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     CPP_BINARY_AVAILABLE = False
 
 

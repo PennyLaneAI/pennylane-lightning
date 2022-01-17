@@ -13,7 +13,7 @@ env:
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && pip install pybind11 ninja CMake
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && pip install pybind11 ninja
 
   # Testing of built wheels
   CIBW_TEST_REQUIRES: numpy==1.19.5 scipy pytest pytest-cov pytest-mock flaky
