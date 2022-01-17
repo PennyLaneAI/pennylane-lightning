@@ -106,7 +106,6 @@ constexpr auto getLambdaForKernelGateOp() {
         "The operator to register must be implemented.");
 
     if constexpr (gate_op != GateOperations::Matrix) {
-
         return
             [](StateVectorRaw<PrecisionT> &st, const std::vector<size_t> &wires,
                bool inverse, const std::vector<ParamT> &params) {
