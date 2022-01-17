@@ -12,7 +12,7 @@ using namespace Pennylane;
 
 constexpr auto referenceKernel = KernelType::PI;
 
-std::default_random_engine re{1337};
+std::mt19937_64 re{1337};
 
 TEMPLATE_TEST_CASE("StateVectorRaw::StateVectorRaw", "[StateVectorRaw]", float,
                    double) {

@@ -136,7 +136,7 @@ void testAllKernels(RandomEngine &re, size_t max_num_qubits) {
 
 TEMPLATE_TEST_CASE("DynamicDispatcher::applyOperation", "[DynamicDispatcher]",
                    float, double) {
-    std::default_random_engine re{1337};
+    std::mt19937_64 re{1337};
 
     constexpr size_t max_num_qubits = 6;
 

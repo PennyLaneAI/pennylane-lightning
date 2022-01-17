@@ -98,7 +98,7 @@ template <typename fp_t, class RandomEngine>
 auto create_random_state(RandomEngine &re, size_t num_qubits)
     -> std::vector<std::complex<fp_t>> {
     std::vector<std::complex<fp_t>> res(1U << num_qubits, {0.0, 0.0});
-    std::normal_distribution<fp_t> dist;
+    std::uniform_real_distribution<fp_t> dist;
     for (size_t idx = 0; idx < (1U << num_qubits); idx++) {
         res[idx] = {dist(re), dist(re)};
     }
