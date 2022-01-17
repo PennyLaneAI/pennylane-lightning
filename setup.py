@@ -85,7 +85,8 @@ class CMakeBuild(build_ext):
         elif platform.system() == "Windows":
             configure_args += [
                 "-DENABLE_OPENMP=OFF",
-                "-DENABLE_BLAS=OFF"
+                "-DENABLE_BLAS=OFF",
+                "-G\"Visual Studio 15 2017 Win64\""
             ]
         else:
             raise RuntimeError(f"Unsupported '{platform.system()}' platform")
