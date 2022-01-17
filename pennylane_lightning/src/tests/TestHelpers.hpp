@@ -74,7 +74,7 @@ void scaleVector(std::vector<std::complex<Data_t>> &data,
  */
 template <typename fp_t>
 auto create_zero_state(size_t num_qubits) -> std::vector<std::complex<fp_t>> {
-    std::vector<std::complex<fp_t>> res(1U << num_qubits, 0.0);
+    std::vector<std::complex<fp_t>> res(1U << num_qubits, {0.0, 0.0});
     res[0] = std::complex<fp_t>{1.0, 0.0};
     return res;
 }
@@ -84,7 +84,7 @@ auto create_zero_state(size_t num_qubits) -> std::vector<std::complex<fp_t>> {
  */
 template <typename fp_t>
 auto create_plus_state(size_t num_qubits) -> std::vector<std::complex<fp_t>> {
-    std::vector<std::complex<fp_t>> res(1U << num_qubits, 1.0);
+    std::vector<std::complex<fp_t>> res(1U << num_qubits, {1.0, 0.0});
     for (auto &elt : res) {
         elt /= std::sqrt(1U << num_qubits);
     }
@@ -97,7 +97,7 @@ auto create_plus_state(size_t num_qubits) -> std::vector<std::complex<fp_t>> {
 template <typename fp_t, class RandomEngine>
 auto create_random_state(RandomEngine &re, size_t num_qubits)
     -> std::vector<std::complex<fp_t>> {
-    std::vector<std::complex<fp_t>> res(1U << num_qubits, 0.0);
+    std::vector<std::complex<fp_t>> res(1U << num_qubits, {0.0, 0.0});
     std::normal_distribution<fp_t> dist;
     for (size_t idx = 0; idx < (1U << num_qubits); idx++) {
         res[idx] = {dist(re), dist(re)};
@@ -107,6 +107,6 @@ auto create_random_state(RandomEngine &re, size_t num_qubits)
         std::cbegin(res), std::cend(res), fp_t{}, std::plus<fp_t>(),
         static_cast<fp_t (*)(const std::complex<fp_t> &)>(&std::norm<fp_t>));
 
-    scaleVector(res, std::complex<fp_t>{1.0} / std::sqrt(squared_norm));
+    scaleVector(res, std::complex<fp_t>{1.0, 0.0} / std::sqrt(squared_norm));
     return res;
 }
