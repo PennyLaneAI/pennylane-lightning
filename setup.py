@@ -86,7 +86,8 @@ class CMakeBuild(build_ext):
             configure_args += [
                 "-DENABLE_OPENMP=OFF",
                 "-DENABLE_BLAS=OFF",
-                "-G\"Visual Studio 16 2019\""
+                "-G \"Visual Studio 16 2019\"",
+                "-A x64"
             ]
         else:
             raise RuntimeError(f"Unsupported '{platform.system()}' platform")
