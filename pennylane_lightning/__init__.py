@@ -13,8 +13,5 @@
 # limitations under the License.
 """Top level PennyLane-Lightning module."""
 
-import platform, os, sys
-from warnings import warn
-
 from ._version import __version__
 from .lightning_qubit import LightningQubit
