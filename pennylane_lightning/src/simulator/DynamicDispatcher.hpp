@@ -97,7 +97,8 @@ template <typename fp_t> class DynamicDispatcher {
     void registerGateOperation(const std::string &op_name, KernelType kernel,
                                FunctionType &&func) {
         // TODO: Add mutex when we go to multithreading
-        gates_.emplace(std::make_pair(op_name, kernel), func);
+        gates_.emplace(std::make_pair(op_name, kernel),
+                       std::forward<FunctionType>(func));
     }
 
     /**
