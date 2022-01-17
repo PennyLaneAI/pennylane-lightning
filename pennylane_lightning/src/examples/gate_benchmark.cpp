@@ -18,7 +18,7 @@
  */
 int main(int argc, char *argv[]) {
     using TestType = double;
-    namespace IndecesUtil = Pennylane::IndicesUtil;
+    namespace IndicesUtil = Pennylane::IndicesUtil;
 
     // Handle input
     try {
@@ -57,9 +57,9 @@ int main(int argc, char *argv[]) {
         for (size_t index = 0; index < num_qubits; index++) {
             // Apply single qubit non-parametric operations
             const auto int_idx =
-                IndecesUtil::getInternalIndices({index}, num_qubits);
+                IndicesUtil::getInternalIndices({index}, num_qubits);
             const auto ext_idx =
-                IndecesUtil::getExternalIndices({index}, num_qubits);
+                IndicesUtil::getExternalIndices({index}, num_qubits);
             svdat.applyPauliX(int_idx, ext_idx, false);
             svdat.applyPauliY(int_idx, ext_idx, false);
             svdat.applyPauliZ(int_idx, ext_idx, false);
