@@ -36,6 +36,9 @@ namespace Pennylane {
 /**
  * @brief Kernel functions for gate operations with precomputed indices
  *
+ * For given wires, we first compute the indices the gate applies to and use
+ * the computed indices to apply the operation.
+ *
  * @tparam fp_t Floating point precision of underlying statevector data.
  * */
 template <class fp_t> class GateOperationsPI {
