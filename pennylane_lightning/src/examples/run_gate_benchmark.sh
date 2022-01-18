@@ -8,10 +8,10 @@ if [ "$#" -ne 2 ]; then
 fi
 
 # Parameter initialization
-min_num_qubits=20
-max_num_qubits=26
+min_num_qubits=8
+max_num_qubits=24
 num_qubits_increment=2
-num_gate_reps=10000
+num_gate_reps=1000
 kernel="$1"
 gate="$2"
 

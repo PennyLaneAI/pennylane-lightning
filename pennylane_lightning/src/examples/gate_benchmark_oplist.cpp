@@ -189,7 +189,7 @@ int main(int argc, char *argv[]) {
 
     // Generate random gate sequences
     std::random_device rd;
-    std::default_random_engine re(rd());
+    std::mt19937 re(rd());
 
     std::vector<std::string_view> random_gate_names;
     std::vector<std::vector<size_t>> random_gate_wires;

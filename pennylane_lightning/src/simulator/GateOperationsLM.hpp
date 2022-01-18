@@ -71,7 +71,7 @@ template <class fp_t> class GateOperationsLM {
         GateOperations::GeneratorPhaseShift};
 
   private:
-    static void applySingleQubitOp(CFP_t *arr, size_t num_qubits,
+    static inline void applySingleQubitOp(CFP_t *arr, size_t num_qubits,
                                    const CFP_t *op_matrix, size_t wire) {
         const size_t rev_wire = num_qubits - wire - 1;
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
