@@ -9,6 +9,7 @@ You can benchmark different gate implementations inside the project.
     $ cd BuildBench
 
 Inside the directory, you can see ``run_gate_benchmark.sh``. You can benchmark a specific kernel implementation for a gate by providing arguments. 
+Currently, we have two different kernels in ``Pennylane-Lightning`` named ``PI`` and ``LM``. For difference between two kernels, see the documents :cpp:class:`Pennylane::GateOperationsPI` and :cpp:class:`Pennylane::GateOperationsLM`.
 For example, you can compare benchmark results for ``PauliX`` gate with ``KernelType::PI`` and ``KernelType::LM`` by running the following commands:
 
 .. code-block:: console
