@@ -48,4 +48,18 @@ struct getNthType<TypeList, 0> {
     using Type = typename TypeList::Type;
 };
 
+template<bool condition, typename FirstType, typename SecondType>
+struct IfFirstElseSecond {
+};
+
+template<typename FirstType, typename SecondType>
+struct IfFirstElseSecond<true, FirstType, SecondType> {
+    using Type = FirstType;
+};
+
+template<typename FirstType, typename SecondType>
+struct IfFirstElseSecond<false, FirstType, SecondType> {
+    using Type = SecondType;
+};
+
 } // namespace Pennylane::Util

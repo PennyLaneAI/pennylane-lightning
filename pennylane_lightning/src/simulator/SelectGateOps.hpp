@@ -22,6 +22,7 @@
 #include "GateOperationsPI.hpp"
 #include "KernelType.hpp"
 #include "Macros.hpp"
+#include "TypeList.hpp"
 
 #include <array>
 #include <functional>
@@ -30,6 +31,14 @@
 namespace Pennylane {
 
 namespace Constant {
+
+/**
+ * @brief Type list of all kernels
+ */ 
+template<typename PrecisionT>
+using AvailableKernels = Util::TypeList<GateOperationsLM<PrecisionT>, 
+                                        GateOperationsPI<PrecisionT>>;
+
 /**
  * @brief Define which kernel to use for each operation
  *
@@ -97,6 +106,29 @@ static_lookup(const std::array<std::pair<GateOperations, T>, size> &arr) -> T {
     return T{};
 }
 
+constexpr auto string_to_kernel(std::string_view str) -> KernelType {
+    for (const auto &[k, v] : Constant::available_kernels) {
+        if (v == str) {
+            return k;
+        }
+    }
+    // TODO: Throw exception or call PL_ABORT in GCC >= 9
+    return KernelType::Unknown;
+}
+
+namespace Internal {
+template <class PrecisionT, KernelType kernel, class TypeList>
+struct SelectGateOpsHelper {
+    static_assert(!std::is_same_v<TypeList, void>,
+            "Cannot find a kernel with the given kernel_id in available kernels.");
+    using Type = typename Util::IfFirstElseSecond<
+            TypeList::Type::kernel_id == kernel,
+            typename TypeList::Type,
+            typename SelectGateOpsHelper<PrecisionT, kernel, typename TypeList::Next>::Type>::Type;
+};
+} // namespace Internal
+
+
 /**
  * @brief This class chooses a gate implementation at the compile time.
  *
@@ -107,19 +139,50 @@ static_lookup(const std::array<std::pair<GateOperations, T>, size> &arr) -> T {
  * one may convert GateOpsFuncPtrPairs into constexpr functions with
  * kernel as a parameter (instead of a template prameter).
  *
- * @tparam fp_t Floating point precision of underlying statevector data.
+ * @tparam PrecisionT Floating point precision of underlying statevector data.
  * @tparam kernel Kernel to select
  */
-template <class fp_t, KernelType kernel> class SelectGateOps {};
-
-template <class fp_t>
-class SelectGateOps<fp_t, KernelType::PI> : public GateOperationsPI<fp_t> {};
-template <class fp_t>
-class SelectGateOps<fp_t, KernelType::LM> : public GateOperationsLM<fp_t> {};
+template <class PrecisionT, KernelType kernel>
+using SelectGateOps = typename Internal::SelectGateOpsHelper<
+        PrecisionT, kernel, Constant::AvailableKernels<PrecisionT>>::Type;
 
 } // namespace Pennylane
 
 namespace Pennylane::Internal {
+
+/**
+ * @brief Gate operation pointer type for a statevector. See all specialized types.
+ */
+template <class SVType, class ParamT, size_t num_params>
+struct GateMemFuncPtr {
+    static_assert(num_params < 2 || num_params == 3,
+                  "The given num_params is not supported.");
+};
+/**
+ * @brief Function pointer type for a gate operation without parameters.
+ */
+template <class SVType, class ParamT>
+struct GateMemFuncPtr<SVType, ParamT, 0> {
+    using Type = void (SVType::*)(const std::vector<size_t> &, bool);
+};
+/**
+ * @brief Function pointer type for a gate operation with a single parameter.
+ */
+template <class SVType, class ParamT>
+struct GateMemFuncPtr<SVType, ParamT, 1> {
+    using Type = void (SVType::*)(const std::vector<size_t> &, bool, ParamT);
+};
+/**
+ * @brief Function pointer type for a gate operation with three parameters.
+ */
+template <class SVType, class ParamT>
+struct GateMemFuncPtr<SVType, ParamT, 3> {
+    using Type = void (SVType::*)(const std::vector<size_t> &, bool, ParamT,
+            ParamT, ParamT);
+};
+
+template <class SVType, class ParamT, size_t num_params>
+using GateMemFuncPtrT = typename GateMemFuncPtr<SVType, ParamT, num_params>::Type;
 
 /**
  * @brief Gate operation pointer type. See all specialized types.
@@ -135,7 +198,7 @@ struct GateFuncPtr {
  */
 template <class PrecisionT, class ParamT>
 struct GateFuncPtr<PrecisionT, ParamT, 0> {
-    using type = void (*)(std::complex<PrecisionT> *, size_t,
+    using Type = void (*)(std::complex<PrecisionT> *, size_t,
                           const std::vector<size_t> &, bool);
 };
 /**
@@ -143,7 +206,7 @@ struct GateFuncPtr<PrecisionT, ParamT, 0> {
  */
 template <class PrecisionT, class ParamT>
 struct GateFuncPtr<PrecisionT, ParamT, 1> {
-    using type = void (*)(std::complex<PrecisionT> *, size_t,
+    using Type = void (*)(std::complex<PrecisionT> *, size_t,
                           const std::vector<size_t> &, bool, ParamT);
 };
 /**
@@ -151,16 +214,25 @@ struct GateFuncPtr<PrecisionT, ParamT, 1> {
  */
 template <class PrecisionT, class ParamT>
 struct GateFuncPtr<PrecisionT, ParamT, 3> {
-    using type = void (*)(std::complex<PrecisionT> *, size_t,
+    using Type = void (*)(std::complex<PrecisionT> *, size_t,
                           const std::vector<size_t> &, bool, ParamT, ParamT,
                           ParamT);
 };
+
 
 /**
  * @brief Convinient type alias for GateFuncPtr. See GateFuncPtr for details.
  */
 template <class PrecisionT, class ParamT, size_t num_params>
-using GateFuncPtrT = typename GateFuncPtr<PrecisionT, ParamT, num_params>::type;
+using GateFuncPtrT = typename GateFuncPtr<PrecisionT, ParamT, num_params>::Type;
+
+
+
+
+template <class GateOpsKernel, class ParamT, size_t num_params>
+struct ImplementedGateOpsTuple {
+
+};
 
 /**
  * @brief List of all gate operation and funciont pointer pairs for the given
@@ -264,7 +336,7 @@ struct GateOpsFuncPtrPairs<PrecisionT, ParamT, kernel, 3> {
 /**
  * @defgroup Call gate operation with provided arguments
  *
- * @tparam fp_t floating point type for the state-vector
+ * @tparam PrecisionT floating point type for the state-vector
  * @tparam ParamT floating point type for the gate paramters
  * @param func Function pointer for the gate operation
  * @param num_qubits The number of qubits of the state-vector
@@ -276,9 +348,9 @@ struct GateOpsFuncPtrPairs<PrecisionT, ParamT, kernel, 3> {
 /**
  * @brief Overload for a gate operation without parameters
  */
-template <class fp_t, class ParamT>
-inline void callGateOps(GateFuncPtrT<fp_t, ParamT, 0> func,
-                        std::complex<fp_t> *data, size_t num_qubits,
+template <class PrecisionT, class ParamT>
+inline void callGateOps(GateFuncPtrT<PrecisionT, ParamT, 0> func,
+                        std::complex<PrecisionT> *data, size_t num_qubits,
                         const std::vector<size_t> &wires, bool inverse,
                         [[maybe_unused]] const std::vector<ParamT> &params) {
     assert(params.empty());
@@ -288,9 +360,9 @@ inline void callGateOps(GateFuncPtrT<fp_t, ParamT, 0> func,
 /**
  * @brief Overload for a gate operation for a single paramter
  */
-template <class fp_t, class ParamT>
-inline void callGateOps(GateFuncPtrT<fp_t, ParamT, 1> func,
-                        std::complex<fp_t> *data, size_t num_qubits,
+template <class PrecisionT, class ParamT>
+inline void callGateOps(GateFuncPtrT<PrecisionT, ParamT, 1> func,
+                        std::complex<PrecisionT> *data, size_t num_qubits,
                         const std::vector<size_t> &wires, bool inverse,
                         const std::vector<ParamT> &params) {
     assert(params.size() == 1);
@@ -300,9 +372,9 @@ inline void callGateOps(GateFuncPtrT<fp_t, ParamT, 1> func,
 /**
  * @brief Overload for a gate operation for three paramters
  */
-template <class fp_t, class ParamT>
-inline void callGateOps(GateFuncPtrT<fp_t, ParamT, 3> func,
-                        std::complex<fp_t> *data, size_t num_qubits,
+template <class PrecisionT, class ParamT>
+inline void callGateOps(GateFuncPtrT<PrecisionT, ParamT, 3> func,
+                        std::complex<PrecisionT> *data, size_t num_qubits,
                         const std::vector<size_t> &wires, bool inverse,
                         const std::vector<ParamT> &params) {
     assert(params.size() == 3);
@@ -310,17 +382,17 @@ inline void callGateOps(GateFuncPtrT<fp_t, ParamT, 3> func,
 }
 /// @}
 /// @cond DEV
-template <typename fp_t, size_t idx>
+template <typename PrecisionT, size_t idx>
 std::vector<GateOperations> implementedGatesForKernelIter(KernelType kernel) {
     if constexpr (idx == Constant::available_kernels.size()) {
         return {};
     } else if (kernel == std::get<0>(Constant::available_kernels[idx])) {
         const auto &arr =
-            SelectGateOps<fp_t, std::get<0>(Constant::available_kernels[idx])>::
+            SelectGateOps<PrecisionT, std::get<0>(Constant::available_kernels[idx])>::
                 implemented_gates;
         return std::vector(arr.begin(), arr.end());
     } else {
-        return implementedGatesForKernelIter<fp_t, idx + 1>(kernel);
+        return implementedGatesForKernelIter<PrecisionT, idx + 1>(kernel);
     }
 }
 /// @endcond
@@ -333,17 +405,17 @@ std::vector<GateOperations> implementedGatesForKernelIter(KernelType kernel) {
  *
  * TODO: Change to constexpr function in C++20
  */
-template <class fp_t>
+template <class PrecisionT>
 auto implementedGatesForKernel(KernelType kernel)
     -> std::vector<GateOperations> {
-    return Internal::implementedGatesForKernelIter<fp_t, 0>(kernel);
+    return Internal::implementedGatesForKernelIter<PrecisionT, 0>(kernel);
 }
 
 /********************************************************************
  * Functions below are only used in a compile time to check
  * consistency.
  ********************************************************************/
-template <typename fp_t>
+template <typename PrecisionT>
 constexpr auto check_default_kernels_are_available() -> bool {
     // TODO: change to constexpr std::all_of in C++20
     // which is not constexpr in C++17.
@@ -361,6 +433,38 @@ static_assert(check_default_kernels_are_available<double>(),
 static_assert(count_unique(first_elts_of(Constant::default_kernel_for_ops)) ==
                   static_cast<int>(GateOperations::END),
               "All gate operations must be defined in default_kernel_for_ops");
+
+
+/// @cond DEV
+/*******************************************************************************
+ * The functions below are only used in the compile time to check
+ * internal consistency.
+ ******************************************************************************/
+constexpr auto is_available_kernel(KernelType kernel) -> bool {
+    // TODO: change to constexpr std::any_of in C++20
+    // NOLINTNEXTLINE (readability-use-anyofallof)
+    for (const auto &[avail_kernel, avail_kernel_name] :
+         Constant::available_kernels) {
+        if (kernel == avail_kernel) {
+            return true;
+        }
+    }
+    return false;
+}
+
+constexpr auto check_kernels_to_pyexport() -> bool {
+    // TODO: change to constexpr std::any_of in C++20
+    // NOLINTNEXTLINE (readability-use-anyofallof)
+    for (const auto &kernel : Constant::kernels_to_pyexport) {
+        if (!is_available_kernel(kernel)) {
+            return false;
+        }
+    }
+    return true;
+}
+static_assert(check_kernels_to_pyexport(),
+              "Some of Kernels in Python export is not available.");
+/// @endcond
 
 } // namespace Pennylane::Internal
 
