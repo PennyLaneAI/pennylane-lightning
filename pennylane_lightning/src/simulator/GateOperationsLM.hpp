@@ -44,7 +44,7 @@ auto constexpr fillLeadingOnes(size_t pos) -> size_t {
 /**
  * @brief A gate operation implementation with less memory.
  *
- * We use a bitwise operation to calculate the indices where the gate 
+ * We use a bitwise operation to calculate the indices where the gate
  * applies to on the fly.
  *
  * @tparam fp_t Floating point precision of underlying statevector data
@@ -75,7 +75,7 @@ template <class fp_t> class GateOperationsLM {
 
   private:
     static inline void applySingleQubitOp(CFP_t *arr, size_t num_qubits,
-                                   const CFP_t *op_matrix, size_t wire) {
+                                          const CFP_t *op_matrix, size_t wire) {
         const size_t rev_wire = num_qubits - wire - 1;
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
         const size_t wire_parity = fillTrailingOnes(rev_wire);
