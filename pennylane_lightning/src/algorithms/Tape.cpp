@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "AdjointDiff.hpp"
+#include "Tape.hpp"
 
-// explicit instantiation
-template class Pennylane::Algorithms::AdjointJacobian<float>;
-template class Pennylane::Algorithms::AdjointJacobian<double>;
+template class Pennylane::Algorithms::ObsDatum<float>;
+template class Pennylane::Algorithms::ObsDatum<double>;
+
+template class Pennylane::Algorithms::ObsDatum<std::complex<float>>;
+template class Pennylane::Algorithms::ObsDatum<std::complex<double>>;

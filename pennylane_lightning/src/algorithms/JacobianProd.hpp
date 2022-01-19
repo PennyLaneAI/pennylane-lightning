@@ -16,6 +16,7 @@
 #include <algorithm>
 
 #include "AdjointDiff.hpp"
+#include "Tape.hpp"
 
 namespace Pennylane {
 namespace Algorithms {
@@ -126,25 +127,18 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
      * of size `trainableParams.size()`.
      * @param jac Preallocated Jacobian matrix from `AdjointJacobian` of size
      * `observables.size() * trainableParams.size()`.
-     * @param psi Pointer to the statevector data.
-     * @param num_elements Length of the statevector data.
      * @param dy Gradient-output vector.
-     * @param observables Observables for which to calculate Jacobian.
-     * @param operations Operations used to create given state.
-     * @param trainableParams List of parameters participating in Jacobian
-     * calculation.
-     * @param apply_operations Indicate whether to apply operations to psi prior
-     * to calculation.
+     * @param tape The QuantumTape to differentiate
+     * @param apply_operations Indicate whether to apply operations to tape.psi
+     * prior to calculation.
+     *
      */
     void vectorJacobianProduct(std::vector<T> &vjp,
                                std::vector<std::vector<T>> &jac,
                                const std::vector<T> &dy,
-                               const std::complex<T> *psi, size_t num_elements,
-                               const std::vector<ObsDatum<T>> &observables,
-                               const OpsData<T> &operations,
-                               const std::vector<size_t> &trainableParams,
+                               const DataTapeT<T> &tape,
                                bool apply_operations = false) {
-        const size_t num_params = trainableParams.size();
+        const size_t num_params = tape.trainableParams.size();
 
         if (num_params == 0U || dy.empty()) {
             vjp.clear();
@@ -158,8 +152,7 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
             return;
         }
 
-        this->adjointJacobian(psi, num_elements, jac, observables, operations,
-                              trainableParams, apply_operations);
+        this->adjointJacobianTape(jac, tape, apply_operations);
 
         computeVJP(vjp, jac, dy);
     }

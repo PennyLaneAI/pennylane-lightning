@@ -26,6 +26,7 @@
 #include "Error.hpp"
 #include "StateVector.hpp"
 #include "StateVectorManaged.hpp"
+#include "Tape.hpp"
 #include "Util.hpp"
 
 #include <iostream>
@@ -137,230 +138,6 @@ void applyGeneratorControlledPhaseShift(
 /// @endcond
 
 namespace Pennylane::Algorithms {
-
-/**
- * @brief Utility struct for observable operations used by AdjointJacobian
- * class.
- *
- */
-template <class T = double> class ObsDatum {
-  public:
-    /**
-     * @brief Variant type of stored parameter data.
-     */
-    using param_var_t = std::variant<std::monostate, std::vector<T>,
-                                     std::vector<std::complex<T>>>;
-
-    /**
-     * @brief Copy constructor for an ObsDatum object, representing a given
-     * observable.
-     *
-     * @param obs_name Name of each operation of the observable. Tensor product
-     * observables have more than one operation.
-     * @param obs_params Parameters for a given obserable operation ({} if
-     * optional).
-     * @param obs_wires Wires upon which to apply operation. Each observable
-     * operation will be a separate nested list.
-     */
-    ObsDatum(std::vector<std::string> obs_name,
-             std::vector<param_var_t> obs_params,
-             std::vector<std::vector<size_t>> obs_wires)
-        : obs_name_{std::move(obs_name)},
-          obs_params_(std::move(obs_params)), obs_wires_{
-                                                  std::move(obs_wires)} {};
-
-    /**
-     * @brief Get the number of operations in observable.
-     *
-     * @return size_t
-     */
-    [[nodiscard]] auto getSize() const -> size_t { return obs_name_.size(); }
-    /**
-     * @brief Get the name of the observable operations.
-     *
-     * @return const std::vector<std::string>&
-     */
-    [[nodiscard]] auto getObsName() const -> const std::vector<std::string> & {
-        return obs_name_;
-    }
-    /**
-     * @brief Get the parameters for the observable operations.
-     *
-     * @return const std::vector<std::vector<T>>&
-     */
-    [[nodiscard]] auto getObsParams() const
-        -> const std::vector<param_var_t> & {
-        return obs_params_;
-    }
-    /**
-     * @brief Get the wires for each observable operation.
-     *
-     * @return const std::vector<std::vector<size_t>>&
-     */
-    [[nodiscard]] auto getObsWires() const
-        -> const std::vector<std::vector<size_t>> & {
-        return obs_wires_;
-    }
-
-  private:
-    const std::vector<std::string> obs_name_;
-    const std::vector<param_var_t> obs_params_;
-    const std::vector<std::vector<size_t>> obs_wires_;
-};
-
-/**
- * @brief Utility class for encapsulating operations used by AdjointJacobian
- * class.
- *
- */
-template <class T> class OpsData {
-  private:
-    size_t num_par_ops_;
-    size_t num_nonpar_ops_;
-    const std::vector<std::string> ops_name_;
-    const std::vector<std::vector<T>> ops_params_;
-    const std::vector<std::vector<size_t>> ops_wires_;
-    const std::vector<bool> ops_inverses_;
-    const std::vector<std::vector<std::complex<T>>> ops_matrices_;
-
-  public:
-    /**
-     * @brief Construct an OpsData object, representing the serialized
-     * operations to apply upon the `%StateVector`.
-     *
-     * @param ops_name Name of each operation to apply.
-     * @param ops_params Parameters for a given operation ({} if optional).
-     * @param ops_wires Wires upon which to apply operation
-     * @param ops_inverses Value to represent whether given operation is
-     * adjoint.
-     * @param ops_matrices Numerical representation of given matrix if not
-     * supported.
-     */
-    OpsData(std::vector<std::string> ops_name,
-            const std::vector<std::vector<T>> &ops_params,
-            std::vector<std::vector<size_t>> ops_wires,
-            std::vector<bool> ops_inverses,
-            std::vector<std::vector<std::complex<T>>> ops_matrices)
-        : ops_name_{std::move(ops_name)}, ops_params_{ops_params},
-          ops_wires_{std::move(ops_wires)},
-          ops_inverses_{std::move(ops_inverses)}, ops_matrices_{
-                                                      std::move(ops_matrices)} {
-        num_par_ops_ = 0;
-        for (const auto &p : ops_params) {
-            if (!p.empty()) {
-                num_par_ops_++;
-            }
-        }
-        num_nonpar_ops_ = ops_params.size() - num_par_ops_;
-    };
-
-    /**
-     * @brief Construct an OpsData object, representing the serialized
-     operations to apply upon the `%StateVector`.
-     *
-     * @see  OpsData(const std::vector<std::string> &ops_name,
-            const std::vector<std::vector<T>> &ops_params,
-            const std::vector<std::vector<size_t>> &ops_wires,
-            const std::vector<bool> &ops_inverses,
-            const std::vector<std::vector<std::complex<T>>> &ops_matrices)
-     */
-    OpsData(const std::vector<std::string> &ops_name,
-            const std::vector<std::vector<T>> &ops_params,
-            std::vector<std::vector<size_t>> ops_wires,
-            std::vector<bool> ops_inverses)
-        : ops_name_{ops_name}, ops_params_{ops_params},
-          ops_wires_{std::move(ops_wires)}, ops_inverses_{std::move(
-                                                ops_inverses)},
-          ops_matrices_(ops_name.size()) {
-        num_par_ops_ = 0;
-        for (const auto &p : ops_params) {
-            if (p.size() > 0) {
-                num_par_ops_++;
-            }
-        }
-        num_nonpar_ops_ = ops_params.size() - num_par_ops_;
-    };
-
-    /**
-     * @brief Get the number of operations to be applied.
-     *
-     * @return size_t Number of operations.
-     */
-    [[nodiscard]] auto getSize() const -> size_t { return ops_name_.size(); }
-
-    /**
-     * @brief Get the names of the operations to be applied.
-     *
-     * @return const std::vector<std::string>&
-     */
-    [[nodiscard]] auto getOpsName() const -> const std::vector<std::string> & {
-        return ops_name_;
-    }
-    /**
-     * @brief Get the (optional) parameters for each operation. Given entries
-     * are empty ({}) if not required.
-     *
-     * @return const std::vector<std::vector<T>>&
-     */
-    [[nodiscard]] auto getOpsParams() const
-        -> const std::vector<std::vector<T>> & {
-        return ops_params_;
-    }
-    /**
-     * @brief Get the wires for each operation.
-     *
-     * @return const std::vector<std::vector<size_t>>&
-     */
-    [[nodiscard]] auto getOpsWires() const
-        -> const std::vector<std::vector<size_t>> & {
-        return ops_wires_;
-    }
-    /**
-     * @brief Get the adjoint flag for each operation.
-     *
-     * @return const std::vector<bool>&
-     */
-    [[nodiscard]] auto getOpsInverses() const -> const std::vector<bool> & {
-        return ops_inverses_;
-    }
-    /**
-     * @brief Get the numerical matrix for a given unsupported operation. Given
-     * entries are empty ({}) if not required.
-     *
-     * @return const std::vector<std::vector<std::complex<T>>>&
-     */
-    [[nodiscard]] auto getOpsMatrices() const
-        -> const std::vector<std::vector<std::complex<T>>> & {
-        return ops_matrices_;
-    }
-
-    /**
-     * @brief Notify if the operation at a given index is parametric.
-     *
-     * @param index Operation index.
-     * @return true Gate is parametric (has parameters).
-     * @return false Gate in non-parametric.
-     */
-    [[nodiscard]] inline auto hasParams(size_t index) const -> bool {
-        return !ops_params_[index].empty();
-    }
-
-    /**
-     * @brief Get the number of parametric operations.
-     *
-     * @return size_t
-     */
-    [[nodiscard]] auto getNumParOps() const -> size_t { return num_par_ops_; }
-
-    /**
-     * @brief Get the number of non-parametric ops.
-     *
-     * @return size_t
-     */
-    [[nodiscard]] auto getNumNonParOps() const -> size_t {
-        return num_nonpar_ops_;
-    }
-};
 
 /**
  * @brief Represent the logic for the adjoint Jacobian method of
@@ -758,6 +535,100 @@ template <class T = double> class AdjointJacobian {
                 }
                 applyOperationsAdj(H_lambda, operations,
                                    static_cast<size_t>(op_idx));
+            }
+        }
+    }
+
+    /**
+     * @brief Calculates the Jacobian for the statevector for the selected set
+     * of parametric gates.
+     *
+     * For the statevector data associated with `psi` of length `num_elements`,
+     * we make internal copies to a `%StateVectorManaged<T>` object, with one
+     * per required observable. The `operations` will be applied to the internal
+     * statevector copies, with the operation indices participating in the
+     * gradient calculations given in `trainableParams`, and the overall number
+     * of parameters for the gradient calculation provided within `num_params`.
+     * The resulting row-major ordered `jac` matrix representation will be of
+     * size `trainableParams.size() * observables.size()`. OpenMP is used to
+     * enable independent operations to be offloaded to threads.
+     *
+     * @param jac Preallocated vector for Jacobian data results.
+     * @param tape The QuantumTape to differentiate
+     * @param apply_operations Indicate whether to apply operations to tape.psi
+     * prior to calculation.
+     */
+    void adjointJacobianTape(std::vector<std::vector<T>> &jac,
+                             const DataTapeT<T> &tape,
+                             bool apply_operations = false) {
+        PL_ABORT_IF(tape.trainableParams.empty(),
+                    "No trainable parameters provided.");
+
+        auto ops = tape.operations;
+
+        // Track positions within par and non-par operations
+        size_t num_observables = tape.observables.size();
+        size_t trainableParamNumber = tape.trainableParams.size() - 1;
+        size_t current_param_idx =
+            ops.getNumParOps() - 1; // total number of parametric ops
+
+        auto tp_it = tape.trainableParams.end();
+
+        // Create $U_{1:p}\vert \lambda \rangle$
+        StateVectorManaged<T> lambda(tape.psi, tape.num_elements);
+
+        // Apply given operations to statevector if requested
+        if (apply_operations) {
+            applyOperations(lambda, ops);
+        }
+
+        // Create observable-applied state-vectors
+        std::vector<StateVectorManaged<T>> H_lambda(num_observables,
+                                                    {lambda.getNumQubits()});
+        applyObservables(H_lambda, lambda, tape.observables);
+
+        StateVectorManaged<T> mu(lambda.getNumQubits());
+
+        for (int op_idx = static_cast<int>(ops.getOpsName().size() - 1);
+             op_idx >= 0; op_idx--) {
+            PL_ABORT_IF(ops.getOpsParams()[op_idx].size() > 1,
+                        "The operation is not supported using the adjoint "
+                        "differentiation method");
+            if ((ops.getOpsName()[op_idx] != "QubitStateVector") &&
+                (ops.getOpsName()[op_idx] != "BasisState")) {
+                mu.updateData(lambda.getDataVector());
+                applyOperationAdj(lambda, ops, op_idx);
+
+                if (ops.hasParams(op_idx)) {
+                    if (std::find(tape.trainableParams.begin(), tp_it,
+                                  current_param_idx) != tp_it) {
+                        const T scalingFactor =
+                            applyGenerator(mu, ops.getOpsName()[op_idx],
+                                           ops.getOpsWires()[op_idx],
+                                           !ops.getOpsInverses()[op_idx]) *
+                            (2 * (0b1 ^ ops.getOpsInverses()[op_idx]) - 1);
+                        // clang-format off
+
+                        #if defined(_OPENMP)
+                            #pragma omp parallel for default(none)   \
+                            shared(H_lambda, jac, mu, scalingFactor, \
+                                trainableParamNumber, tp_it,         \
+                                num_observables)
+                        #endif
+
+                        // clang-format on
+                        for (size_t obs_idx = 0; obs_idx < num_observables;
+                             obs_idx++) {
+                            updateJacobian(H_lambda[obs_idx], mu, jac,
+                                           scalingFactor, obs_idx,
+                                           trainableParamNumber);
+                        }
+                        trainableParamNumber--;
+                        std::advance(tp_it, -1);
+                    }
+                    current_param_idx--;
+                }
+                applyOperationsAdj(H_lambda, ops, static_cast<size_t>(op_idx));
             }
         }
     }

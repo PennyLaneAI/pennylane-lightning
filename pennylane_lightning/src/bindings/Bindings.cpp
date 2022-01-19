@@ -19,6 +19,7 @@
 #include "AdjointDiff.hpp"
 #include "JacobianProd.hpp"
 #include "StateVector.hpp"
+#include "Tape.hpp"
 #include "pybind11/complex.h"
 #include "pybind11/numpy.h"
 #include "pybind11/pybind11.h"
@@ -820,8 +821,12 @@ void lightning_class_bindings(py::module &m) {
                  std::vector<std::vector<PrecisionT>> jac(
                      observables.size(),
                      std::vector<PrecisionT>(num_params, 0));
-                 adj.adjointJacobian(sv.getData(), sv.getLength(), jac,
-                                     observables, operations, trainableParams);
+
+                 const DataTapeT<PrecisionT> tape{sv.getLength(), sv.getData(),
+                                                  observables, operations,
+                                                  trainableParams};
+
+                 adj.adjointJacobianTape(jac, tape);
                  return py::array_t<Param_t>(py::cast(jac));
              });
 
@@ -883,9 +888,12 @@ void lightning_class_bindings(py::module &m) {
             std::vector<std::vector<PrecisionT>> jac(
                 observables.size(), std::vector<PrecisionT>(num_params, 0));
             std::vector<PrecisionT> vjp_res(num_params);
-            v.vectorJacobianProduct(vjp_res, jac, dy, sv.getData(),
-                                    sv.getLength(), observables, operations,
-                                    trainableParams);
+
+            const DataTapeT<PrecisionT> tape{sv.getLength(), sv.getData(),
+                                             observables, operations,
+                                             trainableParams};
+
+            v.vectorJacobianProduct(vjp_res, jac, dy, tape);
             return py::make_tuple(py::array_t<Param_t>(py::cast(jac)),
                                   py::array_t<Param_t>(py::cast(vjp_res)));
         });
