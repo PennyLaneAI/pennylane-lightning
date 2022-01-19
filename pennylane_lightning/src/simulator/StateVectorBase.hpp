@@ -45,31 +45,53 @@
  * @brief This macro defines methods for State-vector class. The kernel template
  * argument choose the kernel to run.
  */
-#define PENNYLANE_STATEVECTOR_DEFINE_OPS(GATE_NAME)                            \
+#define PENNYLANE_STATEVECTOR_DEFINE_GATE(GATE_NAME)                           \
     template <KernelType kernel, typename... Ts>                               \
     inline void apply##GATE_NAME##_(const std::vector<size_t> &wires,          \
                                     bool inverse, Ts &&...args) {              \
         auto *arr = getData();                                                 \
-        static_assert(static_lookup<GateOperations::GATE_NAME>(                \
+        static_assert(static_lookup<GateOperation::GATE_NAME>(                 \
                           Constant::gate_num_params) == sizeof...(Ts),         \
                       "The provided number of parameters for gate " #GATE_NAME \
                       " is wrong.");                                           \
         static_assert(                                                         \
             array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,      \
-                          GateOperations::GATE_NAME),                          \
+                          GateOperation::GATE_NAME),                           \
             "The kernel does not implement the gate.");                        \
         SelectGateOps<fp_t, kernel>::apply##GATE_NAME(                         \
             arr, num_qubits_, wires, inverse, std::forward<Ts>(args)...);      \
     }
 
-#define PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GATE_NAME)                    \
+#define PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(GATE_NAME)                   \
     template <typename... Ts>                                                  \
     inline void apply##GATE_NAME(const std::vector<size_t> &wires,             \
                                  bool inverse, Ts &&...args) {                 \
-        constexpr auto kernel = static_lookup<GateOperations::GATE_NAME>(      \
-            Constant::default_kernel_for_ops);                                 \
+        constexpr auto kernel = static_lookup<GateOperation::GATE_NAME>(       \
+            Constant::default_kernel_for_gates);                                \
         apply##GATE_NAME##_<kernel>(wires, inverse,                            \
                                     std::forward<Ts>(args)...);                \
+    }
+#define PENNYLANE_STATEVECTOR_DEFINE_GENERATOR(GENERATOR_NAME)                 \
+    template <KernelType kernel, typename... Ts>                               \
+    inline void applyGenerator##GENERATOR_NAME##_(                             \
+                const std::vector<size_t> &wires, bool adj) {                  \
+        auto *arr = getData();                                                 \
+        static_assert(                                                         \
+            array_has_elt(SelectGateOps<fp_t, kernel>::implemented_generators, \
+                          GeneratorOperation::GENERATOR_NAME),                 \
+            "The kernel does not implement the gate generator.");              \
+        SelectGateOps<fp_t, kernel>::applyGenerator##GENERATOR_NAME(           \
+            arr, num_qubits_, wires, adj);                                     \
+    }
+
+#define PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GENERATOR(GENERATOR_NAME)         \
+    template <typename... Ts>                                                  \
+    inline void applyGenerator##GENERATOR_NAME(                                \
+                const std::vector<size_t> &wires, bool adj) {                  \
+        constexpr auto kernel = static_lookup<                                 \
+                GeneratorOperation::GENERATOR_NAME>(                           \
+                Constant::default_kernel_for_generators);                      \
+        applyGenerator##GENERATOR_NAME##_<kernel>(wires, adj);        \
     }
 
 namespace Pennylane {
@@ -88,7 +110,7 @@ namespace Pennylane {
  */
 template <class fp_t, class Derived> class StateVectorBase {
   public:
-    using scalar_type_t = fp_t;
+    using ScalarTypeT = fp_t;
     /**
      * @brief StateVector complex precision type.
      */
@@ -218,6 +240,37 @@ template <class fp_t, class Derived> class StateVectorBase {
             arr, num_qubits_, ops, wires, inverse);
     }
 
+
+    /**
+     * @brief Apply a single generator to the state-vector using a given kernel.
+     *
+     * @param kernel Kernel to run the operation.
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param adj Indicates whether to use adjoint of operator.
+     * @param params Optional parameter list for parametric gates.
+     */
+    void applyGenerator(KernelType kernel, const std::string &opName,
+                        const std::vector<size_t> &wires, bool adj = false) {
+        auto *arr = getData();
+        DynamicDispatcher<fp_t>::getInstance().applyGenerator(
+            kernel, arr, num_qubits_, opName, wires, adj);
+    }
+
+    /**
+     * @brief Apply a single generator to the state-vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param adj Indicates whether to use adjoint of operator.
+     */
+    void applyGenerator(const std::string &opName,
+                        const std::vector<size_t> &wires, bool adj = false) {
+        auto *arr = getData();
+        DynamicDispatcher<fp_t>::getInstance().applyGenerator(
+            arr, num_qubits_, opName, wires, adj);
+    }
+
     /**
      * @brief Apply a given matrix directly to the statevector read directly
      * from numpy data. Data can be in 1D or 2D format.
@@ -242,25 +295,32 @@ template <class fp_t, class Derived> class StateVectorBase {
                                                  wires, inverse);
     }
 
+    /**
+     * @brief Apply a given matrix directly to the statevector read directly
+     * from numpy data. Data can be in 1D or 2D format.
+     *
+     * @param matrix Pointer to the array data.
+     * @param inverse Indicate whether inverse should be taken.
+     */
     inline void applyMatrix(const CFP_t *matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
-        constexpr auto kernel = static_lookup<GateOperations::Matrix>(
-            Constant::default_kernel_for_ops);
+        constexpr auto kernel = static_lookup<GateOperation::Matrix>(
+            Constant::default_kernel_for_gates);
         static_assert(
             array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,
-                          GateOperations::Matrix),
+                          GateOperation::Matrix),
             "The default kernel for applyMatrix does not implement it.");
         applyMatrix_<kernel>(matrix, wires, inverse);
     }
     inline void applyMatrix(const std::vector<CFP_t> &matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
-        constexpr auto kernel = static_lookup<GateOperations::Matrix>(
-            Constant::default_kernel_for_ops);
+        constexpr auto kernel = static_lookup<GateOperation::Matrix>(
+            Constant::default_kernel_for_gates);
         static_assert(
             array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,
-                          GateOperations::Matrix),
+                          GateOperation::Matrix),
             "The default kernel for applyMatrix does not implement it.");
         applyMatrix_<kernel>(matrix, wires, inverse);
     }
@@ -271,13 +331,13 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(PauliX)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(PauliX)
 
     /**
      * @brief Apply PauliX gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(PauliX)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(PauliX)
 
     /**
      * @brief Apply PauliY gate operation to given indices of statevector.
@@ -285,13 +345,13 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(PauliY)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(PauliY)
 
     /**
      * @brief Apply PauliY gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(PauliY)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(PauliY)
 
     /**
      * @brief Apply PauliZ gate operation to given indices of statevector.
@@ -299,12 +359,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(PauliZ)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(PauliZ)
     /**
      * @brief Apply PauliZ gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(PauliZ)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(PauliZ)
 
     /**
      * @brief Apply Hadamard gate operation to given indices of statevector.
@@ -312,12 +372,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(Hadamard)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(Hadamard)
     /**
      * @brief Apply Hadamard gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(Hadamard)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(Hadamard)
 
     /**
      * @brief Apply S gate operation to given indices of statevector.
@@ -325,24 +385,24 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(S)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(S)
     /**
      * @brief Apply S gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(S)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(S)
 
     /**
      * @brief Apply T gate operation to given indices of statevector.
      *
      * @param inverse Take adjoint of given operation.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(T)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(T)
     /**
      * @brief Apply T gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(T)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(T)
 
     /**
      * @brief Apply RX gate operation to given indices of statevector.
@@ -351,12 +411,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(RX)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(RX)
     /**
      * @brief Apply RX gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(RX)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(RX)
 
     /**
      * @brief Apply RY gate operation to given indices of statevector.
@@ -365,12 +425,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(RY)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(RY)
     /**
      * @brief Apply RY gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(RY)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(RY)
 
     /**
      * @brief Apply RZ gate operation to given indices of statevector.
@@ -379,12 +439,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(RZ)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(RZ)
     /**
      * @brief Apply RZ gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(RZ)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(RZ)
 
     /**
      * @brief Apply phase shift gate operation to given indices of statevector.
@@ -393,12 +453,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      * @param angle Phase shift angle.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(PhaseShift)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(PhaseShift)
     /**
      * @brief Apply PhaseShift gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(PhaseShift)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(PhaseShift)
 
     /*
      * @brief Apply Rot gate \f$RZ(\omega)RY(\theta)RZ(\phi)\f$ to given indices
@@ -410,12 +470,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param theta Gate rotation parameter \f$\theta\f$.
      * @param omega Gate rotation parameter \f$\omega\f$.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(Rot)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(Rot)
     /**
      * @brief Apply Rot gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(Rot)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(Rot)
 
     /**
      * @brief Apply controlled phase shift gate operation to given indices of
@@ -425,12 +485,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      * @param angle Phase shift angle.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(ControlledPhaseShift)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(ControlledPhaseShift)
     /**
      * @brief Apply controlled phase shift gate operation using a kernel given
-     * in default_kernel_for_ops
+     * in default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(ControlledPhaseShift)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(ControlledPhaseShift)
 
     /**
      * @brief Apply CNOT (CX) gate to given indices of statevector.
@@ -438,12 +498,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(CNOT)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(CNOT)
     /**
      * @brief Apply CNOT gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CNOT)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(CNOT)
 
     /**
      * @brief Apply CY gate to given indices of statevector.
@@ -451,12 +511,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(CY)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(CY)
     /**
      * @brief Apply CY gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CY)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(CY)
 
     /**
      * @brief Apply CZ gate to given indices of statevector.
@@ -464,12 +524,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(CZ)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(CZ)
     /**
      * @brief Apply CZ gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CZ)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(CZ)
 
     /**
      * @brief Apply SWAP gate to given indices of statevector.
@@ -477,12 +537,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(SWAP)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(SWAP)
     /**
      * @brief Apply SWAP gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(SWAP)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(SWAP)
 
     /**
      * @brief Apply CRX gate to given indices of statevector.
@@ -491,12 +551,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(CRX)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(CRX)
     /**
      * @brief Apply CRX gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CRX)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(CRX)
 
     /**
      * @brief Apply CRY gate to given indices of statevector.
@@ -505,12 +565,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(CRY)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(CRY)
     /**
      * @brief Apply CRY gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CRY)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(CRY)
 
     /**
      * @brief Apply CRZ gate to given indices of statevector.
@@ -519,12 +579,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      * @param angle Rotation angle of gate.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(CRZ)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(CRZ)
     /**
      * @brief Apply CRZ gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CRZ)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(CRZ)
 
     /**
      * @brief Apply CRot gate (controlled \f$RZ(\omega)RY(\theta)RZ(\phi)\f$) to
@@ -536,12 +596,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param theta Gate rotation parameter \f$\theta\f$.
      * @param omega Gate rotation parameter \f$\omega\f$.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(CRot)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(CRot)
     /**
      * @brief Apply CRot gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CRot)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(CRot)
 
     /**
      * @brief Apply Toffoli (CCX) gate to given indices of statevector.
@@ -549,12 +609,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(Toffoli)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(Toffoli)
     /**
      * @brief Apply Toffoli gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(Toffoli)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(Toffoli)
 
     /**
      * @brief Apply CSWAP gate to given indices of statevector.
@@ -562,12 +622,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(CSWAP)
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(CSWAP)
     /**
      * @brief Apply CSWAP gate operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(CSWAP)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(CSWAP)
 
     /**
      * @brief Apply PhaseShift generator to given indices of statevector.
@@ -575,12 +635,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(GeneratorPhaseShift)
+    PENNYLANE_STATEVECTOR_DEFINE_GENERATOR(PhaseShift)
     /**
      * @brief Apply PhaseShift generator operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GeneratorPhaseShift)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GENERATOR(PhaseShift)
 
     /**
      * @brief Apply CRX generator to given indices of statevector.
@@ -588,12 +648,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(GeneratorCRX)
+    PENNYLANE_STATEVECTOR_DEFINE_GENERATOR(CRX)
     /**
      * @brief Apply CRX generator operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GeneratorCRX)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GENERATOR(CRX)
 
     /**
      * @brief Apply CRY generator to given indices of statevector.
@@ -601,12 +661,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(GeneratorCRY)
+    PENNYLANE_STATEVECTOR_DEFINE_GENERATOR(CRY)
     /**
      * @brief Apply CRY generator opertation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GeneratorCRY)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GENERATOR(CRY)
 
     /**
      * @brief Apply CRZ generator to given indices of statevector.
@@ -614,12 +674,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(GeneratorCRZ)
+    PENNYLANE_STATEVECTOR_DEFINE_GENERATOR(CRZ)
     /**
      * @brief Apply CRZ generator operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GeneratorCRZ)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GENERATOR(CRZ)
 
     /**
      * @brief Apply controlled phase shift generator to given indices of
@@ -628,12 +688,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
-    PENNYLANE_STATEVECTOR_DEFINE_OPS(GeneratorControlledPhaseShift)
+    PENNYLANE_STATEVECTOR_DEFINE_GENERATOR(ControlledPhaseShift)
     /**
      * @brief Apply controlled phase shift operation using a kernel given in
-     * default_kernel_for_ops
+     * default_kernel_for_gates
      */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GeneratorControlledPhaseShift)
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GENERATOR(ControlledPhaseShift)
 };
 
 /**

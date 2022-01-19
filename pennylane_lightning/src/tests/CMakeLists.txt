@@ -49,18 +49,17 @@ endif()
 ################################################################################
 
 set(TEST_SOURCES Test_AdjDiff.cpp
-                 Test_Bindings.cpp
-                 Test_DynamicDispatcher.cpp
-                 Test_GateOperations_Nonparam.cpp
-                 Test_GateOperations_Param.cpp
-                 Test_IndicesUtil.cpp
+#                 Test_Bindings.cpp
+#                 Test_DynamicDispatcher.cpp
+#                 Test_GateOperations_Nonparam.cpp
+#                 Test_GateOperations_Param.cpp
+#                 Test_IndicesUtil.cpp
                  Test_Measures.cpp
-                 Test_SelectGateOps.cpp
-                 Test_StateVectorManaged.cpp
-                 Test_StateVectorRaw.cpp
+#                 Test_SelectGateOps.cpp
+#                 Test_StateVectorManaged.cpp
+#                 Test_StateVectorRaw.cpp
                  Test_Util.cpp
                  Test_VectorJacobianProduct.cpp)
-
 
 add_executable(runner ${TEST_SOURCES})
 target_link_libraries(runner PRIVATE lightning_tests_dependency)

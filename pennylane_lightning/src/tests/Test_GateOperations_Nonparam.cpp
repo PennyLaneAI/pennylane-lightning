@@ -30,10 +30,10 @@ using std::vector;
  * Single-qubit gates
  ******************************************************************************/
 
-TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyPauliX",
+TEMPLATE_PRODUCT_TEST_CASE("GateOperation::applyPauliX",
                            "[GateOperations_Nonparam],[single-qubit]",
                            ALL_GATE_OPERATIONS, (float, double)) {
-    using fp_t = typename TestType::scalar_type_t;
+    using fp_t = typename TestType::ScalarTypeT;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
     for (size_t index = 0; index < num_qubits; index++) {
@@ -46,10 +46,10 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyPauliX",
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyPauliY",
+TEMPLATE_PRODUCT_TEST_CASE("GateOperation::applyPauliY",
                            "[GateOperations_Nonparam],[single-qubit]",
                            ALL_GATE_OPERATIONS, (float, double)) {
-    using fp_t = typename TestType::scalar_type_t;
+    using fp_t = typename TestType::ScalarTypeT;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
 
@@ -72,10 +72,10 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyPauliY",
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyPauliZ",
+TEMPLATE_PRODUCT_TEST_CASE("GateOperation::applyPauliZ",
                            "[GateOperations_Nonparam],[single-qubit]",
                            ALL_GATE_OPERATIONS, (float, double)) {
-    using fp_t = typename TestType::scalar_type_t;
+    using fp_t = typename TestType::ScalarTypeT;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
 
@@ -95,11 +95,11 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyPauliZ",
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyHadamard",
+TEMPLATE_PRODUCT_TEST_CASE("GateOperation::applyHadamard",
                            "[GateOperations_Nonparam],[single-qubit]",
                            (GateOperationsLM, GateOperationsPI),
                            (float, double)) {
-    using fp_t = typename TestType::scalar_type_t;
+    using fp_t = typename TestType::ScalarTypeT;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
     for (size_t index = 0; index < num_qubits; index++) {
@@ -119,10 +119,10 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyHadamard",
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyS",
+TEMPLATE_PRODUCT_TEST_CASE("GateOperation::applyS",
                            "[GateOperations_Nonparam],[single-qubit]",
                            ALL_GATE_OPERATIONS, (float, double)) {
-    using fp_t = typename TestType::scalar_type_t;
+    using fp_t = typename TestType::ScalarTypeT;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
 
@@ -143,10 +143,10 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyS",
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyT",
+TEMPLATE_PRODUCT_TEST_CASE("GateOperation::applyT",
                            "[GateOperations_Nonparam],[single-qubit]",
                            ALL_GATE_OPERATIONS, (float, double)) {
-    using fp_t = typename TestType::scalar_type_t;
+    using fp_t = typename TestType::ScalarTypeT;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
     // Test using |+++> state
@@ -172,10 +172,10 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyT",
  * Two-qubit gates
  ******************************************************************************/
 
-TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCNOT",
+TEMPLATE_PRODUCT_TEST_CASE("GateOperation::applyCNOT",
                            "[GateOperations_Nonparam],[two-qubit]",
                            ALL_GATE_OPERATIONS, (float, double)) {
-    using fp_t = typename TestType::scalar_type_t;
+    using fp_t = typename TestType::ScalarTypeT;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
     auto st = create_zero_state<fp_t>(num_qubits);
@@ -184,7 +184,7 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCNOT",
     TestType::applyHadamard(st.data(), num_qubits, {0}, false);
 
     if constexpr (array_has_elt(TestType::implemented_gates,
-                                GateOperations::CNOT)) {
+                                GateOperation::CNOT)) {
         for (size_t index = 1; index < num_qubits; index++) {
             TestType::applyCNOT(st.data(), num_qubits, {index - 1, index},
                                 false);
@@ -195,10 +195,10 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCNOT",
 }
 
 // NOLINTNEXTLINE: Avoiding complexity errors
-TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applySWAP",
+TEMPLATE_PRODUCT_TEST_CASE("GateOperation::applySWAP",
                            "[GateOperations_Nonparam],[two-qubit]",
                            ALL_GATE_OPERATIONS, (float, double)) {
-    using fp_t = typename TestType::scalar_type_t;
+    using fp_t = typename TestType::ScalarTypeT;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
     auto ini_st = create_zero_state<fp_t>(num_qubits);
@@ -208,7 +208,7 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applySWAP",
     TestType::applyPauliX(ini_st.data(), num_qubits, {1}, false);
 
     if constexpr (array_has_elt(TestType::implemented_gates,
-                                GateOperations::SWAP)) {
+                                GateOperation::SWAP)) {
         CHECK(ini_st ==
               std::vector<CFP_t>{Util::ZERO<fp_t>(), Util::ZERO<fp_t>(),
                                  Util::INVSQRT2<fp_t>(), Util::ZERO<fp_t>(),
@@ -273,10 +273,10 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applySWAP",
 }
 
 // NOLINTNEXTLINE: Avoiding complexity errors
-TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCY",
+TEMPLATE_PRODUCT_TEST_CASE("GateOperation::applyCY",
                            "[GateOperations_Nonparam],[two-qubit]",
                            ALL_GATE_OPERATIONS, (float, double)) {
-    using fp_t = typename TestType::scalar_type_t;
+    using fp_t = typename TestType::ScalarTypeT;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
     auto ini_st = create_zero_state<fp_t>(num_qubits);
@@ -286,7 +286,7 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCY",
     TestType::applyPauliX(ini_st.data(), num_qubits, {1}, false);
 
     if constexpr (array_has_elt(TestType::implemented_gates,
-                                GateOperations::CY)) {
+                                GateOperation::CY)) {
         CHECK(ini_st ==
               std::vector<CFP_t>{
                   Util::ZERO<fp_t>(), Util::ZERO<fp_t>(),
@@ -340,10 +340,10 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCY",
 }
 
 // NOLINTNEXTLINE: Avoiding complexity errors
-TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCZ",
+TEMPLATE_PRODUCT_TEST_CASE("GateOperation::applyCZ",
                            "[GateOperations_Nonparam],[two-qubit]",
                            ALL_GATE_OPERATIONS, (float, double)) {
-    using fp_t = typename TestType::scalar_type_t;
+    using fp_t = typename TestType::ScalarTypeT;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
 
@@ -354,7 +354,7 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCZ",
     TestType::applyPauliX(ini_st.data(), num_qubits, {1}, false);
 
     if constexpr (array_has_elt(TestType::implemented_gates,
-                                GateOperations::CZ)) {
+                                GateOperation::CZ)) {
         auto st = ini_st;
         CHECK(st == std::vector<CFP_t>{Util::ZERO<fp_t>(), Util::ZERO<fp_t>(),
                                        std::complex<fp_t>(1.0 / sqrt(2), 0),
@@ -414,10 +414,10 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCZ",
  * Three-qubit gates
  ******************************************************************************/
 
-TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyToffoli",
+TEMPLATE_PRODUCT_TEST_CASE("GateOperation::applyToffoli",
                            "[GateOperations_Nonparam],[three-qubit]",
                            ALL_GATE_OPERATIONS, (float, double)) {
-    using fp_t = typename TestType::scalar_type_t;
+    using fp_t = typename TestType::ScalarTypeT;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
     auto ini_st = create_zero_state<fp_t>(num_qubits);
@@ -427,7 +427,7 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyToffoli",
     TestType::applyPauliX(ini_st.data(), num_qubits, {1}, false);
 
     if constexpr (array_has_elt(TestType::implemented_gates,
-                                GateOperations::Toffoli)) {
+                                GateOperation::Toffoli)) {
         SECTION("Toffoli 0,1,2 |+10> -> |010> + |111>") {
             std::vector<CFP_t> expected{Util::ZERO<fp_t>(),
                                         Util::ZERO<fp_t>(),
@@ -482,10 +482,10 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyToffoli",
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCSWAP",
+TEMPLATE_PRODUCT_TEST_CASE("GateOperation::applyCSWAP",
                            "[GateOperations_Nonparam],[three-qubit]",
                            ALL_GATE_OPERATIONS, (float, double)) {
-    using fp_t = typename TestType::scalar_type_t;
+    using fp_t = typename TestType::ScalarTypeT;
     using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
 
@@ -496,7 +496,7 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCSWAP",
     TestType::applyPauliX(ini_st.data(), num_qubits, {1}, false);
 
     if constexpr (array_has_elt(TestType::implemented_gates,
-                                GateOperations::CSWAP)) {
+                                GateOperation::CSWAP)) {
         SECTION("CSWAP 0,1,2 |+10> -> |010> + |101>") {
             std::vector<CFP_t> expected{Util::ZERO<fp_t>(),
                                         Util::ZERO<fp_t>(),

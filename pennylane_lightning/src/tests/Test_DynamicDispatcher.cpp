@@ -96,7 +96,7 @@ template <typename PrecisionT, typename ParamT, KernelType kernel, size_t idx,
           class RandomEngine>
 constexpr void testAllGatesForKernelIter(RandomEngine &re,
                                          size_t max_num_qubits) {
-    if constexpr (idx < static_cast<int>(GateOperations::END) - 1) {
+    if constexpr (idx < static_cast<int>(GateOperation::END) - 1) {
         constexpr auto gate_op = static_cast<GateOperations>(idx);
         for (size_t num_qubits = static_lookup<gate_op>(Constant::gate_wires);
              num_qubits <= max_num_qubits; num_qubits++) {

@@ -57,7 +57,7 @@ TEMPLATE_TEST_CASE("StateVectorRaw::setData", "[StateVectorRaw]", float,
         }                                                                      \
     };                                                                         \
     template <typename fp_t> struct TestGateOps##GATE_NAME<fp_t, 0> {          \
-        constexpr static GateOperations op = GateOperations::GATE_NAME;        \
+        constexpr static GateOperations op = GateOperation::GATE_NAME;        \
         template <KernelType kernel>                                           \
         static std::enable_if_t<                                               \
             array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates, op), \
@@ -86,7 +86,7 @@ TEMPLATE_TEST_CASE("StateVectorRaw::setData", "[StateVectorRaw]", float,
         }                                                                      \
     };                                                                         \
     template <typename fp_t> struct TestGateOps##GATE_NAME<fp_t, 1> {          \
-        constexpr static GateOperations op = GateOperations::GATE_NAME;        \
+        constexpr static GateOperations op = GateOperation::GATE_NAME;        \
         constexpr static std::array<fp_t, 1> params = {0.312};                 \
         template <KernelType kernel>                                           \
         static std::enable_if_t<                                               \
@@ -116,7 +116,7 @@ TEMPLATE_TEST_CASE("StateVectorRaw::setData", "[StateVectorRaw]", float,
         }                                                                      \
     };                                                                         \
     template <typename fp_t> struct TestGateOps##GATE_NAME<fp_t, 3> {          \
-        constexpr static GateOperations op = GateOperations::GATE_NAME;        \
+        constexpr static GateOperations op = GateOperation::GATE_NAME;        \
         constexpr static std::array<fp_t, 3> params = {0.128, -0.563, 1.414};  \
         template <KernelType kernel>                                           \
         static std::enable_if_t<                                               \
@@ -154,7 +154,7 @@ TEMPLATE_TEST_CASE("StateVectorRaw::setData", "[StateVectorRaw]", float,
                 std::get<0>(Constant::available_kernels[idx]);                 \
             TestGateOps##GATE_NAME<                                            \
                 fp_t,                                                          \
-                static_lookup<GateOperations::GATE_NAME>(                      \
+                static_lookup<GateOperation::GATE_NAME>(                      \
                     Constant::gate_num_params)>::template test<kernel>();      \
             testStateVectorApply##GATE_NAME##Iter<fp_t, idx + 1>();            \
         }                                                                      \

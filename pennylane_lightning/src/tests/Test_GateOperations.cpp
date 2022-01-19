@@ -1,6 +1,6 @@
 #include <complex>
 
-#include "GateOperations.hpp"
+#include "GateOperation.hpp"
 #include "Util.hpp"
 
 #include <catch2/catch.hpp>

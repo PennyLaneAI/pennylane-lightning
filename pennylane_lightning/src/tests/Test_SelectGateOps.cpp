@@ -47,8 +47,8 @@ TEMPLATE_TEST_CASE("SelectGateOps", "[SelectGateOps]", float, double) {
 
     SECTION("Check all gate operations have default kernels") {
         static_assert(
-            count_unique(first_elts_of(Constant::default_kernel_for_ops)) ==
-            static_cast<int>(GateOperations::END));
+            count_unique(first_elts_of(Constant::default_kernel_for_gates)) ==
+            static_cast<int>(GateOperation::END));
     }
 }
 
@@ -76,7 +76,7 @@ template <size_t num_params> struct CountGatesWithNumParamsIter<num_params, 0> {
 
 template <size_t num_params> struct CountGatesWithNumParams {
     constexpr static size_t value = CountGatesWithNumParamsIter<
-        num_params, static_cast<int>(GateOperations::END) - 1>::value;
+        num_params, static_cast<int>(GateOperation::END) - 1>::value;
 };
 
 /**
@@ -85,10 +85,10 @@ template <size_t num_params> struct CountGatesWithNumParams {
  * */
 constexpr static size_t countGatesWithNumParams(size_t num_params) {
     size_t cnt = 0;
-    for (size_t idx = 0; idx < static_cast<int>(GateOperations::END) - 1;
+    for (size_t idx = 0; idx < static_cast<int>(GateOperation::END) - 1;
          idx++) {
         const auto gate_op = static_cast<GateOperations>(idx);
-        if (gate_op == GateOperations::Matrix) {
+        if (gate_op == GateOperation::Matrix) {
             continue;
         }
         if (lookup(Constant::gate_num_params, gate_op) == num_params) {
@@ -110,8 +110,8 @@ void testGateFuncPtrPair() {
 
     REQUIRE(gate_ops_set.size() ==
             count_elt(
-                static_cast<int>(GateOperations::BEGIN),
-                static_cast<int>(GateOperations::END) - 1, /*Besides matrix*/
+                static_cast<int>(GateOperation::BEGIN),
+                static_cast<int>(GateOperation::END) - 1, /*Besides matrix*/
                 [](int v) {
                     return lookup(Constant::gate_num_params,
                                   static_cast<GateOperations>(v)) == num_params;

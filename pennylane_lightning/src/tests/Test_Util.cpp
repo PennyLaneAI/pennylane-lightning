@@ -392,8 +392,8 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
  *
  * This is a slow version of countBit1 defined in Util.hpp
  */
-int popcount_slow(uint64_t x) {
-    int c = 0;
+size_t popcount_slow(uint64_t x) {
+    size_t c = 0;
     for (; x != 0; x >>= 1) {
         if ((x & 1U) != 0U) {
             c++;
@@ -407,8 +407,8 @@ int popcount_slow(uint64_t x) {
  *
  * This is a slow version of countTrailing0 defined in Util.hpp
  */
-int ctz_slow(uint64_t x) {
-    int c = 0;
+size_t ctz_slow(uint64_t x) {
+    size_t c = 0;
     while ((x & 1) == 0) {
         x >>= 1;
         c++;
@@ -493,4 +493,30 @@ TEST_CASE("Utility bit operations", "[Util]") {
             }
         }
     }
+}
+
+TEST_CASE("Utility array and tuples", "[Util]") {
+    std::array<std::pair<int, std::string_view>, 5> test_pairs {
+        std::pair(0, "Zero"),
+        std::pair(1, "One"),
+        std::pair(2, "Two"),
+        std::pair(3, "Three"),
+        std::pair(4, "Four"),
+    };
+
+    REQUIRE(Util::reverse_pairs(test_pairs) == std::array{
+        std::pair<std::string_view, int>("Zero", 0),
+        std::pair<std::string_view, int>("One", 1),
+        std::pair<std::string_view, int>("Two", 2),
+        std::pair<std::string_view, int>("Three", 3),
+        std::pair<std::string_view, int>("Four", 4),
+    });
+
+    REQUIRE(Util::reverse_pairs(test_pairs) != std::array{
+        std::pair<std::string_view, int>("Zero", 0),
+        std::pair<std::string_view, int>("One", 1),
+        std::pair<std::string_view, int>("Two", 0),
+        std::pair<std::string_view, int>("Three", 3),
+        std::pair<std::string_view, int>("Four", 4),
+    });
 }

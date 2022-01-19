@@ -18,7 +18,7 @@
 #pragma once
 
 #include "Error.hpp"
-#include "GateOperations.hpp"
+#include "GateOperation.hpp"
 #include "Gates.hpp"
 #include "KernelType.hpp"
 #include "Util.hpp"
@@ -49,32 +49,36 @@ auto constexpr fillLeadingOnes(size_t pos) -> size_t {
  *
  * @tparam PrecisionT Floating point precision of underlying statevector data
  */
-class GateOperationsLM {
+class GateImplementationsLM {
   public:
     constexpr static KernelType kernel_id = KernelType::LM;
     constexpr static std::string_view name = "LM";
 
     constexpr static std::array implemented_gates = {
-        GateOperations::PauliX,
-        GateOperations::PauliY,
-        GateOperations::PauliZ,
-        GateOperations::Hadamard,
-        GateOperations::S,
-        GateOperations::T,
-        GateOperations::RX,
-        GateOperations::RY,
-        GateOperations::RZ,
-        GateOperations::PhaseShift,
-        GateOperations::Rot,
-        GateOperations::CZ,
-        GateOperations::CNOT,
-        GateOperations::SWAP,
-        GateOperations::GeneratorPhaseShift};
+        GateOperation::PauliX,
+        GateOperation::PauliY,
+        GateOperation::PauliZ,
+        GateOperation::Hadamard,
+        GateOperation::S,
+        GateOperation::T,
+        GateOperation::RX,
+        GateOperation::RY,
+        GateOperation::RZ,
+        GateOperation::PhaseShift,
+        GateOperation::Rot,
+        GateOperation::CZ,
+        GateOperation::CNOT,
+        GateOperation::SWAP,
+    };
+    constexpr static std::array implemented_generators = {
+        GeneratorOperation::PhaseShift
+    };
 
   private:
     template <class PrecisionT>
-    static inline void applySingleQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
-                                          const std::complex<PrecisionT> *op_matrix, size_t wire) {
+    static inline void
+    applySingleQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
+                       const std::complex<PrecisionT> *op_matrix, size_t wire) {
         const size_t rev_wire = num_qubits - wire - 1;
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
         const size_t wire_parity = fillTrailingOnes(rev_wire);
@@ -95,7 +99,8 @@ class GateOperationsLM {
 
   public:
     template <class PrecisionT>
-    static void applyMatrix(std::complex<PrecisionT> *arr, size_t num_qubits, const std::complex<PrecisionT> *matrix,
+    static void applyMatrix(std::complex<PrecisionT> *arr, size_t num_qubits,
+                            const std::complex<PrecisionT> *matrix,
                             const std::vector<size_t> &wires, bool inverse) {
         static_cast<void>(arr);
         static_cast<void>(num_qubits);
@@ -106,7 +111,8 @@ class GateOperationsLM {
     }
 
     template <class PrecisionT>
-    static void applyPauliX(std::complex<PrecisionT> *arr, const size_t num_qubits,
+    static void applyPauliX(std::complex<PrecisionT> *arr,
+                            const size_t num_qubits,
                             const std::vector<size_t> &wires,
                             [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
@@ -123,7 +129,8 @@ class GateOperationsLM {
     }
 
     template <class PrecisionT>
-    static void applyPauliY(std::complex<PrecisionT> *arr, const size_t num_qubits,
+    static void applyPauliY(std::complex<PrecisionT> *arr,
+                            const size_t num_qubits,
                             const std::vector<size_t> &wires,
                             [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
@@ -143,7 +150,8 @@ class GateOperationsLM {
     }
 
     template <class PrecisionT>
-    static void applyPauliZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
+    static void applyPauliZ(std::complex<PrecisionT> *arr,
+                            const size_t num_qubits,
                             const std::vector<size_t> &wires,
                             [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
@@ -160,13 +168,14 @@ class GateOperationsLM {
     }
 
     template <class PrecisionT>
-    static void applyHadamard(std::complex<PrecisionT> *arr, const size_t num_qubits,
+    static void applyHadamard(std::complex<PrecisionT> *arr,
+                              const size_t num_qubits,
                               const std::vector<size_t> &wires,
                               [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
         constexpr PrecisionT isqrt2 = Util::INVSQRT2<PrecisionT>();
-        constexpr static std::array<std::complex<PrecisionT>, 4> hadamardMat = {isqrt2, isqrt2,
-                                                             isqrt2, -isqrt2};
+        constexpr static std::array<std::complex<PrecisionT>, 4> hadamardMat = {
+            isqrt2, isqrt2, isqrt2, -isqrt2};
         applySingleQubitOp(arr, num_qubits, hadamardMat.data(), wires[0]);
     }
 
@@ -201,9 +210,10 @@ class GateOperationsLM {
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
         const std::complex<PrecisionT> shift =
-            (inverse)
-                ? std::conj(std::exp(std::complex<PrecisionT>(0, static_cast<PrecisionT>(M_PI / 4))))
-                : std::exp(std::complex<PrecisionT>(0, static_cast<PrecisionT>(M_PI / 4)));
+            (inverse) ? std::conj(std::exp(std::complex<PrecisionT>(
+                            0, static_cast<PrecisionT>(M_PI / 4))))
+                      : std::exp(std::complex<PrecisionT>(
+                            0, static_cast<PrecisionT>(M_PI / 4)));
 
         for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
@@ -212,42 +222,45 @@ class GateOperationsLM {
         }
     }
 
-    template <class PrecisionT, class Param_t = PrecisionT>
+    template <class PrecisionT, class ParamT = PrecisionT>
     static void applyRX(std::complex<PrecisionT> *arr, const size_t num_qubits,
                         const std::vector<size_t> &wires, bool inverse,
-                        Param_t angle) {
+                        ParamT angle) {
         assert(wires.size() == 1);
 
         const PrecisionT c = std::cos(angle / 2);
         const PrecisionT js =
             (inverse) ? -std::sin(-angle / 2) : std::sin(-angle / 2);
 
-        const std::array<std::complex<PrecisionT>, 4> RXMat = {c, Util::IMAG<PrecisionT>() * js,
-                                            Util::IMAG<PrecisionT>() * js, c};
+        const std::array<std::complex<PrecisionT>, 4> RXMat = {
+            c, Util::IMAG<PrecisionT>() * js, Util::IMAG<PrecisionT>() * js, c};
         applySingleQubitOp(arr, num_qubits, RXMat.data(), wires[0]);
     }
 
-    template <class PrecisionT, class Param_t = PrecisionT>
+    template <class PrecisionT, class ParamT = PrecisionT>
     static void applyRY(std::complex<PrecisionT> *arr, const size_t num_qubits,
                         const std::vector<size_t> &wires, bool inverse,
-                        Param_t angle) {
+                        ParamT angle) {
         assert(wires.size() == 1);
 
         const PrecisionT c = std::cos(angle / 2);
-        const PrecisionT s = (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
+        const PrecisionT s =
+            (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
 
         const std::array<std::complex<PrecisionT>, 4> RYMat = {c, -s, s, c};
         applySingleQubitOp(arr, num_qubits, RYMat.data(), wires[0]);
     }
 
-    template <class PrecisionT, class Param_t = PrecisionT>
+    template <class PrecisionT, class ParamT = PrecisionT>
     static void applyRZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
                         const std::vector<size_t> &wires, bool inverse,
-                        Param_t angle) {
+                        ParamT angle) {
         assert(wires.size() == 1);
 
-        const std::complex<PrecisionT> first = std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
-        const std::complex<PrecisionT> second = std::complex<PrecisionT>{std::cos(angle / 2), std::sin(angle / 2)};
+        const std::complex<PrecisionT> first =
+            std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
+        const std::complex<PrecisionT> second =
+            std::complex<PrecisionT>{std::cos(angle / 2), std::sin(angle / 2)};
 
         const std::array<std::complex<PrecisionT>, 2> shifts = {
             (inverse) ? std::conj(first) : first,
@@ -259,10 +272,11 @@ class GateOperationsLM {
         }
     }
 
-    template <class PrecisionT, class Param_t = PrecisionT>
-    static void applyPhaseShift(std::complex<PrecisionT> *arr, const size_t num_qubits,
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void applyPhaseShift(std::complex<PrecisionT> *arr,
+                                const size_t num_qubits,
                                 const std::vector<size_t> &wires, bool inverse,
-                                Param_t angle) {
+                                ParamT angle) {
         assert(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
@@ -270,7 +284,8 @@ class GateOperationsLM {
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
         const std::complex<PrecisionT> s =
-            inverse ? std::exp(-std::complex<PrecisionT>(0, angle)) : std::exp(std::complex<PrecisionT>(0, angle));
+            inverse ? std::exp(-std::complex<PrecisionT>(0, angle))
+                    : std::exp(std::complex<PrecisionT>(0, angle));
 
         for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
@@ -279,23 +294,23 @@ class GateOperationsLM {
         }
     }
 
-    template <class PrecisionT, class Param_t = PrecisionT>
+    template <class PrecisionT, class ParamT = PrecisionT>
     static void applyRot(std::complex<PrecisionT> *arr, const size_t num_qubits,
                          const std::vector<size_t> &wires, bool inverse,
-                         Param_t phi, Param_t theta, Param_t omega) {
+                         ParamT phi, ParamT theta, ParamT omega) {
         assert(wires.size() == 1);
 
-        const auto rotMat = (inverse)
-                                ? Gates::getRot<PrecisionT>(-omega, -theta, -phi)
-                                : Gates::getRot<PrecisionT>(phi, theta, omega);
+        const auto rotMat =
+            (inverse) ? Gates::getRot<PrecisionT>(-omega, -theta, -phi)
+                      : Gates::getRot<PrecisionT>(phi, theta, omega);
 
         applySingleQubitOp(arr, num_qubits, rotMat.data(), wires[0]);
     }
 
     template <class PrecisionT>
-    static void applyCNOT(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                          const std::vector<size_t> &wires,
-                          [[maybe_unused]] bool inverse) {
+    static void
+    applyCNOT(std::complex<PrecisionT> *arr, const size_t num_qubits,
+              const std::vector<size_t> &wires, [[maybe_unused]] bool inverse) {
         assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
@@ -389,141 +404,6 @@ class GateOperationsLM {
             const size_t i01 = i00 | rev_wire0_shift;
             std::swap(arr[i10], arr[i01]);
         }
-    }
-
-    template <class PrecisionT, class Param_t = PrecisionT>
-    static void applyControlledPhaseShift(std::complex<PrecisionT> *arr, size_t num_qubits,
-                                          const std::vector<size_t> &wires,
-                                          [[maybe_unused]] bool inverse,
-                                          Param_t angle) {
-        static_cast<void>(arr);
-        static_cast<void>(num_qubits);
-        static_cast<void>(wires);
-        static_cast<void>(angle);
-        PL_ABORT("GaterOperationsLM::applyControlledPhaseShift is not "
-                 "implemented yet");
-    }
-
-    template <class PrecisionT, class Param_t = PrecisionT>
-    static void applyCRX(std::complex<PrecisionT> *arr, size_t num_qubits,
-                         const std::vector<size_t> &wires,
-                         [[maybe_unused]] bool inverse, Param_t angle) {
-        static_cast<void>(arr);
-        static_cast<void>(num_qubits);
-        static_cast<void>(wires);
-        static_cast<void>(angle);
-        PL_ABORT("GaterOperationsLM::applyCRX is not implemented yet");
-    }
-
-    template <class PrecisionT, class Param_t = PrecisionT>
-    static void applyCRY(std::complex<PrecisionT> *arr, size_t num_qubits,
-                         const std::vector<size_t> &wires,
-                         [[maybe_unused]] bool inverse, Param_t angle) {
-        static_cast<void>(arr);
-        static_cast<void>(num_qubits);
-        static_cast<void>(wires);
-        static_cast<void>(angle);
-        PL_ABORT("GaterOperationsLM::applyCRY is not implemented yet");
-    }
-
-    template <class PrecisionT, class Param_t = PrecisionT>
-    static void applyCRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
-                         const std::vector<size_t> &wires,
-                         [[maybe_unused]] bool inverse, Param_t angle) {
-        static_cast<void>(arr);
-        static_cast<void>(num_qubits);
-        static_cast<void>(wires);
-        static_cast<void>(angle);
-        PL_ABORT("GaterOperationsLM::applyCRZ is not implemented yet");
-    }
-
-    template <class PrecisionT, class Param_t = PrecisionT>
-    static void applyCRot(std::complex<PrecisionT> *arr, size_t num_qubits,
-                          const std::vector<size_t> &wires,
-                          [[maybe_unused]] bool inverse, Param_t phi,
-                          Param_t theta, Param_t omega) {
-        static_cast<void>(arr);
-        static_cast<void>(num_qubits);
-        static_cast<void>(wires);
-        static_cast<void>(phi);
-        static_cast<void>(theta);
-        static_cast<void>(omega);
-        PL_ABORT("GaterOperationsLM::applyCRot is not implemented yet");
-    }
-
-    template <class PrecisionT>
-    static void applyToffoli(std::complex<PrecisionT> *arr, size_t num_qubits,
-                             const std::vector<size_t> &wires,
-                             [[maybe_unused]] bool inverse) {
-        static_cast<void>(arr);
-        static_cast<void>(num_qubits);
-        static_cast<void>(wires);
-        PL_ABORT("GaterOperationsLM::applyTofolli is not implemented yet");
-    }
-
-    template <class PrecisionT>
-    static void applyCSWAP(std::complex<PrecisionT> *arr, size_t num_qubits,
-                           const std::vector<size_t> &wires,
-                           [[maybe_unused]] bool inverse) {
-        static_cast<void>(arr);
-        static_cast<void>(num_qubits);
-        static_cast<void>(wires);
-        PL_ABORT("GaterOperationsLM::applyCSWAP is not implemented yet");
-    }
-
-    template <class PrecisionT>
-    static void applyGeneratorPhaseShift(std::complex<PrecisionT> *arr, size_t num_qubits,
-                                         const std::vector<size_t> &wires,
-                                         [[maybe_unused]] bool inverse) {
-        assert(wires.size() == 1);
-        const size_t rev_wire = num_qubits - wires[0] - 1;
-        const size_t wire_parity = fillTrailingOnes(rev_wire);
-        const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
-
-        for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
-            const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
-            arr[i0] = Util::ZERO<PrecisionT>();
-        }
-    }
-
-    template <class PrecisionT>
-    static void applyGeneratorCRX(std::complex<PrecisionT> *arr, size_t num_qubits,
-                                  const std::vector<size_t> &wires,
-                                  [[maybe_unused]] bool inverse) {
-        static_cast<void>(arr);
-        static_cast<void>(num_qubits);
-        static_cast<void>(wires);
-        PL_ABORT("GaterOperationsLM::applyGeneratorCRX is not implemented yet");
-    }
-
-    template <class PrecisionT>
-    static void applyGeneratorCRY(std::complex<PrecisionT> *arr, size_t num_qubits,
-                                  const std::vector<size_t> &wires,
-                                  [[maybe_unused]] bool inverse) {
-        static_cast<void>(arr);
-        static_cast<void>(num_qubits);
-        static_cast<void>(wires);
-        PL_ABORT("GaterOperationsLM::applyGeneratorCRY is not implemented yet");
-    }
-    template <class PrecisionT>
-    static void applyGeneratorCRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
-                                  const std::vector<size_t> &wires,
-                                  [[maybe_unused]] bool inverse) {
-        static_cast<void>(arr);
-        static_cast<void>(num_qubits);
-        static_cast<void>(wires);
-        PL_ABORT("GaterOperationsLM::applyGeneratorCRZ is not implemented yet");
-    }
-    template <class PrecisionT>
-    static void
-    applyGeneratorControlledPhaseShift(std::complex<PrecisionT> *arr, size_t num_qubits,
-                                       const std::vector<size_t> &wires,
-                                       [[maybe_unused]] bool inverse) {
-        static_cast<void>(arr);
-        static_cast<void>(num_qubits);
-        static_cast<void>(wires);
-        PL_ABORT("GaterOperationsLM::applyGeneratorControlledPhaseShift is not "
-                 "implemented yet");
     }
 };
 

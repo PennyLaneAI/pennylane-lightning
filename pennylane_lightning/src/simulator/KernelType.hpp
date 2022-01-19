@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file
+ * @file KernelType.hpp
  * Defines possible kernel types as enum and define python export.
  */
 #pragma once
@@ -25,11 +25,13 @@
 #include <utility>
 
 namespace Pennylane {
-enum class KernelType { PI, LM, Unknown };
+/**
+ * @brief Define kernel id for each implemenation
+ */
+enum class KernelType { PI, LM, None };
+} // namespace Pennylane
 
-namespace Constant {
-
+namespace Pennylane::Constant {
 [[maybe_unused]] constexpr std::array kernels_to_pyexport = {KernelType::PI,
                                                              KernelType::LM};
-} // namespace Constant
-} // namespace Pennylane
+} // namespace Pennylane::Constant

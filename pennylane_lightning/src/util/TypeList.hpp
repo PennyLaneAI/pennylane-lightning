@@ -21,45 +21,53 @@
 #include <type_traits>
 
 namespace Pennylane::Util {
-template<typename T, typename ...Ts>
-struct TypeNode {
+template <typename T, typename... Ts> struct TypeNode {
     using Type = T;
     using Next = TypeNode<Ts...>;
 };
 
-template<typename T>
-struct TypeNode<T> {
+template <typename T> struct TypeNode<T> {
     using Type = T;
     using Next = void;
 };
 
-template<typename... Ts>
-using TypeList = TypeNode<Ts...>;
+/**
+ * @brief Define type list
+ */
+template <typename... Ts> using TypeList = TypeNode<Ts...>;
 
-template<typename TypeList, size_t n>
-struct getNthType {
-    static_assert(!std::is_same_v<typename TypeList::Next, void>, 
-            "The given n is larger than the lenght of the typelist.");
-    using Type = getNthType<typename TypeList::Next, n-1>;
+template <typename TypeList, size_t n> struct getNthType {
+    static_assert(!std::is_same_v<typename TypeList::Next, void>,
+                  "The given n is larger than the lenght of the typelist.");
+    using Type = getNthType<typename TypeList::Next, n - 1>;
 };
 
-template<typename TypeList>
-struct getNthType<TypeList, 0> {
+template <typename TypeList> struct getNthType<TypeList, 0> {
     using Type = typename TypeList::Type;
 };
 
-template<bool condition, typename FirstType, typename SecondType>
-struct IfFirstElseSecond {
-};
+template <typename TypeList>
+constexpr size_t length() {
+    return 1 + length<typename TypeList::Next>();
+}
+template<>
+constexpr size_t length<void>() {
+    return 0;
+}
 
-template<typename FirstType, typename SecondType>
+/**
+ * @brief Return first type if condition is true. Else return second type
+ */
+template <bool condition, typename FirstType, typename SecondType>
+struct IfFirstElseSecond {};
+
+template <typename FirstType, typename SecondType>
 struct IfFirstElseSecond<true, FirstType, SecondType> {
     using Type = FirstType;
 };
 
-template<typename FirstType, typename SecondType>
+template <typename FirstType, typename SecondType>
 struct IfFirstElseSecond<false, FirstType, SecondType> {
     using Type = SecondType;
 };
-
 } // namespace Pennylane::Util

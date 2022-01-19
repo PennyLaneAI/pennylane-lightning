@@ -26,7 +26,7 @@ template <class fp_t = double>
 class StateVectorManaged
     : public StateVectorBase<fp_t, StateVectorManaged<fp_t>> {
   public:
-    using scalar_type_t = fp_t;
+    using ScalarTypeT = fp_t;
     using CFP_t = std::complex<fp_t>;
 
   private:

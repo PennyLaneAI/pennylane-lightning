@@ -3,7 +3,7 @@
 #include <random>
 #include <vector>
 
-#include "GateOperations.hpp"
+#include "GateOperation.hpp"
 
 #include <catch2/catch.hpp>
 

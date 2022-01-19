@@ -1319,4 +1319,24 @@ template <class T, class Tuple> constexpr auto tuple_to_array(Tuple &&tuple) {
         [](auto... n) { return std::array<T, sizeof...(n)>{n...}; },
         std::forward<Tuple>(tuple));
 }
+
+/// @cond DEV
+namespace Internal {
+/**
+ * @brief Helper function for prepend_to_tuple
+ */
+template <class T, class U, size_t size, std::size_t... I>
+constexpr auto reverse_pairs_helper(const std::array<std::pair<T, U>, size>& arr,
+                        [[maybe_unused]] std::index_sequence<I...> dummy) {
+    return std::array{std::pair{arr[I].second, arr[I].first}...};
+}
+} // namespace Internal
+/// @endcond
+
+template <class T, class U, size_t size>
+constexpr auto reverse_pairs(const std::array<std::pair<T, U>, size>& arr) -> 
+    std::array<std::pair<U, T>, size>
+{
+    return Internal::reverse_pairs_helper(arr, std::make_index_sequence<size>{});
+}
 } // namespace Pennylane::Util
