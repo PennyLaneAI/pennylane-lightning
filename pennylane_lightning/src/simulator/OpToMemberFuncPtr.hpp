@@ -26,7 +26,8 @@ namespace Pennylane {
  */
 template <class PrecisionT, class ParamT, class GateImplOrSVType, GateOperation gate_op>
 struct GateOpToMemberFuncPtr {
-    static_assert(gate_op != GateOperation::Matrix, "GateOperation::Matrix is not supported.");
+    static_assert(gate_op != GateOperation::Matrix, 
+            "GateOpToMemberFuncPtr is not defined for GateOperation::Matrix.");
 };
 
 template <class PrecisionT, class ParamT, class GateImplOrSVType>
@@ -124,7 +125,20 @@ struct GateOpToMemberFuncPtr <PrecisionT, ParamT, GateImplOrSVType, GateOperatio
  * speicalized classes.
  */
 template <class PrecisionT, class GateImplOrSVType, GeneratorOperation gntr_op>
-struct GeneratorOpToMemberFuncPtr;
+struct GeneratorOpToMemberFuncPtr; // Link error when used
+
+template <class PrecisionT, class GateImplOrSVType>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplOrSVType, GeneratorOperation::RX> {
+    constexpr static auto value = &GateImplOrSVType::template applyGeneratorRX<PrecisionT>;
+};
+template <class PrecisionT, class GateImplOrSVType>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplOrSVType, GeneratorOperation::RY> {
+    constexpr static auto value = &GateImplOrSVType::template applyGeneratorRY<PrecisionT>;
+};
+template <class PrecisionT, class GateImplOrSVType>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplOrSVType, GeneratorOperation::RZ> {
+    constexpr static auto value = &GateImplOrSVType::template applyGeneratorRZ<PrecisionT>;
+};
 template <class PrecisionT, class GateImplOrSVType>
 struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplOrSVType, GeneratorOperation::PhaseShift> {
     constexpr static auto value = &GateImplOrSVType::template applyGeneratorPhaseShift<PrecisionT>;
@@ -143,6 +157,6 @@ struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplOrSVType, GeneratorOperati
 };
 template <class PrecisionT, class GateImplOrSVType>
 struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplOrSVType, GeneratorOperation::ControlledPhaseShift> {
-    constexpr static auto value = &GateImplOrSVType::template applyGeneratorCRX<PrecisionT>;
+    constexpr static auto value = &GateImplOrSVType::template applyGeneratorControlledPhaseShift<PrecisionT>;
 };
 } // namespace Pennylane

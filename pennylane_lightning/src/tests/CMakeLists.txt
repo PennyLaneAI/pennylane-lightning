@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.14)
 
 project(pennylane_lightning_tests)
 
-set(CMAKE_CXX_STANDARD 17)
 find_package(OpenMP)
 
 # Default build type for test code is Debug
@@ -50,7 +49,7 @@ endif()
 
 set(TEST_SOURCES Test_AdjDiff.cpp
 #                 Test_Bindings.cpp
-#                 Test_DynamicDispatcher.cpp
+                 Test_DynamicDispatcher.cpp
 #                 Test_GateOperations_Nonparam.cpp
 #                 Test_GateOperations_Param.cpp
                  Test_IndicesUtil.cpp

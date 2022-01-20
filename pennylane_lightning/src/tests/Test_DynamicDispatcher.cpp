@@ -16,15 +16,15 @@
 #include "TestHelpers.hpp"
 
 using namespace Pennylane;
+namespace Constant = Pennylane::Constant;
 
 using Pennylane::Internal::callGateOps;
-using Pennylane::Internal::GateOpsFuncPtrPairs;
 
 /**
  * @file This file contains tests for DynamicDispatcher class
  */
 
-std::vector<size_t> createWires(GateOperations op) {
+std::vector<size_t> createWires(GateOperation op) {
     switch (lookup(Constant::gate_wires, op)) {
     case 1:
         return {0};
@@ -38,7 +38,7 @@ std::vector<size_t> createWires(GateOperations op) {
 }
 
 template <class PrecisionT>
-std::vector<PrecisionT> createParams(GateOperations op) {
+std::vector<PrecisionT> createParams(GateOperation op) {
     switch (lookup(Constant::gate_num_params, op)) {
     case 0:
         return {};
@@ -51,87 +51,80 @@ std::vector<PrecisionT> createParams(GateOperations op) {
     }
 }
 
-template <typename PrecisionT, typename ParamT, KernelType kernel>
+template <typename PrecisionT, typename ParamT, class GateImplementation>
 struct testDispatchForKernel {
-    template <GateOperations gate_op, class RandomEngine>
+    template <GateOperation gate_op, class RandomEngine,
+             std::enable_if_t<array_has_elt(GateImplementation::implemented_gates, gate_op), bool> = true>
     static void test(RandomEngine &re, size_t num_qubits) {
         using CFP_t = std::complex<PrecisionT>;
-        std::vector<CFP_t> ini_st =
+        const std::vector<CFP_t> ini_st =
             create_random_state<PrecisionT>(re, num_qubits);
         std::vector<CFP_t> expected = ini_st;
 
         const auto wires = createWires(gate_op);
         const auto params = createParams<PrecisionT>(gate_op);
 
-        constexpr size_t num_params =
-            static_lookup<gate_op>(Constant::gate_num_params);
-
-        auto gate_func = static_lookup<gate_op>(
-            GateOpsFuncPtrPairs<PrecisionT, ParamT, kernel, num_params>::value);
-
+        // We first calculate expected directly calling a static member function
+        // in the GateImplementation
+        auto gate_func = GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation, gate_op>::value;
         callGateOps(gate_func, expected.data(), num_qubits, wires, false,
                     params);
 
+        // and compare it to the dynamic dispatcher
+        auto test_st = ini_st;
         const auto gate_name =
             std::string(static_lookup<gate_op>(Constant::gate_names));
-
-        auto test_st = ini_st;
-        if constexpr (array_has_elt(
-                          SelectGateOps<PrecisionT, kernel>::implemented_gates,
-                          gate_op)) {
-            DynamicDispatcher<PrecisionT>::getInstance().applyOperation(
-                kernel, test_st.data(), num_qubits, gate_name, wires, false,
-                params);
-            REQUIRE(isApproxEqual(test_st, expected));
-        } else {
-            REQUIRE_THROWS(
-                DynamicDispatcher<PrecisionT>::getInstance().applyOperation(
-                    kernel, test_st.data(), num_qubits, gate_name.c_str(),
-                    wires, false, params));
-        }
+        DynamicDispatcher<PrecisionT>::getInstance().applyOperation(
+            GateImplementation::kernel_id, test_st.data(), 
+            num_qubits, gate_name, wires, false, params);
+        REQUIRE(isApproxEqual(test_st, expected));
     }
+
+    template <GateOperation gate_op, class RandomEngine,
+             std::enable_if_t<!array_has_elt(GateImplementation::implemented_gates, gate_op), bool> = true>
+    static void test(RandomEngine &re, size_t num_qubits)
+            {} // Do nothing if not implemented
 };
 
-template <typename PrecisionT, typename ParamT, KernelType kernel, size_t idx,
+template <typename PrecisionT, typename ParamT, class GateImplementation, size_t idx,
           class RandomEngine>
 constexpr void testAllGatesForKernelIter(RandomEngine &re,
                                          size_t max_num_qubits) {
     if constexpr (idx < static_cast<int>(GateOperation::END) - 1) {
-        constexpr auto gate_op = static_cast<GateOperations>(idx);
+        constexpr auto gate_op = static_cast<GateOperation>(idx);
         for (size_t num_qubits = static_lookup<gate_op>(Constant::gate_wires);
              num_qubits <= max_num_qubits; num_qubits++) {
             testDispatchForKernel<PrecisionT, ParamT,
-                                  kernel>::template test<gate_op>(re,
+                                  GateImplementation>::template test<gate_op>(re,
                                                                   num_qubits);
         }
 
-        testAllGatesForKernelIter<PrecisionT, ParamT, kernel, idx + 1>(
+        testAllGatesForKernelIter<PrecisionT, ParamT, GateImplementation, idx + 1>(
             re, max_num_qubits);
     }
 }
 
-template <typename PrecisionT, typename ParamT, KernelType kernel,
+template <typename PrecisionT, typename ParamT, class GateImplementation,
           class RandomEngine>
 void testAllGatesForKernel(RandomEngine &re, size_t max_num_qubits) {
-    testAllGatesForKernelIter<PrecisionT, ParamT, kernel, 0>(re,
+    testAllGatesForKernelIter<PrecisionT, ParamT, GateImplementation, 0>(re,
                                                              max_num_qubits);
 }
 
-template <typename PrecisionT, typename ParamT, size_t idx, class RandomEngine>
+template <typename PrecisionT, typename ParamT, typename TypeList, class RandomEngine>
 void testAllKernelsIter(RandomEngine &re, size_t max_num_qubits) {
-    if constexpr (idx < Constant::available_kernels.size()) {
-        testAllGatesForKernel<PrecisionT, ParamT,
-                              std::get<0>(Constant::available_kernels[idx])>(
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        testAllGatesForKernel<PrecisionT, ParamT, typename TypeList::Type>(
             re, max_num_qubits);
 
-        testAllKernelsIter<PrecisionT, ParamT, idx + 1, RandomEngine>(
+        testAllKernelsIter<PrecisionT, ParamT, typename TypeList::Next, RandomEngine>(
             re, max_num_qubits);
     }
 }
 
 template <typename PrecisionT, typename ParamT, class RandomEngine>
 void testAllKernels(RandomEngine &re, size_t max_num_qubits) {
-    testAllKernelsIter<PrecisionT, ParamT, 0>(re, max_num_qubits);
+    testAllKernelsIter<PrecisionT, ParamT, Constant::AvailableKernels>(re, max_num_qubits);
 }
 
 TEMPLATE_TEST_CASE("DynamicDispatcher::applyOperation", "[DynamicDispatcher]",
@@ -140,8 +133,7 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyOperation", "[DynamicDispatcher]",
 
     constexpr size_t max_num_qubits = 6;
 
-    testAllGatesForKernel<TestType, TestType, KernelType::PI>(re,
-                                                              max_num_qubits);
+    testAllKernels<TestType, TestType>(re, max_num_qubits);
 }
 
 // DynamicDispatcher::appyMatrix?

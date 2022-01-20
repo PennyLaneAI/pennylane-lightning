@@ -79,6 +79,9 @@ constexpr std::array<std::pair<GeneratorOperation, KernelType>,
           static_cast<size_t>(GeneratorOperation::END)>
     default_kernel_for_generators = {
         std::pair{GeneratorOperation::PhaseShift, KernelType::PI},
+        std::pair{GeneratorOperation::RX, KernelType::PI},
+        std::pair{GeneratorOperation::RY, KernelType::PI},
+        std::pair{GeneratorOperation::RZ, KernelType::PI},
         std::pair{GeneratorOperation::CRX, KernelType::PI},
         std::pair{GeneratorOperation::CRY, KernelType::PI},
         std::pair{GeneratorOperation::CRZ, KernelType::PI},
@@ -277,13 +280,13 @@ using GeneratorFuncPtrT = typename GeneratorFuncPtr<PrecisionT>::Type;
 /**
  * @defgroup Call gate operation with provided arguments
  *
- * @tparam PrecisionT floating point type for the state-vector
- * @tparam ParamT floating point type for the gate paramters
- * @param func Function pointer for the gate operation
- * @param num_qubits The number of qubits of the state-vector
- * @param wires Wires the gate applies to
- * @param inverse If true, we apply the inverse of the gate
- * @param params The list of gate paramters
+ * @tparam PrecisionT Floating point type for the state-vector.
+ * @tparam ParamT Floating point type for the gate paramters.
+ * @param func Function pointer for the gate operation.
+ * @param num_qubits The number of qubits of the state-vector.
+ * @param wires Wires the gate applies to.
+ * @param inverse If true, we apply the inverse of the gate.
+ * @param params The list of gate paramters.
  */
 /// @{
 /**
@@ -322,7 +325,12 @@ inline void callGateOps(GateFuncPtrT<PrecisionT, ParamT, 3> func,
     func(data, num_qubits, wires, inverse, params[0], params[1], params[2]);
 }
 /// @}
-
+/**
+ * @brief Call a generator operation.
+ *
+ * @tparam PrecisionT Floating point type for the state-vector.
+ * @return Scaling factor
+ */
 template <class PrecisionT>
 inline PrecisionT callGeneratorOps(GeneratorFuncPtrT<PrecisionT> func,
                                    std::complex<PrecisionT>* data, size_t num_qubits,

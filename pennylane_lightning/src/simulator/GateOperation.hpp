@@ -22,11 +22,8 @@
 
 namespace Pennylane {
 /**
- * @brief enum class for all gate operations
- *
- * When you add a gate in this enum, please sure that gate_num_params is also
- * updated accordingly.
- * */
+ * @brief Enum class for all gate operations
+ */
 enum class GateOperation : uint32_t {
     BEGIN = 0,
     /* Single-qubit gates */
@@ -59,10 +56,16 @@ enum class GateOperation : uint32_t {
     /* END (placeholder) */
     END
 };
+/**
+ * @brief Enum class of all gate generators
+ */
 enum class GeneratorOperation : uint32_t {
     BEGIN = 0,
     /* Gate generators (only used internally for adjoint diff) */
-    PhaseShift = 0,
+    RX = 0,
+    RY,
+    RZ,
+    PhaseShift,
     CRX,
     CRY,
     CRZ,
@@ -73,7 +76,6 @@ enum class GeneratorOperation : uint32_t {
 } // namespace Pennylane
 
 namespace Pennylane::Constant {
-
 /**
  * @brief Gate names
  */
@@ -110,12 +112,16 @@ constexpr std::array<std::pair<GateOperation, std::string_view>,
 constexpr std::array<std::pair<GeneratorOperation, std::string_view>,
           static_cast<size_t>(GeneratorOperation::END)>
     generator_names = {
-        std::pair{GeneratorOperation::PhaseShift, "GeneratrorPhaseShift"},
-        std::pair{GeneratorOperation::CRX, "GeneratrorCRX"},
-        std::pair{GeneratorOperation::CRY, "GeneratrorCRY"},
-        std::pair{GeneratorOperation::CRZ, "GeneratrorCRZ"},
+        std::pair{GeneratorOperation::RX, "GeneratorRX"},
+        std::pair{GeneratorOperation::RY, "GeneratorRY"},
+        std::pair{GeneratorOperation::RZ, "GeneratorRZ"},
+        std::pair{GeneratorOperation::PhaseShift,
+                  "GeneratorPhaseShift"},
+        std::pair{GeneratorOperation::CRX, "GeneratorCRX"},
+        std::pair{GeneratorOperation::CRY, "GeneratorCRY"},
+        std::pair{GeneratorOperation::CRZ, "GeneratorCRZ"},
         std::pair{GeneratorOperation::ControlledPhaseShift,
-                  "GeneratrorControlledPhaseShift"},
+                  "GeneratorControlledPhaseShift"},
     };
 
 /**

@@ -339,16 +339,6 @@ class GateImplementationsLM {
     }
 
     template <class PrecisionT>
-    static void applyCY(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                        const std::vector<size_t> &wires,
-                        [[maybe_unused]] bool inverse) {
-        static_cast<void>(arr);
-        static_cast<void>(num_qubits);
-        static_cast<void>(wires);
-        PL_ABORT("GaterOperationsLM::applyCY is not implemented yet");
-    }
-
-    template <class PrecisionT>
     static void applyCZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
                         const std::vector<size_t> &wires,
                         [[maybe_unused]] bool inverse) {
@@ -404,6 +394,23 @@ class GateImplementationsLM {
             const size_t i01 = i00 | rev_wire0_shift;
             std::swap(arr[i10], arr[i01]);
         }
+
+    }
+
+    template <class PrecisionT>
+    static auto applyGeneratorPhaseShift(
+            std::complex<PrecisionT>* arr, size_t num_qubits,
+            const std::vector<size_t>& wires, [[maybe_unused]] bool adj ) -> PrecisionT {
+        assert(wires.size() == 1);
+        const size_t rev_wire = num_qubits - wires[0] - 1;
+        const size_t wire_parity = fillTrailingOnes(rev_wire);
+        const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
+
+        for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
+            const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
+            arr[i0] = std::complex<PrecisionT>{0.0, 0.0};
+        }
+        return static_cast<PrecisionT>(1.0);
     }
 };
 

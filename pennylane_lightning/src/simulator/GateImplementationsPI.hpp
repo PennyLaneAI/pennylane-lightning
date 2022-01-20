@@ -28,6 +28,7 @@
 #include "Gates.hpp"
 #include "IndicesUtil.hpp"
 #include "KernelType.hpp"
+#include "PauliGenerator.hpp"
 
 #include <complex>
 #include <vector>
@@ -41,7 +42,7 @@ namespace Pennylane {
  *
  * @tparam PrecisionT Floating point precision of underlying statevector data.
  * */
-class GateImplementationsPI {
+class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
   private:
     using GateIndices = IndicesUtil::GateIndices;
 
@@ -75,6 +76,9 @@ class GateImplementationsPI {
         GateOperation::Matrix
     };
     constexpr static std::array implemented_generators = {
+        GeneratorOperation::RX,
+        GeneratorOperation::RY,
+        GeneratorOperation::RZ,
         GeneratorOperation::PhaseShift,
         GeneratorOperation::CRX,
         GeneratorOperation::CRY,
@@ -551,23 +555,24 @@ class GateImplementationsPI {
 
     /* Gate generators */
     template <class PrecisionT>
-    static void applyGeneratorPhaseShift(std::complex<PrecisionT> *arr,
+    static auto applyGeneratorPhaseShift(std::complex<PrecisionT> *arr,
                                          size_t num_qubits,
                                          const std::vector<size_t> &wires,
-                                         [[maybe_unused]] bool adj) {
+                                         [[maybe_unused]] bool adj) -> PrecisionT {
         assert(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             shiftedState[indices[0]] = std::complex<PrecisionT>{0.0, 0.0};
         }
+        return static_cast<PrecisionT>(1.0);
     }
 
     template <class PrecisionT>
-    static void applyGeneratorCRX(std::complex<PrecisionT> *arr,
+    static auto applyGeneratorCRX(std::complex<PrecisionT> *arr,
                                   size_t num_qubits,
                                   const std::vector<size_t> &wires,
-                                  [[maybe_unused]] bool adj) {
+                                  [[maybe_unused]] bool adj) -> PrecisionT{
         assert(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
@@ -578,13 +583,14 @@ class GateImplementationsPI {
 
             std::swap(shiftedState[indices[2]], shiftedState[indices[3]]);
         }
+        return -static_cast<PrecisionT>(0.5);
     }
 
     template <class PrecisionT>
-    static void applyGeneratorCRY(std::complex<PrecisionT> *arr,
+    static auto applyGeneratorCRY(std::complex<PrecisionT> *arr,
                                   size_t num_qubits,
                                   const std::vector<size_t> &wires,
-                                  [[maybe_unused]] bool adj) {
+                                  [[maybe_unused]] bool adj) -> PrecisionT{
         assert(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
@@ -597,13 +603,14 @@ class GateImplementationsPI {
                 -IMAG<PrecisionT>() * shiftedState[indices[3]];
             shiftedState[indices[3]] = IMAG<PrecisionT>() * v0;
         }
+        return -static_cast<PrecisionT>(0.5);
     }
 
     template <class PrecisionT>
-    static void applyGeneratorCRZ(std::complex<PrecisionT> *arr,
+    static auto applyGeneratorCRZ(std::complex<PrecisionT> *arr,
                                   size_t num_qubits,
                                   const std::vector<size_t> &wires,
-                                  [[maybe_unused]] bool adj) {
+                                  [[maybe_unused]] bool adj) -> PrecisionT {
         assert(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
@@ -613,12 +620,13 @@ class GateImplementationsPI {
             shiftedState[indices[1]] = Util::ZERO<PrecisionT>();
             shiftedState[indices[3]] *= -1;
         }
+        return -static_cast<PrecisionT>(0.5);
     }
 
     template <class PrecisionT>
-    static void applyGeneratorControlledPhaseShift(
+    static auto applyGeneratorControlledPhaseShift(
         std::complex<PrecisionT> *arr, size_t num_qubits,
-        const std::vector<size_t> &wires, [[maybe_unused]] bool adj) {
+        const std::vector<size_t> &wires, [[maybe_unused]] bool adj) -> PrecisionT{
         assert(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
@@ -628,6 +636,7 @@ class GateImplementationsPI {
             shiftedState[indices[1]] = 0;
             shiftedState[indices[2]] = 0;
         }
+        return static_cast<PrecisionT>(1);
     }
 };
 } // namespace Pennylane
