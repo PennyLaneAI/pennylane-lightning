@@ -73,6 +73,7 @@ constexpr std::array<std::pair<GateOperation, KernelType>,
         std::pair{GateOperation::CRot, KernelType::PI},
         std::pair{GateOperation::Toffoli, KernelType::PI},
         std::pair{GateOperation::CSWAP, KernelType::PI},
+        std::pair{GateOperation::MultiRZ, KernelType::LM},
         std::pair{GateOperation::Matrix, KernelType::PI},
     };
 constexpr std::array<std::pair<GeneratorOperation, KernelType>,
@@ -389,82 +390,11 @@ inline auto implementedGeneratorsForKernel(KernelType kernel) {
 }
 } // namespace Pennylane::Internal
 
-
-/*******************************************************************************
- * The functions below are only used in the compile time to check
- * internal consistency.
- ******************************************************************************/
-/// @cond DEV
-namespace Pennylane {
-
-static_assert(Util::count_unique(Util::first_elts_of(kernelIdNamePairs)) == 
-        Util::length<Constant::AvailableKernels>(),
-        "Kernel ids must be distinct.");
-
-static_assert(Util::count_unique(Util::second_elts_of(kernelIdNamePairs)) == 
-        Util::length<Constant::AvailableKernels>(),
-        "Kernel names must be distinct.");
-
-namespace Internal {
-
-template<typename TypeList>
-constexpr auto is_available_kernel_helper(KernelType kernel) -> bool {
-    if (TypeList::Type::kernel_id == kernel) {
-        return true;
-    }
-    return is_available_kernel_helper<typename TypeList::Next>(kernel);
-}
-template <>
-constexpr auto is_available_kernel_helper<void>([[maybe_unused]] KernelType kernel) -> bool {
-    return false;
-}
-} // namespace Internal
-/**
- * @brief Check the given kernel is in AvailableKernels.
- */
-constexpr auto is_available_kernel(KernelType kernel) -> bool {
-    return Internal::is_available_kernel_helper<Constant::AvailableKernels>(kernel);
-}
-
-template <typename PrecisionT>
-constexpr auto check_default_kernels_are_available() -> bool {
-    // TODO: change to constexpr std::all_of in C++20
-    // which is not constexpr in C++17.
-    // NOLINTNEXTLINE (readability-use-anyofallof)
-    for (const auto &[gate_op, kernel] : Constant::default_kernel_for_gates) {
-        if (!is_available_kernel(kernel)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-static_assert(check_default_kernels_are_available<double>(),
-              "default_kernel_for_gates contains an unavailable kernel");
-static_assert(count_unique(first_elts_of(Constant::default_kernel_for_gates)) ==
-                  static_cast<int>(GateOperation::END),
-              "All gate operations must be defined in default_kernel_for_gates");
-
-constexpr auto check_kernels_to_pyexport() -> bool {
-    // TODO: change to constexpr std::any_of in C++20
-    // NOLINTNEXTLINE (readability-use-anyofallof)
-    for (const auto &kernel : Constant::kernels_to_pyexport) {
-        if (!is_available_kernel(kernel)) {
-            return false;
-        }
-    }
-    return true;
-}
-static_assert(check_kernels_to_pyexport(),
-              "Some of Kernels in Python export is not available.");
-} // namespace Pennylane
-/// @endcond
-
 /**
  * @brief A hash function for GateOperations type
  */
 template <> struct std::hash<Pennylane::GateOperation> {
     size_t operator()(Pennylane::GateOperation gate_operation) const {
-        return std::hash<int>()(static_cast<int>(gate_operation));
+        return std::hash<uint32_t>()(static_cast<uint32_t>(gate_operation));
     }
 };

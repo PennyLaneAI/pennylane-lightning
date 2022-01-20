@@ -49,6 +49,7 @@ endif()
 
 set(TEST_SOURCES Test_AdjDiff.cpp
 #                 Test_Bindings.cpp
+                 Test_Constant.hpp
                  Test_DynamicDispatcher.cpp
 #                 Test_GateOperations_Nonparam.cpp
 #                 Test_GateOperations_Param.cpp

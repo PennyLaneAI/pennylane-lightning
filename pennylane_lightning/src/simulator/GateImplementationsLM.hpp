@@ -21,6 +21,7 @@
 #include "GateOperation.hpp"
 #include "Gates.hpp"
 #include "KernelType.hpp"
+#include "PauliGenerator.hpp"
 #include "Util.hpp"
 
 #include <climits>
@@ -49,7 +50,7 @@ auto constexpr fillLeadingOnes(size_t pos) -> size_t {
  *
  * @tparam PrecisionT Floating point precision of underlying statevector data
  */
-class GateImplementationsLM {
+class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
   public:
     constexpr static KernelType kernel_id = KernelType::LM;
     constexpr static std::string_view name = "LM";
@@ -69,9 +70,15 @@ class GateImplementationsLM {
         GateOperation::CZ,
         GateOperation::CNOT,
         GateOperation::SWAP,
+        GateOperation::MultiRZ,
     };
+
     constexpr static std::array implemented_generators = {
-        GeneratorOperation::PhaseShift
+        GeneratorOperation::RX,
+        GeneratorOperation::RY,
+        GeneratorOperation::RZ,
+        GeneratorOperation::PhaseShift,
+        GeneratorOperation::MultiRZ,
     };
 
   private:
@@ -394,7 +401,29 @@ class GateImplementationsLM {
             const size_t i01 = i00 | rev_wire0_shift;
             std::swap(arr[i10], arr[i01]);
         }
+    }
 
+    template <class PrecisionT, class ParamT>
+    static void applyMultiRZ(std::complex<PrecisionT>* arr, size_t num_qubits,
+                             const std::vector<size_t>& wires,
+                             bool inverse, ParamT angle) {
+        const std::complex<PrecisionT> first =
+            std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
+        const std::complex<PrecisionT> second =
+            std::complex<PrecisionT>{std::cos(angle / 2), std::sin(angle / 2)};
+
+        const std::array<std::complex<PrecisionT>, 2> shifts = {
+            (inverse) ? std::conj(first) : first,
+            (inverse) ? std::conj(second) : second};
+
+        size_t wires_parity = 0U;
+        for (size_t wire: wires) {
+            wires_parity |= (static_cast<size_t>(1U) << (num_qubits - wire - 1));
+        }
+
+        for (size_t k = 0; k < Util::exp2(num_qubits); k++) {
+            arr[k] *= shifts[Util::popcount(k & wires_parity)];
+        }
     }
 
     template <class PrecisionT>
@@ -411,6 +440,22 @@ class GateImplementationsLM {
             arr[i0] = std::complex<PrecisionT>{0.0, 0.0};
         }
         return static_cast<PrecisionT>(1.0);
+    }
+
+    template <class PrecisionT>
+    static auto applyGeneratorMultiRZ(
+            std::complex<PrecisionT>* arr, size_t num_qubits,
+            const std::vector<size_t>& wires, [[maybe_unused]] bool adj ) -> PrecisionT {
+
+        size_t wires_parity = 0U;
+        for (size_t wire: wires) {
+            wires_parity |= (static_cast<size_t>(1U) << (num_qubits - wire - 1));
+        }
+
+        for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
+            arr[k] *= (2*Util::popcount(k & wires_parity) - 1);
+        }
+        return static_cast<PrecisionT>(0.5);
     }
 };
 
