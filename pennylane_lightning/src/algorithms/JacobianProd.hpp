@@ -136,7 +136,7 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
     void vectorJacobianProduct(std::vector<T> &vjp,
                                std::vector<std::vector<T>> &jac,
                                const std::vector<T> &dy,
-                               const DataTapeT<T> &tape,
+                               const GradTapeT<T> &tape,
                                bool apply_operations = false) {
         const size_t num_params = tape.trainableParams.size();
 

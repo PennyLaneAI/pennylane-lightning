@@ -255,14 +255,14 @@ template <class T> class OpsData {
  * @param trainableParams List of parameters participating in Jacobian
  * calculation.
  */
-template <class T> struct DataTapeT {
+template <class T> struct GradTapeT {
     size_t num_elements;
     std::complex<T> *psi;
     const std::vector<ObsDatum<T>> &observables;
     const OpsData<T> &operations;
     const std::vector<size_t> &trainableParams;
 
-    DataTapeT(size_t num_elem, std::complex<T> *p,
+    GradTapeT(size_t num_elem, std::complex<T> *p,
               const std::vector<ObsDatum<T>> &obs, const OpsData<T> &ops,
               const std::vector<size_t> &trainP)
         : num_elements(num_elem), psi(p), observables(obs), operations(ops),

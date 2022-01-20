@@ -63,7 +63,7 @@ class Measures {
      * @return Floating point std::vector with probabilities
      * in lexicographic order.
      */
-    vector<fp_t> probs() {
+    auto probs -> vector<fp_t>() {
         const complex<fp_t> *arr_data = original_statevector.getData();
         vector<fp_t> basis_probs(original_statevector.getLength(), 0);
 
@@ -83,7 +83,7 @@ class Measures {
      * @return Floating point std::vector with probabilities.
      * The basis columns are rearranged according to wires.
      */
-    vector<fp_t> probs(const vector<size_t> &wires) {
+    auto probs(const vector<size_t> &wires) -> vector<fp_t> {
         // Determining index that would sort the vector.
         // This information is needed later.
         vector<size_t> sorted_ind_wires(sorting_indices(wires));
@@ -126,7 +126,7 @@ class Measures {
      * @return Floating point expected value of the observable.
      */
     template <typename op_type>
-    fp_t expval(const op_type &operation, const vector<size_t> &wires) {
+    auto expval(const op_type &operation, const vector<size_t> &wires) -> fp_t {
         // Copying the original state vector, for the application of the
         // observable operator.
         StateVectorManaged<fp_t> operator_statevector(original_statevector);
@@ -149,8 +149,8 @@ class Measures {
      * observables.
      */
     template <typename op_type>
-    vector<fp_t> expval(const vector<op_type> &operations_list,
-                        const vector<vector<size_t>> &wires_list) {
+    auto expval(const vector<op_type> &operations_list,
+                const vector<vector<size_t>> &wires_list) -> vector<fp_t> {
         if (operations_list.size() != wires_list.size()) {
             throw std::out_of_range("The lengths of the list of operations and "
                                     "wires do not match.");
@@ -175,7 +175,7 @@ class Measures {
      * @return Floating point with the variance of the observables.
      */
     template <typename op_type>
-    fp_t var(const op_type &operation, const vector<size_t> &wires) {
+    auto var(const op_type &operation, const vector<size_t> &wires) -> fp_t {
         // Copying the original state vector, for the application of the
         // observable operator.
         StateVectorManaged<fp_t> operator_statevector(original_statevector);
@@ -201,8 +201,8 @@ class Measures {
      * @return Floating point std::vector with the variance of the observables.
      */
     template <typename op_type>
-    vector<fp_t> var(const vector<op_type> &operations_list,
-                     const vector<vector<size_t>> &wires_list) {
+    auto var(const vector<op_type> &operations_list,
+             const vector<vector<size_t>> &wires_list) -> vector<fp_t> {
         if (operations_list.size() != wires_list.size()) {
             throw std::out_of_range("The lengths of the list of operations and "
                                     "wires do not match.");

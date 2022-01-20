@@ -559,7 +559,7 @@ template <class T = double> class AdjointJacobian {
      * prior to calculation.
      */
     void adjointJacobianTape(std::vector<std::vector<T>> &jac,
-                             const DataTapeT<T> &tape,
+                             const GradTapeT<T> &tape,
                              bool apply_operations = false) {
         PL_ABORT_IF(tape.trainableParams.empty(),
                     "No trainable parameters provided.");

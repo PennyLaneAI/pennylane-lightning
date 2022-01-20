@@ -822,7 +822,7 @@ void lightning_class_bindings(py::module &m) {
                      observables.size(),
                      std::vector<PrecisionT>(num_params, 0));
 
-                 const DataTapeT<PrecisionT> tape{sv.getLength(), sv.getData(),
+                 const GradTapeT<PrecisionT> tape{sv.getLength(), sv.getData(),
                                                   observables, operations,
                                                   trainableParams};
 
@@ -889,7 +889,7 @@ void lightning_class_bindings(py::module &m) {
                 observables.size(), std::vector<PrecisionT>(num_params, 0));
             std::vector<PrecisionT> vjp_res(num_params);
 
-            const DataTapeT<PrecisionT> tape{sv.getLength(), sv.getData(),
+            const GradTapeT<PrecisionT> tape{sv.getLength(), sv.getData(),
                                              observables, operations,
                                              trainableParams};
 
