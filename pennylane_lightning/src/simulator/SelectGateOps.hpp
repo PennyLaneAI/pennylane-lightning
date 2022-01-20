@@ -138,8 +138,7 @@ struct KernelIdNamePairsHelper<void> {
 /**
  * @brief Array of kernel_id and name pairs
  */
-constexpr static auto kernelIdNamePairs = Util::tuple_to_array
-        <std::pair<KernelType, std::string_view>>(
+constexpr static auto kernelIdNamePairs = Util::tuple_to_array(
             Internal::KernelIdNamePairsHelper<Constant::AvailableKernels>::value);
 
 /**
@@ -156,10 +155,10 @@ constexpr auto string_to_kernel(const std::string_view kernel_name)
 namespace Internal {
 template <class PrecisionT, KernelType kernel, class TypeList>
 struct SelectGateOpsHelper {
-    using Type = typename Util::IfFirstElseSecond<
+    using Type = std::conditional_t<
         TypeList::Type::kernel_id == kernel, typename TypeList::Type,
         typename SelectGateOpsHelper<PrecisionT, kernel,
-                                     typename TypeList::Next>::Type>::Type;
+                                     typename TypeList::Next>::Type>;
 };
 template <class PrecisionT, KernelType kernel>
 struct SelectGateOpsHelper<PrecisionT, kernel, void> {
@@ -258,115 +257,22 @@ struct GateFuncPtr<PrecisionT, ParamT, 3> {
 };
 
 /**
+ * @brief Pointer type for a generator operation
+ */
+template <class PrecisionT>
+struct GeneratorFuncPtr {
+    using Type = PrecisionT (*)(std::complex<PrecisionT> *, size_t,
+                                const std::vector<size_t> &, bool);
+};
+
+/**
  * @brief Convinient type alias for GateFuncPtr. See GateFuncPtr for details.
  */
 template <class PrecisionT, class ParamT, size_t num_params>
 using GateFuncPtrT = typename GateFuncPtr<PrecisionT, ParamT, num_params>::Type;
 
-template <class GateOpsKernel, class ParamT, size_t num_params>
-struct ImplementedGateOpsTuple {};
-
-/**
- * @brief List of all gate operation and funciont pointer pairs for the given
- * num_params. See specializations for details.
- */
-template <class PrecisionT, class ParamT, KernelType kernel, size_t num_params>
-struct GateOpsFuncPtrPairs {
-    static_assert(num_params < 2 || num_params == 3,
-                  "The given num_params is not supported.");
-};
-
-/**
- * @brief List of all gate operation and funciont pointer pairs without
- * parameters.
- */
-template <class PrecisionT, class ParamT, KernelType kernel>
-struct GateOpsFuncPtrPairs<PrecisionT, ParamT, kernel, 0> {
-    constexpr static std::array value = {
-        std::pair{GateOperation::PauliX,
-                  &SelectGateOps<PrecisionT, kernel>::applyPauliX},
-        std::pair{GateOperation::PauliY,
-                  &SelectGateOps<PrecisionT, kernel>::applyPauliY},
-        std::pair{GateOperation::PauliZ,
-                  &SelectGateOps<PrecisionT, kernel>::applyPauliZ},
-        std::pair{GateOperation::Hadamard,
-                  &SelectGateOps<PrecisionT, kernel>::applyHadamard},
-        std::pair{GateOperation::S,
-                  &SelectGateOps<PrecisionT, kernel>::applyS},
-        std::pair{GateOperation::T,
-                  &SelectGateOps<PrecisionT, kernel>::applyT},
-        std::pair{GateOperation::CNOT,
-                  &SelectGateOps<PrecisionT, kernel>::applyCNOT},
-        std::pair{GateOperation::CY,
-                  &SelectGateOps<PrecisionT, kernel>::applyCY},
-        std::pair{GateOperation::CZ,
-                  &SelectGateOps<PrecisionT, kernel>::applyCZ},
-        std::pair{GateOperation::SWAP,
-                  &SelectGateOps<PrecisionT, kernel>::applySWAP},
-        std::pair{GateOperation::Toffoli,
-                  &SelectGateOps<PrecisionT, kernel>::applyToffoli},
-    };
-        /*
-        std::pair{GateOperation::CSWAP,
-                  &SelectGateOps<PrecisionT, kernel>::applyCSWAP},
-        std::pair{GateOperation::GeneratorPhaseShift,
-                  &SelectGateOps<PrecisionT, kernel>::applyGeneratorPhaseShift},
-        std::pair{GateOperation::GeneratorCRX,
-                  &SelectGateOps<PrecisionT, kernel>::applyGeneratorCRX},
-        std::pair{GateOperation::GeneratorCRY,
-                  &SelectGateOps<PrecisionT, kernel>::applyGeneratorCRY},
-        std::pair{GateOperation::GeneratorCRZ,
-                  &SelectGateOps<PrecisionT, kernel>::applyGeneratorCRZ},
-        std::pair{GateOperation::GeneratorControlledPhaseShift,
-                  &SelectGateOps<PrecisionT,
-                                 kernel>::applyGeneratorControlledPhaseShift}};
-        */
-};
-
-/**
- * @brief List of all gate operation and funciont pointer pairs with a single
- * paramter.
- */
-template <class PrecisionT, class ParamT, KernelType kernel>
-struct GateOpsFuncPtrPairs<PrecisionT, ParamT, kernel, 1> {
-    constexpr static std::array value = {
-        std::pair{GateOperation::RX,
-                  &SelectGateOps<PrecisionT, kernel>::template applyRX<ParamT>},
-        std::pair{GateOperation::RY,
-                  &SelectGateOps<PrecisionT, kernel>::template applyRY<ParamT>},
-        std::pair{GateOperation::RZ,
-                  &SelectGateOps<PrecisionT, kernel>::template applyRZ<ParamT>},
-        std::pair{GateOperation::PhaseShift,
-                  &SelectGateOps<PrecisionT,
-                                 kernel>::template applyPhaseShift<ParamT>},
-        std::pair{
-            GateOperation::CRX,
-            &SelectGateOps<PrecisionT, kernel>::template applyCRX<ParamT>},
-        std::pair{
-            GateOperation::CRY,
-            &SelectGateOps<PrecisionT, kernel>::template applyCRY<ParamT>},
-        std::pair{
-            GateOperation::CRZ,
-            &SelectGateOps<PrecisionT, kernel>::template applyCRZ<ParamT>},
-        std::pair{GateOperation::ControlledPhaseShift,
-                  &SelectGateOps<PrecisionT, kernel>::
-                      template applyControlledPhaseShift<ParamT>}};
-};
-
-/**
- * @brief List of all gate operation and funciont pointer pairs with three
- * paramters.
- */
-template <class PrecisionT, class ParamT, KernelType kernel>
-struct GateOpsFuncPtrPairs<PrecisionT, ParamT, kernel, 3> {
-    constexpr static std::array value = {
-        std::pair{
-            GateOperation::Rot,
-            &SelectGateOps<PrecisionT, kernel>::template applyRot<ParamT>},
-        std::pair{
-            GateOperation::CRot,
-            &SelectGateOps<PrecisionT, kernel>::template applyCRot<ParamT>}};
-};
+template <class PrecisionT>
+using GeneratorFuncPtrT = typename GeneratorFuncPtr<PrecisionT>::Type;
 
 /**
  * @defgroup Call gate operation with provided arguments
@@ -416,6 +322,13 @@ inline void callGateOps(GateFuncPtrT<PrecisionT, ParamT, 3> func,
     func(data, num_qubits, wires, inverse, params[0], params[1], params[2]);
 }
 /// @}
+
+template <class PrecisionT>
+inline PrecisionT callGeneratorOps(GeneratorFuncPtrT<PrecisionT> func,
+                                   std::complex<PrecisionT>* data, size_t num_qubits,
+                                   const std::vector<size_t> &wires, bool adj) {
+    return func(data, num_qubits, wires, adj);
+}
 
 /// @cond DEV
 template <class OperatorImplementation>

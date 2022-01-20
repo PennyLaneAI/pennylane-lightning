@@ -1165,6 +1165,10 @@ template <class T> struct remove_cvref {
     using type = std::remove_cv_t<std::remove_reference_t<T>>;
 };
 
+template <class T>
+using remove_cvref_t = typename remove_cvref<T>::type;
+
+
 /**
  * @brief Lookup key in array of pairs. For a constexpr map-like behavior.
  *
@@ -1285,11 +1289,20 @@ prepend_to_tuple_helper(T &&elt, Tuple &&t,
                         [[maybe_unused]] std::index_sequence<I...> dummy) {
     return std::make_tuple(elt, std::get<I>(std::forward<Tuple>(t))...);
 }
+/**
+ * @brief Helper function for append_to_tuple
+ */
+template <class T, class Tuple, std::size_t... I>
+constexpr auto
+append_to_tuple_helper(Tuple &&t, T&& elt,
+                        [[maybe_unused]] std::index_sequence<I...> dummy) {
+    return std::make_tuple(std::get<I>(std::forward<Tuple>(t))..., elt);
+}
 } // namespace Internal
 /// @endcond
 
 /**
- * @brief Prepent an element to a tuple
+ * @brief Prepend an element to a tuple
  * @tparam T Type of element
  * @tparam Tuple Type of the tuple (usually std::tuple)
  *
@@ -1303,6 +1316,21 @@ constexpr auto prepend_to_tuple(T &&elt, Tuple &&t) {
         std::make_index_sequence<
             std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
 }
+/**
+ * @brief Append an element to a tuple
+ * @tparam T Type of element
+ * @tparam Tuple Type of the tuple (usually std::tuple)
+ *
+ * @param t Tuple to add an element
+ * @param elt Element to append
+ */
+template <class T, class Tuple>
+constexpr auto append_to_tuple(Tuple &&t, T&& elt) {
+    return Internal::append_to_tuple_helper(
+        std::forward<Tuple>(t), std::forward<T>(elt),
+        std::make_index_sequence<
+            std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
+}
 
 /**
  * @brief Transform a tuple to an array
@@ -1310,11 +1338,12 @@ constexpr auto prepend_to_tuple(T &&elt, Tuple &&t) {
  * This function only works when all elements of the tuple are the same
  * type or convertible to the same type.
  *
- * @tparam T Type of the elements. This type usually needs to be specified.
  * @tparam Tuple Type of the tuple.
  * @param tuple Tuple to transform
  */
-template <class T, class Tuple> constexpr auto tuple_to_array(Tuple &&tuple) {
+template <class Tuple>
+constexpr auto tuple_to_array(Tuple &&tuple) {
+    using T = std::tuple_element_t<0, remove_cvref_t<Tuple>>;
     return std::apply(
         [](auto... n) { return std::array<T, sizeof...(n)>{n...}; },
         std::forward<Tuple>(tuple));

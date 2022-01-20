@@ -54,20 +54,4 @@ template<>
 constexpr size_t length<void>() {
     return 0;
 }
-
-/**
- * @brief Return first type if condition is true. Else return second type
- */
-template <bool condition, typename FirstType, typename SecondType>
-struct IfFirstElseSecond {};
-
-template <typename FirstType, typename SecondType>
-struct IfFirstElseSecond<true, FirstType, SecondType> {
-    using Type = FirstType;
-};
-
-template <typename FirstType, typename SecondType>
-struct IfFirstElseSecond<false, FirstType, SecondType> {
-    using Type = SecondType;
-};
 } // namespace Pennylane::Util

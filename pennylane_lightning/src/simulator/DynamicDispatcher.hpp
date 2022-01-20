@@ -20,7 +20,7 @@
 #pragma once
 
 #include "Error.hpp"
-#include "OperationToMemberFuncPtr.hpp"
+#include "OpToMemberFuncPtr.hpp"
 #include "SelectGateOps.hpp"
 
 #include <complex>

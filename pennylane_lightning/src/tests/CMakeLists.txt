@@ -53,8 +53,9 @@ set(TEST_SOURCES Test_AdjDiff.cpp
 #                 Test_DynamicDispatcher.cpp
 #                 Test_GateOperations_Nonparam.cpp
 #                 Test_GateOperations_Param.cpp
-#                 Test_IndicesUtil.cpp
+                 Test_IndicesUtil.cpp
                  Test_Measures.cpp
+                 Test_OpToMemberFuncPtr.cpp
 #                 Test_SelectGateOps.cpp
 #                 Test_StateVectorManaged.cpp
 #                 Test_StateVectorRaw.cpp
