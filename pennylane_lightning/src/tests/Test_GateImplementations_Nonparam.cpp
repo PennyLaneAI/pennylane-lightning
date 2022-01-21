@@ -28,27 +28,25 @@ using std::vector;
  * @brief Run test suit only when the gate is defined
  */
 #define PENNYLANE_RUN_TEST(GATE_NAME)                                          \
-    template <                                                                 \
-        typename PrecisionT, class GateImplementation,                         \
-        std::enable_if_t<                                                      \
-            !std::is_pointer_v<decltype(                                       \
-                &GateImplementation::template apply##GATE_NAME<PrecisionT>)>,  \
-            bool> = true>                                                      \
-    void testApply##GATE_NAME##IfDefined() {}                                  \
-    template <                                                                 \
-        typename PrecisionT, class GateImplementation,                         \
-        std::enable_if_t<                                                      \
-            std::is_pointer_v<decltype(                                        \
-                &GateImplementation::template apply##GATE_NAME<PrecisionT>)>,  \
-            bool> = true>                                                      \
-    void testApply##GATE_NAME##IfDefined() {                                   \
-        testApply##GATE_NAME<PrecisionT, GateImplementation>();                \
-    }                                                                          \
+    template <typename PrecisionT, class GateImplementation,                   \
+              typename U = void>                                               \
+    struct TestApply##GATE_NAME##IfDefined {                                   \
+        static void run() {}                                                   \
+    };                                                                         \
+    template <typename PrecisionT, class GateImplementation>                   \
+    struct TestApply##GATE_NAME##IfDefined<                                    \
+        PrecisionT, GateImplementation,                                        \
+        std::enable_if_t<std::is_pointer_v<decltype(                           \
+            &GateImplementation::template apply##GATE_NAME<PrecisionT>)>>> {   \
+        static void run() {                                                    \
+            testApply##GATE_NAME<PrecisionT, GateImplementation>();            \
+        }                                                                      \
+    };                                                                         \
     template <typename PrecisionT, typename TypeList>                          \
     struct TestApply##GATE_NAME##ForKernels {                                  \
         static void run() {                                                    \
-            testApply##GATE_NAME##IfDefined<PrecisionT,                        \
-                                            typename TypeList::Type>();        \
+            TestApply##GATE_NAME##IfDefined<PrecisionT,                        \
+                                            typename TypeList::Type>::run();   \
             TestApply##GATE_NAME##ForKernels<PrecisionT,                       \
                                              typename TypeList::Next>::run();  \
         }                                                                      \
@@ -58,10 +56,10 @@ using std::vector;
         static void run() {}                                                   \
     };                                                                         \
     TEMPLATE_TEST_CASE("GateImplementation::apply" #GATE_NAME,                 \
-                       "[GateImplementations_Nonparam],[single-qubit]", float, \
+                       "[GateImplementations_Nonparam]", float,                \
                        double) {                                               \
         using PrecisionT = TestType;                                           \
-        TestApplyPauliXForKernels<PrecisionT, AvailableKernels>::run();        \
+        TestApply##GATE_NAME##ForKernels<PrecisionT, AvailableKernels>::run(); \
     }
 
 /*******************************************************************************
@@ -210,15 +208,12 @@ template <typename PrecisionT, class GateImplementation> void testApplyCNOT() {
     // Test using |+00> state to generate 3-qubit GHZ state
     GateImplementation::applyHadamard(st.data(), num_qubits, {0}, false);
 
-    if constexpr (array_has_elt(GateImplementation::implemented_gates,
-                                GateImplementation::CNOT)) {
-        for (size_t index = 1; index < num_qubits; index++) {
-            GateImplementation::applyCNOT(st.data(), num_qubits,
-                                          {index - 1, index}, false);
-        }
-        CHECK(st.front() == Util::INVSQRT2<PrecisionT>());
-        CHECK(st.back() == Util::INVSQRT2<PrecisionT>());
+    for (size_t index = 1; index < num_qubits; index++) {
+        GateImplementation::applyCNOT(st.data(), num_qubits, {index - 1, index},
+                                      false);
     }
+    CHECK(st.front() == Util::INVSQRT2<PrecisionT>());
+    CHECK(st.back() == Util::INVSQRT2<PrecisionT>());
 }
 PENNYLANE_RUN_TEST(CNOT)
 
@@ -232,81 +227,72 @@ template <typename PrecisionT, class GateImplementation> void testApplySWAP() {
     GateImplementation::applyHadamard(ini_st.data(), num_qubits, {0}, false);
     GateImplementation::applyPauliX(ini_st.data(), num_qubits, {1}, false);
 
-    if constexpr (array_has_elt(GateImplementation::implemented_gates,
-                                GateImplementation::SWAP)) {
-        CHECK(ini_st ==
-              std::vector<ComplexPrecisionT>{
-                  Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
-                  Util::INVSQRT2<PrecisionT>(), Util::ZERO<PrecisionT>(),
-                  Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
-                  Util::INVSQRT2<PrecisionT>(), Util::ZERO<PrecisionT>()});
+    CHECK(ini_st == std::vector<ComplexPrecisionT>{
+                        Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
+                        Util::INVSQRT2<PrecisionT>(), Util::ZERO<PrecisionT>(),
+                        Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
+                        Util::INVSQRT2<PrecisionT>(),
+                        Util::ZERO<PrecisionT>()});
 
-        SECTION("SWAP0,1 |+10> -> |1+0>") {
-            std::vector<ComplexPrecisionT> expected{
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                Util::ZERO<PrecisionT>(),
-                std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                Util::ZERO<PrecisionT>()};
-            auto sv01 = ini_st;
-            auto sv10 = ini_st;
+    SECTION("SWAP0,1 |+10> -> |1+0>") {
+        std::vector<ComplexPrecisionT> expected{
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+            Util::ZERO<PrecisionT>()};
+        auto sv01 = ini_st;
+        auto sv10 = ini_st;
 
-            GateImplementation::applySWAP(sv01.data(), num_qubits, {0, 1},
-                                          false);
-            GateImplementation::applySWAP(sv10.data(), num_qubits, {1, 0},
-                                          false);
+        GateImplementation::applySWAP(sv01.data(), num_qubits, {0, 1}, false);
+        GateImplementation::applySWAP(sv10.data(), num_qubits, {1, 0}, false);
 
-            CHECK(sv01 == expected);
-            CHECK(sv10 == expected);
-        }
+        CHECK(sv01 == expected);
+        CHECK(sv10 == expected);
+    }
 
-        SECTION("SWAP0,2 |+10> -> |01+>") {
-            std::vector<ComplexPrecisionT> expected{
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>()};
+    SECTION("SWAP0,2 |+10> -> |01+>") {
+        std::vector<ComplexPrecisionT> expected{
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>()};
 
-            auto sv02 = ini_st;
-            auto sv20 = ini_st;
+        auto sv02 = ini_st;
+        auto sv20 = ini_st;
 
-            GateImplementation::applySWAP(sv02.data(), num_qubits, {0, 2},
-                                          false);
-            GateImplementation::applySWAP(sv20.data(), num_qubits, {2, 0},
-                                          false);
+        GateImplementation::applySWAP(sv02.data(), num_qubits, {0, 2}, false);
+        GateImplementation::applySWAP(sv20.data(), num_qubits, {2, 0}, false);
 
-            CHECK(sv02 == expected);
-            CHECK(sv20 == expected);
-        }
-        SECTION("SWAP1,2 |+10> -> |+01>") {
-            std::vector<ComplexPrecisionT> expected{
-                Util::ZERO<PrecisionT>(),
-                std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>()};
+        CHECK(sv02 == expected);
+        CHECK(sv20 == expected);
+    }
+    SECTION("SWAP1,2 |+10> -> |+01>") {
+        std::vector<ComplexPrecisionT> expected{
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>()};
 
-            auto sv12 = ini_st;
-            auto sv21 = ini_st;
+        auto sv12 = ini_st;
+        auto sv21 = ini_st;
 
-            GateImplementation::applySWAP(sv12.data(), num_qubits, {1, 2},
-                                          false);
-            GateImplementation::applySWAP(sv21.data(), num_qubits, {2, 1},
-                                          false);
+        GateImplementation::applySWAP(sv12.data(), num_qubits, {1, 2}, false);
+        GateImplementation::applySWAP(sv21.data(), num_qubits, {2, 1}, false);
 
-            CHECK(sv12 == expected);
-            CHECK(sv21 == expected);
-        }
+        CHECK(sv12 == expected);
+        CHECK(sv21 == expected);
     }
 }
 PENNYLANE_RUN_TEST(SWAP)
@@ -321,64 +307,61 @@ template <typename PrecisionT, class GateImplementation> void testApplyCY() {
     GateImplementation::applyHadamard(ini_st.data(), num_qubits, {0}, false);
     GateImplementation::applyPauliX(ini_st.data(), num_qubits, {1}, false);
 
-    if constexpr (array_has_elt(GateImplementation::implemented_gates,
-                                GateImplementation::CY)) {
-        CHECK(ini_st == std::vector<ComplexPrecisionT>{
-                            Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
-                            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                            Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
-                            Util::ZERO<PrecisionT>(),
-                            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                            Util::ZERO<PrecisionT>()});
+    CHECK(ini_st == std::vector<ComplexPrecisionT>{
+                        Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
+                        std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+                        Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
+                        Util::ZERO<PrecisionT>(),
+                        std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+                        Util::ZERO<PrecisionT>()});
 
-        SECTION("CY 0,1 |+10> -> i|100>") {
-            std::vector<ComplexPrecisionT> expected{
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                Util::ZERO<PrecisionT>(),
-                std::complex<PrecisionT>(0, -1 / sqrt(2)),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>()};
+    SECTION("CY 0,1 |+10> -> i|100>") {
+        std::vector<ComplexPrecisionT> expected{
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(0, -1 / sqrt(2)),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>()};
 
-            auto sv01 = ini_st;
-            GateImplementation::applyCY(sv01.data(), num_qubits, {0, 1}, false);
-            CHECK(sv01 == expected);
-        }
+        auto sv01 = ini_st;
+        GateImplementation::applyCY(sv01.data(), num_qubits, {0, 1}, false);
+        CHECK(sv01 == expected);
+    }
 
-        SECTION("CY 0,2 |+10> -> |010> + i |111>") {
-            std::vector<ComplexPrecisionT> expected{
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                std::complex<PrecisionT>(1.0 / sqrt(2), 0.0),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                std::complex<PrecisionT>(0.0, 1 / sqrt(2))};
+    SECTION("CY 0,2 |+10> -> |010> + i |111>") {
+        std::vector<ComplexPrecisionT> expected{
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0.0),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(0.0, 1 / sqrt(2))};
 
-            auto sv02 = ini_st;
+        auto sv02 = ini_st;
 
-            GateImplementation::applyCY(sv02.data(), num_qubits, {0, 2}, false);
-            CHECK(sv02 == expected);
-        }
-        SECTION("CY 1,2 |+10> -> i|+11>") {
-            std::vector<ComplexPrecisionT> expected{
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                std::complex<PrecisionT>(0.0, 1.0 / sqrt(2)),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                std::complex<PrecisionT>(0.0, 1 / sqrt(2))};
+        GateImplementation::applyCY(sv02.data(), num_qubits, {0, 2}, false);
+        CHECK(sv02 == expected);
+    }
+    SECTION("CY 1,2 |+10> -> i|+11>") {
+        std::vector<ComplexPrecisionT> expected{
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(0.0, 1.0 / sqrt(2)),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(0.0, 1 / sqrt(2))};
 
-            auto sv12 = ini_st;
+        auto sv12 = ini_st;
 
-            GateImplementation::applyCY(sv12.data(), num_qubits, {1, 2}, false);
-            CHECK(sv12 == expected);
-        }
+        GateImplementation::applyCY(sv12.data(), num_qubits, {1, 2}, false);
+        CHECK(sv12 == expected);
     }
 }
 PENNYLANE_RUN_TEST(CY)
@@ -394,62 +377,59 @@ template <typename PrecisionT, class GateImplementation> void testApplyCZ() {
     GateImplementation::applyHadamard(ini_st.data(), num_qubits, {0}, false);
     GateImplementation::applyPauliX(ini_st.data(), num_qubits, {1}, false);
 
-    if constexpr (array_has_elt(GateImplementation::implemented_gates,
-                                GateImplementation::CZ)) {
-        auto st = ini_st;
-        CHECK(st == std::vector<ComplexPrecisionT>{
-                        Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
-                        std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                        Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
-                        Util::ZERO<PrecisionT>(),
-                        std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                        Util::ZERO<PrecisionT>()});
+    auto st = ini_st;
+    CHECK(st == std::vector<ComplexPrecisionT>{
+                    Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
+                    std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+                    Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
+                    Util::ZERO<PrecisionT>(),
+                    std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+                    Util::ZERO<PrecisionT>()});
 
-        SECTION("CZ0,1 |+10> -> |-10>") {
-            std::vector<ComplexPrecisionT> expected{
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                std::complex<PrecisionT>(-1 / sqrt(2), 0),
-                Util::ZERO<PrecisionT>()};
+    SECTION("CZ0,1 |+10> -> |-10>") {
+        std::vector<ComplexPrecisionT> expected{
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(-1 / sqrt(2), 0),
+            Util::ZERO<PrecisionT>()};
 
-            auto sv01 = ini_st;
-            auto sv10 = ini_st;
+        auto sv01 = ini_st;
+        auto sv10 = ini_st;
 
-            GateImplementation::applyCZ(sv01.data(), num_qubits, {0, 1}, false);
-            GateImplementation::applyCZ(sv10.data(), num_qubits, {1, 0}, false);
+        GateImplementation::applyCZ(sv01.data(), num_qubits, {0, 1}, false);
+        GateImplementation::applyCZ(sv10.data(), num_qubits, {1, 0}, false);
 
-            CHECK(sv01 == expected);
-            CHECK(sv10 == expected);
-        }
+        CHECK(sv01 == expected);
+        CHECK(sv10 == expected);
+    }
 
-        SECTION("CZ0,2 |+10> -> |+10>") {
-            const std::vector<ComplexPrecisionT> &expected{ini_st};
+    SECTION("CZ0,2 |+10> -> |+10>") {
+        const std::vector<ComplexPrecisionT> &expected{ini_st};
 
-            auto sv02 = ini_st;
-            auto sv20 = ini_st;
+        auto sv02 = ini_st;
+        auto sv20 = ini_st;
 
-            GateImplementation::applyCZ(sv02.data(), num_qubits, {0, 2}, false);
-            GateImplementation::applyCZ(sv20.data(), num_qubits, {2, 0}, false);
+        GateImplementation::applyCZ(sv02.data(), num_qubits, {0, 2}, false);
+        GateImplementation::applyCZ(sv20.data(), num_qubits, {2, 0}, false);
 
-            CHECK(sv02 == expected);
-            CHECK(sv20 == expected);
-        }
-        SECTION("CZ1,2 |+10> -> |+10>") {
-            const std::vector<ComplexPrecisionT> &expected{ini_st};
+        CHECK(sv02 == expected);
+        CHECK(sv20 == expected);
+    }
+    SECTION("CZ1,2 |+10> -> |+10>") {
+        const std::vector<ComplexPrecisionT> &expected{ini_st};
 
-            auto sv12 = ini_st;
-            auto sv21 = ini_st;
+        auto sv12 = ini_st;
+        auto sv21 = ini_st;
 
-            GateImplementation::applyCZ(sv12.data(), num_qubits, {1, 2}, false);
-            GateImplementation::applyCZ(sv21.data(), num_qubits, {2, 1}, false);
+        GateImplementation::applyCZ(sv12.data(), num_qubits, {1, 2}, false);
+        GateImplementation::applyCZ(sv21.data(), num_qubits, {2, 1}, false);
 
-            CHECK(sv12 == expected);
-            CHECK(sv21 == expected);
-        }
+        CHECK(sv12 == expected);
+        CHECK(sv21 == expected);
     }
 }
 PENNYLANE_RUN_TEST(CZ)
@@ -467,65 +447,62 @@ void testApplyToffoli() {
     GateImplementation::applyHadamard(ini_st.data(), num_qubits, {0}, false);
     GateImplementation::applyPauliX(ini_st.data(), num_qubits, {1}, false);
 
-    if constexpr (array_has_elt(GateImplementation::implemented_gates,
-                                GateImplementation::Toffoli)) {
-        SECTION("Toffoli 0,1,2 |+10> -> |010> + |111>") {
-            std::vector<ComplexPrecisionT> expected{
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                std::complex<PrecisionT>(1.0 / sqrt(2), 0)};
+    SECTION("Toffoli 0,1,2 |+10> -> |010> + |111>") {
+        std::vector<ComplexPrecisionT> expected{
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0)};
 
-            auto sv012 = ini_st;
+        auto sv012 = ini_st;
 
-            GateImplementation::applyToffoli(sv012.data(), num_qubits,
-                                             {0, 1, 2}, false);
+        GateImplementation::applyToffoli(sv012.data(), num_qubits, {0, 1, 2},
+                                         false);
 
-            CHECK(sv012 == expected);
-        }
+        CHECK(sv012 == expected);
+    }
 
-        SECTION("Toffoli 1,0,2 |+10> -> |010> + |111>") {
-            std::vector<ComplexPrecisionT> expected{
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                std::complex<PrecisionT>(1.0 / sqrt(2), 0)};
+    SECTION("Toffoli 1,0,2 |+10> -> |010> + |111>") {
+        std::vector<ComplexPrecisionT> expected{
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0)};
 
-            auto sv102 = ini_st;
+        auto sv102 = ini_st;
 
-            GateImplementation::applyToffoli(sv102.data(), num_qubits,
-                                             {1, 0, 2}, false);
+        GateImplementation::applyToffoli(sv102.data(), num_qubits, {1, 0, 2},
+                                         false);
 
-            CHECK(sv102 == expected);
-        }
+        CHECK(sv102 == expected);
+    }
 
-        SECTION("Toffoli 0,2,1 |+10> -> |+10>") {
-            const auto &expected = ini_st;
+    SECTION("Toffoli 0,2,1 |+10> -> |+10>") {
+        const auto &expected = ini_st;
 
-            auto sv021 = ini_st;
+        auto sv021 = ini_st;
 
-            GateImplementation::applyToffoli(sv021.data(), num_qubits,
-                                             {0, 2, 1}, false);
+        GateImplementation::applyToffoli(sv021.data(), num_qubits, {0, 2, 1},
+                                         false);
 
-            CHECK(sv021 == expected);
-        }
+        CHECK(sv021 == expected);
+    }
 
-        SECTION("Toffoli 1,2,0 |+10> -> |+10>") {
-            const auto &expected = ini_st;
+    SECTION("Toffoli 1,2,0 |+10> -> |+10>") {
+        const auto &expected = ini_st;
 
-            auto sv120 = ini_st;
-            GateImplementation::applyToffoli(sv120.data(), num_qubits,
-                                             {1, 2, 0}, false);
-            CHECK(sv120 == expected);
-        }
+        auto sv120 = ini_st;
+        GateImplementation::applyToffoli(sv120.data(), num_qubits, {1, 2, 0},
+                                         false);
+        CHECK(sv120 == expected);
     }
 }
 PENNYLANE_RUN_TEST(Toffoli)
@@ -540,49 +517,46 @@ template <typename PrecisionT, class GateImplementation> void testApplyCSWAP() {
     GateImplementation::applyHadamard(ini_st.data(), num_qubits, {0}, false);
     GateImplementation::applyPauliX(ini_st.data(), num_qubits, {1}, false);
 
-    if constexpr (array_has_elt(GateImplementation::implemented_gates,
-                                GateImplementation::CSWAP)) {
-        SECTION("CSWAP 0,1,2 |+10> -> |010> + |101>") {
-            std::vector<ComplexPrecisionT> expected{
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>()};
+    SECTION("CSWAP 0,1,2 |+10> -> |010> + |101>") {
+        std::vector<ComplexPrecisionT> expected{
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>()};
 
-            auto sv012 = ini_st;
-            GateImplementation::applyCSWAP(sv012.data(), num_qubits, {0, 1, 2},
-                                           false);
-            CHECK(sv012 == expected);
-        }
+        auto sv012 = ini_st;
+        GateImplementation::applyCSWAP(sv012.data(), num_qubits, {0, 1, 2},
+                                       false);
+        CHECK(sv012 == expected);
+    }
 
-        SECTION("CSWAP 1,0,2 |+10> -> |01+>") {
-            std::vector<ComplexPrecisionT> expected{
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>(),
-                Util::ZERO<PrecisionT>()};
+    SECTION("CSWAP 1,0,2 |+10> -> |01+>") {
+        std::vector<ComplexPrecisionT> expected{
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>()};
 
-            auto sv102 = ini_st;
-            GateImplementation::applyCSWAP(sv102.data(), num_qubits, {1, 0, 2},
-                                           false);
-            CHECK(sv102 == expected);
-        }
-        SECTION("CSWAP 2,1,0 |+10> -> |+10>") {
-            const auto &expected = ini_st;
+        auto sv102 = ini_st;
+        GateImplementation::applyCSWAP(sv102.data(), num_qubits, {1, 0, 2},
+                                       false);
+        CHECK(sv102 == expected);
+    }
+    SECTION("CSWAP 2,1,0 |+10> -> |+10>") {
+        const auto &expected = ini_st;
 
-            auto sv210 = ini_st;
-            GateImplementation::applyCSWAP(sv210.data(), num_qubits, {2, 1, 0},
-                                           false);
-            CHECK(sv210 == expected);
-        }
+        auto sv210 = ini_st;
+        GateImplementation::applyCSWAP(sv210.data(), num_qubits, {2, 1, 0},
+                                       false);
+        CHECK(sv210 == expected);
     }
 }
 PENNYLANE_RUN_TEST(CSWAP)

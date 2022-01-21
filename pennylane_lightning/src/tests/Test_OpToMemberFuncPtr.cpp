@@ -16,6 +16,28 @@ template <typename EnumClass> constexpr auto allGateOps() {
         std::make_integer_sequence<uint32_t,
                                    static_cast<uint32_t>(EnumClass::END)>{}));
 };
+template <class PrecisionT, class ParamT, class GateImplemenation,
+          uint32_t gate_idx>
+constexpr bool testAllGatesImplementedIter() {
+    if constexpr (gate_idx < static_cast<uint32_t>(GateOperation::END)) {
+        constexpr auto gate_op = static_cast<GateOperation>(gate_idx);
+        if constexpr (gate_op != GateOperation::Matrix) {
+            if (GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplemenation,
+                                      gate_op>::value == nullptr) {
+                return false;
+            }
+        }
+        return testAllGatesImplementedIter<PrecisionT, ParamT,
+                                           GateImplemenation, gate_idx + 1>();
+    } else {
+        return true;
+    }
+}
+template <class PrecisionT, class ParamT, class GateImplemenation>
+constexpr bool testAllGatesImplemeted() {
+    return testAllGatesImplementedIter<PrecisionT, ParamT, GateImplemenation,
+                                       0>();
+}
 
 #define PENNYLANE_TESTS_DEFINE_GATE_OP_PARAM0(GATE_NAME)                       \
     template <class PrecisionT>                                                \
@@ -96,6 +118,9 @@ class DummyImplementation {
     PENNYLANE_TESTS_DEFINE_GATE_OP(CZ, 0)
     PENNYLANE_TESTS_DEFINE_GATE_OP(SWAP, 0)
     PENNYLANE_TESTS_DEFINE_GATE_OP(ControlledPhaseShift, 1)
+    PENNYLANE_TESTS_DEFINE_GATE_OP(IsingXX, 1)
+    PENNYLANE_TESTS_DEFINE_GATE_OP(IsingYY, 1)
+    PENNYLANE_TESTS_DEFINE_GATE_OP(IsingZZ, 1)
     PENNYLANE_TESTS_DEFINE_GATE_OP(CRX, 1)
     PENNYLANE_TESTS_DEFINE_GATE_OP(CRY, 1)
     PENNYLANE_TESTS_DEFINE_GATE_OP(CRZ, 1)
@@ -114,6 +139,9 @@ class DummyImplementation {
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(ControlledPhaseShift)
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(MultiRZ)
 };
+
+static_assert(testAllGatesImplemeted<float, float, DummyImplementation>(),
+              "DummyImplementation must define all gate operations.");
 
 template <class GateImplementation> struct ImplementedGates {
     constexpr static auto value = GateImplementation::implemented_gates;
@@ -207,6 +235,7 @@ constexpr auto testUniqueness(const std::array<std::pair<T, U>, size> &pairs) {
 
 TEMPLATE_TEST_CASE("GateOpToMemberFuncPtr", "[GateOpToMemberFuncPtr]", float,
                    double) {
+    // TODO: This can be done in compile time
     testUniqueness(gate_op_func_ptr_with_params<TestType, TestType, 0>);
     testUniqueness(gate_op_func_ptr_with_params<TestType, TestType, 1>);
     testUniqueness(gate_op_func_ptr_with_params<TestType, TestType, 3>);
@@ -214,6 +243,7 @@ TEMPLATE_TEST_CASE("GateOpToMemberFuncPtr", "[GateOpToMemberFuncPtr]", float,
 }
 TEMPLATE_TEST_CASE("GeneratorOpToMemberFuncPtr", "[GeneratorOpToMemberFuncPtr]",
                    float, double) {
+    // TODO: This can be done in compile time
     testUniqueness(generator_op_func_ptr<TestType, TestType>);
     REQUIRE(true);
 }

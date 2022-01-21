@@ -34,7 +34,10 @@ include(Catch)
 ################################################################################
 
 add_library(lightning_tests_dependency INTERFACE)
-target_link_libraries(lightning_tests_dependency INTERFACE lightning_simulator lightning_algorithms lightning_utils Catch2::Catch2)
+target_link_libraries(lightning_tests_dependency INTERFACE lightning_simulator
+                                                           lightning_algorithms
+                                                           lightning_utils
+                                                           Catch2::Catch2)
 target_compile_options(lightning_tests_dependency INTERFACE "$<$<CONFIG:DEBUG>:-Wall>")
 target_sources(lightning_tests_dependency INTERFACE runner_main.cpp)
 
@@ -54,7 +57,7 @@ set(TEST_SOURCES Test_AdjDiff.cpp
 #                 Test_Bindings.cpp
                  Test_DynamicDispatcher.cpp
                  Test_GateImplementations_Nonparam.cpp
-#                 Test_GateOperations_Param.cpp
+                 Test_GateImplementations_Param.cpp
                  Test_IndicesUtil.cpp
                  Test_Measures.cpp
                  Test_OpToMemberFuncPtr.cpp

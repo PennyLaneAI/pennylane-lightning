@@ -100,8 +100,7 @@ template <typename PrecisionT> class DynamicDispatcher {
         for (const auto &[gate_op, gate_name] : Constant::gate_names) {
             KernelType kernel =
                 lookup(Constant::default_kernel_for_gates, gate_op);
-            const auto implemented_gates =
-                Internal::implementedGatesForKernel(kernel);
+            const auto implemented_gates = implementedGatesForKernel(kernel);
             if (std::find(std::cbegin(implemented_gates),
                           std::cend(implemented_gates),
                           gate_op) == std::cend(implemented_gates)) {
@@ -115,7 +114,7 @@ template <typename PrecisionT> class DynamicDispatcher {
             KernelType kernel =
                 lookup(Constant::default_kernel_for_generators, gntr_op);
             const auto implemented_generators =
-                Internal::implementedGeneratorsForKernel(kernel);
+                implementedGeneratorsForKernel(kernel);
             if (std::find(std::cbegin(implemented_generators),
                           std::cend(implemented_generators),
                           gntr_op) == std::cend(implemented_generators)) {

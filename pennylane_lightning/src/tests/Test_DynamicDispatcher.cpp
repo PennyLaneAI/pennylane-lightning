@@ -18,7 +18,7 @@
 using namespace Pennylane;
 namespace Constant = Pennylane::Constant;
 
-using Pennylane::Internal::callGateOps;
+using Pennylane::callGateOps;
 
 /**
  * @file This file contains tests for DynamicDispatcher class

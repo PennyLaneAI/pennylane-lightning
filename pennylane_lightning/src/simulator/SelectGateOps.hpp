@@ -124,155 +124,7 @@ using SelectGateOps =
     typename Internal::SelectGateOpsHelper<PrecisionT, kernel,
                                            AvailableKernels>::Type;
 
-} // namespace Pennylane
-
-namespace Pennylane::Internal {
-/**
- * @brief Gate operation pointer type for a statevector. See all specialized
- * types.
- */
-template <class SVType, class ParamT, size_t num_params> struct GateMemFuncPtr {
-    static_assert(num_params < 2 || num_params == 3,
-                  "The given num_params is not supported.");
-};
-/**
- * @brief Function pointer type for a gate operation without parameters.
- */
-template <class SVType, class ParamT> struct GateMemFuncPtr<SVType, ParamT, 0> {
-    using Type = void (SVType::*)(const std::vector<size_t> &, bool);
-};
-/**
- * @brief Function pointer type for a gate operation with a single parameter.
- */
-template <class SVType, class ParamT> struct GateMemFuncPtr<SVType, ParamT, 1> {
-    using Type = void (SVType::*)(const std::vector<size_t> &, bool, ParamT);
-};
-/**
- * @brief Function pointer type for a gate operation with three parameters.
- */
-template <class SVType, class ParamT> struct GateMemFuncPtr<SVType, ParamT, 3> {
-    using Type = void (SVType::*)(const std::vector<size_t> &, bool, ParamT,
-                                  ParamT, ParamT);
-};
-
-template <class SVType, class ParamT, size_t num_params>
-using GateMemFuncPtrT =
-    typename GateMemFuncPtr<SVType, ParamT, num_params>::Type;
-
-/**
- * @brief Gate operation pointer type. See all specialized types.
- */
-template <class PrecisionT, class ParamT, size_t num_params>
-struct GateFuncPtr {
-    static_assert(num_params < 2 || num_params == 3,
-                  "The given num_params is not supported.");
-};
-
-/**
- * @brief Pointer type for a gate operation without parameters.
- */
-template <class PrecisionT, class ParamT>
-struct GateFuncPtr<PrecisionT, ParamT, 0> {
-    using Type = void (*)(std::complex<PrecisionT> *, size_t,
-                          const std::vector<size_t> &, bool);
-};
-/**
- * @brief Pointer type for a gate operation with a single parameter
- */
-template <class PrecisionT, class ParamT>
-struct GateFuncPtr<PrecisionT, ParamT, 1> {
-    using Type = void (*)(std::complex<PrecisionT> *, size_t,
-                          const std::vector<size_t> &, bool, ParamT);
-};
-/**
- * @brief Pointer type for a gate operation with three paramters
- */
-template <class PrecisionT, class ParamT>
-struct GateFuncPtr<PrecisionT, ParamT, 3> {
-    using Type = void (*)(std::complex<PrecisionT> *, size_t,
-                          const std::vector<size_t> &, bool, ParamT, ParamT,
-                          ParamT);
-};
-
-/**
- * @brief Pointer type for a generator operation
- */
-template <class PrecisionT> struct GeneratorFuncPtr {
-    using Type = PrecisionT (*)(std::complex<PrecisionT> *, size_t,
-                                const std::vector<size_t> &, bool);
-};
-
-/**
- * @brief Convinient type alias for GateFuncPtr. See GateFuncPtr for details.
- */
-template <class PrecisionT, class ParamT, size_t num_params>
-using GateFuncPtrT = typename GateFuncPtr<PrecisionT, ParamT, num_params>::Type;
-
-template <class PrecisionT>
-using GeneratorFuncPtrT = typename GeneratorFuncPtr<PrecisionT>::Type;
-
-/**
- * @defgroup Call gate operation with provided arguments
- *
- * @tparam PrecisionT Floating point type for the state-vector.
- * @tparam ParamT Floating point type for the gate paramters.
- * @param func Function pointer for the gate operation.
- * @param num_qubits The number of qubits of the state-vector.
- * @param wires Wires the gate applies to.
- * @param inverse If true, we apply the inverse of the gate.
- * @param params The list of gate paramters.
- */
-/// @{
-/**
- * @brief Overload for a gate operation without parameters
- */
-template <class PrecisionT, class ParamT>
-inline void callGateOps(GateFuncPtrT<PrecisionT, ParamT, 0> func,
-                        std::complex<PrecisionT> *data, size_t num_qubits,
-                        const std::vector<size_t> &wires, bool inverse,
-                        [[maybe_unused]] const std::vector<ParamT> &params) {
-    assert(params.empty());
-    func(data, num_qubits, wires, inverse);
-}
-
-/**
- * @brief Overload for a gate operation for a single paramter
- */
-template <class PrecisionT, class ParamT>
-inline void callGateOps(GateFuncPtrT<PrecisionT, ParamT, 1> func,
-                        std::complex<PrecisionT> *data, size_t num_qubits,
-                        const std::vector<size_t> &wires, bool inverse,
-                        const std::vector<ParamT> &params) {
-    assert(params.size() == 1);
-    func(data, num_qubits, wires, inverse, params[0]);
-}
-
-/**
- * @brief Overload for a gate operation for three paramters
- */
-template <class PrecisionT, class ParamT>
-inline void callGateOps(GateFuncPtrT<PrecisionT, ParamT, 3> func,
-                        std::complex<PrecisionT> *data, size_t num_qubits,
-                        const std::vector<size_t> &wires, bool inverse,
-                        const std::vector<ParamT> &params) {
-    assert(params.size() == 3);
-    func(data, num_qubits, wires, inverse, params[0], params[1], params[2]);
-}
-/// @}
-/**
- * @brief Call a generator operation.
- *
- * @tparam PrecisionT Floating point type for the state-vector.
- * @return Scaling factor
- */
-template <class PrecisionT>
-inline PrecisionT callGeneratorOps(GeneratorFuncPtrT<PrecisionT> func,
-                                   std::complex<PrecisionT> *data,
-                                   size_t num_qubits,
-                                   const std::vector<size_t> &wires, bool adj) {
-    return func(data, num_qubits, wires, adj);
-}
-
+namespace Internal {
 /// @cond DEV
 template <class OperatorImplementation> struct ImplementedGates {
     constexpr static auto value = OperatorImplementation::implemented_gates;
@@ -297,7 +149,7 @@ auto ValueForKernelHelper([[maybe_unused]] KernelType kernel) {
     }
 }
 /// @endcond
-
+} // namespace Internal
 /**
  * @brief Return implemented_gates constexpr member variables for a given kernel
  *
@@ -307,8 +159,8 @@ auto ValueForKernelHelper([[maybe_unused]] KernelType kernel) {
  * TODO: Change to constexpr function in C++20
  */
 inline auto implementedGatesForKernel(KernelType kernel) {
-    return ValueForKernelHelper<AvailableKernels, GateOperation,
-                                ImplementedGates>(kernel);
+    return Internal::ValueForKernelHelper<AvailableKernels, GateOperation,
+                                          Internal::ImplementedGates>(kernel);
 }
 /**
  * @brief Return implemented_generators constexpr member variables for a given
@@ -320,10 +172,11 @@ inline auto implementedGatesForKernel(KernelType kernel) {
  * TODO: Change to constexpr function in C++20
  */
 inline auto implementedGeneratorsForKernel(KernelType kernel) {
-    return ValueForKernelHelper<AvailableKernels, GeneratorOperation,
-                                ImplementedGenerators>(kernel);
+    return Internal::ValueForKernelHelper<AvailableKernels, GeneratorOperation,
+                                          Internal::ImplementedGenerators>(
+        kernel);
 }
-} // namespace Pennylane::Internal
+} // namespace Pennylane
 
 /**
  * @brief A hash function for GateOperations type
