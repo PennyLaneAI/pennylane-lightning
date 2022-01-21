@@ -53,12 +53,11 @@ target_link_libraries(compile_time_tests lightning_simulator lightning_utils)
 set(TEST_SOURCES Test_AdjDiff.cpp
 #                 Test_Bindings.cpp
                  Test_DynamicDispatcher.cpp
-#                 Test_GateOperations_Nonparam.cpp
+                 Test_GateImplementations_Nonparam.cpp
 #                 Test_GateOperations_Param.cpp
                  Test_IndicesUtil.cpp
                  Test_Measures.cpp
                  Test_OpToMemberFuncPtr.cpp
-#                 Test_SelectGateOps.cpp
 #                 Test_StateVectorManaged.cpp
 #                 Test_StateVectorRaw.cpp
                  Test_Util.cpp

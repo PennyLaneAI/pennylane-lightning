@@ -49,7 +49,8 @@ namespace Pennylane {
  * @tparam PrecisionT Floating point precision of underlying statevector data.
  */
 template <class PrecisionT = double>
-class StateVectorRaw : public StateVectorBase<PrecisionT, StateVectorRaw<PrecisionT>> {
+class StateVectorRaw
+    : public StateVectorBase<PrecisionT, StateVectorRaw<PrecisionT>> {
   public:
     using Base = StateVectorBase<PrecisionT, StateVectorRaw<PrecisionT>>;
     using ComplexPrecisionT = std::complex<PrecisionT>;

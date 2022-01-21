@@ -56,9 +56,10 @@ template <typename PrecisionT> class DynamicDispatcher {
         const std::vector<size_t> & /*wires*/, bool /*inverse*/,
         const std::vector<PrecisionT> & /*params*/)>;
 
-    using GeneratorFunc = PrecisionT (*)(
-        std::complex<PrecisionT> * /*data*/, size_t /*num_qubits*/,
-        const std::vector<size_t> & /*wires*/, bool /*adjoint*/);
+    using GeneratorFunc = PrecisionT (*)(std::complex<PrecisionT> * /*data*/,
+                                         size_t /*num_qubits*/,
+                                         const std::vector<size_t> & /*wires*/,
+                                         bool /*adjoint*/);
 
   private:
     std::unordered_map<std::string, size_t> gate_wires_;
@@ -67,12 +68,14 @@ template <typename PrecisionT> class DynamicDispatcher {
     std::unordered_map<std::string, KernelType> generator_kernel_map_;
 
     std::unordered_map<std::pair<std::string, KernelType>, GateFunc,
-                       Internal::PairHash> gates_;
+                       Internal::PairHash>
+        gates_;
 
     std::unordered_map<std::pair<std::string, KernelType>, GeneratorFunc,
-                       Internal::PairHash> generators_;
+                       Internal::PairHash>
+        generators_;
 
-    std::string removeGeneratorPrefix(const std::string& op_name) {
+    std::string removeGeneratorPrefix(const std::string &op_name) {
         constexpr std::string_view prefix = "Generator";
         // TODO: change to string::starts_with in C++20
         if (op_name.rfind(prefix) != 0) {
@@ -119,10 +122,11 @@ template <typename PrecisionT> class DynamicDispatcher {
                 PL_ABORT("Default kernel for " + std::string(gntr_name) +
                          " does not implement the generator.");
             }
-            generator_kernel_map_.emplace(
-                    removeGeneratorPrefix(gntr_name), kernel);
+            generator_kernel_map_.emplace(removeGeneratorPrefix(gntr_name),
+                                          kernel);
         }
     }
+
   public:
     static DynamicDispatcher &getInstance() {
         static DynamicDispatcher singleton;
@@ -146,11 +150,12 @@ template <typename PrecisionT> class DynamicDispatcher {
      * kernel
      */
     template <typename FunctionType>
-    void registerGeneratorOperation(const std::string &op_name, KernelType kernel,
-                                   FunctionType &&func) {
+    void registerGeneratorOperation(const std::string &op_name,
+                                    KernelType kernel, FunctionType &&func) {
         // TODO: Add mutex when we go to multithreading
-        generators_.emplace(std::make_pair(removeGeneratorPrefix(op_name), kernel),
-                            std::forward<FunctionType>(func));
+        generators_.emplace(
+            std::make_pair(removeGeneratorPrefix(op_name), kernel),
+            std::forward<FunctionType>(func));
     }
 
     /**
@@ -175,12 +180,12 @@ template <typename PrecisionT> class DynamicDispatcher {
         }
         const auto gate_wire_iter = gate_wires_.find(op_name);
         if ((gate_wire_iter != gate_wires_.end()) &&
-                (gate_wire_iter->second != wires.size())) {
+            (gate_wire_iter->second != wires.size())) {
             throw std::invalid_argument(
                 std::string("The supplied gate requires ") +
                 std::to_string(gate_wire_iter->second) + " wires, but " +
                 std::to_string(wires.size()) + " were supplied.");
-            //TODO: change to std::format in C++20
+            // TODO: change to std::format in C++20
         }
         (iter->second)(data, num_qubits, wires, inverse, params);
     }
@@ -195,10 +200,10 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param inverse Indicates whether to use inverse of gate.
      * @param params Optional parameter list for parametric gates.
      */
-    inline void applyOperation(CFP_t *data, size_t num_qubits,
-                               const std::string &op_name,
-                               const std::vector<size_t> &wires, bool inverse,
-                               const std::vector<PrecisionT> &params = {}) const {
+    inline void
+    applyOperation(CFP_t *data, size_t num_qubits, const std::string &op_name,
+                   const std::vector<size_t> &wires, bool inverse,
+                   const std::vector<PrecisionT> &params = {}) const {
         const auto kernel_iter = gate_kernel_map_.find(op_name);
         if (kernel_iter == gate_kernel_map_.end()) {
             PL_ABORT("Kernel for gate " + op_name + " is not registered.");
@@ -264,7 +269,8 @@ template <typename PrecisionT> class DynamicDispatcher {
     }
 
     /**
-     * @brief Apply a single generator to the state-vector using the given kernel.
+     * @brief Apply a single generator to the state-vector using the given
+     * kernel.
      *
      * @param kernel Kernel to run the gate operation.
      * @param data Pointer to data.
@@ -297,18 +303,16 @@ template <typename PrecisionT> class DynamicDispatcher {
      */
     inline auto applyGenerator(CFP_t *data, size_t num_qubits,
                                const std::string &op_name,
-                               const std::vector<size_t> &wires, bool adj) const 
+                               const std::vector<size_t> &wires, bool adj) const
         -> PrecisionT {
         const auto kernel_iter = generator_kernel_map_.find(op_name);
         if (kernel_iter == generator_kernel_map_.end()) {
             PL_ABORT("Kernel for gate " + op_name + " is not registered.");
         }
 
-        return applyGenerator(kernel_iter->second, data, num_qubits, 
-                              op_name, wires, adj);
+        return applyGenerator(kernel_iter->second, data, num_qubits, op_name,
+                              wires, adj);
     }
-
-
 };
 /*******************************************************************************
  * The functions below are only used for register kernels to the dynamic
@@ -329,14 +333,15 @@ namespace Internal {
  * @tparam kernel Kernel for the gate operation
  * @tparam gate_op Gate operation to make a functor
  */
-template <class PrecisionT, class ParamT, class GateImplementation, 
+template <class PrecisionT, class ParamT, class GateImplementation,
           GateOperation gate_op>
 constexpr auto gateOpToFunctor() {
     return [](std::complex<PrecisionT> *data, size_t num_qubits,
               const std::vector<size_t> &wires, bool inverse,
               const std::vector<PrecisionT> &params) {
-        constexpr auto func_ptr = GateOpToMemberFuncPtr<
-                    PrecisionT, ParamT, GateImplementation, gate_op>::value;
+        constexpr auto func_ptr =
+            GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                  gate_op>::value;
         callGateOps(func_ptr, data, num_qubits, wires, inverse, params);
     };
 }
@@ -344,28 +349,30 @@ constexpr auto gateOpToFunctor() {
 /// @cond DEV
 /**
  * @brief Internal recursion function for constructGateOpsFunctorTuple
- * 
+ *
  * @return Tuple of gate operations and corresponding GateImplementation member
  * function pointers.
  */
-template <class PrecisionT, class ParamT, class GateImplementation, size_t gate_idx>
+template <class PrecisionT, class ParamT, class GateImplementation,
+          size_t gate_idx>
 constexpr auto constructGateOpsFunctorTupleIter() {
     if constexpr (gate_idx == GateImplementation::implemented_gates.size()) {
         return std::tuple{};
     } else if (gate_idx < GateImplementation::implemented_gates.size()) {
-        constexpr auto gate_op = GateImplementation::implemented_gates[gate_idx];
+        constexpr auto gate_op =
+            GateImplementation::implemented_gates[gate_idx];
         if constexpr (gate_op == GateOperation::Matrix) {
             /* GateOperation::Matrix is not supported for dynamic dispatch now
              */
-            return constructGateOpsFunctorTupleIter<PrecisionT, ParamT, GateImplementation,
-                                                    gate_idx + 1>();
+            return constructGateOpsFunctorTupleIter<
+                PrecisionT, ParamT, GateImplementation, gate_idx + 1>();
         } else {
             return prepend_to_tuple(
-                std::pair{
-                    gate_op,
-                    gateOpToFunctor<PrecisionT, ParamT, GateImplementation, gate_op>()},
-                constructGateOpsFunctorTupleIter<PrecisionT, ParamT, GateImplementation,
-                                                 gate_idx + 1>());
+                std::pair{gate_op,
+                          gateOpToFunctor<PrecisionT, ParamT,
+                                          GateImplementation, gate_op>()},
+                constructGateOpsFunctorTupleIter<
+                    PrecisionT, ParamT, GateImplementation, gate_idx + 1>());
         }
     }
 }
@@ -374,15 +381,18 @@ constexpr auto constructGateOpsFunctorTupleIter() {
  */
 template <class PrecisionT, class GateImplementation, size_t gntr_idx>
 constexpr auto constructGeneratorOpsFunctorTupleIter() {
-    if constexpr (gntr_idx == GateImplementation::implemented_generators.size()) {
+    if constexpr (gntr_idx ==
+                  GateImplementation::implemented_generators.size()) {
         return std::tuple{};
     } else if (gntr_idx < GateImplementation::implemented_generators.size()) {
-        constexpr auto gntr_op = GateImplementation::implemented_generators[gntr_idx];
+        constexpr auto gntr_op =
+            GateImplementation::implemented_generators[gntr_idx];
         return prepend_to_tuple(
-            std::pair{
-                gntr_op,
-                GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation, gntr_op>::value},
-            constructGeneratorOpsFunctorTupleIter<PrecisionT, GateImplementation, gntr_idx + 1>());
+            std::pair{gntr_op,
+                      GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
+                                                 gntr_op>::value},
+            constructGeneratorOpsFunctorTupleIter<
+                PrecisionT, GateImplementation, gntr_idx + 1>());
     }
 }
 /// @endcond
@@ -395,8 +405,8 @@ constexpr auto constructGeneratorOpsFunctorTupleIter() {
  * @tparam kernel Kernel to construct tuple
  */
 template <class PrecisionT, class ParamT, class GateImplementation>
-constexpr static auto gate_op_functor_tuple =
-    constructGateOpsFunctorTupleIter<PrecisionT, ParamT, GateImplementation, 0>();
+constexpr static auto gate_op_functor_tuple = constructGateOpsFunctorTupleIter<
+    PrecisionT, ParamT, GateImplementation, 0>();
 
 /**
  * @brief Tuple of gate operation and function pointer pairs.
@@ -420,11 +430,13 @@ template <class PrecisionT, class ParamT, class GateImplementation>
 void registerAllImplementedGateOps() {
     auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
 
-    auto registerGateToDispatcher = [&dispatcher](const auto &gate_op_func_pair) {
+    auto registerGateToDispatcher = [&dispatcher](
+                                        const auto &gate_op_func_pair) {
         const auto &[gate_op, func] = gate_op_func_pair;
         std::string op_name =
             std::string(lookup(Constant::gate_names, gate_op));
-        dispatcher.registerGateOperation(op_name, GateImplementation::kernel_id, func);
+        dispatcher.registerGateOperation(op_name, GateImplementation::kernel_id,
+                                         func);
         return gate_op;
     };
 
@@ -432,7 +444,7 @@ void registerAllImplementedGateOps() {
         [&registerGateToDispatcher](auto... elt) {
             return std::make_tuple(registerGateToDispatcher(elt)...);
         },
-    gate_op_functor_tuple<PrecisionT, ParamT, GateImplementation>);
+        gate_op_functor_tuple<PrecisionT, ParamT, GateImplementation>);
 }
 /**
  * @brief Register all implemented generators for a given kernel
@@ -445,21 +457,22 @@ template <class PrecisionT, class GateImplementation>
 void registerAllImplementedGeneratorOps() {
     auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
 
-    auto registerGeneratorToDispatcher = [&dispatcher](const auto &gntr_op_func_pair) {
-        const auto &[gntr_op, func] = gntr_op_func_pair;
-        std::string op_name =
-            std::string(lookup(Constant::generator_names, gntr_op));
-        dispatcher.registerGeneratorOperation(op_name, GateImplementation::kernel_id, func);
-        return gntr_op;
-    };
+    auto registerGeneratorToDispatcher =
+        [&dispatcher](const auto &gntr_op_func_pair) {
+            const auto &[gntr_op, func] = gntr_op_func_pair;
+            std::string op_name =
+                std::string(lookup(Constant::generator_names, gntr_op));
+            dispatcher.registerGeneratorOperation(
+                op_name, GateImplementation::kernel_id, func);
+            return gntr_op;
+        };
 
     [[maybe_unused]] const auto registerd_gate_ops = std::apply(
         [&registerGeneratorToDispatcher](auto... elt) {
             return std::make_tuple(registerGeneratorToDispatcher(elt)...);
         },
-    generator_op_functor_tuple<PrecisionT, GateImplementation>);
+        generator_op_functor_tuple<PrecisionT, GateImplementation>);
 }
-
 
 /// @cond DEV
 /**
@@ -471,8 +484,10 @@ void registerKernelIter() {
     if constexpr (std::is_same_v<TypeList, void>) {
         return;
     } else {
-        registerAllImplementedGateOps<PrecisionT, ParamT, typename TypeList::Type>();
-        registerAllImplementedGeneratorOps<PrecisionT, typename TypeList::Type>();
+        registerAllImplementedGateOps<PrecisionT, ParamT,
+                                      typename TypeList::Type>();
+        registerAllImplementedGeneratorOps<PrecisionT,
+                                           typename TypeList::Type>();
         registerKernelIter<PrecisionT, ParamT, typename TypeList::Next>();
     }
 }

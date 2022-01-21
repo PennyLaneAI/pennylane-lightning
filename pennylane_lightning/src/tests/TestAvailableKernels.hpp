@@ -7,7 +7,7 @@
 namespace Pennylane {
 
 // Define some utility function
-template<typename TypeList>
+template <typename TypeList>
 constexpr auto is_available_kernel_helper(KernelType kernel) -> bool {
     if (TypeList::Type::kernel_id == kernel) {
         return true;
@@ -15,7 +15,8 @@ constexpr auto is_available_kernel_helper(KernelType kernel) -> bool {
     return is_available_kernel_helper<typename TypeList::Next>(kernel);
 }
 template <>
-constexpr auto is_available_kernel_helper<void>([[maybe_unused]] KernelType kernel) -> bool {
+constexpr auto
+is_available_kernel_helper<void>([[maybe_unused]] KernelType kernel) -> bool {
     return false;
 }
 /**
@@ -26,12 +27,12 @@ constexpr auto is_available_kernel(KernelType kernel) -> bool {
 }
 
 template <size_t size>
-constexpr auto check_kernels_are_available(
-        const std::array<KernelType, size>& arr) -> bool {
+constexpr auto
+check_kernels_are_available(const std::array<KernelType, size> &arr) -> bool {
     // TODO: change to constexpr std::all_of in C++20
     // which is not constexpr in C++17.
     // NOLINTNEXTLINE (readability-use-anyofallof)
-    for (const auto &kernel: arr) {
+    for (const auto &kernel : arr) {
         if (!is_available_kernel(kernel)) {
             return false;
         }
@@ -60,31 +61,27 @@ static_assert(check_kernels_to_pyexport(),
  * Check each element in kernelIdNamesPairs is unique
  ******************************************************************************/
 
-static_assert(Util::count_unique(Util::first_elts_of(kernelIdNamePairs)) == 
-        Util::length<AvailableKernels>(),
-        "Kernel ids must be distinct.");
+static_assert(Util::count_unique(Util::first_elts_of(kernelIdNamePairs)) ==
+                  Util::length<AvailableKernels>(),
+              "Kernel ids must be distinct.");
 
-static_assert(Util::count_unique(Util::second_elts_of(kernelIdNamePairs)) == 
-        Util::length<AvailableKernels>(),
-        "Kernel names must be distinct.");
+static_assert(Util::count_unique(Util::second_elts_of(kernelIdNamePairs)) ==
+                  Util::length<AvailableKernels>(),
+              "Kernel names must be distinct.");
 
 /*******************************************************************************
  * Check all kernels in default_kernel_for_gates are available
  ******************************************************************************/
 
-static_assert(check_kernels_are_available(Util::second_elts_of(Constant::default_kernel_for_gates)),
+static_assert(check_kernels_are_available(
+                  Util::second_elts_of(Constant::default_kernel_for_gates)),
               "default_kernel_for_gates contains an unavailable kernel");
-static_assert(count_unique(first_elts_of(Constant::default_kernel_for_gates)) ==
-                  static_cast<int>(GateOperation::END),
-              "All gate operations must be defined in default_kernel_for_gates");
 
 /*******************************************************************************
  * Check all kernels in default_kernel_for_generators are available
  ******************************************************************************/
 
-static_assert(check_kernels_are_available(Util::second_elts_of(Constant::default_kernel_for_generators)),
+static_assert(check_kernels_are_available(Util::second_elts_of(
+                  Constant::default_kernel_for_generators)),
               "default_kernel_for_gates contains an unavailable kernel");
-static_assert(count_unique(first_elts_of(Constant::default_kernel_for_generators)) ==
-                  static_cast<int>(GeneratorOperation::END),
-              "All gate operations must be defined in default_kernel_for_generators");
 } // namespace Pennylane

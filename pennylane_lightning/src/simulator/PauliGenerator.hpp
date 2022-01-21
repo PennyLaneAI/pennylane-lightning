@@ -24,28 +24,27 @@ namespace Pennylane {
 /**
  * @brief Define generators of RX, RY, RZ using the Pauli gates
  */
-template <class GateImplementation>
-class PauliGenerator {
+template <class GateImplementation> class PauliGenerator {
   private:
   public:
-    template<class PrecisionT>
-    static PrecisionT applyGeneratorRX(
-            std::complex<PrecisionT>* data, size_t num_qubits,
-            const std::vector<size_t>& wires, bool adj) {
+    template <class PrecisionT>
+    static PrecisionT
+    applyGeneratorRX(std::complex<PrecisionT> *data, size_t num_qubits,
+                     const std::vector<size_t> &wires, bool adj) {
         GateImplementation::applyPauliX(data, num_qubits, wires, adj);
         return -static_cast<PrecisionT>(0.5);
     }
-    template<class PrecisionT>
-    static PrecisionT applyGeneratorRY(
-            std::complex<PrecisionT>* data, size_t num_qubits,
-            const std::vector<size_t>& wires, bool adj) {
+    template <class PrecisionT>
+    static PrecisionT
+    applyGeneratorRY(std::complex<PrecisionT> *data, size_t num_qubits,
+                     const std::vector<size_t> &wires, bool adj) {
         GateImplementation::applyPauliY(data, num_qubits, wires, adj);
         return -static_cast<PrecisionT>(0.5);
     }
-    template<class PrecisionT>
-    static PrecisionT applyGeneratorRZ(
-            std::complex<PrecisionT>* data, size_t num_qubits,
-            const std::vector<size_t>& wires, bool adj) {
+    template <class PrecisionT>
+    static PrecisionT
+    applyGeneratorRZ(std::complex<PrecisionT> *data, size_t num_qubits,
+                     const std::vector<size_t> &wires, bool adj) {
         GateImplementation::applyPauliZ(data, num_qubits, wires, adj);
         return -static_cast<PrecisionT>(0.5);
     }

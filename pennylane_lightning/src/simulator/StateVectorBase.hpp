@@ -55,10 +55,11 @@
                       "The provided number of parameters for gate " #GATE_NAME \
                       " is wrong.");                                           \
         static_assert(                                                         \
-            array_has_elt(SelectGateOps<PrecisionT, kernel>::implemented_gates,      \
-                          GateOperation::GATE_NAME),                           \
+            array_has_elt(                                                     \
+                SelectGateOps<PrecisionT, kernel>::implemented_gates,          \
+                GateOperation::GATE_NAME),                                     \
             "The kernel does not implement the gate.");                        \
-        SelectGateOps<PrecisionT, kernel>::apply##GATE_NAME(                         \
+        SelectGateOps<PrecisionT, kernel>::apply##GATE_NAME(                   \
             arr, num_qubits_, wires, inverse, std::forward<Ts>(args)...);      \
     }
 
@@ -67,20 +68,21 @@
     inline void apply##GATE_NAME(const std::vector<size_t> &wires,             \
                                  bool inverse, Ts &&...args) {                 \
         constexpr auto kernel = static_lookup<GateOperation::GATE_NAME>(       \
-            Constant::default_kernel_for_gates);                                \
+            Constant::default_kernel_for_gates);                               \
         apply##GATE_NAME##_<kernel>(wires, inverse,                            \
                                     std::forward<Ts>(args)...);                \
     }
 #define PENNYLANE_STATEVECTOR_DEFINE_GENERATOR(GENERATOR_NAME)                 \
     template <KernelType kernel, typename... Ts>                               \
     inline void applyGenerator##GENERATOR_NAME##_(                             \
-                const std::vector<size_t> &wires, bool adj) {                  \
+        const std::vector<size_t> &wires, bool adj) {                          \
         auto *arr = getData();                                                 \
         static_assert(                                                         \
-            array_has_elt(SelectGateOps<PrecisionT, kernel>::implemented_generators, \
-                          GeneratorOperation::GENERATOR_NAME),                 \
+            array_has_elt(                                                     \
+                SelectGateOps<PrecisionT, kernel>::implemented_generators,     \
+                GeneratorOperation::GENERATOR_NAME),                           \
             "The kernel does not implement the gate generator.");              \
-        SelectGateOps<PrecisionT, kernel>::applyGenerator##GENERATOR_NAME(           \
+        SelectGateOps<PrecisionT, kernel>::applyGenerator##GENERATOR_NAME(     \
             arr, num_qubits_, wires, adj);                                     \
     }
 
@@ -229,7 +231,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
             arr, num_qubits_, ops, wires, inverse);
     }
 
-
     /**
      * @brief Apply a single generator to the state-vector using a given kernel.
      *
@@ -273,7 +274,7 @@ template <class PrecisionT, class Derived> class StateVectorBase {
                              bool inverse = false) {
         auto *arr = getData();
         SelectGateOps<PrecisionT, kernel>::applyMatrix(arr, num_qubits_, matrix,
-                                                 wires, inverse);
+                                                       wires, inverse);
     }
     template <KernelType kernel>
     inline void applyMatrix_(const std::vector<ComplexPrecisionT> &matrix,
@@ -281,7 +282,7 @@ template <class PrecisionT, class Derived> class StateVectorBase {
                              bool inverse = false) {
         auto *arr = getData();
         SelectGateOps<PrecisionT, kernel>::applyMatrix(arr, num_qubits_, matrix,
-                                                 wires, inverse);
+                                                       wires, inverse);
     }
 
     /**

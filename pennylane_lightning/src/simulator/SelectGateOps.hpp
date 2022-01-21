@@ -27,7 +27,6 @@
 #include <functional>
 #include <variant>
 
-
 namespace Pennylane {
 /**
  * @brief For lookup from any array of pair whose first elements are
@@ -50,7 +49,8 @@ static_lookup(const std::array<std::pair<GateOperation, T>, size> &arr) -> T {
 
 template <GeneratorOperation op, class T, size_t size>
 constexpr auto
-static_lookup(const std::array<std::pair<GeneratorOperation, T>, size> &arr) -> T {
+static_lookup(const std::array<std::pair<GeneratorOperation, T>, size> &arr)
+    -> T {
     for (size_t idx = 0; idx < size; idx++) {
         if (std::get<0>(arr[idx]) == op) {
             return std::get<1>(arr[idx]);
@@ -61,15 +61,13 @@ static_lookup(const std::array<std::pair<GeneratorOperation, T>, size> &arr) -> 
 
 /// @cond DEV
 namespace Internal {
-template<typename TypeList>
-struct KernelIdNamePairsHelper {
-    constexpr static std::tuple value = 
-        Util::prepend_to_tuple(std::pair{TypeList::Type::kernel_id, TypeList::Type::name},
-            KernelIdNamePairsHelper<typename TypeList::Next>::value);
+template <typename TypeList> struct KernelIdNamePairsHelper {
+    constexpr static std::tuple value = Util::prepend_to_tuple(
+        std::pair{TypeList::Type::kernel_id, TypeList::Type::name},
+        KernelIdNamePairsHelper<typename TypeList::Next>::value);
 };
 
-template<>
-struct KernelIdNamePairsHelper<void> {
+template <> struct KernelIdNamePairsHelper<void> {
     constexpr static std::tuple value = std::tuple{};
 };
 
@@ -80,7 +78,7 @@ struct KernelIdNamePairsHelper<void> {
  * @brief Array of kernel_id and name pairs
  */
 constexpr static auto kernelIdNamePairs = Util::tuple_to_array(
-            Internal::KernelIdNamePairsHelper<AvailableKernels>::value);
+    Internal::KernelIdNamePairsHelper<AvailableKernels>::value);
 
 /**
  * @brief Return kernel_id for the given kernel_name
@@ -129,7 +127,6 @@ using SelectGateOps =
 } // namespace Pennylane
 
 namespace Pennylane::Internal {
-
 /**
  * @brief Gate operation pointer type for a statevector. See all specialized
  * types.
@@ -200,8 +197,7 @@ struct GateFuncPtr<PrecisionT, ParamT, 3> {
 /**
  * @brief Pointer type for a generator operation
  */
-template <class PrecisionT>
-struct GeneratorFuncPtr {
+template <class PrecisionT> struct GeneratorFuncPtr {
     using Type = PrecisionT (*)(std::complex<PrecisionT> *, size_t,
                                 const std::vector<size_t> &, bool);
 };
@@ -271,32 +267,33 @@ inline void callGateOps(GateFuncPtrT<PrecisionT, ParamT, 3> func,
  */
 template <class PrecisionT>
 inline PrecisionT callGeneratorOps(GeneratorFuncPtrT<PrecisionT> func,
-                                   std::complex<PrecisionT>* data, size_t num_qubits,
+                                   std::complex<PrecisionT> *data,
+                                   size_t num_qubits,
                                    const std::vector<size_t> &wires, bool adj) {
     return func(data, num_qubits, wires, adj);
 }
 
 /// @cond DEV
-template <class OperatorImplementation>
-struct ImplementedGates {
+template <class OperatorImplementation> struct ImplementedGates {
     constexpr static auto value = OperatorImplementation::implemented_gates;
 };
-template <class OperatorImplementation>
-struct ImplementedGenerators {
-    constexpr static auto value = OperatorImplementation::implemented_generators;
+template <class OperatorImplementation> struct ImplementedGenerators {
+    constexpr static auto value =
+        OperatorImplementation::implemented_generators;
 };
 
 template <class TypeList, class ValueType, template <class> class ValueClass>
-auto ValueForKernelHelper ([[maybe_unused]] KernelType kernel) {
+auto ValueForKernelHelper([[maybe_unused]] KernelType kernel) {
     if constexpr (std::is_same_v<TypeList, void>) {
         return std::vector<ValueType>{};
     } else {
         if (TypeList::Type::kernel_id == kernel) {
             return std::vector<ValueType>(
-                    std::cbegin(ValueClass<typename TypeList::Type>::value),
-                    std::cend(ValueClass<typename TypeList::Type>::value));
+                std::cbegin(ValueClass<typename TypeList::Type>::value),
+                std::cend(ValueClass<typename TypeList::Type>::value));
         }
-        return ValueForKernelHelper<typename TypeList::Next, ValueType, ValueClass>(kernel);
+        return ValueForKernelHelper<typename TypeList::Next, ValueType,
+                                    ValueClass>(kernel);
     }
 }
 /// @endcond
@@ -311,10 +308,11 @@ auto ValueForKernelHelper ([[maybe_unused]] KernelType kernel) {
  */
 inline auto implementedGatesForKernel(KernelType kernel) {
     return ValueForKernelHelper<AvailableKernels, GateOperation,
-           ImplementedGates>(kernel);
+                                ImplementedGates>(kernel);
 }
 /**
- * @brief Return implemented_generators constexpr member variables for a given kernel
+ * @brief Return implemented_generators constexpr member variables for a given
+ * kernel
  *
  * This function interfaces the runtime variable kernel with the constant time
  * variable implemented_gates
@@ -323,7 +321,7 @@ inline auto implementedGatesForKernel(KernelType kernel) {
  */
 inline auto implementedGeneratorsForKernel(KernelType kernel) {
     return ValueForKernelHelper<AvailableKernels, GeneratorOperation,
-           ImplementedGenerators>(kernel);
+                                ImplementedGenerators>(kernel);
 }
 } // namespace Pennylane::Internal
 

@@ -51,40 +51,23 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     constexpr static std::string_view name = "PI";
 
     constexpr static std::array implemented_gates = {
-        GateOperation::PauliX,
-        GateOperation::PauliY,
-        GateOperation::PauliZ,
-        GateOperation::Hadamard,
-        GateOperation::S,
-        GateOperation::T,
-        GateOperation::RX,
-        GateOperation::RY,
-        GateOperation::RZ,
-        GateOperation::PhaseShift,
-        GateOperation::Rot,
-        GateOperation::ControlledPhaseShift,
-        GateOperation::CNOT,
-        GateOperation::CY,
-        GateOperation::CZ,
-        GateOperation::SWAP,
-        GateOperation::CRX,
-        GateOperation::CRY,
-        GateOperation::CRZ,
-        GateOperation::CRot,
-        GateOperation::Toffoli,
-        GateOperation::CSWAP,
-        GateOperation::Matrix
-    };
+        GateOperation::PauliX,  GateOperation::PauliY,
+        GateOperation::PauliZ,  GateOperation::Hadamard,
+        GateOperation::S,       GateOperation::T,
+        GateOperation::RX,      GateOperation::RY,
+        GateOperation::RZ,      GateOperation::PhaseShift,
+        GateOperation::Rot,     GateOperation::ControlledPhaseShift,
+        GateOperation::CNOT,    GateOperation::CY,
+        GateOperation::CZ,      GateOperation::SWAP,
+        GateOperation::CRX,     GateOperation::CRY,
+        GateOperation::CRZ,     GateOperation::CRot,
+        GateOperation::Toffoli, GateOperation::CSWAP,
+        GateOperation::Matrix};
     constexpr static std::array implemented_generators = {
-        GeneratorOperation::RX,
-        GeneratorOperation::RY,
-        GeneratorOperation::RZ,
-        GeneratorOperation::PhaseShift,
-        GeneratorOperation::CRX,
-        GeneratorOperation::CRY,
-        GeneratorOperation::CRZ,
-        GeneratorOperation::ControlledPhaseShift
-    };
+        GeneratorOperation::RX,  GeneratorOperation::RY,
+        GeneratorOperation::RZ,  GeneratorOperation::PhaseShift,
+        GeneratorOperation::CRX, GeneratorOperation::CRY,
+        GeneratorOperation::CRZ, GeneratorOperation::ControlledPhaseShift};
 
     /**
      * @brief Apply a given matrix directly to the statevector.
@@ -558,7 +541,8 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static auto applyGeneratorPhaseShift(std::complex<PrecisionT> *arr,
                                          size_t num_qubits,
                                          const std::vector<size_t> &wires,
-                                         [[maybe_unused]] bool adj) -> PrecisionT {
+                                         [[maybe_unused]] bool adj)
+        -> PrecisionT {
         assert(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
         for (const size_t &externalIndex : externalIndices) {
@@ -572,7 +556,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static auto applyGeneratorCRX(std::complex<PrecisionT> *arr,
                                   size_t num_qubits,
                                   const std::vector<size_t> &wires,
-                                  [[maybe_unused]] bool adj) -> PrecisionT{
+                                  [[maybe_unused]] bool adj) -> PrecisionT {
         assert(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
@@ -590,7 +574,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static auto applyGeneratorCRY(std::complex<PrecisionT> *arr,
                                   size_t num_qubits,
                                   const std::vector<size_t> &wires,
-                                  [[maybe_unused]] bool adj) -> PrecisionT{
+                                  [[maybe_unused]] bool adj) -> PrecisionT {
         assert(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
@@ -626,7 +610,8 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     template <class PrecisionT>
     static auto applyGeneratorControlledPhaseShift(
         std::complex<PrecisionT> *arr, size_t num_qubits,
-        const std::vector<size_t> &wires, [[maybe_unused]] bool adj) -> PrecisionT{
+        const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
+        -> PrecisionT {
         assert(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 

@@ -6,6 +6,4 @@
  * See included files to see checks.
  */
 
-int main() {
-    return 0;
-}
+int main() { return 0; }

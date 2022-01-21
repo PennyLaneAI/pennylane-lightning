@@ -496,27 +496,26 @@ TEST_CASE("Utility bit operations", "[Util]") {
 }
 
 TEST_CASE("Utility array and tuples", "[Util]") {
-    std::array<std::pair<int, std::string_view>, 5> test_pairs {
-        std::pair(0, "Zero"),
-        std::pair(1, "One"),
-        std::pair(2, "Two"),
-        std::pair(3, "Three"),
-        std::pair(4, "Four"),
+    std::array<std::pair<int, std::string_view>, 5> test_pairs{
+        std::pair(0, "Zero"),  std::pair(1, "One"),  std::pair(2, "Two"),
+        std::pair(3, "Three"), std::pair(4, "Four"),
     };
 
-    REQUIRE(Util::reverse_pairs(test_pairs) == std::array{
-        std::pair<std::string_view, int>("Zero", 0),
-        std::pair<std::string_view, int>("One", 1),
-        std::pair<std::string_view, int>("Two", 2),
-        std::pair<std::string_view, int>("Three", 3),
-        std::pair<std::string_view, int>("Four", 4),
-    });
+    REQUIRE(Util::reverse_pairs(test_pairs) ==
+            std::array{
+                std::pair<std::string_view, int>("Zero", 0),
+                std::pair<std::string_view, int>("One", 1),
+                std::pair<std::string_view, int>("Two", 2),
+                std::pair<std::string_view, int>("Three", 3),
+                std::pair<std::string_view, int>("Four", 4),
+            });
 
-    REQUIRE(Util::reverse_pairs(test_pairs) != std::array{
-        std::pair<std::string_view, int>("Zero", 0),
-        std::pair<std::string_view, int>("One", 1),
-        std::pair<std::string_view, int>("Two", 0),
-        std::pair<std::string_view, int>("Three", 3),
-        std::pair<std::string_view, int>("Four", 4),
-    });
+    REQUIRE(Util::reverse_pairs(test_pairs) !=
+            std::array{
+                std::pair<std::string_view, int>("Zero", 0),
+                std::pair<std::string_view, int>("One", 1),
+                std::pair<std::string_view, int>("Two", 0),
+                std::pair<std::string_view, int>("Three", 3),
+                std::pair<std::string_view, int>("Four", 4),
+            });
 }

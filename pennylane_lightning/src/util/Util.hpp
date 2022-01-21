@@ -1165,9 +1165,7 @@ template <class T> struct remove_cvref {
     using type = std::remove_cv_t<std::remove_reference_t<T>>;
 };
 
-template <class T>
-using remove_cvref_t = typename remove_cvref<T>::type;
-
+template <class T> using remove_cvref_t = typename remove_cvref<T>::type;
 
 /**
  * @brief Lookup key in array of pairs. For a constexpr map-like behavior.
@@ -1294,8 +1292,8 @@ prepend_to_tuple_helper(T &&elt, Tuple &&t,
  */
 template <class T, class Tuple, std::size_t... I>
 constexpr auto
-append_to_tuple_helper(Tuple &&t, T&& elt,
-                        [[maybe_unused]] std::index_sequence<I...> dummy) {
+append_to_tuple_helper(Tuple &&t, T &&elt,
+                       [[maybe_unused]] std::index_sequence<I...> dummy) {
     return std::make_tuple(std::get<I>(std::forward<Tuple>(t))..., elt);
 }
 } // namespace Internal
@@ -1325,7 +1323,7 @@ constexpr auto prepend_to_tuple(T &&elt, Tuple &&t) {
  * @param elt Element to append
  */
 template <class T, class Tuple>
-constexpr auto append_to_tuple(Tuple &&t, T&& elt) {
+constexpr auto append_to_tuple(Tuple &&t, T &&elt) {
     return Internal::append_to_tuple_helper(
         std::forward<Tuple>(t), std::forward<T>(elt),
         std::make_index_sequence<
@@ -1341,8 +1339,7 @@ constexpr auto append_to_tuple(Tuple &&t, T&& elt) {
  * @tparam Tuple Type of the tuple.
  * @param tuple Tuple to transform
  */
-template <class Tuple>
-constexpr auto tuple_to_array(Tuple &&tuple) {
+template <class Tuple> constexpr auto tuple_to_array(Tuple &&tuple) {
     using T = std::tuple_element_t<0, remove_cvref_t<Tuple>>;
     return std::apply(
         [](auto... n) { return std::array<T, sizeof...(n)>{n...}; },
@@ -1355,17 +1352,18 @@ namespace Internal {
  * @brief Helper function for prepend_to_tuple
  */
 template <class T, class U, size_t size, std::size_t... I>
-constexpr auto reverse_pairs_helper(const std::array<std::pair<T, U>, size>& arr,
-                        [[maybe_unused]] std::index_sequence<I...> dummy) {
+constexpr auto
+reverse_pairs_helper(const std::array<std::pair<T, U>, size> &arr,
+                     [[maybe_unused]] std::index_sequence<I...> dummy) {
     return std::array{std::pair{arr[I].second, arr[I].first}...};
 }
 } // namespace Internal
 /// @endcond
 
 template <class T, class U, size_t size>
-constexpr auto reverse_pairs(const std::array<std::pair<T, U>, size>& arr) -> 
-    std::array<std::pair<U, T>, size>
-{
-    return Internal::reverse_pairs_helper(arr, std::make_index_sequence<size>{});
+constexpr auto reverse_pairs(const std::array<std::pair<T, U>, size> &arr)
+    -> std::array<std::pair<U, T>, size> {
+    return Internal::reverse_pairs_helper(arr,
+                                          std::make_index_sequence<size>{});
 }
 } // namespace Pennylane::Util

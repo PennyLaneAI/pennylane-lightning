@@ -38,7 +38,8 @@ class StateVectorManaged
 
     explicit StateVectorManaged(size_t num_qubits)
         : BaseType(num_qubits),
-          data_(static_cast<size_t>(Util::exp2(num_qubits)), ComplexPrecisionT{0, 0}) {
+          data_(static_cast<size_t>(Util::exp2(num_qubits)),
+                ComplexPrecisionT{0, 0}) {
         data_[0] = {1, 0};
     }
 
@@ -62,7 +63,8 @@ class StateVectorManaged
     }
 
     StateVectorManaged(const StateVectorManaged<PrecisionT> &other) = default;
-    StateVectorManaged(StateVectorManaged<PrecisionT> &&other) noexcept = default;
+    StateVectorManaged(StateVectorManaged<PrecisionT> &&other) noexcept =
+        default;
 
     auto operator=(const StateVectorManaged<PrecisionT> &other)
         -> StateVectorManaged<PrecisionT> & = default;
@@ -70,13 +72,16 @@ class StateVectorManaged
         -> StateVectorManaged<PrecisionT> & = default;
 
     auto getDataVector() -> std::vector<ComplexPrecisionT> & { return data_; }
-    [[nodiscard]] auto getDataVector() const -> const std::vector<ComplexPrecisionT> & {
+    [[nodiscard]] auto getDataVector() const
+        -> const std::vector<ComplexPrecisionT> & {
         return data_;
     }
 
     [[nodiscard]] auto getData() -> ComplexPrecisionT * { return data_.data(); }
 
-    [[nodiscard]] auto getData() const -> const ComplexPrecisionT * { return data_.data(); }
+    [[nodiscard]] auto getData() const -> const ComplexPrecisionT * {
+        return data_.data();
+    }
 
     void updateData(const std::vector<ComplexPrecisionT> &new_data) {
         PL_ABORT_IF_NOT(data_.size() == new_data.size(),

@@ -46,12 +46,8 @@ template <typename TypeList> struct getNthType<TypeList, 0> {
     using Type = typename TypeList::Type;
 };
 
-template <typename TypeList>
-constexpr size_t length() {
+template <typename TypeList> constexpr size_t length() {
     return 1 + length<typename TypeList::Next>();
 }
-template<>
-constexpr size_t length<void>() {
-    return 0;
-}
+template <> constexpr size_t length<void>() { return 0; }
 } // namespace Pennylane::Util

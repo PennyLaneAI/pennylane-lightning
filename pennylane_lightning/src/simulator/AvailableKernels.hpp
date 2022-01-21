@@ -22,6 +22,6 @@
 #include "TypeList.hpp"
 
 namespace Pennylane {
-using AvailableKernels = Util::TypeList<GateImplementationsLM,
-                                        GateImplementationsPI>;
+using AvailableKernels =
+    Util::TypeList<GateImplementationsLM, GateImplementationsPI>;
 } // namespace Pennylane
