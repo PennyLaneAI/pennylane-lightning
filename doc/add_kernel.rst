@@ -17,59 +17,31 @@ We discuss how one can add another gate implementation in this document. Assume 
             /* Write your implementation */
             ...
         }
-
-        static void applyPauliY(std::complex<PrecisionT>* data,
-                                size_t num_qubits,
-                                const std::vector<size_t>& wires,
-                                [[maybe_unused]] bool inverse) {
-            PL_ABORT("MyGateImplementation::applyPauliY is not implemented");
-        }
-
-        /* All other gates */
-        ...
     };
 
-Note that all member functions must be defined to prevent compile errors (this requirement may be deprecated in the near future).
-
-Then you can add your gate implementation to Pennylane-Lightning by doing followings:
+Then you can add your gate implementation to Pennylane-Lightning. This can be done my modifying two files as:
 
 .. code-block:: cpp
 
     // file: simulator/KernelType.hpp
     namespace Pennylane {
-    enum class KernelType { PI, LM, MyKernel /* This is added */, Unknown };
-
-    namespace Constant {
-    constexpr std::array available_kernels = {
-        std::pair<KernelType, std::string_view>{KernelType::PI, "PI"},
-        std::pair<KernelType, std::string_view>{KernelType::LM, "LM"},
-        /* The following line is added */
-        std::pair<KernelType, std::string_view>{KernelType::MyKernel, "MyKernel"},
-    };
+    enum class KernelType { PI, LM, MyKernel /* This is added */, None };
 
     /* Rest of the file */
+
     } // namespace Pennylane
 
 and 
 
 .. code-block:: cpp
 
-    // file: simulator/SelectGateOps.hpp
+    // file: simulator/AvailableKernels.hpp
     namespace Pennylane {
-        ...
-        /* Some code */
-
-        template <class fp_t, KernelType kernel> class SelectGateOps {};
-
-        template <class fp_t>
-        class SelectGateOps<fp_t, KernelType::PI> : public GateOperationsPI<fp_t> {};
-        template <class fp_t>
-        class SelectGateOps<fp_t, KernelType::LM> : public GateOperationsLM<fp_t> {};
-
-        /* Add the following lines */
-        template <class fp_t>
-        class SelectGateOps<fp_t, KernelType::MyKernel> : public MyGateImplementation<fp_t> {};
+    using AvailableKernels = Util::TypeList<GateImplementationsLM,
+                                            GateImplementationsPI,
+                                            MyGateImplementation /* This is added*/>;
     } // namespace Pennylane
+
 
 
 Now you can call your kernel functions in C++.
@@ -106,10 +78,8 @@ To make your gate implementation default, you need to change ``default_kernel_fo
 
 .. code-block:: cpp
 
-    // file: simulator/SelectGateOps.hpp
-    constexpr std::array<std::pair<GateOperations, KernelType>,
-                     static_cast<int>(GateOperations::END)>
-    default_kernel_for_ops = {
+    // file: simulator/Constant.hpp
+    constexpr std::array default_kernel_for_gates = {
         std::pair{GateOperations::PauliX, KernelType::LM},
         std::pair{GateOperations::PauliY, KernelType::LM},
         ...
@@ -119,9 +89,7 @@ to
 
 .. code-block:: cpp
 
-    constexpr std::array<std::pair<GateOperations, KernelType>,
-                     static_cast<int>(GateOperations::END)>
-    default_kernel_for_ops = {
+    constexpr std::array default_kernel_for_gates = {
         std::pair{GateOperations::PauliX, KernelType::MyKernel},
         std::pair{GateOperations::PauliY, KernelType::LM},
         ...
