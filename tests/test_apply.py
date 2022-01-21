@@ -89,6 +89,7 @@ class TestApply:
 
     from pennylane_lightning import LightningQubit as lq
 
+    @pytest.mark.skipif(not hasttr(np, complex256), reason="Numpy only defines complex256 in Linux-like system")
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_apply_operation_raise_type_error(self, qubit_device_1_wire):
         """Tests that applying an operation yields the expected output state for single wire
