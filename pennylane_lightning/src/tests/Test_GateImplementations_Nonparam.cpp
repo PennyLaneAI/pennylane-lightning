@@ -56,8 +56,7 @@ using std::vector;
         static void run() {}                                                   \
     };                                                                         \
     TEMPLATE_TEST_CASE("GateImplementation::apply" #GATE_NAME,                 \
-                       "[GateImplementations_Nonparam]", float,                \
-                       double) {                                               \
+                       "[GateImplementations_Nonparam]", float, double) {      \
         using PrecisionT = TestType;                                           \
         TestApply##GATE_NAME##ForKernels<PrecisionT, AvailableKernels>::run(); \
     }

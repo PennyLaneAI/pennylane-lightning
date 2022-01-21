@@ -1,8 +1,8 @@
 #include <algorithm>
 #include <complex>
+#include <random>
 #include <string>
 #include <type_traits>
-#include <random>
 #include <vector>
 
 #include "GateOperation.hpp"
@@ -13,12 +13,16 @@ namespace TestHelper {
 /**
  * @brief Custom catch matcher for std::vector<std::complex<T>>
  */
-template<typename T, typename AllocComp, typename AllocMatch>
-struct ComplexApproxMatcher : Catch::MatcherBase<std::vector<std::complex<T>, AllocMatch>> {
+template <typename T, typename AllocComp, typename AllocMatch>
+struct ComplexApproxMatcher
+    : Catch::MatcherBase<std::vector<std::complex<T>, AllocMatch>> {
 
-    ComplexApproxMatcher(const std::vector<std::complex<T>, AllocComp>& comparator) : m_comparator( comparator ) {}
+    ComplexApproxMatcher(
+        const std::vector<std::complex<T>, AllocComp> &comparator)
+        : m_comparator(comparator) {}
 
-    bool match(std::vector<std::complex<T>, AllocMatch> const &v) const override {
+    bool
+    match(std::vector<std::complex<T>, AllocMatch> const &v) const override {
         if (m_comparator.size() != v.size()) {
             return false;
         }
@@ -31,32 +35,33 @@ struct ComplexApproxMatcher : Catch::MatcherBase<std::vector<std::complex<T>, Al
         return true;
     }
     std::string describe() const override {
-        return "is approx: " + ::Catch::Detail::stringify( m_comparator );
+        return "is approx: " + ::Catch::Detail::stringify(m_comparator);
     }
     template <typename = std::enable_if_t<std::is_constructible_v<double, T>>>
-    ComplexApproxMatcher& epsilon(const T& newEpsilon ) {
+    ComplexApproxMatcher &epsilon(const T &newEpsilon) {
         approx.epsilon(newEpsilon);
         return *this;
     }
     template <typename = std::enable_if_t<std::is_constructible_v<double, T>>>
-    ComplexApproxMatcher& margin(const T& newMargin ) {
+    ComplexApproxMatcher &margin(const T &newMargin) {
         approx.margin(newMargin);
         return *this;
     }
     template <typename = std::enable_if_t<std::is_constructible_v<double, T>>>
-    ComplexApproxMatcher& scale(const T& newScale ) {
+    ComplexApproxMatcher &scale(const T &newScale) {
         approx.scale(newScale);
         return *this;
     }
 
-    const std::vector<std::complex<T>, AllocComp> & m_comparator;
+    const std::vector<std::complex<T>, AllocComp> &m_comparator;
     mutable Catch::Detail::Approx approx = Catch::Detail::Approx::custom();
 };
 
-template<typename T, typename AllocComp = std::allocator<std::complex<T>>, typename AllocMatch = AllocComp>
-ComplexApproxMatcher<T, AllocComp, AllocMatch> Approx(
-        std::vector<std::complex<T>, AllocComp> const& comparator ) {
-    return ComplexApproxMatcher<T, AllocComp, AllocMatch>{ comparator };
+template <typename T, typename AllocComp = std::allocator<std::complex<T>>,
+          typename AllocMatch = AllocComp>
+ComplexApproxMatcher<T, AllocComp, AllocMatch>
+Approx(std::vector<std::complex<T>, AllocComp> const &comparator) {
+    return ComplexApproxMatcher<T, AllocComp, AllocMatch>{comparator};
 }
 } // namespace TestHelper
 

@@ -21,7 +21,6 @@
 using namespace Pennylane;
 using namespace Pennylane::Algorithms;
 
-
 /**
  * @brief Tests the constructability of the AdjointDiff.hpp classes.
  *
