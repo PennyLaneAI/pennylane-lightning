@@ -42,33 +42,23 @@ option(ENABLE_BLAS "Enable BLAS" OFF)
 option(BUILD_TESTS "Build cpp tests" OFF)
 option(BUILD_EXAMPLES "Build cpp examples" OFF)
 
-if(ENABLE_CLANG_TIDY)
-    if(NOT DEFINED CLANG_TIDY_BINARY)
-        set(CLANG_TIDY_BINARY clang-tidy)
-    endif()
-    set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY_BINARY};
-                            -extra-arg=-std=c++17;
-    )
-endif()
 
 # Process compile options
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
 
-
 set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 # Add pybind11
 include(FetchContent)
-FetchContent_Declare(
-    pybind11
-    GIT_REPOSITORY https://github.com/pybind/pybind11.git
-    GIT_TAG        v2.6.2
+FetchContent_Declare(pybind11
+                     GIT_REPOSITORY https://github.com/pybind/pybind11.git
+                     GIT_TAG        v2.6.2
 )
 FetchContent_MakeAvailable(pybind11)
 
 # All CMakeLists.txt in subdirectories use pennylane_lightning_compile_options and pennylane_lightning_external_libs
 add_subdirectory(pennylane_lightning/src)
 
-
+# Define pennylane_lightning target
 add_library(pennylane_lightning INTERFACE)
 target_link_libraries(pennylane_lightning INTERFACE     lightning_utils
                                                         lightning_simulator
@@ -81,19 +71,8 @@ target_link_libraries(lightning_qubit_ops PRIVATE pennylane_lightning
                                                   pennylane_lightning_external_libs)
 set_target_properties(lightning_qubit_ops PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
-if (MSVC)
-    target_compile_options(lightning_qubit_ops PRIVATE "$<$<CONFIG:RELEASE>:/w>")
-else()
-    target_compile_options(lightning_qubit_ops PRIVATE "$<$<CONFIG:RELEASE>:-W>")
-endif()
-
 target_compile_definitions(lightning_qubit_ops PRIVATE VERSION_INFO=${VERSION_STRING})
 
-
-if(BUILD_TESTS)
+if (BUILD_TESTS)
     enable_testing()
-endif()
-
-if(BUILD_EXAMPLES)
-    add_subdirectory(examples)
 endif()
