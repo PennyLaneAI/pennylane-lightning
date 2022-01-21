@@ -118,6 +118,11 @@ template <class PrecisionT, class ParamT, class GateImplOrSVType>
 struct GateOpToMemberFuncPtr <PrecisionT, ParamT, GateImplOrSVType, GateOperation::CSWAP> {
     constexpr static auto value = &GateImplOrSVType::template applyCSWAP<PrecisionT>;
 };
+template <class PrecisionT, class ParamT, class GateImplOrSVType>
+struct GateOpToMemberFuncPtr <PrecisionT, ParamT, GateImplOrSVType, GateOperation::MultiRZ> {
+    constexpr static auto value = &GateImplOrSVType::template applyMultiRZ<PrecisionT, ParamT>;
+};
+
 
 
 /**
@@ -158,5 +163,9 @@ struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplOrSVType, GeneratorOperati
 template <class PrecisionT, class GateImplOrSVType>
 struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplOrSVType, GeneratorOperation::ControlledPhaseShift> {
     constexpr static auto value = &GateImplOrSVType::template applyGeneratorControlledPhaseShift<PrecisionT>;
+};
+template <class PrecisionT, class GateImplOrSVType>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplOrSVType, GeneratorOperation::MultiRZ> {
+    constexpr static auto value = &GateImplOrSVType::template applyGeneratorMultiRZ<PrecisionT>;
 };
 } // namespace Pennylane

@@ -1237,14 +1237,14 @@ first_elts_of(const std::array<std::pair<T, U>, size> &arr) {
  * @param arr Array to extract.
  */
 template <typename T, typename U, size_t size>
-constexpr std::array<T, size>
+constexpr std::array<U, size>
 second_elts_of(const std::array<std::pair<T, U>, size> &arr) {
     // TODO: change to std::transform in C++20
-    std::array<T, size> res = {
-        T{},
+    std::array<U, size> res = {
+        U{},
     };
     for (size_t i = 0; i < size; i++) {
-        res[i] = std::get<0>(arr[i]);
+        res[i] = std::get<1>(arr[i]);
     }
     return res;
 }

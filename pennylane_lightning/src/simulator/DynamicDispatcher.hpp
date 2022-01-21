@@ -63,6 +63,7 @@ template <typename PrecisionT> class DynamicDispatcher {
 
   private:
     std::unordered_map<std::string, size_t> gate_wires_;
+
     std::unordered_map<std::string, KernelType> gate_kernel_map_;
     std::unordered_map<std::string, KernelType> generator_kernel_map_;
 
@@ -76,6 +77,7 @@ template <typename PrecisionT> class DynamicDispatcher {
         for (const auto &[gate_op, n_wires] : Constant::gate_wires) {
             gate_wires_.emplace(lookup(Constant::gate_names, gate_op), n_wires);
         }
+
         for (const auto &[gate_op, gate_name] : Constant::gate_names) {
             KernelType kernel =
                 lookup(Constant::default_kernel_for_gates, gate_op);
@@ -155,13 +157,14 @@ template <typename PrecisionT> class DynamicDispatcher {
             throw std::invalid_argument(
                 "Cannot find a gate with a given name \"" + op_name + "\".");
         }
-
-        if (const auto requiredWires = gate_wires_.at(op_name);
-            requiredWires != wires.size()) {
+        const auto gate_wire_iter = gate_wires_.find(op_name);
+        if ((gate_wire_iter != gate_wires_.end()) &&
+                (gate_wire_iter->second != wires.size())) {
             throw std::invalid_argument(
                 std::string("The supplied gate requires ") +
-                std::to_string(requiredWires) + " wires, but " +
+                std::to_string(gate_wire_iter->second) + " wires, but " +
                 std::to_string(wires.size()) + " were supplied.");
+            //TODO: change to std::format in C++20
         }
         (iter->second)(data, num_qubits, wires, inverse, params);
     }
@@ -261,14 +264,6 @@ template <typename PrecisionT> class DynamicDispatcher {
         if (iter == gates_.cend()) {
             throw std::invalid_argument(
                 "Cannot find a gate with a given name \"" + op_name + "\".");
-        }
-
-        if (const auto requiredWires = gate_wires_.at(op_name);
-            requiredWires != wires.size()) {
-            throw std::invalid_argument(
-                std::string("The supplied gate requires ") +
-                std::to_string(requiredWires) + " wires, but " +
-                std::to_string(wires.size()) + " were supplied.");
         }
         (iter->second)(data, num_qubits, wires, inverse);
     }
@@ -473,7 +468,7 @@ void registerKernelIter() {
  */
 template <class PrecisionT, class ParamT>
 auto registerAllAvailableKernels() -> int {
-    registerKernelIter<PrecisionT, ParamT, Constant::AvailableKernels>();
+    registerKernelIter<PrecisionT, ParamT, AvailableKernels>();
     return 0;
 }
 } // namespace Internal

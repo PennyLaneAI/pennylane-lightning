@@ -1,29 +1,8 @@
 #include "GateOperation.hpp"
-#include "SelectGateOps.hpp"
+#include "Constant.hpp"
 #include "Util.hpp"
 
-using namespace Pennylane;
-namespace Internal = Pennylane::Internal;
-
-// Define some utility function
-
-template<typename TypeList>
-constexpr auto is_available_kernel_helper(KernelType kernel) -> bool {
-    if (TypeList::Type::kernel_id == kernel) {
-        return true;
-    }
-    return is_available_kernel_helper<typename TypeList::Next>(kernel);
-}
-template <>
-constexpr auto is_available_kernel_helper<void>([[maybe_unused]] KernelType kernel) -> bool {
-    return false;
-}
-/**
- * @brief Check the given kernel is in AvailableKernels.
- */
-constexpr auto is_available_kernel(KernelType kernel) -> bool {
-    return is_available_kernel_helper<Constant::AvailableKernels>(kernel);
-}
+namespace Pennylane {
 
 template <typename T, size_t size1, size_t size2>
 constexpr auto are_mutually_disjoint(const std::array<T, size1>& arr1,
@@ -95,36 +74,6 @@ static_assert(Util::count_unique(Util::first_elts_of(Constant::generator_wires))
         "First elements of generator_wires must be distinct.");
 
 /*******************************************************************************
- * Check all kernels in kernels_to_pyexport are available
- ******************************************************************************/
-
-constexpr auto check_kernels_to_pyexport() -> bool {
-    // TODO: change to constexpr std::any_of in C++20
-    // NOLINTNEXTLINE (readability-use-anyofallof)
-    for (const auto &kernel : Constant::kernels_to_pyexport) {
-        if (!is_available_kernel(kernel)) {
-            return false;
-        }
-    }
-    return true;
-}
-static_assert(check_kernels_to_pyexport(),
-              "Some of Kernels in Python export is not available.");
-
-
-/*******************************************************************************
- * Check each element in kernelIdNamesPairs is unique
- ******************************************************************************/
-
-static_assert(Util::count_unique(Util::first_elts_of(kernelIdNamePairs)) == 
-        Util::length<Constant::AvailableKernels>(),
-        "Kernel ids must be distinct.");
-
-static_assert(Util::count_unique(Util::second_elts_of(kernelIdNamePairs)) == 
-        Util::length<Constant::AvailableKernels>(),
-        "Kernel names must be distinct.");
-
-/*******************************************************************************
  * Check default_kernel_for_gates are defined for all gates
  ******************************************************************************/
 
@@ -133,25 +82,11 @@ static_assert(Util::count_unique(Util::first_elts_of(
         static_cast<size_t>(GateOperation::END));
 
 /*******************************************************************************
- * Check all kernels in default_kernel_for_gates are available
+ * Check default_kernel_for_generators are defined for all generators
  ******************************************************************************/
 
-template <typename PrecisionT>
-constexpr auto check_default_kernels_are_available() -> bool {
-    // TODO: change to constexpr std::all_of in C++20
-    // which is not constexpr in C++17.
-    // NOLINTNEXTLINE (readability-use-anyofallof)
-    for (const auto &[gate_op, kernel] : Constant::default_kernel_for_gates) {
-        if (!is_available_kernel(kernel)) {
-            return false;
-        }
-    }
-    return true;
-}
+static_assert(Util::count_unique(Util::first_elts_of(
+                Constant::default_kernel_for_generators)) ==
+        static_cast<size_t>(GeneratorOperation::END));
 
-static_assert(check_default_kernels_are_available<double>(),
-              "default_kernel_for_gates contains an unavailable kernel");
-static_assert(count_unique(first_elts_of(Constant::default_kernel_for_gates)) ==
-                  static_cast<int>(GateOperation::END),
-              "All gate operations must be defined in default_kernel_for_gates");
-
+} // namespace Pennylane

@@ -22,9 +22,16 @@ using Pennylane::Internal::callGateOps;
 
 /**
  * @file This file contains tests for DynamicDispatcher class
+ *
+ * We just check DynamicDispacther calls the correct functuion by comparing 
+ * the result from it with that of the direct call.
  */
 
 std::vector<size_t> createWires(GateOperation op) {
+    if (array_has_elt(Constant::multi_qubit_gates, op)) {
+        // if multi-qubit gates
+        return {0, 1, 2};
+    }
     switch (lookup(Constant::gate_wires, op)) {
     case 1:
         return {0};
@@ -33,7 +40,7 @@ std::vector<size_t> createWires(GateOperation op) {
     case 3:
         return {0, 1, 2};
     default:
-        PL_ABORT("The number of wires for a given gate is unset.");
+        PL_ABORT("The number of wires for a given gate is unknown.");
     }
 }
 
@@ -47,7 +54,7 @@ std::vector<PrecisionT> createParams(GateOperation op) {
     case 3:
         return {0.128, -0.563, 1.414};
     default:
-        PL_ABORT("The number of wires for a given gate is unset.");
+        PL_ABORT("The number of parameters for a given gate is unknown.");
     }
 }
 
@@ -92,7 +99,7 @@ constexpr void testAllGatesForKernelIter(RandomEngine &re,
                                          size_t max_num_qubits) {
     if constexpr (idx < static_cast<int>(GateOperation::END) - 1) {
         constexpr auto gate_op = static_cast<GateOperation>(idx);
-        for (size_t num_qubits = static_lookup<gate_op>(Constant::gate_wires);
+        for (size_t num_qubits = 3;
              num_qubits <= max_num_qubits; num_qubits++) {
             testDispatchForKernel<PrecisionT, ParamT,
                                   GateImplementation>::template test<gate_op>(re,
@@ -124,7 +131,7 @@ void testAllKernelsIter(RandomEngine &re, size_t max_num_qubits) {
 
 template <typename PrecisionT, typename ParamT, class RandomEngine>
 void testAllKernels(RandomEngine &re, size_t max_num_qubits) {
-    testAllKernelsIter<PrecisionT, ParamT, Constant::AvailableKernels>(re, max_num_qubits);
+    testAllKernelsIter<PrecisionT, ParamT, AvailableKernels>(re, max_num_qubits);
 }
 
 TEMPLATE_TEST_CASE("DynamicDispatcher::applyOperation", "[DynamicDispatcher]",

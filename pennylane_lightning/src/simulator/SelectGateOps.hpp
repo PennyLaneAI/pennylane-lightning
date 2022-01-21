@@ -16,10 +16,9 @@
  * Defines a template class for choosing a Gate operations
  */
 #pragma once
-
+#include "AvailableKernels.hpp"
+#include "Constant.hpp"
 #include "GateOperation.hpp"
-#include "GateImplementationsLM.hpp"
-#include "GateImplementationsPI.hpp"
 #include "KernelType.hpp"
 #include "Macros.hpp"
 #include "TypeList.hpp"
@@ -28,68 +27,6 @@
 #include <functional>
 #include <variant>
 
-namespace Pennylane::Constant {
-/**
- * @brief Type list of all kernels
- */
-using AvailableKernels = Util::TypeList<GateImplementationsLM,
-                                        GateImplementationsPI>;
-
-/**
- * @brief Define which kernel to use for each operation
- *
- * This value is used for:
- *   1) StateVector apply##GATE_NAME methods. The kernel function is statically
- * binded to the given kernel and cannot be modified. 2) Default kernel
- * functions of StateVector applyOperation(opName, ...) methods. The kernel
- * function is dynamically binded and can be changed using DynamicDispatcher
- * singleton class. 3) Python binding.
- *
- * TODO: Change to constexpr
- * Map(https://www.youtube.com/watch?v=INn3xa4pMfg&list=WL&index=9) in C++20?
- */
-constexpr std::array<std::pair<GateOperation, KernelType>,
-                     static_cast<size_t>(GateOperation::END)>
-    default_kernel_for_gates = {
-        std::pair{GateOperation::PauliX, KernelType::LM},
-        std::pair{GateOperation::PauliY, KernelType::LM},
-        std::pair{GateOperation::PauliZ, KernelType::LM},
-        std::pair{GateOperation::Hadamard, KernelType::PI},
-        std::pair{GateOperation::S, KernelType::LM},
-        std::pair{GateOperation::T, KernelType::LM},
-        std::pair{GateOperation::RX, KernelType::PI},
-        std::pair{GateOperation::RY, KernelType::PI},
-        std::pair{GateOperation::RZ, KernelType::LM},
-        std::pair{GateOperation::PhaseShift, KernelType::LM},
-        std::pair{GateOperation::Rot, KernelType::LM},
-        std::pair{GateOperation::ControlledPhaseShift, KernelType::PI},
-        std::pair{GateOperation::CNOT, KernelType::PI},
-        std::pair{GateOperation::CY, KernelType::PI},
-        std::pair{GateOperation::CZ, KernelType::PI},
-        std::pair{GateOperation::SWAP, KernelType::PI},
-        std::pair{GateOperation::CRX, KernelType::PI},
-        std::pair{GateOperation::CRY, KernelType::PI},
-        std::pair{GateOperation::CRZ, KernelType::PI},
-        std::pair{GateOperation::CRot, KernelType::PI},
-        std::pair{GateOperation::Toffoli, KernelType::PI},
-        std::pair{GateOperation::CSWAP, KernelType::PI},
-        std::pair{GateOperation::MultiRZ, KernelType::LM},
-        std::pair{GateOperation::Matrix, KernelType::PI},
-    };
-constexpr std::array<std::pair<GeneratorOperation, KernelType>,
-          static_cast<size_t>(GeneratorOperation::END)>
-    default_kernel_for_generators = {
-        std::pair{GeneratorOperation::PhaseShift, KernelType::PI},
-        std::pair{GeneratorOperation::RX, KernelType::PI},
-        std::pair{GeneratorOperation::RY, KernelType::PI},
-        std::pair{GeneratorOperation::RZ, KernelType::PI},
-        std::pair{GeneratorOperation::CRX, KernelType::PI},
-        std::pair{GeneratorOperation::CRY, KernelType::PI},
-        std::pair{GeneratorOperation::CRZ, KernelType::PI},
-        std::pair{GeneratorOperation::ControlledPhaseShift,
-                  KernelType::PI},
-};
-} // namespace Pennylane::Constant
 
 namespace Pennylane {
 /**
@@ -143,7 +80,7 @@ struct KernelIdNamePairsHelper<void> {
  * @brief Array of kernel_id and name pairs
  */
 constexpr static auto kernelIdNamePairs = Util::tuple_to_array(
-            Internal::KernelIdNamePairsHelper<Constant::AvailableKernels>::value);
+            Internal::KernelIdNamePairsHelper<AvailableKernels>::value);
 
 /**
  * @brief Return kernel_id for the given kernel_name
@@ -187,7 +124,7 @@ struct SelectGateOpsHelper<PrecisionT, kernel, void> {
 template <class PrecisionT, KernelType kernel>
 using SelectGateOps =
     typename Internal::SelectGateOpsHelper<PrecisionT, kernel,
-                                           Constant::AvailableKernels>::Type;
+                                           AvailableKernels>::Type;
 
 } // namespace Pennylane
 
@@ -373,7 +310,7 @@ auto ValueForKernelHelper ([[maybe_unused]] KernelType kernel) {
  * TODO: Change to constexpr function in C++20
  */
 inline auto implementedGatesForKernel(KernelType kernel) {
-    return ValueForKernelHelper<Constant::AvailableKernels, GateOperation,
+    return ValueForKernelHelper<AvailableKernels, GateOperation,
            ImplementedGates>(kernel);
 }
 /**
@@ -385,7 +322,7 @@ inline auto implementedGatesForKernel(KernelType kernel) {
  * TODO: Change to constexpr function in C++20
  */
 inline auto implementedGeneratorsForKernel(KernelType kernel) {
-    return ValueForKernelHelper<Constant::AvailableKernels, GeneratorOperation,
+    return ValueForKernelHelper<AvailableKernels, GeneratorOperation,
            ImplementedGenerators>(kernel);
 }
 } // namespace Pennylane::Internal

@@ -105,6 +105,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
   public:
+    /*
     template <class PrecisionT>
     static void applyMatrix(std::complex<PrecisionT> *arr, size_t num_qubits,
                             const std::complex<PrecisionT> *matrix,
@@ -116,6 +117,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         static_cast<void>(inverse);
         PL_ABORT("Called unimplemented gate operation applyMatrix.");
     }
+    */
 
     template <class PrecisionT>
     static void applyPauliX(std::complex<PrecisionT> *arr,
@@ -422,7 +424,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         }
 
         for (size_t k = 0; k < Util::exp2(num_qubits); k++) {
-            arr[k] *= shifts[Util::popcount(k & wires_parity)];
+            arr[k] *= shifts[Util::popcount(k & wires_parity) % 2];
         }
     }
 

@@ -47,9 +47,11 @@ endif()
 # Define targets
 ################################################################################
 
+add_executable(compile_time_tests compile_time_tests.cpp)
+target_link_libraries(compile_time_tests lightning_simulator lightning_utils)
+
 set(TEST_SOURCES Test_AdjDiff.cpp
 #                 Test_Bindings.cpp
-                 Test_Constant.hpp
                  Test_DynamicDispatcher.cpp
 #                 Test_GateOperations_Nonparam.cpp
 #                 Test_GateOperations_Param.cpp
@@ -65,3 +67,7 @@ set(TEST_SOURCES Test_AdjDiff.cpp
 add_executable(runner ${TEST_SOURCES})
 target_link_libraries(runner PRIVATE lightning_tests_dependency)
 catch_discover_tests(runner)
+
+# We build compile time tests before the runtime tests as build error messages
+# are horrible if compile time constants are not well defined.
+add_dependencies(runner compile_time_tests)
