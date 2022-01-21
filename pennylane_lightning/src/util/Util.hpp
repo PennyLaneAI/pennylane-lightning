@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file
+ * @file Util.hpp
  * Contains uncategorised utility functions.
  */
 #pragma once
@@ -27,6 +27,7 @@
 #include <numeric>
 #include <set>
 #include <stdexcept>
+#include <tuple>
 #include <type_traits>
 #include <vector>
 
@@ -52,6 +53,106 @@ using CBLAS_LAYOUT = enum CBLAS_LAYOUT {
 #endif
 #endif
 /// @endcond
+
+namespace Pennylane::Util::Internal {
+/**
+ * @brief Count the number of 1s in the binary representation of n.
+ *
+ * @param n Unsigned 32 bit integer
+ */
+constexpr auto countBit1(uint32_t n) -> size_t {
+    n = (n & 0x55555555U) +         // NOLINT(readability-magic-numbers)
+        ((n >> 1U) & 0x55555555U);  // NOLINT(readability-magic-numbers)
+    n = (n & 0x33333333U) +         // NOLINT(readability-magic-numbers)
+        ((n >> 2U) & 0x33333333U);  // NOLINT(readability-magic-numbers)
+    n = (n & 0x0F0F0F0FU) +         // NOLINT(readability-magic-numbers)
+        ((n >> 4U) & 0x0F0F0F0FU);  // NOLINT(readability-magic-numbers)
+    n = (n & 0X00FF00FFU) +         // NOLINT(readability-magic-numbers)
+        ((n >> 8U) & 0x00FF00FFU);  // NOLINT(readability-magic-numbers)
+    n = (n & 0X0000FFFFU) +         // NOLINT(readability-magic-numbers)
+        ((n >> 16U) & 0x0000FFFFU); // NOLINT(readability-magic-numbers)
+    return n;
+}
+
+/**
+ * @brief Count the number of 1s in the binary representation of n.
+ *
+ * @param n Unsigned 64 bit integer
+ */
+constexpr auto countBit1(uint64_t n) -> size_t {
+    return countBit1(static_cast<uint32_t>(
+               n & 0xFFFFFFFFU)) + // NOLINT(readability-magic-numbers)
+           countBit1(static_cast<uint32_t>(
+               n >> 32U)); // NOLINT(readability-magic-numbers)
+}
+
+/**
+ * @brief Lookup table for number of trailing zeros in the binary
+ * representation for 0 to 255 (8 bit integers).
+ */
+// NOLINTNEXTLINE (readability-magic-numbers)
+constexpr uint8_t TRAILING_ZERO_LOOKUP_TABLE[256] = {
+    0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0,
+    3, 0, 1, 0, 2, 0, 1, 0, 5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 6, 0, 1, 0, 2, 0, 1, 0,
+    3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+    5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0,
+    3, 0, 1, 0, 2, 0, 1, 0, 7, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 5, 0, 1, 0, 2, 0, 1, 0,
+    3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+    6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0,
+    3, 0, 1, 0, 2, 0, 1, 0, 5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0};
+
+/**
+ * @brief Number of trailing zeros (starting from LSB) in the binary
+ * representation of n.
+ *
+ * @param n Unsigned 8 bit integer
+ */
+constexpr auto countTrailing0(uint8_t n) -> size_t {
+    return TRAILING_ZERO_LOOKUP_TABLE[n];
+}
+
+/**
+ * @brief Number of trailing zeros (starting from LSB) in the binary
+ * representation of n.
+ *
+ * @param n Unsigned 16 bit integer
+ */
+constexpr auto countTrailing0(uint16_t n) -> size_t {
+    // NOLINTNEXTLINE (readability-magic-numbers)
+    if (const auto mod = (n & 0xFFU); mod != 0) {
+        return countTrailing0(static_cast<uint8_t>(mod));
+    }
+    // NOLINTNEXTLINE (readability-magic-numbers)
+    return countTrailing0(static_cast<uint8_t>(n >> 8U)) + 8U;
+}
+
+/**
+ * @brief Number of trailing zeros (starting from LSB) in the binary
+ * representation of n.
+ *
+ * @param n Unsigned 32 bit integer
+ */
+constexpr auto countTrailing0(uint32_t n) -> size_t {
+    // NOLINTNEXTLINE (readability-magic-numbers)
+    if (const auto mod = (n & 0xFFFFU); mod != 0) {
+        return countTrailing0(static_cast<uint16_t>(mod));
+    }
+    // NOLINTNEXTLINE (readability-magic-numbers)
+    return countTrailing0(static_cast<uint16_t>(n >> 16U)) + 16U;
+}
+constexpr auto countTrailing0(uint64_t n) -> size_t {
+    // NOLINTNEXTLINE (readability-magic-numbers)
+    if (const auto mod = (n & 0xFFFFFFFFU); mod != 0) {
+        return countTrailing0(static_cast<uint32_t>(mod));
+    }
+    // NOLINTNEXTLINE (readability-magic-numbers)
+    return countTrailing0(static_cast<uint32_t>(n >> 32U)) + 32U;
+}
+
+} // namespace Pennylane::Util::Internal
 
 namespace Pennylane::Util {
 
@@ -182,6 +283,61 @@ inline auto log2(size_t value) -> size_t {
 }
 
 /**
+ * @brief Define popcount for multiple compilers as well as different types.
+ *
+ * TODO: change to std::popcount in C++20
+ */
+///@{
+#if defined(_MSC_VER)
+inline auto popcount(uint64_t val) -> size_t {
+    return static_cast<size_t>(__popcnt64(val));
+}
+#elif defined(__GNUC__) || defined(__clang__)
+inline auto popcount(unsigned long val) -> size_t {
+    return static_cast<size_t>(__builtin_popcountl(val));
+}
+#else
+inline auto popcount(unsigned long val) -> size_t {
+    return static_cast<size_t>(Internal::countBit1(val));
+}
+#endif
+///@}
+
+/**
+ * @brief Faster log2 when the value is the perferct power of 2.
+ *
+ * If the value is the perfect power of 2, using a system provided bit operation
+ * is much faster than std::log2
+ *
+ * TODO: change to std::countr_zero in C++20
+ */
+///@{
+#if defined(_MSC_VER)
+inline auto log2PerfectPower(uint64_t val) -> size_t {
+    return static_cast<size_t>(63 - __lzcnt64(val));
+}
+#elif defined(__GNUC__) || defined(__clang__)
+inline auto log2PerfectPower(unsigned long val) -> size_t {
+    return static_cast<size_t>(__builtin_ctzl(val));
+}
+#else
+inline auto log2PerfectPower(unsigned long val) -> size_t {
+    return Internal::countTrailing0(val);
+}
+#endif
+///@}
+
+/**
+ * @brief Check if there is a positive integer n such that value == 2^n.
+ *
+ * @param value Value to calculate for.
+ * @return bool
+ */
+inline auto isPerfectPowerOf2(size_t value) -> bool {
+    return popcount(value) == 1;
+}
+
+/**
  * @brief Calculates the decimal value for a qubit, assuming a big-endian
  * convention.
  *
@@ -229,7 +385,7 @@ template <class T> inline auto dimSize(const std::vector<T> &data) -> size_t {
  * @param data_size Size of data arrays.
  */
 template <class T,
-          size_t NTERMS = (1 << 19)> // NOLINT(readability-magic-numbers)
+          size_t NTERMS = (1U << 19U)> // NOLINT(readability-magic-numbers)
 inline static void
 omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
               std::complex<T> &result, const size_t data_size) {
@@ -267,7 +423,8 @@ omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
  * @return std::complex<T> Result of inner product operation.
  */
 template <class T,
-          size_t STD_CROSSOVER = (1 << 20)> // NOLINT(readability-magic-numbers)
+          size_t STD_CROSSOVER = (1U
+                                  << 20U)> // NOLINT(readability-magic-numbers)
 inline auto innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
                       const size_t data_size) -> std::complex<T> {
     std::complex<T> result(0, 0);
@@ -303,7 +460,7 @@ inline auto innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
  * @param data_size Size of data arrays.
  */
 template <class T,
-          size_t NTERMS = (1 << 19)> // NOLINT(readability-magic-numbers)
+          size_t NTERMS = (1U << 19U)> // NOLINT(readability-magic-numbers)
 inline static void
 omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
                std::complex<T> &result, const size_t data_size) {
@@ -342,7 +499,8 @@ omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
  * @return std::complex<T> Result of inner product operation.
  */
 template <class T,
-          size_t STD_CROSSOVER = (1 << 20)> // NOLINT(readability-magic-numbers)
+          size_t STD_CROSSOVER = (1U
+                                  << 20U)> // NOLINT(readability-magic-numbers)
 inline auto innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
                        const size_t data_size) -> std::complex<T> {
     std::complex<T> result(0, 0);
@@ -918,7 +1076,7 @@ auto linspace(T start, T end, size_t num_points) -> std::vector<T> {
 /**
  * @brief Determines the indices that would sort an array.
  *
- * @tparam T vector data type.
+ * @tparam T Vector data type.
  * @param arr Array to be inspected.
  * @return a vector with indices that would sort the array.
  */
@@ -938,7 +1096,7 @@ inline auto sorting_indices(const T &arr, size_t length)
 /**
  * @brief Determines the indices that would sort a vector.
  *
- * @tparam T array data type.
+ * @tparam T Array data type.
  * @param vec Vector to be inspected.
  * @return a vector with indices that would sort the vector.
  */
@@ -959,7 +1117,7 @@ inline auto transposed_state_index(size_t ind,
                                    const std::vector<size_t> &new_axes)
     -> size_t {
     size_t new_index = 0;
-    for (unsigned long axis : new_axes) {
+    for (size_t axis : new_axes) {
         new_index += (ind % 2) << axis;
         ind /= 2;
     }
@@ -970,7 +1128,7 @@ inline auto transposed_state_index(size_t ind,
  * @brief Template for the transposition of state tensors,
  * axes are assumed to have a length of 2 (|0>, |1>).
  *
- * @tparam T tensor data type.
+ * @tparam T Tensor data type.
  * @param tensor Tensor to be transposed.
  * @param new_axes new axes distribution.
  * @return Transposed Tensor.
@@ -1007,4 +1165,158 @@ template <class T> struct remove_cvref {
     using type = std::remove_cv_t<std::remove_reference_t<T>>;
 };
 
+/**
+ * @brief Lookup key in array of pairs. For a constexpr map-like behavior.
+ *
+ * @tparam Key Type of keys
+ * @tparam Value Type of values
+ * @tparam size Size of std::array
+ * @param arr Array to lookup
+ * @param key Key to find
+ */
+template <typename Key, typename Value, size_t size>
+constexpr auto lookup(const std::array<std::pair<Key, Value>, size> &arr,
+                      const Key &key) -> Value {
+    for (size_t idx = 0; idx < size; idx++) {
+        if (std::get<0>(arr[idx]) == key) {
+            return std::get<1>(arr[idx]);
+        }
+    }
+    throw std::range_error("The given key does not exist.");
+};
+
+/**
+ * @brief Check an array has an element.
+ *
+ * @tparam U Type of array elements.
+ * @tparam size Size of array.
+ * @param arr Array to check.
+ * @param elt Element to find.
+ */
+template <typename U, size_t size>
+constexpr auto array_has_elt(const std::array<U, size> &arr, const U &elt)
+    -> bool {
+    for (size_t idx = 0; idx < size; idx++) {
+        if (arr[idx] == elt) {
+            return true;
+        }
+    }
+    return false;
+};
+
+/**
+ * @brief Extract first elements from the array of pairs.
+ *
+ * @tparam T Type of the first elements.
+ * @tparam U Type of the second elements.
+ * @tparam size Size of the array.
+ * @param arr Array to extract.
+ */
+template <typename T, typename U, size_t size>
+constexpr std::array<T, size>
+first_elts_of(const std::array<std::pair<T, U>, size> &arr) {
+    // TODO: change to std::transform in C++20
+    std::array<T, size> res = {
+        T{},
+    };
+    for (size_t i = 0; i < size; i++) {
+        res[i] = std::get<0>(arr[i]);
+    }
+    return res;
+}
+/**
+ * @brief Extract second elements from the array of pairs.
+ *
+ * @tparam T Type of the first elements.
+ * @tparam U Type of the second elements.
+ * @tparam size Size of the array.
+ * @param arr Array to extract.
+ */
+template <typename T, typename U, size_t size>
+constexpr std::array<T, size>
+second_elts_of(const std::array<std::pair<T, U>, size> &arr) {
+    // TODO: change to std::transform in C++20
+    std::array<T, size> res = {
+        T{},
+    };
+    for (size_t i = 0; i < size; i++) {
+        res[i] = std::get<0>(arr[i]);
+    }
+    return res;
+}
+
+/**
+ * @brief Count the number of unique elements in the array.
+ *
+ * Current runtime is O(n^2).
+ * TODO: count using sorted array in C++20 using constexpr std::sort.
+ *
+ * @tparam T Type of array elements
+ * @tparam size Size of the array
+ * @return size_t
+ */
+template <typename T, size_t size>
+constexpr size_t count_unique(const std::array<T, size> &arr) {
+    size_t res = 0;
+
+    for (size_t i = 0; i < size; i++) {
+        bool counted = false;
+        for (size_t j = 0; j < i; j++) {
+            if (arr[j] == arr[i]) {
+                counted = true;
+                break;
+            }
+        }
+        if (!counted) {
+            res++;
+        }
+    }
+    return res;
+}
+
+/// @cond DEV
+namespace Internal {
+/**
+ * @brief Helper function for prepend_to_tuple
+ */
+template <class T, class Tuple, std::size_t... I>
+constexpr auto
+prepend_to_tuple_helper(T &&elt, Tuple &&t,
+                        [[maybe_unused]] std::index_sequence<I...> dummy) {
+    return std::make_tuple(elt, std::get<I>(std::forward<Tuple>(t))...);
+}
+} // namespace Internal
+/// @endcond
+
+/**
+ * @brief Prepent an element to a tuple
+ * @tparam T Type of element
+ * @tparam Tuple Type of the tuple (usually std::tuple)
+ *
+ * @param elt Element to prepend
+ * @param t Tuple to add an element
+ */
+template <class T, class Tuple>
+constexpr auto prepend_to_tuple(T &&elt, Tuple &&t) {
+    return Internal::prepend_to_tuple_helper(
+        std::forward<T>(elt), std::forward<Tuple>(t),
+        std::make_index_sequence<
+            std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
+}
+
+/**
+ * @brief Transform a tuple to an array
+ *
+ * This function only works when all elements of the tuple are the same
+ * type or convertible to the same type.
+ *
+ * @tparam T Type of the elements. This type usually needs to be specified.
+ * @tparam Tuple Type of the tuple.
+ * @param tuple Tuple to transform
+ */
+template <class T, class Tuple> constexpr auto tuple_to_array(Tuple &&tuple) {
+    return std::apply(
+        [](auto... n) { return std::array<T, sizeof...(n)>{n...}; },
+        std::forward<Tuple>(tuple));
+}
 } // namespace Pennylane::Util

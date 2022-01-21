@@ -1,0 +1,4 @@
+# Do not change lines below. They are also used by /bin/format.
+build/*
+
+tags

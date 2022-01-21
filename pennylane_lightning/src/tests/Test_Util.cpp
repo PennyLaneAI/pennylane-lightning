@@ -386,3 +386,111 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
         }
     }
 }
+
+/**
+ * @brief Count number of 1s in the binary representation of x
+ *
+ * This is a slow version of countBit1 defined in Util.hpp
+ */
+int popcount_slow(uint64_t x) {
+    int c = 0;
+    for (; x != 0; x >>= 1) {
+        if ((x & 1U) != 0U) {
+            c++;
+        }
+    }
+    return c;
+}
+
+/**
+ * @brief Count number of trailing zeros in the binary representation of x
+ *
+ * This is a slow version of countTrailing0 defined in Util.hpp
+ */
+int ctz_slow(uint64_t x) {
+    int c = 0;
+    while ((x & 1) == 0) {
+        x >>= 1;
+        c++;
+    }
+    return c;
+}
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
+TEST_CASE("Utility bit operations", "[Util]") {
+    SECTION("Internal::countBit1Fast") {
+        { // for uint32_t
+            uint32_t n = 0;
+            CHECK(Util::Internal::countBit1(n) == 0);
+            for (uint32_t k = 0; k < 100; k++) {
+                n <<= 1U;
+                n ^= 1U;
+                CHECK(Util::Internal::countBit1(n) == popcount_slow(n));
+            }
+        }
+        { // for uint64_t
+            uint64_t n = 0;
+            CHECK(Util::Internal::countBit1(n) == 0);
+            for (uint32_t k = 0; k < 100; k++) {
+                n <<= 1U;
+                n ^= 1U;
+                CHECK(Util::Internal::countBit1(n) == popcount_slow(n));
+            }
+        }
+    }
+
+    SECTION("isPerfectPowerOf2") {
+        size_t n = 1U;
+        CHECK(Util::isPerfectPowerOf2(n));
+        for (size_t k = 0; k < sizeof(size_t) - 2; k++) {
+            n *= 2;
+            CHECK(Util::isPerfectPowerOf2(n));
+            CHECK(!Util::isPerfectPowerOf2(n + 1));
+        }
+
+        CHECK(!Util::isPerfectPowerOf2(0U));
+        CHECK(!Util::isPerfectPowerOf2(124U));
+        CHECK(!Util::isPerfectPowerOf2(1077U));
+        CHECK(!Util::isPerfectPowerOf2(1000000000U));
+
+        if constexpr (sizeof(size_t) == 8) {
+            // if size_t is uint64_t
+            CHECK(!Util::isPerfectPowerOf2(1234556789012345678U));
+        }
+    }
+
+    SECTION("Internal::countTrailing0") {
+        { // for uint32_t
+            for (uint32_t c = 0; c < 31; c++) {
+                uint32_t n = static_cast<uint32_t>(1U)
+                             << static_cast<uint32_t>(c);
+                CHECK(Util::Internal::countTrailing0(n) == c);
+                CHECK(Util::Internal::countTrailing0(n | (1U << 31U)) == c);
+            }
+        }
+        { // for uint64_t
+            for (uint32_t c = 0; c < 63; c++) {
+                uint64_t n = static_cast<uint64_t>(1U)
+                             << static_cast<uint64_t>(c);
+                CHECK(Util::Internal::countTrailing0(n) == c);
+                CHECK(Util::Internal::countTrailing0(n | (1UL << 63U)) == c);
+            }
+        }
+    }
+
+    SECTION("log2PerfectPower") {
+        { // for uint32_t
+            for (uint32_t c = 0; c < 32; c++) {
+                uint32_t n = static_cast<uint32_t>(1U)
+                             << static_cast<uint64_t>(c);
+                CHECK(Util::log2PerfectPower(n) == c);
+            }
+        }
+        { // for uint64_t
+            for (uint32_t c = 0; c < 32; c++) {
+                uint32_t n = static_cast<uint64_t>(1U)
+                             << static_cast<uint64_t>(c);
+                CHECK(Util::log2PerfectPower(n) == c);
+            }
+        }
+    }
+}
