@@ -49,8 +49,7 @@ namespace Pennylane {
  */
 template <typename PrecisionT> class DynamicDispatcher {
   public:
-    using ScalarTypeT = PrecisionT;
-    using CFP_t = std::complex<ScalarTypeT>;
+    using CFP_t = std::complex<PrecisionT>;
 
     using GateFunc = std::function<void(
         std::complex<PrecisionT> * /*data*/, size_t /*num_qubits*/,

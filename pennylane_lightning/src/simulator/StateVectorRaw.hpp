@@ -46,16 +46,16 @@ namespace Pennylane {
  * `complex<float>`) or 64-bit (128-bit `complex<double>`) floating point
  * representation.
  *
- * @tparam fp_t Floating point precision of underlying statevector data.
+ * @tparam PrecisionT Floating point precision of underlying statevector data.
  */
-template <class fp_t = double>
-class StateVectorRaw : public StateVectorBase<fp_t, StateVectorRaw<fp_t>> {
+template <class PrecisionT = double>
+class StateVectorRaw : public StateVectorBase<PrecisionT, StateVectorRaw<PrecisionT>> {
   public:
-    using Base = StateVectorBase<fp_t, StateVectorRaw<fp_t>>;
-    using CFP_t = std::complex<fp_t>;
+    using Base = StateVectorBase<PrecisionT, StateVectorRaw<PrecisionT>>;
+    using ComplexPrecisionT = std::complex<PrecisionT>;
 
   private:
-    CFP_t *data_;
+    ComplexPrecisionT *data_;
     size_t length_;
 
   public:
@@ -65,8 +65,8 @@ class StateVectorRaw : public StateVectorBase<fp_t, StateVectorRaw<fp_t>> {
      * @param data Raw data pointer.
      * @param length The size of the data, i.e. 2^(number of qubits).
      */
-    StateVectorRaw(CFP_t *data, size_t length)
-        : StateVectorBase<fp_t, StateVectorRaw<fp_t>>(
+    StateVectorRaw(ComplexPrecisionT *data, size_t length)
+        : StateVectorBase<PrecisionT, StateVectorRaw<PrecisionT>>(
               Util::log2PerfectPower(length)),
           data_{data}, length_(length) {
         // check length is perfect power of 2
@@ -87,16 +87,16 @@ class StateVectorRaw : public StateVectorBase<fp_t, StateVectorRaw<fp_t>> {
     /**
      * @brief Get the underlying data pointer.
      *
-     * @return const CFP_t* Pointer to statevector data.
+     * @return const ComplexPrecisionT* Pointer to statevector data.
      */
-    [[nodiscard]] auto getData() const -> CFP_t * { return data_; }
+    [[nodiscard]] auto getData() const -> ComplexPrecisionT * { return data_; }
 
     /**
      * @brief Get the underlying data pointer.
      *
-     * @return CFP_t* Pointer to statevector data.
+     * @return ComplexPrecisionT* Pointer to statevector data.
      */
-    auto getData() -> CFP_t * { return data_; }
+    auto getData() -> ComplexPrecisionT * { return data_; }
 
     /**
      * @brief Redefine statevector data pointer.
@@ -104,7 +104,7 @@ class StateVectorRaw : public StateVectorBase<fp_t, StateVectorRaw<fp_t>> {
      * @param data New raw data pointer.
      * @param length The size of the data, i.e. 2^(number of qubits).
      */
-    void setData(CFP_t *data, size_t length) {
+    void setData(ComplexPrecisionT *data, size_t length) {
         if (!Util::isPerfectPowerOf2(length)) {
             PL_ABORT("The length of the array for StateVector must be "
                      "a perfect power of 2. But " +

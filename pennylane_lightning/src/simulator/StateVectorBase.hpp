@@ -55,10 +55,10 @@
                       "The provided number of parameters for gate " #GATE_NAME \
                       " is wrong.");                                           \
         static_assert(                                                         \
-            array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,      \
+            array_has_elt(SelectGateOps<PrecisionT, kernel>::implemented_gates,      \
                           GateOperation::GATE_NAME),                           \
             "The kernel does not implement the gate.");                        \
-        SelectGateOps<fp_t, kernel>::apply##GATE_NAME(                         \
+        SelectGateOps<PrecisionT, kernel>::apply##GATE_NAME(                         \
             arr, num_qubits_, wires, inverse, std::forward<Ts>(args)...);      \
     }
 
@@ -77,21 +77,11 @@
                 const std::vector<size_t> &wires, bool adj) {                  \
         auto *arr = getData();                                                 \
         static_assert(                                                         \
-            array_has_elt(SelectGateOps<fp_t, kernel>::implemented_generators, \
+            array_has_elt(SelectGateOps<PrecisionT, kernel>::implemented_generators, \
                           GeneratorOperation::GENERATOR_NAME),                 \
             "The kernel does not implement the gate generator.");              \
-        SelectGateOps<fp_t, kernel>::applyGenerator##GENERATOR_NAME(           \
+        SelectGateOps<PrecisionT, kernel>::applyGenerator##GENERATOR_NAME(           \
             arr, num_qubits_, wires, adj);                                     \
-    }
-
-#define PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GENERATOR(GENERATOR_NAME)         \
-    template <typename... Ts>                                                  \
-    inline void applyGenerator##GENERATOR_NAME(                                \
-                const std::vector<size_t> &wires, bool adj) {                  \
-        constexpr auto kernel = static_lookup<                                 \
-                GeneratorOperation::GENERATOR_NAME>(                           \
-                Constant::default_kernel_for_generators);                      \
-        applyGenerator##GENERATOR_NAME##_<kernel>(wires, adj);        \
     }
 
 namespace Pennylane {
@@ -105,16 +95,15 @@ namespace Pennylane {
  * 64-bit (128-bit `complex<double>`) floating point representation.
  * As this is the base class, we do not add default template arguments.
  *
- * @tparam fp_t Floating point precision of underlying statevector data.
+ * @tparam PrecisionT Floating point precision of underlying statevector data.
  * @tparam Derived Type of a derived class
  */
-template <class fp_t, class Derived> class StateVectorBase {
+template <class PrecisionT, class Derived> class StateVectorBase {
   public:
-    using ScalarTypeT = fp_t;
     /**
      * @brief StateVector complex precision type.
      */
-    using CFP_t = std::complex<fp_t>;
+    using ComplexPrecisionT = std::complex<PrecisionT>;
 
   private:
     size_t num_qubits_{0};
@@ -145,11 +134,11 @@ template <class fp_t, class Derived> class StateVectorBase {
         return static_cast<size_t>(Util::exp2(num_qubits_));
     }
 
-    [[nodiscard]] inline auto getData() -> CFP_t * {
+    [[nodiscard]] inline auto getData() -> ComplexPrecisionT * {
         return static_cast<Derived *>(this)->getData();
     }
 
-    [[nodiscard]] inline auto getData() const -> const CFP_t * {
+    [[nodiscard]] inline auto getData() const -> const ComplexPrecisionT * {
         return static_cast<const Derived *>(this)->getData();
     }
 
@@ -161,12 +150,12 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @return bool
      */
     template <class RhsDerived>
-    bool operator==(const StateVectorBase<fp_t, RhsDerived> &rhs) {
+    bool operator==(const StateVectorBase<PrecisionT, RhsDerived> &rhs) {
         if (num_qubits_ != rhs.getNumQubits()) {
             return false;
         }
-        const CFP_t *data1 = getData();
-        const CFP_t *data2 = rhs.getData();
+        const ComplexPrecisionT *data1 = getData();
+        const ComplexPrecisionT *data2 = rhs.getData();
         for (size_t k = 0; k < getLength(); k++) {
             if (data1[k] != data2[k]) {
                 return false;
@@ -186,9 +175,9 @@ template <class fp_t, class Derived> class StateVectorBase {
      */
     void applyOperation(KernelType kernel, const std::string &opName,
                         const std::vector<size_t> &wires, bool inverse = false,
-                        const std::vector<fp_t> &params = {}) {
+                        const std::vector<PrecisionT> &params = {}) {
         auto *arr = getData();
-        DynamicDispatcher<fp_t>::getInstance().applyOperation(
+        DynamicDispatcher<PrecisionT>::getInstance().applyOperation(
             kernel, arr, num_qubits_, opName, wires, inverse, params);
     }
 
@@ -202,9 +191,9 @@ template <class fp_t, class Derived> class StateVectorBase {
      */
     void applyOperation(const std::string &opName,
                         const std::vector<size_t> &wires, bool inverse = false,
-                        const std::vector<fp_t> &params = {}) {
+                        const std::vector<PrecisionT> &params = {}) {
         auto *arr = getData();
-        DynamicDispatcher<fp_t>::getInstance().applyOperation(
+        DynamicDispatcher<PrecisionT>::getInstance().applyOperation(
             arr, num_qubits_, opName, wires, inverse, params);
     }
 
@@ -219,9 +208,9 @@ template <class fp_t, class Derived> class StateVectorBase {
     void applyOperations(const std::vector<std::string> &ops,
                          const std::vector<std::vector<size_t>> &wires,
                          const std::vector<bool> &inverse,
-                         const std::vector<std::vector<fp_t>> &params) {
+                         const std::vector<std::vector<PrecisionT>> &params) {
         auto *arr = getData();
-        DynamicDispatcher<fp_t>::getInstance().applyOperations(
+        DynamicDispatcher<PrecisionT>::getInstance().applyOperations(
             arr, num_qubits_, ops, wires, inverse, params);
     }
 
@@ -236,7 +225,7 @@ template <class fp_t, class Derived> class StateVectorBase {
                          const std::vector<std::vector<size_t>> &wires,
                          const std::vector<bool> &inverse) {
         auto *arr = getData();
-        DynamicDispatcher<fp_t>::getInstance().applyOperations(
+        DynamicDispatcher<PrecisionT>::getInstance().applyOperations(
             arr, num_qubits_, ops, wires, inverse);
     }
 
@@ -253,7 +242,7 @@ template <class fp_t, class Derived> class StateVectorBase {
     void applyGenerator(KernelType kernel, const std::string &opName,
                         const std::vector<size_t> &wires, bool adj = false) {
         auto *arr = getData();
-        DynamicDispatcher<fp_t>::getInstance().applyGenerator(
+        DynamicDispatcher<PrecisionT>::getInstance().applyGenerator(
             kernel, arr, num_qubits_, opName, wires, adj);
     }
 
@@ -267,7 +256,7 @@ template <class fp_t, class Derived> class StateVectorBase {
     void applyGenerator(const std::string &opName,
                         const std::vector<size_t> &wires, bool adj = false) {
         auto *arr = getData();
-        DynamicDispatcher<fp_t>::getInstance().applyGenerator(
+        DynamicDispatcher<PrecisionT>::getInstance().applyGenerator(
             arr, num_qubits_, opName, wires, adj);
     }
 
@@ -279,19 +268,19 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param inverse Indicate whether inverse should be taken.
      */
     template <KernelType kernel>
-    inline void applyMatrix_(const CFP_t *matrix,
+    inline void applyMatrix_(const ComplexPrecisionT *matrix,
                              const std::vector<size_t> &wires,
                              bool inverse = false) {
         auto *arr = getData();
-        SelectGateOps<fp_t, kernel>::applyMatrix(arr, num_qubits_, matrix,
+        SelectGateOps<PrecisionT, kernel>::applyMatrix(arr, num_qubits_, matrix,
                                                  wires, inverse);
     }
     template <KernelType kernel>
-    inline void applyMatrix_(const std::vector<CFP_t> &matrix,
+    inline void applyMatrix_(const std::vector<ComplexPrecisionT> &matrix,
                              const std::vector<size_t> &wires,
                              bool inverse = false) {
         auto *arr = getData();
-        SelectGateOps<fp_t, kernel>::applyMatrix(arr, num_qubits_, matrix,
+        SelectGateOps<PrecisionT, kernel>::applyMatrix(arr, num_qubits_, matrix,
                                                  wires, inverse);
     }
 
@@ -302,24 +291,24 @@ template <class fp_t, class Derived> class StateVectorBase {
      * @param matrix Pointer to the array data.
      * @param inverse Indicate whether inverse should be taken.
      */
-    inline void applyMatrix(const CFP_t *matrix,
+    inline void applyMatrix(const ComplexPrecisionT *matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
         constexpr auto kernel = static_lookup<GateOperation::Matrix>(
             Constant::default_kernel_for_gates);
         static_assert(
-            array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,
+            array_has_elt(SelectGateOps<PrecisionT, kernel>::implemented_gates,
                           GateOperation::Matrix),
             "The default kernel for applyMatrix does not implement it.");
         applyMatrix_<kernel>(matrix, wires, inverse);
     }
-    inline void applyMatrix(const std::vector<CFP_t> &matrix,
+    inline void applyMatrix(const std::vector<ComplexPrecisionT> &matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
         constexpr auto kernel = static_lookup<GateOperation::Matrix>(
             Constant::default_kernel_for_gates);
         static_assert(
-            array_has_elt(SelectGateOps<fp_t, kernel>::implemented_gates,
+            array_has_elt(SelectGateOps<PrecisionT, kernel>::implemented_gates,
                           GateOperation::Matrix),
             "The default kernel for applyMatrix does not implement it.");
         applyMatrix_<kernel>(matrix, wires, inverse);
@@ -628,72 +617,6 @@ template <class fp_t, class Derived> class StateVectorBase {
      * default_kernel_for_gates
      */
     PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(CSWAP)
-
-    /**
-     * @brief Apply PhaseShift generator to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GENERATOR(PhaseShift)
-    /**
-     * @brief Apply PhaseShift generator operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GENERATOR(PhaseShift)
-
-    /**
-     * @brief Apply CRX generator to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GENERATOR(CRX)
-    /**
-     * @brief Apply CRX generator operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GENERATOR(CRX)
-
-    /**
-     * @brief Apply CRY generator to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GENERATOR(CRY)
-    /**
-     * @brief Apply CRY generator opertation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GENERATOR(CRY)
-
-    /**
-     * @brief Apply CRZ generator to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GENERATOR(CRZ)
-    /**
-     * @brief Apply CRZ generator operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GENERATOR(CRZ)
-
-    /**
-     * @brief Apply controlled phase shift generator to given indices of
-     * statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GENERATOR(ControlledPhaseShift)
-    /**
-     * @brief Apply controlled phase shift operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GENERATOR(ControlledPhaseShift)
 };
 
 /**
