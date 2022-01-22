@@ -75,7 +75,7 @@ template <> struct KernelIdNamePairsHelper<void> {
 /// @endcond
 
 /**
- * @brief Array of kernel_id and name pairs
+ * @brief Array of kernel_id and name pairs for all available kernels
  */
 constexpr static auto kernelIdNamePairs = Util::tuple_to_array(
     Internal::KernelIdNamePairsHelper<AvailableKernels>::value);
@@ -101,6 +101,8 @@ struct SelectGateOpsHelper {
 };
 template <class PrecisionT, KernelType kernel>
 struct SelectGateOpsHelper<PrecisionT, kernel, void> {
+    static_assert(Util::array_has_elt(Util::first_elts_of(kernelIdNamePairs), kernel),
+            "The given kernel is not in the list of available kernels.");
     using Type = void;
 };
 } // namespace Internal
@@ -158,7 +160,8 @@ auto ValueForKernelHelper([[maybe_unused]] KernelType kernel) {
  *
  * TODO: Change to constexpr function in C++20
  */
-inline auto implementedGatesForKernel(KernelType kernel) {
+inline auto implementedGatesForKernel(KernelType kernel)
+    -> std::vector<GateOperation> {
     return Internal::ValueForKernelHelper<AvailableKernels, GateOperation,
                                           Internal::ImplementedGates>(kernel);
 }
@@ -171,7 +174,8 @@ inline auto implementedGatesForKernel(KernelType kernel) {
  *
  * TODO: Change to constexpr function in C++20
  */
-inline auto implementedGeneratorsForKernel(KernelType kernel) {
+inline auto implementedGeneratorsForKernel(KernelType kernel) 
+    -> std::vector<GeneratorOperation>{
     return Internal::ValueForKernelHelper<AvailableKernels, GeneratorOperation,
                                           Internal::ImplementedGenerators>(
         kernel);

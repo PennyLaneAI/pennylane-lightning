@@ -26,38 +26,6 @@ using Pennylane::callGateOps;
  * We just check DynamicDispacther calls the correct functuion by comparing
  * the result from it with that of the direct call.
  */
-
-std::vector<size_t> createWires(GateOperation op) {
-    if (array_has_elt(Constant::multi_qubit_gates, op)) {
-        // if multi-qubit gates
-        return {0, 1, 2};
-    }
-    switch (lookup(Constant::gate_wires, op)) {
-    case 1:
-        return {0};
-    case 2:
-        return {0, 1};
-    case 3:
-        return {0, 1, 2};
-    default:
-        PL_ABORT("The number of wires for a given gate is unknown.");
-    }
-}
-
-template <class PrecisionT>
-std::vector<PrecisionT> createParams(GateOperation op) {
-    switch (lookup(Constant::gate_num_params, op)) {
-    case 0:
-        return {};
-    case 1:
-        return {0.312};
-    case 3:
-        return {0.128, -0.563, 1.414};
-    default:
-        PL_ABORT("The number of parameters for a given gate is unknown.");
-    }
-}
-
 template <typename PrecisionT, typename ParamT, class GateImplementation>
 struct testDispatchForKernel {
     template <GateOperation gate_op, class RandomEngine,

@@ -5,6 +5,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "Constant.hpp"
 #include "GateOperation.hpp"
 #include "Error.hpp"
 #include "Util.hpp"
@@ -213,4 +214,35 @@ auto create_product_state(std::string_view str) {
         st[k] = elt;
     }
     return st;
+}
+
+inline std::vector<size_t> createWires(Pennylane::GateOperation op) {
+    if (Pennylane::Util::array_has_elt(Pennylane::Constant::multi_qubit_gates, op)) {
+        // if multi-qubit gates
+        return {0, 1, 2};
+    }
+    switch (Pennylane::Util::lookup(Pennylane::Constant::gate_wires, op)) {
+    case 1:
+        return {0};
+    case 2:
+        return {0, 1};
+    case 3:
+        return {0, 1, 2};
+    default:
+        PL_ABORT("The number of wires for a given gate is unknown.");
+    }
+}
+
+template <class PrecisionT>
+std::vector<PrecisionT> createParams(Pennylane::GateOperation op) {
+    switch (Pennylane::Util::lookup(Pennylane::Constant::gate_num_params, op)) {
+    case 0:
+        return {};
+    case 1:
+        return {0.312};
+    case 3:
+        return {0.128, -0.563, 1.414};
+    default:
+        PL_ABORT("The number of parameters for a given gate is unknown.");
+    }
 }

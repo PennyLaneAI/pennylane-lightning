@@ -23,6 +23,7 @@
 #include "OpToMemberFuncPtr.hpp"
 #include "SelectGateOps.hpp"
 
+#include <cassert>
 #include <complex>
 #include <functional>
 #include <string>
@@ -341,6 +342,7 @@ constexpr auto gateOpToFunctor() {
         constexpr auto func_ptr =
             GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                                   gate_op>::value;
+        assert(params.size() == static_lookup<gate_op>(Constant::gate_num_params));
         callGateOps(func_ptr, data, num_qubits, wires, inverse, params);
     };
 }

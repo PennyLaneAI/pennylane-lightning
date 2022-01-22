@@ -17,7 +17,7 @@
 
 #pragma once
 #include "GateOperation.hpp"
-
+#include "cassert"
 #include <complex>
 #include <vector>
 
@@ -30,9 +30,14 @@ namespace Pennylane {
 template <class PrecisionT, class ParamT, class GateImplOrSVType,
           GateOperation gate_op>
 struct GateOpToMemberFuncPtr {
+    // raises compile error when used
     static_assert(
         gate_op != GateOperation::Matrix,
         "GateOpToMemberFuncPtr is not defined for GateOperation::Matrix.");
+    static_assert(gate_op == GateOperation::Matrix,
+            "GateOpToMemberFuncPtr is not defined for the given gate. "
+            "When you define a new GateOperation, check that you also "
+            "add the corresponding entry in GateOpToMemberFuncPtr.");
     constexpr static auto value = nullptr;
 };
 
@@ -199,7 +204,13 @@ struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
  * operation. See speicalized classes.
  */
 template <class PrecisionT, class GateImplOrSVType, GeneratorOperation gntr_op>
-struct GeneratorOpToMemberFuncPtr; // Link error when used
+struct GeneratorOpToMemberFuncPtr {
+    // raises compile error when used
+    static_assert(sizeof(GateImplOrSVType) == -1,
+            "GeneratorOpToMemberFuncPtr is not defined for the given generator. "
+            "When you define a new GeneratorOperation, check that you also "
+            "add the corresponding entry in GeneratorOpToMemberFuncPtr.");
+};
 
 template <class PrecisionT, class GateImplOrSVType>
 struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplOrSVType,

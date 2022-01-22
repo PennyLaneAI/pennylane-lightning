@@ -8,6 +8,7 @@
 #include <string>
 
 #include "StateVectorManaged.hpp"
+#include "Constant.hpp"
 
 using namespace Pennylane;
 
@@ -22,34 +23,19 @@ struct GateDesc {
     size_t n_params; // number of parameters the gate requires
 };
 
-std::vector<std::pair<std::string_view, GateDesc>>
+std::vector<std::pair<std::string, GateDesc>>
 parseGateLists(std::string_view arg) {
-    const static std::map<std::string, GateDesc> available_gates_wires = {
-        /* Single-qubit gates */
-        {"PauliX", {1, 0}},
-        {"PauliY", {1, 0}},
-        {"PauliZ", {1, 0}},
-        {"Hadamard", {1, 0}},
-        {"S", {1, 0}},
-        {"T", {1, 0}},
-        {"RX", {1, 1}},
-        {"RY", {1, 1}},
-        {"RZ", {1, 1}},
-        {"Rot", {1, 3}},
-        {"PhaseShift", {1, 1}},
-        /* Two-qubit gates */
-        {"CNOT", {2, 0}},
-        {"CZ", {2, 0}},
-        {"SWAP", {2, 0}},
-        {"ControlledPhaseShift", {2, 1}},
-        {"CRX", {2, 1}},
-        {"CRY", {2, 1}},
-        {"CRZ", {2, 1}},
-        {"CRot", {2, 3}},
-        /* Three-qubit gates */
-        {"Toffoli", {3, 0}},
-        {"CSWAP", {3, 0}}};
+    std::map<std::string, GateDesc> available_gates_wires;
 
+    for (const auto &[gate_op, gate_name]: Constant::gate_names) {
+        if (!array_has_elt(Constant::multi_qubit_gates, gate_op)) {
+            // We do not support multi qubit gates yet
+            size_t n_wires = Util::lookup(Constant::gate_wires, gate_op);
+            size_t n_params = Util::lookup(Constant::gate_num_params, gate_op);
+            available_gates_wires.emplace(gate_name, GateDesc{n_wires, n_params});
+        }
+    }
+    
     if (arg.empty()) {
         /*
         return std::vector<std::pair<std::string_view, GateDesc>>(
@@ -58,7 +44,7 @@ parseGateLists(std::string_view arg) {
         return {};
     }
 
-    std::vector<std::pair<std::string_view, GateDesc>> ops;
+    std::vector<std::pair<std::string, GateDesc>> ops;
 
     if (auto pos = arg.find_first_of('['); pos != std::string_view::npos) {
         // arg is a list "[...]"
@@ -159,7 +145,7 @@ int main(int argc, char *argv[]) {
 
     std::string_view kernel_name = argv[3];
     KernelType kernel = string_to_kernel(kernel_name);
-    if (kernel == KernelType::Unknown) {
+    if (kernel == KernelType::None) {
         std::cerr << "Kernel " << kernel_name << " is unknown." << std::endl;
         return 1;
     }
@@ -174,7 +160,7 @@ int main(int argc, char *argv[]) {
         op_list_s = ss.str();
     }
 
-    std::vector<std::pair<std::string_view, GateDesc>> op_list;
+    std::vector<std::pair<std::string, GateDesc>> op_list;
     try {
         op_list = parseGateLists(op_list_s);
     } catch (std::exception &e) {

@@ -27,7 +27,11 @@ using namespace Pennylane;
     template <typename PrecisionT, typename ParamT, class GateImplementation,  \
               typename U = void>                                               \
     struct TestApply##GATE_NAME##IfDefined {                                   \
-        static void run() {}                                                   \
+        static void run() {\
+            INFO( "Member function apply" #GATE_NAME " is not defined for kernel " << \
+                    GateImplementation::name);\
+            REQUIRE(true);\
+        }                                                   \
     };                                                                         \
     template <typename PrecisionT, typename ParamT, class GateImplementation>  \
     struct TestApply##GATE_NAME##IfDefined<                                    \
@@ -36,6 +40,8 @@ using namespace Pennylane;
             &GateImplementation::template apply##GATE_NAME<PrecisionT,         \
                                                            ParamT>)>>> {       \
         static void run() {                                                    \
+            INFO( "Test apply" #GATE_NAME " in kernel " << \
+                    GateImplementation::name);\
             testApply##GATE_NAME<PrecisionT, ParamT, GateImplementation>();    \
         }                                                                      \
     };                                                                         \
@@ -58,11 +64,58 @@ using namespace Pennylane;
         using ParamT = TestType;                                               \
         TestApply##GATE_NAME##ForKernels<PrecisionT, ParamT,                   \
                                          AvailableKernels>::run();             \
-    }
+    } static_assert(true) // Require semicolon
 
 /*******************************************************************************
  * Single-qubit gates
  ******************************************************************************/
+
+template <typename PrecisionT, typename ParamT, class GateImplementation>
+void testApplyPhaseShift() {
+    using ComplexPrecisionT = std::complex<PrecisionT>;
+    const size_t num_qubits = 3;
+
+    // Test using |+++> state
+
+    const std::vector<PrecisionT> angles{0.3, 0.8, 2.4};
+    const ComplexPrecisionT coef(1.0 / (2 * std::sqrt(2)), 0);
+
+    std::vector<std::vector<ComplexPrecisionT>> ps_data;
+    ps_data.reserve(angles.size());
+    for (auto &a : angles) {
+        ps_data.push_back(Gates::getPhaseShift<PrecisionT>(a));
+    }
+
+    std::vector<std::vector<ComplexPrecisionT>> expected_results = {
+        {ps_data[0][0], ps_data[0][0], ps_data[0][0], ps_data[0][0],
+         ps_data[0][3], ps_data[0][3], ps_data[0][3], ps_data[0][3]},
+        {
+            ps_data[1][0],
+            ps_data[1][0],
+            ps_data[1][3],
+            ps_data[1][3],
+            ps_data[1][0],
+            ps_data[1][0],
+            ps_data[1][3],
+            ps_data[1][3],
+        },
+        {ps_data[2][0], ps_data[2][3], ps_data[2][0], ps_data[2][3],
+         ps_data[2][0], ps_data[2][3], ps_data[2][0], ps_data[2][3]}};
+
+    for (auto &vec : expected_results) {
+        scaleVector(vec, coef);
+    }
+
+    for (size_t index = 0; index < num_qubits; index++) {
+        auto st = create_plus_state<PrecisionT>(num_qubits);
+
+        GateImplementation::applyPhaseShift(st.data(), num_qubits, {index},
+                                            false, {angles[index]});
+
+        CHECK(isApproxEqual(st, expected_results[index]));
+    }
+}
+PENNYLANE_RUN_TEST(PhaseShift);
 
 template <typename PrecisionT, typename ParamT, class GateImplementation>
 void testApplyRX() {
@@ -87,7 +140,7 @@ void testApplyRX() {
         CHECK(isApproxEqual(st, expected_results[index], 1e-7));
     }
 }
-PENNYLANE_RUN_TEST(RX)
+PENNYLANE_RUN_TEST(RX);
 
 template <typename PrecisionT, typename ParamT, class GateImplementation>
 void testApplyRY() {
@@ -137,7 +190,7 @@ void testApplyRY() {
         }
     }
 }
-PENNYLANE_RUN_TEST(RY)
+PENNYLANE_RUN_TEST(RY);
 
 template <typename PrecisionT, typename ParamT, class GateImplementation>
 void testApplyRZ() {
@@ -184,54 +237,7 @@ void testApplyRZ() {
         CHECK(isApproxEqual(st, expected_results[index]));
     }
 }
-PENNYLANE_RUN_TEST(RZ)
-
-template <typename PrecisionT, typename ParamT, class GateImplementation>
-void testApplyPhaseShift() {
-    using ComplexPrecisionT = std::complex<PrecisionT>;
-    const size_t num_qubits = 3;
-
-    // Test using |+++> state
-
-    const std::vector<PrecisionT> angles{0.3, 0.8, 2.4};
-    const ComplexPrecisionT coef(1.0 / (2 * std::sqrt(2)), 0);
-
-    std::vector<std::vector<ComplexPrecisionT>> ps_data;
-    ps_data.reserve(angles.size());
-    for (auto &a : angles) {
-        ps_data.push_back(Gates::getPhaseShift<PrecisionT>(a));
-    }
-
-    std::vector<std::vector<ComplexPrecisionT>> expected_results = {
-        {ps_data[0][0], ps_data[0][0], ps_data[0][0], ps_data[0][0],
-         ps_data[0][3], ps_data[0][3], ps_data[0][3], ps_data[0][3]},
-        {
-            ps_data[1][0],
-            ps_data[1][0],
-            ps_data[1][3],
-            ps_data[1][3],
-            ps_data[1][0],
-            ps_data[1][0],
-            ps_data[1][3],
-            ps_data[1][3],
-        },
-        {ps_data[2][0], ps_data[2][3], ps_data[2][0], ps_data[2][3],
-         ps_data[2][0], ps_data[2][3], ps_data[2][0], ps_data[2][3]}};
-
-    for (auto &vec : expected_results) {
-        scaleVector(vec, coef);
-    }
-
-    for (size_t index = 0; index < num_qubits; index++) {
-        auto st = create_plus_state<PrecisionT>(num_qubits);
-
-        GateImplementation::applyPhaseShift(st.data(), num_qubits, {index},
-                                            false, {angles[index]});
-
-        CHECK(isApproxEqual(st, expected_results[index]));
-    }
-}
-PENNYLANE_RUN_TEST(PhaseShift)
+PENNYLANE_RUN_TEST(RZ);
 
 template <typename PrecisionT, typename ParamT, class GateImplementation>
 void testApplyRot() {
@@ -265,50 +271,11 @@ void testApplyRot() {
         CHECK(isApproxEqual(st, expected_results[index]));
     }
 }
-PENNYLANE_RUN_TEST(Rot)
+PENNYLANE_RUN_TEST(Rot);
 
 /*******************************************************************************
  * Two-qubit gates
  ******************************************************************************/
-
-template <typename PrecisionT, typename ParamT, class GateImplementation>
-void testApplyControlledPhaseShift() {
-    using ComplexPrecisionT = std::complex<PrecisionT>;
-
-    const size_t num_qubits = 3;
-
-    // Test using |+++> state
-    auto ini_st = create_plus_state<PrecisionT>(num_qubits);
-
-    const std::vector<PrecisionT> angles{0.3, 2.4};
-    const ComplexPrecisionT coef(1.0 / (2 * std::sqrt(2)), 0);
-
-    std::vector<std::vector<ComplexPrecisionT>> ps_data;
-    ps_data.reserve(angles.size());
-    for (auto &a : angles) {
-        ps_data.push_back(Gates::getPhaseShift<PrecisionT>(a));
-    }
-
-    std::vector<std::vector<ComplexPrecisionT>> expected_results = {
-        {ps_data[0][0], ps_data[0][0], ps_data[0][0], ps_data[0][0],
-         ps_data[0][0], ps_data[0][0], ps_data[0][3], ps_data[0][3]},
-        {ps_data[1][0], ps_data[1][0], ps_data[1][0], ps_data[1][3],
-         ps_data[1][0], ps_data[1][0], ps_data[1][0], ps_data[1][3]}};
-
-    for (auto &vec : expected_results) {
-        scaleVector(vec, coef);
-    }
-
-    auto st = ini_st;
-
-    GateImplementation::applyControlledPhaseShift(st.data(), num_qubits, {0, 1},
-                                                  false, {angles[0]});
-    CAPTURE(st);
-    CHECK(isApproxEqual(st, expected_results[0]));
-}
-PENNYLANE_RUN_TEST(ControlledPhaseShift)
-
-
 template <typename PrecisionT, typename ParamT, class GateImplementation>
 void testApplyIsingXX() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
@@ -430,8 +397,7 @@ void testApplyIsingXX() {
         REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 }
-PENNYLANE_RUN_TEST(IsingXX)
-
+PENNYLANE_RUN_TEST(IsingXX);
 
 template <typename PrecisionT, typename ParamT, class GateImplementation>
 void testApplyIsingYY() {
@@ -573,7 +539,7 @@ void testApplyIsingYY() {
         REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 }
-PENNYLANE_RUN_TEST(IsingYY)
+PENNYLANE_RUN_TEST(IsingYY);
 
 template <typename PrecisionT, typename ParamT, class GateImplementation>
 void testApplyIsingZZ() {
@@ -695,21 +661,21 @@ void testApplyIsingZZ() {
 
         std::vector<ComplexPrecisionT> expected {
             ComplexPrecisionT{0.265888039508, -0.030917377350},
-            ComplexPrecisionT{0.227440863156, -0.025076966901},
-            ComplexPrecisionT{0.138812299373, 0.242224241539},
-            ComplexPrecisionT{0.122048663851, 0.172985266764},
-            ComplexPrecisionT{0.001315529800, 0.206549421962},
-            ComplexPrecisionT{0.211505899280, 0.116123534558},
-            ComplexPrecisionT{0.003366392733, 0.179637932181},
-            ComplexPrecisionT{0.268161243812, 0.189116978698},
-            ComplexPrecisionT{0.133544466595, 0.134003857126},
-            ComplexPrecisionT{-0.006247074818, 0.120520790080},
-            ComplexPrecisionT{0.210247652980, 0.189627242850},
-            ComplexPrecisionT{0.080147179284, 0.243468334233},
-            ComplexPrecisionT{0.051236139067, 0.058687025978},
-            ComplexPrecisionT{0.122991206449, 0.204961354585},
-            ComplexPrecisionT{0.260499076094, 0.253870909435},
-            ComplexPrecisionT{0.318422472324, 0.138783420076},
+                ComplexPrecisionT{0.227440863156, -0.025076966901},
+                ComplexPrecisionT{0.138812299373, 0.242224241539},
+                ComplexPrecisionT{0.122048663851, 0.172985266764},
+                ComplexPrecisionT{0.001315529800, 0.206549421962},
+                ComplexPrecisionT{0.211505899280, 0.116123534558},
+                ComplexPrecisionT{0.003366392733, 0.179637932181},
+                ComplexPrecisionT{0.268161243812, 0.189116978698},
+                ComplexPrecisionT{0.133544466595, 0.134003857126},
+                ComplexPrecisionT{-0.006247074818, 0.120520790080},
+                ComplexPrecisionT{0.210247652980, 0.189627242850},
+                ComplexPrecisionT{0.080147179284, 0.243468334233},
+                ComplexPrecisionT{0.051236139067, 0.058687025978},
+                ComplexPrecisionT{0.122991206449, 0.204961354585},
+                ComplexPrecisionT{0.260499076094, 0.253870909435},
+                ComplexPrecisionT{0.318422472324, 0.138783420076},
         };
 
         auto st = ini_st;
@@ -718,7 +684,510 @@ void testApplyIsingZZ() {
     }
 
 }
-PENNYLANE_RUN_TEST(IsingZZ)
+PENNYLANE_RUN_TEST(IsingZZ);
+
+template <typename PrecisionT, typename ParamT, class GateImplementation>
+void testApplyControlledPhaseShift() {
+    using ComplexPrecisionT = std::complex<PrecisionT>;
+
+    const size_t num_qubits = 3;
+
+    // Test using |+++> state
+    auto ini_st = create_plus_state<PrecisionT>(num_qubits);
+
+    const std::vector<PrecisionT> angles{0.3, 2.4};
+    const ComplexPrecisionT coef(1.0 / (2 * std::sqrt(2)), 0);
+
+    std::vector<std::vector<ComplexPrecisionT>> ps_data;
+    ps_data.reserve(angles.size());
+    for (auto &a : angles) {
+        ps_data.push_back(Gates::getPhaseShift<PrecisionT>(a));
+    }
+
+    std::vector<std::vector<ComplexPrecisionT>> expected_results = {
+        {ps_data[0][0], ps_data[0][0], ps_data[0][0], ps_data[0][0],
+            ps_data[0][0], ps_data[0][0], ps_data[0][3], ps_data[0][3]},
+        {ps_data[1][0], ps_data[1][0], ps_data[1][0], ps_data[1][3],
+            ps_data[1][0], ps_data[1][0], ps_data[1][0], ps_data[1][3]}};
+
+    for (auto &vec : expected_results) {
+        scaleVector(vec, coef);
+    }
+
+    auto st = ini_st;
+
+    GateImplementation::applyControlledPhaseShift(st.data(), num_qubits, {0, 1},
+            false, angles[0]);
+    CAPTURE(st);
+    CHECK(isApproxEqual(st, expected_results[0]));
+}
+PENNYLANE_RUN_TEST(ControlledPhaseShift);
+
+template <typename PrecisionT, typename ParamT, class GateImplementation>
+void testApplyCRX() {
+    using ComplexPrecisionT = std::complex<PrecisionT>;
+    using TestHelper::Approx;
+    SECTION("CRX0,1") {
+        const size_t num_qubits = 4;
+
+        std::vector<ComplexPrecisionT> ini_st {
+            ComplexPrecisionT{0.188018120185, 0.267344585187},
+                ComplexPrecisionT{0.172684792903, 0.187465336044},
+                ComplexPrecisionT{0.218892658302, 0.241508557821},
+                ComplexPrecisionT{0.107094509452, 0.233123916768},
+                ComplexPrecisionT{0.144398681914, 0.102112687699},
+                ComplexPrecisionT{0.266641428689, 0.096286886834},
+                ComplexPrecisionT{0.037126289559, 0.047222166486},
+                ComplexPrecisionT{0.136865047634, 0.203178369592},
+                ComplexPrecisionT{0.001562711889, 0.224933454573},
+                ComplexPrecisionT{0.009933412610, 0.080866505038},
+                ComplexPrecisionT{0.000948295069, 0.280652963863},
+                ComplexPrecisionT{0.109817299553, 0.150776413412},
+                ComplexPrecisionT{0.297480913626, 0.232588348025},
+                ComplexPrecisionT{0.247386444054, 0.077608200535},
+                ComplexPrecisionT{0.192650977126, 0.054764192471},
+                ComplexPrecisionT{0.033093927690, 0.243038790593},
+        };
+
+        const std::vector<size_t> wires = {0, 1};
+        const ParamT angle = 0.312;
+
+        std::vector<ComplexPrecisionT> expected {
+            ComplexPrecisionT{0.188018120185, 0.267344585187},
+                ComplexPrecisionT{0.172684792903, 0.187465336044},
+                ComplexPrecisionT{0.218892658302, 0.241508557821},
+                ComplexPrecisionT{0.107094509452, 0.233123916768},
+                ComplexPrecisionT{0.144398681914, 0.102112687699},
+                ComplexPrecisionT{0.266641428689, 0.096286886834},
+                ComplexPrecisionT{0.037126289559, 0.047222166486},
+                ComplexPrecisionT{0.136865047634, 0.203178369592},
+                ComplexPrecisionT{0.037680529583, 0.175982985869},
+                ComplexPrecisionT{0.021870621269, 0.041448569986},
+                ComplexPrecisionT{0.009445384485, 0.247313095111},
+                ComplexPrecisionT{0.146244209335, 0.143803745197},
+                ComplexPrecisionT{0.328815969263, 0.229521152393},
+                ComplexPrecisionT{0.256946415396, 0.075122442730},
+                ComplexPrecisionT{0.233916049255, 0.053951837341},
+                ComplexPrecisionT{0.056117891609, 0.223025389250},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applyCRX(st.data(), num_qubits, wires, false, angle);
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+    }
+    SECTION("CRX0,2") {
+        const size_t num_qubits = 4;
+
+        std::vector<ComplexPrecisionT> ini_st {
+            ComplexPrecisionT{0.052996853820, 0.268704529517},
+                ComplexPrecisionT{0.082642978242, 0.195193762273},
+                ComplexPrecisionT{0.275869474800, 0.221416497403},
+                ComplexPrecisionT{0.198695648566, 0.006071386515},
+                ComplexPrecisionT{0.067983147697, 0.276232498024},
+                ComplexPrecisionT{0.136067312263, 0.055703741794},
+                ComplexPrecisionT{0.157173013237, 0.279061453647},
+                ComplexPrecisionT{0.104219108364, 0.247711145514},
+                ComplexPrecisionT{0.176998514444, 0.152305581694},
+                ComplexPrecisionT{0.055177054767, 0.009344289143},
+                ComplexPrecisionT{0.047003532929, 0.014270464770},
+                ComplexPrecisionT{0.067602001658, 0.237978418468},
+                ComplexPrecisionT{0.191357285454, 0.247486891611},
+                ComplexPrecisionT{0.059014417923, 0.240820754268},
+                ComplexPrecisionT{0.017675906958, 0.280795663824},
+                ComplexPrecisionT{0.149294381068, 0.236647612943},
+        };
+
+        const std::vector<size_t> wires = {0, 2};
+        const ParamT angle = 0.312;
+
+        std::vector<ComplexPrecisionT> expected {
+            ComplexPrecisionT{0.052996853820, 0.268704529517},
+            ComplexPrecisionT{0.082642978242, 0.195193762273},
+            ComplexPrecisionT{0.275869474800, 0.221416497403},
+            ComplexPrecisionT{0.198695648566, 0.006071386515},
+            ComplexPrecisionT{0.067983147697, 0.276232498024},
+            ComplexPrecisionT{0.136067312263, 0.055703741794},
+            ComplexPrecisionT{0.157173013237, 0.279061453647},
+            ComplexPrecisionT{0.104219108364, 0.247711145514},
+            ComplexPrecisionT{0.177066334766, 0.143153236251},
+            ComplexPrecisionT{0.091481259734, -0.001272371824},
+            ComplexPrecisionT{0.070096171606, -0.013402737499},
+            ComplexPrecisionT{0.068232891172, 0.226515814342},
+            ComplexPrecisionT{0.232660238337, 0.241735302419},
+            ComplexPrecisionT{0.095065259834, 0.214700810780},
+            ComplexPrecisionT{0.055912814010, 0.247655060549},
+            ComplexPrecisionT{0.184897295154, 0.224604965678},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applyCRX(st.data(), num_qubits, wires, false, angle);
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+    }
+    SECTION("CRX1,3") {
+
+        const size_t num_qubits = 4;
+
+        std::vector<ComplexPrecisionT> ini_st {
+            ComplexPrecisionT{0.192438300910, 0.082027221475},
+            ComplexPrecisionT{0.217147770013, 0.101186506864},
+            ComplexPrecisionT{0.172631211937, 0.036301903892},
+            ComplexPrecisionT{0.006532319481, 0.086171029910},
+            ComplexPrecisionT{0.042291498813, 0.282934641945},
+            ComplexPrecisionT{0.231739267944, 0.188873888944},
+            ComplexPrecisionT{0.278594048803, 0.306941867941},
+            ComplexPrecisionT{0.126901023080, 0.220266540060},
+            ComplexPrecisionT{0.229998291616, 0.200076737619},
+            ComplexPrecisionT{0.016698938983, 0.160673755090},
+            ComplexPrecisionT{0.123754272868, 0.123889666882},
+            ComplexPrecisionT{0.128913058161, 0.104905508280},
+            ComplexPrecisionT{0.004957334386, 0.000151477546},
+            ComplexPrecisionT{0.286109480550, 0.287939421742},
+            ComplexPrecisionT{0.180882613126, 0.180408714716},
+            ComplexPrecisionT{0.169404192357, 0.128550443286},
+        };
+
+        const std::vector<size_t> wires = {1, 3};
+        const ParamT angle = 0.312;
+
+        std::vector<ComplexPrecisionT> expected {
+            ComplexPrecisionT{0.192438300910, 0.082027221475},
+            ComplexPrecisionT{0.217147770013, 0.101186506864},
+            ComplexPrecisionT{0.172631211937, 0.036301903892},
+            ComplexPrecisionT{0.006532319481, 0.086171029910},
+            ComplexPrecisionT{0.071122903322, 0.243493995118},
+            ComplexPrecisionT{0.272884177375, 0.180009581467},
+            ComplexPrecisionT{0.309433364794, 0.283498205063},
+            ComplexPrecisionT{0.173048974802, 0.174307158347},
+            ComplexPrecisionT{0.229998291616, 0.200076737619},
+            ComplexPrecisionT{0.016698938983, 0.160673755090},
+            ComplexPrecisionT{0.123754272868, 0.123889666882},
+            ComplexPrecisionT{0.128913058161, 0.104905508280},
+            ComplexPrecisionT{0.049633717487, -0.044302629247},
+            ComplexPrecisionT{0.282658689673, 0.283672663198},
+            ComplexPrecisionT{0.198658723032, 0.151897953530},
+            ComplexPrecisionT{0.195376806318, 0.098886035231},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applyCRX(st.data(), num_qubits, wires, false, angle);
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+    }
+}
+PENNYLANE_RUN_TEST(CRX);
+
+
+template <typename PrecisionT, typename ParamT, class GateImplementation>
+void testApplyCRY() {
+    using ComplexPrecisionT = std::complex<PrecisionT>;
+    using TestHelper::Approx;
+
+    SECTION("CRY0,1") {
+        const size_t num_qubits = 4;
+
+        std::vector<ComplexPrecisionT> ini_st {
+            ComplexPrecisionT{0.024509081663, 0.005606762650},
+            ComplexPrecisionT{0.261792037054, 0.259257414596},
+            ComplexPrecisionT{0.168380715455, 0.096012484887},
+            ComplexPrecisionT{0.169761107379, 0.042890935442},
+            ComplexPrecisionT{0.012169527484, 0.082631086139},
+            ComplexPrecisionT{0.155790166500, 0.292998574950},
+            ComplexPrecisionT{0.150529463310, 0.282021216715},
+            ComplexPrecisionT{0.097100202708, 0.134938013786},
+            ComplexPrecisionT{0.062640753523, 0.251735121160},
+            ComplexPrecisionT{0.121654204141, 0.116964600258},
+            ComplexPrecisionT{0.152865184550, 0.084800955456},
+            ComplexPrecisionT{0.300145205424, 0.101098965771},
+            ComplexPrecisionT{0.288274703880, 0.038180155037},
+            ComplexPrecisionT{0.041378441702, 0.206525491532},
+            ComplexPrecisionT{0.033201995261, 0.096777018650},
+            ComplexPrecisionT{0.303210250465, 0.300817738868},
+        };
+
+        const std::vector<size_t> wires = {0, 1};
+        const ParamT angle = 0.312;
+
+        std::vector<ComplexPrecisionT> expected {
+            ComplexPrecisionT{0.024509081663, 0.005606762650},
+            ComplexPrecisionT{0.261792037054, 0.259257414596},
+            ComplexPrecisionT{0.168380715455, 0.096012484887},
+            ComplexPrecisionT{0.169761107379, 0.042890935442},
+            ComplexPrecisionT{0.012169527484, 0.082631086139},
+            ComplexPrecisionT{0.155790166500, 0.292998574950},
+            ComplexPrecisionT{0.150529463310, 0.282021216715},
+            ComplexPrecisionT{0.097100202708, 0.134938013786},
+            ComplexPrecisionT{0.017091411508, 0.242746239557},
+            ComplexPrecisionT{0.113748028260, 0.083456799483},
+            ComplexPrecisionT{0.145850361424, 0.068735133269},
+            ComplexPrecisionT{0.249391258812, 0.053133825802},
+            ComplexPrecisionT{0.294506455875, 0.076828111036},
+            ComplexPrecisionT{0.059777143539, 0.222190141515},
+            ComplexPrecisionT{0.056549175144, 0.108777179774},
+            ComplexPrecisionT{0.346161234622, 0.312872353290},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applyCRY(st.data(), num_qubits, wires, false, angle);
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+    }
+
+    SECTION("CRY0,2") {
+        const size_t num_qubits = 4;
+
+        std::vector<ComplexPrecisionT> ini_st {
+            ComplexPrecisionT{0.102619838050, 0.054477528511},
+            ComplexPrecisionT{0.202715827962, 0.019268690848},
+            ComplexPrecisionT{0.009985085718, 0.046864154650},
+            ComplexPrecisionT{0.095353410397, 0.178365407785},
+            ComplexPrecisionT{0.265491448756, 0.075474015573},
+            ComplexPrecisionT{0.155542525434, 0.336145304405},
+            ComplexPrecisionT{0.264473386058, 0.073102790542},
+            ComplexPrecisionT{0.275654487087, 0.027356694914},
+            ComplexPrecisionT{0.040156237615, 0.323407814320},
+            ComplexPrecisionT{0.111584643322, 0.148005654537},
+            ComplexPrecisionT{0.143440399478, 0.139829784016},
+            ComplexPrecisionT{0.104105862006, 0.036845342185},
+            ComplexPrecisionT{0.254859090295, 0.077839069459},
+            ComplexPrecisionT{0.166580751989, 0.081673415646},
+            ComplexPrecisionT{0.322693919290, 0.244062536913},
+            ComplexPrecisionT{0.203101217204, 0.182142660415},
+        };
+
+        const std::vector<size_t> wires = {0, 2};
+        const ParamT angle = 0.312;
+
+        std::vector<ComplexPrecisionT> expected {
+            ComplexPrecisionT{0.102619838050, 0.054477528511},
+                ComplexPrecisionT{0.202715827962, 0.019268690848},
+                ComplexPrecisionT{0.009985085718, 0.046864154650},
+                ComplexPrecisionT{0.095353410397, 0.178365407785},
+                ComplexPrecisionT{0.265491448756, 0.075474015573},
+                ComplexPrecisionT{0.155542525434, 0.336145304405},
+                ComplexPrecisionT{0.264473386058, 0.073102790542},
+                ComplexPrecisionT{0.275654487087, 0.027356694914},
+                ComplexPrecisionT{0.017382553849, 0.297755483640},
+                ComplexPrecisionT{0.094054909639, 0.140483782705},
+                ComplexPrecisionT{0.147937549133, 0.188379019063},
+                ComplexPrecisionT{0.120178355382, 0.059393264033},
+                ComplexPrecisionT{0.201627929216, 0.038974326513},
+                ComplexPrecisionT{0.133002468018, 0.052382480362},
+                ComplexPrecisionT{0.358372291916, 0.253192504889},
+                ComplexPrecisionT{0.226516213248, 0.192620277535},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applyCRY(st.data(), num_qubits, wires, false, angle);
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+    }
+
+    SECTION("CRY1,3") {
+        const size_t num_qubits = 4;
+
+        std::vector<ComplexPrecisionT> ini_st {
+            ComplexPrecisionT{0.058899496683, 0.031397556785},
+                ComplexPrecisionT{0.069961513798, 0.130434904124},
+                ComplexPrecisionT{0.217689437802, 0.274984586300},
+                ComplexPrecisionT{0.306390652950, 0.298990481245},
+                ComplexPrecisionT{0.209944539032, 0.220900665872},
+                ComplexPrecisionT{0.003587823096, 0.069341448987},
+                ComplexPrecisionT{0.114578641694, 0.136714993752},
+                ComplexPrecisionT{0.131460200149, 0.288466810023},
+                ComplexPrecisionT{0.153891247725, 0.128222510215},
+                ComplexPrecisionT{0.161391493466, 0.264248676428},
+                ComplexPrecisionT{0.102366240850, 0.123871730768},
+                ComplexPrecisionT{0.094155009506, 0.178235083697},
+                ComplexPrecisionT{0.137480035766, 0.038860712805},
+                ComplexPrecisionT{0.181542539134, 0.186931324992},
+                ComplexPrecisionT{0.130801257167, 0.165524479895},
+                ComplexPrecisionT{0.303475658073, 0.099907724058},
+        };
+
+        const std::vector<size_t> wires = {1, 3};
+        const ParamT angle = 0.312;
+
+        std::vector<ComplexPrecisionT> expected {
+            ComplexPrecisionT{0.058899496683, 0.031397556785},
+                ComplexPrecisionT{0.069961513798, 0.130434904124},
+                ComplexPrecisionT{0.217689437802, 0.274984586300},
+                ComplexPrecisionT{0.306390652950, 0.298990481245},
+                ComplexPrecisionT{0.206837677400, 0.207444748683},
+                ComplexPrecisionT{0.036162925095, 0.102820314015},
+                ComplexPrecisionT{0.092762561137, 0.090236295654},
+                ComplexPrecisionT{0.147665692045, 0.306204998241},
+                ComplexPrecisionT{0.153891247725, 0.128222510215},
+                ComplexPrecisionT{0.161391493466, 0.264248676428},
+                ComplexPrecisionT{0.102366240850, 0.123871730768},
+                ComplexPrecisionT{0.094155009506, 0.178235083697},
+                ComplexPrecisionT{0.107604661198, 0.009345661471},
+                ComplexPrecisionT{0.200698008554, 0.190699066265},
+                ComplexPrecisionT{0.082062476397, 0.147991992696},
+                ComplexPrecisionT{0.320112783074, 0.124411723198},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applyCRY(st.data(), num_qubits, wires, false, angle);
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+    }
+
+}
+
+PENNYLANE_RUN_TEST(CRY);
+
+template <typename PrecisionT, typename ParamT, class GateImplementation>
+void testApplyCRZ() {
+    using ComplexPrecisionT = std::complex<PrecisionT>;
+    using TestHelper::Approx;
+
+    SECTION("CRZ0,1") {
+        const size_t num_qubits = 4;
+
+        std::vector<ComplexPrecisionT> ini_st {
+            ComplexPrecisionT{0.264968228755, 0.059389110312},
+                ComplexPrecisionT{0.004927738580, 0.117198819444},
+                ComplexPrecisionT{0.192517901751, 0.061524928233},
+                ComplexPrecisionT{0.285160768924, 0.013212111581},
+                ComplexPrecisionT{0.278645646186, 0.212116779981},
+                ComplexPrecisionT{0.171786665640, 0.141260537212},
+                ComplexPrecisionT{0.199480649113, 0.218261452113},
+                ComplexPrecisionT{0.071007710848, 0.294720535623},
+                ComplexPrecisionT{0.169589173252, 0.010528306669},
+                ComplexPrecisionT{0.061973371011, 0.033143783035},
+                ComplexPrecisionT{0.177570977662, 0.116785656786},
+                ComplexPrecisionT{0.070266502325, 0.084338553411},
+                ComplexPrecisionT{0.053744021753, 0.146932844792},
+                ComplexPrecisionT{0.254428637803, 0.138916780809},
+                ComplexPrecisionT{0.260354050166, 0.267004004472},
+                ComplexPrecisionT{0.008910554792, 0.316282675508},
+        };
+
+        const std::vector<size_t> wires = {0, 1};
+        const ParamT angle = 0.312;
+
+        std::vector<ComplexPrecisionT> expected {
+            ComplexPrecisionT{0.264968228755, 0.059389110312},
+                ComplexPrecisionT{0.004927738580, 0.117198819444},
+                ComplexPrecisionT{0.192517901751, 0.061524928233},
+                ComplexPrecisionT{0.285160768924, 0.013212111581},
+                ComplexPrecisionT{0.278645646186, 0.212116779981},
+                ComplexPrecisionT{0.171786665640, 0.141260537212},
+                ComplexPrecisionT{0.199480649113, 0.218261452113},
+                ComplexPrecisionT{0.071007710848, 0.294720535623},
+                ComplexPrecisionT{0.169165556003, -0.015948278519},
+                ComplexPrecisionT{0.066370291483, 0.023112625918},
+                ComplexPrecisionT{0.193559430151, 0.087778634862},
+                ComplexPrecisionT{0.082516747253, 0.072397233118},
+                ComplexPrecisionT{0.030262722499, 0.153498691785},
+                ComplexPrecisionT{0.229755796458, 0.176759943762},
+                ComplexPrecisionT{0.215708594452, 0.304212379961},
+                ComplexPrecisionT{-0.040337866447, 0.313826361773},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applyCRZ(st.data(), num_qubits, wires, false, angle);
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+    }
+
+    SECTION("CRZ0,2") {
+        const size_t num_qubits = 4;
+
+        std::vector<ComplexPrecisionT> ini_st {
+            ComplexPrecisionT{0.148770394604, 0.083378238599},
+                ComplexPrecisionT{0.274356796683, 0.083823071640},
+                ComplexPrecisionT{0.028016616540, 0.165919229565},
+                ComplexPrecisionT{0.123329104424, 0.295826835858},
+                ComplexPrecisionT{0.222343815006, 0.093160444663},
+                ComplexPrecisionT{0.288857659956, 0.138646598905},
+                ComplexPrecisionT{0.199272938656, 0.123099916175},
+                ComplexPrecisionT{0.182062963782, 0.098622669183},
+                ComplexPrecisionT{0.270467177482, 0.282942493365},
+                ComplexPrecisionT{0.147717133688, 0.038580110182},
+                ComplexPrecisionT{0.279040367487, 0.114344708857},
+                ComplexPrecisionT{0.229917326705, 0.222777886314},
+                ComplexPrecisionT{0.047595071834, 0.026542458656},
+                ComplexPrecisionT{0.133654136834, 0.275281854777},
+                ComplexPrecisionT{0.126723771272, 0.071649311030},
+                ComplexPrecisionT{0.040467231551, 0.098358909396},
+        };
+
+        const std::vector<size_t> wires = {0, 2};
+        const ParamT angle = 0.312;
+
+        std::vector<ComplexPrecisionT> expected {
+            ComplexPrecisionT{0.148770394604, 0.083378238599},
+                ComplexPrecisionT{0.274356796683, 0.083823071640},
+                ComplexPrecisionT{0.028016616540, 0.165919229565},
+                ComplexPrecisionT{0.123329104424, 0.295826835858},
+                ComplexPrecisionT{0.222343815006, 0.093160444663},
+                ComplexPrecisionT{0.288857659956, 0.138646598905},
+                ComplexPrecisionT{0.199272938656, 0.123099916175},
+                ComplexPrecisionT{0.182062963782, 0.098622669183},
+                ComplexPrecisionT{0.311143020471, 0.237484672050},
+                ComplexPrecisionT{0.151917469671, 0.015161098089},
+                ComplexPrecisionT{0.257886371956, 0.156310134957},
+                ComplexPrecisionT{0.192512799579, 0.255794420869},
+                ComplexPrecisionT{0.051140958142, 0.018825391755},
+                ComplexPrecisionT{0.174801129192, 0.251173432304},
+                ComplexPrecisionT{0.114052908458, 0.090468071985},
+                ComplexPrecisionT{0.024693993739, 0.103451817578},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applyCRZ(st.data(), num_qubits, wires, false, angle);
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+    }
+
+    SECTION("CRZ1,3") {
+        const size_t num_qubits = 4;
+
+        std::vector<ComplexPrecisionT> ini_st {
+            ComplexPrecisionT{0.190769680625, 0.287992363388},
+                ComplexPrecisionT{0.098068639739, 0.098569855389},
+                ComplexPrecisionT{0.037728060139, 0.188330976218},
+                ComplexPrecisionT{0.091809561053, 0.200107659880},
+                ComplexPrecisionT{0.299856248683, 0.162326250675},
+                ComplexPrecisionT{0.064700651300, 0.038667789709},
+                ComplexPrecisionT{0.119630787356, 0.257575730461},
+                ComplexPrecisionT{0.061392768321, 0.055938727834},
+                ComplexPrecisionT{0.052661991695, 0.274401532393},
+                ComplexPrecisionT{0.238974614805, 0.213527036406},
+                ComplexPrecisionT{0.163750665141, 0.107235582319},
+                ComplexPrecisionT{0.260992375359, 0.008326988206},
+                ComplexPrecisionT{0.240406501616, 0.032737802983},
+                ComplexPrecisionT{0.152754313527, 0.107245249982},
+                ComplexPrecisionT{0.162638949527, 0.306372397719},
+                ComplexPrecisionT{0.231663044710, 0.107293515032},
+        };
+
+        const std::vector<size_t> wires = {1, 3};
+        const ParamT angle = 0.312;
+
+        std::vector<ComplexPrecisionT> expected {
+            ComplexPrecisionT{0.190769680625, 0.287992363388},
+                ComplexPrecisionT{0.098068639739, 0.098569855389},
+                ComplexPrecisionT{0.037728060139, 0.188330976218},
+                ComplexPrecisionT{0.091809561053, 0.200107659880},
+                ComplexPrecisionT{0.321435301661, 0.113766991605},
+                ComplexPrecisionT{0.057907230634, 0.048250646420},
+                ComplexPrecisionT{0.158197104346, 0.235861099766},
+                ComplexPrecisionT{0.051956164721, 0.064797918341},
+                ComplexPrecisionT{0.052661991695, 0.274401532393},
+                ComplexPrecisionT{0.238974614805, 0.213527036406},
+                ComplexPrecisionT{0.163750665141, 0.107235582319},
+                ComplexPrecisionT{0.260992375359, 0.008326988206},
+                ComplexPrecisionT{0.242573571004, -0.005011228787},
+                ComplexPrecisionT{0.134236881868, 0.129676071390},
+                ComplexPrecisionT{0.208264445871, 0.277383118761},
+                ComplexPrecisionT{0.212179898392, 0.141983644728},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applyCRZ(st.data(), num_qubits, wires, false, angle);
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+    }
+
+
+
+}
+PENNYLANE_RUN_TEST(CRZ);
 
 template <typename PrecisionT, typename ParamT, class GateImplementation>
 void testApplyCRot() {
@@ -751,8 +1220,60 @@ void testApplyCRot() {
 
         CHECK(isApproxEqual(st, expected_results));
     }
+
+    SECTION("CRot0,1") {
+        using TestHelper::Approx;
+        const size_t num_qubits = 4;
+
+        std::vector<ComplexPrecisionT> ini_st {
+            ComplexPrecisionT{0.234734234199, 0.088957328814},
+            ComplexPrecisionT{0.065109443398, 0.284054307559},
+            ComplexPrecisionT{0.272603451516, 0.101758170511},
+            ComplexPrecisionT{0.049922391489, 0.280849666080},
+            ComplexPrecisionT{0.012676439023, 0.283581988298},
+            ComplexPrecisionT{0.074837215146, 0.119865583718},
+            ComplexPrecisionT{0.220666349215, 0.083019197512},
+            ComplexPrecisionT{0.228645004012, 0.109144153614},
+            ComplexPrecisionT{0.186515011731, 0.009044330588},
+            ComplexPrecisionT{0.268705684298, 0.278878779206},
+            ComplexPrecisionT{0.007225255939, 0.104466710409},
+            ComplexPrecisionT{0.092186772555, 0.167323294042},
+            ComplexPrecisionT{0.198642540305, 0.317101356672},
+            ComplexPrecisionT{0.061416756317, 0.014463767792},
+            ComplexPrecisionT{0.109767506116, 0.244842265274},
+            ComplexPrecisionT{0.044108879936, 0.124327196075},
+        };
+
+        const std::vector<size_t> wires = {0, 1};
+        const ParamT phi = 0.128;
+        const ParamT theta = -0.563;
+        const ParamT omega = 1.414;
+
+        std::vector<ComplexPrecisionT> expected {
+            ComplexPrecisionT{0.234734234199, 0.088957328814},
+            ComplexPrecisionT{0.065109443398, 0.284054307559},
+            ComplexPrecisionT{0.272603451516, 0.101758170511},
+            ComplexPrecisionT{0.049922391489, 0.280849666080},
+            ComplexPrecisionT{0.012676439023, 0.283581988298},
+            ComplexPrecisionT{0.074837215146, 0.119865583718},
+            ComplexPrecisionT{0.220666349215, 0.083019197512},
+            ComplexPrecisionT{0.228645004012, 0.109144153614},
+            ComplexPrecisionT{0.231541411002, -0.081215269214},
+            ComplexPrecisionT{0.387885772871, 0.005250582985},
+            ComplexPrecisionT{0.140096879751, 0.103289147066},
+            ComplexPrecisionT{0.206040689190, 0.073864544104},
+            ComplexPrecisionT{-0.115373527531, 0.318376165756},
+            ComplexPrecisionT{0.019345803102, -0.055678858513},
+            ComplexPrecisionT{-0.072480957773, 0.217744954736},
+            ComplexPrecisionT{-0.045461901445, 0.062632338099},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applyCRot(st.data(), num_qubits, wires, false, phi, theta, omega);
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+    }
 }
-PENNYLANE_RUN_TEST(CRot)
+PENNYLANE_RUN_TEST(CRot);
 
 /*******************************************************************************
  * Multi-qubit gates
@@ -916,4 +1437,4 @@ void testApplyMultiRZ() {
         REQUIRE_THAT(st, Approx(expected).margin(1e-7));
     }
 }
-PENNYLANE_RUN_TEST(MultiRZ)
+PENNYLANE_RUN_TEST(MultiRZ);

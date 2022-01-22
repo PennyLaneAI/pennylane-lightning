@@ -31,7 +31,11 @@ using std::vector;
     template <typename PrecisionT, class GateImplementation,                   \
               typename U = void>                                               \
     struct TestApply##GATE_NAME##IfDefined {                                   \
-        static void run() {}                                                   \
+        static void run() {\
+            INFO( "Member function apply" #GATE_NAME " is not defined for kernel " << \
+                    GateImplementation::name);\
+            REQUIRE(true);\
+        }                                                   \
     };                                                                         \
     template <typename PrecisionT, class GateImplementation>                   \
     struct TestApply##GATE_NAME##IfDefined<                                    \
@@ -39,6 +43,8 @@ using std::vector;
         std::enable_if_t<std::is_pointer_v<decltype(                           \
             &GateImplementation::template apply##GATE_NAME<PrecisionT>)>>> {   \
         static void run() {                                                    \
+            INFO( "Test apply" #GATE_NAME " in kernel " << \
+                    GateImplementation::name);\
             testApply##GATE_NAME<PrecisionT, GateImplementation>();            \
         }                                                                      \
     };                                                                         \
@@ -217,86 +223,6 @@ template <typename PrecisionT, class GateImplementation> void testApplyCNOT() {
 PENNYLANE_RUN_TEST(CNOT)
 
 // NOLINTNEXTLINE: Avoiding complexity errors
-template <typename PrecisionT, class GateImplementation> void testApplySWAP() {
-    using ComplexPrecisionT = std::complex<PrecisionT>;
-    const size_t num_qubits = 3;
-    auto ini_st = create_zero_state<PrecisionT>(num_qubits);
-
-    // Test using |+10> state
-    GateImplementation::applyHadamard(ini_st.data(), num_qubits, {0}, false);
-    GateImplementation::applyPauliX(ini_st.data(), num_qubits, {1}, false);
-
-    CHECK(ini_st == std::vector<ComplexPrecisionT>{
-                        Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
-                        Util::INVSQRT2<PrecisionT>(), Util::ZERO<PrecisionT>(),
-                        Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
-                        Util::INVSQRT2<PrecisionT>(),
-                        Util::ZERO<PrecisionT>()});
-
-    SECTION("SWAP0,1 |+10> -> |1+0>") {
-        std::vector<ComplexPrecisionT> expected{
-            Util::ZERO<PrecisionT>(),
-            Util::ZERO<PrecisionT>(),
-            Util::ZERO<PrecisionT>(),
-            Util::ZERO<PrecisionT>(),
-            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-            Util::ZERO<PrecisionT>(),
-            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-            Util::ZERO<PrecisionT>()};
-        auto sv01 = ini_st;
-        auto sv10 = ini_st;
-
-        GateImplementation::applySWAP(sv01.data(), num_qubits, {0, 1}, false);
-        GateImplementation::applySWAP(sv10.data(), num_qubits, {1, 0}, false);
-
-        CHECK(sv01 == expected);
-        CHECK(sv10 == expected);
-    }
-
-    SECTION("SWAP0,2 |+10> -> |01+>") {
-        std::vector<ComplexPrecisionT> expected{
-            Util::ZERO<PrecisionT>(),
-            Util::ZERO<PrecisionT>(),
-            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-            Util::ZERO<PrecisionT>(),
-            Util::ZERO<PrecisionT>(),
-            Util::ZERO<PrecisionT>(),
-            Util::ZERO<PrecisionT>()};
-
-        auto sv02 = ini_st;
-        auto sv20 = ini_st;
-
-        GateImplementation::applySWAP(sv02.data(), num_qubits, {0, 2}, false);
-        GateImplementation::applySWAP(sv20.data(), num_qubits, {2, 0}, false);
-
-        CHECK(sv02 == expected);
-        CHECK(sv20 == expected);
-    }
-    SECTION("SWAP1,2 |+10> -> |+01>") {
-        std::vector<ComplexPrecisionT> expected{
-            Util::ZERO<PrecisionT>(),
-            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-            Util::ZERO<PrecisionT>(),
-            Util::ZERO<PrecisionT>(),
-            Util::ZERO<PrecisionT>(),
-            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-            Util::ZERO<PrecisionT>(),
-            Util::ZERO<PrecisionT>()};
-
-        auto sv12 = ini_st;
-        auto sv21 = ini_st;
-
-        GateImplementation::applySWAP(sv12.data(), num_qubits, {1, 2}, false);
-        GateImplementation::applySWAP(sv21.data(), num_qubits, {2, 1}, false);
-
-        CHECK(sv12 == expected);
-        CHECK(sv21 == expected);
-    }
-}
-PENNYLANE_RUN_TEST(SWAP)
-
-// NOLINTNEXTLINE: Avoiding complexity errors
 template <typename PrecisionT, class GateImplementation> void testApplyCY() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     const size_t num_qubits = 3;
@@ -432,6 +358,86 @@ template <typename PrecisionT, class GateImplementation> void testApplyCZ() {
     }
 }
 PENNYLANE_RUN_TEST(CZ)
+
+// NOLINTNEXTLINE: Avoiding complexity errors
+template <typename PrecisionT, class GateImplementation> void testApplySWAP() {
+    using ComplexPrecisionT = std::complex<PrecisionT>;
+    const size_t num_qubits = 3;
+    auto ini_st = create_zero_state<PrecisionT>(num_qubits);
+
+    // Test using |+10> state
+    GateImplementation::applyHadamard(ini_st.data(), num_qubits, {0}, false);
+    GateImplementation::applyPauliX(ini_st.data(), num_qubits, {1}, false);
+
+    CHECK(ini_st == std::vector<ComplexPrecisionT>{
+                        Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
+                        Util::INVSQRT2<PrecisionT>(), Util::ZERO<PrecisionT>(),
+                        Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
+                        Util::INVSQRT2<PrecisionT>(),
+                        Util::ZERO<PrecisionT>()});
+
+    SECTION("SWAP0,1 |+10> -> |1+0>") {
+        std::vector<ComplexPrecisionT> expected{
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+            Util::ZERO<PrecisionT>()};
+        auto sv01 = ini_st;
+        auto sv10 = ini_st;
+
+        GateImplementation::applySWAP(sv01.data(), num_qubits, {0, 1}, false);
+        GateImplementation::applySWAP(sv10.data(), num_qubits, {1, 0}, false);
+
+        CHECK(sv01 == expected);
+        CHECK(sv10 == expected);
+    }
+
+    SECTION("SWAP0,2 |+10> -> |01+>") {
+        std::vector<ComplexPrecisionT> expected{
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>()};
+
+        auto sv02 = ini_st;
+        auto sv20 = ini_st;
+
+        GateImplementation::applySWAP(sv02.data(), num_qubits, {0, 2}, false);
+        GateImplementation::applySWAP(sv20.data(), num_qubits, {2, 0}, false);
+
+        CHECK(sv02 == expected);
+        CHECK(sv20 == expected);
+    }
+    SECTION("SWAP1,2 |+10> -> |+01>") {
+        std::vector<ComplexPrecisionT> expected{
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+            Util::ZERO<PrecisionT>(),
+            Util::ZERO<PrecisionT>()};
+
+        auto sv12 = ini_st;
+        auto sv21 = ini_st;
+
+        GateImplementation::applySWAP(sv12.data(), num_qubits, {1, 2}, false);
+        GateImplementation::applySWAP(sv21.data(), num_qubits, {2, 1}, false);
+
+        CHECK(sv12 == expected);
+        CHECK(sv21 == expected);
+    }
+}
+PENNYLANE_RUN_TEST(SWAP)
 
 /*******************************************************************************
  * Three-qubit gates

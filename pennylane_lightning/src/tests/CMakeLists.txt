@@ -56,6 +56,7 @@ target_link_libraries(compile_time_tests lightning_simulator lightning_utils)
 set(TEST_SOURCES Test_AdjDiff.cpp
 #                 Test_Bindings.cpp
                  Test_DynamicDispatcher.cpp
+                 Test_GateImplementations_Inverse.cpp
                  Test_GateImplementations_Nonparam.cpp
                  Test_GateImplementations_Param.cpp
                  Test_IndicesUtil.cpp
