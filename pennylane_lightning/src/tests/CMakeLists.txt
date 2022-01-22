@@ -59,6 +59,7 @@ set(TEST_SOURCES Test_AdjDiff.cpp
                  Test_GateImplementations_Nonparam.cpp
                  Test_GateImplementations_Param.cpp
                  Test_IndicesUtil.cpp
+                 Test_Internal.cpp
                  Test_Measures.cpp
                  Test_OpToMemberFuncPtr.cpp
 #                 Test_StateVectorManaged.cpp

@@ -6,6 +6,8 @@
 #include <vector>
 
 #include "GateOperation.hpp"
+#include "Error.hpp"
+#include "Util.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -130,19 +132,19 @@ void scaleVector(std::vector<std::complex<Data_t>> &data,
 /**
  * @brief create |0>^N
  */
-template <typename fp_t>
-auto create_zero_state(size_t num_qubits) -> std::vector<std::complex<fp_t>> {
-    std::vector<std::complex<fp_t>> res(1U << num_qubits, {0.0, 0.0});
-    res[0] = std::complex<fp_t>{1.0, 0.0};
+template <typename PrecisionT>
+auto create_zero_state(size_t num_qubits) -> std::vector<std::complex<PrecisionT>> {
+    std::vector<std::complex<PrecisionT>> res(1U << num_qubits, {0.0, 0.0});
+    res[0] = std::complex<PrecisionT>{1.0, 0.0};
     return res;
 }
 
 /**
  * @brief create |+>^N
  */
-template <typename fp_t>
-auto create_plus_state(size_t num_qubits) -> std::vector<std::complex<fp_t>> {
-    std::vector<std::complex<fp_t>> res(1U << num_qubits, {1.0, 0.0});
+template <typename PrecisionT>
+auto create_plus_state(size_t num_qubits) -> std::vector<std::complex<PrecisionT>> {
+    std::vector<std::complex<PrecisionT>> res(1U << num_qubits, {1.0, 0.0});
     for (auto &elt : res) {
         elt /= std::sqrt(1U << num_qubits);
     }
@@ -152,19 +154,63 @@ auto create_plus_state(size_t num_qubits) -> std::vector<std::complex<fp_t>> {
 /**
  * @brief create a random state
  */
-template <typename fp_t, class RandomEngine>
+template <typename PrecisionT, class RandomEngine>
 auto create_random_state(RandomEngine &re, size_t num_qubits)
-    -> std::vector<std::complex<fp_t>> {
-    std::vector<std::complex<fp_t>> res(1U << num_qubits, {0.0, 0.0});
-    std::uniform_real_distribution<fp_t> dist;
+    -> std::vector<std::complex<PrecisionT>> {
+    std::vector<std::complex<PrecisionT>> res(1U << num_qubits, {0.0, 0.0});
+    std::uniform_real_distribution<PrecisionT> dist;
     for (size_t idx = 0; idx < (1U << num_qubits); idx++) {
         res[idx] = {dist(re), dist(re)};
     }
 
-    fp_t squared_norm = std::transform_reduce(
-        std::cbegin(res), std::cend(res), fp_t{}, std::plus<fp_t>(),
-        static_cast<fp_t (*)(const std::complex<fp_t> &)>(&std::norm<fp_t>));
+    PrecisionT squared_norm = std::transform_reduce(
+        std::cbegin(res), std::cend(res), PrecisionT{}, std::plus<PrecisionT>(),
+        static_cast<PrecisionT (*)(const std::complex<PrecisionT> &)>(&std::norm<PrecisionT>));
 
-    scaleVector(res, std::complex<fp_t>{1.0, 0.0} / std::sqrt(squared_norm));
+    scaleVector(res, std::complex<PrecisionT>{1.0, 0.0} / std::sqrt(squared_norm));
     return res;
+}
+
+/**
+ * @brief Create an arbitrary product state in X- or Z-basis.
+ *
+ * Example: create_product_state("+01") will produce |+01> state.
+ */
+template <typename PrecisionT>
+auto create_product_state(std::string_view str) {
+    using Pennylane::Util::INVSQRT2;
+    std::vector<std::complex<PrecisionT>> st;
+    st.resize(1U << str.length());
+
+    std::vector<PrecisionT> zero{1.0, 0.0};
+    std::vector<PrecisionT> one{0.0, 1.0};
+
+    std::vector<PrecisionT> plus{INVSQRT2<PrecisionT>(), INVSQRT2<PrecisionT>()};
+    std::vector<PrecisionT> minus{INVSQRT2<PrecisionT>(), -INVSQRT2<PrecisionT>()};
+
+    for(size_t k = 0; k < (1U << str.length()); k++) {
+        PrecisionT elt = 1.0;
+        for(size_t n = 0; n < str.length(); n++) {
+            char c = str[n];
+            const size_t wire = str.length() - 1 - n;
+            switch(c) {
+            case '0':
+                elt *= zero[(k >> wire) & 1U];
+                break;
+            case '1':
+                elt *= one[(k >> wire) & 1U];
+                break;
+            case '+':
+                elt *= plus[(k >> wire) & 1U];
+                break;
+            case '-':
+                elt *= minus[(k >> wire) & 1U];
+                break;
+            default:
+                PL_ABORT("Unknown character in the argument.");
+            }
+        }
+        st[k] = elt;
+    }
+    return st;
 }
