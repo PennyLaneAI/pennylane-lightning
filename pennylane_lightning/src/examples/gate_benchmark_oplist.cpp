@@ -7,8 +7,8 @@
 #include <stdexcept>
 #include <string>
 
-#include "StateVectorManaged.hpp"
 #include "Constant.hpp"
+#include "StateVectorManaged.hpp"
 
 using namespace Pennylane;
 
@@ -27,15 +27,16 @@ std::vector<std::pair<std::string, GateDesc>>
 parseGateLists(std::string_view arg) {
     std::map<std::string, GateDesc> available_gates_wires;
 
-    for (const auto &[gate_op, gate_name]: Constant::gate_names) {
+    for (const auto &[gate_op, gate_name] : Constant::gate_names) {
         if (!array_has_elt(Constant::multi_qubit_gates, gate_op)) {
             // We do not support multi qubit gates yet
             size_t n_wires = Util::lookup(Constant::gate_wires, gate_op);
             size_t n_params = Util::lookup(Constant::gate_num_params, gate_op);
-            available_gates_wires.emplace(gate_name, GateDesc{n_wires, n_params});
+            available_gates_wires.emplace(gate_name,
+                                          GateDesc{n_wires, n_params});
         }
     }
-    
+
     if (arg.empty()) {
         /*
         return std::vector<std::pair<std::string_view, GateDesc>>(

@@ -101,8 +101,9 @@ struct SelectGateOpsHelper {
 };
 template <class PrecisionT, KernelType kernel>
 struct SelectGateOpsHelper<PrecisionT, kernel, void> {
-    static_assert(Util::array_has_elt(Util::first_elts_of(kernelIdNamePairs), kernel),
-            "The given kernel is not in the list of available kernels.");
+    static_assert(Util::array_has_elt(Util::first_elts_of(kernelIdNamePairs),
+                                      kernel),
+                  "The given kernel is not in the list of available kernels.");
     using Type = void;
 };
 } // namespace Internal
@@ -174,8 +175,8 @@ inline auto implementedGatesForKernel(KernelType kernel)
  *
  * TODO: Change to constexpr function in C++20
  */
-inline auto implementedGeneratorsForKernel(KernelType kernel) 
-    -> std::vector<GeneratorOperation>{
+inline auto implementedGeneratorsForKernel(KernelType kernel)
+    -> std::vector<GeneratorOperation> {
     return Internal::ValueForKernelHelper<AvailableKernels, GeneratorOperation,
                                           Internal::ImplementedGenerators>(
         kernel);

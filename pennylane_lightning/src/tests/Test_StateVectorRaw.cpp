@@ -20,7 +20,7 @@ TEMPLATE_TEST_CASE("StateVectorRaw::StateVectorRaw", "[StateVectorRaw]", float,
 
     SECTION("StateVectorRaw<TestType> {std::complex<TestType>*, size_t}") {
         const size_t num_qubits = 4;
-        auto st_data = create_random_state<fp_t>(re, num_qubits);
+        auto st_data = createRandomState<fp_t>(re, num_qubits);
         StateVectorRaw<fp_t> sv(st_data.data(), st_data.size());
 
         REQUIRE(sv.getNumQubits() == 4);
@@ -37,10 +37,10 @@ TEMPLATE_TEST_CASE("StateVectorRaw::setData", "[StateVectorRaw]", float,
                    double) {
     using fp_t = TestType;
 
-    auto st_data = create_random_state<fp_t>(re, 4);
+    auto st_data = createRandomState<fp_t>(re, 4);
     StateVectorRaw<fp_t> sv(st_data.data(), st_data.size());
 
-    auto st_data2 = create_random_state<fp_t>(re, 8);
+    auto st_data2 = createRandomState<fp_t>(re, 8);
     sv.setData(st_data2.data(), st_data2.size());
 
     REQUIRE(sv.getNumQubits() == 8);
@@ -64,7 +64,7 @@ TEMPLATE_TEST_CASE("StateVectorRaw::setData", "[StateVectorRaw]", float,
             void>                                                              \
         test() {                                                               \
             const size_t num_qubits = 4;                                       \
-            auto ini_st = create_random_state<fp_t>(re, num_qubits);           \
+            auto ini_st = createRandomState<fp_t>(re, num_qubits);             \
             auto num_wires = lookup(Constant::gate_wires, op);                 \
             std::vector<size_t> wires;                                         \
             wires.resize(num_wires);                                           \
@@ -94,7 +94,7 @@ TEMPLATE_TEST_CASE("StateVectorRaw::setData", "[StateVectorRaw]", float,
             void>                                                              \
         test() {                                                               \
             const size_t num_qubits = 4;                                       \
-            auto ini_st = create_random_state<fp_t>(re, num_qubits);           \
+            auto ini_st = createRandomState<fp_t>(re, num_qubits);             \
             auto num_wires = lookup(Constant::gate_wires, op);                 \
             std::vector<size_t> wires;                                         \
             wires.resize(num_wires);                                           \
@@ -124,7 +124,7 @@ TEMPLATE_TEST_CASE("StateVectorRaw::setData", "[StateVectorRaw]", float,
             void>                                                              \
         test() {                                                               \
             const size_t num_qubits = 4;                                       \
-            auto ini_st = create_random_state<fp_t>(re, num_qubits);           \
+            auto ini_st = createRandomState<fp_t>(re, num_qubits);             \
             auto num_wires = lookup(Constant::gate_wires, op);                 \
             std::vector<size_t> wires;                                         \
             wires.resize(num_wires);                                           \

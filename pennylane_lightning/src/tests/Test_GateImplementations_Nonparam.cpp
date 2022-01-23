@@ -31,11 +31,12 @@ using std::vector;
     template <typename PrecisionT, class GateImplementation,                   \
               typename U = void>                                               \
     struct TestApply##GATE_NAME##IfDefined {                                   \
-        static void run() {\
-            INFO( "Member function apply" #GATE_NAME " is not defined for kernel " << \
-                    GateImplementation::name);\
-            REQUIRE(true);\
-        }                                                   \
+        static void run() {                                                    \
+            INFO("Member function apply" #GATE_NAME                            \
+                 " is not defined for kernel "                                 \
+                 << GateImplementation::name);                                 \
+            REQUIRE(true);                                                     \
+        }                                                                      \
     };                                                                         \
     template <typename PrecisionT, class GateImplementation>                   \
     struct TestApply##GATE_NAME##IfDefined<                                    \
@@ -43,8 +44,8 @@ using std::vector;
         std::enable_if_t<std::is_pointer_v<decltype(                           \
             &GateImplementation::template apply##GATE_NAME<PrecisionT>)>>> {   \
         static void run() {                                                    \
-            INFO( "Test apply" #GATE_NAME " in kernel " << \
-                    GateImplementation::name);\
+            INFO("Test apply" #GATE_NAME " in kernel "                         \
+                 << GateImplementation::name);                                 \
             testApply##GATE_NAME<PrecisionT, GateImplementation>();            \
         }                                                                      \
     };                                                                         \
@@ -74,7 +75,7 @@ template <typename PrecisionT, class GateImplementation>
 void testApplyPauliX() {
     const size_t num_qubits = 3;
     for (size_t index = 0; index < num_qubits; index++) {
-        auto st = create_zero_state<PrecisionT>(num_qubits);
+        auto st = createZeroState<PrecisionT>(num_qubits);
         CHECK(st[0] == Util::ONE<PrecisionT>());
 
         GateImplementation::applyPauliX(st.data(), num_qubits, {index}, false);
@@ -101,7 +102,7 @@ void testApplyPauliY() {
         {m, p, m, p, m, p, m, p}};
 
     for (size_t index = 0; index < num_qubits; index++) {
-        auto st = create_plus_state<PrecisionT>(num_qubits);
+        auto st = createPlusState<PrecisionT>(num_qubits);
 
         GateImplementation::applyPauliY(st.data(), num_qubits, {index}, false);
 
@@ -125,7 +126,7 @@ void testApplyPauliZ() {
         {p, m, p, m, p, m, p, m}};
 
     for (size_t index = 0; index < num_qubits; index++) {
-        auto st = create_plus_state<PrecisionT>(num_qubits);
+        auto st = createPlusState<PrecisionT>(num_qubits);
         GateImplementation::applyPauliZ(st.data(), num_qubits, {index}, false);
 
         CHECK(isApproxEqual(st, expected_results[index]));
@@ -138,7 +139,7 @@ void testApplyHadamard() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     const size_t num_qubits = 3;
     for (size_t index = 0; index < num_qubits; index++) {
-        auto st = create_zero_state<PrecisionT>(num_qubits);
+        auto st = createZeroState<PrecisionT>(num_qubits);
 
         CHECK(st[0] == ComplexPrecisionT{1, 0});
         GateImplementation::applyHadamard(st.data(), num_qubits, {index},
@@ -170,7 +171,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyS() {
         {r, i, r, i, r, i, r, i}};
 
     for (size_t index = 0; index < num_qubits; index++) {
-        auto st = create_plus_state<PrecisionT>(num_qubits);
+        auto st = createPlusState<PrecisionT>(num_qubits);
 
         GateImplementation::applyS(st.data(), num_qubits, {index}, false);
 
@@ -193,7 +194,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyT() {
         {r, i, r, i, r, i, r, i}};
 
     for (size_t index = 0; index < num_qubits; index++) {
-        auto st = create_plus_state<PrecisionT>(num_qubits);
+        auto st = createPlusState<PrecisionT>(num_qubits);
 
         GateImplementation::applyT(st.data(), num_qubits, {index}, false);
 
@@ -208,7 +209,7 @@ PENNYLANE_RUN_TEST(T)
 template <typename PrecisionT, class GateImplementation> void testApplyCNOT() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     const size_t num_qubits = 3;
-    auto st = create_zero_state<PrecisionT>(num_qubits);
+    auto st = createZeroState<PrecisionT>(num_qubits);
 
     // Test using |+00> state to generate 3-qubit GHZ state
     GateImplementation::applyHadamard(st.data(), num_qubits, {0}, false);
@@ -226,7 +227,7 @@ PENNYLANE_RUN_TEST(CNOT)
 template <typename PrecisionT, class GateImplementation> void testApplyCY() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     const size_t num_qubits = 3;
-    auto ini_st = create_zero_state<PrecisionT>(num_qubits);
+    auto ini_st = createZeroState<PrecisionT>(num_qubits);
 
     // Test using |+10> state
     GateImplementation::applyHadamard(ini_st.data(), num_qubits, {0}, false);
@@ -296,7 +297,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyCZ() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     const size_t num_qubits = 3;
 
-    auto ini_st = create_zero_state<PrecisionT>(num_qubits);
+    auto ini_st = createZeroState<PrecisionT>(num_qubits);
 
     // Test using |+10> state
     GateImplementation::applyHadamard(ini_st.data(), num_qubits, {0}, false);
@@ -363,7 +364,7 @@ PENNYLANE_RUN_TEST(CZ)
 template <typename PrecisionT, class GateImplementation> void testApplySWAP() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     const size_t num_qubits = 3;
-    auto ini_st = create_zero_state<PrecisionT>(num_qubits);
+    auto ini_st = createZeroState<PrecisionT>(num_qubits);
 
     // Test using |+10> state
     GateImplementation::applyHadamard(ini_st.data(), num_qubits, {0}, false);
@@ -446,7 +447,7 @@ template <typename PrecisionT, class GateImplementation>
 void testApplyToffoli() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     const size_t num_qubits = 3;
-    auto ini_st = create_zero_state<PrecisionT>(num_qubits);
+    auto ini_st = createZeroState<PrecisionT>(num_qubits);
 
     // Test using |+10> state
     GateImplementation::applyHadamard(ini_st.data(), num_qubits, {0}, false);
@@ -516,7 +517,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyCSWAP() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     const size_t num_qubits = 3;
 
-    auto ini_st = create_zero_state<PrecisionT>(num_qubits);
+    auto ini_st = createZeroState<PrecisionT>(num_qubits);
 
     // Test using |+10> state
     GateImplementation::applyHadamard(ini_st.data(), num_qubits, {0}, false);
