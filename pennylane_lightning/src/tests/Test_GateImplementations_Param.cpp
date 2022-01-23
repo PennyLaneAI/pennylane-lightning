@@ -1,7 +1,5 @@
-#include "AvailableKernels.hpp"
-#include "Gates.hpp"
 #include "TestHelpers.hpp"
-#include "TestMacros.hpp"
+#include "TestKernels.hpp"
 #include "Util.hpp"
 
 #include <catch2/catch.hpp>
@@ -26,47 +24,45 @@ using namespace Pennylane;
 #define PENNYLANE_RUN_TEST(GATE_NAME)                                          \
     template <typename PrecisionT, typename ParamT, class GateImplementation,  \
               typename U = void>                                               \
-    struct TestApply##GATE_NAME##IfDefined {                                   \
-        static void run() {                                                    \
-            INFO("Member function apply" #GATE_NAME                            \
-                 " is not defined for kernel "                                 \
-                 << GateImplementation::name);                                 \
-            REQUIRE(true);                                                     \
-        }                                                                      \
+    struct Apply##GATE_NAME##IsDefined {                                       \
+        constexpr static bool value = false;                                   \
     };                                                                         \
     template <typename PrecisionT, typename ParamT, class GateImplementation>  \
-    struct TestApply##GATE_NAME##IfDefined<                                    \
+    struct Apply##GATE_NAME##IsDefined<                                        \
         PrecisionT, ParamT, GateImplementation,                                \
         std::enable_if_t<std::is_pointer_v<decltype(                           \
             &GateImplementation::template apply##GATE_NAME<PrecisionT,         \
                                                            ParamT>)>>> {       \
-        static void run() {                                                    \
-            INFO("Test apply" #GATE_NAME " in kernel "                         \
-                 << GateImplementation::name);                                 \
-            testApply##GATE_NAME<PrecisionT, ParamT, GateImplementation>();    \
-        }                                                                      \
+        constexpr static bool value = true;                                    \
     };                                                                         \
     template <typename PrecisionT, typename ParamT, typename TypeList>         \
     struct TestApply##GATE_NAME##ForKernels {                                  \
         static void run() {                                                    \
-            TestApply##GATE_NAME##IfDefined<PrecisionT, ParamT,                \
-                                            typename TypeList::Type>::run();   \
-            TestApply##GATE_NAME##ForKernels<PrecisionT, ParamT,               \
-                                             typename TypeList::Next>::run();  \
+            if constexpr (!std::is_same_v<TypeList, void>) {                   \
+                using GateImplementation = typename TypeList::Type;            \
+                if constexpr (Apply##GATE_NAME##IsDefined<                     \
+                                  PrecisionT, ParamT,                          \
+                                  GateImplementation>::value) {                \
+                    testApply##GATE_NAME<PrecisionT, ParamT,                   \
+                                         GateImplementation>();                \
+                } else {                                                       \
+                    WARN("Member function apply" #GATE_NAME                    \
+                         " is not defined for kernel "                         \
+                         << GateImplementation::name);                         \
+                }                                                              \
+                TestApply##GATE_NAME##ForKernels<                              \
+                    PrecisionT, ParamT, typename TypeList::Next>::run();       \
+            }                                                                  \
         }                                                                      \
-    };                                                                         \
-    template <typename PrecisionT, typename ParamT>                            \
-    struct TestApply##GATE_NAME##ForKernels<PrecisionT, ParamT, void> {        \
-        static void run() {}                                                   \
     };                                                                         \
     TEMPLATE_TEST_CASE("GateImplementation::apply" #GATE_NAME,                 \
                        "[GateImplementations_Param]", float, double) {         \
         using PrecisionT = TestType;                                           \
         using ParamT = TestType;                                               \
         TestApply##GATE_NAME##ForKernels<PrecisionT, ParamT,                   \
-                                         AvailableKernels>::run();             \
+                                         TestKernels>::run();                  \
     }                                                                          \
-    static_assert(true) // Require semicolon
+    static_assert(true, "Require semicolon")
 
 /*******************************************************************************
  * Single-qubit gates
@@ -173,22 +169,13 @@ void testApplyRY() {
 
     const std::vector<ComplexPrecisionT> init_state{
         {0.8775825618903728, 0.0}, {0.0, -0.47942553860420306}};
-    SECTION("adj = false") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", RY - " << PrecisionToName<PrecisionT>::value) {
         for (size_t index = 0; index < angles.size(); index++) {
             auto st = init_state;
             GateImplementation::applyRY(st.data(), num_qubits, {0}, false,
                                         {angles[index]});
             CHECK(isApproxEqual(st, expected_results[index], 1e-5));
-        }
-    }
-    SECTION("adj = true") {
-        for (size_t index = 0; index < angles.size(); index++) {
-            auto st = init_state;
-
-            GateImplementation::applyRY(st.data(), num_qubits, {0}, true,
-                                        {angles[index]});
-
-            CHECK(isApproxEqual(st, expected_results_adj[index], 1e-5));
         }
     }
 }
@@ -285,7 +272,9 @@ void testApplyIsingXX() {
     using std::sin;
     using TestHelper::Approx;
 
-    SECTION("IsingXX0,1 |000> -> a|000> + b|110>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", IsingXX0,1 |000> -> a|000> + b|110> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 3;
         const auto ini_st = createZeroState<PrecisionT>(num_qubits);
         ParamT angle = 0.312;
@@ -306,7 +295,9 @@ void testApplyIsingXX() {
                                          angle);
         REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
-    SECTION("IsingXX0,1 |100> -> a|100> + b|010>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", IsingXX0,1 |100> -> a|100> + b|010> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 3;
         const auto ini_st = createProductState<PrecisionT>("100");
         ParamT angle = 0.312;
@@ -327,7 +318,9 @@ void testApplyIsingXX() {
                                          angle);
         REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
-    SECTION("IsingXX0,1 |010> -> a|010> + b|100>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", IsingXX0,1 |010> -> a|010> + b|100> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 3;
         const auto ini_st = createProductState<PrecisionT>("010");
         ParamT angle = 0.312;
@@ -348,7 +341,9 @@ void testApplyIsingXX() {
                                          angle);
         REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
-    SECTION("IsingXX0,1 |110> -> a|110> + b|000>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", IsingXX0,1 |110> -> a|110> + b|000> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 3;
         const auto ini_st = createProductState<PrecisionT>("110");
         ParamT angle = 0.312;
@@ -369,7 +364,9 @@ void testApplyIsingXX() {
                                          angle);
         REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
-    SECTION("IsingXX0,2") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", IsingXX0,2 - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 3;
         std::vector<ComplexPrecisionT> ini_st{
             ComplexPrecisionT{0.125681356503, 0.252712197380},
@@ -409,7 +406,9 @@ void testApplyIsingYY() {
     using std::sin;
     using TestHelper::Approx;
 
-    SECTION("IsingYY0,1 |000> -> a|000> + b|110>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", IsingYY0,1 |000> -> a|000> + b|110> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 3;
         const auto ini_st = createZeroState<PrecisionT>(num_qubits);
         ParamT angle = 0.312;
@@ -430,7 +429,9 @@ void testApplyIsingYY() {
                                          angle);
         REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
-    SECTION("IsingYY0,1 |100> -> a|100> + b|010>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", IsingYY0,1 |100> -> a|100> + b|010> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 3;
         const auto ini_st = createProductState<PrecisionT>("100");
         ParamT angle = 0.312;
@@ -451,7 +452,9 @@ void testApplyIsingYY() {
                                          angle);
         REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
-    SECTION("IsingYY0,1 |010> -> a|010> + b|100>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", IsingYY0,1 |010> -> a|010> + b|100> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 3;
         const auto ini_st = createProductState<PrecisionT>("010");
         ParamT angle = 0.312;
@@ -472,7 +475,9 @@ void testApplyIsingYY() {
                                          angle);
         REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
-    SECTION("IsingYY0,1 |110> -> a|110> + b|000>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", IsingYY0,1 |110> -> a|110> + b|000> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 3;
         const auto ini_st = createProductState<PrecisionT>("110");
         ParamT angle = 0.312;
@@ -493,7 +498,9 @@ void testApplyIsingYY() {
                                          angle);
         REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
-    SECTION("IsingYY0,1") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", IsingYY0,1 - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 4;
 
         std::vector<ComplexPrecisionT> ini_st{
@@ -552,7 +559,9 @@ void testApplyIsingZZ() {
     using std::sin;
     using TestHelper::Approx;
 
-    SECTION("IsingZZ0,1 |000> -> |000>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", IsingZZ0,1 |000> -> |000> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 3;
         const auto ini_st = createZeroState<PrecisionT>(num_qubits);
         ParamT angle = 0.312;
@@ -573,7 +582,9 @@ void testApplyIsingZZ() {
                                          angle);
         REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
-    SECTION("IsingZZ0,1 |100> -> |100>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", IsingZZ0,1 |100> -> |100> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 3;
         const auto ini_st = createProductState<PrecisionT>("100");
         ParamT angle = 0.312;
@@ -595,7 +606,9 @@ void testApplyIsingZZ() {
         REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
 
-    SECTION("IsingZZ0,1 |010> -> |010>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", IsingZZ0,1 |010> -> |010> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 3;
         const auto ini_st = createProductState<PrecisionT>("010");
         ParamT angle = 0.312;
@@ -617,7 +630,9 @@ void testApplyIsingZZ() {
         REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
 
-    SECTION("IsingZZ0,1 |110> -> |110>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", IsingZZ0,1 |110> -> |110> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 3;
         const auto ini_st = createProductState<PrecisionT>("110");
         ParamT angle = 0.312;
@@ -638,7 +653,9 @@ void testApplyIsingZZ() {
                                          angle);
         REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
-    SECTION("IsingZZ0,1") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", IsingZZ0,1 - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 4;
 
         std::vector<ComplexPrecisionT> ini_st{
@@ -731,7 +748,8 @@ template <typename PrecisionT, typename ParamT, class GateImplementation>
 void testApplyCRX() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     using TestHelper::Approx;
-    SECTION("CRX0,1") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CRX0,1 - " << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 4;
 
         std::vector<ComplexPrecisionT> ini_st{
@@ -780,7 +798,8 @@ void testApplyCRX() {
                                      angle);
         REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
-    SECTION("CRX0,2") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CRX0,2 - " << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 4;
 
         std::vector<ComplexPrecisionT> ini_st{
@@ -829,7 +848,8 @@ void testApplyCRX() {
                                      angle);
         REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
-    SECTION("CRX1,3") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CRX1,3 - " << PrecisionToName<PrecisionT>::value) {
 
         const size_t num_qubits = 4;
 
@@ -887,7 +907,8 @@ void testApplyCRY() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     using TestHelper::Approx;
 
-    SECTION("CRY0,1") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CRY0,1 - " << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 4;
 
         std::vector<ComplexPrecisionT> ini_st{
@@ -937,7 +958,8 @@ void testApplyCRY() {
         REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 
-    SECTION("CRY0,2") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CRY0,2 - " << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 4;
 
         std::vector<ComplexPrecisionT> ini_st{
@@ -987,7 +1009,8 @@ void testApplyCRY() {
         REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 
-    SECTION("CRY1,3") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CRY1,3 - " << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 4;
 
         std::vector<ComplexPrecisionT> ini_st{
@@ -1045,7 +1068,8 @@ void testApplyCRZ() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     using TestHelper::Approx;
 
-    SECTION("CRZ0,1") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CRZ0,1 - " << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 4;
 
         std::vector<ComplexPrecisionT> ini_st{
@@ -1095,7 +1119,8 @@ void testApplyCRZ() {
         REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 
-    SECTION("CRZ0,2") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CRZ0,2 - " << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 4;
 
         std::vector<ComplexPrecisionT> ini_st{
@@ -1145,7 +1170,8 @@ void testApplyCRZ() {
         REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 
-    SECTION("CRZ1,3") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CRZ1,3 - " << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 4;
 
         std::vector<ComplexPrecisionT> ini_st{
@@ -1212,14 +1238,18 @@ void testApplyCRot() {
     expected_results[0b1 << (num_qubits - 1)] = rot_mat[0];
     expected_results[(0b1 << num_qubits) - 2] = rot_mat[2];
 
-    SECTION("CRot0,1 |000> -> |000>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CRot0,1 |000> -> |000> - "
+                    << PrecisionToName<PrecisionT>::value) {
         auto st = createZeroState<PrecisionT>(num_qubits);
         GateImplementation::applyCRot(st.data(), num_qubits, {0, 1}, false,
                                       angles[0], angles[1], angles[2]);
 
         CHECK(isApproxEqual(st, ini_st));
     }
-    SECTION("CRot0,1 |100> -> |1>(a|0>+b|1>)|0>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CRot0,1 |100> -> |1>(a|0>+b|1>)|0> - "
+                    << PrecisionToName<PrecisionT>::value) {
         auto st = createZeroState<PrecisionT>(num_qubits);
         GateImplementation::applyPauliX(st.data(), num_qubits, {0}, false);
 
@@ -1229,7 +1259,8 @@ void testApplyCRot() {
         CHECK(isApproxEqual(st, expected_results));
     }
 
-    SECTION("CRot0,1") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CRot0,1 - " << PrecisionToName<PrecisionT>::value) {
         using TestHelper::Approx;
         const size_t num_qubits = 4;
 
@@ -1292,7 +1323,9 @@ void testApplyMultiRZ() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     using TestHelper::Approx;
 
-    SECTION("MultiRZ0 |++++>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", MultiRZ0 |++++> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 4;
         const ParamT angle = M_PI;
         auto st = createPlusState<PrecisionT>(num_qubits);
@@ -1313,7 +1346,9 @@ void testApplyMultiRZ() {
 
         REQUIRE_THAT(st, Approx(expected).margin(1e-7));
     }
-    SECTION("MultiRZ0 |++++>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", MultiRZ0 |++++> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 4;
         const ParamT angle = M_PI;
         auto st = createPlusState<PrecisionT>(num_qubits);
@@ -1334,7 +1369,9 @@ void testApplyMultiRZ() {
 
         REQUIRE_THAT(st, Approx(expected).margin(1e-7));
     }
-    SECTION("MultiRZ01 |++++>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", MultiRZ01 |++++> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 4;
         const ParamT angle = M_PI;
         auto st = createPlusState<PrecisionT>(num_qubits);
@@ -1355,7 +1392,9 @@ void testApplyMultiRZ() {
 
         REQUIRE_THAT(st, Approx(expected).margin(1e-7));
     }
-    SECTION("MultiRZ012 |++++>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", MultiRZ012 |++++> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 4;
         const ParamT angle = M_PI;
         auto st = createPlusState<PrecisionT>(num_qubits);
@@ -1376,7 +1415,9 @@ void testApplyMultiRZ() {
 
         REQUIRE_THAT(st, Approx(expected).margin(1e-7));
     }
-    SECTION("MultiRZ0123 |++++>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", MultiRZ0123 |++++> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 4;
         const ParamT angle = M_PI;
         auto st = createPlusState<PrecisionT>(num_qubits);
@@ -1398,7 +1439,9 @@ void testApplyMultiRZ() {
         REQUIRE_THAT(st, Approx(expected).margin(1e-7));
     }
 
-    SECTION("MultiRZ013") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", MultiRZ013 - "
+                    << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 4;
         std::vector<ComplexPrecisionT> ini_st{
             ComplexPrecisionT{0.029963367200, 0.181037777550},

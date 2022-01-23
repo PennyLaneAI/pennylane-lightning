@@ -1,7 +1,7 @@
 #include "OpToMemberFuncPtr.hpp"
 #include "SelectGateOps.hpp"
 #include "TestHelpers.hpp"
-#include "TestMacros.hpp"
+#include "TestKernels.hpp"
 #include "Util.hpp"
 
 #include <catch2/catch.hpp>
@@ -19,23 +19,24 @@ void testInverseKernelGate(RandomEngine &re, size_t num_qubits) {
 
     if constexpr (gate_op != GateOperation::Matrix) {
         constexpr auto gate_name = static_lookup<gate_op>(Constant::gate_names);
-        INFO("Test inverse of " << gate_name << " for kernel "
-                                << GateImplementation::name);
-        const auto ini_st = createRandomState<PrecisionT>(re, num_qubits);
+        DYNAMIC_SECTION("Test inverse of " << gate_name << " for kernel "
+                                           << GateImplementation::name) {
+            const auto ini_st = createRandomState<PrecisionT>(re, num_qubits);
 
-        auto st = ini_st;
+            auto st = ini_st;
 
-        const auto func_ptr =
-            GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
-                                  gate_op>::value;
+            const auto func_ptr =
+                GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                      gate_op>::value;
 
-        const auto wires = createWires(gate_op);
-        const auto params = createParams<ParamT>(gate_op);
+            const auto wires = createWires(gate_op);
+            const auto params = createParams<ParamT>(gate_op);
 
-        callGateOps(func_ptr, st.data(), num_qubits, wires, false, params);
-        callGateOps(func_ptr, st.data(), num_qubits, wires, true, params);
+            callGateOps(func_ptr, st.data(), num_qubits, wires, false, params);
+            callGateOps(func_ptr, st.data(), num_qubits, wires, true, params);
 
-        REQUIRE_THAT(st, Approx(ini_st).margin(1e-7));
+            REQUIRE_THAT(st, Approx(ini_st).margin(1e-7));
+        }
     }
 }
 
@@ -74,5 +75,5 @@ TEMPLATE_TEST_CASE("Test inverse of gate implementations",
                    "[GateImplementations_Inverse]", float, double) {
     std::mt19937 re(1337);
 
-    testKernels<TestType, TestType, AvailableKernels>(re, 5);
+    testKernels<TestType, TestType, TestKernels>(re, 5);
 }

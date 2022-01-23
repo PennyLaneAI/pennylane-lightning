@@ -54,6 +54,12 @@ using CBLAS_LAYOUT = enum CBLAS_LAYOUT {
 #endif
 /// @endcond
 
+enum class Trans : int {
+    NoTranspose = CblasNoTrans,
+    Transpose = CblasTrans,
+    Adjoint = CblasConjTrans
+};
+
 namespace Pennylane::Util::Internal {
 /**
  * @brief Count the number of 1s in the binary representation of n.
@@ -559,14 +565,14 @@ inline auto innerProdC(const std::vector<std::complex<T>> &v1,
  * @param v_out Pre-allocated complex data array to store the result.
  * @param m Number of rows of `mat`.
  * @param n Number of columns of `mat`.
- * @param transpose If `true`, considers transposed version of `mat`.
+ * @param transpose One of NoTranspose, Transpose, Adjoint
  * row-wise.
  */
 template <class T>
 inline static void omp_matrixVecProd(const std::complex<T> *mat,
                                      const std::complex<T> *v_in,
                                      std::complex<T> *v_out, size_t m, size_t n,
-                                     bool transpose = false) {
+                                     Trans transpose = Trans::NoTranspose) {
     if (!v_out) {
         return;
     }
@@ -578,16 +584,8 @@ inline static void omp_matrixVecProd(const std::complex<T> *mat,
 #pragma omp parallel default(none) private(row, col)
 #endif
     {
-        if (transpose) {
-#if defined(_OPENMP)
-#pragma omp for
-#endif
-            for (row = 0; row < m; row++) {
-                for (col = 0; col < n; col++) {
-                    v_out[row] += mat[col * m + row] * v_in[col];
-                }
-            }
-        } else {
+        switch (transpose) {
+        case Trans::NoTranspose:
 #if defined(_OPENMP)
 #pragma omp for
 #endif
@@ -596,6 +594,27 @@ inline static void omp_matrixVecProd(const std::complex<T> *mat,
                     v_out[row] += mat[row * n + col] * v_in[col];
                 }
             }
+            break;
+        case Trans::Transpose:
+#if defined(_OPENMP)
+#pragma omp for
+#endif
+            for (row = 0; row < m; row++) {
+                for (col = 0; col < n; col++) {
+                    v_out[row] += mat[col * m + row] * v_in[col];
+                }
+            }
+            break;
+        case Trans::Adjoint:
+#if defined(_OPENMP)
+#pragma omp for
+#endif
+            for (row = 0; row < m; row++) {
+                for (col = 0; col < n; col++) {
+                    v_out[row] += std::conj(mat[col * m + row]) * v_in[col];
+                }
+            }
+            break;
         }
     }
 }
@@ -609,12 +628,12 @@ inline static void omp_matrixVecProd(const std::complex<T> *mat,
  * @param v_out Pre-allocated complex data array to store the result.
  * @param m Number of rows of `mat`.
  * @param n Number of columns of `mat`.
- * @param transpose If `true`, considers transposed version of `mat`.
+ * @param transpose One of NoTranspose, Transpose, Adjoint
  */
 template <class T>
 inline void matrixVecProd(const std::complex<T> *mat,
                           const std::complex<T> *v_in, std::complex<T> *v_out,
-                          size_t m, size_t n, bool transpose = false) {
+                          size_t m, size_t n, Trans transpose = Trans::NoTranspose) {
     if (!v_out) {
         return;
     }
@@ -622,7 +641,7 @@ inline void matrixVecProd(const std::complex<T> *mat,
     if constexpr (USE_CBLAS) {
         constexpr std::complex<T> co{1, 0};
         constexpr std::complex<T> cz{0, 0};
-        const auto tr = (transpose) ? CblasTrans : CblasNoTrans;
+        const auto tr = static_cast<int>(transpose);
         if constexpr (std::is_same_v<T, float>) {
             cblas_cgemv(CblasRowMajor, tr, m, n, &co, mat, m, v_in, 1, &cz,
                         v_out, 1);
@@ -645,7 +664,7 @@ inline void matrixVecProd(const std::complex<T> *mat,
 template <class T>
 inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
                           const std::vector<std::complex<T>> v_in, size_t m,
-                          size_t n, bool transpose = false)
+                          size_t n, Trans transpose = Trans::NoTranspose)
     -> std::vector<std::complex<T>> {
     if (mat.size() != m * n) {
         throw std::invalid_argument(

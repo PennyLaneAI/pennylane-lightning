@@ -1,6 +1,6 @@
-#include "AvailableKernels.hpp"
 #include "Gates.hpp"
 #include "TestHelpers.hpp"
+#include "TestKernels.hpp"
 #include "Util.hpp"
 
 #include <catch2/catch.hpp>
@@ -30,43 +30,40 @@ using std::vector;
 #define PENNYLANE_RUN_TEST(GATE_NAME)                                          \
     template <typename PrecisionT, class GateImplementation,                   \
               typename U = void>                                               \
-    struct TestApply##GATE_NAME##IfDefined {                                   \
-        static void run() {                                                    \
-            INFO("Member function apply" #GATE_NAME                            \
-                 " is not defined for kernel "                                 \
-                 << GateImplementation::name);                                 \
-            REQUIRE(true);                                                     \
-        }                                                                      \
+    struct Apply##GATE_NAME##IsDefined {                                       \
+        constexpr static bool value = false;                                   \
     };                                                                         \
     template <typename PrecisionT, class GateImplementation>                   \
-    struct TestApply##GATE_NAME##IfDefined<                                    \
+    struct Apply##GATE_NAME##IsDefined<                                        \
         PrecisionT, GateImplementation,                                        \
         std::enable_if_t<std::is_pointer_v<decltype(                           \
             &GateImplementation::template apply##GATE_NAME<PrecisionT>)>>> {   \
-        static void run() {                                                    \
-            INFO("Test apply" #GATE_NAME " in kernel "                         \
-                 << GateImplementation::name);                                 \
-            testApply##GATE_NAME<PrecisionT, GateImplementation>();            \
-        }                                                                      \
+        constexpr static bool value = true;                                    \
     };                                                                         \
     template <typename PrecisionT, typename TypeList>                          \
     struct TestApply##GATE_NAME##ForKernels {                                  \
         static void run() {                                                    \
-            TestApply##GATE_NAME##IfDefined<PrecisionT,                        \
-                                            typename TypeList::Type>::run();   \
-            TestApply##GATE_NAME##ForKernels<PrecisionT,                       \
-                                             typename TypeList::Next>::run();  \
+            if constexpr (!std::is_same_v<TypeList, void>) {                   \
+                using GateImplementation = typename TypeList::Type;            \
+                if constexpr (Apply##GATE_NAME##IsDefined<                     \
+                                  PrecisionT, GateImplementation>::value) {    \
+                    testApply##GATE_NAME<PrecisionT, GateImplementation>();    \
+                } else {                                                       \
+                    WARN("Member function apply" #GATE_NAME                    \
+                         " is not defined for kernel "                         \
+                         << GateImplementation::name);                         \
+                }                                                              \
+                TestApply##GATE_NAME##ForKernels<                              \
+                    PrecisionT, typename TypeList::Next>::run();               \
+            }                                                                  \
         }                                                                      \
-    };                                                                         \
-    template <typename PrecisionT>                                             \
-    struct TestApply##GATE_NAME##ForKernels<PrecisionT, void> {                \
-        static void run() {}                                                   \
     };                                                                         \
     TEMPLATE_TEST_CASE("GateImplementation::apply" #GATE_NAME,                 \
                        "[GateImplementations_Nonparam]", float, double) {      \
         using PrecisionT = TestType;                                           \
-        TestApply##GATE_NAME##ForKernels<PrecisionT, AvailableKernels>::run(); \
-    }
+        TestApply##GATE_NAME##ForKernels<PrecisionT, TestKernels>::run();      \
+    }                                                                          \
+    static_assert(true, "Require semicolon")
 
 /*******************************************************************************
  * Single-qubit gates
@@ -83,7 +80,7 @@ void testApplyPauliX() {
         CHECK(st[0b1 << (num_qubits - index - 1)] == Util::ONE<PrecisionT>());
     }
 }
-PENNYLANE_RUN_TEST(PauliX)
+PENNYLANE_RUN_TEST(PauliX);
 
 template <typename PrecisionT, class GateImplementation>
 void testApplyPauliY() {
@@ -109,7 +106,7 @@ void testApplyPauliY() {
         CHECK(isApproxEqual(st, expected_results[index]));
     }
 }
-PENNYLANE_RUN_TEST(PauliY)
+PENNYLANE_RUN_TEST(PauliY);
 
 template <typename PrecisionT, class GateImplementation>
 void testApplyPauliZ() {
@@ -132,7 +129,7 @@ void testApplyPauliZ() {
         CHECK(isApproxEqual(st, expected_results[index]));
     }
 }
-PENNYLANE_RUN_TEST(PauliZ)
+PENNYLANE_RUN_TEST(PauliZ);
 
 template <typename PrecisionT, class GateImplementation>
 void testApplyHadamard() {
@@ -155,7 +152,7 @@ void testApplyHadamard() {
               Approx(st[0b1 << (num_qubits - index - 1)].imag()));
     }
 }
-PENNYLANE_RUN_TEST(Hadamard)
+PENNYLANE_RUN_TEST(Hadamard);
 
 template <typename PrecisionT, class GateImplementation> void testApplyS() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
@@ -178,7 +175,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyS() {
         CHECK(isApproxEqual(st, expected_results[index]));
     }
 }
-PENNYLANE_RUN_TEST(S)
+PENNYLANE_RUN_TEST(S);
 
 template <typename PrecisionT, class GateImplementation> void testApplyT() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
@@ -201,7 +198,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyT() {
         CHECK(isApproxEqual(st, expected_results[index]));
     }
 }
-PENNYLANE_RUN_TEST(T)
+PENNYLANE_RUN_TEST(T);
 /*******************************************************************************
  * Two-qubit gates
  ******************************************************************************/
@@ -221,7 +218,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyCNOT() {
     CHECK(st.front() == Util::INVSQRT2<PrecisionT>());
     CHECK(st.back() == Util::INVSQRT2<PrecisionT>());
 }
-PENNYLANE_RUN_TEST(CNOT)
+PENNYLANE_RUN_TEST(CNOT);
 
 // NOLINTNEXTLINE: Avoiding complexity errors
 template <typename PrecisionT, class GateImplementation> void testApplyCY() {
@@ -241,7 +238,9 @@ template <typename PrecisionT, class GateImplementation> void testApplyCY() {
                         std::complex<PrecisionT>(1.0 / sqrt(2), 0),
                         Util::ZERO<PrecisionT>()});
 
-    SECTION("CY 0,1 |+10> -> i|100>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CY 0,1 |+10> -> i|100> - "
+                    << PrecisionToName<PrecisionT>::value) {
         std::vector<ComplexPrecisionT> expected{
             Util::ZERO<PrecisionT>(),
             Util::ZERO<PrecisionT>(),
@@ -257,7 +256,9 @@ template <typename PrecisionT, class GateImplementation> void testApplyCY() {
         CHECK(sv01 == expected);
     }
 
-    SECTION("CY 0,2 |+10> -> |010> + i |111>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CY 0,2 |+10> -> |010> + i |111> - "
+                    << PrecisionToName<PrecisionT>::value) {
         std::vector<ComplexPrecisionT> expected{
             Util::ZERO<PrecisionT>(),
             Util::ZERO<PrecisionT>(),
@@ -273,7 +274,9 @@ template <typename PrecisionT, class GateImplementation> void testApplyCY() {
         GateImplementation::applyCY(sv02.data(), num_qubits, {0, 2}, false);
         CHECK(sv02 == expected);
     }
-    SECTION("CY 1,2 |+10> -> i|+11>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CY 1,2 |+10> -> i|+11> - "
+                    << PrecisionToName<PrecisionT>::value) {
         std::vector<ComplexPrecisionT> expected{
             Util::ZERO<PrecisionT>(),
             Util::ZERO<PrecisionT>(),
@@ -290,7 +293,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyCY() {
         CHECK(sv12 == expected);
     }
 }
-PENNYLANE_RUN_TEST(CY)
+PENNYLANE_RUN_TEST(CY);
 
 // NOLINTNEXTLINE: Avoiding complexity errors
 template <typename PrecisionT, class GateImplementation> void testApplyCZ() {
@@ -312,7 +315,9 @@ template <typename PrecisionT, class GateImplementation> void testApplyCZ() {
                     std::complex<PrecisionT>(1.0 / sqrt(2), 0),
                     Util::ZERO<PrecisionT>()});
 
-    SECTION("CZ0,1 |+10> -> |-10>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CZ0,1 |+10> -> |-10> - "
+                    << PrecisionToName<PrecisionT>::value) {
         std::vector<ComplexPrecisionT> expected{
             Util::ZERO<PrecisionT>(),
             Util::ZERO<PrecisionT>(),
@@ -333,7 +338,9 @@ template <typename PrecisionT, class GateImplementation> void testApplyCZ() {
         CHECK(sv10 == expected);
     }
 
-    SECTION("CZ0,2 |+10> -> |+10>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CZ0,2 |+10> -> |+10> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const std::vector<ComplexPrecisionT> &expected{ini_st};
 
         auto sv02 = ini_st;
@@ -345,7 +352,9 @@ template <typename PrecisionT, class GateImplementation> void testApplyCZ() {
         CHECK(sv02 == expected);
         CHECK(sv20 == expected);
     }
-    SECTION("CZ1,2 |+10> -> |+10>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CZ1,2 |+10> -> |+10> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const std::vector<ComplexPrecisionT> &expected{ini_st};
 
         auto sv12 = ini_st;
@@ -358,7 +367,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyCZ() {
         CHECK(sv21 == expected);
     }
 }
-PENNYLANE_RUN_TEST(CZ)
+PENNYLANE_RUN_TEST(CZ);
 
 // NOLINTNEXTLINE: Avoiding complexity errors
 template <typename PrecisionT, class GateImplementation> void testApplySWAP() {
@@ -377,7 +386,9 @@ template <typename PrecisionT, class GateImplementation> void testApplySWAP() {
                         Util::INVSQRT2<PrecisionT>(),
                         Util::ZERO<PrecisionT>()});
 
-    SECTION("SWAP0,1 |+10> -> |1+0>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", SWAP0,1 |+10> -> |1+0> - "
+                    << PrecisionToName<PrecisionT>::value) {
         std::vector<ComplexPrecisionT> expected{
             Util::ZERO<PrecisionT>(),
             Util::ZERO<PrecisionT>(),
@@ -397,7 +408,9 @@ template <typename PrecisionT, class GateImplementation> void testApplySWAP() {
         CHECK(sv10 == expected);
     }
 
-    SECTION("SWAP0,2 |+10> -> |01+>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", SWAP0,2 |+10> -> |01+> - "
+                    << PrecisionToName<PrecisionT>::value) {
         std::vector<ComplexPrecisionT> expected{
             Util::ZERO<PrecisionT>(),
             Util::ZERO<PrecisionT>(),
@@ -417,7 +430,9 @@ template <typename PrecisionT, class GateImplementation> void testApplySWAP() {
         CHECK(sv02 == expected);
         CHECK(sv20 == expected);
     }
-    SECTION("SWAP1,2 |+10> -> |+01>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", SWAP1,2 |+10> -> |+01> - "
+                    << PrecisionToName<PrecisionT>::value) {
         std::vector<ComplexPrecisionT> expected{
             Util::ZERO<PrecisionT>(),
             std::complex<PrecisionT>(1.0 / sqrt(2), 0),
@@ -438,7 +453,7 @@ template <typename PrecisionT, class GateImplementation> void testApplySWAP() {
         CHECK(sv21 == expected);
     }
 }
-PENNYLANE_RUN_TEST(SWAP)
+PENNYLANE_RUN_TEST(SWAP);
 
 /*******************************************************************************
  * Three-qubit gates
@@ -453,7 +468,9 @@ void testApplyToffoli() {
     GateImplementation::applyHadamard(ini_st.data(), num_qubits, {0}, false);
     GateImplementation::applyPauliX(ini_st.data(), num_qubits, {1}, false);
 
-    SECTION("Toffoli 0,1,2 |+10> -> |010> + |111>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", Toffoli 0,1,2 |+10> -> |010> + |111> - "
+                    << PrecisionToName<PrecisionT>::value) {
         std::vector<ComplexPrecisionT> expected{
             Util::ZERO<PrecisionT>(),
             Util::ZERO<PrecisionT>(),
@@ -472,7 +489,9 @@ void testApplyToffoli() {
         CHECK(sv012 == expected);
     }
 
-    SECTION("Toffoli 1,0,2 |+10> -> |010> + |111>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", Toffoli 1,0,2 |+10> -> |010> + |111> - "
+                    << PrecisionToName<PrecisionT>::value) {
         std::vector<ComplexPrecisionT> expected{
             Util::ZERO<PrecisionT>(),
             Util::ZERO<PrecisionT>(),
@@ -491,7 +510,9 @@ void testApplyToffoli() {
         CHECK(sv102 == expected);
     }
 
-    SECTION("Toffoli 0,2,1 |+10> -> |+10>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", Toffoli 0,2,1 |+10> -> |+10> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const auto &expected = ini_st;
 
         auto sv021 = ini_st;
@@ -502,7 +523,9 @@ void testApplyToffoli() {
         CHECK(sv021 == expected);
     }
 
-    SECTION("Toffoli 1,2,0 |+10> -> |+10>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", Toffoli 1,2,0 |+10> -> |+10> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const auto &expected = ini_st;
 
         auto sv120 = ini_st;
@@ -511,7 +534,7 @@ void testApplyToffoli() {
         CHECK(sv120 == expected);
     }
 }
-PENNYLANE_RUN_TEST(Toffoli)
+PENNYLANE_RUN_TEST(Toffoli);
 
 template <typename PrecisionT, class GateImplementation> void testApplyCSWAP() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
@@ -523,7 +546,9 @@ template <typename PrecisionT, class GateImplementation> void testApplyCSWAP() {
     GateImplementation::applyHadamard(ini_st.data(), num_qubits, {0}, false);
     GateImplementation::applyPauliX(ini_st.data(), num_qubits, {1}, false);
 
-    SECTION("CSWAP 0,1,2 |+10> -> |010> + |101>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CSWAP 0,1,2 |+10> -> |010> + |101> - "
+                    << PrecisionToName<PrecisionT>::value) {
         std::vector<ComplexPrecisionT> expected{
             Util::ZERO<PrecisionT>(),
             Util::ZERO<PrecisionT>(),
@@ -540,7 +565,9 @@ template <typename PrecisionT, class GateImplementation> void testApplyCSWAP() {
         CHECK(sv012 == expected);
     }
 
-    SECTION("CSWAP 1,0,2 |+10> -> |01+>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CSWAP 1,0,2 |+10> -> |01+> - "
+                    << PrecisionToName<PrecisionT>::value) {
         std::vector<ComplexPrecisionT> expected{
             Util::ZERO<PrecisionT>(),
             Util::ZERO<PrecisionT>(),
@@ -556,7 +583,9 @@ template <typename PrecisionT, class GateImplementation> void testApplyCSWAP() {
                                        false);
         CHECK(sv102 == expected);
     }
-    SECTION("CSWAP 2,1,0 |+10> -> |+10>") {
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", CSWAP 2,1,0 |+10> -> |+10> - "
+                    << PrecisionToName<PrecisionT>::value) {
         const auto &expected = ini_st;
 
         auto sv210 = ini_st;
@@ -565,4 +594,4 @@ template <typename PrecisionT, class GateImplementation> void testApplyCSWAP() {
         CHECK(sv210 == expected);
     }
 }
-PENNYLANE_RUN_TEST(CSWAP)
+PENNYLANE_RUN_TEST(CSWAP);

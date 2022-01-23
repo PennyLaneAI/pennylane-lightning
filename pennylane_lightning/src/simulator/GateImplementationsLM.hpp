@@ -115,8 +115,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
         if (inverse) {
-            for (size_t n = 0; n < Util::exp2(num_qubits - 1); n++) {
-                const size_t k = n;
+            for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
                 const size_t i0 =
                     ((k << 1U) & wire_parity_inv) | (wire_parity & k);
                 const size_t i1 = i0 | rev_wire_shift;
@@ -125,13 +124,12 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 arr[i0] = std::conj(matrix[0B00]) * v0 +
                           std::conj(matrix[0B10]) *
                               v1; // NOLINT(readability-magic-numbers)
-                arr[i1] = std::conj(matrix[0B10]) * v0 +
+                arr[i1] = std::conj(matrix[0B01]) * v0 +
                           std::conj(matrix[0B11]) *
                               v1; // NOLINT(readability-magic-numbers)
             }
         } else {
-            for (size_t n = 0; n < Util::exp2(num_qubits - 1); n++) {
-                const size_t k = n;
+            for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
                 const size_t i0 =
                     ((k << 1U) & wire_parity_inv) | (wire_parity & k);
                 const size_t i1 = i0 | rev_wire_shift;
@@ -176,13 +174,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
 
         if (inverse) {
-            std::vector<std::complex<PrecisionT>> matrix_inv;
-            for (size_t col = 0; col < 4; col++) {
-                for (size_t row = 0; row < 4; row++) {
-                    matrix_inv[(col << 2U) | row] =
-                        std::conj(matrix[(row << 2U) | col]);
-                }
-            }
             for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
                 const size_t i00 = ((k << 2U) & parity_high) |
                                    ((k << 1U) & parity_middle) |
@@ -195,6 +186,27 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 const std::complex<PrecisionT> v01 = arr[i01];
                 const std::complex<PrecisionT> v10 = arr[i10];
                 const std::complex<PrecisionT> v11 = arr[i11];
+
+                // NOLINTNEXLINE(readability-magic-numbers)
+                arr[i00] = std::conj(matrix[0b0000]) * v00 + 
+                           std::conj(matrix[0b0100]) * v01 +
+                           std::conj(matrix[0b1000]) * v10 +
+                           std::conj(matrix[0b1100]) * v11;
+                // NOLINTNEXLINE(readability-magic-numbers)
+                arr[i01] = std::conj(matrix[0b0001]) * v00 + 
+                           std::conj(matrix[0b0101]) * v01 +
+                           std::conj(matrix[0b1001]) * v10 +
+                           std::conj(matrix[0b1101]) * v11;
+                // NOLINTNEXLINE(readability-magic-numbers)
+                arr[i10] = std::conj(matrix[0b0010]) * v00 + 
+                           std::conj(matrix[0b0110]) * v01 +
+                           std::conj(matrix[0b1010]) * v10 +
+                           std::conj(matrix[0b1110]) * v11;
+                // NOLINTNEXLINE(readability-magic-numbers)
+                arr[i11] = std::conj(matrix[0b0011]) * v00 + 
+                           std::conj(matrix[0b0111]) * v01 +
+                           std::conj(matrix[0b1011]) * v10 +
+                           std::conj(matrix[0b1111]) * v11;
             }
         } else {
             for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
@@ -235,32 +247,32 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         switch (wires.size()) {
         case 1:
-            applySingleQubitOp(arr, num_qubits, matrix, wires, inverse);
+            applySingleQubitOp(arr, num_qubits, matrix, wires[0], inverse);
             break;
         case 2:
             applyTwoQubitOp(arr, num_qubits, matrix, wires, inverse);
             break;
         default: {
             size_t dim = 1U << wires.size();
-            std::vector<std::complex<PrecisionT>> coeffs_in;
-            std::vector<std::complex<PrecisionT>> coeffs_out;
             std::vector<size_t> indices;
-            coeffs_in.resize(dim);
-            coeffs_out.resize(dim);
             indices.resize(dim);
 
             for (size_t k = 0; k < Util::exp2(num_qubits); k += dim) {
+                std::vector<std::complex<PrecisionT>> coeffs_in(dim);
+                std::vector<std::complex<PrecisionT>> coeffs_out(dim);
 
                 for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
-                    size_t idx = k + inner_idx;
-                    for (size_t pos = 0; pos < wires.size(); pos++) {
-                        bitswap(idx, pos, wires[pos]);
+                    size_t idx = k | inner_idx;
+                    size_t n_wires = wires.size();
+                    for (size_t pos = 0; pos < n_wires; pos++) {
+                        bitswap(idx, n_wires - pos - 1, num_qubits - wires[pos] - 1);
                     }
                     indices[inner_idx] = idx;
                     coeffs_in[inner_idx] = arr[idx];
                 }
 
-                Util::matrixVecProd(matrix, coeffs_in, coeffs_out, dim, dim);
+                Util::matrixVecProd(matrix, coeffs_in.data(), coeffs_out.data(),
+                                    dim, dim, inverse?Trans::Adjoint:Trans::NoTranspose);
 
                 for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
                     arr[indices[inner_idx]] = coeffs_out[inner_idx];

@@ -158,7 +158,7 @@ auto createPlusState(size_t num_qubits)
  * @brief Calculate the squared norm of a vector
  */
 template <typename PrecisionT>
-auto squareNorm(const std::complex<PrecisionT> *data, size_t data_size)
+auto squaredNorm(const std::complex<PrecisionT> *data, size_t data_size)
     -> PrecisionT {
     return std::transform_reduce(
         data, data + data_size, PrecisionT{}, std::plus<PrecisionT>(),
@@ -179,7 +179,7 @@ auto createRandomState(RandomEngine &re, size_t num_qubits)
     }
 
     scaleVector(res, std::complex<PrecisionT>{1.0, 0.0} /
-                         std::sqrt(squareNorm(res.data(), res.size())));
+                         std::sqrt(squaredNorm(res.data(), res.size())));
     return res;
 }
 
@@ -228,7 +228,7 @@ template <typename PrecisionT> auto createProductState(std::string_view str) {
     return st;
 }
 
-inline std::vector<size_t> createWires(Pennylane::GateOperation op) {
+inline auto createWires(Pennylane::GateOperation op) -> std::vector<size_t> {
     if (Pennylane::Util::array_has_elt(Pennylane::Constant::multi_qubit_gates,
                                        op)) {
         // if multi-qubit gates
@@ -247,7 +247,7 @@ inline std::vector<size_t> createWires(Pennylane::GateOperation op) {
 }
 
 template <class PrecisionT>
-std::vector<PrecisionT> createParams(Pennylane::GateOperation op) {
+auto createParams(Pennylane::GateOperation op) -> std::vector<PrecisionT> {
     switch (Pennylane::Util::lookup(Pennylane::Constant::gate_num_params, op)) {
     case 0:
         return {};
@@ -259,3 +259,64 @@ std::vector<PrecisionT> createParams(Pennylane::GateOperation op) {
         PL_ABORT("The number of parameters for a given gate is unknown.");
     }
 }
+/**
+ * @brief Generate random unitary matrix
+ *
+ * @return Generated unitary matrix in row-major format
+ */
+template <typename PrecisionT, class RandomEngine>
+auto randomUnitary(RandomEngine &re, size_t num_qubits)
+    -> std::vector<std::complex<PrecisionT>> {
+    using ComplexPrecisionT = std::complex<PrecisionT>;
+    const size_t dim = (1U << num_qubits);
+    std::vector<ComplexPrecisionT> res(dim * dim, ComplexPrecisionT{});
+
+    std::normal_distribution<PrecisionT> dist;
+
+    auto generator = [&dist, &re]() -> ComplexPrecisionT {
+        return ComplexPrecisionT{dist(re), dist(re)};
+    };
+
+    std::generate(res.begin(), res.end(), generator);
+
+    // Simple algorithm to make rows orthogonal with Gram-Schmidt
+    // This algorithm is unstable but works for a small matrix.
+    // Use QR decomposition when we have LAPACK support.
+
+    for (size_t row2 = 0; row2 < dim; row2++) {
+        ComplexPrecisionT *row2_p = res.data() + row2 * dim;
+        for (size_t row1 = 0; row1 < row2; row1++) {
+            const ComplexPrecisionT *row1_p = res.data() + row1 * dim;
+            ComplexPrecisionT dot12 = innerProdC(row1_p, row2_p, dim);
+            ComplexPrecisionT dot11 = squaredNorm(row1_p, dim);
+
+            // orthogonalize row2
+            std::transform(
+                row2_p, row2_p + dim, row1_p, row2_p,
+                [scale = dot12 / dot11](auto &elt2, const auto &elt1) {
+                    return elt2 - scale * elt1;
+                });
+        }
+    }
+
+    // Normalize each row
+    for (size_t row = 0; row < dim; row++) {
+        ComplexPrecisionT *row_p = res.data() + row * dim;
+        PrecisionT norm2 = std::sqrt(squaredNorm(row_p, dim));
+
+        // noramlize row2
+        std::transform(row_p, row_p + dim, row_p, [norm2](const auto c) {
+            return (static_cast<PrecisionT>(1.0) / norm2) * c;
+        });
+    }
+    return res;
+}
+
+template <class PrecisionT> struct PrecisionToName;
+
+template <> struct PrecisionToName<float> {
+    constexpr static auto value = "float";
+};
+template <> struct PrecisionToName<double> {
+    constexpr static auto value = "double";
+};
