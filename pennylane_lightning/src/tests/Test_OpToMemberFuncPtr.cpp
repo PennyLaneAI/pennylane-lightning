@@ -149,7 +149,6 @@ struct ImplementedGates {
     constexpr static std::array<GateOperation, 1> ignore_list = {
         GateOperation::Matrix};
 
-    // Using this raises segfault in clang version 10, 11, 12..
     template <typename PrecisionT, typename ParamT, GateOperation op>
     constexpr static auto func_ptr =
         GateOpToMemberFuncPtr<PrecisionT, ParamT, DummyImplementation,
@@ -159,7 +158,6 @@ struct ImplementedGenerators {
     constexpr static auto value = DummyImplementation::implemented_generators;
     constexpr static std::array<GeneratorOperation, 0> ignore_list = {};
 
-    // Using this raises segfault in clang version 10, 11, 12..
     template <typename PrecisionT, typename ParamT, GeneratorOperation op>
     constexpr static auto func_ptr =
         GeneratorOpToMemberFuncPtr<PrecisionT, DummyImplementation, op>::value;
@@ -174,8 +172,7 @@ constexpr auto opFuncPtrPairsIter() {
                                       op_idx + 1>();
         } else {
             const auto elt = std::pair{
-                op, GateOpToMemberFuncPtr<PrecisionT, ParamT,
-                                          DummyImplementation, op>::value};
+                op, ValueClass::template func_ptr<PrecisionT, ParamT, op>};
             return Util::prepend_to_tuple(
                 elt, opFuncPtrPairsIter<PrecisionT, ParamT, ValueClass,
                                         op_idx + 1>());
@@ -193,11 +190,10 @@ template <typename PrecisionT, typename ParamT>
 constexpr static auto gate_op_func_ptr_pairs =
     opFuncPtrPairsIter<PrecisionT, ParamT, ImplementedGates, 0>();
 
-/*
 template <typename PrecisionT, typename ParamT>
 constexpr static auto generator_op_func_ptr_pairs =
     opFuncPtrPairsIter<PrecisionT, ParamT, ImplementedGenerators, 0>();
-*/
+
 template <typename PrecisionT, typename ParamT, size_t num_params,
           size_t tuple_idx>
 constexpr auto gateOpFuncPtrPairsWithNumParamsIter() {
@@ -223,11 +219,11 @@ constexpr auto gateOpFuncPtrPairsWithNumParamsIter() {
 template <typename PrecisionT, typename ParamT, size_t num_params>
 constexpr auto gate_op_func_ptr_with_params = Util::tuple_to_array(
     gateOpFuncPtrPairsWithNumParamsIter<PrecisionT, ParamT, num_params, 0>());
-/*
+
 template <typename PrecisionT, typename ParamT>
 constexpr auto generator_op_func_ptr =
     Util::tuple_to_array(generator_op_func_ptr_pairs<PrecisionT, PrecisionT>);
-*/
+
 template <typename T, typename U, size_t size>
 auto testUniqueness(const std::array<std::pair<T, U>, size> &pairs) {
     REQUIRE(Util::count_unique(Util::first_elts_of(pairs)) == pairs.size());
@@ -241,10 +237,8 @@ TEMPLATE_TEST_CASE("GateOpToMemberFuncPtr", "[GateOpToMemberFuncPtr]", float,
     testUniqueness(gate_op_func_ptr_with_params<TestType, TestType, 1>);
     testUniqueness(gate_op_func_ptr_with_params<TestType, TestType, 3>);
 }
-/*
 TEMPLATE_TEST_CASE("GeneratorOpToMemberFuncPtr", "[GeneratorOpToMemberFuncPtr]",
                    float, double) {
     // TODO: This can be done in compile time
     testUniqueness(generator_op_func_ptr<TestType, TestType>);
 }
-*/

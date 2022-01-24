@@ -228,5 +228,4 @@ constexpr std::array default_kernel_for_generators = {
     std::pair{GeneratorOperation::ControlledPhaseShift, KernelType::PI},
     std::pair{GeneratorOperation::MultiRZ, KernelType::LM},
 };
-
 } // namespace Pennylane::Constant
