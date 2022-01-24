@@ -11,6 +11,7 @@
 
 #include "DynamicDispatcher.hpp"
 #include "Gates.hpp"
+#include "OpToMemberFuncPtr.hpp"
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"

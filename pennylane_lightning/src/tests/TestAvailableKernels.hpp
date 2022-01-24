@@ -61,11 +61,11 @@ static_assert(check_kernels_to_pyexport(),
  * Check each element in kernelIdNamesPairs is unique
  ******************************************************************************/
 
-static_assert(Util::count_unique(Util::first_elts_of(kernelIdNamePairs)) ==
+static_assert(Util::count_unique(Util::first_elts_of(kernel_id_name_pairs)) ==
                   Util::length<AvailableKernels>(),
               "Kernel ids must be distinct.");
 
-static_assert(Util::count_unique(Util::second_elts_of(kernelIdNamePairs)) ==
+static_assert(Util::count_unique(Util::second_elts_of(kernel_id_name_pairs)) ==
                   Util::length<AvailableKernels>(),
               "Kernel names must be distinct.");
 

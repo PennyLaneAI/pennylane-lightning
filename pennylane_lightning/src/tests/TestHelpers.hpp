@@ -244,6 +244,7 @@ inline auto createWires(Pennylane::GateOperation op) -> std::vector<size_t> {
     default:
         PL_ABORT("The number of wires for a given gate is unknown.");
     }
+    return {};
 }
 
 template <class PrecisionT>
@@ -258,6 +259,7 @@ auto createParams(Pennylane::GateOperation op) -> std::vector<PrecisionT> {
     default:
         PL_ABORT("The number of parameters for a given gate is unknown.");
     }
+    return {};
 }
 /**
  * @brief Generate random unitary matrix

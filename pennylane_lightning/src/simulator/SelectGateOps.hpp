@@ -20,7 +20,6 @@
 #include "Constant.hpp"
 #include "GateOperation.hpp"
 #include "KernelType.hpp"
-#include "Macros.hpp"
 #include "TypeList.hpp"
 
 #include <array>
@@ -77,7 +76,7 @@ template <> struct KernelIdNamePairsHelper<void> {
 /**
  * @brief Array of kernel_id and name pairs for all available kernels
  */
-constexpr static auto kernelIdNamePairs = Util::tuple_to_array(
+constexpr static auto kernel_id_name_pairs = Util::tuple_to_array(
     Internal::KernelIdNamePairsHelper<AvailableKernels>::value);
 
 /**
@@ -87,21 +86,18 @@ constexpr static auto kernelIdNamePairs = Util::tuple_to_array(
  */
 constexpr auto string_to_kernel(const std::string_view kernel_name)
     -> KernelType {
-    return Util::lookup(Util::reverse_pairs(kernelIdNamePairs), kernel_name);
+    return Util::lookup(Util::reverse_pairs(kernel_id_name_pairs), kernel_name);
 }
 
 /// @cond DEV
 namespace Internal {
-template <class PrecisionT, KernelType kernel, class TypeList>
-struct SelectGateOpsHelper {
+template <KernelType kernel, class TypeList> struct SelectGateOpsHelper {
     using Type = std::conditional_t<
         TypeList::Type::kernel_id == kernel, typename TypeList::Type,
-        typename SelectGateOpsHelper<PrecisionT, kernel,
-                                     typename TypeList::Next>::Type>;
+        typename SelectGateOpsHelper<kernel, typename TypeList::Next>::Type>;
 };
-template <class PrecisionT, KernelType kernel>
-struct SelectGateOpsHelper<PrecisionT, kernel, void> {
-    static_assert(Util::array_has_elt(Util::first_elts_of(kernelIdNamePairs),
+template <KernelType kernel> struct SelectGateOpsHelper<kernel, void> {
+    static_assert(Util::array_has_elt(Util::first_elts_of(kernel_id_name_pairs),
                                       kernel),
                   "The given kernel is not in the list of available kernels.");
     using Type = void;
@@ -122,10 +118,9 @@ struct SelectGateOpsHelper<PrecisionT, kernel, void> {
  * @tparam PrecisionT Floating point precision of underlying statevector data.
  * @tparam kernel Kernel to select
  */
-template <class PrecisionT, KernelType kernel>
+template <KernelType kernel>
 using SelectGateOps =
-    typename Internal::SelectGateOpsHelper<PrecisionT, kernel,
-                                           AvailableKernels>::Type;
+    typename Internal::SelectGateOpsHelper<kernel, AvailableKernels>::Type;
 
 namespace Internal {
 /// @cond DEV

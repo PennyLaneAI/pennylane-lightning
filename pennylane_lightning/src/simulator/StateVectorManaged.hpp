@@ -44,12 +44,14 @@ class StateVectorManaged
     }
 
     template <class OtherDerived>
-    StateVectorManaged(const StateVectorBase<PrecisionT, OtherDerived> &other)
+    explicit StateVectorManaged(
+        const StateVectorBase<PrecisionT, OtherDerived> &other)
         : BaseType(other.getNumQubits()), data_{other.getData(),
                                                 other.getData() +
                                                     other.getLength()} {}
 
-    StateVectorManaged(const std::vector<ComplexPrecisionT> &other_data)
+    explicit StateVectorManaged(
+        const std::vector<ComplexPrecisionT> &other_data)
         : BaseType(Util::log2(other_data.size())), data_{other_data} {
         PL_ABORT_IF_NOT(Util::isPerfectPowerOf2(other_data.size()),
                         "The size of provided data must be a power of 2.");
@@ -65,6 +67,8 @@ class StateVectorManaged
     StateVectorManaged(const StateVectorManaged<PrecisionT> &other) = default;
     StateVectorManaged(StateVectorManaged<PrecisionT> &&other) noexcept =
         default;
+
+    ~StateVectorManaged() = default;
 
     auto operator=(const StateVectorManaged<PrecisionT> &other)
         -> StateVectorManaged<PrecisionT> & = default;

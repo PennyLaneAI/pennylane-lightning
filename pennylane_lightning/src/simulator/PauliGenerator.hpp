@@ -32,6 +32,7 @@ template <class GateImplementation> class PauliGenerator {
     applyGeneratorRX(std::complex<PrecisionT> *data, size_t num_qubits,
                      const std::vector<size_t> &wires, bool adj) {
         GateImplementation::applyPauliX(data, num_qubits, wires, adj);
+        // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
     }
     template <class PrecisionT>
@@ -39,6 +40,7 @@ template <class GateImplementation> class PauliGenerator {
     applyGeneratorRY(std::complex<PrecisionT> *data, size_t num_qubits,
                      const std::vector<size_t> &wires, bool adj) {
         GateImplementation::applyPauliY(data, num_qubits, wires, adj);
+        // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
     }
     template <class PrecisionT>
@@ -46,6 +48,7 @@ template <class GateImplementation> class PauliGenerator {
     applyGeneratorRZ(std::complex<PrecisionT> *data, size_t num_qubits,
                      const std::vector<size_t> &wires, bool adj) {
         GateImplementation::applyPauliZ(data, num_qubits, wires, adj);
+        // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
     }
 };

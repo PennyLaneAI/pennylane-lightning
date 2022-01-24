@@ -7,6 +7,8 @@ namespace Pennylane {
 template <typename T, size_t size1, size_t size2>
 constexpr auto are_mutually_disjoint(const std::array<T, size1> &arr1,
                                      const std::array<T, size2> &arr2) -> bool {
+    // TODO: change to any_of in C++20
+    // NOLINTNEXTLINE(readability-use-anyofallof)
     for (const T &elt : arr2) {
         if (Util::array_has_elt(arr1, elt)) {
             return false;

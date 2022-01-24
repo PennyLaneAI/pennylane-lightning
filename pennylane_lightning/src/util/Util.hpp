@@ -633,7 +633,8 @@ inline static void omp_matrixVecProd(const std::complex<T> *mat,
 template <class T>
 inline void matrixVecProd(const std::complex<T> *mat,
                           const std::complex<T> *v_in, std::complex<T> *v_out,
-                          size_t m, size_t n, Trans transpose = Trans::NoTranspose) {
+                          size_t m, size_t n,
+                          Trans transpose = Trans::NoTranspose) {
     if (!v_out) {
         return;
     }

@@ -16,13 +16,14 @@
  * Export C++ functions to Python using Pybind.
  */
 #include "Bindings.hpp"
+#include "SelectGateOps.hpp"
 
 #include "pybind11/pybind11.h"
 
 /// @cond DEV
 namespace {
+using Pennylane::implementedGatesForKernel;
 using Pennylane::StateVectorRaw;
-using Pennylane::Internal::implementedGatesForKernel;
 
 using namespace Pennylane::Algorithms;
 
@@ -331,9 +332,8 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
     std::vector<std::pair<std::string, std::string>> exported_kernel_ops;
 
     for (const auto kernel : Constant::kernels_to_pyexport) {
-        const auto kernel_name =
-            std::string(lookup(Constant::available_kernels, kernel));
-        const auto implemented_gates = implementedGatesForKernel<float>(kernel);
+        const auto kernel_name = lookup(kernel_id_name_pairs, kernel);
+        const auto implemented_gates = implementedGatesForKernel(kernel);
         for (const auto gate_op : implemented_gates) {
             const auto gate_name =
                 std::string(lookup(Constant::gate_names, gate_op));
@@ -347,8 +347,7 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
     std::map<std::string, std::string> default_kernel_ops_map;
     for (const auto &[gate_op, name] : Constant::gate_names) {
         const auto kernel = lookup(Constant::default_kernel_for_gates, gate_op);
-        const auto kernel_name =
-            std::string(lookup(Constant::available_kernels, kernel));
+        const auto kernel_name = Util::lookup(kernel_id_name_pairs, kernel);
         default_kernel_ops_map.emplace(std::string(name), kernel_name);
     }
     m.attr("DEFAULT_KERNEL_FOR_OPS") = py::cast(default_kernel_ops_map);

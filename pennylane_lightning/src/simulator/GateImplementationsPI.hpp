@@ -550,6 +550,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             shiftedState[indices[0]] = std::complex<PrecisionT>{0.0, 0.0};
         }
+        // NOLINTNEXTLINE(readability-magic-numbers)
         return static_cast<PrecisionT>(1.0);
     }
 
@@ -568,6 +569,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
             std::swap(shiftedState[indices[2]], shiftedState[indices[3]]);
         }
+        // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -588,6 +590,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
                 -IMAG<PrecisionT>() * shiftedState[indices[3]];
             shiftedState[indices[3]] = IMAG<PrecisionT>() * v0;
         }
+        // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -605,6 +608,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
             shiftedState[indices[1]] = Util::ZERO<PrecisionT>();
             shiftedState[indices[3]] *= -1;
         }
+        // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -622,6 +626,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
             shiftedState[indices[1]] = 0;
             shiftedState[indices[2]] = 0;
         }
+        // NOLINTNEXTLINE(readability-magic-numbers)
         return static_cast<PrecisionT>(1);
     }
 };

@@ -187,25 +187,37 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 const std::complex<PrecisionT> v10 = arr[i10];
                 const std::complex<PrecisionT> v11 = arr[i11];
 
-                // NOLINTNEXLINE(readability-magic-numbers)
-                arr[i00] = std::conj(matrix[0b0000]) * v00 + 
+                // NOLINTNEXTLINE(readability-magic-numbers)
+                arr[i00] = std::conj(matrix[0b0000]) * v00 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
                            std::conj(matrix[0b0100]) * v01 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
                            std::conj(matrix[0b1000]) * v10 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
                            std::conj(matrix[0b1100]) * v11;
-                // NOLINTNEXLINE(readability-magic-numbers)
-                arr[i01] = std::conj(matrix[0b0001]) * v00 + 
+                // NOLINTNEXTLINE(readability-magic-numbers)
+                arr[i01] = std::conj(matrix[0b0001]) * v00 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
                            std::conj(matrix[0b0101]) * v01 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
                            std::conj(matrix[0b1001]) * v10 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
                            std::conj(matrix[0b1101]) * v11;
-                // NOLINTNEXLINE(readability-magic-numbers)
-                arr[i10] = std::conj(matrix[0b0010]) * v00 + 
+                // NOLINTNEXTLINE(readability-magic-numbers)
+                arr[i10] = std::conj(matrix[0b0010]) * v00 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
                            std::conj(matrix[0b0110]) * v01 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
                            std::conj(matrix[0b1010]) * v10 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
                            std::conj(matrix[0b1110]) * v11;
-                // NOLINTNEXLINE(readability-magic-numbers)
-                arr[i11] = std::conj(matrix[0b0011]) * v00 + 
+                // NOLINTNEXTLINE(readability-magic-numbers)
+                arr[i11] = std::conj(matrix[0b0011]) * v00 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
                            std::conj(matrix[0b0111]) * v01 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
                            std::conj(matrix[0b1011]) * v10 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
                            std::conj(matrix[0b1111]) * v11;
             }
         } else {
@@ -222,17 +234,21 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 const std::complex<PrecisionT> v10 = arr[i10];
                 const std::complex<PrecisionT> v11 = arr[i11];
 
-                // NOLINTNEXLINE(readability-magic-numbers)
+                // NOLINTNEXTLINE(readability-magic-numbers)
                 arr[i00] = matrix[0b0000] * v00 + matrix[0b0001] * v01 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
                            matrix[0b0010] * v10 + matrix[0b0011] * v11;
-                // NOLINTNEXLINE(readability-magic-numbers)
+                // NOLINTNEXTLINE(readability-magic-numbers)
                 arr[i01] = matrix[0b0100] * v00 + matrix[0b0101] * v01 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
                            matrix[0b0110] * v10 + matrix[0b0111] * v11;
-                // NOLINTNEXLINE(readability-magic-numbers)
+                // NOLINTNEXTLINE(readability-magic-numbers)
                 arr[i10] = matrix[0b1000] * v00 + matrix[0b1001] * v01 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
                            matrix[0b1010] * v10 + matrix[0b1011] * v11;
-                // NOLINTNEXLINE(readability-magic-numbers)
+                // NOLINTNEXTLINE(readability-magic-numbers)
                 arr[i11] = matrix[0b1100] * v00 + matrix[0b1101] * v01 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
                            matrix[0b1110] * v10 + matrix[0b1111] * v11;
             }
         }
@@ -265,14 +281,16 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                     size_t idx = k | inner_idx;
                     size_t n_wires = wires.size();
                     for (size_t pos = 0; pos < n_wires; pos++) {
-                        bitswap(idx, n_wires - pos - 1, num_qubits - wires[pos] - 1);
+                        bitswap(idx, n_wires - pos - 1,
+                                num_qubits - wires[pos] - 1);
                     }
                     indices[inner_idx] = idx;
                     coeffs_in[inner_idx] = arr[idx];
                 }
 
-                Util::matrixVecProd(matrix, coeffs_in.data(), coeffs_out.data(),
-                                    dim, dim, inverse?Trans::Adjoint:Trans::NoTranspose);
+                Util::matrixVecProd(
+                    matrix, coeffs_in.data(), coeffs_out.data(), dim, dim,
+                    inverse ? Trans::Adjoint : Trans::NoTranspose);
 
                 for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
                     arr[indices[inner_idx]] = coeffs_out[inner_idx];
@@ -345,7 +363,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                               const std::vector<size_t> &wires,
                               [[maybe_unused]] bool inverse) {
         assert(wires.size() == 1);
-        constexpr PrecisionT isqrt2 = Util::INVSQRT2<PrecisionT>();
+        constexpr auto isqrt2 = Util::INVSQRT2<PrecisionT>();
         constexpr static std::array<std::complex<PrecisionT>, 4> hadamardMat = {
             isqrt2, isqrt2, isqrt2, -isqrt2};
         applySingleQubitOp(arr, num_qubits, hadamardMat.data(), wires[0]);
@@ -916,6 +934,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             arr[i0] = std::complex<PrecisionT>{0.0, 0.0};
         }
+        // NOLINTNEXTLINE(readability-magic-numbers)
         return static_cast<PrecisionT>(1.0);
     }
 
@@ -933,6 +952,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             arr[k] *= (2 * Util::popcount(k & wires_parity) - 1);
         }
+        // NOLINTNEXTLINE(readability-magic-numbers)
         return static_cast<PrecisionT>(0.5);
     }
 };
