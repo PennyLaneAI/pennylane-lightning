@@ -17,17 +17,12 @@
  */
 
 #pragma once
-#include <cmath>
 #include <complex>
-#include <functional>
-#include <set>
 #include <stdexcept>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "Error.hpp"
-#include "Gates.hpp"
 #include "StateVectorBase.hpp"
 #include "Util.hpp"
 

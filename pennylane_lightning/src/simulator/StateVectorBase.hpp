@@ -20,7 +20,6 @@
 
 #include "DynamicDispatcher.hpp"
 #include "Error.hpp"
-#include "Gates.hpp"
 #include "SelectGateOps.hpp"
 #include "Util.hpp"
 
@@ -35,9 +34,7 @@
 #include <complex>
 #include <functional>
 #include <iostream>
-#include <set>
 #include <stdexcept>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -238,10 +235,10 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param adj Indicates whether to use adjoint of operator.
      * @param params Optional parameter list for parametric gates.
      */
-    void applyGenerator(KernelType kernel, const std::string &opName,
-                        const std::vector<size_t> &wires, bool adj = false) {
+    [[nodiscard]] inline auto applyGenerator(KernelType kernel, const std::string &opName,
+                        const std::vector<size_t> &wires, bool adj = false) -> PrecisionT {
         auto *arr = getData();
-        DynamicDispatcher<PrecisionT>::getInstance().applyGenerator(
+        return DynamicDispatcher<PrecisionT>::getInstance().applyGenerator(
             kernel, arr, num_qubits_, opName, wires, adj);
     }
 
@@ -252,10 +249,10 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param wires Wires to apply gate to.
      * @param adj Indicates whether to use adjoint of operator.
      */
-    void applyGenerator(const std::string &opName,
-                        const std::vector<size_t> &wires, bool adj = false) {
+    [[nodiscard]] auto applyGenerator(const std::string &opName,
+                        const std::vector<size_t> &wires, bool adj = false) -> PrecisionT{
         auto *arr = getData();
-        DynamicDispatcher<PrecisionT>::getInstance().applyGenerator(
+        return DynamicDispatcher<PrecisionT>::getInstance().applyGenerator(
             arr, num_qubits_, opName, wires, adj);
     }
 
