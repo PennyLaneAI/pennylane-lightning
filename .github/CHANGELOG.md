@@ -11,6 +11,9 @@
 
 ### Improvements
 
+* Add a new C++ kernel. 
+[(#202)](https://github.com/PennyLaneAI/pennylane-lightning/pull/202)
+
 * Ensure debug info is built into dynamic libraries.
 [(#201)](https://github.com/PennyLaneAI/pennylane-lightning/pull/201)
 

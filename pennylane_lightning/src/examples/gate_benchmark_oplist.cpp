@@ -9,6 +9,8 @@
 
 #include "StateVectorManaged.hpp"
 
+using namespace Pennylane;
+
 std::string_view strip(std::string_view str) {
     auto start = str.find_first_not_of(" \t");
     auto end = str.find_last_not_of(" \t");
@@ -37,6 +39,7 @@ parseGateLists(std::string_view arg) {
         {"PhaseShift", {1, 1}},
         /* Two-qubit gates */
         {"CNOT", {2, 0}},
+        {"CZ", {2, 0}},
         {"SWAP", {2, 0}},
         {"ControlledPhaseShift", {2, 1}},
         {"CRX", {2, 1}},
@@ -47,16 +50,20 @@ parseGateLists(std::string_view arg) {
         {"Toffoli", {3, 0}},
         {"CSWAP", {3, 0}}};
 
-    if (arg.empty())
+    if (arg.empty()) {
+        /*
         return std::vector<std::pair<std::string_view, GateDesc>>(
             available_gates_wires.begin(), available_gates_wires.end());
+        */
+        return {};
+    }
 
     std::vector<std::pair<std::string_view, GateDesc>> ops;
 
-    if (auto pos = arg.find_first_of("["); pos != std::string_view::npos) {
+    if (auto pos = arg.find_first_of('['); pos != std::string_view::npos) {
         // arg is a list "[...]"
         auto start = pos + 1;
-        auto end = arg.find_last_of("]");
+        auto end = arg.find_last_of(']');
         if (end == std::string_view::npos) {
             throw std::invalid_argument(
                 "Argument must contain operators within square brackets [].");
@@ -66,8 +73,8 @@ parseGateLists(std::string_view arg) {
 
     size_t start;
     size_t end = 0;
-    while ((start = arg.find_first_not_of(",", end)) != string::npos) {
-        end = arg.find(",", start);
+    while ((start = arg.find_first_not_of(',', end)) != std::string::npos) {
+        end = arg.find(',', start);
         auto op_name = strip(arg.substr(start, end - start));
 
         auto iter = available_gates_wires.find(std::string(op_name));
@@ -91,6 +98,20 @@ std::vector<size_t> generateDistinctWires(RandomEngine &re, size_t num_qubits,
     shuffle(v.begin(), v.end(), re);
     return std::vector<size_t>(v.begin(), v.begin() + num_wires);
 }
+
+template <typename RandomEngine>
+std::vector<size_t> generateNeighboringWires(RandomEngine &re,
+                                             size_t num_qubits,
+                                             size_t num_wires) {
+    std::vector<size_t> v;
+    v.reserve(num_wires);
+    std::uniform_int_distribution<size_t> idist(0, num_qubits - 1);
+    size_t start_idx = idist(re);
+    for (size_t k = 0; k < num_wires; k++) {
+        v.emplace_back((start_idx + k) % num_qubits);
+    }
+    return v;
+}
 /**
  * @brief Benchmark Pennylane-Lightning for a given gate set
  *
@@ -113,13 +134,13 @@ int main(int argc, char *argv[]) {
     using TestType = double;
 
     // Handle input
-    if (argc < 3) {
+    if (argc < 4) {
         std::cerr << "Wrong number of inputs. User provided " << argc - 1
                   << " inputs. "
                   << "Usage: " + std::string(argv[0]) +
-                         " num_gate_reps num_qubits [gate_lists]\n"
+                         " num_gate_reps num_qubits kernel [gate_lists]\n"
                          "\tExample: "
-                  << argv[0] << " 1000 10 [PauliX, CNOT]"
+                  << argv[0] << " 1000 10 PI [PauliX, CNOT]"
                   << std::endl; // Change to std::format in C++20
         return -1;
     }
@@ -136,11 +157,18 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    std::string_view kernel_name = argv[3];
+    KernelType kernel = string_to_kernel(kernel_name);
+    if (kernel == KernelType::Unknown) {
+        std::cerr << "Kernel " << kernel_name << " is unknown." << std::endl;
+        return 1;
+    }
+
     // Gate list is provided
     std::string op_list_s;
     {
         std::ostringstream ss;
-        for (int idx = 3; idx < argc; ++idx) {
+        for (int idx = 4; idx < argc; idx++) {
             ss << argv[idx] << " ";
         }
         op_list_s = ss.str();
@@ -154,9 +182,14 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    if (op_list.empty()) {
+        std::cerr << "Please provide a gate list." << std::endl;
+        return 1;
+    }
+
     // Generate random gate sequences
     std::random_device rd;
-    std::default_random_engine re(rd());
+    std::mt19937 re(rd());
 
     std::vector<std::string_view> random_gate_names;
     std::vector<std::vector<size_t>> random_gate_wires;
@@ -170,7 +203,7 @@ int main(int argc, char *argv[]) {
 
     auto gen_param = [&param_dist, &re]() { return param_dist(re); };
 
-    for (uint32_t k = 0; k < num_gate_reps; ++k) {
+    for (uint32_t k = 0; k < num_gate_reps; k++) {
         auto [op_name, gate_desc] = op_list[gate_dist(re)];
 
         std::vector<TestType> gate_params(gate_desc.n_params, 0.0);
@@ -178,15 +211,17 @@ int main(int argc, char *argv[]) {
 
         random_gate_names.emplace_back(op_name);
         random_inverses.emplace_back(static_cast<bool>(inverse_dist(re)));
+        // random_gate_wires.emplace_back(generateDistinctWires(re, num_qubits,
+        // gate_desc.n_wires));
         random_gate_wires.emplace_back(
-            generateDistinctWires(re, num_qubits, gate_desc.n_wires));
+            generateNeighboringWires(re, num_qubits, gate_desc.n_wires));
         random_gate_parameters.emplace_back(std::move(gate_params));
     }
 
     // Log genereated sequence if LOG is turned on
     const char *env_p = std::getenv("LOG");
     try {
-        if (env_p && std::stoi(env_p) != 0) {
+        if (env_p != nullptr && std::stoi(env_p) != 0) {
             for (size_t gate_rep = 0; gate_rep < num_gate_reps; gate_rep++) {
                 std::cerr << random_gate_names[gate_rep] << ", "
                           << random_gate_wires[gate_rep] << ", "
@@ -199,11 +234,12 @@ int main(int argc, char *argv[]) {
 
     // Run benchmark. Total num_gate_reps number of gates is used.
     Pennylane::StateVectorManaged<TestType> svdat{num_qubits};
-    std::chrono::time_point<std::chrono::high_resolution_clock> t_start, t_end;
+    std::chrono::time_point<std::chrono::high_resolution_clock> t_start;
+    std::chrono::time_point<std::chrono::high_resolution_clock> t_end;
     t_start = std::chrono::high_resolution_clock::now();
 
     for (size_t gate_rep = 0; gate_rep < num_gate_reps; gate_rep++) {
-        svdat.applyOperation(std::string(random_gate_names[gate_rep]),
+        svdat.applyOperation(kernel, std::string(random_gate_names[gate_rep]),
                              random_gate_wires[gate_rep],
                              random_inverses[gate_rep],
                              random_gate_parameters[gate_rep]);

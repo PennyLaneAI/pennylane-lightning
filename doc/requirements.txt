@@ -1,6 +1,7 @@
+breathe
 docutils==0.16
+exhale
+graphviz
+pybind11
 sphinx
 sphinx-automodapi
-breathe
-exhale
-pybind11

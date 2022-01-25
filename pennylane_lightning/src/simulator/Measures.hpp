@@ -22,20 +22,12 @@
 
 #include <algorithm>
 #include <complex>
-#include <stdio.h>
+#include <cstdio>
 #include <vector>
 
-#include "StateVector.hpp"
 #include "StateVectorManaged.hpp"
+#include "StateVectorRaw.hpp"
 #include "Util.hpp"
-
-/// @cond DEV
-namespace {
-using std::complex;
-using std::size_t;
-using std::vector;
-}; // namespace
-/// @endcond
 
 namespace Pennylane {
 using namespace Util;
@@ -48,10 +40,11 @@ using namespace Util;
  *
  * @tparam fp_t Floating point precision of underlying measurements.
  */
-template <class fp_t = double, class SVType = StateVector<fp_t>>
+template <class fp_t = double, class SVType = StateVectorRaw<fp_t>>
 class Measures {
   private:
     const SVType &original_statevector;
+    using CFP_t = std::complex<fp_t>;
 
   public:
     Measures(const SVType &provided_statevector)
@@ -63,14 +56,13 @@ class Measures {
      * @return Floating point std::vector with probabilities
      * in lexicographic order.
      */
-    auto probs() -> vector<fp_t> {
-        const complex<fp_t> *arr_data = original_statevector.getData();
-        vector<fp_t> basis_probs(original_statevector.getLength(), 0);
+    auto probs() -> std::vector<fp_t> {
+        const CFP_t *arr_data = original_statevector.getData();
+        std::vector<fp_t> basis_probs(original_statevector.getLength(), 0);
 
-        std::transform(
-            arr_data, arr_data + original_statevector.getLength(),
-            basis_probs.begin(),
-            [](const std::complex<fp_t> &z) -> fp_t { return std::norm(z); });
+        std::transform(arr_data, arr_data + original_statevector.getLength(),
+                       basis_probs.begin(),
+                       [](const CFP_t &z) -> fp_t { return std::norm(z); });
 
         return basis_probs;
     };
@@ -83,24 +75,28 @@ class Measures {
      * @return Floating point std::vector with probabilities.
      * The basis columns are rearranged according to wires.
      */
-    auto probs(const vector<size_t> &wires) -> vector<fp_t> {
+    auto probs(const std::vector<size_t> &wires) -> std::vector<fp_t> {
         // Determining index that would sort the vector.
         // This information is needed later.
-        vector<size_t> sorted_ind_wires(sorting_indices(wires));
+        const std::vector<size_t> sorted_ind_wires(sorting_indices(wires));
         // Sorting wires.
-        vector<size_t> sorted_wires(wires.size());
+        std::vector<size_t> sorted_wires(wires.size());
         for (size_t pos = 0; pos < wires.size(); pos++) {
             sorted_wires[pos] = wires[sorted_ind_wires[pos]];
         }
         // Determining probabilities for the sorted wires.
-        const complex<fp_t> *arr_data = original_statevector.getData();
+        const CFP_t *arr_data = original_statevector.getData();
 
-        vector<size_t> all_indices =
-            original_statevector.generateBitPatterns(sorted_wires);
-        vector<size_t> all_offsets = original_statevector.generateBitPatterns(
-            original_statevector.getIndicesAfterExclusion(sorted_wires));
+        size_t num_qubits = original_statevector.getNumQubits();
 
-        vector<fp_t> probabilities(all_indices.size(), 0);
+        const std::vector<size_t> all_indices =
+            IndicesUtil::generateBitPatterns(sorted_wires, num_qubits);
+        const std::vector<size_t> all_offsets =
+            IndicesUtil::generateBitPatterns(
+                IndicesUtil::getIndicesAfterExclusion(sorted_wires, num_qubits),
+                num_qubits);
+
+        std::vector<fp_t> probabilities(all_indices.size(), 0);
 
         size_t ind_probs = 0;
         for (auto index : all_indices) {
@@ -120,22 +116,41 @@ class Measures {
     /**
      * @brief Expected value of an observable.
      *
-     * @param operation Square matrix in row-major order or string with the
-     * operator name.
+     * @param operation Square matrix in row-major order.
      * @param wires Wires where to apply the operator.
      * @return Floating point expected value of the observable.
      */
-    template <typename op_type>
-    auto expval(const op_type &operation, const vector<size_t> &wires) -> fp_t {
+    auto expval(const std::vector<CFP_t> &matrix,
+                const std::vector<size_t> &wires) -> fp_t {
+        // Copying the original state vector, for the application of the
+        // observable operator.
+        StateVectorManaged<fp_t> operator_statevector(original_statevector);
+
+        operator_statevector.applyMatrix(matrix, wires);
+
+        CFP_t expected_value = innerProdC(original_statevector.getData(),
+                                          operator_statevector.getData(),
+                                          original_statevector.getLength());
+        return std::real(expected_value);
+    };
+    /**
+     * @brief Expected value of an observable.
+     *
+     * @param operation String with the operator name.
+     * @param wires Wires where to apply the operator.
+     * @return Floating point expected value of the observable.
+     */
+    auto expval(const std::string &operation, const std::vector<size_t> &wires)
+        -> fp_t {
         // Copying the original state vector, for the application of the
         // observable operator.
         StateVectorManaged<fp_t> operator_statevector(original_statevector);
 
         operator_statevector.applyOperation(operation, wires);
 
-        complex<fp_t> expected_value = innerProdC(
-            original_statevector.getData(), operator_statevector.getData(),
-            original_statevector.getLength());
+        CFP_t expected_value = innerProdC(original_statevector.getData(),
+                                          operator_statevector.getData(),
+                                          original_statevector.getLength());
         return std::real(expected_value);
     };
 
@@ -149,14 +164,15 @@ class Measures {
      * observables.
      */
     template <typename op_type>
-    auto expval(const vector<op_type> &operations_list,
-                const vector<vector<size_t>> &wires_list) -> vector<fp_t> {
+    auto expval(const std::vector<op_type> &operations_list,
+                const std::vector<std::vector<size_t>> &wires_list)
+        -> std::vector<fp_t> {
         if (operations_list.size() != wires_list.size()) {
             throw std::out_of_range("The lengths of the list of operations and "
                                     "wires do not match.");
         }
 
-        vector<fp_t> expected_value_list;
+        std::vector<fp_t> expected_value_list;
 
         for (size_t index = 0; index < operations_list.size(); index++) {
             expected_value_list.emplace_back(
@@ -174,13 +190,39 @@ class Measures {
      * @param wires Wires where to apply the operator.
      * @return Floating point with the variance of the observables.
      */
-    template <typename op_type>
-    auto var(const op_type &operation, const vector<size_t> &wires) -> fp_t {
+    auto var(const std::string &operation, const std::vector<size_t> &wires)
+        -> fp_t {
         // Copying the original state vector, for the application of the
         // observable operator.
         StateVectorManaged<fp_t> operator_statevector(original_statevector);
 
         operator_statevector.applyOperation(operation, wires);
+
+        fp_t mean_square = std::real(innerProdC(
+            operator_statevector.getData(), operator_statevector.getData(),
+            original_statevector.getLength()));
+        fp_t squared_mean = std::real(innerProdC(
+            original_statevector.getData(), operator_statevector.getData(),
+            original_statevector.getLength()));
+        squared_mean = std::pow(squared_mean, 2);
+        return (mean_square - squared_mean);
+    };
+
+    /**
+     * @brief Variance of an observable.
+     *
+     * @param operation Square matrix in row-major order or string with the
+     * operator name.
+     * @param wires Wires where to apply the operator.
+     * @return Floating point with the variance of the observables.
+     */
+    auto var(const std::vector<CFP_t> &matrix, const std::vector<size_t> &wires)
+        -> fp_t {
+        // Copying the original state vector, for the application of the
+        // observable operator.
+        StateVectorManaged<fp_t> operator_statevector(original_statevector);
+
+        operator_statevector.applyMatrix(matrix, wires);
 
         fp_t mean_square = std::real(innerProdC(
             operator_statevector.getData(), operator_statevector.getData(),
@@ -201,14 +243,15 @@ class Measures {
      * @return Floating point std::vector with the variance of the observables.
      */
     template <typename op_type>
-    auto var(const vector<op_type> &operations_list,
-             const vector<vector<size_t>> &wires_list) -> vector<fp_t> {
+    auto var(const std::vector<op_type> &operations_list,
+             const std::vector<std::vector<size_t>> &wires_list)
+        -> std::vector<fp_t> {
         if (operations_list.size() != wires_list.size()) {
             throw std::out_of_range("The lengths of the list of operations and "
                                     "wires do not match.");
         }
 
-        vector<fp_t> expected_value_list;
+        std::vector<fp_t> expected_value_list;
 
         for (size_t index = 0; index < operations_list.size(); index++) {
             expected_value_list.emplace_back(

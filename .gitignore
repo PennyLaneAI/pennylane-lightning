@@ -2,6 +2,7 @@ venv/
 doc/_build/
 PennyLane_Lightning.egg-info/
 build/
+BuildBench/
 BuildTests/
 dist/
 tests/__pycache__/
@@ -17,5 +18,8 @@ doc/code/
 cpptests
 *.o
 
+.vscode/*
 .ycm_extra_conf.py
-.vscode
+/.vs
+/pennylane_lightning/.vs
+/pennylane_lightning/*.pyd
