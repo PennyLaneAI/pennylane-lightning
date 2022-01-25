@@ -57,7 +57,7 @@ struct testDispatchForKernel {
         DynamicDispatcher<PrecisionT>::getInstance().applyOperation(
             GateImplementation::kernel_id, test_st.data(), num_qubits,
             gate_name, wires, false, params);
-        REQUIRE(isApproxEqual(test_st, expected));
+        REQUIRE(test_st == expected);
     }
 
     template <
@@ -73,12 +73,15 @@ template <typename PrecisionT, typename ParamT, class GateImplementation,
           size_t idx, class RandomEngine>
 constexpr void testAllGatesForKernelIter(RandomEngine &re,
                                          size_t max_num_qubits) {
-    if constexpr (idx < static_cast<int>(GateOperation::END) - 1) {
+    if constexpr (idx < static_cast<int>(GateOperation::END)) {
         constexpr auto gate_op = static_cast<GateOperation>(idx);
-        for (size_t num_qubits = 3; num_qubits <= max_num_qubits;
-             num_qubits++) {
-            testDispatchForKernel<PrecisionT, ParamT, GateImplementation>::
-                template test<gate_op>(re, num_qubits);
+
+        if constexpr (gate_op != GateOperation::Matrix) { // ignore Matrix
+            for (size_t num_qubits = 3; num_qubits <= max_num_qubits;
+                 num_qubits++) {
+                testDispatchForKernel<PrecisionT, ParamT, GateImplementation>::
+                    template test<gate_op>(re, num_qubits);
+            }
         }
 
         testAllGatesForKernelIter<PrecisionT, ParamT, GateImplementation,

@@ -1,4 +1,3 @@
-#include "Gates.hpp"
 #include "TestHelpers.hpp"
 #include "TestKernels.hpp"
 #include "Util.hpp"
@@ -14,7 +13,9 @@
 #include <vector>
 
 /**
- * @file This file contains tests for non-parameterized gates. List of such
+ * @file Test_GateImplementations_Nonparam.cpp
+ *
+ * This file contains tests for non-parameterized gates. List of such
  * gates are [PauliX, PauliY, PauliZ, Hadamard, S, T, CNOT, SWAP, CZ, Toffoli,
  * CSWAP].
  */

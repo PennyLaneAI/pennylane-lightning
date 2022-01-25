@@ -74,11 +74,5 @@ TEMPLATE_TEST_CASE("randomUnitary", "[Test_Internal]", float, double) {
         }
 
         REQUIRE_THAT(mat, Approx(identity).margin(1e-5));
-        /*
-        for(size_t row = 0; row < dim; row++) {
-            const ComplexPrecisionT* row_p = unitary.data() + row*dim;
-            std::cout << row << "\t" << squaredNorm(row_p, dim) << std::endl;
-        }
-        */
     }
 }
