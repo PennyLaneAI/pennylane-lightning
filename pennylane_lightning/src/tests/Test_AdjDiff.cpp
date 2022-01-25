@@ -58,8 +58,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=Z",
 
             std::vector<size_t> tp{0};
             std::vector<ObsDatum<double>> obs_ls{obs};
-            GradTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                                   tp};
+            JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls,
+                                       ops, tp};
 
             adj.adjointJacobianTape(jacobian, tape, true);
             CAPTURE(jacobian);

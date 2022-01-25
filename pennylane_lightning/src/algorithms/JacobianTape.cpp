@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "Tape.hpp"
+#include "JacobianTape.hpp"
 
 template class Pennylane::Algorithms::ObsDatum<float>;
 template class Pennylane::Algorithms::ObsDatum<double>;

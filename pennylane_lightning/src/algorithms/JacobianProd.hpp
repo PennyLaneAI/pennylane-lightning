@@ -16,7 +16,7 @@
 #include <algorithm>
 
 #include "AdjointDiff.hpp"
-#include "Tape.hpp"
+#include "JacobianTape.hpp"
 
 namespace Pennylane::Algorithms {
 
@@ -135,7 +135,7 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
     void vectorJacobianProduct(std::vector<T> &vjp,
                                std::vector<std::vector<T>> &jac,
                                const std::vector<T> &dy,
-                               const GradTapeT<T> &tape,
+                               const JacobianTapeT<T> &tape,
                                bool apply_operations = false) {
         const size_t num_params = tape.trainableParams.size();
 
@@ -156,32 +156,33 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
         computeVJP(vjp, jac, dy);
     }
 
-    auto vectorJacobianProductFunc(const std::vector<T> &dy,
-                               const GradTapeT<T> &tape,
-                               bool apply_operations = false) -> std::function<std::vector<T>(void)> {
-        const size_t num_params = tape.trainableParams.size();
-        if (num_params == 0U || dy.empty()) {
-            // The tape has no trainable parameters; 
-            // the VJP is simple {}.
-            return []() -> std::vector<T> {
-                return {};
-            };
-        }
+    auto vectorJacobianProductFunc(const std::vector<T> &dy, size_t num_params,
+                                   bool apply_operations = false)
+        -> std::function<std::vector<T>(const JacobianTapeT<T> &tape)> {
 
-        if (std::all_of(dy.cbegin(), dy.cend(), [](T e) { return e == 0; })) {
+        if (!dy.size() ||
+            std::all_of(dy.cbegin(), dy.cend(), [](T e) { return e == 0; })) {
             // If the dy vector is zero, then the
             // corresponding element of the VJP will be zero,
             // and we can avoid unnecessary computation.
-            return [&num_params]() -> std::vector<T> {
-                return std::vector<T>(num_params, 0);
+
+            return [](const JacobianTapeT<T> &tape) -> std::vector<T> {
+                return std::vector<T>(tape.trainableParams.size(), 0);
             };
         }
 
-        return [&]() -> std::vector<T> {
+        return [&](const JacobianTapeT<T> &tape) -> std::vector<T> {
+            if (!tape.trainableParams.size()) {
+                // The tape has no trainable parameters;
+                // the VJP is simple {}.
+                return {};
+            }
+
             std::vector<T> vjp(num_params);
-            std::vector<std::vector<T>> jac(tape.observables.size(), std::vector<T>(num_params, 0));
-            
-            // Compute Jacobian for the input tape using `adjoint` method            
+            std::vector<std::vector<T>> jac(tape.observables.size(),
+                                            std::vector<T>(num_params, 0));
+
+            // Compute Jacobian for the input tape using `adjoint` method
             this->adjointJacobianTape(jac, tape, apply_operations);
 
             // Compute VJP

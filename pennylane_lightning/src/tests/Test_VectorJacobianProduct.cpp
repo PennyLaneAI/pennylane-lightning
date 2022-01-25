@@ -60,8 +60,8 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={0}",
 
             std::vector<size_t> tp{0};
             std::vector<ObsDatum<double>> obs_ls{obs};
-            GradTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                                   tp};
+            JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls,
+                                       ops, tp};
 
             VJP.vectorJacobianProduct(vjp_res, jacobian, dy, tape, true);
 
@@ -100,15 +100,11 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={1}",
 
             std::vector<size_t> tp{0};
             std::vector<ObsDatum<double>> obs_ls{obs};
-            GradTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                                   tp};
+            JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls,
+                                       ops, tp};
 
-            // VJP.vectorJacobianProduct(vjp_res, jacobian, dy, tape, true);
-            auto fn = VJP.vectorJacobianProductFunc(dy, tape, true);
-            vjp_res = fn();
-
-            // CAPTURE(jacobian);
-            // CHECK(-sin(p) == Approx(jacobian[0].front()));
+            auto fn = VJP.vectorJacobianProductFunc(dy, num_params, true);
+            vjp_res = fn(tape);
 
             CAPTURE(vjp_res);
             CHECK(-sin(p) == Approx(vjp_res[0]));
@@ -142,13 +138,11 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={0.4}",
 
             std::vector<size_t> tp{0};
             std::vector<ObsDatum<double>> obs_ls{obs};
-            GradTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                                   tp};
+            JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls,
+                                       ops, tp};
 
-            VJP.vectorJacobianProduct(vjp_res, jacobian, dy, tape, true);
-
-            CAPTURE(jacobian);
-            CHECK(-sin(p) == Approx(jacobian[0].front()));
+            auto fn = VJP.vectorJacobianProductFunc(dy, num_params, true);
+            vjp_res = fn(tape);
 
             CAPTURE(vjp_res);
             CHECK(vjp_res.size() == num_params);
@@ -183,13 +177,11 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RY, Obs=X dy={0.4}",
 
             std::vector<size_t> tp{0};
             std::vector<ObsDatum<double>> obs_ls{obs};
-            GradTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                                   tp};
+            JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls,
+                                       ops, tp};
 
-            VJP.vectorJacobianProduct(vjp_res, jacobian, dy, tape, true);
-
-            CAPTURE(jacobian);
-            CHECK(cos(p) == Approx(jacobian[0].front()).margin(1e-7));
+            auto fn = VJP.vectorJacobianProductFunc(dy, num_params, true);
+            vjp_res = fn(tape);
 
             CAPTURE(vjp_res);
             CHECK(vjp_res.size() == num_params);
@@ -224,13 +216,11 @@ TEST_CASE(
 
         std::vector<size_t> tp{0};
         std::vector<ObsDatum<double>> obs_ls{obs1, obs2};
-        GradTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops, tp};
+        JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
+                                   tp};
 
-        VJP.vectorJacobianProduct(vjp_res, jacobian, dy, tape, true);
-
-        CAPTURE(jacobian);
-        CHECK(-sin(param[0]) == Approx(jacobian[0][0]).margin(1e-7));
-        CHECK(0.0 == Approx(jacobian[1][0]).margin(1e-7));
+        auto fn = VJP.vectorJacobianProductFunc(dy, num_params, true);
+        vjp_res = fn(tape);
 
         CAPTURE(vjp_res);
         CHECK(vjp_res.size() == num_params);
@@ -265,14 +255,11 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=[RX,RX,RX], "
 
         std::vector<size_t> tp{0, 1, 2};
         std::vector<ObsDatum<double>> obs_ls{obs1, obs2, obs3};
-        GradTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops, tp};
+        JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
+                                   tp};
 
-        VJP.vectorJacobianProduct(vjp_res, jacobian, dy, tape, true);
-
-        CAPTURE(jacobian);
-        CHECK(-sin(param[0]) == Approx(jacobian[0][0]).margin(1e-7));
-        CHECK(-sin(param[1]) == Approx(jacobian[1][1]).margin(1e-7));
-        CHECK(-sin(param[2]) == Approx(jacobian[2][2]).margin(1e-7));
+        auto fn = VJP.vectorJacobianProductFunc(dy, num_params, true);
+        vjp_res = fn(tape);
 
         CAPTURE(vjp_res);
         CHECK(vjp_res.size() == num_params);
@@ -310,15 +297,11 @@ TEST_CASE(
                                      {{0}, {1}, {2}}, {false, false, false});
 
         std::vector<ObsDatum<double>> obs_ls{obs1, obs2, obs3};
-        GradTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                               t_params};
+        JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
+                                   t_params};
 
-        VJP.vectorJacobianProduct(vjp_res, jacobian, dy, tape, true);
-
-        CAPTURE(jacobian);
-        CHECK(-sin(param[0]) == Approx(jacobian[0][0]).margin(1e-7));
-        CHECK(0 == Approx(jacobian[1][1]).margin(1e-7));
-        CHECK(-sin(param[2]) == Approx(jacobian[2][1]).margin(1e-7));
+        auto fn = VJP.vectorJacobianProductFunc(dy, num_params, true);
+        vjp_res = fn(tape);
 
         CAPTURE(vjp_res);
         CHECK(vjp_res.size() == num_params);
@@ -353,7 +336,8 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=[RX,RX,RX], "
 
         std::vector<size_t> tp{0, 1, 2};
         std::vector<ObsDatum<double>> obs_ls{obs};
-        GradTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops, tp};
+        JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
+                                   tp};
 
         VJP.vectorJacobianProduct(vjp_res, jacobian, dy, tape, true);
 
@@ -404,7 +388,8 @@ TEST_CASE(
 
         std::vector<size_t> tp{0, 1, 2, 3, 4, 5};
         std::vector<ObsDatum<double>> obs_ls{obs};
-        GradTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops, tp};
+        JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
+                                   tp};
 
         VJP.vectorJacobianProduct(vjp_res, jacobian, dy, tape, true);
 
@@ -461,7 +446,8 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=Mixed, Obs=[XXX], "
 
         std::vector<size_t> tp{0, 1, 2, 3, 4, 5};
         std::vector<ObsDatum<double>> obs_ls{obs};
-        GradTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops, tp};
+        JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
+                                   tp};
 
         VJP.vectorJacobianProduct(vjp_res, jacobian, dy, tape, true);
 
@@ -525,8 +511,8 @@ TEST_CASE(
 
             std::vector<size_t> tp{0, 1, 2};
             std::vector<ObsDatum<double>> obs_ls{obs};
-            GradTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                                   tp};
+            JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls,
+                                       ops, tp};
 
             VJP.vectorJacobianProduct(vjp_res, jacobian, dy, tape, true);
 
@@ -591,8 +577,8 @@ TEST_CASE(
              false, false, false});
 
         std::vector<ObsDatum<double>> obs_ls{obs};
-        GradTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                               t_params};
+        JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
+                                   t_params};
 
         VJP.vectorJacobianProduct(vjp_res, jacobian, dy, tape, true);
 
@@ -652,8 +638,8 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Mixed Ops, Obs and "
              false, false, false});
 
         std::vector<ObsDatum<double>> obs_ls{obs};
-        GradTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                               t_params};
+        JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
+                                   t_params};
 
         VJP.vectorJacobianProduct(vjp_res, jacobian, dy, tape, true);
 

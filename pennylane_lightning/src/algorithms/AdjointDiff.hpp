@@ -24,9 +24,9 @@
 #include <vector>
 
 #include "Error.hpp"
+#include "JacobianTape.hpp"
 #include "StateVector.hpp"
 #include "StateVectorManaged.hpp"
-#include "Tape.hpp"
 #include "Util.hpp"
 
 #include <iostream>
@@ -559,7 +559,7 @@ template <class T = double> class AdjointJacobian {
      * prior to calculation.
      */
     void adjointJacobianTape(std::vector<std::vector<T>> &jac,
-                             const GradTapeT<T> &tape,
+                             const JacobianTapeT<T> &tape,
                              bool apply_operations = false) {
         PL_ABORT_IF(tape.trainableParams.empty(),
                     "No trainable parameters provided.");
@@ -592,8 +592,8 @@ template <class T = double> class AdjointJacobian {
 
         StateVectorManaged<T> mu(lambda.getNumQubits());
 
-        for (int op_idx = static_cast<int>(ops_name.size() - 1);
-             op_idx >= 0; op_idx--) {
+        for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
+             op_idx--) {
             PL_ABORT_IF(ops.getOpsParams()[op_idx].size() > 1,
                         "The operation is not supported using the adjoint "
                         "differentiation method");

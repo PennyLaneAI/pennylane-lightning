@@ -18,8 +18,8 @@
 
 #include "AdjointDiff.hpp"
 #include "JacobianProd.hpp"
+#include "JacobianTape.hpp"
 #include "StateVector.hpp"
-#include "Tape.hpp"
 #include "pybind11/complex.h"
 #include "pybind11/numpy.h"
 #include "pybind11/pybind11.h"
@@ -822,9 +822,9 @@ void lightning_class_bindings(py::module &m) {
                      observables.size(),
                      std::vector<PrecisionT>(num_params, 0));
 
-                 const GradTapeT<PrecisionT> tape{sv.getLength(), sv.getData(),
-                                                  observables, operations,
-                                                  trainableParams};
+                 const JacobianTapeT<PrecisionT> tape{
+                     sv.getLength(), sv.getData(), observables, operations,
+                     trainableParams};
 
                  adj.adjointJacobianTape(jac, tape);
                  return py::array_t<Param_t>(py::cast(jac));
@@ -889,9 +889,9 @@ void lightning_class_bindings(py::module &m) {
                 observables.size(), std::vector<PrecisionT>(num_params, 0));
             std::vector<PrecisionT> vjp_res(num_params);
 
-            const GradTapeT<PrecisionT> tape{sv.getLength(), sv.getData(),
-                                             observables, operations,
-                                             trainableParams};
+            const JacobianTapeT<PrecisionT> tape{sv.getLength(), sv.getData(),
+                                                 observables, operations,
+                                                 trainableParams};
 
             v.vectorJacobianProduct(vjp_res, jac, dy, tape);
             return py::make_tuple(py::array_t<Param_t>(py::cast(jac)),
