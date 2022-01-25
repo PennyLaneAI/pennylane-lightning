@@ -19,3 +19,6 @@ template class Pennylane::Algorithms::ObsDatum<double>;
 
 template class Pennylane::Algorithms::ObsDatum<std::complex<float>>;
 template class Pennylane::Algorithms::ObsDatum<std::complex<double>>;
+
+template class Pennylane::Algorithms::JacobianData<float>;
+template class Pennylane::Algorithms::JacobianData<double>;

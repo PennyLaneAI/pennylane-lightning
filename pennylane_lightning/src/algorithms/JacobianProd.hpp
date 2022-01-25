@@ -127,7 +127,7 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
      * @param jac Preallocated Jacobian matrix from `AdjointJacobian` of size
      * `observables.size() * trainableParams.size()`.
      * @param dy Gradient-output vector.
-     * @param tape The QuantumTape to differentiate
+     * @param tape JacobianData represents the QuantumTape to differentiate
      * @param apply_operations Indicate whether to apply operations to tape.psi
      * prior to calculation.
      *
@@ -135,9 +135,9 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
     void vectorJacobianProduct(std::vector<T> &vjp,
                                std::vector<std::vector<T>> &jac,
                                const std::vector<T> &dy,
-                               const JacobianTapeT<T> &tape,
+                               const JacobianData<T> &tape,
                                bool apply_operations = false) {
-        const size_t num_params = tape.trainableParams.size();
+        const size_t num_params = tape.getNumTrainableParams();
 
         if (num_params == 0U || dy.empty()) {
             vjp.clear();
@@ -156,30 +156,40 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
         computeVJP(vjp, jac, dy);
     }
 
+    /**
+     * @brief Calculates the VectorJacobianProduct for the statevector
+     * for the selected set of parametric gates using `AdjointJacobian`.
+     *
+     * @param dy Gradient-output vector.
+     * @param num_params Total number of parameters in the QuantumTape
+     * @param apply_operations Indicate whether to apply operations to tape.psi
+     * prior to calculation.
+     *
+     * @return std::function<std::vector<T>(const JacobianData<T> &tape)>
+     */
     auto vectorJacobianProductFunc(const std::vector<T> &dy, size_t num_params,
                                    bool apply_operations = false)
-        -> std::function<std::vector<T>(const JacobianTapeT<T> &tape)> {
+        -> std::function<std::vector<T>(const JacobianData<T> &tape)> {
 
         if (!dy.size() ||
             std::all_of(dy.cbegin(), dy.cend(), [](T e) { return e == 0; })) {
             // If the dy vector is zero, then the
             // corresponding element of the VJP will be zero,
             // and we can avoid unnecessary computation.
-
             return
-                [&num_params]([[maybe_unused]] const JacobianTapeT<T> &tape)
+                [&num_params]([[maybe_unused]] const JacobianData<T> &tape)
                     -> std::vector<T> { return std::vector<T>(num_params, 0); };
         }
 
-        return [=](const JacobianTapeT<T> &tape) -> std::vector<T> {
-            if (!tape.trainableParams.size()) {
+        return [=](const JacobianData<T> &tape) -> std::vector<T> {
+            if (!tape.hasTrainableParams()) {
                 // The tape has no trainable parameters;
                 // the VJP is simple {}.
                 return {};
             }
 
             std::vector<T> vjp(num_params);
-            std::vector<std::vector<T>> jac(tape.observables.size(),
+            std::vector<std::vector<T>> jac(tape.getNumObservables(),
                                             std::vector<T>(num_params, 0));
 
             // Compute Jacobian for the input tape using `adjoint` method

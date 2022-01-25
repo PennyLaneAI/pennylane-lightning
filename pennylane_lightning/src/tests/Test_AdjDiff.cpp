@@ -58,8 +58,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=Z",
 
             std::vector<size_t> tp{0};
             std::vector<ObsDatum<double>> obs_ls{obs};
-            JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls,
-                                       ops, tp};
+            JacobianData<double> tape{psi.getLength(), psi.getData(), obs_ls,
+                                      ops, tp};
 
             adj.adjointJacobianTape(jacobian, tape, true);
 
@@ -91,8 +91,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RY, Obs=X",
 
             std::vector<size_t> tp{0};
             std::vector<ObsDatum<double>> obs_ls{obs};
-            JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls,
-                                       ops, tp};
+            JacobianData<double> tape{psi.getLength(), psi.getData(), obs_ls,
+                                      ops, tp};
 
             adj.adjointJacobianTape(jacobian, tape, true);
 
@@ -123,8 +123,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=[Z,Z]",
 
         std::vector<size_t> tp{0};
         std::vector<ObsDatum<double>> obs_ls{obs1, obs2};
-        JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                                   tp};
+        JacobianData<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
+                                  tp};
 
         adj.adjointJacobianTape(jacobian, tape, true);
 
@@ -158,8 +158,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z]",
 
         std::vector<size_t> tp{0, 1, 2};
         std::vector<ObsDatum<double>> obs_ls{obs1, obs2, obs3};
-        JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                                   tp};
+        JacobianData<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
+                                  tp};
 
         adj.adjointJacobianTape(jacobian, tape, true);
 
@@ -195,8 +195,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z], "
                                      {{0}, {1}, {2}}, {false, false, false});
 
         std::vector<ObsDatum<double>> obs_ls{obs1, obs2, obs3};
-        JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                                   t_params};
+        JacobianData<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
+                                  t_params};
 
         adj.adjointJacobianTape(jacobian, tape, true);
 
@@ -229,8 +229,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
 
         std::vector<size_t> tp{0, 1, 2};
         std::vector<ObsDatum<double>> obs_ls{obs};
-        JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                                   tp};
+        JacobianData<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
+                                  tp};
 
         adj.adjointJacobianTape(jacobian, tape, true);
 
@@ -274,8 +274,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=Mixed, Obs=[XXX]",
 
         std::vector<size_t> tp{0, 1, 2, 3, 4, 5};
         std::vector<ObsDatum<double>> obs_ls{obs};
-        JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                                   tp};
+        JacobianData<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
+                                  tp};
 
         adj.adjointJacobianTape(jacobian, tape, true);
 
@@ -328,8 +328,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian Decomposed Rot gate, non "
 
             std::vector<size_t> tp{0, 1, 2};
             std::vector<ObsDatum<double>> obs_ls{obs};
-            JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls,
-                                       ops, tp};
+            JacobianData<double> tape{psi.getLength(), psi.getData(), obs_ls,
+                                      ops, tp};
 
             adj.adjointJacobianTape(jacobian, tape, true);
 
@@ -387,8 +387,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian Mixed Ops, Obs and TParams",
              false, false, false});
 
         std::vector<ObsDatum<double>> obs_ls{obs};
-        JacobianTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                                   t_params};
+        JacobianData<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
+                                  t_params};
 
         adj.adjointJacobianTape(jacobian, tape, true);
 

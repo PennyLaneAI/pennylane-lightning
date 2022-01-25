@@ -515,31 +515,39 @@ template <class T = double> class AdjointJacobian {
      * enable independent operations to be offloaded to threads.
      *
      * @param jac Preallocated vector for Jacobian data results.
-     * @param tape The QuantumTape to differentiate
+     * @param tape JacobianData represents the QuantumTape to differentiate
      * @param apply_operations Indicate whether to apply operations to tape.psi
      * prior to calculation.
      */
     void adjointJacobianTape(std::vector<std::vector<T>> &jac,
-                             const JacobianTapeT<T> &tape,
+                             const JacobianData<T> &tape,
                              bool apply_operations = false) {
-        PL_ABORT_IF(tape.trainableParams.empty(),
+        PL_ABORT_IF(!tape.hasTrainableParams(),
                     "No trainable parameters provided.");
 
-        const OpsData<T> &ops = tape.operations;
+        const OpsData<T> &ops = tape.getOperations();
         const std::vector<std::string> &ops_name = ops.getOpsName();
 
-        const std::vector<ObsDatum<T>> &obs = tape.observables;
+        const std::vector<ObsDatum<T>> &obs = tape.getObservables();
         const size_t num_observables = obs.size();
 
-        // Track positions within par and non-par operations
-        size_t trainableParamNumber = tape.trainableParams.size() - 1;
-        size_t current_param_idx =
-            ops.getNumParOps() - 1; // total number of parametric ops
+        const size_t tp_size = tape.getNumTrainableParams();
+        const size_t num_param_ops = ops.getNumParOps();
 
-        auto tp_it = tape.trainableParams.end();
+        // Track positions within par and non-par operations
+        size_t trainableParamNumber = tp_size - 1;
+        size_t current_param_idx =
+            num_param_ops - 1; // total number of parametric ops
+
+        // A (value -> index) vector for tape.trainableParams
+        std::vector<size_t> tp_map(num_param_ops, num_param_ops);
+        for (size_t i = 0; i < tp_size; i++) {
+            tp_map[tape.getTrainableParamAt(i)] = i;
+        }
 
         // Create $U_{1:p}\vert \lambda \rangle$
-        StateVectorManaged<T> lambda(tape.psi, tape.num_elements);
+        StateVectorManaged<T> lambda(tape.getPtrStateVec(),
+                                     tape.getSizeStateVec());
 
         // Apply given operations to statevector if requested
         if (apply_operations) {
@@ -564,8 +572,8 @@ template <class T = double> class AdjointJacobian {
                 applyOperationAdj(lambda, ops, op_idx);
 
                 if (ops.hasParams(op_idx)) {
-                    if (std::find(tape.trainableParams.begin(), tp_it,
-                                  current_param_idx) != tp_it) {
+                    if (trainableParamNumber < tp_size &&
+                        tp_map.at(current_param_idx) <= trainableParamNumber) {
                         const T scalingFactor =
                             applyGenerator(mu, ops_name[op_idx],
                                            ops.getOpsWires()[op_idx],
@@ -576,7 +584,7 @@ template <class T = double> class AdjointJacobian {
                         #if defined(_OPENMP)
                             #pragma omp parallel for default(none)   \
                             shared(H_lambda, jac, mu, scalingFactor, \
-                                trainableParamNumber, tp_it,         \
+                                trainableParamNumber,         \
                                 num_observables)
                         #endif
 
@@ -588,7 +596,6 @@ template <class T = double> class AdjointJacobian {
                                            trainableParamNumber);
                         }
                         trainableParamNumber--;
-                        std::advance(tp_it, -1);
                     }
                     current_param_idx--;
                 }

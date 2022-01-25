@@ -223,7 +223,7 @@ void lightning_class_bindings(py::module &m) {
                      observables.size(),
                      std::vector<PrecisionT>(num_params, 0));
 
-                 const JacobianTapeT<PrecisionT> tape{
+                 const JacobianData<PrecisionT> tape{
                      sv.getLength(), sv.getData(), observables, operations,
                      trainableParams};
 
@@ -290,14 +290,86 @@ void lightning_class_bindings(py::module &m) {
                 observables.size(), std::vector<PrecisionT>(num_params, 0));
             std::vector<PrecisionT> vjp_res(num_params);
 
-            const JacobianTapeT<PrecisionT> tape{sv.getLength(), sv.getData(),
-                                                 observables, operations,
-                                                 trainableParams};
+            const JacobianData<PrecisionT> tape{sv.getLength(), sv.getData(),
+                                                observables, operations,
+                                                trainableParams};
 
             v.vectorJacobianProduct(vjp_res, jac, dy, tape);
             return py::make_tuple(py::array_t<ParamT>(py::cast(jac)),
                                   py::array_t<ParamT>(py::cast(vjp_res)));
         });
+
+    // class_name = "FuncVectorJacobianProductC" + bitsize;
+    // py::class_<VectorJacobianProduct<PrecisionT>>(m, class_name.c_str())
+    //     .def(py::init<>())
+    //     .def("create_ops_list",
+    //          &VectorJacobianProduct<PrecisionT>::createOpsData)
+    //     .def("create_ops_list",
+    //          [](VectorJacobianProduct<PrecisionT> &v,
+    //             const std::vector<std::string> &ops_name,
+    //             const std::vector<np_arr_r> &ops_params,
+    //             const std::vector<std::vector<size_t>> &ops_wires,
+    //             const std::vector<bool> &ops_inverses,
+    //             const std::vector<np_arr_c> &ops_matrices) {
+    //              std::vector<std::vector<PrecisionT>> conv_params(
+    //                  ops_params.size());
+    //              std::vector<std::vector<std::complex<PrecisionT>>>
+    //                  conv_matrices(ops_matrices.size());
+    //              static_cast<void>(v);
+    //              for (size_t op = 0; op < ops_name.size(); op++) {
+    //                  const auto p_buffer = ops_params[op].request();
+    //                  const auto m_buffer = ops_matrices[op].request();
+    //                  if (p_buffer.size) {
+    //                      const auto *const p_ptr =
+    //                          static_cast<const ParamT *>(p_buffer.ptr);
+    //                      conv_params[op] =
+    //                          std::vector<ParamT>{p_ptr, p_ptr +
+    //                          p_buffer.size};
+    //                  }
+    //                  if (m_buffer.size) {
+    //                      const auto m_ptr =
+    //                          static_cast<const std::complex<ParamT> *>(
+    //                              m_buffer.ptr);
+    //                      conv_matrices[op] =
+    //                      std::vector<std::complex<ParamT>>{
+    //                          m_ptr, m_ptr + m_buffer.size};
+    //                  }
+    //              }
+    //              return OpsData<PrecisionT>{ops_name, conv_params, ops_wires,
+    //                                         ops_inverses, conv_matrices};
+    //          })
+    //     .def("compute_vjp_from_jac",
+    //          &VectorJacobianProduct<PrecisionT>::computeVJP)
+    //     .def("compute_vjp_from_jac",
+    //          [](VectorJacobianProduct<PrecisionT> &v,
+    //             const std::vector<PrecisionT> &jac,
+    //             const std::vector<PrecisionT> &dy_row, size_t m, size_t n) {
+    //              std::vector<PrecisionT> vjp_res(n);
+    //              v._computeVJP(vjp_res, jac, dy_row, m, n);
+    //              return py::array_t<ParamT>(py::cast(vjp_res));
+    //          })
+    //     .def("vjpf",
+    //     &VectorJacobianProduct<PrecisionT>::vectorJacobianProductFunc)
+    //     .def("vjpf", [](VectorJacobianProduct<PrecisionT> &v,
+    //                    const std::vector<PrecisionT> &dy,
+    //                    const StateVectorRaw<PrecisionT> &sv,
+    //                    const std::vector<ObsDatum<PrecisionT>> &observables,
+    //                    const OpsData<PrecisionT> &operations,
+    //                    const std::vector<size_t> &trainableParams,
+    //                    size_t num_params) {
+    //         std::vector<std::vector<PrecisionT>> jac(
+    //             observables.size(), std::vector<PrecisionT>(num_params, 0));
+    //         std::vector<PrecisionT> vjp_res(num_params);
+
+    //         const JacobianData<PrecisionT> tape{sv.getLength(),
+    //         sv.getData(),
+    //                                              observables, operations,
+    //                                              trainableParams};
+
+    //         v.vectorJacobianProduct(vjp_res, jac, dy, tape);
+    //         return py::make_tuple(py::array_t<ParamT>(py::cast(jac)),
+    //                               py::array_t<ParamT>(py::cast(vjp_res)));
+    //     });
 }
 
 /**

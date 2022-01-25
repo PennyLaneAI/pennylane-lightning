@@ -255,17 +255,116 @@ template <class T> class OpsData {
  * @param trainableParams List of parameters participating in Jacobian
  * calculation.
  */
-template <class T> struct JacobianTapeT {
+template <class T> class JacobianData {
+  private:
     size_t num_elements;
     std::complex<T> *psi;
-    const std::vector<ObsDatum<T>> &observables;
-    const OpsData<T> &operations;
-    const std::vector<size_t> &trainableParams;
+    const std::vector<ObsDatum<T>> observables;
+    const OpsData<T> operations;
+    const std::vector<size_t> trainableParams;
 
-    JacobianTapeT(size_t num_elem, std::complex<T> *p,
-                  const std::vector<ObsDatum<T>> &obs, const OpsData<T> &ops,
-                  const std::vector<size_t> &trainP)
-        : num_elements(num_elem), psi(p), observables(obs), operations(ops),
+  public:
+    /**
+     * @brief Construct a JacobianData object
+     *
+     * @param num_elem Length of the statevector data.
+     * @param ps Pointer to the statevector data.
+     * @param obs Observables for which to calculate Jacobian.
+     * @param ops Operations used to create given state.
+     * @param trainP List of parameters participating in Jacobian
+     * calculation.
+     */
+    JacobianData(size_t num_elem, std::complex<T> *ps,
+                 const std::vector<ObsDatum<T>> &obs, const OpsData<T> &ops,
+                 const std::vector<size_t> &trainP)
+        : num_elements(num_elem), psi(ps), observables(obs), operations(ops),
           trainableParams(trainP) {}
+
+    /**
+     * @brief Get the length of the statevector data.
+     *
+     * @return size_t
+     */
+    [[nodiscard]] auto getSizeStateVec() const -> size_t {
+        return num_elements;
+    }
+
+    /**
+     * @brief Get the pointer to the statevector data.
+     *
+     * @return std::complex<T> *
+     */
+    [[nodiscard]] auto getPtrStateVec() const -> const std::complex<T> * {
+        return psi;
+    }
+
+    /**
+     * @brief Get observables for which to calculate Jacobian.
+     *
+     * @return std::vector<ObsDatum<T>>&
+     */
+    [[nodiscard]] auto getObservables() const
+        -> const std::vector<ObsDatum<T>> & {
+        return observables;
+    }
+
+    /**
+     * @brief Get the number of observables for which to calculate
+     * Jacobian.
+     *
+     * @return size_t
+     */
+    [[nodiscard]] auto getNumObservables() const -> size_t {
+        return observables.size();
+    }
+
+    /**
+     * @brief Get operations used to create given state.
+     *
+     * @return OpsData<T>&
+     */
+    [[nodiscard]] auto getOperations() const -> const OpsData<T> & {
+        return operations;
+    }
+
+    /**
+     * @brief Get list of parameters participating in Jacobian
+     * calculation.
+     *
+     * @return std::vector<size_t>&
+     */
+    [[nodiscard]] auto getTrainableParams() const
+        -> const std::vector<size_t> & {
+        return trainableParams;
+    }
+
+    /**
+     * @brief Get the number of parameters participating in Jacobian
+     * calculation.
+     *
+     * @return size_t
+     */
+    [[nodiscard]] auto getNumTrainableParams() const -> size_t {
+        return trainableParams.size();
+    }
+
+    /**
+     * @brief Get if the number of parameters participating in Jacobian
+     * calculation is zero.
+     *
+     * @return true If it has trainable parameters; false otherwise.
+     */
+    [[nodiscard]] auto hasTrainableParams() const -> bool {
+        return !trainableParams.empty();
+    }
+
+    /**
+     * @brief Get the idx-th parameter in the list of trainable parameters.
+     *
+     * @return size_t
+     */
+    [[nodiscard]] auto getTrainableParamAt(size_t idx) const -> size_t {
+        return trainableParams.at(idx);
+    }
 };
 } // namespace Pennylane::Algorithms
