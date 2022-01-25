@@ -1,3 +1,5 @@
+.. _lightning_add_gate_implementation:
+
 Adding a gate implementation
 ############################
 
