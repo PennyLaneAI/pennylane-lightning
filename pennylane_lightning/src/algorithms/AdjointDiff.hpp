@@ -18,7 +18,6 @@
 #include <numeric>
 #include <stdexcept>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -512,8 +511,7 @@ template <class T = double> class AdjointJacobian {
                                const std::string &op_name,
                                const std::vector<size_t> &wires, const bool adj)
         -> T {
-        return DynamicDispatcher<T>::getInstance().applyGenerator(
-            sv.getData(), sv.getNumQubits(), op_name, wires, adj);
+        return sv.applyGenerator(op_name, wires, adj);
     }
 
   public:
