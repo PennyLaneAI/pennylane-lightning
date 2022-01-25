@@ -166,12 +166,12 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
             // corresponding element of the VJP will be zero,
             // and we can avoid unnecessary computation.
 
-            return [](const JacobianTapeT<T> &tape) -> std::vector<T> {
-                return std::vector<T>(tape.trainableParams.size(), 0);
-            };
+            return
+                [&num_params]([[maybe_unused]] const JacobianTapeT<T> &tape)
+                    -> std::vector<T> { return std::vector<T>(num_params, 0); };
         }
 
-        return [&](const JacobianTapeT<T> &tape) -> std::vector<T> {
+        return [=](const JacobianTapeT<T> &tape) -> std::vector<T> {
             if (!tape.trainableParams.size()) {
                 // The tape has no trainable parameters;
                 // the VJP is simple {}.

@@ -48,7 +48,7 @@
 #define PENNYLANE_STATEVECTOR_DEFINE_OPS(GATE_NAME)                            \
     template <KernelType kernel, typename... Ts>                               \
     inline void apply##GATE_NAME##_(const std::vector<size_t> &wires,          \
-                                    bool inverse, Ts &&... args) {             \
+                                    bool inverse, Ts &&...args) {              \
         auto *arr = getData();                                                 \
         static_assert(static_lookup<GateOperations::GATE_NAME>(                \
                           Constant::gate_num_params) == sizeof...(Ts),         \
@@ -65,7 +65,7 @@
 #define PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_OPS(GATE_NAME)                    \
     template <typename... Ts>                                                  \
     inline void apply##GATE_NAME(const std::vector<size_t> &wires,             \
-                                 bool inverse, Ts &&... args) {                \
+                                 bool inverse, Ts &&...args) {                 \
         constexpr auto kernel = static_lookup<GateOperations::GATE_NAME>(      \
             Constant::default_kernel_for_ops);                                 \
         apply##GATE_NAME##_<kernel>(wires, inverse,                            \

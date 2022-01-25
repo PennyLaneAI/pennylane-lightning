@@ -67,7 +67,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={0}",
             vjp_res = fn(tape);
 
             CAPTURE(vjp_res);
-            CHECK(-sin(p) == Approx(vjp_res[0]));
+            CHECK(0 == Approx(vjp_res[0]));
             CHECK(0 == Approx(vjp_res[1]));
             CHECK(0 == Approx(vjp_res[2]));
         }
