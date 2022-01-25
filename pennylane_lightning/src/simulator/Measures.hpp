@@ -63,7 +63,7 @@ class Measures {
      * @return Floating point std::vector with probabilities
      * in lexicographic order.
      */
-    auto probs -> vector<fp_t>() {
+    auto probs() -> vector<fp_t> {
         const complex<fp_t> *arr_data = original_statevector.getData();
         vector<fp_t> basis_probs(original_statevector.getLength(), 0);
 
@@ -150,7 +150,7 @@ class Measures {
      */
     template <typename op_type>
     auto expval(const vector<op_type> &operations_list,
-                const vector<vector<size_t>> &wires_list) -> vector<fp_t> {
+                        const vector<vector<size_t>> &wires_list) -> vector<fp_t> {
         if (operations_list.size() != wires_list.size()) {
             throw std::out_of_range("The lengths of the list of operations and "
                                     "wires do not match.");
@@ -202,7 +202,7 @@ class Measures {
      */
     template <typename op_type>
     auto var(const vector<op_type> &operations_list,
-             const vector<vector<size_t>> &wires_list) -> vector<fp_t> {
+                     const vector<vector<size_t>> &wires_list) -> vector<fp_t>{
         if (operations_list.size() != wires_list.size()) {
             throw std::out_of_range("The lengths of the list of operations and "
                                     "wires do not match.");

@@ -55,8 +55,13 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=Z",
             cdata[0] = std::complex<double>{1, 0};
 
             StateVector<double> psi(cdata.data(), cdata.size());
-            adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian, {obs},
-                                ops, {0}, true);
+
+            std::vector<size_t> tp{0};
+            std::vector<ObsDatum<double>> obs_ls{obs};
+            GradTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
+                                   tp};
+
+            adj.adjointJacobianTape(jacobian, tape, true);
             CAPTURE(jacobian);
             CHECK(-sin(p) == Approx(jacobian[0].front()));
         }

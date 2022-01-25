@@ -103,10 +103,12 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={1}",
             GradTapeT<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
                                    tp};
 
-            VJP.vectorJacobianProduct(vjp_res, jacobian, dy, tape, true);
+            // VJP.vectorJacobianProduct(vjp_res, jacobian, dy, tape, true);
+            auto fn = VJP.vectorJacobianProductFunc(dy, tape, true);
+            vjp_res = fn();
 
-            CAPTURE(jacobian);
-            CHECK(-sin(p) == Approx(jacobian[0].front()));
+            // CAPTURE(jacobian);
+            // CHECK(-sin(p) == Approx(jacobian[0].front()));
 
             CAPTURE(vjp_res);
             CHECK(-sin(p) == Approx(vjp_res[0]));

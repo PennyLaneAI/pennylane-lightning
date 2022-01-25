@@ -564,10 +564,13 @@ template <class T = double> class AdjointJacobian {
         PL_ABORT_IF(tape.trainableParams.empty(),
                     "No trainable parameters provided.");
 
-        auto ops = tape.operations;
+        const OpsData<T> &ops = tape.operations;
+        const std::vector<std::string> &ops_name = ops.getOpsName();
+
+        const std::vector<ObsDatum<T>> &obs = tape.observables;
+        const size_t num_observables = obs.size();
 
         // Track positions within par and non-par operations
-        size_t num_observables = tape.observables.size();
         size_t trainableParamNumber = tape.trainableParams.size() - 1;
         size_t current_param_idx =
             ops.getNumParOps() - 1; // total number of parametric ops
@@ -585,17 +588,17 @@ template <class T = double> class AdjointJacobian {
         // Create observable-applied state-vectors
         std::vector<StateVectorManaged<T>> H_lambda(num_observables,
                                                     {lambda.getNumQubits()});
-        applyObservables(H_lambda, lambda, tape.observables);
+        applyObservables(H_lambda, lambda, obs);
 
         StateVectorManaged<T> mu(lambda.getNumQubits());
 
-        for (int op_idx = static_cast<int>(ops.getOpsName().size() - 1);
+        for (int op_idx = static_cast<int>(ops_name.size() - 1);
              op_idx >= 0; op_idx--) {
             PL_ABORT_IF(ops.getOpsParams()[op_idx].size() > 1,
                         "The operation is not supported using the adjoint "
                         "differentiation method");
-            if ((ops.getOpsName()[op_idx] != "QubitStateVector") &&
-                (ops.getOpsName()[op_idx] != "BasisState")) {
+            if ((ops_name[op_idx] != "QubitStateVector") &&
+                (ops_name[op_idx] != "BasisState")) {
                 mu.updateData(lambda.getDataVector());
                 applyOperationAdj(lambda, ops, op_idx);
 
@@ -603,7 +606,7 @@ template <class T = double> class AdjointJacobian {
                     if (std::find(tape.trainableParams.begin(), tp_it,
                                   current_param_idx) != tp_it) {
                         const T scalingFactor =
-                            applyGenerator(mu, ops.getOpsName()[op_idx],
+                            applyGenerator(mu, ops_name[op_idx],
                                            ops.getOpsWires()[op_idx],
                                            !ops.getOpsInverses()[op_idx]) *
                             (2 * (0b1 ^ ops.getOpsInverses()[op_idx]) - 1);
