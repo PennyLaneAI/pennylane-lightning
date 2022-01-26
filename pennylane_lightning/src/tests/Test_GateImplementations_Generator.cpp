@@ -52,10 +52,7 @@ constexpr auto findGateOpForGenerator()
 template <size_t gntr_idx>
 constexpr auto generatorGatePairsIter() {
     if constexpr (gntr_idx < Constant::generator_names.size()) {
-        const auto &[gntr_op, gntr_name] = Constant::generator_names[gntr_idx];
-
-        // The line below does not work in GCC9
-        // GateOperation gate_op = Util::lookup(gate_name_to_ops, remove_prefix(gntr_name, 9));
+        constexpr auto gntr_op = std::get<0>(Constant::generator_names[gntr_idx]);
         constexpr auto gate_op = findGateOpForGenerator<gntr_op>();
 
         return Util::prepend_to_tuple(std::pair{gntr_op, gate_op}, 

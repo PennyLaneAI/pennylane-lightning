@@ -111,7 +111,7 @@ constexpr auto constructGeneratorOpsFunctorTupleIter() {
  * @tparam kernel Kernel to construct tuple
  */
 template <class PrecisionT, class ParamT, class GateImplementation>
-constexpr static auto gate_op_functor_tuple = constructGateOpsFunctorTupleIter<
+constexpr auto gate_op_functor_tuple = constructGateOpsFunctorTupleIter<
     PrecisionT, ParamT, GateImplementation, 0>();
 
 /**
@@ -122,7 +122,7 @@ constexpr static auto gate_op_functor_tuple = constructGateOpsFunctorTupleIter<
  * @tparam kernel Kernel to construct tuple
  */
 template <class PrecisionT, class GateImplementation>
-constexpr static auto generator_op_functor_tuple =
+constexpr auto generator_op_functor_tuple =
     constructGeneratorOpsFunctorTupleIter<PrecisionT, GateImplementation, 0>();
 
 /**
