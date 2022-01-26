@@ -24,6 +24,9 @@
 * Add virtual destructor to C++ state-vector classes.
 [(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
 
+* Fix failed tests for the non-binary wheel.
+[(#213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/213)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
