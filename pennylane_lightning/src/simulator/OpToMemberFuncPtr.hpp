@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file 
- * Defines template classes extract member function pointers for metaprogramming.
- * Also defines some utility functions that calls such pointers.
+ * @file
+ * Defines template classes extract member function pointers for
+ * metaprogramming. Also defines some utility functions that calls such
+ * pointers.
  */
 
 #pragma once

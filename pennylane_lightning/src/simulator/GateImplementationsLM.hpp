@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file 
+ * @file
  * Defines kernel functions with less memory (and fast)
  */
 #pragma once
@@ -86,8 +86,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GateOperation::IsingYY,
         GateOperation::IsingZZ,
         GateOperation::MultiRZ,
-        GateOperation::Matrix
-    };
+        GateOperation::Matrix};
 
     constexpr static std::array implemented_generators = {
         GeneratorOperation::RX,      GeneratorOperation::RY,

@@ -79,8 +79,6 @@ namespace Pennylane::Constant {
  *
  * Note that a name of generators must be "Generator" +
  * the name of the corresponding gate.
- *
- * TODO: Test all names start with "Generator" compile time in C++20
  */
 [[maybe_unused]] constexpr std::array generator_names = {
     std::pair<GeneratorOperation, std::string_view>{
@@ -197,9 +195,10 @@ namespace Pennylane::Constant {
  *
  * This value is used for:
  * 1. StateVector apply##GATE_NAME methods. The kernel function is statically
- * binded to the given kernel and cannot be modified. 
- * 2. Default kernel functions for DynamicDispatcher. The kernel function is 
- * dynamically binded and can be changed using DynamicDispatcher singleton class. 
+ * binded to the given kernel and cannot be modified.
+ * 2. Default kernel functions for DynamicDispatcher. The kernel function is
+ * dynamically binded and can be changed using DynamicDispatcher singleton
+ * class.
  * 3. For the Python binding.
  */
 [[maybe_unused]] constexpr std::array default_kernel_for_gates = {
