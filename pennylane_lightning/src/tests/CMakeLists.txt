@@ -57,14 +57,15 @@ set(TEST_SOURCES Test_AdjDiff.cpp
 #                 Test_Bindings.cpp
                  Test_Constant.cpp
                  Test_DynamicDispatcher.cpp
+                 Test_GateImplementations_Generator.cpp
                  Test_GateImplementations_Inverse.cpp
+                 Test_GateImplementations_Matrix.cpp
                  Test_GateImplementations_Nonparam.cpp
                  Test_GateImplementations_Param.cpp
-                 Test_GateImplementations_Matrix.cpp
-                 Test_IndicesUtil.cpp
                  Test_Internal.cpp
                  Test_Measures.cpp
                  Test_OpToMemberFuncPtr.cpp
+                 Test_SimulatorUtil.cpp
                  Test_StateVectorManaged.cpp
                  Test_StateVectorRaw.cpp
                  Test_Util.cpp

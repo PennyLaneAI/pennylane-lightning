@@ -11,6 +11,46 @@
 
 using namespace Pennylane;
 
+TEMPLATE_TEST_CASE("Approx", "[Test_Internal]", float, double) {
+    using PrecisionT = TestType;
+    using ComplexPrecisionT = std::complex<PrecisionT>;
+    using TestHelper::Approx;
+
+    SECTION("vector{1.0, 1.0*I} approx vector{1.0001, 0.9999*I} with margin 0.00015") {
+        const std::vector<ComplexPrecisionT> test1{
+            ComplexPrecisionT{1.0, 0.0},
+            ComplexPrecisionT{0.0, 1.0},
+        };
+        const std::vector<ComplexPrecisionT> test2{
+            ComplexPrecisionT{1.0001, 0.0},
+            ComplexPrecisionT{0.0, 0.9999},
+        };
+        REQUIRE_THAT(test1, Approx(test2).margin(0.00015));
+    }
+    SECTION("vector{1.0, 1.0*I} does not approx vector{1.0002, 0.9998*I} with margin 0.00015") {
+        const std::vector<ComplexPrecisionT> test1{
+            ComplexPrecisionT{1.0, 0.0},
+            ComplexPrecisionT{0.0, 1.0},
+        };
+        const std::vector<ComplexPrecisionT> test2{
+            ComplexPrecisionT{1.0002, 0.0},
+            ComplexPrecisionT{0.0, 0.9998},
+        };
+        REQUIRE_THAT(test1, !Approx(test2).margin(0.00015));
+    }
+    SECTION("vector{1.0, 1.0*I} does not approx vector{1.0I, 1.0} with margin 0.00015") {
+        const std::vector<ComplexPrecisionT> test1{
+            ComplexPrecisionT{1.0, 0.0},
+            ComplexPrecisionT{0.0, 1.0},
+        };
+        const std::vector<ComplexPrecisionT> test2{
+            ComplexPrecisionT{0.0, 1.0},
+            ComplexPrecisionT{1.0, 0.0},
+        };
+        REQUIRE_THAT(test1, !Approx(test2).margin(0.00015));
+    }
+}
+
 TEMPLATE_TEST_CASE("createProductState", "[Test_Internal]", float, double) {
     using PrecisionT = TestType;
     using Pennylane::GateImplementationsPI;

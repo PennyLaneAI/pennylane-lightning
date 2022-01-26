@@ -75,7 +75,12 @@ namespace Pennylane::Constant {
     std::pair<GateOperation, std::string_view>{GateOperation::Matrix, "Matrix"},
 };
 /**
- * @brief Generator names
+ * @brief Generator names.
+ *
+ * Note that a name of generators must be "Generator" + 
+ * the name of the corresponding gate.
+ *
+ * TODO: Test all names start with "Generator" compile time in C++20
  */
 [[maybe_unused]] constexpr std::array generator_names = {
     std::pair<GeneratorOperation, std::string_view>{
@@ -92,6 +97,12 @@ namespace Pennylane::Constant {
                                                     "GeneratorCRY"},
     std::pair<GeneratorOperation, std::string_view>{GeneratorOperation::CRZ,
                                                     "GeneratorCRZ"},
+    std::pair<GeneratorOperation, std::string_view>{GeneratorOperation::IsingXX,
+                                                    "GeneratorIsingXX"},
+    std::pair<GeneratorOperation, std::string_view>{GeneratorOperation::IsingYY,
+                                                    "GeneratorIsingYY"},
+    std::pair<GeneratorOperation, std::string_view>{GeneratorOperation::IsingZZ,
+                                                    "GeneratorIsingZZ"},
     std::pair<GeneratorOperation, std::string_view>{
         GeneratorOperation::ControlledPhaseShift,
         "GeneratorControlledPhaseShift"},
@@ -139,6 +150,9 @@ namespace Pennylane::Constant {
     std::pair<GeneratorOperation, std::size_t>{GeneratorOperation::RX, 1},
     std::pair<GeneratorOperation, std::size_t>{GeneratorOperation::RY, 1},
     std::pair<GeneratorOperation, std::size_t>{GeneratorOperation::RZ, 1},
+    std::pair<GeneratorOperation, std::size_t>{GeneratorOperation::IsingXX, 2},
+    std::pair<GeneratorOperation, std::size_t>{GeneratorOperation::IsingYY, 2},
+    std::pair<GeneratorOperation, std::size_t>{GeneratorOperation::IsingZZ, 2},
     std::pair<GeneratorOperation, std::size_t>{GeneratorOperation::CRX, 2},
     std::pair<GeneratorOperation, std::size_t>{GeneratorOperation::CRY, 2},
     std::pair<GeneratorOperation, std::size_t>{GeneratorOperation::CRZ, 2},
@@ -179,7 +193,7 @@ namespace Pennylane::Constant {
 };
 
 /**
- * @brief Define which kernel to use for each operation
+ * @brief Define which kernel to use for each gate operation.
  *
  * This value is used for:
  *   1) StateVector apply##GATE_NAME methods. The kernel function is statically
@@ -188,7 +202,7 @@ namespace Pennylane::Constant {
  * function is dynamically binded and can be changed using DynamicDispatcher
  * singleton class. 3) Python binding.
  */
-constexpr std::array default_kernel_for_gates = {
+[[maybe_unused]] constexpr std::array default_kernel_for_gates = {
     std::pair{GateOperation::PauliX, KernelType::LM},
     std::pair{GateOperation::PauliY, KernelType::LM},
     std::pair{GateOperation::PauliZ, KernelType::LM},
@@ -217,11 +231,17 @@ constexpr std::array default_kernel_for_gates = {
     std::pair{GateOperation::MultiRZ, KernelType::LM},
     std::pair{GateOperation::Matrix, KernelType::PI},
 };
-constexpr std::array default_kernel_for_generators = {
+/**
+ * @brief Define which kernel to use for each generator operation.
+ */
+[[maybe_unused]] constexpr std::array default_kernel_for_generators = {
     std::pair{GeneratorOperation::PhaseShift, KernelType::PI},
     std::pair{GeneratorOperation::RX, KernelType::PI},
     std::pair{GeneratorOperation::RY, KernelType::PI},
     std::pair{GeneratorOperation::RZ, KernelType::PI},
+    std::pair{GeneratorOperation::IsingXX, KernelType::LM},
+    std::pair{GeneratorOperation::IsingYY, KernelType::LM},
+    std::pair{GeneratorOperation::IsingZZ, KernelType::LM},
     std::pair{GeneratorOperation::CRX, KernelType::PI},
     std::pair{GeneratorOperation::CRY, KernelType::PI},
     std::pair{GeneratorOperation::CRZ, KernelType::PI},

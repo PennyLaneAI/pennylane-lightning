@@ -1,4 +1,4 @@
-// Copyright 2021 Xanadu Quantum Technologies Inc.
+// Copyright 2022 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -122,67 +122,6 @@ template <KernelType kernel>
 using SelectGateOps =
     typename Internal::SelectGateOpsHelper<kernel, AvailableKernels>::Type;
 
-namespace Internal {
-/// @cond DEV
-template <class OperatorImplementation> struct ImplementedGates {
-    constexpr static auto value = OperatorImplementation::implemented_gates;
-};
-template <class OperatorImplementation> struct ImplementedGenerators {
-    constexpr static auto value =
-        OperatorImplementation::implemented_generators;
-};
 
-template <class TypeList, class ValueType, template <class> class ValueClass>
-auto ValueForKernelHelper([[maybe_unused]] KernelType kernel) {
-    if constexpr (std::is_same_v<TypeList, void>) {
-        return std::vector<ValueType>{};
-    } else {
-        if (TypeList::Type::kernel_id == kernel) {
-            return std::vector<ValueType>(
-                std::cbegin(ValueClass<typename TypeList::Type>::value),
-                std::cend(ValueClass<typename TypeList::Type>::value));
-        }
-        return ValueForKernelHelper<typename TypeList::Next, ValueType,
-                                    ValueClass>(kernel);
-    }
-}
-/// @endcond
-} // namespace Internal
-/**
- * @brief Return implemented_gates constexpr member variables for a given kernel
- *
- * This function interfaces the runtime variable kernel with the constant time
- * variable implemented_gates
- *
- * TODO: Change to constexpr function in C++20
- */
-inline auto implementedGatesForKernel(KernelType kernel)
-    -> std::vector<GateOperation> {
-    return Internal::ValueForKernelHelper<AvailableKernels, GateOperation,
-                                          Internal::ImplementedGates>(kernel);
-}
-/**
- * @brief Return implemented_generators constexpr member variables for a given
- * kernel
- *
- * This function interfaces the runtime variable kernel with the constant time
- * variable implemented_gates
- *
- * TODO: Change to constexpr function in C++20
- */
-inline auto implementedGeneratorsForKernel(KernelType kernel)
-    -> std::vector<GeneratorOperation> {
-    return Internal::ValueForKernelHelper<AvailableKernels, GeneratorOperation,
-                                          Internal::ImplementedGenerators>(
-        kernel);
-}
 } // namespace Pennylane
 
-/**
- * @brief A hash function for GateOperations type
- */
-template <> struct std::hash<Pennylane::GateOperation> {
-    size_t operator()(Pennylane::GateOperation gate_operation) const {
-        return std::hash<uint32_t>()(static_cast<uint32_t>(gate_operation));
-    }
-};

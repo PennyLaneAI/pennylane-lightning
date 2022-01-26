@@ -86,6 +86,10 @@ constexpr bool testAllGatesImplemeted() {
         return PrecisionT{};                                                   \
     }
 
+/**
+ * @brief This class defines all possible gates and generators to check
+ * consistency of OpToMemberFuncPtr
+ */
 class DummyImplementation {
   public:
     constexpr static std::array implemented_gates = allGateOps<GateOperation>();
@@ -134,6 +138,9 @@ class DummyImplementation {
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(RX)
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(RY)
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(RZ)
+    PENNYLANE_TESTS_DEFINE_GENERATOR_OP(IsingXX)
+    PENNYLANE_TESTS_DEFINE_GENERATOR_OP(IsingYY)
+    PENNYLANE_TESTS_DEFINE_GENERATOR_OP(IsingZZ)
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(CRX)
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(CRY)
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(CRZ)

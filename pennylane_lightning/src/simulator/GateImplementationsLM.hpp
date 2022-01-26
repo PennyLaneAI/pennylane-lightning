@@ -91,6 +91,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     constexpr static std::array implemented_generators = {
         GeneratorOperation::RX,      GeneratorOperation::RY,
         GeneratorOperation::RZ,      GeneratorOperation::PhaseShift,
+        GeneratorOperation::CRX, GeneratorOperation::CRY,
+        GeneratorOperation::CRZ,
+        GeneratorOperation::IsingXX, GeneratorOperation::IsingYY,
+        GeneratorOperation::IsingZZ,
         GeneratorOperation::MultiRZ,
     };
 
@@ -920,7 +924,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     /* Define generators */
 
     template <class PrecisionT>
-    static auto applyGeneratorPhaseShift(std::complex<PrecisionT> *arr,
+    [[nodiscard]] static auto applyGeneratorPhaseShift(std::complex<PrecisionT> *arr,
                                          size_t num_qubits,
                                          const std::vector<size_t> &wires,
                                          [[maybe_unused]] bool adj)
@@ -939,18 +943,247 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT>
-    static auto applyGeneratorMultiRZ(std::complex<PrecisionT> *arr,
+    [[nodiscard]] static auto applyGeneratorIsingXX(std::complex<PrecisionT> *arr,
+                                         size_t num_qubits,
+                                         const std::vector<size_t> &wires,
+                                         [[maybe_unused]] bool adj)
+        -> PrecisionT {
+        assert(wires.size() == 2);
+
+        const size_t rev_wire0 = num_qubits - wires[1] - 1;
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+
+        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
+        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+
+        const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
+        const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
+
+        const size_t parity_low = fillTrailingOnes(rev_wire_min);
+        const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
+        const size_t parity_middle =
+            fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
+
+        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
+            const size_t i00 = ((k << 2U) & parity_high) |
+                               ((k << 1U) & parity_middle) | (k & parity_low);
+            const size_t i01 = i00 | rev_wire0_shift;
+            const size_t i10 = i00 | rev_wire1_shift;
+            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
+            
+            std::swap(arr[i00], arr[i11]);
+            std::swap(arr[i10], arr[i01]);
+        }
+
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return -static_cast<PrecisionT>(0.5);
+    }
+    template <class PrecisionT>
+    [[nodiscard]] static auto applyGeneratorIsingYY(std::complex<PrecisionT> *arr,
+                                         size_t num_qubits,
+                                         const std::vector<size_t> &wires,
+                                         [[maybe_unused]] bool adj)
+        -> PrecisionT {
+        assert(wires.size() == 2);
+
+        const size_t rev_wire0 = num_qubits - wires[1] - 1;
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+
+        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
+        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+
+        const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
+        const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
+
+        const size_t parity_low = fillTrailingOnes(rev_wire_min);
+        const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
+        const size_t parity_middle =
+            fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
+
+        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
+            const size_t i00 = ((k << 2U) & parity_high) |
+                               ((k << 1U) & parity_middle) | (k & parity_low);
+            const size_t i01 = i00 | rev_wire0_shift;
+            const size_t i10 = i00 | rev_wire1_shift;
+            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
+
+            const auto v00 = arr[i00];
+            arr[i00] = -arr[i11];
+            arr[i11] = -v00;
+            std::swap(arr[i10], arr[i01]);
+        }
+
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return -static_cast<PrecisionT>(0.5);
+    }
+    template <class PrecisionT>
+    [[nodiscard]] static auto applyGeneratorIsingZZ(std::complex<PrecisionT> *arr,
+                                         size_t num_qubits,
+                                         const std::vector<size_t> &wires,
+                                         [[maybe_unused]] bool adj)
+        -> PrecisionT {
+        assert(wires.size() == 2);
+
+        const size_t rev_wire0 = num_qubits - wires[1] - 1;
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+
+        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
+        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+
+        const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
+        const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
+
+        const size_t parity_low = fillTrailingOnes(rev_wire_min);
+        const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
+        const size_t parity_middle =
+            fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
+
+        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
+            const size_t i00 = ((k << 2U) & parity_high) |
+                               ((k << 1U) & parity_middle) | (k & parity_low);
+            const size_t i01 = i00 | rev_wire0_shift;
+            const size_t i10 = i00 | rev_wire1_shift;
+            
+            arr[i10] *= -1;
+            arr[i01] *= -1;
+        }
+
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto applyGeneratorCRX(std::complex<PrecisionT> *arr,
+                                         size_t num_qubits,
+                                         const std::vector<size_t> &wires,
+                                         [[maybe_unused]] bool adj)
+        -> PrecisionT {
+        using ComplexPrecisionT = std::complex<PrecisionT>;
+        assert(wires.size() == 2);
+
+        const size_t rev_wire0 = num_qubits - wires[1] - 1;
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+
+        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
+        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+
+        const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
+        const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
+
+        const size_t parity_low = fillTrailingOnes(rev_wire_min);
+        const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
+        const size_t parity_middle =
+            fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
+
+        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
+            const size_t i00 = ((k << 2U) & parity_high) |
+                               ((k << 1U) & parity_middle) | (k & parity_low);
+            const size_t i01 = i00 | rev_wire0_shift;
+            const size_t i10 = i00 | rev_wire1_shift;
+            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
+
+            arr[i00] = ComplexPrecisionT{};
+            arr[i01] = ComplexPrecisionT{};
+
+            std::swap(arr[i10], arr[i11]);
+        }
+
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return -static_cast<PrecisionT>(0.5);
+    }
+    template <class PrecisionT>
+    [[nodiscard]] static auto applyGeneratorCRY(std::complex<PrecisionT> *arr,
+                                         size_t num_qubits,
+                                         const std::vector<size_t> &wires,
+                                         [[maybe_unused]] bool adj)
+        -> PrecisionT {
+        using ComplexPrecisionT = std::complex<PrecisionT>;
+        assert(wires.size() == 2);
+
+        const size_t rev_wire0 = num_qubits - wires[1] - 1;
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+
+        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
+        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+
+        const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
+        const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
+
+        const size_t parity_low = fillTrailingOnes(rev_wire_min);
+        const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
+        const size_t parity_middle =
+            fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
+
+        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
+            const size_t i00 = ((k << 2U) & parity_high) |
+                               ((k << 1U) & parity_middle) | (k & parity_low);
+            const size_t i01 = i00 | rev_wire0_shift;
+            const size_t i10 = i00 | rev_wire1_shift;
+            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
+
+            arr[i00] = ComplexPrecisionT{};
+            arr[i01] = ComplexPrecisionT{};
+
+            const auto v0 = arr[i10];
+
+            arr[i10] = ComplexPrecisionT{std::imag(arr[i11]), -std::real(arr[i11])};
+            arr[i11] = ComplexPrecisionT{-std::imag(v0), std::real(v0)};
+        }
+
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return -static_cast<PrecisionT>(0.5);
+    }
+    template <class PrecisionT>
+    [[nodiscard]] static auto applyGeneratorCRZ(std::complex<PrecisionT> *arr,
+                                         size_t num_qubits,
+                                         const std::vector<size_t> &wires,
+                                         [[maybe_unused]] bool adj)
+        -> PrecisionT {
+        using ComplexPrecisionT = std::complex<PrecisionT>;
+        assert(wires.size() == 2);
+
+        const size_t rev_wire0 = num_qubits - wires[1] - 1;
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+
+        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
+        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+
+        const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
+        const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
+
+        const size_t parity_low = fillTrailingOnes(rev_wire_min);
+        const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
+        const size_t parity_middle =
+            fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
+
+        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
+            const size_t i00 = ((k << 2U) & parity_high) |
+                               ((k << 1U) & parity_middle) | (k & parity_low);
+            const size_t i01 = i00 | rev_wire0_shift;
+            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
+
+            arr[i00] = ComplexPrecisionT{};
+            arr[i01] = ComplexPrecisionT{};
+            arr[i11] *= -1;
+        }
+
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto applyGeneratorMultiRZ(std::complex<PrecisionT> *arr,
                                       size_t num_qubits,
                                       const std::vector<size_t> &wires,
                                       [[maybe_unused]] bool adj) -> PrecisionT {
-        size_t wires_parity = 0U;
+        auto wires_parity = static_cast<size_t>(0U);
         for (size_t wire : wires) {
             wires_parity |=
                 (static_cast<size_t>(1U) << (num_qubits - wire - 1));
         }
 
-        for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
-            arr[k] *= (2 * Util::popcount(k & wires_parity) - 1);
+        for (size_t k = 0; k < Util::exp2(num_qubits); k++) {
+            arr[k] *= (2 * int(Util::popcount(k & wires_parity) % 2) - 1);
         }
         // NOLINTNEXTLINE(readability-magic-numbers)
         return static_cast<PrecisionT>(0.5);

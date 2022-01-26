@@ -27,7 +27,7 @@ namespace Pennylane {
  * @brief Return a specific member function pointer for a given gate operation.
  * See speicalized classes.
  */
-template <class PrecisionT, class ParamT, class GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation,
           GateOperation gate_op>
 struct GateOpToMemberFuncPtr {
     // raises compile error when used
@@ -41,232 +41,250 @@ struct GateOpToMemberFuncPtr {
     constexpr static auto value = nullptr;
 };
 
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::PauliX> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyPauliX<PrecisionT>;
+        &GateImplementation::template applyPauliX<PrecisionT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::PauliY> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyPauliY<PrecisionT>;
+        &GateImplementation::template applyPauliY<PrecisionT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::PauliZ> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyPauliZ<PrecisionT>;
+        &GateImplementation::template applyPauliZ<PrecisionT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::Hadamard> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyHadamard<PrecisionT>;
+        &GateImplementation::template applyHadamard<PrecisionT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::S> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyS<PrecisionT>;
+        &GateImplementation::template applyS<PrecisionT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::T> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyT<PrecisionT>;
+        &GateImplementation::template applyT<PrecisionT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::PhaseShift> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyPhaseShift<PrecisionT, ParamT>;
+        &GateImplementation::template applyPhaseShift<PrecisionT, ParamT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::RX> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyRX<PrecisionT, ParamT>;
+        &GateImplementation::template applyRX<PrecisionT, ParamT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::RY> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyRY<PrecisionT, ParamT>;
+        &GateImplementation::template applyRY<PrecisionT, ParamT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::RZ> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyRZ<PrecisionT, ParamT>;
+        &GateImplementation::template applyRZ<PrecisionT, ParamT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::Rot> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyRot<PrecisionT, ParamT>;
+        &GateImplementation::template applyRot<PrecisionT, ParamT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::CNOT> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyCNOT<PrecisionT>;
+        &GateImplementation::template applyCNOT<PrecisionT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::CY> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyCY<PrecisionT>;
+        &GateImplementation::template applyCY<PrecisionT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::CZ> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyCZ<PrecisionT>;
+        &GateImplementation::template applyCZ<PrecisionT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::SWAP> {
     constexpr static auto value =
-        &GateImplOrSVType::template applySWAP<PrecisionT>;
+        &GateImplementation::template applySWAP<PrecisionT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::IsingXX> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyIsingXX<PrecisionT, ParamT>;
+        &GateImplementation::template applyIsingXX<PrecisionT, ParamT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::IsingYY> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyIsingYY<PrecisionT, ParamT>;
+        &GateImplementation::template applyIsingYY<PrecisionT, ParamT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::IsingZZ> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyIsingZZ<PrecisionT, ParamT>;
+        &GateImplementation::template applyIsingZZ<PrecisionT, ParamT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::ControlledPhaseShift> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyControlledPhaseShift<PrecisionT,
+        &GateImplementation::template applyControlledPhaseShift<PrecisionT,
                                                               ParamT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::CRX> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyCRX<PrecisionT, ParamT>;
+        &GateImplementation::template applyCRX<PrecisionT, ParamT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::CRY> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyCRY<PrecisionT, ParamT>;
+        &GateImplementation::template applyCRY<PrecisionT, ParamT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::CRZ> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyCRZ<PrecisionT, ParamT>;
+        &GateImplementation::template applyCRZ<PrecisionT, ParamT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::CRot> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyCRot<PrecisionT, ParamT>;
+        &GateImplementation::template applyCRot<PrecisionT, ParamT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::Toffoli> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyToffoli<PrecisionT>;
+        &GateImplementation::template applyToffoli<PrecisionT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::CSWAP> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyCSWAP<PrecisionT>;
+        &GateImplementation::template applyCSWAP<PrecisionT>;
 };
-template <class PrecisionT, class ParamT, class GateImplOrSVType>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplOrSVType,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::MultiRZ> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyMultiRZ<PrecisionT, ParamT>;
+        &GateImplementation::template applyMultiRZ<PrecisionT, ParamT>;
 };
 
 /**
  * @brief Return a specific member function pointer for a given generator
  * operation. See speicalized classes.
  */
-template <class PrecisionT, class GateImplOrSVType, GeneratorOperation gntr_op>
+template <class PrecisionT, class GateImplementation, GeneratorOperation gntr_op>
 struct GeneratorOpToMemberFuncPtr {
     // raises compile error when used
     static_assert(
-        sizeof(GateImplOrSVType) == -1,
+        sizeof(GateImplementation) == -1,
         "GeneratorOpToMemberFuncPtr is not defined for the given generator. "
         "When you define a new GeneratorOperation, check that you also "
         "add the corresponding entry in GeneratorOpToMemberFuncPtr.");
 };
 
-template <class PrecisionT, class GateImplOrSVType>
-struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplOrSVType,
+template <class PrecisionT, class GateImplementation>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
                                   GeneratorOperation::RX> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyGeneratorRX<PrecisionT>;
+        &GateImplementation::template applyGeneratorRX<PrecisionT>;
 };
-template <class PrecisionT, class GateImplOrSVType>
-struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplOrSVType,
+template <class PrecisionT, class GateImplementation>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
                                   GeneratorOperation::RY> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyGeneratorRY<PrecisionT>;
+        &GateImplementation::template applyGeneratorRY<PrecisionT>;
 };
-template <class PrecisionT, class GateImplOrSVType>
-struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplOrSVType,
+template <class PrecisionT, class GateImplementation>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
                                   GeneratorOperation::RZ> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyGeneratorRZ<PrecisionT>;
+        &GateImplementation::template applyGeneratorRZ<PrecisionT>;
 };
-template <class PrecisionT, class GateImplOrSVType>
-struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplOrSVType,
+template <class PrecisionT, class GateImplementation>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
                                   GeneratorOperation::PhaseShift> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyGeneratorPhaseShift<PrecisionT>;
+        &GateImplementation::template applyGeneratorPhaseShift<PrecisionT>;
 };
-template <class PrecisionT, class GateImplOrSVType>
-struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplOrSVType,
+template <class PrecisionT, class GateImplementation>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
+                                  GeneratorOperation::IsingXX> {
+    constexpr static auto value =
+        &GateImplementation::template applyGeneratorIsingXX<PrecisionT>;
+};
+template <class PrecisionT, class GateImplementation>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
+                                  GeneratorOperation::IsingYY> {
+    constexpr static auto value =
+        &GateImplementation::template applyGeneratorIsingYY<PrecisionT>;
+};
+template <class PrecisionT, class GateImplementation>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
+                                  GeneratorOperation::IsingZZ> {
+    constexpr static auto value =
+        &GateImplementation::template applyGeneratorIsingZZ<PrecisionT>;
+};
+template <class PrecisionT, class GateImplementation>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
                                   GeneratorOperation::CRX> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyGeneratorCRX<PrecisionT>;
+        &GateImplementation::template applyGeneratorCRX<PrecisionT>;
 };
-template <class PrecisionT, class GateImplOrSVType>
-struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplOrSVType,
+template <class PrecisionT, class GateImplementation>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
                                   GeneratorOperation::CRY> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyGeneratorCRY<PrecisionT>;
+        &GateImplementation::template applyGeneratorCRY<PrecisionT>;
 };
-template <class PrecisionT, class GateImplOrSVType>
-struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplOrSVType,
+template <class PrecisionT, class GateImplementation>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
                                   GeneratorOperation::CRZ> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyGeneratorCRZ<PrecisionT>;
+        &GateImplementation::template applyGeneratorCRZ<PrecisionT>;
 };
-template <class PrecisionT, class GateImplOrSVType>
-struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplOrSVType,
+template <class PrecisionT, class GateImplementation>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
                                   GeneratorOperation::ControlledPhaseShift> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyGeneratorControlledPhaseShift<
+        &GateImplementation::template applyGeneratorControlledPhaseShift<
             PrecisionT>;
 };
-template <class PrecisionT, class GateImplOrSVType>
-struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplOrSVType,
+template <class PrecisionT, class GateImplementation>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
                                   GeneratorOperation::MultiRZ> {
     constexpr static auto value =
-        &GateImplOrSVType::template applyGeneratorMultiRZ<PrecisionT>;
+        &GateImplementation::template applyGeneratorMultiRZ<PrecisionT>;
 };
 
 //

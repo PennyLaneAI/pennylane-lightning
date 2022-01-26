@@ -1,5 +1,5 @@
 #include "Gates.hpp"
-#include "IndicesUtil.hpp"
+#include "SimulatorUtil.hpp"
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"

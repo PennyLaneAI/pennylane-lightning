@@ -10,6 +10,16 @@
 #include <type_traits>
 #include <utility>
 
+/**
+ * @file 
+ * We test inverse of each gate operation here. For all gates in implemented_gates,
+ * we test wether the state after applying an operation and its inverse is the same
+ * as the initial state.
+ *
+ * Note the we only test generators only when it is included in 
+ * constexpr member variable implemented_generators.
+ */
+
 using namespace Pennylane;
 
 template <typename PrecisionT, typename ParamT, class GateImplementation,

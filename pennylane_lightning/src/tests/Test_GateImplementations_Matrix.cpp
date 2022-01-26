@@ -770,7 +770,7 @@ void testApplyMatrixForKernels() {
                                            GateImplementation>::value) {
             testApplyMatrix<PrecisionT, GateImplementation>();
         } else {
-            WARN("Member function applyMatrix is not defined in kernel"
+            SUCCEED("Member function applyMatrix is not defined in kernel"
                  << GateImplementation::name);
         }
         testApplyMatrixForKernels<PrecisionT, typename TypeList::Next>();
@@ -782,12 +782,6 @@ TEMPLATE_TEST_CASE("GateImplementation::applyMatrix, inverse = false",
     using PrecisionT = TestType;
 
     testApplyMatrixForKernels<PrecisionT, AvailableKernels>();
-}
-
-auto vector_to_string(const std::vector<size_t> &v) -> std::string {
-    std::ostringstream ss;
-    ss << v;
-    return ss.str();
 }
 
 template <typename PrecisionT, class GateImplementation>
@@ -961,7 +955,7 @@ void testApplyMatrixInverseForKernels() {
                                            GateImplementation>::value) {
             testApplyMatrixInverse<PrecisionT, GateImplementation>();
         } else {
-            WARN("Member function applyMatrix is not defined in kernel"
+            SUCCEED("Member function applyMatrix is not defined in kernel"
                  << GateImplementation::name);
         }
         testApplyMatrixInverseForKernels<PrecisionT, typename TypeList::Next>();

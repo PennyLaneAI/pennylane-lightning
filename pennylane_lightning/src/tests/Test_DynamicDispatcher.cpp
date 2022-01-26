@@ -10,8 +10,8 @@
 #include <catch2/catch.hpp>
 
 #include "DynamicDispatcher.hpp"
-#include "Gates.hpp"
 #include "OpToMemberFuncPtr.hpp"
+#include "SelectGateOps.hpp"
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"

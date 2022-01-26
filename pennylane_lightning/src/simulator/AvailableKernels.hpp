@@ -13,7 +13,8 @@
 // limitations under the License.
 /**
  * @file AvailableKernels.hpp
- * Defines available kernels
+ * Defines available kernels. Be careful when including this file as
+ * it also includes all gate implementations.
  */
 #pragma once
 
@@ -22,6 +23,14 @@
 #include "TypeList.hpp"
 
 namespace Pennylane {
+/**
+ * @brief List of all available kernels (gate implementations).
+ *
+ * If you want to add another gate implementaion, just add it to this type list.
+ * @rst
+ * See :ref:`lightning_add_gate_implementation` for details.
+ * @endrst
+ */
 using AvailableKernels =
     Util::TypeList<GateImplementationsLM, GateImplementationsPI>;
 } // namespace Pennylane

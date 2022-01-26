@@ -131,6 +131,22 @@ void scaleVector(std::vector<std::complex<Data_t>> &data,
 }
 
 /**
+ * @brief Multiplies every value in a dataset by a given complex scalar value.
+ *
+ * @tparam Data_t Precision of complex data type. Supports float and double
+ * data.
+ * @param data Data to be scaled.
+ * @param scalar Scalar value.
+ */
+template <class Data_t>
+void scaleVector(std::vector<std::complex<Data_t>> &data,
+                 Data_t scalar) {
+    std::transform(
+        data.begin(), data.end(), data.begin(),
+        [scalar](const std::complex<Data_t> &c) { return c * scalar; });
+}
+
+/**
  * @brief create |0>^N
  */
 template <typename PrecisionT>

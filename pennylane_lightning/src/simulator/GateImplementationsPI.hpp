@@ -26,7 +26,7 @@
 
 #include "GateOperation.hpp"
 #include "Gates.hpp"
-#include "IndicesUtil.hpp"
+#include "SimulatorUtil.hpp"
 #include "KernelType.hpp"
 #include "PauliGenerator.hpp"
 
@@ -539,7 +539,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
     /* Gate generators */
     template <class PrecisionT>
-    static auto applyGeneratorPhaseShift(std::complex<PrecisionT> *arr,
+    [[nodiscard]] static auto applyGeneratorPhaseShift(std::complex<PrecisionT> *arr,
                                          size_t num_qubits,
                                          const std::vector<size_t> &wires,
                                          [[maybe_unused]] bool adj)
@@ -555,7 +555,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     template <class PrecisionT>
-    static auto applyGeneratorCRX(std::complex<PrecisionT> *arr,
+    [[nodiscard]] static auto applyGeneratorCRX(std::complex<PrecisionT> *arr,
                                   size_t num_qubits,
                                   const std::vector<size_t> &wires,
                                   [[maybe_unused]] bool adj) -> PrecisionT {
@@ -574,7 +574,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     template <class PrecisionT>
-    static auto applyGeneratorCRY(std::complex<PrecisionT> *arr,
+    [[nodiscard]] static auto applyGeneratorCRY(std::complex<PrecisionT> *arr,
                                   size_t num_qubits,
                                   const std::vector<size_t> &wires,
                                   [[maybe_unused]] bool adj) -> PrecisionT {
@@ -595,7 +595,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     template <class PrecisionT>
-    static auto applyGeneratorCRZ(std::complex<PrecisionT> *arr,
+    [[nodiscard]] static auto applyGeneratorCRZ(std::complex<PrecisionT> *arr,
                                   size_t num_qubits,
                                   const std::vector<size_t> &wires,
                                   [[maybe_unused]] bool adj) -> PrecisionT {
@@ -613,7 +613,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     template <class PrecisionT>
-    static auto applyGeneratorControlledPhaseShift(
+    [[nodiscard]] static auto applyGeneratorControlledPhaseShift(
         std::complex<PrecisionT> *arr, size_t num_qubits,
         const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
         -> PrecisionT {

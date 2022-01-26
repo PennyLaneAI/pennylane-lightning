@@ -36,31 +36,29 @@ using namespace Pennylane;
         constexpr static bool value = true;                                    \
     };                                                                         \
     template <typename PrecisionT, typename ParamT, typename TypeList>         \
-    struct TestApply##GATE_NAME##ForKernels {                                  \
-        static void run() {                                                    \
-            if constexpr (!std::is_same_v<TypeList, void>) {                   \
-                using GateImplementation = typename TypeList::Type;            \
-                if constexpr (Apply##GATE_NAME##IsDefined<                     \
-                                  PrecisionT, ParamT,                          \
-                                  GateImplementation>::value) {                \
-                    testApply##GATE_NAME<PrecisionT, ParamT,                   \
-                                         GateImplementation>();                \
-                } else {                                                       \
-                    WARN("Member function apply" #GATE_NAME                    \
-                         " is not defined for kernel "                         \
-                         << GateImplementation::name);                         \
-                }                                                              \
-                TestApply##GATE_NAME##ForKernels<                              \
-                    PrecisionT, ParamT, typename TypeList::Next>::run();       \
+    void testApply##GATE_NAME##ForKernels() {                                  \
+        if constexpr (!std::is_same_v<TypeList, void>) {                       \
+            using GateImplementation = typename TypeList::Type;                \
+            if constexpr (Apply##GATE_NAME##IsDefined<                         \
+                              PrecisionT, ParamT,                              \
+                              GateImplementation>::value) {                    \
+                testApply##GATE_NAME<PrecisionT, ParamT,                       \
+                                     GateImplementation>();                    \
+            } else {                                                           \
+                SUCCEED("Member function apply" #GATE_NAME                        \
+                     " is not defined for kernel "                             \
+                     << GateImplementation::name);                             \
             }                                                                  \
+            testApply##GATE_NAME##ForKernels<                                  \
+                PrecisionT, ParamT, typename TypeList::Next>();                \
         }                                                                      \
-    };                                                                         \
+    }                                                                          \
     TEMPLATE_TEST_CASE("GateImplementation::apply" #GATE_NAME,                 \
                        "[GateImplementations_Param]", float, double) {         \
         using PrecisionT = TestType;                                           \
         using ParamT = TestType;                                               \
-        TestApply##GATE_NAME##ForKernels<PrecisionT, ParamT,                   \
-                                         TestKernels>::run();                  \
+        testApply##GATE_NAME##ForKernels<PrecisionT, ParamT,                   \
+                                         TestKernels>();                       \
     }                                                                          \
     static_assert(true, "Require semicolon")
 

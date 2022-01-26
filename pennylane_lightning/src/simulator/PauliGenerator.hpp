@@ -13,7 +13,7 @@
 // limitations under the License.
 /**
  * @file DefaultGenerator.hpp
- * Defines RX, RY, RZ
+ * Defines generators for RX, RY, RZ
  */
 #pragma once
 #include <complex>
@@ -22,31 +22,34 @@
 
 namespace Pennylane {
 /**
- * @brief Define generators of RX, RY, RZ using the Pauli gates
+ * @brief Define generators of RX, RY, RZ using the Pauli gates.
+ * @rst
+ * A Generator for a unitray operator :math:`U` is :math:`G` such that :math:`e^{iGt} = U`.
+ * @endrst
  */
 template <class GateImplementation> class PauliGenerator {
   private:
   public:
     template <class PrecisionT>
-    static PrecisionT
+    [[nodiscard]] static auto 
     applyGeneratorRX(std::complex<PrecisionT> *data, size_t num_qubits,
-                     const std::vector<size_t> &wires, bool adj) {
+                     const std::vector<size_t> &wires, bool adj) -> PrecisionT{
         GateImplementation::applyPauliX(data, num_qubits, wires, adj);
         // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
     }
     template <class PrecisionT>
-    static PrecisionT
+    [[nodiscard]] static auto 
     applyGeneratorRY(std::complex<PrecisionT> *data, size_t num_qubits,
-                     const std::vector<size_t> &wires, bool adj) {
+                     const std::vector<size_t> &wires, bool adj) -> PrecisionT {
         GateImplementation::applyPauliY(data, num_qubits, wires, adj);
         // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
     }
     template <class PrecisionT>
-    static PrecisionT
+    [[nodiscard]] static auto 
     applyGeneratorRZ(std::complex<PrecisionT> *data, size_t num_qubits,
-                     const std::vector<size_t> &wires, bool adj) {
+                     const std::vector<size_t> &wires, bool adj) -> PrecisionT{
         GateImplementation::applyPauliZ(data, num_qubits, wires, adj);
         // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);

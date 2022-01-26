@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file IndicesUtil.hpp
- * Defines the class representation for quantum state vectors.
+ * @file SimulatorUtil.hpp
+ * Defines a non-template utility functions
  */
 
 #pragma once
@@ -22,6 +22,8 @@
 #include <set>
 #include <vector>
 
+#include "GateOperation.hpp"
+#include "KernelType.hpp"
 #include "Util.hpp"
 
 /**
@@ -80,3 +82,23 @@ struct GateIndices {
               getIndicesAfterExclusion(wires, num_qubits), num_qubits)} {}
 };
 } // namespace Pennylane::IndicesUtil
+
+namespace Pennylane {
+/**
+ * @brief Return implemented_gates constexpr member variables for a given kernel
+ *
+ * This function interfaces the runtime variable kernel with the constant time
+ * variable implemented_gates
+ */
+auto implementedGatesForKernel(KernelType kernel)
+    -> std::vector<GateOperation>;
+/**
+ * @brief Return implemented_generators constexpr member variables for a given
+ * kernel
+ *
+ * This function interfaces the runtime variable kernel with the constant time
+ * variable implemented_gates
+ */
+auto implementedGeneratorsForKernel(KernelType kernel)
+    -> std::vector<GeneratorOperation>;
+} // namespace Pennylane
