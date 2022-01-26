@@ -10,8 +10,6 @@
 
 using namespace Pennylane;
 
-constexpr auto referenceKernel = KernelType::PI;
-
 std::mt19937_64 re{1337};
 
 TEMPLATE_TEST_CASE("StateVectorRaw::StateVectorRaw", "[StateVectorRaw]", float,

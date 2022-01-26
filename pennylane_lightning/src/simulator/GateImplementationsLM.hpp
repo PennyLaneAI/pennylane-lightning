@@ -64,29 +64,18 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     constexpr static std::string_view name = "LM";
 
     constexpr static std::array implemented_gates = {
-        GateOperation::PauliX,
-        GateOperation::PauliY,
-        GateOperation::PauliZ,
-        GateOperation::Hadamard,
-        GateOperation::S,
-        GateOperation::T,
-        GateOperation::RX,
-        GateOperation::RY,
-        GateOperation::RZ,
-        GateOperation::PhaseShift,
-        GateOperation::Rot,
-        GateOperation::CZ,
-        GateOperation::CNOT,
-        GateOperation::SWAP,
-        GateOperation::ControlledPhaseShift,
-        GateOperation::CRX,
-        GateOperation::CRY,
-        GateOperation::CRZ,
-        GateOperation::IsingXX,
-        GateOperation::IsingYY,
-        GateOperation::IsingZZ,
-        GateOperation::MultiRZ,
-        GateOperation::Matrix};
+        GateOperation::PauliX,  GateOperation::PauliY,
+        GateOperation::PauliZ,  GateOperation::Hadamard,
+        GateOperation::S,       GateOperation::T,
+        GateOperation::RX,      GateOperation::RY,
+        GateOperation::RZ,      GateOperation::PhaseShift,
+        GateOperation::Rot,     GateOperation::CY,
+        GateOperation::CZ,      GateOperation::CNOT,
+        GateOperation::SWAP,    GateOperation::ControlledPhaseShift,
+        GateOperation::CRX,     GateOperation::CRY,
+        GateOperation::CRZ,     GateOperation::IsingXX,
+        GateOperation::IsingYY, GateOperation::IsingZZ,
+        GateOperation::MultiRZ, GateOperation::Matrix};
 
     constexpr static std::array implemented_generators = {
         GeneratorOperation::RX,      GeneratorOperation::RY,
@@ -690,6 +679,40 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             const size_t i11 = i00 | rev_wire1_shift | rev_wire0_shift;
 
             std::swap(arr[i10], arr[i11]);
+        }
+    }
+
+    template <class PrecisionT>
+    static void applyCY(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                        const std::vector<size_t> &wires,
+                        [[maybe_unused]] bool inverse) {
+        assert(wires.size() == 2);
+
+        const size_t rev_wire0 = num_qubits - wires[1] - 1;
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+
+        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
+        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+
+        const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
+        const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
+
+        const size_t parity_low = fillTrailingOnes(rev_wire_min);
+        const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
+        const size_t parity_middle =
+            fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
+
+        /* This is faster than iterate over all indices */
+        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
+            const size_t i00 = ((k << 2U) & parity_high) |
+                               ((k << 1U) & parity_middle) | (k & parity_low);
+            const size_t i10 = i00 | rev_wire1_shift;
+            const size_t i11 = i00 | rev_wire1_shift | rev_wire0_shift;
+            std::complex<PrecisionT> v10 = arr[i10];
+            arr[i10] = std::complex<PrecisionT>{std::imag(arr[i11]),
+                                                -std::real(arr[i11])};
+            arr[i11] =
+                std::complex<PrecisionT>{-std::imag(v10), std::real(v10)};
         }
     }
 
