@@ -3,15 +3,17 @@
 Adding a gate implementation
 ############################
 
-We discuss how one can add another gate implementation in this document. Assume that you want to add a custom ``PauliX`` gate implementation in Pennylane-Lightning. In this case, you may first add a template class as:
+We discuss how one can add another gate implementation in this document. Assume that you want to add a custom ``PauliX`` gate implementation in Pennylane-Lightning. In this case, you may first create a file and add a class:
 
 .. code-block:: cpp
+   // file: MyGateImplementation.hpp
 
-    template <class PrecisionT>
     struct MyGateImplementation {
+      public:
         constexpr static implemented_gates = {GateOperations::PauliX};
         constexpr static kernel_id = KernelType::Mykernel; // Will be discussed below
 
+        template <class PrecisionT>
         static void applyPauliX(std::complex<PrecisionT>* data,
                                 size_t num_qubits,
                                 const std::vector<size_t>& wires,
@@ -43,7 +45,6 @@ and
                                             GateImplementationsPI,
                                             MyGateImplementation /* This is added*/>;
     } // namespace Pennylane
-
 
 
 Now you can call your kernel functions in C++.
@@ -97,4 +98,20 @@ to
         ...
     }
 
-will make your implementation as default kernel for ``PauliX`` gate (for all C++ call as well as for the Python binding).
+will make your implementation as default kernel for ``PauliX`` gate (for all C++ calls as well as for the Python binding).
+
+Gate generators can be also handled in the same way.
+
+Test your gate implementation
+=============================
+
+To test your own kernel implementations, you can go to ``tests/TestKernels.hpp`` and add your implementation.
+
+..code-block:: cpp
+
+    using TestKernels = Pennylane::Util::TypeList<Pennylane::GateImplementationsLM,
+                                                  Pennylane::GateImplementationsPI,
+                                                  MyGateImplementation /*This is added */>;
+
+It will automatically test your gate implementation.
+Note that, in the current implementation, this will test a gate if ``apply + gate name`` is defined even when the gate is not included in ``implemented_gates`` variable.
