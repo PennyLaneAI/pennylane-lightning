@@ -139,8 +139,7 @@ void scaleVector(std::vector<std::complex<Data_t>> &data,
  * @param scalar Scalar value.
  */
 template <class Data_t>
-void scaleVector(std::vector<std::complex<Data_t>> &data,
-                 Data_t scalar) {
+void scaleVector(std::vector<std::complex<Data_t>> &data, Data_t scalar) {
     std::transform(
         data.begin(), data.end(), data.begin(),
         [scalar](const std::complex<Data_t> &c) { return c * scalar; });

@@ -235,8 +235,10 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param adj Indicates whether to use adjoint of operator.
      * @param params Optional parameter list for parametric gates.
      */
-    [[nodiscard]] inline auto applyGenerator(KernelType kernel, const std::string &opName,
-                        const std::vector<size_t> &wires, bool adj = false) -> PrecisionT {
+    [[nodiscard]] inline auto applyGenerator(KernelType kernel,
+                                             const std::string &opName,
+                                             const std::vector<size_t> &wires,
+                                             bool adj = false) -> PrecisionT {
         auto *arr = getData();
         return DynamicDispatcher<PrecisionT>::getInstance().applyGenerator(
             kernel, arr, num_qubits_, opName, wires, adj);
@@ -250,7 +252,8 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param adj Indicates whether to use adjoint of operator.
      */
     [[nodiscard]] auto applyGenerator(const std::string &opName,
-                        const std::vector<size_t> &wires, bool adj = false) -> PrecisionT{
+                                      const std::vector<size_t> &wires,
+                                      bool adj = false) -> PrecisionT {
         auto *arr = getData();
         return DynamicDispatcher<PrecisionT>::getInstance().applyGenerator(
             arr, num_qubits_, opName, wires, adj);

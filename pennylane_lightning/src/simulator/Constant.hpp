@@ -77,7 +77,7 @@ namespace Pennylane::Constant {
 /**
  * @brief Generator names.
  *
- * Note that a name of generators must be "Generator" + 
+ * Note that a name of generators must be "Generator" +
  * the name of the corresponding gate.
  *
  * TODO: Test all names start with "Generator" compile time in C++20

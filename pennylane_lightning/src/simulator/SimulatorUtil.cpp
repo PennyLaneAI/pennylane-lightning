@@ -1,5 +1,5 @@
-#include "AvailableKernels.hpp"
 #include "SimulatorUtil.hpp"
+#include "AvailableKernels.hpp"
 
 #include "Util.hpp"
 
@@ -66,12 +66,11 @@ namespace Pennylane {
 auto implementedGatesForKernel(KernelType kernel)
     -> std::vector<GateOperation> {
     return ValueForKernelHelper<AvailableKernels, GateOperation,
-                                          ImplementedGates>(kernel);
+                                ImplementedGates>(kernel);
 }
 auto implementedGeneratorsForKernel(KernelType kernel)
     -> std::vector<GeneratorOperation> {
     return ValueForKernelHelper<AvailableKernels, GeneratorOperation,
-                                          ImplementedGenerators>(
-        kernel);
+                                ImplementedGenerators>(kernel);
 }
-}
+} // namespace Pennylane

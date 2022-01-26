@@ -43,24 +43,24 @@ using std::vector;
     };                                                                         \
     template <typename PrecisionT, typename TypeList>                          \
     void testApply##GATE_NAME##ForKernels() {                                  \
-        if constexpr (!std::is_same_v<TypeList, void>) {                   \
-            using GateImplementation = typename TypeList::Type;            \
-            if constexpr (Apply##GATE_NAME##IsDefined<                     \
-                              PrecisionT, GateImplementation>::value) {    \
-                testApply##GATE_NAME<PrecisionT, GateImplementation>();    \
-            } else {                                                       \
-                SUCCEED("Member function apply" #GATE_NAME                    \
-                     " is not defined for kernel "                         \
-                     << GateImplementation::name);                         \
-            }                                                              \
-            testApply##GATE_NAME##ForKernels<                              \
-                PrecisionT, typename TypeList::Next>();                    \
-        }                                                                  \
-    }                                                                      \
+        if constexpr (!std::is_same_v<TypeList, void>) {                       \
+            using GateImplementation = typename TypeList::Type;                \
+            if constexpr (Apply##GATE_NAME##IsDefined<                         \
+                              PrecisionT, GateImplementation>::value) {        \
+                testApply##GATE_NAME<PrecisionT, GateImplementation>();        \
+            } else {                                                           \
+                SUCCEED("Member function apply" #GATE_NAME                     \
+                        " is not defined for kernel "                          \
+                        << GateImplementation::name);                          \
+            }                                                                  \
+            testApply##GATE_NAME##ForKernels<PrecisionT,                       \
+                                             typename TypeList::Next>();       \
+        }                                                                      \
+    }                                                                          \
     TEMPLATE_TEST_CASE("GateImplementation::apply" #GATE_NAME,                 \
                        "[GateImplementations_Nonparam]", float, double) {      \
         using PrecisionT = TestType;                                           \
-        testApply##GATE_NAME##ForKernels<PrecisionT, TestKernels>();      \
+        testApply##GATE_NAME##ForKernels<PrecisionT, TestKernels>();           \
     }                                                                          \
     static_assert(true, "Require semicolon")
 

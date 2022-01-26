@@ -771,7 +771,7 @@ void testApplyMatrixForKernels() {
             testApplyMatrix<PrecisionT, GateImplementation>();
         } else {
             SUCCEED("Member function applyMatrix is not defined in kernel"
-                 << GateImplementation::name);
+                    << GateImplementation::name);
         }
         testApplyMatrixForKernels<PrecisionT, typename TypeList::Next>();
     }
@@ -956,7 +956,7 @@ void testApplyMatrixInverseForKernels() {
             testApplyMatrixInverse<PrecisionT, GateImplementation>();
         } else {
             SUCCEED("Member function applyMatrix is not defined in kernel"
-                 << GateImplementation::name);
+                    << GateImplementation::name);
         }
         testApplyMatrixInverseForKernels<PrecisionT, typename TypeList::Next>();
     }

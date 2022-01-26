@@ -154,7 +154,7 @@ struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::ControlledPhaseShift> {
     constexpr static auto value =
         &GateImplementation::template applyControlledPhaseShift<PrecisionT,
-                                                              ParamT>;
+                                                                ParamT>;
 };
 template <class PrecisionT, class ParamT, class GateImplementation>
 struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
@@ -203,7 +203,8 @@ struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
  * @brief Return a specific member function pointer for a given generator
  * operation. See speicalized classes.
  */
-template <class PrecisionT, class GateImplementation, GeneratorOperation gntr_op>
+template <class PrecisionT, class GateImplementation,
+          GeneratorOperation gntr_op>
 struct GeneratorOpToMemberFuncPtr {
     // raises compile error when used
     static_assert(

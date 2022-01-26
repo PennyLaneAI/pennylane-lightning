@@ -16,7 +16,8 @@ TEMPLATE_TEST_CASE("Approx", "[Test_Internal]", float, double) {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     using TestHelper::Approx;
 
-    SECTION("vector{1.0, 1.0*I} approx vector{1.0001, 0.9999*I} with margin 0.00015") {
+    SECTION("vector{1.0, 1.0*I} approx vector{1.0001, 0.9999*I} with margin "
+            "0.00015") {
         const std::vector<ComplexPrecisionT> test1{
             ComplexPrecisionT{1.0, 0.0},
             ComplexPrecisionT{0.0, 1.0},
@@ -27,7 +28,8 @@ TEMPLATE_TEST_CASE("Approx", "[Test_Internal]", float, double) {
         };
         REQUIRE_THAT(test1, Approx(test2).margin(0.00015));
     }
-    SECTION("vector{1.0, 1.0*I} does not approx vector{1.0002, 0.9998*I} with margin 0.00015") {
+    SECTION("vector{1.0, 1.0*I} does not approx vector{1.0002, 0.9998*I} with "
+            "margin 0.00015") {
         const std::vector<ComplexPrecisionT> test1{
             ComplexPrecisionT{1.0, 0.0},
             ComplexPrecisionT{0.0, 1.0},
@@ -38,7 +40,8 @@ TEMPLATE_TEST_CASE("Approx", "[Test_Internal]", float, double) {
         };
         REQUIRE_THAT(test1, !Approx(test2).margin(0.00015));
     }
-    SECTION("vector{1.0, 1.0*I} does not approx vector{1.0I, 1.0} with margin 0.00015") {
+    SECTION("vector{1.0, 1.0*I} does not approx vector{1.0I, 1.0} with margin "
+            "0.00015") {
         const std::vector<ComplexPrecisionT> test1{
             ComplexPrecisionT{1.0, 0.0},
             ComplexPrecisionT{0.0, 1.0},

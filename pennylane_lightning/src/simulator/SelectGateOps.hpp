@@ -122,6 +122,4 @@ template <KernelType kernel>
 using SelectGateOps =
     typename Internal::SelectGateOpsHelper<kernel, AvailableKernels>::Type;
 
-
 } // namespace Pennylane
-

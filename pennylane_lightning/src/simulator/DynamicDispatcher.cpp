@@ -15,8 +15,8 @@
  * @file DynamicDispatcher.cpp
  * Register all gate and generator implementations
  */
-#include "AvailableKernels.hpp"
 #include "DynamicDispatcher.hpp"
+#include "AvailableKernels.hpp"
 #include "Constant.hpp"
 #include "OpToMemberFuncPtr.hpp"
 #include "SelectGateOps.hpp"
@@ -134,7 +134,7 @@ constexpr auto generator_op_functor_tuple =
  */
 template <class PrecisionT, class ParamT, class GateImplementation>
 void registerAllImplementedGateOps() {
-    auto& dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+    auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
 
     auto registerGateToDispatcher = [&dispatcher](
                                         const auto &gate_op_func_pair) {
@@ -161,7 +161,7 @@ void registerAllImplementedGateOps() {
  */
 template <class PrecisionT, class GateImplementation>
 void registerAllImplementedGeneratorOps() {
-    auto& dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+    auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
 
     auto registerGeneratorToDispatcher =
         [&dispatcher](const auto &gntr_op_func_pair) {
@@ -198,7 +198,7 @@ void registerKernelIter() {
     }
 }
 /// @endcond
-}  // namespace
+} // namespace
 
 namespace Pennylane::Internal {
 /**
@@ -207,8 +207,7 @@ namespace Pennylane::Internal {
  * @tparam PrecisionT Floating point precision of underlying statevector data.
  * @tparam ParamT Floating point type for parameters
  */
-template <class PrecisionT, class ParamT>
-int registerAllAvailableKernels() {
+template <class PrecisionT, class ParamT> int registerAllAvailableKernels() {
     registerKernelIter<PrecisionT, ParamT, AvailableKernels>();
     return 1;
 }
@@ -217,4 +216,4 @@ int registerAllAvailableKernels() {
 template int registerAllAvailableKernels<float, float>();
 template int registerAllAvailableKernels<double, double>();
 
-} // namespace Pennylane
+} // namespace Pennylane::Internal

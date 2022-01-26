@@ -90,8 +90,7 @@ namespace Pennylane {
  * This function interfaces the runtime variable kernel with the constant time
  * variable implemented_gates
  */
-auto implementedGatesForKernel(KernelType kernel)
-    -> std::vector<GateOperation>;
+auto implementedGatesForKernel(KernelType kernel) -> std::vector<GateOperation>;
 /**
  * @brief Return implemented_generators constexpr member variables for a given
  * kernel

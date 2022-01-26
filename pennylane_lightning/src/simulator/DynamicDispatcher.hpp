@@ -21,8 +21,8 @@
 
 #include "Constant.hpp"
 #include "Error.hpp"
-#include "SimulatorUtil.hpp"
 #include "KernelType.hpp"
+#include "SimulatorUtil.hpp"
 #include "Util.hpp"
 
 #include <cassert>
@@ -46,8 +46,7 @@ struct PairHash {
 namespace Pennylane {
 
 namespace Internal {
-    template <class PrecisionT, class ParamT>
-    int registerAllAvailableKernels();
+template <class PrecisionT, class ParamT> int registerAllAvailableKernels();
 } // namespace Internal
 
 /**
@@ -118,7 +117,8 @@ template <typename PrecisionT> class DynamicDispatcher {
 
     DynamicDispatcher() {
         for (const auto &[gate_op, n_wires] : Constant::gate_wires) {
-            gate_wires_.emplace(Util::lookup(Constant::gate_names, gate_op), n_wires);
+            gate_wires_.emplace(Util::lookup(Constant::gate_names, gate_op),
+                                n_wires);
         }
 
         for (const auto &[gate_op, gate_name] : Constant::gate_names) {

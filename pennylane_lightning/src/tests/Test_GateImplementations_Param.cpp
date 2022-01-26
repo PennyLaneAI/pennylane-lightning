@@ -45,20 +45,19 @@ using namespace Pennylane;
                 testApply##GATE_NAME<PrecisionT, ParamT,                       \
                                      GateImplementation>();                    \
             } else {                                                           \
-                SUCCEED("Member function apply" #GATE_NAME                        \
-                     " is not defined for kernel "                             \
-                     << GateImplementation::name);                             \
+                SUCCEED("Member function apply" #GATE_NAME                     \
+                        " is not defined for kernel "                          \
+                        << GateImplementation::name);                          \
             }                                                                  \
-            testApply##GATE_NAME##ForKernels<                                  \
-                PrecisionT, ParamT, typename TypeList::Next>();                \
+            testApply##GATE_NAME##ForKernels<PrecisionT, ParamT,               \
+                                             typename TypeList::Next>();       \
         }                                                                      \
     }                                                                          \
     TEMPLATE_TEST_CASE("GateImplementation::apply" #GATE_NAME,                 \
                        "[GateImplementations_Param]", float, double) {         \
         using PrecisionT = TestType;                                           \
         using ParamT = TestType;                                               \
-        testApply##GATE_NAME##ForKernels<PrecisionT, ParamT,                   \
-                                         TestKernels>();                       \
+        testApply##GATE_NAME##ForKernels<PrecisionT, ParamT, TestKernels>();   \
     }                                                                          \
     static_assert(true, "Require semicolon")
 
