@@ -617,11 +617,6 @@ class TestLightningQubitIntegration:
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_load_default_qubit_device_with_invalid_kernel(self):
         """Test that lightning.qubit raises error for unsupported gate/kernel pair."""
-        # This line is only for current implementation
-        with pytest.raises(
-            ValueError, match=f"The given kernel LM does not implement Matrix gate."
-        ):
-            dev = qml.device("lightning.qubit", kernel_for_ops={"Matrix": "LM"}, wires=2)
 
         for gate in ["PauliX", "CRot", "CSWAP", "Matrix"]:
             with pytest.raises(

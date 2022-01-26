@@ -580,14 +580,12 @@ inline static void omp_matrixVecProd(const std::complex<T> *mat,
     size_t row;
     size_t col;
 
-#if defined(_OPENMP)
-#pragma omp parallel default(none) private(row, col)
-#endif
     {
         switch (transpose) {
         case Trans::NoTranspose:
 #if defined(_OPENMP)
-#pragma omp for
+#pragma omp parallel for default(none) private(row, col) firstprivate(m,n) \
+            shared(v_out, mat, v_in)
 #endif
             for (row = 0; row < m; row++) {
                 for (col = 0; col < n; col++) {
@@ -597,7 +595,8 @@ inline static void omp_matrixVecProd(const std::complex<T> *mat,
             break;
         case Trans::Transpose:
 #if defined(_OPENMP)
-#pragma omp for
+#pragma omp parallel for default(none) private(row, col) firstprivate(m,n) \
+            shared(v_out, mat, v_in)
 #endif
             for (row = 0; row < m; row++) {
                 for (col = 0; col < n; col++) {
@@ -607,7 +606,8 @@ inline static void omp_matrixVecProd(const std::complex<T> *mat,
             break;
         case Trans::Adjoint:
 #if defined(_OPENMP)
-#pragma omp for
+#pragma omp parallel for default(none) private(row, col) firstprivate(m,n) \
+            shared(v_out, mat, v_in)
 #endif
             for (row = 0; row < m; row++) {
                 for (col = 0; col < n; col++) {

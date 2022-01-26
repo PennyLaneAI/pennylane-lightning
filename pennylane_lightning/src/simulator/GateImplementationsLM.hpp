@@ -86,6 +86,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GateOperation::IsingYY,
         GateOperation::IsingZZ,
         GateOperation::MultiRZ,
+        GateOperation::Matrix
     };
 
     constexpr static std::array implemented_generators = {
