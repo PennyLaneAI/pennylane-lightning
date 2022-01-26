@@ -29,7 +29,6 @@ namespace Pennylane {
  * @endrst
  */
 template <class GateImplementation> class PauliGenerator {
-  private:
   public:
     template <class PrecisionT>
     [[nodiscard]] static auto

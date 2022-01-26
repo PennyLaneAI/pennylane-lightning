@@ -847,7 +847,6 @@ void testApplyCRX() {
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CRX1,3 - " << PrecisionToName<PrecisionT>::value) {
-
         const size_t num_qubits = 4;
 
         std::vector<ComplexPrecisionT> ini_st{
