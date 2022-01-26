@@ -40,7 +40,8 @@ struct GateOpToMemberFuncPtr {
     static_assert(gate_op == GateOperation::Matrix,
                   "GateOpToMemberFuncPtr is not defined for the given gate. "
                   "When you define a new GateOperation, check that you also "
-                  "add the corresponding entry in GateOpToMemberFuncPtr.");
+                  "have added the corresponding entry in "
+                  "GateOpToMemberFuncPtr.");
     constexpr static auto value = nullptr;
 };
 
@@ -214,7 +215,7 @@ struct GeneratorOpToMemberFuncPtr {
         sizeof(GateImplementation) == -1,
         "GeneratorOpToMemberFuncPtr is not defined for the given generator. "
         "When you define a new GeneratorOperation, check that you also "
-        "add the corresponding entry in GeneratorOpToMemberFuncPtr.");
+        "have added the corresponding entry in GeneratorOpToMemberFuncPtr.");
 };
 
 template <class PrecisionT, class GateImplementation>
