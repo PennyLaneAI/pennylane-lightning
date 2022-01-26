@@ -233,7 +233,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param opName Name of gate to apply.
      * @param wires Wires to apply gate to.
      * @param adj Indicates whether to use adjoint of operator.
-     * @param params Optional parameter list for parametric gates.
      */
     [[nodiscard]] inline auto applyGenerator(KernelType kernel,
                                              const std::string &opName,
@@ -248,7 +247,7 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @brief Apply a single generator to the state-vector.
      *
      * @param opName Name of gate to apply.
-     * @param wires Wires to apply gate to.
+     * @param wires Wires the gate applies to.
      * @param adj Indicates whether to use adjoint of operator.
      */
     [[nodiscard]] auto applyGenerator(const std::string &opName,
@@ -264,6 +263,7 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * from numpy data. Data can be in 1D or 2D format.
      *
      * @param matrix Pointer to the array data.
+     * @param wires Wires the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */
     template <KernelType kernel>
@@ -288,6 +288,7 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * from numpy data. Data can be in 1D or 2D format.
      *
      * @param matrix Pointer to the array data.
+     * @param wires Wires to apply gate to.
      * @param inverse Indicate whether inverse should be taken.
      */
     inline void applyMatrix(const ComplexPrecisionT *matrix,

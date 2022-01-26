@@ -33,9 +33,9 @@ namespace {
  * In C++20, one also may use a template lambda function instead.
  *
  * @tparam PrecisionT Floating point precision of underlying statevector data.
- * @tparam ParamT Floating point type for parameters
- * @tparam kernel Kernel for the gate operation
- * @tparam gate_op Gate operation to make a functor
+ * @tparam ParamT Floating point type for parameters>
+ * @tparam GateImplementation Gate implementation class.
+ * @tparam gate_op Gate operation to make a functor.
  */
 template <class PrecisionT, class ParamT, class GateImplementation,
           GateOperation gate_op>
@@ -108,7 +108,7 @@ constexpr auto constructGeneratorOpsFunctorTupleIter() {
  *
  * @tparam PrecisionT Floating point precision of underlying statevector data
  * @tparam ParamT Floating point type of gate parameters
- * @tparam kernel Kernel to construct tuple
+ * @tparam GateImplementation Gate implementation class.
  */
 template <class PrecisionT, class ParamT, class GateImplementation>
 constexpr auto gate_op_functor_tuple = constructGateOpsFunctorTupleIter<
@@ -119,7 +119,7 @@ constexpr auto gate_op_functor_tuple = constructGateOpsFunctorTupleIter<
  *
  * @tparam PrecisionT Floating point precision of underlying statevector data
  * @tparam ParamT Floating point type of gate parameters
- * @tparam kernel Kernel to construct tuple
+ * @tparam GateImplementation Gate implementation class.
  */
 template <class PrecisionT, class GateImplementation>
 constexpr auto generator_op_functor_tuple =
@@ -130,7 +130,7 @@ constexpr auto generator_op_functor_tuple =
  *
  * @tparam PrecisionT Floating point precision of underlying statevector data
  * @tparam ParamT Floating point type of gate parameters
- * @tparam kernel Kernel to construct tuple
+ * @tparam GateImplementation Gate implementation class.
  */
 template <class PrecisionT, class ParamT, class GateImplementation>
 void registerAllImplementedGateOps() {
@@ -156,8 +156,7 @@ void registerAllImplementedGateOps() {
  * @brief Register all implemented generators for a given kernel
  *
  * @tparam PrecisionT Floating point precision of underlying statevector data
- * @tparam ParamT Floating point type of gate parameters
- * @tparam kernel Kernel to construct tuple
+ * @tparam GateImplementation Gate implementation class.
  */
 template <class PrecisionT, class GateImplementation>
 void registerAllImplementedGeneratorOps() {
@@ -201,12 +200,6 @@ void registerKernelIter() {
 } // namespace
 
 namespace Pennylane::Internal {
-/**
- * @brief Register all implemented gates for all available kernels.
- *
- * @tparam PrecisionT Floating point precision of underlying statevector data.
- * @tparam ParamT Floating point type for parameters
- */
 template <class PrecisionT, class ParamT> int registerAllAvailableKernels() {
     registerKernelIter<PrecisionT, ParamT, AvailableKernels>();
     return 1;

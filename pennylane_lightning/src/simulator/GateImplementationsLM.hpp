@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file GateOperationsLM.hpp
+ * @file 
  * Defines kernel functions with less memory (and fast)
  */
 #pragma once
@@ -105,7 +105,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param arr Pointer to the statevector.
      * @param num_qubits Number of qubits.
      * @param matrix Perfect square matrix in row-major order.
-     * @param wires Wires the gate applies to.
+     * @param wire A wire the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */
     template <class PrecisionT>

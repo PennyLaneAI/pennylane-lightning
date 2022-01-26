@@ -35,6 +35,7 @@ namespace Pennylane {
  * (by the standard). But GCC 9 still does not accept Util::lookup in constexpr
  * some cases.
  */
+///@{
 template <GateOperation op, class T, size_t size>
 constexpr auto
 static_lookup(const std::array<std::pair<GateOperation, T>, size> &arr) -> T {
@@ -57,6 +58,7 @@ static_lookup(const std::array<std::pair<GeneratorOperation, T>, size> &arr)
     }
     return T{};
 }
+///@}
 
 /// @cond DEV
 namespace Internal {

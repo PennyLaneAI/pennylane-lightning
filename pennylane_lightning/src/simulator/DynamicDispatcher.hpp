@@ -40,15 +40,16 @@ struct PairHash {
                std::hash<int>()(static_cast<int>(p.second));
     }
 };
-
+/**
+ * @brief Register all implemented gates for all available kernels.
+ *
+ * @tparam PrecisionT Floating point precision of underlying statevector data.
+ * @tparam ParamT Floating point type for parameters
+ */
+template <class PrecisionT, class ParamT> int registerAllAvailableKernels();
 } // namespace Pennylane::Internal
 
 namespace Pennylane {
-
-namespace Internal {
-template <class PrecisionT, class ParamT> int registerAllAvailableKernels();
-} // namespace Internal
-
 /**
  * @brief These functions are only used to register kernels to the dynamic
  * dispatcher.
@@ -273,7 +274,6 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param ops List of Gate operation names.
      * @param wires List of wires to apply each gate to.
      * @param inverse List of inverses
-     * @param params List of parameters
      */
     void applyOperations(CFP_t *data, size_t num_qubits,
                          const std::vector<std::string> &ops,
@@ -322,7 +322,6 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param op_name Gate operation name.
      * @param wires Wires to apply gate to.
      * @param adj Indicates whether to use adjoint of gate.
-     * @param params Optional parameter list for parametric gates.
      */
     inline auto applyGenerator(CFP_t *data, size_t num_qubits,
                                const std::string &op_name,

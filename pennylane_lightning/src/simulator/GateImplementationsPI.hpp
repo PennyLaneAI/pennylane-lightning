@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file GateOperationsPI.hpp
+ * @file
  * Defines gate operations with precomputed indicies
  */
 #pragma once
@@ -123,9 +123,10 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     /**
      * @brief Apply a given matrix directly to the statevector.
      *
+     * @param arr Pointer to the statevector.
+     * @param num_qubits Number of qubits.
      * @param matrix Perfect square matrix in row-major order.
-     * @param indices Internal indices participating in the operation.
-     * @param externalIndices External indices unaffected by the operation.
+     * @param wires Wires the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */
     template <class PrecisionT>

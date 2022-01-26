@@ -67,15 +67,16 @@ auto generateBitPatterns(const std::vector<size_t> &qubitIndices,
  * 1000B, 1001B}. For each external index, internal indices are bitstrings for
  * the wires. In the example, we have internal indices {0000B, 0010B, 0100B,
  * 0110B}.
- *
- * @var internal Internal indices. For the given wires with size n_wire, the
- * output size is 2^n_wire.
- * @var external External indices. For the given wires with size n_wire, the
- * output size is 2^(num_qubits - n_wires).
  */
 struct GateIndices {
-    const std::vector<size_t> internal;
-    const std::vector<size_t> external;
+    const std::vector<size_t> internal; /**< Internal indices. 
+                                          For the given wires with size n_wire, the
+                                          output size is 2^n_wire. */
+
+    const std::vector<size_t> external; /**< external External indices.
+                                          For the given wires with size n_wire, the
+                                          output size is 2^(num_qubits - n_wires). */
+
     GateIndices(const std::vector<size_t> &wires, size_t num_qubits)
         : internal{generateBitPatterns(wires, num_qubits)},
           external{generateBitPatterns(

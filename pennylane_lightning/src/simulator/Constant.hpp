@@ -196,11 +196,11 @@ namespace Pennylane::Constant {
  * @brief Define which kernel to use for each gate operation.
  *
  * This value is used for:
- *   1) StateVector apply##GATE_NAME methods. The kernel function is statically
- * binded to the given kernel and cannot be modified. 2) Default kernel
- * functions of StateVector applyOperation(opName, ...) methods. The kernel
- * function is dynamically binded and can be changed using DynamicDispatcher
- * singleton class. 3) Python binding.
+ * 1. StateVector apply##GATE_NAME methods. The kernel function is statically
+ * binded to the given kernel and cannot be modified. 
+ * 2. Default kernel functions for DynamicDispatcher. The kernel function is 
+ * dynamically binded and can be changed using DynamicDispatcher singleton class. 
+ * 3. For the Python binding.
  */
 [[maybe_unused]] constexpr std::array default_kernel_for_gates = {
     std::pair{GateOperation::PauliX, KernelType::LM},
@@ -215,9 +215,9 @@ namespace Pennylane::Constant {
     std::pair{GateOperation::PhaseShift, KernelType::LM},
     std::pair{GateOperation::Rot, KernelType::LM},
     std::pair{GateOperation::ControlledPhaseShift, KernelType::PI},
-    std::pair{GateOperation::CNOT, KernelType::PI},
+    std::pair{GateOperation::CNOT, KernelType::LM},
     std::pair{GateOperation::CY, KernelType::PI},
-    std::pair{GateOperation::CZ, KernelType::PI},
+    std::pair{GateOperation::CZ, KernelType::LM},
     std::pair{GateOperation::SWAP, KernelType::PI},
     std::pair{GateOperation::IsingXX, KernelType::LM},
     std::pair{GateOperation::IsingYY, KernelType::LM},

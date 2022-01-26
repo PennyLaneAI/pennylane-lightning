@@ -289,9 +289,8 @@ inline auto log2(size_t value) -> size_t {
 }
 
 /**
- * @brief Define popcount for multiple compilers as well as different types.
- *
- * TODO: change to std::popcount in C++20
+ * @breif Define popcount for multiple compilers as well as different types.
+ * @param val Value to calculate
  */
 ///@{
 #if defined(_MSC_VER)
