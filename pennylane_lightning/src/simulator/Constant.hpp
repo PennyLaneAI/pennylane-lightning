@@ -191,7 +191,14 @@ namespace Pennylane::Constant {
 };
 
 /**
- * @brief Define which kernel to use for each gate operation.
+ * 
+ * @brief Define which kernel to use for each gate operation. 
+ *
+ * @rst
+ * Check 
+ * `this repository <https://github.com/PennyLaneAI/pennylane-lightning-compare-kernels>`_
+ * to see the benchmark results for each gate
+ * @endrst
  *
  * This value is used for:
  * 1. StateVector apply##GATE_NAME methods. The kernel function is statically
@@ -217,13 +224,13 @@ namespace Pennylane::Constant {
     std::pair{GateOperation::CNOT, KernelType::LM},
     std::pair{GateOperation::CY, KernelType::PI},
     std::pair{GateOperation::CZ, KernelType::LM},
-    std::pair{GateOperation::SWAP, KernelType::PI},
+    std::pair{GateOperation::SWAP, KernelType::LM},
     std::pair{GateOperation::IsingXX, KernelType::LM},
     std::pair{GateOperation::IsingYY, KernelType::LM},
     std::pair{GateOperation::IsingZZ, KernelType::LM},
-    std::pair{GateOperation::CRX, KernelType::PI},
-    std::pair{GateOperation::CRY, KernelType::PI},
-    std::pair{GateOperation::CRZ, KernelType::PI},
+    std::pair{GateOperation::CRX, KernelType::LM},
+    std::pair{GateOperation::CRY, KernelType::LM},
+    std::pair{GateOperation::CRZ, KernelType::LM},
     std::pair{GateOperation::CRot, KernelType::PI},
     std::pair{GateOperation::Toffoli, KernelType::PI},
     std::pair{GateOperation::CSWAP, KernelType::PI},

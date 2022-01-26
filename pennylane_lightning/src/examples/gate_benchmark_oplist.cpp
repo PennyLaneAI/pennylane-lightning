@@ -191,7 +191,7 @@ int main(int argc, char *argv[]) {
     auto gen_param = [&param_dist, &re]() { return param_dist(re); };
 
     for (uint32_t k = 0; k < num_gate_reps; k++) {
-        auto [op_name, gate_desc] = op_list[gate_dist(re)];
+        const auto& [op_name, gate_desc] = op_list[gate_dist(re)];
 
         std::vector<TestType> gate_params(gate_desc.n_params, 0.0);
         std::generate(gate_params.begin(), gate_params.end(), gen_param);
