@@ -191,13 +191,14 @@ namespace Pennylane::Constant {
 };
 
 /**
- * 
- * @brief Define which kernel to use for each gate operation. 
+ *
+ * @brief Define which kernel to use for each gate operation.
  *
  * @rst
- * Check 
- * `this repository <https://github.com/PennyLaneAI/pennylane-lightning-compare-kernels>`_
- * to see the benchmark results for each gate
+ * Check
+ * `this repository
+ * <https://github.com/PennyLaneAI/pennylane-lightning-compare-kernels>`_ to see
+ * the benchmark results for each gate
  * @endrst
  *
  * This value is used for:
