@@ -10,8 +10,11 @@ We discuss how one can add another gate implementation in this document. Assume 
 
     struct MyGateImplementation {
       public:
-        constexpr static implemented_gates = {GateOperations::PauliX};
+        constexpr static std::array implemented_gates = {
+            GateOperation::PauliX
+        }; // List of implemented gates
         constexpr static kernel_id = KernelType::Mykernel; // Will be discussed below
+        constexpr static std::string_view = "MyGateImpl"; // Name of your kernel
 
         template <class PrecisionT>
         static void applyPauliX(std::complex<PrecisionT>* data,
