@@ -98,7 +98,7 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
      * gradient outputs and a Jacobian.
      *
      * @param vjp Preallocated vector for vector-jacobian product data results.
-     * @param jac Row-wise flatten Jacobian matrix of shape m * n.
+     * @param jac Row-wise flatten Jacobian matrix of shape `m * n`.
      * @param dy_row Gradient-output vector.
      * @param m Number of rows of `jac`.
      * @param n Number of columns of `jac`.
@@ -122,53 +122,18 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
      * @brief Calculates the VectorJacobianProduct for the statevector
      * for the selected set of parametric gates using `AdjointJacobian`.
      *
-     * @param vjp Preallocated vector for vector-jacobian product data results
-     * of size `trainableParams.size()`.
-     * @param jac Preallocated Jacobian matrix from `AdjointJacobian` of size
-     * `observables.size() * trainableParams.size()`.
-     * @param dy Gradient-output vector.
-     * @param tape JacobianData represents the QuantumTape to differentiate
-     * @param apply_operations Indicate whether to apply operations to tape.psi
-     * prior to calculation.
-     *
-     */
-    void vectorJacobianProduct(std::vector<T> &vjp,
-                               std::vector<std::vector<T>> &jac,
-                               const std::vector<T> &dy,
-                               const JacobianData<T> &tape,
-                               bool apply_operations = false) {
-        const size_t num_params = tape.getNumTrainableParams();
-
-        if (num_params == 0U || dy.empty()) {
-            vjp.clear();
-            return;
-        }
-
-        const bool allzero =
-            std::all_of(dy.cbegin(), dy.cend(), [](T e) { return e == 0; });
-        if (allzero) {
-            vjp.resize(num_params);
-            return;
-        }
-
-        this->adjointJacobianTape(jac, tape, apply_operations);
-
-        computeVJP(vjp, jac, dy);
-    }
-
-    /**
-     * @brief Calculates the VectorJacobianProduct for the statevector
-     * for the selected set of parametric gates using `AdjointJacobian`.
-     *
      * @param dy Gradient-output vector.
      * @param num_params Total number of parameters in the QuantumTape
      * @param apply_operations Indicate whether to apply operations to tape.psi
      * prior to calculation.
      *
      * @return std::function<std::vector<T>(const JacobianData<T> &tape)>
+     * where `tape` is a JacobianData object representing the QuantumTape
+     * to differentiate.
+     *
      */
-    auto vectorJacobianProductFunc(const std::vector<T> &dy, size_t num_params,
-                                   bool apply_operations = false)
+    auto vectorJacobianProduct(const std::vector<T> &dy, size_t num_params,
+                               bool apply_operations = false)
         -> std::function<std::vector<T>(const JacobianData<T> &tape)> {
 
         if (!dy.size() ||
@@ -193,7 +158,7 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
                                             std::vector<T>(num_params, 0));
 
             // Compute Jacobian for the input tape using `adjoint` method
-            this->adjointJacobianTape(jac, tape, apply_operations);
+            this->adjointJacobianJD(jac, tape, apply_operations);
 
             // Compute VJP
             computeVJP(vjp, jac, dy);

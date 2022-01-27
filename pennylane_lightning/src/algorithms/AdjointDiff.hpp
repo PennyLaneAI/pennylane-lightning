@@ -515,23 +515,23 @@ template <class T = double> class AdjointJacobian {
      * enable independent operations to be offloaded to threads.
      *
      * @param jac Preallocated vector for Jacobian data results.
-     * @param tape JacobianData represents the QuantumTape to differentiate
+     * @param jd JacobianData represents the QuantumTape to differentiate
      * @param apply_operations Indicate whether to apply operations to tape.psi
      * prior to calculation.
      */
-    void adjointJacobianTape(std::vector<std::vector<T>> &jac,
-                             const JacobianData<T> &tape,
+    void adjointJacobianJD(std::vector<std::vector<T>> &jac,
+                             const JacobianData<T> &jd,
                              bool apply_operations = false) {
-        PL_ABORT_IF(!tape.hasTrainableParams(),
+        PL_ABORT_IF(!jd.hasTrainableParams(),
                     "No trainable parameters provided.");
 
-        const OpsData<T> &ops = tape.getOperations();
+        const OpsData<T> &ops = jd.getOperations();
         const std::vector<std::string> &ops_name = ops.getOpsName();
 
-        const std::vector<ObsDatum<T>> &obs = tape.getObservables();
+        const std::vector<ObsDatum<T>> &obs = jd.getObservables();
         const size_t num_observables = obs.size();
 
-        const size_t tp_size = tape.getNumTrainableParams();
+        const size_t tp_size = jd.getNumTrainableParams();
         const size_t num_param_ops = ops.getNumParOps();
 
         // Track positions within par and non-par operations
@@ -539,15 +539,15 @@ template <class T = double> class AdjointJacobian {
         size_t current_param_idx =
             num_param_ops - 1; // total number of parametric ops
 
-        // A (value -> index) vector for tape.trainableParams
+        // A (value -> index) vector for jd.trainableParams
         std::vector<size_t> tp_map(num_param_ops, num_param_ops);
         for (size_t i = 0; i < tp_size; i++) {
-            tp_map[tape.getTrainableParamAt(i)] = i;
+            tp_map[jd.getTrainableParamAt(i)] = i;
         }
 
         // Create $U_{1:p}\vert \lambda \rangle$
-        StateVectorManaged<T> lambda(tape.getPtrStateVec(),
-                                     tape.getSizeStateVec());
+        StateVectorManaged<T> lambda(jd.getPtrStateVec(),
+                                     jd.getSizeStateVec());
 
         // Apply given operations to statevector if requested
         if (apply_operations) {

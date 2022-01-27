@@ -232,7 +232,7 @@ void lightning_class_bindings(py::module &m) {
                                                    observables, operations,
                                                    trainableParams};
 
-                 adj.adjointJacobianTape(jac, jd);
+                 adj.adjointJacobianJD(jac, jd);
                  return py::array_t<ParamT>(py::cast(jac));
              });
 
@@ -290,7 +290,7 @@ void lightning_class_bindings(py::module &m) {
         .def("vjp_fn",
              [](VectorJacobianProduct<PrecisionT> &v,
                 const std::vector<PrecisionT> &dy, size_t num_params) {
-                 auto fn = v.vectorJacobianProductFunc(dy, num_params);
+                 auto fn = v.vectorJacobianProduct(dy, num_params);
                  return py::cpp_function(
                      [fn](const StateVectorRaw<PrecisionT> &sv,
                           const std::vector<ObsDatum<PrecisionT>> &observables,
@@ -301,27 +301,7 @@ void lightning_class_bindings(py::module &m) {
                              operations, trainableParams};
                          return py::array_t<ParamT>(py::cast(fn(jd)));
                      });
-             })
-        .def("vjp", &VectorJacobianProduct<PrecisionT>::vectorJacobianProduct)
-        .def("vjp", [](VectorJacobianProduct<PrecisionT> &v,
-                       const std::vector<PrecisionT> &dy,
-                       const StateVectorRaw<PrecisionT> &sv,
-                       const std::vector<ObsDatum<PrecisionT>> &observables,
-                       const OpsData<PrecisionT> &operations,
-                       const std::vector<size_t> &trainableParams,
-                       size_t num_params) {
-            std::vector<std::vector<PrecisionT>> jac(
-                observables.size(), std::vector<PrecisionT>(num_params, 0));
-            std::vector<PrecisionT> vjp_res(num_params);
-
-            const JacobianData<PrecisionT> tape{sv.getLength(), sv.getData(),
-                                                observables, operations,
-                                                trainableParams};
-
-            v.vectorJacobianProduct(vjp_res, jac, dy, tape);
-            return py::make_tuple(py::array_t<ParamT>(py::cast(jac)),
-                                  py::array_t<ParamT>(py::cast(vjp_res)));
-        });
+             });
 }
 
 /**
