@@ -503,13 +503,11 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        jacs, vjps = dev.batch_vjp(tapes, dys)
+        fn = dev.batch_vjp(tapes, dys)
+        vjps = fn(tapes)
 
         assert vjps[0] is None
         assert vjps[1] is not None
-
-        assert jacs[0] is None
-        assert jacs[1] is not None
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_all_tapes_no_trainable_parameters(self, dev, C):
@@ -533,13 +531,11 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        jacs, vjps = dev.batch_vjp(tapes, dys)
+        fn = dev.batch_vjp(tapes, dys)
+        vjps = fn(tapes)
 
         assert vjps[0] is None
         assert vjps[1] is None
-
-        assert jacs[0] is None
-        assert jacs[1] is None
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_zero_dy(self, dev, C):
@@ -563,10 +559,10 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([0.0]), np.array([1.0])]
 
-        jacs, vjps = dev.batch_vjp(tapes, dys)
+        fn = dev.batch_vjp(tapes, dys)
+        vjps = fn(tapes)
 
         assert np.allclose(vjps[0], 0)
-        assert jacs[0] is None
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_reduction_append(self, dev, C):
@@ -590,17 +586,12 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        jacs, vjps = dev.batch_vjp(tapes, dys, reduction="append")
-
-        jac0 = dev.adjoint_jacobian(tape1)
-        jac1 = dev.adjoint_jacobian(tape2)
+        fn = dev.batch_vjp(tapes, dys, reduction="append")
+        vjps = fn(tapes)
 
         assert len(vjps) == 2
         assert all(isinstance(v, np.ndarray) for v in vjps)
         assert all(len(v) == len(t.trainable_params) for t, v in zip(tapes, vjps))
-
-        assert np.allclose(jacs[0], jac0)
-        assert np.allclose(jacs[1], jac1)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_reduction_append_callable(self, dev, C):
@@ -624,17 +615,12 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        jacs, vjps = dev.batch_vjp(tapes, dys, reduction=list.append)
-
-        jac0 = dev.adjoint_jacobian(tape1)
-        jac1 = dev.adjoint_jacobian(tape2)
+        fn = dev.batch_vjp(tapes, dys, reduction="append")
+        vjps = fn(tapes)
 
         assert len(vjps) == 2
         assert all(isinstance(v, np.ndarray) for v in vjps)
         assert all(len(v) == len(t.trainable_params) for t, v in zip(tapes, vjps))
-
-        assert np.allclose(jacs[0], jac0)
-        assert np.allclose(jacs[1], jac1)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_reduction_extend(self, dev, C):
@@ -658,15 +644,10 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        jacs, vjps = dev.batch_vjp(tapes, dys, reduction="extend")
-
-        jac0 = dev.adjoint_jacobian(tape1)
-        jac1 = dev.adjoint_jacobian(tape2)
+        fn = dev.batch_vjp(tapes, dys, reduction="extend")
+        vjps = fn(tapes)
 
         assert len(vjps) == sum(len(t.trainable_params) for t in tapes)
-
-        assert np.allclose(jacs[0], jac0)
-        assert np.allclose(jacs[1], jac1)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_reduction_extend_callable(self, dev, C):
@@ -690,6 +671,7 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        _, vjps = dev.batch_vjp(tapes, dys, reduction=list.extend)
+        fn = dev.batch_vjp(tapes, dys, reduction=list.extend)
+        vjps = fn(tapes)
 
         assert len(vjps) == sum(len(t.trainable_params) for t in tapes)

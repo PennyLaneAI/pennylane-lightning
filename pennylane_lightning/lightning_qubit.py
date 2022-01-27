@@ -305,169 +305,6 @@ class LightningQubit(DefaultQubit):
         )
         return jac
 
-    def vjp(self, tape, dy, starting_state=None, use_device_state=False):
-        if self.shots is not None:
-            warn(
-                "Requested adjoint differentiation to be computed with finite shots."
-                " The derivative is always exact when using the adjoint differentiation method.",
-                UserWarning,
-            )
-
-        num_params = len(tape.trainable_params)
-
-        if num_params == 0:
-            return lambda _: None
-
-        if math.allclose(dy, 0):
-            return lambda _: math.convert_like(np.zeros([num_params]), dy)
-
-        # To support np.complex64 based on the type of self._state
-        dtype = self._state.dtype
-        if dtype == np.complex64:
-            use_csingle = True
-        elif dtype == np.complex128:
-            use_csingle = False
-        else:
-            raise TypeError(f"Unsupported complex Type: {dtype}")
-
-        if use_csingle:
-            V = VectorJacobianProductC64()
-        else:
-            V = VectorJacobianProductC128()
-
-        fn = V.vjp_fn(math.reshape(dy, [-1]), tape.num_params)
-
-        def processing_fn(tape):
-            # To support np.complex64 based on the type of self._state
-            dtype = self._state.dtype
-            if dtype == np.complex64:
-                use_csingle = True
-            elif dtype == np.complex128:
-                use_csingle = False
-            else:
-                raise TypeError(f"Unsupported complex Type: {dtype}")
-
-            # Check adjoint diff support
-            self.adjoint_diff_support_check(tape)
-
-            # Initialization of state
-            if starting_state is not None:
-                ket = np.ravel(starting_state)
-            else:
-                if not use_device_state:
-                    self.reset()
-                    self.execute(tape)
-                ket = np.ravel(self._pre_rotated_state)
-
-            if use_csingle:
-                V = VectorJacobianProductC64()
-                ket = ket.astype(np.complex64)
-            else:
-                V = VectorJacobianProductC128()
-
-            obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=use_csingle)
-            ops_serialized, use_sp = _serialize_ops(tape, self.wire_map, use_csingle=use_csingle)
-
-            ops_serialized = V.create_ops_list(*ops_serialized)
-
-            trainable_params = sorted(tape.trainable_params)
-            first_elem = 1 if trainable_params[0] == 0 else 0
-
-            tp_shift = (
-                trainable_params if not use_sp else [i - 1 for i in trainable_params[first_elem:]]
-            )  # exclude first index if explicitly setting sv
-
-            state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
-
-            return fn(state_vector, obs_serialized, ops_serialized, tp_shift)
-
-        return processing_fn
-
-    def vector_jacobian_product(self, tape, dy, starting_state=None, use_device_state=False):
-        """Generate the the vector-Jacobian products of a tape.
-
-        Args:
-            tape (.QuantumTape): quantum tape to differentiate
-            dy (tensor_like): Gradient-output vector. Must have shape
-                matching the output shape of the corresponding tape.
-
-        Keyword Args:
-            starting_state (tensor_like): post-forward pass state to start execution with. It should be
-                complex-valued. Takes precedence over ``use_device_state``.
-            use_device_state (bool): use current device state to initialize. A forward pass of the same
-                circuit should be the last thing the device has executed. If a ``starting_state`` is
-                provided, that takes precedence.
-
-        Returns:
-            tuple[array or None, tensor_like or None]: A tuple of the adjoint-jacobian and the Vector-Jacobian
-            product. Returns ``None`` if the tape has no trainable parameters.
-        """
-        if self.shots is not None:
-            warn(
-                "Requested adjoint differentiation to be computed with finite shots."
-                " The derivative is always exact when using the adjoint differentiation method.",
-                UserWarning,
-            )
-
-        num_params = len(tape.trainable_params)
-
-        if num_params == 0:
-            return None, None
-
-        if math.allclose(dy, 0):
-            return None, math.convert_like(np.zeros([num_params]), dy)
-
-        # To support np.complex64 based on the type of self._state
-        dtype = self._state.dtype
-        if dtype == np.complex64:
-            use_csingle = True
-        elif dtype == np.complex128:
-            use_csingle = False
-        else:
-            raise TypeError(f"Unsupported complex Type: {dtype}")
-
-        # Check adjoint diff support
-        self.adjoint_diff_support_check(tape)
-
-        # Initialization of state
-        if starting_state is not None:
-            ket = np.ravel(starting_state)
-        else:
-            if not use_device_state:
-                self.reset()
-                self.execute(tape)
-            ket = np.ravel(self._pre_rotated_state)
-
-        if use_csingle:
-            VJP = VectorJacobianProductC64()
-            ket = ket.astype(np.complex64)
-        else:
-            VJP = VectorJacobianProductC128()
-
-        obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=use_csingle)
-        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map, use_csingle=use_csingle)
-
-        ops_serialized = VJP.create_ops_list(*ops_serialized)
-
-        trainable_params = sorted(tape.trainable_params)
-        first_elem = 1 if trainable_params[0] == 0 else 0
-
-        tp_shift = (
-            trainable_params if not use_sp else [i - 1 for i in trainable_params[first_elem:]]
-        )  # exclude first index if explicitly setting sv
-
-        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
-
-        jac, vjp = VJP.vjp(
-            math.reshape(dy, [-1]),
-            state_vector,
-            obs_serialized,
-            ops_serialized,
-            tp_shift,
-            tape.num_params,
-        )
-        return jac, vjp
-
     def compute_vjp(self, dy, jac, num=None):
         """Convenience function to compute the vector-Jacobian product for a given
         vector of gradient outputs and a Jacobian.
@@ -520,10 +357,95 @@ class LightningQubit(DefaultQubit):
         )
         return vjp_tensor
 
+    def vjp(self, tape, dy, starting_state=None, use_device_state=False):
+        """Generate the processing function required to compute the vector-Jacobian products of a tape.
+
+        Args:
+            tape (.QuantumTape): quantum tape to differentiate
+            dy (tensor_like): Gradient-output vector. Must have shape
+                matching the output shape of the corresponding tape.
+
+        Keyword Args:
+            starting_state (tensor_like): post-forward pass state to start execution with. It should be
+                complex-valued. Takes precedence over ``use_device_state``.
+            use_device_state (bool): use current device state to initialize. A forward pass of the same
+                circuit should be the last thing the device has executed. If a ``starting_state`` is
+                provided, that takes precedence.
+
+        Returns:
+            The processing function required to compute the vector-Jacobian
+            products of a tape.
+        """
+        if self.shots is not None:
+            warn(
+                "Requested adjoint differentiation to be computed with finite shots."
+                " The derivative is always exact when using the adjoint differentiation method.",
+                UserWarning,
+            )
+
+        num_params = len(tape.trainable_params)
+
+        if num_params == 0:
+            return lambda _: None
+
+        if math.allclose(dy, 0):
+            return lambda _: math.convert_like(np.zeros([num_params]), dy)
+
+        # To support np.complex64 based on the type of self._state
+        dtype = self._state.dtype
+        if dtype == np.complex64:
+            use_csingle = True
+        elif dtype == np.complex128:
+            use_csingle = False
+        else:
+            raise TypeError(f"Unsupported complex Type: {dtype}")
+
+        if use_csingle:
+            V = VectorJacobianProductC64()
+        else:
+            V = VectorJacobianProductC128()
+
+        fn = V.vjp_fn(math.reshape(dy, [-1]), tape.num_params)
+
+        def processing_fn(tape):
+            # Check adjoint diff support
+            self.adjoint_diff_support_check(tape)
+
+            # Initialization of state
+            if starting_state is not None:
+                ket = np.ravel(starting_state)
+            else:
+                if not use_device_state:
+                    self.reset()
+                    self.execute(tape)
+                ket = np.ravel(self._pre_rotated_state)
+
+            if use_csingle:
+                ket = ket.astype(np.complex64)
+
+            obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=use_csingle)
+            ops_serialized, use_sp = _serialize_ops(tape, self.wire_map, use_csingle=use_csingle)
+
+            ops_serialized = V.create_ops_list(*ops_serialized)
+
+            trainable_params = sorted(tape.trainable_params)
+            first_elem = 1 if trainable_params[0] == 0 else 0
+
+            tp_shift = (
+                trainable_params if not use_sp else [i - 1 for i in trainable_params[first_elem:]]
+            )  # exclude first index if explicitly setting sv
+
+            state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
+
+            return fn(state_vector, obs_serialized, ops_serialized, tp_shift)
+
+        return processing_fn
+
     def batch_vjp(
         self, tapes, dys, reduction="append", starting_state=None, use_device_state=False
     ):
-        """Generate the the vector-Jacobian products of a batch of tapes.
+        """Generate the processing function required to compute the vector-Jacobian products
+        of a batch of tapes.
 
         Args:
             tapes (Sequence[.QuantumTape]): sequence of quantum tapes to differentiate
@@ -543,34 +465,35 @@ class LightningQubit(DefaultQubit):
                 provided, that takes precedence.
 
         Returns:
-            tuple[List[array or None], List[tensor_like or None]]: A tuple containing a list
-            of adjoint-jacobians and a list of vector-Jacobian products. ``None`` elements corresponds
-            to tapes with no trainable parameters.
+            The processing function required to compute the vector-Jacobian products of a batch of tapes.
         """
-        vjps = []
-        jacs = []
+        fns = []
 
         # Loop through the tapes and dys vector
         for tape, dy in zip(tapes, dys):
-            jac, vjp = self.vector_jacobian_product(
-                tape,
-                dy,
-                starting_state=starting_state,
-                use_device_state=use_device_state,
+            fn = self.vjp(
+                tape, dy, starting_state=starting_state, use_device_state=use_device_state
             )
-            if vjp is None:
-                if reduction == "append":
-                    vjps.append(None)
-                    jacs.append(jac)
-                continue
-            if isinstance(reduction, str):
-                getattr(vjps, reduction)(vjp)
-                getattr(jacs, reduction)(jac)
-            elif callable(reduction):
-                reduction(vjps, vjp)
-                reduction(jacs, jac)
+            fns.append(fn)
 
-        return jacs, vjps
+        def processing_fns(tapes):
+            vjps = []
+            for t, f in zip(tapes, fns):
+                vjp = f(t)
+
+                if vjp is None:
+                    if reduction == "append":
+                        vjps.append(None)
+                    continue
+
+                if isinstance(reduction, str):
+                    getattr(vjps, reduction)(vjp)
+                elif callable(reduction):
+                    reduction(vjps, vjp)
+
+            return vjps
+
+        return processing_fns
 
 
 if not CPP_BINARY_AVAILABLE:
