@@ -259,9 +259,9 @@ template <class T> class JacobianData {
   private:
     size_t num_elements;
     std::complex<T> *psi;
-    std::vector<ObsDatum<T>> observables;
-    OpsData<T> operations;
-    std::vector<size_t> trainableParams;
+    const std::vector<ObsDatum<T>> observables;
+    const OpsData<T> operations;
+    const std::vector<size_t> trainableParams;
 
   public:
     /**
@@ -276,9 +276,9 @@ template <class T> class JacobianData {
      */
     JacobianData(size_t num_elem, std::complex<T> *ps,
                  const std::vector<ObsDatum<T>> &obs, const OpsData<T> &ops,
-                 const std::vector<size_t> &trainP)
+                 const std::vector<size_t> trainP)
         : num_elements(num_elem), psi(ps), observables(obs), operations(ops),
-          trainableParams(trainP) {}
+          trainableParams(std::move(trainP)) {}
 
     /**
      * @brief Get the length of the statevector data.
