@@ -520,8 +520,8 @@ template <class T = double> class AdjointJacobian {
      * prior to calculation.
      */
     void adjointJacobianJD(std::vector<std::vector<T>> &jac,
-                             const JacobianData<T> &jd,
-                             bool apply_operations = false) {
+                           const JacobianData<T> &jd,
+                           bool apply_operations = false) {
         PL_ABORT_IF(!jd.hasTrainableParams(),
                     "No trainable parameters provided.");
 
@@ -546,8 +546,7 @@ template <class T = double> class AdjointJacobian {
         }
 
         // Create $U_{1:p}\vert \lambda \rangle$
-        StateVectorManaged<T> lambda(jd.getPtrStateVec(),
-                                     jd.getSizeStateVec());
+        StateVectorManaged<T> lambda(jd.getPtrStateVec(), jd.getSizeStateVec());
 
         // Apply given operations to statevector if requested
         if (apply_operations) {
@@ -578,7 +577,7 @@ template <class T = double> class AdjointJacobian {
                             applyGenerator(mu, ops_name[op_idx],
                                            ops.getOpsWires()[op_idx],
                                            !ops.getOpsInverses()[op_idx]) *
-                            (2 * (0b1 ^ ops.getOpsInverses()[op_idx]) - 1);
+                            (2 * (ops.getOpsInverses()[op_idx] ? 0 : 1) - 1);
                         // clang-format off
 
                         #if defined(_OPENMP)

@@ -259,9 +259,9 @@ template <class T> class JacobianData {
   private:
     size_t num_elements;
     std::complex<T> *psi;
-    const std::vector<ObsDatum<T>> observables;
-    const OpsData<T> operations;
-    const std::vector<size_t> trainableParams;
+    std::vector<ObsDatum<T>> observables;
+    OpsData<T> operations;
+    std::vector<size_t> trainableParams;
 
   public:
     /**
