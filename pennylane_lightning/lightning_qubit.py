@@ -496,19 +496,10 @@ class LightningQubit(DefaultQubit):
         return jacs, vjps
 
     def probs(self, tape, wires, starting_state=None, use_device_state=False):
-        r"""Probability of each computational basis state.
-
-        This measurement function accepts a wire specification.
-        Passing wires to the function instructs the QNode to return
-        a flat array containing the probabilities :math:`|\langle i | \psi \rangle |^2`
-        of measuring the computational basis state :math:`| i \rangle`
-        given the current state :math:`| \psi \rangle`.
-
-        Marginal probabilities may also be requested by restricting
-        the wires to a subset of the full system; the size of the
-        returned array will be ``[2**len(wires)]``.
+        """Probability of each computational basis state.
 
         Args:
+            tape (.QuantumTape): a quantum tapes
             wires (Sequence[int] or int): the wire the operation acts on
 
         Returns:
@@ -543,19 +534,18 @@ class LightningQubit(DefaultQubit):
 
         return M.probs([] if wires == None else wires)
 
-    def expval(self, tape, op, wires, starting_state=None, use_device_state=False):
-        r"""Expectation value of the supplied observable.
+    def expval(self, tape, op, wires=None, starting_state=None, use_device_state=False):
+        """Expectation value of the supplied observable.
 
         Args:
-            op: observable name.
-            wires (Sequence[int] or int): the wire the operation acts on
+            tape (.QuantumTape): a quantum tapes
+            op: observable name or a PennyLane observable.
+            wires (Sequence[int] or int): the wire the operation acts on. This must be
+            `None` if op is a PennyLane observable.
 
         Returns:
             Expectation value of the op
         """
-        if wires == None:
-            return 0.0  # TODO
-
         # To support np.complex64 based on the type of self._state
         dtype = self._state.dtype
         if dtype == np.complex64:
@@ -580,21 +570,24 @@ class LightningQubit(DefaultQubit):
         state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
 
+        if wires == None:
+            # TODO: check if op is an qml.op
+            return M.expval(op.name, op.wires.toarray())
+
         return M.expval(op, wires)
 
-    def var(self, tape, op, wires, starting_state=None, use_device_state=False):
-        r"""Variance of the supplied observable.
+    def var(self, tape, op, wires=None, starting_state=None, use_device_state=False):
+        """Variance of the supplied observable.
 
         Args:
-            op: observable name.
-            wires (Sequence[int] or int): the wire the operation acts on
+            tape (.QuantumTape): a quantum tapes
+            op: observable name or a PennyLane observable.
+            wires (Sequence[int] or int): the wire the operation acts on. This must be
+            `None` if op is a PennyLane observable.
 
         Returns:
             Variance of the op
         """
-        if wires == None:
-            return 0.0  # TODO
-
         # To support np.complex64 based on the type of self._state
         dtype = self._state.dtype
         if dtype == np.complex64:
@@ -618,6 +611,10 @@ class LightningQubit(DefaultQubit):
 
         state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
+
+        if wires == None:
+            # TODO: check if op is an qml.op
+            return M.var(op.name, op.wires.toarray())
 
         return M.var(op, wires)
 
