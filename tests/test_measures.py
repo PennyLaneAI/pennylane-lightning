@@ -14,7 +14,6 @@
 """
 Unit tests for Measures in lightning.qubit.
 """
-import json
 import numpy as np
 import pennylane as qml
 import pytest
@@ -317,7 +316,6 @@ class TestVar:
             qml.RY(-0.2, wires=[1])
 
         e = dev.var(tape, cases[0], cases[1])
-        print(json.dumps(e))
         assert np.allclose(e, cases[2], atol=tol, rtol=0)
 
     @pytest.mark.parametrize(
