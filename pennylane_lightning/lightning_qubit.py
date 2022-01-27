@@ -34,9 +34,11 @@ from ._version import __version__
 
 try:
     from .lightning_qubit_ops import (
+        MeasuresC64,
         StateVectorC64,
         AdjointJacobianC64,
         VectorJacobianProductC64,
+        MeasuresC128,
         StateVectorC128,
         AdjointJacobianC128,
         VectorJacobianProductC128,
@@ -492,6 +494,132 @@ class LightningQubit(DefaultQubit):
                 reduction(jacs, jac)
 
         return jacs, vjps
+
+    def probs(self, tape, wires, starting_state=None, use_device_state=False):
+        r"""Probability of each computational basis state.
+
+        This measurement function accepts a wire specification.
+        Passing wires to the function instructs the QNode to return
+        a flat array containing the probabilities :math:`|\langle i | \psi \rangle |^2`
+        of measuring the computational basis state :math:`| i \rangle`
+        given the current state :math:`| \psi \rangle`.
+
+        Marginal probabilities may also be requested by restricting
+        the wires to a subset of the full system; the size of the
+        returned array will be ``[2**len(wires)]``.
+
+        Args:
+            wires (Sequence[int] or int): the wire the operation acts on
+
+        Returns:
+            The returned array is in lexicographic order, so corresponds
+            to a :math:`14.6\%` chance of measuring the rotated :math:`|0\rangle` state
+            and :math:`85.4\%` of measuring the rotated :math:`|1\rangle` state.
+        """
+
+        # To support np.complex64 based on the type of self._state
+        dtype = self._state.dtype
+        if dtype == np.complex64:
+            use_csingle = True
+        elif dtype == np.complex128:
+            use_csingle = False
+        else:
+            raise TypeError(f"Unsupported complex Type: {dtype}")
+
+        # Initialization of state
+        if starting_state is not None:
+            ket = np.ravel(starting_state)
+        else:
+            if not use_device_state:
+                self.reset()
+                self.execute(tape)
+            ket = np.ravel(self._pre_rotated_state)
+
+        if use_csingle:
+            ket = ket.astype(np.complex64)
+
+        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
+        M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
+
+        return M.probs([] if wires == None else wires)
+
+    def expval(self, tape, op, wires, starting_state=None, use_device_state=False):
+        r"""Expectation value of the supplied observable.
+
+        Args:
+            op: observable name.
+            wires (Sequence[int] or int): the wire the operation acts on
+
+        Returns:
+            Expectation value of the op
+        """
+        if wires == None:
+            return 0.0  # TODO
+
+        # To support np.complex64 based on the type of self._state
+        dtype = self._state.dtype
+        if dtype == np.complex64:
+            use_csingle = True
+        elif dtype == np.complex128:
+            use_csingle = False
+        else:
+            raise TypeError(f"Unsupported complex Type: {dtype}")
+
+        # Initialization of state
+        if starting_state is not None:
+            ket = np.ravel(starting_state)
+        else:
+            if not use_device_state:
+                self.reset()
+                self.execute(tape)
+            ket = np.ravel(self._pre_rotated_state)
+
+        if use_csingle:
+            ket = ket.astype(np.complex64)
+
+        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
+        M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
+
+        return M.expval(op, wires)
+
+    def var(self, tape, op, wires, starting_state=None, use_device_state=False):
+        r"""Variance of the supplied observable.
+
+        Args:
+            op: observable name.
+            wires (Sequence[int] or int): the wire the operation acts on
+
+        Returns:
+            Variance of the op
+        """
+        if wires == None:
+            return 0.0  # TODO
+
+        # To support np.complex64 based on the type of self._state
+        dtype = self._state.dtype
+        if dtype == np.complex64:
+            use_csingle = True
+        elif dtype == np.complex128:
+            use_csingle = False
+        else:
+            raise TypeError(f"Unsupported complex Type: {dtype}")
+
+        # Initialization of state
+        if starting_state is not None:
+            ket = np.ravel(starting_state)
+        else:
+            if not use_device_state:
+                self.reset()
+                self.execute(tape)
+            ket = np.ravel(self._pre_rotated_state)
+
+        if use_csingle:
+            ket = ket.astype(np.complex64)
+
+        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
+        M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
+
+        return M.var(op, wires)
 
 
 if not CPP_BINARY_AVAILABLE:

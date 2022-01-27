@@ -295,52 +295,99 @@ void lightning_class_bindings(py::module &m) {
     //***********************************************************************//
     //                              Measures
     //***********************************************************************//
+
     class_name = "MeasuresC" + bitsize;
-    py::class_<Measures<PrecisionT, StateVectorRaw<PrecisionT>>>(
-        m, class_name.c_str())
+    using WiresT = std::variant<std::monostate, size_t, std::vector<size_t>>;
+    using OpsT = std::variant<std::monostate, std::string,
+                              std::vector<std::complex<ParamT>>>;
+    py::class_<Measures<PrecisionT>>(m, class_name.c_str())
         .def(py::init<const StateVectorRaw<PrecisionT> &>())
         .def("probs",
-             [](Measures<PrecisionT, StateVectorRaw<PrecisionT>> &M,
-                const std::vector<size_t> &wires) {
-                 return py::array_t<ParamT>(py::cast(M.probs(wires)));
+             [](Measures<PrecisionT> &M, const WiresT &wires) {
+                 if (std::holds_alternative<size_t>(wires)) {
+                     return py::array_t<ParamT>(
+                         py::cast(M.probs({std::get<size_t>(wires)})));
+                 }
+
+                 std::vector<size_t> w = std::get<std::vector<size_t>>(wires);
+                 if (w.empty()) {
+                     return py::array_t<ParamT>(py::cast(M.probs()));
+                 }
+                 return py::array_t<ParamT>(py::cast(M.probs(w)));
              })
         .def("expval",
-             [](Measures<PrecisionT, StateVectorRaw<PrecisionT>> &M,
-                const std::string &operation,
-                const std::vector<size_t> &wires) {
-                 return py::cast(M.expval(operation, wires));
+             [](Measures<PrecisionT> &M, const OpsT &operation,
+                const WiresT &wires) {
+                 if (std::holds_alternative<size_t>(wires)) {
+                     if (std::holds_alternative<std::string>(operation)) {
+                         return M.expval(std::get<std::string>(operation),
+                                         {std::get<size_t>(wires)});
+                     } else {
+                         return M.expval(
+                             std::get<std::vector<std::complex<ParamT>>>(
+                                 operation),
+                             {std::get<size_t>(wires)});
+                     }
+                 }
+                 if (std::holds_alternative<std::string>(operation)) {
+                     return M.expval(std::get<std::string>(operation),
+                                     std::get<std::vector<size_t>>(wires));
+                 }
+                 return M.expval(
+                     std::get<std::vector<std::complex<ParamT>>>(operation),
+                     std::get<std::vector<size_t>>(wires));
              })
         .def("expval_ops_str",
-             [](Measures<PrecisionT, StateVectorRaw<PrecisionT>> &M,
+             [](Measures<PrecisionT> &M,
                 const std::vector<std::string> &operations,
                 const std::vector<std::vector<size_t>> &wires_lists) {
-                 return py::cast(M.expval(operations, wires_lists));
+                 return py::array_t<ParamT>(
+                     py::cast(M.expval(operations, wires_lists)));
              })
         .def(
             "expval_ops_vec",
-            [](Measures<PrecisionT, StateVectorRaw<PrecisionT>> &M,
+            [](Measures<PrecisionT> &M,
                const std::vector<std::vector<std::complex<ParamT>>> &operations,
                const std::vector<std::vector<size_t>> &wires_lists) {
-                return py::cast(M.expval(operations, wires_lists));
+                return py::array_t<ParamT>(
+                    py::cast(M.expval(operations, wires_lists)));
             })
         .def("var",
-             [](Measures<PrecisionT, StateVectorRaw<PrecisionT>> &M,
-                const std::string &operation,
-                const std::vector<size_t> &wires) {
-                 return py::cast(M.var(operation, wires));
+             [](Measures<PrecisionT> &M, const OpsT &operation,
+                const WiresT &wires) {
+                 if (std::holds_alternative<size_t>(wires)) {
+                     if (std::holds_alternative<std::string>(operation)) {
+                         return M.var(std::get<std::string>(operation),
+                                      {std::get<size_t>(wires)});
+                     } else {
+                         return M.var(
+                             std::get<std::vector<std::complex<ParamT>>>(
+                                 operation),
+                             {std::get<size_t>(wires)});
+                     }
+                 }
+                 if (std::holds_alternative<std::string>(operation)) {
+                     return M.var(std::get<std::string>(operation),
+                                  std::get<std::vector<size_t>>(wires));
+                 }
+                 return M.var(
+                     std::get<std::vector<std::complex<ParamT>>>(operation),
+                     std::get<std::vector<size_t>>(wires));
              })
         .def("var_ops_str",
-             [](Measures<PrecisionT, StateVectorRaw<PrecisionT>> &M,
+             [](Measures<PrecisionT> &M,
                 const std::vector<std::string> &operations,
                 const std::vector<std::vector<size_t>> &wires_lists) {
-                 return py::cast(M.var(operations, wires_lists));
+                 return py::array_t<ParamT>(
+                     py::cast(M.var(operations, wires_lists)));
              })
         .def(
             "var_ops_vec",
-            [](Measures<PrecisionT, StateVectorRaw<PrecisionT>> &M,
+            [](Measures<PrecisionT> &M,
                const std::vector<std::vector<std::complex<ParamT>>> &operations,
                const std::vector<std::vector<size_t>> &wires_lists) {
-                return py::cast(M.var(operations, wires_lists));
+                return py::array_t<ParamT>(
+                    py::cast(M.var(operations, wires_lists)));
             });
 }
 

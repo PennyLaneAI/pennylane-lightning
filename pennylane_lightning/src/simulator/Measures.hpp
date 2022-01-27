@@ -116,8 +116,7 @@ class Measures {
     /**
      * @brief Expected value of an observable.
      *
-     * @param matrix Square matrix in row-major order or string with the
-     * operator name.
+     * @param matrix Square matrix in row-major order.
      * @param wires Wires where to apply the operator.
      * @return Floating point expected value of the observable.
      */
