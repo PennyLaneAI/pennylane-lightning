@@ -116,7 +116,8 @@ class Measures {
     /**
      * @brief Expected value of an observable.
      *
-     * @param operation Square matrix in row-major order.
+     * @param matrix Square matrix in row-major order or string with the
+     * operator name.
      * @param wires Wires where to apply the operator.
      * @return Floating point expected value of the observable.
      */
@@ -158,7 +159,6 @@ class Measures {
      * @brief Expected value for a list of observables.
      *
      * @param operations_list List of operations to measure.
-     * Square matrix in row-major order or string with the operator name.
      * @param wires_list List of wires where to apply the operators.
      * @return Floating point std::vector with expected values for the
      * observables.
@@ -185,8 +185,7 @@ class Measures {
     /**
      * @brief Variance of an observable.
      *
-     * @param operation Square matrix in row-major order or string with the
-     * operator name.
+     * @param operation String with the operator name.
      * @param wires Wires where to apply the operator.
      * @return Floating point with the variance of the observables.
      */
