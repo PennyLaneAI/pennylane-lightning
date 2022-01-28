@@ -19,14 +19,6 @@ import pytest
 import pennylane as qml
 from pennylane import numpy as np
 
-try:
-    from pennylane_lightning.lightning_qubit_ops import (
-        VectorJacobianProductC64,
-        VectorJacobianProductC128,
-    )
-except (ImportError, ModuleNotFoundError):
-    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-
 
 class TestComputeVJP:
     """Tests for the numeric computation of VJPs"""

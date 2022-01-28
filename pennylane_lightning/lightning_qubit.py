@@ -15,7 +15,6 @@ r"""
 This module contains the :class:`~.LightningQubit` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
-from nntplib import NNTPPermanentError
 from warnings import warn
 
 import numpy as np

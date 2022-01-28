@@ -136,7 +136,7 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
                                bool apply_operations = false)
         -> std::function<std::vector<T>(const JacobianData<T> &tape)> {
 
-        if (!dy.size() ||
+        if (dy.empty() ||
             std::all_of(dy.cbegin(), dy.cend(), [](T e) { return e == 0; })) {
             // If the dy vector is zero, then the
             // corresponding element of the VJP will be zero,
