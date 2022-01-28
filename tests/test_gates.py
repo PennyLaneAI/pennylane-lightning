@@ -108,7 +108,7 @@ def test_gate_unitary_correct(op, op_name):
 
     op = getattr(qml, op_name)
 
-    @qml.qnode(dev)
+    @qml.qnode(dev, diff_method="parameter-shift")
     def output(input):
         qml.BasisState(input, wires=range(wires))
         op(*p, wires=range(wires))
@@ -153,7 +153,7 @@ def test_inverse_unitary_correct(op, op_name):
 
     op = getattr(qml, op_name)
 
-    @qml.qnode(dev)
+    @qml.qnode(dev, diff_method="parameter-shift")
     def output(input):
         qml.BasisState(input, wires=range(wires))
         op(*p, wires=range(wires)).inv()
@@ -206,7 +206,7 @@ def test_arbitrary_unitary_correct():
     wires = 2
     dev = qml.device("lightning.qubit", wires=wires)
 
-    @qml.qnode(dev)
+    @qml.qnode(dev, diff_method="parameter-shift")
     def output(input):
         qml.BasisState(input, wires=range(wires))
         qml.QubitUnitary(random_unitary, wires=range(2))
@@ -227,7 +227,7 @@ def test_arbitrary_inv_unitary_correct():
     wires = 2
     dev = qml.device("lightning.qubit", wires=wires)
 
-    @qml.qnode(dev)
+    @qml.qnode(dev, diff_method="parameter-shift")
     def output(input):
         qml.BasisState(input, wires=range(wires))
         qml.QubitUnitary(random_unitary, wires=range(2)).inv()
