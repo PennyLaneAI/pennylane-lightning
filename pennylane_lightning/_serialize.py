@@ -34,9 +34,22 @@ try:
         ObsStructC64,
         StateVectorC128,
         ObsStructC128,
+        DEFAULT_KERNEL_FOR_OPS,
     )
 except ImportError:
     pass
+
+
+def _is_lightning_gate(gate_name):
+    """Returns True if the gate (besides Matrix) is implemented
+    and exported from lightning.
+
+    Args:
+        gate_name (str): the name of gate
+    """
+    if gate_name == "Matrix":
+        return False
+    return gate_name in DEFAULT_KERNEL_FOR_OPS
 
 
 def _obs_has_kernel(obs: Observable) -> bool:
@@ -154,7 +167,7 @@ def _serialize_ops(
             name = single_op.name if not is_inverse else single_op.name[:-4]
             names.append(name)
 
-            if getattr(sv_py, name, None) is None:
+            if not _is_lightning_gate(name):
                 params.append([])
                 mats.append(single_op.matrix)
 

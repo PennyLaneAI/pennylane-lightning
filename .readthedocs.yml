@@ -20,3 +20,4 @@ build:
     - build-essential
     - libopenblas-base
     - libopenblas-dev
+    - graphviz

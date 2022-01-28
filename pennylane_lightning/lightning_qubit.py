@@ -16,7 +16,6 @@ This module contains the :class:`~.LightningQubit` class, a PennyLane simulator 
 interfaces with C++ for fast linear algebra calculations.
 """
 from warnings import warn
-import platform, os, sys
 
 import numpy as np
 from pennylane import (
@@ -34,32 +33,23 @@ from pennylane.operation import Expectation
 from ._version import __version__
 
 try:
-    if platform.system() == "Windows" and sys.version_info[:2] >= (3, 8):  # pragma: no cover
-        # Add the current directory to DLL path.
-        # See https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew
-        os.add_dll_directory(os.path.dirname(os.path.abspath(__file__)))
-        from lightning_qubit_ops import (
-            StateVectorC64,
-            AdjointJacobianC64,
-            VectorJacobianProductC64,
-            StateVectorC128,
-            AdjointJacobianC128,
-            VectorJacobianProductC128,
-        )
-    else:
-        from .lightning_qubit_ops import (
-            StateVectorC64,
-            AdjointJacobianC64,
-            VectorJacobianProductC64,
-            StateVectorC128,
-            AdjointJacobianC128,
-            VectorJacobianProductC128,
-        )
-    from ._serialize import _serialize_obs, _serialize_ops
+    from .lightning_qubit_ops import (
+        StateVectorC64,
+        AdjointJacobianC64,
+        VectorJacobianProductC64,
+        StateVectorC128,
+        AdjointJacobianC128,
+        VectorJacobianProductC128,
+        DEFAULT_KERNEL_FOR_OPS,
+        EXPORTED_KERNEL_OPS,
+    )
+
+    from ._serialize import _serialize_obs, _serialize_ops, _is_lightning_gate
 
     CPP_BINARY_AVAILABLE = True
 except ModuleNotFoundError:
     CPP_BINARY_AVAILABLE = False
+
 
 UNSUPPORTED_PARAM_GATES_ADJOINT = (
     "MultiRZ",
@@ -86,6 +76,9 @@ class LightningQubit(DefaultQubit):
 
     Args:
         wires (int): the number of wires to initialize the device with
+        kernel_for_ops (dict): Optional argument which kernel to run for a gate operation.
+            For example, if {'PauliX': 'LM', 'RX': 'PI'} is passed, the less memory (LM) kernel
+            is used for PauliX whereas precomputed indices (PI) kernel is used for RX.
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
             the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
@@ -99,7 +92,19 @@ class LightningQubit(DefaultQubit):
     author = "Xanadu Inc."
     _CPP_BINARY_AVAILABLE = True
 
-    def __init__(self, wires, *, shots=None):
+    def __init__(self, wires, *, kernel_for_ops=None, shots=None):
+        self._kernel_for_ops = DEFAULT_KERNEL_FOR_OPS
+        if kernel_for_ops is not None:
+            if not isinstance(kernel_for_ops, dict):
+                raise ValueError("Argument kernel_for_ops must be a dictionary.")
+
+            for gate_op, kernel in kernel_for_ops.items():
+                if (kernel, gate_op) not in EXPORTED_KERNEL_OPS:
+                    raise ValueError(
+                        f"The given kernel {kernel} does not implement {gate_op} gate."
+                    )
+                self._kernel_for_ops[gate_op] = kernel
+
         super().__init__(wires, shots=shots)
 
     @classmethod
@@ -177,13 +182,18 @@ class LightningQubit(DefaultQubit):
 
         for o in operations:
             name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
-            method = getattr(sim, name, None)
+            if _is_lightning_gate(name):
+                kernel = self._kernel_for_ops[name]
+                method = getattr(sim, f"{name}_{kernel}".format(), None)
+            else:
+                method = None
 
             wires = self.wires.indices(o.wires)
 
             if method is None:
                 # Inverse can be set to False since o.matrix is already in inverted form
-                sim.applyMatrix(o.matrix, wires, False)
+                method = getattr(sim, "applyMatrix_{}".format(self._kernel_for_ops["Matrix"]))
+                method(o.matrix, wires, False)
             else:
                 inv = o.inverse
                 param = o.parameters

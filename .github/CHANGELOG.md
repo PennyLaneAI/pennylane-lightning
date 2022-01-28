@@ -14,6 +14,9 @@
 * Force "best" method to point to "adjoint"
 [(#207)](https://github.com/PennyLaneAI/pennylane-lightning/pull/207)
 
+* Add a new C++ kernel. 
+[(#202)](https://github.com/PennyLaneAI/pennylane-lightning/pull/202)
+
 * Ensure debug info is built into dynamic libraries.
 [(#201)](https://github.com/PennyLaneAI/pennylane-lightning/pull/201)
 
@@ -23,6 +26,9 @@
 
 * Add virtual destructor to C++ state-vector classes.
 [(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
+
+* Fix failed tests for the non-binary wheel.
+[(#213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/213)
 
 ### Contributors
 

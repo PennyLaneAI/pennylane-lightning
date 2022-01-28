@@ -11,9 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+/**
+ * @file
+ * Define some builtin alternatives
+ */
+#pragma once
 
-#include "StateVector.hpp"
-
-// explicit instantiation
-template class Pennylane::StateVector<float>;
-template class Pennylane::StateVector<double>;
+#if defined(__GNUC__) || defined(__clang__)
+#define PL_UNREACHABLE __builtin_unreachable()
+#else
+#define PL_UNREACHABLE __assume(false)
+#endif

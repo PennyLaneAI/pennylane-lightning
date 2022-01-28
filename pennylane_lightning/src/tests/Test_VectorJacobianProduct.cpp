@@ -14,7 +14,7 @@
 
 #include "AdjointDiff.hpp"
 #include "JacobianProd.hpp"
-#include "StateVector.hpp"
+#include "StateVectorRaw.hpp"
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"
@@ -57,7 +57,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={0}",
             std::vector<std::complex<double>> cdata(0b1 << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
 
-            StateVector<double> psi(cdata.data(), cdata.size());
+            StateVectorRaw<double> psi(cdata.data(), cdata.size());
             VJP.vectorJacobianProduct(vjp_res, jacobian, dy, psi.getData(),
                                       psi.getLength(), {obs}, ops, {0}, true);
 
@@ -92,7 +92,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={1}",
             std::vector<std::complex<double>> cdata(0b1 << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
 
-            StateVector<double> psi(cdata.data(), cdata.size());
+            StateVectorRaw<double> psi(cdata.data(), cdata.size());
             VJP.vectorJacobianProduct(vjp_res, jacobian, dy, psi.getData(),
                                       psi.getLength(), {obs}, ops, {0}, true);
 
@@ -127,7 +127,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={0.4}",
             std::vector<std::complex<double>> cdata(0b1 << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
 
-            StateVector<double> psi(cdata.data(), cdata.size());
+            StateVectorRaw<double> psi(cdata.data(), cdata.size());
             VJP.vectorJacobianProduct(vjp_res, jacobian, dy, psi.getData(),
                                       psi.getLength(), {obs}, ops, {0}, true);
 
@@ -163,7 +163,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RY, Obs=X dy={0.4}",
             std::vector<std::complex<double>> cdata(0b1 << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
 
-            StateVector<double> psi(cdata.data(), cdata.size());
+            StateVectorRaw<double> psi(cdata.data(), cdata.size());
             VJP.vectorJacobianProduct(vjp_res, jacobian, dy, psi.getData(),
                                       psi.getLength(), {obs}, ops, {0}, true);
 
@@ -193,7 +193,7 @@ TEST_CASE(
         std::vector<double> dy(num_obs, 1);
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVector<double> psi(cdata.data(), cdata.size());
+        StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs1 = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
@@ -229,7 +229,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=[RX,RX,RX], "
         std::vector<double> dy(num_obs, 0.4);
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVector<double> psi(cdata.data(), cdata.size());
+        StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs1 = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
@@ -273,7 +273,7 @@ TEST_CASE(
         std::vector<double> dy(num_obs, 1);
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVector<double> psi(cdata.data(), cdata.size());
+        StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs1 = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
@@ -315,7 +315,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=[RX,RX,RX], "
         std::vector<double> dy(num_obs, 0.4);
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVector<double> psi(cdata.data(), cdata.size());
+        StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs = ObsDatum<double>({"PauliZ", "PauliZ", "PauliZ"},
@@ -354,7 +354,7 @@ TEST_CASE(
         std::vector<double> dy(num_obs, 1);
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVector<double> psi(cdata.data(), cdata.size());
+        StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs = ObsDatum<double>({"PauliX", "PauliX", "PauliX"},
@@ -409,7 +409,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=Mixed, Obs=[XXX], "
         std::vector<double> dy(num_obs, -0.2);
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVector<double> psi(cdata.data(), cdata.size());
+        StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs = ObsDatum<double>({"PauliX", "PauliX", "PauliX"},
@@ -481,7 +481,7 @@ TEST_CASE(
 
             std::vector<std::complex<double>> cdata{INVSQRT2<double>(),
                                                     -INVSQRT2<double>()};
-            StateVector<double> psi(cdata.data(), cdata.size());
+            StateVectorRaw<double> psi(cdata.data(), cdata.size());
 
             auto obs = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
             auto ops = VJP.createOpsData(
@@ -531,7 +531,7 @@ TEST_CASE(
 
         std::vector<std::complex<double>> cdata{ONE<double>(), ZERO<double>(),
                                                 ZERO<double>(), ZERO<double>()};
-        StateVector<double> psi(cdata.data(), cdata.size());
+        StateVectorRaw<double> psi(cdata.data(), cdata.size());
 
         auto obs = ObsDatum<double>({"PauliX", "PauliZ"}, {{}, {}}, {{0}, {1}});
         auto ops = VJP.createOpsData(
@@ -589,7 +589,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Mixed Ops, Obs and "
 
         std::vector<std::complex<double>> cdata{ONE<double>(), ZERO<double>(),
                                                 ZERO<double>(), ZERO<double>()};
-        StateVector<double> psi(cdata.data(), cdata.size());
+        StateVectorRaw<double> psi(cdata.data(), cdata.size());
 
         auto obs = ObsDatum<double>({"PauliX", "PauliZ"}, {{}, {}}, {{0}, {1}});
         auto ops = VJP.createOpsData(

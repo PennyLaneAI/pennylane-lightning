@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,-*,-llvmlibc-*,modernize-*,-modernize-use-trailing-return-type,clang-analyzer-cplusplus*,openmp-*,performance-*,portability-*,readability-*'
+Checks:          'clang-diagnostic-*,clang-analyzer-*,-*,-llvmlibc-*,modernize-*,-modernize-use-trailing-return-type,clang-analyzer-cplusplus*,openmp-*,performance-*,portability-*,readability-*,hicpp-signed-bitwise'
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'
 AnalyzeTemporaryDtors: false
@@ -25,6 +25,8 @@ CheckOptions:
     value:           'false'
   - key:             readability-magic-numbers.IgnoredIntegerValues
     value:           '1;2;3;4;'
+  - key:             readability-magic-numbers.IgnorePowersOf2IntegerValues
+    value:           true
   - key:             modernize-use-default-member-init.UseAssignment
     value:           'false'
   - key:             readability-function-size.NestingThreshold

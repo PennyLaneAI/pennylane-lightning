@@ -40,6 +40,14 @@ PennyLane-Lightning provides the following device:
 
 .. toctree::
    :maxdepth: 1
+   :caption: Development
+   :hidden:
+
+   add_kernel
+   benchmark
+
+.. toctree::
+   :maxdepth: 1
    :caption: API
    :hidden:
 

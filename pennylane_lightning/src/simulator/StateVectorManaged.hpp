@@ -10,7 +10,7 @@
 // limitations under the License.
 #pragma once
 
-#include "StateVector.hpp"
+#include "StateVectorBase.hpp"
 
 namespace Pennylane {
 
@@ -18,80 +18,67 @@ namespace Pennylane {
  * @brief Managed memory version of StateVector class. Memory ownership resides
  * within class.
  *
+ * This class is only internally used in C++ code.
+ *
  * @tparam fp_t
  */
 template <class fp_t = double>
-class StateVectorManaged : public StateVector<fp_t> {
-  private:
+class StateVectorManaged
+    : public StateVectorBase<fp_t, StateVectorManaged<fp_t>> {
+  public:
+    using scalar_type_t = fp_t;
     using CFP_t = std::complex<fp_t>;
+
+  private:
+    using BaseType = StateVectorBase<fp_t, StateVectorManaged>;
 
     std::vector<CFP_t> data_;
 
   public:
-    StateVectorManaged() : StateVector<fp_t>() {}
-    StateVectorManaged(size_t num_qubits)
-        : StateVector<fp_t>(nullptr,
-                            static_cast<size_t>(Util::exp2(num_qubits))),
+    StateVectorManaged() : StateVectorBase<fp_t, StateVectorManaged>() {}
+
+    explicit StateVectorManaged(size_t num_qubits)
+        : BaseType(num_qubits),
           data_(static_cast<size_t>(Util::exp2(num_qubits)), CFP_t{0, 0}) {
-        StateVector<fp_t>::setData(data_.data());
         data_[0] = {1, 0};
     }
-    StateVectorManaged(const StateVector<fp_t> &other)
-        : StateVector<fp_t>(nullptr, other.getLength()),
-          data_{other.getData(), other.getData() + other.getLength()} {
-        StateVector<fp_t>::setData(data_.data());
-    }
+
+    template <class OtherDerived>
+    StateVectorManaged(const StateVectorBase<fp_t, OtherDerived> &other)
+        : BaseType(other.getNumQubits()), data_{other.getData(),
+                                                other.getData() +
+                                                    other.getLength()} {}
+
     StateVectorManaged(const std::vector<CFP_t> &other_data)
-        : StateVector<fp_t>(nullptr, other_data.size()), data_{other_data} {
-        StateVector<fp_t>::setData(data_.data());
-    }
-    StateVectorManaged(const CFP_t *other_data, size_t other_size)
-        : StateVector<fp_t>(nullptr, other_size), data_{other_data,
-                                                        other_data +
-                                                            other_size} {
-        StateVector<fp_t>::setData(data_.data());
-    }
-    StateVectorManaged(const StateVectorManaged<fp_t> &other)
-        : StateVector<fp_t>(nullptr, other.getDataVector().size()),
-          data_{other.data_} {
-        StateVector<fp_t>::setData(data_.data());
+        : BaseType(Util::log2(other_data.size())), data_{other_data} {
+        PL_ABORT_IF_NOT(Util::isPerfectPowerOf2(other_data.size()),
+                        "The size of provided data must be a power of 2.");
     }
 
-    ~StateVectorManaged() override = default;
+    StateVectorManaged(const CFP_t *other_data, size_t other_size)
+        : BaseType(Util::log2(other_size)), data_{other_data,
+                                                  other_data + other_size} {
+        PL_ABORT_IF_NOT(Util::isPerfectPowerOf2(other_size),
+                        "The size of provided data must be a power of 2.");
+    }
+
+    StateVectorManaged(const StateVectorManaged<fp_t> &other) = default;
+    StateVectorManaged(StateVectorManaged<fp_t> &&other) noexcept = default;
 
     auto operator=(const StateVectorManaged<fp_t> &other)
-        -> StateVectorManaged & {
-        if (this != &other) {
-            if (data_.size() != other.getLength()) {
-                data_.resize(other.getLength());
-                StateVector<fp_t>::setData(data_.data());
-                StateVector<fp_t>::setLength(other.getLength());
-            }
-            std::copy(other.data_.data(),
-                      other.data_.data() + other.getLength(), data_.data());
-        }
-        return *this;
-    }
+        -> StateVectorManaged<fp_t> & = default;
+    auto operator=(StateVectorManaged<fp_t> &&other) noexcept
+        -> StateVectorManaged<fp_t> & = default;
+
     auto getDataVector() -> std::vector<CFP_t> & { return data_; }
     [[nodiscard]] auto getDataVector() const -> const std::vector<CFP_t> & {
         return data_;
     }
 
-    auto getInternalIndices(const std::vector<size_t> &qubit_indices)
-        -> std::vector<size_t> {
-        return StateVector<fp_t>::generateBitPatterns(qubit_indices,
-                                                      Util::log2(data_.size()));
-    }
-    auto getExternalIndices(const std::vector<size_t> &qubit_indices)
-        -> std::vector<size_t> {
-        std::vector<size_t> externalWires =
-            StateVector<fp_t>::getIndicesAfterExclusion(
-                qubit_indices, Util::log2(data_.size()));
-        std::vector<size_t> externalIndices =
-            StateVector<fp_t>::generateBitPatterns(externalWires,
-                                                   Util::log2(data_.size()));
-        return externalIndices;
-    }
+    [[nodiscard]] auto getData() -> CFP_t * { return data_.data(); }
+
+    [[nodiscard]] auto getData() const -> const CFP_t * { return data_.data(); }
+
     void updateData(const std::vector<CFP_t> &new_data) {
         PL_ABORT_IF_NOT(data_.size() == new_data.size(),
                         "New data must be the same size as old data.")

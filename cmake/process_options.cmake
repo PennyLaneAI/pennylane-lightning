@@ -1,3 +1,9 @@
+##############################################################################
+# This file processes ENABLE_WARNINGS, ENABLE_NATIVE, ENABLE_AVX, 
+# ENABLE_OPENMP, ENABLE_BLAS options and produces interface libraries
+# pennylane_lightning_compile_options and pennylane_lightning_external_libs.
+##############################################################################
+
 # Include this file only once
 include_guard()
 
