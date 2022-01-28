@@ -702,7 +702,7 @@ class TestLightningQubitIntegration:
 
         p = 0.543
 
-        @qml.qnode(qubit_device_1_wire,diff_method="parameter-shift")
+        @qml.qnode(qubit_device_1_wire, diff_method="parameter-shift")
         def circuit(x):
             """Test quantum function"""
             qml.RX(x, wires=0)
