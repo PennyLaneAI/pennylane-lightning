@@ -1,8 +1,11 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 
 project(lightning_components LANGUAGES CXX)
-
 set(CMAKE_CXX_STANDARD 17)
+
+###############################################################################
+# Process options
+###############################################################################
 
 option(ENABLE_WARNINGS "Enable warnings" ON)
 
@@ -15,12 +18,7 @@ if(ENABLE_CLANG_TIDY)
     )
 endif()
 
-
-###############################################################################
-# Process options
-###############################################################################
 include("${PROJECT_SOURCE_DIR}/../../cmake/process_options.cmake")
-
 
 ###############################################################################
 # Include all nested sources directories

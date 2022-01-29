@@ -63,5 +63,7 @@ set(TEST_SOURCES Test_AdjDiff.cpp
 
 
 add_executable(runner ${TEST_SOURCES})
-target_link_libraries(runner PRIVATE lightning_tests_dependency)
+target_link_libraries(runner PRIVATE lightning_tests_dependency
+                                     pennylane_lightning_external_libs
+                                     pennylane_lightning_compile_options)
 catch_discover_tests(runner)

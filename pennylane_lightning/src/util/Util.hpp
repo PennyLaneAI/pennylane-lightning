@@ -52,6 +52,14 @@ using CBLAS_LAYOUT = enum CBLAS_LAYOUT {
 };
 #endif
 #endif
+
+#if defined(_ENABLE_KOKKOS)
+#include <KokkosBlas2_gemv.hpp> // For matrix-vector product
+#include <Kokkos_Core.hpp>
+constexpr bool USE_KOKKOS = true;
+#else
+constexpr bool USE_KOKKOS = false;
+#endif
 /// @endcond
 
 namespace Pennylane::Util::Internal {
@@ -615,11 +623,30 @@ template <class T>
 inline void matrixVecProd(const std::complex<T> *mat,
                           const std::complex<T> *v_in, std::complex<T> *v_out,
                           size_t m, size_t n, bool transpose = false) {
+    using ComplexT = std::complex<T>;
     if (!v_out) {
         return;
     }
 
-    if constexpr (USE_CBLAS) {
+    if constexpr (USE_KOKKOS) {
+        auto mat_view = Kokkos::View<const ComplexT **, Kokkos::LayoutRight,
+                                     Kokkos::HostSpace>(mat, m, n);
+        const ComplexT alpha{1.0, 0.0};
+        const ComplexT beta{0.0, 0.0};
+        if (transpose) {
+            auto v_in_view = Kokkos::View<const ComplexT *, Kokkos::LayoutRight,
+                                          Kokkos::HostSpace>(v_in, m);
+            auto v_out_view = Kokkos::View<ComplexT *, Kokkos::LayoutRight,
+                                           Kokkos::HostSpace>(v_out, n);
+            KokkosBlas::gemv("T", alpha, mat_view, v_in_view, beta, v_out_view);
+        } else {
+            auto v_in_view = Kokkos::View<const ComplexT *, Kokkos::LayoutRight,
+                                          Kokkos::HostSpace>(v_in, n);
+            auto v_out_view = Kokkos::View<ComplexT *, Kokkos::LayoutRight,
+                                           Kokkos::HostSpace>(v_out, m);
+            KokkosBlas::gemv("N", alpha, mat_view, v_in_view, beta, v_out_view);
+        }
+    } else if (USE_CBLAS) {
         constexpr std::complex<T> co{1, 0};
         constexpr std::complex<T> cz{0, 0};
         const auto tr = (transpose) ? CblasTrans : CblasNoTrans;

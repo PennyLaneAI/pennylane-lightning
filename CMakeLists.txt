@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16) # For kokkos
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version")
 
@@ -51,7 +51,7 @@ set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 include(FetchContent)
 FetchContent_Declare(pybind11
                      GIT_REPOSITORY https://github.com/pybind/pybind11.git
-                     GIT_TAG        v2.6.2
+                     GIT_TAG        v2.7.1
 )
 FetchContent_MakeAvailable(pybind11)
 

@@ -265,7 +265,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Decomposed Rot gate, non "
     AdjointJacobian<double> adj;
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     {
-        const size_t num_qubits = 1;
+        // const size_t num_qubits = 1;
         const size_t num_params = 3;
         const size_t num_obs = 1;
 
@@ -315,7 +315,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Mixed Ops, Obs and TParams",
     AdjointJacobian<double> adj;
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     {
-        const size_t num_qubits = 2;
+        // const size_t num_qubits = 2;
         const std::vector<size_t> t_params{1, 2, 3};
         const size_t num_obs = 1;
 

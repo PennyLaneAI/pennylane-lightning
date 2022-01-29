@@ -89,3 +89,29 @@ if(ENABLE_BLAS)
     target_link_options(pennylane_lightning_external_libs INTERFACE "${BLAS_LINKER_FLAGS}")
     target_compile_options(pennylane_lightning_compile_options INTERFACE "-D_ENABLE_BLAS=1")
 endif()
+
+if(ENABLE_KOKKOS)
+    # Enable openmp backend for some exsting openmp compatibility (can be removed
+    # when explicit openmp dependency is lifted)
+    option(Kokkos_ENABLE_OPEMNMP ON) 
+    option(Kokkos_CXX_STANDARD 17)
+
+    include(FetchContent)
+    FetchContent_Declare(Kokkos
+                         GIT_REPOSITORY https://github.com/kokkos/kokkos.git
+                         GIT_TAG        3.5.00
+    )
+    FetchContent_MakeAvailable(Kokkos)
+
+    FetchContent_GetProperties(Kokkos)
+
+    option(Kokkos_ROOT ${kokkos_SOURCE_DIR})
+    FetchContent_Declare(KokkosKernels
+                         GIT_REPOSITORY https://github.com/kokkos/kokkos-kernels.git
+                         GIT_TAG        3.5.00
+    )
+    FetchContent_MakeAvailable(KokkosKernels)
+
+    target_compile_options(pennylane_lightning_compile_options INTERFACE "-D_ENABLE_KOKKOS=1")
+    target_link_libraries(pennylane_lightning_external_libs INTERFACE Kokkos::kokkos Kokkos::kokkoskernels)
+endif()
