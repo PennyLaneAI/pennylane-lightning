@@ -32,9 +32,8 @@ std::vector<size_t> createWires(GateOperations op) {
         return {0, 1};
     case 3:
         return {0, 1, 2};
-    default:
-        PL_ABORT("The number of wires for a given gate is unset.");
     }
+    PL_ABORT("The number of wires for a given gate is unset.");
 }
 
 template <class PrecisionT>
@@ -46,9 +45,8 @@ std::vector<PrecisionT> createParams(GateOperations op) {
         return {0.312};
     case 3:
         return {0.128, -0.563, 1.414};
-    default:
-        PL_ABORT("The number of wires for a given gate is unset.");
     }
+    PL_ABORT("The number of wires for a given gate is unset.");
 }
 
 template <typename PrecisionT, typename ParamT, KernelType kernel>
