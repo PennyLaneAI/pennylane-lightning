@@ -59,7 +59,6 @@ class CMakeBuild(build_ext):
         configure_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
-            f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
             "-DENABLE_WARNINGS=OFF", # Ignore warnings
         ]
 
@@ -70,7 +69,11 @@ class CMakeBuild(build_ext):
         build_args = []
 
         if platform.system() != "Windows":
-            configure_args += ["-GNinja"] # as Ninja does not support long path for windows yet (https://github.com/ninja-build/ninja/pull/2056)
+            # As Ninja does not support long path for windows yet (https://github.com/ninja-build/ninja/pull/2056)
+            configure_args += [
+                "-GNinja", 
+                f"-DCMAKE_MAKE_PROGRAM={ninja_path}"
+            ]
 
         # Add more platform dependent options
         if platform.system() == "Darwin":
