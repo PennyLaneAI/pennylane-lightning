@@ -26,6 +26,6 @@ add_custom_command(TARGET gate_benchmark_oplist POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E create_symlink
                            ${PROJECT_SOURCE_DIR}/plot_gate_benchmark.py
                            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/plot_gate_benchmark.py
-                   COMMAND ${CMAKE_COMMAND} -E rename
+                   COMMAND ${CMAKE_COMMAND} -E copy 
                            ${CMAKE_CURRENT_BINARY_DIR}/compiler_info.txt
                            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/compiler_info.txt)

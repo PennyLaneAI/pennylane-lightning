@@ -18,11 +18,11 @@
 #include <numeric>
 #include <stdexcept>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
 
+#include "DynamicDispatcher.hpp"
 #include "Error.hpp"
 #include "JacobianTape.hpp"
 #include "StateVectorManaged.hpp"
@@ -35,65 +35,6 @@ namespace {
 
 using namespace Pennylane;
 using namespace Pennylane::Util;
-
-template <class T>
-static constexpr auto getP00() -> std::vector<std::complex<T>> {
-    return {ONE<T>(), ZERO<T>(), ZERO<T>(), ZERO<T>()};
-}
-
-template <class T>
-static constexpr auto getP11() -> std::vector<std::complex<T>> {
-    return {ZERO<T>(), ZERO<T>(), ZERO<T>(), ONE<T>()};
-}
-
-template <class T = double, class SVType>
-void applyGeneratorRX(SVType &sv, const std::vector<size_t> &wires,
-                      const bool adj = false) {
-    sv.applyPauliX(wires, adj);
-}
-
-template <class T = double, class SVType>
-void applyGeneratorRY(SVType &sv, const std::vector<size_t> &wires,
-                      const bool adj = false) {
-    sv.applyPauliY(wires, adj);
-}
-
-template <class T = double, class SVType>
-void applyGeneratorRZ(SVType &sv, const std::vector<size_t> &wires,
-                      const bool adj = false) {
-    sv.applyPauliZ(wires, adj);
-}
-
-template <class T, class SVType>
-void applyGeneratorPhaseShift(SVType &sv, const std::vector<size_t> &wires,
-                              const bool adj = false) {
-    sv.applyGeneratorPhaseShift(wires, adj);
-}
-
-template <class T, class SVType>
-void applyGeneratorCRX(SVType &sv, const std::vector<size_t> &wires,
-                       [[maybe_unused]] const bool adj = false) {
-    sv.applyGeneratorCRX(wires, adj);
-}
-
-template <class T, class SVType>
-void applyGeneratorCRY(SVType &sv, const std::vector<size_t> &wires,
-                       [[maybe_unused]] const bool adj = false) {
-    sv.applyGeneratorCRY(wires, adj);
-}
-
-template <class T, class SVType>
-void applyGeneratorCRZ(SVType &sv, const std::vector<size_t> &wires,
-                       [[maybe_unused]] const bool adj = false) {
-    sv.applyGeneratorCRZ(wires, adj);
-}
-
-template <class T, class SVType>
-void applyGeneratorControlledPhaseShift(SVType &sv,
-                                        const std::vector<size_t> &wires,
-                                        const bool adj = false) {
-    sv.applyGeneratorControlledPhaseShift(wires, adj);
-}
 
 } // namespace
 /// @endcond
@@ -111,29 +52,6 @@ template <class T = double> class AdjointJacobian {
     using GeneratorFunc = void (*)(StateVectorManaged<T> &,
                                    const std::vector<size_t> &,
                                    const bool); // function pointer type
-
-    // Holds the mapping from gate labels to associated generator functions.
-    const std::unordered_map<std::string, GeneratorFunc> generator_map{
-        {"RX", &::applyGeneratorRX<T, StateVectorManaged<T>>},
-        {"RY", &::applyGeneratorRY<T, StateVectorManaged<T>>},
-        {"RZ", &::applyGeneratorRZ<T, StateVectorManaged<T>>},
-        {"PhaseShift", &::applyGeneratorPhaseShift<T, StateVectorManaged<T>>},
-        {"CRX", &::applyGeneratorCRX<T, StateVectorManaged<T>>},
-        {"CRY", &::applyGeneratorCRY<T, StateVectorManaged<T>>},
-        {"CRZ", &::applyGeneratorCRZ<T, StateVectorManaged<T>>},
-        {"ControlledPhaseShift",
-         &::applyGeneratorControlledPhaseShift<T, StateVectorManaged<T>>}};
-
-    // Holds the mappings from gate labels to associated generator coefficients.
-    const std::unordered_map<std::string, T> scaling_factors{
-        {"RX", -static_cast<T>(0.5)},
-        {"RY", -static_cast<T>(0.5)},
-        {"RZ", -static_cast<T>(0.5)},
-        {"PhaseShift", static_cast<T>(1)},
-        {"CRX", -static_cast<T>(0.5)},
-        {"CRY", -static_cast<T>(0.5)},
-        {"CRZ", -static_cast<T>(0.5)},
-        {"ControlledPhaseShift", static_cast<T>(1)}};
 
     /**
      * @brief Utility method to update the Jacobian at a given index by
@@ -365,12 +283,12 @@ template <class T = double> class AdjointJacobian {
      * @param adj Indicate whether to take the adjoint of the operation.
      * @return T Generator scaling coefficient.
      */
-    inline auto applyGenerator(StateVectorManaged<T> &sv,
+    template <class SVType>
+    inline auto applyGenerator(StateVectorBase<T, SVType> &sv,
                                const std::string &op_name,
                                const std::vector<size_t> &wires, const bool adj)
         -> T {
-        generator_map.at(op_name)(sv, wires, adj);
-        return scaling_factors.at(op_name);
+        return sv.applyGenerator(op_name, wires, adj);
     }
 
   public:

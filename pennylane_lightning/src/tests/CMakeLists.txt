@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.14)
 
 project(pennylane_lightning_tests)
 
-set(CMAKE_CXX_STANDARD 17)
 find_package(OpenMP)
 
 # Default build type for test code is Debug
@@ -35,7 +34,10 @@ include(Catch)
 ################################################################################
 
 add_library(lightning_tests_dependency INTERFACE)
-target_link_libraries(lightning_tests_dependency INTERFACE lightning_simulator lightning_algorithms lightning_utils Catch2::Catch2)
+target_link_libraries(lightning_tests_dependency INTERFACE lightning_simulator
+                                                           lightning_algorithms
+                                                           lightning_utils
+                                                           Catch2::Catch2)
 target_compile_options(lightning_tests_dependency INTERFACE "$<$<CONFIG:DEBUG>:-Wall>")
 target_sources(lightning_tests_dependency INTERFACE runner_main.cpp)
 
@@ -48,20 +50,31 @@ endif()
 # Define targets
 ################################################################################
 
+add_executable(compile_time_tests compile_time_tests.cpp)
+target_link_libraries(compile_time_tests lightning_simulator lightning_utils)
+
 set(TEST_SOURCES Test_AdjDiff.cpp
-                 Test_Bindings.cpp
+#                 Test_Bindings.cpp
+                 Test_Constant.cpp
                  Test_DynamicDispatcher.cpp
-                 Test_GateOperations_Nonparam.cpp
-                 Test_GateOperations_Param.cpp
-                 Test_IndicesUtil.cpp
+                 Test_GateImplementations_Generator.cpp
+                 Test_GateImplementations_Inverse.cpp
+                 Test_GateImplementations_Matrix.cpp
+                 Test_GateImplementations_Nonparam.cpp
+                 Test_GateImplementations_Param.cpp
+                 Test_Internal.cpp
                  Test_Measures.cpp
-                 Test_SelectGateOps.cpp
+                 Test_OpToMemberFuncPtr.cpp
+                 Test_SimulatorUtil.cpp
                  Test_StateVectorManaged.cpp
                  Test_StateVectorRaw.cpp
                  Test_Util.cpp
                  Test_VectorJacobianProduct.cpp)
 
-
 add_executable(runner ${TEST_SOURCES})
 target_link_libraries(runner PRIVATE lightning_tests_dependency)
 catch_discover_tests(runner)
+
+# We build compile time tests before the runtime tests as build error messages
+# are horrible if compile time constants are not well defined.
+add_dependencies(runner compile_time_tests)

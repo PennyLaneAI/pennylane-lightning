@@ -54,6 +54,12 @@ using CBLAS_LAYOUT = enum CBLAS_LAYOUT {
 #endif
 /// @endcond
 
+enum class Trans : int {
+    NoTranspose = CblasNoTrans,
+    Transpose = CblasTrans,
+    Adjoint = CblasConjTrans
+};
+
 namespace Pennylane::Util::Internal {
 /**
  * @brief Count the number of 1s in the binary representation of n.
@@ -283,9 +289,8 @@ inline auto log2(size_t value) -> size_t {
 }
 
 /**
- * @brief Define popcount for multiple compilers as well as different types.
- *
- * TODO: change to std::popcount in C++20
+ * @breif Define popcount for multiple compilers as well as different types.
+ * @param val Value to calculate
  */
 ///@{
 #if defined(_MSC_VER)
@@ -559,14 +564,14 @@ inline auto innerProdC(const std::vector<std::complex<T>> &v1,
  * @param v_out Pre-allocated complex data array to store the result.
  * @param m Number of rows of `mat`.
  * @param n Number of columns of `mat`.
- * @param transpose If `true`, considers transposed version of `mat`.
+ * @param transpose One of NoTranspose, Transpose, Adjoint
  * row-wise.
  */
 template <class T>
 inline static void omp_matrixVecProd(const std::complex<T> *mat,
                                      const std::complex<T> *v_in,
                                      std::complex<T> *v_out, size_t m, size_t n,
-                                     bool transpose = false) {
+                                     Trans transpose = Trans::NoTranspose) {
     if (!v_out) {
         return;
     }
@@ -574,28 +579,41 @@ inline static void omp_matrixVecProd(const std::complex<T> *mat,
     size_t row;
     size_t col;
 
-#if defined(_OPENMP)
-#pragma omp parallel default(none) private(row, col)
-#endif
     {
-        if (transpose) {
+        switch (transpose) {
+        case Trans::NoTranspose:
 #if defined(_OPENMP)
-#pragma omp for
-#endif
-            for (row = 0; row < m; row++) {
-                for (col = 0; col < n; col++) {
-                    v_out[row] += mat[col * m + row] * v_in[col];
-                }
-            }
-        } else {
-#if defined(_OPENMP)
-#pragma omp for
+#pragma omp parallel for default(none) private(row, col) firstprivate(m, n)    \
+    shared(v_out, mat, v_in)
 #endif
             for (row = 0; row < m; row++) {
                 for (col = 0; col < n; col++) {
                     v_out[row] += mat[row * n + col] * v_in[col];
                 }
             }
+            break;
+        case Trans::Transpose:
+#if defined(_OPENMP)
+#pragma omp parallel for default(none) private(row, col) firstprivate(m, n)    \
+    shared(v_out, mat, v_in)
+#endif
+            for (row = 0; row < m; row++) {
+                for (col = 0; col < n; col++) {
+                    v_out[row] += mat[col * m + row] * v_in[col];
+                }
+            }
+            break;
+        case Trans::Adjoint:
+#if defined(_OPENMP)
+#pragma omp parallel for default(none) private(row, col) firstprivate(m, n)    \
+    shared(v_out, mat, v_in)
+#endif
+            for (row = 0; row < m; row++) {
+                for (col = 0; col < n; col++) {
+                    v_out[row] += std::conj(mat[col * m + row]) * v_in[col];
+                }
+            }
+            break;
         }
     }
 }
@@ -609,12 +627,13 @@ inline static void omp_matrixVecProd(const std::complex<T> *mat,
  * @param v_out Pre-allocated complex data array to store the result.
  * @param m Number of rows of `mat`.
  * @param n Number of columns of `mat`.
- * @param transpose If `true`, considers transposed version of `mat`.
+ * @param transpose One of NoTranspose, Transpose, Adjoint
  */
 template <class T>
 inline void matrixVecProd(const std::complex<T> *mat,
                           const std::complex<T> *v_in, std::complex<T> *v_out,
-                          size_t m, size_t n, bool transpose = false) {
+                          size_t m, size_t n,
+                          Trans transpose = Trans::NoTranspose) {
     if (!v_out) {
         return;
     }
@@ -622,7 +641,7 @@ inline void matrixVecProd(const std::complex<T> *mat,
     if constexpr (USE_CBLAS) {
         constexpr std::complex<T> co{1, 0};
         constexpr std::complex<T> cz{0, 0};
-        const auto tr = (transpose) ? CblasTrans : CblasNoTrans;
+        const auto tr = static_cast<int>(transpose);
         if constexpr (std::is_same_v<T, float>) {
             cblas_cgemv(CblasRowMajor, tr, m, n, &co, mat, m, v_in, 1, &cz,
                         v_out, 1);
@@ -645,7 +664,7 @@ inline void matrixVecProd(const std::complex<T> *mat,
 template <class T>
 inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
                           const std::vector<std::complex<T>> v_in, size_t m,
-                          size_t n, bool transpose = false)
+                          size_t n, Trans transpose = Trans::NoTranspose)
     -> std::vector<std::complex<T>> {
     if (mat.size() != m * n) {
         throw std::invalid_argument(
@@ -1165,6 +1184,8 @@ template <class T> struct remove_cvref {
     using type = std::remove_cv_t<std::remove_reference_t<T>>;
 };
 
+template <class T> using remove_cvref_t = typename remove_cvref<T>::type;
+
 /**
  * @brief Lookup key in array of pairs. For a constexpr map-like behavior.
  *
@@ -1233,14 +1254,14 @@ first_elts_of(const std::array<std::pair<T, U>, size> &arr) {
  * @param arr Array to extract.
  */
 template <typename T, typename U, size_t size>
-constexpr std::array<T, size>
+constexpr std::array<U, size>
 second_elts_of(const std::array<std::pair<T, U>, size> &arr) {
     // TODO: change to std::transform in C++20
-    std::array<T, size> res = {
-        T{},
+    std::array<U, size> res = {
+        U{},
     };
     for (size_t i = 0; i < size; i++) {
-        res[i] = std::get<0>(arr[i]);
+        res[i] = std::get<1>(arr[i]);
     }
     return res;
 }
@@ -1285,11 +1306,20 @@ prepend_to_tuple_helper(T &&elt, Tuple &&t,
                         [[maybe_unused]] std::index_sequence<I...> dummy) {
     return std::make_tuple(elt, std::get<I>(std::forward<Tuple>(t))...);
 }
+/**
+ * @brief Helper function for append_to_tuple
+ */
+template <class T, class Tuple, std::size_t... I>
+constexpr auto
+append_to_tuple_helper(Tuple &&t, T &&elt,
+                       [[maybe_unused]] std::index_sequence<I...> dummy) {
+    return std::make_tuple(std::get<I>(std::forward<Tuple>(t))..., elt);
+}
 } // namespace Internal
 /// @endcond
 
 /**
- * @brief Prepent an element to a tuple
+ * @brief Prepend an element to a tuple
  * @tparam T Type of element
  * @tparam Tuple Type of the tuple (usually std::tuple)
  *
@@ -1303,6 +1333,21 @@ constexpr auto prepend_to_tuple(T &&elt, Tuple &&t) {
         std::make_index_sequence<
             std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
 }
+/**
+ * @brief Append an element to a tuple
+ * @tparam T Type of element
+ * @tparam Tuple Type of the tuple (usually std::tuple)
+ *
+ * @param t Tuple to add an element
+ * @param elt Element to append
+ */
+template <class T, class Tuple>
+constexpr auto append_to_tuple(Tuple &&t, T &&elt) {
+    return Internal::append_to_tuple_helper(
+        std::forward<Tuple>(t), std::forward<T>(elt),
+        std::make_index_sequence<
+            std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
+}
 
 /**
  * @brief Transform a tuple to an array
@@ -1310,13 +1355,34 @@ constexpr auto prepend_to_tuple(T &&elt, Tuple &&t) {
  * This function only works when all elements of the tuple are the same
  * type or convertible to the same type.
  *
- * @tparam T Type of the elements. This type usually needs to be specified.
  * @tparam Tuple Type of the tuple.
  * @param tuple Tuple to transform
  */
-template <class T, class Tuple> constexpr auto tuple_to_array(Tuple &&tuple) {
+template <class Tuple> constexpr auto tuple_to_array(Tuple &&tuple) {
+    using T = std::tuple_element_t<0, remove_cvref_t<Tuple>>;
     return std::apply(
         [](auto... n) { return std::array<T, sizeof...(n)>{n...}; },
         std::forward<Tuple>(tuple));
+}
+
+/// @cond DEV
+namespace Internal {
+/**
+ * @brief Helper function for prepend_to_tuple
+ */
+template <class T, class U, size_t size, std::size_t... I>
+constexpr auto
+reverse_pairs_helper(const std::array<std::pair<T, U>, size> &arr,
+                     [[maybe_unused]] std::index_sequence<I...> dummy) {
+    return std::array{std::pair{arr[I].second, arr[I].first}...};
+}
+} // namespace Internal
+/// @endcond
+
+template <class T, class U, size_t size>
+constexpr auto reverse_pairs(const std::array<std::pair<T, U>, size> &arr)
+    -> std::array<std::pair<U, T>, size> {
+    return Internal::reverse_pairs_helper(arr,
+                                          std::make_index_sequence<size>{});
 }
 } // namespace Pennylane::Util

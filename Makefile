@@ -74,10 +74,9 @@ coverage:
 
 test-cpp:
 	rm -rf ./BuildTests
-	cmake . -BBuildTests -DBUILD_TESTS=ON
+	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON
 	cmake --build ./BuildTests --target runner
 	cmake --build ./BuildTests --target test
-
 
 .PHONY: benchmark
 benchmark:

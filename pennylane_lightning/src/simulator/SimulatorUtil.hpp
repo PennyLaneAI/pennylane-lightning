@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file IndicesUtil.hpp
- * Defines the class representation for quantum state vectors.
+ * @file SimulatorUtil.hpp
+ * Defines a non-template utility functions
  */
 
 #pragma once
@@ -22,6 +22,8 @@
 #include <set>
 #include <vector>
 
+#include "GateOperation.hpp"
+#include "KernelType.hpp"
 #include "Util.hpp"
 
 /**
@@ -65,18 +67,39 @@ auto generateBitPatterns(const std::vector<size_t> &qubitIndices,
  * 1000B, 1001B}. For each external index, internal indices are bitstrings for
  * the wires. In the example, we have internal indices {0000B, 0010B, 0100B,
  * 0110B}.
- *
- * @var internal Internal indices. For the given wires with size n_wire, the
- * output size is 2^n_wire.
- * @var external External indices. For the given wires with size n_wire, the
- * output size is 2^(num_qubits - n_wires).
  */
 struct GateIndices {
-    const std::vector<size_t> internal;
-    const std::vector<size_t> external;
+    const std::vector<size_t> internal; /**< Internal indices.
+                                          For the given wires with size n_wire,
+                                          the output size is 2^n_wire. */
+
+    const std::vector<size_t>
+        external; /**< external External indices.
+                    For the given wires with size n_wire, the
+                    output size is 2^(num_qubits - n_wires). */
+
     GateIndices(const std::vector<size_t> &wires, size_t num_qubits)
         : internal{generateBitPatterns(wires, num_qubits)},
           external{generateBitPatterns(
               getIndicesAfterExclusion(wires, num_qubits), num_qubits)} {}
 };
 } // namespace Pennylane::IndicesUtil
+
+namespace Pennylane {
+/**
+ * @brief Return implemented_gates constexpr member variables for a given kernel
+ *
+ * This function interfaces the runtime variable kernel with the constant time
+ * variable implemented_gates
+ */
+auto implementedGatesForKernel(KernelType kernel) -> std::vector<GateOperation>;
+/**
+ * @brief Return implemented_generators constexpr member variables for a given
+ * kernel
+ *
+ * This function interfaces the runtime variable kernel with the constant time
+ * variable implemented_gates
+ */
+auto implementedGeneratorsForKernel(KernelType kernel)
+    -> std::vector<GeneratorOperation>;
+} // namespace Pennylane

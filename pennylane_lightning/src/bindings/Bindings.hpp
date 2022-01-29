@@ -18,9 +18,9 @@
  */
 #pragma once
 #include "AdjointDiff.hpp"
-#include "IndicesUtil.hpp"
 #include "JacobianProd.hpp"
-#include "JacobianTape.hpp"
+#include "OpToMemberFuncPtr.hpp"
+#include "SimulatorUtil.hpp"
 #include "StateVectorRaw.hpp"
 #include "pybind11/complex.h"
 #include "pybind11/functional.h"
@@ -96,31 +96,22 @@ void apply(pybind11::array_t<std::complex<PrecisionT>> &stateNumpyArray,
  * @tparam gate_op Gate operation
  */
 template <class PrecisionT, class ParamT, KernelType kernel,
-          GateOperations gate_op>
+          GateOperation gate_op>
 constexpr auto getLambdaForKernelGateOp() {
-    using Pennylane::Internal::callGateOps;
-    using Pennylane::Internal::GateOpsFuncPtrPairs;
     namespace py = pybind11;
+    using Pennylane::callGateOps;
+    using GateImplementation = SelectGateOps<kernel>;
 
-    static_assert(
-        array_has_elt(SelectGateOps<PrecisionT, kernel>::implemented_gates,
-                      gate_op),
-        "The operator to register must be implemented.");
+    static_assert(array_has_elt(GateImplementation::implemented_gates, gate_op),
+                  "The operator to register must be implemented.");
 
-    if constexpr (gate_op != GateOperations::Matrix) {
+    if constexpr (gate_op != GateOperation::Matrix) {
         return
             [](StateVectorRaw<PrecisionT> &st, const std::vector<size_t> &wires,
                bool inverse, const std::vector<ParamT> &params) {
-                constexpr size_t num_params =
-                    static_lookup<gate_op>(Constant::gate_num_params);
-                constexpr auto func_ptr = static_lookup<gate_op>(
-                    GateOpsFuncPtrPairs<PrecisionT, ParamT, kernel,
-                                        num_params>::value);
-                // The line below is added as static_lookup cannot raise
-                // exception in GCC 9
-                static_assert(func_ptr != nullptr,
-                              "Function pointer for the gate is not "
-                              "included in GateOpsFuncPtrPairs.");
+                constexpr auto func_ptr =
+                    GateOpToMemberFuncPtr<PrecisionT, ParamT,
+                                          GateImplementation, gate_op>::value;
                 callGateOps(func_ptr, st.getData(), st.getNumQubits(), wires,
                             inverse, params);
             };
@@ -140,10 +131,9 @@ constexpr auto getLambdaForKernelGateOp() {
 /// @cond DEV
 template <class PrecisionT, class ParamT, KernelType kernel, size_t gate_idx>
 constexpr auto getGateOpLambdaPairsIter() {
-    if constexpr (gate_idx <
-                  SelectGateOps<PrecisionT, kernel>::implemented_gates.size()) {
+    if constexpr (gate_idx < SelectGateOps<kernel>::implemented_gates.size()) {
         constexpr auto gate_op =
-            SelectGateOps<PrecisionT, kernel>::implemented_gates[gate_idx];
+            SelectGateOps<kernel>::implemented_gates[gate_idx];
         return prepend_to_tuple(
             std::pair{gate_op, getLambdaForKernelGateOp<PrecisionT, ParamT,
                                                         kernel, gate_op>()},
@@ -178,16 +168,15 @@ constexpr auto getGateOpLambdaPairs() {
  */
 template <class PrecisionT, class ParamT, KernelType kernel, class PyClass>
 void registerImplementedGatesForKernel(PyClass &pyclass) {
-    const auto kernel_name =
-        std::string(lookup(Constant::available_kernels, kernel));
+    const auto kernel_name = std::string(SelectGateOps<kernel>::name);
 
     constexpr auto gate_op_lambda_pairs =
         getGateOpLambdaPairs<PrecisionT, ParamT, kernel>();
 
     auto registerToPyclass =
-        [&pyclass, &kernel_name](auto &&gate_op_lambda_pair) -> GateOperations {
+        [&pyclass, &kernel_name](auto &&gate_op_lambda_pair) -> GateOperation {
         const auto &[gate_op, func] = gate_op_lambda_pair;
-        if (gate_op == GateOperations::Matrix) {
+        if (gate_op == GateOperation::Matrix) {
             const std::string name = "applyMatrix_" + kernel_name;
             const std::string doc = "Apply a given matrix to wires.";
             pyclass.def(name.c_str(), func, doc.c_str());

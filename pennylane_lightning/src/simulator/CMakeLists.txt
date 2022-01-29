@@ -1,7 +1,8 @@
 project(lightning_simulator)
 set(CMAKE_CXX_STANDARD 17)
 
-set(SIMULATOR_FILES IndicesUtil.cpp CACHE INTERNAL "" FORCE)
+set(SIMULATOR_FILES SimulatorUtil.cpp DynamicDispatcher.cpp
+    CACHE INTERNAL "" FORCE)
 
 add_library(lightning_simulator STATIC ${SIMULATOR_FILES})
 target_link_libraries(lightning_simulator PRIVATE pennylane_lightning_compile_options
