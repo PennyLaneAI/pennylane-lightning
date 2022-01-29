@@ -7,6 +7,10 @@
 # Include this file only once
 include_guard()
 
+if (WIN32) # We assume long path is enabled
+  set(CMAKE_OBJECT_PATH_MAX 512)
+endif ()
+
 # Set compile flags and library dependencies
 add_library(pennylane_lightning_compile_options INTERFACE)
 add_library(pennylane_lightning_external_libs INTERFACE)
@@ -116,7 +120,4 @@ if(ENABLE_KOKKOS)
     target_link_libraries(pennylane_lightning_external_libs INTERFACE Kokkos::kokkos Kokkos::kokkoskernels)
 endif()
 
-if (WIN32) # We assume long path is enabled
-  set(CMAKE_OBJECT_PATH_MAX 512)
-endif ()
 
