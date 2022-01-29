@@ -115,7 +115,3 @@ if(ENABLE_KOKKOS)
     target_compile_options(pennylane_lightning_compile_options INTERFACE "-D_ENABLE_KOKKOS=1")
     target_link_libraries(pennylane_lightning_external_libs INTERFACE Kokkos::kokkos Kokkos::kokkoskernels)
 endif()
-
-if (WIN32)
-  set(CMAKE_OBJECT_PATH_MAX 260)
-endif ()

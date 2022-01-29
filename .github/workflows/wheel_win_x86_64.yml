@@ -59,6 +59,10 @@ jobs:
         with:
           arch: amd64
 
+      - name: Check LongPathsEnabled
+        run: |
+          (Get-ItemProperty "HKLM:System\CurrentControlSet\Control\FileSystem").LongPathsEnabled
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.3.1
 
