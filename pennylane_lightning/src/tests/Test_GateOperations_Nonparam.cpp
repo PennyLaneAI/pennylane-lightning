@@ -34,7 +34,7 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyPauliX",
                            "[GateOperations_Nonparam],[single-qubit]",
                            ALL_GATE_OPERATIONS, (float, double)) {
     using fp_t = typename TestType::scalar_type_t;
-    using CFP_t = typename TestType::CFP_t;
+    // using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
     for (size_t index = 0; index < num_qubits; index++) {
         auto st = create_zero_state<fp_t>(num_qubits);
@@ -176,7 +176,7 @@ TEMPLATE_PRODUCT_TEST_CASE("GateOperations::applyCNOT",
                            "[GateOperations_Nonparam],[two-qubit]",
                            ALL_GATE_OPERATIONS, (float, double)) {
     using fp_t = typename TestType::scalar_type_t;
-    using CFP_t = typename TestType::CFP_t;
+    // using CFP_t = typename TestType::CFP_t;
     const size_t num_qubits = 3;
     auto st = create_zero_state<fp_t>(num_qubits);
 

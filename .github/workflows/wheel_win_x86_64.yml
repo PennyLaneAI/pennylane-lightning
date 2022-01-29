@@ -13,6 +13,7 @@ env:
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
+    New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force &&
     pip install pybind11 ninja
 
   # Testing of built wheels
@@ -58,10 +59,6 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64
-
-      - name:  maximum path limit
-        run: >
-          New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.3.1
