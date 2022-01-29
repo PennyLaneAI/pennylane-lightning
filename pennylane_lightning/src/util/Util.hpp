@@ -923,8 +923,8 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
         return;
     }
 #if defined(_OPENMP)
-#pragma omp parallel default(none) shared(m_out,m_left,m_right) \
-    firstprivate(m,n,k,transpose)
+#pragma omp parallel default(none) shared(m_out, m_left, m_right)              \
+    firstprivate(m, n, k, transpose)
 #endif
     {
         size_t row;
