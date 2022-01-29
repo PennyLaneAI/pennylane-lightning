@@ -32,20 +32,20 @@ namespace Pennylane {
 /**
  * @brief Fill ones from LSB to rev_wire
  */
-auto constexpr fillTrailingOnes(size_t pos) -> size_t {
+inline auto constexpr fillTrailingOnes(size_t pos) -> size_t {
     return (pos == 0) ? 0 : (~size_t(0) >> (CHAR_BIT * sizeof(size_t) - pos));
 }
 /**
  * @brief Fill ones from MSB to pos
  */
-auto constexpr fillLeadingOnes(size_t pos) -> size_t {
+inline auto constexpr fillLeadingOnes(size_t pos) -> size_t {
     return (~size_t(0)) << pos;
 }
 
 /**
  * @brief Swap bits in i-th and j-th position in place
  */
-void constexpr bitswap(size_t bits, const size_t i, const size_t j) {
+inline void constexpr bitswap(size_t bits, const size_t i, const size_t j) {
     size_t x = ((bits >> i) ^ (bits >> j)) & 1U;
     bits ^= ((x << i) | (x << j));
 }
