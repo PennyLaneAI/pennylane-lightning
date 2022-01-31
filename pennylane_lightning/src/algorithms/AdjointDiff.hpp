@@ -448,6 +448,7 @@ template <class T = double> class AdjointJacobian {
         const std::vector<ObsDatum<T>> &obs = jd.getObservables();
         const size_t num_observables = obs.size();
 
+        const std::vector<size_t> &tp = jd.getTrainableParams();
         const size_t tp_size = tp.size();
         const size_t num_param_ops = ops.getNumParOps();
 
@@ -464,7 +465,6 @@ template <class T = double> class AdjointJacobian {
             applyOperations(lambda, ops);
         }
 
-        const std::vector<size_t> &tp = jd.getTrainableParams();
         auto tp_begin = tp.begin();
         auto tp_it = tp.end();
 
