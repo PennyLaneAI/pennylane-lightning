@@ -490,7 +490,6 @@ template <class T = double> class AdjointJacobian {
                     if ((current_param_idx == *(std::prev(tp_it))) ||
                         std::find(tp_begin, tp_it, current_param_idx) !=
                             tp_it) {
-
                         const T scalingFactor =
                             applyGenerator(mu, ops_name[op_idx],
                                            ops.getOpsWires()[op_idx],

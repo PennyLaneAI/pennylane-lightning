@@ -136,7 +136,6 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
     auto vectorJacobianProduct(const std::vector<T> &dy, size_t num_params,
                                bool apply_operations = false)
         -> std::function<std::vector<T>(const JacobianData<T> &)> {
-
         if (dy.empty() ||
             std::all_of(dy.cbegin(), dy.cend(), [](T e) { return e == 0; })) {
             // If the dy vector is zero, then the
