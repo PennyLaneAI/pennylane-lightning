@@ -29,6 +29,7 @@ from pennylane import (
 import pennylane as qml
 from pennylane.devices import DefaultQubit
 from pennylane.operation import Expectation
+from pennylane.wires import Wires
 
 from ._version import __version__
 
@@ -495,18 +496,32 @@ class LightningQubit(DefaultQubit):
 
         return jacs, vjps
 
-    def probs(self, tape, wires, starting_state=None, use_device_state=False):
-        """Probability of each computational basis state.
+    def probability(self, wires=None, shot_range=None, bin_size=None):
+        """Return the probability of each computational basis state.
+
+        Devices that require a finite number of shots always return the
+        estimated probability.
 
         Args:
-            tape (.QuantumTape): a quantum tapes
-            wires (Sequence[int] or int): the wire the operation acts on
+            wires (Iterable[Number, str], Number, str, Wires): wires to return
+                marginal probabilities for. Wires not provided are traced out of the system.
+            shot_range (tuple[int]): 2-tuple of integers specifying the range of samples
+                to use. If not specified, all samples are used.
+            bin_size (int): Divides the shot range into bins of size ``bin_size``, and
+                returns the measurement statistic separately over each bin. If not
+                provided, the entire shot range is treated as a single bin.
 
         Returns:
-            The returned array is in lexicographic order, so corresponds
-            to a :math:`14.6\%` chance of measuring the rotated :math:`|0\rangle` state
-            and :math:`85.4\%` of measuring the rotated :math:`|1\rangle` state.
+            array[float]: list of the probabilities
         """
+        if self.shots is not None:
+            return self.estimate_probability(wires=wires, shot_range=shot_range, bin_size=bin_size)
+
+        wires = wires or self.wires
+        # convert to a wires object
+        wires = Wires(wires)
+        # translate to wire labels used by device
+        device_wires = self.map_wires(wires)
 
         # To support np.complex64 based on the type of self._state
         dtype = self._state.dtype
@@ -518,13 +533,7 @@ class LightningQubit(DefaultQubit):
             raise TypeError(f"Unsupported complex Type: {dtype}")
 
         # Initialization of state
-        if starting_state is not None:
-            ket = np.ravel(starting_state)
-        else:
-            if not use_device_state:
-                self.reset()
-                self.execute(tape)
-            ket = np.ravel(self._pre_rotated_state)
+        ket = np.ravel(self._pre_rotated_state)
 
         if use_csingle:
             ket = ket.astype(np.complex64)
@@ -532,20 +541,34 @@ class LightningQubit(DefaultQubit):
         state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
 
-        return M.probs([] if wires == None else wires)
+        return M.probs(device_wires)
 
-    def expval(self, tape, op, wires=None, starting_state=None, use_device_state=False):
+    def expval(self, observable, shot_range=None, bin_size=None):
         """Expectation value of the supplied observable.
 
         Args:
-            tape (.QuantumTape): a quantum tapes
-            op: observable name or a PennyLane observable.
-            wires (Sequence[int] or int): the wire the operation acts on. This must be
-            `None` if op is a PennyLane observable.
+            observable: A PennyLane observable.
+            shot_range (tuple[int]): 2-tuple of integers specifying the range of samples
+                to use. If not specified, all samples are used.
+            bin_size (int): Divides the shot range into bins of size ``bin_size``, and
+                returns the measurement statistic separately over each bin. If not
+                provided, the entire shot range is treated as a single bin.
 
         Returns:
-            Expectation value of the op
+            Expectation value of the observable
         """
+        if observable.name == "Projector":
+            # branch specifically to handle the projector observable
+            idx = int("".join(str(i) for i in observable.parameters[0]), 2)
+            probs = self.probability(
+                wires=observable.wires, shot_range=shot_range, bin_size=bin_size
+            )
+            return probs[idx]
+
+        if self.shots is not None:
+            samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
+            return np.squeeze(np.mean(samples, axis=0))
+
         # To support np.complex64 based on the type of self._state
         dtype = self._state.dtype
         if dtype == np.complex64:
@@ -556,13 +579,7 @@ class LightningQubit(DefaultQubit):
             raise TypeError(f"Unsupported complex Type: {dtype}")
 
         # Initialization of state
-        if starting_state is not None:
-            ket = np.ravel(starting_state)
-        else:
-            if not use_device_state:
-                self.reset()
-                self.execute(tape)
-            ket = np.ravel(self._pre_rotated_state)
+        ket = np.ravel(self._pre_rotated_state)
 
         if use_csingle:
             ket = ket.astype(np.complex64)
@@ -570,17 +587,12 @@ class LightningQubit(DefaultQubit):
         state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
 
-        if wires == None:
-            # TODO: check if op is an qml.op
-            return M.expval(op.name, op.wires.toarray())
+        return M.expval(observable.name, observable.wires)
 
-        return M.expval(op, wires)
-
-    def var(self, tape, op, wires=None, starting_state=None, use_device_state=False):
+    def var(self, op, wires=None):
         """Variance of the supplied observable.
 
         Args:
-            tape (.QuantumTape): a quantum tapes
             op: observable name or a PennyLane observable.
             wires (Sequence[int] or int): the wire the operation acts on. This must be
             `None` if op is a PennyLane observable.
@@ -598,13 +610,7 @@ class LightningQubit(DefaultQubit):
             raise TypeError(f"Unsupported complex Type: {dtype}")
 
         # Initialization of state
-        if starting_state is not None:
-            ket = np.ravel(starting_state)
-        else:
-            if not use_device_state:
-                self.reset()
-                self.execute(tape)
-            ket = np.ravel(self._pre_rotated_state)
+        ket = np.ravel(self._pre_rotated_state)
 
         if use_csingle:
             ket = ket.astype(np.complex64)

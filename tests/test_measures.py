@@ -48,7 +48,7 @@ class TestProbs:
             qml.Rot(x, y, z, wires=[0])
             qml.RY(-0.2, wires=[0])
 
-        p = dev.probs(tape, cases[0])
+        p = dev.probs(cases[0])
 
         assert np.allclose(cases[1], p, atol=tol, rtol=0)
 
@@ -103,7 +103,7 @@ class TestProbs:
             qml.RX(0.5, wires=[0])
             qml.RY(0.3, wires=[1])
 
-        p = dev.probs(tape, cases[0])
+        p = dev.probs(cases[0])
 
         assert np.allclose(cases[1], p, atol=tol, rtol=0)
 
@@ -134,7 +134,7 @@ class TestExpval:
         with pytest.raises(
             ValueError, match="The supplied gate requires 1 wires, but 2 were supplied."
         ):
-            dev.expval(tape, cases[0], cases[1])
+            dev.expval(cases[0], cases[1])
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_expval_wires_error(self, dev, C):
@@ -145,7 +145,7 @@ class TestExpval:
             qml.RY(-0.2, wires=[1])
 
         with pytest.raises(AttributeError, match="'str' object has no attribute 'name'"):
-            dev.expval(tape, "PauliX", wires=None)
+            dev.expval("PauliX", wires=None)
 
     @pytest.mark.parametrize(
         "cases",
@@ -169,7 +169,7 @@ class TestExpval:
             qml.Rot(x, y, z, wires=[0])
             qml.RY(-0.2, wires=[0])
 
-        e = dev.expval(tape, cases[0], cases[1])
+        e = dev.expval(cases[0], cases[1])
         assert np.allclose(e, cases[2], atol=tol, rtol=0)
 
     @pytest.mark.parametrize(
@@ -191,7 +191,7 @@ class TestExpval:
             qml.RX(0.4, wires=[0])
             qml.RY(-0.2, wires=[1])
 
-        e = dev.expval(tape, cases[0], cases[1])
+        e = dev.expval(cases[0], cases[1])
         assert np.allclose(e, cases[2], atol=tol, rtol=0)
 
     @pytest.mark.parametrize(
@@ -216,7 +216,7 @@ class TestExpval:
             qml.Rot(x, y, z, wires=[0])
             qml.RY(-0.2, wires=[0])
 
-        e = dev.expval(tape, cases[0])
+        e = dev.expval(cases[0])
         assert np.allclose(e, cases[1], atol=tol, rtol=0)
 
     @pytest.mark.parametrize(
@@ -238,7 +238,7 @@ class TestExpval:
             qml.RX(0.4, wires=[0])
             qml.RY(-0.2, wires=[1])
 
-        e = dev.expval(tape, cases[0])
+        e = dev.expval(cases[0])
         assert np.allclose(e, cases[1], atol=tol, rtol=0)
 
 
@@ -268,7 +268,7 @@ class TestVar:
         with pytest.raises(
             ValueError, match="The supplied gate requires 1 wires, but 2 were supplied."
         ):
-            dev.var(tape, cases[0], cases[1])
+            dev.var(cases[0], cases[1])
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_var_wires_error(self, dev, C):
@@ -279,7 +279,7 @@ class TestVar:
             qml.RY(-0.2, wires=[1])
 
         with pytest.raises(AttributeError, match="'str' object has no attribute 'name'"):
-            dev.var(tape, "PauliX", wires=None)
+            dev.var("PauliX", wires=None)
 
     @pytest.mark.parametrize(
         "cases",
@@ -303,7 +303,7 @@ class TestVar:
             qml.Rot(x, y, z, wires=[0])
             qml.RY(-0.2, wires=[0])
 
-        e = dev.var(tape, cases[0], cases[1])
+        e = dev.var(cases[0], cases[1])
         assert np.allclose(e, cases[2], atol=tol, rtol=0)
 
     @pytest.mark.parametrize(
@@ -325,7 +325,7 @@ class TestVar:
             qml.RX(0.4, wires=[0])
             qml.RY(-0.2, wires=[1])
 
-        e = dev.var(tape, cases[0], cases[1])
+        e = dev.var(cases[0], cases[1])
         assert np.allclose(e, cases[2], atol=tol, rtol=0)
 
     @pytest.mark.parametrize(
@@ -350,7 +350,7 @@ class TestVar:
             qml.Rot(x, y, z, wires=[0])
             qml.RY(-0.2, wires=[0])
 
-        e = dev.var(tape, cases[0])
+        e = dev.var(cases[0])
         assert np.allclose(e, cases[1], atol=tol, rtol=0)
 
     @pytest.mark.parametrize(
@@ -372,5 +372,5 @@ class TestVar:
             qml.RX(0.4, wires=[0])
             qml.RY(-0.2, wires=[1])
 
-        e = dev.var(tape, cases[0])
+        e = dev.var(cases[0])
         assert np.allclose(e, cases[1], atol=tol, rtol=0)
