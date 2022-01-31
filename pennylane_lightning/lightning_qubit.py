@@ -298,7 +298,7 @@ class LightningQubit(DefaultQubit):
             tp_shift,
             tape.num_params,
         )
-        return jac
+        return jac.reshape(-1, tape.num_params)
 
     def compute_vjp(self, dy, jac, num=None):
         """Convenience function to compute the vector-Jacobian product for a given

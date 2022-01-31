@@ -429,16 +429,15 @@ template <class T = double> class AdjointJacobian {
      * gradient calculations given in `trainableParams`, and the overall number
      * of parameters for the gradient calculation provided within `num_params`.
      * The resulting row-major ordered `jac` matrix representation will be of
-     * size `trainableParams.size() * observables.size()`. OpenMP is used to
-     * enable independent operations to be offloaded to threads.
+     * size `jd.getSizeStateVec() * jd.getObservables().size()`. OpenMP is used
+     * to enable independent operations to be offloaded to threads.
      *
      * @param jac Preallocated vector for Jacobian data results.
      * @param jd JacobianData represents the QuantumTape to differentiate
      * @param apply_operations Indicate whether to apply operations to tape.psi
      * prior to calculation.
      */
-    void adjointJacobianJD(std::vector<std::vector<T>> &jac,
-                           const JacobianData<T> &jd,
+    void adjointJacobianJD(std::vector<T> &jac, const JacobianData<T> &jd,
                            bool apply_operations = false) {
         PL_ABORT_IF(!jd.hasTrainableParams(),
                     "No trainable parameters provided.");
@@ -449,19 +448,18 @@ template <class T = double> class AdjointJacobian {
         const std::vector<ObsDatum<T>> &obs = jd.getObservables();
         const size_t num_observables = obs.size();
 
-        const size_t tp_size = jd.getNumTrainableParams();
+        const auto tp = jd.getTrainableParams();
+        const auto tp_begin = tp.begin();
+
+        auto tp_it = tp.end();
+
+        const size_t tp_size = tp.size();
         const size_t num_param_ops = ops.getNumParOps();
 
         // Track positions within par and non-par operations
         size_t trainableParamNumber = tp_size - 1;
         size_t current_param_idx =
             num_param_ops - 1; // total number of parametric ops
-
-        // A (value -> index) vector for jd.trainableParams
-        std::vector<size_t> tp_map(num_param_ops, num_param_ops);
-        for (size_t i = 0; i < tp_size; i++) {
-            tp_map[jd.getTrainableParamAt(i)] = i;
-        }
 
         // Create $U_{1:p}\vert \lambda \rangle$
         StateVectorManaged<T> lambda(jd.getPtrStateVec(), jd.getSizeStateVec());
@@ -489,36 +487,46 @@ template <class T = double> class AdjointJacobian {
                 applyOperationAdj(lambda, ops, op_idx);
 
                 if (ops.hasParams(op_idx)) {
-                    if (trainableParamNumber < tp_size &&
-                        tp_map.at(current_param_idx) <= trainableParamNumber) {
+                    if ((current_param_idx == *(std::prev(tp_it))) ||
+                        std::find(tp_begin, tp_it, current_param_idx) !=
+                            tp_it) {
+
                         const T scalingFactor =
                             applyGenerator(mu, ops_name[op_idx],
                                            ops.getOpsWires()[op_idx],
                                            !ops.getOpsInverses()[op_idx]) *
                             (2 * (ops.getOpsInverses()[op_idx] ? 0 : 1) - 1);
+
+                        const size_t mat_row_idx =
+                            trainableParamNumber * num_observables;
+
                         // clang-format off
 
                         #if defined(_OPENMP)
                             #pragma omp parallel for default(none)   \
                             shared(H_lambda, jac, mu, scalingFactor, \
-                                trainableParamNumber,         \
+                                mat_row_idx,        \
                                 num_observables)
                         #endif
 
                         // clang-format on
                         for (size_t obs_idx = 0; obs_idx < num_observables;
                              obs_idx++) {
-                            updateJacobian(H_lambda[obs_idx], mu, jac,
-                                           scalingFactor, obs_idx,
-                                           trainableParamNumber);
+                            jac.at(mat_row_idx + obs_idx) =
+                                -2 * scalingFactor *
+                                std::imag(innerProdC(
+                                    H_lambda[obs_idx].getDataVector(),
+                                    mu.getDataVector()));
                         }
                         trainableParamNumber--;
+                        std::advance(tp_it, -1);
                     }
                     current_param_idx--;
                 }
                 applyOperationsAdj(H_lambda, ops, static_cast<size_t>(op_idx));
             }
         }
+        jac = Transpose(jac, jd.getNumParams(), num_observables);
     }
 }; // class AdjointJacobian
 

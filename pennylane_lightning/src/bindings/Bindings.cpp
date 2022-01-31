@@ -225,15 +225,15 @@ void lightning_class_bindings(py::module &m) {
                 const std::vector<ObsDatum<PrecisionT>> &observables,
                 const OpsData<PrecisionT> &operations,
                 const std::vector<size_t> &trainableParams, size_t num_params) {
-                 std::vector<std::vector<PrecisionT>> jac(
-                     observables.size(),
-                     std::vector<PrecisionT>(num_params, 0));
+                 std::vector<PrecisionT> jac(observables.size() * num_params,
+                                             0);
 
-                 const JacobianData<PrecisionT> jd{sv.getLength(), sv.getData(),
-                                                   observables, operations,
-                                                   trainableParams};
+                 const JacobianData<PrecisionT> jd{
+                     num_params,  sv.getLength(), sv.getData(),
+                     observables, operations,     trainableParams};
 
                  adj.adjointJacobianJD(jac, jd);
+
                  return py::array_t<ParamT>(py::cast(jac));
              });
 
@@ -285,7 +285,7 @@ void lightning_class_bindings(py::module &m) {
                 const std::vector<PrecisionT> &jac,
                 const std::vector<PrecisionT> &dy_row, size_t m, size_t n) {
                  std::vector<PrecisionT> vjp_res(n);
-                 v._computeVJP(vjp_res, jac, dy_row, m, n);
+                 v.computeVJP(vjp_res, jac, dy_row, m, n);
                  return py::array_t<ParamT>(py::cast(vjp_res));
              })
         .def("vjp_fn",
@@ -293,13 +293,14 @@ void lightning_class_bindings(py::module &m) {
                 const std::vector<PrecisionT> &dy, size_t num_params) {
                  auto fn = v.vectorJacobianProduct(dy, num_params);
                  return py::cpp_function(
-                     [fn](const StateVectorRaw<PrecisionT> &sv,
-                          const std::vector<ObsDatum<PrecisionT>> &observables,
-                          const OpsData<PrecisionT> &operations,
-                          const std::vector<size_t> &trainableParams) {
+                     [fn, num_params](
+                         const StateVectorRaw<PrecisionT> &sv,
+                         const std::vector<ObsDatum<PrecisionT>> &observables,
+                         const OpsData<PrecisionT> &operations,
+                         const std::vector<size_t> &trainableParams) {
                          const JacobianData<PrecisionT> jd{
-                             sv.getLength(), sv.getData(), observables,
-                             operations, trainableParams};
+                             num_params,  sv.getLength(), sv.getData(),
+                             observables, operations,     trainableParams};
                          return py::array_t<ParamT>(py::cast(fn(jd)));
                      });
              });

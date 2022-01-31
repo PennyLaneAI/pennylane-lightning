@@ -248,6 +248,7 @@ template <class T> class OpsData {
 /**
  * @brief Represent the serialized data of a QuantumTape to differentiate
  *
+ * @param num_parameters Number of parameters in the Tape.
  * @param num_elements Length of the statevector data.
  * @param psi Pointer to the statevector data.
  * @param observables Observables for which to calculate Jacobian.
@@ -257,6 +258,7 @@ template <class T> class OpsData {
  */
 template <class T> class JacobianData {
   private:
+    size_t num_parameters;
     size_t num_elements;
     const std::complex<T> *psi;
     const std::vector<ObsDatum<T>> observables;
@@ -267,6 +269,7 @@ template <class T> class JacobianData {
     /**
      * @brief Construct a JacobianData object
      *
+     * @param num_params Number of parameters in the Tape.
      * @param num_elem Length of the statevector data.
      * @param ps Pointer to the statevector data.
      * @param obs Observables for which to calculate Jacobian.
@@ -274,11 +277,19 @@ template <class T> class JacobianData {
      * @param trainP List of parameters participating in Jacobian
      * calculation.
      */
-    JacobianData(size_t num_elem, std::complex<T> *ps,
+    JacobianData(size_t num_params, size_t num_elem, std::complex<T> *ps,
                  const std::vector<ObsDatum<T>> &obs, const OpsData<T> &ops,
                  std::vector<size_t> trainP)
-        : num_elements(num_elem), psi(ps), observables(obs), operations(ops),
+        : num_parameters(num_params), num_elements(num_elem), psi(ps),
+          observables(obs), operations(ops),
           trainableParams(std::move(trainP)) {}
+
+    /**
+     * @brief Get Number of parameters in the Tape.
+     *
+     * @return size_t
+     */
+    [[nodiscard]] auto getNumParams() const -> size_t { return num_parameters; }
 
     /**
      * @brief Get the length of the statevector data.
@@ -339,16 +350,6 @@ template <class T> class JacobianData {
     }
 
     /**
-     * @brief Get the number of parameters participating in Jacobian
-     * calculation.
-     *
-     * @return size_t
-     */
-    [[nodiscard]] auto getNumTrainableParams() const -> size_t {
-        return trainableParams.size();
-    }
-
-    /**
      * @brief Get if the number of parameters participating in Jacobian
      * calculation is zero.
      *
@@ -356,15 +357,6 @@ template <class T> class JacobianData {
      */
     [[nodiscard]] auto hasTrainableParams() const -> bool {
         return !trainableParams.empty();
-    }
-
-    /**
-     * @brief Get the idx-th parameter in the list of trainable parameters.
-     *
-     * @return size_t
-     */
-    [[nodiscard]] auto getTrainableParamAt(size_t idx) const -> size_t {
-        return trainableParams.at(idx);
     }
 };
 } // namespace Pennylane::Algorithms

@@ -45,8 +45,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=Z",
         const size_t num_params = 3;
         const size_t num_obs = 1;
         auto obs = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
-        std::vector<std::vector<double>> jacobian(
-            num_obs, std::vector<double>(num_params, 0));
+        std::vector<double> jacobian(num_obs * num_params, 0);
 
         for (const auto &p : param) {
             auto ops = adj.createOpsData({"RX"}, {{p}}, {{0}}, {false});
@@ -58,13 +57,13 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=Z",
 
             std::vector<size_t> tp{0};
             std::vector<ObsDatum<double>> obs_ls{obs};
-            JacobianData<double> tape{psi.getLength(), psi.getData(), obs_ls,
-                                      ops, tp};
+            JacobianData<double> tape{
+                num_params, psi.getLength(), psi.getData(), obs_ls, ops, tp};
 
             adj.adjointJacobianJD(jacobian, tape, true);
 
             CAPTURE(jacobian);
-            CHECK(-sin(p) == Approx(jacobian[0].front()));
+            CHECK(-sin(p) == Approx(jacobian[0]));
         }
     }
 }
@@ -78,8 +77,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RY, Obs=X",
         const size_t num_obs = 1;
 
         auto obs = ObsDatum<double>({"PauliX"}, {{}}, {{0}});
-        std::vector<std::vector<double>> jacobian(
-            num_obs, std::vector<double>(num_params, 0));
+        std::vector<double> jacobian(num_obs * num_params, 0);
 
         for (const auto &p : param) {
             auto ops = adj.createOpsData({"RY"}, {{p}}, {{0}}, {false});
@@ -91,13 +89,13 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RY, Obs=X",
 
             std::vector<size_t> tp{0};
             std::vector<ObsDatum<double>> obs_ls{obs};
-            JacobianData<double> tape{psi.getLength(), psi.getData(), obs_ls,
-                                      ops, tp};
+            JacobianData<double> tape{
+                num_params, psi.getLength(), psi.getData(), obs_ls, ops, tp};
 
             adj.adjointJacobianJD(jacobian, tape, true);
 
             CAPTURE(jacobian);
-            CHECK(cos(p) == Approx(jacobian[0].front()).margin(1e-7));
+            CHECK(cos(p) == Approx(jacobian[0]).margin(1e-7));
         }
     }
 }
@@ -109,8 +107,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=[Z,Z]",
         const size_t num_qubits = 2;
         const size_t num_params = 1;
         const size_t num_obs = 2;
-        std::vector<std::vector<double>> jacobian(
-            num_obs, std::vector<double>(num_params, 0));
+        std::vector<double> jacobian(num_obs * num_params, 0);
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
         StateVectorRaw<double> psi(cdata.data(), cdata.size());
@@ -123,14 +120,14 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=[Z,Z]",
 
         std::vector<size_t> tp{0};
         std::vector<ObsDatum<double>> obs_ls{obs1, obs2};
-        JacobianData<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                                  tp};
+        JacobianData<double> tape{
+            num_params, psi.getLength(), psi.getData(), obs_ls, ops, tp};
 
         adj.adjointJacobianJD(jacobian, tape, true);
 
         CAPTURE(jacobian);
-        CHECK(-sin(param[0]) == Approx(jacobian[0][0]).margin(1e-7));
-        CHECK(0.0 == Approx(jacobian[1][1]).margin(1e-7));
+        CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
+        CHECK(0.0 == Approx(jacobian[1 * num_params + 1]).margin(1e-7));
     }
 }
 TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z]",
@@ -141,8 +138,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z]",
         const size_t num_qubits = 3;
         const size_t num_params = 3;
         const size_t num_obs = 3;
-        std::vector<std::vector<double>> jacobian(
-            num_obs, std::vector<double>(num_params, 0));
+        std::vector<double> jacobian(num_obs * num_params, 0);
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
         StateVectorRaw<double> psi(cdata.data(), cdata.size());
@@ -158,15 +154,17 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z]",
 
         std::vector<size_t> tp{0, 1, 2};
         std::vector<ObsDatum<double>> obs_ls{obs1, obs2, obs3};
-        JacobianData<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                                  tp};
+        JacobianData<double> tape{
+            num_params, psi.getLength(), psi.getData(), obs_ls, ops, tp};
 
         adj.adjointJacobianJD(jacobian, tape, true);
 
         CAPTURE(jacobian);
-        CHECK(-sin(param[0]) == Approx(jacobian[0][0]).margin(1e-7));
-        CHECK(-sin(param[1]) == Approx(jacobian[1][1]).margin(1e-7));
-        CHECK(-sin(param[2]) == Approx(jacobian[2][2]).margin(1e-7));
+        CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
+        CHECK(-sin(param[1]) ==
+              Approx(jacobian[1 * num_params + 1]).margin(1e-7));
+        CHECK(-sin(param[2]) ==
+              Approx(jacobian[2 * num_params + 2]).margin(1e-7));
     }
 }
 TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z], "
@@ -178,8 +176,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z], "
         const size_t num_qubits = 3;
         const size_t num_params = 3;
         const size_t num_obs = 3;
-        std::vector<std::vector<double>> jacobian(
-            num_obs, std::vector<double>(num_params, 0));
+        std::vector<double> jacobian(num_obs * num_params, 0);
         std::vector<size_t> t_params{0, 2};
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
@@ -195,15 +192,16 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z], "
                                      {{0}, {1}, {2}}, {false, false, false});
 
         std::vector<ObsDatum<double>> obs_ls{obs1, obs2, obs3};
-        JacobianData<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                                  t_params};
+        JacobianData<double> tape{
+            num_params, psi.getLength(), psi.getData(), obs_ls, ops, t_params};
 
         adj.adjointJacobianJD(jacobian, tape, true);
 
         CAPTURE(jacobian);
-        CHECK(-sin(param[0]) == Approx(jacobian[0][0]).margin(1e-7));
-        CHECK(0 == Approx(jacobian[1][1]).margin(1e-7));
-        CHECK(-sin(param[2]) == Approx(jacobian[2][1]).margin(1e-7));
+        CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
+        CHECK(0 == Approx(jacobian[1 * num_params + 1]).margin(1e-7));
+        CHECK(-sin(param[2]) ==
+              Approx(jacobian[2 * num_params + 1]).margin(1e-7));
     }
 }
 TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
@@ -214,8 +212,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
         const size_t num_qubits = 3;
         const size_t num_params = 3;
         const size_t num_obs = 1;
-        std::vector<std::vector<double>> jacobian(
-            num_obs, std::vector<double>(num_params, 0));
+        std::vector<double> jacobian(num_obs * num_params, 0);
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
         StateVectorRaw<double> psi(cdata.data(), cdata.size());
@@ -229,17 +226,17 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
 
         std::vector<size_t> tp{0, 1, 2};
         std::vector<ObsDatum<double>> obs_ls{obs};
-        JacobianData<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                                  tp};
+        JacobianData<double> tape{
+            num_params, psi.getLength(), psi.getData(), obs_ls, ops, tp};
 
         adj.adjointJacobianJD(jacobian, tape, true);
 
         CAPTURE(jacobian);
 
         // Computed with parameter shift
-        CHECK(-0.1755096592645253 == Approx(jacobian[0][0]).margin(1e-7));
-        CHECK(0.26478810666384334 == Approx(jacobian[0][1]).margin(1e-7));
-        CHECK(-0.6312451595102775 == Approx(jacobian[0][2]).margin(1e-7));
+        CHECK(-0.1755096592645253 == Approx(jacobian[0]).margin(1e-7));
+        CHECK(0.26478810666384334 == Approx(jacobian[1]).margin(1e-7));
+        CHECK(-0.6312451595102775 == Approx(jacobian[2]).margin(1e-7));
     }
 }
 TEST_CASE("AdjointJacobian::adjointJacobian Op=Mixed, Obs=[XXX]",
@@ -250,8 +247,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=Mixed, Obs=[XXX]",
         const size_t num_qubits = 3;
         const size_t num_params = 6;
         const size_t num_obs = 1;
-        std::vector<std::vector<double>> jacobian(
-            num_obs, std::vector<double>(num_params, 0));
+        std::vector<double> jacobian(num_obs * num_params, 0);
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
         StateVectorRaw<double> psi(cdata.data(), cdata.size());
@@ -274,20 +270,20 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=Mixed, Obs=[XXX]",
 
         std::vector<size_t> tp{0, 1, 2, 3, 4, 5};
         std::vector<ObsDatum<double>> obs_ls{obs};
-        JacobianData<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                                  tp};
+        JacobianData<double> tape{
+            num_params, psi.getLength(), psi.getData(), obs_ls, ops, tp};
 
         adj.adjointJacobianJD(jacobian, tape, true);
 
         CAPTURE(jacobian);
 
         // Computed with PennyLane using default.qubit.adjoint_jacobian
-        CHECK(0.0 == Approx(jacobian[0][0]).margin(1e-7));
-        CHECK(-0.674214427 == Approx(jacobian[0][1]).margin(1e-7));
-        CHECK(0.275139672 == Approx(jacobian[0][2]).margin(1e-7));
-        CHECK(0.275139672 == Approx(jacobian[0][3]).margin(1e-7));
-        CHECK(-0.0129093062 == Approx(jacobian[0][4]).margin(1e-7));
-        CHECK(0.323846156 == Approx(jacobian[0][5]).margin(1e-7));
+        CHECK(0.0 == Approx(jacobian[0]).margin(1e-7));
+        CHECK(-0.674214427 == Approx(jacobian[1]).margin(1e-7));
+        CHECK(0.275139672 == Approx(jacobian[2]).margin(1e-7));
+        CHECK(0.275139672 == Approx(jacobian[3]).margin(1e-7));
+        CHECK(-0.0129093062 == Approx(jacobian[4]).margin(1e-7));
+        CHECK(0.323846156 == Approx(jacobian[5]).margin(1e-7));
     }
 }
 TEST_CASE("AdjointJacobian::adjointJacobian Decomposed Rot gate, non "
@@ -296,7 +292,6 @@ TEST_CASE("AdjointJacobian::adjointJacobian Decomposed Rot gate, non "
     AdjointJacobian<double> adj;
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     {
-        const size_t num_qubits = 1;
         const size_t num_params = 3;
         const size_t num_obs = 1;
 
@@ -313,8 +308,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Decomposed Rot gate, non "
         for (const auto &theta : thetas) {
             std::vector<double> local_params{theta, std::pow(theta, 3),
                                              SQRT2<double>() * theta};
-            std::vector<std::vector<double>> jacobian(
-                num_obs, std::vector<double>(num_params, 0));
+            std::vector<double> jacobian(num_obs * num_params, 0);
 
             std::vector<std::complex<double>> cdata{INVSQRT2<double>(),
                                                     -INVSQRT2<double>()};
@@ -328,8 +322,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian Decomposed Rot gate, non "
 
             std::vector<size_t> tp{0, 1, 2};
             std::vector<ObsDatum<double>> obs_ls{obs};
-            JacobianData<double> tape{psi.getLength(), psi.getData(), obs_ls,
-                                      ops, tp};
+            JacobianData<double> tape{
+                num_params, psi.getLength(), psi.getData(), obs_ls, ops, tp};
 
             adj.adjointJacobianJD(jacobian, tape, true);
 
@@ -337,12 +331,9 @@ TEST_CASE("AdjointJacobian::adjointJacobian Decomposed Rot gate, non "
             CAPTURE(jacobian);
 
             // Computed with PennyLane using default.qubit
-            CHECK(expec_results[theta][0] ==
-                  Approx(jacobian[0][0]).margin(1e-7));
-            CHECK(expec_results[theta][1] ==
-                  Approx(jacobian[0][1]).margin(1e-7));
-            CHECK(expec_results[theta][2] ==
-                  Approx(jacobian[0][2]).margin(1e-7));
+            CHECK(expec_results[theta][0] == Approx(jacobian[0]).margin(1e-7));
+            CHECK(expec_results[theta][1] == Approx(jacobian[1]).margin(1e-7));
+            CHECK(expec_results[theta][2] == Approx(jacobian[2]).margin(1e-7));
         }
     }
 }
@@ -351,7 +342,6 @@ TEST_CASE("AdjointJacobian::adjointJacobian Mixed Ops, Obs and TParams",
     AdjointJacobian<double> adj;
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     {
-        const size_t num_qubits = 2;
         const std::vector<size_t> t_params{1, 2, 3};
         const size_t num_obs = 1;
 
@@ -359,8 +349,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Mixed Ops, Obs and TParams",
 
         std::vector<double> local_params{0.543, 0.54, 0.1,  0.5, 1.3,
                                          -2.3,  0.5,  -0.5, 0.5};
-        std::vector<std::vector<double>> jacobian(
-            num_obs, std::vector<double>(t_params.size(), 0));
+        std::vector<double> jacobian(num_obs * t_params.size(), 0);
 
         std::vector<std::complex<double>> cdata{ONE<double>(), ZERO<double>(),
                                                 ZERO<double>(), ZERO<double>()};
@@ -387,15 +376,16 @@ TEST_CASE("AdjointJacobian::adjointJacobian Mixed Ops, Obs and TParams",
              false, false, false});
 
         std::vector<ObsDatum<double>> obs_ls{obs};
-        JacobianData<double> tape{psi.getLength(), psi.getData(), obs_ls, ops,
-                                  t_params};
+        JacobianData<double> tape{
+            t_params.size(), psi.getLength(), psi.getData(), obs_ls, ops,
+            t_params};
 
         adj.adjointJacobianJD(jacobian, tape, true);
 
         std::vector<double> expected{-0.71429188, 0.04998561, -0.71904837};
         // Computed with PennyLane using default.qubit
-        CHECK(expected[0] == Approx(jacobian[0][0]));
-        CHECK(expected[1] == Approx(jacobian[0][1]));
-        CHECK(expected[2] == Approx(jacobian[0][2]));
+        CHECK(expected[0] == Approx(jacobian[0]));
+        CHECK(expected[1] == Approx(jacobian[1]));
+        CHECK(expected[2] == Approx(jacobian[2]));
     }
 }
