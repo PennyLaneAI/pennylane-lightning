@@ -89,7 +89,9 @@ class TestApply:
 
     from pennylane_lightning import LightningQubit as lq
 
-    @pytest.mark.skipif(not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system")
+    @pytest.mark.skipif(
+        not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
+    )
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_apply_operation_raise_type_error(self, qubit_device_1_wire):
         """Tests that applying an operation yields the expected output state for single wire
@@ -588,7 +590,7 @@ class TestSample:
 
         # s1 should only contain 1 and -1, which is guaranteed if
         # they square to 1
-        assert np.allclose(s1 ** 2, 1, atol=tol, rtol=0)
+        assert np.allclose(s1**2, 1, atol=tol, rtol=0)
 
 
 class TestLightningQubitIntegration:
@@ -714,7 +716,7 @@ class TestLightningQubitIntegration:
     def test_nonzero_shots(self, tol):
         """Test that the default qubit plugin provides correct result for high shot number"""
 
-        shots = 10 ** 4
+        shots = 10**4
         dev = qml.device("lightning.qubit", wires=1, shots=shots)
 
         p = 0.543
@@ -1265,13 +1267,13 @@ class TestTensorSample:
         p = dev.probability(wires=obs.wires)
 
         # s1 should only contain 1 and -1
-        assert np.allclose(s1 ** 2, 1, atol=tolerance, rtol=0)
+        assert np.allclose(s1**2, 1, atol=tolerance, rtol=0)
 
         mean = s1 @ p
         expected = np.sin(theta) * np.sin(phi) * np.sin(varphi)
         assert np.allclose(mean, expected, atol=tolerance, rtol=0)
 
-        var = (s1 ** 2) @ p - (s1 @ p).real ** 2
+        var = (s1**2) @ p - (s1 @ p).real ** 2
         expected = (
             8 * np.sin(theta) ** 2 * np.cos(2 * varphi) * np.sin(phi) ** 2
             - np.cos(2 * (theta - phi))
@@ -1307,13 +1309,13 @@ class TestTensorSample:
         p = dev.marginal_prob(dev.probability(), wires=obs.wires)
 
         # s1 should only contain 1 and -1
-        assert np.allclose(s1 ** 2, 1, atol=tol, rtol=0)
+        assert np.allclose(s1**2, 1, atol=tol, rtol=0)
 
         mean = s1 @ p
         expected = -(np.cos(varphi) * np.sin(phi) + np.sin(varphi) * np.cos(theta)) / np.sqrt(2)
         assert np.allclose(mean, expected, atol=tol, rtol=0)
 
-        var = (s1 ** 2) @ p - (s1 @ p).real ** 2
+        var = (s1**2) @ p - (s1 @ p).real ** 2
         expected = (
             3
             + np.cos(2 * phi) * np.cos(varphi) ** 2
