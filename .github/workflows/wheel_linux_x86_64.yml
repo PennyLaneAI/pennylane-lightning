@@ -65,9 +65,10 @@ jobs:
           path: ./wheelhouse/*.whl
 
       - name: Upload wheels to PyPI
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           packages_dir: ./wheelhouse/
           repository_url: https://test.pypi.org/legacy/
