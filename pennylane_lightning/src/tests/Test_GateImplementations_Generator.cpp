@@ -72,7 +72,6 @@ template <class PrecisionT, class ParamT, class GateImplementation,
           GeneratorOperation gntr_op, class RandomEngine>
 void testGeneratorForGate(RandomEngine &re, size_t num_qubits) {
     using ComplexPrecisionT = std::complex<PrecisionT>;
-    using TestHelper::Approx;
     constexpr auto I = IMAG<PrecisionT>();
 
     constexpr ParamT eps = 1e-4; // For finite difference
@@ -115,7 +114,7 @@ void testGeneratorForGate(RandomEngine &re, size_t num_qubits) {
 
         scaleVector(gate_der_st, static_cast<PrecisionT>(0.5) / eps);
 
-        REQUIRE_THAT(gntr_st, Approx(gate_der_st).margin(1e-3));
+        REQUIRE(gntr_st == PLApprox(gate_der_st).margin(1e-3));
     }
 }
 template <typename PrecisionT, typename ParamT, class GateImplementation,

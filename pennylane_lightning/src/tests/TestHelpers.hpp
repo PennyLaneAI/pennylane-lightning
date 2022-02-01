@@ -12,61 +12,61 @@
 
 #include <catch2/catch.hpp>
 
-namespace TestHelper {
-/**
- * @brief Custom catch matcher for std::vector<std::complex<T>>
- */
-template <typename T, typename AllocComp, typename AllocMatch>
-struct ComplexApproxMatcher
-    : Catch::MatcherBase<std::vector<std::complex<T>, AllocMatch>> {
+template<typename T>
+struct remove_complex {
+    using type = T;
+};
+template<typename T>
+struct remove_complex<std::complex<T>> {
+    using type = T;
+};
+template <typename T>
+using remove_complex_t = typename remove_complex<T>::type;
 
-    ComplexApproxMatcher(
-        const std::vector<std::complex<T>, AllocComp> &comparator)
-        : m_comparator(comparator) {}
+template<class T, class Alloc>
+struct PLApprox {
+    const std::vector<T, Alloc>& comp_;
 
-    bool
-    match(std::vector<std::complex<T>, AllocMatch> const &v) const override {
-        if (m_comparator.size() != v.size()) {
+    explicit PLApprox(const std::vector<T, Alloc>& comp)
+        : comp_{comp} {
+    }
+
+    remove_complex_t<T> margin_{};
+    remove_complex_t<T> epsilon_ = std::numeric_limits<float>::epsilon()*100;
+    
+    template <class AllocA>
+    bool compare(const std::vector<T, AllocA>& lhs) const {
+        if (lhs.size() != comp_.size()) {
             return false;
         }
-        for (std::size_t i = 0; i < v.size(); ++i) {
-            if (std::real(m_comparator[i]) != approx(std::real(v[i])) ||
-                std::imag(m_comparator[i]) != approx(std::imag(v[i]))) {
+
+        for (size_t i = 0; i < lhs.size(); i++) {
+            if (lhs[i].real() != Approx(comp_[i].real()).epsilon(epsilon_).margin(margin_) ||
+                lhs[i].imag() != Approx(comp_[i].imag()).epsilon(epsilon_).margin(margin_)) {
                 return false;
             }
         }
         return true;
     }
-    std::string describe() const override {
-        return "is approx: " + ::Catch::Detail::stringify(m_comparator);
-    }
-    template <typename = std::enable_if_t<std::is_constructible_v<double, T>>>
-    ComplexApproxMatcher &epsilon(const T &newEpsilon) {
-        approx.epsilon(newEpsilon);
+    PLApprox& epsilon(remove_complex_t<T> eps) {
+        epsilon_ = eps;
         return *this;
     }
-    template <typename = std::enable_if_t<std::is_constructible_v<double, T>>>
-    ComplexApproxMatcher &margin(const T &newMargin) {
-        approx.margin(newMargin);
+    PLApprox& margin(remove_complex_t<T> m) {
+        margin_ = m;
         return *this;
     }
-    template <typename = std::enable_if_t<std::is_constructible_v<double, T>>>
-    ComplexApproxMatcher &scale(const T &newScale) {
-        approx.scale(newScale);
-        return *this;
-    }
-
-    const std::vector<std::complex<T>, AllocComp> &m_comparator;
-    mutable Catch::Detail::Approx approx = Catch::Detail::Approx::custom();
 };
-
-template <typename T, typename AllocComp = std::allocator<std::complex<T>>,
-          typename AllocMatch = AllocComp>
-ComplexApproxMatcher<T, AllocComp, AllocMatch>
-Approx(std::vector<std::complex<T>, AllocComp> const &comparator) {
-    return ComplexApproxMatcher<T, AllocComp, AllocMatch>{comparator};
+template<class T, class AllocA, class AllocB>
+bool operator==(const std::vector<T, AllocA>& lhs,
+        const PLApprox<T, AllocB>& rhs) {
+    return rhs.compare(lhs);
 }
-} // namespace TestHelper
+template<class T, class AllocA, class AllocB>
+bool operator!=(const std::vector<T, AllocA>& lhs,
+        const PLApprox<T, AllocB>& rhs) {
+    return !rhs.compare(lhs);
+}
 
 /**
  * @brief Utility function to compare complex statevector data.
@@ -77,22 +77,13 @@ Approx(std::vector<std::complex<T>, AllocComp> const &comparator) {
  * @return true Data are approximately equal.
  * @return false Data are not approximately equal.
  */
-template <class Data_t>
+template <class Data_t, class AllocA, class AllocB>
 inline bool isApproxEqual(
-    const std::vector<Data_t> &data1, const std::vector<Data_t> &data2,
+    const std::vector<Data_t, AllocA> &data1, 
+    const std::vector<Data_t, AllocB> &data2,
     const typename Data_t::value_type eps =
         std::numeric_limits<typename Data_t::value_type>::epsilon() * 100) {
-    if (data1.size() != data2.size()) {
-        return false;
-    }
-
-    for (size_t i = 0; i < data1.size(); i++) {
-        if (data1[i].real() != Approx(data2[i].real()).epsilon(eps) ||
-            data1[i].imag() != Approx(data2[i].imag()).epsilon(eps)) {
-            return false;
-        }
-    }
-    return true;
+    return data1 == PLApprox(data2);
 }
 
 /**

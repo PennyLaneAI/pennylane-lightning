@@ -102,7 +102,7 @@ void testApplyPauliY() {
 
         GateImplementation::applyPauliY(st.data(), num_qubits, {index}, false);
 
-        CHECK(isApproxEqual(st, expected_results[index]));
+        CHECK(st == PLApprox(expected_results[index]));
     }
 }
 PENNYLANE_RUN_TEST(PauliY);
@@ -125,7 +125,7 @@ void testApplyPauliZ() {
         auto st = createPlusState<PrecisionT>(num_qubits);
         GateImplementation::applyPauliZ(st.data(), num_qubits, {index}, false);
 
-        CHECK(isApproxEqual(st, expected_results[index]));
+        CHECK(st == PLApprox(expected_results[index]));
     }
 }
 PENNYLANE_RUN_TEST(PauliZ);
@@ -171,7 +171,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyS() {
 
         GateImplementation::applyS(st.data(), num_qubits, {index}, false);
 
-        CHECK(isApproxEqual(st, expected_results[index]));
+        CHECK(st == PLApprox(expected_results[index]));
     }
 }
 PENNYLANE_RUN_TEST(S);
@@ -194,7 +194,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyT() {
 
         GateImplementation::applyT(st.data(), num_qubits, {index}, false);
 
-        CHECK(isApproxEqual(st, expected_results[index]));
+        CHECK(st == PLApprox(expected_results[index]));
     }
 }
 PENNYLANE_RUN_TEST(T);

@@ -25,7 +25,6 @@ using namespace Pennylane;
 template <typename PrecisionT, typename ParamT, class GateImplementation,
           GateOperation gate_op, class RandomEngine>
 void testInverseKernelGate(RandomEngine &re, size_t num_qubits) {
-    using TestHelper::Approx;
 
     if constexpr (gate_op != GateOperation::Matrix) {
         constexpr auto gate_name = static_lookup<gate_op>(Constant::gate_names);
@@ -45,7 +44,7 @@ void testInverseKernelGate(RandomEngine &re, size_t num_qubits) {
             callGateOps(func_ptr, st.data(), num_qubits, wires, false, params);
             callGateOps(func_ptr, st.data(), num_qubits, wires, true, params);
 
-            REQUIRE_THAT(st, Approx(ini_st).margin(1e-7));
+            REQUIRE(st == PLApprox(ini_st).margin(1e-7));
         }
     }
 }

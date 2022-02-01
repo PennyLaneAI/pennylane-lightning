@@ -107,7 +107,7 @@ void testApplyPhaseShift() {
         GateImplementation::applyPhaseShift(st.data(), num_qubits, {index},
                                             false, {angles[index]});
 
-        CHECK(isApproxEqual(st, expected_results[index]));
+        CHECK(st == PLApprox(expected_results[index]));
     }
 }
 PENNYLANE_RUN_TEST(PhaseShift);
@@ -132,7 +132,7 @@ void testApplyRX() {
         GateImplementation::applyRX(st.data(), num_qubits, {0}, false,
                                     {angles[index]});
 
-        CHECK(isApproxEqual(st, expected_results[index], 1e-7));
+        CHECK(st == PLApprox(expected_results[index]).epsilon(1e-7));
     }
 }
 PENNYLANE_RUN_TEST(RX);
@@ -172,7 +172,7 @@ void testApplyRY() {
             auto st = init_state;
             GateImplementation::applyRY(st.data(), num_qubits, {0}, false,
                                         {angles[index]});
-            CHECK(isApproxEqual(st, expected_results[index], 1e-5));
+            CHECK(st == PLApprox(expected_results[index]).epsilon(1e-5));
         }
     }
 }
@@ -220,7 +220,7 @@ void testApplyRZ() {
         GateImplementation::applyRZ(st.data(), num_qubits, {index}, false,
                                     {angles[index]});
 
-        CHECK(isApproxEqual(st, expected_results[index]));
+        CHECK(st == PLApprox(expected_results[index]));
     }
 }
 PENNYLANE_RUN_TEST(RZ);
@@ -254,7 +254,7 @@ void testApplyRot() {
                                      angles[index][0], angles[index][1],
                                      angles[index][2]);
 
-        CHECK(isApproxEqual(st, expected_results[index]));
+        CHECK(st == PLApprox(expected_results[index]));
     }
 }
 PENNYLANE_RUN_TEST(Rot);
@@ -267,7 +267,6 @@ void testApplyIsingXX() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     using std::cos;
     using std::sin;
-    using TestHelper::Approx;
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingXX0,1 |000> -> a|000> + b|110> - "
@@ -290,7 +289,7 @@ void testApplyIsingXX() {
         auto st = ini_st;
         GateImplementation::applyIsingXX(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
+        REQUIRE(st == PLApprox(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingXX0,1 |100> -> a|100> + b|010> - "
@@ -313,7 +312,7 @@ void testApplyIsingXX() {
         auto st = ini_st;
         GateImplementation::applyIsingXX(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
+        REQUIRE(st == PLApprox(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingXX0,1 |010> -> a|010> + b|100> - "
@@ -336,7 +335,7 @@ void testApplyIsingXX() {
         auto st = ini_st;
         GateImplementation::applyIsingXX(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
+        REQUIRE(st == PLApprox(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingXX0,1 |110> -> a|110> + b|000> - "
@@ -359,7 +358,7 @@ void testApplyIsingXX() {
         auto st = ini_st;
         GateImplementation::applyIsingXX(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
+        REQUIRE(st == PLApprox(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingXX0,2 - "
@@ -391,7 +390,7 @@ void testApplyIsingXX() {
         auto st = ini_st;
         GateImplementation::applyIsingXX(st.data(), num_qubits, wires, false,
                                          angle);
-        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+        REQUIRE(st == PLApprox(expected).margin(1e-5));
     }
 }
 PENNYLANE_RUN_TEST(IsingXX);
@@ -401,7 +400,6 @@ void testApplyIsingYY() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     using std::cos;
     using std::sin;
-    using TestHelper::Approx;
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingYY0,1 |000> -> a|000> + b|110> - "
@@ -424,7 +422,7 @@ void testApplyIsingYY() {
         auto st = ini_st;
         GateImplementation::applyIsingYY(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
+        REQUIRE(st == PLApprox(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingYY0,1 |100> -> a|100> + b|010> - "
@@ -447,7 +445,7 @@ void testApplyIsingYY() {
         auto st = ini_st;
         GateImplementation::applyIsingYY(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
+        REQUIRE(st == PLApprox(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingYY0,1 |010> -> a|010> + b|100> - "
@@ -470,7 +468,7 @@ void testApplyIsingYY() {
         auto st = ini_st;
         GateImplementation::applyIsingYY(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
+        REQUIRE(st == PLApprox(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingYY0,1 |110> -> a|110> + b|000> - "
@@ -493,7 +491,7 @@ void testApplyIsingYY() {
         auto st = ini_st;
         GateImplementation::applyIsingYY(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
+        REQUIRE(st == PLApprox(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingYY0,1 - "
@@ -544,7 +542,7 @@ void testApplyIsingYY() {
         auto st = ini_st;
         GateImplementation::applyIsingYY(st.data(), num_qubits, wires, false,
                                          angle);
-        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+        REQUIRE(st == PLApprox(expected).margin(1e-5));
     }
 }
 PENNYLANE_RUN_TEST(IsingYY);
@@ -554,7 +552,6 @@ void testApplyIsingZZ() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     using std::cos;
     using std::sin;
-    using TestHelper::Approx;
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingZZ0,1 |000> -> |000> - "
@@ -577,7 +574,7 @@ void testApplyIsingZZ() {
         auto st = ini_st;
         GateImplementation::applyIsingZZ(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
+        REQUIRE(st == PLApprox(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingZZ0,1 |100> -> |100> - "
@@ -600,7 +597,7 @@ void testApplyIsingZZ() {
         auto st = ini_st;
         GateImplementation::applyIsingZZ(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
+        REQUIRE(st == PLApprox(expected_results).margin(1e-7));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -624,7 +621,7 @@ void testApplyIsingZZ() {
         auto st = ini_st;
         GateImplementation::applyIsingZZ(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
+        REQUIRE(st == PLApprox(expected_results).margin(1e-7));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -648,7 +645,7 @@ void testApplyIsingZZ() {
         auto st = ini_st;
         GateImplementation::applyIsingZZ(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
+        REQUIRE(st == PLApprox(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingZZ0,1 - "
@@ -699,7 +696,7 @@ void testApplyIsingZZ() {
         auto st = ini_st;
         GateImplementation::applyIsingZZ(st.data(), num_qubits, wires, false,
                                          angle);
-        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+        REQUIRE(st == PLApprox(expected).margin(1e-5));
     }
 }
 PENNYLANE_RUN_TEST(IsingZZ);
@@ -737,14 +734,13 @@ void testApplyControlledPhaseShift() {
     GateImplementation::applyControlledPhaseShift(st.data(), num_qubits, {0, 1},
                                                   false, angles[0]);
     CAPTURE(st);
-    CHECK(isApproxEqual(st, expected_results[0]));
+    CHECK(st == PLApprox(expected_results[0]));
 }
 PENNYLANE_RUN_TEST(ControlledPhaseShift);
 
 template <typename PrecisionT, typename ParamT, class GateImplementation>
 void testApplyCRX() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
-    using TestHelper::Approx;
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CRX0,1 - " << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 4;
@@ -793,7 +789,7 @@ void testApplyCRX() {
         auto st = ini_st;
         GateImplementation::applyCRX(st.data(), num_qubits, wires, false,
                                      angle);
-        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+        REQUIRE(st == PLApprox(expected).margin(1e-5));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CRX0,2 - " << PrecisionToName<PrecisionT>::value) {
@@ -843,7 +839,7 @@ void testApplyCRX() {
         auto st = ini_st;
         GateImplementation::applyCRX(st.data(), num_qubits, wires, false,
                                      angle);
-        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+        REQUIRE(st == PLApprox(expected).margin(1e-5));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CRX1,3 - " << PrecisionToName<PrecisionT>::value) {
@@ -893,7 +889,7 @@ void testApplyCRX() {
         auto st = ini_st;
         GateImplementation::applyCRX(st.data(), num_qubits, wires, false,
                                      angle);
-        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+        REQUIRE(st == PLApprox(expected).margin(1e-5));
     }
 }
 PENNYLANE_RUN_TEST(CRX);
@@ -901,7 +897,6 @@ PENNYLANE_RUN_TEST(CRX);
 template <typename PrecisionT, typename ParamT, class GateImplementation>
 void testApplyCRY() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
-    using TestHelper::Approx;
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CRY0,1 - " << PrecisionToName<PrecisionT>::value) {
@@ -951,7 +946,7 @@ void testApplyCRY() {
         auto st = ini_st;
         GateImplementation::applyCRY(st.data(), num_qubits, wires, false,
                                      angle);
-        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+        REQUIRE(st == PLApprox(expected).margin(1e-5));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -1002,7 +997,7 @@ void testApplyCRY() {
         auto st = ini_st;
         GateImplementation::applyCRY(st.data(), num_qubits, wires, false,
                                      angle);
-        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+        REQUIRE(st == PLApprox(expected).margin(1e-5));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -1053,7 +1048,7 @@ void testApplyCRY() {
         auto st = ini_st;
         GateImplementation::applyCRY(st.data(), num_qubits, wires, false,
                                      angle);
-        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+        REQUIRE(st == PLApprox(expected).margin(1e-5));
     }
 }
 
@@ -1062,7 +1057,6 @@ PENNYLANE_RUN_TEST(CRY);
 template <typename PrecisionT, typename ParamT, class GateImplementation>
 void testApplyCRZ() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
-    using TestHelper::Approx;
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CRZ0,1 - " << PrecisionToName<PrecisionT>::value) {
@@ -1112,7 +1106,7 @@ void testApplyCRZ() {
         auto st = ini_st;
         GateImplementation::applyCRZ(st.data(), num_qubits, wires, false,
                                      angle);
-        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+        REQUIRE(st == PLApprox(expected).margin(1e-5));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -1163,7 +1157,7 @@ void testApplyCRZ() {
         auto st = ini_st;
         GateImplementation::applyCRZ(st.data(), num_qubits, wires, false,
                                      angle);
-        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+        REQUIRE(st == PLApprox(expected).margin(1e-5));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -1214,7 +1208,7 @@ void testApplyCRZ() {
         auto st = ini_st;
         GateImplementation::applyCRZ(st.data(), num_qubits, wires, false,
                                      angle);
-        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+        REQUIRE(st == PLApprox(expected).margin(1e-5));
     }
 }
 PENNYLANE_RUN_TEST(CRZ);
@@ -1241,7 +1235,7 @@ void testApplyCRot() {
         GateImplementation::applyCRot(st.data(), num_qubits, {0, 1}, false,
                                       angles[0], angles[1], angles[2]);
 
-        CHECK(isApproxEqual(st, ini_st));
+        CHECK(st == PLApprox(ini_st));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CRot0,1 |100> -> |1>(a|0>+b|1>)|0> - "
@@ -1252,12 +1246,11 @@ void testApplyCRot() {
         GateImplementation::applyCRot(st.data(), num_qubits, {0, 1}, false,
                                       angles[0], angles[1], angles[2]);
 
-        CHECK(isApproxEqual(st, expected_results));
+        CHECK(st == PLApprox(expected_results));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CRot0,1 - " << PrecisionToName<PrecisionT>::value) {
-        using TestHelper::Approx;
         const size_t num_qubits = 4;
 
         std::vector<ComplexPrecisionT> ini_st{
@@ -1306,7 +1299,7 @@ void testApplyCRot() {
         auto st = ini_st;
         GateImplementation::applyCRot(st.data(), num_qubits, wires, false, phi,
                                       theta, omega);
-        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
+        REQUIRE(st == PLApprox(expected).margin(1e-5));
     }
 }
 PENNYLANE_RUN_TEST(CRot);
@@ -1317,7 +1310,6 @@ PENNYLANE_RUN_TEST(CRot);
 template <typename PrecisionT, typename ParamT, class GateImplementation>
 void testApplyMultiRZ() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
-    using TestHelper::Approx;
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", MultiRZ0 |++++> - "
@@ -1340,7 +1332,7 @@ void testApplyMultiRZ() {
         GateImplementation::applyMultiRZ(st.data(), num_qubits, {0}, false,
                                          angle);
 
-        REQUIRE_THAT(st, Approx(expected).margin(1e-7));
+        REQUIRE(st == PLApprox(expected).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", MultiRZ0 |++++> - "
@@ -1363,7 +1355,7 @@ void testApplyMultiRZ() {
         GateImplementation::applyMultiRZ(st.data(), num_qubits, {0}, false,
                                          angle);
 
-        REQUIRE_THAT(st, Approx(expected).margin(1e-7));
+        REQUIRE(st == PLApprox(expected).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", MultiRZ01 |++++> - "
@@ -1386,7 +1378,7 @@ void testApplyMultiRZ() {
         GateImplementation::applyMultiRZ(st.data(), num_qubits, {0, 1}, false,
                                          angle);
 
-        REQUIRE_THAT(st, Approx(expected).margin(1e-7));
+        REQUIRE(st == PLApprox(expected).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", MultiRZ012 |++++> - "
@@ -1409,7 +1401,7 @@ void testApplyMultiRZ() {
         GateImplementation::applyMultiRZ(st.data(), num_qubits, {0, 1, 2},
                                          false, angle);
 
-        REQUIRE_THAT(st, Approx(expected).margin(1e-7));
+        REQUIRE(st == PLApprox(expected).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", MultiRZ0123 |++++> - "
@@ -1432,7 +1424,7 @@ void testApplyMultiRZ() {
         GateImplementation::applyMultiRZ(st.data(), num_qubits, {0, 1, 2, 3},
                                          false, angle);
 
-        REQUIRE_THAT(st, Approx(expected).margin(1e-7));
+        REQUIRE(st == PLApprox(expected).margin(1e-7));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -1482,7 +1474,7 @@ void testApplyMultiRZ() {
 
         GateImplementation::applyMultiRZ(st.data(), num_qubits, wires, false,
                                          angle);
-        REQUIRE_THAT(st, Approx(expected).margin(1e-7));
+        REQUIRE(st == PLApprox(expected).margin(1e-7));
     }
 }
 PENNYLANE_RUN_TEST(MultiRZ);

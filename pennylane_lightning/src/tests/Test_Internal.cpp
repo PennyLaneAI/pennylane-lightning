@@ -14,7 +14,6 @@ using namespace Pennylane;
 TEMPLATE_TEST_CASE("Approx", "[Test_Internal]", float, double) {
     using PrecisionT = TestType;
     using ComplexPrecisionT = std::complex<PrecisionT>;
-    using TestHelper::Approx;
 
     SECTION("vector{1.0, 1.0*I} approx vector{1.0001, 0.9999*I} with margin "
             "0.00015") {
@@ -26,7 +25,7 @@ TEMPLATE_TEST_CASE("Approx", "[Test_Internal]", float, double) {
             ComplexPrecisionT{1.0001, 0.0},
             ComplexPrecisionT{0.0, 0.9999},
         };
-        REQUIRE_THAT(test1, Approx(test2).margin(0.00015));
+        REQUIRE(test1 == PLApprox(test2).margin(0.00015));
     }
     SECTION("vector{1.0, 1.0*I} does not approx vector{1.0002, 0.9998*I} with "
             "margin 0.00015") {
@@ -38,7 +37,7 @@ TEMPLATE_TEST_CASE("Approx", "[Test_Internal]", float, double) {
             ComplexPrecisionT{1.0002, 0.0},
             ComplexPrecisionT{0.0, 0.9998},
         };
-        REQUIRE_THAT(test1, !Approx(test2).margin(0.00015));
+        REQUIRE(test1 != PLApprox(test2).margin(0.00015));
     }
     SECTION("vector{1.0, 1.0*I} does not approx vector{1.0I, 1.0} with margin "
             "0.00015") {
@@ -50,14 +49,13 @@ TEMPLATE_TEST_CASE("Approx", "[Test_Internal]", float, double) {
             ComplexPrecisionT{0.0, 1.0},
             ComplexPrecisionT{1.0, 0.0},
         };
-        REQUIRE_THAT(test1, !Approx(test2).margin(0.00015));
+        REQUIRE(test1 != PLApprox(test2).margin(0.00015));
     }
 }
 
 TEMPLATE_TEST_CASE("createProductState", "[Test_Internal]", float, double) {
     using PrecisionT = TestType;
     using Pennylane::GateImplementationsPI;
-    using TestHelper::Approx;
 
     SECTION("createProductState(\"+-0\") == |+-0> ") {
         const auto st = createProductState<PrecisionT>("+-0");
@@ -68,7 +66,7 @@ TEMPLATE_TEST_CASE("createProductState", "[Test_Internal]", float, double) {
         GateImplementationsPI::applyPauliX(expected.data(), 3, {1}, false);
         GateImplementationsPI::applyHadamard(expected.data(), 3, {1}, false);
 
-        REQUIRE_THAT(st, Approx(expected).margin(1e-7));
+        REQUIRE(st == PLApprox(expected).margin(1e-7));
     }
     SECTION("createProductState(\"+-0\") == |+-1> ") {
         const auto st = createProductState<PrecisionT>("+-0");
@@ -81,7 +79,7 @@ TEMPLATE_TEST_CASE("createProductState", "[Test_Internal]", float, double) {
 
         GateImplementationsPI::applyPauliX(expected.data(), 3, {2}, false);
 
-        REQUIRE_THAT(st, !Approx(expected).margin(1e-7));
+        REQUIRE(st != PLApprox(expected).margin(1e-7));
     }
 }
 
@@ -91,7 +89,6 @@ TEMPLATE_TEST_CASE("createProductState", "[Test_Internal]", float, double) {
 TEMPLATE_TEST_CASE("randomUnitary", "[Test_Internal]", float, double) {
     using PrecisionT = TestType;
     using ComplexPrecisionT = std::complex<PrecisionT>;
-    using TestHelper::Approx;
 
     std::mt19937 re{1337};
 
@@ -116,6 +113,6 @@ TEMPLATE_TEST_CASE("randomUnitary", "[Test_Internal]", float, double) {
             identity[i * dim + i] = std::complex<PrecisionT>{1.0, 0.0};
         }
 
-        REQUIRE_THAT(mat, Approx(identity).margin(1e-5));
+        REQUIRE(mat == PLApprox(identity).margin(1e-5));
     }
 }
