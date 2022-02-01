@@ -34,7 +34,7 @@ StateVectorManaged<double> Initializing_StateVector() {
     double gamma = 0.2;
     Measured_StateVector.applyOperations(
         {"RX", "RY", "RX", "RY", "RX", "RY"}, {{0}, {0}, {1}, {1}, {2}, {2}},
-        {{false}, {false}, {false}, {false}, {false}, {false}},
+        {false, false, false, false, false, false},
         {{alpha}, {alpha}, {beta}, {beta}, {gamma}, {gamma}});
 
     return Measured_StateVector;

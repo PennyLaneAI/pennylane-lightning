@@ -7,6 +7,9 @@
 * Add C++ only benchmark for a given list of gates.
 [(#199)](https://github.com/PennyLaneAI/pennylane-lightning/pull/199)
 
+* Add bindings to C++ expval, var, probs.
+[(#214)](https://github.com/PennyLaneAI/pennylane-lightning/pull/214)
+
 ### Breaking changes
 
 ### Improvements
@@ -30,11 +33,14 @@
 * Fix failed tests on Windows.
 [(#218)](https://github.com/PennyLaneAI/pennylane-lightning/pull/218)
 
+* Update clang-format version.
+[(#219)](https://github.com/PennyLaneAI/pennylane-lightning/pull/219)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Chae-Yeun Park, Lee James O'Riordan
+Ali Asadi, Amintor Dusko, Chae-Yeun Park, Lee James O'Riordan
 
 ---
 
