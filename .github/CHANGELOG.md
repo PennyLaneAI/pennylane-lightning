@@ -77,7 +77,7 @@ Lee J. O'Riordan
 ### New features since last release
 
 * Add wheel-builder support for Python 3.10.
-[(#186)](https://github.com/PennyLaneAI/pennylane-lightning/pull/186)
+  [(#186)](https://github.com/PennyLaneAI/pennylane-lightning/pull/186)
 
 * Add VJP support to PL-Lightning.
 [(#181)](https://github.com/PennyLaneAI/pennylane-lightning/pull/181)
