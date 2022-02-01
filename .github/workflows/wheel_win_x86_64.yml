@@ -80,7 +80,12 @@ jobs:
     steps:
       - uses: actions/download-artifact@v2
         with:
-          path: ./dist
+          path: /dist
+
+      - name: Unzip artifact
+        run: |
+          unzip /dist/*.zip
+          rm /dist/*.zip
 
       - name: Upload wheels to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
