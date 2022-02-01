@@ -617,7 +617,7 @@ class LightningQubit(DefaultQubit):
             return super().var(observable, shot_range=shot_range, bin_size=bin_size)
 
         if self.shots is not None:
-            # estimate the expectation value
+            # estimate the var
             samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
             return np.squeeze(np.var(samples, axis=0))
 
