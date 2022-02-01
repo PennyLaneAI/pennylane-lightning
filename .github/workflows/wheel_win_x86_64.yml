@@ -78,17 +78,16 @@ jobs:
     needs: win-wheels
     runs-on: ubuntu-latest
     steps:
-      - name: Unzip artifact
-        run: mkdir ./dist
+      - name: Create directory
+        run: mkdir -p /github/workspace/dist
 
       - uses: actions/download-artifact@v2
         with:
-          path: ./dist
+          path: /github/workspace/dist
 
       - name: Upload wheels to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          packages_dir: ./dist/
           repository_url: https://test.pypi.org/legacy/
