@@ -53,8 +53,24 @@ class TestProbs:
     def dev(self):
         return qml.device("lightning.qubit", wires=2)
 
+    def test_probs_dtype64(self, dev):
+        """Test if probs changes the state dtype"""
+        dev._state = np.array([1, 0]).astype(np.complex64)
+        p = dev.probability(wires=[0, 1])
+
+        assert dev._state.dtype == np.complex64
+        assert np.allclose(p, [1, 1, 0, 0])
+
+    def test_probs_dtype_error(self, dev):
+        """Test if probs raise error with complex256"""
+        dev._state = np.array([1, 0]).astype(np.complex256)
+
+        with pytest.raises(TypeError, match="Unsupported complex Type:"):
+            dev.probability(wires=[0, 1])
+
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_probs_H(self, tol, dev, C):
+        """Test probs with Hadamard"""
         dev._state = dev._asarray(dev._state, C)
 
         @qml.qnode(dev)
@@ -77,6 +93,7 @@ class TestProbs:
     )
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_probs_tape_wire0(self, cases, tol, dev, C):
+        """Test probs with a circuit on wires=[0]"""
         dev._state = dev._asarray(dev._state, C)
 
         x, y, z = [0.5, 0.3, -0.7]
@@ -88,7 +105,6 @@ class TestProbs:
             qml.RY(-0.2, wires=[0])
             return qml.probs(wires=cases[0])
 
-        print(circuit())
         assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
     @pytest.mark.parametrize(
@@ -136,6 +152,7 @@ class TestProbs:
     )
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_probs_tape_wire01(self, cases, tol, dev, C):
+        """Test probs with a circuit on wires=[0,1]"""
         dev._state = dev._asarray(dev._state, C)
 
         @qml.qnode(dev)
@@ -153,6 +170,21 @@ class TestExpval:
     @pytest.fixture
     def dev(self):
         return qml.device("lightning.qubit", wires=2)
+
+    def test_expval_dtype64(self, dev):
+        """Test if expval changes the state dtype"""
+        dev._state = np.array([1, 0]).astype(np.complex64)
+        e = dev.expval(qml.PauliX(0))
+
+        assert dev._state.dtype == np.complex64
+        assert np.allclose(e, 0.0)
+
+    def test_expval_dtype_error(self, dev):
+        """Test if expval raise error with complex256"""
+        dev._state = np.array([1, 0]).astype(np.complex256)
+
+        with pytest.raises(TypeError, match="Unsupported complex Type:"):
+            dev.expval(qml.PauliX(0))
 
     @pytest.mark.parametrize(
         "cases",
@@ -233,7 +265,7 @@ class TestExpval:
             return qml.expval(qml.CNOT(wires=[0, 1]))
 
         with pytest.raises(qml.QuantumFunctionError, match="CNOT is not an observable"):
-            res = circuit()
+            circuit()
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_observable_return_type_is_expectation(self, C, dev):
@@ -256,6 +288,21 @@ class TestVar:
     def dev(self):
         return qml.device("lightning.qubit", wires=2)
 
+    def test_var_dtype64(self, dev):
+        """Test if var changes the state dtype"""
+        dev._state = np.array([1, 0]).astype(np.complex64)
+        v = dev.var(qml.PauliX(0))
+
+        assert dev._state.dtype == np.complex64
+        assert np.allclose(v, 1.0)
+
+    def test_expval_dtype_error(self, dev):
+        """Test if var raise error with complex256"""
+        dev._state = np.array([1, 0]).astype(np.complex256)
+
+        with pytest.raises(TypeError, match="Unsupported complex Type:"):
+            dev.var(qml.PauliX(0))
+
     @pytest.mark.parametrize(
         "cases",
         [
@@ -269,6 +316,7 @@ class TestVar:
     )
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_var_qml_tape_wire0(self, cases, tol, dev, C):
+        """Test var with a circuit on wires=[0]"""
         dev._state = dev._asarray(dev._state, C)
 
         x, y, z = [0.5, 0.3, -0.7]
@@ -295,6 +343,7 @@ class TestVar:
     )
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_var_qml_tape_wire01(self, cases, tol, dev, C):
+        """Test var with a circuit on wires=[0,1]"""
         dev._state = dev._asarray(dev._state, C)
 
         @qml.qnode(dev)
