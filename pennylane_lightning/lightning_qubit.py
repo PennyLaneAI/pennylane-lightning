@@ -15,7 +15,6 @@ r"""
 This module contains the :class:`~.LightningQubit` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
-from http.client import INSUFFICIENT_STORAGE
 from typing import List
 from warnings import warn
 
@@ -32,8 +31,6 @@ import pennylane as qml
 from pennylane.devices import DefaultQubit
 from pennylane.operation import Expectation
 from pennylane.wires import Wires
-
-from scipy.sparse import coo_matrix
 
 from ._version import __version__
 
@@ -522,8 +519,8 @@ class LightningQubit(DefaultQubit):
             return self.estimate_probability(wires=wires, shot_range=shot_range, bin_size=bin_size)
 
         wires = wires or self.wires
-        # convert to a wires object
         wires = Wires(wires)
+
         # translate to wire labels used by device
         device_wires = self.map_wires(wires)
 
@@ -561,13 +558,13 @@ class LightningQubit(DefaultQubit):
         Returns:
             Expectation value of the observable
         """
-        if isinstance(observable.name, List):
-            return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
-
-        if observable.name in ["Projector", "Identity", "Hermitian"] or observable.name in (
+        if isinstance(observable.name, List) or observable.name in [
+            "Projector",
+            "Identity",
+            "Hermitian",
             "Hamiltonian",
             "SparseHamiltonian",
-        ):
+        ]:
             return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
         if self.shots is not None:

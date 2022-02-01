@@ -16,15 +16,20 @@ Unit tests for Measures in lightning.qubit.
 """
 import numpy as np
 import pennylane as qml
-from pennylane.queuing import AnnotatedQueue
 from pennylane.measure import (
-    Probability,
     Variance,
     Expectation,
-    MeasurementProcess,
 )
 
 import pytest
+
+try:
+    from pennylane_lightning.lightning_qubit_ops import (
+        MeasuresC64,
+        MeasuresC128,
+    )
+except (ImportError, ModuleNotFoundError):
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
 def test_no_measure(tol):
