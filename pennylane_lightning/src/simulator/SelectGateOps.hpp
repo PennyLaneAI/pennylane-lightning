@@ -336,7 +336,7 @@ std::vector<GateOperations> implementedGatesForKernelIter(KernelType kernel) {
 template <class fp_t>
 auto implementedGatesForKernel(KernelType kernel)
     -> std::vector<GateOperations> {
-    return Pennylane::Internal::implementedGatesForKernelIter<fp_t, 0>(kernel);
+    return Internal::implementedGatesForKernelIter<fp_t, 0>(kernel);
 }
 
 /********************************************************************

@@ -61,7 +61,7 @@ template <typename fp_t> class DynamicDispatcher {
     std::unordered_map<std::string, KernelType> kernel_map_;
 
     std::unordered_map<std::pair<std::string, KernelType>, Func,
-                       Pennylane::Internal::PairHash>
+                       Internal::PairHash>
         gates_;
 
     DynamicDispatcher() {
@@ -72,7 +72,7 @@ template <typename fp_t> class DynamicDispatcher {
             KernelType kernel =
                 lookup(Constant::default_kernel_for_ops, gate_op);
             auto implemented_gates =
-                Pennylane::Internal::implementedGatesForKernel<fp_t>(kernel);
+                Internal::implementedGatesForKernel<fp_t>(kernel);
             if (std::find(std::cbegin(implemented_gates),
                           std::cend(implemented_gates),
                           gate_op) == std::cend(implemented_gates)) {
