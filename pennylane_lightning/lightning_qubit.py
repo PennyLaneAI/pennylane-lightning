@@ -15,7 +15,8 @@ r"""
 This module contains the :class:`~.LightningQubit` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
-from ast import operator
+from http.client import INSUFFICIENT_STORAGE
+from typing import List
 from warnings import warn
 
 import numpy as np
@@ -31,6 +32,8 @@ import pennylane as qml
 from pennylane.devices import DefaultQubit
 from pennylane.operation import Expectation
 from pennylane.wires import Wires
+
+from scipy.sparse import coo_matrix
 
 from ._version import __version__
 
@@ -518,6 +521,9 @@ class LightningQubit(DefaultQubit):
         if self.shots is not None:
             return self.estimate_probability(wires=wires, shot_range=shot_range, bin_size=bin_size)
 
+        if wires is not None and not all(isinstance(w, int) and w > -1 for w in wires):
+            return super().probability(wires=wires, shot_range=shot_range, bin_size=bin_size)
+
         wires = wires or self.wires
         # convert to a wires object
         wires = Wires(wires)
@@ -534,7 +540,7 @@ class LightningQubit(DefaultQubit):
             raise TypeError(f"Unsupported complex Type: {dtype}")
 
         # Initialization of state
-        ket = np.ravel(self._pre_rotated_state)
+        ket = np.ravel(self._state)
 
         if use_csingle:
             ket = ket.astype(np.complex64)
@@ -558,6 +564,11 @@ class LightningQubit(DefaultQubit):
         Returns:
             Expectation value of the observable
         """
+        if isinstance(observable.name, List) or not all(
+            isinstance(w, int) and w > -1 for w in observable.wires
+        ):
+            return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
+
         if observable.name == "Projector":
             # branch specifically to handle the projector observable
             idx = int("".join(str(i) for i in observable.parameters[0]), 2)
@@ -566,10 +577,67 @@ class LightningQubit(DefaultQubit):
             )
             return probs[idx]
 
+        if observable.name == "Identity":
+            return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
+
         if self.shots is not None:
             # estimate the expectation value
             samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
             return np.squeeze(np.mean(samples, axis=0))
+
+        # intercept Hamiltonians here; in future, we want a logic that handles
+        # general observables that do not define eigenvalues
+        if observable.name in ("Hamiltonian", "SparseHamiltonian"):
+            assert self.shots is None, f"{observable.name} must be used with shots=None"
+
+            backprop_mode = (
+                not isinstance(self.state, np.ndarray)
+                or any(not isinstance(d, (float, np.ndarray)) for d in observable.data)
+            ) and observable.name == "Hamiltonian"
+
+            if backprop_mode:
+                # We must compute the expectation value assuming that the Hamiltonian
+                # coefficients *and* the quantum states are tensor objects.
+
+                # Compute  <psi| H |psi> via sum_i coeff_i * <psi| PauliWord |psi> using a sparse
+                # representation of the Pauliword
+                res = qml.math.cast(qml.math.convert_like(0.0, observable.data), dtype=complex)
+
+                # Note: it is important that we use the Hamiltonian's data and not the coeffs attribute.
+                # This is because the .data attribute may be 'unwrapped' as required by the interfaces,
+                # whereas the .coeff attribute will always be the same input dtype that the user provided.
+                for op, coeff in zip(observable.ops, observable.data):
+
+                    # extract a scipy.sparse.coo_matrix representation of this Pauli word
+                    coo = qml.operation.Tensor(op).sparse_matrix(wires=self.wires)
+                    Hmat = qml.math.cast(qml.math.convert_like(coo.data, self.state), "complex128")
+
+                    product = (
+                        qml.math.gather(qml.math.conj(self.state), coo.row)
+                        * Hmat
+                        * qml.math.gather(self.state, coo.col)
+                    )
+                    c = qml.math.cast(qml.math.convert_like(coeff, product), "complex128")
+                    res = qml.math.convert_like(res, product) + qml.math.sum(c * product)
+
+            else:
+                # Coefficients and the state are not trainable, we can be more
+                # efficient in how we compute the Hamiltonian sparse matrix.
+
+                if observable.name == "Hamiltonian":
+                    Hmat = qml.utils.sparse_hamiltonian(observable, wires=self.wires)
+                elif observable.name == "SparseHamiltonian":
+                    Hmat = observable.matrix
+
+                res = coo_matrix.dot(
+                    coo_matrix(qml.math.conj(self.state)),
+                    coo_matrix.dot(Hmat, coo_matrix(self.state.reshape(len(self.state), 1))),
+                ).toarray()[0]
+
+            if observable.name == "Hamiltonian":
+                res = qml.math.squeeze(res)
+
+            return qml.math.real(res)
 
         # To support np.complex64 based on the type of self._state
         dtype = self._state.dtype
@@ -605,6 +673,14 @@ class LightningQubit(DefaultQubit):
         Returns:
             Variance of the observable
         """
+        if isinstance(observable.name, List) or not all(
+            isinstance(w, int) and w > -1 for w in observable.wires
+        ):
+            return super().var(observable, shot_range=shot_range, bin_size=bin_size)
+
+        if observable.name == "Identity":
+            return super().var(observable, shot_range=shot_range, bin_size=bin_size)
+
         if observable.name == "Projector":
             # branch specifically to handle the projector observable
             idx = int("".join(str(i) for i in observable.parameters[0]), 2)

@@ -337,58 +337,25 @@ void lightning_class_bindings(py::module &m) {
                      std::get<std::vector<std::complex<ParamT>>>(operation),
                      std::get<std::vector<size_t>>(wires));
              })
-        .def("expval_ops_str",
-             [](Measures<PrecisionT> &M,
-                const std::vector<std::string> &operations,
-                const std::vector<std::vector<size_t>> &wires_lists) {
-                 return py::array_t<ParamT>(
-                     py::cast(M.expval(operations, wires_lists)));
-             })
-        .def(
-            "expval_ops_vec",
-            [](Measures<PrecisionT> &M,
-               const std::vector<std::vector<std::complex<ParamT>>> &operations,
-               const std::vector<std::vector<size_t>> &wires_lists) {
-                return py::array_t<ParamT>(
-                    py::cast(M.expval(operations, wires_lists)));
-            })
-        .def("var",
-             [](Measures<PrecisionT> &M, const OpsT &operation,
-                const WiresT &wires) {
-                 if (std::holds_alternative<size_t>(wires)) {
-                     if (std::holds_alternative<std::string>(operation)) {
-                         return M.var(std::get<std::string>(operation),
-                                      {std::get<size_t>(wires)});
-                     } else {
-                         return M.var(
-                             std::get<std::vector<std::complex<ParamT>>>(
-                                 operation),
-                             {std::get<size_t>(wires)});
-                     }
-                 }
-                 if (std::holds_alternative<std::string>(operation)) {
-                     return M.var(std::get<std::string>(operation),
-                                  std::get<std::vector<size_t>>(wires));
-                 }
-                 return M.var(
-                     std::get<std::vector<std::complex<ParamT>>>(operation),
-                     std::get<std::vector<size_t>>(wires));
-             })
-        .def("var_ops_str",
-             [](Measures<PrecisionT> &M,
-                const std::vector<std::string> &operations,
-                const std::vector<std::vector<size_t>> &wires_lists) {
-                 return py::array_t<ParamT>(
-                     py::cast(M.var(operations, wires_lists)));
-             })
-        .def(
-            "var_ops_vec",
-            [](Measures<PrecisionT> &M,
-               const std::vector<std::vector<std::complex<ParamT>>> &operations,
-               const std::vector<std::vector<size_t>> &wires_lists) {
-                return py::array_t<ParamT>(
-                    py::cast(M.var(operations, wires_lists)));
-            });
+        .def("var", [](Measures<PrecisionT> &M, const OpsT &operation,
+                       const WiresT &wires) {
+            if (std::holds_alternative<size_t>(wires)) {
+                if (std::holds_alternative<std::string>(operation)) {
+                    return M.var(std::get<std::string>(operation),
+                                 {std::get<size_t>(wires)});
+                } else {
+                    return M.var(
+                        std::get<std::vector<std::complex<ParamT>>>(operation),
+                        {std::get<size_t>(wires)});
+                }
+            }
+            if (std::holds_alternative<std::string>(operation)) {
+                return M.var(std::get<std::string>(operation),
+                             std::get<std::vector<size_t>>(wires));
+            }
+            return M.var(std::get<std::vector<std::complex<ParamT>>>(operation),
+                         std::get<std::vector<size_t>>(wires));
+        });
 }
 
 /**
