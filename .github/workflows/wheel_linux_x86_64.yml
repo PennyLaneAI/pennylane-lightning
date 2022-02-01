@@ -65,7 +65,6 @@ jobs:
           path: ./wheelhouse/*.whl
 
       - name: Upload wheels to PyPI
-        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
