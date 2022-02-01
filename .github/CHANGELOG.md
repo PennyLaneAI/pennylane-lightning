@@ -27,6 +27,9 @@
 * Fix failed tests for the non-binary wheel.
 [(#213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/213)
 
+* Fix failed tests on Windows.
+[(#218)](https://github.com/PennyLaneAI/pennylane-lightning/pull/218)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
