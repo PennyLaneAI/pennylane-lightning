@@ -85,11 +85,6 @@ jobs:
         with:
           path: ./dist
 
-      - name: Unzip artifact
-        run: |
-          unzip ./dist/*.zip
-          rm ./dist/*.zip
-
       - name: Upload wheels to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
