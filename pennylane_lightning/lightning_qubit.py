@@ -15,6 +15,7 @@ r"""
 This module contains the :class:`~.LightningQubit` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
+from ast import operator
 from warnings import warn
 
 import numpy as np
@@ -566,6 +567,7 @@ class LightningQubit(DefaultQubit):
             return probs[idx]
 
         if self.shots is not None:
+            # estimate the expectation value
             samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
             return np.squeeze(np.mean(samples, axis=0))
 
@@ -589,17 +591,33 @@ class LightningQubit(DefaultQubit):
 
         return M.expval(observable.name, observable.wires)
 
-    def var(self, op, wires=None):
+    def var(self, observable, shot_range=None, bin_size=None):
         """Variance of the supplied observable.
 
         Args:
-            op: observable name or a PennyLane observable.
-            wires (Sequence[int] or int): the wire the operation acts on. This must be
-            `None` if op is a PennyLane observable.
+            observable: A PennyLane observable.
+            shot_range (tuple[int]): 2-tuple of integers specifying the range of samples
+                to use. If not specified, all samples are used.
+            bin_size (int): Divides the shot range into bins of size ``bin_size``, and
+                returns the measurement statistic separately over each bin. If not
+                provided, the entire shot range is treated as a single bin.
 
         Returns:
-            Variance of the op
+            Variance of the observable
         """
+        if observable.name == "Projector":
+            # branch specifically to handle the projector observable
+            idx = int("".join(str(i) for i in observable.parameters[0]), 2)
+            probs = self.probability(
+                wires=observable.wires, shot_range=shot_range, bin_size=bin_size
+            )
+            return probs[idx] - probs[idx] ** 2
+
+        if self.shots is not None:
+            # estimate the expectation value
+            samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
+            return np.squeeze(np.var(samples, axis=0))
+
         # To support np.complex64 based on the type of self._state
         dtype = self._state.dtype
         if dtype == np.complex64:
@@ -618,11 +636,7 @@ class LightningQubit(DefaultQubit):
         state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
 
-        if wires == None:
-            # TODO: check if op is an qml.op
-            return M.var(op.name, op.wires.toarray())
-
-        return M.var(op, wires)
+        return M.var(observable.name, observable.wires)
 
 
 if not CPP_BINARY_AVAILABLE:
