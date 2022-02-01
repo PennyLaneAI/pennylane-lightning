@@ -559,8 +559,8 @@ class LightningQubit(DefaultQubit):
             Expectation value of the observable
         """
         if isinstance(observable.name, List) or observable.name in [
-            "Projector",
             "Identity",
+            "Projector",
             "Hermitian",
             "Hamiltonian",
             "SparseHamiltonian",
@@ -570,6 +570,7 @@ class LightningQubit(DefaultQubit):
 
         if self.shots is not None:
             # estimate the expectation value
+            # TODO: Lightning support for sampling
             samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
             return np.squeeze(np.mean(samples, axis=0))
 
@@ -612,14 +613,15 @@ class LightningQubit(DefaultQubit):
         """
         if isinstance(observable.name, List) or observable.name in [
             "Identity",
-            "Hermitian",
             "Projector",
+            "Hermitian",
         ]:
             # TODO: requires backend support
             return super().var(observable, shot_range=shot_range, bin_size=bin_size)
 
         if self.shots is not None:
             # estimate the var
+            # TODO: Lightning support for sampling
             samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
             return np.squeeze(np.var(samples, axis=0))
 

@@ -201,7 +201,7 @@ class Measures {
         fp_t squared_mean = std::real(innerProdC(
             original_statevector.getData(), operator_statevector.getData(),
             original_statevector.getLength()));
-        squared_mean = std::pow(squared_mean, 2);
+        squared_mean = static_cast<fp_t>(std::pow(squared_mean, 2));
         return (mean_square - squared_mean);
     };
 
@@ -227,7 +227,7 @@ class Measures {
         fp_t squared_mean = std::real(innerProdC(
             original_statevector.getData(), operator_statevector.getData(),
             original_statevector.getLength()));
-        squared_mean = std::pow(squared_mean, 2);
+        squared_mean = static_cast<fp_t>(std::pow(squared_mean, 2));
         return (mean_square - squared_mean);
     };
 
