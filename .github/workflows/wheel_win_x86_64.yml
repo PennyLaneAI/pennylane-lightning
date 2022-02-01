@@ -78,8 +78,6 @@ jobs:
     needs: win-wheels
     runs-on: ubuntu-latest
     steps:
-      - name: Create directory
-
       - uses: actions/download-artifact@v2
         with:
           path: dist
