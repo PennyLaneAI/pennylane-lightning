@@ -35,6 +35,9 @@ class TestComputeVJP:
     def dev(self):
         return qml.device("lightning.qubit", wires=2)
 
+    @pytest.mark.skipif(
+        not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
+    )
     def test_unsupported_complex_type(self, dev):
         dev._state = dev._asarray(dev._state, np.complex256)
 
@@ -113,6 +116,9 @@ class TestVectorJacobianProduct:
     def dev(self):
         return qml.device("lightning.qubit", wires=2)
 
+    @pytest.mark.skipif(
+        not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
+    )
     def test_unsupported_complex_type(self, dev):
         dev._state = dev._asarray(dev._state, np.complex256)
 
@@ -438,6 +444,9 @@ class TestBatchVectorJacobianProduct:
     def dev(self):
         return qml.device("lightning.qubit", wires=2)
 
+    @pytest.mark.skipif(
+        not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
+    )
     def test_unsupported_complex_type(self, dev):
         dev._state = dev._asarray(dev._state, np.complex256)
 
