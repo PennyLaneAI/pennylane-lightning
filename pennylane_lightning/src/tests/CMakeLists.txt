@@ -29,24 +29,39 @@ list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/contrib)
 include(CTest)
 include(Catch)
 
-add_executable(runner runner_main.cpp)
-target_link_libraries(runner lightning_simulator lightning_utils lightning_algorithms Catch2::Catch2)
 
-target_sources(runner PRIVATE   Test_AdjDiff.cpp
-                                Test_Bindings.cpp
-                                Test_StateVector_Nonparam.cpp 
-                                Test_StateVector_Param.cpp 
-                                Test_StateVectorManaged_Nonparam.cpp 
-                                Test_StateVectorManaged_Param.cpp 
-                                Test_Util.cpp
-                                Test_VectorJacobianProduct.cpp
-)
+################################################################################
+# Define compile options and library
+################################################################################
 
-target_compile_options(runner PRIVATE "$<$<CONFIG:DEBUG>:-Wall>")
+add_library(lightning_tests_dependency INTERFACE)
+target_link_libraries(lightning_tests_dependency INTERFACE lightning_simulator lightning_algorithms lightning_utils Catch2::Catch2)
+target_compile_options(lightning_tests_dependency INTERFACE "$<$<CONFIG:DEBUG>:-Wall>")
+target_sources(lightning_tests_dependency INTERFACE runner_main.cpp)
 
 if(ENABLE_NATIVE)
     message(STATUS "ENABLE_NATIVE is ON. Use -march=native for cpptests.")
-    target_compile_options(runner PRIVATE -march=native)
+    target_compile_options(lightning_tests_dependency INTERFACE -march=native)
 endif()
 
+################################################################################
+# Define targets
+################################################################################
+
+set(TEST_SOURCES Test_AdjDiff.cpp
+                 Test_Bindings.cpp
+                 Test_DynamicDispatcher.cpp
+                 Test_GateOperations_Nonparam.cpp
+                 Test_GateOperations_Param.cpp
+                 Test_IndicesUtil.cpp
+                 Test_Measures.cpp
+                 Test_SelectGateOps.cpp
+                 Test_StateVectorManaged.cpp
+                 Test_StateVectorRaw.cpp
+                 Test_Util.cpp
+                 Test_VectorJacobianProduct.cpp)
+
+
+add_executable(runner ${TEST_SOURCES})
+target_link_libraries(runner PRIVATE lightning_tests_dependency)
 catch_discover_tests(runner)

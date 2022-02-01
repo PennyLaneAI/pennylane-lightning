@@ -53,7 +53,6 @@ class CMakeBuild(build_ext):
         extdir = str(Path(self.get_ext_fullpath(ext.name)).parent.absolute())
 
         debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
-        cfg = "Debug" if debug else "Release"
         ninja_path = str(shutil.which('ninja'))
 
         # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
@@ -61,13 +60,15 @@ class CMakeBuild(build_ext):
             "-GNinja",
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
-            f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
             f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
+            "-DENABLE_WARNINGS=OFF", # Ignore warnings
         ]
+
+        if debug:
+            configure_args += ["-DCMAKE_BUILD_TYPE=Debug"]
         configure_args += self.cmake_defines
         
         build_args = []
-
 
         # Add more platform dependent options
         if platform.system() == "Darwin":
@@ -128,7 +129,7 @@ info = {
     "long_description_content_type": "text/x-rst",
     "provides": ["pennylane_lightning"],
     "install_requires": requirements,
-    "ext_modules": [CMakeExtension("lightning_qubit_ops")],
+    "ext_modules": [CMakeExtension("lightning_qubit_ops")] if not os.environ.get("SKIP_COMPILATION", False) else [],
     "cmdclass": {"build_ext": CMakeBuild},
     "ext_package": "pennylane_lightning",
 }

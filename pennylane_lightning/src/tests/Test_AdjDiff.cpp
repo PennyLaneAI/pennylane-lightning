@@ -13,7 +13,7 @@
 #include <catch2/catch.hpp>
 
 #include "AdjointDiff.hpp"
-#include "StateVector.hpp"
+#include "StateVectorRaw.hpp"
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"
@@ -54,7 +54,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=Z",
             std::vector<std::complex<double>> cdata(0b1 << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
 
-            StateVector<double> psi(cdata.data(), cdata.size());
+            StateVectorRaw<double> psi(cdata.data(), cdata.size());
             adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian, {obs},
                                 ops, {0}, true);
             CAPTURE(jacobian);
@@ -81,7 +81,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RY, Obs=X",
             std::vector<std::complex<double>> cdata(0b1 << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
 
-            StateVector<double> psi(cdata.data(), cdata.size());
+            StateVectorRaw<double> psi(cdata.data(), cdata.size());
 
             adj.adjointJacobian(psi.getData(), psi.getLength(), jacobian, {obs},
                                 ops, {0}, true);
@@ -103,7 +103,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=[Z,Z]",
             num_obs, std::vector<double>(num_params, 0));
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVector<double> psi(cdata.data(), cdata.size());
+        StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs1 = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
@@ -131,7 +131,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z]",
             num_obs, std::vector<double>(num_params, 0));
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVector<double> psi(cdata.data(), cdata.size());
+        StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs1 = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
@@ -165,7 +165,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z], "
         std::vector<size_t> t_params{0, 2};
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVector<double> psi(cdata.data(), cdata.size());
+        StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs1 = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
@@ -197,7 +197,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
             num_obs, std::vector<double>(num_params, 0));
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVector<double> psi(cdata.data(), cdata.size());
+        StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs = ObsDatum<double>({"PauliZ", "PauliZ", "PauliZ"},
@@ -228,7 +228,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=Mixed, Obs=[XXX]",
             num_obs, std::vector<double>(num_params, 0));
 
         std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVector<double> psi(cdata.data(), cdata.size());
+        StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs = ObsDatum<double>({"PauliX", "PauliX", "PauliX"},
@@ -287,7 +287,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Decomposed Rot gate, non "
 
             std::vector<std::complex<double>> cdata{INVSQRT2<double>(),
                                                     -INVSQRT2<double>()};
-            StateVector<double> psi(cdata.data(), cdata.size());
+            StateVectorRaw<double> psi(cdata.data(), cdata.size());
 
             auto obs = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
             auto ops = adj.createOpsData(
@@ -328,7 +328,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Mixed Ops, Obs and TParams",
 
         std::vector<std::complex<double>> cdata{ONE<double>(), ZERO<double>(),
                                                 ZERO<double>(), ZERO<double>()};
-        StateVector<double> psi(cdata.data(), cdata.size());
+        StateVectorRaw<double> psi(cdata.data(), cdata.size());
 
         auto obs = ObsDatum<double>({"PauliX", "PauliZ"}, {{}, {}}, {{0}, {1}});
         auto ops = adj.createOpsData(

@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "IndicesUtil.hpp"
 #include "StateVectorManaged.hpp"
 
 /**
@@ -17,6 +18,7 @@
  */
 int main(int argc, char *argv[]) {
     using TestType = double;
+    namespace IndicesUtil = Pennylane::IndicesUtil;
 
     // Handle input
     try {
@@ -54,8 +56,10 @@ int main(int argc, char *argv[]) {
     for (size_t gate_rep = 0; gate_rep < num_gate_reps; gate_rep++) {
         for (size_t index = 0; index < num_qubits; index++) {
             // Apply single qubit non-parametric operations
-            const auto int_idx = svdat.getInternalIndices({index});
-            const auto ext_idx = svdat.getExternalIndices({index});
+            const auto int_idx =
+                IndicesUtil::getInternalIndices({index}, num_qubits);
+            const auto ext_idx =
+                IndicesUtil::getExternalIndices({index}, num_qubits);
             svdat.applyPauliX(int_idx, ext_idx, false);
             svdat.applyPauliY(int_idx, ext_idx, false);
             svdat.applyPauliZ(int_idx, ext_idx, false);

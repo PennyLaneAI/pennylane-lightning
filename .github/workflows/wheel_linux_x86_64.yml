@@ -6,14 +6,13 @@ on:
       - master
   pull_request:
 
-
 env:
   CIBW_BUILD: 'cp37-* cp38-* cp39-* cp310-*'
   CIBW_SKIP: "*-musllinux*"
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
-    pip install pybind11 ninja
+    pip install pybind11 ninja && yum install -y gcc gcc-c++
 
   # Testing of built wheels
   CIBW_TEST_REQUIRES: numpy~=1.21 scipy pytest pytest-cov pytest-mock flaky
@@ -54,8 +53,14 @@ jobs:
         env:
           CIBW_ARCHS_LINUX: ${{matrix.arch}}
 
+      - uses: actions-ecosystem/action-regex-match@v2
+        id: rc_build
+        with:
+          text: ${{ github.event.pull_request.head.ref }}
+          regex: '.*[0-9]+.[0-9]+.[0-9]+[-]?rc[0-9]+'
+
       - uses: actions/upload-artifact@v2
-        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         with:
           name: ${{ runner.os }}-wheels.zip
           path: ./wheelhouse/*.whl

@@ -13,6 +13,9 @@
 # serve to show the default.
 import sys, os, re, inspect
 from unittest.mock import MagicMock
+from pathlib import Path
+import subprocess
+import json
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -20,6 +23,32 @@ from unittest.mock import MagicMock
 sys.path.insert(0, os.path.abspath(''))
 sys.path.insert(0, os.path.abspath('_ext'))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath('doc')), 'doc'))
+
+
+# For obtaining all relevant C++ source files
+currdir = Path(__file__).resolve().parent # PROJECT_SOURCE_DIR/docs
+PROJECT_SOURCE_DIR = currdir.parent
+CPP_SOURCE_DIR = PROJECT_SOURCE_DIR.joinpath('pennylane_lightning/src')
+CPP_EXCLUDE_DIRS = ['examples', 'tests'] # relative to CPP_SOURCE_DIR
+
+def obtain_cpp_files():
+    script_path = PROJECT_SOURCE_DIR.joinpath('bin/cpp-files')
+
+    if not script_path.exists():
+        print('The project directory structure is corrupted.')
+        sys.exit(1)
+
+    exclude_dirs = [CPP_SOURCE_DIR.joinpath(exclude_dir) for exclude_dir in CPP_EXCLUDE_DIRS]
+
+    p = subprocess.run([str(script_path), CPP_SOURCE_DIR, '--exclude-dirs', *exclude_dirs], capture_output = True)
+    file_list = json.loads(p.stdout)
+
+    file_list = ['../' + str(Path(f).relative_to(PROJECT_SOURCE_DIR)) for f in file_list]
+    return file_list
+
+CPP_FILES = obtain_cpp_files()
+print(CPP_FILES)
+
 
 
 class Mock(MagicMock):
@@ -49,12 +78,13 @@ extensions = [
     "exhale",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
-    "sphinx.ext.todo",
     "sphinx.ext.coverage",
-    "sphinx.ext.mathjax",
-    "sphinx.ext.napoleon",
+    "sphinx.ext.graphviz",
     "sphinx.ext.inheritance_diagram",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.todo",
     'sphinx.ext.viewcode',
     "sphinx_automodapi.automodapi",
     'sphinx_automodapi.smart_resolver'
@@ -85,13 +115,7 @@ exhale_args = {
     # "treeViewIsBootstrap": True,
     "exhaleExecutesDoxygen": True,
     "exhaleDoxygenStdin": (
-        "INPUT = "
-        "../pennylane_lightning/src/algorithms/AdjointDiff.hpp "
-        "../pennylane_lightning/src/bindings/Bindings.cpp "
-        "../pennylane_lightning/src/simulator/Gates.hpp "
-        "../pennylane_lightning/src/simulator/StateVector.hpp "
-        "../pennylane_lightning/src/util/Util.hpp "
-        "../pennylane_lightning/src/util/Error.hpp "
+        "INPUT = " + ' '.join(CPP_FILES) + ' '
         "EXCLUDE_SYMBOLS = std::* "
     ),
     "afterTitleDescription": inspect.cleandoc(

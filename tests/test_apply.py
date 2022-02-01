@@ -87,6 +87,20 @@ class TestApply:
     that the proper errors are raised.
     """
 
+    from pennylane_lightning import LightningQubit as lq
+
+    @pytest.mark.skipif(
+        not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
+    )
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    def test_apply_operation_raise_type_error(self, qubit_device_1_wire):
+        """Tests that applying an operation yields the expected output state for single wire
+        operations that have no parameters."""
+
+        with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
+            qubit_device_1_wire._state = np.array([1, 0]).astype(np.complex256)
+            qubit_device_1_wire.apply([qml.PauliX(wires=[0])])
+
     test_data_no_parameters = [
         (qml.PauliX, [1, 0], np.array([0, 1])),
         (qml.PauliX, [1 / math.sqrt(2), 1 / math.sqrt(2)], [1 / math.sqrt(2), 1 / math.sqrt(2)]),
@@ -107,13 +121,14 @@ class TestApply:
     ]
 
     @pytest.mark.parametrize("operation,input,expected_output", test_data_no_parameters)
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_single_wire_no_parameters(
-        self, qubit_device_1_wire, tol, operation, input, expected_output
+        self, qubit_device_1_wire, tol, operation, input, expected_output, C
     ):
         """Tests that applying an operation yields the expected output state for single wire
         operations that have no parameters."""
 
-        qubit_device_1_wire._state = np.array(input).astype(complex)
+        qubit_device_1_wire._state = np.array(input).astype(C)
         qubit_device_1_wire.apply([operation(wires=[0])])
 
         assert np.allclose(qubit_device_1_wire._state, np.array(expected_output), atol=tol, rtol=0)
@@ -143,12 +158,13 @@ class TestApply:
     ]
 
     @pytest.mark.parametrize("operation,input,expected_output", test_data_two_wires_no_parameters)
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_two_wires_no_parameters(
-        self, qubit_device_2_wires, tol, operation, input, expected_output
+        self, qubit_device_2_wires, tol, operation, input, expected_output, C
     ):
         """Tests that applying an operation yields the expected output state for two wire
         operations that have no parameters."""
-        qubit_device_2_wires._state = np.array(input).reshape(2 * [2]).astype(complex)
+        qubit_device_2_wires._state = np.array(input).reshape(2 * [2]).astype(C)
         qubit_device_2_wires.apply([operation(wires=[0, 1])])
 
         assert np.allclose(qubit_device_2_wires.state, np.array(expected_output), atol=tol, rtol=0)
@@ -164,13 +180,14 @@ class TestApply:
     ]
 
     @pytest.mark.parametrize("operation,input,expected_output", test_data_three_wires_no_parameters)
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_three_wires_no_parameters(
-        self, qubit_device_3_wires, tol, operation, input, expected_output
+        self, qubit_device_3_wires, tol, operation, input, expected_output, C
     ):
         """Tests that applying an operation yields the expected output state for three wire
         operations that have no parameters."""
 
-        qubit_device_3_wires._state = np.array(input).reshape(3 * [2]).astype(complex)
+        qubit_device_3_wires._state = np.array(input).reshape(3 * [2]).astype(C)
         qubit_device_3_wires.apply([operation(wires=[0, 1, 2])])
 
         assert np.allclose(qubit_device_3_wires.state, np.array(expected_output), atol=tol, rtol=0)
@@ -262,13 +279,14 @@ class TestApply:
     @pytest.mark.parametrize(
         "operation,input,expected_output,par", test_data_single_wire_with_parameters
     )
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_single_wire_with_parameters(
-        self, qubit_device_1_wire, tol, operation, input, expected_output, par
+        self, qubit_device_1_wire, tol, operation, input, expected_output, par, C
     ):
         """Tests that applying an operation yields the expected output state for single wire
         operations that have parameters."""
 
-        qubit_device_1_wire._state = np.array(input).astype(complex)
+        qubit_device_1_wire._state = np.array(input).astype(C)
 
         qubit_device_1_wire.apply([operation(*par, wires=[0])])
 
@@ -360,13 +378,14 @@ class TestApply:
     @pytest.mark.parametrize(
         "operation,input,expected_output,par", test_data_two_wires_with_parameters
     )
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_two_wires_with_parameters(
-        self, qubit_device_2_wires, tol, operation, input, expected_output, par
+        self, qubit_device_2_wires, tol, operation, input, expected_output, par, C
     ):
         """Tests that applying an operation yields the expected output state for two wire
         operations that have parameters."""
 
-        qubit_device_2_wires._state = np.array(input).reshape(2 * [2]).astype(complex)
+        qubit_device_2_wires._state = np.array(input).reshape(2 * [2]).astype(C)
         qubit_device_2_wires.apply([operation(*par, wires=[0, 1])])
 
         assert np.allclose(qubit_device_2_wires.state, np.array(expected_output), atol=tol, rtol=0)
@@ -571,12 +590,14 @@ class TestSample:
 
         # s1 should only contain 1 and -1, which is guaranteed if
         # they square to 1
-        assert np.allclose(s1 ** 2, 1, atol=tol, rtol=0)
+        assert np.allclose(s1**2, 1, atol=tol, rtol=0)
 
 
 class TestLightningQubitIntegration:
     """Integration tests for lightning.qubit. This test ensures it integrates
     properly with the PennyLane interface, in particular QNode."""
+
+    from pennylane_lightning import LightningQubit as lq
 
     def test_load_default_qubit_device(self):
         """Test that the default plugin loads correctly"""
@@ -585,6 +606,49 @@ class TestLightningQubitIntegration:
         assert dev.num_wires == 2
         assert dev.shots is None
         assert dev.short_name == "lightning.qubit"
+
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    def test_load_default_qubit_device_with_valid_kernel(self):
+        """Test that lightning.qubit works with valid kernel_for_ops argument."""
+        for gate in ["PauliX", "CRot", "CSWAP", "Matrix"]:
+            dev = qml.device("lightning.qubit", kernel_for_ops={gate: "PI"}, wires=2)
+
+            assert dev.num_wires == 2
+            assert dev.shots is None
+            assert dev.short_name == "lightning.qubit"
+
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    def test_load_default_qubit_device_with_invalid_kernel(self):
+        """Test that lightning.qubit raises error for unsupported gate/kernel pair."""
+        # This line is only for current implementation
+        with pytest.raises(
+            ValueError, match=f"The given kernel LM does not implement Matrix gate."
+        ):
+            dev = qml.device("lightning.qubit", kernel_for_ops={"Matrix": "LM"}, wires=2)
+
+        for gate in ["PauliX", "CRot", "CSWAP", "Matrix"]:
+            with pytest.raises(
+                ValueError, match=f"The given kernel Unknown does not implement {gate} gate."
+            ):
+                dev = qml.device("lightning.qubit", kernel_for_ops={gate: "Unknown"}, wires=2)
+
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    def test_load_default_qubit_device_with_invalid_param(self):
+        """Test that lightning.qubit does not support kernel_for_ops type list."""
+        with pytest.raises(ValueError, match=f"Argument kernel_for_ops must be a dictionary."):
+            dev = qml.device("lightning.qubit", kernel_for_ops=["I am a list"], wires=2)
+
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    def test_all_exported_gates_are_available(self):
+        """Test all exported gates from lightning_qubit_ops are accessible"""
+        from pennylane_lightning import lightning_qubit_ops
+        from pennylane_lightning.lightning_qubit_ops import StateVectorC128 as SV
+
+        for kernel, gate_op in lightning_qubit_ops.EXPORTED_KERNEL_OPS:
+            if gate_op != "Matrix":
+                assert getattr(SV, f"{gate_op}_{kernel}", None) is not None
+            else:
+                assert getattr(SV, f"applyMatrix_{kernel}", None) is not None
 
     def test_no_backprop(self):
         """Test that lightning.qubit does not support the backprop
@@ -652,7 +716,7 @@ class TestLightningQubitIntegration:
     def test_nonzero_shots(self, tol):
         """Test that the default qubit plugin provides correct result for high shot number"""
 
-        shots = 10 ** 4
+        shots = 10**4
         dev = qml.device("lightning.qubit", wires=1, shots=shots)
 
         p = 0.543
@@ -1203,13 +1267,13 @@ class TestTensorSample:
         p = dev.probability(wires=obs.wires)
 
         # s1 should only contain 1 and -1
-        assert np.allclose(s1 ** 2, 1, atol=tolerance, rtol=0)
+        assert np.allclose(s1**2, 1, atol=tolerance, rtol=0)
 
         mean = s1 @ p
         expected = np.sin(theta) * np.sin(phi) * np.sin(varphi)
         assert np.allclose(mean, expected, atol=tolerance, rtol=0)
 
-        var = (s1 ** 2) @ p - (s1 @ p).real ** 2
+        var = (s1**2) @ p - (s1 @ p).real ** 2
         expected = (
             8 * np.sin(theta) ** 2 * np.cos(2 * varphi) * np.sin(phi) ** 2
             - np.cos(2 * (theta - phi))
@@ -1245,13 +1309,13 @@ class TestTensorSample:
         p = dev.marginal_prob(dev.probability(), wires=obs.wires)
 
         # s1 should only contain 1 and -1
-        assert np.allclose(s1 ** 2, 1, atol=tol, rtol=0)
+        assert np.allclose(s1**2, 1, atol=tol, rtol=0)
 
         mean = s1 @ p
         expected = -(np.cos(varphi) * np.sin(phi) + np.sin(varphi) * np.cos(theta)) / np.sqrt(2)
         assert np.allclose(mean, expected, atol=tol, rtol=0)
 
-        var = (s1 ** 2) @ p - (s1 @ p).real ** 2
+        var = (s1**2) @ p - (s1 @ p).real ** 2
         expected = (
             3
             + np.cos(2 * phi) * np.cos(varphi) ** 2

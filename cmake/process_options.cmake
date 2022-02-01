@@ -1,6 +1,29 @@
+##############################################################################
+# This file processes ENABLE_WARNINGS, ENABLE_NATIVE, ENABLE_AVX, 
+# ENABLE_OPENMP, ENABLE_BLAS options and produces interface libraries
+# pennylane_lightning_compile_options and pennylane_lightning_external_libs.
+##############################################################################
+
+# Include this file only once
+include_guard()
+
 # Set compile flags and library dependencies
 add_library(pennylane_lightning_compile_options INTERFACE)
 add_library(pennylane_lightning_external_libs INTERFACE)
+
+# Initial attempt to find which BLAS implementation is chosen
+function(get_blas_impl)
+    string(FIND "${BLAS_LIBRARIES}" "mkl" FOUND_MKL)
+    string(FIND "${BLAS_LIBRARIES}" "openblas" FOUND_OPENBLAS)
+
+    if (NOT (FOUND_MKL EQUAL -1)) # MKL is found
+        set(BLAS_IMPL "MKL" PARENT_SCOPE)
+    elseif (NOT (FOUND_OPENBLAS EQUAL -1))
+        set(BLAS_IMPL "OpenBLAS" PARENT_SCOPE)
+    else()
+        set(BLAS_IMPL "Unknown" PARENT_SCOPE)
+    endif()
+endfunction()
 
 if(MSVC) # For M_PI
     target_compile_options(pennylane_lightning_compile_options INTERFACE /D_USE_MATH_DEFINES)
@@ -56,9 +79,13 @@ if(ENABLE_BLAS)
         message(FATAL_ERROR "BLAS is enabled but not found.")
     endif()
 
+    get_blas_impl()
+    message(STATUS "Use ${BLAS_IMPL} for BLAS implementation. Set BLA_VENDOR variable "
+                   "if you want to use a different BLAS implementation. "
+                   "See https://cmake.org/cmake/help/latest/module/FindBLAS.html"
+                   "#blas-lapack-vendors for available options.")
+
     target_link_libraries(pennylane_lightning_external_libs INTERFACE "${BLAS_LIBRARIES}")
     target_link_options(pennylane_lightning_external_libs INTERFACE "${BLAS_LINKER_FLAGS}")
     target_compile_options(pennylane_lightning_compile_options INTERFACE "-D_ENABLE_BLAS=1")
 endif()
-
-

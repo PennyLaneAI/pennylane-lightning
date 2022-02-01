@@ -13,16 +13,20 @@ env:
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
-    call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && pip install pybind11 ninja
+    pip install pybind11 ninja
 
   # Testing of built wheels
   CIBW_TEST_REQUIRES: numpy~=1.21 scipy pytest pytest-cov pytest-mock flaky
 
   CIBW_BEFORE_TEST: |
-    call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && python -c "import sys; print(sys.path)"
+    python -c "import sys; print(sys.path)"
 
   CIBW_TEST_COMMAND: |
     pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+
+  DISTUTILS_USE_SDK: 1
+
+  MSSdk: 1
 
 jobs:
   win-wheels:
@@ -39,6 +43,10 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
+      - name: Get git branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v5
+
       - uses: actions/checkout@v2
 
       - uses: actions/setup-python@v2
@@ -46,11 +54,22 @@ jobs:
         with:
           python-version: '3.7'
 
+      - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
+
       - name: Build wheels
-        uses: pypa/cibuildwheel@v1.12.0
+        uses: pypa/cibuildwheel@v2.3.1
+
+      - uses: actions-ecosystem/action-regex-match@v2
+        id: rc_build
+        with:
+          text: ${{ github.event.pull_request.head.ref }}
+          regex: '.*[0-9]+.[0-9]+.[0-9]+[-]?rc[0-9]+'
 
       - uses: actions/upload-artifact@v2
-        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         with:
           name: ${{ runner.os }}-wheels.zip
           path: ./wheelhouse/*.whl
