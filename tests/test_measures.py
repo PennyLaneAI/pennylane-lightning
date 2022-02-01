@@ -148,17 +148,17 @@ class TestBetaStatisticsError:
 
 
 class TestWiresInExpval:
-    """Test that the device integrates with PennyLane's wire management."""
+    """Test different Wires settings in Lightning's expval."""
 
     @pytest.mark.parametrize(
         "wires1, wires2",
         [
             ([2, 3, 0], [2, 3, 0]),
             ([0, 1], [0, 1]),
-            # ([0, 2], [2, 0]),
-            # (["a", "c", "d"], [2, 3, 0]),
+            ([0, 2, 3], [2, 0, 3]),
+            (["a", "c", "d"], [2, 3, 0]),
             ([-1, -2, -3], ["q1", "ancilla", 2]),
-            # (["a", "c"], [3, 0]),
+            (["a", "c"], [3, 0]),
             ([-1, -2], ["ancilla", 2]),
             (["a"], ["nothing"]),
         ],
@@ -168,7 +168,6 @@ class TestWiresInExpval:
         dev1 = qml.device("lightning.qubit", wires=wires1)
         dev2 = qml.device("lightning.qubit", wires=wires2)
 
-        # circuit1 = circuit_factory(device=dev1, wires=wires1)
         n_wires = len(wires1)
 
         @qml.qnode(dev1)
@@ -179,7 +178,6 @@ class TestWiresInExpval:
                 qml.CNOT(wires=[wires1[0], wires1[1]])
             return [qml.expval(qml.PauliZ(wires=w)) for w in wires1]
 
-        # circuit2 = circuit_factory(device=dev2, wires=wires2)
         @qml.qnode(dev2)
         def circuit2():
             qml.RX(0.5, wires=wires2[0 % n_wires])
@@ -187,6 +185,47 @@ class TestWiresInExpval:
             if n_wires > 1:
                 qml.CNOT(wires=[wires2[0], wires2[1]])
             return [qml.expval(qml.PauliZ(wires=w)) for w in wires2]
+
+        print(circuit1())
+        print(circuit2())
+        assert np.allclose(circuit1(), circuit2(), atol=tol)
+
+
+class TestWiresInVar:
+    """Test different Wires settings in Lightning's var."""
+
+    @pytest.mark.parametrize(
+        "wires1, wires2",
+        [
+            (["a", "c", "d"], [2, 3, 0]),
+            ([-1, -2, -3], ["q1", "ancilla", 2]),
+            (["a", "c"], [3, 0]),
+            ([-1, -2], ["ancilla", 2]),
+            (["a"], ["nothing"]),
+        ],
+    )
+    def test_wires_var(self, wires1, wires2, tol):
+        """Test that the expectation of a circuit is independent from the wire labels used."""
+        dev1 = qml.device("lightning.qubit", wires=wires1)
+        dev2 = qml.device("lightning.qubit", wires=wires2)
+
+        n_wires = len(wires1)
+
+        @qml.qnode(dev1)
+        def circuit1():
+            qml.RX(0.5, wires=wires1[0 % n_wires])
+            qml.RY(2.0, wires=wires1[1 % n_wires])
+            if n_wires > 1:
+                qml.CNOT(wires=[wires1[0], wires1[1]])
+            return [qml.var(qml.PauliZ(wires=w)) for w in wires1]
+
+        @qml.qnode(dev2)
+        def circuit2():
+            qml.RX(0.5, wires=wires2[0 % n_wires])
+            qml.RY(2.0, wires=wires2[1 % n_wires])
+            if n_wires > 1:
+                qml.CNOT(wires=[wires2[0], wires2[1]])
+            return [qml.var(qml.PauliZ(wires=w)) for w in wires2]
 
         print(circuit1())
         print(circuit2())
