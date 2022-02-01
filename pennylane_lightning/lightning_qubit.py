@@ -565,6 +565,7 @@ class LightningQubit(DefaultQubit):
             "Hamiltonian",
             "SparseHamiltonian",
         ]:
+            # TODO: requires backend support
             return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
         if self.shots is not None:
@@ -609,11 +610,12 @@ class LightningQubit(DefaultQubit):
         Returns:
             Variance of the observable
         """
-        if isinstance(observable.name, List):
-            # TODO: requires backend support; e.g., PauliX(wires=[0]) @ PauliY(wires=[2])
-            return super().var(observable, shot_range=shot_range, bin_size=bin_size)
-
-        if observable.name in ["Identity", "Hermitian", "Projector"]:
+        if isinstance(observable.name, List) or observable.name in [
+            "Identity",
+            "Hermitian",
+            "Projector",
+        ]:
+            # TODO: requires backend support
             return super().var(observable, shot_range=shot_range, bin_size=bin_size)
 
         if self.shots is not None:
