@@ -12,59 +12,53 @@
 
 #include <catch2/catch.hpp>
 
-template<typename T>
-struct remove_complex {
+template <typename T> struct remove_complex { using type = T; };
+template <typename T> struct remove_complex<std::complex<T>> {
     using type = T;
 };
-template<typename T>
-struct remove_complex<std::complex<T>> {
-    using type = T;
-};
-template <typename T>
-using remove_complex_t = typename remove_complex<T>::type;
+template <typename T> using remove_complex_t = typename remove_complex<T>::type;
 
-template<class T, class Alloc>
-struct PLApprox {
-    const std::vector<T, Alloc>& comp_;
+template <class T, class Alloc> struct PLApprox {
+    const std::vector<T, Alloc> &comp_;
 
-    explicit PLApprox(const std::vector<T, Alloc>& comp)
-        : comp_{comp} {
-    }
+    explicit PLApprox(const std::vector<T, Alloc> &comp) : comp_{comp} {}
 
     remove_complex_t<T> margin_{};
-    remove_complex_t<T> epsilon_ = std::numeric_limits<float>::epsilon()*100;
-    
+    remove_complex_t<T> epsilon_ = std::numeric_limits<float>::epsilon() * 100;
+
     template <class AllocA>
-    bool compare(const std::vector<T, AllocA>& lhs) const {
+    bool compare(const std::vector<T, AllocA> &lhs) const {
         if (lhs.size() != comp_.size()) {
             return false;
         }
 
         for (size_t i = 0; i < lhs.size(); i++) {
-            if (lhs[i].real() != Approx(comp_[i].real()).epsilon(epsilon_).margin(margin_) ||
-                lhs[i].imag() != Approx(comp_[i].imag()).epsilon(epsilon_).margin(margin_)) {
+            if (lhs[i].real() !=
+                    Approx(comp_[i].real()).epsilon(epsilon_).margin(margin_) ||
+                lhs[i].imag() !=
+                    Approx(comp_[i].imag()).epsilon(epsilon_).margin(margin_)) {
                 return false;
             }
         }
         return true;
     }
-    PLApprox& epsilon(remove_complex_t<T> eps) {
+    PLApprox &epsilon(remove_complex_t<T> eps) {
         epsilon_ = eps;
         return *this;
     }
-    PLApprox& margin(remove_complex_t<T> m) {
+    PLApprox &margin(remove_complex_t<T> m) {
         margin_ = m;
         return *this;
     }
 };
-template<class T, class AllocA, class AllocB>
-bool operator==(const std::vector<T, AllocA>& lhs,
-        const PLApprox<T, AllocB>& rhs) {
+template <class T, class AllocA, class AllocB>
+bool operator==(const std::vector<T, AllocA> &lhs,
+                const PLApprox<T, AllocB> &rhs) {
     return rhs.compare(lhs);
 }
-template<class T, class AllocA, class AllocB>
-bool operator!=(const std::vector<T, AllocA>& lhs,
-        const PLApprox<T, AllocB>& rhs) {
+template <class T, class AllocA, class AllocB>
+bool operator!=(const std::vector<T, AllocA> &lhs,
+                const PLApprox<T, AllocB> &rhs) {
     return !rhs.compare(lhs);
 }
 
@@ -78,11 +72,12 @@ bool operator!=(const std::vector<T, AllocA>& lhs,
  * @return false Data are not approximately equal.
  */
 template <class Data_t, class AllocA, class AllocB>
-inline bool isApproxEqual(
-    const std::vector<Data_t, AllocA> &data1, 
-    const std::vector<Data_t, AllocB> &data2,
-    const typename Data_t::value_type eps =
-        std::numeric_limits<typename Data_t::value_type>::epsilon() * 100) {
+inline bool
+isApproxEqual(const std::vector<Data_t, AllocA> &data1,
+              const std::vector<Data_t, AllocB> &data2,
+              const typename Data_t::value_type eps =
+                  std::numeric_limits<typename Data_t::value_type>::epsilon() *
+                  100) {
     return data1 == PLApprox(data2);
 }
 
