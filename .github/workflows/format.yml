@@ -68,7 +68,7 @@ jobs:
           access_token: ${{ github.token }}
 
       - name: Install dependencies
-        run: sudo apt update && sudo apt -y install clang-format-11 python3
+        run: sudo apt update && sudo apt -y install clang-format-12 python3
 
       - name: Checkout code
         uses: actions/checkout@v2
