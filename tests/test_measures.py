@@ -16,95 +16,269 @@ Unit tests for Measures in lightning.qubit.
 """
 import numpy as np
 import pennylane as qml
+from pennylane.queuing import AnnotatedQueue
+from pennylane.measure import (
+    Probability,
+    Variance,
+    Expectation,
+    MeasurementProcess,
+)
+
 import pytest
 
 
-class TestProbs:
-    """Test Probs"""
+def test_no_measure(tol):
+    """Test that failing to specify a measurement
+    raises an exception"""
+    dev = qml.device("lightning.qubit", wires=2)
 
-    @pytest.fixture
-    def dev(self):
-        return qml.device("lightning.qubit", wires=2)
+    @qml.qnode(dev)
+    def circuit(x):
+        qml.RX(x, wires=0)
+        return qml.PauliY(0)
+
+    with pytest.raises(qml.QuantumFunctionError, match="must return either a single measurement"):
+        circuit(0.65)
+
+
+class TestExpval:
+    """Tests for the expval function"""
+
+    def test_value(self, tol):
+        """Test that the expval interface works"""
+        dev = qml.device("lightning.qubit", wires=2)
+
+        @qml.qnode(dev)
+        def circuit(x):
+            qml.RX(x, wires=0)
+            return qml.expval(qml.PauliY(0))
+
+        x = 0.54
+        res = circuit(x)
+        expected = -np.sin(x)
+
+        assert np.allclose(res, expected, atol=tol, rtol=0)
+
+    def test_not_an_observable(self):
+        """Test that a qml.QuantumFunctionError is raised if the provided
+        argument is not an observable"""
+        dev = qml.device("lightning.qubit", wires=2)
+
+        @qml.qnode(dev)
+        def circuit():
+            qml.RX(0.52, wires=0)
+            return qml.expval(qml.CNOT(wires=[0, 1]))
+
+        with pytest.raises(qml.QuantumFunctionError, match="CNOT is not an observable"):
+            res = circuit()
+
+    def test_observable_return_type_is_expectation(self):
+        """Test that the return type of the observable is :attr:`ObservableReturnTypes.Expectation`"""
+        dev = qml.device("lightning.qubit", wires=2)
+
+        @qml.qnode(dev)
+        def circuit():
+            res = qml.expval(qml.PauliZ(0))
+            assert res.return_type is Expectation
+            return res
+
+        circuit()
+
+
+class TestVar:
+    """Tests for the var function"""
+
+    def test_value(self, tol):
+        """Test that the var function works"""
+        dev = qml.device("lightning.qubit", wires=2)
+
+        @qml.qnode(dev)
+        def circuit(x):
+            qml.RX(x, wires=0)
+            return qml.var(qml.PauliZ(0))
+
+        x = 0.54
+        res = circuit(x)
+        expected = np.sin(x) ** 2
+
+        assert np.allclose(res, expected, atol=tol, rtol=0)
+
+    def test_not_an_observable(self):
+        """Test that a qml.QuantumFunctionError is raised if the provided
+        argument is not an observable"""
+        dev = qml.device("lightning.qubit", wires=2)
+
+        @qml.qnode(dev)
+        def circuit():
+            qml.RX(0.52, wires=0)
+            return qml.var(qml.CNOT(wires=[0, 1]))
+
+        with pytest.raises(qml.QuantumFunctionError, match="CNOT is not an observable"):
+            res = circuit()
+
+    def test_observable_return_type_is_variance(self):
+        """Test that the return type of the observable is :attr:`ObservableReturnTypes.Variance`"""
+        dev = qml.device("lightning.qubit", wires=2)
+
+        @qml.qnode(dev)
+        def circuit():
+            res = qml.var(qml.PauliZ(0))
+            assert res.return_type is Variance
+            return res
+
+        circuit()
+
+
+@pytest.mark.parametrize("stat_func", [qml.expval, qml.var])
+class TestBetaStatisticsError:
+    """Tests for errors arising for the beta statistics functions"""
+
+    def test_not_an_observable(self, stat_func):
+        """Test that a qml.QuantumFunctionError is raised if the provided
+        argument is not an observable"""
+        dev = qml.device("lightning.qubit", wires=2)
+
+        @qml.qnode(dev)
+        def circuit():
+            qml.RX(0.52, wires=0)
+            return stat_func(qml.CNOT(wires=[0, 1]))
+
+        with pytest.raises(qml.QuantumFunctionError, match="CNOT is not an observable"):
+            circuit()
+
+
+class TestWiresInExpval:
+    """Test that the device integrates with PennyLane's wire management."""
 
     @pytest.mark.parametrize(
-        "cases",
+        "wires1, wires2",
         [
-            [None, [0.9165164490394898, 0.0, 0.08348355096051052, 0.0]],
-            [[], [0.9165164490394898, 0.0, 0.08348355096051052, 0.0]],
-            [[0, 1], [0.9165164490394898, 0.0, 0.08348355096051052, 0.0]],
-            [[1, 0], [0.9165164490394898, 0.08348355096051052, 0.0, 0.0]],
-            [0, [0.9165164490394898, 0.08348355096051052]],
-            [[0], [0.9165164490394898, 0.08348355096051052]],
+            ([2, 3, 0], [2, 3, 0]),
+            ([0, 1], [0, 1]),
+            # ([0, 2], [2, 0]),
+            # (["a", "c", "d"], [2, 3, 0]),
+            ([-1, -2, -3], ["q1", "ancilla", 2]),
+            # (["a", "c"], [3, 0]),
+            ([-1, -2], ["ancilla", 2]),
+            (["a"], ["nothing"]),
         ],
     )
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_probs_tape_wire0(self, cases, tol, dev, C):
-        dev._state = dev._asarray(dev._state, C)
+    def test_wires_expval(self, wires1, wires2, tol):
+        """Test that the expectation of a circuit is independent from the wire labels used."""
+        dev1 = qml.device("lightning.qubit", wires=wires1)
+        dev2 = qml.device("lightning.qubit", wires=wires2)
 
-        x, y, z = [0.5, 0.3, -0.7]
+        # circuit1 = circuit_factory(device=dev1, wires=wires1)
+        n_wires = len(wires1)
 
-        with qml.tape.JacobianTape() as tape:
-            qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
-            p = qml.probs(cases[0])
+        @qml.qnode(dev1)
+        def circuit1():
+            qml.RX(0.5, wires=wires1[0 % n_wires])
+            qml.RY(2.0, wires=wires1[1 % n_wires])
+            if n_wires > 1:
+                qml.CNOT(wires=[wires1[0], wires1[1]])
+            return [qml.expval(qml.PauliZ(wires=w)) for w in wires1]
 
-        assert np.allclose(cases[1], p, atol=tol, rtol=0)
+        # circuit2 = circuit_factory(device=dev2, wires=wires2)
+        @qml.qnode(dev2)
+        def circuit2():
+            qml.RX(0.5, wires=wires2[0 % n_wires])
+            qml.RY(2.0, wires=wires2[1 % n_wires])
+            if n_wires > 1:
+                qml.CNOT(wires=[wires2[0], wires2[1]])
+            return [qml.expval(qml.PauliZ(wires=w)) for w in wires2]
 
-    # @pytest.mark.parametrize(
-    #     "cases",
-    #     [
-    #         [
-    #             None,
-    #             [
-    #                 0.9178264236525453,
-    #                 0.02096485729264079,
-    #                 0.059841820910257436,
-    #                 0.0013668981445561978,
-    #             ],
-    #         ],
-    #         [
-    #             [],
-    #             [
-    #                 0.9178264236525453,
-    #                 0.02096485729264079,
-    #                 0.059841820910257436,
-    #                 0.0013668981445561978,
-    #             ],
-    #         ],
-    #         [
-    #             [0, 1],
-    #             [
-    #                 0.9178264236525453,
-    #                 0.02096485729264079,
-    #                 0.059841820910257436,
-    #                 0.0013668981445561978,
-    #             ],
-    #         ],
-    #         [
-    #             [1, 0],
-    #             [
-    #                 0.9178264236525453,
-    #                 0.059841820910257436,
-    #                 0.02096485729264079,
-    #                 0.0013668981445561978,
-    #             ],
-    #         ],
-    #         [0, [0.938791280945186, 0.061208719054813635]],
-    #         [[0], [0.938791280945186, 0.061208719054813635]],
-    #     ],
-    # )
-    # @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    # def test_probs_tape_wire01(self, cases, tol, dev, C):
-    #     dev._state = dev._asarray(dev._state, C)
+        print(circuit1())
+        print(circuit2())
+        assert np.allclose(circuit1(), circuit2(), atol=tol)
 
-    #     with qml.tape.JacobianTape() as tape:
-    #         qml.RX(0.5, wires=[0])
-    #         qml.RY(0.3, wires=[1])
 
-    #     p = dev.probs(cases[0])
+# class TestProbs:
+#     """Test Probs"""
 
-    #     assert np.allclose(cases[1], p, atol=tol, rtol=0)
+#     @pytest.fixture
+#     def dev(self):
+#         return qml.device("lightning.qubit", wires=2)
+
+#     @pytest.mark.parametrize(
+#         "cases",
+#         [
+#             [None, [0.9165164490394898, 0.0, 0.08348355096051052, 0.0]],
+#             [[], [0.9165164490394898, 0.0, 0.08348355096051052, 0.0]],
+#             [[0, 1], [0.9165164490394898, 0.0, 0.08348355096051052, 0.0]],
+#             [[1, 0], [0.9165164490394898, 0.08348355096051052, 0.0, 0.0]],
+#             [0, [0.9165164490394898, 0.08348355096051052]],
+#             [[0], [0.9165164490394898, 0.08348355096051052]],
+#         ],
+#     )
+#     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+#     def test_probs_tape_wire0(self, cases, tol, dev, C):
+#         dev._state = dev._asarray(dev._state, C)
+
+#         x, y, z = [0.5, 0.3, -0.7]
+
+#         with qml.tape.JacobianTape() as tape:
+#             qml.RX(0.4, wires=[0])
+#             qml.Rot(x, y, z, wires=[0])
+#             qml.RY(-0.2, wires=[0])
+#             p = qml.probs(cases[0])
+
+#         assert np.allclose(cases[1], p, atol=tol, rtol=0)
+
+# @pytest.mark.parametrize(
+#     "cases",
+#     [
+#         [
+#             None,
+#             [
+#                 0.9178264236525453,
+#                 0.02096485729264079,
+#                 0.059841820910257436,
+#                 0.0013668981445561978,
+#             ],
+#         ],
+#         [
+#             [],
+#             [
+#                 0.9178264236525453,
+#                 0.02096485729264079,
+#                 0.059841820910257436,
+#                 0.0013668981445561978,
+#             ],
+#         ],
+#         [
+#             [0, 1],
+#             [
+#                 0.9178264236525453,
+#                 0.02096485729264079,
+#                 0.059841820910257436,
+#                 0.0013668981445561978,
+#             ],
+#         ],
+#         [
+#             [1, 0],
+#             [
+#                 0.9178264236525453,
+#                 0.059841820910257436,
+#                 0.02096485729264079,
+#                 0.0013668981445561978,
+#             ],
+#         ],
+#         [0, [0.938791280945186, 0.061208719054813635]],
+#         [[0], [0.938791280945186, 0.061208719054813635]],
+#     ],
+# )
+# @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+# def test_probs_tape_wire01(self, cases, tol, dev, C):
+#     dev._state = dev._asarray(dev._state, C)
+
+#     with qml.tape.JacobianTape() as tape:
+#         qml.RX(0.5, wires=[0])
+#         qml.RY(0.3, wires=[1])
+
+#     p = dev.probs(cases[0])
+
+#     assert np.allclose(cases[1], p, atol=tol, rtol=0)
 
 
 # class TestExpval:

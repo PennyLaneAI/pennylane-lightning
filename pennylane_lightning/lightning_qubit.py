@@ -565,7 +565,7 @@ class LightningQubit(DefaultQubit):
             Expectation value of the observable
         """
         if isinstance(observable.name, List) or not all(
-            isinstance(w, int) and w > -1 for w in observable.wires
+            isinstance(w, int) and w > -1 for w in self.wires
         ):
             return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
@@ -577,7 +577,7 @@ class LightningQubit(DefaultQubit):
             )
             return probs[idx]
 
-        if observable.name == "Identity":
+        if observable.name in ["Identity", "Hermitian"]:
             return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
         if self.shots is not None:
@@ -674,11 +674,11 @@ class LightningQubit(DefaultQubit):
             Variance of the observable
         """
         if isinstance(observable.name, List) or not all(
-            isinstance(w, int) and w > -1 for w in observable.wires
+            isinstance(w, int) and w > -1 for w in self.wires
         ):
             return super().var(observable, shot_range=shot_range, bin_size=bin_size)
 
-        if observable.name == "Identity":
+        if observable.name in ["Identity", "Hermitian"]:
             return super().var(observable, shot_range=shot_range, bin_size=bin_size)
 
         if observable.name == "Projector":
