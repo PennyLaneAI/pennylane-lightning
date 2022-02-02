@@ -111,7 +111,7 @@ requirements = [
 ]
 
 info = {
-    "name": "PennyLane-Lightning",
+    "name": "PennyLane-Lightning-Test",
     "version": version,
     "maintainer": "Xanadu Inc.",
     "maintainer_email": "software@xanadu.ai",

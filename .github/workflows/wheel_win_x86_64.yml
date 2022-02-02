@@ -77,14 +77,21 @@ jobs:
   upload-pypi:
     needs: win-wheels
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
     steps:
+      - uses: actions-ecosystem/action-regex-match@v2
+        id: rc_build
+        with:
+          text: ${{ github.event.pull_request.head.ref }}
+          regex: '.*[0-9]+.[0-9]+.[0-9]+[-]?rc[0-9]+'
+
       - uses: actions/download-artifact@v2
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         with:
           name: Windows-wheels.zip
           path: dist
 
       - name: Upload wheels to PyPI
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
