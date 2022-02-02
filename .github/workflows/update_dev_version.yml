@@ -1,0 +1,45 @@
+name: Update dev version automatically
+on:
+  pull_request:
+
+jobs:
+  update-dev-version:
+    name: Update version for developing branches
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout PennyLane-Lightning master
+        uses: actions/checkout@v2
+        with:
+          ref: master
+          path: main
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.7'
+
+      - name: Checkout PennyLane-Lightning PR
+        uses: actions/checkout@v2
+        with:
+          path: pr
+
+      - name: Run version update script
+        run: >
+          python3 pr/.github/workflows/dev_version_script.py
+          --pr-path "./pr" --master-path "./main"
+
+      - name: Commit changes
+        run: |
+          cd ./pr
+          git config --global user.email "chae-yeun@xanadu.ai"
+          git config --global user.name "Chae-Yeun Park"
+          git add .
+          git commit -m 'Auto update version'
+
+      - name: Push changes # push the output folder to your repo
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.DEV_TOKEN }}
+          branch: ${{ github.ref }}
+          directory: ./pr
