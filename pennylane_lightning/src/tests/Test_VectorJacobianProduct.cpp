@@ -53,16 +53,18 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={0}",
 
         for (const auto &p : param) {
             auto ops = VJP.createOpsData({"RX"}, {{p}}, {{0}}, {false});
-
             std::vector<std::complex<double>> cdata(0b1 << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
 
             StateVectorRaw<double> psi(cdata.data(), cdata.size());
-            VJP.vectorJacobianProduct(vjp_res, jacobian, dy, psi.getData(),
-                                      psi.getLength(), {obs}, ops, {0}, true);
 
-            CAPTURE(jacobian);
-            CHECK(0 == Approx(jacobian[0].front()));
+            std::vector<size_t> tp{0};
+            std::vector<ObsDatum<double>> obs_ls{obs};
+            JacobianData<double> tape{
+                num_params, psi.getLength(), psi.getData(), obs_ls, ops, tp};
+
+            auto fn = VJP.vectorJacobianProduct(dy, num_params, true);
+            vjp_res = fn(tape);
 
             CAPTURE(vjp_res);
             CHECK(0 == Approx(vjp_res[0]));
@@ -93,11 +95,14 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={1}",
             cdata[0] = std::complex<double>{1, 0};
 
             StateVectorRaw<double> psi(cdata.data(), cdata.size());
-            VJP.vectorJacobianProduct(vjp_res, jacobian, dy, psi.getData(),
-                                      psi.getLength(), {obs}, ops, {0}, true);
 
-            CAPTURE(jacobian);
-            CHECK(-sin(p) == Approx(jacobian[0].front()));
+            std::vector<size_t> tp{0};
+            std::vector<ObsDatum<double>> obs_ls{obs};
+            JacobianData<double> tape{
+                num_params, psi.getLength(), psi.getData(), obs_ls, ops, tp};
+
+            auto fn = VJP.vectorJacobianProduct(dy, num_params, true);
+            vjp_res = fn(tape);
 
             CAPTURE(vjp_res);
             CHECK(-sin(p) == Approx(vjp_res[0]));
@@ -128,11 +133,14 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={0.4}",
             cdata[0] = std::complex<double>{1, 0};
 
             StateVectorRaw<double> psi(cdata.data(), cdata.size());
-            VJP.vectorJacobianProduct(vjp_res, jacobian, dy, psi.getData(),
-                                      psi.getLength(), {obs}, ops, {0}, true);
 
-            CAPTURE(jacobian);
-            CHECK(-sin(p) == Approx(jacobian[0].front()));
+            std::vector<size_t> tp{0};
+            std::vector<ObsDatum<double>> obs_ls{obs};
+            JacobianData<double> tape{
+                num_params, psi.getLength(), psi.getData(), obs_ls, ops, tp};
+
+            auto fn = VJP.vectorJacobianProduct(dy, num_params, true);
+            vjp_res = fn(tape);
 
             CAPTURE(vjp_res);
             CHECK(vjp_res.size() == num_params);
@@ -164,11 +172,14 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RY, Obs=X dy={0.4}",
             cdata[0] = std::complex<double>{1, 0};
 
             StateVectorRaw<double> psi(cdata.data(), cdata.size());
-            VJP.vectorJacobianProduct(vjp_res, jacobian, dy, psi.getData(),
-                                      psi.getLength(), {obs}, ops, {0}, true);
 
-            CAPTURE(jacobian);
-            CHECK(cos(p) == Approx(jacobian[0].front()).margin(1e-7));
+            std::vector<size_t> tp{0};
+            std::vector<ObsDatum<double>> obs_ls{obs};
+            JacobianData<double> tape{
+                num_params, psi.getLength(), psi.getData(), obs_ls, ops, tp};
+
+            auto fn = VJP.vectorJacobianProduct(dy, num_params, true);
+            vjp_res = fn(tape);
 
             CAPTURE(vjp_res);
             CHECK(vjp_res.size() == num_params);
@@ -201,13 +212,13 @@ TEST_CASE(
 
         auto ops = VJP.createOpsData({"RX"}, {{param[0]}}, {{0}}, {false});
 
-        VJP.vectorJacobianProduct(vjp_res, jacobian, dy, psi.getData(),
-                                  psi.getLength(), {obs1, obs2}, ops, {0},
-                                  true);
+        std::vector<size_t> tp{0};
+        std::vector<ObsDatum<double>> obs_ls{obs1, obs2};
+        JacobianData<double> tape{
+            num_params, psi.getLength(), psi.getData(), obs_ls, ops, tp};
 
-        CAPTURE(jacobian);
-        CHECK(-sin(param[0]) == Approx(jacobian[0][0]).margin(1e-7));
-        CHECK(0.0 == Approx(jacobian[1][0]).margin(1e-7));
+        auto fn = VJP.vectorJacobianProduct(dy, num_params, true);
+        vjp_res = fn(tape);
 
         CAPTURE(vjp_res);
         CHECK(vjp_res.size() == num_params);
@@ -240,14 +251,13 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=[RX,RX,RX], "
                                      {{param[0]}, {param[1]}, {param[2]}},
                                      {{0}, {1}, {2}}, {false, false, false});
 
-        VJP.vectorJacobianProduct(vjp_res, jacobian, dy, psi.getData(),
-                                  psi.getLength(), {obs1, obs2, obs3}, ops,
-                                  {0, 1, 2}, true);
+        std::vector<size_t> tp{0, 1, 2};
+        std::vector<ObsDatum<double>> obs_ls{obs1, obs2, obs3};
+        JacobianData<double> tape{
+            num_params, psi.getLength(), psi.getData(), obs_ls, ops, tp};
 
-        CAPTURE(jacobian);
-        CHECK(-sin(param[0]) == Approx(jacobian[0][0]).margin(1e-7));
-        CHECK(-sin(param[1]) == Approx(jacobian[1][1]).margin(1e-7));
-        CHECK(-sin(param[2]) == Approx(jacobian[2][2]).margin(1e-7));
+        auto fn = VJP.vectorJacobianProduct(dy, num_params, true);
+        vjp_res = fn(tape);
 
         CAPTURE(vjp_res);
         CHECK(vjp_res.size() == num_params);
@@ -284,14 +294,12 @@ TEST_CASE(
                                      {{param[0]}, {param[1]}, {param[2]}},
                                      {{0}, {1}, {2}}, {false, false, false});
 
-        VJP.vectorJacobianProduct(vjp_res, jacobian, dy, psi.getData(),
-                                  psi.getLength(), {obs1, obs2, obs3}, ops,
-                                  t_params, true);
+        std::vector<ObsDatum<double>> obs_ls{obs1, obs2, obs3};
+        JacobianData<double> tape{
+            num_params, psi.getLength(), psi.getData(), obs_ls, ops, t_params};
 
-        CAPTURE(jacobian);
-        CHECK(-sin(param[0]) == Approx(jacobian[0][0]).margin(1e-7));
-        CHECK(0 == Approx(jacobian[1][1]).margin(1e-7));
-        CHECK(-sin(param[2]) == Approx(jacobian[2][1]).margin(1e-7));
+        auto fn = VJP.vectorJacobianProduct(dy, num_params, true);
+        vjp_res = fn(tape);
 
         CAPTURE(vjp_res);
         CHECK(vjp_res.size() == num_params);
@@ -324,13 +332,13 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=[RX,RX,RX], "
                                      {{param[0]}, {param[1]}, {param[2]}},
                                      {{0}, {1}, {2}}, {false, false, false});
 
-        VJP.vectorJacobianProduct(vjp_res, jacobian, dy, psi.getData(),
-                                  psi.getLength(), {obs}, ops, {0, 1, 2}, true);
+        std::vector<size_t> tp{0, 1, 2};
+        std::vector<ObsDatum<double>> obs_ls{obs};
+        JacobianData<double> tape{
+            num_params, psi.getLength(), psi.getData(), obs_ls, ops, tp};
 
-        CAPTURE(jacobian);
-        CHECK(-0.1755096592645253 == Approx(jacobian[0][0]).margin(1e-7));
-        CHECK(0.26478810666384334 == Approx(jacobian[0][1]).margin(1e-7));
-        CHECK(-0.6312451595102775 == Approx(jacobian[0][2]).margin(1e-7));
+        auto fn = VJP.vectorJacobianProduct(dy, num_params, true);
+        vjp_res = fn(tape);
 
         CAPTURE(vjp_res);
         CHECK(vjp_res.size() == num_params);
@@ -372,17 +380,13 @@ TEST_CASE(
             {{0}, {0}, {0}, {0, 1}, {1, 2}, {1}, {1}, {1}},
             {false, false, false, false, false, false, false, false});
 
-        VJP.vectorJacobianProduct(vjp_res, jacobian, dy, psi.getData(),
-                                  psi.getLength(), {obs}, ops,
-                                  {0, 1, 2, 3, 4, 5}, true);
+        std::vector<size_t> tp{0, 1, 2, 3, 4, 5};
+        std::vector<ObsDatum<double>> obs_ls{obs};
+        JacobianData<double> tape{
+            num_params, psi.getLength(), psi.getData(), obs_ls, ops, tp};
 
-        CAPTURE(jacobian);
-        CHECK(0.0 == Approx(jacobian[0][0]).margin(1e-7));
-        CHECK(-0.674214427 == Approx(jacobian[0][1]).margin(1e-7));
-        CHECK(0.275139672 == Approx(jacobian[0][2]).margin(1e-7));
-        CHECK(0.275139672 == Approx(jacobian[0][3]).margin(1e-7));
-        CHECK(-0.0129093062 == Approx(jacobian[0][4]).margin(1e-7));
-        CHECK(0.323846156 == Approx(jacobian[0][5]).margin(1e-7));
+        auto fn = VJP.vectorJacobianProduct(dy, num_params, true);
+        vjp_res = fn(tape);
 
         CAPTURE(vjp_res);
         CHECK(vjp_res.size() == num_params);
@@ -427,17 +431,13 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=Mixed, Obs=[XXX], "
             {{0}, {0}, {0}, {0, 1}, {1, 2}, {1}, {1}, {1}},
             {false, false, false, false, false, false, false, false});
 
-        VJP.vectorJacobianProduct(vjp_res, jacobian, dy, psi.getData(),
-                                  psi.getLength(), {obs}, ops,
-                                  {0, 1, 2, 3, 4, 5}, true);
+        std::vector<size_t> tp{0, 1, 2, 3, 4, 5};
+        std::vector<ObsDatum<double>> obs_ls{obs};
+        JacobianData<double> tape{
+            num_params, psi.getLength(), psi.getData(), obs_ls, ops, tp};
 
-        CAPTURE(jacobian);
-        CHECK(0.0 == Approx(jacobian[0][0]).margin(1e-7));
-        CHECK(-0.674214427 == Approx(jacobian[0][1]).margin(1e-7));
-        CHECK(0.275139672 == Approx(jacobian[0][2]).margin(1e-7));
-        CHECK(0.275139672 == Approx(jacobian[0][3]).margin(1e-7));
-        CHECK(-0.0129093062 == Approx(jacobian[0][4]).margin(1e-7));
-        CHECK(0.323846156 == Approx(jacobian[0][5]).margin(1e-7));
+        auto fn = VJP.vectorJacobianProduct(dy, num_params, true);
+        vjp_res = fn(tape);
 
         CAPTURE(vjp_res);
         CHECK(vjp_res.size() == num_params);
@@ -457,7 +457,6 @@ TEST_CASE(
 
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     {
-        const size_t num_qubits = 1;
         const size_t num_params = 3;
         const size_t num_obs = 1;
 
@@ -489,19 +488,15 @@ TEST_CASE(
                 {{local_params[0]}, {local_params[1]}, {local_params[2]}},
                 {{0}, {0}, {0}}, {false, false, false});
 
-            VJP.vectorJacobianProduct(vjp_res, jacobian, dy, psi.getData(),
-                                      psi.getLength(), {obs}, ops, {0, 1, 2},
-                                      true);
+            std::vector<size_t> tp{0, 1, 2};
+            std::vector<ObsDatum<double>> obs_ls{obs};
+            JacobianData<double> tape{
+                num_params, psi.getLength(), psi.getData(), obs_ls, ops, tp};
+
+            auto fn = VJP.vectorJacobianProduct(dy, num_params, true);
+            vjp_res = fn(tape);
 
             CAPTURE(theta);
-            CAPTURE(jacobian);
-            CHECK(expec_results[theta][0] ==
-                  Approx(jacobian[0][0]).margin(1e-7));
-            CHECK(expec_results[theta][1] ==
-                  Approx(jacobian[0][1]).margin(1e-7));
-            CHECK(expec_results[theta][2] ==
-                  Approx(jacobian[0][2]).margin(1e-7));
-
             CAPTURE(vjp_res);
             CHECK(vjp_res.size() == num_params);
             CHECK(expec_results[theta][0] == Approx(vjp_res[0]).margin(1e-7));
@@ -516,7 +511,6 @@ TEST_CASE(
     VectorJacobianProduct<double> VJP;
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     {
-        const size_t num_qubits = 2;
         const std::vector<size_t> t_params{1, 2, 3};
         const size_t num_obs = 1;
 
@@ -553,13 +547,15 @@ TEST_CASE(
             {false, false, false, false, false, false, false, false, false,
              false, false, false});
 
-        VJP.vectorJacobianProduct(vjp_res, jacobian, dy, psi.getData(),
-                                  psi.getLength(), {obs}, ops, t_params, true);
+        std::vector<ObsDatum<double>> obs_ls{obs};
+        JacobianData<double> tape{
+            t_params.size(), psi.getLength(), psi.getData(), obs_ls, ops,
+            t_params};
+
+        auto fn = VJP.vectorJacobianProduct(dy, t_params.size(), true);
+        vjp_res = fn(tape);
 
         std::vector<double> expected{-0.71429188, 0.04998561, -0.71904837};
-        CHECK(expected[0] == Approx(jacobian[0][0]));
-        CHECK(expected[1] == Approx(jacobian[0][1]));
-        CHECK(expected[2] == Approx(jacobian[0][2]));
 
         CAPTURE(vjp_res);
         CHECK(vjp_res.size() == t_params.size());
@@ -574,7 +570,6 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Mixed Ops, Obs and "
     VectorJacobianProduct<double> VJP;
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     {
-        const size_t num_qubits = 2;
         const std::vector<size_t> t_params{1, 2, 3};
         const size_t num_obs = 1;
 
@@ -611,13 +606,15 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Mixed Ops, Obs and "
             {false, false, false, false, false, false, false, false, false,
              false, false, false});
 
-        VJP.vectorJacobianProduct(vjp_res, jacobian, dy, psi.getData(),
-                                  psi.getLength(), {obs}, ops, t_params, true);
+        std::vector<ObsDatum<double>> obs_ls{obs};
+        JacobianData<double> tape{
+            t_params.size(), psi.getLength(), psi.getData(), obs_ls, ops,
+            t_params};
+
+        auto fn = VJP.vectorJacobianProduct(dy, t_params.size(), true);
+        vjp_res = fn(tape);
 
         std::vector<double> expected{-0.71429188, 0.04998561, -0.71904837};
-        CHECK(expected[0] == Approx(jacobian[0][0]));
-        CHECK(expected[1] == Approx(jacobian[0][1]));
-        CHECK(expected[2] == Approx(jacobian[0][2]));
 
         CAPTURE(vjp_res);
         CHECK(vjp_res.size() == t_params.size());
