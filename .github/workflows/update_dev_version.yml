@@ -22,7 +22,8 @@ jobs:
       - name: Checkout PennyLane-Lightning PR
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0
+          token: ${{ secrets.DEV_TOKEN }}
+          branch: ${{ github.head_ref }}
           path: pr
 
       - name: Run version update script
@@ -38,9 +39,7 @@ jobs:
           git add .
           git commit -m 'Auto update version'
 
-      - name: Push changes # push the output folder to your repo
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.DEV_TOKEN }}
-          branch: ${{ github.head_ref }}
-          directory: ./pr
+      - name: Push changes
+        run: |
+          cd ./pr
+          git push
