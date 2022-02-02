@@ -16,6 +16,8 @@ This module contains the :class:`~.LightningQubit` class, a PennyLane simulator 
 interfaces with C++ for fast linear algebra calculations.
 """
 from warnings import warn
+import os
+from itertools import islice
 
 import numpy as np
 from pennylane import (
@@ -65,6 +67,12 @@ UNSUPPORTED_PARAM_GATES_ADJOINT = (
 )
 
 
+def _chunk_iterable(it, num_chunks):
+    "Lazy-evaluted chunking of given iterable from https://stackoverflow.com/a/22045226"
+    it = iter(it)
+    return iter(lambda: tuple(islice(it, num_chunks)), ())
+
+
 class LightningQubit(DefaultQubit):
     """PennyLane Lightning device.
 
@@ -92,7 +100,7 @@ class LightningQubit(DefaultQubit):
     author = "Xanadu Inc."
     _CPP_BINARY_AVAILABLE = True
 
-    def __init__(self, wires, *, kernel_for_ops=None, shots=None):
+    def __init__(self, wires, *, kernel_for_ops=None, shots=None, batch_obs=False):
         self._kernel_for_ops = DEFAULT_KERNEL_FOR_OPS
         if kernel_for_ops is not None:
             if not isinstance(kernel_for_ops, dict):
@@ -106,6 +114,7 @@ class LightningQubit(DefaultQubit):
                 self._kernel_for_ops[gate_op] = kernel
 
         super().__init__(wires, shots=shots)
+        self._batch_obs = batch_obs
 
     @classmethod
     def capabilities(cls):
@@ -295,13 +304,31 @@ class LightningQubit(DefaultQubit):
 
         state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
 
-        jac = adj.adjoint_jacobian(
-            state_vector,
-            obs_serialized,
-            ops_serialized,
-            tp_shift,
-            tape.num_params,
-        )
+        # If requested batching over observables, chunk into OMP_NUM_THREADS sized chunks.
+        # This will allow use of Lightning with adjoint for large-qubit numbers AND large
+        # numbers of observables, enabling choice between compute time and memory use.
+        if self._batch_obs:
+            requested_threads = int(os.environ["OMP_NUM_THREADS"])
+
+            obs_partitions = _chunk_iterable(obs_serialized, requested_threads)
+            jac = []
+            for obs_chunk in obs_partitions:
+                jac_local = adj.adjoint_jacobian(
+                    state_vector,
+                    obs_chunk,
+                    ops_serialized,
+                    tp_shift,
+                    tape.num_params,
+                )
+                jac.extend(jac_local)
+        else:
+            jac = adj.adjoint_jacobian(
+                state_vector,
+                obs_serialized,
+                ops_serialized,
+                tp_shift,
+                tape.num_params,
+            )
         return jac
 
     def vector_jacobian_product(self, tape, dy, starting_state=None, use_device_state=False):
