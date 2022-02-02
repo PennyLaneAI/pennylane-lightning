@@ -77,9 +77,11 @@ jobs:
   upload-pypi:
     needs: win-wheels
     runs-on: ubuntu-latest
+    #if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
     steps:
       - uses: actions/download-artifact@v2
         with:
+          name: artifact
           path: dist
 
       - name: Upload wheels to PyPI
@@ -87,4 +89,5 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          #package_dir: '/home/runner/work/pennylane-lightning/pennylane-lightning/dist/'
           repository_url: https://test.pypi.org/legacy/
