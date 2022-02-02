@@ -485,6 +485,7 @@ class LightningQubit(DefaultQubit):
 
         return processing_fns
 
+
 if not CPP_BINARY_AVAILABLE:
 
     class LightningQubit(DefaultQubit):

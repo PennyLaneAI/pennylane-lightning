@@ -660,7 +660,6 @@ inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
     return v_out;
 }
 
-
 /**
  * @brief Calculates transpose of a matrix recursively and Cache-Friendly
  * using blocking and Cache-optimized techniques.
