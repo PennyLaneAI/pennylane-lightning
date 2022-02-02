@@ -1358,7 +1358,7 @@ template <template <typename...> class Container, typename T>
 auto chunkData(const Container<T> &data, std::size_t num_chunks)
     -> Container<Container<T>> {
     const auto rem = data.size() % num_chunks;
-    const std::size_t div = static_cast<std::size_t>(data.size() / num_chunks);
+    const auto div = static_cast<std::size_t>(data.size() / num_chunks);
     if (!div) { // Match chunks to available work
         return chunkDataSize(data, 1);
     }

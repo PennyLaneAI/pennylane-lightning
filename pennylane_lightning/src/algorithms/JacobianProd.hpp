@@ -17,8 +17,7 @@
 
 #include "AdjointDiff.hpp"
 
-namespace Pennylane {
-namespace Algorithms {
+namespace Pennylane::Algorithms {
 
 /**
  * @brief Represent the class to compute the vector-Jacobian products
@@ -165,5 +164,4 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
     }
 }; // class VectorJacobianProduct
 
-} // namespace Algorithms
-} // namespace Pennylane
+} // namespace Pennylane::Algorithms
