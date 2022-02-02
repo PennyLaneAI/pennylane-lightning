@@ -73,7 +73,7 @@ jobs:
         with:
           name: ${{ runner.os }}-wheels.zip
           path: ./wheelhouse/*.whl
-    
+
   upload-pypi:
     needs: win-wheels
     runs-on: ubuntu-latest
