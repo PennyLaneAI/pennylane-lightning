@@ -85,7 +85,7 @@ class LightningQubit(DefaultQubit):
             variances analytically.
     """
 
-    name = "Lightning Qubit PennyLane plugin"
+    name = "Lightning Qubit PennyLane plugin Test"
     short_name = "lightning.qubit"
     pennylane_requires = ">=0.15"
     version = __version__
