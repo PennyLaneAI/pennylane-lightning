@@ -22,7 +22,7 @@ import pennylane as qml
 from pennylane import numpy as np
 from pennylane import QNode, qnode
 from scipy.stats import unitary_group
-
+from pennylane_lightning import LightningQubit as lq
 
 I, X, Y, Z = np.eye(2), qml.PauliX.matrix, qml.PauliY.matrix, qml.PauliZ.matrix
 
@@ -62,8 +62,6 @@ def Rz(theta):
 
 class TestAdjointJacobian:
     """Tests for the adjoint_jacobian method"""
-
-    from pennylane_lightning import LightningQubit as lq
 
     @pytest.fixture
     def dev(self):
@@ -692,6 +690,7 @@ def test_integration(returns):
     assert np.allclose(j_def, j_lightning)
 
 
+@pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 def test_integration_chunk_observables():
     """Integration tests that compare to default.qubit for a large circuit with multiple expectation values. Expvals are generated in parallelized chunks."""
     dev_def = qml.device("default.qubit", wires=range(4))
@@ -715,6 +714,7 @@ def test_integration_chunk_observables():
 
     assert np.allclose(j_def, j_lightning)
     assert np.allclose(j_def, j_lightning_batched)
+
 
 custom_wires = ["alice", 3.14, -1, 0]
 
