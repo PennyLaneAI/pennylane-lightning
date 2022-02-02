@@ -35,7 +35,7 @@ jobs:
         if:
         run: |
           cd ./pr
-          if [[ -z $(git status -s) ]]; then
+          if [[ -n $(git status -s) ]]; then
             git config --local user.email "chae-yeun@xanadu.ai"
             git config --local user.name "Dev version update bot"
             git add .
