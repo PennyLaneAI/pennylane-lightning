@@ -22,6 +22,7 @@ jobs:
       - name: Checkout PennyLane-Lightning PR
         uses: actions/checkout@v2
         with:
+          fetch-depth: 0
           path: pr
 
       - name: Run version update script
@@ -32,8 +33,8 @@ jobs:
       - name: Commit changes
         run: |
           cd ./pr
-          git config --global user.email "chae-yeun@xanadu.ai"
-          git config --global user.name "Chae-Yeun Park"
+          git config --local user.email "chae-yeun@xanadu.ai"
+          git config --local user.name "Dev version update bot"
           git add .
           git commit -m 'Auto update version'
 
