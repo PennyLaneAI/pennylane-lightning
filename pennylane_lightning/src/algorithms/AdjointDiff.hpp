@@ -28,6 +28,9 @@
 #include "Util.hpp"
 
 #include <iostream>
+#if defined(_OPENMP)
+#include <omp.h>
+#endif
 
 /// @cond DEV
 namespace {
@@ -655,73 +658,117 @@ template <class T = double> class AdjointJacobian {
 
         // Track positions within par and non-par operations
         size_t num_observables = observables.size();
-        size_t trainableParamNumber = trainableParams.size() - 1;
-        size_t current_param_idx =
-            operations.getNumParOps() - 1; // total number of parametric ops
+        size_t num_threads = 1;
 
-        auto tp_it = trainableParams.end();
+        // clang-format off
 
-        // Create $U_{1:p}\vert \lambda \rangle$
-        StateVectorManaged<T> lambda(psi, num_elements);
-
-        // Apply given operations to statevector if requested
-        if (apply_operations) {
-            applyOperations(lambda, operations);
+        #if defined(_OPENMP)
+        // Determine user-requested OMP_NUM_THREADS value
+        #pragma omp parallel
+        {
+            #pragma omp single
+            num_threads = static_cast<std::size_t>(omp_get_num_threads());
         }
+        #endif
 
-        // Create observable-applied state-vectors
-        std::vector<StateVectorManaged<T>> H_lambda(
-            num_observables, StateVectorManaged<T>{lambda.getNumQubits()});
-        applyObservables(H_lambda, lambda, observables);
+        // clang-format on
 
-        StateVectorManaged<T> mu(lambda.getNumQubits());
+        // Batch iteration over data
+        const std::size_t batch_size =
+            (num_threads < num_observables) ? num_threads : num_observables;
 
-        for (int op_idx = static_cast<int>(operations.getOpsName().size() - 1);
-             op_idx >= 0; op_idx--) {
-            PL_ABORT_IF(operations.getOpsParams()[op_idx].size() > 1,
-                        "The operation is not supported using the adjoint "
-                        "differentiation method");
-            if ((operations.getOpsName()[op_idx] != "QubitStateVector") &&
-                (operations.getOpsName()[op_idx] != "BasisState")) {
-                mu.updateData(lambda.getDataVector());
-                applyOperationAdj(lambda, operations, op_idx);
+        // Partition observable indices into chunks to match available threads
+        std::vector<std::size_t> obs_indices(num_observables);
+        std::iota(obs_indices.begin(), obs_indices.end(), 0);
 
-                if (operations.hasParams(op_idx)) {
-                    if (std::find(trainableParams.begin(), tp_it,
-                                  current_param_idx) != tp_it) {
-                        const T scalingFactor =
-                            applyGenerator(
-                                mu, operations.getOpsName()[op_idx],
-                                operations.getOpsWires()[op_idx],
-                                !operations.getOpsInverses()[op_idx]) *
-                            (2 * (operations.getOpsInverses()[op_idx] ? 0 : 1) -
-                             1);
-                        // clang-format off
+        const auto obs_idx_per_batch =
+            Util::chunkDataSize(obs_indices, batch_size);
 
-                        #if defined(_OPENMP)
-                            #pragma omp parallel for default(none)   \
-                            shared(H_lambda, jac, mu, scalingFactor, \
-                                trainableParamNumber, tp_it,         \
-                                num_observables)
-                        #endif
+        // Here obs_indices are a given set of indices
+        // to batch process using the available number
+        // of OpenMP threads
+        std::size_t batch_num = 0;
+        for (const auto &local_obs_indices : obs_idx_per_batch) {
+            size_t trainableParamNumber = trainableParams.size() - 1;
+            size_t current_param_idx =
+                operations.getNumParOps() - 1; // total number of parametric ops
+            auto tp_it = trainableParams.end();
 
-                        // clang-format on
-                        for (size_t obs_idx = 0; obs_idx < num_observables;
-                             obs_idx++) {
-                            updateJacobian(H_lambda[obs_idx], mu, jac,
-                                           scalingFactor, obs_idx,
-                                           trainableParamNumber);
-                        }
-                        trainableParamNumber--;
-                        std::advance(tp_it, -1);
-                    }
-                    current_param_idx--;
-                }
-                applyOperationsAdj(H_lambda, operations,
-                                   static_cast<size_t>(op_idx));
+            std::vector<ObsDatum<T>> local_observables;
+            for (std::size_t i = 0; i < local_obs_indices.size(); i++) {
+                local_observables.emplace_back(
+                    observables[local_obs_indices[i]]);
             }
+
+            // Create $U_{1:p}\vert \lambda \rangle$
+            StateVectorManaged<T> lambda(psi, num_elements);
+            // Apply given operations to statevector if requested
+            if (apply_operations) {
+                applyOperations(lambda, operations);
+            }
+
+            // Create observable-applied state-vectors
+            std::vector<StateVectorManaged<T>> H_lambda(
+                local_obs_indices.size(),
+                StateVectorManaged<T>{lambda.getNumQubits()});
+            applyObservables(H_lambda, lambda, local_observables);
+
+            StateVectorManaged<T> mu(lambda.getNumQubits());
+
+            for (int op_idx =
+                     static_cast<int>(operations.getOpsName().size() - 1);
+                 op_idx >= 0; op_idx--) {
+                PL_ABORT_IF(operations.getOpsParams()[op_idx].size() > 1,
+                            "The operation is not supported using the adjoint "
+                            "differentiation method");
+                if ((operations.getOpsName()[op_idx] != "QubitStateVector") &&
+                    (operations.getOpsName()[op_idx] != "BasisState")) {
+
+                    mu.updateData(lambda.getDataVector());
+                    applyOperationAdj(lambda, operations, op_idx);
+
+                    if (operations.hasParams(op_idx)) {
+                        if (std::find(trainableParams.begin(), tp_it,
+                                      current_param_idx) != tp_it) {
+                            const T scalingFactor =
+                                applyGenerator(
+                                    mu, operations.getOpsName()[op_idx],
+                                    operations.getOpsWires()[op_idx],
+                                    !operations.getOpsInverses()[op_idx]) *
+                                (2 * (operations.getOpsInverses()[op_idx] ? 0
+                                                                          : 1) -
+                                 1);
+                            // clang-format off
+
+                            #if defined(_OPENMP)
+                                #pragma omp parallel for default(none)   \
+                                shared(H_lambda, jac, mu, scalingFactor, \
+                                    trainableParamNumber, tp_it,         \
+                                    num_observables, local_observables,  \
+                                    batch_num, batch_size)
+                            #endif
+
+                            // clang-format on
+                            for (size_t obs_idx = 0;
+                                 obs_idx < local_observables.size();
+                                 obs_idx++) {
+                                updateJacobian(H_lambda[obs_idx], mu, jac,
+                                               scalingFactor,
+                                               obs_idx + batch_num * batch_size,
+                                               trainableParamNumber);
+                            }
+                            trainableParamNumber--;
+                            std::advance(tp_it, -1);
+                        }
+                        current_param_idx--;
+                    }
+                    applyOperationsAdj(H_lambda, operations,
+                                       static_cast<size_t>(op_idx));
+                }
+            }
+            batch_num++;
         }
     }
-}; // class AdjointJacobian
+}; // namespace Pennylane::Algorithms
 
 } // namespace Pennylane::Algorithms
