@@ -12,7 +12,7 @@ env:
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
-    pip install pybind11 ninja
+    pip install pybind11 ninja cmake && yum install -y gcc gcc-c++
 
   # Skip PPC tests due to lack of numpy/scipy wheel support
   CIBW_TEST_SKIP: "*-manylinux_{ppc64le}"
