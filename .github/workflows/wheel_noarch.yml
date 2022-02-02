@@ -36,7 +36,24 @@ jobs:
           SKIP_COMPILATION: True
 
       - uses: actions/upload-artifact@v2
-        #if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
         with:
-          name: pure-python-wheels
+          name: pure-python-wheels.zip
           path: main/dist/*.whl
+
+  upload-pypi:
+    needs: build-pure-python-wheel
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: pure-python-wheels.zip
+          path: dist
+
+      - name: Upload wheels to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
