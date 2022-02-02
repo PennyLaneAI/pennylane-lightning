@@ -64,10 +64,7 @@ class TestComparison:
     @pytest.mark.parametrize(
         "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
     )
-    @pytest.mark.skipif(
-        not CPP_BINARY_AVAILABLE and lightning_dev_version == lightning_qubit_batch_obs_dev,
-        reason="Lightning binary required",
-    )
+    @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_one_qubit_circuit(self, wires, lightning_dev_version, basis_state):
         """Test a single-qubit circuit"""
 
@@ -97,10 +94,7 @@ class TestComparison:
     @pytest.mark.parametrize(
         "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
     )
-    @pytest.mark.skipif(
-        not CPP_BINARY_AVAILABLE and lightning_dev_version == lightning_qubit_batch_obs_dev,
-        reason="Lightning binary required",
-    )
+    @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_two_qubit_circuit(self, wires, lightning_dev_version, basis_state):
         """Test a two-qubit circuit"""
 
@@ -140,10 +134,7 @@ class TestComparison:
     @pytest.mark.parametrize(
         "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
     )
-    @pytest.mark.skipif(
-        not CPP_BINARY_AVAILABLE and lightning_dev_version == lightning_qubit_batch_obs_dev,
-        reason="Lightning binary required",
-    )
+    @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_three_qubit_circuit(self, wires, lightning_dev_version, basis_state):
         """Test a three-qubit circuit"""
 
@@ -191,10 +182,7 @@ class TestComparison:
     @pytest.mark.parametrize(
         "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
     )
-    @pytest.mark.skipif(
-        not CPP_BINARY_AVAILABLE and lightning_dev_version == lightning_qubit_batch_obs_dev,
-        reason="Lightning binary required",
-    )
+    @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_four_qubit_circuit(self, wires, lightning_dev_version, basis_state):
         """Test a four-qubit circuit"""
 
@@ -245,11 +233,8 @@ class TestComparison:
     @pytest.mark.parametrize(
         "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
     )
-    @pytest.mark.skipif(
-        not CPP_BINARY_AVAILABLE and lightning_dev_version == lightning_qubit_batch_obs_dev,
-        reason="Lightning binary required",
-    )
     @pytest.mark.parametrize("wires", range(1, 17))
+    @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_n_qubit_circuit(self, wires, lightning_dev_version):
         """Test an n-qubit circuit"""
 
