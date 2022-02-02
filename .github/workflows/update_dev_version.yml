@@ -41,9 +41,9 @@ jobs:
 
       - name: Push changes # push the output folder to your repo
         uses: ad-m/github-push-action@master
-        run: cd ./pr
         with:
           github_token: ${{ secrets.DEV_TOKEN }}
           force: true
           branch: ${{ github.ref }}
+          directory: ./pr
 
