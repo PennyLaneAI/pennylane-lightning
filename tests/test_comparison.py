@@ -22,13 +22,14 @@ import pytest
 import pennylane as qml
 
 
-@pytest.fixture
 def lightning_qubit_dev(wires):
     """Loads ``lightning.qubit``"""
     return qml.device("lightning.qubit", wires=wires)
 
+def lightning_qubit_batch_obs_dev(wires):
+    """Loads ``lightning.qubit``"""
+    return qml.device("lightning.qubit", wires=wires, batch_obs=True)
 
-@pytest.fixture
 def default_qubit_dev(wires):
     """Loads ``default.qubit``"""
     return qml.device("default.qubit", wires=wires)
@@ -50,7 +51,6 @@ def one_qubit_block(wires=None):
     qml.PauliX(wires=wires)
 
 
-@pytest.mark.usefixtures("lightning_qubit_dev", "default_qubit_dev")
 class TestComparison:
     """A test that compares the output states of ``lightning.qubit`` and ``default.qubit`` for a
     variety of different circuits. This uses ``default.qubit`` as a gold standard to compare
@@ -58,7 +58,8 @@ class TestComparison:
 
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 1))
     @pytest.mark.parametrize("wires", [1])
-    def test_one_qubit_circuit(self, wires, lightning_qubit_dev, default_qubit_dev, basis_state):
+    @pytest.mark.parametrize("lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev])
+    def test_one_qubit_circuit(self, wires, lightning_dev_version, basis_state):
         """Test a single-qubit circuit"""
 
         def circuit():
@@ -67,21 +68,25 @@ class TestComparison:
             qml.BasisState(np.array(basis_state), wires=0)
             one_qubit_block(wires=0)
             return qml.expval(qml.PauliZ(0))
+        
+        dev_l = lightning_dev_version(wires)
+        dev_d = lightning_dev_version(wires)
 
-        lightning = qml.QNode(circuit, lightning_qubit_dev)
-        default = qml.QNode(circuit, default_qubit_dev)
+        lightning = qml.QNode(circuit, dev_l)
+        default = qml.QNode(circuit, dev_d)
 
         lightning()
-        lightning_state = lightning_qubit_dev.state
+        lightning_state = dev_l.state
 
         default()
-        default_state = default_qubit_dev.state
+        default_state = dev_d.state
 
         assert np.allclose(lightning_state, default_state)
 
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 2))
     @pytest.mark.parametrize("wires", [2])
-    def test_two_qubit_circuit(self, wires, lightning_qubit_dev, default_qubit_dev, basis_state):
+    @pytest.mark.parametrize("lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev])
+    def test_two_qubit_circuit(self, wires, lightning_dev_version, basis_state):
         """Test a two-qubit circuit"""
 
         def circuit():
@@ -101,19 +106,24 @@ class TestComparison:
             qml.CRot(0.2, 0.3, 0.7, wires=[0, 1])
             return qml.expval(qml.PauliZ(0))
 
-        lightning = qml.QNode(circuit, lightning_qubit_dev)
-        default = qml.QNode(circuit, default_qubit_dev)
+        dev_l = lightning_dev_version(wires)
+        dev_d = lightning_dev_version(wires)
+
+        lightning = qml.QNode(circuit, dev_l)
+        default = qml.QNode(circuit, dev_d)
 
         lightning()
-        lightning_state = lightning_qubit_dev.state
+        lightning_state = dev_l.state
 
         default()
-        default_state = default_qubit_dev.state
+        default_state = dev_d.state
+
         assert np.allclose(lightning_state, default_state)
 
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 3))
     @pytest.mark.parametrize("wires", [3])
-    def test_three_qubit_circuit(self, wires, lightning_qubit_dev, default_qubit_dev, basis_state):
+    @pytest.mark.parametrize("lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev])
+    def test_three_qubit_circuit(self, wires, lightning_dev_version, basis_state):
         """Test a three-qubit circuit"""
 
         def circuit():
@@ -141,19 +151,24 @@ class TestComparison:
             qml.Toffoli(wires=[2, 1, 0])
             return qml.expval(qml.PauliZ(0))
 
-        lightning = qml.QNode(circuit, lightning_qubit_dev)
-        default = qml.QNode(circuit, default_qubit_dev)
+        dev_l = lightning_dev_version(wires)
+        dev_d = lightning_dev_version(wires)
+
+        lightning = qml.QNode(circuit, dev_l)
+        default = qml.QNode(circuit, dev_d)
 
         lightning()
-        lightning_state = lightning_qubit_dev.state
+        lightning_state = dev_l.state
 
         default()
-        default_state = default_qubit_dev.state
+        default_state = dev_d.state
+
         assert np.allclose(lightning_state, default_state)
 
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 4))
     @pytest.mark.parametrize("wires", [4])
-    def test_four_qubit_circuit(self, wires, lightning_qubit_dev, default_qubit_dev, basis_state):
+    @pytest.mark.parametrize("lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev])
+    def test_four_qubit_circuit(self, wires, lightning_dev_version, basis_state):
         """Test a four-qubit circuit"""
 
         def circuit():
@@ -186,18 +201,23 @@ class TestComparison:
             qml.Toffoli(wires=[2, 1, 0])
             return qml.expval(qml.PauliZ(0))
 
-        lightning = qml.QNode(circuit, lightning_qubit_dev)
-        default = qml.QNode(circuit, default_qubit_dev)
+        dev_l = lightning_dev_version(wires)
+        dev_d = lightning_dev_version(wires)
+
+        lightning = qml.QNode(circuit, dev_l)
+        default = qml.QNode(circuit, dev_d)
 
         lightning()
-        lightning_state = lightning_qubit_dev.state
+        lightning_state = dev_l.state
 
         default()
-        default_state = default_qubit_dev.state
+        default_state = dev_d.state
+
         assert np.allclose(lightning_state, default_state)
 
+    @pytest.mark.parametrize("lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev])
     @pytest.mark.parametrize("wires", range(1, 17))
-    def test_n_qubit_circuit(self, wires, lightning_qubit_dev, default_qubit_dev):
+    def test_n_qubit_circuit(self, wires, lightning_dev_version):
         """Test an n-qubit circuit"""
 
         vec = np.array([1] * (2**wires)) / np.sqrt(2**wires)
@@ -211,12 +231,16 @@ class TestComparison:
             qml.StronglyEntanglingLayers(w, wires=range(wires))
             return qml.expval(qml.PauliZ(0))
 
-        lightning = qml.QNode(circuit, lightning_qubit_dev)
-        default = qml.QNode(circuit, default_qubit_dev)
+        dev_l = lightning_dev_version(wires)
+        dev_d = lightning_dev_version(wires)
+
+        lightning = qml.QNode(circuit, dev_l)
+        default = qml.QNode(circuit, dev_d)
 
         lightning()
-        lightning_state = lightning_qubit_dev.state
+        lightning_state = dev_l.state
 
         default()
-        default_state = default_qubit_dev.state
+        default_state = dev_d.state
+
         assert np.allclose(lightning_state, default_state)

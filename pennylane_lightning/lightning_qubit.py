@@ -308,7 +308,7 @@ class LightningQubit(DefaultQubit):
         # This will allow use of Lightning with adjoint for large-qubit numbers AND large
         # numbers of observables, enabling choice between compute time and memory use.
         if self._batch_obs:
-            requested_threads = int(os.environ["OMP_NUM_THREADS"])
+            requested_threads = int(os.getenv("OMP_NUM_THREADS", "1"))
 
             obs_partitions = _chunk_iterable(obs_serialized, requested_threads)
             jac = []
