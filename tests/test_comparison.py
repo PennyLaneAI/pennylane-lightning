@@ -26,9 +26,11 @@ def lightning_qubit_dev(wires):
     """Loads ``lightning.qubit``"""
     return qml.device("lightning.qubit", wires=wires)
 
+
 def lightning_qubit_batch_obs_dev(wires):
     """Loads ``lightning.qubit``"""
     return qml.device("lightning.qubit", wires=wires, batch_obs=True)
+
 
 def default_qubit_dev(wires):
     """Loads ``default.qubit``"""
@@ -58,7 +60,9 @@ class TestComparison:
 
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 1))
     @pytest.mark.parametrize("wires", [1])
-    @pytest.mark.parametrize("lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev])
+    @pytest.mark.parametrize(
+        "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
+    )
     def test_one_qubit_circuit(self, wires, lightning_dev_version, basis_state):
         """Test a single-qubit circuit"""
 
@@ -68,7 +72,7 @@ class TestComparison:
             qml.BasisState(np.array(basis_state), wires=0)
             one_qubit_block(wires=0)
             return qml.expval(qml.PauliZ(0))
-        
+
         dev_l = lightning_dev_version(wires)
         dev_d = lightning_dev_version(wires)
 
@@ -85,7 +89,9 @@ class TestComparison:
 
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 2))
     @pytest.mark.parametrize("wires", [2])
-    @pytest.mark.parametrize("lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev])
+    @pytest.mark.parametrize(
+        "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
+    )
     def test_two_qubit_circuit(self, wires, lightning_dev_version, basis_state):
         """Test a two-qubit circuit"""
 
@@ -122,7 +128,9 @@ class TestComparison:
 
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 3))
     @pytest.mark.parametrize("wires", [3])
-    @pytest.mark.parametrize("lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev])
+    @pytest.mark.parametrize(
+        "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
+    )
     def test_three_qubit_circuit(self, wires, lightning_dev_version, basis_state):
         """Test a three-qubit circuit"""
 
@@ -167,7 +175,9 @@ class TestComparison:
 
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 4))
     @pytest.mark.parametrize("wires", [4])
-    @pytest.mark.parametrize("lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev])
+    @pytest.mark.parametrize(
+        "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
+    )
     def test_four_qubit_circuit(self, wires, lightning_dev_version, basis_state):
         """Test a four-qubit circuit"""
 
@@ -215,7 +225,9 @@ class TestComparison:
 
         assert np.allclose(lightning_state, default_state)
 
-    @pytest.mark.parametrize("lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev])
+    @pytest.mark.parametrize(
+        "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
+    )
     @pytest.mark.parametrize("wires", range(1, 17))
     def test_n_qubit_circuit(self, wires, lightning_dev_version):
         """Test an n-qubit circuit"""
