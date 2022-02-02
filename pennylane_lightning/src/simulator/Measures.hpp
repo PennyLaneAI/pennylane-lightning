@@ -70,8 +70,8 @@ class Measures {
     /**
      * @brief Probabilities for a subset of the full system.
      *
-     * @param wires Wires will restrict probabilities to a subset of the full
-     * system.
+     * @param wires Wires will restrict probabilities to a subset
+     * of the full system.
      * @return Floating point std::vector with probabilities.
      * The basis columns are rearranged according to wires.
      */
@@ -208,8 +208,7 @@ class Measures {
     /**
      * @brief Variance of an observable.
      *
-     * @param operation Square matrix in row-major order or string with the
-     * operator name.
+     * @param operation Square matrix in row-major order.
      * @param wires Wires where to apply the operator.
      * @return Floating point with the variance of the observables.
      */
