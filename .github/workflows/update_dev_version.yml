@@ -31,15 +31,14 @@ jobs:
           python3 pr/.github/workflows/dev_version_script.py
           --pr-path "./pr" --master-path "./main"
 
-      - name: Commit changes
+      - name: Commit and push changes
+        if:
         run: |
           cd ./pr
-          git config --local user.email "chae-yeun@xanadu.ai"
-          git config --local user.name "Dev version update bot"
-          git add .
-          git commit -m 'Auto update version'
-
-      - name: Push changes
-        run: |
-          cd ./pr
-          git push
+          if [[ -z $(git status -s) ]]; then
+            git config --local user.email "chae-yeun@xanadu.ai"
+            git config --local user.name "Dev version update bot"
+            git add .
+            git commit -m 'Auto update version'
+            git push
+          fi
