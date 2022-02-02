@@ -21,6 +21,9 @@
 
 ### Bug fixes
 
+* Fix for OOM errors when using adjoint with large numbers of observables.
+[(#221)](https://github.com/PennyLaneAI/pennylane-lightning/pull/221)
+
 * Add virtual destructor to C++ state-vector classes.
 [(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
 
