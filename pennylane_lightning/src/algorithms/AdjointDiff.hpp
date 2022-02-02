@@ -608,7 +608,5 @@ template <class T = double> class AdjointJacobian {
         }
         jac = Transpose(jac, jd.getNumParams(), num_observables);
     }
-
 }; // class AdjointJacobian
-
 } // namespace Pennylane::Algorithms
