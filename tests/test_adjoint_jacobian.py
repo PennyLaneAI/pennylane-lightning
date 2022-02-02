@@ -16,6 +16,7 @@ Tests for the ``adjoint_jacobian`` method of LightningQubit.
 """
 import math
 import pytest
+import os
 
 import pennylane as qml
 from pennylane import numpy as np
@@ -690,6 +691,30 @@ def test_integration(returns):
 
     assert np.allclose(j_def, j_lightning)
 
+
+def test_integration_chunk_observables():
+    """Integration tests that compare to default.qubit for a large circuit with multiple expectation values. Expvals are generated in parallelized chunks."""
+    dev_def = qml.device("default.qubit", wires=range(4))
+    dev_lightning = qml.device("lightning.qubit", wires=range(4))
+    dev_lightning_batched = qml.device("lightning.qubit", wires=range(4), batch_obs=True)
+
+    def circuit(params):
+        circuit_ansatz(params, wires=range(4))
+        return [qml.expval(qml.PauliZ(i)) for i in range(4)]
+
+    n_params = 30
+    params = np.linspace(0, 10, n_params)
+
+    qnode_def = qml.QNode(circuit, dev_def)
+    qnode_lightning = qml.QNode(circuit, dev_lightning, diff_method="adjoint")
+    qnode_lightning_batched = qml.QNode(circuit, dev_lightning_batched, diff_method="adjoint")
+
+    j_def = qml.jacobian(qnode_def)(params)
+    j_lightning = qml.jacobian(qnode_lightning)(params)
+    j_lightning_batched = qml.jacobian(qnode_lightning_batched)(params)
+
+    assert np.allclose(j_def, j_lightning)
+    assert np.allclose(j_def, j_lightning_batched)
 
 custom_wires = ["alice", 3.14, -1, 0]
 
