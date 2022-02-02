@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.DEV_TOKEN }}
-          branch: ${{ github.head_ref }}
+          ref: ${{ github.head_ref }}
           path: pr
 
       - name: Run version update script
