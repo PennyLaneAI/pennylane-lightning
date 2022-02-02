@@ -4,7 +4,7 @@ on:
 
 jobs:
   update-dev-version:
-    name: Update version for developing branches
+    name: Update version for development branches
     runs-on: ubuntu-latest
     steps:
 
