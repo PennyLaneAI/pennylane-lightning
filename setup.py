@@ -107,7 +107,7 @@ with open("pennylane_lightning/_version.py") as f:
 requirements = [
     "ninja", 
     "numpy",
-    "pennylane>=0.15",
+    "pennylane>=0.19",
 ]
 
 info = {
@@ -149,6 +149,7 @@ classifiers = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Scientific/Engineering :: Physics",
 ]
