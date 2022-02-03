@@ -575,7 +575,7 @@ template <class T = double> class AdjointJacobian {
                             applyGenerator(mu, ops_name[op_idx],
                                            ops.getOpsWires()[op_idx],
                                            !ops.getOpsInverses()[op_idx]) *
-                            (ops.getOpsInverses()[op_idx] ? -1:1);
+                            (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
                         const size_t mat_row_idx =
                             trainableParamNumber * num_observables;
