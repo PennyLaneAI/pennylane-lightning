@@ -68,7 +68,7 @@ UNSUPPORTED_PARAM_GATES_ADJOINT = (
 
 
 def _chunk_iterable(it, num_chunks):
-    "Lazy-evaluted chunking of given iterable from https://stackoverflow.com/a/22045226"
+    "Lazy-evaluated chunking of given iterable from https://stackoverflow.com/a/22045226"
     it = iter(it)
     return iter(lambda: tuple(islice(it, num_chunks)), ())
 

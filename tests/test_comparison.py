@@ -76,7 +76,7 @@ class TestComparison:
             return qml.expval(qml.PauliZ(0))
 
         dev_l = lightning_dev_version(wires)
-        dev_d = lightning_dev_version(wires)
+        dev_d = default_qubit_dev(wires)
 
         lightning = qml.QNode(circuit, dev_l)
         default = qml.QNode(circuit, dev_d)
@@ -116,7 +116,7 @@ class TestComparison:
             return qml.expval(qml.PauliZ(0))
 
         dev_l = lightning_dev_version(wires)
-        dev_d = lightning_dev_version(wires)
+        dev_d = default_qubit_dev(wires)
 
         lightning = qml.QNode(circuit, dev_l)
         default = qml.QNode(circuit, dev_d)
@@ -164,7 +164,7 @@ class TestComparison:
             return qml.expval(qml.PauliZ(0))
 
         dev_l = lightning_dev_version(wires)
-        dev_d = lightning_dev_version(wires)
+        dev_d = default_qubit_dev(wires)
 
         lightning = qml.QNode(circuit, dev_l)
         default = qml.QNode(circuit, dev_d)
@@ -217,7 +217,7 @@ class TestComparison:
             return qml.expval(qml.PauliZ(0))
 
         dev_l = lightning_dev_version(wires)
-        dev_d = lightning_dev_version(wires)
+        dev_d = default_qubit_dev(wires)
 
         lightning = qml.QNode(circuit, dev_l)
         default = qml.QNode(circuit, dev_d)
@@ -250,7 +250,7 @@ class TestComparison:
             return qml.expval(qml.PauliZ(0))
 
         dev_l = lightning_dev_version(wires)
-        dev_d = lightning_dev_version(wires)
+        dev_d = default_qubit_dev(wires)
 
         lightning = qml.QNode(circuit, dev_l)
         default = qml.QNode(circuit, dev_d)
