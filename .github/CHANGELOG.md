@@ -1,15 +1,20 @@
-# Release 0.21.0-dev
+# Release 0.21.0
 
 ### New features since last release
-* Direct support to probability, expectation value and variance calculation in PL-Lightning.
-[(#185)](https://github.com/PennyLaneAI/pennylane-lightning/pull/185)
 
 * Add C++ only benchmark for a given list of gates.
 [(#199)](https://github.com/PennyLaneAI/pennylane-lightning/pull/199)
 
-### Breaking changes
+* Wheel-build support for Python 3.10.
+[(#186)](https://github.com/PennyLaneAI/pennylane-lightning/pull/186)
+
+* C++ support for probability, expectation value and variance calculations.
+[(#185)](https://github.com/PennyLaneAI/pennylane-lightning/pull/185)
 
 ### Improvements
+
+* `setup.py` adds debug only when --debug is given
+[(#208)](https://github.com/PennyLaneAI/pennylane-lightning/pull/208)
 
 * Add a new C++ kernel. 
 [(#202)](https://github.com/PennyLaneAI/pennylane-lightning/pull/202)
@@ -19,6 +24,9 @@
 
 ### Documentation
 
+* New guidelines on adding and benchmarking C++ kernels.
+[(#202)](https://github.com/PennyLaneAI/pennylane-lightning/pull/202)
+
 ### Bug fixes
 
 * Fix for OOM errors when using adjoint with large numbers of observables.
@@ -27,17 +35,23 @@
 * Add virtual destructor to C++ state-vector classes.
 [(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
 
-* Fix failed tests for the non-binary wheel.
-[(#213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/213)
+* Update clang-format version
+[(#219)](https://github.com/PennyLaneAI/pennylane-lightning/pull/219)
 
 * Fix failed tests on Windows.
 [(#218)](https://github.com/PennyLaneAI/pennylane-lightning/pull/218)
+
+* Fix failed tests for the non-binary wheel.
+[(#213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/213)
+
+* Add virtual destructor to C++ state-vector classes.
+[(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Chae-Yeun Park, Lee James O'Riordan
+Ali Asadi, Amintor Dusko, Chae-Yeun Park, Lee James O'Riordan
 
 ---
 
@@ -90,9 +104,6 @@ Lee J. O'Riordan
 
 * Added examples folder containing aggregate gate performance test.
 [(#165)](https://github.com/PennyLaneAI/pennylane-lightning/pull/165)
-
-* Add VJP support to PL-Lightning.
-[(#181)](https://github.com/PennyLaneAI/pennylane-lightning/pull/181)
 
 ### Breaking changes
 
