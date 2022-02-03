@@ -27,6 +27,9 @@
 * Fix failed tests for the non-binary wheel.
 [(#213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/213)
 
+* Fix failed tests on Windows.
+[(#218)](https://github.com/PennyLaneAI/pennylane-lightning/pull/218)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
@@ -72,6 +75,9 @@ Lee J. O'Riordan
 # Release 0.20.0
 
 ### New features since last release
+
+* Add wheel-builder support for Python 3.10.
+  [(#186)](https://github.com/PennyLaneAI/pennylane-lightning/pull/186)
 
 * Add VJP support to PL-Lightning.
 [(#181)](https://github.com/PennyLaneAI/pennylane-lightning/pull/181)
