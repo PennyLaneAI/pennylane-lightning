@@ -30,7 +30,6 @@
 #include "Util.hpp"
 
 namespace Pennylane {
-using namespace Util;
 /**
  * @brief Observable's Measurement Class.
  *
@@ -78,7 +77,8 @@ class Measures {
     std::vector<fp_t> probs(const std::vector<size_t> &wires) {
         // Determining index that would sort the vector.
         // This information is needed later.
-        const std::vector<size_t> sorted_ind_wires(sorting_indices(wires));
+        const std::vector<size_t> sorted_ind_wires(
+            Util::sorting_indices(wires));
         // Sorting wires.
         std::vector<size_t> sorted_wires(wires.size());
         for (size_t pos = 0; pos < wires.size(); pos++) {
@@ -109,7 +109,7 @@ class Measures {
         // the begining.
         if (wires != sorted_wires) {
             probabilities =
-                transpose_state_tensor(probabilities, sorted_ind_wires);
+                Util::transpose_state_tensor(probabilities, sorted_ind_wires);
         }
         return probabilities;
     }
@@ -128,9 +128,9 @@ class Measures {
 
         operator_statevector.applyMatrix(matrix, wires);
 
-        CFP_t expected_value = innerProdC(original_statevector.getData(),
-                                          operator_statevector.getData(),
-                                          original_statevector.getLength());
+        CFP_t expected_value = Util::innerProdC(
+            original_statevector.getData(), operator_statevector.getData(),
+            original_statevector.getLength());
         return std::real(expected_value);
     };
     /**
@@ -148,9 +148,9 @@ class Measures {
 
         operator_statevector.applyOperation(operation, wires);
 
-        CFP_t expected_value = innerProdC(original_statevector.getData(),
-                                          operator_statevector.getData(),
-                                          original_statevector.getLength());
+        CFP_t expected_value = Util::innerProdC(
+            original_statevector.getData(), operator_statevector.getData(),
+            original_statevector.getLength());
         return std::real(expected_value);
     };
 
@@ -195,12 +195,13 @@ class Measures {
 
         operator_statevector.applyOperation(operation, wires);
 
-        fp_t mean_square = std::real(innerProdC(
-            operator_statevector.getData(), operator_statevector.getData(),
-            original_statevector.getLength()));
-        fp_t squared_mean = std::real(innerProdC(
-            original_statevector.getData(), operator_statevector.getData(),
-            original_statevector.getLength()));
+        const std::complex<fp_t> *opsv_data = operator_statevector.getData();
+        size_t orgsv_len = original_statevector.getLength();
+
+        fp_t mean_square =
+            std::real(Util::innerProdC(opsv_data, opsv_data, orgsv_len));
+        fp_t squared_mean = std::real(Util::innerProdC(
+            original_statevector.getData(), opsv_data, orgsv_len));
         squared_mean = static_cast<fp_t>(std::pow(squared_mean, 2));
         return (mean_square - squared_mean);
     };
@@ -220,12 +221,13 @@ class Measures {
 
         operator_statevector.applyMatrix(matrix, wires);
 
-        fp_t mean_square = std::real(innerProdC(
-            operator_statevector.getData(), operator_statevector.getData(),
-            original_statevector.getLength()));
-        fp_t squared_mean = std::real(innerProdC(
-            original_statevector.getData(), operator_statevector.getData(),
-            original_statevector.getLength()));
+        const std::complex<fp_t> *opsv_data = operator_statevector.getData();
+        size_t orgsv_len = original_statevector.getLength();
+
+        fp_t mean_square =
+            std::real(Util::innerProdC(opsv_data, opsv_data, orgsv_len));
+        fp_t squared_mean = std::real(Util::innerProdC(
+            original_statevector.getData(), opsv_data, orgsv_len));
         squared_mean = static_cast<fp_t>(std::pow(squared_mean, 2));
         return (mean_square - squared_mean);
     };
@@ -256,5 +258,4 @@ class Measures {
         return expected_value_list;
     };
 }; // class Measures
-
 } // namespace Pennylane
