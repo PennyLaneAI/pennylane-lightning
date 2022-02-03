@@ -1,13 +1,15 @@
-# Release 0.21.0-dev
+# Release 0.21.0
 
 ### New features since last release
-* Direct support to probability, expectation value and variance calculation in PL-Lightning.
+
+* Wheel-build support for Python 3.10.
+[(#186)](https://github.com/PennyLaneAI/pennylane-lightning/pull/186)
+
+* C++ support for probability, expectation value and variance calculations.
 [(#185)](https://github.com/PennyLaneAI/pennylane-lightning/pull/185)
 
 * Add C++ only benchmark for a given list of gates.
 [(#199)](https://github.com/PennyLaneAI/pennylane-lightning/pull/199)
-
-### Breaking changes
 
 ### Improvements
 
@@ -18,6 +20,9 @@
 [(#201)](https://github.com/PennyLaneAI/pennylane-lightning/pull/201)
 
 ### Documentation
+
+* New guidelines on adding and benchmarking C++ kernels.
+[(#202)](https://github.com/PennyLaneAI/pennylane-lightning/pull/202)
 
 ### Bug fixes
 
