@@ -89,7 +89,7 @@ To enable parallel differentiation over observables, ensure the ``OMP_NUM_THREAD
 
 Assuming you request multiple expectation values from a QNode, this should automatically parallelize the computation over the requested number of threads. You should ensure that the number of threads does not exceed the available physical cores on your machine.
 
-If you are computating a large number of expectation values, or if you are using a large number of wires on your device, it may be best to limit the number of expectation value calculations to at-most ``OMP_NUM_THREADS`` concurrent executions. This will help save memory, at the cost of additional compute time. To enable this, initialize a ``lightning.qubit`` device with the ``batch_obs=True`` keyword argument, as:
+If you are computing a large number of expectation values, or if you are using a large number of wires on your device, it may be best to limit the number of expectation value calculations to at-most ``OMP_NUM_THREADS`` concurrent executions. This will help save memory, at the cost of additional compute time. To enable this, initialize a ``lightning.qubit`` device with the ``batch_obs=True`` keyword argument, as:
 
 .. code-block:: bash
 
