@@ -393,10 +393,7 @@ class LightningQubit(DefaultQubit):
         else:
             raise TypeError(f"Unsupported complex Type: {dtype}")
 
-        if use_csingle:
-            V = VectorJacobianProductC64()
-        else:
-            V = VectorJacobianProductC128()
+        V = VectorJacobianProductC64() if use_csingle else VectorJacobianProductC128()
 
         fn = V.vjp_fn(math.reshape(dy, [-1]), tape.num_params)
 
