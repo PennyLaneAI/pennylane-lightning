@@ -118,7 +118,8 @@ info = {
     "url": "https://github.com/XanaduAI/pennylane-lightning",
     "license": "Apache License 2.0",
     "packages": find_packages(where="."),
-    "package_data": {"pennylane_lightning": ["src/*"]},
+    "package_data": {"pennylane_lightning": ["src/**/*"]},
+    "include_package_data": True,
     "entry_points": {
         "pennylane.plugins": [
             "lightning.qubit = pennylane_lightning:LightningQubit",
