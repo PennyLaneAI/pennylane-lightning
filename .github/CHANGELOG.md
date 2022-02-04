@@ -33,9 +33,6 @@
 * Fix failed tests on Windows.
 [(#218)](https://github.com/PennyLaneAI/pennylane-lightning/pull/218)
 
-* Update clang-format version.
-[(#219)](https://github.com/PennyLaneAI/pennylane-lightning/pull/219)
-
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
