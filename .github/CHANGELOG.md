@@ -11,6 +11,9 @@
 * C++ support for probability, expectation value and variance calculations.
 [(#185)](https://github.com/PennyLaneAI/pennylane-lightning/pull/185)
 
+* Add bindings to C++ expval, var, probs.
+[(#214)](https://github.com/PennyLaneAI/pennylane-lightning/pull/214)
+
 ### Improvements
 
 * `setup.py` adds debug only when --debug is given
