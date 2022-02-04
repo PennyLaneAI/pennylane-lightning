@@ -16,7 +16,7 @@ This module contains the :class:`~.LightningQubit` class, a PennyLane simulator 
 interfaces with C++ for fast linear algebra calculations.
 """
 from warnings import warn
-import os
+from os import getenv
 from itertools import islice
 
 import numpy as np
@@ -307,7 +307,7 @@ class LightningQubit(DefaultQubit):
         # If requested batching over observables, chunk into OMP_NUM_THREADS sized chunks.
         # This will allow use of Lightning with adjoint for large-qubit numbers AND large
         # numbers of observables, enabling choice between compute time and memory use.
-        requested_threads = int(os.getenv("OMP_NUM_THREADS", "1"))
+        requested_threads = int(getenv("OMP_NUM_THREADS", "1"))
 
         if self._batch_obs and requested_threads > 1:
             obs_partitions = _chunk_iterable(obs_serialized, requested_threads)
