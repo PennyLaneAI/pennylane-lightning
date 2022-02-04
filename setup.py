@@ -23,9 +23,10 @@ from setuptools.command.build_ext import build_ext
 
 from distutils.util import get_platform
 
+
 class CMakeExtension(Extension):
-    def __init__(self, name, sourcedir = ""):
-        Extension.__init__(self, name, sources = [])
+    def __init__(self, name, sourcedir=""):
+        Extension.__init__(self, name, sources=[])
         self.sourcedir = Path(sourcedir).absolute()
 
 
@@ -34,9 +35,7 @@ class CMakeBuild(build_ext):
     This class is built upon https://github.com/diegoferigo/cmake-build-extension/blob/master/src/cmake_build_extension/build_extension.py and https://github.com/pybind/cmake_example/blob/master/setup.py
     """
 
-    user_options = build_ext.user_options + [
-        ("define=", "D", "Define variables for CMake")
-    ]
+    user_options = build_ext.user_options + [("define=", "D", "Define variables for CMake")]
 
     def initialize_options(self):
         super().initialize_options()
@@ -53,7 +52,7 @@ class CMakeBuild(build_ext):
         extdir = str(Path(self.get_ext_fullpath(ext.name)).parent.absolute())
 
         debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
-        ninja_path = str(shutil.which('ninja'))
+        ninja_path = str(shutil.which("ninja"))
 
         # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
         configure_args = [
@@ -61,13 +60,13 @@ class CMakeBuild(build_ext):
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
             f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
-            "-DENABLE_WARNINGS=OFF", # Ignore warnings
+            "-DENABLE_WARNINGS=OFF",  # Ignore warnings
         ]
 
         if debug:
             configure_args += ["-DCMAKE_BUILD_TYPE=Debug"]
         configure_args += self.cmake_defines
-        
+
         build_args = []
 
         # Add more platform dependent options
@@ -79,33 +78,24 @@ class CMakeBuild(build_ext):
                 configure_args += ["-DENABLE_OPENMP=OFF"]
         elif platform.system() == "Linux":
             if platform.machine() == "x86_64":
-                configure_args += [
-                    "-DENABLE_AVX=ON"
-                ] # Enable AVX if x64 on Linux
+                configure_args += ["-DENABLE_AVX=ON"]  # Enable AVX if x64 on Linux
         elif platform.system() == "Windows":
-            configure_args += [
-                "-DENABLE_OPENMP=OFF",
-                "-DENABLE_BLAS=OFF"
-            ]
+            configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
         else:
             raise RuntimeError(f"Unsupported '{platform.system()}' platform")
 
         if not Path(self.build_temp).exists():
             os.makedirs(self.build_temp)
-        
-        subprocess.check_call(
-            ["cmake", str(ext.sourcedir)] + configure_args, cwd = self.build_temp
-        )
-        subprocess.check_call(
-            ["cmake", "--build", "."] + build_args, cwd = self.build_temp
-        )
+
+        subprocess.check_call(["cmake", str(ext.sourcedir)] + configure_args, cwd=self.build_temp)
+        subprocess.check_call(["cmake", "--build", "."] + build_args, cwd=self.build_temp)
 
 
 with open("pennylane_lightning/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
-    "ninja", 
+    "ninja",
     "numpy",
     "pennylane>=0.19",
 ]
@@ -118,7 +108,7 @@ info = {
     "url": "https://github.com/XanaduAI/pennylane-lightning",
     "license": "Apache License 2.0",
     "packages": find_packages(where="."),
-    "package_data": {"pennylane_lightning": ["src/**/*"]},
+    "package_data": {"pennylane_lightning": ["src/*", "src/**/*"]},
     "include_package_data": True,
     "entry_points": {
         "pennylane.plugins": [
@@ -130,7 +120,9 @@ info = {
     "long_description_content_type": "text/x-rst",
     "provides": ["pennylane_lightning"],
     "install_requires": requirements,
-    "ext_modules": [CMakeExtension("lightning_qubit_ops")] if not os.environ.get("SKIP_COMPILATION", False) else [],
+    "ext_modules": [CMakeExtension("lightning_qubit_ops")]
+    if not os.environ.get("SKIP_COMPILATION", False)
+    else [],
     "cmdclass": {"build_ext": CMakeBuild},
     "ext_package": "pennylane_lightning",
 }
