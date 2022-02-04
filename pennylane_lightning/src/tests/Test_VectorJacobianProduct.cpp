@@ -52,7 +52,6 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={0}",
         std::vector<double> dy(num_obs, 0);
 
         for (const auto &p : param) {
-
             auto ops = OpsData<double>({"RX"}, {{p}}, {{0}}, {false});
             std::vector<std::complex<double>> cdata(0b1 << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
