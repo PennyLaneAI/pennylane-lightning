@@ -20,7 +20,30 @@
 [(#202)](https://github.com/PennyLaneAI/pennylane-lightning/pull/202)
 
 The new kernels significantly improve the runtime performance of PennyLane-Lightning 
-for both differentiable and non-differentiable workflows.
+for both differentiable and non-differentiable workflows. Here is an example workflow
+using the adjoint differentiation method with a circuit of 5 strongly entangling layers:
+
+```python
+import pennylane as qml
+from pennylane import numpy as np
+from pennylane.templates.layers import StronglyEntanglingLayers
+from numpy.random import random
+np.random.seed(42)
+n_layers = 5
+n_wires = 6
+dev = qml.device("lightning.qubit", wires=n_wires)
+
+@qml.qnode(dev, diff_method="adjoint")
+def circuit(weights):
+    StronglyEntanglingLayers(weights, wires=list(range(n_wires)))
+    return [qml.expval(qml.PauliZ(i)) for i in range(n_wires)]
+
+init_weights = np.random.random(StronglyEntanglingLayers.shape(n_layers=n_layers, n_wires=n_wires))
+params = np.array(init_weights,requires_grad=True)
+jac = qml.jacobian(circuit)(params)
+```
+The latest release shows improved performance on both single and multi-threaded evaluations!
+
 <img src="https://raw.githubusercontent.com/PennyLaneAI/pennylane-lightning/v0.21.0-rc0/doc/_static/lightning_v20_v21_bm.png" width=50%/>
 
 * Ensure debug info is built into dynamic libraries.
