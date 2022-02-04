@@ -44,7 +44,7 @@ and
 
     // file: simulator/AvailableKernels.hpp
     namespace Pennylane {
-    using AvailableKernels = Util::TypeList<GateImplementationsLM,
+        using AvailableKernels = Util::TypeList<GateImplementationsLM,
                                             GateImplementationsPI,
                                             MyGateImplementation /* This is added*/>;
     } // namespace Pennylane
@@ -103,7 +103,7 @@ to
 
 will make your implementation as default kernel for ``PauliX`` gate (for all C++ calls as well as for the Python binding).
 
-Gate generators can be also handled in the same way.
+Gate generators can also be handled in the same way.
 
 Test your gate implementation
 =============================
