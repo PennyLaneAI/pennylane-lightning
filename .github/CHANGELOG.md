@@ -16,8 +16,11 @@
 * `setup.py` adds debug only when --debug is given
 [(#208)](https://github.com/PennyLaneAI/pennylane-lightning/pull/208)
 
-* Add a new C++ kernel. 
+* Add new highly-performant C++ kernels for quantum gates. 
 [(#202)](https://github.com/PennyLaneAI/pennylane-lightning/pull/202)
+
+The new kernels significantly improve the runtime performance of PennyLane-Lightning for both differentiable and non-differentiable workflows.
+<img src="https://raw.githubusercontent.com/PennyLaneAI/pennylane-lightning/v0.21.0-rc0/doc/_static/lightning_v20_v21_bm1.png" width=70%/>
 
 * Ensure debug info is built into dynamic libraries.
 [(#201)](https://github.com/PennyLaneAI/pennylane-lightning/pull/201)
