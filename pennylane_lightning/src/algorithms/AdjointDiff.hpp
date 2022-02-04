@@ -377,130 +377,6 @@ template <class T = double> class AdjointJacobian {
     AdjointJacobian() = default;
 
     /**
-     * @brief Utility to create a given operations object.
-     *
-     * @param ops_name Name of operations.
-     * @param ops_params Parameters for each operation in ops_name.
-     * @param ops_wires Wires for each operation in ops_name.
-     * @param ops_inverses Indicate whether to take adjoint of each operation in
-     * ops_name.
-     * @param ops_matrices Matrix definition of an operation if unsupported.
-     * @return const OpsData<T>
-     */
-    auto createOpsData(
-        const std::vector<std::string> &ops_name,
-        const std::vector<std::vector<T>> &ops_params,
-        const std::vector<std::vector<size_t>> &ops_wires,
-        const std::vector<bool> &ops_inverses,
-        const std::vector<std::vector<std::complex<T>>> &ops_matrices = {{}})
-        -> OpsData<T> {
-        return {ops_name, ops_params, ops_wires, ops_inverses, ops_matrices};
-    }
-
-    /**
-     * @brief Calculates the Jacobian for the statevector for the selected set
-     * of parametric gates.
-     *
-     * For the statevector data associated with `psi` of length `num_elements`,
-     * we make internal copies to a `%StateVectorManaged<T>` object, with one
-     * per required observable. The `operations` will be applied to the internal
-     * statevector copies, with the operation indices participating in the
-     * gradient calculations given in `trainableParams`, and the overall number
-     * of parameters for the gradient calculation provided within `num_params`.
-     * The resulting row-major ordered `jac` matrix representation will be of
-     * size `trainableParams.size() * observables.size()`. OpenMP is used to
-     * enable independent operations to be offloaded to threads.
-     *
-     * @param psi Pointer to the statevector data.
-     * @param num_elements Length of the statevector data.
-     * @param jac Preallocated vector for Jacobian data results.
-     * @param observables Observables for which to calculate Jacobian.
-     * @param operations Operations used to create given state.
-     * @param trainableParams List of parameters participating in Jacobian
-     * calculation.
-     * @param apply_operations Indicate whether to apply operations to psi prior
-     * to calculation.
-     */
-    void adjointJacobian(const std::complex<T> *psi, size_t num_elements,
-                         std::vector<std::vector<T>> &jac,
-                         const std::vector<ObsDatum<T>> &observables,
-                         const OpsData<T> &operations,
-                         const std::vector<size_t> &trainableParams,
-                         bool apply_operations = false) {
-        PL_ABORT_IF(trainableParams.empty(),
-                    "No trainable parameters provided.");
-
-        // Track positions within par and non-par operations
-        size_t num_observables = observables.size();
-        size_t trainableParamNumber = trainableParams.size() - 1;
-        size_t current_param_idx =
-            operations.getNumParOps() - 1; // total number of parametric ops
-
-        auto tp_it = trainableParams.end();
-
-        // Create $U_{1:p}\vert \lambda \rangle$
-        StateVectorManaged<T> lambda(psi, num_elements);
-
-        // Apply given operations to statevector if requested
-        if (apply_operations) {
-            applyOperations(lambda, operations);
-        }
-
-        // Create observable-applied state-vectors
-        std::vector<StateVectorManaged<T>> H_lambda(
-            num_observables, StateVectorManaged<T>{lambda.getNumQubits()});
-        applyObservables(H_lambda, lambda, observables);
-
-        StateVectorManaged<T> mu(lambda.getNumQubits());
-
-        for (int op_idx = static_cast<int>(operations.getOpsName().size() - 1);
-             op_idx >= 0; op_idx--) {
-            PL_ABORT_IF(operations.getOpsParams()[op_idx].size() > 1,
-                        "The operation is not supported using the adjoint "
-                        "differentiation method");
-            if ((operations.getOpsName()[op_idx] != "QubitStateVector") &&
-                (operations.getOpsName()[op_idx] != "BasisState")) {
-                mu.updateData(lambda.getDataVector());
-                applyOperationAdj(lambda, operations, op_idx);
-
-                if (operations.hasParams(op_idx)) {
-                    if (std::find(trainableParams.begin(), tp_it,
-                                  current_param_idx) != tp_it) {
-                        const T scalingFactor =
-                            applyGenerator(
-                                mu, operations.getOpsName()[op_idx],
-                                operations.getOpsWires()[op_idx],
-                                !operations.getOpsInverses()[op_idx]) *
-                            (2 * (operations.getOpsInverses()[op_idx] ? 0 : 1) -
-                             1);
-                        // clang-format off
-
-                        #if defined(_OPENMP)
-                            #pragma omp parallel for default(none)   \
-                            shared(H_lambda, jac, mu, scalingFactor, \
-                                trainableParamNumber, tp_it,         \
-                                num_observables)
-                        #endif
-
-                        // clang-format on
-                        for (size_t obs_idx = 0; obs_idx < num_observables;
-                             obs_idx++) {
-                            updateJacobian(H_lambda[obs_idx], mu, jac,
-                                           scalingFactor, obs_idx,
-                                           trainableParamNumber);
-                        }
-                        trainableParamNumber--;
-                        std::advance(tp_it, -1);
-                    }
-                    current_param_idx--;
-                }
-                applyOperationsAdj(H_lambda, operations,
-                                   static_cast<size_t>(op_idx));
-            }
-        }
-    }
-
-    /**
      * @brief Calculates the Jacobian for the statevector for the selected set
      * of parametric gates.
      *
@@ -519,8 +395,8 @@ template <class T = double> class AdjointJacobian {
      * @param apply_operations Indicate whether to apply operations to tape.psi
      * prior to calculation.
      */
-    void adjointJacobianJD(std::vector<T> &jac, const JacobianData<T> &jd,
-                           bool apply_operations = false) {
+    void adjointJacobian(std::vector<T> &jac, const JacobianData<T> &jd,
+                         bool apply_operations = false) {
         PL_ABORT_IF(!jd.hasTrainableParams(),
                     "No trainable parameters provided.");
 
@@ -547,7 +423,7 @@ template <class T = double> class AdjointJacobian {
             applyOperations(lambda, ops);
         }
 
-        auto tp_begin = tp.begin();
+        const auto tp_begin = tp.begin();
         auto tp_it = tp.end();
 
         // Create observable-applied state-vectors
@@ -592,7 +468,7 @@ template <class T = double> class AdjointJacobian {
                         // clang-format on
                         for (size_t obs_idx = 0; obs_idx < num_observables;
                              obs_idx++) {
-                            jac.at(mat_row_idx + obs_idx) =
+                            jac[mat_row_idx + obs_idx] =
                                 -2 * scalingFactor *
                                 std::imag(innerProdC(
                                     H_lambda[obs_idx].getDataVector(),
@@ -609,4 +485,5 @@ template <class T = double> class AdjointJacobian {
         jac = Transpose(jac, jd.getNumParams(), num_observables);
     }
 }; // class AdjointJacobian
+
 } // namespace Pennylane::Algorithms

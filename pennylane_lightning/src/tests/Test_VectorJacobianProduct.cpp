@@ -52,7 +52,8 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={0}",
         std::vector<double> dy(num_obs, 0);
 
         for (const auto &p : param) {
-            auto ops = VJP.createOpsData({"RX"}, {{p}}, {{0}}, {false});
+
+            auto ops = OpsData<double>({"RX"}, {{p}}, {{0}}, {false});
             std::vector<std::complex<double>> cdata(0b1 << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
 
@@ -89,7 +90,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={1}",
         std::vector<double> dy(num_obs, 1.0);
 
         for (const auto &p : param) {
-            auto ops = VJP.createOpsData({"RX"}, {{p}}, {{0}}, {false});
+            auto ops = OpsData<double>({"RX"}, {{p}}, {{0}}, {false});
 
             std::vector<std::complex<double>> cdata(0b1 << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
@@ -127,7 +128,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={0.4}",
         std::vector<double> dy(num_obs, 0.4);
 
         for (const auto &p : param) {
-            auto ops = VJP.createOpsData({"RX"}, {{p}}, {{0}}, {false});
+            auto ops = OpsData<double>({"RX"}, {{p}}, {{0}}, {false});
 
             std::vector<std::complex<double>> cdata(0b1 << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
@@ -166,7 +167,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RY, Obs=X dy={0.4}",
         std::vector<double> dy(num_obs, 0.4);
 
         for (const auto &p : param) {
-            auto ops = VJP.createOpsData({"RY"}, {{p}}, {{0}}, {false});
+            auto ops = OpsData<double>({"RY"}, {{p}}, {{0}}, {false});
 
             std::vector<std::complex<double>> cdata(0b1 << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
@@ -210,7 +211,7 @@ TEST_CASE(
         auto obs1 = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
         auto obs2 = ObsDatum<double>({"PauliZ"}, {{}}, {{1}});
 
-        auto ops = VJP.createOpsData({"RX"}, {{param[0]}}, {{0}}, {false});
+        auto ops = OpsData<double>({"RX"}, {{param[0]}}, {{0}}, {false});
 
         std::vector<size_t> tp{0};
         std::vector<ObsDatum<double>> obs_ls{obs1, obs2};
@@ -247,9 +248,9 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=[RX,RX,RX], "
         auto obs2 = ObsDatum<double>({"PauliZ"}, {{}}, {{1}});
         auto obs3 = ObsDatum<double>({"PauliZ"}, {{}}, {{2}});
 
-        auto ops = VJP.createOpsData({"RX", "RX", "RX"},
-                                     {{param[0]}, {param[1]}, {param[2]}},
-                                     {{0}, {1}, {2}}, {false, false, false});
+        auto ops = OpsData<double>({"RX", "RX", "RX"},
+                                   {{param[0]}, {param[1]}, {param[2]}},
+                                   {{0}, {1}, {2}}, {false, false, false});
 
         std::vector<size_t> tp{0, 1, 2};
         std::vector<ObsDatum<double>> obs_ls{obs1, obs2, obs3};
@@ -290,9 +291,9 @@ TEST_CASE(
         auto obs2 = ObsDatum<double>({"PauliZ"}, {{}}, {{1}});
         auto obs3 = ObsDatum<double>({"PauliZ"}, {{}}, {{2}});
 
-        auto ops = VJP.createOpsData({"RX", "RX", "RX"},
-                                     {{param[0]}, {param[1]}, {param[2]}},
-                                     {{0}, {1}, {2}}, {false, false, false});
+        auto ops = OpsData<double>({"RX", "RX", "RX"},
+                                   {{param[0]}, {param[1]}, {param[2]}},
+                                   {{0}, {1}, {2}}, {false, false, false});
 
         std::vector<ObsDatum<double>> obs_ls{obs1, obs2, obs3};
         JacobianData<double> tape{
@@ -328,9 +329,9 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=[RX,RX,RX], "
 
         auto obs = ObsDatum<double>({"PauliZ", "PauliZ", "PauliZ"},
                                     {{}, {}, {}}, {{0}, {1}, {2}});
-        auto ops = VJP.createOpsData({"RX", "RX", "RX"},
-                                     {{param[0]}, {param[1]}, {param[2]}},
-                                     {{0}, {1}, {2}}, {false, false, false});
+        auto ops = OpsData<double>({"RX", "RX", "RX"},
+                                   {{param[0]}, {param[1]}, {param[2]}},
+                                   {{0}, {1}, {2}}, {false, false, false});
 
         std::vector<size_t> tp{0, 1, 2};
         std::vector<ObsDatum<double>> obs_ls{obs};
@@ -367,7 +368,7 @@ TEST_CASE(
 
         auto obs = ObsDatum<double>({"PauliX", "PauliX", "PauliX"},
                                     {{}, {}, {}}, {{0}, {1}, {2}});
-        auto ops = VJP.createOpsData(
+        auto ops = OpsData<double>(
             {"RZ", "RY", "RZ", "CNOT", "CNOT", "RZ", "RY", "RZ"},
             {{param[0]},
              {param[1]},
@@ -418,7 +419,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=Mixed, Obs=[XXX], "
 
         auto obs = ObsDatum<double>({"PauliX", "PauliX", "PauliX"},
                                     {{}, {}, {}}, {{0}, {1}, {2}});
-        auto ops = VJP.createOpsData(
+        auto ops = OpsData<double>(
             {"RZ", "RY", "RZ", "CNOT", "CNOT", "RZ", "RY", "RZ"},
             {{param[0]},
              {param[1]},
@@ -483,7 +484,7 @@ TEST_CASE(
             StateVectorRaw<double> psi(cdata.data(), cdata.size());
 
             auto obs = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
-            auto ops = VJP.createOpsData(
+            auto ops = OpsData<double>(
                 {"RZ", "RY", "RZ"},
                 {{local_params[0]}, {local_params[1]}, {local_params[2]}},
                 {{0}, {0}, {0}}, {false, false, false});
@@ -528,7 +529,7 @@ TEST_CASE(
         StateVectorRaw<double> psi(cdata.data(), cdata.size());
 
         auto obs = ObsDatum<double>({"PauliX", "PauliZ"}, {{}, {}}, {{0}, {1}});
-        auto ops = VJP.createOpsData(
+        auto ops = OpsData<double>(
             {"Hadamard", "RX", "CNOT", "RZ", "RY", "RZ", "RZ", "RY", "RZ", "RZ",
              "RY", "CNOT"},
             {{},
@@ -587,7 +588,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Mixed Ops, Obs and "
         StateVectorRaw<double> psi(cdata.data(), cdata.size());
 
         auto obs = ObsDatum<double>({"PauliX", "PauliZ"}, {{}, {}}, {{0}, {1}});
-        auto ops = VJP.createOpsData(
+        auto ops = OpsData<double>(
             {"Hadamard", "RX", "CNOT", "RZ", "RY", "RZ", "RZ", "RY", "RZ", "RZ",
              "RY", "CNOT"},
             {{},

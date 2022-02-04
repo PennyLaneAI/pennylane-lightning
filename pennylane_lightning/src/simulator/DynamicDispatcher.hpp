@@ -61,10 +61,11 @@ template <typename fp_t> class DynamicDispatcher {
     std::unordered_map<std::string, KernelType> kernel_map_;
 
     std::unordered_map<std::pair<std::string, KernelType>, Func,
-                       Internal::PairHash>
+                       Pennylane::Internal::PairHash>
         gates_;
 
     DynamicDispatcher() {
+        namespace Internal = Pennylane::Internal;
         for (const auto &[gate_op, n_wires] : Constant::gate_wires) {
             gate_wires_.emplace(lookup(Constant::gate_names, gate_op), n_wires);
         }
@@ -234,6 +235,7 @@ constexpr auto gateOpToFunctor() {
     return [](std::complex<PrecisionT> *data, size_t num_qubits,
               const std::vector<size_t> &wires, bool inverse,
               const std::vector<PrecisionT> &params) {
+        namespace Internal = Pennylane::Internal;
         constexpr size_t num_params =
             static_lookup<gate_op>(Constant::gate_num_params);
         constexpr auto func_ptr = static_lookup<gate_op>(

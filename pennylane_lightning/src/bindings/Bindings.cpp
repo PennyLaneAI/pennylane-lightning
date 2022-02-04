@@ -183,7 +183,6 @@ void lightning_class_bindings(py::module &m) {
     class_name = "AdjointJacobianC" + bitsize;
     py::class_<AdjointJacobian<PrecisionT>>(m, class_name.c_str())
         .def(py::init<>())
-        .def("create_ops_list", &AdjointJacobian<PrecisionT>::createOpsData)
         .def("create_ops_list",
              [](AdjointJacobian<PrecisionT> &adj,
                 const std::vector<std::string> &ops_name,
@@ -230,7 +229,7 @@ void lightning_class_bindings(py::module &m) {
                      num_params,  sv.getLength(), sv.getData(),
                      observables, operations,     trainableParams};
 
-                 adj.adjointJacobianJD(jac, jd);
+                 adj.adjointJacobian(jac, jd);
 
                  return py::array_t<ParamT>(py::cast(jac));
              });
@@ -242,8 +241,6 @@ void lightning_class_bindings(py::module &m) {
     class_name = "VectorJacobianProductC" + bitsize;
     py::class_<VectorJacobianProduct<PrecisionT>>(m, class_name.c_str())
         .def(py::init<>())
-        .def("create_ops_list",
-             &VectorJacobianProduct<PrecisionT>::createOpsData)
         .def("create_ops_list",
              [](VectorJacobianProduct<PrecisionT> &v,
                 const std::vector<std::string> &ops_name,
@@ -302,6 +299,30 @@ void lightning_class_bindings(py::module &m) {
                          return py::array_t<ParamT>(py::cast(fn(jd)));
                      });
              });
+
+    //***********************************************************************//
+    //                              Measures
+    //***********************************************************************//
+
+    class_name = "MeasuresC" + bitsize;
+    py::class_<Measures<PrecisionT>>(m, class_name.c_str())
+        .def(py::init<const StateVectorRaw<PrecisionT> &>())
+        .def("probs",
+             [](Measures<PrecisionT> &M, const std::vector<size_t> &wires) {
+                 if (wires.empty()) {
+                     return py::array_t<ParamT>(py::cast(M.probs()));
+                 }
+                 return py::array_t<ParamT>(py::cast(M.probs(wires)));
+             })
+        .def("expval",
+             [](Measures<PrecisionT> &M, const std::string &operation,
+                const std::vector<size_t> &wires) {
+                 return M.expval(operation, wires);
+             })
+        .def("var", [](Measures<PrecisionT> &M, const std::string &operation,
+                       const std::vector<size_t> &wires) {
+            return M.var(operation, wires);
+        });
 }
 
 /**

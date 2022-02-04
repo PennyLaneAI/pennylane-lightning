@@ -26,8 +26,7 @@ namespace Pennylane::Algorithms {
  *
  * @tparam T Floating-point precision.
  */
-template <class T = double>
-class VectorJacobianProduct : public AdjointJacobian<T> {
+template <class T = double> class VectorJacobianProduct {
   private:
     /**
      * @brief Computes the vector-Jacobian product for a given vector of
@@ -112,7 +111,8 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
             // corresponding element of the VJP will be zero,
             // and we can avoid unnecessary computation.
             return
-                [&num_params]([[maybe_unused]] const JacobianData<T> &jd)
+                [num_params =
+                     num_params]([[maybe_unused]] const JacobianData<T> &jd)
                     -> std::vector<T> { return std::vector<T>(num_params, 0); };
         }
 
@@ -127,7 +127,8 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
             std::vector<T> jac(jd.getNumObservables() * num_params, 0);
 
             // Compute Jacobian for the input jd using `adjoint` method
-            this->adjointJacobianJD(jac, jd, apply_operations);
+            AdjointJacobian<T> v;
+            v.adjointJacobian(jac, jd, apply_operations);
 
             // Compute VJP
             computeVJP(vjp, jac, dy, jd.getNumObservables(), num_params);
