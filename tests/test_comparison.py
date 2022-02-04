@@ -18,6 +18,7 @@ import itertools
 
 import numpy as np
 import pytest
+import os
 
 import pennylane as qml
 from pennylane_lightning.lightning_qubit import CPP_BINARY_AVAILABLE
@@ -65,8 +66,13 @@ class TestComparison:
         "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
     )
     @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    def test_one_qubit_circuit(self, wires, lightning_dev_version, basis_state):
+    @pytest.mark.parametrize("num_threads", [1, 2])
+    def test_one_qubit_circuit(
+        self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
+    ):
         """Test a single-qubit circuit"""
+
+        monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         def circuit():
             """A combination of the one_qubit_block and a simple PauliZ measurement applied to a
@@ -88,15 +94,20 @@ class TestComparison:
         default_state = dev_d.state
 
         assert np.allclose(lightning_state, default_state)
+        assert os.getenv("OMP_NUM_THREADS") == str(num_threads)
 
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 2))
     @pytest.mark.parametrize("wires", [2])
     @pytest.mark.parametrize(
         "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
     )
+    @pytest.mark.parametrize("num_threads", [1, 2])
     @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    def test_two_qubit_circuit(self, wires, lightning_dev_version, basis_state):
+    def test_two_qubit_circuit(
+        self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
+    ):
         """Test a two-qubit circuit"""
+        monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         def circuit():
             """A combination of two qubit gates with the one_qubit_block and a simple PauliZ
@@ -134,9 +145,13 @@ class TestComparison:
     @pytest.mark.parametrize(
         "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
     )
+    @pytest.mark.parametrize("num_threads", [1, 2])
     @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    def test_three_qubit_circuit(self, wires, lightning_dev_version, basis_state):
+    def test_three_qubit_circuit(
+        self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
+    ):
         """Test a three-qubit circuit"""
+        monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         def circuit():
             """A combination of two and three qubit gates with the one_qubit_block and a simple
@@ -182,9 +197,13 @@ class TestComparison:
     @pytest.mark.parametrize(
         "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
     )
+    @pytest.mark.parametrize("num_threads", [1, 2])
     @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    def test_four_qubit_circuit(self, wires, lightning_dev_version, basis_state):
+    def test_four_qubit_circuit(
+        self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
+    ):
         """Test a four-qubit circuit"""
+        monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         def circuit():
             """A combination of two and three qubit gates with the one_qubit_block and a simple
@@ -234,9 +253,11 @@ class TestComparison:
         "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
     )
     @pytest.mark.parametrize("wires", range(1, 17))
+    @pytest.mark.parametrize("num_threads", [1, 2])
     @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    def test_n_qubit_circuit(self, wires, lightning_dev_version):
+    def test_n_qubit_circuit(self, monkeypatch, wires, lightning_dev_version, num_threads):
         """Test an n-qubit circuit"""
+        monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         vec = np.array([1] * (2**wires)) / np.sqrt(2**wires)
         shape = qml.StronglyEntanglingLayers.shape(2, wires)
