@@ -90,10 +90,10 @@ class Measures {
         size_t num_qubits = original_statevector.getNumQubits();
 
         const std::vector<size_t> all_indices =
-            IndicesUtil::generateBitPatterns(sorted_wires, num_qubits);
+            Gates::generateBitPatterns(sorted_wires, num_qubits);
         const std::vector<size_t> all_offsets =
-            IndicesUtil::generateBitPatterns(
-                IndicesUtil::getIndicesAfterExclusion(sorted_wires, num_qubits),
+            Gates::generateBitPatterns(
+                Gates::getIndicesAfterExclusion(sorted_wires, num_qubits),
                 num_qubits);
 
         std::vector<fp_t> probabilities(all_indices.size(), 0);

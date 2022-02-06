@@ -28,7 +28,7 @@
 #include <complex>
 #include <vector>
 
-namespace Pennylane {
+namespace Pennylane::Gates {
 /**
  * @brief Fill ones from LSB to rev_wire
  */
@@ -1204,4 +1204,4 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         return static_cast<PrecisionT>(0.5);
     }
 };
-} // namespace Pennylane
+} // namespace Pennylane::Gates

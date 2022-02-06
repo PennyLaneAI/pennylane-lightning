@@ -12,25 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file AvailableKernels.hpp
- * Defines available kernels. Be careful when including this file as
- * it also includes all gate implementations.
+ * @file KernelType.hpp
+ * Defines possible kernel types as enum and define python export.
  */
 #pragma once
+#include "Error.hpp"
+#include "Util.hpp"
 
-#include "GateImplementationsLM.hpp"
-#include "GateImplementationsPI.hpp"
-#include "TypeList.hpp"
+#include <array>
+#include <string>
+#include <string_view>
+#include <utility>
+
+namespace Pennylane::Gates {
+/**
+ * @brief Define kernel id for each implemenation.
+ */
+enum class KernelType { PI, LM, None };
+} // namespace Pennylane::Gates
 
 namespace Pennylane {
 /**
- * @brief List of all available kernels (gate implementations).
- *
- * If you want to add another gate implementaion, just add it to this type list.
- * @rst
- * See :ref:`lightning_add_gate_implementation` for details.
- * @endrst
+ * @brief List of kernels binds to Python.
  */
-using AvailableKernels =
-    Util::TypeList<GateImplementationsLM, GateImplementationsPI>;
+[[maybe_unused]] constexpr std::array kernels_to_pyexport = {Gates::KernelType::PI,
+                                                             Gates::KernelType::LM};
 } // namespace Pennylane

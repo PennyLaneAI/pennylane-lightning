@@ -20,7 +20,8 @@
 
 #include "DynamicDispatcher.hpp"
 #include "Error.hpp"
-#include "SelectGateOps.hpp"
+#include "Constant.hpp"
+#include "SelectKernel.hpp"
 #include "Util.hpp"
 
 /// @cond DEV
@@ -43,18 +44,18 @@
  * argument choose the kernel to run.
  */
 #define PENNYLANE_STATEVECTOR_DEFINE_GATE(GATE_NAME)                           \
-    template <KernelType kernel, typename... Ts>                               \
+    template <Gates::KernelType kernel, typename... Ts>                               \
     inline void apply##GATE_NAME##_(const std::vector<size_t> &wires,          \
                                     bool inverse, Ts &&...args) {              \
         auto *arr = getData();                                                 \
-        static_assert(static_lookup<GateOperation::GATE_NAME>(                 \
-                          Constant::gate_num_params) == sizeof...(Ts),         \
+        static_assert(Gates::static_lookup<Gates::GateOperation::GATE_NAME>(                 \
+                          Gates::Constant::gate_num_params) == sizeof...(Ts),         \
                       "The provided number of parameters for gate " #GATE_NAME \
                       " is wrong.");                                           \
-        static_assert(array_has_elt(SelectGateOps<kernel>::implemented_gates,  \
-                                    GateOperation::GATE_NAME),                 \
+        static_assert(Util::array_has_elt(Gates::SelectKernel<kernel>::implemented_gates,  \
+                                    Gates::GateOperation::GATE_NAME),                 \
                       "The kernel does not implement the gate.");              \
-        SelectGateOps<kernel>::apply##GATE_NAME(                               \
+        Gates::SelectKernel<kernel>::apply##GATE_NAME(                               \
             arr, num_qubits_, wires, inverse, std::forward<Ts>(args)...);      \
     }
 
@@ -62,8 +63,8 @@
     template <typename... Ts>                                                  \
     inline void apply##GATE_NAME(const std::vector<size_t> &wires,             \
                                  bool inverse, Ts &&...args) {                 \
-        constexpr auto kernel = static_lookup<GateOperation::GATE_NAME>(       \
-            Constant::default_kernel_for_gates);                               \
+        constexpr auto kernel = Gates::static_lookup<Gates::GateOperation::GATE_NAME>(       \
+            Gates::Constant::default_kernel_for_gates);                               \
         apply##GATE_NAME##_<kernel>(wires, inverse,                            \
                                     std::forward<Ts>(args)...);                \
     }
@@ -73,11 +74,11 @@
         const std::vector<size_t> &wires, bool adj) {                          \
         auto *arr = getData();                                                 \
         static_assert(                                                         \
-            array_has_elt(                                                     \
-                SelectGateOps<PrecisionT, kernel>::implemented_generators,     \
-                GeneratorOperation::GENERATOR_NAME),                           \
+            Util::array_has_elt(                                                     \
+                Gates::SelectKernel<PrecisionT, kernel>::implemented_generators,     \
+                Gates::GeneratorOperation::GENERATOR_NAME),                           \
             "The kernel does not implement the gate generator.");              \
-        SelectGateOps<kernel>::applyGenerator##GENERATOR_NAME(                 \
+        SelectKernel<kernel>::applyGenerator##GENERATOR_NAME(                 \
             arr, num_qubits_, wires, adj);                                     \
     }
 
@@ -170,7 +171,7 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param inverse Indicates whether to use inverse of gate.
      * @param params Optional parameter list for parametric gates.
      */
-    void applyOperation(KernelType kernel, const std::string &opName,
+    void applyOperation(Gates::KernelType kernel, const std::string &opName,
                         const std::vector<size_t> &wires, bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
         auto *arr = getData();
@@ -234,7 +235,7 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param wires Wires to apply gate to.
      * @param adj Indicates whether to use adjoint of operator.
      */
-    [[nodiscard]] inline auto applyGenerator(KernelType kernel,
+    [[nodiscard]] inline auto applyGenerator(Gates::KernelType kernel,
                                              const std::string &opName,
                                              const std::vector<size_t> &wires,
                                              bool adj = false) -> PrecisionT {
@@ -266,20 +267,20 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param wires Wires the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */
-    template <KernelType kernel>
+    template <Gates::KernelType kernel>
     inline void applyMatrix_(const ComplexPrecisionT *matrix,
                              const std::vector<size_t> &wires,
                              bool inverse = false) {
         auto *arr = getData();
-        SelectGateOps<kernel>::applyMatrix(arr, num_qubits_, matrix, wires,
+        Gates::SelectKernel<kernel>::applyMatrix(arr, num_qubits_, matrix, wires,
                                            inverse);
     }
-    template <KernelType kernel>
+    template <Gates::KernelType kernel>
     inline void applyMatrix_(const std::vector<ComplexPrecisionT> &matrix,
                              const std::vector<size_t> &wires,
                              bool inverse = false) {
         auto *arr = getData();
-        SelectGateOps<kernel>::applyMatrix(arr, num_qubits_, matrix, wires,
+        Gates::SelectKernel<kernel>::applyMatrix(arr, num_qubits_, matrix, wires,
                                            inverse);
     }
 
@@ -294,10 +295,15 @@ template <class PrecisionT, class Derived> class StateVectorBase {
     inline void applyMatrix(const ComplexPrecisionT *matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
+        namespace Constant = Gates::Constant;
+        using Gates::GateOperation;
+        using Gates::SelectKernel;
+        using Gates::static_lookup;
+
         constexpr auto kernel = static_lookup<GateOperation::Matrix>(
             Constant::default_kernel_for_gates);
         static_assert(
-            array_has_elt(SelectGateOps<kernel>::implemented_gates,
+            Util::array_has_elt(SelectKernel<kernel>::implemented_gates,
                           GateOperation::Matrix),
             "The default kernel for applyMatrix does not implement it.");
         applyMatrix_<kernel>(matrix, wires, inverse);
@@ -305,10 +311,15 @@ template <class PrecisionT, class Derived> class StateVectorBase {
     inline void applyMatrix(const std::vector<ComplexPrecisionT> &matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
+        namespace Constant = Gates::Constant;
+        using Gates::GateOperation;
+        using Gates::SelectKernel;
+        using Gates::static_lookup;
+
         constexpr auto kernel = static_lookup<GateOperation::Matrix>(
             Constant::default_kernel_for_gates);
         static_assert(
-            array_has_elt(SelectGateOps<kernel>::implemented_gates,
+            Util::array_has_elt(SelectKernel<kernel>::implemented_gates,
                           GateOperation::Matrix),
             "The default kernel for applyMatrix does not implement it.");
         applyMatrix_<kernel>(matrix, wires, inverse);

@@ -11,7 +11,7 @@
 using namespace Pennylane;
 
 TEST_CASE("Test generator names start with \"Generator\"", "Constant") {
-    for (const auto &[gntr_op, gntr_name] : Constant::generator_names) {
+    for (const auto &[gntr_op, gntr_name] : Gates::Constant::generator_names) {
         REQUIRE(gntr_name.find("Generator") == 0);
     }
 }

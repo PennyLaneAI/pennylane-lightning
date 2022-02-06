@@ -20,7 +20,7 @@
 #include <string>
 #include <utility>
 
-namespace Pennylane {
+namespace Pennylane::Gates {
 /**
  * @brief Enum class for all gate operations
  */
@@ -82,4 +82,4 @@ enum class GeneratorOperation : uint32_t {
     /* END (placeholder) */
     END
 };
-} // namespace Pennylane
+} // namespace Pennylane::Gates

@@ -16,16 +16,18 @@
  * Export C++ functions to Python using Pybind.
  */
 #include "Bindings.hpp"
-#include "SelectGateOps.hpp"
+
+#include "GateUtil.hpp"
+#include "SelectKernel.hpp"
 
 #include "pybind11/pybind11.h"
 
 /// @cond DEV
 namespace {
-using Pennylane::implementedGatesForKernel;
-using Pennylane::StateVectorRaw;
-
 using namespace Pennylane::Algorithms;
+using namespace Pennylane::Gates;
+
+using Pennylane::StateVectorRaw;
 
 using std::complex;
 using std::string;
@@ -345,17 +347,17 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
 
     m.def("generateBitPatterns",
           py::overload_cast<const vector<size_t> &, size_t>(
-              &IndicesUtil::generateBitPatterns),
+              &Gates::generateBitPatterns),
           "Get statevector indices for gate application");
     m.def("getIndicesAfterExclusion",
           py::overload_cast<const vector<size_t> &, size_t>(
-              &IndicesUtil::getIndicesAfterExclusion),
+              &Gates::getIndicesAfterExclusion),
           "Get statevector indices for gate application");
 
     /* Add EXPORTED_KERNELS */
     std::vector<std::pair<std::string, std::string>> exported_kernel_ops;
 
-    for (const auto kernel : Constant::kernels_to_pyexport) {
+    for (const auto kernel : kernels_to_pyexport) {
         const auto kernel_name = lookup(kernel_id_name_pairs, kernel);
         const auto implemented_gates = implementedGatesForKernel(kernel);
         for (const auto gate_op : implemented_gates) {

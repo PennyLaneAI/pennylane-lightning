@@ -10,6 +10,7 @@
  */
 
 using namespace Pennylane;
+using Pennylane::Gates::GateImplementationsPI;
 
 TEMPLATE_TEST_CASE("Approx", "[Test_Internal]", float, double) {
     using PrecisionT = TestType;
@@ -55,7 +56,6 @@ TEMPLATE_TEST_CASE("Approx", "[Test_Internal]", float, double) {
 
 TEMPLATE_TEST_CASE("createProductState", "[Test_Internal]", float, double) {
     using PrecisionT = TestType;
-    using Pennylane::GateImplementationsPI;
 
     SECTION("createProductState(\"+-0\") == |+-0> ") {
         const auto st = createProductState<PrecisionT>("+-0");
@@ -97,14 +97,14 @@ TEMPLATE_TEST_CASE("randomUnitary", "[Test_Internal]", float, double) {
         const auto unitary = randomUnitary<PrecisionT>(re, num_qubits);
 
         std::vector<std::complex<PrecisionT>> unitary_dagger =
-            Transpose(unitary, dim, dim);
+            Util::Transpose(unitary, dim, dim);
         std::transform(
             unitary_dagger.begin(), unitary_dagger.end(),
             unitary_dagger.begin(),
             [](const std::complex<PrecisionT> &v) { return std::conj(v); });
 
         std::vector<std::complex<PrecisionT>> mat(dim * dim);
-        matrixMatProd(unitary.data(), unitary_dagger.data(), mat.data(), dim,
+        Util::matrixMatProd(unitary.data(), unitary_dagger.data(), mat.data(), dim,
                       dim, dim);
 
         std::vector<std::complex<PrecisionT>> identity(

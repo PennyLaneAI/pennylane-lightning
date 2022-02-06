@@ -21,7 +21,7 @@
 #include "KernelType.hpp"
 #include "TypeList.hpp"
 
-namespace Pennylane::Constant {
+namespace Pennylane::Gates::Constant {
 /**
  * @brief List of multi-qubit gates
  */
@@ -255,4 +255,4 @@ namespace Pennylane::Constant {
     std::pair{GeneratorOperation::ControlledPhaseShift, KernelType::PI},
     std::pair{GeneratorOperation::MultiRZ, KernelType::LM},
 };
-} // namespace Pennylane::Constant
+} // namespace Pennylane::Gates::Constant

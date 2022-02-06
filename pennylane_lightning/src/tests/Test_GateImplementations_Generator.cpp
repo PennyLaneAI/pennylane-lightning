@@ -1,5 +1,5 @@
 #include "OpToMemberFuncPtr.hpp"
-#include "SelectGateOps.hpp"
+#include "SelectKernel.hpp"
 #include "TestHelpers.hpp"
 #include "TestKernels.hpp"
 #include "Util.hpp"
@@ -24,6 +24,7 @@
  * @endrst
  */
 using namespace Pennylane;
+using namespace Pennylane::Gates;
 
 /**
  * @brief As clang does not support constexpr string_view::remove_prefix yet.
@@ -33,7 +34,7 @@ constexpr std::string_view remove_prefix(const std::string_view &str,
     return std::string_view(str.data() + len, str.length() - len);
 }
 
-constexpr auto gate_name_to_ops = reverse_pairs(Constant::gate_names);
+constexpr auto gate_name_to_ops = Util::reverse_pairs(Constant::gate_names);
 
 template <GeneratorOperation gntr_op>
 constexpr auto findGateOpForGenerator() -> GateOperation {
@@ -72,7 +73,7 @@ template <class PrecisionT, class ParamT, class GateImplementation,
           GeneratorOperation gntr_op, class RandomEngine>
 void testGeneratorForGate(RandomEngine &re, size_t num_qubits) {
     using ComplexPrecisionT = std::complex<PrecisionT>;
-    constexpr auto I = IMAG<PrecisionT>();
+    constexpr auto I = Util::IMAG<PrecisionT>();
 
     constexpr ParamT eps = 1e-4; // For finite difference
 

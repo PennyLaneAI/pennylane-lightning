@@ -6,6 +6,7 @@ add_library(lightning_algorithms STATIC ${ALGORITHM_FILES})
 
 target_link_libraries(lightning_algorithms PRIVATE pennylane_lightning_compile_options
                                                    pennylane_lightning_external_libs
+                                                   lightning_gates
                                                    lightning_simulator
                                                    lightning_utils)
 

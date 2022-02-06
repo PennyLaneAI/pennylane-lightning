@@ -1,5 +1,5 @@
 #include "AvailableKernels.hpp"
-#include "SelectGateOps.hpp"
+#include "SelectKernel.hpp"
 #include "TestHelpers.hpp"
 #include "Util.hpp"
 

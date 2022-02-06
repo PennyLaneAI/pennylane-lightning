@@ -13,7 +13,7 @@
 // limitations under the License.
 /**
  * @file
- * Defines template classes extract member function pointers for
+ * Defines template classes to extract member function pointers for
  * metaprogramming. Also defines some utility functions that calls such
  * pointers.
  */
@@ -24,11 +24,11 @@
 #include <complex>
 #include <vector>
 
-namespace Pennylane {
+namespace Pennylane::Gates {
 
 /**
  * @brief Return a specific member function pointer for a given gate operation.
- * See speicalized classes.
+ * See specialized classes.
  */
 template <class PrecisionT, class ParamT, class GateImplementation,
           GateOperation gate_op>
@@ -441,4 +441,4 @@ inline PrecisionT callGeneratorOps(GeneratorFuncPtrT<PrecisionT> func,
                                    const std::vector<size_t> &wires, bool adj) {
     return func(data, num_qubits, wires, adj);
 }
-} // namespace Pennylane
+} // namespace Pennylane::Gates

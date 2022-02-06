@@ -11,15 +11,16 @@
 
 #include "DynamicDispatcher.hpp"
 #include "OpToMemberFuncPtr.hpp"
-#include "SelectGateOps.hpp"
+#include "SelectKernel.hpp"
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"
 
 using namespace Pennylane;
-namespace Constant = Pennylane::Constant;
+using namespace Pennylane::Gates;
+namespace Constant = Pennylane::Gates::Constant;
 
-using Pennylane::callGateOps;
+using Pennylane::Gates::callGateOps;
 
 /**
  * @file This file contains tests for DynamicDispatcher class
@@ -31,7 +32,7 @@ template <typename PrecisionT, typename ParamT, class GateImplementation>
 struct testDispatchForKernel {
     template <GateOperation gate_op, class RandomEngine,
               std::enable_if_t<
-                  array_has_elt(GateImplementation::implemented_gates, gate_op),
+                  Util::array_has_elt(GateImplementation::implemented_gates, gate_op),
                   bool> = true>
     static void test(RandomEngine &re, size_t num_qubits) {
         using CFP_t = std::complex<PrecisionT>;
@@ -62,7 +63,7 @@ struct testDispatchForKernel {
 
     template <
         GateOperation gate_op, class RandomEngine,
-        std::enable_if_t<!array_has_elt(GateImplementation::implemented_gates,
+        std::enable_if_t<!Util::array_has_elt(GateImplementation::implemented_gates,
                                         gate_op),
                          bool> = true>
     static void test(RandomEngine &re, size_t num_qubits) {
@@ -110,7 +111,7 @@ void testAllKernelsIter(RandomEngine &re, size_t max_num_qubits) {
 
 template <typename PrecisionT, typename ParamT, class RandomEngine>
 void testAllKernels(RandomEngine &re, size_t max_num_qubits) {
-    testAllKernelsIter<PrecisionT, ParamT, AvailableKernels>(re,
+    testAllKernelsIter<PrecisionT, ParamT, Pennylane::AvailableKernels>(re,
                                                              max_num_qubits);
 }
 

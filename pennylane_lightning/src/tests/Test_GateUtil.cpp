@@ -1,5 +1,5 @@
 #include "Gates.hpp"
-#include "SimulatorUtil.hpp"
+#include "GateUtil.hpp"
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"
@@ -15,18 +15,19 @@
 #include <vector>
 
 using namespace Pennylane;
+using namespace Pennylane::Gates;
 
-TEST_CASE("IndicesUtil::generateBitPatterns", "[IndicesUtil]") {
+TEST_CASE("generateBitPatterns", "[IndicesUtil]") {
     const size_t num_qubits = 4;
     SECTION("Qubit indices {}") {
-        auto bit_pattern = IndicesUtil::generateBitPatterns({}, num_qubits);
+        auto bit_pattern = generateBitPatterns({}, num_qubits);
         CHECK(bit_pattern == std::vector<size_t>{0});
     }
     SECTION("Qubit indices {i}") {
         for (size_t i = 0; i < num_qubits; i++) {
             std::vector<size_t> expected{0, 0b1UL << (num_qubits - i - 1)};
             auto bit_pattern =
-                IndicesUtil::generateBitPatterns({i}, num_qubits);
+                generateBitPatterns({i}, num_qubits);
             CHECK(bit_pattern == expected);
         }
     }
@@ -34,9 +35,9 @@ TEST_CASE("IndicesUtil::generateBitPatterns", "[IndicesUtil]") {
         std::vector<size_t> expected_123{0, 1, 2, 3, 4, 5, 6, 7};
         std::vector<size_t> expected_012{0, 2, 4, 6, 8, 10, 12, 14};
         auto bit_pattern_123 =
-            IndicesUtil::generateBitPatterns({1, 2, 3}, num_qubits);
+            generateBitPatterns({1, 2, 3}, num_qubits);
         auto bit_pattern_012 =
-            IndicesUtil::generateBitPatterns({0, 1, 2}, num_qubits);
+            generateBitPatterns({0, 1, 2}, num_qubits);
 
         CHECK(bit_pattern_123 == expected_123);
         CHECK(bit_pattern_012 == expected_012);
@@ -44,14 +45,14 @@ TEST_CASE("IndicesUtil::generateBitPatterns", "[IndicesUtil]") {
     SECTION("Qubit indices {0,2,3}") {
         std::vector<size_t> expected{0, 1, 2, 3, 8, 9, 10, 11};
         auto bit_pattern =
-            IndicesUtil::generateBitPatterns({0, 2, 3}, num_qubits);
+            generateBitPatterns({0, 2, 3}, num_qubits);
 
         CHECK(bit_pattern == expected);
     }
     SECTION("Qubit indices {3,1,0}") {
         std::vector<size_t> expected{0, 8, 4, 12, 1, 9, 5, 13};
         auto bit_pattern =
-            IndicesUtil::generateBitPatterns({3, 1, 0}, num_qubits);
+            generateBitPatterns({3, 1, 0}, num_qubits);
         CHECK(bit_pattern == expected);
     }
 }
@@ -60,7 +61,7 @@ TEST_CASE("StateVector::getIndicesAfterExclusion", "[StateVector_Nonparam]") {
     const size_t num_qubits = 4;
     SECTION("Qubit indices {}") {
         std::vector<size_t> expected{0, 1, 2, 3};
-        auto indices = IndicesUtil::getIndicesAfterExclusion({}, num_qubits);
+        auto indices = getIndicesAfterExclusion({}, num_qubits);
         CHECK(indices == expected);
     }
     SECTION("Qubit indices {i}") {
@@ -69,7 +70,7 @@ TEST_CASE("StateVector::getIndicesAfterExclusion", "[StateVector_Nonparam]") {
             expected.erase(expected.begin() + i);
 
             auto indices =
-                IndicesUtil::getIndicesAfterExclusion({i}, num_qubits);
+                getIndicesAfterExclusion({i}, num_qubits);
             CHECK(indices == expected);
         }
     }
@@ -77,9 +78,9 @@ TEST_CASE("StateVector::getIndicesAfterExclusion", "[StateVector_Nonparam]") {
         std::vector<size_t> expected_123{0};
         std::vector<size_t> expected_012{3};
         auto indices_123 =
-            IndicesUtil::getIndicesAfterExclusion({1, 2, 3}, num_qubits);
+            getIndicesAfterExclusion({1, 2, 3}, num_qubits);
         auto indices_012 =
-            IndicesUtil::getIndicesAfterExclusion({0, 1, 2}, num_qubits);
+            getIndicesAfterExclusion({0, 1, 2}, num_qubits);
 
         CHECK(indices_123 == expected_123);
         CHECK(indices_012 == expected_012);
@@ -87,14 +88,14 @@ TEST_CASE("StateVector::getIndicesAfterExclusion", "[StateVector_Nonparam]") {
     SECTION("Qubit indices {0,2,3}") {
         std::vector<size_t> expected{1};
         auto indices =
-            IndicesUtil::getIndicesAfterExclusion({0, 2, 3}, num_qubits);
+            getIndicesAfterExclusion({0, 2, 3}, num_qubits);
 
         CHECK(indices == expected);
     }
     SECTION("Qubit indices {3,1,0}") {
         std::vector<size_t> expected{2};
         auto indices =
-            IndicesUtil::getIndicesAfterExclusion({3, 1, 0}, num_qubits);
+            getIndicesAfterExclusion({3, 1, 0}, num_qubits);
 
         CHECK(indices == expected);
     }

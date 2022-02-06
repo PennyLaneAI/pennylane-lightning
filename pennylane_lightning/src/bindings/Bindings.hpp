@@ -20,7 +20,6 @@
 #include "AdjointDiff.hpp"
 #include "JacobianProd.hpp"
 #include "OpToMemberFuncPtr.hpp"
-#include "SimulatorUtil.hpp"
 #include "Measures.hpp"
 #include "StateVectorRaw.hpp"
 
@@ -96,12 +95,12 @@ void apply(pybind11::array_t<std::complex<PrecisionT>> &stateNumpyArray,
  * @tparam kernel Kernel to register
  * @tparam gate_op Gate operation
  */
-template <class PrecisionT, class ParamT, KernelType kernel,
-          GateOperation gate_op>
+template <class PrecisionT, class ParamT, Gates::KernelType kernel,
+          Gates::GateOperation gate_op>
 constexpr auto getLambdaForKernelGateOp() {
     namespace py = pybind11;
-    using Pennylane::callGateOps;
-    using GateImplementation = SelectGateOps<kernel>;
+    using namespace Pennylane::Gates;
+    using GateImplementation = SelectKernel<kernel>;
 
     static_assert(array_has_elt(GateImplementation::implemented_gates, gate_op),
                   "The operator to register must be implemented.");
@@ -130,11 +129,12 @@ constexpr auto getLambdaForKernelGateOp() {
 };
 
 /// @cond DEV
-template <class PrecisionT, class ParamT, KernelType kernel, size_t gate_idx>
+template <class PrecisionT, class ParamT, Gates::KernelType kernel, size_t gate_idx>
 constexpr auto getGateOpLambdaPairsIter() {
-    if constexpr (gate_idx < SelectGateOps<kernel>::implemented_gates.size()) {
+    using Pennylane::Gates::SelectKernel;
+    if constexpr (gate_idx < SelectKernel<kernel>::implemented_gates.size()) {
         constexpr auto gate_op =
-            SelectGateOps<kernel>::implemented_gates[gate_idx];
+            SelectKernel<kernel>::implemented_gates[gate_idx];
         return prepend_to_tuple(
             std::pair{gate_op, getLambdaForKernelGateOp<PrecisionT, ParamT,
                                                         kernel, gate_op>()},
@@ -153,7 +153,7 @@ constexpr auto getGateOpLambdaPairsIter() {
  * @tparam ParamT Floating point type of gate parameters
  * @tparam kernel Kernel to register
  */
-template <class PrecisionT, class ParamT, KernelType kernel>
+template <class PrecisionT, class ParamT, Gates::KernelType kernel>
 constexpr auto getGateOpLambdaPairs() {
     return getGateOpLambdaPairsIter<PrecisionT, ParamT, kernel, 0>();
 }
@@ -167,9 +167,10 @@ constexpr auto getGateOpLambdaPairs() {
  * @tparam Kernel Kernel to register
  * @tparam PyClass Pybind11 class type
  */
-template <class PrecisionT, class ParamT, KernelType kernel, class PyClass>
+template <class PrecisionT, class ParamT, Gates::KernelType kernel, class PyClass>
 void registerImplementedGatesForKernel(PyClass &pyclass) {
-    const auto kernel_name = std::string(SelectGateOps<kernel>::name);
+    using namespace Pennylane::Gates;
+    const auto kernel_name = std::string(SelectKernel<kernel>::name);
 
     constexpr auto gate_op_lambda_pairs =
         getGateOpLambdaPairs<PrecisionT, ParamT, kernel>();
@@ -202,8 +203,8 @@ void registerImplementedGatesForKernel(PyClass &pyclass) {
 /// @cond DEV
 template <class PrecisionT, class ParamT, size_t kernel_idx, class PyClass>
 void registerKernelsToPyexportIter(PyClass &pyclass) {
-    if constexpr (kernel_idx < Constant::kernels_to_pyexport.size()) {
-        constexpr auto kernel = Constant::kernels_to_pyexport[kernel_idx];
+    if constexpr (kernel_idx < kernels_to_pyexport.size()) {
+        constexpr auto kernel = kernels_to_pyexport[kernel_idx];
         registerImplementedGatesForKernel<PrecisionT, ParamT, kernel>(pyclass);
         registerKernelsToPyexportIter<PrecisionT, ParamT, kernel_idx + 1>(
             pyclass);

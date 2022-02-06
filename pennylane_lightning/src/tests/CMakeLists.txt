@@ -34,8 +34,9 @@ include(Catch)
 ################################################################################
 
 add_library(lightning_tests_dependency INTERFACE)
-target_link_libraries(lightning_tests_dependency INTERFACE lightning_simulator
-                                                           lightning_algorithms
+target_link_libraries(lightning_tests_dependency INTERFACE lightning_algorithms
+                                                           lightning_gates
+                                                           lightning_simulator
                                                            lightning_utils
                                                            Catch2::Catch2)
 target_compile_options(lightning_tests_dependency INTERFACE "$<$<CONFIG:DEBUG>:-Wall>")
@@ -51,7 +52,7 @@ endif()
 ################################################################################
 
 add_executable(compile_time_tests compile_time_tests.cpp)
-target_link_libraries(compile_time_tests lightning_simulator lightning_utils)
+target_link_libraries(compile_time_tests lightning_gates lightning_utils)
 
 set(TEST_SOURCES Test_AdjDiff.cpp
 #                 Test_Bindings.cpp
@@ -62,10 +63,10 @@ set(TEST_SOURCES Test_AdjDiff.cpp
                  Test_GateImplementations_Matrix.cpp
                  Test_GateImplementations_Nonparam.cpp
                  Test_GateImplementations_Param.cpp
+                 Test_GateUtil.cpp
                  Test_Internal.cpp
                  Test_Measures.cpp
                  Test_OpToMemberFuncPtr.cpp
-                 Test_SimulatorUtil.cpp
                  Test_StateVectorManaged.cpp
                  Test_StateVectorRaw.cpp
                  Test_Util.cpp

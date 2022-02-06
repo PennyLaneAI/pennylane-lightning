@@ -1,10 +1,11 @@
 #include "OpToMemberFuncPtr.hpp"
-#include "SelectGateOps.hpp"
+#include "SelectKernel.hpp"
 #include "Util.hpp"
 
 #include <catch2/catch.hpp>
 
 using namespace Pennylane;
+using namespace Pennylane::Gates;
 
 template <typename EnumClass, uint32_t... I>
 constexpr auto
@@ -87,7 +88,7 @@ constexpr bool testAllGatesImplemeted() {
     }
 
 /**
- * @brief This class defines all possible gates and generators to check
+ * @brief This class defines all dummy gates and generators to check
  * consistency of OpToMemberFuncPtr
  */
 class DummyImplementation {
@@ -174,7 +175,7 @@ template <typename PrecisionT, typename ParamT, class ValueClass, size_t op_idx>
 constexpr auto opFuncPtrPairsIter() {
     if constexpr (op_idx < ValueClass::value.size()) {
         constexpr auto op = ValueClass::value[op_idx];
-        if constexpr (array_has_elt(ValueClass::ignore_list, op)) {
+        if constexpr (Util::array_has_elt(ValueClass::ignore_list, op)) {
             return opFuncPtrPairsIter<PrecisionT, ParamT, ValueClass,
                                       op_idx + 1>();
         } else {
@@ -211,7 +212,7 @@ constexpr auto gateOpFuncPtrPairsWithNumParamsIter() {
             std::get<tuple_idx>(gate_op_func_ptr_pairs<PrecisionT, ParamT>);
         if constexpr (static_lookup<elt.first>(Constant::gate_num_params) ==
                       num_params) {
-            return prepend_to_tuple(
+            return Util::prepend_to_tuple(
                 elt, gateOpFuncPtrPairsWithNumParamsIter<
                          PrecisionT, ParamT, num_params, tuple_idx + 1>());
         } else {

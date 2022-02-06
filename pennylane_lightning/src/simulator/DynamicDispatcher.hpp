@@ -22,7 +22,7 @@
 #include "Constant.hpp"
 #include "Error.hpp"
 #include "KernelType.hpp"
-#include "SimulatorUtil.hpp"
+#include "GateUtil.hpp"
 #include "Util.hpp"
 
 #include <cassert>
@@ -35,7 +35,7 @@
 
 namespace Pennylane::Internal {
 struct PairHash {
-    size_t operator()(const std::pair<std::string, KernelType> &p) const {
+    size_t operator()(const std::pair<std::string, Gates::KernelType> &p) const {
         return std::hash<std::string>()(p.first) ^
                std::hash<int>()(static_cast<int>(p.second));
     }
@@ -88,14 +88,14 @@ template <typename PrecisionT> class DynamicDispatcher {
   private:
     std::unordered_map<std::string, size_t> gate_wires_;
 
-    std::unordered_map<std::string, KernelType> gate_kernel_map_;
-    std::unordered_map<std::string, KernelType> generator_kernel_map_;
+    std::unordered_map<std::string, Gates::KernelType> gate_kernel_map_;
+    std::unordered_map<std::string, Gates::KernelType> generator_kernel_map_;
 
-    std::unordered_map<std::pair<std::string, KernelType>, GateFunc,
+    std::unordered_map<std::pair<std::string, Gates::KernelType>, GateFunc,
                        Internal::PairHash>
         gates_;
 
-    std::unordered_map<std::pair<std::string, KernelType>, GeneratorFunc,
+    std::unordered_map<std::pair<std::string, Gates::KernelType>, GeneratorFunc,
                        Internal::PairHash>
         generators_;
 
@@ -117,14 +117,15 @@ template <typename PrecisionT> class DynamicDispatcher {
     }
 
     DynamicDispatcher() {
-        for (const auto &[gate_op, n_wires] : Constant::gate_wires) {
-            gate_wires_.emplace(Util::lookup(Constant::gate_names, gate_op),
+        using Gates::KernelType;
+        for (const auto &[gate_op, n_wires] : Gates::Constant::gate_wires) {
+            gate_wires_.emplace(Util::lookup(Gates::Constant::gate_names, gate_op),
                                 n_wires);
         }
 
-        for (const auto &[gate_op, gate_name] : Constant::gate_names) {
+        for (const auto &[gate_op, gate_name] : Gates::Constant::gate_names) {
             KernelType kernel =
-                Util::lookup(Constant::default_kernel_for_gates, gate_op);
+                Util::lookup(Gates::Constant::default_kernel_for_gates, gate_op);
             const auto implemented_gates = implementedGatesForKernel(kernel);
             if (std::find(std::cbegin(implemented_gates),
                           std::cend(implemented_gates),
@@ -135,9 +136,9 @@ template <typename PrecisionT> class DynamicDispatcher {
             gate_kernel_map_.emplace(gate_name, kernel);
         }
 
-        for (const auto &[gntr_op, gntr_name] : Constant::generator_names) {
+        for (const auto &[gntr_op, gntr_name] : Gates::Constant::generator_names) {
             KernelType kernel =
-                Util::lookup(Constant::default_kernel_for_generators, gntr_op);
+                Util::lookup(Gates::Constant::default_kernel_for_generators, gntr_op);
             const auto implemented_generators =
                 implementedGeneratorsForKernel(kernel);
             if (std::find(std::cbegin(implemented_generators),
@@ -162,7 +163,7 @@ template <typename PrecisionT> class DynamicDispatcher {
      * kernel
      */
     template <typename FunctionType>
-    void registerGateOperation(const std::string &op_name, KernelType kernel,
+    void registerGateOperation(const std::string &op_name, Gates::KernelType kernel,
                                FunctionType &&func) {
         // TODO: Add mutex when we go to multithreading
         gates_.emplace(std::make_pair(op_name, kernel),
@@ -175,7 +176,7 @@ template <typename PrecisionT> class DynamicDispatcher {
      */
     template <typename FunctionType>
     void registerGeneratorOperation(const std::string &op_name,
-                                    KernelType kernel, FunctionType &&func) {
+                                    Gates::KernelType kernel, FunctionType &&func) {
         // TODO: Add mutex when we go to multithreading
         generators_.emplace(
             std::make_pair(removeGeneratorPrefix(op_name), kernel),
@@ -193,7 +194,7 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param inverse Indicates whether to use inverse of gate.
      * @param params Optional parameter list for parametric gates.
      */
-    void applyOperation(KernelType kernel, CFP_t *data, size_t num_qubits,
+    void applyOperation(Gates::KernelType kernel, CFP_t *data, size_t num_qubits,
                         const std::string &op_name,
                         const std::vector<size_t> &wires, bool inverse,
                         const std::vector<PrecisionT> &params = {}) const {
@@ -302,7 +303,7 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param wires Wires to apply gate to.
      * @param adj Indicates whether to use adjoint of gate.
      */
-    auto applyGenerator(KernelType kernel, CFP_t *data, size_t num_qubits,
+    auto applyGenerator(Gates::KernelType kernel, CFP_t *data, size_t num_qubits,
                         const std::string &op_name,
                         const std::vector<size_t> &wires, bool adj) const
         -> PrecisionT {

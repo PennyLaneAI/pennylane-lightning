@@ -12,6 +12,7 @@
 
 #include <catch2/catch.hpp>
 
+namespace Pennylane {
 template <typename T> struct remove_complex { using type = T; };
 template <typename T> struct remove_complex<std::complex<T>> {
     using type = T;
@@ -27,7 +28,7 @@ template <class T, class Alloc> struct PLApprox {
     remove_complex_t<T> epsilon_ = std::numeric_limits<float>::epsilon() * 100;
 
     template <class AllocA>
-    bool compare(const std::vector<T, AllocA> &lhs) const {
+    [[nodiscard]] bool compare(const std::vector<T, AllocA> &lhs) const {
         if (lhs.size() != comp_.size()) {
             return false;
         }
@@ -229,13 +230,13 @@ template <typename PrecisionT> auto createProductState(std::string_view str) {
     return st;
 }
 
-inline auto createWires(Pennylane::GateOperation op) -> std::vector<size_t> {
-    if (Pennylane::Util::array_has_elt(Pennylane::Constant::multi_qubit_gates,
+inline auto createWires(Gates::GateOperation op) -> std::vector<size_t> {
+    if (Pennylane::Util::array_has_elt(Gates::Constant::multi_qubit_gates,
                                        op)) {
         // if multi-qubit gates
         return {0, 1, 2};
     }
-    switch (Pennylane::Util::lookup(Pennylane::Constant::gate_wires, op)) {
+    switch (Pennylane::Util::lookup(Gates::Constant::gate_wires, op)) {
     case 1:
         return {0};
     case 2:
@@ -249,8 +250,8 @@ inline auto createWires(Pennylane::GateOperation op) -> std::vector<size_t> {
 }
 
 template <class PrecisionT>
-auto createParams(Pennylane::GateOperation op) -> std::vector<PrecisionT> {
-    switch (Pennylane::Util::lookup(Pennylane::Constant::gate_num_params, op)) {
+auto createParams(Gates::GateOperation op) -> std::vector<PrecisionT> {
+    switch (Pennylane::Util::lookup(Gates::Constant::gate_num_params, op)) {
     case 0:
         return {};
     case 1:
@@ -290,7 +291,7 @@ auto randomUnitary(RandomEngine &re, size_t num_qubits)
         ComplexPrecisionT *row2_p = res.data() + row2 * dim;
         for (size_t row1 = 0; row1 < row2; row1++) {
             const ComplexPrecisionT *row1_p = res.data() + row1 * dim;
-            ComplexPrecisionT dot12 = innerProdC(row1_p, row2_p, dim);
+            ComplexPrecisionT dot12 = Util::innerProdC(row1_p, row2_p, dim);
             ComplexPrecisionT dot11 = squaredNorm(row1_p, dim);
 
             // orthogonalize row2
@@ -323,3 +324,4 @@ template <> struct PrecisionToName<float> {
 template <> struct PrecisionToName<double> {
     constexpr static auto value = "double";
 };
+} // namespace Pennylane

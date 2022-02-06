@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file SimulatorUtil.hpp
+ * @file
  * Defines a non-template utility functions
  */
 
@@ -32,7 +32,7 @@
  * for loop is usually better performing, consider to use other options before
  * using functions below.
  */
-namespace Pennylane::IndicesUtil {
+namespace Pennylane::Gates {
 
 /**
  * @brief Get indices of statevector data not participating in application
@@ -83,9 +83,9 @@ struct GateIndices {
           external{generateBitPatterns(
               getIndicesAfterExclusion(wires, num_qubits), num_qubits)} {}
 };
-} // namespace Pennylane::IndicesUtil
+} // namespace Pennylane::Gates
 
-namespace Pennylane {
+namespace Pennylane::Gates {
 /**
  * @brief Return implemented_gates constexpr member variables for a given kernel
  *
@@ -102,4 +102,4 @@ auto implementedGatesForKernel(KernelType kernel) -> std::vector<GateOperation>;
  */
 auto implementedGeneratorsForKernel(KernelType kernel)
     -> std::vector<GeneratorOperation>;
-} // namespace Pennylane
+} // namespace Pennylane::Gates

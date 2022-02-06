@@ -1,5 +1,5 @@
 #include "OpToMemberFuncPtr.hpp"
-#include "SelectGateOps.hpp"
+#include "SelectKernel.hpp"
 #include "TestHelpers.hpp"
 #include "TestKernels.hpp"
 #include "Util.hpp"
@@ -21,6 +21,7 @@
  */
 
 using namespace Pennylane;
+using namespace Pennylane::Gates;
 
 template <typename PrecisionT, typename ParamT, class GateImplementation,
           GateOperation gate_op, class RandomEngine>

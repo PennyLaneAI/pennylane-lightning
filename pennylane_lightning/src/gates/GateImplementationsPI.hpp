@@ -28,12 +28,13 @@
 #include "Gates.hpp"
 #include "KernelType.hpp"
 #include "PauliGenerator.hpp"
-#include "SimulatorUtil.hpp"
+#include "GateUtil.hpp"
+#include "Util.hpp"
 
 #include <complex>
 #include <vector>
 
-namespace Pennylane {
+namespace Pennylane::Gates {
 /**
  * @brief Kernel functions for gate operations with precomputed indices
  *
@@ -43,9 +44,6 @@ namespace Pennylane {
  * @tparam PrecisionT Floating point precision of underlying statevector data.
  * */
 class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
-  private:
-    using GateIndices = IndicesUtil::GateIndices;
-
   public:
     constexpr static KernelType kernel_id = KernelType::PI;
     constexpr static std::string_view name = "PI";
@@ -578,6 +576,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     applyGeneratorCRY(std::complex<PrecisionT> *arr, size_t num_qubits,
                       const std::vector<size_t> &wires,
                       [[maybe_unused]] bool adj) -> PrecisionT {
+        using Util::IMAG;
         assert(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
@@ -630,4 +629,4 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         return static_cast<PrecisionT>(1);
     }
 };
-} // namespace Pennylane
+} // namespace Pennylane::Gates

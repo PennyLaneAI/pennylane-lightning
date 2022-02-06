@@ -1,10 +1,10 @@
 #include "AvailableKernels.hpp"
 #include "Constant.hpp"
 #include "KernelType.hpp"
-#include "SelectGateOps.hpp"
+#include "SelectKernel.hpp"
 #include "Util.hpp"
 
-namespace Pennylane {
+namespace Pennylane::Gates {
 
 // Define some utility function
 template <typename TypeList>
@@ -47,7 +47,7 @@ check_kernels_are_available(const std::array<KernelType, size> &arr) -> bool {
 constexpr auto check_kernels_to_pyexport() -> bool {
     // TODO: change to constexpr std::any_of in C++20
     // NOLINTNEXTLINE (readability-use-anyofallof)
-    for (const auto &kernel : Constant::kernels_to_pyexport) {
+    for (const auto &kernel : kernels_to_pyexport) {
         if (!is_available_kernel(kernel)) {
             return false;
         }

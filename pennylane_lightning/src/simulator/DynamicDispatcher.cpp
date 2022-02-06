@@ -19,10 +19,11 @@
 #include "AvailableKernels.hpp"
 #include "Constant.hpp"
 #include "OpToMemberFuncPtr.hpp"
-#include "SelectGateOps.hpp"
-#include "SimulatorUtil.hpp"
+#include "SelectKernel.hpp"
+#include "GateUtil.hpp"
 
 using namespace Pennylane;
+using namespace Pennylane::Util;
 
 namespace {
 /**
@@ -38,17 +39,17 @@ namespace {
  * @tparam gate_op Gate operation to make a functor.
  */
 template <class PrecisionT, class ParamT, class GateImplementation,
-          GateOperation gate_op>
+          Gates::GateOperation gate_op>
 constexpr auto gateOpToFunctor() {
     return [](std::complex<PrecisionT> *data, size_t num_qubits,
               const std::vector<size_t> &wires, bool inverse,
               const std::vector<PrecisionT> &params) {
         constexpr auto func_ptr =
-            GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+            Gates::GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                                   gate_op>::value;
         assert(params.size() ==
-               static_lookup<gate_op>(Constant::gate_num_params));
-        callGateOps(func_ptr, data, num_qubits, wires, inverse, params);
+               Gates::static_lookup<gate_op>(Gates::Constant::gate_num_params));
+        Gates::callGateOps(func_ptr, data, num_qubits, wires, inverse, params);
     };
 }
 
@@ -67,7 +68,7 @@ constexpr auto constructGateOpsFunctorTupleIter() {
     } else if (gate_idx < GateImplementation::implemented_gates.size()) {
         constexpr auto gate_op =
             GateImplementation::implemented_gates[gate_idx];
-        if constexpr (gate_op == GateOperation::Matrix) {
+        if constexpr (gate_op == Gates::GateOperation::Matrix) {
             /* GateOperation::Matrix is not supported for dynamic dispatch now
              */
             return constructGateOpsFunctorTupleIter<
@@ -95,7 +96,7 @@ constexpr auto constructGeneratorOpsFunctorTupleIter() {
             GateImplementation::implemented_generators[gntr_idx];
         return prepend_to_tuple(
             std::pair{gntr_op,
-                      GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
+                      Gates::GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
                                                  gntr_op>::value},
             constructGeneratorOpsFunctorTupleIter<
                 PrecisionT, GateImplementation, gntr_idx + 1>());
@@ -140,7 +141,7 @@ void registerAllImplementedGateOps() {
                                         const auto &gate_op_func_pair) {
         const auto &[gate_op, func] = gate_op_func_pair;
         std::string op_name =
-            std::string(lookup(Constant::gate_names, gate_op));
+            std::string(lookup(Gates::Constant::gate_names, gate_op));
         dispatcher.registerGateOperation(op_name, GateImplementation::kernel_id,
                                          func);
         return gate_op;
@@ -166,7 +167,7 @@ void registerAllImplementedGeneratorOps() {
         [&dispatcher](const auto &gntr_op_func_pair) {
             const auto &[gntr_op, func] = gntr_op_func_pair;
             std::string op_name =
-                std::string(lookup(Constant::generator_names, gntr_op));
+                std::string(lookup(Gates::Constant::generator_names, gntr_op));
             dispatcher.registerGeneratorOperation(
                 op_name, GateImplementation::kernel_id, func);
             return gntr_op;

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file SelectGateOps.hpp
+ * @file SelectKernel.hpp
  * Defines a template class for choosing a Gate operations
  */
 #pragma once
@@ -26,7 +26,7 @@
 #include <functional>
 #include <variant>
 
-namespace Pennylane {
+namespace Pennylane::Gates {
 /**
  * @brief For lookup from any array of pair whose first elements are
  * GateOperations.
@@ -93,12 +93,12 @@ constexpr auto string_to_kernel(const std::string_view kernel_name)
 
 /// @cond DEV
 namespace Internal {
-template <KernelType kernel, class TypeList> struct SelectGateOpsHelper {
+template <KernelType kernel, class TypeList> struct SelectKernelHelper {
     using Type = std::conditional_t<
         TypeList::Type::kernel_id == kernel, typename TypeList::Type,
-        typename SelectGateOpsHelper<kernel, typename TypeList::Next>::Type>;
+        typename SelectKernelHelper<kernel, typename TypeList::Next>::Type>;
 };
-template <KernelType kernel> struct SelectGateOpsHelper<kernel, void> {
+template <KernelType kernel> struct SelectKernelHelper<kernel, void> {
     static_assert(Util::array_has_elt(Util::first_elts_of(kernel_id_name_pairs),
                                       kernel),
                   "The given kernel is not in the list of available kernels.");
@@ -111,7 +111,7 @@ template <KernelType kernel> struct SelectGateOpsHelper<kernel, void> {
  * @brief This class chooses a gate implementation at the compile time.
  *
  * When one adds another gate implementation, one needs to add a key
- * in KernelType and assign it to SelectGateOps by template specialization.
+ * in KernelType and assign it to SelectKernel by template specialization.
  *
  * Even though it is impossible to convert this into a constexpr function,
  * one may convert GateOpsFuncPtrPairs into constexpr functions with
@@ -121,7 +121,7 @@ template <KernelType kernel> struct SelectGateOpsHelper<kernel, void> {
  * @tparam kernel Kernel to select
  */
 template <KernelType kernel>
-using SelectGateOps =
-    typename Internal::SelectGateOpsHelper<kernel, AvailableKernels>::Type;
+using SelectKernel =
+    typename Internal::SelectKernelHelper<kernel, AvailableKernels>::Type;
 
-} // namespace Pennylane
+} // namespace Pennylane::Gates
