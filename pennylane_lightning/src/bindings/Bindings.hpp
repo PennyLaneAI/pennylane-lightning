@@ -19,8 +19,8 @@
 #pragma once
 #include "AdjointDiff.hpp"
 #include "JacobianProd.hpp"
-#include "OpToMemberFuncPtr.hpp"
 #include "Measures.hpp"
+#include "OpToMemberFuncPtr.hpp"
 #include "StateVectorRaw.hpp"
 
 #include "pybind11/complex.h"
@@ -129,7 +129,8 @@ constexpr auto getLambdaForKernelGateOp() {
 };
 
 /// @cond DEV
-template <class PrecisionT, class ParamT, Gates::KernelType kernel, size_t gate_idx>
+template <class PrecisionT, class ParamT, Gates::KernelType kernel,
+          size_t gate_idx>
 constexpr auto getGateOpLambdaPairsIter() {
     using Pennylane::Gates::SelectKernel;
     if constexpr (gate_idx < SelectKernel<kernel>::implemented_gates.size()) {
@@ -167,7 +168,8 @@ constexpr auto getGateOpLambdaPairs() {
  * @tparam Kernel Kernel to register
  * @tparam PyClass Pybind11 class type
  */
-template <class PrecisionT, class ParamT, Gates::KernelType kernel, class PyClass>
+template <class PrecisionT, class ParamT, Gates::KernelType kernel,
+          class PyClass>
 void registerImplementedGatesForKernel(PyClass &pyclass) {
     using namespace Pennylane::Gates;
     const auto kernel_name = std::string(SelectKernel<kernel>::name);

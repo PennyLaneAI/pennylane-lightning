@@ -35,6 +35,6 @@ namespace Pennylane {
 /**
  * @brief List of kernels binds to Python.
  */
-[[maybe_unused]] constexpr std::array kernels_to_pyexport = {Gates::KernelType::PI,
-                                                             Gates::KernelType::LM};
+[[maybe_unused]] constexpr std::array kernels_to_pyexport = {
+    Gates::KernelType::PI, Gates::KernelType::LM};
 } // namespace Pennylane

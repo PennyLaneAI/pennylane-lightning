@@ -91,10 +91,9 @@ class Measures {
 
         const std::vector<size_t> all_indices =
             Gates::generateBitPatterns(sorted_wires, num_qubits);
-        const std::vector<size_t> all_offsets =
-            Gates::generateBitPatterns(
-                Gates::getIndicesAfterExclusion(sorted_wires, num_qubits),
-                num_qubits);
+        const std::vector<size_t> all_offsets = Gates::generateBitPatterns(
+            Gates::getIndicesAfterExclusion(sorted_wires, num_qubits),
+            num_qubits);
 
         std::vector<fp_t> probabilities(all_indices.size(), 0);
 

@@ -8,5 +8,6 @@
 
 #include "TypeList.hpp"
 
-using TestKernels = Pennylane::Util::TypeList<Pennylane::Gates::GateImplementationsLM,
-                                              Pennylane::Gates::GateImplementationsPI>;
+using TestKernels =
+    Pennylane::Util::TypeList<Pennylane::Gates::GateImplementationsLM,
+                              Pennylane::Gates::GateImplementationsPI>;

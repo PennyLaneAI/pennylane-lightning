@@ -30,10 +30,11 @@ using Pennylane::Gates::callGateOps;
  */
 template <typename PrecisionT, typename ParamT, class GateImplementation>
 struct testDispatchForKernel {
-    template <GateOperation gate_op, class RandomEngine,
-              std::enable_if_t<
-                  Util::array_has_elt(GateImplementation::implemented_gates, gate_op),
-                  bool> = true>
+    template <
+        GateOperation gate_op, class RandomEngine,
+        std::enable_if_t<
+            Util::array_has_elt(GateImplementation::implemented_gates, gate_op),
+            bool> = true>
     static void test(RandomEngine &re, size_t num_qubits) {
         using CFP_t = std::complex<PrecisionT>;
         const std::vector<CFP_t> ini_st =
@@ -63,8 +64,8 @@ struct testDispatchForKernel {
 
     template <
         GateOperation gate_op, class RandomEngine,
-        std::enable_if_t<!Util::array_has_elt(GateImplementation::implemented_gates,
-                                        gate_op),
+        std::enable_if_t<!Util::array_has_elt(
+                             GateImplementation::implemented_gates, gate_op),
                          bool> = true>
     static void test(RandomEngine &re, size_t num_qubits) {
     } // Do nothing if not implemented
@@ -111,8 +112,8 @@ void testAllKernelsIter(RandomEngine &re, size_t max_num_qubits) {
 
 template <typename PrecisionT, typename ParamT, class RandomEngine>
 void testAllKernels(RandomEngine &re, size_t max_num_qubits) {
-    testAllKernelsIter<PrecisionT, ParamT, Pennylane::AvailableKernels>(re,
-                                                             max_num_qubits);
+    testAllKernelsIter<PrecisionT, ParamT, Pennylane::AvailableKernels>(
+        re, max_num_qubits);
 }
 
 TEMPLATE_TEST_CASE("DynamicDispatcher::applyOperation", "[DynamicDispatcher]",

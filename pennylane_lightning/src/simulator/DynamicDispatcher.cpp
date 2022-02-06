@@ -18,9 +18,9 @@
 #include "DynamicDispatcher.hpp"
 #include "AvailableKernels.hpp"
 #include "Constant.hpp"
+#include "GateUtil.hpp"
 #include "OpToMemberFuncPtr.hpp"
 #include "SelectKernel.hpp"
-#include "GateUtil.hpp"
 
 using namespace Pennylane;
 using namespace Pennylane::Util;
@@ -46,7 +46,7 @@ constexpr auto gateOpToFunctor() {
               const std::vector<PrecisionT> &params) {
         constexpr auto func_ptr =
             Gates::GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
-                                  gate_op>::value;
+                                         gate_op>::value;
         assert(params.size() ==
                Gates::static_lookup<gate_op>(Gates::Constant::gate_num_params));
         Gates::callGateOps(func_ptr, data, num_qubits, wires, inverse, params);
@@ -96,8 +96,8 @@ constexpr auto constructGeneratorOpsFunctorTupleIter() {
             GateImplementation::implemented_generators[gntr_idx];
         return prepend_to_tuple(
             std::pair{gntr_op,
-                      Gates::GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
-                                                 gntr_op>::value},
+                      Gates::GeneratorOpToMemberFuncPtr<
+                          PrecisionT, GateImplementation, gntr_op>::value},
             constructGeneratorOpsFunctorTupleIter<
                 PrecisionT, GateImplementation, gntr_idx + 1>());
     }

@@ -87,7 +87,8 @@ static constexpr auto getS() -> std::vector<std::complex<T>> {
 template <class T>
 static constexpr auto getT() -> std::vector<std::complex<T>> {
     using namespace Util;
-    return {ONE<T>(), ZERO<T>(), ZERO<T>(), std::complex<T>{INVSQRT2<T>(), INVSQRT2<T>()}};
+    return {ONE<T>(), ZERO<T>(), ZERO<T>(),
+            std::complex<T>{INVSQRT2<T>(), INVSQRT2<T>()}};
 }
 
 /**

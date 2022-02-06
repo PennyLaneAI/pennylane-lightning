@@ -118,4 +118,4 @@ static_assert(Util::count_unique(Util::first_elts_of(
               "Constant default_kernel_for_generators must be defined for all "
               "generators.");
 
-} // namespace Pennylane
+} // namespace Pennylane::Gates

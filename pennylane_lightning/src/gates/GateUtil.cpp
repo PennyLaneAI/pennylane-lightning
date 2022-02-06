@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "AvailableKernels.hpp"
 #include "GateUtil.hpp"
+#include "AvailableKernels.hpp"
 
 #include "Util.hpp"
 
@@ -59,7 +59,8 @@ template <class OperatorImplementation> struct ImplementedGenerators {
 };
 
 template <class TypeList, class ValueType, template <class> class ValueClass>
-auto ValueForKernelHelper([[maybe_unused]] Pennylane::Gates::KernelType kernel) {
+auto ValueForKernelHelper(
+    [[maybe_unused]] Pennylane::Gates::KernelType kernel) {
     if constexpr (std::is_same_v<TypeList, void>) {
         return std::vector<ValueType>{};
     } else {

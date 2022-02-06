@@ -84,4 +84,4 @@ static_assert(check_kernels_are_available(
 static_assert(check_kernels_are_available(Util::second_elts_of(
                   Constant::default_kernel_for_generators)),
               "default_kernel_for_gates contains an unavailable kernel");
-} // namespace Pennylane
+} // namespace Pennylane::Gates

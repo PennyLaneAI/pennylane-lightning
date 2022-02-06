@@ -25,10 +25,10 @@
 /// @endcond
 
 #include "GateOperation.hpp"
+#include "GateUtil.hpp"
 #include "Gates.hpp"
 #include "KernelType.hpp"
 #include "PauliGenerator.hpp"
-#include "GateUtil.hpp"
 #include "Util.hpp"
 
 #include <complex>

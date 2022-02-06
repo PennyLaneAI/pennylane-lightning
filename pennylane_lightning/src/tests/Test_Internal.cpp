@@ -104,8 +104,8 @@ TEMPLATE_TEST_CASE("randomUnitary", "[Test_Internal]", float, double) {
             [](const std::complex<PrecisionT> &v) { return std::conj(v); });
 
         std::vector<std::complex<PrecisionT>> mat(dim * dim);
-        Util::matrixMatProd(unitary.data(), unitary_dagger.data(), mat.data(), dim,
-                      dim, dim);
+        Util::matrixMatProd(unitary.data(), unitary_dagger.data(), mat.data(),
+                            dim, dim, dim);
 
         std::vector<std::complex<PrecisionT>> identity(
             dim * dim, std::complex<PrecisionT>{});
