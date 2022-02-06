@@ -11,6 +11,8 @@
 #include "StateVectorManaged.hpp"
 
 using namespace Pennylane;
+using namespace Pennylane::Gates;
+using namespace Pennylane::Util;
 
 std::string_view strip(std::string_view str) {
     auto start = str.find_first_not_of(" \t");
@@ -25,6 +27,7 @@ struct GateDesc {
 
 std::vector<std::pair<std::string, GateDesc>>
 parseGateLists(std::string_view arg) {
+    namespace Constant = Gates::Constant;
     std::map<std::string, GateDesc> available_gates_wires;
 
     for (const auto &[gate_op, gate_name] : Constant::gate_names) {
