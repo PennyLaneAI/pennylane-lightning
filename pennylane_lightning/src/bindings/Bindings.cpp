@@ -292,6 +292,30 @@ void lightning_class_bindings(py::module &m) {
             return py::make_tuple(py::array_t<ParamT>(py::cast(jac)),
                                   py::array_t<ParamT>(py::cast(vjp_res)));
         });
+
+    //***********************************************************************//
+    //                              Measures
+    //***********************************************************************//
+
+    class_name = "MeasuresC" + bitsize;
+    py::class_<Measures<PrecisionT>>(m, class_name.c_str())
+        .def(py::init<const StateVectorRaw<PrecisionT> &>())
+        .def("probs",
+             [](Measures<PrecisionT> &M, const std::vector<size_t> &wires) {
+                 if (wires.empty()) {
+                     return py::array_t<ParamT>(py::cast(M.probs()));
+                 }
+                 return py::array_t<ParamT>(py::cast(M.probs(wires)));
+             })
+        .def("expval",
+             [](Measures<PrecisionT> &M, const std::string &operation,
+                const std::vector<size_t> &wires) {
+                 return M.expval(operation, wires);
+             })
+        .def("var", [](Measures<PrecisionT> &M, const std::string &operation,
+                       const std::vector<size_t> &wires) {
+            return M.var(operation, wires);
+        });
 }
 
 /**

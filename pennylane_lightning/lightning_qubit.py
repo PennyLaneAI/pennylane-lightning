@@ -15,6 +15,7 @@ r"""
 This module contains the :class:`~.LightningQubit` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
+from typing import List
 from warnings import warn
 
 import numpy as np
@@ -29,14 +30,17 @@ from pennylane import (
 import pennylane as qml
 from pennylane.devices import DefaultQubit
 from pennylane.operation import Expectation
+from pennylane.wires import Wires
 
 from ._version import __version__
 
 try:
     from .lightning_qubit_ops import (
+        MeasuresC64,
         StateVectorC64,
         AdjointJacobianC64,
         VectorJacobianProductC64,
+        MeasuresC128,
         StateVectorC128,
         AdjointJacobianC128,
         VectorJacobianProductC128,
@@ -488,6 +492,157 @@ class LightningQubit(DefaultQubit):
                 reduction(jacs, jac)
 
         return jacs, vjps
+
+    def probability(self, wires=None, shot_range=None, bin_size=None):
+        """Return the probability of each computational basis state.
+
+        Devices that require a finite number of shots always return the
+        estimated probability.
+
+        Args:
+            wires (Iterable[Number, str], Number, str, Wires): wires to return
+                marginal probabilities for. Wires not provided are traced out of the system.
+            shot_range (tuple[int]): 2-tuple of integers specifying the range of samples
+                to use. If not specified, all samples are used.
+            bin_size (int): Divides the shot range into bins of size ``bin_size``, and
+                returns the measurement statistic separately over each bin. If not
+                provided, the entire shot range is treated as a single bin.
+
+        Returns:
+            array[float]: list of the probabilities
+        """
+        if self.shots is not None:
+            return self.estimate_probability(wires=wires, shot_range=shot_range, bin_size=bin_size)
+
+        wires = wires or self.wires
+        wires = Wires(wires)
+
+        # translate to wire labels used by device
+        device_wires = self.map_wires(wires)
+
+        # To support np.complex64 based on the type of self._state
+        dtype = self._state.dtype
+        if dtype == np.complex64:
+            use_csingle = True
+        elif dtype == np.complex128:
+            use_csingle = False
+        else:
+            raise TypeError(f"Unsupported complex Type: {dtype}")
+
+        # Initialization of state
+        ket = np.ravel(self._state)
+
+        if use_csingle:
+            ket = ket.astype(np.complex64)
+
+        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
+        M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
+
+        return M.probs(device_wires)
+
+    def expval(self, observable, shot_range=None, bin_size=None):
+        """Expectation value of the supplied observable.
+
+        Args:
+            observable: A PennyLane observable.
+            shot_range (tuple[int]): 2-tuple of integers specifying the range of samples
+                to use. If not specified, all samples are used.
+            bin_size (int): Divides the shot range into bins of size ``bin_size``, and
+                returns the measurement statistic separately over each bin. If not
+                provided, the entire shot range is treated as a single bin.
+
+        Returns:
+            Expectation value of the observable
+        """
+        if isinstance(observable.name, List) or observable.name in [
+            "Identity",
+            "Projector",
+            "Hermitian",
+            "Hamiltonian",
+            "SparseHamiltonian",
+        ]:
+            # TODO: requires backend support
+            return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
+
+        if self.shots is not None:
+            # estimate the expectation value
+            # TODO: Lightning support for sampling
+            samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
+            return np.squeeze(np.mean(samples, axis=0))
+
+        # To support np.complex64 based on the type of self._state
+        dtype = self._state.dtype
+        if dtype == np.complex64:
+            use_csingle = True
+        elif dtype == np.complex128:
+            use_csingle = False
+        else:
+            raise TypeError(f"Unsupported complex Type: {dtype}")
+
+        # Initialization of state
+        ket = np.ravel(self._pre_rotated_state)
+
+        if use_csingle:
+            ket = ket.astype(np.complex64)
+
+        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
+        M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
+
+        # translate to wire labels used by device
+        observable_wires = self.map_wires(observable.wires)
+
+        return M.expval(observable.name, observable_wires)
+
+    def var(self, observable, shot_range=None, bin_size=None):
+        """Variance of the supplied observable.
+
+        Args:
+            observable: A PennyLane observable.
+            shot_range (tuple[int]): 2-tuple of integers specifying the range of samples
+                to use. If not specified, all samples are used.
+            bin_size (int): Divides the shot range into bins of size ``bin_size``, and
+                returns the measurement statistic separately over each bin. If not
+                provided, the entire shot range is treated as a single bin.
+
+        Returns:
+            Variance of the observable
+        """
+        if isinstance(observable.name, List) or observable.name in [
+            "Identity",
+            "Projector",
+            "Hermitian",
+        ]:
+            # TODO: requires backend support
+            return super().var(observable, shot_range=shot_range, bin_size=bin_size)
+
+        if self.shots is not None:
+            # estimate the var
+            # TODO: Lightning support for sampling
+            samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
+            return np.squeeze(np.var(samples, axis=0))
+
+        # To support np.complex64 based on the type of self._state
+        dtype = self._state.dtype
+        if dtype == np.complex64:
+            use_csingle = True
+        elif dtype == np.complex128:
+            use_csingle = False
+        else:
+            raise TypeError(f"Unsupported complex Type: {dtype}")
+
+        # Initialization of state
+        ket = np.ravel(self._pre_rotated_state)
+
+        if use_csingle:
+            ket = ket.astype(np.complex64)
+
+        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
+        M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
+
+        # translate to wire labels used by device
+        observable_wires = self.map_wires(observable.wires)
+
+        return M.var(observable.name, observable_wires)
 
 
 if not CPP_BINARY_AVAILABLE:
