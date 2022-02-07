@@ -6,8 +6,8 @@ Adding a gate implementation
 We discuss how one can add another gate implementation in this document. Assume that you want to add a custom ``PauliX`` gate implementation in Pennylane-Lightning. In this case, you may first create a file and add a class:
 
 .. code-block:: cpp
-   // file: MyGateImplementation.hpp
 
+      // file: MyGateImplementation.hpp
     struct MyGateImplementation {
       public:
         constexpr static std::array implemented_gates = {
