@@ -43,6 +43,15 @@ template <class T, class Alloc> struct PLApprox {
         }
         return true;
     }
+    [[nodiscard]] std::string describe() const {
+        std::ostringstream ss;
+        ss << "is Approx to {";
+        for (const auto &elt : comp_) {
+            ss << elt << ", ";
+        }
+        ss << "}" << std::endl;
+        return ss.str();
+    }
     PLApprox &epsilon(remove_complex_t<T> eps) {
         epsilon_ = eps;
         return *this;
@@ -52,6 +61,11 @@ template <class T, class Alloc> struct PLApprox {
         return *this;
     }
 };
+template <typename T, class Alloc>
+std::ostream &operator<<(std::ostream &os, const PLApprox<T, Alloc> &approx) {
+    os << approx.describe();
+    return os;
+}
 template <class T, class AllocA, class AllocB>
 bool operator==(const std::vector<T, AllocA> &lhs,
                 const PLApprox<T, AllocB> &rhs) {

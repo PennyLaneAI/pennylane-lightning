@@ -47,6 +47,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
   public:
     constexpr static KernelType kernel_id = KernelType::PI;
     constexpr static std::string_view name = "PI";
+    constexpr static uint32_t data_alignment_in_bytes = 1;
 
     constexpr static std::array implemented_gates = {
         GateOperation::PauliX,  GateOperation::PauliY,
@@ -57,9 +58,11 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         GateOperation::Rot,     GateOperation::ControlledPhaseShift,
         GateOperation::CNOT,    GateOperation::CY,
         GateOperation::CZ,      GateOperation::SWAP,
-        GateOperation::CRX,     GateOperation::CRY,
-        GateOperation::CRZ,     GateOperation::CRot,
-        GateOperation::Toffoli, GateOperation::CSWAP,
+        GateOperation::IsingXX, GateOperation::IsingYY,
+        GateOperation::IsingZZ, GateOperation::CRX,
+        GateOperation::CRY,     GateOperation::CRZ,
+        GateOperation::CRot,    GateOperation::Toffoli,
+        GateOperation::CSWAP,   GateOperation::MultiRZ,
         GateOperation::Matrix};
     constexpr static std::array implemented_generators = {
         GeneratorOperation::RX,  GeneratorOperation::RY,
@@ -236,6 +239,22 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
     /* Single qubit operators with a parameter */
     template <class PrecisionT, class ParamT = PrecisionT>
+    static void applyPhaseShift(std::complex<PrecisionT> *arr,
+                                size_t num_qubits,
+                                const std::vector<size_t> &wires, bool inverse,
+                                ParamT angle) {
+        assert(wires.size() == 1);
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+        const std::complex<PrecisionT> s =
+            inverse ? std::conj(std::exp(std::complex<PrecisionT>(0, angle)))
+                    : std::exp(std::complex<PrecisionT>(0, angle));
+        for (const size_t &externalIndex : externalIndices) {
+            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
+            shiftedState[indices[1]] *= s;
+        }
+    }
+
+    template <class PrecisionT, class ParamT = PrecisionT>
     static void applyRX(std::complex<PrecisionT> *arr, size_t num_qubits,
                         const std::vector<size_t> &wires, bool inverse,
                         ParamT angle) {
@@ -301,22 +320,6 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyPhaseShift(std::complex<PrecisionT> *arr,
-                                size_t num_qubits,
-                                const std::vector<size_t> &wires, bool inverse,
-                                ParamT angle) {
-        assert(wires.size() == 1);
-        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
-        const std::complex<PrecisionT> s =
-            inverse ? std::conj(std::exp(std::complex<PrecisionT>(0, angle)))
-                    : std::exp(std::complex<PrecisionT>(0, angle));
-        for (const size_t &externalIndex : externalIndices) {
-            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
-            shiftedState[indices[1]] *= s;
-        }
-    }
-
-    template <class PrecisionT, class ParamT = PrecisionT>
     static void applyRot(std::complex<PrecisionT> *arr, size_t num_qubits,
                          const std::vector<size_t> &wires, bool inverse,
                          ParamT phi, ParamT theta, ParamT omega) {
@@ -356,18 +359,6 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     template <class PrecisionT>
-    static void applySWAP(std::complex<PrecisionT> *arr, size_t num_qubits,
-                          const std::vector<size_t> &wires,
-                          [[maybe_unused]] bool inverse) {
-        assert(wires.size() == 2);
-        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
-        for (const size_t &externalIndex : externalIndices) {
-            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
-            std::swap(shiftedState[indices[1]], shiftedState[indices[2]]);
-        }
-    }
-
-    template <class PrecisionT>
     static void applyCY(std::complex<PrecisionT> *arr, size_t num_qubits,
                         const std::vector<size_t> &wires,
                         [[maybe_unused]] bool inverse) {
@@ -396,7 +387,107 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         }
     }
 
+    template <class PrecisionT>
+    static void applySWAP(std::complex<PrecisionT> *arr, size_t num_qubits,
+                          const std::vector<size_t> &wires,
+                          [[maybe_unused]] bool inverse) {
+        assert(wires.size() == 2);
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+        for (const size_t &externalIndex : externalIndices) {
+            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
+            std::swap(shiftedState[indices[1]], shiftedState[indices[2]]);
+        }
+    }
+
     /* Two qubit operators with a parameter */
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void applyIsingXX(std::complex<PrecisionT> *arr, size_t num_qubits,
+                             const std::vector<size_t> &wires, bool inverse,
+                             ParamT angle) {
+        using ComplexPrecisionT = std::complex<PrecisionT>;
+        assert(wires.size() == 2);
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+
+        const PrecisionT cr = std::cos(angle / 2);
+        const PrecisionT sj =
+            inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
+
+        for (const size_t &externalIndex : externalIndices) {
+            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
+
+            const auto v0 = shiftedState[indices[0]];
+            const auto v1 = shiftedState[indices[1]];
+            const auto v2 = shiftedState[indices[2]];
+            const auto v3 = shiftedState[indices[3]];
+
+            shiftedState[indices[0]] = ComplexPrecisionT{
+                cr * real(v0) + sj * imag(v3), cr * imag(v0) - sj * real(v3)};
+            shiftedState[indices[1]] = ComplexPrecisionT{
+                cr * real(v1) + sj * imag(v2), cr * imag(v1) - sj * real(v2)};
+            shiftedState[indices[2]] = ComplexPrecisionT{
+                cr * real(v2) + sj * imag(v1), cr * imag(v2) - sj * real(v1)};
+            shiftedState[indices[3]] = ComplexPrecisionT{
+                cr * real(v3) + sj * imag(v0), cr * imag(v3) - sj * real(v0)};
+        }
+    }
+
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void applyIsingYY(std::complex<PrecisionT> *arr, size_t num_qubits,
+                             const std::vector<size_t> &wires, bool inverse,
+                             ParamT angle) {
+        using ComplexPrecisionT = std::complex<PrecisionT>;
+        assert(wires.size() == 2);
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+
+        const PrecisionT cr = std::cos(angle / 2);
+        const PrecisionT sj =
+            inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
+
+        for (const size_t &externalIndex : externalIndices) {
+            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
+
+            const auto v0 = shiftedState[indices[0]];
+            const auto v1 = shiftedState[indices[1]];
+            const auto v2 = shiftedState[indices[2]];
+            const auto v3 = shiftedState[indices[3]];
+
+            shiftedState[indices[0]] = ComplexPrecisionT{
+                cr * real(v0) - sj * imag(v3), cr * imag(v0) + sj * real(v3)};
+            shiftedState[indices[1]] = ComplexPrecisionT{
+                cr * real(v1) + sj * imag(v2), cr * imag(v1) - sj * real(v2)};
+            shiftedState[indices[2]] = ComplexPrecisionT{
+                cr * real(v2) + sj * imag(v1), cr * imag(v2) - sj * real(v1)};
+            shiftedState[indices[3]] = ComplexPrecisionT{
+                cr * real(v3) - sj * imag(v0), cr * imag(v3) + sj * real(v0)};
+        }
+    }
+
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void applyIsingZZ(std::complex<PrecisionT> *arr, size_t num_qubits,
+                             const std::vector<size_t> &wires, bool inverse,
+                             ParamT angle) {
+        assert(wires.size() == 2);
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+
+        const std::complex<PrecisionT> first =
+            std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
+        const std::complex<PrecisionT> second =
+            std::complex<PrecisionT>{std::cos(angle / 2), std::sin(angle / 2)};
+
+        const std::array<std::complex<PrecisionT>, 2> shifts = {
+            (inverse) ? std::conj(first) : first,
+            (inverse) ? std::conj(second) : second};
+
+        for (const size_t &externalIndex : externalIndices) {
+            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
+
+            shiftedState[indices[0]] *= shifts[0];
+            shiftedState[indices[1]] *= shifts[1];
+            shiftedState[indices[2]] *= shifts[1];
+            shiftedState[indices[3]] *= shifts[0];
+        }
+    }
+
     template <class PrecisionT, class ParamT = PrecisionT>
     static void applyControlledPhaseShift(std::complex<PrecisionT> *arr,
                                           size_t num_qubits,
@@ -533,6 +624,30 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             std::swap(shiftedState[indices[op_idx0]],
                       shiftedState[indices[op_idx1]]);
+        }
+    }
+
+    /* Multi-qubit gates */
+    template <class PrecisionT, class ParamT>
+    static void applyMultiRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
+                             const std::vector<size_t> &wires,
+                             [[maybe_unused]] bool inverse, ParamT angle) {
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+        const std::complex<PrecisionT> first =
+            std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
+        const std::complex<PrecisionT> second =
+            std::complex<PrecisionT>{std::cos(angle / 2), std::sin(angle / 2)};
+
+        const std::array<std::complex<PrecisionT>, 2> shifts = {
+            (inverse) ? std::conj(first) : first,
+            (inverse) ? std::conj(second) : second};
+
+        // Participating swapped indices
+        for (const size_t &externalIndex : externalIndices) {
+            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
+            for (size_t k = 0; k < indices.size(); k++) {
+                shiftedState[indices[k]] *= shifts[Util::popcount(k) % 2];
+            }
         }
     }
 
