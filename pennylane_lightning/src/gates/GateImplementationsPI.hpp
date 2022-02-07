@@ -13,7 +13,7 @@
 // limitations under the License.
 /**
  * @file
- * Defines gate operations with precomputed indicies
+ * Defines gate operations with precomputed indices
  */
 #pragma once
 

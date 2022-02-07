@@ -152,7 +152,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                     const std::complex<PrecisionT> *matrix,
                     const std::vector<size_t> &wires, bool inverse = false) {
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
@@ -505,7 +505,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
@@ -536,7 +536,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
@@ -570,7 +570,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
@@ -599,7 +599,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
@@ -631,7 +631,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
@@ -681,7 +681,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
@@ -728,7 +728,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
@@ -773,7 +773,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
@@ -811,7 +811,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
@@ -853,7 +853,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
@@ -896,7 +896,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             (inverse) ? std::conj(second) : second};
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
@@ -974,7 +974,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
@@ -1009,7 +1009,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
@@ -1045,7 +1045,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
@@ -1080,7 +1080,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
@@ -1119,7 +1119,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
@@ -1161,7 +1161,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Controll qubit
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;

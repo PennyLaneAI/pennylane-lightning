@@ -87,8 +87,8 @@ void apply(pybind11::array_t<std::complex<PrecisionT>> &stateNumpyArray,
  * @brief Return a specific lambda function for the given kernel and gate
  * operation
  *
- * We do not expect template paramters kernel and gate_op can be function
- * paramters as we want the lambda function to be a stateless.
+ * We do not expect template parameters kernel and gate_op can be function
+ * parameters as we want the lambda function to be a stateless.
  *
  * @tparam PrecisionT Floating point precision of underlying statevector data
  * @tparam ParamT Floating point type of gate parameters

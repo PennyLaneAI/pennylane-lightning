@@ -115,7 +115,7 @@ template <KernelType kernel> struct SelectKernelHelper<kernel, void> {
  *
  * Even though it is impossible to convert this into a constexpr function,
  * one may convert GateOpsFuncPtrPairs into constexpr functions with
- * kernel as a parameter (instead of a template prameter).
+ * kernel as a parameter (instead of a template parameter).
  *
  * @tparam kernel Kernel to select
  */

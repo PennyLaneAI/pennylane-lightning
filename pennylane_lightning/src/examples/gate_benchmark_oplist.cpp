@@ -81,7 +81,6 @@ parseGateLists(std::string_view arg) {
     return ops;
 }
 
-
 /**
  * @brief Benchmark Pennylane-Lightning for a given gate set
  *
@@ -188,7 +187,7 @@ int main(int argc, char *argv[]) {
         random_gate_parameters.emplace_back(std::move(gate_params));
     }
 
-    // Log genereated sequence if LOG is turned on
+    // Log generated sequence if LOG is turned on
     const char *env_p = std::getenv("LOG");
     try {
         if (env_p != nullptr && std::stoi(env_p) != 0) {

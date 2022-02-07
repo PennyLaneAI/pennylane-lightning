@@ -24,7 +24,7 @@ namespace Pennylane::Gates {
 /**
  * @brief Define generators of RX, RY, RZ using the Pauli gates.
  * @rst
- * A Generator for a unitray operator :math:`U` is :math:`G` such that
+ * A Generator for a unitary operator :math:`U` is :math:`G` such that
  * :math:`e^{iGt} = U`.
  * @endrst
  */

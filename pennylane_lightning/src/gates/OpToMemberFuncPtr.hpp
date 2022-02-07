@@ -205,14 +205,14 @@ struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
 
 /**
  * @brief Return a specific member function pointer for a given generator
- * operation. See speicalized classes.
+ * operation. See specialized classes.
  */
 template <class PrecisionT, class GateImplementation,
           GeneratorOperation gntr_op>
 struct GeneratorOpToMemberFuncPtr {
     // raises compile error when used
     static_assert(
-        sizeof(gntr_op) == -1,
+        sizeof(GateImplementation) == -1,
         "GeneratorOpToMemberFuncPtr is not defined for the given generator. "
         "When you define a new GeneratorOperation, check that you also "
         "have added the corresponding entry in GeneratorOpToMemberFuncPtr.");
@@ -371,7 +371,7 @@ template <class PrecisionT> struct GeneratorFuncPtr {
 } // namespace Internal
 
 /**
- * @brief Convinient type alias for GateFuncPtr. See GateFuncPtr for details.
+ * @brief Convenient type alias for GateFuncPtr. See GateFuncPtr for details.
  */
 template <class PrecisionT, class ParamT, size_t num_params>
 using GateFuncPtrT =

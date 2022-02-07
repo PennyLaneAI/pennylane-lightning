@@ -29,7 +29,7 @@ namespace {
 /**
  * @brief return a lambda function for the given kernel and gate operation
  *
- * As we want the lamba function to be stateless, kernel and gate_op are
+ * As we want the lambda function to be stateless, kernel and gate_op are
  * template parameters (or the functions can be consteval in C++20).
  * In C++20, one also may use a template lambda function instead.
  *

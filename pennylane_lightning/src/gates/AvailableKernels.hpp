@@ -26,7 +26,7 @@ namespace Pennylane {
 /**
  * @brief List of all available kernels (gate implementations).
  *
- * If you want to add another gate implementaion, just add it to this type list.
+ * If you want to add another gate implementation, just add it to this type list.
  * @rst
  * See :ref:`lightning_add_gate_implementation` for details.
  * @endrst
