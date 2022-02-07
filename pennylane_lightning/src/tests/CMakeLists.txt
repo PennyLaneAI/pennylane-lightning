@@ -40,7 +40,8 @@ target_link_libraries(lightning_tests_dependency INTERFACE lightning_algorithms
                                                            lightning_simulator
                                                            lightning_utils
                                                            Catch2::Catch2)
-target_compile_options(lightning_tests_dependency INTERFACE "$<$<CONFIG:DEBUG>:-Wall>")
+
+target_compile_options(lightning_tests_dependency INTERFACE "-Wall;-Wno-unused;")
 target_sources(lightning_tests_dependency INTERFACE runner_main.cpp)
 
 if(ENABLE_NATIVE)
@@ -74,7 +75,9 @@ set(TEST_SOURCES Test_AdjDiff.cpp
                  Test_VectorJacobianProduct.cpp)
 
 add_executable(runner ${TEST_SOURCES})
-target_link_libraries(runner PRIVATE lightning_tests_dependency)
+target_link_libraries(runner PRIVATE lightning_tests_dependency
+                                     pennylane_lightning_compile_options
+                                     pennylane_lightning_external_libs)
 catch_discover_tests(runner)
 
 # We build compile time tests before the runtime tests as build error messages

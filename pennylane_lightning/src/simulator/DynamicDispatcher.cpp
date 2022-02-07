@@ -25,6 +25,7 @@
 using namespace Pennylane;
 using namespace Pennylane::Util;
 
+/// @cond DEV
 namespace {
 /**
  * @brief return a lambda function for the given kernel and gate operation
@@ -52,6 +53,7 @@ constexpr auto gateOpToFunctor() {
         Gates::callGateOps(func_ptr, data, num_qubits, wires, inverse, params);
     };
 }
+/// @endcond
 
 /// @cond DEV
 /**
@@ -200,11 +202,13 @@ void registerKernelIter() {
 /// @endcond
 } // namespace
 
+/// @cond DEV
 namespace Pennylane::Internal {
 template <class PrecisionT, class ParamT> int registerAllAvailableKernels() {
     registerKernelIter<PrecisionT, ParamT, AvailableKernels>();
     return 1;
 }
+/// @endcond
 
 // explicit instantiations
 template int registerAllAvailableKernels<float, float>();

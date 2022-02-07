@@ -82,11 +82,7 @@ test-cpp:
 benchmark:
 	cmake --build BuildBench --target clean || true
 	rm -rf ./BuildBench/CMakeCache.txt ./BuildBench/compiler_info.txt ./BuildBench/run_gate_benchmark.sh
-ifdef CXX
-	CXX=${CXX} cmake $(LIGHTNING_CPP_DIR) -BBuildBench -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_AVX=ON
-else
-	cmake . -BBuildBench -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_AVX=ON
-endif
+	cmake $(LIGHTNING_CPP_DIR) -BBuildBench -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_AVX=ON
 	cmake --build ./BuildBench
 
 .PHONY: format format-cpp format-python
@@ -109,5 +105,5 @@ endif
 .PHONY: check-tidy
 check-tidy:
 	rm -rf ./Build
-	cmake . -BBuild -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=1
+	cmake . -BBuild -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
 	cmake --build ./Build

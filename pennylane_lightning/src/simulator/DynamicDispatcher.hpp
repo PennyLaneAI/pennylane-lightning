@@ -33,6 +33,7 @@
 #include <variant>
 #include <vector>
 
+/// @cond DEV
 namespace Pennylane::Internal {
 struct PairHash {
     size_t
@@ -49,6 +50,7 @@ struct PairHash {
  */
 template <class PrecisionT, class ParamT> int registerAllAvailableKernels();
 } // namespace Pennylane::Internal
+/// @endcond
 
 namespace Pennylane {
 /**

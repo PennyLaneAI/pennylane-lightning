@@ -60,6 +60,7 @@ enum class Trans : int {
     Adjoint = CblasConjTrans
 };
 
+/// @cond DEV
 namespace Pennylane::Util::Internal {
 /**
  * @brief Count the number of 1s in the binary representation of n.
@@ -157,8 +158,8 @@ constexpr auto countTrailing0(uint64_t n) -> size_t {
     // NOLINTNEXTLINE (readability-magic-numbers)
     return countTrailing0(static_cast<uint32_t>(n >> 32U)) + 32U;
 }
-
 } // namespace Pennylane::Util::Internal
+/// @endcond
 
 namespace Pennylane::Util {
 
@@ -915,7 +916,8 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
         return;
     }
 #if defined(_OPENMP)
-#pragma omp parallel default(none)
+#pragma omp parallel default(none) firstprivate(m, n, k, transpose)            \
+    shared(m_left, m_right, m_out)
 #endif
     {
         size_t row;

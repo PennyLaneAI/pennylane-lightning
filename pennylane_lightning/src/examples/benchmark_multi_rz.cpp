@@ -15,8 +15,8 @@ int main(int argc, char *argv[]) {
     using TestType = double;
 
     if (argc != 5) { // NOLINT(readability-magic-numbers)
-        printf("Usage: %s num_gate_reps num_qubits num_wires kernel\n",
-               argv[0]); // NOLINT(hicpp-vararg)
+        std::cout << "Usage: " << argv[0]
+                  << " num_gate_reps num_qubits num_wires kernel" << std::endl;
         return 1;
     }
 
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
         num_qubits = std::stoi(argv[2]);
         num_wires = std::stoi(argv[3]);
     } catch (std::exception &e) {
-        std::cerr << "Arguments must be interges." << std::endl;
+        std::cerr << "Arguments must be integers." << std::endl;
         return 1;
     }
 
