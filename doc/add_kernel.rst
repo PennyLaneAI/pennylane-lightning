@@ -112,8 +112,8 @@ To test your own kernel implementations, you can go to ``tests/TestKernels.hpp``
 
 .. code-block:: cpp
 
-    using TestKernels = Pennylane::Util::TypeList<Pennylane::GateImplementationsLM,
-                                                  Pennylane::GateImplementationsPI,
+    using TestKernels = Pennylane::Util::TypeList<Pennylane::Gates::GateImplementationsLM,
+                                                  Pennylane::Gates::GateImplementationsPI,
                                                   MyGateImplementation /*This is added */>;
 
 It will automatically test your gate implementation.

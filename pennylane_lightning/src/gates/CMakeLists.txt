@@ -1,4 +1,4 @@
-project(lightning_simulator)
+project(lightning_gates)
 set(CMAKE_CXX_STANDARD 17)
 
 set(SIMULATOR_FILES GateUtil.cpp CACHE INTERNAL "" FORCE)

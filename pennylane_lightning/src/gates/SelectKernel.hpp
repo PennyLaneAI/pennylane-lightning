@@ -117,7 +117,6 @@ template <KernelType kernel> struct SelectKernelHelper<kernel, void> {
  * one may convert GateOpsFuncPtrPairs into constexpr functions with
  * kernel as a parameter (instead of a template prameter).
  *
- * @tparam PrecisionT Floating point precision of underlying statevector data.
  * @tparam kernel Kernel to select
  */
 template <KernelType kernel>

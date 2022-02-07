@@ -30,7 +30,7 @@ namespace {
  * @brief return a lambda function for the given kernel and gate operation
  *
  * As we want the lamba function to be stateless, kernel and gate_op are
- * template paramters (or the functions can be consteval in C++20).
+ * template parameters (or the functions can be consteval in C++20).
  * In C++20, one also may use a template lambda function instead.
  *
  * @tparam PrecisionT Floating point precision of underlying statevector data.
@@ -182,7 +182,7 @@ void registerAllImplementedGeneratorOps() {
 
 /// @cond DEV
 /**
- * @brief Internal function to iterate over all available kerenls in
+ * @brief Internal function to iterate over all available kernels in
  * the compile time
  */
 template <class PrecisionT, class ParamT, class TypeList>
