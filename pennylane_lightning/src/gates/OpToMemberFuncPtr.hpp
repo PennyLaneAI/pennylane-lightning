@@ -212,7 +212,7 @@ template <class PrecisionT, class GateImplementation,
 struct GeneratorOpToMemberFuncPtr {
     // raises compile error when used
     static_assert(
-        sizeof(GateImplementation) == -1,
+        sizeof(gntr_op) == -1,
         "GeneratorOpToMemberFuncPtr is not defined for the given generator. "
         "When you define a new GeneratorOperation, check that you also "
         "have added the corresponding entry in GeneratorOpToMemberFuncPtr.");
@@ -352,7 +352,7 @@ struct GateFuncPtr<PrecisionT, ParamT, 1> {
                           const std::vector<size_t> &, bool, ParamT);
 };
 /**
- * @brief Pointer type for a gate operation with three paramters
+ * @brief Pointer type for a gate operation with three parameters
  */
 template <class PrecisionT, class ParamT>
 struct GateFuncPtr<PrecisionT, ParamT, 3> {
@@ -384,12 +384,12 @@ using GeneratorFuncPtrT = typename Internal::GeneratorFuncPtr<PrecisionT>::Type;
  * @defgroup Call gate operation with provided arguments
  *
  * @tparam PrecisionT Floating point type for the state-vector.
- * @tparam ParamT Floating point type for the gate paramters.
+ * @tparam ParamT Floating point type for the gate parameters.
  * @param func Function pointer for the gate operation.
  * @param num_qubits The number of qubits of the state-vector.
  * @param wires Wires the gate applies to.
  * @param inverse If true, we apply the inverse of the gate.
- * @param params The list of gate paramters.
+ * @param params The list of gate parameters.
  */
 /// @{
 /**
@@ -405,7 +405,7 @@ inline void callGateOps(GateFuncPtrT<PrecisionT, ParamT, 0> func,
 }
 
 /**
- * @brief Overload for a gate operation for a single paramter
+ * @brief Overload for a gate operation for a single parameter
  */
 template <class PrecisionT, class ParamT>
 inline void callGateOps(GateFuncPtrT<PrecisionT, ParamT, 1> func,
@@ -417,7 +417,7 @@ inline void callGateOps(GateFuncPtrT<PrecisionT, ParamT, 1> func,
 }
 
 /**
- * @brief Overload for a gate operation for three paramters
+ * @brief Overload for a gate operation for three parameters
  */
 template <class PrecisionT, class ParamT>
 inline void callGateOps(GateFuncPtrT<PrecisionT, ParamT, 3> func,
