@@ -397,6 +397,7 @@ template <class PrecisionT, class Derived> class StateVectorBase {
     /**
      * @brief Apply T gate operation to given indices of statevector.
      *
+     * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(T)

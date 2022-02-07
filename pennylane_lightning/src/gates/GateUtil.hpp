@@ -78,6 +78,9 @@ struct GateIndices {
                     For the given wires with size n_wire, the
                     output size is 2^(num_qubits - n_wires). */
 
+    /**
+     * @brief Create indices for gates.
+     */
     GateIndices(const std::vector<size_t> &wires, size_t num_qubits)
         : internal{generateBitPatterns(wires, num_qubits)},
           external{generateBitPatterns(

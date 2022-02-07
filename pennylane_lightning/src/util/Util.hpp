@@ -289,7 +289,7 @@ inline auto log2(size_t value) -> size_t {
 }
 
 /**
- * @breif Define popcount for multiple compilers as well as different types.
+ * @brief Define popcount for multiple compilers as well as different types.
  * @param val Value to calculate
  */
 ///@{
@@ -1097,6 +1097,7 @@ auto linspace(T start, T end, size_t num_points) -> std::vector<T> {
  *
  * @tparam T Vector data type.
  * @param arr Array to be inspected.
+ * @param length The size of the array
  * @return a vector with indices that would sort the array.
  */
 template <typename T>

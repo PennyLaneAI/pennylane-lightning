@@ -47,7 +47,10 @@ template <typename TypeList> struct getNthType<TypeList, 0> {
 };
 
 template <typename TypeList> constexpr size_t length() {
-    return 1 + length<typename TypeList::Next>();
+    if constexpr (std::is_same_v<TypeList, void>) {
+        return 0;
+    } else {
+        return 1 + length<typename TypeList::Next>();
+    }
 }
-template <> constexpr size_t length<void>() { return 0; }
 } // namespace Pennylane::Util

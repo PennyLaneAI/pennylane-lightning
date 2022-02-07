@@ -322,6 +322,9 @@ template <class SVType, class ParamT> struct GateMemFuncPtr<SVType, ParamT, 3> {
                                   ParamT, ParamT);
 };
 
+/**
+ * @brief A convenient alias for GateMemFuncPtr.
+ */
 template <class SVType, class ParamT, size_t num_params>
 using GateMemFuncPtrT =
     typename GateMemFuncPtr<SVType, ParamT, num_params>::Type;
@@ -371,12 +374,15 @@ template <class PrecisionT> struct GeneratorFuncPtr {
 } // namespace Internal
 
 /**
- * @brief Convenient type alias for GateFuncPtr. See GateFuncPtr for details.
+ * @brief Convenient type alias for GateFuncPtr.
  */
 template <class PrecisionT, class ParamT, size_t num_params>
 using GateFuncPtrT =
     typename Internal::GateFuncPtr<PrecisionT, ParamT, num_params>::Type;
 
+/**
+ * @brief Convenient type alias for GeneratorFuncPtrT.
+ */
 template <class PrecisionT>
 using GeneratorFuncPtrT = typename Internal::GeneratorFuncPtr<PrecisionT>::Type;
 
