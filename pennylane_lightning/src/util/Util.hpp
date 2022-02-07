@@ -642,7 +642,7 @@ inline void matrixVecProd(const std::complex<T> *mat,
     if constexpr (USE_CBLAS) {
         constexpr std::complex<T> co{1, 0};
         constexpr std::complex<T> cz{0, 0};
-        const auto tr = static_cast<int>(transpose);
+        const auto tr = static_cast<CBLAS_TRANSPOSE>(transpose);
         if constexpr (std::is_same_v<T, float>) {
             cblas_cgemv(CblasRowMajor, tr, m, n, &co, mat, m, v_in, 1, &cz,
                         v_out, 1);
@@ -657,10 +657,6 @@ inline void matrixVecProd(const std::complex<T> *mat,
 
 /**
  * @brief Calculates the matrix-vector product using the best available method.
- *
- * @see void matrixVecProd(const std::complex<T> *mat, const
- * std::complex<T> *v_in, std::complex<T> *v_out, size_t m, size_t n, size_t
- * nthreads = 1, bool transpose = false)
  */
 template <class T>
 inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
@@ -992,10 +988,10 @@ inline void matrixMatProd(const std::complex<T> *m_left,
         constexpr std::complex<T> cz{0, 0};
         const auto tr = (transpose) ? CblasTrans : CblasNoTrans;
         if constexpr (std::is_same_v<T, float>) {
-            cblas_cgemm(CblasRowMajor, tr, CblasNoTrans, m, n, k, &co, m_left,
+            cblas_cgemm(CblasRowMajor, CblasNoTrans, tr, m, n, k, &co, m_left,
                         k, m_right, n, &cz, m_out, n);
         } else if constexpr (std::is_same_v<T, double>) {
-            cblas_zgemm(CblasRowMajor, tr, CblasNoTrans, m, n, k, &co, m_left,
+            cblas_zgemm(CblasRowMajor, CblasNoTrans, tr, m, n, k, &co, m_left,
                         k, m_right, n, &cz, m_out, n);
         }
     } else {
