@@ -386,6 +386,7 @@ using GeneratorFuncPtrT = typename Internal::GeneratorFuncPtr<PrecisionT>::Type;
  * @tparam PrecisionT Floating point type for the state-vector.
  * @tparam ParamT Floating point type for the gate paramters.
  * @param func Function pointer for the gate operation.
+ * @param data Data pointer the gate is applied to
  * @param num_qubits The number of qubits of the state-vector.
  * @param wires Wires the gate applies to.
  * @param inverse If true, we apply the inverse of the gate.
