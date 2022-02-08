@@ -16,6 +16,7 @@
 #include <algorithm>
 
 #include "AdjointDiff.hpp"
+#include "LinearAlgebra.hpp"
 
 namespace Pennylane {
 namespace Algorithms {

@@ -26,10 +26,10 @@
 #include <utility>
 #include <vector>
 
+#include "BitUtil.hpp"
 #include "Error.hpp"
 #include "Gates.hpp"
 #include "StateVectorBase.hpp"
-#include "Util.hpp"
 
 #include <iostream>
 

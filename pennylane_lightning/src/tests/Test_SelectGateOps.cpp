@@ -119,7 +119,7 @@ void testGateFuncPtrPair() {
 }
 
 template <class fp_t, size_t kernel_idx, size_t num_params>
-constexpr void testGateFuncPtrPairIter() {
+void testGateFuncPtrPairIter() {
     using Pennylane::Internal::GateOpsFuncPtrPairs;
     if constexpr (kernel_idx < Constant::available_kernels.size()) {
         const auto kernel =
@@ -130,11 +130,10 @@ constexpr void testGateFuncPtrPairIter() {
                 GateOpsFuncPtrPairs<fp_t, fp_t, kernel, num_params>::value)) ==
                 CountGatesWithNumParams<num_params>::value,
             "Gate operations in GateOpsFuncPtrPairs are not distinct");
-        static_assert(
+        REQUIRE(
             count_unique(Util::second_elts_of(
                 GateOpsFuncPtrPairs<fp_t, fp_t, kernel, num_params>::value)) ==
-                CountGatesWithNumParams<num_params>::value,
-            "Function pointers in GateOpsFuncPtrPairs are not distinct");
+            CountGatesWithNumParams<num_params>::value);
     }
 }
 
