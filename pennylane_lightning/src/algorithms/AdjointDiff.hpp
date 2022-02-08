@@ -24,8 +24,8 @@
 #include <vector>
 
 #include "Error.hpp"
+#include "LinearAlgebra.hpp"
 #include "StateVectorManaged.hpp"
-#include "Util.hpp"
 
 #include <iostream>
 
