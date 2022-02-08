@@ -10,7 +10,9 @@
 // limitations under the License.
 #pragma once
 
+#include "BitUtil.hpp"
 #include "StateVectorBase.hpp"
+#include "Util.hpp"
 
 namespace Pennylane {
 

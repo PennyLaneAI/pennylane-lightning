@@ -85,6 +85,12 @@ test-cpp-blas:
 	cmake --build ./BuildTests --target runner
 	cmake --build ./BuildTests --target test
 
+test-cpp-omp:
+	rm -rf ./BuildTests
+	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON -DENABLE_OPENMP=ON
+	cmake --build ./BuildTests --target runner
+	cmake --build ./BuildTests --target test
+
 .PHONY: benchmark
 benchmark:
 	cmake --build BuildBench --target clean || true

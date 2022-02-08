@@ -24,8 +24,8 @@
 
 #include "DynamicDispatcher.hpp"
 #include "Error.hpp"
+#include "LinearAlgebra.hpp"
 #include "StateVectorManaged.hpp"
-#include "Util.hpp"
 
 #include <iostream>
 

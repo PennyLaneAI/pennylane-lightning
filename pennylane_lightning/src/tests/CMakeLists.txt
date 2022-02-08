@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.14)
 project(pennylane_lightning_tests)
 
 set(CMAKE_CXX_STANDARD 17)
-find_package(OpenMP)
 
 # Default build type for test code is Debug
 if(NOT CMAKE_BUILD_TYPE)
@@ -76,8 +75,13 @@ set(TEST_SOURCES Test_AdjDiff.cpp
 
 add_executable(runner ${TEST_SOURCES})
 target_link_libraries(runner PRIVATE lightning_tests_dependency
+<<<<<<< HEAD
                                      pennylane_lightning_compile_options
                                      pennylane_lightning_external_libs)
+=======
+                                     lightning_compile_options
+                                     lightning_external_libs)
+>>>>>>> origin/master
 catch_discover_tests(runner)
 
 # We build compile time tests before the runtime tests as build error messages
