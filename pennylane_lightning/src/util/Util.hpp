@@ -348,7 +348,6 @@ template <class T> struct remove_cvref {
 };
 
 // type alias
-template <class T>
-using remove_cvref_t = typename remove_cvref<T>::type;
+template <class T> using remove_cvref_t = typename remove_cvref<T>::type;
 
 } // namespace Pennylane::Util

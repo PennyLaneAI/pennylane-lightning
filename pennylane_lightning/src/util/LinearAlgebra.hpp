@@ -244,14 +244,12 @@ inline auto innerProdC(const std::vector<std::complex<T>> &v1,
  * row-wise.
  */
 template <class T>
-inline static void omp_matrixVecProd(const std::complex<T> *mat,
-                                     const std::complex<T> *v_in,
-                                     std::complex<T> *v_out, size_t m, size_t n,
-                                     Trans transpose) {
+inline static void
+omp_matrixVecProd(const std::complex<T> *mat, const std::complex<T> *v_in,
+                  std::complex<T> *v_out, size_t m, size_t n, Trans transpose) {
     if (!v_out) {
         return;
     }
-
 
     size_t row;
     size_t col;
@@ -591,7 +589,7 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
     if (!m_out) {
         return;
     }
-    switch(transpose) {
+    switch (transpose) {
     case Trans::Transpose:
 #if defined(_OPENMP)
 #pragma omp parallel for default(none) shared(m_left, m_right, m_out)          \
@@ -614,8 +612,8 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
         for (size_t row = 0; row < m; row++) {
             for (size_t col = 0; col < n; col++) {
                 for (size_t blk = 0; blk < k; blk++) {
-                    m_out[row * n + col] +=
-                        m_left[row * k + blk] * std::conj(m_right[col * n + blk]);
+                    m_out[row * n + col] += m_left[row * k + blk] *
+                                            std::conj(m_right[col * n + blk]);
                 }
             }
         }
@@ -678,10 +676,12 @@ inline void matrixMatProd(const std::complex<T> *m_left,
         const auto tr = static_cast<CBLAS_TRANSPOSE>(transpose);
         if constexpr (std::is_same_v<T, float>) {
             cblas_cgemm(CblasRowMajor, CblasNoTrans, tr, m, n, k, &co, m_left,
-                        k, m_right, (transpose != Trans::NoTranspose) ? k : n, &cz, m_out, n);
+                        k, m_right, (transpose != Trans::NoTranspose) ? k : n,
+                        &cz, m_out, n);
         } else if constexpr (std::is_same_v<T, double>) {
             cblas_zgemm(CblasRowMajor, CblasNoTrans, tr, m, n, k, &co, m_left,
-                        k, m_right, (transpose != Trans::NoTranspose) ? k : n, &cz, m_out, n);
+                        k, m_right, (transpose != Trans::NoTranspose) ? k : n,
+                        &cz, m_out, n);
         }
     } else {
         omp_matrixMatProd(m_left, m_right, m_out, m, n, k, transpose);
@@ -701,7 +701,8 @@ inline void matrixMatProd(const std::complex<T> *m_left,
 template <class T>
 inline auto matrixMatProd(const std::vector<std::complex<T>> m_left,
                           const std::vector<std::complex<T>> m_right, size_t m,
-                          size_t n, size_t k, Trans transpose = Trans::NoTranspose)
+                          size_t n, size_t k,
+                          Trans transpose = Trans::NoTranspose)
     -> std::vector<std::complex<T>> {
     if (m_left.size() != m * k) {
         throw std::invalid_argument(
