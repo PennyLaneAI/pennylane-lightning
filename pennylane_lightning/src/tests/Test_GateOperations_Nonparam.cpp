@@ -1,9 +1,9 @@
+#include "ConstantUtil.hpp"
 #include "GateOperationsLM.hpp"
 #include "GateOperationsPI.hpp"
 #include "Gates.hpp"
 #include "TestHelpers.hpp"
 #include "TestMacros.hpp"
-#include "Util.hpp"
 
 #include <catch2/catch.hpp>
 

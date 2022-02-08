@@ -6,8 +6,6 @@ TESTRUNNER := -m pytest tests --tb=short
 
 LIGHTNING_CPP_DIR := pennylane_lightning/src/
 
-TEST_CPP_BLAS_DIR := ./TestBlas
-
 .PHONY: help
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -76,13 +74,19 @@ coverage:
 
 test-cpp:
 	rm -rf ./BuildTests
-	cmake . -BBuildTests -DBUILD_TESTS=ON
+	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON
 	cmake --build ./BuildTests --target runner
 	cmake --build ./BuildTests --target test
 
 test-cpp-blas:
 	rm -rf ./BuildTests
-	cmake . -BBuildTests -DBUILD_TESTS=ON -DENABLE_BLAS=ON
+	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON -DENABLE_BLAS=ON
+	cmake --build ./BuildTests --target runner
+	cmake --build ./BuildTests --target test
+
+test-cpp-omp:
+	rm -rf ./BuildTests
+	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON -DENABLE_OPENMP=ON
 	cmake --build ./BuildTests --target runner
 	cmake --build ./BuildTests --target test
 

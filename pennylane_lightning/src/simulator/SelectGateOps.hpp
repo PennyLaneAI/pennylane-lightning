@@ -17,6 +17,7 @@
  */
 #pragma once
 
+#include "ConstantUtil.hpp"
 #include "GateOperations.hpp"
 #include "GateOperationsLM.hpp"
 #include "GateOperationsPI.hpp"

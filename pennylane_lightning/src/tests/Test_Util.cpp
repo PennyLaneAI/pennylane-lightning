@@ -7,6 +7,8 @@
 
 #include <catch2/catch.hpp>
 
+#include "BitUtil.hpp"
+#include "LinearAlgebra.hpp"
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"
@@ -56,7 +58,8 @@ TEMPLATE_TEST_CASE("Constant values", "[Util]", float, double) {
 }
 
 // NOLINTNEXTLINE: Avoid complexity errors
-TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
+TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
+                   double) {
     SECTION("exp2: 2^n") {
         for (size_t i = 0; i < 10; i++) {
             CHECK(Util::exp2(i) == static_cast<size_t>(std::pow(2, i)));
@@ -392,8 +395,8 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
  *
  * This is a slow version of countBit1 defined in Util.hpp
  */
-int popcount_slow(uint64_t x) {
-    int c = 0;
+size_t popcount_slow(uint64_t x) {
+    size_t c = 0;
     for (; x != 0; x >>= 1) {
         if ((x & 1U) != 0U) {
             c++;
@@ -407,8 +410,8 @@ int popcount_slow(uint64_t x) {
  *
  * This is a slow version of countTrailing0 defined in Util.hpp
  */
-int ctz_slow(uint64_t x) {
-    int c = 0;
+size_t ctz_slow(uint64_t x) {
+    size_t c = 0;
     while ((x & 1) == 0) {
         x >>= 1;
         c++;
@@ -416,7 +419,7 @@ int ctz_slow(uint64_t x) {
     return c;
 }
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
-TEST_CASE("Utility bit operations", "[Util]") {
+TEST_CASE("Utility bit operations", "[Util][BitUtil]") {
     SECTION("Internal::countBit1Fast") {
         { // for uint32_t
             uint32_t n = 0;

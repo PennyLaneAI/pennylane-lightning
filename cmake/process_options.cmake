@@ -1,15 +1,15 @@
 ##############################################################################
 # This file processes ENABLE_WARNINGS, ENABLE_NATIVE, ENABLE_AVX, 
 # ENABLE_OPENMP, ENABLE_BLAS options and produces interface libraries
-# pennylane_lightning_compile_options and pennylane_lightning_external_libs.
+# lightning_compile_options and lightning_external_libs.
 ##############################################################################
 
 # Include this file only once
 include_guard()
 
 # Set compile flags and library dependencies
-add_library(pennylane_lightning_compile_options INTERFACE)
-add_library(pennylane_lightning_external_libs INTERFACE)
+add_library(lightning_compile_options INTERFACE)
+add_library(lightning_external_libs INTERFACE)
 
 # Initial attempt to find which BLAS implementation is chosen
 function(get_blas_impl)
@@ -26,36 +26,36 @@ function(get_blas_impl)
 endfunction()
 
 if(MSVC) # For M_PI
-    target_compile_options(pennylane_lightning_compile_options INTERFACE /D_USE_MATH_DEFINES)
+    target_compile_options(lightning_compile_options INTERFACE /D_USE_MATH_DEFINES)
 endif()
 
 # Add -fwrapv, -fno-plt in Clang
 if ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM"))
-    target_compile_options(pennylane_lightning_compile_options INTERFACE
+    target_compile_options(lightning_compile_options INTERFACE
         $<$<COMPILE_LANGUAGE:CXX>:-fwrapv;-fno-plt>)
 # Add -fwrapv, -fno-plt, -pipe in GCC
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(pennylane_lightning_compile_options INTERFACE
+    target_compile_options(lightning_compile_options INTERFACE
         $<$<COMPILE_LANGUAGE:CXX>:-fwrapv;-fno-plt;-pipe>)
 endif()
 
 if(ENABLE_WARNINGS)
     message(STATUS "ENABLE_WARNINGS is ON.")
     if(MSVC)
-        target_compile_options(pennylane_lightning_compile_options INTERFACE $<$<COMPILE_LANGUAGE:CXX>:/W4;/WX>)
+        target_compile_options(lightning_compile_options INTERFACE $<$<COMPILE_LANGUAGE:CXX>:/W4;/WX>)
     else()
-        target_compile_options(pennylane_lightning_compile_options INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Werror>)
+        target_compile_options(lightning_compile_options INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Werror>)
     endif()
 endif()
 
 if(ENABLE_NATIVE)
     message(STATUS "ENABLE_NATIVE is ON. Using -march=native.")
-    target_compile_options(pennylane_lightning_compile_options INTERFACE -march=native)
+    target_compile_options(lightning_compile_options INTERFACE -march=native)
 endif()
 
 if(ENABLE_AVX)
     message(STATUS "ENABLE_AVX is ON.")
-    target_compile_options(pennylane_lightning_compile_options INTERFACE -mavx)
+    target_compile_options(lightning_compile_options INTERFACE -mavx)
 endif()
 
 if(ENABLE_OPENMP)
@@ -67,7 +67,7 @@ if(ENABLE_OPENMP)
             "Install OpenMP or set ENABLE_OPENMP OFF.")
     endif()
 
-    target_link_libraries(pennylane_lightning_external_libs INTERFACE OpenMP::OpenMP_CXX)
+    target_link_libraries(lightning_external_libs INTERFACE OpenMP::OpenMP_CXX)
 endif()
 
 
@@ -85,7 +85,7 @@ if(ENABLE_BLAS)
                    "See https://cmake.org/cmake/help/latest/module/FindBLAS.html"
                    "#blas-lapack-vendors for available options.")
 
-    target_link_libraries(pennylane_lightning_external_libs INTERFACE "${BLAS_LIBRARIES}")
-    target_link_options(pennylane_lightning_external_libs INTERFACE "${BLAS_LINKER_FLAGS}")
-    target_compile_options(pennylane_lightning_compile_options INTERFACE "-D_ENABLE_BLAS=1")
+    target_link_libraries(lightning_external_libs INTERFACE "${BLAS_LIBRARIES}")
+    target_link_options(lightning_external_libs INTERFACE "${BLAS_LINKER_FLAGS}")
+    target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_BLAS=1")
 endif()
