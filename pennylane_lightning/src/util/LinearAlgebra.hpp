@@ -377,6 +377,101 @@ inline static void CFTranspose(const T *mat, T *mat_t, size_t m, size_t n,
 }
 
 /**
+ * @brief Calculates transpose of a matrix recursively and Cache-Friendly
+ * using blocking and Cache-optimized techniques.
+ *
+ * @tparam T Floating point precision type.
+ * @tparam BLOCKSIZE Size of submatrices in the blocking techinque.
+ * @param mat Data array repr. a flatten (row-wise) matrix m * n.
+ * @param mat_t Pre-allocated data array to store the transpose of `mat`.
+ * @param m Number of rows of `mat`.
+ * @param n Number of columns of `mat`.
+ * @param m1 Index of the first row.
+ * @param m2 Index of the last row.
+ * @param n1 Index of the first column.
+ * @param n2 Index of the last column.
+ */
+template <class T, size_t BLOCKSIZE = 32> // NOLINT(readability-magic-numbers)
+inline static void CFTranspose(const std::complex<T> *mat,
+                               std::complex<T> *mat_t, size_t m, size_t n,
+                               size_t m1, size_t m2, size_t n1, size_t n2) {
+    size_t r;
+    size_t s;
+
+    size_t r1;
+    size_t s1;
+    size_t r2;
+    size_t s2;
+
+    r1 = m2 - m1;
+    s1 = n2 - n1;
+
+    if (r1 >= s1 && r1 > BLOCKSIZE) {
+        r2 = (m1 + m2) / 2;
+        CFTranspose(mat, mat_t, m, n, m1, r2, n1, n2);
+        m1 = r2;
+        CFTranspose(mat, mat_t, m, n, m1, m2, n1, n2);
+    } else if (s1 > BLOCKSIZE) {
+        s2 = (n1 + n2) / 2;
+        CFTranspose(mat, mat_t, m, n, m1, m2, n1, s2);
+        n1 = s2;
+        CFTranspose(mat, mat_t, m, n, m1, m2, n1, n2);
+    } else {
+        for (r = m1; r < m2; r++) {
+            for (s = n1; s < n2; s++) {
+                mat_t[s * m + r] = mat[r * n + s];
+            }
+        }
+    }
+}
+
+/**
+ * @brief Transpose a matrix of shape m * n to n * m using the
+ * best available method.
+ *
+ * @tparam T Floating point precision type.
+ * @param mat Row-wise flatten matrix of shape m * n.
+ * @param m Number of rows of `mat`.
+ * @param n Number of columns of `mat`.
+ * @return mat transpose of shape n * m.
+ */
+template <class T>
+inline auto Transpose(const std::vector<std::complex<T>> mat, size_t m,
+                      size_t n) -> std::vector<std::complex<T>> {
+    if (mat.size() != m * n) {
+        throw std::invalid_argument(
+            "Invalid number of rows and columns for the input matrix");
+    }
+
+    std::vector<std::complex<T>> mat_t(n * m);
+    CFTranspose(mat.data(), mat_t.data(), m, n, 0, m, 0, n);
+    return mat_t;
+}
+
+/**
+ * @brief Transpose a matrix of shape m * n to n * m using the
+ * best available method.
+ *
+ * @tparam T Floating point precision type.
+ * @param mat Row-wise flatten matrix of shape m * n.
+ * @param m Number of rows of `mat`.
+ * @param n Number of columns of `mat`.
+ * @return mat transpose of shape n * m.
+ */
+template <class T>
+inline auto Transpose(const std::vector<T> mat, size_t m, size_t n)
+    -> std::vector<T> {
+    if (mat.size() != m * n) {
+        throw std::invalid_argument(
+            "Invalid number of rows and columns for the input matrix");
+    }
+
+    std::vector<T> mat_t(n * m);
+    CFTranspose(mat.data(), mat_t.data(), m, n, 0, m, 0, n);
+    return mat_t;
+}
+
+/**
  * @brief Calculates vector-matrix product.
  *
  * @tparam T Floating point precision type.
@@ -465,78 +560,6 @@ inline void vecMatrixProd(std::vector<T> &v_out, const std::vector<T> &v_in,
     }
 
     vecMatrixProd(v_in.data(), mat.data(), v_out.data(), m, n);
-}
-
-/**
- * @brief Calculates transpose of a matrix recursively and Cache-Friendly
- * using blocking and Cache-optimized techniques.
- *
- * @tparam T Floating point precision type.
- * @tparam BLOCKSIZE Size of submatrices in the blocking techinque.
- * @param mat Data array repr. a flatten (row-wise) matrix m * n.
- * @param mat_t Pre-allocated data array to store the transpose of `mat`.
- * @param m Number of rows of `mat`.
- * @param n Number of columns of `mat`.
- * @param m1 Index of the first row.
- * @param m2 Index of the last row.
- * @param n1 Index of the first column.
- * @param n2 Index of the last column.
- */
-template <class T, size_t BLOCKSIZE = 32> // NOLINT(readability-magic-numbers)
-inline static void CFTranspose(const std::complex<T> *mat,
-                               std::complex<T> *mat_t, size_t m, size_t n,
-                               size_t m1, size_t m2, size_t n1, size_t n2) {
-    size_t r;
-    size_t s;
-
-    size_t r1;
-    size_t s1;
-    size_t r2;
-    size_t s2;
-
-    r1 = m2 - m1;
-    s1 = n2 - n1;
-
-    if (r1 >= s1 && r1 > BLOCKSIZE) {
-        r2 = (m1 + m2) / 2;
-        CFTranspose(mat, mat_t, m, n, m1, r2, n1, n2);
-        m1 = r2;
-        CFTranspose(mat, mat_t, m, n, m1, m2, n1, n2);
-    } else if (s1 > BLOCKSIZE) {
-        s2 = (n1 + n2) / 2;
-        CFTranspose(mat, mat_t, m, n, m1, m2, n1, s2);
-        n1 = s2;
-        CFTranspose(mat, mat_t, m, n, m1, m2, n1, n2);
-    } else {
-        for (r = m1; r < m2; r++) {
-            for (s = n1; s < n2; s++) {
-                mat_t[s * m + r] = mat[r * n + s];
-            }
-        }
-    }
-}
-
-/**
- * @brief Transpose a matrix of shape m * n to n * m using the
- * best available method.
- *
- * @tparam T Floating point precision type.
- * @param mat Row-wise flatten matrix of shape m * n.
- * @param m Number of rows of `mat`.
- * @param n Number of columns of `mat`.
- * @return mat transpose of shape n * m.
- */
-template <class T>
-inline auto Transpose(const std::vector<std::complex<T>> mat, size_t m,
-                      size_t n) -> std::vector<std::complex<T>> {
-    if (mat.size() != m * n) {
-        throw std::invalid_argument(
-            "Invalid number of rows and columns for the input matrix");
-    }
-
-    std::vector<std::complex<T>> mat_t(n * m);
-    CFTranspose(mat.data(), mat_t.data(), m, n, 0, m, 0, n);
-    return mat_t;
 }
 
 /**
