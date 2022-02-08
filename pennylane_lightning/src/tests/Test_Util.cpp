@@ -171,20 +171,16 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 {0.378397, 0.894381},  {0.840747, 0.889789},
                 {0.530623, 0.463644},  {0.868736, 0.760685},
                 {0.258175, 0.836569},  {0.495012, 0.667726},
-                {0.298962, 0.384992},  {0.659472, 0.232696}
-            };
-            std::vector<std::complex<TestType>> v_in{
-                {0.417876, 0.27448},
-                {0.601209, 0.723548},
-                {0.781624, 0.538222},
-                {0.0597232, 0.27755}
-            };
+                {0.298962, 0.384992},  {0.659472, 0.232696}};
+            std::vector<std::complex<TestType>> v_in{{0.417876, 0.27448},
+                                                     {0.601209, 0.723548},
+                                                     {0.781624, 0.538222},
+                                                     {0.0597232, 0.27755}};
             std::vector<std::complex<TestType>> v_expected{
                 {0.184998, 1.97393},
                 {-0.0894368, 0.946047},
                 {-0.219747, 2.55541},
-                {-0.305997, 1.83881}
-            };
+                {-0.305997, 1.83881}};
             std::vector<std::complex<TestType>> v_out =
                 Util::matrixVecProd(mat, v_in, 4, 4);
             CAPTURE(v_out);
@@ -240,7 +236,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
         SECTION("Random Matrix") {
             std::vector<TestType> v_in{1.0, 2.0, 3.0, 4.0};
             std::vector<TestType> mat{1.0, 0.1,  0.2, 0.2,  0.6,  0.1,
-                                   0.4, -0.7, 1.2, -0.5, -0.6, 0.7};
+                                      0.4, -0.7, 1.2, -0.5, -0.6, 0.7};
             std::vector<TestType> v_expected{0.6, -3.2, 6.8};
             std::vector<TestType> v_out = Util::vecMatrixProd(v_in, mat, 4, 3);
             CAPTURE(v_out);
@@ -382,7 +378,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
             const size_t m = 4;
             const size_t k = 2;
             const size_t n = 8;
-            std::vector<std::complex<TestType>> mat1 {
+            std::vector<std::complex<TestType>> mat1{
                 {-0.08981826740301613, -0.27637263739311546},
                 {0.8727813226706924, 0.258896589429058},
                 {-0.5949864309922819, 0.18285525036841555},
@@ -393,7 +389,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 {-0.9547436543380183, -0.42965580917488455},
             }; // m x k
 
-            std::vector<std::complex<TestType>> mat2 {
+            std::vector<std::complex<TestType>> mat2{
                 {-0.2737437848727584, 0.049006595173545886},
                 {0.5192576146240857, 0.7301480202235375},
                 {0.653209372398236, 0.6769135138733755},
@@ -412,7 +408,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 {-0.6585640941981321, 0.14497152454268059},
             }; // k x n
 
-            const std::vector<std::complex<TestType>> expected {
+            const std::vector<std::complex<TestType>> expected{
                 {-0.6470081137924694, -0.6288858542578596},
                 {0.4856151790538221, 0.22722135179683745},
                 {0.25373996181718034, 0.2323691717947702},
@@ -449,7 +445,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
 
             const auto m_out = Util::matrixMatProd(mat1, mat2, m, n, k);
 
-            for(size_t i = 0; i < (m*n); i++) {
+            for (size_t i = 0; i < (m * n); i++) {
                 CHECK(isApproxEqual(m_out[i], expected[i]));
             }
         }
