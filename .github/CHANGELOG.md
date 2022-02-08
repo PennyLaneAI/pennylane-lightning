@@ -1,4 +1,22 @@
-# Release 0.21.0-dev
+# Release 0.22.0-dev
+
+### New features since last release
+
+### Breaking changes
+
+### Improvements
+
+### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+---
+
+# Release 0.21.0
 
 ### New features since last release
 * Direct support to probability, expectation value and variance calculation in PL-Lightning.
@@ -6,6 +24,9 @@
 
 * Add C++ only benchmark for a given list of gates.
 [(#199)](https://github.com/PennyLaneAI/pennylane-lightning/pull/199)
+
+* Add bindings to C++ expval, var, probs.
+[(#214)](https://github.com/PennyLaneAI/pennylane-lightning/pull/214)
 
 ### Breaking changes
 
@@ -34,7 +55,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Chae-Yeun Park, Lee James O'Riordan
+Ali Asadi, Amintor Dusko, Chae-Yeun Park, Lee James O'Riordan
 
 ---
 
