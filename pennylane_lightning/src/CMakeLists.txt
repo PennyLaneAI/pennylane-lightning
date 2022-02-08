@@ -26,9 +26,9 @@ include("${PROJECT_SOURCE_DIR}/../../cmake/process_options.cmake")
 ###############################################################################
 # Include all nested sources directories
 ###############################################################################
-set(COMPONENT_SUBDIRS      gates;
+set(COMPONENT_SUBDIRS      algorithms;
+                           gates;
                            simulator;
-                           algorithms;
                            util;
 )
 foreach(COMP ${COMPONENT_SUBDIRS})

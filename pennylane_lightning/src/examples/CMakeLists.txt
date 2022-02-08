@@ -15,10 +15,11 @@ project("gate_benchmark"
 #                                      lightning_external_libs)
 
 add_executable(gate_benchmark_oplist gate_benchmark_oplist.cpp)
-target_link_libraries(gate_benchmark_oplist PRIVATE lightning_utils
+target_link_libraries(gate_benchmark_oplist PRIVATE lightning_compile_options
+                                                    lightning_external_libs
+                                                    lightning_gates
                                                     lightning_simulator
-                                                    lightning_compile_options
-                                                    lightning_external_libs)
+                                                    lightning_utils)
 
 configure_file("compiler_info.in" "compiler_info.txt")
 

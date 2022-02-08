@@ -240,7 +240,7 @@ inline auto innerProdC(const std::vector<std::complex<T>> &v1,
  * @param v_out Pre-allocated complex data array to store the result.
  * @param m Number of rows of `mat`.
  * @param n Number of columns of `mat`.
- * @param transpose If `true`, considers transposed version of `mat`.
+ * @param transpose Whether use a transposed version of `m_right`.
  * row-wise.
  */
 template <class T>
@@ -302,7 +302,7 @@ omp_matrixVecProd(const std::complex<T> *mat, const std::complex<T> *v_in,
  * @param v_out Pre-allocated complex data array to store the result.
  * @param m Number of rows of `mat`.
  * @param n Number of columns of `mat`.
- * @param transpose If `true`, considers transposed version of `mat`.
+ * @param transpose Whether use a transposed version of `m_right`.
  */
 template <class T>
 inline void matrixVecProd(const std::complex<T> *mat,
@@ -576,12 +576,14 @@ inline auto Transpose(const std::vector<std::complex<T>> mat, size_t m,
  * @param m Number of rows of `m_left`.
  * @param n Number of columns of `m_right`.
  * @param k Number of rows of `m_right`.
- * @param transpose If `true`, requires transposed version of `m_right`.
+ * @param transpose Whether use a transposed version of `m_right`.
  *
  * @note Consider transpose=true, to get a better performance.
  *  To transpose a matrix efficiently, check Util::Transpose
  */
-template <class T, size_t STRIDE = 2> // NOLINT(readability-magic-numbers)
+
+template <class T, size_t STRIDE = 2>
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 inline void omp_matrixMatProd(const std::complex<T> *m_left,
                               const std::complex<T> *m_right,
                               std::complex<T> *m_out, size_t m, size_t n,
@@ -589,6 +591,7 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
     if (!m_out) {
         return;
     }
+
     switch (transpose) {
     case Trans::Transpose:
 #if defined(_OPENMP)
@@ -657,7 +660,7 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
  * @param m Number of rows of `m_left`.
  * @param n Number of columns of `m_right`.
  * @param k Number of rows of `m_right`.
- * @param transpose If `true`, requires transposed version of `m_right`.
+ * @param transpose Whether use a transposed version of `m_right`.
  *
  * @note Consider transpose=true, to get a better performance.
  *  To transpose a matrix efficiently, check Util::Transpose
