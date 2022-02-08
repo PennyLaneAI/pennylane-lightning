@@ -633,10 +633,10 @@ inline void matrixMatProd(const std::complex<T> *m_left,
         const auto tr = (transpose) ? CblasTrans : CblasNoTrans;
         if constexpr (std::is_same_v<T, float>) {
             cblas_cgemm(CblasRowMajor, CblasNoTrans, tr, m, n, k, &co, m_left,
-                        k, m_right, transpose ? n : k, &cz, m_out, n);
+                        k, m_right, transpose ? k : n, &cz, m_out, n);
         } else if constexpr (std::is_same_v<T, double>) {
             cblas_zgemm(CblasRowMajor, CblasNoTrans, tr, m, n, k, &co, m_left,
-                        k, m_right, transpose ? n : k, &cz, m_out, n);
+                        k, m_right, transpose ? k : n, &cz, m_out, n);
         }
     } else {
         omp_matrixMatProd(m_left, m_right, m_out, m, n, k, transpose);
