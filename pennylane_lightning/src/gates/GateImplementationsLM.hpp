@@ -17,12 +17,13 @@
  */
 #pragma once
 
+#include "BitUtil.hpp"
 #include "Error.hpp"
 #include "GateOperation.hpp"
 #include "Gates.hpp"
 #include "KernelType.hpp"
+#include "LinearAlgebra.hpp"
 #include "PauliGenerator.hpp"
-#include "Util.hpp"
 
 #include <climits>
 #include <complex>

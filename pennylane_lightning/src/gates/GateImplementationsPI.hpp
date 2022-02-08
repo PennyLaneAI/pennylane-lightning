@@ -24,12 +24,13 @@
 #endif
 /// @endcond
 
+#include "BitUtil.hpp"
 #include "GateOperation.hpp"
 #include "GateUtil.hpp"
 #include "Gates.hpp"
 #include "KernelType.hpp"
 #include "PauliGenerator.hpp"
-#include "Util.hpp"
+#include "LinearAlgebra.hpp"
 
 #include <complex>
 #include <vector>

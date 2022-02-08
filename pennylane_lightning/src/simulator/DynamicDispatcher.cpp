@@ -18,6 +18,7 @@
 #include "DynamicDispatcher.hpp"
 #include "AvailableKernels.hpp"
 #include "Constant.hpp"
+#include "ConstantUtil.hpp"
 #include "GateUtil.hpp"
 #include "OpToMemberFuncPtr.hpp"
 #include "SelectKernel.hpp"

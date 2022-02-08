@@ -18,6 +18,7 @@
 #pragma once
 #include "AvailableKernels.hpp"
 #include "Constant.hpp"
+#include "ConstantUtil.hpp"
 #include "GateOperation.hpp"
 #include "KernelType.hpp"
 #include "TypeList.hpp"

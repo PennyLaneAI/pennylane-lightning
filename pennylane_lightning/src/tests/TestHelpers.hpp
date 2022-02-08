@@ -6,8 +6,10 @@
 #include <vector>
 
 #include "Constant.hpp"
+#include "ConstantUtil.hpp"
 #include "Error.hpp"
 #include "GateOperation.hpp"
+#include "LinearAlgebra.hpp"
 #include "Util.hpp"
 
 #include <catch2/catch.hpp>

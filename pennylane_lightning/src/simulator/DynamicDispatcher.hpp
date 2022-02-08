@@ -20,10 +20,10 @@
 #pragma once
 
 #include "Constant.hpp"
+#include "ConstantUtil.hpp"
 #include "Error.hpp"
 #include "GateUtil.hpp"
 #include "KernelType.hpp"
-#include "Util.hpp"
 
 #include <cassert>
 #include <complex>

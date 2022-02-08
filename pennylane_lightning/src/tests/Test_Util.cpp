@@ -307,7 +307,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 std::vector<std::complex<TestType>> m_out_exp(
                     m * m, {0, static_cast<TestType>(2 * m)});
                 std::vector<std::complex<TestType>> m_out =
-                    Util::matrixMatProd(m_left, m_right, m, m, m, true);
+                    Util::matrixMatProd(m_left, m_right, m, m, m, Trans::Transpose);
                 CAPTURE(m_out);
                 CAPTURE(m_out_exp);
                 for (size_t i = 0; i < m * m; i++) {
@@ -361,9 +361,9 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 {-0.482010055957000, 2.062995137499000},
                 {-0.524094900662100, 1.815727577737900}};
             std::vector<std::complex<TestType>> m_out_1 =
-                Util::matrixMatProd(m_left, m_right_tp, 4, 4, 4, true);
+                Util::matrixMatProd(m_left, m_right_tp, 4, 4, 4, Trans::Transpose);
             std::vector<std::complex<TestType>> m_out_2 =
-                Util::matrixMatProd(m_left, m_right, 4, 4, 4, false);
+                Util::matrixMatProd(m_left, m_right, 4, 4, 4, Trans::NoTranspose);
             CAPTURE(m_out_1);
             CAPTURE(m_out_2);
             CAPTURE(m_out_exp);

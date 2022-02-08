@@ -75,13 +75,8 @@ set(TEST_SOURCES Test_AdjDiff.cpp
 
 add_executable(runner ${TEST_SOURCES})
 target_link_libraries(runner PRIVATE lightning_tests_dependency
-<<<<<<< HEAD
-                                     pennylane_lightning_compile_options
-                                     pennylane_lightning_external_libs)
-=======
                                      lightning_compile_options
                                      lightning_external_libs)
->>>>>>> origin/master
 catch_discover_tests(runner)
 
 # We build compile time tests before the runtime tests as build error messages

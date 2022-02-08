@@ -147,12 +147,12 @@ inline auto popcount(unsigned long val) -> size_t {
 ///@}
 
 /**
- * @brief Faster log2 when the value is the perferct power of 2.
+ * @brief Faster log2 when the value is the perfect power of 2.
  *
  * If the value is the perfect power of 2, using a system provided bit operation
  * is much faster than std::log2
  *
- * TODO: change to std::countr_zero in C++20
+ * TODO: change to std::count_zero in C++20
  */
 ///@{
 #if defined(_MSC_VER)
