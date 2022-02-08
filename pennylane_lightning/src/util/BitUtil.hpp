@@ -19,6 +19,10 @@
 #include <cstdint>
 #include <cstdlib>
 
+#if defined(_MSC_VER)
+#include <intrin.h> // for __lzcnt64 and __popcount
+#endif
+
 /// @cond DEV
 namespace Pennylane::Util::Internal {
 /**
