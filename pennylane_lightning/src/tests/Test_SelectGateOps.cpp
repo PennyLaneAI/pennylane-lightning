@@ -119,7 +119,7 @@ void testGateFuncPtrPair() {
 }
 
 template <class fp_t, size_t kernel_idx, size_t num_params>
-constexpr void testGateFuncPtrPairIter() {
+void testGateFuncPtrPairIter() {
     using Pennylane::Internal::GateOpsFuncPtrPairs;
     if constexpr (kernel_idx < Constant::available_kernels.size()) {
         const auto kernel =
