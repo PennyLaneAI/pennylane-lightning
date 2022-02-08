@@ -6,6 +6,8 @@
 
 ### Improvements
 
+* Set GitHub workflow to upload wheels to Test PyPI [(#220)](https://github.com/PennyLaneAI/pennylane-lightning/pull/220)
+
 ### Documentation
 
 ### Bug fixes
@@ -13,6 +15,8 @@
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Chae-Yeun Park
 
 ---
 
