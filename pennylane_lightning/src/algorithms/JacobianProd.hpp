@@ -17,6 +17,7 @@
 
 #include "AdjointDiff.hpp"
 #include "JacobianTape.hpp"
+#include "LinearAlgebra.hpp"
 
 namespace Pennylane::Algorithms {
 

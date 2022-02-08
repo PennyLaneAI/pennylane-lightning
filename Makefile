@@ -74,20 +74,27 @@ coverage:
 
 test-cpp:
 	rm -rf ./BuildTests
-	cmake . -BBuildTests -DBUILD_TESTS=ON
+	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON
 	cmake --build ./BuildTests --target runner
 	cmake --build ./BuildTests --target test
 
+test-cpp-blas:
+	rm -rf ./BuildTests
+	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON -DENABLE_BLAS=ON
+	cmake --build ./BuildTests --target runner
+	cmake --build ./BuildTests --target test
+
+test-cpp-omp:
+	rm -rf ./BuildTests
+	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON -DENABLE_OPENMP=ON
+	cmake --build ./BuildTests --target runner
+	cmake --build ./BuildTests --target test
 
 .PHONY: benchmark
 benchmark:
 	cmake --build BuildBench --target clean || true
 	rm -rf ./BuildBench/CMakeCache.txt ./BuildBench/compiler_info.txt ./BuildBench/run_gate_benchmark.sh
-ifdef CXX
-	CXX=${CXX} cmake $(LIGHTNING_CPP_DIR) -BBuildBench -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_AVX=ON
-else
-	cmake . -BBuildBench -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_AVX=ON
-endif
+	cmake $(LIGHTNING_CPP_DIR) -BBuildBench -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_AVX=ON
 	cmake --build ./BuildBench
 
 .PHONY: format format-cpp format-python

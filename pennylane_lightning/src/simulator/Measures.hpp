@@ -25,9 +25,9 @@
 #include <cstdio>
 #include <vector>
 
+#include "LinearAlgebra.hpp"
 #include "StateVectorManaged.hpp"
 #include "StateVectorRaw.hpp"
-#include "Util.hpp"
 
 namespace Pennylane {
 /**

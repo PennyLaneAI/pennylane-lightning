@@ -25,8 +25,8 @@
 
 #include "Error.hpp"
 #include "JacobianTape.hpp"
+#include "LinearAlgebra.hpp"
 #include "StateVectorManaged.hpp"
-#include "Util.hpp"
 
 #include <iostream>
 
