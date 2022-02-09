@@ -21,6 +21,12 @@ template <typename T> struct remove_complex<std::complex<T>> {
 };
 template <typename T> using remove_complex_t = typename remove_complex<T>::type;
 
+template <typename T> struct is_complex : std::false_type {};
+
+template <typename T> struct is_complex<std::complex<T>> : std::true_type {};
+
+template <typename T> constexpr bool is_complex_v = is_complex<T>::value;
+
 template <class T, class Alloc> struct PLApprox {
     const std::vector<T, Alloc> &comp_;
 
@@ -36,11 +42,20 @@ template <class T, class Alloc> struct PLApprox {
         }
 
         for (size_t i = 0; i < lhs.size(); i++) {
-            if (lhs[i].real() !=
-                    Approx(comp_[i].real()).epsilon(epsilon_).margin(margin_) ||
-                lhs[i].imag() !=
-                    Approx(comp_[i].imag()).epsilon(epsilon_).margin(margin_)) {
-                return false;
+            if constexpr (is_complex_v<T>) {
+                if (lhs[i].real() != Approx(comp_[i].real())
+                                         .epsilon(epsilon_)
+                                         .margin(margin_) ||
+                    lhs[i].imag() != Approx(comp_[i].imag())
+                                         .epsilon(epsilon_)
+                                         .margin(margin_)) {
+                    return false;
+                }
+            } else {
+                if (lhs[i] !=
+                    Approx(comp_[i]).epsilon(epsilon_).margin(margin_)) {
+                    return false;
+                }
             }
         }
         return true;
