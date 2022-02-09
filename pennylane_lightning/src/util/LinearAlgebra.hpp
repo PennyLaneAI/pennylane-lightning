@@ -462,7 +462,7 @@ inline static void CFTranspose(const std::complex<T> *mat,
  * @return mat transpose of shape n * m.
  */
 template <class T>
-inline auto Transpose(const std::vector<std::complex<T>> mat, size_t m,
+inline auto Transpose(const std::vector<std::complex<T>>& mat, size_t m,
                       size_t n) -> std::vector<std::complex<T>> {
     if (mat.size() != m * n) {
         throw std::invalid_argument(
@@ -485,7 +485,7 @@ inline auto Transpose(const std::vector<std::complex<T>> mat, size_t m,
  * @return mat transpose of shape n * m.
  */
 template <class T>
-inline auto Transpose(const std::vector<T> mat, size_t m, size_t n)
+inline auto Transpose(const std::vector<T>& mat, size_t m, size_t n)
     -> std::vector<T> {
     if (mat.size() != m * n) {
         throw std::invalid_argument(

@@ -278,10 +278,10 @@ template <class T> class JacobianData {
      * calculation.
      */
     JacobianData(size_t num_params, size_t num_elem, std::complex<T> *ps,
-                 const std::vector<ObsDatum<T>> &obs, const OpsData<T> &ops,
+                 std::vector<ObsDatum<T>> obs, OpsData<T> ops,
                  std::vector<size_t> trainP)
         : num_parameters(num_params), num_elements(num_elem), psi(ps),
-          observables(obs), operations(ops),
+          observables(std::move(obs)), operations(std::move(ops)),
           trainableParams(std::move(trainP)) {}
 
     /**
