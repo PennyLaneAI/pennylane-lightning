@@ -40,7 +40,6 @@ using namespace Pennylane::Util;
 /// @endcond
 
 namespace Pennylane::Algorithms {
-
 /**
  * @brief Represent the logic for the adjoint Jacobian method of
  * arXiV:2009.02823
@@ -403,5 +402,4 @@ template <class T = double> class AdjointJacobian {
         jac = Transpose(jac, jd.getNumParams(), num_observables);
     }
 }; // class AdjointJacobian
-
 } // namespace Pennylane::Algorithms

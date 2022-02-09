@@ -80,6 +80,8 @@ class StateVectorRaw
     auto operator=(const StateVectorRaw &) -> StateVectorRaw & = default;
     auto operator=(StateVectorRaw &&) noexcept -> StateVectorRaw & = default;
 
+    ~StateVectorRaw() = default;
+
     /**
      * @brief Get the underlying data pointer.
      *

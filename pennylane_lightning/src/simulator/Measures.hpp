@@ -104,8 +104,8 @@ class Measures {
             }
             ind_probs++;
         }
-        // Transposing the probabilites tensor with the indices determined at
-        // the begining.
+        // Transposing the probabilities tensor with the indices determined at
+        // the beginning.
         if (wires != sorted_wires) {
             probabilities =
                 Util::transpose_state_tensor(probabilities, sorted_ind_wires);

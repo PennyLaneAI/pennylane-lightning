@@ -89,6 +89,11 @@ class StateVectorManaged
         return data_.data();
     }
 
+    /**
+     * @brief Update data of the class to new_data
+     *
+     * @param new_data std::vector contains data.
+     */
     void updateData(const std::vector<ComplexPrecisionT> &new_data) {
         PL_ABORT_IF_NOT(data_.size() == new_data.size(),
                         "New data must be the same size as old data.")

@@ -272,7 +272,7 @@ template <typename PrecisionT> class DynamicDispatcher {
     }
 
     /**
-     * @brief Apply multiple (non-paramterized) gates to the state-vector
+     * @brief Apply multiple (non-parameterized) gates to the state-vector
      * using a registered kernel
      *
      * @param data Pointer to data.

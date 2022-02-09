@@ -30,7 +30,7 @@
 namespace Pennylane::Gates {
 /**
  * @brief For lookup from any array of pair whose first elements are
- * GateOperations.
+ * GateOperation.
  *
  * As Util::lookup can be used in constexpr context, this function is redundant
  * (by the standard). But GCC 9 still does not accept Util::lookup in constexpr

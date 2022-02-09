@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
         num_gate_reps = std::stoi(argv[1]);
         num_qubits = std::stoi(argv[2]);
     } catch (std::exception &e) {
-        std::cerr << "Arguements num_gate_reps and num_qubits must be integers."
+        std::cerr << "Arguments num_gate_reps and num_qubits must be integers."
                   << std::endl;
         return -1;
     }

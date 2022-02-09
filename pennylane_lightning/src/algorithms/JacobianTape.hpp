@@ -40,7 +40,7 @@ template <class T = double> class ObsDatum {
      *
      * @param obs_name Name of each operation of the observable. Tensor product
      * observables have more than one operation.
-     * @param obs_params Parameters for a given obserable operation ({} if
+     * @param obs_params Parameters for a given observable operation ({} if
      * optional).
      * @param obs_wires Wires upon which to apply operation. Each observable
      * operation will be a separate nested list.

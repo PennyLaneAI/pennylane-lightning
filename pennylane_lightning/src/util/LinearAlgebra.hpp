@@ -131,7 +131,7 @@ inline auto innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
 
 /**
  * @brief Calculates the inner-product using OpenMP.
- * with the the first dataset conjugated.
+ * with the first dataset conjugated.
  *
  * @tparam T Floating point precision type.
  * @tparam NTERMS Number of terms proceeds by each thread
