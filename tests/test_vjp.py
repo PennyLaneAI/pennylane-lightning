@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tests for the ``vector_jacobian_product`` method of LightningQubit.
+Tests for the ``vjp`` method of LightningQubit.
 """
 import pytest
 
@@ -110,7 +110,7 @@ class TestComputeVJP:
 
 
 class TestVectorJacobianProduct:
-    """Tests for the vector_jacobian_product function"""
+    """Tests for the `vjp` function"""
 
     @pytest.fixture
     def dev(self):
@@ -135,7 +135,7 @@ class TestVectorJacobianProduct:
         dy = np.array([1.0])
 
         with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
-            dev.vector_jacobian_product(tape, dy)
+            dev.vjp(tape, dy)(tape)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_use_device_state(self, tol, dev, C):
@@ -154,13 +154,14 @@ class TestVectorJacobianProduct:
 
         dy = np.array([1.0])
 
-        jac1, vjp1 = dev.vector_jacobian_product(tape, dy)
+        fn1 = dev.vjp(tape, dy)
+        vjp1 = fn1(tape)
 
         tape.execute(dev)
-        jac2, vjp2 = dev.vector_jacobian_product(tape, dy, use_device_state=True)
+        fn2 = dev.vjp(tape, dy, use_device_state=True)
+        vjp2 = fn2(tape)
 
         assert np.allclose(vjp1, vjp2, atol=tol, rtol=0)
-        assert np.allclose(jac1, jac2, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_provide_starting_state(self, tol, dev, C):
@@ -179,13 +180,14 @@ class TestVectorJacobianProduct:
 
         dy = np.array([1.0])
 
-        jac1, vjp1 = dev.vector_jacobian_product(tape, dy)
+        fn1 = dev.vjp(tape, dy)
+        vjp1 = fn1(tape)
 
         tape.execute(dev)
-        jac2, vjp2 = dev.vector_jacobian_product(tape, dy, starting_state=dev._pre_rotated_state)
+        fn2 = dev.vjp(tape, dy, starting_state=dev._pre_rotated_state)
+        vjp2 = fn2(tape)
 
         assert np.allclose(vjp1, vjp2, atol=tol, rtol=0)
-        assert np.allclose(jac1, jac2, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_not_expval(self, dev, C):
@@ -200,7 +202,7 @@ class TestVectorJacobianProduct:
         dy = np.array([1.0])
 
         with pytest.raises(qml.QuantumFunctionError, match="Adjoint differentiation method does"):
-            dev.vector_jacobian_product(tape, dy)
+            dev.vjp(tape, dy)(tape)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_finite_shots_warns(self, C):
@@ -217,7 +219,7 @@ class TestVectorJacobianProduct:
         with pytest.warns(
             UserWarning, match="Requested adjoint differentiation to be computed with finite shots."
         ):
-            dev.vector_jacobian_product(tape, dy)
+            dev.vjp(tape, dy)(tape)
 
     from pennylane_lightning import LightningQubit as lq
 
@@ -237,7 +239,7 @@ class TestVectorJacobianProduct:
         with pytest.raises(
             qml.QuantumFunctionError, match="The CRot operation is not supported using the"
         ):
-            dev.vector_jacobian_product(tape, dy)
+            dev.vjp(tape, dy)(tape)
 
         with qml.tape.JacobianTape() as tape:
             qml.SingleExcitation(0.1, wires=[0, 1])
@@ -247,7 +249,7 @@ class TestVectorJacobianProduct:
             qml.QuantumFunctionError,
             match="The SingleExcitation operation is not supported using the",
         ):
-            dev.vector_jacobian_product(tape, dy)
+            dev.vjp(tape, dy)(tape)
 
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
@@ -264,7 +266,7 @@ class TestVectorJacobianProduct:
         with pytest.raises(
             qml.QuantumFunctionError, match="differentiation method does not support the Projector"
         ):
-            dev.vector_jacobian_product(tape, dy)
+            dev.vjp(tape, dy)(tape)
 
         with qml.tape.JacobianTape() as tape:
             qml.CRX(0.1, wires=[0, 1])
@@ -273,7 +275,7 @@ class TestVectorJacobianProduct:
         with pytest.raises(
             qml.QuantumFunctionError, match="differentiation method does not support the Projector"
         ):
-            dev.vector_jacobian_product(tape, dy)
+            dev.vjp(tape, dy)(tape)
 
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
@@ -291,7 +293,7 @@ class TestVectorJacobianProduct:
         with pytest.raises(
             qml.QuantumFunctionError, match="Lightning adjoint differentiation method does not"
         ):
-            dev.vector_jacobian_product(tape, dy)
+            dev.vjp(tape, dy)(tape)
 
         with qml.tape.JacobianTape() as tape:
             qml.RY(0.1, wires=(0,))
@@ -300,7 +302,7 @@ class TestVectorJacobianProduct:
         with pytest.raises(
             qml.QuantumFunctionError, match="Lightning adjoint differentiation method does not"
         ):
-            dev.vector_jacobian_product(tape, dy)
+            dev.vjp(tape, dy)(tape)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_no_trainable_parameters(self, dev, C):
@@ -316,10 +318,30 @@ class TestVectorJacobianProduct:
 
         tape.trainable_params = {}
         dy = np.array([1.0])
-        jac, vjp = dev.vector_jacobian_product(tape, dy)
+
+        fn = dev.vjp(tape, dy)
+        vjp = fn(tape)
 
         assert vjp is None
-        assert jac is None
+
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_no_trainable_parameters_NEW(self, dev, C):
+        """A tape with no trainable parameters will simply return None"""
+        dev._state = dev._asarray(dev._state, C)
+
+        x = 0.4
+
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(x, wires=0)
+            qml.CNOT(wires=[0, 1])
+            qml.expval(qml.PauliZ(0))
+
+        tape.trainable_params = {}
+        dy = np.array([1.0])
+        fn = dev.vjp(tape, dy)
+        vjp = fn(tape)
+
+        assert vjp is None
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_no_trainable_parameters_(self, dev, C):
@@ -335,10 +357,11 @@ class TestVectorJacobianProduct:
 
         tape.trainable_params = {}
         dy = np.array([1.0])
-        jac, vjp = dev.vector_jacobian_product(tape, dy)
+
+        fn = dev.vjp(tape, dy)
+        vjp = fn(tape)
 
         assert vjp is None
-        assert jac is None
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_zero_dy(self, dev, C):
@@ -356,10 +379,11 @@ class TestVectorJacobianProduct:
 
         tape.trainable_params = {0, 1}
         dy = np.array([0.0])
-        jac, vjp = dev.vector_jacobian_product(tape, dy)
+
+        fn = dev.vjp(tape, dy)
+        vjp = fn(tape)
 
         assert np.all(vjp == np.zeros([len(tape.trainable_params)]))
-        assert jac is None
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_single_expectation_value(self, tol, dev, C):
@@ -379,13 +403,11 @@ class TestVectorJacobianProduct:
         tape.trainable_params = {0, 1}
         dy = np.array([1.0])
 
-        jac1, vjp = dev.vector_jacobian_product(tape, dy)
-
-        jac2 = dev.adjoint_jacobian(tape)
+        fn = dev.vjp(tape, dy)
+        vjp = fn(tape)
 
         expected = np.array([-np.sin(y) * np.sin(x), np.cos(y) * np.cos(x)])
         assert np.allclose(vjp, expected, atol=tol, rtol=0)
-        assert np.allclose(jac1, jac2, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_multiple_expectation_values(self, tol, dev, C):
@@ -406,13 +428,11 @@ class TestVectorJacobianProduct:
         tape.trainable_params = {0, 1}
         dy = np.array([1.0, 2.0])
 
-        jac1, vjp = dev.vector_jacobian_product(tape, dy)
-
-        jac2 = dev.adjoint_jacobian(tape)
+        fn = dev.vjp(tape, dy)
+        vjp = fn(tape)
 
         expected = np.array([-np.sin(x), 2 * np.cos(y)])
         assert np.allclose(vjp, expected, atol=tol, rtol=0)
-        assert np.allclose(jac1, jac2, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_prob_expectation_values(self, dev, C):
@@ -434,7 +454,7 @@ class TestVectorJacobianProduct:
         dy = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
 
         with pytest.raises(qml.QuantumFunctionError, match="Adjoint differentiation method does"):
-            dev.vector_jacobian_product(tape, dy)
+            dev.vjp(tape, dy)(tape)
 
 
 class TestBatchVectorJacobianProduct:
@@ -492,13 +512,11 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        jacs, vjps = dev.batch_vjp(tapes, dys)
+        fn = dev.batch_vjp(tapes, dys)
+        vjps = fn(tapes)
 
         assert vjps[0] is None
         assert vjps[1] is not None
-
-        assert jacs[0] is None
-        assert jacs[1] is not None
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_all_tapes_no_trainable_parameters(self, dev, C):
@@ -522,13 +540,11 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        jacs, vjps = dev.batch_vjp(tapes, dys)
+        fn = dev.batch_vjp(tapes, dys)
+        vjps = fn(tapes)
 
         assert vjps[0] is None
         assert vjps[1] is None
-
-        assert jacs[0] is None
-        assert jacs[1] is None
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_zero_dy(self, dev, C):
@@ -552,10 +568,10 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([0.0]), np.array([1.0])]
 
-        jacs, vjps = dev.batch_vjp(tapes, dys)
+        fn = dev.batch_vjp(tapes, dys)
+        vjps = fn(tapes)
 
         assert np.allclose(vjps[0], 0)
-        assert jacs[0] is None
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_reduction_append(self, dev, C):
@@ -579,17 +595,12 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        jacs, vjps = dev.batch_vjp(tapes, dys, reduction="append")
-
-        jac0 = dev.adjoint_jacobian(tape1)
-        jac1 = dev.adjoint_jacobian(tape2)
+        fn = dev.batch_vjp(tapes, dys, reduction="append")
+        vjps = fn(tapes)
 
         assert len(vjps) == 2
         assert all(isinstance(v, np.ndarray) for v in vjps)
         assert all(len(v) == len(t.trainable_params) for t, v in zip(tapes, vjps))
-
-        assert np.allclose(jacs[0], jac0)
-        assert np.allclose(jacs[1], jac1)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_reduction_append_callable(self, dev, C):
@@ -613,17 +624,12 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        jacs, vjps = dev.batch_vjp(tapes, dys, reduction=list.append)
-
-        jac0 = dev.adjoint_jacobian(tape1)
-        jac1 = dev.adjoint_jacobian(tape2)
+        fn = dev.batch_vjp(tapes, dys, reduction="append")
+        vjps = fn(tapes)
 
         assert len(vjps) == 2
         assert all(isinstance(v, np.ndarray) for v in vjps)
         assert all(len(v) == len(t.trainable_params) for t, v in zip(tapes, vjps))
-
-        assert np.allclose(jacs[0], jac0)
-        assert np.allclose(jacs[1], jac1)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_reduction_extend(self, dev, C):
@@ -647,15 +653,10 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        jacs, vjps = dev.batch_vjp(tapes, dys, reduction="extend")
-
-        jac0 = dev.adjoint_jacobian(tape1)
-        jac1 = dev.adjoint_jacobian(tape2)
+        fn = dev.batch_vjp(tapes, dys, reduction="extend")
+        vjps = fn(tapes)
 
         assert len(vjps) == sum(len(t.trainable_params) for t in tapes)
-
-        assert np.allclose(jacs[0], jac0)
-        assert np.allclose(jacs[1], jac1)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_reduction_extend_callable(self, dev, C):
@@ -679,6 +680,7 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        _, vjps = dev.batch_vjp(tapes, dys, reduction=list.extend)
+        fn = dev.batch_vjp(tapes, dys, reduction=list.extend)
+        vjps = fn(tapes)
 
         assert len(vjps) == sum(len(t.trainable_params) for t in tapes)
