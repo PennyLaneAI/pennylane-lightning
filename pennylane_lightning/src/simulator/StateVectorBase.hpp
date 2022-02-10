@@ -109,7 +109,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
     size_t num_qubits_{0};
 
   protected:
-    StateVectorBase() = default;
     explicit StateVectorBase(size_t num_qubits) : num_qubits_{num_qubits} {}
 
     /**

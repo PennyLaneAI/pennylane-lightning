@@ -86,9 +86,7 @@ struct GateIndices {
           external{generateBitPatterns(
               getIndicesAfterExclusion(wires, num_qubits), num_qubits)} {}
 };
-} // namespace Pennylane::Gates
 
-namespace Pennylane::Gates {
 /**
  * @brief Return implemented_gates constexpr member variables for a given kernel
  *

@@ -14,12 +14,17 @@ project("gate_benchmark"
 #                                      lightning_compile_options
 #                                      lightning_external_libs)
 
+add_library(lightning_examples INTERFACE)
+target_link_libraries(lightning_examples INTERFACE lightning_compile_options
+                                                   lightning_external_libs
+                                                   lightning_gates
+                                                   lightning_simulator
+                                                   lightning_utils)
+
 add_executable(gate_benchmark_oplist gate_benchmark_oplist.cpp)
-target_link_libraries(gate_benchmark_oplist PRIVATE lightning_compile_options
-                                                    lightning_external_libs
-                                                    lightning_gates
-                                                    lightning_simulator
-                                                    lightning_utils)
+target_link_libraries(gate_benchmark_oplist PRIVATE lightning_examples)
+add_executable(benchmark_multi_rz benchmark_multi_rz.cpp)
+target_link_libraries(benchmark_multi_rz PRIVATE lightning_examples)
 
 configure_file("compiler_info.in" "compiler_info.txt")
 

@@ -25,32 +25,10 @@
 #include "LinearAlgebra.hpp"
 #include "PauliGenerator.hpp"
 
-#include <climits>
 #include <complex>
 #include <vector>
 
 namespace Pennylane::Gates {
-/**
- * @brief Fill ones from LSB to rev_wire
- */
-inline auto constexpr fillTrailingOnes(size_t pos) -> size_t {
-    return (pos == 0) ? 0 : (~size_t(0) >> (CHAR_BIT * sizeof(size_t) - pos));
-}
-/**
- * @brief Fill ones from MSB to pos
- */
-inline auto constexpr fillLeadingOnes(size_t pos) -> size_t {
-    return (~size_t(0)) << pos;
-}
-
-/**
- * @brief Swap bits in i-th and j-th position in place
- */
-inline void constexpr bitswap(size_t bits, const size_t i, const size_t j) {
-    size_t x = ((bits >> i) ^ (bits >> j)) & 1U;
-    bits ^= ((x << i) | (x << j));
-}
-
 /**
  * @brief A gate operation implementation with less memory.
  *
@@ -89,6 +67,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     };
 
   private:
+    /* Alias utility functions */
+    static constexpr auto fillLeadingOnes = Util::fillLeadingOnes;
+    static constexpr auto fillTrailingOnes = Util::fillTrailingOnes;
+    static constexpr auto bitswap = Util::bitswap;
+
     /**
      * @brief Apply a single qubit gate to the statevector.
      *
@@ -298,6 +281,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                             const size_t num_qubits,
                             const std::vector<size_t> &wires,
                             [[maybe_unused]] bool inverse) {
+        using Util::fillLeadingOnes, Util::fillTrailingOnes;
+
         assert(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
@@ -410,6 +395,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                 const size_t num_qubits,
                                 const std::vector<size_t> &wires, bool inverse,
                                 ParamT angle) {
+        using Util::fillLeadingOnes, Util::fillTrailingOnes;
+
         assert(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);

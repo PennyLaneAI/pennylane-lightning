@@ -16,6 +16,7 @@
  * Contains uncategorised utility functions.
  */
 #pragma once
+#include <climits>
 #include <cstdint>
 #include <cstdlib>
 
@@ -179,5 +180,24 @@ inline auto log2PerfectPower(unsigned long val) -> size_t {
 inline auto isPerfectPowerOf2(size_t value) -> bool {
     return popcount(value) == 1;
 }
+/**
+ * @brief Fill ones from LSB to rev_wire
+ */
+inline auto constexpr fillTrailingOnes(size_t pos) -> size_t {
+    return (pos == 0) ? 0 : (~size_t(0) >> (CHAR_BIT * sizeof(size_t) - pos));
+}
+/**
+ * @brief Fill ones from MSB to pos
+ */
+inline auto constexpr fillLeadingOnes(size_t pos) -> size_t {
+    return (~size_t(0)) << pos;
+}
 
+/**
+ * @brief Swap bits in i-th and j-th position in place
+ */
+inline void constexpr bitswap(size_t bits, const size_t i, const size_t j) {
+    size_t x = ((bits >> i) ^ (bits >> j)) & 1U;
+    bits ^= ((x << i) | (x << j));
+}
 } // namespace Pennylane::Util
