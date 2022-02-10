@@ -61,6 +61,8 @@ add_subdirectory(pennylane_lightning/src)
 #####################################################
 # Maintain for dependent external package development
 #####################################################
+add_library(pennylane_lightning INTERFACE)
+
 target_link_libraries(pennylane_lightning INTERFACE     lightning_utils
                                                         lightning_simulator
                                                         lightning_algorithms)
