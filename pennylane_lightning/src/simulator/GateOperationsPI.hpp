@@ -547,8 +547,9 @@ template <class fp_t> class GateOperationsPI {
             const auto v0 = shiftedState[indices[2]];
             shiftedState[indices[0]] = Util::ZERO<fp_t>();
             shiftedState[indices[1]] = Util::ZERO<fp_t>();
-            shiftedState[indices[2]] = -IMAG<fp_t>() * shiftedState[indices[3]];
-            shiftedState[indices[3]] = IMAG<fp_t>() * v0;
+            shiftedState[indices[2]] =
+                -Util::IMAG<fp_t>() * shiftedState[indices[3]];
+            shiftedState[indices[3]] = Util::IMAG<fp_t>() * v0;
         }
     }
 
