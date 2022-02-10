@@ -58,6 +58,18 @@ FetchContent_MakeAvailable(pybind11)
 # All CMakeLists.txt in subdirectories use pennylane_lightning_compile_options and pennylane_lightning_external_libs
 add_subdirectory(pennylane_lightning/src)
 
+#####################################################
+# Maintain for dependent external package development
+#####################################################
+add_library(pennylane_lightning INTERFACE)
+
+target_link_libraries(pennylane_lightning INTERFACE     lightning_utils
+                                                        lightning_simulator
+                                                        lightning_algorithms)
+target_include_directories(pennylane_lightning INTERFACE "pennylane_lightning/src")
+
+#####################################################
+
 pybind11_add_module(lightning_qubit_ops "pennylane_lightning/src/bindings/Bindings.cpp")
 target_link_libraries(lightning_qubit_ops PRIVATE lightning_algorithms
                                                   lightning_gates

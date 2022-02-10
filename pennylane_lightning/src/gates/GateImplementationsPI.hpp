@@ -692,7 +692,6 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     applyGeneratorCRY(std::complex<PrecisionT> *arr, size_t num_qubits,
                       const std::vector<size_t> &wires,
                       [[maybe_unused]] bool adj) -> PrecisionT {
-        using Util::IMAG;
         assert(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
@@ -702,8 +701,8 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
             shiftedState[indices[0]] = Util::ZERO<PrecisionT>();
             shiftedState[indices[1]] = Util::ZERO<PrecisionT>();
             shiftedState[indices[2]] =
-                -IMAG<PrecisionT>() * shiftedState[indices[3]];
-            shiftedState[indices[3]] = IMAG<PrecisionT>() * v0;
+                -Util::IMAG<PrecisionT>() * shiftedState[indices[3]];
+            shiftedState[indices[3]] = Util::IMAG<PrecisionT>() * v0;
         }
         // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
