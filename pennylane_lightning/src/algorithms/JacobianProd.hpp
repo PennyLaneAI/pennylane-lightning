@@ -16,9 +16,10 @@
 #include <algorithm>
 
 #include "AdjointDiff.hpp"
+#include "JacobianTape.hpp"
+#include "LinearAlgebra.hpp"
 
-namespace Pennylane {
-namespace Algorithms {
+namespace Pennylane::Algorithms {
 
 /**
  * @brief Represent the class to compute the vector-Jacobian products
@@ -26,8 +27,7 @@ namespace Algorithms {
  *
  * @tparam T Floating-point precision.
  */
-template <class T = double>
-class VectorJacobianProduct : public AdjointJacobian<T> {
+template <class T = double> class VectorJacobianProduct {
   private:
     /**
      * @brief Computes the vector-Jacobian product for a given vector of
@@ -69,42 +69,13 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
      * gradient outputs and a Jacobian.
      *
      * @param vjp Preallocated vector for vector-jacobian product data results.
-     * @param jac Jacobian matrix from `AdjointJacobian`.
-     * @param dy_row Gradient-output vector.
-     */
-    void computeVJP(std::vector<T> &vjp, const std::vector<std::vector<T>> &jac,
-                    const std::vector<T> &dy_row) {
-        if (jac.empty() || dy_row.empty()) {
-            vjp.clear();
-            return;
-        }
-
-        const size_t r_len = jac.size();
-        const size_t c_len = jac.front().size();
-        if (dy_row.size() != r_len) {
-            throw std::invalid_argument(
-                "Invalid size for the gradient-output vector");
-        }
-
-        const size_t t_len = r_len * c_len;
-        std::vector<T> jac_row(t_len);
-        getRowMajor(jac_row, jac, t_len);
-
-        Util::vecMatrixProd(vjp, dy_row, jac_row, r_len, c_len);
-    }
-
-    /**
-     * @brief Computes the vector-Jacobian product for a given vector of
-     * gradient outputs and a Jacobian.
-     *
-     * @param vjp Preallocated vector for vector-jacobian product data results.
-     * @param jac Row-wise flatten Jacobian matrix of shape m * n.
+     * @param jac Row-wise flatten Jacobian matrix of shape `m * n`.
      * @param dy_row Gradient-output vector.
      * @param m Number of rows of `jac`.
      * @param n Number of columns of `jac`.
      */
-    void _computeVJP(std::vector<T> &vjp, const std::vector<T> &jac,
-                     const std::vector<T> &dy_row, size_t m, size_t n) {
+    void computeVJP(std::vector<T> &vjp, const std::vector<T> &jac,
+                    const std::vector<T> &dy_row, size_t m, size_t n) {
         if (jac.empty() || dy_row.empty()) {
             vjp.clear();
             return;
@@ -122,48 +93,49 @@ class VectorJacobianProduct : public AdjointJacobian<T> {
      * @brief Calculates the VectorJacobianProduct for the statevector
      * for the selected set of parametric gates using `AdjointJacobian`.
      *
-     * @param vjp Preallocated vector for vector-jacobian product data results
-     * of size `trainableParams.size()`.
-     * @param jac Preallocated Jacobian matrix from `AdjointJacobian` of size
-     * `observables.size() * trainableParams.size()`.
-     * @param psi Pointer to the statevector data.
-     * @param num_elements Length of the statevector data.
      * @param dy Gradient-output vector.
-     * @param observables Observables for which to calculate Jacobian.
-     * @param operations Operations used to create given state.
-     * @param trainableParams List of parameters participating in Jacobian
-     * calculation.
-     * @param apply_operations Indicate whether to apply operations to psi prior
-     * to calculation.
+     * @param num_params Total number of parameters in the QuantumTape
+     * @param apply_operations Indicate whether to apply operations to jd.psi
+     * prior to calculation.
+     *
+     * @return std::function<std::vector<T>(const JacobianData<T> &jd)>
+     * where `jd` is a JacobianData object representing the QuantumTape
+     * to differentiate.
+     *
      */
-    void vectorJacobianProduct(std::vector<T> &vjp,
-                               std::vector<std::vector<T>> &jac,
-                               const std::vector<T> &dy,
-                               const std::complex<T> *psi, size_t num_elements,
-                               const std::vector<ObsDatum<T>> &observables,
-                               const OpsData<T> &operations,
-                               const std::vector<size_t> &trainableParams,
-                               bool apply_operations = false) {
-        const size_t num_params = trainableParams.size();
-
-        if (num_params == 0U || dy.empty()) {
-            vjp.clear();
-            return;
+    auto vectorJacobianProduct(const std::vector<T> &dy, size_t num_params,
+                               bool apply_operations = false)
+        -> std::function<std::vector<T>(const JacobianData<T> &)> {
+        if (dy.empty() ||
+            std::all_of(dy.cbegin(), dy.cend(), [](T e) { return e == 0; })) {
+            // If the dy vector is zero, then the
+            // corresponding element of the VJP will be zero,
+            // and we can avoid unnecessary computation.
+            return
+                [num_params =
+                     num_params]([[maybe_unused]] const JacobianData<T> &jd)
+                    -> std::vector<T> { return std::vector<T>(num_params, 0); };
         }
 
-        const bool allzero =
-            std::all_of(dy.cbegin(), dy.cend(), [](T e) { return e == 0; });
-        if (allzero) {
-            vjp.resize(num_params);
-            return;
-        }
+        return [=](const JacobianData<T> &jd) -> std::vector<T> {
+            if (!jd.hasTrainableParams()) {
+                // The jd has no trainable parameters;
+                // the VJP is simple {}.
+                return {};
+            }
 
-        this->adjointJacobian(psi, num_elements, jac, observables, operations,
-                              trainableParams, apply_operations);
+            std::vector<T> vjp(num_params);
+            std::vector<T> jac(jd.getNumObservables() * num_params, 0);
 
-        computeVJP(vjp, jac, dy);
+            // Compute Jacobian for the input jd using `adjoint` method
+            AdjointJacobian<T> v;
+            v.adjointJacobian(jac, jd, apply_operations);
+
+            // Compute VJP
+            computeVJP(vjp, jac, dy, jd.getNumObservables(), num_params);
+            return vjp;
+        };
     }
 }; // class VectorJacobianProduct
 
-} // namespace Algorithms
-} // namespace Pennylane
+} // namespace Pennylane::Algorithms

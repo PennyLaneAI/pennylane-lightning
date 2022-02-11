@@ -96,7 +96,7 @@ std::vector<size_t> generateDistinctWires(RandomEngine &re, size_t num_qubits,
     std::vector<size_t> v(num_qubits, 0);
     std::iota(v.begin(), v.end(), 0);
     shuffle(v.begin(), v.end(), re);
-    return std::vector<size_t>(v.begin(), v.begin() + num_wires);
+    return {v.begin(), v.begin() + num_wires};
 }
 
 template <typename RandomEngine>

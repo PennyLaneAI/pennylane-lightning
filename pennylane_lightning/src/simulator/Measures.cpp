@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "AdjointDiff.hpp"
+#include "Measures.hpp"
 
 // explicit instantiation
-template class Pennylane::Algorithms::AdjointJacobian<float>;
-template class Pennylane::Algorithms::AdjointJacobian<double>;
+template class Pennylane::Measures<float, Pennylane::StateVectorRaw<float>>;
+template class Pennylane::Measures<double, Pennylane::StateVectorRaw<double>>;
