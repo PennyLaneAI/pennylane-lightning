@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.14)
 project(pennylane_lightning_tests)
 
 set(CMAKE_CXX_STANDARD 17)
-find_package(OpenMP)
 
 # Default build type for test code is Debug
 if(NOT CMAKE_BUILD_TYPE)
@@ -36,7 +35,7 @@ include(Catch)
 
 add_library(lightning_tests_dependency INTERFACE)
 target_link_libraries(lightning_tests_dependency INTERFACE lightning_simulator lightning_algorithms lightning_utils Catch2::Catch2)
-target_compile_options(lightning_tests_dependency INTERFACE "$<$<CONFIG:DEBUG>:-Wall>")
+target_compile_options(lightning_tests_dependency INTERFACE "-Wno-unused;")
 target_sources(lightning_tests_dependency INTERFACE runner_main.cpp)
 
 if(ENABLE_NATIVE)
@@ -61,7 +60,8 @@ set(TEST_SOURCES Test_AdjDiff.cpp
                  Test_Util.cpp
                  Test_VectorJacobianProduct.cpp)
 
-
 add_executable(runner ${TEST_SOURCES})
-target_link_libraries(runner PRIVATE lightning_tests_dependency)
+target_link_libraries(runner PRIVATE lightning_tests_dependency
+                                     lightning_compile_options
+                                     lightning_external_libs)
 catch_discover_tests(runner)

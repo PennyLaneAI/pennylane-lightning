@@ -176,10 +176,13 @@ void lightning_class_bindings(py::module &m) {
             return "Operations: [" + ops_stream.str() + "]";
         });
 
+    //***********************************************************************//
+    //                              Adjoint Jacobian
+    //***********************************************************************//
+
     class_name = "AdjointJacobianC" + bitsize;
     py::class_<AdjointJacobian<PrecisionT>>(m, class_name.c_str())
         .def(py::init<>())
-        .def("create_ops_list", &AdjointJacobian<PrecisionT>::createOpsData)
         .def("create_ops_list",
              [](AdjointJacobian<PrecisionT> &adj,
                 const std::vector<std::string> &ops_name,
@@ -219,19 +222,25 @@ void lightning_class_bindings(py::module &m) {
                 const std::vector<ObsDatum<PrecisionT>> &observables,
                 const OpsData<PrecisionT> &operations,
                 const std::vector<size_t> &trainableParams, size_t num_params) {
-                 std::vector<std::vector<PrecisionT>> jac(
-                     observables.size(),
-                     std::vector<PrecisionT>(num_params, 0));
-                 adj.adjointJacobian(sv.getData(), sv.getLength(), jac,
-                                     observables, operations, trainableParams);
+                 std::vector<PrecisionT> jac(observables.size() * num_params,
+                                             0);
+
+                 const JacobianData<PrecisionT> jd{
+                     num_params,  sv.getLength(), sv.getData(),
+                     observables, operations,     trainableParams};
+
+                 adj.adjointJacobian(jac, jd);
+
                  return py::array_t<ParamT>(py::cast(jac));
              });
+
+    //***********************************************************************//
+    //                              VJP
+    //***********************************************************************//
 
     class_name = "VectorJacobianProductC" + bitsize;
     py::class_<VectorJacobianProduct<PrecisionT>>(m, class_name.c_str())
         .def(py::init<>())
-        .def("create_ops_list",
-             &VectorJacobianProduct<PrecisionT>::createOpsData)
         .def("create_ops_list",
              [](VectorJacobianProduct<PrecisionT> &v,
                 const std::vector<std::string> &ops_name,
@@ -271,26 +280,25 @@ void lightning_class_bindings(py::module &m) {
                 const std::vector<PrecisionT> &jac,
                 const std::vector<PrecisionT> &dy_row, size_t m, size_t n) {
                  std::vector<PrecisionT> vjp_res(n);
-                 v._computeVJP(vjp_res, jac, dy_row, m, n);
+                 v.computeVJP(vjp_res, jac, dy_row, m, n);
                  return py::array_t<ParamT>(py::cast(vjp_res));
              })
-        .def("vjp", &VectorJacobianProduct<PrecisionT>::vectorJacobianProduct)
-        .def("vjp", [](VectorJacobianProduct<PrecisionT> &v,
-                       const std::vector<PrecisionT> &dy,
-                       const StateVectorRaw<PrecisionT> &sv,
-                       const std::vector<ObsDatum<PrecisionT>> &observables,
-                       const OpsData<PrecisionT> &operations,
-                       const std::vector<size_t> &trainableParams,
-                       size_t num_params) {
-            std::vector<std::vector<PrecisionT>> jac(
-                observables.size(), std::vector<PrecisionT>(num_params, 0));
-            std::vector<PrecisionT> vjp_res(num_params);
-            v.vectorJacobianProduct(vjp_res, jac, dy, sv.getData(),
-                                    sv.getLength(), observables, operations,
-                                    trainableParams);
-            return py::make_tuple(py::array_t<ParamT>(py::cast(jac)),
-                                  py::array_t<ParamT>(py::cast(vjp_res)));
-        });
+        .def("vjp_fn",
+             [](VectorJacobianProduct<PrecisionT> &v,
+                const std::vector<PrecisionT> &dy, size_t num_params) {
+                 auto fn = v.vectorJacobianProduct(dy, num_params);
+                 return py::cpp_function(
+                     [fn, num_params](
+                         const StateVectorRaw<PrecisionT> &sv,
+                         const std::vector<ObsDatum<PrecisionT>> &observables,
+                         const OpsData<PrecisionT> &operations,
+                         const std::vector<size_t> &trainableParams) {
+                         const JacobianData<PrecisionT> jd{
+                             num_params,  sv.getLength(), sv.getData(),
+                             observables, operations,     trainableParams};
+                         return py::array_t<ParamT>(py::cast(fn(jd)));
+                     });
+             });
 
     //***********************************************************************//
     //                              Measures

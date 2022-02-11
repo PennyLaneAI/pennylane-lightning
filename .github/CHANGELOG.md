@@ -1,3 +1,27 @@
+# Release 0.22.0-dev
+
+### New features since last release
+
+### Breaking changes
+
+### Improvements
+
+* Set GitHub workflow to upload wheels to Test PyPI [(#220)](https://github.com/PennyLaneAI/pennylane-lightning/pull/220).
+
+### Documentation
+
+### Bug fixes
+
+* Refactor utility header and fix a bug in linear algebra function with CBLAS [(#228)](https://github.com/PennyLaneAI/pennylane-lightning/pull/228).
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Chae-Yeun Park
+
+---
+
 # Release 0.21.0
 
 ### New features since last release
@@ -24,6 +48,9 @@
 
 * Ensure debug info is built into dynamic libraries.
 [(#201)](https://github.com/PennyLaneAI/pennylane-lightning/pull/201)
+
+* Update adjointJacobian and VJP methods.
+[(#222)](https://github.com/PennyLaneAI/pennylane-lightning/pull/222)
 
 ### Documentation
 

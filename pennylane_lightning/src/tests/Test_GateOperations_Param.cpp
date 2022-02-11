@@ -1,3 +1,4 @@
+#include "ConstantUtil.hpp"
 #include "GateOperationsLM.hpp"
 #include "GateOperationsPI.hpp"
 #include "Gates.hpp"
