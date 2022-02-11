@@ -63,7 +63,7 @@ else()
 endif()
 
 if(ENABLE_OPENMP)
-    message(STATUS "ENABLE_OPENMP is ON. Using OpenMP.")
+    message(STATUS "ENABLE_OPENMP is ON.")
     find_package(OpenMP)
 
     if(NOT OpenMP_CXX_FOUND)
