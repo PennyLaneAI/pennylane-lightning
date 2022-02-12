@@ -14,11 +14,10 @@
 
 FROM ubuntu:latest AS base
 
-#Setup and install basic packages
-RUN apt-get update \
-    && apt-get install -y apt-utils --no-install-recommends
-
-RUN DEBIAN_FRONTEND="noninteractive" \
+# Setup and install basic packages
+RUN apt-get update \ 
+    && apt-get install -y apt-utils --no-install-recommends \
+    && DEBIAN_FRONTEND="noninteractive" \
     apt-get install -y tzdata \
     build-essential \
     ca-certificates \
@@ -30,20 +29,26 @@ RUN DEBIAN_FRONTEND="noninteractive" \
     python3-pip \
     python3-venv \
     libjpeg-dev \
-    libpng-dev && \
-    rm -rf /var/lib/apt/lists/* \
+    libpng-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
     && /usr/sbin/update-ccache-symlinks \
     && mkdir /opt/ccache && ccache --set-config=cache_dir=/opt/ccache \
     && python3 -m venv /opt/venv
 
 ENV PATH="/opt/venv/bin:$PATH"
 
-#Setup and build pennylane-lightning
+# Setup and build pennylane-lightning
 WORKDIR /opt/pennylane-lightning
+
 COPY . .
-RUN pip install wheel \
-    && pip install -r requirements.txt \
-    && pip install pytest pytest-cov pytest-mock flaky \
+
+RUN pip install --no-cache-dir wheel \
+    pytest \
+    pytest-cov \
+    pytest-mock \
+    flaky \
+    && pip install --no-cache-dir -r requirements.txt \
     && pip uninstall -y PennyLane_Lightning \
     && make install \
     && make test-python \
