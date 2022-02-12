@@ -243,9 +243,9 @@ namespace Pennylane::Gates::Constant {
  */
 [[maybe_unused]] constexpr std::array default_kernel_for_generators = {
     std::pair{GeneratorOperation::PhaseShift, KernelType::PI},
-    std::pair{GeneratorOperation::RX, KernelType::PI},
-    std::pair{GeneratorOperation::RY, KernelType::PI},
-    std::pair{GeneratorOperation::RZ, KernelType::PI},
+    std::pair{GeneratorOperation::RX, KernelType::LM},
+    std::pair{GeneratorOperation::RY, KernelType::LM},
+    std::pair{GeneratorOperation::RZ, KernelType::LM},
     std::pair{GeneratorOperation::IsingXX, KernelType::LM},
     std::pair{GeneratorOperation::IsingYY, KernelType::LM},
     std::pair{GeneratorOperation::IsingZZ, KernelType::LM},
