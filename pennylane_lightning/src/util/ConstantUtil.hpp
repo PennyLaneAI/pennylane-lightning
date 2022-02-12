@@ -21,6 +21,8 @@
 #include <stdexcept>
 #include <tuple>
 
+#include "Util.hpp"
+
 namespace Pennylane::Util {
 /**
  * @brief Lookup key in array of pairs. For a constexpr map-like behavior.
@@ -146,7 +148,7 @@ prepend_to_tuple_helper(T &&elt, Tuple &&t,
 /// @endcond
 
 /**
- * @brief Prepent an element to a tuple
+ * @brief Prepend an element to a tuple
  * @tparam T Type of element
  * @tparam Tuple Type of the tuple (usually std::tuple)
  *
@@ -171,9 +173,38 @@ constexpr auto prepend_to_tuple(T &&elt, Tuple &&t) {
  * @tparam Tuple Type of the tuple.
  * @param tuple Tuple to transform
  */
-template <class T, class Tuple> constexpr auto tuple_to_array(Tuple &&tuple) {
+template <class Tuple> constexpr auto tuple_to_array(Tuple &&tuple) {
+    using T = std::tuple_element_t<0, remove_cvref_t<Tuple>>;
     return std::apply(
         [](auto... n) { return std::array<T, sizeof...(n)>{n...}; },
         std::forward<Tuple>(tuple));
+}
+
+/// @cond DEV
+namespace Internal {
+/**
+ * @brief Helper function for prepend_to_tuple
+ */
+template <class T, class U, size_t size, std::size_t... I>
+constexpr auto
+reverse_pairs_helper(const std::array<std::pair<T, U>, size> &arr,
+                     [[maybe_unused]] std::index_sequence<I...> dummy) {
+    return std::array{std::pair{arr[I].second, arr[I].first}...};
+}
+} // namespace Internal
+/// @endcond
+
+/**
+ * @brief Swap positions of elements in each pair
+ *
+ * @tparam T Type of first elements
+ * @tparam U Type of second elements
+ * @tparam size Size of the array
+ */
+template <class T, class U, size_t size>
+constexpr auto reverse_pairs(const std::array<std::pair<T, U>, size> &arr)
+    -> std::array<std::pair<U, T>, size> {
+    return Internal::reverse_pairs_helper(arr,
+                                          std::make_index_sequence<size>{});
 }
 } // namespace Pennylane::Util

@@ -7,9 +7,13 @@
 #include <stdexcept>
 #include <string>
 
+#include "Constant.hpp"
+#include "ExampleUtil.hpp"
 #include "StateVectorManaged.hpp"
 
 using namespace Pennylane;
+using namespace Pennylane::Gates;
+using namespace Pennylane::Util;
 
 std::string_view strip(std::string_view str) {
     auto start = str.find_first_not_of(" \t");
@@ -22,33 +26,20 @@ struct GateDesc {
     size_t n_params; // number of parameters the gate requires
 };
 
-std::vector<std::pair<std::string_view, GateDesc>>
+std::vector<std::pair<std::string, GateDesc>>
 parseGateLists(std::string_view arg) {
-    const static std::map<std::string, GateDesc> available_gates_wires = {
-        /* Single-qubit gates */
-        {"PauliX", {1, 0}},
-        {"PauliY", {1, 0}},
-        {"PauliZ", {1, 0}},
-        {"Hadamard", {1, 0}},
-        {"S", {1, 0}},
-        {"T", {1, 0}},
-        {"RX", {1, 1}},
-        {"RY", {1, 1}},
-        {"RZ", {1, 1}},
-        {"Rot", {1, 3}},
-        {"PhaseShift", {1, 1}},
-        /* Two-qubit gates */
-        {"CNOT", {2, 0}},
-        {"CZ", {2, 0}},
-        {"SWAP", {2, 0}},
-        {"ControlledPhaseShift", {2, 1}},
-        {"CRX", {2, 1}},
-        {"CRY", {2, 1}},
-        {"CRZ", {2, 1}},
-        {"CRot", {2, 3}},
-        /* Three-qubit gates */
-        {"Toffoli", {3, 0}},
-        {"CSWAP", {3, 0}}};
+    namespace Constant = Gates::Constant;
+    std::map<std::string, GateDesc> available_gates_wires;
+
+    for (const auto &[gate_op, gate_name] : Constant::gate_names) {
+        if (!array_has_elt(Constant::multi_qubit_gates, gate_op)) {
+            // We do not support multi qubit gates yet
+            size_t n_wires = Util::lookup(Constant::gate_wires, gate_op);
+            size_t n_params = Util::lookup(Constant::gate_num_params, gate_op);
+            available_gates_wires.emplace(gate_name,
+                                          GateDesc{n_wires, n_params});
+        }
+    }
 
     if (arg.empty()) {
         /*
@@ -58,7 +49,7 @@ parseGateLists(std::string_view arg) {
         return {};
     }
 
-    std::vector<std::pair<std::string_view, GateDesc>> ops;
+    std::vector<std::pair<std::string, GateDesc>> ops;
 
     if (auto pos = arg.find_first_of('['); pos != std::string_view::npos) {
         // arg is a list "[...]"
@@ -88,29 +79,6 @@ parseGateLists(std::string_view arg) {
         ops.emplace_back(*iter);
     }
     return ops;
-}
-
-template <typename RandomEngine>
-std::vector<size_t> generateDistinctWires(RandomEngine &re, size_t num_qubits,
-                                          size_t num_wires) {
-    std::vector<size_t> v(num_qubits, 0);
-    std::iota(v.begin(), v.end(), 0);
-    shuffle(v.begin(), v.end(), re);
-    return {v.begin(), v.begin() + num_wires};
-}
-
-template <typename RandomEngine>
-std::vector<size_t> generateNeighboringWires(RandomEngine &re,
-                                             size_t num_qubits,
-                                             size_t num_wires) {
-    std::vector<size_t> v;
-    v.reserve(num_wires);
-    std::uniform_int_distribution<size_t> idist(0, num_qubits - 1);
-    size_t start_idx = idist(re);
-    for (size_t k = 0; k < num_wires; k++) {
-        v.emplace_back((start_idx + k) % num_qubits);
-    }
-    return v;
 }
 /**
  * @brief Benchmark Pennylane-Lightning for a given gate set
@@ -152,14 +120,14 @@ int main(int argc, char *argv[]) {
         num_gate_reps = std::stoi(argv[1]);
         num_qubits = std::stoi(argv[2]);
     } catch (std::exception &e) {
-        std::cerr << "Arguements num_gate_reps and num_qubits must be integers."
+        std::cerr << "Arguments num_gate_reps and num_qubits must be integers."
                   << std::endl;
         return -1;
     }
 
     std::string_view kernel_name = argv[3];
     KernelType kernel = string_to_kernel(kernel_name);
-    if (kernel == KernelType::Unknown) {
+    if (kernel == KernelType::None) {
         std::cerr << "Kernel " << kernel_name << " is unknown." << std::endl;
         return 1;
     }
@@ -174,7 +142,7 @@ int main(int argc, char *argv[]) {
         op_list_s = ss.str();
     }
 
-    std::vector<std::pair<std::string_view, GateDesc>> op_list;
+    std::vector<std::pair<std::string, GateDesc>> op_list;
     try {
         op_list = parseGateLists(op_list_s);
     } catch (std::exception &e) {
@@ -204,7 +172,7 @@ int main(int argc, char *argv[]) {
     auto gen_param = [&param_dist, &re]() { return param_dist(re); };
 
     for (uint32_t k = 0; k < num_gate_reps; k++) {
-        auto [op_name, gate_desc] = op_list[gate_dist(re)];
+        const auto &[op_name, gate_desc] = op_list[gate_dist(re)];
 
         std::vector<TestType> gate_params(gate_desc.n_params, 0.0);
         std::generate(gate_params.begin(), gate_params.end(), gen_param);
@@ -218,7 +186,7 @@ int main(int argc, char *argv[]) {
         random_gate_parameters.emplace_back(std::move(gate_params));
     }
 
-    // Log genereated sequence if LOG is turned on
+    // Log generated sequence if LOG is turned on
     const char *env_p = std::getenv("LOG");
     try {
         if (env_p != nullptr && std::stoi(env_p) != 0) {

@@ -40,7 +40,7 @@ template <class T = double> class ObsDatum {
      *
      * @param obs_name Name of each operation of the observable. Tensor product
      * observables have more than one operation.
-     * @param obs_params Parameters for a given obserable operation ({} if
+     * @param obs_params Parameters for a given observable operation ({} if
      * optional).
      * @param obs_wires Wires upon which to apply operation. Each observable
      * operation will be a separate nested list.
@@ -278,10 +278,10 @@ template <class T> class JacobianData {
      * calculation.
      */
     JacobianData(size_t num_params, size_t num_elem, std::complex<T> *ps,
-                 const std::vector<ObsDatum<T>> &obs, const OpsData<T> &ops,
+                 std::vector<ObsDatum<T>> obs, OpsData<T> ops,
                  std::vector<size_t> trainP)
         : num_parameters(num_params), num_elements(num_elem), psi(ps),
-          observables(obs), operations(ops),
+          observables(std::move(obs)), operations(std::move(ops)),
           trainableParams(std::move(trainP)) {}
 
     /**
