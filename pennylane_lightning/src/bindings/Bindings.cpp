@@ -17,14 +17,17 @@
  */
 #include "Bindings.hpp"
 
+#include "GateUtil.hpp"
+#include "SelectKernel.hpp"
+
 #include "pybind11/pybind11.h"
 
 /// @cond DEV
 namespace {
-using Pennylane::StateVectorRaw;
-using Pennylane::Internal::implementedGatesForKernel;
-
 using namespace Pennylane::Algorithms;
+using namespace Pennylane::Gates;
+
+using Pennylane::StateVectorRaw;
 
 using std::complex;
 using std::string;
@@ -352,20 +355,19 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
 
     m.def("generateBitPatterns",
           py::overload_cast<const vector<size_t> &, size_t>(
-              &IndicesUtil::generateBitPatterns),
+              &Gates::generateBitPatterns),
           "Get statevector indices for gate application");
     m.def("getIndicesAfterExclusion",
           py::overload_cast<const vector<size_t> &, size_t>(
-              &IndicesUtil::getIndicesAfterExclusion),
+              &Gates::getIndicesAfterExclusion),
           "Get statevector indices for gate application");
 
     /* Add EXPORTED_KERNELS */
     std::vector<std::pair<std::string, std::string>> exported_kernel_ops;
 
-    for (const auto kernel : Constant::kernels_to_pyexport) {
-        const auto kernel_name =
-            std::string(lookup(Constant::available_kernels, kernel));
-        const auto implemented_gates = implementedGatesForKernel<float>(kernel);
+    for (const auto kernel : kernels_to_pyexport) {
+        const auto kernel_name = lookup(kernel_id_name_pairs, kernel);
+        const auto implemented_gates = implementedGatesForKernel(kernel);
         for (const auto gate_op : implemented_gates) {
             const auto gate_name =
                 std::string(lookup(Constant::gate_names, gate_op));
@@ -378,9 +380,8 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
     /* Add DEFAULT_KERNEL_FOR_OPS */
     std::map<std::string, std::string> default_kernel_ops_map;
     for (const auto &[gate_op, name] : Constant::gate_names) {
-        const auto kernel = lookup(Constant::default_kernel_for_ops, gate_op);
-        const auto kernel_name =
-            std::string(lookup(Constant::available_kernels, kernel));
+        const auto kernel = lookup(Constant::default_kernel_for_gates, gate_op);
+        const auto kernel_name = Util::lookup(kernel_id_name_pairs, kernel);
         default_kernel_ops_map.emplace(std::string(name), kernel_name);
     }
     m.attr("DEFAULT_KERNEL_FOR_OPS") = py::cast(default_kernel_ops_map);

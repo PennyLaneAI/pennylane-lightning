@@ -254,6 +254,14 @@ class TestApply:
             [1 / 2 - 1j / 2, 1 / 2 + 1j / 2],
             [math.pi / 2],
         ),
+        (qml.MultiRZ, [1, 0], [1 / math.sqrt(2) - 1j / math.sqrt(2), 0], [math.pi / 2]),
+        (qml.MultiRZ, [0, 1], [0, 1j], [math.pi]),
+        (
+            qml.MultiRZ,
+            [1 / math.sqrt(2), 1 / math.sqrt(2)],
+            [1 / 2 - 1j / 2, 1 / 2 + 1j / 2],
+            [math.pi / 2],
+        ),
         (qml.Rot, [1, 0], [1 / math.sqrt(2) - 1j / math.sqrt(2), 0], [math.pi / 2, 0, 0]),
         (qml.Rot, [1, 0], [1 / math.sqrt(2), 1 / math.sqrt(2)], [0, math.pi / 2, 0]),
         (
@@ -294,6 +302,34 @@ class TestApply:
 
     """ operation,input,expected_output,par """
     test_data_two_wires_with_parameters = [
+        (qml.IsingXX, [1, 0, 0, 0], [1 / math.sqrt(2), 0, 0, -1j / math.sqrt(2)], [math.pi / 2]),
+        (
+            qml.IsingXX,
+            [0, 1 / math.sqrt(2), 0, 1 / math.sqrt(2)],
+            [-0.5j, 0.5, -0.5j, 0.5],
+            [math.pi / 2],
+        ),
+        (qml.IsingYY, [1, 0, 0, 0], [1 / math.sqrt(2), 0, 0, 1j / math.sqrt(2)], [math.pi / 2]),
+        (
+            qml.IsingYY,
+            [1 / math.sqrt(2), 0, 0, 1 / math.sqrt(2)],
+            [0.5 + 0.5j, 0, 0, 0.5 + 0.5j],
+            [math.pi / 2],
+        ),
+        (qml.IsingZZ, [1, 0, 0, 0], [1 / math.sqrt(2) - 1j / math.sqrt(2), 0, 0, 0], [math.pi / 2]),
+        (
+            qml.IsingZZ,
+            [1 / math.sqrt(2), 0, 0, 1 / math.sqrt(2)],
+            [0.5 - 0.5j, 0, 0, 0.5 - 0.5j],
+            [math.pi / 2],
+        ),
+        (qml.MultiRZ, [1, 0, 0, 0], [1 / math.sqrt(2) - 1j / math.sqrt(2), 0, 0, 0], [math.pi / 2]),
+        (
+            qml.MultiRZ,
+            [1 / math.sqrt(2), 0, 0, 1 / math.sqrt(2)],
+            [0.5 - 0.5j, 0, 0, 0.5 - 0.5j],
+            [math.pi / 2],
+        ),
         (qml.CRX, [0, 1, 0, 0], [0, 1, 0, 0], [math.pi / 2]),
         (qml.CRX, [0, 0, 0, 1], [0, 0, -1j, 0], [math.pi]),
         (
@@ -620,11 +656,6 @@ class TestLightningQubitIntegration:
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_load_default_qubit_device_with_invalid_kernel(self):
         """Test that lightning.qubit raises error for unsupported gate/kernel pair."""
-        # This line is only for current implementation
-        with pytest.raises(
-            ValueError, match=f"The given kernel LM does not implement Matrix gate."
-        ):
-            dev = qml.device("lightning.qubit", kernel_for_ops={"Matrix": "LM"}, wires=2)
 
         for gate in ["PauliX", "CRot", "CSWAP", "Matrix"]:
             with pytest.raises(

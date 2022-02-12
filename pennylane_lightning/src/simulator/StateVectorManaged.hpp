@@ -22,66 +22,79 @@ namespace Pennylane {
  *
  * This class is only internally used in C++ code.
  *
- * @tparam fp_t
+ * @tparam PrecisionT
  */
-template <class fp_t = double>
+template <class PrecisionT = double>
 class StateVectorManaged
-    : public StateVectorBase<fp_t, StateVectorManaged<fp_t>> {
+    : public StateVectorBase<PrecisionT, StateVectorManaged<PrecisionT>> {
   public:
-    using scalar_type_t = fp_t;
-    using CFP_t = std::complex<fp_t>;
+    using ComplexPrecisionT = std::complex<PrecisionT>;
 
   private:
-    using BaseType = StateVectorBase<fp_t, StateVectorManaged>;
+    using BaseType = StateVectorBase<PrecisionT, StateVectorManaged>;
 
-    std::vector<CFP_t> data_;
+    std::vector<ComplexPrecisionT> data_;
 
   public:
-    StateVectorManaged() : StateVectorBase<fp_t, StateVectorManaged>() {}
+    StateVectorManaged() : StateVectorBase<PrecisionT, StateVectorManaged>() {}
 
     explicit StateVectorManaged(size_t num_qubits)
         : BaseType(num_qubits),
-          data_(static_cast<size_t>(Util::exp2(num_qubits)), CFP_t{0, 0}) {
+          data_(static_cast<size_t>(Util::exp2(num_qubits)),
+                ComplexPrecisionT{0, 0}) {
         data_[0] = {1, 0};
     }
 
     template <class OtherDerived>
-    StateVectorManaged(const StateVectorBase<fp_t, OtherDerived> &other)
+    explicit StateVectorManaged(
+        const StateVectorBase<PrecisionT, OtherDerived> &other)
         : BaseType(other.getNumQubits()), data_{other.getData(),
                                                 other.getData() +
                                                     other.getLength()} {}
 
-    StateVectorManaged(const std::vector<CFP_t> &other_data)
+    explicit StateVectorManaged(
+        const std::vector<ComplexPrecisionT> &other_data)
         : BaseType(Util::log2(other_data.size())), data_{other_data} {
         PL_ABORT_IF_NOT(Util::isPerfectPowerOf2(other_data.size()),
                         "The size of provided data must be a power of 2.");
     }
 
-    StateVectorManaged(const CFP_t *other_data, size_t other_size)
+    StateVectorManaged(const ComplexPrecisionT *other_data, size_t other_size)
         : BaseType(Util::log2(other_size)), data_{other_data,
                                                   other_data + other_size} {
         PL_ABORT_IF_NOT(Util::isPerfectPowerOf2(other_size),
                         "The size of provided data must be a power of 2.");
     }
 
-    StateVectorManaged(const StateVectorManaged<fp_t> &other) = default;
-    StateVectorManaged(StateVectorManaged<fp_t> &&other) noexcept = default;
+    StateVectorManaged(const StateVectorManaged<PrecisionT> &other) = default;
+    StateVectorManaged(StateVectorManaged<PrecisionT> &&other) noexcept =
+        default;
 
-    auto operator=(const StateVectorManaged<fp_t> &other)
-        -> StateVectorManaged<fp_t> & = default;
-    auto operator=(StateVectorManaged<fp_t> &&other) noexcept
-        -> StateVectorManaged<fp_t> & = default;
+    ~StateVectorManaged() = default;
 
-    auto getDataVector() -> std::vector<CFP_t> & { return data_; }
-    [[nodiscard]] auto getDataVector() const -> const std::vector<CFP_t> & {
+    auto operator=(const StateVectorManaged<PrecisionT> &other)
+        -> StateVectorManaged<PrecisionT> & = default;
+    auto operator=(StateVectorManaged<PrecisionT> &&other) noexcept
+        -> StateVectorManaged<PrecisionT> & = default;
+
+    auto getDataVector() -> std::vector<ComplexPrecisionT> & { return data_; }
+    [[nodiscard]] auto getDataVector() const
+        -> const std::vector<ComplexPrecisionT> & {
         return data_;
     }
 
-    [[nodiscard]] auto getData() -> CFP_t * { return data_.data(); }
+    [[nodiscard]] auto getData() -> ComplexPrecisionT * { return data_.data(); }
 
-    [[nodiscard]] auto getData() const -> const CFP_t * { return data_.data(); }
+    [[nodiscard]] auto getData() const -> const ComplexPrecisionT * {
+        return data_.data();
+    }
 
-    void updateData(const std::vector<CFP_t> &new_data) {
+    /**
+     * @brief Update data of the class to new_data
+     *
+     * @param new_data std::vector contains data.
+     */
+    void updateData(const std::vector<ComplexPrecisionT> &new_data) {
         PL_ABORT_IF_NOT(data_.size() == new_data.size(),
                         "New data must be the same size as old data.")
         std::copy(new_data.begin(), new_data.end(), data_.begin());
