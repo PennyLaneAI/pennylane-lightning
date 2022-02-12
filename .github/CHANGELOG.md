@@ -2,22 +2,22 @@
 
 ### New features since last release
 
-* Add Docker support 
-[(#234)](https://github.com/PennyLaneAI/pennylane-lightning/pull/234).
+* Add Docker support.
+[(#234)](https://github.com/PennyLaneAI/pennylane-lightning/pull/234)
 
 ### Breaking changes
 
 ### Improvements
 
-* Set GitHub workflow to upload wheels to Test PyPI
-[(#220)](https://github.com/PennyLaneAI/pennylane-lightning/pull/220).
+* Set GitHub workflow to upload wheels to Test PyPI.
+[(#220)](https://github.com/PennyLaneAI/pennylane-lightning/pull/220)
 
 ### Documentation
 
 ### Bug fixes
 
-* Refactor utility header and fix a bug in linear algebra function with CBLAS
-[(#228)](https://github.com/PennyLaneAI/pennylane-lightning/pull/228).
+* Refactor utility header and fix a bug in linear algebra function with CBLAS.
+[(#228)](https://github.com/PennyLaneAI/pennylane-lightning/pull/228)
 
 ### Contributors
 

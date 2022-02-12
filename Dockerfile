@@ -1,4 +1,4 @@
-# Copyright 2018-2022 Xanadu Quantum Technologies Inc.
+# Copyright 2018-2021 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ubuntu:latest AS base
+FROM ubuntu:focal AS base
 
 # Setup and install basic packages
-RUN apt-get update \ 
-    && apt-get install -y apt-utils --no-install-recommends \
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y apt-utils \
     && DEBIAN_FRONTEND="noninteractive" \
-    apt-get install -y tzdata \
+    apt-get install --no-install-recommends -y tzdata \
     build-essential \
     ca-certificates \
     ccache \
@@ -28,12 +28,12 @@ RUN apt-get update \
     python3 \
     python3-pip \
     python3-venv \
-    libjpeg-dev \
-    libpng-dev \
+    python3-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && /usr/sbin/update-ccache-symlinks \
-    && mkdir /opt/ccache && ccache --set-config=cache_dir=/opt/ccache \
+    && mkdir /opt/ccache \
+    && ccache --set-config=cache_dir=/opt/ccache \
     && python3 -m venv /opt/venv
 
 ENV PATH="/opt/venv/bin:$PATH"
