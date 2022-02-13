@@ -550,12 +550,11 @@ class LightningQubit(DefaultQubit):
             "Hamiltonian",
             "SparseHamiltonian",
         ]:
-            # TODO: requires backend support
             return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
         if self.shots is not None:
             # estimate the expectation value
-            # TODO: Lightning support for sampling
+            # LightningQubit doesn't support sampling yet
             samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
             return np.squeeze(np.mean(samples, axis=0))
 
@@ -601,12 +600,11 @@ class LightningQubit(DefaultQubit):
             "Projector",
             "Hermitian",
         ]:
-            # TODO: requires backend support
             return super().var(observable, shot_range=shot_range, bin_size=bin_size)
 
         if self.shots is not None:
             # estimate the var
-            # TODO: Lightning support for sampling
+            # LightningQubit doesn't support sampling yet
             samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
             return np.squeeze(np.var(samples, axis=0))
 
