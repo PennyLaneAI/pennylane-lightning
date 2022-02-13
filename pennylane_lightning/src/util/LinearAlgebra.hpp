@@ -46,6 +46,13 @@ using CBLAS_LAYOUT = enum CBLAS_LAYOUT {
 #endif
 #endif
 /// @endcond
+//
+
+enum class Trans : int {
+    NoTranspose = CblasNoTrans,
+    Transpose = CblasTrans,
+    Adjoint = CblasConjTrans
+};
 
 namespace Pennylane::Util {
 /**
@@ -124,7 +131,7 @@ inline auto innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
 
 /**
  * @brief Calculates the inner-product using OpenMP.
- * with the the first dataset conjugated.
+ * with the first dataset conjugated.
  *
  * @tparam T Floating point precision type.
  * @tparam NTERMS Number of terms proceeds by each thread
@@ -233,37 +240,55 @@ inline auto innerProdC(const std::vector<std::complex<T>> &v1,
  * @param v_out Pre-allocated complex data array to store the result.
  * @param m Number of rows of `mat`.
  * @param n Number of columns of `mat`.
- * @param transpose If `true`, considers transposed version of `mat`.
+ * @param transpose Whether use a transposed version of `m_right`.
  * row-wise.
  */
 template <class T>
-inline static void omp_matrixVecProd(const std::complex<T> *mat,
-                                     const std::complex<T> *v_in,
-                                     std::complex<T> *v_out, size_t m, size_t n,
-                                     bool transpose = false) {
+inline static void
+omp_matrixVecProd(const std::complex<T> *mat, const std::complex<T> *v_in,
+                  std::complex<T> *v_out, size_t m, size_t n, Trans transpose) {
     if (!v_out) {
         return;
     }
 
-    if (transpose) {
+    size_t row;
+    size_t col;
+
+    {
+        switch (transpose) {
+        case Trans::NoTranspose:
 #if defined(_OPENMP)
-#pragma omp parallel for default(none) shared(mat, v_in, v_out)                \
-    firstprivate(m, n)
+#pragma omp parallel for default(none) private(row, col) firstprivate(m, n)    \
+    shared(v_out, mat, v_in)
 #endif
-        for (size_t row = 0; row < m; row++) {
-            for (size_t col = 0; col < n; col++) {
-                v_out[row] += mat[col * m + row] * v_in[col];
+            for (row = 0; row < m; row++) {
+                for (col = 0; col < n; col++) {
+                    v_out[row] += mat[row * n + col] * v_in[col];
+                }
             }
-        }
-    } else {
+            break;
+        case Trans::Transpose:
 #if defined(_OPENMP)
-#pragma omp parallel for default(none) shared(mat, v_in, v_out)                \
-    firstprivate(m, n)
+#pragma omp parallel for default(none) private(row, col) firstprivate(m, n)    \
+    shared(v_out, mat, v_in)
 #endif
-        for (size_t row = 0; row < m; row++) {
-            for (size_t col = 0; col < n; col++) {
-                v_out[row] += mat[row * n + col] * v_in[col];
+            for (row = 0; row < m; row++) {
+                for (col = 0; col < n; col++) {
+                    v_out[row] += mat[col * m + row] * v_in[col];
+                }
             }
+            break;
+        case Trans::Adjoint:
+#if defined(_OPENMP)
+#pragma omp parallel for default(none) private(row, col) firstprivate(m, n)    \
+    shared(v_out, mat, v_in)
+#endif
+            for (row = 0; row < m; row++) {
+                for (col = 0; col < n; col++) {
+                    v_out[row] += std::conj(mat[col * m + row]) * v_in[col];
+                }
+            }
+            break;
         }
     }
 }
@@ -277,12 +302,13 @@ inline static void omp_matrixVecProd(const std::complex<T> *mat,
  * @param v_out Pre-allocated complex data array to store the result.
  * @param m Number of rows of `mat`.
  * @param n Number of columns of `mat`.
- * @param transpose If `true`, considers transposed version of `mat`.
+ * @param transpose Whether use a transposed version of `m_right`.
  */
 template <class T>
 inline void matrixVecProd(const std::complex<T> *mat,
                           const std::complex<T> *v_in, std::complex<T> *v_out,
-                          size_t m, size_t n, bool transpose = false) {
+                          size_t m, size_t n,
+                          Trans transpose = Trans::NoTranspose) {
     if (!v_out) {
         return;
     }
@@ -290,7 +316,7 @@ inline void matrixVecProd(const std::complex<T> *mat,
     if constexpr (USE_CBLAS) {
         constexpr std::complex<T> co{1, 0};
         constexpr std::complex<T> cz{0, 0};
-        const auto tr = (transpose) ? CblasTrans : CblasNoTrans;
+        const auto tr = static_cast<CBLAS_TRANSPOSE>(transpose);
         if constexpr (std::is_same_v<T, float>) {
             cblas_cgemv(CblasRowMajor, tr, m, n, &co, mat, m, v_in, 1, &cz,
                         v_out, 1);
@@ -313,7 +339,7 @@ inline void matrixVecProd(const std::complex<T> *mat,
 template <class T>
 inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
                           const std::vector<std::complex<T>> v_in, size_t m,
-                          size_t n, bool transpose = false)
+                          size_t n, Trans transpose = Trans::NoTranspose)
     -> std::vector<std::complex<T>> {
     if (mat.size() != m * n) {
         throw std::invalid_argument(
@@ -333,7 +359,7 @@ inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
  * using blocking and Cache-optimized techniques.
  *
  * @tparam T Floating point precision type.
- * @tparam BLOCKSIZE Size of submatrices in the blocking techinque.
+ * @tparam BLOCKSIZE Size of submatrices in the blocking technique.
  * @param mat Data array repr. a flatten (row-wise) matrix m * n.
  * @param mat_t Pre-allocated data array to store the transpose of `mat`.
  * @param m Number of rows of `mat`.
@@ -436,7 +462,7 @@ inline static void CFTranspose(const std::complex<T> *mat,
  * @return mat transpose of shape n * m.
  */
 template <class T>
-inline auto Transpose(const std::vector<std::complex<T>> mat, size_t m,
+inline auto Transpose(const std::vector<std::complex<T>> &mat, size_t m,
                       size_t n) -> std::vector<std::complex<T>> {
     if (mat.size() != m * n) {
         throw std::invalid_argument(
@@ -459,7 +485,7 @@ inline auto Transpose(const std::vector<std::complex<T>> mat, size_t m,
  * @return mat transpose of shape n * m.
  */
 template <class T>
-inline auto Transpose(const std::vector<T> mat, size_t m, size_t n)
+inline auto Transpose(const std::vector<T> &mat, size_t m, size_t n)
     -> std::vector<T> {
     if (mat.size() != m * n) {
         throw std::invalid_argument(
@@ -517,7 +543,7 @@ inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, size_t m,
 }
 
 /**
- * @brief Calculates the vactor-matrix product using the best available method.
+ * @brief Calculates the vector-matrix product using the best available method.
  *
  * @see inline void vecMatrixProd(const T *v_in,
  * const T *mat, T *v_out, size_t m, size_t n)
@@ -540,7 +566,7 @@ inline auto vecMatrixProd(const std::vector<T> &v_in, const std::vector<T> &mat,
 }
 
 /**
- * @brief Calculates the vactor-matrix product using the best available method.
+ * @brief Calculates the vector-matrix product using the best available method.
  *
  * @see inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, size_t
  * m, size_t n)
@@ -573,20 +599,24 @@ inline void vecMatrixProd(std::vector<T> &v_out, const std::vector<T> &v_in,
  * @param m Number of rows of `m_left`.
  * @param n Number of columns of `m_right`.
  * @param k Number of rows of `m_right`.
- * @param transpose If `true`, requires transposed version of `m_right`.
+ * @param transpose Whether use a transposed version of `m_right`.
  *
  * @note Consider transpose=true, to get a better performance.
  *  To transpose a matrix efficiently, check Util::Transpose
  */
-template <class T, size_t STRIDE = 2> // NOLINT(readability-magic-numbers)
+
+template <class T, size_t STRIDE = 2>
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 inline void omp_matrixMatProd(const std::complex<T> *m_left,
                               const std::complex<T> *m_right,
                               std::complex<T> *m_out, size_t m, size_t n,
-                              size_t k, bool transpose = false) {
+                              size_t k, Trans transpose) {
     if (!m_out) {
         return;
     }
-    if (transpose) {
+
+    switch (transpose) {
+    case Trans::Transpose:
 #if defined(_OPENMP)
 #pragma omp parallel for default(none) shared(m_left, m_right, m_out)          \
     firstprivate(m, n, k)
@@ -599,7 +629,22 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
                 }
             }
         }
-    } else {
+        break;
+    case Trans::Adjoint:
+#if defined(_OPENMP)
+#pragma omp parallel for default(none) shared(m_left, m_right, m_out)          \
+    firstprivate(m, n, k)
+#endif
+        for (size_t row = 0; row < m; row++) {
+            for (size_t col = 0; col < n; col++) {
+                for (size_t blk = 0; blk < k; blk++) {
+                    m_out[row * n + col] += m_left[row * k + blk] *
+                                            std::conj(m_right[col * n + blk]);
+                }
+            }
+        }
+        break;
+    case Trans::NoTranspose:
 #if defined(_OPENMP)
 #pragma omp parallel for default(none) shared(m_left, m_right, m_out)          \
     firstprivate(m, n, k)
@@ -624,11 +669,12 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
                 }
             }
         }
+        break;
     }
 }
 
 /**
- * @brief Calculates matrix-matrix product using the best avaiable method.
+ * @brief Calculates matrix-matrix product using the best available method.
  *
  * @tparam T Floating point precision type.
  * @param m_left Row-wise flatten matrix of shape m * k.
@@ -637,7 +683,7 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
  * @param m Number of rows of `m_left`.
  * @param n Number of columns of `m_right`.
  * @param k Number of rows of `m_right`.
- * @param transpose If `true`, requires transposed version of `m_right`.
+ * @param transpose Whether use a transposed version of `m_right`.
  *
  * @note Consider transpose=true, to get a better performance.
  *  To transpose a matrix efficiently, check Util::Transpose
@@ -646,20 +692,22 @@ template <class T>
 inline void matrixMatProd(const std::complex<T> *m_left,
                           const std::complex<T> *m_right,
                           std::complex<T> *m_out, size_t m, size_t n, size_t k,
-                          bool transpose = false) {
+                          Trans transpose = Trans::NoTranspose) {
     if (!m_out) {
         return;
     }
     if constexpr (USE_CBLAS) {
         constexpr std::complex<T> co{1, 0};
         constexpr std::complex<T> cz{0, 0};
-        const auto tr = (transpose) ? CblasTrans : CblasNoTrans;
+        const auto tr = static_cast<CBLAS_TRANSPOSE>(transpose);
         if constexpr (std::is_same_v<T, float>) {
             cblas_cgemm(CblasRowMajor, CblasNoTrans, tr, m, n, k, &co, m_left,
-                        k, m_right, transpose ? k : n, &cz, m_out, n);
+                        k, m_right, (transpose != Trans::NoTranspose) ? k : n,
+                        &cz, m_out, n);
         } else if constexpr (std::is_same_v<T, double>) {
             cblas_zgemm(CblasRowMajor, CblasNoTrans, tr, m, n, k, &co, m_left,
-                        k, m_right, transpose ? k : n, &cz, m_out, n);
+                        k, m_right, (transpose != Trans::NoTranspose) ? k : n,
+                        &cz, m_out, n);
         }
     } else {
         omp_matrixMatProd(m_left, m_right, m_out, m, n, k, transpose);
@@ -679,7 +727,8 @@ inline void matrixMatProd(const std::complex<T> *m_left,
 template <class T>
 inline auto matrixMatProd(const std::vector<std::complex<T>> m_left,
                           const std::vector<std::complex<T>> m_right, size_t m,
-                          size_t n, size_t k, bool transpose = false)
+                          size_t n, size_t k,
+                          Trans transpose = Trans::NoTranspose)
     -> std::vector<std::complex<T>> {
     if (m_left.size() != m * k) {
         throw std::invalid_argument(

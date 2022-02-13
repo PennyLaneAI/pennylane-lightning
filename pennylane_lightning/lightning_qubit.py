@@ -56,10 +56,6 @@ except ModuleNotFoundError:
 
 
 UNSUPPORTED_PARAM_GATES_ADJOINT = (
-    "MultiRZ",
-    "IsingXX",
-    "IsingYY",
-    "IsingZZ",
     "SingleExcitation",
     "SingleExcitationPlus",
     "SingleExcitationMinus",
