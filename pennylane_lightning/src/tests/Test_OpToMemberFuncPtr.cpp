@@ -22,13 +22,6 @@ template <class PrecisionT, class ParamT, class GateImplemenation,
           uint32_t gate_idx>
 constexpr bool testAllGatesImplementedIter() {
     if constexpr (gate_idx < static_cast<uint32_t>(GateOperation::END)) {
-        constexpr auto gate_op = static_cast<GateOperation>(gate_idx);
-        if constexpr (gate_op != GateOperation::Matrix) {
-            if (GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplemenation,
-                                      gate_op>::value == nullptr) {
-                return false;
-            }
-        }
         return testAllGatesImplementedIter<PrecisionT, ParamT,
                                            GateImplemenation, gate_idx + 1>();
     } else {

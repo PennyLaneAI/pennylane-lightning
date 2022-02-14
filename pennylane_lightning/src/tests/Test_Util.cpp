@@ -78,7 +78,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
         for (size_t i = 0; i < 64; i++) {
             std::vector<size_t> data(i);
             TestType rem;
-            TestType f2 = std::modf(sqrt(i), &rem);
+            std::modf(sqrt(i), &rem);
             if (i < 4) {
                 CHECK_THROWS_AS(Util::dimSize(data), std::invalid_argument);
                 CHECK_THROWS_WITH(Util::dimSize(data),

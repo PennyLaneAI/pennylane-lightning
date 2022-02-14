@@ -785,8 +785,6 @@ TEMPLATE_TEST_CASE("GateImplementation::applyMatrix, inverse = false",
 
 template <typename PrecisionT, class GateImplementation>
 void testApplyMatrixInverse() {
-    using ComplexPrecisionT = std::complex<PrecisionT>;
-
     std::mt19937 re{1337};
     const int num_qubits = 4;
 

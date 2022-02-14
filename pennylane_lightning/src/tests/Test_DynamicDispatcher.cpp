@@ -68,7 +68,12 @@ struct testDispatchForKernel {
                              GateImplementation::implemented_gates, gate_op),
                          bool> = true>
     static void test(RandomEngine &re, size_t num_qubits) {
-    } // Do nothing if not implemented
+        // Keep source, but allow clang-tidy to pass for unused
+        static_cast<void>(re);
+        static_cast<void>(num_qubits);
+    } // Do nothing if not implemented;
+      // This could probably be replaced with an enable_if or SFINAE-like
+      // pattern.
 };
 
 template <typename PrecisionT, typename ParamT, class GateImplementation,

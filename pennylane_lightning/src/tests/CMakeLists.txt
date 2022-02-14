@@ -39,8 +39,21 @@ target_link_libraries(lightning_tests_dependency INTERFACE lightning_algorithms
                                                            lightning_simulator
                                                            lightning_utils
                                                            Catch2::Catch2)
+if(ENABLE_WARNINGS)
+    message(STATUS "ENABLE_WARNINGS is ON.")
+    if(MSVC)
+        target_compile_options(lightning_tests_dependency INTERFACE $<$<COMPILE_LANGUAGE:CXX>:/W4;/WX>)
+    else()
+        target_compile_options(lightning_tests_dependency INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Werror>)
+    endif()
+else()
+    if(MSVC)
+        target_compile_options(lightning_tests_dependency INTERFACE $<$<COMPILE_LANGUAGE:CXX>:/W4>)
+    else()
+        target_compile_options(lightning_tests_dependency INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wno-unused>)
+    endif()
+endif()
 
-target_compile_options(lightning_tests_dependency INTERFACE "-Wall;-Wno-unused;")
 target_sources(lightning_tests_dependency INTERFACE runner_main.cpp)
 
 if(ENABLE_NATIVE)
