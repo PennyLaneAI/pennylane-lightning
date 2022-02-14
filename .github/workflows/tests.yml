@@ -16,7 +16,10 @@ jobs:
       matrix:
         os: [ubuntu-20.04]
     steps:
-
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
 
       - uses: actions/setup-python@v2
         name: Install Python
@@ -35,7 +38,19 @@ jobs:
             mkdir -p ./Build/tests/results
             ./Build/pennylane_lightning/src/tests/runner --order lex --reporter junit --out ./Build/tests/results/report.xml
 
+      - name: Upload test results
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: ubuntu-test-report
+          path: Build/tests/results/report.xml
 
+      - name: Publish test results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          check_name: Test Report (C++) on Ubuntu
+          files: Build/tests/results/report.xml
 
   pythontests:
     name: Python tests

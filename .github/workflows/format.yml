@@ -54,7 +54,7 @@ jobs:
 
       - name: Run clang-tidy compilation
         run: |
-          cmake -BBuild -DENABLE_CLANG_TIDY=ON -DCLANG_TIDY_BINARY=clang-tidy-12 -DBUILD_EXAMPLES=ON -DBUILD_TESTS=on .
+          cmake -BBuild -DENABLE_CLANG_TIDY=ON -DCLANG_TIDY_BINARY=clang-tidy-12 -DBUILD_EXAMPLES=ON -DBUILD_TESTS=on -DENABLE_WARNINGS=on .
           cmake --build ./Build
 
   format-cpp:
