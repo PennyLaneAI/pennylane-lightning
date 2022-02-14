@@ -74,12 +74,12 @@ void testKernelInverses(RandomEngine &re, size_t num_qubits) {
         re, num_qubits);
 }
 
-template <typename PrecisionT, typename ParamT, typename TypeList,
-          class RandomEngine> //, typename
-                              //std::enable_if<std::is_same<TypeList,void>::value>
-                              //>
-                              void testKernels(RandomEngine &re,
-                                               size_t num_qubits) {
+template <
+    typename PrecisionT, typename ParamT, typename TypeList,
+    class RandomEngine> //, typename
+                        // std::enable_if<std::is_same<TypeList,void>::value>
+                        //>
+void testKernels(RandomEngine &re, size_t num_qubits) {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using GateImplementation = typename TypeList::Type;
         testKernelInverses<PrecisionT, ParamT, GateImplementation>(re,
