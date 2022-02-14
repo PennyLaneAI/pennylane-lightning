@@ -46,6 +46,9 @@ void testInverseKernelGate(RandomEngine &re, size_t num_qubits) {
 
             REQUIRE(st == PLApprox(ini_st).margin(1e-7));
         }
+    } else {
+        static_cast<void>(re);
+        static_cast<void>(num_qubits);
     }
 }
 
@@ -58,6 +61,9 @@ void testKernelInversesIter(RandomEngine &re, size_t num_qubits) {
             re, num_qubits);
         testKernelInversesIter<PrecisionT, ParamT, GateImplementation,
                                gate_idx + 1>(re, num_qubits);
+    } else {
+        static_cast<void>(re);
+        static_cast<void>(num_qubits);
     }
 }
 
@@ -69,14 +75,20 @@ void testKernelInverses(RandomEngine &re, size_t num_qubits) {
 }
 
 template <typename PrecisionT, typename ParamT, typename TypeList,
-          class RandomEngine>
-void testKernels(RandomEngine &re, size_t num_qubits) {
+          class RandomEngine> //, typename
+                              //std::enable_if<std::is_same<TypeList,void>::value>
+                              //>
+                              void testKernels(RandomEngine &re,
+                                               size_t num_qubits) {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using GateImplementation = typename TypeList::Type;
         testKernelInverses<PrecisionT, ParamT, GateImplementation>(re,
                                                                    num_qubits);
         testKernels<PrecisionT, ParamT, typename TypeList::Next>(re,
                                                                  num_qubits);
+    } else {
+        static_cast<void>(re);
+        static_cast<void>(num_qubits);
     }
 }
 

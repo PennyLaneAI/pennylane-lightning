@@ -112,6 +112,9 @@ void testAllKernelsIter(RandomEngine &re, size_t max_num_qubits) {
 
         testAllKernelsIter<PrecisionT, ParamT, typename TypeList::Next,
                            RandomEngine>(re, max_num_qubits);
+    } else {
+        static_cast<void>(re);
+        static_cast<void>(max_num_qubits);
     }
 }
 

@@ -130,6 +130,9 @@ void testAllGeneratorForKernel(RandomEngine &re, size_t num_qubits) {
             re, num_qubits);
         testAllGeneratorForKernel<PrecisionT, ParamT, GateImplementation,
                                   gntr_idx + 1>(re, num_qubits);
+    } else {
+        static_cast<void>(re);
+        static_cast<void>(num_qubits);
     }
 }
 
@@ -142,6 +145,9 @@ void testAllGeneratorsAndKernels(RandomEngine &re, size_t num_qubits) {
             re, num_qubits);
         testAllGeneratorsAndKernels<PrecisionT, ParamT,
                                     typename TypeList::Next>(re, num_qubits);
+    } else {
+        static_cast<void>(re);
+        static_cast<void>(num_qubits);
     }
 }
 
