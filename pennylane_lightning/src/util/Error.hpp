@@ -75,9 +75,14 @@ class LightningException : public std::exception {
      *
      * @param err_msg Error message explaining the exception condition.
      */
-
     explicit LightningException(std::string err_msg) noexcept
         : err_msg{std::move(err_msg)} {}
+
+    LightningException(const LightningException &) = default;
+    LightningException(LightningException &&) noexcept = default;
+
+    auto operator=(const LightningException &) -> LightningException & = delete;
+    auto operator=(LightningException &&) -> LightningException & = delete;
 
     /**
      * @brief Destroys the `%LightningException` object.

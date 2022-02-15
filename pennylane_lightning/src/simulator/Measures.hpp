@@ -90,11 +90,10 @@ class Measures {
         size_t num_qubits = original_statevector.getNumQubits();
 
         const std::vector<size_t> all_indices =
-            IndicesUtil::generateBitPatterns(sorted_wires, num_qubits);
-        const std::vector<size_t> all_offsets =
-            IndicesUtil::generateBitPatterns(
-                IndicesUtil::getIndicesAfterExclusion(sorted_wires, num_qubits),
-                num_qubits);
+            Gates::generateBitPatterns(sorted_wires, num_qubits);
+        const std::vector<size_t> all_offsets = Gates::generateBitPatterns(
+            Gates::getIndicesAfterExclusion(sorted_wires, num_qubits),
+            num_qubits);
 
         std::vector<fp_t> probabilities(all_indices.size(), 0);
 
@@ -105,8 +104,8 @@ class Measures {
             }
             ind_probs++;
         }
-        // Transposing the probabilites tensor with the indices determined at
-        // the begining.
+        // Transposing the probabilities tensor with the indices determined at
+        // the beginning.
         if (wires != sorted_wires) {
             probabilities =
                 Util::transpose_state_tensor(probabilities, sorted_ind_wires);
@@ -209,7 +208,7 @@ class Measures {
     /**
      * @brief Variance of an observable.
      *
-     * @param operation Square matrix in row-major order.
+     * @param matrix Square matrix in row-major order.
      * @param wires Wires where to apply the operator.
      * @return Floating point with the variance of the observables.
      */

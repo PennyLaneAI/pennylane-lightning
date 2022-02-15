@@ -8,6 +8,8 @@ import argparse
 
 import re
 
+plt.rc("font", family="sans-serif")
+
 
 def parse_result_csv(filepath):
     n_qubits = []

@@ -57,6 +57,7 @@ docs:
 clean-docs:
 	$(MAKE) -C doc clean
 
+.PHONY : test-builtin test-suite test-python coverage test-cpp
 test-builtin:
 	$(PYTHON) -I $(TESTRUNNER)
 
@@ -117,5 +118,5 @@ endif
 .PHONY: check-tidy
 check-tidy:
 	rm -rf ./Build
-	cmake . -BBuild -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=1
+	cmake . -BBuild -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
 	cmake --build ./Build

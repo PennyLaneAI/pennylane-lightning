@@ -6,7 +6,12 @@
 
 ### Improvements
 
+* Update adjointJacobian and VJP methods.
+[(#222)](https://github.com/PennyLaneAI/pennylane-lightning/pull/222)
+
 * Set GitHub workflow to upload wheels to Test PyPI [(#220)](https://github.com/PennyLaneAI/pennylane-lightning/pull/220).
+
+* Finalize the new kernel implementation [(#212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/212).
 
 ### Documentation
 
@@ -18,7 +23,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Chae-Yeun Park
+Ali Asadi, Chae-Yeun Park
 
 ---
 
@@ -75,9 +80,6 @@ The latest release shows improved performance on both single and multi-threaded 
 
 * Ensure debug info is built into dynamic libraries.
 [(#201)](https://github.com/PennyLaneAI/pennylane-lightning/pull/201)
-
-* Update adjointJacobian and VJP methods.
-[(#222)](https://github.com/PennyLaneAI/pennylane-lightning/pull/222)
 
 ### Documentation
 
