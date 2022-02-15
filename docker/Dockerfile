@@ -43,7 +43,7 @@ WORKDIR /opt/pennylane-lightning
 
 COPY . .
 
-RUN pip install --no-cache-dir wheel\
+RUN pip install --no-cache-dir wheel \
     pytest \
     pytest-cov \
     pytest-mock \
