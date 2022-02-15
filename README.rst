@@ -174,7 +174,7 @@ One can also build the Pennylane-Lightning image using Docker:
 
     $ git clone https://github.com/XanaduAI/pennylane-lightning.git
     $ cd pennylane-lightning
-    $ docker build -t lightning/base .
+    $ docker build -t lightning/base -f docker/Dockerfile .
 
 Please refer to the `PennyLane installation <https://pennylane.readthedocs.io/en/stable/development/guide/installation.html#installation>`_ for detailed description about PennyLane Docker support.
 
