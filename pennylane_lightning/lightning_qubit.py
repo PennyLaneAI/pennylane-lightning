@@ -634,8 +634,7 @@ class LightningQubit(DefaultQubit):
 
 if not CPP_BINARY_AVAILABLE:
 
-    class LightningQubit(DefaultQubit):
-
+    class LightningQubit(DefaultQubit):  # pragma: no cover
         name = "Lightning Qubit PennyLane plugin"
         short_name = "lightning.qubit"
         pennylane_requires = ">=0.15"
