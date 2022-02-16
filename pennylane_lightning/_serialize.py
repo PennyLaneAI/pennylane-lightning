@@ -113,11 +113,11 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict, use_csingle: bool = False
             if is_tensor:
                 for o_ in o.obs:
                     if not _obs_has_kernel(o_):
-                        params.append(o_.matrix.ravel().astype(ctype))
+                        params.append(o_.get_matrix().ravel().astype(ctype))
                     else:
                         params.append([])
             else:
-                params.append(o.matrix.ravel().astype(ctype))
+                params.append(o.get_matrix().ravel().astype(ctype))
 
         ob = obs_py(name, params, wires)
         obs.append(ob)
@@ -169,7 +169,7 @@ def _serialize_ops(
 
             if not _is_lightning_gate(name):
                 params.append([])
-                mats.append(single_op.matrix)
+                mats.append(single_op.get_matrix())
 
                 if is_inverse:
                     is_inverse = False

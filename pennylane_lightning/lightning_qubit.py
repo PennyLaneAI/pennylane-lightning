@@ -190,9 +190,9 @@ class LightningQubit(DefaultQubit):
             wires = self.wires.indices(o.wires)
 
             if method is None:
-                # Inverse can be set to False since o.matrix is already in inverted form
+                # Inverse can be set to False since o.get_matrix() is already in inverted form
                 method = getattr(sim, "applyMatrix_{}".format(self._kernel_for_ops["Matrix"]))
-                method(o.matrix, wires, False)
+                method(o.get_matrix(), wires, False)
             else:
                 inv = o.inverse
                 param = o.parameters
@@ -322,13 +322,13 @@ class LightningQubit(DefaultQubit):
         if jac is None:
             return None
 
+        if not isinstance(dy, np.ndarray) or not isinstance(jac, np.ndarray):
+            return qml.gradients.compute_vjp(dy, jac)
+
         dy_row = math.reshape(dy, [-1])
 
         if num is None:
             num = math.shape(dy_row)[0]
-
-        if not isinstance(dy_row, np.ndarray):
-            jac = math.convert_like(jac, dy_row)
 
         jac = math.reshape(jac, [num, -1])
         num_params = jac.shape[1]

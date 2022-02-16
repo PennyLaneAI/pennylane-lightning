@@ -14,6 +14,7 @@
 """
 Tests for the ``vjp`` method of LightningQubit.
 """
+from cmath import exp
 import pytest
 
 import pennylane as qml
@@ -107,6 +108,45 @@ class TestComputeVJP:
 
         vjp = dev.compute_vjp(dy, jac)
         assert np.all(vjp == np.zeros([3]))
+
+    def test_array_dy(self, dev):
+        """Test vjp_compute using Python array"""
+
+        dy = [1.0, 1.0, 1.0, 1.0]
+        jac = [dy, dy, dy, dy]
+
+        expected = [4.0, 4.0, 4.0, 4.0]
+        vjp = dev.compute_vjp(dy, jac)
+
+        assert np.all(vjp == expected)
+
+    def test_torch_tensor_dy(self, dev):
+        """Test vjp_compute using the Torch interface"""
+        torch = pytest.importorskip("torch")
+
+        dtype = getattr(torch, "float32")
+
+        dy = torch.ones(4, dtype=dtype)
+        jac = torch.ones((4, 4), dtype=dtype)
+
+        expected = torch.tensor([4.0, 4.0, 4.0, 4.0], dtype=dtype)
+        vjp = dev.compute_vjp(dy, jac)
+
+        assert torch.all(vjp == expected)
+
+    def test_tf_tensor_dy(self, dev):
+        """Test vjp_compute using the Tensorflow interface"""
+        tf = pytest.importorskip("tensorflow")
+
+        dtype = getattr(tf, "float32")
+
+        dy = tf.ones(4, dtype=dtype)
+        jac = tf.ones((4, 4), dtype=dtype)
+
+        expected = tf.tensor([4.0, 4.0, 4.0, 4.0], dtype=dtype)
+        vjp = dev.compute_vjp(dy, jac)
+
+        assert tf.all(vjp == expected)
 
 
 class TestVectorJacobianProduct:
