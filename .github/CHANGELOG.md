@@ -9,6 +9,9 @@
 
 ### Improvements
 
+* Update quantum tapes serialization and Python tests.
+[(#239)](https://github.com/PennyLaneAI/pennylane-lightning/pull/239)
+
 * Update adjointJacobian and VJP methods.
 [(#222)](https://github.com/PennyLaneAI/pennylane-lightning/pull/222)
 
