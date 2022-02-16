@@ -192,7 +192,7 @@ class LightningQubit(DefaultQubit):
             if method is None:
                 # Inverse can be set to False since o.get_matrix() is already in inverted form
                 method = getattr(sim, "applyMatrix_{}".format(self._kernel_for_ops["Matrix"]))
-                method(o.get_matrix(), wires, False)
+                method(o.matrix, wires, False)  # Must be replaced by get_matrix()
             else:
                 inv = o.inverse
                 param = o.parameters
