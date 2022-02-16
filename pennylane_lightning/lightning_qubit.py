@@ -322,13 +322,13 @@ class LightningQubit(DefaultQubit):
         if jac is None:
             return None
 
+        if not isinstance(dy, np.ndarray) or not isinstance(jac, np.ndarray):
+            return qml.gradients.compute_vjp(dy, jac)
+
         dy_row = math.reshape(dy, [-1])
 
         if num is None:
             num = math.shape(dy_row)[0]
-
-        if not isinstance(dy_row, np.ndarray):
-            jac = math.convert_like(jac, dy_row)
 
         jac = math.reshape(jac, [num, -1])
         num_params = jac.shape[1]
