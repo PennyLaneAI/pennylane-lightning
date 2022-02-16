@@ -22,6 +22,8 @@
 
 ### Bug fixes
 
+* Fix a bug in Python tests with operations' `matrix` calls.
+
 * Refactor utility header and fix a bug in linear algebra function with CBLAS.
 [(#228)](https://github.com/PennyLaneAI/pennylane-lightning/pull/228)
 
