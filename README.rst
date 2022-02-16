@@ -167,7 +167,7 @@ well as to the `PennyLane documentation <https://pennylane.readthedocs.io/>`_ fo
 
 
 Docker Support
-------------
+--------------
 One can also build the Pennylane-Lightning image using Docker:
 
 .. code-block:: console
