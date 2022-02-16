@@ -13,16 +13,12 @@
 # limitations under the License.
 import os
 import platform
-import setuptools
 import sys
 import subprocess
 import shutil
 from pathlib import Path
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
-
-from distutils.util import get_platform
-
 
 class CMakeExtension(Extension):
     def __init__(self, name, sourcedir=""):
