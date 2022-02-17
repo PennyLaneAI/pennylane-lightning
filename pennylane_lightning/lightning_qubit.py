@@ -194,7 +194,7 @@ class LightningQubit(DefaultQubit):
                 method = getattr(sim, "applyMatrix_{}".format(self._kernel_for_ops["Matrix"]))
                 try:
                     method(o.get_matrix(), wires, False)
-                except AttributeError:
+                except AttributeError:  # pragma: no cover
                     # To support older versions of PL
                     method(o.matrix, wires, False)
             else:
