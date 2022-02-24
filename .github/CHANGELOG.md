@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add Docker support.
+[(#234)](https://github.com/PennyLaneAI/pennylane-lightning/pull/234)
+
 ### Breaking changes
 
 ### Improvements
@@ -9,15 +12,21 @@
 * Update adjointJacobian and VJP methods.
 [(#222)](https://github.com/PennyLaneAI/pennylane-lightning/pull/222)
 
-* Set GitHub workflow to upload wheels to Test PyPI [(#220)](https://github.com/PennyLaneAI/pennylane-lightning/pull/220).
+* Set GitHub workflow to upload wheels to Test PyPI.
+[(#220)](https://github.com/PennyLaneAI/pennylane-lightning/pull/220)
 
-* Finalize the new kernel implementation [(#212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/212).
+* Finalize the new kernel implementation.
+[(#212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/212)
 
 ### Documentation
 
 ### Bug fixes
 
-* Refactor utility header and fix a bug in linear algebra function with CBLAS [(#228)](https://github.com/PennyLaneAI/pennylane-lightning/pull/228).
+* Fix a bug in Python tests with operations' `matrix` calls.
+[(#238)](https://github.com/PennyLaneAI/pennylane-lightning/pull/238)
+
+* Refactor utility header and fix a bug in linear algebra function with CBLAS.
+[(#228)](https://github.com/PennyLaneAI/pennylane-lightning/pull/228)
 
 ### Contributors
 

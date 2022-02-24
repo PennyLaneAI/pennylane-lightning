@@ -23,7 +23,12 @@ from pennylane import QNode, qnode
 from scipy.stats import unitary_group
 
 
-I, X, Y, Z = np.eye(2), qml.PauliX.matrix, qml.PauliY.matrix, qml.PauliZ.matrix
+I, X, Y, Z = (
+    np.eye(2),
+    qml.PauliX.compute_matrix(),
+    qml.PauliY.compute_matrix(),
+    qml.PauliZ.compute_matrix(),
+)
 
 
 def Rx(theta):

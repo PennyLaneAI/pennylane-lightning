@@ -301,9 +301,9 @@ class TestSerializeObs:
         """Test for a comprehensive range of returns"""
         wires_dict = {"a": 0, 1: 1, "b": 2, -1: 3, 3.141: 4, "five": 5, 6: 6, 77: 7, 9: 8}
         I = np.eye(2).astype(np.complex64)
-        X = qml.PauliX.matrix.astype(np.complex64)
-        Y = qml.PauliY.matrix.astype(np.complex64)
-        Z = qml.PauliZ.matrix.astype(np.complex64)
+        X = qml.PauliX.compute_matrix().astype(np.complex64)
+        Y = qml.PauliY.compute_matrix().astype(np.complex64)
+        Z = qml.PauliZ.compute_matrix().astype(np.complex64)
 
         mock_obs = mock.MagicMock()
 
@@ -347,9 +347,9 @@ class TestSerializeObs:
         """Test for a comprehensive range of returns"""
         wires_dict = {"a": 0, 1: 1, "b": 2, -1: 3, 3.141: 4, "five": 5, 6: 6, 77: 7, 9: 8}
         I = np.eye(2).astype(np.complex128)
-        X = qml.PauliX.matrix.astype(np.complex128)
-        Y = qml.PauliY.matrix.astype(np.complex128)
-        Z = qml.PauliZ.matrix.astype(np.complex128)
+        X = qml.PauliX.compute_matrix().astype(np.complex128)
+        Y = qml.PauliY.compute_matrix().astype(np.complex128)
+        Z = qml.PauliZ.compute_matrix().astype(np.complex128)
 
         mock_obs = mock.MagicMock()
 
