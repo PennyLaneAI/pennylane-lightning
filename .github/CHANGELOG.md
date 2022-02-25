@@ -9,6 +9,12 @@
 
 ### Improvements
 
+* Clang-tidy is now enabled for both tests and examples builds under Github Actions.
+[(#237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/237)
+
+* The return type of `StateVectorBase` data is now derived-class defined.
+[(#237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/237)
+
 * Update adjointJacobian and VJP methods.
 [(#222)](https://github.com/PennyLaneAI/pennylane-lightning/pull/222)
 
@@ -32,7 +38,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Chae-Yeun Park
+Ali Asadi, Chae-Yeun Park, Lee James O'Riordan
 
 ---
 

@@ -88,7 +88,6 @@ TEMPLATE_TEST_CASE("createProductState", "[Test_Internal]", float, double) {
  */
 TEMPLATE_TEST_CASE("randomUnitary", "[Test_Internal]", float, double) {
     using PrecisionT = TestType;
-    using ComplexPrecisionT = std::complex<PrecisionT>;
 
     std::mt19937 re{1337};
 
