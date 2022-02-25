@@ -396,7 +396,7 @@ class TestSerializeObs:
             qml.expval(qml.PauliZ(0) @ qml.PauliX(1))
             qml.expval(qml.PauliY(wires=1))
             qml.expval(qml.PauliX(0) @ qml.Hermitian([[0, 1], [1, 0]], wires=3) @ qml.Hadamard(2))
-            qml.expval(qml.Hermitian(qml.PauliZ.matrix, wires=1) @ qml.Identity(1))
+            qml.expval(qml.Hermitian(qml.PauliZ.compute_matrix(), wires=1) @ qml.Identity(1))
 
         mock_obs = mock.MagicMock()
 
