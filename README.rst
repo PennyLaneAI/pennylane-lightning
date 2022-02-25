@@ -93,6 +93,7 @@ and install the compilied library with
 
     $ python3 setup.py develop
 
+
 Testing
 -------
 
@@ -134,7 +135,6 @@ Other supported options are ``-DENABLE_WARNINGS=ON``,
 ``-DENABLE_CLANG_TIDY=ON``.
 
 
-
 Compile on Windows with MSVC
 ----------------------------
 
@@ -165,6 +165,18 @@ Note that OpenMP and BLAS are disabled in this setting.
 Please refer to the `plugin documentation <https://pennylane-lightning.readthedocs.io/>`_ as
 well as to the `PennyLane documentation <https://pennylane.readthedocs.io/>`_ for further reference.
 
+
+Docker Support
+--------------
+One can also build the Pennylane-Lightning image using Docker:
+
+.. code-block:: console
+
+    $ git clone https://github.com/XanaduAI/pennylane-lightning.git
+    $ cd pennylane-lightning
+    $ docker build -t lightning/base -f docker/Dockerfile .
+
+Please refer to the `PennyLane installation <https://pennylane.readthedocs.io/en/stable/development/guide/installation.html#installation>`_ for detailed description about PennyLane Docker support.
 
 
 Contributing
