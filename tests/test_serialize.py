@@ -384,6 +384,34 @@ class TestSerializeObs:
                 assert np.allclose(v1, v2)
         assert all(s1[0][2] == s2[2] for s1, s2 in zip(s, s_expected))
 
+    @pytest.mark.skipif(
+        "ObsStructC128" and "ObsStructC64" not in dir(pennylane_lightning.lightning_qubit_ops),
+        reason="ObsStructC128 and ObsStructC64 are required",
+    )
+    @pytest.mark.parametrize("ObsFunc", [ObsStructC128, ObsStructC64])
+    @pytest.mark.parametrize("ObsChunk", list(range(1, 5)))
+    def test_chunk_obs(self, monkeypatch, ObsFunc, ObsChunk):
+        """Test chunking of observable array"""
+        with qml.tape.QuantumTape() as tape:
+            qml.expval(qml.PauliZ(0) @ qml.PauliX(1))
+            qml.expval(qml.PauliY(wires=1))
+            qml.expval(qml.PauliX(0) @ qml.Hermitian([[0, 1], [1, 0]], wires=3) @ qml.Hadamard(2))
+            qml.expval(qml.Hermitian(qml.PauliZ.compute_matrix(), wires=1) @ qml.Identity(1))
+
+        mock_obs = mock.MagicMock()
+
+        use_csingle = True if ObsFunc == ObsStructC64 else False
+        obs_str = "ObsStructC64" if ObsFunc == ObsStructC64 else "ObsStructC128"
+
+        with monkeypatch.context() as m:
+            m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
+            _serialize_obs(tape, self.wires_dict, use_csingle=use_csingle)
+
+        s = mock_obs.call_args_list
+
+        obtained_chunks = pennylane_lightning.lightning_qubit._chunk_iterable(s, ObsChunk)
+        assert len(list(obtained_chunks)) == int(np.ceil(len(s) / ObsChunk))
+
 
 class TestSerializeOps:
     """Tests for the _serialize_ops function"""
