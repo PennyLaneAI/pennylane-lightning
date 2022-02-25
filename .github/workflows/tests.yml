@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc g++
 
       - name: Build and run unit tests
         run: |
@@ -71,7 +71,7 @@ jobs:
           python-version: '3.7'
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc g++
 
       - name: Get required Python packages
         run: |
