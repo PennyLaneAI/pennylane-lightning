@@ -18,17 +18,22 @@ import itertools
 
 import numpy as np
 import pytest
+import os
 
 import pennylane as qml
+from pennylane_lightning.lightning_qubit import CPP_BINARY_AVAILABLE
 
 
-@pytest.fixture
 def lightning_qubit_dev(wires):
     """Loads ``lightning.qubit``"""
     return qml.device("lightning.qubit", wires=wires)
 
 
-@pytest.fixture
+def lightning_qubit_batch_obs_dev(wires):
+    """Loads ``lightning.qubit``"""
+    return qml.device("lightning.qubit", wires=wires, batch_obs=True)
+
+
 def default_qubit_dev(wires):
     """Loads ``default.qubit``"""
     return qml.device("default.qubit", wires=wires)
@@ -50,7 +55,6 @@ def one_qubit_block(wires=None):
     qml.PauliX(wires=wires)
 
 
-@pytest.mark.usefixtures("lightning_qubit_dev", "default_qubit_dev")
 class TestComparison:
     """A test that compares the output states of ``lightning.qubit`` and ``default.qubit`` for a
     variety of different circuits. This uses ``default.qubit`` as a gold standard to compare
@@ -58,8 +62,17 @@ class TestComparison:
 
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 1))
     @pytest.mark.parametrize("wires", [1])
-    def test_one_qubit_circuit(self, wires, lightning_qubit_dev, default_qubit_dev, basis_state):
+    @pytest.mark.parametrize(
+        "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
+    )
+    @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    @pytest.mark.parametrize("num_threads", [1, 2])
+    def test_one_qubit_circuit(
+        self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
+    ):
         """Test a single-qubit circuit"""
+
+        monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         def circuit():
             """A combination of the one_qubit_block and a simple PauliZ measurement applied to a
@@ -68,21 +81,33 @@ class TestComparison:
             one_qubit_block(wires=0)
             return qml.expval(qml.PauliZ(0))
 
-        lightning = qml.QNode(circuit, lightning_qubit_dev)
-        default = qml.QNode(circuit, default_qubit_dev)
+        dev_l = lightning_dev_version(wires)
+        dev_d = default_qubit_dev(wires)
+
+        lightning = qml.QNode(circuit, dev_l)
+        default = qml.QNode(circuit, dev_d)
 
         lightning()
-        lightning_state = lightning_qubit_dev.state
+        lightning_state = dev_l.state
 
         default()
-        default_state = default_qubit_dev.state
+        default_state = dev_d.state
 
         assert np.allclose(lightning_state, default_state)
+        assert os.getenv("OMP_NUM_THREADS") == str(num_threads)
 
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 2))
     @pytest.mark.parametrize("wires", [2])
-    def test_two_qubit_circuit(self, wires, lightning_qubit_dev, default_qubit_dev, basis_state):
+    @pytest.mark.parametrize(
+        "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
+    )
+    @pytest.mark.parametrize("num_threads", [1, 2])
+    @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    def test_two_qubit_circuit(
+        self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
+    ):
         """Test a two-qubit circuit"""
+        monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         def circuit():
             """A combination of two qubit gates with the one_qubit_block and a simple PauliZ
@@ -101,20 +126,32 @@ class TestComparison:
             qml.CRot(0.2, 0.3, 0.7, wires=[0, 1])
             return qml.expval(qml.PauliZ(0))
 
-        lightning = qml.QNode(circuit, lightning_qubit_dev)
-        default = qml.QNode(circuit, default_qubit_dev)
+        dev_l = lightning_dev_version(wires)
+        dev_d = default_qubit_dev(wires)
+
+        lightning = qml.QNode(circuit, dev_l)
+        default = qml.QNode(circuit, dev_d)
 
         lightning()
-        lightning_state = lightning_qubit_dev.state
+        lightning_state = dev_l.state
 
         default()
-        default_state = default_qubit_dev.state
+        default_state = dev_d.state
+
         assert np.allclose(lightning_state, default_state)
 
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 3))
     @pytest.mark.parametrize("wires", [3])
-    def test_three_qubit_circuit(self, wires, lightning_qubit_dev, default_qubit_dev, basis_state):
+    @pytest.mark.parametrize(
+        "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
+    )
+    @pytest.mark.parametrize("num_threads", [1, 2])
+    @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    def test_three_qubit_circuit(
+        self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
+    ):
         """Test a three-qubit circuit"""
+        monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         def circuit():
             """A combination of two and three qubit gates with the one_qubit_block and a simple
@@ -141,20 +178,32 @@ class TestComparison:
             qml.Toffoli(wires=[2, 1, 0])
             return qml.expval(qml.PauliZ(0))
 
-        lightning = qml.QNode(circuit, lightning_qubit_dev)
-        default = qml.QNode(circuit, default_qubit_dev)
+        dev_l = lightning_dev_version(wires)
+        dev_d = default_qubit_dev(wires)
+
+        lightning = qml.QNode(circuit, dev_l)
+        default = qml.QNode(circuit, dev_d)
 
         lightning()
-        lightning_state = lightning_qubit_dev.state
+        lightning_state = dev_l.state
 
         default()
-        default_state = default_qubit_dev.state
+        default_state = dev_d.state
+
         assert np.allclose(lightning_state, default_state)
 
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 4))
     @pytest.mark.parametrize("wires", [4])
-    def test_four_qubit_circuit(self, wires, lightning_qubit_dev, default_qubit_dev, basis_state):
+    @pytest.mark.parametrize(
+        "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
+    )
+    @pytest.mark.parametrize("num_threads", [1, 2])
+    @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    def test_four_qubit_circuit(
+        self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
+    ):
         """Test a four-qubit circuit"""
+        monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         def circuit():
             """A combination of two and three qubit gates with the one_qubit_block and a simple
@@ -186,19 +235,29 @@ class TestComparison:
             qml.Toffoli(wires=[2, 1, 0])
             return qml.expval(qml.PauliZ(0))
 
-        lightning = qml.QNode(circuit, lightning_qubit_dev)
-        default = qml.QNode(circuit, default_qubit_dev)
+        dev_l = lightning_dev_version(wires)
+        dev_d = default_qubit_dev(wires)
+
+        lightning = qml.QNode(circuit, dev_l)
+        default = qml.QNode(circuit, dev_d)
 
         lightning()
-        lightning_state = lightning_qubit_dev.state
+        lightning_state = dev_l.state
 
         default()
-        default_state = default_qubit_dev.state
+        default_state = dev_d.state
+
         assert np.allclose(lightning_state, default_state)
 
+    @pytest.mark.parametrize(
+        "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
+    )
     @pytest.mark.parametrize("wires", range(1, 17))
-    def test_n_qubit_circuit(self, wires, lightning_qubit_dev, default_qubit_dev):
+    @pytest.mark.parametrize("num_threads", [1, 2])
+    @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    def test_n_qubit_circuit(self, monkeypatch, wires, lightning_dev_version, num_threads):
         """Test an n-qubit circuit"""
+        monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         vec = np.array([1] * (2**wires)) / np.sqrt(2**wires)
         shape = qml.StronglyEntanglingLayers.shape(2, wires)
@@ -211,12 +270,16 @@ class TestComparison:
             qml.StronglyEntanglingLayers(w, wires=range(wires))
             return qml.expval(qml.PauliZ(0))
 
-        lightning = qml.QNode(circuit, lightning_qubit_dev)
-        default = qml.QNode(circuit, default_qubit_dev)
+        dev_l = lightning_dev_version(wires)
+        dev_d = default_qubit_dev(wires)
+
+        lightning = qml.QNode(circuit, dev_l)
+        default = qml.QNode(circuit, dev_d)
 
         lightning()
-        lightning_state = lightning_qubit_dev.state
+        lightning_state = dev_l.state
 
         default()
-        default_state = default_qubit_dev.state
+        default_state = dev_d.state
+
         assert np.allclose(lightning_state, default_state)

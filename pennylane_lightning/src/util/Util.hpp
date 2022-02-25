@@ -347,6 +347,60 @@ template <class T> struct remove_cvref {
     using type = std::remove_cv_t<std::remove_reference_t<T>>;
 };
 
+/**
+ * @brief Chunk the data using the requested chunk size.
+ *
+ * @tparam Container STL container type
+ * @tparam T Data-type of STL container
+ * @param data Data to chunk
+ * @param chunk_size Chunk size to use.
+ * @return Container<Container<T>> Container of {Containers of data with sizes
+ * chunk_size}
+ */
+template <template <typename...> class Container, typename T>
+auto chunkDataSize(const Container<T> &data, std::size_t chunk_size)
+    -> Container<Container<T>> {
+    Container<Container<T>> output;
+    for (std::size_t chunk = 0; chunk < data.size(); chunk += chunk_size) {
+        const auto chunk_end = std::min(data.size(), chunk + chunk_size);
+        output.emplace_back(data.begin() + chunk, data.begin() + chunk_end);
+    }
+    return output;
+}
+
+/** Chunk the data into the requested number of chunks */
+
+/**
+ * @brief Chunk the data into the requested number of chunks.
+ *
+ * @tparam Container STL container type
+ * @tparam T Data-type of STL container
+ * @param data Data to chunk
+ * @param num_chunks Chunk size to use.
+ * @return Container<Container<T>> Container of num_chunks {Containers of data}
+ */
+template <template <typename...> class Container, typename T>
+auto chunkData(const Container<T> &data, std::size_t num_chunks)
+    -> Container<Container<T>> {
+    const auto rem = data.size() % num_chunks;
+    const auto div = static_cast<std::size_t>(data.size() / num_chunks);
+    if (!div) { // Match chunks to available work
+        return chunkDataSize(data, 1);
+    }
+    if (rem) { // We have an uneven split; ensure fair distribution
+        auto output =
+            chunkDataSize(Container<T>{data.begin(), data.end() - rem}, div);
+        auto output_rem =
+            chunkDataSize(Container<T>{data.end() - rem, data.end()}, div);
+        for (std::size_t idx = 0; idx < output_rem.size(); idx++) {
+            output[idx].insert(output[idx].end(), output_rem[idx].begin(),
+                               output_rem[idx].end());
+        }
+        return output;
+    }
+    return chunkDataSize(data, div);
+}
+
 // type alias
 template <class T> using remove_cvref_t = typename remove_cvref<T>::type;
 

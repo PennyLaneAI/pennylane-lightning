@@ -28,6 +28,12 @@
 
 ### Bug fixes
 
+* Fix for OOM errors when using adjoint with large numbers of observables.
+[(#221)](https://github.com/PennyLaneAI/pennylane-lightning/pull/221)
+
+* Add virtual destructor to C++ state-vector classes.
+[(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
+
 * Fix a bug in Python tests with operations' `matrix` calls.
 [(#238)](https://github.com/PennyLaneAI/pennylane-lightning/pull/238)
 
@@ -108,6 +114,12 @@ The latest release shows improved performance on both single and multi-threaded 
 
 * Fix failed tests on Windows.
 [(#218)](https://github.com/PennyLaneAI/pennylane-lightning/pull/218)
+
+* Update clang-format version
+[(#219)](https://github.com/PennyLaneAI/pennylane-lightning/pull/219)
+
+* Add virtual destructor to C++ state-vector classes.
+[(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
 
 * Fix failed tests for the non-binary wheel.
 [(#213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/213)

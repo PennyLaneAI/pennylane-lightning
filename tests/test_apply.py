@@ -1355,6 +1355,52 @@ class TestTensorSample:
         ) / 4
         assert np.allclose(var, expected, atol=tolerance, rtol=0)
 
+    def test_qubitunitary_rotation_hadamard(
+        self, theta, phi, varphi, monkeypatch, shots, qubit_device_3_wires, tol
+    ):
+        """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
+        tolerance = tol if shots is None else TOL_STOCHASTIC
+        dev = qubit_device_3_wires
+        obs = qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2)
+        dev.apply(
+            [
+                qml.RX(theta, wires=[0]),
+                qml.RX(phi, wires=[1]),
+                qml.RX(varphi, wires=[2]),
+                qml.CNOT(wires=[0, 1]),
+                qml.CNOT(wires=[1, 2]),
+            ],
+            [
+                qml.QubitUnitary(
+                    obs.diagonalizing_gates()[0].get_matrix(),
+                    wires=obs.diagonalizing_gates()[0].wires,
+                ),
+                *obs.diagonalizing_gates()[1:],
+            ],
+        )
+
+        dev._wires_measured = {0, 1, 2}
+        dev._samples = dev.generate_samples() if dev.shots is not None else None
+
+        s1 = obs.eigvals
+        p = dev.marginal_prob(dev.probability(), wires=obs.wires)
+
+        # s1 should only contain 1 and -1
+        assert np.allclose(s1**2, 1, atol=tol, rtol=0)
+
+        mean = s1 @ p
+        expected = -(np.cos(varphi) * np.sin(phi) + np.sin(varphi) * np.cos(theta)) / np.sqrt(2)
+        assert np.allclose(mean, expected, atol=tol, rtol=0)
+
+        var = (s1**2) @ p - (s1 @ p).real ** 2
+        expected = (
+            3
+            + np.cos(2 * phi) * np.cos(varphi) ** 2
+            - np.cos(2 * theta) * np.sin(varphi) ** 2
+            - 2 * np.cos(theta) * np.sin(phi) * np.sin(2 * varphi)
+        ) / 4
+        assert np.allclose(var, expected, atol=tolerance, rtol=0)
+
 
 def test_warning():
     """Tests if a warning is raised when lightning.qubit binaries are not available"""
