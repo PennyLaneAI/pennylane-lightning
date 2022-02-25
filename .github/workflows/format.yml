@@ -45,7 +45,7 @@ jobs:
           python-version: 3.7
 
       - name: Install dependencies
-        run: sudo apt update && sudo apt -y install clang-tidy-11 cmake g++
+        run: sudo apt update && sudo apt -y install clang-tidy-12 cmake g++
         env:
           DEBIAN_FRONTEND: noninteractive
 
@@ -54,7 +54,7 @@ jobs:
 
       - name: Run clang-tidy compilation
         run: |
-          cmake -BBuild -DENABLE_CLANG_TIDY=ON -DCLANG_TIDY_BINARY=clang-tidy-11 -DBUILD_EXAMPLES=ON .
+          cmake -BBuild -DENABLE_CLANG_TIDY=ON -DCLANG_TIDY_BINARY=clang-tidy-12 -DBUILD_EXAMPLES=ON -DBUILD_TESTS=on -DENABLE_WARNINGS=on .
           cmake --build ./Build
 
   format-cpp:

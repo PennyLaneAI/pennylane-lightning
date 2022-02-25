@@ -10,6 +10,7 @@
 #include <complex>
 #include <iostream>
 #include <limits>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -31,7 +32,7 @@ using namespace Pennylane::Gates;
  */
 constexpr std::string_view remove_prefix(const std::string_view &str,
                                          size_t len) {
-    return std::string_view(str.data() + len, str.length() - len);
+    return {str.data() + len, str.length() - len};
 }
 
 constexpr auto gate_name_to_ops = Util::reverse_pairs(Constant::gate_names);
@@ -129,6 +130,9 @@ void testAllGeneratorForKernel(RandomEngine &re, size_t num_qubits) {
             re, num_qubits);
         testAllGeneratorForKernel<PrecisionT, ParamT, GateImplementation,
                                   gntr_idx + 1>(re, num_qubits);
+    } else {
+        static_cast<void>(re);
+        static_cast<void>(num_qubits);
     }
 }
 
@@ -141,6 +145,9 @@ void testAllGeneratorsAndKernels(RandomEngine &re, size_t num_qubits) {
             re, num_qubits);
         testAllGeneratorsAndKernels<PrecisionT, ParamT,
                                     typename TypeList::Next>(re, num_qubits);
+    } else {
+        static_cast<void>(re);
+        static_cast<void>(num_qubits);
     }
 }
 
