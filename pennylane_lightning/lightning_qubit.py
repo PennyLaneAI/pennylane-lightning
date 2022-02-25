@@ -303,7 +303,7 @@ class LightningQubit(DefaultQubit):
         )  # exclude first index if explicitly setting sv
 
         state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
-        
+
         # If requested batching over observables, chunk into OMP_NUM_THREADS sized chunks.
         # This will allow use of Lightning with adjoint for large-qubit numbers AND large
         # numbers of observables, enabling choice between compute time and memory use.
