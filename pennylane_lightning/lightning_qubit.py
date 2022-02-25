@@ -321,6 +321,7 @@ class LightningQubit(DefaultQubit):
                     tape.num_params,
                 )
                 jac.extend(jac_local)
+            jac = np.array(jac)
         else:
             jac = adj.adjoint_jacobian(
                 state_vector,
