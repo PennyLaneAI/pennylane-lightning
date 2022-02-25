@@ -1,15 +1,22 @@
+.. _lightning_add_gate_implementation:
+
 Adding a gate implementation
 ############################
 
-We discuss how one can add another gate implementation in this document. Assume that you want to add a custom ``PauliX`` gate implementation in Pennylane-Lightning. In this case, you may first add a template class as:
+We discuss how one can add another gate implementation in this document. Assume that you want to add a custom ``PauliX`` gate implementation in Pennylane-Lightning. In this case, you may first create a file and add a class:
 
 .. code-block:: cpp
 
-    template <class PrecisionT>
+      // file: MyGateImplementation.hpp
     struct MyGateImplementation {
-        constexpr static implemented_gates = {GateOperations::PauliX};
+      public:
+        constexpr static std::array implemented_gates = {
+            GateOperation::PauliX
+        }; // List of implemented gates
         constexpr static kernel_id = KernelType::Mykernel; // Will be discussed below
+        constexpr static std::string_view = "MyGateImpl"; // Name of your kernel
 
+        template <class PrecisionT>
         static void applyPauliX(std::complex<PrecisionT>* data,
                                 size_t num_qubits,
                                 const std::vector<size_t>& wires,
@@ -17,58 +24,29 @@ We discuss how one can add another gate implementation in this document. Assume 
             /* Write your implementation */
             ...
         }
-
-        static void applyPauliY(std::complex<PrecisionT>* data,
-                                size_t num_qubits,
-                                const std::vector<size_t>& wires,
-                                [[maybe_unused]] bool inverse) {
-            PL_ABORT("MyGateImplementation::applyPauliY is not implemented");
-        }
-
-        /* All other gates */
-        ...
     };
 
-Note that all member functions must be defined to prevent compile errors (this requirement may be deprecated in the near future).
-
-Then you can add your gate implementation to Pennylane-Lightning by doing followings:
+Then you can add your gate implementation to Pennylane-Lightning. This can be done my modifying two files as:
 
 .. code-block:: cpp
 
     // file: simulator/KernelType.hpp
     namespace Pennylane {
-    enum class KernelType { PI, LM, MyKernel /* This is added */, Unknown };
-
-    namespace Constant {
-    constexpr std::array available_kernels = {
-        std::pair<KernelType, std::string_view>{KernelType::PI, "PI"},
-        std::pair<KernelType, std::string_view>{KernelType::LM, "LM"},
-        /* The following line is added */
-        std::pair<KernelType, std::string_view>{KernelType::MyKernel, "MyKernel"},
-    };
+    enum class KernelType { PI, LM, MyKernel /* This is added */, None };
 
     /* Rest of the file */
+
     } // namespace Pennylane
 
 and 
 
 .. code-block:: cpp
 
-    // file: simulator/SelectGateOps.hpp
+    // file: simulator/AvailableKernels.hpp
     namespace Pennylane {
-        ...
-        /* Some code */
-
-        template <class fp_t, KernelType kernel> class SelectGateOps {};
-
-        template <class fp_t>
-        class SelectGateOps<fp_t, KernelType::PI> : public GateOperationsPI<fp_t> {};
-        template <class fp_t>
-        class SelectGateOps<fp_t, KernelType::LM> : public GateOperationsLM<fp_t> {};
-
-        /* Add the following lines */
-        template <class fp_t>
-        class SelectGateOps<fp_t, KernelType::MyKernel> : public MyGateImplementation<fp_t> {};
+        using AvailableKernels = Util::TypeList<GateImplementationsLM,
+                                            GateImplementationsPI,
+                                            MyGateImplementation /* This is added*/>;
     } // namespace Pennylane
 
 
@@ -106,10 +84,8 @@ To make your gate implementation default, you need to change ``default_kernel_fo
 
 .. code-block:: cpp
 
-    // file: simulator/SelectGateOps.hpp
-    constexpr std::array<std::pair<GateOperations, KernelType>,
-                     static_cast<int>(GateOperations::END)>
-    default_kernel_for_ops = {
+    // file: simulator/Constant.hpp
+    constexpr std::array default_kernel_for_gates = {
         std::pair{GateOperations::PauliX, KernelType::LM},
         std::pair{GateOperations::PauliY, KernelType::LM},
         ...
@@ -119,12 +95,26 @@ to
 
 .. code-block:: cpp
 
-    constexpr std::array<std::pair<GateOperations, KernelType>,
-                     static_cast<int>(GateOperations::END)>
-    default_kernel_for_ops = {
+    constexpr std::array default_kernel_for_gates = {
         std::pair{GateOperations::PauliX, KernelType::MyKernel},
         std::pair{GateOperations::PauliY, KernelType::LM},
         ...
     }
 
-will make your implementation as default kernel for ``PauliX`` gate (for all C++ call as well as for the Python binding).
+will make your implementation as default kernel for ``PauliX`` gate (for all C++ calls as well as for the Python binding).
+
+Gate generators can also be handled in the same way.
+
+Test your gate implementation
+=============================
+
+To test your own kernel implementations, you can go to ``tests/TestKernels.hpp`` and add your implementation.
+
+.. code-block:: cpp
+
+    using TestKernels = Pennylane::Util::TypeList<Pennylane::Gates::GateImplementationsLM,
+                                                  Pennylane::Gates::GateImplementationsPI,
+                                                  MyGateImplementation /*This is added */>;
+
+It will automatically test your gate implementation.
+Note that, in the current implementation, this will test a gate if ``apply + gate name`` is defined even when the gate is not included in ``implemented_gates`` variable.

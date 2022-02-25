@@ -347,8 +347,6 @@ template <class T> struct remove_cvref {
     using type = std::remove_cv_t<std::remove_reference_t<T>>;
 };
 
-/** Chunk the data with the requested chunk size */
-
 /**
  * @brief Chunk the data using the requested chunk size.
  *
@@ -402,5 +400,8 @@ auto chunkData(const Container<T> &data, std::size_t num_chunks)
     }
     return chunkDataSize(data, div);
 }
+
+// type alias
+template <class T> using remove_cvref_t = typename remove_cvref<T>::type;
 
 } // namespace Pennylane::Util

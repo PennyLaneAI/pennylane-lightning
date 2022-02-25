@@ -157,9 +157,8 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                     Util::matrixVecProd(mat, v_in, m, m);
                 CAPTURE(v_out);
                 CAPTURE(v_expected);
-                for (size_t i = 0; i < m; i++) {
-                    CHECK(isApproxEqual(v_out[i], v_expected[i]));
-                }
+
+                CHECK(v_out == PLApprox(v_expected).margin(1e-7));
             }
         }
         SECTION("Random Complex") {
@@ -184,9 +183,8 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
             std::vector<std::complex<TestType>> v_out =
                 Util::matrixVecProd(mat, v_in, 4, 4);
             CAPTURE(v_out);
-            for (size_t i = 0; i < 4; i++) {
-                CHECK(isApproxEqual(v_out[i], v_out[i]));
-            }
+
+            CHECK(v_out == PLApprox(v_expected).margin(1e-7));
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
@@ -212,11 +210,11 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 std::vector<TestType> v_expected(m, m);
                 std::vector<TestType> v_out =
                     Util::vecMatrixProd(v_in, mat, m, m);
+
                 CAPTURE(v_out);
                 CAPTURE(v_expected);
-                for (size_t i = 0; i < m; i++) {
-                    CHECK(v_out[i] == v_expected[i]);
-                }
+
+                CHECK(v_out == PLApprox(v_expected).margin(1e-7));
             }
         }
         SECTION("Zero Vector") {
@@ -226,11 +224,11 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 std::vector<TestType> v_expected(m, 0);
                 std::vector<TestType> v_out =
                     Util::vecMatrixProd(v_in, mat, m, m);
+
                 CAPTURE(v_out);
                 CAPTURE(v_expected);
-                for (size_t i = 0; i < m; i++) {
-                    CHECK(v_out[i] == v_expected[i]);
-                }
+
+                CHECK(v_out == PLApprox(v_expected).margin(1e-7));
             }
         }
         SECTION("Random Matrix") {
@@ -239,11 +237,11 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                                       0.4, -0.7, 1.2, -0.5, -0.6, 0.7};
             std::vector<TestType> v_expected{0.6, -3.2, 6.8};
             std::vector<TestType> v_out = Util::vecMatrixProd(v_in, mat, 4, 3);
+
             CAPTURE(v_out);
             CAPTURE(v_expected);
-            for (size_t i = 0; i < 3; i++) {
-                CHECK(std::abs(v_out[i] - v_expected[i]) < 0.000001);
-            }
+
+            CHECK(v_out == PLApprox(v_expected).margin(1e-7));
         }
     }
     SECTION("Transpose") {
@@ -255,11 +253,11 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 }
                 std::vector<std::complex<TestType>> mat_t =
                     Util::Transpose(mat, m, m);
+
                 CAPTURE(mat_t);
                 CAPTURE(mat);
-                for (size_t i = 0; i < m * m; i++) {
-                    CHECK(isApproxEqual(mat[i], mat_t[i]));
-                }
+
+                CHECK(mat_t == PLApprox(mat).margin(1e-7));
             }
         }
         SECTION("Random Complex") {
@@ -283,11 +281,11 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 {0.868736, 0.760685}, {0.659472, 0.232696}};
             std::vector<std::complex<TestType>> mat_t =
                 Util::Transpose(mat, 4, 4);
+
             CAPTURE(mat_t);
             CAPTURE(mat_t_exp);
-            for (size_t i = 0; i < 16; i++) {
-                CHECK(isApproxEqual(mat_t[i], mat_t_exp[i]));
-            }
+
+            CHECK(mat_t == PLApprox(mat_t_exp));
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
@@ -306,13 +304,13 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 std::vector<std::complex<TestType>> m_right(m * m, {1, 1});
                 std::vector<std::complex<TestType>> m_out_exp(
                     m * m, {0, static_cast<TestType>(2 * m)});
-                std::vector<std::complex<TestType>> m_out =
-                    Util::matrixMatProd(m_left, m_right, m, m, m, true);
+                std::vector<std::complex<TestType>> m_out = Util::matrixMatProd(
+                    m_left, m_right, m, m, m, Trans::Transpose);
+
                 CAPTURE(m_out);
                 CAPTURE(m_out_exp);
-                for (size_t i = 0; i < m * m; i++) {
-                    CHECK(isApproxEqual(m_out[i], m_out_exp[i]));
-                }
+
+                CHECK(m_out == PLApprox(m_out_exp));
             }
         }
         SECTION("Random Complex") {
@@ -360,19 +358,17 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 {0.845207296911400, 1.843583823364000},
                 {-0.482010055957000, 2.062995137499000},
                 {-0.524094900662100, 1.815727577737900}};
-            std::vector<std::complex<TestType>> m_out_1 =
-                Util::matrixMatProd(m_left, m_right_tp, 4, 4, 4, true);
-            std::vector<std::complex<TestType>> m_out_2 =
-                Util::matrixMatProd(m_left, m_right, 4, 4, 4, false);
+            std::vector<std::complex<TestType>> m_out_1 = Util::matrixMatProd(
+                m_left, m_right_tp, 4, 4, 4, Trans::Transpose);
+            std::vector<std::complex<TestType>> m_out_2 = Util::matrixMatProd(
+                m_left, m_right, 4, 4, 4, Trans::NoTranspose);
+
             CAPTURE(m_out_1);
             CAPTURE(m_out_2);
             CAPTURE(m_out_exp);
-            for (size_t i = 0; i < 16; i++) {
-                CHECK(isApproxEqual(m_out_1[i], m_out_2[i]));
-            }
-            for (size_t i = 0; i < 16; i++) {
-                CHECK(isApproxEqual(m_out_1[i], m_out_exp[i]));
-            }
+
+            CHECK(m_out_1 == PLApprox(m_out_2));
+            CHECK(m_out_1 == PLApprox(m_out_exp));
         }
         SECTION("Random complex non-square") {
             const size_t m = 4;
@@ -445,9 +441,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
 
             const auto m_out = Util::matrixMatProd(mat1, mat2, m, n, k);
 
-            for (size_t i = 0; i < (m * n); i++) {
-                CHECK(isApproxEqual(m_out[i], expected[i]));
-            }
+            CHECK(m_out == PLApprox(expected));
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
@@ -573,4 +567,29 @@ TEST_CASE("Utility bit operations", "[Util][BitUtil]") {
             }
         }
     }
+}
+
+TEST_CASE("Utility array and tuples", "[Util]") {
+    std::array<std::pair<int, std::string_view>, 5> test_pairs{
+        std::pair(0, "Zero"),  std::pair(1, "One"),  std::pair(2, "Two"),
+        std::pair(3, "Three"), std::pair(4, "Four"),
+    };
+
+    REQUIRE(Util::reverse_pairs(test_pairs) ==
+            std::array{
+                std::pair<std::string_view, int>("Zero", 0),
+                std::pair<std::string_view, int>("One", 1),
+                std::pair<std::string_view, int>("Two", 2),
+                std::pair<std::string_view, int>("Three", 3),
+                std::pair<std::string_view, int>("Four", 4),
+            });
+
+    REQUIRE(Util::reverse_pairs(test_pairs) !=
+            std::array{
+                std::pair<std::string_view, int>("Zero", 0),
+                std::pair<std::string_view, int>("One", 1),
+                std::pair<std::string_view, int>("Two", 0),
+                std::pair<std::string_view, int>("Three", 3),
+                std::pair<std::string_view, int>("Four", 4),
+            });
 }

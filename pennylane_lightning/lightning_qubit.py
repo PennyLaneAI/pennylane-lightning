@@ -58,10 +58,6 @@ except ModuleNotFoundError:
 
 
 UNSUPPORTED_PARAM_GATES_ADJOINT = (
-    "MultiRZ",
-    "IsingXX",
-    "IsingYY",
-    "IsingZZ",
     "SingleExcitation",
     "SingleExcitationPlus",
     "SingleExcitationMinus",
@@ -581,12 +577,11 @@ class LightningQubit(DefaultQubit):
             "Hamiltonian",
             "SparseHamiltonian",
         ]:
-            # TODO: requires backend support
             return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
         if self.shots is not None:
             # estimate the expectation value
-            # TODO: Lightning support for sampling
+            # LightningQubit doesn't support sampling yet
             samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
             return np.squeeze(np.mean(samples, axis=0))
 
@@ -632,12 +627,11 @@ class LightningQubit(DefaultQubit):
             "Projector",
             "Hermitian",
         ]:
-            # TODO: requires backend support
             return super().var(observable, shot_range=shot_range, bin_size=bin_size)
 
         if self.shots is not None:
             # estimate the var
-            # TODO: Lightning support for sampling
+            # LightningQubit doesn't support sampling yet
             samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
             return np.squeeze(np.var(samples, axis=0))
 
@@ -667,8 +661,7 @@ class LightningQubit(DefaultQubit):
 
 if not CPP_BINARY_AVAILABLE:
 
-    class LightningQubit(DefaultQubit):
-
+    class LightningQubit(DefaultQubit):  # pragma: no cover
         name = "Lightning Qubit PennyLane plugin"
         short_name = "lightning.qubit"
         pennylane_requires = ">=0.15"

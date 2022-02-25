@@ -2,23 +2,43 @@
 
 ### New features since last release
 
+* Add Docker support.
+[(#234)](https://github.com/PennyLaneAI/pennylane-lightning/pull/234)
+
 ### Breaking changes
 
 ### Improvements
 
-* Set GitHub workflow to upload wheels to Test PyPI [(#220)](https://github.com/PennyLaneAI/pennylane-lightning/pull/220).
+* Update adjointJacobian and VJP methods.
+[(#222)](https://github.com/PennyLaneAI/pennylane-lightning/pull/222)
+
+* Set GitHub workflow to upload wheels to Test PyPI.
+[(#220)](https://github.com/PennyLaneAI/pennylane-lightning/pull/220)
+
+* Finalize the new kernel implementation.
+[(#212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/212)
 
 ### Documentation
 
 ### Bug fixes
 
-* Refactor utility header and fix a bug in linear algebra function with CBLAS [(#228)](https://github.com/PennyLaneAI/pennylane-lightning/pull/228).
+* Fix for OOM errors when using adjoint with large numbers of observables.
+[(#221)](https://github.com/PennyLaneAI/pennylane-lightning/pull/221)
+
+* Add virtual destructor to C++ state-vector classes.
+[(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
+
+* Fix a bug in Python tests with operations' `matrix` calls.
+[(#238)](https://github.com/PennyLaneAI/pennylane-lightning/pull/238)
+
+* Refactor utility header and fix a bug in linear algebra function with CBLAS.
+[(#228)](https://github.com/PennyLaneAI/pennylane-lightning/pull/228)
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Chae-Yeun Park
+Ali Asadi, Chae-Yeun Park
 
 ---
 
@@ -43,14 +63,38 @@ Chae-Yeun Park
 * `setup.py` adds debug only when --debug is given
 [(#208)](https://github.com/PennyLaneAI/pennylane-lightning/pull/208)
 
-* Add a new C++ kernel. 
+* Add new highly-performant C++ kernels for quantum gates. 
 [(#202)](https://github.com/PennyLaneAI/pennylane-lightning/pull/202)
+
+The new kernels significantly improve the runtime performance of PennyLane-Lightning 
+for both differentiable and non-differentiable workflows. Here is an example workflow
+using the adjoint differentiation method with a circuit of 5 strongly entangling layers:
+
+```python
+import pennylane as qml
+from pennylane import numpy as np
+from pennylane.templates.layers import StronglyEntanglingLayers
+from numpy.random import random
+np.random.seed(42)
+n_layers = 5
+n_wires = 6
+dev = qml.device("lightning.qubit", wires=n_wires)
+
+@qml.qnode(dev, diff_method="adjoint")
+def circuit(weights):
+    StronglyEntanglingLayers(weights, wires=list(range(n_wires)))
+    return [qml.expval(qml.PauliZ(i)) for i in range(n_wires)]
+
+init_weights = np.random.random(StronglyEntanglingLayers.shape(n_layers=n_layers, n_wires=n_wires))
+params = np.array(init_weights,requires_grad=True)
+jac = qml.jacobian(circuit)(params)
+```
+The latest release shows improved performance on both single and multi-threaded evaluations!
+
+<img src="https://raw.githubusercontent.com/PennyLaneAI/pennylane-lightning/v0.21.0-rc0/doc/_static/lightning_v20_v21_bm.png" width=50%/>
 
 * Ensure debug info is built into dynamic libraries.
 [(#201)](https://github.com/PennyLaneAI/pennylane-lightning/pull/201)
-
-* Update adjointJacobian and VJP methods.
-[(#222)](https://github.com/PennyLaneAI/pennylane-lightning/pull/222)
 
 ### Documentation
 
@@ -59,17 +103,17 @@ Chae-Yeun Park
 
 ### Bug fixes
 
-* Fix for OOM errors when using adjoint with large numbers of observables.
-[(#221)](https://github.com/PennyLaneAI/pennylane-lightning/pull/221)
-
-* Add virtual destructor to C++ state-vector classes.
-[(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
-
 * Update clang-format version
 [(#219)](https://github.com/PennyLaneAI/pennylane-lightning/pull/219)
 
 * Fix failed tests on Windows.
 [(#218)](https://github.com/PennyLaneAI/pennylane-lightning/pull/218)
+
+* Update clang-format version
+[(#219)](https://github.com/PennyLaneAI/pennylane-lightning/pull/219)
+
+* Add virtual destructor to C++ state-vector classes.
+[(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
 
 * Fix failed tests for the non-binary wheel.
 [(#213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/213)

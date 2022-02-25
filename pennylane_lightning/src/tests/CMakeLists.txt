@@ -34,8 +34,13 @@ include(Catch)
 ################################################################################
 
 add_library(lightning_tests_dependency INTERFACE)
-target_link_libraries(lightning_tests_dependency INTERFACE lightning_simulator lightning_algorithms lightning_utils Catch2::Catch2)
-target_compile_options(lightning_tests_dependency INTERFACE "-Wno-unused;")
+target_link_libraries(lightning_tests_dependency INTERFACE lightning_algorithms
+                                                           lightning_gates
+                                                           lightning_simulator
+                                                           lightning_utils
+                                                           Catch2::Catch2)
+
+target_compile_options(lightning_tests_dependency INTERFACE "-Wall;-Wno-unused;")
 target_sources(lightning_tests_dependency INTERFACE runner_main.cpp)
 
 if(ENABLE_NATIVE)
@@ -47,14 +52,21 @@ endif()
 # Define targets
 ################################################################################
 
+add_executable(compile_time_tests compile_time_tests.cpp)
+target_link_libraries(compile_time_tests lightning_gates lightning_utils)
+
 set(TEST_SOURCES Test_AdjDiff.cpp
-                 Test_Bindings.cpp
+#                 Test_Bindings.cpp
                  Test_DynamicDispatcher.cpp
-                 Test_GateOperations_Nonparam.cpp
-                 Test_GateOperations_Param.cpp
-                 Test_IndicesUtil.cpp
+                 Test_GateImplementations_Generator.cpp
+                 Test_GateImplementations_Inverse.cpp
+                 Test_GateImplementations_Matrix.cpp
+                 Test_GateImplementations_Nonparam.cpp
+                 Test_GateImplementations_Param.cpp
+                 Test_GateUtil.cpp
+                 Test_Internal.cpp
                  Test_Measures.cpp
-                 Test_SelectGateOps.cpp
+                 Test_OpToMemberFuncPtr.cpp
                  Test_StateVectorManaged.cpp
                  Test_StateVectorRaw.cpp
                  Test_Util.cpp
@@ -65,3 +77,7 @@ target_link_libraries(runner PRIVATE lightning_tests_dependency
                                      lightning_compile_options
                                      lightning_external_libs)
 catch_discover_tests(runner)
+
+# We build compile time tests before the runtime tests as build error messages
+# are horrible if compile time constants are not well defined.
+add_dependencies(runner compile_time_tests)

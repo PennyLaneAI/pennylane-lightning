@@ -24,7 +24,12 @@ from pennylane import QNode, qnode
 from scipy.stats import unitary_group
 from pennylane_lightning import LightningQubit as lq
 
-I, X, Y, Z = np.eye(2), qml.PauliX.matrix, qml.PauliY.matrix, qml.PauliZ.matrix
+I, X, Y, Z = (
+    np.eye(2),
+    qml.PauliX.compute_matrix(),
+    qml.PauliY.compute_matrix(),
+    qml.PauliZ.compute_matrix(),
+)
 
 
 def Rx(theta):
@@ -631,12 +636,12 @@ def circuit_ansatz(params, wires):
     qml.PhaseShift(params[6], wires=wires[0]).inv()
     qml.Rot(params[6], params[7], params[8], wires=wires[0])
     # #     qml.Rot(params[8], params[8], params[9], wires=wires[1]).inv()
-    # qml.MultiRZ(params[11], wires=[wires[0], wires[1]])
+    qml.MultiRZ(params[11], wires=[wires[0], wires[1]])
     # #     qml.PauliRot(params[12], "XXYZ", wires=[wires[0], wires[1], wires[2], wires[3]])
     qml.CPhase(params[12], wires=[wires[3], wires[2]])
-    # qml.IsingXX(params[13], wires=[wires[1], wires[0]])
-    # qml.IsingYY(params[14], wires=[wires[3], wires[2]])
-    # qml.IsingZZ(params[14], wires=[wires[2], wires[1]])
+    qml.IsingXX(params[13], wires=[wires[1], wires[0]])
+    qml.IsingYY(params[14], wires=[wires[3], wires[2]])
+    qml.IsingZZ(params[14], wires=[wires[2], wires[1]])
     qml.U1(params[15], wires=wires[0])
     qml.U2(params[16], params[17], wires=wires[0])
     qml.U3(params[18], params[19], params[20], wires=wires[1])
