@@ -13,7 +13,7 @@ auto crateAllWires(size_t n_qubits, Gates::GateOperation gate_op, bool order)
             wires.reserve(Util::popcount(k));
 
             for (size_t i = 0; i < n_qubits; i++) {
-                if (((k >> i) & 1) == 1) {
+                if (((k >> i) & 1U) == 1U) {
                     wires.emplace_back(i);
                 }
             }

@@ -46,9 +46,7 @@ template <class T, uint32_t alignment> struct AlignedAllocator {
         if (size == 0) {
             return nullptr;
         }
-        void *p = std::aligned_alloc(
-            alignment,
-            sizeof(T) * size); // NOLINT(cppcoreguidelines-owning-memory)
+        void *p = std::aligned_alloc(alignment, sizeof(T) * size);
         if (p == nullptr) {
             throw std::bad_alloc();
         }
@@ -56,8 +54,8 @@ template <class T, uint32_t alignment> struct AlignedAllocator {
     }
 
     void deallocate(T *p, [[maybe_unused]] std::size_t size) noexcept {
-        std::free(
-            p); // NOLINT(hicpp-no-malloc, cppcoreguidelines-owning-memory)
+        // NOLINTNEXTLINE(hicpp-no-malloc)
+        std::free(p);
     }
 
     template <class U> void construct(U *ptr) { ::new ((void *)ptr) U(); }

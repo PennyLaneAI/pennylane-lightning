@@ -26,8 +26,8 @@
 #include <vector>
 
 #include "LinearAlgebra.hpp"
-#include "StateVectorCPU.hpp"
-#include "StateVectorRaw.hpp"
+#include "StateVectorManagedCPU.hpp"
+#include "StateVectorRawCPU.hpp"
 
 namespace Pennylane {
 /**
@@ -39,14 +39,14 @@ namespace Pennylane {
  *
  * @tparam fp_t Floating point precision of underlying measurements.
  */
-template <class fp_t = double, class SVType = StateVectorRaw<fp_t>>
+template <class fp_t = double, class SVType = StateVectorRawCPU<fp_t>>
 class Measures {
   private:
     const SVType &original_statevector;
     using CFP_t = std::complex<fp_t>;
 
   public:
-    Measures(const SVType &provided_statevector)
+    explicit Measures(const SVType &provided_statevector)
         : original_statevector{provided_statevector} {};
 
     /**
@@ -123,7 +123,7 @@ class Measures {
                 const std::vector<size_t> &wires) {
         // Copying the original state vector, for the application of the
         // observable operator.
-        StateVectorCPU<fp_t> operator_statevector(original_statevector);
+        StateVectorManagedCPU<fp_t> operator_statevector(original_statevector);
 
         operator_statevector.applyMatrix(matrix, wires);
 
@@ -143,7 +143,7 @@ class Measures {
                 const std::vector<size_t> &wires) {
         // Copying the original state vector, for the application of the
         // observable operator.
-        StateVectorCPU<fp_t> operator_statevector(original_statevector);
+        StateVectorManagedCPU<fp_t> operator_statevector(original_statevector);
 
         operator_statevector.applyOperation(operation, wires);
 
@@ -190,7 +190,7 @@ class Measures {
     fp_t var(const std::string &operation, const std::vector<size_t> &wires) {
         // Copying the original state vector, for the application of the
         // observable operator.
-        StateVectorCPU<fp_t> operator_statevector(original_statevector);
+        StateVectorManagedCPU<fp_t> operator_statevector(original_statevector);
 
         operator_statevector.applyOperation(operation, wires);
 
@@ -216,7 +216,7 @@ class Measures {
              const std::vector<size_t> &wires) {
         // Copying the original state vector, for the application of the
         // observable operator.
-        StateVectorCPU<fp_t> operator_statevector(original_statevector);
+        StateVectorManagedCPU<fp_t> operator_statevector(original_statevector);
 
         operator_statevector.applyMatrix(matrix, wires);
 

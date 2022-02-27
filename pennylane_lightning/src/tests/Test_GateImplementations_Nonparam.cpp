@@ -21,9 +21,7 @@
  */
 using namespace Pennylane;
 
-namespace {
 using std::vector;
-}
 
 /**
  * @brief Run test suit only when the gate is defined
@@ -75,13 +73,14 @@ void testApplyPauliX() {
                     << ", PauliX - " << PrecisionToName<PrecisionT>::value) {
         for (size_t index = 0; index < num_qubits; index++) {
             auto st = createZeroState<PrecisionT>(num_qubits);
-            CHECK(st[0] == Util::ONE<PrecisionT>());
 
             GateImplementation::applyPauliX(st.data(), num_qubits, {index},
                                             false);
-            CHECK(st[0] == Util::ZERO<PrecisionT>());
-            CHECK(st[0b1 << (num_qubits - index - 1)] ==
-                  Util::ONE<PrecisionT>());
+
+            std::string expected_str("000");
+            expected_str[index] = '1';
+            REQUIRE(st ==
+                    PLApprox(createProductState<PrecisionT>(expected_str)));
         }
     }
 }

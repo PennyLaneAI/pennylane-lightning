@@ -468,7 +468,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
  */
 size_t popcount_slow(uint64_t x) {
     size_t c = 0;
-    for (; x != 0; x >>= 1) {
+    for (; x != 0; x >>= 1U) {
         if ((x & 1U) != 0U) {
             c++;
         }
@@ -483,8 +483,8 @@ size_t popcount_slow(uint64_t x) {
  */
 size_t ctz_slow(uint64_t x) {
     size_t c = 0;
-    while ((x & 1) == 0) {
-        x >>= 1;
+    while ((x & 1U) == 0) {
+        x >>= 1U;
         c++;
     }
     return c;

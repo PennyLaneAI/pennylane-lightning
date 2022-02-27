@@ -25,9 +25,7 @@ using namespace Pennylane;
 using namespace Pennylane::Gates;
 using namespace Pennylane::Util;
 
-namespace {
 using std::vector;
-}
 
 template <typename TypeList> std::string kernelsToString() {
     if constexpr (!std::is_same_v<TypeList, void>) {

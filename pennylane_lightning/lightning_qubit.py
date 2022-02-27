@@ -116,6 +116,11 @@ class LightningQubit(DefaultQubit):
         super().__init__(wires, shots=shots)
         self._batch_obs = batch_obs
 
+        # Lightning keeps a simulator memory of which is managed by C++
+        # Note that as C++ manages the data, we need to copy from this array when
+        # the result is used outside of the module
+        self.sim_ = None
+
     @classmethod
     def capabilities(cls):
         capabilities = super().capabilities().copy()

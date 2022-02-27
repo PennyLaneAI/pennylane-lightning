@@ -14,7 +14,7 @@
 
 #include "AdjointDiff.hpp"
 #include "JacobianProd.hpp"
-#include "StateVectorRaw.hpp"
+#include "StateVectorRawCPU.hpp"
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"
@@ -53,10 +53,10 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={0}",
 
         for (const auto &p : param) {
             auto ops = OpsData<double>({"RX"}, {{p}}, {{0}}, {false});
-            std::vector<std::complex<double>> cdata(0b1 << num_qubits);
+            std::vector<std::complex<double>> cdata(1U << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
 
-            StateVectorRaw<double> psi(cdata.data(), cdata.size());
+            StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
 
             std::vector<size_t> tp{0};
             std::vector<ObsDatum<double>> obs_ls{obs};
@@ -91,10 +91,10 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={1}",
         for (const auto &p : param) {
             auto ops = OpsData<double>({"RX"}, {{p}}, {{0}}, {false});
 
-            std::vector<std::complex<double>> cdata(0b1 << num_qubits);
+            std::vector<std::complex<double>> cdata(1U << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
 
-            StateVectorRaw<double> psi(cdata.data(), cdata.size());
+            StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
 
             std::vector<size_t> tp{0};
             std::vector<ObsDatum<double>> obs_ls{obs};
@@ -129,10 +129,10 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={0.4}",
         for (const auto &p : param) {
             auto ops = OpsData<double>({"RX"}, {{p}}, {{0}}, {false});
 
-            std::vector<std::complex<double>> cdata(0b1 << num_qubits);
+            std::vector<std::complex<double>> cdata(1U << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
 
-            StateVectorRaw<double> psi(cdata.data(), cdata.size());
+            StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
 
             std::vector<size_t> tp{0};
             std::vector<ObsDatum<double>> obs_ls{obs};
@@ -168,10 +168,10 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RY, Obs=X dy={0.4}",
         for (const auto &p : param) {
             auto ops = OpsData<double>({"RY"}, {{p}}, {{0}}, {false});
 
-            std::vector<std::complex<double>> cdata(0b1 << num_qubits);
+            std::vector<std::complex<double>> cdata(1U << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
 
-            StateVectorRaw<double> psi(cdata.data(), cdata.size());
+            StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
 
             std::vector<size_t> tp{0};
             std::vector<ObsDatum<double>> obs_ls{obs};
@@ -203,8 +203,8 @@ TEST_CASE(
         std::vector<double> vjp_res(num_params);
         std::vector<double> dy(num_obs, 1);
 
-        std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVectorRaw<double> psi(cdata.data(), cdata.size());
+        std::vector<std::complex<double>> cdata(1U << num_qubits);
+        StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs1 = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
@@ -239,8 +239,8 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=[RX,RX,RX], "
         std::vector<double> vjp_res(num_params);
         std::vector<double> dy(num_obs, 0.4);
 
-        std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVectorRaw<double> psi(cdata.data(), cdata.size());
+        std::vector<std::complex<double>> cdata(1U << num_qubits);
+        StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs1 = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
@@ -282,8 +282,8 @@ TEST_CASE(
         std::vector<double> vjp_res(num_params);
         std::vector<double> dy(num_obs, 1);
 
-        std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVectorRaw<double> psi(cdata.data(), cdata.size());
+        std::vector<std::complex<double>> cdata(1U << num_qubits);
+        StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs1 = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
@@ -322,8 +322,8 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=[RX,RX,RX], "
         std::vector<double> vjp_res(num_params);
         std::vector<double> dy(num_obs, 0.4);
 
-        std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVectorRaw<double> psi(cdata.data(), cdata.size());
+        std::vector<std::complex<double>> cdata(1U << num_qubits);
+        StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs = ObsDatum<double>({"PauliZ", "PauliZ", "PauliZ"},
@@ -361,8 +361,8 @@ TEST_CASE(
         std::vector<double> vjp_res(num_params);
         std::vector<double> dy(num_obs, 1);
 
-        std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVectorRaw<double> psi(cdata.data(), cdata.size());
+        std::vector<std::complex<double>> cdata(1U << num_qubits);
+        StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs = ObsDatum<double>({"PauliX", "PauliX", "PauliX"},
@@ -412,8 +412,8 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=Mixed, Obs=[XXX], "
         std::vector<double> vjp_res(num_params);
         std::vector<double> dy(num_obs, -0.2);
 
-        std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVectorRaw<double> psi(cdata.data(), cdata.size());
+        std::vector<std::complex<double>> cdata(1U << num_qubits);
+        StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs = ObsDatum<double>({"PauliX", "PauliX", "PauliX"},
@@ -480,7 +480,7 @@ TEST_CASE(
 
             std::vector<std::complex<double>> cdata{INVSQRT2<double>(),
                                                     -INVSQRT2<double>()};
-            StateVectorRaw<double> psi(cdata.data(), cdata.size());
+            StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
 
             auto obs = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
             auto ops = OpsData<double>(
@@ -525,7 +525,7 @@ TEST_CASE(
 
         std::vector<std::complex<double>> cdata{ONE<double>(), ZERO<double>(),
                                                 ZERO<double>(), ZERO<double>()};
-        StateVectorRaw<double> psi(cdata.data(), cdata.size());
+        StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
 
         auto obs = ObsDatum<double>({"PauliX", "PauliZ"}, {{}, {}}, {{0}, {1}});
         auto ops = OpsData<double>(
@@ -584,7 +584,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Mixed Ops, Obs and "
 
         std::vector<std::complex<double>> cdata{ONE<double>(), ZERO<double>(),
                                                 ZERO<double>(), ZERO<double>()};
-        StateVectorRaw<double> psi(cdata.data(), cdata.size());
+        StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
 
         auto obs = ObsDatum<double>({"PauliX", "PauliZ"}, {{}, {}}, {{0}, {1}});
         auto ops = OpsData<double>(

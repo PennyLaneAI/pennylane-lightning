@@ -63,6 +63,13 @@ static auto create(pybind11::array_t<std::complex<PrecisionT>> &numpyArray)
         {data_ptr, static_cast<size_t>(numpyArrayInfo.shape[0])});
 }
 
+template <class PrecisionT = double>
+static auto toNumpyArray(const StateVectorCPU<PrecisionT> &sv)
+    -> py::array_t<std::complex<PrecisionT>> {
+    return py::array_t<std::complex<PrecisionT>>(
+        {sv.getLength()}, {sizeof(PrecisionT)} sv.getData(), );
+}
+
 /**
  * @brief Apply given list of operations to Numpy data array using C++
  * `%StateVector` class.

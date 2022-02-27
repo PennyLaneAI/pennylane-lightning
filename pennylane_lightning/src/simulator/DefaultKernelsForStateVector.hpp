@@ -123,15 +123,18 @@ class DefaultKernelsForStateVector {
                                      all_memory_model, all_qubit_numbers,
                                      Gates::KernelType::LM);
 
-        instance.assignKernelForGate(GateOperation::IsingXX, all_threading,
-                                     all_memory_model, less_than(12),
-                                     Gates::KernelType::LM);
+        instance.assignKernelForGate(
+            GateOperation::IsingXX, all_threading,
+            // NOLINTNEXTLINE(readability-magic-numbers)
+            all_memory_model, less_than(12), Gates::KernelType::LM);
         instance.assignKernelForGate(
             GateOperation::IsingXX, all_threading, all_memory_model,
+            // NOLINTNEXTLINE(readability-magic-numbers)
             in_between_closed(12, 20), Gates::KernelType::PI);
-        instance.assignKernelForGate(GateOperation::IsingXX, all_threading,
-                                     all_memory_model, larger_than(20),
-                                     Gates::KernelType::LM);
+        instance.assignKernelForGate(
+            GateOperation::IsingXX, all_threading,
+            // NOLINTNEXTLINE(readability-magic-numbers)
+            all_memory_model, larger_than(20), Gates::KernelType::LM);
 
         instance.assignKernelForGate(GateOperation::IsingYY, all_threading,
                                      all_memory_model, all_qubit_numbers,
