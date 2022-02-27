@@ -36,12 +36,10 @@ struct testDispatchForKernel {
             Util::array_has_elt(GateImplementation::implemented_gates, gate_op),
             bool> = true>
     static void test(RandomEngine &re, size_t num_qubits) {
-        using CFP_t = std::complex<PrecisionT>;
-        const std::vector<CFP_t> ini_st =
-            createRandomState<PrecisionT>(re, num_qubits);
-        std::vector<CFP_t> expected = ini_st;
+        const auto ini_st = createRandomState<PrecisionT>(re, num_qubits);
+        auto expected = ini_st;
 
-        const auto wires = createWires(gate_op);
+        const auto wires = createWires(gate_op, num_qubits);
         const auto params = createParams<PrecisionT>(gate_op);
 
         // We first calculate expected directly calling a static member function

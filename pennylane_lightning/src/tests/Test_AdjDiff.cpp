@@ -13,7 +13,7 @@
 #include <catch2/catch.hpp>
 
 #include "AdjointDiff.hpp"
-#include "StateVectorRaw.hpp"
+#include "StateVectorCPU.hpp"
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"
@@ -50,10 +50,12 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=Z",
         for (const auto &p : param) {
             auto ops = OpsData<double>({"RX"}, {{p}}, {{0}}, {false});
 
+            /*
             std::vector<std::complex<double>> cdata(0b1 << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
+            */
 
-            StateVectorRaw<double> psi(cdata.data(), cdata.size());
+            StateVectorCPU<double> psi(num_qubits);
 
             std::vector<size_t> tp{0};
             std::vector<ObsDatum<double>> obs_ls{obs};
@@ -82,10 +84,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RY, Obs=X",
         for (const auto &p : param) {
             auto ops = OpsData<double>({"RY"}, {{p}}, {{0}}, {false});
 
-            std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-            cdata[0] = std::complex<double>{1, 0};
-
-            StateVectorRaw<double> psi(cdata.data(), cdata.size());
+            StateVectorCPU<double> psi(num_qubits);
 
             std::vector<size_t> tp{0};
             std::vector<ObsDatum<double>> obs_ls{obs};
@@ -109,9 +108,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=[Z,Z]",
         const size_t num_obs = 2;
         std::vector<double> jacobian(num_obs * num_params, 0);
 
-        std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVectorRaw<double> psi(cdata.data(), cdata.size());
-        cdata[0] = std::complex<double>{1, 0};
+        StateVectorCPU<double> psi(num_qubits);
 
         auto obs1 = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
         auto obs2 = ObsDatum<double>({"PauliZ"}, {{}}, {{1}});
@@ -140,9 +137,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z]",
         const size_t num_obs = 3;
         std::vector<double> jacobian(num_obs * num_params, 0);
 
-        std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVectorRaw<double> psi(cdata.data(), cdata.size());
-        cdata[0] = std::complex<double>{1, 0};
+        StateVectorCPU<double> psi(num_qubits);
 
         auto obs1 = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
         auto obs2 = ObsDatum<double>({"PauliZ"}, {{}}, {{1}});
@@ -179,9 +174,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z], "
         std::vector<double> jacobian(num_obs * num_params, 0);
         std::vector<size_t> t_params{0, 2};
 
-        std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVectorRaw<double> psi(cdata.data(), cdata.size());
-        cdata[0] = std::complex<double>{1, 0};
+        StateVectorCPU<double> psi(num_qubits);
 
         auto obs1 = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
         auto obs2 = ObsDatum<double>({"PauliZ"}, {{}}, {{1}});
@@ -214,9 +207,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
         const size_t num_obs = 1;
         std::vector<double> jacobian(num_obs * num_params, 0);
 
-        std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVectorRaw<double> psi(cdata.data(), cdata.size());
-        cdata[0] = std::complex<double>{1, 0};
+        StateVectorCPU<double> psi(num_qubits);
 
         auto obs = ObsDatum<double>({"PauliZ", "PauliZ", "PauliZ"},
                                     {{}, {}, {}}, {{0}, {1}, {2}});
@@ -249,9 +240,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=Mixed, Obs=[XXX]",
         const size_t num_obs = 1;
         std::vector<double> jacobian(num_obs * num_params, 0);
 
-        std::vector<std::complex<double>> cdata(0b1 << num_qubits);
-        StateVectorRaw<double> psi(cdata.data(), cdata.size());
-        cdata[0] = std::complex<double>{1, 0};
+        StateVectorCPU<double> psi(num_qubits);
 
         auto obs = ObsDatum<double>({"PauliX", "PauliX", "PauliX"},
                                     {{}, {}, {}}, {{0}, {1}, {2}});
@@ -312,7 +301,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Decomposed Rot gate, non "
 
             std::vector<std::complex<double>> cdata{INVSQRT2<double>(),
                                                     -INVSQRT2<double>()};
-            StateVectorRaw<double> psi(cdata.data(), cdata.size());
+            StateVectorCPU<double> psi(cdata.data(), cdata.size());
 
             auto obs = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
             auto ops = OpsData<double>(
@@ -353,7 +342,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Mixed Ops, Obs and TParams",
 
         std::vector<std::complex<double>> cdata{ONE<double>(), ZERO<double>(),
                                                 ZERO<double>(), ZERO<double>()};
-        StateVectorRaw<double> psi(cdata.data(), cdata.size());
+        StateVectorCPU<double> psi(cdata);
 
         auto obs = ObsDatum<double>({"PauliX", "PauliZ"}, {{}, {}}, {{0}, {1}});
         auto ops = OpsData<double>(

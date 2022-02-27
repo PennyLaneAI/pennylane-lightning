@@ -21,14 +21,19 @@ target_link_libraries(lightning_examples INTERFACE lightning_compile_options
                                                    lightning_simulator
                                                    lightning_utils)
 
-add_executable(gate_benchmark_oplist gate_benchmark_oplist.cpp)
-target_link_libraries(gate_benchmark_oplist PRIVATE lightning_examples)
+add_executable(benchmark_operation benchmark_operation.cpp)
+target_link_libraries(benchmark_operation PRIVATE lightning_examples)
+
+add_executable(benchmark_operation_float benchmark_operation.cpp)
+target_compile_options(benchmark_operation_float PRIVATE "-DUSE_SINGLE_PRECISION")
+target_link_libraries(benchmark_operation_float PRIVATE lightning_examples)
+
 add_executable(benchmark_multi_rz benchmark_multi_rz.cpp)
 target_link_libraries(benchmark_multi_rz PRIVATE lightning_examples)
 
 configure_file("compiler_info.in" "compiler_info.txt")
 
-add_custom_command(TARGET gate_benchmark_oplist POST_BUILD 
+add_custom_command(TARGET benchmark_operation POST_BUILD 
                    COMMAND ${CMAKE_COMMAND} -E copy
                            ${PROJECT_SOURCE_DIR}/run_gate_benchmark.sh
                            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/run_gate_benchmark.sh

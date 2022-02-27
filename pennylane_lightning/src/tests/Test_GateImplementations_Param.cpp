@@ -164,8 +164,8 @@ void testApplyRY() {
             {0.10575112905629831, -0.47593196040758534},
             {-0.8711876098966215, -0.0577721051072477}}};
 
-    const std::vector<ComplexPrecisionT> init_state{
-        {0.8775825618903728, 0.0}, {0.0, -0.47942553860420306}};
+    const TestVector<ComplexPrecisionT> init_state{{0.8775825618903728, 0.0},
+                                                   {0.0, -0.47942553860420306}};
     DYNAMIC_SECTION(GateImplementation::name
                     << ", RY - " << PrecisionToName<PrecisionT>::value) {
         for (size_t index = 0; index < angles.size(); index++) {
@@ -220,6 +220,14 @@ void testApplyRZ() {
         GateImplementation::applyRZ(st.data(), num_qubits, {index}, false,
                                     {angles[index]});
 
+        CHECK(st == PLApprox(expected_results[index]));
+    }
+
+    for (size_t index = 0; index < num_qubits; index++) {
+        auto st = createPlusState<PrecisionT>(num_qubits);
+
+        GateImplementation::applyRZ(st.data(), num_qubits, {index}, true,
+                                    {-angles[index]});
         CHECK(st == PLApprox(expected_results[index]));
     }
 }
@@ -364,7 +372,7 @@ void testApplyIsingXX() {
                     << ", IsingXX0,2 - "
                     << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 3;
-        std::vector<ComplexPrecisionT> ini_st{
+        const auto ini_st = TestVector<ComplexPrecisionT>{
             ComplexPrecisionT{0.125681356503, 0.252712197380},
             ComplexPrecisionT{0.262591068130, 0.370189000494},
             ComplexPrecisionT{0.129300299863, 0.371057794075},
@@ -498,7 +506,7 @@ void testApplyIsingYY() {
                     << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 4;
 
-        std::vector<ComplexPrecisionT> ini_st{
+        const auto ini_st = TestVector<ComplexPrecisionT>{
             ComplexPrecisionT{0.276522701942, 0.192601873155},
             ComplexPrecisionT{0.035951282872, 0.224882549474},
             ComplexPrecisionT{0.142578003191, 0.016769549184},
@@ -652,7 +660,7 @@ void testApplyIsingZZ() {
                     << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 4;
 
-        std::vector<ComplexPrecisionT> ini_st{
+        TestVector<ComplexPrecisionT> ini_st{
             ComplexPrecisionT{0.267462841882, 0.010768564798},
             ComplexPrecisionT{0.228575129706, 0.010564590956},
             ComplexPrecisionT{0.099492749900, 0.260849823392},

@@ -143,9 +143,7 @@ void registerAllImplementedGateOps() {
     auto registerGateToDispatcher = [&dispatcher](
                                         const auto &gate_op_func_pair) {
         const auto &[gate_op, func] = gate_op_func_pair;
-        std::string op_name =
-            std::string(lookup(Gates::Constant::gate_names, gate_op));
-        dispatcher.registerGateOperation(op_name, GateImplementation::kernel_id,
+        dispatcher.registerGateOperation(gate_op, GateImplementation::kernel_id,
                                          func);
         return gate_op;
     };
@@ -169,10 +167,8 @@ void registerAllImplementedGeneratorOps() {
     auto registerGeneratorToDispatcher =
         [&dispatcher](const auto &gntr_op_func_pair) {
             const auto &[gntr_op, func] = gntr_op_func_pair;
-            std::string op_name =
-                std::string(lookup(Gates::Constant::generator_names, gntr_op));
             dispatcher.registerGeneratorOperation(
-                op_name, GateImplementation::kernel_id, func);
+                gntr_op, GateImplementation::kernel_id, func);
             return gntr_op;
         };
 

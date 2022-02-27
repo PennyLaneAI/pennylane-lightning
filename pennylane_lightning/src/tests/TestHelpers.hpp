@@ -1,16 +1,19 @@
+#include "Constant.hpp"
+#include "ConstantUtil.hpp"
+#include "Error.hpp"
+#include "GateOperation.hpp"
+#include "LinearAlgebra.hpp"
+#include "Macros.hpp"
+#include "Memory.hpp"
+#include "TestKernels.hpp"
+#include "Util.hpp"
+
 #include <algorithm>
 #include <complex>
 #include <random>
 #include <string>
 #include <type_traits>
 #include <vector>
-
-#include "Constant.hpp"
-#include "ConstantUtil.hpp"
-#include "Error.hpp"
-#include "GateOperation.hpp"
-#include "LinearAlgebra.hpp"
-#include "Util.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -94,6 +97,20 @@ bool operator!=(const std::vector<T, AllocA> &lhs,
     return !rhs.compare(lhs);
 }
 
+template <class T, class AllocA, class AllocB>
+bool operator==(const std::vector<T, AllocA> &lhs,
+                const std::vector<T, AllocB> &rhs) {
+    if (lhs.size() != rhs.size()) {
+        return false;
+    }
+    for (size_t idx = 0; idx < lhs.size(); idx++) {
+        if (lhs[idx] != rhs[idx]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 /**
  * @brief Utility function to compare complex statevector data.
  *
@@ -132,6 +149,11 @@ isApproxEqual(const Data_t &data1, const Data_t &data2,
              data1.imag() != Approx(data2.imag()).epsilon(eps));
 }
 
+template <typename T>
+using TestVector = std::vector<
+    T,
+    PLAllocator<T, Util::common_alignment_v<remove_complex_t<T>, TestKernels>>>;
+
 /**
  * @brief Multiplies every value in a dataset by a given complex scalar value.
  *
@@ -140,8 +162,8 @@ isApproxEqual(const Data_t &data1, const Data_t &data2,
  * @param data Data to be scaled.
  * @param scalar Scalar value.
  */
-template <class Data_t>
-void scaleVector(std::vector<std::complex<Data_t>> &data,
+template <class Data_t, class Alloc>
+void scaleVector(std::vector<std::complex<Data_t>, Alloc> &data,
                  std::complex<Data_t> scalar) {
     std::transform(
         data.begin(), data.end(), data.begin(),
@@ -156,8 +178,9 @@ void scaleVector(std::vector<std::complex<Data_t>> &data,
  * @param data Data to be scaled.
  * @param scalar Scalar value.
  */
-template <class Data_t>
-void scaleVector(std::vector<std::complex<Data_t>> &data, Data_t scalar) {
+template <class Data_t, class Alloc>
+void scaleVector(std::vector<std::complex<Data_t>, Alloc> &data,
+                 Data_t scalar) {
     std::transform(
         data.begin(), data.end(), data.begin(),
         [scalar](const std::complex<Data_t> &c) { return c * scalar; });
@@ -168,8 +191,8 @@ void scaleVector(std::vector<std::complex<Data_t>> &data, Data_t scalar) {
  */
 template <typename PrecisionT>
 auto createZeroState(size_t num_qubits)
-    -> std::vector<std::complex<PrecisionT>> {
-    std::vector<std::complex<PrecisionT>> res(1U << num_qubits, {0.0, 0.0});
+    -> TestVector<std::complex<PrecisionT>> {
+    TestVector<std::complex<PrecisionT>> res(1U << num_qubits, {0.0, 0.0});
     res[0] = std::complex<PrecisionT>{1.0, 0.0};
     return res;
 }
@@ -179,8 +202,8 @@ auto createZeroState(size_t num_qubits)
  */
 template <typename PrecisionT>
 auto createPlusState(size_t num_qubits)
-    -> std::vector<std::complex<PrecisionT>> {
-    std::vector<std::complex<PrecisionT>> res(1U << num_qubits, {1.0, 0.0});
+    -> TestVector<std::complex<PrecisionT>> {
+    TestVector<std::complex<PrecisionT>> res(1U << num_qubits, {1.0, 0.0});
     for (auto &elt : res) {
         elt /= std::sqrt(1U << num_qubits);
     }
@@ -204,8 +227,8 @@ auto squaredNorm(const std::complex<PrecisionT> *data, size_t data_size)
  */
 template <typename PrecisionT, class RandomEngine>
 auto createRandomState(RandomEngine &re, size_t num_qubits)
-    -> std::vector<std::complex<PrecisionT>> {
-    std::vector<std::complex<PrecisionT>> res(1U << num_qubits, {0.0, 0.0});
+    -> TestVector<std::complex<PrecisionT>> {
+    TestVector<std::complex<PrecisionT>> res(1U << num_qubits, {0.0, 0.0});
     std::uniform_real_distribution<PrecisionT> dist;
     for (size_t idx = 0; idx < (1U << num_qubits); idx++) {
         res[idx] = {dist(re), dist(re)};
@@ -221,9 +244,11 @@ auto createRandomState(RandomEngine &re, size_t num_qubits)
  *
  * Example: createProductState("+01") will produce |+01> state.
  */
-template <typename PrecisionT> auto createProductState(std::string_view str) {
+template <typename PrecisionT>
+auto createProductState(std::string_view str)
+    -> TestVector<std::complex<PrecisionT>> {
     using Pennylane::Util::INVSQRT2;
-    std::vector<std::complex<PrecisionT>> st;
+    TestVector<std::complex<PrecisionT>> st;
     st.resize(1U << str.length());
 
     std::vector<PrecisionT> zero{1.0, 0.0};
@@ -261,11 +286,13 @@ template <typename PrecisionT> auto createProductState(std::string_view str) {
     return st;
 }
 
-inline auto createWires(Gates::GateOperation op) -> std::vector<size_t> {
+inline auto createWires(Gates::GateOperation op, size_t num_qubits)
+    -> std::vector<size_t> {
     if (Pennylane::Util::array_has_elt(Gates::Constant::multi_qubit_gates,
                                        op)) {
-        // if multi-qubit gates
-        return {0, 1, 2};
+        std::vector<size_t> wires(num_qubits);
+        std::iota(wires.begin(), wires.end(), 0);
+        return wires;
     }
     switch (Pennylane::Util::lookup(Gates::Constant::gate_wires, op)) {
     case 1:
@@ -301,10 +328,10 @@ auto createParams(Gates::GateOperation op) -> std::vector<PrecisionT> {
  */
 template <typename PrecisionT, class RandomEngine>
 auto randomUnitary(RandomEngine &re, size_t num_qubits)
-    -> std::vector<std::complex<PrecisionT>> {
+    -> TestVector<std::complex<PrecisionT>> {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     const size_t dim = (1U << num_qubits);
-    std::vector<ComplexPrecisionT> res(dim * dim, ComplexPrecisionT{});
+    TestVector<ComplexPrecisionT> res(dim * dim, ComplexPrecisionT{});
 
     std::normal_distribution<PrecisionT> dist;
 
@@ -339,7 +366,7 @@ auto randomUnitary(RandomEngine &re, size_t num_qubits)
         ComplexPrecisionT *row_p = res.data() + row * dim;
         PrecisionT norm2 = std::sqrt(squaredNorm(row_p, dim));
 
-        // noramlize row2
+        // normalize row2
         std::transform(row_p, row_p + dim, row_p, [norm2](const auto c) {
             return (static_cast<PrecisionT>(1.0) / norm2) * c;
         });

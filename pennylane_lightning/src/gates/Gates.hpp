@@ -330,7 +330,7 @@ e^{-i(\phi-\omega)/2}\sin(\theta/2) & e^{i(\phi+\omega)/2}\cos(\theta/2)
  * @return const std::vector<std::complex<T>> Return const Rot gate data.
  */
 template <class T, class U = T>
-static auto getRot(U phi, U theta, U omega) -> std::vector<std::complex<T>> {
+static auto getRot(U phi, U theta, U omega) -> std::array<std::complex<T>, 4> {
     using namespace Util;
     const T c = std::cos(theta / 2);
     const T s = std::sin(theta / 2);

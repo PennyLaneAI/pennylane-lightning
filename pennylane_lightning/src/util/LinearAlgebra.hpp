@@ -210,9 +210,9 @@ inline auto innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
  * @see innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
  * const size_t data_size)
  */
-template <class T>
-inline auto innerProd(const std::vector<std::complex<T>> &v1,
-                      const std::vector<std::complex<T>> &v2)
+template <class T, class AllocA, class AllocB>
+inline auto innerProd(const std::vector<std::complex<T>, AllocA> &v1,
+                      const std::vector<std::complex<T>, AllocB> &v2)
     -> std::complex<T> {
     return innerProd(v1.data(), v2.data(), v1.size());
 }
@@ -224,9 +224,9 @@ inline auto innerProd(const std::vector<std::complex<T>> &v1,
  * @see innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
  * const size_t data_size)
  */
-template <class T>
-inline auto innerProdC(const std::vector<std::complex<T>> &v1,
-                       const std::vector<std::complex<T>> &v2)
+template <class T, class AllocA, class AllocB>
+inline auto innerProdC(const std::vector<std::complex<T>, AllocA> &v1,
+                       const std::vector<std::complex<T>, AllocB> &v2)
     -> std::complex<T> {
     return innerProdC(v1.data(), v2.data(), v1.size());
 }
@@ -484,15 +484,15 @@ inline auto Transpose(const std::vector<std::complex<T>> &mat, size_t m,
  * @param n Number of columns of `mat`.
  * @return mat transpose of shape n * m.
  */
-template <class T>
-inline auto Transpose(const std::vector<T> &mat, size_t m, size_t n)
-    -> std::vector<T> {
+template <class T, class Alloc>
+inline auto Transpose(const std::vector<T, Alloc> &mat, size_t m, size_t n)
+    -> std::vector<T, Alloc> {
     if (mat.size() != m * n) {
         throw std::invalid_argument(
             "Invalid number of rows and columns for the input matrix");
     }
 
-    std::vector<T> mat_t(n * m);
+    std::vector<T, Alloc> mat_t(n * m);
     CFTranspose(mat.data(), mat_t.data(), m, n, 0, m, 0, n);
     return mat_t;
 }
@@ -548,9 +548,10 @@ inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, size_t m,
  * @see inline void vecMatrixProd(const T *v_in,
  * const T *mat, T *v_out, size_t m, size_t n)
  */
-template <class T>
-inline auto vecMatrixProd(const std::vector<T> &v_in, const std::vector<T> &mat,
-                          size_t m, size_t n) -> std::vector<T> {
+template <class T, class Alloc>
+inline auto vecMatrixProd(const std::vector<T, Alloc> &v_in,
+                          const std::vector<T, Alloc> &mat, size_t m, size_t n)
+    -> std::vector<T, Alloc> {
     if (v_in.size() != m) {
         throw std::invalid_argument("Invalid size for the input vector");
     }
@@ -559,7 +560,7 @@ inline auto vecMatrixProd(const std::vector<T> &v_in, const std::vector<T> &mat,
             "Invalid number of rows and columns for the input matrix");
     }
 
-    std::vector<T> v_out(n);
+    std::vector<T, Alloc> v_out(n);
     vecMatrixProd(v_in.data(), mat.data(), v_out.data(), m, n);
 
     return v_out;

@@ -22,11 +22,12 @@
 #include <variant>
 #include <vector>
 
+#include "DispatchKeys.hpp"
 #include "DynamicDispatcher.hpp"
 #include "Error.hpp"
 #include "JacobianTape.hpp"
 #include "LinearAlgebra.hpp"
-#include "StateVectorManaged.hpp"
+#include "StateVectorCPU.hpp"
 
 #include <iostream>
 
@@ -48,7 +49,7 @@ namespace Pennylane::Algorithms {
  */
 template <class T = double> class AdjointJacobian {
   private:
-    using GeneratorFunc = void (*)(StateVectorManaged<T> &,
+    using GeneratorFunc = void (*)(StateVectorCPU<T> &,
                                    const std::vector<size_t> &,
                                    const bool); // function pointer type
 
@@ -63,25 +64,26 @@ template <class T = double> class AdjointJacobian {
      * @param obs_index Observable index position of Jacobian to update.
      * @param param_index Parameter index position of Jacobian to update.
      */
-    inline void updateJacobian(const StateVectorManaged<T> &sv1,
-                               const StateVectorManaged<T> &sv2,
+    inline void updateJacobian(const StateVectorCPU<T> &sv1,
+                               const StateVectorCPU<T> &sv2,
                                std::vector<std::vector<T>> &jac,
                                T scaling_coeff, size_t obs_index,
                                size_t param_index) {
         jac[obs_index][param_index] =
             -2 * scaling_coeff *
-            std::imag(innerProdC(sv1.getDataVector(), sv2.getDataVector()));
+            std::imag(
+                innerProdC(sv1.getData(), sv2.getData(), sv1.getLength()));
     }
 
     /**
      * @brief Utility method to apply all operations from given `%OpsData<T>`
-     * object to `%StateVectorManaged<T>`
+     * object to `%StateVectorCPU<T>`
      *
      * @param state Statevector to be updated.
      * @param operations Operations to apply.
      * @param adj Take the adjoint of the given operations.
      */
-    inline void applyOperations(StateVectorManaged<T> &state,
+    inline void applyOperations(StateVectorCPU<T> &state,
                                 const OpsData<T> &operations,
                                 bool adj = false) {
         for (size_t op_idx = 0; op_idx < operations.getOpsName().size();
@@ -94,13 +96,13 @@ template <class T = double> class AdjointJacobian {
     }
     /**
      * @brief Utility method to apply the adjoint indexed operation from
-     * `%OpsData<T>` object to `%StateVectorManaged<T>`.
+     * `%OpsData<T>` object to `%StateVectorCPU<T>`.
      *
      * @param state Statevector to be updated.
      * @param operations Operations to apply.
      * @param op_idx Adjointed operation index to apply.
      */
-    inline void applyOperationAdj(StateVectorManaged<T> &state,
+    inline void applyOperationAdj(StateVectorCPU<T> &state,
                                   const OpsData<T> &operations, size_t op_idx) {
         state.applyOperation(operations.getOpsName()[op_idx],
                              operations.getOpsWires()[op_idx],
@@ -110,12 +112,12 @@ template <class T = double> class AdjointJacobian {
 
     /**
      * @brief Utility method to apply a given operations from given
-     * `%ObsDatum<T>` object to `%StateVectorManaged<T>`
+     * `%ObsDatum<T>` object to `%StateVectorCPU<T>`
      *
      * @param state Statevector to be updated.
      * @param observable Observable to apply.
      */
-    inline void applyObservable(StateVectorManaged<T> &state,
+    inline void applyObservable(StateVectorCPU<T> &state,
                                 const ObsDatum<T> &observable) {
         using namespace Pennylane::Util;
         for (size_t j = 0; j < observable.getSize(); j++) {
@@ -157,8 +159,8 @@ template <class T = double> class AdjointJacobian {
      * @param reference_state Reference statevector
      * @param observables Vector of observables to apply to each statevector.
      */
-    inline void applyObservables(std::vector<StateVectorManaged<T>> &states,
-                                 const StateVectorManaged<T> &reference_state,
+    inline void applyObservables(std::vector<StateVectorCPU<T>> &states,
+                                 const StateVectorCPU<T> &reference_state,
                                  const std::vector<ObsDatum<T>> &observables) {
         // clang-format off
         // Globally scoped exception value to be captured within OpenMP block.
@@ -174,7 +176,7 @@ template <class T = double> class AdjointJacobian {
         #endif
             for (size_t h_i = 0; h_i < num_observables; h_i++) {
                 try {
-                    states[h_i].updateData(reference_state.getDataVector());
+                    states[h_i].updateData(reference_state.getData());
                     applyObservable(states[h_i], observables[h_i]);
                 } catch (...) {
                     #if defined(_OPENMP)
@@ -207,7 +209,7 @@ template <class T = double> class AdjointJacobian {
      * @param op_idx Index of given operation within operations list to take
      * adjoint of.
      */
-    inline void applyOperationsAdj(std::vector<StateVectorManaged<T>> &states,
+    inline void applyOperationsAdj(std::vector<StateVectorCPU<T>> &states,
                                    const OpsData<T> &operations,
                                    size_t op_idx) {
         // clang-format off
@@ -298,7 +300,7 @@ template <class T = double> class AdjointJacobian {
      * of parametric gates.
      *
      * For the statevector data associated with `psi` of length `num_elements`,
-     * we make internal copies to a `%StateVectorManaged<T>` object, with one
+     * we make internal copies to a `%StateVectorCPU<T>` object, with one
      * per required observable. The `operations` will be applied to the internal
      * statevector copies, with the operation indices participating in the
      * gradient calculations given in `trainableParams`, and the overall number
@@ -333,7 +335,7 @@ template <class T = double> class AdjointJacobian {
             num_param_ops - 1; // total number of parametric ops
 
         // Create $U_{1:p}\vert \lambda \rangle$
-        StateVectorManaged<T> lambda(jd.getPtrStateVec(), jd.getSizeStateVec());
+        StateVectorCPU<T> lambda(jd.getPtrStateVec(), jd.getSizeStateVec());
 
         // Apply given operations to statevector if requested
         if (apply_operations) {
@@ -343,12 +345,14 @@ template <class T = double> class AdjointJacobian {
         const auto tp_begin = tp.begin();
         auto tp_it = tp.end();
 
+        StateVectorCPU<T> sv{lambda.getNumQubits(), Threading::SingleThread};
         // Create observable-applied state-vectors
-        std::vector<StateVectorManaged<T>> H_lambda(
-            num_observables, StateVectorManaged<T>{lambda.getNumQubits()});
+        std::vector<StateVectorCPU<T>> H_lambda(
+            num_observables,
+            StateVectorCPU<T>{lambda.getNumQubits(), Threading::SingleThread});
         applyObservables(H_lambda, lambda, obs);
 
-        StateVectorManaged<T> mu(lambda.getNumQubits());
+        StateVectorCPU<T> mu(lambda.getNumQubits());
 
         for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
              op_idx--) {
@@ -357,7 +361,7 @@ template <class T = double> class AdjointJacobian {
                         "differentiation method");
             if ((ops_name[op_idx] != "QubitStateVector") &&
                 (ops_name[op_idx] != "BasisState")) {
-                mu.updateData(lambda.getDataVector());
+                mu.updateData(lambda.getData());
                 applyOperationAdj(lambda, ops, op_idx);
 
                 if (ops.hasParams(op_idx)) {
@@ -387,9 +391,9 @@ template <class T = double> class AdjointJacobian {
                              obs_idx++) {
                             jac[mat_row_idx + obs_idx] =
                                 -2 * scalingFactor *
-                                std::imag(innerProdC(
-                                    H_lambda[obs_idx].getDataVector(),
-                                    mu.getDataVector()));
+                                std::imag(
+                                    innerProdC(H_lambda[obs_idx].getData(),
+                                               mu.getData(), mu.getLength()));
                         }
                         trainableParamNumber--;
                         std::advance(tp_it, -1);

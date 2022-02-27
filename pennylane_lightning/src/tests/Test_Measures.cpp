@@ -3,8 +3,7 @@
 #include <vector>
 
 #include "Measures.hpp"
-#include "StateVectorManaged.hpp"
-#include "StateVectorRaw.hpp"
+#include "StateVectorCPU.hpp"
 #include "Util.hpp"
 
 #include <catch2/catch.hpp>
@@ -18,14 +17,14 @@ using std::string;
 using std::vector;
 }; // namespace
 
-StateVectorManaged<double> Initializing_StateVector() {
+StateVectorCPU<double> Initializing_StateVector() {
     // Defining a StateVector in a non-trivial configuration:
     size_t num_qubits = 3;
     size_t data_size = std::pow(2, num_qubits);
 
     std::vector<std::complex<double>> arr(data_size, 0);
     arr[0] = 1;
-    StateVectorManaged<double> Measured_StateVector(arr.data(), data_size);
+    StateVectorCPU<double> Measured_StateVector(arr.data(), data_size);
 
     std::vector<size_t> wires;
 
@@ -65,12 +64,11 @@ TEST_CASE("Probabilities", "[Measures]") {
         {1, 2},    {2, 1},    {0},       {1},       {2}};
 
     // Defining the State Vector that will be measured.
-    StateVectorManaged<double> Measured_StateVector =
-        Initializing_StateVector();
+    StateVectorCPU<double> Measured_StateVector = Initializing_StateVector();
 
     // Initializing the measures class.
     // It will attach to the StateVector, allowing measures to keep been taken.
-    Measures<double, StateVectorManaged<double>> Measurer(Measured_StateVector);
+    Measures<double, StateVectorCPU<double>> Measurer(Measured_StateVector);
 
     vector<double> probabilities;
 
@@ -92,12 +90,11 @@ TEST_CASE("Probabilities", "[Measures]") {
 
 TEST_CASE("Expected Values", "[Measures]") {
     // Defining the State Vector that will be measured.
-    StateVectorManaged<double> Measured_StateVector =
-        Initializing_StateVector();
+    StateVectorCPU<double> Measured_StateVector = Initializing_StateVector();
 
     // Initializing the measures class.
     // It will attach to the StateVector, allowing measures to keep been taken.
-    Measures<double, StateVectorManaged<double>> Measurer(Measured_StateVector);
+    Measures<double, StateVectorCPU<double>> Measurer(Measured_StateVector);
 
     SECTION("Testing single operation defined by a matrix:") {
         vector<std::complex<double>> PauliX = {0, 1, 1, 0};
@@ -165,12 +162,11 @@ TEST_CASE("Expected Values", "[Measures]") {
 
 TEST_CASE("Variances", "[Measures]") {
     // Defining the State Vector that will be measured.
-    StateVectorManaged<double> Measured_StateVector =
-        Initializing_StateVector();
+    StateVectorCPU<double> Measured_StateVector = Initializing_StateVector();
 
     // Initializing the measures class.
     // It will attach to the StateVector, allowing measures to keep been taken.
-    Measures<double, StateVectorManaged<double>> Measurer(Measured_StateVector);
+    Measures<double, StateVectorCPU<double>> Measurer(Measured_StateVector);
 
     SECTION("Testing single operation defined by a matrix:") {
         vector<std::complex<double>> PauliX = {0, 1, 1, 0};

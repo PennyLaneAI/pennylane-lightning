@@ -141,6 +141,18 @@ template <class PrecisionT, class Derived> class StateVectorBase {
         return static_cast<const Derived *>(this)->getData();
     }
 
+    [[nodiscard]] inline auto
+    getKernelForGate(Gates::GateOperation gate_op) const -> Gates::KernelType {
+        return static_cast<const Derived *>(this)->getKernelForGate(gate_op);
+    }
+
+    [[nodiscard]] inline auto
+    getKernelForGenerator(Gates::GeneratorOperation gntr_op) const
+        -> Gates::KernelType {
+        return static_cast<const Derived *>(this)->getKernelForGenerator(
+            gntr_op);
+    }
+
     /**
      * @brief Compare two statevectors.
      *
@@ -192,8 +204,10 @@ template <class PrecisionT, class Derived> class StateVectorBase {
                         const std::vector<size_t> &wires, bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
         auto *arr = getData();
-        DynamicDispatcher<PrecisionT>::getInstance().applyOperation(
-            arr, num_qubits_, opName, wires, inverse, params);
+        auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        const auto gate_op = dispatcher.strToGateOp(opName);
+        dispatcher.applyOperation(getKernelForGate(gate_op), arr, num_qubits_,
+                                  gate_op, wires, inverse, params);
     }
 
     /**
@@ -208,9 +222,15 @@ template <class PrecisionT, class Derived> class StateVectorBase {
                          const std::vector<std::vector<size_t>> &wires,
                          const std::vector<bool> &inverse,
                          const std::vector<std::vector<PrecisionT>> &params) {
-        auto *arr = getData();
-        DynamicDispatcher<PrecisionT>::getInstance().applyOperations(
-            arr, num_qubits_, ops, wires, inverse, params);
+        const size_t numOperations = ops.size();
+        if (numOperations != wires.size()) {
+            throw std::invalid_argument(
+                "Invalid arguments: number of operations, wires, and "
+                "parameters must all be equal");
+        }
+        for (size_t i = 0; i < numOperations; i++) {
+            applyOperation(ops[i], wires[i], inverse[i], params[i]);
+        }
     }
 
     /**
@@ -223,9 +243,15 @@ template <class PrecisionT, class Derived> class StateVectorBase {
     void applyOperations(const std::vector<std::string> &ops,
                          const std::vector<std::vector<size_t>> &wires,
                          const std::vector<bool> &inverse) {
-        auto *arr = getData();
-        DynamicDispatcher<PrecisionT>::getInstance().applyOperations(
-            arr, num_qubits_, ops, wires, inverse);
+        const size_t numOperations = ops.size();
+        if (numOperations != wires.size()) {
+            throw std::invalid_argument(
+                "Invalid arguments: number of operations, wires, and "
+                "parameters must all be equal");
+        }
+        for (size_t i = 0; i < numOperations; i++) {
+            applyOperation(ops[i], wires[i], inverse[i], {});
+        }
     }
 
     /**
@@ -256,8 +282,10 @@ template <class PrecisionT, class Derived> class StateVectorBase {
                                       const std::vector<size_t> &wires,
                                       bool adj = false) -> PrecisionT {
         auto *arr = getData();
-        return DynamicDispatcher<PrecisionT>::getInstance().applyGenerator(
-            arr, num_qubits_, opName, wires, adj);
+        auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        return dispatcher.applyGenerator(
+            getKernelForGenerator(dispatcher.strToGeneratorOp(opName)), arr,
+            num_qubits_, opName, wires, adj);
     }
 
     /**

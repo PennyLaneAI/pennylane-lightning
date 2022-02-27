@@ -26,7 +26,7 @@
 #include <vector>
 
 #include "LinearAlgebra.hpp"
-#include "StateVectorManaged.hpp"
+#include "StateVectorCPU.hpp"
 #include "StateVectorRaw.hpp"
 
 namespace Pennylane {
@@ -123,7 +123,7 @@ class Measures {
                 const std::vector<size_t> &wires) {
         // Copying the original state vector, for the application of the
         // observable operator.
-        StateVectorManaged<fp_t> operator_statevector(original_statevector);
+        StateVectorCPU<fp_t> operator_statevector(original_statevector);
 
         operator_statevector.applyMatrix(matrix, wires);
 
@@ -143,7 +143,7 @@ class Measures {
                 const std::vector<size_t> &wires) {
         // Copying the original state vector, for the application of the
         // observable operator.
-        StateVectorManaged<fp_t> operator_statevector(original_statevector);
+        StateVectorCPU<fp_t> operator_statevector(original_statevector);
 
         operator_statevector.applyOperation(operation, wires);
 
@@ -190,7 +190,7 @@ class Measures {
     fp_t var(const std::string &operation, const std::vector<size_t> &wires) {
         // Copying the original state vector, for the application of the
         // observable operator.
-        StateVectorManaged<fp_t> operator_statevector(original_statevector);
+        StateVectorCPU<fp_t> operator_statevector(original_statevector);
 
         operator_statevector.applyOperation(operation, wires);
 
@@ -216,7 +216,7 @@ class Measures {
              const std::vector<size_t> &wires) {
         // Copying the original state vector, for the application of the
         // observable operator.
-        StateVectorManaged<fp_t> operator_statevector(original_statevector);
+        StateVectorCPU<fp_t> operator_statevector(original_statevector);
 
         operator_statevector.applyMatrix(matrix, wires);
 

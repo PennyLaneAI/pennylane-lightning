@@ -19,7 +19,7 @@ compiler_info=$(<compiler_info.txt)
 
 if [[ "$gate" != "MultiRZ" ]]; then
 	# Creating data file
-	binary_name="./gate_benchmark_oplist"
+	binary_name="./benchmark_operation"
 	path_to_binary="$currdir/$binary_name"
 
 	resdir="$currdir/res_${compiler_info}"

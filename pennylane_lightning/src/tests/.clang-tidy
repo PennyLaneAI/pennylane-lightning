@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,-*,-llvmlibc-*,modernize-*,-modernize-use-trailing-return-type,clang-analyzer-cplusplus*,openmp-*,performance-*,portability-*,readability-*,-readability-magic-numbers,-modernize-avoid-c-arrays'
+Checks:          'clang-diagnostic-*,clang-analyzer-*,-*,-llvmlibc-*,modernize-*,-modernize-use-trailing-return-type,clang-analyzer-cplusplus*,openmp-*,performance-*,portability-*,readability-*,-readability-magic-numbers,hicpp-*,-hicpp-no-array-decay,bugprone-suspicious-*,llvm-namespace-comment,cppcoreguidelines-avoid-non-const-global-variables,cppcoreguidelines-slicing,cppcoreguidelines-special-member-functions'
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'
 AnalyzeTemporaryDtors: false
@@ -216,7 +216,7 @@ CheckOptions:
   - key:             modernize-use-auto.RemoveStars
     value:           'false'
   - key:             readability-magic-numbers.IgnorePowersOf2IntegerValues
-    value:           'false'
+    value:           'true'
   - key:             portability-simd-intrinsics.Std
     value:           ''
   - key:             readability-redundant-member-init.IgnoreBaseInCopyConstructors

@@ -83,7 +83,7 @@ void testGeneratorForGate(RandomEngine &re, size_t num_qubits) {
 
     DYNAMIC_SECTION("Test generator of " << gate_name << " for kernel "
                                          << GateImplementation::name) {
-        const auto wires = createWires(gate_op);
+        const auto wires = createWires(gate_op, num_qubits);
         const auto ini_st = createRandomState<PrecisionT>(re, num_qubits);
 
         auto gntr_func =

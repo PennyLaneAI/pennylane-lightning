@@ -38,7 +38,7 @@ void testInverseKernelGate(RandomEngine &re, size_t num_qubits) {
                 GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                                       gate_op>::value;
 
-            const auto wires = createWires(gate_op);
+            const auto wires = createWires(gate_op, num_qubits);
             const auto params = createParams<ParamT>(gate_op);
 
             callGateOps(func_ptr, st.data(), num_qubits, wires, false, params);

@@ -404,4 +404,39 @@ auto chunkData(const Container<T> &data, std::size_t num_chunks)
 // type alias
 template <class T> using remove_cvref_t = typename remove_cvref<T>::type;
 
+/**
+ * @brief Iterate over all enum values (if BEGIN and END are defined).
+ *
+ * @tparam T enum type
+ * @tparam Func function to execute
+ */
+template <class T, class Func> void for_each_enum(Func &&func) {
+    for (auto e = T::BEGIN; e != T::END;
+         e = static_cast<T>(std::underlying_type_t<T>(e) + 1)) {
+        func(e);
+    }
+}
+template <class T, class U, class Func> void for_each_enum(Func &&func) {
+    for (auto e1 = T::BEGIN; e1 != T::END;
+         e1 = static_cast<T>(std::underlying_type_t<T>(e1) + 1)) {
+        for (auto e2 = U::BEGIN; e2 != U::END;
+             e2 = static_cast<U>(std::underlying_type_t<U>(e2) + 1)) {
+            func(e1, e2);
+        }
+    }
+}
+
+template <class PrecisionT, class TypeList> struct common_alignment {
+    constexpr static size_t value =
+        std::max(TypeList::Type::template required_alignment<PrecisionT>,
+                 common_alignment<PrecisionT, typename TypeList::Next>::value);
+};
+template <class PrecisionT> struct common_alignment<PrecisionT, void> {
+    constexpr static size_t value = std::alignment_of_v<PrecisionT>;
+};
+
+template <class PrecisionT, class TypeList>
+[[maybe_unused]] constexpr static size_t common_alignment_v =
+    common_alignment<PrecisionT, TypeList>::value;
+
 } // namespace Pennylane::Util

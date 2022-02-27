@@ -71,13 +71,18 @@ using std::vector;
 template <typename PrecisionT, class GateImplementation>
 void testApplyPauliX() {
     const size_t num_qubits = 3;
-    for (size_t index = 0; index < num_qubits; index++) {
-        auto st = createZeroState<PrecisionT>(num_qubits);
-        CHECK(st[0] == Util::ONE<PrecisionT>());
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", PauliX - " << PrecisionToName<PrecisionT>::value) {
+        for (size_t index = 0; index < num_qubits; index++) {
+            auto st = createZeroState<PrecisionT>(num_qubits);
+            CHECK(st[0] == Util::ONE<PrecisionT>());
 
-        GateImplementation::applyPauliX(st.data(), num_qubits, {index}, false);
-        CHECK(st[0] == Util::ZERO<PrecisionT>());
-        CHECK(st[0b1 << (num_qubits - index - 1)] == Util::ONE<PrecisionT>());
+            GateImplementation::applyPauliX(st.data(), num_qubits, {index},
+                                            false);
+            CHECK(st[0] == Util::ZERO<PrecisionT>());
+            CHECK(st[0b1 << (num_qubits - index - 1)] ==
+                  Util::ONE<PrecisionT>());
+        }
     }
 }
 PENNYLANE_RUN_TEST(PauliX);
@@ -133,23 +138,20 @@ PENNYLANE_RUN_TEST(PauliZ);
 
 template <typename PrecisionT, class GateImplementation>
 void testApplyHadamard() {
-    using ComplexPrecisionT = std::complex<PrecisionT>;
     const size_t num_qubits = 3;
     for (size_t index = 0; index < num_qubits; index++) {
         auto st = createZeroState<PrecisionT>(num_qubits);
 
-        CHECK(st[0] == ComplexPrecisionT{1, 0});
         GateImplementation::applyHadamard(st.data(), num_qubits, {index},
                                           false);
 
-        ComplexPrecisionT expected(1 / std::sqrt(2), 0);
-        CHECK(expected.real() == Approx(st[0].real()));
-        CHECK(expected.imag() == Approx(st[0].imag()));
-
-        CHECK(expected.real() ==
-              Approx(st[0b1 << (num_qubits - index - 1)].real()));
-        CHECK(expected.imag() ==
-              Approx(st[0b1 << (num_qubits - index - 1)].imag()));
+        std::vector<char> expected_string;
+        expected_string.resize(num_qubits);
+        std::fill(expected_string.begin(), expected_string.end(), '0');
+        expected_string[index] = '+';
+        const auto expected = createProductState<PrecisionT>(
+            std::string_view{expected_string.data(), num_qubits});
+        CHECK(expected == PLApprox(st));
     }
 }
 PENNYLANE_RUN_TEST(Hadamard);
@@ -205,17 +207,40 @@ PENNYLANE_RUN_TEST(T);
 
 template <typename PrecisionT, class GateImplementation> void testApplyCNOT() {
     const size_t num_qubits = 3;
-    auto st = createZeroState<PrecisionT>(num_qubits);
 
-    // Test using |+00> state to generate 3-qubit GHZ state
-    GateImplementation::applyHadamard(st.data(), num_qubits, {0}, false);
-
-    for (size_t index = 1; index < num_qubits; index++) {
-        GateImplementation::applyCNOT(st.data(), num_qubits, {index - 1, index},
-                                      false);
+    SECTION("CNOT0,1 |000> = |000>") {
+        const auto ini_st = createProductState<PrecisionT>("000");
+        auto st = ini_st;
+        GateImplementation::applyCNOT(st.data(), num_qubits, {0, 1}, false);
+        CHECK(st == ini_st);
     }
-    CHECK(st.front() == Util::INVSQRT2<PrecisionT>());
-    CHECK(st.back() == Util::INVSQRT2<PrecisionT>());
+
+    SECTION("CNOT0,1 |100> = |110>") {
+        const auto ini_st = createProductState<PrecisionT>("100");
+        auto st = ini_st;
+        GateImplementation::applyCNOT(st.data(), num_qubits, {0, 1}, false);
+        CHECK(st ==
+              PLApprox(createProductState<PrecisionT>("110")).margin(1e-7));
+    }
+    SECTION("CNOT1,2 |110> = |111>") {
+        const auto ini_st = createProductState<PrecisionT>("110");
+        auto st = ini_st;
+        GateImplementation::applyCNOT(st.data(), num_qubits, {1, 2}, false);
+        CHECK(st ==
+              PLApprox(createProductState<PrecisionT>("111")).margin(1e-7));
+    }
+
+    SECTION("Generate GHZ state") {
+        auto st = createProductState<PrecisionT>("+00");
+
+        // Test using |+00> state to generate 3-qubit GHZ state
+        for (size_t index = 1; index < num_qubits; index++) {
+            GateImplementation::applyCNOT(st.data(), num_qubits,
+                                          {index - 1, index}, false);
+        }
+        CHECK(st.front() == Util::INVSQRT2<PrecisionT>());
+        CHECK(st.back() == Util::INVSQRT2<PrecisionT>());
+    }
 }
 PENNYLANE_RUN_TEST(CNOT);
 
@@ -223,11 +248,8 @@ PENNYLANE_RUN_TEST(CNOT);
 template <typename PrecisionT, class GateImplementation> void testApplyCY() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     const size_t num_qubits = 3;
-    auto ini_st = createZeroState<PrecisionT>(num_qubits);
-
-    // Test using |+10> state
-    GateImplementation::applyHadamard(ini_st.data(), num_qubits, {0}, false);
-    GateImplementation::applyPauliX(ini_st.data(), num_qubits, {1}, false);
+    auto ini_st =
+        createProductState<PrecisionT>("+10"); // Test using |+10> state
 
     CHECK(ini_st == std::vector<ComplexPrecisionT>{
                         Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
@@ -299,20 +321,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyCZ() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     const size_t num_qubits = 3;
 
-    auto ini_st = createZeroState<PrecisionT>(num_qubits);
-
-    // Test using |+10> state
-    GateImplementation::applyHadamard(ini_st.data(), num_qubits, {0}, false);
-    GateImplementation::applyPauliX(ini_st.data(), num_qubits, {1}, false);
-
-    auto st = ini_st;
-    CHECK(st == std::vector<ComplexPrecisionT>{
-                    Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
-                    std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                    Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
-                    Util::ZERO<PrecisionT>(),
-                    std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                    Util::ZERO<PrecisionT>()});
+    auto ini_st = createProductState<PrecisionT>("+10");
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CZ0,1 |+10> -> |-10> - "
@@ -340,7 +349,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyCZ() {
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CZ0,2 |+10> -> |+10> - "
                     << PrecisionToName<PrecisionT>::value) {
-        const std::vector<ComplexPrecisionT> &expected{ini_st};
+        const auto &expected = ini_st;
 
         auto sv02 = ini_st;
         auto sv20 = ini_st;
@@ -354,7 +363,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyCZ() {
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CZ1,2 |+10> -> |+10> - "
                     << PrecisionToName<PrecisionT>::value) {
-        const std::vector<ComplexPrecisionT> &expected{ini_st};
+        const auto &expected = ini_st;
 
         auto sv12 = ini_st;
         auto sv21 = ini_st;
@@ -372,11 +381,9 @@ PENNYLANE_RUN_TEST(CZ);
 template <typename PrecisionT, class GateImplementation> void testApplySWAP() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     const size_t num_qubits = 3;
-    auto ini_st = createZeroState<PrecisionT>(num_qubits);
+    auto ini_st = createProductState<PrecisionT>("+10");
 
     // Test using |+10> state
-    GateImplementation::applyHadamard(ini_st.data(), num_qubits, {0}, false);
-    GateImplementation::applyPauliX(ini_st.data(), num_qubits, {1}, false);
 
     CHECK(ini_st == std::vector<ComplexPrecisionT>{
                         Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
@@ -461,12 +468,9 @@ template <typename PrecisionT, class GateImplementation>
 void testApplyToffoli() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     const size_t num_qubits = 3;
-    auto ini_st = createZeroState<PrecisionT>(num_qubits);
+    auto ini_st = createProductState<PrecisionT>("+10");
 
     // Test using |+10> state
-    GateImplementation::applyHadamard(ini_st.data(), num_qubits, {0}, false);
-    GateImplementation::applyPauliX(ini_st.data(), num_qubits, {1}, false);
-
     DYNAMIC_SECTION(GateImplementation::name
                     << ", Toffoli 0,1,2 |+10> -> |010> + |111> - "
                     << PrecisionToName<PrecisionT>::value) {
@@ -539,11 +543,8 @@ template <typename PrecisionT, class GateImplementation> void testApplyCSWAP() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     const size_t num_qubits = 3;
 
-    auto ini_st = createZeroState<PrecisionT>(num_qubits);
-
-    // Test using |+10> state
-    GateImplementation::applyHadamard(ini_st.data(), num_qubits, {0}, false);
-    GateImplementation::applyPauliX(ini_st.data(), num_qubits, {1}, false);
+    auto ini_st =
+        createProductState<PrecisionT>("+10"); // Test using |+10> state
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CSWAP 0,1,2 |+10> -> |010> + |101> - "

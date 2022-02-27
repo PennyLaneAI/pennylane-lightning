@@ -19,6 +19,7 @@
 #include <climits>
 #include <cstdint>
 #include <cstdlib>
+#include <type_traits>
 
 #if defined(_MSC_VER)
 #include <intrin.h> // for __lzcnt64 and __popcount
@@ -171,6 +172,18 @@ inline auto log2PerfectPower(unsigned long val) -> size_t {
 #endif
 ///@}
 
+constexpr auto constLog2PerfectPower(size_t value) -> size_t {
+    if (value == 0) {
+        return 0; // not well defined
+    }
+    size_t n = 0;
+    while ((value & 1U) == 0U) {
+        value >>= 1U;
+        ++n;
+    }
+    return n;
+}
+
 /**
  * @brief Check if there is a positive integer n such that value == 2^n.
  *
@@ -196,8 +209,18 @@ inline auto constexpr fillLeadingOnes(size_t pos) -> size_t {
 /**
  * @brief Swap bits in i-th and j-th position in place
  */
-inline void constexpr bitswap(size_t bits, const size_t i, const size_t j) {
+inline auto constexpr bitswap(size_t bits, const size_t i, const size_t j)
+    -> size_t {
     size_t x = ((bits >> i) ^ (bits >> j)) & 1U;
-    bits ^= ((x << i) | (x << j));
+    return bits ^ ((x << i) | (x << j));
+}
+
+template <class IntegerType>
+inline auto constexpr fillOnes(size_t nbits) -> IntegerType {
+    static_assert(std::is_integral_v<IntegerType> &&
+                  std::is_unsigned_v<IntegerType>);
+
+    return static_cast<IntegerType>(~IntegerType(0)) >>
+           static_cast<IntegerType>(CHAR_BIT * sizeof(IntegerType) - nbits);
 }
 } // namespace Pennylane::Util

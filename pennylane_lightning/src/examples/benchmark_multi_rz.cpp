@@ -1,5 +1,5 @@
 #include "ExampleUtil.hpp"
-#include "StateVectorManaged.hpp"
+#include "StateVectorCPU.hpp"
 
 #include <chrono>
 #include <cstdio>
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
         params.emplace_back(param_dist(re));
     }
 
-    StateVectorManaged<TestType> sv{num_qubits};
+    StateVectorCPU<TestType> sv{num_qubits};
 
     std::chrono::time_point<std::chrono::high_resolution_clock> t_start =
         std::chrono::high_resolution_clock::now();
