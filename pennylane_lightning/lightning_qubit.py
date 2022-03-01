@@ -529,6 +529,31 @@ class LightningQubit(DefaultQubit):
 
         return M.probs(device_wires)
 
+    def generate_samples_test(self):
+        # translate to wire labels used by device
+        device_wires = self.map_wires(self.wires)
+
+        # To support np.complex64 based on the type of self._state
+        dtype = self._state.dtype
+        if dtype == np.complex64:
+            use_csingle = True
+        elif dtype == np.complex128:
+            use_csingle = False
+        else:
+            raise TypeError(f"Unsupported complex Type: {dtype}")
+
+        # Initialization of state
+        ket = np.ravel(self._state)
+
+        if use_csingle:
+            ket = ket.astype(np.complex64)
+
+        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
+        M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
+
+        return M.generate_samples_test(device_wires, self.shots)
+        
+    
     def expval(self, observable, shot_range=None, bin_size=None):
         """Expectation value of the supplied observable.
 

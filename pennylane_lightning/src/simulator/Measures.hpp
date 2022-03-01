@@ -24,12 +24,14 @@
 #include <complex>
 #include <cstdio>
 #include <vector>
+#include <random>
 
 #include "LinearAlgebra.hpp"
 #include "StateVectorManaged.hpp"
 #include "StateVectorRaw.hpp"
 
 namespace Pennylane {
+
 /**
  * @brief Observable's Measurement Class.
  *
@@ -256,5 +258,81 @@ class Measures {
 
         return expected_value_list;
     };
+  
+  std::vector<std::vector<int>> generate_samples_test(const std::vector<size_t> &wires,int num_samples)
+  {
+
+    size_t num_qubits = original_statevector.getNumQubits();
+    auto && probabilities = probs(wires);
+    int N = probabilities.size();
+    int i,j,k;
+    std::vector<fp_t> bucket_share(N);
+    std::vector<int> bucket_partner(N);
+    
+    for (i=0; i<N; i++) {
+      bucket_share[i] = probabilities[i] * N; 
+      bucket_partner[i] = i; 
+    }
+
+    for (j=0; j<N; j++) {
+      if (bucket_share[j] > 1.0){
+	break;
+      }
+    }
+
+    for (i=0; i<N; i++) {
+      k = i;
+      if (bucket_partner[k]!=i) {
+	continue; 
+      }
+      fp_t bucket_overflow = 1.0 - bucket_share[k];  
+      while (bucket_overflow > 0 ) {
+	if (j == N) { break; }     
+	bucket_partner[k]=j;              
+	bucket_share[j] -= bucket_overflow;
+	bucket_overflow = 1.0 - bucket_share[j];  
+	if (bucket_overflow >= 0) { 
+	  for (k=j++; j<N; j++) {
+	    if (bucket_share[j] > 1.0){
+	      break;
+	    }
+	  }
+	}
+      }
+    }
+
+    std::vector<int> counts(N,0);
+    
+#pragma omp parallel for 
+    for (int i = 0; i < num_samples; i++){
+      thread_local std::mt19937 generator(std::random_device{}());
+      std::uniform_real_distribution<fp_t> distribution(0.0, 1.0);
+      fp_t pct = distribution(generator)*N;
+      
+      int idx = static_cast<int>(pct);
+      if (pct-idx > bucket_share[idx])
+	counts[bucket_partner[idx]] += 1;
+      else
+	counts[idx] += 1;
+    }
+
+
+    std::vector<std::vector<int>> samples(num_samples,std::vector<int>(num_qubits,0));    
+#pragma omp parallel for
+    for (int j = 0; j < num_qubits; ++j) {
+      int s = 0;
+      for (int i = 0; i < counts.size(); ++i){
+	if (counts[i] >= 0){
+	  for (int k = s; k < counts[i]; ++k)
+	    samples[k][j] = (i >> j) & 1;
+	  s += counts[i];
+	}
+      }
+    }
+
+    return samples;
+    
+  }
+  
 }; // class Measures
 } // namespace Pennylane
