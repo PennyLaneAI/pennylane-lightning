@@ -309,7 +309,7 @@ void lightning_class_bindings(py::module &m) {
 
     class_name = "MeasuresC" + bitsize;
     py::class_<Measures<PrecisionT>>(m, class_name.c_str())
-        .def(py::init<const StateVectorRaw<PrecisionT> &>())
+        .def(py::init<const StateVectorRaw<PrecisionT>>())
         .def("probs",
              [](Measures<PrecisionT> &M, const std::vector<size_t> &wires) {
                  if (wires.empty()) {

@@ -21,6 +21,8 @@ from pennylane.measure import (
     Expectation,
 )
 
+from pennylane.queuing import AnnotatedQueue
+
 import pytest
 
 try:
@@ -503,3 +505,56 @@ class TestWiresInVar:
             return [qml.var(qml.PauliZ(wires=w)) for w in wires2]
 
         assert np.allclose(circuit1(), circuit2(), atol=tol)
+
+
+class TestStatisticsQueuing:
+    """Tests the statistics method in Lightning"""
+
+    @pytest.fixture
+    def dev(self):
+        return qml.device("lightning.qubit", wires=2)
+
+    @pytest.mark.parametrize(
+        "obs, expected",
+        [
+            (qml.var(qml.PauliZ(0)), [0.0]),
+            (qml.expval(qml.PauliZ(0)), [1.0]),
+            (qml.probs(), [1.0, 0.0, 0.0, 0.0]),
+        ],
+    )
+    def test_single_obs(self, dev, obs, expected):
+        """Test statistics over single observable oven an initiated state"""
+        res = dev.statistics([obs])
+        assert np.allclose(res, expected)
+
+    @pytest.mark.parametrize(
+        "obs, expected",
+        [
+            ([qml.var(qml.PauliZ(0)), qml.var(qml.PauliZ(1))], [0.0]),
+            ([qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliZ(1))], [1.0, 1.0]),
+            ([qml.probs(0), qml.probs(1)], [1.0, 0.0]),
+            ([qml.var(qml.PauliZ(1)), qml.expval(qml.PauliX(1))], [0.0, 1.0]),
+        ],
+    )
+    def test_obs_list(self, dev, obs, expected):
+        """Test statistics of a list of observables oven an initiated state"""
+        res = dev.statistics(obs)
+        assert np.allclose(res, expected)
+
+
+@pytest.mark.parametrize("stat_func", [qml.expval, qml.var, qml.sample])
+class TestBetaStatisticsError:
+    """Tests for errors arising for the beta statistics functions"""
+
+    def test_not_an_observable(self, stat_func):
+        """Test that a qml.QuantumFunctionError is raised if the provided
+        argument is not an observable"""
+        dev = qml.device("default.qubit", wires=2)
+
+        @qml.qnode(dev)
+        def circuit():
+            qml.RX(0.52, wires=0)
+            return stat_func(qml.CNOT(wires=[0, 1]))
+
+        with pytest.raises(qml.QuantumFunctionError, match="CNOT is not an observable"):
+            circuit()

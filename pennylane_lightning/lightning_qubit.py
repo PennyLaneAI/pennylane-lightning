@@ -31,8 +31,14 @@ from pennylane import (
 )
 import pennylane as qml
 from pennylane.devices import DefaultQubit
-from pennylane.operation import Expectation
 from pennylane.wires import Wires
+from pennylane.operation import (
+    Expectation,
+    Variance,
+    Probability,
+    Sample,
+    State,
+)
 
 from ._version import __version__
 
@@ -510,7 +516,27 @@ class LightningQubit(DefaultQubit):
 
         return processing_fns
 
-    def probability(self, wires=None, shot_range=None, bin_size=None):
+    def init_measures_object(self, pre_rotated=False):
+        # To support np.complex64 based on the type of self._state
+        dtype = self._state.dtype
+        if dtype == np.complex64:
+            use_csingle = True
+        elif dtype == np.complex128:
+            use_csingle = False
+        else:
+            raise TypeError(f"Unsupported complex Type: {dtype}")
+
+        # Initialization of state
+        state = self._pre_rotated_state if pre_rotated else self._state
+        ket = np.ravel(state)
+
+        if use_csingle:
+            ket = ket.astype(np.complex64)
+
+        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
+        return MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
+
+    def probability(self, wires=None, shot_range=None, bin_size=None, mc_obj=None):
         """Return the probability of each computational basis state.
 
         Devices that require a finite number of shots always return the
@@ -537,27 +563,11 @@ class LightningQubit(DefaultQubit):
         # translate to wire labels used by device
         device_wires = self.map_wires(wires)
 
-        # To support np.complex64 based on the type of self._state
-        dtype = self._state.dtype
-        if dtype == np.complex64:
-            use_csingle = True
-        elif dtype == np.complex128:
-            use_csingle = False
-        else:
-            raise TypeError(f"Unsupported complex Type: {dtype}")
-
-        # Initialization of state
-        ket = np.ravel(self._state)
-
-        if use_csingle:
-            ket = ket.astype(np.complex64)
-
-        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
-        M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
+        M = self.init_measures_object() if mc_obj is None else mc_obj
 
         return M.probs(device_wires)
 
-    def expval(self, observable, shot_range=None, bin_size=None):
+    def expval(self, observable, shot_range=None, bin_size=None, mc_obj=None):
         """Expectation value of the supplied observable.
 
         Args:
@@ -586,30 +596,14 @@ class LightningQubit(DefaultQubit):
             samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
             return np.squeeze(np.mean(samples, axis=0))
 
-        # To support np.complex64 based on the type of self._state
-        dtype = self._state.dtype
-        if dtype == np.complex64:
-            use_csingle = True
-        elif dtype == np.complex128:
-            use_csingle = False
-        else:
-            raise TypeError(f"Unsupported complex Type: {dtype}")
-
-        # Initialization of state
-        ket = np.ravel(self._pre_rotated_state)
-
-        if use_csingle:
-            ket = ket.astype(np.complex64)
-
-        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
-        M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
+        M = self.init_measures_object(pre_rotated=True) if mc_obj is None else mc_obj
 
         # translate to wire labels used by device
         observable_wires = self.map_wires(observable.wires)
 
         return M.expval(observable.name, observable_wires)
 
-    def var(self, observable, shot_range=None, bin_size=None):
+    def var(self, observable, shot_range=None, bin_size=None, mc_obj=None):
         """Variance of the supplied observable.
 
         Args:
@@ -636,28 +630,62 @@ class LightningQubit(DefaultQubit):
             samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
             return np.squeeze(np.var(samples, axis=0))
 
-        # To support np.complex64 based on the type of self._state
-        dtype = self._state.dtype
-        if dtype == np.complex64:
-            use_csingle = True
-        elif dtype == np.complex128:
-            use_csingle = False
-        else:
-            raise TypeError(f"Unsupported complex Type: {dtype}")
-
-        # Initialization of state
-        ket = np.ravel(self._pre_rotated_state)
-
-        if use_csingle:
-            ket = ket.astype(np.complex64)
-
-        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
-        M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
+        M = self.init_measures_object(pre_rotated=True) if mc_obj is None else mc_obj
 
         # translate to wire labels used by device
         observable_wires = self.map_wires(observable.wires)
 
         return M.var(observable.name, observable_wires)
+
+    def statistics(self, observables, shot_range=None, bin_size=None):
+        """Process measurement results from circuit execution and return statistics."""
+        # LightningQubit doesn't support sampling yet
+        not_sampling = True if self.shots == None else False
+
+        mc_obj = None
+        mc_pre = None
+        results = []
+
+        for obs in observables:
+            if obs.return_type is Probability:
+                if not_sampling and mc_obj is None:
+                    mc_obj = self.init_measures_object()
+                results.append(
+                    self.probability(
+                        wires=obs.wires, shot_range=shot_range, bin_size=bin_size, mc_obj=mc_obj
+                    )
+                )
+            elif obs.return_type is Expectation:
+                if not_sampling and mc_pre is None:
+                    mc_pre = self.init_measures_object(pre_rotated=True)
+                results.append(
+                    self.expval(obs, shot_range=shot_range, bin_size=bin_size, mc_obj=mc_pre)
+                )
+            elif obs.return_type is Variance:
+                if not_sampling and mc_pre is None:
+                    mc_pre = self.init_measures_object(pre_rotated=True)
+                results.append(
+                    self.var(obs, shot_range=shot_range, bin_size=bin_size, mc_obj=mc_pre)
+                )
+            elif obs.return_type is Sample:
+                results.append(super().sample(obs, shot_range=shot_range, bin_size=bin_size))
+            elif obs.return_type is State:
+                if len(observables) > 1:
+                    raise qml.QuantumFunctionError(
+                        "The state or density matrix cannot be returned in combination"
+                        " with other return types"
+                    )
+                if self.wires.labels != tuple(range(self.num_wires)):
+                    raise qml.QuantumFunctionError(
+                        "Returning the state is not supported when using custom wire labels"
+                    )
+                # LightningQubit doesn't support state preparation yet
+                results.append(super().access_state(wires=obs.wires))
+            elif obs.return_type is not None:
+                raise qml.QuantumFunctionError(
+                    "Unsupported return type specified for observable {}".format(obs.name)
+                )
+        return results
 
 
 if not CPP_BINARY_AVAILABLE:

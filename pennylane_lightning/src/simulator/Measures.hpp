@@ -42,12 +42,12 @@ namespace Pennylane {
 template <class fp_t = double, class SVType = StateVectorRaw<fp_t>>
 class Measures {
   private:
-    const SVType &original_statevector;
+    const SVType original_statevector;
     using CFP_t = std::complex<fp_t>;
 
   public:
-    Measures(const SVType &provided_statevector)
-        : original_statevector{provided_statevector} {};
+    Measures(const SVType provided_statevector)
+        : original_statevector{std::move(provided_statevector)} {};
 
     /**
      * @brief Probabilities of each computational basis state.
