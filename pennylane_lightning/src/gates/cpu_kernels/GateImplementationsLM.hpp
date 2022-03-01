@@ -65,8 +65,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GateOperation::CRX,     GateOperation::CRY,
         GateOperation::CRZ,     GateOperation::CRot,
         GateOperation::IsingXX, GateOperation::IsingYY,
-        GateOperation::IsingZZ, GateOperation::MultiRZ,
-        GateOperation::Matrix};
+        GateOperation::IsingZZ, GateOperation::MultiRZ};
 
     constexpr static std::array implemented_generators = {
         GeneratorOperation::RX,
@@ -83,6 +82,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GeneratorOperation::MultiRZ,
     };
 
+    constexpr static std::array implemented_matrices = {
+        MatrixOperation::SingleQubitOp, MatrixOperation::TwoQubitOp,
+        MatrixOperation::MultiQubitOp};
+
     /**
      * @brief Apply a single qubit gate to the statevector.
      *
@@ -95,9 +98,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     template <class PrecisionT>
     static inline void
     applySingleQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
-                       const std::complex<PrecisionT> *matrix, size_t wire,
-                       bool inverse = false) {
-        const size_t rev_wire = num_qubits - wire - 1;
+                       const std::complex<PrecisionT> *matrix,
+                       const std::vector<size_t> &wires, bool inverse = false) {
+        assert(wires.size() == 1);
+        const size_t rev_wire = num_qubits - wires[0] - 1;
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
         const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
@@ -146,6 +150,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     applyTwoQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
                     const std::complex<PrecisionT> *matrix,
                     const std::vector<size_t> &wires, bool inverse = false) {
+        assert(wires.size() == 2);
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
@@ -242,47 +247,38 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT>
-    static void applyMatrix(std::complex<PrecisionT> *arr, size_t num_qubits,
-                            const std::complex<PrecisionT> *matrix,
-                            const std::vector<size_t> &wires, bool inverse) {
+    static void
+    applyMultiQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
+                      const std::complex<PrecisionT> *matrix,
+                      const std::vector<size_t> &wires, bool inverse) {
         assert(num_qubits >= wires.size());
 
-        switch (wires.size()) {
-        case 1:
-            applySingleQubitOp(arr, num_qubits, matrix, wires[0], inverse);
-            break;
-        case 2:
-            applyTwoQubitOp(arr, num_qubits, matrix, wires, inverse);
-            break;
-        default: {
-            size_t dim = 1U << wires.size();
-            std::vector<size_t> indices;
-            indices.resize(dim);
+        size_t dim = 1U << wires.size();
+        std::vector<size_t> indices;
+        indices.resize(dim);
 
-            for (size_t k = 0; k < Util::exp2(num_qubits); k += dim) {
-                std::vector<std::complex<PrecisionT>> coeffs_in(dim);
-                std::vector<std::complex<PrecisionT>> coeffs_out(dim);
+        for (size_t k = 0; k < Util::exp2(num_qubits); k += dim) {
+            std::vector<std::complex<PrecisionT>> coeffs_in(dim);
+            std::vector<std::complex<PrecisionT>> coeffs_out(dim);
 
-                for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
-                    size_t idx = k | inner_idx;
-                    size_t n_wires = wires.size();
-                    for (size_t pos = 0; pos < n_wires; pos++) {
-                        idx = bitswap(idx, n_wires - pos - 1,
-                                      num_qubits - wires[pos] - 1);
-                    }
-                    indices[inner_idx] = idx;
-                    coeffs_in[inner_idx] = arr[idx];
+            for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
+                size_t idx = k | inner_idx;
+                size_t n_wires = wires.size();
+                for (size_t pos = 0; pos < n_wires; pos++) {
+                    idx = bitswap(idx, n_wires - pos - 1,
+                                  num_qubits - wires[pos] - 1);
                 }
-
-                Util::matrixVecProd(
-                    matrix, coeffs_in.data(), coeffs_out.data(), dim, dim,
-                    inverse ? Trans::Adjoint : Trans::NoTranspose);
-
-                for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
-                    arr[indices[inner_idx]] = coeffs_out[inner_idx];
-                }
+                indices[inner_idx] = idx;
+                coeffs_in[inner_idx] = arr[idx];
             }
-        }
+
+            Util::matrixVecProd(matrix, coeffs_in.data(), coeffs_out.data(),
+                                dim, dim,
+                                inverse ? Trans::Adjoint : Trans::NoTranspose);
+
+            for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
+                arr[indices[inner_idx]] = coeffs_out[inner_idx];
+            }
         }
     }
 
@@ -520,7 +516,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             (inverse) ? Gates::getRot<PrecisionT>(-omega, -theta, -phi)
                       : Gates::getRot<PrecisionT>(phi, theta, omega);
 
-        applySingleQubitOp(arr, num_qubits, rotMat.data(), wires[0]);
+        applySingleQubitOp(arr, num_qubits, rotMat.data(), wires);
     }
 
     /* Two-qubit gates */

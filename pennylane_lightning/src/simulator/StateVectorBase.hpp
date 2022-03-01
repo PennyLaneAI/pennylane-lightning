@@ -98,11 +98,12 @@ namespace Pennylane {
  * @tparam PrecisionT Floating point precision of underlying statevector data.
  * @tparam Derived Type of a derived class
  */
-template <class PrecisionT, class Derived> class StateVectorBase {
+template <class T, class Derived> class StateVectorBase {
   public:
     /**
      * @brief StateVector complex precision type.
      */
+    using PrecisionT = T;
     using ComplexPrecisionT = std::complex<PrecisionT>;
 
   private:
@@ -151,6 +152,12 @@ template <class PrecisionT, class Derived> class StateVectorBase {
         -> Gates::KernelType {
         return static_cast<const Derived *>(this)->getKernelForGenerator(
             gntr_op);
+    }
+
+    [[nodiscard]] inline auto
+    getKernelForMatrix(Gates::MatrixOperation mat_op) const
+        -> Gates::KernelType {
+        return static_cast<const Derived *>(this)->getKernelForMatrix(mat_op);
     }
 
     /**
@@ -293,31 +300,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * from numpy data. Data can be in 1D or 2D format.
      *
      * @param matrix Pointer to the array data.
-     * @param wires Wires the gate applies to.
-     * @param inverse Indicate whether inverse should be taken.
-     */
-    template <Gates::KernelType kernel>
-    inline void applyMatrix_(const ComplexPrecisionT *matrix,
-                             const std::vector<size_t> &wires,
-                             bool inverse = false) {
-        auto *arr = getData();
-        Gates::SelectKernel<kernel>::applyMatrix(arr, num_qubits_, matrix,
-                                                 wires, inverse);
-    }
-    template <Gates::KernelType kernel>
-    inline void applyMatrix_(const std::vector<ComplexPrecisionT> &matrix,
-                             const std::vector<size_t> &wires,
-                             bool inverse = false) {
-        auto *arr = getData();
-        Gates::SelectKernel<kernel>::applyMatrix(arr, num_qubits_, matrix,
-                                                 wires, inverse);
-    }
-
-    /**
-     * @brief Apply a given matrix directly to the statevector read directly
-     * from numpy data. Data can be in 1D or 2D format.
-     *
-     * @param matrix Pointer to the array data.
      * @param wires Wires to apply gate to.
      * @param inverse Indicate whether inverse should be taken.
      */
@@ -325,33 +307,52 @@ template <class PrecisionT, class Derived> class StateVectorBase {
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
         namespace Constant = Gates::Constant;
-        using Gates::GateOperation;
+        using Gates::MatrixOperation;
         using Gates::SelectKernel;
         using Gates::static_lookup;
 
-        constexpr auto kernel = static_lookup<GateOperation::Matrix>(
-            Constant::default_kernel_for_gates);
-        static_assert(
-            Util::array_has_elt(SelectKernel<kernel>::implemented_gates,
-                                GateOperation::Matrix),
-            "The default kernel for applyMatrix does not implement it.");
-        applyMatrix_<kernel>(matrix, wires, inverse);
+        auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        auto *arr = getData();
+
+        if (wires.empty()) {
+            throw std::invalid_argument(
+                "Number of wires must be larger than 0");
+        }
+
+        switch (wires.size()) {
+        case 1:
+            dispatcher.applyMatrix(
+                getKernelForMatrix(MatrixOperation::SingleQubitOp), arr,
+                MatrixOperation::SingleQubitOp, num_qubits_, matrix, wires,
+                inverse);
+            return;
+        case 2:
+            dispatcher.applyMatrix(
+                getKernelForMatrix(MatrixOperation::TwoQubitOp), arr,
+                MatrixOperation::TwoQubitOp, num_qubits_, matrix, wires,
+                inverse);
+            return;
+        default:
+            dispatcher.applyMatrix(
+                getKernelForMatrix(MatrixOperation::MultiQubitOp), arr,
+                MatrixOperation::MultiQubitOp, num_qubits_, matrix, wires,
+                inverse);
+            return;
+        }
+        PL_UNREACHABLE;
     }
-    inline void applyMatrix(const std::vector<ComplexPrecisionT> &matrix,
+
+    template <typename Alloc>
+    inline void applyMatrix(const std::vector<ComplexPrecisionT, Alloc> &matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
-        namespace Constant = Gates::Constant;
-        using Gates::GateOperation;
-        using Gates::SelectKernel;
-        using Gates::static_lookup;
+        if (matrix.size() != Util::exp2(2 * wires.size())) {
+            throw std::invalid_argument(
+                "The size of matrix does not match with the given "
+                "number of wires");
+        }
 
-        constexpr auto kernel = static_lookup<GateOperation::Matrix>(
-            Constant::default_kernel_for_gates);
-        static_assert(
-            Util::array_has_elt(SelectKernel<kernel>::implemented_gates,
-                                GateOperation::Matrix),
-            "The default kernel for applyMatrix does not implement it.");
-        applyMatrix_<kernel>(matrix, wires, inverse);
+        applyMatrix(matrix.data(), wires, inverse);
     }
 
     /**

@@ -24,6 +24,9 @@
 #include "Error.hpp"
 #include "GateUtil.hpp"
 #include "KernelType.hpp"
+#include "Macros.hpp"
+#include "OpToMemberFuncPtr.hpp"
+#include "Util.hpp"
 
 #include <cassert>
 #include <complex>
@@ -35,12 +38,6 @@
 
 /// @cond DEV
 namespace Pennylane::Internal {
-struct PairHash {
-    template <typename T, typename U>
-    size_t operator()(const std::pair<T, U> &p) const {
-        return std::hash<T>()(p.first) ^ std::hash<U>()(p.second);
-    }
-};
 /**
  * @brief Register all implemented gates for all available kernels.
  *
@@ -82,22 +79,26 @@ template <typename PrecisionT> class DynamicDispatcher {
         const std::vector<size_t> & /*wires*/, bool /*inverse*/,
         const std::vector<PrecisionT> & /*params*/)>;
 
-    using GeneratorFunc = PrecisionT (*)(std::complex<PrecisionT> * /*data*/,
-                                         size_t /*num_qubits*/,
-                                         const std::vector<size_t> & /*wires*/,
-                                         bool /*adjoint*/);
+    using GeneratorFunc = Gates::GeneratorFuncPtrT<PrecisionT>;
+    using MatrixFunc = std::function<void(std::complex<PrecisionT> *, size_t,
+                                          const std::complex<PrecisionT> *,
+                                          const std::vector<size_t> &, bool)>;
 
   private:
     std::unordered_map<std::string, Gates::GateOperation> str_to_gates_;
     std::unordered_map<std::string, Gates::GeneratorOperation> str_to_gntrs_;
 
     std::unordered_map<std::pair<Gates::GateOperation, Gates::KernelType>,
-                       GateFunc, Internal::PairHash>
+                       GateFunc, Util::PairHash>
         gates_;
 
     std::unordered_map<std::pair<Gates::GeneratorOperation, Gates::KernelType>,
-                       GeneratorFunc, Internal::PairHash>
+                       GeneratorFunc, Util::PairHash>
         generators_;
+
+    std::unordered_map<std::pair<Gates::MatrixOperation, Gates::KernelType>,
+                       MatrixFunc, Util::PairHash>
+        matrices_;
 
     constexpr static auto removeGeneratorPrefix(std::string_view op_name)
         -> std::string_view {
@@ -162,6 +163,18 @@ template <typename PrecisionT> class DynamicDispatcher {
     }
 
     /**
+     * @brief Register a new matrix operation. Can pass a custom
+     * kernel
+     */
+    // template <typename FunctionType>
+    void registerMatrixOperation(Gates::MatrixOperation mat_op,
+                                 Gates::KernelType kernel, MatrixFunc func) {
+        // FunctionType&& func) {
+        // TODO: Add mutex when we go to multithreading
+        matrices_.emplace(std::make_pair(mat_op, kernel), func);
+    }
+
+    /**
      * @brief Apply a single gate to the state-vector using the given kernel.
      *
      * @param kernel Kernel to run the gate operation.
@@ -180,7 +193,8 @@ template <typename PrecisionT> class DynamicDispatcher {
             gates_.find(std::make_pair(strToGateOp(op_name), kernel));
         if (iter == gates_.cend()) {
             throw std::invalid_argument(
-                "Cannot find a gate with a given name \"" + op_name + "\".");
+                "The gate " + op_name +
+                " is not registered for the given kernel");
         }
         (iter->second)(data, num_qubits, wires, inverse, params);
     }
@@ -203,10 +217,10 @@ template <typename PrecisionT> class DynamicDispatcher {
         const auto iter = gates_.find(std::make_pair(gate_op, kernel));
         if (iter == gates_.cend()) {
             throw std::invalid_argument(
-                std::string("Cannot find a gate with a given name \"") +
+                std::string("The gate ") +
                 std::string(
                     Util::lookup(Gates::Constant::gate_names, gate_op)) +
-                "\".");
+                " is not registered for the given kernel");
         }
         (iter->second)(data, num_qubits, wires, inverse, params);
     }
@@ -221,11 +235,12 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param inverse List of inverses
      * @param params List of parameters
      */
-    void applyOperations(CFP_t *data, size_t num_qubits,
-                         const std::vector<std::string> &ops,
-                         const std::vector<std::vector<size_t>> &wires,
-                         const std::vector<bool> &inverse,
-                         const std::vector<std::vector<PrecisionT>> &params) {
+    void
+    applyOperations(CFP_t *data, size_t num_qubits,
+                    const std::vector<std::string> &ops,
+                    const std::vector<std::vector<size_t>> &wires,
+                    const std::vector<bool> &inverse,
+                    const std::vector<std::vector<PrecisionT>> &params) const {
         const size_t numOperations = ops.size();
         if (numOperations != wires.size() || numOperations != params.size()) {
             throw std::invalid_argument(
@@ -252,7 +267,7 @@ template <typename PrecisionT> class DynamicDispatcher {
     void applyOperations(CFP_t *data, size_t num_qubits,
                          const std::vector<std::string> &ops,
                          const std::vector<std::vector<size_t>> &wires,
-                         const std::vector<bool> &inverse) {
+                         const std::vector<bool> &inverse) const {
         const size_t numOperations = ops.size();
         if (numOperations != wires.size()) {
             throw std::invalid_argument(
@@ -265,6 +280,86 @@ template <typename PrecisionT> class DynamicDispatcher {
         }
     }
 
+    /**
+     * @brief Apply a given matrix directly to the statevector.
+     *
+     * @param arr Pointer to the statevector.
+     * @param num_qubits Number of qubits.
+     * @param matrix Perfect square matrix in row-major order.
+     * @param wires Wires the gate applies to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    void applyMatrix(Gates::KernelType kernel, CFP_t *data,
+                     Gates::MatrixOperation mat_op, size_t num_qubits,
+                     const std::complex<PrecisionT> *matrix,
+                     const std::vector<size_t> &wires, bool inverse) const {
+        assert(num_qubits >= wires.size());
+
+        switch (mat_op) {
+        case Gates::MatrixOperation::SingleQubitOp:
+            assert(wires.size() == 1);
+            break;
+        case Gates::MatrixOperation::TwoQubitOp:
+            assert(wires.size() == 2);
+            break;
+        default:
+            break;
+        }
+        const auto iter = matrices_.find(std::make_pair(mat_op, kernel));
+        if (iter == matrices_.end()) {
+            throw std::invalid_argument(
+                std::string(
+                    Util::lookup(Gates::Constant::matrix_names, mat_op)) +
+                " is not registered for the given kernel");
+        }
+        (iter->second)(data, num_qubits, matrix, wires, inverse);
+    }
+
+    /**
+     * @brief Apply a given matrix directly to the statevector.
+     *
+     * @param arr Pointer to the statevector.
+     * @param num_qubits Number of qubits.
+     * @param matrix Perfect square matrix in row-major order.
+     * @param wires Wires the gate applies to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    void applyMatrix(Gates::KernelType kernel, CFP_t *data,
+                     Gates::MatrixOperation mat_op, size_t num_qubits,
+                     const std::complex<PrecisionT> &matrix,
+                     const std::vector<size_t> &wires, bool inverse) const {
+        if (matrix.size() != Util::exp2(2 * wires.size())) {
+            throw std::invalid_argument(
+                "The size of matrix does not match with the given "
+                "number of wires");
+        }
+        applyMatrix(kernel, data, num_qubits, matrix.data(), wires, inverse);
+    }
+
+    /**
+     * @brief Apply a single generator to the state-vector using the given
+     * kernel.
+     *
+     * @param kernel Kernel to run the gate operation.
+     * @param data Pointer to data.
+     * @param num_qubits Number of qubits.
+     * @param op_name Gate operation name.
+     * @param wires Wires to apply gate to.
+     * @param adj Indicates whether to use adjoint of gate.
+     */
+    auto applyGenerator(Gates::KernelType kernel, CFP_t *data,
+                        size_t num_qubits, Gates::GeneratorOperation gntr_op,
+                        const std::vector<size_t> &wires, bool adj) const
+        -> PrecisionT {
+        using Gates::Constant::generator_names;
+        const auto iter = generators_.find(std::make_pair(gntr_op, kernel));
+        if (iter == generators_.cend()) {
+            throw std::invalid_argument(
+                "Cannot find a gate with a given name \"" +
+                std::string(Util::lookup(generator_names, gntr_op)) + "\".");
+        }
+        return (iter->second)(data, num_qubits, wires, adj);
+    }
     /**
      * @brief Apply a single generator to the state-vector using the given
      * kernel.

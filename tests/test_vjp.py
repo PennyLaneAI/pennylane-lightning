@@ -39,12 +39,14 @@ class TestComputeVJP:
         not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
     )
     def test_unsupported_complex_type(self, dev):
-        dev._state = dev._asarray(dev._state, np.complex256)
+        with pytest.raises(TypeError, match="Unsupported .*"):
+            dev._state = dev._asarray(dev._state, np.complex256)
 
-        dy = np.array([[1.0, 2.0], [3.0, 4.0]])
-        jac = np.array([[[1.0, 0.1, 0.2], [0.2, 0.6, 0.1]], [[0.4, -0.7, 1.2], [-0.5, -0.6, 0.7]]])
+            dy = np.array([[1.0, 2.0], [3.0, 4.0]])
+            jac = np.array(
+                [[[1.0, 0.1, 0.2], [0.2, 0.6, 0.1]], [[0.4, -0.7, 1.2], [-0.5, -0.6, 0.7]]]
+            )
 
-        with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
             dev.compute_vjp(dy, jac)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
@@ -120,21 +122,21 @@ class TestVectorJacobianProduct:
         not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
     )
     def test_unsupported_complex_type(self, dev):
-        dev._state = dev._asarray(dev._state, np.complex256)
+        with pytest.raises(TypeError, match="Unsupported .*"):
+            dev._state = dev._asarray(dev._state, np.complex256)
 
-        x, y, z = [0.5, 0.3, -0.7]
+            x, y, z = [0.5, 0.3, -0.7]
 
-        with qml.tape.JacobianTape() as tape:
-            qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
-            qml.expval(qml.PauliZ(0))
+            with qml.tape.JacobianTape() as tape:
+                qml.RX(0.4, wires=[0])
+                qml.Rot(x, y, z, wires=[0])
+                qml.RY(-0.2, wires=[0])
+                qml.expval(qml.PauliZ(0))
 
-        tape.trainable_params = {1, 2, 3}
+            tape.trainable_params = {1, 2, 3}
 
-        dy = np.array([1.0])
+            dy = np.array([1.0])
 
-        with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
             dev.vjp(tape, dy)(tape)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
@@ -468,26 +470,26 @@ class TestBatchVectorJacobianProduct:
         not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
     )
     def test_unsupported_complex_type(self, dev):
-        dev._state = dev._asarray(dev._state, np.complex256)
+        with pytest.raises(TypeError, match="Unsupported .*"):
+            dev._state = dev._asarray(dev._state, np.complex256)
 
-        with qml.tape.QuantumTape() as tape1:
-            qml.RX(0.4, wires=0)
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
+            with qml.tape.QuantumTape() as tape1:
+                qml.RX(0.4, wires=0)
+                qml.CNOT(wires=[0, 1])
+                qml.expval(qml.PauliZ(0))
 
-        with qml.tape.JacobianTape() as tape2:
-            qml.RX(0.4, wires=0)
-            qml.RX(0.6, wires=0)
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
+            with qml.tape.JacobianTape() as tape2:
+                qml.RX(0.4, wires=0)
+                qml.RX(0.6, wires=0)
+                qml.CNOT(wires=[0, 1])
+                qml.expval(qml.PauliZ(0))
 
-        tape1.trainable_params = {0}
-        tape2.trainable_params = {0, 1}
+            tape1.trainable_params = {0}
+            tape2.trainable_params = {0, 1}
 
-        tapes = [tape1, tape2]
-        dys = [np.array([1.0]), np.array([1.0])]
+            tapes = [tape1, tape2]
+            dys = [np.array([1.0]), np.array([1.0])]
 
-        with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
             dev.batch_vjp(tapes, dys)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])

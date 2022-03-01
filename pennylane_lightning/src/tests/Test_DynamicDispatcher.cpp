@@ -81,12 +81,10 @@ constexpr void testAllGatesForKernelIter(RandomEngine &re,
     if constexpr (idx < static_cast<int>(GateOperation::END)) {
         constexpr auto gate_op = static_cast<GateOperation>(idx);
 
-        if constexpr (gate_op != GateOperation::Matrix) { // ignore Matrix
-            for (size_t num_qubits = 3; num_qubits <= max_num_qubits;
-                 num_qubits++) {
-                testDispatchForKernel<PrecisionT, ParamT, GateImplementation>::
-                    template test<gate_op>(re, num_qubits);
-            }
+        for (size_t num_qubits = 3; num_qubits <= max_num_qubits;
+             num_qubits++) {
+            testDispatchForKernel<PrecisionT, ParamT, GateImplementation>::
+                template test<gate_op>(re, num_qubits);
         }
 
         testAllGatesForKernelIter<PrecisionT, ParamT, GateImplementation,

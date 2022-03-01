@@ -207,4 +207,11 @@ constexpr auto reverse_pairs(const std::array<std::pair<T, U>, size> &arr)
     return Internal::reverse_pairs_helper(arr,
                                           std::make_index_sequence<size>{});
 }
+
+constexpr auto constIsPerfectPowerOf2(size_t value) -> bool {
+    while ((value & 1U) == 0) {
+        value >>= 1U;
+    }
+    return value == 1;
+}
 } // namespace Pennylane::Util

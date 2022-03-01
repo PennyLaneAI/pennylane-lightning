@@ -11,6 +11,7 @@
 #pragma once
 
 #include "BitUtil.hpp"
+#include "CPUMemoryModel.hpp"
 #include "DispatchKeys.hpp"
 #include "Gates.hpp"
 #include "KernelType.hpp"
@@ -49,9 +50,7 @@ class StateVectorManagedCPU
         : BaseType{num_qubits, threading, memory_model} {
 
         size_t length = BaseType::getLength();
-        // NOLINTNEXTLINE(modernize-avoid-c-arrays,hicpp-avoid-c-arrays)
-        data_ = std::unique_ptr<ComplexPrecisionT[]>{
-            new (std::align_val_t{64}) ComplexPrecisionT[length]};
+        data_ = allocateMemory<ComplexPrecisionT>(memory_model, length);
         std::fill(data_.get(), data_.get() + length,
                   ComplexPrecisionT{0.0, 0.0});
         data_[0] = {1, 0};
@@ -59,19 +58,14 @@ class StateVectorManagedCPU
 
     template <class OtherDerived>
     explicit StateVectorManagedCPU(
-        const StateVectorBase<PrecisionT, OtherDerived> &other,
-        Threading threading = bestThreading(),
-        CPUMemoryModel memory_model = bestCPUMemoryModel())
-        : BaseType(other.getNumQubits(), threading, memory_model) {
+        const StateVectorCPU<PrecisionT, OtherDerived> &other)
+        : BaseType(other.getNumQubits(), other.threading(),
+                   other.memoryModel()) {
 
         size_t length = BaseType::getLength();
-        // NOLINTNEXTLINE(modernize-avoid-c-arrays,hicpp-avoid-c-arrays)
-        data_ = std::unique_ptr<ComplexPrecisionT[]>{
-            new (std::align_val_t{64}) ComplexPrecisionT[length]};
+        data_ = allocateMemory<ComplexPrecisionT>(other.memoryModel(), length);
 
         std::copy(other.getData(), other.getData() + length, data_.get());
-
-        setKernels(BaseType::getNumQubits(), threading, memory_model);
     }
 
     StateVectorManagedCPU(const ComplexPrecisionT *other_data,
@@ -83,9 +77,7 @@ class StateVectorManagedCPU
         PL_ABORT_IF_NOT(Util::isPerfectPowerOf2(other_size),
                         "The size of provided data must be a power of 2.");
 
-        // NOLINTNEXTLINE(modernize-avoid-c-arrays,hicpp-avoid-c-arrays)
-        data_ = std::unique_ptr<ComplexPrecisionT[]>{
-            new (std::align_val_t{64}) ComplexPrecisionT[other_size]};
+        data_ = allocateMemory<ComplexPrecisionT>(memory_model, other_size);
         updateData(other_data);
     }
 
@@ -101,9 +93,7 @@ class StateVectorManagedCPU
 
     StateVectorManagedCPU(const StateVectorManagedCPU &rhs) : BaseType(rhs) {
         size_t length = BaseType::getLength();
-        // NOLINTNEXTLINE(modernize-avoid-c-arrays,hicpp-avoid-c-arrays)
-        data_ = std::unique_ptr<ComplexPrecisionT[]>{
-            new (std::align_val_t{64}) ComplexPrecisionT[length]};
+        data_ = allocateMemory<ComplexPrecisionT>(rhs.memory_model_, length);
         std::copy(rhs.getData(), rhs.getData() + length, data_.get());
     }
 
@@ -130,5 +120,4 @@ class StateVectorManagedCPU
         std::copy(data, data + BaseType::getLength(), data_.get());
     }
 };
-
 } // namespace Pennylane

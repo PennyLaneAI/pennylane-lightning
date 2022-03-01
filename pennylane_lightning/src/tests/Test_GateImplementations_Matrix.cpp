@@ -13,20 +13,46 @@ using ApplyMatrixType = void (*)(std::complex<PrecisionT> *, size_t,
                                  const std::vector<size_t> &, bool);
 
 template <typename PrecisionT, class GateImplementation, class U = void>
-struct IsApplyMatrixDefined {
+struct IsApplySingleQubitOpDefined {
     constexpr static bool value = false;
 };
 template <typename PrecisionT, class GateImplementation>
-struct IsApplyMatrixDefined<
+struct IsApplySingleQubitOpDefined<
     PrecisionT, GateImplementation,
     std::enable_if_t<
         std::is_pointer_v<decltype(static_cast<ApplyMatrixType<PrecisionT>>(
-            &GateImplementation::template applyMatrix<PrecisionT>))>>> {
+            &GateImplementation::template applySingleQubitOp<PrecisionT>))>>> {
+    constexpr static bool value = true;
+};
+
+template <typename PrecisionT, class GateImplementation, class U = void>
+struct IsApplyTwoQubitOpDefined {
+    constexpr static bool value = false;
+};
+template <typename PrecisionT, class GateImplementation>
+struct IsApplyTwoQubitOpDefined<
+    PrecisionT, GateImplementation,
+    std::enable_if_t<
+        std::is_pointer_v<decltype(static_cast<ApplyMatrixType<PrecisionT>>(
+            &GateImplementation::template applyTwoQubitOp<PrecisionT>))>>> {
+    constexpr static bool value = true;
+};
+
+template <typename PrecisionT, class GateImplementation, class U = void>
+struct IsApplyMultiQubitOpDefined {
+    constexpr static bool value = false;
+};
+template <typename PrecisionT, class GateImplementation>
+struct IsApplyMultiQubitOpDefined<
+    PrecisionT, GateImplementation,
+    std::enable_if_t<
+        std::is_pointer_v<decltype(static_cast<ApplyMatrixType<PrecisionT>>(
+            &GateImplementation::template applyMultiQubitOp<PrecisionT>))>>> {
     constexpr static bool value = true;
 };
 
 template <typename PrecisionT, class GateImplementation>
-void testApplyMatrix() {
+void testApplySingleQubitOp() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -80,8 +106,8 @@ void testApplyMatrix() {
         };
 
         auto st = ini_st;
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, false);
+        GateImplementation::applySingleQubitOp(st.data(), num_qubits,
+                                               matrix.data(), wires, false);
         REQUIRE(st == PLApprox(expected).margin(1e-5));
     }
 
@@ -136,8 +162,8 @@ void testApplyMatrix() {
         };
 
         auto st = ini_st;
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, false);
+        GateImplementation::applySingleQubitOp(st.data(), num_qubits,
+                                               matrix.data(), wires, false);
         REQUIRE(st == PLApprox(expected).margin(1e-5));
     }
 
@@ -192,10 +218,15 @@ void testApplyMatrix() {
         };
 
         auto st = ini_st;
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, false);
+        GateImplementation::applySingleQubitOp(st.data(), num_qubits,
+                                               matrix.data(), wires, false);
         REQUIRE(st == PLApprox(expected).margin(1e-5));
     }
+}
+
+template <typename PrecisionT, class GateImplementation>
+void testApplyTwoQubitOp() {
+    using ComplexPrecisionT = std::complex<PrecisionT>;
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", Matrix0,1 - " << PrecisionToName<PrecisionT>::value) {
@@ -260,8 +291,8 @@ void testApplyMatrix() {
         };
 
         auto st = ini_st;
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, false);
+        GateImplementation::applyTwoQubitOp(st.data(), num_qubits,
+                                            matrix.data(), wires, false);
         REQUIRE(st == PLApprox(expected).margin(1e-5));
     }
 
@@ -328,10 +359,15 @@ void testApplyMatrix() {
         };
 
         auto st = ini_st;
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, false);
+        GateImplementation::applyTwoQubitOp(st.data(), num_qubits,
+                                            matrix.data(), wires, false);
         REQUIRE(st == PLApprox(expected).margin(1e-5));
     }
+}
+
+template <typename PrecisionT, class GateImplementation>
+void testApplyMultiQubitOp() {
+    using ComplexPrecisionT = std::complex<PrecisionT>;
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", Matrix1,2,3 - "
@@ -445,8 +481,8 @@ void testApplyMatrix() {
         };
 
         auto st = ini_st;
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, false);
+        GateImplementation::applyMultiQubitOp(st.data(), num_qubits,
+                                              matrix.data(), wires, false);
         REQUIRE(st == PLApprox(expected).margin(1e-5));
     }
 
@@ -754,25 +790,57 @@ void testApplyMatrix() {
         };
 
         auto st = ini_st;
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, false);
+        GateImplementation::applyMultiQubitOp(st.data(), num_qubits,
+                                              matrix.data(), wires, false);
         REQUIRE(st == PLApprox(expected).margin(1e-5));
     }
 }
 
 template <typename PrecisionT, typename TypeList>
-void testApplyMatrixForKernels() {
+void testApplySingleQubitOpForKernels() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using GateImplementation = typename TypeList::Type;
 
-        if constexpr (IsApplyMatrixDefined<PrecisionT,
-                                           GateImplementation>::value) {
-            testApplyMatrix<PrecisionT, GateImplementation>();
+        if constexpr (IsApplySingleQubitOpDefined<PrecisionT,
+                                                  GateImplementation>::value) {
+            testApplySingleQubitOp<PrecisionT, GateImplementation>();
         } else {
-            SUCCEED("Member function applyMatrix is not defined in kernel"
+            SUCCEED(
+                "Member function applySingleQubitOp is not defined in kernel"
+                << GateImplementation::name);
+        }
+        testApplySingleQubitOpForKernels<PrecisionT, typename TypeList::Next>();
+    }
+}
+
+template <typename PrecisionT, typename TypeList>
+void testApplyTwoQubitOpForKernels() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using GateImplementation = typename TypeList::Type;
+
+        if constexpr (IsApplyTwoQubitOpDefined<PrecisionT,
+                                               GateImplementation>::value) {
+            testApplyTwoQubitOp<PrecisionT, GateImplementation>();
+        } else {
+            SUCCEED("Member function applyTwoQubitOp is not defined in kernel"
                     << GateImplementation::name);
         }
-        testApplyMatrixForKernels<PrecisionT, typename TypeList::Next>();
+        testApplyTwoQubitOpForKernels<PrecisionT, typename TypeList::Next>();
+    }
+}
+template <typename PrecisionT, typename TypeList>
+void testApplyMultiQubitOpForKernels() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using GateImplementation = typename TypeList::Type;
+
+        if constexpr (IsApplyMultiQubitOpDefined<PrecisionT,
+                                                 GateImplementation>::value) {
+            testApplyMultiQubitOp<PrecisionT, GateImplementation>();
+        } else {
+            SUCCEED("Member function applyMultiQubitOp is not defined in kernel"
+                    << GateImplementation::name);
+        }
+        testApplyMultiQubitOpForKernels<PrecisionT, typename TypeList::Next>();
     }
 }
 
@@ -780,11 +848,13 @@ TEMPLATE_TEST_CASE("GateImplementation::applyMatrix, inverse = false",
                    "[GateImplementations_Matrix]", float, double) {
     using PrecisionT = TestType;
 
-    testApplyMatrixForKernels<PrecisionT, AvailableKernels>();
+    testApplySingleQubitOpForKernels<PrecisionT, AvailableKernels>();
+    testApplyTwoQubitOpForKernels<PrecisionT, AvailableKernels>();
+    testApplyMultiQubitOpForKernels<PrecisionT, AvailableKernels>();
 }
 
 template <typename PrecisionT, class GateImplementation>
-void testApplyMatrixInverse() {
+void testApplySingleQubitOpInverse() {
     std::mt19937 re{1337};
     const int num_qubits = 4;
 
@@ -798,10 +868,10 @@ void testApplyMatrixInverse() {
         const auto matrix = randomUnitary<PrecisionT>(re, wires.size());
 
         auto st = ini_st;
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, false);
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, true);
+        GateImplementation::applySingleQubitOp(st.data(), num_qubits,
+                                               matrix.data(), wires, false);
+        GateImplementation::applySingleQubitOp(st.data(), num_qubits,
+                                               matrix.data(), wires, true);
         REQUIRE(st == PLApprox(ini_st).margin(1e-5));
     }
 
@@ -815,10 +885,10 @@ void testApplyMatrixInverse() {
         const auto matrix = randomUnitary<PrecisionT>(re, wires.size());
 
         auto st = ini_st;
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, false);
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, true);
+        GateImplementation::applySingleQubitOp(st.data(), num_qubits,
+                                               matrix.data(), wires, false);
+        GateImplementation::applySingleQubitOp(st.data(), num_qubits,
+                                               matrix.data(), wires, true);
 
         REQUIRE(st == PLApprox(ini_st).margin(1e-5));
     }
@@ -833,10 +903,10 @@ void testApplyMatrixInverse() {
         const auto matrix = randomUnitary<PrecisionT>(re, wires.size());
 
         auto st = ini_st;
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, false);
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, true);
+        GateImplementation::applySingleQubitOp(st.data(), num_qubits,
+                                               matrix.data(), wires, false);
+        GateImplementation::applySingleQubitOp(st.data(), num_qubits,
+                                               matrix.data(), wires, true);
 
         REQUIRE(st == PLApprox(ini_st).margin(1e-5));
     }
@@ -851,13 +921,19 @@ void testApplyMatrixInverse() {
         const auto matrix = randomUnitary<PrecisionT>(re, wires.size());
 
         auto st = ini_st;
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, false);
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, true);
+        GateImplementation::applySingleQubitOp(st.data(), num_qubits,
+                                               matrix.data(), wires, false);
+        GateImplementation::applySingleQubitOp(st.data(), num_qubits,
+                                               matrix.data(), wires, true);
 
         REQUIRE(st == PLApprox(ini_st).margin(1e-5));
     }
+}
+
+template <typename PrecisionT, class GateImplementation>
+void testApplyTwoQubitOpInverse() {
+    std::mt19937 re{1337};
+    const int num_qubits = 4;
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", wires = {0,1} - "
@@ -869,10 +945,10 @@ void testApplyMatrixInverse() {
         const auto matrix = randomUnitary<PrecisionT>(re, wires.size());
 
         auto st = ini_st;
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, false);
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, true);
+        GateImplementation::applyTwoQubitOp(st.data(), num_qubits,
+                                            matrix.data(), wires, false);
+        GateImplementation::applyTwoQubitOp(st.data(), num_qubits,
+                                            matrix.data(), wires, true);
 
         REQUIRE(st == PLApprox(ini_st).margin(1e-5));
     }
@@ -885,10 +961,10 @@ void testApplyMatrixInverse() {
         const auto matrix = randomUnitary<PrecisionT>(re, wires.size());
 
         auto st = ini_st;
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, false);
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, true);
+        GateImplementation::applyTwoQubitOp(st.data(), num_qubits,
+                                            matrix.data(), wires, false);
+        GateImplementation::applyTwoQubitOp(st.data(), num_qubits,
+                                            matrix.data(), wires, true);
 
         REQUIRE(st == PLApprox(ini_st).margin(1e-5));
     }
@@ -901,13 +977,19 @@ void testApplyMatrixInverse() {
         const auto matrix = randomUnitary<PrecisionT>(re, wires.size());
 
         auto st = ini_st;
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, false);
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, true);
+        GateImplementation::applyTwoQubitOp(st.data(), num_qubits,
+                                            matrix.data(), wires, false);
+        GateImplementation::applyTwoQubitOp(st.data(), num_qubits,
+                                            matrix.data(), wires, true);
 
         REQUIRE(st == PLApprox(ini_st).margin(1e-5));
     }
+}
+
+template <typename PrecisionT, class GateImplementation>
+void testApplyMultiQubitOpInverse() {
+    std::mt19937 re{1337};
+    const int num_qubits = 4;
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", wires = {1,2,3} - "
@@ -918,10 +1000,10 @@ void testApplyMatrixInverse() {
         const auto matrix = randomUnitary<PrecisionT>(re, wires.size());
 
         auto st = ini_st;
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, false);
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, true);
+        GateImplementation::applyMultiQubitOp(st.data(), num_qubits,
+                                              matrix.data(), wires, false);
+        GateImplementation::applyMultiQubitOp(st.data(), num_qubits,
+                                              matrix.data(), wires, true);
 
         REQUIRE(st == PLApprox(ini_st).margin(1e-5));
     }
@@ -934,27 +1016,61 @@ void testApplyMatrixInverse() {
         const auto matrix = randomUnitary<PrecisionT>(re, wires.size());
 
         auto st = ini_st;
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, false);
-        GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
-                                        wires, true);
+        GateImplementation::applyMultiQubitOp(st.data(), num_qubits,
+                                              matrix.data(), wires, false);
+        GateImplementation::applyMultiQubitOp(st.data(), num_qubits,
+                                              matrix.data(), wires, true);
 
         REQUIRE(st == PLApprox(ini_st).margin(1e-5));
     }
 }
 
 template <typename PrecisionT, typename TypeList>
-void testApplyMatrixInverseForKernels() {
+void testApplySingleQubitOpInverseForKernels() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using GateImplementation = typename TypeList::Type;
-        if constexpr (IsApplyMatrixDefined<PrecisionT,
-                                           GateImplementation>::value) {
-            testApplyMatrixInverse<PrecisionT, GateImplementation>();
+        if constexpr (IsApplySingleQubitOpDefined<PrecisionT,
+                                                  GateImplementation>::value) {
+            testApplySingleQubitOpInverse<PrecisionT, GateImplementation>();
         } else {
-            SUCCEED("Member function applyMatrix is not defined in kernel"
+            SUCCEED(
+                "Member function applySingleQubitOp is not defined in kernel"
+                << GateImplementation::name);
+        }
+        testApplySingleQubitOpInverseForKernels<PrecisionT,
+                                                typename TypeList::Next>();
+    }
+}
+
+template <typename PrecisionT, typename TypeList>
+void testApplyTwoQubitOpInverseForKernels() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using GateImplementation = typename TypeList::Type;
+        if constexpr (IsApplyTwoQubitOpDefined<PrecisionT,
+                                               GateImplementation>::value) {
+            testApplyTwoQubitOpInverse<PrecisionT, GateImplementation>();
+        } else {
+            SUCCEED("Member function applyTwoQubitOp is not defined in kernel"
                     << GateImplementation::name);
         }
-        testApplyMatrixInverseForKernels<PrecisionT, typename TypeList::Next>();
+        testApplyTwoQubitOpInverseForKernels<PrecisionT,
+                                             typename TypeList::Next>();
+    }
+}
+
+template <typename PrecisionT, typename TypeList>
+void testApplyMultiQubitOpInverseForKernels() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using GateImplementation = typename TypeList::Type;
+        if constexpr (IsApplyMultiQubitOpDefined<PrecisionT,
+                                                 GateImplementation>::value) {
+            testApplyMultiQubitOpInverse<PrecisionT, GateImplementation>();
+        } else {
+            SUCCEED("Member function applyMultiQubitOp is not defined in kernel"
+                    << GateImplementation::name);
+        }
+        testApplyMultiQubitOpInverseForKernels<PrecisionT,
+                                               typename TypeList::Next>();
     }
 }
 
@@ -962,5 +1078,7 @@ TEMPLATE_TEST_CASE("GateImplementation::applyMatrix, inverse = true",
                    "[GateImplementations_Matrix]", float, double) {
     using PrecisionT = TestType;
 
-    testApplyMatrixInverseForKernels<PrecisionT, AvailableKernels>();
+    testApplySingleQubitOpInverseForKernels<PrecisionT, AvailableKernels>();
+    testApplyTwoQubitOpInverseForKernels<PrecisionT, AvailableKernels>();
+    testApplyMultiQubitOpInverseForKernels<PrecisionT, AvailableKernels>();
 }

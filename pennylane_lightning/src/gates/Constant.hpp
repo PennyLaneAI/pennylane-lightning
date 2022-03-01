@@ -25,13 +25,18 @@ namespace Pennylane::Gates::Constant {
 /**
  * @brief List of multi-qubit gates
  */
-[[maybe_unused]] constexpr std::array multi_qubit_gates{GateOperation::MultiRZ,
-                                                        GateOperation::Matrix};
+[[maybe_unused]] constexpr std::array multi_qubit_gates{GateOperation::MultiRZ};
 /**
  * @brief List of multi-qubit generators
  */
 [[maybe_unused]] constexpr std::array multi_qubit_generators{
     GeneratorOperation::MultiRZ,
+};
+/**
+ * @brief List of multi-qubit matrix operation
+ */
+[[maybe_unused]] constexpr std::array multi_qubit_matrix_ops{
+    MatrixOperation::MultiQubitOp,
 };
 
 /**
@@ -71,9 +76,7 @@ namespace Pennylane::Gates::Constant {
                                                "Toffoli"},
     std::pair<GateOperation, std::string_view>{GateOperation::CSWAP, "CSWAP"},
     std::pair<GateOperation, std::string_view>{GateOperation::MultiRZ,
-                                               "MultiRZ"},
-    std::pair<GateOperation, std::string_view>{GateOperation::Matrix, "Matrix"},
-};
+                                               "MultiRZ"}};
 /**
  * @brief Generator names.
  *
@@ -106,6 +109,19 @@ namespace Pennylane::Gates::Constant {
         "GeneratorControlledPhaseShift"},
     std::pair<GeneratorOperation, std::string_view>{GeneratorOperation::MultiRZ,
                                                     "GeneratorMultiRZ"},
+};
+
+/**
+ * @brief Matrix names.
+ *
+ */
+[[maybe_unused]] constexpr std::array matrix_names = {
+    std::pair<MatrixOperation, std::string_view>{MatrixOperation::SingleQubitOp,
+                                                 "SingleQubitOp"},
+    std::pair<MatrixOperation, std::string_view>{MatrixOperation::TwoQubitOp,
+                                                 "TwoQubitOp"},
+    std::pair<MatrixOperation, std::string_view>{MatrixOperation::MultiQubitOp,
+                                                 "MultiQubitOp"},
 };
 
 /**
@@ -236,7 +252,6 @@ namespace Pennylane::Gates::Constant {
     std::pair{GateOperation::Toffoli, KernelType::PI},
     std::pair{GateOperation::CSWAP, KernelType::PI},
     std::pair{GateOperation::MultiRZ, KernelType::LM},
-    std::pair{GateOperation::Matrix, KernelType::PI},
 };
 /**
  * @brief Define which kernel to use for each generator operation.

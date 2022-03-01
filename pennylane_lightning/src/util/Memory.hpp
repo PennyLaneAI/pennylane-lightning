@@ -16,19 +16,12 @@
 #include <memory>
 #include <new>
 
+#include "ConstantUtil.hpp"
 #include "TypeList.hpp"
 
 namespace Pennylane {
-
-constexpr auto constIsPerfectPowerOf2(size_t value) -> bool {
-    while ((value & 1U) == 0) {
-        value >>= 1U;
-    }
-    return value == 1;
-}
-
 template <class T, uint32_t alignment> struct AlignedAllocator {
-    static_assert(constIsPerfectPowerOf2(alignment),
+    static_assert(Util::constIsPerfectPowerOf2(alignment),
                   "Template parameter alignment must be power of 2.");
     using value_type = T;
 
@@ -101,4 +94,5 @@ template <typename TypeList>
 template <class T, uint32_t alignment>
 using PLAllocator = std::conditional_t<alignment == 4, std::allocator<T>,
                                        AlignedAllocator<T, alignment>>;
+
 } // namespace Pennylane

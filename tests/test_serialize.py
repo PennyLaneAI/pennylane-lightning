@@ -22,7 +22,6 @@ from pennylane_lightning._serialize import (
     _serialize_obs,
     _serialize_ops,
     _obs_has_kernel,
-    _is_lightning_gate,
 )
 import pytest
 from unittest import mock
@@ -34,45 +33,6 @@ try:
     )
 except (ImportError, ModuleNotFoundError):
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-
-
-class TestIsLightningGate:
-    """Tests for the _is_lightning_gate"""
-
-    def test_gates(self):
-        """Test if returns true for some gates"""
-        for gate in [
-            "PauliX",
-            "PauliY",
-            "PauliZ",
-            "Hadamard",
-            "S",
-            "T",
-            "PhaseShift",
-            "RX",
-            "RY",
-            "RZ",
-            "Rot",
-            "CNOT",
-            "CY",
-            "CZ",
-            "SWAP",
-            "ControlledPhaseShift",
-            "CRX",
-            "CRY",
-            "CRZ",
-            "CRot",
-            "Toffoli",
-            "CSWAP",
-        ]:
-            assert _is_lightning_gate(gate)
-
-    def test_matrix(self):
-        assert not _is_lightning_gate("Matrix")
-
-    def test_non_gates(self):
-        for gate in ["Quantum", "computing", "in", "2022", "with", "Pennylane", "Lightning"]:
-            assert not _is_lightning_gate(gate)
 
 
 class TestObsHasKernel:

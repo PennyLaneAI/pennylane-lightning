@@ -17,6 +17,7 @@
  */
 #pragma once
 
+#include "CPUMemoryModel.hpp"
 #include "Macros.hpp"
 
 #include <cstdint>
@@ -33,31 +34,11 @@ enum class Threading : uint8_t {
     BEGIN = SingleThread,
 };
 
-enum class CPUMemoryModel : uint8_t {
-    Unaligned,
-    Aligned256,
-    Aligned512,
-    END,
-    BEGIN = Unaligned,
-};
-
 constexpr uint32_t toDispatchKey(Threading threading,
                                  CPUMemoryModel memory_model) {
     /* Threading is in higher priority */
     return (static_cast<uint32_t>(threading) << 8U) |
            static_cast<uint32_t>(memory_model);
-}
-
-inline auto getMemoryModel(const void *ptr) -> CPUMemoryModel {
-    if ((reinterpret_cast<uintptr_t>(ptr) % 64) == 0) {
-        return CPUMemoryModel::Aligned512;
-    }
-
-    if ((reinterpret_cast<uintptr_t>(ptr) % 32) == 0) {
-        return CPUMemoryModel::Aligned256;
-    }
-
-    return CPUMemoryModel::Unaligned;
 }
 
 /**
@@ -73,15 +54,6 @@ inline auto bestThreading() -> Threading {
     return Threading::MultiThread;
 #endif
     return Threading::SingleThread;
-}
-
-constexpr inline auto bestCPUMemoryModel() -> CPUMemoryModel {
-    if constexpr (use_avx512f) {
-        return CPUMemoryModel::Aligned512;
-    } else if (use_avx2) {
-        return CPUMemoryModel::Aligned256;
-    }
-    return CPUMemoryModel::Unaligned;
 }
 
 } // namespace Pennylane

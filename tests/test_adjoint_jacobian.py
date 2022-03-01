@@ -168,16 +168,16 @@ class TestAdjointJacobian:
     )
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_unsupported_complex_type(self, dev):
-        dev._state = dev._asarray(dev._state, np.complex256)
+        with pytest.raises(TypeError, match="Unsupported .*"):
+            dev._state = dev._asarray(dev._state, np.complex256)
 
-        with qml.tape.JacobianTape() as tape:
-            qml.QubitStateVector(np.array([1.0, -1.0]) / np.sqrt(2), wires=0)
-            qml.RX(0.3, wires=[0])
-            qml.expval(qml.PauliZ(0))
+            with qml.tape.JacobianTape() as tape:
+                qml.QubitStateVector(np.array([1.0, -1.0]) / np.sqrt(2), wires=0)
+                qml.RX(0.3, wires=[0])
+                qml.expval(qml.PauliZ(0))
 
-        tape.trainable_params = {1}
+            tape.trainable_params = {1}
 
-        with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
             dev.adjoint_jacobian(tape)
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))

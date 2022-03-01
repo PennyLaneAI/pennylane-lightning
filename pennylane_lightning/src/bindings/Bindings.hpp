@@ -18,10 +18,12 @@
  */
 #pragma once
 #include "AdjointDiff.hpp"
+#include "CPUMemoryModel.hpp"
 #include "JacobianProd.hpp"
 #include "Measures.hpp"
+#include "Memory.hpp"
 #include "OpToMemberFuncPtr.hpp"
-#include "StateVectorRaw.hpp"
+#include "StateVectorManagedCPU.hpp"
 
 #include "pybind11/complex.h"
 #include "pybind11/functional.h"
@@ -45,8 +47,8 @@ namespace Pennylane {
  * @return StateVector<PrecisionT> `%StateVector` object.
  */
 template <class PrecisionT = double>
-static auto create(pybind11::array_t<std::complex<PrecisionT>> &numpyArray)
-    -> StateVectorRaw<PrecisionT> {
+auto createRaw(const pybind11::array_t<std::complex<PrecisionT>> &numpyArray)
+    -> StateVectorRawCPU<PrecisionT> {
     pybind11::buffer_info numpyArrayInfo = numpyArray.request();
 
     if (numpyArrayInfo.ndim != 1) {
@@ -59,15 +61,86 @@ static auto create(pybind11::array_t<std::complex<PrecisionT>> &numpyArray)
     }
     auto *data_ptr =
         static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
-    return StateVectorRaw<PrecisionT>(
+    return StateVectorRawCPU<PrecisionT>(
         {data_ptr, static_cast<size_t>(numpyArrayInfo.shape[0])});
 }
 
 template <class PrecisionT = double>
-static auto toNumpyArray(const StateVectorCPU<PrecisionT> &sv)
-    -> py::array_t<std::complex<PrecisionT>> {
-    return py::array_t<std::complex<PrecisionT>>(
-        {sv.getLength()}, {sizeof(PrecisionT)} sv.getData(), );
+auto createManaged(
+    const pybind11::array_t<std::complex<PrecisionT>> &numpyArray)
+    -> StateVectorManagedCPU<PrecisionT> {
+    pybind11::buffer_info numpyArrayInfo = numpyArray.request();
+
+    if (numpyArrayInfo.ndim != 1) {
+        throw std::invalid_argument(
+            "NumPy array must be a 1-dimensional array");
+    }
+    if (numpyArrayInfo.itemsize != sizeof(std::complex<PrecisionT>)) {
+        throw std::invalid_argument(
+            "NumPy array must be of type np.complex64 or np.complex128");
+    }
+    auto *data_ptr =
+        static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
+    return StateVectorManagedCPU<PrecisionT>(
+        {data_ptr, static_cast<size_t>(numpyArrayInfo.shape[0])});
+}
+
+template <class PrecisionT = double>
+auto toNumpyArray(const StateVectorManagedCPU<PrecisionT> &sv)
+    -> pybind11::array_t<std::complex<PrecisionT>> {
+    return pybind11::array_t<std::complex<PrecisionT>>(
+        {sv.getLength()}, {2 * sizeof(PrecisionT)}, sv.getData());
+}
+
+auto getNumpyArrayAlignment(const pybind11::array &numpyArray)
+    -> CPUMemoryModel {
+    return getMemoryModel(numpyArray.request().ptr);
+}
+
+void deallocateArray(void *ptr) { std::free(ptr); }
+
+/**
+ * @brief We return an numpy array whose underlying data is allocated by
+ * lightning.
+ *
+ * See https://github.com/pybind/pybind11/issues/1042#issuecomment-325941022
+ * for capsule usage.
+ */
+auto allocateAlignedArray(size_t size, pybind11::dtype dt) -> pybind11::array {
+
+    auto memory_model = bestCPUMemoryModel();
+
+    if (dt.is(pybind11::dtype::of<float>())) {
+        void *ptr = std::aligned_alloc(getAlignment<float>(memory_model),
+                                       sizeof(float) * size);
+        auto capsule = pybind11::capsule(ptr, &deallocateArray);
+
+        return pybind11::array{dt, {size}, {sizeof(float)}, ptr, capsule};
+    } else if (dt.is(pybind11::dtype::of<double>())) {
+        void *ptr = std::aligned_alloc(getAlignment<double>(memory_model),
+                                       sizeof(double) * size);
+        auto capsule = pybind11::capsule(ptr, &deallocateArray);
+
+        return pybind11::array{dt, {size}, {sizeof(double)}, ptr, capsule};
+    } else if (dt.is(pybind11::dtype::of<std::complex<float>>())) {
+        void *ptr =
+            std::aligned_alloc(getAlignment<std::complex<float>>(memory_model),
+                               sizeof(std::complex<float>) * size);
+        auto capsule = pybind11::capsule(ptr, &deallocateArray);
+
+        return pybind11::array{
+            dt, {size}, {sizeof(std::complex<float>)}, ptr, capsule};
+    } else if (dt.is(pybind11::dtype::of<std::complex<double>>())) {
+        void *ptr =
+            std::aligned_alloc(getAlignment<std::complex<double>>(memory_model),
+                               sizeof(std::complex<double>) * size);
+        auto capsule = pybind11::capsule(ptr, &deallocateArray);
+
+        return pybind11::array{
+            dt, {size}, {sizeof(std::complex<double>)}, ptr, capsule};
+    } else {
+        throw pybind11::type_error("Unsupported datatype.");
+    }
 }
 
 /**
@@ -87,7 +160,7 @@ void apply(pybind11::array_t<std::complex<PrecisionT>> &stateNumpyArray,
            const std::vector<std::vector<size_t>> &wires,
            const std::vector<bool> &inverse,
            const std::vector<std::vector<PrecisionT>> &params) {
-    auto state = create<PrecisionT>(stateNumpyArray);
+    auto state = createRaw<PrecisionT>(stateNumpyArray);
     state.applyOperations(ops, wires, inverse, params);
 }
 
@@ -103,6 +176,7 @@ void apply(pybind11::array_t<std::complex<PrecisionT>> &stateNumpyArray,
  * @tparam kernel Kernel to register
  * @tparam gate_op Gate operation
  */
+/*
 template <class PrecisionT, class ParamT, Gates::KernelType kernel,
           Gates::GateOperation gate_op>
 constexpr auto getLambdaForKernelGateOp() {
@@ -115,16 +189,14 @@ constexpr auto getLambdaForKernelGateOp() {
 
     if constexpr (gate_op != GateOperation::Matrix) {
         return
-            [](StateVectorRaw<PrecisionT> &st, const std::vector<size_t> &wires,
-               bool inverse, const std::vector<ParamT> &params) {
-                constexpr auto func_ptr =
-                    GateOpToMemberFuncPtr<PrecisionT, ParamT,
-                                          GateImplementation, gate_op>::value;
-                callGateOps(func_ptr, st.getData(), st.getNumQubits(), wires,
+            [](StateVectorRawCPU<PrecisionT> &st, const std::vector<size_t>
+&wires, bool inverse, const std::vector<ParamT> &params) { constexpr auto
+func_ptr = GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+gate_op>::value; callGateOps(func_ptr, st.getData(), st.getNumQubits(), wires,
                             inverse, params);
             };
     } else {
-        return [](StateVectorRaw<PrecisionT> &st,
+        return [](StateVectorRawCPU<PrecisionT> &st,
                   const py::array_t<std::complex<PrecisionT>,
                                     py::array::c_style | py::array::forcecast>
                       &matrix,
@@ -135,7 +207,8 @@ constexpr auto getLambdaForKernelGateOp() {
         };
     }
 };
-
+*/
+/*
 /// @cond DEV
 template <class PrecisionT, class ParamT, Gates::KernelType kernel,
           size_t gate_idx>
@@ -154,7 +227,7 @@ constexpr auto getGateOpLambdaPairsIter() {
     }
 }
 /// @endcond
-
+*/
 /**
  * @brief Create a tuple of lambda functions to bind
  *
@@ -162,10 +235,12 @@ constexpr auto getGateOpLambdaPairsIter() {
  * @tparam ParamT Floating point type of gate parameters
  * @tparam kernel Kernel to register
  */
+/*
 template <class PrecisionT, class ParamT, Gates::KernelType kernel>
 constexpr auto getGateOpLambdaPairs() {
     return getGateOpLambdaPairsIter<PrecisionT, ParamT, kernel, 0>();
 }
+*/
 
 /**
  * @brief For given kernel, register all implemented gate operations and apply
@@ -176,17 +251,13 @@ constexpr auto getGateOpLambdaPairs() {
  * @tparam Kernel Kernel to register
  * @tparam PyClass Pybind11 class type
  */
-template <class PrecisionT, class ParamT, Gates::KernelType kernel,
-          class PyClass>
+/*
+template <class PrecisionT, class ParamT, class PyClass>
 void registerImplementedGatesForKernel(PyClass &pyclass) {
     using namespace Pennylane::Gates;
-    const auto kernel_name = std::string(SelectKernel<kernel>::name);
-
-    constexpr auto gate_op_lambda_pairs =
-        getGateOpLambdaPairs<PrecisionT, ParamT, kernel>();
 
     auto registerToPyclass =
-        [&pyclass, &kernel_name](auto &&gate_op_lambda_pair) -> GateOperation {
+        [&pyclass](auto &&gate_op_lambda_pair) -> GateOperation {
         const auto &[gate_op, func] = gate_op_lambda_pair;
         if (gate_op == GateOperation::Matrix) {
             const std::string name = "applyMatrix_" + kernel_name;
@@ -195,10 +266,14 @@ void registerImplementedGatesForKernel(PyClass &pyclass) {
         } else {
             const auto gate_name =
                 std::string(lookup(Constant::gate_names, gate_op));
-            const std::string name = gate_name + "_" + kernel_name;
-            const std::string doc = "Apply the " + gate_name + " gate using " +
-                                    kernel_name + " kernel.";
-            pyclass.def(name.c_str(), func, doc.c_str());
+            const std::string doc = "Apply the " + gate_name + " gate.";
+            auto func = [&gate_name](StateVectorManagedCPU<PrecisionT>& sv,
+                                     const std::vector<size_t> &wires,
+                                     bool inverse,
+                                     const std::vector<ParamT> &params) {
+                sv.applyOperation(gate_name, wires, inverse, params);
+            }
+            pyclass.def(name.c_str(), , doc.c_str());
         }
         return gate_op;
     };
@@ -209,29 +284,40 @@ void registerImplementedGatesForKernel(PyClass &pyclass) {
         },
         gate_op_lambda_pairs);
 }
-
+*/
 /// @cond DEV
-template <class PrecisionT, class ParamT, size_t kernel_idx, class PyClass>
-void registerKernelsToPyexportIter(PyClass &pyclass) {
-    if constexpr (kernel_idx < kernels_to_pyexport.size()) {
-        constexpr auto kernel = kernels_to_pyexport[kernel_idx];
-        registerImplementedGatesForKernel<PrecisionT, ParamT, kernel>(pyclass);
-        registerKernelsToPyexportIter<PrecisionT, ParamT, kernel_idx + 1>(
-            pyclass);
-    }
-}
-/// @endcond
+template <class PrecisionT, class ParamT, class SVType, class PyClass>
+void registerGatesForStateVector(PyClass &pyclass) {
+    using Gates::GateOperation;
+    namespace Constant = Gates::Constant;
 
-/**
- * @brief register gates for each kernel in kernels_to_pyexport
- *
- *
- * @tparam PrecisionT Floating point precision of underlying statevector data
- * @tparam ParamT Floating point type of gate parameters
- * @tparam PyClass Pyclass type
- */
-template <class PrecisionT, class ParamT, class PyClass>
-void registerKernelsToPyexport(PyClass &pyclass) {
-    registerKernelsToPyexportIter<PrecisionT, ParamT, 0>(pyclass);
+    static_assert(std::is_same_v<typename SVType::PrecisionT, PrecisionT>);
+
+    { // Register matrix
+        const std::string doc = "Apply a given matrix to wires.";
+        auto func =
+            [](SVType &st,
+               const pybind11::array_t<std::complex<PrecisionT>,
+                                       pybind11::array::c_style |
+                                           pybind11::array::forcecast> &matrix,
+               const std::vector<size_t> &wires, bool inverse = false) {
+                st.applyMatrix(static_cast<const std::complex<PrecisionT> *>(
+                                   matrix.request().ptr),
+                               wires, inverse);
+            };
+        pyclass.def("applyMatrix", func, doc.c_str());
+    }
+
+    Util::for_each_enum<GateOperation>([&pyclass](GateOperation gate_op) {
+        const auto gate_name =
+            std::string(lookup(Constant::gate_names, gate_op));
+        const std::string doc = "Apply the " + gate_name + " gate.";
+        auto func = [gate_name = gate_name](
+                        SVType &sv, const std::vector<size_t> &wires,
+                        bool inverse, const std::vector<ParamT> &params) {
+            sv.applyOperation(gate_name, wires, inverse, params);
+        };
+        pyclass.def(gate_name.c_str(), func, doc.c_str());
+    });
 }
 } // namespace Pennylane

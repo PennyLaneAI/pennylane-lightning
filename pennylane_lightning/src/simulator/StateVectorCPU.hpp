@@ -32,16 +32,19 @@ class StateVectorCPU : public StateVectorBase<PrecisionT, Derived> {
   public:
     using ComplexPrecisionT = std::complex<PrecisionT>;
 
+  protected:
+    const Threading threading_;
+    const CPUMemoryModel memory_model_;
+
   private:
     using BaseType = StateVectorBase<PrecisionT, Derived>;
-
-    Threading threading_;
-    CPUMemoryModel memory_model_;
 
     std::unordered_map<Gates::GateOperation, Gates::KernelType>
         kernel_for_gates_;
     std::unordered_map<Gates::GeneratorOperation, Gates::KernelType>
         kernel_for_generators_;
+    std::unordered_map<Gates::MatrixOperation, Gates::KernelType>
+        kernel_for_matrices_;
 
     void setKernels(size_t num_qubits, Threading threading,
                     CPUMemoryModel memory_model) {
@@ -49,6 +52,8 @@ class StateVectorCPU : public StateVectorBase<PrecisionT, Derived> {
         kernel_for_gates_ = default_kernels.getGateKernelMap(
             num_qubits, threading, memory_model);
         kernel_for_generators_ = default_kernels.getGeneratorKernelMap(
+            num_qubits, threading, memory_model);
+        kernel_for_matrices_ = default_kernels.getMatrixKernelMap(
             num_qubits, threading, memory_model);
     }
 
@@ -71,6 +76,14 @@ class StateVectorCPU : public StateVectorBase<PrecisionT, Derived> {
         -> Gates::KernelType {
         return kernel_for_generators_.at(gntr_op);
     }
-};
 
+    [[nodiscard]] inline auto
+    getKernelForMatrix(Gates::MatrixOperation mat_op) const
+        -> Gates::KernelType {
+        return kernel_for_matrices_.at(mat_op);
+    }
+
+    inline CPUMemoryModel memoryModel() const { return memory_model_; }
+    inline Threading threading() const { return threading_; }
+};
 } // namespace Pennylane

@@ -46,11 +46,13 @@ try:
         StateVectorC128,
         AdjointJacobianC128,
         VectorJacobianProductC128,
-        DEFAULT_KERNEL_FOR_OPS,
-        EXPORTED_KERNEL_OPS,
+        allocate_aligned_array,
+        get_alignment,
+        best_alignment,
+        CPUMemoryModel,
     )
 
-    from ._serialize import _serialize_obs, _serialize_ops, _is_lightning_gate
+    from ._serialize import _serialize_obs, _serialize_ops
 
     CPP_BINARY_AVAILABLE = True
 except ModuleNotFoundError:
@@ -101,25 +103,23 @@ class LightningQubit(DefaultQubit):
     _CPP_BINARY_AVAILABLE = True
 
     def __init__(self, wires, *, kernel_for_ops=None, shots=None, batch_obs=False):
-        self._kernel_for_ops = DEFAULT_KERNEL_FOR_OPS
-        if kernel_for_ops is not None:
-            if not isinstance(kernel_for_ops, dict):
-                raise ValueError("Argument kernel_for_ops must be a dictionary.")
-
-            for gate_op, kernel in kernel_for_ops.items():
-                if (kernel, gate_op) not in EXPORTED_KERNEL_OPS:
-                    raise ValueError(
-                        f"The given kernel {kernel} does not implement {gate_op} gate."
-                    )
-                self._kernel_for_ops[gate_op] = kernel
-
         super().__init__(wires, shots=shots)
         self._batch_obs = batch_obs
 
-        # Lightning keeps a simulator memory of which is managed by C++
-        # Note that as C++ manages the data, we need to copy from this array when
-        # the result is used outside of the module
-        self.sim_ = None
+    @staticmethod
+    def _asarray(arr, dtype=None):
+        arr = np.asarray(arr)
+        if not dtype:
+            dtype = arr.dtype
+
+        # We allocate a new aligned memory and copy data to there if alignment or dtype mismatches
+        # Note that get_alignment does not neccsarily returns CPUMemoryModel(Unaligned) even for
+        # numpy allocated memory as the memory location happens to be aligend.
+        if int(get_alignment(arr)) < int(best_alignment()) or arr.dtype != dtype:
+            new_arr = allocate_aligned_array(arr.size, np.dtype(dtype)).reshape(arr.shape)
+            np.copyto(new_arr, arr)
+            arr = new_arr
+        return arr
 
     @classmethod
     def capabilities(cls):
@@ -195,17 +195,13 @@ class LightningQubit(DefaultQubit):
 
         for o in operations:
             name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
-            if _is_lightning_gate(name):
-                kernel = self._kernel_for_ops[name]
-                method = getattr(sim, f"{name}_{kernel}".format(), None)
-            else:
-                method = None
+            method = getattr(sim, name, None)
 
             wires = self.wires.indices(o.wires)
 
             if method is None:
                 # Inverse can be set to False since o.matrix is already in inverted form
-                method = getattr(sim, "applyMatrix_{}".format(self._kernel_for_ops["Matrix"]))
+                method = getattr(sim, "applyMatrix")
                 method(o.matrix, wires, False)
             else:
                 inv = o.inverse

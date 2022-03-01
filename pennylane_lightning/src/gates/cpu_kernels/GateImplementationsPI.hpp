@@ -68,8 +68,8 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         GateOperation::IsingZZ, GateOperation::CRX,
         GateOperation::CRY,     GateOperation::CRZ,
         GateOperation::CRot,    GateOperation::Toffoli,
-        GateOperation::CSWAP,   GateOperation::MultiRZ,
-        GateOperation::Matrix};
+        GateOperation::CSWAP,   GateOperation::MultiRZ};
+
     constexpr static std::array implemented_generators = {
         GeneratorOperation::RX,
         GeneratorOperation::RY,
@@ -83,6 +83,153 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         GeneratorOperation::CRZ,
         GeneratorOperation::ControlledPhaseShift};
 
+    constexpr static std::array implemented_matrices = {
+        MatrixOperation::SingleQubitOp, MatrixOperation::TwoQubitOp,
+        MatrixOperation::MultiQubitOp};
+
+    /**
+     * @brief Apply a single qubit gate to the statevector.
+     *
+     * @param arr Pointer to the statevector.
+     * @param num_qubits Number of qubits.
+     * @param matrix Perfect square matrix in row-major order.
+     * @param wires Wires the gate applies to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    template <class PrecisionT>
+    static inline void
+    applySingleQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
+                       const std::complex<PrecisionT> *matrix,
+                       const std::vector<size_t> &wires, bool inverse = false) {
+        assert(wires.size() == 1);
+
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+
+        if (inverse) {
+            for (const size_t &externalIndex : externalIndices) {
+                std::complex<PrecisionT> *shiftedState = arr + externalIndex;
+                const std::complex<PrecisionT> v0 = shiftedState[indices[0]];
+                const std::complex<PrecisionT> v1 = shiftedState[indices[1]];
+                shiftedState[indices[0]] =
+                    std::conj(matrix[0B00]) * v0 +
+                    std::conj(matrix[0B10]) *
+                        v1; // NOLINT(readability-magic-numbers)
+                shiftedState[indices[1]] =
+                    std::conj(matrix[0B01]) * v0 +
+                    std::conj(matrix[0B11]) *
+                        v1; // NOLINT(readability-magic-numbers)
+            }
+        } else {
+            for (const size_t &externalIndex : externalIndices) {
+                std::complex<PrecisionT> *shiftedState = arr + externalIndex;
+                const std::complex<PrecisionT> v0 = shiftedState[indices[0]];
+                const std::complex<PrecisionT> v1 = shiftedState[indices[1]];
+                shiftedState[indices[0]] =
+                    matrix[0B00] * v0 +
+                    matrix[0B01] * v1; // NOLINT(readability-magic-numbers)
+                shiftedState[indices[1]] =
+                    matrix[0B10] * v0 +
+                    matrix[0B11] * v1; // NOLINT(readability-magic-numbers)
+            }
+        }
+    }
+
+    /**
+     * @brief Apply a two qubit gate to the statevector.
+     *
+     * @param arr Pointer to the statevector.
+     * @param num_qubits Number of qubits.
+     * @param matrix Perfect square matrix in row-major order.
+     * @param wires Wires the gate applies to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    template <class PrecisionT>
+    static inline void
+    applyTwoQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
+                    const std::complex<PrecisionT> *matrix,
+                    const std::vector<size_t> &wires, bool inverse = false) {
+        assert(wires.size() == 2);
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+
+        if (inverse) {
+            for (const size_t &externalIndex : externalIndices) {
+                std::complex<PrecisionT> *shiftedState = arr + externalIndex;
+
+                const std::complex<PrecisionT> v00 = shiftedState[indices[0]];
+                const std::complex<PrecisionT> v01 = shiftedState[indices[1]];
+                const std::complex<PrecisionT> v10 = shiftedState[indices[2]];
+                const std::complex<PrecisionT> v11 = shiftedState[indices[3]];
+
+                // NOLINTNEXTLINE(readability-magic-numbers)
+                shiftedState[indices[0]] =
+                    std::conj(matrix[0b0000]) * v00 +
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    std::conj(matrix[0b0100]) * v01 +
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    std::conj(matrix[0b1000]) * v10 +
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    std::conj(matrix[0b1100]) * v11;
+                // NOLINTNEXTLINE(readability-magic-numbers)
+                shiftedState[indices[1]] =
+                    std::conj(matrix[0b0001]) * v00 +
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    std::conj(matrix[0b0101]) * v01 +
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    std::conj(matrix[0b1001]) * v10 +
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    std::conj(matrix[0b1101]) * v11;
+                // NOLINTNEXTLINE(readability-magic-numbers)
+                shiftedState[indices[2]] =
+                    std::conj(matrix[0b0010]) * v00 +
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    std::conj(matrix[0b0110]) * v01 +
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    std::conj(matrix[0b1010]) * v10 +
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    std::conj(matrix[0b1110]) * v11;
+                // NOLINTNEXTLINE(readability-magic-numbers)
+                shiftedState[indices[3]] =
+                    std::conj(matrix[0b0011]) * v00 +
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    std::conj(matrix[0b0111]) * v01 +
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    std::conj(matrix[0b1011]) * v10 +
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    std::conj(matrix[0b1111]) * v11;
+            }
+        } else {
+            for (const size_t &externalIndex : externalIndices) {
+                std::complex<PrecisionT> *shiftedState = arr + externalIndex;
+
+                const std::complex<PrecisionT> v00 = shiftedState[indices[0]];
+                const std::complex<PrecisionT> v01 = shiftedState[indices[1]];
+                const std::complex<PrecisionT> v10 = shiftedState[indices[2]];
+                const std::complex<PrecisionT> v11 = shiftedState[indices[3]];
+
+                // NOLINTNEXTLINE(readability-magic-numbers)
+                shiftedState[indices[0]] =
+                    matrix[0b0000] * v00 + matrix[0b0001] * v01 +
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    matrix[0b0010] * v10 + matrix[0b0011] * v11;
+                // NOLINTNEXTLINE(readability-magic-numbers)
+                shiftedState[indices[1]] =
+                    matrix[0b0100] * v00 + matrix[0b0101] * v01 +
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    matrix[0b0110] * v10 + matrix[0b0111] * v11;
+                // NOLINTNEXTLINE(readability-magic-numbers)
+                shiftedState[indices[2]] =
+                    matrix[0b1000] * v00 + matrix[0b1001] * v01 +
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    matrix[0b1010] * v10 + matrix[0b1011] * v11;
+                // NOLINTNEXTLINE(readability-magic-numbers)
+                shiftedState[indices[3]] =
+                    matrix[0b1100] * v00 + matrix[0b1101] * v01 +
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    matrix[0b1110] * v10 + matrix[0b1111] * v11;
+            }
+        }
+    }
+
     /**
      * @brief Apply a given matrix directly to the statevector.
      *
@@ -93,9 +240,10 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
      * @param inverse Indicate whether inverse should be taken.
      */
     template <class PrecisionT>
-    static void applyMatrix(std::complex<PrecisionT> *arr, size_t num_qubits,
-                            const std::complex<PrecisionT> *matrix,
-                            const std::vector<size_t> &wires, bool inverse) {
+    static void
+    applyMultiQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
+                      const std::complex<PrecisionT> *matrix,
+                      const std::vector<size_t> &wires, bool inverse) {
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         std::vector<std::complex<PrecisionT>> v(indices.size());
@@ -132,27 +280,6 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
                 }
             }
         }
-    }
-
-    /**
-     * @brief Apply a given matrix directly to the statevector.
-     *
-     * @param arr Pointer to the statevector.
-     * @param num_qubits Number of qubits.
-     * @param matrix Perfect square matrix in row-major order.
-     * @param wires Wires the gate applies to.
-     * @param inverse Indicate whether inverse should be taken.
-     */
-    template <class PrecisionT>
-    static void applyMatrix(std::complex<PrecisionT> *arr, size_t num_qubits,
-                            const std::vector<std::complex<PrecisionT>> &matrix,
-                            const std::vector<size_t> &wires, bool inverse) {
-        if (matrix.size() != Util::exp2(2 * wires.size())) {
-            throw std::invalid_argument(
-                "The size of matrix does not match with the given "
-                "number of wires");
-        }
-        applyMatrix(arr, num_qubits, matrix.data(), wires, inverse);
     }
 
     /* Single qubit operators */

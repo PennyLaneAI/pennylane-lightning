@@ -40,18 +40,6 @@ except ImportError:
     pass
 
 
-def _is_lightning_gate(gate_name):
-    """Returns True if the gate (besides Matrix) is implemented
-    and exported from lightning.
-
-    Args:
-        gate_name (str): the name of gate
-    """
-    if gate_name == "Matrix":
-        return False
-    return gate_name in DEFAULT_KERNEL_FOR_OPS
-
-
 def _obs_has_kernel(obs: Observable) -> bool:
     """Returns True if the input observable has a supported kernel in the C++ backend.
 
@@ -167,7 +155,7 @@ def _serialize_ops(
             name = single_op.name if not is_inverse else single_op.name[:-4]
             names.append(name)
 
-            if not _is_lightning_gate(name):
+            if getattr(StateVectorC128, name, None) is None:
                 params.append([])
                 mats.append(single_op.matrix)
 
