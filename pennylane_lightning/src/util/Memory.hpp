@@ -10,13 +10,15 @@
 // limitations under the License.
 #pragma once
 
+#include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <limits>
 #include <memory>
 #include <new>
 
-#include "ConstantUtil.hpp"
+#include "BitUtil.hpp"
 #include "TypeList.hpp"
 
 /* Apple clang does not support std::aligned_alloc in Mac 10.14 */
@@ -24,50 +26,58 @@
 namespace Pennylane {
 /**
  * @brief Custom aligned allocate function. As appleclang does not support
- * std::aligned_alloc in Mac OS 10.14, we use posix memalign
+ * std::aligned_alloc in Mac OS 10.14, we use posix_memalign function.
+ *
+ * Note that alignment must be larger than max_align_t.
  */
-inline auto alignedAlloc(uint32_t alignment, size_t bytes) -> void* {
+inline auto alignedAlloc(uint32_t alignment, size_t bytes) -> void * {
 #if defined(__clang__) // probably AppleClang
-    void* p;
+    void *p;
     posix_memalign(&p, alignment, bytes);
     return p;
-#elif  defined(_MSC_VER)
+#elif defined(_MSC_VER)
     return _aligned_malloc(bytes, alignment);
 #else
     return std::aligned_alloc(alignment, bytes);
 #endif
 }
 
-inline void alignedFree(void* p) {
+inline void alignedFree(void *p) {
 #if defined(__clang__)
-    return free(p);
-#elif  defined(_MSC_VER)
+    return ::free(p); // NOLINT(hicpp-no-malloc)
+#elif defined(_MSC_VER)
     return _aligned_free(p);
 #else
     return std::free(p);
 #endif
 }
 
-template <class T, uint32_t alignment> struct AlignedAllocator {
-    static_assert(Util::constIsPerfectPowerOf2(alignment),
-                  "Template parameter alignment must be power of 2.");
+template <class T> struct AlignedAllocator {
+    uint32_t alignment_;
     using value_type = T;
 
-    AlignedAllocator() = default;
+    constexpr explicit AlignedAllocator(uint32_t alignment)
+        : alignment_{alignment} {
+        // assert(Util::isPerfectPowerOf2(alignment));
+    }
 
-    template <class U> struct rebind {
-        using other = AlignedAllocator<U, alignment>;
-    };
+    template <class U> struct rebind { using other = AlignedAllocator<U>; };
 
     template <typename U>
     explicit constexpr AlignedAllocator(
-        [[maybe_unused]] const AlignedAllocator<U, alignment> &rhs) noexcept {}
+        [[maybe_unused]] const AlignedAllocator<U> &rhs) noexcept
+        : alignment_{rhs.alignment_} {}
 
     [[nodiscard]] T *allocate(std::size_t size) {
         if (size == 0) {
             return nullptr;
         }
-        void *p = alignedAlloc(alignment, sizeof(T) * size);
+        void *p;
+        if (alignment_ > alignof(std::max_align_t)) {
+            p = alignedAlloc(alignment_, sizeof(T) * size);
+        } else {
+            p = malloc(sizeof(T) * size);
+        }
         if (p == nullptr) {
             throw std::bad_alloc();
         }
@@ -86,15 +96,15 @@ template <class T, uint32_t alignment> struct AlignedAllocator {
     }
 };
 
-template <class T, class U, uint32_t alignment>
-bool operator==([[maybe_unused]] const AlignedAllocator<T, alignment> &lhs,
-                [[maybe_unused]] const AlignedAllocator<U, alignment> &rhs) {
+template <class T, class U>
+bool operator==([[maybe_unused]] const AlignedAllocator<T> &lhs,
+                [[maybe_unused]] const AlignedAllocator<U> &rhs) {
     return true;
 }
 
 template <class T, class U, uint32_t alignment>
-bool operator!=([[maybe_unused]] const AlignedAllocator<T, alignment> &lhs,
-                [[maybe_unused]] const AlignedAllocator<U, alignment> &rhs) {
+bool operator!=([[maybe_unused]] const AlignedAllocator<T> &lhs,
+                [[maybe_unused]] const AlignedAllocator<U> &rhs) {
     return false;
 }
 
@@ -117,9 +127,4 @@ template <> struct commonAlignmentHelper<void> {
 template <typename TypeList>
 [[maybe_unused]] constexpr static size_t common_alignment =
     commonAlignmentHelper<TypeList>::value;
-
-template <class T, uint32_t alignment>
-using PLAllocator = std::conditional_t<alignment == 4, std::allocator<T>,
-                                       AlignedAllocator<T, alignment>>;
-
 } // namespace Pennylane

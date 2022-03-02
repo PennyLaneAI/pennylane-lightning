@@ -323,7 +323,8 @@ template <typename PrecisionT> class DynamicDispatcher {
                 "The size of matrix does not match with the given "
                 "number of wires");
         }
-        applyMatrix(kernel, data, mat_op, num_qubits, matrix.data(), wires, inverse);
+        applyMatrix(kernel, data, mat_op, num_qubits, matrix.data(), wires,
+                    inverse);
     }
 
     /**

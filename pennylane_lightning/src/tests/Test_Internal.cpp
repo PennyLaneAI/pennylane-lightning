@@ -114,7 +114,7 @@ TEST_CASE("createAllWires", "[Test_Internal]") {
             {4, 2},  {8, 3},  {12, 1}, {12, 2}, {12, 3},  {12, 4},  {12, 5},
             {12, 6}, {12, 7}, {12, 8}, {12, 9}, {12, 10}, {12, 11}, {12, 12}};
 
-        for (const auto& [n, r] : test_pairs) {
+        for (const auto &[n, r] : test_pairs) {
             std::vector<std::set<size_t>> vec;
             auto v = CombinationGenerator(n, r).all_perms();
 
@@ -139,7 +139,7 @@ TEST_CASE("createAllWires", "[Test_Internal]") {
         const std::vector<std::pair<size_t, size_t>> test_pairs{
             {4, 2}, {8, 3}, {12, 1}, {12, 2}, {12, 3}, {12, 4}, {12, 5}};
 
-        for (const auto& [n, r] : test_pairs) {
+        for (const auto &[n, r] : test_pairs) {
             auto v = PermutationGenerator(n, r).all_perms();
 
             REQUIRE(v.size() == permSize(n, r));

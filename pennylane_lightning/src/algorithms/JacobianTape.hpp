@@ -86,9 +86,9 @@ template <class T = double> class ObsDatum {
     }
 
   private:
-    const std::vector<std::string> obs_name_;
-    const std::vector<param_var_t> obs_params_;
-    const std::vector<std::vector<size_t>> obs_wires_;
+    const std::vector<std::string> obs_name_{};
+    const std::vector<param_var_t> obs_params_{};
+    const std::vector<std::vector<size_t>> obs_wires_{};
 };
 
 /**

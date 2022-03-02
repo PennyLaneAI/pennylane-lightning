@@ -164,8 +164,9 @@ void testApplyRY() {
             {0.10575112905629831, -0.47593196040758534},
             {-0.8711876098966215, -0.0577721051072477}}};
 
-    const TestVector<ComplexPrecisionT> init_state{{0.8775825618903728, 0.0},
-                                                   {0.0, -0.47942553860420306}};
+    const TestVector<ComplexPrecisionT> init_state{
+        {{0.8775825618903728, 0.0}, {0.0, -0.47942553860420306}},
+        test_allocator<ComplexPrecisionT>};
     DYNAMIC_SECTION(GateImplementation::name
                     << ", RY - " << PrecisionToName<PrecisionT>::value) {
         for (size_t index = 0; index < angles.size(); index++) {
@@ -373,15 +374,17 @@ void testApplyIsingXX() {
                     << PrecisionToName<PrecisionT>::value) {
         const size_t num_qubits = 3;
         const auto ini_st = TestVector<ComplexPrecisionT>{
-            ComplexPrecisionT{0.125681356503, 0.252712197380},
-            ComplexPrecisionT{0.262591068130, 0.370189000494},
-            ComplexPrecisionT{0.129300299863, 0.371057794075},
-            ComplexPrecisionT{0.392248682814, 0.195795523118},
-            ComplexPrecisionT{0.303908059240, 0.082981563244},
-            ComplexPrecisionT{0.189140284321, 0.179512645957},
-            ComplexPrecisionT{0.173146612336, 0.092249594834},
-            ComplexPrecisionT{0.298857179897, 0.269627836165},
-        };
+            {
+                ComplexPrecisionT{0.125681356503, 0.252712197380},
+                ComplexPrecisionT{0.262591068130, 0.370189000494},
+                ComplexPrecisionT{0.129300299863, 0.371057794075},
+                ComplexPrecisionT{0.392248682814, 0.195795523118},
+                ComplexPrecisionT{0.303908059240, 0.082981563244},
+                ComplexPrecisionT{0.189140284321, 0.179512645957},
+                ComplexPrecisionT{0.173146612336, 0.092249594834},
+                ComplexPrecisionT{0.298857179897, 0.269627836165},
+            },
+            test_allocator<ComplexPrecisionT>};
         const std::vector<size_t> wires = {0, 2};
         const ParamT angle = 0.267030328057308;
         std::vector<ComplexPrecisionT> expected{
@@ -507,23 +510,23 @@ void testApplyIsingYY() {
         const size_t num_qubits = 4;
 
         const auto ini_st = TestVector<ComplexPrecisionT>{
-            ComplexPrecisionT{0.276522701942, 0.192601873155},
-            ComplexPrecisionT{0.035951282872, 0.224882549474},
-            ComplexPrecisionT{0.142578003191, 0.016769549184},
-            ComplexPrecisionT{0.207510965432, 0.068085008177},
-            ComplexPrecisionT{0.231177902264, 0.039974505646},
-            ComplexPrecisionT{0.038587049391, 0.058503643276},
-            ComplexPrecisionT{0.023121176451, 0.294843178966},
-            ComplexPrecisionT{0.297936734810, 0.061981734524},
-            ComplexPrecisionT{0.140961289031, 0.061129422308},
-            ComplexPrecisionT{0.204531438234, 0.159178277448},
-            ComplexPrecisionT{0.143828437747, 0.031972463787},
-            ComplexPrecisionT{0.291528706380, 0.138875986482},
-            ComplexPrecisionT{0.297088897520, 0.179914971203},
-            ComplexPrecisionT{0.032991360504, 0.024025500927},
-            ComplexPrecisionT{0.121553926676, 0.263606060346},
-            ComplexPrecisionT{0.177173454285, 0.267447421480},
-        };
+            {ComplexPrecisionT{0.276522701942, 0.192601873155},
+             ComplexPrecisionT{0.035951282872, 0.224882549474},
+             ComplexPrecisionT{0.142578003191, 0.016769549184},
+             ComplexPrecisionT{0.207510965432, 0.068085008177},
+             ComplexPrecisionT{0.231177902264, 0.039974505646},
+             ComplexPrecisionT{0.038587049391, 0.058503643276},
+             ComplexPrecisionT{0.023121176451, 0.294843178966},
+             ComplexPrecisionT{0.297936734810, 0.061981734524},
+             ComplexPrecisionT{0.140961289031, 0.061129422308},
+             ComplexPrecisionT{0.204531438234, 0.159178277448},
+             ComplexPrecisionT{0.143828437747, 0.031972463787},
+             ComplexPrecisionT{0.291528706380, 0.138875986482},
+             ComplexPrecisionT{0.297088897520, 0.179914971203},
+             ComplexPrecisionT{0.032991360504, 0.024025500927},
+             ComplexPrecisionT{0.121553926676, 0.263606060346},
+             ComplexPrecisionT{0.177173454285, 0.267447421480}},
+            test_allocator<ComplexPrecisionT>};
 
         const std::vector<size_t> wires = {0, 1};
         const ParamT angle = 0.312;
@@ -661,23 +664,23 @@ void testApplyIsingZZ() {
         const size_t num_qubits = 4;
 
         TestVector<ComplexPrecisionT> ini_st{
-            ComplexPrecisionT{0.267462841882, 0.010768564798},
-            ComplexPrecisionT{0.228575129706, 0.010564590956},
-            ComplexPrecisionT{0.099492749900, 0.260849823392},
-            ComplexPrecisionT{0.093690204310, 0.189847108173},
-            ComplexPrecisionT{0.033390732374, 0.203836830144},
-            ComplexPrecisionT{0.226979395737, 0.081852150975},
-            ComplexPrecisionT{0.031235505729, 0.176933497281},
-            ComplexPrecisionT{0.294287602843, 0.145156781198},
-            ComplexPrecisionT{0.152742706049, 0.111628061129},
-            ComplexPrecisionT{0.012553863703, 0.120027860480},
-            ComplexPrecisionT{0.237156555364, 0.154658769755},
-            ComplexPrecisionT{0.117001120872, 0.228059505033},
-            ComplexPrecisionT{0.041495873225, 0.065934827444},
-            ComplexPrecisionT{0.089653239407, 0.221581340372},
-            ComplexPrecisionT{0.217892322429, 0.291261296999},
-            ComplexPrecisionT{0.292993251871, 0.186570798697},
-        };
+            {ComplexPrecisionT{0.267462841882, 0.010768564798},
+             ComplexPrecisionT{0.228575129706, 0.010564590956},
+             ComplexPrecisionT{0.099492749900, 0.260849823392},
+             ComplexPrecisionT{0.093690204310, 0.189847108173},
+             ComplexPrecisionT{0.033390732374, 0.203836830144},
+             ComplexPrecisionT{0.226979395737, 0.081852150975},
+             ComplexPrecisionT{0.031235505729, 0.176933497281},
+             ComplexPrecisionT{0.294287602843, 0.145156781198},
+             ComplexPrecisionT{0.152742706049, 0.111628061129},
+             ComplexPrecisionT{0.012553863703, 0.120027860480},
+             ComplexPrecisionT{0.237156555364, 0.154658769755},
+             ComplexPrecisionT{0.117001120872, 0.228059505033},
+             ComplexPrecisionT{0.041495873225, 0.065934827444},
+             ComplexPrecisionT{0.089653239407, 0.221581340372},
+             ComplexPrecisionT{0.217892322429, 0.291261296999},
+             ComplexPrecisionT{0.292993251871, 0.186570798697}},
+            test_allocator<ComplexPrecisionT>};
 
         const std::vector<size_t> wires = {0, 1};
         const ParamT angle = 0.312;

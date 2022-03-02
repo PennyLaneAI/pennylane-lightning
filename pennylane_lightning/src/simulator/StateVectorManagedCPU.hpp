@@ -26,9 +26,6 @@ namespace Pennylane {
  * @brief StateVector class where data resides in CPU memory. Memory ownership
  * resides within class.
  *
- * We currently use std::unique_ptr to C-style array as we want to choose
- * allocator in runtime. This is impossible with std::vector.
- *
  * @tparam PrecisionT
  */
 template <class PrecisionT = double>
@@ -41,17 +38,15 @@ class StateVectorManagedCPU
     using BaseType = StateVectorCPU<PrecisionT, StateVectorManagedCPU>;
 
     // NOLINTNEXTLINE(modernize-avoid-c-arrays,hicpp-avoid-c-arrays)
-    std::unique_ptr<ComplexPrecisionT[]> data_;
+    std::vector<ComplexPrecisionT, AlignedAllocator<ComplexPrecisionT>> data_;
 
   public:
     explicit StateVectorManagedCPU(
         size_t num_qubits, Threading threading = bestThreading(),
         CPUMemoryModel memory_model = bestCPUMemoryModel())
-        : BaseType{num_qubits, threading, memory_model} {
-        size_t length = BaseType::getLength();
-        data_ = allocateMemory<ComplexPrecisionT>(memory_model, length);
-        std::fill(data_.get(), data_.get() + length,
-                  ComplexPrecisionT{0.0, 0.0});
+        : BaseType{num_qubits, threading, memory_model},
+          data_{Util::exp2(num_qubits), ComplexPrecisionT{0.0, 0.0},
+                getAllocator<ComplexPrecisionT>(this->memory_model_)} {
         data_[0] = {1, 0};
     }
 
@@ -59,24 +54,19 @@ class StateVectorManagedCPU
     explicit StateVectorManagedCPU(
         const StateVectorCPU<PrecisionT, OtherDerived> &other)
         : BaseType(other.getNumQubits(), other.threading(),
-                   other.memoryModel()) {
-        size_t length = BaseType::getLength();
-        data_ = allocateMemory<ComplexPrecisionT>(other.memoryModel(), length);
-
-        std::copy(other.getData(), other.getData() + length, data_.get());
-    }
+                   other.memoryModel()),
+          data_{other.getData(), other.getData() + other.getLength(),
+                getAllocator<ComplexPrecisionT>(this->memory_model_)} {}
 
     StateVectorManagedCPU(const ComplexPrecisionT *other_data,
                           size_t other_size,
                           Threading threading = bestThreading(),
                           CPUMemoryModel memory_model = bestCPUMemoryModel())
-        : BaseType(Util::log2PerfectPower(other_size), threading,
-                   memory_model) {
+        : BaseType(Util::log2PerfectPower(other_size), threading, memory_model),
+          data_{other_data, other_data + other_size,
+                getAllocator<ComplexPrecisionT>(this->memory_model_)} {
         PL_ABORT_IF_NOT(Util::isPerfectPowerOf2(other_size),
                         "The size of provided data must be a power of 2.");
-
-        data_ = allocateMemory<ComplexPrecisionT>(memory_model, other_size);
-        updateData(other_data);
     }
 
     // Clang-tidy gives false positive for delegating constructor
@@ -89,24 +79,19 @@ class StateVectorManagedCPU
         : StateVectorManagedCPU(rhs.data(), rhs.size(), threading,
                                 memory_model) {}
 
-    StateVectorManagedCPU(const StateVectorManagedCPU &rhs) : BaseType(rhs) {
-        size_t length = BaseType::getLength();
-        data_ = allocateMemory<ComplexPrecisionT>(rhs.memory_model_, length);
-        std::copy(rhs.getData(), rhs.getData() + length, data_.get());
-    }
-
+    StateVectorManagedCPU(const StateVectorManagedCPU &rhs) = default;
     StateVectorManagedCPU(StateVectorManagedCPU &&) noexcept = default;
 
-    StateVectorManagedCPU &operator=(const StateVectorManagedCPU &) = delete;
+    StateVectorManagedCPU &operator=(const StateVectorManagedCPU &) = default;
     StateVectorManagedCPU &
     operator=(StateVectorManagedCPU &&) noexcept = default;
 
     ~StateVectorManagedCPU() = default;
 
-    [[nodiscard]] auto getData() -> ComplexPrecisionT * { return data_.get(); }
+    [[nodiscard]] auto getData() -> ComplexPrecisionT * { return data_.data(); }
 
     [[nodiscard]] auto getData() const -> const ComplexPrecisionT * {
-        return data_.get();
+        return data_.data();
     }
 
     /**
@@ -115,7 +100,7 @@ class StateVectorManagedCPU
      * @param new_data std::vector contains data.
      */
     void updateData(const ComplexPrecisionT *data) {
-        std::copy(data, data + BaseType::getLength(), data_.get());
+        std::copy(data, data + BaseType::getLength(), data_.data());
     }
 };
 } // namespace Pennylane

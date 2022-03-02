@@ -111,20 +111,20 @@ auto allocateAlignedArray(size_t size, pybind11::dtype dt) -> pybind11::array {
 
     if (dt.is(pybind11::dtype::of<float>())) {
         void *ptr = alignedAlloc(getAlignment<float>(memory_model),
-                                       sizeof(float) * size);
+                                 sizeof(float) * size);
         auto capsule = pybind11::capsule(ptr, &deallocateArray);
 
         return pybind11::array{dt, {size}, {sizeof(float)}, ptr, capsule};
     } else if (dt.is(pybind11::dtype::of<double>())) {
         void *ptr = alignedAlloc(getAlignment<double>(memory_model),
-                                       sizeof(double) * size);
+                                 sizeof(double) * size);
         auto capsule = pybind11::capsule(ptr, &deallocateArray);
 
         return pybind11::array{dt, {size}, {sizeof(double)}, ptr, capsule};
     } else if (dt.is(pybind11::dtype::of<std::complex<float>>())) {
         void *ptr =
             alignedAlloc(getAlignment<std::complex<float>>(memory_model),
-                               sizeof(std::complex<float>) * size);
+                         sizeof(std::complex<float>) * size);
         auto capsule = pybind11::capsule(ptr, &deallocateArray);
 
         return pybind11::array{
@@ -132,7 +132,7 @@ auto allocateAlignedArray(size_t size, pybind11::dtype dt) -> pybind11::array {
     } else if (dt.is(pybind11::dtype::of<std::complex<double>>())) {
         void *ptr =
             alignedAlloc(getAlignment<std::complex<double>>(memory_model),
-                               sizeof(std::complex<double>) * size);
+                         sizeof(std::complex<double>) * size);
         auto capsule = pybind11::capsule(ptr, &deallocateArray);
 
         return pybind11::array{

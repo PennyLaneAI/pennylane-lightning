@@ -18,6 +18,7 @@
  */
 #pragma once
 #include "Macros.hpp"
+#include "Memory.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -52,11 +53,11 @@ constexpr inline auto bestCPUMemoryModel() -> CPUMemoryModel {
     return CPUMemoryModel::Unaligned;
 }
 
-template <class PrecisionT>
-constexpr inline auto getAlignment(CPUMemoryModel memory_model) -> size_t {
+template <class T>
+constexpr inline auto getAlignment(CPUMemoryModel memory_model) -> uint32_t {
     switch (memory_model) {
     case CPUMemoryModel::Unaligned:
-        return alignof(PrecisionT);
+        return alignof(T);
     case CPUMemoryModel::Aligned256:
         return 32U;
     case CPUMemoryModel::Aligned512:
@@ -67,23 +68,9 @@ constexpr inline auto getAlignment(CPUMemoryModel memory_model) -> size_t {
     PL_UNREACHABLE;
 }
 
-template <typename T>
-auto allocateMemory(CPUMemoryModel memory_model, size_t size)
-    // NOLINTNEXTLINE(modernize-avoid-c-arrays,hicpp-avoid-c-arrays)
-    -> std::unique_ptr<T[]> {
-    switch (memory_model) {
-    case CPUMemoryModel::Unaligned:
-        // NOLINTNEXTLINE(modernize-avoid-c-arrays,hicpp-avoid-c-arrays)
-        return std::unique_ptr<T[]>{new T[size]};
-    case CPUMemoryModel::Aligned256:
-        // NOLINTNEXTLINE(modernize-avoid-c-arrays,hicpp-avoid-c-arrays)
-        return std::unique_ptr<T[]>{new (std::align_val_t(32)) T[size]};
-    case CPUMemoryModel::Aligned512:
-        // NOLINTNEXTLINE(modernize-avoid-c-arrays,hicpp-avoid-c-arrays)
-        return std::unique_ptr<T[]>{new (std::align_val_t(64)) T[size]};
-    default:
-        break;
-    }
-    PL_UNREACHABLE;
+template <class T>
+constexpr auto getAllocator(CPUMemoryModel memory_model)
+    -> AlignedAllocator<T> {
+    return AlignedAllocator<T>{getAlignment<T>(memory_model)};
 }
 } // namespace Pennylane

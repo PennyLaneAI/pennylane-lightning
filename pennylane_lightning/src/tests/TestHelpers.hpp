@@ -150,9 +150,10 @@ isApproxEqual(const Data_t &data1, const Data_t &data2,
 }
 
 template <typename T>
-using TestVector = std::vector<
-    T,
-    PLAllocator<T, Util::common_alignment_v<remove_complex_t<T>, TestKernels>>>;
+constexpr static auto test_allocator =
+    AlignedAllocator<T>{Util::common_alignment_v<T, TestKernels>};
+
+template <typename T> using TestVector = std::vector<T, AlignedAllocator<T>>;
 
 /**
  * @brief Multiplies every value in a dataset by a given complex scalar value.
@@ -192,7 +193,8 @@ void scaleVector(std::vector<std::complex<Data_t>, Alloc> &data,
 template <typename PrecisionT>
 auto createZeroState(size_t num_qubits)
     -> TestVector<std::complex<PrecisionT>> {
-    TestVector<std::complex<PrecisionT>> res(1U << num_qubits, {0.0, 0.0});
+    TestVector<std::complex<PrecisionT>> res(
+        1U << num_qubits, {0.0, 0.0}, test_allocator<std::complex<PrecisionT>>);
     res[0] = std::complex<PrecisionT>{1.0, 0.0};
     return res;
 }
@@ -203,7 +205,8 @@ auto createZeroState(size_t num_qubits)
 template <typename PrecisionT>
 auto createPlusState(size_t num_qubits)
     -> TestVector<std::complex<PrecisionT>> {
-    TestVector<std::complex<PrecisionT>> res(1U << num_qubits, {1.0, 0.0});
+    TestVector<std::complex<PrecisionT>> res(
+        1U << num_qubits, {1.0, 0.0}, test_allocator<std::complex<PrecisionT>>);
     for (auto &elt : res) {
         elt /= std::sqrt(1U << num_qubits);
     }
@@ -218,7 +221,8 @@ auto createRandomState(RandomEngine &re, size_t num_qubits)
     -> TestVector<std::complex<PrecisionT>> {
     using Util::squaredNorm;
 
-    TestVector<std::complex<PrecisionT>> res(1U << num_qubits, {0.0, 0.0});
+    TestVector<std::complex<PrecisionT>> res(
+        1U << num_qubits, {0.0, 0.0}, test_allocator<std::complex<PrecisionT>>);
     std::uniform_real_distribution<PrecisionT> dist;
     for (size_t idx = 0; idx < (1U << num_qubits); idx++) {
         res[idx] = {dist(re), dist(re)};
@@ -238,7 +242,8 @@ template <typename PrecisionT>
 auto createProductState(std::string_view str)
     -> TestVector<std::complex<PrecisionT>> {
     using Pennylane::Util::INVSQRT2;
-    TestVector<std::complex<PrecisionT>> st;
+    TestVector<std::complex<PrecisionT>> st(
+        test_allocator<std::complex<PrecisionT>>);
     st.resize(1U << str.length());
 
     std::vector<PrecisionT> zero{1.0, 0.0};
