@@ -38,7 +38,6 @@ template <class RandomEngine>
 auto generateMatrixSequence(RandomEngine &re, const size_t num_reps,
                             const size_t num_qubits, const size_t num_wires)
     -> std::vector<MatOpDesc> {
-
     std::vector<MatOpDesc> matrix_seq;
     matrix_seq.reserve(num_reps);
     std::uniform_int_distribution<size_t> inverse_dist(0, 1);
