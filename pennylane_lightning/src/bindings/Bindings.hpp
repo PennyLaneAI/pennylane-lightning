@@ -97,7 +97,7 @@ auto getNumpyArrayAlignment(const pybind11::array &numpyArray)
     return getMemoryModel(numpyArray.request().ptr);
 }
 
-void deallocateArray(void *ptr) { std::free(ptr); }
+void deallocateArray(void *ptr) { alignedFree(ptr); }
 
 /**
  * @brief We return an numpy array whose underlying data is allocated by
@@ -110,20 +110,20 @@ auto allocateAlignedArray(size_t size, pybind11::dtype dt) -> pybind11::array {
     auto memory_model = bestCPUMemoryModel();
 
     if (dt.is(pybind11::dtype::of<float>())) {
-        void *ptr = std::aligned_alloc(getAlignment<float>(memory_model),
+        void *ptr = alignedAlloc(getAlignment<float>(memory_model),
                                        sizeof(float) * size);
         auto capsule = pybind11::capsule(ptr, &deallocateArray);
 
         return pybind11::array{dt, {size}, {sizeof(float)}, ptr, capsule};
     } else if (dt.is(pybind11::dtype::of<double>())) {
-        void *ptr = std::aligned_alloc(getAlignment<double>(memory_model),
+        void *ptr = alignedAlloc(getAlignment<double>(memory_model),
                                        sizeof(double) * size);
         auto capsule = pybind11::capsule(ptr, &deallocateArray);
 
         return pybind11::array{dt, {size}, {sizeof(double)}, ptr, capsule};
     } else if (dt.is(pybind11::dtype::of<std::complex<float>>())) {
         void *ptr =
-            std::aligned_alloc(getAlignment<std::complex<float>>(memory_model),
+            alignedAlloc(getAlignment<std::complex<float>>(memory_model),
                                sizeof(std::complex<float>) * size);
         auto capsule = pybind11::capsule(ptr, &deallocateArray);
 
@@ -131,7 +131,7 @@ auto allocateAlignedArray(size_t size, pybind11::dtype dt) -> pybind11::array {
             dt, {size}, {sizeof(std::complex<float>)}, ptr, capsule};
     } else if (dt.is(pybind11::dtype::of<std::complex<double>>())) {
         void *ptr =
-            std::aligned_alloc(getAlignment<std::complex<double>>(memory_model),
+            alignedAlloc(getAlignment<std::complex<double>>(memory_model),
                                sizeof(std::complex<double>) * size);
         auto capsule = pybind11::capsule(ptr, &deallocateArray);
 
