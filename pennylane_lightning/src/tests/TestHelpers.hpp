@@ -211,23 +211,13 @@ auto createPlusState(size_t num_qubits)
 }
 
 /**
- * @brief Calculate the squared norm of a vector
- */
-template <typename PrecisionT>
-auto squaredNorm(const std::complex<PrecisionT> *data, size_t data_size)
-    -> PrecisionT {
-    return std::transform_reduce(
-        data, data + data_size, PrecisionT{}, std::plus<PrecisionT>(),
-        static_cast<PrecisionT (*)(const std::complex<PrecisionT> &)>(
-            &std::norm<PrecisionT>));
-}
-
-/**
  * @brief create a random state
  */
 template <typename PrecisionT, class RandomEngine>
 auto createRandomState(RandomEngine &re, size_t num_qubits)
     -> TestVector<std::complex<PrecisionT>> {
+    using Util::squaredNorm;
+
     TestVector<std::complex<PrecisionT>> res(1U << num_qubits, {0.0, 0.0});
     std::uniform_real_distribution<PrecisionT> dist;
     for (size_t idx = 0; idx < (1U << num_qubits); idx++) {
@@ -320,58 +310,6 @@ auto createParams(Gates::GateOperation op) -> std::vector<PrecisionT> {
         PL_ABORT("The number of parameters for a given gate is unknown.");
     }
     return {};
-}
-/**
- * @brief Generate random unitary matrix
- *
- * @return Generated unitary matrix in row-major format
- */
-template <typename PrecisionT, class RandomEngine>
-auto randomUnitary(RandomEngine &re, size_t num_qubits)
-    -> TestVector<std::complex<PrecisionT>> {
-    using ComplexPrecisionT = std::complex<PrecisionT>;
-    const size_t dim = (1U << num_qubits);
-    TestVector<ComplexPrecisionT> res(dim * dim, ComplexPrecisionT{});
-
-    std::normal_distribution<PrecisionT> dist;
-
-    auto generator = [&dist, &re]() -> ComplexPrecisionT {
-        return ComplexPrecisionT{dist(re), dist(re)};
-    };
-
-    std::generate(res.begin(), res.end(), generator);
-
-    // Simple algorithm to make rows orthogonal with Gram-Schmidt
-    // This algorithm is unstable but works for a small matrix.
-    // Use QR decomposition when we have LAPACK support.
-
-    for (size_t row2 = 0; row2 < dim; row2++) {
-        ComplexPrecisionT *row2_p = res.data() + row2 * dim;
-        for (size_t row1 = 0; row1 < row2; row1++) {
-            const ComplexPrecisionT *row1_p = res.data() + row1 * dim;
-            ComplexPrecisionT dot12 = Util::innerProdC(row1_p, row2_p, dim);
-            ComplexPrecisionT dot11 = squaredNorm(row1_p, dim);
-
-            // orthogonalize row2
-            std::transform(
-                row2_p, row2_p + dim, row1_p, row2_p,
-                [scale = dot12 / dot11](auto &elt2, const auto &elt1) {
-                    return elt2 - scale * elt1;
-                });
-        }
-    }
-
-    // Normalize each row
-    for (size_t row = 0; row < dim; row++) {
-        ComplexPrecisionT *row_p = res.data() + row * dim;
-        PrecisionT norm2 = std::sqrt(squaredNorm(row_p, dim));
-
-        // normalize row2
-        std::transform(row_p, row_p + dim, row_p, [norm2](const auto c) {
-            return (static_cast<PrecisionT>(1.0) / norm2) * c;
-        });
-    }
-    return res;
 }
 
 template <class PrecisionT> struct PrecisionToName;

@@ -256,28 +256,56 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         size_t dim = 1U << wires.size();
         std::vector<size_t> indices;
         indices.resize(dim);
+        std::vector<std::complex<PrecisionT>> coeffs_in(dim, 0.0);
 
-        for (size_t k = 0; k < Util::exp2(num_qubits); k += dim) {
-            std::vector<std::complex<PrecisionT>> coeffs_in(dim);
-            std::vector<std::complex<PrecisionT>> coeffs_out(dim);
+        if (inverse) {
+            for (size_t k = 0; k < Util::exp2(num_qubits); k += dim) {
 
-            for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
-                size_t idx = k | inner_idx;
-                size_t n_wires = wires.size();
-                for (size_t pos = 0; pos < n_wires; pos++) {
-                    idx = bitswap(idx, n_wires - pos - 1,
-                                  num_qubits - wires[pos] - 1);
+                for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
+                    size_t idx = k | inner_idx;
+                    size_t n_wires = wires.size();
+                    for (size_t pos = 0; pos < n_wires; pos++) {
+                        idx = bitswap(idx, n_wires - pos - 1,
+                                      num_qubits - wires[pos] - 1);
+                    }
+                    indices[inner_idx] = idx;
+                    coeffs_in[inner_idx] = arr[idx];
                 }
-                indices[inner_idx] = idx;
-                coeffs_in[inner_idx] = arr[idx];
+
+                for (size_t i = 0; i < dim; i++) {
+                    const auto idx = indices[i];
+                    arr[idx] = 0.0;
+
+                    for (size_t j = 0; j < dim; j++) {
+                        const size_t base_idx = j * dim;
+                        arr[idx] +=
+                            std::conj(matrix[base_idx + i]) * coeffs_in[j];
+                    }
+                }
             }
+        } else {
+            for (size_t k = 0; k < Util::exp2(num_qubits); k += dim) {
 
-            Util::matrixVecProd(matrix, coeffs_in.data(), coeffs_out.data(),
-                                dim, dim,
-                                inverse ? Trans::Adjoint : Trans::NoTranspose);
+                for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
+                    size_t idx = k | inner_idx;
+                    size_t n_wires = wires.size();
+                    for (size_t pos = 0; pos < n_wires; pos++) {
+                        idx = bitswap(idx, n_wires - pos - 1,
+                                      num_qubits - wires[pos] - 1);
+                    }
+                    indices[inner_idx] = idx;
+                    coeffs_in[inner_idx] = arr[idx];
+                }
 
-            for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
-                arr[indices[inner_idx]] = coeffs_out[inner_idx];
+                for (size_t i = 0; i < dim; i++) {
+                    const auto idx = indices[i];
+                    arr[idx] = 0.0;
+                    const size_t base_idx = i * dim;
+
+                    for (size_t j = 0; j < dim; j++) {
+                        arr[idx] += matrix[base_idx + j] * coeffs_in[j];
+                    }
+                }
             }
         }
     }

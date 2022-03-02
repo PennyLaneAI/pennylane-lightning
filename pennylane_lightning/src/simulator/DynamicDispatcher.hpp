@@ -295,16 +295,6 @@ template <typename PrecisionT> class DynamicDispatcher {
                      const std::vector<size_t> &wires, bool inverse) const {
         assert(num_qubits >= wires.size());
 
-        switch (mat_op) {
-        case Gates::MatrixOperation::SingleQubitOp:
-            assert(wires.size() == 1);
-            break;
-        case Gates::MatrixOperation::TwoQubitOp:
-            assert(wires.size() == 2);
-            break;
-        default:
-            break;
-        }
         const auto iter = matrices_.find(std::make_pair(mat_op, kernel));
         if (iter == matrices_.end()) {
             throw std::invalid_argument(

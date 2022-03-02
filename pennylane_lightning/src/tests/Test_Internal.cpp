@@ -85,38 +85,6 @@ TEMPLATE_TEST_CASE("createProductState", "[Test_Internal]", float, double) {
     }
 }
 
-/**
- * @brief Test randomUnitary is correct
- */
-TEMPLATE_TEST_CASE("randomUnitary", "[Test_Internal]", float, double) {
-    using PrecisionT = TestType;
-
-    std::mt19937 re{1337};
-
-    for (size_t num_qubits = 1; num_qubits <= 5; num_qubits++) {
-        const size_t dim = (1U << num_qubits);
-        const auto unitary = randomUnitary<PrecisionT>(re, num_qubits);
-
-        auto unitary_dagger = Util::Transpose(unitary, dim, dim);
-        std::transform(
-            unitary_dagger.begin(), unitary_dagger.end(),
-            unitary_dagger.begin(),
-            [](const std::complex<PrecisionT> &v) { return std::conj(v); });
-
-        std::vector<std::complex<PrecisionT>> mat(dim * dim);
-        Util::matrixMatProd(unitary.data(), unitary_dagger.data(), mat.data(),
-                            dim, dim, dim);
-
-        std::vector<std::complex<PrecisionT>> identity(
-            dim * dim, std::complex<PrecisionT>{});
-        for (size_t i = 0; i < dim; i++) {
-            identity[i * dim + i] = std::complex<PrecisionT>{1.0, 0.0};
-        }
-
-        REQUIRE(mat == PLApprox(identity).margin(1e-5));
-    }
-}
-
 size_t binomialCeff(size_t n, size_t r) {
     size_t num = 1;
     size_t dem = 1;

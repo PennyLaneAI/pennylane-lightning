@@ -6,6 +6,7 @@
 #include <catch2/catch.hpp>
 
 using namespace Pennylane;
+using Util::randomUnitary;
 
 template <typename PrecisionT>
 using ApplyMatrixType = void (*)(std::complex<PrecisionT> *, size_t,

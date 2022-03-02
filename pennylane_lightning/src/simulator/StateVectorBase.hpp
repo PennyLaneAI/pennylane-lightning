@@ -296,6 +296,110 @@ template <class T, class Derived> class StateVectorBase {
     }
 
     /**
+     * @brief Apply a general single qubit matrix to given wires.
+     *
+     * @param kernel Kernel to run the operation
+     * @param matrix Pointer to the array data.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    inline void applySingleQubitOp(Gates::KernelType kernel,
+                                   const ComplexPrecisionT *matrix,
+                                   const std::vector<size_t> &wires,
+                                   bool inverse = false) {
+        using Gates::MatrixOperation;
+
+        assert(wires.size() == 1);
+
+        auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        auto *arr = getData();
+        dispatcher.applyMatrix(kernel, arr, MatrixOperation::SingleQubitOp,
+                               num_qubits_, matrix, wires, inverse);
+    }
+
+    /**
+     * @brief Apply a general single qubit matrix to given wires.
+     *
+     * @param kernel Kernel to run the operation
+     * @param matrix Pointer to the array data.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    inline void applyTwoQubitOp(Gates::KernelType kernel,
+                                const ComplexPrecisionT *matrix,
+                                const std::vector<size_t> &wires,
+                                bool inverse = false) {
+        using Gates::MatrixOperation;
+
+        assert(wires.size() == 2);
+
+        auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        auto *arr = getData();
+        dispatcher.applyMatrix(kernel, arr, MatrixOperation::TwoQubitOp,
+                               num_qubits_, matrix, wires, inverse);
+    }
+
+    /**
+     * @brief Apply a general multi qubit matrix to given wires.
+     *
+     * @param kernel Kernel to run the operation
+     * @param matrix Pointer to the array data.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    inline void applyMultiQubitOp(Gates::KernelType kernel,
+                                  const ComplexPrecisionT *matrix,
+                                  const std::vector<size_t> &wires,
+                                  bool inverse = false) {
+        using Gates::MatrixOperation;
+
+        auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        auto *arr = getData();
+        dispatcher.applyMatrix(kernel, arr, MatrixOperation::MultiQubitOp,
+                               num_qubits_, matrix, wires, inverse);
+    }
+
+    /**
+     * @brief Apply a given matrix directly to the statevector read directly
+     * from numpy data. Data can be in 1D or 2D format.
+     *
+     * @param kernel Kernel to run the operation
+     * @param matrix Pointer to the array data.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    inline void applyMatrix(Gates::KernelType kernel,
+                            const ComplexPrecisionT *matrix,
+                            const std::vector<size_t> &wires,
+                            bool inverse = false) {
+        using Gates::MatrixOperation;
+
+        auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        auto *arr = getData();
+
+        if (wires.empty()) {
+            throw std::invalid_argument(
+                "Number of wires must be larger than 0");
+        }
+
+        switch (wires.size()) {
+        case 1:
+            dispatcher.applyMatrix(kernel, arr, MatrixOperation::SingleQubitOp,
+                                   num_qubits_, matrix, wires, inverse);
+            return;
+        case 2:
+            dispatcher.applyMatrix(kernel, arr, MatrixOperation::TwoQubitOp,
+                                   num_qubits_, matrix, wires, inverse);
+            return;
+        default:
+            dispatcher.applyMatrix(kernel, arr, MatrixOperation::MultiQubitOp,
+                                   num_qubits_, matrix, wires, inverse);
+            return;
+        }
+        PL_UNREACHABLE;
+    }
+
+    /**
      * @brief Apply a given matrix directly to the statevector read directly
      * from numpy data. Data can be in 1D or 2D format.
      *
@@ -306,10 +410,7 @@ template <class T, class Derived> class StateVectorBase {
     inline void applyMatrix(const ComplexPrecisionT *matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
-        namespace Constant = Gates::Constant;
         using Gates::MatrixOperation;
-        using Gates::SelectKernel;
-        using Gates::static_lookup;
 
         auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         auto *arr = getData();
