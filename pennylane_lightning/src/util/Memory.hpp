@@ -103,13 +103,13 @@ template <class T> struct AlignedAllocator {
 template <class T, class U>
 bool operator==([[maybe_unused]] const AlignedAllocator<T> &lhs,
                 [[maybe_unused]] const AlignedAllocator<U> &rhs) {
-    return true;
+    return lhs.alignment_ == rhs.alignment_;
 }
 
 template <class T, class U, uint32_t alignment>
 bool operator!=([[maybe_unused]] const AlignedAllocator<T> &lhs,
                 [[maybe_unused]] const AlignedAllocator<U> &rhs) {
-    return false;
+    return lhs.alignment_ != rhs.alignment_;
 }
 
 /**

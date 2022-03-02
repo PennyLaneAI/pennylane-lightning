@@ -344,8 +344,8 @@ template <class T = double> class AdjointJacobian {
             applyOperations(lambda, ops);
         }
 
-        const auto tp_begin = tp.begin();
-        auto tp_it = tp.end();
+        const auto tp_rend = tp.rend();
+        auto tp_it = tp.rbegin();
 
         StateVectorManagedCPU<T> sv{lambda.getNumQubits(),
                                     Threading::SingleThread};
@@ -368,9 +368,9 @@ template <class T = double> class AdjointJacobian {
                 applyOperationAdj(lambda, ops, op_idx);
 
                 if (ops.hasParams(op_idx)) {
-                    if ((current_param_idx == *(std::prev(tp_it))) ||
-                        std::find(tp_begin, tp_it, current_param_idx) !=
-                            tp_it) {
+                    if ((current_param_idx == *tp_it) ||
+                        std::find(tp_it, tp_rend, current_param_idx) !=
+                            tp_rend) {
                         const T scalingFactor =
                             applyGenerator(mu, ops_name[op_idx],
                                            ops.getOpsWires()[op_idx],
@@ -399,7 +399,7 @@ template <class T = double> class AdjointJacobian {
                                                mu.getData(), mu.getLength()));
                         }
                         trainableParamNumber--;
-                        std::advance(tp_it, -1);
+                        ++tp_it;
                     }
                     current_param_idx--;
                 }

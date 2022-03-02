@@ -35,6 +35,17 @@ constexpr std::string_view remove_prefix(const std::string_view &str,
     return {str.data() + len, str.length() - len};
 }
 
+template <typename T> constexpr auto testMargin() -> T {
+    static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
+    if constexpr (std::is_same_v<T, float>) {
+        return 1e-3F;
+    } else {
+        return 1e-5L;
+    }
+}
+
+template <typename T> constexpr static auto test_margin = testMargin<T>();
+
 template <GeneratorOperation gntr_op>
 constexpr auto findGateOpForGenerator() -> GateOperation {
     constexpr auto gntr_name =
@@ -105,7 +116,8 @@ void testGeneratorForGate(RandomEngine &re, size_t num_qubits) {
         gate_func(diff_st_1.data(), num_qubits, wires, false, eps);
         gate_func(diff_st_2.data(), num_qubits, wires, false, -eps);
 
-        std::vector<ComplexPrecisionT> gate_der_st(static_cast<size_t>(1U) << num_qubits);
+        std::vector<ComplexPrecisionT> gate_der_st(static_cast<size_t>(1U)
+                                                   << num_qubits);
 
         std::transform(
             diff_st_1.cbegin(), diff_st_1.cend(), diff_st_2.cbegin(),
@@ -114,7 +126,8 @@ void testGeneratorForGate(RandomEngine &re, size_t num_qubits) {
 
         scaleVector(gate_der_st, static_cast<PrecisionT>(0.5) / eps);
 
-        REQUIRE(gntr_st == PLApprox(gate_der_st).margin(static_cast<PrecisionT>(1e-4)));
+        REQUIRE(gntr_st ==
+                PLApprox(gate_der_st).margin(test_margin<PrecisionT>));
     }
 }
 template <typename PrecisionT, typename ParamT, class GateImplementation,

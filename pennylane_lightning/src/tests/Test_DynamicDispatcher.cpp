@@ -30,9 +30,9 @@ using Pennylane::Gates::callGateOps;
  */
 
 template <typename PrecisionT, typename ParamT, class GateImplementation,
-    GateOperation gate_op, class RandomEngine, class Enable = void>
-    struct testDispatchForKernel {
-        static void test(RandomEngine& re, size_t num_qubits) {
+          GateOperation gate_op, class RandomEngine, class Enable = void>
+struct testDispatchForKernel {
+    static void test(RandomEngine &re, size_t num_qubits) {
         // Keep source, but allow clang-tidy to pass for unused
         static_cast<void>(re);
         static_cast<void>(num_qubits);
@@ -41,10 +41,12 @@ template <typename PrecisionT, typename ParamT, class GateImplementation,
       // pattern.
 };
 template <typename PrecisionT, typename ParamT, class GateImplementation,
-    GateOperation gate_op, class RandomEngine,
-    std::enable_if_t<Util::array_has_elt(GateImplementation::implemented_gates, gate_op)>>
-struct testDispatchForKernel {
-    static void test(RandomEngine& re, size_t num_qubits) {
+          GateOperation gate_op, class RandomEngine>
+struct testDispatchForKernel<
+    PrecisionT, ParamT, GateImplementation, gate_op, RandomEngine,
+    std::enable_if_t<Util::array_has_elt(GateImplementation::implemented_gates,
+                                         gate_op)>> {
+    static void test(RandomEngine &re, size_t num_qubits) {
         const auto ini_st = createRandomState<PrecisionT>(re, num_qubits);
         auto expected = ini_st;
 
@@ -55,9 +57,9 @@ struct testDispatchForKernel {
         // in the GateImplementation
         auto gate_func =
             GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
-            gate_op>::value;
+                                  gate_op>::value;
         callGateOps(gate_func, expected.data(), num_qubits, wires, false,
-            params);
+                    params);
 
         // and compare it to the dynamic dispatcher
         auto test_st = ini_st;
@@ -79,7 +81,8 @@ constexpr void testAllGatesForKernelIter(RandomEngine &re,
 
         for (size_t num_qubits = 3; num_qubits <= max_num_qubits;
              num_qubits++) {
-            testDispatchForKernel<PrecisionT, ParamT, GateImplementation, gate_op, RandomEngine>::test(re, num_qubits);
+            testDispatchForKernel<PrecisionT, ParamT, GateImplementation,
+                                  gate_op, RandomEngine>::test(re, num_qubits);
         }
 
         testAllGatesForKernelIter<PrecisionT, ParamT, GateImplementation,

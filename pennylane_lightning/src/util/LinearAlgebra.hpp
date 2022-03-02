@@ -463,15 +463,15 @@ inline static void CFTranspose(const std::complex<T> *mat,
  * @param n Number of columns of `mat`.
  * @return mat transpose of shape n * m.
  */
-template <class T>
-inline auto Transpose(const std::vector<std::complex<T>> &mat, size_t m,
-                      size_t n) -> std::vector<std::complex<T>> {
+template <class T, class Alloc>
+inline auto Transpose(const std::vector<std::complex<T>, Alloc> &mat, size_t m,
+                      size_t n) -> std::vector<std::complex<T>, Alloc> {
     if (mat.size() != m * n) {
         throw std::invalid_argument(
             "Invalid number of rows and columns for the input matrix");
     }
 
-    std::vector<std::complex<T>> mat_t(n * m);
+    std::vector<std::complex<T>, Alloc> mat_t(n * m, mat.get_allocator());
     CFTranspose(mat.data(), mat_t.data(), m, n, 0, m, 0, n);
     return mat_t;
 }
@@ -494,7 +494,7 @@ inline auto Transpose(const std::vector<T, Alloc> &mat, size_t m, size_t n)
             "Invalid number of rows and columns for the input matrix");
     }
 
-    std::vector<T, Alloc> mat_t(n * m);
+    std::vector<T, Alloc> mat_t(n * m, mat.get_allocator());
     CFTranspose(mat.data(), mat_t.data(), m, n, 0, m, 0, n);
     return mat_t;
 }
@@ -562,7 +562,7 @@ inline auto vecMatrixProd(const std::vector<T, Alloc> &v_in,
             "Invalid number of rows and columns for the input matrix");
     }
 
-    std::vector<T, Alloc> v_out(n);
+    std::vector<T, Alloc> v_out(n, mat.get_allocator());
     vecMatrixProd(v_in.data(), mat.data(), v_out.data(), m, n);
 
     return v_out;

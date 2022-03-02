@@ -98,16 +98,19 @@ auto getNumpyArrayAlignment(const pybind11::array &numpyArray)
 }
 
 template <typename T>
-auto alignedNumpyArray(CPUMemoryModel memory_model, size_t size) -> pybind11::array {
+auto alignedNumpyArray(CPUMemoryModel memory_model, size_t size)
+    -> pybind11::array {
     if (getAlignment<T>(memory_model) > alignof(std::max_align_t)) {
-        void* ptr = alignedAlloc(getAlignment<T>(memory_model),
-            sizeof(T) * size);
+        void *ptr =
+            alignedAlloc(getAlignment<T>(memory_model), sizeof(T) * size);
         auto capsule = pybind11::capsule(ptr, &alignedFree);
-        return pybind11::array{pybind11::dtype::of<T>(), {size}, {sizeof(T)}, ptr, capsule};
+        return pybind11::array{
+            pybind11::dtype::of<T>(), {size}, {sizeof(T)}, ptr, capsule};
     } // else
-    void* ptr = malloc(sizeof(T) * size);
+    void *ptr = malloc(sizeof(T) * size);
     auto capsule = pybind11::capsule(ptr, free);
-    return pybind11::array{ pybind11::dtype::of<T>(), {size}, {sizeof(T)}, ptr, capsule };
+    return pybind11::array{
+        pybind11::dtype::of<T>(), {size}, {sizeof(T)}, ptr, capsule};
 }
 
 /**
