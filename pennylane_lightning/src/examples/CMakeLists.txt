@@ -42,8 +42,8 @@ configure_file("compiler_info.in" "compiler_info.txt")
 
 add_custom_command(TARGET benchmark_gate POST_BUILD 
                    COMMAND ${CMAKE_COMMAND} -E copy
-                           ${PROJECT_SOURCE_DIR}/run_benchmark.sh
-                           ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/run_benchmark.sh
+                           ${PROJECT_SOURCE_DIR}/run_benchmark.py
+                           ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/run_benchmark.py
                    COMMAND ${CMAKE_COMMAND} -E create_symlink
                            ${PROJECT_SOURCE_DIR}/plot_benchmark.py
                            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/plot_benchmark.py
