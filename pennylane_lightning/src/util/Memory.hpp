@@ -19,7 +19,35 @@
 #include "ConstantUtil.hpp"
 #include "TypeList.hpp"
 
+/* Apple clang does not support std::aligned_alloc in Mac 10.14 */
+
 namespace Pennylane {
+/**
+ * @brief Custom aligned allocate function. As appleclang does not support
+ * std::aligned_alloc in Mac OS 10.14, we use posix memalign
+ */
+inline auto alignedAlloc(uint32_t alignment, size_t bytes) -> void* {
+#if defined(__clang__) // probably AppleClang
+    void* p;
+    posix_memalign(&p, alignment, bytes);
+    return p;
+#elif  defined(_MSC_VER)
+    return _aligned_malloc(bytes, alignment);
+#else
+    return std::aligned_alloc(alignment, bytes);
+#endif
+}
+
+inline void alignedFree(void* p) {
+#if defined(__clang__)
+    return free(p);
+#elif  defined(_MSC_VER)
+    return _aligned_free(p);
+#else
+    return std::free(p);
+#endif
+}
+
 template <class T, uint32_t alignment> struct AlignedAllocator {
     static_assert(Util::constIsPerfectPowerOf2(alignment),
                   "Template parameter alignment must be power of 2.");
@@ -39,7 +67,7 @@ template <class T, uint32_t alignment> struct AlignedAllocator {
         if (size == 0) {
             return nullptr;
         }
-        void *p = std::aligned_alloc(alignment, sizeof(T) * size);
+        void *p = alignedAlloc(alignment, sizeof(T) * size);
         if (p == nullptr) {
             throw std::bad_alloc();
         }
@@ -47,8 +75,7 @@ template <class T, uint32_t alignment> struct AlignedAllocator {
     }
 
     void deallocate(T *p, [[maybe_unused]] std::size_t size) noexcept {
-        // NOLINTNEXTLINE(hicpp-no-malloc)
-        std::free(p);
+        alignedFree(p);
     }
 
     template <class U> void construct(U *ptr) { ::new ((void *)ptr) U(); }

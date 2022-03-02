@@ -95,16 +95,6 @@ class DummyImplementation {
         allGateOps<GeneratorOperation>();
     constexpr static std::string_view name = "Dummy";
 
-    template <class PrecisionT>
-    static void applyMatrix(std::complex<PrecisionT> *arr, size_t num_qubits,
-                            const std::complex<PrecisionT> *matrix,
-                            const std::vector<size_t> &wires, bool inverse) {
-        static_cast<void>(arr);
-        static_cast<void>(num_qubits);
-        static_cast<void>(matrix);
-        static_cast<void>(inverse);
-    }
-
     PENNYLANE_TESTS_DEFINE_GATE_OP(PauliX, 0)
     PENNYLANE_TESTS_DEFINE_GATE_OP(PauliY, 0)
     PENNYLANE_TESTS_DEFINE_GATE_OP(PauliZ, 0)

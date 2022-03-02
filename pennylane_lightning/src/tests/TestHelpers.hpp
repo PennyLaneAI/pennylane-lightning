@@ -127,7 +127,7 @@ isApproxEqual(const std::vector<Data_t, AllocA> &data1,
               const typename Data_t::value_type eps =
                   std::numeric_limits<typename Data_t::value_type>::epsilon() *
                   100) {
-    return data1 == PLApprox(data2);
+    return data1 == PLApprox(data2).epsilon(eps);
 }
 
 /**
