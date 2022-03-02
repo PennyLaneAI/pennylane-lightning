@@ -16,7 +16,7 @@ Unit tests for Measures in lightning.qubit.
 """
 import numpy as np
 import pennylane as qml
-from pennylane.measure import (
+from pennylane.measurements import (
     Variance,
     Expectation,
 )
