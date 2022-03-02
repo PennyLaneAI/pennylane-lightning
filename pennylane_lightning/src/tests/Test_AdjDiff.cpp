@@ -1,5 +1,3 @@
-#define _USE_MATH_DEFINES
-
 #include <algorithm>
 #include <cmath>
 #include <complex>
@@ -17,6 +15,10 @@
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"
+
+#if !defined(_USE_MATH_DEFINES)
+#define _USE_MATH_DEFINES
+#endif
 
 using namespace Pennylane;
 using namespace Pennylane::Algorithms;

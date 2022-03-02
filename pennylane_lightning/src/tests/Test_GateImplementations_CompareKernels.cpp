@@ -29,12 +29,10 @@ using std::vector;
 
 template <typename TypeList> std::string kernelsToString() {
     if constexpr (!std::is_same_v<TypeList, void>) {
-        if constexpr (!std::is_same_v<typename TypeList::Next, void>) {
-            return std::string(TypeList::Type::name) + ", " +
-                   kernelsToString<typename TypeList::Next>();
-        }
-        return std::string(TypeList::Type::name);
+        return std::string(TypeList::Type::name) + ", " +
+                kernelsToString<typename TypeList::Next>();
     }
+    return std::string("");
 }
 
 /* Type transformation */
@@ -128,7 +126,7 @@ void testApplyGate(RandomEngine &re, size_t num_qubits) {
                     std::make_index_sequence<length<Kernels>()>()));
 
             for (size_t i = 0; i < results.size() - 1; i++) {
-                REQUIRE(results[i] == PLApprox(results[i + 1]).margin(1e-7));
+                REQUIRE(results[i] == PLApprox(results[i + 1]).margin(static_cast<PrecisionT>(1e-5)));
             }
         }
 
@@ -142,7 +140,7 @@ void testApplyGate(RandomEngine &re, size_t num_qubits) {
                     std::make_index_sequence<length<Kernels>()>()));
 
             for (size_t i = 0; i < results.size() - 1; i++) {
-                REQUIRE(results[i] == PLApprox(results[i + 1]).margin(1e-7));
+                REQUIRE(results[i] == PLApprox(results[i + 1]).margin(static_cast<PrecisionT>(1e-5)));
             }
         }
     }

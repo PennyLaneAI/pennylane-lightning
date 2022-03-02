@@ -85,7 +85,11 @@ template <class T> struct AlignedAllocator {
     }
 
     void deallocate(T *p, [[maybe_unused]] std::size_t size) noexcept {
-        alignedFree(p);
+        if (alignment_ > alignof(std::max_align_t)) {
+            alignedFree(p);
+        } else {
+            free(p);
+        }
     }
 
     template <class U> void construct(U *ptr) { ::new ((void *)ptr) U(); }

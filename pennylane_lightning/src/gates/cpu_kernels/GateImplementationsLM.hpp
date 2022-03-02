@@ -253,7 +253,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                       const std::vector<size_t> &wires, bool inverse) {
         assert(num_qubits >= wires.size());
 
-        size_t dim = 1U << wires.size();
+        size_t dim = static_cast<size_t>(1U) << wires.size();
         std::vector<size_t> indices;
         indices.resize(dim);
         std::vector<std::complex<PrecisionT>> coeffs_in(dim, 0.0);
@@ -1324,7 +1324,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         }
 
         for (size_t k = 0; k < Util::exp2(num_qubits); k++) {
-            arr[k] *= (2 * int(Util::popcount(k & wires_parity) % 2) - 1);
+            arr[k] *= static_cast<PrecisionT>(2 * int(Util::popcount(k & wires_parity) % 2) - 1);
         }
         // NOLINTNEXTLINE(readability-magic-numbers)
         return static_cast<PrecisionT>(0.5);

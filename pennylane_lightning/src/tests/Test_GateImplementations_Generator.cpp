@@ -74,7 +74,7 @@ void testGeneratorForGate(RandomEngine &re, size_t num_qubits) {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     constexpr auto I = Util::IMAG<PrecisionT>();
 
-    constexpr ParamT eps = 1e-4; // For finite difference
+    constexpr ParamT eps = static_cast<ParamT>(1e-4); // For finite difference
 
     constexpr auto gate_op = static_lookup<gntr_op>(generator_gate_pairs);
     constexpr auto gate_name = static_lookup<gate_op>(Constant::gate_names);
@@ -105,7 +105,7 @@ void testGeneratorForGate(RandomEngine &re, size_t num_qubits) {
         gate_func(diff_st_1.data(), num_qubits, wires, false, eps);
         gate_func(diff_st_2.data(), num_qubits, wires, false, -eps);
 
-        std::vector<ComplexPrecisionT> gate_der_st(1U << num_qubits);
+        std::vector<ComplexPrecisionT> gate_der_st(static_cast<size_t>(1U) << num_qubits);
 
         std::transform(
             diff_st_1.cbegin(), diff_st_1.cend(), diff_st_2.cbegin(),
@@ -114,7 +114,7 @@ void testGeneratorForGate(RandomEngine &re, size_t num_qubits) {
 
         scaleVector(gate_der_st, static_cast<PrecisionT>(0.5) / eps);
 
-        REQUIRE(gntr_st == PLApprox(gate_der_st).margin(1e-3));
+        REQUIRE(gntr_st == PLApprox(gate_der_st).margin(static_cast<PrecisionT>(1e-4)));
     }
 }
 template <typename PrecisionT, typename ParamT, class GateImplementation,

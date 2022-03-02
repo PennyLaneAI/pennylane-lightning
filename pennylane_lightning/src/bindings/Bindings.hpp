@@ -97,7 +97,18 @@ auto getNumpyArrayAlignment(const pybind11::array &numpyArray)
     return getMemoryModel(numpyArray.request().ptr);
 }
 
-void deallocateArray(void *ptr) { alignedFree(ptr); }
+template <typename T>
+auto alignedNumpyArray(CPUMemoryModel memory_model, size_t size) -> pybind11::array {
+    if (getAlignment<T>(memory_model) > alignof(std::max_align_t)) {
+        void* ptr = alignedAlloc(getAlignment<T>(memory_model),
+            sizeof(T) * size);
+        auto capsule = pybind11::capsule(ptr, &alignedFree);
+        return pybind11::array{pybind11::dtype::of<T>(), {size}, {sizeof(T)}, ptr, capsule};
+    } // else
+    void* ptr = malloc(sizeof(T) * size);
+    auto capsule = pybind11::capsule(ptr, free);
+    return pybind11::array{ pybind11::dtype::of<T>(), {size}, {sizeof(T)}, ptr, capsule };
+}
 
 /**
  * @brief We return an numpy array whose underlying data is allocated by
@@ -110,33 +121,13 @@ auto allocateAlignedArray(size_t size, pybind11::dtype dt) -> pybind11::array {
     auto memory_model = bestCPUMemoryModel();
 
     if (dt.is(pybind11::dtype::of<float>())) {
-        void *ptr = alignedAlloc(getAlignment<float>(memory_model),
-                                 sizeof(float) * size);
-        auto capsule = pybind11::capsule(ptr, &deallocateArray);
-
-        return pybind11::array{dt, {size}, {sizeof(float)}, ptr, capsule};
+        return alignedNumpyArray<float>(memory_model, size);
     } else if (dt.is(pybind11::dtype::of<double>())) {
-        void *ptr = alignedAlloc(getAlignment<double>(memory_model),
-                                 sizeof(double) * size);
-        auto capsule = pybind11::capsule(ptr, &deallocateArray);
-
-        return pybind11::array{dt, {size}, {sizeof(double)}, ptr, capsule};
+        return alignedNumpyArray<double>(memory_model, size);
     } else if (dt.is(pybind11::dtype::of<std::complex<float>>())) {
-        void *ptr =
-            alignedAlloc(getAlignment<std::complex<float>>(memory_model),
-                         sizeof(std::complex<float>) * size);
-        auto capsule = pybind11::capsule(ptr, &deallocateArray);
-
-        return pybind11::array{
-            dt, {size}, {sizeof(std::complex<float>)}, ptr, capsule};
+        return alignedNumpyArray<std::complex<float>>(memory_model, size);
     } else if (dt.is(pybind11::dtype::of<std::complex<double>>())) {
-        void *ptr =
-            alignedAlloc(getAlignment<std::complex<double>>(memory_model),
-                         sizeof(std::complex<double>) * size);
-        auto capsule = pybind11::capsule(ptr, &deallocateArray);
-
-        return pybind11::array{
-            dt, {size}, {sizeof(std::complex<double>)}, ptr, capsule};
+        return alignedNumpyArray<std::complex<double>>(memory_model, size);
     } else {
         throw pybind11::type_error("Unsupported datatype.");
     }

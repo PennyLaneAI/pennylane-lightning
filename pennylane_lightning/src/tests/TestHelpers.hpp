@@ -222,9 +222,9 @@ auto createRandomState(RandomEngine &re, size_t num_qubits)
     using Util::squaredNorm;
 
     TestVector<std::complex<PrecisionT>> res(
-        1U << num_qubits, {0.0, 0.0}, test_allocator<std::complex<PrecisionT>>);
+        static_cast<size_t>(1U) << num_qubits, {0.0, 0.0}, test_allocator<std::complex<PrecisionT>>);
     std::uniform_real_distribution<PrecisionT> dist;
-    for (size_t idx = 0; idx < (1U << num_qubits); idx++) {
+    for (size_t idx = 0; idx < (static_cast<size_t>(1U) << num_qubits); idx++) {
         res[idx] = {dist(re), dist(re)};
     }
 
@@ -308,9 +308,9 @@ auto createParams(Gates::GateOperation op) -> std::vector<PrecisionT> {
     case 0:
         return {};
     case 1:
-        return {0.312};
+        return {static_cast<PrecisionT>(0.312)};
     case 3:
-        return {0.128, -0.563, 1.414};
+        return {static_cast<PrecisionT>(0.128), static_cast<PrecisionT>(-0.563), static_cast<PrecisionT>(1.414)};
     default:
         PL_ABORT("The number of parameters for a given gate is unknown.");
     }
