@@ -84,14 +84,12 @@ class GateBenchmarkRunner(BenchmarkRunner):
     def external_info(self):
         if self.num_wires:
             return {"num_wires": self.num_wires}
-        else:
-            return None
+        return None
 
     def filename(self):
         if self.num_wires:
             return f"{self.operation}_{self.kernel}_{self.num_wires}.json"
-        else:
-            return f"{self.operation}_{self.kernel}.json"
+        return f"{self.operation}_{self.kernel}.json"
 
 
 class GeneratorBenchmarkRunner(BenchmarkRunner):
@@ -108,14 +106,12 @@ class GeneratorBenchmarkRunner(BenchmarkRunner):
     def external_info(self):
         if self.num_wires:
             return {"num_wires": self.num_wires}
-        else:
-            return None
+        return None
 
     def filename(self):
         if self.num_wires:
             return f"{self.operation}_{self.kernel}_{self.num_wires}.json"
-        else:
-            return f"{self.operation}_{self.kernel}.json"
+        return f"{self.operation}_{self.kernel}.json"
 
 
 if __name__ == "__main__":

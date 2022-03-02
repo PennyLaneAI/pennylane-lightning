@@ -109,7 +109,6 @@ size_t permSize(size_t n, size_t r) {
  * @brief Test create all wires
  */
 TEST_CASE("createAllWires", "[Test_Internal]") {
-
     SECTION("order = false") {
         const std::vector<std::pair<size_t, size_t>> test_pairs{
             {4, 2},  {8, 3},  {12, 1}, {12, 2}, {12, 3},  {12, 4},  {12, 5},

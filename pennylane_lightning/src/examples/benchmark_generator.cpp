@@ -68,7 +68,6 @@ auto generateGeneratorSequence(RandomEngine &re,
     std::uniform_int_distribution<size_t> inverse_dist(0, 1);
 
     for (uint32_t k = 0; k < num_reps; k++) {
-
         bool inverse = static_cast<bool>(inverse_dist(re));
         auto wires = generateNeighboringWires(re, num_qubits, num_wires);
 

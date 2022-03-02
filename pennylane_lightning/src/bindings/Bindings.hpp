@@ -107,7 +107,6 @@ void deallocateArray(void *ptr) { std::free(ptr); }
  * for capsule usage.
  */
 auto allocateAlignedArray(size_t size, pybind11::dtype dt) -> pybind11::array {
-
     auto memory_model = bestCPUMemoryModel();
 
     if (dt.is(pybind11::dtype::of<float>())) {

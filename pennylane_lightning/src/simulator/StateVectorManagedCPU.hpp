@@ -48,7 +48,6 @@ class StateVectorManagedCPU
         size_t num_qubits, Threading threading = bestThreading(),
         CPUMemoryModel memory_model = bestCPUMemoryModel())
         : BaseType{num_qubits, threading, memory_model} {
-
         size_t length = BaseType::getLength();
         data_ = allocateMemory<ComplexPrecisionT>(memory_model, length);
         std::fill(data_.get(), data_.get() + length,
@@ -61,7 +60,6 @@ class StateVectorManagedCPU
         const StateVectorCPU<PrecisionT, OtherDerived> &other)
         : BaseType(other.getNumQubits(), other.threading(),
                    other.memoryModel()) {
-
         size_t length = BaseType::getLength();
         data_ = allocateMemory<ComplexPrecisionT>(other.memoryModel(), length);
 

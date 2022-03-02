@@ -260,7 +260,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         if (inverse) {
             for (size_t k = 0; k < Util::exp2(num_qubits); k += dim) {
-
                 for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
                     size_t idx = k | inner_idx;
                     size_t n_wires = wires.size();
@@ -285,7 +284,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             }
         } else {
             for (size_t k = 0; k < Util::exp2(num_qubits); k += dim) {
-
                 for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
                     size_t idx = k | inner_idx;
                     size_t n_wires = wires.size();
