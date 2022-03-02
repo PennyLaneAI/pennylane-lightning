@@ -175,7 +175,7 @@ int main(int argc, char *argv[]) {
     size_t num_wires_for_multi_qubit = 0;
     if (Util::array_has_elt(Constant::multi_qubit_gates, gate_op)) {
         // User provided a multi-qubit gates
-        if (argc != 6) {
+        if (argc != 6) { // NOLINT(readability-magic-numbers)
             std::cerr << "One should provide the number of wires when using "
                          "multi qubit gates."
                       << std::endl;
@@ -183,6 +183,7 @@ int main(int argc, char *argv[]) {
         }
 
         try {
+            // NOLINTNEXTLINE(readability-magic-numbers)
             num_wires_for_multi_qubit = std::stoi(argv[5]);
         } catch (std::exception &e) {
             std::cerr << "Number of wires must be an integer" << std::endl;
