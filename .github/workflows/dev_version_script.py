@@ -34,7 +34,7 @@ def extract_version(package_path):
 
 def is_dev(version_str):
     m = rgx_dev_ver.fullmatch(version_str)
-    return m is not None:
+    return m is not None
 
 def update_dev_version(package_path, version_str):
     m = rgx_dev_ver.fullmatch(version_str)
