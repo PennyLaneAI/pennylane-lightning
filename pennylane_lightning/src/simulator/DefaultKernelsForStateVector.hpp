@@ -312,7 +312,7 @@ class DefaultKernelsForStateVector {
                                        all_qubit_numbers, KernelType::LM);
         instance.assignKernelForMatrix(MatrixOperation::MultiQubitOp,
                                        all_threading, all_memory_model,
-                                       all_qubit_numbers, KernelType::LM);
+                                       all_qubit_numbers, KernelType::PI);
     }
 
     DefaultKernelsForStateVector() {

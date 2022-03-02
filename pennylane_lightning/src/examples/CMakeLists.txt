@@ -9,10 +9,9 @@ project("gate_benchmark"
         LANGUAGES CXX
 )
 
-# add_executable(gate_benchmark gate_benchmark.cpp)
-# target_link_libraries(gate_benchmark lightning_utils lightning_simulator
-#                                      lightning_compile_options
-#                                      lightning_external_libs)
+################################################################################
+# II. Set dependencies
+################################################################################
 
 add_library(lightning_examples INTERFACE)
 target_link_libraries(lightning_examples INTERFACE lightning_compile_options
@@ -20,6 +19,11 @@ target_link_libraries(lightning_examples INTERFACE lightning_compile_options
                                                    lightning_gates
                                                    lightning_simulator
                                                    lightning_utils)
+
+
+################################################################################
+# III. set executables
+################################################################################
 
 add_executable(benchmark_gate benchmark_gate.cpp)
 target_link_libraries(benchmark_gate PRIVATE lightning_examples)
