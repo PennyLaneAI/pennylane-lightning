@@ -97,25 +97,4 @@ static_assert(
     Util::count_unique(Util::first_elts_of(Constant::generator_wires)) ==
         Constant::generator_wires.size(),
     "First elements of generator_wires must be distinct.");
-
-/*******************************************************************************
- * Check default_kernel_for_gates are defined for all gates
- ******************************************************************************/
-
-static_assert(
-    Util::count_unique(
-        Util::first_elts_of(Constant::default_kernel_for_gates)) ==
-        static_cast<size_t>(GateOperation::END),
-    "Constant default_kernel_for_gates must be defined for all gates.");
-
-/*******************************************************************************
- * Check default_kernel_for_generators are defined for all generators
- ******************************************************************************/
-
-static_assert(Util::count_unique(Util::first_elts_of(
-                  Constant::default_kernel_for_generators)) ==
-                  static_cast<size_t>(GeneratorOperation::END),
-              "Constant default_kernel_for_generators must be defined for all "
-              "generators.");
-
 } // namespace Pennylane::Gates
