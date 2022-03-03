@@ -17,7 +17,7 @@ template <typename EnumClass> constexpr auto allGateOps() {
     return Util::tuple_to_array(allGateOpsHelper<EnumClass>(
         std::make_integer_sequence<uint32_t,
                                    static_cast<uint32_t>(EnumClass::END)>{}));
-};
+}
 template <class PrecisionT, class ParamT, class GateImplemenation,
           uint32_t gate_idx>
 constexpr bool testAllGatesImplementedIter() {
@@ -174,7 +174,7 @@ constexpr auto opFuncPtrPairsIter() {
     } else {
         return std::tuple{};
     }
-};
+}
 
 /**
  * @brief Pairs of all implemented gate operations and the corresponding

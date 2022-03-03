@@ -42,7 +42,7 @@ constexpr auto lookup(const std::array<std::pair<Key, Value>, size> &arr,
         }
     }
     throw std::range_error("The given key does not exist.");
-};
+}
 
 /**
  * @brief Check an array has an element.
@@ -61,7 +61,7 @@ constexpr auto array_has_elt(const std::array<U, size> &arr, const U &elt)
         }
     }
     return false;
-};
+}
 
 /**
  * @brief Extract first elements from the array of pairs.

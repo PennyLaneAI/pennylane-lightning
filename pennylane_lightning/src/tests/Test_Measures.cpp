@@ -10,12 +10,10 @@
 
 using namespace Pennylane;
 
-namespace {
 using std::complex;
 using std::size_t;
 using std::string;
 using std::vector;
-}; // namespace
 
 StateVectorManagedCPU<double> Initializing_StateVector() {
     // Defining a StateVector in a non-trivial configuration:

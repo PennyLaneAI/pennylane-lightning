@@ -178,7 +178,7 @@ class Measures {
         }
 
         return expected_value_list;
-    };
+    }
 
     /**
      * @brief Variance of an observable.
@@ -255,6 +255,6 @@ class Measures {
         }
 
         return expected_value_list;
-    };
+    }
 }; // class Measures
 } // namespace Pennylane
