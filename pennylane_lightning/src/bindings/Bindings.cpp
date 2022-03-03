@@ -323,18 +323,26 @@ void lightning_class_bindings(py::module &m) {
                  return M.expval(operation, wires);
              })
         .def("generate_samples_test",
-             [](Measures<PrecisionT> &M,
-                const std::vector<size_t> &wires, size_t num_shots) {
+             [](Measures<PrecisionT> &M,size_t num_shots) {
 	       
-	       auto && result = M.generate_samples_test(wires,num_shots);
+	       auto && result = M.generate_samples_test(num_shots);
+	       // int num_samples = num_shots;
+	       // std::vector<int> result(num_samples*wires.size(),0);
+	     
+	       int num_wires = result.size()/num_shots;
+	       ssize_t              ndim    = 2;
+	       std::vector<ssize_t> shape   = { num_shots , num_wires };
+	       std::vector<ssize_t> strides = { sizeof(int)*num_wires , sizeof(int) };
+
+	       // return 2-D NumPy array
 	       return py::array(py::buffer_info(
 						result.data(),                           /* data as contiguous array  */
 						sizeof(int),                          /* size of one scalar        */
 						py::format_descriptor<int>::format(), /* data type                 */
-						2,                                    /* number of dimensions      */
-						{result.size(), result[0].size()},                                   /* shape of the matrix       */
-						{sizeof(int)*result[0].size(),sizeof(int)}                                  /* strides for each axis     */
-						));	       
+						ndim,                                    /* number of dimensions      */
+						shape,                                   /* shape of the matrix       */
+						strides                                  /* strides for each axis     */
+						));			
              })      
         .def("var", [](Measures<PrecisionT> &M, const std::string &operation,
                        const std::vector<size_t> &wires) {

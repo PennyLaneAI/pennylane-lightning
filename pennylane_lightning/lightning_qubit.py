@@ -530,8 +530,6 @@ class LightningQubit(DefaultQubit):
         return M.probs(device_wires)
 
     def generate_samples_test(self):
-        # translate to wire labels used by device
-        device_wires = self.map_wires(self.wires)
 
         # To support np.complex64 based on the type of self._state
         dtype = self._state.dtype
@@ -551,7 +549,7 @@ class LightningQubit(DefaultQubit):
         state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
 
-        return M.generate_samples_test(device_wires, self.shots)
+        return M.generate_samples_test(self.shots)
         
     
     def expval(self, observable, shot_range=None, bin_size=None):

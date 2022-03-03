@@ -25,6 +25,7 @@
 #include <cstdio>
 #include <vector>
 #include <random>
+#include <unordered_map>
 
 #include "LinearAlgebra.hpp"
 #include "StateVectorManaged.hpp"
@@ -258,42 +259,45 @@ class Measures {
 
         return expected_value_list;
     };
-  
-  std::vector<std::vector<int>> generate_samples_test(const std::vector<size_t> &wires,int num_samples)
-  {
 
+  
+  std::vector<int> generate_samples_test(int num_samples)
+  {
     size_t num_qubits = original_statevector.getNumQubits();
-    auto && probabilities = probs(wires);
+    auto && probabilities = probs();
+
+    std::vector<int> samples(num_samples*num_qubits,0); 
+    std::mt19937 generator(std::random_device{}());
+    std::uniform_real_distribution<fp_t> distribution(0.0, 1.0);
+    std::unordered_map<int,int> cache;
+    
     int N = probabilities.size();
     int i,j,k;
-    std::vector<fp_t> bucket_share(N);
+    std::vector<fp_t> bucket(N);
     std::vector<int> bucket_partner(N);
-    
-    for (i=0; i<N; i++) {
-      bucket_share[i] = probabilities[i] * N; 
-      bucket_partner[i] = i; 
-    }
-
+    std::iota (std::begin(bucket_partner), std::end(bucket_partner), 0);
+    std::transform(probabilities.begin(), probabilities.end(), bucket.begin(),
+		   std::bind(std::multiplies<fp_t>(), std::placeholders::_1, N));
+      
     for (j=0; j<N; j++) {
-      if (bucket_share[j] > 1.0){
+      if (bucket[j] > 1.0)
 	break;
-      }
     }
-
+    
     for (i=0; i<N; i++) {
       k = i;
       if (bucket_partner[k]!=i) {
 	continue; 
       }
-      fp_t bucket_overflow = 1.0 - bucket_share[k];  
+      fp_t bucket_overflow = 1.0 - bucket[k];  
       while (bucket_overflow > 0 ) {
 	if (j == N) { break; }     
 	bucket_partner[k]=j;              
-	bucket_share[j] -= bucket_overflow;
-	bucket_overflow = 1.0 - bucket_share[j];  
+	bucket[j] -= bucket_overflow;
+	bucket_overflow = 1.0 - bucket[j];  
 	if (bucket_overflow >= 0) { 
 	  for (k=j++; j<N; j++) {
-	    if (bucket_share[j] > 1.0){
+	    if (bucket[j] > 1.0){
 	      break;
 	    }
 	  }
@@ -301,33 +305,23 @@ class Measures {
       }
     }
 
-    std::vector<int> counts(N,0);
-    
-#pragma omp parallel for 
     for (int i = 0; i < num_samples; i++){
-      thread_local std::mt19937 generator(std::random_device{}());
-      std::uniform_real_distribution<fp_t> distribution(0.0, 1.0);
       fp_t pct = distribution(generator)*N;
-      
       int idx = static_cast<int>(pct);
-      if (pct-idx > bucket_share[idx])
-	counts[bucket_partner[idx]] += 1;
-      else
-	counts[idx] += 1;
-    }
+      if (pct-idx > bucket[idx])
+	idx = bucket_partner[idx];
 
-
-    std::vector<std::vector<int>> samples(num_samples,std::vector<int>(num_qubits,0));    
-#pragma omp parallel for
-    for (int j = 0; j < num_qubits; ++j) {
-      int s = 0;
-      for (int i = 0; i < counts.size(); ++i){
-	if (counts[i] >= 0){
-	  for (int k = s; k < counts[i]; ++k)
-	    samples[k][j] = (i >> j) & 1;
-	  s += counts[i];
-	}
+      if (cache.count(idx) != 0){
+	int cache_id = cache[idx];
+	auto it_temp = samples.begin()+cache_id*num_qubits;
+	std::copy(it_temp, it_temp+num_qubits, samples.begin()+i*num_qubits);
       }
+      else {
+	for (int j = 0; j < num_qubits; j++)
+	  samples[i*num_qubits + (num_qubits-1-j)] = (idx >> j) & 1;
+	cache[idx] = i;
+      }
+       
     }
 
     return samples;
