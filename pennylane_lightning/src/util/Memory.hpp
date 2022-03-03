@@ -76,6 +76,7 @@ template <class T> struct AlignedAllocator {
         if (alignment_ > alignof(std::max_align_t)) {
             p = alignedAlloc(alignment_, sizeof(T) * size);
         } else {
+            // NOLINTNEXTLINE(hicpp-no-malloc)
             p = malloc(sizeof(T) * size);
         }
         if (p == nullptr) {
@@ -88,6 +89,7 @@ template <class T> struct AlignedAllocator {
         if (alignment_ > alignof(std::max_align_t)) {
             alignedFree(p);
         } else {
+            // NOLINTNEXTLINE(hicpp-no-malloc)
             free(p);
         }
     }

@@ -40,11 +40,11 @@ class StateVectorCPU : public StateVectorBase<PrecisionT, Derived> {
     using BaseType = StateVectorBase<PrecisionT, Derived>;
 
     std::unordered_map<Gates::GateOperation, Gates::KernelType>
-        kernel_for_gates_;
+        kernel_for_gates_{};
     std::unordered_map<Gates::GeneratorOperation, Gates::KernelType>
-        kernel_for_generators_;
+        kernel_for_generators_{};
     std::unordered_map<Gates::MatrixOperation, Gates::KernelType>
-        kernel_for_matrices_;
+        kernel_for_matrices_{};
 
     void setKernels(size_t num_qubits, Threading threading,
                     CPUMemoryModel memory_model) {
@@ -83,7 +83,9 @@ class StateVectorCPU : public StateVectorBase<PrecisionT, Derived> {
         return kernel_for_matrices_.at(mat_op);
     }
 
-    inline CPUMemoryModel memoryModel() const { return memory_model_; }
-    inline Threading threading() const { return threading_; }
+    [[nodiscard]] inline CPUMemoryModel memoryModel() const {
+        return memory_model_;
+    }
+    [[nodiscard]] inline Threading threading() const { return threading_; }
 };
 } // namespace Pennylane

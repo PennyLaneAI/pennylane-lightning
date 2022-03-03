@@ -85,7 +85,7 @@ void testGeneratorForGate(RandomEngine &re, size_t num_qubits) {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     constexpr auto I = Util::IMAG<PrecisionT>();
 
-    constexpr ParamT eps = static_cast<ParamT>(1e-4); // For finite difference
+    constexpr auto eps = static_cast<ParamT>(1e-4); // For finite difference
 
     constexpr auto gate_op = static_lookup<gntr_op>(generator_gate_pairs);
     constexpr auto gate_name = static_lookup<gate_op>(Constant::gate_names);

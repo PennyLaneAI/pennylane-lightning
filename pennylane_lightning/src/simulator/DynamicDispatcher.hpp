@@ -85,20 +85,20 @@ template <typename PrecisionT> class DynamicDispatcher {
                                           const std::vector<size_t> &, bool)>;
 
   private:
-    std::unordered_map<std::string, Gates::GateOperation> str_to_gates_;
-    std::unordered_map<std::string, Gates::GeneratorOperation> str_to_gntrs_;
+    std::unordered_map<std::string, Gates::GateOperation> str_to_gates_{};
+    std::unordered_map<std::string, Gates::GeneratorOperation> str_to_gntrs_{};
 
     std::unordered_map<std::pair<Gates::GateOperation, Gates::KernelType>,
                        GateFunc, Util::PairHash>
-        gates_;
+        gates_{};
 
     std::unordered_map<std::pair<Gates::GeneratorOperation, Gates::KernelType>,
                        GeneratorFunc, Util::PairHash>
-        generators_;
+        generators_{};
 
     std::unordered_map<std::pair<Gates::MatrixOperation, Gates::KernelType>,
                        MatrixFunc, Util::PairHash>
-        matrices_;
+        matrices_{};
 
     constexpr static auto removeGeneratorPrefix(std::string_view op_name)
         -> std::string_view {
@@ -128,11 +128,12 @@ template <typename PrecisionT> class DynamicDispatcher {
         return singleton;
     }
 
-    auto strToGateOp(const std::string &gate_name) const
+    [[nodiscard]] auto strToGateOp(const std::string &gate_name) const
         -> Gates::GateOperation {
         return str_to_gates_.at(gate_name);
     }
-    auto strToGeneratorOp(const std::string &gntr_name) const
+
+    [[nodiscard]] auto strToGeneratorOp(const std::string &gntr_name) const
         -> Gates::GeneratorOperation {
         return str_to_gntrs_.at(gntr_name);
     }

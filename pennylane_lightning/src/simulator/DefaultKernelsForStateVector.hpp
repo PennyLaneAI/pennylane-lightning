@@ -509,8 +509,8 @@ class DefaultKernelsForStateVector {
      * @param threading Threading context
      * @param memory_model Memory model of the underlying data
      */
-    auto getGateKernelMap(size_t num_qubits, Threading threading,
-                          CPUMemoryModel memory_model) const
+    [[nodiscard]] auto getGateKernelMap(size_t num_qubits, Threading threading,
+                                        CPUMemoryModel memory_model) const
         -> std::unordered_map<Gates::GateOperation, Gates::KernelType> {
         uint32_t dispatch_key = toDispatchKey(threading, memory_model);
 
@@ -532,8 +532,9 @@ class DefaultKernelsForStateVector {
      * @param threading Threading context
      * @param memory_model Memory model of the underlying data
      */
-    auto getGeneratorKernelMap(size_t num_qubits, Threading threading,
-                               CPUMemoryModel memory_model) const
+    [[nodiscard]] auto getGeneratorKernelMap(size_t num_qubits,
+                                             Threading threading,
+                                             CPUMemoryModel memory_model) const
         -> std::unordered_map<Gates::GeneratorOperation, Gates::KernelType> {
         uint32_t dispatch_key = toDispatchKey(threading, memory_model);
 
@@ -556,8 +557,9 @@ class DefaultKernelsForStateVector {
      * @param threading Threading context
      * @param memory_model Memory model of the underlying data
      */
-    auto getMatrixKernelMap(size_t num_qubits, Threading threading,
-                            CPUMemoryModel memory_model) const
+    [[nodiscard]] auto getMatrixKernelMap(size_t num_qubits,
+                                          Threading threading,
+                                          CPUMemoryModel memory_model) const
         -> std::unordered_map<Gates::MatrixOperation, Gates::KernelType> {
         uint32_t dispatch_key = toDispatchKey(threading, memory_model);
 
@@ -578,16 +580,26 @@ class DefaultKernelsForStateVector {
                                   CPUMemoryModel memory_model,
                                   uint32_t priority) {
         uint32_t dispatch_key = toDispatchKey(threading, memory_model);
-        gate_kernel_map_[std::make_pair(gate_op, dispatch_key)].clearPriority(
-            priority);
+        const auto key = std::make_pair(gate_op, dispatch_key);
+
+        const auto iter = generator_kernel_map_.find(key);
+        if (iter == gate_kernel_map_.end()) {
+            return;
+        }
+        iter->clearPriority(priority);
     }
 
     void removeKernelForMatrix(Gates::MatrixOperation mat_op,
                                Threading threading, CPUMemoryModel memory_model,
                                uint32_t priority) {
         uint32_t dispatch_key = toDispatchKey(threading, memory_model);
-        matrix_kernel_map_[std::make_pair(mat_op, dispatch_key)].clearPriority(
-            priority);
+        const auto key = std::make_pair(mat_op, dispatch_key);
+
+        const auto iter = matrix_kernel_map_.find(key);
+        if (iter == matrix_kernel_map_.end()) {
+            return;
+        }
+        iter->clearPriority(priority);
     }
 };
 } // namespace Pennylane
