@@ -92,9 +92,9 @@ TEST_CASE("Test priority works", "[Test_DefaultKernelsForStateVector]") {
                     CPUMemoryModel::Unaligned)[GateOperation::PauliX] ==
                 KernelType::PI);
 
-        instance.removeKernelForGenerator(GateOperation::PauliX,
-                                          Threading::SingleThread,
-                                          CPUMemoryModel::Unaligned, 100);
+        instance.removeKernelForGate(GateOperation::PauliX,
+                                     Threading::SingleThread,
+                                     CPUMemoryModel::Unaligned, 100);
         REQUIRE(instance.getGateKernelMap(
                     24, Threading::SingleThread,
                     CPUMemoryModel::Unaligned)[GateOperation::PauliX] ==

@@ -575,18 +575,30 @@ class DefaultKernelsForStateVector {
         return kernel_for_matrices;
     }
 
-    void removeKernelForGenerator(Gates::GateOperation gate_op,
+    void removeKernelForGate(Gates::GateOperation gate_op, Threading threading,
+                             CPUMemoryModel memory_model, uint32_t priority) {
+        uint32_t dispatch_key = toDispatchKey(threading, memory_model);
+        const auto key = std::make_pair(gate_op, dispatch_key);
+
+        const auto iter = gate_kernel_map_.find(key);
+        if (iter == gate_kernel_map_.end()) {
+            return;
+        }
+        (iter->second).clearPriority(priority);
+    }
+
+    void removeKernelForGenerator(Gates::GeneratorOperation gntr_op,
                                   Threading threading,
                                   CPUMemoryModel memory_model,
                                   uint32_t priority) {
         uint32_t dispatch_key = toDispatchKey(threading, memory_model);
-        const auto key = std::make_pair(gate_op, dispatch_key);
+        const auto key = std::make_pair(gntr_op, dispatch_key);
 
         const auto iter = generator_kernel_map_.find(key);
-        if (iter == gate_kernel_map_.end()) {
+        if (iter == generator_kernel_map_.end()) {
             return;
         }
-        iter->clearPriority(priority);
+        (iter->second).clearPriority(priority);
     }
 
     void removeKernelForMatrix(Gates::MatrixOperation mat_op,
@@ -599,7 +611,7 @@ class DefaultKernelsForStateVector {
         if (iter == matrix_kernel_map_.end()) {
             return;
         }
-        iter->clearPriority(priority);
+        (iter->second).clearPriority(priority);
     }
 };
 } // namespace Pennylane
