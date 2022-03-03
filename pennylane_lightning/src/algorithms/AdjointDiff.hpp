@@ -368,6 +368,9 @@ template <class T = double> class AdjointJacobian {
                 applyOperationAdj(lambda, ops, op_idx);
 
                 if (ops.hasParams(op_idx)) {
+                    if (tp_it == tp.rend()) {
+                        break;
+                    }
                     if ((current_param_idx == *tp_it) ||
                         std::find(tp_it, tp_rend, current_param_idx) !=
                             tp_rend) {

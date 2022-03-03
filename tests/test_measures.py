@@ -16,6 +16,7 @@ Unit tests for Measures in lightning.qubit.
 """
 import numpy as np
 import pennylane as qml
+import math
 from pennylane.measurements import (
     Variance,
     Expectation,
@@ -55,15 +56,18 @@ class TestProbs:
 
     def test_probs_dtype64(self, dev):
         """Test if probs changes the state dtype"""
-        dev._state = np.array([1, 0]).astype(np.complex64)
+        dev._state = dev._asarray(np.array([1/math.sqrt(2), 1/math.sqrt(2), 0, 0]).astype(np.complex64))
         p = dev.probability(wires=[0, 1])
 
         assert dev._state.dtype == np.complex64
-        assert np.allclose(p, [1, 1, 0, 0])
+        assert np.allclose(p, [0.5, 0.5, 0, 0])
 
+    @pytest.mark.skipif(
+        not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
+    )
     def test_probs_dtype_error(self, dev):
         """Test if probs raise error with complex256"""
-        dev._state = np.array([1, 0]).astype(np.complex256)
+        dev._state = dev._asarray(np.array([1, 0]).astype(np.complex256))
 
         with pytest.raises(TypeError, match="Unsupported complex Type:"):
             dev.probability(wires=[0, 1])
@@ -179,6 +183,9 @@ class TestExpval:
         assert dev._state.dtype == np.complex64
         assert np.allclose(e, 0.0)
 
+    @pytest.mark.skipif(
+        not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
+    )
     def test_expval_dtype_error(self, dev):
         """Test if expval raise error with complex256"""
         dev._state = np.array([1, 0]).astype(np.complex256)
@@ -296,6 +303,9 @@ class TestVar:
         assert dev._state.dtype == np.complex64
         assert np.allclose(v, 1.0)
 
+    @pytest.mark.skipif(
+        not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
+    )
     def test_expval_dtype_error(self, dev):
         """Test if var raise error with complex256"""
         dev._state = np.array([1, 0]).astype(np.complex256)
