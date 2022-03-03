@@ -40,11 +40,11 @@ class StateVectorCPU : public StateVectorBase<PrecisionT, Derived> {
     using BaseType = StateVectorBase<PrecisionT, Derived>;
 
     std::unordered_map<Gates::GateOperation, Gates::KernelType>
-        kernel_for_gates_{};
+        kernel_for_gates_;
     std::unordered_map<Gates::GeneratorOperation, Gates::KernelType>
-        kernel_for_generators_{};
+        kernel_for_generators_;
     std::unordered_map<Gates::MatrixOperation, Gates::KernelType>
-        kernel_for_matrices_{};
+        kernel_for_matrices_;
 
     void setKernels(size_t num_qubits, Threading threading,
                     CPUMemoryModel memory_model) {
