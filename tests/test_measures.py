@@ -56,7 +56,9 @@ class TestProbs:
 
     def test_probs_dtype64(self, dev):
         """Test if probs changes the state dtype"""
-        dev._state = dev._asarray(np.array([1/math.sqrt(2), 1/math.sqrt(2), 0, 0]).astype(np.complex64))
+        dev._state = dev._asarray(
+            np.array([1 / math.sqrt(2), 1 / math.sqrt(2), 0, 0]).astype(np.complex64)
+        )
         p = dev.probability(wires=[0, 1])
 
         assert dev._state.dtype == np.complex64
