@@ -70,7 +70,7 @@ auto in_between_closed(IntegerType from, IntegerType to)
     return IntegerInterval<IntegerType>{from, to + 1};
 }
 template <typename IntegerType>
-auto full_domain() -> IntegerInterval<IntegerType> {
+constexpr auto full_domain() -> IntegerInterval<IntegerType> {
     return IntegerInterval<IntegerType>{
         0, std::numeric_limits<IntegerType>::max()};
 }

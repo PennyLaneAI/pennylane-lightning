@@ -11,9 +11,9 @@
 #pragma once
 
 #include "BitUtil.hpp"
-#include "DefaultKernelsForStateVector.hpp"
 #include "DispatchKeys.hpp"
 #include "Gates.hpp"
+#include "KernelMap.hpp"
 #include "KernelType.hpp"
 #include "Memory.hpp"
 #include "StateVectorBase.hpp"
@@ -48,13 +48,16 @@ class StateVectorCPU : public StateVectorBase<PrecisionT, Derived> {
 
     void setKernels(size_t num_qubits, Threading threading,
                     CPUMemoryModel memory_model) {
-        auto &default_kernels = DefaultKernelsForStateVector::getInstance();
-        kernel_for_gates_ = default_kernels.getGateKernelMap(
-            num_qubits, threading, memory_model);
-        kernel_for_generators_ = default_kernels.getGeneratorKernelMap(
-            num_qubits, threading, memory_model);
-        kernel_for_matrices_ = default_kernels.getMatrixKernelMap(
-            num_qubits, threading, memory_model);
+        using KernelMap::OperationKernelMap;
+        kernel_for_gates_ =
+            OperationKernelMap<Gates::GateOperation>::getInstance()
+                .getKernelMap(num_qubits, threading, memory_model);
+        kernel_for_generators_ =
+            OperationKernelMap<Gates::GeneratorOperation>::getInstance()
+                .getKernelMap(num_qubits, threading, memory_model);
+        kernel_for_matrices_ =
+            OperationKernelMap<Gates::MatrixOperation>::getInstance()
+                .getKernelMap(num_qubits, threading, memory_model);
     }
 
   protected:

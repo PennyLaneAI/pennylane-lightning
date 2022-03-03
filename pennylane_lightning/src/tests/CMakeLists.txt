@@ -71,7 +71,6 @@ target_link_libraries(compile_time_tests lightning_gates lightning_utils)
 set(TEST_SOURCES CreateAllWires.cpp
                  Test_AdjDiff.cpp
                  Test_DynamicDispatcher.cpp
-                 Test_DefaultKernelsForStateVector.cpp
                  Test_GateImplementations_CompareKernels.cpp
                  Test_GateImplementations_Generator.cpp
                  Test_GateImplementations_Inverse.cpp
@@ -80,6 +79,7 @@ set(TEST_SOURCES CreateAllWires.cpp
                  Test_GateImplementations_Param.cpp
                  Test_GateUtil.cpp
                  Test_Internal.cpp
+                 Test_KernelMap.cpp
                  Test_Measures.cpp
                  Test_OpToMemberFuncPtr.cpp
                  Test_StateVectorCPU.cpp

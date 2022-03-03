@@ -1,0 +1,282 @@
+// Copyright 2022 Xanadu Quantum Technologies Inc.
+
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+/**
+ * @file
+ * Set/get Default kernels for statevector
+ */
+#include "DispatchKeys.hpp"
+#include "GateOperation.hpp"
+#include "IntegerInterval.hpp"
+#include "KernelType.hpp"
+#include "Util.hpp"
+
+#include <deque>
+#include <functional>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+
+namespace Pennylane::KernelMap {
+///@cond DEV
+namespace Internal {
+
+int assignDefaultKernelsForGateOp();
+int assignDefaultKernelsForGeneratorOp();
+int assignDefaultKernelsForMatrixOp();
+
+template <class Operation> struct AssignKernelForOp;
+
+template <> struct AssignKernelForOp<Gates::GateOperation> {
+    static inline const int dummy = assignDefaultKernelsForGateOp();
+};
+template <> struct AssignKernelForOp<Gates::GeneratorOperation> {
+    static inline const int dummy = assignDefaultKernelsForGeneratorOp();
+};
+template <> struct AssignKernelForOp<Gates::MatrixOperation> {
+    static inline const int dummy = assignDefaultKernelsForMatrixOp();
+};
+} // namespace Internal
+///@endcond
+
+///@cond DEV
+struct DispatchElement {
+    uint32_t priority;
+    Util::IntegerInterval<size_t> interval;
+    Gates::KernelType kernel;
+};
+
+inline bool lower_priority(const DispatchElement &lhs,
+                           const DispatchElement &rhs) {
+    return lhs.priority < rhs.priority;
+}
+
+inline bool higher_priority(const DispatchElement &lhs,
+                            const DispatchElement &rhs) {
+    return lhs.priority > rhs.priority;
+}
+
+/**
+ * @brief Maintain dispatch element using a vector decreasingly-ordered by
+ * priority.
+ */
+class PriorityDispatchSet {
+  private:
+    std::vector<DispatchElement> ordered_vec_;
+
+  public:
+    [[nodiscard]] bool
+    conflict(uint32_t test_priority,
+             const Util::IntegerInterval<size_t> &test_interval) const {
+        const auto test_elt = DispatchElement{test_priority, test_interval,
+                                              Gates::KernelType::None};
+        const auto [b, e] =
+            std::equal_range(ordered_vec_.begin(), ordered_vec_.end(), test_elt,
+                             higher_priority);
+        for (auto iter = b; iter != e; ++iter) {
+            if (!is_disjoint(iter->interval, test_interval)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void insert(const DispatchElement &elt) {
+        const auto iter_to_insert = std::upper_bound(
+            ordered_vec_.begin(), ordered_vec_.end(), elt, &higher_priority);
+        ordered_vec_.insert(iter_to_insert, elt);
+    }
+
+    template <typename... Ts> void emplace(Ts &&...args) {
+        const auto elt = DispatchElement{std::forward<Ts>(args)...};
+        const auto iter_to_insert = std::upper_bound(
+            ordered_vec_.begin(), ordered_vec_.end(), elt, &higher_priority);
+        ordered_vec_.insert(iter_to_insert, elt);
+    }
+
+    [[nodiscard]] Gates::KernelType getKernel(size_t num_qubits) const {
+        for (const auto &elt : ordered_vec_) {
+            if (elt.interval(num_qubits)) {
+                return elt.kernel;
+            }
+        }
+        throw std::range_error(
+            "Cannot find a kernel for the given number of qubits.");
+    }
+
+    void clearPriority(uint32_t remove_priority) {
+        const auto begin = std::lower_bound(
+            ordered_vec_.begin(), ordered_vec_.end(), remove_priority,
+            [](const auto &elt, uint32_t p) { return elt.priority > p; });
+        const auto end = std::upper_bound(
+            ordered_vec_.begin(), ordered_vec_.end(), remove_priority,
+            [](uint32_t p, const auto &elt) { return p > elt.priority; });
+        ordered_vec_.erase(begin, end);
+    }
+};
+
+///@endcond
+
+struct AllThreading {};
+struct AllMemoryModel {};
+
+constexpr static AllThreading all_threading{};
+constexpr static AllMemoryModel all_memory_model{};
+
+/**
+ * @brief This class manages all data related to kernel map statevector uses.
+ *
+ * For a given number of qubit, threading, and memory model, this class
+ * returns the best kernels for each gate/generator/matrix operation.
+ */
+template <class Operation, size_t cache_size = 16> class OperationKernelMap {
+  public:
+    using EnumDispatchKernalMap =
+        std::unordered_map<std::pair<Operation, uint32_t /* dispatch_key */>,
+                           PriorityDispatchSet, Util::PairHash>;
+    using EnumKernelMap = std::unordered_map<Operation, Gates::KernelType>;
+
+  private:
+    EnumDispatchKernalMap kernel_map_;
+    mutable std::deque<std::tuple<size_t, uint32_t, EnumKernelMap>> cache_;
+
+    /**
+     * @brief Allowed kernels for a given memory model
+     */
+    const std::unordered_map<CPUMemoryModel, std::vector<Gates::KernelType>>
+        allowed_kernels_;
+
+    OperationKernelMap()
+        : allowed_kernels_{
+              {CPUMemoryModel::Unaligned,
+               {Gates::KernelType::LM, Gates::KernelType::PI}},
+              {CPUMemoryModel::Aligned256,
+               {Gates::KernelType::LM, Gates::KernelType::PI}},
+              {CPUMemoryModel::Aligned512,
+               {Gates::KernelType::LM, Gates::KernelType::PI}},
+          } {}
+
+  public:
+    static auto getInstance() -> OperationKernelMap & {
+        static OperationKernelMap instance;
+
+        return instance;
+    }
+
+    void assignKernelForOp(Operation op, Threading threading,
+                           CPUMemoryModel memory_model, uint32_t priority,
+                           const Util::IntegerInterval<size_t> &interval,
+                           Gates::KernelType kernel) {
+        if (std::find(allowed_kernels_.at(memory_model).cbegin(),
+                      allowed_kernels_.at(memory_model).cend(),
+                      kernel) == allowed_kernels_.at(memory_model).cend()) {
+            throw std::invalid_argument("The given kernel is now allowed for "
+                                        "the given memory model.");
+        }
+        const auto dispatch_key = toDispatchKey(threading, memory_model);
+        auto &set = kernel_map_[std::make_pair(op, dispatch_key)];
+
+        if (set.conflict(priority, interval)) {
+            throw std::invalid_argument("The given interval conflicts with "
+                                        "existing intervals.");
+        }
+
+        // Reset cache
+        cache_.clear();
+
+        set.emplace(priority, interval, kernel);
+    }
+
+    void assignKernelForOp(Operation op, [[maybe_unused]] AllThreading dummy,
+                           CPUMemoryModel memory_model,
+                           const Util::IntegerInterval<size_t> &interval,
+                           Gates::KernelType kernel) {
+        /* Priority for all threading is 1 */
+        Util::for_each_enum<Threading>([=](Threading threading) {
+            assignKernelForOp(op, threading, memory_model, 1, interval, kernel);
+        });
+    }
+
+    void assignKernelForOp(Operation op, Threading threading,
+                           [[maybe_unused]] AllMemoryModel dummy,
+                           const Util::IntegerInterval<size_t> &interval,
+                           Gates::KernelType kernel) {
+        /* Priority for all memory model is 2 */
+        Util::for_each_enum<CPUMemoryModel>([=](CPUMemoryModel memory_model) {
+            assignKernelForOp(op, threading, memory_model, 2, interval, kernel);
+        });
+    }
+
+    void assignKernelForOp(Operation op, [[maybe_unused]] AllThreading dummy1,
+                           [[maybe_unused]] AllMemoryModel dummy2,
+                           const Util::IntegerInterval<size_t> &interval,
+                           Gates::KernelType kernel) {
+        /* Priority is 0 */
+        Util::for_each_enum<Threading, CPUMemoryModel>(
+            [=](Threading threading, CPUMemoryModel memory_model) {
+                assignKernelForOp(op, threading, memory_model, 0, interval,
+                                  kernel);
+            });
+    }
+
+    void removeKernelForOp(Operation op, Threading threading,
+                           CPUMemoryModel memory_model, uint32_t priority) {
+        uint32_t dispatch_key = toDispatchKey(threading, memory_model);
+        const auto key = std::make_pair(op, dispatch_key);
+
+        const auto iter = kernel_map_.find(key);
+        if (iter == kernel_map_.end()) {
+            return;
+        }
+        (iter->second).clearPriority(priority);
+
+        // Reset cache
+        cache_.clear();
+    }
+
+    /**
+     * @brief Create map contains default kernels for operation
+     *
+     * @param num_qubits Number of qubits
+     * @param threading Threading context
+     * @param memory_model Memory model of the underlying data
+     */
+    [[nodiscard]] auto getKernelMap(size_t num_qubits, Threading threading,
+                                    CPUMemoryModel memory_model) const
+        -> EnumKernelMap {
+        // Add mutex for cache_ when we goto multithread.
+        const uint32_t dispatch_key = toDispatchKey(threading, memory_model);
+
+        const auto cache_iter =
+            std::find_if(cache_.begin(), cache_.end(), [=](const auto &elt) {
+                return (std::get<0>(elt) == num_qubits) &&
+                       (std::get<1>(elt) == dispatch_key);
+            });
+        if (cache_iter == cache_.end()) {
+            std::unordered_map<Operation, Gates::KernelType> kernel_for_op;
+
+            Util::for_each_enum<Operation>([&](Operation op) {
+                const auto key = std::make_pair(op, dispatch_key);
+                const auto &set = kernel_map_.at(key);
+                kernel_for_op.emplace(op, set.getKernel(num_qubits));
+            });
+            if (cache_.size() == cache_size) {
+                cache_.pop_front();
+            }
+            cache_.emplace_back(num_qubits, dispatch_key, kernel_for_op);
+            return kernel_for_op;
+        }
+        return std::get<2>(*cache_iter);
+    }
+};
+} // namespace Pennylane::KernelMap

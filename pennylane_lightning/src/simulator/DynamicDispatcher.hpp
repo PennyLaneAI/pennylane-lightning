@@ -53,14 +53,14 @@ namespace Pennylane {
  * @brief These functions are only used to register kernels to the dynamic
  * dispatcher.
  */
-template <class PrecisionT, class ParamT> struct registerBeforeMain;
+template <class PrecisionT, class ParamT> struct RegisterBeforeMain;
 
-template <> struct registerBeforeMain<float, float> {
+template <> struct RegisterBeforeMain<float, float> {
     static inline const int dummy =
         Internal::registerAllAvailableKernels<float, float>();
 };
 
-template <> struct registerBeforeMain<double, double> {
+template <> struct RegisterBeforeMain<double, double> {
     static inline const int dummy =
         Internal::registerAllAvailableKernels<double, double>();
 };
