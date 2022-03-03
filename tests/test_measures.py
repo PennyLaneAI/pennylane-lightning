@@ -69,7 +69,7 @@ class TestProbs:
     )
     def test_probs_dtype_error(self, dev):
         """Test if probs raise error with complex256"""
-        dev._state = dev._asarray(np.array([1, 0]).astype(np.complex256))
+        dev._state = np.array([1, 0, 0, 0]).astype(np.complex256)
 
         with pytest.raises(TypeError, match="Unsupported complex Type:"):
             dev.probability(wires=[0, 1])
