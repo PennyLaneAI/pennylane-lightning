@@ -34,7 +34,6 @@ try:
         ObsStructC64,
         StateVectorC128,
         ObsStructC128,
-        DEFAULT_KERNEL_FOR_OPS,
     )
 except ImportError:
     pass

@@ -110,7 +110,7 @@ class TestComputeVJP:
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_non_numpy_dy(self, dev, C):
-        "Test when dy is torch.tensor"
+        "Test compute_vjp works when dy is torch.tensor"
         torch = pytest.importorskip("torch")
         dev._state = dev._asarray(dev._state, C)
 

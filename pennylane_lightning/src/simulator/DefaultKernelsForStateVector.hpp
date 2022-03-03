@@ -108,8 +108,7 @@ class PriorityDispatchSet {
 
 class DefaultKernelsForStateVector {
   private:
-    const static inline std::unordered_map<CPUMemoryModel,
-                                           std::vector<Gates::KernelType>>
+    const std::unordered_map<CPUMemoryModel, std::vector<Gates::KernelType>>
         allowed_kernels{
             {CPUMemoryModel::Unaligned,
              {Gates::KernelType::LM, Gates::KernelType::PI}},
