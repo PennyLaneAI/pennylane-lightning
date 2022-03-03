@@ -10,6 +10,7 @@
 // limitations under the License.
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
