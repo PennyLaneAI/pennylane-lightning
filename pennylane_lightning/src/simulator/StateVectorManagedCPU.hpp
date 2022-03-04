@@ -37,7 +37,6 @@ class StateVectorManagedCPU
   private:
     using BaseType = StateVectorCPU<PrecisionT, StateVectorManagedCPU>;
 
-    // NOLINTNEXTLINE(modernize-avoid-c-arrays,hicpp-avoid-c-arrays)
     std::vector<ComplexPrecisionT, AlignedAllocator<ComplexPrecisionT>> data_;
 
   public:
@@ -71,7 +70,6 @@ class StateVectorManagedCPU
 
     // Clang-tidy gives false positive for delegating constructor
     template <class Alloc>
-    // NOLINTNEXTLINE(hicpp-member-init)
     explicit StateVectorManagedCPU(
         const std::vector<std::complex<PrecisionT>, Alloc> &rhs,
         Threading threading = bestThreading(),
