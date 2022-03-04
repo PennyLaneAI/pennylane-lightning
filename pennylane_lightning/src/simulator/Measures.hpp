@@ -26,6 +26,7 @@
 #include <vector>
 #include <random>
 #include <unordered_map>
+#include <stack>
 
 #include "LinearAlgebra.hpp"
 #include "StateVectorManaged.hpp"
@@ -273,38 +274,46 @@ class Measures {
     
     int N = probabilities.size();
     int i,j,k;
-    std::vector<fp_t> bucket(N);
+
+    std::vector<double> bucket(N);
     std::vector<int> bucket_partner(N);
-    std::iota (std::begin(bucket_partner), std::end(bucket_partner), 0);
-    std::transform(probabilities.begin(), probabilities.end(), bucket.begin(),
-		   std::bind(std::multiplies<fp_t>(), std::placeholders::_1, N));
-      
-    for (j=0; j<N; j++) {
-      if (bucket[j] > 1.0)
-	break;
-    }
-    
-    for (i=0; i<N; i++) {
-      k = i;
-      if (bucket_partner[k]!=i) {
-	continue; 
+    std::stack<int> overfull_bucket_ids;
+    std::stack<int> underfull_bucket_ids;
+  
+    for (int i = 0; i < N; i++){
+      bucket[i] = N*probabilities[i];
+      bucket_partner[i] = i;
+      if (bucket[i] > 1.0){
+	overfull_bucket_ids.push(i);
       }
-      fp_t bucket_overflow = 1.0 - bucket[k];  
-      while (bucket_overflow > 0 ) {
-	if (j == N) { break; }     
-	bucket_partner[k]=j;              
-	bucket[j] -= bucket_overflow;
-	bucket_overflow = 1.0 - bucket[j];  
-	if (bucket_overflow >= 0) { 
-	  for (k=j++; j<N; j++) {
-	    if (bucket[j] > 1.0){
-	      break;
-	    }
-	  }
-	}
+      if (bucket[i] < 1.0){
+	underfull_bucket_ids.push(i);      
       }
     }
 
+    while (underfull_bucket_ids.size() != 0 and
+	   overfull_bucket_ids.size() != 0 ){
+      //get an overfull bucket
+      auto i = overfull_bucket_ids.top();
+    
+      //get an underfull bucket
+      auto j = underfull_bucket_ids.top();
+      underfull_bucket_ids.pop();
+      //underfull bucket partner is overfull bucket
+      bucket_partner[j] = i;
+      bucket[i] = bucket[i] + bucket[j] - 1;
+      //if overfull bucket is now underfull
+      //put in underfull stack
+      if (bucket[i] < 1){
+	overfull_bucket_ids.pop();
+	underfull_bucket_ids.push(i);
+      }
+      //if overfull bucket is full -> remove
+      else if (bucket[i] == 1.0){
+	overfull_bucket_ids.pop();
+      }
+    }
+    
     for (int i = 0; i < num_samples; i++){
       fp_t pct = distribution(generator)*N;
       int idx = static_cast<int>(pct);
