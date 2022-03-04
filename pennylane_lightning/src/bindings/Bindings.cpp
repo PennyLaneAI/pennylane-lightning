@@ -322,10 +322,10 @@ void lightning_class_bindings(py::module &m) {
                 const std::vector<size_t> &wires) {
                  return M.expval(operation, wires);
              })
-        .def("generate_samples_test",
+        .def("generate_samples",
              [](Measures<PrecisionT> &M,size_t num_shots) {
 	       
-	       auto && result = M.generate_samples_test(num_shots);
+	       auto && result = M.generate_samples(num_shots);
 	       // int num_samples = num_shots;
 	       // std::vector<int> result(num_samples*wires.size(),0);
 	     

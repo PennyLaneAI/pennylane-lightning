@@ -262,7 +262,7 @@ class Measures {
     };
 
   
-  std::vector<int> generate_samples_test(int num_samples)
+  std::vector<int> generate_samples(int num_samples)
   {
     size_t num_qubits = original_statevector.getNumQubits();
     auto && probabilities = probs();
