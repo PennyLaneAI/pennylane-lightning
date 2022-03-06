@@ -13,11 +13,14 @@
 // limitations under the License.
 #include "RuntimeInfo.hpp"
 
+#include <array>
+
 #if defined(__GNUC__) || defined(__clang__)
 #include <cpuid.h>
 #elif defined(_MSC_VER)
 #include <intrin.h>
 #endif
+
 namespace Pennylane::Util {
 #if defined(__GNUC__) || defined(__clang__)
 RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
@@ -59,7 +62,7 @@ RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
     if (nids >= 7) {
         __cpuidex(cpui.data(), 7, 0);
         f_7_ebx = cpui[1];
-        f_7_ecx = cpui[2]
+        f_7_ecx = cpui[2];
     }
 }
 #else
