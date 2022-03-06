@@ -1,26 +1,24 @@
 #!/usr/bin/env python3
-import csv
 import sys
 import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
 import argparse
+import json
 
 import re
 
 plt.rc("font", family="sans-serif")
 
 
-def parse_result_csv(filepath):
+def parse_result_json(filepath):
     n_qubits = []
     times = []
-    with filepath.open() as csvfile:
-        reader = csv.reader(csvfile)
-        next(reader)  # ignore the first line
-        for row in reader:
-            n_qubits.append(int(row[0]))
-            times.append(float(row[1]))
+    with filepath.open() as f:
+        data = json.load(f)
 
+    n_qubits = [int(d["N"]) for d in data]
+    times = [float(d["time"]) for d in data]
     return n_qubits, times
 
 
@@ -37,10 +35,10 @@ if __name__ == "__main__":
     res_dir = Path(args.path)
     gate_name = args.gate_name
 
-    filename_rgx = re.compile(f"^benchmark_(.*?)_{gate_name}.csv$")
+    filename_rgx = re.compile(f"^{gate_name}_(.*?).json$")
 
     res_files = []
-    for file in res_dir.glob("*.csv"):
+    for file in res_dir.glob("*.json"):
         m = filename_rgx.match(file.name)
         if m is not None:
             res_files.append((m.group(1), file))
@@ -57,7 +55,7 @@ if __name__ == "__main__":
     total_num_qubits = set()
 
     for kernel_idx, (kernel_name, res_file) in enumerate(res_files):
-        n_qubits, times = parse_result_csv(res_file)
+        n_qubits, times = parse_result_json(res_file)
         total_num_qubits |= set(n_qubits)
         n_qubits = np.array(n_qubits, dtype=float)
         plt.bar(n_qubits + 0.8 * (kernel_idx - num_kernels / 2 + 1 / 2), times, label=kernel_name)
