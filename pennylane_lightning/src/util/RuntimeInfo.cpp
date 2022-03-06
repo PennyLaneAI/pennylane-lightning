@@ -56,7 +56,7 @@ RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
     if (nids >= 1) {
         __cpuidex(cpui.data(), 1, 0);
         f_1_ecx = cpui[2];
-        f_1_edx = cpui[3]
+        f_1_edx = cpui[3];
     }
 
     if (nids >= 7) {
