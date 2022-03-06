@@ -256,8 +256,6 @@ auto getCompileInfo() -> pybind11::dict {
             return "ARM";
         default:
             return "Unknown";
-        default:
-            break;
         }
     }();
 

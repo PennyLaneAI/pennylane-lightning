@@ -19,8 +19,7 @@ using PrecisionT = double;
 #endif
 
 using namespace Pennylane;
-using namespace Pennylane::Gates;
-using namespace Pennylane::Util;
+using Util::operator<<;
 
 struct GateDesc {
     std::string name;
@@ -45,18 +44,19 @@ auto generateGateSequence(RandomEngine &re, const std::string &gate_name,
                           const size_t num_reps, const size_t num_qubits,
                           const size_t num_wires_for_multi_qubit)
     -> std::vector<GateDesc> {
-    using Gates::Constant::multi_qubit_gates;
+    using namespace Gates::Constant;
+    using Gates::GateOperation;
 
-    const GateOperation gate_op = Util::lookup(
-        Util::reverse_pairs(Constant::gate_names), std::string_view(gate_name));
+    const GateOperation gate_op = Util::lookup(Util::reverse_pairs(gate_names),
+                                               std::string_view(gate_name));
     const size_t num_wires = [=]() {
         if (Util::array_has_elt(multi_qubit_gates, gate_op)) {
             // if multi qubit gate
             return num_wires_for_multi_qubit;
         }
-        return Util::lookup(Constant::gate_wires, gate_op);
+        return Util::lookup(gate_wires, gate_op);
     }();
-    const size_t num_params = Util::lookup(Constant::gate_num_params, gate_op);
+    const size_t num_params = Util::lookup(gate_num_params, gate_op);
 
     std::vector<GateDesc> gate_seq;
     std::uniform_int_distribution<size_t> inverse_dist(0, 1);
@@ -79,7 +79,7 @@ auto generateGateSequence(RandomEngine &re, const std::string &gate_name,
     return gate_seq;
 }
 
-double benchmarkGate(KernelType kernel, const size_t num_qubits,
+double benchmarkGate(Gates::KernelType kernel, const size_t num_qubits,
                      const std::vector<GateDesc> &gate_seq) {
     // Run benchmark. Total num_reps number of gates is used.
     StateVectorManagedCPU<PrecisionT> svdat{num_qubits};
@@ -97,7 +97,7 @@ double benchmarkGate(KernelType kernel, const size_t num_qubits,
 }
 
 template <typename RandomEngine>
-double runBenchmarkGate(RandomEngine &re, KernelType kernel,
+double runBenchmarkGate(RandomEngine &re, Gates::KernelType kernel,
                         const std::string &gate_name, size_t num_reps,
                         size_t num_qubits, size_t num_wires_for_multi_qubit) {
     auto gate_seq = generateGateSequence(re, gate_name, num_reps, num_qubits,
@@ -127,7 +127,7 @@ double runBenchmarkGate(RandomEngine &re, KernelType kernel,
  * @return Returns 0 is completed successfully
  */
 int main(int argc, char *argv[]) {
-    namespace Constant = Gates::Constant;
+    using namespace Pennylane::Gates;
     // Handle input
     if (argc != 5 && argc != 6) { // NOLINT(readability-magic-numbers)
         std::cerr
