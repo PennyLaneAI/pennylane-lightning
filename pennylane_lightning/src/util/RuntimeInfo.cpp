@@ -48,7 +48,7 @@ RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
     std::array<int, 4> cpui;
     __cpuid(cpui.data(), 0);
 
-    nids = cpui[0];
+    int nids = cpui[0];
 
     if (nids >= 1) {
         __cpuidex(cpui.data(), 1, 0);

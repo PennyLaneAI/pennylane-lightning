@@ -256,6 +256,8 @@ auto getCompileInfo() -> pybind11::dict {
             return "ARM";
         default:
             return "Unknown";
+        default:
+            break;
         }
     }();
 
@@ -267,7 +269,7 @@ auto getCompileInfo() -> pybind11::dict {
             return "Clang";
         case Compiler::MSVC:
             return "MSVC";
-        case Compiler::Unknown:
+        default:
             return "Unknown";
         }
     }();
