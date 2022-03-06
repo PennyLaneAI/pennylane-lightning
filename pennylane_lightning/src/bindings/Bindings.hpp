@@ -20,9 +20,11 @@
 #include "AdjointDiff.hpp"
 #include "CPUMemoryModel.hpp"
 #include "JacobianProd.hpp"
+#include "Macros.hpp"
 #include "Measures.hpp"
 #include "Memory.hpp"
 #include "OpToMemberFuncPtr.hpp"
+#include "RuntimeInfo.hpp"
 #include "StateVectorManagedCPU.hpp"
 
 #include "pybind11/complex.h"
@@ -40,11 +42,12 @@
 
 namespace Pennylane {
 /**
- * @brief Create a `%StateVector` object from a 1D numpy complex data array.
+ * @brief Create a @ref Pennylane::StateVectorRawCPU object from a 1D numpy
+ * complex data array.
  *
  * @tparam PrecisionT Precision data type
  * @param numpyArray Numpy data array.
- * @return StateVector<PrecisionT> `%StateVector` object.
+ * @return StateVectorRawCPU object.
  */
 template <class PrecisionT = double>
 auto createRaw(const pybind11::array_t<std::complex<PrecisionT>> &numpyArray)
@@ -65,6 +68,14 @@ auto createRaw(const pybind11::array_t<std::complex<PrecisionT>> &numpyArray)
         {data_ptr, static_cast<size_t>(numpyArrayInfo.shape[0])});
 }
 
+/**
+ * @brief Create a StateVectorManagedCPU object from a 1D numpy array
+ * by copying the internal data.
+ *
+ * @tparam PrecisionT Floating point precision type
+ * @param numpyArray Numpy array data-type
+ * @return StateVectorManagedCPU object.
+ */
 template <class PrecisionT = double>
 auto createManaged(
     const pybind11::array_t<std::complex<PrecisionT>> &numpyArray)
@@ -85,6 +96,14 @@ auto createManaged(
         {data_ptr, static_cast<size_t>(numpyArrayInfo.shape[0])});
 }
 
+/**
+ * @brief Create numpy array view for the underlying data of
+ * `%StateVectorManagedCPU` object.
+ *
+ * @tparam PrecisionT Floating point data type
+ * @param sv `%StateVectorManagedCPU` object
+ * @return A numpy array
+ */
 template <class PrecisionT = double>
 auto toNumpyArray(const StateVectorManagedCPU<PrecisionT> &sv)
     -> pybind11::array_t<std::complex<PrecisionT>> {
@@ -92,11 +111,26 @@ auto toNumpyArray(const StateVectorManagedCPU<PrecisionT> &sv)
         {sv.getLength()}, {2 * sizeof(PrecisionT)}, sv.getData());
 }
 
+/**
+ * @brief Get memory alignment of a given numpy array.
+ *
+ * @param NumpyArray Pybind11's numpy array type.
+ * @return Memory model describing alignment
+ */
 auto getNumpyArrayAlignment(const pybind11::array &numpyArray)
     -> CPUMemoryModel {
     return getMemoryModel(numpyArray.request().ptr);
 }
 
+/**
+ * @brief Create an aligned numpy array for a given type, memory model and array
+ * size.
+ *
+ * @tparam T Datatype of numpy array to create
+ * @param memory_model Memory model to use
+ * @param size Size of the array to create
+ * @return Numpy array
+ */
 template <typename T>
 auto alignedNumpyArray(CPUMemoryModel memory_model, size_t size)
     -> pybind11::array {
@@ -114,11 +148,14 @@ auto alignedNumpyArray(CPUMemoryModel memory_model, size_t size)
 }
 
 /**
- * @brief We return an numpy array whose underlying data is allocated by
+ * @brief Create a numpy array whose underlying data is allocated by
  * lightning.
  *
  * See https://github.com/pybind/pybind11/issues/1042#issuecomment-325941022
  * for capsule usage.
+ *
+ * @param size Size of the array to create
+ * @param dt Pybind11's datatype object
  */
 auto allocateAlignedArray(size_t size, pybind11::dtype dt) -> pybind11::array {
     auto memory_model = bestCPUMemoryModel();
@@ -138,7 +175,7 @@ auto allocateAlignedArray(size_t size, pybind11::dtype dt) -> pybind11::array {
 
 /**
  * @brief Apply given list of operations to Numpy data array using C++
- * `%StateVector` class.
+ * StateVectorRawCPU class.
  *
  * @tparam PrecisionT Precision data type
  * @param stateNumpyArray Complex numpy data array representing statevector.
@@ -157,7 +194,16 @@ void apply(pybind11::array_t<std::complex<PrecisionT>> &stateNumpyArray,
     state.applyOperations(ops, wires, inverse, params);
 }
 
-/// @cond DEV
+/**
+ * @brief Register StateVector class to pybind.
+ *
+ * @tparam PrecisionT Floating point type for statevector
+ * @tparam ParamT Parameter type of gate operations for statevector
+ * @tparam SVType Statevector type to register
+ * @tparam Pyclass Pybind11's class object type
+ *
+ * @param pyclass Pybind11's class object to bind statevector
+ */
 template <class PrecisionT, class ParamT, class SVType, class PyClass>
 void registerGatesForStateVector(PyClass &pyclass) {
     using Gates::GateOperation;
@@ -191,5 +237,58 @@ void registerGatesForStateVector(PyClass &pyclass) {
         };
         pyclass.def(gate_name.c_str(), func, doc.c_str());
     });
+}
+
+/**
+ * @brief Return basic information of the compiled binary.
+ */
+auto getCompileInfo() -> pybind11::dict {
+    using namespace Util::Constant;
+    using namespace pybind11::literals;
+
+    const std::string_view cpu_arch_str = [] {
+        switch (cpu_arch) {
+        case CPUArch::AMD64:
+            return "AMD64";
+        case CPUArch::PPC64:
+            return "PPC64";
+        case CPUArch::ARM:
+            return "ARM";
+        default:
+            return "Unknown";
+        }
+    }();
+
+    const std::string_view compiler_name_str = [] {
+        switch (compiler) {
+        case Compiler::GCC:
+            return "GCC";
+        case Compiler::Clang:
+            return "Clang";
+        case Compiler::MSVC:
+            return "MSVC";
+        case Compiler::Unknown:
+            return "Unknown";
+        }
+    }();
+
+    const auto compiler_version_str = getCompilerVersion<compiler>();
+
+    return pybind11::dict("cpu.arch"_a = cpu_arch_str,
+                          "compiler.name"_a = compiler_name_str,
+                          "compiler.version"_a = compiler_version_str,
+                          "AVX2"_a = use_avx2, "AVX512F"_a = use_avx512f);
+}
+
+/**
+ * @brief Return basic information of runtime environment
+ */
+auto getRuntimeInfo() -> pybind11::dict {
+    using namespace Util::Constant;
+    using namespace pybind11::literals;
+
+    return pybind11::dict("AVX"_a = RuntimeInfo::AVX(),
+                          "AVX2"_a = RuntimeInfo::AVX2(),
+                          "AVX512F"_a = RuntimeInfo::AVX512F());
 }
 } // namespace Pennylane

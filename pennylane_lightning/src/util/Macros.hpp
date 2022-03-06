@@ -13,9 +13,18 @@
 // limitations under the License.
 /**
  * @file
- * Define some builtin alternatives
+ * Define macros and compile-time constants.
  */
 #pragma once
+
+#include <string>
+
+/**
+ * @brief Predefined macro variable to a string. Use std::format instead in
+ * C++20.
+ */
+#define PL_TO_STR_INDIR(x) #x
+#define PL_TO_STR(VAR) PL_TO_STR_INDIR(VAR)
 
 #if defined(__GNUC__) || defined(__clang__)
 #define PL_UNREACHABLE __builtin_unreachable()
@@ -90,3 +99,69 @@
 #define PL_FORCE_INLINE
 #endif
 #endif
+
+namespace Pennylane::Util::Constant {
+enum class CPUArch { AMD64, PPC64, ARM, Unknown };
+
+constexpr auto getCPUArchClangGCC() {
+#if defined(__x86_64__)
+    return CPUArch::AMD64;
+#elif defined(__powerpc64__)
+    return CPUArch::PPC64;
+#elif defined(__arm__)
+    return CPUArch::ARM;
+#else
+    return CPUArch::Unknown;
+#endif
+}
+
+constexpr auto getCPUArchMSVC() {
+#if defined(_M_AMD64)
+    return CPUArch::AMD64;
+#elif defined(_M_PPC)
+    return CPUArch::PPC64;
+#elif defined(_M_ARM)
+    return CPUArch::ARM;
+#else
+    return CPUArch::Unknown;
+#endif
+}
+
+#if defined(__GNUC__) || defined(__clang__)
+[[maybe_unused]] constexpr static auto cpu_arch = getCPUArchClangGCC();
+#elif defined(_MSC_VER)
+[[maybe_unused]] constexpr static auto cpu_arch = getCPUArchMSVC();
+#else
+[[maybe_unused]] constexpr static auto cpu_arch = CPUArch::Unknown;
+#endif
+
+enum class Compiler { GCC, Clang, MSVC, Unknown };
+
+template <Compiler compiler>
+constexpr auto getCompilerVersion() -> std::string_view {
+    return "Unknown version";
+}
+template <>
+constexpr auto getCompilerVersion<Compiler::GCC>() -> std::string_view {
+    return PL_TO_STR(__GNUC__) "." PL_TO_STR(__GNUC_MINOR__) "." PL_TO_STR(
+        __GNUC_PATCHLEVEL__);
+}
+template <>
+constexpr auto getCompilerVersion<Compiler::Clang>() -> std::string_view {
+    return PL_TO_STR(__clang_major__) "." PL_TO_STR(
+        __clang_minor__) "." PL_TO_STR(__clang_patchlevel__);
+}
+template <>
+constexpr auto getCompilerVersion<Compiler::MSVC>() -> std::string_view {
+    return PL_TO_STR(_MSC_FULL_VER);
+}
+#if defined(__GNUC__) && !defined(__llvm__) && !defined(__INTEL_COMPILER)
+[[maybe_unused]] constexpr static auto compiler = Compiler::GCC;
+#elif defined(__clang__)
+[[maybe_unused]] constexpr static auto compiler = Compiler::Clang;
+#elif defined(_MSC_VER)
+[[maybe_unused]] constexpr static auto compiler = Compiler::MSVC;
+#else
+[[maybe_unused]] constexpr static auto compiler = Compiler::Unknown;
+#endif
+} // namespace Pennylane::Util::Constant

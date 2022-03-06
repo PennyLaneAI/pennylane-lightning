@@ -46,6 +46,14 @@ class StateVectorCPU : public StateVectorBase<PrecisionT, Derived> {
     std::unordered_map<Gates::MatrixOperation, Gates::KernelType>
         kernel_for_matrices_;
 
+    /**
+     * @brief Internal function set kernels for all operations depending on
+     * provided dispatch options.
+     *
+     * @param num_qubits Number of qubits of the statevector
+     * @param threading Threading option
+     * @param memory_model Memory model
+     */
     void setKernels(size_t num_qubits, Threading threading,
                     CPUMemoryModel memory_model) {
         using KernelMap::OperationKernelMap;
@@ -90,5 +98,35 @@ class StateVectorCPU : public StateVectorBase<PrecisionT, Derived> {
         return memory_model_;
     }
     [[nodiscard]] inline Threading threading() const { return threading_; }
+
+    [[nodiscard]] inline auto getGateKernelMap() const & -> const
+        std::unordered_map<Gates::GateOperation, Gates::KernelType> & {
+        return kernel_for_gates_;
+    }
+
+    [[nodiscard]] inline auto getGateKernelMap()
+        && -> std::unordered_map<Gates::GateOperation, Gates::KernelType> {
+        return kernel_for_gates_;
+    }
+
+    [[nodiscard]] inline auto getGeneratorKernelMap() const & -> const
+        std::unordered_map<Gates::GeneratorOperation, Gates::KernelType> & {
+        return kernel_for_generators_;
+    }
+
+    [[nodiscard]] inline auto getGeneratorKernelMap()
+        && -> std::unordered_map<Gates::GeneratorOperation, Gates::KernelType> {
+        return kernel_for_generators_;
+    }
+
+    [[nodiscard]] inline auto getMatrixKernelMap() const & -> const
+        std::unordered_map<Gates::MatrixOperation, Gates::KernelType> & {
+        return kernel_for_matrices_;
+    }
+
+    [[nodiscard]] inline auto getMatrixKernelMap()
+        && -> std::unordered_map<Gates::MatrixOperation, Gates::KernelType> {
+        return kernel_for_matrices_;
+    }
 };
 } // namespace Pennylane

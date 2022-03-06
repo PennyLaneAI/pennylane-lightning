@@ -25,6 +25,10 @@ using namespace Pennylane;
 using namespace Pennylane::Gates;
 using namespace Pennylane::Util;
 
+namespace {
+using namespace Pennylane::Gates::Constant;
+} // namespace
+
 using std::vector;
 
 template <typename TypeList> std::string kernelsToString() {
@@ -32,7 +36,7 @@ template <typename TypeList> std::string kernelsToString() {
         return std::string(TypeList::Type::name) + ", " +
                kernelsToString<typename TypeList::Next>();
     }
-    return std::string("");
+    return "";
 }
 
 /* Type transformation */
@@ -105,8 +109,8 @@ void testApplyGate(RandomEngine &re, size_t num_qubits) {
 
     using Kernels = typename KernelsImplementingGate<gate_op>::Type;
 
-    INFO("Kernels implementing " << lookup(Constant::gate_names, gate_op)
-                                 << " are " << kernelsToString<Kernels>());
+    INFO("Kernels implementing " << lookup(gate_names, gate_op) << " are "
+                                 << kernelsToString<Kernels>());
 
     INFO("PrecisionT, ParamT = " << PrecisionToName<PrecisionT>::value << ", "
                                  << PrecisionToName<ParamT>::value);
@@ -114,7 +118,7 @@ void testApplyGate(RandomEngine &re, size_t num_qubits) {
     const auto all_wires = crateAllWires(num_qubits, gate_op, true);
     for (const auto &wires : all_wires) {
         const auto params = createParams<ParamT>(gate_op);
-        const auto gate_name = lookup(Constant::gate_names, gate_op);
+        const auto gate_name = lookup(gate_names, gate_op);
         DYNAMIC_SECTION(
             "Test gate "
             << gate_name
@@ -156,10 +160,9 @@ void testAllGatesIter(RandomEngine &re, size_t max_num_qubits) {
     if constexpr (gate_idx < static_cast<size_t>(GateOperation::END)) {
         constexpr static auto gate_op = static_cast<GateOperation>(gate_idx);
 
-        size_t min_num_qubits =
-            array_has_elt(Constant::multi_qubit_gates, gate_op)
-                ? 1
-                : lookup(Constant::gate_wires, gate_op);
+        size_t min_num_qubits = array_has_elt(multi_qubit_gates, gate_op)
+                                    ? 1
+                                    : lookup(gate_wires, gate_op);
         for (size_t num_qubits = min_num_qubits; num_qubits < max_num_qubits;
              num_qubits++) {
             testApplyGate<gate_op, PrecisionT, ParamT>(re, num_qubits);

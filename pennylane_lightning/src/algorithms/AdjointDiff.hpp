@@ -71,8 +71,7 @@ template <class T = double> class AdjointJacobian {
                                size_t param_index) {
         jac[obs_index][param_index] =
             -2 * scaling_coeff *
-            std::imag(
-                innerProdC(sv1.getData(), sv2.getData(), sv1.getLength()));
+            std::imag(innerProdC(sv1.getDataVector(), sv2.getDataVector()));
     }
 
     /**
@@ -397,9 +396,9 @@ template <class T = double> class AdjointJacobian {
                              obs_idx++) {
                             jac[mat_row_idx + obs_idx] =
                                 -2 * scalingFactor *
-                                std::imag(
-                                    innerProdC(H_lambda[obs_idx].getData(),
-                                               mu.getData(), mu.getLength()));
+                                std::imag(innerProdC(
+                                    H_lambda[obs_idx].getDataVector(),
+                                    mu.getDataVector()));
                         }
                         trainableParamNumber--;
                         ++tp_it;

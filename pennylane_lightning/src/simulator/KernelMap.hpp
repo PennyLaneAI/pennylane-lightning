@@ -124,7 +124,6 @@ class PriorityDispatchSet {
         ordered_vec_.erase(begin, end);
     }
 };
-
 ///@endcond
 
 struct AllThreading {};
@@ -167,12 +166,32 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
           } {}
 
   public:
+    /**
+     * @brief Get a singleton instance.
+     *
+     * return A singleton instance.
+     */
     static auto getInstance() -> OperationKernelMap & {
         static OperationKernelMap instance;
 
         return instance;
     }
 
+    /**
+     * @brief Assign a kernel for a given operation, threading, and memory
+     * model.
+     *
+     * Variable `%priority` set the priority of the given kernel when multiple
+     * choices are available. The given `%interval` must be disjoint
+     * with all existing intervals with a given priority.
+     *
+     * @param op Operation to use as a dispatch key
+     * @param threading Threading option to use as a dispatch key
+     * @param memory_model Memory model to use as a dispatch key
+     * @param priority Priority of this assignment
+     * @param interval Range of the number of qubits to use this kernel
+     * @param kernel Kernel to assign
+     */
     void assignKernelForOp(Operation op, Threading threading,
                            CPUMemoryModel memory_model, uint32_t priority,
                            const Util::IntegerInterval<size_t> &interval,
@@ -197,6 +216,10 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
         set.emplace(priority, interval, kernel);
     }
 
+    /**
+     * @brief Assign kernel for given operation and memory model for all
+     * threading options. The priority of this assignment is 1.
+     */
     void assignKernelForOp(Operation op, [[maybe_unused]] AllThreading dummy,
                            CPUMemoryModel memory_model,
                            const Util::IntegerInterval<size_t> &interval,
@@ -207,6 +230,10 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
         });
     }
 
+    /**
+     * @brief Assign kernel for given operation and threading option for all
+     * memory models. The priority of this assignment is 2.
+     */
     void assignKernelForOp(Operation op, Threading threading,
                            [[maybe_unused]] AllMemoryModel dummy,
                            const Util::IntegerInterval<size_t> &interval,
@@ -217,6 +244,10 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
         });
     }
 
+    /**
+     * @brief Assign kernel for a given operation for all memory model and all
+     * threading options. The priority of this assignment is 0.
+     */
     void assignKernelForOp(Operation op, [[maybe_unused]] AllThreading dummy1,
                            [[maybe_unused]] AllMemoryModel dummy2,
                            const Util::IntegerInterval<size_t> &interval,
@@ -229,6 +260,15 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
             });
     }
 
+    /**
+     * @brief Remove an assigned kernel for the given operation, threading,
+     * and memory model.
+     *
+     * @param op Operation
+     * @param threading Threading option
+     * @param memory_model Memory model
+     * @param priority Priority to remove
+     */
     void removeKernelForOp(Operation op, Threading threading,
                            CPUMemoryModel memory_model, uint32_t priority) {
         uint32_t dispatch_key = toDispatchKey(threading, memory_model);
@@ -250,11 +290,12 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
      * @param num_qubits Number of qubits
      * @param threading Threading context
      * @param memory_model Memory model of the underlying data
+     * @return A kernel map for given keys
      */
     [[nodiscard]] auto getKernelMap(size_t num_qubits, Threading threading,
                                     CPUMemoryModel memory_model) const
         -> EnumKernelMap {
-        // Add mutex for cache_ when we goto multithread.
+        // TODO: Add mutex for cache_ when we goto multithread.
         const uint32_t dispatch_key = toDispatchKey(threading, memory_model);
 
         const auto cache_iter =
@@ -271,9 +312,9 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
                 kernel_for_op.emplace(op, set.getKernel(num_qubits));
             });
             if (cache_.size() == cache_size) {
-                cache_.pop_front();
+                cache_.pop_back();
             }
-            cache_.emplace_back(num_qubits, dispatch_key, kernel_for_op);
+            cache_.emplace_front(num_qubits, dispatch_key, kernel_for_op);
             return kernel_for_op;
         }
         return std::get<2>(*cache_iter);

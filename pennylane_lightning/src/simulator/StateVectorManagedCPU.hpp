@@ -92,6 +92,17 @@ class StateVectorManagedCPU
         return data_.data();
     }
 
+    [[nodiscard]] auto getDataVector()
+        -> std::vector<ComplexPrecisionT, AlignedAllocator<ComplexPrecisionT>>
+            & {
+        return data_;
+    }
+
+    [[nodiscard]] auto getDataVector() const -> const
+        std::vector<ComplexPrecisionT, AlignedAllocator<ComplexPrecisionT>> & {
+        return data_;
+    }
+
     /**
      * @brief Update data of the class to new_data
      *

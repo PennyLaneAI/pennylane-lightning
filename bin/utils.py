@@ -2,13 +2,14 @@ from pathlib import Path
 import re
 import fnmatch
 
-SRCFILE_EXT = ("c", "cc", "cpp", "cxx", "h", "hh", "hpp", "hxx", "cu", "cuh")
+SRCFILE_EXT = ["c", "cc", "cpp", "cxx", "cu"]
+HEADERFILE_EXT = ["h", "hh", "hpp", "hxx", "cuh"]
 
 LIGHTNING_SOURCE_DIR = Path(__file__).resolve().parent.parent
 
 rgx_gitignore_comment = re.compile("#.*$")
 
-def get_cpp_files_from_path(path, ignore_patterns = None, use_gitignore = True):
+def get_cpp_files_from_path(path, ignore_patterns = None, use_gitignore = True, header_only = False):
     """return set of C++ source files from a path
 
     Args:
@@ -18,7 +19,11 @@ def get_cpp_files_from_path(path, ignore_patterns = None, use_gitignore = True):
     """
     path = Path(path)
     files_rel = set() # file paths relative to path
-    for ext in SRCFILE_EXT:
+
+    exts = HEADERFILE_EXT
+    if not header_only:
+        exts += SRCFILE_EXT
+    for ext in exts:
         for file_path in path.rglob(f"*.{ext}"):
             files_rel.add(file_path.relative_to(path))
 
@@ -46,7 +51,7 @@ def get_cpp_files_from_path(path, ignore_patterns = None, use_gitignore = True):
 
     return set(str(path.joinpath(f)) for f in files_rel)
     
-def get_cpp_files(paths, ignore_patterns = None, use_gitignore = True):
+def get_cpp_files(paths, ignore_patterns = None, use_gitignore = True, header_only = False):
     """return list of C++ source files from paths.
 
     Args:
@@ -56,5 +61,5 @@ def get_cpp_files(paths, ignore_patterns = None, use_gitignore = True):
     """
     files = set()
     for path in paths:
-        files |= get_cpp_files_from_path(path, ignore_patterns, use_gitignore)
+        files |= get_cpp_files_from_path(path, ignore_patterns, use_gitignore, header_only)
     return list(files)

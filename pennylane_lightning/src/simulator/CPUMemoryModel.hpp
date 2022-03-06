@@ -1,4 +1,3 @@
-
 // Copyright 2022 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +18,7 @@
 #pragma once
 #include "Macros.hpp"
 #include "Memory.hpp"
+#include "RuntimeInfo.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -44,11 +44,22 @@ inline auto getMemoryModel(const void *ptr) -> CPUMemoryModel {
     return CPUMemoryModel::Unaligned;
 }
 
-constexpr inline auto bestCPUMemoryModel() -> CPUMemoryModel {
+/**
+ * @brief Choose the best memory model to use using runtime/compile-time
+ * information.
+ */
+inline auto bestCPUMemoryModel() -> CPUMemoryModel {
     if constexpr (use_avx512f) {
-        return CPUMemoryModel::Aligned512;
-    } else if (use_avx2) {
-        return CPUMemoryModel::Aligned256;
+        // If the binary is compiled with AVX512F support
+        if (Util::RuntimeInfo::AVX512F()) {
+            // and the CPU support it as well
+            return CPUMemoryModel::Aligned512;
+        }
+    }
+    if constexpr (use_avx2) {
+        if (Util::RuntimeInfo::AVX2()) {
+            return CPUMemoryModel::Aligned256;
+        }
     }
     return CPUMemoryModel::Unaligned;
 }

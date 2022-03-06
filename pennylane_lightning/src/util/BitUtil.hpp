@@ -174,7 +174,8 @@ inline auto log2PerfectPower(unsigned long val) -> size_t {
 
 constexpr auto constLog2PerfectPower(size_t value) -> size_t {
     if (value == 0) {
-        return 0; // not well defined
+        return 0; // not well defined. TODO: Raise an exception instead in
+                  // a later version.
     }
     size_t n = 0;
     while ((value & 1U) == 0U) {

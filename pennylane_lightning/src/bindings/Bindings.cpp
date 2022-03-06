@@ -378,6 +378,12 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
     m.def("best_alignment", &bestCPUMemoryModel,
           "Best memory alignment. for the simulator.");
 
+    /* Add compile info */
+    m.def("compile_info", &getCompileInfo, "Compiled binary information.");
+
+    /* Add compile info */
+    m.def("runtime_info", &getRuntimeInfo, "Runtime information.");
+
     lightning_class_bindings<float, float>(m);
     lightning_class_bindings<double, double>(m);
 }

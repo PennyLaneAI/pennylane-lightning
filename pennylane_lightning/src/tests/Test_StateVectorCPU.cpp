@@ -35,6 +35,7 @@ TEMPLATE_TEST_CASE("StateVectorManagedCPU::StateVectorManagedCPU",
 
         REQUIRE(sv.getNumQubits() == 4);
         REQUIRE(sv.getLength() == 16);
+        REQUIRE(sv.getDataVector().size() == 16);
     }
     SECTION("StateVectorManagedCPU<TestType> {const "
             "StateVectorRawCPU<TestType>&}") {

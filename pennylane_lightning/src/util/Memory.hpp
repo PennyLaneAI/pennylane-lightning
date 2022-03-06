@@ -22,17 +22,22 @@
 #include "BitUtil.hpp"
 #include "TypeList.hpp"
 
-/* Apple clang does not support std::aligned_alloc in Mac 10.14 */
-
 namespace Pennylane {
 /**
  * @brief Custom aligned allocate function. As appleclang does not support
  * std::aligned_alloc in Mac OS 10.14, we use posix_memalign function.
  *
- * Note that alignment must be larger than max_align_t.
+ * Note that alignment must be larger than max_align_t. Otherwise, the behavior
+ * is undefined.
+ *
+ * @param alignment Alignment value we want for the data pointer
+ * @param bytes Number of bytes to allocate
+ * @return Memory pointer
  */
 inline auto alignedAlloc(uint32_t alignment, size_t bytes) -> void * {
-#if defined(__clang__) // probably AppleClang
+#if defined(__clang__)
+    /* Apple clang does not support std::aligned_alloc in Mac 10.14.
+     * Thus we use Posix function instead. */
     void *p;
     posix_memalign(&p, alignment, bytes);
     return p;
@@ -43,6 +48,11 @@ inline auto alignedAlloc(uint32_t alignment, size_t bytes) -> void * {
 #endif
 }
 
+/**
+ * @brief Free memory allocated by alignedAlloc.
+ *
+ * @param p Pointer to the memory location allocated by aligendAlloc
+ */
 inline void alignedFree(void *p) {
 #if defined(__clang__)
     return ::free(p); // NOLINT(hicpp-no-malloc)
@@ -53,12 +63,25 @@ inline void alignedFree(void *p) {
 #endif
 }
 
+/**
+ * @brief C++ Allocator class for aligned memory.
+ *
+ * @tparam T Datatype to allocate
+ */
 template <class T> struct AlignedAllocator {
     uint32_t alignment_;
     using value_type = T;
 
+    /**
+     * @brief Constructor of AlignedAllocator class
+     *
+     * @param alignment Memory alignment we want.
+     */
     constexpr explicit AlignedAllocator(uint32_t alignment)
         : alignment_{alignment} {
+        // We do not check input now as it doesn't allow the constructor to be
+        // a constexpr.
+        // TODO: Using exception is allowed in GCC>=10
         // assert(Util::isPerfectPowerOf2(alignment));
     }
 
@@ -69,6 +92,12 @@ template <class T> struct AlignedAllocator {
         [[maybe_unused]] const AlignedAllocator<U> &rhs) noexcept
         : alignment_{rhs.alignment_} {}
 
+    /**
+     * @brief Allocate memory with for the given number of datatype T
+     *
+     * @param size The number of T objects for the allocation
+     * @return Allocated aligned memory
+     */
     [[nodiscard]] T *allocate(std::size_t size) {
         if (size == 0) {
             return nullptr;
@@ -86,6 +115,12 @@ template <class T> struct AlignedAllocator {
         return static_cast<T *>(p);
     }
 
+    /**
+     * @brief Deallocate allocated memory
+     *
+     * @param p Pointer to the allocated data
+     * @param size Size of the data we allocated (unused).
+     */
     void deallocate(T *p, [[maybe_unused]] std::size_t size) noexcept {
         if (alignment_ > alignof(std::max_align_t)) {
             alignedFree(p);
@@ -103,25 +138,29 @@ template <class T> struct AlignedAllocator {
     }
 };
 
+/**
+ * @brief Compare two allocators
+ *
+ * By [the standard](https://en.cppreference.com/w/cpp/named_req/Allocator),
+ * two allocators are equal if the memory allocated by one can be deallocated
+ * by the other.
+ */
 template <class T, class U>
 bool operator==([[maybe_unused]] const AlignedAllocator<T> &lhs,
                 [[maybe_unused]] const AlignedAllocator<U> &rhs) {
     return lhs.alignment_ == rhs.alignment_;
 }
 
+/**
+ * @brief Compare two allocators. See `%operator==` above.
+ */
 template <class T, class U, uint32_t alignment>
 bool operator!=([[maybe_unused]] const AlignedAllocator<T> &lhs,
                 [[maybe_unused]] const AlignedAllocator<U> &rhs) {
     return lhs.alignment_ != rhs.alignment_;
 }
 
-/**
- * @brief This function calculate the common multiplier of alignments of all
- * kernels.
- *
- * As all alignment must be a multiple of 2, we just can choose the maximum
- * alignment.
- */
+///@cond DEV
 template <typename TypeList> struct commonAlignmentHelper {
     constexpr static uint32_t value =
         std::max(TypeList::Type::packed_bytes,
@@ -130,7 +169,17 @@ template <typename TypeList> struct commonAlignmentHelper {
 template <> struct commonAlignmentHelper<void> {
     constexpr static uint32_t value = 4U;
 };
+///@endcond
 
+/**
+ * @brief This function calculate the common multiplier of alignments of the
+ * given kernels in TypeList.
+ *
+ * As all alignment must be a power of 2, we just can choose the maximum
+ * alignment.
+ *
+ * @tparam TypeList Type list of kernels.
+ */
 template <typename TypeList>
 [[maybe_unused]] constexpr static size_t common_alignment =
     commonAlignmentHelper<TypeList>::value;
