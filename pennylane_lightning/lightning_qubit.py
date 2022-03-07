@@ -99,6 +99,9 @@ class LightningQubit(DefaultQubit):
     version = __version__
     author = "Xanadu Inc."
     _CPP_BINARY_AVAILABLE = True
+    operations = DefaultQubit.operations.copy()
+
+    operations.remove("Snapshot")
 
     def __init__(self, wires, *, kernel_for_ops=None, shots=None, batch_obs=False):
         self._kernel_for_ops = DEFAULT_KERNEL_FOR_OPS
@@ -660,11 +663,7 @@ class LightningQubit(DefaultQubit):
         return M.var(observable.name, observable_wires)
 
 
-if CPP_BINARY_AVAILABLE:
-    # Remove Snapshot from operations
-    LightningQubit.operations.remove("Snapshot")
-
-else:
+if not CPP_BINARY_AVAILABLE:
 
     class LightningQubit(DefaultQubit):  # pragma: no cover
         name = "Lightning Qubit PennyLane plugin"
