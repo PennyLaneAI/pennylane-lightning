@@ -47,7 +47,7 @@ if(ENABLE_WARNINGS)
         target_compile_options(lightning_compile_options INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Werror>)
     endif()
 else()
-    message(STATUS "ENABLE_WARNINGS is OFF")
+    message(STATUS "ENABLE_WARNINGS is OFF.")
 endif()
 
 if(ENABLE_NATIVE)
@@ -59,7 +59,7 @@ if(ENABLE_AVX)
     message(STATUS "ENABLE_AVX is ON.")
     target_compile_options(lightning_compile_options INTERFACE -mavx)
 else()
-    message(STATUS "ENABLE_AVX is OFF")
+    message(STATUS "ENABLE_AVX is OFF.")
 endif()
 
 if(ENABLE_OPENMP)
@@ -73,7 +73,7 @@ if(ENABLE_OPENMP)
 
     target_link_libraries(lightning_external_libs INTERFACE OpenMP::OpenMP_CXX)
 else()
-    message(STATUS "ENABLE_OPENMP is OFF")
+    message(STATUS "ENABLE_OPENMP is OFF.")
 endif()
 
 if(ENABLE_BLAS)
@@ -94,5 +94,44 @@ if(ENABLE_BLAS)
     target_link_options(lightning_external_libs INTERFACE "${BLAS_LINKER_FLAGS}")
     target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_BLAS=1")
 else()
-    message(STATUS "ENABLE_BLAS is OFF")
+    message(STATUS "ENABLE_BLAS is OFF.")
 endif()
+
+# if(ENABLE_GB)
+#     message(STATUS "ENABLE_GB is ON. Find GBenchmark.")
+#     find_package(benchmark)
+
+#     if (NOT benchmark_FOUND)
+#         message(STATUS "GBenchmark is not found. Fetch GBenchmark.")
+#         include(FetchContent) # ...
+
+#         # Fetch GTest; required for GBenchmark
+#         FetchContent_Declare(
+#             googletest
+#             GIT_REPOSITORY https://github.com/google/googletest.git
+#             GIT_TAG        release-1.11.0 # latest
+#         )
+#         FetchContent_GetProperties(googletest)
+#         if(NOT googletest_POPULATED)
+#             FetchContent_Populate(googletest)
+#             add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
+#         endif()
+
+#         # Fetch GBenchmark and surpress internal tests.
+#         FetchContent_Declare(
+#             googlebenchmark
+#             GIT_REPOSITORY https://github.com/google/benchmark.git
+#             GIT_TAG        v1.6.1 # latest
+#         )
+#         set(BENCHMARK_ENABLE_TESTING off)
+#         FetchContent_GetProperties(googlebenchmark)
+#         if(NOT googlebenchmark_POPULATED)
+#             FetchContent_Populate(googlebenchmark)
+#             add_subdirectory(${googlebenchmark_SOURCE_DIR} ${googlebenchmark_BINARY_DIR})
+#         endif()
+#     endif()
+
+#     target_link_libraries(lightning_external_libs INTERFACE benchmark::benchmark)
+# else()
+#     message(STATUS "ENABLE_GB is OFF.")
+# endif()

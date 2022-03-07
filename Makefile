@@ -120,3 +120,9 @@ check-tidy:
 	rm -rf ./Build
 	cmake . -BBuild -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
 	cmake --build ./Build
+
+.PHONY: gbenchmark
+gbenchmark:
+	rm -rf ./BuildGBench
+	cmake $(LIGHTNING_CPP_DIR) -BBuildGBench -DBUILD_BENCHMARKS=ON -DCMAKE_BUILD_TYPE=Release
+	cmake --build ./BuildGBench --target runner
