@@ -101,8 +101,6 @@ class LightningQubit(DefaultQubit):
     _CPP_BINARY_AVAILABLE = True
     operations = DefaultQubit.operations.copy()
 
-    operations.remove("Snapshot")
-
     def __init__(self, wires, *, kernel_for_ops=None, shots=None, batch_obs=False):
         self._kernel_for_ops = DEFAULT_KERNEL_FOR_OPS
         if kernel_for_ops is not None:
@@ -661,6 +659,9 @@ class LightningQubit(DefaultQubit):
         observable_wires = self.map_wires(observable.wires)
 
         return M.var(observable.name, observable_wires)
+
+
+LightningQubit.operations.remove("Snapshot")
 
 
 if not CPP_BINARY_AVAILABLE:
