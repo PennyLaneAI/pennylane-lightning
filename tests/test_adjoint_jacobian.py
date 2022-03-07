@@ -401,6 +401,7 @@ class TestAdjointJacobian:
 
         assert np.allclose(dM1, dM2, atol=tol, rtol=0)
 
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_ignore_snapshot(self, tol, dev, C):
         """Tests provides correct answer when provided starting state."""
