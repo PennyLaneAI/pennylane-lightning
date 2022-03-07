@@ -406,15 +406,13 @@ class TestAdjointJacobian:
         """Tests provides correct answer when provided starting state."""
         x, y, z = [0.5, 0.3, -0.7]
 
-        print(dev)
-
         dev._state = dev._state.astype(C)
 
         with qml.tape.JacobianTape() as tape:
             qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
             qml.Snapshot()
             qml.Snapshot().inv()
+            qml.Rot(x, y, z, wires=[0])
             qml.RY(-0.2, wires=[0])
             qml.expval(qml.PauliZ(0))
 
