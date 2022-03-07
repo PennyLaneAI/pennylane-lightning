@@ -24,10 +24,9 @@ constexpr bool testAllGatesImplementedIter() {
     if constexpr (gate_idx < static_cast<uint32_t>(GateOperation::END)) {
         constexpr auto gate_op = static_cast<GateOperation>(gate_idx);
         if constexpr (gate_op != GateOperation::Matrix) {
-            if (GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplemenation,
-                                      gate_op>::value == nullptr) {
-                return false;
-            }
+            static_cast<void>(
+                GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplemenation,
+                                      gate_op>::value);
         }
         return testAllGatesImplementedIter<PrecisionT, ParamT,
                                            GateImplemenation, gate_idx + 1>();

@@ -9,6 +9,12 @@
 
 ### Improvements
 
+* Clang-tidy is now enabled for both tests and examples builds under Github Actions.
+[(#237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/237)
+
+* The return type of `StateVectorBase` data is now derived-class defined.
+[(#237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/237)
+
 * Update adjointJacobian and VJP methods.
 [(#222)](https://github.com/PennyLaneAI/pennylane-lightning/pull/222)
 
@@ -22,6 +28,12 @@
 
 ### Bug fixes
 
+* Fix for OOM errors when using adjoint with large numbers of observables.
+[(#221)](https://github.com/PennyLaneAI/pennylane-lightning/pull/221)
+
+* Add virtual destructor to C++ state-vector classes.
+[(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
+
 * Fix a bug in Python tests with operations' `matrix` calls.
 [(#238)](https://github.com/PennyLaneAI/pennylane-lightning/pull/238)
 
@@ -32,35 +44,79 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Chae-Yeun Park
+Ali Asadi, Chae-Yeun Park, Lee James O'Riordan
 
 ---
 
 # Release 0.21.0
 
 ### New features since last release
-* Direct support to probability, expectation value and variance calculation in PL-Lightning.
-[(#185)](https://github.com/PennyLaneAI/pennylane-lightning/pull/185)
 
 * Add C++ only benchmark for a given list of gates.
 [(#199)](https://github.com/PennyLaneAI/pennylane-lightning/pull/199)
 
+* Wheel-build support for Python 3.10.
+[(#186)](https://github.com/PennyLaneAI/pennylane-lightning/pull/186)
+
+* C++ support for probability, expectation value and variance calculations.
+[(#185)](https://github.com/PennyLaneAI/pennylane-lightning/pull/185)
+
 * Add bindings to C++ expval, var, probs.
 [(#214)](https://github.com/PennyLaneAI/pennylane-lightning/pull/214)
 
-### Breaking changes
-
 ### Improvements
 
-* Add a new C++ kernel. 
+* `setup.py` adds debug only when --debug is given
+[(#208)](https://github.com/PennyLaneAI/pennylane-lightning/pull/208)
+
+* Add new highly-performant C++ kernels for quantum gates. 
 [(#202)](https://github.com/PennyLaneAI/pennylane-lightning/pull/202)
+
+The new kernels significantly improve the runtime performance of PennyLane-Lightning 
+for both differentiable and non-differentiable workflows. Here is an example workflow
+using the adjoint differentiation method with a circuit of 5 strongly entangling layers:
+
+```python
+import pennylane as qml
+from pennylane import numpy as np
+from pennylane.templates.layers import StronglyEntanglingLayers
+from numpy.random import random
+np.random.seed(42)
+n_layers = 5
+n_wires = 6
+dev = qml.device("lightning.qubit", wires=n_wires)
+
+@qml.qnode(dev, diff_method="adjoint")
+def circuit(weights):
+    StronglyEntanglingLayers(weights, wires=list(range(n_wires)))
+    return [qml.expval(qml.PauliZ(i)) for i in range(n_wires)]
+
+init_weights = np.random.random(StronglyEntanglingLayers.shape(n_layers=n_layers, n_wires=n_wires))
+params = np.array(init_weights,requires_grad=True)
+jac = qml.jacobian(circuit)(params)
+```
+The latest release shows improved performance on both single and multi-threaded evaluations!
+
+<img src="https://raw.githubusercontent.com/PennyLaneAI/pennylane-lightning/v0.21.0-rc0/doc/_static/lightning_v20_v21_bm.png" width=50%/>
 
 * Ensure debug info is built into dynamic libraries.
 [(#201)](https://github.com/PennyLaneAI/pennylane-lightning/pull/201)
 
 ### Documentation
 
+* New guidelines on adding and benchmarking C++ kernels.
+[(#202)](https://github.com/PennyLaneAI/pennylane-lightning/pull/202)
+
 ### Bug fixes
+
+* Update clang-format version
+[(#219)](https://github.com/PennyLaneAI/pennylane-lightning/pull/219)
+
+* Fix failed tests on Windows.
+[(#218)](https://github.com/PennyLaneAI/pennylane-lightning/pull/218)
+
+* Update clang-format version
+[(#219)](https://github.com/PennyLaneAI/pennylane-lightning/pull/219)
 
 * Add virtual destructor to C++ state-vector classes.
 [(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
@@ -68,8 +124,8 @@ Ali Asadi, Chae-Yeun Park
 * Fix failed tests for the non-binary wheel.
 [(#213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/213)
 
-* Fix failed tests on Windows.
-[(#218)](https://github.com/PennyLaneAI/pennylane-lightning/pull/218)
+* Add virtual destructor to C++ state-vector classes.
+[(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
 
 ### Contributors
 
@@ -128,9 +184,6 @@ Lee J. O'Riordan
 
 * Added examples folder containing aggregate gate performance test.
 [(#165)](https://github.com/PennyLaneAI/pennylane-lightning/pull/165)
-
-* Add VJP support to PL-Lightning.
-[(#181)](https://github.com/PennyLaneAI/pennylane-lightning/pull/181)
 
 ### Breaking changes
 

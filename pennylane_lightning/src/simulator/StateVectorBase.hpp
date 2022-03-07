@@ -133,11 +133,11 @@ template <class PrecisionT, class Derived> class StateVectorBase {
         return static_cast<size_t>(Util::exp2(num_qubits_));
     }
 
-    [[nodiscard]] inline auto getData() -> ComplexPrecisionT * {
+    [[nodiscard]] inline auto getData() -> decltype(auto) {
         return static_cast<Derived *>(this)->getData();
     }
 
-    [[nodiscard]] inline auto getData() const -> const ComplexPrecisionT * {
+    [[nodiscard]] inline auto getData() const -> decltype(auto) {
         return static_cast<const Derived *>(this)->getData();
     }
 
