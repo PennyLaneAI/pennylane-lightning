@@ -72,6 +72,11 @@ def _chunk_iterable(it, num_chunks):
     it = iter(it)
     return iter(lambda: tuple(islice(it, num_chunks)), ())
 
+def _remove_snapshot_from_operations(operations):
+    operations = operations.copy()
+    operations.remove("Snapshot")
+    return operations
+
 
 class LightningQubit(DefaultQubit):
     """PennyLane Lightning device.
@@ -99,7 +104,7 @@ class LightningQubit(DefaultQubit):
     version = __version__
     author = "Xanadu Inc."
     _CPP_BINARY_AVAILABLE = True
-    operations = DefaultQubit.operations.copy()
+    operations = _remove_snapshot_from_operations(DefaultQubit.operations)
 
     def __init__(self, wires, *, kernel_for_ops=None, shots=None, batch_obs=False):
         self._kernel_for_ops = DEFAULT_KERNEL_FOR_OPS
@@ -660,8 +665,6 @@ class LightningQubit(DefaultQubit):
 
         return M.var(observable.name, observable_wires)
 
-
-LightningQubit.operations.remove("Snapshot")
 
 
 if not CPP_BINARY_AVAILABLE:
