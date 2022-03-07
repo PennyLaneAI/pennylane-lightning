@@ -401,6 +401,30 @@ class TestAdjointJacobian:
 
         assert np.allclose(dM1, dM2, atol=tol, rtol=0)
 
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_ignore_snapshot(self, tol, dev, C):
+        """Tests provides correct answer when provided starting state."""
+        x, y, z = [0.5, 0.3, -0.7]
+
+        print(dev)
+
+        dev._state = dev._state.astype(C)
+
+        with qml.tape.JacobianTape() as tape:
+            qml.RX(0.4, wires=[0])
+            qml.Rot(x, y, z, wires=[0])
+            qml.Snapshot()
+            qml.Snapshot().inv()
+            qml.RY(-0.2, wires=[0])
+            qml.expval(qml.PauliZ(0))
+
+        tape.trainable_params = {1, 2, 3}
+
+        grad_F = tape.jacobian(dev, method="numeric")
+        grad_D = dev.adjoint_jacobian(tape)
+
+        assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
+
 
 class TestAdjointJacobianQNode:
     """Test QNode integration with the adjoint_jacobian method"""

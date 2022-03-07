@@ -165,6 +165,8 @@ def _serialize_ops(
             is_inverse = single_op.inverse
 
             name = single_op.name if not is_inverse else single_op.name[:-4]
+            if name == "Snapshot":
+                continue
             names.append(name)
 
             if not _is_lightning_gate(name):
