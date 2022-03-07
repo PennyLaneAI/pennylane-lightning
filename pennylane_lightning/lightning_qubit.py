@@ -190,8 +190,6 @@ class LightningQubit(DefaultQubit):
 
         for o in operations:
             name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
-            if name == "Snapshot":
-                continue
             if _is_lightning_gate(name):
                 kernel = self._kernel_for_ops[name]
                 method = getattr(sim, f"{name}_{kernel}".format(), None)
@@ -661,6 +659,7 @@ class LightningQubit(DefaultQubit):
 
         return M.var(observable.name, observable_wires)
 
+LightningQubit.operations.remove('Snapshot')
 
 if not CPP_BINARY_AVAILABLE:
 
