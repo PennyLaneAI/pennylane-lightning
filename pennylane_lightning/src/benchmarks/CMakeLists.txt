@@ -7,8 +7,6 @@ set(CMAKE_CXX_STANDARD 17)
 message(STATUS "ENABLE_GB is ON. Find GBenchmark.")
 find_package(benchmark)
 
-option(ENABLE_BLAS "Enable BLAS" ON)
-
 if (NOT benchmark_FOUND)
     message(STATUS "GBenchmark is not found. Fetch GBenchmark.")
     # include(FetchContent)
@@ -55,5 +53,8 @@ set(GBENCH_SRC  Bench_BitUtil.cpp
                 Bench_LinearAlgebra.cpp)
 
 add_executable(runner ${GBENCH_SRC})
+
+add_compile_definitions(runner INTERFACE _ENABLE_BLAS=1)
+
 target_link_libraries(runner PRIVATE lightning_benchmarks_dependency
                                      lightning_external_libs)
