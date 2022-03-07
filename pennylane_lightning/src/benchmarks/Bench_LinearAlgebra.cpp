@@ -292,9 +292,10 @@ static void omp_matrixMatProd_cmplx(benchmark::State &state) {
             m_right.push_back({distr(eng), distr(eng)});
 
         std::vector<std::complex<T>> m_out(sz * sz);
-        Pennylane::Util::omp_matrixMatProd(m_left.data(), m_right.data(),
+        auto m_right_tr = Pennylane::Util::Transpose(m_right, sz, sz);
+        Pennylane::Util::omp_matrixMatProd(m_left.data(), m_right_tr.data(),
                                            m_out.data(), sz, sz, sz,
-                                           Trans::NoTranspose);
+                                           Trans::Transpose);
         benchmark::DoNotOptimize(m_out[sz * sz - 1]);
     }
 }
