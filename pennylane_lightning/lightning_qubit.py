@@ -563,7 +563,7 @@ class LightningQubit(DefaultQubit):
         Returns:
             Array of samples in binary
         """
-        
+
         # To support np.complex64 based on the type of self._state
         dtype = self._state.dtype
         if dtype == np.complex64:
@@ -583,8 +583,7 @@ class LightningQubit(DefaultQubit):
         M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
 
         return M.generate_samples(self.shots)
-        
-    
+
     def expval(self, observable, shot_range=None, bin_size=None):
         """Expectation value of the supplied observable.
 
