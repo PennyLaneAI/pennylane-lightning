@@ -49,8 +49,8 @@ target_link_libraries(lightning_benchmarks_dependency INTERFACE lightning_utils
 # Set benchmark srcs and Define target
 ################################################################################
 
-set(GBENCH_SRC  Bench_LinearAlgebra.cpp
-                Bench_BitUtil.cpp)
+set(GBENCH_SRC  Bench_BitUtil.cpp
+                Bench_LinearAlgebra.cpp)
 
 add_executable(runner ${GBENCH_SRC})
 target_link_libraries(runner PRIVATE lightning_benchmarks_dependency
