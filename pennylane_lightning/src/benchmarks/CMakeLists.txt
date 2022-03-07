@@ -43,18 +43,28 @@ endif()
 
 add_library(lightning_benchmarks_dependency INTERFACE)
 target_link_libraries(lightning_benchmarks_dependency INTERFACE lightning_utils
+                                                    lightning_external_libs
                                                     benchmark::benchmark_main)
 
 ################################################################################
-# Set benchmark srcs and Define target
+# Add benchmark_utils exe
 ################################################################################
 
 set(GBENCH_SRC  Bench_BitUtil.cpp
                 Bench_LinearAlgebra.cpp)
 
-add_executable(runner ${GBENCH_SRC})
+add_executable(benchmark_utils ${GBENCH_SRC})
 
-add_compile_definitions(runner INTERFACE _ENABLE_BLAS=1)
+add_compile_definitions(benchmark_utils INTERFACE _ENABLE_BLAS=1)
 
-target_link_libraries(runner PRIVATE lightning_benchmarks_dependency
-                                     lightning_external_libs)
+target_link_libraries(benchmark_utils PRIVATE lightning_benchmarks_dependency)
+
+################################################################################
+# Add benchmark_gates exe
+################################################################################
+
+set(GBENCH_SRC  Bench_Gate.cpp)
+
+add_executable(benchmark_gates ${GBENCH_SRC})
+
+target_link_libraries(benchmark_gates PRIVATE lightning_benchmarks_dependency)

@@ -195,13 +195,13 @@ template <class T> static void cf_transpose_b32_cmplx(benchmark::State &state) {
         benchmark::DoNotOptimize(mat2[sz * sz - 1]);
     }
 }
-BENCHMARK(cf_transpose_b32_cmplx<float>)
-    ->RangeMultiplier(1l << 3)
-    ->Range(1l << 5, 1l << 10);
+// BENCHMARK(cf_transpose_b32_cmplx<float>)
+//     ->RangeMultiplier(1l << 3)
+//     ->Range(1l << 5, 1l << 10);
 
-BENCHMARK(cf_transpose_b32_cmplx<double>)
-    ->RangeMultiplier(1l << 3)
-    ->Range(1l << 5, 1l << 10);
+// BENCHMARK(cf_transpose_b32_cmplx<double>)
+//     ->RangeMultiplier(1l << 3)
+//     ->Range(1l << 5, 1l << 10);
 
 template <class T>
 static void omp_matrixVecProd_cmplx(benchmark::State &state) {
