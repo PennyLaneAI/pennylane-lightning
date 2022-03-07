@@ -44,7 +44,7 @@ clean:
 	find . -type d -name '__pycache__' -exec rm -r {} \+
 	rm -rf dist
 	rm -rf build
-	rm -rf BuildTests BuildBench
+	rm -rf BuildTests BuildBench BuildGBench
 	rm -rf .coverage coverage_html_report/
 	rm -rf tmp
 	rm -rf *.dat
