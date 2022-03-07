@@ -13,7 +13,8 @@ static void generate_uniform_random_number(benchmark::State &state) {
         benchmark::DoNotOptimize(distr(eng));
     }
 }
-BENCHMARK(generate_uniform_random_number)->Complexity();;
+BENCHMARK(generate_uniform_random_number)->Complexity();
+;
 
 static void naive_popcount(benchmark::State &state) {
     std::random_device rd;
@@ -24,7 +25,8 @@ static void naive_popcount(benchmark::State &state) {
         benchmark::DoNotOptimize(Pennylane::Util::Internal::countBit1(val));
     }
 }
-BENCHMARK(naive_popcount)->Complexity();;
+BENCHMARK(naive_popcount)->Complexity();
+;
 
 #if defined(__GNUC__) || defined(__clang__)
 static void builtin_popcount(benchmark::State &state) {
@@ -36,7 +38,8 @@ static void builtin_popcount(benchmark::State &state) {
         benchmark::DoNotOptimize(__builtin_popcountl(val));
     }
 }
-BENCHMARK(builtin_popcount)->Complexity();;
+BENCHMARK(builtin_popcount)->Complexity();
+;
 #endif
 
 #if defined(_MSC_VER)
