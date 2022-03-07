@@ -662,6 +662,7 @@ class LightningQubit(DefaultQubit):
     # Remove Snapshot from operations
     LightningQubit.operations.remove("Snapshot")
 
+
 if not CPP_BINARY_AVAILABLE:
 
     class LightningQubit(DefaultQubit):  # pragma: no cover
