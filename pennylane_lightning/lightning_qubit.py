@@ -659,8 +659,8 @@ class LightningQubit(DefaultQubit):
 
         return M.var(observable.name, observable_wires)
 
-
-LightningQubit.operations.remove("Snapshot")
+    # Remove Snapshot from operations
+    LightningQubit.operations.remove("Snapshot")
 
 if not CPP_BINARY_AVAILABLE:
 
