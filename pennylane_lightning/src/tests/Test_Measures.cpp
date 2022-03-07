@@ -163,6 +163,65 @@ TEST_CASE("Expected Values", "[Measures]") {
     }
 }
 
+TEST_CASE("Sample", "[Measures]"){
+
+  constexpr int twos[] = {
+    1<<0,  1<<1,  1<<2,  1<<3,  1<<4,  1<<5,  1<<6,  1<<7,
+    1<<8,  1<<9,  1<<10, 1<<11, 1<<12, 1<<13, 1<<14, 1<<15,
+    1<<16, 1<<17, 1<<18, 1<<19, 1<<20, 1<<21, 1<<22, 1<<23,
+    1<<24, 1<<25, 1<<26, 1<<27, 1<<28, 1<<29, 1<<30, 1<<31
+  };
+  
+  // Defining the State Vector that will be measured.
+  StateVectorManaged<double> Measured_StateVector =
+    Initializing_StateVector();
+
+  // Initializing the measures class.
+  // It will attach to the StateVector, allowing measures to keep been taken.
+  Measures<double, StateVectorManaged<double>> Measurer(Measured_StateVector);
+
+  vector<double> probabilities = Measurer.probs();
+  vector<double> expected_probabilities = {0.687573,
+					   0.013842,
+					   0.089279,
+					   0.001797,
+					   0.180036,
+					   0.003624,
+					   0.023377,
+					   0.000471};
+
+  size_t num_qubits = 3;
+  size_t N = std::pow(2, num_qubits);
+  size_t num_samples = 10000;
+  auto && samples = Measurer.generate_samples(num_samples);
+  
+  std::vector<int> counts(N,0);
+  std::vector<int> samples_decimal(num_samples,0);
+
+  //convert samples to decimal and then bin them in counts
+  for (int i = 0; i < num_samples; i++){
+    for (int j = 0; j < num_qubits; j++){
+      if (samples[i*num_qubits + j] != 0){
+	samples_decimal[i] += twos[(num_qubits-1-j)];
+      }
+    }
+    counts[samples_decimal[i]] += 1;
+  }
+
+  //compute estimated probabilities from histogram
+  std::vector<double> probabilities(counts.size());
+  for (int i = 0; i < counts.size(); i++){ 
+    probabilities[i] = counts[i]/(double)num_samples;
+  }  
+
+  //compare estimated probabilities to real probabilities
+  SECTION("No wires provided:") {
+    REQUIRE_THAT(probabilities,
+		 Catch::Approx(expected_probabilities).margin(1e-3));
+  }
+
+}
+
 TEST_CASE("Variances", "[Measures]") {
     // Defining the State Vector that will be measured.
     StateVectorManaged<double> Measured_StateVector =

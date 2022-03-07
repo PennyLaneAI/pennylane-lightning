@@ -261,7 +261,14 @@ class Measures {
         return expected_value_list;
     };
 
-  
+
+  /**
+   * @brief Generate samples
+   *
+   * @param num_samples The number of samples to generate.
+   * @return 1-D vector of samples in binary, each sample is
+   * separated by a stride equal to the number of qubits.
+   */  
   std::vector<int> generate_samples(int num_samples)
   {
     size_t num_qubits = original_statevector.getNumQubits();
@@ -320,17 +327,18 @@ class Measures {
       if (pct-idx > bucket[idx])
 	idx = bucket_partner[idx];
 
+      //If cached, retrieve from cache
       if (cache.count(idx) != 0){
 	int cache_id = cache[idx];
 	auto it_temp = samples.begin()+cache_id*num_qubits;
 	std::copy(it_temp, it_temp+num_qubits, samples.begin()+i*num_qubits);
       }
+      //If not cached, compute
       else {
 	for (int j = 0; j < num_qubits; j++)
 	  samples[i*num_qubits + (num_qubits-1-j)] = (idx >> j) & 1;
 	cache[idx] = i;
       }
-       
     }
 
     return samples;

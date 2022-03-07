@@ -530,7 +530,12 @@ class LightningQubit(DefaultQubit):
         return M.probs(device_wires)
 
     def generate_samples(self):
+        """Generate samples
 
+        Returns:
+            Array of samples in binary
+        """
+        
         # To support np.complex64 based on the type of self._state
         dtype = self._state.dtype
         if dtype == np.complex64:
