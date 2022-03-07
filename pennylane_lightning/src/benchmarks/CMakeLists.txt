@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD 17)
 message(STATUS "ENABLE_GB is ON. Find GBenchmark.")
 find_package(benchmark)
 
+option(ENABLE_BLAS "Enable BLAS" ON)
+
 if (NOT benchmark_FOUND)
     message(STATUS "GBenchmark is not found. Fetch GBenchmark.")
     # include(FetchContent)
