@@ -659,11 +659,12 @@ class LightningQubit(DefaultQubit):
 
         return M.var(observable.name, observable_wires)
 
+
+if CPP_BINARY_AVAILABLE:
     # Remove Snapshot from operations
     LightningQubit.operations.remove("Snapshot")
 
-
-if not CPP_BINARY_AVAILABLE:
+else:
 
     class LightningQubit(DefaultQubit):  # pragma: no cover
         name = "Lightning Qubit PennyLane plugin"
