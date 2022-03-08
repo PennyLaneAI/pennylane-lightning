@@ -28,12 +28,9 @@ from pennylane.grouping import is_pauli_word
 from pennylane.operation import Observable, Tensor
 from pennylane.tape import QuantumTape
 
-try:
-    # Remove after the next release of PL
-    # And from pennylane import matrix
-    import pennylane as qml
-except ImportError:  # pragma: no cover
-    pass
+# Remove after the next release of PL
+# Add from pennylane import matrix
+import pennylane as qml
 
 try:
     from .lightning_qubit_ops import (

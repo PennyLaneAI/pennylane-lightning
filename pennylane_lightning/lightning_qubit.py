@@ -37,14 +37,11 @@ from pennylane.devices import DefaultQubit
 from pennylane.operation import Expectation, Tensor
 from pennylane.wires import Wires
 
-from ._version import __version__
+# Remove after the next release of PL
+# Add from pennylane import matrix
+import pennylane as qml
 
-try:
-    # Remove after the next release of PL
-    # And from pennylane import matrix
-    import pennylane as qml
-except ImportError:  # pragma: no cover
-    pass
+from ._version import __version__
 
 try:
     from .lightning_qubit_ops import (
