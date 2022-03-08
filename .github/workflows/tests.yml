@@ -82,6 +82,12 @@ jobs:
           pip uninstall pennylane -y
           pip install git+https://github.com/PennyLaneAI/pennylane.git
 
+      - name: Install ML libraries for interfaces
+        run: |
+          pip install --upgrade torch
+          pip install --upgrade "jax[cpu]"
+          pip install --upgrade tensorflow
+
       - name: Install lightning.qubit device
         run: |
           cd main
