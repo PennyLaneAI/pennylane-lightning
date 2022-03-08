@@ -41,7 +41,7 @@ from ._version import __version__
 
 try:
     from pennylane import matrix
-except ImportError:
+except ImportError: # pragma: no cover
     # Remove after the next release of PL
     pass
 
