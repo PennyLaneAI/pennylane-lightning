@@ -33,12 +33,17 @@ from pennylane import (
     QuantumFunctionError,
     DeviceError,
 )
-from pennylane import matrix as qml_matrix
 from pennylane.devices import DefaultQubit
 from pennylane.operation import Expectation, Tensor
 from pennylane.wires import Wires
 
 from ._version import __version__
+
+try:
+    from pennylane import matrix
+except ImportError:
+    # Remove after the next release of PL
+    pass
 
 try:
     from .lightning_qubit_ops import (
@@ -206,7 +211,7 @@ class LightningQubit(DefaultQubit):
                 # Inverse can be set to False since qml.matrix(o) is already in inverted form
                 method = getattr(sim, "applyMatrix_{}".format(self._kernel_for_ops["Matrix"]))
                 try:
-                    method(qml_matrix(o), wires, False)
+                    method(matrix(o), wires, False)
                 except AttributeError:  # pragma: no cover
                     # To support older versions of PL
                     method(o.matrix, wires, False)
