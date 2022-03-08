@@ -202,8 +202,6 @@ class LightningQubit(DefaultQubit):
 
         for o in operations:
             name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
-            if name == 'Snapshot':
-                continue
             method = getattr(sim, name, None)
 
             wires = self.wires.indices(o.wires)
