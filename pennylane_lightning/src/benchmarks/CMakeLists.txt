@@ -63,9 +63,9 @@ target_link_libraries(benchmark_utils PRIVATE lightning_benchmarks_dependency)
 # Add benchmark_gates_oplist exe
 ################################################################################
 
-add_executable(benchmark_gates_oplist Bench_Gate_Oplist.cpp)
+# add_executable(benchmark_gates_oplist Bench_Gate_Oplist.cpp)
 
-target_link_libraries(benchmark_gates_oplist PRIVATE lightning_compile_options
-                                            lightning_gates
-                                            lightning_simulator
-                                            lightning_benchmarks_dependency)
+# target_link_libraries(benchmark_gates_oplist PRIVATE lightning_compile_options
+#                                             lightning_gates
+#                                             lightning_simulator
+#                                             lightning_benchmarks_dependency)
