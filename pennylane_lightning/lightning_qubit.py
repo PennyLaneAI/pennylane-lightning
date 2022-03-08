@@ -201,7 +201,11 @@ class LightningQubit(DefaultQubit):
             if method is None:
                 # Inverse can be set to False since qml.matrix(o) is already in inverted form
                 method = getattr(sim, "applyMatrix_{}".format(self._kernel_for_ops["Matrix"]))
-                method(qml.matrix(o), wires, False)
+                try:
+                    method(qml.matrix(o), wires, False)
+                except AttributeError:  # pragma: no cover
+                    # To support older versions of PL
+                    method(o.matrix, wires, False)
             else:
                 inv = o.inverse
                 param = o.parameters
