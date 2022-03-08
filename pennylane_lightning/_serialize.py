@@ -30,7 +30,7 @@ from pennylane.tape import QuantumTape
 
 try:
     from pennylane import matrix
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     # Remove after the next release of PL
     pass
 

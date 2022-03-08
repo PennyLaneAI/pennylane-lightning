@@ -136,17 +136,15 @@ class TestComputeVJP:
 
     def test_tf_tensor_dy(self, dev):
         """Test vjp_compute using the Tensorflow interface"""
-        tf = pytest.importorskip("tensorflow")
+        # tf = pytest.importorskip("TensorFlow")
+        import tensorflow as tf
 
-        dtype = getattr(tf, "float32")
+        dy = tf.ones(4, dtype=tf.float32)
+        jac = tf.ones((4, 4), dtype=tf.float32)
 
-        dy = tf.ones(4, dtype=dtype)
-        jac = tf.ones((4, 4), dtype=dtype)
-
-        expected = tf.tensor([4.0, 4.0, 4.0, 4.0], dtype=dtype)
+        expected = tf.constant([4.0, 4.0, 4.0, 4.0], dtype=tf.float32)
         vjp = dev.compute_vjp(dy, jac)
-
-        assert tf.all(vjp == expected)
+        assert tf.reduce_all(vjp == expected)
 
 
 class TestVectorJacobianProduct:
