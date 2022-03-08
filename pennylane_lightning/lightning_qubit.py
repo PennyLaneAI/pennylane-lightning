@@ -40,9 +40,10 @@ from pennylane.wires import Wires
 from ._version import __version__
 
 try:
-    from pennylane import matrix
-except ImportError:  # pragma: no cover
     # Remove after the next release of PL
+    # And from pennylane import matrix
+    import pennylane as qml
+except ImportError:  # pragma: no cover
     pass
 
 try:
@@ -218,7 +219,7 @@ class LightningQubit(DefaultQubit):
                 # Inverse can be set to False since qml.matrix(o) is already in inverted form
                 method = getattr(sim, "applyMatrix_{}".format(self._kernel_for_ops["Matrix"]))
                 try:
-                    method(matrix(o), wires, False)
+                    method(qml.matrix(o), wires, False)
                 except AttributeError:  # pragma: no cover
                     # To support older versions of PL
                     method(o.matrix, wires, False)

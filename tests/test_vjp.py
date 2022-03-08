@@ -136,8 +136,7 @@ class TestComputeVJP:
 
     def test_tf_tensor_dy(self, dev):
         """Test vjp_compute using the Tensorflow interface"""
-        # tf = pytest.importorskip("TensorFlow")
-        import tensorflow as tf
+        tf = pytest.importorskip("tensorflow")
 
         dy = tf.ones(4, dtype=tf.float32)
         jac = tf.ones((4, 4), dtype=tf.float32)
