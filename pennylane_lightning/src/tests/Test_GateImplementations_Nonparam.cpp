@@ -204,7 +204,6 @@ PENNYLANE_RUN_TEST(T);
  ******************************************************************************/
 
 template <typename PrecisionT, class GateImplementation> void testApplyCNOT() {
-    using ComplexPrecisionT = std::complex<PrecisionT>;
     const size_t num_qubits = 3;
     auto st = createZeroState<PrecisionT>(num_qubits);
 

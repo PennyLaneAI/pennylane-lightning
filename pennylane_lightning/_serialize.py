@@ -27,6 +27,7 @@ from pennylane import (
 from pennylane.grouping import is_pauli_word
 from pennylane.operation import Observable, Tensor
 from pennylane.tape import QuantumTape
+import pennylane as qml
 
 try:
     from .lightning_qubit_ops import (
@@ -113,11 +114,11 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict, use_csingle: bool = False
             if is_tensor:
                 for o_ in o.obs:
                     if not _obs_has_kernel(o_):
-                        params.append(o_.get_matrix().ravel().astype(ctype))
+                        params.append(qml.matrix(o_).ravel().astype(ctype))
                     else:
                         params.append([])
             else:
-                params.append(o.get_matrix().ravel().astype(ctype))
+                params.append(qml.matrix(o).ravel().astype(ctype))
 
         ob = obs_py(name, params, wires)
         obs.append(ob)
@@ -169,7 +170,7 @@ def _serialize_ops(
 
             if not _is_lightning_gate(name):
                 params.append([])
-                mats.append(single_op.get_matrix())
+                mats.append(qml.matrix(single_op))
 
                 if is_inverse:
                     is_inverse = False

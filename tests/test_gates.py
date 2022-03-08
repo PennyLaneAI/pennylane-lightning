@@ -118,7 +118,7 @@ def test_gate_unitary_correct(op, op_name):
         out = output(np.array(input))
         unitary[:, i] = out
 
-    unitary_expected = op(*p, wires=range(wires)).get_matrix()
+    unitary_expected = qml.matrix(op(*p, wires=range(wires)))
 
     assert np.allclose(unitary, unitary_expected)
 
@@ -163,7 +163,7 @@ def test_inverse_unitary_correct(op, op_name):
         out = output(np.array(input))
         unitary[:, i] = out
 
-    unitary_expected = op(*p, wires=range(wires)).inv().get_matrix()
+    unitary_expected = qml.matrix(op(*p, wires=range(wires)).inv())
 
     assert np.allclose(unitary, unitary_expected)
 
