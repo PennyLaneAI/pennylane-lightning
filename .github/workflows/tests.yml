@@ -88,7 +88,7 @@ jobs:
         run: |
           pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
           pip install --upgrade "jax[cpu]"  # This also installs jaxlib
-          pip install --upgrade tensorflow==$TF_VERSION keras
+          pip install --upgrade tensorflow==$TF_VERSION keras==$TF_VERSION
 
       - name: Install lightning.qubit device
         run: |
