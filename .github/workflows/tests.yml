@@ -6,6 +6,8 @@ on:
   pull_request:
 
 env:
+  TF_VERSION: 2.6
+  TORCH_VERSION: 1.10.0+cpu
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:../coverage.xml --no-flaky-report -p no:warnings --tb=native"
   OMP_NUM_THREADS: "2"
 
@@ -84,9 +86,9 @@ jobs:
 
       - name: Install ML libraries for interfaces
         run: |
-          pip install --upgrade torch
-          pip install --upgrade "jax[cpu]" jaxlib
-          pip install --upgrade tensorflow keras
+          pip install --upgrade torch==$TORCH_VERSION
+          pip install --upgrade "jax[cpu]"  # This also installs jaxlib
+          pip install --upgrade tensorflow==$TF_VERSION keras
 
       - name: Install lightning.qubit device
         run: |

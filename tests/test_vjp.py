@@ -108,18 +108,6 @@ class TestComputeVJP:
         vjp = dev.compute_vjp(dy, jac)
         assert np.all(vjp == np.zeros([3]))
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_non_numpy_dy(self, dev, C):
-        "Test compute_vjp works when dy is torch.tensor"
-        torch = pytest.importorskip("torch")
-        dev._state = dev._asarray(dev._state, C)
-
-        dy = torch.zeros(2, 2)
-        jac = np.array([[[1.0, 0.1, 0.2], [0.2, 0.6, 0.1]], [[0.4, -0.7, 1.2], [-0.5, -0.6, 0.7]]])
-
-        vjp = dev.compute_vjp(dy, jac)
-        assert torch.equal(vjp, torch.zeros([3], dtype=torch.double))
-
 
 class TestVectorJacobianProduct:
     """Tests for the `vjp` function"""
