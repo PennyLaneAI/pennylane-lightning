@@ -82,6 +82,9 @@ jobs:
           pip uninstall pennylane -y
           pip install git+https://github.com/PennyLaneAI/pennylane.git
 
+      - name: Install torch to test interface
+        run: pip install torch
+
       - name: Install lightning.qubit device
         run: |
           cd main
