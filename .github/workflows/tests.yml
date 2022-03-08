@@ -85,8 +85,8 @@ jobs:
       - name: Install ML libraries for interfaces
         run: |
           pip install --upgrade torch
-          pip install --upgrade "jax[cpu]"
-          pip install --upgrade tensorflow
+          pip install --upgrade "jax[cpu]" jaxlib
+          pip install --upgrade tensorflow keras
 
       - name: Install lightning.qubit device
         run: |
