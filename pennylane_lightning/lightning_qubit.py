@@ -72,9 +72,10 @@ def _chunk_iterable(it, num_chunks):
     it = iter(it)
     return iter(lambda: tuple(islice(it, num_chunks)), ())
 
+
 def _remove_snapshot_from_operations(operations):
     operations = operations.copy()
-    operations.remove("Snapshot")
+    operations.discard("Snapshot")
     return operations
 
 
@@ -664,7 +665,6 @@ class LightningQubit(DefaultQubit):
         observable_wires = self.map_wires(observable.wires)
 
         return M.var(observable.name, observable_wires)
-
 
 
 if not CPP_BINARY_AVAILABLE:
