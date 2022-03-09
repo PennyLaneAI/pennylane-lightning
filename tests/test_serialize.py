@@ -256,8 +256,7 @@ class TestSerializeObs:
         "ObsStructC128" and "ObsStructC64" not in dir(pennylane_lightning.lightning_qubit_ops),
         reason="ObsStructC128 and ObsStructC64 are required",
     )
-    @pytest.mark.parametrize("ObsFunc", [ObsStructC128, ObsStructC64])
-    def test_integration_c64(self, monkeypatch, ObsFunc):
+    def test_integration_c64(self, monkeypatch):
         """Test for a comprehensive range of returns"""
         wires_dict = {"a": 0, 1: 1, "b": 2, -1: 3, 3.141: 4, "five": 5, 6: 6, 77: 7, 9: 8}
         I = np.eye(2).astype(np.complex64)
@@ -267,8 +266,7 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
-        use_csingle = True if ObsFunc == ObsStructC64 else False
-        obs_str = "ObsStructC64" if ObsFunc == ObsStructC64 else "ObsStructC128"
+        use_csingle = True
 
         with qml.tape.QuantumTape() as tape:
             qml.expval(qml.PauliZ("a") @ qml.PauliX("b"))
@@ -278,7 +276,7 @@ class TestSerializeObs:
             qml.expval(qml.Hermitian(Z, wires="a") @ qml.Identity(1))
 
         with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
+            m.setattr(pennylane_lightning._serialize, "ObsStructC64", mock_obs)
             _serialize_obs(tape, wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args_list
@@ -287,10 +285,10 @@ class TestSerializeObs:
             (["PauliZ", "PauliX"], [], [[0], [2]]),
             (["Hermitian"], [I.ravel()], [[1]]),
             (["PauliZ", "Hermitian", "Hadamard"], [[], X.ravel(), []], [[3], [4], [5]]),
-            # (["Projector", "Hermitian"], [[],Y.ravel().astype(np.complex64)], [[6, 7], [8]]),
+            # (["Projector", "Hermitian"], [[],Y.ravel()], [[6, 7], [8]]),
             (["Hermitian", "Identity"], [Z.ravel(), []], [[0], [1]]),
         ]
-        [ObsFunc(*s_expected) for s_expected in s_expected]
+        [ObsStructC64(*s_expected) for s_expected in s_expected]
 
         assert all(s1[0][0] == s2[0] for s1, s2 in zip(s, s_expected))
         for s1, s2 in zip(s, s_expected):
@@ -313,8 +311,7 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
-        use_csingle = True if ObsFunc == ObsStructC64 else False
-        obs_str = "ObsStructC64" if ObsFunc == ObsStructC64 else "ObsStructC128"
+        use_csingle = False
 
         with qml.tape.QuantumTape() as tape:
             qml.expval(qml.PauliZ("a") @ qml.PauliX("b"))
@@ -324,7 +321,7 @@ class TestSerializeObs:
             qml.expval(qml.Hermitian(Z, wires="a") @ qml.Identity(1))
 
         with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
+            m.setattr(pennylane_lightning._serialize, "ObsStructC128", mock_obs)
             _serialize_obs(tape, wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args_list
@@ -333,10 +330,10 @@ class TestSerializeObs:
             (["PauliZ", "PauliX"], [], [[0], [2]]),
             (["Hermitian"], [I.ravel()], [[1]]),
             (["PauliZ", "Hermitian", "Hadamard"], [[], X.ravel(), []], [[3], [4], [5]]),
-            # (["Projector", "Hermitian"], [[],Y.ravel().astype(np.complex128)], [[6, 7], [8]]),
+            # (["Projector", "Hermitian"], [[],Y.ravel()], [[6, 7], [8]]),
             (["Hermitian", "Identity"], [Z.ravel(), []], [[0], [1]]),
         ]
-        [ObsFunc(*s_expected) for s_expected in s_expected]
+        [ObsStructC128(*s_expected) for s_expected in s_expected]
 
         assert all(s1[0][0] == s2[0] for s1, s2 in zip(s, s_expected))
         for s1, s2 in zip(s, s_expected):
@@ -462,8 +459,8 @@ class TestSerializeOps:
                 [[0, 1], [1, 2], [0, 1], [2]],
                 [False, False, False, False],
                 [
-                    qml.SingleExcitationPlus(0.4, wires=[0, 1]).matrix,
-                    qml.SingleExcitationMinus(0.5, wires=[1, 2]).inv().matrix,
+                    qml.matrix(qml.SingleExcitationPlus(0.4, wires=[0, 1])),
+                    qml.matrix(qml.SingleExcitationMinus(0.5, wires=[1, 2]).inv()),
                     [],
                     [],
                 ],
@@ -523,9 +520,9 @@ class TestSerializeOps:
                     [],
                     [],
                     [],
-                    qml.QubitUnitary(np.eye(4, dtype=dtype), wires=[0, 1]).matrix,
-                    qml.templates.QFT(wires=[0, 1, 2]).inv().matrix,
-                    qml.DoubleExcitation(0.555, wires=[3, 2, 1, 0]).matrix,
+                    qml.matrix(qml.QubitUnitary(np.eye(4, dtype=dtype), wires=[0, 1])),
+                    qml.matrix(qml.templates.QFT(wires=[0, 1, 2]).inv()),
+                    qml.matrix(qml.DoubleExcitation(0.555, wires=[3, 2, 1, 0])),
                 ],
             ),
             False,

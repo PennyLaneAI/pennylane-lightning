@@ -28,6 +28,10 @@ from pennylane.grouping import is_pauli_word
 from pennylane.operation import Observable, Tensor
 from pennylane.tape import QuantumTape
 
+# Remove after the next release of PL
+# Add from pennylane import matrix
+import pennylane as qml
+
 try:
     from .lightning_qubit_ops import (
         StateVectorC64,
@@ -100,11 +104,11 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict, use_csingle: bool = False
             if is_tensor:
                 for o_ in o.obs:
                     if not _obs_has_kernel(o_):
-                        params.append(o_.matrix.ravel().astype(ctype))
+                        params.append(qml.matrix(o_).ravel().astype(ctype))
                     else:
                         params.append([])
             else:
-                params.append(o.matrix.ravel().astype(ctype))
+                params.append(qml.matrix(o).ravel().astype(ctype))
 
         ob = obs_py(name, params, wires)
         obs.append(ob)
@@ -156,7 +160,7 @@ def _serialize_ops(
 
             if getattr(StateVectorC128, name, None) is None:
                 params.append([])
-                mats.append(single_op.matrix)
+                mats.append(qml.matrix(single_op))
 
                 if is_inverse:
                     is_inverse = False
