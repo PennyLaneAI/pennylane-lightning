@@ -218,7 +218,7 @@ TEST_CASE("Variances", "[Measures]") {
         Initializing_StateVector();
 
     // Initializing the measures class.
-r    // It will attach to the StateVector, allowing measures to keep been taken.
+    // It will attach to the StateVector, allowing measures to keep been taken.
     Measures<double, StateVectorManaged<double>> Measurer(Measured_StateVector);
 
     SECTION("Testing single operation defined by a matrix:") {
