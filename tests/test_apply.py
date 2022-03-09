@@ -1326,7 +1326,7 @@ class TestTensorSample:
         dev._wires_measured = {0, 1, 2}
         dev._samples = dev.generate_samples() if shots is not None else None
 
-        s1 = obs.eigvals
+        s1 = qml.eigvals(obs)
         p = dev.probability(wires=obs.wires)
 
         # s1 should only contain 1 and -1
@@ -1368,7 +1368,7 @@ class TestTensorSample:
         dev._wires_measured = {0, 1, 2}
         dev._samples = dev.generate_samples() if dev.shots is not None else None
 
-        s1 = obs.eigvals
+        s1 = qml.eigvals(obs)
         p = dev.marginal_prob(dev.probability(), wires=obs.wires)
 
         # s1 should only contain 1 and -1
@@ -1404,7 +1404,7 @@ class TestTensorSample:
             ],
             [
                 qml.QubitUnitary(
-                    obs.diagonalizing_gates()[0].get_matrix(),
+                    qml.matrix(obs.diagonalizing_gates()[0]),
                     wires=obs.diagonalizing_gates()[0].wires,
                 ),
                 *obs.diagonalizing_gates()[1:],
@@ -1414,7 +1414,7 @@ class TestTensorSample:
         dev._wires_measured = {0, 1, 2}
         dev._samples = dev.generate_samples() if dev.shots is not None else None
 
-        s1 = obs.eigvals
+        s1 = qml.eigvals(obs)
         p = dev.marginal_prob(dev.probability(), wires=obs.wires)
 
         # s1 should only contain 1 and -1
