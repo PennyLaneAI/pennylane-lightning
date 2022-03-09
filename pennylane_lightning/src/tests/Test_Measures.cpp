@@ -177,8 +177,6 @@ TEST_CASE("Sample", "[Measures]") {
     // Initializing the measures class.
     // It will attach to the StateVector, allowing measures to keep been taken.
     Measures<double, StateVectorManaged<double>> Measurer(Measured_StateVector);
-
-    vector<double> probabilities = Measurer.probs();
     vector<double> expected_probabilities = {0.687573, 0.013842, 0.089279,
                                              0.001797, 0.180036, 0.003624,
                                              0.023377, 0.000471};
@@ -220,7 +218,7 @@ TEST_CASE("Variances", "[Measures]") {
         Initializing_StateVector();
 
     // Initializing the measures class.
-    // It will attach to the StateVector, allowing measures to keep been taken.
+r    // It will attach to the StateVector, allowing measures to keep been taken.
     Measures<double, StateVectorManaged<double>> Measurer(Measured_StateVector);
 
     SECTION("Testing single operation defined by a matrix:") {
