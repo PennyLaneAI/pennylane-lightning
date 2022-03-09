@@ -347,6 +347,5 @@ class Measures {
 
         return samples;
     }
-
 }; // class Measures
 } // namespace Pennylane
