@@ -16,7 +16,6 @@ Tests for the ``adjoint_jacobian`` method of LightningQubit.
 """
 import math
 import pytest
-import os
 
 import pennylane as qml
 from pennylane import numpy as np
