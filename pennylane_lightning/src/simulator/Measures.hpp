@@ -329,7 +329,7 @@ class Measures {
             if (pct - idx > bucket[idx])
                 idx = bucket_partner[idx];
 
-            // If cached, retrieve sample 1from cache
+            // If cached, retrieve sample from cache
             if (cache.count(idx) != 0) {
                 size_t cache_id = cache[idx];
                 auto it_temp = samples.begin() + cache_id * num_qubits;
