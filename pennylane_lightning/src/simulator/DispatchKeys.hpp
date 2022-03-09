@@ -34,6 +34,11 @@ enum class Threading : uint8_t {
     BEGIN = SingleThread,
 };
 
+/**
+ * @brief Compute dispatch key using threading and memory information.
+ *
+ * @return Dispatch key
+ */
 constexpr uint32_t toDispatchKey(Threading threading,
                                  CPUMemoryModel memory_model) {
     /* Threading is in higher priority */
@@ -43,6 +48,8 @@ constexpr uint32_t toDispatchKey(Threading threading,
 
 /**
  * @brief Choose the best threading based on the current context.
+ *
+ * @return Threading
  */
 inline auto bestThreading() -> Threading {
 #ifdef PL_USE_OMP

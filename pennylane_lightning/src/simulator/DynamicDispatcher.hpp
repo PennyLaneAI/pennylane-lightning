@@ -208,7 +208,7 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param kernel Kernel to run the gate operation.
      * @param data Pointer to data.
      * @param num_qubits Number of qubits.
-     * @param op_name Gate operation name.
+     * @param gate_op Gate operation.
      * @param wires Wires to apply gate to.
      * @param inverse Indicates whether to use inverse of gate.
      * @param params Optional parameter list for parametric gates.
@@ -292,17 +292,29 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param wires Wires the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */
-    void applyMatrix(Gates::KernelType kernel, CFP_t *data,
-                     Gates::MatrixOperation mat_op, size_t num_qubits,
+    void applyMatrix(Gates::KernelType kernel, CFP_t *data, size_t num_qubits,
                      const std::complex<PrecisionT> *matrix,
                      const std::vector<size_t> &wires, bool inverse) const {
+        using Gates::MatrixOperation;
         assert(num_qubits >= wires.size());
 
-        const auto iter = matrices_.find(std::make_pair(mat_op, kernel));
+        const auto iter = [n_wires = wires.size(), kernel, this]() {
+            switch (n_wires) {
+            case 1:
+                return matrices_.find(
+                    std::make_pair(MatrixOperation::SingleQubitOp, kernel));
+            case 2:
+                return matrices_.find(
+                    std::make_pair(MatrixOperation::TwoQubitOp, kernel));
+            default:
+                return matrices_.find(
+                    std::make_pair(MatrixOperation::MultiQubitOp, kernel));
+            }
+        }();
         if (iter == matrices_.end()) {
             throw std::invalid_argument(
-                std::string(
-                    Util::lookup(Gates::Constant::matrix_names, mat_op)) +
+                std::string(Util::lookup(Gates::Constant::matrix_names,
+                                         (iter->first).first)) +
                 " is not registered for the given kernel");
         }
         (iter->second)(data, num_qubits, matrix, wires, inverse);
@@ -317,8 +329,7 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param wires Wires the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */
-    void applyMatrix(Gates::KernelType kernel, CFP_t *data,
-                     Gates::MatrixOperation mat_op, size_t num_qubits,
+    void applyMatrix(Gates::KernelType kernel, CFP_t *data, size_t num_qubits,
                      const std::complex<PrecisionT> &matrix,
                      const std::vector<size_t> &wires, bool inverse) const {
         if (matrix.size() != Util::exp2(2 * wires.size())) {
@@ -326,8 +337,7 @@ template <typename PrecisionT> class DynamicDispatcher {
                 "The size of matrix does not match with the given "
                 "number of wires");
         }
-        applyMatrix(kernel, data, mat_op, num_qubits, matrix.data(), wires,
-                    inverse);
+        applyMatrix(kernel, data, num_qubits, matrix.data(), wires, inverse);
     }
 
     /**

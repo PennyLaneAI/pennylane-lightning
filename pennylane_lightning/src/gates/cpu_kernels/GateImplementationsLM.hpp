@@ -41,7 +41,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
   private:
     /* Alias utility functions */
     static constexpr auto fillLeadingOnes = Util::fillLeadingOnes;
-    static constexpr auto fillTrailingOnes = Util::fillTrailingOnes;
+    static constexpr auto fillTrailingOnes = Util::fillTrailingOnes<size_t>;
     static constexpr auto bitswap = Util::bitswap;
 
   public:

@@ -46,35 +46,61 @@ template <typename IntegerType> class IntegerInterval {
     [[nodiscard]] IntegerType max() const { return max_; }
 };
 
+/**
+ * @brief Create integer interval (from, inf)
+ */
 template <typename IntegerType>
 auto larger_than(IntegerType from) -> IntegerInterval<IntegerType> {
     return IntegerInterval<IntegerType>{
         from + 1, std::numeric_limits<IntegerType>::max()};
 }
+/**
+ * @brief Create integer interval [from, inf)
+ */
 template <typename IntegerType>
 auto larger_than_equal_to(IntegerType from) -> IntegerInterval<IntegerType> {
     return IntegerInterval<IntegerType>{
         from, std::numeric_limits<IntegerType>::max()};
 }
+/**
+ * @brief Create integer interval [0, to)
+ */
 template <typename IntegerType>
 auto less_than(IntegerType to) -> IntegerInterval<IntegerType> {
     return IntegerInterval<IntegerType>{0, to};
 }
+/**
+ * @brief Create integer interval [0, to]
+ */
 template <typename IntegerType>
 auto less_than_equal_to(IntegerType to) -> IntegerInterval<IntegerType> {
     return IntegerInterval<IntegerType>{0, to + 1};
 }
+
+/**
+ * @brief Create integer interval [from, to]
+ */
 template <typename IntegerType>
 auto in_between_closed(IntegerType from, IntegerType to)
     -> IntegerInterval<IntegerType> {
     return IntegerInterval<IntegerType>{from, to + 1};
 }
+
+/**
+ * @brief Create integer interval [0, inf)
+ */
 template <typename IntegerType>
 constexpr auto full_domain() -> IntegerInterval<IntegerType> {
     return IntegerInterval<IntegerType>{
         0, std::numeric_limits<IntegerType>::max()};
 }
 
+/**
+ * @brief
+ * @rst
+ * Test if :math:`I_1 \cap I_2 = \phi`.
+ * @endrst
+ */
 template <typename IntegerType>
 bool is_disjoint(const IntegerInterval<IntegerType> &interval1,
                  const IntegerInterval<IntegerType> &interval2) {
@@ -82,6 +108,12 @@ bool is_disjoint(const IntegerInterval<IntegerType> &interval1,
            (interval2.max() <= interval1.min());
 }
 
+/**
+ * @brief
+ * @rst
+ * Create :math:`I_1 \cup I_2`
+ * @endrst
+ */
 template <typename IntegerType>
 auto union_interval(const IntegerInterval<IntegerType> &interval1,
                     const IntegerInterval<IntegerType> &interval2)
@@ -90,5 +122,4 @@ auto union_interval(const IntegerInterval<IntegerType> &interval1,
         std::min(interval1.min(), interval2.min()),
         std::max(interval1.max(), interval2.max())};
 }
-
 } // namespace Pennylane::Util

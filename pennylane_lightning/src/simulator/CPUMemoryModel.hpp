@@ -24,6 +24,10 @@
 #include <memory>
 
 namespace Pennylane {
+
+/**
+ * @brief Enum class for defining CPU memory alignments
+ */
 enum class CPUMemoryModel : uint8_t {
     Unaligned,
     Aligned256,
@@ -32,6 +36,12 @@ enum class CPUMemoryModel : uint8_t {
     BEGIN = Unaligned,
 };
 
+/**
+ * @brief Compute alignment of a given data pointer
+ *
+ * @param ptr Pointer to data
+ * @return CPUMemoryModel
+ */
 inline auto getMemoryModel(const void *ptr) -> CPUMemoryModel {
     if ((reinterpret_cast<uintptr_t>(ptr) % 64) == 0) {
         return CPUMemoryModel::Aligned512;
@@ -47,6 +57,8 @@ inline auto getMemoryModel(const void *ptr) -> CPUMemoryModel {
 /**
  * @brief Choose the best memory model to use using runtime/compile-time
  * information.
+ *
+ * @return CPUMemoryModel
  */
 inline auto bestCPUMemoryModel() -> CPUMemoryModel {
     if constexpr (use_avx512f) {
@@ -64,6 +76,11 @@ inline auto bestCPUMemoryModel() -> CPUMemoryModel {
     return CPUMemoryModel::Unaligned;
 }
 
+/**
+ * @brief Return alignment of a given memory model.
+ *
+ * @tparam T Data type
+ */
 template <class T>
 constexpr inline auto getAlignment(CPUMemoryModel memory_model) -> uint32_t {
     switch (memory_model) {
@@ -79,6 +96,11 @@ constexpr inline auto getAlignment(CPUMemoryModel memory_model) -> uint32_t {
     PL_UNREACHABLE;
 }
 
+/**
+ * @brief Get a corresponding allocator for standard library containers.
+ *
+ * @tparam T Data type
+ */
 template <class T>
 constexpr auto getAllocator(CPUMemoryModel memory_model)
     -> AlignedAllocator<T> {

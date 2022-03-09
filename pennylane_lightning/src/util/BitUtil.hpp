@@ -172,6 +172,11 @@ inline auto log2PerfectPower(unsigned long val) -> size_t {
 #endif
 ///@}
 
+/**
+ * @brief Compute log2 of value in a compile-time.
+ *
+ * @param value Number to compute log2
+ */
 constexpr auto constLog2PerfectPower(size_t value) -> size_t {
     if (value == 0) {
         return 0; // not well defined. TODO: Raise an exception instead in
@@ -186,6 +191,24 @@ constexpr auto constLog2PerfectPower(size_t value) -> size_t {
 }
 
 /**
+ * @brief Fill ones from LSB to nbits. Runnable in a compile-time and for any
+ * integer type.
+ *
+ * @tparam IntegerType Integer type to use
+ * @param nbits Number of bits to fill
+ */
+template <class IntegerType = size_t>
+inline auto constexpr fillTrailingOnes(size_t nbits) -> IntegerType {
+    static_assert(std::is_integral_v<IntegerType> &&
+                  std::is_unsigned_v<IntegerType>);
+
+    return (nbits == 0) ? 0
+                        : static_cast<IntegerType>(~IntegerType(0)) >>
+                              static_cast<IntegerType>(
+                                  CHAR_BIT * sizeof(IntegerType) - nbits);
+}
+
+/**
  * @brief Check if there is a positive integer n such that value == 2^n.
  *
  * @param value Value to calculate for.
@@ -193,12 +216,6 @@ constexpr auto constLog2PerfectPower(size_t value) -> size_t {
  */
 inline auto isPerfectPowerOf2(size_t value) -> bool {
     return popcount(value) == 1;
-}
-/**
- * @brief Fill ones from LSB to rev_wire
- */
-inline auto constexpr fillTrailingOnes(size_t pos) -> size_t {
-    return (pos == 0) ? 0 : (~size_t(0) >> (CHAR_BIT * sizeof(size_t) - pos));
 }
 /**
  * @brief Fill ones from MSB to pos
@@ -216,12 +233,4 @@ inline auto constexpr bitswap(size_t bits, const size_t i, const size_t j)
     return bits ^ ((x << i) | (x << j));
 }
 
-template <class IntegerType>
-inline auto constexpr fillOnes(size_t nbits) -> IntegerType {
-    static_assert(std::is_integral_v<IntegerType> &&
-                  std::is_unsigned_v<IntegerType>);
-
-    return static_cast<IntegerType>(~IntegerType(0)) >>
-           static_cast<IntegerType>(CHAR_BIT * sizeof(IntegerType) - nbits);
-}
 } // namespace Pennylane::Util

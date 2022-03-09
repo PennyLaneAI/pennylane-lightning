@@ -278,74 +278,10 @@ template <class T, class Derived> class StateVectorBase {
                                       const std::vector<size_t> &wires,
                                       bool adj = false) -> PrecisionT {
         auto *arr = getData();
-        auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         return dispatcher.applyGenerator(
             getKernelForGenerator(dispatcher.strToGeneratorOp(opName)), arr,
             num_qubits_, opName, wires, adj);
-    }
-
-    /**
-     * @brief Apply a general single qubit matrix to given wires.
-     *
-     * @param kernel Kernel to run the operation
-     * @param matrix Pointer to the array data.
-     * @param wires Wires to apply gate to.
-     * @param inverse Indicate whether inverse should be taken.
-     */
-    inline void applySingleQubitOp(Gates::KernelType kernel,
-                                   const ComplexPrecisionT *matrix,
-                                   const std::vector<size_t> &wires,
-                                   bool inverse = false) {
-        using Gates::MatrixOperation;
-
-        assert(wires.size() == 1);
-
-        auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
-        auto *arr = getData();
-        dispatcher.applyMatrix(kernel, arr, MatrixOperation::SingleQubitOp,
-                               num_qubits_, matrix, wires, inverse);
-    }
-
-    /**
-     * @brief Apply a general single qubit matrix to given wires.
-     *
-     * @param kernel Kernel to run the operation
-     * @param matrix Pointer to the array data.
-     * @param wires Wires to apply gate to.
-     * @param inverse Indicate whether inverse should be taken.
-     */
-    inline void applyTwoQubitOp(Gates::KernelType kernel,
-                                const ComplexPrecisionT *matrix,
-                                const std::vector<size_t> &wires,
-                                bool inverse = false) {
-        using Gates::MatrixOperation;
-
-        assert(wires.size() == 2);
-
-        auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
-        auto *arr = getData();
-        dispatcher.applyMatrix(kernel, arr, MatrixOperation::TwoQubitOp,
-                               num_qubits_, matrix, wires, inverse);
-    }
-
-    /**
-     * @brief Apply a general multi qubit matrix to given wires.
-     *
-     * @param kernel Kernel to run the operation
-     * @param matrix Pointer to the array data.
-     * @param wires Wires to apply gate to.
-     * @param inverse Indicate whether inverse should be taken.
-     */
-    inline void applyMultiQubitOp(Gates::KernelType kernel,
-                                  const ComplexPrecisionT *matrix,
-                                  const std::vector<size_t> &wires,
-                                  bool inverse = false) {
-        using Gates::MatrixOperation;
-
-        auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
-        auto *arr = getData();
-        dispatcher.applyMatrix(kernel, arr, MatrixOperation::MultiQubitOp,
-                               num_qubits_, matrix, wires, inverse);
     }
 
     /**
@@ -363,7 +299,7 @@ template <class T, class Derived> class StateVectorBase {
                             bool inverse = false) {
         using Gates::MatrixOperation;
 
-        auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         auto *arr = getData();
 
         if (wires.empty()) {
@@ -371,21 +307,8 @@ template <class T, class Derived> class StateVectorBase {
                 "Number of wires must be larger than 0");
         }
 
-        switch (wires.size()) {
-        case 1:
-            dispatcher.applyMatrix(kernel, arr, MatrixOperation::SingleQubitOp,
-                                   num_qubits_, matrix, wires, inverse);
-            return;
-        case 2:
-            dispatcher.applyMatrix(kernel, arr, MatrixOperation::TwoQubitOp,
-                                   num_qubits_, matrix, wires, inverse);
-            return;
-        default:
-            dispatcher.applyMatrix(kernel, arr, MatrixOperation::MultiQubitOp,
-                                   num_qubits_, matrix, wires, inverse);
-            return;
-        }
-        PL_UNREACHABLE;
+        dispatcher.applyMatrix(kernel, arr, num_qubits_, matrix, wires,
+                               inverse);
     }
 
     /**
@@ -401,35 +324,22 @@ template <class T, class Derived> class StateVectorBase {
                             bool inverse = false) {
         using Gates::MatrixOperation;
 
-        auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
-        auto *arr = getData();
-
         if (wires.empty()) {
             throw std::invalid_argument(
                 "Number of wires must be larger than 0");
         }
 
-        switch (wires.size()) {
-        case 1:
-            dispatcher.applyMatrix(
-                getKernelForMatrix(MatrixOperation::SingleQubitOp), arr,
-                MatrixOperation::SingleQubitOp, num_qubits_, matrix, wires,
-                inverse);
-            return;
-        case 2:
-            dispatcher.applyMatrix(
-                getKernelForMatrix(MatrixOperation::TwoQubitOp), arr,
-                MatrixOperation::TwoQubitOp, num_qubits_, matrix, wires,
-                inverse);
-            return;
-        default:
-            dispatcher.applyMatrix(
-                getKernelForMatrix(MatrixOperation::MultiQubitOp), arr,
-                MatrixOperation::MultiQubitOp, num_qubits_, matrix, wires,
-                inverse);
-            return;
-        }
-        PL_UNREACHABLE;
+        const auto kernel = [n_wires = wires.size(), this]() {
+            switch (n_wires) {
+            case 1:
+                return getKernelForMatrix(MatrixOperation::SingleQubitOp);
+            case 2:
+                return getKernelForMatrix(MatrixOperation::TwoQubitOp);
+            default:
+                return getKernelForMatrix(MatrixOperation::MultiQubitOp);
+            }
+        }();
+        applyMatrix(kernel, matrix, wires, inverse);
     }
 
     template <typename Alloc>
@@ -663,5 +573,4 @@ inline auto operator<<(std::ostream &out, const StateVectorBase<T, Derived> &sv)
 
     return out;
 }
-
 } // namespace Pennylane

@@ -176,7 +176,7 @@ template <class T = double> class AdjointJacobian {
         #endif
             for (size_t h_i = 0; h_i < num_observables; h_i++) {
                 try {
-                    states[h_i].updateData(reference_state.getData());
+                    states[h_i].updateData(reference_state.getDataVector());
                     applyObservable(states[h_i], observables[h_i]);
                 } catch (...) {
                     #if defined(_OPENMP)
@@ -363,7 +363,7 @@ template <class T = double> class AdjointJacobian {
                         "differentiation method");
             if ((ops_name[op_idx] != "QubitStateVector") &&
                 (ops_name[op_idx] != "BasisState")) {
-                mu.updateData(lambda.getData());
+                mu.updateData(lambda.getDataVector());
                 applyOperationAdj(lambda, ops, op_idx);
 
                 if (ops.hasParams(op_idx)) {

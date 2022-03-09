@@ -40,6 +40,13 @@ class StateVectorManagedCPU
     std::vector<ComplexPrecisionT, AlignedAllocator<ComplexPrecisionT>> data_;
 
   public:
+    /**
+     * @brief Create a new statevector
+     *
+     * @param num_qubits Number of qubits
+     * @param threading Threading option the statevector to use
+     * @param memory_model Memory model the statevector will use
+     */
     explicit StateVectorManagedCPU(
         size_t num_qubits, Threading threading = bestThreading(),
         CPUMemoryModel memory_model = bestCPUMemoryModel())
@@ -49,6 +56,11 @@ class StateVectorManagedCPU
         data_[0] = {1, 0};
     }
 
+    /**
+     * @brief Construct a statevector from another statevector
+     *
+     * @param other Another statevector to construct the statevector from
+     */
     template <class OtherDerived>
     explicit StateVectorManagedCPU(
         const StateVectorCPU<PrecisionT, OtherDerived> &other)
@@ -57,6 +69,14 @@ class StateVectorManagedCPU
           data_{other.getData(), other.getData() + other.getLength(),
                 getAllocator<ComplexPrecisionT>(this->memory_model_)} {}
 
+    /**
+     * @brief Construct a statevector from data pointer
+     *
+     * @param other_data Data pointer to construct the statvector from.
+     * @param other_size Size of the data
+     * @param threading Threading option the statevector to use
+     * @param memory_model Memory model the statevector will use
+     */
     StateVectorManagedCPU(const ComplexPrecisionT *other_data,
                           size_t other_size,
                           Threading threading = bestThreading(),
@@ -68,13 +88,19 @@ class StateVectorManagedCPU
                         "The size of provided data must be a power of 2.");
     }
 
-    // Clang-tidy gives false positive for delegating constructor
+    /**
+     * @brief Construct a statevector from a data vector
+     *
+     * @param other Data to construct the statevector from
+     * @param threading Threading option the statevector to use
+     * @param memory_model Memory model the statevector will use
+     */
     template <class Alloc>
     explicit StateVectorManagedCPU(
-        const std::vector<std::complex<PrecisionT>, Alloc> &rhs,
+        const std::vector<std::complex<PrecisionT>, Alloc> &other,
         Threading threading = bestThreading(),
         CPUMemoryModel memory_model = bestCPUMemoryModel())
-        : StateVectorManagedCPU(rhs.data(), rhs.size(), threading,
+        : StateVectorManagedCPU(other.data(), other.size(), threading,
                                 memory_model) {}
 
     StateVectorManagedCPU(const StateVectorManagedCPU &rhs) = default;
@@ -92,6 +118,9 @@ class StateVectorManagedCPU
         return data_.data();
     }
 
+    /**
+     * @brief Get underlying data vector
+     */
     [[nodiscard]] auto getDataVector()
         -> std::vector<ComplexPrecisionT, AlignedAllocator<ComplexPrecisionT>>
             & {
@@ -108,8 +137,11 @@ class StateVectorManagedCPU
      *
      * @param new_data std::vector contains data.
      */
-    void updateData(const ComplexPrecisionT *data) {
-        std::copy(data, data + BaseType::getLength(), data_.data());
+    template <class Alloc>
+    void updateData(const std::vector<ComplexPrecisionT, Alloc> &new_data) {
+        assert(data_.size() == new_data.size());
+        std::copy(new_data.data(), new_data.data() + new_data.size(),
+                  data_.data());
     }
 };
 } // namespace Pennylane

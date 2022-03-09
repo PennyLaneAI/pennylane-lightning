@@ -58,8 +58,11 @@ class StateVectorRawCPU
     /**
      * @brief Construct state-vector from a raw data pointer.
      *
+     * Memory model is automatically deduced from a pointer.
+     *
      * @param data Raw data pointer.
      * @param length The size of the data, i.e. 2^(number of qubits).
+     * @param threading Threading option the statevector to use
      */
     StateVectorRawCPU(ComplexPrecisionT *data, size_t length,
                       Threading threading = bestThreading())

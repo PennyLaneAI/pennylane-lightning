@@ -77,28 +77,56 @@ class StateVectorCPU : public StateVectorBase<PrecisionT, Derived> {
     }
 
   public:
+    /**
+     * @brief Get a kernel for a gate operation.
+     *
+     * @param gate_op Gate operation
+     * @return KernelType
+     */
     [[nodiscard]] inline auto
     getKernelForGate(Gates::GateOperation gate_op) const -> Gates::KernelType {
         return kernel_for_gates_.at(gate_op);
     }
 
+    /**
+     * @brief Get a kernel for a gate operation.
+     *
+     * @param gntr_op Generator operation
+     * @return KernelType
+     */
     [[nodiscard]] inline auto
     getKernelForGenerator(Gates::GeneratorOperation gntr_op) const
         -> Gates::KernelType {
         return kernel_for_generators_.at(gntr_op);
     }
 
+    /**
+     * @brief Get a kernel for a gate operation.
+     *
+     * @param mat_op Matrix operation
+     * @return KernelType
+     */
     [[nodiscard]] inline auto
     getKernelForMatrix(Gates::MatrixOperation mat_op) const
         -> Gates::KernelType {
         return kernel_for_matrices_.at(mat_op);
     }
 
+    /**
+     * @brief Get memory model of the statevector
+     */
     [[nodiscard]] inline CPUMemoryModel memoryModel() const {
         return memory_model_;
     }
+
+    /**
+     * @brief Get threading of the statevector
+     */
     [[nodiscard]] inline Threading threading() const { return threading_; }
 
+    /**
+     * @brief Get kernels for all gate operations.
+     */
     [[nodiscard]] inline auto getGateKernelMap() const & -> const
         std::unordered_map<Gates::GateOperation, Gates::KernelType> & {
         return kernel_for_gates_;
@@ -109,6 +137,9 @@ class StateVectorCPU : public StateVectorBase<PrecisionT, Derived> {
         return kernel_for_gates_;
     }
 
+    /**
+     * @brief Get kernels for all generator operations.
+     */
     [[nodiscard]] inline auto getGeneratorKernelMap() const & -> const
         std::unordered_map<Gates::GeneratorOperation, Gates::KernelType> & {
         return kernel_for_generators_;
@@ -119,6 +150,9 @@ class StateVectorCPU : public StateVectorBase<PrecisionT, Derived> {
         return kernel_for_generators_;
     }
 
+    /**
+     * @brief Get kernels for all matrix operations.
+     */
     [[nodiscard]] inline auto getMatrixKernelMap() const & -> const
         std::unordered_map<Gates::MatrixOperation, Gates::KernelType> & {
         return kernel_for_matrices_;

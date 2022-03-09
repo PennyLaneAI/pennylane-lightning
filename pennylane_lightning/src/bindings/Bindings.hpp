@@ -114,7 +114,7 @@ auto toNumpyArray(const StateVectorManagedCPU<PrecisionT> &sv)
 /**
  * @brief Get memory alignment of a given numpy array.
  *
- * @param NumpyArray Pybind11's numpy array type.
+ * @param numpyArray Pybind11's numpy array type.
  * @return Memory model describing alignment
  */
 auto getNumpyArrayAlignment(const pybind11::array &numpyArray)
@@ -237,6 +237,40 @@ void registerGatesForStateVector(PyClass &pyclass) {
         };
         pyclass.def(gate_name.c_str(), func, doc.c_str());
     });
+}
+
+/**
+ * @brief Get a gate kernel map for a statevector
+ */
+template <class PrecisionT>
+auto svKernelMap(const StateVectorRawCPU<PrecisionT> &sv) -> pybind11::dict {
+    pybind11::dict res_map;
+    namespace Constant = Gates::Constant;
+
+    for (const auto &[gate_op, kernel] : sv.getGateKernelMap()) {
+        const auto key =
+            std::string(Util::lookup(Constant::gate_names, gate_op));
+        const auto value = Util::lookup(Gates::kernel_id_name_pairs, kernel);
+
+        res_map[key.c_str()] = value;
+    }
+
+    for (const auto &[gntr_op, kernel] : sv.getGeneratorKernelMap()) {
+        const auto key =
+            std::string(Util::lookup(Constant::generator_names, gntr_op));
+        const auto value = Util::lookup(Gates::kernel_id_name_pairs, kernel);
+
+        res_map[key.c_str()] = value;
+    }
+
+    for (const auto &[mat_op, kernel] : sv.getMatrixKernelMap()) {
+        const auto key =
+            std::string(Util::lookup(Constant::matrix_names, mat_op));
+        const auto value = Util::lookup(Gates::kernel_id_name_pairs, kernel);
+
+        res_map[key.c_str()] = value;
+    }
+    return res_map;
 }
 
 /**
