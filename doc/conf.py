@@ -101,6 +101,8 @@ automodsumm_inherited_members = True
 breathe_projects = {"Lightning-Qubit": "./doxyoutput/xml"}
 breathe_default_project = "Lightning-Qubit"
 
+mathjax_path = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"
+
 # Exhale extension
 # Setup the exhale extension
 exhale_args = {
