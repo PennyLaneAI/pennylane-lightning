@@ -14,6 +14,7 @@
 #include "TestHelpers.hpp"
 
 using namespace Pennylane;
+using namespace Pennylane::Util;
 
 /**
  * @brief This tests the compile-time calculation of a given scalar

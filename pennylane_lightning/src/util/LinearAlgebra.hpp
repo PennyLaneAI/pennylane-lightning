@@ -50,13 +50,13 @@ using CBLAS_LAYOUT = enum CBLAS_LAYOUT {
 /// @endcond
 //
 
+namespace Pennylane::Util {
 enum class Trans : int {
     NoTranspose = CblasNoTrans,
     Transpose = CblasTrans,
     Adjoint = CblasConjTrans
 };
 
-namespace Pennylane::Util {
 /**
  * @brief Calculates the inner-product using OpenMP.
  *
