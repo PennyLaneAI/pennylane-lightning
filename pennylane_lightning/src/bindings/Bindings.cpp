@@ -330,7 +330,7 @@ void lightning_class_bindings(py::module &m) {
                  // int num_samples = num_shots;
                  // std::vector<int> result(num_samples*wires.size(),0);
 
-                 int num_wires = result.size() / num_shots;
+                 const size_t num_wires = result.size() / num_shots;
                  ssize_t ndim = 2;
                  std::vector<ssize_t> shape = {static_cast<ssize_t>(num_shots),
 					       static_cast<ssize_t>(num_wires)};
