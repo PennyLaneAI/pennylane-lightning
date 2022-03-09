@@ -186,8 +186,8 @@ TEST_CASE("Sample", "[Measures]") {
     size_t num_samples = 10000;
     auto &&samples = Measurer.generate_samples(num_samples);
 
-    std::vector<int> counts(N, 0);
-    std::vector<int> samples_decimal(num_samples, 0);
+    std::vector<size_t> counts(N, 0);
+    std::vector<size_t> samples_decimal(num_samples, 0);
 
     // convert samples to decimal and then bin them in counts
     for (size_t i = 0; i < num_samples; i++) {
