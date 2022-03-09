@@ -1,3 +1,4 @@
+#include "CompareVector.hpp"
 #include "TestHelpers.hpp"
 #include "TestKernels.hpp"
 #include "Util.hpp"

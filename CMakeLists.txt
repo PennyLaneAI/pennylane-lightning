@@ -42,6 +42,7 @@ option(ENABLE_BLAS "Enable BLAS" OFF)
 option(BUILD_TESTS "Build cpp tests" OFF)
 option(BUILD_EXAMPLES "Build cpp examples" OFF)
 
+
 # Process compile options
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
 

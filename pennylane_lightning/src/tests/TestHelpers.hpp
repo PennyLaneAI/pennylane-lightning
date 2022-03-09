@@ -8,14 +8,14 @@
 #include "TestKernels.hpp"
 #include "Util.hpp"
 
+#include <catch2/catch.hpp>
+
 #include <algorithm>
 #include <complex>
 #include <random>
 #include <string>
 #include <type_traits>
 #include <vector>
-
-#include <catch2/catch.hpp>
 
 namespace Pennylane {
 template <typename T> struct remove_complex { using type = T; };
@@ -95,20 +95,6 @@ template <class T, class AllocA, class AllocB>
 bool operator!=(const std::vector<T, AllocA> &lhs,
                 const PLApprox<T, AllocB> &rhs) {
     return !rhs.compare(lhs);
-}
-
-template <class T, class AllocA, class AllocB>
-bool operator==(const std::vector<T, AllocA> &lhs,
-                const std::vector<T, AllocB> &rhs) {
-    if (lhs.size() != rhs.size()) {
-        return false;
-    }
-    for (size_t idx = 0; idx < lhs.size(); idx++) {
-        if (lhs[idx] != rhs[idx]) {
-            return false;
-        }
-    }
-    return true;
 }
 
 /**
