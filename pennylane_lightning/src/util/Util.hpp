@@ -436,30 +436,4 @@ template <class T, class U, class Func> void for_each_enum(Func &&func) {
         }
     }
 }
-
-/**
- * @brief Get common alignment of given kernels
- *
- * @tparam PrecisionT Floating point type
- * @tparam TypeList Type list of kernels to calculate common alignment
- */
-template <class PrecisionT, class TypeList> struct common_alignment {
-    constexpr static size_t value =
-        std::max(TypeList::Type::template required_alignment<PrecisionT>,
-                 common_alignment<PrecisionT, typename TypeList::Next>::value);
-};
-
-/// @cond DEV
-template <class PrecisionT> struct common_alignment<PrecisionT, void> {
-    constexpr static size_t value = std::alignment_of_v<PrecisionT>;
-};
-/// @endcond
-
-/**
- * @brief A value alias for common_alignment
- */
-template <class PrecisionT, class TypeList>
-[[maybe_unused]] constexpr static size_t common_alignment_v =
-    common_alignment<PrecisionT, TypeList>::value;
-
 } // namespace Pennylane::Util

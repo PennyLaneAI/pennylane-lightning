@@ -151,9 +151,10 @@ isApproxEqual(const Data_t &data1, const Data_t &data2,
 
 template <typename T>
 constexpr static auto test_allocator =
-    AlignedAllocator<T>{Util::common_alignment_v<T, TestKernels>};
+    Util::AlignedAllocator<T>{Util::common_alignment_v<T, TestKernels>};
 
-template <typename T> using TestVector = std::vector<T, AlignedAllocator<T>>;
+template <typename T>
+using TestVector = std::vector<T, Util::AlignedAllocator<T>>;
 
 /**
  * @brief Multiplies every value in a dataset by a given complex scalar value.

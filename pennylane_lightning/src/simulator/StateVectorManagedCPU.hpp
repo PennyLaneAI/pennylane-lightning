@@ -37,7 +37,8 @@ class StateVectorManagedCPU
   private:
     using BaseType = StateVectorCPU<PrecisionT, StateVectorManagedCPU>;
 
-    std::vector<ComplexPrecisionT, AlignedAllocator<ComplexPrecisionT>> data_;
+    std::vector<ComplexPrecisionT, Util::AlignedAllocator<ComplexPrecisionT>>
+        data_;
 
   public:
     /**
@@ -122,13 +123,14 @@ class StateVectorManagedCPU
      * @brief Get underlying data vector
      */
     [[nodiscard]] auto getDataVector()
-        -> std::vector<ComplexPrecisionT, AlignedAllocator<ComplexPrecisionT>>
-            & {
+        -> std::vector<ComplexPrecisionT,
+                       Util::AlignedAllocator<ComplexPrecisionT>> & {
         return data_;
     }
 
-    [[nodiscard]] auto getDataVector() const -> const
-        std::vector<ComplexPrecisionT, AlignedAllocator<ComplexPrecisionT>> & {
+    [[nodiscard]] auto getDataVector() const
+        -> const std::vector<ComplexPrecisionT,
+                             Util::AlignedAllocator<ComplexPrecisionT>> & {
         return data_;
     }
 

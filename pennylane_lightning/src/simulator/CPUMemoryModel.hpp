@@ -103,7 +103,7 @@ constexpr inline auto getAlignment(CPUMemoryModel memory_model) -> uint32_t {
  */
 template <class T>
 constexpr auto getAllocator(CPUMemoryModel memory_model)
-    -> AlignedAllocator<T> {
-    return AlignedAllocator<T>{getAlignment<T>(memory_model)};
+    -> Util::AlignedAllocator<T> {
+    return Util::AlignedAllocator<T>{getAlignment<T>(memory_model)};
 }
 } // namespace Pennylane

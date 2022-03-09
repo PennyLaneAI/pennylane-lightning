@@ -22,7 +22,7 @@
 #include "BitUtil.hpp"
 #include "TypeList.hpp"
 
-namespace Pennylane {
+namespace Pennylane::Util {
 /**
  * @brief Custom aligned allocate function. As appleclang does not support
  * std::aligned_alloc in Mac OS 10.14, we use posix_memalign function.
@@ -161,16 +161,6 @@ bool operator!=([[maybe_unused]] const AlignedAllocator<T> &lhs,
 }
 
 ///@cond DEV
-template <typename TypeList> struct commonAlignmentHelper {
-    constexpr static uint32_t value =
-        std::max(TypeList::Type::packed_bytes,
-                 commonAlignmentHelper<typename TypeList::Next>::value);
-};
-template <> struct commonAlignmentHelper<void> {
-    constexpr static uint32_t value = 4U;
-};
-///@endcond
-
 /**
  * @brief This function calculate the common multiplier of alignments of the
  * given kernels in TypeList.
@@ -180,7 +170,17 @@ template <> struct commonAlignmentHelper<void> {
  *
  * @tparam TypeList Type list of kernels.
  */
-template <typename TypeList>
-[[maybe_unused]] constexpr static size_t common_alignment =
-    commonAlignmentHelper<TypeList>::value;
-} // namespace Pennylane
+template <class PrecisionT, class TypeList> struct commonAlignmentHelper {
+    constexpr static size_t value = std::max(
+        TypeList::Type::template required_alignment<PrecisionT>,
+        commonAlignmentHelper<PrecisionT, typename TypeList::Next>::value);
+};
+template <class PrecisionT> struct commonAlignmentHelper<PrecisionT, void> {
+    constexpr static size_t value = 1;
+};
+/// @endcond
+template <class PrecisionT, class TypeList>
+[[maybe_unused]] constexpr static auto common_alignment_v =
+    commonAlignmentHelper<PrecisionT, TypeList>::value;
+
+} // namespace Pennylane::Util

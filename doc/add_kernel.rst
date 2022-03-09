@@ -16,6 +16,12 @@ We discuss how one can add another gate implementation in this document. Assume 
         constexpr static kernel_id = KernelType::Mykernel; // Will be discussed below
         constexpr static std::string_view = "MyGateImpl"; // Name of your kernel
 
+        template <typename PrecisionT>
+        constexpr static size_t required_alignment =
+            std::alignment_of_v<PrecisionT>;
+        template <typename PrecisionT>
+        constexpr static size_t packed_bytes = sizeof(PrecisionT);
+
         template <class PrecisionT>
         static void applyPauliX(std::complex<PrecisionT>* data,
                                 size_t num_qubits,
