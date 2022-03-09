@@ -161,15 +161,6 @@ bool operator!=([[maybe_unused]] const AlignedAllocator<T> &lhs,
 }
 
 ///@cond DEV
-/**
- * @brief This function calculate the common multiplier of alignments of the
- * given kernels in TypeList.
- *
- * As all alignment must be a power of 2, we just can choose the maximum
- * alignment.
- *
- * @tparam TypeList Type list of kernels.
- */
 template <class PrecisionT, class TypeList> struct commonAlignmentHelper {
     constexpr static size_t value = std::max(
         TypeList::Type::template required_alignment<PrecisionT>,
@@ -179,6 +170,17 @@ template <class PrecisionT> struct commonAlignmentHelper<PrecisionT, void> {
     constexpr static size_t value = 1;
 };
 /// @endcond
+
+/**
+ * @brief This function calculate the common multiplier of alignments of the
+ * given kernels in TypeList.
+ *
+ * As all alignment must be a power of 2, we just can choose the maximum
+ * alignment.
+ *
+ * @tparam PrecisionT Floating point type
+ * @tparam TypeList Type list of kernels.
+ */
 template <class PrecisionT, class TypeList>
 [[maybe_unused]] constexpr static auto common_alignment_v =
     commonAlignmentHelper<PrecisionT, TypeList>::value;

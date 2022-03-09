@@ -13,14 +13,13 @@ We discuss how one can add another gate implementation in this document. Assume 
         constexpr static std::array implemented_gates = {
             GateOperation::PauliX
         }; // List of implemented gates
-        constexpr static kernel_id = KernelType::Mykernel; // Will be discussed below
+        constexpr static kernel_id = KernelType::MyKernel; // Will be discussed below
         constexpr static std::string_view = "MyGateImpl"; // Name of your kernel
 
+        /* This defines the required alignment for this kernel. If there is no special requirement, 
+           using std::alignment_of_v is sufficient. */
         template <typename PrecisionT>
-        constexpr static size_t required_alignment =
-            std::alignment_of_v<PrecisionT>;
-        template <typename PrecisionT>
-        constexpr static size_t packed_bytes = sizeof(PrecisionT);
+        constexpr static size_t required_alignment = std::alignment_of_v<PrecisionT>;
 
         template <class PrecisionT>
         static void applyPauliX(std::complex<PrecisionT>* data,
@@ -51,8 +50,9 @@ and
     // file: simulator/AvailableKernels.hpp
     namespace Pennylane {
         using AvailableKernels = Util::TypeList<GateImplementationsLM,
-                                            GateImplementationsPI,
-                                            MyGateImplementation /* This is added*/>;
+                                                GateImplementationsPI,
+                                                MyGateImplementation /* This is added*/,
+                                                void>;
     } // namespace Pennylane
 
 
@@ -68,48 +68,47 @@ Now you can call your kernel functions in C++.
     // call using the dynamic dispatcher
     sv.applyOperation(KernelType::MyKernel, "PauliX", /*wires=*/{0}, /*inverse=*/false);
 
-To export your gate implementation to python, you also need to add your kernel to ``kernels_to_pyexport``:
-
-.. code-block:: cpp
-
-    // file: simulator/KernelType.hpp
-    [[maybe_unused]] constexpr std::array kernels_to_pyexport = {
-        KernelType::PI, KernelType::LM, KernelType::Mykernel /* This is added */
-    };
-
-Then you can find ``PauliX_MyKernel`` function in ``lightning_qubit_ops`` Python module.
-
 Still, note that your gate implementation is not a default implementation for ``PauliX`` gate yet, i.e.,
 
 .. code-block:: cpp
 
-    sv.applyPauliX({0}, false); // still call the default implementation
     sv.applyOperation("PauliX", {0}, false) // still call the default implementation
 
-To make your gate implementation default, you need to change ``default_kernel_for_ops`` constant. Thus changing
+To make your gate implementation default, you need to change registered ``KernelMap``.
+Thus changing the following lines
 
 .. code-block:: cpp
 
-    // file: simulator/Constant.hpp
-    constexpr std::array default_kernel_for_gates = {
-        std::pair{GateOperations::PauliX, KernelType::LM},
-        std::pair{GateOperations::PauliY, KernelType::LM},
+    // simulator/Kernel.cpp
+
+    int assignDefaultKernelsForGateOp() {
+        auto &instance = OperationKernelMap<GateOperation>::getInstance();
+
+        instance.assignKernelForOp(GateOperation::PauliX, all_threading,
+                                   all_memory_model, all_qubit_numbers,
+                                   Gates::KernelType::LM);
+
         ...
     }
 
-to 
+to
 
 .. code-block:: cpp
 
-    constexpr std::array default_kernel_for_gates = {
-        std::pair{GateOperations::PauliX, KernelType::MyKernel},
-        std::pair{GateOperations::PauliY, KernelType::LM},
+    int assignDefaultKernelsForGateOp() {
+        auto &instance = OperationKernelMap<GateOperation>::getInstance();
+
+        instance.assignKernelForOp(GateOperation::PauliX, all_threading,
+                                   all_memory_model, all_qubit_numbers,
+                                   Gates::KernelType::MyKernel);
+
         ...
     }
 
 will make your implementation as default kernel for ``PauliX`` gate (for all C++ calls as well as for the Python binding).
 
-Gate generators can also be handled in the same way.
+Gate generators can also be handled in the same way. Note that it is possible to assign the kernel only for specific memory model or
+threading operations. Check overloaded functions :cpp:func:`Pennylane::KernelMap::OperationKernelMap::assignKernelForOp` for details.
 
 Test your gate implementation
 =============================
@@ -120,7 +119,7 @@ To test your own kernel implementations, you can go to ``tests/TestKernels.hpp``
 
     using TestKernels = Pennylane::Util::TypeList<Pennylane::Gates::GateImplementationsLM,
                                                   Pennylane::Gates::GateImplementationsPI,
-                                                  MyGateImplementation /*This is added */>;
+                                                  MyGateImplementation /*This is added */, void>;
 
 It will automatically test your gate implementation.
 Note that, in the current implementation, this will test a gate if ``apply + gate name`` is defined even when the gate is not included in ``implemented_gates`` variable.

@@ -130,11 +130,21 @@ template <typename PrecisionT> class DynamicDispatcher {
         return singleton;
     }
 
+    /**
+     * @brief Gate name to gate operation
+     *
+     * @param gate_name Gate name
+     */
     [[nodiscard]] auto strToGateOp(const std::string &gate_name) const
         -> Gates::GateOperation {
         return str_to_gates_.at(gate_name);
     }
 
+    /**
+     * @brief Generator name to generator operation
+     *
+     * @param gntr_name Generator name
+     */
     [[nodiscard]] auto strToGeneratorOp(const std::string &gntr_name) const
         -> Gates::GeneratorOperation {
         return str_to_gntrs_.at(gntr_name);
@@ -286,7 +296,8 @@ template <typename PrecisionT> class DynamicDispatcher {
     /**
      * @brief Apply a given matrix directly to the statevector.
      *
-     * @param arr Pointer to the statevector.
+     * @param kernel Kernel to use for this operation
+     * @param data Pointer to the statevector.
      * @param num_qubits Number of qubits.
      * @param matrix Perfect square matrix in row-major order.
      * @param wires Wires the gate applies to.
@@ -323,14 +334,15 @@ template <typename PrecisionT> class DynamicDispatcher {
     /**
      * @brief Apply a given matrix directly to the statevector.
      *
-     * @param arr Pointer to the statevector.
+     * @param kernel Kernel to use for this operation
+     * @param data Pointer to the statevector.
      * @param num_qubits Number of qubits.
      * @param matrix Perfect square matrix in row-major order.
      * @param wires Wires the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */
     void applyMatrix(Gates::KernelType kernel, CFP_t *data, size_t num_qubits,
-                     const std::complex<PrecisionT> &matrix,
+                     const std::vector<std::complex<PrecisionT>> &matrix,
                      const std::vector<size_t> &wires, bool inverse) const {
         if (matrix.size() != Util::exp2(2 * wires.size())) {
             throw std::invalid_argument(
@@ -347,7 +359,7 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param kernel Kernel to run the gate operation.
      * @param data Pointer to data.
      * @param num_qubits Number of qubits.
-     * @param op_name Gate operation name.
+     * @param gntr_op Generator operation.
      * @param wires Wires to apply gate to.
      * @param adj Indicates whether to use adjoint of gate.
      */
