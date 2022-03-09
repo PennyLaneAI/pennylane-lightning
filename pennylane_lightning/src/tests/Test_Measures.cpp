@@ -192,8 +192,8 @@ TEST_CASE("Sample", "[Measures]") {
     std::vector<int> samples_decimal(num_samples, 0);
 
     // convert samples to decimal and then bin them in counts
-    for (int i = 0; i < num_samples; i++) {
-        for (int j = 0; j < num_qubits; j++) {
+    for (size_t i = 0; i < num_samples; i++) {
+        for (size_t j = 0; j < num_qubits; j++) {
             if (samples[i * num_qubits + j] != 0) {
                 samples_decimal[i] += twos[(num_qubits - 1 - j)];
             }
@@ -203,7 +203,7 @@ TEST_CASE("Sample", "[Measures]") {
 
     // compute estimated probabilities from histogram
     std::vector<double> probabilities(counts.size());
-    for (int i = 0; i < counts.size(); i++) {
+    for (size_t i = 0; i < counts.size(); i++) {
         probabilities[i] = counts[i] / (double)num_samples;
     }
 
