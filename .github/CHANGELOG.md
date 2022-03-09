@@ -9,6 +9,9 @@
 
 ### Improvements
 
+* Update quantum tapes serialization and Python tests.
+[(#239)](https://github.com/PennyLaneAI/pennylane-lightning/pull/239)
+
 * Clang-tidy is now enabled for both tests and examples builds under Github Actions.
 [(#237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/237)
 
