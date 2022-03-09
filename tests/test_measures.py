@@ -512,7 +512,8 @@ class TestSample:
 
         # s1 should only contain 1 and -1, which is guaranteed if
         # they square to 1
-        assert np.allclose(s1**2, 1, atol=tol, rtol=0)    
+        assert np.allclose(s1 ** 2, 1, atol=tol, rtol=0)
+
 
 class TestWiresInVar:
     """Test different Wires settings in Lightning's var."""
@@ -555,5 +556,3 @@ class TestWiresInVar:
             return [qml.var(qml.PauliZ(wires=w)) for w in wires2]
 
         assert np.allclose(circuit1(), circuit2(), atol=tol)
-
-

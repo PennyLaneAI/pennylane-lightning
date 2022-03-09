@@ -30,9 +30,9 @@ using namespace Pennylane;
     template <typename PrecisionT, typename ParamT, class GateImplementation>  \
     struct Apply##GATE_NAME##IsDefined<                                        \
         PrecisionT, ParamT, GateImplementation,                                \
-        std::enable_if_t<std::is_pointer_v<                                    \
-            decltype(&GateImplementation::template apply##GATE_NAME<           \
-                     PrecisionT, ParamT>)>>> {                                 \
+        std::enable_if_t<std::is_pointer_v<decltype(                           \
+            &GateImplementation::template apply##GATE_NAME<PrecisionT,         \
+                                                           ParamT>)>>> {       \
         constexpr static bool value = true;                                    \
     };                                                                         \
     template <typename PrecisionT, typename ParamT, typename TypeList>         \

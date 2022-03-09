@@ -205,8 +205,8 @@ template <typename PrecisionT, typename ParamT, size_t num_params,
           size_t tuple_idx>
 constexpr auto gateOpFuncPtrPairsWithNumParamsIter() {
     if constexpr (tuple_idx <
-                  std::tuple_size_v<
-                      decltype(gate_op_func_ptr_pairs<PrecisionT, ParamT>)>) {
+                  std::tuple_size_v<decltype(
+                      gate_op_func_ptr_pairs<PrecisionT, ParamT>)>) {
         constexpr auto elt =
             std::get<tuple_idx>(gate_op_func_ptr_pairs<PrecisionT, ParamT>);
         if constexpr (static_lookup<elt.first>(Constant::gate_num_params) ==

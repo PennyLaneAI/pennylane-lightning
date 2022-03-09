@@ -23,10 +23,10 @@
 #include <algorithm>
 #include <complex>
 #include <cstdio>
-#include <vector>
 #include <random>
-#include <unordered_map>
 #include <stack>
+#include <unordered_map>
+#include <vector>
 
 #include "LinearAlgebra.hpp"
 #include "StateVectorManaged.hpp"
@@ -261,92 +261,92 @@ class Measures {
         return expected_value_list;
     };
 
+    /**
+     * @brief Generate samples using the alias method.
+     * Reference: https://en.wikipedia.org/wiki/Alias_method
+     *
+     * @param num_samples The number of samples to generate.
+     * @return 1-D vector of samples in binary, each sample is
+     * separated by a stride equal to the number of qubits.
+     */
+    std::vector<size_t> generate_samples(size_t num_samples) {
+        size_t num_qubits = original_statevector.getNumQubits();
+        auto &&probabilities = probs();
 
-  /**
-   * @brief Generate samples using the alias method.
-   * Reference: https://en.wikipedia.org/wiki/Alias_method
-   *
-   * @param num_samples The number of samples to generate.
-   * @return 1-D vector of samples in binary, each sample is
-   * separated by a stride equal to the number of qubits.
-   */  
-  std::vector<size_t> generate_samples(size_t num_samples)
-  {
-    size_t num_qubits = original_statevector.getNumQubits();
-    auto && probabilities = probs();
+        std::vector<size_t> samples(num_samples * num_qubits, 0);
+        std::mt19937 generator(std::random_device{}());
+        std::uniform_real_distribution<fp_t> distribution(0.0, 1.0);
+        std::unordered_map<size_t, size_t> cache;
 
-    std::vector<size_t> samples(num_samples*num_qubits,0); 
-    std::mt19937 generator(std::random_device{}());
-    std::uniform_real_distribution<fp_t> distribution(0.0, 1.0);
-    std::unordered_map<size_t,size_t> cache;
-    
-    size_t N = probabilities.size();
-    std::vector<double> bucket(N);
-    std::vector<size_t> bucket_partner(N);
-    std::stack<size_t> overfull_bucket_ids;
-    std::stack<size_t> underfull_bucket_ids;
-  
-    for (size_t i = 0; i < N; i++){
-      bucket[i] = N*probabilities[i];
-      bucket_partner[i] = i;
-      if (bucket[i] > 1.0){
-	overfull_bucket_ids.push(i);
-      }
-      if (bucket[i] < 1.0){
-	underfull_bucket_ids.push(i);      
-      }
+        size_t N = probabilities.size();
+        std::vector<double> bucket(N);
+        std::vector<size_t> bucket_partner(N);
+        std::stack<size_t> overfull_bucket_ids;
+        std::stack<size_t> underfull_bucket_ids;
+
+        for (size_t i = 0; i < N; i++) {
+            bucket[i] = N * probabilities[i];
+            bucket_partner[i] = i;
+            if (bucket[i] > 1.0) {
+                overfull_bucket_ids.push(i);
+            }
+            if (bucket[i] < 1.0) {
+                underfull_bucket_ids.push(i);
+            }
+        }
+
+        // Run alias algorithm
+        while (underfull_bucket_ids.size() != 0 and
+               overfull_bucket_ids.size() != 0) {
+            // get an overfull bucket
+            auto i = overfull_bucket_ids.top();
+
+            // get an underfull bucket
+            auto j = underfull_bucket_ids.top();
+            underfull_bucket_ids.pop();
+
+            // underfull bucket is partned with an overfull bucket
+            bucket_partner[j] = i;
+            bucket[i] = bucket[i] + bucket[j] - 1;
+
+            // if overfull bucket is now underfull
+            // put in underfull stack
+            if (bucket[i] < 1) {
+                overfull_bucket_ids.pop();
+                underfull_bucket_ids.push(i);
+            }
+
+            // if overfull bucket is full -> remove
+            else if (bucket[i] == 1.0) {
+                overfull_bucket_ids.pop();
+            }
+        }
+
+        // Pick samples
+        for (size_t i = 0; i < num_samples; i++) {
+            fp_t pct = distribution(generator) * N;
+            size_t idx = static_cast<size_t>(pct);
+            if (pct - idx > bucket[idx])
+                idx = bucket_partner[idx];
+
+            // If cached, retrieve sample 1from cache
+            if (cache.count(idx) != 0) {
+                size_t cache_id = cache[idx];
+                auto it_temp = samples.begin() + cache_id * num_qubits;
+                std::copy(it_temp, it_temp + num_qubits,
+                          samples.begin() + i * num_qubits);
+            }
+            // If not cached, compute
+            else {
+                for (size_t j = 0; j < num_qubits; j++)
+                    samples[i * num_qubits + (num_qubits - 1 - j)] =
+                        (idx >> j) & 1;
+                cache[idx] = i;
+            }
+        }
+
+        return samples;
     }
 
-    //Run alias algorithm
-    while (underfull_bucket_ids.size() != 0 and
-	   overfull_bucket_ids.size() != 0 ){
-      //get an overfull bucket
-      auto i = overfull_bucket_ids.top();
-    
-      //get an underfull bucket
-      auto j = underfull_bucket_ids.top();
-      underfull_bucket_ids.pop();
-      
-      //underfull bucket is partned with an overfull bucket
-      bucket_partner[j] = i;
-      bucket[i] = bucket[i] + bucket[j] - 1;
-
-      //if overfull bucket is now underfull
-      //put in underfull stack
-      if (bucket[i] < 1){
-	overfull_bucket_ids.pop();
-	underfull_bucket_ids.push(i);
-      }
-      
-      //if overfull bucket is full -> remove
-      else if (bucket[i] == 1.0){
-	overfull_bucket_ids.pop();
-      }
-    }
-
-    //Pick samples
-    for (size_t i = 0; i < num_samples; i++){
-      fp_t pct = distribution(generator)*N;
-      size_t idx = static_cast<size_t>(pct);
-      if (pct-idx > bucket[idx])
-	idx = bucket_partner[idx];
-
-      //If cached, retrieve sample 1from cache
-      if (cache.count(idx) != 0){
-	size_t cache_id = cache[idx];
-	auto it_temp = samples.begin()+cache_id*num_qubits;
-	std::copy(it_temp, it_temp+num_qubits, samples.begin()+i*num_qubits);
-      }
-      //If not cached, compute
-      else {
-	for (size_t j = 0; j < num_qubits; j++)
-	  samples[i*num_qubits + (num_qubits-1-j)] = (idx >> j) & 1;
-	cache[idx] = i;
-      }
-    }
-
-    return samples;
-  }
-  
 }; // class Measures
 } // namespace Pennylane
