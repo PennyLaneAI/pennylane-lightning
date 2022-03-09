@@ -278,7 +278,7 @@ class Measures {
         std::uniform_real_distribution<fp_t> distribution(0.0, 1.0);
         std::unordered_map<size_t, size_t> cache;
 
-        size_t N = probabilities.size();
+        const size_t N = probabilities.size();
         std::vector<double> bucket(N);
         std::vector<size_t> bucket_partner(N);
         std::stack<size_t> overfull_bucket_ids;
