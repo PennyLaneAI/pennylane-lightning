@@ -341,7 +341,7 @@ void lightning_class_bindings(py::module &m) {
                  return py::array(py::buffer_info(
                      result.data(), /* data as contiguous array  */
                      sizeof(int),   /* size of one scalar        */
-                     py::format_descriptor<int>::format(), /* data type */
+                     py::format_descriptor<size_t>::format(), /* data type */
                      ndim,   /* number of dimensions      */
                      shape,  /* shape of the matrix       */
                      strides /* strides for each axis     */
