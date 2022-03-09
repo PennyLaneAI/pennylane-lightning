@@ -332,10 +332,8 @@ void lightning_class_bindings(py::module &m) {
 
                  const size_t num_wires = result.size() / num_shots;
                  const size_t ndim = 2;
-                 std::vector<ssize_t> shape = {static_cast<ssize_t>(num_shots),
-					       static_cast<ssize_t>(num_wires)};
-                 std::vector<ssize_t> strides = {static_cast<ssize_t>(sizeof(int) * num_wires),
-						 static_cast<ssize_t>(sizeof(int))};
+                 const std::vector<size_t> shape {num_shots, num_wires};
+                 const std::vector<size_t> strides {sizeof(size_t) * num_wires, sizeof(size_t)};
 
                  // return 2-D NumPy array
                  return py::array(py::buffer_info(
