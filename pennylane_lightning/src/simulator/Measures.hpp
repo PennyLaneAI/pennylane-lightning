@@ -270,7 +270,7 @@ class Measures {
      * separated by a stride equal to the number of qubits.
      */
     std::vector<size_t> generate_samples(size_t num_samples) {
-        size_t num_qubits = original_statevector.getNumQubits();
+        const size_t num_qubits = original_statevector.getNumQubits();
         auto &&probabilities = probs();
 
         std::vector<size_t> samples(num_samples * num_qubits, 0);
