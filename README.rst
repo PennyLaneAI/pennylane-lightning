@@ -94,6 +94,17 @@ and install the compilied library with
     $ python3 setup.py develop
 
 
+GPU support
+-----------
+
+For GPU support, `PennyLane-Lightning-GPU <https://github.com/XanaduAI/pennylane-lightning-gpu.git>`_ can be be installed by providing the optional tag ``[gpu]``:
+
+.. code-block:: console
+
+    $ pip install pennylane-lightning[gpu]
+
+For more information, please refer to the `documentation <https://pennylane-lightning-gpu.readthedocs.io/>_`.
+
 Testing
 -------
 
