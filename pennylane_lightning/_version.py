@@ -16,4 +16,8 @@
    Version number (major.minor.patch[-label])
 """
 
+<<<<<<< HEAD
 __version__ = "0.22.0-dev15"
+=======
+__version__ = "0.22.0-dev13"
+>>>>>>> b6465a33085d3246324bbdff89154a2f07ae46bd
