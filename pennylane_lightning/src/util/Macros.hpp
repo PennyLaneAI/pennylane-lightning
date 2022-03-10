@@ -13,12 +13,155 @@
 // limitations under the License.
 /**
  * @file
- * Define some builtin alternatives
+ * Define macros and compile-time constants.
  */
 #pragma once
 
+#include <string>
+
+/**
+ * @brief Predefined macro variable to a string. Use std::format instead in
+ * C++20.
+ */
+#define PL_TO_STR_INDIR(x) #x
+#define PL_TO_STR(VAR) PL_TO_STR_INDIR(VAR)
+
 #if defined(__GNUC__) || defined(__clang__)
 #define PL_UNREACHABLE __builtin_unreachable()
-#else
+#elif defined(_MSC_VER)
 #define PL_UNREACHABLE __assume(false)
+#else // Unsupported compiler
+#define PL_UNREACHABLE
 #endif
+
+#if defined(__AVX2__)
+#define PL_USE_AVX2 1
+[[maybe_unused]] static constexpr bool use_avx2 = true;
+#else
+[[maybe_unused]] static constexpr bool use_avx2 = false;
+#endif
+
+#if defined(__AVX512F__)
+#define PL_USE_AVX512F 1
+[[maybe_unused]] static constexpr bool use_avx512f = true;
+#else
+[[maybe_unused]] static constexpr bool use_avx512f = false;
+#endif
+
+#if defined(__AVX512DQ__)
+#define PL_USE_AVX512DQ 1
+[[maybe_unused]] static constexpr bool use_avx512dq = true;
+#else
+[[maybe_unused]] static constexpr bool use_avx512dq = false;
+#endif
+
+#if defined(__AVX512VL__)
+#define PL_USE_AVX512VL 1
+[[maybe_unused]] static constexpr bool use_avx512vl = true;
+#else
+[[maybe_unused]] static constexpr bool use_avx512vl = false;
+#endif
+
+#if defined(_OPENMP)
+#define PL_USE_OMP 1
+[[maybe_unused]] static constexpr bool use_openmp = true;
+#else
+[[maybe_unused]] static constexpr bool use_openmp = false;
+#endif
+
+#if (_OPENMP >= 202011)
+#define PL_UNROLL_LOOP __Pragma("omp unroll(8)")
+#elif defined(__GNUC__)
+#define PL_UNROLL_LOOP _Pragma("GCC unroll 8")
+#elif defined(__clang__)
+#define PL_UNROLL_LOOP _Pragma("unroll(8)")
+#else
+#define PL_UNROLL_LOOP
+#endif
+
+// Define force inline
+#if defined(__GNUC__) || defined(__clang__)
+#if NDEBUG
+#define PL_FORCE_INLINE __attribute__((always_inline)) inline
+#else
+#define PL_FORCE_INLINE
+#endif
+#elif defined(_MSC_VER)
+#if NDEBUG
+#define PL_FORCE_INLINE __forceinline
+#else
+#define PL_FORCE_INLINE
+#endif
+#else
+#if NDEBUG
+#define PL_FORCE_INLINE inline
+#else
+#define PL_FORCE_INLINE
+#endif
+#endif
+
+namespace Pennylane::Util::Constant {
+enum class CPUArch { AMD64, PPC64, ARM, Unknown };
+
+constexpr auto getCPUArchClangGCC() {
+#if defined(__x86_64__)
+    return CPUArch::AMD64;
+#elif defined(__powerpc64__)
+    return CPUArch::PPC64;
+#elif defined(__arm__)
+    return CPUArch::ARM;
+#else
+    return CPUArch::Unknown;
+#endif
+}
+
+constexpr auto getCPUArchMSVC() {
+#if defined(_M_AMD64)
+    return CPUArch::AMD64;
+#elif defined(_M_PPC)
+    return CPUArch::PPC64;
+#elif defined(_M_ARM)
+    return CPUArch::ARM;
+#else
+    return CPUArch::Unknown;
+#endif
+}
+
+#if defined(__GNUC__) || defined(__clang__)
+[[maybe_unused]] constexpr static auto cpu_arch = getCPUArchClangGCC();
+#elif defined(_MSC_VER)
+[[maybe_unused]] constexpr static auto cpu_arch = getCPUArchMSVC();
+#else
+[[maybe_unused]] constexpr static auto cpu_arch = CPUArch::Unknown;
+#endif
+
+enum class Compiler { GCC, Clang, MSVC, Unknown };
+
+template <Compiler compiler>
+constexpr auto getCompilerVersion() -> std::string_view {
+    return "Unknown version";
+}
+template <>
+constexpr auto getCompilerVersion<Compiler::GCC>() -> std::string_view {
+    return PL_TO_STR(__GNUC__) "." PL_TO_STR(__GNUC_MINOR__) "." PL_TO_STR(
+        __GNUC_PATCHLEVEL__);
+}
+template <>
+constexpr auto getCompilerVersion<Compiler::Clang>() -> std::string_view {
+    return PL_TO_STR(__clang_major__) "." PL_TO_STR(
+        __clang_minor__) "." PL_TO_STR(__clang_patchlevel__);
+}
+template <>
+constexpr auto getCompilerVersion<Compiler::MSVC>() -> std::string_view {
+    return PL_TO_STR(_MSC_FULL_VER);
+}
+#if defined(__GNUC__) && !defined(__llvm__) && !defined(__INTEL_COMPILER)
+[[maybe_unused]] constexpr static auto compiler = Compiler::GCC;
+#elif defined(__clang__)
+[[maybe_unused]] constexpr static auto compiler = Compiler::Clang;
+#elif defined(_MSC_VER)
+[[maybe_unused]] constexpr static auto compiler = Compiler::MSVC;
+#else
+[[maybe_unused]] constexpr static auto compiler = Compiler::Unknown;
+#endif
+} // namespace Pennylane::Util::Constant

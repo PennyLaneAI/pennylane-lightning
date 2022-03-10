@@ -260,10 +260,11 @@ auto linspace(T start, T end, size_t num_points) -> std::vector<T> {
  *
  * @tparam T Vector data type.
  * @param arr Array to be inspected.
+ * @param length Size of the array
  * @return a vector with indices that would sort the array.
  */
 template <typename T>
-inline auto sorting_indices(const T &arr, size_t length)
+inline auto sorting_indices(const T *arr, size_t length)
     -> std::vector<size_t> {
     std::vector<size_t> indices(length);
     iota(indices.begin(), indices.end(), 0);

@@ -42,7 +42,7 @@ constexpr auto lookup(const std::array<std::pair<Key, Value>, size> &arr,
         }
     }
     throw std::range_error("The given key does not exist.");
-};
+}
 
 /**
  * @brief Check an array has an element.
@@ -61,7 +61,7 @@ constexpr auto array_has_elt(const std::array<U, size> &arr, const U &elt)
         }
     }
     return false;
-};
+}
 
 /**
  * @brief Extract first elements from the array of pairs.
@@ -206,5 +206,12 @@ constexpr auto reverse_pairs(const std::array<std::pair<T, U>, size> &arr)
     -> std::array<std::pair<U, T>, size> {
     return Internal::reverse_pairs_helper(arr,
                                           std::make_index_sequence<size>{});
+}
+
+constexpr auto constIsPerfectPowerOf2(size_t value) -> bool {
+    while ((value & 1U) == 0) {
+        value >>= 1U;
+    }
+    return value == 1;
 }
 } // namespace Pennylane::Util
