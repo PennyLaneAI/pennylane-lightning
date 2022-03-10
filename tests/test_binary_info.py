@@ -27,6 +27,7 @@ def test_runtime_info():
     for key in ["AVX", "AVX2", "AVX512F"]:
         assert key in m
 
+
 def test_compile_info():
     m = compile_info()
     for key in ["cpu.arch", "compiler.name", "compiler.version", "AVX2", "AVX512F"]:
