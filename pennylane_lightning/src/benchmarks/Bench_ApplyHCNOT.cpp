@@ -16,16 +16,17 @@ static void applyOperation_HCNOT(benchmark::State &state,
             sv.applyOperation(kernel, "CNOT", {i, i + 1}, false);
         }
 
-        benchmark::DoNotOptimize(sv.getLength());
+        benchmark::DoNotOptimize(sv.getDataVector()[0]);
+        benchmark::DoNotOptimize(sv.getDataVector()[(1 << num_qubits) - 1]);
     }
 }
 
 BENCHMARK_CAPTURE(applyOperation_HCNOT, kernel_LM,
                   Pennylane::Gates::KernelType::LM)
-    ->RangeMultiplier(2l)
-    ->Range(4l, 24l);
+    ->RangeMultiplier(1l << 1)
+    ->Range(2l, 26l);
 
 BENCHMARK_CAPTURE(applyOperation_HCNOT, kernel_PI,
                   Pennylane::Gates::KernelType::PI)
     ->RangeMultiplier(2l)
-    ->Range(4l, 24l);
+    ->Range(2l, 26l);
