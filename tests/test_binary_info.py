@@ -14,6 +14,7 @@
 """
 Test binary information of ``lightning.qubit``.
 """
+import pytest
 
 try:
     from pennylane_lightning.lightning_qubit_ops import runtime_info, compile_info
@@ -25,7 +26,6 @@ def test_runtime_info():
     m = runtime_info()
     for key in ["AVX", "AVX2", "AVX512F"]:
         assert key in m
-
 
 def test_compile_info():
     m = compile_info()
