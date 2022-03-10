@@ -53,19 +53,19 @@ target_link_libraries(lightning_benchmarks_dependency INTERFACE lightning_utils
 set(GBENCH_SRC  Bench_BitUtil.cpp
                 Bench_LinearAlgebra.cpp)
 
-add_executable(benchmark_utils ${GBENCH_SRC})
+add_executable(utils ${GBENCH_SRC})
 
-add_compile_definitions(benchmark_utils INTERFACE _ENABLE_BLAS=1)
+add_compile_definitions(utils INTERFACE _ENABLE_BLAS=1)
 
-target_link_libraries(benchmark_utils PRIVATE lightning_benchmarks_dependency)
+target_link_libraries(utils PRIVATE lightning_benchmarks_dependency)
 
 ################################################################################
-# Add benchmark_gates_oplist exe
+# Add benchmark_apply_operations exe
 ################################################################################
 
-# add_executable(benchmark_gates_oplist Bench_Gate_Oplist.cpp)
+add_executable(apply_operations Bench_ApplyOperations.cpp)
 
-# target_link_libraries(benchmark_gates_oplist PRIVATE lightning_compile_options
-#                                             lightning_gates
-#                                             lightning_simulator
-#                                             lightning_benchmarks_dependency)
+target_link_libraries(apply_operations PRIVATE lightning_compile_options
+                                            lightning_gates
+                                            lightning_simulator
+                                            lightning_benchmarks_dependency)
