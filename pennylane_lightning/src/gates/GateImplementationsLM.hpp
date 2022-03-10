@@ -235,6 +235,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void applyMatrix(std::complex<PrecisionT> *arr, size_t num_qubits,
                             const std::complex<PrecisionT> *matrix,
                             const std::vector<size_t> &wires, bool inverse) {
+        using Util::Trans;
         assert(num_qubits >= wires.size());
 
         switch (wires.size()) {

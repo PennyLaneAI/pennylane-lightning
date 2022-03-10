@@ -60,6 +60,7 @@ TEMPLATE_TEST_CASE("Constant values", "[Util]", float, double) {
 // NOLINTNEXTLINE: Avoid complexity errors
 TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                    double) {
+    using Util::Trans;
     SECTION("exp2: 2^n") {
         for (size_t i = 0; i < 10; i++) {
             CHECK(Util::exp2(i) == static_cast<size_t>(std::pow(2, i)));
