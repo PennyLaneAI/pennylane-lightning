@@ -105,7 +105,6 @@ BENCHMARK_CAPTURE(serializeOps, ops_all, {"PauliX",     "PauliY",
                                           "CRZ",        "CRot",
                                           "Toffoli",    "CSWAP"});
 
-
 // static void applyOperationsFromRandOps(benchmark::State &state,
 //                                        Pennylane::Gates::KernelType kernel,
 //                                        std::vector<SerializedOp> ops) {
