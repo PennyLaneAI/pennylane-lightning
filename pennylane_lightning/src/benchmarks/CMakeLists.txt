@@ -69,3 +69,14 @@ target_link_libraries(apply_operations PRIVATE lightning_compile_options
                                             lightning_gates
                                             lightning_simulator
                                             lightning_benchmarks_dependency)
+
+################################################################################
+# Add benchmark_apply_hcnot exe
+################################################################################
+
+add_executable(apply_hcnot Bench_ApplyHCNOT.cpp)
+
+target_link_libraries(apply_hcnot PRIVATE lightning_compile_options
+                                            lightning_gates
+                                            lightning_simulator
+                                            lightning_benchmarks_dependency)

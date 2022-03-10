@@ -105,6 +105,7 @@ BENCHMARK_CAPTURE(serializeOps, ops_all, {"PauliX",     "PauliY",
                                           "CRZ",        "CRot",
                                           "Toffoli",    "CSWAP"});
 
+
 // static void applyOperationsFromRandOps(benchmark::State &state,
 //                                        Pennylane::Gates::KernelType kernel,
 //                                        std::vector<SerializedOp> ops) {
@@ -154,14 +155,7 @@ BENCHMARK_CAPTURE(serializeOps, ops_all, {"PauliX",     "PauliY",
 //                               rand_gate_wires[g], rand_inverses[g],
 //                               rand_gate_params[g]);
 //         }
+
+//         benchmark::DoNotOptimize(sv.getData());
 //     }
 // }
-
-// // std::vector<std::string> ops {"PauliX", "PauliY", "PauliZ"};
-
-// BENCHMARK_CAPTURE(applyOperationsFromRandOps, kernel_ops,
-//                   Pennylane::Gates::KernelType::LM,
-//                   serializeOperationsFromStrings({"PauliX", "PauliY",
-//                                                   "PauliZ"}))
-//     ->Arg(10)
-//     ->Arg(22);
