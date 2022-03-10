@@ -104,6 +104,7 @@ class DummyImplementation {
         static_cast<void>(arr);
         static_cast<void>(num_qubits);
         static_cast<void>(matrix);
+        static_cast<void>(wires);
         static_cast<void>(inverse);
     }
 

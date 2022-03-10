@@ -258,8 +258,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                     size_t idx = k | inner_idx;
                     size_t n_wires = wires.size();
                     for (size_t pos = 0; pos < n_wires; pos++) {
-                        bitswap(idx, n_wires - pos - 1,
-                                num_qubits - wires[pos] - 1);
+                        idx = bitswap(idx, n_wires - pos - 1,
+                                      num_qubits - wires[pos] - 1);
                     }
                     indices[inner_idx] = idx;
                     coeffs_in[inner_idx] = arr[idx];

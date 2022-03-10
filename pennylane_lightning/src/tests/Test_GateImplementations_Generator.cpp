@@ -35,8 +35,6 @@ constexpr std::string_view remove_prefix(const std::string_view &str,
     return {str.data() + len, str.length() - len};
 }
 
-constexpr auto gate_name_to_ops = Util::reverse_pairs(Constant::gate_names);
-
 template <GeneratorOperation gntr_op>
 constexpr auto findGateOpForGenerator() -> GateOperation {
     constexpr auto gntr_name =

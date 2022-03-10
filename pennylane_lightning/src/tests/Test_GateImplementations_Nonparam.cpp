@@ -21,10 +21,6 @@
  */
 using namespace Pennylane;
 
-namespace {
-using std::vector;
-}
-
 /**
  * @brief Run test suit only when the gate is defined
  */
@@ -77,7 +73,7 @@ void testApplyPauliX() {
 
         GateImplementation::applyPauliX(st.data(), num_qubits, {index}, false);
         CHECK(st[0] == Util::ZERO<PrecisionT>());
-        CHECK(st[0b1 << (num_qubits - index - 1)] == Util::ONE<PrecisionT>());
+        CHECK(st[1U << (num_qubits - index - 1)] == Util::ONE<PrecisionT>());
     }
 }
 PENNYLANE_RUN_TEST(PauliX);
@@ -147,9 +143,9 @@ void testApplyHadamard() {
         CHECK(expected.imag() == Approx(st[0].imag()));
 
         CHECK(expected.real() ==
-              Approx(st[0b1 << (num_qubits - index - 1)].real()));
+              Approx(st[1U << (num_qubits - index - 1)].real()));
         CHECK(expected.imag() ==
-              Approx(st[0b1 << (num_qubits - index - 1)].imag()));
+              Approx(st[1U << (num_qubits - index - 1)].imag()));
     }
 }
 PENNYLANE_RUN_TEST(Hadamard);

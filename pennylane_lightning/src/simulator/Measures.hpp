@@ -46,7 +46,7 @@ class Measures {
     using CFP_t = std::complex<fp_t>;
 
   public:
-    Measures(const SVType &provided_statevector)
+    explicit Measures(const SVType &provided_statevector)
         : original_statevector{provided_statevector} {};
 
     /**

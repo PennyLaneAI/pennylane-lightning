@@ -237,15 +237,15 @@ void testApplyRot() {
         std::vector<PrecisionT>{2.3, 0.1, 0.4}};
 
     std::vector<std::vector<ComplexPrecisionT>> expected_results{
-        std::vector<ComplexPrecisionT>(0b1 << num_qubits),
-        std::vector<ComplexPrecisionT>(0b1 << num_qubits),
-        std::vector<ComplexPrecisionT>(0b1 << num_qubits)};
+        std::vector<ComplexPrecisionT>(1U << num_qubits),
+        std::vector<ComplexPrecisionT>(1U << num_qubits),
+        std::vector<ComplexPrecisionT>(1U << num_qubits)};
 
     for (size_t i = 0; i < angles.size(); i++) {
         const auto rot_mat =
             Gates::getRot<PrecisionT>(angles[i][0], angles[i][1], angles[i][2]);
         expected_results[i][0] = rot_mat[0];
-        expected_results[i][0b1 << (num_qubits - i - 1)] = rot_mat[2];
+        expected_results[i][1U << (num_qubits - i - 1)] = rot_mat[2];
     }
 
     for (size_t index = 0; index < num_qubits; index++) {
@@ -1225,8 +1225,8 @@ void testApplyCRot() {
     std::vector<ComplexPrecisionT> expected_results(8);
     const auto rot_mat =
         Gates::getRot<PrecisionT>(angles[0], angles[1], angles[2]);
-    expected_results[0b1 << (num_qubits - 1)] = rot_mat[0];
-    expected_results[(0b1 << num_qubits) - 2] = rot_mat[2];
+    expected_results[1U << (num_qubits - 1)] = rot_mat[0];
+    expected_results[(1U << num_qubits) - 2] = rot_mat[2];
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CRot0,1 |000> -> |000> - "
