@@ -125,4 +125,4 @@ check-tidy:
 gbenchmark:
 	rm -rf ./BuildGBench
 	cmake $(LIGHTNING_CPP_DIR) -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_OPENMP=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release
-	cmake --build ./BuildGBench --target utils apply_operations apply_hcnot
+	cmake --build ./BuildGBench --target utils apply_operations apply_hcnot apply_multirz
