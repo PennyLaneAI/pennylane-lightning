@@ -11,8 +11,9 @@ if(ENABLE_CLANG_TIDY)
     if(NOT DEFINED CLANG_TIDY_BINARY)
         set(CLANG_TIDY_BINARY clang-tidy)
     endif()
+    message(STATUS "Using CLANG_TIDY_BINARY=${CLANG_TIDY_BINARY}")
     set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY_BINARY};
-                            -extra-arg=-std=c++17;
+                             -extra-arg=-std=c++17;
     )
 endif()
 
