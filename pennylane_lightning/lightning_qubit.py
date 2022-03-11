@@ -600,7 +600,7 @@ class LightningQubit(DefaultQubit):
         state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
 
-        return M.generate_samples(self.shots)
+        return M.generate_samples(self.shots).astype(int)
 
     def expval(self, observable, shot_range=None, bin_size=None):
         """Expectation value of the supplied observable.
