@@ -112,7 +112,7 @@ def test_gate_unitary_correct(op, op_name):
         op(*p, wires=range(wires))
         return qml.state()
 
-    unitary = np.zeros((2 ** wires, 2 ** wires), dtype=np.complex128)
+    unitary = np.zeros((2**wires, 2**wires), dtype=np.complex128)
 
     for i, input in enumerate(itertools.product([0, 1], repeat=wires)):
         out = output(np.array(input))
@@ -157,7 +157,7 @@ def test_inverse_unitary_correct(op, op_name):
         op(*p, wires=range(wires)).inv()
         return qml.state()
 
-    unitary = np.zeros((2 ** wires, 2 ** wires), dtype=np.complex128)
+    unitary = np.zeros((2**wires, 2**wires), dtype=np.complex128)
 
     for i, input in enumerate(itertools.product([0, 1], repeat=wires)):
         out = output(np.array(input))
@@ -210,7 +210,7 @@ def test_arbitrary_unitary_correct():
         qml.QubitUnitary(random_unitary, wires=range(2))
         return qml.state()
 
-    unitary = np.zeros((2 ** wires, 2 ** wires), dtype=np.complex128)
+    unitary = np.zeros((2**wires, 2**wires), dtype=np.complex128)
 
     for i, input in enumerate(itertools.product([0, 1], repeat=wires)):
         out = output(np.array(input))
@@ -231,7 +231,7 @@ def test_arbitrary_inv_unitary_correct():
         qml.QubitUnitary(random_unitary, wires=range(2)).inv()
         return qml.state()
 
-    unitary = np.zeros((2 ** wires, 2 ** wires), dtype=np.complex128)
+    unitary = np.zeros((2**wires, 2**wires), dtype=np.complex128)
 
     for i, input in enumerate(itertools.product([0, 1], repeat=wires)):
         out = output(np.array(input))

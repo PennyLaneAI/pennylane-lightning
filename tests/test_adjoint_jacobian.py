@@ -206,7 +206,7 @@ class TestAdjointJacobian:
     def test_Rot_gradient(self, theta, tol, dev, C):
         """Tests that the device gradient of an arbitrary Euler-angle-parameterized gate is
         correct."""
-        params = np.array([theta, theta ** 3, np.sqrt(2) * theta])
+        params = np.array([theta, theta**3, np.sqrt(2) * theta])
 
         dev._state = dev._state.astype(C)
 
@@ -461,8 +461,8 @@ class TestAdjointJacobianQNode:
 
     thetas = np.linspace(-2 * np.pi, 2 * np.pi, 8)
 
-    @pytest.mark.parametrize("reused_p", thetas ** 3 / 19)
-    @pytest.mark.parametrize("other_p", thetas ** 2 / 1)
+    @pytest.mark.parametrize("reused_p", thetas**3 / 19)
+    @pytest.mark.parametrize("other_p", thetas**2 / 1)
     def test_fanout_multiple_params(self, reused_p, other_p, tol, mocker, dev):
         """Tests that the correct gradient is computed for qnodes which
         use the same parameter in multiple gates."""
@@ -623,7 +623,7 @@ class TestAdjointJacobianQNode:
 
 def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
-    qml.QubitStateVector(unitary_group.rvs(2 ** 4, random_state=0)[0], wires=wires)
+    qml.QubitStateVector(unitary_group.rvs(2**4, random_state=0)[0], wires=wires)
     qml.RX(params[0], wires=wires[0])
     qml.RY(params[1], wires=wires[1])
     qml.RX(params[2], wires=wires[2]).inv()
