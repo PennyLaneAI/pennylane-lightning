@@ -465,13 +465,14 @@ class TestWiresInExpval:
 class TestSample:
     """Tests that samples are properly calculated."""
 
-    def test_sample_dimensions(self):
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_sample_dimensions(self, C):
 
         # Explicitly resetting is necessary as the internal
         # state is set to None in __init__ and only properly
         # initialized during reset
         dev = qml.device("lightning.qubit", wires=2, shots=1000)
-
+        dev_state = dev._asarray(dev._state, C)
         dev.apply([qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])])
 
         dev.shots = 10
@@ -494,7 +495,8 @@ class TestSample:
         s3 = dev.sample(qml.PauliX(0) @ qml.PauliZ(1))
         assert np.array_equal(s3.shape, (17,))
 
-    def test_sample_values(self, qubit_device_2_wires, tol):
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_sample_values(self, qubit_device_2_wires, C, tol):
         """Tests if the samples returned by sample have
         the correct values
         """
@@ -503,6 +505,7 @@ class TestSample:
         # state is set to None in __init__ and only properly
         # initialized during reset
         dev = qml.device("lightning.qubit", wires=2, shots=1000)
+        dev_state = dev._asarray(dev._state, C)
 
         dev.apply([qml.RX(1.5708, wires=[0])])
         dev._wires_measured = {0}
