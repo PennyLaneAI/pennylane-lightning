@@ -23,14 +23,18 @@ from itertools import islice
 import numpy as np
 from pennylane import (
     math,
+    gradients,
     BasisState,
-    DeviceError,
-    QuantumFunctionError,
     QubitStateVector,
     QubitUnitary,
+    Projector,
+    Hermitian,
+    Rot,
+    QuantumFunctionError,
+    DeviceError,
 )
-import pennylane as qml
 from pennylane.devices import DefaultQubit
+from pennylane.operation import Expectation, Tensor
 from pennylane.wires import Wires
 from pennylane.operation import (
     Expectation,
@@ -39,6 +43,10 @@ from pennylane.operation import (
     Sample,
     State,
 )
+
+# Remove after the next release of PL
+# Add from pennylane import matrix
+import pennylane as qml
 
 from ._version import __version__
 
@@ -79,6 +87,12 @@ def _chunk_iterable(it, num_chunks):
     return iter(lambda: tuple(islice(it, num_chunks)), ())
 
 
+def _remove_snapshot_from_operations(operations):
+    operations = operations.copy()
+    operations.discard("Snapshot")
+    return operations
+
+
 class LightningQubit(DefaultQubit):
     """PennyLane Lightning device.
 
@@ -105,6 +119,7 @@ class LightningQubit(DefaultQubit):
     version = __version__
     author = "Xanadu Inc."
     _CPP_BINARY_AVAILABLE = True
+    operations = _remove_snapshot_from_operations(DefaultQubit.operations)
 
     def __init__(self, wires, *, kernel_for_ops=None, shots=None, batch_obs=False):
         self._kernel_for_ops = DEFAULT_KERNEL_FOR_OPS
@@ -205,9 +220,13 @@ class LightningQubit(DefaultQubit):
             wires = self.wires.indices(o.wires)
 
             if method is None:
-                # Inverse can be set to False since o.matrix is already in inverted form
+                # Inverse can be set to False since qml.matrix(o) is already in inverted form
                 method = getattr(sim, "applyMatrix_{}".format(self._kernel_for_ops["Matrix"]))
-                method(o.matrix, wires, False)
+                try:
+                    method(qml.matrix(o), wires, False)
+                except AttributeError:  # pragma: no cover
+                    # To support older versions of PL
+                    method(o.matrix, wires, False)
             else:
                 inv = o.inverse
                 param = o.parameters
@@ -230,28 +249,28 @@ class LightningQubit(DefaultQubit):
                     "Adjoint differentiation method does not support"
                     f" measurement {m.return_type.value}"
                 )
-            if not isinstance(m.obs, qml.operation.Tensor):
-                if isinstance(m.obs, qml.Projector):
+            if not isinstance(m.obs, Tensor):
+                if isinstance(m.obs, Projector):
                     raise QuantumFunctionError(
                         "Adjoint differentiation method does not support the Projector observable"
                     )
-                if isinstance(m.obs, qml.Hermitian):
+                if isinstance(m.obs, Hermitian):
                     raise QuantumFunctionError(
                         "Lightning adjoint differentiation method does not currently support the Hermitian observable"
                     )
             else:
-                if any([isinstance(o, qml.Projector) for o in m.obs.non_identity_obs]):
+                if any([isinstance(o, Projector) for o in m.obs.non_identity_obs]):
                     raise QuantumFunctionError(
                         "Adjoint differentiation method does not support the Projector observable"
                     )
-                if any([isinstance(o, qml.Hermitian) for o in m.obs.non_identity_obs]):
+                if any([isinstance(o, Hermitian) for o in m.obs.non_identity_obs]):
                     raise QuantumFunctionError(
                         "Lightning adjoint differentiation method does not currently support the Hermitian observable"
                     )
 
         for op in tape.operations:
             if (
-                op.num_params > 1 and not isinstance(op, qml.Rot)
+                op.num_params > 1 and not isinstance(op, Rot)
             ) or op.name in UNSUPPORTED_PARAM_GATES_ADJOINT:
                 raise QuantumFunctionError(
                     f"The {op.name} operation is not supported using "
@@ -356,13 +375,13 @@ class LightningQubit(DefaultQubit):
         if jac is None:
             return None
 
+        if not isinstance(dy, np.ndarray) or not isinstance(jac, np.ndarray):
+            return gradients.compute_vjp(dy, jac)
+
         dy_row = math.reshape(dy, [-1])
 
         if num is None:
             num = math.shape(dy_row)[0]
-
-        if not isinstance(dy_row, np.ndarray):
-            jac = math.convert_like(jac, dy_row)
 
         jac = math.reshape(jac, [num, -1])
         num_params = jac.shape[1]

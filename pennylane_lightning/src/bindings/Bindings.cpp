@@ -55,8 +55,8 @@ void lightning_class_bindings(py::module &m) {
     //***********************************************************************//
 
     std::string class_name = "StateVectorC" + bitsize;
-    auto pyclass =
-        py::class_<StateVectorRaw<PrecisionT>>(m, class_name.c_str());
+    auto pyclass = py::class_<StateVectorRaw<PrecisionT>>(m, class_name.c_str(),
+                                                          py::module_local());
     pyclass.def(py::init(&create<PrecisionT>));
 
     registerKernelsToPyexport<PrecisionT, ParamT>(pyclass);
@@ -72,7 +72,7 @@ void lightning_class_bindings(py::module &m) {
         py::array_t<ParamT, py::array::c_style | py::array::forcecast>;
 
     using obs_data_var = std::variant<std::monostate, np_arr_r, np_arr_c>;
-    py::class_<ObsDatum<PrecisionT>>(m, class_name.c_str())
+    py::class_<ObsDatum<PrecisionT>>(m, class_name.c_str(), py::module_local())
         .def(py::init([](const std::vector<std::string> &names,
                          const std::vector<obs_data_var> &params,
                          const std::vector<std::vector<size_t>> &wires) {
@@ -157,7 +157,7 @@ void lightning_class_bindings(py::module &m) {
     //                              Operations
     //***********************************************************************//
     class_name = "OpsStructC" + bitsize;
-    py::class_<OpsData<PrecisionT>>(m, class_name.c_str())
+    py::class_<OpsData<PrecisionT>>(m, class_name.c_str(), py::module_local())
         .def(py::init<
              const std::vector<std::string> &,
              const std::vector<std::vector<ParamT>> &,
@@ -184,7 +184,8 @@ void lightning_class_bindings(py::module &m) {
     //***********************************************************************//
 
     class_name = "AdjointJacobianC" + bitsize;
-    py::class_<AdjointJacobian<PrecisionT>>(m, class_name.c_str())
+    py::class_<AdjointJacobian<PrecisionT>>(m, class_name.c_str(),
+                                            py::module_local())
         .def(py::init<>())
         .def("create_ops_list",
              [](AdjointJacobian<PrecisionT> &adj,
@@ -242,7 +243,8 @@ void lightning_class_bindings(py::module &m) {
     //***********************************************************************//
 
     class_name = "VectorJacobianProductC" + bitsize;
-    py::class_<VectorJacobianProduct<PrecisionT>>(m, class_name.c_str())
+    py::class_<VectorJacobianProduct<PrecisionT>>(m, class_name.c_str(),
+                                                  py::module_local())
         .def(py::init<>())
         .def("create_ops_list",
              [](VectorJacobianProduct<PrecisionT> &v,
@@ -308,8 +310,8 @@ void lightning_class_bindings(py::module &m) {
     //***********************************************************************//
 
     class_name = "MeasuresC" + bitsize;
-    py::class_<Measures<PrecisionT>>(m, class_name.c_str())
-        .def(py::init<const StateVectorRaw<PrecisionT>>())
+    py::class_<Measures<PrecisionT>>(m, class_name.c_str(), py::module_local())
+        .def(py::init<const StateVectorRaw<PrecisionT> &>())
         .def("probs",
              [](Measures<PrecisionT> &M, const std::vector<size_t> &wires) {
                  if (wires.empty()) {

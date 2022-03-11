@@ -63,9 +63,7 @@ def op(op_name):
         "ControlledQubitUnitary": qml.ControlledQubitUnitary(
             np.eye(2) * 1j, wires=[0], control_wires=[2]
         ),
-        "MultiControlledX": qml.MultiControlledX(
-            control_wires=[0, 1], wires=2, control_values="01"
-        ),
+        "MultiControlledX": qml.MultiControlledX(wires=(0, 1, 2), control_values="01"),
         "SingleExcitation": qml.SingleExcitation(0.123, wires=[0, 3]),
         "SingleExcitationPlus": qml.SingleExcitationPlus(0.123, wires=[0, 3]),
         "SingleExcitationMinus": qml.SingleExcitationMinus(0.123, wires=[0, 3]),
@@ -120,7 +118,7 @@ def test_gate_unitary_correct(op, op_name):
         out = output(np.array(input))
         unitary[:, i] = out
 
-    unitary_expected = op(*p, wires=range(wires)).matrix
+    unitary_expected = qml.matrix(op(*p, wires=range(wires)))
 
     assert np.allclose(unitary, unitary_expected)
 
@@ -165,7 +163,7 @@ def test_inverse_unitary_correct(op, op_name):
         out = output(np.array(input))
         unitary[:, i] = out
 
-    unitary_expected = op(*p, wires=range(wires)).inv().matrix
+    unitary_expected = qml.matrix(op(*p, wires=range(wires)).inv())
 
     assert np.allclose(unitary, unitary_expected)
 
