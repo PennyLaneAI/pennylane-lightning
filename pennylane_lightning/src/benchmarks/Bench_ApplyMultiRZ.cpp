@@ -1,12 +1,11 @@
-#include <vector>
 #include <algorithm>
 #include <random>
+#include <vector>
 
 #include "Constant.hpp"
 #include "StateVectorManaged.hpp"
 
 #include <benchmark/benchmark.h>
-
 
 template <typename RandomEngine>
 static inline auto generateDistinctWires(RandomEngine &re, size_t num_qubits,
@@ -19,8 +18,7 @@ static inline auto generateDistinctWires(RandomEngine &re, size_t num_qubits,
 }
 
 static void applyOperation_MultiRZ(benchmark::State &state,
-                                 Pennylane::Gates::KernelType kernel) {
-
+                                   Pennylane::Gates::KernelType kernel) {
     size_t num_gates = state.range(0);
     size_t num_qubits = state.range(1);
     size_t num_wires = state.range(2);
@@ -63,7 +61,7 @@ static void applyOperation_MultiRZ(benchmark::State &state,
 
 BENCHMARK_CAPTURE(applyOperation_MultiRZ, kernel_LM,
                   Pennylane::Gates::KernelType::LM)
-    ->RangeMultiplier(1l << 1)
+    ->RangeMultiplier(2l)
     ->Ranges({{8, 64}, {4, 24}, {2, 2}});
 
 BENCHMARK_CAPTURE(applyOperation_MultiRZ, kernel_PI,
