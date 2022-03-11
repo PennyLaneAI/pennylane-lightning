@@ -183,7 +183,7 @@ TEST_CASE("Sample", "[Measures]") {
 
     size_t num_qubits = 3;
     size_t N = std::pow(2, num_qubits);
-    size_t num_samples = 10000;
+    size_t num_samples = 100000;
     auto &&samples = Measurer.generate_samples(num_samples);
 
     std::vector<size_t> counts(N, 0);
@@ -208,7 +208,7 @@ TEST_CASE("Sample", "[Measures]") {
     // compare estimated probabilities to real probabilities
     SECTION("No wires provided:") {
         REQUIRE_THAT(probabilities,
-                     Catch::Approx(expected_probabilities).margin(1e-3));
+                     Catch::Approx(expected_probabilities).margin(.05));
     }
 }
 
