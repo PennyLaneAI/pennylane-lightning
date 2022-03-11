@@ -296,8 +296,7 @@ class Measures {
         }
 
         // Run alias algorithm
-        while (underfull_bucket_ids.size() != 0 and
-               overfull_bucket_ids.size() != 0) {
+        while (!underfull_bucket_ids.empty() and !overfull_bucket_ids.empty()) {
             // get an overfull bucket
             auto i = overfull_bucket_ids.top();
 
@@ -325,10 +324,10 @@ class Measures {
         // Pick samples
         for (size_t i = 0; i < num_samples; i++) {
             fp_t pct = distribution(generator) * N;
-            size_t idx = static_cast<size_t>(pct);
-            if (pct - idx > bucket[idx])
+            size_t idx = pct;
+            if (pct - idx > bucket[idx]) {
                 idx = bucket_partner[idx];
-
+            }
             // If cached, retrieve sample from cache
             if (cache.count(idx) != 0) {
                 size_t cache_id = cache[idx];
@@ -338,9 +337,10 @@ class Measures {
             }
             // If not cached, compute
             else {
-                for (size_t j = 0; j < num_qubits; j++)
+                for (size_t j = 0; j < num_qubits; j++) {
                     samples[i * num_qubits + (num_qubits - 1 - j)] =
                         (idx >> j) & 1;
+                }
                 cache[idx] = i;
             }
         }
