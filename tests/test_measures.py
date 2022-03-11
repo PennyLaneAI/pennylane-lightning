@@ -500,7 +500,7 @@ class TestSample:
         """Tests if the samples returned by sample have
         the correct values
         """
-
+        
         # Explicitly resetting is necessary as the internal
         # state is set to None in __init__ and only properly
         # initialized during reset
@@ -517,6 +517,15 @@ class TestSample:
         # they square to 1
         assert np.allclose(s1**2, 1, atol=tol, rtol=0)
 
+    def test_sample_unsupported_type(self):
+        """Test if expval raise error with complex256"""
+        
+        dev = qml.device("lightning.qubit", wires=2, shots=1000)
+        dev._state = dev._state.astype(np.complex256)
+        with pytest.raises(TypeError, match="Unsupported complex Type:"):
+            dev._samples = dev.generate_samples()
+            
+        
 
 class TestWiresInVar:
     """Test different Wires settings in Lightning's var."""
