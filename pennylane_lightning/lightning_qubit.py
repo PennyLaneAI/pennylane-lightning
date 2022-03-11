@@ -34,9 +34,9 @@ from pennylane import (
     DeviceError,
 )
 from pennylane.devices import DefaultQubit
-from pennylane.operation import Expectation, Tensor
 from pennylane.wires import Wires
 from pennylane.operation import (
+    Tensor,
     Expectation,
     Variance,
     Probability,
