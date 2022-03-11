@@ -9,7 +9,7 @@ $ cmake --build ./BuildGBench --target utils apply_operations apply_multirz
 ## Google-Benchmark
 The main requirement for these scripts is [google-benchmark](https://github.com/google/benchmark). We use the CMake `FetchContent` command to install the library if the `find_package` command fails to find GB. 
 
-## GB CLI Options
+### GB CLI Flags
 ```Bash
 benchmark [--benchmark_list_tests={true|false}]
           [--benchmark_filter=<regex>]
@@ -28,7 +28,7 @@ benchmark [--benchmark_list_tests={true|false}]
           [--v=<verbosity>]
 ```
 
-## Implementation details:
+## Implementation details
 The `make gbenchmark` command compiles the benchmark executables from the following files,
 - `Bench_BitUtil.cpp`,
 - `Bench_LinearAlgebra.cpp`,
@@ -181,7 +181,7 @@ applyOperation_MultiRZ/kernel_LM/64/24/4 5512339216 ns   5511768787 ns          
 ```
 
 ## GB Compare Tooling
-You can use `compare.py` [here](https://github.com/google/benchmark/blob/main/tools/compare.py) to compare the results of the GB scripts. 
+You can use [`compare.py`](https://github.com/google/benchmark/blob/main/tools/compare.py) to compare the results of the GB scripts. 
 
 ### Compare float vs double 
 ```Bash

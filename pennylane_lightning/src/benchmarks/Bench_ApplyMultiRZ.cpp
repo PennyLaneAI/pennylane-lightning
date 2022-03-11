@@ -8,27 +8,31 @@
 #include <benchmark/benchmark.h>
 
 template <typename RandomEngine>
-static inline auto generateDistinctWires(RandomEngine &re, size_t num_qubits,
+static inline auto generateDistinctWires(RandomEngine &eng, size_t num_qubits,
                                          size_t num_wires)
     -> std::vector<size_t> {
     std::vector<size_t> v(num_qubits, 0);
     std::iota(v.begin(), v.end(), 0);
-    shuffle(v.begin(), v.end(), re);
+    shuffle(v.begin(), v.end(), eng);
     return {v.begin(), v.begin() + num_wires};
 }
 
 static void applyOperation_MultiRZ(benchmark::State &state,
-                                   Pennylane::Gates::KernelType kernel) {
+                                   const Pennylane::Gates::KernelType kernel) {
     size_t num_gates = state.range(0);
     size_t num_qubits = state.range(1);
     size_t num_wires = state.range(2);
 
+    if (!num_gates) {
+        state.SkipWithError("Invalid number of gates.");
+    }
+
     if (!num_qubits) {
-        throw std::invalid_argument("Invalid number of qubits.");
+        state.SkipWithError("Invalid number of qubits.");
     }
 
     if (!num_wires) {
-        throw std::invalid_argument("Invalid number of gates.");
+        state.SkipWithError("Invalid number of wires.");
     }
 
     std::random_device rd;

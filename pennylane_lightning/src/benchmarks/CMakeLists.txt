@@ -9,7 +9,6 @@ find_package(benchmark)
 
 if (NOT benchmark_FOUND)
     message(STATUS "GBenchmark is not found. Fetch GBenchmark.")
-    # include(FetchContent)
 
     # Fetch GTest; required for GBenchmark
     FetchContent_Declare(
@@ -66,17 +65,6 @@ target_link_libraries(utils PRIVATE lightning_benchmarks_dependency)
 add_executable(apply_operations Bench_ApplyOperations.cpp)
 
 target_link_libraries(apply_operations PRIVATE lightning_compile_options
-                                            lightning_gates
-                                            lightning_simulator
-                                            lightning_benchmarks_dependency)
-
-################################################################################
-# Add benchmark_apply_hcnot exe
-################################################################################
-
-add_executable(apply_hcnot Bench_ApplyHCNOT.cpp)
-
-target_link_libraries(apply_hcnot PRIVATE lightning_compile_options
                                             lightning_gates
                                             lightning_simulator
                                             lightning_benchmarks_dependency)

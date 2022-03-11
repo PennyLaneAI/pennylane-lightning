@@ -5,6 +5,7 @@ project(lightning_components LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 option(ENABLE_WARNINGS "Enable warnings" ON)
+option(ENABLE_OPENMP "Enable OpenMP" ON)
 
 if(ENABLE_CLANG_TIDY)
     if(NOT DEFINED CLANG_TIDY_BINARY)
