@@ -518,10 +518,11 @@ class TestSample:
         assert np.allclose(s1**2, 1, atol=tol, rtol=0)
 
     def test_sample_unsupported_type(self):
-        """Test if expval raise error with complex256"""
+        """Test if generate_samples raise error with complex256"""
         
         dev = qml.device("lightning.qubit", wires=2, shots=1000)
-        dev._state = dev._state.astype(np.complex256)
+        dev._state = np.array([1, 0]).astype(np.complex256)
+        
         with pytest.raises(TypeError, match="Unsupported complex Type:"):
             dev._samples = dev.generate_samples()
             
