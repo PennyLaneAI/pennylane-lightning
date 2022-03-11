@@ -1,13 +1,13 @@
 # Lightning Google-Benchmark Suite 
 
-This is the PennyLane-Lightning benchmark suite powered by [google-benchmark](https://github.com/google/benchmark) (GB). To use GB scripts, you can perform `make gbenchmark` or run 
+This is the PennyLane-Lightning benchmark suite powered by [google-benchmark](https://github.com/google/benchmark) (GB). To use GB scripts, one can perform `make gbenchmark` or run 
 ```Bash
 $ cmake pennylane_lightning/src/ -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_OPENMP=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release
 $ cmake --build ./BuildGBench --target utils apply_operations apply_multirz
 ```
 
 ## Google-Benchmark
-The main requirement for these scripts is [google-benchmark](https://github.com/google/benchmark). We use the CMake `FetchContent` command to install the library if the `find_package` command fails to find GB. 
+The main requirement for these scripts is [google-benchmark](https://github.com/google/benchmark). We take advantage of the CMake `FetchContent` command to get the library up and running if the `find_package` command fails to find and load GB. 
 
 ### GB CLI Flags
 ```Bash
@@ -29,7 +29,7 @@ benchmark [--benchmark_list_tests={true|false}]
 ```
 
 ## Implementation details
-The `make gbenchmark` command compiles the benchmark executables from the following files,
+The `make gbenchmark` command compiles benchmark executables from the following files,
 - `Bench_BitUtil.cpp`,
 - `Bench_LinearAlgebra.cpp`,
 - `Bench_ApplyOperations.cpp`,
@@ -37,13 +37,13 @@ The `make gbenchmark` command compiles the benchmark executables from the follow
 
 
 ### `benchmarks/utils`
-To benchmark the linear algebra and bit opertions in PennyLane-Lightning, you can run:
+To benchmark the linear algebra and bit operations in PennyLane-Lightning, one can run:
 ```Bash
 $ make gbenchmark
 $ ./BuildGBench/benchmarks/utils 
 ```
 
-For example, in `Bench_LinearAlgebra.cpp`, The `std_innerProd_cmplx<T>` method performs the benchmark for the inner product of two vectors with complex numbers (`std::complex<T>`) using `std::inner_product`. This is usual to try a few arguments in some ranges and generate a benchmark for each such value. The GB offers `Range` and `Ranges` to do so, 
+For example, the `std_innerProd_cmplx<T>` method in `Bench_LinearAlgebra.cpp` performs the benchmark for the inner product of two vectors with complex numbers (`std::complex<T>`) using `std::inner_product`. This is usual to try a few arguments in some ranges and generate a benchmark for each such value. The GB offers `Range` and `Ranges` to do so, 
 ```C
 BENCHMARK(std_innerProd_cmplx<float>)
     ->Range(1l << 5, 1l << 10);
@@ -56,22 +56,22 @@ BENCHMARK(std_innerProd_cmplx<float>)
     ->Range(1l << 2, 1l << 10);
 ```
 
-To filter the benchmark results to run only `std_innerProd_cmplx`, you can run:
+To filter the benchmark results to run only `std_innerProd_cmplx`, one can run:
 ```Bash
 $ ./BuildGBench/benchmarks/utils --benchmark_filter=std_innerProd_cmplx
 ```
 
-You can use `--benchmark_time_unit` to get the results in `{ns|us|ms|s}` too. Check **GB CLI Options** for the list of options. 
+Besides, one can use `--benchmark_time_unit` to get the results in `{ns|us|ms|s}` too. Check **GB CLI Flags** for the list of flags. 
 
 
 ### `benchmarks/apply_operations`
-To benchmark the `Pennylane::StateVectorManaged` and `applyOperation` in PennyLane-Lightning, you can run:
+To benchmark the `Pennylane::StateVectorManaged` and `applyOperation` in PennyLane-Lightning, one can run:
 ```Bash
 $ make gbenchmark
 $ ./BuildGBench/benchmarks/apply_operations
 ```
 
-You can alter the follwoing arguments.
+The follwoing arguments could be altered:
 - `Pennylane::Gates::KernelType` 
 - The list of gates that script would randomly pick from to apply to the state vector. 
 - The range for the number of gates to be applied.
@@ -91,7 +91,6 @@ BENCHMARK_CAPTURE(applyOperationsFromRandOps, LM_RXYZ,
     ->RangeMultiplier(2)
     ->Ranges({{8, 64}, {4, 24}});
 ```
-
 
 ```Bash
 -----------------------------------------------------------------------------------
@@ -115,16 +114,15 @@ applyOperationsFromRandOps/LM_RXYZ/32/24 1572258140 ns   1571911717 ns          
 applyOperationsFromRandOps/LM_RXYZ/64/24 3219987188 ns   3219288609 ns            1
 ```
 
-You can use `--benchmark_format` to get the results in other formats: `<console|json|csv>`. Check **GB CLI Options** for the list of options. 
+One can use `--benchmark_format` to get the results in other formats: `<console|json|csv>`. Check **GB CLI Flags** for the list of flags. 
 
 
 ### `benchmarks/apply_multirz`
-To benchmark the `Pennylane::StateVectorManaged` and `applyOperation` specificly for `"MultiRZ"` in PennyLane-Lightning, you can run:
+To benchmark the `Pennylane::StateVectorManaged` and `applyOperation` specificly for `"MultiRZ"` in PennyLane-Lightning, one can run:
 ```Bash
 $ make gbenchmark
 $ ./BuildGBench/benchmarks/apply_multirz
 ```
-
 
 For example, in the code below, 
 - `applyOperation_MultiRZ` is the name of the method in `Bench_ApplyMultiRZ.cpp`, 
@@ -140,7 +138,6 @@ BENCHMARK_CAPTURE(applyOperation_MultiRZ, kernel_LM,
     ->RangeMultiplier(2)
     ->Ranges({{8, 64}, {4, 24}, {2, 4}});
 ```
-
 
 ```Bash
 -----------------------------------------------------------------------------------
@@ -181,7 +178,7 @@ applyOperation_MultiRZ/kernel_LM/64/24/4 5512339216 ns   5511768787 ns          
 ```
 
 ## GB Compare Tooling
-You can use [`compare.py`](https://github.com/google/benchmark/blob/main/tools/compare.py) to compare the results of the GB scripts. 
+One can use [`compare.py`](https://github.com/google/benchmark/blob/main/tools/compare.py) to compare the results of the GB scripts. 
 
 ### Compare float vs double 
 ```Bash
