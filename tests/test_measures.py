@@ -472,7 +472,7 @@ class TestSample:
         # state is set to None in __init__ and only properly
         # initialized during reset
         dev = qml.device("lightning.qubit", wires=2, shots=1000)
-        dev_state = dev._asarray(dev._state, C)
+        dev._state = dev._asarray(dev._state, C)
         dev.apply([qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])])
 
         dev.shots = 10
@@ -505,7 +505,7 @@ class TestSample:
         # state is set to None in __init__ and only properly
         # initialized during reset
         dev = qml.device("lightning.qubit", wires=2, shots=1000)
-        dev_state = dev._asarray(dev._state, C)
+        dev._state = dev._asarray(dev._state, C)
 
         dev.apply([qml.RX(1.5708, wires=[0])])
         dev._wires_measured = {0}
