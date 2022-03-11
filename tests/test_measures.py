@@ -55,15 +55,15 @@ class TestProbs:
 
     def test_probs_dtype64(self, dev):
         """Test if probs changes the state dtype"""
-        dev._state = np.array([1, 0]).astype(np.complex64)
+        dev._state = dev._state.astype(np.complex64)
         p = dev.probability(wires=[0, 1])
 
         assert dev._state.dtype == np.complex64
-        assert np.allclose(p, [1, 1, 0, 0])
+        assert np.allclose(p, [1, 0, 0, 0])
 
     def test_probs_dtype_error(self, dev):
         """Test if probs raise error with complex256"""
-        dev._state = np.array([1, 0]).astype(np.complex256)
+        dev._state = dev._state.astype(np.complex256)
 
         with pytest.raises(TypeError, match="Unsupported complex Type:"):
             dev.probability(wires=[0, 1])
@@ -173,7 +173,7 @@ class TestExpval:
 
     def test_expval_dtype64(self, dev):
         """Test if expval changes the state dtype"""
-        dev._state = np.array([1, 0]).astype(np.complex64)
+        dev._state = dev._state.astype(np.complex64)
         e = dev.expval(qml.PauliX(0))
 
         assert dev._state.dtype == np.complex64
@@ -181,7 +181,7 @@ class TestExpval:
 
     def test_expval_dtype_error(self, dev):
         """Test if expval raise error with complex256"""
-        dev._state = np.array([1, 0]).astype(np.complex256)
+        dev._state = dev._state.astype(np.complex256)
 
         with pytest.raises(TypeError, match="Unsupported complex Type:"):
             dev.expval(qml.PauliX(0))
@@ -290,7 +290,7 @@ class TestVar:
 
     def test_var_dtype64(self, dev):
         """Test if var changes the state dtype"""
-        dev._state = np.array([1, 0]).astype(np.complex64)
+        dev._state = dev._state.astype(np.complex64)
         v = dev.var(qml.PauliX(0))
 
         assert dev._state.dtype == np.complex64
@@ -298,7 +298,7 @@ class TestVar:
 
     def test_expval_dtype_error(self, dev):
         """Test if var raise error with complex256"""
-        dev._state = np.array([1, 0]).astype(np.complex256)
+        dev._state = dev._state.astype(np.complex256)
 
         with pytest.raises(TypeError, match="Unsupported complex Type:"):
             dev.var(qml.PauliX(0))
@@ -505,6 +505,33 @@ class TestWiresInVar:
         assert np.allclose(circuit1(), circuit2(), atol=tol)
 
 
+class TestInitMeasuresObject:
+    """Tests the init_measures_object method in Lightning"""
+
+    @pytest.fixture
+    def dev(self):
+        return qml.device("lightning.qubit", wires=2)
+
+    @pytest.mark.parametrize(
+        "datatype, objtype", [(np.complex64, MeasuresC64), (np.complex128, MeasuresC128)]
+    )
+    def test_init_measures_object_dtype(self, dev, datatype, objtype):
+        """Test if init_measures_object changes the state dtype64"""
+
+        dev._state = dev._state.astype(datatype)
+        obj = dev.init_measures_object()
+
+        assert dev._state.dtype == datatype
+        assert type(obj) == objtype
+
+    def test_init_measures_object_dtype_error(self, dev):
+        """Test if init_measures_object raise error with complex256"""
+        dev._state = dev._state.astype(np.complex256)
+
+        with pytest.raises(TypeError, match="Unsupported complex Type:"):
+            dev.init_measures_object()
+
+
 class TestStatisticsQueuing:
     """Tests the statistics method in Lightning"""
 
@@ -530,14 +557,21 @@ class TestStatisticsQueuing:
         [
             ([qml.var(qml.PauliZ(0)), qml.var(qml.PauliZ(1))], [0.0]),
             ([qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliZ(1))], [1.0, 1.0]),
-            ([qml.probs(0), qml.probs(1)], [1.0, 0.0]),
-            ([qml.var(qml.PauliZ(1)), qml.expval(qml.PauliX(1))], [0.0, 1.0]),
+            (
+                [qml.probs(0), qml.probs(1), qml.probs()],
+                [np.array([1.0, 0.0]), np.array([1.0, 0.0]), np.array([1.0, 0.0, 0.0, 0.0])],
+            ),
+            (
+                [qml.var(qml.PauliZ(1)), qml.expval(qml.PauliX(1)), qml.probs()],
+                [0.0, 1.0, np.array([1.0, 0.0, 0.0, 0.0])],
+            ),
         ],
     )
     def test_obs_list(self, dev, obs, expected):
         """Test statistics of a list of observables oven an initiated state"""
         res = dev.statistics(obs)
-        assert np.allclose(res, expected)
+        for a, b in zip(res, expected):
+            assert np.allclose(a, b)
 
 
 @pytest.mark.parametrize("stat_func", [qml.expval, qml.var, qml.sample])

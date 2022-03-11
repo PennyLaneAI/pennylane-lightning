@@ -663,31 +663,23 @@ class LightningQubit(DefaultQubit):
 
         mc_obj = None
         mc_pre = None
-        results = []
+        res = []
 
         for obs in observables:
             if obs.return_type is Probability:
                 if not_sampling and mc_obj is None:
                     mc_obj = self.init_measures_object()
-                results.append(
-                    self.probability(
-                        wires=obs.wires, shot_range=shot_range, bin_size=bin_size, mc_obj=mc_obj
-                    )
-                )
+                res.append(self.probability(obs.wires, shot_range, bin_size, mc_obj))
             elif obs.return_type is Expectation:
                 if not_sampling and mc_pre is None:
                     mc_pre = self.init_measures_object(pre_rotated=True)
-                results.append(
-                    self.expval(obs, shot_range=shot_range, bin_size=bin_size, mc_obj=mc_pre)
-                )
+                res.append(self.expval(obs, shot_range, bin_size, mc_pre))
             elif obs.return_type is Variance:
                 if not_sampling and mc_pre is None:
                     mc_pre = self.init_measures_object(pre_rotated=True)
-                results.append(
-                    self.var(obs, shot_range=shot_range, bin_size=bin_size, mc_obj=mc_pre)
-                )
+                res.append(self.var(obs, shot_range, bin_size, mc_pre))
             elif obs.return_type is Sample:
-                results.append(super().sample(obs, shot_range=shot_range, bin_size=bin_size))
+                res.append(super().sample(obs, shot_range, bin_size))
             elif obs.return_type is State:
                 if len(observables) > 1:
                     raise qml.QuantumFunctionError(
@@ -699,12 +691,12 @@ class LightningQubit(DefaultQubit):
                         "Returning the state is not supported when using custom wire labels"
                     )
                 # LightningQubit doesn't support state preparation yet
-                results.append(super().access_state(wires=obs.wires))
+                res.append(super().access_state(wires=obs.wires))
             elif obs.return_type is not None:
                 raise qml.QuantumFunctionError(
                     "Unsupported return type specified for observable {}".format(obs.name)
                 )
-        return results
+        return res
 
 
 if not CPP_BINARY_AVAILABLE:
