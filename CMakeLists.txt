@@ -1,8 +1,20 @@
 cmake_minimum_required(VERSION 3.14)
 
+set(LOGO "
+░█░░░▀█▀░█▀▀░█░█░▀█▀░█▀█░▀█▀░█▀█░█▀▀░░░░▄▀▄░█░█░█▀▄░▀█▀░▀█▀
+░█░░░░█░░█░█░█▀█░░█░░█░█░░█░░█░█░█░█░░░░█\█░█░█░█▀▄░░█░░░█░
+░▀▀▀░▀▀▀░▀▀▀░▀░▀░░▀░░▀░▀░▀▀▀░▀░▀░▀▀▀░▀░░░▀\░▀▀▀░▀▀░░▀▀▀░░▀░
+")
+message(${LOGO})
+
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version")
 
 project(pennylane_lightning)
+
+project(pennylane_lightning
+    DESCRIPTION "C++ stavector simulator bindings for PennyLane. "
+    LANGUAGES CXX
+)
 
 # Read and set pennylane_lightning version
 function(set_pennylane_lightning_version VERSION_FILE_PATH)
