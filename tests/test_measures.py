@@ -21,8 +21,6 @@ from pennylane.measurements import (
     Expectation,
 )
 
-from pennylane.queuing import AnnotatedQueue
-
 import pytest
 
 try:
