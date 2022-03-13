@@ -500,7 +500,7 @@ class TestSample:
         """Tests if the samples returned by sample have
         the correct values
         """
-        
+
         # Explicitly resetting is necessary as the internal
         # state is set to None in __init__ and only properly
         # initialized during reset
@@ -519,14 +519,13 @@ class TestSample:
 
     def test_sample_unsupported_type(self):
         """Test if generate_samples raise error with complex256"""
-        
+
         dev = qml.device("lightning.qubit", wires=2, shots=1000)
         dev._state = np.array([1, 0]).astype(np.complex256)
-        
+
         with pytest.raises(TypeError, match="Unsupported complex Type:"):
             dev._samples = dev.generate_samples()
-            
-        
+
 
 class TestWiresInVar:
     """Test different Wires settings in Lightning's var."""
