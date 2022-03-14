@@ -16,25 +16,14 @@
 #include <catch2/catch.hpp>
 
 namespace Pennylane {
-template <typename T> struct remove_complex { using type = T; };
-template <typename T> struct remove_complex<std::complex<T>> {
-    using type = T;
-};
-template <typename T> using remove_complex_t = typename remove_complex<T>::type;
-
-template <typename T> struct is_complex : std::false_type {};
-
-template <typename T> struct is_complex<std::complex<T>> : std::true_type {};
-
-template <typename T> constexpr bool is_complex_v = is_complex<T>::value;
-
 template <class T, class Alloc = std::allocator<T>> struct PLApprox {
     const std::vector<T, Alloc> &comp_;
 
     explicit PLApprox(const std::vector<T, Alloc> &comp) : comp_{comp} {}
 
-    remove_complex_t<T> margin_{};
-    remove_complex_t<T> epsilon_ = std::numeric_limits<float>::epsilon() * 100;
+    Util::remove_complex_t<T> margin_{};
+    Util::remove_complex_t<T> epsilon_ =
+        std::numeric_limits<float>::epsilon() * 100;
 
     template <class AllocA>
     [[nodiscard]] bool compare(const std::vector<T, AllocA> &lhs) const {
@@ -43,7 +32,7 @@ template <class T, class Alloc = std::allocator<T>> struct PLApprox {
         }
 
         for (size_t i = 0; i < lhs.size(); i++) {
-            if constexpr (is_complex_v<T>) {
+            if constexpr (Util::is_complex_v<T>) {
                 if (lhs[i].real() != Approx(comp_[i].real())
                                          .epsilon(epsilon_)
                                          .margin(margin_) ||
@@ -61,6 +50,7 @@ template <class T, class Alloc = std::allocator<T>> struct PLApprox {
         }
         return true;
     }
+
     [[nodiscard]] std::string describe() const {
         std::ostringstream ss;
         ss << "is Approx to {";
@@ -70,11 +60,12 @@ template <class T, class Alloc = std::allocator<T>> struct PLApprox {
         ss << "}" << std::endl;
         return ss.str();
     }
-    PLApprox &epsilon(remove_complex_t<T> eps) {
+
+    PLApprox &epsilon(Util::remove_complex_t<T> eps) {
         epsilon_ = eps;
         return *this;
     }
-    PLApprox &margin(remove_complex_t<T> m) {
+    PLApprox &margin(Util::remove_complex_t<T> m) {
         margin_ = m;
         return *this;
     }
@@ -199,18 +190,6 @@ auto createPlusState(size_t num_qubits)
 }
 
 /**
- * @brief Calculate the squared norm of a vector
- */
-template <typename PrecisionT>
-auto squaredNorm(const std::complex<PrecisionT> *data, size_t data_size)
-    -> PrecisionT {
-    return std::transform_reduce(
-        data, data + data_size, PrecisionT{}, std::plus<PrecisionT>(),
-        static_cast<PrecisionT (*)(const std::complex<PrecisionT> &)>(
-            &std::norm<PrecisionT>));
-}
-
-/**
  * @brief create a random state
  */
 template <typename PrecisionT, class RandomEngine>
@@ -223,7 +202,7 @@ auto createRandomState(RandomEngine &re, size_t num_qubits)
     }
 
     scaleVector(res, std::complex<PrecisionT>{1.0, 0.0} /
-                         std::sqrt(squaredNorm(res.data(), res.size())));
+                         std::sqrt(Util::squaredNorm(res.data(), res.size())));
     return res;
 }
 

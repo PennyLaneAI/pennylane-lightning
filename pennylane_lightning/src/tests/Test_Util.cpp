@@ -568,6 +568,28 @@ TEST_CASE("Utility bit operations", "[Util][BitUtil]") {
             }
         }
     }
+
+    SECTION("SquaredNorm") {
+        { // for float
+            std::vector<float> vec{0.0, 1.0, 3.0, 10.0};
+            CHECK(Util::squaredNorm(vec) == Approx(110.0));
+        }
+
+        { // for double
+            std::vector<double> vec{0.0, 1.0, 3.0, 10.0};
+            CHECK(Util::squaredNorm(vec) == Approx(110.0));
+        }
+
+        { // for complex<float>
+            std::vector<std::complex<float>> vec{{0.0, 1.0}, {3.0, 10.0}};
+            CHECK(Util::squaredNorm(vec) == Approx(110.0));
+        }
+
+        { // for complex<double>
+            std::vector<std::complex<double>> vec{{0.0, 1.0}, {3.0, 10.0}};
+            CHECK(Util::squaredNorm(vec) == Approx(110.0));
+        }
+    }
 }
 
 TEST_CASE("Utility array and tuples", "[Util]") {
