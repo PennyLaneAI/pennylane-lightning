@@ -12,7 +12,7 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment ve
 project(pennylane_lightning)
 
 project(pennylane_lightning
-    DESCRIPTION "C++ stavector simulator bindings for PennyLane. "
+    DESCRIPTION "C++ state-vector simulator bindings for PennyLane. "
     LANGUAGES CXX
 )
 
