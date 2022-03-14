@@ -115,7 +115,7 @@ void testApplyGate(RandomEngine &re, size_t num_qubits) {
     INFO("PrecisionT, ParamT = " << PrecisionToName<PrecisionT>::value << ", "
                                  << PrecisionToName<ParamT>::value);
 
-    const auto all_wires = crateAllWires(num_qubits, gate_op, true);
+    const auto all_wires = createAllWires(num_qubits, gate_op, true);
     for (const auto &wires : all_wires) {
         const auto params = createParams<ParamT>(gate_op);
         const auto gate_name = lookup(gate_names, gate_op);

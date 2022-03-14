@@ -70,7 +70,7 @@
 #endif
 
 #if (_OPENMP >= 202011)
-#define PL_UNROLL_LOOP __Pragma("omp unroll(8)")
+#define PL_UNROLL_LOOP _Pragma("omp unroll(8)")
 #elif defined(__GNUC__)
 #define PL_UNROLL_LOOP _Pragma("GCC unroll 8")
 #elif defined(__clang__)
@@ -135,27 +135,97 @@ constexpr auto getCPUArchMSVC() {
 [[maybe_unused]] constexpr static auto cpu_arch = CPUArch::Unknown;
 #endif
 
-enum class Compiler { GCC, Clang, MSVC, Unknown };
+enum class Compiler { GCC, Clang, MSVC, NVCC, NVHPC, Unknown };
 
+/**
+ * @brief When none of the specialized functions is called.
+ */
 template <Compiler compiler>
 constexpr auto getCompilerVersion() -> std::string_view {
     return "Unknown version";
 }
+/**
+ * @brief Create version string for GCC.
+ *
+ * This function raises an error when instantiated (invoked) if a compiler
+ * does not define macros (i.e. other than GCC compatible compilers).
+ */
 template <>
 constexpr auto getCompilerVersion<Compiler::GCC>() -> std::string_view {
     return PL_TO_STR(__GNUC__) "." PL_TO_STR(__GNUC_MINOR__) "." PL_TO_STR(
         __GNUC_PATCHLEVEL__);
 }
+
+/**
+ * @brief Create version string for Clang.
+ *
+ * This function raises an error when instantiated (invoked) if a compiler
+ * does not define macros (i.e. other than Clang).
+ */
 template <>
 constexpr auto getCompilerVersion<Compiler::Clang>() -> std::string_view {
     return PL_TO_STR(__clang_major__) "." PL_TO_STR(
         __clang_minor__) "." PL_TO_STR(__clang_patchlevel__);
 }
+
+/**
+ * @brief Create version string for MSVC.
+ *
+ * This function raises an error when instantiated (invoked) if a compiler
+ * does not define macros (i.e. other than MSVC).
+ */
 template <>
 constexpr auto getCompilerVersion<Compiler::MSVC>() -> std::string_view {
     return PL_TO_STR(_MSC_FULL_VER);
 }
-#if defined(__GNUC__) && !defined(__llvm__) && !defined(__INTEL_COMPILER)
+
+/**
+ * @brief Create version string for NVCC.
+ *
+ * This function raises an error when instantiated (invoked) if a compiler
+ * does not define macros (i.e. other than NVCC).
+ */
+template <>
+constexpr auto getCompilerVersion<Compiler::NVCC>() -> std::string_view {
+    return PL_TO_STR(__CUDACC_VER_MAJOR__) "." PL_TO_STR(
+        __CUDACC_VER_MINOR__) "." PL_TO_STR(__CUDACC_VER_BUILD__);
+}
+
+/**
+ * @brief Create version string for NVCC.
+ *
+ * This function raises an error when instantiated (invoked) if a compiler
+ * does not define macros (i.e. other than NVCC).
+ *
+ * See
+ * https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-identification-macro
+ * for related information
+ */
+template <>
+constexpr auto getCompilerVersion<Compiler::NVCC>() -> std::string_view {
+    return PL_TO_STR(__CUDACC_VER_MAJOR__) "." PL_TO_STR(
+        __CUDACC_VER_MINOR__) "." PL_TO_STR(__CUDACC_VER_BUILD__);
+}
+
+/**
+ * @brief Create version string for NVHPC (C/C++ compilers without CUDA from
+ * NVIDIA).
+ *
+ * This function raises an error when instantiated (invoked) if a compiler
+ * does not define macros (i.e. other than NVHPC).
+ */
+template <>
+constexpr auto getCompilerVersion<Compiler::NVHPC>() -> std::string_view {
+    return PL_TO_STR(__NVCOMPILER_MAJOR__) "." PL_TO_STR(
+        __NVCOMPILER_MINOR__) "." PL_TO_STR(__NVCOMPILER_PATCHLEVEL__);
+}
+
+#if defined(__NVCC__)
+[[maybe_unused]] constexpr static auto compiler = Compiler::NVCC;
+#elif defined(__NVCOMPILER)
+[[maybe_unused]] constexpr static auto compiler = Compiler::NVHPC;
+#elif defined(__GNUC__) && !defined(__llvm__) && !defined(__INTEL_COMPILER)
+// All GCC compatible compilers define __GNUC__.
 [[maybe_unused]] constexpr static auto compiler = Compiler::GCC;
 #elif defined(__clang__)
 [[maybe_unused]] constexpr static auto compiler = Compiler::Clang;

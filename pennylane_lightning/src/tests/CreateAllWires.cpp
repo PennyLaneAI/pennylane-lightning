@@ -1,6 +1,6 @@
 #include "CreateAllWires.hpp"
 namespace Pennylane {
-auto crateAllWires(size_t n_qubits, Gates::GateOperation gate_op, bool order)
+auto createAllWires(size_t n_qubits, Gates::GateOperation gate_op, bool order)
     -> std::vector<std::vector<size_t>> {
     if (Util::array_has_elt(Gates::Constant::multi_qubit_gates, gate_op)) {
         // make all possible 2^N permutations

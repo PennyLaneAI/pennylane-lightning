@@ -87,6 +87,6 @@ class PermutationGenerator : public WiresGenerator {
  * @param gate_op Gate operation
  * @param order Whether the ordering matters (if true, permutation is used)
  */
-auto crateAllWires(size_t n_qubits, Gates::GateOperation gate_op, bool order)
+auto createAllWires(size_t n_qubits, Gates::GateOperation gate_op, bool order)
     -> std::vector<std::vector<size_t>>;
 } // namespace Pennylane

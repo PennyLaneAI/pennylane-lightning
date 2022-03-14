@@ -13,11 +13,10 @@
 // limitations under the License.
 #include "RuntimeInfo.hpp"
 
-#include <array>
-
 #if defined(__GNUC__) || defined(__clang__)
 #include <cpuid.h>
 #elif defined(_MSC_VER)
+#include <array>
 #include <intrin.h>
 #endif
 
