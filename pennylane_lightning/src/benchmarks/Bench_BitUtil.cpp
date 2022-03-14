@@ -1,3 +1,16 @@
+// Copyright 2022 Xanadu Quantum Technologies Inc.
+
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 #include <limits>
 #include <random>
 
@@ -5,6 +18,9 @@
 
 #include <benchmark/benchmark.h>
 
+/**
+ * @brief Benchmark generating an uniform random integer.
+ */
 static void generate_uniform_random_number(benchmark::State &state) {
     std::random_device rd;
     std::mt19937_64 eng(rd());
@@ -14,8 +30,10 @@ static void generate_uniform_random_number(benchmark::State &state) {
     }
 }
 BENCHMARK(generate_uniform_random_number);
-;
 
+/**
+ * @brief Benchmark naive popcount.
+ */
 static void naive_popcount(benchmark::State &state) {
     std::random_device rd;
     std::mt19937_64 eng(rd());
@@ -26,9 +44,11 @@ static void naive_popcount(benchmark::State &state) {
     }
 }
 BENCHMARK(naive_popcount);
-;
 
 #if defined(__GNUC__) || defined(__clang__)
+/**
+ * @brief Benchmark builtin popcount.
+ */
 static void builtin_popcount(benchmark::State &state) {
     std::random_device rd;
     std::mt19937_64 eng(rd());
@@ -43,6 +63,9 @@ BENCHMARK(builtin_popcount);
 #endif
 
 #if defined(_MSC_VER)
+/**
+ * @brief Benchmark builtin popcount.
+ */
 static void msv_builtin_popcount(benchmark::State &state) {
     std::random_device rd;
     std::mt19937_64 eng(rd());
@@ -55,6 +78,10 @@ static void msv_builtin_popcount(benchmark::State &state) {
 BENCHMARK(msv_builtin_popcount);
 #endif
 
+/**
+ * @brief Benchmark naive log2PerfectPower using
+ * Pennylane::Util::Internal::countTrailing0.
+ */
 static void naive_log2PerfectPower(benchmark::State &state) {
     std::random_device rd;
     std::mt19937_64 eng(rd());
@@ -68,6 +95,9 @@ static void naive_log2PerfectPower(benchmark::State &state) {
 BENCHMARK(naive_log2PerfectPower);
 
 #if defined(__GNUC__) || defined(__clang__)
+/**
+ * @brief Benchmark builtin log2PerfectPower using __builtin_ctzl.
+ */
 static void builtin_log2PerfectPower(benchmark::State &state) {
     std::random_device rd;
     std::mt19937_64 eng(rd());
@@ -81,6 +111,9 @@ BENCHMARK(builtin_log2PerfectPower);
 #endif
 
 #if defined(_MSC_VER)
+/**
+ * @brief Benchmark builtin log2PerfectPower using __lzcnt64.
+ */
 static void msv_builtin_log2PerfectPower(benchmark::State &state) {
     std::random_device rd;
     std::mt19937_64 eng(rd());
@@ -93,6 +126,9 @@ static void msv_builtin_log2PerfectPower(benchmark::State &state) {
 BENCHMARK(msv_builtin_log2PerfectPower);
 #endif
 
+/**
+ * @brief Benchmark log2PerfectPower in PennyLane-Lightning.
+ */
 static void lightning_isPerfectPowerOf2(benchmark::State &state) {
     std::random_device rd;
     std::mt19937_64 eng(rd());
@@ -104,6 +140,9 @@ static void lightning_isPerfectPowerOf2(benchmark::State &state) {
 }
 BENCHMARK(lightning_isPerfectPowerOf2);
 
+/**
+ * @brief Benchmark fillTrailingOnes in PennyLane-Lightning.
+ */
 static void lightning_fillTrailingOnes(benchmark::State &state) {
     std::random_device rd;
     std::mt19937_64 eng(rd());
@@ -115,6 +154,9 @@ static void lightning_fillTrailingOnes(benchmark::State &state) {
 }
 BENCHMARK(lightning_fillTrailingOnes);
 
+/**
+ * @brief Benchmark fillLeadingOnes in PennyLane-Lightning.
+ */
 static void lightning_fillLeadingOnes(benchmark::State &state) {
     std::random_device rd;
     std::mt19937_64 eng(rd());

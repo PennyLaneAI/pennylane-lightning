@@ -1,3 +1,16 @@
+// Copyright 2022 Xanadu Quantum Technologies Inc.
+
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 #include <algorithm>
 #include <random>
 #include <vector>
@@ -5,8 +18,19 @@
 #include "Constant.hpp"
 #include "StateVectorManaged.hpp"
 
-#include <benchmark/benchmark.h>
+#include "Bench_Macros.hpp"
 
+using Kernel = Pennylane::Gates::KernelType;
+
+/**
+ * @brief Generate distinct wires.
+ *
+ * @tparam RandomEngine Random number generator engine.
+ * @param num_qubits Number of qubits.
+ * @param num_wires Number of wires.
+ *
+ * @return std::vector<size_t>
+ */
 template <typename RandomEngine>
 static inline auto generateDistinctWires(RandomEngine &eng, size_t num_qubits,
                                          size_t num_wires)
@@ -17,11 +41,21 @@ static inline auto generateDistinctWires(RandomEngine &eng, size_t num_qubits,
     return {v.begin(), v.begin() + num_wires};
 }
 
-static void applyOperation_MultiRZ(benchmark::State &state,
-                                   const Pennylane::Gates::KernelType kernel) {
-    size_t num_gates = state.range(0);
-    size_t num_qubits = state.range(1);
-    size_t num_wires = state.range(2);
+//***********************************************************************//
+//                            applyOperation
+//***********************************************************************//
+
+/**
+ * @brief Benchmark applyOperation for "MultiRZ" in PennyLane-Lightning.
+ *
+ * @tparam T Floating point precision type.
+ * @param kernel Pennylane::Gates::KernelType.
+ */
+template <class T>
+static void applyOperation_MultiRZ(benchmark::State &state, Kernel kernel) {
+    const size_t num_gates = state.range(0);
+    const size_t num_qubits = state.range(1);
+    const size_t num_wires = state.range(2);
 
     if (!num_gates) {
         state.SkipWithError("Invalid number of gates.");
@@ -38,10 +72,10 @@ static void applyOperation_MultiRZ(benchmark::State &state,
     std::random_device rd;
     std::mt19937_64 eng(rd());
 
-    std::uniform_real_distribution<double> param_distr(-M_PI, M_PI);
+    std::uniform_real_distribution<T> param_distr(-M_PI, M_PI);
 
     std::vector<std::vector<size_t>> wires;
-    std::vector<double> params;
+    std::vector<T> params;
 
     wires.reserve(num_gates);
     params.reserve(num_gates);
@@ -52,7 +86,7 @@ static void applyOperation_MultiRZ(benchmark::State &state,
     }
 
     for (auto _ : state) {
-        Pennylane::StateVectorManaged<double> sv{num_qubits};
+        Pennylane::StateVectorManaged<T> sv{num_qubits};
 
         for (size_t g = 0; g < num_gates; g++) {
             sv.applyOperation(kernel, "MultiRZ", wires[g], false, {params[g]});
@@ -63,12 +97,18 @@ static void applyOperation_MultiRZ(benchmark::State &state,
     }
 }
 
-BENCHMARK_CAPTURE(applyOperation_MultiRZ, kernel_LM,
-                  Pennylane::Gates::KernelType::LM)
+BENCHMARK_APPLYOPS(applyOperation_MultiRZ, float, LM, Kernel::LM)
     ->RangeMultiplier(2l)
     ->Ranges({{8, 64}, {4, 24}, {2, 2}});
 
-BENCHMARK_CAPTURE(applyOperation_MultiRZ, kernel_PI,
-                  Pennylane::Gates::KernelType::PI)
+BENCHMARK_APPLYOPS(applyOperation_MultiRZ, float, PI, Kernel::PI)
+    ->RangeMultiplier(2l)
+    ->Ranges({{8, 64}, {4, 24}, {2, 2}});
+
+BENCHMARK_APPLYOPS(applyOperation_MultiRZ, double, LM, Kernel::LM)
+    ->RangeMultiplier(2l)
+    ->Ranges({{8, 64}, {4, 24}, {2, 2}});
+
+BENCHMARK_APPLYOPS(applyOperation_MultiRZ, double, PI, Kernel::PI)
     ->RangeMultiplier(2l)
     ->Ranges({{8, 64}, {4, 24}, {2, 2}});

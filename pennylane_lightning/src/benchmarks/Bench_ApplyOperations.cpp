@@ -1,27 +1,46 @@
-#include <map>
+// Copyright 2022 Xanadu Quantum Technologies Inc.
+
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 #include <random>
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "Constant.hpp"
 #include "StateVectorManaged.hpp"
 
-#include <benchmark/benchmark.h>
+#include "Bench_Macros.hpp"
+
+using Kernel = Pennylane::Gates::KernelType;
 
 using OpName = std::string;
 using NumWires = size_t;
 using NumParams = size_t;
-
 using SerializedOp = std::tuple<OpName, NumWires, NumParams>;
 
+/**
+ * @brief Get all gates except multi-qubit gates.
+ *
+ * @return std::unordered_map<OpName, std::pair<NumWires, NumParams>>
+ */
 static inline auto getLightningGates()
-    -> std::map<OpName, std::pair<NumWires, NumParams>> {
-    // All gates except multi-qubit-gates
+    -> std::unordered_map<OpName, std::pair<NumWires, NumParams>> {
     namespace Constant = Pennylane::Gates::Constant;
-    std::map<OpName, std::pair<NumWires, NumParams>> all_gates;
+
+    std::unordered_map<OpName, std::pair<NumWires, NumParams>> all_gates;
     for (const auto &[gate_op, gate_name] : Constant::gate_names) {
         if (!Pennylane::Util::array_has_elt(Constant::multi_qubit_gates,
                                             gate_op)) {
@@ -36,6 +55,9 @@ static inline auto getLightningGates()
     return all_gates;
 }
 
+/**
+ * @brief Benchmark getLightningGates.
+ */
 static void availableLightningGates(benchmark::State &state) {
     for (auto _ : state) {
         auto res = getLightningGates();
@@ -44,11 +66,16 @@ static void availableLightningGates(benchmark::State &state) {
 }
 BENCHMARK(availableLightningGates);
 
+/**
+ * @brief Serialize a list of operations.
+ *
+ * @return std::vector<std::tuple<OpName, NumWires, NumParams>>
+ */
 static inline auto
 serializeOperationsFromStrings(benchmark::State &state,
                                const std::vector<OpName> op_names) {
     std::vector<SerializedOp> ops;
-    auto all_gates = getLightningGates();
+    const auto all_gates = getLightningGates();
     for (auto &name : op_names) {
         auto gate_info_pair = all_gates.find(name);
         if (gate_info_pair == all_gates.end()) {
@@ -61,10 +88,15 @@ serializeOperationsFromStrings(benchmark::State &state,
     return ops;
 }
 
+/**
+ * @brief Benchmark serializeOperationsFromStrings.
+ *
+ * @param op_names List of operations' names.
+ */
 static void serializeOps(benchmark::State &state,
                          const std::vector<OpName> op_names) {
     for (auto _ : state) {
-        auto res = serializeOperationsFromStrings(state, op_names);
+        const auto res = serializeOperationsFromStrings(state, op_names);
         benchmark::DoNotOptimize(res.size());
     }
 }
@@ -82,6 +114,15 @@ BENCHMARK_CAPTURE(serializeOps, ops_all, {"PauliX",     "PauliY",
                                           "CRZ",        "CRot",
                                           "Toffoli",    "CSWAP"});
 
+/**
+ * @brief Generate neighboring wires from a start index
+ *
+ * @param start_idx Start index.
+ * @param num_qubits Number of qubits.
+ * @param num_wires Number of wires to be considered.
+ *
+ * @return std::vector<size_t>
+ */
 static inline auto generateNeighboringWires(size_t start_idx, size_t num_qubits,
                                             size_t num_wires)
     -> std::vector<size_t> {
@@ -93,15 +134,27 @@ static inline auto generateNeighboringWires(size_t start_idx, size_t num_qubits,
     return v;
 }
 
-static void applyOperationsFromRandOps(benchmark::State &state,
-                                       Pennylane::Gates::KernelType kernel,
-                                       const std::vector<OpName> op_names) {
+//***********************************************************************//
+//                            applyOperation
+//***********************************************************************//
+
+/**
+ * @brief Benchmark applyOperation in PennyLane-Lightning .
+ *
+ * @tparam T Floating point precision type.
+ * @param kernel Pennylane::Gates::KernelType.
+ * @param op_names List of operations' names.
+ */
+template <class T>
+static void applyOperations_RandOps(benchmark::State &state,
+                                    const Kernel kernel,
+                                    const std::vector<OpName> op_names) {
     if (op_names.empty()) {
         state.SkipWithError("Invalid list of operations.");
     }
 
-    size_t num_gates = state.range(0);
-    size_t num_qubits = state.range(1);
+    const size_t num_gates = state.range(0);
+    const size_t num_qubits = state.range(1);
 
     if (!num_gates) {
         state.SkipWithError("Invalid number of gates.");
@@ -111,21 +164,21 @@ static void applyOperationsFromRandOps(benchmark::State &state,
         state.SkipWithError("Invalid number of qubits.");
     }
 
-    auto ops = serializeOperationsFromStrings(state, op_names);
+    const auto ops = serializeOperationsFromStrings(state, op_names);
 
     std::random_device rd;
     std::mt19937_64 eng(rd());
 
     std::uniform_int_distribution<size_t> gate_distr(0, ops.size() - 1);
     std::uniform_int_distribution<size_t> inv_distr(0, 1);
-    std::uniform_real_distribution<double> param_distr(0.0, 2 * M_PI);
+    std::uniform_real_distribution<T> param_distr(0.0, 2 * M_PI);
     std::uniform_int_distribution<size_t> wire_distr(0, num_qubits - 1);
 
     auto param_generator = [&param_distr, &eng]() { return param_distr(eng); };
 
     std::vector<std::string_view> rand_gate_names;
     std::vector<std::vector<size_t>> rand_gate_wires;
-    std::vector<std::vector<double>> rand_gate_params;
+    std::vector<std::vector<T>> rand_gate_params;
 
     std::vector<bool> rand_inverses;
 
@@ -137,7 +190,7 @@ static void applyOperationsFromRandOps(benchmark::State &state,
         rand_gate_wires.emplace_back(
             generateNeighboringWires(wire_start_idx, num_qubits, n_wires));
 
-        std::vector<double> params(n_params);
+        std::vector<T> params(n_params);
         std::generate(params.begin(), params.end(), param_generator);
         rand_gate_params.emplace_back(std::move(params));
 
@@ -145,7 +198,7 @@ static void applyOperationsFromRandOps(benchmark::State &state,
     }
 
     for (auto _ : state) {
-        Pennylane::StateVectorManaged<double> sv{num_qubits};
+        Pennylane::StateVectorManaged<T> sv{num_qubits};
 
         for (size_t g = 0; g < num_gates; g++) {
             sv.applyOperation(kernel, OpName(rand_gate_names[g]),
@@ -157,40 +210,74 @@ static void applyOperationsFromRandOps(benchmark::State &state,
         benchmark::DoNotOptimize(sv.getDataVector()[(1 << num_qubits) - 1]);
     }
 }
-BENCHMARK_CAPTURE(applyOperationsFromRandOps, LM_RXYZ,
-                  Pennylane::Gates::KernelType::LM, {"RX", "RY", "RZ"})
+
+/* RXYZ */
+BENCHMARK_APPLYOPS(applyOperations_RandOps, float, LM_RXYZ, Kernel::LM,
+                   {"RX", "RY", "RZ"})
     ->RangeMultiplier(2l)
     ->Ranges({{8, 64}, {4, 24}});
 
-BENCHMARK_CAPTURE(applyOperationsFromRandOps, PI_RXYZ,
-                  Pennylane::Gates::KernelType::PI, {"RX", "RY", "RZ"})
+BENCHMARK_APPLYOPS(applyOperations_RandOps, float, PI_RXYZ, Kernel::PI,
+                   {"RX", "RY", "RZ"})
     ->RangeMultiplier(2l)
     ->Ranges({{8, 64}, {4, 24}});
 
-BENCHMARK_CAPTURE(applyOperationsFromRandOps, LM_PauliXYZ,
-                  Pennylane::Gates::KernelType::LM,
-                  {"PauliX", "PauliY", "PauliZ"})
+BENCHMARK_APPLYOPS(applyOperations_RandOps, double, LM_RXYZ, Kernel::LM,
+                   {"RX", "RY", "RZ"})
     ->RangeMultiplier(2l)
     ->Ranges({{8, 64}, {4, 24}});
 
-BENCHMARK_CAPTURE(applyOperationsFromRandOps, PI_PauliXYZ,
-                  Pennylane::Gates::KernelType::PI,
-                  {"PauliX", "PauliY", "PauliZ"})
+BENCHMARK_APPLYOPS(applyOperations_RandOps, double, PI_RXYZ, Kernel::PI,
+                   {"RX", "RY", "RZ"})
     ->RangeMultiplier(2l)
     ->Ranges({{8, 64}, {4, 24}});
 
-BENCHMARK_CAPTURE(applyOperationsFromRandOps, LM_all,
-                  Pennylane::Gates::KernelType::LM,
-                  {"PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T", "RX",
-                   "RY", "RZ", "Rot", "PhaseShift", "CNOT", "SWAP",
-                   "ControlledPhaseShift", "CRX", "CRY", "CRZ"})
+/* PauliXYZ */
+BENCHMARK_APPLYOPS(applyOperations_RandOps, double, LM_PauliXYZ, Kernel::LM,
+                   {"PauliX", "PauliY", "PauliZ"})
     ->RangeMultiplier(2l)
     ->Ranges({{8, 64}, {4, 24}});
 
-BENCHMARK_CAPTURE(applyOperationsFromRandOps, PI_all,
-                  Pennylane::Gates::KernelType::PI,
-                  {"PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T", "RX",
-                   "RY", "RZ", "Rot", "PhaseShift", "CNOT", "SWAP",
-                   "ControlledPhaseShift", "CRX", "CRY", "CRZ"})
+BENCHMARK_APPLYOPS(applyOperations_RandOps, double, PI_PauliXYZ, Kernel::PI,
+                   {"PauliX", "PauliY", "PauliZ"})
+    ->RangeMultiplier(2l)
+    ->Ranges({{8, 64}, {4, 24}});
+
+BENCHMARK_APPLYOPS(applyOperations_RandOps, float, LM_PauliXYZ, Kernel::LM,
+                   {"PauliX", "PauliY", "PauliZ"})
+    ->RangeMultiplier(2l)
+    ->Ranges({{8, 64}, {4, 24}});
+
+BENCHMARK_APPLYOPS(applyOperations_RandOps, float, PI_PauliXYZ, Kernel::PI,
+                   {"PauliX", "PauliY", "PauliZ"})
+    ->RangeMultiplier(2l)
+    ->Ranges({{8, 64}, {4, 24}});
+
+/* From All Gates */
+BENCHMARK_APPLYOPS(applyOperations_RandOps, float, LM_all, Kernel::LM,
+                   {"PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T", "RX",
+                    "RY", "RZ", "Rot", "PhaseShift", "CNOT", "SWAP",
+                    "ControlledPhaseShift", "CRX", "CRY", "CRZ"})
+    ->RangeMultiplier(2l)
+    ->Ranges({{8, 64}, {4, 24}});
+
+BENCHMARK_APPLYOPS(applyOperations_RandOps, float, PI_all, Kernel::PI,
+                   {"PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T", "RX",
+                    "RY", "RZ", "Rot", "PhaseShift", "CNOT", "SWAP",
+                    "ControlledPhaseShift", "CRX", "CRY", "CRZ"})
+    ->RangeMultiplier(2l)
+    ->Ranges({{8, 64}, {4, 24}});
+
+BENCHMARK_APPLYOPS(applyOperations_RandOps, double, LM_all, Kernel::LM,
+                   {"PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T", "RX",
+                    "RY", "RZ", "Rot", "PhaseShift", "CNOT", "SWAP",
+                    "ControlledPhaseShift", "CRX", "CRY", "CRZ"})
+    ->RangeMultiplier(2l)
+    ->Ranges({{8, 64}, {4, 24}});
+
+BENCHMARK_APPLYOPS(applyOperations_RandOps, double, PI_all, Kernel::PI,
+                   {"PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T", "RX",
+                    "RY", "RZ", "Rot", "PhaseShift", "CNOT", "SWAP",
+                    "ControlledPhaseShift", "CRX", "CRY", "CRZ"})
     ->RangeMultiplier(2l)
     ->Ranges({{8, 64}, {4, 24}});
