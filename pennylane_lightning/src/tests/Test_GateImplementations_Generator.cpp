@@ -114,7 +114,7 @@ void testGeneratorForGate(RandomEngine &re, size_t num_qubits) {
 
         scaleVector(gate_der_st, static_cast<PrecisionT>(0.5) / eps);
 
-        REQUIRE(gntr_st == PLApprox(gate_der_st).margin(1e-3));
+        REQUIRE(gntr_st == approx(gate_der_st).margin(1e-3));
     }
 }
 template <typename PrecisionT, typename ParamT, class GateImplementation,

@@ -159,7 +159,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 CAPTURE(v_out);
                 CAPTURE(v_expected);
 
-                CHECK(v_out == PLApprox(v_expected).margin(1e-7));
+                CHECK(v_out == approx(v_expected).margin(1e-7));
             }
         }
         SECTION("Random Complex") {
@@ -185,7 +185,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 Util::matrixVecProd(mat, v_in, 4, 4);
             CAPTURE(v_out);
 
-            CHECK(v_out == PLApprox(v_expected).margin(1e-7));
+            CHECK(v_out == approx(v_expected).margin(1e-7));
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
@@ -215,7 +215,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 CAPTURE(v_out);
                 CAPTURE(v_expected);
 
-                CHECK(v_out == PLApprox(v_expected).margin(1e-7));
+                CHECK(v_out == approx(v_expected).margin(1e-7));
             }
         }
         SECTION("Zero Vector") {
@@ -229,7 +229,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 CAPTURE(v_out);
                 CAPTURE(v_expected);
 
-                CHECK(v_out == PLApprox(v_expected).margin(1e-7));
+                CHECK(v_out == approx(v_expected).margin(1e-7));
             }
         }
         SECTION("Random Matrix") {
@@ -242,7 +242,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
             CAPTURE(v_out);
             CAPTURE(v_expected);
 
-            CHECK(v_out == PLApprox(v_expected).margin(1e-7));
+            CHECK(v_out == approx(v_expected).margin(1e-7));
         }
     }
     SECTION("Transpose") {
@@ -258,7 +258,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 CAPTURE(mat_t);
                 CAPTURE(mat);
 
-                CHECK(mat_t == PLApprox(mat).margin(1e-7));
+                CHECK(mat_t == approx(mat).margin(1e-7));
             }
         }
         SECTION("Random Complex") {
@@ -286,7 +286,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
             CAPTURE(mat_t);
             CAPTURE(mat_t_exp);
 
-            CHECK(mat_t == PLApprox(mat_t_exp));
+            CHECK(mat_t == approx(mat_t_exp));
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
@@ -311,7 +311,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 CAPTURE(m_out);
                 CAPTURE(m_out_exp);
 
-                CHECK(m_out == PLApprox(m_out_exp));
+                CHECK(m_out == approx(m_out_exp));
             }
         }
         SECTION("Random Complex") {
@@ -368,8 +368,8 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
             CAPTURE(m_out_2);
             CAPTURE(m_out_exp);
 
-            CHECK(m_out_1 == PLApprox(m_out_2));
-            CHECK(m_out_1 == PLApprox(m_out_exp));
+            CHECK(m_out_1 == approx(m_out_2));
+            CHECK(m_out_1 == approx(m_out_exp));
         }
         SECTION("Random complex non-square") {
             const size_t m = 4;
@@ -442,7 +442,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
 
             const auto m_out = Util::matrixMatProd(mat1, mat2, m, n, k);
 
-            CHECK(m_out == PLApprox(expected));
+            CHECK(m_out == approx(expected));
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
@@ -623,6 +623,6 @@ TEMPLATE_TEST_CASE("randomUnitary", "[Test_Internal]", float, double) {
             identity[i * dim + i] = std::complex<PrecisionT>{1.0, 0.0};
         }
 
-        REQUIRE(mat == PLApprox(identity).margin(1e-5));
+        REQUIRE(mat == approx(identity).margin(1e-5));
     }
 }

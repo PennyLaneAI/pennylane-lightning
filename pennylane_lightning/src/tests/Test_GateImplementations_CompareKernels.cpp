@@ -131,7 +131,7 @@ void testApplyGate(RandomEngine &re, size_t num_qubits) {
 
             for (size_t i = 0; i < results.size() - 1; i++) {
                 REQUIRE(results[i] ==
-                        PLApprox(results[i + 1])
+                        approx(results[i + 1])
                             .margin(static_cast<PrecisionT>(1e-5)));
             }
         }
@@ -147,7 +147,7 @@ void testApplyGate(RandomEngine &re, size_t num_qubits) {
 
             for (size_t i = 0; i < results.size() - 1; i++) {
                 REQUIRE(results[i] ==
-                        PLApprox(results[i + 1])
+                        approx(results[i + 1])
                             .margin(static_cast<PrecisionT>(1e-5)));
             }
         }

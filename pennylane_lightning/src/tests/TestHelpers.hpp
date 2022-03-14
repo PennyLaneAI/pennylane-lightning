@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <complex>
+#include <memory>
 #include <random>
 #include <string>
 #include <type_traits>
@@ -27,7 +28,7 @@ template <typename T> struct is_complex<std::complex<T>> : std::true_type {};
 
 template <typename T> constexpr bool is_complex_v = is_complex<T>::value;
 
-template <class T, class Alloc> struct PLApprox {
+template <class T, class Alloc = std::allocator<T>> struct PLApprox {
     const std::vector<T, Alloc> &comp_;
 
     explicit PLApprox(const std::vector<T, Alloc> &comp) : comp_{comp} {}
@@ -78,6 +79,16 @@ template <class T, class Alloc> struct PLApprox {
         return *this;
     }
 };
+
+/**
+ * @brief Simple helper for PLApprox for the cases when the class template
+ * deduction does not work well.
+ */
+template <typename T, class Alloc>
+PLApprox<T, Alloc> approx(const std::vector<T, Alloc> &vec) {
+    return PLApprox<T, Alloc>(vec);
+}
+
 template <typename T, class Alloc>
 std::ostream &operator<<(std::ostream &os, const PLApprox<T, Alloc> &approx) {
     os << approx.describe();
@@ -110,7 +121,7 @@ isApproxEqual(const std::vector<Data_t, AllocA> &data1,
               const typename Data_t::value_type eps =
                   std::numeric_limits<typename Data_t::value_type>::epsilon() *
                   100) {
-    return data1 == PLApprox(data2).epsilon(eps);
+    return data1 == PLApprox<Data_t, AllocB>(data2).epsilon(eps);
 }
 
 /**
