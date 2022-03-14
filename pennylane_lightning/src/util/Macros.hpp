@@ -184,18 +184,6 @@ constexpr auto getCompilerVersion<Compiler::MSVC>() -> std::string_view {
  *
  * This function raises an error when instantiated (invoked) if a compiler
  * does not define macros (i.e. other than NVCC).
- */
-template <>
-constexpr auto getCompilerVersion<Compiler::NVCC>() -> std::string_view {
-    return PL_TO_STR(__CUDACC_VER_MAJOR__) "." PL_TO_STR(
-        __CUDACC_VER_MINOR__) "." PL_TO_STR(__CUDACC_VER_BUILD__);
-}
-
-/**
- * @brief Create version string for NVCC.
- *
- * This function raises an error when instantiated (invoked) if a compiler
- * does not define macros (i.e. other than NVCC).
  *
  * See
  * https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-identification-macro
