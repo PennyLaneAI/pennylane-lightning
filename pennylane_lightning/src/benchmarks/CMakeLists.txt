@@ -5,7 +5,7 @@ project(pennylane_lightning_benchmarks)
 set(CMAKE_CXX_STANDARD 17)
 
 message(STATUS "ENABLE_GB is ON. Find GBenchmark.")
-find_package(benchmark)
+find_package(benchmark QUIET)
 
 if (NOT benchmark_FOUND)
     message(STATUS "GBenchmark is not found. Fetch GBenchmark.")
@@ -34,6 +34,8 @@ if (NOT benchmark_FOUND)
         FetchContent_Populate(googlebenchmark)
         add_subdirectory(${googlebenchmark_SOURCE_DIR} ${googlebenchmark_BINARY_DIR})
     endif()
+else()
+    message(STATUS "GBenchmark found.")
 endif()
 
 ################################################################################
