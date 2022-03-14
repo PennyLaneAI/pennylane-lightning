@@ -296,12 +296,12 @@ class Measures {
         }
 
         // Run alias algorithm
-        while (!underfull_bucket_ids.empty() and !overfull_bucket_ids.empty()) {
+        while (!underfull_bucket_ids.empty() && !overfull_bucket_ids.empty()) {
             // get an overfull bucket
-            auto i = overfull_bucket_ids.top();
+            size_t i = overfull_bucket_ids.top();
 
             // get an underfull bucket
-            auto j = underfull_bucket_ids.top();
+            size_t j = underfull_bucket_ids.top();
             underfull_bucket_ids.pop();
 
             // underfull bucket is partned with an overfull bucket
