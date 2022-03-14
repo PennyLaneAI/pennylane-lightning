@@ -367,7 +367,7 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
     /* Add compile info */
     m.def("compile_info", &getCompileInfo, "Compiled binary information.");
 
-    /* Add compile info */
+    /* Add runtime info */
     m.def("runtime_info", &getRuntimeInfo, "Runtime information.");
 
     /* Add EXPORTED_KERNELS */
