@@ -6,7 +6,6 @@ auto crateAllWires(size_t n_qubits, Gates::GateOperation gate_op, bool order)
         // make all possible 2^N permutations
         std::vector<std::vector<size_t>> res;
         res.reserve((1U << n_qubits) - 1);
-        ;
         for (size_t k = 1; k < (static_cast<size_t>(1U) << n_qubits); k++) {
             std::vector<size_t> wires;
             wires.reserve(Util::popcount(k));
