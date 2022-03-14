@@ -72,7 +72,7 @@ for mod_name in MOCK_MODULES:
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = "1.6"
+needs_sphinx = "3.3"
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -229,7 +229,7 @@ html_theme_options = {
     "download_button": "#19b37b",
 }
 
-edit_on_github_project = "XanaduAI/pennylane-lightning"
+edit_on_github_project = "PennyLaneAI/pennylane-lightning"
 edit_on_github_branch = "master/doc"
 
 # ============================================================
