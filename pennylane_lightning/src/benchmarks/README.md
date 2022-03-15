@@ -1,13 +1,15 @@
 # Lightning Google-Benchmark Suite 
-
-This is the PennyLane-Lightning benchmark suite powered by [google-benchmark](https://github.com/google/benchmark) (GB). To use GB scripts, one can perform `make gbenchmark` or run 
+The PennyLane-Lightning benchmark suite powered by [google-benchmark](https://github.com/google/benchmark) (GB). 
+To use GB scripts, one can perform `make gbenchmark` or run 
 ```Bash
 $ cmake pennylane_lightning/src/ -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_OPENMP=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release
 $ cmake --build ./BuildGBench --target utils apply_operations apply_multirz
 ```
 
 ## Google-Benchmark
-The main requirement for these scripts is [google-benchmark](https://github.com/google/benchmark). We take advantage of the CMake `FetchContent` command to get the library up and running if the `find_package` command fails to find and load GB. 
+The main requirement for these scripts is [google-benchmark](https://github.com/google/benchmark). 
+The CMake uses `FetchContent` to fetch and install the library if the `find_package` command fails 
+to find and load GB.
 
 ### GB CLI Flags
 ```Bash
@@ -43,25 +45,33 @@ $ make gbenchmark
 $ ./BuildGBench/benchmarks/utils 
 ```
 
-For example, the `std_innerProd_cmplx<T>` method in `Bench_LinearAlgebra.cpp` performs the benchmark for the inner product of two vectors with complex numbers (`std::complex<T>`) using `std::inner_product`. This is usual to try a few arguments in some ranges and generate a benchmark for each such value. The GB offers `Range` and `Ranges` to do so, 
+For example, the `std_innerProd_cmplx<T>` method in `Bench_LinearAlgebra.cpp` runs the benchmark 
+for the inner product of two randomly generated vectors with complex numbers (`std::complex<T>`) 
+using `std::inner_product`. 
+This is usual to try a few arguments in some ranges and generate a benchmark for each such value. 
+The GB offers `Range` and `Ranges` to do so, 
 ```C
 BENCHMARK(std_innerProd_cmplx<float>)
     ->Range(1l << 5, 1l << 10);
 ```
 
-By default the arguments in the range are generated in multiples of 8 and the command above picks `{32, 64, 512, 1024}`. To change the range multiplier, one should use `RangeMultiplier`. The following code selects `{4, 8, 16, 32, 64, 128, 256, 512, 1024}`,
+By default the arguments in the range are generated in multiples of 8 and the command above picks
+`{32, 64, 512, 1024}`. To change the range multiplier, one should use `RangeMultiplier`. 
+The following code selects `{4, 8, 16, 32, 64, 128, 256, 512, 1024}`,
 ```C
 BENCHMARK(std_innerProd_cmplx<float>)
     ->RangeMultiplier(2)
     ->Range(1l << 2, 1l << 10);
 ```
 
-To filter the benchmark results to run only `std_innerProd_cmplx`, one can run:
+To filter the results one can use regex and `--benchmark_filter`. For example, 
+the following command runs only `std_innerProd_cmplx` benchmark tests in `./benchmarks/utils`:
 ```Bash
 $ ./BuildGBench/benchmarks/utils --benchmark_filter=std_innerProd_cmplx
 ```
 
-Besides, one can use `--benchmark_time_unit` to get the results in `{ns|us|ms|s}` too. Check **GB CLI Flags** for the list of flags. 
+Besides, one can use `--benchmark_time_unit` to get the results in `{ns|us|ms|s}` too. 
+Check **GB CLI Flags** for the list of flags. 
 
 
 ### `benchmarks/apply_operations`

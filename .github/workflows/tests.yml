@@ -77,14 +77,12 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc g++ libopenblas-dev
 
-      - name: Build unit tests
+      - name: Build and run unit tests
         run: |
             cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DENABLE_BLAS=ON -DBUILD_TESTS=1 
             cmake --build ./Build
             mkdir -p ./Build/tests/results
-
-      - name: Run unit tests
-        run: ./Build/pennylane_lightning/src/tests/runner --order lex --reporter junit --out ./Build/tests/results/report.xml
+            ./Build/pennylane_lightning/src/tests/runner --order lex --reporter junit --out ./Build/tests/results/report.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v2
