@@ -779,8 +779,7 @@ auto squaredNorm(const T *data, size_t data_size) -> remove_complex_t<T> {
  * Compute the squared norm of a real/complex vector :math:`\sum_k |v_k|^2`
  * @endrst
  *
- * @param data Data pointer
- * @param data_size Size of the data
+ * @param vec std::vector containing data
  */
 template <class T, class Alloc>
 auto squaredNorm(const std::vector<T, Alloc> &vec) -> remove_complex_t<T> {

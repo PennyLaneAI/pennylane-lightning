@@ -27,7 +27,7 @@ template <typename PrecisionT, typename ParamT, class GateImplementation,
           GateOperation gate_op, class RandomEngine>
 void testInverseKernelGate(RandomEngine &re, size_t num_qubits) {
     if constexpr (gate_op != GateOperation::Matrix) {
-        constexpr auto gate_name = static_lookup<gate_op>(Constant::gate_names);
+        constexpr auto gate_name = Util::static_lookup<gate_op>(Constant::gate_names);
         DYNAMIC_SECTION("Test inverse of " << gate_name << " for kernel "
                                            << GateImplementation::name) {
             const auto ini_st = createRandomState<PrecisionT>(re, num_qubits);

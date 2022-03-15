@@ -210,7 +210,7 @@ constexpr auto gateOpFuncPtrPairsWithNumParamsIter() {
                       decltype(gate_op_func_ptr_pairs<PrecisionT, ParamT>)>) {
         constexpr auto elt =
             std::get<tuple_idx>(gate_op_func_ptr_pairs<PrecisionT, ParamT>);
-        if constexpr (static_lookup<elt.first>(Constant::gate_num_params) ==
+        if constexpr (Util::static_lookup<elt.first>(Constant::gate_num_params) ==
                       num_params) {
             return Util::prepend_to_tuple(
                 elt, gateOpFuncPtrPairsWithNumParamsIter<
