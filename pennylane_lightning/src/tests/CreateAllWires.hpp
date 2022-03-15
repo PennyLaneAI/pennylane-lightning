@@ -16,11 +16,11 @@ class WiresGenerator {
 };
 
 /**
- * @brief 
+ * @brief
  * @rst Generating all permutation of wires without ordering (often called
  * as combination). The size of all combination is given as :math:`n \choose r`.
  *
- * We use the recursion formula 
+ * We use the recursion formula
  * :math:`{n \choose r} = {n \choose r-1} + {n-1 \choose r}`
  * @endrst
  */
@@ -57,12 +57,12 @@ class CombinationGenerator : public WiresGenerator {
 };
 
 /**
- * @brief 
- * @rst Generating all permutation of wires with ordering. The size of all 
+ * @brief
+ * @rst Generating all permutation of wires with ordering. The size of all
  * permutation is given as :math:`{}_{n}P_r=n!/(n-r)!r!`.
  * @endrst
  *
- * We use the recursion formula 
+ * We use the recursion formula
  * :math:`{}_n P_r = n {}_{n-1} P_{r-1}`
  */
 class PermutationGenerator : public WiresGenerator {

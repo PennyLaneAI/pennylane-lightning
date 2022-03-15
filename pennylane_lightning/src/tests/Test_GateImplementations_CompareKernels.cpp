@@ -59,7 +59,6 @@ struct KernelsImplementingGateHelper<gate_op, void> {
     using Type = void;
 };
 
-
 /**
  * @brief Type list of kernels implementing the given gate operation.
  */
