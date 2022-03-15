@@ -1,11 +1,9 @@
-# Release 0.22.0-dev
+# Release 0.22.0
 
 ### New features since last release
 
 * Add Docker support.
 [(#234)](https://github.com/PennyLaneAI/pennylane-lightning/pull/234)
-
-### Breaking changes
 
 ### Improvements
 
@@ -28,6 +26,9 @@
 [(#212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/212)
 
 ### Documentation
+
+* Use of batching with OpenMP threads is documented.
+[(#221)](https://github.com/PennyLaneAI/pennylane-lightning/pull/221)
 
 ### Bug fixes
 
