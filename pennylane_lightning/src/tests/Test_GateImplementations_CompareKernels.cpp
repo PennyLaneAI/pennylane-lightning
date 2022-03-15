@@ -31,6 +31,9 @@ using namespace Pennylane::Gates::Constant;
 
 using std::vector;
 
+/**
+ * @brief Change the given type list of kernels to string
+ */
 template <typename TypeList> std::string kernelsToString() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         return std::string(TypeList::Type::name) + ", " +
@@ -56,6 +59,10 @@ struct KernelsImplementingGateHelper<gate_op, void> {
     using Type = void;
 };
 
+
+/**
+ * @brief Type list of kernels implementing the given gate operation.
+ */
 template <Gates::GateOperation gate_op> struct KernelsImplementingGate {
     using Type =
         typename KernelsImplementingGateHelper<gate_op, TestKernels>::Type;
@@ -102,6 +109,10 @@ auto applyGateForImplemetingKernels(
             ini, num_qubits, wires, inverse, params)...);
 }
 
+/**
+ * @brief Apply the given gate using all implementing kernels and compare
+ * the results.
+ */
 template <Gates::GateOperation gate_op, typename PrecisionT, typename ParamT,
           class RandomEngine>
 void testApplyGate(RandomEngine &re, size_t num_qubits) {
