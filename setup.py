@@ -121,6 +121,7 @@ info = {
     else [],
     "cmdclass": {"build_ext": CMakeBuild},
     "ext_package": "pennylane_lightning",
+    "extras_require": {"gpu" : ["pennylane-lightning-gpu"]}
 }
 
 classifiers = [
