@@ -258,6 +258,10 @@ auto getCompileInfo() -> pybind11::dict {
             return "Clang";
         case Compiler::MSVC:
             return "MSVC";
+        case Compiler::NVCC:
+            return "NVCC";
+        case Compiler::NVHPC:
+            return "NVHPC";
         default:
             return "Unknown";
         }
