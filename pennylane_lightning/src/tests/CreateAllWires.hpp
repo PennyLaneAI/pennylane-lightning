@@ -14,6 +14,16 @@ class WiresGenerator {
     [[nodiscard]] virtual auto all_perms() const
         -> const std::vector<std::vector<size_t>> & = 0;
 };
+
+/**
+ * @brief 
+ * @rst Generating all permutation of wires without ordering (often called
+ * as combination). The size of all combination is given as :math:`n \choose r`.
+ *
+ * We use the recursion formula 
+ * :math:`{n \choose r} = {n \choose r-1} + {n-1 \choose r}`
+ * @endrst
+ */
 class CombinationGenerator : public WiresGenerator {
   private:
     std::vector<size_t> v_;
@@ -45,6 +55,16 @@ class CombinationGenerator : public WiresGenerator {
         return all_perms_;
     }
 };
+
+/**
+ * @brief 
+ * @rst Generating all permutation of wires with ordering. The size of all 
+ * permutation is given as :math:`{}_{n}P_r=n!/(n-r)!r!`.
+ * @endrst
+ *
+ * We use the recursion formula 
+ * :math:`{}_n P_r = n {}_{n-1} P_{r-1}`
+ */
 class PermutationGenerator : public WiresGenerator {
   private:
     std::vector<std::vector<size_t>> all_perms_;
