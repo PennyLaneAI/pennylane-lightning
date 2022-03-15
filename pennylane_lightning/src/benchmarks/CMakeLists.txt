@@ -10,6 +10,8 @@ find_package(benchmark QUIET)
 if (NOT benchmark_FOUND)
     message(STATUS "GBenchmark is not found. Fetch GBenchmark.")
 
+    include(FetchContent)
+
     # Fetch GTest; required for GBenchmark
     FetchContent_Declare(
         googletest

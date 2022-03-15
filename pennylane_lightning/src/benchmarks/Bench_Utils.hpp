@@ -26,3 +26,23 @@
                 #func "<" #t ">"                                               \
                       "/" #test_case_name,                                     \
                 [](benchmark::State &st) { func<t>(st, __VA_ARGS__); })))
+
+/**
+ * @brief Create an ordered list of {lo, lo + sum, ..., lo + k * sum, hi}
+ * to be used by benchmark::ArgsProduct.
+ *
+ * @param lo int64_t
+ * @param hi int64_t
+ * @param sum int64_t
+ *
+ * @return std::vector<int64_t>
+ */
+std::vector<int64_t> CreateDenseRange(int64_t lo, int64_t hi, int sum) {
+    std::vector<int64_t> v;
+    int64_t i = lo;
+    for (; i < hi; i += sum) {
+        v.push_back(i);
+    }
+    v.push_back(hi);
+    return v;
+}

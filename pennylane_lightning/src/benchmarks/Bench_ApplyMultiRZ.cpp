@@ -18,7 +18,7 @@
 #include "Constant.hpp"
 #include "StateVectorManaged.hpp"
 
-#include "Bench_Macros.hpp"
+#include "Bench_Utils.hpp"
 
 using Kernel = Pennylane::Gates::KernelType;
 
@@ -98,17 +98,29 @@ static void applyOperation_MultiRZ(benchmark::State &state, Kernel kernel) {
 }
 
 BENCHMARK_APPLYOPS(applyOperation_MultiRZ, float, LM, Kernel::LM)
-    ->RangeMultiplier(2l)
-    ->Ranges({{8, 64}, {4, 24}, {2, 2}});
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2), // num_gates
+        CreateDenseRange(6, 24, /*sum=*/2),       // num_qubits
+        CreateDenseRange(2, 4, /*sum=*/2),        // num_wires
+    });
 
 BENCHMARK_APPLYOPS(applyOperation_MultiRZ, float, PI, Kernel::PI)
-    ->RangeMultiplier(2l)
-    ->Ranges({{8, 64}, {4, 24}, {2, 2}});
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2), // num_gates
+        CreateDenseRange(6, 24, /*sum=*/2),       // num_qubits
+        CreateDenseRange(2, 4, /*sum=*/2),        // num_wires
+    });
 
 BENCHMARK_APPLYOPS(applyOperation_MultiRZ, double, LM, Kernel::LM)
-    ->RangeMultiplier(2l)
-    ->Ranges({{8, 64}, {4, 24}, {2, 2}});
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2), // num_gates
+        CreateDenseRange(6, 24, /*sum=*/2),       // num_qubits
+        CreateDenseRange(2, 4, /*sum=*/2),        // num_wires
+    });
 
 BENCHMARK_APPLYOPS(applyOperation_MultiRZ, double, PI, Kernel::PI)
-    ->RangeMultiplier(2l)
-    ->Ranges({{8, 64}, {4, 24}, {2, 2}});
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2), // num_gates
+        CreateDenseRange(6, 24, /*sum=*/2),       // num_qubits
+        CreateDenseRange(2, 4, /*sum=*/2),        // num_wires
+    });

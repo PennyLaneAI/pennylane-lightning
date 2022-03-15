@@ -22,7 +22,7 @@
 #include "Constant.hpp"
 #include "StateVectorManaged.hpp"
 
-#include "Bench_Macros.hpp"
+#include "Bench_Utils.hpp"
 
 using Kernel = Pennylane::Gates::KernelType;
 
@@ -214,70 +214,94 @@ static void applyOperations_RandOps(benchmark::State &state,
 /* RXYZ */
 BENCHMARK_APPLYOPS(applyOperations_RandOps, float, LM_RXYZ, Kernel::LM,
                    {"RX", "RY", "RZ"})
-    ->RangeMultiplier(2l)
-    ->Ranges({{8, 64}, {4, 24}});
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2), // num_gates
+        CreateDenseRange(6, 24, /*sum=*/2),       // num_qubits
+    });
 
 BENCHMARK_APPLYOPS(applyOperations_RandOps, float, PI_RXYZ, Kernel::PI,
                    {"RX", "RY", "RZ"})
-    ->RangeMultiplier(2l)
-    ->Ranges({{8, 64}, {4, 24}});
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2), // num_gates
+        CreateDenseRange(6, 24, /*sum=*/2),       // num_qubits
+    });
 
 BENCHMARK_APPLYOPS(applyOperations_RandOps, double, LM_RXYZ, Kernel::LM,
                    {"RX", "RY", "RZ"})
-    ->RangeMultiplier(2l)
-    ->Ranges({{8, 64}, {4, 24}});
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2), // num_gates
+        CreateDenseRange(6, 24, /*sum=*/2),       // num_qubits
+    });
 
 BENCHMARK_APPLYOPS(applyOperations_RandOps, double, PI_RXYZ, Kernel::PI,
                    {"RX", "RY", "RZ"})
-    ->RangeMultiplier(2l)
-    ->Ranges({{8, 64}, {4, 24}});
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2), // num_gates
+        CreateDenseRange(6, 24, /*sum=*/2),       // num_qubits
+    });
 
 /* PauliXYZ */
 BENCHMARK_APPLYOPS(applyOperations_RandOps, double, LM_PauliXYZ, Kernel::LM,
                    {"PauliX", "PauliY", "PauliZ"})
-    ->RangeMultiplier(2l)
-    ->Ranges({{8, 64}, {4, 24}});
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2), // num_gates
+        CreateDenseRange(6, 24, /*sum=*/2),       // num_qubits
+    });
 
 BENCHMARK_APPLYOPS(applyOperations_RandOps, double, PI_PauliXYZ, Kernel::PI,
                    {"PauliX", "PauliY", "PauliZ"})
-    ->RangeMultiplier(2l)
-    ->Ranges({{8, 64}, {4, 24}});
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2), // num_gates
+        CreateDenseRange(6, 24, /*sum=*/2),       // num_qubits
+    });
 
 BENCHMARK_APPLYOPS(applyOperations_RandOps, float, LM_PauliXYZ, Kernel::LM,
                    {"PauliX", "PauliY", "PauliZ"})
-    ->RangeMultiplier(2l)
-    ->Ranges({{8, 64}, {4, 24}});
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2), // num_gates
+        CreateDenseRange(6, 24, /*sum=*/2),       // num_qubits
+    });
 
 BENCHMARK_APPLYOPS(applyOperations_RandOps, float, PI_PauliXYZ, Kernel::PI,
                    {"PauliX", "PauliY", "PauliZ"})
-    ->RangeMultiplier(2l)
-    ->Ranges({{8, 64}, {4, 24}});
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2), // num_gates
+        CreateDenseRange(6, 24, /*sum=*/2),       // num_qubits
+    });
 
 /* From All Gates */
 BENCHMARK_APPLYOPS(applyOperations_RandOps, float, LM_all, Kernel::LM,
                    {"PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T", "RX",
                     "RY", "RZ", "Rot", "PhaseShift", "CNOT", "SWAP",
                     "ControlledPhaseShift", "CRX", "CRY", "CRZ"})
-    ->RangeMultiplier(2l)
-    ->Ranges({{8, 64}, {4, 24}});
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2), // num_gates
+        CreateDenseRange(6, 24, /*sum=*/2),       // num_qubits
+    });
 
 BENCHMARK_APPLYOPS(applyOperations_RandOps, float, PI_all, Kernel::PI,
                    {"PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T", "RX",
                     "RY", "RZ", "Rot", "PhaseShift", "CNOT", "SWAP",
                     "ControlledPhaseShift", "CRX", "CRY", "CRZ"})
-    ->RangeMultiplier(2l)
-    ->Ranges({{8, 64}, {4, 24}});
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2), // num_gates
+        CreateDenseRange(6, 24, /*sum=*/2),       // num_qubits
+    });
 
 BENCHMARK_APPLYOPS(applyOperations_RandOps, double, LM_all, Kernel::LM,
                    {"PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T", "RX",
                     "RY", "RZ", "Rot", "PhaseShift", "CNOT", "SWAP",
                     "ControlledPhaseShift", "CRX", "CRY", "CRZ"})
-    ->RangeMultiplier(2l)
-    ->Ranges({{8, 64}, {4, 24}});
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2), // num_gates
+        CreateDenseRange(6, 24, /*sum=*/2),       // num_qubits
+    });
 
 BENCHMARK_APPLYOPS(applyOperations_RandOps, double, PI_all, Kernel::PI,
                    {"PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T", "RX",
                     "RY", "RZ", "Rot", "PhaseShift", "CNOT", "SWAP",
                     "ControlledPhaseShift", "CRX", "CRY", "CRZ"})
-    ->RangeMultiplier(2l)
-    ->Ranges({{8, 64}, {4, 24}});
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2), // num_gates
+        CreateDenseRange(6, 24, /*sum=*/2),       // num_qubits
+    });
