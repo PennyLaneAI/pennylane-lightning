@@ -99,28 +99,28 @@ static void applyOperation_MultiRZ(benchmark::State &state, Kernel kernel) {
 
 BENCHMARK_APPLYOPS(applyOperation_MultiRZ, float, LM, Kernel::LM)
     ->ArgsProduct({
-        benchmark::CreateRange(8, 64, /*mul=*/2), // num_gates
-        CreateDenseRange(6, 24, /*sum=*/2),       // num_qubits
-        CreateDenseRange(2, 4, /*sum=*/2),        // num_wires
+        benchmark::CreateRange(8, 64, /*mul=*/2),       // num_gates
+        benchmark::CreateDenseRange(6, 24, /*step=*/2), // num_qubits
+        benchmark::CreateDenseRange(2, 4, /*step=*/2),  // num_wires
     });
 
 BENCHMARK_APPLYOPS(applyOperation_MultiRZ, float, PI, Kernel::PI)
     ->ArgsProduct({
-        benchmark::CreateRange(8, 64, /*mul=*/2), // num_gates
-        CreateDenseRange(6, 24, /*sum=*/2),       // num_qubits
-        CreateDenseRange(2, 4, /*sum=*/2),        // num_wires
+        benchmark::CreateRange(8, 64, /*mul=*/2),       // num_gates
+        benchmark::CreateDenseRange(6, 24, /*step=*/2), // num_qubits
+        benchmark::CreateDenseRange(2, 4, /*step=*/2),  // num_wires
     });
 
 BENCHMARK_APPLYOPS(applyOperation_MultiRZ, double, LM, Kernel::LM)
     ->ArgsProduct({
-        benchmark::CreateRange(8, 64, /*mul=*/2), // num_gates
-        CreateDenseRange(6, 24, /*sum=*/2),       // num_qubits
-        CreateDenseRange(2, 4, /*sum=*/2),        // num_wires
+        benchmark::CreateRange(8, 64, /*mul=*/2),       // num_gates
+        benchmark::CreateDenseRange(6, 24, /*step=*/2), // num_qubits
+        benchmark::CreateDenseRange(2, 4, /*step=*/2),  // num_wires
     });
 
 BENCHMARK_APPLYOPS(applyOperation_MultiRZ, double, PI, Kernel::PI)
     ->ArgsProduct({
-        benchmark::CreateRange(8, 64, /*mul=*/2), // num_gates
-        CreateDenseRange(6, 24, /*sum=*/2),       // num_qubits
-        CreateDenseRange(2, 4, /*sum=*/2),        // num_wires
+        benchmark::CreateRange(8, 64, /*mul=*/2),       // num_gates
+        benchmark::CreateDenseRange(6, 24, /*step=*/2), // num_qubits
+        benchmark::CreateDenseRange(2, 4, /*step=*/2),  // num_wires
     });
