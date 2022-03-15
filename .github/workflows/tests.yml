@@ -56,7 +56,7 @@ jobs:
           files: Build/tests/results/report.xml
 
   cpptestswithblas:
-    name: C++ tests with ENABLE_BLAS=ON
+    name: C++ tests with OpenBLAS
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -77,12 +77,14 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc g++ libopenblas-dev
 
-      - name: Build and run unit tests
+      - name: Build unit tests
         run: |
             cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DENABLE_BLAS=ON -DBUILD_TESTS=1 
             cmake --build ./Build
             mkdir -p ./Build/tests/results
-            ./Build/pennylane_lightning/src/tests/runner --order lex --reporter junit --out ./Build/tests/results/report.xml
+
+      - name: Run unit tests
+        run: ./Build/pennylane_lightning/src/tests/runner --order lex --reporter junit --out ./Build/tests/results/report.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v2
