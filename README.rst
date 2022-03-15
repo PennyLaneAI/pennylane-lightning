@@ -73,7 +73,7 @@ Alternatively, for development and testing, you can install by cloning the repos
 
 .. code-block:: console
 
-    $ git clone https://github.com/XanaduAI/pennylane-lightning.git
+    $ git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     $ cd pennylane-lightning
     $ pip install -r requirements.txt
     $ pip install -e .
@@ -93,6 +93,17 @@ and install the compilied library with
 
     $ python3 setup.py develop
 
+
+GPU support
+-----------
+
+For GPU support, `PennyLane-Lightning-GPU <https://github.com/PennyLaneAI/pennylane-lightning-gpu>`_ can be installed by providing the optional ``[gpu]`` tag:
+
+.. code-block:: console
+
+    $ pip install pennylane-lightning[gpu]
+
+For more information, please refer to the PennyLane Lightning GPU `documentation <https://pennylane-lightning-gpu.readthedocs.io/>`_.
 
 Testing
 -------
@@ -172,7 +183,7 @@ One can also build the Pennylane-Lightning image using Docker:
 
 .. code-block:: console
 
-    $ git clone https://github.com/XanaduAI/pennylane-lightning.git
+    $ git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     $ cd pennylane-lightning
     $ docker build -t lightning/base -f docker/Dockerfile .
 
@@ -193,7 +204,7 @@ or applications built on PennyLane.
 Authors
 =======
 
-PennyLane-Lightning is the work of `many contributors <https://github.com/XanaduAI/pennylane-lightning/graphs/contributors>`_.
+PennyLane-Lightning is the work of `many contributors <https://github.com/PennyLaneAI/pennylane-lightning/graphs/contributors>`_.
 
 If you are doing research using PennyLane and PennyLane-Lightning, please cite `our paper <https://arxiv.org/abs/1811.04968>`_:
 

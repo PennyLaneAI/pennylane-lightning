@@ -23,8 +23,6 @@ This release contains contributions from (in alphabetical order):
 * Add Docker support.
 [(#234)](https://github.com/PennyLaneAI/pennylane-lightning/pull/234)
 
-### Breaking changes
-
 ### Improvements
 
 * Update quantum tapes serialization and Python tests.
@@ -46,6 +44,9 @@ This release contains contributions from (in alphabetical order):
 [(#212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/212)
 
 ### Documentation
+
+* Use of batching with OpenMP threads is documented.
+[(#221)](https://github.com/PennyLaneAI/pennylane-lightning/pull/221)
 
 ### Bug fixes
 
