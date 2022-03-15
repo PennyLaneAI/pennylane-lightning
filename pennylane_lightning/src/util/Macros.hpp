@@ -101,11 +101,11 @@
 #endif
 
 namespace Pennylane::Util::Constant {
-enum class CPUArch { AMD64, PPC64, ARM, Unknown };
+enum class CPUArch { X86_64, PPC64, ARM, Unknown };
 
 constexpr auto getCPUArchClangGCC() {
 #if defined(__x86_64__)
-    return CPUArch::AMD64;
+    return CPUArch::X86_64;
 #elif defined(__powerpc64__)
     return CPUArch::PPC64;
 #elif defined(__arm__)
@@ -117,7 +117,7 @@ constexpr auto getCPUArchClangGCC() {
 
 constexpr auto getCPUArchMSVC() {
 #if defined(_M_AMD64)
-    return CPUArch::AMD64;
+    return CPUArch::X86_64;
 #elif defined(_M_PPC)
     return CPUArch::PPC64;
 #elif defined(_M_ARM)

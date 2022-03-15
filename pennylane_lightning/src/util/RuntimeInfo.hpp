@@ -20,7 +20,7 @@
 
 namespace Pennylane::Util {
 /**
- * @brief This class is only usable in x86 or AMD64 architecture.
+ * @brief This class is only usable in x86 or x86_64 architecture.
  */
 class RuntimeInfo {
   private:

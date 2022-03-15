@@ -168,8 +168,8 @@ void registerAllImplementedGeneratorOps() {
     auto registerGeneratorToDispatcher =
         [&dispatcher](const auto &gntr_op_func_pair) {
             const auto &[gntr_op, func] = gntr_op_func_pair;
-            std::string op_name =
-                std::string(Util::lookup(Gates::Constant::generator_names, gntr_op));
+            std::string op_name = std::string(
+                Util::lookup(Gates::Constant::generator_names, gntr_op));
             dispatcher.registerGeneratorOperation(
                 op_name, GateImplementation::kernel_id, func);
             return gntr_op;

@@ -239,8 +239,8 @@ auto getCompileInfo() -> pybind11::dict {
 
     const std::string_view cpu_arch_str = [] {
         switch (cpu_arch) {
-        case CPUArch::AMD64:
-            return "AMD64";
+        case CPUArch::X86_64:
+            return "x86_64";
         case CPUArch::PPC64:
             return "PPC64";
         case CPUArch::ARM:
