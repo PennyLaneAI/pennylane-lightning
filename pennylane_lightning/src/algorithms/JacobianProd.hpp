@@ -62,8 +62,6 @@ template <class T = double> class VectorJacobianProduct {
     }
 
   public:
-    VectorJacobianProduct() = default;
-
     /**
      * @brief Computes the vector-Jacobian product for a given vector of
      * gradient outputs and a Jacobian.

@@ -12,23 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #pragma once
-
-#include <complex>
-#include <cstring>
-#include <numeric>
-#include <stdexcept>
-#include <type_traits>
-#include <utility>
-#include <variant>
-#include <vector>
-
-#include "DynamicDispatcher.hpp"
+#include "AlgUtil.hpp"
 #include "Error.hpp"
 #include "JacobianTape.hpp"
 #include "LinearAlgebra.hpp"
 #include "StateVectorManaged.hpp"
 
-#include <iostream>
+#include <complex>
+#include <numeric>
+#include <type_traits>
+#include <string>
+#include <utility>
+#include <vector>
 
 /// @cond DEV
 namespace {
@@ -48,10 +43,6 @@ namespace Pennylane::Algorithms {
  */
 template <class T = double> class AdjointJacobian {
   private:
-    using GeneratorFunc = void (*)(StateVectorManaged<T> &,
-                                   const std::vector<size_t> &,
-                                   const bool); // function pointer type
-
     /**
      * @brief Utility method to update the Jacobian at a given index by
      * calculating the overlap between two given states.
@@ -63,7 +54,7 @@ template <class T = double> class AdjointJacobian {
      * @param obs_index Observable index position of Jacobian to update.
      * @param param_index Parameter index position of Jacobian to update.
      */
-    inline void updateJacobian(const StateVectorManaged<T> &sv1,
+    inline static void updateJacobian(const StateVectorManaged<T> &sv1,
                                const StateVectorManaged<T> &sv2,
                                std::vector<std::vector<T>> &jac,
                                T scaling_coeff, size_t obs_index,
@@ -74,180 +65,6 @@ template <class T = double> class AdjointJacobian {
     }
 
     /**
-     * @brief Utility method to apply all operations from given `%OpsData<T>`
-     * object to `%StateVectorManaged<T>`
-     *
-     * @param state Statevector to be updated.
-     * @param operations Operations to apply.
-     * @param adj Take the adjoint of the given operations.
-     */
-    inline void applyOperations(StateVectorManaged<T> &state,
-                                const OpsData<T> &operations,
-                                bool adj = false) {
-        for (size_t op_idx = 0; op_idx < operations.getOpsName().size();
-             op_idx++) {
-            state.applyOperation(operations.getOpsName()[op_idx],
-                                 operations.getOpsWires()[op_idx],
-                                 operations.getOpsInverses()[op_idx] ^ adj,
-                                 operations.getOpsParams()[op_idx]);
-        }
-    }
-    /**
-     * @brief Utility method to apply the adjoint indexed operation from
-     * `%OpsData<T>` object to `%StateVectorManaged<T>`.
-     *
-     * @param state Statevector to be updated.
-     * @param operations Operations to apply.
-     * @param op_idx Adjointed operation index to apply.
-     */
-    inline void applyOperationAdj(StateVectorManaged<T> &state,
-                                  const OpsData<T> &operations, size_t op_idx) {
-        state.applyOperation(operations.getOpsName()[op_idx],
-                             operations.getOpsWires()[op_idx],
-                             !operations.getOpsInverses()[op_idx],
-                             operations.getOpsParams()[op_idx]);
-    }
-
-    /**
-     * @brief Utility method to apply a given operations from given
-     * `%ObsDatum<T>` object to `%StateVectorManaged<T>`
-     *
-     * @param state Statevector to be updated.
-     * @param observable Observable to apply.
-     */
-    inline void applyObservable(StateVectorManaged<T> &state,
-                                const ObsDatum<T> &observable) {
-        using namespace Pennylane::Util;
-        for (size_t j = 0; j < observable.getSize(); j++) {
-            if (!observable.getObsParams().empty()) {
-                std::visit(
-                    [&](const auto &param) {
-                        using p_t = std::decay_t<decltype(param)>;
-                        // Apply supported gate with given params
-                        if constexpr (std::is_same_v<p_t, std::vector<T>>) {
-                            state.applyOperation(observable.getObsName()[j],
-                                                 observable.getObsWires()[j],
-                                                 false, param);
-                        }
-                        // Apply provided matrix
-                        else if constexpr (std::is_same_v<
-                                               p_t,
-                                               std::vector<std::complex<T>>>) {
-                            state.applyMatrix(
-                                param, observable.getObsWires()[j], false);
-                        } else {
-                            state.applyOperation(observable.getObsName()[j],
-                                                 observable.getObsWires()[j],
-                                                 false);
-                        }
-                    },
-                    observable.getObsParams()[j]);
-            } else { // Offloat to SV dispatcher if no parameters provided
-                state.applyOperation(observable.getObsName()[j],
-                                     observable.getObsWires()[j], false);
-            }
-        }
-    }
-
-    /**
-     * @brief OpenMP accelerated application of observables to given
-     * statevectors
-     *
-     * @param states Vector of statevector copies, one per observable.
-     * @param reference_state Reference statevector
-     * @param observables Vector of observables to apply to each statevector.
-     */
-    inline void applyObservables(std::vector<StateVectorManaged<T>> &states,
-                                 const StateVectorManaged<T> &reference_state,
-                                 const std::vector<ObsDatum<T>> &observables) {
-        // clang-format off
-        // Globally scoped exception value to be captured within OpenMP block.
-        // See the following for OpenMP design decisions:
-        // https://www.openmp.org/wp-content/uploads/openmp-examples-4.5.0.pdf
-        std::exception_ptr ex = nullptr;
-        size_t num_observables = observables.size();
-        #if defined(_OPENMP)
-            #pragma omp parallel default(none)                                 \
-            shared(states, reference_state, observables, ex, num_observables)
-        {
-            #pragma omp for
-        #endif
-            for (size_t h_i = 0; h_i < num_observables; h_i++) {
-                try {
-                    states[h_i].updateData(reference_state.getDataVector());
-                    applyObservable(states[h_i], observables[h_i]);
-                } catch (...) {
-                    #if defined(_OPENMP)
-                        #pragma omp critical
-                    #endif
-                    ex = std::current_exception();
-                    #if defined(_OPENMP)
-                        #pragma omp cancel for
-                    #endif
-                }
-            }
-        #if defined(_OPENMP)
-            if (ex) {
-                #pragma omp cancel parallel
-            }
-        }
-        #endif
-        if (ex) {
-            std::rethrow_exception(ex);
-        }
-        // clang-format on
-    }
-
-    /**
-     * @brief OpenMP accelerated application of adjoint operations to
-     * statevectors.
-     *
-     * @param states Vector of all statevectors; 1 per observable
-     * @param operations Operations list.
-     * @param op_idx Index of given operation within operations list to take
-     * adjoint of.
-     */
-    inline void applyOperationsAdj(std::vector<StateVectorManaged<T>> &states,
-                                   const OpsData<T> &operations,
-                                   size_t op_idx) {
-        // clang-format off
-        // Globally scoped exception value to be captured within OpenMP block.
-        // See the following for OpenMP design decisions:
-        // https://www.openmp.org/wp-content/uploads/openmp-examples-4.5.0.pdf
-        std::exception_ptr ex = nullptr;
-        size_t num_states = states.size();
-        #if defined(_OPENMP)
-            #pragma omp parallel default(none)                                 \
-                shared(states, operations, op_idx, ex, num_states)
-        {
-            #pragma omp for
-        #endif
-            for (size_t obs_idx = 0; obs_idx < num_states; obs_idx++) {
-                try {
-                    applyOperationAdj(states[obs_idx], operations, op_idx);
-                } catch (...) {
-                    #if defined(_OPENMP)
-                        #pragma omp critical
-                    #endif
-                    ex = std::current_exception();
-                    #if defined(_OPENMP)
-                        #pragma omp cancel for
-                    #endif
-                }
-            }
-        #if defined(_OPENMP)
-            if (ex) {
-                #pragma omp cancel parallel
-            }
-        }
-        #endif
-        if (ex) {
-            std::rethrow_exception(ex);
-        }
-        // clang-format on
-    }
-
-    /**
      * @brief Inline utility to assist with getting the Jacobian index offset.
      *
      * @param obs_index
@@ -255,7 +72,8 @@ template <class T = double> class AdjointJacobian {
      * @param tp_size
      * @return size_t
      */
-    inline auto getJacIndex(size_t obs_index, size_t tp_index, size_t tp_size)
+    inline static auto getJacIndex(size_t obs_index, size_t tp_index, 
+                                   size_t tp_size)
         -> size_t {
         return obs_index * tp_size + tp_index;
     }
@@ -267,32 +85,12 @@ template <class T = double> class AdjointJacobian {
      * @param state_length
      * @return std::vector<std::complex<T>>
      */
-    auto copyStateData(const std::complex<T> *input_state, size_t state_length)
+    inline static auto copyStateData(const std::complex<T> *input_state, size_t state_length)
         -> std::vector<std::complex<T>> {
         return {input_state, input_state + state_length};
     }
 
-    /**
-     * @brief Applies the gate generator for a given parameteric gate. Returns
-     * the associated scaling coefficient.
-     *
-     * @param sv Statevector data to operate upon.
-     * @param op_name Name of parametric gate.
-     * @param wires Wires to operate upon.
-     * @param adj Indicate whether to take the adjoint of the operation.
-     * @return T Generator scaling coefficient.
-     */
-    template <class SVType>
-    inline auto applyGenerator(StateVectorBase<T, SVType> &sv,
-                               const std::string &op_name,
-                               const std::vector<size_t> &wires, const bool adj)
-        -> T {
-        return sv.applyGenerator(op_name, wires, adj);
-    }
-
   public:
-    AdjointJacobian() = default;
-
     /**
      * @brief Calculates the Jacobian for the statevector for the selected set
      * of parametric gates.
@@ -312,7 +110,7 @@ template <class T = double> class AdjointJacobian {
      * @param apply_operations Indicate whether to apply operations to tape.psi
      * prior to calculation.
      */
-    void adjointJacobian(std::vector<T> &jac, const JacobianData<T> &jd,
+    static void adjointJacobian(std::vector<T> &jac, const JacobianData<T> &jd,
                          bool apply_operations = false) {
         PL_ABORT_IF(!jd.hasTrainableParams(),
                     "No trainable parameters provided.");
@@ -365,7 +163,7 @@ template <class T = double> class AdjointJacobian {
                         std::find(tp_begin, tp_it, current_param_idx) !=
                             tp_it) {
                         const T scalingFactor =
-                            applyGenerator(mu, ops_name[op_idx],
+                            mu.applyGenerator(ops_name[op_idx],
                                            ops.getOpsWires()[op_idx],
                                            !ops.getOpsInverses()[op_idx]) *
                             (ops.getOpsInverses()[op_idx] ? -1 : 1);
