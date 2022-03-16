@@ -465,13 +465,19 @@ class TestWiresInExpval:
 class TestSample:
     """Tests that samples are properly calculated."""
 
+    @pytest.fixture
+    def dev(self):
+        return qml.device("lightning.qubit", wires=2, shots=1000)
+
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_sample_dimensions(self, C):
+    def test_sample_dimensions(self, dev, C):
+        """Tests if the samples returned by sample have
+        the correct dimensions
+        """
 
         # Explicitly resetting is necessary as the internal
         # state is set to None in __init__ and only properly
         # initialized during reset
-        dev = qml.device("lightning.qubit", wires=2, shots=1000)
         dev._state = dev._asarray(dev._state, C)
         dev.apply([qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])])
 
@@ -496,7 +502,7 @@ class TestSample:
         assert np.array_equal(s3.shape, (17,))
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_sample_values(self, qubit_device_2_wires, C, tol):
+    def test_sample_values(self, dev, C, tol):
         """Tests if the samples returned by sample have
         the correct values
         """
@@ -504,7 +510,6 @@ class TestSample:
         # Explicitly resetting is necessary as the internal
         # state is set to None in __init__ and only properly
         # initialized during reset
-        dev = qml.device("lightning.qubit", wires=2, shots=1000)
         dev._state = dev._asarray(dev._state, C)
 
         dev.apply([qml.RX(1.5708, wires=[0])])
@@ -517,10 +522,9 @@ class TestSample:
         # they square to 1
         assert np.allclose(s1**2, 1, atol=tol, rtol=0)
 
-    def test_sample_unsupported_type(self):
+    def test_sample_unsupported_type(self, dev):
         """Test if generate_samples raise error with complex256"""
 
-        dev = qml.device("lightning.qubit", wires=2, shots=1000)
         dev._state = np.array([1, 0]).astype(np.complex256)
 
         with pytest.raises(TypeError, match="Unsupported complex Type:"):

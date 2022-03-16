@@ -163,7 +163,7 @@ TEST_CASE("Expected Values", "[Measures]") {
     }
 }
 
-TEST_CASE("Sample", "[Measures]") {
+TEMPLATE_TEST_CASE("Sample", "[Measures]", float, double) {
     constexpr int twos[] = {
         1 << 0,  1 << 1,  1 << 2,  1 << 3,  1 << 4,  1 << 5,  1 << 6,  1 << 7,
         1 << 8,  1 << 9,  1 << 10, 1 << 11, 1 << 12, 1 << 13, 1 << 14, 1 << 15,
@@ -171,15 +171,16 @@ TEST_CASE("Sample", "[Measures]") {
         1 << 24, 1 << 25, 1 << 26, 1 << 27, 1 << 28, 1 << 29, 1 << 30, 1 << 31};
 
     // Defining the State Vector that will be measured.
-    StateVectorManaged<double> Measured_StateVector =
+    StateVectorManaged<TestType> Measured_StateVector =
         Initializing_StateVector();
 
     // Initializing the measures class.
     // It will attach to the StateVector, allowing measures to keep been taken.
-    Measures<double, StateVectorManaged<double>> Measurer(Measured_StateVector);
-    vector<double> expected_probabilities = {0.687573, 0.013842, 0.089279,
-                                             0.001797, 0.180036, 0.003624,
-                                             0.023377, 0.000471};
+    Measures<TestType, StateVectorManaged<TestType>> Measurer(
+        Measured_StateVector);
+    vector<TestType> expected_probabilities = {0.687573, 0.013842, 0.089279,
+                                               0.001797, 0.180036, 0.003624,
+                                               0.023377, 0.000471};
 
     size_t num_qubits = 3;
     size_t N = std::pow(2, num_qubits);
@@ -200,9 +201,9 @@ TEST_CASE("Sample", "[Measures]") {
     }
 
     // compute estimated probabilities from histogram
-    std::vector<double> probabilities(counts.size());
+    std::vector<TestType> probabilities(counts.size());
     for (size_t i = 0; i < counts.size(); i++) {
-        probabilities[i] = counts[i] / (double)num_samples;
+        probabilities[i] = counts[i] / (TestType)num_samples;
     }
 
     // compare estimated probabilities to real probabilities
