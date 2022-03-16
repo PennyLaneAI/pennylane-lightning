@@ -27,10 +27,10 @@ class RuntimeInfo {
     struct InternalRuntimeInfo {
         InternalRuntimeInfo();
 
-        std::bitset<32> f_1_ecx;
-        std::bitset<32> f_1_edx;
-        std::bitset<32> f_7_ebx;
-        std::bitset<32> f_7_ecx;
+        std::bitset<32> f_1_ecx{};
+        std::bitset<32> f_1_edx{};
+        std::bitset<32> f_7_ebx{};
+        std::bitset<32> f_7_ecx{};
     };
 
     static const inline InternalRuntimeInfo internal_runtime_info_;
