@@ -15,4 +15,4 @@
 """Version information.
    Version number (major.minor.patch[-label])
 """
-__version__ = "0.23.0-dev2"
+__version__ = "0.23.0-dev3"
