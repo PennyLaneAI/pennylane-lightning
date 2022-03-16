@@ -213,40 +213,40 @@ TEMPLATE_TEST_CASE("Sample", "[Measures]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("Variances", "[Measures]", float, double) {
+TEMPLATE_TEST_CASE("Variances", "[Measures]") {
     // Defining the State Vector that will be measured.
-    StateVectorManaged<TestType> Measured_StateVector =
+    StateVectorManaged<double> Measured_StateVector =
         Initializing_StateVector();
 
     // Initializing the measures class.
     // It will attach to the StateVector, allowing measures to keep been taken.
-    Measures<TestType, StateVectorManaged<TestType>> Measurer(
+    Measures<double, StateVectorManaged<double>> Measurer(
         Measured_StateVector);
 
     SECTION("Testing single operation defined by a matrix:") {
-        vector<std::complex<TestType>> PauliX = {0, 1, 1, 0};
+        vector<std::complex<double>> PauliX = {0, 1, 1, 0};
         vector<size_t> wires_single = {0};
-        TestType variance = Measurer.var(PauliX, wires_single);
-        TestType variances_ref = 0.757222;
+        double variance = Measurer.var(PauliX, wires_single);
+        double variances_ref = 0.757222;
         REQUIRE(variance == Approx(variances_ref).margin(1e-6));
     }
 
     SECTION("Testing single operation defined by its name:") {
         vector<size_t> wires_single = {0};
-        TestType variance = Measurer.var("PauliX", wires_single);
-        TestType variances_ref = 0.757222;
+        double variance = Measurer.var("PauliX", wires_single);
+        double variances_ref = 0.757222;
         REQUIRE(variance == Approx(variances_ref).margin(1e-6));
     }
 
     SECTION("Testing list of operators defined by a matrix:") {
-        vector<std::complex<TestType>> PauliX = {0, 1, 1, 0};
-        vector<std::complex<TestType>> PauliY = {0, {0, -1}, {0, 1}, 0};
-        vector<std::complex<TestType>> PauliZ = {1, 0, 0, -1};
+        vector<std::complex<double>> PauliX = {0, 1, 1, 0};
+        vector<std::complex<double>> PauliY = {0, {0, -1}, {0, 1}, 0};
+        vector<std::complex<double>> PauliZ = {1, 0, 0, -1};
 
-        vector<TestType> variances;
-        vector<TestType> variances_ref;
+        vector<double> variances;
+        vector<double> variances_ref;
         vector<vector<size_t>> wires_list = {{0}, {1}, {2}};
-        vector<vector<std::complex<TestType>>> operations_list;
+        vector<vector<std::complex<double>>> operations_list;
 
         operations_list = {PauliX, PauliX, PauliX};
         variances = Measurer.var(operations_list, wires_list);
