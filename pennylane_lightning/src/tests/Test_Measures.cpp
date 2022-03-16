@@ -220,7 +220,8 @@ TEMPLATE_TEST_CASE("Variances", "[Measures]", float, double) {
 
     // Initializing the measures class.
     // It will attach to the StateVector, allowing measures to keep been taken.
-    Measures<TestType, StateVectorManaged<TestType>> Measurer(Measured_StateVector);
+    Measures<TestType, StateVectorManaged<TestType>> Measurer(
+        Measured_StateVector);
 
     SECTION("Testing single operation defined by a matrix:") {
         vector<std::complex<TestType>> PauliX = {0, 1, 1, 0};
