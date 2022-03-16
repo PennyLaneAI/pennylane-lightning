@@ -213,7 +213,7 @@ TEMPLATE_TEST_CASE("Sample", "[Measures]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("Variances", "[Measures]") {
+TEST_CASE("Variances", "[Measures]") {
     // Defining the State Vector that will be measured.
     StateVectorManaged<double> Measured_StateVector =
         Initializing_StateVector();
