@@ -371,7 +371,7 @@ inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
  * @param n1 Index of the first column.
  * @param n2 Index of the last column.
  */
-template <class T, size_t BLOCKSIZE = 32> // NOLINT(readability-magic-numbers)
+template <class T, size_t BLOCKSIZE = 16> // NOLINT(readability-magic-numbers)
 inline static void CFTranspose(const T *mat, T *mat_t, size_t m, size_t n,
                                size_t m1, size_t m2, size_t n1, size_t n2) {
     size_t r;
@@ -419,7 +419,7 @@ inline static void CFTranspose(const T *mat, T *mat_t, size_t m, size_t n,
  * @param n1 Index of the first column.
  * @param n2 Index of the last column.
  */
-template <class T, size_t BLOCKSIZE = 32> // NOLINT(readability-magic-numbers)
+template <class T, size_t BLOCKSIZE = 16> // NOLINT(readability-magic-numbers)
 inline static void CFTranspose(const std::complex<T> *mat,
                                std::complex<T> *mat_t, size_t m, size_t n,
                                size_t m1, size_t m2, size_t n1, size_t n2) {
