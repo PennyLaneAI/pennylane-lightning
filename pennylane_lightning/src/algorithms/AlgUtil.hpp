@@ -30,12 +30,10 @@ namespace Pennylane::Algorithms {
  * @param operations Operations to apply.
  * @param adj Take the adjoint of the given operations.
  */
-template<typename T>
+template <typename T>
 inline void applyOperations(StateVectorManaged<T> &state,
-                            const OpsData<T> &operations,
-                            bool adj = false) {
-    for (size_t op_idx = 0; op_idx < operations.getOpsName().size();
-         op_idx++) {
+                            const OpsData<T> &operations, bool adj = false) {
+    for (size_t op_idx = 0; op_idx < operations.getOpsName().size(); op_idx++) {
         state.applyOperation(operations.getOpsName()[op_idx],
                              operations.getOpsWires()[op_idx],
                              operations.getOpsInverses()[op_idx] ^ adj,
@@ -50,7 +48,7 @@ inline void applyOperations(StateVectorManaged<T> &state,
  * @param operations Operations to apply.
  * @param op_idx Adjointed operation index to apply.
  */
-template<typename T>
+template <typename T>
 inline void applyOperationAdj(StateVectorManaged<T> &state,
                               const OpsData<T> &operations, size_t op_idx) {
     state.applyOperation(operations.getOpsName()[op_idx],
@@ -66,7 +64,7 @@ inline void applyOperationAdj(StateVectorManaged<T> &state,
  * @param state Statevector to be updated.
  * @param observable Observable to apply.
  */
-template<typename T>
+template <typename T>
 inline void applyObservable(StateVectorManaged<T> &state,
                             const ObsDatum<T> &observable) {
     using namespace Pennylane::Util;
@@ -78,15 +76,14 @@ inline void applyObservable(StateVectorManaged<T> &state,
                     // Apply supported gate with given params
                     if constexpr (std::is_same_v<p_t, std::vector<T>>) {
                         state.applyOperation(observable.getObsName()[j],
-                                             observable.getObsWires()[j],
-                                             false, param);
+                                             observable.getObsWires()[j], false,
+                                             param);
                     }
                     // Apply provided matrix
                     else if constexpr (std::is_same_v<
-                                           p_t,
-                                           std::vector<std::complex<T>>>) {
-                        state.applyMatrix(
-                            param, observable.getObsWires()[j], false);
+                                           p_t, std::vector<std::complex<T>>>) {
+                        state.applyMatrix(param, observable.getObsWires()[j],
+                                          false);
                     } else {
                         state.applyOperation(observable.getObsName()[j],
                                              observable.getObsWires()[j],
@@ -109,7 +106,7 @@ inline void applyObservable(StateVectorManaged<T> &state,
  * @param reference_state Reference statevector
  * @param observables Vector of observables to apply to each statevector.
  */
-template<typename T>
+template <typename T>
 inline void applyObservables(std::vector<StateVectorManaged<T>> &states,
                              const StateVectorManaged<T> &reference_state,
                              const std::vector<ObsDatum<T>> &observables) {
@@ -160,10 +157,9 @@ inline void applyObservables(std::vector<StateVectorManaged<T>> &states,
  * @param op_idx Index of given operation within operations list to take
  * adjoint of.
  */
-template<typename T>
+template <typename T>
 inline void applyOperationsAdj(std::vector<StateVectorManaged<T>> &states,
-                               const OpsData<T> &operations,
-                               size_t op_idx) {
+                               const OpsData<T> &operations, size_t op_idx) {
     // clang-format off
     // Globally scoped exception value to be captured within OpenMP block.
     // See the following for OpenMP design decisions:

@@ -24,8 +24,8 @@
 
 #include <complex>
 #include <numeric>
-#include <type_traits>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -59,10 +59,10 @@ template <class T = double> class AdjointJacobian {
      * @param param_index Parameter index position of Jacobian to update.
      */
     inline static void updateJacobian(const StateVectorManaged<T> &sv1,
-                               const StateVectorManaged<T> &sv2,
-                               std::vector<std::vector<T>> &jac,
-                               T scaling_coeff, size_t obs_index,
-                               size_t param_index) {
+                                      const StateVectorManaged<T> &sv2,
+                                      std::vector<std::vector<T>> &jac,
+                                      T scaling_coeff, size_t obs_index,
+                                      size_t param_index) {
         jac[obs_index][param_index] =
             -2 * scaling_coeff *
             std::imag(innerProdC(sv1.getDataVector(), sv2.getDataVector()));
@@ -76,9 +76,8 @@ template <class T = double> class AdjointJacobian {
      * @param tp_size
      * @return size_t
      */
-    inline static auto getJacIndex(size_t obs_index, size_t tp_index, 
-                                   size_t tp_size)
-        -> size_t {
+    inline static auto getJacIndex(size_t obs_index, size_t tp_index,
+                                   size_t tp_size) -> size_t {
         return obs_index * tp_size + tp_index;
     }
 
@@ -89,7 +88,8 @@ template <class T = double> class AdjointJacobian {
      * @param state_length
      * @return std::vector<std::complex<T>>
      */
-    inline static auto copyStateData(const std::complex<T> *input_state, size_t state_length)
+    inline static auto copyStateData(const std::complex<T> *input_state,
+                                     size_t state_length)
         -> std::vector<std::complex<T>> {
         return {input_state, input_state + state_length};
     }
@@ -115,7 +115,7 @@ template <class T = double> class AdjointJacobian {
      * prior to calculation.
      */
     static void adjointJacobian(std::vector<T> &jac, const JacobianData<T> &jd,
-                         bool apply_operations = false) {
+                                bool apply_operations = false) {
         PL_ABORT_IF(!jd.hasTrainableParams(),
                     "No trainable parameters provided.");
 
@@ -163,7 +163,7 @@ template <class T = double> class AdjointJacobian {
                 continue; // Ignore them
             }
 
-            if(tp_it == tp_rend) {
+            if (tp_it == tp_rend) {
                 break; // All done
             }
             mu.updateData(lambda.getDataVector());
@@ -174,8 +174,8 @@ template <class T = double> class AdjointJacobian {
                     // if current parameter is a trainable parameter
                     const T scalingFactor =
                         mu.applyGenerator(ops_name[op_idx],
-                                       ops.getOpsWires()[op_idx],
-                                       !ops.getOpsInverses()[op_idx]) *
+                                          ops.getOpsWires()[op_idx],
+                                          !ops.getOpsInverses()[op_idx]) *
                         (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
                     const size_t mat_row_idx =
@@ -195,9 +195,9 @@ template <class T = double> class AdjointJacobian {
                          obs_idx++) {
                         jac[mat_row_idx + obs_idx] =
                             -2 * scalingFactor *
-                            std::imag(innerProdC(
-                                H_lambda[obs_idx].getDataVector(),
-                                mu.getDataVector()));
+                            std::imag(
+                                innerProdC(H_lambda[obs_idx].getDataVector(),
+                                           mu.getDataVector()));
                     }
                     trainableParamNumber--;
                     ++tp_it;

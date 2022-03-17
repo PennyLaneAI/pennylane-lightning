@@ -78,11 +78,6 @@ template <class T, class Alloc> struct PLApprox {
         return *this;
     }
 };
-template <typename T, class Alloc>
-std::ostream &operator<<(std::ostream &os, const PLApprox<T, Alloc> &approx) {
-    os << approx.describe();
-    return os;
-}
 template <class T, class AllocA, class AllocB>
 bool operator==(const std::vector<T, AllocA> &lhs,
                 const PLApprox<T, AllocB> &rhs) {
@@ -92,6 +87,74 @@ template <class T, class AllocA, class AllocB>
 bool operator!=(const std::vector<T, AllocA> &lhs,
                 const PLApprox<T, AllocB> &rhs) {
     return !rhs.compare(lhs);
+}
+
+template <class PrecisionT> struct PLApproxComplex {
+    const std::complex<PrecisionT> comp_;
+
+    explicit PLApproxComplex(const std::complex<PrecisionT> &comp) : comp_{comp} {}
+
+    PrecisionT margin_{};
+    PrecisionT epsilon_ = std::numeric_limits<float>::epsilon() * 100;
+
+    [[nodiscard]] bool compare(const std::complex<PrecisionT> &lhs) const {
+        return (lhs.real() == Approx(comp_.real())
+                                 .epsilon(epsilon_)
+                                 .margin(margin_)) &&
+            (lhs.imag() == Approx(comp_.imag())
+                                 .epsilon(epsilon_)
+                                 .margin(margin_));
+    }
+    [[nodiscard]] std::string describe() const {
+        std::ostringstream ss;
+        ss << "is Approx to " << comp_;
+        return ss.str();
+    }
+    PLApproxComplex &epsilon(PrecisionT eps) {
+        epsilon_ = eps;
+        return *this;
+    }
+    PLApproxComplex &margin(PrecisionT m) {
+        margin_ = m;
+        return *this;
+    }
+};
+
+template <class T>
+bool operator==(const std::complex<T> &lhs,
+                const PLApproxComplex<T> &rhs) {
+    return rhs.compare(lhs);
+}
+template <class T>
+bool operator!=(const std::complex<T> &lhs,
+                const PLApproxComplex<T> &rhs) {
+    return !rhs.compare(lhs);
+}
+
+template<typename T>
+PLApproxComplex<T> approx(const std::complex<T>& val) {
+    return PLApproxComplex<T>{val};
+}
+
+/**
+ * @brief Simple helper for PLApprox for the cases when the class template
+ * deduction does not work well.
+ */
+template <typename T, class Alloc>
+PLApprox<T, Alloc> approx(const std::vector<T, Alloc> &vec) {
+    return PLApprox<T, Alloc>(vec);
+}
+
+template <typename T, class Alloc>
+std::ostream &operator<<(std::ostream &os, const PLApprox<T, Alloc> &approx) {
+    os << approx.describe();
+    return os;
+}
+
+template <typename T>
+std::ostream &operator<<(std::ostream &os, const PLApproxComplex<T> &approx) {
+    os << approx.describe();
+    return os;
 }
 
 /**

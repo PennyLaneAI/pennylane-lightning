@@ -82,6 +82,7 @@ set(TEST_SOURCES Test_AdjDiff.cpp
                  Test_OpToMemberFuncPtr.cpp
                  Test_StateVectorManaged.cpp
                  Test_StateVectorRaw.cpp
+                 Test_StateVecAdjDiff.cpp
                  Test_Util.cpp
                  Test_VectorJacobianProduct.cpp)
 
