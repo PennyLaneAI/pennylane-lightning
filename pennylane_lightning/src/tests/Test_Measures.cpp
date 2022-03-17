@@ -18,20 +18,21 @@ using std::string;
 using std::vector;
 }; // namespace
 
-StateVectorManaged<double> Initializing_StateVector() {
+template<typename T=double>
+StateVectorManaged<T> Initializing_StateVector() {
     // Defining a StateVector in a non-trivial configuration:
     size_t num_qubits = 3;
     size_t data_size = std::pow(2, num_qubits);
 
-    std::vector<std::complex<double>> arr(data_size, 0);
+    std::vector<std::complex<T>> arr(data_size, 0);
     arr[0] = 1;
-    StateVectorManaged<double> Measured_StateVector(arr.data(), data_size);
+    StateVectorManaged<T> Measured_StateVector(arr.data(), data_size);
 
     std::vector<size_t> wires;
 
-    double alpha = 0.7;
-    double beta = 0.5;
-    double gamma = 0.2;
+    T alpha = 0.7;
+    T beta = 0.5;
+    T gamma = 0.2;
     Measured_StateVector.applyOperations(
         {"RX", "RY", "RX", "RY", "RX", "RY"}, {{0}, {0}, {1}, {1}, {2}, {2}},
         {false, false, false, false, false, false},
@@ -172,7 +173,7 @@ TEMPLATE_TEST_CASE("Sample", "[Measures]", float, double) {
 
     // Defining the State Vector that will be measured.
     StateVectorManaged<TestType> Measured_StateVector =
-        Initializing_StateVector();
+        Initializing_StateVector<TestType>();
 
     // Initializing the measures class.
     // It will attach to the StateVector, allowing measures to keep been taken.
@@ -213,40 +214,40 @@ TEMPLATE_TEST_CASE("Sample", "[Measures]", float, double) {
     }
 }
 
-TEST_CASE("Variances", "[Measures]") {
+TEMPLATE_TEST_CASE("Variances", "[Measures]",float,double) {
     // Defining the State Vector that will be measured.
-    StateVectorManaged<double> Measured_StateVector =
-        Initializing_StateVector();
+    StateVectorManaged<TestType> Measured_StateVector =
+        Initializing_StateVector<TestType>();
 
     // Initializing the measures class.
     // It will attach to the StateVector, allowing measures to keep been taken.
-    Measures<double, StateVectorManaged<double>> Measurer(
+    Measures<TestType, StateVectorManaged<TestType>> Measurer(
         Measured_StateVector);
 
     SECTION("Testing single operation defined by a matrix:") {
-        vector<std::complex<double>> PauliX = {0, 1, 1, 0};
+        vector<std::complex<TestType>> PauliX = {0, 1, 1, 0};
         vector<size_t> wires_single = {0};
-        double variance = Measurer.var(PauliX, wires_single);
-        double variances_ref = 0.757222;
+        TestType variance = Measurer.var(PauliX, wires_single);
+        TestType variances_ref = 0.757222;
         REQUIRE(variance == Approx(variances_ref).margin(1e-6));
     }
 
     SECTION("Testing single operation defined by its name:") {
         vector<size_t> wires_single = {0};
-        double variance = Measurer.var("PauliX", wires_single);
-        double variances_ref = 0.757222;
+        TestType variance = Measurer.var("PauliX", wires_single);
+        TestType variances_ref = 0.757222;
         REQUIRE(variance == Approx(variances_ref).margin(1e-6));
     }
 
     SECTION("Testing list of operators defined by a matrix:") {
-        vector<std::complex<double>> PauliX = {0, 1, 1, 0};
-        vector<std::complex<double>> PauliY = {0, {0, -1}, {0, 1}, 0};
-        vector<std::complex<double>> PauliZ = {1, 0, 0, -1};
+        vector<std::complex<TestType>> PauliX = {0, 1, 1, 0};
+        vector<std::complex<TestType>> PauliY = {0, {0, -1}, {0, 1}, 0};
+        vector<std::complex<TestType>> PauliZ = {1, 0, 0, -1};
 
-        vector<double> variances;
-        vector<double> variances_ref;
+        vector<TestType> variances;
+        vector<TestType> variances_ref;
         vector<vector<size_t>> wires_list = {{0}, {1}, {2}};
-        vector<vector<std::complex<double>>> operations_list;
+        vector<vector<std::complex<TestType>>> operations_list;
 
         operations_list = {PauliX, PauliX, PauliX};
         variances = Measurer.var(operations_list, wires_list);
@@ -265,8 +266,8 @@ TEST_CASE("Variances", "[Measures]") {
     }
 
     SECTION("Testing list of operators defined by its name:") {
-        vector<double> variances;
-        vector<double> variances_ref;
+        vector<TestType> variances;
+        vector<TestType> variances_ref;
         vector<vector<size_t>> wires_list = {{0}, {1}, {2}};
         vector<string> operations_list;
 
