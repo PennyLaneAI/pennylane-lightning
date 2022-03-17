@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.14)
 
-set(LOGO "
+set(LOGO [=[
 ░█░░░▀█▀░█▀▀░█░█░▀█▀░█▀█░▀█▀░█▀█░█▀▀░░░░▄▀▄░█░█░█▀▄░▀█▀░▀█▀
 ░█░░░░█░░█░█░█▀█░░█░░█░█░░█░░█░█░█░█░░░░█\█░█░█░█▀▄░░█░░░█░
 ░▀▀▀░▀▀▀░▀▀▀░▀░▀░░▀░░▀░▀░▀▀▀░▀░▀░▀▀▀░▀░░░▀\░▀▀▀░▀▀░░▀▀▀░░▀░
-")
+]=])
 message(${LOGO})
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version")
@@ -53,7 +53,7 @@ option(ENABLE_BLAS "Enable BLAS" OFF)
 # Other build options
 option(BUILD_TESTS "Build cpp tests" OFF)
 option(BUILD_EXAMPLES "Build cpp examples" OFF)
-
+option(BUILD_BENCHMARKS "Enable cpp benchmarks" OFF)
 
 # Process compile options
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
@@ -66,6 +66,7 @@ FetchContent_Declare(pybind11
                      GIT_TAG        v2.6.2
 )
 FetchContent_MakeAvailable(pybind11)
+
 
 # All CMakeLists.txt in subdirectories use pennylane_lightning_compile_options and pennylane_lightning_external_libs
 add_subdirectory(pennylane_lightning/src)
