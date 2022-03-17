@@ -2,17 +2,27 @@
 
 ### New features since last release
 
+* Add Lightning GBenchmark Suite.
+[(#249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/249)
+
 ### Breaking changes
 
 ### Improvements
+
+* Add `ENABLE_BLAS` build to CI checks.
+[(#249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/249)
 
 ### Documentation
 
 ### Bug fixes
 
+* Update tests to remove `JacobianTape`.
+[(#260)](https://github.com/PennyLaneAI/pennylane-lightning/pull/260)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+Ali Asadi, Lee James O'Riordan
 
 ---
 
