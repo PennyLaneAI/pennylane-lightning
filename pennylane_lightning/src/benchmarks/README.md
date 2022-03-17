@@ -45,11 +45,11 @@ $ make gbenchmark
 $ ./BuildGBench/benchmarks/utils 
 ```
 
-For example, the `std_innerProd_cmplx<T>` method in `Bench_LinearAlgebra.cpp` runs benchmarks 
-computing the inner product of two randomly generated vectors with complex numbers (`std::complex<T>`) 
+The `std_innerProd_cmplx<T>` method in `Bench_LinearAlgebra.cpp` runs benchmarks computing 
+the inner product of two randomly generated vectors with complex numbers (`std::complex<T>`) 
 using `std::inner_product`. 
-If one wants to try a few arguments in some ranges and generate a benchmark for each such value. 
-The GB offers `Range` and `Ranges` to do so, 
+If one wants to try a few arguments in some ranges and generate a benchmark for each such value,
+GB offers `Range` and `Ranges` to do so, 
 ```C
 BENCHMARK(std_innerProd_cmplx<float>)
     ->Range(1l << 5, 1l << 10);
@@ -102,7 +102,7 @@ $ make gbenchmark
 $ ./BuildGBench/benchmarks/apply_operations
 ```
 
-The follwoing arguments could be altered:
+The following arguments could be altered:
 - `Pennylane::Gates::KernelType`;
 - Floating point precision type;
 - List of gates that script would randomly pick from to apply to the state vector; 
