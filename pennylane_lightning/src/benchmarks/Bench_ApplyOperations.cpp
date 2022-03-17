@@ -269,7 +269,7 @@ BENCHMARK_APPLYOPS(applyOperations_RandOps, float, PI_PauliXYZ, Kernel::PI,
         benchmark::CreateDenseRange(6, 24, /*step=*/2), // num_qubits
     });
 
-/* All Gates */
+/* From All Gates */
 BENCHMARK_APPLYOPS(applyOperations_RandOps, float, LM_all, Kernel::LM,
                    {"PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T", "RX",
                     "RY", "RZ", "Rot", "PhaseShift", "CNOT", "SWAP",
