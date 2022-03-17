@@ -18,7 +18,7 @@ using std::string;
 using std::vector;
 }; // namespace
 
-template<typename T=double>
+template <typename T = double>
 StateVectorManaged<T> Initializing_StateVector() {
     // Defining a StateVector in a non-trivial configuration:
     size_t num_qubits = 3;
@@ -214,7 +214,7 @@ TEMPLATE_TEST_CASE("Sample", "[Measures]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("Variances", "[Measures]",float,double) {
+TEMPLATE_TEST_CASE("Variances", "[Measures]", float, double) {
     // Defining the State Vector that will be measured.
     StateVectorManaged<TestType> Measured_StateVector =
         Initializing_StateVector<TestType>();
