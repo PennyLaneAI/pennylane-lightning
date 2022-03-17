@@ -44,7 +44,7 @@ clean:
 	find . -type d -name '__pycache__' -exec rm -r {} \+
 	rm -rf dist
 	rm -rf build
-	rm -rf BuildTests BuildBench
+	rm -rf BuildTests BuildBench BuildGBench
 	rm -rf .coverage coverage_html_report/
 	rm -rf tmp
 	rm -rf *.dat
@@ -120,3 +120,9 @@ check-tidy:
 	rm -rf ./Build
 	cmake . -BBuild -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
 	cmake --build ./Build
+
+.PHONY: gbenchmark
+gbenchmark:
+	rm -rf ./BuildGBench
+	cmake $(LIGHTNING_CPP_DIR) -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_OPENMP=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release
+	cmake --build ./BuildGBench --target utils apply_operations apply_multirz
