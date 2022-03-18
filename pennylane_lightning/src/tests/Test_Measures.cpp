@@ -240,9 +240,9 @@ TEMPLATE_TEST_CASE("Variances", "[Measures]", float, double) {
     }
 
     SECTION("Testing list of operators defined by a matrix:") {
-        vector<std::complex<TestType>> PauliX = {0, 1, 1, 0};
-        vector<std::complex<TestType>> PauliY = {0, {0, -1}, {0, 1}, 0};
-        vector<std::complex<TestType>> PauliZ = {1, 0, 0, -1};
+        vector<std::complex<TestType>> PauliX = {{0, 0}, {1, 0}, {1, 0}, {0, 0}};
+        vector<std::complex<TestType>> PauliY = {{0, 0}, {0, -1}, {0, 1}, {0, 0}};
+        vector<std::complex<TestType>> PauliZ = {{1, 0}, {0, 0}, {0, 0}, {-1, 0}};
 
         vector<TestType> variances;
         vector<TestType> variances_ref;
