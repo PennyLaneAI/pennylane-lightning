@@ -580,7 +580,7 @@ class LightningQubit(DefaultQubit):
         """Generate samples
 
         Returns:
-            Array of samples in binary
+            array[int]: array of samples in binary representation
         """
 
         # To support np.complex64 based on the type of self._state
