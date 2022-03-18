@@ -715,6 +715,7 @@ if not CPP_BINARY_AVAILABLE:
         version = __version__
         author = "Xanadu Inc."
         _CPP_BINARY_AVAILABLE = False
+        operations = _remove_snapshot_from_operations(DefaultQubit.operations)
 
         def __init__(self, *args, **kwargs):
             warn(
