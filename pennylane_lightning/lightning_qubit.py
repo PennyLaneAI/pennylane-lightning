@@ -580,7 +580,7 @@ class LightningQubit(DefaultQubit):
         """Generate samples
 
         Returns:
-            array[int]: array of samples in binary representation
+            array[int]: array of samples in binary representation with shape ``(dev.shots, dev.num_wires)``
         """
 
         # To support np.complex64 based on the type of self._state
