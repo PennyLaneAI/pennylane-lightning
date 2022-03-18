@@ -46,14 +46,11 @@ from ._version import __version__
 
 try:
     from .lightning_qubit_ops import (
+        adjoint_diff,
         MeasuresC64,
         StateVectorC64,
-        AdjointJacobianC64,
-        VectorJacobianProductC64,
         MeasuresC128,
         StateVectorC128,
-        AdjointJacobianC128,
-        VectorJacobianProductC128,
         DEFAULT_KERNEL_FOR_OPS,
         EXPORTED_KERNEL_OPS,
     )
@@ -304,15 +301,12 @@ class LightningQubit(DefaultQubit):
             ket = np.ravel(self._pre_rotated_state)
 
         if use_csingle:
-            adj = AdjointJacobianC64()
             ket = ket.astype(np.complex64)
-        else:
-            adj = AdjointJacobianC128()
 
         obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=use_csingle)
         ops_serialized, use_sp = _serialize_ops(tape, self.wire_map, use_csingle=use_csingle)
 
-        ops_serialized = adj.create_ops_list(*ops_serialized)
+        ops_serialized = adjoint_diff.create_ops_list(*ops_serialized)
 
         trainable_params = sorted(tape.trainable_params)
         first_elem = 1 if trainable_params[0] == 0 else 0
@@ -332,7 +326,7 @@ class LightningQubit(DefaultQubit):
             obs_partitions = _chunk_iterable(obs_serialized, requested_threads)
             jac = []
             for obs_chunk in obs_partitions:
-                jac_local = adj.adjoint_jacobian(
+                jac_local = adjoind_diff.adjoint_jacobian(
                     state_vector,
                     obs_chunk,
                     ops_serialized,
@@ -342,7 +336,7 @@ class LightningQubit(DefaultQubit):
                 jac.extend(jac_local)
             jac = np.array(jac)
         else:
-            jac = adj.adjoint_jacobian(
+            jac = adjoint_diff.adjoint_jacobian(
                 state_vector,
                 obs_serialized,
                 ops_serialized,

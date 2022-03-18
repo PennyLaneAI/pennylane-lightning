@@ -103,7 +103,7 @@ constexpr auto getLambdaForKernelGateOp() {
     using namespace Pennylane::Gates;
     using GateImplementation = SelectKernel<kernel>;
 
-    static_assert(array_has_elt(GateImplementation::implemented_gates, gate_op),
+    static_assert(Util::array_has_elt(GateImplementation::implemented_gates, gate_op),
                   "The operator to register must be implemented.");
 
     if constexpr (gate_op != GateOperation::Matrix) {
@@ -137,7 +137,7 @@ constexpr auto getGateOpLambdaPairsIter() {
     if constexpr (gate_idx < SelectKernel<kernel>::implemented_gates.size()) {
         constexpr auto gate_op =
             SelectKernel<kernel>::implemented_gates[gate_idx];
-        return prepend_to_tuple(
+        return Util::prepend_to_tuple(
             std::pair{gate_op, getLambdaForKernelGateOp<PrecisionT, ParamT,
                                                         kernel, gate_op>()},
             getGateOpLambdaPairsIter<PrecisionT, ParamT, kernel,
@@ -187,7 +187,7 @@ void registerImplementedGatesForKernel(PyClass &pyclass) {
             pyclass.def(name.c_str(), func, doc.c_str());
         } else {
             const auto gate_name =
-                std::string(lookup(Constant::gate_names, gate_op));
+                std::string(Util::lookup(Constant::gate_names, gate_op));
             const std::string name = gate_name + "_" + kernel_name;
             const std::string doc = "Apply the " + gate_name + " gate using " +
                                     kernel_name + " kernel.";

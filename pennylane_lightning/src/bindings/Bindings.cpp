@@ -24,6 +24,8 @@
 
 /// @cond DEV
 namespace {
+using namespace Pennylane;
+using namespace Pennylane::Util;
 using namespace Pennylane::Algorithms;
 using namespace Pennylane::Gates;
 
@@ -61,16 +63,46 @@ void lightning_class_bindings(py::module &m) {
 
     registerKernelsToPyexport<PrecisionT, ParamT>(pyclass);
 
+
+    //***********************************************************************//
+    //                              Measures
+    //***********************************************************************//
+
+    class_name = "MeasuresC" + bitsize;
+    py::class_<Measures<PrecisionT>>(m, class_name.c_str(), py::module_local())
+        .def(py::init<const StateVectorRaw<PrecisionT> &>())
+        .def("probs",
+             [](Measures<PrecisionT> &M, const std::vector<size_t> &wires) {
+                 if (wires.empty()) {
+                     return py::array_t<ParamT>(py::cast(M.probs()));
+                 }
+                 return py::array_t<ParamT>(py::cast(M.probs(wires)));
+             })
+        .def("expval",
+             [](Measures<PrecisionT> &M, const std::string &operation,
+                const std::vector<size_t> &wires) {
+                 return M.expval(operation, wires);
+             })
+        .def("var", [](Measures<PrecisionT> &M, const std::string &operation,
+                       const std::vector<size_t> &wires) {
+            return M.var(operation, wires);
+        });
+}
+
+template<class PrecisionT, class ParamT>
+void registerAlgorithms(py::module_ m) {
+    const std::string bitsize =
+        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
     //***********************************************************************//
     //                              Observable
     //***********************************************************************//
-
-    class_name = "ObsStructC" + bitsize;
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
     using np_arr_r =
         py::array_t<ParamT, py::array::c_style | py::array::forcecast>;
 
+    
+    std::string class_name = "ObsStructC" + bitsize;
     using obs_data_var = std::variant<std::monostate, np_arr_r, np_arr_c>;
     py::class_<ObsDatum<PrecisionT>>(m, class_name.c_str(), py::module_local())
         .def(py::init([](const std::vector<std::string> &names,
@@ -156,6 +188,7 @@ void lightning_class_bindings(py::module &m) {
     //***********************************************************************//
     //                              Operations
     //***********************************************************************//
+
     class_name = "OpsStructC" + bitsize;
     py::class_<OpsData<PrecisionT>>(m, class_name.c_str(), py::module_local())
         .def(py::init<
@@ -179,105 +212,59 @@ void lightning_class_bindings(py::module &m) {
             return "Operations: [" + ops_stream.str() + "]";
         });
 
-    //***********************************************************************//
-    //                              Adjoint Jacobian
-    //***********************************************************************//
+    /* Create ops List */
 
-    class_name = "AdjointJacobianC" + bitsize;
-    py::class_<AdjointJacobian<PrecisionT>>(m, class_name.c_str(),
-                                            py::module_local())
-        .def(py::init<>())
-        .def("create_ops_list",
-             [](AdjointJacobian<PrecisionT> &adj,
-                const std::vector<std::string> &ops_name,
-                const std::vector<np_arr_r> &ops_params,
-                const std::vector<std::vector<size_t>> &ops_wires,
-                const std::vector<bool> &ops_inverses,
-                const std::vector<np_arr_c> &ops_matrices) {
-                 std::vector<std::vector<PrecisionT>> conv_params(
-                     ops_params.size());
-                 std::vector<std::vector<std::complex<PrecisionT>>>
-                     conv_matrices(ops_matrices.size());
-                 static_cast<void>(adj);
-                 for (size_t op = 0; op < ops_name.size(); op++) {
-                     const auto p_buffer = ops_params[op].request();
-                     const auto m_buffer = ops_matrices[op].request();
-                     if (p_buffer.size) {
-                         const auto *const p_ptr =
-                             static_cast<const ParamT *>(p_buffer.ptr);
-                         conv_params[op] =
-                             std::vector<ParamT>{p_ptr, p_ptr + p_buffer.size};
-                     }
-                     if (m_buffer.size) {
-                         const auto m_ptr =
-                             static_cast<const std::complex<ParamT> *>(
-                                 m_buffer.ptr);
-                         conv_matrices[op] = std::vector<std::complex<ParamT>>{
-                             m_ptr, m_ptr + m_buffer.size};
-                     }
+    m.def("create_ops_list",
+         [](const std::vector<std::string> &ops_name,
+            const std::vector<np_arr_r> &ops_params,
+            const std::vector<std::vector<size_t>> &ops_wires,
+            const std::vector<bool> &ops_inverses,
+            const std::vector<np_arr_c> &ops_matrices) {
+             std::vector<std::vector<PrecisionT>> conv_params(
+                 ops_params.size());
+             std::vector<std::vector<std::complex<PrecisionT>>>
+                 conv_matrices(ops_matrices.size());
+             for (size_t op = 0; op < ops_name.size(); op++) {
+                 const auto p_buffer = ops_params[op].request();
+                 const auto m_buffer = ops_matrices[op].request();
+                 if (p_buffer.size) {
+                     const auto *const p_ptr =
+                         static_cast<const ParamT *>(p_buffer.ptr);
+                     conv_params[op] =
+                         std::vector<ParamT>{p_ptr, p_ptr + p_buffer.size};
                  }
-                 return OpsData<PrecisionT>{ops_name, conv_params, ops_wires,
-                                            ops_inverses, conv_matrices};
-             })
-        .def("adjoint_jacobian", &AdjointJacobian<PrecisionT>::adjointJacobian)
-        .def("adjoint_jacobian",
-             [](AdjointJacobian<PrecisionT> &adj,
-                const StateVectorRaw<PrecisionT> &sv,
-                const std::vector<ObsDatum<PrecisionT>> &observables,
-                const OpsData<PrecisionT> &operations,
-                const std::vector<size_t> &trainableParams, size_t num_params) {
-                 std::vector<PrecisionT> jac(observables.size() * num_params,
-                                             0);
-
-                 const JacobianData<PrecisionT> jd{
-                     num_params,  sv.getLength(), sv.getData(),
-                     observables, operations,     trainableParams};
-
-                 adj.adjointJacobian(jac, jd);
-
-                 return py::array_t<ParamT>(py::cast(jac));
-             });
-
-    //***********************************************************************//
-    //                              VJP
-    //***********************************************************************//
-
-    class_name = "VectorJacobianProductC" + bitsize;
-    py::class_<VectorJacobianProduct<PrecisionT>>(m, class_name.c_str(),
-                                                  py::module_local())
-        .def(py::init<>())
-        .def("create_ops_list",
-             [](VectorJacobianProduct<PrecisionT> &v,
-                const std::vector<std::string> &ops_name,
-                const std::vector<np_arr_r> &ops_params,
-                const std::vector<std::vector<size_t>> &ops_wires,
-                const std::vector<bool> &ops_inverses,
-                const std::vector<np_arr_c> &ops_matrices) {
-                 std::vector<std::vector<PrecisionT>> conv_params(
-                     ops_params.size());
-                 std::vector<std::vector<std::complex<PrecisionT>>>
-                     conv_matrices(ops_matrices.size());
-                 static_cast<void>(v);
-                 for (size_t op = 0; op < ops_name.size(); op++) {
-                     const auto p_buffer = ops_params[op].request();
-                     const auto m_buffer = ops_matrices[op].request();
-                     if (p_buffer.size) {
-                         const auto *const p_ptr =
-                             static_cast<const ParamT *>(p_buffer.ptr);
-                         conv_params[op] =
-                             std::vector<ParamT>{p_ptr, p_ptr + p_buffer.size};
-                     }
-                     if (m_buffer.size) {
-                         const auto m_ptr =
-                             static_cast<const std::complex<ParamT> *>(
-                                 m_buffer.ptr);
-                         conv_matrices[op] = std::vector<std::complex<ParamT>>{
-                             m_ptr, m_ptr + m_buffer.size};
-                     }
+                 if (m_buffer.size) {
+                     const auto m_ptr =
+                         static_cast<const std::complex<ParamT> *>(
+                             m_buffer.ptr);
+                     conv_matrices[op] = std::vector<std::complex<ParamT>>{
+                         m_ptr, m_ptr + m_buffer.size};
                  }
-                 return OpsData<PrecisionT>{ops_name, conv_params, ops_wires,
-                                            ops_inverses, conv_matrices};
-             })
+             }
+             return OpsData<PrecisionT>{ops_name, conv_params, ops_wires,
+                                        ops_inverses, conv_matrices};
+         }, "Create a list of operations from data.");
+
+    m.def("adjoint_jacobian", &Algorithms::adjointJacobian<PrecisionT>)
+     .def("adjoint_jacobian",
+         [](const StateVectorRaw<PrecisionT> &sv,
+            const std::vector<ObsDatum<PrecisionT>> &observables,
+            const OpsData<PrecisionT> &operations,
+            const std::vector<size_t> &trainableParams, size_t num_params) {
+             std::vector<PrecisionT> jac(observables.size() * num_params,
+                                         0);
+
+             const JacobianData<PrecisionT> jd{
+                 num_params,  sv.getLength(), sv.getData(),
+                 observables, operations,     trainableParams};
+
+             adjointJacobian(jac, jd);
+
+             return py::array_t<ParamT>(py::cast(jac));
+         });
+
+    /*
+
         .def("compute_vjp_from_jac",
              &VectorJacobianProduct<PrecisionT>::computeVJP)
         .def("compute_vjp_from_jac",
@@ -304,30 +291,7 @@ void lightning_class_bindings(py::module &m) {
                          return py::array_t<ParamT>(py::cast(fn(jd)));
                      });
              });
-
-    //***********************************************************************//
-    //                              Measures
-    //***********************************************************************//
-
-    class_name = "MeasuresC" + bitsize;
-    py::class_<Measures<PrecisionT>>(m, class_name.c_str(), py::module_local())
-        .def(py::init<const StateVectorRaw<PrecisionT> &>())
-        .def("probs",
-             [](Measures<PrecisionT> &M, const std::vector<size_t> &wires) {
-                 if (wires.empty()) {
-                     return py::array_t<ParamT>(py::cast(M.probs()));
-                 }
-                 return py::array_t<ParamT>(py::cast(M.probs(wires)));
-             })
-        .def("expval",
-             [](Measures<PrecisionT> &M, const std::string &operation,
-                const std::vector<size_t> &wires) {
-                 return M.expval(operation, wires);
-             })
-        .def("var", [](Measures<PrecisionT> &M, const std::string &operation,
-                       const std::vector<size_t> &wires) {
-            return M.var(operation, wires);
-        });
+     */
 }
 
 /**
@@ -364,10 +328,19 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
               &Gates::getIndicesAfterExclusion),
           "Get statevector indices for gate application");
 
+    /* Algorithms submodule */
+    py::module_ alg_submodule = 
+        m.def_submodule("adjoint_diff", 
+                        "A submodule for adjoint differentiation method.");
+
+    registerAlgorithms<float, float>(alg_submodule);
+    registerAlgorithms<double, double>(alg_submodule);
+
+
     /* Add EXPORTED_KERNELS */
     std::vector<std::pair<std::string, std::string>> exported_kernel_ops;
 
-    for (const auto kernel : kernels_to_pyexport) {
+    for (const auto kernel: kernels_to_pyexport) {
         const auto kernel_name = lookup(kernel_id_name_pairs, kernel);
         const auto implemented_gates = implementedGatesForKernel(kernel);
         for (const auto gate_op : implemented_gates) {
@@ -383,7 +356,7 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
     std::map<std::string, std::string> default_kernel_ops_map;
     for (const auto &[gate_op, name] : Constant::gate_names) {
         const auto kernel = lookup(Constant::default_kernel_for_gates, gate_op);
-        const auto kernel_name = Util::lookup(kernel_id_name_pairs, kernel);
+        const auto kernel_name = lookup(kernel_id_name_pairs, kernel);
         default_kernel_ops_map.emplace(std::string(name), kernel_name);
     }
     m.attr("DEFAULT_KERNEL_FOR_OPS") = py::cast(default_kernel_ops_map);

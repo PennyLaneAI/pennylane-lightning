@@ -126,8 +126,7 @@ template <class T = double> class VectorJacobianProduct {
             std::vector<T> jac(jd.getNumObservables() * num_params, 0);
 
             // Compute Jacobian for the input jd using `adjoint` method
-            AdjointJacobian<T> v;
-            v.adjointJacobian(jac, jd, apply_operations);
+            adjointJacobian(jac, jd, apply_operations);
 
             // Compute VJP
             computeVJP(vjp, jac, dy, jd.getNumObservables(), num_params);
