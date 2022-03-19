@@ -13,18 +13,81 @@
 // limitations under the License.
 #pragma once
 
+#include "StateVectorManaged.hpp"
+#include "StateVectorRaw.hpp"
+
 #include <complex>
 #include <cstring>
+#include <stdexcept>
 #include <utility>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
 namespace Pennylane::Algorithms {
 
+class ObsTerm {
+  private:
+    std::vector<std::string> op_names_;
+    std::vector<std::vector<size_t>> wires_;
+    const static inline std::unordered_set<std::string> allowed_names_ {
+        "PauliX", "PauliY", "PauliZ", "Hadamard"
+    };
+
+  public:
+    ObsTerm(std::vector<std::string> op_names,
+         std::vector<std::vector<size_t>> wires)
+        : op_names_{std::move(op_names)}, wires_{std::move(wires)} {
+        for(const auto& name: op_names_) {
+            if(allowed_names_.find(name) == allowed_names_.end()) {
+                throw std::invalid_argument("The given operator " + name +
+                                            " is not allowed.");
+            }
+        }
+    }
+
+    template <typename SVType>
+    void apply(const SVType& sv_in,
+               std::complex<typename SVType::PrecisionT>* v_out) {
+        StateVectorRaw sv_out(v_out, sv_in.getLength());
+        for (size_t op_idx = 0; op_idx < op_names_.size(); op_idx++) {
+            sv_out.applyOperation(op_names_[op_idx], wires_[op_idx]);
+        }
+    }
+
+    void addTensorProd(std::string name, std::vector<size_t> wires) {
+        op_names_.emplace_back(std::move(name));
+        wires_.emplace_back(std::move(wires));
+    }
+};
+
+template <typename T>
+class Hamiltonian {
+  public:
+    using PrecisionT = T;
+  private:
+    std::vector<T> coeffs_;
+    std::vector<ObsTerm> terms_;
+
+  public:
+    template <typename SVType>
+    void apply(const SVType& sv_in,
+               std::complex<typename SVType::PrecisionT>* v_out) {
+        using PrecisionT = typename SVType::PrecisionT;
+        std::fill(v_out, v_out + sv_in.getLength(), PrecisionT{});
+
+        std::vector<std::complex<PrecisionT>> tmp(sv_in.getLength());
+
+        for (size_t term_idx = 0; term_idx < coeffs_.size(); term_idx++) {
+            terms_[term_idx].apply(sv_in, tmp.data());
+            scaleAndAdd(tmp.size(), coeffs_[term_idx], tmp.data(), v_out);
+        }
+    }
+};
+
 /**
- * @brief Utility struct for observable operations used by AdjointJacobian
- * class.
- *
+ * @brief Utility struct for observable operations used by the adjoint
+ * differentiation method.
  */
 template <class T = double> class ObsDatum {
   public:

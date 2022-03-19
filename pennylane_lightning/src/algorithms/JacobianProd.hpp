@@ -75,6 +75,7 @@ void expvalVJP(const JacobianData<PrecisionT>& jd, const PrecisionT* dy,
         return ;
     }
 
+    /*
     std::vector<PrecisionT> jac(jd.getNumObservables() * num_params, 0);
 
     // Compute Jacobian for the input jd using `adjoint` method
@@ -82,6 +83,6 @@ void expvalVJP(const JacobianData<PrecisionT>& jd, const PrecisionT* dy,
 
     // Compute VJP
     computeVJP(vjp, jac, dy, jd.getNumObservables(), num_params);
-    return vjp;
+    */
 }
 } // namespace Pennylane::Algorithms

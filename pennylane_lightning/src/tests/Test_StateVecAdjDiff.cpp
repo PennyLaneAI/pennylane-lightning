@@ -59,6 +59,7 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
     using std::sqrt;
 
     constexpr static auto isqrt2 = INVSQRT2<TestType>();
+    using ComplexPrecisionT = std::complex<TestType>;
 
     SECTION("CNOT RX1") {
 
@@ -70,9 +71,9 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
             {}              // matrices
         };
 
-        auto dy = std::vector<std::complex<TestType>>(4);
+        auto dy = std::vector<ComplexPrecisionT>(4);
 
-        std::vector<std::vector<std::complex<TestType>>> expected = {
+        std::vector<std::vector<ComplexPrecisionT>> expected = {
             {{-isqrt2 / 2.0, 0.0}},
             {{0.0, 0.0}},
             {{0.0, 0.0}},
@@ -80,14 +81,15 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
         };
 
         SECTION("with apply_operations = true") {
-            std::vector<std::complex<TestType>> ini_st{
+            std::vector<ComplexPrecisionT> ini_st{
                 {isqrt2, 0.0}, {0.0, 0.0}, {isqrt2, 0.0}, {0.0, 0.0}};
             JacobianData<TestType> jd{1, 4, ini_st.data(), {}, ops_data, {0}};
 
             for (size_t i = 0; i < 4; i++) {
-                std::fill(dy.begin(), dy.end(), std::complex<TestType>{0.0, 0.0});
+                std::fill(dy.begin(), dy.end(), ComplexPrecisionT{0.0, 0.0});
                 dy[i] = {1.0, 0.0};
-                auto vjp = statevectorVJP(jd, dy.data(), true);
+                std::vector<ComplexPrecisionT> vjp(1);
+                statevectorVJP(jd, dy.data(), vjp.data(), true);
 
                 REQUIRE(vjp == PLApprox(expected[i]).margin(1e-5));
             }
@@ -101,7 +103,8 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
             for (size_t i = 0; i < 4; i++) {
                 std::fill(dy.begin(), dy.end(), std::complex<TestType>{0.0, 0.0});
                 dy[i] = {1.0, 0.0};
-                auto vjp = statevectorVJP(jd, dy.data(), false);
+                std::vector<ComplexPrecisionT> vjp(1);
+                statevectorVJP(jd, dy.data(), vjp.data(), false);
 
                 REQUIRE(vjp == PLApprox(expected[i]).margin(1e-5));
             }
@@ -146,7 +149,8 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
             for (size_t i = 0; i < 4; i++) {
                 std::fill(dy.begin(), dy.end(), std::complex<TestType>{0.0, 0.0});
                 dy[i] = {1.0, 0.0};
-                auto vjp = statevectorVJP(jd, dy.data(), true);
+                std::vector<ComplexPrecisionT> vjp(2);
+                statevectorVJP(jd, dy.data(), vjp.data(), true);
 
                 REQUIRE(vjp[0] == approx(expected_der0[i]).margin(1e-5));
                 REQUIRE(vjp[1] == approx(expected_der1[i]).margin(1e-5));
@@ -163,7 +167,8 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
             for (size_t i = 0; i < 4; i++) {
                 std::fill(dy.begin(), dy.end(), std::complex<TestType>{0.0, 0.0});
                 dy[i] = {1.0, 0.0};
-                auto vjp = statevectorVJP(jd, dy.data(), false);
+                std::vector<ComplexPrecisionT> vjp(2);
+                statevectorVJP(jd, dy.data(), vjp.data(), false);
 
                 REQUIRE(vjp[0] == approx(expected_der0[i]).margin(1e-5));
                 REQUIRE(vjp[1] == approx(expected_der1[i]).margin(1e-5));
@@ -201,7 +206,8 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
         applyObservable(o_sv, obs);
 
         std::vector<TestType> grad_vjp = [&]() {
-            auto vjp = statevectorVJP(jd, o_sv.getDataVector().data(), false);
+            std::vector<ComplexPrecisionT> vjp(num_params);
+            statevectorVJP(jd, o_sv.getDataVector().data(), vjp.data(), false);
             std::vector<TestType> res(vjp.size());
             std::transform(vjp.begin(), vjp.end(), res.begin(), 
                 [](const auto& x) { return 2*std::real(x); });
@@ -209,7 +215,7 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
         }();
 
         std::vector<TestType> jac(num_params);
-        AdjointJacobian<TestType>::adjointJacobian(jac, jd);
+        adjointJacobian<TestType>(jac, jd);
 
         REQUIRE(grad_vjp == PLApprox(jac).margin(1e-5));
     }

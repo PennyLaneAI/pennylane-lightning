@@ -22,3 +22,20 @@
 #else
 #define PL_UNREACHABLE __assume(false)
 #endif
+
+#if (_OPENMP >= 202011)
+#define PL_UNROLL_LOOP _Pragma("omp unroll(8)")
+#elif defined(__GNUC__)
+#define PL_UNROLL_LOOP _Pragma("GCC unroll 8")
+#elif defined(__clang__)
+#define PL_UNROLL_LOOP _Pragma("unroll(8)")
+#else
+#define PL_UNROLL_LOOP
+#endif
+
+#if defined(_OPENMP)
+#define PL_USE_OMP 1
+[[maybe_unused]] static constexpr bool use_openmp = true;
+#else
+[[maybe_unused]] static constexpr bool use_openmp = false;
+#endif

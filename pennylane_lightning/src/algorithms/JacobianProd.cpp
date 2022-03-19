@@ -15,5 +15,3 @@
 #include "JacobianProd.hpp"
 
 // explicit instantiation
-template class Pennylane::Algorithms::VectorJacobianProduct<float>;
-template class Pennylane::Algorithms::VectorJacobianProduct<double>;

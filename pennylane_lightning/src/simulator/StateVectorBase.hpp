@@ -95,14 +95,15 @@ namespace Pennylane {
  * 64-bit (128-bit `complex<double>`) floating point representation.
  * As this is the base class, we do not add default template arguments.
  *
- * @tparam PrecisionT Floating point precision of underlying statevector data.
+ * @tparam T Floating point precision of underlying statevector data.
  * @tparam Derived Type of a derived class
  */
-template <class PrecisionT, class Derived> class StateVectorBase {
+template <class T, class Derived> class StateVectorBase {
   public:
     /**
      * @brief StateVector complex precision type.
      */
+    using PrecisionT = T;
     using ComplexPrecisionT = std::complex<PrecisionT>;
 
   private:

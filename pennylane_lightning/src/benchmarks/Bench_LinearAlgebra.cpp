@@ -429,3 +429,120 @@ BENCHMARK(blas_matrixMatProd_cmplx<double>)
     ->RangeMultiplier(1l << 2)
     ->Range(1l << 4, 1l << 8);
 #endif
+
+//***********************************************************************//
+//                         Scale and add
+//***********************************************************************//
+
+/**
+ * @brief Benchmark scaleAndAdd function implemented in the standard way
+ *
+ * @tparam T Floating point precision type.
+ */
+template <class T>
+static void std_scaleAndAdd_cmplx(benchmark::State &state) {
+    std::random_device rd;
+    std::mt19937_64 eng(rd());
+    std::uniform_real_distribution<T> distr;
+    const auto sz = static_cast<size_t>(state.range(0));
+
+    std::vector<std::complex<T>> vec1;
+    std::vector<std::complex<T>> vec2;
+    std::complex<T> scale{std::cos(0.4123), std::sin(0.4123)};
+
+    for (size_t i = 0; i < sz; i++) {
+        vec1.push_back({distr(eng), distr(eng)});
+    }
+    for (size_t i = 0; i < sz; i++) {
+        vec2.push_back({distr(eng), distr(eng)});
+    }
+
+    for (auto _ : state) {
+        for (size_t i = 0; i < sz; i ++) {
+            vec2[i] += scale * vec1[i];
+        }
+        benchmark::DoNotOptimize(vec2[sz - 1]);
+    }
+}
+BENCHMARK(std_scaleAndAdd_cmplx<float>)
+    ->RangeMultiplier(1U << 2U)
+    ->Range(1U << 4U, 1U << 20U);
+
+BENCHMARK(std_scaleAndAdd_cmplx<double>)
+    ->RangeMultiplier(1U << 2)
+    ->Range(1U << 4U, 1U << 20U);
+
+/**
+ * @brief Benchmark PennyLane::Util::omp_scaleAndAdd for a randomly generated
+ * matrix and vector of complex numbers.
+ *
+ * @tparam T Floating point precision type.
+ */
+template <class T>
+static void omp_scaleAndAdd_cmplx(benchmark::State &state) {
+    std::random_device rd;
+    std::mt19937_64 eng(rd());
+    std::uniform_real_distribution<T> distr;
+    const auto sz = static_cast<size_t>(state.range(0));
+
+    std::vector<std::complex<T>> vec1;
+    std::vector<std::complex<T>> vec2;
+    std::complex<T> scale{std::cos(0.4123), std::sin(0.4123)};
+
+    for (size_t i = 0; i < sz; i++) {
+        vec1.push_back({distr(eng), distr(eng)});
+    }
+    for (size_t i = 0; i < sz; i++) {
+        vec2.push_back({distr(eng), distr(eng)});
+    }
+
+    for (auto _ : state) {
+        Pennylane::Util::omp_scaleAndAdd(sz, scale, vec1.data(), vec2.data());
+        benchmark::DoNotOptimize(vec2[sz - 1]);
+    }
+}
+BENCHMARK(omp_scaleAndAdd_cmplx<float>)
+    ->RangeMultiplier(1U << 2U)
+    ->Range(1U << 4U, 1U << 20U);
+
+BENCHMARK(omp_scaleAndAdd_cmplx<double>)
+    ->RangeMultiplier(1U << 2U)
+    ->Range(1U << 4U, 1U << 20U);
+
+#if __has_include(<cblas.h>) && defined _ENABLE_BLAS
+/**
+ * @brief Benchmark blas_scaleAndAdd
+ *
+ * @tparam T Floating point precision type.
+ */
+template <class T>
+static void blas_scaleAndAdd_cmplx(benchmark::State &state) {
+    std::random_device rd;
+    std::mt19937_64 eng(rd());
+    std::uniform_real_distribution<T> distr;
+    const auto sz = static_cast<size_t>(state.range(0));
+
+    std::vector<std::complex<T>> vec1;
+    std::vector<std::complex<T>> vec2;
+    std::complex<T> scale{std::cos(0.4123), std::sin(0.4123)};
+
+    for (size_t i = 0; i < sz; i++) {
+        vec1.push_back({distr(eng), distr(eng)});
+    }
+    for (size_t i = 0; i < sz; i++) {
+        vec2.push_back({distr(eng), distr(eng)});
+    }
+
+    for (auto _ : state) {
+        Pennylane::Util::blas_scaleAndAdd(sz, scale, vec1.data(), vec2.data());
+        benchmark::DoNotOptimize(vec2[sz - 1]);
+    }
+}
+BENCHMARK(blas_scaleAndAdd_cmplx<float>)
+    ->RangeMultiplier(1U << 2U)
+    ->Range(1U << 4U, 1U << 20U);
+
+BENCHMARK(blas_scaleAndAdd_cmplx<double>)
+    ->RangeMultiplier(1U << 2)
+    ->Range(1U << 4U, 1U << 20U);
+#endif

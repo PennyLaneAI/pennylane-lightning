@@ -40,7 +40,7 @@ namespace Pennylane::Algorithms {
 template <typename PrecisionT>
 static void statevectorVJP(const JacobianData<PrecisionT> &jd,
                            const std::complex<PrecisionT> *dy,
-                           const std::complex<PrecisionT> *vec_out,
+                           std::complex<PrecisionT> *vec_out,
                            bool apply_operations = false) {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     if (!jd.hasTrainableParams()) {

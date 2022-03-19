@@ -459,6 +459,67 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                                        "the input right matrix"));
         }
     }
+    SECTION("scaleAndAdd") {
+        using ComplexPrecisionT = std::complex<TestType>;
+        std::vector<ComplexPrecisionT> x {
+            ComplexPrecisionT{0.637580898845, 0.233013812820},
+            ComplexPrecisionT{0.125550040650, 0.148470698987},
+            ComplexPrecisionT{0.889523198771, 0.761756550641},
+            ComplexPrecisionT{0.891875446490, 0.605138392264},
+            ComplexPrecisionT{0.290222258799, 0.803424416691},
+            ComplexPrecisionT{0.624571035127, 0.689904559001},
+            ComplexPrecisionT{0.491333492669, 0.625261934614},
+            ComplexPrecisionT{0.136862290866, 0.601670445202},
+            ComplexPrecisionT{0.091643970627, 0.673530285501},
+            ComplexPrecisionT{0.183361442769, 0.641076714523},
+            ComplexPrecisionT{0.079918528198, 0.329092045111},
+            ComplexPrecisionT{0.520125597990, 0.201190718335},
+            ComplexPrecisionT{0.717206120883, 0.302043790729},
+            ComplexPrecisionT{0.187500358256, 0.828948575085},
+            ComplexPrecisionT{0.281997052270, 0.329021862613},
+            ComplexPrecisionT{0.184123280486, 0.001268774308},
+        };
+        std::vector<ComplexPrecisionT> y {
+            ComplexPrecisionT{0.113474380402, 0.123755327504},
+            ComplexPrecisionT{0.738127975138, 0.031835875486},
+            ComplexPrecisionT{0.155243215510, 0.055196171134},
+            ComplexPrecisionT{0.756885139031, 0.039005627338},
+            ComplexPrecisionT{0.299505586354, 0.310112638972},
+            ComplexPrecisionT{0.777346465307, 0.225748691762},
+            ComplexPrecisionT{0.168512001132, 0.588891444173},
+            ComplexPrecisionT{0.747931516221, 0.524911047454},
+            ComplexPrecisionT{0.945667187421, 0.017019572529},
+            ComplexPrecisionT{0.959354271089, 0.034475980103},
+            ComplexPrecisionT{0.416016653267, 0.267333109970},
+            ComplexPrecisionT{0.840020601520, 0.597537320389},
+            ComplexPrecisionT{0.822522803699, 0.778794267872},
+            ComplexPrecisionT{0.186681218783, 0.585537701358},
+            ComplexPrecisionT{0.175303920227, 0.653812572452},
+            ComplexPrecisionT{0.379094098377, 0.969570074787},
+        };
+        ComplexPrecisionT a{0.6125508610408819, 0.9792336596104031};
+        std::vector<ComplexPrecisionT> expected {
+            ComplexPrecisionT{0.275850140305, 0.890828816056},
+            ComplexPrecisionT{0.669646254728, 0.245724555760},
+            ComplexPrecisionT{-0.045816237983, 1.392861859373},
+            ComplexPrecisionT{0.710632329293, 1.283038127951},
+            ComplexPrecisionT{-0.309458750902, 1.086446361782},
+            ComplexPrecisionT{0.484350224562, 1.259951303828},
+            ComplexPrecisionT{-0.142798777323, 1.453026474712},
+            ComplexPrecisionT{0.242590678401, 1.027484958673},
+            ComplexPrecisionT{0.342260254208, 0.519331989588},
+            ComplexPrecisionT{0.443908583485, 0.606721770212},
+            ComplexPrecisionT{0.142712808846, 0.547177638402},
+            ComplexPrecisionT{0.961611261024, 1.230101360915},
+            ComplexPrecisionT{0.966076584032, 1.666123826401},
+            ComplexPrecisionT{-0.510199622131, 1.276917526778},
+            ComplexPrecisionT{0.025852174787, 1.131496203190},
+            ComplexPrecisionT{0.490636545868, 1.150646977352},
+        };
+
+        Util::scaleAndAdd(a, x, y);
+        REQUIRE(y == PLApprox(expected).margin(1e-7));
+    }
 }
 
 /**

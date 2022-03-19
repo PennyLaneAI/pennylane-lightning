@@ -17,12 +17,13 @@
  */
 #pragma once
 
+#include "Macros.hpp"
+#include "Util.hpp"
+
 #include <complex>
 #include <cstdlib>
 #include <numeric>
 #include <vector>
-
-#include "Util.hpp"
 
 /// @cond DEV
 #if __has_include(<cblas.h>) && defined _ENABLE_BLAS
@@ -708,6 +709,10 @@ inline void matrixMatProd(const std::complex<T> *m_left,
             cblas_zgemm(CblasRowMajor, CblasNoTrans, tr, m, n, k, &co, m_left,
                         k, m_right, (transpose != Trans::NoTranspose) ? k : n,
                         &cz, m_out, n);
+        } else {
+            static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>,
+                    "This procedure only supports a single or double precision "
+                    "floating point types.");
         }
     } else {
         omp_matrixMatProd(m_left, m_right, m_out, m, n, k, transpose);
@@ -744,5 +749,96 @@ inline auto matrixMatProd(const std::vector<std::complex<T>> m_left,
                   transpose);
 
     return m_out;
+}
+
+/**
+ * @brief @rst
+ * Calculate :math:`y += a*x` for a scalar :math:`a` and a vector :math:`x` using OpenMP
+ * @endrst
+ *
+ * @tparam STD_CROSSOVER The number of dimension after which OpenMP version 
+ * outperforms the standard method.
+ *
+ * @param dim Dimension of data
+ * @param a Scalar to scale x
+ * @param x Vector to add
+ * @param y Vector to be added
+ */
+template <class T, size_t STD_CROSSOVER = 1U << 12U>
+void omp_scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T>* x, std::complex<T>* y) {
+    if (dim < STD_CROSSOVER) {
+        for (size_t i = 0; i < dim; i ++) {
+            y[i] += a * x[i];
+        }
+    }
+    else {
+#if defined(_OPENMP)
+#pragma omp parallel for default(none) firstprivate(a, dim, x, y)
+#endif
+        for (size_t i = 0; i < dim; i ++) {
+            y[i] += a * x[i];
+        }
+    }
+}
+
+/**
+ * @brief @rst
+ * Calculate :math:`y += a*x` for a scalar :math:`a` and a vector :math:`x` using BLAS.
+ * @endrst
+ *
+ * @param dim Dimension of data
+ * @param a Scalar to scale x
+ * @param x Vector to add
+ * @param y Vector to be added
+ */
+template<class T>
+void blas_scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T>* x, std::complex<T>* y) {
+    if constexpr(std::is_same_v<T, float>) {
+        cblas_caxpy(dim, &a, x, 1, y, 1);
+    } else if (std::is_same_v<T, double>) {
+        cblas_zaxpy(dim, &a, x, 1, y, 1);
+    } else {
+        static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>,
+                "This procedure only supports a single or double precision "
+                "floating point types.");
+    }
+}
+
+/**
+ * @brief @rst
+ * Calculate :math:`y += a*x` for a scalar :math:`a` and a vector :math:`x` using the best available method.
+ * @endrst
+ *
+ *
+ * @param dim Dimension of data
+ * @param a Scalar to scale x
+ * @param x Vector to add
+ * @param y Vector to be added
+ */
+template <class T>
+void scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T>* x, std::complex<T>* y) {
+    if constexpr (USE_CBLAS) {
+        blas_scaleAndAdd(dim, a, x, y);
+    } else {
+        omp_scaleAndAdd(dim, a, x, y);
+    }
+}
+/**
+ * @brief @rst
+ * Calculate :math:`y += a*x` for a scalar :math:`a` and a vector :math:`x`.
+ * @endrst
+ *
+ * @param dim Dimension of data
+ * @param a Scalar to scale x
+ * @param x Vector to add
+ * @param y Vector to be added
+ */
+template <class T>
+void scaleAndAdd(std::complex<T> a, const std::vector<std::complex<T>>& x, 
+        std::vector<std::complex<T>>& y) {
+    if (x.size() != y.size()) {
+        throw std::invalid_argument("Dimensions of parameters mismatch");
+    }
+    scaleAndAdd(x.size(), a, x.data(), y.data());
 }
 } // namespace Pennylane::Util

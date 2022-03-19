@@ -99,6 +99,17 @@ class StateVectorManaged
                         "New data must be the same size as old data.")
         std::copy(new_data.begin(), new_data.end(), data_.begin());
     }
+
+    /**
+     * @brief Update data of the class to new_data
+     *
+     * @param new_data_ptr New data pointer
+     *
+     * TODO: change to std::span in C++20
+     */
+    void updateData(const ComplexPrecisionT* new_data_ptr) {
+        std::copy(new_data_ptr, new_data_ptr + this->getLength(), data_.begin());
+    }
 };
 
 } // namespace Pennylane
