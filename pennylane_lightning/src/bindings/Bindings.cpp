@@ -90,17 +90,16 @@ void lightning_class_bindings(py::module &m) {
 }
 
 template<class PrecisionT, class ParamT>
-void registerAlgorithms(py::module_ m) {
+void registerAlgorithms(py::module_& m) {
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+
     //***********************************************************************//
     //                              Observable
     //***********************************************************************//
-    using np_arr_c = py::array_t<std::complex<ParamT>,
-                                 py::array::c_style | py::array::forcecast>;
-    using np_arr_r =
-        py::array_t<ParamT, py::array::c_style | py::array::forcecast>;
 
+    using np_arr_c = py::array_t<std::complex<ParamT>, py::array::c_style>;
+    using np_arr_r = py::array_t<ParamT, py::array::c_style>;
     
     std::string class_name = "ObsStructC" + bitsize;
     using obs_data_var = std::variant<std::monostate, np_arr_r, np_arr_c>;
@@ -212,8 +211,12 @@ void registerAlgorithms(py::module_ m) {
             return "Operations: [" + ops_stream.str() + "]";
         });
 
-    /* Create ops List */
-
+    /**
+     * Create operation list
+     *
+     * We use the same function name for C64 and C128. They are distinguished
+     * by parameter types.
+     * */
     m.def("create_ops_list",
          [](const std::vector<std::string> &ops_name,
             const std::vector<np_arr_r> &ops_params,
@@ -243,10 +246,9 @@ void registerAlgorithms(py::module_ m) {
              }
              return OpsData<PrecisionT>{ops_name, conv_params, ops_wires,
                                         ops_inverses, conv_matrices};
-         }, "Create a list of operations from data.");
+        }, "Create a list of operations from data.");
 
-    m.def("adjoint_jacobian", &Algorithms::adjointJacobian<PrecisionT>)
-     .def("adjoint_jacobian",
+    m.def("adjoint_jacobian",
          [](const StateVectorRaw<PrecisionT> &sv,
             const std::vector<ObsDatum<PrecisionT>> &observables,
             const OpsData<PrecisionT> &operations,
@@ -261,15 +263,13 @@ void registerAlgorithms(py::module_ m) {
              adjointJacobian(jac, jd);
 
              return py::array_t<ParamT>(py::cast(jac));
-         });
+         }, "Compute jacobian of the circuit using the adjoint method.");
 
     /*
-
         .def("compute_vjp_from_jac",
              &VectorJacobianProduct<PrecisionT>::computeVJP)
         .def("compute_vjp_from_jac",
-             [](VectorJacobianProduct<PrecisionT> &v,
-                const std::vector<PrecisionT> &jac,
+             [](const std::vector<PrecisionT> &jac,
                 const std::vector<PrecisionT> &dy_row, size_t m, size_t n) {
                  std::vector<PrecisionT> vjp_res(n);
                  v.computeVJP(vjp_res, jac, dy_row, m, n);
@@ -335,7 +335,6 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
 
     registerAlgorithms<float, float>(alg_submodule);
     registerAlgorithms<double, double>(alg_submodule);
-
 
     /* Add EXPORTED_KERNELS */
     std::vector<std::pair<std::string, std::string>> exported_kernel_ops;

@@ -35,7 +35,7 @@ from pennylane import (
 )
 from pennylane.devices import DefaultQubit
 from pennylane.operation import Tensor
-from pennylane.measurements import Expectation
+from pennylane.measurements import Expectation, State
 from pennylane.wires import Wires
 
 # Remove after the next release of PL
@@ -53,6 +53,12 @@ try:
         StateVectorC128,
         DEFAULT_KERNEL_FOR_OPS,
         EXPORTED_KERNEL_OPS,
+    )
+    from .lightning_qubit_ops.adjoint_diff import (
+        ObsStructC64,
+        ObsStructC128,
+        OpsStructC64,
+        OpsStructC128,
     )
 
     from ._serialize import _serialize_obs, _serialize_ops, _is_lightning_gate
@@ -225,6 +231,32 @@ class LightningQubit(DefaultQubit):
 
         return np.reshape(state_vector, state.shape)
 
+    @staticmethod
+    def _check_supported_observables(m):
+        """Check whether given 
+
+        Args:
+            m (qml.MeasurementProcess): A measurement process to check. The return type of m must be Expectation
+        """
+        if not isinstance(m.obs, Tensor):
+            if isinstance(m.obs, Projector):
+                raise QuantumFunctionError(
+                    "Adjoint differentiation method does not support the Projector observable"
+                )
+            if isinstance(m.obs, Hermitian):
+                raise QuantumFunctionError(
+                    "Lightning adjoint differentiation method does not currently support the Hermitian observable"
+                )
+        else:
+            if any([isinstance(o, Projector) for o in m.obs.non_identity_obs]):
+                raise QuantumFunctionError(
+                    "Adjoint differentiation method does not support the Projector observable"
+                )
+            if any([isinstance(o, Hermitian) for o in m.obs.non_identity_obs]):
+                raise QuantumFunctionError(
+                    "Lightning adjoint differentiation method does not currently support the Hermitian observable"
+                )
+
     def adjoint_diff_support_check(self, tape):
         """Check Lightning adjoint differentiation method support for a tape.
 
@@ -234,30 +266,22 @@ class LightningQubit(DefaultQubit):
         Args:
             tape (.QuantumTape): quantum tape to differentiate
         """
-        for m in tape.measurements:
-            if m.return_type is not Expectation:
-                raise QuantumFunctionError(
-                    "Adjoint differentiation method does not support"
-                    f" measurement {m.return_type.value}"
-                )
-            if not isinstance(m.obs, Tensor):
-                if isinstance(m.obs, Projector):
-                    raise QuantumFunctionError(
-                        "Adjoint differentiation method does not support the Projector observable"
-                    )
-                if isinstance(m.obs, Hermitian):
-                    raise QuantumFunctionError(
-                        "Lightning adjoint differentiation method does not currently support the Hermitian observable"
-                    )
-            else:
-                if any([isinstance(o, Projector) for o in m.obs.non_identity_obs]):
-                    raise QuantumFunctionError(
-                        "Adjoint differentiation method does not support the Projector observable"
-                    )
-                if any([isinstance(o, Hermitian) for o in m.obs.non_identity_obs]):
-                    raise QuantumFunctionError(
-                        "Lightning adjoint differentiation method does not currently support the Hermitian observable"
-                    )
+        return_sv = any([m.return_type is State for m in tape.measurements])
+        return_exp = all([m.return_type is Expectation for m in tape.measurements])
+
+        if return_sv and len(tape.measurements) != 1:
+            raise QuantumFunctionError(
+                " The state cannot be returned in combination with other return types"
+            )
+        if not return_exp and not return_sv:
+            raise QuantumFunctionError(
+                "Measurements allowed for adjoint differentiation method are "
+                "(1) expecation values with observables or "
+                "(2) state."
+            )
+        if return_exp:
+            for m in tape.measurements:
+                _check_supported_observables(m)
 
         for op in tape.operations:
             if (
@@ -267,6 +291,7 @@ class LightningQubit(DefaultQubit):
                     f"The {op.name} operation is not supported using "
                     'the "adjoint" differentiation method'
                 )
+        return State is return_sv or Expectation
 
     def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
         if self.shots is not None:
@@ -289,7 +314,10 @@ class LightningQubit(DefaultQubit):
             return np.array(0)
 
         # Check adjoint diff support
-        self.adjoint_diff_support_check(tape)
+        if self.adjoint_diff_support_check(tape) is not Expectation:
+            raise QuantumFunctionError(
+                "This method only supports quantum tape returnning expectation values."
+            )
 
         # Initialization of state
         if starting_state is not None:
@@ -386,7 +414,7 @@ class LightningQubit(DefaultQubit):
         else:
             raise TypeError(f"Unsupported complex Type: {dtype}")
 
-        vjp_tensor = VJP.compute_vjp_from_jac(
+        vjp_tensor = adjoind_diff.compute_vjp_from_jac(
             math.reshape(jac, [-1]),
             dy_row,
             num,
@@ -434,13 +462,9 @@ class LightningQubit(DefaultQubit):
         else:
             raise TypeError(f"Unsupported complex Type: {dtype}")
 
-        V = VectorJacobianProductC64() if use_csingle else VectorJacobianProductC128()
-
-        fn = V.vjp_fn(math.reshape(dy, [-1]), tape.num_params)
-
         def processing_fn(tape):
             # Check adjoint diff support
-            self.adjoint_diff_support_check(tape)
+            return_type = self.adjoint_diff_support_check(tape)
 
             # Initialization of state
             if starting_state is not None:
@@ -468,7 +492,8 @@ class LightningQubit(DefaultQubit):
 
             state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
 
-            return fn(state_vector, obs_serialized, ops_serialized, tp_shift)
+            if return_type is Expectation:
+                return fn(state_vector, obs_serialized, ops_serialized, tp_shift)
 
         return processing_fn
 

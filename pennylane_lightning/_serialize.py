@@ -35,10 +35,14 @@ import pennylane as qml
 try:
     from .lightning_qubit_ops import (
         StateVectorC64,
-        ObsStructC64,
         StateVectorC128,
-        ObsStructC128,
         DEFAULT_KERNEL_FOR_OPS,
+    )
+    from .lightning_qubit_ops.adjoint_diff import (
+        ObsStructC64,
+        ObsStructC128,
+        OpsStructC64,
+        OpsStructC128,
     )
 except ImportError:
     pass
@@ -154,6 +158,8 @@ def _serialize_ops(
 
     sv_py = StateVectorC64 if use_csingle else StateVectorC128
 
+    float_type = np.float32 if use_csingle else np.float64
+
     uses_stateprep = False
 
     for o in tape.operations:
@@ -172,13 +178,13 @@ def _serialize_ops(
             names.append(name)
 
             if not _is_lightning_gate(name):
-                params.append([])
+                params.append(np.array([], dtype=float_type))
                 mats.append(qml.matrix(single_op))
 
                 if is_inverse:
                     is_inverse = False
             else:
-                params.append(single_op.parameters)
+                params.append(np.array(single_op.parameters, dtype = float_type))
                 mats.append([])
 
             wires_list = single_op.wires.tolist()

@@ -187,6 +187,8 @@ class TestAdjointJacobian:
 
         dev._state = dev._asarray(dev._state, C)
 
+        print(C)
+
         with qml.tape.QuantumTape() as tape:
             qml.QubitStateVector(np.array([1.0, -1.0]) / np.sqrt(2), wires=0)
             G(theta, wires=[0])

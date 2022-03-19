@@ -34,15 +34,17 @@ namespace Pennylane::Algorithms {
  * @param apply_operations Assume the given state is an input state and apply
  * operations if true
  * @return a vector length of the number of trainable parameters
+ *
+ * TODO: change pointer parameters to std::span in C++20
  */
 template <typename PrecisionT>
-static auto statevectorVJP(const JacobianData<PrecisionT> &jd,
-                           const std::complex<PrecisionT> *vec,
-                           bool apply_operations = false)
-    -> std::vector<std::complex<PrecisionT>> {
+static void statevectorVJP(const JacobianData<PrecisionT> &jd,
+                           const std::complex<PrecisionT> *dy,
+                           const std::complex<PrecisionT> *vec_out,
+                           bool apply_operations = false) {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     if (!jd.hasTrainableParams()) {
-        return {};
+        return ;
     }
     const OpsData<PrecisionT> &ops = jd.getOperations();
     const std::vector<std::string> &ops_name = ops.getOpsName();
@@ -50,8 +52,6 @@ static auto statevectorVJP(const JacobianData<PrecisionT> &jd,
     // We can assume the trainable params are sorted (from Python)
     const size_t num_param_ops = ops.getNumParOps();
     const auto trainable_params = jd.getTrainableParams();
-
-    std::vector<ComplexPrecisionT> vjp(trainable_params.size());
 
     // Create $U_{1:p}\vert \lambda \rangle$
     StateVectorManaged<PrecisionT> lambda(jd.getPtrStateVec(),
@@ -61,7 +61,7 @@ static auto statevectorVJP(const JacobianData<PrecisionT> &jd,
     if (apply_operations) {
         applyOperations(lambda, ops);
     }
-    StateVectorManaged<PrecisionT> mu(vec, jd.getSizeStateVec());
+    StateVectorManaged<PrecisionT> mu(dy, jd.getSizeStateVec());
     StateVectorManaged<PrecisionT> mu_d(
         Util::log2PerfectPower(jd.getSizeStateVec()));
 
@@ -95,7 +95,7 @@ static auto statevectorVJP(const JacobianData<PrecisionT> &jd,
                                         !ops.getOpsInverses()[op_idx]) *
                     (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
-                vjp[trainable_param_idx] =
+                vec_out[trainable_param_idx] =
                     ComplexPrecisionT{0.0, scalingFactor} *
                     Util::innerProdC(mu_d.getDataVector(),
                                      lambda.getDataVector());
@@ -107,6 +107,14 @@ static auto statevectorVJP(const JacobianData<PrecisionT> &jd,
         applyOperationAdj(lambda, ops, static_cast<size_t>(op_idx));
         applyOperationAdj(mu, ops, static_cast<size_t>(op_idx));
     }
-    return vjp;
 };
+
+/**
+ * @brief
+ */
+template <typename PrecisionT>
+auto fisherMatrix(const JacobianData<PrecisionT> &jd,
+                  bool apply_operations = false) {
+}
+
 } // namespace Pennylane::Algorithms

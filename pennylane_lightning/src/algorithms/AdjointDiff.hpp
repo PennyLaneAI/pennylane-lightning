@@ -51,7 +51,7 @@ namespace Pennylane::Algorithms {
  */
 template<typename T>
 void adjointJacobian(std::vector<T> &jac, const JacobianData<T> &jd,
-                            bool apply_operations = false) {
+                     bool apply_operations = false) {
     PL_ABORT_IF(!jd.hasTrainableParams(),
                 "No trainable parameters provided.");
 

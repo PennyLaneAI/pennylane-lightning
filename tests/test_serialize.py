@@ -28,7 +28,7 @@ import pytest
 from unittest import mock
 
 try:
-    from pennylane_lightning.lightning_qubit_ops import (
+    from pennylane_lightning.lightning_qubit_ops.adjoint_diff import (
         ObsStructC64,
         ObsStructC128,
     )
