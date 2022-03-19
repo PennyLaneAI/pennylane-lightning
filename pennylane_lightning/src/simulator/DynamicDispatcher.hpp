@@ -59,6 +59,7 @@ namespace Pennylane {
  */
 template <class PrecisionT, class ParamT> struct registerBeforeMain;
 
+/// @cond DEV
 template <> struct registerBeforeMain<float, float> {
     const static inline int dummy =
         Internal::registerAllAvailableKernels<float, float>();
@@ -68,6 +69,7 @@ template <> struct registerBeforeMain<double, double> {
     const static inline int dummy =
         Internal::registerAllAvailableKernels<double, double>();
 };
+/// @endcond
 
 /**
  * @brief DynamicDispatcher class
