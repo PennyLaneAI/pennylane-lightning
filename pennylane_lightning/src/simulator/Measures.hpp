@@ -339,7 +339,7 @@ class Measures {
             else {
                 for (size_t j = 0; j < num_qubits; j++) {
                     samples[i * num_qubits + (num_qubits - 1 - j)] =
-                        (idx >> j) & 1;
+                        (idx >> j) & 1U;
                 }
                 cache[idx] = i;
             }
