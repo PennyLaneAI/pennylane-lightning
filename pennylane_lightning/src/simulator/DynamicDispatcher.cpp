@@ -24,7 +24,6 @@
 #include "SelectKernel.hpp"
 
 using namespace Pennylane;
-using namespace Pennylane::Util;
 
 /// @cond DEV
 namespace {
@@ -50,7 +49,7 @@ constexpr auto gateOpToFunctor() {
             Gates::GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                                          gate_op>::value;
         assert(params.size() ==
-               Gates::static_lookup<gate_op>(Gates::Constant::gate_num_params));
+               Util::static_lookup<gate_op>(Gates::Constant::gate_num_params));
         Gates::callGateOps(func_ptr, data, num_qubits, wires, inverse, params);
     };
 }
@@ -71,7 +70,7 @@ constexpr auto constructGateOpsFunctorTupleIter() {
     } else if (gate_idx < GateImplementation::implemented_gates.size()) {
         constexpr auto gate_op =
             GateImplementation::implemented_gates[gate_idx];
-        return prepend_to_tuple(
+        return Util::prepend_to_tuple(
             std::pair{gate_op, gateOpToFunctor<PrecisionT, ParamT,
                                                GateImplementation, gate_op>()},
             constructGateOpsFunctorTupleIter<
@@ -89,7 +88,7 @@ constexpr auto constructGeneratorOpsFunctorTupleIter() {
     } else if (gntr_idx < GateImplementation::implemented_generators.size()) {
         constexpr auto gntr_op =
             GateImplementation::implemented_generators[gntr_idx];
-        return prepend_to_tuple(
+        return Util::prepend_to_tuple(
             std::pair{gntr_op,
                       Gates::GeneratorOpToMemberFuncPtr<
                           PrecisionT, GateImplementation, gntr_op>::value},
@@ -107,7 +106,7 @@ constexpr auto constructMatrixOpsFunctorTupleIter() {
     } else if (mat_idx < GateImplementation::implemented_matrices.size()) {
         constexpr auto mat_op =
             GateImplementation::implemented_matrices[mat_idx];
-        return prepend_to_tuple(
+        return Util::prepend_to_tuple(
             std::pair{
                 mat_op,
                 Gates::MatrixOpToMemberFuncPtr<PrecisionT, GateImplementation,

@@ -23,14 +23,14 @@
  */
 using namespace Pennylane;
 using namespace Pennylane::Gates;
-using namespace Pennylane::Util;
-
-namespace {
 using namespace Pennylane::Gates::Constant;
-} // namespace
+using namespace Pennylane::Util;
 
 using std::vector;
 
+/**
+ * @brief Change the given type list of kernels to string
+ */
 template <typename TypeList> std::string kernelsToString() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         return std::string(TypeList::Type::name) + ", " +
@@ -56,6 +56,9 @@ struct KernelsImplementingGateHelper<gate_op, void> {
     using Type = void;
 };
 
+/**
+ * @brief Type list of kernels implementing the given gate operation.
+ */
 template <Gates::GateOperation gate_op> struct KernelsImplementingGate {
     using Type =
         typename KernelsImplementingGateHelper<gate_op, TestKernels>::Type;
@@ -75,11 +78,11 @@ template <Gates::GateOperation gate_op> struct KernelsImplementingGate {
  * @param params Paramters for gate
  */
 template <Gates::GateOperation gate_op, typename PrecisionT, typename ParamT,
-          typename GateImplementation>
-auto applyGate(TestVector<std::complex<PrecisionT>> ini, size_t num_qubits,
+          typename GateImplementation, class Alloc>
+auto applyGate(std::vector<std::complex<PrecisionT>, Alloc> ini, size_t num_qubits,
                const std::vector<size_t> &wires, bool inverse,
                const std::vector<ParamT> &params)
-    -> TestVector<std::complex<PrecisionT>> {
+    -> std::vector<std::complex<PrecisionT>, Alloc> {
     callGateOps(GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                                       gate_op>::value,
                 ini.data(), num_qubits, wires, inverse, params);
@@ -91,17 +94,21 @@ auto applyGate(TestVector<std::complex<PrecisionT>> ini, size_t num_qubits,
  * results in tuple.
  */
 template <Gates::GateOperation gate_op, typename PrecisionT, typename ParamT,
-          typename Kernels, size_t... I>
+          typename Kernels, class Alloc, size_t... I>
 auto applyGateForImplemetingKernels(
-    const TestVector<std::complex<PrecisionT>> &ini, size_t num_qubits,
+    const std::vector<std::complex<PrecisionT>, Alloc> &ini, size_t num_qubits,
     const std::vector<size_t> &wires, bool inverse,
     const std::vector<ParamT> &params,
     [[maybe_unused]] std::index_sequence<I...> dummy) {
     return std::make_tuple(
-        applyGate<gate_op, PrecisionT, ParamT, getNthType<Kernels, I>>(
+        applyGate<gate_op, PrecisionT, ParamT, getNthType<Kernels, I>, Alloc>(
             ini, num_qubits, wires, inverse, params)...);
 }
 
+/**
+ * @brief Apply the given gate using all implementing kernels and compare
+ * the results.
+ */
 template <Gates::GateOperation gate_op, typename PrecisionT, typename ParamT,
           class RandomEngine>
 void testApplyGate(RandomEngine &re, size_t num_qubits) {
@@ -115,7 +122,7 @@ void testApplyGate(RandomEngine &re, size_t num_qubits) {
     INFO("PrecisionT, ParamT = " << PrecisionToName<PrecisionT>::value << ", "
                                  << PrecisionToName<ParamT>::value);
 
-    const auto all_wires = crateAllWires(num_qubits, gate_op, true);
+    const auto all_wires = createAllWires(num_qubits, gate_op, true);
     for (const auto &wires : all_wires) {
         const auto params = createParams<ParamT>(gate_op);
         const auto gate_name = lookup(gate_names, gate_op);
@@ -131,7 +138,7 @@ void testApplyGate(RandomEngine &re, size_t num_qubits) {
 
             for (size_t i = 0; i < results.size() - 1; i++) {
                 REQUIRE(results[i] ==
-                        PLApprox(results[i + 1])
+                        approx(results[i + 1])
                             .margin(static_cast<PrecisionT>(1e-5)));
             }
         }
@@ -147,7 +154,7 @@ void testApplyGate(RandomEngine &re, size_t num_qubits) {
 
             for (size_t i = 0; i < results.size() - 1; i++) {
                 REQUIRE(results[i] ==
-                        PLApprox(results[i + 1])
+                        approx(results[i + 1])
                             .margin(static_cast<PrecisionT>(1e-5)));
             }
         }

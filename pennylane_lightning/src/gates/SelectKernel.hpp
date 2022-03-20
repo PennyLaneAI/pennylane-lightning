@@ -28,30 +28,6 @@
 #include <variant>
 
 namespace Pennylane::Gates {
-/**
- * @brief For lookup from any array of pair whose first elements are
- * GateOperation.
- *
- * As Util::lookup can be used in constexpr context, this function is redundant
- * (by the standard). But GCC 9 still does not accept Util::lookup in constexpr
- * some cases.
- *
- * @tparam e Enum value
- * @tparam T Value type of array
- * @tparam size Size of the array
- *
- * @param arr Array of key, value pairs
- */
-template <auto e, class T, size_t size>
-constexpr auto
-static_lookup(const std::array<std::pair<decltype(e), T>, size> &arr) -> T {
-    for (size_t idx = 0; idx < size; idx++) {
-        if (std::get<0>(arr[idx]) == e) {
-            return std::get<1>(arr[idx]);
-        }
-    }
-    return T{};
-}
 
 /// @cond DEV
 namespace Internal {

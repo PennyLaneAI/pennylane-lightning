@@ -95,6 +95,17 @@ class DummyImplementation {
         allGateOps<GeneratorOperation>();
     constexpr static std::string_view name = "Dummy";
 
+    template <class PrecisionT>
+    static void applyMatrix(std::complex<PrecisionT> *arr, size_t num_qubits,
+                            const std::complex<PrecisionT> *matrix,
+                            const std::vector<size_t> &wires, bool inverse) {
+        static_cast<void>(arr);
+        static_cast<void>(num_qubits);
+        static_cast<void>(matrix);
+        static_cast<void>(wires);
+        static_cast<void>(inverse);
+    }
+
     PENNYLANE_TESTS_DEFINE_GATE_OP(PauliX, 0)
     PENNYLANE_TESTS_DEFINE_GATE_OP(PauliY, 0)
     PENNYLANE_TESTS_DEFINE_GATE_OP(PauliZ, 0)
@@ -196,8 +207,8 @@ constexpr auto gateOpFuncPtrPairsWithNumParamsIter() {
                       decltype(gate_op_func_ptr_pairs<PrecisionT, ParamT>)>) {
         constexpr auto elt =
             std::get<tuple_idx>(gate_op_func_ptr_pairs<PrecisionT, ParamT>);
-        if constexpr (static_lookup<elt.first>(Constant::gate_num_params) ==
-                      num_params) {
+        if constexpr (Util::static_lookup<elt.first>(
+                          Constant::gate_num_params) == num_params) {
             return Util::prepend_to_tuple(
                 elt, gateOpFuncPtrPairsWithNumParamsIter<
                          PrecisionT, ParamT, num_params, tuple_idx + 1>());

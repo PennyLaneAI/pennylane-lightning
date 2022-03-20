@@ -1,11 +1,37 @@
-# Release 0.22.0-dev
+# Release 0.23.0-dev
+
+### New features since last release
+
+* Add Lightning GBenchmark Suite.
+[(#249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/249)
+
+### Breaking changes
+
+### Improvements
+
+* Add `ENABLE_BLAS` build to CI checks.
+[(#249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/249)
+
+### Documentation
+
+### Bug fixes
+
+* Update tests to remove `JacobianTape`.
+[(#260)](https://github.com/PennyLaneAI/pennylane-lightning/pull/260)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+Ali Asadi, Lee James O'Riordan
+
+---
+
+# Release 0.22.0
 
 ### New features since last release
 
 * Add Docker support.
 [(#234)](https://github.com/PennyLaneAI/pennylane-lightning/pull/234)
-
-### Breaking changes
 
 ### Improvements
 
@@ -28,6 +54,9 @@
 [(#212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/212)
 
 ### Documentation
+
+* Use of batching with OpenMP threads is documented.
+[(#221)](https://github.com/PennyLaneAI/pennylane-lightning/pull/221)
 
 ### Bug fixes
 

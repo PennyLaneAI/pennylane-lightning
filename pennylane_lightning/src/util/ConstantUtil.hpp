@@ -16,12 +16,14 @@
  * Contains utility functions for processing constants
  */
 #pragma once
+
+#include "Util.hpp"
+#include "TypeTraits.hpp"
+
 #include <array>
 #include <cstdlib>
 #include <stdexcept>
 #include <tuple>
-
-#include "Util.hpp"
 
 namespace Pennylane::Util {
 /**
@@ -200,6 +202,8 @@ reverse_pairs_helper(const std::array<std::pair<T, U>, size> &arr,
  * @tparam T Type of first elements
  * @tparam U Type of second elements
  * @tparam size Size of the array
+ * @param arr Array to reverse
+ * @return reversed array
  */
 template <class T, class U, size_t size>
 constexpr auto reverse_pairs(const std::array<std::pair<T, U>, size> &arr)
@@ -208,6 +212,14 @@ constexpr auto reverse_pairs(const std::array<std::pair<T, U>, size> &arr)
                                           std::make_index_sequence<size>{});
 }
 
+/**
+ * @brief Constexpr function that check whether the given value is a power of 2.
+ *
+ * Can be merged with isPerfectPowerOf2 in C++20 using constexpr std::popcount.
+ *
+ * @param value Value to check
+ * @return True when the given value is a power of 2
+ */
 constexpr auto constIsPerfectPowerOf2(size_t value) -> bool {
     while ((value & 1U) == 0) {
         value >>= 1U;

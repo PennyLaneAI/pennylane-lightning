@@ -1,0 +1,18 @@
+name: Automated Latest Release Tag
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  post_release_tag_latest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: rickstaa/action-create-tag@v1
+        with:
+          tag: "latest"
+          message: "Latest release"
+          force_push_tag: true
+          commit_sha: ${{github.sha}}

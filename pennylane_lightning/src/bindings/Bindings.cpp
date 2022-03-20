@@ -329,6 +329,23 @@ void lightning_class_bindings(py::module_ &m) {
                 const std::vector<size_t> &wires) {
                  return M.expval(operation, wires);
              })
+        .def("generate_samples",
+             [](Measures<PrecisionT> &M, size_t num_wires, size_t num_shots) {
+                 auto &&result = M.generate_samples(num_shots);
+                 const size_t ndim = 2;
+                 const std::vector<size_t> shape{num_shots, num_wires};
+                 constexpr auto sz = sizeof(size_t);
+                 const std::vector<size_t> strides{sz * num_wires, sz};
+                 // return 2-D NumPy array
+                 return py::array(py::buffer_info(
+                     result.data(), /* data as contiguous array  */
+                     sz,            /* size of one scalar        */
+                     py::format_descriptor<size_t>::format(), /* data type */
+                     ndim,   /* number of dimensions      */
+                     shape,  /* shape of the matrix       */
+                     strides /* strides for each axis     */
+                     ));
+             })
         .def("var", [](Measures<PrecisionT> &M, const std::string &operation,
                        const std::vector<size_t> &wires) {
             return M.var(operation, wires);

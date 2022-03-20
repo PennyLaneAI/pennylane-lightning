@@ -75,7 +75,7 @@ class TestAdjointJacobian:
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
         expectation values"""
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.RX(0.1, wires=0)
             qml.var(qml.PauliZ(0))
 
@@ -87,7 +87,7 @@ class TestAdjointJacobian:
 
         dev = qml.device("lightning.qubit", wires=1, shots=1)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.expval(qml.PauliZ(0))
 
         with pytest.warns(
@@ -100,7 +100,7 @@ class TestAdjointJacobian:
         """Test if a QuantumFunctionError is raised for an unsupported operation, i.e.,
         multi-parameter operations that are not qml.Rot"""
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.CRot(0.1, 0.2, 0.3, wires=[0, 1])
             qml.expval(qml.PauliZ(0))
 
@@ -109,7 +109,7 @@ class TestAdjointJacobian:
         ):
             dev.adjoint_jacobian(tape)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.SingleExcitation(0.1, wires=[0, 1])
             qml.expval(qml.PauliZ(0))
 
@@ -122,7 +122,7 @@ class TestAdjointJacobian:
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_proj_unsupported(self, dev):
         """Test if a QuantumFunctionError is raised for a Projector observable"""
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.CRX(0.1, wires=[0, 1])
             qml.expval(qml.Projector([0, 1], wires=[0, 1]))
 
@@ -131,7 +131,7 @@ class TestAdjointJacobian:
         ):
             dev.adjoint_jacobian(tape)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.CRX(0.1, wires=[0, 1])
             qml.expval(qml.Projector([0], wires=[0]) @ qml.PauliZ(0))
 
@@ -144,7 +144,7 @@ class TestAdjointJacobian:
     def test_unsupported_hermitian_expectation(self, dev):
         obs = np.array([[1, 0], [0, -1]], dtype=np.complex128, requires_grad=False)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.RY(0.1, wires=(0,))
             qml.expval(qml.Hermitian(obs, wires=(0,)))
 
@@ -153,7 +153,7 @@ class TestAdjointJacobian:
         ):
             dev.adjoint_jacobian(tape)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.RY(0.1, wires=(0,))
             qml.expval(qml.Hermitian(obs, wires=(0,)) @ qml.PauliZ(wires=1))
 
@@ -169,7 +169,7 @@ class TestAdjointJacobian:
     def test_unsupported_complex_type(self, dev):
         dev._state = np.zeros(8, np.complex256)  # Directly put unaligned numpy array to device
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.QubitStateVector(np.array([1.0, -1.0]) / np.sqrt(2), wires=0)
             qml.RX(0.3, wires=[0])
             qml.expval(qml.PauliZ(0))
@@ -187,7 +187,7 @@ class TestAdjointJacobian:
 
         dev._state = dev._asarray(dev._state, C)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.QubitStateVector(np.array([1.0, -1.0]) / np.sqrt(2), wires=0)
             G(theta, wires=[0])
             qml.expval(qml.PauliZ(0))
@@ -210,7 +210,7 @@ class TestAdjointJacobian:
 
         dev._state = dev._state.astype(C)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.QubitStateVector(np.array([1.0, -1.0]) / np.sqrt(2), wires=0)
             qml.Rot(*params, wires=[0])
             qml.expval(qml.PauliZ(0))
@@ -231,7 +231,7 @@ class TestAdjointJacobian:
 
         dev._state = dev._state.astype(C)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.RY(par, wires=[0])
             qml.expval(qml.PauliX(0))
 
@@ -239,11 +239,9 @@ class TestAdjointJacobian:
 
         # gradients
         exact = np.cos(par)
-        grad_F = tape.jacobian(dev, method="numeric")
         grad_A = dev.adjoint_jacobian(tape)
 
         # different methods must agree
-        assert np.allclose(grad_F, exact, atol=tol, rtol=0)
         assert np.allclose(grad_A, exact, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
@@ -253,7 +251,7 @@ class TestAdjointJacobian:
 
         dev._state = dev._state.astype(C)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.RX(a, wires=0)
             qml.expval(qml.PauliZ(0))
 
@@ -270,7 +268,7 @@ class TestAdjointJacobian:
 
         dev._state = dev._state.astype(C)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.RX(params[0], wires=0)
             qml.RX(params[1], wires=1)
             qml.RX(params[2], wires=2)
@@ -307,7 +305,7 @@ class TestAdjointJacobian:
         dev._state = dev._state.astype(C)
 
         # op.num_wires and op.num_params must be initialized a priori
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.Hadamard(wires=0)
             qml.RX(0.543, wires=0)
             qml.CNOT(wires=[0, 1])
@@ -326,7 +324,8 @@ class TestAdjointJacobian:
 
         tape.trainable_params = set(range(1, 1 + op.num_params))
 
-        grad_F = tape.jacobian(dev, method="numeric")
+        tapes, fn = qml.gradients.finite_diff(tape)
+        grad_F = fn(qml.execute(tapes, dev, None))
         grad_D = dev.adjoint_jacobian(tape)
 
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
@@ -338,7 +337,7 @@ class TestAdjointJacobian:
 
         dev._state = dev._state.astype(C)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=[0])
             qml.Rot(x, y, z, wires=[0])
             qml.RY(-0.2, wires=[0])
@@ -347,7 +346,8 @@ class TestAdjointJacobian:
         tape.trainable_params = {1, 2, 3}
 
         grad_D = dev.adjoint_jacobian(tape)
-        grad_F = tape.jacobian(dev, method="numeric")
+        tapes, fn = qml.gradients.finite_diff(tape)
+        grad_F = fn(qml.execute(tapes, dev, None))
 
         # gradient has the correct shape and every element is nonzero
         assert grad_D.shape == (1, 3)
@@ -363,7 +363,7 @@ class TestAdjointJacobian:
 
         dev._state = dev._state.astype(C)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=[0])
             qml.Rot(x, y, z, wires=[0])
             qml.RY(-0.2, wires=[0])
@@ -385,7 +385,7 @@ class TestAdjointJacobian:
 
         dev._state = dev._state.astype(C)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=[0])
             qml.Rot(x, y, z, wires=[0])
             qml.RY(-0.2, wires=[0])

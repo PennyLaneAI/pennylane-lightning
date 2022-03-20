@@ -343,11 +343,6 @@ class NotImplementedException : public std::logic_error {
                            fname){};
 };
 
-// Enable until C++20 support is explicitly allowed
-template <class T> struct remove_cvref {
-    using type = std::remove_cv_t<std::remove_reference_t<T>>;
-};
-
 /**
  * @brief Chunk the data using the requested chunk size.
  *
@@ -402,8 +397,24 @@ auto chunkData(const Container<T> &data, std::size_t num_chunks)
     return chunkDataSize(data, div);
 }
 
-// type alias
-template <class T> using remove_cvref_t = typename remove_cvref<T>::type;
+/**
+ * @brief For lookup from any array of pair whose first elements are
+ * GateOperation.
+ *
+ * As Util::lookup can be used in constexpr context, this function is redundant
+ * (by the standard). But GCC 9 still does not accept Util::lookup in constexpr
+ * some cases.
+ */
+template <auto op, class T, size_t size>
+constexpr auto
+static_lookup(const std::array<std::pair<decltype(op), T>, size> &arr) -> T {
+    for (size_t idx = 0; idx < size; idx++) {
+        if (std::get<0>(arr[idx]) == op) {
+            return std::get<1>(arr[idx]);
+        }
+    }
+    return T{};
+}
 
 /**
  * @brief Hash for std::pair

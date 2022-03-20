@@ -20,17 +20,17 @@
 
 namespace Pennylane::Util {
 /**
- * @brief This class is only usable in x86 or AMD64 architecture.
+ * @brief This class is only usable in x86 or x86_64 architecture.
  */
 class RuntimeInfo {
   private:
     struct InternalRuntimeInfo {
         InternalRuntimeInfo();
 
-        std::bitset<32> f_1_ecx;
-        std::bitset<32> f_1_edx;
-        std::bitset<32> f_7_ebx;
-        std::bitset<32> f_7_ecx;
+        std::bitset<32> f_1_ecx{};
+        std::bitset<32> f_1_edx{};
+        std::bitset<32> f_7_ebx{};
+        std::bitset<32> f_7_ecx{};
     };
 
     static const inline InternalRuntimeInfo internal_runtime_info_;

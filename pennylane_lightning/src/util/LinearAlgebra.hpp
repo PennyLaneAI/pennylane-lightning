@@ -17,6 +17,9 @@
  */
 #pragma once
 
+#include "TypeTraits.hpp"
+#include "Util.hpp"
+
 #include <algorithm>
 #include <complex>
 #include <cstdlib>
@@ -24,7 +27,6 @@
 #include <random>
 #include <vector>
 
-#include "Util.hpp"
 
 /// @cond DEV
 #if __has_include(<cblas.h>) && defined _ENABLE_BLAS
@@ -371,7 +373,7 @@ inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
  * @param n1 Index of the first column.
  * @param n2 Index of the last column.
  */
-template <class T, size_t BLOCKSIZE = 32> // NOLINT(readability-magic-numbers)
+template <class T, size_t BLOCKSIZE = 16> // NOLINT(readability-magic-numbers)
 inline static void CFTranspose(const T *mat, T *mat_t, size_t m, size_t n,
                                size_t m1, size_t m2, size_t n1, size_t n2) {
     size_t r;
@@ -419,7 +421,7 @@ inline static void CFTranspose(const T *mat, T *mat_t, size_t m, size_t n,
  * @param n1 Index of the first column.
  * @param n2 Index of the last column.
  */
-template <class T, size_t BLOCKSIZE = 32> // NOLINT(readability-magic-numbers)
+template <class T, size_t BLOCKSIZE = 16> // NOLINT(readability-magic-numbers)
 inline static void CFTranspose(const std::complex<T> *mat,
                                std::complex<T> *mat_t, size_t m, size_t n,
                                size_t m1, size_t m2, size_t n1, size_t n2) {
@@ -751,14 +753,40 @@ inline auto matrixMatProd(const std::vector<std::complex<T>> m_left,
 
 /**
  * @brief Calculate the squared norm of a vector
+ * @brief @rst
+ * Compute the squared norm of a real/complex vector :math:`\sum_k |v_k|^2`
+ * @endrst
+ *
+ * @param data Data pointer
+ * @param data_size Size of the data
  */
-template <typename PrecisionT>
-auto squaredNorm(const std::complex<PrecisionT> *data, size_t data_size)
-    -> PrecisionT {
-    return std::transform_reduce(
-        data, data + data_size, PrecisionT{}, std::plus<PrecisionT>(),
-        static_cast<PrecisionT (*)(const std::complex<PrecisionT> &)>(
-            &std::norm<PrecisionT>));
+template <class T>
+auto squaredNorm(const T *data, size_t data_size) -> remove_complex_t<T> {
+    if constexpr (is_complex_v<T>) {
+        // complex type
+        using PrecisionT = remove_complex_t<T>;
+        return std::transform_reduce(
+            data, data + data_size, PrecisionT{}, std::plus<PrecisionT>(),
+            static_cast<PrecisionT (*)(const std::complex<PrecisionT> &)>(
+                &std::norm<PrecisionT>));
+    } else {
+        using PrecisionT = T;
+        return std::transform_reduce(
+            data, data + data_size, PrecisionT{}, std::plus<PrecisionT>(),
+            static_cast<PrecisionT (*)(PrecisionT)>(std::norm));
+    }
+}
+
+/**
+ * @brief @rst
+ * Compute the squared norm of a real/complex vector :math:`\sum_k |v_k|^2`
+ * @endrst
+ *
+ * @param vec std::vector containing data
+ */
+template <class T, class Alloc>
+auto squaredNorm(const std::vector<T, Alloc> &vec) -> remove_complex_t<T> {
+    return squaredNorm(vec.data(), vec.size());
 }
 
 /**

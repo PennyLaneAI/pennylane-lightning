@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <catch2/catch.hpp>
 
+#include <algorithm>
 #include <random>
 
 /**
@@ -28,7 +29,7 @@ TEMPLATE_TEST_CASE("Approx", "[Test_Internal]", float, double) {
             ComplexPrecisionT{1.0001, 0.0},
             ComplexPrecisionT{0.0, 0.9999},
         };
-        REQUIRE(test1 == PLApprox(test2).margin(0.00015));
+        REQUIRE(test1 == approx(test2).margin(0.00015));
     }
     SECTION("vector{1.0, 1.0*I} does not approx vector{1.0002, 0.9998*I} with "
             "margin 0.00015") {
@@ -40,7 +41,7 @@ TEMPLATE_TEST_CASE("Approx", "[Test_Internal]", float, double) {
             ComplexPrecisionT{1.0002, 0.0},
             ComplexPrecisionT{0.0, 0.9998},
         };
-        REQUIRE(test1 != PLApprox(test2).margin(0.00015));
+        REQUIRE(test1 != approx(test2).margin(0.00015));
     }
     SECTION("vector{1.0, 1.0*I} does not approx vector{1.0I, 1.0} with margin "
             "0.00015") {
@@ -52,7 +53,7 @@ TEMPLATE_TEST_CASE("Approx", "[Test_Internal]", float, double) {
             ComplexPrecisionT{0.0, 1.0},
             ComplexPrecisionT{1.0, 0.0},
         };
-        REQUIRE(test1 != PLApprox(test2).margin(0.00015));
+        REQUIRE(test1 != approx(test2).margin(0.00015));
     }
 }
 
@@ -68,7 +69,7 @@ TEMPLATE_TEST_CASE("createProductState", "[Test_Internal]", float, double) {
         GateImplementationsPI::applyPauliX(expected.data(), 3, {1}, false);
         GateImplementationsPI::applyHadamard(expected.data(), 3, {1}, false);
 
-        REQUIRE(st == PLApprox(expected).margin(1e-7));
+        REQUIRE(st == approx(expected).margin(1e-7));
     }
     SECTION("createProductState(\"+-0\") == |+-1> ") {
         const auto st = createProductState<PrecisionT>("+-0");
@@ -81,7 +82,7 @@ TEMPLATE_TEST_CASE("createProductState", "[Test_Internal]", float, double) {
 
         GateImplementationsPI::applyPauliX(expected.data(), 3, {2}, false);
 
-        REQUIRE(st != PLApprox(expected).margin(1e-7));
+        REQUIRE(st != approx(expected).margin(1e-7));
     }
 }
 
