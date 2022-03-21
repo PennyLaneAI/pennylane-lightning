@@ -359,12 +359,11 @@ template <class T = double> class AdjointJacobian {
                 (ops_name[op_idx] == "BasisState")) {
                 continue;
             }
-            mu.updateData(lambda.getDataVector());
-            applyOperationAdj(lambda, ops, op_idx);
-
             if (tp_it == tp_rend) {
                 break; // All done
             }
+            mu.updateData(lambda.getDataVector());
+            applyOperationAdj(lambda, ops, op_idx);
 
             if (ops.hasParams(op_idx)) {
                 if (current_param_idx == *tp_it) {
