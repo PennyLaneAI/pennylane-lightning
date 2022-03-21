@@ -381,6 +381,12 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
               &Gates::getIndicesAfterExclusion),
           "Get statevector indices for gate application");
 
+    /* Add compile info */
+    m.def("compile_info", &getCompileInfo, "Compiled binary information.");
+
+    /* Add runtime info */
+    m.def("runtime_info", &getRuntimeInfo, "Runtime information.");
+
     /* Add EXPORTED_KERNELS */
     std::vector<std::pair<std::string, std::string>> exported_kernel_ops;
 
@@ -389,7 +395,7 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
         const auto implemented_gates = implementedGatesForKernel(kernel);
         for (const auto gate_op : implemented_gates) {
             const auto gate_name =
-                std::string(lookup(Constant::gate_names, gate_op));
+                std::string(lookup(Gates::Constant::gate_names, gate_op));
             exported_kernel_ops.emplace_back(kernel_name, gate_name);
         }
     }
@@ -398,8 +404,9 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
 
     /* Add DEFAULT_KERNEL_FOR_OPS */
     std::map<std::string, std::string> default_kernel_ops_map;
-    for (const auto &[gate_op, name] : Constant::gate_names) {
-        const auto kernel = lookup(Constant::default_kernel_for_gates, gate_op);
+    for (const auto &[gate_op, name] : Gates::Constant::gate_names) {
+        const auto kernel =
+            lookup(Gates::Constant::default_kernel_for_gates, gate_op);
         const auto kernel_name = Util::lookup(kernel_id_name_pairs, kernel);
         default_kernel_ops_map.emplace(std::string(name), kernel_name);
     }

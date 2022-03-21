@@ -50,7 +50,7 @@ class Measures {
     using CFP_t = std::complex<fp_t>;
 
   public:
-    Measures(const SVType &provided_statevector)
+    explicit Measures(const SVType &provided_statevector)
         : original_statevector{provided_statevector} {};
 
     /**
@@ -339,7 +339,7 @@ class Measures {
             else {
                 for (size_t j = 0; j < num_qubits; j++) {
                     samples[i * num_qubits + (num_qubits - 1 - j)] =
-                        (idx >> j) & 1;
+                        (idx >> j) & 1U;
                 }
                 cache[idx] = i;
             }

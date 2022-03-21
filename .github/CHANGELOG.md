@@ -5,12 +5,18 @@
 * Add Lightning GBenchmark Suite.
 [(#249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/249)
 
+* Add run-time and compile information in binary.
+[(#253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/253)
+
 ### Breaking changes
 
 ### Improvements
 
 * Add `ENABLE_BLAS` build to CI checks.
 [(#249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/249)
+
+* Add more `clang-tidy` checks and kernel tests.
+[(#253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/253)
 
 ### Documentation
 
@@ -22,7 +28,7 @@
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
-Ali Asadi, Lee James O'Riordan
+Ali Asadi, Chae=Yeun Park, and Lee James O'Riordan
 
 ---
 

@@ -62,7 +62,7 @@ struct testDispatchForKernel<
         // and compare it to the dynamic dispatcher
         auto test_st = ini_st;
         const auto gate_name =
-            std::string(static_lookup<gate_op>(Constant::gate_names));
+            std::string(Util::static_lookup<gate_op>(Constant::gate_names));
         DynamicDispatcher<PrecisionT>::getInstance().applyOperation(
             GateImplementation::kernel_id, test_st.data(), num_qubits,
             gate_name, wires, false, params);

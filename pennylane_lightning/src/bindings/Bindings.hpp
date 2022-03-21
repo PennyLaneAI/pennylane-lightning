@@ -19,8 +19,10 @@
 #pragma once
 #include "AdjointDiff.hpp"
 #include "JacobianProd.hpp"
+#include "Macros.hpp"
 #include "Measures.hpp"
 #include "OpToMemberFuncPtr.hpp"
+#include "RuntimeInfo.hpp"
 #include "StateVectorRaw.hpp"
 
 #include "pybind11/complex.h"
@@ -226,5 +228,62 @@ void registerKernelsToPyexportIter(PyClass &pyclass) {
 template <class PrecisionT, class ParamT, class PyClass>
 void registerKernelsToPyexport(PyClass &pyclass) {
     registerKernelsToPyexportIter<PrecisionT, ParamT, 0>(pyclass);
+}
+
+/**
+ * @brief Return basic information of the compiled binary.
+ */
+auto getCompileInfo() -> pybind11::dict {
+    using namespace Util::Constant;
+    using namespace pybind11::literals;
+
+    const std::string_view cpu_arch_str = [] {
+        switch (cpu_arch) {
+        case CPUArch::X86_64:
+            return "x86_64";
+        case CPUArch::PPC64:
+            return "PPC64";
+        case CPUArch::ARM:
+            return "ARM";
+        default:
+            return "Unknown";
+        }
+    }();
+
+    const std::string_view compiler_name_str = [] {
+        switch (compiler) {
+        case Compiler::GCC:
+            return "GCC";
+        case Compiler::Clang:
+            return "Clang";
+        case Compiler::MSVC:
+            return "MSVC";
+        case Compiler::NVCC:
+            return "NVCC";
+        case Compiler::NVHPC:
+            return "NVHPC";
+        default:
+            return "Unknown";
+        }
+    }();
+
+    const auto compiler_version_str = getCompilerVersion<compiler>();
+
+    return pybind11::dict("cpu.arch"_a = cpu_arch_str,
+                          "compiler.name"_a = compiler_name_str,
+                          "compiler.version"_a = compiler_version_str,
+                          "AVX2"_a = use_avx2, "AVX512F"_a = use_avx512f);
+}
+
+/**
+ * @brief Return basic information of runtime environment
+ */
+auto getRuntimeInfo() -> pybind11::dict {
+    using namespace Util::Constant;
+    using namespace pybind11::literals;
+
+    return pybind11::dict("AVX"_a = RuntimeInfo::AVX(),
+                          "AVX2"_a = RuntimeInfo::AVX2(),
+                          "AVX512F"_a = RuntimeInfo::AVX512F());
 }
 } // namespace Pennylane

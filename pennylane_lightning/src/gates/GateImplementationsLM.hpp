@@ -235,6 +235,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void applyMatrix(std::complex<PrecisionT> *arr, size_t num_qubits,
                             const std::complex<PrecisionT> *matrix,
                             const std::vector<size_t> &wires, bool inverse) {
+        using Util::Trans;
         assert(num_qubits >= wires.size());
 
         switch (wires.size()) {
@@ -257,8 +258,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                     size_t idx = k | inner_idx;
                     size_t n_wires = wires.size();
                     for (size_t pos = 0; pos < n_wires; pos++) {
-                        bitswap(idx, n_wires - pos - 1,
-                                num_qubits - wires[pos] - 1);
+                        idx = bitswap(idx, n_wires - pos - 1,
+                                      num_qubits - wires[pos] - 1);
                     }
                     indices[inner_idx] = idx;
                     coeffs_in[inner_idx] = arr[idx];
