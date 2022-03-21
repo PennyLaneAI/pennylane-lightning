@@ -245,7 +245,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             applyTwoQubitOp(arr, num_qubits, matrix, wires, inverse);
             break;
         default: {
-            size_t dim = size_t{ 1U } << wires.size();
+            size_t dim = size_t{1U} << wires.size();
             std::vector<size_t> indices;
             indices.resize(dim);
 
@@ -1188,7 +1188,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         }
 
         for (size_t k = 0; k < Util::exp2(num_qubits); k++) {
-            arr[k] *= static_cast<PrecisionT>( 2 * int(Util::popcount(k & wires_parity) % 2) - 1 );
+            arr[k] *= static_cast<PrecisionT>(
+                2 * int(Util::popcount(k & wires_parity) % 2) - 1);
         }
         // NOLINTNEXTLINE(readability-magic-numbers)
         return static_cast<PrecisionT>(0.5);

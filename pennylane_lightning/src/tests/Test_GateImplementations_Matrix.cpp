@@ -6,7 +6,7 @@
 #include <catch2/catch.hpp>
 
 #if defined(_MSC_VER)
-#pragma warning( disable : 4305)
+#pragma warning(disable : 4305)
 #endif
 
 using namespace Pennylane;
@@ -791,7 +791,7 @@ template <typename PrecisionT, class GateImplementation>
 void testApplyMatrixInverse() {
     std::mt19937 re{1337};
     const int num_qubits = 4;
-    const auto margin = PrecisionT{ 1e-5 };
+    const auto margin = PrecisionT{1e-5};
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", wires = {0} - "

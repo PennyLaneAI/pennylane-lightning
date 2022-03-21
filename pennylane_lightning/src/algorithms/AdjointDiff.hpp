@@ -370,8 +370,8 @@ template <class T = double> class AdjointJacobian {
                 if (current_param_idx == *tp_it) {
                     const T scalingFactor =
                         applyGenerator(mu, ops_name[op_idx],
-                                        ops.getOpsWires()[op_idx],
-                                        !ops.getOpsInverses()[op_idx]) *
+                                       ops.getOpsWires()[op_idx],
+                                       !ops.getOpsInverses()[op_idx]) *
                         (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
                     const size_t mat_row_idx =
@@ -388,12 +388,12 @@ template <class T = double> class AdjointJacobian {
 
                     // clang-format on
                     for (size_t obs_idx = 0; obs_idx < num_observables;
-                            obs_idx++) {
+                         obs_idx++) {
                         jac[mat_row_idx + obs_idx] =
                             -2 * scalingFactor *
-                            std::imag(innerProdC(
-                                H_lambda[obs_idx].getDataVector(),
-                                mu.getDataVector()));
+                            std::imag(
+                                innerProdC(H_lambda[obs_idx].getDataVector(),
+                                           mu.getDataVector()));
                     }
                     trainableParamNumber--;
                     ++tp_it;

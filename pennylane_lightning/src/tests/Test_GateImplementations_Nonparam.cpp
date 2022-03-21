@@ -77,7 +77,8 @@ void testApplyPauliX() {
 
         GateImplementation::applyPauliX(st.data(), num_qubits, {index}, false);
         CHECK(st[0] == Util::ZERO<PrecisionT>());
-        CHECK(st[size_t{ 1U } << (num_qubits - index - 1)] == Util::ONE<PrecisionT>());
+        CHECK(st[size_t{1U} << (num_qubits - index - 1)] ==
+              Util::ONE<PrecisionT>());
     }
 }
 PENNYLANE_RUN_TEST(PauliX);

@@ -13,7 +13,7 @@
 #include <vector>
 
 #if defined(_MSC_VER)
-#pragma warning( disable : 4305)
+#pragma warning(disable : 4305)
 #endif
 
 /**
@@ -75,9 +75,9 @@ void testApplyPhaseShift() {
     const size_t num_qubits = 3;
 
     // Test using |+++> state
-    const auto isqrt2 = PrecisionT{ Util::INVSQRT2<PrecisionT>() };
+    const auto isqrt2 = PrecisionT{Util::INVSQRT2<PrecisionT>()};
     const std::vector<PrecisionT> angles{0.3, 0.8, 2.4};
-    const ComplexPrecisionT coef{isqrt2/2.0, 0.0};
+    const ComplexPrecisionT coef{isqrt2 / PrecisionT{2.0}, PrecisionT{0.0}};
 
     std::vector<std::vector<ComplexPrecisionT>> ps_data;
     ps_data.reserve(angles.size());
@@ -188,10 +188,10 @@ void testApplyRZ() {
     const size_t num_qubits = 3;
 
     // Test using |+++> state
-    const auto isqrt2 = PrecisionT{ Util::INVSQRT2<PrecisionT>() };
+    const auto isqrt2 = PrecisionT{Util::INVSQRT2<PrecisionT>()};
 
     const std::vector<PrecisionT> angles{0.2, 0.7, 2.9};
-    const ComplexPrecisionT coef{ isqrt2 / 2.0, 0.0 };
+    const ComplexPrecisionT coef{isqrt2 / PrecisionT{2.0}, PrecisionT{0.0}};
 
     std::vector<std::vector<ComplexPrecisionT>> rz_data;
     rz_data.reserve(angles.size());
@@ -250,7 +250,7 @@ void testApplyRot() {
         const auto rot_mat =
             Gates::getRot<PrecisionT>(angles[i][0], angles[i][1], angles[i][2]);
         expected_results[i][0] = rot_mat[0];
-        expected_results[i][size_t{ 1U } << (num_qubits - i - 1)] = rot_mat[2];
+        expected_results[i][size_t{1U} << (num_qubits - i - 1)] = rot_mat[2];
     }
 
     for (size_t index = 0; index < num_qubits; index++) {
@@ -715,10 +715,10 @@ void testApplyControlledPhaseShift() {
     // Test using |+++> state
     auto ini_st = createPlusState<PrecisionT>(num_qubits);
 
-    const PrecisionT isqrt2 = Util::INVSQRT2<PrecisionT>();
+    const auto isqrt2 = Util::INVSQRT2<PrecisionT>();
 
     const std::vector<PrecisionT> angles{0.3, 2.4};
-    const ComplexPrecisionT coef{isqrt2 / 2.0, 0.0 };
+    const ComplexPrecisionT coef{isqrt2 / PrecisionT{2.0}, PrecisionT{0.0}};
 
     std::vector<std::vector<ComplexPrecisionT>> ps_data;
     ps_data.reserve(angles.size());
@@ -1223,9 +1223,8 @@ PENNYLANE_RUN_TEST(CRZ);
 template <typename PrecisionT, typename ParamT, class GateImplementation>
 void testApplyCRot() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
-    
-    const std::vector<PrecisionT> angles{0.3, 0.8, 2.4};
 
+    const std::vector<PrecisionT> angles{0.3, 0.8, 2.4};
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CRot0,1 |000> -> |000> - "

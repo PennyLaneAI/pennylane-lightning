@@ -169,7 +169,8 @@ void scaleVector(std::vector<std::complex<Data_t>> &data, Data_t scalar) {
 template <typename PrecisionT>
 auto createZeroState(size_t num_qubits)
     -> std::vector<std::complex<PrecisionT>> {
-    std::vector<std::complex<PrecisionT>> res(size_t{ 1U } << num_qubits, { 0.0, 0.0 });
+    std::vector<std::complex<PrecisionT>> res(size_t{1U} << num_qubits,
+                                              {0.0, 0.0});
     res[0] = std::complex<PrecisionT>{1.0, 0.0};
     return res;
 }
@@ -180,7 +181,8 @@ auto createZeroState(size_t num_qubits)
 template <typename PrecisionT>
 auto createPlusState(size_t num_qubits)
     -> std::vector<std::complex<PrecisionT>> {
-    std::vector<std::complex<PrecisionT>> res(size_t{ 1U } << num_qubits, { 1.0, 0.0 });
+    std::vector<std::complex<PrecisionT>> res(size_t{1U} << num_qubits,
+                                              {1.0, 0.0});
     for (auto &elt : res) {
         elt /= std::sqrt(1U << num_qubits);
     }
@@ -205,7 +207,8 @@ auto squaredNorm(const std::complex<PrecisionT> *data, size_t data_size)
 template <typename PrecisionT, class RandomEngine>
 auto createRandomState(RandomEngine &re, size_t num_qubits)
     -> std::vector<std::complex<PrecisionT>> {
-    std::vector<std::complex<PrecisionT>> res(size_t{ 1U } << num_qubits, { 0.0, 0.0 });
+    std::vector<std::complex<PrecisionT>> res(size_t{1U} << num_qubits,
+                                              {0.0, 0.0});
     std::uniform_real_distribution<PrecisionT> dist;
     for (size_t idx = 0; idx < (size_t{1U} << num_qubits); idx++) {
         res[idx] = {dist(re), dist(re)};
@@ -224,7 +227,7 @@ auto createRandomState(RandomEngine &re, size_t num_qubits)
 template <typename PrecisionT> auto createProductState(std::string_view str) {
     using Pennylane::Util::INVSQRT2;
     std::vector<std::complex<PrecisionT>> st;
-    st.resize(size_t{ 1U } << str.length());
+    st.resize(size_t{1U} << str.length());
 
     std::vector<PrecisionT> zero{1.0, 0.0};
     std::vector<PrecisionT> one{0.0, 1.0};
@@ -234,7 +237,7 @@ template <typename PrecisionT> auto createProductState(std::string_view str) {
     std::vector<PrecisionT> minus{INVSQRT2<PrecisionT>(),
                                   -INVSQRT2<PrecisionT>()};
 
-    for (size_t k = 0; k < (size_t{ 1U } << str.length()); k++) {
+    for (size_t k = 0; k < (size_t{1U} << str.length()); k++) {
         PrecisionT elt = 1.0;
         for (size_t n = 0; n < str.length(); n++) {
             char c = str[n];
@@ -286,9 +289,9 @@ auto createParams(Gates::GateOperation op) -> std::vector<PrecisionT> {
     case 0:
         return {};
     case 1:
-        return { PrecisionT{0.312} };
+        return {PrecisionT{0.312}};
     case 3:
-        return { PrecisionT{0.128}, PrecisionT{-0.563}, PrecisionT{1.414} };
+        return {PrecisionT{0.128}, PrecisionT{-0.563}, PrecisionT{1.414}};
     default:
         PL_ABORT("The number of parameters for a given gate is unknown.");
     }
@@ -303,7 +306,7 @@ template <typename PrecisionT, class RandomEngine>
 auto randomUnitary(RandomEngine &re, size_t num_qubits)
     -> std::vector<std::complex<PrecisionT>> {
     using ComplexPrecisionT = std::complex<PrecisionT>;
-    const size_t dim = (size_t{ 1U } << num_qubits);
+    const size_t dim = (size_t{1U} << num_qubits);
     std::vector<ComplexPrecisionT> res(dim * dim, ComplexPrecisionT{});
 
     std::normal_distribution<PrecisionT> dist;

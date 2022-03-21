@@ -25,7 +25,7 @@ TEST_CASE("generateBitPatterns", "[IndicesUtil]") {
     }
     SECTION("Qubit indices {i}") {
         for (size_t i = 0; i < num_qubits; i++) {
-            std::vector<size_t> expected{ 0, size_t{1U} << (num_qubits - i - 1) };
+            std::vector<size_t> expected{0, size_t{1U} << (num_qubits - i - 1)};
             auto bit_pattern = generateBitPatterns({i}, num_qubits);
             CHECK(bit_pattern == expected);
         }

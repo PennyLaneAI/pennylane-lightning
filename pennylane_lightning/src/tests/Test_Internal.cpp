@@ -6,7 +6,7 @@
 #include <random>
 
 #if defined(_MSC_VER)
-#pragma warning( disable : 4305)
+#pragma warning(disable : 4305)
 #endif
 
 /**
@@ -20,7 +20,7 @@ TEMPLATE_TEST_CASE("Approx", "[Test_Internal]", float, double) {
     using PrecisionT = TestType;
     using ComplexPrecisionT = std::complex<PrecisionT>;
 
-    const auto margin = PrecisionT{ 0.00015 };
+    const auto margin = PrecisionT{0.00015};
 
     SECTION("vector{1.0, 1.0*I} approx vector{1.0001, 0.9999*I} with margin "
             "0.00015") {
@@ -72,7 +72,7 @@ TEMPLATE_TEST_CASE("createProductState", "[Test_Internal]", float, double) {
         GateImplementationsPI::applyPauliX(expected.data(), 3, {1}, false);
         GateImplementationsPI::applyHadamard(expected.data(), 3, {1}, false);
 
-        REQUIRE(st == PLApprox(expected).margin(PrecisionT{ 1e-7 }));
+        REQUIRE(st == PLApprox(expected).margin(PrecisionT{1e-7}));
     }
     SECTION("createProductState(\"+-0\") == |+-1> ") {
         const auto st = createProductState<PrecisionT>("+-0");
@@ -85,7 +85,7 @@ TEMPLATE_TEST_CASE("createProductState", "[Test_Internal]", float, double) {
 
         GateImplementationsPI::applyPauliX(expected.data(), 3, {2}, false);
 
-        REQUIRE(st != PLApprox(expected).margin(PrecisionT{ 1e-7 }));
+        REQUIRE(st != PLApprox(expected).margin(PrecisionT{1e-7}));
     }
 }
 
@@ -98,7 +98,7 @@ TEMPLATE_TEST_CASE("randomUnitary", "[Test_Internal]", float, double) {
     std::mt19937 re{1337};
 
     for (size_t num_qubits = 1; num_qubits <= 5; num_qubits++) {
-        const size_t dim = (size_t{ 1U } << num_qubits);
+        const size_t dim = (size_t{1U} << num_qubits);
         const auto unitary = randomUnitary<PrecisionT>(re, num_qubits);
 
         std::vector<std::complex<PrecisionT>> unitary_dagger =
@@ -118,6 +118,6 @@ TEMPLATE_TEST_CASE("randomUnitary", "[Test_Internal]", float, double) {
             identity[i * dim + i] = std::complex<PrecisionT>{1.0, 0.0};
         }
 
-        REQUIRE(mat == PLApprox(identity).margin(PrecisionT{ 1e-5 }));
+        REQUIRE(mat == PLApprox(identity).margin(PrecisionT{1e-5}));
     }
 }
