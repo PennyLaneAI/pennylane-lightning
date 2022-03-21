@@ -114,26 +114,6 @@ BENCHMARK_CAPTURE(serializeOps, ops_all, {"PauliX",     "PauliY",
                                           "CRZ",        "CRot",
                                           "Toffoli",    "CSWAP"});
 
-/**
- * @brief Generate neighboring wires from a start index
- *
- * @param start_idx Start index.
- * @param num_qubits Number of qubits.
- * @param num_wires Number of wires to be considered.
- *
- * @return std::vector<size_t>
- */
-static inline auto generateNeighboringWires(size_t start_idx, size_t num_qubits,
-                                            size_t num_wires)
-    -> std::vector<size_t> {
-    std::vector<size_t> v;
-    v.reserve(num_wires);
-    for (size_t k = 0; k < num_wires; k++) {
-        v.emplace_back((start_idx + k) % num_qubits);
-    }
-    return v;
-}
-
 //***********************************************************************//
 //                            applyOperation
 //***********************************************************************//

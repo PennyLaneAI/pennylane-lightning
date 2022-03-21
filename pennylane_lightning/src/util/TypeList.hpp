@@ -39,7 +39,7 @@ template <typename... Ts> using TypeList = TypeNode<Ts...>;
 template <typename TypeList, size_t n> struct getNthType {
     static_assert(!std::is_same_v<typename TypeList::Next, void>,
                   "The given n is larger than the length of the typelist.");
-    using Type = getNthType<typename TypeList::Next, n - 1>;
+    using Type = typename getNthType<typename TypeList::Next, n - 1>::Type;
 };
 
 template <typename TypeList> struct getNthType<TypeList, 0> {

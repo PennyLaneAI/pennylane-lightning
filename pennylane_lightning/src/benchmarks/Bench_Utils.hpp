@@ -15,6 +15,8 @@
 
 #include <benchmark/benchmark.h>
 
+#include <string>
+
 /**
  * @brief A benchmark macro to register func<t>(...)
  * using benchmark::internal::FunctionBenchmark.
@@ -26,3 +28,52 @@
                 #func "<" #t ">"                                               \
                       "/" #test_case_name,                                     \
                 [](benchmark::State &st) { func<t>(st, __VA_ARGS__); })))
+template <typename T> struct PrecisionToStr;
+
+template <> struct PrecisionToStr<float> {
+    constexpr static std::string_view value = "float";
+};
+
+template <> struct PrecisionToStr<double> {
+    constexpr static std::string_view value = "double";
+};
+
+template <typename T>
+constexpr static auto precision_to_str = PrecisionToStr<T>::value;
+
+/**
+ * @brief Generate neighboring wires from a start index
+ *
+ * @param start_idx Start index.
+ * @param num_qubits Number of qubits.
+ * @param num_wires Number of wires to be considered.
+ *
+ * @return std::vector<size_t>
+ */
+inline auto generateNeighboringWires(size_t start_idx, size_t num_qubits,
+                                     size_t num_wires) -> std::vector<size_t> {
+    std::vector<size_t> v;
+    v.reserve(num_wires);
+    for (size_t k = 0; k < num_wires; k++) {
+        v.emplace_back((start_idx + k) % num_qubits);
+    }
+    return v;
+}
+
+/**
+ * @brief Generate distinct wires.
+ *
+ * @tparam RandomEngine Random number generator engine.
+ * @param num_qubits Number of qubits.
+ * @param num_wires Number of wires.
+ *
+ * @return std::vector<size_t>
+ */
+template <typename RandomEngine>
+inline auto generateDistinctWires(RandomEngine &eng, size_t num_qubits,
+                                  size_t num_wires) -> std::vector<size_t> {
+    std::vector<size_t> v(num_qubits, 0);
+    std::iota(v.begin(), v.end(), 0);
+    shuffle(v.begin(), v.end(), eng);
+    return {v.begin(), v.begin() + num_wires};
+}

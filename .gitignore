@@ -4,6 +4,7 @@ PennyLane_Lightning.egg-info/
 build/
 Build/
 BuildBench/
+BuildGBench/
 BuildTests/
 dist/
 tests/__pycache__/

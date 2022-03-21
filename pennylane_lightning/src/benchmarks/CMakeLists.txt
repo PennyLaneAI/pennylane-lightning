@@ -46,8 +46,8 @@ endif()
 
 add_library(lightning_benchmarks_dependency INTERFACE)
 target_link_libraries(lightning_benchmarks_dependency INTERFACE lightning_utils
-                                                    lightning_external_libs
-                                                    benchmark::benchmark_main)
+                                                                lightning_external_libs
+                                                                benchmark::benchmark)
 
 ################################################################################
 # Add benchmark_utils exe
@@ -58,9 +58,9 @@ set(GBENCH_SRC  Bench_BitUtil.cpp
 
 add_executable(utils ${GBENCH_SRC})
 
-add_compile_definitions(utils INTERFACE _ENABLE_BLAS=1)
-
-target_link_libraries(utils PRIVATE lightning_benchmarks_dependency)
+add_compile_definitions(utils INTERFACE lightning_compile_options)
+target_link_libraries(utils PRIVATE lightning_benchmarks_dependency
+                                    benchmark::benchmark_main)
 
 ################################################################################
 # Add benchmark_apply_operations exe
@@ -68,18 +68,19 @@ target_link_libraries(utils PRIVATE lightning_benchmarks_dependency)
 
 add_executable(apply_operations Bench_ApplyOperations.cpp)
 
-target_link_libraries(apply_operations PRIVATE lightning_compile_options
-                                            lightning_gates
-                                            lightning_simulator
-                                            lightning_benchmarks_dependency)
+add_compile_definitions(apply_operations INTERFACE lightning_compile_options)
+target_link_libraries(apply_operations PRIVATE lightning_gates
+                                               lightning_simulator
+                                               lightning_benchmarks_dependency
+                                               benchmark::benchmark_main)
 
 ################################################################################
-# Add benchmark_apply_multirz exe
+# Add apply_all_gates exe
 ################################################################################
 
-add_executable(apply_multirz Bench_ApplyMultiRZ.cpp)
-
-target_link_libraries(apply_multirz PRIVATE lightning_compile_options
-                                            lightning_gates
-                                            lightning_simulator
-                                            lightning_benchmarks_dependency)
+add_executable(apply_all_gates Bench_AllGates.cpp)
+add_compile_definitions(apply_all_gates INTERFACE lightning_compile_options)
+target_link_libraries(apply_all_gates PRIVATE lightning_compile_options
+                                              lightning_gates
+                                              lightning_simulator
+                                              lightning_benchmarks_dependency)
