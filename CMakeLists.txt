@@ -44,6 +44,7 @@ endif()
 option(ENABLE_CLANG_TIDY "Enable clang-tidy build checks" OFF)
 
 # Compile options
+option(ENABLE_COVERAGE "Enable code coverage" OFF)
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_AVX "Enable AVX support" OFF)
