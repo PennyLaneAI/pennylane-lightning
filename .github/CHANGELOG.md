@@ -25,6 +25,9 @@
 * Update tests to remove `JacobianTape`.
 [(#260)](https://github.com/PennyLaneAI/pennylane-lightning/pull/260)
 
+* Fix tests for MSVC.
+[(#264)](https://github.com/PennyLaneAI/pennylane-lightning/pull/264)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):

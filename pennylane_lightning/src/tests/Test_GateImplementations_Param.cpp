@@ -1248,8 +1248,8 @@ void testApplyCRot() {
         std::vector<ComplexPrecisionT> expected_results(8);
         const auto rot_mat =
             Gates::getRot<PrecisionT>(angles[0], angles[1], angles[2]);
-        expected_results[0b1 << (num_qubits - 1)] = rot_mat[0];
-        expected_results[(0b1 << num_qubits) - 2] = rot_mat[2];
+        expected_results[size_t{1U} << (num_qubits - 1)] = rot_mat[0];
+        expected_results[(size_t{1U} << num_qubits) - 2] = rot_mat[2];
 
         GateImplementation::applyPauliX(st.data(), num_qubits, {0}, false);
 
