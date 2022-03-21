@@ -324,7 +324,7 @@ class Measures {
         // Pick samples
         for (size_t i = 0; i < num_samples; i++) {
             fp_t pct = distribution(generator) * N;
-            size_t idx = pct;
+            size_t idx = static_cast<size_t>(pct);
             if (pct - idx > bucket[idx]) {
                 idx = bucket_partner[idx];
             }

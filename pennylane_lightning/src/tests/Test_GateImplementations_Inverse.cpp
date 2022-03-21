@@ -44,7 +44,7 @@ void testInverseKernelGate(RandomEngine &re, size_t num_qubits) {
             callGateOps(func_ptr, st.data(), num_qubits, wires, false, params);
             callGateOps(func_ptr, st.data(), num_qubits, wires, true, params);
 
-            REQUIRE(st == PLApprox(ini_st).margin(1e-7));
+            REQUIRE(st == PLApprox(ini_st).margin(PrecisionT{ 1e-7 }));
         }
     } else {
         static_cast<void>(re);

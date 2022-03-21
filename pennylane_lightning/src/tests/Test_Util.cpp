@@ -13,6 +13,10 @@
 
 #include "TestHelpers.hpp"
 
+#if defined(_MSC_VER)
+#pragma warning( disable : 4305)
+#endif
+
 using namespace Pennylane;
 
 /**
@@ -20,9 +24,9 @@ using namespace Pennylane;
  * multiplication.
  */
 TEMPLATE_TEST_CASE("Util::ConstMult", "[Util]", float, double) {
-    constexpr TestType r_val = 0.679;
-    constexpr std::complex<TestType> c0_val{1.321, -0.175};
-    constexpr std::complex<TestType> c1_val{0.579, 1.334};
+    constexpr TestType r_val{ 0.679 };
+    constexpr std::complex<TestType> c0_val{ TestType{1.321}, TestType{ -0.175} };
+    constexpr std::complex<TestType> c1_val{ TestType{0.579}, TestType{1.334} };
 
     SECTION("Real times Complex") {
         constexpr std::complex<TestType> result =
@@ -78,7 +82,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
         for (size_t i = 0; i < 64; i++) {
             std::vector<size_t> data(i);
             TestType rem;
-            std::modf(sqrt(i), &rem);
+            std::modf(sqrt(static_cast<TestType>(i)), &rem);
             if (i < 4) {
                 CHECK_THROWS_AS(Util::dimSize(data), std::invalid_argument);
                 CHECK_THROWS_WITH(Util::dimSize(data),
@@ -100,9 +104,9 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
     SECTION("innerProd") {
         SECTION("Iterative increment") {
             for (size_t i = 0; i < 12; i++) {
-                std::vector<std::complex<TestType>> data1(1UL << i, {1, 1});
-                std::vector<std::complex<TestType>> data2(1UL << i, {1, 1});
-                std::complex<TestType> expected_result(0, 1UL << (i + 1));
+                std::vector<std::complex<TestType>> data1(size_t{ 1U } << i, { 1, 1 });
+                std::vector<std::complex<TestType>> data2(size_t{ 1U } << i, { 1, 1 });
+                std::complex<TestType> expected_result(0, size_t{1U} << (i + 1));
                 std::complex<TestType> result = Util::innerProd(data1, data2);
                 CHECK(isApproxEqual(result, expected_result));
             }
@@ -122,9 +126,9 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
     SECTION("innerProdC") {
         SECTION("Iterative increment") {
             for (size_t i = 0; i < 12; i++) {
-                std::vector<std::complex<TestType>> data1(1UL << i, {1, 1});
-                std::vector<std::complex<TestType>> data2(1UL << i, {1, 1});
-                std::complex<TestType> expected_result(1UL << (i + 1), 0);
+                std::vector<std::complex<TestType>> data1(size_t{ 1U } << i, { 1, 1 });
+                std::vector<std::complex<TestType>> data2(size_t{ 1U } << i, { 1, 1 });
+                std::complex<TestType> expected_result(size_t{ 1U } << (i + 1), 0);
                 std::complex<TestType> result = Util::innerProdC(data1, data2);
                 CAPTURE(result);
                 CAPTURE(expected_result);
@@ -205,9 +209,9 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
     SECTION("vecMatrixProd") {
         SECTION("Simple Iterative") {
             for (size_t m = 2; m < 8; m++) {
-                std::vector<TestType> mat(m * m, 1);
-                std::vector<TestType> v_in(m, 1);
-                std::vector<TestType> v_expected(m, m);
+                std::vector<TestType> mat(m * m, TestType{ 1.0 });
+                std::vector<TestType> v_in(m, TestType{ 1.0 });
+                std::vector<TestType> v_expected(m, static_cast<TestType>(m));
                 std::vector<TestType> v_out =
                     Util::vecMatrixProd(v_in, mat, m, m);
 
@@ -546,7 +550,7 @@ TEST_CASE("Utility bit operations", "[Util][BitUtil]") {
                 uint64_t n = static_cast<uint64_t>(1U)
                              << static_cast<uint64_t>(c);
                 CHECK(Util::Internal::countTrailing0(n) == c);
-                CHECK(Util::Internal::countTrailing0(n | (1UL << 63U)) == c);
+                CHECK(Util::Internal::countTrailing0(n | (uint64_t{1U} << 63U)) == c);
             }
         }
     }

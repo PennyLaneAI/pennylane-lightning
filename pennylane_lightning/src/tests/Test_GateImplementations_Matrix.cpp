@@ -5,6 +5,10 @@
 
 #include <catch2/catch.hpp>
 
+#if defined(_MSC_VER)
+#pragma warning( disable : 4305)
+#endif
+
 using namespace Pennylane;
 
 template <typename PrecisionT>
@@ -787,6 +791,7 @@ template <typename PrecisionT, class GateImplementation>
 void testApplyMatrixInverse() {
     std::mt19937 re{1337};
     const int num_qubits = 4;
+    const auto margin = PrecisionT{ 1e-5 };
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", wires = {0} - "
@@ -802,7 +807,7 @@ void testApplyMatrixInverse() {
                                         wires, false);
         GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
                                         wires, true);
-        REQUIRE(st == PLApprox(ini_st).margin(1e-5));
+        REQUIRE(st == PLApprox(ini_st).margin(margin));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -820,7 +825,7 @@ void testApplyMatrixInverse() {
         GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
                                         wires, true);
 
-        REQUIRE(st == PLApprox(ini_st).margin(1e-5));
+        REQUIRE(st == PLApprox(ini_st).margin(margin));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -838,7 +843,7 @@ void testApplyMatrixInverse() {
         GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
                                         wires, true);
 
-        REQUIRE(st == PLApprox(ini_st).margin(1e-5));
+        REQUIRE(st == PLApprox(ini_st).margin(margin));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -856,7 +861,7 @@ void testApplyMatrixInverse() {
         GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
                                         wires, true);
 
-        REQUIRE(st == PLApprox(ini_st).margin(1e-5));
+        REQUIRE(st == PLApprox(ini_st).margin(margin));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -874,7 +879,7 @@ void testApplyMatrixInverse() {
         GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
                                         wires, true);
 
-        REQUIRE(st == PLApprox(ini_st).margin(1e-5));
+        REQUIRE(st == PLApprox(ini_st).margin(margin));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", wires = {1,2} - "
@@ -890,7 +895,7 @@ void testApplyMatrixInverse() {
         GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
                                         wires, true);
 
-        REQUIRE(st == PLApprox(ini_st).margin(1e-5));
+        REQUIRE(st == PLApprox(ini_st).margin(margin));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", wires = {1,3} - "
@@ -906,7 +911,7 @@ void testApplyMatrixInverse() {
         GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
                                         wires, true);
 
-        REQUIRE(st == PLApprox(ini_st).margin(1e-5));
+        REQUIRE(st == PLApprox(ini_st).margin(margin));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -923,7 +928,7 @@ void testApplyMatrixInverse() {
         GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
                                         wires, true);
 
-        REQUIRE(st == PLApprox(ini_st).margin(1e-5));
+        REQUIRE(st == PLApprox(ini_st).margin(margin));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", wires = {0,1,2,3} - "
@@ -939,7 +944,7 @@ void testApplyMatrixInverse() {
         GateImplementation::applyMatrix(st.data(), num_qubits, matrix.data(),
                                         wires, true);
 
-        REQUIRE(st == PLApprox(ini_st).margin(1e-5));
+        REQUIRE(st == PLApprox(ini_st).margin(margin));
     }
 }
 

@@ -9,6 +9,10 @@
 
 #include <catch2/catch.hpp>
 
+#if defined(_MSC_VER)
+#pragma warning( disable : 4305)
+#endif
+
 using namespace Pennylane;
 
 namespace {
