@@ -26,7 +26,7 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
+            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DENABLE_OPENMP=OFF
             cmake --build ./Build
             mkdir -p ./Build/tests/results
             ./Build/pennylane_lightning/src/tests/runner --order lex --reporter junit --out ./Build/tests/results/report.xml
