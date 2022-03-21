@@ -29,11 +29,11 @@ jobs:
             cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DENABLE_OPENMP=OFF
             cmake --build ./Build
             mkdir -p ./Build/tests/results
-            ./Build/pennylane_lightning/src/tests/runner --order lex --reporter junit --out ./Build/tests/results/report.xml
+            Build\pennylane_lightning\src\tests\runner --order lex --reporter junit --out Build\tests\results\report.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v2
         if: always()
         with:
           name: windows-test-report
-          path: Build/tests/results/report.xml
+          path: Build\tests\results\report.xml
