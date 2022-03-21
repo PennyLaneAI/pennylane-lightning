@@ -15,12 +15,12 @@
 #include "Macros.hpp"
 
 #if defined(__x86_64__)
-#  if defined(__GNUC__) || defined(__clang__)
+#if defined(__GNUC__) || defined(__clang__)
 #include <cpuid.h>
-#  elif defined(_MSC_VER)
+#elif defined(_MSC_VER)
 #include <array>
 #include <intrin.h>
-#  endif
+#endif
 #endif
 
 namespace Pennylane::Util {
