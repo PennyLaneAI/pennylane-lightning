@@ -12,16 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "RuntimeInfo.hpp"
+#include "Macros.hpp"
 
+#if defined(__x86_64__)
 #if defined(__GNUC__) || defined(__clang__)
 #include <cpuid.h>
 #elif defined(_MSC_VER)
 #include <array>
 #include <intrin.h>
 #endif
+#endif
 
 namespace Pennylane::Util {
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))
 RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
     const auto nids = __get_cpuid_max(0x00, nullptr);
     if (nids == 0) {
@@ -45,7 +48,7 @@ RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
         f_7_ecx = ecx;
     }
 }
-#elif defined(_MSC_VER)
+#elif defined(__x86_64__) && defined(_MSC_VER)
 RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
     std::array<int, 4> cpui;
     __cpuid(cpui.data(), 0);

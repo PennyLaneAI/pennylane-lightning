@@ -25,6 +25,9 @@
 * Update tests to remove `JacobianTape`.
 [(#260)](https://github.com/PennyLaneAI/pennylane-lightning/pull/260)
 
+* Fix `#include <cpuid.h>` for PPC and AArch64 in Linux.
+[(#266)](https://github.com/PennyLaneAI/pennylane-lightning/pull/266)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
