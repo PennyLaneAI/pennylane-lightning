@@ -196,8 +196,9 @@ inline auto constexpr fillLeadingOnes(size_t pos) -> size_t {
 /**
  * @brief Swap bits in i-th and j-th position in place
  */
-inline void constexpr bitswap(size_t bits, const size_t i, const size_t j) {
+inline auto constexpr bitswap(size_t bits, const size_t i, const size_t j)
+    -> size_t {
     size_t x = ((bits >> i) ^ (bits >> j)) & 1U;
-    bits ^= ((x << i) | (x << j));
+    return bits ^ ((x << i) | (x << j));
 }
 } // namespace Pennylane::Util

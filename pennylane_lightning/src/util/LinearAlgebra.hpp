@@ -17,9 +17,11 @@
  */
 #pragma once
 
+#include <algorithm>
 #include <complex>
 #include <cstdlib>
 #include <numeric>
+#include <random>
 #include <vector>
 
 #include "Util.hpp"
@@ -48,13 +50,13 @@ using CBLAS_LAYOUT = enum CBLAS_LAYOUT {
 /// @endcond
 //
 
+namespace Pennylane::Util {
 enum class Trans : int {
     NoTranspose = CblasNoTrans,
     Transpose = CblasTrans,
     Adjoint = CblasConjTrans
 };
 
-namespace Pennylane::Util {
 /**
  * @brief Calculates the inner-product using OpenMP.
  *
@@ -210,9 +212,9 @@ inline auto innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
  * @see innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
  * const size_t data_size)
  */
-template <class T>
-inline auto innerProd(const std::vector<std::complex<T>> &v1,
-                      const std::vector<std::complex<T>> &v2)
+template <class T, class AllocA, class AllocB>
+inline auto innerProd(const std::vector<std::complex<T>, AllocA> &v1,
+                      const std::vector<std::complex<T>, AllocB> &v2)
     -> std::complex<T> {
     return innerProd(v1.data(), v2.data(), v1.size());
 }
@@ -224,9 +226,9 @@ inline auto innerProd(const std::vector<std::complex<T>> &v1,
  * @see innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
  * const size_t data_size)
  */
-template <class T>
-inline auto innerProdC(const std::vector<std::complex<T>> &v1,
-                       const std::vector<std::complex<T>> &v2)
+template <class T, class AllocA, class AllocB>
+inline auto innerProdC(const std::vector<std::complex<T>, AllocA> &v1,
+                       const std::vector<std::complex<T>, AllocB> &v2)
     -> std::complex<T> {
     return innerProdC(v1.data(), v2.data(), v1.size());
 }
@@ -461,15 +463,15 @@ inline static void CFTranspose(const std::complex<T> *mat,
  * @param n Number of columns of `mat`.
  * @return mat transpose of shape n * m.
  */
-template <class T>
-inline auto Transpose(const std::vector<std::complex<T>> &mat, size_t m,
-                      size_t n) -> std::vector<std::complex<T>> {
+template <class T, class Alloc>
+inline auto Transpose(const std::vector<std::complex<T>, Alloc> &mat, size_t m,
+                      size_t n) -> std::vector<std::complex<T>, Alloc> {
     if (mat.size() != m * n) {
         throw std::invalid_argument(
             "Invalid number of rows and columns for the input matrix");
     }
 
-    std::vector<std::complex<T>> mat_t(n * m);
+    std::vector<std::complex<T>, Alloc> mat_t(n * m, mat.get_allocator());
     CFTranspose(mat.data(), mat_t.data(), m, n, 0, m, 0, n);
     return mat_t;
 }
@@ -484,15 +486,15 @@ inline auto Transpose(const std::vector<std::complex<T>> &mat, size_t m,
  * @param n Number of columns of `mat`.
  * @return mat transpose of shape n * m.
  */
-template <class T>
-inline auto Transpose(const std::vector<T> &mat, size_t m, size_t n)
-    -> std::vector<T> {
+template <class T, class Alloc>
+inline auto Transpose(const std::vector<T, Alloc> &mat, size_t m, size_t n)
+    -> std::vector<T, Alloc> {
     if (mat.size() != m * n) {
         throw std::invalid_argument(
             "Invalid number of rows and columns for the input matrix");
     }
 
-    std::vector<T> mat_t(n * m);
+    std::vector<T, Alloc> mat_t(n * m, mat.get_allocator());
     CFTranspose(mat.data(), mat_t.data(), m, n, 0, m, 0, n);
     return mat_t;
 }
@@ -548,9 +550,10 @@ inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, size_t m,
  * @see inline void vecMatrixProd(const T *v_in,
  * const T *mat, T *v_out, size_t m, size_t n)
  */
-template <class T>
-inline auto vecMatrixProd(const std::vector<T> &v_in, const std::vector<T> &mat,
-                          size_t m, size_t n) -> std::vector<T> {
+template <class T, class Alloc>
+inline auto vecMatrixProd(const std::vector<T, Alloc> &v_in,
+                          const std::vector<T, Alloc> &mat, size_t m, size_t n)
+    -> std::vector<T, Alloc> {
     if (v_in.size() != m) {
         throw std::invalid_argument("Invalid size for the input vector");
     }
@@ -559,7 +562,7 @@ inline auto vecMatrixProd(const std::vector<T> &v_in, const std::vector<T> &mat,
             "Invalid number of rows and columns for the input matrix");
     }
 
-    std::vector<T> v_out(n);
+    std::vector<T, Alloc> v_out(n, mat.get_allocator());
     vecMatrixProd(v_in.data(), mat.data(), v_out.data(), m, n);
 
     return v_out;
@@ -744,5 +747,99 @@ inline auto matrixMatProd(const std::vector<std::complex<T>> m_left,
                   transpose);
 
     return m_out;
+}
+
+/**
+ * @brief @rst
+ * Compute the squared norm of a real/complex vector :math:`\sum_k |v_k|^2`
+ * @endrst
+ *
+ * @param data Data pointer
+ * @param data_size Size of the data
+ */
+template <class T>
+auto squaredNorm(const T *data, size_t data_size) -> remove_complex_t<T> {
+    if constexpr (is_complex_v<T>) {
+        // complex type
+        using PrecisionT = remove_complex_t<T>;
+        return std::transform_reduce(
+            data, data + data_size, PrecisionT{}, std::plus<PrecisionT>(),
+            static_cast<PrecisionT (*)(const std::complex<PrecisionT> &)>(
+                &std::norm<PrecisionT>));
+    } else {
+        using PrecisionT = T;
+        return std::transform_reduce(
+            data, data + data_size, PrecisionT{}, std::plus<PrecisionT>(),
+            static_cast<PrecisionT (*)(PrecisionT)>(std::norm));
+    }
+}
+
+/**
+ * @brief @rst
+ * Compute the squared norm of a real/complex vector :math:`\sum_k |v_k|^2`
+ * @endrst
+ *
+ * @param vec std::vector containing data
+ */
+template <class T, class Alloc>
+auto squaredNorm(const std::vector<T, Alloc> &vec) -> remove_complex_t<T> {
+    return squaredNorm(vec.data(), vec.size());
+}
+
+/**
+ * @brief Generate random unitary matrix
+ *
+ * @tparam PrecisionT Floating point type
+ * @tparam RandomEngine Random engine type
+ * @param re Random engine instance
+ * @param num_qubits Number of qubits
+ * @return Generated unitary matrix in row-major format
+ */
+template <typename PrecisionT, class RandomEngine>
+auto randomUnitary(RandomEngine &re, size_t num_qubits)
+    -> std::vector<std::complex<PrecisionT>> {
+    using ComplexPrecisionT = std::complex<PrecisionT>;
+    const size_t dim = (1U << num_qubits);
+    std::vector<ComplexPrecisionT> res(dim * dim, ComplexPrecisionT{});
+
+    std::normal_distribution<PrecisionT> dist;
+
+    auto generator = [&dist, &re]() -> ComplexPrecisionT {
+        return ComplexPrecisionT{dist(re), dist(re)};
+    };
+
+    std::generate(res.begin(), res.end(), generator);
+
+    // Simple algorithm to make rows orthogonal with Gram-Schmidt
+    // This algorithm is unstable but works for a small matrix.
+    // Use QR decomposition when we have LAPACK support.
+
+    for (size_t row2 = 0; row2 < dim; row2++) {
+        ComplexPrecisionT *row2_p = res.data() + row2 * dim;
+        for (size_t row1 = 0; row1 < row2; row1++) {
+            const ComplexPrecisionT *row1_p = res.data() + row1 * dim;
+            ComplexPrecisionT dot12 = Util::innerProdC(row1_p, row2_p, dim);
+            ComplexPrecisionT dot11 = squaredNorm(row1_p, dim);
+
+            // orthogonalize row2
+            std::transform(
+                row2_p, row2_p + dim, row1_p, row2_p,
+                [scale = dot12 / dot11](auto &elt2, const auto &elt1) {
+                    return elt2 - scale * elt1;
+                });
+        }
+    }
+
+    // Normalize each row
+    for (size_t row = 0; row < dim; row++) {
+        ComplexPrecisionT *row_p = res.data() + row * dim;
+        PrecisionT norm2 = std::sqrt(squaredNorm(row_p, dim));
+
+        // normalize row2
+        std::transform(row_p, row_p + dim, row_p, [norm2](const auto c) {
+            return (static_cast<PrecisionT>(1.0) / norm2) * c;
+        });
+    }
+    return res;
 }
 } // namespace Pennylane::Util
