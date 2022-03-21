@@ -43,5 +43,5 @@ TEMPLATE_TEST_CASE("StateVectorRaw::setData", "[StateVectorRaw]", float,
 
     REQUIRE(sv.getNumQubits() == 8);
     REQUIRE(sv.getData() == st_data2.data());
-    REQUIRE(sv.getLength() == (1U << 8));
+    REQUIRE(sv.getLength() == (1U << 8U));
 }

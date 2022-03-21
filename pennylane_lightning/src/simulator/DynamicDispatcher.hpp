@@ -53,6 +53,7 @@ template <class PrecisionT, class ParamT> int registerAllAvailableKernels();
 /// @endcond
 
 namespace Pennylane {
+/// @cond DEV
 /**
  * @brief These functions are only used to register kernels to the dynamic
  * dispatcher.
@@ -60,14 +61,15 @@ namespace Pennylane {
 template <class PrecisionT, class ParamT> struct registerBeforeMain;
 
 template <> struct registerBeforeMain<float, float> {
-    static inline int dummy =
+    const static inline int dummy =
         Internal::registerAllAvailableKernels<float, float>();
 };
 
 template <> struct registerBeforeMain<double, double> {
-    static inline int dummy =
+    const static inline int dummy =
         Internal::registerAllAvailableKernels<double, double>();
 };
+/// @endcond
 
 /**
  * @brief DynamicDispatcher class
