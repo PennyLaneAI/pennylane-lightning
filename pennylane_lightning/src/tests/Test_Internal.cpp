@@ -163,6 +163,5 @@ TEST_CASE("createAllWires", "[Test_Internal]") {
                 REQUIRE(v[i] != v[i + 1]); // all permutations must be different
             }
         }
-        REQUIRE(mat == approx(identity).margin(PrecisionT{1e-5}));
     }
 }
