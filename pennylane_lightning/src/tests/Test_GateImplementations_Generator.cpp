@@ -74,7 +74,7 @@ void testGeneratorForGate(RandomEngine &re, size_t num_qubits, bool inverse) {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     constexpr auto I = Util::IMAG<PrecisionT>();
 
-    constexpr auto eps = PrecisionT{1e-4}; // For finite difference
+    constexpr auto eps = PrecisionT{1e-3}; // For finite difference
 
     constexpr auto gate_op = Util::static_lookup<gntr_op>(generator_gate_pairs);
     constexpr auto gate_name =
@@ -118,7 +118,7 @@ void testGeneratorForGate(RandomEngine &re, size_t num_qubits, bool inverse) {
 
         scaleVector(gate_der_st, static_cast<PrecisionT>(0.5) / eps);
 
-        REQUIRE(gntr_st == approx(gate_der_st).margin(PrecisionT{1e-4}));
+        REQUIRE(gntr_st == approx(gate_der_st).margin(PrecisionT{1e-3}));
     }
 }
 template <typename PrecisionT, typename ParamT, class GateImplementation,

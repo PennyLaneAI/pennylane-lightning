@@ -28,7 +28,7 @@ TEMPLATE_TEST_CASE("StateVectorManaged::StateVectorManaged", "[StateVectorRaw]",
         REQUIRE(!std::is_constructible_v<StateVectorManaged<TestType>>);
     }
     SECTION("StateVectorManaged<TestType> {size_t}") {
-        REQUIRE(std::is_constructible_v<StateVectorManaged<TestType>>);
+        REQUIRE(std::is_constructible_v<StateVectorManaged<TestType>, size_t>);
         const size_t num_qubits = 4;
         StateVectorManaged<fp_t> sv(num_qubits);
 
