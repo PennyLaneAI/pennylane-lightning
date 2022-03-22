@@ -91,13 +91,6 @@ test-cpp-omp:
 	cmake --build ./BuildTests --target runner
 	cmake --build ./BuildTests --target test
 
-.PHONY: benchmark
-benchmark:
-	cmake --build BuildBench --target clean || true
-	rm -rf ./BuildBench/CMakeCache.txt ./BuildBench/compiler_info.txt ./BuildBench/run_gate_benchmark.sh
-	cmake $(LIGHTNING_CPP_DIR) -BBuildBench -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_AVX=ON
-	cmake --build ./BuildBench
-
 .PHONY: format format-cpp format-python
 format: format-cpp format-python
 
@@ -125,4 +118,4 @@ check-tidy:
 gbenchmark:
 	rm -rf ./BuildGBench
 	cmake $(LIGHTNING_CPP_DIR) -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_OPENMP=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release
-	cmake --build ./BuildGBench --target utils apply_operations apply_multirz
+	cmake --build ./BuildGBench --target utils apply_operations bench_all_gates bench_all_generators

@@ -102,7 +102,7 @@ static void applyOperation_GateOp(benchmark::State &state, Kernel kernel,
     }
 }
 
-template <class T, class GateImplementation> void registerNonMultiQubitGates() {
+template <class T, class GateImplementation> void registerAllGates() {
     for (const auto gate_op : GateImplementation::implemented_gates) {
         const auto gate_name =
             std::string(Util::lookup(Gates::Constant::gate_names, gate_op));
@@ -130,8 +130,8 @@ template <class T, class GateImplementation> void registerNonMultiQubitGates() {
 
 template <typename TypeList, std::size_t... Is>
 void registerBenchmarkForAllKernelsHelper(std::index_sequence<Is...>) {
-    (registerNonMultiQubitGates<float, Util::getNthType<TypeList, Is>>(), ...);
-    (registerNonMultiQubitGates<double, Util::getNthType<TypeList, Is>>(), ...);
+    (registerAllGates<float, Util::getNthType<TypeList, Is>>(), ...);
+    (registerAllGates<double, Util::getNthType<TypeList, Is>>(), ...);
 }
 
 void registerBenchmarkForAllKernels() {
