@@ -204,10 +204,9 @@ class LightningQubit(DefaultQubit):
             raise TypeError(f"Unsupported complex Type: {dtype}")
 
         skipped_ops = ["Identity"]
-        ops_iter = operations if isinstance(operations, Iterable) else [operations]
-        ops_generator = (o for o in ops_iter if o not in skipped_ops)
-
-        for o in ops_generator:
+        for o in operations:
+            if op in skipped_ops:
+                continue
             name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
             if _is_lightning_gate(name):
                 kernel = self._kernel_for_ops[name]
