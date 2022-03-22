@@ -1,4 +1,4 @@
-name: Testing on Windows
+name: Testing (Windows)
 on:
   push:
     branches:
