@@ -243,7 +243,7 @@ auto createProductState(std::string_view str)
     std::vector<PrecisionT> minus{INVSQRT2<PrecisionT>(),
                                   -INVSQRT2<PrecisionT>()};
 
-    for (size_t k = 0; k < (1U << str.length()); k++) {
+    for (size_t k = 0; k < (size_t{1U} << str.length()); k++) {
         PrecisionT elt = 1.0;
         for (size_t n = 0; n < str.length(); n++) {
             char c = str[n];

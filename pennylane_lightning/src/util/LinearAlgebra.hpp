@@ -752,7 +752,6 @@ inline auto matrixMatProd(const std::vector<std::complex<T>> m_left,
 }
 
 /**
- * @brief Calculate the squared norm of a vector
  * @brief @rst
  * Compute the squared norm of a real/complex vector :math:`\sum_k |v_k|^2`
  * @endrst
@@ -792,6 +791,10 @@ auto squaredNorm(const std::vector<T, Alloc> &vec) -> remove_complex_t<T> {
 /**
  * @brief Generate random unitary matrix
  *
+ * @tparam PrecisionT Floating point type
+ * @tparam RandomEngine Random engine type
+ * @param re Random engine instance
+ * @param num_qubits Number of qubits
  * @return Generated unitary matrix in row-major format
  */
 template <typename PrecisionT, class RandomEngine>

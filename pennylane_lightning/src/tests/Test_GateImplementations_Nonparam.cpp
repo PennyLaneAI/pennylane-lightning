@@ -78,8 +78,7 @@ void testApplyPauliX() {
 
             std::string expected_str("000");
             expected_str[index] = '1';
-            REQUIRE(st ==
-                    PLApprox(createProductState<PrecisionT>(expected_str)));
+            REQUIRE(st == approx(createProductState<PrecisionT>(expected_str)));
         }
     }
 }

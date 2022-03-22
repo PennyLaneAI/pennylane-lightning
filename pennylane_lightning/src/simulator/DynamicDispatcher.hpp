@@ -49,6 +49,7 @@ template <class PrecisionT, class ParamT> int registerAllAvailableKernels();
 /// @endcond
 
 namespace Pennylane {
+/// @cond DEV
 /**
  * @brief These functions are only used to register kernels to the dynamic
  * dispatcher.

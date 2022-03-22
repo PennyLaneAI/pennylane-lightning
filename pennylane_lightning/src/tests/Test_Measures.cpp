@@ -8,6 +8,10 @@
 
 #include <catch2/catch.hpp>
 
+#if defined(_MSC_VER)
+#pragma warning(disable : 4305)
+#endif
+
 using namespace Pennylane;
 
 using std::complex;
@@ -164,11 +168,13 @@ TEST_CASE("Expected Values", "[Measures]") {
 }
 
 TEMPLATE_TEST_CASE("Sample", "[Measures]", float, double) {
-    constexpr int twos[] = {
-        1 << 0,  1 << 1,  1 << 2,  1 << 3,  1 << 4,  1 << 5,  1 << 6,  1 << 7,
-        1 << 8,  1 << 9,  1 << 10, 1 << 11, 1 << 12, 1 << 13, 1 << 14, 1 << 15,
-        1 << 16, 1 << 17, 1 << 18, 1 << 19, 1 << 20, 1 << 21, 1 << 22, 1 << 23,
-        1 << 24, 1 << 25, 1 << 26, 1 << 27, 1 << 28, 1 << 29, 1 << 30, 1 << 31};
+    constexpr uint32_t twos[] = {
+        1U << 0U,  1U << 1U,  1U << 2U,  1U << 3U,  1U << 4U,  1U << 5U,
+        1U << 6U,  1U << 7U,  1U << 8U,  1U << 9U,  1U << 10U, 1U << 11U,
+        1U << 12U, 1U << 13U, 1U << 14U, 1U << 15U, 1U << 16U, 1U << 17U,
+        1U << 18U, 1U << 19U, 1U << 20U, 1U << 21U, 1U << 22U, 1U << 23U,
+        1U << 24U, 1U << 25U, 1U << 26U, 1U << 27U, 1U << 28U, 1U << 29U,
+        1U << 30U, 1U << 31U};
 
     // Defining the State Vector that will be measured.
     StateVectorManagedCPU<TestType> Measured_StateVector =

@@ -36,37 +36,22 @@
 
 #if defined(__AVX2__)
 #define PL_USE_AVX2 1
-[[maybe_unused]] static constexpr bool use_avx2 = true;
-#else
-[[maybe_unused]] static constexpr bool use_avx2 = false;
 #endif
 
 #if defined(__AVX512F__)
 #define PL_USE_AVX512F 1
-[[maybe_unused]] static constexpr bool use_avx512f = true;
-#else
-[[maybe_unused]] static constexpr bool use_avx512f = false;
 #endif
 
 #if defined(__AVX512DQ__)
 #define PL_USE_AVX512DQ 1
-[[maybe_unused]] static constexpr bool use_avx512dq = true;
-#else
-[[maybe_unused]] static constexpr bool use_avx512dq = false;
 #endif
 
 #if defined(__AVX512VL__)
 #define PL_USE_AVX512VL 1
-[[maybe_unused]] static constexpr bool use_avx512vl = true;
-#else
-[[maybe_unused]] static constexpr bool use_avx512vl = false;
 #endif
 
 #if defined(_OPENMP)
 #define PL_USE_OMP 1
-[[maybe_unused]] static constexpr bool use_openmp = true;
-#else
-[[maybe_unused]] static constexpr bool use_openmp = false;
 #endif
 
 #if (_OPENMP >= 202011)
@@ -101,6 +86,35 @@
 #endif
 
 namespace Pennylane::Util::Constant {
+/* Create constexpr values */
+/// @cond DEV
+#if defined(PL_USE_AVX2)
+[[maybe_unused]] static constexpr bool use_avx2 = true;
+#else
+[[maybe_unused]] static constexpr bool use_avx2 = false;
+#endif
+#if defined(PL_USE_AVX512F)
+[[maybe_unused]] static constexpr bool use_avx512f = true;
+#else
+[[maybe_unused]] static constexpr bool use_avx512f = false;
+#endif
+#if defined(PL_USE_AVX512DQ)
+[[maybe_unused]] static constexpr bool use_avx512dq = true;
+#else
+[[maybe_unused]] static constexpr bool use_avx512dq = false;
+#endif
+#if defined(PL_USE_AVX512VL)
+[[maybe_unused]] static constexpr bool use_avx512vl = true;
+#else
+[[maybe_unused]] static constexpr bool use_avx512vl = false;
+#endif
+#if defined(PL_USE_OMP)
+[[maybe_unused]] static constexpr bool use_openmp = true;
+#else
+[[maybe_unused]] static constexpr bool use_openmp = false;
+#endif
+/// @endcond
+
 enum class CPUArch { X86_64, PPC64, ARM, Unknown };
 
 constexpr auto getCPUArchClangGCC() {
@@ -127,6 +141,7 @@ constexpr auto getCPUArchMSVC() {
 #endif
 }
 
+/// @cond DEV
 #if defined(__GNUC__) || defined(__clang__)
 [[maybe_unused]] constexpr static auto cpu_arch = getCPUArchClangGCC();
 #elif defined(_MSC_VER)
@@ -134,6 +149,7 @@ constexpr auto getCPUArchMSVC() {
 #else
 [[maybe_unused]] constexpr static auto cpu_arch = CPUArch::Unknown;
 #endif
+/// @endcond
 
 enum class Compiler { GCC, Clang, MSVC, NVCC, NVHPC, Unknown };
 
@@ -207,7 +223,7 @@ constexpr auto getCompilerVersion<Compiler::NVHPC>() -> std::string_view {
     return PL_TO_STR(__NVCOMPILER_MAJOR__) "." PL_TO_STR(
         __NVCOMPILER_MINOR__) "." PL_TO_STR(__NVCOMPILER_PATCHLEVEL__);
 }
-
+/// @cond DEV
 #if defined(__NVCC__)
 [[maybe_unused]] constexpr static auto compiler = Compiler::NVCC;
 #elif defined(__NVCOMPILER)
@@ -222,4 +238,5 @@ constexpr auto getCompilerVersion<Compiler::NVHPC>() -> std::string_view {
 #else
 [[maybe_unused]] constexpr static auto compiler = Compiler::Unknown;
 #endif
+/// @endcond
 } // namespace Pennylane::Util::Constant

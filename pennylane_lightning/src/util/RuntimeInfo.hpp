@@ -24,6 +24,7 @@ namespace Pennylane::Util {
  */
 class RuntimeInfo {
   private:
+    /// @cond DEV
     struct InternalRuntimeInfo {
         InternalRuntimeInfo();
 
@@ -32,6 +33,7 @@ class RuntimeInfo {
         std::bitset<32> f_7_ebx{};
         std::bitset<32> f_7_ecx{};
     };
+    /// @endcond
 
     static const inline InternalRuntimeInfo internal_runtime_info_;
 

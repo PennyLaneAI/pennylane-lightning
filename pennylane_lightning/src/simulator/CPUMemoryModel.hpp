@@ -61,14 +61,14 @@ inline auto getMemoryModel(const void *ptr) -> CPUMemoryModel {
  * @return CPUMemoryModel
  */
 inline auto bestCPUMemoryModel() -> CPUMemoryModel {
-    if constexpr (use_avx512f) {
+    if constexpr (Util::Constant::use_avx512f) {
         // If the binary is compiled with AVX512F support
         if (Util::RuntimeInfo::AVX512F()) {
             // and the CPU support it as well
             return CPUMemoryModel::Aligned512;
         }
     }
-    if constexpr (use_avx2) {
+    if constexpr (Util::Constant::use_avx2) {
         if (Util::RuntimeInfo::AVX2()) {
             return CPUMemoryModel::Aligned256;
         }

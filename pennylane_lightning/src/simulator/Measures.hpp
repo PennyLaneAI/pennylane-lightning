@@ -323,7 +323,7 @@ class Measures {
         // Pick samples
         for (size_t i = 0; i < num_samples; i++) {
             fp_t pct = distribution(generator) * N;
-            size_t idx = pct;
+            auto idx = static_cast<size_t>(pct);
             if (pct - idx > bucket[idx]) {
                 idx = bucket_partner[idx];
             }
@@ -338,7 +338,7 @@ class Measures {
             else {
                 for (size_t j = 0; j < num_qubits; j++) {
                     samples[i * num_qubits + (num_qubits - 1 - j)] =
-                        (idx >> j) & 1;
+                        (idx >> j) & 1U;
                 }
                 cache[idx] = i;
             }

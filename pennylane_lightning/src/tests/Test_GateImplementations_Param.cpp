@@ -12,6 +12,10 @@
 #include <utility>
 #include <vector>
 
+#if defined(_MSC_VER)
+#pragma warning(disable : 4305)
+#endif
+
 /**
  * @file This file contains tests for parameterized gates. List of such gates is
  * [RX, RY, RZ, PhaseShift, Rot, ControlledPhaseShift, CRX, CRY, CRZ, CRot]
@@ -71,9 +75,9 @@ void testApplyPhaseShift() {
     const size_t num_qubits = 3;
 
     // Test using |+++> state
-
+    const auto isqrt2 = PrecisionT{Util::INVSQRT2<PrecisionT>()};
     const std::vector<PrecisionT> angles{0.3, 0.8, 2.4};
-    const ComplexPrecisionT coef(1.0 / (2 * std::sqrt(2)), 0);
+    const ComplexPrecisionT coef{isqrt2 / PrecisionT{2.0}, PrecisionT{0.0}};
 
     std::vector<std::vector<ComplexPrecisionT>> ps_data;
     ps_data.reserve(angles.size());
@@ -185,9 +189,10 @@ void testApplyRZ() {
     const size_t num_qubits = 3;
 
     // Test using |+++> state
+    const auto isqrt2 = PrecisionT{Util::INVSQRT2<PrecisionT>()};
 
     const std::vector<PrecisionT> angles{0.2, 0.7, 2.9};
-    const ComplexPrecisionT coef(1.0 / (2 * std::sqrt(2)), 0);
+    const ComplexPrecisionT coef{isqrt2 / PrecisionT{2.0}, PrecisionT{0.0}};
 
     std::vector<std::vector<ComplexPrecisionT>> rz_data;
     rz_data.reserve(angles.size());
@@ -229,7 +234,7 @@ void testApplyRZ() {
 
         GateImplementation::applyRZ(st.data(), num_qubits, {index}, true,
                                     {-angles[index]});
-        CHECK(st == PLApprox(expected_results[index]));
+        CHECK(st == approx(expected_results[index]));
     }
 }
 PENNYLANE_RUN_TEST(RZ);
@@ -254,7 +259,7 @@ void testApplyRot() {
         const auto rot_mat =
             Gates::getRot<PrecisionT>(angles[i][0], angles[i][1], angles[i][2]);
         expected_results[i][0] = rot_mat[0];
-        expected_results[i][1U << (num_qubits - i - 1)] = rot_mat[2];
+        expected_results[i][size_t{1U} << (num_qubits - i - 1)] = rot_mat[2];
     }
 
     for (size_t index = 0; index < num_qubits; index++) {
@@ -721,8 +726,10 @@ void testApplyControlledPhaseShift() {
     // Test using |+++> state
     auto ini_st = createPlusState<PrecisionT>(num_qubits);
 
+    const auto isqrt2 = Util::INVSQRT2<PrecisionT>();
+
     const std::vector<PrecisionT> angles{0.3, 2.4};
-    const ComplexPrecisionT coef(1.0 / (2 * std::sqrt(2)), 0);
+    const ComplexPrecisionT coef{isqrt2 / PrecisionT{2.0}, PrecisionT{0.0}};
 
     std::vector<std::vector<ComplexPrecisionT>> ps_data;
     ps_data.reserve(angles.size());
@@ -1227,21 +1234,15 @@ PENNYLANE_RUN_TEST(CRZ);
 template <typename PrecisionT, typename ParamT, class GateImplementation>
 void testApplyCRot() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
-    const size_t num_qubits = 3;
-
-    const auto ini_st = createZeroState<PrecisionT>(num_qubits);
 
     const std::vector<PrecisionT> angles{0.3, 0.8, 2.4};
-
-    std::vector<ComplexPrecisionT> expected_results(8);
-    const auto rot_mat =
-        Gates::getRot<PrecisionT>(angles[0], angles[1], angles[2]);
-    expected_results[1U << (num_qubits - 1)] = rot_mat[0];
-    expected_results[(1U << num_qubits) - 2] = rot_mat[2];
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CRot0,1 |000> -> |000> - "
                     << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+        const auto ini_st = createZeroState<PrecisionT>(num_qubits);
+
         auto st = createZeroState<PrecisionT>(num_qubits);
         GateImplementation::applyCRot(st.data(), num_qubits, {0, 1}, false,
                                       angles[0], angles[1], angles[2]);
@@ -1251,7 +1252,16 @@ void testApplyCRot() {
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CRot0,1 |100> -> |1>(a|0>+b|1>)|0> - "
                     << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+
         auto st = createZeroState<PrecisionT>(num_qubits);
+
+        std::vector<ComplexPrecisionT> expected_results(8);
+        const auto rot_mat =
+            Gates::getRot<PrecisionT>(angles[0], angles[1], angles[2]);
+        expected_results[size_t{1U} << (num_qubits - 1)] = rot_mat[0];
+        expected_results[(size_t{1U} << num_qubits) - 2] = rot_mat[2];
+
         GateImplementation::applyPauliX(st.data(), num_qubits, {0}, false);
 
         GateImplementation::applyCRot(st.data(), num_qubits, {0, 1}, false,
