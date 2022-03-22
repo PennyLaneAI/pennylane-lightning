@@ -24,12 +24,18 @@ jobs:
         with:
           arch: amd64
 
-      - name: Build and run unit tests
+      - name: Setup OpenCppCoverage and add to PATH
         run: |
-            cmake . -BBuild  -DBUILD_TESTS=ON -DENABLE_OPENMP=OFF -DENABLE_WARNINGS=OFF
-            cmake --build ./Build --config Release
+          choco install OpenCppCoverage -y
+          echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
+
+      - name: Build and run unit tests for code coverage
+        run: |
+            cmake ./pennylane_lightning/src -BBuild  -DBUILD_TESTS=ON -DENABLE_OPENMP=OFF -DENABLE_WARNINGS=OFF
+            cmake --build ./Build --config Debug
             mkdir -p ./Build/tests/results
-            .\Build\pennylane_lightning\src\tests\Release\runner.exe --order lex --reporter junit --out .\Build\tests\results\report.xml
+            .\Build\tests\Debug\runner.exe --order lex --reporter junit --out .\Build\tests\results\report.xml
+            OpenCppCoverage --sources .\pennylane_lightning\src --export_type cobertura:coverage.xml .\Build\tests\Debug\runner.exe
 
       - name: Upload test results
         uses: actions/upload-artifact@v2
@@ -37,3 +43,11 @@ jobs:
         with:
           name: windows-test-report
           path: .\Build\tests\results\report.xml
+
+      - name: Upload Report to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: true
+          functionalities: fix
+
