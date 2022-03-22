@@ -16,7 +16,6 @@ Unit tests for the :mod:`pennylane_lightning.LightningQubit` device.
 """
 # pylint: disable=protected-access,cell-var-from-loop
 import math
-from tracemalloc import start
 
 import numpy as np
 import pennylane as qml
@@ -1440,36 +1439,42 @@ class TestTensorSample:
 class TestApplyLightningMethod:
     """Unit tests for the apply_lightning method."""
 
-    def test_noniter_identity_skipped(self, mocker, tol):
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_noniter_identity_skipped(self, mocker, C, tol):
         """Test identity operation does not perform additional computations."""
         dev = qml.device("lightning.qubit", wires=1)
+        if not hasattr(dev, "apply_lightning"):
+            pytest.skip("LightningQubit object has no attribute apply_lightning")
 
-        starting_state = np.array([1, 0], dtype=np.complex128)
+        starting_state = np.array([1, 0], dtype=C)
         op = qml.Identity(0)
 
         spy_diagonal = mocker.spy(dev, "_apply_diagonal_unitary")
         spy_einsum = mocker.spy(dev, "_apply_unitary_einsum")
         spy_unitary = mocker.spy(dev, "_apply_unitary")
 
-        res = dev.apply_lightning(starting_state, op, dtype=np.complex128)
+        res = dev.apply_lightning(starting_state, op, dtype=C)
         assert np.allclose(res, starting_state, atol=tol, rtol=0)
 
         spy_diagonal.assert_not_called()
         spy_einsum.assert_not_called()
         spy_unitary.assert_not_called()
 
-    def test_iter_identity_skipped(self, mocker, tol):
-        """Test identity operation does not perform additional computations."""
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_iter_identity_skipped(self, mocker, C, tol):
+        """Test identity operations do not perform additional computations."""
         dev = qml.device("lightning.qubit", wires=2)
+        if not hasattr(dev, "apply_lightning"):
+            pytest.skip("LightningQubit object has no attribute apply_lightning")
 
-        starting_state = np.array([1, 0, 0, 0], dtype=np.complex128)
+        starting_state = np.array([1, 0, 0, 0], dtype=C)
         op = [qml.Identity(0), qml.Identity(1)]
 
         spy_diagonal = mocker.spy(dev, "_apply_diagonal_unitary")
         spy_einsum = mocker.spy(dev, "_apply_unitary_einsum")
         spy_unitary = mocker.spy(dev, "_apply_unitary")
 
-        res = dev.apply_lightning(starting_state, op, dtype=np.complex128)
+        res = dev.apply_lightning(starting_state, op, dtype=C)
         assert np.allclose(res, starting_state, atol=tol, rtol=0)
 
         spy_diagonal.assert_not_called()

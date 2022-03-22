@@ -204,7 +204,7 @@ class LightningQubit(DefaultQubit):
             raise TypeError(f"Unsupported complex Type: {dtype}")
 
         skipped_ops = ["Identity"]
-        ops_iter = operations if isinstance(operations, Iterable) else list(operations)
+        ops_iter = operations if isinstance(operations, Iterable) else [operations]
         ops_generator = (o for o in ops_iter if o not in skipped_ops)
 
         for o in ops_generator:
