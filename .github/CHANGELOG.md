@@ -18,12 +18,12 @@
 * Add more `clang-tidy` checks and kernel tests.
 [(#253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/253)
 
+* Skip over identity operations in `"lightning.qubit"`.
+[(#268)](https://github.com/PennyLaneAI/pennylane-lightning/pull/268)
+
 ### Documentation
 
 ### Bug fixes
-
-* Remove deprecated tape execution methods.
-[(#270)](https://github.com/PennyLaneAI/pennylane-lightning/pull/270)
 
 * Update tests to remove `JacobianTape`.
 [(#260)](https://github.com/PennyLaneAI/pennylane-lightning/pull/260)
@@ -33,6 +33,9 @@
 
 * Fix `#include <cpuid.h>` for PPC and AArch64 in Linux.
 [(#266)](https://github.com/PennyLaneAI/pennylane-lightning/pull/266)
+
+* Remove deprecated tape execution methods.
+[(#270)](https://github.com/PennyLaneAI/pennylane-lightning/pull/270)
 
 ### Contributors
 
