@@ -55,11 +55,12 @@ void lightning_class_bindings(py::module &m) {
     //***********************************************************************//
 
     std::string class_name = "StateVectorC" + bitsize;
-    auto pyclass = py::class_<StateVectorRaw<PrecisionT>>(m, class_name.c_str(),
-                                                          py::module_local());
-    pyclass.def(py::init(&create<PrecisionT>));
+    auto pyclass = py::class_<StateVectorRaw<PrecisionT>>(
+        m, class_name.c_str(), py::module_local());
+    pyclass.def(py::init(&createRaw<PrecisionT>));
 
-    registerKernelsToPyexport<PrecisionT, ParamT>(pyclass);
+    registerGatesForStateVector<PrecisionT, ParamT,
+                                StateVectorRaw<PrecisionT>>(pyclass);
 
     //***********************************************************************//
     //                              Observable
@@ -386,31 +387,6 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
 
     /* Add runtime info */
     m.def("runtime_info", &getRuntimeInfo, "Runtime information.");
-
-    /* Add EXPORTED_KERNELS */
-    std::vector<std::pair<std::string, std::string>> exported_kernel_ops;
-
-    for (const auto kernel : kernels_to_pyexport) {
-        const auto kernel_name = lookup(kernel_id_name_pairs, kernel);
-        const auto implemented_gates = implementedGatesForKernel(kernel);
-        for (const auto gate_op : implemented_gates) {
-            const auto gate_name =
-                std::string(lookup(Gates::Constant::gate_names, gate_op));
-            exported_kernel_ops.emplace_back(kernel_name, gate_name);
-        }
-    }
-
-    m.attr("EXPORTED_KERNEL_OPS") = py::cast(exported_kernel_ops);
-
-    /* Add DEFAULT_KERNEL_FOR_OPS */
-    std::map<std::string, std::string> default_kernel_ops_map;
-    for (const auto &[gate_op, name] : Gates::Constant::gate_names) {
-        const auto kernel =
-            lookup(Gates::Constant::default_kernel_for_gates, gate_op);
-        const auto kernel_name = Util::lookup(kernel_id_name_pairs, kernel);
-        default_kernel_ops_map.emplace(std::string(name), kernel_name);
-    }
-    m.attr("DEFAULT_KERNEL_FOR_OPS") = py::cast(default_kernel_ops_map);
 
     lightning_class_bindings<float, float>(m);
     lightning_class_bindings<double, double>(m);

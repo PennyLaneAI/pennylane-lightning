@@ -403,25 +403,6 @@ auto chunkData(const Container<T> &data, std::size_t num_chunks)
 }
 
 /**
- * @brief For lookup from any array of pair whose first elements are
- * GateOperation.
- *
- * As Util::lookup can be used in constexpr context, this function is redundant
- * (by the standard). But GCC 9 still does not accept Util::lookup in constexpr
- * some cases.
- */
-template <auto op, class T, size_t size>
-constexpr auto
-static_lookup(const std::array<std::pair<decltype(op), T>, size> &arr) -> T {
-    for (size_t idx = 0; idx < size; idx++) {
-        if (std::get<0>(arr[idx]) == op) {
-            return std::get<1>(arr[idx]);
-        }
-    }
-    return T{};
-}
-
-/**
  * @brief Hash for std::pair
  */
 struct PairHash {
@@ -446,4 +427,25 @@ template <typename T> struct is_complex<std::complex<T>> : std::true_type {};
 
 template <typename T> constexpr bool is_complex_v = is_complex<T>::value;
 
+/**
+ * @brief Iterate over all enum values (if BEGIN and END are defined).
+ *
+ * @tparam T enum type
+ * @tparam Func function to execute
+ */
+template <class T, class Func> void for_each_enum(Func &&func) {
+    for (auto e = T::BEGIN; e != T::END;
+         e = static_cast<T>(std::underlying_type_t<T>(e) + 1)) {
+        func(e);
+    }
+}
+template <class T, class U, class Func> void for_each_enum(Func &&func) {
+    for (auto e1 = T::BEGIN; e1 != T::END;
+         e1 = static_cast<T>(std::underlying_type_t<T>(e1) + 1)) {
+        for (auto e2 = U::BEGIN; e2 != U::END;
+             e2 = static_cast<U>(std::underlying_type_t<U>(e2) + 1)) {
+            func(e1, e2);
+        }
+    }
+}
 } // namespace Pennylane::Util

@@ -64,8 +64,11 @@ RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
             0,
         };
         auto *p = tmp.data();
+        // NOLINTNEXTLINE(readability-magic-numbers)
         __get_cpuid(0x80000002, p + 0x0, p + 0x1, p + 0x2, p + 0x3);
+        // NOLINTNEXTLINE(readability-magic-numbers)
         __get_cpuid(0x80000003, p + 0x4, p + 0x5, p + 0x6, p + 0x7);
+        // NOLINTNEXTLINE(readability-magic-numbers)
         __get_cpuid(0x80000004, p + 0x8, p + 0x9, p + 0xa, p + 0xb);
 
         brand = reinterpret_cast<const char *>(p);
