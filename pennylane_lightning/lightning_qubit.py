@@ -203,9 +203,13 @@ class LightningQubit(DefaultQubit):
         else:
             raise TypeError(f"Unsupported complex Type: {dtype}")
 
+        ops_iter = operations if isinstance(operations, Iterable) else [operations]
+        # Skip over identity operators instead or performing
+        # matrix multiplication with the identity.
         skipped_ops = ["Identity"]
-        for o in operations:
-            if op in skipped_ops:
+
+        for o in ops_iter:
+            if o in skipped_ops:
                 continue
             name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
             if _is_lightning_gate(name):
