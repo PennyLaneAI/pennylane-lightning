@@ -24,7 +24,6 @@
 #include "SelectKernel.hpp"
 
 using namespace Pennylane;
-using namespace Pennylane::Util;
 
 /// @cond DEV
 namespace {
@@ -50,7 +49,7 @@ constexpr auto gateOpToFunctor() {
             Gates::GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                                          gate_op>::value;
         assert(params.size() ==
-               Gates::static_lookup<gate_op>(Gates::Constant::gate_num_params));
+               Util::static_lookup<gate_op>(Gates::Constant::gate_num_params));
         Gates::callGateOps(func_ptr, data, num_qubits, wires, inverse, params);
     };
 }
@@ -77,7 +76,7 @@ constexpr auto constructGateOpsFunctorTupleIter() {
             return constructGateOpsFunctorTupleIter<
                 PrecisionT, ParamT, GateImplementation, gate_idx + 1>();
         } else {
-            return prepend_to_tuple(
+            return Util::prepend_to_tuple(
                 std::pair{gate_op,
                           gateOpToFunctor<PrecisionT, ParamT,
                                           GateImplementation, gate_op>()},
@@ -97,7 +96,7 @@ constexpr auto constructGeneratorOpsFunctorTupleIter() {
     } else if (gntr_idx < GateImplementation::implemented_generators.size()) {
         constexpr auto gntr_op =
             GateImplementation::implemented_generators[gntr_idx];
-        return prepend_to_tuple(
+        return Util::prepend_to_tuple(
             std::pair{gntr_op,
                       Gates::GeneratorOpToMemberFuncPtr<
                           PrecisionT, GateImplementation, gntr_op>::value},
@@ -144,7 +143,7 @@ void registerAllImplementedGateOps() {
                                         const auto &gate_op_func_pair) {
         const auto &[gate_op, func] = gate_op_func_pair;
         std::string op_name =
-            std::string(lookup(Gates::Constant::gate_names, gate_op));
+            std::string(Util::lookup(Gates::Constant::gate_names, gate_op));
         dispatcher.registerGateOperation(op_name, GateImplementation::kernel_id,
                                          func);
         return gate_op;
@@ -169,8 +168,8 @@ void registerAllImplementedGeneratorOps() {
     auto registerGeneratorToDispatcher =
         [&dispatcher](const auto &gntr_op_func_pair) {
             const auto &[gntr_op, func] = gntr_op_func_pair;
-            std::string op_name =
-                std::string(lookup(Gates::Constant::generator_names, gntr_op));
+            std::string op_name = std::string(
+                Util::lookup(Gates::Constant::generator_names, gntr_op));
             dispatcher.registerGeneratorOperation(
                 op_name, GateImplementation::kernel_id, func);
             return gntr_op;

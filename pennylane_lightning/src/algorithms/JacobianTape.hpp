@@ -275,7 +275,7 @@ template <class T> class JacobianData {
      * @param obs Observables for which to calculate Jacobian.
      * @param ops Operations used to create given state.
      * @param trainP List of parameters participating in Jacobian
-     * calculation.
+     * calculation. This must be sorted.
      */
     JacobianData(size_t num_params, size_t num_elem, std::complex<T> *ps,
                  std::vector<ObsDatum<T>> obs, OpsData<T> ops,

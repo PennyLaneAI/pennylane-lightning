@@ -53,7 +53,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={0}",
 
         for (const auto &p : param) {
             auto ops = OpsData<double>({"RX"}, {{p}}, {{0}}, {false});
-            std::vector<std::complex<double>> cdata(0b1 << num_qubits);
+            std::vector<std::complex<double>> cdata(1U << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
 
             StateVectorRaw<double> psi(cdata.data(), cdata.size());
@@ -91,7 +91,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={1}",
         for (const auto &p : param) {
             auto ops = OpsData<double>({"RX"}, {{p}}, {{0}}, {false});
 
-            std::vector<std::complex<double>> cdata(0b1 << num_qubits);
+            std::vector<std::complex<double>> cdata(1U << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
 
             StateVectorRaw<double> psi(cdata.data(), cdata.size());
@@ -129,7 +129,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RX, Obs=Z dy={0.4}",
         for (const auto &p : param) {
             auto ops = OpsData<double>({"RX"}, {{p}}, {{0}}, {false});
 
-            std::vector<std::complex<double>> cdata(0b1 << num_qubits);
+            std::vector<std::complex<double>> cdata(1U << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
 
             StateVectorRaw<double> psi(cdata.data(), cdata.size());
@@ -168,7 +168,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=RY, Obs=X dy={0.4}",
         for (const auto &p : param) {
             auto ops = OpsData<double>({"RY"}, {{p}}, {{0}}, {false});
 
-            std::vector<std::complex<double>> cdata(0b1 << num_qubits);
+            std::vector<std::complex<double>> cdata(1U << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
 
             StateVectorRaw<double> psi(cdata.data(), cdata.size());
@@ -203,7 +203,7 @@ TEST_CASE(
         std::vector<double> vjp_res(num_params);
         std::vector<double> dy(num_obs, 1);
 
-        std::vector<std::complex<double>> cdata(0b1 << num_qubits);
+        std::vector<std::complex<double>> cdata(1U << num_qubits);
         StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
@@ -239,7 +239,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=[RX,RX,RX], "
         std::vector<double> vjp_res(num_params);
         std::vector<double> dy(num_obs, 0.4);
 
-        std::vector<std::complex<double>> cdata(0b1 << num_qubits);
+        std::vector<std::complex<double>> cdata(1U << num_qubits);
         StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
@@ -282,7 +282,7 @@ TEST_CASE(
         std::vector<double> vjp_res(num_params);
         std::vector<double> dy(num_obs, 1);
 
-        std::vector<std::complex<double>> cdata(0b1 << num_qubits);
+        std::vector<std::complex<double>> cdata(1U << num_qubits);
         StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
@@ -322,7 +322,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=[RX,RX,RX], "
         std::vector<double> vjp_res(num_params);
         std::vector<double> dy(num_obs, 0.4);
 
-        std::vector<std::complex<double>> cdata(0b1 << num_qubits);
+        std::vector<std::complex<double>> cdata(1U << num_qubits);
         StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
@@ -361,7 +361,7 @@ TEST_CASE(
         std::vector<double> vjp_res(num_params);
         std::vector<double> dy(num_obs, 1);
 
-        std::vector<std::complex<double>> cdata(0b1 << num_qubits);
+        std::vector<std::complex<double>> cdata(1U << num_qubits);
         StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
@@ -412,7 +412,7 @@ TEST_CASE("VectorJacobianProduct::vectorJacobianProduct Op=Mixed, Obs=[XXX], "
         std::vector<double> vjp_res(num_params);
         std::vector<double> dy(num_obs, -0.2);
 
-        std::vector<std::complex<double>> cdata(0b1 << num_qubits);
+        std::vector<std::complex<double>> cdata(1U << num_qubits);
         StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 

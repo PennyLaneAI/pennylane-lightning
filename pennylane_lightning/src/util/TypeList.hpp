@@ -18,34 +18,58 @@
 #pragma once
 
 #include <cstdlib>
+#include <tuple>
 #include <type_traits>
+#include <utility>
 
 namespace Pennylane::Util {
 template <typename T, typename... Ts> struct TypeNode {
     using Type = T;
     using Next = TypeNode<Ts...>;
 };
-
+///@cond DEV
+template <typename T> struct TypeNode<T, void> {
+    using Type = T;
+    using Next = void;
+};
 template <typename T> struct TypeNode<T> {
     using Type = T;
     using Next = void;
 };
+///@endcond
 
 /**
  * @brief Define type list
  */
 template <typename... Ts> using TypeList = TypeNode<Ts...>;
 
-template <typename TypeList, size_t n> struct getNthType {
-    static_assert(!std::is_same_v<typename TypeList::Next, void>,
-                  "The given n is larger than the length of the typelist.");
-    using Type = typename getNthType<typename TypeList::Next, n - 1>::Type;
+/**
+ * @brief Get N-th type of a type list.
+ *
+ * @tparam TypeList Type list
+ * @tparam n The position of a type to extract
+ */
+template <typename TypeList, size_t n> struct getNth {
+    using Type = typename getNth<typename TypeList::Next, n - 1>::Type;
 };
 
-template <typename TypeList> struct getNthType<TypeList, 0> {
+/// @cond DEV
+template <typename TypeList> struct getNth<TypeList, 0> {
+    static_assert(!std::is_same_v<typename TypeList::Type, void>,
+                  "The given n is larger than the length of the type list.");
     using Type = typename TypeList::Type;
 };
+/// @endcod
 
+/**
+ * @brief Convenient of alias of getNth
+ */
+template <typename TypeList, size_t n>
+using getNthType = typename getNth<TypeList, n>::Type;
+
+/**
+ * @brief Get the size of a type list
+ */
 template <typename TypeList> constexpr size_t length() {
     if constexpr (std::is_same_v<TypeList, void>) {
         return 0;
@@ -53,4 +77,22 @@ template <typename TypeList> constexpr size_t length() {
         return 1 + length<typename TypeList::Next>();
     }
 }
+
+/**
+ * @brief Prepend a type to a type list.
+ *
+ * @tparam T Type to prepend
+ * @tparam U TypeList
+ */
+template <typename T, typename U> struct PrependToTypeList;
+
+/// @cond DEV
+template <typename T, typename... Ts>
+struct PrependToTypeList<T, TypeNode<Ts...>> {
+    using Type = TypeNode<T, Ts...>;
+};
+template <typename T> struct PrependToTypeList<T, void> {
+    using Type = TypeNode<T, void>;
+};
+/// @endcond
 } // namespace Pennylane::Util
