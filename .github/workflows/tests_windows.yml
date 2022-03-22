@@ -45,7 +45,7 @@ jobs:
           path: .\Build\tests\results\report.xml
 
       - name: Upload Report to Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v1.0.12
         with:
           files: ./coverage.xml
           fail_ci_if_error: true

@@ -68,6 +68,7 @@ jobs:
         uses: codecov/codecov-action@v1.0.12
         with:
           file: ./BuildCov/coverage.info
+          fail_ci_if_error: true
 
   cpptestswithblas:
     name: C++ tests (Linux, OpenBLAS)
@@ -125,6 +126,7 @@ jobs:
         uses: codecov/codecov-action@v1.0.12
         with:
           file: ./BuildCov/coverage.info
+          fail_ci_if_error: true
 
   pythontests:
     name: Python tests
@@ -177,3 +179,4 @@ jobs:
         uses: codecov/codecov-action@v1.0.12
         with:
           file: coverage.xml
+          fail_ci_if_error: true
