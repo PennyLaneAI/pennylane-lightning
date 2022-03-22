@@ -204,7 +204,7 @@ class LightningQubit(DefaultQubit):
             raise TypeError(f"Unsupported complex Type: {dtype}")
 
         ops_iter = operations if isinstance(operations, Iterable) else [operations]
-        # Skip over identity operators instead or performing
+        # Skip over identity operators instead of performing
         # matrix multiplication with the identity.
         skipped_ops = ["Identity"]
 
