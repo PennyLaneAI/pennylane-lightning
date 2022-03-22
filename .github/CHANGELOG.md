@@ -25,6 +25,9 @@
 
 ### Bug fixes
 
+* Remove deprecated tape execution methods.
+[(#270)](https://github.com/PennyLaneAI/pennylane-lightning/pull/270)
+
 * Update tests to remove `JacobianTape`.
 [(#260)](https://github.com/PennyLaneAI/pennylane-lightning/pull/260)
 
