@@ -35,7 +35,7 @@ jobs:
             cmake --build ./Build --config Debug
             mkdir -p ./Build/tests/results
             .\Build\tests\Debug\runner.exe --order lex --reporter junit --out .\Build\tests\results\report.xml
-            OpenCppCoverage --sources .\pennylane_lightning\src --export_type cobertura:coverage.xml .\Build\tests\Debug\runner.exe
+            OpenCppCoverage --sources pennylane_lightning\src --export_type cobertura:coverage.xml Build\tests\Debug\runner.exe
 
       - name: Upload test results
         uses: actions/upload-artifact@v2
