@@ -12,6 +12,9 @@
 
 ### Improvements
 
+* Skip over identity operations in `"lightning.qubit"`.
+[(#266)](https://github.com/PennyLaneAI/pennylane-lightning/pull/266)
+
 * Add `ENABLE_BLAS` build to CI checks.
 [(#249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/249)
 
