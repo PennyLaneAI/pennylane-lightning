@@ -46,7 +46,7 @@ RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
         f_7_ecx = ecx;
     }
 }
-#elif defined(_MSC_VER) && defined(_WIN64)
+#elif defined(_MSC_VER) && defined(_M_AMD64)
 RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
     std::array<int, 4> cpui;
     __cpuid(cpui.data(), 0);
