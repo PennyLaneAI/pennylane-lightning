@@ -1,9 +1,10 @@
 #include "Constant.hpp"
+#include "ConstantUtil.hpp"
+#include "DefaultKernels.hpp"
 #include "GateOperation.hpp"
 #include "Util.hpp"
 
 namespace Pennylane::Gates {
-
 template <typename T, size_t size1, size_t size2>
 constexpr auto are_mutually_disjoint(const std::array<T, size1> &arr1,
                                      const std::array<T, size2> &arr2) -> bool {
@@ -103,8 +104,7 @@ static_assert(
  ******************************************************************************/
 
 static_assert(
-    Util::count_unique(
-        Util::first_elts_of(Constant::default_kernel_for_gates)) ==
+    Util::count_unique(Util::first_elts_of(default_kernel_for_gates)) ==
         static_cast<size_t>(GateOperation::END),
     "Constant default_kernel_for_gates must be defined for all gates.");
 
@@ -112,10 +112,9 @@ static_assert(
  * Check default_kernel_for_generators are defined for all generators
  ******************************************************************************/
 
-static_assert(Util::count_unique(Util::first_elts_of(
-                  Constant::default_kernel_for_generators)) ==
-                  static_cast<size_t>(GeneratorOperation::END),
-              "Constant default_kernel_for_generators must be defined for all "
-              "generators.");
-
+static_assert(
+    Util::count_unique(Util::first_elts_of(default_kernel_for_generators)) ==
+        static_cast<size_t>(GeneratorOperation::END),
+    "Constant default_kernel_for_generators must be defined for all "
+    "generators.");
 } // namespace Pennylane::Gates

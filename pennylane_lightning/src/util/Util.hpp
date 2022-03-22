@@ -421,6 +421,16 @@ static_lookup(const std::array<std::pair<decltype(op), T>, size> &arr) -> T {
     return T{};
 }
 
+/**
+ * @brief Hash for std::pair
+ */
+struct PairHash {
+    template <typename T, typename U>
+    size_t operator()(const std::pair<T, U> &p) const {
+        return std::hash<T>()(p.first) ^ std::hash<U>()(p.second);
+    }
+};
+
 // type alias
 template <class T> using remove_cvref_t = typename remove_cvref<T>::type;
 

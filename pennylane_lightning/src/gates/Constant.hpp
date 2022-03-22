@@ -25,8 +25,7 @@ namespace Pennylane::Gates::Constant {
 /**
  * @brief List of multi-qubit gates
  */
-[[maybe_unused]] constexpr std::array multi_qubit_gates{GateOperation::MultiRZ,
-                                                        GateOperation::Matrix};
+[[maybe_unused]] constexpr std::array multi_qubit_gates{GateOperation::MultiRZ};
 /**
  * @brief List of multi-qubit generators
  */
@@ -72,7 +71,6 @@ namespace Pennylane::Gates::Constant {
     std::pair<GateOperation, std::string_view>{GateOperation::CSWAP, "CSWAP"},
     std::pair<GateOperation, std::string_view>{GateOperation::MultiRZ,
                                                "MultiRZ"},
-    std::pair<GateOperation, std::string_view>{GateOperation::Matrix, "Matrix"},
 };
 /**
  * @brief Generator names.
@@ -106,6 +104,17 @@ namespace Pennylane::Gates::Constant {
         "GeneratorControlledPhaseShift"},
     std::pair<GeneratorOperation, std::string_view>{GeneratorOperation::MultiRZ,
                                                     "GeneratorMultiRZ"},
+};
+/**
+ * @brief Matrix names.
+ */
+[[maybe_unused]] constexpr std::array matrix_names = {
+    std::pair<MatrixOperation, std::string_view>{MatrixOperation::SingleQubitOp,
+                                                 "SingleQubitOp"},
+    std::pair<MatrixOperation, std::string_view>{MatrixOperation::TwoQubitOp,
+                                                 "TwoQubitOp"},
+    std::pair<MatrixOperation, std::string_view>{MatrixOperation::MultiQubitOp,
+                                                 "MultiQubitOp"},
 };
 
 /**
@@ -188,71 +197,5 @@ namespace Pennylane::Gates::Constant {
     std::pair<GateOperation, size_t>{GateOperation::Toffoli, 0},
     std::pair<GateOperation, size_t>{GateOperation::CSWAP, 0},
     std::pair<GateOperation, size_t>{GateOperation::MultiRZ, 1},
-};
-
-/**
- *
- * @brief Define which kernel to use for each gate operation.
- *
- * @rst
- * Check
- * `this repository
- * <https://github.com/PennyLaneAI/pennylane-lightning-compare-kernels>`_ to see
- * the benchmark results for each gate
- * @endrst
- *
- * This value is used for:
- * 1. StateVector apply##GATE_NAME methods. The kernel function is statically
- * binded to the given kernel and cannot be modified.
- * 2. Default kernel functions for DynamicDispatcher. The kernel function is
- * dynamically binded and can be changed using DynamicDispatcher singleton
- * class.
- * 3. For the Python binding.
- */
-[[maybe_unused]] constexpr std::array default_kernel_for_gates = {
-    std::pair{GateOperation::PauliX, KernelType::LM},
-    std::pair{GateOperation::PauliY, KernelType::LM},
-    std::pair{GateOperation::PauliZ, KernelType::LM},
-    std::pair{GateOperation::Hadamard, KernelType::PI},
-    std::pair{GateOperation::S, KernelType::LM},
-    std::pair{GateOperation::T, KernelType::LM},
-    std::pair{GateOperation::RX, KernelType::PI},
-    std::pair{GateOperation::RY, KernelType::PI},
-    std::pair{GateOperation::RZ, KernelType::LM},
-    std::pair{GateOperation::PhaseShift, KernelType::LM},
-    std::pair{GateOperation::Rot, KernelType::LM},
-    std::pair{GateOperation::ControlledPhaseShift, KernelType::PI},
-    std::pair{GateOperation::CNOT, KernelType::LM},
-    std::pair{GateOperation::CY, KernelType::PI},
-    std::pair{GateOperation::CZ, KernelType::LM},
-    std::pair{GateOperation::SWAP, KernelType::LM},
-    std::pair{GateOperation::IsingXX, KernelType::LM},
-    std::pair{GateOperation::IsingYY, KernelType::LM},
-    std::pair{GateOperation::IsingZZ, KernelType::LM},
-    std::pair{GateOperation::CRX, KernelType::LM},
-    std::pair{GateOperation::CRY, KernelType::LM},
-    std::pair{GateOperation::CRZ, KernelType::LM},
-    std::pair{GateOperation::CRot, KernelType::PI},
-    std::pair{GateOperation::Toffoli, KernelType::PI},
-    std::pair{GateOperation::CSWAP, KernelType::PI},
-    std::pair{GateOperation::MultiRZ, KernelType::LM},
-    std::pair{GateOperation::Matrix, KernelType::PI},
-};
-/**
- * @brief Define which kernel to use for each generator operation.
- */
-[[maybe_unused]] constexpr std::array default_kernel_for_generators = {
-    std::pair{GeneratorOperation::PhaseShift, KernelType::PI},
-    std::pair{GeneratorOperation::RX, KernelType::LM},
-    std::pair{GeneratorOperation::RY, KernelType::LM},
-    std::pair{GeneratorOperation::RZ, KernelType::LM},
-    std::pair{GeneratorOperation::IsingXX, KernelType::LM},
-    std::pair{GeneratorOperation::IsingYY, KernelType::LM},
-    std::pair{GeneratorOperation::IsingZZ, KernelType::LM},
-    std::pair{GeneratorOperation::CRX, KernelType::PI},
-    std::pair{GeneratorOperation::CRY, KernelType::PI},
-    std::pair{GeneratorOperation::CRZ, KernelType::PI},
-    std::pair{GeneratorOperation::ControlledPhaseShift, KernelType::PI},
-    std::pair{GeneratorOperation::MultiRZ, KernelType::LM},
 };
 } // namespace Pennylane::Gates::Constant

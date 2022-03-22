@@ -170,17 +170,14 @@ void testAllGatesIter(RandomEngine &re, size_t max_num_qubits) {
     if constexpr (gate_idx < static_cast<size_t>(GateOperation::END)) {
         constexpr static auto gate_op = static_cast<GateOperation>(gate_idx);
 
-        if constexpr (gate_op != GateOperation::Matrix) {
-            size_t min_num_qubits = array_has_elt(multi_qubit_gates, gate_op)
-                                        ? 1
-                                        : lookup(gate_wires, gate_op);
-            for (size_t num_qubits = min_num_qubits;
-                 num_qubits < max_num_qubits; num_qubits++) {
-                testApplyGate<gate_op, PrecisionT, ParamT>(re, num_qubits);
-            }
-            testAllGatesIter<gate_idx + 1, PrecisionT, ParamT>(re,
-                                                               max_num_qubits);
+        size_t min_num_qubits = array_has_elt(multi_qubit_gates, gate_op)
+                                    ? 1
+                                    : lookup(gate_wires, gate_op);
+        for (size_t num_qubits = min_num_qubits; num_qubits < max_num_qubits;
+             num_qubits++) {
+            testApplyGate<gate_op, PrecisionT, ParamT>(re, num_qubits);
         }
+        testAllGatesIter<gate_idx + 1, PrecisionT, ParamT>(re, max_num_qubits);
     }
 }
 

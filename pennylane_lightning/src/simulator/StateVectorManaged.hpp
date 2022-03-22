@@ -36,8 +36,6 @@ class StateVectorManaged
     std::vector<ComplexPrecisionT> data_;
 
   public:
-    StateVectorManaged() : StateVectorBase<PrecisionT, StateVectorManaged>() {}
-
     explicit StateVectorManaged(size_t num_qubits)
         : BaseType(num_qubits),
           data_(static_cast<size_t>(Util::exp2(num_qubits)),

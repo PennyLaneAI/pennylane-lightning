@@ -84,3 +84,5 @@ target_link_libraries(apply_all_gates PRIVATE lightning_compile_options
                                               lightning_gates
                                               lightning_simulator
                                               lightning_benchmarks_dependency)
+
+configure_file("compiler_info.in" "compiler_info.txt")

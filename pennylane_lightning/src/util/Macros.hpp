@@ -16,7 +16,7 @@
  * Define macros and compile-time constants.
  */
 #pragma once
-
+#include <array>
 #include <string>
 
 /**
@@ -239,4 +239,12 @@ constexpr auto getCompilerVersion<Compiler::NVHPC>() -> std::string_view {
 [[maybe_unused]] constexpr static auto compiler = Compiler::Unknown;
 #endif
 /// @endcond
+[[maybe_unused]] constexpr std::array compiler_names = {
+    std::pair{Compiler::NVCC, std::string_view{"NVCC"}},
+    std::pair{Compiler::NVHPC, std::string_view{"NVHPC"}},
+    std::pair{Compiler::GCC, std::string_view{"GCC"}},
+    std::pair{Compiler::Clang, std::string_view{"Clang"}},
+    std::pair{Compiler::MSVC, std::string_view{"MSVC"}},
+    std::pair{Compiler::Unknown, std::string_view{"Unknown"}},
+};
 } // namespace Pennylane::Util::Constant

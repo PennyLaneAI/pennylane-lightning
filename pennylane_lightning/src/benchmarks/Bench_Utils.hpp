@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #pragma once
+#include "ConstantUtil.hpp"
+#include "Macros.hpp"
+#include "RuntimeInfo.hpp"
 
 #include <benchmark/benchmark.h>
 
@@ -76,4 +79,36 @@ inline auto generateDistinctWires(RandomEngine &eng, size_t num_qubits,
     std::iota(v.begin(), v.end(), 0);
     shuffle(v.begin(), v.end(), eng);
     return {v.begin(), v.begin() + num_wires};
+}
+
+inline auto addCompileInfo() {
+    using namespace Pennylane;
+    constexpr auto compiler_name =
+        Util::static_lookup<Util::Constant::compiler>(
+            Util::Constant::compiler_names);
+    benchmark::AddCustomContext("Compiler::Name", std::string(compiler_name));
+    benchmark::AddCustomContext("Compiler::AVX2",
+                                std::to_string(Util::Constant::use_avx2));
+    benchmark::AddCustomContext("Compiler::AVX512F",
+                                std::to_string(Util::Constant::use_avx512f));
+    benchmark::AddCustomContext(
+        "Compiler::Version",
+        std::string(
+            Util::Constant::getCompilerVersion<Util::Constant::compiler>()));
+}
+
+constexpr auto boolToStr(bool val) -> std::string_view {
+    return val ? "True" : "False";
+}
+
+inline auto addRuntimeInfo() {
+    using Pennylane::Util::RuntimeInfo;
+    benchmark::AddCustomContext("CPU::Vendor", RuntimeInfo::vendor());
+    benchmark::AddCustomContext("CPU::Brand", RuntimeInfo::brand());
+    benchmark::AddCustomContext("CPU::AVX",
+                                std::string{boolToStr(RuntimeInfo::AVX())});
+    benchmark::AddCustomContext("CPU::AVX2",
+                                std::string{boolToStr(RuntimeInfo::AVX2())});
+    benchmark::AddCustomContext("CPU::AVX512F",
+                                std::string{boolToStr(RuntimeInfo::AVX512F())});
 }

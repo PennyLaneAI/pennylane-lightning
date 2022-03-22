@@ -3,8 +3,8 @@
  * @brief We define test kernels. Note that kernels not registered to
  * AvailableKernels can be also tested by adding it to here.
  */
-#include "GateImplementationsLM.hpp"
-#include "GateImplementationsPI.hpp"
+#include "cpu_kernels/GateImplementationsLM.hpp"
+#include "cpu_kernels/GateImplementationsPI.hpp"
 
 #include "TypeList.hpp"
 

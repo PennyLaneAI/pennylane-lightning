@@ -1,6 +1,6 @@
 #include "CreateAllWires.hpp"
-#include "GateImplementationsPI.hpp"
 #include "TestHelpers.hpp"
+#include "cpu_kernels/GateImplementationsPI.hpp"
 
 #include <catch2/catch.hpp>
 

@@ -22,10 +22,10 @@ TEMPLATE_TEST_CASE("StateVectorManaged::StateVectorManaged", "[StateVectorRaw]",
     using fp_t = TestType;
 
     SECTION("StateVectorManaged") {
-        REQUIRE(std::is_constructible_v<StateVectorManaged<>>);
+        REQUIRE(!std::is_constructible_v<StateVectorManaged<>>);
     }
     SECTION("StateVectorManaged<TestType>") {
-        REQUIRE(std::is_constructible_v<StateVectorManaged<TestType>>);
+        REQUIRE(!std::is_constructible_v<StateVectorManaged<TestType>>);
     }
     SECTION("StateVectorManaged<TestType> {size_t}") {
         REQUIRE(std::is_constructible_v<StateVectorManaged<TestType>>);

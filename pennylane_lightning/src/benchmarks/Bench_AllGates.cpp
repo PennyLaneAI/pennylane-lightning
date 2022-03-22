@@ -130,19 +130,18 @@ template <class T, class GateImplementation> void registerNonMultiQubitGates() {
 
 template <typename TypeList, std::size_t... Is>
 void registerBenchmarkForAllKernelsHelper(std::index_sequence<Is...>) {
-    (registerNonMultiQubitGates<
-         float, typename Util::getNthType<TypeList, Is>::Type>(),
-     ...);
-    (registerNonMultiQubitGates<
-         double, typename Util::getNthType<TypeList, Is>::Type>(),
-     ...);
+    (registerNonMultiQubitGates<float, Util::getNthType<TypeList, Is>>(), ...);
+    (registerNonMultiQubitGates<double, Util::getNthType<TypeList, Is>>(), ...);
 }
+
 void registerBenchmarkForAllKernels() {
     registerBenchmarkForAllKernelsHelper<AvailableKernels>(
         std::make_index_sequence<Util::length<AvailableKernels>()>());
 }
 
 int main(int argc, char **argv) {
+    addCompileInfo();
+    addRuntimeInfo();
     registerBenchmarkForAllKernels();
 
     benchmark::Initialize(&argc, argv);

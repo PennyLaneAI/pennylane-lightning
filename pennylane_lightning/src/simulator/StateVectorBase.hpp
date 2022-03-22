@@ -19,6 +19,7 @@
 #pragma once
 
 #include "Constant.hpp"
+#include "DefaultKernels.hpp"
 #include "DynamicDispatcher.hpp"
 #include "Error.hpp"
 #include "SelectKernel.hpp"
@@ -60,16 +61,6 @@
             arr, num_qubits_, wires, inverse, std::forward<Ts>(args)...);      \
     }
 
-#define PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(GATE_NAME)                   \
-    template <typename... Ts>                                                  \
-    inline void apply##GATE_NAME(const std::vector<size_t> &wires,             \
-                                 bool inverse, Ts &&...args) {                 \
-        constexpr auto kernel =                                                \
-            Util::static_lookup<Gates::GateOperation::GATE_NAME>(              \
-                Gates::Constant::default_kernel_for_gates);                    \
-        apply##GATE_NAME##_<kernel>(wires, inverse,                            \
-                                    std::forward<Ts>(args)...);                \
-    }
 #define PENNYLANE_STATEVECTOR_DEFINE_GENERATOR(GENERATOR_NAME)                 \
     template <KernelType kernel, typename... Ts>                               \
     inline void applyGenerator##GENERATOR_NAME##_(                             \
@@ -192,8 +183,10 @@ template <class PrecisionT, class Derived> class StateVectorBase {
                         const std::vector<size_t> &wires, bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
         auto *arr = getData();
-        DynamicDispatcher<PrecisionT>::getInstance().applyOperation(
-            arr, num_qubits_, opName, wires, inverse, params);
+        auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        const auto gate_op = dispatcher.strToGateOp(opName);
+        dispatcher.applyOperation(getDefaultKernelForGate(gate_op), arr,
+                                  num_qubits_, gate_op, wires, inverse, params);
     }
 
     /**
@@ -208,9 +201,15 @@ template <class PrecisionT, class Derived> class StateVectorBase {
                          const std::vector<std::vector<size_t>> &wires,
                          const std::vector<bool> &inverse,
                          const std::vector<std::vector<PrecisionT>> &params) {
-        auto *arr = getData();
-        DynamicDispatcher<PrecisionT>::getInstance().applyOperations(
-            arr, num_qubits_, ops, wires, inverse, params);
+        const size_t numOperations = ops.size();
+        if (numOperations != wires.size()) {
+            throw std::invalid_argument(
+                "Invalid arguments: number of operations, wires, and "
+                "parameters must all be equal");
+        }
+        for (size_t i = 0; i < numOperations; i++) {
+            applyOperation(ops[i], wires[i], inverse[i], params[i]);
+        }
     }
 
     /**
@@ -223,9 +222,15 @@ template <class PrecisionT, class Derived> class StateVectorBase {
     void applyOperations(const std::vector<std::string> &ops,
                          const std::vector<std::vector<size_t>> &wires,
                          const std::vector<bool> &inverse) {
-        auto *arr = getData();
-        DynamicDispatcher<PrecisionT>::getInstance().applyOperations(
-            arr, num_qubits_, ops, wires, inverse);
+        const size_t numOperations = ops.size();
+        if (numOperations != wires.size()) {
+            throw std::invalid_argument(
+                "Invalid arguments: number of operations, wires, and "
+                "parameters must all be equal");
+        }
+        for (size_t i = 0; i < numOperations; i++) {
+            applyOperation(ops[i], wires[i], inverse[i], {});
+        }
     }
 
     /**
@@ -256,33 +261,37 @@ template <class PrecisionT, class Derived> class StateVectorBase {
                                       const std::vector<size_t> &wires,
                                       bool adj = false) -> PrecisionT {
         auto *arr = getData();
-        return DynamicDispatcher<PrecisionT>::getInstance().applyGenerator(
-            arr, num_qubits_, opName, wires, adj);
+        const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        const auto gntr_op = dispatcher.strToGeneratorOp(opName);
+        return dispatcher.applyGenerator(getDefaultKernelForGenerator(gntr_op),
+                                         arr, num_qubits_, gntr_op, wires, adj);
     }
 
     /**
      * @brief Apply a given matrix directly to the statevector read directly
      * from numpy data. Data can be in 1D or 2D format.
      *
+     * @param kernel Kernel to run the operation
      * @param matrix Pointer to the array data.
-     * @param wires Wires the gate applies to.
+     * @param wires Wires to apply gate to.
      * @param inverse Indicate whether inverse should be taken.
      */
-    template <Gates::KernelType kernel>
-    inline void applyMatrix_(const ComplexPrecisionT *matrix,
-                             const std::vector<size_t> &wires,
-                             bool inverse = false) {
+    inline void applyMatrix(Gates::KernelType kernel,
+                            const ComplexPrecisionT *matrix,
+                            const std::vector<size_t> &wires,
+                            bool inverse = false) {
+        using Gates::MatrixOperation;
+
+        const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         auto *arr = getData();
-        Gates::SelectKernel<kernel>::applyMatrix(arr, num_qubits_, matrix,
-                                                 wires, inverse);
-    }
-    template <Gates::KernelType kernel>
-    inline void applyMatrix_(const std::vector<ComplexPrecisionT> &matrix,
-                             const std::vector<size_t> &wires,
-                             bool inverse = false) {
-        auto *arr = getData();
-        Gates::SelectKernel<kernel>::applyMatrix(arr, num_qubits_, matrix,
-                                                 wires, inverse);
+
+        if (wires.empty()) {
+            throw std::invalid_argument(
+                "Number of wires must be larger than 0");
+        }
+
+        dispatcher.applyMatrix(kernel, arr, num_qubits_, matrix, wires,
+                               inverse);
     }
 
     /**
@@ -296,32 +305,38 @@ template <class PrecisionT, class Derived> class StateVectorBase {
     inline void applyMatrix(const ComplexPrecisionT *matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
-        namespace Constant = Gates::Constant;
-        using Gates::GateOperation;
-        using Gates::SelectKernel;
+        using Gates::MatrixOperation;
 
-        constexpr auto kernel = Util::static_lookup<GateOperation::Matrix>(
-            Constant::default_kernel_for_gates);
-        static_assert(
-            Util::array_has_elt(SelectKernel<kernel>::implemented_gates,
-                                GateOperation::Matrix),
-            "The default kernel for applyMatrix does not implement it.");
-        applyMatrix_<kernel>(matrix, wires, inverse);
+        if (wires.empty()) {
+            throw std::invalid_argument(
+                "Number of wires must be larger than 0");
+        }
+
+        const auto kernel = [n_wires = wires.size()]() {
+            switch (n_wires) {
+            case 1:
+                return getDefaultKernelForMatrix(
+                    MatrixOperation::SingleQubitOp);
+            case 2:
+                return getDefaultKernelForMatrix(MatrixOperation::TwoQubitOp);
+            default:
+                return getDefaultKernelForMatrix(MatrixOperation::MultiQubitOp);
+            }
+        }();
+        applyMatrix(kernel, matrix, wires, inverse);
     }
-    inline void applyMatrix(const std::vector<ComplexPrecisionT> &matrix,
+
+    template <typename Alloc>
+    inline void applyMatrix(const std::vector<ComplexPrecisionT, Alloc> &matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
-        namespace Constant = Gates::Constant;
-        using Gates::GateOperation;
-        using Gates::SelectKernel;
+        if (matrix.size() != Util::exp2(2 * wires.size())) {
+            throw std::invalid_argument(
+                "The size of matrix does not match with the given "
+                "number of wires");
+        }
 
-        constexpr auto kernel = Util::static_lookup<GateOperation::Matrix>(
-            Constant::default_kernel_for_gates);
-        static_assert(
-            Util::array_has_elt(SelectKernel<kernel>::implemented_gates,
-                                GateOperation::Matrix),
-            "The default kernel for applyMatrix does not implement it.");
-        applyMatrix_<kernel>(matrix, wires, inverse);
+        applyMatrix(matrix.data(), wires, inverse);
     }
 
     /**
@@ -333,12 +348,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
     PENNYLANE_STATEVECTOR_DEFINE_GATE(PauliX)
 
     /**
-     * @brief Apply PauliX gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(PauliX)
-
-    /**
      * @brief Apply PauliY gate operation to given indices of statevector.
      *
      * @param wires Wires to apply gate to.
@@ -347,23 +356,12 @@ template <class PrecisionT, class Derived> class StateVectorBase {
     PENNYLANE_STATEVECTOR_DEFINE_GATE(PauliY)
 
     /**
-     * @brief Apply PauliY gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(PauliY)
-
-    /**
      * @brief Apply PauliZ gate operation to given indices of statevector.
      *
      * @param wires Wires to apply gate to.
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(PauliZ)
-    /**
-     * @brief Apply PauliZ gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(PauliZ)
 
     /**
      * @brief Apply Hadamard gate operation to given indices of statevector.
@@ -372,11 +370,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(Hadamard)
-    /**
-     * @brief Apply Hadamard gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(Hadamard)
 
     /**
      * @brief Apply S gate operation to given indices of statevector.
@@ -385,11 +378,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(S)
-    /**
-     * @brief Apply S gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(S)
 
     /**
      * @brief Apply T gate operation to given indices of statevector.
@@ -398,11 +386,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(T)
-    /**
-     * @brief Apply T gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(T)
 
     /**
      * @brief Apply RX gate operation to given indices of statevector.
@@ -412,11 +395,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param angle Rotation angle of gate.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(RX)
-    /**
-     * @brief Apply RX gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(RX)
 
     /**
      * @brief Apply RY gate operation to given indices of statevector.
@@ -426,11 +404,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param angle Rotation angle of gate.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(RY)
-    /**
-     * @brief Apply RY gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(RY)
 
     /**
      * @brief Apply RZ gate operation to given indices of statevector.
@@ -440,11 +413,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param angle Rotation angle of gate.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(RZ)
-    /**
-     * @brief Apply RZ gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(RZ)
 
     /**
      * @brief Apply phase shift gate operation to given indices of statevector.
@@ -454,11 +422,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param angle Phase shift angle.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(PhaseShift)
-    /**
-     * @brief Apply PhaseShift gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(PhaseShift)
 
     /*
      * @brief Apply Rot gate \f$RZ(\omega)RY(\theta)RZ(\phi)\f$ to given indices
@@ -471,11 +434,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param omega Gate rotation parameter \f$\omega\f$.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(Rot)
-    /**
-     * @brief Apply Rot gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(Rot)
 
     /**
      * @brief Apply controlled phase shift gate operation to given indices of
@@ -486,11 +444,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param angle Phase shift angle.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(ControlledPhaseShift)
-    /**
-     * @brief Apply controlled phase shift gate operation using a kernel given
-     * in default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(ControlledPhaseShift)
 
     /**
      * @brief Apply CNOT (CX) gate to given indices of statevector.
@@ -499,11 +452,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(CNOT)
-    /**
-     * @brief Apply CNOT gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(CNOT)
 
     /**
      * @brief Apply CY gate to given indices of statevector.
@@ -512,11 +460,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(CY)
-    /**
-     * @brief Apply CY gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(CY)
 
     /**
      * @brief Apply CZ gate to given indices of statevector.
@@ -525,11 +468,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(CZ)
-    /**
-     * @brief Apply CZ gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(CZ)
 
     /**
      * @brief Apply SWAP gate to given indices of statevector.
@@ -538,11 +476,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(SWAP)
-    /**
-     * @brief Apply SWAP gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(SWAP)
 
     /**
      * @brief Apply CRX gate to given indices of statevector.
@@ -552,11 +485,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param angle Rotation angle of gate.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(CRX)
-    /**
-     * @brief Apply CRX gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(CRX)
 
     /**
      * @brief Apply CRY gate to given indices of statevector.
@@ -566,11 +494,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param angle Rotation angle of gate.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(CRY)
-    /**
-     * @brief Apply CRY gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(CRY)
 
     /**
      * @brief Apply CRZ gate to given indices of statevector.
@@ -580,11 +503,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param angle Rotation angle of gate.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(CRZ)
-    /**
-     * @brief Apply CRZ gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(CRZ)
 
     /**
      * @brief Apply CRot gate (controlled \f$RZ(\omega)RY(\theta)RZ(\phi)\f$) to
@@ -597,11 +515,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param omega Gate rotation parameter \f$\omega\f$.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(CRot)
-    /**
-     * @brief Apply CRot gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(CRot)
 
     /**
      * @brief Apply Toffoli (CCX) gate to given indices of statevector.
@@ -610,11 +523,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(Toffoli)
-    /**
-     * @brief Apply Toffoli gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(Toffoli)
 
     /**
      * @brief Apply CSWAP gate to given indices of statevector.
@@ -623,11 +531,6 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param inverse Take adjoint of given operation.
      */
     PENNYLANE_STATEVECTOR_DEFINE_GATE(CSWAP)
-    /**
-     * @brief Apply CSWAP gate operation using a kernel given in
-     * default_kernel_for_gates
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(CSWAP)
 };
 
 /**

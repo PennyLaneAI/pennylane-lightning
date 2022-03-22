@@ -1,5 +1,6 @@
 #include "AvailableKernels.hpp"
 #include "Constant.hpp"
+#include "DefaultKernels.hpp"
 #include "KernelType.hpp"
 #include "SelectKernel.hpp"
 #include "Util.hpp"
@@ -73,15 +74,15 @@ static_assert(Util::count_unique(Util::second_elts_of(kernel_id_name_pairs)) ==
  * Check all kernels in default_kernel_for_gates are available
  ******************************************************************************/
 
-static_assert(check_kernels_are_available(
-                  Util::second_elts_of(Constant::default_kernel_for_gates)),
-              "default_kernel_for_gates contains an unavailable kernel");
+static_assert(
+    check_kernels_are_available(Util::second_elts_of(default_kernel_for_gates)),
+    "default_kernel_for_gates contains an unavailable kernel");
 
 /*******************************************************************************
  * Check all kernels in default_kernel_for_generators are available
  ******************************************************************************/
 
-static_assert(check_kernels_are_available(Util::second_elts_of(
-                  Constant::default_kernel_for_generators)),
+static_assert(check_kernels_are_available(
+                  Util::second_elts_of(default_kernel_for_generators)),
               "default_kernel_for_gates contains an unavailable kernel");
 } // namespace Pennylane::Gates
