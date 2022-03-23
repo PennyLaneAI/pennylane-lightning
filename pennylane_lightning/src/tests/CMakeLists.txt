@@ -72,6 +72,7 @@ set(TEST_SOURCES CreateAllWires.cpp
                  Test_AdjDiff.cpp
 #                 Test_Bindings.cpp
                  Test_DynamicDispatcher.cpp
+                 Test_Error.cpp
                  Test_GateImplementations_CompareKernels.cpp
                  Test_GateImplementations_Generator.cpp
                  Test_GateImplementations_Inverse.cpp
