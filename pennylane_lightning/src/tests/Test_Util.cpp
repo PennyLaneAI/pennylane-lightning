@@ -623,7 +623,7 @@ TEST_CASE("Utility array and tuples", "[Util]") {
 /**
  * @brief Test randomUnitary is correct
  */
-TEMPLATE_TEST_CASE("randomUnitary", "[Test_Internal]", float, double) {
+TEMPLATE_TEST_CASE("randomUnitary", "[Util]", float, double) {
     using PrecisionT = TestType;
 
     std::mt19937 re{1337};
@@ -649,5 +649,58 @@ TEMPLATE_TEST_CASE("randomUnitary", "[Test_Internal]", float, double) {
         }
 
         REQUIRE(mat == approx(identity).margin(1e-5));
+    }
+}
+
+enum class TestEnum {One, Two, , Many};
+
+TEST_CASE("Test utility functions for constants", "[Util][ConstantUtil]") {
+    using namespace std::literals;
+
+    SECTION("lookup") {
+        constexpr std::array test_pairs = {
+            std::pair{"Pennylane"sv, "-"sv},
+            std::pair{"Lightning"sv, "is"sv},
+            std::pair{"the"sv, "best"sv},
+            std::pair{"QML"sv, "library"sv},
+        };
+
+        REQUIRE(Util::lookup(test_pairs, "Pennylane"sv) == "-"sv);
+        REQUIRE(Util::lookup(test_pairs, "Lightning"sv) == "is"sv);
+        REQUIRE(Util::lookup(test_pairs, "the"sv) == "best"sv);
+        REQUIRE(Util::lookup(test_pairs, "QML"sv) == "library"sv);
+        REQUIRE_THROWS(Util::lookup(test_pairs, "bad"sv));
+    }
+
+    SECTION("count_unique") {
+        constexpr std::array test_arr1 = {
+            "This"sv,
+            "is"sv,
+            "a"sv,
+            "test"sv,
+            "arr"sv
+        };
+        constexpr std::array test_arr2 = {
+            "This"sv,
+            "is"sv,
+            "a"sv,
+            "test"sv,
+            "arr"sv,
+            "is"sv
+        };
+
+        REQUIRE(Util::count_unique(test_arr1) == 5);
+        REQUIRE(Util::count_unique(test_arr2) == 5);
+    }
+
+    SECTION("static_lookup") {
+        std::array test_pairs = {
+            std::pair{TestEnum::One, 1U},
+            std::pair{TestEnum::Two, 2U},
+        };
+
+        REQUIRE(static_lookup<TestEnum::One>(test_pairs) == 1U);
+        REQUIRE(static_lookup<TestEnum::Two>(test_pairs) == 2U);
+        REQUIRE(static_lookup<TestEnum::Many>(test_pairs) == unsigned int{});
     }
 }
