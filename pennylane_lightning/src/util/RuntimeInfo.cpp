@@ -14,17 +14,15 @@
 #include "RuntimeInfo.hpp"
 #include "Macros.hpp"
 
-#if defined(__x86_64__)
-#if defined(__GNUC__) || defined(__clang__)
+#if (defined(__GNUC__) || defined(__clang__)) && defined(__x86_64__)
 #include <cpuid.h>
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) && defined(_WIN64)
 #include <array>
 #include <intrin.h>
 #endif
-#endif
 
 namespace Pennylane::Util {
-#if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))
+#if (defined(__GNUC__) || defined(__clang__)) && defined(__x86_64__)
 RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
     const auto nids = __get_cpuid_max(0x00, nullptr);
     if (nids == 0) {
@@ -48,7 +46,7 @@ RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
         f_7_ecx = ecx;
     }
 }
-#elif defined(__x86_64__) && defined(_MSC_VER)
+#elif defined(_MSC_VER) && defined(_M_AMD64)
 RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
     std::array<int, 4> cpui;
     __cpuid(cpui.data(), 0);
