@@ -15,16 +15,14 @@
 #include "Macros.hpp"
 
 #include <array>
-#if defined(__x86_64__)
-#if defined(__GNUC__) || defined(__clang__)
+#if (defined(__GNUC__) || defined(__clang__)) && defined(__x86_64__)
 #include <cpuid.h>
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) && defined(_WIN64)
 #include <intrin.h>
-#endif
 #endif
 
 namespace Pennylane::Util {
-#if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))
+#if (defined(__GNUC__) || defined(__clang__)) && defined(__x86_64__)
 RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
     unsigned int eax = 0;
     unsigned int ebx = 0;
@@ -74,7 +72,7 @@ RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
         brand = reinterpret_cast<const char *>(p);
     }
 }
-#elif defined(__x86_64__) && defined(_MSC_VER)
+#elif defined(_MSC_VER) && defined(_M_AMD64)
 RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
     std::array<int, 4> cpui;
     __cpuid(cpui.data(), 0);
