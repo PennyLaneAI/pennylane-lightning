@@ -27,7 +27,8 @@ TEMPLATE_TEST_CASE("StateVectorRaw::StateVectorRaw", "[StateVectorRaw]", float,
     }
     SECTION("StateVectorRaw<TestType> {std::complex<TestType>*, size_t}") {
         std::vector<std::complex<TestType>> st_data(14, 0.0);
-        REQUIRE_THROWS(StateVectorRaw<PrecisionT>(st_data.data(), st_data.size()));
+        REQUIRE_THROWS(
+            StateVectorRaw<PrecisionT>(st_data.data(), st_data.size()));
     }
 }
 

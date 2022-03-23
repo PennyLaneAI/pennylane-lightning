@@ -652,7 +652,7 @@ TEMPLATE_TEST_CASE("randomUnitary", "[Util]", float, double) {
     }
 }
 
-enum class TestEnum {One, Two, Many};
+enum class TestEnum { One, Two, Many };
 
 TEST_CASE("Test utility functions for constants", "[Util][ConstantUtil]") {
     using namespace std::literals;
@@ -673,21 +673,10 @@ TEST_CASE("Test utility functions for constants", "[Util][ConstantUtil]") {
     }
 
     SECTION("count_unique") {
-        constexpr std::array test_arr1 = {
-            "This"sv,
-            "is"sv,
-            "a"sv,
-            "test"sv,
-            "arr"sv
-        };
-        constexpr std::array test_arr2 = {
-            "This"sv,
-            "is"sv,
-            "a"sv,
-            "test"sv,
-            "arr"sv,
-            "is"sv
-        };
+        constexpr std::array test_arr1 = {"This"sv, "is"sv, "a"sv, "test"sv,
+                                          "arr"sv};
+        constexpr std::array test_arr2 = {"This"sv, "is"sv,  "a"sv,
+                                          "test"sv, "arr"sv, "is"sv};
 
         REQUIRE(Util::count_unique(test_arr1) == 5);
         REQUIRE(Util::count_unique(test_arr2) == 5);
