@@ -8,6 +8,7 @@
 /**
  * @brief Test LightningException class behaves correctly
  */
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_CASE("Error.hpp", "[Error]") {
     SECTION("Raw exception") {
         const auto e = Pennylane::Util::LightningException("Test exception e");
@@ -18,6 +19,7 @@ TEST_CASE("Error.hpp", "[Error]") {
                             Catch::Matchers::Contains("Test exception e"));
         REQUIRE_THROWS_AS(throw e, Pennylane::Util::LightningException);
 
+        // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
         const Pennylane::Util::LightningException e_copy(e);
         REQUIRE_THROWS_WITH(throw e_copy,
                             Catch::Matchers::Contains("Test exception e"));
