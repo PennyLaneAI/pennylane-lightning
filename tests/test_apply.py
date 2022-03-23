@@ -645,44 +645,6 @@ class TestLightningQubitIntegration:
         assert dev.shots is None
         assert dev.short_name == "lightning.qubit"
 
-    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    def test_load_default_qubit_device_with_valid_kernel(self):
-        """Test that lightning.qubit works with valid kernel_for_ops argument."""
-        for gate in ["PauliX", "CRot", "CSWAP", "Matrix"]:
-            dev = qml.device("lightning.qubit", kernel_for_ops={gate: "PI"}, wires=2)
-
-            assert dev.num_wires == 2
-            assert dev.shots is None
-            assert dev.short_name == "lightning.qubit"
-
-    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    def test_load_default_qubit_device_with_invalid_kernel(self):
-        """Test that lightning.qubit raises error for unsupported gate/kernel pair."""
-
-        for gate in ["PauliX", "CRot", "CSWAP", "Matrix"]:
-            with pytest.raises(
-                ValueError, match=f"The given kernel Unknown does not implement {gate} gate."
-            ):
-                dev = qml.device("lightning.qubit", kernel_for_ops={gate: "Unknown"}, wires=2)
-
-    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    def test_load_default_qubit_device_with_invalid_param(self):
-        """Test that lightning.qubit does not support kernel_for_ops type list."""
-        with pytest.raises(ValueError, match=f"Argument kernel_for_ops must be a dictionary."):
-            dev = qml.device("lightning.qubit", kernel_for_ops=["I am a list"], wires=2)
-
-    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    def test_all_exported_gates_are_available(self):
-        """Test all exported gates from lightning_qubit_ops are accessible"""
-        from pennylane_lightning import lightning_qubit_ops
-        from pennylane_lightning.lightning_qubit_ops import StateVectorC128 as SV
-
-        for kernel, gate_op in lightning_qubit_ops.EXPORTED_KERNEL_OPS:
-            if gate_op != "Matrix":
-                assert getattr(SV, f"{gate_op}_{kernel}", None) is not None
-            else:
-                assert getattr(SV, f"applyMatrix_{kernel}", None) is not None
-
     def test_no_backprop(self):
         """Test that lightning.qubit does not support the backprop
         differentiation method."""
