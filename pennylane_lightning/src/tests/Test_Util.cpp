@@ -695,12 +695,12 @@ TEST_CASE("Test utility functions for constants", "[Util][ConstantUtil]") {
 
     SECTION("static_lookup") {
         std::array test_pairs = {
-            std::pair{TestEnum::One, 1U},
-            std::pair{TestEnum::Two, 2U},
+            std::pair{TestEnum::One, uint32_t{1U}},
+            std::pair{TestEnum::Two, uint32_t{2U}},
         };
 
         REQUIRE(static_lookup<TestEnum::One>(test_pairs) == 1U);
         REQUIRE(static_lookup<TestEnum::Two>(test_pairs) == 2U);
-        REQUIRE(static_lookup<TestEnum::Many>(test_pairs) == unsigned int{});
+        REQUIRE(static_lookup<TestEnum::Many>(test_pairs) == uint32_t{});
     }
 }
