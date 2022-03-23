@@ -157,9 +157,10 @@ template <class T = double> class AdjointJacobian {
      * @param reference_state Reference statevector
      * @param observables Vector of observables to apply to each statevector.
      */
-    inline void applyObservables(std::vector<StateVectorManagedCPU<T>> &states,
-                                 const StateVectorManagedCPU<T> &reference_state,
-                                 const std::vector<ObsDatum<T>> &observables) {
+    inline void
+    applyObservables(std::vector<StateVectorManagedCPU<T>> &states,
+                     const StateVectorManagedCPU<T> &reference_state,
+                     const std::vector<ObsDatum<T>> &observables) {
         // clang-format off
         // Globally scoped exception value to be captured within OpenMP block.
         // See the following for OpenMP design decisions:
@@ -207,9 +208,9 @@ template <class T = double> class AdjointJacobian {
      * @param op_idx Index of given operation within operations list to take
      * adjoint of.
      */
-    inline void applyOperationsAdj(std::vector<StateVectorManagedCPU<T>> &states,
-                                   const OpsData<T> &operations,
-                                   size_t op_idx) {
+    inline void
+    applyOperationsAdj(std::vector<StateVectorManagedCPU<T>> &states,
+                       const OpsData<T> &operations, size_t op_idx) {
         // clang-format off
         // Globally scoped exception value to be captured within OpenMP block.
         // See the following for OpenMP design decisions:
@@ -333,7 +334,8 @@ template <class T = double> class AdjointJacobian {
             num_param_ops - 1; // total number of parametric ops
 
         // Create $U_{1:p}\vert \lambda \rangle$
-        StateVectorManagedCPU<T> lambda(jd.getPtrStateVec(), jd.getSizeStateVec());
+        StateVectorManagedCPU<T> lambda(jd.getPtrStateVec(),
+                                        jd.getSizeStateVec());
 
         // Apply given operations to statevector if requested
         if (apply_operations) {

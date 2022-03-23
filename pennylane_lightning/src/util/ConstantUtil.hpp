@@ -17,8 +17,8 @@
  */
 #pragma once
 
-#include "Util.hpp"
 #include "TypeTraits.hpp"
+#include "Util.hpp"
 
 #include <array>
 #include <cstdlib>

@@ -79,9 +79,9 @@ template <Gates::GateOperation gate_op> struct KernelsImplementingGate {
  */
 template <Gates::GateOperation gate_op, typename PrecisionT, typename ParamT,
           typename GateImplementation, class Alloc>
-auto applyGate(std::vector<std::complex<PrecisionT>, Alloc> ini, size_t num_qubits,
-               const std::vector<size_t> &wires, bool inverse,
-               const std::vector<ParamT> &params)
+auto applyGate(std::vector<std::complex<PrecisionT>, Alloc> ini,
+               size_t num_qubits, const std::vector<size_t> &wires,
+               bool inverse, const std::vector<ParamT> &params)
     -> std::vector<std::complex<PrecisionT>, Alloc> {
     callGateOps(GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                                       gate_op>::value,
