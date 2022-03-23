@@ -652,7 +652,7 @@ TEMPLATE_TEST_CASE("randomUnitary", "[Util]", float, double) {
     }
 }
 
-enum class TestEnum {One, Two, , Many};
+enum class TestEnum {One, Two, Many};
 
 TEST_CASE("Test utility functions for constants", "[Util][ConstantUtil]") {
     using namespace std::literals;
@@ -699,8 +699,8 @@ TEST_CASE("Test utility functions for constants", "[Util][ConstantUtil]") {
             std::pair{TestEnum::Two, uint32_t{2U}},
         };
 
-        REQUIRE(static_lookup<TestEnum::One>(test_pairs) == 1U);
-        REQUIRE(static_lookup<TestEnum::Two>(test_pairs) == 2U);
-        REQUIRE(static_lookup<TestEnum::Many>(test_pairs) == uint32_t{});
+        REQUIRE(Util::static_lookup<TestEnum::One>(test_pairs) == 1U);
+        REQUIRE(Util::static_lookup<TestEnum::Two>(test_pairs) == 2U);
+        REQUIRE(Util::static_lookup<TestEnum::Many>(test_pairs) == uint32_t{});
     }
 }
