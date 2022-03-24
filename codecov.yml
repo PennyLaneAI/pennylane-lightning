@@ -3,3 +3,10 @@ fixes:
 
 ignore:
   - "pennylane_lightning/src/tests"
+
+codecov:
+  notify:
+    after_n_builds: 5
+
+comment:
+  after_n_builds: 5
