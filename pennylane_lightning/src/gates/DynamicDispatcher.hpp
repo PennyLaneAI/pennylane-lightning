@@ -45,6 +45,21 @@ namespace Pennylane::Internal {
  * @tparam ParamT Floating point type for parameters
  */
 template <class PrecisionT, class ParamT> int registerAllAvailableKernels();
+
+constexpr auto generatorNamesWithoutPrefix() {
+    constexpr std::string_view prefix = "Generator";
+    namespace GateConstant = Gates::Constant;
+    std::array<std::pair<Gates::GeneratorOperation, std::string_view>,
+               GateConstant::generator_names.size()>
+        res;
+    for (size_t i = 0; i < GateConstant::generator_names.size(); i++) {
+        const auto [gntr_op, gntr_name] = GateConstant::generator_names[i];
+        res[i].first = gntr_op;
+        res[i].second = gntr_name.substr(prefix.size());
+    }
+    return res;
+}
+
 } // namespace Pennylane::Internal
 /// @endcond
 
@@ -102,25 +117,16 @@ template <typename PrecisionT> class DynamicDispatcher {
                        MatrixFunc, Util::PairHash>
         matrices_;
 
-    constexpr static auto removeGeneratorPrefix(std::string_view op_name)
-        -> std::string_view {
-        constexpr std::string_view prefix = "Generator";
-        // TODO: change to string::starts_with in C++20
-        if (op_name.rfind(prefix) != 0) {
-            return op_name;
-        }
-        return op_name.substr(prefix.size());
-    }
-
     DynamicDispatcher() {
         using Gates::KernelType;
+        constexpr static auto gntr_names_without_prefix =
+            Internal::generatorNamesWithoutPrefix();
 
         for (const auto &[gate_op, gate_name] : Gates::Constant::gate_names) {
             str_to_gates_.emplace(gate_name, gate_op);
         }
-        for (const auto &[gntr_op, gntr_name] :
-             Gates::Constant::generator_names) {
-            str_to_gntrs_.emplace(removeGeneratorPrefix(gntr_name), gntr_op);
+        for (const auto &[gntr_op, gntr_name] : gntr_names_without_prefix) {
+            str_to_gntrs_.emplace(gntr_name, gntr_op);
         }
     }
 
