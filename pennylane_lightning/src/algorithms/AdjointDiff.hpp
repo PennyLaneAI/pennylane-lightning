@@ -193,7 +193,7 @@ template <class T = double> class AdjointJacobian {
         }
         #endif
         if (ex) {
-            std::rethrow_exception(ex);
+            std::rethrow_exception(ex); //LCOV_EXCL_LINE
         }
         // clang-format on
     }
@@ -242,7 +242,7 @@ template <class T = double> class AdjointJacobian {
         }
         #endif
         if (ex) {
-            std::rethrow_exception(ex);
+            std::rethrow_exception(ex); //LCOV_EXCL_LINE
         }
         // clang-format on
     }
