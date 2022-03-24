@@ -318,13 +318,13 @@ TEMPLATE_TEST_CASE("Test linear algebra functions", "[Util][LinearAlgebra]",
     }
     SECTION("CFTranspose") {
         SECTION("Simple Matrix") {
-            for (size_t m = 2; m < 8; m++) {
+            for (size_t m = 2; m < 10; m++) {
                 std::vector<TestType> mat(m * m, {0});
                 for (size_t i = 0; i < m; i++) {
                     mat[i * m + i] = 1.0;
                 }
                 std::vector<TestType> mat_t(m * m);
-                Util::CFTranspose<TestType, 2>(mat.data(), mat_t.data(), m, m,
+                Util::CFTranspose<TestType, 4>(mat.data(), mat_t.data(), m, m,
                                                0, m, 0, m);
 
                 CAPTURE(mat_t);

@@ -176,7 +176,7 @@ template <class T = double> class AdjointJacobian {
                 try {
                     states[h_i].updateData(reference_state.getDataVector());
                     applyObservable(states[h_i], observables[h_i]);
-                } catch (...) { // pragma: no cover
+                } catch (...) {
                     #if defined(_OPENMP)
                         #pragma omp critical
                     #endif
@@ -192,7 +192,7 @@ template <class T = double> class AdjointJacobian {
             }
         }
         #endif
-        if (ex) { // pragma: no cover
+        if (ex) {
             std::rethrow_exception(ex);
         }
         // clang-format on
@@ -225,7 +225,7 @@ template <class T = double> class AdjointJacobian {
             for (size_t obs_idx = 0; obs_idx < num_states; obs_idx++) {
                 try {
                     applyOperationAdj(states[obs_idx], operations, op_idx);
-                } catch (...) { // pragma: no cover
+                } catch (...) {
                     #if defined(_OPENMP)
                         #pragma omp critical
                     #endif
@@ -241,7 +241,7 @@ template <class T = double> class AdjointJacobian {
             }
         }
         #endif
-        if (ex) { // pragma: no cover
+        if (ex) {
             std::rethrow_exception(ex);
         }
         // clang-format on
