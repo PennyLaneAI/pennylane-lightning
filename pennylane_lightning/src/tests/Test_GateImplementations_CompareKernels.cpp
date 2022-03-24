@@ -72,12 +72,13 @@ template <Gates::MatrixOperation mat_op, typename TypeList>
 constexpr auto kernelsImplementingMatrixHelper() {
     if constexpr (std::is_same_v<TypeList, void>) {
         return std::tuple{};
-    }
-    else {
-        constexpr auto r = kernelsImplementingMatrixHelper<mat_op, typename TypeList::Next>();
-        if constexpr (Util::array_has_elt(TypeList::Type::implemented_matrices, mat_op)) {
+    } else {
+        constexpr auto r =
+            kernelsImplementingMatrixHelper<mat_op, typename TypeList::Next>();
+        if constexpr (Util::array_has_elt(TypeList::Type::implemented_matrices,
+                                          mat_op)) {
             return Util::prepend_to_tuple(TypeList::Type::kernel_id, r);
-        } else{
+        } else {
             return r;
         }
     }
@@ -95,8 +96,8 @@ template <Gates::GateOperation gate_op> struct KernelsImplementingGate {
  * @brief Type list of kernels implementing the given matrix operation.
  */
 template <Gates::MatrixOperation mat_op>
-constexpr static auto kernels_implementing_matrix = 
-    Util::tuple_to_array(kernelsImplementingMatrixHelper<mat_op, TestKernels>());
+constexpr static auto kernels_implementing_matrix = Util::tuple_to_array(
+    kernelsImplementingMatrixHelper<mat_op, TestKernels>());
 
 /**
  * @brief Apply the given gate operation with the given gate implementation.
@@ -224,100 +225,109 @@ TEMPLATE_TEST_CASE("Test all kernels give the same results for gates",
 }
 
 template <typename PrecisionT, class RandomEngine>
-void testSingleQubitOp(RandomEngine& re, size_t num_qubits, bool inverse) {
+void testSingleQubitOp(RandomEngine &re, size_t num_qubits, bool inverse) {
     constexpr size_t num_wires = 1;
 
     const auto ini_st = createRandomState<PrecisionT>(re, num_qubits);
     const auto matrix = randomUnitary<PrecisionT>(re, num_qubits);
-    const auto all_kernels = kernels_implementing_matrix<MatrixOperation::SingleQubitOp>;
+    const auto all_kernels =
+        kernels_implementing_matrix<MatrixOperation::SingleQubitOp>;
 
     std::ostringstream ss;
     ss << "Test SingleQubitOp with kernels: ";
-    for (KernelType kernel: all_kernels) {
+    for (KernelType kernel : all_kernels) {
         ss << Util::lookup(kernel_id_name_pairs, kernel) << ", ";
     }
     ss << "inverse: " << inverse;
 
     DYNAMIC_SECTION(ss.str()) {
-        const auto all_wires = CombinationGenerator(num_qubits, num_wires).all_perms();
-        for(const auto wires: all_wires) {
+        const auto all_wires =
+            CombinationGenerator(num_qubits, num_wires).all_perms();
+        for (const auto wires : all_wires) {
             std::vector<std::vector<std::complex<PrecisionT>>> res;
-            for (KernelType kernel: all_kernels) {
+            for (KernelType kernel : all_kernels) {
                 auto st = ini_st;
-                DynamicDispatcher<PrecisionT>::getInstance().applyMatrix(kernel, st.data(),
-                        num_qubits, matrix.data(), wires, inverse);
+                DynamicDispatcher<PrecisionT>::getInstance().applyMatrix(
+                    kernel, st.data(), num_qubits, matrix.data(), wires,
+                    inverse);
                 res.emplace_back(std::move(st));
             }
-            for(size_t idx = 0; idx < all_kernels.size() - 1; idx++) {
-                REQUIRE(res[idx] == approx(res[idx+1]).margin(1e-7));
+            for (size_t idx = 0; idx < all_kernels.size() - 1; idx++) {
+                REQUIRE(res[idx] == approx(res[idx + 1]).margin(1e-7));
             }
         }
     }
 }
 
 template <typename PrecisionT, class RandomEngine>
-void testTwoQubitOp(RandomEngine& re, size_t num_qubits, bool inverse) {
+void testTwoQubitOp(RandomEngine &re, size_t num_qubits, bool inverse) {
     constexpr size_t num_wires = 1;
 
     const auto ini_st = createRandomState<PrecisionT>(re, num_qubits);
     const auto matrix = randomUnitary<PrecisionT>(re, num_qubits);
-    const auto all_kernels = kernels_implementing_matrix<MatrixOperation::TwoQubitOp>;
+    const auto all_kernels =
+        kernels_implementing_matrix<MatrixOperation::TwoQubitOp>;
 
     std::ostringstream ss;
     ss << "Test TwoQubitOp with kernels: ";
-    for (KernelType kernel: all_kernels) {
+    for (KernelType kernel : all_kernels) {
         ss << Util::lookup(kernel_id_name_pairs, kernel) << ", ";
     }
     ss << "inverse: " << inverse;
 
     DYNAMIC_SECTION(ss.str()) {
-        const auto all_wires = CombinationGenerator(num_qubits, num_wires).all_perms();
-        for(const auto wires: all_wires) {
+        const auto all_wires =
+            CombinationGenerator(num_qubits, num_wires).all_perms();
+        for (const auto wires : all_wires) {
             std::vector<std::vector<std::complex<PrecisionT>>> res;
-            for (KernelType kernel: all_kernels) {
+            for (KernelType kernel : all_kernels) {
                 auto st = ini_st;
-                DynamicDispatcher<PrecisionT>::getInstance().applyMatrix(kernel, st.data(),
-                        num_qubits, matrix.data(), wires, inverse);
+                DynamicDispatcher<PrecisionT>::getInstance().applyMatrix(
+                    kernel, st.data(), num_qubits, matrix.data(), wires,
+                    inverse);
                 res.emplace_back(std::move(st));
             }
-            for(size_t idx = 0; idx < all_kernels.size() - 1; idx++) {
-                REQUIRE(res[idx] == approx(res[idx+1]).margin(1e-7));
+            for (size_t idx = 0; idx < all_kernels.size() - 1; idx++) {
+                REQUIRE(res[idx] == approx(res[idx + 1]).margin(1e-7));
             }
         }
     }
 }
 
 template <typename PrecisionT, class RandomEngine>
-void testMultiQubitOp(RandomEngine& re, size_t num_qubits, size_t num_wires, bool inverse) {
+void testMultiQubitOp(RandomEngine &re, size_t num_qubits, size_t num_wires,
+                      bool inverse) {
     assert(num_wires >= 2);
     const auto ini_st = createRandomState<PrecisionT>(re, num_qubits);
     const auto matrix = randomUnitary<PrecisionT>(re, num_qubits);
-    const auto all_kernels = kernels_implementing_matrix<MatrixOperation::MultiQubitOp>;
+    const auto all_kernels =
+        kernels_implementing_matrix<MatrixOperation::MultiQubitOp>;
 
     std::ostringstream ss;
     ss << "Test MultiQubitOp with kernels: ";
-    for (KernelType kernel: all_kernels) {
+    for (KernelType kernel : all_kernels) {
         ss << Util::lookup(kernel_id_name_pairs, kernel) << ", ";
     }
     ss << "inverse: " << inverse;
 
     DYNAMIC_SECTION(ss.str()) {
-        const auto all_wires = PermutationGenerator(num_qubits, num_wires).all_perms();
-        for(const auto wires: all_wires) {
+        const auto all_wires =
+            PermutationGenerator(num_qubits, num_wires).all_perms();
+        for (const auto wires : all_wires) {
             std::vector<std::vector<std::complex<PrecisionT>>> res;
-            for (KernelType kernel: all_kernels) {
+            for (KernelType kernel : all_kernels) {
                 auto st = ini_st;
-                DynamicDispatcher<PrecisionT>::getInstance().applyMatrix(kernel, st.data(),
-                        num_qubits, matrix.data(), wires, inverse);
+                DynamicDispatcher<PrecisionT>::getInstance().applyMatrix(
+                    kernel, st.data(), num_qubits, matrix.data(), wires,
+                    inverse);
                 res.emplace_back(std::move(st));
             }
-            for(size_t idx = 0; idx < all_kernels.size() - 1; idx++) {
-                REQUIRE(res[idx] == approx(res[idx+1]).margin(1e-7));
+            for (size_t idx = 0; idx < all_kernels.size() - 1; idx++) {
+                REQUIRE(res[idx] == approx(res[idx + 1]).margin(1e-7));
             }
         }
     }
 }
-
 
 TEMPLATE_TEST_CASE("Test all kernels give the same results for matrices",
                    "[Test_GateImplementations_CompareKernels]", float, double) {
@@ -325,7 +335,7 @@ TEMPLATE_TEST_CASE("Test all kernels give the same results for matrices",
 
     const size_t num_qubits = 5;
 
-    for(bool inverse: {true, false}) {
+    for (bool inverse : {true, false}) {
         testSingleQubitOp<TestType>(re, num_qubits, inverse);
         testTwoQubitOp<TestType>(re, num_qubits, inverse);
         testMultiQubitOp<TestType>(re, num_qubits, 2, inverse);

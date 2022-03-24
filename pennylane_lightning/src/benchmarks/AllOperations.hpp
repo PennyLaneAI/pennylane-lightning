@@ -11,19 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include <algorithm>
-#include <random>
-#include <vector>
+#pragma once
+#include "Bench_Utils.hpp"
 
 #include "Constant.hpp"
 #include "StateVectorManaged.hpp"
 
-#include "Bench_Utils.hpp"
-
-using namespace Pennylane;
-using Kernel = Pennylane::Gates::KernelType;
+#include <algorithm>
+#include <random>
+#include <vector>
 
 constexpr size_t num_gates = 32;
+constexpr size_t num_gntrs = 32;
 
 //***********************************************************************//
 //                            Gates
@@ -45,8 +44,10 @@ auto createParams(RandomEngine &re, size_t num_params) -> std::vector<ParamT> {
  * @tparam T Floating point precision type.
  */
 template <class T>
-static void applyOperation_GateOp(benchmark::State &state, Kernel kernel,
-                                  Gates::GateOperation gate_op) {
+static void applyOperation_GateOp(benchmark::State &state,
+                                  Pennylane::Gates::KernelType kernel,
+                                  Pennylane::Gates::GateOperation gate_op) {
+    using namespace Pennylane;
     const size_t num_qubits = state.range(0);
 
     const auto num_params =
@@ -102,49 +103,62 @@ static void applyOperation_GateOp(benchmark::State &state, Kernel kernel,
     }
 }
 
-template <class T, class GateImplementation> void registerAllGates() {
-    for (const auto gate_op : GateImplementation::implemented_gates) {
-        const auto gate_name =
-            std::string(Util::lookup(Gates::Constant::gate_names, gate_op));
-        const std::string name = std::string("applyOperation_") + gate_name +
-                                 "<" + std::string(precision_to_str<T>) + ">/" +
-                                 std::string(GateImplementation::name);
-        if (Util::array_has_elt(Gates::Constant::multi_qubit_gates, gate_op)) {
-            benchmark::RegisterBenchmark(name.c_str(), applyOperation_GateOp<T>,
-                                         GateImplementation::kernel_id, gate_op)
-                ->ArgsProduct({
-                    benchmark::CreateDenseRange(6, 24,
-                                                /*step=*/2), // num_qubits
-                    benchmark::CreateRange(2, 4, /*mul=*/2), // num_wires
-                });
+//***********************************************************************//
+//                            Generators
+//***********************************************************************//
+
+/**
+ * @brief Benchmark function for gate operation with a fixed number of wires.
+ */
+template <class T>
+static void
+applyGenerator_GntrOp(benchmark::State &state,
+                      Pennylane::Gates::KernelType kernel,
+                      Pennylane::Gates::GeneratorOperation gntr_op) {
+    using namespace Pennylane;
+    const size_t num_qubits = state.range(0);
+    const auto gntr_name =
+        std::string{Util::lookup(Gates::Constant::generator_names, gntr_op)};
+
+    const auto num_wires = [&]() {
+        if (Util::array_has_elt(Gates::Constant::multi_qubit_generators,
+                                gntr_op)) {
+            return static_cast<size_t>(state.range(1));
         } else {
-            benchmark::RegisterBenchmark(name.c_str(), applyOperation_GateOp<T>,
-                                         GateImplementation::kernel_id, gate_op)
-                ->ArgsProduct({
-                    benchmark::CreateDenseRange(6, 24,
-                                                /*step=*/2), // num_qubits
-                });
+            return Util::lookup(Gates::Constant::generator_wires, gntr_op);
         }
+    }();
+
+    if (!num_qubits) {
+        state.SkipWithError("Invalid number of qubits.");
     }
-}
 
-template <typename TypeList, std::size_t... Is>
-void registerBenchmarkForAllKernelsHelper(std::index_sequence<Is...>) {
-    (registerAllGates<float, Util::getNthType<TypeList, Is>>(), ...);
-    (registerAllGates<double, Util::getNthType<TypeList, Is>>(), ...);
-}
+    if (!num_wires) {
+        state.SkipWithError("Invalid number of wires.");
+    }
 
-void registerBenchmarkForAllKernels() {
-    registerBenchmarkForAllKernelsHelper<AvailableKernels>(
-        std::make_index_sequence<Util::length<AvailableKernels>()>());
-}
+    std::random_device rd;
+    std::mt19937_64 eng(rd());
 
-int main(int argc, char **argv) {
-    addCompileInfo();
-    addRuntimeInfo();
-    registerBenchmarkForAllKernels();
+    std::vector<std::vector<size_t>> wires;
 
-    benchmark::Initialize(&argc, argv);
-    benchmark::RunSpecifiedBenchmarks();
-    benchmark::Shutdown();
+    wires.reserve(num_gntrs);
+
+    for (size_t i = 0; i < num_gntrs; i++) {
+        wires.emplace_back(generateDistinctWires(eng, num_qubits, num_wires));
+    }
+
+    const auto gntr_name_without_suffix = gntr_name.substr(9);
+
+    for (auto _ : state) {
+        Pennylane::StateVectorManaged<T> sv{num_qubits};
+
+        for (size_t g = 0; g < num_gntrs; g++) {
+            [[maybe_unused]] const auto scale = sv.applyGenerator(
+                kernel, gntr_name_without_suffix, wires[g], false);
+        }
+
+        benchmark::DoNotOptimize(sv.getDataVector()[0]);
+        benchmark::DoNotOptimize(sv.getDataVector()[(1 << num_qubits) - 1]);
+    }
 }

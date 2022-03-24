@@ -75,23 +75,22 @@ target_link_libraries(apply_operations PRIVATE lightning_gates
                                                benchmark::benchmark_main)
 
 ################################################################################
-# Add bench_all_gates exe
+# Add bench_kernels
 ################################################################################
 
-add_executable(bench_all_gates Bench_AllGates.cpp)
-add_compile_definitions(bench_all_gates INTERFACE lightning_compile_options)
-target_link_libraries(bench_all_gates PRIVATE lightning_compile_options
+add_executable(bench_kernels Bench_Kernels.cpp)
+add_compile_definitions(bench_kernels INTERFACE lightning_compile_options)
+target_link_libraries(bench_kernels PRIVATE lightning_compile_options
                                               lightning_gates
                                               lightning_simulator
                                               lightning_benchmarks_dependency)
 
-################################################################################
-# Add bench_all_generators
-################################################################################
 
-add_executable(bench_all_generators Bench_AllGenerators.cpp)
-add_compile_definitions(bench_all_generators INTERFACE lightning_compile_options)
-target_link_libraries(bench_all_generators PRIVATE lightning_compile_options
-                                              lightning_gates
-                                              lightning_simulator
-                                              lightning_benchmarks_dependency)
+add_custom_command(TARGET bench_kernels POST_BUILD 
+                   COMMAND ${CMAKE_COMMAND} -E create_symlink
+                           ${PROJECT_SOURCE_DIR}/benchmark_all.sh
+                           ${PROJECT_BINARY_DIR}/benchmark_all.sh
+                   COMMAND ${CMAKE_COMMAND} -E create_symlink
+                           ${PROJECT_SOURCE_DIR}/plot_gate_benchmark.py
+                           ${PROJECT_BINARY_DIR}/plot_gate_benchmark.py
+)

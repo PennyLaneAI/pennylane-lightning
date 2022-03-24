@@ -55,12 +55,12 @@ void lightning_class_bindings(py::module &m) {
     //***********************************************************************//
 
     std::string class_name = "StateVectorC" + bitsize;
-    auto pyclass = py::class_<StateVectorRaw<PrecisionT>>(
-        m, class_name.c_str(), py::module_local());
+    auto pyclass = py::class_<StateVectorRaw<PrecisionT>>(m, class_name.c_str(),
+                                                          py::module_local());
     pyclass.def(py::init(&createRaw<PrecisionT>));
 
-    registerGatesForStateVector<PrecisionT, ParamT,
-                                StateVectorRaw<PrecisionT>>(pyclass);
+    registerGatesForStateVector<PrecisionT, ParamT, StateVectorRaw<PrecisionT>>(
+        pyclass);
 
     //***********************************************************************//
     //                              Observable

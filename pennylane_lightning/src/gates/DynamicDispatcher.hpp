@@ -187,14 +187,19 @@ template <typename PrecisionT> class DynamicDispatcher {
         matrices_.emplace(std::make_pair(mat_op, kernel), func);
     }
 
-    bool isRegistered(Gates::GateOperation gate_op, Gates::KernelType kernel) const {
+    bool isRegistered(Gates::GateOperation gate_op,
+                      Gates::KernelType kernel) const {
         return gates_.find(std::make_pair(gate_op, kernel)) != gates_.cend();
     }
-    bool isRegistered(Gates::GeneratorOperation gntr_op, Gates::KernelType kernel) const {
-        return generators_.find(std::make_pair(gntr_op, kernel)) != generators_.cend();
+    bool isRegistered(Gates::GeneratorOperation gntr_op,
+                      Gates::KernelType kernel) const {
+        return generators_.find(std::make_pair(gntr_op, kernel)) !=
+               generators_.cend();
     }
-    bool isRegistered(Gates::MatrixOperation mat_op, Gates::KernelType kernel) const {
-        return matrices_.find(std::make_pair(mat_op, kernel)) != matrices_.cend();
+    bool isRegistered(Gates::MatrixOperation mat_op,
+                      Gates::KernelType kernel) const {
+        return matrices_.find(std::make_pair(mat_op, kernel)) !=
+               matrices_.cend();
     }
 
     /**
