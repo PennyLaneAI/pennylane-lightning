@@ -18,8 +18,8 @@
 #if (defined(__GNUC__) || defined(__clang__)) && defined(__x86_64__)
 #include <cpuid.h>
 #elif defined(_MSC_VER) && defined(_WIN64)
-#include <vector>
 #include <intrin.h>
+#include <vector>
 #endif
 
 namespace Pennylane::Util {
@@ -75,7 +75,9 @@ RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
 }
 #elif defined(_MSC_VER) && defined(_M_AMD64)
 RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
-    std::array<int, 4> cpui = {0,};
+    std::array<int, 4> cpui = {
+        0,
+    };
     __cpuid(cpui.data(), 0);
 
     const int nids = cpui[0];
@@ -115,7 +117,7 @@ RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
 
         char str[48];
         memset(str, 0, sizeof(str));
-        memcpy(str, tmp[0].data(), sizeof(int)*4);
+        memcpy(str, tmp[0].data(), sizeof(int) * 4);
         memcpy(str + 16, tmp[1].data(), sizeof(int) * 4);
         memcpy(str + 32, tmp[2].data(), sizeof(int) * 4);
         brand = str;
