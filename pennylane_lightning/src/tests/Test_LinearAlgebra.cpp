@@ -205,9 +205,6 @@ TEMPLATE_TEST_CASE("Test linear algebra functions", "[Util][LinearAlgebra]",
                 Util::matrixVecProd(mat, v_in, 4, 4, Trans::Transpose);
             CAPTURE(v_out);
 
-            for (const auto &i : v_out) {
-                std::cout << i << std::endl;
-            }
             CHECK(v_out == approx(v_expected).margin(1e-7));
         }
         SECTION("Invalid Arguments") {
@@ -282,7 +279,7 @@ TEMPLATE_TEST_CASE("Test linear algebra functions", "[Util][LinearAlgebra]",
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
             std::vector<TestType> v_in(4, {1.0});
-            std::vector<TestType> mat{4 * 2, {1.0}};
+            std::vector<TestType> mat(8, {1.0});
             CHECK_THROWS_AS(Util::vecMatrixProd(v_in, mat, 2, 3),
                             std::invalid_argument);
             CHECK_THROWS_WITH(Util::vecMatrixProd(v_in, mat, 2, 3),
@@ -293,6 +290,23 @@ TEMPLATE_TEST_CASE("Test linear algebra functions", "[Util][LinearAlgebra]",
                 Util::vecMatrixProd(v_in, mat, 4, 3),
                 Contains(
                     "Invalid number of rows and columns for the input matrix"));
+
+            std::vector<TestType> v_out(3);
+            CHECK_THROWS_AS(Util::vecMatrixProd(v_out, v_in, mat, 2, 3),
+                            std::invalid_argument);
+            CHECK_THROWS_WITH(
+                Util::vecMatrixProd(v_out, v_in, mat, 2, 3),
+                Contains(
+                    "Invalid number of rows and columns for the input matrix"));
+            CHECK_THROWS_AS(Util::vecMatrixProd(v_out, v_in, mat, 2, 4),
+                            std::invalid_argument);
+            CHECK_THROWS_WITH(Util::vecMatrixProd(v_out, v_in, mat, 2, 4),
+                              Contains("Invalid size for the input vector"));
+            CHECK_THROWS_AS(Util::vecMatrixProd(v_out, v_in, mat, 4, 2),
+                            std::invalid_argument);
+            CHECK_THROWS_WITH(
+                Util::vecMatrixProd(v_out, v_in, mat, 4, 2),
+                Contains("Invalid preallocated size for the result"));
         }
         SECTION("nullptr for v_out") {
             std::vector<TestType> v_in(4, {1.0});
@@ -302,14 +316,16 @@ TEMPLATE_TEST_CASE("Test linear algebra functions", "[Util][LinearAlgebra]",
             CHECK(v_out == nullptr);
         }
     }
-    SECTION("Transpose<T>") {
+    SECTION("CFTranspose") {
         SECTION("Simple Matrix") {
             for (size_t m = 2; m < 8; m++) {
                 std::vector<TestType> mat(m * m, {0});
                 for (size_t i = 0; i < m; i++) {
                     mat[i * m + i] = 1.0;
                 }
-                std::vector<TestType> mat_t = Util::Transpose(mat, m, m);
+                std::vector<TestType> mat_t(m * m);
+                Util::CFTranspose<TestType, 2>(mat.data(), mat_t.data(), m, m,
+                                               0, m, 0, m);
 
                 CAPTURE(mat_t);
                 CAPTURE(mat);
@@ -326,7 +342,9 @@ TEMPLATE_TEST_CASE("Test linear algebra functions", "[Util][LinearAlgebra]",
                 0.417876, 0.723548, 0.0597232, 0.27448,  0.781624,
                 0.27755,  0.601209, 0.538222,  0.836569,
             };
-            std::vector<TestType> mat_t = Util::Transpose(mat, 3, 3);
+            std::vector<TestType> mat_t(9);
+            Util::CFTranspose<TestType, 2>(mat.data(), mat_t.data(), 3, 3, 0, 3,
+                                           0, 3);
 
             CAPTURE(mat_t);
             CAPTURE(mat_t_exp);
@@ -472,30 +490,17 @@ TEMPLATE_TEST_CASE("Test linear algebra functions", "[Util][LinearAlgebra]",
                 {0.845207296911400, 1.843583823364000},
                 {-0.482010055957000, 2.062995137499000},
                 {-0.524094900662100, 1.815727577737900}};
-            std::vector<std::complex<TestType>> m_out_exp_3{
-                {2.09643, 0},          {1.80347, -0.352886},
-                {1.52571, -0.43653},   {2.19719, -1.19117},
-                {1.80347, 0.352886},   {2.68584, 0},
-                {2.08094, -0.0199763}, {2.44976, -0.540067},
-                {1.52571, 0.43653},    {2.08094, 0.0199763},
-                {2.33875, 0},          {2.22899, -0.656204},
-                {2.19719, 1.19117},    {2.44976, 0.540067},
-                {2.22899, 0.656204},   {3.3193, 0}};
             std::vector<std::complex<TestType>> m_out_1 = Util::matrixMatProd(
                 m_left, m_right_tp, 4, 4, 4, Trans::Transpose);
             std::vector<std::complex<TestType>> m_out_2 = Util::matrixMatProd(
                 m_left, m_right, 4, 4, 4, Trans::NoTranspose);
-            std::vector<std::complex<TestType>> m_out_3 =
-                Util::matrixMatProd(m_left, m_right, 4, 4, 4, Trans::Adjoint);
 
             CAPTURE(m_out_1);
             CAPTURE(m_out_2);
-            CAPTURE(m_out_3);
             CAPTURE(m_out_exp);
 
             CHECK(m_out_1 == approx(m_out_2));
             CHECK(m_out_1 == approx(m_out_exp));
-            CHECK(m_out_3 == approx(m_out_exp_3));
         }
         SECTION("Random complex non-square") {
             const size_t m = 4;
