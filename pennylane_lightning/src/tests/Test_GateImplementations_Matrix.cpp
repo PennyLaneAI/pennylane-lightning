@@ -969,17 +969,17 @@ void testApplyMatrixInverseForKernels() {
         if constexpr (Util::array_has_elt(
                           GateImplementation::implemented_matrices,
                           MatrixOperation::SingleQubitOp)) {
-            testApplySingleQubitOp<PrecisionT, GateImplementation>();
+            testApplySingleQubitOpInverse<PrecisionT, GateImplementation>();
         }
         if constexpr (Util::array_has_elt(
                           GateImplementation::implemented_matrices,
                           MatrixOperation::TwoQubitOp)) {
-            testApplyTwoQubitOp<PrecisionT, GateImplementation>();
+            testApplyTwoQubitOpInverse<PrecisionT, GateImplementation>();
         }
         if constexpr (Util::array_has_elt(
                           GateImplementation::implemented_matrices,
                           MatrixOperation::MultiQubitOp)) {
-            testApplyMultiQubitOp<PrecisionT, GateImplementation>();
+            testApplyMultiQubitOpInverse<PrecisionT, GateImplementation>();
         }
         testApplyMatrixInverseForKernels<PrecisionT, typename TypeList::Next>();
     }
