@@ -23,6 +23,7 @@
 
 constexpr size_t num_gates = 32;
 constexpr size_t num_gntrs = 32;
+constexpr size_t num_matrices = 32;
 
 //***********************************************************************//
 //                            Gates
@@ -39,7 +40,7 @@ auto createParams(RandomEngine &re, size_t num_params) -> std::vector<ParamT> {
 }
 
 /**
- * @brief Benchmark function for gate operation with a fixed number of wires.
+ * @brief Benchmark function for gate operations
  *
  * @tparam T Floating point precision type.
  */
@@ -108,7 +109,9 @@ static void applyOperation_GateOp(benchmark::State &state,
 //***********************************************************************//
 
 /**
- * @brief Benchmark function for gate operation with a fixed number of wires.
+ * @brief Benchmark function for generator operations
+ *
+ * @tparam T Floating point precision type.
  */
 template <class T>
 static void
@@ -156,6 +159,53 @@ applyGenerator_GntrOp(benchmark::State &state,
         for (size_t g = 0; g < num_gntrs; g++) {
             [[maybe_unused]] const auto scale = sv.applyGenerator(
                 kernel, gntr_name_without_suffix, wires[g], false);
+        }
+
+        benchmark::DoNotOptimize(sv.getDataVector()[0]);
+        benchmark::DoNotOptimize(sv.getDataVector()[(1 << num_qubits) - 1]);
+    }
+}
+
+//***********************************************************************//
+//                            Matrices
+//***********************************************************************//
+
+/**
+ * @brief Benchmark function for matrices
+ */
+template <class T>
+static void applyMatrix(benchmark::State &state,
+                        Pennylane::Gates::KernelType kernel) {
+    using namespace Pennylane;
+    const size_t num_qubits = state.range(0);
+    const auto num_wires = static_cast<size_t>(state.range(1));
+
+    if (!num_qubits) {
+        state.SkipWithError("Invalid number of qubits.");
+    }
+
+    if (!num_wires) {
+        state.SkipWithError("Invalid number of wires.");
+    }
+
+    std::random_device rd;
+    std::mt19937_64 eng(rd());
+
+    std::vector<std::vector<size_t>> wires;
+    std::vector<std::vector<std::complex<T>>> matrices;
+    wires.reserve(num_matrices);
+    matrices.reserve(num_matrices);
+
+    for (size_t i = 0; i < num_gntrs; i++) {
+        wires.emplace_back(generateDistinctWires(eng, num_qubits, num_wires));
+        matrices.emplace_back(Util::randomUnitary<T>(eng, num_wires));
+    }
+
+    for (auto _ : state) {
+        Pennylane::StateVectorManaged<T> sv{num_qubits};
+
+        for (size_t g = 0; g < num_matrices; g++) {
+            sv.applyMatrix(kernel, matrices[g], wires[g], false);
         }
 
         benchmark::DoNotOptimize(sv.getDataVector()[0]);

@@ -41,6 +41,7 @@ template <class T, class GateImplementation> void registerAllGenerators() {
         }
     }
 }
+
 template <class T, class GateImplementation> void registerAllGates() {
     for (const auto gate_op : GateImplementation::implemented_gates) {
         const auto gate_name =
@@ -67,6 +68,42 @@ template <class T, class GateImplementation> void registerAllGates() {
     }
 }
 
+template <class T, class GateImplementation> void registerAllMatrices() {
+    if constexpr (Util::array_has_elt(GateImplementation::implemented_matrices,
+                                      Gates::MatrixOperation::SingleQubitOp)) {
+        std::string name = "SingleQubitOp<" + std::string(precision_to_str<T>) +
+                           ">/" + std::string(GateImplementation::name);
+        benchmark::RegisterBenchmark(name.c_str(), applyMatrix<T>,
+                                     GateImplementation::kernel_id)
+            ->ArgsProduct(
+                {benchmark::CreateDenseRange(6, 24,
+                                             /*step=*/2), // num_qubits
+                 {1}});
+    }
+    if constexpr (Util::array_has_elt(GateImplementation::implemented_matrices,
+                                      Gates::MatrixOperation::TwoQubitOp)) {
+        std::string name = "TwoQubitOp<" + std::string(precision_to_str<T>) +
+                           ">/" + std::string(GateImplementation::name);
+        benchmark::RegisterBenchmark(name.c_str(), applyMatrix<T>,
+                                     GateImplementation::kernel_id)
+            ->ArgsProduct(
+                {benchmark::CreateDenseRange(6, 24,
+                                             /*step=*/2), // num_qubits
+                 {2}});
+    }
+    if constexpr (Util::array_has_elt(GateImplementation::implemented_matrices,
+                                      Gates::MatrixOperation::MultiQubitOp)) {
+        std::string name = "MultiQubitOp<" + std::string(precision_to_str<T>) +
+                           ">/" + std::string(GateImplementation::name);
+        benchmark::RegisterBenchmark(name.c_str(), applyMatrix<T>,
+                                     GateImplementation::kernel_id)
+            ->ArgsProduct(
+                {benchmark::CreateDenseRange(6, 24,
+                                             /*step=*/2), // num_qubits
+                 {3, 4, 5}});
+    }
+}
+
 template <typename TypeList, std::size_t... Is>
 void registerAllKernelsHelper(std::index_sequence<Is...>) {
     /* Gates */
@@ -75,6 +112,9 @@ void registerAllKernelsHelper(std::index_sequence<Is...>) {
     /* Generators */
     (registerAllGenerators<float, Util::getNthType<TypeList, Is>>(), ...);
     (registerAllGenerators<double, Util::getNthType<TypeList, Is>>(), ...);
+    /* Matrices */
+    (registerAllMatrices<float, Util::getNthType<TypeList, Is>>(), ...);
+    (registerAllMatrices<double, Util::getNthType<TypeList, Is>>(), ...);
 }
 
 void registerAllKernels() {

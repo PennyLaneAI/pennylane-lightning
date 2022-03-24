@@ -270,11 +270,11 @@ template <class T, class Derived> class StateVectorBase {
     }
 
     /**
-     * @brief Apply a given matrix directly to the statevector read directly
-     * from numpy data. Data can be in 1D or 2D format.
+     * @brief Apply a given matrix directly to the statevector using a given
+     * kernel.
      *
      * @param kernel Kernel to run the operation
-     * @param matrix Pointer to the array data.
+     * @param matrix Pointer to the array data (in row-major format).
      * @param wires Wires to apply gate to.
      * @param inverse Indicate whether inverse should be taken.
      */
@@ -297,10 +297,33 @@ template <class T, class Derived> class StateVectorBase {
     }
 
     /**
-     * @brief Apply a given matrix directly to the statevector read directly
-     * from numpy data. Data can be in 1D or 2D format.
+     * @brief Apply a given matrix directly to the statevector using a given
+     * kernel.
      *
-     * @param matrix Pointer to the array data.
+     * @param kernel Kernel to run the operation
+     * @param matrix Matrix data (in row-major format).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    inline void applyMatrix(Gates::KernelType kernel,
+                            const std::vector<ComplexPrecisionT> &matrix,
+                            const std::vector<size_t> &wires,
+                            bool inverse = false) {
+        using Gates::MatrixOperation;
+
+        if (matrix.size() != Util::exp2(2 * wires.size())) {
+            throw std::invalid_argument(
+                "The size of matrix does not match with the given "
+                "number of wires");
+        }
+        applyMatrix(kernel, matrix.data(), wires, inverse);
+    }
+
+    /**
+     * @brief Apply a given matrix directly to the statevector using a
+     * raw matrix pointer vector.
+     *
+     * @param matrix Pointer to the array data (in row-major format).
      * @param wires Wires to apply gate to.
      * @param inverse Indicate whether inverse should be taken.
      */
@@ -328,6 +351,13 @@ template <class T, class Derived> class StateVectorBase {
         applyMatrix(kernel, matrix, wires, inverse);
     }
 
+    /**
+     * @brief Apply a given matrix directly to the statevector.
+     *
+     * @param matrix Matrix data (in row-major format).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
     template <typename Alloc>
     inline void applyMatrix(const std::vector<ComplexPrecisionT, Alloc> &matrix,
                             const std::vector<size_t> &wires,
