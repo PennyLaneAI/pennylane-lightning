@@ -17,9 +17,9 @@
 
 using namespace Pennylane;
 
-TEMPLATE_TEST_CASE("StateVectorManaged::StateVectorManaged", "[StateVectorRaw]",
-                   float, double) {
-    using fp_t = TestType;
+TEMPLATE_TEST_CASE("StateVectorManaged::StateVectorManaged",
+                   "[StateVectorManaged]", float, double) {
+    using PrecisionT = TestType;
 
     SECTION("StateVectorManaged") {
         REQUIRE(!std::is_constructible_v<StateVectorManaged<>>);
@@ -30,7 +30,7 @@ TEMPLATE_TEST_CASE("StateVectorManaged::StateVectorManaged", "[StateVectorRaw]",
     SECTION("StateVectorManaged<TestType> {size_t}") {
         REQUIRE(std::is_constructible_v<StateVectorManaged<TestType>, size_t>);
         const size_t num_qubits = 4;
-        StateVectorManaged<fp_t> sv(num_qubits);
+        StateVectorManaged<PrecisionT> sv(num_qubits);
 
         REQUIRE(sv.getNumQubits() == 4);
         REQUIRE(sv.getLength() == 16);
@@ -46,5 +46,43 @@ TEMPLATE_TEST_CASE("StateVectorManaged::StateVectorManaged", "[StateVectorRaw]",
     }
     SECTION("StateVectorManaged<TestType> {StateVectorManaged<TestType>&&}") {
         REQUIRE(std::is_move_constructible_v<StateVectorManaged<TestType>>);
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix", "[StateVectorManaged]",
+                   float, double) {
+    using PrecisionT = TestType;
+    SECTION("Test wrong matrix") {
+        std::vector<std::complex<TestType>> m(7, 0.0);
+        const size_t num_qubits = 4;
+        StateVectorManaged<PrecisionT> sv(num_qubits);
+        REQUIRE_THROWS(sv.applyMatrix(m, {0, 1}));
+    }
+
+    SECTION("Test wrong wires") {
+        std::vector<std::complex<TestType>> m(8, 0.0);
+        const size_t num_qubits = 4;
+        StateVectorManaged<PrecisionT> sv(num_qubits);
+        REQUIRE_THROWS(sv.applyMatrix(m, {}));
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorManaged::applyOperations",
+                   "[StateVectorManaged]", float, double) {
+    using PrecisionT = TestType;
+    SECTION("Test wrong matrix") {
+        std::vector<std::complex<PrecisionT>> m(7, 0.0);
+        const size_t num_qubits = 4;
+        StateVectorManaged<PrecisionT> sv(num_qubits);
+        REQUIRE_THROWS_WITH(sv.applyMatrix(m, {0, 1}),
+                            Catch::Contains("does not match with the given"));
+    }
+
+    SECTION("Test wrong wires") {
+        std::vector<std::complex<PrecisionT>> m(8, 0.0);
+        const size_t num_qubits = 4;
+        StateVectorManaged<PrecisionT> sv(num_qubits);
+        REQUIRE_THROWS_WITH(sv.applyMatrix(m.data(), {}),
+                            "Number of wires must be larger than 0");
     }
 }

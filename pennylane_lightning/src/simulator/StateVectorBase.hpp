@@ -286,12 +286,6 @@ template <class T, class Derived> class StateVectorBase {
 
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         auto *arr = getData();
-
-        if (wires.empty()) {
-            throw std::invalid_argument(
-                "Number of wires must be larger than 0");
-        }
-
         dispatcher.applyMatrix(kernel, arr, num_qubits_, matrix, wires,
                                inverse);
     }
