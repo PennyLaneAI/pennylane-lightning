@@ -18,6 +18,7 @@
 #if (defined(__GNUC__) || defined(__clang__)) && defined(__x86_64__)
 #include <cpuid.h>
 #elif defined(_MSC_VER) && defined(_WIN64)
+#include <vector>
 #include <intrin.h>
 #endif
 
@@ -74,7 +75,7 @@ RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
 }
 #elif defined(_MSC_VER) && defined(_M_AMD64)
 RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
-    std::array<int, 4> cpui;
+    std::array<int, 4> cpui = {0,};
     __cpuid(cpui.data(), 0);
 
     const int nids = cpui[0];
@@ -104,17 +105,20 @@ RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
     // Calling __cpuid with 0x80000000 as the function_id argument
     // gets the number of the highest valid extended ID.
     __cpuid(cpui.data(), 0x80000000);
-    nExIds_ = cpui[0];
+    const int nExIds_ = cpui[0];
 
     if (nExIds_ >= 0x80000004) {
-        std::array<uint32_t, 12> tmp = {
-            0,
-        };
-        auto *p = tmp.data();
-        __cpuidex(p, 0x80000002, 0);
-        __cpuidex(p + 4, 0x80000003, 0);
-        __cpuidex(p + 8, 0x80000004, 0);
-        brand = reinterpret_cast<const char *>(p);
+        std::vector<std::array<int, 4>> tmp(3);
+        __cpuidex(tmp[0].data(), 0x80000002, 0);
+        __cpuidex(tmp[1].data(), 0x80000003, 0);
+        __cpuidex(tmp[2].data(), 0x80000004, 0);
+
+        char str[48];
+        memset(str, 0, sizeof(str));
+        memcpy(str, tmp[0].data(), sizeof(int)*4);
+        memcpy(str + 16, tmp[1].data(), sizeof(int) * 4);
+        memcpy(str + 32, tmp[2].data(), sizeof(int) * 4);
+        brand = str;
     }
 }
 #else
