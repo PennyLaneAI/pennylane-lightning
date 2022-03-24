@@ -351,6 +351,23 @@ TEMPLATE_TEST_CASE("Test linear algebra functions", "[Util][LinearAlgebra]",
 
             CHECK(mat_t == approx(mat_t_exp));
         }
+        SECTION("Random Complex non-square") {
+            std::vector<TestType> mat{
+                0.417876, 0.27448,  0.601209,  0.723548,
+                0.781624, 0.538222, 0.0597232, 0.27755,
+            };
+            std::vector<TestType> mat_t_exp{0.417876, 0.781624, 0.27448,
+                                            0.538222, 0.601209, 0.0597232,
+                                            0.723548, 0.27755};
+            std::vector<TestType> mat_t(8);
+            Util::CFTranspose<TestType, 2>(mat.data(), mat_t.data(), 2, 4, 0, 2,
+                                           0, 4);
+
+            CAPTURE(mat_t);
+            CAPTURE(mat_t_exp);
+
+            CHECK(mat_t == approx(mat_t_exp));
+        }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
             std::vector<TestType> mat(2 * 3, {1.0});
