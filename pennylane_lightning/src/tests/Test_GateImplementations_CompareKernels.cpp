@@ -243,7 +243,7 @@ void testSingleQubitOp(RandomEngine &re, size_t num_qubits, bool inverse) {
     DYNAMIC_SECTION(ss.str()) {
         const auto all_wires =
             CombinationGenerator(num_qubits, num_wires).all_perms();
-        for (const auto wires : all_wires) {
+        for (const auto& wires : all_wires) {
             std::vector<std::vector<std::complex<PrecisionT>>> res;
             for (KernelType kernel : all_kernels) {
                 auto st = ini_st;
@@ -278,7 +278,7 @@ void testTwoQubitOp(RandomEngine &re, size_t num_qubits, bool inverse) {
     DYNAMIC_SECTION(ss.str()) {
         const auto all_wires =
             CombinationGenerator(num_qubits, num_wires).all_perms();
-        for (const auto wires : all_wires) {
+        for (const auto& wires : all_wires) {
             std::vector<std::vector<std::complex<PrecisionT>>> res;
             for (KernelType kernel : all_kernels) {
                 auto st = ini_st;
@@ -313,7 +313,7 @@ void testMultiQubitOp(RandomEngine &re, size_t num_qubits, size_t num_wires,
     DYNAMIC_SECTION(ss.str()) {
         const auto all_wires =
             PermutationGenerator(num_qubits, num_wires).all_perms();
-        for (const auto wires : all_wires) {
+        for (const auto& wires : all_wires) {
             std::vector<std::vector<std::complex<PrecisionT>>> res;
             for (KernelType kernel : all_kernels) {
                 auto st = ini_st;
