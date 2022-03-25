@@ -102,6 +102,11 @@ template <class T, class Derived> class StateVectorBase {
     size_t num_qubits_{0};
 
   protected:
+    /**
+     * @brief Constructor used by derived classes.
+     *
+     * @param num_qubits Number of qubits
+     */
     explicit StateVectorBase(size_t num_qubits) : num_qubits_{num_qubits} {}
 
     /**
@@ -122,10 +127,20 @@ template <class T, class Derived> class StateVectorBase {
         return num_qubits_;
     }
 
+    /**
+     * @brief Get the size of the statvector
+     *
+     * @return The size of the statevector
+     */
     [[nodiscard]] size_t getLength() const {
         return static_cast<size_t>(Util::exp2(num_qubits_));
     }
 
+    /**
+     * @brief Get the data pointer of the statevector
+     *
+     * @return The pointer to the data of statevector
+     */
     [[nodiscard]] inline auto getData() -> decltype(auto) {
         return static_cast<Derived *>(this)->getData();
     }
@@ -195,14 +210,16 @@ template <class T, class Derived> class StateVectorBase {
      * @brief Apply multiple gates to the state-vector.
      *
      * @param ops Vector of gate names to be applied in order.
-     * @param wires Vector of wires on which to apply index-matched gate name.
-     * @param inverse Indicates whether gate at matched index is to be inverted.
-     * @param params Optional parameter data for index matched gates.
+     * @param ops_wires Vector of wires on which to apply index-matched gate
+     * name.
+     * @param ops_inverse Indicates whether gate at matched index is to be
+     * inverted.
+     * @param ops_params Optional parameter data for index matched gates.
      */
     void
     applyOperations(const std::vector<std::string> &ops,
                     const std::vector<std::vector<size_t>> &ops_wires,
-                    const std::vector<bool> &ops_inverses,
+                    const std::vector<bool> &ops_inverse,
                     const std::vector<std::vector<PrecisionT>> &ops_params) {
         const size_t numOperations = ops.size();
         if (numOperations != ops_wires.size()) {
@@ -210,7 +227,7 @@ template <class T, class Derived> class StateVectorBase {
                 "Invalid arguments: number of operations, wires, and "
                 "parameters must all be equal");
         }
-        if (numOperations != ops_inverses.size()) {
+        if (numOperations != ops_inverse.size()) {
             throw std::invalid_argument(
                 "Invalid arguments: number of operations, wires, and "
                 "parameters must all be equal");
@@ -221,8 +238,7 @@ template <class T, class Derived> class StateVectorBase {
                 "parameters must all be equal");
         }
         for (size_t i = 0; i < numOperations; i++) {
-            applyOperation(ops[i], ops_wires[i], ops_inverses[i],
-                           ops_params[i]);
+            applyOperation(ops[i], ops_wires[i], ops_inverse[i], ops_params[i]);
         }
     }
 
@@ -230,25 +246,27 @@ template <class T, class Derived> class StateVectorBase {
      * @brief Apply multiple gates to the state-vector.
      *
      * @param ops Vector of gate names to be applied in order.
-     * @param wires Vector of wires on which to apply index-matched gate name.
-     * @param inverse Indicates whether gate at matched index is to be inverted.
+     * @param ops_wires Vector of wires on which to apply index-matched gate
+     * name.
+     * @param ops_inverse Indicates whether gate at matched index is to be
+     * inverted.
      */
     void applyOperations(const std::vector<std::string> &ops,
                          const std::vector<std::vector<size_t>> &ops_wires,
-                         const std::vector<bool> &ops_inverses) {
+                         const std::vector<bool> &ops_inverse) {
         const size_t numOperations = ops.size();
         if (numOperations != ops_wires.size()) {
             throw std::invalid_argument(
                 "Invalid arguments: number of operations and wires "
                 "must all be equal");
         }
-        if (numOperations != ops_inverses.size()) {
+        if (numOperations != ops_inverse.size()) {
             throw std::invalid_argument(
                 "Invalid arguments: number of operations and wires "
                 "must all be equal");
         }
         for (size_t i = 0; i < numOperations; i++) {
-            applyOperation(ops[i], ops_wires[i], ops_inverses[i], {});
+            applyOperation(ops[i], ops_wires[i], ops_inverse[i], {});
         }
     }
 

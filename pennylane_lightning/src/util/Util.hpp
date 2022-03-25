@@ -403,9 +403,16 @@ auto chunkData(const Container<T> &data, std::size_t num_chunks)
 }
 
 /**
- * @brief Hash for std::pair
+ * @brief Define a hash function for std::pair
  */
 struct PairHash {
+    /**
+     * @brief A hash function for std::pair
+     *
+     * @tparam T The type of the first element of the pair
+     * @tparam U The type of the first element of the pair
+     * @param p A pair to compute hash
+     */
     template <typename T, typename U>
     size_t operator()(const std::pair<T, U> &p) const {
         return std::hash<T>()(p.first) ^ std::hash<U>()(p.second);

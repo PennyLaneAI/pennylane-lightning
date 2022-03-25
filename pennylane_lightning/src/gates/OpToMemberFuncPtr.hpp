@@ -395,6 +395,15 @@ template <class PrecisionT> struct GeneratorFuncPtr {
     using Type = PrecisionT (*)(std::complex<PrecisionT> *, size_t,
                                 const std::vector<size_t> &, bool);
 };
+
+/**
+ * @brief Pointer type for a matrix operation
+ */
+template <class PrecisionT> struct MatrixFuncPtr {
+    using Type = void (*)(std::complex<PrecisionT> *, size_t,
+                          const std::complex<PrecisionT> *,
+                          const std::vector<size_t> &, bool);
+};
 } // namespace Internal
 /// @endcond
 
@@ -410,6 +419,12 @@ using GateFuncPtrT =
  */
 template <class PrecisionT>
 using GeneratorFuncPtrT = typename Internal::GeneratorFuncPtr<PrecisionT>::Type;
+
+/**
+ * @brief Convenient type alias for GeneratorFuncPtrT.
+ */
+template <class PrecisionT>
+using MatrixFuncPtrT = typename Internal::MatrixFuncPtr<PrecisionT>::Type;
 
 /**
  * @defgroup Call gate operation with provided arguments

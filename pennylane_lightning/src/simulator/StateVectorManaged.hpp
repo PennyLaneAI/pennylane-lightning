@@ -36,6 +36,15 @@ class StateVectorManaged
     std::vector<ComplexPrecisionT> data_;
 
   public:
+    /**
+     * @brief @rst
+     * Create a new statevector whose data is managed by C++. The state
+     * is initialized as :math:`|0\rangle^{\otimes N}` where :math:`N` is
+     * the number of qubits.
+     * @endrst
+     *
+     * @param num_qubits Number of qubits
+     */
     explicit StateVectorManaged(size_t num_qubits)
         : BaseType(num_qubits),
           data_(static_cast<size_t>(Util::exp2(num_qubits)),
@@ -43,6 +52,9 @@ class StateVectorManaged
         data_[0] = {1, 0};
     }
 
+    /**
+     * @brief Construct a statevector from a data vector
+     */
     template <class OtherDerived>
     explicit StateVectorManaged(
         const StateVectorBase<PrecisionT, OtherDerived> &other)
@@ -50,6 +62,9 @@ class StateVectorManaged
                                                 other.getData() +
                                                     other.getLength()} {}
 
+    /**
+     * @brief Construct a statevector from a data vector
+     */
     explicit StateVectorManaged(
         const std::vector<ComplexPrecisionT> &other_data)
         : BaseType(Util::log2(other_data.size())), data_{other_data} {
@@ -57,6 +72,9 @@ class StateVectorManaged
                         "The size of provided data must be a power of 2.");
     }
 
+    /**
+     * @brief Construct a statevector from a data pointer
+     */
     StateVectorManaged(const ComplexPrecisionT *other_data, size_t other_size)
         : BaseType(Util::log2(other_size)), data_{other_data,
                                                   other_data + other_size} {
@@ -64,17 +82,11 @@ class StateVectorManaged
                         "The size of provided data must be a power of 2.");
     }
 
-    StateVectorManaged(const StateVectorManaged<PrecisionT> &other) = default;
-    StateVectorManaged(StateVectorManaged<PrecisionT> &&other) noexcept =
-        default;
-
-    ~StateVectorManaged() = default;
-
-    auto operator=(const StateVectorManaged<PrecisionT> &other)
-        -> StateVectorManaged<PrecisionT> & = default;
-    auto operator=(StateVectorManaged<PrecisionT> &&other) noexcept
-        -> StateVectorManaged<PrecisionT> & = default;
-
+    /**
+     * @brief Return underlying data vector
+     *
+     * @return Data vector
+     */
     auto getDataVector() -> std::vector<ComplexPrecisionT> & { return data_; }
     [[nodiscard]] auto getDataVector() const
         -> const std::vector<ComplexPrecisionT> & {

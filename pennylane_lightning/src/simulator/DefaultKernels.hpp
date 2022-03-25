@@ -34,7 +34,7 @@ namespace Pennylane {
  * @endrst
  *
  * This value is used for:
- * 1. StateVector apply##GATE_NAME methods. The kernel function is statically
+ * 1. StateVector `apply##GATE_NAME` methods. The kernel function is statically
  * binded to the given kernel and cannot be modified.
  * 2. Default kernel functions for DynamicDispatcher. The kernel function is
  * dynamically binded and can be changed using DynamicDispatcher singleton
@@ -98,14 +98,31 @@ namespace Pennylane {
     std::pair{Gates::MatrixOperation::MultiQubitOp, Gates::KernelType::PI},
 };
 
+/**
+ * @brief Return default kernel for gate operation
+ *
+ * @param gate_op Gate operation
+ */
 constexpr auto getDefaultKernelForGate(Gates::GateOperation gate_op)
     -> Gates::KernelType {
     return Util::lookup(default_kernel_for_gates, gate_op);
 }
+
+/**
+ * @brief Return default kernel for generator operation
+ *
+ * @param gntr_op Generator operation
+ */
 constexpr auto getDefaultKernelForGenerator(Gates::GeneratorOperation gntr_op)
     -> Gates::KernelType {
     return Util::lookup(default_kernel_for_generators, gntr_op);
 }
+
+/**
+ * @brief Return default kernel for matrix operation
+ *
+ * @param mat_op Matrix operation
+ */
 constexpr auto getDefaultKernelForMatrix(Gates::MatrixOperation mat_op)
     -> Gates::KernelType {
     return Util::lookup(default_kernel_for_matrices, mat_op);

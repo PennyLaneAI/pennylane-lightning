@@ -97,9 +97,7 @@ template <typename PrecisionT> class DynamicDispatcher {
         const std::vector<PrecisionT> & /*params*/)>;
 
     using GeneratorFunc = Gates::GeneratorFuncPtrT<PrecisionT>;
-    using MatrixFunc = std::function<void(std::complex<PrecisionT> *, size_t,
-                                          const std::complex<PrecisionT> *,
-                                          const std::vector<size_t> &, bool)>;
+    using MatrixFunc = Gates::MatrixFuncPtrT<PrecisionT>;
 
   private:
     std::unordered_map<std::string, Gates::GateOperation> str_to_gates_;
@@ -131,6 +129,9 @@ template <typename PrecisionT> class DynamicDispatcher {
     }
 
   public:
+    /**
+     * @brief Get the singleton instance
+     */
     static DynamicDispatcher &getInstance() {
         static DynamicDispatcher singleton;
         return singleton;
@@ -193,15 +194,38 @@ template <typename PrecisionT> class DynamicDispatcher {
         matrices_.emplace(std::make_pair(mat_op, kernel), func);
     }
 
+    /**
+     * @brief Check if a kernel function is registered for the given
+     * gate operation and kernel.
+     *
+     * @param gate_op Gate operation
+     * @param kernel Kernel
+     */
     bool isRegistered(Gates::GateOperation gate_op,
                       Gates::KernelType kernel) const {
         return gates_.find(std::make_pair(gate_op, kernel)) != gates_.cend();
     }
+
+    /**
+     * @brief Check if a kernel function is registered for the given
+     * generator operation and kernel.
+     *
+     * @param gntr_op Generator operation
+     * @param kernel Kernel
+     */
     bool isRegistered(Gates::GeneratorOperation gntr_op,
                       Gates::KernelType kernel) const {
         return generators_.find(std::make_pair(gntr_op, kernel)) !=
                generators_.cend();
     }
+
+    /**
+     * @brief Check if a kernel function is registered for the given
+     * matrix operation and kernel.
+     *
+     * @param mat_op Matrix operation
+     * @param kernel Kernel
+     */
     bool isRegistered(Gates::MatrixOperation mat_op,
                       Gates::KernelType kernel) const {
         return matrices_.find(std::make_pair(mat_op, kernel)) !=
