@@ -292,6 +292,47 @@ void registerAlgorithms(py::module_& m) {
                      });
              });
      */
+
+    //***********************************************************************//
+    //                              Measures
+    //***********************************************************************//
+
+    class_name = "MeasuresC" + bitsize;
+    py::class_<Measures<PrecisionT>>(m, class_name.c_str(), py::module_local())
+        .def(py::init<const StateVectorRaw<PrecisionT> &>())
+        .def("probs",
+             [](Measures<PrecisionT> &M, const std::vector<size_t> &wires) {
+                 if (wires.empty()) {
+                     return py::array_t<ParamT>(py::cast(M.probs()));
+                 }
+                 return py::array_t<ParamT>(py::cast(M.probs(wires)));
+             })
+        .def("expval",
+             [](Measures<PrecisionT> &M, const std::string &operation,
+                const std::vector<size_t> &wires) {
+                 return M.expval(operation, wires);
+             })
+        .def("generate_samples",
+             [](Measures<PrecisionT> &M, size_t num_wires, size_t num_shots) {
+                 auto &&result = M.generate_samples(num_shots);
+                 const size_t ndim = 2;
+                 const std::vector<size_t> shape{num_shots, num_wires};
+                 constexpr auto sz = sizeof(size_t);
+                 const std::vector<size_t> strides{sz * num_wires, sz};
+                 // return 2-D NumPy array
+                 return py::array(py::buffer_info(
+                     result.data(), /* data as contiguous array  */
+                     sz,            /* size of one scalar        */
+                     py::format_descriptor<size_t>::format(), /* data type */
+                     ndim,   /* number of dimensions      */
+                     shape,  /* shape of the matrix       */
+                     strides /* strides for each axis     */
+                     ));
+             })
+        .def("var", [](Measures<PrecisionT> &M, const std::string &operation,
+                       const std::vector<size_t> &wires) {
+            return M.var(operation, wires);
+        });
 }
 
 /**
@@ -336,6 +377,12 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
     registerAlgorithms<float, float>(alg_submodule);
     registerAlgorithms<double, double>(alg_submodule);
 
+    /* Add compile info */
+    m.def("compile_info", &getCompileInfo, "Compiled binary information.");
+
+    /* Add runtime info */
+    m.def("runtime_info", &getRuntimeInfo, "Runtime information.");
+
     /* Add EXPORTED_KERNELS */
     std::vector<std::pair<std::string, std::string>> exported_kernel_ops;
 
@@ -344,7 +391,7 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
         const auto implemented_gates = implementedGatesForKernel(kernel);
         for (const auto gate_op : implemented_gates) {
             const auto gate_name =
-                std::string(lookup(Constant::gate_names, gate_op));
+                std::string(lookup(Gates::Constant::gate_names, gate_op));
             exported_kernel_ops.emplace_back(kernel_name, gate_name);
         }
     }

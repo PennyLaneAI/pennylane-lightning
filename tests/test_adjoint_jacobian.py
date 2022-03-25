@@ -322,12 +322,9 @@ class TestAdjointJacobian:
             qml.expval(obs(wires=0))
             qml.expval(qml.PauliZ(wires=1))
 
-        tape.execute(dev)
+        dev.trainable_params = set(range(1, 1 + op.num_params))
 
-        tape.trainable_params = set(range(1, 1 + op.num_params))
-
-        tapes, fn = qml.gradients.finite_diff(tape)
-        grad_F = fn(qml.execute(tapes, dev, None))
+        grad_F = (lambda t, fn: fn(qml.execute(t, dev, None)))(*qml.gradients.finite_diff(tape))
         grad_D = dev.adjoint_jacobian(tape)
 
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
@@ -375,7 +372,7 @@ class TestAdjointJacobian:
 
         dM1 = dev.adjoint_jacobian(tape)
 
-        tape.execute(dev)
+        qml.execute([tape], dev, None)
         dM2 = dev.adjoint_jacobian(tape, use_device_state=True)
 
         assert np.allclose(dM1, dM2, atol=tol, rtol=0)
@@ -397,7 +394,7 @@ class TestAdjointJacobian:
 
         dM1 = dev.adjoint_jacobian(tape)
 
-        tape.execute(dev)
+        qml.execute([tape], dev, None)
         dM2 = dev.adjoint_jacobian(tape, starting_state=dev._pre_rotated_state)
 
         assert np.allclose(dM1, dM2, atol=tol, rtol=0)

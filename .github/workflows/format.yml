@@ -45,7 +45,7 @@ jobs:
           python-version: 3.7
 
       - name: Install dependencies
-        run: sudo apt update && sudo apt -y install clang-tidy-12 cmake g++
+        run: sudo apt update && sudo apt -y install clang-tidy-12 cmake g++ libomp-12-dev
         env:
           DEBIAN_FRONTEND: noninteractive
 

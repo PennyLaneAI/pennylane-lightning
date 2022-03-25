@@ -39,6 +39,13 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         $<$<COMPILE_LANGUAGE:CXX>:-fwrapv;-fno-plt;-pipe>)
 endif()
 
+if(ENABLE_COVERAGE)
+    message(STATUS "ENABLE_COVERAGE is ON.")
+    target_compile_options(lightning_compile_options INTERFACE
+        $<$<COMPILE_LANGUAGE:CXX>:-fprofile-arcs;-ftest-coverage>)
+    target_link_libraries(lightning_external_libs INTERFACE gcov)
+endif()
+
 if(ENABLE_WARNINGS)
     message(STATUS "ENABLE_WARNINGS is ON.")
     if(MSVC)
@@ -60,6 +67,20 @@ if(ENABLE_AVX)
     target_compile_options(lightning_compile_options INTERFACE -mavx)
 else()
     message(STATUS "ENABLE_AVX is OFF.")
+endif()
+
+if(ENABLE_AVX2)
+    message(STATUS "ENABLE_AVX2 is ON.")
+    target_compile_options(lightning_compile_options INTERFACE -mavx2)
+else()
+    message(STATUS "ENABLE_AVX2 is OFF")
+endif()
+
+if(ENABLE_AVX512)
+    message(STATUS "ENABLE_AVX512 is ON.")
+    target_compile_options(lightning_compile_options INTERFACE -mavx512f) # Now we only use avx512f
+else()
+    message(STATUS "ENABLE_AVX512 is OFF")
 endif()
 
 if(ENABLE_OPENMP)

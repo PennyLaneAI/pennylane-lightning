@@ -13,6 +13,10 @@
 
 #include "TestHelpers.hpp"
 
+#if defined(_MSC_VER)
+#pragma warning(disable : 4305)
+#endif
+
 using namespace Pennylane;
 
 /**
@@ -20,9 +24,9 @@ using namespace Pennylane;
  * multiplication.
  */
 TEMPLATE_TEST_CASE("Util::ConstMult", "[Util]", float, double) {
-    constexpr TestType r_val = 0.679;
-    constexpr std::complex<TestType> c0_val{1.321, -0.175};
-    constexpr std::complex<TestType> c1_val{0.579, 1.334};
+    constexpr TestType r_val{0.679};
+    constexpr std::complex<TestType> c0_val{TestType{1.321}, TestType{-0.175}};
+    constexpr std::complex<TestType> c1_val{TestType{0.579}, TestType{1.334}};
 
     SECTION("Real times Complex") {
         constexpr std::complex<TestType> result =
@@ -60,6 +64,7 @@ TEMPLATE_TEST_CASE("Constant values", "[Util]", float, double) {
 // NOLINTNEXTLINE: Avoid complexity errors
 TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                    double) {
+    using Util::Trans;
     SECTION("exp2: 2^n") {
         for (size_t i = 0; i < 10; i++) {
             CHECK(Util::exp2(i) == static_cast<size_t>(std::pow(2, i)));
@@ -78,7 +83,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
         for (size_t i = 0; i < 64; i++) {
             std::vector<size_t> data(i);
             TestType rem;
-            std::modf(sqrt(i), &rem);
+            std::modf(sqrt(static_cast<TestType>(i)), &rem);
             if (i < 4) {
                 CHECK_THROWS_AS(Util::dimSize(data), std::invalid_argument);
                 CHECK_THROWS_WITH(Util::dimSize(data),
@@ -100,9 +105,12 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
     SECTION("innerProd") {
         SECTION("Iterative increment") {
             for (size_t i = 0; i < 12; i++) {
-                std::vector<std::complex<TestType>> data1(1UL << i, {1, 1});
-                std::vector<std::complex<TestType>> data2(1UL << i, {1, 1});
-                std::complex<TestType> expected_result(0, 1UL << (i + 1));
+                std::vector<std::complex<TestType>> data1(size_t{1U} << i,
+                                                          {1, 1});
+                std::vector<std::complex<TestType>> data2(size_t{1U} << i,
+                                                          {1, 1});
+                std::complex<TestType> expected_result(0,
+                                                       size_t{1U} << (i + 1));
                 std::complex<TestType> result = Util::innerProd(data1, data2);
                 CHECK(isApproxEqual(result, expected_result));
             }
@@ -122,9 +130,12 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
     SECTION("innerProdC") {
         SECTION("Iterative increment") {
             for (size_t i = 0; i < 12; i++) {
-                std::vector<std::complex<TestType>> data1(1UL << i, {1, 1});
-                std::vector<std::complex<TestType>> data2(1UL << i, {1, 1});
-                std::complex<TestType> expected_result(1UL << (i + 1), 0);
+                std::vector<std::complex<TestType>> data1(size_t{1U} << i,
+                                                          {1, 1});
+                std::vector<std::complex<TestType>> data2(size_t{1U} << i,
+                                                          {1, 1});
+                std::complex<TestType> expected_result(size_t{1U} << (i + 1),
+                                                       0);
                 std::complex<TestType> result = Util::innerProdC(data1, data2);
                 CAPTURE(result);
                 CAPTURE(expected_result);
@@ -158,7 +169,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 CAPTURE(v_out);
                 CAPTURE(v_expected);
 
-                CHECK(v_out == PLApprox(v_expected).margin(1e-7));
+                CHECK(v_out == approx(v_expected).margin(1e-7));
             }
         }
         SECTION("Random Complex") {
@@ -184,7 +195,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 Util::matrixVecProd(mat, v_in, 4, 4);
             CAPTURE(v_out);
 
-            CHECK(v_out == PLApprox(v_expected).margin(1e-7));
+            CHECK(v_out == approx(v_expected).margin(1e-7));
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
@@ -205,16 +216,16 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
     SECTION("vecMatrixProd") {
         SECTION("Simple Iterative") {
             for (size_t m = 2; m < 8; m++) {
-                std::vector<TestType> mat(m * m, 1);
-                std::vector<TestType> v_in(m, 1);
-                std::vector<TestType> v_expected(m, m);
+                std::vector<TestType> mat(m * m, TestType{1.0});
+                std::vector<TestType> v_in(m, TestType{1.0});
+                std::vector<TestType> v_expected(m, static_cast<TestType>(m));
                 std::vector<TestType> v_out =
                     Util::vecMatrixProd(v_in, mat, m, m);
 
                 CAPTURE(v_out);
                 CAPTURE(v_expected);
 
-                CHECK(v_out == PLApprox(v_expected).margin(1e-7));
+                CHECK(v_out == approx(v_expected).margin(1e-7));
             }
         }
         SECTION("Zero Vector") {
@@ -228,7 +239,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 CAPTURE(v_out);
                 CAPTURE(v_expected);
 
-                CHECK(v_out == PLApprox(v_expected).margin(1e-7));
+                CHECK(v_out == approx(v_expected).margin(1e-7));
             }
         }
         SECTION("Random Matrix") {
@@ -241,7 +252,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
             CAPTURE(v_out);
             CAPTURE(v_expected);
 
-            CHECK(v_out == PLApprox(v_expected).margin(1e-7));
+            CHECK(v_out == approx(v_expected).margin(1e-7));
         }
     }
     SECTION("Transpose") {
@@ -257,7 +268,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 CAPTURE(mat_t);
                 CAPTURE(mat);
 
-                CHECK(mat_t == PLApprox(mat).margin(1e-7));
+                CHECK(mat_t == approx(mat).margin(1e-7));
             }
         }
         SECTION("Random Complex") {
@@ -285,7 +296,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
             CAPTURE(mat_t);
             CAPTURE(mat_t_exp);
 
-            CHECK(mat_t == PLApprox(mat_t_exp));
+            CHECK(mat_t == approx(mat_t_exp));
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
@@ -310,7 +321,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                 CAPTURE(m_out);
                 CAPTURE(m_out_exp);
 
-                CHECK(m_out == PLApprox(m_out_exp));
+                CHECK(m_out == approx(m_out_exp));
             }
         }
         SECTION("Random Complex") {
@@ -367,8 +378,8 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
             CAPTURE(m_out_2);
             CAPTURE(m_out_exp);
 
-            CHECK(m_out_1 == PLApprox(m_out_2));
-            CHECK(m_out_1 == PLApprox(m_out_exp));
+            CHECK(m_out_1 == approx(m_out_2));
+            CHECK(m_out_1 == approx(m_out_exp));
         }
         SECTION("Random complex non-square") {
             const size_t m = 4;
@@ -441,7 +452,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
 
             const auto m_out = Util::matrixMatProd(mat1, mat2, m, n, k);
 
-            CHECK(m_out == PLApprox(expected));
+            CHECK(m_out == approx(expected));
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
@@ -459,6 +470,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
                                        "the input right matrix"));
         }
     }
+
     SECTION("scaleAndAdd") {
         using ComplexPrecisionT = std::complex<TestType>;
         std::vector<ComplexPrecisionT> x {
@@ -520,6 +532,18 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
         Util::scaleAndAdd(a, x, y);
         REQUIRE(y == PLApprox(expected).margin(1e-7));
     }
+
+    SECTION("SquaredNorm") {
+        SECTION("For real type") {
+            std::vector<TestType> vec{0.0, 1.0, 3.0, 10.0};
+            CHECK(Util::squaredNorm(vec) == Approx(110.0));
+        }
+
+        SECTION("For complex type") {
+            std::vector<std::complex<TestType>> vec{{0.0, 1.0}, {3.0, 10.0}};
+            CHECK(Util::squaredNorm(vec) == Approx(110.0));
+        }
+    }
 }
 
 /**
@@ -529,7 +553,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
  */
 size_t popcount_slow(uint64_t x) {
     size_t c = 0;
-    for (; x != 0; x >>= 1) {
+    for (; x != 0U; x >>= 1U) {
         if ((x & 1U) != 0U) {
             c++;
         }
@@ -544,8 +568,8 @@ size_t popcount_slow(uint64_t x) {
  */
 size_t ctz_slow(uint64_t x) {
     size_t c = 0;
-    while ((x & 1) == 0) {
-        x >>= 1;
+    while ((x & 1U) == 0) {
+        x >>= 1U;
         c++;
     }
     return c;
@@ -607,7 +631,8 @@ TEST_CASE("Utility bit operations", "[Util][BitUtil]") {
                 uint64_t n = static_cast<uint64_t>(1U)
                              << static_cast<uint64_t>(c);
                 CHECK(Util::Internal::countTrailing0(n) == c);
-                CHECK(Util::Internal::countTrailing0(n | (1UL << 63U)) == c);
+                CHECK(Util::Internal::countTrailing0(
+                          n | (uint64_t{1U} << 63U)) == c);
             }
         }
     }
@@ -653,4 +678,36 @@ TEST_CASE("Utility array and tuples", "[Util]") {
                 std::pair<std::string_view, int>("Three", 3),
                 std::pair<std::string_view, int>("Four", 4),
             });
+}
+
+/**
+ * @brief Test randomUnitary is correct
+ */
+TEMPLATE_TEST_CASE("randomUnitary", "[Test_Internal]", float, double) {
+    using PrecisionT = TestType;
+
+    std::mt19937 re{1337};
+
+    for (size_t num_qubits = 1; num_qubits <= 5; num_qubits++) {
+        const size_t dim = (1U << num_qubits);
+        const auto unitary = Util::randomUnitary<PrecisionT>(re, num_qubits);
+
+        auto unitary_dagger = Util::Transpose(unitary, dim, dim);
+        std::transform(
+            unitary_dagger.begin(), unitary_dagger.end(),
+            unitary_dagger.begin(),
+            [](const std::complex<PrecisionT> &v) { return std::conj(v); });
+
+        std::vector<std::complex<PrecisionT>> mat(dim * dim);
+        Util::matrixMatProd(unitary.data(), unitary_dagger.data(), mat.data(),
+                            dim, dim, dim);
+
+        std::vector<std::complex<PrecisionT>> identity(
+            dim * dim, std::complex<PrecisionT>{});
+        for (size_t i = 0; i < dim; i++) {
+            identity[i * dim + i] = std::complex<PrecisionT>{1.0, 0.0};
+        }
+
+        REQUIRE(mat == approx(identity).margin(1e-5));
+    }
 }

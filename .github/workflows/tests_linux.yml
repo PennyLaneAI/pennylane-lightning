@@ -1,4 +1,4 @@
-name: Testing
+name: Testing (Linux)
 on:
   push:
     branches:
@@ -13,7 +13,7 @@ env:
 
 jobs:
   cpptests:
-    name: C++ tests
+    name: C++ tests (Linux)
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -30,13 +30,15 @@ jobs:
           python-version: '3.7'
 
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2 # for codecov
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc g++
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc g++ gcovr lcov
 
       - name: Build and run unit tests
         run: |
-            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=1
+            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
             cmake --build ./Build
             mkdir -p ./Build/tests/results
             ./Build/pennylane_lightning/src/tests/runner --order lex --reporter junit --out ./Build/tests/results/report.xml
@@ -55,8 +57,23 @@ jobs:
           check_name: Test Report (C++) on Ubuntu
           files: Build/tests/results/report.xml
 
+      - name: Build and run unit tests for code Coverage
+        run: |
+            cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON
+            cmake --build ./BuildCov
+            cd ./BuildCov
+            ./tests/runner
+            lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
+            lcov --remove coverage.info '/usr/*' --output-file coverage.info
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1.0.12
+        with:
+          file: ./BuildCov/coverage.info
+          fail_ci_if_error: true
+
   cpptestswithblas:
-    name: C++ tests with OpenBLAS
+    name: C++ tests (Linux, OpenBLAS)
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -73,9 +90,11 @@ jobs:
           python-version: '3.7'
 
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc g++ libopenblas-dev
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc g++ libopenblas-dev gcovr lcov
 
       - name: Build and run unit tests
         run: |
@@ -98,6 +117,21 @@ jobs:
           check_name: Test Report (C++) on Ubuntu
           files: Build/tests/results/report.xml
 
+      - name: Build and run unit tests for code coverage
+        run: |
+            cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DENABLE_BLAS=ON
+            cmake --build ./BuildCov
+            cd ./BuildCov
+            ./tests/runner
+            lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
+            lcov --remove coverage.info '/usr/*' --output-file coverage.info
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1.0.12
+        with:
+          file: ./BuildCov/coverage.info
+          fail_ci_if_error: true
+
   pythontests:
     name: Python tests
     runs-on: ${{ matrix.os }}
@@ -110,6 +144,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           path: main
+          fetch-depth: 2
 
       - uses: actions/setup-python@v2
         name: Install Python
@@ -149,3 +184,4 @@ jobs:
         uses: codecov/codecov-action@v1.0.12
         with:
           file: coverage.xml
+          fail_ci_if_error: true

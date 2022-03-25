@@ -48,7 +48,7 @@
     inline void apply##GATE_NAME##_(const std::vector<size_t> &wires,          \
                                     bool inverse, Ts &&...args) {              \
         auto *arr = getData();                                                 \
-        static_assert(Gates::static_lookup<Gates::GateOperation::GATE_NAME>(   \
+        static_assert(Util::static_lookup<Gates::GateOperation::GATE_NAME>(    \
                           Gates::Constant::gate_num_params) == sizeof...(Ts),  \
                       "The provided number of parameters for gate " #GATE_NAME \
                       " is wrong.");                                           \
@@ -65,7 +65,7 @@
     inline void apply##GATE_NAME(const std::vector<size_t> &wires,             \
                                  bool inverse, Ts &&...args) {                 \
         constexpr auto kernel =                                                \
-            Gates::static_lookup<Gates::GateOperation::GATE_NAME>(             \
+            Util::static_lookup<Gates::GateOperation::GATE_NAME>(              \
                 Gates::Constant::default_kernel_for_gates);                    \
         apply##GATE_NAME##_<kernel>(wires, inverse,                            \
                                     std::forward<Ts>(args)...);                \
@@ -300,9 +300,8 @@ template <class T, class Derived> class StateVectorBase {
         namespace Constant = Gates::Constant;
         using Gates::GateOperation;
         using Gates::SelectKernel;
-        using Gates::static_lookup;
 
-        constexpr auto kernel = static_lookup<GateOperation::Matrix>(
+        constexpr auto kernel = Util::static_lookup<GateOperation::Matrix>(
             Constant::default_kernel_for_gates);
         static_assert(
             Util::array_has_elt(SelectKernel<kernel>::implemented_gates,
@@ -316,9 +315,8 @@ template <class T, class Derived> class StateVectorBase {
         namespace Constant = Gates::Constant;
         using Gates::GateOperation;
         using Gates::SelectKernel;
-        using Gates::static_lookup;
 
-        constexpr auto kernel = static_lookup<GateOperation::Matrix>(
+        constexpr auto kernel = Util::static_lookup<GateOperation::Matrix>(
             Constant::default_kernel_for_gates);
         static_assert(
             Util::array_has_elt(SelectKernel<kernel>::implemented_gates,

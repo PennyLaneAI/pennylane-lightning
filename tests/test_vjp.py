@@ -194,7 +194,7 @@ class TestVectorJacobianProduct:
         fn1 = dev.vjp(tape, dy)
         vjp1 = fn1(tape)
 
-        tape.execute(dev)
+        qml.execute([tape], dev, None)
         fn2 = dev.vjp(tape, dy, use_device_state=True)
         vjp2 = fn2(tape)
 
@@ -220,7 +220,7 @@ class TestVectorJacobianProduct:
         fn1 = dev.vjp(tape, dy)
         vjp1 = fn1(tape)
 
-        tape.execute(dev)
+        qml.execute([tape], dev, None)
         fn2 = dev.vjp(tape, dy, starting_state=dev._pre_rotated_state)
         vjp2 = fn2(tape)
 

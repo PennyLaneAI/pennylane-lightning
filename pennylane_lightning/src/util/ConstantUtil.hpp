@@ -42,7 +42,7 @@ constexpr auto lookup(const std::array<std::pair<Key, Value>, size> &arr,
         }
     }
     throw std::range_error("The given key does not exist.");
-};
+}
 
 /**
  * @brief Check an array has an element.
@@ -61,7 +61,7 @@ constexpr auto array_has_elt(const std::array<U, size> &arr, const U &elt)
         }
     }
     return false;
-};
+}
 
 /**
  * @brief Extract first elements from the array of pairs.
@@ -200,11 +200,28 @@ reverse_pairs_helper(const std::array<std::pair<T, U>, size> &arr,
  * @tparam T Type of first elements
  * @tparam U Type of second elements
  * @tparam size Size of the array
+ * @param arr Array to reverse
+ * @return reversed array
  */
 template <class T, class U, size_t size>
 constexpr auto reverse_pairs(const std::array<std::pair<T, U>, size> &arr)
     -> std::array<std::pair<U, T>, size> {
     return Internal::reverse_pairs_helper(arr,
                                           std::make_index_sequence<size>{});
+}
+
+/**
+ * @brief Constexpr function that check whether the given value is a power of 2.
+ *
+ * Can be merged with isPerfectPowerOf2 in C++20 using constexpr std::popcount.
+ *
+ * @param value Value to check
+ * @return True when the given value is a power of 2
+ */
+constexpr auto constIsPerfectPowerOf2(size_t value) -> bool {
+    while ((value & 1U) == 0) {
+        value >>= 1U;
+    }
+    return value == 1;
 }
 } // namespace Pennylane::Util

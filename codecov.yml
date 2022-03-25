@@ -1,2 +1,5 @@
 fixes:
   - "main/::"
+
+ignore:
+  - "pennylane_lightning/src/tests"
