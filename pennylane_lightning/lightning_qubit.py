@@ -15,7 +15,7 @@ r"""
 This module contains the :class:`~.LightningQubit` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
-from typing import Iterable, List
+from typing import List
 from warnings import warn
 from os import getenv
 from itertools import islice
@@ -189,14 +189,12 @@ class LightningQubit(DefaultQubit):
         else:
             raise TypeError(f"Unsupported complex Type: {dtype}")
 
-        ops_iter = operations if isinstance(operations, Iterable) else [operations]
-
         # Skip over identity operations instead of performing
         # matrix multiplication with the identity.
         skipped_ops = ["Identity"]
 
-        for o in ops_iter:
-            if o in skipped_ops:
+        for o in operations:
+            if o.base_name in skipped_ops:
                 continue
             name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
             method = getattr(sim, name, None)

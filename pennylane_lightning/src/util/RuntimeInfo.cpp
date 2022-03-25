@@ -43,6 +43,7 @@ RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
         *reinterpret_cast<int *>(tmp.data() + 8) = ecx;
         vendor = tmp.data();
     }
+
     if (nids >= 1) {
         eax = 1;
         __get_cpuid(1, &eax, &ebx, &ecx, &edx);
