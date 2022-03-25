@@ -90,7 +90,6 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix with a pointer",
         std::default_random_engine re{1337};
         const size_t num_qubits = 5;
         for (size_t num_wires = 1; num_wires < num_qubits; num_wires++) {
-
             StateVectorManaged<PrecisionT> sv1(num_qubits);
             StateVectorManaged<PrecisionT> sv2(num_qubits);
 
