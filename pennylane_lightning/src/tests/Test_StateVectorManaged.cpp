@@ -90,6 +90,7 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix with a pointer",
         std::default_random_engine re{1337};
         const size_t num_qubits = 5;
         for (size_t num_wires = 1; num_wires < num_qubits; num_wires++) {
+
             StateVectorManaged<PrecisionT> sv1(num_qubits);
             StateVectorManaged<PrecisionT> sv2(num_qubits);
 
@@ -109,6 +110,9 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix with a pointer",
 TEMPLATE_TEST_CASE("StateVectorManaged::applyOperations",
                    "[StateVectorManaged]", float, double) {
     using PrecisionT = TestType;
+
+    std::mt19937 re{1337};
+
     SECTION("Test invalid arguments without params") {
         const size_t num_qubits = 4;
         StateVectorManaged<PrecisionT> sv(num_qubits);
@@ -118,6 +122,21 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyOperations",
         REQUIRE_THROWS_WITH(
             sv.applyOperations({"PauliX", "PauliY"}, {{0}, {1}}, {false}),
             Catch::Contains("must all be equal")); // invalid inverse
+    }
+
+    SECTION("applyOperations without params works as expected") {
+        const size_t num_qubits = 3;
+        StateVectorManaged<PrecisionT> sv1(num_qubits);
+
+        sv1.updateData(createRandomState<PrecisionT>(re, num_qubits));
+        StateVectorManaged<PrecisionT> sv2 = sv1;
+
+        sv1.applyOperations({"PauliX", "PauliY"}, {{0}, {1}}, {false, false});
+
+        sv2.applyOperation("PauliX", {0}, false);
+        sv2.applyOperation("PauliY", {1}, false);
+
+        REQUIRE(sv1.getDataVector() == approx(sv2.getDataVector()));
     }
 
     SECTION("Test invalid arguments with params") {
@@ -136,5 +155,21 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyOperations",
             sv.applyOperations({"RX", "RY"}, {{0}, {1}}, {false, false},
                                {{0.0}}),
             Catch::Contains("must all be equal")); // invalid params
+    }
+
+    SECTION("applyOperations with params works as expected") {
+        const size_t num_qubits = 3;
+        StateVectorManaged<PrecisionT> sv1(num_qubits);
+
+        sv1.updateData(createRandomState<PrecisionT>(re, num_qubits));
+        StateVectorManaged<PrecisionT> sv2 = sv1;
+
+        sv1.applyOperations({"RX", "RY"}, {{0}, {1}}, {false, false},
+                            {{0.1}, {0.2}});
+
+        sv2.applyOperation("RX", {0}, false, {0.1});
+        sv2.applyOperation("RY", {1}, false, {0.2});
+
+        REQUIRE(sv1.getDataVector() == approx(sv2.getDataVector()));
     }
 }
