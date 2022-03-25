@@ -128,7 +128,8 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyOperations",
                                {{0.0}, {0.0}}),
             Catch::Contains("must all be equal")); // invalid wires
         REQUIRE_THROWS_WITH(
-            sv.applyOperations({"RX", "RY"}, {{0}}, {false}, {{0.0}, {0.0}}),
+            sv.applyOperations({"RX", "RY"}, {{0}, {1}}, {false},
+                               {{0.0}, {0.0}}),
             Catch::Contains("must all be equal")); // invalid inverse
 
         REQUIRE_THROWS_WITH(
