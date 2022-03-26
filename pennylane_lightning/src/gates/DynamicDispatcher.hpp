@@ -251,8 +251,8 @@ template <typename PrecisionT> class DynamicDispatcher {
             gates_.find(std::make_pair(strToGateOp(op_name), kernel));
         if (iter == gates_.cend()) {
             throw std::invalid_argument(
-                "The gate " + op_name +
-                " is not registered for the given kernel");
+                "Cannot find a registered kernel for a given gate "
+                "and kernel pair");
         }
         (iter->second)(data, num_qubits, wires, inverse, params);
     }
@@ -275,10 +275,8 @@ template <typename PrecisionT> class DynamicDispatcher {
         const auto iter = gates_.find(std::make_pair(gate_op, kernel));
         if (iter == gates_.cend()) {
             throw std::invalid_argument(
-                std::string("The gate ") +
-                std::string(
-                    Util::lookup(Gates::Constant::gate_names, gate_op)) +
-                " is not registered for the given kernel");
+                "Cannot find a registered kernel for a given gate "
+                "and kernel pair");
         }
         (iter->second)(data, num_qubits, wires, inverse, params);
     }
@@ -354,23 +352,23 @@ template <typename PrecisionT> class DynamicDispatcher {
         using Gates::MatrixOperation;
         assert(num_qubits >= wires.size());
 
-        const auto iter = [n_wires = wires.size(), kernel, this]() {
+        const auto mat_op = [n_wires = wires.size()]() {
             switch (n_wires) {
             case 1:
-                return matrices_.find(
-                    std::make_pair(MatrixOperation::SingleQubitOp, kernel));
+                return MatrixOperation::SingleQubitOp;
             case 2:
-                return matrices_.find(
-                    std::make_pair(MatrixOperation::TwoQubitOp, kernel));
+                return MatrixOperation::TwoQubitOp;
             default:
-                return matrices_.find(
-                    std::make_pair(MatrixOperation::MultiQubitOp, kernel));
+                return MatrixOperation::MultiQubitOp;
             }
         }();
+
+        const auto iter = matrices_.find(std::make_pair(mat_op, kernel));
+
         if (iter == matrices_.end()) {
             throw std::invalid_argument(
-                std::string(Util::lookup(Gates::Constant::matrix_names,
-                                         (iter->first).first)) +
+                std::string(
+                    Util::lookup(Gates::Constant::matrix_names, mat_op)) +
                 " is not registered for the given kernel");
         }
         (iter->second)(data, num_qubits, matrix, wires, inverse);
@@ -416,8 +414,8 @@ template <typename PrecisionT> class DynamicDispatcher {
         const auto iter = generators_.find(std::make_pair(gntr_op, kernel));
         if (iter == generators_.cend()) {
             throw std::invalid_argument(
-                "Cannot find a gate with a given name \"" +
-                std::string(Util::lookup(generator_names, gntr_op)) + "\".");
+                "Cannot find a registered kernel for a given generator "
+                "and kernel pair.");
         }
         return (iter->second)(data, num_qubits, wires, adj);
     }
@@ -440,7 +438,8 @@ template <typename PrecisionT> class DynamicDispatcher {
             generators_.find(std::make_pair(strToGeneratorOp(op_name), kernel));
         if (iter == generators_.cend()) {
             throw std::invalid_argument(
-                "Cannot find a gate with a given name \"" + op_name + "\".");
+                "Cannot find a registered kernel for a given generator "
+                "and kernel pair.");
         }
         return (iter->second)(data, num_qubits, wires, adj);
     }
