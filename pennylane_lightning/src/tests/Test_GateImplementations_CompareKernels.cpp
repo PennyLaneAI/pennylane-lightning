@@ -106,7 +106,6 @@ constexpr static auto kernels_implementing_matrix = Util::tuple_to_array(
 template <Gates::GateOperation gate_op, typename PrecisionT, typename ParamT,
           class RandomEngine>
 void testApplyGate(RandomEngine &re, size_t num_qubits) {
-
     constexpr static auto implementing_kernel_ids =
         kernels_implementing_gate<gate_op>;
 
