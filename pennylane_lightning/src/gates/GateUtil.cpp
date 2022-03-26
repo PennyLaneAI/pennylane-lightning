@@ -75,29 +75,22 @@ auto ValueForKernelHelper(
     }
 }
 
-template <class TypeList, size_t... Is>
-constexpr auto implementedGatesBeginsHelper(
-    [[maybe_unused]] std::index_sequence<Is...> indices) {
-    return std::array{
-        std::begin(Util::getNth<TypeList, Is>::Type::implemented_gates)...};
-}
-
-constexpr auto implementedGatesBegins() {
-    constexpr auto size = Util::length<AvailableKernels>();
-    return implementedGatesBeginsHelper<AvailableKernels>(
-        std::make_index_sequence<size>());
-}
+template <class GateImplementation>
+constexpr auto implementedGatesIterPair =
+    std::pair{&(*std::begin(GateImplementation::implemented_gates)),
+              &(*std::begin(GateImplementation::implemented_gates)) +
+                  GateImplementation::implemented_gates.size()};
 
 template <class TypeList, size_t... Is>
-constexpr auto implementedGatesEndsHelper(
+constexpr auto implementedGatesItersHelper(
     [[maybe_unused]] std::index_sequence<Is...> indices) {
     return std::array{
-        std::end(Util::getNth<TypeList, Is>::Type::implemented_gates)...};
+        implementedGatesIterPair<Util::getNthType<TypeList, Is>>...};
 }
 
-constexpr auto implementedGatesEnds() {
+constexpr auto implementedGatesIters() {
     constexpr auto size = Util::length<AvailableKernels>();
-    return implementedGatesEndsHelper<AvailableKernels>(
+    return implementedGatesItersHelper<AvailableKernels>(
         std::make_index_sequence<size>());
 }
 
@@ -123,10 +116,9 @@ auto kernelIndices(Gates::KernelType kernel) {
 namespace Pennylane::Gates {
 auto implementedGatesForKernel(KernelType kernel)
     -> std::vector<GateOperation> {
-    constexpr static auto begins = implementedGatesBegins();
-    constexpr static auto ends = implementedGatesEnds();
+    constexpr static auto iters = implementedGatesIters();
 
     const auto idx = kernelIndices(kernel);
-    return std::vector<GateOperation>{begins[idx], ends[idx]};
+    return std::vector<GateOperation>{iters[idx].first, iters[idx].second};
 }
 } // namespace Pennylane::Gates
