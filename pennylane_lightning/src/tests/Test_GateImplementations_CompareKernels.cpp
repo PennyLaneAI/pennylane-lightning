@@ -50,19 +50,20 @@ template <typename TypeList> std::string kernelsToString() {
  * @brief Construct a type list of kernels implementing the given gate
  */
 template <Gates::GateOperation gate_op, typename TypeList>
-struct KernelsImplementingGateHelper {
-    using Type = std::conditional_t<
-        array_has_elt(TypeList::Type::implemented_gates, gate_op),
-        typename PrependToTypeList<
-            typename TypeList::Type,
-            typename KernelsImplementingGateHelper<
-                gate_op, typename TypeList::Next>::Type>::Type,
-        typename KernelsImplementingGateHelper<gate_op,
-                                               typename TypeList::Next>::Type>;
-};
-template <Gates::GateOperation gate_op>
-struct KernelsImplementingGateHelper<gate_op, void> {
-    using Type = void;
+constexpr auto kernelsImplementingGateHelper() {
+    if constexpr (std::is_same_v<TypeList, void>) {
+        return std::tuple{};
+    } else {
+        using GateImplementation = typename TypeList::Type;
+        constexpr auto t =
+            kernelsImplementingGateHelper<gate_op, typename TypeList::Next>();
+        if constexpr (array_has_elt(GateImplementation::implemented_gates,
+                                    gate_op)) {
+            return Util::prepend_to_tuple(GateImplementation::kernel_id, t);
+        } else {
+            return t;
+        }
+    }
 };
 
 /**
@@ -87,10 +88,9 @@ constexpr auto kernelsImplementingMatrixHelper() {
 /**
  * @brief Type list of kernels implementing the given gate operation.
  */
-template <Gates::GateOperation gate_op> struct KernelsImplementingGate {
-    using Type =
-        typename KernelsImplementingGateHelper<gate_op, TestKernels>::Type;
-};
+template <Gates::GateOperation gate_op>
+constexpr static auto kernels_implementing_gate =
+    Util::tuple_to_array(kernelsImplementingGateHelper<gate_op, TestKernels>());
 
 /**
  * @brief Type list of kernels implementing the given matrix operation.
@@ -100,62 +100,28 @@ constexpr static auto kernels_implementing_matrix = Util::tuple_to_array(
     kernelsImplementingMatrixHelper<mat_op, TestKernels>());
 
 /**
- * @brief Apply the given gate operation with the given gate implementation.
- *
- * @tparam gate_op Gate operation to test
- * @tparam PrecisionT Floating point data type for statevector
- * @tparam ParamT Floating point data type for parameter
- * @tparam GateImplementation Gate implementation class
- * @param ini Initial statevector
- * @param num_qubits Number of qubits
- * @param wires Wires the gate applies to
- * @param inverse Whether to use inverse of gate
- * @param params Paramters for gate
- */
-template <Gates::GateOperation gate_op, typename PrecisionT, typename ParamT,
-          typename GateImplementation, class Alloc>
-auto applyGate(std::vector<std::complex<PrecisionT>, Alloc> ini,
-               size_t num_qubits, const std::vector<size_t> &wires,
-               bool inverse, const std::vector<ParamT> &params)
-    -> std::vector<std::complex<PrecisionT>, Alloc> {
-    callGateOps(GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
-                                      gate_op>::value,
-                ini.data(), num_qubits, wires, inverse, params);
-    return ini;
-}
-
-/**
- * @brief Apply the given gate using all implementing kernels and return
- * results in tuple.
- */
-template <Gates::GateOperation gate_op, typename PrecisionT, typename ParamT,
-          typename Kernels, class Alloc, size_t... I>
-auto applyGateForImplemetingKernels(
-    const std::vector<std::complex<PrecisionT>, Alloc> &ini, size_t num_qubits,
-    const std::vector<size_t> &wires, bool inverse,
-    const std::vector<ParamT> &params,
-    [[maybe_unused]] std::index_sequence<I...> dummy) {
-    return std::make_tuple(
-        applyGate<gate_op, PrecisionT, ParamT, getNthType<Kernels, I>>(
-            ini, num_qubits, wires, inverse, params)...);
-}
-
-/**
  * @brief Apply the given gate using all implementing kernels and compare
  * the results.
  */
 template <Gates::GateOperation gate_op, typename PrecisionT, typename ParamT,
           class RandomEngine>
 void testApplyGate(RandomEngine &re, size_t num_qubits) {
-    const auto ini = createRandomState<PrecisionT>(re, num_qubits);
 
-    using Kernels = typename KernelsImplementingGate<gate_op>::Type;
+    constexpr static auto implementing_kernel_ids =
+        kernels_implementing_gate<gate_op>;
 
-    INFO("Kernels implementing " << lookup(gate_names, gate_op) << " are "
-                                 << kernelsToString<Kernels>());
+    std::ostringstream ss;
+    ss << "Kernels implementing " << lookup(gate_names, gate_op) << " are ";
+    for (KernelType kernel : implementing_kernel_ids) {
+        ss << Util::lookup(kernel_id_name_pairs, kernel) << ", ";
+    }
 
+    INFO(ss.str());
     INFO("PrecisionT, ParamT = " << PrecisionToName<PrecisionT>::value << ", "
                                  << PrecisionToName<ParamT>::value);
+
+    auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+    const auto ini = createRandomState<PrecisionT>(re, num_qubits);
 
     const auto all_wires = createAllWires(num_qubits, gate_op, true);
     for (const auto &wires : all_wires) {
@@ -165,32 +131,36 @@ void testApplyGate(RandomEngine &re, size_t num_qubits) {
             "Test gate "
             << gate_name
             << " with inverse = false") { // Test with inverse = false
-            const auto results = Util::tuple_to_array(
-                applyGateForImplemetingKernels<gate_op, PrecisionT, ParamT,
-                                               Kernels>(
-                    ini, num_qubits, wires, false, params,
-                    std::make_index_sequence<length<Kernels>()>()));
+            std::vector<std::vector<std::complex<PrecisionT>>> res;
 
-            for (size_t i = 0; i < results.size() - 1; i++) {
-                REQUIRE(results[i] ==
-                        approx(results[i + 1])
-                            .margin(static_cast<PrecisionT>(1e-5)));
+            for (auto kernel_id : implementing_kernel_ids) {
+                auto st = ini;
+                dispatcher.applyOperation(kernel_id, st.data(), num_qubits,
+                                          gate_op, wires, false, params);
+                res.emplace_back(std::move(st));
+            }
+            for (size_t i = 0; i < res.size() - 1; i++) {
+                REQUIRE(
+                    res[i] ==
+                    approx(res[i + 1]).margin(static_cast<PrecisionT>(1e-5)));
             }
         }
 
         DYNAMIC_SECTION("Test gate "
                         << gate_name
                         << " with inverse = true") { // Test with inverse = true
-            const auto results = Util::tuple_to_array(
-                applyGateForImplemetingKernels<gate_op, PrecisionT, ParamT,
-                                               Kernels>(
-                    ini, num_qubits, wires, true, params,
-                    std::make_index_sequence<length<Kernels>()>()));
+            std::vector<std::vector<std::complex<PrecisionT>>> res;
 
-            for (size_t i = 0; i < results.size() - 1; i++) {
-                REQUIRE(results[i] ==
-                        approx(results[i + 1])
-                            .margin(static_cast<PrecisionT>(1e-5)));
+            for (auto kernel_id : implementing_kernel_ids) {
+                auto st = ini;
+                dispatcher.applyOperation(kernel_id, st.data(), num_qubits,
+                                          gate_op, wires, true, params);
+                res.emplace_back(std::move(st));
+            }
+            for (size_t i = 0; i < res.size() - 1; i++) {
+                REQUIRE(
+                    res[i] ==
+                    approx(res[i + 1]).margin(static_cast<PrecisionT>(1e-5)));
             }
         }
     }
