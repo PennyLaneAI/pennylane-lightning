@@ -42,23 +42,6 @@ check_kernels_are_available(const std::array<KernelType, size> &arr) -> bool {
 }
 
 /*******************************************************************************
- * Check all kernels in kernels_to_pyexport are available
- ******************************************************************************/
-
-constexpr auto check_kernels_to_pyexport() -> bool {
-    // TODO: change to constexpr std::any_of in C++20
-    // NOLINTNEXTLINE (readability-use-anyofallof)
-    for (const auto &kernel : kernels_to_pyexport) {
-        if (!is_available_kernel(kernel)) {
-            return false;
-        }
-    }
-    return true;
-}
-static_assert(check_kernels_to_pyexport(),
-              "Some of Kernels in Python export is not available.");
-
-/*******************************************************************************
  * Check each element in kernelIdNamesPairs is unique
  ******************************************************************************/
 

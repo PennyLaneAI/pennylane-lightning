@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "GateUtil.hpp"
-#include "AvailableKernels.hpp"
 
+#include "AvailableKernels.hpp"
+#include "ConstantUtil.hpp"
 #include "Util.hpp"
 
 namespace Pennylane::Gates {
-
 auto getIndicesAfterExclusion(const std::vector<size_t> &indicesToExclude,
                               size_t num_qubits) -> std::vector<size_t> {
     std::set<size_t> indices;
@@ -50,6 +50,7 @@ auto generateBitPatterns(const std::vector<size_t> &qubitIndices,
 
 /// @cond DEV
 namespace {
+using namespace Pennylane;
 template <class OperatorImplementation> struct ImplementedGates {
     constexpr static auto value = OperatorImplementation::implemented_gates;
 };
@@ -73,18 +74,59 @@ auto ValueForKernelHelper(
                                     ValueClass>(kernel);
     }
 }
+
+template <class TypeList, size_t... Is>
+constexpr auto implementedGatesBeginsHelper(
+    [[maybe_unused]] std::index_sequence<Is...> indices) {
+    return std::array{
+        &(*std::begin(Util::getNth<TypeList, Is>::Type::implemented_gates))...};
+}
+
+constexpr auto implementedGatesBegins() {
+    constexpr auto size = Util::length<AvailableKernels>();
+    return implementedGatesBeginsHelper<AvailableKernels>(
+        std::make_index_sequence<size>());
+}
+
+template <class TypeList, size_t... Is>
+constexpr auto implementedGatesEndsHelper(
+    [[maybe_unused]] std::index_sequence<Is...> indices) {
+    return std::array{
+        &(*std::end(Util::getNth<TypeList, Is>::Type::implemented_gates))...};
+}
+
+constexpr auto implementedGatesEnds() {
+    constexpr auto size = Util::length<AvailableKernels>();
+    return implementedGatesEndsHelper<AvailableKernels>(
+        std::make_index_sequence<size>());
+}
+
+template <class TypeList, size_t... Is>
+constexpr auto
+kernelIndicesHelper([[maybe_unused]] std::index_sequence<Is...> indices) {
+    return std::array{
+        std::pair{Util::getNth<TypeList, Is>::Type::kernel_id, Is}...};
+}
+/**
+ * @brief Get the position of the given kernel in AvailabeKernels
+ */
+auto kernelIndices(Gates::KernelType kernel) {
+    constexpr static auto size = Util::length<AvailableKernels>();
+    constexpr static auto kernelIndices =
+        kernelIndicesHelper<AvailableKernels>(std::make_index_sequence<size>());
+    return Util::lookup(kernelIndices, kernel);
+}
+
 } // namespace
 /// @endcond
 
 namespace Pennylane::Gates {
 auto implementedGatesForKernel(KernelType kernel)
     -> std::vector<GateOperation> {
-    return ValueForKernelHelper<AvailableKernels, GateOperation,
-                                ImplementedGates>(kernel);
-}
-auto implementedGeneratorsForKernel(KernelType kernel)
-    -> std::vector<GeneratorOperation> {
-    return ValueForKernelHelper<AvailableKernels, GeneratorOperation,
-                                ImplementedGenerators>(kernel);
+    constexpr static auto begins = implementedGatesBegins();
+    constexpr static auto ends = implementedGatesEnds();
+
+    const auto idx = kernelIndices(kernel);
+    return std::vector<GateOperation>{begins[idx], ends[idx]};
 }
 } // namespace Pennylane::Gates

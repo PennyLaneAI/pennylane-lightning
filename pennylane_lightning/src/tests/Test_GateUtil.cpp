@@ -3,6 +3,7 @@
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"
+#include "TestKernels.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -17,7 +18,7 @@
 using namespace Pennylane;
 using namespace Pennylane::Gates;
 
-TEST_CASE("generateBitPatterns", "[IndicesUtil]") {
+TEST_CASE("generateBitPatterns", "[GateUtil]") {
     const size_t num_qubits = 4;
     SECTION("Qubit indices {}") {
         auto bit_pattern = generateBitPatterns({}, num_qubits);
@@ -52,7 +53,7 @@ TEST_CASE("generateBitPatterns", "[IndicesUtil]") {
     }
 }
 
-TEST_CASE("StateVector::getIndicesAfterExclusion", "[StateVector_Nonparam]") {
+TEST_CASE("getIndicesAfterExclusion", "[GateUtil]") {
     const size_t num_qubits = 4;
     SECTION("Qubit indices {}") {
         std::vector<size_t> expected{0, 1, 2, 3};
@@ -89,4 +90,21 @@ TEST_CASE("StateVector::getIndicesAfterExclusion", "[StateVector_Nonparam]") {
 
         CHECK(indices == expected);
     }
+}
+
+template <class GateImplementation> void testKernel() {
+    REQUIRE(implementedGatesForKernel(GateImplementation::kernel_id) ==
+            std::vector(std::begin(GateImplementation::implemented_gates),
+                        std::end(GateImplementation::implemented_gates)));
+}
+
+template <class TypeList, size_t... Is>
+void testAllTestKernels([[maybe_unused]] std::index_sequence<Is...> indices) {
+    using Util::getNthType;
+    (testKernel<getNthType<TypeList, Is>>(), ...);
+}
+
+TEST_CASE("implementedGatesForKernel", "[GateUtil]") {
+    constexpr static size_t num_kernels = Util::length<TestKernels>();
+    testAllTestKernels<TestKernels>(std::make_index_sequence<num_kernels>());
 }
