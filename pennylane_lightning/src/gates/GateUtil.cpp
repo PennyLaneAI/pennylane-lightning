@@ -79,7 +79,7 @@ template <class TypeList, size_t... Is>
 constexpr auto implementedGatesBeginsHelper(
     [[maybe_unused]] std::index_sequence<Is...> indices) {
     return std::array{
-        &(*std::begin(Util::getNth<TypeList, Is>::Type::implemented_gates))...};
+        std::begin(Util::getNth<TypeList, Is>::Type::implemented_gates)...};
 }
 
 constexpr auto implementedGatesBegins() {
@@ -92,7 +92,7 @@ template <class TypeList, size_t... Is>
 constexpr auto implementedGatesEndsHelper(
     [[maybe_unused]] std::index_sequence<Is...> indices) {
     return std::array{
-        &(*std::end(Util::getNth<TypeList, Is>::Type::implemented_gates))...};
+        std::end(Util::getNth<TypeList, Is>::Type::implemented_gates)...};
 }
 
 constexpr auto implementedGatesEnds() {
