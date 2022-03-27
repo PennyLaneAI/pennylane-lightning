@@ -55,8 +55,10 @@ try:
         EXPORTED_KERNEL_OPS,
     )
     from .lightning_qubit_ops.adjoint_diff import (
-        ObsStructC64,
-        ObsStructC128,
+        ObsTermC64,
+        ObsTermC128,
+        HamiltonianC64,
+        HamiltonianC128,
         OpsStructC64,
         OpsStructC128,
     )
@@ -251,18 +253,10 @@ class LightningQubit(DefaultQubit):
                 raise QuantumFunctionError(
                     "Adjoint differentiation method does not support the Projector observable"
                 )
-            if isinstance(m.obs, Hermitian):
-                raise QuantumFunctionError(
-                    "Lightning adjoint differentiation method does not currently support the Hermitian observable"
-                )
         else:
             if any([isinstance(o, Projector) for o in m.obs.non_identity_obs]):
                 raise QuantumFunctionError(
                     "Adjoint differentiation method does not support the Projector observable"
-                )
-            if any([isinstance(o, Hermitian) for o in m.obs.non_identity_obs]):
-                raise QuantumFunctionError(
-                    "Lightning adjoint differentiation method does not currently support the Hermitian observable"
                 )
 
     def adjoint_diff_support_check(self, tape):
@@ -283,13 +277,13 @@ class LightningQubit(DefaultQubit):
             )
         if not return_exp and not return_sv:
             raise QuantumFunctionError(
-                "Measurements allowed for adjoint differentiation method are "
+                "Allowed measurement for the adjoint differentiation method is "
                 "(1) expecation values with observables or "
                 "(2) state."
             )
         if return_exp:
             for m in tape.measurements:
-                _check_supported_observables(m)
+                self._check_supported_observables(m)
 
         for op in tape.operations:
             if (
@@ -329,6 +323,11 @@ class LightningQubit(DefaultQubit):
 
         # Initialization of state
         if starting_state is not None:
+            if starting_state.size != 2 ** len(self.wires):
+                raise ValueError(
+                    "The number of qubits of starting_state must be the same as"
+                    "that of the device."
+                )
             ket = np.ravel(starting_state)
         else:
             if not use_device_state:
@@ -362,12 +361,11 @@ class LightningQubit(DefaultQubit):
             obs_partitions = _chunk_iterable(obs_serialized, requested_threads)
             jac = []
             for obs_chunk in obs_partitions:
-                jac_local = adjoind_diff.adjoint_jacobian(
+                jac_local = adjoint_diff.adjoint_jacobian(
                     state_vector,
                     obs_chunk,
                     ops_serialized,
                     tp_shift,
-                    tape.num_params,
                 )
                 jac.extend(jac_local)
             jac = np.array(jac)
@@ -377,7 +375,6 @@ class LightningQubit(DefaultQubit):
                 obs_serialized,
                 ops_serialized,
                 tp_shift,
-                tape.num_params,
             )
         return jac.reshape(-1, len(trainable_params))
 
@@ -476,6 +473,11 @@ class LightningQubit(DefaultQubit):
 
             # Initialization of state
             if starting_state is not None:
+                if starting_state.size != 2 ** len(self.wires):
+                    raise ValueError(
+                        "The number of qubits of starting_state must be the same as"
+                        "that of the device."
+                    )
                 ket = np.ravel(starting_state)
             else:
                 if not use_device_state:

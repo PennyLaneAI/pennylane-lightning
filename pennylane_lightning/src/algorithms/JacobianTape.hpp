@@ -128,7 +128,7 @@ template <typename T> class ObsTerm final : public Observable<T> {
         const auto obs_size = obs_name_.size();
         for (size_t idx = 0; idx < obs_size; idx++) {
             obs_stream << obs_name_[idx];
-            if (idx < obs_size) {
+            if (idx != obs_size - 1) {
                 obs_stream << " @ ";
             }
         }
@@ -181,7 +181,7 @@ template <typename T> class Hamiltonian final : public Observable<T> {
         const auto term_size = terms_.size();
         for (size_t t = 0; t < term_size; t++) {
             ss << terms_[t]->toString();
-            if (t < term_size) {
+            if (t != term_size - 1) {
                 ss << ", ";
             }
         }
@@ -341,6 +341,18 @@ template <class T> class OpsData {
     [[nodiscard]] auto getNumNonParOps() const -> size_t {
         return num_nonpar_ops_;
     }
+
+    /**
+     * @brief Get total number of parameters.
+     */
+    [[nodiscard]] auto getTotalNumParams() const -> size_t {
+        return std::accumulate(ops_params_.begin(), ops_params_.end(),
+                               size_t{0U}, [](size_t acc, auto &params) {
+                                   return acc + std::accumulate(params.begin(),
+                                                                params.end(),
+                                                                size_t{0U});
+                               });
+    }
 };
 
 /**
@@ -356,7 +368,7 @@ template <class T> class OpsData {
  */
 template <class T> class JacobianData {
   private:
-    size_t num_parameters;
+    size_t num_parameters{};
     size_t num_elements;
     const std::complex<T> *psi;
     const std::vector<std::shared_ptr<Observable<T>>> observables;

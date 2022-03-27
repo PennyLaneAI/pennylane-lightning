@@ -82,6 +82,23 @@ void lightning_class_bindings(py::module &m) {
                 const std::vector<size_t> &wires) {
                  return M.expval(operation, wires);
              })
+        .def("generate_samples",
+             [](Measures<PrecisionT> &M, size_t num_wires, size_t num_shots) {
+                 auto &&result = M.generate_samples(num_shots);
+                 const size_t ndim = 2;
+                 const std::vector<size_t> shape{num_shots, num_wires};
+                 constexpr auto sz = sizeof(size_t);
+                 const std::vector<size_t> strides{sz * num_wires, sz};
+                 // return 2-D NumPy array
+                 return py::array(py::buffer_info(
+                     result.data(), /* data as contiguous array  */
+                     sz,            /* size of one scalar        */
+                     py::format_descriptor<size_t>::format(), /* data type */
+                     ndim,   /* number of dimensions      */
+                     shape,  /* shape of the matrix       */
+                     strides /* strides for each axis     */
+                     ));
+             })
         .def("var", [](Measures<PrecisionT> &M, const std::string &operation,
                        const std::vector<size_t> &wires) {
             return M.var(operation, wires);
@@ -100,10 +117,16 @@ void registerAlgorithms(py::module_ &m) {
     using np_arr_c = py::array_t<std::complex<ParamT>, py::array::c_style>;
     using np_arr_r = py::array_t<ParamT, py::array::c_style>;
 
-    std::string class_name = "ObsTermC" + bitsize;
+    std::string class_name;
 
-    py::class_<ObsTerm<PrecisionT>, std::shared_ptr<ObsTerm<PrecisionT>>>(
-        m, class_name.c_str(), py::module_local())
+    class_name = "ObservableC" + bitsize;
+    py::class_<Observable<PrecisionT>, std::shared_ptr<Observable<PrecisionT>>>(
+        m, class_name.c_str(), py::module_local());
+
+    class_name = "ObsTermC" + bitsize;
+    py::class_<ObsTerm<PrecisionT>, std::shared_ptr<ObsTerm<PrecisionT>>,
+               Observable<PrecisionT>>(m, class_name.c_str(),
+                                       py::module_local())
         .def(py::init([](const std::vector<std::string> &names,
                          const std::vector<np_arr_c> &params,
                          const std::vector<std::vector<size_t>> &wires) {
@@ -127,8 +150,9 @@ void registerAlgorithms(py::module_ &m) {
     class_name = "HamiltonianC" + bitsize;
     using ObsTermPtr = std::shared_ptr<ObsTerm<PrecisionT>>;
     py::class_<Hamiltonian<PrecisionT>,
-               std::shared_ptr<Hamiltonian<PrecisionT>>>(m, class_name.c_str(),
-                                                         py::module_local())
+               std::shared_ptr<Hamiltonian<PrecisionT>>,
+               Observable<PrecisionT>>(m, class_name.c_str(),
+                                       py::module_local())
         .def(py::init(
             [](const np_arr_r &coeffs, const std::vector<ObsTermPtr> &terms) {
                 auto buffer = coeffs.request();
@@ -232,24 +256,28 @@ void registerAlgorithms(py::module_ &m) {
                                        ops_inverses, conv_matrices};
         },
         "Create a list of operations from data.");
-    /*
-    m.def("adjoint_jacobian",
-         [](const StateVectorRaw<PrecisionT> &sv,
-            const std::vector<ObsDatum<PrecisionT>> &observables,
-            const OpsData<PrecisionT> &operations,
-            const std::vector<size_t> &trainableParams, size_t num_params) {
-             std::vector<PrecisionT> jac(observables.size() * num_params,
-                                         0);
+    m.def(
+        "adjoint_jacobian",
+        [](const StateVectorRaw<PrecisionT> &sv,
+           const std::vector<std::shared_ptr<Observable<PrecisionT>>>
+               &observables,
+           const OpsData<PrecisionT> &operations,
+           const std::vector<size_t> &trainableParams) {
+            std::vector<PrecisionT> jac(
+                observables.size() * trainableParams.size(), PrecisionT{0.0});
 
-             const JacobianData<PrecisionT> jd{
-                 num_params,  sv.getLength(), sv.getData(),
-                 observables, operations,     trainableParams};
+            const JacobianData<PrecisionT> jd{operations.getTotalNumParams(),
+                                              sv.getLength(),
+                                              sv.getData(),
+                                              observables,
+                                              operations,
+                                              trainableParams};
 
-             adjointJacobian(jac, jd);
+            adjointJacobian(jac, jd);
 
-             return py::array_t<ParamT>(py::cast(jac));
-         }, "Compute jacobian of the circuit using the adjoint method.");
-    */
+            return py::array_t<ParamT>(py::cast(jac));
+        },
+        "Compute jacobian of the circuit using the adjoint method.");
     /*
         .def("compute_vjp_from_jac",
              &VectorJacobianProduct<PrecisionT>::computeVJP)

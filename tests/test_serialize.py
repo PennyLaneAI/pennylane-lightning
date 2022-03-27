@@ -29,8 +29,10 @@ from unittest import mock
 
 try:
     from pennylane_lightning.lightning_qubit_ops.adjoint_diff import (
-        ObsStructC64,
-        ObsStructC128,
+        ObsTermC64,
+        ObsTermC128,
+        HamiltonianC64,
+        HamiltonianC128,
     )
 except (ImportError, ModuleNotFoundError):
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -125,10 +127,10 @@ class TestSerializeObs:
     wires_dict = {i: i for i in range(10)}
 
     @pytest.mark.skipif(
-        "ObsStructC128" and "ObsStructC64" not in dir(pennylane_lightning.lightning_qubit_ops),
-        reason="ObsStructC128 and ObsStructC64 are required",
+        "ObsTermC128" and "ObsTermC64" not in dir(pennylane_lightning.lightning_qubit_ops),
+        reason="ObsTermC128 and ObsTermC64 are required",
     )
-    @pytest.mark.parametrize("ObsFunc", [ObsStructC128, ObsStructC64])
+    @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
     def test_basic_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a simple return"""
         with qml.tape.QuantumTape() as tape:
@@ -136,8 +138,8 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
-        use_csingle = True if ObsFunc == ObsStructC64 else False
-        obs_str = "ObsStructC64" if ObsFunc == ObsStructC64 else "ObsStructC128"
+        use_csingle = True if ObsFunc == ObsTermC64 else False
+        obs_str = "ObsTermC64" if ObsFunc == ObsTermC64 else "ObsTermC128"
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
@@ -150,10 +152,10 @@ class TestSerializeObs:
         assert s == s_expected
 
     @pytest.mark.skipif(
-        "ObsStructC128" and "ObsStructC64" not in dir(pennylane_lightning.lightning_qubit_ops),
-        reason="ObsStructC128 and ObsStructC64 are required",
+        "ObsTermC128" and "ObsTermC64" not in dir(pennylane_lightning.lightning_qubit_ops),
+        reason="ObsTermC128 and ObsTermC64 are required",
     )
-    @pytest.mark.parametrize("ObsFunc", [ObsStructC128, ObsStructC64])
+    @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
     def test_tensor_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a tensor product return"""
         with qml.tape.QuantumTape() as tape:
@@ -161,8 +163,8 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
-        use_csingle = True if ObsFunc == ObsStructC64 else False
-        obs_str = "ObsStructC64" if ObsFunc == ObsStructC64 else "ObsStructC128"
+        use_csingle = True if ObsFunc == ObsTermC64 else False
+        obs_str = "ObsTermC64" if ObsFunc == ObsTermC64 else "ObsTermC128"
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
@@ -175,10 +177,10 @@ class TestSerializeObs:
         assert s == s_expected
 
     @pytest.mark.skipif(
-        "ObsStructC128" and "ObsStructC64" not in dir(pennylane_lightning.lightning_qubit_ops),
-        reason="ObsStructC128 and ObsStructC64 are required",
+        "ObsTermC128" and "ObsTermC64" not in dir(pennylane_lightning.lightning_qubit_ops),
+        reason="ObsTermC128 and ObsTermC64 are required",
     )
-    @pytest.mark.parametrize("ObsFunc", [ObsStructC128, ObsStructC64])
+    @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
     def test_tensor_non_tensor_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a mixture of tensor product and non-tensor product
         return"""
@@ -188,8 +190,8 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
-        use_csingle = True if ObsFunc == ObsStructC64 else False
-        obs_str = "ObsStructC64" if ObsFunc == ObsStructC64 else "ObsStructC128"
+        use_csingle = True if ObsFunc == ObsTermC64 else False
+        obs_str = "ObsTermC64" if ObsFunc == ObsTermC64 else "ObsTermC128"
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
@@ -207,10 +209,10 @@ class TestSerializeObs:
         assert s[1][0] == s_expected[1]
 
     @pytest.mark.skipif(
-        "ObsStructC128" and "ObsStructC64" not in dir(pennylane_lightning.lightning_qubit_ops),
-        reason="ObsStructC128 and ObsStructC64 are required",
+        "ObsTermC128" and "ObsTermC64" not in dir(pennylane_lightning.lightning_qubit_ops),
+        reason="ObsTermC128 and ObsTermC64 are required",
     )
-    @pytest.mark.parametrize("ObsFunc", [ObsStructC128, ObsStructC64])
+    @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
     def test_hermitian_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a Hermitian return"""
         with qml.tape.QuantumTape() as tape:
@@ -218,8 +220,8 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
-        use_csingle = True if ObsFunc == ObsStructC64 else False
-        obs_str = "ObsStructC64" if ObsFunc == ObsStructC64 else "ObsStructC128"
+        use_csingle = True if ObsFunc == ObsTermC64 else False
+        obs_str = "ObsTermC64" if ObsFunc == ObsTermC64 else "ObsTermC128"
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
@@ -234,10 +236,10 @@ class TestSerializeObs:
         assert s[2] == s_expected[2]
 
     @pytest.mark.skipif(
-        "ObsStructC128" and "ObsStructC64" not in dir(pennylane_lightning.lightning_qubit_ops),
-        reason="ObsStructC128 and ObsStructC64 are required",
+        "ObsTermC128" and "ObsTermC64" not in dir(pennylane_lightning.lightning_qubit_ops),
+        reason="ObsTermC128 and ObsTermC64 are required",
     )
-    @pytest.mark.parametrize("ObsFunc", [ObsStructC128, ObsStructC64])
+    @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
     def test_hermitian_tensor_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a Hermitian return"""
         with qml.tape.QuantumTape() as tape:
@@ -245,8 +247,8 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
-        use_csingle = True if ObsFunc == ObsStructC64 else False
-        obs_str = "ObsStructC64" if ObsFunc == ObsStructC64 else "ObsStructC128"
+        use_csingle = True if ObsFunc == ObsTermC64 else False
+        obs_str = "ObsTermC64" if ObsFunc == ObsTermC64 else "ObsTermC128"
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
@@ -266,10 +268,10 @@ class TestSerializeObs:
         assert s[2] == s_expected[2]
 
     @pytest.mark.skipif(
-        "ObsStructC128" and "ObsStructC64" not in dir(pennylane_lightning.lightning_qubit_ops),
-        reason="ObsStructC128 and ObsStructC64 are required",
+        "ObsTermC128" and "ObsTermC64" not in dir(pennylane_lightning.lightning_qubit_ops),
+        reason="ObsTermC128 and ObsTermC64 are required",
     )
-    @pytest.mark.parametrize("ObsFunc", [ObsStructC128, ObsStructC64])
+    @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
     def test_mixed_tensor_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a mixture of Hermitian and Pauli return"""
         with qml.tape.QuantumTape() as tape:
@@ -277,8 +279,8 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
-        use_csingle = True if ObsFunc == ObsStructC64 else False
-        obs_str = "ObsStructC64" if ObsFunc == ObsStructC64 else "ObsStructC128"
+        use_csingle = True if ObsFunc == ObsTermC64 else False
+        obs_str = "ObsTermC64" if ObsFunc == ObsTermC64 else "ObsTermC128"
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
@@ -293,8 +295,8 @@ class TestSerializeObs:
         assert s[2] == s_expected[2]
 
     @pytest.mark.skipif(
-        "ObsStructC128" and "ObsStructC64" not in dir(pennylane_lightning.lightning_qubit_ops),
-        reason="ObsStructC128 and ObsStructC64 are required",
+        "ObsTermC128" and "ObsTermC64" not in dir(pennylane_lightning.lightning_qubit_ops),
+        reason="ObsTermC128 and ObsTermC64 are required",
     )
     def test_integration_c64(self, monkeypatch):
         """Test for a comprehensive range of returns"""
@@ -316,7 +318,7 @@ class TestSerializeObs:
             qml.expval(qml.Hermitian(Z, wires="a") @ qml.Identity(1))
 
         with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, "ObsStructC64", mock_obs)
+            m.setattr(pennylane_lightning._serialize, "ObsTermC64", mock_obs)
             _serialize_obs(tape, wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args_list
@@ -328,7 +330,7 @@ class TestSerializeObs:
             # (["Projector", "Hermitian"], [[],Y.ravel()], [[6, 7], [8]]),
             (["Hermitian", "Identity"], [Z.ravel(), []], [[0], [1]]),
         ]
-        [ObsStructC64(*s_expected) for s_expected in s_expected]
+        [ObsTermC64(*s_expected) for s_expected in s_expected]
 
         assert all(s1[0][0] == s2[0] for s1, s2 in zip(s, s_expected))
         for s1, s2 in zip(s, s_expected):
@@ -337,10 +339,10 @@ class TestSerializeObs:
         assert all(s1[0][2] == s2[2] for s1, s2 in zip(s, s_expected))
 
     @pytest.mark.skipif(
-        "ObsStructC128" and "ObsStructC64" not in dir(pennylane_lightning.lightning_qubit_ops),
-        reason="ObsStructC128 and ObsStructC64 are required",
+        "ObsTermC128" and "ObsTermC64" not in dir(pennylane_lightning.lightning_qubit_ops),
+        reason="ObsTermC128 and ObsTermC64 are required",
     )
-    @pytest.mark.parametrize("ObsFunc", [ObsStructC128, ObsStructC64])
+    @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
     def test_integration_c128(self, monkeypatch, ObsFunc):
         """Test for a comprehensive range of returns"""
         wires_dict = {"a": 0, 1: 1, "b": 2, -1: 3, 3.141: 4, "five": 5, 6: 6, 77: 7, 9: 8}
@@ -361,7 +363,7 @@ class TestSerializeObs:
             qml.expval(qml.Hermitian(Z, wires="a") @ qml.Identity(1))
 
         with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, "ObsStructC128", mock_obs)
+            m.setattr(pennylane_lightning._serialize, "ObsTermC128", mock_obs)
             _serialize_obs(tape, wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args_list
@@ -373,7 +375,7 @@ class TestSerializeObs:
             # (["Projector", "Hermitian"], [[],Y.ravel()], [[6, 7], [8]]),
             (["Hermitian", "Identity"], [Z.ravel(), []], [[0], [1]]),
         ]
-        [ObsStructC128(*s_expected) for s_expected in s_expected]
+        [ObsTermC128(*s_expected) for s_expected in s_expected]
 
         assert all(s1[0][0] == s2[0] for s1, s2 in zip(s, s_expected))
         for s1, s2 in zip(s, s_expected):
@@ -382,10 +384,10 @@ class TestSerializeObs:
         assert all(s1[0][2] == s2[2] for s1, s2 in zip(s, s_expected))
 
     @pytest.mark.skipif(
-        "ObsStructC128" and "ObsStructC64" not in dir(pennylane_lightning.lightning_qubit_ops),
-        reason="ObsStructC128 and ObsStructC64 are required",
+        "ObsTermC128" and "ObsTermC64" not in dir(pennylane_lightning.lightning_qubit_ops),
+        reason="ObsTermC128 and ObsTermC64 are required",
     )
-    @pytest.mark.parametrize("ObsFunc", [ObsStructC128, ObsStructC64])
+    @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
     @pytest.mark.parametrize("ObsChunk", list(range(1, 5)))
     def test_chunk_obs(self, monkeypatch, ObsFunc, ObsChunk):
         """Test chunking of observable array"""
@@ -397,8 +399,8 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
-        use_csingle = True if ObsFunc == ObsStructC64 else False
-        obs_str = "ObsStructC64" if ObsFunc == ObsStructC64 else "ObsStructC128"
+        use_csingle = True if ObsFunc == ObsTermC64 else False
+        obs_str = "ObsTermC64" if ObsFunc == ObsTermC64 else "ObsTermC128"
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
