@@ -439,8 +439,7 @@ BENCHMARK(blas_matrixMatProd_cmplx<double>)
  *
  * @tparam T Floating point precision type.
  */
-template <class T>
-static void std_scaleAndAdd_cmplx(benchmark::State &state) {
+template <class T> static void std_scaleAndAdd_cmplx(benchmark::State &state) {
     std::random_device rd;
     std::mt19937_64 eng(rd());
     std::uniform_real_distribution<T> distr;
@@ -458,7 +457,7 @@ static void std_scaleAndAdd_cmplx(benchmark::State &state) {
     }
 
     for (auto _ : state) {
-        for (size_t i = 0; i < sz; i ++) {
+        for (size_t i = 0; i < sz; i++) {
             vec2[i] += scale * vec1[i];
         }
         benchmark::DoNotOptimize(vec2[sz - 1]);
@@ -478,8 +477,7 @@ BENCHMARK(std_scaleAndAdd_cmplx<double>)
  *
  * @tparam T Floating point precision type.
  */
-template <class T>
-static void omp_scaleAndAdd_cmplx(benchmark::State &state) {
+template <class T> static void omp_scaleAndAdd_cmplx(benchmark::State &state) {
     std::random_device rd;
     std::mt19937_64 eng(rd());
     std::uniform_real_distribution<T> distr;
@@ -515,8 +513,7 @@ BENCHMARK(omp_scaleAndAdd_cmplx<double>)
  *
  * @tparam T Floating point precision type.
  */
-template <class T>
-static void blas_scaleAndAdd_cmplx(benchmark::State &state) {
+template <class T> static void blas_scaleAndAdd_cmplx(benchmark::State &state) {
     std::random_device rd;
     std::mt19937_64 eng(rd());
     std::uniform_real_distribution<T> distr;

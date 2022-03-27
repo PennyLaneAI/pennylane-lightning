@@ -20,9 +20,11 @@
 #include "Macros.hpp"
 #include "Util.hpp"
 
+#include <algorithm>
 #include <complex>
 #include <cstdlib>
 #include <numeric>
+#include <random>
 #include <vector>
 
 /// @cond DEV
@@ -49,13 +51,15 @@ using CBLAS_LAYOUT = enum CBLAS_LAYOUT {
 /// @endcond
 //
 
+namespace Pennylane::Util {
+/**
+ * @brief Transpose enum class
+ */
 enum class Trans : int {
     NoTranspose = CblasNoTrans,
     Transpose = CblasTrans,
     Adjoint = CblasConjTrans
 };
-
-namespace Pennylane::Util {
 /**
  * @brief Calculates the inner-product using OpenMP.
  *
@@ -710,9 +714,10 @@ inline void matrixMatProd(const std::complex<T> *m_left,
                         k, m_right, (transpose != Trans::NoTranspose) ? k : n,
                         &cz, m_out, n);
         } else {
-            static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>,
-                    "This procedure only supports a single or double precision "
-                    "floating point types.");
+            static_assert(
+                std::is_same_v<T, float> || std::is_same_v<T, double>,
+                "This procedure only supports a single or double precision "
+                "floating point types.");
         }
     } else {
         omp_matrixMatProd(m_left, m_right, m_out, m, n, k, transpose);
@@ -753,10 +758,105 @@ inline auto matrixMatProd(const std::vector<std::complex<T>> m_left,
 
 /**
  * @brief @rst
- * Calculate :math:`y += a*x` for a scalar :math:`a` and a vector :math:`x` using OpenMP
+ * Compute the squared norm of a real/complex vector :math:`\sum_k |v_k|^2`
  * @endrst
  *
- * @tparam STD_CROSSOVER The number of dimension after which OpenMP version 
+ * @param data Data pointer
+ * @param data_size Size of the data
+ */
+template <class T>
+auto squaredNorm(const T *data, size_t data_size) -> remove_complex_t<T> {
+    if constexpr (is_complex_v<T>) {
+        // complex type
+        using PrecisionT = remove_complex_t<T>;
+        return std::transform_reduce(
+            data, data + data_size, PrecisionT{}, std::plus<PrecisionT>(),
+            static_cast<PrecisionT (*)(const std::complex<PrecisionT> &)>(
+                &std::norm<PrecisionT>));
+    } else {
+        using PrecisionT = T;
+        return std::transform_reduce(
+            data, data + data_size, PrecisionT{}, std::plus<PrecisionT>(),
+            static_cast<PrecisionT (*)(PrecisionT)>(std::norm));
+    }
+}
+
+/**
+ * @brief @rst
+ * Compute the squared norm of a real/complex vector :math:`\sum_k |v_k|^2`
+ * @endrst
+ *
+ * @param vec std::vector containing data
+ */
+template <class T, class Alloc>
+auto squaredNorm(const std::vector<T, Alloc> &vec) -> remove_complex_t<T> {
+    return squaredNorm(vec.data(), vec.size());
+}
+
+/**
+ * @brief Generate random unitary matrix
+ *
+ * @tparam PrecisionT Floating point type
+ * @tparam RandomEngine Random engine type
+ * @param re Random engine instance
+ * @param num_qubits Number of qubits
+ * @return Generated unitary matrix in row-major format
+ */
+template <typename PrecisionT, class RandomEngine>
+auto randomUnitary(RandomEngine &re, size_t num_qubits)
+    -> std::vector<std::complex<PrecisionT>> {
+    using ComplexPrecisionT = std::complex<PrecisionT>;
+    const size_t dim = (1U << num_qubits);
+    std::vector<ComplexPrecisionT> res(dim * dim, ComplexPrecisionT{});
+
+    std::normal_distribution<PrecisionT> dist;
+
+    auto generator = [&dist, &re]() -> ComplexPrecisionT {
+        return ComplexPrecisionT{dist(re), dist(re)};
+    };
+
+    std::generate(res.begin(), res.end(), generator);
+
+    // Simple algorithm to make rows orthogonal with Gram-Schmidt
+    // This algorithm is unstable but works for a small matrix.
+    // Use QR decomposition when we have LAPACK support.
+
+    for (size_t row2 = 0; row2 < dim; row2++) {
+        ComplexPrecisionT *row2_p = res.data() + row2 * dim;
+        for (size_t row1 = 0; row1 < row2; row1++) {
+            const ComplexPrecisionT *row1_p = res.data() + row1 * dim;
+            ComplexPrecisionT dot12 = Util::innerProdC(row1_p, row2_p, dim);
+            ComplexPrecisionT dot11 = squaredNorm(row1_p, dim);
+
+            // orthogonalize row2
+            std::transform(
+                row2_p, row2_p + dim, row1_p, row2_p,
+                [scale = dot12 / dot11](auto &elt2, const auto &elt1) {
+                    return elt2 - scale * elt1;
+                });
+        }
+    }
+
+    // Normalize each row
+    for (size_t row = 0; row < dim; row++) {
+        ComplexPrecisionT *row_p = res.data() + row * dim;
+        PrecisionT norm2 = std::sqrt(squaredNorm(row_p, dim));
+
+        // normalize row2
+        std::transform(row_p, row_p + dim, row_p, [norm2](const auto c) {
+            return (static_cast<PrecisionT>(1.0) / norm2) * c;
+        });
+    }
+    return res;
+}
+
+/**
+ * @brief @rst
+ * Calculate :math:`y += a*x` for a scalar :math:`a` and a vector :math:`x`
+ * using OpenMP
+ * @endrst
+ *
+ * @tparam STD_CROSSOVER The number of dimension after which OpenMP version
  * outperforms the standard method.
  *
  * @param dim Dimension of data
@@ -765,17 +865,17 @@ inline auto matrixMatProd(const std::vector<std::complex<T>> m_left,
  * @param y Vector to be added
  */
 template <class T, size_t STD_CROSSOVER = 1U << 12U>
-void omp_scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T>* x, std::complex<T>* y) {
+void omp_scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T> *x,
+                     std::complex<T> *y) {
     if (dim < STD_CROSSOVER) {
-        for (size_t i = 0; i < dim; i ++) {
+        for (size_t i = 0; i < dim; i++) {
             y[i] += a * x[i];
         }
-    }
-    else {
+    } else {
 #if defined(_OPENMP)
 #pragma omp parallel for default(none) firstprivate(a, dim, x, y)
 #endif
-        for (size_t i = 0; i < dim; i ++) {
+        for (size_t i = 0; i < dim; i++) {
             y[i] += a * x[i];
         }
     }
@@ -783,7 +883,8 @@ void omp_scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T>* x, st
 
 /**
  * @brief @rst
- * Calculate :math:`y += a*x` for a scalar :math:`a` and a vector :math:`x` using BLAS.
+ * Calculate :math:`y += a*x` for a scalar :math:`a` and a vector :math:`x`
+ * using BLAS.
  * @endrst
  *
  * @param dim Dimension of data
@@ -791,22 +892,25 @@ void omp_scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T>* x, st
  * @param x Vector to add
  * @param y Vector to be added
  */
-template<class T>
-void blas_scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T>* x, std::complex<T>* y) {
-    if constexpr(std::is_same_v<T, float>) {
+template <class T>
+void blas_scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T> *x,
+                      std::complex<T> *y) {
+    if constexpr (std::is_same_v<T, float>) {
         cblas_caxpy(dim, &a, x, 1, y, 1);
     } else if (std::is_same_v<T, double>) {
         cblas_zaxpy(dim, &a, x, 1, y, 1);
     } else {
-        static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>,
-                "This procedure only supports a single or double precision "
-                "floating point types.");
+        static_assert(
+            std::is_same_v<T, float> || std::is_same_v<T, double>,
+            "This procedure only supports a single or double precision "
+            "floating point types.");
     }
 }
 
 /**
  * @brief @rst
- * Calculate :math:`y += a*x` for a scalar :math:`a` and a vector :math:`x` using the best available method.
+ * Calculate :math:`y += a*x` for a scalar :math:`a` and a vector :math:`x`
+ * using the best available method.
  * @endrst
  *
  *
@@ -816,7 +920,8 @@ void blas_scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T>* x, s
  * @param y Vector to be added
  */
 template <class T>
-void scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T>* x, std::complex<T>* y) {
+void scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T> *x,
+                 std::complex<T> *y) {
     if constexpr (USE_CBLAS) {
         blas_scaleAndAdd(dim, a, x, y);
     } else {
@@ -834,8 +939,8 @@ void scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T>* x, std::c
  * @param y Vector to be added
  */
 template <class T>
-void scaleAndAdd(std::complex<T> a, const std::vector<std::complex<T>>& x, 
-        std::vector<std::complex<T>>& y) {
+void scaleAndAdd(std::complex<T> a, const std::vector<std::complex<T>> &x,
+                 std::vector<std::complex<T>> &y) {
     if (x.size() != y.size()) {
         throw std::invalid_argument("Dimensions of parameters mismatch");
     }

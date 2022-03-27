@@ -66,36 +66,8 @@ inline void applyOperationAdj(StateVectorManaged<T> &state,
  */
 template <typename T>
 inline void applyObservable(StateVectorManaged<T> &state,
-                            const ObsDatum<T> &observable) {
-    using namespace Pennylane::Util;
-    for (size_t j = 0; j < observable.getSize(); j++) {
-        if (!observable.getObsParams().empty()) {
-            std::visit(
-                [&](const auto &param) {
-                    using p_t = std::decay_t<decltype(param)>;
-                    // Apply supported gate with given params
-                    if constexpr (std::is_same_v<p_t, std::vector<T>>) {
-                        state.applyOperation(observable.getObsName()[j],
-                                             observable.getObsWires()[j], false,
-                                             param);
-                    }
-                    // Apply provided matrix
-                    else if constexpr (std::is_same_v<
-                                           p_t, std::vector<std::complex<T>>>) {
-                        state.applyMatrix(param, observable.getObsWires()[j],
-                                          false);
-                    } else {
-                        state.applyOperation(observable.getObsName()[j],
-                                             observable.getObsWires()[j],
-                                             false);
-                    }
-                },
-                observable.getObsParams()[j]);
-        } else { // Offloat to SV dispatcher if no parameters provided
-            state.applyOperation(observable.getObsName()[j],
-                                 observable.getObsWires()[j], false);
-        }
-    }
+                            const Observable<T> &observable) {
+    observable.applyInPlace(state.getData(), state.getNumQubits());
 }
 
 /**
@@ -107,9 +79,10 @@ inline void applyObservable(StateVectorManaged<T> &state,
  * @param observables Vector of observables to apply to each statevector.
  */
 template <typename T>
-inline void applyObservables(std::vector<StateVectorManaged<T>> &states,
-                             const StateVectorManaged<T> &reference_state,
-                             const std::vector<ObsDatum<T>> &observables) {
+inline void applyObservables(
+    std::vector<StateVectorManaged<T>> &states,
+    const StateVectorManaged<T> &reference_state,
+    const std::vector<std::shared_ptr<Observable<T>>> &observables) {
     // clang-format off
     // Globally scoped exception value to be captured within OpenMP block.
     // See the following for OpenMP design decisions:
@@ -125,7 +98,7 @@ inline void applyObservables(std::vector<StateVectorManaged<T>> &states,
         for (size_t h_i = 0; h_i < num_observables; h_i++) {
             try {
                 states[h_i].updateData(reference_state.getDataVector());
-                applyObservable(states[h_i], observables[h_i]);
+                applyObservable(states[h_i], *observables[h_i]);
             } catch (...) {
                 #if defined(_OPENMP)
                     #pragma omp critical

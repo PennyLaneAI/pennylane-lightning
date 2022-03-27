@@ -39,7 +39,7 @@ TEMPLATE_TEST_CASE("StateVectorRaw::setData", "[StateVectorRaw]", float,
     StateVectorRaw<fp_t> sv(st_data.data(), st_data.size());
 
     auto st_data2 = createRandomState<fp_t>(re, 8);
-    sv.setData(st_data2.data(), st_data2.size());
+    sv.changeDataPtr(st_data2.data(), st_data2.size());
 
     REQUIRE(sv.getNumQubits() == 8);
     REQUIRE(sv.getData() == st_data2.data());

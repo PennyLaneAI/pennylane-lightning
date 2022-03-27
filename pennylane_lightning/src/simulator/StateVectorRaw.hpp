@@ -75,11 +75,11 @@ class StateVectorRaw
     }
 
     StateVectorRaw(const StateVectorRaw &) = default;
-    StateVectorRaw(StateVectorRaw &&) noexcept = default;
 
-    auto operator=(const StateVectorRaw &) -> StateVectorRaw & = default;
-    auto operator=(StateVectorRaw &&) noexcept -> StateVectorRaw & = default;
-
+    /**
+     * @brief Assignment operator is deleted. Use changeDataPtr or setDataFrom.
+     */
+    auto operator=(const StateVectorRaw &) -> StateVectorRaw & = delete;
     ~StateVectorRaw() = default;
 
     /**
@@ -102,7 +102,7 @@ class StateVectorRaw
      * @param data New raw data pointer.
      * @param length The size of the data, i.e. 2^(number of qubits).
      */
-    void setData(ComplexPrecisionT *data, size_t length) {
+    void changeDataPtr(ComplexPrecisionT *data, size_t length) {
         if (!Util::isPerfectPowerOf2(length)) {
             PL_ABORT("The length of the array for StateVector must be "
                      "a perfect power of 2. But " +
@@ -112,6 +112,21 @@ class StateVectorRaw
         data_ = data;
         Base::setNumQubits(Util::log2PerfectPower(length));
         length_ = length;
+    }
+
+    /**
+     * @brief Set statevector data from another data.
+     *
+     * @param data New raw data pointer.
+     * @param length The size of the data, i.e. 2^(number of qubits).
+     */
+    void setDataFrom(ComplexPrecisionT *new_data, size_t length) {
+        if (length != this->getLength()) {
+            PL_ABORT("The length of data to set must be the same as "
+                     "the original data size"); // TODO: change to std::format
+                                                // in C++20
+        }
+        std::copy(new_data, new_data + length, data_);
     }
 
     /**

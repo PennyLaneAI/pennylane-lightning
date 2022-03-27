@@ -473,7 +473,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
 
     SECTION("scaleAndAdd") {
         using ComplexPrecisionT = std::complex<TestType>;
-        std::vector<ComplexPrecisionT> x {
+        std::vector<ComplexPrecisionT> x{
             ComplexPrecisionT{0.637580898845, 0.233013812820},
             ComplexPrecisionT{0.125550040650, 0.148470698987},
             ComplexPrecisionT{0.889523198771, 0.761756550641},
@@ -491,7 +491,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
             ComplexPrecisionT{0.281997052270, 0.329021862613},
             ComplexPrecisionT{0.184123280486, 0.001268774308},
         };
-        std::vector<ComplexPrecisionT> y {
+        std::vector<ComplexPrecisionT> y{
             ComplexPrecisionT{0.113474380402, 0.123755327504},
             ComplexPrecisionT{0.738127975138, 0.031835875486},
             ComplexPrecisionT{0.155243215510, 0.055196171134},
@@ -510,7 +510,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util][LinearAlgebra]", float,
             ComplexPrecisionT{0.379094098377, 0.969570074787},
         };
         ComplexPrecisionT a{0.6125508610408819, 0.9792336596104031};
-        std::vector<ComplexPrecisionT> expected {
+        std::vector<ComplexPrecisionT> expected{
             ComplexPrecisionT{0.275850140305, 0.890828816056},
             ComplexPrecisionT{0.669646254728, 0.245724555760},
             ComplexPrecisionT{-0.045816237983, 1.392861859373},

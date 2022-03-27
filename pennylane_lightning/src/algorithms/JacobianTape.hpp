@@ -15,91 +15,49 @@
 
 #include "StateVectorManaged.hpp"
 #include "StateVectorRaw.hpp"
+#include "Util.hpp"
 
 #include <complex>
 #include <cstring>
 #include <stdexcept>
-#include <utility>
 #include <unordered_set>
-#include <variant>
+#include <utility>
 #include <vector>
 
 namespace Pennylane::Algorithms {
 
-class ObsTerm {
-  private:
-    std::vector<std::string> op_names_;
-    std::vector<std::vector<size_t>> wires_;
-    const static inline std::unordered_set<std::string> allowed_names_ {
-        "PauliX", "PauliY", "PauliZ", "Hadamard"
-    };
+template <typename T> class Observable {
+  protected:
+    Observable() = default;
+    Observable(const Observable &) = default;
+    Observable(Observable &&) noexcept = default;
+    Observable &operator=(const Observable &) = default;
+    Observable &operator=(Observable &&) noexcept = default;
 
   public:
-    ObsTerm(std::vector<std::string> op_names,
-         std::vector<std::vector<size_t>> wires)
-        : op_names_{std::move(op_names)}, wires_{std::move(wires)} {
-        for(const auto& name: op_names_) {
-            if(allowed_names_.find(name) == allowed_names_.end()) {
-                throw std::invalid_argument("The given operator " + name +
-                                            " is not allowed.");
-            }
-        }
-    }
+    virtual ~Observable() = default;
 
-    template <typename SVType>
-    void apply(const SVType& sv_in,
-               std::complex<typename SVType::PrecisionT>* v_out) {
-        StateVectorRaw sv_out(v_out, sv_in.getLength());
-        for (size_t op_idx = 0; op_idx < op_names_.size(); op_idx++) {
-            sv_out.applyOperation(op_names_[op_idx], wires_[op_idx]);
-        }
-    }
-
-    void addTensorProd(std::string name, std::vector<size_t> wires) {
-        op_names_.emplace_back(std::move(name));
-        wires_.emplace_back(std::move(wires));
-    }
-};
-
-template <typename T>
-class Hamiltonian {
-  public:
-    using PrecisionT = T;
-  private:
-    std::vector<T> coeffs_;
-    std::vector<ObsTerm> terms_;
-
-  public:
-    template <typename SVType>
-    void apply(const SVType& sv_in,
-               std::complex<typename SVType::PrecisionT>* v_out) {
-        using PrecisionT = typename SVType::PrecisionT;
-        std::fill(v_out, v_out + sv_in.getLength(), PrecisionT{});
-
-        std::vector<std::complex<PrecisionT>> tmp(sv_in.getLength());
-
-        for (size_t term_idx = 0; term_idx < coeffs_.size(); term_idx++) {
-            terms_[term_idx].apply(sv_in, tmp.data());
-            scaleAndAdd(tmp.size(), coeffs_[term_idx], tmp.data(), v_out);
-        }
-    }
+    virtual void applyInPlace(std::complex<T> *v, size_t num_qubits) const = 0;
 };
 
 /**
- * @brief Utility struct for observable operations used by the adjoint
+ * @brief Utility class for observable operations used by the adjoint
  * differentiation method.
+ *
+ * @tparam T Floating point type
  */
-template <class T = double> class ObsDatum {
+template <typename T> class ObsTerm final : public Observable<T> {
+  public:
+    using MatrixT = std::vector<std::complex<T>>;
+
+  private:
+    std::vector<std::string> obs_name_;
+    std::vector<MatrixT> obs_matrix_;
+    std::vector<std::vector<size_t>> obs_wires_;
+
   public:
     /**
-     * @brief Variant type of stored parameter data.
-     */
-    using param_var_t = std::variant<std::monostate, std::vector<T>,
-                                     std::vector<std::complex<T>>>;
-
-    /**
-     * @brief Copy constructor for an ObsDatum object, representing a given
-     * observable.
+     * @brief Construct an ObsTerm object, representing a given observable.
      *
      * @param obs_name Name of each operation of the observable. Tensor product
      * observables have more than one operation.
@@ -108,12 +66,17 @@ template <class T = double> class ObsDatum {
      * @param obs_wires Wires upon which to apply operation. Each observable
      * operation will be a separate nested list.
      */
-    ObsDatum(std::vector<std::string> obs_name,
-             std::vector<param_var_t> obs_params,
-             std::vector<std::vector<size_t>> obs_wires)
-        : obs_name_{std::move(obs_name)},
-          obs_params_(std::move(obs_params)), obs_wires_{
-                                                  std::move(obs_wires)} {};
+    ObsTerm(std::vector<std::string> obs_name, std::vector<MatrixT> obs_matrix,
+            std::vector<std::vector<size_t>> obs_wires)
+        : obs_name_{std::move(obs_name)}, obs_matrix_{std::move(obs_matrix)},
+          obs_wires_{std::move(obs_wires)} {};
+
+    void addTensorProd(std::string name, std::vector<MatrixT> matrix,
+                       std::vector<size_t> wires) {
+        obs_name_.emplace_back(std::move(name));
+        obs_matrix_.emplace_back(std::move(matrix));
+        obs_wires_.emplace_back(std::move(wires));
+    }
 
     /**
      * @brief Get the number of operations in observable.
@@ -134,9 +97,8 @@ template <class T = double> class ObsDatum {
      *
      * @return const std::vector<std::vector<T>>&
      */
-    [[nodiscard]] auto getObsParams() const
-        -> const std::vector<param_var_t> & {
-        return obs_params_;
+    [[nodiscard]] auto getObsMatrix() const -> const std::vector<MatrixT> & {
+        return obs_matrix_;
     }
     /**
      * @brief Get the wires for each observable operation.
@@ -148,16 +110,89 @@ template <class T = double> class ObsDatum {
         return obs_wires_;
     }
 
+    void applyInPlace(std::complex<T> *v, size_t num_qubits) const final {
+        StateVectorRaw sv(v, Util::exp2(num_qubits));
+        for (size_t idx = 0; idx < obs_name_.size(); idx++) {
+            if (obs_name_[idx] == "Hermitian") {
+                sv.applyMatrix(obs_matrix_[idx], obs_wires_[idx]);
+            } else {
+                sv.applyOperation(obs_name_[idx], obs_wires_[idx]);
+            }
+        }
+    }
+
+    [[nodiscard]] std::string toString() const {
+        using Util::operator<<;
+        std::ostringstream obs_stream;
+        obs_stream << "Observable: { 'name' : ";
+        const auto obs_size = obs_name_.size();
+        for (size_t idx = 0; idx < obs_size; idx++) {
+            obs_stream << obs_name_[idx];
+            if (idx < obs_size) {
+                obs_stream << " @ ";
+            }
+        }
+        obs_stream << ", 'wires' : " << getObsWires() << " }";
+        return obs_stream.str();
+    }
+};
+
+/**
+ * @brief General Hamiltonian as a sum of observables.
+ *
+ * TODO: Check whether caching the sparse matrix representation can give
+ * a speedup
+ */
+template <typename T> class Hamiltonian final : public Observable<T> {
+  public:
+    using PrecisionT = T;
+
   private:
-    const std::vector<std::string> obs_name_;
-    const std::vector<param_var_t> obs_params_;
-    const std::vector<std::vector<size_t>> obs_wires_;
+    std::vector<T> coeffs_;
+    std::vector<std::shared_ptr<ObsTerm<T>>> terms_;
+
+  public:
+    Hamiltonian(std::vector<T> coeff,
+                std::vector<std::shared_ptr<ObsTerm<T>>> terms)
+        : coeffs_{std::move(coeff)}, terms_{std::move(terms)} {}
+
+    void applyInPlace(std::complex<T> *v, size_t num_qubits) const {
+        StateVectorManaged sv_in(v, Util::exp2(num_qubits));
+
+        for (size_t term_idx = 0; term_idx < coeffs_.size(); term_idx++) {
+            StateVectorManaged tmp(sv_in);
+            terms_[term_idx]->applyInPlace(tmp.getData(), num_qubits);
+            Util::scaleAndAdd(tmp.getLength(),
+                              std::complex<T>{coeffs_[term_idx], 0.0},
+                              tmp.getData(), v);
+        }
+    }
+
+    void appendTerm(T coeff, std::shared_ptr<ObsTerm<T>> term) {
+        coeffs_.emplace_back(coeff);
+        terms_.emplace_back(std::move(term));
+    }
+
+    [[nodiscard]] auto toString() const -> std::string {
+        using Util::operator<<;
+        std::ostringstream ss;
+        ss << "Hamiltonian: { 'coeffs' : " << coeffs_
+           << "}, { 'observables' : ";
+        const auto term_size = terms_.size();
+        for (size_t t = 0; t < term_size; t++) {
+            ss << terms_[t]->toString();
+            if (t < term_size) {
+                ss << ", ";
+            }
+        }
+        ss << "}";
+        return ss.str();
+    }
 };
 
 /**
  * @brief Utility class for encapsulating operations used by AdjointJacobian
  * class.
- *
  */
 template <class T> class OpsData {
   private:
@@ -324,7 +359,7 @@ template <class T> class JacobianData {
     size_t num_parameters;
     size_t num_elements;
     const std::complex<T> *psi;
-    const std::vector<ObsDatum<T>> observables;
+    const std::vector<std::shared_ptr<Observable<T>>> observables;
     const OpsData<T> operations;
     const std::vector<size_t> trainableParams;
 
@@ -341,8 +376,8 @@ template <class T> class JacobianData {
      * calculation. This must be sorted.
      */
     JacobianData(size_t num_params, size_t num_elem, std::complex<T> *ps,
-                 std::vector<ObsDatum<T>> obs, OpsData<T> ops,
-                 std::vector<size_t> trainP)
+                 std::vector<std::shared_ptr<Observable<T>>> obs,
+                 OpsData<T> ops, std::vector<size_t> trainP)
         : num_parameters(num_params), num_elements(num_elem), psi(ps),
           observables(std::move(obs)), operations(std::move(ops)),
           trainableParams(std::move(trainP)) {}
@@ -375,10 +410,10 @@ template <class T> class JacobianData {
     /**
      * @brief Get observables for which to calculate Jacobian.
      *
-     * @return std::vector<ObsDatum<T>>&
+     * @return std::vector<ObsTerm<T>>&
      */
     [[nodiscard]] auto getObservables() const
-        -> const std::vector<ObsDatum<T>> & {
+        -> const std::vector<std::shared_ptr<Observable<T>>> & {
         return observables;
     }
 

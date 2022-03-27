@@ -184,7 +184,7 @@ def _serialize_ops(
                 if is_inverse:
                     is_inverse = False
             else:
-                params.append(np.array(single_op.parameters, dtype = float_type))
+                params.append(np.array(single_op.parameters, dtype=float_type))
                 mats.append([])
 
             wires_list = single_op.wires.tolist()

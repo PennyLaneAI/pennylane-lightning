@@ -105,8 +105,9 @@ constexpr auto getLambdaForKernelGateOp() {
     using namespace Pennylane::Gates;
     using GateImplementation = SelectKernel<kernel>;
 
-    static_assert(Util::array_has_elt(GateImplementation::implemented_gates, gate_op),
-                  "The operator to register must be implemented.");
+    static_assert(
+        Util::array_has_elt(GateImplementation::implemented_gates, gate_op),
+        "The operator to register must be implemented.");
 
     if constexpr (gate_op != GateOperation::Matrix) {
         return
@@ -279,7 +280,7 @@ auto getCompileInfo() -> pybind11::dict {
  * @brief Return basic information of runtime environment
  */
 auto getRuntimeInfo() -> pybind11::dict {
-    using namespace Util::Constant;
+    using Util::RuntimeInfo;
     using namespace pybind11::literals;
 
     return pybind11::dict("AVX"_a = RuntimeInfo::AVX(),

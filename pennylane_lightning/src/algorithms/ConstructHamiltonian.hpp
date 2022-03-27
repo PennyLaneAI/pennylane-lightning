@@ -22,44 +22,48 @@ namespace Pennylane::Algorithms {
 
 class PauliWord {
   private:
-    std::vector<std::pair<size_t, char>> pstring_; // vector of wire ('X', 'Y', 'Z') pair. All wires must be distinct
+    std::vector<std::pair<size_t, char>>
+        pstring_; // vector of wire ('X', 'Y', 'Z') pair. All wires must be
+                  // distinct
 
   public:
-    PauliWord(std::string_view pstr, const std::vector<size_t>& wires) {
+    PauliWord(std::string_view pstr, const std::vector<size_t> &wires) {
         if (pstr.size() != wires.size()) {
-            throw std::invalid_argument("Size of the Pauli string must be same as that of wires.");
+            throw std::invalid_argument(
+                "Size of the Pauli string must be same as that of wires.");
         }
-        for(size_t idx = 0; idx < pstr.size(); idx++) {
+        for (size_t idx = 0; idx < pstr.size(); idx++) {
             if (pstr[idx] != 'X' || pstr[idx] != 'Y' || pstr[idx] != 'Z') {
-                throw std::invalid_argument("An element of Pauli string must be one of X, Y, Z.");
+                throw std::invalid_argument(
+                    "An element of Pauli string must be one of X, Y, Z.");
             }
             pstring_.emplace_back(wires[idx], pstr[idx]);
         }
     }
 
-    template<typename T>
+    template <typename T>
     auto applyBasisState(size_t n_qubits, size_t basis_st) const
         -> std::pair<std::complex<T>, size_t> {
         // basis_st in binary rep
         uint32_t powi = 0;
-        for(const auto& [wire, pchar]: pstring_) {
-            switch(pchar) {
+        for (const auto &[wire, pchar] : pstring_) {
+            switch (pchar) {
             case 'X':
                 basis_st ^= (1U << (n_qubits - wire - 1));
                 break;
             case 'Y':
-                powi += ((basis_st >> (n_qubits - wire - 1)) & 1U) == 0?1:3;
+                powi += ((basis_st >> (n_qubits - wire - 1)) & 1U) == 0 ? 1 : 3;
                 basis_st ^= (1U << (n_qubits - wire - 1));
                 break;
             case 'Z':
-                powi += ((basis_st >> (n_qubits - wire - 1)) & 1U) == 0?0:2;
+                powi += ((basis_st >> (n_qubits - wire - 1)) & 1U) == 0 ? 0 : 2;
                 break;
             default:
                 PL_UNREACHABLE;
             }
         }
         std::complex<T> scalar;
-        switch(powi % 4) {
+        switch (powi % 4) {
         case 0:
             scalar = std::complex<T>{1.0, 0.0};
             break;
@@ -70,33 +74,29 @@ class PauliWord {
             scalar = std::complex<T>{-1.0, 0.0};
             break;
         case 3:
-            scalar = std::complex<T>{0.0,-1.0};
+            scalar = std::complex<T>{0.0, -1.0};
             break;
         }
         return std::make_pair(scalar, basis_st);
     }
 
     [[nodiscard]] auto isDiagonal() const -> bool {
-        return std::all_of(pstring_.begin(), pstring_.end(), 
-            [](const auto& p) {
-                return p.second == 'Z';
-            });
+        return std::all_of(pstring_.begin(), pstring_.end(),
+                           [](const auto &p) { return p.second == 'Z'; });
     }
 };
 
-template<typename T>
-class Hamlitonian {
+template <typename T> class Hamlitonian {
   private:
     size_t num_qubits_;
     std::vector<T> coeffs_;
     std::vector<PauliWord> pwords_;
 
   public:
-    Hamlitonian(size_t num_qubits, std::vector<T> coeff, 
-            std::vector<PauliWord> pwords)
-        : num_qubits_{num_qubits}, 
-        coeffs_{std::move(coeff)}, pwords_{std::move(pwords)} {
-    }
+    Hamlitonian(size_t num_qubits, std::vector<T> coeff,
+                std::vector<PauliWord> pwords)
+        : num_qubits_{num_qubits}, coeffs_{std::move(coeff)}, pwords_{std::move(
+                                                                  pwords)} {}
 
     /**
      * @brief For a given binary representation of a basis state,
@@ -108,9 +108,9 @@ class Hamlitonian {
         std::vector<size_t> state_outs;
         state_coeffs.resize(pwords_.size());
         state_outs.resize(pwords_.size());
-        for(size_t idx = 0; idx < pwords_.size(); idx++) {
-            const auto [scalar, state_out]
-                = pwords_[idx].applyBasisState<T>(num_qubits_, state_in);
+        for (size_t idx = 0; idx < pwords_.size(); idx++) {
+            const auto [scalar, state_out] =
+                pwords_[idx].applyBasisState<T>(num_qubits_, state_in);
             state_coeffs.emplace_back(scalar * coeffs_[idx]);
             state_outs.emplace_back(state_out);
         }
@@ -122,31 +122,28 @@ class Hamlitonian {
         return this->applyBasisState(state_in);
     }
 
-    [[nodiscard]] auto countTerms() const -> size_t {
-        return pwords_.size();
-    }
+    [[nodiscard]] auto countTerms() const -> size_t { return pwords_.size(); }
 };
 
 /**
  * @brief Sparse matrix in csr format
  */
-template<typename T>
-struct SparseMatrix {
+template <typename T> struct SparseMatrix {
     std::vector<T> data;
     std::vector<size_t> indices;
     std::vector<size_t> indptr;
 };
 
-template<typename T>
-auto constructSparseMatrix(const Hamlitonian<T>& ham) -> SparseMatrix<T> {
+template <typename T>
+auto constructSparseMatrix(const Hamlitonian<T> &ham) -> SparseMatrix<T> {
     SparseMatrix<T> result;
 
     result.indptr.emplace_back(0);
 
     for (size_t row = 0; row < (1U << ham.getNumQubits()); row++) {
         const auto [coeffs, cols] = ham(row);
-        
-        for(size_t idx = 0; idx < cols.size(); idx++) {
+
+        for (size_t idx = 0; idx < cols.size(); idx++) {
             result.data.emplace_back(coeffs[idx]);
         }
         result.indices.reserve(result.indies.size() + cols.size());

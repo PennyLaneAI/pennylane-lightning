@@ -15,12 +15,11 @@
 #include "AdjointDiff.hpp"
 
 // explicit instantiation
-template void Pennylane::Algorithms::adjointJacobian<float>(
-        std::vector<float> &jac,
-        const JacobianData<float> &jd,
-        bool apply_operations = false);
-template void Pennylane::Algorithms::adjointJacobian<double>(
-        std::vector<double> &jac,
-        const JacobianData<double> &jd,
-        bool apply_operations = false);
-
+template void
+Pennylane::Algorithms::adjointJacobian<float>(std::vector<float> &jac,
+                                              const JacobianData<float> &jd,
+                                              bool apply_operations = false);
+template void
+Pennylane::Algorithms::adjointJacobian<double>(std::vector<double> &jac,
+                                               const JacobianData<double> &jd,
+                                               bool apply_operations = false);

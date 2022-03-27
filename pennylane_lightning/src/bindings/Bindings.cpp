@@ -63,7 +63,6 @@ void lightning_class_bindings(py::module &m) {
 
     registerKernelsToPyexport<PrecisionT, ParamT>(pyclass);
 
-
     //***********************************************************************//
     //                              Measures
     //***********************************************************************//
@@ -89,8 +88,8 @@ void lightning_class_bindings(py::module &m) {
         });
 }
 
-template<class PrecisionT, class ParamT>
-void registerAlgorithms(py::module_& m) {
+template <class PrecisionT, class ParamT>
+void registerAlgorithms(py::module_ &m) {
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
@@ -100,64 +99,49 @@ void registerAlgorithms(py::module_& m) {
 
     using np_arr_c = py::array_t<std::complex<ParamT>, py::array::c_style>;
     using np_arr_r = py::array_t<ParamT, py::array::c_style>;
-    
-    std::string class_name = "ObsStructC" + bitsize;
-    using obs_data_var = std::variant<std::monostate, np_arr_r, np_arr_c>;
+
+    std::string class_name = "ObsTermC" + bitsize;
+
+    py::class_<ObsTerm<PrecisionT>, std::shared_ptr<ObsTerm<PrecisionT>>>(
+        m, class_name.c_str(), py::module_local())
+        .def(py::init([](const std::vector<std::string> &names,
+                         const std::vector<np_arr_c> &params,
+                         const std::vector<std::vector<size_t>> &wires) {
+            std::vector<typename ObsTerm<PrecisionT>::MatrixT> conv_params;
+            conv_params.reserve(params.size());
+            for (size_t p_idx = 0; p_idx < params.size(); p_idx++) {
+                auto buffer = params[p_idx].request();
+                auto ptr = static_cast<std::complex<ParamT> *>(buffer.ptr);
+                if (buffer.size) {
+                    conv_params.emplace_back(ptr, ptr + buffer.size);
+                }
+            }
+            return ObsTerm<PrecisionT>(names, conv_params, wires);
+        }))
+        .def("__repr__", &ObsTerm<PrecisionT>::toString)
+        .def("get_name", &ObsTerm<PrecisionT>::getObsName,
+             "Get names of observables")
+        .def("get_wires", &ObsTerm<PrecisionT>::getObsWires,
+             "Get wires of observables");
+
+    class_name = "HamiltonianC" + bitsize;
+    using ObsTermPtr = std::shared_ptr<ObsTerm<PrecisionT>>;
+    py::class_<Hamiltonian<PrecisionT>,
+               std::shared_ptr<Hamiltonian<PrecisionT>>>(m, class_name.c_str(),
+                                                         py::module_local())
+        .def(py::init(
+            [](const np_arr_r &coeffs, const std::vector<ObsTermPtr> &terms) {
+                auto buffer = coeffs.request();
+                const auto ptr = static_cast<const ParamT *>(buffer.ptr);
+                return Hamiltonian{{ptr, ptr + buffer.size}, terms};
+            }))
+        .def("__repr__", &Hamiltonian<PrecisionT>::toString);
+    /*
     py::class_<ObsDatum<PrecisionT>>(m, class_name.c_str(), py::module_local())
         .def(py::init([](const std::vector<std::string> &names,
                          const std::vector<obs_data_var> &params,
                          const std::vector<std::vector<size_t>> &wires) {
-            std::vector<typename ObsDatum<PrecisionT>::param_var_t> conv_params(
-                params.size());
-            for (size_t p_idx = 0; p_idx < params.size(); p_idx++) {
-                std::visit(
-                    [&](const auto &param) {
-                        using p_t = std::decay_t<decltype(param)>;
-                        if constexpr (std::is_same_v<p_t, np_arr_c>) {
-                            auto buffer = param.request();
-                            auto ptr =
-                                static_cast<std::complex<ParamT> *>(buffer.ptr);
-                            if (buffer.size) {
-                                conv_params[p_idx] =
-                                    std::vector<std::complex<ParamT>>{
-                                        ptr, ptr + buffer.size};
-                            }
-                        } else if constexpr (std::is_same_v<p_t, np_arr_r>) {
-                            auto buffer = param.request();
-
-                            auto *ptr = static_cast<ParamT *>(buffer.ptr);
-                            if (buffer.size) {
-                                conv_params[p_idx] =
-                                    std::vector<ParamT>{ptr, ptr + buffer.size};
-                            }
-                        } else {
-                            PL_ABORT(
-                                "Parameter datatype not current supported");
-                        }
-                    },
-                    params[p_idx]);
-            }
-            return ObsDatum<PrecisionT>(names, conv_params, wires);
         }))
-        .def("__repr__",
-             [](const ObsDatum<PrecisionT> &obs) {
-                 using namespace Pennylane::Util;
-                 std::ostringstream obs_stream;
-                 std::string obs_name = obs.getObsName()[0];
-                 for (size_t o = 1; o < obs.getObsName().size(); o++) {
-                     if (o < obs.getObsName().size()) {
-                         obs_name += " @ ";
-                     }
-                     obs_name += obs.getObsName()[o];
-                 }
-                 obs_stream << "'wires' : " << obs.getObsWires();
-                 return "Observable: { 'name' : " + obs_name + ", " +
-                        obs_stream.str() + " }";
-             })
-        .def("get_name",
-             [](const ObsDatum<PrecisionT> &obs) { return obs.getObsName(); })
-        .def("get_wires",
-             [](const ObsDatum<PrecisionT> &obs) { return obs.getObsWires(); })
         .def("get_params", [](const ObsDatum<PrecisionT> &obs) {
             py::list params;
             for (size_t i = 0; i < obs.getObsParams().size(); i++) {
@@ -183,6 +167,7 @@ void registerAlgorithms(py::module_& m) {
             }
             return params;
         });
+    */
 
     //***********************************************************************//
     //                              Operations
@@ -217,37 +202,37 @@ void registerAlgorithms(py::module_& m) {
      * We use the same function name for C64 and C128. They are distinguished
      * by parameter types.
      * */
-    m.def("create_ops_list",
-         [](const std::vector<std::string> &ops_name,
-            const std::vector<np_arr_r> &ops_params,
-            const std::vector<std::vector<size_t>> &ops_wires,
-            const std::vector<bool> &ops_inverses,
-            const std::vector<np_arr_c> &ops_matrices) {
-             std::vector<std::vector<PrecisionT>> conv_params(
-                 ops_params.size());
-             std::vector<std::vector<std::complex<PrecisionT>>>
-                 conv_matrices(ops_matrices.size());
-             for (size_t op = 0; op < ops_name.size(); op++) {
-                 const auto p_buffer = ops_params[op].request();
-                 const auto m_buffer = ops_matrices[op].request();
-                 if (p_buffer.size) {
-                     const auto *const p_ptr =
-                         static_cast<const ParamT *>(p_buffer.ptr);
-                     conv_params[op] =
-                         std::vector<ParamT>{p_ptr, p_ptr + p_buffer.size};
-                 }
-                 if (m_buffer.size) {
-                     const auto m_ptr =
-                         static_cast<const std::complex<ParamT> *>(
-                             m_buffer.ptr);
-                     conv_matrices[op] = std::vector<std::complex<ParamT>>{
-                         m_ptr, m_ptr + m_buffer.size};
-                 }
-             }
-             return OpsData<PrecisionT>{ops_name, conv_params, ops_wires,
-                                        ops_inverses, conv_matrices};
-        }, "Create a list of operations from data.");
-
+    m.def(
+        "create_ops_list",
+        [](const std::vector<std::string> &ops_name,
+           const std::vector<np_arr_r> &ops_params,
+           const std::vector<std::vector<size_t>> &ops_wires,
+           const std::vector<bool> &ops_inverses,
+           const std::vector<np_arr_c> &ops_matrices) {
+            std::vector<std::vector<PrecisionT>> conv_params(ops_params.size());
+            std::vector<std::vector<std::complex<PrecisionT>>> conv_matrices(
+                ops_matrices.size());
+            for (size_t op = 0; op < ops_name.size(); op++) {
+                const auto p_buffer = ops_params[op].request();
+                const auto m_buffer = ops_matrices[op].request();
+                if (p_buffer.size) {
+                    const auto *const p_ptr =
+                        static_cast<const ParamT *>(p_buffer.ptr);
+                    conv_params[op] =
+                        std::vector<ParamT>(p_ptr, p_ptr + p_buffer.size);
+                }
+                if (m_buffer.size) {
+                    const auto m_ptr =
+                        static_cast<const std::complex<ParamT> *>(m_buffer.ptr);
+                    conv_matrices[op] = std::vector<std::complex<ParamT>>{
+                        m_ptr, m_ptr + m_buffer.size};
+                }
+            }
+            return OpsData<PrecisionT>{ops_name, conv_params, ops_wires,
+                                       ops_inverses, conv_matrices};
+        },
+        "Create a list of operations from data.");
+    /*
     m.def("adjoint_jacobian",
          [](const StateVectorRaw<PrecisionT> &sv,
             const std::vector<ObsDatum<PrecisionT>> &observables,
@@ -264,7 +249,7 @@ void registerAlgorithms(py::module_& m) {
 
              return py::array_t<ParamT>(py::cast(jac));
          }, "Compute jacobian of the circuit using the adjoint method.");
-
+    */
     /*
         .def("compute_vjp_from_jac",
              &VectorJacobianProduct<PrecisionT>::computeVJP)
@@ -292,47 +277,6 @@ void registerAlgorithms(py::module_& m) {
                      });
              });
      */
-
-    //***********************************************************************//
-    //                              Measures
-    //***********************************************************************//
-
-    class_name = "MeasuresC" + bitsize;
-    py::class_<Measures<PrecisionT>>(m, class_name.c_str(), py::module_local())
-        .def(py::init<const StateVectorRaw<PrecisionT> &>())
-        .def("probs",
-             [](Measures<PrecisionT> &M, const std::vector<size_t> &wires) {
-                 if (wires.empty()) {
-                     return py::array_t<ParamT>(py::cast(M.probs()));
-                 }
-                 return py::array_t<ParamT>(py::cast(M.probs(wires)));
-             })
-        .def("expval",
-             [](Measures<PrecisionT> &M, const std::string &operation,
-                const std::vector<size_t> &wires) {
-                 return M.expval(operation, wires);
-             })
-        .def("generate_samples",
-             [](Measures<PrecisionT> &M, size_t num_wires, size_t num_shots) {
-                 auto &&result = M.generate_samples(num_shots);
-                 const size_t ndim = 2;
-                 const std::vector<size_t> shape{num_shots, num_wires};
-                 constexpr auto sz = sizeof(size_t);
-                 const std::vector<size_t> strides{sz * num_wires, sz};
-                 // return 2-D NumPy array
-                 return py::array(py::buffer_info(
-                     result.data(), /* data as contiguous array  */
-                     sz,            /* size of one scalar        */
-                     py::format_descriptor<size_t>::format(), /* data type */
-                     ndim,   /* number of dimensions      */
-                     shape,  /* shape of the matrix       */
-                     strides /* strides for each axis     */
-                     ));
-             })
-        .def("var", [](Measures<PrecisionT> &M, const std::string &operation,
-                       const std::vector<size_t> &wires) {
-            return M.var(operation, wires);
-        });
 }
 
 /**
@@ -370,9 +314,8 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
           "Get statevector indices for gate application");
 
     /* Algorithms submodule */
-    py::module_ alg_submodule = 
-        m.def_submodule("adjoint_diff", 
-                        "A submodule for adjoint differentiation method.");
+    py::module_ alg_submodule = m.def_submodule(
+        "adjoint_diff", "A submodule for adjoint differentiation method.");
 
     registerAlgorithms<float, float>(alg_submodule);
     registerAlgorithms<double, double>(alg_submodule);
@@ -386,7 +329,7 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
     /* Add EXPORTED_KERNELS */
     std::vector<std::pair<std::string, std::string>> exported_kernel_ops;
 
-    for (const auto kernel: kernels_to_pyexport) {
+    for (const auto kernel : kernels_to_pyexport) {
         const auto kernel_name = lookup(kernel_id_name_pairs, kernel);
         const auto implemented_gates = implementedGatesForKernel(kernel);
         for (const auto gate_op : implemented_gates) {
@@ -399,9 +342,11 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
     m.attr("EXPORTED_KERNEL_OPS") = py::cast(exported_kernel_ops);
 
     /* Add DEFAULT_KERNEL_FOR_OPS */
+    namespace GateConstant = Gates::Constant;
     std::map<std::string, std::string> default_kernel_ops_map;
-    for (const auto &[gate_op, name] : Constant::gate_names) {
-        const auto kernel = lookup(Constant::default_kernel_for_gates, gate_op);
+    for (const auto &[gate_op, name] : GateConstant::gate_names) {
+        const auto kernel =
+            lookup(GateConstant::default_kernel_for_gates, gate_op);
         const auto kernel_name = lookup(kernel_id_name_pairs, kernel);
         default_kernel_ops_map.emplace(std::string(name), kernel_name);
     }

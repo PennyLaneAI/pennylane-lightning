@@ -44,7 +44,7 @@ static void statevectorVJP(const JacobianData<PrecisionT> &jd,
                            bool apply_operations = false) {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     if (!jd.hasTrainableParams()) {
-        return ;
+        return;
     }
     const OpsData<PrecisionT> &ops = jd.getOperations();
     const std::vector<std::string> &ops_name = ops.getOpsName();
@@ -114,7 +114,6 @@ static void statevectorVJP(const JacobianData<PrecisionT> &jd,
  */
 template <typename PrecisionT>
 auto fisherMatrix(const JacobianData<PrecisionT> &jd,
-                  bool apply_operations = false) {
-}
+                  bool apply_operations = false) {}
 
 } // namespace Pennylane::Algorithms

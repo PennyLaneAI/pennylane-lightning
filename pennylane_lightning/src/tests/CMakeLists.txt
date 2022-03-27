@@ -69,7 +69,7 @@ add_executable(compile_time_tests compile_time_tests.cpp)
 target_link_libraries(compile_time_tests lightning_gates lightning_utils)
 
 set(TEST_SOURCES CreateAllWires.cpp
-                 #Test_AdjDiff.cpp
+                 Test_AdjDiff.cpp
                  #Test_Bindings.cpp
                  Test_DynamicDispatcher.cpp
                  Test_GateImplementations_CompareKernels.cpp

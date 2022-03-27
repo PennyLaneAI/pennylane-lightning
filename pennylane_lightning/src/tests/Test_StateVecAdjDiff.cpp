@@ -1,10 +1,10 @@
 #include "VectorStream.hpp"
 
-#include "AlgUtil.hpp"
 #include "AdjointDiff.hpp"
-#include "StateVecAdjDiff.hpp"
-#include "GateOperation.hpp"
+#include "AlgUtil.hpp"
 #include "Constant.hpp"
+#include "GateOperation.hpp"
+#include "StateVecAdjDiff.hpp"
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"
@@ -21,31 +21,28 @@ using namespace Pennylane::Algorithms;
  * @brief
  *
  * @param length Size of the gate sequence
- * @param 
+ * @param
  */
 template <class PrecisionT, class RandomEngine>
-auto createRandomOps(RandomEngine& re, size_t length) 
-    -> OpsData<PrecisionT> {
+auto createRandomOps(RandomEngine &re, size_t length) -> OpsData<PrecisionT> {
     using namespace Pennylane::Gates;
 
-    std::array gates_to_use = {
-        GateOperation::RX,
-        GateOperation::RY,
-        GateOperation::RZ
-    };
+    std::array gates_to_use = {GateOperation::RX, GateOperation::RY,
+                               GateOperation::RZ};
 
     std::vector<std::string> ops_names;
     std::vector<std::vector<PrecisionT>> ops_params;
     std::vector<std::vector<size_t>> ops_wires;
     std::vector<bool> ops_inverses;
 
-    std::uniform_int_distribution<size_t> gate_dist(0, gates_to_use.size()-1);
-    std::uniform_real_distribution<PrecisionT> param_dist(0.0, 2*M_PI);
+    std::uniform_int_distribution<size_t> gate_dist(0, gates_to_use.size() - 1);
+    std::uniform_real_distribution<PrecisionT> param_dist(0.0, 2 * M_PI);
     std::uniform_int_distribution<int> inverse_dist(0, 1);
 
-    for(size_t i = 0; i < length; i++) {
+    for (size_t i = 0; i < length; i++) {
         const auto gate_op = gates_to_use[gate_dist(re)];
-        const auto gate_name = Util::lookup(Constant::gate_names, gate_op);
+        const auto gate_name =
+            Util::lookup(Gates::Constant::gate_names, gate_op);
         ops_names.emplace_back(gate_name);
         ops_params.emplace_back(std::vector<PrecisionT>{param_dist(re)});
         ops_inverses.emplace_back(inverse_dist(re));
@@ -101,7 +98,8 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
             JacobianData<TestType> jd{1, 4, final_st.data(), {}, ops_data, {0}};
 
             for (size_t i = 0; i < 4; i++) {
-                std::fill(dy.begin(), dy.end(), std::complex<TestType>{0.0, 0.0});
+                std::fill(dy.begin(), dy.end(),
+                          std::complex<TestType>{0.0, 0.0});
                 dy[i] = {1.0, 0.0};
                 std::vector<ComplexPrecisionT> vjp(1);
                 statevectorVJP(jd, dy.data(), vjp.data(), false);
@@ -143,11 +141,12 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
             std::vector<std::complex<TestType>> ini_st{
                 {isqrt2, 0.0}, {0.0, 0.0}, {isqrt2, 0.0}, {0.0, 0.0}};
 
-            JacobianData<TestType> jd{1, 4, ini_st.data(), {}, ops_data, 
-                {1, 2} // trainable params
+            JacobianData<TestType> jd{
+                1, 4, ini_st.data(), {}, ops_data, {1, 2} // trainable params
             };
             for (size_t i = 0; i < 4; i++) {
-                std::fill(dy.begin(), dy.end(), std::complex<TestType>{0.0, 0.0});
+                std::fill(dy.begin(), dy.end(),
+                          std::complex<TestType>{0.0, 0.0});
                 dy[i] = {1.0, 0.0};
                 std::vector<ComplexPrecisionT> vjp(2);
                 statevectorVJP(jd, dy.data(), vjp.data(), true);
@@ -161,11 +160,12 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
             std::vector<std::complex<TestType>> final_st{
                 {0.0, 0.0}, {isqrt2, 0.0}, {isqrt2, 0.0}, {0.0, 0.0}};
 
-            JacobianData<TestType> jd{4, 4, final_st.data(), {}, ops_data, 
-                {1, 2} // trainable params
+            JacobianData<TestType> jd{
+                4, 4, final_st.data(), {}, ops_data, {1, 2} // trainable params
             };
             for (size_t i = 0; i < 4; i++) {
-                std::fill(dy.begin(), dy.end(), std::complex<TestType>{0.0, 0.0});
+                std::fill(dy.begin(), dy.end(),
+                          std::complex<TestType>{0.0, 0.0});
                 dy[i] = {1.0, 0.0};
                 std::vector<ComplexPrecisionT> vjp(2);
                 statevectorVJP(jd, dy.data(), vjp.data(), false);
@@ -176,15 +176,19 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
         }
     }
 
-    SECTION("Check the result is consistent with adjoint diff with observables") {
+    SECTION(
+        "Check the result is consistent with adjoint diff with observables") {
         std::mt19937 re{1337};
         auto ops_data = createRandomOps<TestType>(re, 10);
-        ObsDatum<TestType> obs{{"PauliZ"}, {}, {{0}}};
+        auto obs = std::make_shared<ObsTerm<TestType>>(
+            std::vector<std::string>{"PauliZ"},
+            std::vector<std::vector<std::complex<TestType>>>{{}},
+            std::vector<std::vector<size_t>>{{0}});
 
-        const size_t num_params = [&](){
+        const size_t num_params = [&]() {
             size_t r = 0;
-            for(const auto& ops_params: ops_data.getOpsParams()) {
-                if(!ops_params.empty()) {
+            for (const auto &ops_params : ops_data.getOpsParams()) {
+                if (!ops_params.empty()) {
                     ++r;
                 }
             }
@@ -198,19 +202,19 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
 
         StateVectorManaged<TestType> sv(ini_st.data(), ini_st.size());
         applyOperations(sv, ops_data);
-        JacobianData<TestType> jd{num_params, 8, sv.getDataVector().data(), {obs},
-            ops_data, trainable_params
-        };
+        JacobianData<TestType> jd{
+            num_params, 8,        sv.getDataVector().data(),
+            {obs},      ops_data, trainable_params};
 
         auto o_sv = sv;
-        applyObservable(o_sv, obs);
+        applyObservable(o_sv, *obs);
 
         std::vector<TestType> grad_vjp = [&]() {
             std::vector<ComplexPrecisionT> vjp(num_params);
             statevectorVJP(jd, o_sv.getDataVector().data(), vjp.data(), false);
             std::vector<TestType> res(vjp.size());
-            std::transform(vjp.begin(), vjp.end(), res.begin(), 
-                [](const auto& x) { return 2*std::real(x); });
+            std::transform(vjp.begin(), vjp.end(), res.begin(),
+                           [](const auto &x) { return 2 * std::real(x); });
             return res;
         }();
 

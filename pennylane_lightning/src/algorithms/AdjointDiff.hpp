@@ -49,16 +49,15 @@ namespace Pennylane::Algorithms {
  * @param apply_operations Indicate whether to apply operations to tape.psi
  * prior to calculation.
  */
-template<typename T>
+template <typename T>
 void adjointJacobian(std::vector<T> &jac, const JacobianData<T> &jd,
                      bool apply_operations = false) {
-    PL_ABORT_IF(!jd.hasTrainableParams(),
-                "No trainable parameters provided.");
+    PL_ABORT_IF(!jd.hasTrainableParams(), "No trainable parameters provided.");
 
     const OpsData<T> &ops = jd.getOperations();
     const std::vector<std::string> &ops_name = ops.getOpsName();
 
-    const std::vector<ObsDatum<T>> &obs = jd.getObservables();
+    const auto &obs = jd.getObservables();
     const size_t num_observables = obs.size();
 
     // We can assume the trainable params are sorted (from Python)
@@ -126,13 +125,12 @@ void adjointJacobian(std::vector<T> &jac, const JacobianData<T> &jd,
                 #endif
 
                 // clang-format on
-                for (size_t obs_idx = 0; obs_idx < num_observables;
-                     obs_idx++) {
+                for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
                     jac[mat_row_idx + obs_idx] =
                         -2 * scalingFactor *
                         std::imag(
                             Util::innerProdC(H_lambda[obs_idx].getDataVector(),
-                                       mu.getDataVector()));
+                                             mu.getDataVector()));
                 }
                 trainableParamNumber--;
                 ++tp_it;
@@ -141,6 +139,6 @@ void adjointJacobian(std::vector<T> &jac, const JacobianData<T> &jd,
         }
         applyOperationsAdj(H_lambda, ops, static_cast<size_t>(op_idx));
     }
-    jac = Util::Transpose(jac, jd.getNumParams(), num_observables);
+    jac = Util::Transpose(jac, tp_size, num_observables);
 }
 } // namespace Pennylane::Algorithms

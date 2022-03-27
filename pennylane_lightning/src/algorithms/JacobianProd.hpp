@@ -66,13 +66,13 @@ void computeVJP(std::vector<T> &vjp, const std::vector<T> &jac,
  * TODO: Change pointers to std::span in C++20
  */
 template <typename PrecisionT>
-void expvalVJP(const JacobianData<PrecisionT>& jd, const PrecisionT* dy,
-               const PrecisionT* v_out, bool apply_operations = false) {
+void expvalVJP(const JacobianData<PrecisionT> &jd, const PrecisionT *dy,
+               const PrecisionT *v_out, bool apply_operations = false) {
 
     const size_t num_params = jd.getTrainableParams().size();
 
     if (num_params == 0) {
-        return ;
+        return;
     }
 
     /*

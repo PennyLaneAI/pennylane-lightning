@@ -241,7 +241,7 @@ class LightningQubit(DefaultQubit):
 
     @staticmethod
     def _check_supported_observables(m):
-        """Check whether given 
+        """Check whether given
 
         Args:
             m (qml.MeasurementProcess): A measurement process to check. The return type of m must be Expectation
@@ -379,7 +379,7 @@ class LightningQubit(DefaultQubit):
                 tp_shift,
                 tape.num_params,
             )
-        return jac.reshape(-1, tape.num_params)
+        return jac.reshape(-1, len(trainable_params))
 
     def compute_vjp(self, dy, jac, num=None):
         """Convenience function to compute the vector-Jacobian product for a given

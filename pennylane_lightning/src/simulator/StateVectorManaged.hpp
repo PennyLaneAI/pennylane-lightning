@@ -107,8 +107,9 @@ class StateVectorManaged
      *
      * TODO: change to std::span in C++20
      */
-    void updateData(const ComplexPrecisionT* new_data_ptr) {
-        std::copy(new_data_ptr, new_data_ptr + this->getLength(), data_.begin());
+    void updateData(const ComplexPrecisionT *new_data_ptr) {
+        std::copy(new_data_ptr, new_data_ptr + this->getLength(),
+                  data_.begin());
     }
 };
 
