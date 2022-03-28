@@ -150,7 +150,7 @@ template <typename PrecisionT> class DynamicDispatcher {
     /**
      * @brief Generator name to generator operation
      *
-     * @param gntr_name Generator name
+     * @param gntr_name Generator name without "Generator" prefix
      */
     [[nodiscard]] auto strToGeneratorOp(const std::string &gntr_name) const
         -> Gates::GeneratorOperation {
