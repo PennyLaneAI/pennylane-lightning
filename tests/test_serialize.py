@@ -126,10 +126,6 @@ class TestSerializeObs:
 
     wires_dict = {i: i for i in range(10)}
 
-    @pytest.mark.skipif(
-        "ObsTermC128" and "ObsTermC64" not in dir(pennylane_lightning.lightning_qubit_ops),
-        reason="ObsTermC128 and ObsTermC64 are required",
-    )
     @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
     def test_basic_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a simple return"""
@@ -151,10 +147,6 @@ class TestSerializeObs:
 
         assert s == s_expected
 
-    @pytest.mark.skipif(
-        "ObsTermC128" and "ObsTermC64" not in dir(pennylane_lightning.lightning_qubit_ops),
-        reason="ObsTermC128 and ObsTermC64 are required",
-    )
     @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
     def test_tensor_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a tensor product return"""
@@ -176,10 +168,6 @@ class TestSerializeObs:
 
         assert s == s_expected
 
-    @pytest.mark.skipif(
-        "ObsTermC128" and "ObsTermC64" not in dir(pennylane_lightning.lightning_qubit_ops),
-        reason="ObsTermC128 and ObsTermC64 are required",
-    )
     @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
     def test_tensor_non_tensor_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a mixture of tensor product and non-tensor product
@@ -208,10 +196,6 @@ class TestSerializeObs:
         assert s[0][0] == s_expected[0]
         assert s[1][0] == s_expected[1]
 
-    @pytest.mark.skipif(
-        "ObsTermC128" and "ObsTermC64" not in dir(pennylane_lightning.lightning_qubit_ops),
-        reason="ObsTermC128 and ObsTermC64 are required",
-    )
     @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
     def test_hermitian_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a Hermitian return"""
@@ -223,22 +207,20 @@ class TestSerializeObs:
         use_csingle = True if ObsFunc == ObsTermC64 else False
         obs_str = "ObsTermC64" if ObsFunc == ObsTermC64 else "ObsTermC128"
 
+        dtype = np.float32 if use_csingle else np.float64
+
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
             _serialize_obs(tape, self.wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args[0]
-        s_expected = (["Hermitian"], [np.eye(4).ravel()], [[0, 1]])
+        s_expected = (["Hermitian"], [np.eye(4, dtype=dtype).ravel()], [[0, 1]])
         ObsFunc(*s_expected)
 
         assert s[0] == s_expected[0]
         assert np.allclose(s[1], s_expected[1])
         assert s[2] == s_expected[2]
 
-    @pytest.mark.skipif(
-        "ObsTermC128" and "ObsTermC64" not in dir(pennylane_lightning.lightning_qubit_ops),
-        reason="ObsTermC128 and ObsTermC64 are required",
-    )
     @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
     def test_hermitian_tensor_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a Hermitian return"""
@@ -267,10 +249,6 @@ class TestSerializeObs:
         assert np.allclose(s[1][1], s_expected[1][1])
         assert s[2] == s_expected[2]
 
-    @pytest.mark.skipif(
-        "ObsTermC128" and "ObsTermC64" not in dir(pennylane_lightning.lightning_qubit_ops),
-        reason="ObsTermC128 and ObsTermC64 are required",
-    )
     @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
     def test_mixed_tensor_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a mixture of Hermitian and Pauli return"""
@@ -294,10 +272,6 @@ class TestSerializeObs:
         assert np.allclose(s[1][0], s_expected[1][0])
         assert s[2] == s_expected[2]
 
-    @pytest.mark.skipif(
-        "ObsTermC128" and "ObsTermC64" not in dir(pennylane_lightning.lightning_qubit_ops),
-        reason="ObsTermC128 and ObsTermC64 are required",
-    )
     def test_integration_c64(self, monkeypatch):
         """Test for a comprehensive range of returns"""
         wires_dict = {"a": 0, 1: 1, "b": 2, -1: 3, 3.141: 4, "five": 5, 6: 6, 77: 7, 9: 8}

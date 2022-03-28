@@ -18,6 +18,8 @@
 
 #include <benchmark/benchmark.h>
 
+using namespace Pennylane;
+
 /**
  * @brief Benchmark generating a vector of random complex numbers.
  *
@@ -73,9 +75,9 @@ template <class T> static void std_innerProd_cmplx(benchmark::State &state) {
     for (auto _ : state) {
         std::complex<T> res = std::inner_product(
             vec1.data(), vec1.data() + sz, vec2.data(), std::complex<T>(),
-            Pennylane::Util::ConstSum<T>,
+            Util::ConstSum<T>,
             static_cast<std::complex<T> (*)(std::complex<T>, std::complex<T>)>(
-                &Pennylane::Util::ConstMult<T>));
+                &Util::ConstMult<T>));
         benchmark::DoNotOptimize(res);
     }
 }
@@ -88,7 +90,7 @@ BENCHMARK(std_innerProd_cmplx<double>)
     ->Range(1l << 5, 1l << 10);
 
 /**
- * @brief Benchmark Pennylane::Util::omp_innerProd for two vectors of complex
+ * @brief Benchmark Util::omp_innerProd for two vectors of complex
  * numbers.
  *
  * @tparam T Floating point precision type.
@@ -110,7 +112,7 @@ template <class T> static void omp_innerProd_cmplx(benchmark::State &state) {
     for (auto _ : state) {
         std::complex<T> res(.0, .0);
 
-        Pennylane::Util::omp_innerProd(vec1.data(), vec2.data(), res, sz);
+        Util::omp_innerProd(vec1.data(), vec2.data(), res, sz);
         benchmark::DoNotOptimize(res);
     }
 }
@@ -205,7 +207,7 @@ BENCHMARK(naive_transpose_cmplx<double>)
     ->Range(1l << 5, 1l << 10);
 
 /**
- * @brief Benchmark Pennylane::Util::CFTranspose for a randomly generated matrix
+ * @brief Benchmark Util::CFTranspose for a randomly generated matrix
  * of complex numbers.
  *
  * @tparam T Floating point precision type.
@@ -225,7 +227,7 @@ static void cf_transpose_cmplx(benchmark::State &state) {
     for (auto _ : state) {
         std::vector<std::complex<T>> mat2(sz * sz);
 
-        Pennylane::Util::CFTranspose<T, BLOCKSIZE>(mat1.data(), mat2.data(), sz,
+        Util::CFTranspose<T, BLOCKSIZE>(mat1.data(), mat2.data(), sz,
                                                    sz, 0, sz, 0, sz);
         benchmark::DoNotOptimize(mat2[sz * sz - 1]);
     }
@@ -258,6 +260,7 @@ BENCHMARK(cf_transpose_cmplx<double, 32>)
  */
 template <class T>
 static void omp_matrixVecProd_cmplx(benchmark::State &state) {
+    using Util::Trans;
     std::random_device rd;
     std::mt19937_64 eng(rd());
     std::uniform_real_distribution<T> distr;
@@ -274,7 +277,7 @@ static void omp_matrixVecProd_cmplx(benchmark::State &state) {
     for (auto _ : state) {
         std::vector<std::complex<T>> vec2(sz);
 
-        Pennylane::Util::omp_matrixVecProd(mat.data(), vec1.data(), vec2.data(),
+        Util::omp_matrixVecProd(mat.data(), vec1.data(), vec2.data(),
                                            sz, sz, Trans::NoTranspose);
         benchmark::DoNotOptimize(vec2[sz - 1]);
     }
@@ -296,6 +299,7 @@ BENCHMARK(omp_matrixVecProd_cmplx<double>)
  */
 template <class T>
 static void blas_matrixVecProd_cmplx(benchmark::State &state) {
+    using Util::Trans;
     std::random_device rd;
     std::mt19937_64 eng(rd());
     std::uniform_real_distribution<T> distr;
@@ -341,13 +345,14 @@ BENCHMARK(blas_matrixVecProd_cmplx<double>)
 //***********************************************************************//
 
 /**
- * @brief Benchmark Pennylane::Util::omp_matrixMatProd for two randomly
+ * @brief Benchmark Util::omp_matrixMatProd for two randomly
  * generated matrices of complex numbers.
  *
  * @tparam T Floating point precision type.
  */
 template <class T>
 static void omp_matrixMatProd_cmplx(benchmark::State &state) {
+    using Util::Trans;
     std::random_device rd;
     std::mt19937_64 eng(rd());
     std::uniform_real_distribution<T> distr;
@@ -361,12 +366,12 @@ static void omp_matrixMatProd_cmplx(benchmark::State &state) {
     for (size_t i = 0; i < sz * sz; i++)
         m_right.push_back({distr(eng), distr(eng)});
 
-    const auto m_right_tr = Pennylane::Util::Transpose(m_right, sz, sz);
+    const auto m_right_tr = Util::Transpose(m_right, sz, sz);
 
     for (auto _ : state) {
         std::vector<std::complex<T>> m_out(sz * sz);
 
-        Pennylane::Util::omp_matrixMatProd(m_left.data(), m_right_tr.data(),
+        Util::omp_matrixMatProd(m_left.data(), m_right_tr.data(),
                                            m_out.data(), sz, sz, sz,
                                            Trans::Transpose);
         benchmark::DoNotOptimize(m_out[sz * sz - 1]);
@@ -389,6 +394,7 @@ BENCHMARK(omp_matrixMatProd_cmplx<double>)
  */
 template <class T>
 static void blas_matrixMatProd_cmplx(benchmark::State &state) {
+    using Util::Trans;
     std::random_device rd;
     std::mt19937_64 eng(rd());
     std::uniform_real_distribution<T> distr;
@@ -495,7 +501,7 @@ template <class T> static void omp_scaleAndAdd_cmplx(benchmark::State &state) {
     }
 
     for (auto _ : state) {
-        Pennylane::Util::omp_scaleAndAdd(sz, scale, vec1.data(), vec2.data());
+        Util::omp_scaleAndAdd(sz, scale, vec1.data(), vec2.data());
         benchmark::DoNotOptimize(vec2[sz - 1]);
     }
 }
@@ -531,7 +537,7 @@ template <class T> static void blas_scaleAndAdd_cmplx(benchmark::State &state) {
     }
 
     for (auto _ : state) {
-        Pennylane::Util::blas_scaleAndAdd(sz, scale, vec1.data(), vec2.data());
+        Util::blas_scaleAndAdd(sz, scale, vec1.data(), vec2.data());
         benchmark::DoNotOptimize(vec2[sz - 1]);
     }
 }

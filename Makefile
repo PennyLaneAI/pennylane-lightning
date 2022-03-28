@@ -124,5 +124,5 @@ check-tidy:
 .PHONY: gbenchmark
 gbenchmark:
 	rm -rf ./BuildGBench
-	cmake $(LIGHTNING_CPP_DIR) -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_OPENMP=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release
+	cmake $(LIGHTNING_CPP_DIR) -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_OPENMP=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release -DBLA_VENDOR=OpenBLAS
 	cmake --build ./BuildGBench --target utils apply_operations apply_multirz

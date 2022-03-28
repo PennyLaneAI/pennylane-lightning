@@ -110,6 +110,8 @@ class LightningQubit(DefaultQubit):
             the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
+        batch_obs (bool): Determine whether we process observables parallelly when computing the 
+            jacobian. This value is only relevant when the lightning qubit is built with OpenMP.
     """
 
     name = "Lightning Qubit PennyLane plugin"
@@ -295,14 +297,7 @@ class LightningQubit(DefaultQubit):
                 )
         return State is return_sv or Expectation
 
-    def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
-        if self.shots is not None:
-            warn(
-                "Requested adjoint differentiation to be computed with finite shots."
-                " The derivative is always exact when using the adjoint differentiation method.",
-                UserWarning,
-            )
-
+    def _process_jacobian_tape(self, tape, starting_state, use_device_state):
         # To support np.complex64 based on the type of self._state
         dtype = self._state.dtype
         if dtype == np.complex64:
@@ -311,9 +306,6 @@ class LightningQubit(DefaultQubit):
             use_csingle = False
         else:
             raise TypeError(f"Unsupported complex Type: {dtype}")
-
-        if len(tape.trainable_params) == 0:
-            return np.array(0)
 
         # Check adjoint diff support
         if self.adjoint_diff_support_check(tape) is not Expectation:
@@ -344,6 +336,8 @@ class LightningQubit(DefaultQubit):
         ops_serialized = adjoint_diff.create_ops_list(*ops_serialized)
 
         trainable_params = sorted(tape.trainable_params)
+        if len(trainable_params) == 0:
+            return None
         first_elem = 1 if trainable_params[0] == 0 else 0
 
         tp_shift = (
@@ -351,6 +345,26 @@ class LightningQubit(DefaultQubit):
         )  # exclude first index if explicitly setting sv
 
         state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
+        return {
+            'state_vector': state_vector,
+            'obs_serialized': obs_serialized,
+            'ops_serialized': ops_serialized,
+            'tp_shift': tp_shift
+        }
+
+    def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
+        if self.shots is not None:
+            warn(
+                "Requested adjoint differentiation to be computed with finite shots."
+                " The derivative is always exact when using the adjoint differentiation method.",
+                UserWarning,
+            )
+        processed_data = self._process_jacobian_tape(tape, starting_state, use_device_state)
+
+        if not processed_data: # training_params is empty
+            return np.array([], dtype = self._state.dtype)
+
+        trainable_params = processed_data['tp_shift']
 
         # If requested batching over observables, chunk into OMP_NUM_THREADS sized chunks.
         # This will allow use of Lightning with adjoint for large-qubit numbers AND large
@@ -358,23 +372,23 @@ class LightningQubit(DefaultQubit):
         requested_threads = int(getenv("OMP_NUM_THREADS", "1"))
 
         if self._batch_obs and requested_threads > 1:
-            obs_partitions = _chunk_iterable(obs_serialized, requested_threads)
+            obs_partitions = _chunk_iterable(processed_data['ops_serialized'], requested_threads)
             jac = []
             for obs_chunk in obs_partitions:
                 jac_local = adjoint_diff.adjoint_jacobian(
-                    state_vector,
+                    processed_data['state_vector'],
                     obs_chunk,
-                    ops_serialized,
-                    tp_shift,
+                    processed_data['ops_serialized'],
+                    trainable_params
                 )
                 jac.extend(jac_local)
             jac = np.array(jac)
         else:
             jac = adjoint_diff.adjoint_jacobian(
-                state_vector,
-                obs_serialized,
-                ops_serialized,
-                tp_shift,
+                processed_data['state_vector'],
+                processed_data['obs_serialized'],
+                processed_data['ops_serialized'],
+                trainable_params,
             )
         return jac.reshape(-1, len(trainable_params))
 
@@ -416,7 +430,7 @@ class LightningQubit(DefaultQubit):
             if return_type is Expectation:
                 if len(dy) != len(tape.observables):
                     raise ValueError(
-                        "Size of observables in the tape must be the same as the size of dy in the vjp method"
+                        "Size of observables in the tape must be the same as the length of dy in the vjp method"
                     )
 
                 if np.iscomplex(dy):
@@ -431,7 +445,22 @@ class LightningQubit(DefaultQubit):
 
                 return self.adjoint_jacobian(new_tape, starting_state, use_device_state).flatten()
             else:  # if returnning State
-                return np.array()
+                if len(dy) != 2 ** len(self.wires):
+                    raise ValueError(
+                        "Size of the provided vector dy must be the same as the size of the statevector"
+                    )
+                if np.isreal(dy):
+                    raise ValueError(
+                        "The vjp method only works with complex-valued dy when the tape is returning a statevector"
+                    )
+
+                processed_data = self._process_jacobian_tape(tape, starting_state, use_device_state)
+                return adjoint_diff.statevector_vjp(
+                    processed_data['state_vector'],
+                    processed_data['ops_serialized'],
+                    dy,
+                    processed_data['tp_shift'],
+                )
 
         return processing_fn
 

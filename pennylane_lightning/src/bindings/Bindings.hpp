@@ -18,7 +18,6 @@
  */
 #pragma once
 #include "AdjointDiff.hpp"
-#include "JacobianProd.hpp"
 #include "Macros.hpp"
 #include "Measures.hpp"
 #include "OpToMemberFuncPtr.hpp"

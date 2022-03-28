@@ -17,6 +17,7 @@
  */
 #include "Bindings.hpp"
 
+#include "StateVecAdjDiff.hpp"
 #include "GateUtil.hpp"
 #include "SelectKernel.hpp"
 
@@ -254,8 +255,8 @@ void registerAlgorithms(py::module_ &m) {
            /* Do not cast non-conforming array */
            const py::array_t<PrecisionT, py::array::c_style> dy,
            const std::vector<size_t> &trainableParams) {
-            std::vector<PrecisionT> jac(
-                observables.size() * trainableParams.size(), PrecisionT{0.0});
+            std::vector<std::complex<PrecisionT>> vjp(
+                    trainableParams.size(), std::complex<PrecisionT>{});
 
             const JacobianData<PrecisionT> jd{operations.getTotalNumParams(),
                                               sv.getLength(),
@@ -263,11 +264,12 @@ void registerAlgorithms(py::module_ &m) {
                                               {},
                                               operations,
                                               trainableParams};
-            const auto buffer = dy.reqest();
+            const auto buffer = dy.request();
 
-            statevectorVJP(jac, jd, buffer.ptr, buffer.itemsize);
+            statevectorVJP<PrecisionT>(vjp, jd,
+                    static_cast<std::complex<PrecisionT>*>(buffer.ptr), buffer.itemsize);
 
-            return py::array_t<ParamT>(py::cast(jac));
+            return py::array_t<ParamT>(py::cast(vjp));
         },
         "Compute jacobian of the circuit using the adjoint method.");
 }
