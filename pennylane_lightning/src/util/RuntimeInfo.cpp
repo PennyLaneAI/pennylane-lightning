@@ -25,14 +25,12 @@ namespace Pennylane::Util {
 #if (defined(__GNUC__) || defined(__clang__)) && defined(__x86_64__)
 RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
     const auto nids = __get_cpuid_max(0x00, nullptr);
-    if (nids == 0) {
-        return; // cpuid is not supported
-    }
 
     unsigned int eax = 0;
     unsigned int ebx = 0;
     unsigned int ecx = 0;
     unsigned int edx = 0;
+
     if (nids >= 1) {
         eax = 1;
         __get_cpuid(1, &eax, &ebx, &ecx, &edx);
