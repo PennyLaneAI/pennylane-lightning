@@ -142,7 +142,7 @@ template <class T = double> class AdjointJacobian {
                         }
                     },
                     observable.getObsParams()[j]);
-            } else { // Offloat to SV dispatcher if no parameters provided
+            } else { // Offload to SV dispatcher if no parameters provided
                 state.applyOperation(observable.getObsName()[j],
                                      observable.getObsWires()[j], false);
             }
@@ -194,7 +194,7 @@ template <class T = double> class AdjointJacobian {
         }
         #endif
         if (ex) {
-            std::rethrow_exception(ex);
+            std::rethrow_exception(ex); //LCOV_EXCL_LINE
         }
         // clang-format on
     }
@@ -243,7 +243,7 @@ template <class T = double> class AdjointJacobian {
         }
         #endif
         if (ex) {
-            std::rethrow_exception(ex);
+            std::rethrow_exception(ex); //LCOV_EXCL_LINE
         }
         // clang-format on
     }

@@ -67,7 +67,7 @@ jobs:
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1.0.12
+        uses: codecov/codecov-action@v2.1.0
         with:
           file: ./BuildCov/coverage.info
           fail_ci_if_error: true
@@ -127,7 +127,7 @@ jobs:
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1.0.12
+        uses: codecov/codecov-action@v2.0.1
         with:
           file: ./BuildCov/coverage.info
           fail_ci_if_error: true
@@ -181,7 +181,7 @@ jobs:
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1.0.12
+        uses: codecov/codecov-action@v2.0.1
         with:
           file: coverage.xml
           fail_ci_if_error: true

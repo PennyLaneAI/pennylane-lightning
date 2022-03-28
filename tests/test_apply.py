@@ -1402,25 +1402,16 @@ class TestApplyLightningMethod:
     """Unit tests for the apply_lightning method."""
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_noniter_identity_skipped(self, mocker, C, tol):
+    def test_apply_identity_skipped(self, mocker, C, tol):
         """Test identity operation does not perform additional computations."""
         dev = qml.device("lightning.qubit", wires=1)
-        if not hasattr(dev, "apply_lightning"):
-            pytest.skip("LightningQubit object has no attribute apply_lightning")
+        dev._state = dev._asarray(dev._state, C)
 
         starting_state = np.array([1, 0], dtype=C)
-        op = qml.Identity(0)
+        op = [qml.Identity(0)]
+        dev.apply(op)
 
-        spy_diagonal = mocker.spy(dev, "_apply_diagonal_unitary")
-        spy_einsum = mocker.spy(dev, "_apply_unitary_einsum")
-        spy_unitary = mocker.spy(dev, "_apply_unitary")
-
-        res = dev.apply_lightning(starting_state, op, dtype=C)
-        assert np.allclose(res, starting_state, atol=tol, rtol=0)
-
-        spy_diagonal.assert_not_called()
-        spy_einsum.assert_not_called()
-        spy_unitary.assert_not_called()
+        assert np.allclose(dev._state, starting_state, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_iter_identity_skipped(self, mocker, C, tol):
