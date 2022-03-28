@@ -378,55 +378,6 @@ class LightningQubit(DefaultQubit):
             )
         return jac.reshape(-1, len(trainable_params))
 
-    def compute_vjp(self, dy, jac, num=None):
-        """Convenience function to compute the vector-Jacobian product for a given
-        vector of gradient outputs and a Jacobian.
-        Args:
-            dy (tensor_like): vector of gradient outputs
-            jac (tensor_like): Jacobian matrix. For an n-dimensional ``dy``
-                vector, the first n-dimensions of ``jac`` should match
-                the shape of ``dy``.
-        Keyword Args:
-        num (int): The length of the flattened ``dy`` argument. This is an
-            optional argument, but can be useful to provide if ``dy`` potentially
-            has no shape (for example, due to tracing or just-in-time compilation).
-        Returns:
-            tensor_like: the vector-Jacobian product
-        """
-        if jac is None:
-            return None
-
-        if not isinstance(dy, np.ndarray) or not isinstance(jac, np.ndarray):
-            return gradients.compute_vjp(dy, jac)
-
-        dy_row = math.reshape(dy, [-1])
-
-        if num is None:
-            num = math.shape(dy_row)[0]
-
-        jac = math.reshape(jac, [num, -1])
-        num_params = jac.shape[1]
-
-        if math.allclose(dy, 0):
-            return math.convert_like(np.zeros([num_params]), dy)
-
-        # To support np.complex64 based on the type of self._state
-        dtype = self._state.dtype
-        if dtype == np.complex64:
-            VJP = VectorJacobianProductC64()
-        elif dtype == np.complex128:
-            VJP = VectorJacobianProductC128()
-        else:
-            raise TypeError(f"Unsupported complex Type: {dtype}")
-
-        vjp_tensor = adjoind_diff.compute_vjp_from_jac(
-            math.reshape(jac, [-1]),
-            dy_row,
-            num,
-            num_params,
-        )
-        return vjp_tensor
-
     def vjp(self, tape, dy, starting_state=None, use_device_state=False):
         """Generate the processing function required to compute the vector-Jacobian products of a tape.
         Args:
@@ -458,52 +409,29 @@ class LightningQubit(DefaultQubit):
         if math.allclose(dy, 0):
             return lambda _: math.convert_like(np.zeros([num_params]), dy)
 
-        # To support np.complex64 based on the type of self._state
-        dtype = self._state.dtype
-        if dtype == np.complex64:
-            use_csingle = True
-        elif dtype == np.complex128:
-            use_csingle = False
-        else:
-            raise TypeError(f"Unsupported complex Type: {dtype}")
-
         def processing_fn(tape):
             # Check adjoint diff support
             return_type = self.adjoint_diff_support_check(tape)
 
-            # Initialization of state
-            if starting_state is not None:
-                if starting_state.size != 2 ** len(self.wires):
-                    raise ValueError(
-                        "The number of qubits of starting_state must be the same as"
-                        "that of the device."
-                    )
-                ket = np.ravel(starting_state)
-            else:
-                if not use_device_state:
-                    self.reset()
-                    self.execute(tape)
-                ket = np.ravel(self._pre_rotated_state)
-
-            if use_csingle:
-                ket = ket.astype(np.complex64)
-
-            obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=use_csingle)
-            ops_serialized, use_sp = _serialize_ops(tape, self.wire_map, use_csingle=use_csingle)
-
-            ops_serialized = V.create_ops_list(*ops_serialized)
-
-            trainable_params = sorted(tape.trainable_params)
-            first_elem = 1 if trainable_params[0] == 0 else 0
-
-            tp_shift = (
-                trainable_params if not use_sp else [i - 1 for i in trainable_params[first_elem:]]
-            )  # exclude first index if explicitly setting sv
-
-            state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
-
             if return_type is Expectation:
-                return fn(state_vector, obs_serialized, ops_serialized, tp_shift)
+                if len(dy) != len(tape.observables):
+                    raise ValueError(
+                        "Size of observables in the tape must be the same as the size of dy in the vjp method"
+                    )
+
+                if np.iscomplex(dy):
+                    raise ValueError(
+                        "The vjp method only works with real-valued dy when the tape is returning an expectation value"
+                    )
+
+                new_tape = tape.copy()
+
+                ham = qml.Hamiltonian(dy, tape.observables)
+                new_tape._measurements = [qml.expval(ham)]
+
+                return self.adjoint_jacobian(new_tape, starting_state, use_device_state).flatten()
+            else:  # if returnning State
+                return np.array()
 
         return processing_fn
 

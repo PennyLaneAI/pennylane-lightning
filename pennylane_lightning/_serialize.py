@@ -128,10 +128,12 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict, use_csingle: bool = False
     obs = []
 
     if use_csingle:
+        rtype = np.float32
         ctype = np.complex64
         obs_py = ObsTermC64
         ham_py = HamiltonianC64
     else:
+        rtype = np.float64
         ctype = np.complex128
         obs_py = ObsTermC128
         ham_py = HamiltonianC128
@@ -140,7 +142,7 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict, use_csingle: bool = False
         if o.name != "Hamiltonian":
             ob = _serialize_ob(o, wires_map, ctype, obs_py)
         else:
-            coeffs = o.coeffs
+            coeffs = o.coeffs.astype(rtype)
             ops = [_serialize_ob(op, wires_map, ctype, obs_py) for op in o.ops]
             ob = ham_py(coeffs, ops)
         obs.append(ob)

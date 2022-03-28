@@ -1,7 +1,7 @@
 project(lightning_algorithms LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 
-set(ALGORITHM_FILES AdjointDiff.hpp AdjointDiff.cpp JacobianProd.hpp JacobianProd.cpp CACHE INTERNAL "" FORCE)
+set(ALGORITHM_FILES AdjointDiff.cpp StateVecAdjDiff.cpp CACHE INTERNAL "" FORCE)
 add_library(lightning_algorithms STATIC ${ALGORITHM_FILES})
 
 target_link_libraries(lightning_algorithms PRIVATE lightning_compile_options

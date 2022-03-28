@@ -13,9 +13,14 @@
 // limitations under the License.
 #pragma once
 
+#include "Macros.hpp"
 #include "StateVectorManaged.hpp"
 #include "StateVectorRaw.hpp"
 #include "Util.hpp"
+
+#if defined(_OPENMP)
+#include <omp.h>
+#endif
 
 #include <complex>
 #include <cstring>
@@ -137,6 +142,72 @@ template <typename T> class ObsTerm final : public Observable<T> {
     }
 };
 
+/// @cond DEV
+namespace detail {
+template <class T, bool use_omp = false> struct HamiltonianApplyInPlaceImpl {
+    static void run(const std::vector<T> &coeffs,
+                    const std::vector<std::shared_ptr<ObsTerm<T>>> &terms,
+                    std::complex<T> *v, size_t num_qubits) {
+        const StateVectorManaged sv_in(v, Util::exp2(num_qubits));
+
+        for (size_t term_idx = 0; term_idx < coeffs.size(); term_idx++) {
+            StateVectorManaged tmp(sv_in);
+            terms[term_idx]->applyInPlace(tmp.getData(), num_qubits);
+            Util::scaleAndAdd(tmp.getLength(),
+                              std::complex<T>{coeffs[term_idx], 0.0},
+                              tmp.getData(), v);
+        }
+    }
+};
+
+#if defined(_OPENMP)
+template <class T> struct HamiltonianApplyInPlaceImpl<T, true> {
+    static void run(const std::vector<T> &coeffs,
+                    const std::vector<std::shared_ptr<ObsTerm<T>>> &terms,
+                    std::complex<T> *v, size_t num_qubits) {
+        const StateVectorManaged sv_in(v, Util::exp2(num_qubits));
+        const size_t length = sv_in.getLength();
+
+#pragma omp parallel default(none) firstprivate(v, num_qubits, length)         \
+    shared(coeffs, terms, sv_in)
+        {
+            const auto nthreads = static_cast<size_t>(omp_get_num_threads());
+            std::vector<std::complex<T>> local_sv(nthreads * length,
+                                                  std::complex<T>{});
+
+            int tid = omp_get_thread_num();
+
+#pragma omp for
+            for (size_t term_idx = 0; term_idx < terms.size(); term_idx++) {
+                StateVectorManaged tmp(sv_in);
+                terms[term_idx]->applyInPlace(tmp.getData(), num_qubits);
+                Util::scaleAndAdd(
+                    length, std::complex<T>{coeffs[term_idx], 0.0},
+                    tmp.getData(), local_sv.data() + length * tid);
+            }
+
+#pragma omp critical
+            {
+                for (size_t i = 0; i < nthreads; i++) {
+                    Util::scaleAndAdd(length, std::complex<T>{1.0, 0.0},
+                                      local_sv.data() + length * i, v);
+                }
+            }
+        }
+    }
+};
+#endif
+
+template <class T, bool use_omp>
+void hamiltonianApplyInPlaceImpl(
+    const std::vector<T> &coeffs,
+    const std::vector<std::shared_ptr<ObsTerm<T>>> &terms, std::complex<T> *v,
+    size_t num_qubits) {
+    HamiltonianApplyInPlaceImpl<T, use_omp>::run(coeffs, terms, v, num_qubits);
+}
+} // namespace detail
+/// @endcond
+
 /**
  * @brief General Hamiltonian as a sum of observables.
  *
@@ -157,15 +228,8 @@ template <typename T> class Hamiltonian final : public Observable<T> {
         : coeffs_{std::move(coeff)}, terms_{std::move(terms)} {}
 
     void applyInPlace(std::complex<T> *v, size_t num_qubits) const {
-        StateVectorManaged sv_in(v, Util::exp2(num_qubits));
-
-        for (size_t term_idx = 0; term_idx < coeffs_.size(); term_idx++) {
-            StateVectorManaged tmp(sv_in);
-            terms_[term_idx]->applyInPlace(tmp.getData(), num_qubits);
-            Util::scaleAndAdd(tmp.getLength(),
-                              std::complex<T>{coeffs_[term_idx], 0.0},
-                              tmp.getData(), v);
-        }
+        detail::hamiltonianApplyInPlaceImpl<T, Util::Constant::use_openmp>(
+            coeffs_, terms_, v, num_qubits);
     }
 
     void appendTerm(T coeff, std::shared_ptr<ObsTerm<T>> term) {
@@ -368,7 +432,7 @@ template <class T> class OpsData {
  */
 template <class T> class JacobianData {
   private:
-    size_t num_parameters{};
+    size_t num_parameters;
     size_t num_elements;
     const std::complex<T> *psi;
     const std::vector<std::shared_ptr<Observable<T>>> observables;

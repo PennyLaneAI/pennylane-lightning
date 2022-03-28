@@ -49,11 +49,11 @@ class PauliWord {
         for (const auto &[wire, pchar] : pstring_) {
             switch (pchar) {
             case 'X':
-                basis_st ^= (1U << (n_qubits - wire - 1));
+                basis_st ^= (size_t{1U} << (n_qubits - wire - 1));
                 break;
             case 'Y':
                 powi += ((basis_st >> (n_qubits - wire - 1)) & 1U) == 0 ? 1 : 3;
-                basis_st ^= (1U << (n_qubits - wire - 1));
+                basis_st ^= (size_t{1U} << (n_qubits - wire - 1));
                 break;
             case 'Z':
                 powi += ((basis_st >> (n_qubits - wire - 1)) & 1U) == 0 ? 0 : 2;
@@ -86,7 +86,7 @@ class PauliWord {
     }
 };
 
-template <typename T> class Hamlitonian {
+template <typename T> class EfficientHamlitonian {
   private:
     size_t num_qubits_;
     std::vector<T> coeffs_;
@@ -135,7 +135,8 @@ template <typename T> struct SparseMatrix {
 };
 
 template <typename T>
-auto constructSparseMatrix(const Hamlitonian<T> &ham) -> SparseMatrix<T> {
+auto constructSparseMatrix(const EfficientHamlitonian<T> &ham)
+    -> SparseMatrix<T> {
     SparseMatrix<T> result;
 
     result.indptr.emplace_back(0);

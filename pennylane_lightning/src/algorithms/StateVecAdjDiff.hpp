@@ -13,8 +13,11 @@
 // limitations under the License.
 /**
  * @file
+ * Define vjp algorithm for a statevector
  */
 #pragma once
+#include <cassert>
+
 #include "AlgUtil.hpp"
 
 namespace Pennylane::Algorithms {
@@ -38,11 +41,15 @@ namespace Pennylane::Algorithms {
  * TODO: change pointer parameters to std::span in C++20
  */
 template <typename PrecisionT>
-static void statevectorVJP(const JacobianData<PrecisionT> &jd,
-                           const std::complex<PrecisionT> *dy,
-                           std::complex<PrecisionT> *vec_out,
-                           bool apply_operations = false) {
+void statevectorVJP(std::vector<std::complex<PrecisionT>> &jac,
+                    const JacobianData<PrecisionT> &jd,
+                    const std::complex<PrecisionT> *dy,
+                    [[maybe_unused]] size_t dy_size,
+                    bool apply_operations = false) {
     using ComplexPrecisionT = std::complex<PrecisionT>;
+
+    assert(dy_size == jd.getSizeStateVec());
+
     if (!jd.hasTrainableParams()) {
         return;
     }
@@ -52,6 +59,8 @@ static void statevectorVJP(const JacobianData<PrecisionT> &jd,
     // We can assume the trainable params are sorted (from Python)
     const size_t num_param_ops = ops.getNumParOps();
     const auto trainable_params = jd.getTrainableParams();
+
+    assert(jac.size() == trainable_params.size());
 
     // Create $U_{1:p}\vert \lambda \rangle$
     StateVectorManaged<PrecisionT> lambda(jd.getPtrStateVec(),
@@ -95,7 +104,7 @@ static void statevectorVJP(const JacobianData<PrecisionT> &jd,
                                         !ops.getOpsInverses()[op_idx]) *
                     (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
-                vec_out[trainable_param_idx] =
+                jac[trainable_param_idx] =
                     ComplexPrecisionT{0.0, scalingFactor} *
                     Util::innerProdC(mu_d.getDataVector(),
                                      lambda.getDataVector());

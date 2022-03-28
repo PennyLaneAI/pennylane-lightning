@@ -160,38 +160,6 @@ void registerAlgorithms(py::module_ &m) {
                 return Hamiltonian{{ptr, ptr + buffer.size}, terms};
             }))
         .def("__repr__", &Hamiltonian<PrecisionT>::toString);
-    /*
-    py::class_<ObsDatum<PrecisionT>>(m, class_name.c_str(), py::module_local())
-        .def(py::init([](const std::vector<std::string> &names,
-                         const std::vector<obs_data_var> &params,
-                         const std::vector<std::vector<size_t>> &wires) {
-        }))
-        .def("get_params", [](const ObsDatum<PrecisionT> &obs) {
-            py::list params;
-            for (size_t i = 0; i < obs.getObsParams().size(); i++) {
-                std::visit(
-                    [&](const auto &param) {
-                        using p_t = std::decay_t<decltype(param)>;
-                        if constexpr (std::is_same_v<
-                                          p_t,
-                                          std::vector<std::complex<ParamT>>>) {
-                            params.append(py::array_t<std::complex<ParamT>>(
-                                py::cast(param)));
-                        } else if constexpr (std::is_same_v<
-                                                 p_t, std::vector<ParamT>>) {
-                            params.append(py::array_t<ParamT>(py::cast(param)));
-                        } else if constexpr (std::is_same_v<p_t,
-                                                            std::monostate>) {
-                            params.append(py::list{});
-                        } else {
-                            throw("Unsupported data type");
-                        }
-                    },
-                    obs.getObsParams()[i]);
-            }
-            return params;
-        });
-    */
 
     //***********************************************************************//
     //                              Operations
@@ -278,33 +246,30 @@ void registerAlgorithms(py::module_ &m) {
             return py::array_t<ParamT>(py::cast(jac));
         },
         "Compute jacobian of the circuit using the adjoint method.");
-    /*
-        .def("compute_vjp_from_jac",
-             &VectorJacobianProduct<PrecisionT>::computeVJP)
-        .def("compute_vjp_from_jac",
-             [](const std::vector<PrecisionT> &jac,
-                const std::vector<PrecisionT> &dy_row, size_t m, size_t n) {
-                 std::vector<PrecisionT> vjp_res(n);
-                 v.computeVJP(vjp_res, jac, dy_row, m, n);
-                 return py::array_t<ParamT>(py::cast(vjp_res));
-             })
-        .def("vjp_fn",
-             [](VectorJacobianProduct<PrecisionT> &v,
-                const std::vector<PrecisionT> &dy, size_t num_params) {
-                 auto fn = v.vectorJacobianProduct(dy, num_params);
-                 return py::cpp_function(
-                     [fn, num_params](
-                         const StateVectorRaw<PrecisionT> &sv,
-                         const std::vector<ObsDatum<PrecisionT>> &observables,
-                         const OpsData<PrecisionT> &operations,
-                         const std::vector<size_t> &trainableParams) {
-                         const JacobianData<PrecisionT> jd{
-                             num_params,  sv.getLength(), sv.getData(),
-                             observables, operations,     trainableParams};
-                         return py::array_t<ParamT>(py::cast(fn(jd)));
-                     });
-             });
-     */
+
+    m.def(
+        "statevector_vjp",
+        [](const StateVectorRaw<PrecisionT> &sv,
+           const OpsData<PrecisionT> &operations,
+           /* Do not cast non-conforming array */
+           const py::array_t<PrecisionT, py::array::c_style> dy,
+           const std::vector<size_t> &trainableParams) {
+            std::vector<PrecisionT> jac(
+                observables.size() * trainableParams.size(), PrecisionT{0.0});
+
+            const JacobianData<PrecisionT> jd{operations.getTotalNumParams(),
+                                              sv.getLength(),
+                                              sv.getData(),
+                                              {},
+                                              operations,
+                                              trainableParams};
+            const auto buffer = dy.reqest();
+
+            statevectorVJP(jac, jd, buffer.ptr, buffer.itemsize);
+
+            return py::array_t<ParamT>(py::cast(jac));
+        },
+        "Compute jacobian of the circuit using the adjoint method.");
 }
 
 /**
