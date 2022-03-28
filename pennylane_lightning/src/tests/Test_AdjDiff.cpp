@@ -11,6 +11,7 @@
 #include <catch2/catch.hpp>
 
 #include "AdjointDiff.hpp"
+#include "StateVectorManaged.hpp"
 #include "StateVectorRaw.hpp"
 #include "Util.hpp"
 
@@ -23,8 +24,8 @@
 using namespace Pennylane;
 using namespace Pennylane::Algorithms;
 
-TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=Z",
-          "[AdjointJacobian]") {
+TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=Z",
+          "[Algorithms]") {
     const std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     const std::vector<size_t> tp{0};
     {
@@ -56,8 +57,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=Z",
     }
 }
 
-TEST_CASE("AdjointJacobian::adjointJacobian Op=RY, Obs=X",
-          "[AdjointJacobian]") {
+TEST_CASE("Algorithms::adjointJacobian Op=RY, Obs=X",
+          "[Algorithms]") {
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     std::vector<size_t> tp{0};
     {
@@ -90,8 +91,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RY, Obs=X",
     }
 }
 
-TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=[Z,Z]",
-          "[AdjointJacobian]") {
+TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=[Z,Z]",
+          "[Algorithms]") {
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     std::vector<size_t> tp{0};
     {
@@ -126,8 +127,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=[Z,Z]",
     }
 }
 
-TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z]",
-          "[AdjointJacobian]") {
+TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z]",
+          "[Algorithms]") {
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     std::vector<size_t> tp{0, 1, 2};
     {
@@ -172,9 +173,9 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z]",
     }
 }
 
-TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z], "
+TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z], "
           "TParams=[0,2]",
-          "[AdjointJacobian]") {
+          "[Algorithms]") {
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     std::vector<size_t> t_params{0, 2};
     {
@@ -218,8 +219,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z], "
     }
 }
 
-TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
-          "[AdjointJacobian]") {
+TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
+          "[Algorithms]") {
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     std::vector<size_t> tp{0, 1, 2};
     {
@@ -254,8 +255,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
     }
 }
 
-TEST_CASE("AdjointJacobian::adjointJacobian Op=Mixed, Obs=[XXX]",
-          "[AdjointJacobian]") {
+TEST_CASE("Algorithms::adjointJacobian Op=Mixed, Obs=[XXX]",
+          "[Algorithms]") {
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     std::vector<size_t> tp{0, 1, 2, 3, 4, 5};
     {
@@ -302,9 +303,9 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=Mixed, Obs=[XXX]",
     }
 }
 
-TEST_CASE("AdjointJacobian::adjointJacobian Decomposed Rot gate, non "
+TEST_CASE("Algorithms::adjointJacobian Decomposed Rot gate, non "
           "computational basis state",
-          "[AdjointJacobian]") {
+          "[Algorithms]") {
     using namespace Pennylane::Util;
     const std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     const std::vector<size_t> tp{0, 1, 2};
@@ -356,8 +357,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian Decomposed Rot gate, non "
     }
 }
 
-TEST_CASE("AdjointJacobian::adjointJacobian Mixed Ops, Obs and TParams",
-          "[AdjointJacobian]") {
+TEST_CASE("Algorithms::adjointJacobian Mixed Ops, Obs and TParams",
+          "[Algorithms]") {
     using namespace Pennylane::Util;
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     const std::vector<size_t> t_params{1, 2, 3};
@@ -411,8 +412,8 @@ TEST_CASE("AdjointJacobian::adjointJacobian Mixed Ops, Obs and TParams",
     }
 }
 
-TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=Ham[Z0+Z1]",
-          "[AdjointJacobian]") {
+TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=Ham[Z0+Z1]",
+          "[Algorithms]") {
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     std::vector<size_t> tp{0};
     {
@@ -449,9 +450,9 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=Ham[Z0+Z1]",
     }
 }
 
-TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=Ham[Z0+Z1+Z2], "
+TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=Ham[Z0+Z1+Z2], "
           "TParams=[0,2]",
-          "[AdjointJacobian]") {
+          "[Algorithms]") {
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     std::vector<size_t> t_params{0, 2};
     {
@@ -495,3 +496,86 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=Ham[Z0+Z1+Z2], "
         CHECK((-0.96 * sin(param[2]) == Approx(jacobian[1]).margin(1e-7)));
     }
 }
+/*
+TEST_CASE("Algorithms::applyObservable visitor checks",
+          "[Algorithms]") {
+    SECTION("Obs with params 0") {
+        std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+        std::vector<double> expec_results{0.90096887, 0.80901699, -0.5};
+
+        auto obs_default = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
+        auto ops =
+            OpsData<double>({"RX"}, {{expec_results[0]}}, {{0}}, {false});
+        std::vector<double> out_data(1);
+
+        for (std::size_t i = 0; i < param.size(); i++) {
+            StateVectorManaged<double> psi(2);
+            JacobianData<double> jd(1, psi.getLength(), psi.getData(),
+                                    {obs_default}, ops, {1});
+            adj.adjointJacobian(out_data, jd, true);
+        }
+    }
+    SECTION("Obs with params std::vector<std::complex<double>>") {
+        std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+        std::vector<double> expec_results{0.90096887, 0.80901699, -0.5};
+        using v_type = std::vector<std::complex<double>>;
+
+        v_type z_par{ONE<double>(), ZERO<double>(), ZERO<double>(),
+                     ZERO<double>()};
+
+        auto obs_default = ObsDatum<double>({"MyPauliZ"}, {z_par}, {{0}});
+
+        auto ops =
+            OpsData<double>({"RX"}, {{expec_results[0]}}, {{0}}, {false});
+        std::vector<double> out_data(1);
+
+        for (std::size_t i = 0; i < param.size(); i++) {
+            StateVectorManaged<double> psi(2);
+            JacobianData<double> jd(1, psi.getLength(), psi.getData(),
+                                    {obs_default}, ops, {1});
+            adj.adjointJacobian(out_data, jd, true);
+        }
+    }
+    SECTION("Obs with params std::vector<double>") {
+        std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+        std::vector<double> expec_results{0.90096887, 0.80901699, -0.5};
+        using v_type = std::vector<double>;
+
+        v_type z_par{0.123};
+
+        auto obs_default = ObsDatum<double>({"RZ"}, {z_par}, {{0}});
+
+        auto ops =
+            OpsData<double>({"RX"}, {{expec_results[0]}}, {{0}}, {false});
+        std::vector<double> out_data(1);
+
+        for (std::size_t i = 0; i < param.size(); i++) {
+            StateVectorManaged<double> psi(2);
+            JacobianData<double> jd(1, psi.getLength(), psi.getData(),
+                                    {obs_default}, ops, {1});
+            adj.adjointJacobian(out_data, jd, true);
+        }
+    }
+    SECTION("Obs no params") {
+        std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+        std::vector<double> expec_results{0.90096887, 0.80901699, -0.5};
+        using v_type = std::vector<std::complex<double>>;
+
+        v_type z_par{ONE<double>(), ZERO<double>(), ZERO<double>(),
+                     ZERO<double>()};
+
+        auto obs_default = ObsDatum<double>({"PauliZ"}, {}, {{0}});
+
+        auto ops =
+            OpsData<double>({"RX"}, {{expec_results[0]}}, {{0}}, {false});
+        std::vector<double> out_data(1);
+
+        for (std::size_t i = 0; i < param.size(); i++) {
+            StateVectorManaged<double> psi(2);
+            JacobianData<double> jd(1, psi.getLength(), psi.getData(),
+                                    {obs_default}, ops, {1});
+            adj.adjointJacobian(out_data, jd, true);
+        }
+    }
+}
+*/

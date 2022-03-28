@@ -1,16 +1,9 @@
 #include <algorithm>
 #include <complex>
-
-#include <limits>
-#include <string_view>
-#include <type_traits>
-#include <utility>
 #include <vector>
 
 #include <catch2/catch.hpp>
 
-#include "BitUtil.hpp"
-#include "Error.hpp"
 #include "LinearAlgebra.hpp"
 #include "Util.hpp"
 
@@ -22,94 +15,16 @@
 
 using namespace Pennylane;
 
-/**
- * @brief This tests the compile-time calculation of a given scalar
- * multiplication.
- */
-TEMPLATE_TEST_CASE("Util::ConstMult", "[Util]", float, double) {
-    constexpr TestType r_val{0.679};
-    constexpr std::complex<TestType> c0_val{TestType{1.321}, TestType{-0.175}};
-    constexpr std::complex<TestType> c1_val{TestType{0.579}, TestType{1.334}};
-
-    SECTION("Real times Complex") {
-        constexpr std::complex<TestType> result =
-            Util::ConstMult(r_val, c0_val);
-        const std::complex<TestType> expected = r_val * c0_val;
-        CHECK(isApproxEqual(result, expected));
-    }
-    SECTION("Complex times Complex") {
-        constexpr std::complex<TestType> result =
-            Util::ConstMult(c0_val, c1_val);
-        const std::complex<TestType> expected = c0_val * c1_val;
-        CHECK(isApproxEqual(result, expected));
-    }
-}
-
-TEMPLATE_TEST_CASE("Constant values", "[Util]", float, double) {
-    SECTION("One") {
-        CHECK(Util::ONE<TestType>() == std::complex<TestType>{1, 0});
-    }
-    SECTION("Zero") {
-        CHECK(Util::ZERO<TestType>() == std::complex<TestType>{0, 0});
-    }
-    SECTION("Imag") {
-        CHECK(Util::IMAG<TestType>() == std::complex<TestType>{0, 1});
-    }
-    SECTION("Sqrt2") {
-        CHECK(Util::SQRT2<TestType>() == std::sqrt(static_cast<TestType>(2)));
-    }
-    SECTION("Inverse Sqrt2") {
-        CHECK(Util::INVSQRT2<TestType>() ==
-              static_cast<TestType>(1 / std::sqrt(2)));
-    }
-}
-
 // NOLINTNEXTLINE: Avoid complexity errors
-TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
-    SECTION("exp2: 2^n") {
-        for (size_t i = 0; i < 10; i++) {
-            CHECK(Util::exp2(i) == static_cast<size_t>(std::pow(2, i)));
-        }
-    }
-    SECTION("maxDecimalForQubit") {
-        for (size_t num_qubits = 0; num_qubits < 4; num_qubits++) {
-            for (size_t index = 0; index < num_qubits; index++) {
-                CHECK(Util::maxDecimalForQubit(index, num_qubits) ==
-                      static_cast<size_t>(std::pow(2, num_qubits - index - 1)));
-            }
-        }
-    }
-    SECTION("dimSize") {
-        using namespace Catch::Matchers;
-        for (size_t i = 0; i < 64; i++) {
-            std::vector<size_t> data(i);
-            TestType rem;
-            std::modf(sqrt(static_cast<TestType>(i)), &rem);
-            if (i < 4) {
-                CHECK_THROWS_AS(Util::dimSize(data), std::invalid_argument);
-                CHECK_THROWS_WITH(Util::dimSize(data),
-                                  Contains("The dataset must be at least 2x2"));
-            } else if (rem != 0.0 && i >= 4 && (i & (i - 1))) {
-                CHECK_THROWS_AS(Util::dimSize(data), std::invalid_argument);
-                CHECK_THROWS_WITH(Util::dimSize(data),
-                                  Contains("The dataset must be a power of 2"));
-            } else if (std::sqrt(i) * std::sqrt(i) != i) {
-                CHECK_THROWS_AS(Util::dimSize(data), std::invalid_argument);
-                CHECK_THROWS_WITH(
-                    Util::dimSize(data),
-                    Contains("The dataset must be a perfect square"));
-            } else {
-                CHECK(Util::dimSize(data) == std::log2(std::sqrt(i)));
-            }
-        }
-    }
+TEMPLATE_TEST_CASE("Test linear algebra functions", "[Util][LinearAlgebra]",
+                   float, double) {
+    using Util::Trans;
     SECTION("innerProd") {
         SECTION("Iterative increment") {
             for (size_t i = 0; i < 12; i++) {
-                std::vector<std::complex<TestType>> data1(size_t{1U} << i,
-                                                          {1, 1});
-                std::vector<std::complex<TestType>> data2(size_t{1U} << i,
-                                                          {1, 1});
+                auto sz = static_cast<size_t>(1U << i);
+                std::vector<std::complex<TestType>> data1(sz, {1.0, 1.0});
+                std::vector<std::complex<TestType>> data2(sz, {1.0, 1.0});
                 std::complex<TestType> expected_result(0,
                                                        size_t{1U} << (i + 1));
                 std::complex<TestType> result = Util::innerProd(data1, data2);
@@ -128,13 +43,38 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             CHECK(isApproxEqual(result, expected_result));
         }
     }
+    SECTION("innerProd-inline") {
+        SECTION("Iterative increment") {
+            for (size_t i = 0; i < 12; i++) {
+                auto sz = static_cast<size_t>(1U << i);
+                std::vector<std::complex<TestType>> data1(sz, {1.0, 1.0});
+                std::vector<std::complex<TestType>> data2(sz, {1.0, 1.0});
+                std::complex<TestType> expected_result(0,
+                                                       size_t{1U} << (i + 1));
+                std::complex<TestType> result = Util::innerProd<TestType, 1>(
+                    data1.data(), data2.data(), sz);
+                CHECK(isApproxEqual(result, expected_result));
+            }
+        }
+        SECTION("Random complex") {
+            std::vector<std::complex<TestType>> data1{
+                {0.326417, 0},  {-0, 0.343918}, {0, 0.508364}, {-0.53562, -0},
+                {0, -0.178322}, {0.187883, -0}, {0.277721, 0}, {-0, 0.292611}};
+            std::vector<std::complex<TestType>> data2{
+                {0, -0.479426}, {0, 0}, {2.77556e-17, 0}, {0, 0},
+                {0.877583, 0},  {0, 0}, {0, 0},           {0, 0}};
+            std::complex<TestType> expected_result(0, -0.312985152368);
+            std::complex<TestType> result =
+                Util::innerProd<TestType, 1>(data1.data(), data2.data(), 8);
+            CHECK(isApproxEqual(result, expected_result));
+        }
+    }
     SECTION("innerProdC") {
         SECTION("Iterative increment") {
             for (size_t i = 0; i < 12; i++) {
-                std::vector<std::complex<TestType>> data1(size_t{1U} << i,
-                                                          {1, 1});
-                std::vector<std::complex<TestType>> data2(size_t{1U} << i,
-                                                          {1, 1});
+                auto sz = static_cast<size_t>(1U << i);
+                std::vector<std::complex<TestType>> data1(sz, {1.0, 1.0});
+                std::vector<std::complex<TestType>> data2(sz, {1.0, 1.0});
                 std::complex<TestType> expected_result(size_t{1U} << (i + 1),
                                                        0);
                 std::complex<TestType> result = Util::innerProdC(data1, data2);
@@ -158,22 +98,67 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             CHECK(imag(result) == Approx(imag(expected_result)).margin(1e-7));
         }
     }
+    SECTION("innerProdC-inline") {
+        SECTION("Iterative increment") {
+            for (size_t i = 0; i < 12; i++) {
+                auto sz = static_cast<size_t>(1U << i);
+                std::vector<std::complex<TestType>> data1(sz, {1.0, 1.0});
+                std::vector<std::complex<TestType>> data2(sz, {1.0, 1.0});
+                std::complex<TestType> expected_result(size_t{1U} << (i + 1),
+                                                       0);
+                std::complex<TestType> result = Util::innerProdC<TestType, 1>(
+                    data1.data(), data2.data(), sz);
+                CAPTURE(result);
+                CAPTURE(expected_result);
+                CHECK(isApproxEqual(result, expected_result));
+            }
+        }
+        SECTION("Random complex") {
+            std::vector<std::complex<TestType>> data2{
+                {0, -0.479426}, {0, 0}, {2.77556e-17, 0}, {0, 0},
+                {0.877583, 0},  {0, 0}, {0, 0},           {0, 0}};
+            std::vector<std::complex<TestType>> data1{
+                {0.326417, 0},  {-0, 0.343918}, {0, 0.508364}, {-0.53562, -0},
+                {0, -0.178322}, {0.187883, -0}, {0.277721, 0}, {-0, 0.292611}};
+            std::complex<TestType> expected_result(0, -4.40916e-7);
+            std::complex<TestType> result =
+                Util::innerProdC<TestType, 1>(data1.data(), data2.data(), 8);
+            CAPTURE(result);
+            CAPTURE(expected_result);
+            CHECK(real(result) == Approx(real(expected_result)).margin(1e-7));
+            CHECK(imag(result) == Approx(imag(expected_result)).margin(1e-7));
+        }
+    }
     SECTION("matrixVecProd") {
-        SECTION("Simple Iterative") {
+        SECTION("Simple Iterative with NoTranspose") {
             for (size_t m = 2; m < 8; m++) {
-                std::vector<std::complex<TestType>> mat(m * m, {1, 1});
-                std::vector<std::complex<TestType>> v_in(m, {1, 1});
+                std::vector<std::complex<TestType>> mat(m * m, {1.0, 1.0});
+                std::vector<std::complex<TestType>> v_in(m, {1.0, 1.0});
                 std::vector<std::complex<TestType>> v_expected(
                     m, {0, static_cast<TestType>(2 * m)});
                 std::vector<std::complex<TestType>> v_out =
-                    Util::matrixVecProd(mat, v_in, m, m);
+                    Util::matrixVecProd(mat, v_in, m, m, Trans::NoTranspose);
                 CAPTURE(v_out);
                 CAPTURE(v_expected);
 
                 CHECK(v_out == approx(v_expected).margin(1e-7));
             }
         }
-        SECTION("Random Complex") {
+        SECTION("Simple Iterative with Transpose") {
+            for (size_t m = 2; m < 8; m++) {
+                std::vector<std::complex<TestType>> mat(m * m, {1.0, 1.0});
+                std::vector<std::complex<TestType>> v_in(m, {1.0, 1.0});
+                std::vector<std::complex<TestType>> v_expected(
+                    m, {0, static_cast<TestType>(2 * m)});
+                std::vector<std::complex<TestType>> v_out =
+                    Util::matrixVecProd(mat, v_in, m, m, Trans::Transpose);
+                CAPTURE(v_out);
+                CAPTURE(v_expected);
+
+                CHECK(v_out == approx(v_expected).margin(1e-7));
+            }
+        }
+        SECTION("Random Complex with NoTranspose") {
             std::vector<std::complex<TestType>> mat{
                 {0.417876, 0.27448},   {0.601209, 0.723548},
                 {0.781624, 0.538222},  {0.0597232, 0.27755},
@@ -193,15 +178,39 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
                 {-0.219747, 2.55541},
                 {-0.305997, 1.83881}};
             std::vector<std::complex<TestType>> v_out =
-                Util::matrixVecProd(mat, v_in, 4, 4);
+                Util::matrixVecProd(mat, v_in, 4, 4, Trans::NoTranspose);
+            CAPTURE(v_out);
+
+            CHECK(v_out == approx(v_expected).margin(1e-7));
+        }
+        SECTION("Random Complex with Transpose") {
+            std::vector<std::complex<TestType>> mat{
+                {0.417876, 0.27448},   {0.601209, 0.723548},
+                {0.781624, 0.538222},  {0.0597232, 0.27755},
+                {0.0431741, 0.593319}, {0.224124, 0.130335},
+                {0.237877, 0.01557},   {0.931634, 0.786367},
+                {0.378397, 0.894381},  {0.840747, 0.889789},
+                {0.530623, 0.463644},  {0.868736, 0.760685},
+                {0.258175, 0.836569},  {0.495012, 0.667726},
+                {0.298962, 0.384992},  {0.659472, 0.232696}};
+            std::vector<std::complex<TestType>> v_in{{0.417876, 0.27448},
+                                                     {0.601209, 0.723548},
+                                                     {0.781624, 0.538222},
+                                                     {0.0597232, 0.27755}};
+            std::vector<std::complex<TestType>> v_expected{{-0.706439, 1.64169},
+                                                           {0.115553, 2.03315},
+                                                           {0.386844, 1.37488},
+                                                           {0.184316, 2.5383}};
+            std::vector<std::complex<TestType>> v_out =
+                Util::matrixVecProd(mat, v_in, 4, 4, Trans::Transpose);
             CAPTURE(v_out);
 
             CHECK(v_out == approx(v_expected).margin(1e-7));
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
-            std::vector<std::complex<TestType>> mat(2 * 3, {1, 1});
-            std::vector<std::complex<TestType>> v_in(2, {1, 1});
+            std::vector<std::complex<TestType>> mat(2 * 3, {1.0, 1.0});
+            std::vector<std::complex<TestType>> v_in(2, {1.0, 1.0});
             CHECK_THROWS_AS(Util::matrixVecProd(mat, v_in, 2, 3),
                             std::invalid_argument);
             CHECK_THROWS_WITH(Util::matrixVecProd(mat, v_in, 2, 3),
@@ -212,6 +221,18 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
                 Util::matrixVecProd(mat, v_in, 2, 2),
                 Contains(
                     "Invalid number of rows and columns for the input matrix"));
+        }
+        SECTION("nullptr for v_out") {
+            std::vector<std::complex<TestType>> mat(2 * 3, {1.0, 1.0});
+            std::vector<std::complex<TestType>> v_in(2, {1.0, 1.0});
+            auto v_out = nullptr;
+            Util::matrixVecProd<TestType>(mat.data(), v_in.data(), v_out, 2, 3,
+                                          Trans::NoTranspose);
+            CHECK(v_out == nullptr);
+
+            Util::omp_matrixVecProd<TestType>(mat.data(), v_in.data(), v_out, 2,
+                                              3, Trans::NoTranspose);
+            CHECK(v_out == nullptr);
         }
     }
     SECTION("vecMatrixProd") {
@@ -255,13 +276,114 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
 
             CHECK(v_out == approx(v_expected).margin(1e-7));
         }
+        SECTION("Invalid Arguments") {
+            using namespace Catch::Matchers;
+            std::vector<TestType> v_in(4, {1.0});
+            std::vector<TestType> mat(8, {1.0});
+            CHECK_THROWS_AS(Util::vecMatrixProd(v_in, mat, 2, 3),
+                            std::invalid_argument);
+            CHECK_THROWS_WITH(Util::vecMatrixProd(v_in, mat, 2, 3),
+                              Contains("Invalid size for the input vector"));
+            CHECK_THROWS_AS(Util::vecMatrixProd(v_in, mat, 4, 3),
+                            std::invalid_argument);
+            CHECK_THROWS_WITH(
+                Util::vecMatrixProd(v_in, mat, 4, 3),
+                Contains(
+                    "Invalid number of rows and columns for the input matrix"));
+
+            std::vector<TestType> v_out(3);
+            CHECK_THROWS_AS(Util::vecMatrixProd(v_out, v_in, mat, 2, 3),
+                            std::invalid_argument);
+            CHECK_THROWS_WITH(
+                Util::vecMatrixProd(v_out, v_in, mat, 2, 3),
+                Contains(
+                    "Invalid number of rows and columns for the input matrix"));
+            CHECK_THROWS_AS(Util::vecMatrixProd(v_out, v_in, mat, 2, 4),
+                            std::invalid_argument);
+            CHECK_THROWS_WITH(Util::vecMatrixProd(v_out, v_in, mat, 2, 4),
+                              Contains("Invalid size for the input vector"));
+            CHECK_THROWS_AS(Util::vecMatrixProd(v_out, v_in, mat, 4, 2),
+                            std::invalid_argument);
+            CHECK_THROWS_WITH(
+                Util::vecMatrixProd(v_out, v_in, mat, 4, 2),
+                Contains("Invalid preallocated size for the result"));
+        }
+        SECTION("nullptr for v_out") {
+            std::vector<TestType> v_in(4, {1.0});
+            std::vector<TestType> mat{4 * 2, {1.0}};
+            auto v_out = nullptr;
+            Util::vecMatrixProd<TestType>(v_in.data(), mat.data(), v_out, 4, 2);
+            CHECK(v_out == nullptr);
+        }
     }
-    SECTION("Transpose") {
+    SECTION("CFTranspose") {
+        SECTION("Simple Matrix") {
+            for (size_t m = 2; m < 10; m++) {
+                std::vector<TestType> mat(m * m, {0});
+                for (size_t i = 0; i < m; i++) {
+                    mat[i * m + i] = 1.0;
+                }
+                std::vector<TestType> mat_t(m * m);
+                Util::CFTranspose<TestType, 4>(mat.data(), mat_t.data(), m, m,
+                                               0, m, 0, m);
+
+                CAPTURE(mat_t);
+                CAPTURE(mat);
+
+                CHECK(mat_t == approx(mat).margin(1e-7));
+            }
+        }
+        SECTION("Random Complex") {
+            std::vector<TestType> mat{
+                0.417876, 0.27448,   0.601209, 0.723548, 0.781624,
+                0.538222, 0.0597232, 0.27755,  0.836569,
+            };
+            std::vector<TestType> mat_t_exp{
+                0.417876, 0.723548, 0.0597232, 0.27448,  0.781624,
+                0.27755,  0.601209, 0.538222,  0.836569,
+            };
+            std::vector<TestType> mat_t(9);
+            Util::CFTranspose<TestType, 2>(mat.data(), mat_t.data(), 3, 3, 0, 3,
+                                           0, 3);
+
+            CAPTURE(mat_t);
+            CAPTURE(mat_t_exp);
+
+            CHECK(mat_t == approx(mat_t_exp));
+        }
+        SECTION("Random Complex non-square") {
+            std::vector<TestType> mat{
+                0.417876, 0.27448,  0.601209,  0.723548,
+                0.781624, 0.538222, 0.0597232, 0.27755,
+            };
+            std::vector<TestType> mat_t_exp{0.417876, 0.781624, 0.27448,
+                                            0.538222, 0.601209, 0.0597232,
+                                            0.723548, 0.27755};
+            std::vector<TestType> mat_t(8);
+            Util::CFTranspose<TestType, 2>(mat.data(), mat_t.data(), 2, 4, 0, 2,
+                                           0, 4);
+
+            CAPTURE(mat_t);
+            CAPTURE(mat_t_exp);
+
+            CHECK(mat_t == approx(mat_t_exp));
+        }
+        SECTION("Invalid Arguments") {
+            using namespace Catch::Matchers;
+            std::vector<TestType> mat(2 * 3, {1.0});
+            CHECK_THROWS_AS(Util::Transpose(mat, 2, 2), std::invalid_argument);
+            CHECK_THROWS_WITH(
+                Util::Transpose(mat, 2, 2),
+                Contains(
+                    "Invalid number of rows and columns for the input matrix"));
+        }
+    }
+    SECTION("Transpose<complex<T>>") {
         SECTION("Simple Matrix") {
             for (size_t m = 2; m < 8; m++) {
                 std::vector<std::complex<TestType>> mat(m * m, {0, 0});
                 for (size_t i = 0; i < m; i++) {
-                    mat[i * m + i] = {1, 1};
+                    mat[i * m + i] = {1.0, 1.0};
                 }
                 std::vector<std::complex<TestType>> mat_t =
                     Util::Transpose(mat, m, m);
@@ -301,7 +423,7 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
-            std::vector<std::complex<TestType>> mat(2 * 3, {1, 1});
+            std::vector<std::complex<TestType>> mat(2 * 3, {1.0, 1.0});
             CHECK_THROWS_AS(Util::Transpose(mat, 2, 2), std::invalid_argument);
             CHECK_THROWS_WITH(
                 Util::Transpose(mat, 2, 2),
@@ -310,15 +432,29 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
         }
     }
     SECTION("matrixMatProd") {
-        using Util::Trans;
-        SECTION("Simple Iterative") {
+        SECTION("Simple Iterative (Trans::Transpose)") {
             for (size_t m = 2; m < 8; m++) {
-                std::vector<std::complex<TestType>> m_left(m * m, {1, 1});
-                std::vector<std::complex<TestType>> m_right(m * m, {1, 1});
+                std::vector<std::complex<TestType>> m_left(m * m, {1.0, 1.0});
+                std::vector<std::complex<TestType>> m_right(m * m, {1.0, 1.0});
                 std::vector<std::complex<TestType>> m_out_exp(
                     m * m, {0, static_cast<TestType>(2 * m)});
                 std::vector<std::complex<TestType>> m_out = Util::matrixMatProd(
                     m_left, m_right, m, m, m, Trans::Transpose);
+
+                CAPTURE(m_out);
+                CAPTURE(m_out_exp);
+
+                CHECK(m_out == approx(m_out_exp));
+            }
+        }
+        SECTION("Simple Iterative (Trans::Adjoint)") {
+            for (size_t m = 2; m < 8; m++) {
+                std::vector<std::complex<TestType>> m_left(m * m, {1.0, 1.0});
+                std::vector<std::complex<TestType>> m_right(m * m, {1.0, 1.0});
+                std::vector<std::complex<TestType>> m_out_exp(
+                    m * m, {static_cast<TestType>(2 * m), 0});
+                std::vector<std::complex<TestType>> m_out = Util::matrixMatProd(
+                    m_left, m_right, m, m, m, Trans::Adjoint);
 
                 CAPTURE(m_out);
                 CAPTURE(m_out_exp);
@@ -458,8 +594,8 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
-            std::vector<std::complex<TestType>> m_left(2 * 3, {1, 1});
-            std::vector<std::complex<TestType>> m_right(3 * 4, {1, 1});
+            std::vector<std::complex<TestType>> m_left(2 * 3, {1.0, 1.0});
+            std::vector<std::complex<TestType>> m_right(3 * 4, {1.0, 1.0});
             CHECK_THROWS_AS(Util::matrixMatProd(m_left, m_right, 2, 3, 4),
                             std::invalid_argument);
             CHECK_THROWS_WITH(Util::matrixMatProd(m_left, m_right, 2, 3, 4),
@@ -471,70 +607,20 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
                               Contains("Invalid number of rows and columns for "
                                        "the input right matrix"));
         }
+        SECTION("nullptr for m_out") {
+            std::vector<std::complex<TestType>> m_left(2 * 3, {1.0, 1.0});
+            std::vector<std::complex<TestType>> m_right(3 * 4, {1.0, 1.0});
+            auto m_out = nullptr;
+            Util::matrixMatProd<TestType>(m_left.data(), m_right.data(), m_out,
+                                          2, 3, 4, Trans::NoTranspose);
+            CHECK(m_out == nullptr);
+
+            Util::omp_matrixMatProd<TestType>(m_left.data(), m_right.data(),
+                                              m_out, 2, 3, 4,
+                                              Trans::NoTranspose);
+            CHECK(m_out == nullptr);
+        }
     }
-
-    SECTION("scaleAndAdd") {
-        using ComplexPrecisionT = std::complex<TestType>;
-        std::vector<ComplexPrecisionT> x{
-            ComplexPrecisionT{0.637580898845, 0.233013812820},
-            ComplexPrecisionT{0.125550040650, 0.148470698987},
-            ComplexPrecisionT{0.889523198771, 0.761756550641},
-            ComplexPrecisionT{0.891875446490, 0.605138392264},
-            ComplexPrecisionT{0.290222258799, 0.803424416691},
-            ComplexPrecisionT{0.624571035127, 0.689904559001},
-            ComplexPrecisionT{0.491333492669, 0.625261934614},
-            ComplexPrecisionT{0.136862290866, 0.601670445202},
-            ComplexPrecisionT{0.091643970627, 0.673530285501},
-            ComplexPrecisionT{0.183361442769, 0.641076714523},
-            ComplexPrecisionT{0.079918528198, 0.329092045111},
-            ComplexPrecisionT{0.520125597990, 0.201190718335},
-            ComplexPrecisionT{0.717206120883, 0.302043790729},
-            ComplexPrecisionT{0.187500358256, 0.828948575085},
-            ComplexPrecisionT{0.281997052270, 0.329021862613},
-            ComplexPrecisionT{0.184123280486, 0.001268774308},
-        };
-        std::vector<ComplexPrecisionT> y{
-            ComplexPrecisionT{0.113474380402, 0.123755327504},
-            ComplexPrecisionT{0.738127975138, 0.031835875486},
-            ComplexPrecisionT{0.155243215510, 0.055196171134},
-            ComplexPrecisionT{0.756885139031, 0.039005627338},
-            ComplexPrecisionT{0.299505586354, 0.310112638972},
-            ComplexPrecisionT{0.777346465307, 0.225748691762},
-            ComplexPrecisionT{0.168512001132, 0.588891444173},
-            ComplexPrecisionT{0.747931516221, 0.524911047454},
-            ComplexPrecisionT{0.945667187421, 0.017019572529},
-            ComplexPrecisionT{0.959354271089, 0.034475980103},
-            ComplexPrecisionT{0.416016653267, 0.267333109970},
-            ComplexPrecisionT{0.840020601520, 0.597537320389},
-            ComplexPrecisionT{0.822522803699, 0.778794267872},
-            ComplexPrecisionT{0.186681218783, 0.585537701358},
-            ComplexPrecisionT{0.175303920227, 0.653812572452},
-            ComplexPrecisionT{0.379094098377, 0.969570074787},
-        };
-        ComplexPrecisionT a{0.6125508610408819, 0.9792336596104031};
-        std::vector<ComplexPrecisionT> expected{
-            ComplexPrecisionT{0.275850140305, 0.890828816056},
-            ComplexPrecisionT{0.669646254728, 0.245724555760},
-            ComplexPrecisionT{-0.045816237983, 1.392861859373},
-            ComplexPrecisionT{0.710632329293, 1.283038127951},
-            ComplexPrecisionT{-0.309458750902, 1.086446361782},
-            ComplexPrecisionT{0.484350224562, 1.259951303828},
-            ComplexPrecisionT{-0.142798777323, 1.453026474712},
-            ComplexPrecisionT{0.242590678401, 1.027484958673},
-            ComplexPrecisionT{0.342260254208, 0.519331989588},
-            ComplexPrecisionT{0.443908583485, 0.606721770212},
-            ComplexPrecisionT{0.142712808846, 0.547177638402},
-            ComplexPrecisionT{0.961611261024, 1.230101360915},
-            ComplexPrecisionT{0.966076584032, 1.666123826401},
-            ComplexPrecisionT{-0.510199622131, 1.276917526778},
-            ComplexPrecisionT{0.025852174787, 1.131496203190},
-            ComplexPrecisionT{0.490636545868, 1.150646977352},
-        };
-
-        Util::scaleAndAdd(a, x, y);
-        REQUIRE(y == PLApprox(expected).margin(1e-7));
-    }
-
     SECTION("SquaredNorm") {
         SECTION("For real type") {
             std::vector<TestType> vec{0.0, 1.0, 3.0, 10.0};
@@ -545,213 +631,5 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             std::vector<std::complex<TestType>> vec{{0.0, 1.0}, {3.0, 10.0}};
             CHECK(Util::squaredNorm(vec) == Approx(110.0));
         }
-    }
-}
-
-/**
- * @brief Count number of 1s in the binary representation of x
- *
- * This is a slow version of countBit1 defined in Util.hpp
- */
-size_t popcount_slow(uint64_t x) {
-    size_t c = 0;
-    for (; x != 0U; x >>= 1U) {
-        if ((x & 1U) != 0U) {
-            c++;
-        }
-    }
-    return c;
-}
-
-/**
- * @brief Count number of trailing zeros in the binary representation of x
- *
- * This is a slow version of countTrailing0 defined in Util.hpp
- */
-size_t ctz_slow(uint64_t x) {
-    size_t c = 0;
-    while ((x & 1U) == 0) {
-        x >>= 1U;
-        c++;
-    }
-    return c;
-}
-// NOLINTNEXTLINE(readability-function-cognitive-complexity)
-TEST_CASE("Utility bit operations", "[Util][BitUtil]") {
-    SECTION("Internal::countBit1Fast") {
-        { // for uint32_t
-            uint32_t n = 0;
-            CHECK(Util::Internal::countBit1(n) == 0);
-            for (uint32_t k = 0; k < 100; k++) {
-                n <<= 1U;
-                n ^= 1U;
-                CHECK(Util::Internal::countBit1(n) == popcount_slow(n));
-            }
-        }
-        { // for uint64_t
-            uint64_t n = 0;
-            CHECK(Util::Internal::countBit1(n) == 0);
-            for (uint32_t k = 0; k < 100; k++) {
-                n <<= 1U;
-                n ^= 1U;
-                CHECK(Util::Internal::countBit1(n) == popcount_slow(n));
-            }
-        }
-    }
-
-    SECTION("isPerfectPowerOf2") {
-        size_t n = 1U;
-        CHECK(Util::isPerfectPowerOf2(n));
-        for (size_t k = 0; k < sizeof(size_t) - 2; k++) {
-            n *= 2;
-            CHECK(Util::isPerfectPowerOf2(n));
-            CHECK(!Util::isPerfectPowerOf2(n + 1));
-        }
-
-        CHECK(!Util::isPerfectPowerOf2(0U));
-        CHECK(!Util::isPerfectPowerOf2(124U));
-        CHECK(!Util::isPerfectPowerOf2(1077U));
-        CHECK(!Util::isPerfectPowerOf2(1000000000U));
-
-        if constexpr (sizeof(size_t) == 8) {
-            // if size_t is uint64_t
-            CHECK(!Util::isPerfectPowerOf2(1234556789012345678U));
-        }
-    }
-
-    SECTION("Internal::countTrailing0") {
-        { // for uint32_t
-            for (uint32_t c = 0; c < 31; c++) {
-                uint32_t n = static_cast<uint32_t>(1U)
-                             << static_cast<uint32_t>(c);
-                CHECK(Util::Internal::countTrailing0(n) == c);
-                CHECK(Util::Internal::countTrailing0(n | (1U << 31U)) == c);
-            }
-        }
-        { // for uint64_t
-            for (uint32_t c = 0; c < 63; c++) {
-                uint64_t n = static_cast<uint64_t>(1U)
-                             << static_cast<uint64_t>(c);
-                CHECK(Util::Internal::countTrailing0(n) == c);
-                CHECK(Util::Internal::countTrailing0(
-                          n | (uint64_t{1U} << 63U)) == c);
-            }
-        }
-    }
-
-    SECTION("log2PerfectPower") {
-        { // for uint32_t
-            for (uint32_t c = 0; c < 32; c++) {
-                uint32_t n = static_cast<uint32_t>(1U)
-                             << static_cast<uint64_t>(c);
-                CHECK(Util::log2PerfectPower(n) == c);
-            }
-        }
-        { // for uint64_t
-            for (uint32_t c = 0; c < 32; c++) {
-                uint32_t n = static_cast<uint64_t>(1U)
-                             << static_cast<uint64_t>(c);
-                CHECK(Util::log2PerfectPower(n) == c);
-            }
-        }
-    }
-}
-
-TEST_CASE("Utility array and tuples", "[Util]") {
-    std::array<std::pair<int, std::string_view>, 5> test_pairs{
-        std::pair(0, "Zero"),  std::pair(1, "One"),  std::pair(2, "Two"),
-        std::pair(3, "Three"), std::pair(4, "Four"),
-    };
-
-    REQUIRE(Util::reverse_pairs(test_pairs) ==
-            std::array{
-                std::pair<std::string_view, int>("Zero", 0),
-                std::pair<std::string_view, int>("One", 1),
-                std::pair<std::string_view, int>("Two", 2),
-                std::pair<std::string_view, int>("Three", 3),
-                std::pair<std::string_view, int>("Four", 4),
-            });
-
-    REQUIRE(Util::reverse_pairs(test_pairs) !=
-            std::array{
-                std::pair<std::string_view, int>("Zero", 0),
-                std::pair<std::string_view, int>("One", 1),
-                std::pair<std::string_view, int>("Two", 0),
-                std::pair<std::string_view, int>("Three", 3),
-                std::pair<std::string_view, int>("Four", 4),
-            });
-}
-
-/**
- * @brief Test randomUnitary is correct
- */
-TEMPLATE_TEST_CASE("randomUnitary", "[Util]", float, double) {
-    using PrecisionT = TestType;
-
-    std::mt19937 re{1337};
-
-    for (size_t num_qubits = 1; num_qubits <= 5; num_qubits++) {
-        const size_t dim = (1U << num_qubits);
-        const auto unitary = Util::randomUnitary<PrecisionT>(re, num_qubits);
-
-        auto unitary_dagger = Util::Transpose(unitary, dim, dim);
-        std::transform(
-            unitary_dagger.begin(), unitary_dagger.end(),
-            unitary_dagger.begin(),
-            [](const std::complex<PrecisionT> &v) { return std::conj(v); });
-
-        std::vector<std::complex<PrecisionT>> mat(dim * dim);
-        Util::matrixMatProd(unitary.data(), unitary_dagger.data(), mat.data(),
-                            dim, dim, dim);
-
-        std::vector<std::complex<PrecisionT>> identity(
-            dim * dim, std::complex<PrecisionT>{});
-        for (size_t i = 0; i < dim; i++) {
-            identity[i * dim + i] = std::complex<PrecisionT>{1.0, 0.0};
-        }
-
-        REQUIRE(mat == approx(identity).margin(1e-5));
-    }
-}
-
-enum class TestEnum { One, Two, Many };
-
-TEST_CASE("Test utility functions for constants", "[Util][ConstantUtil]") {
-    using namespace std::literals;
-
-    SECTION("lookup") {
-        constexpr std::array test_pairs = {
-            std::pair{"Pennylane"sv, "-"sv},
-            std::pair{"Lightning"sv, "is"sv},
-            std::pair{"the"sv, "best"sv},
-            std::pair{"QML"sv, "library"sv},
-        };
-
-        REQUIRE(Util::lookup(test_pairs, "Pennylane"sv) == "-"sv);
-        REQUIRE(Util::lookup(test_pairs, "Lightning"sv) == "is"sv);
-        REQUIRE(Util::lookup(test_pairs, "the"sv) == "best"sv);
-        REQUIRE(Util::lookup(test_pairs, "QML"sv) == "library"sv);
-        REQUIRE_THROWS(Util::lookup(test_pairs, "bad"sv));
-    }
-
-    SECTION("count_unique") {
-        constexpr std::array test_arr1 = {"This"sv, "is"sv, "a"sv, "test"sv,
-                                          "arr"sv};
-        constexpr std::array test_arr2 = {"This"sv, "is"sv,  "a"sv,
-                                          "test"sv, "arr"sv, "is"sv};
-
-        REQUIRE(Util::count_unique(test_arr1) == 5);
-        REQUIRE(Util::count_unique(test_arr2) == 5);
-    }
-
-    SECTION("static_lookup") {
-        std::array test_pairs = {
-            std::pair{TestEnum::One, uint32_t{1U}},
-            std::pair{TestEnum::Two, uint32_t{2U}},
-        };
-
-        REQUIRE(Util::static_lookup<TestEnum::One>(test_pairs) == 1U);
-        REQUIRE(Util::static_lookup<TestEnum::Two>(test_pairs) == 2U);
-        REQUIRE(Util::static_lookup<TestEnum::Many>(test_pairs) == uint32_t{});
     }
 }
