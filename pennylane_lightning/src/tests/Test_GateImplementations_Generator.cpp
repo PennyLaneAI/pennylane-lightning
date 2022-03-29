@@ -35,12 +35,10 @@ constexpr std::string_view remove_prefix(const std::string_view &str,
     return {str.data() + len, str.length() - len};
 }
 
-constexpr auto gate_name_to_ops = Util::reverse_pairs(Constant::gate_names);
-
 template <GeneratorOperation gntr_op>
 constexpr auto findGateOpForGenerator() -> GateOperation {
-    constexpr auto gntr_name =
-        remove_prefix(static_lookup<gntr_op>(Constant::generator_names), 9);
+    constexpr auto gntr_name = remove_prefix(
+        Util::static_lookup<gntr_op>(Constant::generator_names), 9);
 
     for (const auto &[gate_op, gate_name] : Constant::gate_names) {
         if (gate_name == gntr_name) {
@@ -76,10 +74,11 @@ void testGeneratorForGate(RandomEngine &re, size_t num_qubits) {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     constexpr auto I = Util::IMAG<PrecisionT>();
 
-    constexpr ParamT eps = 1e-4; // For finite difference
+    constexpr auto eps = PrecisionT{1e-4}; // For finite difference
 
-    constexpr auto gate_op = static_lookup<gntr_op>(generator_gate_pairs);
-    constexpr auto gate_name = static_lookup<gate_op>(Constant::gate_names);
+    constexpr auto gate_op = Util::static_lookup<gntr_op>(generator_gate_pairs);
+    constexpr auto gate_name =
+        Util::static_lookup<gate_op>(Constant::gate_names);
 
     DYNAMIC_SECTION("Test generator of " << gate_name << " for kernel "
                                          << GateImplementation::name) {
@@ -107,7 +106,7 @@ void testGeneratorForGate(RandomEngine &re, size_t num_qubits) {
         gate_func(diff_st_1.data(), num_qubits, wires, false, eps);
         gate_func(diff_st_2.data(), num_qubits, wires, false, -eps);
 
-        std::vector<ComplexPrecisionT> gate_der_st(1U << num_qubits);
+        std::vector<ComplexPrecisionT> gate_der_st(size_t{1U} << num_qubits);
 
         std::transform(
             diff_st_1.cbegin(), diff_st_1.cend(), diff_st_2.cbegin(),
@@ -116,7 +115,7 @@ void testGeneratorForGate(RandomEngine &re, size_t num_qubits) {
 
         scaleVector(gate_der_st, static_cast<PrecisionT>(0.5) / eps);
 
-        REQUIRE(gntr_st == PLApprox(gate_der_st).margin(1e-3));
+        REQUIRE(gntr_st == approx(gate_der_st).margin(PrecisionT{1e-3}));
     }
 }
 template <typename PrecisionT, typename ParamT, class GateImplementation,

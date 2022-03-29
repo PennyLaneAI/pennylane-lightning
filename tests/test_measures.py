@@ -16,6 +16,7 @@ Unit tests for Measures in lightning.qubit.
 """
 import numpy as np
 import pennylane as qml
+import math
 from pennylane.measurements import (
     Variance,
     Expectation,
@@ -55,15 +56,20 @@ class TestProbs:
 
     def test_probs_dtype64(self, dev):
         """Test if probs changes the state dtype"""
-        dev._state = np.array([1, 0]).astype(np.complex64)
+        dev._state = dev._asarray(
+            np.array([1 / math.sqrt(2), 1 / math.sqrt(2), 0, 0]).astype(np.complex64)
+        )
         p = dev.probability(wires=[0, 1])
 
         assert dev._state.dtype == np.complex64
-        assert np.allclose(p, [1, 1, 0, 0])
+        assert np.allclose(p, [0.5, 0.5, 0, 0])
 
+    @pytest.mark.skipif(
+        not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
+    )
     def test_probs_dtype_error(self, dev):
         """Test if probs raise error with complex256"""
-        dev._state = np.array([1, 0]).astype(np.complex256)
+        dev._state = np.array([1, 0, 0, 0]).astype(np.complex256)
 
         with pytest.raises(TypeError, match="Unsupported complex Type:"):
             dev.probability(wires=[0, 1])
@@ -179,6 +185,9 @@ class TestExpval:
         assert dev._state.dtype == np.complex64
         assert np.allclose(e, 0.0)
 
+    @pytest.mark.skipif(
+        not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
+    )
     def test_expval_dtype_error(self, dev):
         """Test if expval raise error with complex256"""
         dev._state = np.array([1, 0]).astype(np.complex256)
@@ -296,6 +305,9 @@ class TestVar:
         assert dev._state.dtype == np.complex64
         assert np.allclose(v, 1.0)
 
+    @pytest.mark.skipif(
+        not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
+    )
     def test_expval_dtype_error(self, dev):
         """Test if var raise error with complex256"""
         dev._state = np.array([1, 0]).astype(np.complex256)
@@ -460,6 +472,75 @@ class TestWiresInExpval:
             return [qml.expval(qml.PauliZ(wires=w)) for w in wires2]
 
         assert np.allclose(circuit1(), circuit2(), atol=tol)
+
+
+class TestSample:
+    """Tests that samples are properly calculated."""
+
+    @pytest.fixture
+    def dev(self):
+        return qml.device("lightning.qubit", wires=2, shots=1000)
+
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_sample_dimensions(self, dev, C):
+        """Tests if the samples returned by sample have
+        the correct dimensions
+        """
+
+        # Explicitly resetting is necessary as the internal
+        # state is set to None in __init__ and only properly
+        # initialized during reset
+        dev._state = dev._asarray(dev._state, C)
+        dev.apply([qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])])
+
+        dev.shots = 10
+        dev._wires_measured = {0}
+        dev._samples = dev.generate_samples()
+        s1 = dev.sample(qml.PauliZ(wires=[0]))
+        assert np.array_equal(s1.shape, (10,))
+
+        dev.reset()
+        dev.shots = 12
+        dev._wires_measured = {1}
+        dev._samples = dev.generate_samples()
+        s2 = dev.sample(qml.PauliZ(wires=[1]))
+        assert np.array_equal(s2.shape, (12,))
+
+        dev.reset()
+        dev.shots = 17
+        dev._wires_measured = {0, 1}
+        dev._samples = dev.generate_samples()
+        s3 = dev.sample(qml.PauliX(0) @ qml.PauliZ(1))
+        assert np.array_equal(s3.shape, (17,))
+
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_sample_values(self, dev, C, tol):
+        """Tests if the samples returned by sample have
+        the correct values
+        """
+
+        # Explicitly resetting is necessary as the internal
+        # state is set to None in __init__ and only properly
+        # initialized during reset
+        dev._state = dev._asarray(dev._state, C)
+
+        dev.apply([qml.RX(1.5708, wires=[0])])
+        dev._wires_measured = {0}
+        dev._samples = dev.generate_samples()
+
+        s1 = dev.sample(qml.PauliZ(0))
+
+        # s1 should only contain 1 and -1, which is guaranteed if
+        # they square to 1
+        assert np.allclose(s1**2, 1, atol=tol, rtol=0)
+
+    def test_sample_unsupported_type(self, dev):
+        """Test if generate_samples raise error with complex256"""
+
+        dev._state = np.array([1, 0]).astype(np.complex256)
+
+        with pytest.raises(TypeError, match="Unsupported complex Type:"):
+            dev._samples = dev.generate_samples()
 
 
 class TestWiresInVar:

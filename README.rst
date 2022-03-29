@@ -97,7 +97,7 @@ and install the compilied library with
 GPU support
 -----------
 
-For GPU support, `PennyLane-Lightning-GPU <https://github.com/PennyLaneAI/pennylane-lightning-gpu.git>`_ can be be installed by providing the optional ``[gpu]`` tag:
+For GPU support, `PennyLane-Lightning-GPU <https://github.com/PennyLaneAI/pennylane-lightning-gpu>`_ can be installed by providing the optional ``[gpu]`` tag:
 
 .. code-block:: console
 

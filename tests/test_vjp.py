@@ -161,7 +161,7 @@ class TestVectorJacobianProduct:
 
         x, y, z = [0.5, 0.3, -0.7]
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=[0])
             qml.Rot(x, y, z, wires=[0])
             qml.RY(-0.2, wires=[0])
@@ -181,7 +181,7 @@ class TestVectorJacobianProduct:
 
         x, y, z = [0.5, 0.3, -0.7]
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=[0])
             qml.Rot(x, y, z, wires=[0])
             qml.RY(-0.2, wires=[0])
@@ -194,7 +194,7 @@ class TestVectorJacobianProduct:
         fn1 = dev.vjp(tape, dy)
         vjp1 = fn1(tape)
 
-        tape.execute(dev)
+        qml.execute([tape], dev, None)
         fn2 = dev.vjp(tape, dy, use_device_state=True)
         vjp2 = fn2(tape)
 
@@ -207,7 +207,7 @@ class TestVectorJacobianProduct:
 
         x, y, z = [0.5, 0.3, -0.7]
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=[0])
             qml.Rot(x, y, z, wires=[0])
             qml.RY(-0.2, wires=[0])
@@ -220,7 +220,7 @@ class TestVectorJacobianProduct:
         fn1 = dev.vjp(tape, dy)
         vjp1 = fn1(tape)
 
-        tape.execute(dev)
+        qml.execute([tape], dev, None)
         fn2 = dev.vjp(tape, dy, starting_state=dev._pre_rotated_state)
         vjp2 = fn2(tape)
 
@@ -232,7 +232,7 @@ class TestVectorJacobianProduct:
         expectation values"""
         dev._state = dev._asarray(dev._state, C)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.RX(0.1, wires=0)
             qml.var(qml.PauliZ(0))
 
@@ -248,7 +248,7 @@ class TestVectorJacobianProduct:
         dev = qml.device("lightning.qubit", wires=1, shots=1)
         dev._state = dev._asarray(dev._state, C)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.expval(qml.PauliZ(0))
 
         dy = np.array([1.0])
@@ -267,7 +267,7 @@ class TestVectorJacobianProduct:
         multi-parameter operations that are not qml.Rot"""
         dev._state = dev._asarray(dev._state, C)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.CRot(0.1, 0.2, 0.3, wires=[0, 1])
             qml.expval(qml.PauliZ(0))
 
@@ -278,7 +278,7 @@ class TestVectorJacobianProduct:
         ):
             dev.vjp(tape, dy)(tape)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.SingleExcitation(0.1, wires=[0, 1])
             qml.expval(qml.PauliZ(0))
 
@@ -294,7 +294,7 @@ class TestVectorJacobianProduct:
         """Test if a QuantumFunctionError is raised for a Projector observable"""
         dev._state = dev._asarray(dev._state, C)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.CRX(0.1, wires=[0, 1])
             qml.expval(qml.Projector([0, 1], wires=[0, 1]))
 
@@ -305,7 +305,7 @@ class TestVectorJacobianProduct:
         ):
             dev.vjp(tape, dy)(tape)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.CRX(0.1, wires=[0, 1])
             qml.expval(qml.Projector([0], wires=[0]) @ qml.PauliZ(0))
 
@@ -321,7 +321,7 @@ class TestVectorJacobianProduct:
 
         obs = np.array([[1, 0], [0, -1]], dtype=np.complex128, requires_grad=False)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.RY(0.1, wires=(0,))
             qml.expval(qml.Hermitian(obs, wires=(0,)))
 
@@ -332,7 +332,7 @@ class TestVectorJacobianProduct:
         ):
             dev.vjp(tape, dy)(tape)
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.RY(0.1, wires=(0,))
             qml.expval(qml.Hermitian(obs, wires=(0,)) @ qml.PauliZ(wires=1))
 
@@ -431,7 +431,7 @@ class TestVectorJacobianProduct:
         x = 0.543
         y = -0.654
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.RX(x, wires=[0])
             qml.RY(y, wires=[1])
             qml.CNOT(wires=[0, 1])
@@ -455,7 +455,7 @@ class TestVectorJacobianProduct:
         x = 0.543
         y = -0.654
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.RX(x, wires=[0])
             qml.RY(y, wires=[1])
             qml.CNOT(wires=[0, 1])
@@ -480,7 +480,7 @@ class TestVectorJacobianProduct:
         x = 0.543
         y = -0.654
 
-        with qml.tape.JacobianTape() as tape:
+        with qml.tape.QuantumTape() as tape:
             qml.RX(x, wires=[0])
             qml.RY(y, wires=[1])
             qml.CNOT(wires=[0, 1])
@@ -512,7 +512,7 @@ class TestBatchVectorJacobianProduct:
             qml.CNOT(wires=[0, 1])
             qml.expval(qml.PauliZ(0))
 
-        with qml.tape.JacobianTape() as tape2:
+        with qml.tape.QuantumTape() as tape2:
             qml.RX(0.4, wires=0)
             qml.RX(0.6, wires=0)
             qml.CNOT(wires=[0, 1])
@@ -537,7 +537,7 @@ class TestBatchVectorJacobianProduct:
             qml.CNOT(wires=[0, 1])
             qml.expval(qml.PauliZ(0))
 
-        with qml.tape.JacobianTape() as tape2:
+        with qml.tape.QuantumTape() as tape2:
             qml.RX(0.4, wires=0)
             qml.RX(0.6, wires=0)
             qml.CNOT(wires=[0, 1])
@@ -593,7 +593,7 @@ class TestBatchVectorJacobianProduct:
             qml.CNOT(wires=[0, 1])
             qml.expval(qml.PauliZ(0))
 
-        with qml.tape.JacobianTape() as tape2:
+        with qml.tape.QuantumTape() as tape2:
             qml.RX(0.4, wires=0)
             qml.RX(0.6, wires=0)
             qml.CNOT(wires=[0, 1])
@@ -615,12 +615,12 @@ class TestBatchVectorJacobianProduct:
         """Test the 'append' reduction strategy"""
         dev._state = dev._asarray(dev._state, C)
 
-        with qml.tape.JacobianTape() as tape1:
+        with qml.tape.QuantumTape() as tape1:
             qml.RX(0.4, wires=0)
             qml.CNOT(wires=[0, 1])
             qml.expval(qml.PauliZ(0))
 
-        with qml.tape.JacobianTape() as tape2:
+        with qml.tape.QuantumTape() as tape2:
             qml.RX(0.4, wires=0)
             qml.RX(0.6, wires=0)
             qml.CNOT(wires=[0, 1])
@@ -644,12 +644,12 @@ class TestBatchVectorJacobianProduct:
         """Test the 'append' reduction strategy"""
         dev._state = dev._asarray(dev._state, C)
 
-        with qml.tape.JacobianTape() as tape1:
+        with qml.tape.QuantumTape() as tape1:
             qml.RX(0.4, wires=0)
             qml.CNOT(wires=[0, 1])
             qml.expval(qml.PauliZ(0))
 
-        with qml.tape.JacobianTape() as tape2:
+        with qml.tape.QuantumTape() as tape2:
             qml.RX(0.4, wires=0)
             qml.RX(0.6, wires=0)
             qml.CNOT(wires=[0, 1])
@@ -673,12 +673,12 @@ class TestBatchVectorJacobianProduct:
         """Test the 'extend' reduction strategy"""
         dev._state = dev._asarray(dev._state, C)
 
-        with qml.tape.JacobianTape() as tape1:
+        with qml.tape.QuantumTape() as tape1:
             qml.RX(0.4, wires=0)
             qml.CNOT(wires=[0, 1])
             qml.expval(qml.PauliZ(0))
 
-        with qml.tape.JacobianTape() as tape2:
+        with qml.tape.QuantumTape() as tape2:
             qml.RX(0.4, wires=0)
             qml.RX(0.6, wires=0)
             qml.CNOT(wires=[0, 1])
@@ -700,12 +700,12 @@ class TestBatchVectorJacobianProduct:
         """Test the 'extend' reduction strategy"""
         dev._state = dev._asarray(dev._state, C)
 
-        with qml.tape.JacobianTape() as tape1:
+        with qml.tape.QuantumTape() as tape1:
             qml.RX(0.4, wires=0)
             qml.CNOT(wires=[0, 1])
             qml.expval(qml.PauliZ(0))
 
-        with qml.tape.JacobianTape() as tape2:
+        with qml.tape.QuantumTape() as tape2:
             qml.RX(0.4, wires=0)
             qml.RX(0.6, wires=0)
             qml.CNOT(wires=[0, 1])

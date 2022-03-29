@@ -34,7 +34,8 @@ from pennylane import (
     DeviceError,
 )
 from pennylane.devices import DefaultQubit
-from pennylane.operation import Expectation, Tensor
+from pennylane.operation import Tensor
+from pennylane.measurements import Expectation
 from pennylane.wires import Wires
 
 # Remove after the next release of PL
@@ -202,7 +203,13 @@ class LightningQubit(DefaultQubit):
         else:
             raise TypeError(f"Unsupported complex Type: {dtype}")
 
+        # Skip over identity operations instead of performing
+        # matrix multiplication with the identity.
+        skipped_ops = ["Identity"]
+
         for o in operations:
+            if o.base_name in skipped_ops:
+                continue
             name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
             if _is_lightning_gate(name):
                 kernel = self._kernel_for_ops[name]
@@ -575,6 +582,33 @@ class LightningQubit(DefaultQubit):
 
         return M.probs(device_wires)
 
+    def generate_samples(self):
+        """Generate samples
+
+        Returns:
+            array[int]: array of samples in binary representation with shape ``(dev.shots, dev.num_wires)``
+        """
+
+        # To support np.complex64 based on the type of self._state
+        dtype = self._state.dtype
+        if dtype == np.complex64:
+            use_csingle = True
+        elif dtype == np.complex128:
+            use_csingle = False
+        else:
+            raise TypeError(f"Unsupported complex Type: {dtype}")
+
+        # Initialization of state
+        ket = np.ravel(self._state)
+
+        if use_csingle:
+            ket = ket.astype(np.complex64)
+
+        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
+        M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
+
+        return M.generate_samples(len(self.wires), self.shots).astype(int)
+
     def expval(self, observable, shot_range=None, bin_size=None):
         """Expectation value of the supplied observable.
 
@@ -687,6 +721,7 @@ if not CPP_BINARY_AVAILABLE:
         version = __version__
         author = "Xanadu Inc."
         _CPP_BINARY_AVAILABLE = False
+        operations = _remove_snapshot_from_operations(DefaultQubit.operations)
 
         def __init__(self, *args, **kwargs):
             warn(

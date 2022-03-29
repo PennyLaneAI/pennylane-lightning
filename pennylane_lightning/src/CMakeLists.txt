@@ -11,8 +11,9 @@ if(ENABLE_CLANG_TIDY)
     if(NOT DEFINED CLANG_TIDY_BINARY)
         set(CLANG_TIDY_BINARY clang-tidy)
     endif()
+    message(STATUS "Using CLANG_TIDY_BINARY=${CLANG_TIDY_BINARY}")
     set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY_BINARY};
-                            -extra-arg=-std=c++17;
+                             -extra-arg=-std=c++17;
     )
 endif()
 
@@ -43,4 +44,8 @@ endif()
 if (BUILD_EXAMPLES)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
     add_subdirectory("examples" "examples")
+endif()
+
+if (BUILD_BENCHMARKS)
+    add_subdirectory("benchmarks" "benchmarks")
 endif()

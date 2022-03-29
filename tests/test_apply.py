@@ -118,6 +118,8 @@ class TestApply:
         ),
         (qml.Hadamard, [1, 0], [1 / math.sqrt(2), 1 / math.sqrt(2)]),
         (qml.Hadamard, [1 / math.sqrt(2), -1 / math.sqrt(2)], [0, 1]),
+        (qml.Identity, [1, 0], [1, 0]),
+        (qml.Identity, [1 / math.sqrt(2), 1 / math.sqrt(2)], [1 / math.sqrt(2), 1 / math.sqrt(2)]),
     ]
 
     @pytest.mark.parametrize("operation,input,expected_output", test_data_no_parameters)
@@ -1432,6 +1434,43 @@ class TestTensorSample:
             - 2 * np.cos(theta) * np.sin(phi) * np.sin(2 * varphi)
         ) / 4
         assert np.allclose(var, expected, atol=tolerance, rtol=0)
+
+
+class TestApplyLightningMethod:
+    """Unit tests for the apply_lightning method."""
+
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_apply_identity_skipped(self, mocker, C, tol):
+        """Test identity operation does not perform additional computations."""
+        dev = qml.device("lightning.qubit", wires=1)
+        dev._state = dev._asarray(dev._state, C)
+
+        starting_state = np.array([1, 0], dtype=C)
+        op = [qml.Identity(0)]
+        dev.apply(op)
+
+        assert np.allclose(dev._state, starting_state, atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_iter_identity_skipped(self, mocker, C, tol):
+        """Test identity operations do not perform additional computations."""
+        dev = qml.device("lightning.qubit", wires=2)
+        if not hasattr(dev, "apply_lightning"):
+            pytest.skip("LightningQubit object has no attribute apply_lightning")
+
+        starting_state = np.array([1, 0, 0, 0], dtype=C)
+        op = [qml.Identity(0), qml.Identity(1)]
+
+        spy_diagonal = mocker.spy(dev, "_apply_diagonal_unitary")
+        spy_einsum = mocker.spy(dev, "_apply_unitary_einsum")
+        spy_unitary = mocker.spy(dev, "_apply_unitary")
+
+        res = dev.apply_lightning(starting_state, op, dtype=C)
+        assert np.allclose(res, starting_state, atol=tol, rtol=0)
+
+        spy_diagonal.assert_not_called()
+        spy_einsum.assert_not_called()
+        spy_unitary.assert_not_called()
 
 
 def test_warning():

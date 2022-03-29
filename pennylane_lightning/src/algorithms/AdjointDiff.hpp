@@ -142,7 +142,7 @@ template <class T = double> class AdjointJacobian {
                         }
                     },
                     observable.getObsParams()[j]);
-            } else { // Offloat to SV dispatcher if no parameters provided
+            } else { // Offload to SV dispatcher if no parameters provided
                 state.applyOperation(observable.getObsName()[j],
                                      observable.getObsWires()[j], false);
             }
@@ -193,7 +193,7 @@ template <class T = double> class AdjointJacobian {
         }
         #endif
         if (ex) {
-            std::rethrow_exception(ex);
+            std::rethrow_exception(ex); //LCOV_EXCL_LINE
         }
         // clang-format on
     }
@@ -242,7 +242,7 @@ template <class T = double> class AdjointJacobian {
         }
         #endif
         if (ex) {
-            std::rethrow_exception(ex);
+            std::rethrow_exception(ex); //LCOV_EXCL_LINE
         }
         // clang-format on
     }
@@ -340,8 +340,8 @@ template <class T = double> class AdjointJacobian {
             applyOperations(lambda, ops);
         }
 
-        const auto tp_begin = tp.begin();
-        auto tp_it = tp.end();
+        auto tp_it = tp.rbegin();
+        const auto tp_rend = tp.rend();
 
         // Create observable-applied state-vectors
         std::vector<StateVectorManaged<T>> H_lambda(
@@ -355,49 +355,51 @@ template <class T = double> class AdjointJacobian {
             PL_ABORT_IF(ops.getOpsParams()[op_idx].size() > 1,
                         "The operation is not supported using the adjoint "
                         "differentiation method");
-            if ((ops_name[op_idx] != "QubitStateVector") &&
-                (ops_name[op_idx] != "BasisState")) {
-                mu.updateData(lambda.getDataVector());
-                applyOperationAdj(lambda, ops, op_idx);
-
-                if (ops.hasParams(op_idx)) {
-                    if ((current_param_idx == *(std::prev(tp_it))) ||
-                        std::find(tp_begin, tp_it, current_param_idx) !=
-                            tp_it) {
-                        const T scalingFactor =
-                            applyGenerator(mu, ops_name[op_idx],
-                                           ops.getOpsWires()[op_idx],
-                                           !ops.getOpsInverses()[op_idx]) *
-                            (ops.getOpsInverses()[op_idx] ? -1 : 1);
-
-                        const size_t mat_row_idx =
-                            trainableParamNumber * num_observables;
-
-                        // clang-format off
-
-                        #if defined(_OPENMP)
-                            #pragma omp parallel for default(none)   \
-                            shared(H_lambda, jac, mu, scalingFactor, \
-                                mat_row_idx,        \
-                                num_observables)
-                        #endif
-
-                        // clang-format on
-                        for (size_t obs_idx = 0; obs_idx < num_observables;
-                             obs_idx++) {
-                            jac[mat_row_idx + obs_idx] =
-                                -2 * scalingFactor *
-                                std::imag(innerProdC(
-                                    H_lambda[obs_idx].getDataVector(),
-                                    mu.getDataVector()));
-                        }
-                        trainableParamNumber--;
-                        std::advance(tp_it, -1);
-                    }
-                    current_param_idx--;
-                }
-                applyOperationsAdj(H_lambda, ops, static_cast<size_t>(op_idx));
+            if ((ops_name[op_idx] == "QubitStateVector") ||
+                (ops_name[op_idx] == "BasisState")) {
+                continue;
             }
+            if (tp_it == tp_rend) {
+                break; // All done
+            }
+            mu.updateData(lambda.getDataVector());
+            applyOperationAdj(lambda, ops, op_idx);
+
+            if (ops.hasParams(op_idx)) {
+                if (current_param_idx == *tp_it) {
+                    const T scalingFactor =
+                        applyGenerator(mu, ops_name[op_idx],
+                                       ops.getOpsWires()[op_idx],
+                                       !ops.getOpsInverses()[op_idx]) *
+                        (ops.getOpsInverses()[op_idx] ? -1 : 1);
+
+                    const size_t mat_row_idx =
+                        trainableParamNumber * num_observables;
+
+                    // clang-format off
+
+                    #if defined(_OPENMP)
+                        #pragma omp parallel for default(none)   \
+                        shared(H_lambda, jac, mu, scalingFactor, \
+                            mat_row_idx,        \
+                            num_observables)
+                    #endif
+
+                    // clang-format on
+                    for (size_t obs_idx = 0; obs_idx < num_observables;
+                         obs_idx++) {
+                        jac[mat_row_idx + obs_idx] =
+                            -2 * scalingFactor *
+                            std::imag(
+                                innerProdC(H_lambda[obs_idx].getDataVector(),
+                                           mu.getDataVector()));
+                    }
+                    trainableParamNumber--;
+                    ++tp_it;
+                }
+                current_param_idx--;
+            }
+            applyOperationsAdj(H_lambda, ops, static_cast<size_t>(op_idx));
         }
         jac = Transpose(jac, jd.getNumParams(), num_observables);
     }

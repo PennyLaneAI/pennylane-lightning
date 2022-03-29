@@ -1,3 +1,47 @@
+# Release 0.23.0-dev
+
+### New features since last release
+
+* Add Lightning GBenchmark Suite.
+[(#249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/249)
+
+* Add run-time and compile information in binary.
+[(#253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/253)
+
+### Improvements
+
+* Add `ENABLE_BLAS` build to CI checks.
+[(#249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/249)
+
+* Add more `clang-tidy` checks and kernel tests.
+[(#253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/253)
+
+* Skip over identity operations in `"lightning.qubit"`.
+[(#268)](https://github.com/PennyLaneAI/pennylane-lightning/pull/268)
+
+### Documentation
+
+### Bug fixes
+
+* Update tests to remove `JacobianTape`.
+[(#260)](https://github.com/PennyLaneAI/pennylane-lightning/pull/260)
+
+* Fix tests for MSVC.
+[(#264)](https://github.com/PennyLaneAI/pennylane-lightning/pull/264)
+
+* Fix `#include <cpuid.h>` for PPC and AArch64 in Linux.
+[(#266)](https://github.com/PennyLaneAI/pennylane-lightning/pull/266)
+
+* Remove deprecated tape execution methods.
+[(#270)](https://github.com/PennyLaneAI/pennylane-lightning/pull/270)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+Ali Asadi, Chae-Yeun Park, and Lee James O'Riordan
+
+---
+
 # Release 0.22.1
 
 ### Bug fixes

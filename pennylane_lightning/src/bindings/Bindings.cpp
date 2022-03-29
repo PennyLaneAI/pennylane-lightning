@@ -324,6 +324,23 @@ void lightning_class_bindings(py::module &m) {
                 const std::vector<size_t> &wires) {
                  return M.expval(operation, wires);
              })
+        .def("generate_samples",
+             [](Measures<PrecisionT> &M, size_t num_wires, size_t num_shots) {
+                 auto &&result = M.generate_samples(num_shots);
+                 const size_t ndim = 2;
+                 const std::vector<size_t> shape{num_shots, num_wires};
+                 constexpr auto sz = sizeof(size_t);
+                 const std::vector<size_t> strides{sz * num_wires, sz};
+                 // return 2-D NumPy array
+                 return py::array(py::buffer_info(
+                     result.data(), /* data as contiguous array  */
+                     sz,            /* size of one scalar        */
+                     py::format_descriptor<size_t>::format(), /* data type */
+                     ndim,   /* number of dimensions      */
+                     shape,  /* shape of the matrix       */
+                     strides /* strides for each axis     */
+                     ));
+             })
         .def("var", [](Measures<PrecisionT> &M, const std::string &operation,
                        const std::vector<size_t> &wires) {
             return M.var(operation, wires);
@@ -364,6 +381,12 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
               &Gates::getIndicesAfterExclusion),
           "Get statevector indices for gate application");
 
+    /* Add compile info */
+    m.def("compile_info", &getCompileInfo, "Compiled binary information.");
+
+    /* Add runtime info */
+    m.def("runtime_info", &getRuntimeInfo, "Runtime information.");
+
     /* Add EXPORTED_KERNELS */
     std::vector<std::pair<std::string, std::string>> exported_kernel_ops;
 
@@ -372,7 +395,7 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
         const auto implemented_gates = implementedGatesForKernel(kernel);
         for (const auto gate_op : implemented_gates) {
             const auto gate_name =
-                std::string(lookup(Constant::gate_names, gate_op));
+                std::string(lookup(Gates::Constant::gate_names, gate_op));
             exported_kernel_ops.emplace_back(kernel_name, gate_name);
         }
     }
@@ -381,8 +404,9 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
 
     /* Add DEFAULT_KERNEL_FOR_OPS */
     std::map<std::string, std::string> default_kernel_ops_map;
-    for (const auto &[gate_op, name] : Constant::gate_names) {
-        const auto kernel = lookup(Constant::default_kernel_for_gates, gate_op);
+    for (const auto &[gate_op, name] : Gates::Constant::gate_names) {
+        const auto kernel =
+            lookup(Gates::Constant::default_kernel_for_gates, gate_op);
         const auto kernel_name = Util::lookup(kernel_id_name_pairs, kernel);
         default_kernel_ops_map.emplace(std::string(name), kernel_name);
     }

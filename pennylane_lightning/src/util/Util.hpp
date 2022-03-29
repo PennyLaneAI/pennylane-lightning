@@ -260,10 +260,11 @@ auto linspace(T start, T end, size_t num_points) -> std::vector<T> {
  *
  * @tparam T Vector data type.
  * @param arr Array to be inspected.
+ * @param length Size of the array
  * @return a vector with indices that would sort the array.
  */
 template <typename T>
-inline auto sorting_indices(const T &arr, size_t length)
+inline auto sorting_indices(const T *arr, size_t length)
     -> std::vector<size_t> {
     std::vector<size_t> indices(length);
     iota(indices.begin(), indices.end(), 0);
@@ -401,7 +402,38 @@ auto chunkData(const Container<T> &data, std::size_t num_chunks)
     return chunkDataSize(data, div);
 }
 
+/**
+ * @brief For lookup from any array of pair whose first elements are
+ * GateOperation.
+ *
+ * As Util::lookup can be used in constexpr context, this function is redundant
+ * (by the standard). But GCC 9 still does not accept Util::lookup in constexpr
+ * some cases.
+ */
+template <auto op, class T, size_t size>
+constexpr auto
+static_lookup(const std::array<std::pair<decltype(op), T>, size> &arr) -> T {
+    for (size_t idx = 0; idx < size; idx++) {
+        if (std::get<0>(arr[idx]) == op) {
+            return std::get<1>(arr[idx]);
+        }
+    }
+    return T{};
+}
+
 // type alias
 template <class T> using remove_cvref_t = typename remove_cvref<T>::type;
+
+template <typename T> struct remove_complex { using type = T; };
+template <typename T> struct remove_complex<std::complex<T>> {
+    using type = T;
+};
+template <typename T> using remove_complex_t = typename remove_complex<T>::type;
+
+template <typename T> struct is_complex : std::false_type {};
+
+template <typename T> struct is_complex<std::complex<T>> : std::true_type {};
+
+template <typename T> constexpr bool is_complex_v = is_complex<T>::value;
 
 } // namespace Pennylane::Util

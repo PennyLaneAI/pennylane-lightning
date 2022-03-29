@@ -21,10 +21,6 @@
  */
 using namespace Pennylane;
 
-namespace {
-using std::vector;
-}
-
 /**
  * @brief Run test suit only when the gate is defined
  */
@@ -103,7 +99,8 @@ void testApplyPauliX() {
 
         GateImplementation::applyPauliX(st.data(), num_qubits, {index}, false);
         CHECK(st[0] == Util::ZERO<PrecisionT>());
-        CHECK(st[0b1 << (num_qubits - index - 1)] == Util::ONE<PrecisionT>());
+        CHECK(st[size_t{1U} << (num_qubits - index - 1)] ==
+              Util::ONE<PrecisionT>());
     }
 }
 PENNYLANE_RUN_TEST(PauliX);
@@ -129,7 +126,7 @@ void testApplyPauliY() {
 
         GateImplementation::applyPauliY(st.data(), num_qubits, {index}, false);
 
-        CHECK(st == PLApprox(expected_results[index]));
+        CHECK(st == approx(expected_results[index]));
     }
 }
 PENNYLANE_RUN_TEST(PauliY);
@@ -152,7 +149,7 @@ void testApplyPauliZ() {
         auto st = createPlusState<PrecisionT>(num_qubits);
         GateImplementation::applyPauliZ(st.data(), num_qubits, {index}, false);
 
-        CHECK(st == PLApprox(expected_results[index]));
+        CHECK(st == approx(expected_results[index]));
     }
 }
 PENNYLANE_RUN_TEST(PauliZ);
@@ -173,9 +170,9 @@ void testApplyHadamard() {
         CHECK(expected.imag() == Approx(st[0].imag()));
 
         CHECK(expected.real() ==
-              Approx(st[0b1 << (num_qubits - index - 1)].real()));
+              Approx(st[size_t{1U} << (num_qubits - index - 1)].real()));
         CHECK(expected.imag() ==
-              Approx(st[0b1 << (num_qubits - index - 1)].imag()));
+              Approx(st[size_t{1U} << (num_qubits - index - 1)].imag()));
     }
 }
 PENNYLANE_RUN_TEST(Hadamard);
@@ -198,7 +195,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyS() {
 
         GateImplementation::applyS(st.data(), num_qubits, {index}, false);
 
-        CHECK(st == PLApprox(expected_results[index]));
+        CHECK(st == approx(expected_results[index]));
     }
 }
 PENNYLANE_RUN_TEST(S);
@@ -221,7 +218,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyT() {
 
         GateImplementation::applyT(st.data(), num_qubits, {index}, false);
 
-        CHECK(st == PLApprox(expected_results[index]));
+        CHECK(st == approx(expected_results[index]));
     }
 }
 PENNYLANE_RUN_TEST(T);
