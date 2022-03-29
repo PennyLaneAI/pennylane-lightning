@@ -327,6 +327,20 @@ template <class PrecisionT, class Derived> class StateVectorBase {
     }
 
     /**
+     * @brief Apply Identity gate operation to given indices of statevector.
+     *
+     * @param wires Wires to apply gate to.
+     * @param inverse Take adjoint of given operation.
+     */
+    PENNYLANE_STATEVECTOR_DEFINE_GATE(Identity)
+
+    /**
+     * @brief Apply Identity gate operation using a kernel given in
+     * default_kernel_for_gates
+     */
+    PENNYLANE_STATEVECTOR_DEFINE_DEFAULT_GATE(Identity)
+
+    /**
      * @brief Apply PauliX gate operation to given indices of statevector.
      *
      * @param wires Wires to apply gate to.

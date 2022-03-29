@@ -69,6 +69,32 @@ using std::vector;
  * Single-qubit gates
  ******************************************************************************/
 template <typename PrecisionT, class GateImplementation>
+void testApplyIdentity() {
+    const size_t num_qubits = 3;
+    for (size_t index = 0; index < num_qubits; index++) {
+        auto st_pre = createZeroState<PrecisionT>(num_qubits);
+        auto st_post = createZeroState<PrecisionT>(num_qubits);
+
+        GateImplementation::applyIdentity(st_pre.data(), num_qubits, {index},
+                                          false);
+        CHECK(std::equal(st_pre.begin(), st_pre.end(), st_post.begin()));
+    }
+    for (size_t index = 0; index < num_qubits; index++) {
+        auto st_pre = createZeroState<PrecisionT>(num_qubits);
+        auto st_post = createZeroState<PrecisionT>(num_qubits);
+        GateImplementation::applyHadamard(st_pre.data(), num_qubits, {index},
+                                          false);
+        GateImplementation::applyHadamard(st_post.data(), num_qubits, {index},
+                                          false);
+
+        GateImplementation::applyIdentity(st_pre.data(), num_qubits, {index},
+                                          false);
+        CHECK(std::equal(st_pre.begin(), st_pre.end(), st_post.begin()));
+    }
+}
+PENNYLANE_RUN_TEST(Identity);
+
+template <typename PrecisionT, class GateImplementation>
 void testApplyPauliX() {
     const size_t num_qubits = 3;
     for (size_t index = 0; index < num_qubits; index++) {

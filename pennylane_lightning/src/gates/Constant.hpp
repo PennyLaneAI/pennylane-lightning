@@ -38,6 +38,8 @@ namespace Pennylane::Gates::Constant {
  * @brief Gate names
  */
 [[maybe_unused]] constexpr std::array gate_names = {
+    std::pair<GateOperation, std::string_view>{GateOperation::Identity,
+                                               "Identity"},
     std::pair<GateOperation, std::string_view>{GateOperation::PauliX, "PauliX"},
     std::pair<GateOperation, std::string_view>{GateOperation::PauliY, "PauliY"},
     std::pair<GateOperation, std::string_view>{GateOperation::PauliZ, "PauliZ"},
@@ -112,6 +114,7 @@ namespace Pennylane::Gates::Constant {
  * @brief Number of wires for gates besides multi-qubit gates
  */
 [[maybe_unused]] constexpr std::array gate_wires = {
+    std::pair<GateOperation, size_t>{GateOperation::Identity, 1},
     std::pair<GateOperation, size_t>{GateOperation::PauliX, 1},
     std::pair<GateOperation, size_t>{GateOperation::PauliY, 1},
     std::pair<GateOperation, size_t>{GateOperation::PauliZ, 1},
@@ -162,6 +165,7 @@ namespace Pennylane::Gates::Constant {
  * @brief Number of parameters for gates
  */
 [[maybe_unused]] constexpr std::array gate_num_params = {
+    std::pair<GateOperation, size_t>{GateOperation::Identity, 0},
     std::pair<GateOperation, size_t>{GateOperation::PauliX, 0},
     std::pair<GateOperation, size_t>{GateOperation::PauliY, 0},
     std::pair<GateOperation, size_t>{GateOperation::PauliZ, 0},
@@ -210,6 +214,7 @@ namespace Pennylane::Gates::Constant {
  * 3. For the Python binding.
  */
 [[maybe_unused]] constexpr std::array default_kernel_for_gates = {
+    std::pair{GateOperation::Identity, KernelType::LM},
     std::pair{GateOperation::PauliX, KernelType::LM},
     std::pair{GateOperation::PauliY, KernelType::LM},
     std::pair{GateOperation::PauliZ, KernelType::LM},

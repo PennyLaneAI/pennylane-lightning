@@ -107,6 +107,7 @@ class DummyImplementation {
         static_cast<void>(inverse);
     }
 
+    PENNYLANE_TESTS_DEFINE_GATE_OP(Identity, 0)
     PENNYLANE_TESTS_DEFINE_GATE_OP(PauliX, 0)
     PENNYLANE_TESTS_DEFINE_GATE_OP(PauliY, 0)
     PENNYLANE_TESTS_DEFINE_GATE_OP(PauliZ, 0)
