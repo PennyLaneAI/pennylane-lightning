@@ -53,7 +53,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     constexpr static size_t required_alignment =
         std::alignment_of_v<PrecisionT>;
     template <typename PrecisionT>
-    constexpr static uint32_t packed_bytes = std::alignment_of_v<PrecisionT>;
+    constexpr static uint32_t packed_bytes = sizeof(PrecisionT);
 
     constexpr static std::array implemented_gates = {
         GateOperation::PauliX,  GateOperation::PauliY,
