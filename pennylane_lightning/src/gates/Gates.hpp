@@ -9,6 +9,20 @@
 namespace Pennylane::Gates {
 
 /**
+ * @brief Create a matrix representation of the Identity gate data in row-major
+ * format.
+ *
+ * @tparam T Required precision of gate (`float` or `double`).
+ * @return constexpr std::vector<std::complex<T>> Return constant expression of
+ * Identity data.
+ */
+template <class T>
+static constexpr auto getIdentity() -> std::vector<std::complex<T>> {
+    using namespace Util;
+    return {ONE<T>(), ZERO<T>(), ZERO<T>(), ONE<T>()};
+}
+
+/**
  * @brief Create a matrix representation of the PauliX gate data in row-major
  * format.
  *
