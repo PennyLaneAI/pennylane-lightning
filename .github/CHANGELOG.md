@@ -1,3 +1,12 @@
+# Release 0.22.1
+
+### Bug fixes
+
+* Ensure `Identity ` kernel is registered to C++ dispatcher.
+[(#275)](https://github.com/PennyLaneAI/pennylane-lightning/pull/275)
+
+---
+
 # Release 0.22.0
 
 ### New features since last release
