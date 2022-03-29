@@ -1,27 +1,22 @@
-# Release 0.23.0-dev
+# Release 0.23.1-dev
 
 ### New features since last release
-
-* Add Lightning GBenchmark Suite.
-[(#249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/249)
-
-* Add run-time and compile information in binary.
-[(#253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/253)
 
 ### Breaking changes
 
 ### Improvements
 
-* Add `ENABLE_BLAS` build to CI checks.
-[(#249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/249)
-
-* Add more `clang-tidy` checks and kernel tests.
-[(#253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/253)
-
-* Skip over identity operations in `"lightning.qubit"`.
-[(#268)](https://github.com/PennyLaneAI/pennylane-lightning/pull/268)
-
 ### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+---
+
+# Release 0.22.1
 
 ### Bug fixes
 
