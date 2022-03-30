@@ -258,6 +258,7 @@ BENCHMARK(cf_transpose_cmplx<double, 32>)
  */
 template <class T>
 static void omp_matrixVecProd_cmplx(benchmark::State &state) {
+    using Pennylane::Util::Trans;
     std::random_device rd;
     std::mt19937_64 eng(rd());
     std::uniform_real_distribution<T> distr;
@@ -296,6 +297,7 @@ BENCHMARK(omp_matrixVecProd_cmplx<double>)
  */
 template <class T>
 static void blas_matrixVecProd_cmplx(benchmark::State &state) {
+    using Pennylane::Util::Trans;
     std::random_device rd;
     std::mt19937_64 eng(rd());
     std::uniform_real_distribution<T> distr;
@@ -348,6 +350,7 @@ BENCHMARK(blas_matrixVecProd_cmplx<double>)
  */
 template <class T>
 static void omp_matrixMatProd_cmplx(benchmark::State &state) {
+    using Pennylane::Util::Trans;
     std::random_device rd;
     std::mt19937_64 eng(rd());
     std::uniform_real_distribution<T> distr;
@@ -389,6 +392,7 @@ BENCHMARK(omp_matrixMatProd_cmplx<double>)
  */
 template <class T>
 static void blas_matrixMatProd_cmplx(benchmark::State &state) {
+    using Pennylane::Util::Trans;
     std::random_device rd;
     std::mt19937_64 eng(rd());
     std::uniform_real_distribution<T> distr;
