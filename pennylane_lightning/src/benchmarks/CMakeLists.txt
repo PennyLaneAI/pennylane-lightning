@@ -47,9 +47,11 @@ endif()
 ################################################################################
 
 add_library(lightning_benchmarks_dependency INTERFACE)
-target_link_libraries(lightning_benchmarks_dependency INTERFACE lightning_utils
+target_link_libraries(lightning_benchmarks_dependency INTERFACE lignting_compile_options
+                                                                lightning_utils
                                                                 lightning_external_libs
-                                                                benchmark::benchmark)
+                                                                lightning_gates
+                                                                lightning_simulator)
 
 ################################################################################
 # Add benchmark_utils exe
@@ -60,7 +62,6 @@ set(GBENCH_SRC  Bench_BitUtil.cpp
 
 add_executable(utils ${GBENCH_SRC})
 
-add_compile_definitions(utils INTERFACE lightning_compile_options)
 target_link_libraries(utils PRIVATE lightning_benchmarks_dependency
                                     benchmark::benchmark_main)
 
@@ -70,10 +71,7 @@ target_link_libraries(utils PRIVATE lightning_benchmarks_dependency
 
 add_executable(apply_operations Bench_ApplyOperations.cpp)
 
-add_compile_definitions(apply_operations INTERFACE lightning_compile_options)
-target_link_libraries(apply_operations PRIVATE lightning_gates
-                                               lightning_simulator
-                                               lightning_benchmarks_dependency
+target_link_libraries(apply_operations PRIVATE lightning_benchmarks_dependency
                                                benchmark::benchmark_main)
 
 ################################################################################
@@ -81,11 +79,8 @@ target_link_libraries(apply_operations PRIVATE lightning_gates
 ################################################################################
 
 add_executable(bench_kernels Bench_Kernels.cpp)
-add_compile_definitions(bench_kernels INTERFACE lightning_compile_options)
-target_link_libraries(bench_kernels PRIVATE lightning_compile_options
-                                              lightning_gates
-                                              lightning_simulator
-                                              lightning_benchmarks_dependency)
+target_link_libraries(bench_kernels PRIVATE lightning_benchmarks_dependency
+                                            benchmark::benchmark)
 
 
 add_custom_command(TARGET bench_kernels POST_BUILD 
