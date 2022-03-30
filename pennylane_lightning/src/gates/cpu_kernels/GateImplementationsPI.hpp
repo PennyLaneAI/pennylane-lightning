@@ -56,19 +56,33 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     constexpr static uint32_t packed_bytes = sizeof(PrecisionT);
 
     constexpr static std::array implemented_gates = {
-        GateOperation::PauliX,  GateOperation::PauliY,
-        GateOperation::PauliZ,  GateOperation::Hadamard,
-        GateOperation::S,       GateOperation::T,
-        GateOperation::RX,      GateOperation::RY,
-        GateOperation::RZ,      GateOperation::PhaseShift,
-        GateOperation::Rot,     GateOperation::ControlledPhaseShift,
-        GateOperation::CNOT,    GateOperation::CY,
-        GateOperation::CZ,      GateOperation::SWAP,
-        GateOperation::IsingXX, GateOperation::IsingYY,
-        GateOperation::IsingZZ, GateOperation::CRX,
-        GateOperation::CRY,     GateOperation::CRZ,
-        GateOperation::CRot,    GateOperation::Toffoli,
-        GateOperation::CSWAP,   GateOperation::MultiRZ};
+        GateOperation::Identity,
+        GateOperation::PauliX,
+        GateOperation::PauliY,
+        GateOperation::PauliZ,
+        GateOperation::Hadamard,
+        GateOperation::S,
+        GateOperation::T,
+        GateOperation::RX,
+        GateOperation::RY,
+        GateOperation::RZ,
+        GateOperation::PhaseShift,
+        GateOperation::Rot,
+        GateOperation::ControlledPhaseShift,
+        GateOperation::CNOT,
+        GateOperation::CY,
+        GateOperation::CZ,
+        GateOperation::SWAP,
+        GateOperation::IsingXX,
+        GateOperation::IsingYY,
+        GateOperation::IsingZZ,
+        GateOperation::CRX,
+        GateOperation::CRY,
+        GateOperation::CRZ,
+        GateOperation::CRot,
+        GateOperation::Toffoli,
+        GateOperation::CSWAP,
+        GateOperation::MultiRZ};
 
     constexpr static std::array implemented_generators = {
         GeneratorOperation::RX,
@@ -283,6 +297,16 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     /* Single qubit operators */
+    template <class PrecisionT>
+    static void applyIdentity(std::complex<PrecisionT> *arr, size_t num_qubits,
+                              const std::vector<size_t> &wires,
+                              [[maybe_unused]] bool inverse) {
+        assert(wires.size() == 1);
+        static_cast<void>(arr);        // No-op
+        static_cast<void>(num_qubits); // No-op
+        static_cast<void>(wires);      // No-op
+    }
+
     template <class PrecisionT>
     static void applyPauliX(std::complex<PrecisionT> *arr, size_t num_qubits,
                             const std::vector<size_t> &wires,

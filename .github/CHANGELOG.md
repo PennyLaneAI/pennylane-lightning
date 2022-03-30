@@ -8,8 +8,6 @@
 * Add run-time and compile information in binary.
 [(#253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/253)
 
-### Breaking changes
-
 ### Improvements
 
 * Add `ENABLE_BLAS` build to CI checks.
@@ -40,7 +38,16 @@
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
-Ali Asadi, Chae=Yeun Park, and Lee James O'Riordan
+Ali Asadi, Chae-Yeun Park, and Lee James O'Riordan
+
+---
+
+# Release 0.22.1
+
+### Bug fixes
+
+* Ensure `Identity ` kernel is registered to C++ dispatcher.
+[(#275)](https://github.com/PennyLaneAI/pennylane-lightning/pull/275)
 
 ---
 

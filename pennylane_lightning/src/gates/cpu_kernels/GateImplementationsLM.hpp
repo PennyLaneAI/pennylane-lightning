@@ -54,18 +54,31 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     constexpr static size_t packed_bytes = sizeof(PrecisionT);
 
     constexpr static std::array implemented_gates = {
-        GateOperation::PauliX,  GateOperation::PauliY,
-        GateOperation::PauliZ,  GateOperation::Hadamard,
-        GateOperation::S,       GateOperation::T,
-        GateOperation::RX,      GateOperation::RY,
-        GateOperation::RZ,      GateOperation::PhaseShift,
-        GateOperation::Rot,     GateOperation::CY,
-        GateOperation::CZ,      GateOperation::CNOT,
-        GateOperation::SWAP,    GateOperation::ControlledPhaseShift,
-        GateOperation::CRX,     GateOperation::CRY,
-        GateOperation::CRZ,     GateOperation::CRot,
-        GateOperation::IsingXX, GateOperation::IsingYY,
-        GateOperation::IsingZZ, GateOperation::MultiRZ};
+        GateOperation::Identity,
+        GateOperation::PauliX,
+        GateOperation::PauliY,
+        GateOperation::PauliZ,
+        GateOperation::Hadamard,
+        GateOperation::S,
+        GateOperation::T,
+        GateOperation::RX,
+        GateOperation::RY,
+        GateOperation::RZ,
+        GateOperation::PhaseShift,
+        GateOperation::Rot,
+        GateOperation::CY,
+        GateOperation::CZ,
+        GateOperation::CNOT,
+        GateOperation::SWAP,
+        GateOperation::ControlledPhaseShift,
+        GateOperation::CRX,
+        GateOperation::CRY,
+        GateOperation::CRZ,
+        GateOperation::CRot,
+        GateOperation::IsingXX,
+        GateOperation::IsingYY,
+        GateOperation::IsingZZ,
+        GateOperation::MultiRZ};
 
     constexpr static std::array implemented_generators = {
         GeneratorOperation::RX,
@@ -306,6 +319,17 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 }
             }
         }
+    }
+
+    template <class PrecisionT>
+    static void applyIdentity(std::complex<PrecisionT> *arr,
+                              const size_t num_qubits,
+                              const std::vector<size_t> &wires,
+                              [[maybe_unused]] bool inverse) {
+        assert(wires.size() == 1);
+        static_cast<void>(arr);        // No-op
+        static_cast<void>(num_qubits); // No-op
+        static_cast<void>(wires);      // No-op
     }
 
     template <class PrecisionT>

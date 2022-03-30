@@ -42,6 +42,7 @@ namespace Pennylane {
  * 3. For the Python binding.
  */
 [[maybe_unused]] constexpr std::array default_kernel_for_gates = {
+    std::pair{Gates::GateOperation::Identity, Gates::KernelType::LM},
     std::pair{Gates::GateOperation::PauliX, Gates::KernelType::LM},
     std::pair{Gates::GateOperation::PauliY, Gates::KernelType::LM},
     std::pair{Gates::GateOperation::PauliZ, Gates::KernelType::LM},
