@@ -198,7 +198,7 @@ void registerAllImplementedGeneratorOps() {
         generator_op_functor_tuple<PrecisionT, GateImplementation>);
 }
 /**
- * @brief Register all implemented matrix oepration for a given kernel
+ * @brief Register all implemented matrix operation for a given kernel
  *
  * @tparam PrecisionT Floating point precision of underlying statevector data
  * @tparam GateImplementation Gate implementation class.

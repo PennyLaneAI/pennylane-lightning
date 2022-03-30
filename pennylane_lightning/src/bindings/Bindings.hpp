@@ -90,7 +90,7 @@ auto createManaged(
     auto *data_ptr =
         static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
     return StateVectorManaged<PrecisionT>(
-        {data_ptr, static_cast<size_t>(numpyArrayInfo.shape[0])});
+        {data_ptr, static_cast<size_t>(numpyArrayInfo.size)});
 }
 /**
  * @brief Apply given list of operations to Numpy data array using C++
