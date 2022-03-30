@@ -159,10 +159,9 @@ jobs:
       - name: Build and run gbenchmark
         run: |
             cmake pennylane_lightning/src/ -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release
-            cmake --build ./BuildGBench --target utils apply_operations apply_multirz
+            cmake --build ./BuildGBench
             ./BuildGBench/benchmarks/utils
             ./BuildGBench/benchmarks/apply_operations
-            ./BuildGBench/benchmarks/apply_multirz
 
   pythontests:
     name: Python tests

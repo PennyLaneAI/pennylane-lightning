@@ -19,6 +19,8 @@ if (NOT benchmark_FOUND)
         GIT_TAG        release-1.11.0 # latest
     )
     FetchContent_GetProperties(googletest)
+    set(BUILD_GMOCK OFF CACHE INTERNAL "")
+    set(INSTALL_GTEST OFF CACHE INTERNAL "")
     if(NOT googletest_POPULATED)
         FetchContent_Populate(googletest)
         add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
@@ -30,7 +32,7 @@ if (NOT benchmark_FOUND)
         GIT_REPOSITORY https://github.com/google/benchmark.git
         GIT_TAG        v1.6.1 # latest
     )
-    set(BENCHMARK_ENABLE_TESTING off)
+    set(BENCHMARK_ENABLE_TESTING OFF)
     FetchContent_GetProperties(googlebenchmark)
     if(NOT googlebenchmark_POPULATED)
         FetchContent_Populate(googlebenchmark)
