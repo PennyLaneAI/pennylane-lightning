@@ -195,13 +195,13 @@ def _serialize_ops(
             names.append(name)
 
             if not _is_lightning_gate(name):
-                params.append(np.array([], dtype=float_type))
+                params.append([])
                 mats.append(qml.matrix(single_op))
 
                 if is_inverse:
                     is_inverse = False
             else:
-                params.append(np.array(single_op.parameters, dtype=float_type))
+                params.append(single_op.parameters)
                 mats.append([])
 
             wires_list = single_op.wires.tolist()

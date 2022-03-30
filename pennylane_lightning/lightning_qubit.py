@@ -155,9 +155,11 @@ class LightningQubit(DefaultQubit):
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
             if isinstance(operations[0], QubitStateVector):
+                self.C_DTYPE = operations[0].parameters[0].dtype
                 self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
                 del operations[0]
             elif isinstance(operations[0], BasisState):
+                self.C_DTYPE = operations[0].parameters[0].dtype
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 del operations[0]
 
@@ -181,14 +183,15 @@ class LightningQubit(DefaultQubit):
             if any(isinstance(r, QubitUnitary) for r in rotations):
                 super().apply(operations=[], rotations=rotations)
             else:
+                state = np.copy(self._pre_rotated_state)
                 self._state = self.apply_lightning(
-                    np.copy(self._pre_rotated_state), rotations, dtype=dtype
+                    state, rotations, dtype=dtype
                 )
         else:
             self._state = self._pre_rotated_state
 
     def apply_lightning(self, state, operations, dtype=np.complex128):
-        """Apply a list of operations to the state tensor.
+        """Apply a list of operations to the state tensor in place.
 
         Args:
             state (array[complex]): the input state tensor
@@ -199,7 +202,7 @@ class LightningQubit(DefaultQubit):
         Returns:
             array[complex]: the output state tensor
         """
-        state_vector = np.ravel(state)
+        state_vector = state.reshape(-1)
 
         if dtype == np.complex64:
             # use_csingle
@@ -259,7 +262,7 @@ class LightningQubit(DefaultQubit):
                     "Adjoint differentiation method does not support the Projector observable"
                 )
 
-    def adjoint_diff_support_check(self, tape):
+    def _adjoint_diff_support_check(self, tape, return_type):
         """Check Lightning adjoint differentiation method support for a tape.
 
         Raise ``QuantumFunctionError`` if ``tape`` contains not supported measurements,
@@ -268,20 +271,21 @@ class LightningQubit(DefaultQubit):
         Args:
             tape (.QuantumTape): quantum tape to differentiate
         """
-        return_sv = any([m.return_type is State for m in tape.measurements])
-        return_exp = all([m.return_type is Expectation for m in tape.measurements])
+        assert return_type in [State, Expectation]
 
-        if return_sv and len(tape.measurements) != 1:
-            raise QuantumFunctionError(
-                " The state cannot be returned in combination with other return types"
-            )
-        if not return_exp and not return_sv:
-            raise QuantumFunctionError(
-                "Allowed measurement for the adjoint differentiation method is "
-                "(1) expecation values with observables or "
-                "(2) state."
-            )
-        if return_exp:
+        if return_type is State:
+            if len(tape.measurements) != 1 or tape.measurements[0].return_type is not State:
+                raise QuantumFunctionError(
+                    "Adjoint differentiation method does not support statevector return type "
+                    "mixed with other measurements"
+                )
+        elif return_type is Expectation:
+            if not all([m.return_type is Expectation for m in tape.measurements]):
+                raise QuantumFunctionError(
+                    "Adjoint differentiation method does not support expectation return type "
+                    "mixed with other measurements"
+                )
+
             for m in tape.measurements:
                 self._check_supported_observables(m)
 
@@ -293,45 +297,39 @@ class LightningQubit(DefaultQubit):
                     f"The {op.name} operation is not supported using "
                     'the "adjoint" differentiation method'
                 )
-        return State is return_sv or Expectation
 
     def _process_jacobian_tape(self, tape, starting_state, use_device_state):
         # To support np.complex64 based on the type of self._state
         dtype = self._state.dtype
         if dtype == np.complex64:
             use_csingle = True
+            create_ops_list = adjoint_diff.create_ops_list_C64
         elif dtype == np.complex128:
             use_csingle = False
+            create_ops_list = adjoint_diff.create_ops_list_C128
         else:
             raise TypeError(f"Unsupported complex Type: {dtype}")
-
-        # Check adjoint diff support
-        if self.adjoint_diff_support_check(tape) is not Expectation:
-            raise QuantumFunctionError(
-                "This method only supports quantum tape returnning expectation values."
-            )
 
         # Initialization of state
         if starting_state is not None:
             if starting_state.size != 2 ** len(self.wires):
                 raise ValueError(
-                    "The number of qubits of starting_state must be the same as"
+                    "The number of qubits of starting_state must be the same as "
                     "that of the device."
                 )
-            ket = np.ravel(starting_state)
+            ket = self._asarray(starting_state, dtype = dtype)
         else:
             if not use_device_state:
                 self.reset()
-                self.execute(tape)
-            ket = np.ravel(self._pre_rotated_state)
+                self.apply(tape.operations)
+            ket = self._pre_rotated_state
 
-        if use_csingle:
-            ket = ket.astype(np.complex64)
+        assert(ket.dtype == dtype)
 
         obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=use_csingle)
         ops_serialized, use_sp = _serialize_ops(tape, self.wire_map, use_csingle=use_csingle)
 
-        ops_serialized = adjoint_diff.create_ops_list(*ops_serialized)
+        ops_serialized = create_ops_list(*ops_serialized)
 
         trainable_params = sorted(tape.trainable_params)
         if len(trainable_params) == 0:
@@ -342,6 +340,7 @@ class LightningQubit(DefaultQubit):
             trainable_params if not use_sp else [i - 1 for i in trainable_params[first_elem:]]
         )  # exclude first index if explicitly setting sv
 
+        ket = ket.reshape(-1)
         state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
         return {
             'state_vector': state_vector,
@@ -357,6 +356,8 @@ class LightningQubit(DefaultQubit):
                 " The derivative is always exact when using the adjoint differentiation method.",
                 UserWarning,
             )
+
+        self._adjoint_diff_support_check(tape, Expectation)
         processed_data = self._process_jacobian_tape(tape, starting_state, use_device_state)
 
         if not processed_data: # training_params is empty
@@ -390,10 +391,10 @@ class LightningQubit(DefaultQubit):
             )
         return jac.reshape(-1, len(trainable_params))
 
-    def vjp(self, tape, dy, starting_state=None, use_device_state=False):
+    def vjp(self, observables, dy, starting_state=None, use_device_state=False):
         """Generate the processing function required to compute the vector-Jacobian products of a tape.
         Args:
-            tape (.QuantumTape): quantum tape to differentiate
+            observables (list): List of observables to compute jacobian
             dy (tensor_like): Gradient-output vector. Must have shape
                 matching the output shape of the corresponding tape.
         Keyword Args:
@@ -403,8 +404,7 @@ class LightningQubit(DefaultQubit):
                 circuit should be the last thing the device has executed. If a ``starting_state`` is
                 provided, that takes precedence.
         Returns:
-            The processing function required to compute the vector-Jacobian
-            products of a tape.
+            The processing function required to compute the vector-Jacobian products of a tape.
         """
         if self.shots is not None:
             warn(
@@ -413,54 +413,53 @@ class LightningQubit(DefaultQubit):
                 UserWarning,
             )
 
-        num_params = len(tape.trainable_params)
-
-        if num_params == 0:
-            return lambda _: None
+        if np.iscomplexobj(dy):
+            raise ValueError(
+                "The vjp method only works with real-valued dy when the tape is returning an expectation value"
+            )
 
         if math.allclose(dy, 0):
-            return lambda _: math.convert_like(np.zeros([num_params]), dy)
+            return lambda tape: math.convert_like(np.zeros(len(tape.trainable_params)), dy)
+
+        if len(dy) != len(observables):
+            raise ValueError(
+                "Size of observables in the tape must be the same as the length of dy in the vjp method"
+            )
+        ham = qml.Hamiltonian(dy, observables)
 
         def processing_fn(tape):
-            # Check adjoint diff support
-            return_type = self.adjoint_diff_support_check(tape)
+            nonlocal ham
+            num_params = len(tape.trainable_params)
 
-            if return_type is Expectation:
-                if len(dy) != len(tape.observables):
-                    raise ValueError(
-                        "Size of observables in the tape must be the same as the length of dy in the vjp method"
-                    )
+            if num_params == 0:
+                return np.array([], dtype = self._state.dtype)
 
-                if np.iscomplex(dy):
-                    raise ValueError(
-                        "The vjp method only works with real-valued dy when the tape is returning an expectation value"
-                    )
+            new_tape = tape.copy()
+            new_tape._measurements = [qml.expval(ham)]
 
-                new_tape = tape.copy()
+            return self.adjoint_jacobian(new_tape, starting_state, use_device_state).reshape(-1)
 
-                ham = qml.Hamiltonian(dy, tape.observables)
-                new_tape._measurements = [qml.expval(ham)]
+    def statevector_vjp(self, dy, staring_state=None, use_device_state=False):
+        self._adjoint_diff_support_check(tape, State)
 
-                return self.adjoint_jacobian(new_tape, starting_state, use_device_state).flatten()
-            else:  # if returnning State
-                if len(dy) != 2 ** len(self.wires):
-                    raise ValueError(
-                        "Size of the provided vector dy must be the same as the size of the statevector"
-                    )
-                if np.isreal(dy):
-                    raise ValueError(
-                        "The vjp method only works with complex-valued dy when the tape is returning a statevector"
-                    )
+        if len(dy) != 2 ** len(self.wires):
+            raise ValueError(
+                "Size of the provided vector dy must be the same as the size of the statevector"
+            )
+        if np.isrealobj(dy):
+            warn(
+                "The vjp method only works with complex-valued dy when the tape is returning a statevector. Upcasting dy."
+            )
+        dy = dy.astype(self._state.dtype, copy = False)
 
-                processed_data = self._process_jacobian_tape(tape, starting_state, use_device_state)
-                return adjoint_diff.statevector_vjp(
-                    processed_data['state_vector'],
-                    processed_data['ops_serialized'],
-                    dy,
-                    processed_data['tp_shift'],
-                )
-
-        return processing_fn
+        def processing_fn(tape):
+            processed_data = self._process_jacobian_tape(tape, starting_state, use_device_state)
+            return adjoint_diff.statevector_vjp(
+                processed_data['state_vector'],
+                processed_data['ops_serialized'],
+                dy,
+                processed_data['tp_shift'],
+            )
 
     def batch_vjp(
         self, tapes, dys, reduction="append", starting_state=None, use_device_state=False
@@ -487,31 +486,17 @@ class LightningQubit(DefaultQubit):
         """
         fns = []
 
+
         # Loop through the tapes and dys vector
+        # We may need to parallelize this in C++
+        vjps = []
         for tape, dy in zip(tapes, dys):
             fn = self.vjp(
                 tape, dy, starting_state=starting_state, use_device_state=use_device_state
             )
-            fns.append(fn)
+            vjps.append(fn())
 
-        def processing_fns(tapes):
-            vjps = []
-            for t, f in zip(tapes, fns):
-                vjp = f(t)
-
-                if vjp is None:
-                    if reduction == "append":
-                        vjps.append(None)
-                    continue
-
-                if isinstance(reduction, str):
-                    getattr(vjps, reduction)(vjp)
-                elif callable(reduction):
-                    reduction(vjps, vjp)
-
-            return vjps
-
-        return processing_fns
+        return vjps 
 
     def probability(self, wires=None, shot_range=None, bin_size=None):
         """Return the probability of each computational basis state.
@@ -553,7 +538,7 @@ class LightningQubit(DefaultQubit):
         ket = np.ravel(self._state)
 
         if use_csingle:
-            ket = ket.astype(np.complex64)
+            ket = ket.astype(np.complex64, copy = False)
 
         state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
@@ -580,12 +565,12 @@ class LightningQubit(DefaultQubit):
         ket = np.ravel(self._state)
 
         if use_csingle:
-            ket = ket.astype(np.complex64)
+            ket = ket.astype(np.complex64, copy = False)
 
         state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
 
-        return M.generate_samples(len(self.wires), self.shots).astype(int)
+        return M.generate_samples(len(self.wires), self.shots).astype(int, copy = False)
 
     def expval(self, observable, shot_range=None, bin_size=None):
         """Expectation value of the supplied observable.
@@ -629,7 +614,7 @@ class LightningQubit(DefaultQubit):
         ket = np.ravel(self._pre_rotated_state)
 
         if use_csingle:
-            ket = ket.astype(np.complex64)
+            ket = ket.astype(np.complex64, copy = False)
 
         state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
@@ -679,7 +664,7 @@ class LightningQubit(DefaultQubit):
         ket = np.ravel(self._pre_rotated_state)
 
         if use_csingle:
-            ket = ket.astype(np.complex64)
+            ket = ket.astype(np.complex64, copy = False)
 
         state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)

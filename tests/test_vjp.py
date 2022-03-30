@@ -118,7 +118,7 @@ class TestVectorJacobianProduct:
 
         dy = np.array([1.0])
 
-        with pytest.raises(qml.QuantumFunctionError, match="Adjoint differentiation method does"):
+        with pytest.raises(qml.QuantumFunctionError, match="Adjoint differentiation method only"):
             dev.vjp(tape, dy)(tape)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
@@ -370,7 +370,7 @@ class TestVectorJacobianProduct:
         tape.trainable_params = {0, 1}
         dy = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
 
-        with pytest.raises(qml.QuantumFunctionError, match="Adjoint differentiation method does"):
+        with pytest.raises(qml.QuantumFunctionError, match="Adjoint differentiation method only supports"):
             dev.vjp(tape, dy)(tape)
 
 
@@ -405,7 +405,7 @@ class TestBatchVectorJacobianProduct:
         dys = [np.array([1.0]), np.array([1.0])]
 
         with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
-            dev.batch_vjp(tapes, dys)
+            batch_fns = dev.batch_vjp(tapes, dys)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_one_tape_no_trainable_parameters(self, dev, C):

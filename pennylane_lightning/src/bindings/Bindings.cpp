@@ -191,29 +191,19 @@ void registerAlgorithms(py::module_ &m) {
 
     /**
      * Create operation list
-     *
-     * We use the same function name for C64 and C128. They are distinguished
-     * by parameter types.
      * */
+    std::string function_name = "create_ops_list_C" + bitsize;
     m.def(
-        "create_ops_list",
+        function_name.c_str(),
         [](const std::vector<std::string> &ops_name,
-           const std::vector<np_arr_r> &ops_params,
+           const std::vector<std::vector<PrecisionT>> &ops_params,
            const std::vector<std::vector<size_t>> &ops_wires,
            const std::vector<bool> &ops_inverses,
            const std::vector<np_arr_c> &ops_matrices) {
-            std::vector<std::vector<PrecisionT>> conv_params(ops_params.size());
             std::vector<std::vector<std::complex<PrecisionT>>> conv_matrices(
                 ops_matrices.size());
             for (size_t op = 0; op < ops_name.size(); op++) {
-                const auto p_buffer = ops_params[op].request();
                 const auto m_buffer = ops_matrices[op].request();
-                if (p_buffer.size) {
-                    const auto *const p_ptr =
-                        static_cast<const ParamT *>(p_buffer.ptr);
-                    conv_params[op] =
-                        std::vector<ParamT>(p_ptr, p_ptr + p_buffer.size);
-                }
                 if (m_buffer.size) {
                     const auto m_ptr =
                         static_cast<const std::complex<ParamT> *>(m_buffer.ptr);
@@ -221,7 +211,7 @@ void registerAlgorithms(py::module_ &m) {
                         m_ptr, m_ptr + m_buffer.size};
                 }
             }
-            return OpsData<PrecisionT>{ops_name, conv_params, ops_wires,
+            return OpsData<PrecisionT>{ops_name, ops_params, ops_wires,
                                        ops_inverses, conv_matrices};
         },
         "Create a list of operations from data.");

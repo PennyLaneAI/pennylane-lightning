@@ -15,7 +15,8 @@
 Unit tests for the serialization helper functions
 """
 import pennylane as qml
-from pennylane import numpy as np
+from pennylane import numpy as qnp
+import numpy as np
 import pennylane_lightning
 
 from pennylane_lightning._serialize import (
@@ -230,6 +231,7 @@ class TestSerializeObs:
         mock_obs = mock.MagicMock()
 
         use_csingle = True if ObsFunc == ObsTermC64 else False
+        dtype = np.complex64 if use_csingle else np.complex128
         obs_str = "ObsTermC64" if ObsFunc == ObsTermC64 else "ObsTermC128"
 
         with monkeypatch.context() as m:
@@ -239,7 +241,7 @@ class TestSerializeObs:
         s = mock_obs.call_args[0]
         s_expected = (
             ["Hermitian", "Hermitian"],
-            [np.eye(4).ravel(), np.eye(2).ravel()],
+            [np.eye(4, dtype=dtype).ravel(), np.eye(2, dtype=dtype).ravel()],
             [[0, 1], [2]],
         )
         ObsFunc(*s_expected)
@@ -258,6 +260,7 @@ class TestSerializeObs:
         mock_obs = mock.MagicMock()
 
         use_csingle = True if ObsFunc == ObsTermC64 else False
+        dtype = np.complex64 if use_csingle else np.complex128
         obs_str = "ObsTermC64" if ObsFunc == ObsTermC64 else "ObsTermC128"
 
         with monkeypatch.context() as m:
@@ -265,7 +268,7 @@ class TestSerializeObs:
             _serialize_obs(tape, self.wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args[0]
-        s_expected = (["Hermitian", "PauliY"], [np.eye(4).ravel()], [[0, 1], [2]])
+        s_expected = (["Hermitian", "PauliY"], [np.eye(4, dtype = dtype).ravel()], [[0, 1], [2]])
         ObsFunc(*s_expected)
 
         assert s[0] == s_expected[0]
@@ -312,10 +315,6 @@ class TestSerializeObs:
                 assert np.allclose(v1, v2)
         assert all(s1[0][2] == s2[2] for s1, s2 in zip(s, s_expected))
 
-    @pytest.mark.skipif(
-        "ObsTermC128" and "ObsTermC64" not in dir(pennylane_lightning.lightning_qubit_ops),
-        reason="ObsTermC128 and ObsTermC64 are required",
-    )
     @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
     def test_integration_c128(self, monkeypatch, ObsFunc):
         """Test for a comprehensive range of returns"""
@@ -357,10 +356,6 @@ class TestSerializeObs:
                 assert np.allclose(v1, v2)
         assert all(s1[0][2] == s2[2] for s1, s2 in zip(s, s_expected))
 
-    @pytest.mark.skipif(
-        "ObsTermC128" and "ObsTermC64" not in dir(pennylane_lightning.lightning_qubit_ops),
-        reason="ObsTermC128 and ObsTermC64 are required",
-    )
     @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
     @pytest.mark.parametrize("ObsChunk", list(range(1, 5)))
     def test_chunk_obs(self, monkeypatch, ObsFunc, ObsChunk):
@@ -400,16 +395,18 @@ class TestSerializeOps:
             qml.CNOT(wires=[0, 1])
 
         s = _serialize_ops(tape, self.wires_dict, use_csingle=C)
+        dtype = np.float32 if C else np.float64
         s_expected = (
             (
                 ["RX", "RY", "CNOT"],
-                [[0.4], [0.6], []],
+                [np.array([0.4], dtype=dtype), np.array([0.6], dtype=dtype), []],
                 [[0], [1], [0, 1]],
                 [False, False, False],
                 [[], [], []],
             ),
             False,
         )
+        print(s == s_expected)
         assert s == s_expected
 
     @pytest.mark.parametrize("C", [True, False])

@@ -79,7 +79,7 @@ class TestAdjointJacobian:
             qml.RX(0.1, wires=0)
             qml.var(qml.PauliZ(0))
 
-        with pytest.raises(qml.QuantumFunctionError, match="Allowed measurement for the adjoint"):
+        with pytest.raises(qml.QuantumFunctionError, match="Adjoint differentiation method does not"):
             dev.adjoint_jacobian(tape)
 
     def test_finite_shots_warns(self):
@@ -415,7 +415,7 @@ class TestAdjointJacobian:
             qml.RX(0.543, wires=0)
             qml.CNOT(wires=[0, 1])
 
-            op
+            op.queue()
 
             qml.Rot(1.3, -2.3, 0.5, wires=[0])
             qml.RZ(-0.5, wires=0)
