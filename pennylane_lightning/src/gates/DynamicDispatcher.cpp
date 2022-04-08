@@ -67,7 +67,7 @@ template <class PrecisionT, class ParamT, class GateImplementation,
 constexpr auto constructGateOpsFunctorTupleIter() {
     if constexpr (gate_idx == GateImplementation::implemented_gates.size()) {
         return std::tuple{};
-    } else if (gate_idx < GateImplementation::implemented_gates.size()) {
+    } else {
         constexpr auto gate_op =
             GateImplementation::implemented_gates[gate_idx];
         return Util::prepend_to_tuple(
@@ -85,7 +85,7 @@ constexpr auto constructGeneratorOpsFunctorTupleIter() {
     if constexpr (gntr_idx ==
                   GateImplementation::implemented_generators.size()) {
         return std::tuple{};
-    } else if (gntr_idx < GateImplementation::implemented_generators.size()) {
+    } else {
         constexpr auto gntr_op =
             GateImplementation::implemented_generators[gntr_idx];
         return Util::prepend_to_tuple(
@@ -103,7 +103,7 @@ template <class PrecisionT, class GateImplementation, size_t mat_idx>
 constexpr auto constructMatrixOpsFunctorTupleIter() {
     if constexpr (mat_idx == GateImplementation::implemented_matrices.size()) {
         return std::tuple{};
-    } else if (mat_idx < GateImplementation::implemented_matrices.size()) {
+    } else {
         constexpr auto mat_op =
             GateImplementation::implemented_matrices[mat_idx];
         return Util::prepend_to_tuple(
