@@ -25,5 +25,5 @@ namespace Pennylane::Gates {
 /**
  * @brief Define kernel id for each implementation.
  */
-enum class KernelType { PI, LM, None };
+enum class KernelType { PI, LM, STD, None };
 } // namespace Pennylane::Gates

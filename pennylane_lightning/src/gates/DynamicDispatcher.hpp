@@ -46,10 +46,10 @@ namespace Pennylane::Internal {
  */
 template <class PrecisionT, class ParamT> int registerAllAvailableKernels();
 
-constexpr auto generatorNamesWithoutPrefix() {
+inline auto generatorNamesWithoutPrefix() {
     constexpr std::string_view prefix = "Generator";
     namespace GateConstant = Gates::Constant;
-    std::array<std::pair<Gates::GeneratorOperation, std::string_view>,
+    std::array<std::pair<Gates::GeneratorOperation, std::string>,
                GateConstant::generator_names.size()>
         res;
     for (size_t i = 0; i < GateConstant::generator_names.size(); i++) {
@@ -117,7 +117,7 @@ template <typename PrecisionT> class DynamicDispatcher {
 
     DynamicDispatcher() {
         using Gates::KernelType;
-        constexpr static auto gntr_names_without_prefix =
+        auto gntr_names_without_prefix =
             Internal::generatorNamesWithoutPrefix();
 
         for (const auto &[gate_op, gate_name] : Gates::Constant::gate_names) {

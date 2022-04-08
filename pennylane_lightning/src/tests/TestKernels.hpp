@@ -5,6 +5,7 @@
  */
 #include "cpu_kernels/GateImplementationsLM.hpp"
 #include "cpu_kernels/GateImplementationsPI.hpp"
+#include "cpu_kernels/GateImplementationsSTD.hpp"
 
 #include "TypeList.hpp"
 
@@ -12,7 +13,8 @@
 
 using TestKernels =
     Pennylane::Util::TypeList<Pennylane::Gates::GateImplementationsLM,
-                              Pennylane::Gates::GateImplementationsPI, void>;
+                              Pennylane::Gates::GateImplementationsPI,
+                              Pennylane::Gates::GateImplementationsSTD, void>;
 
 namespace detail {
 template <size_t... Is>

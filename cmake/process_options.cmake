@@ -29,6 +29,12 @@ if(MSVC) # For M_PI
     target_compile_options(lightning_compile_options INTERFACE /D_USE_MATH_DEFINES)
 endif()
 
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "NVHPC")
+    set(ENABLE_WARNINGS OFF)
+    target_compile_options(lightning_compile_options INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-stdpar=gpu>)
+endif()
+
 # Add -fwrapv, -fno-plt in Clang
 if ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM"))
     target_compile_options(lightning_compile_options INTERFACE

@@ -10,3 +10,6 @@ target_link_libraries(lightning_gates PRIVATE lightning_compile_options
 target_include_directories(lightning_gates PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 set_property(TARGET lightning_gates PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+find_package(Thrust REQUIRED CONFIG)
+target_link_libraries(lightning_gates PRIVATE Thrust)
