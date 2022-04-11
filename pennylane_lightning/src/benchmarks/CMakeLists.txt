@@ -47,7 +47,7 @@ endif()
 ################################################################################
 
 add_library(lightning_benchmarks_dependency INTERFACE)
-target_link_libraries(lightning_benchmarks_dependency INTERFACE lignting_compile_options
+target_link_libraries(lightning_benchmarks_dependency INTERFACE lightning_compile_options
                                                                 lightning_utils
                                                                 lightning_external_libs
                                                                 lightning_gates
