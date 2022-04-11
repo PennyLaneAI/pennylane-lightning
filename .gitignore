@@ -20,6 +20,7 @@ doc/code/
 cpptests
 *.o
 
+.cache/*
 .vscode/*
 .ycm_extra_conf.py
 /.vs

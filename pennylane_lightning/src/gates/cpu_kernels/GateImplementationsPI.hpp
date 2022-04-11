@@ -115,7 +115,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     applySingleQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
                        const std::complex<PrecisionT> *matrix,
                        const std::vector<size_t> &wires, bool inverse = false) {
-        assert(wires.size() == 1);
+        PL_ASSERT(wires.size() == 1);
 
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
@@ -162,7 +162,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     applyTwoQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
                     const std::complex<PrecisionT> *matrix,
                     const std::vector<size_t> &wires, bool inverse = false) {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         if (inverse) {
@@ -301,7 +301,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void applyIdentity(std::complex<PrecisionT> *arr, size_t num_qubits,
                               const std::vector<size_t> &wires,
                               [[maybe_unused]] bool inverse) {
-        assert(wires.size() == 1);
+        PL_ASSERT(wires.size() == 1);
         static_cast<void>(arr);        // No-op
         static_cast<void>(num_qubits); // No-op
         static_cast<void>(wires);      // No-op
@@ -311,7 +311,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void applyPauliX(std::complex<PrecisionT> *arr, size_t num_qubits,
                             const std::vector<size_t> &wires,
                             [[maybe_unused]] bool inverse) {
-        assert(wires.size() == 1);
+        PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         for (const size_t &externalIndex : externalIndices) {
@@ -324,7 +324,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void applyPauliY(std::complex<PrecisionT> *arr, size_t num_qubits,
                             const std::vector<size_t> &wires,
                             [[maybe_unused]] bool inverse) {
-        assert(wires.size() == 1);
+        PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         for (const size_t &externalIndex : externalIndices) {
@@ -342,7 +342,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void applyPauliZ(std::complex<PrecisionT> *arr, size_t num_qubits,
                             const std::vector<size_t> &wires,
                             [[maybe_unused]] bool inverse) {
-        assert(wires.size() == 1);
+        PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         for (const size_t &externalIndex : externalIndices) {
@@ -355,7 +355,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void applyHadamard(std::complex<PrecisionT> *arr, size_t num_qubits,
                               const std::vector<size_t> &wires,
                               [[maybe_unused]] bool inverse) {
-        assert(wires.size() == 1);
+        PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         for (const size_t &externalIndex : externalIndices) {
@@ -372,7 +372,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     template <class PrecisionT>
     static void applyS(std::complex<PrecisionT> *arr, size_t num_qubits,
                        const std::vector<size_t> &wires, bool inverse) {
-        assert(wires.size() == 1);
+        PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
         const std::complex<PrecisionT> shift =
             (inverse) ? -Util::IMAG<PrecisionT>() : Util::IMAG<PrecisionT>();
@@ -386,7 +386,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     template <class PrecisionT>
     static void applyT(std::complex<PrecisionT> *arr, size_t num_qubits,
                        const std::vector<size_t> &wires, bool inverse) {
-        assert(wires.size() == 1);
+        PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         const std::complex<PrecisionT> shift =
@@ -407,7 +407,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
                                 size_t num_qubits,
                                 const std::vector<size_t> &wires, bool inverse,
                                 ParamT angle) {
-        assert(wires.size() == 1);
+        PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
         const std::complex<PrecisionT> s =
             inverse ? std::conj(std::exp(std::complex<PrecisionT>(0, angle)))
@@ -422,7 +422,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void applyRX(std::complex<PrecisionT> *arr, size_t num_qubits,
                         const std::vector<size_t> &wires, bool inverse,
                         ParamT angle) {
-        assert(wires.size() == 1);
+        PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         const PrecisionT c = std::cos(angle / 2);
@@ -444,7 +444,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void applyRY(std::complex<PrecisionT> *arr, size_t num_qubits,
                         const std::vector<size_t> &wires, bool inverse,
                         ParamT angle) {
-        assert(wires.size() == 1);
+        PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         const PrecisionT c = std::cos(angle / 2);
@@ -464,7 +464,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void applyRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
                         const std::vector<size_t> &wires, bool inverse,
                         ParamT angle) {
-        assert(wires.size() == 1);
+        PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         const std::complex<PrecisionT> first =
@@ -487,7 +487,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void applyRot(std::complex<PrecisionT> *arr, size_t num_qubits,
                          const std::vector<size_t> &wires, bool inverse,
                          ParamT phi, ParamT theta, ParamT omega) {
-        assert(wires.size() == 1);
+        PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         const auto rot = Gates::getRot<PrecisionT>(phi, theta, omega);
@@ -513,7 +513,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void applyCNOT(std::complex<PrecisionT> *arr, size_t num_qubits,
                           const std::vector<size_t> &wires,
                           [[maybe_unused]] bool inverse) {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
@@ -525,7 +525,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void applyCY(std::complex<PrecisionT> *arr, size_t num_qubits,
                         const std::vector<size_t> &wires,
                         [[maybe_unused]] bool inverse) {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
@@ -542,7 +542,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void applyCZ(std::complex<PrecisionT> *arr, size_t num_qubits,
                         const std::vector<size_t> &wires,
                         [[maybe_unused]] bool inverse) {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
@@ -554,7 +554,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void applySWAP(std::complex<PrecisionT> *arr, size_t num_qubits,
                           const std::vector<size_t> &wires,
                           [[maybe_unused]] bool inverse) {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
@@ -568,7 +568,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
                              const std::vector<size_t> &wires, bool inverse,
                              ParamT angle) {
         using ComplexPrecisionT = std::complex<PrecisionT>;
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         const PrecisionT cr = std::cos(angle / 2);
@@ -599,7 +599,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
                              const std::vector<size_t> &wires, bool inverse,
                              ParamT angle) {
         using ComplexPrecisionT = std::complex<PrecisionT>;
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         const PrecisionT cr = std::cos(angle / 2);
@@ -629,7 +629,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void applyIsingZZ(std::complex<PrecisionT> *arr, size_t num_qubits,
                              const std::vector<size_t> &wires, bool inverse,
                              ParamT angle) {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         const std::complex<PrecisionT> first =
@@ -656,7 +656,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
                                           size_t num_qubits,
                                           const std::vector<size_t> &wires,
                                           bool inverse, ParamT angle) {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         const std::complex<PrecisionT> s =
@@ -672,7 +672,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void applyCRX(std::complex<PrecisionT> *arr, size_t num_qubits,
                          const std::vector<size_t> &wires, bool inverse,
                          ParamT angle) {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         const PrecisionT c = std::cos(angle / 2);
@@ -694,7 +694,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void applyCRY(std::complex<PrecisionT> *arr, size_t num_qubits,
                          const std::vector<size_t> &wires, bool inverse,
                          ParamT angle) {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         const PrecisionT c = std::cos(angle / 2);
@@ -714,7 +714,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void applyCRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
                          const std::vector<size_t> &wires, bool inverse,
                          ParamT angle) {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
         const std::complex<PrecisionT> m00 =
             (inverse) ? std::complex<PrecisionT>(std::cos(angle / 2),
@@ -737,7 +737,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void applyCRot(std::complex<PrecisionT> *arr, size_t num_qubits,
                           const std::vector<size_t> &wires, bool inverse,
                           ParamT phi, ParamT theta, ParamT omega) {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
         const auto rot = Gates::getRot<PrecisionT>(phi, theta, omega);
 
@@ -762,7 +762,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void applyToffoli(std::complex<PrecisionT> *arr, size_t num_qubits,
                              const std::vector<size_t> &wires,
                              [[maybe_unused]] bool inverse) {
-        assert(wires.size() == 3);
+        PL_ASSERT(wires.size() == 3);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
         // Participating swapped indices
         static const size_t op_idx0 = 6;
@@ -778,7 +778,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void applyCSWAP(std::complex<PrecisionT> *arr, size_t num_qubits,
                            const std::vector<size_t> &wires,
                            [[maybe_unused]] bool inverse) {
-        assert(wires.size() == 3);
+        PL_ASSERT(wires.size() == 3);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
         // Participating swapped indices
         static const size_t op_idx0 = 5;
@@ -820,7 +820,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     applyGeneratorPhaseShift(std::complex<PrecisionT> *arr, size_t num_qubits,
                              const std::vector<size_t> &wires,
                              [[maybe_unused]] bool adj) -> PrecisionT {
-        assert(wires.size() == 1);
+        PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
@@ -835,7 +835,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     applyGeneratorCRX(std::complex<PrecisionT> *arr, size_t num_qubits,
                       const std::vector<size_t> &wires,
                       [[maybe_unused]] bool adj) -> PrecisionT {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         for (const size_t &externalIndex : externalIndices) {
@@ -854,7 +854,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     applyGeneratorIsingXX(std::complex<PrecisionT> *arr, size_t num_qubits,
                           const std::vector<size_t> &wires,
                           [[maybe_unused]] bool adj) -> PrecisionT {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         for (const size_t &externalIndex : externalIndices) {
@@ -872,7 +872,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     applyGeneratorIsingYY(std::complex<PrecisionT> *arr, size_t num_qubits,
                           const std::vector<size_t> &wires,
                           [[maybe_unused]] bool adj) -> PrecisionT {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         for (const size_t &externalIndex : externalIndices) {
@@ -892,7 +892,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     applyGeneratorIsingZZ(std::complex<PrecisionT> *arr, size_t num_qubits,
                           const std::vector<size_t> &wires,
                           [[maybe_unused]] bool adj) -> PrecisionT {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         for (const size_t &externalIndex : externalIndices) {
@@ -911,7 +911,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     applyGeneratorCRY(std::complex<PrecisionT> *arr, size_t num_qubits,
                       const std::vector<size_t> &wires,
                       [[maybe_unused]] bool adj) -> PrecisionT {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         for (const size_t &externalIndex : externalIndices) {
@@ -932,7 +932,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     applyGeneratorCRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
                       const std::vector<size_t> &wires,
                       [[maybe_unused]] bool adj) -> PrecisionT {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         for (const size_t &externalIndex : externalIndices) {
@@ -950,7 +950,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         std::complex<PrecisionT> *arr, size_t num_qubits,
         const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
         -> PrecisionT {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         for (const size_t &externalIndex : externalIndices) {
