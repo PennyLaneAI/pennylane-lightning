@@ -75,6 +75,13 @@ auto ValueForKernelHelper(
     }
 }
 
+/**
+ * @brief For a given gate implementation class, this variable records the
+ * pointer to the first and last + 1 elements of implemented_gates.
+ *
+ * TODO: change to std::begin and std::end when they become constrpx
+ * in all supported compilers.
+ */
 template <class GateImplementation>
 constexpr auto implementedGatesIterPair =
     std::pair{&(*std::begin(GateImplementation::implemented_gates)),
@@ -88,12 +95,22 @@ constexpr auto implementedGatesItersHelper(
         implementedGatesIterPair<Util::getNthType<TypeList, Is>>...};
 }
 
+/**
+ * @brief Construct an array of implementedGatesIterPair for all kernels
+ * registered in AvailableKernels.
+ */
 constexpr auto implementedGatesIters() {
     constexpr auto size = Util::length<AvailableKernels>();
     return implementedGatesItersHelper<AvailableKernels>(
         std::make_index_sequence<size>());
 }
 
+/**
+ * @brief Parse type list and generate kernel id and index pairs.
+ *
+ * For example, if TypeList == TypeList<GateImplementationsLM, GateImplementationsPI, void>, 
+ * this function returns a pairs {{KernelType::LM, 0}, {KernelType::PI, 1}}
+ */
 template <class TypeList, size_t... Is>
 constexpr auto
 kernelIndicesHelper([[maybe_unused]] std::index_sequence<Is...> indices) {
@@ -101,7 +118,7 @@ kernelIndicesHelper([[maybe_unused]] std::index_sequence<Is...> indices) {
         std::pair{Util::getNth<TypeList, Is>::Type::kernel_id, Is}...};
 }
 /**
- * @brief Get the position of the given kernel in AvailabeKernels
+ * @brief Get the position of the given kernel in AvailabeKernels.
  */
 auto kernelIndices(Gates::KernelType kernel) {
     constexpr static auto size = Util::length<AvailableKernels>();
