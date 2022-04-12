@@ -1,0 +1,72 @@
+2022-04-15T23:33:29-04:00
+Running ./BuildGBench/benchmarks/apply_myimpl
+Run on (8 X 2300 MHz CPU s)
+CPU Caches:
+  L1 Data 48 KiB (x4)
+  L1 Instruction 32 KiB (x4)
+  L2 Unified 512 KiB (x4)
+  L3 Unified 8192 KiB (x1)
+Load Average: 2.29, 2.08, 1.85
+-------------------------------------------------------------------------------------------
+Benchmark                                                 Time             CPU   Iterations
+-------------------------------------------------------------------------------------------
+applyOperation_PauliXLM<float>/LM/6/2                   213 ns          213 ns      3474066
+applyOperation_PauliXLM<float>/LM/12/2                 2463 ns         2462 ns       260533
+applyOperation_PauliXLM<float>/LM/18/2               186408 ns       186166 ns         3880
+applyOperation_PauliXLM<float>/LM/24/2             23946204 ns     23913400 ns           30
+applyOperation_PauliXLM<float>/LM/30/2           4181400909 ns   4172948000 ns            1
+applyOperation_PauliXLM<float>/LM/6/3                   220 ns          219 ns      3206626
+applyOperation_PauliXLM<float>/LM/12/3                 2479 ns         2475 ns       267905
+applyOperation_PauliXLM<float>/LM/18/3               182512 ns       182440 ns         3884
+applyOperation_PauliXLM<float>/LM/24/3             22661385 ns     22657226 ns           31
+applyOperation_PauliXLM<float>/LM/30/3           3956131459 ns   3954273000 ns            1
+applyOperation_PauliXLM<float>/LM/6/4                   219 ns          219 ns      3494566
+applyOperation_PauliXLM<float>/LM/12/4                 2465 ns         2465 ns       276355
+applyOperation_PauliXLM<float>/LM/18/4               184850 ns       184821 ns         3863
+applyOperation_PauliXLM<float>/LM/24/4             23432434 ns     23417226 ns           31
+applyOperation_PauliXLM<float>/LM/30/4           3986381152 ns   3984516000 ns            1
+applyOperation_MyImplPauliX<float>/MyKernel/6/2       31488 ns        26841 ns        28113
+applyOperation_MyImplPauliX<float>/MyKernel/12/2      29375 ns        25280 ns        27665
+applyOperation_MyImplPauliX<float>/MyKernel/18/2     172800 ns        95845 ns         7305
+applyOperation_MyImplPauliX<float>/MyKernel/24/2   19694241 ns     13618491 ns           53
+applyOperation_MyImplPauliX<float>/MyKernel/30/2 3605686749 ns   3190094000 ns            1
+applyOperation_MyImplPauliX<float>/MyKernel/6/3       27911 ns        24426 ns        28260
+applyOperation_MyImplPauliX<float>/MyKernel/12/3      30685 ns        26294 ns        26713
+applyOperation_MyImplPauliX<float>/MyKernel/18/3     175123 ns        97733 ns         7213
+applyOperation_MyImplPauliX<float>/MyKernel/24/3   19493213 ns     13459245 ns           53
+applyOperation_MyImplPauliX<float>/MyKernel/30/3 3566961535 ns   3156269000 ns            1
+applyOperation_MyImplPauliX<float>/MyKernel/6/4       28565 ns        24985 ns        27922
+applyOperation_MyImplPauliX<float>/MyKernel/12/4      31401 ns        27138 ns        25447
+applyOperation_MyImplPauliX<float>/MyKernel/18/4     175197 ns        98251 ns         7191
+applyOperation_MyImplPauliX<float>/MyKernel/24/4   20364271 ns     14240404 ns           52
+applyOperation_MyImplPauliX<float>/MyKernel/30/4 4005013319 ns   3588408000 ns            1
+applyOperation_PauliZLM<float>/LM/6/2                   235 ns          234 ns      3107865
+applyOperation_PauliZLM<float>/LM/12/2                 2594 ns         2591 ns       264066
+applyOperation_PauliZLM<float>/LM/18/2               195318 ns       195213 ns         3327
+applyOperation_PauliZLM<float>/LM/24/2             23215254 ns     23209200 ns           30
+applyOperation_PauliZLM<float>/LM/30/2           4088586050 ns   4085567000 ns            1
+applyOperation_PauliZLM<float>/LM/6/3                   249 ns          249 ns      2873103
+applyOperation_PauliZLM<float>/LM/12/3                 2585 ns         2583 ns       266862
+applyOperation_PauliZLM<float>/LM/18/3               194845 ns       194720 ns         3634
+applyOperation_PauliZLM<float>/LM/24/3             24644289 ns     24621500 ns           28
+applyOperation_PauliZLM<float>/LM/30/3           4000149862 ns   3997162000 ns            1
+applyOperation_PauliZLM<float>/LM/6/4                   227 ns          227 ns      3258679
+applyOperation_PauliZLM<float>/LM/12/4                 2541 ns         2540 ns       279918
+applyOperation_PauliZLM<float>/LM/18/4               191629 ns       191553 ns         3587
+applyOperation_PauliZLM<float>/LM/24/4             23225825 ns     23219516 ns           31
+applyOperation_PauliZLM<float>/LM/30/4           3911159355 ns   3909699000 ns            1
+applyOperation_MyImplPauliZ<float>/MyKernel/6/2       28920 ns        25179 ns        27411
+applyOperation_MyImplPauliZ<float>/MyKernel/12/2      29999 ns        25747 ns        28000
+applyOperation_MyImplPauliZ<float>/MyKernel/18/2     142116 ns        95246 ns         7331
+applyOperation_MyImplPauliZ<float>/MyKernel/24/2   16711122 ns     13341462 ns           52
+applyOperation_MyImplPauliZ<float>/MyKernel/30/2 3405020820 ns   3172921000 ns            1
+applyOperation_MyImplPauliZ<float>/MyKernel/6/3       28065 ns        24566 ns        28302
+applyOperation_MyImplPauliZ<float>/MyKernel/12/3      29783 ns        25636 ns        27029
+applyOperation_MyImplPauliZ<float>/MyKernel/18/3     143705 ns        95344 ns         7299
+applyOperation_MyImplPauliZ<float>/MyKernel/24/3   16737716 ns     13357692 ns           52
+applyOperation_MyImplPauliZ<float>/MyKernel/30/3 3479199160 ns   3244445000 ns            1
+applyOperation_MyImplPauliZ<float>/MyKernel/6/4       28995 ns        25237 ns        27307
+applyOperation_MyImplPauliZ<float>/MyKernel/12/4      30625 ns        26472 ns        26792
+applyOperation_MyImplPauliZ<float>/MyKernel/18/4     144800 ns        97225 ns         7197
+applyOperation_MyImplPauliZ<float>/MyKernel/24/4   17101474 ns     13702098 ns           51
+applyOperation_MyImplPauliZ<float>/MyKernel/30/4 3457419696 ns   3224798000 ns            1
