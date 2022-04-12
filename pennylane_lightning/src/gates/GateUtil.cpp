@@ -108,8 +108,9 @@ constexpr auto implementedGatesIters() {
 /**
  * @brief Parse type list and generate kernel id and index pairs.
  *
- * For example, if TypeList == TypeList<GateImplementationsLM, GateImplementationsPI, void>, 
- * this function returns a pairs {{KernelType::LM, 0}, {KernelType::PI, 1}}
+ * For example, if TypeList == TypeList<GateImplementationsLM,
+ * GateImplementationsPI, void>, this function returns a pairs {{KernelType::LM,
+ * 0}, {KernelType::PI, 1}}
  */
 template <class TypeList, size_t... Is>
 constexpr auto
