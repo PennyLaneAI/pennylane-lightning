@@ -281,8 +281,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         PL_ASSERT(num_qubits >= wires.size());
 
         size_t dim = static_cast<size_t>(1U) << wires.size();
-        std::vector<size_t> indices;
-        indices.resize(dim);
+        std::vector<size_t> indices(dim);
         std::vector<std::complex<PrecisionT>> coeffs_in(dim, 0.0);
 
         if (inverse) {
