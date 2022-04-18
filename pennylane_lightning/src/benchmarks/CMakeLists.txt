@@ -53,33 +53,44 @@ target_link_libraries(lightning_benchmarks_dependency INTERFACE lightning_utils
 # Add benchmark_utils exe
 ################################################################################
 
-set(GBENCH_SRC  Bench_BitUtil.cpp
-                Bench_LinearAlgebra.cpp)
+#set(GBENCH_SRC  Bench_BitUtil.cpp
+#                Bench_LinearAlgebra.cpp)
 
-add_executable(utils ${GBENCH_SRC})
+#add_executable(utils ${GBENCH_SRC})
 
-add_compile_definitions(utils INTERFACE _ENABLE_BLAS=1)
+#add_compile_definitions(utils INTERFACE _ENABLE_BLAS=1)
 
-target_link_libraries(utils PRIVATE lightning_benchmarks_dependency)
+#target_link_libraries(utils PRIVATE lightning_benchmarks_dependency)
 
 ################################################################################
 # Add benchmark_apply_operations exe
 ################################################################################
 
-add_executable(apply_operations Bench_ApplyOperations.cpp)
+#add_executable(apply_operations Bench_ApplyOperations.cpp)
 
-target_link_libraries(apply_operations PRIVATE lightning_compile_options
-                                            lightning_gates
-                                            lightning_simulator
-                                            lightning_benchmarks_dependency)
+#target_link_libraries(apply_operations PRIVATE lightning_compile_options
+#                                            lightning_gates
+#                                            lightning_simulator
+#                                            lightning_benchmarks_dependency)
 
 ################################################################################
 # Add benchmark_apply_multirz exe
 ################################################################################
 
-add_executable(apply_multirz Bench_ApplyMultiRZ.cpp)
+#add_executable(apply_multirz Bench_ApplyMultiRZ.cpp)
 
-target_link_libraries(apply_multirz PRIVATE lightning_compile_options
+#target_link_libraries(apply_multirz PRIVATE lightning_compile_options
+#                                            lightning_gates
+#                                            lightning_simulator
+#                                            lightning_benchmarks_dependency)
+
+################################################################################
+# Add benchmark_apply_myimpl exe
+################################################################################
+
+add_executable(apply_myimpl Bench_ApplyMyImpl.cpp)
+
+target_link_libraries(apply_myimpl PRIVATE lightning_compile_options
                                             lightning_gates
                                             lightning_simulator
                                             lightning_benchmarks_dependency)

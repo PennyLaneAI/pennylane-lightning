@@ -21,7 +21,7 @@
 #include "GateImplementationsLM.hpp"
 #include "GateImplementationsPI.hpp"
 #include "TypeList.hpp"
-
+#include "MyGateImplementation.hpp"
 namespace Pennylane {
 /**
  * @brief List of all available kernels (gate implementations).
@@ -33,5 +33,5 @@ namespace Pennylane {
  * @endrst
  */
 using AvailableKernels =
-    Util::TypeList<Gates::GateImplementationsLM, Gates::GateImplementationsPI>;
+    Util::TypeList<Gates::GateImplementationsLM, Gates::GateImplementationsPI,MyGateImplementation>;
 } // namespace Pennylane

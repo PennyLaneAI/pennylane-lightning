@@ -10,4 +10,5 @@
 
 using TestKernels =
     Pennylane::Util::TypeList<Pennylane::Gates::GateImplementationsLM,
-                              Pennylane::Gates::GateImplementationsPI, void>;
+                              Pennylane::Gates::GateImplementationsPI, MyGateImplementation>;
+//Pennylane::Gates::GateImplementationsPI, void>;
