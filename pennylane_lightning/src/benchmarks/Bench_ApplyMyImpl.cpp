@@ -22,29 +22,6 @@
 
 using Kernel = Pennylane::Gates::KernelType;
 
-/**
- * @brief Generate distinct wires.
- *
- * @tparam RandomEngine Random number generator engine.
- * @param num_qubits Number of qubits.
- * @param num_wires Number of wires.
- *
- * @return std::vector<size_t>
- */
-/*
-template <typename RandomEngine>
-static inline auto generateDistinctWires(RandomEngine &eng, size_t num_qubits,
-                                         size_t num_wires)
-    -> std::vector<size_t> {
-    std::vector<size_t> v(num_qubits, 0);
-    std::iota(v.begin(), v.end(), 0);
-    shuffle(v.begin(), v.end(), eng);
-    std::vector<size_t> vo(1,0);
-    vo.begin() = v.begin();
-    //return {v.begin(), v.begin() + num_wires};
-    return vo;
-}
-*/
 //***********************************************************************//
 //                            applyOperation
 //***********************************************************************//
