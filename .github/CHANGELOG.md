@@ -1,11 +1,11 @@
-# Release 0.23.0-dev
+# Release 0.23.0
 
 ### New features since last release
 
 * Add Lightning GBenchmark Suite.
 [(#249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/249)
 
-* Add run-time and compile information in binary.
+* Support runtime and compile information.
 [(#253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/253)
 
 ### Improvements
@@ -18,8 +18,6 @@
 
 * Skip over identity operations in `"lightning.qubit"`.
 [(#268)](https://github.com/PennyLaneAI/pennylane-lightning/pull/268)
-
-### Documentation
 
 ### Bug fixes
 
