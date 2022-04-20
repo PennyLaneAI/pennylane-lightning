@@ -132,14 +132,18 @@ else()
     message(STATUS "ENABLE_THREADS is OFF.")
 endif()
 
+if (WIN32)
+    set(_Threads_FOUND BOOL CMAKE_USE_WIN32_THREADS_INIT)
+else()
+    set(_Threads_FOUND BOOL Threads_FOUND)
+endif()
+
 if(ENABLE_KOKKOS)
-    # set(Kokkos_CXX_STANDARD 17 CACHE STRING "Kokkos C++ standard" FORCE)
     if(OpenMP_CXX_FOUND)
         # Enable KOKKOS with the openmp backend.
         option(Kokkos_ENABLE_OPENMP "Enable the Kokkos OPENMP device" ON)
-        # set(Kokkos_ENABLE_OPENMP ON CACHE BOOL "")
         message(STATUS "KOKKOS OPENMP DEVICE ENABLED.")
-    elseif(Threads_FOUND)
+    elseif(_Threads_FOUND)
         # Enable KOKKOS with the threads backend.
         option(Kokkos_ENABLE_PTHREAD "Enable the Kokkos THREADS device" ON)
         message(STATUS "KOKKOS THREADS DEVICE ENABLED.")
@@ -160,7 +164,6 @@ if(ENABLE_KOKKOS)
     FetchContent_MakeAvailable(Kokkos)
     FetchContent_GetProperties(Kokkos)
 
-    # set(CMAKE_PREFIX_PATH ${Kokkos_SOURCE_DIR})
     FetchContent_Declare(KokkosKernels
                          GIT_REPOSITORY https://github.com/kokkos/kokkos-kernels.git
                          GIT_TAG        3.5.00
