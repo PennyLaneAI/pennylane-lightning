@@ -91,6 +91,28 @@ class TestProbs:
         [
             [None, [0.9165164490394898, 0.0, 0.08348355096051052, 0.0]],
             [[], [0.9165164490394898, 0.0, 0.08348355096051052, 0.0]],
+        ],
+    )
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    @pytest.mark.xfail
+    def test_probs_tape_nowires(self, cases, tol, dev, C):
+        """Test probs with a circuit on wires=[0]"""
+        dev._state = dev._asarray(dev._state, C)
+
+        x, y, z = [0.5, 0.3, -0.7]
+
+        @qml.qnode(dev)
+        def circuit():
+            qml.RX(0.4, wires=[0])
+            qml.Rot(x, y, z, wires=[0])
+            qml.RY(-0.2, wires=[0])
+            return qml.probs(wires=cases[0])
+
+        assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
+
+    @pytest.mark.parametrize(
+        "cases",
+        [
             [[0, 1], [0.9165164490394898, 0.0, 0.08348355096051052, 0.0]],
             [[1, 0], [0.9165164490394898, 0.08348355096051052, 0.0, 0.0]],
             [0, [0.9165164490394898, 0.08348355096051052]],
@@ -116,24 +138,6 @@ class TestProbs:
     @pytest.mark.parametrize(
         "cases",
         [
-            [
-                None,
-                [
-                    0.9178264236525453,
-                    0.02096485729264079,
-                    0.059841820910257436,
-                    0.0013668981445561978,
-                ],
-            ],
-            [
-                [],
-                [
-                    0.9178264236525453,
-                    0.02096485729264079,
-                    0.059841820910257436,
-                    0.0013668981445561978,
-                ],
-            ],
             [
                 [0, 1],
                 [
