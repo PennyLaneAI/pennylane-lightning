@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add `generate_smaples()` to lightning.
+[(#247)](https://github.com/PennyLaneAI/pennylane-lightning/pull/247)
+
 * Add Lightning GBenchmark Suite.
 [(#249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/249)
 
@@ -15,6 +18,9 @@
 
 * Add more `clang-tidy` checks and kernel tests.
 [(#253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/253)
+
+* Add C++ code coverage to CI.
+[(#265)](https://github.com/PennyLaneAI/pennylane-lightning/pull/265)
 
 * Skip over identity operations in `"lightning.qubit"`.
 [(#268)](https://github.com/PennyLaneAI/pennylane-lightning/pull/268)
@@ -32,6 +38,9 @@
 
 * Remove deprecated tape execution methods.
 [(#270)](https://github.com/PennyLaneAI/pennylane-lightning/pull/270)
+
+* Update `qml.probs` in `test_measures.py`.
+[(#280)](https://github.com/PennyLaneAI/pennylane-lightning/pull/280)
 
 ### Contributors
 
