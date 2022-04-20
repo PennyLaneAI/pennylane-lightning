@@ -1,6 +1,7 @@
 ##############################################################################
 # This file processes ENABLE_WARNINGS, ENABLE_NATIVE, ENABLE_AVX, 
-# ENABLE_OPENMP, ENABLE_BLAS options and produces interface libraries
+# ENABLE_OPENMP, ENABLE_THREADS, ENABLE_KOKKOS, and ENABLE_BLAS 
+# options and produces interface libraries
 # lightning_compile_options and lightning_external_libs.
 ##############################################################################
 
@@ -98,7 +99,7 @@ else()
 endif()
 
 if(ENABLE_BLAS)
-    message(STATUS "ENABLE_BLAS is ON. Find BLAS.")
+    message(STATUS "ENABLE_BLAS is ON.")
     find_package(BLAS)
 
     if(NOT BLAS_FOUND)
@@ -116,4 +117,59 @@ if(ENABLE_BLAS)
     target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_BLAS=1")
 else()
     message(STATUS "ENABLE_BLAS is OFF.")
+endif()
+
+if(ENABLE_THREADS)
+    message(STATUS "ENABLE_THREADS is ON.")
+    find_package(Threads)
+
+    if(NOT Threads_FOUND)
+        message(FATAL_ERROR "THREADS is enabled but not found.")
+    endif()
+
+    target_link_libraries(lightning_external_libs INTERFACE Threads::Threads)
+else()
+    message(STATUS "ENABLE_THREADS is OFF.")
+endif()
+
+if(ENABLE_KOKKOS)
+    # set(Kokkos_CXX_STANDARD 17 CACHE STRING "Kokkos C++ standard" FORCE)
+    if(OpenMP_CXX_FOUND)
+        # Enable KOKKOS with the openmp backend.
+        option(Kokkos_ENABLE_OPENMP "Enable the Kokkos OPENMP device" ON)
+        # set(Kokkos_ENABLE_OPENMP ON CACHE BOOL "")
+        message(STATUS "KOKKOS OPENMP DEVICE ENABLED.")
+    elseif(Threads_FOUND)
+        # Enable KOKKOS with the threads backend.
+        option(Kokkos_ENABLE_PTHREAD "Enable the Kokkos THREADS device" ON)
+        message(STATUS "KOKKOS THREADS DEVICE ENABLED.")
+    else()
+        # Enable KOKKOS with the serial backend. This is the default.
+        option(Kokkos_ENABLE_SERIAL  "Enable Kokkos SERIAL device" ON)
+        message(STATUS "KOKKOS SERIAL DEVICE ENABLED.")
+    endif()
+
+    option(Kokkos_ENABLE_COMPLEX_ALIGN "Enable complex alignment in memory" OFF)
+
+    include(FetchContent)
+    FetchContent_Declare(Kokkos
+                         GIT_REPOSITORY https://github.com/kokkos/kokkos.git
+                         GIT_TAG        3.5.00
+    )
+  
+    FetchContent_MakeAvailable(Kokkos)
+    FetchContent_GetProperties(Kokkos)
+
+    # set(CMAKE_PREFIX_PATH ${Kokkos_SOURCE_DIR})
+    FetchContent_Declare(KokkosKernels
+                         GIT_REPOSITORY https://github.com/kokkos/kokkos-kernels.git
+                         GIT_TAG        3.5.00
+    )
+ 
+    FetchContent_MakeAvailable(KokkosKernels)
+
+    target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_KOKKOS=1")
+    target_link_libraries(lightning_external_libs INTERFACE Kokkos::kokkos Kokkos::kokkoskernels)
+else()
+    message(STATUS "ENABLE_KOKKOS is OFF.")
 endif()

@@ -91,6 +91,19 @@ test-cpp-omp:
 	cmake --build ./BuildTests --target runner
 	cmake --build ./BuildTests --target test
 
+test-cpp-kokkos-omp:
+	rm -rf ./BuildTests
+	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON -DENABLE_KOKKOS=ON -DENABLE_OPENMP=ON
+	cmake --build ./BuildTests --target runner
+	cmake --build ./BuildTests --target test
+
+#OPENMP is turned OFF for testing KOKKOS THREADS.
+test-cpp-kokkos-threads:
+	rm -rf ./BuildTests
+	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON -DENABLE_KOKKOS=ON -DENABLE_THREADS=ON -DENABLE_OPENMP=OFF
+	cmake --build ./BuildTests --target runner
+	cmake --build ./BuildTests --target test
+
 .PHONY: benchmark
 benchmark:
 	cmake --build BuildBench --target clean || true
