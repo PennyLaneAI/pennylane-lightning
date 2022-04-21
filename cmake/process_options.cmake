@@ -8,6 +8,11 @@
 # Include this file only once
 include_guard()
 
+if (WIN32)
+    # Increasing maximum full-path length allowed. Needed for Kokkos.
+  set(CMAKE_OBJECT_PATH_MAX 256)
+endif ()
+
 # Set compile flags and library dependencies
 add_library(lightning_compile_options INTERFACE)
 add_library(lightning_external_libs INTERFACE)
