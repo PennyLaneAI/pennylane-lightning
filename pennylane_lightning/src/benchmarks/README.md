@@ -3,7 +3,7 @@ The PennyLane-Lightning benchmark suite powered by [google-benchmark](https://gi
 To use GB scripts, you can perform `make gbenchmark` or run 
 ```console
 $ cmake pennylane_lightning/src/ -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_OPENMP=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release
-$ cmake --build ./BuildGBench --target utils apply_operations apply_multirz
+$ cmake --build ./BuildGBench
 ```
 
 ## Google-Benchmark

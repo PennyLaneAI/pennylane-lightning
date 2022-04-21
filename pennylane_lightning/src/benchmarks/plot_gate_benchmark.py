@@ -13,7 +13,7 @@ plt.rc("font", family="sans-serif")
 plt.rc("text.latex", preamble=r"\usepackage{amsmath}")
 
 
-class DataProcessor:
+class BenchmarkDataProcessor:
     def __init__(self, precision=None):
         if precision not in [None, "float", "double"]:
             raise ValueError("Argument precision must be one of None, float, or double")
@@ -103,7 +103,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    data_processor = DataProcessor(args.precision)
+    data_processor = BenchmarkDataProcessor(args.precision)
     data_processor.parse_result_json(args.res_file)
 
     plot_dir = Path(args.plot_dir)

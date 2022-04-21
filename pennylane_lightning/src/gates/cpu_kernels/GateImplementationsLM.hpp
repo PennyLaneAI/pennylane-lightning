@@ -16,14 +16,13 @@
  * Defines kernel functions with less memory (and fast)
  */
 #pragma once
-#include "PauliGenerator.hpp"
-
 #include "BitUtil.hpp"
 #include "Error.hpp"
 #include "GateOperation.hpp"
 #include "Gates.hpp"
 #include "KernelType.hpp"
 #include "LinearAlgebra.hpp"
+#include "PauliGenerator.hpp"
 
 #include <complex>
 #include <vector>

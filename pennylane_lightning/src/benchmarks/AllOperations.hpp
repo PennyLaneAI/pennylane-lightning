@@ -172,6 +172,8 @@ applyGenerator_GntrOp(benchmark::State &state,
 
 /**
  * @brief Benchmark function for matrices
+ *
+ * @tparam T Floating point precision type.
  */
 template <class T>
 static void applyMatrix(benchmark::State &state,
