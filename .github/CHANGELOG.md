@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Add `generate_smaples()` to lightning.
+* Add `generate_samples()` to lightning.
 [(#247)](https://github.com/PennyLaneAI/pennylane-lightning/pull/247)
 
 * Add Lightning GBenchmark Suite.
