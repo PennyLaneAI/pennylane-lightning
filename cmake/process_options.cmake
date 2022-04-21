@@ -132,26 +132,27 @@ else()
     message(STATUS "ENABLE_THREADS is OFF.")
 endif()
 
-if (WIN32)
-    set(_Threads_FOUND BOOL CMAKE_USE_WIN32_THREADS_INIT)
-else()
-    set(_Threads_FOUND BOOL Threads_FOUND)
-endif()
-
 if(ENABLE_KOKKOS)
-    if(OpenMP_CXX_FOUND)
-        # Enable KOKKOS with the openmp backend.
-        option(Kokkos_ENABLE_OPENMP "Enable the Kokkos OPENMP device" ON)
-        message(STATUS "KOKKOS OPENMP DEVICE ENABLED.")
-    elseif(_Threads_FOUND)
-        # Enable KOKKOS with the threads backend.
-        option(Kokkos_ENABLE_PTHREAD "Enable the Kokkos THREADS device" ON)
-        message(STATUS "KOKKOS THREADS DEVICE ENABLED.")
+    if (NOT WIN32 AND NOT APPLE)
+        if(OpenMP_CXX_FOUND)
+            # Enable KOKKOS with the openmp backend.
+            option(Kokkos_ENABLE_OPENMP "Enable the Kokkos OPENMP device" ON)
+            message(STATUS "KOKKOS OPENMP DEVICE ENABLED.")
+        elseif(Threads_FOUND)
+            # Enable KOKKOS with the threads backend.
+            option(Kokkos_ENABLE_PTHREAD "Enable the Kokkos THREADS device" ON)
+            message(STATUS "KOKKOS THREADS DEVICE ENABLED.")
+        else()
+            # Enable KOKKOS with the serial backend.
+            option(Kokkos_ENABLE_SERIAL  "Enable Kokkos SERIAL device" ON)
+            message(STATUS "KOKKOS SERIAL DEVICE ENABLED.")
+        endif()
     else()
-        # Enable KOKKOS with the serial backend. This is the default.
+        # Enable KOKKOS with the serial backend.
         option(Kokkos_ENABLE_SERIAL  "Enable Kokkos SERIAL device" ON)
-        message(STATUS "KOKKOS SERIAL DEVICE ENABLED.")
+        message(STATUS "KOKKOS SERIAL DEVICE ENABLED--.")
     endif()
+    # If no backend is specified, KOKKOS will enable the serial backend by default.
 
     option(Kokkos_ENABLE_COMPLEX_ALIGN "Enable complex alignment in memory" OFF)
 
