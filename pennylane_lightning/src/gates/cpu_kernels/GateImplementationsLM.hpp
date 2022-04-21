@@ -280,7 +280,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         using Util::bitswap;
         PL_ASSERT(num_qubits >= wires.size());
 
-        size_t dim = static_cast<size_t>(1U) << wires.size();
+        const size_t dim = static_cast<size_t>(1U) << wires.size();
         std::vector<size_t> indices(dim);
         std::vector<std::complex<PrecisionT>> coeffs_in(dim, 0.0);
 
@@ -288,7 +288,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             for (size_t k = 0; k < Util::exp2(num_qubits); k += dim) {
                 for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
                     size_t idx = k | inner_idx;
-                    size_t n_wires = wires.size();
+                    const size_t n_wires = wires.size();
                     for (size_t pos = 0; pos < n_wires; pos++) {
                         idx = bitswap(idx, n_wires - pos - 1,
                                       num_qubits - wires[pos] - 1);
@@ -312,7 +312,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             for (size_t k = 0; k < Util::exp2(num_qubits); k += dim) {
                 for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
                     size_t idx = k | inner_idx;
-                    size_t n_wires = wires.size();
+                    const size_t n_wires = wires.size();
                     for (size_t pos = 0; pos < n_wires; pos++) {
                         idx = bitswap(idx, n_wires - pos - 1,
                                       num_qubits - wires[pos] - 1);
