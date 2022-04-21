@@ -10,7 +10,7 @@ include_guard()
 
 if (WIN32)
     # Increasing maximum full-path length allowed. Needed for Kokkos.
-  set(CMAKE_OBJECT_PATH_MAX 256)
+  set(CMAKE_OBJECT_PATH_MAX 512)
 endif ()
 
 # Set compile flags and library dependencies
