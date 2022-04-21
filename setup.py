@@ -52,13 +52,18 @@ class CMakeBuild(build_ext):
 
         # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
         configure_args = [
-            "-GNinja",
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
-            f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
             "-DENABLE_WARNINGS=OFF",  # Ignore warnings
         ]
 
+        if platform.system() != "Windows":
+            # As Ninja does not support long path for windows yet (https://github.com/ninja-build/ninja/pull/2056)
+            configure_args += [
+                "-GNinja", 
+                f"-DCMAKE_MAKE_PROGRAM={ninja_path}"
+            ]
+        
         if debug:
             configure_args += ["-DCMAKE_BUILD_TYPE=Debug"]
         configure_args += self.cmake_defines
