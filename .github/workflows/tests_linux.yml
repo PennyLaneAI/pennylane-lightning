@@ -69,8 +69,7 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
-          directory: ./BuildCov
-          files: ./coverage.info
+          files: ./BuildCov/coverage.info
           fail_ci_if_error: true
 
   cpptestswithblas:
