@@ -14,17 +14,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          token: ${{ secrets.DEV_TOKEN }}
-          ref: ${{ github.head_ref }}
-          run: |
-            git config --local user.email "chae-yeun@xanadu.ai"
-            git config --local user.name "Latest tag update bot"
-            git tag -d $TAG_NAME
-            if git push --delete origin $TAG_NAME; then
-              echo "Remove tag $TAG_NAME from remote."
-            else
-              echo "$TAG_NAME does not exist in remote. Just proceed."
-            fi
-            git tag $TAG_NAME
-            git push --tags
+
+      - name: Overwrite tag
+        run: |
+          git config --local user.email "chae-yeun@xanadu.ai"
+          git config --local user.name "Latest tag update bot"
+          git tag -d $TAG_NAME
+          if git push --delete origin $TAG_NAME; then
+            echo "Remove tag $TAG_NAME from remote."
+          else
+            echo "$TAG_NAME does not exist in remote. Just proceed."
+          fi
+          git tag $TAG_NAME
+          git push --tags
