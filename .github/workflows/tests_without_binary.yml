@@ -55,7 +55,7 @@ jobs:
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2.0.1
+        uses: codecov/codecov-action@v2
         with:
-          file: ./coverage.xml
+          files: ./coverage.xml
           fail_ci_if_error: true
