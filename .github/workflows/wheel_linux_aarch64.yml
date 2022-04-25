@@ -70,7 +70,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v2
         with:
-          name: Linux-wheels.zip
+          name: Linux-wheels-aarch64.zip
           path: dist
 
       - name: Upload wheels to PyPI
