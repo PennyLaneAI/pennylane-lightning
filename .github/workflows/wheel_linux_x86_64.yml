@@ -1,6 +1,7 @@
 name: Wheel::Linux::x86_64
 on:
   release:
+    types: [published]
   push:
     branches:
       - master
