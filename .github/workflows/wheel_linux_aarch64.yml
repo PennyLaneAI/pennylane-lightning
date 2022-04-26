@@ -60,7 +60,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
         with:
-          name: ${{ runner.os }}-wheels.zip
+          name: ${{ runner.os }}-wheels-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
 
   upload-pypi:
