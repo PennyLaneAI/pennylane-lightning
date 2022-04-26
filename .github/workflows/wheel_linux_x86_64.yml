@@ -1,6 +1,7 @@
 name: Wheel::Linux::x86_64
 on:
   release:
+    types: [published]
   push:
     branches:
       - master
@@ -72,7 +73,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v2
         with:
-          name: Linux-wheels.zip
+          name: Linux-wheels-x86_64.zip
           path: dist
 
       - name: Upload wheels to PyPI
