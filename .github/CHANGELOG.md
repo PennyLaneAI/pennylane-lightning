@@ -21,6 +21,10 @@
 
 ### Documentation
 
+* Use the centralized [Xanadu Sphinx Theme](https://github.com/XanaduAI/xanadu-sphinx-theme)
+  to style the Sphinx documentation.
+[(#287)](https://github.com/PennyLaneAI/pennylane-lightning/pull/287)
+
 ### Bug fixes
 
 * Update tests to remove `JacobianTape`.
@@ -38,7 +42,7 @@
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
-Ali Asadi, Chae-Yeun Park, and Lee James O'Riordan
+Mikhail Andrenkov, Ali Asadi, Chae-Yeun Park, and Lee James O'Riordan
 
 ---
 
