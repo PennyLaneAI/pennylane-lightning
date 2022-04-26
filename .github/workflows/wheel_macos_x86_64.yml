@@ -5,6 +5,7 @@ on:
       - master
   pull_request:
   release:
+    types: [published]
 
 env:
   CIBW_BUILD: 'cp37-* cp38-* cp39-* cp310-*'
@@ -79,7 +80,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v2
         with:
-          name: macOS-wheels.zip
+          name: macOS-wheels-x86_64.zip
           path: dist
 
       - name: Upload wheels to PyPI
