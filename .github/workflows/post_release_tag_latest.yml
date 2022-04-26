@@ -1,12 +1,11 @@
 name: Automated Latest Release Tag
 
 on:
-  pull_request: # for test
   release:
     types: [published]
 
 env:
-  TAG_NAME: latest_test
+  TAG_NAME: latest
 
 jobs:
   post_release_tag_latest:
