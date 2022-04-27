@@ -174,7 +174,6 @@ class Measures {
     fp_t expval(const std::vector<Util::index_type> &row_map,
                 const std::vector<Util::index_type> &entries,
                 const std::vector<CFP_t> &values) {
-
         if (original_statevector.getLength() != (row_map.size() - 1)) {
             throw std::invalid_argument(
                 "Statevector and Hamiltonian have incompatible sizes.");

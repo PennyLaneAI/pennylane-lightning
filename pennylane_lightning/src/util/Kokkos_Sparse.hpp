@@ -171,7 +171,6 @@ apply_Sparse_Matrix(const std::vector<std::complex<fp_precision>> &vector,
                     const std::vector<index_type> &row_map,
                     const std::vector<index_type> &entries,
                     const std::vector<std::complex<fp_precision>> &values) {
-
     return apply_Sparse_Matrix(vector.data(), vector.size(), row_map.data(),
                                row_map.size(), entries.data(), values.data(),
                                values.size());

@@ -8,8 +8,8 @@
 #include "StateVectorRaw.hpp"
 #include "Util.hpp"
 
-#include <catch2/catch.hpp>
 #include "TestHelpers.hpp"
+#include <catch2/catch.hpp>
 
 #if defined(_MSC_VER)
 #pragma warning(disable : 4305)
