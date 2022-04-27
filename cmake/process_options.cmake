@@ -177,7 +177,6 @@ if(ENABLE_KOKKOS)
  
     FetchContent_MakeAvailable(KokkosKernels)
 
-    target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_KOKKOS=1")
     target_link_libraries(lightning_external_libs INTERFACE Kokkos::kokkos Kokkos::kokkoskernels)
 else()
     message(STATUS "ENABLE_KOKKOS is OFF.")

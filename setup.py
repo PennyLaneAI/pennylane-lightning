@@ -1,4 +1,4 @@
-# Copyright 2020 Xanadu Quantum Technologies Inc.
+# Copyright 2022 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -57,8 +57,14 @@ class CMakeBuild(build_ext):
             "-DENABLE_WARNINGS=OFF",  # Ignore warnings
         ]
 
-        if platform.system() != "Windows":
-            # As Ninja does not support long path for windows yet (https://github.com/ninja-build/ninja/pull/2056)
+        if platform.system() == "Windows":
+            # As Ninja does not support long path for windows yet:
+            #  (https://github.com/ninja-build/ninja/pull/2056)
+            configure_args += [
+                "-G Visual Studio 17 2022", 
+                "-T clangcl"
+            ]
+        else:
             configure_args += [
                 "-GNinja", 
                 f"-DCMAKE_MAKE_PROGRAM={ninja_path}"
