@@ -1,6 +1,7 @@
 name: Wheel::Linux::x86_64
 on:
   release:
+    types: [published]
   push:
     branches:
       - master
@@ -62,7 +63,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         #if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         with:
-          name: ${{ runner.os }}-wheels.zip
+          name: ${{ runner.os }}-wheels-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
 
   upload-pypi:
@@ -72,7 +73,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v2
         with:
-          name: Linux-wheels.zip
+          name: Linux-wheels-x86_64.zip
           path: dist
 
       - name: Upload wheels to PyPI
