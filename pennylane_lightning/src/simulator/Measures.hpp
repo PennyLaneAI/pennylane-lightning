@@ -1,4 +1,4 @@
-// Copyright 2021 Xanadu Quantum Technologies Inc.
+// Copyright 2022 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "Kokkos_Sparse.hpp"
 #include "LinearAlgebra.hpp"
 #include "StateVectorManaged.hpp"
 #include "StateVectorRaw.hpp"
@@ -116,6 +117,7 @@ class Measures {
         }
         return probabilities;
     }
+
     /**
      * @brief Expected value of an observable.
      *
@@ -136,6 +138,7 @@ class Measures {
             original_statevector.getLength());
         return std::real(expected_value);
     };
+
     /**
      * @brief Expected value of an observable.
      *
@@ -156,6 +159,34 @@ class Measures {
             original_statevector.getLength());
         return std::real(expected_value);
     };
+
+#ifdef _ENABLE_KOKKOS
+
+    /**
+     * @brief Expected value of a Sparse Hamiltonian.
+     *
+     * @param row_map row_map array.
+     *                The j element encodes the number of non-zeros above row j.
+     * @param entries column indices of the non-zero elements.
+     * @param values  non-zero elements.
+     * @return fp_t
+     */
+    fp_t expval(const std::vector<Util::index_type> &row_map,
+                const std::vector<Util::index_type> &entries,
+                const std::vector<CFP_t> &values) {
+
+        auto operator_vector = Util::apply_Sparse_Matrix(
+            original_statevector.getData(), original_statevector.getLength(),
+            row_map.data(), row_map.size(), entries.data(), values.data(),
+            values.size());
+
+        CFP_t expected_value = Util::innerProdC(
+            original_statevector.getData(), operator_vector.data(),
+            original_statevector.getLength());
+        return std::real(expected_value);
+    };
+
+#endif
 
     /**
      * @brief Expected value for a list of observables.
