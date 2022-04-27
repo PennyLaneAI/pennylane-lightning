@@ -296,4 +296,14 @@ template <> struct PrecisionToName<float> {
 template <> struct PrecisionToName<double> {
     constexpr static auto value = "double";
 };
+
+#define PL_REQUIRE_THROWS_MATCHES(expr, type, message_match) \
+    REQUIRE_THROWS_AS(expr, type); \
+    REQUIRE_THROWS_WITH(expr, message_match)
+
+
+#define PL_CHECK_THROWS_MATCHES(expr, type, message_match) \
+    CHECK_THROWS_AS(expr, type); \
+    CHECK_THROWS_WITH(expr, message_match)
+
 } // namespace Pennylane

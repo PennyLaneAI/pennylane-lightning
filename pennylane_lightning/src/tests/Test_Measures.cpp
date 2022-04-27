@@ -2,18 +2,21 @@
 #include <cstdio>
 #include <vector>
 
+#include "Kokkos_Sparse.hpp"
 #include "Measures.hpp"
 #include "StateVectorManaged.hpp"
 #include "StateVectorRaw.hpp"
 #include "Util.hpp"
 
 #include <catch2/catch.hpp>
+#include "TestHelpers.hpp"
 
 #if defined(_MSC_VER)
 #pragma warning(disable : 4305)
 #endif
 
 using namespace Pennylane;
+using namespace Pennylane::Util;
 
 namespace {
 using std::complex;
@@ -26,7 +29,7 @@ template <typename T = double>
 StateVectorManaged<T> Initializing_StateVector() {
     // Defining a StateVector in a non-trivial configuration:
     size_t num_qubits = 3;
-    size_t data_size = std::pow(2, num_qubits);
+    size_t data_size = Util::exp2(num_qubits);
 
     std::vector<std::complex<T>> arr(data_size, 0);
     arr[0] = 1;
@@ -44,6 +47,64 @@ StateVectorManaged<T> Initializing_StateVector() {
 
     return Measured_StateVector;
 }
+
+#ifdef _ENABLE_KOKKOS
+/**
+ * @brief Fills the empty vectors with the CRS (Compressed Row Storage) sparse
+ * matrix representation, for a tridiagonal + periodic boundary conditions
+ * Hamiltonian.
+ *
+ * @param row_map the j element encodes the total number of non-zeros above
+ * row j.
+ * @param entries column indices.
+ * @param values  matrix non-zero elements.
+ * @param numRows matrix number of rows.
+ */
+template <class fp_precision>
+void write_CRS_vectors(std::vector<index_type> &row_map,
+                       std::vector<index_type> &entries,
+                       std::vector<complex<fp_precision>> &values,
+                       index_type numRows) {
+    const data_type<fp_precision> SC_ONE =
+        Kokkos::ArithTraits<data_type<fp_precision>>::one();
+
+    row_map.resize(numRows + 1);
+    for (index_type rowIdx = 1; rowIdx < (index_type)row_map.size(); ++rowIdx) {
+        row_map[rowIdx] = row_map[rowIdx - 1] + 3;
+    };
+    const index_type numNNZ = row_map[numRows];
+
+    entries.resize(numNNZ);
+    values.resize(numNNZ);
+    for (index_type rowIdx = 0; rowIdx < numRows; ++rowIdx) {
+        if (rowIdx == 0) {
+            entries[0] = rowIdx;
+            entries[1] = rowIdx + 1;
+            entries[2] = numRows - 1;
+
+            values[0] = SC_ONE;
+            values[1] = -SC_ONE;
+            values[2] = -SC_ONE;
+        } else if (rowIdx == numRows - 1) {
+            entries[row_map[rowIdx]] = 0;
+            entries[row_map[rowIdx] + 1] = rowIdx - 1;
+            entries[row_map[rowIdx] + 2] = rowIdx;
+
+            values[row_map[rowIdx]] = -SC_ONE;
+            values[row_map[rowIdx] + 1] = -SC_ONE;
+            values[row_map[rowIdx] + 2] = SC_ONE;
+        } else {
+            entries[row_map[rowIdx]] = rowIdx - 1;
+            entries[row_map[rowIdx] + 1] = rowIdx;
+            entries[row_map[rowIdx] + 2] = rowIdx + 1;
+
+            values[row_map[rowIdx]] = -SC_ONE;
+            values[row_map[rowIdx] + 1] = SC_ONE;
+            values[row_map[rowIdx] + 2] = -SC_ONE;
+        }
+    }
+};
+#endif
 
 TEST_CASE("Probabilities", "[Measures]") {
     // Probabilities calculated with Pennylane default_qbit:
@@ -95,39 +156,40 @@ TEST_CASE("Probabilities", "[Measures]") {
     }
 }
 
-TEST_CASE("Expected Values", "[Measures]") {
+TEMPLATE_TEST_CASE("Expected Values", "[Measures]", float, double) {
     // Defining the State Vector that will be measured.
-    StateVectorManaged<double> Measured_StateVector =
-        Initializing_StateVector();
+    StateVectorManaged<TestType> Measured_StateVector =
+        Initializing_StateVector<TestType>();
 
     // Initializing the measures class.
     // It will attach to the StateVector, allowing measures to keep been taken.
-    Measures<double, StateVectorManaged<double>> Measurer(Measured_StateVector);
+    Measures<TestType, StateVectorManaged<TestType>> Measurer(
+        Measured_StateVector);
 
     SECTION("Testing single operation defined by a matrix:") {
-        vector<std::complex<double>> PauliX = {0, 1, 1, 0};
+        vector<std::complex<TestType>> PauliX = {0, 1, 1, 0};
         vector<size_t> wires_single = {0};
-        double exp_value = Measurer.expval(PauliX, wires_single);
-        double exp_values_ref = 0.492725;
+        TestType exp_value = Measurer.expval(PauliX, wires_single);
+        TestType exp_values_ref = 0.492725;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
     }
 
     SECTION("Testing single operation defined by its name:") {
         vector<size_t> wires_single = {0};
-        double exp_value = Measurer.expval("PauliX", wires_single);
-        double exp_values_ref = 0.492725;
+        TestType exp_value = Measurer.expval("PauliX", wires_single);
+        TestType exp_values_ref = 0.492725;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
     }
 
     SECTION("Testing list of operators defined by a matrix:") {
-        vector<std::complex<double>> PauliX = {0, 1, 1, 0};
-        vector<std::complex<double>> PauliY = {0, {0, -1}, {0, 1}, 0};
-        vector<std::complex<double>> PauliZ = {1, 0, 0, -1};
+        vector<std::complex<TestType>> PauliX = {0, 1, 1, 0};
+        vector<std::complex<TestType>> PauliY = {0, {0, -1}, {0, 1}, 0};
+        vector<std::complex<TestType>> PauliZ = {1, 0, 0, -1};
 
-        vector<double> exp_values;
-        vector<double> exp_values_ref;
+        vector<TestType> exp_values;
+        vector<TestType> exp_values_ref;
         vector<vector<size_t>> wires_list = {{0}, {1}, {2}};
-        vector<vector<std::complex<double>>> operations_list;
+        vector<vector<std::complex<TestType>>> operations_list;
 
         operations_list = {PauliX, PauliX, PauliX};
         exp_values = Measurer.expval(operations_list, wires_list);
@@ -146,8 +208,8 @@ TEST_CASE("Expected Values", "[Measures]") {
     }
 
     SECTION("Testing list of operators defined by its name:") {
-        vector<double> exp_values;
-        vector<double> exp_values_ref;
+        vector<TestType> exp_values;
+        vector<TestType> exp_values_ref;
         vector<vector<size_t>> wires_list = {{0}, {1}, {2}};
         vector<string> operations_list;
 
@@ -167,6 +229,50 @@ TEST_CASE("Expected Values", "[Measures]") {
         REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
     }
 }
+
+#ifdef _ENABLE_KOKKOS
+TEMPLATE_TEST_CASE("Expected Values - Sparse Operator [Kokkos]", "[Measures]",
+                   float, double) {
+    // Defining the State Vector that will be measured.
+    StateVectorManaged<TestType> Measured_StateVector =
+        Initializing_StateVector<TestType>();
+
+    // Initializing the measures class.
+    // It will attach to the StateVector, allowing measures to keep been taken.
+    Measures<TestType, StateVectorManaged<TestType>> Measurer(
+        Measured_StateVector);
+
+    SECTION("Testing Sparse Hamiltonian:") {
+        index_type num_qubits = 3;
+        index_type data_size = Util::exp2(num_qubits);
+
+        std::vector<index_type> row_map_vec;
+        std::vector<index_type> entries_vec;
+        std::vector<complex<TestType>> values_vec;
+        write_CRS_vectors(row_map_vec, entries_vec, values_vec, data_size);
+
+        TestType exp_values =
+            Measurer.expval(row_map_vec, entries_vec, values_vec);
+        TestType exp_values_ref = 0.71999;
+        REQUIRE(exp_values == Approx(exp_values_ref).margin(1e-6));
+    }
+
+    SECTION("Testing Sparse Hamiltonian (incompatible sizes):") {
+        index_type num_qubits = 4;
+        index_type data_size = Util::exp2(num_qubits);
+
+        std::vector<index_type> row_map_vec;
+        std::vector<index_type> entries_vec;
+        std::vector<complex<TestType>> values_vec;
+        write_CRS_vectors(row_map_vec, entries_vec, values_vec, data_size);
+
+        PL_CHECK_THROWS_MATCHES(
+            Measurer.expval(row_map_vec, entries_vec, values_vec),
+            std::invalid_argument,
+            "Statevector and Hamiltonian have incompatible sizes.");
+    }
+}
+#endif
 
 TEMPLATE_TEST_CASE("Sample", "[Measures]", float, double) {
     constexpr uint32_t twos[] = {
