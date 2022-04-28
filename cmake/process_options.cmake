@@ -162,20 +162,26 @@ if(ENABLE_KOKKOS)
     option(Kokkos_ENABLE_COMPLEX_ALIGN "Enable complex alignment in memory" OFF)
 
     include(FetchContent)
-    FetchContent_Declare(Kokkos
+
+    FetchContent_Declare(kokkos
                          GIT_REPOSITORY https://github.com/kokkos/kokkos.git
                          GIT_TAG        3.5.00
     )
   
-    FetchContent_MakeAvailable(Kokkos)
-    FetchContent_GetProperties(Kokkos)
+    FetchContent_MakeAvailable(kokkos)
 
-    FetchContent_Declare(KokkosKernels
+    get_target_property(_kokkos_INC_DIR kokkos INTERFACE_INCLUDE_DIRECTORIES)
+    set_target_properties(kokkos PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_kokkos_INC_DIR}")
+
+    FetchContent_Declare(kokkoskernels
                          GIT_REPOSITORY https://github.com/kokkos/kokkos-kernels.git
                          GIT_TAG        3.5.00
     )
  
-    FetchContent_MakeAvailable(KokkosKernels)
+    FetchContent_MakeAvailable(kokkoskernels)
+
+    get_target_property(_kokkoskernels_INC_DIR kokkoskernels INTERFACE_INCLUDE_DIRECTORIES)
+    set_target_properties(kokkoskernels PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_kokkoskernels_INC_DIR}")
 
     target_link_libraries(lightning_external_libs INTERFACE Kokkos::kokkos Kokkos::kokkoskernels)
 else()
