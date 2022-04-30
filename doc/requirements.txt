@@ -5,5 +5,4 @@ graphviz
 pybind11
 sphinx
 sphinx-automodapi
-# TODO: Use the Xanadu-Sphinx-Theme package on PyPI once it has been released.
-git+https://github.com/XanaduAI/xanadu-sphinx-theme@phoenix#egg=xanadu_sphinx_theme
+xanadu-sphinx-theme==0.1.0
