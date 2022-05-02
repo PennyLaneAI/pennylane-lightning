@@ -72,7 +72,7 @@ Mikhail Andrenkov
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Chae-Yeun Park, and Lee James O'Riordan
+Ali Asadi, Chae-Yeun Park, Lee James O'Riordan, and Trevor Vincent
 
 ---
 
