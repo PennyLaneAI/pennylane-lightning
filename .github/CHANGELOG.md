@@ -49,8 +49,6 @@ Mikhail Andrenkov
 * Skip over identity operations in `"lightning.qubit"`.
 [(#268)](https://github.com/PennyLaneAI/pennylane-lightning/pull/268)
 
-### Documentation
-
 ### Bug fixes
 
 * Update tests to remove `JacobianTape`.
