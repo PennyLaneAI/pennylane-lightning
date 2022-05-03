@@ -97,7 +97,7 @@ constexpr auto constructGeneratorOpsFunctorTupleIter() {
     }
 }
 /**
- * @brief Internal recustion function for constructMatrixOpsFunctorTuple
+ * @brief Internal recursive function for constructMatrixOpsFunctorTuple
  */
 template <class PrecisionT, class GateImplementation, size_t mat_idx>
 constexpr auto constructMatrixOpsFunctorTupleIter() {
