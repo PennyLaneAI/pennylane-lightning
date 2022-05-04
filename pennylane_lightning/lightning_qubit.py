@@ -628,7 +628,6 @@ class LightningQubit(DefaultQubit):
             "Projector",
             "Hermitian",
             "Hamiltonian",
-            "SparseHamiltonian",
         ]:
             return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
@@ -655,6 +654,14 @@ class LightningQubit(DefaultQubit):
 
         state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
+        if observable.name == "SparseHamiltonian":
+            # converting COO to CRS sparse representation.
+            CSR_SparseHamiltonian = observable.data[0].tocsr(copy=False)
+            return M.expval(
+                CSR_SparseHamiltonian.indptr,
+                CSR_SparseHamiltonian.indices,
+                CSR_SparseHamiltonian.data,
+            )
 
         # translate to wire labels used by device
         observable_wires = self.map_wires(observable.wires)

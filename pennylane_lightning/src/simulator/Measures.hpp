@@ -161,7 +161,6 @@ class Measures {
     };
 
 #ifdef _ENABLE_KOKKOS
-
     /**
      * @brief Expected value of a Sparse Hamiltonian.
      *
@@ -188,7 +187,6 @@ class Measures {
             original_statevector.getLength());
         return std::real(expected_value);
     };
-
 #endif
 
     /**

@@ -18,6 +18,7 @@
 #include "Bindings.hpp"
 
 #include "GateUtil.hpp"
+#include "Kokkos_Sparse.hpp"
 #include "SelectKernel.hpp"
 
 #include "pybind11/pybind11.h"
@@ -308,7 +309,6 @@ void lightning_class_bindings(py::module &m) {
     //***********************************************************************//
     //                              Measures
     //***********************************************************************//
-
     class_name = "MeasuresC" + bitsize;
     py::class_<Measures<PrecisionT>>(m, class_name.c_str(), py::module_local())
         .def(py::init<const StateVectorRaw<PrecisionT> &>())
@@ -320,10 +320,19 @@ void lightning_class_bindings(py::module &m) {
                  return py::array_t<ParamT>(py::cast(M.probs(wires)));
              })
         .def("expval",
-             [](Measures<PrecisionT> &M, const std::string &operation,
-                const std::vector<size_t> &wires) {
-                 return M.expval(operation, wires);
-             })
+             static_cast<PrecisionT (Measures<PrecisionT>::*)(
+                 const std::string &, const std::vector<size_t> &)>(
+                 &Measures<PrecisionT>::expval),
+             "Expected value of an operation by name.")
+#ifdef _ENABLE_KOKKOS
+        .def("expval",
+             static_cast<PrecisionT (Measures<PrecisionT>::*)(
+                 const std::vector<Util::index_type> &,
+                 const std::vector<Util::index_type> &,
+                 const std::vector<std::complex<PrecisionT>> &)>(
+                 &Measures<PrecisionT>::expval),
+             "Expected value of a sparse Hamiltonian.")
+#endif
         .def("generate_samples",
              [](Measures<PrecisionT> &M, size_t num_wires, size_t num_shots) {
                  auto &&result = M.generate_samples(num_shots);
