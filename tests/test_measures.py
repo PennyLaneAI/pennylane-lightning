@@ -1,4 +1,4 @@
-# Copyright 2021 Xanadu Quantum Technologies Inc.
+# Copyright 2022 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 Unit tests for Measures in lightning.qubit.
 """
 import numpy as np
+from scipy.sparse import coo_matrix
 import pennylane as qml
 import math
 from pennylane.measurements import (
@@ -256,6 +257,30 @@ class TestExpval:
             qml.RX(0.4, wires=[0])
             qml.RY(-0.2, wires=[1])
             return qml.expval(cases[0])
+
+        assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
+
+    @pytest.mark.parametrize(
+        "cases",
+        [
+            [qml.PauliX(0) @ qml.Identity(1), 0.0],
+            [qml.Identity(0) @ qml.PauliX(1), -0.19866933079506122],
+            [qml.PauliY(0) @ qml.Identity(1), -0.3894183423086505],
+            [qml.Identity(0) @ qml.PauliY(1), 0.0],
+            [qml.PauliZ(0) @ qml.Identity(1), 0.9210609940028852],
+            [qml.Identity(0) @ qml.PauliZ(1), 0.9800665778412417],
+        ],
+    )
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_expval_sparse_Hamiltonian(self, cases, tol, dev, C):
+        """Test expval of a sparse Hamiltonian"""
+        dev._state = dev._asarray(dev._state, C)
+
+        @qml.qnode(dev)
+        def circuit():
+            qml.RX(0.4, wires=[0])
+            qml.RY(-0.2, wires=[1])
+            return qml.expval(qml.SparseHamiltonian(coo_matrix(qml.matrix(cases[0])), wires=[0, 1]))
 
         assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
