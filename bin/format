@@ -20,8 +20,7 @@ IGNORE_PATTERNS = ["external"]
 
 DEFAULT_CLANG_FORMAT_VERSION=12
 
-BASE_ARGS = [f"-style={json.dumps(CLANG_FMT_STYLE_CFG)}"]
-
+BASE_ARGS = f"-style={json.dumps(CLANG_FMT_STYLE_CFG)}"
 
 def parse_version(version_string):
     version_rgx = "version (\d+)"
@@ -29,27 +28,20 @@ def parse_version(version_string):
     m = re.search(version_rgx, version_string)
     return int(m.group(1))
 
-def clang_format_command():
-    command = f"clang-format-{DEFAULT_CLANG_FORMAT_VERSION}"
+def check_bin(command):
+    try:
+        p = subprocess.run([command, "--version"], 
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+        version = parse_version(p.stdout)
 
-    if shutil.which(command) is None:
-        print(f"{command} is not found. Find default clang-format instead.")
-        command = "clang-format"
-        if shutil.which(command) is None:
-            print(f"Default clang-format is not found.")
-            raise FileNotFoundError("clang-format is not installed or is not in PATH.")
-        else:
-            p = subprocess.run([command, "--version"], stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT, universal_newlines=True)
-            version = parse_version(p.stdout)
-
-            if version < DEFAULT_CLANG_FORMAT_VERSION:
-                print(f"Using clang-format version {version}. \
-                        As this is lower than the version used for the CI, \
-                        the CI may fail even after formatting.")
-
-    return command
-
+        if version < DEFAULT_CLANG_FORMAT_VERSION:
+            print(f"Using clang-format version {version}. \
+                    As this is lower than the version used for the CI, \
+                    the CI may fail even after formatting.")
+    except FileNotFoundError as exc:
+        raise FileNotFoundError(
+            f"{command} is not installed or is not in PATH."
+        ) from exc
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -71,14 +63,21 @@ def parse_args():
         action="store_true",
         help="print detailed information about format violations",
     )
-
+    parser.add_argument(
+        "-f",
+        "--cfversion",
+        type=int,
+        default=0,
+        action="store",
+        help="set a version number for clang-format",
+    )
     return parser.parse_args()
 
-def fmt(command, paths) -> int:
-    files = get_cpp_files(paths)
-    cmd = (command, *BASE_ARGS, "-i", *files)
+def fmt(args, command) -> int:
+    files = get_cpp_files(args.paths)
+    cmd = (command, BASE_ARGS, "-i", *files)
 
-    sys.stderr.write(f"Formatting {len(files)} files in {paths}.\n")
+    sys.stderr.write(f"Formatting {len(files)} files in {args.paths}.\n")
 
     ret = subprocess.run(cmd, capture_output=True, universal_newlines=True)
     if ret.returncode != 0:
@@ -88,11 +87,11 @@ def fmt(command, paths) -> int:
     return 0
 
 
-def check(command, paths, is_verbose) -> int:
-    cmd = (command, *BASE_ARGS, "--dry-run", "-Werror")
+def check(args, command) -> int:
+    cmd = (command, BASE_ARGS, "--dry-run", "-Werror")
 
     needs_reformatted_ct = 0
-    files = get_cpp_files(paths)
+    files = get_cpp_files(args.paths)
 
     for src_file in files:
         ret = subprocess.run(
@@ -101,7 +100,7 @@ def check(command, paths, is_verbose) -> int:
 
         if ret.returncode != 0:
             sys.stderr.write(f"Error: {src_file} would be reformatted.\n")
-            if is_verbose:
+            if args.verbose:
                 sys.stderr.write(ret.stderr)
 
             needs_reformatted_ct += 1
@@ -112,12 +111,19 @@ def check(command, paths, is_verbose) -> int:
     return needs_reformatted_ct
 
 if __name__ == "__main__":
-    command = clang_format_command()
     args = parse_args()
 
+    cf_version = args.cfversion
+    cf_cmd = "clang-format"
+
+    if cf_version:
+        cf_cmd += f"-{cf_version}"
+
+    check_bin(cf_cmd)
+
     if args.check:
-        ret = check(command, args.paths, args.verbose)
+        ret = check(args, cf_cmd)
     else:
-        ret = fmt(command, args.paths)
+        ret = fmt(args, cf_cmd)
 
     sys.exit(int(ret > 0))
