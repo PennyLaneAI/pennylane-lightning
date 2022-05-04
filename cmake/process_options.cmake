@@ -161,6 +161,7 @@ if(ENABLE_KOKKOS)
 
     option(Kokkos_ENABLE_COMPLEX_ALIGN "Enable complex alignment in memory" OFF)
 
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
     include(FetchContent)
 
     FetchContent_Declare(kokkos
@@ -179,7 +180,7 @@ if(ENABLE_KOKKOS)
     )
  
     FetchContent_MakeAvailable(kokkoskernels)
-
+ 
     get_target_property(_kokkoskernels_INC_DIR kokkoskernels INTERFACE_INCLUDE_DIRECTORIES)
     set_target_properties(kokkoskernels PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_kokkoskernels_INC_DIR}")
 
