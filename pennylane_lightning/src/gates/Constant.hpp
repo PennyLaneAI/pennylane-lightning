@@ -323,6 +323,5 @@ namespace Pennylane::Gates::Constant {
     std::pair{GeneratorOperation::DoubleExcitationMinus, KernelType::PI},
     std::pair{GeneratorOperation::DoubleExcitationPlus, KernelType::PI},
     std::pair{GeneratorOperation::MultiRZ, KernelType::LM},
-
 };
 } // namespace Pennylane::Gates::Constant

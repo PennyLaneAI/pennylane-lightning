@@ -709,13 +709,18 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
             shiftedState[indices[1]] *= e;
             shiftedState[indices[2]] *= e;
             shiftedState[indices[3]] = c * v3 - s * v12;
-            for (size_t i = 4; i < 12; i++) {
+            for (size_t i = 4; i < 12;
+                 i++) { // NOLINTNEXTLINE(readability-magic-numbers)
                 shiftedState[indices[i]] *= e;
             }
-            shiftedState[indices[12]] = s * v3 + c * v12;
-            shiftedState[indices[13]] *= e;
-            shiftedState[indices[14]] *= e;
-            shiftedState[indices[15]] *= e;
+            shiftedState[indices[12]] =
+                s * v3 + c * v12; // NOLINTNEXTLINE(readability-magic-numbers)
+            shiftedState[indices[13]] *=
+                e; // NOLINTNEXTLINE(readability-magic-numbers)
+            shiftedState[indices[14]] *=
+                e; // NOLINTNEXTLINE(readability-magic-numbers)
+            shiftedState[indices[15]] *=
+                e; // NOLINTNEXTLINE(readability-magic-numbers)
         }
     }
 
@@ -743,13 +748,18 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
             shiftedState[indices[1]] *= e;
             shiftedState[indices[2]] *= e;
             shiftedState[indices[3]] = c * v3 - s * v12;
-            for (size_t i = 4; i < 12; i++) {
+            for (size_t i = 4; i < 12;
+                 i++) { // NOLINTNEXTLINE(readability-magic-numbers)
                 shiftedState[indices[i]] *= e;
             }
-            shiftedState[indices[12]] = s * v3 + c * v12;
-            shiftedState[indices[13]] *= e;
-            shiftedState[indices[14]] *= e;
-            shiftedState[indices[15]] *= e;
+            shiftedState[indices[12]] =
+                s * v3 + c * v12; // NOLINTNEXTLINE(readability-magic-numbers)
+            shiftedState[indices[13]] *=
+                e; // NOLINTNEXTLINE(readability-magic-numbers)
+            shiftedState[indices[14]] *=
+                e; // NOLINTNEXTLINE(readability-magic-numbers)
+            shiftedState[indices[15]] *=
+                e; // NOLINTNEXTLINE(readability-magic-numbers)
         }
     }
 
@@ -880,19 +890,14 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
-            shiftedState[indices[0]] = std::complex<PrecisionT>{};
-            shiftedState[indices[1]] = std::complex<PrecisionT>{};
-            shiftedState[indices[2]] = std::complex<PrecisionT>{};
-            shiftedState[indices[3]] *= Util::IMAG<PrecisionT>();
-            for (size_t i = 4; i < 12; i++) {
+            const std::complex<PrecisionT> v3 = shiftedState[indices[3]];
+            const std::complex<PrecisionT> v12 = shiftedState[indices[12]];
+            for (size_t i = 0; i < indices.size(); i++) {
                 shiftedState[indices[i]] = std::complex<PrecisionT>{};
             }
-            shiftedState[indices[12]] *= -Util::IMAG<PrecisionT>();
-            shiftedState[indices[13]] = std::complex<PrecisionT>{};
-            shiftedState[indices[14]] = std::complex<PrecisionT>{};
-            shiftedState[indices[15]] = std::complex<PrecisionT>{};
 
-            std::swap(shiftedState[indices[3]], shiftedState[indices[12]]);
+            shiftedState[indices[3]] = -v12 * Util::IMAG<PrecisionT>();
+            shiftedState[indices[12]] = -v3 * Util::IMAG<PrecisionT>();
         }
         // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
@@ -927,17 +932,13 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
-            shiftedState[indices[0]] *= -1;
-            shiftedState[indices[1]] *= -1;
-            shiftedState[indices[2]] *= -1;
-            shiftedState[indices[3]] *= Util::IMAG<PrecisionT>();
-            for (size_t i = 4; i < 12; i++) {
+            for (size_t i = 0; i < indices.size(); i++) {
                 shiftedState[indices[i]] *= -1;
             }
-            shiftedState[indices[12]] *= -Util::IMAG<PrecisionT>();
-            shiftedState[indices[13]] *= -1;
-            shiftedState[indices[14]] *= -1;
-            shiftedState[indices[15]] *= -1;
+            shiftedState[indices[3]] *= -Util::IMAG<
+                PrecisionT>(); // NOLINTNEXTLINE(readability-magic-numbers)
+            shiftedState[indices[12]] *= Util::IMAG<
+                PrecisionT>(); // NOLINTNEXTLINE(readability-magic-numbers)
 
             std::swap(shiftedState[indices[3]], shiftedState[indices[12]]);
         }
