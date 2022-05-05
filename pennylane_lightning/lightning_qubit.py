@@ -65,16 +65,6 @@ except ModuleNotFoundError:
     CPP_BINARY_AVAILABLE = False
 
 
-UNSUPPORTED_PARAM_GATES_ADJOINT = (
-    "SingleExcitation",
-    "SingleExcitationPlus",
-    "SingleExcitationMinus",
-    "DoubleExcitation",
-    "DoubleExcitationPlus",
-    "DoubleExcitationMinus",
-)
-
-
 def _chunk_iterable(it, num_chunks):
     "Lazy-evaluated chunking of given iterable from https://stackoverflow.com/a/22045226"
     it = iter(it)
@@ -269,9 +259,7 @@ class LightningQubit(DefaultQubit):
                     )
 
         for op in tape.operations:
-            if (
-                op.num_params > 1 and not isinstance(op, Rot)
-            ) or op.name in UNSUPPORTED_PARAM_GATES_ADJOINT:
+            if op.num_params > 1 and not isinstance(op, Rot):
                 raise QuantumFunctionError(
                     f"The {op.name} operation is not supported using "
                     'the "adjoint" differentiation method'

@@ -77,13 +77,23 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         GateOperation::CRot,
         GateOperation::Toffoli,
         GateOperation::CSWAP,
+        GateOperation::DoubleExcitation,
+        GateOperation::DoubleExcitationMinus,
+        GateOperation::DoubleExcitationPlus,
         GateOperation::MultiRZ,
         GateOperation::Matrix};
     constexpr static std::array implemented_generators = {
-        GeneratorOperation::RX,  GeneratorOperation::RY,
-        GeneratorOperation::RZ,  GeneratorOperation::PhaseShift,
-        GeneratorOperation::CRX, GeneratorOperation::CRY,
-        GeneratorOperation::CRZ, GeneratorOperation::ControlledPhaseShift};
+        GeneratorOperation::RX,
+        GeneratorOperation::RY,
+        GeneratorOperation::RZ,
+        GeneratorOperation::PhaseShift,
+        GeneratorOperation::CRX,
+        GeneratorOperation::CRY,
+        GeneratorOperation::CRZ,
+        GeneratorOperation::DoubleExcitation,
+        GeneratorOperation::DoubleExcitationMinus,
+        GeneratorOperation::DoubleExcitationPlus,
+        GeneratorOperation::ControlledPhaseShift};
 
     /**
      * @brief Apply a given matrix directly to the statevector.
@@ -652,6 +662,97 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         }
     }
 
+    /* Four-qubit gates */
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void
+    applyDoubleExcitation(std::complex<PrecisionT> *arr, size_t num_qubits,
+                          const std::vector<size_t> &wires,
+                          [[maybe_unused]] bool inverse, ParamT angle) {
+        assert(wires.size() == 4);
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+
+        const PrecisionT c = std::cos(angle / 2);
+        const PrecisionT s =
+            inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
+
+        for (const size_t &externalIndex : externalIndices) {
+            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
+            const std::complex<PrecisionT> v3 = shiftedState[indices[3]];
+            const std::complex<PrecisionT> v12 = shiftedState[indices[12]];
+
+            shiftedState[indices[3]] = c * v3 - s * v12;
+            shiftedState[indices[12]] = s * v3 + c * v12;
+        }
+    }
+
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void
+    applyDoubleExcitationMinus(std::complex<PrecisionT> *arr, size_t num_qubits,
+                               const std::vector<size_t> &wires,
+                               [[maybe_unused]] bool inverse, ParamT angle) {
+        assert(wires.size() == 4);
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+
+        const PrecisionT c = std::cos(angle / 2);
+        const PrecisionT s =
+            inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
+        const std::complex<PrecisionT> e =
+            inverse ? std::exp(std::complex<PrecisionT>(0, angle / 2))
+                    : std::exp(-std::complex<PrecisionT>(0, angle / 2));
+
+        for (const size_t &externalIndex : externalIndices) {
+            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
+            const std::complex<PrecisionT> v3 = shiftedState[indices[3]];
+            const std::complex<PrecisionT> v12 = shiftedState[indices[12]];
+
+            shiftedState[indices[0]] *= e;
+            shiftedState[indices[1]] *= e;
+            shiftedState[indices[2]] *= e;
+            shiftedState[indices[3]] = c * v3 - s * v12;
+            for (size_t i = 4; i < 12; i++) {
+                shiftedState[indices[i]] *= e;
+            }
+            shiftedState[indices[12]] = s * v3 + c * v12;
+            shiftedState[indices[13]] *= e;
+            shiftedState[indices[14]] *= e;
+            shiftedState[indices[15]] *= e;
+        }
+    }
+
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void
+    applyDoubleExcitationPlus(std::complex<PrecisionT> *arr, size_t num_qubits,
+                              const std::vector<size_t> &wires,
+                              [[maybe_unused]] bool inverse, ParamT angle) {
+        assert(wires.size() == 4);
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+
+        const PrecisionT c = std::cos(angle / 2);
+        const PrecisionT s =
+            inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
+        const std::complex<PrecisionT> e =
+            inverse ? std::exp(-std::complex<PrecisionT>(0, angle / 2))
+                    : std::exp(std::complex<PrecisionT>(0, angle / 2));
+
+        for (const size_t &externalIndex : externalIndices) {
+            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
+            const std::complex<PrecisionT> v3 = shiftedState[indices[3]];
+            const std::complex<PrecisionT> v12 = shiftedState[indices[12]];
+
+            shiftedState[indices[0]] *= e;
+            shiftedState[indices[1]] *= e;
+            shiftedState[indices[2]] *= e;
+            shiftedState[indices[3]] = c * v3 - s * v12;
+            for (size_t i = 4; i < 12; i++) {
+                shiftedState[indices[i]] *= e;
+            }
+            shiftedState[indices[12]] = s * v3 + c * v12;
+            shiftedState[indices[13]] *= e;
+            shiftedState[indices[14]] *= e;
+            shiftedState[indices[15]] *= e;
+        }
+    }
+
     /* Multi-qubit gates */
     template <class PrecisionT, class ParamT>
     static void applyMultiRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
@@ -766,6 +867,82 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         }
         // NOLINTNEXTLINE(readability-magic-numbers)
         return static_cast<PrecisionT>(1);
+    }
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto
+    applyGeneratorDoubleExcitation(std::complex<PrecisionT> *arr,
+                                   size_t num_qubits,
+                                   const std::vector<size_t> &wires,
+                                   [[maybe_unused]] bool adj) -> PrecisionT {
+        assert(wires.size() == 4);
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+
+        for (const size_t &externalIndex : externalIndices) {
+            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
+            shiftedState[indices[0]] = std::complex<PrecisionT>{};
+            shiftedState[indices[1]] = std::complex<PrecisionT>{};
+            shiftedState[indices[2]] = std::complex<PrecisionT>{};
+            shiftedState[indices[3]] *= Util::IMAG<PrecisionT>();
+            for (size_t i = 4; i < 12; i++) {
+                shiftedState[indices[i]] = std::complex<PrecisionT>{};
+            }
+            shiftedState[indices[12]] *= -Util::IMAG<PrecisionT>();
+            shiftedState[indices[13]] = std::complex<PrecisionT>{};
+            shiftedState[indices[14]] = std::complex<PrecisionT>{};
+            shiftedState[indices[15]] = std::complex<PrecisionT>{};
+
+            std::swap(shiftedState[indices[3]], shiftedState[indices[12]]);
+        }
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto applyGeneratorDoubleExcitationMinus(
+        std::complex<PrecisionT> *arr, size_t num_qubits,
+        const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
+        -> PrecisionT {
+        assert(wires.size() == 4);
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+
+        for (const size_t &externalIndex : externalIndices) {
+            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
+            shiftedState[indices[3]] *= Util::IMAG<PrecisionT>();
+            shiftedState[indices[12]] *= -Util::IMAG<PrecisionT>();
+
+            std::swap(shiftedState[indices[3]], shiftedState[indices[12]]);
+        }
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto applyGeneratorDoubleExcitationPlus(
+        std::complex<PrecisionT> *arr, size_t num_qubits,
+        const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
+        -> PrecisionT {
+        assert(wires.size() == 4);
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+
+        for (const size_t &externalIndex : externalIndices) {
+            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
+            shiftedState[indices[0]] *= -1;
+            shiftedState[indices[1]] *= -1;
+            shiftedState[indices[2]] *= -1;
+            shiftedState[indices[3]] *= Util::IMAG<PrecisionT>();
+            for (size_t i = 4; i < 12; i++) {
+                shiftedState[indices[i]] *= -1;
+            }
+            shiftedState[indices[12]] *= -Util::IMAG<PrecisionT>();
+            shiftedState[indices[13]] *= -1;
+            shiftedState[indices[14]] *= -1;
+            shiftedState[indices[15]] *= -1;
+
+            std::swap(shiftedState[indices[3]], shiftedState[indices[12]]);
+        }
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return -static_cast<PrecisionT>(0.5);
     }
 };
 } // namespace Pennylane::Gates

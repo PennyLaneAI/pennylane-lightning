@@ -642,12 +642,12 @@ def circuit_ansatz(params, wires):
     qml.U2(params[16], params[17], wires=wires[0])
     qml.U3(params[18], params[19], params[20], wires=wires[1])
     # #     qml.CRot(params[21], params[22], params[23], wires=[wires[1], wires[2]]).inv()  # expected tofail
-    # #     qml.SingleExcitation(params[24], wires=[wires[2], wires[0]])
-    # #     qml.DoubleExcitation(params[25], wires=[wires[2], wires[0], wires[1], wires[3]])
-    # #     qml.SingleExcitationPlus(params[26], wires=[wires[0], wires[2]])
-    # #     qml.SingleExcitationMinus(params[27], wires=[wires[0], wires[2]])
-    # #     qml.DoubleExcitationPlus(params[27], wires=[wires[2], wires[0], wires[1], wires[3]])
-    # #     qml.DoubleExcitationMinus(params[27], wires=[wires[2], wires[0], wires[1], wires[3]])
+    qml.SingleExcitation(params[24], wires=[wires[2], wires[0]])
+    qml.DoubleExcitation(params[25], wires=[wires[2], wires[0], wires[1], wires[3]])
+    qml.SingleExcitationPlus(params[26], wires=[wires[0], wires[2]])
+    qml.SingleExcitationMinus(params[27], wires=[wires[0], wires[2]])
+    qml.DoubleExcitationPlus(params[27], wires=[wires[2], wires[0], wires[1], wires[3]])
+    qml.DoubleExcitationMinus(params[27], wires=[wires[2], wires[0], wires[1], wires[3]])
     qml.RX(params[28], wires=wires[0])
     qml.RX(params[29], wires=wires[1])
 

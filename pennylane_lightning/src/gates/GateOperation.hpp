@@ -52,9 +52,16 @@ enum class GateOperation : uint32_t {
     CRY,
     CRZ,
     CRot,
+    SingleExcitation,
+    SingleExcitationMinus,
+    SingleExcitationPlus,
     /* Three-qubit gates */
     Toffoli,
     CSWAP,
+    /* Four-qubit gates */
+    DoubleExcitation,
+    DoubleExcitationMinus,
+    DoubleExcitationPlus,
     /* Mutli-qubit gates */
     MultiRZ,
     /* General matrix */
@@ -79,6 +86,12 @@ enum class GeneratorOperation : uint32_t {
     CRY,
     CRZ,
     ControlledPhaseShift,
+    SingleExcitation,
+    SingleExcitationMinus,
+    SingleExcitationPlus,
+    DoubleExcitation,
+    DoubleExcitationMinus,
+    DoubleExcitationPlus,
     MultiRZ,
     /* END (placeholder) */
     END

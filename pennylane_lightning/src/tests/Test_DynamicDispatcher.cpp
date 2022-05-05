@@ -84,7 +84,7 @@ constexpr void testAllGatesForKernelIter(RandomEngine &re,
         constexpr auto gate_op = static_cast<GateOperation>(idx);
 
         if constexpr (gate_op != GateOperation::Matrix) { // ignore Matrix
-            for (size_t num_qubits = 3; num_qubits <= max_num_qubits;
+            for (size_t num_qubits = 4; num_qubits <= max_num_qubits;
                  num_qubits++) {
                 testDynamicDispatch<PrecisionT, ParamT, GateImplementation,
                                     gate_op>(re, num_qubits);
