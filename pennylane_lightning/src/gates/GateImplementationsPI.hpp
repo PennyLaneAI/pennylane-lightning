@@ -709,18 +709,18 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
             shiftedState[indices[1]] *= e;
             shiftedState[indices[2]] *= e;
             shiftedState[indices[3]] = c * v3 - s * v12;
-            for (size_t i = 4; i < 12;
-                 i++) { // NOLINTNEXTLINE(readability-magic-numbers)
-                shiftedState[indices[i]] *= e;
-            }
-            shiftedState[indices[12]] =
-                s * v3 + c * v12; // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[13]] *=
-                e; // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[14]] *=
-                e; // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[15]] *=
-                e; // NOLINTNEXTLINE(readability-magic-numbers)
+            shiftedState[indices[4]] *= e;
+            shiftedState[indices[5]] *= e;
+            shiftedState[indices[6]] *= e;
+            shiftedState[indices[7]] *= e;
+            shiftedState[indices[8]] *= e;
+            shiftedState[indices[9]] *= e;
+            shiftedState[indices[10]] *= e;
+            shiftedState[indices[11]] *= e;
+            shiftedState[indices[12]] = s * v3 + c * v12;
+            shiftedState[indices[13]] *= e;
+            shiftedState[indices[14]] *= e;
+            shiftedState[indices[15]] *= e;
         }
     }
 
@@ -748,18 +748,18 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
             shiftedState[indices[1]] *= e;
             shiftedState[indices[2]] *= e;
             shiftedState[indices[3]] = c * v3 - s * v12;
-            for (size_t i = 4; i < 12;
-                 i++) { // NOLINTNEXTLINE(readability-magic-numbers)
-                shiftedState[indices[i]] *= e;
-            }
-            shiftedState[indices[12]] =
-                s * v3 + c * v12; // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[13]] *=
-                e; // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[14]] *=
-                e; // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[15]] *=
-                e; // NOLINTNEXTLINE(readability-magic-numbers)
+            shiftedState[indices[4]] *= e;
+            shiftedState[indices[5]] *= e;
+            shiftedState[indices[6]] *= e;
+            shiftedState[indices[7]] *= e;
+            shiftedState[indices[8]] *= e;
+            shiftedState[indices[9]] *= e;
+            shiftedState[indices[10]] *= e;
+            shiftedState[indices[11]] *= e;
+            shiftedState[indices[12]] = s * v3 + c * v12;
+            shiftedState[indices[13]] *= e;
+            shiftedState[indices[14]] *= e;
+            shiftedState[indices[15]] *= e;
         }
     }
 
@@ -897,7 +897,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
             }
 
             shiftedState[indices[3]] = -v12 * Util::IMAG<PrecisionT>();
-            shiftedState[indices[12]] = -v3 * Util::IMAG<PrecisionT>();
+            shiftedState[indices[12]] = v3 * Util::IMAG<PrecisionT>();
         }
         // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
