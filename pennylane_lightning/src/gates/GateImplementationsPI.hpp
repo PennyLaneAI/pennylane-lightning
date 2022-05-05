@@ -675,17 +675,16 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         const PrecisionT s =
             inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
 
+        const size_t i0 = 3;  // NOLINT(readability-magic-numbers)
+        const size_t i1 = 12; // NOLINT(readability-magic-numbers)
+
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
-            // NOLINT(readability-magic-numbers)
-            const std::complex<PrecisionT> v3 = shiftedState[indices[3]];
-            // NOLINT(readability-magic-numbers)
-            const std::complex<PrecisionT> v12 = shiftedState[indices[12]];
+            const std::complex<PrecisionT> v3 = shiftedState[indices[i0]];
+            const std::complex<PrecisionT> v12 = shiftedState[indices[i1]];
 
-            // NOLINT(readability-magic-numbers)
-            shiftedState[indices[3]] = c * v3 - s * v12;
-            // NOLINT(readability-magic-numbers)
-            shiftedState[indices[12]] = s * v3 + c * v12;
+            shiftedState[indices[i0]] = c * v3 - s * v12;
+            shiftedState[indices[i1]] = s * v3 + c * v12;
         }
     }
 
@@ -704,20 +703,21 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
             inverse ? std::exp(std::complex<PrecisionT>(0, angle / 2))
                     : std::exp(-std::complex<PrecisionT>(0, angle / 2));
 
+        const size_t i0 = 3;  // NOLINT(readability-magic-numbers)
+        const size_t i1 = 12; // NOLINT(readability-magic-numbers)
+
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
 
             // NOLINT(readability-magic-numbers)
-            const std::complex<PrecisionT> v3 = shiftedState[indices[3]];
+            const std::complex<PrecisionT> v3 = shiftedState[indices[i0]];
             // NOLINT(readability-magic-numbers)
-            const std::complex<PrecisionT> v12 = shiftedState[indices[12]];
+            const std::complex<PrecisionT> v12 = shiftedState[indices[i1]];
 
             shiftedState[indices[0]] *= e; // NOLINT(readability-magic-numbers)
             shiftedState[indices[1]] *= e; // NOLINT(readability-magic-numbers)
             shiftedState[indices[2]] *= e; // NOLINT(readability-magic-numbers)
-
-            // NOLINT(readability-magic-numbers)
-            shiftedState[indices[3]] = c * v3 - s * v12;
+            shiftedState[indices[i0]] = c * v3 - s * v12;
             shiftedState[indices[4]] *= e;  // NOLINT(readability-magic-numbers)
             shiftedState[indices[5]] *= e;  // NOLINT(readability-magic-numbers)
             shiftedState[indices[6]] *= e;  // NOLINT(readability-magic-numbers)
@@ -726,9 +726,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
             shiftedState[indices[9]] *= e;  // NOLINT(readability-magic-numbers)
             shiftedState[indices[10]] *= e; // NOLINT(readability-magic-numbers)
             shiftedState[indices[11]] *= e; // NOLINT(readability-magic-numbers)
-
-            // NOLINT(readability-magic-numbers)
-            shiftedState[indices[12]] = s * v3 + c * v12;
+            shiftedState[indices[i1]] = s * v3 + c * v12;
             shiftedState[indices[13]] *= e; // NOLINT(readability-magic-numbers)
             shiftedState[indices[14]] *= e; // NOLINT(readability-magic-numbers)
             shiftedState[indices[15]] *= e; // NOLINT(readability-magic-numbers)
@@ -750,20 +748,21 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
             inverse ? std::exp(-std::complex<PrecisionT>(0, angle / 2))
                     : std::exp(std::complex<PrecisionT>(0, angle / 2));
 
+        const size_t i0 = 3;  // NOLINT(readability-magic-numbers)
+        const size_t i1 = 12; // NOLINT(readability-magic-numbers)
+
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
 
             // NOLINT(readability-magic-numbers)
-            const std::complex<PrecisionT> v3 = shiftedState[indices[3]];
+            const std::complex<PrecisionT> v3 = shiftedState[indices[i0]];
             // NOLINT(readability-magic-numbers)
-            const std::complex<PrecisionT> v12 = shiftedState[indices[12]];
+            const std::complex<PrecisionT> v12 = shiftedState[indices[i1]];
 
             shiftedState[indices[0]] *= e; // NOLINT(readability-magic-numbers)
             shiftedState[indices[1]] *= e; // NOLINT(readability-magic-numbers)
             shiftedState[indices[2]] *= e; // NOLINT(readability-magic-numbers)
-
-            // NOLINT(readability-magic-numbers)
-            shiftedState[indices[3]] = c * v3 - s * v12;
+            shiftedState[indices[i0]] = c * v3 - s * v12;
             shiftedState[indices[4]] *= e;  // NOLINT(readability-magic-numbers)
             shiftedState[indices[5]] *= e;  // NOLINT(readability-magic-numbers)
             shiftedState[indices[6]] *= e;  // NOLINT(readability-magic-numbers)
@@ -772,9 +771,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
             shiftedState[indices[9]] *= e;  // NOLINT(readability-magic-numbers)
             shiftedState[indices[10]] *= e; // NOLINT(readability-magic-numbers)
             shiftedState[indices[11]] *= e; // NOLINT(readability-magic-numbers)
-
-            // NOLINT(readability-magic-numbers)
-            shiftedState[indices[12]] = s * v3 + c * v12;
+            shiftedState[indices[i1]] = s * v3 + c * v12;
             shiftedState[indices[13]] *= e; // NOLINT(readability-magic-numbers)
             shiftedState[indices[14]] *= e; // NOLINT(readability-magic-numbers)
             shiftedState[indices[15]] *= e; // NOLINT(readability-magic-numbers)
@@ -906,21 +903,19 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         assert(wires.size() == 4);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
+        const size_t i0 = 3;  // NOLINT(readability-magic-numbers)
+        const size_t i1 = 12; // NOLINT(readability-magic-numbers)
+
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
-            // NOLINT(readability-magic-numbers)
-            const std::complex<PrecisionT> v3 = shiftedState[indices[3]];
-            // NOLINT(readability-magic-numbers)
-            const std::complex<PrecisionT> v12 = shiftedState[indices[12]];
+            const std::complex<PrecisionT> v3 = shiftedState[indices[i0]];
+            const std::complex<PrecisionT> v12 = shiftedState[indices[i1]];
             for (const size_t &i : indices) {
                 shiftedState[i] = std::complex<PrecisionT>{};
             }
 
-            // NOLINT(readability-magic-numbers)
-            shiftedState[indices[3]] = -v12 * Util::IMAG<PrecisionT>();
-
-            // NOLINT(readability-magic-numbers)
-            shiftedState[indices[12]] = v3 * Util::IMAG<PrecisionT>();
+            shiftedState[indices[i0]] = -v12 * Util::IMAG<PrecisionT>();
+            shiftedState[indices[i1]] = v3 * Util::IMAG<PrecisionT>();
         }
         // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
@@ -934,16 +929,16 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         assert(wires.size() == 4);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
+        const size_t i0 = 3;  // NOLINT(readability-magic-numbers)
+        const size_t i1 = 12; // NOLINT(readability-magic-numbers)
+
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
 
-            // NOLINT(readability-magic-numbers)
-            shiftedState[indices[3]] *= Util::IMAG<PrecisionT>();
-            // NOLINT(readability-magic-numbers)
-            shiftedState[indices[12]] *= -Util::IMAG<PrecisionT>();
+            shiftedState[indices[i0]] *= Util::IMAG<PrecisionT>();
+            shiftedState[indices[i1]] *= -Util::IMAG<PrecisionT>();
 
-            // NOLINT(readability-magic-numbers)
-            std::swap(shiftedState[indices[3]], shiftedState[indices[12]]);
+            std::swap(shiftedState[indices[i0]], shiftedState[indices[i1]]);
         }
         // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
@@ -957,19 +952,19 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         assert(wires.size() == 4);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
+        const size_t i0 = 3;  // NOLINT(readability-magic-numbers)
+        const size_t i1 = 12; // NOLINT(readability-magic-numbers)
+
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             for (const size_t &i : indices) {
                 shiftedState[indices[i]] *= -1;
             }
 
-            // NOLINT(readability-magic-numbers)
-            shiftedState[indices[3]] *= -Util::IMAG<PrecisionT>();
-            // NOLINT(readability-magic-numbers)
-            shiftedState[indices[12]] *= Util::IMAG<PrecisionT>();
+            shiftedState[indices[i0]] *= -Util::IMAG<PrecisionT>();
+            shiftedState[indices[i1]] *= Util::IMAG<PrecisionT>();
 
-            // NOLINT(readability-magic-numbers)
-            std::swap(shiftedState[indices[3]], shiftedState[indices[12]]);
+            std::swap(shiftedState[indices[i0]], shiftedState[indices[i1]]);
         }
         // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
