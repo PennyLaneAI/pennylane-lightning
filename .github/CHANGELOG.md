@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add qchem gates and generators.
+[(#289)](https://github.com/PennyLaneAI/pennylane-lightning/pull/289)
+
 ### Breaking changes
 
 ### Improvements
@@ -14,11 +17,14 @@
 
 ### Bug fixes
 
+* Fix the issue with using available `clang-format` version in format.
+[#(288)](https://github.com/PennyLaneAI/pennylane-lightning/pull/288)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Mikhail Andrenkov
+Ali Asadi, Mikhail Andrenkov
 
 ---
 
