@@ -304,7 +304,7 @@ class LightningQubit(DefaultQubit):
             adj = AdjointJacobianC128()
 
         obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=use_csingle)
-        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map, use_csingle=use_csingle)
+        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map)
 
         ops_serialized = adj.create_ops_list(*ops_serialized)
 
@@ -455,7 +455,7 @@ class LightningQubit(DefaultQubit):
                 ket = ket.astype(np.complex64)
 
             obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=use_csingle)
-            ops_serialized, use_sp = _serialize_ops(tape, self.wire_map, use_csingle=use_csingle)
+            ops_serialized, use_sp = _serialize_ops(tape, self.wire_map)
 
             ops_serialized = V.create_ops_list(*ops_serialized)
 

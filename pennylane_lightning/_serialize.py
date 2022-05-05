@@ -130,7 +130,7 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict, use_csingle: bool = False
 
 
 def _serialize_ops(
-    tape: QuantumTape, wires_map: dict, use_csingle: bool = False
+    tape: QuantumTape, wires_map: dict
 ) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]], List[bool], List[np.ndarray]]:
     """Serializes the operations of an input tape.
 
@@ -151,8 +151,6 @@ def _serialize_ops(
     wires = []
     inverses = []
     mats = []
-
-    sv_py = StateVectorC64 if use_csingle else StateVectorC128
 
     uses_stateprep = False
 

@@ -415,15 +415,14 @@ class TestSerializeOps:
 
     wires_dict = {i: i for i in range(10)}
 
-    @pytest.mark.parametrize("C", [True, False])
-    def test_basic_circuit(self, C):
+    def test_basic_circuit(self):
         """Test expected serialization for a simple circuit"""
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=0)
             qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
 
-        s = _serialize_ops(tape, self.wires_dict, use_csingle=C)
+        s = _serialize_ops(tape, self.wires_dict)
         s_expected = (
             (
                 ["RX", "RY", "CNOT"],
@@ -436,8 +435,7 @@ class TestSerializeOps:
         )
         assert s == s_expected
 
-    @pytest.mark.parametrize("C", [True, False])
-    def test_skips_prep_circuit(self, C):
+    def test_skips_prep_circuit(self):
         """Test expected serialization for a simple circuit with state preparation, such that
         the state preparation is skipped"""
         with qml.tape.QuantumTape() as tape:
@@ -447,7 +445,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
 
-        s = _serialize_ops(tape, self.wires_dict, use_csingle=C)
+        s = _serialize_ops(tape, self.wires_dict)
         s_expected = (
             (
                 ["RX", "RY", "CNOT"],
@@ -460,15 +458,14 @@ class TestSerializeOps:
         )
         assert s == s_expected
 
-    @pytest.mark.parametrize("C", [True, False])
-    def test_inverse_circuit(self, C):
+    def test_inverse_circuit(self):
         """Test expected serialization for a simple circuit that includes an inverse gate"""
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=0)
             qml.RY(0.6, wires=1).inv()
             qml.CNOT(wires=[0, 1])
 
-        s = _serialize_ops(tape, self.wires_dict, use_csingle=C)
+        s = _serialize_ops(tape, self.wires_dict)
         s_expected = (
             (
                 ["RX", "RY", "CNOT"],
@@ -481,56 +478,47 @@ class TestSerializeOps:
         )
         assert s == s_expected
 
-    @pytest.mark.parametrize("C", [True, False])
-    def test_unsupported_kernel_circuit(self, C):
+    def test_unsupported_kernel_circuit(self):
         """Test expected serialization for a circuit including gates that do not have a dedicated
         kernel"""
         with qml.tape.QuantumTape() as tape:
-            qml.SingleExcitationPlus(0.4, wires=[0, 1])
-            qml.SingleExcitationMinus(0.5, wires=[1, 2]).inv()
             qml.CNOT(wires=[0, 1])
             qml.RZ(0.2, wires=2)
 
-        s = _serialize_ops(tape, self.wires_dict, use_csingle=C)
+        s = _serialize_ops(tape, self.wires_dict)
         s_expected = (
             (
-                ["SingleExcitationPlus", "SingleExcitationMinus", "CNOT", "RZ"],
-                [[], [], [], [0.2]],
-                [[0, 1], [1, 2], [0, 1], [2]],
-                [False, False, False, False],
-                [
-                    qml.matrix(qml.SingleExcitationPlus(0.4, wires=[0, 1])),
-                    qml.matrix(qml.SingleExcitationMinus(0.5, wires=[1, 2]).inv()),
-                    [],
-                    [],
-                ],
+                ["CNOT", "RZ"],
+                [[], [0.2]],
+                [[0, 1], [2]],
+                [False, False],
             ),
             False,
         )
         assert s[0][0] == s_expected[0][0]
         assert s[0][1] == s_expected[0][1]
-        assert s[0][2] == s_expected[0][2]
-        assert s[0][3] == s_expected[0][3]
 
-        assert all(np.allclose(s1, s2) for s1, s2 in zip(s[0][4], s_expected[0][4]))
-
-    @pytest.mark.parametrize("C", [True, False])
-    def test_custom_wires_circuit(self, C):
+    def test_custom_wires_circuit(self):
         """Test expected serialization for a simple circuit with custom wire labels"""
         wires_dict = {"a": 0, 3.2: 1}
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires="a")
             qml.RY(0.6, wires=3.2)
             qml.CNOT(wires=["a", 3.2])
+            qml.SingleExcitation(0.5, wires=["a", 3.2])
+            qml.SingleExcitationPlus(0.4, wires=["a", 3.2])
+            qml.SingleExcitationMinus(0.5, wires=["a", 3.2]).inv()
 
-        s = _serialize_ops(tape, wires_dict, use_csingle=C)
+        s = _serialize_ops(tape, wires_dict)
+        print(s)
+        print()
         s_expected = (
             (
-                ["RX", "RY", "CNOT"],
-                [[0.4], [0.6], []],
-                [[0], [1], [0, 1]],
-                [False, False, False],
-                [[], [], []],
+                ["RX", "RY", "CNOT", "SingleExcitation", "SingleExcitationPlus", "SingleExcitationMinus"],
+                [[0.4], [0.6], [], [0.5], [0.4], [0.5]],
+                [[0], [1], [0, 1], [0, 1], [0, 1], [0, 1]],
+                [False, False, False, False, False, True],
+                [[], [], [], [], [], []],
             ),
             False,
         )
@@ -546,23 +534,27 @@ class TestSerializeOps:
             qml.QubitUnitary(np.eye(4), wires=[0, 1])
             qml.templates.QFT(wires=[0, 1, 2]).inv()
             qml.DoubleExcitation(0.555, wires=[3, 2, 1, 0])
+            qml.DoubleExcitationMinus(0.555, wires=[0, 1, 2, 3])
+            qml.DoubleExcitationPlus(0.555, wires=[0, 1, 2, 3])
 
-        s = _serialize_ops(tape, self.wires_dict, use_csingle=C)
+        s = _serialize_ops(tape, self.wires_dict)
 
         dtype = np.complex64 if C else np.complex128
         s_expected = (
             (
-                ["RX", "RY", "CNOT", "QubitUnitary", "QFT", "DoubleExcitation"],
-                [[0.4], [0.6], [], [], [], []],
-                [[0], [1], [0, 1], [0, 1], [0, 1, 2], [3, 2, 1, 0]],
-                [False, False, False, False, False, False],
+                ["RX", "RY", "CNOT", "QubitUnitary", "QFT", "DoubleExcitation", "DoubleExcitationMinus", "DoubleExcitationPlus"],
+                [[0.4], [0.6], [], [], [], [0.555], [0.555], [0.555]],
+                [[0], [1], [0, 1], [0, 1], [0, 1, 2], [3, 2, 1, 0], [0, 1, 2, 3], [0, 1, 2, 3]],
+                [False, False, False, False, False, False, False, False],
                 [
                     [],
                     [],
                     [],
                     qml.matrix(qml.QubitUnitary(np.eye(4, dtype=dtype), wires=[0, 1])),
                     qml.matrix(qml.templates.QFT(wires=[0, 1, 2]).inv()),
-                    qml.matrix(qml.DoubleExcitation(0.555, wires=[3, 2, 1, 0])),
+                    [],
+                    [],
+                    [],
                 ],
             ),
             False,
