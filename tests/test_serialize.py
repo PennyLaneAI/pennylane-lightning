@@ -514,7 +514,14 @@ class TestSerializeOps:
         print()
         s_expected = (
             (
-                ["RX", "RY", "CNOT", "SingleExcitation", "SingleExcitationPlus", "SingleExcitationMinus"],
+                [
+                    "RX",
+                    "RY",
+                    "CNOT",
+                    "SingleExcitation",
+                    "SingleExcitationPlus",
+                    "SingleExcitationMinus",
+                ],
                 [[0.4], [0.6], [], [0.5], [0.4], [0.5]],
                 [[0], [1], [0, 1], [0, 1], [0, 1], [0, 1]],
                 [False, False, False, False, False, True],
@@ -542,7 +549,16 @@ class TestSerializeOps:
         dtype = np.complex64 if C else np.complex128
         s_expected = (
             (
-                ["RX", "RY", "CNOT", "QubitUnitary", "QFT", "DoubleExcitation", "DoubleExcitationMinus", "DoubleExcitationPlus"],
+                [
+                    "RX",
+                    "RY",
+                    "CNOT",
+                    "QubitUnitary",
+                    "QFT",
+                    "DoubleExcitation",
+                    "DoubleExcitationMinus",
+                    "DoubleExcitationPlus",
+                ],
                 [[0.4], [0.6], [], [], [], [0.555], [0.555], [0.555]],
                 [[0], [1], [0, 1], [0, 1], [0, 1, 2], [3, 2, 1, 0], [0, 1, 2, 3], [0, 1, 2, 3]],
                 [False, False, False, False, False, False, False, False],
