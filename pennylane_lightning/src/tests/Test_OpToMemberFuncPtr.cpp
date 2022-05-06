@@ -17,17 +17,15 @@ template <typename EnumClass> constexpr auto allGateOps() {
     return Util::tuple_to_array(allGateOpsHelper<EnumClass>(
         std::make_integer_sequence<uint32_t,
                                    static_cast<uint32_t>(EnumClass::END)>{}));
-};
+}
 template <class PrecisionT, class ParamT, class GateImplemenation,
           uint32_t gate_idx>
 constexpr bool testAllGatesImplementedIter() {
     if constexpr (gate_idx < static_cast<uint32_t>(GateOperation::END)) {
         constexpr auto gate_op = static_cast<GateOperation>(gate_idx);
-        if constexpr (gate_op != GateOperation::Matrix) {
-            static_cast<void>(
-                GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplemenation,
-                                      gate_op>::value);
-        }
+        static_cast<void>(
+            GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplemenation,
+                                  gate_op>::value);
         return testAllGatesImplementedIter<PrecisionT, ParamT,
                                            GateImplemenation, gate_idx + 1>();
     } else {
@@ -155,8 +153,7 @@ static_assert(testAllGatesImplemeted<float, float, DummyImplementation>(),
 
 struct ImplementedGates {
     constexpr static auto value = DummyImplementation::implemented_gates;
-    constexpr static std::array<GateOperation, 1> ignore_list = {
-        GateOperation::Matrix};
+    constexpr static std::array<GateOperation, 0> ignore_list = {};
 
     template <typename PrecisionT, typename ParamT, GateOperation op>
     constexpr static auto func_ptr =
@@ -189,7 +186,7 @@ constexpr auto opFuncPtrPairsIter() {
     } else {
         return std::tuple{};
     }
-};
+}
 
 /**
  * @brief Pairs of all implemented gate operations and the corresponding

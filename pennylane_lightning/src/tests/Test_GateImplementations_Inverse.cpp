@@ -26,30 +26,25 @@ using namespace Pennylane::Gates;
 template <typename PrecisionT, typename ParamT, class GateImplementation,
           GateOperation gate_op, class RandomEngine>
 void testInverseKernelGate(RandomEngine &re, size_t num_qubits) {
-    if constexpr (gate_op != GateOperation::Matrix) {
-        constexpr auto gate_name =
-            Util::static_lookup<gate_op>(Constant::gate_names);
-        DYNAMIC_SECTION("Test inverse of " << gate_name << " for kernel "
-                                           << GateImplementation::name) {
-            const auto ini_st = createRandomState<PrecisionT>(re, num_qubits);
+    constexpr auto gate_name =
+        Util::static_lookup<gate_op>(Constant::gate_names);
+    DYNAMIC_SECTION("Test inverse of " << gate_name << " for kernel "
+                                       << GateImplementation::name) {
+        const auto ini_st = createRandomState<PrecisionT>(re, num_qubits);
 
-            auto st = ini_st;
+        auto st = ini_st;
 
-            const auto func_ptr =
-                GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
-                                      gate_op>::value;
+        const auto func_ptr =
+            GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                  gate_op>::value;
 
-            const auto wires = createWires(gate_op);
-            const auto params = createParams<ParamT>(gate_op);
+        const auto wires = createWires(gate_op);
+        const auto params = createParams<ParamT>(gate_op);
 
-            callGateOps(func_ptr, st.data(), num_qubits, wires, false, params);
-            callGateOps(func_ptr, st.data(), num_qubits, wires, true, params);
+        callGateOps(func_ptr, st.data(), num_qubits, wires, false, params);
+        callGateOps(func_ptr, st.data(), num_qubits, wires, true, params);
 
-            REQUIRE(st == approx(ini_st).margin(PrecisionT{1e-7}));
-        }
-    } else {
-        static_cast<void>(re);
-        static_cast<void>(num_qubits);
+        REQUIRE(st == approx(ini_st).margin(PrecisionT{1e-7}));
     }
 }
 

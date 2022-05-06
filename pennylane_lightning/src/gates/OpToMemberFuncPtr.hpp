@@ -33,11 +33,8 @@ namespace Pennylane::Gates {
 template <class PrecisionT, class ParamT, class GateImplementation,
           GateOperation gate_op>
 struct GateOpToMemberFuncPtr {
-    // raises compile error when used
-    static_assert(
-        gate_op != GateOperation::Matrix,
-        "GateOpToMemberFuncPtr is not defined for GateOperation::Matrix.");
-    static_assert(gate_op == GateOperation::Matrix,
+    // raises compile error when instantiated
+    static_assert(sizeof(PrecisionT) == -1,
                   "GateOpToMemberFuncPtr is not defined for the given gate. "
                   "When you define a new GateOperation, check that you also "
                   "have added the corresponding entry in "
@@ -216,7 +213,7 @@ struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
 template <class PrecisionT, class GateImplementation,
           GeneratorOperation gntr_op>
 struct GeneratorOpToMemberFuncPtr {
-    // raises compile error when used
+    // raises compile error when instantiated
     static_assert(
         sizeof(GateImplementation) == -1,
         "GeneratorOpToMemberFuncPtr is not defined for the given generator. "
@@ -298,6 +295,33 @@ struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
         &GateImplementation::template applyGeneratorMultiRZ<PrecisionT>;
 };
 
+/**
+ * @brief Matrix operation to member function pointer
+ */
+template <class PrecisionT, class GateImplementation, MatrixOperation mat_op>
+struct MatrixOpToMemberFuncPtr {
+    static_assert(sizeof(PrecisionT) == -1, "Unrecognized matrix operation");
+};
+
+template <class PrecisionT, class GateImplementation>
+struct MatrixOpToMemberFuncPtr<PrecisionT, GateImplementation,
+                               MatrixOperation::SingleQubitOp> {
+    constexpr static auto value =
+        &GateImplementation::template applySingleQubitOp<PrecisionT>;
+};
+template <class PrecisionT, class GateImplementation>
+struct MatrixOpToMemberFuncPtr<PrecisionT, GateImplementation,
+                               MatrixOperation::TwoQubitOp> {
+    constexpr static auto value =
+        &GateImplementation::template applyTwoQubitOp<PrecisionT>;
+};
+template <class PrecisionT, class GateImplementation>
+struct MatrixOpToMemberFuncPtr<PrecisionT, GateImplementation,
+                               MatrixOperation::MultiQubitOp> {
+    constexpr static auto value =
+        &GateImplementation::template applyMultiQubitOp<PrecisionT>;
+};
+
 /// @cond DEV
 namespace Internal {
 /**
@@ -377,6 +401,15 @@ template <class PrecisionT> struct GeneratorFuncPtr {
     using Type = PrecisionT (*)(std::complex<PrecisionT> *, size_t,
                                 const std::vector<size_t> &, bool);
 };
+
+/**
+ * @brief Pointer type for a matrix operation
+ */
+template <class PrecisionT> struct MatrixFuncPtr {
+    using Type = void (*)(std::complex<PrecisionT> *, size_t,
+                          const std::complex<PrecisionT> *,
+                          const std::vector<size_t> &, bool);
+};
 } // namespace Internal
 /// @endcond
 
@@ -392,6 +425,12 @@ using GateFuncPtrT =
  */
 template <class PrecisionT>
 using GeneratorFuncPtrT = typename Internal::GeneratorFuncPtr<PrecisionT>::Type;
+
+/**
+ * @brief Convenient type alias for GeneratorFuncPtrT.
+ */
+template <class PrecisionT>
+using MatrixFuncPtrT = typename Internal::MatrixFuncPtr<PrecisionT>::Type;
 
 /**
  * @defgroup Call gate operation with provided arguments

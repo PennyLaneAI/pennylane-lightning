@@ -3,7 +3,7 @@ The PennyLane-Lightning benchmark suite powered by [google-benchmark](https://gi
 To use GB scripts, you can perform `make gbenchmark` or run 
 ```console
 $ cmake pennylane_lightning/src/ -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_OPENMP=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release
-$ cmake --build ./BuildGBench --target utils apply_operations apply_multirz
+$ cmake --build ./BuildGBench
 ```
 
 ## Google-Benchmark
@@ -35,7 +35,7 @@ benchmark [--benchmark_list_tests={true|false}]
 - `Bench_BitUtil.cpp`,
 - `Bench_LinearAlgebra.cpp`,
 - `Bench_ApplyOperations.cpp`,
-- `Bench_ApplyMultiRZ.cpp`.
+- `Bench_Kernels.cpp`.
 
 
 ### `benchmarks/utils`
@@ -150,50 +150,59 @@ One can use `--benchmark_format` to get the results in other formats: `<console|
 Check **GB CLI Flags** for the list of flags. 
 
 
-### `benchmarks/apply_multirz`
-To benchmark the `Pennylane::StateVectorManaged` and `applyOperation` for `"MultiRZ"` in PennyLane-Lightning, 
-one can run:
+### `benchmarks/bench_kernels`
+To benchmark the `Pennylane::StateVectorManaged` for all gates, generators, matrix operations using different kernels:
 ```console
 $ make gbenchmark
-$ ./BuildGBench/benchmarks/apply_multirz
+$ ./BuildGBench/benchmarks/bench_kernels
 ```
 
-For example, in the code below, 
-- `applyOperation_MultiRZ` is the name of the method in `Bench_ApplyMultiRZ.cpp`, 
-- `double` is the floating point precision type,
-- `LM` is just a name for the parameters, 
-- `Pennylane::Gates::KernelType::LM` is the kernel type,
-- `CreateRange(8, 16, 2)` creates a (sparse) range for the number of gates, 
-- `CreateDenseRange(6, 10, 2)` creates a (dense) range for the number of qubits, and
-- `{2}` is a list of values for the number of wires involved in `MultiRZ`. 
-
-```C
-BENCHMARK_APPLYOPS(applyOperation_MultiRZ, double, LM, Kernel::LM)
-    ->ArgsProduct({
-        benchmark::CreateRange(8, 16, /*mul=*/2),       // num_gates
-        benchmark::CreateDenseRange(6, 10, /*step=*/2), // num_qubits
-        {2},                                            // num_wires
-    });
-```
-
+The output is
 ```console
-Run on (8 X 2565.86 MHz CPU s)
+Run on (8 X 4800 MHz CPU s)
 CPU Caches:
   L1 Data 48 KiB (x4)
   L1 Instruction 32 KiB (x4)
   L2 Unified 1280 KiB (x4)
   L3 Unified 12288 KiB (x1)
-Load Average: 0.70, 0.56, 0.53
-------------------------------------------------------------------------------------
-Benchmark                                          Time             CPU   Iterations
-------------------------------------------------------------------------------------
-applyOperation_MultiRZ<double>/LM/8/6/2         1803 ns         1803 ns       402773
-applyOperation_MultiRZ<double>/LM/16/6/2        3636 ns         3636 ns       178912
-applyOperation_MultiRZ<double>/LM/8/8/2         6310 ns         6310 ns       109673
-applyOperation_MultiRZ<double>/LM/16/8/2       12540 ns        12540 ns        56605
-applyOperation_MultiRZ<double>/LM/8/10/2       25478 ns        25478 ns        29963
-applyOperation_MultiRZ<double>/LM/16/10/2      54317 ns        54316 ns        12293
+Load Average: 2.05, 1.92, 1.82
+CPU::AVX: True
+CPU::AVX2: True
+CPU::AVX512F: True
+CPU::Brand: 11th Gen Intel(R) Core(TM) i7-1185G7 @ 3.00GHz
+CPU::Vendor: GenuineIntel
+Compiler::AVX2: 0
+Compiler::AVX512F: 0
+Compiler::Name: GCC
+Compiler::Version: 9.4.0
+--------------------------------------------------------------------------------------
+Benchmark                                            Time             CPU   Iterations
+--------------------------------------------------------------------------------------
+PauliX<float>/LM/6                                2576 ns         2575 ns       274752
+PauliX<float>/LM/8                                6522 ns         6521 ns       105910
+PauliX<float>/LM/10                              22811 ns        22810 ns        30130
+PauliX<float>/LM/12                              87670 ns        87646 ns         7964
+PauliX<float>/LM/14                             349718 ns       349693 ns         2020
+PauliX<float>/LM/16                            1393902 ns      1393828 ns          491
+PauliX<float>/LM/18                            5782506 ns      5781553 ns          123
+PauliX<float>/LM/20                           25763147 ns     25761755 ns           26
+PauliX<float>/LM/22                          122700064 ns    122694232 ns            5
 ```
+
+We provide a simple benchmark script and drawing utilities:
+```console
+$ ./benchmarks/benchmark_all.sh
+```
+will record the results to `bench_result.json` file in the current directory. You may draw corresponding plots with
+```console
+$ ./plot_gate_benchmark.py bench_result.json
+```
+The plots will be available inside `./plots` directory. To only draw results for `float` or `double`, you can provide the arumgnet to the script
+```console
+$ ./plot_gate_benchmark.py bench_result.json (float|double)
+```
+
+
 
 ## GB Compare Tooling
 One can use [`compare.py`](https://github.com/google/benchmark/blob/main/tools/compare.py) to compare the results of the GB scripts. 
