@@ -61,13 +61,12 @@ class CMakeBuild(build_ext):
             # As Ninja does not support long path for windows yet:
             #  (https://github.com/ninja-build/ninja/pull/2056)
             configure_args += [
-                "-G Visual Studio 17 2022", 
-                "-T clangcl"
+                "-T clangcl",
             ]
         else:
             configure_args += [
                 "-GNinja", 
-                f"-DCMAKE_MAKE_PROGRAM={ninja_path}"
+                f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
             ]
         
         if debug:
