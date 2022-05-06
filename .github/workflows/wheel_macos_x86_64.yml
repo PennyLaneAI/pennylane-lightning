@@ -5,6 +5,7 @@ on:
       - master
   pull_request:
   release:
+    types: [published]
 
 env:
   CIBW_BUILD: 'cp37-* cp38-* cp39-* cp310-*'
@@ -69,7 +70,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         with:
-          name: ${{ runner.os }}-wheels.zip
+          name: ${{ runner.os }}-wheels-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
 
   upload-pypi:
@@ -79,7 +80,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v2
         with:
-          name: macOS-wheels.zip
+          name: macOS-wheels-x86_64.zip
           path: dist
 
       - name: Upload wheels to PyPI

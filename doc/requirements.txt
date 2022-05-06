@@ -5,3 +5,4 @@ graphviz
 pybind11
 sphinx
 sphinx-automodapi
+xanadu-sphinx-theme==0.1.0

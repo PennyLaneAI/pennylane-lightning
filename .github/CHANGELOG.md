@@ -1,11 +1,38 @@
-# Release 0.23.0-dev
+# Release 0.24.0-dev
 
 ### New features since last release
+
+### Breaking changes
+
+### Improvements
+
+### Documentation
+
+* Use the centralized [Xanadu Sphinx Theme](https://github.com/XanaduAI/xanadu-sphinx-theme)
+  to style the Sphinx documentation.
+[(#287)](https://github.com/PennyLaneAI/pennylane-lightning/pull/287)
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Mikhail Andrenkov
+
+---
+
+# Release 0.23.0
+
+### New features since last release
+
+* Add `generate_samples()` to lightning.
+[(#247)](https://github.com/PennyLaneAI/pennylane-lightning/pull/247)
 
 * Add Lightning GBenchmark Suite.
 [(#249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/249)
 
-* Add run-time and compile information in binary.
+* Support runtime and compile information.
 [(#253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/253)
 
 ### Improvements
@@ -16,10 +43,11 @@
 * Add more `clang-tidy` checks and kernel tests.
 [(#253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/253)
 
+* Add C++ code coverage to CI.
+[(#265)](https://github.com/PennyLaneAI/pennylane-lightning/pull/265)
+
 * Skip over identity operations in `"lightning.qubit"`.
 [(#268)](https://github.com/PennyLaneAI/pennylane-lightning/pull/268)
-
-### Documentation
 
 ### Bug fixes
 
@@ -35,10 +63,14 @@
 * Remove deprecated tape execution methods.
 [(#270)](https://github.com/PennyLaneAI/pennylane-lightning/pull/270)
 
+* Update `qml.probs` in `test_measures.py`.
+[(#280)](https://github.com/PennyLaneAI/pennylane-lightning/pull/280)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
-Ali Asadi, Chae-Yeun Park, and Lee James O'Riordan
+
+Ali Asadi, Chae-Yeun Park, Lee James O'Riordan, and Trevor Vincent
 
 ---
 
