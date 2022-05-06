@@ -14,7 +14,10 @@ env:
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
-    pip install pybind11 ninja cmake &&
+    pip install pybind11 ninja cmake
+    
+  # Long path in Windows  
+  CIBW_BEFORE_BUILD: |
     New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" ` -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
 
   # Testing of built wheels
