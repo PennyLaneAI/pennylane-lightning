@@ -74,7 +74,9 @@ class TestExpval:
         )
 
         res = np.array([dev.expval(O1), dev.expval(O2)], dtype=dev.C_DTYPE)
-        assert np.allclose(res, np.array([np.sin(theta) * np.sin(phi), np.sin(phi)], dtype=dev.C_DTYPE))
+        assert np.allclose(
+            res, np.array([np.sin(theta) * np.sin(phi), np.sin(phi)], dtype=dev.C_DTYPE)
+        )
 
     def test_pauliy_expectation(self, theta, phi, qubit_device_3_wires, tol):
         """Test that PauliY expectation value is correct"""

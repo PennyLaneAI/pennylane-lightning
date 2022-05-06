@@ -23,12 +23,15 @@ from pennylane_lightning.lightning_qubit import CPP_BINARY_AVAILABLE
 if not CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+
 def test_create_device():
     dev = qml.device("lightning.qubit", wires=1)
+
 
 @pytest.mark.parametrize("C", [np.complex64, np.complex128])
 def test_create_device_with_dtype(C):
     dev = qml.device("lightning.qubit", wires=1, c_dtype=C)
+
 
 @pytest.mark.skipif(
     not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"

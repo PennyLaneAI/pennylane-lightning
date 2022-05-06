@@ -161,8 +161,7 @@ class LightningQubit(DefaultQubit):
             if any(isinstance(r, QubitUnitary) for r in rotations):
                 super().apply(operations=[], rotations=rotations)
             else:
-                self._state = self.apply_lightning(
-                    np.copy(self._pre_rotated_state), rotations)
+                self._state = self.apply_lightning(np.copy(self._pre_rotated_state), rotations)
         else:
             self._state = self._pre_rotated_state
 
@@ -266,7 +265,7 @@ class LightningQubit(DefaultQubit):
             )
 
         # To support np.complex64 based on the type of self._state
-       
+
         if len(tape.trainable_params) == 0:
             return np.array(0)
 
@@ -425,7 +424,9 @@ class LightningQubit(DefaultQubit):
                 ket = np.ravel(self._pre_rotated_state)
 
             obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=self.use_csingle)
-            ops_serialized, use_sp = _serialize_ops(tape, self.wire_map, use_csingle=self.use_csingle)
+            ops_serialized, use_sp = _serialize_ops(
+                tape, self.wire_map, use_csingle=self.use_csingle
+            )
 
             ops_serialized = V.create_ops_list(*ops_serialized)
 

@@ -175,7 +175,7 @@ class TestAdjointJacobian:
         tape.trainable_params = {1}
 
         calculated_val = dev.adjoint_jacobian(tape)
- 
+
         h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
@@ -296,7 +296,9 @@ class TestAdjointJacobian:
         h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
-        grad_F = (lambda t, fn: fn(qml.execute(t, dev, None)))(*qml.gradients.finite_diff(tape, h = h))
+        grad_F = (lambda t, fn: fn(qml.execute(t, dev, None)))(
+            *qml.gradients.finite_diff(tape, h=h)
+        )
         grad_D = dev.adjoint_jacobian(tape)
 
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)

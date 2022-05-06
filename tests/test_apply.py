@@ -122,7 +122,7 @@ class TestApply:
         dev.apply([operation(wires=[0])])
 
         assert np.allclose(qubit_device_1_wire._state, np.array(expected_output), atol=tol, rtol=0)
-        assert dev._state.dtype ==  dev.C_DTYPE
+        assert dev._state.dtype == dev.C_DTYPE
 
     test_data_two_wires_no_parameters = [
         (qml.CNOT, [1, 0, 0, 0], [1, 0, 0, 0]),
@@ -159,7 +159,7 @@ class TestApply:
         dev.apply([operation(wires=[0, 1])])
 
         assert np.allclose(qubit_device_2_wires.state, np.array(expected_output), atol=tol, rtol=0)
-        assert dev._state.dtype ==  dev.C_DTYPE
+        assert dev._state.dtype == dev.C_DTYPE
 
     test_data_three_wires_no_parameters = [
         (qml.CSWAP, [1, 0, 0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0]),
@@ -177,13 +177,13 @@ class TestApply:
     ):
         """Tests that applying an operation yields the expected output state for three wire
         operations that have no parameters."""
-        
+
         dev = qubit_device_3_wires
         dev._state = np.array(input).reshape(3 * [2]).astype(dev.C_DTYPE)
         dev.apply([operation(wires=[0, 1, 2])])
 
         assert np.allclose(qubit_device_3_wires.state, np.array(expected_output), atol=tol, rtol=0)
-        assert dev._state.dtype ==  dev.C_DTYPE
+        assert dev._state.dtype == dev.C_DTYPE
 
     @pytest.mark.parametrize(
         "operation,expected_output,par",
