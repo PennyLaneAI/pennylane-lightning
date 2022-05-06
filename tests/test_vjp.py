@@ -32,27 +32,12 @@ except (ImportError, ModuleNotFoundError):
 class TestComputeVJP:
     """Tests for the numeric computation of VJPs"""
 
-    @pytest.fixture
-    def dev(self):
-        return qml.device("lightning.qubit", wires=2)
+    @pytest.fixture(params=[np.complex64, np.complex128])
+    def dev(self, request):
+        return qml.device("lightning.qubit", wires=2, c_dtype=request.param)
 
-    @pytest.mark.skipif(
-        not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
-    )
-    def test_unsupported_complex_type(self, dev):
-        dev._state = dev._asarray(dev._state, np.complex256)
-
-        dy = np.array([[1.0, 2.0], [3.0, 4.0]])
-        jac = np.array([[[1.0, 0.1, 0.2], [0.2, 0.6, 0.1]], [[0.4, -0.7, 1.2], [-0.5, -0.6, 0.7]]])
-
-        with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
-            dev.compute_vjp(dy, jac)
-
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_computation(self, tol, dev, C):
+    def test_computation(self, tol, dev):
         """Test that the correct VJP is returned"""
-        dev._state = dev._asarray(dev._state, C)
-
         dy = np.array([[1.0, 2.0], [3.0, 4.0]])
         jac = np.array([[[1.0, 0.1, 0.2], [0.2, 0.6, 0.1]], [[0.4, -0.7, 1.2], [-0.5, -0.6, 0.7]]])
 
@@ -60,13 +45,11 @@ class TestComputeVJP:
         expected = np.tensordot(dy, jac, axes=[[0, 1], [0, 1]])
 
         assert vjp.shape == (3,)
+        assert vjp.dtype == dev.R_DTYPE
         assert np.allclose(vjp, expected, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_computation_num(self, tol, dev, C):
+    def test_computation_num(self, tol, dev):
         """Test that the correct VJP is returned"""
-        dev._state = dev._asarray(dev._state, C)
-
         dy = np.array([[1.0, 2.0], [3.0, 4.0]])
         jac = np.array([[[1.0, 0.1, 0.2], [0.2, 0.6, 0.1]], [[0.4, -0.7, 1.2], [-0.5, -0.6, 0.7]]])
 
@@ -74,12 +57,12 @@ class TestComputeVJP:
         expected = np.tensordot(dy, jac, axes=[[0, 1], [0, 1]])
 
         assert vjp.shape == (3,)
+        assert vjp.dtype == dev.R_DTYPE
         assert np.allclose(vjp, expected, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_computation_num_error(self, dev, C):
+    def test_computation_num_error(self, dev):
         """Test that the correct VJP is returned"""
-        dev._state = dev._asarray(dev._state, C)
+        dev._state = dev._asarray(dev._state)
 
         dy = np.array([[1.0, 2.0], [3.0, 4.0]])
         jac = np.array([[[1.0, 0.1, 0.2], [0.2, 0.6, 0.1]], [[0.4, -0.7, 1.2], [-0.5, -0.6, 0.7]]])
@@ -87,10 +70,9 @@ class TestComputeVJP:
         with pytest.raises(ValueError, match="Invalid size for the gradient-output vector"):
             dev.compute_vjp(dy, jac, num=3)
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_jacobian_is_none(self, dev, C):
+    def test_jacobian_is_none(self, dev):
         """A None Jacobian returns a None VJP"""
-        dev._state = dev._asarray(dev._state, C)
+        dev._state = dev._asarray(dev._state)
 
         dy = np.array([[1.0, 2.0], [3.0, 4.0]])
         jac = None
@@ -98,10 +80,9 @@ class TestComputeVJP:
         vjp = dev.compute_vjp(dy, jac)
         assert vjp is None
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_zero_dy(self, dev, C):
+    def test_zero_dy(self, dev):
         """A zero dy vector will return a zero matrix"""
-        dev._state = dev._asarray(dev._state, C)
+        dev._state = dev._asarray(dev._state)
 
         dy = np.zeros([2, 2])
         jac = np.array([[[1.0, 0.1, 0.2], [0.2, 0.6, 0.1]], [[0.4, -0.7, 1.2], [-0.5, -0.6, 0.7]]])
@@ -124,55 +105,45 @@ class TestComputeVJP:
         """Test vjp_compute using the Torch interface"""
         torch = pytest.importorskip("torch")
 
-        dtype = getattr(torch, "float32")
+        if dev.R_DTYPE == np.float32:
+            torch_r_dtype = torch.float32
+        else:
+            torch_r_dtype = torch.float64
 
-        dy = torch.ones(4, dtype=dtype)
-        jac = torch.ones((4, 4), dtype=dtype)
+        dy = torch.ones(4, dtype=torch_r_dtype)
+        jac = torch.ones((4, 4), dtype=torch_r_dtype)
 
-        expected = torch.tensor([4.0, 4.0, 4.0, 4.0], dtype=dtype)
+        expected = torch.tensor([4.0, 4.0, 4.0, 4.0], dtype=torch_r_dtype)
         vjp = dev.compute_vjp(dy, jac)
 
+        assert vjp.dtype == torch_r_dtype
         assert torch.all(vjp == expected)
 
     def test_tf_tensor_dy(self, dev):
         """Test vjp_compute using the Tensorflow interface"""
         tf = pytest.importorskip("tensorflow")
 
-        dy = tf.ones(4, dtype=tf.float32)
-        jac = tf.ones((4, 4), dtype=tf.float32)
+        if dev.R_DTYPE == np.float32:
+            tf_r_dtype = tf.float32
+        else:
+            tf_r_dtype = tf.float64
 
-        expected = tf.constant([4.0, 4.0, 4.0, 4.0], dtype=tf.float32)
+        dy = tf.ones(4, dtype=tf_r_dtype)
+        jac = tf.ones((4, 4), dtype=tf_r_dtype)
+
+        expected = tf.constant([4.0, 4.0, 4.0, 4.0], dtype=tf_r_dtype)
         vjp = dev.compute_vjp(dy, jac)
+
+        assert vjp.dtype == dev.R_DTYPE #?
         assert tf.reduce_all(vjp == expected)
 
 
 class TestVectorJacobianProduct:
     """Tests for the `vjp` function"""
 
-    @pytest.fixture
-    def dev(self):
-        return qml.device("lightning.qubit", wires=2)
-
-    @pytest.mark.skipif(
-        not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
-    )
-    def test_unsupported_complex_type(self, dev):
-        dev._state = dev._asarray(dev._state, np.complex256)
-
-        x, y, z = [0.5, 0.3, -0.7]
-
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
-            qml.expval(qml.PauliZ(0))
-
-        tape.trainable_params = {1, 2, 3}
-
-        dy = np.array([1.0])
-
-        with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
-            dev.vjp(tape, dy)(tape)
+    @pytest.fixture(params=[np.complex64, np.complex128])
+    def dev(self, request):
+        return qml.device("lightning.qubit", wires=2, c_dtype=request.param)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_use_device_state(self, tol, dev, C):
@@ -497,35 +468,9 @@ class TestVectorJacobianProduct:
 class TestBatchVectorJacobianProduct:
     """Tests for the batch_vjp function"""
 
-    @pytest.fixture
-    def dev(self):
-        return qml.device("lightning.qubit", wires=2)
-
-    @pytest.mark.skipif(
-        not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
-    )
-    def test_unsupported_complex_type(self, dev):
-        dev._state = dev._asarray(dev._state, np.complex256)
-
-        with qml.tape.QuantumTape() as tape1:
-            qml.RX(0.4, wires=0)
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
-
-        with qml.tape.QuantumTape() as tape2:
-            qml.RX(0.4, wires=0)
-            qml.RX(0.6, wires=0)
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
-
-        tape1.trainable_params = {0}
-        tape2.trainable_params = {0, 1}
-
-        tapes = [tape1, tape2]
-        dys = [np.array([1.0]), np.array([1.0])]
-
-        with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
-            dev.batch_vjp(tapes, dys)
+    @pytest.fixture(params=[np.complex64, np.complex128])
+    def dev(self, request):
+        return qml.device("lightning.qubit", wires=2, c_dtype=request.param)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_one_tape_no_trainable_parameters(self, dev, C):

@@ -62,8 +62,7 @@ class TestExpval:
         res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([np.cos(theta), np.cos(theta) * np.cos(phi)]), tol)
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_paulix_expectation(self, theta, phi, qubit_device_3_wires, tol, C):
+    def test_paulix_expectation(self, theta, phi, qubit_device_3_wires, tol):
         """Test that PauliX expectation value is correct"""
         dev = qubit_device_3_wires
         O1 = qml.PauliX(wires=[0])
@@ -74,8 +73,8 @@ class TestExpval:
             rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
         )
 
-        res = np.array([dev.expval(O1), dev.expval(O2)], dtype=C)
-        assert np.allclose(res, np.array([np.sin(theta) * np.sin(phi), np.sin(phi)], dtype=C))
+        res = np.array([dev.expval(O1), dev.expval(O2)], dtype=dev.C_DTYPE)
+        assert np.allclose(res, np.array([np.sin(theta) * np.sin(phi), np.sin(phi)], dtype=dev.C_DTYPE))
 
     def test_pauliy_expectation(self, theta, phi, qubit_device_3_wires, tol):
         """Test that PauliY expectation value is correct"""
@@ -133,7 +132,7 @@ class TestTensorExpval:
 
         expected = np.sin(theta) * np.sin(phi) * np.sin(varphi)
 
-        assert np.allclose(res, expected)
+        assert np.allclose(res, expected, atol=tol)
 
     def test_pauliz_identity(self, theta, phi, varphi, qubit_device_3_wires, tol):
         """Test that a tensor product involving PauliZ and Identity works

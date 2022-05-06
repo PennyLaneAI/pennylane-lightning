@@ -89,18 +89,6 @@ class TestApply:
 
     from pennylane_lightning import LightningQubit as lq
 
-    @pytest.mark.skipif(
-        not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
-    )
-    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    def test_apply_operation_raise_type_error(self, qubit_device_1_wire):
-        """Tests that applying an operation yields the expected output state for single wire
-        operations that have no parameters."""
-
-        with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
-            qubit_device_1_wire._state = np.array([1, 0]).astype(np.complex256)
-            qubit_device_1_wire.apply([qml.PauliX(wires=[0])])
-
     test_data_no_parameters = [
         (qml.PauliX, [1, 0], np.array([0, 1])),
         (qml.PauliX, [1 / math.sqrt(2), 1 / math.sqrt(2)], [1 / math.sqrt(2), 1 / math.sqrt(2)]),
@@ -123,17 +111,18 @@ class TestApply:
     ]
 
     @pytest.mark.parametrize("operation,input,expected_output", test_data_no_parameters)
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_single_wire_no_parameters(
-        self, qubit_device_1_wire, tol, operation, input, expected_output, C
+        self, qubit_device_1_wire, tol, operation, input, expected_output
     ):
         """Tests that applying an operation yields the expected output state for single wire
         operations that have no parameters."""
 
-        qubit_device_1_wire._state = np.array(input).astype(C)
-        qubit_device_1_wire.apply([operation(wires=[0])])
+        dev = qubit_device_1_wire
+        dev._state = np.array(input).astype(dev.C_DTYPE)
+        dev.apply([operation(wires=[0])])
 
         assert np.allclose(qubit_device_1_wire._state, np.array(expected_output), atol=tol, rtol=0)
+        assert dev._state.dtype ==  dev.C_DTYPE
 
     test_data_two_wires_no_parameters = [
         (qml.CNOT, [1, 0, 0, 0], [1, 0, 0, 0]),
@@ -160,16 +149,17 @@ class TestApply:
     ]
 
     @pytest.mark.parametrize("operation,input,expected_output", test_data_two_wires_no_parameters)
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_two_wires_no_parameters(
-        self, qubit_device_2_wires, tol, operation, input, expected_output, C
+        self, qubit_device_2_wires, tol, operation, input, expected_output
     ):
         """Tests that applying an operation yields the expected output state for two wire
         operations that have no parameters."""
-        qubit_device_2_wires._state = np.array(input).reshape(2 * [2]).astype(C)
-        qubit_device_2_wires.apply([operation(wires=[0, 1])])
+        dev = qubit_device_2_wires
+        dev._state = np.array(input).reshape(2 * [2]).astype(dev.C_DTYPE)
+        dev.apply([operation(wires=[0, 1])])
 
         assert np.allclose(qubit_device_2_wires.state, np.array(expected_output), atol=tol, rtol=0)
+        assert dev._state.dtype ==  dev.C_DTYPE
 
     test_data_three_wires_no_parameters = [
         (qml.CSWAP, [1, 0, 0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0]),
@@ -182,17 +172,18 @@ class TestApply:
     ]
 
     @pytest.mark.parametrize("operation,input,expected_output", test_data_three_wires_no_parameters)
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_three_wires_no_parameters(
-        self, qubit_device_3_wires, tol, operation, input, expected_output, C
+        self, qubit_device_3_wires, tol, operation, input, expected_output
     ):
         """Tests that applying an operation yields the expected output state for three wire
         operations that have no parameters."""
-
-        qubit_device_3_wires._state = np.array(input).reshape(3 * [2]).astype(C)
-        qubit_device_3_wires.apply([operation(wires=[0, 1, 2])])
+        
+        dev = qubit_device_3_wires
+        dev._state = np.array(input).reshape(3 * [2]).astype(dev.C_DTYPE)
+        dev.apply([operation(wires=[0, 1, 2])])
 
         assert np.allclose(qubit_device_3_wires.state, np.array(expected_output), atol=tol, rtol=0)
+        assert dev._state.dtype ==  dev.C_DTYPE
 
     @pytest.mark.parametrize(
         "operation,expected_output,par",
@@ -289,18 +280,18 @@ class TestApply:
     @pytest.mark.parametrize(
         "operation,input,expected_output,par", test_data_single_wire_with_parameters
     )
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_single_wire_with_parameters(
-        self, qubit_device_1_wire, tol, operation, input, expected_output, par, C
+        self, qubit_device_1_wire, tol, operation, input, expected_output, par
     ):
         """Tests that applying an operation yields the expected output state for single wire
         operations that have parameters."""
 
-        qubit_device_1_wire._state = np.array(input).astype(C)
-
-        qubit_device_1_wire.apply([operation(*par, wires=[0])])
+        dev = qubit_device_1_wire
+        dev._state = np.array(input).astype(dev.C_DTYPE)
+        dev.apply([operation(*par, wires=[0])])
 
         assert np.allclose(qubit_device_1_wire.state, np.array(expected_output), atol=tol, rtol=0)
+        assert dev._state.dtype == dev.C_DTYPE
 
     """ operation,input,expected_output,par """
     test_data_two_wires_with_parameters = [
@@ -416,17 +407,18 @@ class TestApply:
     @pytest.mark.parametrize(
         "operation,input,expected_output,par", test_data_two_wires_with_parameters
     )
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_two_wires_with_parameters(
-        self, qubit_device_2_wires, tol, operation, input, expected_output, par, C
+        self, qubit_device_2_wires, tol, operation, input, expected_output, par
     ):
         """Tests that applying an operation yields the expected output state for two wire
         operations that have parameters."""
 
-        qubit_device_2_wires._state = np.array(input).reshape(2 * [2]).astype(C)
-        qubit_device_2_wires.apply([operation(*par, wires=[0, 1])])
+        dev = qubit_device_2_wires
+        dev._state = np.array(input).reshape(2 * [2]).astype(dev.C_DTYPE)
+        dev.apply([operation(*par, wires=[0, 1])])
 
         assert np.allclose(qubit_device_2_wires.state, np.array(expected_output), atol=tol, rtol=0)
+        assert dev._state.dtype == dev.C_DTYPE
 
     def test_apply_errors_qubit_state_vector(self, qubit_device_2_wires):
         """Test that apply fails for incorrect state preparation, and > 2 qubit gates"""
@@ -1401,34 +1393,34 @@ class TestTensorSample:
 class TestApplyLightningMethod:
     """Unit tests for the apply_lightning method."""
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_apply_identity_skipped(self, mocker, C, tol):
+    def test_apply_identity_skipped(self, mocker, tol):
         """Test identity operation does not perform additional computations."""
         dev = qml.device("lightning.qubit", wires=1)
-        dev._state = dev._asarray(dev._state, C)
+        dev._state = dev._asarray(dev._state).astype(dev.C_DTYPE)
 
-        starting_state = np.array([1, 0], dtype=C)
+        starting_state = np.array([1, 0], dtype=dev.C_DTYPE)
         op = [qml.Identity(0)]
         dev.apply(op)
 
         assert np.allclose(dev._state, starting_state, atol=tol, rtol=0)
+        assert dev._state.dtype == dev.C_DTYPE
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_iter_identity_skipped(self, mocker, C, tol):
+    def test_iter_identity_skipped(self, mocker, tol):
         """Test identity operations do not perform additional computations."""
         dev = qml.device("lightning.qubit", wires=2)
         if not hasattr(dev, "apply_lightning"):
             pytest.skip("LightningQubit object has no attribute apply_lightning")
 
-        starting_state = np.array([1, 0, 0, 0], dtype=C)
+        starting_state = np.array([1, 0, 0, 0], dtype=dev.C_DTYPE)
         op = [qml.Identity(0), qml.Identity(1)]
 
         spy_diagonal = mocker.spy(dev, "_apply_diagonal_unitary")
         spy_einsum = mocker.spy(dev, "_apply_unitary_einsum")
         spy_unitary = mocker.spy(dev, "_apply_unitary")
 
-        res = dev.apply_lightning(starting_state, op, dtype=C)
+        res = dev.apply_lightning(starting_state, op)
         assert np.allclose(res, starting_state, atol=tol, rtol=0)
+        assert dev._state.dtype == dev.C_DTYPE
 
         spy_diagonal.assert_not_called()
         spy_einsum.assert_not_called()
