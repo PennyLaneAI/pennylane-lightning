@@ -21,10 +21,6 @@
 #include <random>
 #include <vector>
 
-constexpr size_t num_gates = 32;
-constexpr size_t num_gntrs = 32;
-constexpr size_t num_matrices = 32;
-
 //***********************************************************************//
 //                            Gates
 //***********************************************************************//
@@ -44,7 +40,7 @@ auto createParams(RandomEngine &re, size_t num_params) -> std::vector<ParamT> {
  *
  * @tparam T Floating point precision type.
  */
-template <class T>
+template <class T, size_t num_gates = 32>
 static void applyOperation_GateOp(benchmark::State &state,
                                   Pennylane::Gates::KernelType kernel,
                                   Pennylane::Gates::GateOperation gate_op) {
@@ -113,7 +109,7 @@ static void applyOperation_GateOp(benchmark::State &state,
  *
  * @tparam T Floating point precision type.
  */
-template <class T>
+template <class T, size_t num_gntrs = 32>
 static void
 applyGenerator_GntrOp(benchmark::State &state,
                       Pennylane::Gates::KernelType kernel,
@@ -175,7 +171,7 @@ applyGenerator_GntrOp(benchmark::State &state,
  *
  * @tparam T Floating point precision type.
  */
-template <class T>
+template <class T, size_t num_matrices = 32>
 static void applyMatrix(benchmark::State &state,
                         Pennylane::Gates::KernelType kernel) {
     using namespace Pennylane;
@@ -198,7 +194,7 @@ static void applyMatrix(benchmark::State &state,
     wires.reserve(num_matrices);
     matrices.reserve(num_matrices);
 
-    for (size_t i = 0; i < num_gntrs; i++) {
+    for (size_t i = 0; i < num_matrices; i++) {
         wires.emplace_back(generateDistinctWires(eng, num_qubits, num_wires));
         matrices.emplace_back(Util::randomUnitary<T>(eng, num_wires));
     }
