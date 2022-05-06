@@ -62,16 +62,6 @@ Now you can call your kernel functions in C++.
     // call using the dynamic dispatcher
     sv.applyOperation(KernelType::MyKernel, "PauliX", /*wires=*/{0}, /*inverse=*/false);
 
-To export your gate implementation to python, you also need to add your kernel to ``kernels_to_pyexport``:
-
-.. code-block:: cpp
-
-    // file: simulator/KernelType.hpp
-    [[maybe_unused]] constexpr std::array kernels_to_pyexport = {
-        KernelType::PI, KernelType::LM, KernelType::Mykernel /* This is added */
-    };
-
-Then you can find ``PauliX_MyKernel`` function in ``lightning_qubit_ops`` Python module.
 
 Still, note that your gate implementation is not a default implementation for ``PauliX`` gate yet, i.e.,
 
@@ -84,7 +74,7 @@ To make your gate implementation default, you need to change ``default_kernel_fo
 
 .. code-block:: cpp
 
-    // file: simulator/Constant.hpp
+    // file: gates/Constant.hpp
     constexpr std::array default_kernel_for_gates = {
         std::pair{GateOperations::PauliX, KernelType::LM},
         std::pair{GateOperations::PauliY, KernelType::LM},
