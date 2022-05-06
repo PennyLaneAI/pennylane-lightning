@@ -5,36 +5,43 @@ You can benchmark different gate implementations inside the project.
 
 .. code-block:: console
 
-    $ make benchmark
-    $ cd BuildBench
+    $ make gbenchmark
+    $ cd BuildGBench
 
-Inside the directory, you can see ``run_gate_benchmark.sh``. You can benchmark a specific kernel implementation for a gate by providing arguments. 
-Currently, we have two different kernels in ``Pennylane-Lightning`` named ``PI`` and ``LM``. For difference between two kernels, see the documents :cpp:class:`Pennylane::GateOperationsPI` and :cpp:class:`Pennylane::GateOperationsLM`.
-For example, you can compare benchmark results for ``PauliX`` gate with ``KernelType::PI`` and ``KernelType::LM`` by running the following commands:
+Then you can benchmark all gate operations in all kernels by running the script.
 
 .. code-block:: console
    
-    $ ./run_gate_benchmark.sh PI PauliX
-    $ ./run_gate_benchmark.sh LM PauliX
+    $ ./benchmarks/benchmark_all.sh
 
-The benchmark results will be written in ``res_{COMPILER}_{VERSION}`` subdirectory. For example, if you use GCC version 9.3.0, the directory name will be ``res_GNU_9.3.0``. 
-
+The results will be recorded in ``bench_result.json`` file.
 You can then plot the results for a specific gate with 
 
 .. code-block:: console
    
-    $ ./plot_gate_benchmark res_GNU_9.3.0 PauliX
+    $ ./benchmarks/plot_gate_benchmark.py ./bench_result.json
 
-You should change the second argument to your result directory name. Example outputs are as below:
+It will create a plot for each gate operation comparing performance of kernels and floating point types. The plots can be found in ``plots`` subdirectory.
 
-.. image:: ./_static/benchmark/plot_PauliX.png
+One can also choose a specific datatype by providing an option:
+
+.. code-block:: console
+   
+    $ ./benchmarks/plot_gate_benchmark.py --precision float ./bench_result.json # Results for std::complex<float>
+    $ ./benchmarks/plot_gate_benchmark.py --precision double ./bench_result.json # Results for std::complex<double>
+
+
+Currently, we have two different kernels in ``Pennylane-Lightning`` named ``PI`` and ``LM``. For difference between two kernels, see the documents :cpp:class:`Pennylane::Gates::GateImplementationsPI` and :cpp:class:`Pennylane::Gates::GateImplementationsLM`.
+
+Here are some example plots:
+
+.. image:: ./_static/benchmark/PauliX.png
    :width: 600
    :alt: Benchmark result for PauliX gate
    :align: center
 
-.. image:: ./_static/benchmark/plot_RX.png
+.. image:: ./_static/benchmark/RX.png
    :width: 600
    :alt: Benchmark result for RX gate
    :align: center
 
-It shows the LM kernel is :math:`\sim 2` times faster for the PauliX gate (for all number of qubits :math:`N`) but is slightly slower for the RX gate when :math:`N \leq 22`.

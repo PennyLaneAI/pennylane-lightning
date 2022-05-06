@@ -28,6 +28,8 @@ class RuntimeInfo {
     struct InternalRuntimeInfo {
         InternalRuntimeInfo();
 
+        std::string vendor{};
+        std::string brand{};
         std::bitset<32> f_1_ecx{};
         std::bitset<32> f_1_edx{};
         std::bitset<32> f_7_ebx{};
@@ -50,5 +52,7 @@ class RuntimeInfo {
         // NOLINTNEXTLINE(readability-magic-numbers)
         return internal_runtime_info_.f_7_ebx[16];
     }
+    static const std::string &vendor() { return internal_runtime_info_.vendor; }
+    static const std::string &brand() { return internal_runtime_info_.brand; }
 };
 } // namespace Pennylane::Util

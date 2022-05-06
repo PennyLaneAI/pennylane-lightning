@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Split matrix operations, refactor dispatch mechanisms, and add a benchmark suits.
+[(#274)](https://github.com/PennyLaneAI/pennylane-lightning/pull/274)
+
 ### Documentation
 
 * Use the centralized [Xanadu Sphinx Theme](https://github.com/XanaduAI/xanadu-sphinx-theme)
@@ -18,7 +21,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Mikhail Andrenkov
+Mikhail Andrenkov, Chae-Yeun Park
 
 ---
 
