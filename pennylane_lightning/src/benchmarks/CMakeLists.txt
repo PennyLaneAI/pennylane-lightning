@@ -19,6 +19,8 @@ if (NOT benchmark_FOUND)
         GIT_TAG        release-1.11.0 # latest
     )
     FetchContent_GetProperties(googletest)
+    set(BUILD_GMOCK OFF CACHE INTERNAL "")
+    set(INSTALL_GTEST OFF CACHE INTERNAL "")
     if(NOT googletest_POPULATED)
         FetchContent_Populate(googletest)
         add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
@@ -30,7 +32,7 @@ if (NOT benchmark_FOUND)
         GIT_REPOSITORY https://github.com/google/benchmark.git
         GIT_TAG        v1.6.1 # latest
     )
-    set(BENCHMARK_ENABLE_TESTING off)
+    set(BENCHMARK_ENABLE_TESTING OFF)
     FetchContent_GetProperties(googlebenchmark)
     if(NOT googlebenchmark_POPULATED)
         FetchContent_Populate(googlebenchmark)
@@ -45,9 +47,11 @@ endif()
 ################################################################################
 
 add_library(lightning_benchmarks_dependency INTERFACE)
-target_link_libraries(lightning_benchmarks_dependency INTERFACE lightning_utils
-                                                    lightning_external_libs
-                                                    benchmark::benchmark_main)
+target_link_libraries(lightning_benchmarks_dependency INTERFACE lightning_compile_options
+                                                                lightning_utils
+                                                                lightning_external_libs
+                                                                lightning_gates
+                                                                lightning_simulator)
 
 ################################################################################
 # Add benchmark_utils exe
@@ -58,9 +62,8 @@ set(GBENCH_SRC  Bench_BitUtil.cpp
 
 add_executable(utils ${GBENCH_SRC})
 
-add_compile_definitions(utils INTERFACE _ENABLE_BLAS=1)
-
-target_link_libraries(utils PRIVATE lightning_benchmarks_dependency)
+target_link_libraries(utils PRIVATE lightning_benchmarks_dependency
+                                    benchmark::benchmark_main)
 
 ################################################################################
 # Add benchmark_apply_operations exe
@@ -68,18 +71,23 @@ target_link_libraries(utils PRIVATE lightning_benchmarks_dependency)
 
 add_executable(apply_operations Bench_ApplyOperations.cpp)
 
-target_link_libraries(apply_operations PRIVATE lightning_compile_options
-                                            lightning_gates
-                                            lightning_simulator
-                                            lightning_benchmarks_dependency)
+target_link_libraries(apply_operations PRIVATE lightning_benchmarks_dependency
+                                               benchmark::benchmark_main)
 
 ################################################################################
-# Add benchmark_apply_multirz exe
+# Add bench_kernels
 ################################################################################
 
-add_executable(apply_multirz Bench_ApplyMultiRZ.cpp)
+add_executable(bench_kernels Bench_Kernels.cpp)
+target_link_libraries(bench_kernels PRIVATE lightning_benchmarks_dependency
+                                            benchmark::benchmark)
 
-target_link_libraries(apply_multirz PRIVATE lightning_compile_options
-                                            lightning_gates
-                                            lightning_simulator
-                                            lightning_benchmarks_dependency)
+
+add_custom_command(TARGET bench_kernels POST_BUILD 
+                   COMMAND ${CMAKE_COMMAND} -E create_symlink
+                           ${PROJECT_SOURCE_DIR}/benchmark_all.sh
+                           ${PROJECT_BINARY_DIR}/benchmark_all.sh
+                   COMMAND ${CMAKE_COMMAND} -E create_symlink
+                           ${PROJECT_SOURCE_DIR}/plot_gate_benchmark.py
+                           ${PROJECT_BINARY_DIR}/plot_gate_benchmark.py
+)

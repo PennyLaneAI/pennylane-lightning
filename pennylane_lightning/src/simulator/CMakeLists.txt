@@ -1,7 +1,7 @@
 project(lightning_simulator)
 set(CMAKE_CXX_STANDARD 17)
 
-set(SIMULATOR_FILES DynamicDispatcher.cpp CACHE INTERNAL "" FORCE)
+set(SIMULATOR_FILES StateVectorRaw.cpp StateVectorManaged.cpp Measures.cpp CACHE INTERNAL "" FORCE)
 
 add_library(lightning_simulator STATIC ${SIMULATOR_FILES})
 

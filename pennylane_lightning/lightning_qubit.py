@@ -51,8 +51,8 @@ try:
         StateVectorC64,
         MeasuresC128,
         StateVectorC128,
-        DEFAULT_KERNEL_FOR_OPS,
-        EXPORTED_KERNEL_OPS,
+        AdjointJacobianC128,
+        VectorJacobianProductC128,
     )
     from .lightning_qubit_ops.adjoint_diff import (
         ObsTermC64,
@@ -63,7 +63,7 @@ try:
         OpsStructC128,
     )
 
-    from ._serialize import _serialize_obs, _serialize_ops, _is_lightning_gate
+    from ._serialize import _serialize_obs, _serialize_ops
 
     CPP_BINARY_AVAILABLE = True
 except ModuleNotFoundError:
@@ -103,9 +103,6 @@ class LightningQubit(DefaultQubit):
 
     Args:
         wires (int): the number of wires to initialize the device with
-        kernel_for_ops (dict): Optional argument which kernel to run for a gate operation.
-            For example, if {'PauliX': 'LM', 'RX': 'PI'} is passed, the less memory (LM) kernel
-            is used for PauliX whereas precomputed indices (PI) kernel is used for RX.
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
             the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
@@ -122,19 +119,7 @@ class LightningQubit(DefaultQubit):
     _CPP_BINARY_AVAILABLE = True
     operations = _remove_snapshot_from_operations(DefaultQubit.operations)
 
-    def __init__(self, wires, *, kernel_for_ops=None, shots=None, batch_obs=False):
-        self._kernel_for_ops = DEFAULT_KERNEL_FOR_OPS
-        if kernel_for_ops is not None:
-            if not isinstance(kernel_for_ops, dict):
-                raise ValueError("Argument kernel_for_ops must be a dictionary.")
-
-            for gate_op, kernel in kernel_for_ops.items():
-                if (kernel, gate_op) not in EXPORTED_KERNEL_OPS:
-                    raise ValueError(
-                        f"The given kernel {kernel} does not implement {gate_op} gate."
-                    )
-                self._kernel_for_ops[gate_op] = kernel
-
+    def __init__(self, wires, *, shots=None, batch_obs=False):
         super().__init__(wires, shots=shots)
         self._batch_obs = batch_obs
 
@@ -221,17 +206,13 @@ class LightningQubit(DefaultQubit):
             if o.base_name in skipped_ops:
                 continue
             name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
-            if _is_lightning_gate(name):
-                kernel = self._kernel_for_ops[name]
-                method = getattr(sim, f"{name}_{kernel}".format(), None)
-            else:
-                method = None
+            method = getattr(sim, name, None)
 
             wires = self.wires.indices(o.wires)
 
             if method is None:
                 # Inverse can be set to False since qml.matrix(o) is already in inverted form
-                method = getattr(sim, "applyMatrix_{}".format(self._kernel_for_ops["Matrix"]))
+                method = getattr(sim, "applyMatrix")
                 try:
                     method(qml.matrix(o), wires, False)
                 except AttributeError:  # pragma: no cover

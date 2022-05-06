@@ -92,12 +92,11 @@ test-cpp-omp:
 	cmake --build ./BuildTests --target runner
 	cmake --build ./BuildTests --target test
 
-.PHONY: benchmark
-benchmark:
-	cmake --build BuildBench --target clean || true
-	rm -rf ./BuildBench/CMakeCache.txt ./BuildBench/compiler_info.txt ./BuildBench/run_gate_benchmark.sh
-	cmake $(LIGHTNING_CPP_DIR) -BBuildBench -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_AVX=ON
-	cmake --build ./BuildBench
+.PHONY: gbenchmark
+gbenchmark:
+	rm -rf ./BuildGBench
+	cmake $(LIGHTNING_CPP_DIR) -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_OPENMP=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release -DBLA_VENDOR=OpenBLAS
+	cmake --build ./BuildGBench 
 
 .PHONY: format format-cpp format-python
 format: format-cpp format-python
@@ -121,9 +120,5 @@ check-tidy:
 	rm -rf ./Build
 	cmake . -BBuild -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
 	cmake --build ./Build
-
-.PHONY: gbenchmark
-gbenchmark:
-	rm -rf ./BuildGBench
-	cmake $(LIGHTNING_CPP_DIR) -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_OPENMP=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release -DBLA_VENDOR=OpenBLAS
-	cmake --build ./BuildGBench --target utils apply_operations apply_multirz
+	cmake . -BBuild -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON
+	cmake --build ./Build

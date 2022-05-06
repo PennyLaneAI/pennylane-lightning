@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "GateUtil.hpp"
-#include "AvailableKernels.hpp"
 
+#include "AvailableKernels.hpp"
+#include "ConstantUtil.hpp"
 #include "Util.hpp"
 
 namespace Pennylane::Gates {
-
 auto getIndicesAfterExclusion(const std::vector<size_t> &indicesToExclude,
                               size_t num_qubits) -> std::vector<size_t> {
     std::set<size_t> indices;
@@ -50,6 +50,7 @@ auto generateBitPatterns(const std::vector<size_t> &qubitIndices,
 
 /// @cond DEV
 namespace {
+using namespace Pennylane;
 template <class OperatorImplementation> struct ImplementedGates {
     constexpr static auto value = OperatorImplementation::implemented_gates;
 };
@@ -73,18 +74,69 @@ auto ValueForKernelHelper(
                                     ValueClass>(kernel);
     }
 }
+
+/**
+ * @brief For a given gate implementation class, this variable records the
+ * pointer to the first and last + 1 elements of implemented_gates.
+ *
+ * TODO: change to std::begin and std::end when they become constrpx
+ * in all supported compilers.
+ */
+template <class GateImplementation>
+constexpr auto implementedGatesIterPair =
+    std::pair{&(*std::begin(GateImplementation::implemented_gates)),
+              &(*std::begin(GateImplementation::implemented_gates)) +
+                  GateImplementation::implemented_gates.size()};
+
+template <class TypeList, size_t... Is>
+constexpr auto implementedGatesItersHelper(
+    [[maybe_unused]] std::index_sequence<Is...> indices) {
+    return std::array{
+        implementedGatesIterPair<Util::getNthType<TypeList, Is>>...};
+}
+
+/**
+ * @brief Construct an array of implementedGatesIterPair for all kernels
+ * registered in AvailableKernels.
+ */
+constexpr auto implementedGatesIters() {
+    constexpr auto size = Util::length<AvailableKernels>();
+    return implementedGatesItersHelper<AvailableKernels>(
+        std::make_index_sequence<size>());
+}
+
+/**
+ * @brief Parse type list and generate kernel id and index pairs.
+ *
+ * For example, if TypeList == TypeList<GateImplementationsLM,
+ * GateImplementationsPI, void>, this function returns a pairs {{KernelType::LM,
+ * 0}, {KernelType::PI, 1}}
+ */
+template <class TypeList, size_t... Is>
+constexpr auto
+kernelIndicesHelper([[maybe_unused]] std::index_sequence<Is...> indices) {
+    return std::array{
+        std::pair{Util::getNth<TypeList, Is>::Type::kernel_id, Is}...};
+}
+/**
+ * @brief Get the position of the given kernel in AvailabeKernels.
+ */
+auto kernelIndices(Gates::KernelType kernel) {
+    constexpr static auto size = Util::length<AvailableKernels>();
+    constexpr static auto kernelIndices =
+        kernelIndicesHelper<AvailableKernels>(std::make_index_sequence<size>());
+    return Util::lookup(kernelIndices, kernel);
+}
+
 } // namespace
 /// @endcond
 
 namespace Pennylane::Gates {
 auto implementedGatesForKernel(KernelType kernel)
     -> std::vector<GateOperation> {
-    return ValueForKernelHelper<AvailableKernels, GateOperation,
-                                ImplementedGates>(kernel);
-}
-auto implementedGeneratorsForKernel(KernelType kernel)
-    -> std::vector<GeneratorOperation> {
-    return ValueForKernelHelper<AvailableKernels, GeneratorOperation,
-                                ImplementedGenerators>(kernel);
+    constexpr static auto iters = implementedGatesIters();
+
+    const auto idx = kernelIndices(kernel);
+    return std::vector<GateOperation>{iters[idx].first, iters[idx].second};
 }
 } // namespace Pennylane::Gates

@@ -36,7 +36,7 @@ try:
     from .lightning_qubit_ops import (
         StateVectorC64,
         StateVectorC128,
-        DEFAULT_KERNEL_FOR_OPS,
+        ObsStructC128,
     )
     from .lightning_qubit_ops.adjoint_diff import (
         ObsTermC64,
@@ -48,18 +48,6 @@ try:
     )
 except ImportError:
     pass
-
-
-def _is_lightning_gate(gate_name):
-    """Returns True if the gate (besides Matrix) is implemented
-    and exported from lightning.
-
-    Args:
-        gate_name (str): the name of gate
-    """
-    if gate_name == "Matrix":
-        return False
-    return gate_name in DEFAULT_KERNEL_FOR_OPS
 
 
 def _obs_has_kernel(obs: Observable) -> bool:
@@ -194,7 +182,7 @@ def _serialize_ops(
             name = single_op.name if not is_inverse else single_op.name[:-4]
             names.append(name)
 
-            if not _is_lightning_gate(name):
+            if not hasattr(StateVectorC128, name):
                 params.append([])
                 mats.append(qml.matrix(single_op))
 

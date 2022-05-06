@@ -18,9 +18,9 @@
  */
 #pragma once
 
-#include "GateImplementationsLM.hpp"
-#include "GateImplementationsPI.hpp"
 #include "TypeList.hpp"
+#include "cpu_kernels/GateImplementationsLM.hpp"
+#include "cpu_kernels/GateImplementationsPI.hpp"
 
 namespace Pennylane {
 /**
@@ -32,6 +32,6 @@ namespace Pennylane {
  * See :ref:`lightning_add_gate_implementation` for details.
  * @endrst
  */
-using AvailableKernels =
-    Util::TypeList<Gates::GateImplementationsLM, Gates::GateImplementationsPI>;
+using AvailableKernels = Util::TypeList<Gates::GateImplementationsLM,
+                                        Gates::GateImplementationsPI, void>;
 } // namespace Pennylane

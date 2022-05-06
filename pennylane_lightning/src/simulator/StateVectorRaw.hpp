@@ -74,14 +74,6 @@ class StateVectorRaw
         }
     }
 
-    StateVectorRaw(const StateVectorRaw &) = default;
-
-    /**
-     * @brief Assignment operator is deleted. Use changeDataPtr or setDataFrom.
-     */
-    auto operator=(const StateVectorRaw &) -> StateVectorRaw & = delete;
-    ~StateVectorRaw() = default;
-
     /**
      * @brief Get the underlying data pointer.
      *
