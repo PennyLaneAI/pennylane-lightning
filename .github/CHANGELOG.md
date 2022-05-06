@@ -8,11 +8,17 @@
 
 ### Documentation
 
+* Use the centralized [Xanadu Sphinx Theme](https://github.com/XanaduAI/xanadu-sphinx-theme)
+  to style the Sphinx documentation.
+[(#287)](https://github.com/PennyLaneAI/pennylane-lightning/pull/287)
+
 ### Bug fixes
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Mikhail Andrenkov
 
 ---
 
@@ -63,6 +69,7 @@ This release contains contributions from (in alphabetical order):
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
 Ali Asadi, Chae-Yeun Park, Lee James O'Riordan, and Trevor Vincent
 
 ---
