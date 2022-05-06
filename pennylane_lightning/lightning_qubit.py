@@ -17,8 +17,15 @@ interfaces with C++ for fast linear algebra calculations.
 """
 from typing import List
 from warnings import warn
-from os import getenv
 from itertools import islice
+import platform
+from os import getenv, environ
+
+if platform.system() == "Linux":
+    # Kokkos ask to set OMP_PROC_BIND=spread and OMP_PLACES=threads
+    # for general best performance with OpenMP 4.0 or later.
+    environ["OMP_PROC_BIND"] = "spread"
+    environ["OMP_PLACES"] = "threads"
 
 import numpy as np
 from pennylane import (
