@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "Measures.hpp"
+#include "StateVectorManaged.hpp"
 
 // explicit instantiation
-template class Pennylane::Measures<float, Pennylane::StateVectorRawCPU<float>>;
-template class Pennylane::Measures<double, Pennylane::StateVectorRawCPU<double>>;
+template class Pennylane::StateVectorManaged<float>;
+template class Pennylane::StateVectorManaged<double>;

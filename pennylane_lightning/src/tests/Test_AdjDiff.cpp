@@ -405,7 +405,7 @@ TEST_CASE("AdjointJacobian::applyObservable visitor checks",
         std::vector<double> out_data(1);
 
         for (std::size_t i = 0; i < param.size(); i++) {
-            StateVectorManaged<double> psi(2);
+            StateVectorManagedCPU<double> psi(2);
             JacobianData<double> jd(1, psi.getLength(), psi.getData(),
                                     {obs_default}, ops, {1});
             adj.adjointJacobian(out_data, jd, true);
@@ -427,7 +427,7 @@ TEST_CASE("AdjointJacobian::applyObservable visitor checks",
         std::vector<double> out_data(1);
 
         for (std::size_t i = 0; i < param.size(); i++) {
-            StateVectorManaged<double> psi(2);
+            StateVectorManagedCPU<double> psi(2);
             JacobianData<double> jd(1, psi.getLength(), psi.getData(),
                                     {obs_default}, ops, {1});
             adj.adjointJacobian(out_data, jd, true);
@@ -448,7 +448,7 @@ TEST_CASE("AdjointJacobian::applyObservable visitor checks",
         std::vector<double> out_data(1);
 
         for (std::size_t i = 0; i < param.size(); i++) {
-            StateVectorManaged<double> psi(2);
+            StateVectorManagedCPU<double> psi(2);
             JacobianData<double> jd(1, psi.getLength(), psi.getData(),
                                     {obs_default}, ops, {1});
             adj.adjointJacobian(out_data, jd, true);
@@ -470,7 +470,7 @@ TEST_CASE("AdjointJacobian::applyObservable visitor checks",
         std::vector<double> out_data(1);
 
         for (std::size_t i = 0; i < param.size(); i++) {
-            StateVectorManaged<double> psi(2);
+            StateVectorManagedCPU<double> psi(2);
             JacobianData<double> jd(1, psi.getLength(), psi.getData(),
                                     {obs_default}, ops, {1});
             adj.adjointJacobian(out_data, jd, true);

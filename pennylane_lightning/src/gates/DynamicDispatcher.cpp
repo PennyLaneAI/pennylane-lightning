@@ -97,7 +97,7 @@ constexpr auto constructGeneratorOpsFunctorTupleIter() {
     }
 }
 /**
- * @brief Internal recustion function for constructMatrixOpsFunctorTuple
+ * @brief Internal recursive function for constructMatrixOpsFunctorTuple
  */
 template <class PrecisionT, class GateImplementation, size_t mat_idx>
 constexpr auto constructMatrixOpsFunctorTupleIter() {
@@ -198,7 +198,7 @@ void registerAllImplementedGeneratorOps() {
         generator_op_functor_tuple<PrecisionT, GateImplementation>);
 }
 /**
- * @brief Register all implemented matrix oepration for a given kernel
+ * @brief Register all implemented matrix operation for a given kernel
  *
  * @tparam PrecisionT Floating point precision of underlying statevector data
  * @tparam GateImplementation Gate implementation class.

@@ -81,11 +81,11 @@ constexpr static auto generator_gate_pairs =
 
 template <class PrecisionT, class ParamT, class GateImplementation,
           GeneratorOperation gntr_op, class RandomEngine>
-void testGeneratorForGate(RandomEngine &re, size_t num_qubits) {
+void testGeneratorForGate(RandomEngine &re, size_t num_qubits, bool inverse) {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     constexpr auto I = Util::IMAG<PrecisionT>();
 
-    constexpr auto eps = PrecisionT{1e-4}; // For finite difference
+    constexpr auto eps = PrecisionT{1e-3}; // For finite difference
 
     constexpr auto gate_op = Util::static_lookup<gntr_op>(generator_gate_pairs);
     constexpr auto gate_name =
@@ -106,6 +106,9 @@ void testGeneratorForGate(RandomEngine &re, size_t num_qubits) {
         /* Apply generator to gntr_st */
         auto gntr_st = ini_st;
         PrecisionT scale = gntr_func(gntr_st.data(), num_qubits, wires, false);
+        if (inverse) {
+            scale *= -1;
+        }
         scaleVector(gntr_st, I * scale);
 
         /* Compute the derivative of the unitary gate applied to ini_st using
@@ -114,8 +117,8 @@ void testGeneratorForGate(RandomEngine &re, size_t num_qubits) {
         auto diff_st_1 = ini_st;
         auto diff_st_2 = ini_st;
 
-        gate_func(diff_st_1.data(), num_qubits, wires, false, eps);
-        gate_func(diff_st_2.data(), num_qubits, wires, false, -eps);
+        gate_func(diff_st_1.data(), num_qubits, wires, inverse, eps);
+        gate_func(diff_st_2.data(), num_qubits, wires, inverse, -eps);
 
         std::vector<ComplexPrecisionT> gate_der_st(size_t{1U} << num_qubits);
 
@@ -137,7 +140,9 @@ void testAllGeneratorForKernel(RandomEngine &re, size_t num_qubits) {
         constexpr auto gntr_op =
             GateImplementation::implemented_generators[gntr_idx];
         testGeneratorForGate<PrecisionT, ParamT, GateImplementation, gntr_op>(
-            re, num_qubits);
+            re, num_qubits, false);
+        testGeneratorForGate<PrecisionT, ParamT, GateImplementation, gntr_op>(
+            re, num_qubits, true);
         testAllGeneratorForKernel<PrecisionT, ParamT, GateImplementation,
                                   gntr_idx + 1>(re, num_qubits);
     } else {

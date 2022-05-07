@@ -37,6 +37,9 @@ constexpr static auto all_qubit_numbers = Util::full_domain<size_t>();
 int assignDefaultKernelsForGateOp() {
     auto &instance = OperationKernelMap<GateOperation>::getInstance();
 
+    instance.assignKernelForOp(GateOperation::Identity, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               Gates::KernelType::LM);
     instance.assignKernelForOp(GateOperation::PauliX, all_threading,
                                all_memory_model, all_qubit_numbers,
                                Gates::KernelType::LM);

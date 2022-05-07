@@ -72,13 +72,6 @@ Still, note that your gate implementation is not a default implementation for ``
 
 .. code-block:: cpp
 
-    sv.applyOperation("PauliX", {0}, false) // still call the default implementation
-
-To make your gate implementation default, you need to change registered ``KernelMap``.
-Thus changing the following lines
-
-.. code-block:: cpp
-
     // simulator/Kernel.cpp
 
     int assignDefaultKernelsForGateOp() {
@@ -87,9 +80,6 @@ Thus changing the following lines
         instance.assignKernelForOp(GateOperation::PauliX, all_threading,
                                    all_memory_model, all_qubit_numbers,
                                    Gates::KernelType::LM);
-
-        ...
-    }
 
 to
 

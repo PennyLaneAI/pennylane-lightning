@@ -19,7 +19,8 @@ help:
 	@echo "  test-cpp           to run the C++ test suite"
 	@echo "  test-python        to run the Python test suite"
 	@echo "  coverage           to generate a coverage report"
-	@echo "  format [check=1]   to apply C++ formatter; use with 'check=1' to check instead of modify (requires clang-format)"
+	@echo "  format [check=1]   to apply C++ and Python formatter; use with 'check=1' to check instead of modify (requires black and clang-format)"
+	@echo "  format [version=?] to apply C++ and Python formatter; use with 'version={version}' to check or modify with clang-format-{version} instead of clang-format"
 	@echo "  check-tidy         to build PennyLane-Lightning with ENABLE_CLANG_TIDY=ON (requires clang-tidy & CMake)"
 
 .PHONY: install
@@ -91,21 +92,20 @@ test-cpp-omp:
 	cmake --build ./BuildTests --target runner
 	cmake --build ./BuildTests --target test
 
-.PHONY: benchmark
-benchmark:
-	cmake --build BuildBench --target clean || true
-	rm -rf ./BuildBench/CMakeCache.txt ./BuildBench/compiler_info.txt ./BuildBench/run_gate_benchmark.sh
-	cmake $(LIGHTNING_CPP_DIR) -BBuildBench -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_AVX=ON
-	cmake --build ./BuildBench
+.PHONY: gbenchmark
+gbenchmark:
+	rm -rf ./BuildGBench
+	cmake $(LIGHTNING_CPP_DIR) -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_OPENMP=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release
+	cmake --build ./BuildGBench 
 
 .PHONY: format format-cpp format-python
 format: format-cpp format-python
 
 format-cpp:
 ifdef check
-	./bin/format --check ./pennylane_lightning/src
+	./bin/format --check --cfversion $(if $(version:-=),$(version),0) ./pennylane_lightning/src
 else
-	./bin/format ./pennylane_lightning/src
+	./bin/format --cfversion $(if $(version:-=),$(version),0) ./pennylane_lightning/src
 endif
 
 format-python:
@@ -118,11 +118,5 @@ endif
 .PHONY: check-tidy
 check-tidy:
 	rm -rf ./Build
-	cmake . -BBuild -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON -DBUILD_EXAMPLES=ON
+	cmake . -BBuild -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON
 	cmake --build ./Build
-
-.PHONY: gbenchmark
-gbenchmark:
-	rm -rf ./BuildGBench
-	cmake $(LIGHTNING_CPP_DIR) -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_OPENMP=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release
-	cmake --build ./BuildGBench --target utils apply_operations apply_multirz

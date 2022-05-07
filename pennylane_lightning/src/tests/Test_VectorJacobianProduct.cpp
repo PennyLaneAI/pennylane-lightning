@@ -84,7 +84,7 @@ TEST_CASE(
     std::vector<std::complex<double>> cdata(1U << num_qubits);
     cdata[0] = std::complex<double>{1, 0};
 
-    StateVectorRaw<double> psi(cdata.data(), cdata.size());
+    StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
 
     std::vector<ObsDatum<double>> obs_ls{obs};
     JacobianData<double> tape{

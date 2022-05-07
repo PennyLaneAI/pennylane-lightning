@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "IndicesUtil.hpp"
 #include "StateVectorManaged.hpp"
 
 /**
@@ -17,6 +18,7 @@
  */
 int main(int argc, char *argv[]) {
     using TestType = double;
+    namespace IndicesUtil = Pennylane::IndicesUtil;
 
     // Handle input
     try {

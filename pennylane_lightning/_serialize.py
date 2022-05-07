@@ -158,7 +158,7 @@ def _serialize_ops(
             name = single_op.name if not is_inverse else single_op.name[:-4]
             names.append(name)
 
-            if getattr(StateVectorC128, name, None) is None:
+            if not hasattr(StateVectorC128, name):
                 params.append([])
                 mats.append(qml.matrix(single_op))
 

@@ -100,9 +100,6 @@ class LightningQubit(DefaultQubit):
 
     Args:
         wires (int): the number of wires to initialize the device with
-        kernel_for_ops (dict): Optional argument which kernel to run for a gate operation.
-            For example, if {'PauliX': 'LM', 'RX': 'PI'} is passed, the less memory (LM) kernel
-            is used for PauliX whereas precomputed indices (PI) kernel is used for RX.
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
             the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
@@ -117,7 +114,7 @@ class LightningQubit(DefaultQubit):
     _CPP_BINARY_AVAILABLE = True
     operations = _remove_snapshot_from_operations(DefaultQubit.operations)
 
-    def __init__(self, wires, *, kernel_for_ops=None, shots=None, batch_obs=False):
+    def __init__(self, wires, *, shots=None, batch_obs=False):
         super().__init__(wires, shots=shots)
         self._batch_obs = batch_obs
 
@@ -221,7 +218,7 @@ class LightningQubit(DefaultQubit):
             wires = self.wires.indices(o.wires)
 
             if method is None:
-                # Inverse can be set to False since o.matrix is already in inverted form
+                # Inverse can be set to False since qml.matrix(o) is already in inverted form
                 method = getattr(sim, "applyMatrix")
                 try:
                     method(qml.matrix(o), wires, False)

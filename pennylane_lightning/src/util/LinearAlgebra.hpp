@@ -52,6 +52,9 @@ using CBLAS_LAYOUT = enum CBLAS_LAYOUT {
 //
 
 namespace Pennylane::Util {
+/**
+ * @brief Transpose enum class
+ */
 enum class Trans : int {
     NoTranspose = CblasNoTrans,
     Transpose = CblasTrans,

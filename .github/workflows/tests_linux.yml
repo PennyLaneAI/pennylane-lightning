@@ -8,7 +8,7 @@ on:
 env:
   TF_VERSION: 2.6
   TORCH_VERSION: 1.10.0+cpu
-  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:../coverage.xml --no-flaky-report -p no:warnings --tb=native"
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
   OMP_NUM_THREADS: "2"
 
 jobs:
@@ -67,9 +67,9 @@ jobs:
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2.1.0
+        uses: codecov/codecov-action@v2
         with:
-          file: ./BuildCov/coverage.info
+          files: ./BuildCov/coverage.info
           fail_ci_if_error: true
 
   cpptestswithblas:
@@ -127,10 +127,41 @@ jobs:
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2.0.1
+        uses: codecov/codecov-action@v2
         with:
-          file: ./BuildCov/coverage.info
+          files: ./BuildCov/coverage.info
           fail_ci_if_error: true
+
+  cppbenchmarksuite:
+    name: C++ Benchmark Suite (Linux, OpenBLAS)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.7'
+
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc g++ libopenblas-dev gcovr lcov
+
+      - name: Build and run gbenchmark
+        run: |
+            cmake pennylane_lightning/src/ -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release
+            cmake --build ./BuildGBench
+            ./BuildGBench/benchmarks/utils
+            ./BuildGBench/benchmarks/apply_operations
 
   pythontests:
     name: Python tests
@@ -181,7 +212,7 @@ jobs:
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2.0.1
+        uses: codecov/codecov-action@v2
         with:
-          file: coverage.xml
+          files: ./main/coverage.xml
           fail_ci_if_error: true

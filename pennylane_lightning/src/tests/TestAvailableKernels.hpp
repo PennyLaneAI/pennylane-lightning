@@ -1,5 +1,6 @@
 #include "AvailableKernels.hpp"
 #include "Constant.hpp"
+#include "DefaultKernels.hpp"
 #include "KernelType.hpp"
 #include "SelectKernel.hpp"
 #include "Util.hpp"

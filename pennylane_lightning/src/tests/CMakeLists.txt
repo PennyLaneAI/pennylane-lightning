@@ -16,7 +16,7 @@ Include(FetchContent)
 FetchContent_Declare(
   Catch2
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG        v2.13.1
+  GIT_TAG        v2.13.9
 )
 
 FetchContent_MakeAvailable(Catch2)
@@ -66,7 +66,7 @@ endif()
 ################################################################################
 
 add_executable(compile_time_tests compile_time_tests.cpp)
-target_link_libraries(compile_time_tests lightning_gates lightning_utils)
+target_link_libraries(compile_time_tests lightning_gates lightning_utils lightning_simulator)
 
 set(TEST_SOURCES CreateAllWires.cpp
                  Test_AdjDiff.cpp

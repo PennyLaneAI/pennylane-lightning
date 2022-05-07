@@ -120,11 +120,77 @@ void testAllKernels(RandomEngine &re, size_t max_num_qubits) {
 
 TEMPLATE_TEST_CASE("DynamicDispatcher::applyOperation", "[DynamicDispatcher]",
                    float, double) {
+    using PrecisionT = TestType;
     std::mt19937_64 re{1337};
 
     constexpr size_t max_num_qubits = 6;
 
-    testAllKernels<TestType, TestType>(re, max_num_qubits);
+    SECTION("Test all gates are registered for all kernels") {
+        testAllKernels<TestType, TestType>(re, max_num_qubits);
+    }
+
+    SECTION("Throw an exception for a kernel not registered") {
+        const size_t num_qubits = 3;
+        auto st = createProductState<PrecisionT>("000");
+
+        auto &dispatcher = DynamicDispatcher<TestType>::getInstance();
+
+        REQUIRE_THROWS_WITH(
+            dispatcher.applyOperation(Gates::KernelType::None, st.data(),
+                                      num_qubits, "Toffoli", {0, 1, 2}, false),
+            Catch::Contains("Cannot find"));
+
+        REQUIRE_THROWS_WITH(dispatcher.applyOperation(
+                                Gates::KernelType::None, st.data(), num_qubits,
+                                GateOperation::Toffoli, {0, 1, 2}, false),
+                            Catch::Contains("Cannot find"));
+    }
 }
 
-// DynamicDispatcher::appyMatrix?
+TEMPLATE_TEST_CASE("DynamicDispatcher::applyGenerator", "[DynamicDispatcher]",
+                   float, double) {
+    using PrecisionT = TestType;
+    std::mt19937_64 re{1337};
+
+    // applyGenerator test?
+
+    SECTION("Throw an exception for a kernel not registered") {
+        const size_t num_qubits = 3;
+        auto st = createProductState<PrecisionT>("000");
+
+        auto &dispatcher = DynamicDispatcher<TestType>::getInstance();
+
+        REQUIRE_THROWS_WITH(dispatcher.applyGenerator(Gates::KernelType::None,
+                                                      st.data(), num_qubits,
+                                                      "RX", {0, 1, 2}, false),
+                            Catch::Contains("Cannot find"));
+
+        REQUIRE_THROWS_WITH(dispatcher.applyGenerator(
+                                Gates::KernelType::None, st.data(), num_qubits,
+                                GeneratorOperation::RX, {0, 1, 2}, false),
+                            Catch::Contains("Cannot find"));
+    }
+}
+
+TEMPLATE_TEST_CASE("DynamicDispatcher::applyMatrix", "[DynamicDispatcher]",
+                   float, double) {
+    using PrecisionT = TestType;
+    std::mt19937_64 re{1337};
+
+    // applyMatrix test?
+
+    SECTION("Throw an exception for a kernel not registered") {
+        const size_t num_qubits = 3;
+        auto st = createProductState<PrecisionT>("000");
+
+        auto &dispatcher = DynamicDispatcher<TestType>::getInstance();
+
+        std::vector<std::complex<PrecisionT>> matrix(4, 0.0);
+
+        REQUIRE_THROWS_WITH(dispatcher.applyMatrix(Gates::KernelType::None,
+                                                   st.data(), num_qubits,
+                                                   matrix.data(), {0}, false),
+                            Catch::Contains("is not registered") &&
+                                Catch::Contains("SingleQubitOp"));
+    }
+}

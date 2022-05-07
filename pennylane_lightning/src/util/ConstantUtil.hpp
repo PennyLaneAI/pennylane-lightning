@@ -213,6 +213,25 @@ constexpr auto reverse_pairs(const std::array<std::pair<T, U>, size> &arr)
 }
 
 /**
+ * @brief For lookup from any array of pair whose first elements are
+ * GateOperation.
+ *
+ * As Util::lookup can be used in constexpr context, this function is redundant
+ * (by the standard). But GCC 9 still does not accept Util::lookup in constexpr
+ * some cases.
+ */
+template <auto op, class T, size_t size>
+constexpr auto
+static_lookup(const std::array<std::pair<decltype(op), T>, size> &arr) -> T {
+    for (size_t idx = 0; idx < size; idx++) {
+        if (std::get<0>(arr[idx]) == op) {
+            return std::get<1>(arr[idx]);
+        }
+    }
+    return T{};
+}
+
+/**
  * @brief Constexpr function that check whether the given value is a power of 2.
  *
  * Can be merged with isPerfectPowerOf2 in C++20 using constexpr std::popcount.
