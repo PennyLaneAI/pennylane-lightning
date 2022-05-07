@@ -135,6 +135,18 @@ class TestApply:
 
         assert np.allclose(qubit_device_1_wire._state, np.array(expected_output), atol=tol, rtol=0)
 
+    @pytest.mark.parametrize("operation,input,expected_output", test_data_no_parameters)
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_apply_operation_preserve_pointer_single_wire_no_parameters(
+        self, qubit_device_1_wire, operation, input, expected_output, C
+    ):
+        qubit_device_1_wire._state = np.array(input).astype(C)
+        pointer_before, _ = qubit_device_1_wire._state.__array_interface__["data"]
+        qubit_device_1_wire.apply([operation(wires=[0])])
+        pointer_after, _ = qubit_device_1_wire._state.__array_interface__["data"]
+
+        assert pointer_before == pointer_after
+
     test_data_two_wires_no_parameters = [
         (qml.CNOT, [1, 0, 0, 0], [1, 0, 0, 0]),
         (qml.CNOT, [0, 0, 1, 0], [0, 0, 0, 1]),
@@ -171,6 +183,18 @@ class TestApply:
 
         assert np.allclose(qubit_device_2_wires.state, np.array(expected_output), atol=tol, rtol=0)
 
+    @pytest.mark.parametrize("operation,input,expected_output", test_data_two_wires_no_parameters)
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_apply_operation_preserve_pointer_two_wires_no_parameters(
+        self, qubit_device_2_wires, operation, input, expected_output, C
+    ):
+        qubit_device_2_wires._state = np.array(input).reshape(2 * [2]).astype(C)
+        pointer_before, _ = qubit_device_2_wires._state.__array_interface__["data"]
+        qubit_device_2_wires.apply([operation(wires=[0, 1])])
+        pointer_after, _ = qubit_device_2_wires._state.__array_interface__["data"]
+
+        assert pointer_before == pointer_after
+
     test_data_three_wires_no_parameters = [
         (qml.CSWAP, [1, 0, 0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0]),
         (qml.CSWAP, [0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 1, 0]),
@@ -193,6 +217,18 @@ class TestApply:
         qubit_device_3_wires.apply([operation(wires=[0, 1, 2])])
 
         assert np.allclose(qubit_device_3_wires.state, np.array(expected_output), atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("operation,input,expected_output", test_data_three_wires_no_parameters)
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_apply_operation_preserve_pointer_three_wires_no_parameters(
+        self, qubit_device_3_wires, operation, input, expected_output, C
+    ):
+        qubit_device_3_wires._state = np.array(input).reshape(3 * [2]).astype(C)
+        pointer_before, _ = qubit_device_3_wires._state.__array_interface__["data"]
+        qubit_device_3_wires.apply([operation(wires=[0, 1, 2])])
+        pointer_after, _ = qubit_device_3_wires._state.__array_interface__["data"]
+
+        assert pointer_before == pointer_after
 
     @pytest.mark.parametrize(
         "operation,expected_output,par",
@@ -301,6 +337,20 @@ class TestApply:
         qubit_device_1_wire.apply([operation(*par, wires=[0])])
 
         assert np.allclose(qubit_device_1_wire.state, np.array(expected_output), atol=tol, rtol=0)
+
+    @pytest.mark.parametrize(
+        "operation,input,expected_output,par", test_data_single_wire_with_parameters
+    )
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_apply_operation_preserve_pointer_single_wire_with_parameters(
+        self, qubit_device_1_wire, operation, input, expected_output, par, C
+    ):
+        qubit_device_1_wire._state = np.array(input).astype(C)
+        pointer_before, _ = qubit_device_1_wire._state.__array_interface__["data"]
+        qubit_device_1_wire.apply([operation(*par, wires=[0])])
+        pointer_after, _ = qubit_device_1_wire._state.__array_interface__["data"]
+
+        assert pointer_before == pointer_after
 
     """ operation,input,expected_output,par """
     test_data_two_wires_with_parameters = [
@@ -427,6 +477,20 @@ class TestApply:
         qubit_device_2_wires.apply([operation(*par, wires=[0, 1])])
 
         assert np.allclose(qubit_device_2_wires.state, np.array(expected_output), atol=tol, rtol=0)
+
+    @pytest.mark.parametrize(
+        "operation,input,expected_output,par", test_data_two_wires_with_parameters
+    )
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_apply_operation_preserve_pointer_two_wires_with_parameters(
+        self, qubit_device_2_wires, operation, input, expected_output, par, C
+    ):
+        qubit_device_2_wires._state = np.array(input).reshape(2 * [2]).astype(C)
+        pointer_before, _ = qubit_device_2_wires._state.__array_interface__["data"]
+        qubit_device_2_wires.apply([operation(*par, wires=[0, 1])])
+        pointer_after, _ = qubit_device_2_wires._state.__array_interface__["data"]
+
+        assert pointer_before == pointer_after
 
     def test_apply_errors_qubit_state_vector(self, qubit_device_2_wires):
         """Test that apply fails for incorrect state preparation, and > 2 qubit gates"""

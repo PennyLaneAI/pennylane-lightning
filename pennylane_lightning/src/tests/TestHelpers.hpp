@@ -182,7 +182,8 @@ template <typename PrecisionT>
 auto createZeroState(size_t num_qubits)
     -> TestVector<std::complex<PrecisionT>> {
     TestVector<std::complex<PrecisionT>> res(
-        1U << num_qubits, {0.0, 0.0}, test_allocator<std::complex<PrecisionT>>);
+        size_t{1U} << num_qubits, {0.0, 0.0},
+        test_allocator<std::complex<PrecisionT>>);
     res[0] = std::complex<PrecisionT>{1.0, 0.0};
     return res;
 }
@@ -194,7 +195,8 @@ template <typename PrecisionT>
 auto createPlusState(size_t num_qubits)
     -> TestVector<std::complex<PrecisionT>> {
     TestVector<std::complex<PrecisionT>> res(
-        1U << num_qubits, {1.0, 0.0}, test_allocator<std::complex<PrecisionT>>);
+        size_t{1U} << num_qubits, {1.0, 0.0},
+        test_allocator<std::complex<PrecisionT>>);
     for (auto &elt : res) {
         elt /= std::sqrt(1U << num_qubits);
     }
@@ -210,10 +212,10 @@ auto createRandomState(RandomEngine &re, size_t num_qubits)
     using Util::squaredNorm;
 
     TestVector<std::complex<PrecisionT>> res(
-        static_cast<size_t>(1U) << num_qubits, {0.0, 0.0},
+        size_t{1U} << num_qubits, {0.0, 0.0},
         test_allocator<std::complex<PrecisionT>>);
     std::uniform_real_distribution<PrecisionT> dist;
-    for (size_t idx = 0; idx < (static_cast<size_t>(1U) << num_qubits); idx++) {
+    for (size_t idx = 0; idx < (size_t{1U} << num_qubits); idx++) {
         res[idx] = {dist(re), dist(re)};
     }
 

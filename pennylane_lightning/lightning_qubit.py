@@ -120,7 +120,7 @@ class LightningQubit(DefaultQubit):
 
     @staticmethod
     def _asarray(arr, dtype=None):
-        arr = np.asarray(arr)
+        arr = np.asarray(arr)  # arr is not copied
         if not dtype:
             dtype = arr.dtype
 
