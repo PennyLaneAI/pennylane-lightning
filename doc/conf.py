@@ -31,6 +31,7 @@ PROJECT_SOURCE_DIR = currdir.parent
 CPP_SOURCE_DIR = PROJECT_SOURCE_DIR.joinpath("pennylane_lightning/src")
 CPP_EXCLUDE_DIRS = ["examples", "tests", "benchmarks"]  # relative to CPP_SOURCE_DIR
 
+
 def obtain_cpp_files():
     script_path = PROJECT_SOURCE_DIR.joinpath("bin/cpp-files")
 
