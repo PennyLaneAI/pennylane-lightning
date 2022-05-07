@@ -233,16 +233,16 @@ template <class T, class Derived> class StateVectorBase {
      * inverted.
      */
     void applyOperations(const std::vector<std::string> &ops,
-                         const std::vector<std::vector<size_t>> &wires,
-                         const std::vector<bool> &inverse) {
+                         const std::vector<std::vector<size_t>> &ops_wires,
+                         const std::vector<bool> &ops_inverse) {
         const size_t numOperations = ops.size();
-        if (numOperations != wires.size()) {
+        if (numOperations != ops_wires.size()) {
             throw std::invalid_argument(
                 "Invalid arguments: number of operations, wires, and "
                 "parameters must all be equal");
         }
         for (size_t i = 0; i < numOperations; i++) {
-            applyOperation(ops[i], wires[i], inverse[i], {});
+            applyOperation(ops[i], ops_wires[i], ops_inverse[i], {});
         }
     }
 
@@ -275,9 +275,9 @@ template <class T, class Derived> class StateVectorBase {
                                       bool adj = false) -> PrecisionT {
         auto *arr = getData();
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
-        return dispatcher.applyGenerator(
-            getKernelForGenerator(dispatcher.strToGeneratorOp(opName)), arr,
-            num_qubits_, opName, wires, adj);
+        const auto gntr_op = dispatcher.strToGeneratorOp(opName);
+        return dispatcher.applyGenerator(getKernelForGenerator(gntr_op), arr,
+                                         num_qubits_, opName, wires, adj);
     }
 
     /**

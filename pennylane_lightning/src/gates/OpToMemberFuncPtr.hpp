@@ -427,7 +427,7 @@ template <class PrecisionT>
 using GeneratorFuncPtrT = typename Internal::GeneratorFuncPtr<PrecisionT>::Type;
 
 /**
- * @brief Convinient type alias for MatrixfuncPtr.
+ * @brief Convenient type alias for MatrixfuncPtr.
  */
 template <class PrecisionT>
 using MatrixFuncPtrT = typename Internal::MatrixFuncPtr<PrecisionT>::Type;

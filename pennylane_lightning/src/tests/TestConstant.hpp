@@ -1,6 +1,5 @@
 #include "Constant.hpp"
 #include "ConstantUtil.hpp"
-#include "DefaultKernels.hpp"
 #include "GateOperation.hpp"
 #include "Util.hpp"
 

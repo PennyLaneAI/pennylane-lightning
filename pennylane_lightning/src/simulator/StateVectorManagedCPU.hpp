@@ -49,7 +49,7 @@ class StateVectorManagedCPU
      * @param memory_model Memory model the statevector will use
      */
     explicit StateVectorManagedCPU(
-        size_t num_qubits, Threading threading = bestThreading(),
+        size_t num_qubits, Threading threading = Threading::SingleThread,
         CPUMemoryModel memory_model = bestCPUMemoryModel())
         : BaseType{num_qubits, threading, memory_model},
           data_{Util::exp2(num_qubits), ComplexPrecisionT{0.0, 0.0},

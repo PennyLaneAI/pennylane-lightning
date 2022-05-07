@@ -22,8 +22,8 @@
 #include "GateOperation.hpp"
 #include "Gates.hpp"
 #include "KernelType.hpp"
-#include "PauliGenerator.hpp"
 #include "LinearAlgebra.hpp"
+#include "PauliGenerator.hpp"
 
 #include <complex>
 #include <vector>

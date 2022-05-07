@@ -65,7 +65,7 @@ class StateVectorRawCPU
      * @param threading Threading option the statevector to use
      */
     StateVectorRawCPU(ComplexPrecisionT *data, size_t length,
-                      Threading threading = bestThreading())
+                      Threading threading = Threading::SingleThread)
         : BaseType{Util::log2PerfectPower(length), threading,
                    getMemoryModel(static_cast<void *>(data))},
           data_{data}, length_(length) {
