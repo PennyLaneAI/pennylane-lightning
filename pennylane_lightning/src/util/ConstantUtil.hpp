@@ -16,12 +16,14 @@
  * Contains utility functions for processing constants
  */
 #pragma once
+
+#include "TypeTraits.hpp"
+#include "Util.hpp"
+
 #include <array>
 #include <cstdlib>
 #include <stdexcept>
 #include <tuple>
-
-#include "Util.hpp"
 
 namespace Pennylane::Util {
 /**

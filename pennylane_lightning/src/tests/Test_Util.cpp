@@ -21,6 +21,7 @@
 #endif
 
 using namespace Pennylane;
+using namespace Pennylane::Util;
 
 /**
  * @brief This tests the compile-time calculation of a given scalar
@@ -211,6 +212,21 @@ TEST_CASE("Utility bit operations", "[Util][BitUtil]") {
                 CHECK(Util::log2PerfectPower(n) == c);
             }
         }
+    }
+
+    SECTION("Bitswap") {
+        CHECK(Util::bitswap(0B001101, 0, 1) == 0B001110);
+        CHECK(Util::bitswap(0B001101, 0, 2) == 0B001101);
+        CHECK(Util::bitswap(0B001101, 0, 3) == 0B001101);
+        CHECK(Util::bitswap(0B001101, 0, 4) == 0B011100);
+    }
+
+    SECTION("fillTrailingOnes") {
+        CHECK(Util::fillTrailingOnes<uint8_t>(4) == 0B1111);
+        CHECK(Util::fillTrailingOnes<uint8_t>(6) == 0B111111);
+        CHECK(Util::fillTrailingOnes<uint32_t>(17) == 0B1'1111'1111'1111'1111);
+        CHECK(Util::fillTrailingOnes<uint64_t>(54) ==
+              0x3F'FFFF'FFFF'FFFF); // 54 == 4*13 + 2
     }
 }
 

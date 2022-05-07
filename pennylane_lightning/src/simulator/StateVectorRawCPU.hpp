@@ -24,7 +24,7 @@
 
 #include "BitUtil.hpp"
 #include "Error.hpp"
-#include "StateVectorBase.hpp"
+#include "StateVectorCPU.hpp"
 
 #include <iostream>
 
@@ -44,10 +44,10 @@ namespace Pennylane {
  * @tparam PrecisionT Floating point precision of underlying statevector data.
  */
 template <class PrecisionT = double>
-class StateVectorRaw
-    : public StateVectorBase<PrecisionT, StateVectorRaw<PrecisionT>> {
+class StateVectorRawCPU
+    : public StateVectorCPU<PrecisionT, StateVectorRawCPU<PrecisionT>> {
   public:
-    using Base = StateVectorBase<PrecisionT, StateVectorRaw<PrecisionT>>;
+    using BaseType = StateVectorCPU<PrecisionT, StateVectorRawCPU<PrecisionT>>;
     using ComplexPrecisionT = std::complex<PrecisionT>;
 
   private:
@@ -58,12 +58,16 @@ class StateVectorRaw
     /**
      * @brief Construct state-vector from a raw data pointer.
      *
+     * Memory model is automatically deduced from a pointer.
+     *
      * @param data Raw data pointer.
      * @param length The size of the data, i.e. 2^(number of qubits).
+     * @param threading Threading option the statevector to use
      */
-    StateVectorRaw(ComplexPrecisionT *data, size_t length)
-        : StateVectorBase<PrecisionT, StateVectorRaw<PrecisionT>>(
-              Util::log2PerfectPower(length)),
+    StateVectorRawCPU(ComplexPrecisionT *data, size_t length,
+                      Threading threading = Threading::SingleThread)
+        : BaseType{Util::log2PerfectPower(length), threading,
+                   getMemoryModel(static_cast<void *>(data))},
           data_{data}, length_(length) {
         // check length is perfect power of 2
         if (!Util::isPerfectPowerOf2(length)) {
@@ -102,7 +106,7 @@ class StateVectorRaw
                      " is given."); // TODO: change to std::format in C++20
         }
         data_ = data;
-        Base::setNumQubits(Util::log2PerfectPower(length));
+        BaseType::setNumQubits(Util::log2PerfectPower(length));
         length_ = length;
     }
 

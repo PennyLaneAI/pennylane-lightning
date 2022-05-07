@@ -11,13 +11,12 @@
 #include <catch2/catch.hpp>
 
 #include "AdjointDiff.hpp"
-#include "StateVectorManaged.hpp"
-#include "StateVectorRaw.hpp"
+#include "StateVectorRawCPU.hpp"
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"
 
-#ifndef _USE_MATH_DEFINES
+#if !defined(_USE_MATH_DEFINES)
 #define _USE_MATH_DEFINES
 #endif
 
@@ -56,7 +55,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=Z",
             std::vector<std::complex<double>> cdata(1U << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
 
-            StateVectorRaw<double> psi(cdata.data(), cdata.size());
+            StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
 
             std::vector<size_t> tp{0};
             std::vector<ObsDatum<double>> obs_ls{obs};
@@ -88,7 +87,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RY, Obs=X",
             std::vector<std::complex<double>> cdata(1U << num_qubits);
             cdata[0] = std::complex<double>{1, 0};
 
-            StateVectorRaw<double> psi(cdata.data(), cdata.size());
+            StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
 
             std::vector<size_t> tp{0};
             std::vector<ObsDatum<double>> obs_ls{obs};
@@ -113,7 +112,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=[Z,Z]",
         std::vector<double> jacobian(num_obs * num_params, 0);
 
         std::vector<std::complex<double>> cdata(1U << num_qubits);
-        StateVectorRaw<double> psi(cdata.data(), cdata.size());
+        StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs1 = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
@@ -130,7 +129,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=RX, Obs=[Z,Z]",
 
         CAPTURE(jacobian);
         CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
-        CHECK(0.0 == Approx(jacobian[1 * num_obs - 1]).margin(1e-7));
+        CHECK(0.0 == Approx(jacobian[1 * num_params + 1]).margin(1e-7));
     }
 }
 TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z]",
@@ -144,7 +143,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z]",
         std::vector<double> jacobian(num_obs * num_params, 0);
 
         std::vector<std::complex<double>> cdata(1U << num_qubits);
-        StateVectorRaw<double> psi(cdata.data(), cdata.size());
+        StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs1 = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
@@ -183,7 +182,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z], "
         std::vector<size_t> t_params{0, 2};
 
         std::vector<std::complex<double>> cdata(1U << num_qubits);
-        StateVectorRaw<double> psi(cdata.data(), cdata.size());
+        StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs1 = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
@@ -218,7 +217,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
         std::vector<double> jacobian(num_obs * num_params, 0);
 
         std::vector<std::complex<double>> cdata(1U << num_qubits);
-        StateVectorRaw<double> psi(cdata.data(), cdata.size());
+        StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs = ObsDatum<double>({"PauliZ", "PauliZ", "PauliZ"},
@@ -253,7 +252,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Op=Mixed, Obs=[XXX]",
         std::vector<double> jacobian(num_obs * num_params, 0);
 
         std::vector<std::complex<double>> cdata(1U << num_qubits);
-        StateVectorRaw<double> psi(cdata.data(), cdata.size());
+        StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
         auto obs = ObsDatum<double>({"PauliX", "PauliX", "PauliX"},
@@ -315,7 +314,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Decomposed Rot gate, non "
 
             std::vector<std::complex<double>> cdata{INVSQRT2<double>(),
                                                     -INVSQRT2<double>()};
-            StateVectorRaw<double> psi(cdata.data(), cdata.size());
+            StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
 
             auto obs = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
             auto ops = OpsData<double>(
@@ -356,7 +355,7 @@ TEST_CASE("AdjointJacobian::adjointJacobian Mixed Ops, Obs and TParams",
 
         std::vector<std::complex<double>> cdata{ONE<double>(), ZERO<double>(),
                                                 ZERO<double>(), ZERO<double>()};
-        StateVectorRaw<double> psi(cdata.data(), cdata.size());
+        StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
 
         auto obs = ObsDatum<double>({"PauliX", "PauliZ"}, {{}, {}}, {{0}, {1}});
         auto ops = OpsData<double>(
@@ -406,7 +405,7 @@ TEST_CASE("AdjointJacobian::applyObservable visitor checks",
         std::vector<double> out_data(1);
 
         for (std::size_t i = 0; i < param.size(); i++) {
-            StateVectorManaged<double> psi(2);
+            StateVectorManagedCPU<double> psi(2);
             JacobianData<double> jd(1, psi.getLength(), psi.getData(),
                                     {obs_default}, ops, {1});
             adj.adjointJacobian(out_data, jd, true);
@@ -428,7 +427,7 @@ TEST_CASE("AdjointJacobian::applyObservable visitor checks",
         std::vector<double> out_data(1);
 
         for (std::size_t i = 0; i < param.size(); i++) {
-            StateVectorManaged<double> psi(2);
+            StateVectorManagedCPU<double> psi(2);
             JacobianData<double> jd(1, psi.getLength(), psi.getData(),
                                     {obs_default}, ops, {1});
             adj.adjointJacobian(out_data, jd, true);
@@ -449,7 +448,7 @@ TEST_CASE("AdjointJacobian::applyObservable visitor checks",
         std::vector<double> out_data(1);
 
         for (std::size_t i = 0; i < param.size(); i++) {
-            StateVectorManaged<double> psi(2);
+            StateVectorManagedCPU<double> psi(2);
             JacobianData<double> jd(1, psi.getLength(), psi.getData(),
                                     {obs_default}, ops, {1});
             adj.adjointJacobian(out_data, jd, true);
@@ -471,7 +470,7 @@ TEST_CASE("AdjointJacobian::applyObservable visitor checks",
         std::vector<double> out_data(1);
 
         for (std::size_t i = 0; i < param.size(); i++) {
-            StateVectorManaged<double> psi(2);
+            StateVectorManagedCPU<double> psi(2);
             JacobianData<double> jd(1, psi.getLength(), psi.getData(),
                                     {obs_default}, ops, {1});
             adj.adjointJacobian(out_data, jd, true);

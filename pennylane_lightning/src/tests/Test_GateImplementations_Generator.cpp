@@ -35,6 +35,17 @@ constexpr std::string_view remove_prefix(const std::string_view &str,
     return {str.data() + len, str.length() - len};
 }
 
+template <typename T> constexpr auto testMargin() -> T {
+    static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
+    if constexpr (std::is_same_v<T, float>) {
+        return 1e-3F;
+    } else {
+        return 1e-5L;
+    }
+}
+
+template <typename T> constexpr static auto test_margin = testMargin<T>();
+
 template <GeneratorOperation gntr_op>
 constexpr auto findGateOpForGenerator() -> GateOperation {
     constexpr auto gntr_name = remove_prefix(
@@ -82,7 +93,7 @@ void testGeneratorForGate(RandomEngine &re, size_t num_qubits, bool inverse) {
 
     DYNAMIC_SECTION("Test generator of " << gate_name << " for kernel "
                                          << GateImplementation::name) {
-        const auto wires = createWires(gate_op);
+        const auto wires = createWires(gate_op, num_qubits);
         const auto ini_st = createRandomState<PrecisionT>(re, num_qubits);
 
         auto gntr_func =
@@ -118,7 +129,7 @@ void testGeneratorForGate(RandomEngine &re, size_t num_qubits, bool inverse) {
 
         scaleVector(gate_der_st, static_cast<PrecisionT>(0.5) / eps);
 
-        REQUIRE(gntr_st == approx(gate_der_st).margin(PrecisionT{1e-3}));
+        REQUIRE(gntr_st == approx(gate_der_st).margin(test_margin<PrecisionT>));
     }
 }
 template <typename PrecisionT, typename ParamT, class GateImplementation,

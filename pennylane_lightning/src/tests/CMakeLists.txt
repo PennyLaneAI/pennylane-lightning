@@ -70,7 +70,6 @@ target_link_libraries(compile_time_tests lightning_gates lightning_utils lightni
 
 set(TEST_SOURCES CreateAllWires.cpp
                  Test_AdjDiff.cpp
-#                 Test_Bindings.cpp
                  Test_DynamicDispatcher.cpp
                  Test_Error.cpp
                  Test_GateImplementations_CompareKernels.cpp
@@ -81,12 +80,12 @@ set(TEST_SOURCES CreateAllWires.cpp
                  Test_GateImplementations_Param.cpp
                  Test_GateUtil.cpp
                  Test_Internal.cpp
+                 Test_KernelMap.cpp
                  Test_LinearAlgebra.cpp
                  Test_Measures.cpp
                  Test_OpToMemberFuncPtr.cpp
                  Test_RuntimeInfo.cpp
-                 Test_StateVectorManaged.cpp
-                 Test_StateVectorRaw.cpp
+                 Test_StateVectorCPU.cpp
                  Test_Util.cpp
                  Test_VectorJacobianProduct.cpp)
 

@@ -167,7 +167,7 @@ class TestAdjointJacobian:
     )
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_unsupported_complex_type(self, dev):
-        dev._state = dev._asarray(dev._state, np.complex256)
+        dev._state = np.zeros(8, np.complex256)  # Directly put unaligned numpy array to device
 
         with qml.tape.QuantumTape() as tape:
             qml.QubitStateVector(np.array([1.0, -1.0]) / np.sqrt(2), wires=0)
@@ -176,7 +176,7 @@ class TestAdjointJacobian:
 
         tape.trainable_params = {1}
 
-        with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
+        with pytest.raises(TypeError, match="Unsupported .*"):
             dev.adjoint_jacobian(tape)
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))

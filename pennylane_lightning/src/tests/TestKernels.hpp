@@ -1,14 +1,14 @@
 #pragma once
 /**
- * @brief We define test kernels. Note that kernels not registered to
+ * @file
+ * We define test kernels. Note that kernels not registered to
  * AvailableKernels can be also tested by adding it to here.
  */
-#include "cpu_kernels/GateImplementationsLM.hpp"
-#include "cpu_kernels/GateImplementationsPI.hpp"
-
+#include "Macros.hpp"
 #include "TypeList.hpp"
 
-#include <utility>
+#include "cpu_kernels/GateImplementationsLM.hpp"
+#include "cpu_kernels/GateImplementationsPI.hpp"
 
 using TestKernels =
     Pennylane::Util::TypeList<Pennylane::Gates::GateImplementationsLM,

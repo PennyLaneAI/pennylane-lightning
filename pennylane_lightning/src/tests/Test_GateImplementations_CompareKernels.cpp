@@ -26,11 +26,8 @@
  */
 using namespace Pennylane;
 using namespace Pennylane::Gates;
-using namespace Pennylane::Util;
-
-namespace {
 using namespace Pennylane::Gates::Constant;
-} // namespace
+using namespace Pennylane::Util;
 
 using std::vector;
 
@@ -130,7 +127,7 @@ void testApplyGate(RandomEngine &re, size_t num_qubits) {
             "Test gate "
             << gate_name
             << " with inverse = false") { // Test with inverse = false
-            std::vector<std::vector<std::complex<PrecisionT>>> res;
+            std::vector<TestVector<std::complex<PrecisionT>>> res;
 
             for (auto kernel_id : implementing_kernel_ids) {
                 auto st = ini;
@@ -148,7 +145,7 @@ void testApplyGate(RandomEngine &re, size_t num_qubits) {
         DYNAMIC_SECTION("Test gate "
                         << gate_name
                         << " with inverse = true") { // Test with inverse = true
-            std::vector<std::vector<std::complex<PrecisionT>>> res;
+            std::vector<TestVector<std::complex<PrecisionT>>> res;
 
             for (auto kernel_id : implementing_kernel_ids) {
                 auto st = ini;
@@ -213,7 +210,7 @@ void testSingleQubitOp(RandomEngine &re, size_t num_qubits, bool inverse) {
         const auto all_wires =
             CombinationGenerator(num_qubits, num_wires).all_perms();
         for (const auto &wires : all_wires) {
-            std::vector<std::vector<std::complex<PrecisionT>>> res;
+            std::vector<TestVector<std::complex<PrecisionT>>> res;
             for (KernelType kernel : all_kernels) {
                 auto st = ini_st;
                 DynamicDispatcher<PrecisionT>::getInstance().applyMatrix(
@@ -248,7 +245,7 @@ void testTwoQubitOp(RandomEngine &re, size_t num_qubits, bool inverse) {
         const auto all_wires =
             CombinationGenerator(num_qubits, num_wires).all_perms();
         for (const auto &wires : all_wires) {
-            std::vector<std::vector<std::complex<PrecisionT>>> res;
+            std::vector<TestVector<std::complex<PrecisionT>>> res;
             for (KernelType kernel : all_kernels) {
                 auto st = ini_st;
                 DynamicDispatcher<PrecisionT>::getInstance().applyMatrix(
@@ -283,7 +280,7 @@ void testMultiQubitOp(RandomEngine &re, size_t num_qubits, size_t num_wires,
         const auto all_wires =
             PermutationGenerator(num_qubits, num_wires).all_perms();
         for (const auto &wires : all_wires) {
-            std::vector<std::vector<std::complex<PrecisionT>>> res;
+            std::vector<TestVector<std::complex<PrecisionT>>> res;
             for (KernelType kernel : all_kernels) {
                 auto st = ini_st;
                 DynamicDispatcher<PrecisionT>::getInstance().applyMatrix(

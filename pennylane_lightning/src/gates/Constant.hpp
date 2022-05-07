@@ -32,6 +32,12 @@ namespace Pennylane::Gates::Constant {
 [[maybe_unused]] constexpr std::array multi_qubit_generators{
     GeneratorOperation::MultiRZ,
 };
+/**
+ * @brief List of multi-qubit matrix operation
+ */
+[[maybe_unused]] constexpr std::array multi_qubit_matrix_ops{
+    MatrixOperation::MultiQubitOp,
+};
 
 /**
  * @brief Gate names
@@ -72,8 +78,7 @@ namespace Pennylane::Gates::Constant {
                                                "Toffoli"},
     std::pair<GateOperation, std::string_view>{GateOperation::CSWAP, "CSWAP"},
     std::pair<GateOperation, std::string_view>{GateOperation::MultiRZ,
-                                               "MultiRZ"},
-};
+                                               "MultiRZ"}};
 /**
  * @brief Generator names.
  *

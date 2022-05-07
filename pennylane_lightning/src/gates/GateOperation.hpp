@@ -60,8 +60,9 @@ enum class GateOperation : uint32_t {
     /* END (placeholder) */
     END
 };
+
 /**
- * @brief Enum class of all gate generators
+ * @brief Enum class for all gate generators
  */
 enum class GeneratorOperation : uint32_t {
     BEGIN = 0,
@@ -81,6 +82,7 @@ enum class GeneratorOperation : uint32_t {
     /* END (placeholder) */
     END
 };
+
 /**
  * @brief Enum class for matrix operation
  */

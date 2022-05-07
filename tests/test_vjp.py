@@ -40,12 +40,12 @@ class TestComputeVJP:
         not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
     )
     def test_unsupported_complex_type(self, dev):
-        dev._state = dev._asarray(dev._state, np.complex256)
+        dev._state = np.array([1, 0, 0, 0], dtype=np.complex256)
 
         dy = np.array([[1.0, 2.0], [3.0, 4.0]])
         jac = np.array([[[1.0, 0.1, 0.2], [0.2, 0.6, 0.1]], [[0.4, -0.7, 1.2], [-0.5, -0.6, 0.7]]])
 
-        with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
+        with pytest.raises(TypeError, match="Unsupported .*"):
             dev.compute_vjp(dy, jac)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
@@ -157,7 +157,7 @@ class TestVectorJacobianProduct:
         not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
     )
     def test_unsupported_complex_type(self, dev):
-        dev._state = dev._asarray(dev._state, np.complex256)
+        dev._state = np.array([1, 0, 0, 0], dtype=np.complex256)
 
         x, y, z = [0.5, 0.3, -0.7]
 
@@ -171,7 +171,7 @@ class TestVectorJacobianProduct:
 
         dy = np.array([1.0])
 
-        with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
+        with pytest.raises(TypeError, match="Unsupported .*"):
             dev.vjp(tape, dy)(tape)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
@@ -505,7 +505,7 @@ class TestBatchVectorJacobianProduct:
         not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
     )
     def test_unsupported_complex_type(self, dev):
-        dev._state = dev._asarray(dev._state, np.complex256)
+        dev._state = np.array([1, 0, 0, 0], dtype=np.complex256)
 
         with qml.tape.QuantumTape() as tape1:
             qml.RX(0.4, wires=0)
@@ -524,7 +524,7 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
+        with pytest.raises(TypeError, match="Unsupported .*"):
             dev.batch_vjp(tapes, dys)
 
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])

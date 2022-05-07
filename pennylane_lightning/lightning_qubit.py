@@ -54,6 +54,10 @@ try:
         StateVectorC128,
         AdjointJacobianC128,
         VectorJacobianProductC128,
+        allocate_aligned_array,
+        get_alignment,
+        best_alignment,
+        CPUMemoryModel,
     )
 
     from ._serialize import _serialize_obs, _serialize_ops
@@ -113,6 +117,21 @@ class LightningQubit(DefaultQubit):
     def __init__(self, wires, *, shots=None, batch_obs=False):
         super().__init__(wires, shots=shots)
         self._batch_obs = batch_obs
+
+    @staticmethod
+    def _asarray(arr, dtype=None):
+        arr = np.asarray(arr)
+        if not dtype:
+            dtype = arr.dtype
+
+        # We allocate a new aligned memory and copy data to there if alignment or dtype mismatches
+        # Note that get_alignment does not neccsarily returns CPUMemoryModel(Unaligned) even for
+        # numpy allocated memory as the memory location happens to be aligend.
+        if int(get_alignment(arr)) < int(best_alignment()) or arr.dtype != dtype:
+            new_arr = allocate_aligned_array(arr.size, np.dtype(dtype)).reshape(arr.shape)
+            np.copyto(new_arr, arr)
+            arr = new_arr
+        return arr
 
     @classmethod
     def capabilities(cls):
