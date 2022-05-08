@@ -135,6 +135,7 @@ class TestApply:
 
         assert np.allclose(qubit_device_1_wire._state, np.array(expected_output), atol=tol, rtol=0)
 
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     @pytest.mark.parametrize("operation,input,expected_output", test_data_no_parameters)
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_preserve_pointer_single_wire_no_parameters(
@@ -184,6 +185,7 @@ class TestApply:
 
         assert np.allclose(qubit_device_2_wires.state, np.array(expected_output), atol=tol, rtol=0)
 
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     @pytest.mark.parametrize("operation,input,expected_output", test_data_two_wires_no_parameters)
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_preserve_pointer_two_wires_no_parameters(
@@ -220,6 +222,7 @@ class TestApply:
 
         assert np.allclose(qubit_device_3_wires.state, np.array(expected_output), atol=tol, rtol=0)
 
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     @pytest.mark.parametrize("operation,input,expected_output", test_data_three_wires_no_parameters)
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_preserve_pointer_three_wires_no_parameters(
@@ -341,6 +344,7 @@ class TestApply:
 
         assert np.allclose(qubit_device_1_wire.state, np.array(expected_output), atol=tol, rtol=0)
 
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     @pytest.mark.parametrize(
         "operation,input,expected_output,par", test_data_single_wire_with_parameters
     )
@@ -482,6 +486,7 @@ class TestApply:
 
         assert np.allclose(qubit_device_2_wires.state, np.array(expected_output), atol=tol, rtol=0)
 
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     @pytest.mark.parametrize(
         "operation,input,expected_output,par", test_data_two_wires_with_parameters
     )
