@@ -140,10 +140,11 @@ class TestApply:
     def test_apply_operation_preserve_pointer_single_wire_no_parameters(
         self, qubit_device_1_wire, operation, input, expected_output, C
     ):
-        qubit_device_1_wire._state = np.array(input).astype(C)
-        pointer_before, _ = qubit_device_1_wire._state.__array_interface__["data"]
-        qubit_device_1_wire.apply([operation(wires=[0])])
-        pointer_after, _ = qubit_device_1_wire._state.__array_interface__["data"]
+        dev = qubit_device_1_wire
+        dev._state = dev._asarray(input, dtype=C)
+        pointer_before, _ = dev._state.__array_interface__["data"]
+        dev.apply([operation(wires=[0])])
+        pointer_after, _ = dev._state.__array_interface__["data"]
 
         assert pointer_before == pointer_after
 
@@ -188,10 +189,11 @@ class TestApply:
     def test_apply_operation_preserve_pointer_two_wires_no_parameters(
         self, qubit_device_2_wires, operation, input, expected_output, C
     ):
-        qubit_device_2_wires._state = np.array(input).reshape(2 * [2]).astype(C)
-        pointer_before, _ = qubit_device_2_wires._state.__array_interface__["data"]
+        dev = qubit_device_2_wires
+        dev._state = dev._asarray(input, dtype=C).reshape(2 * [2])
+        pointer_before, _ = dev._state.__array_interface__["data"]
         qubit_device_2_wires.apply([operation(wires=[0, 1])])
-        pointer_after, _ = qubit_device_2_wires._state.__array_interface__["data"]
+        pointer_after, _ = dev._state.__array_interface__["data"]
 
         assert pointer_before == pointer_after
 
@@ -223,10 +225,11 @@ class TestApply:
     def test_apply_operation_preserve_pointer_three_wires_no_parameters(
         self, qubit_device_3_wires, operation, input, expected_output, C
     ):
-        qubit_device_3_wires._state = np.array(input).reshape(3 * [2]).astype(C)
-        pointer_before, _ = qubit_device_3_wires._state.__array_interface__["data"]
-        qubit_device_3_wires.apply([operation(wires=[0, 1, 2])])
-        pointer_after, _ = qubit_device_3_wires._state.__array_interface__["data"]
+        dev = qubit_device_3_wires
+        dev._state = dev._asarray(input, dtype=C).reshape(3 * [2])
+        pointer_before, _ = dev._state.__array_interface__["data"]
+        dev.apply([operation(wires=[0, 1, 2])])
+        pointer_after, _ = dev._state.__array_interface__["data"]
 
         assert pointer_before == pointer_after
 
@@ -345,10 +348,11 @@ class TestApply:
     def test_apply_operation_preserve_pointer_single_wire_with_parameters(
         self, qubit_device_1_wire, operation, input, expected_output, par, C
     ):
-        qubit_device_1_wire._state = np.array(input).astype(C)
-        pointer_before, _ = qubit_device_1_wire._state.__array_interface__["data"]
-        qubit_device_1_wire.apply([operation(*par, wires=[0])])
-        pointer_after, _ = qubit_device_1_wire._state.__array_interface__["data"]
+        dev = qubit_device_1_wire
+        dev._state = dev._asarray(input, dtype=C)
+        pointer_before, _ = dev._state.__array_interface__["data"]
+        dev.apply([operation(*par, wires=[0])])
+        pointer_after, _ = dev._state.__array_interface__["data"]
 
         assert pointer_before == pointer_after
 
@@ -485,10 +489,11 @@ class TestApply:
     def test_apply_operation_preserve_pointer_two_wires_with_parameters(
         self, qubit_device_2_wires, operation, input, expected_output, par, C
     ):
-        qubit_device_2_wires._state = np.array(input).reshape(2 * [2]).astype(C)
-        pointer_before, _ = qubit_device_2_wires._state.__array_interface__["data"]
-        qubit_device_2_wires.apply([operation(*par, wires=[0, 1])])
-        pointer_after, _ = qubit_device_2_wires._state.__array_interface__["data"]
+        dev = qubit_device_2_wires
+        dev._state = dev._asarray(input, dtype=C).reshape(2 * [2])
+        pointer_before, _ = dev._state.__array_interface__["data"]
+        dev.apply([operation(*par, wires=[0, 1])])
+        pointer_after, _ = dev._state.__array_interface__["data"]
 
         assert pointer_before == pointer_after
 
