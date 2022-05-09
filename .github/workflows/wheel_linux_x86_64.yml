@@ -18,7 +18,6 @@ env:
   # Testing of built wheels
   CIBW_TEST_REQUIRES: numpy~=1.21 scipy pytest pytest-cov pytest-mock flaky
 
-  # Force to use master
   CIBW_BEFORE_TEST: pip install git+https://github.com/PennyLaneAI/pennylane.git@master
 
   CIBW_TEST_COMMAND: |
