@@ -12,12 +12,12 @@
 
 #include "BitUtil.hpp"
 #include "CPUMemoryModel.hpp"
-#include "DispatchKeys.hpp"
 #include "Gates.hpp"
 #include "KernelType.hpp"
 #include "Memory.hpp"
 #include "StateVectorBase.hpp"
 #include "StateVectorCPU.hpp"
+#include "Threading.hpp"
 #include "Util.hpp"
 
 namespace Pennylane {
@@ -80,7 +80,7 @@ class StateVectorManagedCPU
      */
     StateVectorManagedCPU(const ComplexPrecisionT *other_data,
                           size_t other_size,
-                          Threading threading = bestThreading(),
+                          Threading threading = Threading::SingleThread,
                           CPUMemoryModel memory_model = bestCPUMemoryModel())
         : BaseType(Util::log2PerfectPower(other_size), threading, memory_model),
           data_{other_data, other_data + other_size,
@@ -99,7 +99,7 @@ class StateVectorManagedCPU
     template <class Alloc>
     explicit StateVectorManagedCPU(
         const std::vector<std::complex<PrecisionT>, Alloc> &other,
-        Threading threading = bestThreading(),
+        Threading threading = Threading::SingleThread,
         CPUMemoryModel memory_model = bestCPUMemoryModel())
         : StateVectorManagedCPU(other.data(), other.size(), threading,
                                 memory_model) {}

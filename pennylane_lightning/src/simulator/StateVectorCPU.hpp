@@ -11,12 +11,12 @@
 #pragma once
 
 #include "BitUtil.hpp"
-#include "DispatchKeys.hpp"
 #include "Gates.hpp"
 #include "KernelMap.hpp"
 #include "KernelType.hpp"
 #include "Memory.hpp"
 #include "StateVectorBase.hpp"
+#include "Threading.hpp"
 #include "Util.hpp"
 
 namespace Pennylane {

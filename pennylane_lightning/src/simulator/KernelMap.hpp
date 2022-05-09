@@ -15,10 +15,10 @@
  * @file
  * Set/get Default kernels for statevector
  */
-#include "DispatchKeys.hpp"
 #include "GateOperation.hpp"
 #include "IntegerInterval.hpp"
 #include "KernelType.hpp"
+#include "Threading.hpp"
 #include "Util.hpp"
 
 #include <deque>

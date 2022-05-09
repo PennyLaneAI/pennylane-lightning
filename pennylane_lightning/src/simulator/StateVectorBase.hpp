@@ -22,7 +22,6 @@
 #include "ConstantUtil.hpp"
 #include "DynamicDispatcher.hpp"
 #include "Error.hpp"
-#include "SelectKernel.hpp"
 #include "Util.hpp"
 
 /// @cond DEV
