@@ -93,8 +93,8 @@ class CMakeBuild(build_ext):
         if not Path(self.build_temp).exists():
             os.makedirs(self.build_temp)
 
-        subprocess.check_call(["cmake", str(ext.sourcedir)] + configure_args, cwd=self.build_temp)
-        subprocess.check_call(["cmake", "--build", "."] + build_args, cwd=self.build_temp)
+        subprocess.check_call(["cmake", str(ext.sourcedir)] + configure_args, cwd=self.build_temp, shell=True)
+        subprocess.check_call(["cmake", "--build", "."] + build_args, cwd=self.build_temp, shell=True)
 
 
 with open("pennylane_lightning/_version.py") as f:
