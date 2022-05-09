@@ -85,7 +85,8 @@ set(TEST_SOURCES CreateAllWires.cpp
                  Test_Measures.cpp
                  Test_OpToMemberFuncPtr.cpp
                  Test_RuntimeInfo.cpp
-                 Test_StateVectorCPU.cpp
+                 Test_StateVectorManagedCPU.cpp
+                 Test_StateVectorRawCPU.cpp
                  Test_Util.cpp
                  Test_VectorJacobianProduct.cpp)
 

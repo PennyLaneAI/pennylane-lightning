@@ -202,21 +202,18 @@ template <class T, class Derived> class StateVectorBase {
                     const std::vector<bool> &ops_inverse,
                     const std::vector<std::vector<PrecisionT>> &ops_params) {
         const size_t numOperations = ops.size();
-        if (numOperations != ops_wires.size()) {
-            throw std::invalid_argument(
-                "Invalid arguments: number of operations, wires, and "
-                "parameters must all be equal");
-        }
-        if (numOperations != ops_inverse.size()) {
-            throw std::invalid_argument(
-                "Invalid arguments: number of operations, wires, and "
-                "parameters must all be equal");
-        }
-        if (numOperations != ops_params.size()) {
-            throw std::invalid_argument(
-                "Invalid arguments: number of operations, wires, and "
-                "parameters must all be equal");
-        }
+        PL_ABORT_IF(
+            numOperations != ops_wires.size(),
+            "Invalid arguments: number of operations, wires, inverses, and "
+            "parameters must all be equal");
+        PL_ABORT_IF(
+            numOperations != ops_inverse.size(),
+            "Invalid arguments: number of operations, wires, inverses, and "
+            "parameters must all be equal");
+        PL_ABORT_IF(
+            numOperations != ops_params.size(),
+            "Invalid arguments: number of operations, wires, inverses, and "
+            "parameters must all be equal");
         for (size_t i = 0; i < numOperations; i++) {
             applyOperation(ops[i], ops_wires[i], ops_inverse[i], ops_params[i]);
         }
@@ -236,9 +233,14 @@ template <class T, class Derived> class StateVectorBase {
                          const std::vector<bool> &ops_inverse) {
         const size_t numOperations = ops.size();
         if (numOperations != ops_wires.size()) {
-            throw std::invalid_argument(
-                "Invalid arguments: number of operations, wires, and "
-                "parameters must all be equal");
+            PL_ABORT(
+                "Invalid arguments: number of operations, wires, and inverses "
+                "must all be equal");
+        }
+        if (numOperations != ops_inverse.size()) {
+            PL_ABORT(
+                "Invalid arguments: number of operations, wires and inverses"
+                "must all be equal");
         }
         for (size_t i = 0; i < numOperations; i++) {
             applyOperation(ops[i], ops_wires[i], ops_inverse[i], {});
@@ -297,10 +299,7 @@ template <class T, class Derived> class StateVectorBase {
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         auto *arr = getData();
 
-        if (wires.empty()) {
-            throw std::invalid_argument(
-                "Number of wires must be larger than 0");
-        }
+        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
 
         dispatcher.applyMatrix(kernel, arr, num_qubits_, matrix, wires,
                                inverse);
@@ -321,11 +320,9 @@ template <class T, class Derived> class StateVectorBase {
                             bool inverse = false) {
         using Gates::MatrixOperation;
 
-        if (matrix.size() != Util::exp2(2 * wires.size())) {
-            throw std::invalid_argument(
-                "The size of matrix does not match with the given "
-                "number of wires");
-        }
+        PL_ABORT_IF(matrix.size() != Util::exp2(2 * wires.size()),
+                    "The size of matrix does not match with the given "
+                    "number of wires");
 
         applyMatrix(kernel, matrix.data(), wires, inverse);
     }
@@ -343,10 +340,7 @@ template <class T, class Derived> class StateVectorBase {
                             bool inverse = false) {
         using Gates::MatrixOperation;
 
-        if (wires.empty()) {
-            throw std::invalid_argument(
-                "Number of wires must be larger than 0");
-        }
+        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
 
         const auto kernel = [n_wires = wires.size(), this]() {
             switch (n_wires) {
@@ -372,11 +366,9 @@ template <class T, class Derived> class StateVectorBase {
     inline void applyMatrix(const std::vector<ComplexPrecisionT, Alloc> &matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
-        if (matrix.size() != Util::exp2(2 * wires.size())) {
-            throw std::invalid_argument(
-                "The size of matrix does not match with the given "
-                "number of wires");
-        }
+        PL_ABORT_IF(matrix.size() != Util::exp2(2 * wires.size()),
+                    "The size of matrix does not match with the given "
+                    "number of wires");
 
         applyMatrix(matrix.data(), wires, inverse);
     }
