@@ -14,8 +14,9 @@
 #pragma once
 #include "Bench_Utils.hpp"
 
+#include "AvailableKernels.hpp"
 #include "Constant.hpp"
-#include "StateVectorManaged.hpp"
+#include "StateVectorManagedCPU.hpp"
 
 #include <algorithm>
 #include <random>
@@ -89,7 +90,7 @@ static void applyOperation_GateOp(benchmark::State &state,
     }
 
     for (auto _ : state) {
-        Pennylane::StateVectorManaged<T> sv{num_qubits};
+        Pennylane::StateVectorManagedCPU<T> sv{num_qubits};
 
         for (size_t g = 0; g < num_gates; g++) {
             sv.applyOperation(kernel, gate_name, wires[g], false, params[g]);
@@ -150,7 +151,7 @@ applyGenerator_GntrOp(benchmark::State &state,
     const auto gntr_name_without_suffix = gntr_name.substr(9);
 
     for (auto _ : state) {
-        Pennylane::StateVectorManaged<T> sv{num_qubits};
+        Pennylane::StateVectorManagedCPU<T> sv{num_qubits};
 
         for (size_t g = 0; g < num_gntrs; g++) {
             [[maybe_unused]] const auto scale = sv.applyGenerator(
@@ -200,7 +201,7 @@ static void applyMatrix(benchmark::State &state,
     }
 
     for (auto _ : state) {
-        Pennylane::StateVectorManaged<T> sv{num_qubits};
+        Pennylane::StateVectorManagedCPU<T> sv{num_qubits};
 
         for (size_t g = 0; g < num_matrices; g++) {
             sv.applyMatrix(kernel, matrices[g], wires[g], false);

@@ -20,7 +20,7 @@
 #include <vector>
 
 #include "Constant.hpp"
-#include "StateVectorManaged.hpp"
+#include "StateVectorManagedCPU.hpp"
 
 #include "Bench_Utils.hpp"
 
@@ -178,7 +178,7 @@ static void applyOperations_RandOps(benchmark::State &state,
     }
 
     for (auto _ : state) {
-        Pennylane::StateVectorManaged<T> sv{num_qubits};
+        Pennylane::StateVectorManagedCPU<T> sv{num_qubits};
 
         for (size_t g = 0; g < num_gates; g++) {
             sv.applyOperation(kernel, OpName(rand_gate_names[g]),
