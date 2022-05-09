@@ -25,6 +25,7 @@
 #include "Memory.hpp"
 #include "OpToMemberFuncPtr.hpp"
 #include "RuntimeInfo.hpp"
+#include "SelectKernel.hpp"
 #include "StateVectorManagedCPU.hpp"
 
 #include "pybind11/complex.h"
