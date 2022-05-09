@@ -166,6 +166,8 @@ class TestAdjointJacobian:
     @pytest.mark.parametrize("G", [qml.RX, qml.RY, qml.RZ])
     def test_pauli_rotation_gradient(self, G, theta, dev):
         """Tests that the automatic gradients of Pauli rotations are correct."""
+        if dev.R_DTYPE == np.float32 and not lq._CPP_BINARY_AVAILABLE:
+            pytest.skip("Skip as default.qubit with a single precision floating point works poorly")
 
         with qml.tape.QuantumTape() as tape:
             qml.QubitStateVector(np.array([1.0, -1.0]) / np.sqrt(2), wires=0)
@@ -185,10 +187,15 @@ class TestAdjointJacobian:
         assert np.allclose(calculated_val, numeric_val[0][2], atol=tol, rtol=0)
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
-    def test_Rot_gradient(self, theta, dev):
+    def test_Rot_gradient(self, theta, dev, tol):
         """Tests that the device gradient of an arbitrary Euler-angle-parameterized gate is
         correct."""
+        if dev.R_DTYPE == np.float32 and not lq._CPP_BINARY_AVAILABLE:
+            pytest.skip("Skip as default.qubit with a single precision floating point works poorly")
+
         params = np.array([theta, theta**3, np.sqrt(2) * theta])
+
+        print(dev.R_DTYPE, dev.C_DTYPE, dev._state.dtype)
 
         with qml.tape.QuantumTape() as tape:
             qml.QubitStateVector(np.array([1.0, -1.0]) / np.sqrt(2), wires=0)
@@ -199,12 +206,10 @@ class TestAdjointJacobian:
 
         calculated_val = dev.adjoint_jacobian(tape)
 
-        h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
-        tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
-
         # compare to finite differences
-        tapes, fn = qml.gradients.finite_diff(tape, h=h)
+        tapes, fn = qml.gradients.finite_diff(tape)
         numeric_val = fn(qml.execute(tapes, dev, None))
+        print(dev._state.dtype)
         assert np.allclose(calculated_val, numeric_val[0][2:], atol=tol, rtol=0)
 
     @pytest.mark.parametrize("par", [1, -2, 1.623, -0.051, 0])  # integers, floats, zero
@@ -274,6 +279,8 @@ class TestAdjointJacobian:
     def test_gradients(self, op, obs, dev):
         """Tests that the gradients of circuits match between the finite difference and device
         methods."""
+        if dev.R_DTYPE == np.float32 and not lq._CPP_BINARY_AVAILABLE:
+            pytest.skip("Skip as default.qubit with a single precision floating point works poorly")
 
         # op.num_wires and op.num_params must be initialized a priori
         with qml.tape.QuantumTape() as tape:
@@ -305,6 +312,9 @@ class TestAdjointJacobian:
 
     def test_gradient_gate_with_multiple_parameters(self, dev):
         """Tests that gates with multiple free parameters yield correct gradients."""
+        if dev.R_DTYPE == np.float32 and not lq._CPP_BINARY_AVAILABLE:
+            pytest.skip("Skip as default.qubit with a single precision floating point works poorly")
+
         x, y, z = [0.5, 0.3, -0.7]
 
         with qml.tape.QuantumTape() as tape:
@@ -394,6 +404,7 @@ class TestAdjointJacobianQNode:
         ):
             qml.grad(circ)(0.1)
 
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_qnode(self, mocker, dev):
         """Test that specifying diff_method allows the adjoint method to be selected"""
         args = np.array([0.54, 0.1, 0.5], requires_grad=True)
@@ -482,6 +493,7 @@ class TestAdjointJacobianQNode:
 
         assert np.allclose(grad_D[0], expected, atol=tol, rtol=0)
 
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_gradient_repeated_gate_parameters(self, mocker, dev):
         """Tests that repeated use of a free parameter in a multi-parameter gate yields correct
         gradients."""
@@ -516,6 +528,9 @@ class TestAdjointJacobianQNode:
     def test_interface_tf(self, dev):
         """Test if gradients agree between the adjoint and finite-diff methods when using the
         TensorFlow interface"""
+        if dev.R_DTYPE == np.float32 and not lq._CPP_BINARY_AVAILABLE:
+            pytest.skip("Skip as default.qubit with a single precision floating point works poorly")
+
         tf = pytest.importorskip("tensorflow")
 
         def f(params1, params2):
@@ -553,6 +568,9 @@ class TestAdjointJacobianQNode:
     def test_interface_torch(self, dev):
         """Test if gradients agree between the adjoint and finite-diff methods when using the
         Torch interface"""
+        if dev.R_DTYPE == np.float32 and not lq._CPP_BINARY_AVAILABLE:
+            pytest.skip("Skip as default.qubit with a single precision floating point works poorly")
+
         torch = pytest.importorskip("torch")
 
         def f(params1, params2):
@@ -564,8 +582,11 @@ class TestAdjointJacobianQNode:
         params1 = torch.tensor(0.3, requires_grad=True)
         params2 = torch.tensor(0.4, requires_grad=True)
 
+        h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+        tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+
         qnode1 = QNode(f, dev, interface="torch", diff_method="adjoint")
-        qnode2 = QNode(f, dev, interface="torch", diff_method="finite-diff")
+        qnode2 = QNode(f, dev, interface="torch", diff_method="finite-diff", h=h)
 
         res1 = qnode1(params1, params2)
         res1.backward()
@@ -582,6 +603,9 @@ class TestAdjointJacobianQNode:
     def test_interface_jax(self, dev):
         """Test if the gradients agree between adjoint and finite-difference methods in the
         jax interface"""
+        if dev.R_DTYPE == np.float32 and not lq._CPP_BINARY_AVAILABLE:
+            pytest.skip("Skip as default.qubit with a single precision floating point works poorly")
+
         jax = pytest.importorskip("jax")
 
         def f(params1, params2):

@@ -637,11 +637,10 @@ class TestLightningQubitIntegration:
         assert dev.shots is None
         assert dev.short_name == "lightning.qubit"
 
+    @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_no_backprop(self):
         """Test that lightning.qubit does not support the backprop
         differentiation method."""
-        if not CPP_BINARY_AVAILABLE:
-            pytest.skip("Skipping test because lightning.qubit is behaving like default.qubit")
 
         dev = qml.device("lightning.qubit", wires=2)
 
@@ -652,12 +651,10 @@ class TestLightningQubitIntegration:
         with pytest.raises(qml.QuantumFunctionError):
             qml.QNode(circuit, dev, diff_method="backprop")
 
+    @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_best_gets_lightning(self):
         """Test that the best differentiation method returns lightning
         qubit."""
-        if not CPP_BINARY_AVAILABLE:
-            pytest.skip("Skipping test because lightning.qubit is behaving like default.qubit")
-
         dev = qml.device("lightning.qubit", wires=2)
 
         def circuit():
@@ -1427,10 +1424,8 @@ class TestApplyLightningMethod:
         spy_unitary.assert_not_called()
 
 
+@pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 def test_warning():
     """Tests if a warning is raised when lightning.qubit binaries are not available"""
-    if CPP_BINARY_AVAILABLE:
-        pytest.skip("Test only applies when binaries are unavailable")
-
     with pytest.warns(UserWarning, match="Pre-compiled binaries for lightning.qubit"):
         qml.device("lightning.qubit", wires=1)

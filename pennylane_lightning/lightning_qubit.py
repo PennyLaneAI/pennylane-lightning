@@ -631,7 +631,7 @@ if not CPP_BINARY_AVAILABLE:
         _CPP_BINARY_AVAILABLE = False
         operations = _remove_snapshot_from_operations(DefaultQubit.operations)
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, wires, *, c_dtype=np.complex128, **kwargs):
             warn(
                 "Pre-compiled binaries for lightning.qubit are not available. Falling back to "
                 "using the Python-based default.qubit implementation. To manually compile from "
@@ -639,4 +639,11 @@ if not CPP_BINARY_AVAILABLE:
                 "https://pennylane-lightning.readthedocs.io/en/latest/installation.html.",
                 UserWarning,
             )
-            super().__init__(*args, **kwargs)
+
+            if c_dtype is np.complex64:
+                r_dtype = np.float32
+            elif c_dtype is np.complex128:
+                r_dtype = np.float64
+            else:
+                raise TypeError(f"Unsupported complex Type: {c_dtype}")
+            super().__init__(wires, r_dtype=r_dtype, c_dtype=c_dtype, **kwargs)
