@@ -100,6 +100,7 @@ class LightningQubit(DefaultQubit):
             the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
+        c_dtype: Datatypes for statevector representation. Must be one of ``np.complex64`` or ``np.complex128``.
     """
 
     name = "Lightning Qubit PennyLane plugin"
