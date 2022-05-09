@@ -187,15 +187,13 @@ class TestAdjointJacobian:
         assert np.allclose(calculated_val, numeric_val[0][2], atol=tol, rtol=0)
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
-    def test_Rot_gradient(self, theta, dev, tol):
+    def test_Rot_gradient(self, theta, dev):
         """Tests that the device gradient of an arbitrary Euler-angle-parameterized gate is
         correct."""
         if dev.R_DTYPE == np.float32 and not lq._CPP_BINARY_AVAILABLE:
             pytest.skip("Skip as default.qubit with a single precision floating point works poorly")
 
         params = np.array([theta, theta**3, np.sqrt(2) * theta])
-
-        print(dev.R_DTYPE, dev.C_DTYPE, dev._state.dtype)
 
         with qml.tape.QuantumTape() as tape:
             qml.QubitStateVector(np.array([1.0, -1.0]) / np.sqrt(2), wires=0)
@@ -206,10 +204,12 @@ class TestAdjointJacobian:
 
         calculated_val = dev.adjoint_jacobian(tape)
 
+        h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
+        tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+
         # compare to finite differences
-        tapes, fn = qml.gradients.finite_diff(tape)
+        tapes, fn = qml.gradients.finite_diff(tape, h=h)
         numeric_val = fn(qml.execute(tapes, dev, None))
-        print(dev._state.dtype)
         assert np.allclose(calculated_val, numeric_val[0][2:], atol=tol, rtol=0)
 
     @pytest.mark.parametrize("par", [1, -2, 1.623, -0.051, 0])  # integers, floats, zero
