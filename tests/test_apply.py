@@ -1424,7 +1424,7 @@ class TestApplyLightningMethod:
         spy_unitary.assert_not_called()
 
 
-@pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+@pytest.mark.skipif(CPP_BINARY_AVAILABLE, reason="Test only applies when binaries are unavailable")
 def test_warning():
     """Tests if a warning is raised when lightning.qubit binaries are not available"""
     with pytest.warns(UserWarning, match="Pre-compiled binaries for lightning.qubit"):
