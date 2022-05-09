@@ -264,8 +264,6 @@ class LightningQubit(DefaultQubit):
                 UserWarning,
             )
 
-        # To support np.complex64 based on the type of self._state
-
         if len(tape.trainable_params) == 0:
             return np.array(0)
 
@@ -360,12 +358,10 @@ class LightningQubit(DefaultQubit):
         if math.allclose(dy, 0):
             return math.convert_like(np.zeros([num_params]), dy)
 
-        if self.C_DTYPE == np.complex64:
+        if self.use_csingle:
             VJP = VectorJacobianProductC64()
-        elif self.C_DTYPE == np.complex128:
-            VJP = VectorJacobianProductC128()
         else:
-            raise TypeError(f"Unsupported complex Type: {dtype}")
+            VJP = VectorJacobianProductC128()
 
         vjp_tensor = VJP.compute_vjp_from_jac(
             math.reshape(jac, [-1]),
@@ -573,9 +569,6 @@ class LightningQubit(DefaultQubit):
             # LightningQubit doesn't support sampling yet
             samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
             return np.squeeze(np.mean(samples, axis=0))
-
-        # To support np.complex64 based on the type of self._state
-        dtype = self._state.dtype
 
         # Initialization of state
         ket = np.ravel(self._pre_rotated_state)
