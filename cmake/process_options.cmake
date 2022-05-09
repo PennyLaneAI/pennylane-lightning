@@ -10,7 +10,8 @@ include_guard()
 
 if (WIN32)
     # Increasing maximum full-path length allowed.
-  set(CMAKE_OBJECT_PATH_MAX 259)
+  message("Setting default path length to 249 characters")
+  set(CMAKE_OBJECT_PATH_MAX 249)
 endif ()
 
 # Set compile flags and library dependencies
