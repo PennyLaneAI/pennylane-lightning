@@ -56,9 +56,9 @@ jobs:
       - name: Test wheel
         run: |
           Set-Location -Path "Z:\"
-          python -m pip installl --find-links=.\dist\ Pennylane_Lightning && \
-          python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master && \
-          python -m pip install pytest pytest-cov pytest-mock flaky && \
+          python -m pip install --find-links=.\dist\ Pennylane_Lightning && `
+          python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master && `
+          python -m pip install pytest pytest-cov pytest-mock flaky && `
           pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
       - uses: actions-ecosystem/action-regex-match@v2
