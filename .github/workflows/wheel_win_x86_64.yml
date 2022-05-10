@@ -38,15 +38,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        os: [windows-2019]
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Check LongPathsEnabled
-        run: |
-          (Get-ItemProperty "HKLM:System\CurrentControlSet\Control\FileSystem").LongPathsEnabled
-
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.4.1
         with:
@@ -57,8 +53,13 @@ jobs:
         uses: tj-actions/branch-names@v5
 
       - uses: actions/checkout@v3
-        with:
-          path: pll
+
+      - name: Rename cloned repo
+        run: |
+          pwd
+          ls
+          cd ..
+          mv pennylane_lightning pll
 
       - uses: actions/setup-python@v2
         name: Install Python
@@ -69,8 +70,7 @@ jobs:
         run: python -m pip install cibuildwheel==2.3.0
 
       - name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
-        working-directory: ./pll
+        run: cd ../pll && python -m cibuildwheel --output-dir wheelhouse
 
       - uses: actions-ecosystem/action-regex-match@v2
         id: rc_build
@@ -83,7 +83,6 @@ jobs:
         with:
           name: ${{ runner.os }}-wheels.zip
           path: ./wheelhouse/*.whl
-        working-directory: ./pll
 
 
   upload-pypi:
