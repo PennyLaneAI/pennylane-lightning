@@ -17,7 +17,8 @@ env:
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
-    pip install pybind11 ninja cmake
+    python -m pip install pybind11 ninja cmake
+    Set-Location Z:\
 
   # Testing of built wheels
   CIBW_TEST_REQUIRES: numpy~=1.21 scipy pytest pytest-cov pytest-mock flaky
@@ -67,7 +68,11 @@ jobs:
         run: python -m pip install cibuildwheel==2.3.0
 
       - name: Build wheels
-        run: Set-Location Z:\ && python -m cibuildwheel --output-dir wheelhouse
+        run: |
+          pwd
+          Set-Location Z:\ 
+          pwd
+          python -m cibuildwheel --output-dir wheelhouse
 
       - uses: actions-ecosystem/action-regex-match@v2
         id: rc_build
