@@ -55,10 +55,6 @@ jobs:
 
       - uses: actions/checkout@v3
 
-      - name: Rename cloned repo
-        run: |
-          Subst Z: (pwd)
-
       - uses: actions/setup-python@v2
         name: Install Python
         with:
@@ -71,7 +67,7 @@ jobs:
         run: |
           Subst Z: (pwd)
           Set-Location -Path "Z:\"
-          python -m cibuildwheel --output-dir wheelhouse
+          python setup.py bdist_wheel
 
       - uses: actions-ecosystem/action-regex-match@v2
         id: rc_build
