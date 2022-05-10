@@ -107,19 +107,4 @@ bool is_disjoint(const IntegerInterval<IntegerType> &interval1,
     return (interval1.max() <= interval2.min()) ||
            (interval2.max() <= interval1.min());
 }
-
-/**
- * @brief
- * @rst
- * Create :math:`I_1 \cup I_2`
- * @endrst
- */
-template <typename IntegerType>
-auto union_interval(const IntegerInterval<IntegerType> &interval1,
-                    const IntegerInterval<IntegerType> &interval2)
-    -> IntegerInterval<IntegerType> {
-    return IntegerInterval<IntegerType>{
-        std::min(interval1.min(), interval2.min()),
-        std::max(interval1.max(), interval2.max())};
-}
 } // namespace Pennylane::Util
