@@ -13,7 +13,7 @@ env:
   CIBW_ARCHS_WINDOWS: "AMD64"
 
   CIBW_BEFORE_ALL: |
-    powershell -Command "New-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem' -Name 'LongPathsEnabled' -Value 1 -PropertyType DWORD -Force"
+    powershell.exe New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
