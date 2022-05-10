@@ -56,7 +56,7 @@ jobs:
 
       - name: Rename cloned repo
         run: |
-          Subst Z: (dir).FullName
+          Subst Z: $pwd.Path
 
       - uses: actions/setup-python@v2
         name: Install Python
