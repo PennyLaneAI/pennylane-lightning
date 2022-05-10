@@ -36,7 +36,6 @@ try:
     from .lightning_qubit_ops import (
         StateVectorC64,
         StateVectorC128,
-        ObsStructC128,
     )
     from .lightning_qubit_ops.adjoint_diff import (
         ObsTermC64,
