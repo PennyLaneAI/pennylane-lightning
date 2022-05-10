@@ -8,8 +8,9 @@
 using namespace Pennylane;
 using namespace Pennylane::KernelMap;
 
+using Catch::Matchers::Contains;
+
 TEST_CASE("Test PriorityDispatchSet", "[PriorityDispatchSet]") {
-    using Catch::Matchers::Contains;
 
     auto pds = PriorityDispatchSet();
     pds.emplace(10U, Util::IntegerInterval<size_t>(10, 20),
@@ -103,10 +104,11 @@ TEST_CASE("Test several limiting cases of default kernels", "[KernelMap]") {
     }
 }
 
-TEST_CASE("Test assignKernelForOp", "[KernelMap]") {
+TEST_CASE("Test KernelMap functionalities", "[KernelMap]") {
     using Gates::GateOperation;
     using Gates::KernelType;
     auto &instance = OperationKernelMap<Gates::GateOperation>::getInstance();
+
     SECTION("Test priority works") {
         auto original_kernel = instance.getKernelMap(
             24, Threading::SingleThread,
@@ -129,5 +131,11 @@ TEST_CASE("Test assignKernelForOp", "[KernelMap]") {
                     24, Threading::SingleThread,
                     CPUMemoryModel::Unaligned)[GateOperation::PauliX] ==
                 original_kernel);
+    }
+    SECTION("Test remove non-existing element") {
+        REQUIRE_THROWS_WITH(
+            instance.removeKernelForOp(GateOperation::PauliX, Threading::END,
+                                       CPUMemoryModel::Unaligned, 100),
+            Contains("does not exist"));
     }
 }

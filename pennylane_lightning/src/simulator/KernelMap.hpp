@@ -157,12 +157,14 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
 
     OperationKernelMap()
         : allowed_kernels_{
+              // LCOV_EXCL_START
               {CPUMemoryModel::Unaligned,
                {Gates::KernelType::LM, Gates::KernelType::PI}},
               {CPUMemoryModel::Aligned256,
                {Gates::KernelType::LM, Gates::KernelType::PI}},
               {CPUMemoryModel::Aligned512,
                {Gates::KernelType::LM, Gates::KernelType::PI}},
+              // LCOV_EXCL_STOP
           } {}
 
   public:
@@ -273,9 +275,8 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
         const auto key = std::make_pair(op, dispatch_key);
 
         const auto iter = kernel_map_.find(key);
-        if (iter == kernel_map_.end()) {
-            return;
-        }
+        PL_ABORT_IF(iter == kernel_map_.end(),
+                    "The given key pair does not exists.");
         (iter->second).clearPriority(priority);
 
         // Reset cache
