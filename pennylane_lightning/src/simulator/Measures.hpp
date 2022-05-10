@@ -164,10 +164,14 @@ class Measures {
     /**
      * @brief Expected value of a Sparse Hamiltonian.
      *
-     * @param row_map row_map array.
-     *                The j element encodes the number of non-zeros above row j.
-     * @param entries column indices of the non-zero elements.
-     * @param values  non-zero elements.
+     * @param row_map_ptr   row_map array pointer.
+     *                      The j element encodes the number of non-zeros above
+     * row j.
+     * @param row_map_size  row_map array size.
+     * @param entries_ptr   pointer to an array with column indices of the
+     * non-zero elements.
+     * @param values_ptr    pointer to an array with the non-zero elements.
+     * @param numNNZ        number of non-zero elements.
      * @return fp_t
      */
     fp_t expval(const Util::index_type *row_map_ptr,
