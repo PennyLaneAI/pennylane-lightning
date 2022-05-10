@@ -174,7 +174,8 @@ class Measures {
                 const Util::index_type row_map_size,
                 const Util::index_type *entries_ptr, const CFP_t *values_ptr,
                 const Util::index_type numNNZ) {
-        PL_ABORT_IF((original_statevector.getLength() != (size_t(row_map_size) - 1)),
+        PL_ABORT_IF(
+            (original_statevector.getLength() != (size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
         auto operator_vector = Util::apply_Sparse_Matrix(
             original_statevector.getData(), original_statevector.getLength(),
@@ -199,8 +200,9 @@ class Measures {
     std::vector<fp_t>
     expval(const std::vector<op_type> &operations_list,
            const std::vector<std::vector<size_t>> &wires_list) {
-        PL_ABORT_IF((operations_list.size() != wires_list.size()),
-                    "The lengths of the list of operations and wires do not match.");
+        PL_ABORT_IF(
+            (operations_list.size() != wires_list.size()),
+            "The lengths of the list of operations and wires do not match.");
         std::vector<fp_t> expected_value_list;
 
         for (size_t index = 0; index < operations_list.size(); index++) {
@@ -273,8 +275,9 @@ class Measures {
     template <typename op_type>
     std::vector<fp_t> var(const std::vector<op_type> &operations_list,
                           const std::vector<std::vector<size_t>> &wires_list) {
-        PL_ABORT_IF((operations_list.size() != wires_list.size()),
-                    "The lengths of the list of operations and wires do not match.");
+        PL_ABORT_IF(
+            (operations_list.size() != wires_list.size()),
+            "The lengths of the list of operations and wires do not match.");
 
         std::vector<fp_t> expected_value_list;
 

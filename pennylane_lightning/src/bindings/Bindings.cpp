@@ -315,7 +315,7 @@ void lightning_class_bindings(py::module &m) {
     //***********************************************************************//
     //                              Measures
     //***********************************************************************//
-    
+
     class_name = "MeasuresC" + bitsize;
     py::class_<Measures<PrecisionT>>(m, class_name.c_str(), py::module_local())
         .def(py::init<const StateVectorRaw<PrecisionT> &>())
@@ -332,18 +332,19 @@ void lightning_class_bindings(py::module &m) {
                  &Measures<PrecisionT>::expval),
              "Expected value of an operation by name.")
 #ifdef _ENABLE_KOKKOS
-        .def("expval",
-                 [](Measures<PrecisionT> &M, const np_arr_ind row_map,
-                    const np_arr_ind entries, const np_arr_c values) {
-                     return M.expval(
-                         static_cast<Util::index_type *>(row_map.request().ptr),
-                         static_cast<Util::index_type>(row_map.request().size),
-                         static_cast<Util::index_type *>(entries.request().ptr),
-                         static_cast<std::complex<PrecisionT> *>(
-                             values.request().ptr),
-                         static_cast<Util::index_type>(values.request().size));
-                 },
-             "Expected value of a sparse Hamiltonian.")
+        .def(
+            "expval",
+            [](Measures<PrecisionT> &M, const np_arr_ind row_map,
+               const np_arr_ind entries, const np_arr_c values) {
+                return M.expval(
+                    static_cast<Util::index_type *>(row_map.request().ptr),
+                    static_cast<Util::index_type>(row_map.request().size),
+                    static_cast<Util::index_type *>(entries.request().ptr),
+                    static_cast<std::complex<PrecisionT> *>(
+                        values.request().ptr),
+                    static_cast<Util::index_type>(values.request().size));
+            },
+            "Expected value of a sparse Hamiltonian.")
 #endif
         .def("generate_samples",
              [](Measures<PrecisionT> &M, size_t num_wires, size_t num_shots) {
