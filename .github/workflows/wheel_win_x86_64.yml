@@ -58,6 +58,7 @@ jobs:
         run: |
           Get-ChildItem -Force
           Set-Location ..
+          Get-ChildItem -Force
           Rename-Item .\pennylane-lightning .\pl
 
       - uses: actions/setup-python@v2
