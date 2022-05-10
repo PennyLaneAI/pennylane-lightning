@@ -333,4 +333,7 @@ TEST_CASE("Test utility functions for constants", "[Util][ConstantUtil]") {
 TEST_CASE("Test AlignedAllocator", "[Util][Memory]") {
     AlignedAllocator<double> allocator(8);
     REQUIRE(allocator.allocate(0) == nullptr);
+    /* Allocate 1 PiB */
+    REQUIRE_THROWS_AS(allocator.allocate(1024UL * 1024UL * 1024UL * 1024UL),
+                      std::bad_alloc);
 }
