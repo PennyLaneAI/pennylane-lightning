@@ -67,6 +67,7 @@ jobs:
         run: |
           Subst Z: (pwd)
           Set-Location -Path "Z:\"
+          python -m pip install wheel cmake ninja
           python setup.py bdist_wheel
 
       - uses: actions-ecosystem/action-regex-match@v2
