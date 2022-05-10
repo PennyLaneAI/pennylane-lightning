@@ -57,12 +57,14 @@ jobs:
       - name: Rename cloned repo
         run: |
           Get-ChildItem -Force
-          Set-Location ..
-          Get-ChildItem -Force
-          Rename-Item .\pennylane-lightning .\pl
+          Set-Location ..\..
+          $cmdOutput = Get-ChildItem -Force
+          echo "ROOT_DIR=$cmdOutput" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+          mklink /d $cmdOutput\pl .\pennylane-lightning\pennylane-lightning
 
       - uses: actions/setup-python@v2
         name: Install Python
+        working-directory:
         with:
           python-version: '3.7'
 
@@ -71,6 +73,7 @@ jobs:
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
+        working_directory: ${env.ROOT_DIR}
 
       - uses: actions-ecosystem/action-regex-match@v2
         id: rc_build
