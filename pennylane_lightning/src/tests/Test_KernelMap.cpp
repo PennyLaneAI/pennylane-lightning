@@ -11,7 +11,6 @@ using namespace Pennylane::KernelMap;
 using Catch::Matchers::Contains;
 
 TEST_CASE("Test PriorityDispatchSet", "[PriorityDispatchSet]") {
-
     auto pds = PriorityDispatchSet();
     pds.emplace(10U, Util::IntegerInterval<size_t>(10, 20),
                 Gates::KernelType::PI);
