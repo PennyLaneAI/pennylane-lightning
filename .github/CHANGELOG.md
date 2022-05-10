@@ -6,6 +6,14 @@
 
 ### Improvements
 
+* Device `lightning.qubit` now accepts a datatype for a statevector.
+[(#290)](https://github.com/PennyLaneAI/pennylane-lightning/pull/290)
+
+```python
+dev1 = qml.device('lightning.qubit', wires=4, c_dtype=np.complex64) # for single precision
+dev2 = qml.device('lightning.qubit', wires=4, c_dtype=np.complex128) # for double precision
+```
+
 * Split matrix operations, refactor dispatch mechanisms, and add a benchmark suits.
 [(#274)](https://github.com/PennyLaneAI/pennylane-lightning/pull/274)
 
