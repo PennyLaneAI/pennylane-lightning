@@ -12,6 +12,7 @@
 #include "BitUtil.hpp"
 #include "Error.hpp"
 #include "LinearAlgebra.hpp"
+#include "Memory.hpp"
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"
@@ -327,4 +328,9 @@ TEST_CASE("Test utility functions for constants", "[Util][ConstantUtil]") {
         REQUIRE(Util::static_lookup<TestEnum::Two>(test_pairs) == 2U);
         REQUIRE(Util::static_lookup<TestEnum::Many>(test_pairs) == uint32_t{});
     }
+}
+
+TEST_CASE("Test AlignedAllocator", "[Util][Memory]") {
+    AlignedAllocator<double> allocator(8);
+    REQUIRE(allocator.allocate(0) == nullptr);
 }

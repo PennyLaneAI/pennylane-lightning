@@ -110,7 +110,7 @@ template <class T> struct AlignedAllocator {
             p = malloc(sizeof(T) * size);
         }
         if (p == nullptr) {
-            throw std::bad_alloc();
+            throw std::bad_alloc(); // LCOV_EXCL_LINE
         }
         return static_cast<T *>(p);
     }

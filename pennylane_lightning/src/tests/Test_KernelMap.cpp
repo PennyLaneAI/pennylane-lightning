@@ -8,8 +8,27 @@
 using namespace Pennylane;
 using namespace Pennylane::KernelMap;
 
-TEST_CASE("Test default kernels for gates are well defined",
-          "[Test_KernelMap]") {
+TEST_CASE("Test PriorityDispatchSet", "[PriorityDispatchSet]") {
+    using Catch::Matchers::Contains;
+
+    auto pds = PriorityDispatchSet();
+    pds.emplace(10u, Util::IntegerInterval<size_t>(10, 20),
+                Gates::KernelType::PI);
+
+    SECTION("Test conflict") {
+        /* If two elements has the same priority but integer intervals overlap,
+         * they conflict. */
+        REQUIRE(pds.conflict(10u, Util::IntegerInterval<size_t>(19, 23)));
+    }
+
+    SECTION("Get Kernel") {
+        REQUIRE(pds.getKernel(15) == Gates::KernelType::PI);
+        REQUIRE_THROWS_WITH(pds.getKernel(30),
+                            Contains("Cannot find a kernel"));
+    }
+}
+
+TEST_CASE("Test default kernels for gates are well defined", "[KernelMap]") {
     auto &instance = OperationKernelMap<Gates::GateOperation>::getInstance();
     Util::for_each_enum<Threading, CPUMemoryModel>(
         [&instance](Threading threading, CPUMemoryModel memory_model) {
@@ -21,7 +40,7 @@ TEST_CASE("Test default kernels for gates are well defined",
 }
 
 TEST_CASE("Test default kernels for generators are well defined",
-          "[Test_KernelMap]") {
+          "[KernelMap]") {
     auto &instance =
         OperationKernelMap<Gates::GeneratorOperation>::getInstance();
     Util::for_each_enum<Threading, CPUMemoryModel>(
@@ -34,7 +53,7 @@ TEST_CASE("Test default kernels for generators are well defined",
 }
 
 TEST_CASE("Test default kernels for matrix operation are well defined",
-          "[Test_KernelMap]") {
+          "[KernelMap]") {
     auto &instance = OperationKernelMap<Gates::MatrixOperation>::getInstance();
     Util::for_each_enum<Threading, CPUMemoryModel>(
         [&instance](Threading threading, CPUMemoryModel memory_model) {
@@ -45,7 +64,7 @@ TEST_CASE("Test default kernels for matrix operation are well defined",
         });
 }
 
-TEST_CASE("Test unallowed kernel", "[Test_KernelMap]") {
+TEST_CASE("Test unallowed kernel", "[KernelMap]") {
     using Gates::GateOperation;
     using Gates::KernelType;
     auto &instance = OperationKernelMap<Gates::GateOperation>::getInstance();
@@ -55,7 +74,7 @@ TEST_CASE("Test unallowed kernel", "[Test_KernelMap]") {
         KernelType::None));
 }
 
-TEST_CASE("Test few limiting cases of default kernels", "[Test_KernelMap]") {
+TEST_CASE("Test several limiting cases of default kernels", "[KernelMap]") {
     auto &instance = OperationKernelMap<Gates::GateOperation>::getInstance();
     SECTION("Single thread, large number of qubits") {
         // For large N, single thread calls "LM" for all single- and two-qubit
@@ -84,11 +103,11 @@ TEST_CASE("Test few limiting cases of default kernels", "[Test_KernelMap]") {
     }
 }
 
-TEST_CASE("Test priority works", "[Test_KernelMap]") {
+TEST_CASE("Test assignKernelForOp", "[KernelMap]") {
     using Gates::GateOperation;
     using Gates::KernelType;
     auto &instance = OperationKernelMap<Gates::GateOperation>::getInstance();
-    SECTION("Test assignKernelForGate") {
+    SECTION("Test priority works") {
         auto original_kernel = instance.getKernelMap(
             24, Threading::SingleThread,
             CPUMemoryModel::Unaligned)[GateOperation::PauliX];

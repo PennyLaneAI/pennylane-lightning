@@ -15,6 +15,7 @@
  * @file
  * Set/get Default kernels for statevector
  */
+#include "Error.hpp"
 #include "GateOperation.hpp"
 #include "IntegerInterval.hpp"
 #include "KernelType.hpp"
@@ -98,10 +99,10 @@ class PriorityDispatchSet {
     }
 
     template <typename... Ts> void emplace(Ts &&...args) {
-        const auto elt = DispatchElement{std::forward<Ts>(args)...};
+        auto elt = DispatchElement{std::forward<Ts>(args)...};
         const auto iter_to_insert = std::upper_bound(
             ordered_vec_.begin(), ordered_vec_.end(), elt, &higher_priority);
-        ordered_vec_.insert(iter_to_insert, elt);
+        ordered_vec_.emplace(iter_to_insert, std::move(elt));
     }
 
     [[nodiscard]] Gates::KernelType getKernel(size_t num_qubits) const {
@@ -110,8 +111,7 @@ class PriorityDispatchSet {
                 return elt.kernel;
             }
         }
-        throw std::range_error(
-            "Cannot find a kernel for the given number of qubits.");
+        PL_ABORT("Cannot find a kernel for the given number of qubits.");
     }
 
     void clearPriority(uint32_t remove_priority) {
@@ -199,16 +199,14 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
         if (std::find(allowed_kernels_.at(memory_model).cbegin(),
                       allowed_kernels_.at(memory_model).cend(),
                       kernel) == allowed_kernels_.at(memory_model).cend()) {
-            throw std::invalid_argument("The given kernel is now allowed for "
-                                        "the given memory model.");
+            PL_ABORT("The given kernel is now allowed for "
+                     "the given memory model.");
         }
         const auto dispatch_key = toDispatchKey(threading, memory_model);
         auto &set = kernel_map_[std::make_pair(op, dispatch_key)];
 
-        if (set.conflict(priority, interval)) {
-            throw std::invalid_argument("The given interval conflicts with "
-                                        "existing intervals.");
-        }
+        PL_ABORT_IF(set.conflict(priority, interval),
+                    "The given interval conflicts with existing intervals.");
 
         // Reset cache
         cache_.clear();

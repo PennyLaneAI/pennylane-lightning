@@ -90,10 +90,12 @@ constexpr inline auto getAlignment(CPUMemoryModel memory_model) -> uint32_t {
         return 32U;
     case CPUMemoryModel::Aligned512:
         return 64U;
+    // LCOV_EXCL_START
     default:
         break;
     }
     PL_UNREACHABLE;
+    // LCOV_EXCL_STOP
 }
 
 /**
