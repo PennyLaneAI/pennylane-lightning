@@ -32,27 +32,12 @@ except (ImportError, ModuleNotFoundError):
 class TestComputeVJP:
     """Tests for the numeric computation of VJPs"""
 
-    @pytest.fixture
-    def dev(self):
-        return qml.device("lightning.qubit", wires=2)
+    @pytest.fixture(params=[np.complex64, np.complex128])
+    def dev(self, request):
+        return qml.device("lightning.qubit", wires=2, c_dtype=request.param)
 
-    @pytest.mark.skipif(
-        not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
-    )
-    def test_unsupported_complex_type(self, dev):
-        dev._state = dev._asarray(dev._state, np.complex256)
-
-        dy = np.array([[1.0, 2.0], [3.0, 4.0]])
-        jac = np.array([[[1.0, 0.1, 0.2], [0.2, 0.6, 0.1]], [[0.4, -0.7, 1.2], [-0.5, -0.6, 0.7]]])
-
-        with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
-            dev.compute_vjp(dy, jac)
-
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_computation(self, tol, dev, C):
+    def test_computation(self, tol, dev):
         """Test that the correct VJP is returned"""
-        dev._state = dev._asarray(dev._state, C)
-
         dy = np.array([[1.0, 2.0], [3.0, 4.0]])
         jac = np.array([[[1.0, 0.1, 0.2], [0.2, 0.6, 0.1]], [[0.4, -0.7, 1.2], [-0.5, -0.6, 0.7]]])
 
@@ -60,13 +45,11 @@ class TestComputeVJP:
         expected = np.tensordot(dy, jac, axes=[[0, 1], [0, 1]])
 
         assert vjp.shape == (3,)
+        assert vjp.dtype == dev.R_DTYPE
         assert np.allclose(vjp, expected, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_computation_num(self, tol, dev, C):
+    def test_computation_num(self, tol, dev):
         """Test that the correct VJP is returned"""
-        dev._state = dev._asarray(dev._state, C)
-
         dy = np.array([[1.0, 2.0], [3.0, 4.0]])
         jac = np.array([[[1.0, 0.1, 0.2], [0.2, 0.6, 0.1]], [[0.4, -0.7, 1.2], [-0.5, -0.6, 0.7]]])
 
@@ -74,12 +57,12 @@ class TestComputeVJP:
         expected = np.tensordot(dy, jac, axes=[[0, 1], [0, 1]])
 
         assert vjp.shape == (3,)
+        assert vjp.dtype == dev.R_DTYPE
         assert np.allclose(vjp, expected, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_computation_num_error(self, dev, C):
+    def test_computation_num_error(self, dev):
         """Test that the correct VJP is returned"""
-        dev._state = dev._asarray(dev._state, C)
+        dev._state = dev._asarray(dev._state)
 
         dy = np.array([[1.0, 2.0], [3.0, 4.0]])
         jac = np.array([[[1.0, 0.1, 0.2], [0.2, 0.6, 0.1]], [[0.4, -0.7, 1.2], [-0.5, -0.6, 0.7]]])
@@ -87,10 +70,9 @@ class TestComputeVJP:
         with pytest.raises(ValueError, match="Invalid size for the gradient-output vector"):
             dev.compute_vjp(dy, jac, num=3)
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_jacobian_is_none(self, dev, C):
+    def test_jacobian_is_none(self, dev):
         """A None Jacobian returns a None VJP"""
-        dev._state = dev._asarray(dev._state, C)
+        dev._state = dev._asarray(dev._state)
 
         dy = np.array([[1.0, 2.0], [3.0, 4.0]])
         jac = None
@@ -98,10 +80,9 @@ class TestComputeVJP:
         vjp = dev.compute_vjp(dy, jac)
         assert vjp is None
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_zero_dy(self, dev, C):
+    def test_zero_dy(self, dev):
         """A zero dy vector will return a zero matrix"""
-        dev._state = dev._asarray(dev._state, C)
+        dev._state = dev._asarray(dev._state)
 
         dy = np.zeros([2, 2])
         jac = np.array([[[1.0, 0.1, 0.2], [0.2, 0.6, 0.1]], [[0.4, -0.7, 1.2], [-0.5, -0.6, 0.7]]])
@@ -124,61 +105,48 @@ class TestComputeVJP:
         """Test vjp_compute using the Torch interface"""
         torch = pytest.importorskip("torch")
 
-        dtype = getattr(torch, "float32")
+        if dev.R_DTYPE == np.float32:
+            torch_r_dtype = torch.float32
+        else:
+            torch_r_dtype = torch.float64
 
-        dy = torch.ones(4, dtype=dtype)
-        jac = torch.ones((4, 4), dtype=dtype)
+        dy = torch.ones(4, dtype=torch_r_dtype)
+        jac = torch.ones((4, 4), dtype=torch_r_dtype)
 
-        expected = torch.tensor([4.0, 4.0, 4.0, 4.0], dtype=dtype)
+        expected = torch.tensor([4.0, 4.0, 4.0, 4.0], dtype=torch_r_dtype)
         vjp = dev.compute_vjp(dy, jac)
 
+        assert vjp.dtype == torch_r_dtype
         assert torch.all(vjp == expected)
 
     def test_tf_tensor_dy(self, dev):
         """Test vjp_compute using the Tensorflow interface"""
         tf = pytest.importorskip("tensorflow")
 
-        dy = tf.ones(4, dtype=tf.float32)
-        jac = tf.ones((4, 4), dtype=tf.float32)
+        if dev.R_DTYPE == np.float32:
+            tf_r_dtype = tf.float32
+        else:
+            tf_r_dtype = tf.float64
 
-        expected = tf.constant([4.0, 4.0, 4.0, 4.0], dtype=tf.float32)
+        dy = tf.ones(4, dtype=tf_r_dtype)
+        jac = tf.ones((4, 4), dtype=tf_r_dtype)
+
+        expected = tf.constant([4.0, 4.0, 4.0, 4.0], dtype=tf_r_dtype)
         vjp = dev.compute_vjp(dy, jac)
+
+        assert vjp.dtype == dev.R_DTYPE  # ?
         assert tf.reduce_all(vjp == expected)
 
 
 class TestVectorJacobianProduct:
     """Tests for the `vjp` function"""
 
-    @pytest.fixture
-    def dev(self):
-        return qml.device("lightning.qubit", wires=2)
+    @pytest.fixture(params=[np.complex64, np.complex128])
+    def dev(self, request):
+        return qml.device("lightning.qubit", wires=2, c_dtype=request.param)
 
-    @pytest.mark.skipif(
-        not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
-    )
-    def test_unsupported_complex_type(self, dev):
-        dev._state = dev._asarray(dev._state, np.complex256)
-
-        x, y, z = [0.5, 0.3, -0.7]
-
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
-            qml.expval(qml.PauliZ(0))
-
-        tape.trainable_params = {1, 2, 3}
-
-        dy = np.array([1.0])
-
-        with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
-            dev.vjp(tape, dy)(tape)
-
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_use_device_state(self, tol, dev, C):
+    def test_use_device_state(self, tol, dev):
         """Tests that when using the device state, the correct answer is still returned."""
-        dev._state = dev._asarray(dev._state, C)
-
         x, y, z = [0.5, 0.3, -0.7]
 
         with qml.tape.QuantumTape() as tape:
@@ -200,11 +168,8 @@ class TestVectorJacobianProduct:
 
         assert np.allclose(vjp1, vjp2, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_provide_starting_state(self, tol, dev, C):
+    def test_provide_starting_state(self, tol, dev):
         """Tests provides correct answer when provided starting state."""
-        dev._state = dev._asarray(dev._state, C)
-
         x, y, z = [0.5, 0.3, -0.7]
 
         with qml.tape.QuantumTape() as tape:
@@ -226,12 +191,9 @@ class TestVectorJacobianProduct:
 
         assert np.allclose(vjp1, vjp2, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_not_expval(self, dev, C):
+    def test_not_expval(self, dev):
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
         expectation values"""
-        dev._state = dev._asarray(dev._state, C)
-
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.1, wires=0)
             qml.var(qml.PauliZ(0))
@@ -241,12 +203,10 @@ class TestVectorJacobianProduct:
         with pytest.raises(qml.QuantumFunctionError, match="Adjoint differentiation method does"):
             dev.vjp(tape, dy)(tape)
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_finite_shots_warns(self, C):
+    def test_finite_shots_warns(self):
         """Tests warning raised when finite shots specified"""
 
         dev = qml.device("lightning.qubit", wires=1, shots=1)
-        dev._state = dev._asarray(dev._state, C)
 
         with qml.tape.QuantumTape() as tape:
             qml.expval(qml.PauliZ(0))
@@ -261,11 +221,9 @@ class TestVectorJacobianProduct:
     from pennylane_lightning import LightningQubit as lq
 
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_unsupported_op(self, dev, C):
+    def test_unsupported_op(self, dev):
         """Test if a QuantumFunctionError is raised for an unsupported operation, i.e.,
         multi-parameter operations that are not qml.Rot"""
-        dev._state = dev._asarray(dev._state, C)
 
         with qml.tape.QuantumTape() as tape:
             qml.CRot(0.1, 0.2, 0.3, wires=[0, 1])
@@ -289,10 +247,8 @@ class TestVectorJacobianProduct:
             dev.vjp(tape, dy)(tape)
 
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_proj_unsupported(self, dev, C):
+    def test_proj_unsupported(self, dev):
         """Test if a QuantumFunctionError is raised for a Projector observable"""
-        dev._state = dev._asarray(dev._state, C)
 
         with qml.tape.QuantumTape() as tape:
             qml.CRX(0.1, wires=[0, 1])
@@ -315,10 +271,7 @@ class TestVectorJacobianProduct:
             dev.vjp(tape, dy)(tape)
 
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_unsupported_hermitian_expectation(self, dev, C):
-        dev._state = dev._asarray(dev._state, C)
-
+    def test_unsupported_hermitian_expectation(self, dev):
         obs = np.array([[1, 0], [0, -1]], dtype=np.complex128, requires_grad=False)
 
         with qml.tape.QuantumTape() as tape:
@@ -341,11 +294,8 @@ class TestVectorJacobianProduct:
         ):
             dev.vjp(tape, dy)(tape)
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_no_trainable_parameters(self, dev, C):
+    def test_no_trainable_parameters(self, dev):
         """A tape with no trainable parameters will simply return None"""
-        dev._state = dev._asarray(dev._state, C)
-
         x = 0.4
 
         with qml.tape.QuantumTape() as tape:
@@ -361,10 +311,9 @@ class TestVectorJacobianProduct:
 
         assert vjp is None
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_no_trainable_parameters_NEW(self, dev, C):
+    def test_no_trainable_parameters_NEW(self, dev):
         """A tape with no trainable parameters will simply return None"""
-        dev._state = dev._asarray(dev._state, C)
+        dev._state = dev._asarray(dev._state)
 
         x = 0.4
 
@@ -380,11 +329,8 @@ class TestVectorJacobianProduct:
 
         assert vjp is None
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_no_trainable_parameters_(self, dev, C):
+    def test_no_trainable_parameters_(self, dev):
         """A tape with no trainable parameters will simply return None"""
-        dev._state = dev._asarray(dev._state, C)
-
         x = 0.4
 
         with qml.tape.QuantumTape() as tape:
@@ -400,11 +346,8 @@ class TestVectorJacobianProduct:
 
         assert vjp is None
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_zero_dy(self, dev, C):
+    def test_zero_dy(self, dev):
         """A zero dy vector will return no tapes and a zero matrix"""
-        dev._state = dev._asarray(dev._state, C)
-
         x = 0.4
         y = 0.6
 
@@ -422,12 +365,9 @@ class TestVectorJacobianProduct:
 
         assert np.all(vjp == np.zeros([len(tape.trainable_params)]))
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_single_expectation_value(self, tol, dev, C):
+    def test_single_expectation_value(self, tol, dev):
         """Tests correct output shape and evaluation for a tape
         with a single expval output"""
-        dev._state = dev._asarray(dev._state, C)
-
         x = 0.543
         y = -0.654
 
@@ -446,12 +386,9 @@ class TestVectorJacobianProduct:
         expected = np.array([-np.sin(y) * np.sin(x), np.cos(y) * np.cos(x)])
         assert np.allclose(vjp, expected, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_multiple_expectation_values(self, tol, dev, C):
+    def test_multiple_expectation_values(self, tol, dev):
         """Tests correct output shape and evaluation for a tape
         with multiple expval outputs"""
-        dev._state = dev._asarray(dev._state, C)
-
         x = 0.543
         y = -0.654
 
@@ -471,11 +408,10 @@ class TestVectorJacobianProduct:
         expected = np.array([-np.sin(x), 2 * np.cos(y)])
         assert np.allclose(vjp, expected, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_prob_expectation_values(self, dev, C):
+    def test_prob_expectation_values(self, dev):
         """Tests correct output shape and evaluation for a tape
         with prob and expval outputs"""
-        dev._state = dev._asarray(dev._state, C)
+        dev._state = dev._asarray(dev._state)
 
         x = 0.543
         y = -0.654
@@ -497,41 +433,12 @@ class TestVectorJacobianProduct:
 class TestBatchVectorJacobianProduct:
     """Tests for the batch_vjp function"""
 
-    @pytest.fixture
-    def dev(self):
-        return qml.device("lightning.qubit", wires=2)
+    @pytest.fixture(params=[np.complex64, np.complex128])
+    def dev(self, request):
+        return qml.device("lightning.qubit", wires=2, c_dtype=request.param)
 
-    @pytest.mark.skipif(
-        not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
-    )
-    def test_unsupported_complex_type(self, dev):
-        dev._state = dev._asarray(dev._state, np.complex256)
-
-        with qml.tape.QuantumTape() as tape1:
-            qml.RX(0.4, wires=0)
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
-
-        with qml.tape.QuantumTape() as tape2:
-            qml.RX(0.4, wires=0)
-            qml.RX(0.6, wires=0)
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
-
-        tape1.trainable_params = {0}
-        tape2.trainable_params = {0, 1}
-
-        tapes = [tape1, tape2]
-        dys = [np.array([1.0]), np.array([1.0])]
-
-        with pytest.raises(TypeError, match="Unsupported complex Type: complex256"):
-            dev.batch_vjp(tapes, dys)
-
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_one_tape_no_trainable_parameters(self, dev, C):
+    def test_one_tape_no_trainable_parameters(self, dev):
         """A tape with no trainable parameters will simply return None"""
-        dev._state = dev._asarray(dev._state, C)
-
         with qml.tape.QuantumTape() as tape1:
             qml.RX(0.4, wires=0)
             qml.CNOT(wires=[0, 1])
@@ -555,11 +462,8 @@ class TestBatchVectorJacobianProduct:
         assert vjps[0] is None
         assert vjps[1] is not None
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_all_tapes_no_trainable_parameters(self, dev, C):
+    def test_all_tapes_no_trainable_parameters(self, dev):
         """If all tapes have no trainable parameters all outputs will be None"""
-        dev._state = dev._asarray(dev._state, C)
-
         with qml.tape.QuantumTape() as tape1:
             qml.RX(0.4, wires=0)
             qml.CNOT(wires=[0, 1])
@@ -583,11 +487,8 @@ class TestBatchVectorJacobianProduct:
         assert vjps[0] is None
         assert vjps[1] is None
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_zero_dy(self, dev, C):
+    def test_zero_dy(self, dev):
         """A zero dy vector will return no tapes and a zero matrix"""
-        dev._state = dev._asarray(dev._state, C)
-
         with qml.tape.QuantumTape() as tape1:
             qml.RX(0.4, wires=0)
             qml.CNOT(wires=[0, 1])
@@ -610,10 +511,9 @@ class TestBatchVectorJacobianProduct:
 
         assert np.allclose(vjps[0], 0)
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_reduction_append(self, dev, C):
+    def test_reduction_append(self, dev):
         """Test the 'append' reduction strategy"""
-        dev._state = dev._asarray(dev._state, C)
+        dev._state = dev._asarray(dev._state)
 
         with qml.tape.QuantumTape() as tape1:
             qml.RX(0.4, wires=0)
@@ -639,11 +539,8 @@ class TestBatchVectorJacobianProduct:
         assert all(isinstance(v, np.ndarray) for v in vjps)
         assert all(len(v) == len(t.trainable_params) for t, v in zip(tapes, vjps))
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_reduction_append_callable(self, dev, C):
+    def test_reduction_append_callable(self, dev):
         """Test the 'append' reduction strategy"""
-        dev._state = dev._asarray(dev._state, C)
-
         with qml.tape.QuantumTape() as tape1:
             qml.RX(0.4, wires=0)
             qml.CNOT(wires=[0, 1])
@@ -668,11 +565,8 @@ class TestBatchVectorJacobianProduct:
         assert all(isinstance(v, np.ndarray) for v in vjps)
         assert all(len(v) == len(t.trainable_params) for t, v in zip(tapes, vjps))
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_reduction_extend(self, dev, C):
+    def test_reduction_extend(self, dev):
         """Test the 'extend' reduction strategy"""
-        dev._state = dev._asarray(dev._state, C)
-
         with qml.tape.QuantumTape() as tape1:
             qml.RX(0.4, wires=0)
             qml.CNOT(wires=[0, 1])
@@ -695,11 +589,8 @@ class TestBatchVectorJacobianProduct:
 
         assert len(vjps) == sum(len(t.trainable_params) for t in tapes)
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_reduction_extend_callable(self, dev, C):
+    def test_reduction_extend_callable(self, dev):
         """Test the 'extend' reduction strategy"""
-        dev._state = dev._asarray(dev._state, C)
-
         with qml.tape.QuantumTape() as tape1:
             qml.RX(0.4, wires=0)
             qml.CNOT(wires=[0, 1])
