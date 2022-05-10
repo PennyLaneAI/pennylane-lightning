@@ -170,17 +170,17 @@ class Measures {
      * @param values  non-zero elements.
      * @return fp_t
      */
-    fp_t expval(const std::vector<Util::index_type> &row_map,
-                const std::vector<Util::index_type> &entries,
-                const std::vector<CFP_t> &values) {
-        if (original_statevector.getLength() != (row_map.size() - 1)) {
+    fp_t expval(const Util::index_type *row_map_ptr,
+                const Util::index_type row_map_size,
+                const Util::index_type *entries_ptr, const CFP_t *values_ptr,
+                const Util::index_type numNNZ) {
+        if (original_statevector.getLength() != (size_t(row_map_size) - 1)) {
             throw std::invalid_argument(
                 "Statevector and Hamiltonian have incompatible sizes.");
         }
         auto operator_vector = Util::apply_Sparse_Matrix(
             original_statevector.getData(), original_statevector.getLength(),
-            row_map.data(), row_map.size(), entries.data(), values.data(),
-            values.size());
+            row_map_ptr, row_map_size, entries_ptr, values_ptr, numNNZ);
 
         CFP_t expected_value = Util::innerProdC(
             original_statevector.getData(), operator_vector.data(),
