@@ -56,7 +56,7 @@ jobs:
       - name: Test wheel
         run: |
           Set-Location -Path "Z:\"
-          foreach ($i in Get-ChildItem -Path Z:\dist\*.whl){ python -m pip install $i } && `
+          foreach ($i in Get-ChildItem -Path Z:\dist\*.whl){ python -m pip install $i }
           python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master && `
           python -m pip install pytest pytest-cov pytest-mock flaky && `
           pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
