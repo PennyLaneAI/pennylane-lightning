@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2019]
+        os: [windows-latest]
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
@@ -57,7 +57,8 @@ jobs:
       - name: Rename cloned repo
         run: |
           Get-ChildItem -Force
-          Get-Location
+          Set-Location ..
+          Rename-Item .\pennylane-lightning .\pl
 
       - uses: actions/setup-python@v2
         name: Install Python
