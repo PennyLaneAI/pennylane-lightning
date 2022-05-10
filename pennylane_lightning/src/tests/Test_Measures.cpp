@@ -246,13 +246,14 @@ TEMPLATE_TEST_CASE("Expected Values - Sparse Operator [Kokkos]", "[Measures]",
         index_type num_qubits = 3;
         index_type data_size = Util::exp2(num_qubits);
 
-        std::vector<index_type> row_map_vec;
-        std::vector<index_type> entries_vec;
-        std::vector<complex<TestType>> values_vec;
-        write_CRS_vectors(row_map_vec, entries_vec, values_vec, data_size);
+        std::vector<index_type> row_map;
+        std::vector<index_type> entries;
+        std::vector<complex<TestType>> values;
+        write_CRS_vectors(row_map, entries, values, data_size);
 
         TestType exp_values =
-            Measurer.expval(row_map_vec, entries_vec, values_vec);
+            Measurer.expval(row_map.data(), row_map.size(), entries.data(),
+                            values.data(), values.size());
         TestType exp_values_ref = 0.71999;
         REQUIRE(exp_values == Approx(exp_values_ref).margin(1e-6));
     }
@@ -261,14 +262,15 @@ TEMPLATE_TEST_CASE("Expected Values - Sparse Operator [Kokkos]", "[Measures]",
         index_type num_qubits = 4;
         index_type data_size = Util::exp2(num_qubits);
 
-        std::vector<index_type> row_map_vec;
-        std::vector<index_type> entries_vec;
-        std::vector<complex<TestType>> values_vec;
-        write_CRS_vectors(row_map_vec, entries_vec, values_vec, data_size);
+        std::vector<index_type> row_map;
+        std::vector<index_type> entries;
+        std::vector<complex<TestType>> values;
+        write_CRS_vectors(row_map, entries, values, data_size);
 
         PL_CHECK_THROWS_MATCHES(
-            Measurer.expval(row_map_vec, entries_vec, values_vec),
-            std::invalid_argument,
+            Measurer.expval(row_map.data(), row_map.size(), entries.data(),
+                            values.data(), values.size()),
+            LightningException,
             "Statevector and Hamiltonian have incompatible sizes.");
     }
 }

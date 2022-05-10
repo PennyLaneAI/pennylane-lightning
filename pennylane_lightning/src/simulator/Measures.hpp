@@ -164,23 +164,26 @@ class Measures {
     /**
      * @brief Expected value of a Sparse Hamiltonian.
      *
-     * @param row_map row_map array.
-     *                The j element encodes the number of non-zeros above row j.
-     * @param entries column indices of the non-zero elements.
-     * @param values  non-zero elements.
+     * @param row_map_ptr   row_map array pointer.
+     *                      The j element encodes the number of non-zeros above
+     * row j.
+     * @param row_map_size  row_map array size.
+     * @param entries_ptr   pointer to an array with column indices of the
+     * non-zero elements.
+     * @param values_ptr    pointer to an array with the non-zero elements.
+     * @param numNNZ        number of non-zero elements.
      * @return fp_t
      */
-    fp_t expval(const std::vector<Util::index_type> &row_map,
-                const std::vector<Util::index_type> &entries,
-                const std::vector<CFP_t> &values) {
-        if (original_statevector.getLength() != (row_map.size() - 1)) {
-            throw std::invalid_argument(
-                "Statevector and Hamiltonian have incompatible sizes.");
-        }
+    fp_t expval(const Util::index_type *row_map_ptr,
+                const Util::index_type row_map_size,
+                const Util::index_type *entries_ptr, const CFP_t *values_ptr,
+                const Util::index_type numNNZ) {
+        PL_ABORT_IF(
+            (original_statevector.getLength() != (size_t(row_map_size) - 1)),
+            "Statevector and Hamiltonian have incompatible sizes.");
         auto operator_vector = Util::apply_Sparse_Matrix(
             original_statevector.getData(), original_statevector.getLength(),
-            row_map.data(), row_map.size(), entries.data(), values.data(),
-            values.size());
+            row_map_ptr, row_map_size, entries_ptr, values_ptr, numNNZ);
 
         CFP_t expected_value = Util::innerProdC(
             original_statevector.getData(), operator_vector.data(),
@@ -201,11 +204,9 @@ class Measures {
     std::vector<fp_t>
     expval(const std::vector<op_type> &operations_list,
            const std::vector<std::vector<size_t>> &wires_list) {
-        if (operations_list.size() != wires_list.size()) {
-            throw std::out_of_range("The lengths of the list of operations and "
-                                    "wires do not match.");
-        }
-
+        PL_ABORT_IF(
+            (operations_list.size() != wires_list.size()),
+            "The lengths of the list of operations and wires do not match.");
         std::vector<fp_t> expected_value_list;
 
         for (size_t index = 0; index < operations_list.size(); index++) {
@@ -278,10 +279,9 @@ class Measures {
     template <typename op_type>
     std::vector<fp_t> var(const std::vector<op_type> &operations_list,
                           const std::vector<std::vector<size_t>> &wires_list) {
-        if (operations_list.size() != wires_list.size()) {
-            throw std::out_of_range("The lengths of the list of operations and "
-                                    "wires do not match.");
-        }
+        PL_ABORT_IF(
+            (operations_list.size() != wires_list.size()),
+            "The lengths of the list of operations and wires do not match.");
 
         std::vector<fp_t> expected_value_list;
 

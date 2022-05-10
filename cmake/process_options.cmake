@@ -167,7 +167,7 @@ if(ENABLE_KOKKOS)
 
     FetchContent_Declare(kokkos
                          GIT_REPOSITORY https://github.com/kokkos/kokkos.git
-                         GIT_TAG        3.5.00
+                         GIT_TAG        3.6.00
     )
   
     FetchContent_MakeAvailable(kokkos)
@@ -177,7 +177,7 @@ if(ENABLE_KOKKOS)
 
     FetchContent_Declare(kokkoskernels
                          GIT_REPOSITORY https://github.com/kokkos/kokkos-kernels.git
-                         GIT_TAG        3.5.00
+                         GIT_TAG        3.6.00
     )
  
     FetchContent_MakeAvailable(kokkoskernels)
