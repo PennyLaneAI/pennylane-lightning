@@ -102,7 +102,7 @@ class PriorityDispatchSet {
         auto elt = DispatchElement{std::forward<Ts>(args)...};
         const auto iter_to_insert = std::upper_bound(
             ordered_vec_.begin(), ordered_vec_.end(), elt, &higher_priority);
-        ordered_vec_.emplace(iter_to_insert, std::move(elt));
+        ordered_vec_.insert(iter_to_insert, elt);
     }
 
     [[nodiscard]] Gates::KernelType getKernel(size_t num_qubits) const {

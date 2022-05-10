@@ -12,13 +12,13 @@ TEST_CASE("Test PriorityDispatchSet", "[PriorityDispatchSet]") {
     using Catch::Matchers::Contains;
 
     auto pds = PriorityDispatchSet();
-    pds.emplace(10u, Util::IntegerInterval<size_t>(10, 20),
+    pds.emplace(10U, Util::IntegerInterval<size_t>(10, 20),
                 Gates::KernelType::PI);
 
     SECTION("Test conflict") {
         /* If two elements has the same priority but integer intervals overlap,
          * they conflict. */
-        REQUIRE(pds.conflict(10u, Util::IntegerInterval<size_t>(19, 23)));
+        REQUIRE(pds.conflict(10U, Util::IntegerInterval<size_t>(19, 23)));
     }
 
     SECTION("Get Kernel") {
