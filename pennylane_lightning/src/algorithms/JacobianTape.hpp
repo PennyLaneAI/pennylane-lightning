@@ -412,9 +412,7 @@ template <class T> class OpsData {
     [[nodiscard]] auto getTotalNumParams() const -> size_t {
         return std::accumulate(ops_params_.begin(), ops_params_.end(),
                                size_t{0U}, [](size_t acc, auto &params) {
-                                   return acc + std::accumulate(params.begin(),
-                                                                params.end(),
-                                                                size_t{0U});
+                                   return acc + params.size();
                                });
     }
 };

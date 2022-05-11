@@ -343,7 +343,7 @@ class LightningQubit(DefaultQubit):
         requested_threads = int(getenv("OMP_NUM_THREADS", "1"))
 
         if self._batch_obs and requested_threads > 1:
-            obs_partitions = _chunk_iterable(processed_data['ops_serialized'], requested_threads)
+            obs_partitions = _chunk_iterable(processed_data['obs_serialized'], requested_threads)
             jac = []
             for obs_chunk in obs_partitions:
                 jac_local = adjoint_diff.adjoint_jacobian(
