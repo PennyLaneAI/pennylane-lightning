@@ -99,6 +99,11 @@ class StateVectorManaged
         return data_.data();
     }
 
+    void setZero() {
+        std::fill(data_.data(), data_.data() + this->getLength(),
+                  std::complex<PrecisionT>{0.0, 0.0});
+    }
+
     /**
      * @brief Update data of the class to new_data
      *

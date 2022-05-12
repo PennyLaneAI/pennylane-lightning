@@ -206,15 +206,30 @@ template <typename T> class TensorProdObs final : public Observable<T> {
 
 /// @cond DEV
 namespace detail {
-template <class T>
-void hamiltonianApplyInPlaceImpl(
-    const std::vector<T> &coeffs,
-    const std::vector<std::shared_ptr<Observable<T>>> &terms,
-    StateVectorManaged<T> &sv) {
-    const size_t length = sv.getLength();
 
-    if constexpr (Util::Constant::use_openmp) {
-        // If OpenMP is enabled
+// Default implementation
+template <class T, bool use_openmp> struct HamiltonianApplyInPlace {
+    static void run(const std::vector<T> &coeffs,
+                    const std::vector<std::shared_ptr<Observable<T>>> &terms,
+                    StateVectorManaged<T> &sv) {
+        StateVectorManaged<T> res(sv.getNumQubits());
+        res.setZero();
+        for (size_t term_idx = 0; term_idx < coeffs.size(); term_idx++) {
+            StateVectorManaged<T> tmp(sv);
+            terms[term_idx]->applyInPlace(tmp);
+            Util::scaleAndAdd(tmp.getLength(),
+                              std::complex<T>{coeffs[term_idx], 0.0},
+                              tmp.getData(), res.getData());
+        }
+        sv = std::move(res);
+    }
+};
+#if defined(_OPENMP)
+template <class T> struct HamiltonianApplyInPlace<T, true> {
+    static void run(const std::vector<T> &coeffs,
+                    const std::vector<std::shared_ptr<Observable<T>>> &terms,
+                    StateVectorManaged<T> &sv) {
+        const size_t length = sv.getLength();
 #pragma omp parallel default(none) firstprivate(length)                        \
     shared(coeffs, terms, sv)
         {
@@ -235,8 +250,7 @@ void hamiltonianApplyInPlaceImpl(
 
 #pragma omp critical
             {
-                std::fill(sv.getData(), sv.getData() + length,
-                          std::complex<T>{0.0, 0.0});
+                sv.setZero();
                 for (size_t i = 0; i < nthreads; i++) {
                     Util::scaleAndAdd(length, std::complex<T>{1.0, 0.0},
                                       local_sv.data() + length * i,
@@ -244,16 +258,10 @@ void hamiltonianApplyInPlaceImpl(
                 }
             }
         }
-    } else {
-        for (size_t term_idx = 0; term_idx < coeffs.size(); term_idx++) {
-            StateVectorManaged<T> tmp(sv);
-            terms[term_idx]->applyInPlace(tmp);
-            Util::scaleAndAdd(tmp.getLength(),
-                              std::complex<T>{coeffs[term_idx], 0.0},
-                              tmp.getData(), sv.getData());
-        }
     }
-}
+};
+#endif
+
 } // namespace detail
 /// @endcond
 
@@ -289,13 +297,14 @@ template <typename T> class Hamiltonian final : public Observable<T> {
     static auto
     create(std::initializer_list<T> arg1,
            std::initializer_list<std::shared_ptr<Observable<T>>> arg2)
-        -> std::shared_ptr<const Hamiltonian<T>> {
+        -> std::shared_ptr<Hamiltonian<T>> {
         return std::shared_ptr<Hamiltonian<T>>(
             new Hamiltonian<T>{std::move(arg1), std::move(arg2)});
     }
 
     void applyInPlace(StateVectorManaged<T> &sv) const final {
-        detail::hamiltonianApplyInPlaceImpl<T>(coeffs_, obs_, sv);
+        detail::HamiltonianApplyInPlace<T, Util::Constant::use_openmp>::run(
+            coeffs_, obs_, sv);
     }
 
     [[nodiscard]] auto getWires() const -> std::vector<size_t> final {

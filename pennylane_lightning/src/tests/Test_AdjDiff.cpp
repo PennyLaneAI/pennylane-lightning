@@ -414,7 +414,7 @@ TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=Ham[Z0+Z1]", "[Algorithms]") {
         const auto obs2 = std::make_shared<NamedObs<double>>(
             "PauliZ", std::vector<size_t>{1});
 
-        const auto ham = Hamiltonian<double>::create({0.3, 0.7}, {obs1, obs2});
+        auto ham = Hamiltonian<double>::create({0.3, 0.7}, {obs1, obs2});
 
         auto ops = OpsData<double>({"RX"}, {{param[0]}}, {{0}}, {false});
 
