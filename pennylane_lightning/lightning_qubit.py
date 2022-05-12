@@ -422,7 +422,7 @@ class LightningQubit(DefaultQubit):
 
             return processing_fn
 
-        elif tape_return_type is State:
+        if tape_return_type is State:
             if len(dy) != 2 ** len(self.wires):
                 raise ValueError(
                     "Size of the provided vector dy must be the same as the size of the statevector"

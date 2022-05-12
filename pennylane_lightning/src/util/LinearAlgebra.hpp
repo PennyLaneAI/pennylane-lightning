@@ -866,7 +866,8 @@ auto randomUnitary(RandomEngine &re, size_t num_qubits)
  * @param x Vector to add
  * @param y Vector to be added
  */
-template <class T, size_t STD_CROSSOVER = 1U << 12U>
+template <class T,
+          size_t STD_CROSSOVER = 1U << 12U> // NOLINT(readability-magic-numbers)
 void omp_scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T> *x,
                      std::complex<T> *y) {
     if (dim < STD_CROSSOVER) {

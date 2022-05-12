@@ -59,7 +59,6 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
     using ComplexPrecisionT = std::complex<TestType>;
 
     SECTION("CNOT RX1") {
-
         OpsData<TestType> ops_data{
             {"CNOT", "RX"}, // names
             {{}, {M_PI}},   // params

@@ -18,8 +18,8 @@
 template void
 Pennylane::Algorithms::adjointJacobian<float>(std::vector<float> &jac,
                                               const JacobianData<float> &jd,
-                                              bool apply_operations = false);
+                                              bool apply_operations);
 template void
 Pennylane::Algorithms::adjointJacobian<double>(std::vector<double> &jac,
                                                const JacobianData<double> &jd,
-                                               bool apply_operations = false);
+                                               bool apply_operations);

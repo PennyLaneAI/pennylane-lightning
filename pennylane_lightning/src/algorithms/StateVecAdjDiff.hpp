@@ -58,7 +58,7 @@ void statevectorVJP(std::vector<std::complex<PrecisionT>> &jac,
 
     // We can assume the trainable params are sorted (from Python)
     const size_t num_param_ops = ops.getNumParOps();
-    const auto trainable_params = jd.getTrainableParams();
+    const auto &trainable_params = jd.getTrainableParams();
 
     assert(jac.size() == trainable_params.size());
 

@@ -51,12 +51,12 @@ template <typename T> class Observable {
     /**
      * @brief Get the name of the observable
      */
-    virtual auto getObsName() const -> std::string = 0;
+    [[nodiscard]] virtual auto getObsName() const -> std::string = 0;
 
     /**
      * @brief Get the wires the observable applies to.
      */
-    virtual auto getWires() const -> std::vector<size_t> = 0;
+    [[nodiscard]] virtual auto getWires() const -> std::vector<size_t> = 0;
 };
 
 /**
@@ -158,7 +158,7 @@ template <typename T> class TensorProdObs final : public Observable<T> {
      * @param arg Arguments perfect forwarded to vector of observables.
      */
     template <typename... Ts>
-    TensorProdObs(Ts &&...arg) : obs_{std::forward<Ts>(arg)...} {}
+    explicit TensorProdObs(Ts &&...arg) : obs_{std::forward<Ts>(arg)...} {}
 
     /**
      * @brief Get the number of operations in observable.
