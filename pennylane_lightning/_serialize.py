@@ -53,7 +53,7 @@ except ImportError:
     pass
 
 
-def _ob_has_kernel(ob: Observable) -> bool:
+def _obs_has_kernel(ob: Observable) -> bool:
     """Returns True if the input observable has a supported kernel in the C++ backend.
 
     Args:
@@ -84,7 +84,7 @@ def _serialize_ob(o, wires_map: dict, use_csingle: bool):
 
     wires_list = o.wires.tolist()
     wires = [wires_map[w] for w in wires_list]
-    if _ob_has_kernel(o):
+    if _obs_has_kernel(o):
         return named_obs(o.name, wires)
     return hermitian_obs(qml.matrix(o).ravel().astype(ctype), wires)
 

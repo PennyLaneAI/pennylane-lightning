@@ -20,8 +20,8 @@ import numpy as np
 import pennylane_lightning
 
 from pennylane_lightning._serialize import (
-    _serialize_obs,
-    _serialize_ops,
+    _serialize_observables,
+    _serialize_operations,
     _obs_has_kernel,
 )
 import pytest
@@ -100,7 +100,7 @@ class TestSerializeObs:
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
-            _serialize_obs(tape, self.wires_dict, use_csingle=use_csingle)
+            _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args[0]
         s_expected = (["PauliZ"], [], [[0]])
@@ -121,7 +121,7 @@ class TestSerializeObs:
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
-            _serialize_obs(tape, self.wires_dict, use_csingle=use_csingle)
+            _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args[0]
         s_expected = (["PauliZ", "PauliZ"], [], [[0], [1]])
@@ -144,7 +144,7 @@ class TestSerializeObs:
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
-            _serialize_obs(tape, self.wires_dict, use_csingle=use_csingle)
+            _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args_list
 
@@ -172,7 +172,7 @@ class TestSerializeObs:
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
-            _serialize_obs(tape, self.wires_dict, use_csingle=use_csingle)
+            _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args[0]
         s_expected = (["Hermitian"], [np.eye(4, dtype=dtype).ravel()], [[0, 1]])
@@ -196,7 +196,7 @@ class TestSerializeObs:
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
-            _serialize_obs(tape, self.wires_dict, use_csingle=use_csingle)
+            _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args[0]
         s_expected = (
@@ -225,7 +225,7 @@ class TestSerializeObs:
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
-            _serialize_obs(tape, self.wires_dict, use_csingle=use_csingle)
+            _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args[0]
         s_expected = (["Hermitian", "PauliY"], [np.eye(4, dtype=dtype).ravel()], [[0, 1], [2]])
@@ -256,7 +256,7 @@ class TestSerializeObs:
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, "ObsTermC64", mock_obs)
-            _serialize_obs(tape, wires_dict, use_csingle=use_csingle)
+            _serialize_observables(tape, wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args_list
 
@@ -297,7 +297,7 @@ class TestSerializeObs:
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, "ObsTermC128", mock_obs)
-            _serialize_obs(tape, wires_dict, use_csingle=use_csingle)
+            _serialize_observables(tape, wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args_list
 
@@ -333,7 +333,7 @@ class TestSerializeObs:
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
-            _serialize_obs(tape, self.wires_dict, use_csingle=use_csingle)
+            _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args_list
 
@@ -354,7 +354,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
 
-        s = _serialize_ops(tape, self.wires_dict, use_csingle=C)
+        s = _serialize_operations(tape, self.wires_dict, use_csingle=C)
         dtype = np.float32 if C else np.float64
         s_expected = (
             (
@@ -380,7 +380,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
 
-        s = _serialize_ops(tape, self.wires_dict, use_csingle=C)
+        s = _serialize_operations(tape, self.wires_dict, use_csingle=C)
         s_expected = (
             (
                 ["RX", "RY", "CNOT"],
@@ -401,7 +401,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1).inv()
             qml.CNOT(wires=[0, 1])
 
-        s = _serialize_ops(tape, self.wires_dict, use_csingle=C)
+        s = _serialize_operations(tape, self.wires_dict, use_csingle=C)
         s_expected = (
             (
                 ["RX", "RY", "CNOT"],
@@ -424,7 +424,7 @@ class TestSerializeOps:
             qml.CNOT(wires=[0, 1])
             qml.RZ(0.2, wires=2)
 
-        s = _serialize_ops(tape, self.wires_dict, use_csingle=C)
+        s = _serialize_operations(tape, self.wires_dict, use_csingle=C)
         s_expected = (
             (
                 ["SingleExcitationPlus", "SingleExcitationMinus", "CNOT", "RZ"],
@@ -456,7 +456,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=3.2)
             qml.CNOT(wires=["a", 3.2])
 
-        s = _serialize_ops(tape, wires_dict, use_csingle=C)
+        s = _serialize_operations(tape, wires_dict, use_csingle=C)
         s_expected = (
             (
                 ["RX", "RY", "CNOT"],
@@ -480,7 +480,7 @@ class TestSerializeOps:
             qml.templates.QFT(wires=[0, 1, 2]).inv()
             qml.DoubleExcitation(0.555, wires=[3, 2, 1, 0])
 
-        s = _serialize_ops(tape, self.wires_dict, use_csingle=C)
+        s = _serialize_operations(tape, self.wires_dict, use_csingle=C)
 
         dtype = np.complex64 if C else np.complex128
         s_expected = (

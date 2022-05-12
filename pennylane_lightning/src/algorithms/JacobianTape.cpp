@@ -14,11 +14,20 @@
 
 #include "JacobianTape.hpp"
 
-template class Pennylane::Algorithms::ObsDatum<float>;
-template class Pennylane::Algorithms::ObsDatum<double>;
+template class Pennylane::Algorithms::NamedObs<float>;
+template class Pennylane::Algorithms::NamedObs<double>;
 
-template class Pennylane::Algorithms::ObsDatum<std::complex<float>>;
-template class Pennylane::Algorithms::ObsDatum<std::complex<double>>;
+template class Pennylane::Algorithms::HermitianObs<float>;
+template class Pennylane::Algorithms::HermitianObs<double>;
+
+template class Pennylane::Algorithms::TensorProdObs<float>;
+template class Pennylane::Algorithms::TensorProdObs<double>;
+
+template class Pennylane::Algorithms::Hamiltonian<float>;
+template class Pennylane::Algorithms::Hamiltonian<double>;
+
+template class Pennylane::Algorithms::OpsData<float>;
+template class Pennylane::Algorithms::OpsData<double>;
 
 template class Pennylane::Algorithms::JacobianData<float>;
 template class Pennylane::Algorithms::JacobianData<double>;

@@ -132,9 +132,7 @@ template <typename T> class HermitianObs final : public Observable<T> {
     HermitianObs(T1 &&arg1, T2 &&arg2)
         : matrix_{std::forward<T1>(arg1)}, wires_{std::forward<T2>(arg2)} {}
 
-    [[nodiscard]] auto getMatrix() const -> const std::vector<MatrixT> & {
-        return matrix_;
-    }
+    [[nodiscard]] auto getMatrix() const -> const MatrixT & { return matrix_; }
 
     [[nodiscard]] auto getWires() const -> std::vector<size_t> final {
         return wires_;
