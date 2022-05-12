@@ -38,8 +38,12 @@ try:
         StateVectorC128,
     )
     from .lightning_qubit_ops.adjoint_diff import (
-        ObsTermC64,
-        ObsTermC128,
+        NamedObsC64,
+        NamedObsC128,
+        HermitianObsC64,
+        HermitianObsC128,
+        TensorProdObsC64,
+        TensorProdObsC128,
         HamiltonianC64,
         HamiltonianC128,
         OpsStructC64,
@@ -49,59 +53,73 @@ except ImportError:
     pass
 
 
-def _obs_has_kernel(obs: Observable) -> bool:
+def _ob_has_kernel(ob: Observable) -> bool:
     """Returns True if the input observable has a supported kernel in the C++ backend.
 
     Args:
-        obs (Observable): the input observable
+        ob (Observable): the input observable
 
     Returns:
         bool: indicating whether ``obs`` has a dedicated kernel in the backend
     """
-    if is_pauli_word(obs):
+    if is_pauli_word(ob):
         return True
-    if isinstance(obs, (Hadamard, Projector)):
+    if isinstance(ob, (Hadamard, Projector)):
         return True
-    if isinstance(obs, Tensor):
-        return all(_obs_has_kernel(o) for o in obs.obs)
     return False
 
 
-def _serialize_ob(o, wires_map: dict, ctype, obs_py):
-    """Serializes an abservable (tensor or a single Observable)"""
+def _serialize_ob(o, wires_map: dict, use_csingle: bool):
+    """Serializes an abservable (Named or Hermitian)"""
+    assert not isinstance(o, Tensor)
 
-    is_tensor = isinstance(o, Tensor)
-
-    wires = []
-
-    if is_tensor:
-        for o_ in o.obs:
-            wires_list = o_.wires.tolist()
-            w = [wires_map[w] for w in wires_list]
-            wires.append(w)
+    if use_csingle:
+        ctype = np.complex64
+        named_obs = NamedObsC64
+        hermitian_obs = HermitianObsC64
     else:
-        wires_list = o.wires.tolist()
-        w = [wires_map[w] for w in wires_list]
-        wires.append(w)
+        ctype = np.complex128
+        named_obs = NamedObsC128
+        hermitian_obs = HermitianObsC128
 
-    name = o.name if is_tensor else [o.name]
+    wires_list = o.wires.tolist()
+    wires = [wires_map[w] for w in wires_list]
+    if _ob_has_kernel(o):
+        return named_obs(o.name, wires)
+    return hermitian_obs(qml.matrix(o).ravel().astype(ctype), wires)
 
-    params = []
 
-    if not _obs_has_kernel(o):
-        if is_tensor:
-            for o_ in o.obs:
-                if not _obs_has_kernel(o_):
-                    params.append(qml.matrix(o_).ravel().astype(ctype))
-                else:
-                    params.append([])
+def _serialize_tensor_ob(ob, wires_map: dict, use_csingle: bool):
+    """Serialize a tensor observable"""
+    assert isinstance(ob, Tensor)
+
+    if use_csingle:
+        tensor_obs = TensorProdObsC64
+    else:
+        tensor_obs = TensorProdObsC128
+
+    return tensor_obs([_serialize_ob(o, wires_map, use_csingle) for o in ob.obs])
+
+
+def _serialize_hamiltonian(ob, wires_map: dict, use_csingle: bool):
+    if use_csingle:
+        rtype = np.float32
+        hamiltonian_obs = HamiltonianC64
+    else:
+        rtype = np.float64
+        hamiltonian_obs = HamiltonianC128
+
+    coeffs = np.array(ob.coeffs).astype(rtype)
+    ops = []
+    for op in ob.ops:
+        if isinstance(op, Tensor):
+            ops.append(_serialize_tensor_ob(op, wires_map, use_csingle))
         else:
-            params.append(qml.matrix(o).ravel().astype(ctype))
+            ops.append(_serialize_ob(op, wires_map, use_csingle))
+    return hamiltonian_obs(coeffs, ops)
 
-    return obs_py(name, params, wires)
 
-
-def _serialize_obs(tape: QuantumTape, wires_map: dict, use_csingle: bool = False) -> List:
+def _serialize_observables(tape: QuantumTape, wires_map: dict, use_csingle: bool = False) -> List:
     """Serializes the observables of an input tape.
 
     Args:
@@ -114,30 +132,19 @@ def _serialize_obs(tape: QuantumTape, wires_map: dict, use_csingle: bool = False
     """
     obs = []
 
-    if use_csingle:
-        rtype = np.float32
-        ctype = np.complex64
-        obs_py = ObsTermC64
-        ham_py = HamiltonianC64
-    else:
-        rtype = np.float64
-        ctype = np.complex128
-        obs_py = ObsTermC128
-        ham_py = HamiltonianC128
-
     for o in tape.observables:
-        if o.name != "Hamiltonian":
-            ob = _serialize_ob(o, wires_map, ctype, obs_py)
+        if isinstance(o, Tensor):
+            ob = _serialize_tensor_ob(o, wires_map, use_csingle)
+        elif o.name == "Hamiltonian":
+            ob = _serialize_hamiltonian(o, wires_map, use_csingle)
         else:
-            coeffs = np.array(o.coeffs).astype(rtype)
-            ops = [_serialize_ob(op, wires_map, ctype, obs_py) for op in o.ops]
-            ob = ham_py(coeffs, ops)
+            ob = _serialize_ob(o, wires_map, use_csingle)
         obs.append(ob)
 
     return obs
 
 
-def _serialize_ops(
+def _serialize_operations(
     tape: QuantumTape, wires_map: dict, use_csingle: bool = False
 ) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]], List[bool], List[np.ndarray]]:
     """Serializes the operations of an input tape.

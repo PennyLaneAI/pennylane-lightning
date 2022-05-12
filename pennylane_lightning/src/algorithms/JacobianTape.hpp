@@ -24,6 +24,7 @@
 
 #include <complex>
 #include <cstring>
+#include <memory>
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
@@ -34,15 +35,28 @@ namespace Pennylane::Algorithms {
 template <typename T> class Observable {
   protected:
     Observable() = default;
-    Observable(const Observable &) = default;
+    Observable(Observable &) = default;
     Observable(Observable &&) noexcept = default;
-    Observable &operator=(const Observable &) = default;
+    Observable &operator=(Observable &) = default;
     Observable &operator=(Observable &&) noexcept = default;
 
   public:
     virtual ~Observable() = default;
 
-    virtual void applyInPlace(std::complex<T> *v, size_t num_qubits) const = 0;
+    /**
+     * @brief Apply the observable to the given statevector in place.
+     */
+    virtual void applyInPlace(StateVectorManaged<T> &sv) const = 0;
+
+    /**
+     * @brief Get the name of the observable
+     */
+    virtual auto getObsName() const -> std::string = 0;
+
+    /**
+     * @brief Get the wires the observable applies to.
+     */
+    virtual auto getWires() const -> std::vector<size_t> = 0;
 };
 
 /**
@@ -51,125 +65,160 @@ template <typename T> class Observable {
  *
  * @tparam T Floating point type
  */
-template <typename T> class ObsTerm final : public Observable<T> {
+template <typename T> class NamedObs final : public Observable<T> {
+  private:
+    std::string obs_name_;
+    std::vector<size_t> wires_;
+    std::vector<T> params_;
+
+  public:
+    /**
+     * @brief Construct a NamedObs object, representing a given observable.
+     *
+     * @param arg1 Name of the observable.
+     * @param arg2 Wires upon which to apply operation.
+     */
+    template <typename T1, typename T2>
+    NamedObs(T1 &&arg1, T2 &&arg2)
+        : obs_name_{std::forward<T1>(arg1)}, wires_{std::forward<T2>(arg2)} {}
+
+    /**
+     * @brief Construct a NamedObs object, representing a given observable.
+     *
+     * @param arg1 Name of the observable.
+     * @param arg2 Argument to construct wires.
+     * @param arg3 Argument to construct parameters
+     */
+    template <typename T1, typename T2, typename T3>
+    NamedObs(T1 &&arg1, T2 &&arg2, T3 &&arg3)
+        : obs_name_{std::forward<T1>(arg1)}, wires_{std::forward<T2>(arg2)},
+          params_{std::forward<T3>(arg3)} {}
+
+    [[nodiscard]] auto getObsName() const -> std::string override {
+        return obs_name_;
+    }
+
+    [[nodiscard]] auto getWires() const -> std::vector<size_t> final {
+        return wires_;
+    }
+
+    void applyInPlace(StateVectorManaged<T> &sv) const final {
+        sv.applyOperation(obs_name_, wires_, false, params_);
+    }
+};
+
+/**
+ * @brief Utility class for observable operations used by the adjoint
+ * differentiation method.
+ *
+ * @tparam T Floating point type
+ */
+template <typename T> class HermitianObs final : public Observable<T> {
   public:
     using MatrixT = std::vector<std::complex<T>>;
 
   private:
-    std::vector<std::string> obs_name_;
-    std::vector<MatrixT> obs_matrix_;
-    std::vector<std::vector<size_t>> obs_wires_;
+    MatrixT matrix_;
+    std::vector<size_t> wires_;
 
   public:
     /**
-     * @brief Construct an ObsTerm object, representing a given observable.
+     * @brief Create Hermitian observable
      *
-     * @param obs_name Name of each operation of the observable. Tensor product
-     * observables have more than one operation.
-     * @param obs_params Parameters for a given observable operation ({} if
-     * optional).
-     * @param obs_wires Wires upon which to apply operation. Each observable
-     * operation will be a separate nested list.
+     * @param arg1 Matrix in row major format.
+     * @param arg2 Wires the observable applies to.
      */
-    ObsTerm(std::vector<std::string> obs_name, std::vector<MatrixT> obs_matrix,
-            std::vector<std::vector<size_t>> obs_wires)
-        : obs_name_{std::move(obs_name)}, obs_matrix_{std::move(obs_matrix)},
-          obs_wires_{std::move(obs_wires)} {};
+    template <typename T1, typename T2>
+    HermitianObs(T1 &&arg1, T2 &&arg2)
+        : matrix_{std::forward<T1>(arg1)}, wires_{std::forward<T2>(arg2)} {}
 
-    void addTensorProd(std::string name, std::vector<MatrixT> matrix,
-                       std::vector<size_t> wires) {
-        obs_name_.emplace_back(std::move(name));
-        obs_matrix_.emplace_back(std::move(matrix));
-        obs_wires_.emplace_back(std::move(wires));
+    [[nodiscard]] auto getMatrix() const -> const std::vector<MatrixT> & {
+        return matrix_;
     }
+
+    [[nodiscard]] auto getWires() const -> std::vector<size_t> final {
+        return wires_;
+    }
+
+    [[nodiscard]] auto getObsName() const -> std::string final {
+        return "Hermitian";
+    }
+
+    void applyInPlace(StateVectorManaged<T> &sv) const final {
+        sv.applyMatrix(matrix_, wires_);
+    }
+};
+
+template <typename T> class TensorProdObs final : public Observable<T> {
+  private:
+    std::vector<std::shared_ptr<Observable<T>>> obs_;
+
+  public:
+    /**
+     * @brief Create a tensor product of observables
+     *
+     * @param arg Arguments perfect forwarded to vector of observables.
+     */
+    template <typename... Ts>
+    TensorProdObs(Ts &&...arg) : obs_{std::forward<Ts>(arg)...} {}
 
     /**
      * @brief Get the number of operations in observable.
      *
      * @return size_t
      */
-    [[nodiscard]] auto getSize() const -> size_t { return obs_name_.size(); }
-    /**
-     * @brief Get the name of the observable operations.
-     *
-     * @return const std::vector<std::string>&
-     */
-    [[nodiscard]] auto getObsName() const -> const std::vector<std::string> & {
-        return obs_name_;
-    }
-    /**
-     * @brief Get the parameters for the observable operations.
-     *
-     * @return const std::vector<std::vector<T>>&
-     */
-    [[nodiscard]] auto getObsMatrix() const -> const std::vector<MatrixT> & {
-        return obs_matrix_;
-    }
+    [[nodiscard]] auto getSize() const -> size_t { return obs_.size(); }
+
     /**
      * @brief Get the wires for each observable operation.
      *
      * @return const std::vector<std::vector<size_t>>&
      */
-    [[nodiscard]] auto getObsWires() const
-        -> const std::vector<std::vector<size_t>> & {
-        return obs_wires_;
+    [[nodiscard]] auto getWires() const -> std::vector<size_t> final {
+        std::unordered_set<size_t> wires;
+
+        for (const auto &ob : obs_) {
+            const auto ob_wires = ob->getWires();
+            wires.insert(ob_wires.begin(), ob_wires.end());
+        }
+        return std::vector<size_t>(wires.begin(), wires.end());
     }
 
-    void applyInPlace(std::complex<T> *v, size_t num_qubits) const final {
-        StateVectorRaw sv(v, Util::exp2(num_qubits));
-        for (size_t idx = 0; idx < obs_name_.size(); idx++) {
-            if (obs_name_[idx] == "Hermitian") {
-                sv.applyMatrix(obs_matrix_[idx], obs_wires_[idx]);
-            } else {
-                sv.applyOperation(obs_name_[idx], obs_wires_[idx]);
-            }
+    void applyInPlace(StateVectorManaged<T> &sv) const final {
+        for (const auto &ob : obs_) {
+            ob->applyInPlace(sv);
         }
     }
 
-    [[nodiscard]] std::string toString() const {
+    [[nodiscard]] auto getObsName() const -> std::string final {
         using Util::operator<<;
         std::ostringstream obs_stream;
         obs_stream << "Observable: { 'name' : ";
-        const auto obs_size = obs_name_.size();
+        const auto obs_size = obs_.size();
         for (size_t idx = 0; idx < obs_size; idx++) {
-            obs_stream << obs_name_[idx];
+            obs_stream << obs_[idx]->getObsName();
             if (idx != obs_size - 1) {
                 obs_stream << " @ ";
             }
         }
-        obs_stream << ", 'wires' : " << getObsWires() << " }";
+        obs_stream << ", 'wires' : " << getWires() << " }";
         return obs_stream.str();
     }
 };
 
 /// @cond DEV
 namespace detail {
-template <class T, bool use_omp = false> struct HamiltonianApplyInPlaceImpl {
-    static void run(const std::vector<T> &coeffs,
-                    const std::vector<std::shared_ptr<ObsTerm<T>>> &terms,
-                    std::complex<T> *v, size_t num_qubits) {
-        const StateVectorManaged sv_in(v, Util::exp2(num_qubits));
+template <class T>
+void hamiltonianApplyInPlaceImpl(
+    const std::vector<T> &coeffs,
+    const std::vector<std::shared_ptr<Observable<T>>> &terms,
+    StateVectorManaged<T> &sv) {
+    const size_t length = sv.getLength();
 
-        for (size_t term_idx = 0; term_idx < coeffs.size(); term_idx++) {
-            StateVectorManaged tmp(sv_in);
-            terms[term_idx]->applyInPlace(tmp.getData(), num_qubits);
-            Util::scaleAndAdd(tmp.getLength(),
-                              std::complex<T>{coeffs[term_idx], 0.0},
-                              tmp.getData(), v);
-        }
-    }
-};
-
-#if defined(_OPENMP)
-template <class T> struct HamiltonianApplyInPlaceImpl<T, true> {
-    static void run(const std::vector<T> &coeffs,
-                    const std::vector<std::shared_ptr<ObsTerm<T>>> &terms,
-                    std::complex<T> *v, size_t num_qubits) {
-        const StateVectorManaged sv_in(v, Util::exp2(num_qubits));
-        const size_t length = sv_in.getLength();
-
-#pragma omp parallel default(none) firstprivate(v, num_qubits, length)         \
-    shared(coeffs, terms, sv_in)
+    if constexpr (Util::Constant::use_openmp) {
+        // If OpenMP is enabled
+#pragma omp parallel default(none) firstprivate(length)                        \
+    shared(coeffs, terms, sv)
         {
             const auto nthreads = static_cast<size_t>(omp_get_num_threads());
             std::vector<std::complex<T>> local_sv(nthreads * length,
@@ -179,8 +228,8 @@ template <class T> struct HamiltonianApplyInPlaceImpl<T, true> {
 
 #pragma omp for
             for (size_t term_idx = 0; term_idx < terms.size(); term_idx++) {
-                StateVectorManaged tmp(sv_in);
-                terms[term_idx]->applyInPlace(tmp.getData(), num_qubits);
+                StateVectorManaged<T> tmp(sv);
+                terms[term_idx]->applyInPlace(tmp);
                 Util::scaleAndAdd(
                     length, std::complex<T>{coeffs[term_idx], 0.0},
                     tmp.getData(), local_sv.data() + length * tid);
@@ -188,22 +237,24 @@ template <class T> struct HamiltonianApplyInPlaceImpl<T, true> {
 
 #pragma omp critical
             {
+                std::fill(sv.getData(), sv.getData() + length,
+                          std::complex<T>{0.0, 0.0});
                 for (size_t i = 0; i < nthreads; i++) {
                     Util::scaleAndAdd(length, std::complex<T>{1.0, 0.0},
-                                      local_sv.data() + length * i, v);
+                                      local_sv.data() + length * i,
+                                      sv.getData());
                 }
             }
         }
+    } else {
+        for (size_t term_idx = 0; term_idx < coeffs.size(); term_idx++) {
+            StateVectorManaged<T> tmp(sv);
+            terms[term_idx]->applyInPlace(tmp);
+            Util::scaleAndAdd(tmp.getLength(),
+                              std::complex<T>{coeffs[term_idx], 0.0},
+                              tmp.getData(), sv.getData());
+        }
     }
-};
-#endif
-
-template <class T, bool use_omp>
-void hamiltonianApplyInPlaceImpl(
-    const std::vector<T> &coeffs,
-    const std::vector<std::shared_ptr<ObsTerm<T>>> &terms, std::complex<T> *v,
-    size_t num_qubits) {
-    HamiltonianApplyInPlaceImpl<T, use_omp>::run(coeffs, terms, v, num_qubits);
 }
 } // namespace detail
 /// @endcond
@@ -220,31 +271,53 @@ template <typename T> class Hamiltonian final : public Observable<T> {
 
   private:
     std::vector<T> coeffs_;
-    std::vector<std::shared_ptr<ObsTerm<T>>> terms_;
+    std::vector<std::shared_ptr<Observable<T>>> obs_;
 
   public:
-    Hamiltonian(std::vector<T> coeff,
-                std::vector<std::shared_ptr<ObsTerm<T>>> terms)
-        : coeffs_{std::move(coeff)}, terms_{std::move(terms)} {}
+    /**
+     * @brief Create a Hamiltonian from coefficients and observables
+     *
+     * @param arg1 Arguments to construct coefficients
+     * @param arg2 Arguments to construct observables
+     */
+    template <typename T1, typename T2>
+    Hamiltonian(T1 &&arg1, T2 &&arg2)
+        : coeffs_{std::forward<T1>(arg1)}, obs_{std::forward<T2>(arg2)} {}
 
-    void applyInPlace(std::complex<T> *v, size_t num_qubits) const {
-        detail::hamiltonianApplyInPlaceImpl<T, Util::Constant::use_openmp>(
-            coeffs_, terms_, v, num_qubits);
+    /**
+     * @brief Convenient wrapper for the constructor as the constructor does not
+     * convert the std::shared_ptr with a derived class correctly.
+     */
+    static auto
+    create(std::initializer_list<T> arg1,
+           std::initializer_list<std::shared_ptr<Observable<T>>> arg2)
+        -> std::shared_ptr<const Hamiltonian<T>> {
+        return std::shared_ptr<Hamiltonian<T>>(
+            new Hamiltonian<T>{std::move(arg1), std::move(arg2)});
     }
 
-    void appendTerm(T coeff, std::shared_ptr<ObsTerm<T>> term) {
-        coeffs_.emplace_back(coeff);
-        terms_.emplace_back(std::move(term));
+    void applyInPlace(StateVectorManaged<T> &sv) const final {
+        detail::hamiltonianApplyInPlaceImpl<T>(coeffs_, obs_, sv);
     }
 
-    [[nodiscard]] auto toString() const -> std::string {
+    [[nodiscard]] auto getWires() const -> std::vector<size_t> final {
+        std::unordered_set<size_t> wires;
+
+        for (const auto &ob : obs_) {
+            const auto ob_wires = ob->getWires();
+            wires.insert(ob_wires.begin(), ob_wires.end());
+        }
+        return std::vector<size_t>(wires.begin(), wires.end());
+    }
+
+    [[nodiscard]] auto getObsName() const -> std::string final {
         using Util::operator<<;
         std::ostringstream ss;
         ss << "Hamiltonian: { 'coeffs' : " << coeffs_
            << "}, { 'observables' : ";
-        const auto term_size = terms_.size();
+        const auto term_size = coeffs_.size();
         for (size_t t = 0; t < term_size; t++) {
-            ss << terms_[t]->toString();
+            ss << obs_[t]->getObsName();
             if (t != term_size - 1) {
                 ss << ", ";
             }
@@ -410,10 +483,9 @@ template <class T> class OpsData {
      * @brief Get total number of parameters.
      */
     [[nodiscard]] auto getTotalNumParams() const -> size_t {
-        return std::accumulate(ops_params_.begin(), ops_params_.end(),
-                               size_t{0U}, [](size_t acc, auto &params) {
-                                   return acc + params.size();
-                               });
+        return std::accumulate(
+            ops_params_.begin(), ops_params_.end(), size_t{0U},
+            [](size_t acc, auto &params) { return acc + params.size(); });
     }
 };
 
@@ -484,7 +556,7 @@ template <class T> class JacobianData {
     /**
      * @brief Get observables for which to calculate Jacobian.
      *
-     * @return std::vector<ObsTerm<T>>&
+     * @return List of observables
      */
     [[nodiscard]] auto getObservables() const
         -> const std::vector<std::shared_ptr<Observable<T>>> & {

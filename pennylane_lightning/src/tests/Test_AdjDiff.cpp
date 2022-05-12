@@ -24,18 +24,15 @@
 using namespace Pennylane;
 using namespace Pennylane::Algorithms;
 
-TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=Z",
-          "[Algorithms]") {
+TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=Z", "[Algorithms]") {
     const std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     const std::vector<size_t> tp{0};
     {
         const size_t num_qubits = 1;
         const size_t num_params = 3;
         const size_t num_obs = 1;
-        auto obs = std::make_shared<ObsTerm<double>>(
-            std::vector<std::string>{"PauliZ"},
-            std::vector<std::vector<std::complex<double>>>{{}},
-            std::vector<std::vector<size_t>>{{0}});
+        const auto obs = std::make_shared<NamedObs<double>>(
+            "PauliZ", std::vector<size_t>{0});
         std::vector<double> jacobian(num_obs * tp.size(), 0);
 
         for (const auto &p : param) {
@@ -57,8 +54,7 @@ TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=Z",
     }
 }
 
-TEST_CASE("Algorithms::adjointJacobian Op=RY, Obs=X",
-          "[Algorithms]") {
+TEST_CASE("Algorithms::adjointJacobian Op=RY, Obs=X", "[Algorithms]") {
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     std::vector<size_t> tp{0};
     {
@@ -66,10 +62,8 @@ TEST_CASE("Algorithms::adjointJacobian Op=RY, Obs=X",
         const size_t num_params = 3;
         const size_t num_obs = 1;
 
-        auto obs = std::make_shared<ObsTerm<double>>(
-            std::vector<std::string>{"PauliX"},
-            std::vector<std::vector<std::complex<double>>>{{}},
-            std::vector<std::vector<size_t>>{{0}});
+        const auto obs = std::make_shared<NamedObs<double>>(
+            "PauliX", std::vector<size_t>{0});
         std::vector<double> jacobian(num_obs * tp.size(), 0);
 
         for (const auto &p : param) {
@@ -91,8 +85,7 @@ TEST_CASE("Algorithms::adjointJacobian Op=RY, Obs=X",
     }
 }
 
-TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=[Z,Z]",
-          "[Algorithms]") {
+TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=[Z,Z]", "[Algorithms]") {
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     std::vector<size_t> tp{0};
     {
@@ -105,14 +98,10 @@ TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=[Z,Z]",
         StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
-        auto obs1 = std::make_shared<ObsTerm<double>>(
-            std::vector<std::string>{"PauliZ"},
-            std::vector<std::vector<std::complex<double>>>{{}},
-            std::vector<std::vector<size_t>>{{0}});
-        auto obs2 = std::make_shared<ObsTerm<double>>(
-            std::vector<std::string>{"PauliZ"},
-            std::vector<std::vector<std::complex<double>>>{{}},
-            std::vector<std::vector<size_t>>{{1}});
+        const auto obs1 = std::make_shared<NamedObs<double>>(
+            "PauliZ", std::vector<size_t>{0});
+        const auto obs2 = std::make_shared<NamedObs<double>>(
+            "PauliZ", std::vector<size_t>{1});
 
         auto ops = OpsData<double>({"RX"}, {{param[0]}}, {{0}}, {false});
 
@@ -141,18 +130,12 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z]",
         StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
-        auto obs1 = std::make_shared<ObsTerm<double>>(
-            std::vector<std::string>{"PauliZ"},
-            std::vector<std::vector<std::complex<double>>>{{}},
-            std::vector<std::vector<size_t>>{{0}});
-        auto obs2 = std::make_shared<ObsTerm<double>>(
-            std::vector<std::string>{"PauliZ"},
-            std::vector<std::vector<std::complex<double>>>{{}},
-            std::vector<std::vector<size_t>>{{1}});
-        auto obs3 = std::make_shared<ObsTerm<double>>(
-            std::vector<std::string>{"PauliZ"},
-            std::vector<std::vector<std::complex<double>>>{{}},
-            std::vector<std::vector<size_t>>{{2}});
+        const auto obs1 = std::make_shared<NamedObs<double>>(
+            "PauliZ", std::vector<size_t>{0});
+        const auto obs2 = std::make_shared<NamedObs<double>>(
+            "PauliZ", std::vector<size_t>{1});
+        const auto obs3 = std::make_shared<NamedObs<double>>(
+            "PauliZ", std::vector<size_t>{2});
 
         auto ops = OpsData<double>({"RX", "RX", "RX"},
                                    {{param[0]}, {param[1]}, {param[2]}},
@@ -188,18 +171,12 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z], "
         StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
-        auto obs1 = std::make_shared<ObsTerm<double>>(
-            std::vector<std::string>{"PauliZ"},
-            std::vector<std::vector<std::complex<double>>>{{}},
-            std::vector<std::vector<size_t>>{{0}});
-        auto obs2 = std::make_shared<ObsTerm<double>>(
-            std::vector<std::string>{"PauliZ"},
-            std::vector<std::vector<std::complex<double>>>{{}},
-            std::vector<std::vector<size_t>>{{1}});
-        auto obs3 = std::make_shared<ObsTerm<double>>(
-            std::vector<std::string>{"PauliZ"},
-            std::vector<std::vector<std::complex<double>>>{{}},
-            std::vector<std::vector<size_t>>{{2}});
+        const auto obs1 = std::make_shared<NamedObs<double>>(
+            "PauliZ", std::vector<size_t>{0});
+        const auto obs2 = std::make_shared<NamedObs<double>>(
+            "PauliZ", std::vector<size_t>{1});
+        const auto obs3 = std::make_shared<NamedObs<double>>(
+            "PauliZ", std::vector<size_t>{2});
 
         auto ops = OpsData<double>({"RX", "RX", "RX"},
                                    {{param[0]}, {param[1]}, {param[2]}},
@@ -233,10 +210,13 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
         StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
-        auto obs = std::make_shared<ObsTerm<double>>(
-            std::vector<std::string>{"PauliZ", "PauliZ", "PauliZ"},
-            std::vector<std::vector<std::complex<double>>>{{}, {}, {}},
-            std::vector<std::vector<size_t>>{{0}, {1}, {2}});
+        const auto obs = std::make_shared<TensorProdObs<double>>(
+            std::make_shared<NamedObs<double>>("PauliZ",
+                                               std::vector<size_t>{0}),
+            std::make_shared<NamedObs<double>>("PauliZ",
+                                               std::vector<size_t>{1}),
+            std::make_shared<NamedObs<double>>("PauliZ",
+                                               std::vector<size_t>{2}));
         auto ops = OpsData<double>({"RX", "RX", "RX"},
                                    {{param[0]}, {param[1]}, {param[2]}},
                                    {{0}, {1}, {2}}, {false, false, false});
@@ -255,8 +235,7 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
     }
 }
 
-TEST_CASE("Algorithms::adjointJacobian Op=Mixed, Obs=[XXX]",
-          "[Algorithms]") {
+TEST_CASE("Algorithms::adjointJacobian Op=Mixed, Obs=[XXX]", "[Algorithms]") {
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     std::vector<size_t> tp{0, 1, 2, 3, 4, 5};
     {
@@ -269,10 +248,13 @@ TEST_CASE("Algorithms::adjointJacobian Op=Mixed, Obs=[XXX]",
         StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
-        auto obs = std::make_shared<ObsTerm<double>>(
-            std::vector<std::string>{"PauliX", "PauliX", "PauliX"},
-            std::vector<std::vector<std::complex<double>>>{{}, {}, {}},
-            std::vector<std::vector<size_t>>{{0}, {1}, {2}});
+        const auto obs = std::make_shared<TensorProdObs<double>>(
+            std::make_shared<NamedObs<double>>("PauliX",
+                                               std::vector<size_t>{0}),
+            std::make_shared<NamedObs<double>>("PauliX",
+                                               std::vector<size_t>{1}),
+            std::make_shared<NamedObs<double>>("PauliX",
+                                               std::vector<size_t>{2}));
         auto ops = OpsData<double>(
             {"RZ", "RY", "RZ", "CNOT", "CNOT", "RZ", "RY", "RZ"},
             {{param[0]},
@@ -314,16 +296,20 @@ TEST_CASE("Algorithms::adjointJacobian Decomposed Rot gate, non "
         const size_t num_obs = 1;
 
         const auto thetas = Util::linspace(-2 * M_PI, 2 * M_PI, 7);
-        std::unordered_map<double, std::vector<double>> expec_results{
-            {thetas[0], {0, -9.90819496e-01, 0}},
-            {thetas[1], {-8.18996553e-01, 1.62526544e-01, 0}},
-            {thetas[2], {-0.203949, 0.48593716, 0}},
-            {thetas[3], {0, 1, 0}},
-            {thetas[4], {-2.03948985e-01, 4.85937177e-01, 0}},
-            {thetas[5], {-8.18996598e-01, 1.62526487e-01, 0}},
-            {thetas[6], {0, -9.90819511e-01, 0}}};
+        std::vector<std::vector<double>> expec_results{
+            {0, -9.90819496e-01, 0},
+            {-8.18996553e-01, 1.62526544e-01, 0},
+            {-0.203949, 0.48593716, 0},
+            {0, 1, 0},
+            {-2.03948985e-01, 4.85937177e-01, 0},
+            {-8.18996598e-01, 1.62526487e-01, 0},
+            {0, -9.90819511e-01, 0}};
 
-        for (const auto &theta : thetas) {
+        const auto obs = std::make_shared<NamedObs<double>>(
+            "PauliZ", std::vector<size_t>{0});
+
+        for (size_t i = 0; i < thetas.size(); i++) {
+            const auto theta = thetas[i];
             std::vector<double> local_params{theta, std::pow(theta, 3),
                                              SQRT2<double>() * theta};
             std::vector<double> jacobian(num_obs * tp.size(), 0);
@@ -332,10 +318,6 @@ TEST_CASE("Algorithms::adjointJacobian Decomposed Rot gate, non "
                                                     -INVSQRT2<double>()};
             StateVectorRaw<double> psi(cdata.data(), cdata.size());
 
-            auto obs = std::make_shared<ObsTerm<double>>(
-                std::vector<std::string>{"PauliZ"},
-                std::vector<std::vector<std::complex<double>>>{{}},
-                std::vector<std::vector<size_t>>{{0}});
             auto ops = OpsData<double>(
                 {"RZ", "RY", "RZ"},
                 {{local_params[0]}, {local_params[1]}, {local_params[2]}},
@@ -350,9 +332,9 @@ TEST_CASE("Algorithms::adjointJacobian Decomposed Rot gate, non "
             CAPTURE(jacobian);
 
             // Computed with PennyLane using default.qubit
-            CHECK(expec_results[theta][0] == Approx(jacobian[0]).margin(1e-7));
-            CHECK(expec_results[theta][1] == Approx(jacobian[1]).margin(1e-7));
-            CHECK(expec_results[theta][2] == Approx(jacobian[2]).margin(1e-7));
+            CHECK(expec_results[i][0] == Approx(jacobian[0]).margin(1e-7));
+            CHECK(expec_results[i][1] == Approx(jacobian[1]).margin(1e-7));
+            CHECK(expec_results[i][2] == Approx(jacobian[2]).margin(1e-7));
         }
     }
 }
@@ -375,10 +357,12 @@ TEST_CASE("Algorithms::adjointJacobian Mixed Ops, Obs and TParams",
                                                 ZERO<double>(), ZERO<double>()};
         StateVectorRaw<double> psi(cdata.data(), cdata.size());
 
-        auto obs = std::make_shared<ObsTerm<double>>(
-            std::vector<std::string>{"PauliX", "PauliZ"},
-            std::vector<std::vector<std::complex<double>>>{{}, {}},
-            std::vector<std::vector<size_t>>{{0}, {1}});
+        const auto obs = std::make_shared<TensorProdObs<double>>(
+            std::make_shared<NamedObs<double>>("PauliX",
+                                               std::vector<size_t>{0}),
+            std::make_shared<NamedObs<double>>("PauliZ",
+                                               std::vector<size_t>{1}));
+
         auto ops = OpsData<double>(
             {"Hadamard", "RX", "CNOT", "RZ", "RY", "RZ", "RZ", "RY", "RZ", "RZ",
              "RY", "CNOT"},
@@ -412,8 +396,7 @@ TEST_CASE("Algorithms::adjointJacobian Mixed Ops, Obs and TParams",
     }
 }
 
-TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=Ham[Z0+Z1]",
-          "[Algorithms]") {
+TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=Ham[Z0+Z1]", "[Algorithms]") {
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     std::vector<size_t> tp{0};
     {
@@ -426,17 +409,12 @@ TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=Ham[Z0+Z1]",
         StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
-        auto obs1 = std::make_shared<ObsTerm<double>>(
-            std::vector<std::string>{"PauliZ"},
-            std::vector<std::vector<std::complex<double>>>{{}},
-            std::vector<std::vector<size_t>>{{0}});
-        auto obs2 = std::make_shared<ObsTerm<double>>(
-            std::vector<std::string>{"PauliZ"},
-            std::vector<std::vector<std::complex<double>>>{{}},
-            std::vector<std::vector<size_t>>{{1}});
+        const auto obs1 = std::make_shared<NamedObs<double>>(
+            "PauliZ", std::vector<size_t>{0});
+        const auto obs2 = std::make_shared<NamedObs<double>>(
+            "PauliZ", std::vector<size_t>{1});
 
-        auto ham = std::make_shared<Hamiltonian<double>>(
-            std::vector<double>{0.3, 0.7}, std::vector{obs1, obs2});
+        const auto ham = Hamiltonian<double>::create({0.3, 0.7}, {obs1, obs2});
 
         auto ops = OpsData<double>({"RX"}, {{param[0]}}, {{0}}, {false});
 
@@ -465,22 +443,15 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=Ham[Z0+Z1+Z2], "
         StateVectorRaw<double> psi(cdata.data(), cdata.size());
         cdata[0] = std::complex<double>{1, 0};
 
-        auto obs1 = std::make_shared<ObsTerm<double>>(
-            std::vector<std::string>{"PauliZ"},
-            std::vector<std::vector<std::complex<double>>>{{}},
-            std::vector<std::vector<size_t>>{{0}});
-        auto obs2 = std::make_shared<ObsTerm<double>>(
-            std::vector<std::string>{"PauliZ"},
-            std::vector<std::vector<std::complex<double>>>{{}},
-            std::vector<std::vector<size_t>>{{1}});
-        auto obs3 = std::make_shared<ObsTerm<double>>(
-            std::vector<std::string>{"PauliZ"},
-            std::vector<std::vector<std::complex<double>>>{{}},
-            std::vector<std::vector<size_t>>{{2}});
+        auto obs1 = std::make_shared<NamedObs<double>>("PauliZ",
+                                                       std::vector<size_t>{0});
+        auto obs2 = std::make_shared<NamedObs<double>>("PauliZ",
+                                                       std::vector<size_t>{1});
+        auto obs3 = std::make_shared<NamedObs<double>>("PauliZ",
+                                                       std::vector<size_t>{2});
 
-        auto ham = std::make_shared<Hamiltonian<double>>(
-            std::vector<double>{0.47, 0.32, 0.96},
-            std::vector{obs1, obs2, obs3});
+        auto ham =
+            Hamiltonian<double>::create({0.47, 0.32, 0.96}, {obs1, obs2, obs3});
 
         auto ops = OpsData<double>({"RX", "RX", "RX"},
                                    {{param[0]}, {param[1]}, {param[2]}},
@@ -496,25 +467,68 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=Ham[Z0+Z1+Z2], "
         CHECK((-0.96 * sin(param[2]) == Approx(jacobian[1]).margin(1e-7)));
     }
 }
+
+TEST_CASE("Algorithms::adjointJacobian Test HermitianObs", "[Algorithms]") {
+    std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+    std::vector<size_t> t_params{0, 2};
+    {
+        const size_t num_qubits = 3;
+        const size_t num_params = 3;
+        const size_t num_obs = 1;
+        std::vector<double> jacobian1(num_obs * t_params.size(), 0);
+        std::vector<double> jacobian2(num_obs * t_params.size(), 0);
+
+        std::vector<std::complex<double>> cdata(1U << num_qubits);
+        StateVectorRaw<double> psi(cdata.data(), cdata.size());
+        cdata[0] = std::complex<double>{1, 0};
+
+        auto obs1 = std::make_shared<TensorProdObs<double>>(
+            std::make_shared<NamedObs<double>>("PauliZ",
+                                               std::vector<size_t>{0}),
+            std::make_shared<NamedObs<double>>("PauliZ",
+                                               std::vector<size_t>{1}));
+        auto obs2 = std::make_shared<HermitianObs<double>>(
+            std::vector<std::complex<double>>{1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1,
+                                              0, 0, 0, 0, 1},
+            std::vector<size_t>{0, 1});
+
+        auto ops = OpsData<double>({"RX", "RX", "RX"},
+                                   {{param[0]}, {param[1]}, {param[2]}},
+                                   {{0}, {1}, {2}}, {false, false, false});
+
+        JacobianData<double> tape1{
+            num_params, psi.getLength(), psi.getData(), {obs1}, ops, t_params};
+
+        JacobianData<double> tape2{
+            num_params, psi.getLength(), psi.getData(), {obs2}, ops, t_params};
+
+        adjointJacobian(jacobian1, tape1, true);
+        adjointJacobian(jacobian2, tape2, true);
+
+        CHECK((jacobian1 == PLApprox(jacobian2).margin(1e-7)));
+    }
+}
+
 /*
 TEST_CASE("Algorithms::applyObservable visitor checks",
           "[Algorithms]") {
     SECTION("Obs with params 0") {
         std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-        std::vector<double> expec_results{0.90096887, 0.80901699, -0.5};
+        std::vector<double> expected_results{0.90096887, 0.80901699, -0.5};
 
-        auto obs_default = ObsDatum<double>({"PauliZ"}, {{}}, {{0}});
-        auto ops =
-            OpsData<double>({"RX"}, {{expec_results[0]}}, {{0}}, {false});
-        std::vector<double> out_data(1);
+        auto obs_term = std::make_shared<ObsTerm<double>>({"PauliZ"}, {{}},
+{{0}}); auto ops = OpsData<double>({"RX"}, {{expec_results[0]}}, {{0}},
+{false}); std::vector<double> out_data(1);
 
         for (std::size_t i = 0; i < param.size(); i++) {
             StateVectorManaged<double> psi(2);
             JacobianData<double> jd(1, psi.getLength(), psi.getData(),
                                     {obs_default}, ops, {1});
-            adj.adjointJacobian(out_data, jd, true);
+            adjointJacobian(out_data, jd, true);
+            REQUIRE(out_data == expected_results[i]);
         }
     }
+
     SECTION("Obs with params std::vector<std::complex<double>>") {
         std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
         std::vector<double> expec_results{0.90096887, 0.80901699, -0.5};
@@ -523,7 +537,8 @@ TEST_CASE("Algorithms::applyObservable visitor checks",
         v_type z_par{ONE<double>(), ZERO<double>(), ZERO<double>(),
                      ZERO<double>()};
 
-        auto obs_default = ObsDatum<double>({"MyPauliZ"}, {z_par}, {{0}});
+        auto obs_term = std::make_shared<ObsDatum<double>>
+            ({"MyPauliZ"}, {z_par}, {{0}});
 
         auto ops =
             OpsData<double>({"RX"}, {{expec_results[0]}}, {{0}}, {false});
@@ -533,27 +548,8 @@ TEST_CASE("Algorithms::applyObservable visitor checks",
             StateVectorManaged<double> psi(2);
             JacobianData<double> jd(1, psi.getLength(), psi.getData(),
                                     {obs_default}, ops, {1});
-            adj.adjointJacobian(out_data, jd, true);
-        }
-    }
-    SECTION("Obs with params std::vector<double>") {
-        std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-        std::vector<double> expec_results{0.90096887, 0.80901699, -0.5};
-        using v_type = std::vector<double>;
-
-        v_type z_par{0.123};
-
-        auto obs_default = ObsDatum<double>({"RZ"}, {z_par}, {{0}});
-
-        auto ops =
-            OpsData<double>({"RX"}, {{expec_results[0]}}, {{0}}, {false});
-        std::vector<double> out_data(1);
-
-        for (std::size_t i = 0; i < param.size(); i++) {
-            StateVectorManaged<double> psi(2);
-            JacobianData<double> jd(1, psi.getLength(), psi.getData(),
-                                    {obs_default}, ops, {1});
-            adj.adjointJacobian(out_data, jd, true);
+            adjointJacobian(out_data, jd, true);
+            REQUIRE(out_data == expec_results[i]);
         }
     }
     SECTION("Obs no params") {

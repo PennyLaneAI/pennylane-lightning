@@ -227,8 +227,8 @@ static void cf_transpose_cmplx(benchmark::State &state) {
     for (auto _ : state) {
         std::vector<std::complex<T>> mat2(sz * sz);
 
-        Util::CFTranspose<T, BLOCKSIZE>(mat1.data(), mat2.data(), sz,
-                                                   sz, 0, sz, 0, sz);
+        Util::CFTranspose<T, BLOCKSIZE>(mat1.data(), mat2.data(), sz, sz, 0, sz,
+                                        0, sz);
         benchmark::DoNotOptimize(mat2[sz * sz - 1]);
     }
 }
@@ -277,8 +277,8 @@ static void omp_matrixVecProd_cmplx(benchmark::State &state) {
     for (auto _ : state) {
         std::vector<std::complex<T>> vec2(sz);
 
-        Util::omp_matrixVecProd(mat.data(), vec1.data(), vec2.data(),
-                                           sz, sz, Trans::NoTranspose);
+        Util::omp_matrixVecProd(mat.data(), vec1.data(), vec2.data(), sz, sz,
+                                Trans::NoTranspose);
         benchmark::DoNotOptimize(vec2[sz - 1]);
     }
 }
@@ -371,9 +371,8 @@ static void omp_matrixMatProd_cmplx(benchmark::State &state) {
     for (auto _ : state) {
         std::vector<std::complex<T>> m_out(sz * sz);
 
-        Util::omp_matrixMatProd(m_left.data(), m_right_tr.data(),
-                                           m_out.data(), sz, sz, sz,
-                                           Trans::Transpose);
+        Util::omp_matrixMatProd(m_left.data(), m_right_tr.data(), m_out.data(),
+                                sz, sz, sz, Trans::Transpose);
         benchmark::DoNotOptimize(m_out[sz * sz - 1]);
     }
 }

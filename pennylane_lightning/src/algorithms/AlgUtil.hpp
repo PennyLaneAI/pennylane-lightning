@@ -66,8 +66,8 @@ inline void applyOperationAdj(StateVectorManaged<T> &state,
  */
 template <typename T>
 inline void applyObservable(StateVectorManaged<T> &state,
-                            const Observable<T> &observable) {
-    observable.applyInPlace(state.getData(), state.getNumQubits());
+                            Observable<T> &observable) {
+    observable.applyInPlace(state);
 }
 
 /**

@@ -16,6 +16,7 @@ Tests for the ``vjp`` method of LightningQubit.
 """
 from cmath import exp
 import pytest
+import math
 
 import pennylane as qml
 from pennylane import numpy as np
@@ -24,6 +25,7 @@ from pennylane_lightning.lightning_qubit import CPP_BINARY_AVAILABLE
 
 if not CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+
 
 class TestVectorJacobianProduct:
     """Tests for the `vjp` function"""
@@ -46,11 +48,11 @@ class TestVectorJacobianProduct:
 
         dy = np.array([1.0])
 
-        fn1 = dev.vjp(tape, dy)
+        fn1 = dev.vjp(tape.measurements, dy)
         vjp1 = fn1(tape)
 
         qml.execute([tape], dev, None)
-        fn2 = dev.vjp(tape, dy, use_device_state=True)
+        fn2 = dev.vjp(tape.measurements, dy, use_device_state=True)
         vjp2 = fn2(tape)
 
         assert np.allclose(vjp1, vjp2, atol=tol, rtol=0)
@@ -69,11 +71,11 @@ class TestVectorJacobianProduct:
 
         dy = np.array([1.0])
 
-        fn1 = dev.vjp(tape, dy)
+        fn1 = dev.vjp(tape.measurements, dy)
         vjp1 = fn1(tape)
 
         qml.execute([tape], dev, None)
-        fn2 = dev.vjp(tape, dy, starting_state=dev._pre_rotated_state)
+        fn2 = dev.vjp(tape.measurements, dy, starting_state=dev._pre_rotated_state)
         vjp2 = fn2(tape)
 
         assert np.allclose(vjp1, vjp2, atol=tol, rtol=0)
@@ -87,8 +89,10 @@ class TestVectorJacobianProduct:
 
         dy = np.array([1.0])
 
-        with pytest.raises(qml.QuantumFunctionError, match="Adjoint differentiation method only"):
-            dev.vjp(tape, dy)(tape)
+        with pytest.raises(
+            qml.QuantumFunctionError, match="Adjoint differentiation method does not"
+        ):
+            dev.vjp(tape.measurements, dy)(tape)
 
     def test_finite_shots_warns(self):
         """Tests warning raised when finite shots specified"""
@@ -103,7 +107,7 @@ class TestVectorJacobianProduct:
         with pytest.warns(
             UserWarning, match="Requested adjoint differentiation to be computed with finite shots."
         ):
-            dev.vjp(tape, dy)(tape)
+            dev.vjp(tape.measurements, dy)(tape)
 
     from pennylane_lightning import LightningQubit as lq
 
@@ -121,7 +125,7 @@ class TestVectorJacobianProduct:
         with pytest.raises(
             qml.QuantumFunctionError, match="The CRot operation is not supported using the"
         ):
-            dev.vjp(tape, dy)(tape)
+            dev.vjp(tape.measurements, dy)(tape)
 
         with qml.tape.QuantumTape() as tape:
             qml.SingleExcitation(0.1, wires=[0, 1])
@@ -131,7 +135,7 @@ class TestVectorJacobianProduct:
             qml.QuantumFunctionError,
             match="The SingleExcitation operation is not supported using the",
         ):
-            dev.vjp(tape, dy)(tape)
+            dev.vjp(tape.measurements, dy)(tape)
 
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_proj_unsupported(self, dev):
@@ -146,7 +150,7 @@ class TestVectorJacobianProduct:
         with pytest.raises(
             qml.QuantumFunctionError, match="differentiation method does not support the Projector"
         ):
-            dev.vjp(tape, dy)(tape)
+            dev.vjp(tape.measurements, dy)(tape)
 
         with qml.tape.QuantumTape() as tape:
             qml.CRX(0.1, wires=[0, 1])
@@ -155,31 +159,52 @@ class TestVectorJacobianProduct:
         with pytest.raises(
             qml.QuantumFunctionError, match="differentiation method does not support the Projector"
         ):
-            dev.vjp(tape, dy)(tape)
+            dev.vjp(tape.measurements, dy)(tape)
 
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    def test_unsupported_hermitian_expectation(self, dev):
-        obs = np.array([[1, 0], [0, -1]], dtype=np.complex128, requires_grad=False)
+    def test_hermitian_expectation(self, dev, tol):
+        obs = np.array([[1, 0], [0, -1]], dtype=dev.C_DTYPE, requires_grad=False)
+        dy = np.array([0.8])
 
-        with qml.tape.QuantumTape() as tape:
-            qml.RY(0.1, wires=(0,))
-            qml.expval(qml.Hermitian(obs, wires=(0,)))
+        fn = dev.vjp([qml.expval(qml.Hermitian(obs, wires=(0,)))], dy)
 
-        dy = np.array([1.0])
+        for x in np.linspace(-2 * math.pi, 2 * math.pi, 7):
+            with qml.tape.QuantumTape() as tape:
+                qml.RY(x, wires=(0,))
+            vjp = fn(tape)
+            assert np.allclose(vjp[0], -0.8 * np.sin(x), atol=tol)
 
-        with pytest.raises(
-            qml.QuantumFunctionError, match="Lightning adjoint differentiation method does not"
-        ):
-            dev.vjp(tape, dy)(tape)
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    def test_hermitian_tensor_expectation(self, dev, tol):
+        obs = np.array([[1, 0], [0, -1]], dtype=dev.C_DTYPE, requires_grad=False)
+        dy = np.array([0.8])
 
-        with qml.tape.QuantumTape() as tape:
-            qml.RY(0.1, wires=(0,))
-            qml.expval(qml.Hermitian(obs, wires=(0,)) @ qml.PauliZ(wires=1))
+        fn = dev.vjp([qml.expval(qml.Hermitian(obs, wires=(0,)) @ qml.PauliZ(wires=1))], dy)
 
-        with pytest.raises(
-            qml.QuantumFunctionError, match="Lightning adjoint differentiation method does not"
-        ):
-            dev.vjp(tape, dy)(tape)
+        for x in np.linspace(-2 * math.pi, 2 * math.pi, 7):
+            with qml.tape.QuantumTape() as tape:
+                qml.RY(x, wires=(0,))
+            assert np.allclose(fn(tape), -0.8 * np.sin(x), atol=tol)
+
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    def test_statevector_ry(self, dev, tol):
+        dy = np.array(
+            [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
+        )
+        fn0 = dev.vjp([qml.state()], dy[0, :])
+        fn1 = dev.vjp([qml.state()], dy[1, :])
+        fn2 = dev.vjp([qml.state()], dy[2, :])
+        fn3 = dev.vjp([qml.state()], dy[3, :])
+
+        for x in np.linspace(-2 * math.pi, 2 * math.pi, 7):
+            with qml.tape.QuantumTape() as tape:
+                qml.RY(x, wires=(0,))
+            assert np.allclose(fn0(tape), -np.sin(x / 2) / 2, atol=tol)
+            assert np.allclose(fn1(tape), np.cos(x / 2) / 2, atol=tol)
+            assert np.allclose(fn2(tape), 0.0, atol=tol)
+            assert np.allclose(fn3(tape), 0.0, atol=tol)
+
+    # Add one more complex example here!
 
     def test_no_trainable_parameters(self, dev):
         """A tape with no trainable parameters will simply return None"""
@@ -193,10 +218,10 @@ class TestVectorJacobianProduct:
         tape.trainable_params = {}
         dy = np.array([1.0])
 
-        fn = dev.vjp(tape, dy)
+        fn = dev.vjp(tape.measurements, dy)
         vjp = fn(tape)
 
-        assert vjp is None
+        assert len(vjp) == 0
 
     def test_no_trainable_parameters_NEW(self, dev):
         """A tape with no trainable parameters will simply return None"""
@@ -211,10 +236,10 @@ class TestVectorJacobianProduct:
 
         tape.trainable_params = {}
         dy = np.array([1.0])
-        fn = dev.vjp(tape, dy)
+        fn = dev.vjp(tape.measurements, dy)
         vjp = fn(tape)
 
-        assert vjp is None
+        assert len(vjp) == 0
 
     def test_no_trainable_parameters_(self, dev):
         """A tape with no trainable parameters will simply return None"""
@@ -228,10 +253,10 @@ class TestVectorJacobianProduct:
         tape.trainable_params = {}
         dy = np.array([1.0])
 
-        fn = dev.vjp(tape, dy)
+        fn = dev.vjp(tape.measurements, dy)
         vjp = fn(tape)
 
-        assert vjp is None
+        assert len(vjp) == 0
 
     def test_zero_dy(self, dev):
         """A zero dy vector will return no tapes and a zero matrix"""
@@ -247,7 +272,7 @@ class TestVectorJacobianProduct:
         tape.trainable_params = {0, 1}
         dy = np.array([0.0])
 
-        fn = dev.vjp(tape, dy)
+        fn = dev.vjp(tape.measurements, dy)
         vjp = fn(tape)
 
         assert np.all(vjp == np.zeros([len(tape.trainable_params)]))
@@ -267,7 +292,7 @@ class TestVectorJacobianProduct:
         tape.trainable_params = {0, 1}
         dy = np.array([1.0])
 
-        fn = dev.vjp(tape, dy)
+        fn = dev.vjp(tape.measurements, dy)
         vjp = fn(tape)
 
         expected = np.array([-np.sin(y) * np.sin(x), np.cos(y) * np.cos(x)])
@@ -289,7 +314,7 @@ class TestVectorJacobianProduct:
         tape.trainable_params = {0, 1}
         dy = np.array([1.0, 2.0])
 
-        fn = dev.vjp(tape, dy)
+        fn = dev.vjp(tape.measurements, dy)
         vjp = fn(tape)
 
         expected = np.array([-np.sin(x), 2 * np.cos(y)])
@@ -313,8 +338,10 @@ class TestVectorJacobianProduct:
         tape.trainable_params = {0, 1}
         dy = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
 
-        with pytest.raises(qml.QuantumFunctionError, match="Adjoint differentiation method only supports"):
-            dev.vjp(tape, dy)(tape)
+        with pytest.raises(
+            qml.QuantumFunctionError, match="Adjoint differentiation method does not support"
+        ):
+            dev.vjp(tape.measurements, dy)(tape)
 
 
 class TestBatchVectorJacobianProduct:
@@ -346,7 +373,7 @@ class TestBatchVectorJacobianProduct:
         fn = dev.batch_vjp(tapes, dys)
         vjps = fn(tapes)
 
-        assert vjps[0] is None
+        assert len(vjps[0]) == 0
         assert vjps[1] is not None
 
     def test_all_tapes_no_trainable_parameters(self, dev):
@@ -371,8 +398,8 @@ class TestBatchVectorJacobianProduct:
         fn = dev.batch_vjp(tapes, dys)
         vjps = fn(tapes)
 
-        assert vjps[0] is None
-        assert vjps[1] is None
+        assert len(vjps[0]) == 0
+        assert len(vjps[1]) == 0
 
     def test_zero_dy(self, dev):
         """A zero dy vector will return no tapes and a zero matrix"""

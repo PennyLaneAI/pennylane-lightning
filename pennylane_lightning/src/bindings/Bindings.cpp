@@ -17,9 +17,9 @@
  */
 #include "Bindings.hpp"
 
-#include "StateVecAdjDiff.hpp"
 #include "GateUtil.hpp"
 #include "SelectKernel.hpp"
+#include "StateVecAdjDiff.hpp"
 
 #include "pybind11/pybind11.h"
 
@@ -125,43 +125,64 @@ void registerAlgorithms(py::module_ &m) {
     py::class_<Observable<PrecisionT>, std::shared_ptr<Observable<PrecisionT>>>(
         m, class_name.c_str(), py::module_local());
 
-    class_name = "ObsTermC" + bitsize;
-    py::class_<ObsTerm<PrecisionT>, std::shared_ptr<ObsTerm<PrecisionT>>,
+    class_name = "NamedObsC" + bitsize;
+    py::class_<NamedObs<PrecisionT>, std::shared_ptr<NamedObs<PrecisionT>>,
                Observable<PrecisionT>>(m, class_name.c_str(),
                                        py::module_local())
-        .def(py::init([](const std::vector<std::string> &names,
-                         const std::vector<np_arr_c> &params,
-                         const std::vector<std::vector<size_t>> &wires) {
-            std::vector<typename ObsTerm<PrecisionT>::MatrixT> conv_params;
-            conv_params.reserve(params.size());
-            for (size_t p_idx = 0; p_idx < params.size(); p_idx++) {
-                auto buffer = params[p_idx].request();
-                auto ptr = static_cast<std::complex<ParamT> *>(buffer.ptr);
-                if (buffer.size) {
-                    conv_params.emplace_back(ptr, ptr + buffer.size);
-                }
-            }
-            return ObsTerm<PrecisionT>(names, conv_params, wires);
+        .def(py::init(
+            [](const std::string &name, const std::vector<size_t> &wires) {
+                return NamedObs<PrecisionT>(name, wires);
+            }))
+        .def("__repr__", &NamedObs<PrecisionT>::getObsName)
+        .def("get_wires", &NamedObs<PrecisionT>::getWires,
+             "Get wires of observables");
+
+    class_name = "HermitianObsC" + bitsize;
+    py::class_<HermitianObs<PrecisionT>,
+               std::shared_ptr<HermitianObs<PrecisionT>>,
+               Observable<PrecisionT>>(m, class_name.c_str(),
+                                       py::module_local())
+        .def(py::init([](const np_arr_c &matrix,
+                         const std::vector<size_t> &wires) {
+            auto buffer = matrix.request();
+            const auto *ptr =
+                static_cast<std::complex<PrecisionT> *>(buffer.ptr);
+            return HermitianObs<PrecisionT>(
+                std::vector<std::complex<PrecisionT>>(ptr, ptr + buffer.size),
+                wires);
         }))
-        .def("__repr__", &ObsTerm<PrecisionT>::toString)
-        .def("get_name", &ObsTerm<PrecisionT>::getObsName,
-             "Get names of observables")
-        .def("get_wires", &ObsTerm<PrecisionT>::getObsWires,
+        .def("__repr__", &HermitianObs<PrecisionT>::getObsName)
+        .def("get_wires", &HermitianObs<PrecisionT>::getWires,
+             "Get wires of observables");
+
+    class_name = "TensorProdObsC" + bitsize;
+    py::class_<TensorProdObs<PrecisionT>,
+               std::shared_ptr<TensorProdObs<PrecisionT>>,
+               Observable<PrecisionT>>(m, class_name.c_str(),
+                                       py::module_local())
+        .def(py::init(
+            [](const std::vector<std::shared_ptr<Observable<PrecisionT>>>
+                   &obs) { return TensorProdObs<PrecisionT>(obs); }))
+        .def("__repr__", &TensorProdObs<PrecisionT>::getObsName)
+        .def("get_wires", &TensorProdObs<PrecisionT>::getWires,
              "Get wires of observables");
 
     class_name = "HamiltonianC" + bitsize;
-    using ObsTermPtr = std::shared_ptr<ObsTerm<PrecisionT>>;
+    using ObsPtr = std::shared_ptr<Observable<PrecisionT>>;
     py::class_<Hamiltonian<PrecisionT>,
                std::shared_ptr<Hamiltonian<PrecisionT>>,
                Observable<PrecisionT>>(m, class_name.c_str(),
                                        py::module_local())
-        .def(py::init(
-            [](const np_arr_r &coeffs, const std::vector<ObsTermPtr> &terms) {
-                auto buffer = coeffs.request();
-                const auto ptr = static_cast<const ParamT *>(buffer.ptr);
-                return Hamiltonian{{ptr, ptr + buffer.size}, terms};
-            }))
-        .def("__repr__", &Hamiltonian<PrecisionT>::toString);
+        .def(py::init([](const np_arr_r &coeffs,
+                         const std::vector<ObsPtr> &obs) {
+            auto buffer = coeffs.request();
+            const auto ptr = static_cast<const ParamT *>(buffer.ptr);
+            return Hamiltonian<PrecisionT>{std::vector(ptr, ptr + buffer.size),
+                                           obs};
+        }))
+        .def("__repr__", &Hamiltonian<PrecisionT>::getObsName)
+        .def("get_wires", &Hamiltonian<PrecisionT>::getWires,
+             "Get wires of observables");
 
     //***********************************************************************//
     //                              Operations
@@ -244,10 +265,9 @@ void registerAlgorithms(py::module_ &m) {
         [](const StateVectorRaw<PrecisionT> &sv,
            const OpsData<PrecisionT> &operations,
            /* Do not cast non-conforming array */
-           const py::array_t<PrecisionT, py::array::c_style> dy,
-           const std::vector<size_t> &trainableParams) {
+           const np_arr_c &dy, const std::vector<size_t> &trainableParams) {
             std::vector<std::complex<PrecisionT>> vjp(
-                    trainableParams.size(), std::complex<PrecisionT>{});
+                trainableParams.size(), std::complex<PrecisionT>{});
 
             const JacobianData<PrecisionT> jd{operations.getTotalNumParams(),
                                               sv.getLength(),
@@ -257,10 +277,11 @@ void registerAlgorithms(py::module_ &m) {
                                               trainableParams};
             const auto buffer = dy.request();
 
-            statevectorVJP<PrecisionT>(vjp, jd,
-                    static_cast<std::complex<PrecisionT>*>(buffer.ptr), buffer.itemsize);
+            statevectorVJP<PrecisionT>(
+                vjp, jd, static_cast<std::complex<PrecisionT> *>(buffer.ptr),
+                buffer.itemsize);
 
-            return py::array_t<ParamT>(py::cast(vjp));
+            return py::array_t<std::complex<PrecisionT>>(py::cast(vjp));
         },
         "Compute jacobian of the circuit using the adjoint method.");
 }

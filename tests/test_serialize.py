@@ -228,7 +228,7 @@ class TestSerializeObs:
             _serialize_obs(tape, self.wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args[0]
-        s_expected = (["Hermitian", "PauliY"], [np.eye(4, dtype = dtype).ravel()], [[0, 1], [2]])
+        s_expected = (["Hermitian", "PauliY"], [np.eye(4, dtype=dtype).ravel()], [[0, 1], [2]])
         ObsFunc(*s_expected)
 
         assert s[0] == s_expected[0]

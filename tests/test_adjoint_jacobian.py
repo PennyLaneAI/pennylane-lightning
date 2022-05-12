@@ -79,7 +79,9 @@ class TestAdjointJacobian:
             qml.RX(0.1, wires=0)
             qml.var(qml.PauliZ(0))
 
-        with pytest.raises(qml.QuantumFunctionError, match="Adjoint differentiation method does not"):
+        with pytest.raises(
+            qml.QuantumFunctionError, match="Adjoint differentiation method does not"
+        ):
             dev.adjoint_jacobian(tape)
 
     def test_finite_shots_warns(self):
@@ -309,6 +311,47 @@ class TestAdjointJacobian:
     qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
     ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
 
+    def test_multiple_rx_gradient_expval_hamiltonian(self, tol, dev):
+        """Tests that the gradient of multiple RX gates in a circuit yields the correct result
+        with Hermitian observable
+        """
+        params = np.array([np.pi / 3, np.pi / 4, np.pi / 5])
+
+        ham = qml.Hamiltonian(
+            [1.0, 0.3, 0.3, 0.4],
+            [
+                qml.PauliX(0) @ qml.PauliX(1),
+                qml.PauliZ(0),
+                qml.PauliZ(1),
+                qml.Hermitian(
+                    [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]], wires=[0, 2]
+                ),
+            ],
+        )
+
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(params[0], wires=0)
+            qml.RX(params[1], wires=1)
+            qml.RX(params[2], wires=2)
+
+            qml.expval(ham)
+
+        tape.trainable_params = {0, 1, 2}
+        dev_jacobian = dev.adjoint_jacobian(tape)
+        expected_jacobian = (
+            0.3 * np.array([-np.sin(params[0]), 0, 0])
+            + 0.3 * np.array([0, -np.sin(params[1]), 0])
+            + 0.4
+            * np.array(
+                [-np.sin(params[0]) * np.cos(params[2]), 0, -np.cos(params[0]) * np.sin(params[2])]
+            )
+        )
+
+        assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
+
+    qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
+    ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
+
     @pytest.mark.parametrize("obs", [qml.PauliX, qml.PauliY])
     @pytest.mark.parametrize(
         "op",
@@ -347,7 +390,9 @@ class TestAdjointJacobian:
         h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
-        grad_F = (lambda t, fn: fn(qml.execute(t, dev, None)))(*qml.gradients.finite_diff(tape, h=h))
+        grad_F = (lambda t, fn: fn(qml.execute(t, dev, None)))(
+            *qml.gradients.finite_diff(tape, h=h)
+        )
         grad_D = dev.adjoint_jacobian(tape)
 
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
@@ -364,7 +409,6 @@ class TestAdjointJacobian:
             qml.Rot(0.2, -0.1, 0.2, wires=0),
         ],
     )
-
     def test_gradients_hermitian(self, op, dev):
         """Tests that the gradients of circuits match between the finite difference and device
         methods."""

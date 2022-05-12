@@ -118,11 +118,4 @@ void statevectorVJP(std::vector<std::complex<PrecisionT>> &jac,
     }
 };
 
-/**
- * @brief
- */
-template <typename PrecisionT>
-auto fisherMatrix(const JacobianData<PrecisionT> &jd,
-                  bool apply_operations = false) {}
-
 } // namespace Pennylane::Algorithms

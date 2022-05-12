@@ -180,10 +180,8 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
         "Check the result is consistent with adjoint diff with observables") {
         std::mt19937 re{1337};
         auto ops_data = createRandomOps<TestType>(re, 10);
-        auto obs = std::make_shared<ObsTerm<TestType>>(
-            std::vector<std::string>{"PauliZ"},
-            std::vector<std::vector<std::complex<TestType>>>{{}},
-            std::vector<std::vector<size_t>>{{0}});
+        auto obs = std::make_shared<NamedObs<TestType>>("PauliZ",
+                                                        std::vector<size_t>{0});
 
         const size_t num_params = [&]() {
             size_t r = 0;
