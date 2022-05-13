@@ -114,7 +114,7 @@ info = {
     "url": "https://github.com/XanaduAI/pennylane-lightning",
     "license": "Apache License 2.0",
     "packages": find_packages(where="."),
-    "package_data": {"pennylane_lightning": ["src/*", "src/**/*"]},
+    "package_data": {"pennylane_lightning": ["src/*", "src/**/*", "*.pyd"]},
     "include_package_data": True,
     "entry_points": {
         "pennylane.plugins": [
