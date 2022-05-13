@@ -71,6 +71,8 @@ class CMakeBuild(build_ext):
         
         if debug:
             configure_args += ["-DCMAKE_BUILD_TYPE=Debug"]
+        elif platform.system() == "Windows":
+            configure_args += ["-DCMAKE_BUILD_TYPE=Release"]
         configure_args += self.cmake_defines
 
         build_args = []
@@ -114,7 +116,7 @@ info = {
     "url": "https://github.com/XanaduAI/pennylane-lightning",
     "license": "Apache License 2.0",
     "packages": find_packages(where="."),
-    "package_data": {"pennylane_lightning": ["src/*", "src/**/*", "*.pyd"]},
+    "package_data": {"pennylane_lightning": ["src/*", "src/**/*"]},
     "include_package_data": True,
     "entry_points": {
         "pennylane.plugins": [
