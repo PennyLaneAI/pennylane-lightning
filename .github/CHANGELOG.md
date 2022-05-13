@@ -6,8 +6,19 @@
 
 ### Improvements
 
+* Device `lightning.qubit` now accepts a datatype for a statevector.
+[(#290)](https://github.com/PennyLaneAI/pennylane-lightning/pull/290)
+
+```python
+dev1 = qml.device('lightning.qubit', wires=4, c_dtype=np.complex64) # for single precision
+dev2 = qml.device('lightning.qubit', wires=4, c_dtype=np.complex128) # for double precision
+```
+
 * Split matrix operations, refactor dispatch mechanisms, and add a benchmark suits.
 [(#274)](https://github.com/PennyLaneAI/pennylane-lightning/pull/274)
+
+* Add native support for the calculation of sparse Hamiltonians' expectation values. Sparse operations are offloaded to [Kokkos](https://github.com/kokkos/kokkos) and [Kokkos-Kernels](https://github.com/kokkos/kokkos-kernels).
+[(#283)](https://github.com/PennyLaneAI/pennylane-lightning/pull/283)
 
 ### Documentation
 
@@ -21,7 +32,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Mikhail Andrenkov, Chae-Yeun Park
+Amintor Dusko, Chae-Yeun Park, Mikhail Andrenkov
 
 ---
 

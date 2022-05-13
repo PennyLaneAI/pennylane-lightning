@@ -17,8 +17,9 @@ interfaces with C++ for fast linear algebra calculations.
 """
 from typing import List
 from warnings import warn
-from itertools import islice
 from os import getenv
+from itertools import islice
+
 import numpy as np
 from pennylane import (
     math,
@@ -99,6 +100,7 @@ class LightningQubit(DefaultQubit):
             the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
+        c_dtype: Datatypes for statevector representation. Must be one of ``np.complex64`` or ``np.complex128``.
     """
 
     name = "Lightning Qubit PennyLane plugin"
@@ -109,8 +111,16 @@ class LightningQubit(DefaultQubit):
     _CPP_BINARY_AVAILABLE = True
     operations = _remove_snapshot_from_operations(DefaultQubit.operations)
 
-    def __init__(self, wires, *, shots=None, batch_obs=False):
-        super().__init__(wires, shots=shots)
+    def __init__(self, wires, *, c_dtype=np.complex128, shots=None, batch_obs=False):
+        if c_dtype is np.complex64:
+            r_dtype = np.float32
+            self.use_csingle = True
+        elif c_dtype is np.complex128:
+            r_dtype = np.float64
+            self.use_csingle = False
+        else:
+            raise TypeError(f"Unsupported complex Type: {c_dtype}")
+        super().__init__(wires, r_dtype=r_dtype, c_dtype=c_dtype, shots=shots)
         self._batch_obs = batch_obs
 
     @classmethod
@@ -143,12 +153,8 @@ class LightningQubit(DefaultQubit):
                     "applied on a {} device.".format(operation.name, self.short_name)
                 )
 
-        # Get the Type of self._state
-        # as the reference type
-        dtype = self._state.dtype
-
         if operations:
-            self._pre_rotated_state = self.apply_lightning(self._state, operations, dtype=dtype)
+            self._pre_rotated_state = self.apply_lightning(self._state, operations)
         else:
             self._pre_rotated_state = self._state
 
@@ -156,13 +162,11 @@ class LightningQubit(DefaultQubit):
             if any(isinstance(r, QubitUnitary) for r in rotations):
                 super().apply(operations=[], rotations=rotations)
             else:
-                self._state = self.apply_lightning(
-                    np.copy(self._pre_rotated_state), rotations, dtype=dtype
-                )
+                self._state = self.apply_lightning(np.copy(self._pre_rotated_state), rotations)
         else:
             self._state = self._pre_rotated_state
 
-    def apply_lightning(self, state, operations, dtype=np.complex128):
+    def apply_lightning(self, state, operations):
         """Apply a list of operations to the state tensor.
 
         Args:
@@ -176,14 +180,12 @@ class LightningQubit(DefaultQubit):
         """
         state_vector = np.ravel(state)
 
-        if dtype == np.complex64:
+        if self.use_csingle:
             # use_csingle
             sim = StateVectorC64(state_vector)
-        elif dtype == np.complex128:
+        else:
             # self.C_DTYPE is np.complex128 by default
             sim = StateVectorC128(state_vector)
-        else:
-            raise TypeError(f"Unsupported complex Type: {dtype}")
 
         # Skip over identity operations instead of performing
         # matrix multiplication with the identity.
@@ -263,15 +265,6 @@ class LightningQubit(DefaultQubit):
                 UserWarning,
             )
 
-        # To support np.complex64 based on the type of self._state
-        dtype = self._state.dtype
-        if dtype == np.complex64:
-            use_csingle = True
-        elif dtype == np.complex128:
-            use_csingle = False
-        else:
-            raise TypeError(f"Unsupported complex Type: {dtype}")
-
         if len(tape.trainable_params) == 0:
             return np.array(0)
 
@@ -287,14 +280,13 @@ class LightningQubit(DefaultQubit):
                 self.execute(tape)
             ket = np.ravel(self._pre_rotated_state)
 
-        if use_csingle:
+        if self.use_csingle:
             adj = AdjointJacobianC64()
-            ket = ket.astype(np.complex64)
         else:
             adj = AdjointJacobianC128()
 
-        obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=use_csingle)
-        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map, use_csingle=use_csingle)
+        obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=self.use_csingle)
+        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map, use_csingle=self.use_csingle)
 
         ops_serialized = adj.create_ops_list(*ops_serialized)
 
@@ -305,7 +297,7 @@ class LightningQubit(DefaultQubit):
             trainable_params if not use_sp else [i - 1 for i in trainable_params[first_elem:]]
         )  # exclude first index if explicitly setting sv
 
-        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
+        state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
 
         # If requested batching over observables, chunk into OMP_NUM_THREADS sized chunks.
         # This will allow use of Lightning with adjoint for large-qubit numbers AND large
@@ -367,14 +359,10 @@ class LightningQubit(DefaultQubit):
         if math.allclose(dy, 0):
             return math.convert_like(np.zeros([num_params]), dy)
 
-        # To support np.complex64 based on the type of self._state
-        dtype = self._state.dtype
-        if dtype == np.complex64:
+        if self.use_csingle:
             VJP = VectorJacobianProductC64()
-        elif dtype == np.complex128:
-            VJP = VectorJacobianProductC128()
         else:
-            raise TypeError(f"Unsupported complex Type: {dtype}")
+            VJP = VectorJacobianProductC128()
 
         vjp_tensor = VJP.compute_vjp_from_jac(
             math.reshape(jac, [-1]),
@@ -415,16 +403,7 @@ class LightningQubit(DefaultQubit):
         if math.allclose(dy, 0):
             return lambda _: math.convert_like(np.zeros([num_params]), dy)
 
-        # To support np.complex64 based on the type of self._state
-        dtype = self._state.dtype
-        if dtype == np.complex64:
-            use_csingle = True
-        elif dtype == np.complex128:
-            use_csingle = False
-        else:
-            raise TypeError(f"Unsupported complex Type: {dtype}")
-
-        V = VectorJacobianProductC64() if use_csingle else VectorJacobianProductC128()
+        V = VectorJacobianProductC64() if self.use_csingle else VectorJacobianProductC128()
 
         fn = V.vjp_fn(math.reshape(dy, [-1]), tape.num_params)
 
@@ -441,11 +420,10 @@ class LightningQubit(DefaultQubit):
                     self.execute(tape)
                 ket = np.ravel(self._pre_rotated_state)
 
-            if use_csingle:
-                ket = ket.astype(np.complex64)
-
-            obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=use_csingle)
-            ops_serialized, use_sp = _serialize_ops(tape, self.wire_map, use_csingle=use_csingle)
+            obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=self.use_csingle)
+            ops_serialized, use_sp = _serialize_ops(
+                tape, self.wire_map, use_csingle=self.use_csingle
+            )
 
             ops_serialized = V.create_ops_list(*ops_serialized)
 
@@ -456,7 +434,7 @@ class LightningQubit(DefaultQubit):
                 trainable_params if not use_sp else [i - 1 for i in trainable_params[first_elem:]]
             )  # exclude first index if explicitly setting sv
 
-            state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
+            state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
 
             return fn(state_vector, obs_serialized, ops_serialized, tp_shift)
 
@@ -542,21 +520,10 @@ class LightningQubit(DefaultQubit):
 
         # To support np.complex64 based on the type of self._state
         dtype = self._state.dtype
-        if dtype == np.complex64:
-            use_csingle = True
-        elif dtype == np.complex128:
-            use_csingle = False
-        else:
-            raise TypeError(f"Unsupported complex Type: {dtype}")
-
-        # Initialization of state
         ket = np.ravel(self._state)
 
-        if use_csingle:
-            ket = ket.astype(np.complex64)
-
-        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
-        M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
+        state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
+        M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
 
         return M.probs(device_wires)
 
@@ -567,23 +534,11 @@ class LightningQubit(DefaultQubit):
             array[int]: array of samples in binary representation with shape ``(dev.shots, dev.num_wires)``
         """
 
-        # To support np.complex64 based on the type of self._state
-        dtype = self._state.dtype
-        if dtype == np.complex64:
-            use_csingle = True
-        elif dtype == np.complex128:
-            use_csingle = False
-        else:
-            raise TypeError(f"Unsupported complex Type: {dtype}")
-
         # Initialization of state
         ket = np.ravel(self._state)
 
-        if use_csingle:
-            ket = ket.astype(np.complex64)
-
-        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
-        M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
+        state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
+        M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
 
         return M.generate_samples(len(self.wires), self.shots).astype(int)
 
@@ -615,23 +570,11 @@ class LightningQubit(DefaultQubit):
             samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
             return np.squeeze(np.mean(samples, axis=0))
 
-        # To support np.complex64 based on the type of self._state
-        dtype = self._state.dtype
-        if dtype == np.complex64:
-            use_csingle = True
-        elif dtype == np.complex128:
-            use_csingle = False
-        else:
-            raise TypeError(f"Unsupported complex Type: {dtype}")
-
         # Initialization of state
         ket = np.ravel(self._pre_rotated_state)
 
-        if use_csingle:
-            ket = ket.astype(np.complex64)
-
-        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
-        M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
+        state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
+        M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
         if observable.name == "SparseHamiltonian":
             # converting COO to CRS sparse representation.
             CSR_SparseHamiltonian = observable.data[0].tocsr(copy=False)
@@ -673,23 +616,11 @@ class LightningQubit(DefaultQubit):
             samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
             return np.squeeze(np.var(samples, axis=0))
 
-        # To support np.complex64 based on the type of self._state
-        dtype = self._state.dtype
-        if dtype == np.complex64:
-            use_csingle = True
-        elif dtype == np.complex128:
-            use_csingle = False
-        else:
-            raise TypeError(f"Unsupported complex Type: {dtype}")
-
         # Initialization of state
         ket = np.ravel(self._pre_rotated_state)
 
-        if use_csingle:
-            ket = ket.astype(np.complex64)
-
-        state_vector = StateVectorC64(ket) if use_csingle else StateVectorC128(ket)
-        M = MeasuresC64(state_vector) if use_csingle else MeasuresC128(state_vector)
+        state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
+        M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
 
         # translate to wire labels used by device
         observable_wires = self.map_wires(observable.wires)
@@ -708,7 +639,7 @@ if not CPP_BINARY_AVAILABLE:
         _CPP_BINARY_AVAILABLE = False
         operations = _remove_snapshot_from_operations(DefaultQubit.operations)
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, wires, *, c_dtype=np.complex128, **kwargs):
             warn(
                 "Pre-compiled binaries for lightning.qubit are not available. Falling back to "
                 "using the Python-based default.qubit implementation. To manually compile from "
@@ -716,4 +647,11 @@ if not CPP_BINARY_AVAILABLE:
                 "https://pennylane-lightning.readthedocs.io/en/latest/installation.html.",
                 UserWarning,
             )
-            super().__init__(*args, **kwargs)
+
+            if c_dtype is np.complex64:
+                r_dtype = np.float32
+            elif c_dtype is np.complex128:
+                r_dtype = np.float64
+            else:
+                raise TypeError(f"Unsupported complex Type: {c_dtype}")
+            super().__init__(wires, r_dtype=r_dtype, c_dtype=c_dtype, **kwargs)
