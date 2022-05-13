@@ -241,6 +241,7 @@ class TestExpval:
     )
     def test_expval_sparse_Hamiltonian(self, cases, tol, dev):
         """Test expval of a sparse Hamiltonian"""
+
         @qml.qnode(dev)
         def circuit():
             qml.RX(0.4, wires=[0])
