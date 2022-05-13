@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        os: [windows-2019]
         py_version: ["3.7", "3.8", "3.9", "3.10"]
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -50,8 +50,19 @@ jobs:
         run: |
           Subst Z: (pwd)
           Set-Location -Path "Z:\"
-          python -m pip install wheel cmake ninja
+          python -m pip install wheel cmake ninja build
           python setup.py bdist_wheel
+          Set-Location -Path "./dist"
+          foreach ($i in Get-ChildItem -Path ./*.whl){ 
+            python -m wheel unpack $i
+            $dirName = python -c "s = '$i'; print('-'.join(s.split('-')[0:2]))"
+            if (Test-Path -Path $dirName\pennylane_lightning\Debug) {
+              Move-Item -Path $dirName\pennylane_lightning\Debug -Destination $dirName\pennylane_lightning
+              Remove-Item $dirName\pennylane_lightning\Debug -Recurse
+              python -m wheel pack $i
+            }
+            Remove-Item $dirName -Recurse
+          }
 
       - name: Test wheel
         run: |

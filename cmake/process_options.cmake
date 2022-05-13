@@ -157,6 +157,7 @@ if(ENABLE_KOKKOS)
         # Enable KOKKOS with the serial backend.
         option(Kokkos_ENABLE_SERIAL  "Enable Kokkos SERIAL device" ON)
         message(STATUS "KOKKOS SERIAL DEVICE ENABLED--.")
+        option(Kokkos_ENABLE_DEBUG OFF)
     endif()
     # If no backend is specified, KOKKOS will enable the serial backend by default.
 
