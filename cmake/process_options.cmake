@@ -186,6 +186,8 @@ if(ENABLE_KOKKOS)
     set_target_properties(kokkoskernels PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_kokkoskernels_INC_DIR}")
 
     target_link_libraries(lightning_external_libs INTERFACE Kokkos::kokkos Kokkos::kokkoskernels)
+    set(CMAKE_BUILD_TYPE Release)
+
 else()
     message(STATUS "ENABLE_KOKKOS is OFF.")
 endif()
