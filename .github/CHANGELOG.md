@@ -17,7 +17,7 @@ dev2 = qml.device('lightning.qubit', wires=4, c_dtype=np.complex128) # for doubl
 * Split matrix operations, refactor dispatch mechanisms, and add a benchmark suits.
 [(#274)](https://github.com/PennyLaneAI/pennylane-lightning/pull/274)
 
-* Add native support for the calculation of sparse Hamiltonians' expectation values. This implementation largely decreases the calculation time for large workflows. Sparse operations are offloaded to [Kokkos](https://github.com/kokkos/kokkos) and [Kokkos-Kernels](https://github.com/kokkos/kokkos-kernels).
+* Add native support for the calculation of sparse Hamiltonians' expectation values. This implementation largely decreases the calculation time. Sparse operations are offloaded to [Kokkos](https://github.com/kokkos/kokkos) and [Kokkos-Kernels](https://github.com/kokkos/kokkos-kernels).
 [(#283)](https://github.com/PennyLaneAI/pennylane-lightning/pull/283)
 
 ### Documentation
