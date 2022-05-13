@@ -125,40 +125,10 @@ else()
     message(STATUS "ENABLE_BLAS is OFF.")
 endif()
 
-if(ENABLE_THREADS)
-    message(STATUS "ENABLE_THREADS is ON.")
-    find_package(Threads)
-
-    if(NOT Threads_FOUND)
-        message(FATAL_ERROR "THREADS is enabled but not found.")
-    endif()
-
-    target_link_libraries(lightning_external_libs INTERFACE Threads::Threads)
-else()
-    message(STATUS "ENABLE_THREADS is OFF.")
-endif()
-
 if(ENABLE_KOKKOS)
-    if (NOT WIN32 AND NOT APPLE)
-        if(OpenMP_CXX_FOUND)
-            # Enable KOKKOS with the openmp backend.
-            option(Kokkos_ENABLE_OPENMP "Enable the Kokkos OPENMP device" ON)
-            message(STATUS "KOKKOS OPENMP DEVICE ENABLED.")
-        elseif(Threads_FOUND)
-            # Enable KOKKOS with the threads backend.
-            option(Kokkos_ENABLE_PTHREAD "Enable the Kokkos THREADS device" ON)
-            message(STATUS "KOKKOS THREADS DEVICE ENABLED.")
-        else()
-            # Enable KOKKOS with the serial backend.
-            option(Kokkos_ENABLE_SERIAL  "Enable Kokkos SERIAL device" ON)
-            message(STATUS "KOKKOS SERIAL DEVICE ENABLED.")
-        endif()
-    else()
-        # Enable KOKKOS with the serial backend.
-        option(Kokkos_ENABLE_SERIAL  "Enable Kokkos SERIAL device" ON)
-        message(STATUS "KOKKOS SERIAL DEVICE ENABLED--.")
-    endif()
-    # If no backend is specified, KOKKOS will enable the serial backend by default.
+    # Setting the Serial device for all cases.
+    option(Kokkos_ENABLE_SERIAL  "Enable Kokkos SERIAL device" ON)
+    message(STATUS "KOKKOS SERIAL DEVICE ENABLED.")
 
     option(Kokkos_ENABLE_COMPLEX_ALIGN "Enable complex alignment in memory" OFF)
 
