@@ -239,11 +239,8 @@ class TestExpval:
             [qml.Identity(0) @ qml.PauliZ(1), 0.9800665778412417],
         ],
     )
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_expval_sparse_Hamiltonian(self, cases, tol, dev, C):
+    def test_expval_sparse_Hamiltonian(self, cases, tol, dev):
         """Test expval of a sparse Hamiltonian"""
-        dev._state = dev._asarray(dev._state, C)
-
         @qml.qnode(dev)
         def circuit():
             qml.RX(0.4, wires=[0])
@@ -252,7 +249,6 @@ class TestExpval:
 
         assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_value(self, dev, tol):
         """Test that the expval interface works"""
 
