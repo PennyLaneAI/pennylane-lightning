@@ -64,8 +64,6 @@ enum class GateOperation : uint32_t {
     DoubleExcitationPlus,
     /* Mutli-qubit gates */
     MultiRZ,
-    /* General matrix */
-    Matrix,
     /* END (placeholder) */
     END
 };
@@ -93,6 +91,17 @@ enum class GeneratorOperation : uint32_t {
     DoubleExcitationMinus,
     DoubleExcitationPlus,
     MultiRZ,
+    /* END (placeholder) */
+    END
+};
+/**
+ * @brief Enum class for matrix operation
+ */
+enum class MatrixOperation : uint32_t {
+    BEGIN = 0,
+    SingleQubitOp = 0,
+    TwoQubitOp,
+    MultiQubitOp,
     /* END (placeholder) */
     END
 };
