@@ -143,8 +143,7 @@ To test the C++ code:
 Other supported options are ``-DENABLE_WARNINGS=ON``,
 ``-DENABLE_NATIVE=ON`` (for ``-march=native``),  
 ``-DENABLE_BLAS=ON``, ``-DENABLE_OPENMP=ON``, 
-``-DENABLE_THREADS=ON``, ``-DENABLE_KOKKOS=ON``,
-and ``-DENABLE_CLANG_TIDY=ON``.
+``-DENABLE_KOKKOS=ON``, and ``-DENABLE_CLANG_TIDY=ON``.
 
 Compile on Windows with MSVC
 ----------------------------
