@@ -17,8 +17,9 @@ interfaces with C++ for fast linear algebra calculations.
 """
 from typing import List
 from warnings import warn
-from itertools import islice
 from os import getenv
+from itertools import islice
+
 import numpy as np
 from pennylane import (
     math,
@@ -571,9 +572,6 @@ class LightningQubit(DefaultQubit):
 
         # Initialization of state
         ket = np.ravel(self._pre_rotated_state)
-
-        if use_csingle:
-            ket = ket.astype(np.complex64)
 
         state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
