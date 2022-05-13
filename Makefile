@@ -98,12 +98,6 @@ test-cpp-kokkos:
 	cmake --build ./BuildTests --target runner
 	cmake --build ./BuildTests --target test
 
-test-cpp-kokkos-serial:
-	rm -rf ./BuildTests
-	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON -DENABLE_KOKKOS=ON -DENABLE_BLAS=OFF -DENABLE_THREADS=OFF -DENABLE_OPENMP=OFF
-	cmake --build ./BuildTests --target runner
-	cmake --build ./BuildTests --target test
-
 .PHONY: benchmark
 benchmark:
 	cmake --build BuildBench --target clean || true
