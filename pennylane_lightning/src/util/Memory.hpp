@@ -24,8 +24,7 @@
 
 namespace Pennylane::Util {
 /**
- * @brief Custom aligned allocate function. As appleclang does not support
- * std::aligned_alloc in Mac OS 10.14, we use posix_memalign function.
+ * @brief Custom aligned allocate function.
  *
  * Note that alignment must be larger than max_align_t. Otherwise, the behavior
  * is undefined.
@@ -38,7 +37,8 @@ inline auto alignedAlloc(uint32_t alignment, size_t bytes) -> void * {
 #if defined(_MSC_VER)
     return _aligned_malloc(bytes, alignment);
 #else
-    return std::aligned_alloc(alignment, bytes);
+    // We use the C version as std::aligned_alloc is not available in MacOS
+    return ::aligned_alloc(alignment, bytes);
 #endif
 }
 
@@ -51,7 +51,7 @@ inline void alignedFree(void *p) {
 #if defined(_MSC_VER)
     return _aligned_free(p);
 #else
-    return std::free(p);
+    return ::free(p);
 #endif
 }
 
