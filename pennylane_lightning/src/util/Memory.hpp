@@ -26,19 +26,26 @@ namespace Pennylane::Util {
 /**
  * @brief Custom aligned allocate function.
  *
+ * We use `posix_memalign` for MacOS as Mac does not support
+ * `std::aligned_alloc` properly yet (even in MacOS 10.15).
  * Note that alignment must be larger than max_align_t. Otherwise, the behavior
  * is undefined.
  *
  * @param alignment Alignment value we want for the data pointer
  * @param bytes Number of bytes to allocate
- * @return Memory pointer
+ * @return Pointer to the allocated memory
  */
 inline auto alignedAlloc(uint32_t alignment, size_t bytes) -> void * {
-#if defined(_MSC_VER)
+#if defined(__clang__)
+    /* Apple clang does not support std::aligned_alloc in Mac 10.14.
+     * Thus we use Posix function instead. */
+    void *p;
+    posix_memalign(&p, alignment, bytes);
+    return p;
+#elif defined(_MSC_VER)
     return _aligned_malloc(bytes, alignment);
 #else
-    // We use the C version as std::aligned_alloc is not available in MacOS
-    return ::aligned_alloc(alignment, bytes);
+    return std::aligned_alloc(alignment, bytes);
 #endif
 }
 
@@ -48,10 +55,12 @@ inline auto alignedAlloc(uint32_t alignment, size_t bytes) -> void * {
  * @param p Pointer to the memory location allocated by aligendAlloc
  */
 inline void alignedFree(void *p) {
-#if defined(_MSC_VER)
+#if defined(__clang__)
+    return ::free(p); // NOLINT(hicpp-no-malloc)
+#elif defined(_MSC_VER)
     return _aligned_free(p);
 #else
-    return ::free(p);
+    return std::free(p);
 #endif
 }
 
@@ -60,8 +69,11 @@ inline void alignedFree(void *p) {
  *
  * @tparam T Datatype to allocate
  */
-template <class T> struct AlignedAllocator {
-    uint32_t alignment_;
+template <class T> class AlignedAllocator {
+  private:
+    const uint32_t alignment_;
+
+  public:
     using value_type = T;
 
     /**
@@ -76,6 +88,11 @@ template <class T> struct AlignedAllocator {
         // TODO: Using exception is allowed in GCC>=10
         // assert(Util::isPerfectPowerOf2(alignment));
     }
+
+    /**
+     * @brief Get alignment of the allocator
+     */
+    [[nodiscard]] inline uint32_t alignment() const { return alignment_; }
 
     template <class U> struct rebind { using other = AlignedAllocator<U>; };
 
@@ -140,7 +157,7 @@ template <class T> struct AlignedAllocator {
 template <class T, class U>
 bool operator==([[maybe_unused]] const AlignedAllocator<T> &lhs,
                 [[maybe_unused]] const AlignedAllocator<U> &rhs) {
-    return lhs.alignment_ == rhs.alignment_;
+    return lhs.alignment() == rhs.alignment();
 }
 
 /**
@@ -149,7 +166,7 @@ bool operator==([[maybe_unused]] const AlignedAllocator<T> &lhs,
 template <class T, class U, uint32_t alignment>
 bool operator!=([[maybe_unused]] const AlignedAllocator<T> &lhs,
                 [[maybe_unused]] const AlignedAllocator<U> &rhs) {
-    return lhs.alignment_ != rhs.alignment_;
+    return lhs.alignment() != rhs.alignment();
 }
 
 ///@cond DEV
