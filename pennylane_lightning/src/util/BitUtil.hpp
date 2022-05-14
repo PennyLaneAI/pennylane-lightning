@@ -185,7 +185,7 @@ constexpr auto constLog2PerfectPower(size_t value) -> size_t {
     size_t n = 0;
     while ((value & 1U) == 0U) {
         value >>= 1U;
-        ++n;
+        n++;
     }
     return n;
 }
