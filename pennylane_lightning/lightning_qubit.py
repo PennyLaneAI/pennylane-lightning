@@ -34,7 +34,7 @@ from pennylane import (
     DeviceError,
 )
 from pennylane.devices import DefaultQubit
-from pennylane.operation import Tensor
+from pennylane.operation import Tensor, Operation
 from pennylane.measurements import MeasurementProcess, Expectation, State
 from pennylane.wires import Wires
 
@@ -297,14 +297,26 @@ class LightningQubit(DefaultQubit):
 
         ops_serialized = create_ops_list(*ops_serialized)
 
+        # We need to filter out indices in trainable_params which do not
+        # correspond to operators.
         trainable_params = sorted(tape.trainable_params)
         if len(trainable_params) == 0:
             return None
-        first_elem = 1 if trainable_params[0] == 0 else 0
 
-        tp_shift = (
-            trainable_params if not use_sp else [i - 1 for i in trainable_params[first_elem:]]
-        )  # exclude first index if explicitly setting sv
+        tp_shift = []
+
+        for op_idx, tp in enumerate(trainable_params):
+            op, _ = tape.get_operation(
+                op_idx
+            )  # get op_idx-th operator amond differentiable operators
+            if isinstance(op, Operation):
+                # We now just ignore them
+                tp_shift.append(tp)
+
+        if use_sp:
+            # When the first element of the tape is state preparation. Still, I am not sure
+            # whether there must be only one state preparation...
+            tp_shift = [i - 1 for i in tp_shift]
 
         ket = ket.reshape(-1)
         state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)

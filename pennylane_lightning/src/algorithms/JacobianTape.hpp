@@ -504,8 +504,11 @@ template <class T> class OpsData {
  * @param psi Pointer to the statevector data.
  * @param observables Observables for which to calculate Jacobian.
  * @param operations Operations used to create given state.
- * @param trainableParams List of parameters participating in Jacobian
- * calculation.
+ * @param trainableParams @rst
+ * List of parameters participating in Jacobian
+ * calculation. Each value :math:`i` in trainable params means that
+ * we differentiate the :math:`i`-th operation.
+ * @endrst
  */
 template <class T> class JacobianData {
   private:
@@ -533,7 +536,10 @@ template <class T> class JacobianData {
                  OpsData<T> ops, std::vector<size_t> trainP)
         : num_parameters(num_params), num_elements(num_elem), psi(ps),
           observables(std::move(obs)), operations(std::move(ops)),
-          trainableParams(std::move(trainP)) {}
+          trainableParams(std::move(trainP)) {
+        /* When the Hamiltonain has parameters, trainable parameters include
+         * these. We explicitly ignore them. */
+    }
 
     /**
      * @brief Get Number of parameters in the Tape.

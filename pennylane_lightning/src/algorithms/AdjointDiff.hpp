@@ -45,7 +45,7 @@ namespace Pennylane::Algorithms {
  * to enable independent operations to be offloaded to threads.
  *
  * @param jac Preallocated vector for Jacobian data results.
- * @param jd JacobianData represents the QuantumTape to differentiate
+ * @param jd JacobianData represents the QuantumTape to differentiate.
  * @param apply_operations Indicate whether to apply operations to tape.psi
  * prior to calculation.
  */

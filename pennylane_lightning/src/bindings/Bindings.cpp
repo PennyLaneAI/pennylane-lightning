@@ -262,10 +262,12 @@ void registerAlgorithms(py::module_ &m) {
 
     m.def(
         "statevector_vjp",
+        /* Do not cast non-conforming array. Argument trainableParams should
+         * only contain indices for operations.
+         */
         [](const StateVectorRaw<PrecisionT> &sv,
-           const OpsData<PrecisionT> &operations,
-           /* Do not cast non-conforming array */
-           const np_arr_c &dy, const std::vector<size_t> &trainableParams) {
+           const OpsData<PrecisionT> &operations, const np_arr_c &dy,
+           const std::vector<size_t> &trainableParams) {
             std::vector<std::complex<PrecisionT>> vjp(
                 trainableParams.size(), std::complex<PrecisionT>{});
 
@@ -279,7 +281,7 @@ void registerAlgorithms(py::module_ &m) {
 
             statevectorVJP<PrecisionT>(
                 vjp, jd, static_cast<std::complex<PrecisionT> *>(buffer.ptr),
-                buffer.itemsize);
+                buffer.size);
 
             return py::array_t<std::complex<PrecisionT>>(py::cast(vjp));
         },

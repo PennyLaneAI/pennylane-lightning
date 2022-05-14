@@ -351,7 +351,7 @@ class TestBatchVectorJacobianProduct:
     def dev(self, request):
         return qml.device("lightning.qubit", wires=2, c_dtype=request.param)
 
-    def test_one_tape_no_trainable_parameters(self, dev):
+    def test_one_tape_no_trainable_parameters_1(self, dev):
         """A tape with no trainable parameters will simply return None"""
         with qml.tape.QuantumTape() as tape1:
             qml.RX(0.4, wires=0)
@@ -376,7 +376,7 @@ class TestBatchVectorJacobianProduct:
         assert len(vjps[0]) == 0
         assert vjps[1] is not None
 
-    def test_all_tapes_no_trainable_parameters(self, dev):
+    def test_all_tapes_no_trainable_parameters_2(self, dev):
         """If all tapes have no trainable parameters all outputs will be None"""
         with qml.tape.QuantumTape() as tape1:
             qml.RX(0.4, wires=0)
