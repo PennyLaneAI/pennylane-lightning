@@ -142,30 +142,6 @@ class TestAdjointJacobian:
         ):
             dev.adjoint_jacobian(tape)
 
-    """
-    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    def test_unsupported_hermitian_expectation(self, dev):
-        obs = np.array([[1, 0], [0, -1]], dtype=np.complex128, requires_grad=False)
-
-        with qml.tape.QuantumTape() as tape:
-            qml.RY(0.1, wires=(0,))
-            qml.expval(qml.Hermitian(obs, wires=(0,)))
-
-        with pytest.raises(
-            qml.QuantumFunctionError, match="Lightning adjoint differentiation method does not"
-        ):
-            dev.adjoint_jacobian(tape)
-
-        with qml.tape.QuantumTape() as tape:
-            qml.RY(0.1, wires=(0,))
-            qml.expval(qml.Hermitian(obs, wires=(0,)) @ qml.PauliZ(wires=1))
-
-        with pytest.raises(
-            qml.QuantumFunctionError, match="Lightning adjoint differentiation method does not"
-        ):
-            dev.adjoint_jacobian(tape)
-    """
-
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
     @pytest.mark.parametrize("G", [qml.RX, qml.RY, qml.RZ])
     def test_pauli_rotation_gradient(self, G, theta, dev):
@@ -311,6 +287,7 @@ class TestAdjointJacobian:
     qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
     ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
 
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_multiple_rx_gradient_expval_hamiltonian(self, tol, dev):
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result
         with Hermitian observable
@@ -495,6 +472,7 @@ class TestAdjointJacobian:
         # the different methods agree
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
 
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_gradient_gate_with_multiple_parameters_hamiltonian(self, dev):
         """Tests that gates with multiple free parameters yield correct gradients."""
         x, y, z = [0.5, 0.3, -0.7]
@@ -841,6 +819,31 @@ def circuit_ansatz(params, wires):
     # #     qml.DoubleExcitationMinus(params[27], wires=[wires[2], wires[0], wires[1], wires[3]])
     qml.RX(params[28], wires=wires[0])
     qml.RX(params[29], wires=wires[1])
+
+
+@pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+def test_complex_tape(tol):
+    """Tests the complicate circit Ansatz with a QChem Hamiltonian produces
+    a consistent results
+    """
+
+    H, qubits = qml.qchem.molecular_hamiltonian(
+        ["H", "H"], np.array([0.0, 0.1, 0.0, 0.0, -0.1, 0.0])
+    )
+
+    def circuit(params):
+        circuit_ansatz(params, wires=range(4))
+        return qml.expval(H)
+
+    params = np.arange(30) * 0.111
+
+    dev_lq = qml.device("lightning.qubit", wires=4)
+    dev_dq = qml.device("default.qubit", wires=4)
+
+    circuit_lq = qml.QNode(circuit, dev_lq, diff_method="adjoint")
+    circuit_dq = qml.QNode(circuit, dev_lq, diff_method="parameter-shift")
+
+    assert np.allclose(qml.grad(circuit_lq)(params), qml.grad(circuit_dq)(params), tol)
 
 
 @pytest.mark.parametrize(

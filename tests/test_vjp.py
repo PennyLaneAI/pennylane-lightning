@@ -204,7 +204,51 @@ class TestVectorJacobianProduct:
             assert np.allclose(fn2(tape), 0.0, atol=tol)
             assert np.allclose(fn3(tape), 0.0, atol=tol)
 
-    # Add one more complex example here!
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    def test_statevector_complex_circuit(self, dev, tol):
+        dy = np.array(
+            [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
+        )
+        fn0 = dev.vjp([qml.state()], dy[0, :])
+        fn1 = dev.vjp([qml.state()], dy[1, :])
+        fn2 = dev.vjp([qml.state()], dy[2, :])
+        fn3 = dev.vjp([qml.state()], dy[3, :])
+
+        params = [math.pi / 7, 6 * math.pi / 7]
+
+        with qml.tape.QuantumTape() as tape:
+            qml.QubitStateVector(np.array([1.0] * 4) / 2, wires=range(2))
+            qml.RY(params[0], wires=0)
+            qml.RZ(params[1], wires=1)
+            qml.CZ(wires=[0, 1])
+
+        tape.trainable_params = {2}  # RZ
+
+        psi_00_diff = (
+            (math.cos(params[0] / 2) - math.sin(params[0] / 2))
+            * (-math.sin(params[1] / 2) - 1j * math.cos(params[1] / 2))
+            / 4
+        )
+        psi_01_diff = (
+            (math.cos(params[0] / 2) + math.sin(params[0] / 2))
+            * (-math.sin(params[1] / 2) - 1j * math.cos(params[1] / 2))
+            / 4
+        )
+        psi_10_diff = (
+            (math.cos(params[0] / 2) - math.sin(params[0] / 2))
+            * (-math.sin(params[1] / 2) + 1j * math.cos(params[1] / 2))
+            / 4
+        )
+        psi_11_diff = (
+            -(math.cos(params[0] / 2) + math.sin(params[0] / 2))
+            * (-math.sin(params[1] / 2) + 1j * math.cos(params[1] / 2))
+            / 4
+        )
+
+        assert np.allclose(fn0(tape), psi_00_diff, atol=tol)
+        assert np.allclose(fn1(tape), psi_01_diff, atol=tol)
+        assert np.allclose(fn2(tape), psi_10_diff, atol=tol)
+        assert np.allclose(fn3(tape), psi_11_diff, atol=tol)
 
     def test_no_trainable_parameters(self, dev):
         """A tape with no trainable parameters will simply return None"""
