@@ -27,15 +27,21 @@ from pennylane_lightning._serialize import (
 import pytest
 from unittest import mock
 
-try:
-    from pennylane_lightning.lightning_qubit_ops.adjoint_diff import (
-        ObsTermC64,
-        ObsTermC128,
-        HamiltonianC64,
-        HamiltonianC128,
-    )
-except (ImportError, ModuleNotFoundError):
+from pennylane_lightning.lightning_qubit import CPP_BINARY_AVAILABLE
+
+if not CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+
+from pennylane_lightning.lightning_qubit_ops.adjoint_diff import (
+    NamedObsC64,
+    NamedObsC128,
+    HermitianObsC64,
+    HermitianObsC128,
+    TensorProdObsC64,
+    TensorProdObsC128,
+    HamiltonianC64,
+    HamiltonianC128,
+)
 
 
 class TestObsHasKernel:
@@ -87,7 +93,7 @@ class TestSerializeObs:
 
     wires_dict = {i: i for i in range(10)}
 
-    @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
+    @pytest.mark.parametrize("ObsFunc", [NamedObsC128, NamedObsC64])
     def test_basic_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a simple return"""
         with qml.tape.QuantumTape() as tape:
@@ -95,41 +101,42 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
-        use_csingle = True if ObsFunc == ObsTermC64 else False
-        obs_str = "ObsTermC64" if ObsFunc == ObsTermC64 else "ObsTermC128"
+        use_csingle = True if ObsFunc == NamedObsC64 else False
+        obs_str = "NamedObsC64" if ObsFunc == NamedObsC64 else "NamedObsC128"
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
             _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args[0]
-        s_expected = (["PauliZ"], [], [[0]])
+        s_expected = ("PauliZ", [0])
         ObsFunc(*s_expected)
 
         assert s == s_expected
 
-    @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
-    def test_tensor_return(self, monkeypatch, ObsFunc):
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    def test_tensor_return(self, monkeypatch, use_csingle):
         """Test expected serialization for a tensor product return"""
         with qml.tape.QuantumTape() as tape:
             qml.expval(qml.PauliZ(0) @ qml.PauliZ(1))
 
         mock_obs = mock.MagicMock()
 
-        use_csingle = True if ObsFunc == ObsTermC64 else False
-        obs_str = "ObsTermC64" if ObsFunc == ObsTermC64 else "ObsTermC128"
+        ObsFunc = TensorProdObsC64 if use_csingle else TensorProdObsC128
+        named_obs = NamedObsC64 if use_csingle else NamedObsC128
+        obs_str = "TensorProdObsC64" if use_csingle else "TensorProdObsC128"
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
             _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
 
         s = mock_obs.call_args[0]
-        s_expected = (["PauliZ", "PauliZ"], [], [[0], [1]])
+        s_expected = ([named_obs("PauliZ", [0]), named_obs("PauliZ", [1])],)
         ObsFunc(*s_expected)
 
         assert s == s_expected
 
-    @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
+    @pytest.mark.parametrize("ObsFunc", [NamedObsC128, NamedObsC64])
     def test_tensor_non_tensor_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a mixture of tensor product and non-tensor product
         return"""
@@ -139,8 +146,8 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
-        use_csingle = True if ObsFunc == ObsTermC64 else False
-        obs_str = "ObsTermC64" if ObsFunc == ObsTermC64 else "ObsTermC128"
+        use_csingle = True if ObsFunc == NamedObsC64 else False
+        obs_str = "NamedObsC64" if ObsFunc == NamedObsC64 else "NamedObsC128"
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
@@ -157,7 +164,7 @@ class TestSerializeObs:
         assert s[0][0] == s_expected[0]
         assert s[1][0] == s_expected[1]
 
-    @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
+    @pytest.mark.parametrize("ObsFunc", [NamedObsC128, NamedObsC64])
     def test_hermitian_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a Hermitian return"""
         with qml.tape.QuantumTape() as tape:
@@ -165,8 +172,8 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
-        use_csingle = True if ObsFunc == ObsTermC64 else False
-        obs_str = "ObsTermC64" if ObsFunc == ObsTermC64 else "ObsTermC128"
+        use_csingle = True if ObsFunc == NamedObsC64 else False
+        obs_str = "NamedObsC64" if ObsFunc == NamedObsC64 else "NamedObsC128"
 
         dtype = np.float32 if use_csingle else np.float64
 
@@ -182,7 +189,7 @@ class TestSerializeObs:
         assert np.allclose(s[1], s_expected[1])
         assert s[2] == s_expected[2]
 
-    @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
+    @pytest.mark.parametrize("ObsFunc", [HermitianObsC128, HermitianObsC64])
     def test_hermitian_tensor_return(self, monkeypatch, ObsFunc):
         """Test expected serialization for a Hermitian return"""
         with qml.tape.QuantumTape() as tape:
@@ -190,9 +197,9 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
-        use_csingle = True if ObsFunc == ObsTermC64 else False
+        use_csingle = True if ObsFunc == HermitianObsC64 else False
         dtype = np.complex64 if use_csingle else np.complex128
-        obs_str = "ObsTermC64" if ObsFunc == ObsTermC64 else "ObsTermC128"
+        obs_str = "HermitianObsC64" if ObsFunc == HermitianObsC64 else "HermitianObsC128"
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
@@ -211,17 +218,17 @@ class TestSerializeObs:
         assert np.allclose(s[1][1], s_expected[1][1])
         assert s[2] == s_expected[2]
 
-    @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
-    def test_mixed_tensor_return(self, monkeypatch, ObsFunc):
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    def test_mixed_tensor_return(self, monkeypatch, use_csingle):
         """Test expected serialization for a mixture of Hermitian and Pauli return"""
         with qml.tape.QuantumTape() as tape:
             qml.expval(qml.Hermitian(np.eye(4), wires=[0, 1]) @ qml.PauliY(2))
 
         mock_obs = mock.MagicMock()
 
-        use_csingle = True if ObsFunc == ObsTermC64 else False
         dtype = np.complex64 if use_csingle else np.complex128
-        obs_str = "ObsTermC64" if ObsFunc == ObsTermC64 else "ObsTermC128"
+        ObsFunc = TensorProdObsC64 if use_csingle else TensorProdObsC128
+        obs_str = "TensorProdObsC64" if ObsFunc == TensorProdObsC64 else "TensorProdObsC128"
 
         with monkeypatch.context() as m:
             m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
@@ -275,8 +282,7 @@ class TestSerializeObs:
                 assert np.allclose(v1, v2)
         assert all(s1[0][2] == s2[2] for s1, s2 in zip(s, s_expected))
 
-    @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
-    def test_integration_c128(self, monkeypatch, ObsFunc):
+    def test_integration_c128(self, monkeypatch):
         """Test for a comprehensive range of returns"""
         wires_dict = {"a": 0, 1: 1, "b": 2, -1: 3, 3.141: 4, "five": 5, 6: 6, 77: 7, 9: 8}
         I = np.eye(2).astype(np.complex128)
@@ -316,9 +322,9 @@ class TestSerializeObs:
                 assert np.allclose(v1, v2)
         assert all(s1[0][2] == s2[2] for s1, s2 in zip(s, s_expected))
 
-    @pytest.mark.parametrize("ObsFunc", [ObsTermC128, ObsTermC64])
+    @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("ObsChunk", list(range(1, 5)))
-    def test_chunk_obs(self, monkeypatch, ObsFunc, ObsChunk):
+    def test_chunk_obs(self, monkeypatch, use_csingle, ObsChunk):
         """Test chunking of observable array"""
         with qml.tape.QuantumTape() as tape:
             qml.expval(qml.PauliZ(0) @ qml.PauliX(1))
@@ -328,7 +334,7 @@ class TestSerializeObs:
 
         mock_obs = mock.MagicMock()
 
-        use_csingle = True if ObsFunc == ObsTermC64 else False
+        ObsFunc = ObsTermC64 if use_csingle else ObsTermc128
         obs_str = "ObsTermC64" if ObsFunc == ObsTermC64 else "ObsTermC128"
 
         with monkeypatch.context() as m:

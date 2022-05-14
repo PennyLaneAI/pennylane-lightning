@@ -498,25 +498,26 @@ template <class T> class OpsData {
 
 /**
  * @brief Represent the serialized data of a QuantumTape to differentiate
- *
- * @param num_parameters Number of parameters in the Tape.
- * @param num_elements Length of the statevector data.
- * @param psi Pointer to the statevector data.
- * @param observables Observables for which to calculate Jacobian.
- * @param operations Operations used to create given state.
- * @param trainableParams @rst
- * List of parameters participating in Jacobian
- * calculation. Each value :math:`i` in trainable params means that
- * we differentiate the :math:`i`-th operation.
- * @endrst
  */
 template <class T> class JacobianData {
   private:
-    size_t num_parameters;
-    size_t num_elements;
-    const std::complex<T> *psi;
+    size_t num_parameters;      /**< Number of paramters in the tape */
+    size_t num_elements;        /**< Length of the statevector data */
+    const std::complex<T> *psi; /**< Pointer to the statevector data */
+
+    /**
+     * @var observables
+     * Observables for which to calculate Jacobian.
+     */
     const std::vector<std::shared_ptr<Observable<T>>> observables;
+
+    /**
+     * @var operations
+     * operations Operations used to create given state.
+     */
     const OpsData<T> operations;
+
+    /* @var trainableParams      */
     const std::vector<size_t> trainableParams;
 
   public:
@@ -528,8 +529,16 @@ template <class T> class JacobianData {
      * @param ps Pointer to the statevector data.
      * @param obs Observables for which to calculate Jacobian.
      * @param ops Operations used to create given state.
-     * @param trainP List of parameters participating in Jacobian
-     * calculation. This must be sorted.
+     * @param trainP Sorted list of parameters participating in Jacobian
+     * computation.
+     *
+     * @rst
+     * Each value :math:`i` in trainable params means that
+     * we want to take a derivative respect to the :math:`i`-th operation.
+     *
+     * Further note that ``ops`` does not contain state preparation operations
+     * (e.g. QubitStateVector) or Hamiltonian coefficients.
+     * @endrst
      */
     JacobianData(size_t num_params, size_t num_elem, std::complex<T> *ps,
                  std::vector<std::shared_ptr<Observable<T>>> obs,

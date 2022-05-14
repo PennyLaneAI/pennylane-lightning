@@ -66,6 +66,8 @@ def _obs_has_kernel(ob: Observable) -> bool:
         return True
     if isinstance(ob, (Hadamard, Projector)):
         return True
+    if isinstance(ob, Tensor):
+        return all(_obs_has_kernel(o) for o in ob.obs)
     return False
 
 
