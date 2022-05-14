@@ -7,7 +7,7 @@ set(LOGO [=[
 ]=])
 message(${LOGO})
 
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
 
 project(pennylane_lightning)
 
