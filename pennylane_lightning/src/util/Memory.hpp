@@ -99,7 +99,7 @@ template <class T> class AlignedAllocator {
     template <typename U>
     explicit constexpr AlignedAllocator(
         [[maybe_unused]] const AlignedAllocator<U> &rhs) noexcept
-        : alignment_{rhs.alignment_} {}
+        : alignment_{rhs.alignment()} {}
 
     /**
      * @brief Allocate memory with for the given number of datatype T
