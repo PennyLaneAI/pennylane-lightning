@@ -998,13 +998,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
 
-        const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
-        const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
-
-        const size_t parity_low = fillTrailingOnes(rev_wire_min);
-        const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
-        const size_t parity_middle =
-            fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
+        const auto [parity_high, parity_middle, parity_low] =
+            revWireParity(rev_wire0, rev_wire1);
 
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
@@ -1040,13 +1035,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
 
-        const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
-        const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
-
-        const size_t parity_low = fillTrailingOnes(rev_wire_min);
-        const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
-        const size_t parity_middle =
-            fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
+        const auto [parity_high, parity_middle, parity_low] =
+            revWireParity(rev_wire0, rev_wire1);
 
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
@@ -1085,13 +1075,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
 
-        const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
-        const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
-
-        const size_t parity_low = fillTrailingOnes(rev_wire_min);
-        const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
-        const size_t parity_middle =
-            fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
+        const auto [parity_high, parity_middle, parity_low] =
+            revWireParity(rev_wire0, rev_wire1);
 
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
@@ -1393,13 +1378,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
 
-        const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
-        const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
-
-        const size_t parity_low = fillTrailingOnes(rev_wire_min);
-        const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
-        const size_t parity_middle =
-            fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
+        const auto [parity_high, parity_middle, parity_low] =
+            revWireParity(rev_wire0, rev_wire1);
 
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
@@ -1432,13 +1412,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
 
-        const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
-        const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
-
-        const size_t parity_low = fillTrailingOnes(rev_wire_min);
-        const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
-        const size_t parity_middle =
-            fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
+        const auto [parity_high, parity_middle, parity_low] =
+            revWireParity(rev_wire0, rev_wire1);
 
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
@@ -1468,13 +1443,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
 
-        const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
-        const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
-
-        const size_t parity_low = fillTrailingOnes(rev_wire_min);
-        const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
-        const size_t parity_middle =
-            fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
+        const auto [parity_high, parity_middle, parity_low] =
+            revWireParity(rev_wire0, rev_wire1);
 
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
