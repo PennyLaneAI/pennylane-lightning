@@ -8,24 +8,6 @@ on:
     types: [published]
 
 env:
-  CIBW_BUILD: 'cp37-* cp38-* cp39-* cp310-*'
-
-  CIBW_ARCHS_WINDOWS: "AMD64"
-
-  # Python build settings
-  CIBW_BEFORE_BUILD: |
-    pip install pybind11 ninja cmake && powershell.exe New-ItemProperty -Path "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
-
-  # Testing of built wheels
-  CIBW_TEST_REQUIRES: numpy~=1.21 scipy pytest pytest-cov pytest-mock flaky
-
-  CIBW_BEFORE_TEST: |
-    pip install git+https://github.com/PennyLaneAI/pennylane.git@master
-    python -c "import sys; print(sys.path)"
-
-  CIBW_TEST_COMMAND: |
-    pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
-
   DISTUTILS_USE_SDK: 1
 
   MSSdk: 1
@@ -35,7 +17,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        os: [windows-2019]
+        py_version: ["3.7", "3.8", "3.9", "3.10"]
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
@@ -49,18 +32,46 @@ jobs:
         id: branch-name
         uses: tj-actions/branch-names@v5
 
-      - uses: actions/checkout@v2
+      - name: Enable long paths
+        run: |
+          powershell.exe New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
+
+      - uses: actions/checkout@v3
 
       - uses: actions/setup-python@v2
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: ${{ matrix.py_version }}
 
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel==2.3.0
 
       - name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
+        run: |
+          Subst Z: (pwd)
+          Set-Location -Path "Z:\"
+          python -m pip install wheel cmake ninja build
+          python setup.py bdist_wheel
+          Set-Location -Path "./dist"
+          foreach ($i in Get-ChildItem -Path ./*.whl){ 
+            python -m wheel unpack $i.Name
+            $name = $i.Name 
+            $dirName = python -c "s = '$name'; print('-'.join(s.split('-')[0:2]))"
+            if (Test-Path -Path $dirName\pennylane_lightning\Debug) {
+              Move-Item -Path $dirName\pennylane_lightning\Debug\* -Destination $dirName\pennylane_lightning
+              Remove-Item $dirName\pennylane_lightning\Debug -Recurse
+              python -m wheel pack $dirName
+            }
+            Remove-Item $dirName -Recurse
+          }
+
+      - name: Test wheel
+        run: |
+          Set-Location -Path "Z:\"
+          foreach ($i in Get-ChildItem -Path Z:\dist\*.whl){ python -m pip install $i }
+          python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master && `
+          python -m pip install pytest pytest-cov pytest-mock flaky && `
+          pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
       - uses: actions-ecosystem/action-regex-match@v2
         id: rc_build
@@ -69,10 +80,11 @@ jobs:
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
       - uses: actions/upload-artifact@v2
-        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
+        #if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         with:
           name: ${{ runner.os }}-wheels.zip
-          path: ./wheelhouse/*.whl
+          path: Z:\dist\*.whl
+
 
   upload-pypi:
     needs: win-wheels
