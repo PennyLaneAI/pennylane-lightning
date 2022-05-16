@@ -53,9 +53,9 @@ jobs:
           python -m pip install wheel cmake ninja build
           python setup.py bdist_wheel
           Set-Location -Path "./dist"
-          foreach ($i in Get-ChildItem -Path ./*.whl){ 
+          foreach ($i in Get-ChildItem -Path ./*.whl){
             python -m wheel unpack $i.Name
-            $name = $i.Name 
+            $name = $i.Name
             $dirName = python -c "s = '$name'; print('-'.join(s.split('-')[0:2]))"
             if (Test-Path -Path $dirName\pennylane_lightning\Debug) {
               Move-Item -Path $dirName\pennylane_lightning\Debug\* -Destination $dirName\pennylane_lightning
