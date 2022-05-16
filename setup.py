@@ -97,7 +97,7 @@ class CMakeBuild(build_ext):
         subprocess.check_call(["cmake", "--build", "."] + build_args, cwd=self.build_temp)
 
 
-with open("pennylane_lightning/_version.py") as f:
+with open(os.path.join("pennylane_lightning", "_version.py")) as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
@@ -114,7 +114,7 @@ info = {
     "url": "https://github.com/XanaduAI/pennylane-lightning",
     "license": "Apache License 2.0",
     "packages": find_packages(where="."),
-    "package_data": {"pennylane_lightning": ["src/*", "src/**/*"]},
+    "package_data": {"pennylane_lightning": [os.path.join("src", "*"), os.path.join("src", "**", "*")]},
     "include_package_data": True,
     "entry_points": {
         "pennylane.plugins": [
