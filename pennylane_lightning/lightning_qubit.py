@@ -409,9 +409,7 @@ class LightningQubit(DefaultQubit):
                 ket = np.ravel(self._pre_rotated_state)
 
             obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=self.use_csingle)
-            ops_serialized, use_sp = _serialize_ops(
-                tape, self.wire_map
-            )
+            ops_serialized, use_sp = _serialize_ops(tape, self.wire_map)
 
             ops_serialized = V.create_ops_list(*ops_serialized)
 
