@@ -35,11 +35,7 @@ dev2 = qml.device('lightning.qubit', wires=4, c_dtype=np.complex128) # for doubl
 
 This release contains contributions from (in alphabetical order):
 
-<<<<<<< HEAD
-Ali Asadi, Mikhail Andrenkov
-=======
-Mikhail Andrenkov, Chae-Yeun Park
->>>>>>> b58394e72868711758599acb6ff51f335289ad35
+Ali Asadi, Mikhail Andrenkov, Chae-Yeun Park
 
 ---
 
