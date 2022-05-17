@@ -576,7 +576,7 @@ class LightningQubit(DefaultQubit):
         state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
         if observable.name == "SparseHamiltonian":
-            # converting COO to CRS sparse representation.
+            # converting COO to CSR sparse representation.
             CSR_SparseHamiltonian = observable.data[0].tocsr(copy=False)
             return M.expval(
                 CSR_SparseHamiltonian.indptr,
