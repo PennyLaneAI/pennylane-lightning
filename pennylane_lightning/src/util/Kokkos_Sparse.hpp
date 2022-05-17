@@ -37,7 +37,7 @@ using device_type = typename Kokkos::Device<
     Kokkos::DefaultExecutionSpace,
     typename Kokkos::DefaultExecutionSpace::memory_space>;
 
-using index_type = size_t;
+using index_type = long int;
 using index_view_type =
     typename Kokkos::View<index_type *, default_layout, device_type,
                           Kokkos::MemoryTraits<Kokkos::Unmanaged>>;

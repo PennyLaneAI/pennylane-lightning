@@ -55,8 +55,11 @@ void lightning_class_bindings(py::module &m) {
                                  py::array::c_style | py::array::forcecast>;
     using np_arr_r =
         py::array_t<ParamT, py::array::c_style | py::array::forcecast>;
-    using np_arr_ind =
-        py::array_t<size_t, py::array::c_style | py::array::forcecast>;
+    using sparse_index_type =
+        long int; // Kokkos Kernels needs signed int as Ordinal type.
+    using np_arr_sparse_ind =
+        py::array_t<sparse_index_type,
+                    py::array::c_style | py::array::forcecast>;
 
     //***********************************************************************//
     //                              StateVector
@@ -331,15 +334,15 @@ void lightning_class_bindings(py::module &m) {
              "Expected value of an operation by name.")
         .def(
             "expval",
-            [](Measures<PrecisionT> &M, const np_arr_ind row_map,
-               const np_arr_ind entries, const np_arr_c values) {
+            [](Measures<PrecisionT> &M, const np_arr_sparse_ind row_map,
+               const np_arr_sparse_ind entries, const np_arr_c values) {
                 return M.expval(
-                    static_cast<Util::index_type *>(row_map.request().ptr),
-                    static_cast<Util::index_type>(row_map.request().size),
-                    static_cast<Util::index_type *>(entries.request().ptr),
+                    static_cast<sparse_index_type *>(row_map.request().ptr),
+                    static_cast<sparse_index_type>(row_map.request().size),
+                    static_cast<sparse_index_type *>(entries.request().ptr),
                     static_cast<std::complex<PrecisionT> *>(
                         values.request().ptr),
-                    static_cast<Util::index_type>(values.request().size));
+                    static_cast<sparse_index_type>(values.request().size));
             },
             "Expected value of a sparse Hamiltonian.")
         .def("generate_samples",
