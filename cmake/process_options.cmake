@@ -142,8 +142,8 @@ if(ENABLE_KOKKOS)
   
     FetchContent_MakeAvailable(kokkos)
 
-    get_target_property(_kokkos_INC_DIR kokkos INTERFACE_INCLUDE_DIRECTORIES)
-    set_target_properties(kokkos PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_kokkos_INC_DIR}")
+    get_target_property(kokkos_INC_DIR kokkos INTERFACE_INCLUDE_DIRECTORIES)
+    set_target_properties(kokkos PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkos_INC_DIR}")
 
     FetchContent_Declare(kokkoskernels
                          GIT_REPOSITORY https://github.com/kokkos/kokkos-kernels.git
@@ -152,9 +152,10 @@ if(ENABLE_KOKKOS)
  
     FetchContent_MakeAvailable(kokkoskernels)
  
-    get_target_property(_kokkoskernels_INC_DIR kokkoskernels INTERFACE_INCLUDE_DIRECTORIES)
-    set_target_properties(kokkoskernels PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_kokkoskernels_INC_DIR}")
+    get_target_property(kokkoskernels_INC_DIR kokkoskernels INTERFACE_INCLUDE_DIRECTORIES)
+    set_target_properties(kokkoskernels PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkoskernels_INC_DIR}")
 
+    target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_KOKKOS=1")
     target_link_libraries(lightning_external_libs INTERFACE Kokkos::kokkos Kokkos::kokkoskernels)
 else()
     message(STATUS "ENABLE_KOKKOS is OFF.")
