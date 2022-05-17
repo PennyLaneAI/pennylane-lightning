@@ -55,11 +55,9 @@ void lightning_class_bindings(py::module &m) {
                                  py::array::c_style | py::array::forcecast>;
     using np_arr_r =
         py::array_t<ParamT, py::array::c_style | py::array::forcecast>;
+    using np_arr_ind =
+        py::array_t<size_t, py::array::c_style | py::array::forcecast>;
 
-#ifdef _ENABLE_KOKKOS
-    using np_arr_ind = py::array_t<Util::index_type,
-                                   py::array::c_style | py::array::forcecast>;
-#endif
     //***********************************************************************//
     //                              StateVector
     //***********************************************************************//
@@ -331,7 +329,6 @@ void lightning_class_bindings(py::module &m) {
                  const std::string &, const std::vector<size_t> &)>(
                  &Measures<PrecisionT>::expval),
              "Expected value of an operation by name.")
-#ifdef _ENABLE_KOKKOS
         .def(
             "expval",
             [](Measures<PrecisionT> &M, const np_arr_ind row_map,
@@ -345,7 +342,6 @@ void lightning_class_bindings(py::module &m) {
                     static_cast<Util::index_type>(values.request().size));
             },
             "Expected value of a sparse Hamiltonian.")
-#endif
         .def("generate_samples",
              [](Measures<PrecisionT> &M, size_t num_wires, size_t num_shots) {
                  auto &&result = M.generate_samples(num_shots);

@@ -19,18 +19,15 @@
 
 #pragma once
 
-#ifdef __has_include
-#if __has_include(                                                             \
-    <Kokkos_Core.hpp>) && __has_include (<KokkosKernels_default_types.hpp>)
+#ifdef _ENABLE_KOKKOS
+
 #include "KokkosKernels_default_types.hpp"
 #include "KokkosSparse_CrsMatrix.hpp"
 #include "KokkosSparse_spmv.hpp"
 #include "Kokkos_Core.hpp"
-#define _ENABLE_KOKKOS
-#endif
-#endif
 
-#ifdef _ENABLE_KOKKOS
+constexpr bool USE_KOKKOS = true;
+
 // Implementing Kokkos Sparse operations.
 #include <complex>
 #include <vector>
@@ -40,7 +37,7 @@ using device_type = typename Kokkos::Device<
     Kokkos::DefaultExecutionSpace,
     typename Kokkos::DefaultExecutionSpace::memory_space>;
 
-using index_type = int;
+using index_type = size_t;
 using index_view_type =
     typename Kokkos::View<index_type *, default_layout, device_type,
                           Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
@@ -176,4 +173,6 @@ apply_Sparse_Matrix(const std::vector<std::complex<fp_precision>> &vector,
                                values.size());
 };
 } // namespace Pennylane::Util
+#else
+constexpr bool USE_KOKKOS = false;
 #endif
