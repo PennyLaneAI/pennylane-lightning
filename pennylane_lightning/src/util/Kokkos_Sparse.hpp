@@ -170,7 +170,6 @@ std::vector<std::complex<fp_precision>>
 apply_Sparse_Matrix(const std::complex<fp_precision> *, const index_type,
                     const index_type *, const index_type, const index_type *,
                     const std::complex<fp_precision> *, const index_type) {
-
     PL_ABORT("Applying a Sparse matrix to a vector needs Kokkos and "
              "Kokkos Kernels installation.");
 
