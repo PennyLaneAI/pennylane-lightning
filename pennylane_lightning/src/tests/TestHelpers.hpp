@@ -11,6 +11,7 @@
 #include "Error.hpp"
 #include "GateOperation.hpp"
 #include "LinearAlgebra.hpp"
+#include "StateVectorManaged.hpp"
 #include "Util.hpp"
 
 #include <catch2/catch.hpp>
@@ -287,6 +288,100 @@ auto createParams(Gates::GateOperation op) -> std::vector<PrecisionT> {
     }
     return {};
 }
+
+/**
+ * @brief Initialize the statevector in a non-trivial configuration.
+ *
+ * @tparam T
+ * @param num_qubits number of qubits
+ * @return StateVectorManaged<T>
+ */
+template <typename T = double>
+StateVectorManaged<T> Initializing_StateVector(size_t num_qubits = 3) {
+    size_t data_size = Util::exp2(num_qubits);
+
+    std::vector<std::complex<T>> arr(data_size, 0);
+    arr[0] = 1;
+    StateVectorManaged<T> Measured_StateVector(arr.data(), data_size);
+
+    std::vector<std::string> gates;
+    std::vector<std::vector<size_t>> wires;
+    std::vector<bool> inv_op(num_qubits * 2, false);
+    std::vector<std::vector<T>> phase;
+
+    T initial_phase = 0.7;
+    for (size_t n_qubit = 0; n_qubit < num_qubits; n_qubit++) {
+        gates.push_back("RX");
+        gates.push_back("RY");
+
+        wires.push_back({n_qubit});
+        wires.push_back({n_qubit});
+
+        phase.push_back({initial_phase});
+        phase.push_back({initial_phase});
+        initial_phase -= 0.2;
+    }
+    Measured_StateVector.applyOperations(gates, wires, inv_op, phase);
+
+    return Measured_StateVector;
+}
+
+/**
+ * @brief Fills the empty vectors with the CSR (Compressed Sparse Row) sparse
+ * matrix representation for a tridiagonal + periodic boundary conditions
+ * Hamiltonian.
+ *
+ * @tparam fp_precision
+ * @tparam index_type
+ * @param row_map the j element encodes the total number of non-zeros above
+ * row j.
+ * @param entries column indices.
+ * @param values  matrix non-zero elements.
+ * @param numRows matrix number of rows.
+ */
+template <class fp_precision, class index_type>
+void write_CSR_vectors(std::vector<index_type> &row_map,
+                       std::vector<index_type> &entries,
+                       std::vector<std::complex<fp_precision>> &values,
+                       index_type numRows) {
+    const std::complex<fp_precision> SC_ONE = 1.0;
+
+    row_map.resize(numRows + 1);
+    for (index_type rowIdx = 1; rowIdx < (index_type)row_map.size(); ++rowIdx) {
+        row_map[rowIdx] = row_map[rowIdx - 1] + 3;
+    };
+    const index_type numNNZ = row_map[numRows];
+
+    entries.resize(numNNZ);
+    values.resize(numNNZ);
+    for (index_type rowIdx = 0; rowIdx < numRows; ++rowIdx) {
+        if (rowIdx == 0) {
+            entries[0] = rowIdx;
+            entries[1] = rowIdx + 1;
+            entries[2] = numRows - 1;
+
+            values[0] = SC_ONE;
+            values[1] = -SC_ONE;
+            values[2] = -SC_ONE;
+        } else if (rowIdx == numRows - 1) {
+            entries[row_map[rowIdx]] = 0;
+            entries[row_map[rowIdx] + 1] = rowIdx - 1;
+            entries[row_map[rowIdx] + 2] = rowIdx;
+
+            values[row_map[rowIdx]] = -SC_ONE;
+            values[row_map[rowIdx] + 1] = -SC_ONE;
+            values[row_map[rowIdx] + 2] = SC_ONE;
+        } else {
+            entries[row_map[rowIdx]] = rowIdx - 1;
+            entries[row_map[rowIdx] + 1] = rowIdx;
+            entries[row_map[rowIdx] + 2] = rowIdx + 1;
+
+            values[row_map[rowIdx]] = -SC_ONE;
+            values[row_map[rowIdx] + 1] = SC_ONE;
+            values[row_map[rowIdx] + 2] = -SC_ONE;
+        }
+    }
+};
 
 template <class PrecisionT> struct PrecisionToName;
 
