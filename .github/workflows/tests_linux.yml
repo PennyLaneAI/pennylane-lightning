@@ -34,10 +34,11 @@ jobs:
           fetch-depth: 2 # for codecov
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc g++ gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 gcovr lcov
 
       - name: Build and run unit tests
         run: |
+            g++ --version
             cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
             cmake --build ./Build
             mkdir -p ./Build/tests/results
