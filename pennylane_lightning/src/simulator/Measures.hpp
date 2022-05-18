@@ -67,7 +67,6 @@ class Measures {
         std::transform(arr_data, arr_data + original_statevector.getLength(),
                        basis_probs.begin(),
                        [](const CFP_t &z) -> fp_t { return std::norm(z); });
-
         return basis_probs;
     };
 
@@ -160,7 +159,6 @@ class Measures {
         return std::real(expected_value);
     };
 
-#ifdef _ENABLE_KOKKOS
     /**
      * @brief Expected value of a Sparse Hamiltonian.
      *
@@ -174,15 +172,16 @@ class Measures {
      * @param numNNZ        number of non-zero elements.
      * @return fp_t
      */
-    fp_t expval(const Util::index_type *row_map_ptr,
-                const Util::index_type row_map_size,
-                const Util::index_type *entries_ptr, const CFP_t *values_ptr,
-                const Util::index_type numNNZ) {
+    template <class index_type>
+    fp_t expval(const index_type *row_map_ptr, const index_type row_map_size,
+                const index_type *entries_ptr, const CFP_t *values_ptr,
+                const index_type numNNZ) {
         PL_ABORT_IF(
             (original_statevector.getLength() != (size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
         auto operator_vector = Util::apply_Sparse_Matrix(
-            original_statevector.getData(), original_statevector.getLength(),
+            original_statevector.getData(),
+            static_cast<index_type>(original_statevector.getLength()),
             row_map_ptr, row_map_size, entries_ptr, values_ptr, numNNZ);
 
         CFP_t expected_value = Util::innerProdC(
@@ -190,7 +189,6 @@ class Measures {
             original_statevector.getLength());
         return std::real(expected_value);
     };
-#endif
 
     /**
      * @brief Expected value for a list of observables.
