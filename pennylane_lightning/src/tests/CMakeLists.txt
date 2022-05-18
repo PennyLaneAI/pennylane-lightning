@@ -83,6 +83,7 @@ set(TEST_SOURCES CreateAllWires.cpp
                  Test_Internal.cpp
                  Test_LinearAlgebra.cpp
                  Test_Measures.cpp
+                 Test_Measures_Sparse.cpp
                  Test_OpToMemberFuncPtr.cpp
                  Test_RuntimeInfo.cpp
                  Test_StateVectorManaged.cpp
