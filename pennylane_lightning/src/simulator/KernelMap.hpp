@@ -25,7 +25,6 @@
 #include <deque>
 #include <functional>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 
 namespace Pennylane::KernelMap {

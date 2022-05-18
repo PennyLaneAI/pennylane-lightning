@@ -31,7 +31,7 @@ We discuss how one can add another gate implementation in this document. Assume 
         }
     };
 
-Then you can add your gate implementation to Pennylane-Lightning. This can be done my modifying two files as:
+Then you can add your gate implementation to Pennylane-Lightning. This can be done by modifying two files as:
 
 .. code-block:: cpp
 

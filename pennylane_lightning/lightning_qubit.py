@@ -57,7 +57,6 @@ try:
         allocate_aligned_array,
         get_alignment,
         best_alignment,
-        CPUMemoryModel,
     )
 
     from ._serialize import _serialize_obs, _serialize_ops

@@ -60,6 +60,8 @@ class StateVectorManagedCPU
     /**
      * @brief Construct a statevector from another statevector
      *
+     * @tparam OtherDerived A derived type of StateVectorCPU to use for
+     * construction.
      * @param other Another statevector to construct the statevector from
      */
     template <class OtherDerived>
@@ -92,6 +94,8 @@ class StateVectorManagedCPU
     /**
      * @brief Construct a statevector from a data vector
      *
+     * @taparm Alloc Allocator type of std::vector to use for constructing
+     * statevector.
      * @param other Data to construct the statevector from
      * @param threading Threading option the statevector to use
      * @param memory_model Memory model the statevector will use
@@ -137,6 +141,7 @@ class StateVectorManagedCPU
     /**
      * @brief Update data of the class to new_data
      *
+     * @tparam Alloc Allocator type of std::vector to use for updating data.
      * @param new_data std::vector contains data.
      */
     template <class Alloc>

@@ -207,6 +207,16 @@ inline auto constexpr fillTrailingOnes(size_t nbits) -> IntegerType {
                               static_cast<IntegerType>(
                                   CHAR_BIT * sizeof(IntegerType) - nbits);
 }
+/**
+ * @brief Fill ones from MSB to pos
+ *
+ * @tparam IntegerType Integer type to use
+ * @param pos Position up to which bit one is filled.
+ */
+template <class IntegerType = size_t>
+inline auto constexpr fillLeadingOnes(size_t pos) -> size_t {
+    return (~IntegerType{0}) << pos;
+}
 
 /**
  * @brief Check if there is a positive integer n such that value == 2^n.
@@ -216,12 +226,6 @@ inline auto constexpr fillTrailingOnes(size_t nbits) -> IntegerType {
  */
 inline auto isPerfectPowerOf2(size_t value) -> bool {
     return popcount(value) == 1;
-}
-/**
- * @brief Fill ones from MSB to pos
- */
-inline auto constexpr fillLeadingOnes(size_t pos) -> size_t {
-    return (~size_t(0)) << pos;
 }
 
 /**
