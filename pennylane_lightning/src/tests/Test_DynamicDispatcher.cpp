@@ -82,12 +82,16 @@ constexpr void testAllGatesForKernelIter(RandomEngine &re,
                                          size_t max_num_qubits) {
     if constexpr (idx < static_cast<int>(GateOperation::END)) {
         constexpr auto gate_op = static_cast<GateOperation>(idx);
-
-        for (size_t num_qubits = 4; num_qubits <= max_num_qubits;
+        constexpr size_t min_num_wires = 3;
+        constexpr auto num_wires =
+            std::max(static_cast<size_t>(
+                         Util::static_lookup<gate_op>(Constant::gate_wires)),
+                     min_num_wires);
+        for (size_t num_qubits = num_wires; num_qubits <= max_num_qubits;
              num_qubits++) {
             testDynamicDispatch<PrecisionT, ParamT, GateImplementation,
                                 gate_op>(re, num_qubits);
-        }
+        };
         testAllGatesForKernelIter<PrecisionT, ParamT, GateImplementation,
                                   idx + 1>(re, max_num_qubits);
     }
