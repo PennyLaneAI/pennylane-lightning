@@ -800,147 +800,19 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     static void
     applyDoubleExcitation(std::complex<PrecisionT> *arr, size_t num_qubits,
                           const std::vector<size_t> &wires,
-                          [[maybe_unused]] bool inverse, ParamT angle) {
-        PL_ASSERT(wires.size() == 4);
-        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
-        const PrecisionT c = std::cos(angle / 2);
-        const PrecisionT s =
-            inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
-
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        const size_t i0 = 3;
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        const size_t i1 = 12;
-
-        for (const size_t &externalIndex : externalIndices) {
-            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
-            const std::complex<PrecisionT> v3 = shiftedState[indices[i0]];
-            const std::complex<PrecisionT> v12 = shiftedState[indices[i1]];
-
-            shiftedState[indices[i0]] = c * v3 - s * v12;
-            shiftedState[indices[i1]] = s * v3 + c * v12;
-        }
-    }
+                          [[maybe_unused]] bool inverse, ParamT angle);
 
     template <class PrecisionT, class ParamT = PrecisionT>
     static void
     applyDoubleExcitationMinus(std::complex<PrecisionT> *arr, size_t num_qubits,
                                const std::vector<size_t> &wires,
-                               [[maybe_unused]] bool inverse, ParamT angle) {
-        PL_ASSERT(wires.size() == 4);
-        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
-
-        const PrecisionT c = std::cos(angle / 2);
-        const PrecisionT s =
-            inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
-        const std::complex<PrecisionT> e =
-            inverse ? std::exp(std::complex<PrecisionT>(0, angle / 2))
-                    : std::exp(-std::complex<PrecisionT>(0, angle / 2));
-
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        const size_t i0 = 3;
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        const size_t i1 = 12;
-
-        for (const size_t &externalIndex : externalIndices) {
-            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            const std::complex<PrecisionT> v3 = shiftedState[indices[i0]];
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            const std::complex<PrecisionT> v12 = shiftedState[indices[i1]];
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[0]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[1]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[2]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[i0]] = c * v3 - s * v12;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[4]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[5]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[6]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[7]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[8]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[9]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[10]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[11]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[i1]] = s * v3 + c * v12;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[13]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[14]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[15]] *= e;
-        }
-    }
+                               [[maybe_unused]] bool inverse, ParamT angle);
 
     template <class PrecisionT, class ParamT = PrecisionT>
     static void
     applyDoubleExcitationPlus(std::complex<PrecisionT> *arr, size_t num_qubits,
                               const std::vector<size_t> &wires,
-                              [[maybe_unused]] bool inverse, ParamT angle) {
-        PL_ASSERT(wires.size() == 4);
-        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
-        const PrecisionT c = std::cos(angle / 2);
-        const PrecisionT s =
-            inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
-        const std::complex<PrecisionT> e =
-            inverse ? std::exp(-std::complex<PrecisionT>(0, angle / 2))
-                    : std::exp(std::complex<PrecisionT>(0, angle / 2));
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        const size_t i0 = 3;
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        const size_t i1 = 12;
-
-        for (const size_t &externalIndex : externalIndices) {
-            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            const std::complex<PrecisionT> v3 = shiftedState[indices[i0]];
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            const std::complex<PrecisionT> v12 = shiftedState[indices[i1]];
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[0]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[1]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[2]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[i0]] = c * v3 - s * v12;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[4]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[5]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[6]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[7]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[8]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[9]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[10]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[11]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[i1]] = s * v3 + c * v12;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[13]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[14]] *= e;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            shiftedState[indices[15]] *= e;
-        }
-    }
+                              [[maybe_unused]] bool inverse, ParamT angle);
 
     /* Multi-qubit gates */
     template <class PrecisionT, class ParamT>
@@ -1120,81 +992,19 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     applyGeneratorDoubleExcitation(std::complex<PrecisionT> *arr,
                                    size_t num_qubits,
                                    const std::vector<size_t> &wires,
-                                   [[maybe_unused]] bool adj) -> PrecisionT {
-        PL_ASSERT(wires.size() == 4);
-        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
-
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        const size_t i0 = 3;
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        const size_t i1 = 12;
-
-        for (const size_t &externalIndex : externalIndices) {
-            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
-            const std::complex<PrecisionT> v3 = shiftedState[indices[i0]];
-            const std::complex<PrecisionT> v12 = shiftedState[indices[i1]];
-            for (const size_t &i : indices) {
-                shiftedState[i] = std::complex<PrecisionT>{};
-            }
-
-            shiftedState[indices[i0]] = -v12 * Util::IMAG<PrecisionT>();
-            shiftedState[indices[i1]] = v3 * Util::IMAG<PrecisionT>();
-        }
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        return -static_cast<PrecisionT>(0.5);
-    }
+                                   [[maybe_unused]] bool adj) -> PrecisionT;
 
     template <class PrecisionT>
     [[nodiscard]] static auto applyGeneratorDoubleExcitationMinus(
         std::complex<PrecisionT> *arr, size_t num_qubits,
         const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
-        -> PrecisionT {
-        PL_ASSERT(wires.size() == 4);
-        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
-
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        const size_t i0 = 3;
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        const size_t i1 = 12;
-
-        for (const size_t &externalIndex : externalIndices) {
-            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
-
-            shiftedState[indices[i0]] *= Util::IMAG<PrecisionT>();
-            shiftedState[indices[i1]] *= -Util::IMAG<PrecisionT>();
-
-            std::swap(shiftedState[indices[i0]], shiftedState[indices[i1]]);
-        }
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        return -static_cast<PrecisionT>(0.5);
-    }
+        -> PrecisionT;
 
     template <class PrecisionT>
-    [[nodiscard]] static auto applyGeneratorDoubleExcitationPlus(
-        std::complex<PrecisionT> *arr, size_t num_qubits,
-        const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
-        -> PrecisionT {
-        PL_ASSERT(wires.size() == 4);
-        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
-
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        const size_t i0 = 3;
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        const size_t i1 = 12;
-
-        for (const size_t &externalIndex : externalIndices) {
-            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
-            for (const size_t &i : indices) {
-                shiftedState[indices[i]] *= -1;
-            }
-
-            shiftedState[indices[i0]] *= -Util::IMAG<PrecisionT>();
-            shiftedState[indices[i1]] *= Util::IMAG<PrecisionT>();
-
-            std::swap(shiftedState[indices[i0]], shiftedState[indices[i1]]);
-        }
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        return -static_cast<PrecisionT>(0.5);
-    }
+    [[nodiscard]] static auto
+    applyGeneratorDoubleExcitationPlus(std::complex<PrecisionT> *arr,
+                                       size_t num_qubits,
+                                       const std::vector<size_t> &wires,
+                                       [[maybe_unused]] bool adj) -> PrecisionT;
 };
 } // namespace Pennylane::Gates

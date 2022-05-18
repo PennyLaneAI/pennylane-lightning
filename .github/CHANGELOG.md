@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Add qchem gates and generators.
+* Add `SingleExcitation` and `DoubleExcitation` qchem gates and generators.
 [(#289)](https://github.com/PennyLaneAI/pennylane-lightning/pull/289)
 
 ### Breaking changes

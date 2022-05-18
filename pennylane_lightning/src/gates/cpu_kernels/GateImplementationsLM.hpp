@@ -981,104 +981,21 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void applySingleExcitation(std::complex<PrecisionT> *arr,
                                       size_t num_qubits,
                                       const std::vector<size_t> &wires,
-                                      bool inverse, ParamT angle) {
-        PL_ASSERT(wires.size() == 2);
-        const PrecisionT c = std::cos(angle / 2);
-        const PrecisionT s =
-            inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
-        const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1;
-        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-        const auto [parity_high, parity_middle, parity_low] =
-            revWireParity(rev_wire0, rev_wire1);
-
-        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
-            const size_t i00 = ((k << 2U) & parity_high) |
-                               ((k << 1U) & parity_middle) | (k & parity_low);
-            const size_t i10 = i00 | rev_wire1_shift;
-            const size_t i01 = i00 | rev_wire0_shift;
-
-            const std::complex<PrecisionT> v01 = arr[i01];
-            const std::complex<PrecisionT> v10 = arr[i10];
-
-            arr[i01] = c * v01 - s * v10;
-            arr[i10] = s * v01 + c * v10;
-        }
-    }
+                                      bool inverse, ParamT angle);
 
     template <class PrecisionT, class ParamT>
     static void applySingleExcitationMinus(std::complex<PrecisionT> *arr,
                                            size_t num_qubits,
                                            const std::vector<size_t> &wires,
-                                           bool inverse, ParamT angle) {
-        PL_ASSERT(wires.size() == 2);
-        const PrecisionT c = std::cos(angle / 2);
-        const PrecisionT s =
-            inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
-        const std::complex<PrecisionT> e =
-            inverse ? std::exp(std::complex<PrecisionT>(0, angle / 2))
-                    : std::exp(-std::complex<PrecisionT>(0, angle / 2));
-        const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1;
-        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-        const auto [parity_high, parity_middle, parity_low] =
-            revWireParity(rev_wire0, rev_wire1);
-
-        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
-            const size_t i00 = ((k << 2U) & parity_high) |
-                               ((k << 1U) & parity_middle) | (k & parity_low);
-            const size_t i10 = i00 | rev_wire1_shift;
-            const size_t i01 = i00 | rev_wire0_shift;
-            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
-
-            const std::complex<PrecisionT> v01 = arr[i01];
-            const std::complex<PrecisionT> v10 = arr[i10];
-
-            arr[i00] *= e;
-            arr[i01] = c * v01 - s * v10;
-            arr[i10] = s * v01 + c * v10;
-            arr[i11] *= e;
-        }
-    }
+                                           bool inverse, ParamT angle);
 
     template <class PrecisionT, class ParamT>
     static void applySingleExcitationPlus(std::complex<PrecisionT> *arr,
                                           size_t num_qubits,
                                           const std::vector<size_t> &wires,
-                                          bool inverse, ParamT angle) {
-        PL_ASSERT(wires.size() == 2);
-        const PrecisionT c = std::cos(angle / 2);
-        const PrecisionT s =
-            inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
-        const std::complex<PrecisionT> e =
-            inverse ? std::exp(-std::complex<PrecisionT>(0, angle / 2))
-                    : std::exp(std::complex<PrecisionT>(0, angle / 2));
-        const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1;
-        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-        const auto [parity_high, parity_middle, parity_low] =
-            revWireParity(rev_wire0, rev_wire1);
-
-        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
-            const size_t i00 = ((k << 2U) & parity_high) |
-                               ((k << 1U) & parity_middle) | (k & parity_low);
-            const size_t i10 = i00 | rev_wire1_shift;
-            const size_t i01 = i00 | rev_wire0_shift;
-            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
-            const std::complex<PrecisionT> v01 = arr[i01];
-            const std::complex<PrecisionT> v10 = arr[i10];
-            arr[i00] *= e;
-            arr[i01] = c * v01 - s * v10;
-            arr[i10] = s * v01 + c * v10;
-            arr[i11] *= e;
-        }
-    }
+                                          bool inverse, ParamT angle);
 
     /* Multi-qubit gates */
-
     template <class PrecisionT, class ParamT>
     static void applyMultiRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
                              const std::vector<size_t> &wires, bool inverse,
@@ -1329,91 +1246,20 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     applyGeneratorSingleExcitation(std::complex<PrecisionT> *arr,
                                    size_t num_qubits,
                                    const std::vector<size_t> &wires,
-                                   [[maybe_unused]] bool adj) -> PrecisionT {
-        PL_ASSERT(wires.size() == 2);
-        const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1;
-        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-        const auto [parity_high, parity_middle, parity_low] =
-            revWireParity(rev_wire0, rev_wire1);
-
-        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
-            const size_t i00 = ((k << 2U) & parity_high) |
-                               ((k << 1U) & parity_middle) | (k & parity_low);
-            const size_t i01 = i00 | rev_wire0_shift;
-            const size_t i10 = i00 | rev_wire1_shift;
-            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
-
-            arr[i00] = std::complex<PrecisionT>{};
-            arr[i01] *= Util::IMAG<PrecisionT>();
-            arr[i10] *= -Util::IMAG<PrecisionT>();
-            arr[i11] = std::complex<PrecisionT>{};
-
-            std::swap(arr[i10], arr[i01]);
-        }
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        return -static_cast<PrecisionT>(0.5);
-    }
+                                   [[maybe_unused]] bool adj) -> PrecisionT;
 
     template <class PrecisionT>
     [[nodiscard]] static auto applyGeneratorSingleExcitationMinus(
         std::complex<PrecisionT> *arr, size_t num_qubits,
         const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
-        -> PrecisionT {
-        PL_ASSERT(wires.size() == 2);
-        const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1;
-        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-        const auto [parity_high, parity_middle, parity_low] =
-            revWireParity(rev_wire0, rev_wire1);
-
-        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
-            const size_t i00 = ((k << 2U) & parity_high) |
-                               ((k << 1U) & parity_middle) | (k & parity_low);
-            const size_t i01 = i00 | rev_wire0_shift;
-            const size_t i10 = i00 | rev_wire1_shift;
-
-            arr[i01] *= Util::IMAG<PrecisionT>();
-            arr[i10] *= -Util::IMAG<PrecisionT>();
-
-            std::swap(arr[i10], arr[i01]);
-        }
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        return -static_cast<PrecisionT>(0.5);
-    }
+        -> PrecisionT;
 
     template <class PrecisionT>
-    [[nodiscard]] static auto applyGeneratorSingleExcitationPlus(
-        std::complex<PrecisionT> *arr, size_t num_qubits,
-        const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
-        -> PrecisionT {
-        PL_ASSERT(wires.size() == 2);
-        const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1;
-        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-        const auto [parity_high, parity_middle, parity_low] =
-            revWireParity(rev_wire0, rev_wire1);
-
-        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
-            const size_t i00 = ((k << 2U) & parity_high) |
-                               ((k << 1U) & parity_middle) | (k & parity_low);
-            const size_t i01 = i00 | rev_wire0_shift;
-            const size_t i10 = i00 | rev_wire1_shift;
-            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
-
-            arr[i00] *= -1;
-            arr[i01] *= Util::IMAG<PrecisionT>();
-            arr[i10] *= -Util::IMAG<PrecisionT>();
-            arr[i11] *= -1;
-
-            std::swap(arr[i10], arr[i01]);
-        }
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        return -static_cast<PrecisionT>(0.5);
-    }
+    [[nodiscard]] static auto
+    applyGeneratorSingleExcitationPlus(std::complex<PrecisionT> *arr,
+                                       size_t num_qubits,
+                                       const std::vector<size_t> &wires,
+                                       [[maybe_unused]] bool adj) -> PrecisionT;
 
     template <class PrecisionT>
     [[nodiscard]] static auto
