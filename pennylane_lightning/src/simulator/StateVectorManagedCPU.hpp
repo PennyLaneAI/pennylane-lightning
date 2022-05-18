@@ -26,7 +26,7 @@ namespace Pennylane {
  * @brief StateVector class where data resides in CPU memory. Memory ownership
  * resides within class.
  *
- * @tparam PrecisionT
+ * @tparam PrecisionT Precision data type
  */
 template <class PrecisionT = double>
 class StateVectorManagedCPU

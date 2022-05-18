@@ -171,7 +171,7 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
     /**
      * @brief Get a singleton instance.
      *
-     * return A singleton instance.
+     * @return A singleton instance.
      */
     static auto getInstance() -> OperationKernelMap & {
         static OperationKernelMap instance;

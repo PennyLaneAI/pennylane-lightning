@@ -47,7 +47,7 @@ and
 
 .. code-block:: cpp
 
-    // file: simulator/AvailableKernels.hpp
+    // file: gates/AvailableKernels.hpp
     namespace Pennylane {
         using AvailableKernels = Util::TypeList<GateImplementationsLM,
                                                 GateImplementationsPI,
@@ -72,7 +72,7 @@ Still, note that your gate implementation is not a default implementation for ``
 
 .. code-block:: cpp
 
-    // simulator/Kernel.cpp
+    // simulator/KernelMap.cpp
 
     int assignDefaultKernelsForGateOp() {
         auto &instance = OperationKernelMap<GateOperation>::getInstance();
