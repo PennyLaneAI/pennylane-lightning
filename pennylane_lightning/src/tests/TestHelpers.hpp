@@ -311,14 +311,14 @@ StateVectorManaged<T> Initializing_StateVector(size_t num_qubits = 3) {
 
     T initial_phase = 0.7;
     for (size_t n_qubit = 0; n_qubit < num_qubits; n_qubit++) {
-        gates.push_back("RX");
-        gates.push_back("RY");
+        gates.emplace_back("RX");
+        gates.emplace_back("RY");
 
-        wires.push_back({n_qubit});
-        wires.push_back({n_qubit});
+        wires.emplace_back({n_qubit});
+        wires.emplace_back({n_qubit});
 
-        phase.push_back({initial_phase});
-        phase.push_back({initial_phase});
+        phase.emplace_back({initial_phase});
+        phase.emplace_back({initial_phase});
         initial_phase -= 0.2;
     }
     Measured_StateVector.applyOperations(gates, wires, inv_op, phase);
