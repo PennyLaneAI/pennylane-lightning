@@ -19,12 +19,12 @@
 #pragma once
 #include "AdjointDiff.hpp"
 #include "JacobianProd.hpp"
+#include "Kokkos_Sparse.hpp"
 #include "Macros.hpp"
 #include "Measures.hpp"
 #include "OpToMemberFuncPtr.hpp"
 #include "RuntimeInfo.hpp"
 #include "StateVectorRaw.hpp"
-#include "Kokkos_Sparse.hpp"
 
 #include "pybind11/complex.h"
 #include "pybind11/functional.h"

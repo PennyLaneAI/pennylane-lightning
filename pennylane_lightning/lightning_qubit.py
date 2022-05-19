@@ -577,7 +577,7 @@ class LightningQubit(DefaultQubit):
         state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
         if observable.name == "SparseHamiltonian":
-            if (Kokkos_info()["USE_KOKKOS"] == True):
+            if Kokkos_info()["USE_KOKKOS"] == True:
                 # converting COO to CSR sparse representation.
                 CSR_SparseHamiltonian = observable.data[0].tocsr(copy=False)
                 return M.expval(
@@ -586,7 +586,7 @@ class LightningQubit(DefaultQubit):
                     CSR_SparseHamiltonian.data,
                 )
             return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
-            
+
         # translate to wire labels used by device
         observable_wires = self.map_wires(observable.wires)
 

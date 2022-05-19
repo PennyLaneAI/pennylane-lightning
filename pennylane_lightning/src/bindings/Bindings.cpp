@@ -408,7 +408,8 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
     m.def("runtime_info", &getRuntimeInfo, "Runtime information.");
 
     /* Add Kokkos and Kokkos Kernels info */
-    m.def("Kokkos_info", &getKokkosInfo, "Kokkos and Kokkos Kernels information.");
+    m.def("Kokkos_info", &getKokkosInfo,
+          "Kokkos and Kokkos Kernels information.");
 
     lightning_class_bindings<float, float>(m);
     lightning_class_bindings<double, double>(m);
