@@ -75,13 +75,11 @@ constexpr auto array_has_elt(const std::array<U, size> &arr, const U &elt)
 template <typename T, typename U, size_t size>
 constexpr std::array<T, size>
 first_elts_of(const std::array<std::pair<T, U>, size> &arr) {
-    // TODO: change to std::transform in C++20
     std::array<T, size> res = {
         T{},
     };
-    for (size_t i = 0; i < size; i++) {
-        res[i] = std::get<0>(arr[i]);
-    }
+    std::transform(arr.begin(), arr.end(), res.begin(),
+                   [](const auto &elt) { return std::get<0>(elt); });
     return res;
 }
 /**
@@ -95,7 +93,6 @@ first_elts_of(const std::array<std::pair<T, U>, size> &arr) {
 template <typename T, typename U, size_t size>
 constexpr std::array<U, size>
 second_elts_of(const std::array<std::pair<T, U>, size> &arr) {
-    // TODO: change to std::transform in C++20
     std::array<U, size> res = {
         U{},
     };

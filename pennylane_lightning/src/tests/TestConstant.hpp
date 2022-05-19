@@ -8,14 +8,9 @@ namespace Pennylane::Gates {
 template <typename T, size_t size1, size_t size2>
 constexpr auto are_mutually_disjoint(const std::array<T, size1> &arr1,
                                      const std::array<T, size2> &arr2) -> bool {
-    // TODO: change to sort and compare in C++20 (std::sort will be constexpr)
-    // NOLINTNEXTLINE(readability-use-anyofallof)
-    for (const T &elt : arr2) {
-        if (Util::array_has_elt(arr1, elt)) {
-            return false;
-        }
-    }
-    return true;
+    return std::all_of(arr1.begin(), arr1.end(), [&arr2](const auto &elt) {
+        return !Util::array_has_elt(arr2, elt);
+    });
 }
 
 /*******************************************************************************
@@ -37,13 +32,11 @@ static_assert(Util::count_unique(Util::second_elts_of(Constant::gate_names)) ==
  ******************************************************************************/
 
 constexpr auto check_generator_names_starts_with() -> bool {
-    // TODO: change constexpr std::any_of, string_view::starts_with in C++20
-    // NOLINTNEXTLINE(readability-use-anyofallof)
-    for (const auto &[gntr_op, gntr_name] : Constant::generator_names) {
-        if (gntr_name.substr(0, 9) != "Generator") {
-            return false;
-        }
-    }
+    constexpr auto &arr = Constant::generator_names;
+    return std::all_of(arr.begin(), arr.end(), [](const auto &elt) {
+        const auto &[gntr_op, gntr_name] = elt;
+        return gntr_name.substr(0, 9) == "Generator";
+    });
     return true;
 }
 
