@@ -94,7 +94,7 @@ test-cpp-omp:
 
 test-cpp-kokkos:
 	rm -rf ./BuildTests
-	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON -DENABLE_KOKKOS=ON -DENABLE_OPENMP=ON
+	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON -DENABLE_KOKKOS=ON
 	cmake --build ./BuildTests --target runner
 	cmake --build ./BuildTests --target test
 
