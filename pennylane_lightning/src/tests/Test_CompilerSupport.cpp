@@ -23,7 +23,7 @@ TEST_CASE("Test exception in a constexpr constructor") {
 
     // The following line must not be compiled
     //[[maybe_unused]] constexpr static auto t1 =
-    //TestExceptionInConstexprConstructor(0);
+    // TestExceptionInConstexprConstructor(0);
 }
 
 TEST_CASE("Test assert in a constexpr function") {
@@ -31,5 +31,5 @@ TEST_CASE("Test assert in a constexpr function") {
 
     // The following line must not be compiled
     //[[maybe_unused]] constexpr static auto t1 =
-    //testAssertInConstexprFunction(0);
+    // testAssertInConstexprFunction(0);
 }
