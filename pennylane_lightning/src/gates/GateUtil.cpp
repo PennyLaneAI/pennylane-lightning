@@ -81,8 +81,9 @@ auto ValueForKernelHelper(
  */
 template <class GateImplementation>
 constexpr auto implementedGatesIterPair =
-    std::pair{std::begin(GateImplementation::implemented_gates),
-              std::end(GateImplementation::implemented_gates)};
+    std::pair{&(*std::begin(GateImplementation::implemented_gates)),
+              &(*std::begin(GateImplementation::implemented_gates)) +
+                  GateImplementation::implemented_gates.size()};
 
 template <class TypeList, size_t... Is>
 constexpr auto implementedGatesItersHelper(
