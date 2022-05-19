@@ -83,6 +83,8 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
+            Subst Z: (pwd)
+            Set-Location -Path "Z:\"
             cmake ./pennylane_lightning/src -BBuild  -DBUILD_TESTS=ON -DENABLE_KOKKOS=ON -DENABLE_OPENMP=OFF -DENABLE_WARNINGS=OFF -T clangcl
             cmake --build ./Build --config Debug
             mkdir -p ./Build/tests/results
