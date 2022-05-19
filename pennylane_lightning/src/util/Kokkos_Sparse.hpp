@@ -166,10 +166,14 @@ namespace Pennylane::Util {
  * @return std::vector<data_type<fp_precision>>
  */
 template <class fp_precision, class index_type>
-std::vector<std::complex<fp_precision>>
-apply_Sparse_Matrix(const std::complex<fp_precision> *, const index_type,
-                    const index_type *, const index_type, const index_type *,
-                    const std::complex<fp_precision> *, const index_type) {
+std::vector<std::complex<fp_precision>> apply_Sparse_Matrix(
+    [[maybe_unused]] const std::complex<fp_precision> *vector_ptr,
+    [[maybe_unused]] const index_type vector_size,
+    [[maybe_unused]] const index_type *row_map_ptr,
+    [[maybe_unused]] const index_type row_map_size,
+    [[maybe_unused]] const index_type *entries_ptr,
+    [[maybe_unused]] const std::complex<fp_precision> *values_ptr,
+    [[maybe_unused]] const index_type numNNZ) {
     PL_ABORT("Applying a Sparse matrix to a vector needs Kokkos and "
              "Kokkos Kernels installation.");
 
