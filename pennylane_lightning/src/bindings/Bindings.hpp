@@ -24,6 +24,7 @@
 #include "OpToMemberFuncPtr.hpp"
 #include "RuntimeInfo.hpp"
 #include "StateVectorRaw.hpp"
+#include "Kokkos_Sparse.hpp"
 
 #include "pybind11/complex.h"
 #include "pybind11/functional.h"
@@ -213,5 +214,14 @@ auto getRuntimeInfo() -> pybind11::dict {
     return pybind11::dict("AVX"_a = RuntimeInfo::AVX(),
                           "AVX2"_a = RuntimeInfo::AVX2(),
                           "AVX512F"_a = RuntimeInfo::AVX512F());
+}
+
+/**
+ * @brief Provide information regarding Kokkos and Kokkos Kernels backend.
+ */
+auto getKokkosInfo() -> pybind11::dict {
+    using namespace pybind11::literals;
+
+    return pybind11::dict("USE_KOKKOS"_a = USE_KOKKOS);
 }
 } // namespace Pennylane

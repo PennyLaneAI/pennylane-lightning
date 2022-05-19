@@ -18,7 +18,6 @@
 #include "Bindings.hpp"
 
 #include "GateUtil.hpp"
-#include "Kokkos_Sparse.hpp"
 #include "SelectKernel.hpp"
 
 #include "pybind11/pybind11.h"
@@ -407,6 +406,9 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
 
     /* Add runtime info */
     m.def("runtime_info", &getRuntimeInfo, "Runtime information.");
+
+    /* Add Kokkos and Kokkos Kernels info */
+    m.def("Kokkos_info", &getKokkosInfo, "Kokkos and Kokkos Kernels information.");
 
     lightning_class_bindings<float, float>(m);
     lightning_class_bindings<double, double>(m);
