@@ -32,7 +32,7 @@ static_assert(Util::count_unique(Util::second_elts_of(Constant::gate_names)) ==
  ******************************************************************************/
 
 constexpr auto check_generator_names_starts_with() -> bool {
-    constexpr auto &arr = Constant::generator_names;
+    const auto &arr = Constant::generator_names;
     return std::all_of(arr.begin(), arr.end(), [](const auto &elt) {
         const auto &[gntr_op, gntr_name] = elt;
         return gntr_name.substr(0, 9) == "Generator";
