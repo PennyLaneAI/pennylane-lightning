@@ -61,7 +61,7 @@ jobs:
           make clean || true
           pip uninstall pennylane-lightning -y
           cd ../pr
-          pip install -e .
+          CXX=g++-10 pip install -e .
 
       - name: Benchmark lightning PR device
         run: |

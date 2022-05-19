@@ -4,7 +4,7 @@
 
 class TestExceptionInConstexprConstructor {
   public:
-    constexpr TestExceptionInConstexprConstructor(int t) {
+    explicit constexpr TestExceptionInConstexprConstructor(int t) {
         if (t == 0) {
             throw std::invalid_argument("Throw");
         }
