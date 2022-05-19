@@ -43,7 +43,11 @@ inline auto constexpr log2PerfectPower(uint64_t val) -> size_t {
  * @return bool
  */
 inline auto constexpr isPerfectPowerOf2(size_t value) -> bool {
+#if __cpp_lib_int_pow2
     return std::has_single_bit(value);
+#else
+    return std::popcount(value) == 1;
+#endif
 }
 /**
  * @brief Fill ones from LSB to rev_wire
