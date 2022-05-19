@@ -218,10 +218,9 @@ constexpr auto reverse_pairs(const std::array<std::pair<T, U>, size> &arr)
  * (by the standard). But GCC 9 still does not accept Util::lookup in constexpr
  * some cases.
  *
- * As we now move to GCC>=10, this function is deprecated
+ * As we now move to GCC>=10, this function is deprecated.
  */
 template <auto op, class T, size_t size>
-//[[deprecated]]
 constexpr auto
 static_lookup(const std::array<std::pair<decltype(op), T>, size> &arr) -> T {
     for (size_t idx = 0; idx < size; idx++) {
