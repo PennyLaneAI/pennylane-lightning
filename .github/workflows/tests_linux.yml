@@ -131,7 +131,7 @@ jobs:
         with:
           files: ./BuildCov/coverage.info
           fail_ci_if_error: true
-  
+
   cpptestswithkokkos:
     name: C++ tests (Linux, Kokkos and Kokkos Kernels)
     runs-on: ${{ matrix.os }}
