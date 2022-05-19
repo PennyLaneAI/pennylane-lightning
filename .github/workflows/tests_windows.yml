@@ -79,7 +79,7 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
-            cmake ./pennylane_lightning/src -BBuild  -DBUILD_TESTS=ON -DENABLE_KOKKOS=ON -DENABLE_OPENMP=OFF -DENABLE_WARNINGS=OFF
+            cmake ./pennylane_lightning/src -BBuild  -DBUILD_TESTS=ON -DENABLE_KOKKOS=ON -DENABLE_OPENMP=OFF -DENABLE_WARNINGS=OFF -T clangcl
             cmake --build ./Build --config Debug
             mkdir -p ./Build/tests/results
             .\Build\tests\Debug\runner.exe --order lex --reporter junit --out .\Build\tests\results\report.xml
