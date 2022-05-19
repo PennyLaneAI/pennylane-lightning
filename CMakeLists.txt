@@ -50,7 +50,7 @@ option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_AVX "Enable AVX support" OFF)
 option(ENABLE_OPENMP "Enable OpenMP" ON)
-option(ENABLE_KOKKOS "Enable Kokkos" ON) # ON by default during development.
+option(ENABLE_KOKKOS "Enable Kokkos" OFF)
 option(ENABLE_BLAS "Enable BLAS" OFF)
 
 # Other build options
