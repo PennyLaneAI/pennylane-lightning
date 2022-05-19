@@ -71,6 +71,7 @@ target_link_libraries(compile_time_tests lightning_gates lightning_utils lightni
 set(TEST_SOURCES CreateAllWires.cpp
                  Test_AdjDiff.cpp
 #                 Test_Bindings.cpp
+                 Test_CompilerSupport.cpp
                  Test_DynamicDispatcher.cpp
                  Test_Error.cpp
                  Test_GateImplementations_CompareKernels.cpp

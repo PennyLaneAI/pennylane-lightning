@@ -50,8 +50,9 @@
     inline void apply##GATE_NAME##_(const std::vector<size_t> &wires,          \
                                     bool inverse, Ts &&...args) {              \
         auto *arr = getData();                                                 \
-        static_assert(Util::static_lookup<Gates::GateOperation::GATE_NAME>(    \
-                          Gates::Constant::gate_num_params) == sizeof...(Ts),  \
+        static_assert(Util::lookup(Gates::Constant::gate_num_params,           \
+                                   Gates::GateOperation::GATE_NAME) ==         \
+                          sizeof...(Ts),                                       \
                       "The provided number of parameters for gate " #GATE_NAME \
                       " is wrong.");                                           \
         static_assert(Util::array_has_elt(                                     \

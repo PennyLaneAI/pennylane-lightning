@@ -94,11 +94,11 @@ jobs:
           fetch-depth: 2
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc g++ libopenblas-dev gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 libopenblas-dev gcovr lcov
 
       - name: Build and run unit tests
         run: |
-            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DENABLE_BLAS=ON -DBUILD_TESTS=1
+            CXX=g++-10 cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DENABLE_BLAS=ON -DBUILD_TESTS=1
             cmake --build ./Build
             mkdir -p ./Build/tests/results
             ./Build/pennylane_lightning/src/tests/runner --order lex --reporter junit --out ./Build/tests/results/report.xml
@@ -154,11 +154,11 @@ jobs:
           fetch-depth: 2
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc g++ libopenblas-dev gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 libopenblas-dev gcovr lcov
 
       - name: Build and run gbenchmark
         run: |
-            cmake pennylane_lightning/src/ -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release
+            CXX=g++-10 cmake pennylane_lightning/src/ -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release
             cmake --build ./BuildGBench
             ./BuildGBench/benchmarks/utils
             ./BuildGBench/benchmarks/apply_operations
@@ -183,7 +183,7 @@ jobs:
           python-version: '3.7'
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc g++
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10
 
       - name: Get required Python packages
         run: |
@@ -202,7 +202,7 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          pip install -e .
+          CXX=g++-10 pip install -e .
 
       - name: Run PennyLane-Lightning unit tests
         run: |
