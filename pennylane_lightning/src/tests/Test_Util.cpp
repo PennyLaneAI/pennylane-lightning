@@ -135,27 +135,6 @@ size_t ctz_slow(uint64_t x) {
 }
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_CASE("Utility bit operations", "[Util][BitUtil]") {
-    SECTION("Internal::countBit1Fast") {
-        { // for uint32_t
-            uint32_t n = 0;
-            CHECK(Util::Internal::countBit1(n) == 0);
-            for (uint32_t k = 0; k < 100; k++) {
-                n <<= 1U;
-                n ^= 1U;
-                CHECK(Util::Internal::countBit1(n) == popcount_slow(n));
-            }
-        }
-        { // for uint64_t
-            uint64_t n = 0;
-            CHECK(Util::Internal::countBit1(n) == 0);
-            for (uint32_t k = 0; k < 100; k++) {
-                n <<= 1U;
-                n ^= 1U;
-                CHECK(Util::Internal::countBit1(n) == popcount_slow(n));
-            }
-        }
-    }
-
     SECTION("isPerfectPowerOf2") {
         size_t n = 1U;
         CHECK(Util::isPerfectPowerOf2(n));
@@ -173,26 +152,6 @@ TEST_CASE("Utility bit operations", "[Util][BitUtil]") {
         if constexpr (sizeof(size_t) == 8) {
             // if size_t is uint64_t
             CHECK(!Util::isPerfectPowerOf2(1234556789012345678U));
-        }
-    }
-
-    SECTION("Internal::countTrailing0") {
-        { // for uint32_t
-            for (uint32_t c = 0; c < 31; c++) {
-                uint32_t n = static_cast<uint32_t>(1U)
-                             << static_cast<uint32_t>(c);
-                CHECK(Util::Internal::countTrailing0(n) == c);
-                CHECK(Util::Internal::countTrailing0(n | (1U << 31U)) == c);
-            }
-        }
-        { // for uint64_t
-            for (uint32_t c = 0; c < 63; c++) {
-                uint64_t n = static_cast<uint64_t>(1U)
-                             << static_cast<uint64_t>(c);
-                CHECK(Util::Internal::countTrailing0(n) == c);
-                CHECK(Util::Internal::countTrailing0(
-                          n | (uint64_t{1U} << 63U)) == c);
-            }
         }
     }
 

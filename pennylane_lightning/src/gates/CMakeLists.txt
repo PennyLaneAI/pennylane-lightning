@@ -1,5 +1,4 @@
 project(lightning_gates)
-set(CMAKE_CXX_STANDARD 17)
 
 set(GATES_FILES GateUtil.cpp DynamicDispatcher.cpp CACHE INTERNAL "" FORCE)
 

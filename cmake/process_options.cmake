@@ -11,6 +11,9 @@ include_guard()
 add_library(lightning_compile_options INTERFACE)
 add_library(lightning_external_libs INTERFACE)
 
+# We use C++20 experimentally
+target_compile_features(lightning_compile_options INTERFACE cxx_std_20)
+
 # Initial attempt to find which BLAS implementation is chosen
 function(get_blas_impl)
     string(FIND "${BLAS_LIBRARIES}" "mkl" FOUND_MKL)

@@ -1,5 +1,4 @@
 project(lightning_utils LANGUAGES CXX)
-set(CMAKE_CXX_STANDARD 17)
 
 set(UTIL_FILES RuntimeInfo.cpp CACHE INTERNAL "" FORCE)
 

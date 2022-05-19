@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.14)
 
 project(lightning_components LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
-
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_OPENMP "Enable OpenMP" ON)
 
