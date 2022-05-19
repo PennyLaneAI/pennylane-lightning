@@ -87,8 +87,8 @@ TEMPLATE_TEST_CASE("Expected Values - Sparse Hamiltonian [Kokkos]",
                                 entries.data(), values.data(),
                                 static_cast<long>(values.size())),
                 LightningException,
-                "Applying a Sparse matrix to a vector needs Kokkos and "
-                "Kokkos Kernels installation.");
+                "Executing the product of a Sparse matrix and a vector needs "
+                "Kokkos and Kokkos Kernels installation.");
         }
     }
 }

@@ -174,8 +174,8 @@ std::vector<std::complex<fp_precision>> apply_Sparse_Matrix(
     [[maybe_unused]] const index_type *entries_ptr,
     [[maybe_unused]] const std::complex<fp_precision> *values_ptr,
     [[maybe_unused]] const index_type numNNZ) {
-    PL_ABORT("Applying a Sparse matrix to a vector needs Kokkos and "
-             "Kokkos Kernels installation.");
+    PL_ABORT("Executing the product of a Sparse matrix and a vector needs "
+             "Kokkos and Kokkos Kernels installation.");
 
     std::vector<std::complex<fp_precision>> result;
     return result;
