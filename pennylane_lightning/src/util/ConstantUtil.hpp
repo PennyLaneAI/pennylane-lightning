@@ -16,6 +16,7 @@
  * Contains utility functions for processing constants
  */
 #pragma once
+#include <algorithm>
 #include <array>
 #include <cstdlib>
 #include <stdexcept>
@@ -98,9 +99,8 @@ second_elts_of(const std::array<std::pair<T, U>, size> &arr) {
     std::array<U, size> res = {
         U{},
     };
-    for (size_t i = 0; i < size; i++) {
-        res[i] = std::get<1>(arr[i]);
-    }
+    std::transform(arr.begin(), arr.end(), res.begin(),
+                   [](const auto &elt) { return std::get<1>(elt); });
     return res;
 }
 
