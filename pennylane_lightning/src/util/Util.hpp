@@ -24,13 +24,20 @@
 #include <iostream>
 #include <limits>
 #include <memory>
-#include <numbers>
 #include <numeric>
 #include <set>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
 #include <vector>
+
+#if __has_include(<version>)
+#include <version>
+#endif
+
+#if __cpp_lib_math_constants >= 201907L
+#include <numbers>
+#endif
 
 namespace Pennylane::Util {
 /**
