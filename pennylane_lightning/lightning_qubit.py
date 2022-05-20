@@ -63,16 +63,6 @@ except ModuleNotFoundError:
     CPP_BINARY_AVAILABLE = False
 
 
-UNSUPPORTED_PARAM_GATES_ADJOINT = (
-    "SingleExcitation",
-    "SingleExcitationPlus",
-    "SingleExcitationMinus",
-    "DoubleExcitation",
-    "DoubleExcitationPlus",
-    "DoubleExcitationMinus",
-)
-
-
 def _chunk_iterable(it, num_chunks):
     "Lazy-evaluated chunking of given iterable from https://stackoverflow.com/a/22045226"
     it = iter(it)
@@ -249,9 +239,7 @@ class LightningQubit(DefaultQubit):
                     )
 
         for op in tape.operations:
-            if (
-                op.num_params > 1 and not isinstance(op, Rot)
-            ) or op.name in UNSUPPORTED_PARAM_GATES_ADJOINT:
+            if op.num_params > 1 and not isinstance(op, Rot):
                 raise QuantumFunctionError(
                     f"The {op.name} operation is not supported using "
                     'the "adjoint" differentiation method'
@@ -286,7 +274,7 @@ class LightningQubit(DefaultQubit):
             adj = AdjointJacobianC128()
 
         obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=self.use_csingle)
-        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map, use_csingle=self.use_csingle)
+        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map)
 
         ops_serialized = adj.create_ops_list(*ops_serialized)
 
@@ -421,9 +409,7 @@ class LightningQubit(DefaultQubit):
                 ket = np.ravel(self._pre_rotated_state)
 
             obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=self.use_csingle)
-            ops_serialized, use_sp = _serialize_ops(
-                tape, self.wire_map, use_csingle=self.use_csingle
-            )
+            ops_serialized, use_sp = _serialize_ops(tape, self.wire_map)
 
             ops_serialized = V.create_ops_list(*ops_serialized)
 
