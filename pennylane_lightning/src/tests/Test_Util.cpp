@@ -258,6 +258,11 @@ TEST_CASE("Test utility functions for constants", "[Util][ConstantUtil]") {
 
         REQUIRE(Util::count_unique(test_arr1) == 5);
         REQUIRE(Util::count_unique(test_arr2) == 5);
+
+        REQUIRE(Util::count_unique(std::array{nullptr, nullptr, nullptr}) == 1);
+        REQUIRE(Util::count_unique(std::array{0, 0, 0}) == 1);
+        REQUIRE(Util::count_unique(std::array{0, 1, 1}) == 2);
+        REQUIRE(Util::count_unique(std::array{0, 1, 2}) == 3);
     }
 
     SECTION("static_lookup") {

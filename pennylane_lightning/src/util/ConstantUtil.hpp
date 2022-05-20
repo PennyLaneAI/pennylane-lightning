@@ -18,6 +18,7 @@
 #pragma once
 #include <algorithm>
 #include <array>
+#include <compare>
 #include <cstdlib>
 #include <stdexcept>
 #include <tuple>
@@ -104,8 +105,7 @@ second_elts_of(const std::array<std::pair<T, U>, size> &arr) {
 /**
  * @brief Count the number of unique elements in the array.
  *
- * Current runtime is O(n^2).
- * TODO: count using sorted array in C++20 using constexpr std::sort.
+ * This is O(n^2) version works for all T
  *
  * @tparam T Type of array elements
  * @tparam size Size of the array
@@ -128,6 +128,28 @@ constexpr size_t count_unique(const std::array<T, size> &arr) {
         }
     }
     return res;
+}
+
+/**
+ * @brief Count the number of unique elements in the array.
+ *
+ * This is a specialized version for partially ordered type T.
+ *
+ * @tparam T Type of array elements
+ * @tparam size Size of the array
+ * @return size_t
+ */
+template <std::three_way_comparable T, size_t size>
+constexpr size_t count_unique(const std::array<T, size> &arr) {
+    auto arr_cpd = arr;
+    size_t dup_cnt = 0;
+    std::sort(std::begin(arr_cpd), std::end(arr_cpd));
+    for (size_t i = 0; i < size - 1; i++) {
+        if (arr_cpd[i] == arr_cpd[i + 1]) {
+            dup_cnt++;
+        }
+    }
+    return size - dup_cnt;
 }
 
 /// @cond DEV
