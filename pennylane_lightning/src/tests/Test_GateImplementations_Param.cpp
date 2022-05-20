@@ -1314,6 +1314,665 @@ void testApplyCRot() {
 }
 PENNYLANE_RUN_TEST(CRot);
 
+template <typename PrecisionT, typename ParamT, class GateImplementation>
+void testApplySingleExcitation() {
+    using ComplexPrecisionT = std::complex<PrecisionT>;
+
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", SingleExcitation0,1 |000> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+        const auto ini_st = createZeroState<PrecisionT>(num_qubits);
+        ParamT angle = 0.312;
+        auto st = ini_st;
+        GateImplementation::applySingleExcitation(st.data(), num_qubits, {0, 1},
+                                                  false, angle);
+        CHECK(st == approx(ini_st));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", SingleExcitation0,1 |100> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+        const auto ini_st = createProductState<PrecisionT>("100");
+        ParamT angle = 0.312;
+
+        const std::vector<ComplexPrecisionT> expected_results{
+            ComplexPrecisionT{0.0, 0.0},           ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{-0.1553680335, 0.0}, ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.9878566567, 0.0},  ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},           ComplexPrecisionT{0.0, 0.0},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applySingleExcitation(st.data(), num_qubits, {0, 1},
+                                                  false, angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", SingleExcitation0,1 |010> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+        const auto ini_st = createProductState<PrecisionT>("010");
+        ParamT angle = 0.312;
+
+        const std::vector<ComplexPrecisionT> expected_results{
+            ComplexPrecisionT{0.0, 0.0},          ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.9878566567, 0.0}, ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.1553680335, 0.0}, ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},          ComplexPrecisionT{0.0, 0.0},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applySingleExcitation(st.data(), num_qubits, {0, 1},
+                                                  false, angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", SingleExcitation0,1 |110> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+        const auto ini_st = createProductState<PrecisionT>("110");
+        ParamT angle = 0.312;
+
+        auto st = ini_st;
+        GateImplementation::applySingleExcitation(st.data(), num_qubits, {0, 1},
+                                                  false, angle);
+        CHECK(st == approx(ini_st));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", SingleExcitation0,1 - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+        std::vector<ComplexPrecisionT> ini_st{
+            ComplexPrecisionT{0.125681356503, 0.252712197380},
+            ComplexPrecisionT{0.262591068130, 0.370189000494},
+            ComplexPrecisionT{0.129300299863, 0.371057794075},
+            ComplexPrecisionT{0.392248682814, 0.195795523118},
+            ComplexPrecisionT{0.303908059240, 0.082981563244},
+            ComplexPrecisionT{0.189140284321, 0.179512645957},
+            ComplexPrecisionT{0.173146612336, 0.092249594834},
+            ComplexPrecisionT{0.298857179897, 0.269627836165},
+        };
+        const std::vector<size_t> wires = {0, 2};
+        const ParamT angle = 0.267030328057308;
+        std::vector<ComplexPrecisionT> expected{
+            ComplexPrecisionT{0.125681, 0.252712},
+            ComplexPrecisionT{0.219798, 0.355848},
+            ComplexPrecisionT{0.1293, 0.371058},
+            ComplexPrecisionT{0.365709, 0.181773},
+            ComplexPrecisionT{0.336159, 0.131522},
+            ComplexPrecisionT{0.18914, 0.179513},
+            ComplexPrecisionT{0.223821, 0.117493},
+            ComplexPrecisionT{0.298857, 0.269628},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applySingleExcitation(st.data(), num_qubits, wires,
+                                                  false, angle);
+        REQUIRE(st == approx(expected).margin(1e-5));
+    }
+}
+PENNYLANE_RUN_TEST(SingleExcitation);
+
+template <typename PrecisionT, typename ParamT, class GateImplementation>
+void testApplySingleExcitationMinus() {
+    using ComplexPrecisionT = std::complex<PrecisionT>;
+
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", SingleExcitationMinus0,1 |000> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+        const auto ini_st = createZeroState<PrecisionT>(num_qubits);
+        ParamT angle = 0.312;
+
+        const std::vector<ComplexPrecisionT> expected_results{
+            ComplexPrecisionT{0.9878566567, -0.1553680335},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applySingleExcitationMinus(st.data(), num_qubits,
+                                                       {0, 1}, false, angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", SingleExcitationMinus0,1 |100> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+        const auto ini_st = createProductState<PrecisionT>("100");
+        ParamT angle = 0.312;
+
+        const std::vector<ComplexPrecisionT> expected_results{
+            ComplexPrecisionT{0.0, 0.0},           ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{-0.1553680335, 0.0}, ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.9878566567, 0.0},  ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},           ComplexPrecisionT{0.0, 0.0},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applySingleExcitationMinus(st.data(), num_qubits,
+                                                       {0, 1}, false, angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", SingleExcitationMinus0,1 |010> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+        const auto ini_st = createProductState<PrecisionT>("010");
+        ParamT angle = 0.312;
+
+        const std::vector<ComplexPrecisionT> expected_results{
+            ComplexPrecisionT{0.0, 0.0},          ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.9878566567, 0.0}, ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.1553680335, 0.0}, ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},          ComplexPrecisionT{0.0, 0.0},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applySingleExcitationMinus(st.data(), num_qubits,
+                                                       {0, 1}, false, angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", SingleExcitationMinus0,1 |110> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+        const auto ini_st = createProductState<PrecisionT>("110");
+        ParamT angle = 0.312;
+
+        const std::vector<ComplexPrecisionT> expected_results{
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.9878566567, -0.1553680335},
+            ComplexPrecisionT{0.0, 0.0},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applySingleExcitationMinus(st.data(), num_qubits,
+                                                       {0, 1}, false, angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", SingleExcitationMinus0,1 - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+        std::vector<ComplexPrecisionT> ini_st{
+            ComplexPrecisionT{0.125681356503, 0.252712197380},
+            ComplexPrecisionT{0.262591068130, 0.370189000494},
+            ComplexPrecisionT{0.129300299863, 0.371057794075},
+            ComplexPrecisionT{0.392248682814, 0.195795523118},
+            ComplexPrecisionT{0.303908059240, 0.082981563244},
+            ComplexPrecisionT{0.189140284321, 0.179512645957},
+            ComplexPrecisionT{0.173146612336, 0.092249594834},
+            ComplexPrecisionT{0.298857179897, 0.269627836165},
+        };
+        const std::vector<size_t> wires = {0, 2};
+        const ParamT angle = 0.267030328057308;
+        std::vector<ComplexPrecisionT> expected{
+            ComplexPrecisionT{0.158204, 0.233733},
+            ComplexPrecisionT{0.219798, 0.355848},
+            ComplexPrecisionT{0.177544, 0.350543},
+            ComplexPrecisionT{0.365709, 0.181773},
+            ComplexPrecisionT{0.336159, 0.131522},
+            ComplexPrecisionT{0.211353, 0.152737},
+            ComplexPrecisionT{0.223821, 0.117493},
+            ComplexPrecisionT{0.33209, 0.227445}};
+
+        auto st = ini_st;
+        GateImplementation::applySingleExcitationMinus(st.data(), num_qubits,
+                                                       wires, false, angle);
+        REQUIRE(st == approx(expected).margin(1e-5));
+    }
+}
+PENNYLANE_RUN_TEST(SingleExcitationMinus);
+
+template <typename PrecisionT, typename ParamT, class GateImplementation>
+void testApplySingleExcitationPlus() {
+    using ComplexPrecisionT = std::complex<PrecisionT>;
+
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", SingleExcitationPlus0,1 |000> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+        const auto ini_st = createZeroState<PrecisionT>(num_qubits);
+        ParamT angle = 0.312;
+
+        const std::vector<ComplexPrecisionT> expected_results{
+            ComplexPrecisionT{0.9878566567, 0.1553680335},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applySingleExcitationPlus(st.data(), num_qubits,
+                                                      {0, 1}, false, angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", SingleExcitationPlus0,1 |100> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+        const auto ini_st = createProductState<PrecisionT>("100");
+        ParamT angle = 0.312;
+
+        const std::vector<ComplexPrecisionT> expected_results{
+            ComplexPrecisionT{0.0, 0.0},           ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{-0.1553680335, 0.0}, ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.9878566567, 0.0},  ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},           ComplexPrecisionT{0.0, 0.0},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applySingleExcitationPlus(st.data(), num_qubits,
+                                                      {0, 1}, false, angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", SingleExcitationPlus0,1 |010> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+        const auto ini_st = createProductState<PrecisionT>("010");
+        ParamT angle = 0.312;
+
+        const std::vector<ComplexPrecisionT> expected_results{
+            ComplexPrecisionT{0.0, 0.0},          ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.9878566567, 0.0}, ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.1553680335, 0.0}, ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},          ComplexPrecisionT{0.0, 0.0},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applySingleExcitationPlus(st.data(), num_qubits,
+                                                      {0, 1}, false, angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", SingleExcitationPlus0,1 |110> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+        const auto ini_st = createProductState<PrecisionT>("110");
+        ParamT angle = 0.312;
+
+        const std::vector<ComplexPrecisionT> expected_results{
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.9878566567, 0.1553680335},
+            ComplexPrecisionT{0.0, 0.0},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applySingleExcitationPlus(st.data(), num_qubits,
+                                                      {0, 1}, false, angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", SingleExcitationPlus0,1 - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+        std::vector<ComplexPrecisionT> ini_st{
+            ComplexPrecisionT{0.125681356503, 0.252712197380},
+            ComplexPrecisionT{0.262591068130, 0.370189000494},
+            ComplexPrecisionT{0.129300299863, 0.371057794075},
+            ComplexPrecisionT{0.392248682814, 0.195795523118},
+            ComplexPrecisionT{0.303908059240, 0.082981563244},
+            ComplexPrecisionT{0.189140284321, 0.179512645957},
+            ComplexPrecisionT{0.173146612336, 0.092249594834},
+            ComplexPrecisionT{0.298857179897, 0.269627836165},
+        };
+        const std::vector<size_t> wires = {0, 2};
+        const ParamT angle = 0.267030328057308;
+        std::vector<ComplexPrecisionT> expected{
+            ComplexPrecisionT{0.090922, 0.267194},
+            ComplexPrecisionT{0.219798, 0.355848},
+            ComplexPrecisionT{0.0787548, 0.384968},
+            ComplexPrecisionT{0.365709, 0.181773},
+            ComplexPrecisionT{0.336159, 0.131522},
+            ComplexPrecisionT{0.16356, 0.203093},
+            ComplexPrecisionT{0.223821, 0.117493},
+            ComplexPrecisionT{0.260305, 0.307012}};
+
+        auto st = ini_st;
+        GateImplementation::applySingleExcitationPlus(st.data(), num_qubits,
+                                                      wires, false, angle);
+        REQUIRE(st == approx(expected).margin(1e-5));
+    }
+}
+PENNYLANE_RUN_TEST(SingleExcitationPlus);
+
+/*******************************************************************************
+ * Four-qubit gates
+ ******************************************************************************/
+template <typename PrecisionT, typename ParamT, class GateImplementation>
+void testApplyDoubleExcitation() {
+    using ComplexPrecisionT = std::complex<PrecisionT>;
+
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", DoubleExcitation0,1,2,3 |0000> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 4;
+        const auto ini_st = createZeroState<PrecisionT>(num_qubits);
+        ParamT angle = 0.312;
+        auto st = ini_st;
+        GateImplementation::applyDoubleExcitation(st.data(), num_qubits,
+                                                  {0, 1, 2, 3}, false, angle);
+        CHECK(st == approx(ini_st));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", DoubleExcitation0,1,2,3 |1100> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 4;
+        const auto ini_st = createProductState<PrecisionT>("1100");
+        ParamT angle = 0.312;
+
+        std::vector<ComplexPrecisionT> expected_results(16,
+                                                        ComplexPrecisionT{});
+        expected_results[3] = ComplexPrecisionT{-0.1553680335, 0};
+        expected_results[12] = ComplexPrecisionT{0.9878566566949545, 0};
+
+        auto st = ini_st;
+        GateImplementation::applyDoubleExcitation(st.data(), num_qubits,
+                                                  {0, 1, 2, 3}, false, angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", DoubleExcitation0,1,2,3 |0011> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 4;
+        const auto ini_st = createProductState<PrecisionT>("0011");
+        ParamT angle = 0.312;
+
+        std::vector<ComplexPrecisionT> expected_results(16,
+                                                        ComplexPrecisionT{});
+        expected_results[3] = ComplexPrecisionT{0.9878566566949545, 0};
+        expected_results[12] = ComplexPrecisionT{0.15536803346720587, 0};
+
+        auto st = ini_st;
+        GateImplementation::applyDoubleExcitation(st.data(), num_qubits,
+                                                  {0, 1, 2, 3}, false, angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", DoubleExcitation0,1,2,3 - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 4;
+        std::vector<ComplexPrecisionT> ini_st{
+            ComplexPrecisionT{0.125681356503, 0.252712197380},
+            ComplexPrecisionT{0.262591068130, 0.370189000494},
+            ComplexPrecisionT{0.129300299863, 0.371057794075},
+            ComplexPrecisionT{0.392248682814, 0.195795523118},
+            ComplexPrecisionT{0.303908059240, 0.082981563244},
+            ComplexPrecisionT{0.189140284321, 0.179512645957},
+            ComplexPrecisionT{0.173146612336, 0.092249594834},
+            ComplexPrecisionT{0.298857179897, 0.269627836165},
+            ComplexPrecisionT{0.125681356503, 0.252712197380},
+            ComplexPrecisionT{0.262591068130, 0.370189000494},
+            ComplexPrecisionT{0.129300299863, 0.371057794075},
+            ComplexPrecisionT{0.392248682814, 0.195795523118},
+            ComplexPrecisionT{0.303908059240, 0.082981563244},
+            ComplexPrecisionT{0.189140284321, 0.179512645957},
+            ComplexPrecisionT{0.173146612336, 0.092249594834},
+            ComplexPrecisionT{0.298857179897, 0.269627836165},
+        };
+        const std::vector<size_t> wires = {0, 1, 2, 3};
+        const ParamT angle = 0.267030328057308;
+        std::vector<ComplexPrecisionT> expected{
+            ComplexPrecisionT{0.125681, 0.252712},
+            ComplexPrecisionT{0.262591, 0.370189},
+            ComplexPrecisionT{0.1293, 0.371058},
+            ComplexPrecisionT{0.348302, 0.183007},
+            ComplexPrecisionT{0.303908, 0.0829816},
+            ComplexPrecisionT{0.18914, 0.179513},
+            ComplexPrecisionT{0.173147, 0.0922496},
+            ComplexPrecisionT{0.298857, 0.269628},
+            ComplexPrecisionT{0.125681, 0.252712},
+            ComplexPrecisionT{0.262591, 0.370189},
+            ComplexPrecisionT{0.1293, 0.371058},
+            ComplexPrecisionT{0.392249, 0.195796},
+            ComplexPrecisionT{0.353419, 0.108307},
+            ComplexPrecisionT{0.18914, 0.179513},
+            ComplexPrecisionT{0.173147, 0.0922496},
+            ComplexPrecisionT{0.298857, 0.269628},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applyDoubleExcitation(st.data(), num_qubits, wires,
+                                                  false, angle);
+        REQUIRE(st == approx(expected).margin(1e-5));
+    }
+}
+PENNYLANE_RUN_TEST(DoubleExcitation);
+
+template <typename PrecisionT, typename ParamT, class GateImplementation>
+void testApplyDoubleExcitationMinus() {
+    using ComplexPrecisionT = std::complex<PrecisionT>;
+
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", DoubleExcitationMinus0,1,2,3 |0000> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 4;
+        const auto ini_st = createZeroState<PrecisionT>(num_qubits);
+        ParamT angle = 0.312;
+
+        std::vector<ComplexPrecisionT> expected_results(16,
+                                                        ComplexPrecisionT{});
+        expected_results[0] =
+            ComplexPrecisionT{0.9878566566949545, -0.15536803346720587};
+
+        auto st = ini_st;
+        GateImplementation::applyDoubleExcitationMinus(
+            st.data(), num_qubits, {0, 1, 2, 3}, false, angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", DoubleExcitationMinus0,1,2,3 |1100> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 4;
+        const auto ini_st = createProductState<PrecisionT>("1100");
+        ParamT angle = 0.312;
+
+        std::vector<ComplexPrecisionT> expected_results(16,
+                                                        ComplexPrecisionT{});
+        expected_results[3] = ComplexPrecisionT{-0.1553680335, 0};
+        expected_results[12] = ComplexPrecisionT{0.9878566566949545, 0};
+
+        auto st = ini_st;
+        GateImplementation::applyDoubleExcitationMinus(
+            st.data(), num_qubits, {0, 1, 2, 3}, false, angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", DoubleExcitationMinus0,1,2,3 |0011> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 4;
+        const auto ini_st = createProductState<PrecisionT>("0011");
+        ParamT angle = 0.312;
+
+        std::vector<ComplexPrecisionT> expected_results(16,
+                                                        ComplexPrecisionT{});
+        expected_results[3] = ComplexPrecisionT{0.9878566566949545, 0};
+        expected_results[12] = ComplexPrecisionT{0.15536803346720587, 0};
+
+        auto st = ini_st;
+        GateImplementation::applyDoubleExcitationMinus(
+            st.data(), num_qubits, {0, 1, 2, 3}, false, angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", DoubleExcitationMinus0,1,2,3 - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 4;
+        std::vector<ComplexPrecisionT> ini_st{
+            ComplexPrecisionT{0.125681356503, 0.252712197380},
+            ComplexPrecisionT{0.262591068130, 0.370189000494},
+            ComplexPrecisionT{0.129300299863, 0.371057794075},
+            ComplexPrecisionT{0.392248682814, 0.195795523118},
+            ComplexPrecisionT{0.303908059240, 0.082981563244},
+            ComplexPrecisionT{0.189140284321, 0.179512645957},
+            ComplexPrecisionT{0.173146612336, 0.092249594834},
+            ComplexPrecisionT{0.298857179897, 0.269627836165},
+            ComplexPrecisionT{0.125681356503, 0.252712197380},
+            ComplexPrecisionT{0.262591068130, 0.370189000494},
+            ComplexPrecisionT{0.129300299863, 0.371057794075},
+            ComplexPrecisionT{0.392248682814, 0.195795523118},
+            ComplexPrecisionT{0.303908059240, 0.082981563244},
+            ComplexPrecisionT{0.189140284321, 0.179512645957},
+            ComplexPrecisionT{0.173146612336, 0.092249594834},
+            ComplexPrecisionT{0.298857179897, 0.269627836165},
+        };
+        const std::vector<size_t> wires = {0, 1, 2, 3};
+        const ParamT angle = 0.267030328057308;
+        std::vector<ComplexPrecisionT> expected{
+            ComplexPrecisionT{0.158204, 0.233733},
+            ComplexPrecisionT{0.309533, 0.331939},
+            ComplexPrecisionT{0.177544, 0.350543},
+            ComplexPrecisionT{0.348302, 0.183007},
+            ComplexPrecisionT{0.31225, 0.0417871},
+            ComplexPrecisionT{0.211353, 0.152737},
+            ComplexPrecisionT{0.183886, 0.0683795},
+            ComplexPrecisionT{0.33209, 0.227445},
+            ComplexPrecisionT{0.158204, 0.233733},
+            ComplexPrecisionT{0.309533, 0.331939},
+            ComplexPrecisionT{0.177544, 0.350543},
+            ComplexPrecisionT{0.414822, 0.141837},
+            ComplexPrecisionT{0.353419, 0.108307},
+            ComplexPrecisionT{0.211353, 0.152737},
+            ComplexPrecisionT{0.183886, 0.0683795},
+            ComplexPrecisionT{0.33209, 0.227445},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applyDoubleExcitationMinus(st.data(), num_qubits,
+                                                       wires, false, angle);
+        REQUIRE(st == approx(expected).margin(1e-5));
+    }
+}
+PENNYLANE_RUN_TEST(DoubleExcitationMinus);
+
+template <typename PrecisionT, typename ParamT, class GateImplementation>
+void testApplyDoubleExcitationPlus() {
+    using ComplexPrecisionT = std::complex<PrecisionT>;
+
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", DoubleExcitationPlus0,1,2,3 |0000> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 4;
+        const auto ini_st = createZeroState<PrecisionT>(num_qubits);
+        ParamT angle = 0.312;
+
+        std::vector<ComplexPrecisionT> expected_results(16,
+                                                        ComplexPrecisionT{});
+        expected_results[0] =
+            ComplexPrecisionT{0.9878566566949545, 0.15536803346720587};
+
+        auto st = ini_st;
+        GateImplementation::applyDoubleExcitationPlus(
+            st.data(), num_qubits, {0, 1, 2, 3}, false, angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", DoubleExcitationPlus0,1,2,3 |1100> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 4;
+        const auto ini_st = createProductState<PrecisionT>("1100");
+        ParamT angle = 0.312;
+
+        std::vector<ComplexPrecisionT> expected_results(16,
+                                                        ComplexPrecisionT{});
+        expected_results[3] = ComplexPrecisionT{-0.1553680335, 0};
+        expected_results[12] = ComplexPrecisionT{0.9878566566949545, 0};
+
+        auto st = ini_st;
+        GateImplementation::applyDoubleExcitationPlus(
+            st.data(), num_qubits, {0, 1, 2, 3}, false, angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", DoubleExcitationPlus0,1,2,3 |0011> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 4;
+        const auto ini_st = createProductState<PrecisionT>("0011");
+        ParamT angle = 0.312;
+
+        std::vector<ComplexPrecisionT> expected_results(16,
+                                                        ComplexPrecisionT{});
+        expected_results[3] = ComplexPrecisionT{0.9878566566949545, 0};
+        expected_results[12] = ComplexPrecisionT{0.15536803346720587, 0};
+
+        auto st = ini_st;
+        GateImplementation::applyDoubleExcitationPlus(
+            st.data(), num_qubits, {0, 1, 2, 3}, false, angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", DoubleExcitationPlus0,1,2,3 - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 4;
+        std::vector<ComplexPrecisionT> ini_st{
+            ComplexPrecisionT{0.125681356503, 0.252712197380},
+            ComplexPrecisionT{0.262591068130, 0.370189000494},
+            ComplexPrecisionT{0.129300299863, 0.371057794075},
+            ComplexPrecisionT{0.392248682814, 0.195795523118},
+            ComplexPrecisionT{0.303908059240, 0.082981563244},
+            ComplexPrecisionT{0.189140284321, 0.179512645957},
+            ComplexPrecisionT{0.173146612336, 0.092249594834},
+            ComplexPrecisionT{0.298857179897, 0.269627836165},
+            ComplexPrecisionT{0.125681356503, 0.252712197380},
+            ComplexPrecisionT{0.262591068130, 0.370189000494},
+            ComplexPrecisionT{0.129300299863, 0.371057794075},
+            ComplexPrecisionT{0.392248682814, 0.195795523118},
+            ComplexPrecisionT{0.303908059240, 0.082981563244},
+            ComplexPrecisionT{0.189140284321, 0.179512645957},
+            ComplexPrecisionT{0.173146612336, 0.092249594834},
+            ComplexPrecisionT{0.298857179897, 0.269627836165},
+        };
+        const std::vector<size_t> wires = {0, 1, 2, 3};
+        const ParamT angle = 0.267030328057308;
+        std::vector<ComplexPrecisionT> expected{
+            ComplexPrecisionT{0.090922, 0.267194},
+            ComplexPrecisionT{0.210975, 0.40185},
+            ComplexPrecisionT{0.0787548, 0.384968},
+            ComplexPrecisionT{0.348302, 0.183007},
+            ComplexPrecisionT{0.290157, 0.122699},
+            ComplexPrecisionT{0.16356, 0.203093},
+            ComplexPrecisionT{0.159325, 0.114478},
+            ComplexPrecisionT{0.260305, 0.307012},
+            ComplexPrecisionT{0.090922, 0.267194},
+            ComplexPrecisionT{0.210975, 0.40185},
+            ComplexPrecisionT{0.0787548, 0.384968},
+            ComplexPrecisionT{0.362694, 0.246269},
+            ComplexPrecisionT{0.353419, 0.108307},
+            ComplexPrecisionT{0.16356, 0.203093},
+            ComplexPrecisionT{0.159325, 0.114478},
+            ComplexPrecisionT{0.260305, 0.307012},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applyDoubleExcitationPlus(st.data(), num_qubits,
+                                                      wires, false, angle);
+        REQUIRE(st == approx(expected).margin(1e-5));
+    }
+}
+PENNYLANE_RUN_TEST(DoubleExcitationPlus);
+
 /*******************************************************************************
  * Multi-qubit gates
  ******************************************************************************/
