@@ -16,9 +16,7 @@ Unit tests for Sparse Measures in lightning.qubit.
 """
 import numpy as np
 import pennylane as qml
-from pennylane.measurements import (
-    Expectation,
-)
+from pennylane import qchem
 
 import pytest
 
@@ -41,15 +39,15 @@ class TestSparseExpval:
     @pytest.mark.parametrize(
         "cases",
         [
-            [qml.PauliX(0) @ qml.Identity(1),  0.00000000000000000],
+            [qml.PauliX(0) @ qml.Identity(1), 0.00000000000000000],
             [qml.Identity(0) @ qml.PauliX(1), -0.19866933079506122],
             [qml.PauliY(0) @ qml.Identity(1), -0.38941834230865050],
-            [qml.Identity(0) @ qml.PauliY(1),  0.00000000000000000],
-            [qml.PauliZ(0) @ qml.Identity(1),  0.92106099400288520],
-            [qml.Identity(0) @ qml.PauliZ(1),  0.98006657784124170],
+            [qml.Identity(0) @ qml.PauliY(1), 0.00000000000000000],
+            [qml.PauliZ(0) @ qml.Identity(1), 0.92106099400288520],
+            [qml.Identity(0) @ qml.PauliZ(1), 0.98006657784124170],
         ],
     )
-    def test_sparse_2_gates(self, cases, tol, dev):
+    def test_sparse_Pauli_words(self, cases, tol, dev):
         """Test expval of some simple sparse Hamiltonian"""
 
         @qml.qnode(dev, diff_method="parameter-shift")
@@ -63,3 +61,60 @@ class TestSparseExpval:
             )
 
         assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
+
+
+class TestSparseExpvalQChem:
+    """Tests for the expval function with qchem workflow"""
+
+    symbols = ["Li", "H"]
+    geometry = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 2.969280527])
+
+    H, qubits = qchem.molecular_hamiltonian(
+        symbols,
+        geometry,
+    )
+    H_sparse = qml.utils.sparse_hamiltonian(H)
+
+    active_electrons = 1
+
+    hf_state = qchem.hf_state(active_electrons, qubits)
+
+    singles, doubles = qchem.excitations(active_electrons, qubits)
+    excitations = singles + doubles
+
+    @pytest.fixture(params=[np.complex64, np.complex128])
+    def dev(self, request):
+        return qml.device("lightning.qubit", wires=12, c_dtype=request.param)
+
+    @pytest.mark.parametrize(
+        "qubits, wires, H_sparse, hf_state, excitations, expected_output",
+        [
+            [qubits, np.arange(qubits), H_sparse, hf_state, excitations, -1.04731892],
+            [
+                qubits,
+                np.random.permutation(np.arange(qubits)),
+                H_sparse,
+                hf_state,
+                excitations,
+                -1.04731892,
+            ],
+        ],
+    )
+    def test_sparse_Pauli_words(
+        self, qubits, wires, H_sparse, hf_state, excitations, expected_output, tol, dev
+    ):
+        """Test expval of some simple sparse Hamiltonian"""
+
+        @qml.qnode(dev, diff_method="parameter-shift")
+        def circuit():
+            qml.BasisState(hf_state, wires=range(qubits))
+
+            for i, excitation in enumerate(excitations):
+                if len(excitation) == 4:
+                    qml.DoubleExcitation(1, wires=excitation)
+                elif len(excitation) == 2:
+                    qml.SingleExcitation(1, wires=excitation)
+
+            return qml.expval(qml.SparseHamiltonian(H_sparse, wires=wires))
+
+        assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
