@@ -4,6 +4,9 @@
 
 ### Breaking changes
 
+* Codebase is now moving to C++20. The default compiler for Linux is now GCC10.
+[(#295)](https://github.com/PennyLaneAI/pennylane-lightning/pull/295)
+
 ### Improvements
 
 * Device `lightning.qubit` now accepts a datatype for a statevector.
