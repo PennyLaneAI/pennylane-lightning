@@ -105,7 +105,7 @@ second_elts_of(const std::array<std::pair<T, U>, size> &arr) {
 /**
  * @brief Count the number of unique elements in the array.
  *
- * This is O(n^2) version works for all T
+ * This is O(n^2) version for all T
  *
  * @tparam T Type of array elements
  * @tparam size Size of the array
