@@ -267,6 +267,8 @@ inline auto createWires(Gates::GateOperation op) -> std::vector<size_t> {
         return {0, 1};
     case 3:
         return {0, 1, 2};
+    case 4:
+        return {0, 1, 2, 3};
     default:
         PL_ABORT("The number of wires for a given gate is unknown.");
     }

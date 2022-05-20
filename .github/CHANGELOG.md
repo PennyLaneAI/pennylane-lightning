@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add `SingleExcitation` and `DoubleExcitation` qchem gates and generators.
+[(#289)](https://github.com/PennyLaneAI/pennylane-lightning/pull/289)
+
 ### Breaking changes
 
 ### Improvements
@@ -25,11 +28,14 @@ dev2 = qml.device('lightning.qubit', wires=4, c_dtype=np.complex128) # for doubl
 
 ### Bug fixes
 
+* Fix the issue with using available `clang-format` version in format.
+[#(288)](https://github.com/PennyLaneAI/pennylane-lightning/pull/288)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Mikhail Andrenkov, Chae-Yeun Park
+Mikhail Andrenkov, Ali Asadi, Chae-Yeun Park
 
 ---
 
