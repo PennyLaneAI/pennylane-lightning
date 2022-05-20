@@ -251,19 +251,4 @@ static_lookup(const std::array<std::pair<decltype(op), T>, size> &arr) -> T {
     }
     return T{};
 }
-
-/**
- * @brief Constexpr function that check whether the given value is a power of 2.
- *
- * Can be merged with isPerfectPowerOf2 in C++20 using constexpr std::popcount.
- *
- * @param value Value to check
- * @return True when the given value is a power of 2
- */
-constexpr auto constIsPerfectPowerOf2(size_t value) -> bool {
-    while ((value & 1U) == 0) {
-        value >>= 1U;
-    }
-    return value == 1;
-}
 } // namespace Pennylane::Util
