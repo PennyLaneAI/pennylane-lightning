@@ -91,7 +91,7 @@ constexpr void testAllGatesForKernelIter(RandomEngine &re,
              num_qubits++) {
             testDynamicDispatch<PrecisionT, ParamT, GateImplementation,
                                 gate_op>(re, num_qubits);
-        };
+        }
         testAllGatesForKernelIter<PrecisionT, ParamT, GateImplementation,
                                   idx + 1>(re, max_num_qubits);
     }
