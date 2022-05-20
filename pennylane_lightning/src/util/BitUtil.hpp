@@ -21,8 +21,8 @@
 #include <cstdint>
 #include <cstdlib>
 
-#if defined(_MSC_VER)
-#include <intrin.h> // for __lzcnt64 and __popcount
+#if __has_include(<version>)
+#include <version>
 #endif
 
 namespace Pennylane::Util {
@@ -43,7 +43,7 @@ inline auto constexpr log2PerfectPower(uint64_t val) -> size_t {
  * @return bool
  */
 inline auto constexpr isPerfectPowerOf2(size_t value) -> bool {
-#if __cpp_lib_int_pow2
+#if __cpp_lib_int_pow2 >= 202002L
     return std::has_single_bit(value);
 #else
     return std::popcount(value) == 1;

@@ -23,6 +23,10 @@
 #include <stdexcept>
 #include <tuple>
 
+#if __has_include(<version>)
+#include <version>
+#endif
+
 #include "Util.hpp"
 
 namespace Pennylane::Util {
@@ -130,7 +134,7 @@ constexpr size_t count_unique(const std::array<T, size> &arr) {
     return res;
 }
 
-#ifdef __cpp_lib_three_way_comparison
+#if __cpp_lib_three_way_comparison >= 201907L
 /**
  * @brief Count the number of unique elements in the array.
  *
