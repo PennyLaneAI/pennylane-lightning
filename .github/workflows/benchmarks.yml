@@ -37,7 +37,8 @@ jobs:
       - name: Install lightning.qubit device (master)
         run: |
           cd main
-          pip install -e .
+          python3 setup.py build_ext -i --define="CMAKE_CXX_COMPILER=$(which g++-10)"
+          python3 setup.py develop
 
       - name: Benchmark lightning master device
         run: |
@@ -61,7 +62,8 @@ jobs:
           make clean || true
           pip uninstall pennylane-lightning -y
           cd ../pr
-          CXX=g++-10 pip install -e .
+          python3 setup.py build_ext -i --define="CMAKE_CXX_COMPILER=$(which g++-10)"
+          python3 setup.py develop
 
       - name: Benchmark lightning PR device
         run: |

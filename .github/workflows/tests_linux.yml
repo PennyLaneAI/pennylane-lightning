@@ -38,7 +38,7 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            CXX=g++-10 cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
+            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER="$(which g++-10)"
             cmake --build ./Build
             mkdir -p ./Build/tests/results
             ./Build/pennylane_lightning/src/tests/runner --order lex --reporter junit --out ./Build/tests/results/report.xml
@@ -59,7 +59,7 @@ jobs:
 
       - name: Build and run unit tests for code Coverage
         run: |
-            CXX=g++-10 cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON
+            cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-10)"
             cmake --build ./BuildCov
             cd ./BuildCov
             ./tests/runner
@@ -98,7 +98,7 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            CXX=g++-10 cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DENABLE_BLAS=ON -DBUILD_TESTS=1
+            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DENABLE_BLAS=ON -DBUILD_TESTS=1 -DCMAKE_CXX_COMPILER="$(which g++-10)"
             cmake --build ./Build
             mkdir -p ./Build/tests/results
             ./Build/pennylane_lightning/src/tests/runner --order lex --reporter junit --out ./Build/tests/results/report.xml
@@ -119,7 +119,7 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
-            CXX=g++-10 cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DENABLE_BLAS=ON
+            cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DENABLE_BLAS=ON -DCMAKE_CXX_COMPILER="$(which g++-10)"
             cmake --build ./BuildCov
             cd ./BuildCov
             ./tests/runner
@@ -158,7 +158,7 @@ jobs:
 
       - name: Build and run gbenchmark
         run: |
-            CXX=g++-10 cmake pennylane_lightning/src/ -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release
+            cmake pennylane_lightning/src/ -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER="$(which g++-10)"
             cmake --build ./BuildGBench
             ./BuildGBench/benchmarks/utils
             ./BuildGBench/benchmarks/apply_operations
@@ -202,7 +202,8 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          CXX=g++-10 pip install -e .
+          python3 setup.py build_ext -i --define="CMAKE_CXX_COMPILER=$(which g++-10)"
+          python3 setup.py develop
 
       - name: Run PennyLane-Lightning unit tests
         run: |
