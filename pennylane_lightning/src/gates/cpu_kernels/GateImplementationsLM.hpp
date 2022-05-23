@@ -99,6 +99,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GateOperation::IsingXX,
         GateOperation::IsingYY,
         GateOperation::IsingZZ,
+        GateOperation::SingleExcitation,
+        GateOperation::SingleExcitationMinus,
+        GateOperation::SingleExcitationPlus,
         GateOperation::MultiRZ};
 
     constexpr static std::array implemented_generators = {
@@ -113,6 +116,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GeneratorOperation::IsingYY,
         GeneratorOperation::IsingZZ,
         GeneratorOperation::ControlledPhaseShift,
+        GeneratorOperation::SingleExcitation,
+        GeneratorOperation::SingleExcitationMinus,
+        GeneratorOperation::SingleExcitationPlus,
         GeneratorOperation::MultiRZ,
     };
 
@@ -951,17 +957,13 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
         const std::complex<PrecisionT> second =
             std::complex<PrecisionT>{std::cos(angle / 2), std::sin(angle / 2)};
-
         const std::array<std::complex<PrecisionT>, 2> shifts = {
             (inverse) ? std::conj(first) : first,
             (inverse) ? std::conj(second) : second};
-
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
@@ -976,8 +978,25 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         }
     }
 
-    /* Multi-qubit gates */
+    template <class PrecisionT, class ParamT>
+    static void applySingleExcitation(std::complex<PrecisionT> *arr,
+                                      size_t num_qubits,
+                                      const std::vector<size_t> &wires,
+                                      bool inverse, ParamT angle);
 
+    template <class PrecisionT, class ParamT>
+    static void applySingleExcitationMinus(std::complex<PrecisionT> *arr,
+                                           size_t num_qubits,
+                                           const std::vector<size_t> &wires,
+                                           bool inverse, ParamT angle);
+
+    template <class PrecisionT, class ParamT>
+    static void applySingleExcitationPlus(std::complex<PrecisionT> *arr,
+                                          size_t num_qubits,
+                                          const std::vector<size_t> &wires,
+                                          bool inverse, ParamT angle);
+
+    /* Multi-qubit gates */
     template <class PrecisionT, class ParamT>
     static void applyMultiRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
                              const std::vector<size_t> &wires, bool inverse,
@@ -986,7 +1005,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
         const std::complex<PrecisionT> second =
             std::complex<PrecisionT>{std::cos(angle / 2), std::sin(angle / 2)};
-
         const std::array<std::complex<PrecisionT>, 2> shifts = {
             (inverse) ? std::conj(first) : first,
             (inverse) ? std::conj(second) : second};
@@ -1027,13 +1045,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                           const std::vector<size_t> &wires,
                           [[maybe_unused]] bool adj) -> PrecisionT {
         PL_ASSERT(wires.size() == 2);
-
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
@@ -1057,13 +1072,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                           const std::vector<size_t> &wires,
                           [[maybe_unused]] bool adj) -> PrecisionT {
         PL_ASSERT(wires.size() == 2);
-
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
@@ -1089,13 +1101,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                           const std::vector<size_t> &wires,
                           [[maybe_unused]] bool adj) -> PrecisionT {
         PL_ASSERT(wires.size() == 2);
-
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
@@ -1119,13 +1128,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                       [[maybe_unused]] bool adj) -> PrecisionT {
         using ComplexPrecisionT = std::complex<PrecisionT>;
         PL_ASSERT(wires.size() == 2);
-
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
@@ -1153,13 +1159,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                       [[maybe_unused]] bool adj) -> PrecisionT {
         using ComplexPrecisionT = std::complex<PrecisionT>;
         PL_ASSERT(wires.size() == 2);
-
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
@@ -1190,13 +1193,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                       [[maybe_unused]] bool adj) -> PrecisionT {
         using ComplexPrecisionT = std::complex<PrecisionT>;
         PL_ASSERT(wires.size() == 2);
-
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
@@ -1221,13 +1221,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         -> PrecisionT {
         using ComplexPrecisionT = std::complex<PrecisionT>;
         PL_ASSERT(wires.size() == 2);
-
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
@@ -1244,6 +1241,26 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         // NOLINTNEXTLINE(readability-magic-numbers)
         return static_cast<PrecisionT>(1);
     }
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto
+    applyGeneratorSingleExcitation(std::complex<PrecisionT> *arr,
+                                   size_t num_qubits,
+                                   const std::vector<size_t> &wires,
+                                   [[maybe_unused]] bool adj) -> PrecisionT;
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto applyGeneratorSingleExcitationMinus(
+        std::complex<PrecisionT> *arr, size_t num_qubits,
+        const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
+        -> PrecisionT;
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto
+    applyGeneratorSingleExcitationPlus(std::complex<PrecisionT> *arr,
+                                       size_t num_qubits,
+                                       const std::vector<size_t> &wires,
+                                       [[maybe_unused]] bool adj) -> PrecisionT;
 
     template <class PrecisionT>
     [[nodiscard]] static auto
