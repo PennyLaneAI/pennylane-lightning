@@ -317,7 +317,7 @@ jobs:
         run: |
           cd main
           python setup.py build_ext --define="ENABLE_KOKKOS=ON"
-          python setup.py install
+          pip install -e .
 
       - name: Run PennyLane-Lightning unit tests
         run: |

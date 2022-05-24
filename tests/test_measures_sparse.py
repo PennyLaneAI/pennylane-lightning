@@ -99,9 +99,7 @@ class TestSparseExpvalQChem:
             ],
         ],
     )
-    def test_sparse_Pauli_words(
-        self, qubits, wires, H_sparse, hf_state, excitations, tol, dev
-    ):
+    def test_sparse_Pauli_words(self, qubits, wires, H_sparse, hf_state, excitations, tol, dev):
         """Test expval of some simple sparse Hamiltonian"""
 
         @qml.qnode(dev, diff_method="parameter-shift")
@@ -117,6 +115,7 @@ class TestSparseExpvalQChem:
             return qml.expval(qml.SparseHamiltonian(H_sparse, wires=wires))
 
         dev_default = qml.device("default.qubit", wires=qubits)
+
         @qml.qnode(dev_default, diff_method="parameter-shift")
         def circuit_default():
             qml.BasisState(hf_state, wires=range(qubits))
