@@ -177,9 +177,8 @@ std::vector<std::complex<fp_precision>> apply_Sparse_Matrix(
     PL_ABORT("Executing the product of a Sparse matrix and a vector needs "
              "Kokkos and Kokkos Kernels installation.");
 
-    std::vector<std::complex<fp_precision>> result;
-    return result;
-};
+    return std::vector<std::complex<fp_precision>>(); //LCOV_EXCL_LINE
+}; //LCOV_EXCL_LINE
 } // namespace Pennylane::Util
 #endif
 
