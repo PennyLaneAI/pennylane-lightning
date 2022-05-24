@@ -87,21 +87,20 @@ class TestSparseExpvalQChem:
         return qml.device("lightning.qubit", wires=12, c_dtype=request.param)
 
     @pytest.mark.parametrize(
-        "qubits, wires, H_sparse, hf_state, excitations, expected_output",
+        "qubits, wires, H_sparse, hf_state, excitations",
         [
-            [qubits, np.arange(qubits), H_sparse, hf_state, excitations, -1.04731892],
+            [qubits, np.arange(qubits), H_sparse, hf_state, excitations],
             [
                 qubits,
                 np.random.permutation(np.arange(qubits)),
                 H_sparse,
                 hf_state,
                 excitations,
-                -1.04731892,
             ],
         ],
     )
     def test_sparse_Pauli_words(
-        self, qubits, wires, H_sparse, hf_state, excitations, expected_output, tol, dev
+        self, qubits, wires, H_sparse, hf_state, excitations, tol, dev
     ):
         """Test expval of some simple sparse Hamiltonian"""
 
@@ -117,4 +116,17 @@ class TestSparseExpvalQChem:
 
             return qml.expval(qml.SparseHamiltonian(H_sparse, wires=wires))
 
-        assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
+        dev_default = qml.device("default.qubit", wires=qubits)
+        @qml.qnode(dev_default, diff_method="parameter-shift")
+        def circuit_default():
+            qml.BasisState(hf_state, wires=range(qubits))
+
+            for i, excitation in enumerate(excitations):
+                if len(excitation) == 4:
+                    qml.DoubleExcitation(1, wires=excitation)
+                elif len(excitation) == 2:
+                    qml.SingleExcitation(1, wires=excitation)
+
+            return qml.expval(qml.SparseHamiltonian(H_sparse, wires=wires))
+
+        assert np.allclose(circuit(), circuit_default(), atol=tol, rtol=0)
