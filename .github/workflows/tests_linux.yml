@@ -203,7 +203,7 @@ jobs:
         run: |
           cd main
           python3 setup.py build_ext -i --define="CMAKE_CXX_COMPILER=$(which g++-10)"
-          python3 setup.py develop
+          pip install -e .
 
       - name: Run PennyLane-Lightning unit tests
         run: |
