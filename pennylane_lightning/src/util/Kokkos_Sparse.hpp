@@ -190,7 +190,6 @@ std::vector<std::complex<fp_precision>> apply_Sparse_Matrix(
     [[maybe_unused]] const index_type *entries_ptr,
     [[maybe_unused]] const std::complex<fp_precision> *values_ptr,
     [[maybe_unused]] const index_type numNNZ) {
-
     std::vector<std::complex<fp_precision>> result;
     apply_Sparse_Matrix_Kokkos(vector_ptr, vector_size, row_map_ptr,
                                row_map_size, entries_ptr, values_ptr, numNNZ,

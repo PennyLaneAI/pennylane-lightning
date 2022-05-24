@@ -276,7 +276,7 @@ jobs:
         with:
           files: ./main/coverage.xml
           fail_ci_if_error: true
-  
+
   pythontestsKokkos:
     name: Python tests with Kokkos and Kokkos Kernels
     runs-on: ${{ matrix.os }}
