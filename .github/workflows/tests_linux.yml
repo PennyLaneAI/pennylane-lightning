@@ -276,3 +276,57 @@ jobs:
         with:
           files: ./main/coverage.xml
           fail_ci_if_error: true
+  
+  pythontestsKokkos:
+    name: Python tests with Kokkos and Kokkos Kernels
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+
+    steps:
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v2
+        with:
+          path: main
+          fetch-depth: 2
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.7'
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc g++
+
+      - name: Get required Python packages
+        run: |
+          cd main
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip uninstall pennylane -y
+          pip install git+https://github.com/PennyLaneAI/pennylane.git
+
+      - name: Install ML libraries for interfaces
+        run: |
+          pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
+          pip install --upgrade "jax[cpu]"  # This also installs jaxlib
+          pip install --upgrade tensorflow==$TF_VERSION keras==$TF_VERSION
+
+      - name: Install lightning.qubit device
+        run: |
+          cd main
+          python setup.py build_ext --define="ENABLE_KOKKOS=ON"
+
+      - name: Run PennyLane-Lightning unit tests
+        run: |
+          cd main/
+          pytest tests/ $COVERAGE_FLAGS
+          pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          files: ./main/coverage.xml
+          fail_ci_if_error: true
