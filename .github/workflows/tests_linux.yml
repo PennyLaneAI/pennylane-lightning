@@ -77,7 +77,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
     steps:
       - name: Cancel previous runs
         uses: styfle/cancel-workflow-action@0.4.1
@@ -137,7 +137,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
     steps:
       - name: Cancel previous runs
         uses: styfle/cancel-workflow-action@0.4.1
@@ -156,33 +156,13 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc g++ gcovr lcov
 
-      - name: Build and run unit tests
-        run: |
-            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DENABLE_KOKKOS=ON -DBUILD_TESTS=1
-            cmake --build ./Build
-            mkdir -p ./Build/tests/results
-            ./Build/pennylane_lightning/src/tests/runner --order lex --reporter junit --out ./Build/tests/results/report.xml
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          name: ubuntu-test-report
-          path: Build/tests/results/report.xml
-
-      - name: Publish test results
-        uses: EnricoMi/publish-unit-test-result-action@v1
-        if: always()
-        with:
-          check_name: Test Report (C++) on Ubuntu
-          files: Build/tests/results/report.xml
-
       - name: Build and run unit tests for code coverage
         run: |
             cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DENABLE_KOKKOS=ON
             cmake --build ./BuildCov
             cd ./BuildCov
-            ./tests/runner
+            mkdir -p ./tests/results
+            ./tests/runner --order lex --reporter junit --out ./tests/results/report.xml
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
 
@@ -192,12 +172,26 @@ jobs:
           files: ./BuildCov/coverage.info
           fail_ci_if_error: true
 
+      - name: Upload test results
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: ubuntu-test-report
+          path: BuildCov/tests/results/report.xml
+
+      - name: Publish test results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          check_name: Test Report (C++) on Ubuntu
+          files: BuildCov/tests/results/report.xml
+
   cppbenchmarksuite:
     name: C++ Benchmark Suite (Linux, OpenBLAS)
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
     steps:
       - name: Cancel previous runs
         uses: styfle/cancel-workflow-action@0.4.1
@@ -228,7 +222,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
 
     steps:
       - name: Checkout PennyLane-Lightning
@@ -282,7 +276,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
 
     steps:
       - name: Checkout PennyLane-Lightning

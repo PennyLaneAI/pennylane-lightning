@@ -155,7 +155,6 @@ void apply_Sparse_Matrix_Kokkos(
 #else
 constexpr bool USE_KOKKOS = false;
 namespace Pennylane::Util {
-// LCOV_EXCL_START
 /**
  * @brief Apply a sparse matrix to a vector with Kokkos.
  *  Abort, because there is no Kokkos and Kokkos Kernels installation.
@@ -176,7 +175,6 @@ void apply_Sparse_Matrix_Kokkos(
     PL_ABORT("Executing the product of a Sparse matrix and a vector needs "
              "Kokkos and Kokkos Kernels installation.");
 };
-// LCOV_EXCL_STOP
 } // namespace Pennylane::Util
 #endif
 
