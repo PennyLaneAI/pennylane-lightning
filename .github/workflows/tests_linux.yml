@@ -77,7 +77,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-20.04]
     steps:
       - name: Cancel previous runs
         uses: styfle/cancel-workflow-action@0.4.1
@@ -137,7 +137,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-20.04]
     steps:
       - name: Cancel previous runs
         uses: styfle/cancel-workflow-action@0.4.1
@@ -158,7 +158,7 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
-            cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DENABLE_KOKKOS=ON
+            cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DENABLE_KOKKOS=ON
             cmake --build ./BuildCov
             cd ./BuildCov
             mkdir -p ./tests/results
@@ -191,7 +191,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-20.04]
     steps:
       - name: Cancel previous runs
         uses: styfle/cancel-workflow-action@0.4.1
@@ -222,7 +222,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-20.04]
 
     steps:
       - name: Checkout PennyLane-Lightning
@@ -276,7 +276,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-20.04]
 
     steps:
       - name: Checkout PennyLane-Lightning
