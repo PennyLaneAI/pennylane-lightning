@@ -171,9 +171,12 @@ void apply_Sparse_Matrix_Kokkos(
     [[maybe_unused]] const index_type *entries_ptr,
     [[maybe_unused]] const std::complex<fp_precision> *values_ptr,
     [[maybe_unused]] const index_type numNNZ,
-    [[maybe_unused]] std::vector<std::complex<fp_precision>> &result) {
-    PL_ABORT("Executing the product of a Sparse matrix and a vector needs "
-             "Kokkos and Kokkos Kernels installation.");
+    [[maybe_unused]] std::vector<std::complex<fp_precision>> &result,
+    bool throw_exception = true) {
+    if (throw_exception) {
+        PL_ABORT("Executing the product of a Sparse matrix and a vector needs "
+                 "Kokkos and Kokkos Kernels installation.");
+    }
 };
 } // namespace Pennylane::Util
 #endif
@@ -182,13 +185,10 @@ namespace Pennylane::Util {
 
 template <class fp_precision, class index_type>
 std::vector<std::complex<fp_precision>> apply_Sparse_Matrix(
-    [[maybe_unused]] const std::complex<fp_precision> *vector_ptr,
-    [[maybe_unused]] const index_type vector_size,
-    [[maybe_unused]] const index_type *row_map_ptr,
-    [[maybe_unused]] const index_type row_map_size,
-    [[maybe_unused]] const index_type *entries_ptr,
-    [[maybe_unused]] const std::complex<fp_precision> *values_ptr,
-    [[maybe_unused]] const index_type numNNZ) {
+    const std::complex<fp_precision> *vector_ptr, const index_type vector_size,
+    const index_type *row_map_ptr, const index_type row_map_size,
+    const index_type *entries_ptr, const std::complex<fp_precision> *values_ptr,
+    const index_type numNNZ) {
     std::vector<std::complex<fp_precision>> result;
     apply_Sparse_Matrix_Kokkos(vector_ptr, vector_size, row_map_ptr,
                                row_map_size, entries_ptr, values_ptr, numNNZ,
