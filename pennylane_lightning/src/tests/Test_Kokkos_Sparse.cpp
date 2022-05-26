@@ -70,19 +70,17 @@ TEMPLATE_TEST_CASE("apply_Sparse_Matrix_Kokkos", "[Kokkos Sparse]", float,
     } else {
         SECTION(
             "Testing if apply_Sparse_Matrix_Kokkos is throwing an exception:") {
-            for (size_t vec = 0; vec < vectors.size(); vec++) {
-                std::vector<complex<TestType>> result;
-                PL_CHECK_THROWS_MATCHES(
-                    apply_Sparse_Matrix_Kokkos(
-                        vectors[vec].data(),
-                        static_cast<long>(vectors[vec].size()), row_map.data(),
-                        static_cast<long>(row_map.size()), entries.data(),
-                        values.data(), static_cast<long>(values.size()),
-                        result),
-                    LightningException,
-                    "Executing the product of a Sparse matrix and a vector "
-                    "needs Kokkos and Kokkos Kernels installation.");
-            }
+            size_t vec = 0;
+            std::vector<complex<TestType>> result;
+            PL_CHECK_THROWS_MATCHES(
+                apply_Sparse_Matrix_Kokkos(
+                    vectors[vec].data(), static_cast<long>(vectors[vec].size()),
+                    row_map.data(), static_cast<long>(row_map.size()),
+                    entries.data(), values.data(),
+                    static_cast<long>(values.size()), result),
+                LightningException,
+                "Executing the product of a Sparse matrix and a vector "
+                "needs Kokkos and Kokkos Kernels installation.");
         }
         SECTION("Checking the full scope of the apply_Sparse_Matrix_Kokkos") {
             // Testing if nothing happens in case apply_Sparse_Matrix is called
@@ -145,17 +143,16 @@ TEMPLATE_TEST_CASE("apply_Sparse_Matrix", "[Kokkos Sparse]", float, double) {
         }
     } else {
         SECTION("Testing if apply_Sparse_Matrix is throwing an exception:") {
-            for (size_t vec = 0; vec < vectors.size(); vec++) {
-                PL_CHECK_THROWS_MATCHES(
-                    apply_Sparse_Matrix(
-                        vectors[vec].data(),
-                        static_cast<long>(vectors[vec].size()), row_map.data(),
-                        static_cast<long>(row_map.size()), entries.data(),
-                        values.data(), static_cast<long>(values.size())),
-                    LightningException,
-                    "Executing the product of a Sparse matrix and a vector "
-                    "needs Kokkos and Kokkos Kernels installation.");
-            }
+            size_t vec = 0;
+            PL_CHECK_THROWS_MATCHES(
+                apply_Sparse_Matrix(
+                    vectors[vec].data(), static_cast<long>(vectors[vec].size()),
+                    row_map.data(), static_cast<long>(row_map.size()),
+                    entries.data(), values.data(),
+                    static_cast<long>(values.size())),
+                LightningException,
+                "Executing the product of a Sparse matrix and a vector "
+                "needs Kokkos and Kokkos Kernels installation.");
         }
     }
 }
