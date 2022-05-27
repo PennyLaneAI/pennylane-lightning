@@ -236,3 +236,12 @@ The PennyLane lightning plugin is **free** and **open source**, released under
 the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_.
 
 .. license-end-inclusion-marker-do-not-remove
+
+Acknowledgements
+================
+
+PennyLane Lightning makes use of the following libraries and tools, which are under their own respective licenses:
+
+- **pybind11:** https://pybind11.readthedocs.io/en/stable/ [`License <https://github.com/pybind/pybind11/blob/master/LICENSE>`_]
+- **Kokkos Core:** https://github.com/kokkos/kokkos [`License <https://github.com/kokkos/kokkos/blob/master/LICENSE>`_]
+- **Kokkos Kernels:** https://github.com/kokkos/kokkos-kernels [`License <https://github.com/kokkos/kokkos-kernels/blob/master/LICENSE>`_]
