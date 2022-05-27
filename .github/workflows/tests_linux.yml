@@ -6,7 +6,7 @@ on:
   pull_request:
 
 env:
-  TF_VERSION: 2.6
+  TF_VERSION: 2.6.0
   TORCH_VERSION: 1.10.0+cpu
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
   OMP_NUM_THREADS: "2"
@@ -251,7 +251,7 @@ jobs:
         run: |
           pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
           pip install --upgrade "jax[cpu]"  # This also installs jaxlib
-          pip install --upgrade tensorflow==$TF_VERSION keras==$TF_VERSION
+          pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
 
       - name: Install lightning.qubit device
         run: |
@@ -305,7 +305,7 @@ jobs:
         run: |
           pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
           pip install --upgrade "jax[cpu]"  # This also installs jaxlib
-          pip install --upgrade tensorflow==$TF_VERSION keras==$TF_VERSION
+          pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
 
       - name: Install lightning.qubit device
         run: |
