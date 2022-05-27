@@ -1,4 +1,4 @@
-# Copyright 2020 Xanadu Quantum Technologies Inc.
+# Copyright 2022 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,13 +52,23 @@ class CMakeBuild(build_ext):
 
         # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
         configure_args = [
-            "-GNinja",
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
-            f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
             "-DENABLE_WARNINGS=OFF",  # Ignore warnings
         ]
 
+        if platform.system() == "Windows":
+            # As Ninja does not support long path for windows yet:
+            #  (https://github.com/ninja-build/ninja/pull/2056)
+            configure_args += [
+                "-T clangcl",
+            ]
+        else:
+            configure_args += [
+                "-GNinja", 
+                f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
+            ]
+        
         if debug:
             configure_args += ["-DCMAKE_BUILD_TYPE=Debug"]
         configure_args += self.cmake_defines
@@ -87,7 +97,7 @@ class CMakeBuild(build_ext):
         subprocess.check_call(["cmake", "--build", "."] + build_args, cwd=self.build_temp)
 
 
-with open("pennylane_lightning/_version.py") as f:
+with open(os.path.join("pennylane_lightning", "_version.py")) as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
@@ -104,7 +114,7 @@ info = {
     "url": "https://github.com/XanaduAI/pennylane-lightning",
     "license": "Apache License 2.0",
     "packages": find_packages(where="."),
-    "package_data": {"pennylane_lightning": ["src/*", "src/**/*"]},
+    "package_data": {"pennylane_lightning": [os.path.join("src", "*"), os.path.join("src", "**", "*")]},
     "include_package_data": True,
     "entry_points": {
         "pennylane.plugins": [
