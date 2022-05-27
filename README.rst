@@ -243,7 +243,7 @@ Acknowledgements
 
 PennyLane Lightning makes use of the following libraries and tools, which are under their own respective licenses:
 
-- **pybind11:** https://pybind11.readthedocs.io/en/stable/
+- **pybind11:** https://github.com/pybind/pybind11
 - **Kokkos Core:** https://github.com/kokkos/kokkos
 - **Kokkos Kernels:** https://github.com/kokkos/kokkos-kernels
 
