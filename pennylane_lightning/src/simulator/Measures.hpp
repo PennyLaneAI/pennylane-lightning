@@ -1,4 +1,4 @@
-// Copyright 2021 Xanadu Quantum Technologies Inc.
+// Copyright 2022 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "Kokkos_Sparse.hpp"
 #include "LinearAlgebra.hpp"
 #include "StateVectorManaged.hpp"
 #include "StateVectorRaw.hpp"
@@ -66,7 +67,6 @@ class Measures {
         std::transform(arr_data, arr_data + original_statevector.getLength(),
                        basis_probs.begin(),
                        [](const CFP_t &z) -> fp_t { return std::norm(z); });
-
         return basis_probs;
     };
 
@@ -116,6 +116,7 @@ class Measures {
         }
         return probabilities;
     }
+
     /**
      * @brief Expected value of an observable.
      *
@@ -136,6 +137,7 @@ class Measures {
             original_statevector.getLength());
         return std::real(expected_value);
     };
+
     /**
      * @brief Expected value of an observable.
      *
@@ -158,6 +160,37 @@ class Measures {
     };
 
     /**
+     * @brief Expected value of a Sparse Hamiltonian.
+     *
+     * @param row_map_ptr   row_map array pointer.
+     *                      The j element encodes the number of non-zeros above
+     * row j.
+     * @param row_map_size  row_map array size.
+     * @param entries_ptr   pointer to an array with column indices of the
+     * non-zero elements.
+     * @param values_ptr    pointer to an array with the non-zero elements.
+     * @param numNNZ        number of non-zero elements.
+     * @return fp_t
+     */
+    template <class index_type>
+    fp_t expval(const index_type *row_map_ptr, const index_type row_map_size,
+                const index_type *entries_ptr, const CFP_t *values_ptr,
+                const index_type numNNZ) {
+        PL_ABORT_IF(
+            (original_statevector.getLength() != (size_t(row_map_size) - 1)),
+            "Statevector and Hamiltonian have incompatible sizes.");
+        auto operator_vector = Util::apply_Sparse_Matrix(
+            original_statevector.getData(),
+            static_cast<index_type>(original_statevector.getLength()),
+            row_map_ptr, row_map_size, entries_ptr, values_ptr, numNNZ);
+
+        CFP_t expected_value = Util::innerProdC(
+            original_statevector.getData(), operator_vector.data(),
+            original_statevector.getLength());
+        return std::real(expected_value);
+    };
+
+    /**
      * @brief Expected value for a list of observables.
      *
      * @param operations_list List of operations to measure.
@@ -169,11 +202,9 @@ class Measures {
     std::vector<fp_t>
     expval(const std::vector<op_type> &operations_list,
            const std::vector<std::vector<size_t>> &wires_list) {
-        if (operations_list.size() != wires_list.size()) {
-            throw std::out_of_range("The lengths of the list of operations and "
-                                    "wires do not match.");
-        }
-
+        PL_ABORT_IF(
+            (operations_list.size() != wires_list.size()),
+            "The lengths of the list of operations and wires do not match.");
         std::vector<fp_t> expected_value_list;
 
         for (size_t index = 0; index < operations_list.size(); index++) {
@@ -246,10 +277,9 @@ class Measures {
     template <typename op_type>
     std::vector<fp_t> var(const std::vector<op_type> &operations_list,
                           const std::vector<std::vector<size_t>> &wires_list) {
-        if (operations_list.size() != wires_list.size()) {
-            throw std::out_of_range("The lengths of the list of operations and "
-                                    "wires do not match.");
-        }
+        PL_ABORT_IF(
+            (operations_list.size() != wires_list.size()),
+            "The lengths of the list of operations and wires do not match.");
 
         std::vector<fp_t> expected_value_list;
 

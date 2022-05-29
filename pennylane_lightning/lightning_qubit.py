@@ -54,6 +54,7 @@ try:
         StateVectorC128,
         AdjointJacobianC128,
         VectorJacobianProductC128,
+        Kokkos_info,
     )
 
     from ._serialize import _serialize_obs, _serialize_ops
@@ -547,7 +548,6 @@ class LightningQubit(DefaultQubit):
             "Projector",
             "Hermitian",
             "Hamiltonian",
-            "SparseHamiltonian",
         ]:
             return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
@@ -562,6 +562,16 @@ class LightningQubit(DefaultQubit):
 
         state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
+        if observable.name == "SparseHamiltonian":
+            if Kokkos_info()["USE_KOKKOS"] == True:
+                # converting COO to CSR sparse representation.
+                CSR_SparseHamiltonian = observable.data[0].tocsr(copy=False)
+                return M.expval(
+                    CSR_SparseHamiltonian.indptr,
+                    CSR_SparseHamiltonian.indices,
+                    CSR_SparseHamiltonian.data,
+                )
+            return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
         # translate to wire labels used by device
         observable_wires = self.map_wires(observable.wires)

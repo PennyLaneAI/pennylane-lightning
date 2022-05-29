@@ -141,10 +141,9 @@ To test the C++ code:
     $ make
 
 Other supported options are ``-DENABLE_WARNINGS=ON``,
-``-DENABLE_NATIVE=ON`` (for ``-march=native``), 
-``-DENALBE_OPENMP=ON``, ``-DENALBE_BLAS=ON``, and
-``-DENABLE_CLANG_TIDY=ON``.
-
+``-DENABLE_NATIVE=ON`` (for ``-march=native``),  
+``-DENABLE_BLAS=ON``, ``-DENABLE_OPENMP=ON``, 
+``-DENABLE_KOKKOS=ON``, and ``-DENABLE_CLANG_TIDY=ON``.
 
 Compile on Windows with MSVC
 ----------------------------
@@ -237,3 +236,15 @@ The PennyLane lightning plugin is **free** and **open source**, released under
 the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_.
 
 .. license-end-inclusion-marker-do-not-remove
+.. acknowledgements-start-inclusion-marker-do-not-remove
+
+Acknowledgements
+================
+
+PennyLane Lightning makes use of the following libraries and tools, which are under their own respective licenses:
+
+- **pybind11:** https://github.com/pybind/pybind11
+- **Kokkos Core:** https://github.com/kokkos/kokkos
+- **Kokkos Kernels:** https://github.com/kokkos/kokkos-kernels
+
+.. acknowledgements-end-inclusion-marker-do-not-remove

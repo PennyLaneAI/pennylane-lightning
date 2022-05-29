@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 
 project(pennylane_lightning_tests)
 
@@ -82,6 +82,8 @@ set(TEST_SOURCES CreateAllWires.cpp
                  Test_Internal.cpp
                  Test_LinearAlgebra.cpp
                  Test_Measures.cpp
+                 Test_Kokkos_Sparse.cpp
+                 Test_Measures_Sparse.cpp
                  Test_OpToMemberFuncPtr.cpp
                  Test_RuntimeInfo.cpp
                  Test_StateVectorManaged.cpp
