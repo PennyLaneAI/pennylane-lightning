@@ -257,7 +257,7 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          pip install -e .
+          pip install -e --define="CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" .
 
       - name: Run PennyLane-Lightning unit tests
         run: |
