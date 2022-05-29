@@ -8,6 +8,7 @@ on:
 env:
   TF_VERSION: 2.6.0
   TORCH_VERSION: 1.10.0+cpu
+  GCC_VERSION: 10
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
   OMP_NUM_THREADS: "2"
 
@@ -38,7 +39,7 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER="$(which g++-10)"
+            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
             cmake --build ./Build
             mkdir -p ./Build/tests/results
             ./Build/pennylane_lightning/src/tests/runner --order lex --reporter junit --out ./Build/tests/results/report.xml
@@ -59,7 +60,7 @@ jobs:
 
       - name: Build and run unit tests for code Coverage
         run: |
-            cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-10)"
+            cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
             cmake --build ./BuildCov
             cd ./BuildCov
             ./tests/runner
@@ -98,7 +99,7 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DENABLE_BLAS=ON -DBUILD_TESTS=1 -DCMAKE_CXX_COMPILER="$(which g++-10)"
+            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DENABLE_BLAS=ON -DBUILD_TESTS=1 -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
             cmake --build ./Build
             mkdir -p ./Build/tests/results
             ./Build/pennylane_lightning/src/tests/runner --order lex --reporter junit --out ./Build/tests/results/report.xml
@@ -119,7 +120,7 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
-            cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DENABLE_BLAS=ON -DCMAKE_CXX_COMPILER="$(which g++-10)"
+            cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DENABLE_BLAS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
             cmake --build ./BuildCov
             cd ./BuildCov
             ./tests/runner
@@ -154,11 +155,11 @@ jobs:
           fetch-depth: 2
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc g++ gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 gcovr lcov
 
       - name: Build and run unit tests for code coverage
         run: |
-            cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DENABLE_KOKKOS=ON
+            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DENABLE_KOKKOS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
             cmake --build ./BuildCov
             cd ./BuildCov
             mkdir -p ./tests/results
@@ -212,7 +213,7 @@ jobs:
 
       - name: Build and run gbenchmark
         run: |
-            cmake pennylane_lightning/src/ -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER="$(which g++-10)"
+            cmake pennylane_lightning/src/ -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
             cmake --build ./BuildGBench
             ./BuildGBench/benchmarks/utils
             ./BuildGBench/benchmarks/apply_operations
@@ -310,7 +311,7 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          python setup.py build_ext --define="ENABLE_KOKKOS=ON;CMAKE_CXX_COMPILER=$(which g++-10)"
+          python setup.py build_ext --define="ENABLE_KOKKOS=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           pip install -e .
 
       - name: Run PennyLane-Lightning unit tests
