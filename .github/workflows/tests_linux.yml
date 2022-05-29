@@ -257,7 +257,8 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          pip install -e --define="CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" .
+          python setup.py build_ext -i --define="CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" .
+          pip install -e .
 
       - name: Run PennyLane-Lightning unit tests
         run: |
@@ -311,7 +312,7 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          python setup.py build_ext --define="ENABLE_KOKKOS=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
+          python setup.py build_ext -i --define="ENABLE_KOKKOS=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           pip install -e .
 
       - name: Run PennyLane-Lightning unit tests
