@@ -14,6 +14,13 @@ if (WIN32)
   set(CMAKE_OBJECT_PATH_MAX 249)
 endif ()
 
+# Check GCC version
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.0)
+        message(FATAL_ERROR "GCC version must be at least 10.0")
+    endif()
+endif()
+
 # Set compile flags and library dependencies
 add_library(lightning_compile_options INTERFACE)
 add_library(lightning_external_libs INTERFACE)
