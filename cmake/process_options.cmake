@@ -25,8 +25,9 @@ endif()
 add_library(lightning_compile_options INTERFACE)
 add_library(lightning_external_libs INTERFACE)
 
-# We use C++20 experimentally
-target_compile_features(lightning_compile_options INTERFACE cxx_std_20)
+# We use C++20 experimentally. As we still set CMAKE_CXX_STANDARD, the following line is not essential.
+# It will be uncommented when we move to a newer set-up.
+# target_compile_features(lightning_compile_options INTERFACE cxx_std_20)
 
 # Initial attempt to find which BLAS implementation is chosen
 function(get_blas_impl)

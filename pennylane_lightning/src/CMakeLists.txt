@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 
 project(lightning_components LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 20) # At least C++20 is required
+
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_OPENMP "Enable OpenMP" ON)
 
