@@ -105,34 +105,6 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
     }
 }
 
-/**
- * @brief Count number of 1s in the binary representation of x
- *
- * This is a slow version of countBit1 defined in Util.hpp
- */
-size_t popcount_slow(uint64_t x) {
-    size_t c = 0;
-    for (; x != 0U; x >>= 1U) {
-        if ((x & 1U) != 0U) {
-            c++;
-        }
-    }
-    return c;
-}
-
-/**
- * @brief Count number of trailing zeros in the binary representation of x
- *
- * This is a slow version of countTrailing0 defined in Util.hpp
- */
-size_t ctz_slow(uint64_t x) {
-    size_t c = 0;
-    while ((x & 1U) == 0) {
-        x >>= 1U;
-        c++;
-    }
-    return c;
-}
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_CASE("Utility bit operations", "[Util][BitUtil]") {
     SECTION("isPerfectPowerOf2") {

@@ -79,9 +79,8 @@ void testDynamicDispatch(RandomEngine &re, size_t num_qubits) {
 constexpr auto calcMinNumWires(GateOperation gate_op) -> size_t {
     if (Util::array_has_elt(Constant::multi_qubit_gates, gate_op)) {
         return size_t{3};
-    } else {
-        return Util::lookup(Constant::gate_wires, gate_op);
     }
+    return Util::lookup(Constant::gate_wires, gate_op);
 }
 
 template <typename PrecisionT, typename ParamT, class GateImplementation,
