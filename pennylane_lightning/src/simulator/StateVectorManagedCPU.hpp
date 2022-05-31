@@ -94,7 +94,7 @@ class StateVectorManagedCPU
     /**
      * @brief Construct a statevector from a data vector
      *
-     * @taparm Alloc Allocator type of std::vector to use for constructing
+     * @tparam Alloc Allocator type of std::vector to use for constructing
      * statevector.
      * @param other Data to construct the statevector from
      * @param threading Threading option the statevector to use
