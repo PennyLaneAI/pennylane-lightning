@@ -162,6 +162,7 @@ class Measures {
     /**
      * @brief Expected value of a Sparse Hamiltonian.
      *
+     * @tparam index_type integer type used as indices of the sparse matrix.
      * @param row_map_ptr   row_map array pointer.
      *                      The j element encodes the number of non-zeros above
      * row j.
@@ -170,7 +171,7 @@ class Measures {
      * non-zero elements.
      * @param values_ptr    pointer to an array with the non-zero elements.
      * @param numNNZ        number of non-zero elements.
-     * @return fp_t
+     * @return fp_t floating point precision.
      */
     template <class index_type>
     fp_t expval(const index_type *row_map_ptr, const index_type row_map_size,
@@ -193,6 +194,7 @@ class Measures {
     /**
      * @brief Expected value for a list of observables.
      *
+     * @tparam operation type.
      * @param operations_list List of operations to measure.
      * @param wires_list List of wires where to apply the operators.
      * @return Floating point std::vector with expected values for the
