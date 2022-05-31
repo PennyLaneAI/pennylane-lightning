@@ -19,7 +19,7 @@ jobs:
       matrix:
         os: [windows-latest]
         py_version: ["3.7", "3.8", "3.9", "3.10"]
-    name: ${{ matrix.os }} (Python ${ matrix.py_version}})
+    name: ${{ matrix.os }} (Python ${{ matrix.py_version}})
     runs-on: ${{ matrix.os }}
 
     steps:
