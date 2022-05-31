@@ -35,7 +35,7 @@ Then you can add your gate implementation to Pennylane-Lightning. This can be do
 
 .. code-block:: cpp
 
-    // file: simulator/KernelType.hpp
+    // file: gates/KernelType.hpp
     namespace Pennylane {
     enum class KernelType { PI, LM, MyKernel /* This is added */, None };
 
