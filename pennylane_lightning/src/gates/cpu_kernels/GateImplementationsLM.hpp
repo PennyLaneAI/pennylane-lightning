@@ -24,6 +24,7 @@
 #include "LinearAlgebra.hpp"
 #include "PauliGenerator.hpp"
 
+#include <bit>
 #include <complex>
 #include <vector>
 
@@ -1015,7 +1016,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         }
 
         for (size_t k = 0; k < Util::exp2(num_qubits); k++) {
-            arr[k] *= shifts[Util::popcount(k & wires_parity) % 2];
+            arr[k] *= shifts[std::popcount(k & wires_parity) % 2];
         }
     }
 
@@ -1274,7 +1275,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         for (size_t k = 0; k < Util::exp2(num_qubits); k++) {
             arr[k] *= static_cast<PrecisionT>(
-                2 * int(Util::popcount(k & wires_parity) % 2) - 1);
+                2 * int(std::popcount(k & wires_parity) % 2) - 1);
         }
         // NOLINTNEXTLINE(readability-magic-numbers)
         return static_cast<PrecisionT>(0.5);

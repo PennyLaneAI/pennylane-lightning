@@ -14,9 +14,20 @@ if (WIN32)
   set(CMAKE_OBJECT_PATH_MAX 249)
 endif ()
 
+# Check GCC version
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.0)
+        message(FATAL_ERROR "GCC version must be at least 10.0")
+    endif()
+endif()
+
 # Set compile flags and library dependencies
 add_library(lightning_compile_options INTERFACE)
 add_library(lightning_external_libs INTERFACE)
+
+# We use C++20 experimentally. As we still set CMAKE_CXX_STANDARD, the following line is not essential.
+# It will be uncommented when we move to a newer set-up.
+# target_compile_features(lightning_compile_options INTERFACE cxx_std_20)
 
 # Initial attempt to find which BLAS implementation is chosen
 function(get_blas_impl)

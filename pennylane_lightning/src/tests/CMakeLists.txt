@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.16)
 
 project(pennylane_lightning_tests)
 
-set(CMAKE_CXX_STANDARD 17)
-
 # Default build type for test code is Debug
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
@@ -66,11 +64,12 @@ endif()
 ################################################################################
 
 add_executable(compile_time_tests compile_time_tests.cpp)
-target_link_libraries(compile_time_tests lightning_gates lightning_utils lightning_simulator)
+target_link_libraries(compile_time_tests lightning_compile_options lightning_gates lightning_utils lightning_simulator)
 
 set(TEST_SOURCES CreateAllWires.cpp
                  Test_AdjDiff.cpp
 #                 Test_Bindings.cpp
+                 Test_CompilerSupport.cpp
                  Test_DynamicDispatcher.cpp
                  Test_Error.cpp
                  Test_GateImplementations_CompareKernels.cpp

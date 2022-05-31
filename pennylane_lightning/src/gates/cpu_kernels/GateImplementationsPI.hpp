@@ -32,6 +32,7 @@
 #include "LinearAlgebra.hpp"
 #include "PauliGenerator.hpp"
 
+#include <bit>
 #include <complex>
 #include <vector>
 
@@ -833,7 +834,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             for (size_t k = 0; k < indices.size(); k++) {
-                shiftedState[indices[k]] *= shifts[Util::popcount(k) % 2];
+                shiftedState[indices[k]] *= shifts[std::popcount(k) % 2];
             }
         }
     }

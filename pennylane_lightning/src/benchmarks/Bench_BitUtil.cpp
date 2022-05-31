@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include <bit>
 #include <limits>
 #include <random>
 
@@ -32,18 +33,18 @@ static void generate_uniform_random_number(benchmark::State &state) {
 BENCHMARK(generate_uniform_random_number);
 
 /**
- * @brief Benchmark naive popcount.
+ * @brief Benchmark std popcount.
  */
-static void naive_popcount(benchmark::State &state) {
+static void std_popcount(benchmark::State &state) {
     std::random_device rd;
     std::mt19937_64 eng(rd());
     std::uniform_int_distribution<unsigned long> distr;
     for (auto _ : state) {
         auto val = static_cast<unsigned long>(distr(eng));
-        benchmark::DoNotOptimize(Pennylane::Util::Internal::countBit1(val));
+        benchmark::DoNotOptimize(std::popcount(val));
     }
 }
-BENCHMARK(naive_popcount);
+BENCHMARK(std_popcount);
 
 #if defined(__GNUC__) || defined(__clang__)
 /**
@@ -79,20 +80,18 @@ BENCHMARK(msv_builtin_popcount);
 #endif
 
 /**
- * @brief Benchmark naive log2PerfectPower using
- * Pennylane::Util::Internal::countTrailing0.
+ * @brief Benchmark std has_single_bit
  */
-static void naive_log2PerfectPower(benchmark::State &state) {
+static void std_log2PerfectPower(benchmark::State &state) {
     std::random_device rd;
     std::mt19937_64 eng(rd());
     std::uniform_int_distribution<unsigned long> distr;
     for (auto _ : state) {
         auto val = static_cast<unsigned long>(distr(eng));
-        benchmark::DoNotOptimize(
-            Pennylane::Util::Internal::countTrailing0(val));
+        benchmark::DoNotOptimize(std::has_single_bit(val));
     }
 }
-BENCHMARK(naive_log2PerfectPower);
+BENCHMARK(std_log2PerfectPower);
 
 #if defined(__GNUC__) || defined(__clang__)
 /**
@@ -125,20 +124,6 @@ static void msv_builtin_log2PerfectPower(benchmark::State &state) {
 }
 BENCHMARK(msv_builtin_log2PerfectPower);
 #endif
-
-/**
- * @brief Benchmark log2PerfectPower in PennyLane-Lightning.
- */
-static void lightning_isPerfectPowerOf2(benchmark::State &state) {
-    std::random_device rd;
-    std::mt19937_64 eng(rd());
-    std::uniform_int_distribution<size_t> distr;
-    for (auto _ : state) {
-        auto val = static_cast<size_t>(distr(eng));
-        benchmark::DoNotOptimize(Pennylane::Util::isPerfectPowerOf2(val));
-    }
-}
-BENCHMARK(lightning_isPerfectPowerOf2);
 
 /**
  * @brief Benchmark fillTrailingOnes in PennyLane-Lightning.
