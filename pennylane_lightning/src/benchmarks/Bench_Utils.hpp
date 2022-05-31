@@ -84,8 +84,7 @@ inline auto generateDistinctWires(RandomEngine &eng, size_t num_qubits,
 inline auto addCompileInfo() {
     using namespace Pennylane;
     constexpr auto compiler_name =
-        Util::static_lookup<Util::Constant::compiler>(
-            Util::Constant::compiler_names);
+        Util::lookup(Util::Constant::compiler_names, Util::Constant::compiler);
     benchmark::AddCustomContext("Compiler::Name", std::string(compiler_name));
     benchmark::AddCustomContext("Compiler::AVX2",
                                 std::to_string(Util::Constant::use_avx2));

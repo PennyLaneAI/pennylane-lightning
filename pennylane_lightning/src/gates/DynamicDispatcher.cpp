@@ -49,7 +49,7 @@ constexpr auto gateOpToFunctor() {
             Gates::GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                                          gate_op>::value;
         assert(params.size() ==
-               Util::static_lookup<gate_op>(Gates::Constant::gate_num_params));
+               Util::lookup(Gates::Constant::gate_num_params, gate_op));
         Gates::callGateOps(func_ptr, data, num_qubits, wires, inverse, params);
     };
 }
