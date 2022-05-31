@@ -48,8 +48,8 @@ template <typename T> constexpr static auto test_margin = testMargin<T>();
 
 template <GeneratorOperation gntr_op>
 constexpr auto findGateOpForGenerator() -> GateOperation {
-    constexpr auto gntr_name = remove_prefix(
-        Util::static_lookup<gntr_op>(Constant::generator_names), 9);
+    constexpr auto gntr_name =
+        remove_prefix(Util::lookup(Constant::generator_names, gntr_op), 9);
 
     for (const auto &[gate_op, gate_name] : Constant::gate_names) {
         if (gate_name == gntr_name) {
@@ -87,9 +87,8 @@ void testGeneratorForGate(RandomEngine &re, size_t num_qubits, bool inverse) {
 
     constexpr auto eps = PrecisionT{1e-3}; // For finite difference
 
-    constexpr auto gate_op = Util::static_lookup<gntr_op>(generator_gate_pairs);
-    constexpr auto gate_name =
-        Util::static_lookup<gate_op>(Constant::gate_names);
+    constexpr auto gate_op = Util::lookup(generator_gate_pairs, gntr_op);
+    constexpr auto gate_name = Util::lookup(Constant::gate_names, gate_op);
 
     DYNAMIC_SECTION("Test generator of " << gate_name << " for kernel "
                                          << GateImplementation::name) {

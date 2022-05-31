@@ -6,6 +6,7 @@
  */
 #include "Macros.hpp"
 #include "TypeList.hpp"
+#include "AvailableKernels.hpp"
 
 #include "cpu_kernels/GateImplementationsLM.hpp"
 #include "cpu_kernels/GateImplementationsPI.hpp"

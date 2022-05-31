@@ -2,10 +2,12 @@
 #include <cstdio>
 #include <vector>
 
+#include "Kokkos_Sparse.hpp"
 #include "Measures.hpp"
 #include "StateVectorManagedCPU.hpp"
 #include "Util.hpp"
 
+#include "TestHelpers.hpp"
 #include <catch2/catch.hpp>
 
 #if defined(_MSC_VER)
@@ -13,53 +15,31 @@
 #endif
 
 using namespace Pennylane;
+using namespace Pennylane::Util;
 
 using std::complex;
 using std::size_t;
 using std::string;
 using std::vector;
 
-template <typename T = double>
-StateVectorManagedCPU<T> Initializing_StateVector() {
-    // Defining a StateVector in a non-trivial configuration:
-    size_t num_qubits = 3;
-    size_t data_size = std::pow(2, num_qubits);
-
-    std::vector<std::complex<T>> arr(data_size, 0);
-    arr[0] = 1;
-    StateVectorManagedCPU<T> Measured_StateVector(arr.data(), data_size);
-
-    std::vector<size_t> wires;
-
-    T alpha = 0.7;
-    T beta = 0.5;
-    T gamma = 0.2;
-    Measured_StateVector.applyOperations(
-        {"RX", "RY", "RX", "RY", "RX", "RY"}, {{0}, {0}, {1}, {1}, {2}, {2}},
-        {false, false, false, false, false, false},
-        {{alpha}, {alpha}, {beta}, {beta}, {gamma}, {gamma}});
-
-    return Measured_StateVector;
-}
-
 TEST_CASE("Probabilities", "[Measures]") {
     // Probabilities calculated with Pennylane default_qbit:
     std::vector<std::vector<double>> Expected_Probabilities = {
-        {0.687573, 0.013842, 0.089279, 0.001797, 0.180036, 0.003624, 0.023377,
-         0.000471}, // probs(0,1,2)
-        {0.687573, 0.180036, 0.089279, 0.023377, 0.013842, 0.003624, 0.001797,
-         0.000471}, // probs(2,1,0)
-        {0.687573, 0.180036, 0.013842, 0.003624, 0.089279, 0.023377, 0.001797,
-         0.000471}, // probs(2,0,1)
-        {0.687573, 0.089279, 0.180036, 0.023377, 0.013842, 0.001797, 0.003624,
-         0.000471},                               // probs(1,2,0)
-        {0.701415, 0.091077, 0.183660, 0.023848}, // probs(0,1)
-        {0.776852, 0.015640, 0.203413, 0.004095}, // probs(0,2)
-        {0.867609, 0.017467, 0.112656, 0.002268}, // probs(1,2)
-        {0.867609, 0.112656, 0.017467, 0.002268}, // probs(2,1)
-        {0.792492, 0.207508},                     // probs(0)
-        {0.885076, 0.114924},                     // probs(1)
-        {0.980265, 0.019735}                      // probs(2)
+        {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072, 0.00801973,
+         0.02280642, 0.00104134}, // probs(0,1,2)
+        {0.67078706, 0.17564072, 0.0870997, 0.02280642, 0.03062806, 0.00801973,
+         0.00397696, 0.00104134}, // probs(2,1,0)
+        {0.67078706, 0.17564072, 0.03062806, 0.00801973, 0.0870997, 0.02280642,
+         0.00397696, 0.00104134}, // probs(2,0,1)
+        {0.67078706, 0.0870997, 0.17564072, 0.02280642, 0.03062806, 0.00397696,
+         0.00801973, 0.00104134},                         // probs(1,2,0)
+        {0.70141512, 0.09107666, 0.18366045, 0.02384776}, // probs(0,1)
+        {0.75788676, 0.03460502, 0.19844714, 0.00906107}, // probs(0,2)
+        {0.84642778, 0.0386478, 0.10990612, 0.0050183},   // probs(1,2)
+        {0.84642778, 0.10990612, 0.0386478, 0.0050183},   // probs(2,1)
+        {0.79249179, 0.20750821},                         // probs(0)
+        {0.88507558, 0.11492442},                         // probs(1)
+        {0.9563339, 0.0436661}                            // probs(2)
     };
 
     std::vector<std::vector<size_t>> Wires_Configuration = {
@@ -67,23 +47,16 @@ TEST_CASE("Probabilities", "[Measures]") {
         {1, 2},    {2, 1},    {0},       {1},       {2}};
 
     // Defining the State Vector that will be measured.
-    StateVectorManagedCPU<double> Measured_StateVector =
-        Initializing_StateVector();
+    auto Measured_StateVector = Initializing_StateVector();
 
     // Initializing the measures class.
-    // It will attach to the StateVector, allowing measures to keep been taken.
+    // This object attaches to the statevector allowing several measures.
     Measures<double, StateVectorManagedCPU<double>> Measurer(
         Measured_StateVector);
 
     vector<double> probabilities;
 
-    SECTION("No wires provided:") {
-        probabilities = Measurer.probs();
-        REQUIRE_THAT(probabilities,
-                     Catch::Approx(Expected_Probabilities[0]).margin(1e-6));
-    }
-
-    SECTION("Looping over different wire configuration:") {
+    SECTION("Looping over different wire configurations:") {
         for (size_t conf = 0; conf < Expected_Probabilities.size(); conf++) {
             probabilities = Measurer.probs(Wires_Configuration[conf]);
             REQUIRE_THAT(
@@ -93,76 +66,75 @@ TEST_CASE("Probabilities", "[Measures]") {
     }
 }
 
-TEST_CASE("Expected Values", "[Measures]") {
+TEMPLATE_TEST_CASE("Expected Values", "[Measures]", float, double) {
     // Defining the State Vector that will be measured.
-    StateVectorManagedCPU<double> Measured_StateVector =
-        Initializing_StateVector();
+    auto Measured_StateVector = Initializing_StateVector<TestType>();
 
     // Initializing the measures class.
-    // It will attach to the StateVector, allowing measures to keep been taken.
-    Measures<double, StateVectorManagedCPU<double>> Measurer(
+    // This object attaches to the statevector allowing several measures.
+    Measures<TestType, StateVectorManagedCPU<TestType>> Measurer(
         Measured_StateVector);
 
     SECTION("Testing single operation defined by a matrix:") {
-        vector<std::complex<double>> PauliX = {0, 1, 1, 0};
+        vector<std::complex<TestType>> PauliX = {0, 1, 1, 0};
         vector<size_t> wires_single = {0};
-        double exp_value = Measurer.expval(PauliX, wires_single);
-        double exp_values_ref = 0.492725;
+        TestType exp_value = Measurer.expval(PauliX, wires_single);
+        TestType exp_values_ref = 0.492725;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
     }
 
     SECTION("Testing single operation defined by its name:") {
         vector<size_t> wires_single = {0};
-        double exp_value = Measurer.expval("PauliX", wires_single);
-        double exp_values_ref = 0.492725;
+        TestType exp_value = Measurer.expval("PauliX", wires_single);
+        TestType exp_values_ref = 0.492725;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
     }
 
     SECTION("Testing list of operators defined by a matrix:") {
-        vector<std::complex<double>> PauliX = {0, 1, 1, 0};
-        vector<std::complex<double>> PauliY = {0, {0, -1}, {0, 1}, 0};
-        vector<std::complex<double>> PauliZ = {1, 0, 0, -1};
+        vector<std::complex<TestType>> PauliX = {0, 1, 1, 0};
+        vector<std::complex<TestType>> PauliY = {0, {0, -1}, {0, 1}, 0};
+        vector<std::complex<TestType>> PauliZ = {1, 0, 0, -1};
 
-        vector<double> exp_values;
-        vector<double> exp_values_ref;
+        vector<TestType> exp_values;
+        vector<TestType> exp_values_ref;
         vector<vector<size_t>> wires_list = {{0}, {1}, {2}};
-        vector<vector<std::complex<double>>> operations_list;
+        vector<vector<std::complex<TestType>>> operations_list;
 
         operations_list = {PauliX, PauliX, PauliX};
         exp_values = Measurer.expval(operations_list, wires_list);
-        exp_values_ref = {0.492725, 0.420735, 0.194709};
+        exp_values_ref = {0.49272486, 0.42073549, 0.28232124};
         REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {PauliY, PauliY, PauliY};
         exp_values = Measurer.expval(operations_list, wires_list);
-        exp_values_ref = {-0.644218, -0.479426, -0.198669};
+        exp_values_ref = {-0.64421768, -0.47942553, -0.29552020};
         REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {PauliZ, PauliZ, PauliZ};
         exp_values = Measurer.expval(operations_list, wires_list);
-        exp_values_ref = {0.584984, 0.770151, 0.960530};
+        exp_values_ref = {0.58498357, 0.77015115, 0.91266780};
         REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
     }
 
     SECTION("Testing list of operators defined by its name:") {
-        vector<double> exp_values;
-        vector<double> exp_values_ref;
+        vector<TestType> exp_values;
+        vector<TestType> exp_values_ref;
         vector<vector<size_t>> wires_list = {{0}, {1}, {2}};
         vector<string> operations_list;
 
         operations_list = {"PauliX", "PauliX", "PauliX"};
         exp_values = Measurer.expval(operations_list, wires_list);
-        exp_values_ref = {0.492725, 0.420735, 0.194709};
+        exp_values_ref = {0.49272486, 0.42073549, 0.28232124};
         REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {"PauliY", "PauliY", "PauliY"};
         exp_values = Measurer.expval(operations_list, wires_list);
-        exp_values_ref = {-0.644218, -0.479426, -0.198669};
+        exp_values_ref = {-0.64421768, -0.47942553, -0.29552020};
         REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {"PauliZ", "PauliZ", "PauliZ"};
         exp_values = Measurer.expval(operations_list, wires_list);
-        exp_values_ref = {0.584984, 0.770151, 0.960530};
+        exp_values_ref = {0.58498357, 0.77015115, 0.91266780};
         REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
     }
 }
@@ -181,12 +153,12 @@ TEMPLATE_TEST_CASE("Sample", "[Measures]", float, double) {
         Initializing_StateVector<TestType>();
 
     // Initializing the measures class.
-    // It will attach to the StateVector, allowing measures to keep been taken.
+    // This object attaches to the statevector allowing several measures.
     Measures<TestType, StateVectorManagedCPU<TestType>> Measurer(
         Measured_StateVector);
-    vector<TestType> expected_probabilities = {0.687573, 0.013842, 0.089279,
-                                               0.001797, 0.180036, 0.003624,
-                                               0.023377, 0.000471};
+    vector<TestType> expected_probabilities = {
+        0.67078706, 0.03062806, 0.0870997,  0.00397696,
+        0.17564072, 0.00801973, 0.02280642, 0.00104134};
 
     size_t num_qubits = 3;
     size_t N = std::pow(2, num_qubits);
@@ -225,7 +197,7 @@ TEMPLATE_TEST_CASE("Variances", "[Measures]", float, double) {
         Initializing_StateVector<TestType>();
 
     // Initializing the measures class.
-    // It will attach to the StateVector, allowing measures to keep been taken.
+    // This object attaches to the statevector allowing several measures.
     Measures<TestType, StateVectorManagedCPU<TestType>> Measurer(
         Measured_StateVector);
 
@@ -233,14 +205,14 @@ TEMPLATE_TEST_CASE("Variances", "[Measures]", float, double) {
         vector<std::complex<TestType>> PauliX = {0, 1, 1, 0};
         vector<size_t> wires_single = {0};
         TestType variance = Measurer.var(PauliX, wires_single);
-        TestType variances_ref = 0.757222;
+        TestType variances_ref = 0.7572222;
         REQUIRE(variance == Approx(variances_ref).margin(1e-6));
     }
 
     SECTION("Testing single operation defined by its name:") {
         vector<size_t> wires_single = {0};
         TestType variance = Measurer.var("PauliX", wires_single);
-        TestType variances_ref = 0.757222;
+        TestType variances_ref = 0.7572222;
         REQUIRE(variance == Approx(variances_ref).margin(1e-6));
     }
 
@@ -259,17 +231,17 @@ TEMPLATE_TEST_CASE("Variances", "[Measures]", float, double) {
 
         operations_list = {PauliX, PauliX, PauliX};
         variances = Measurer.var(operations_list, wires_list);
-        variances_ref = {0.757222, 0.822982, 0.962088};
+        variances_ref = {0.7572222, 0.8229816, 0.9202947};
         REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
 
         operations_list = {PauliY, PauliY, PauliY};
         variances = Measurer.var(operations_list, wires_list);
-        variances_ref = {0.584984, 0.770151, 0.960530};
+        variances_ref = {0.5849835, 0.7701511, 0.9126678};
         REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
 
         operations_list = {PauliZ, PauliZ, PauliZ};
         variances = Measurer.var(operations_list, wires_list);
-        variances_ref = {0.657794, 0.406867, 0.077381};
+        variances_ref = {0.6577942, 0.4068672, 0.1670374};
         REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
     }
 
@@ -281,17 +253,17 @@ TEMPLATE_TEST_CASE("Variances", "[Measures]", float, double) {
 
         operations_list = {"PauliX", "PauliX", "PauliX"};
         variances = Measurer.var(operations_list, wires_list);
-        variances_ref = {0.757222, 0.822982, 0.962088};
+        variances_ref = {0.7572222, 0.8229816, 0.9202947};
         REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
 
         operations_list = {"PauliY", "PauliY", "PauliY"};
         variances = Measurer.var(operations_list, wires_list);
-        variances_ref = {0.584984, 0.770151, 0.960530};
+        variances_ref = {0.5849835, 0.7701511, 0.9126678};
         REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
 
         operations_list = {"PauliZ", "PauliZ", "PauliZ"};
         variances = Measurer.var(operations_list, wires_list);
-        variances_ref = {0.657794, 0.406867, 0.077381};
+        variances_ref = {0.6577942, 0.4068672, 0.1670374};
         REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
     }
 }

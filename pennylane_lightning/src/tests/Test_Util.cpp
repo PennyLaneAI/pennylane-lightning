@@ -107,57 +107,8 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
     }
 }
 
-/**
- * @brief Count number of 1s in the binary representation of x
- *
- * This is a slow version of countBit1 defined in Util.hpp
- */
-size_t popcount_slow(uint64_t x) {
-    size_t c = 0;
-    for (; x != 0U; x >>= 1U) {
-        if ((x & 1U) != 0U) {
-            c++;
-        }
-    }
-    return c;
-}
-
-/**
- * @brief Count number of trailing zeros in the binary representation of x
- *
- * This is a slow version of countTrailing0 defined in Util.hpp
- */
-size_t ctz_slow(uint64_t x) {
-    size_t c = 0;
-    while ((x & 1U) == 0) {
-        x >>= 1U;
-        c++;
-    }
-    return c;
-}
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_CASE("Utility bit operations", "[Util][BitUtil]") {
-    SECTION("Internal::countBit1Fast") {
-        { // for uint32_t
-            uint32_t n = 0;
-            CHECK(Util::Internal::countBit1(n) == 0);
-            for (uint32_t k = 0; k < 100; k++) {
-                n <<= 1U;
-                n ^= 1U;
-                CHECK(Util::Internal::countBit1(n) == popcount_slow(n));
-            }
-        }
-        { // for uint64_t
-            uint64_t n = 0;
-            CHECK(Util::Internal::countBit1(n) == 0);
-            for (uint32_t k = 0; k < 100; k++) {
-                n <<= 1U;
-                n ^= 1U;
-                CHECK(Util::Internal::countBit1(n) == popcount_slow(n));
-            }
-        }
-    }
-
     SECTION("isPerfectPowerOf2") {
         size_t n = 1U;
         CHECK(Util::isPerfectPowerOf2(n));
@@ -175,26 +126,6 @@ TEST_CASE("Utility bit operations", "[Util][BitUtil]") {
         if constexpr (sizeof(size_t) == 8) {
             // if size_t is uint64_t
             CHECK(!Util::isPerfectPowerOf2(1234556789012345678U));
-        }
-    }
-
-    SECTION("Internal::countTrailing0") {
-        { // for uint32_t
-            for (uint32_t c = 0; c < 31; c++) {
-                uint32_t n = static_cast<uint32_t>(1U)
-                             << static_cast<uint32_t>(c);
-                CHECK(Util::Internal::countTrailing0(n) == c);
-                CHECK(Util::Internal::countTrailing0(n | (1U << 31U)) == c);
-            }
-        }
-        { // for uint64_t
-            for (uint32_t c = 0; c < 63; c++) {
-                uint64_t n = static_cast<uint64_t>(1U)
-                             << static_cast<uint64_t>(c);
-                CHECK(Util::Internal::countTrailing0(n) == c);
-                CHECK(Util::Internal::countTrailing0(
-                          n | (uint64_t{1U} << 63U)) == c);
-            }
         }
     }
 
@@ -288,8 +219,6 @@ TEMPLATE_TEST_CASE("randomUnitary", "[Util]", float, double) {
     }
 }
 
-enum class TestEnum { One, Two, Many };
-
 TEST_CASE("Test utility functions for constants", "[Util][ConstantUtil]") {
     using namespace std::literals;
 
@@ -316,17 +245,25 @@ TEST_CASE("Test utility functions for constants", "[Util][ConstantUtil]") {
 
         REQUIRE(Util::count_unique(test_arr1) == 5);
         REQUIRE(Util::count_unique(test_arr2) == 5);
+
+        REQUIRE(Util::count_unique(std::array{nullptr, nullptr, nullptr}) == 1);
+        REQUIRE(Util::count_unique(std::array{0, 0, 0}) == 1);
+        REQUIRE(Util::count_unique(std::array{0, 1, 1}) == 2);
+        REQUIRE(Util::count_unique(std::array{0, 1, 2}) == 3);
     }
 
-    SECTION("static_lookup") {
-        std::array test_pairs = {
+    SECTION("lookup (constexpr context)") {
+        enum class TestEnum { One, Two, Many };
+
+        constexpr std::array test_pairs = {
             std::pair{TestEnum::One, uint32_t{1U}},
             std::pair{TestEnum::Two, uint32_t{2U}},
         };
 
-        REQUIRE(Util::static_lookup<TestEnum::One>(test_pairs) == 1U);
-        REQUIRE(Util::static_lookup<TestEnum::Two>(test_pairs) == 2U);
-        REQUIRE(Util::static_lookup<TestEnum::Many>(test_pairs) == uint32_t{});
+        static_assert(Util::lookup(test_pairs, TestEnum::One) == 1U);
+        static_assert(Util::lookup(test_pairs, TestEnum::Two) == 2U);
+        // The following line must not be compiled
+        // static_assert(Util::lookup(test_pairs, TestEnum::Many) == 2U);
     }
 }
 

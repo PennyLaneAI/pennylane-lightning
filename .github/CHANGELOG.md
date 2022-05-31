@@ -2,7 +2,16 @@
 
 ### New features since last release
 
+* Add `SingleExcitation` and `DoubleExcitation` qchem gates and generators.
+[(#289)](https://github.com/PennyLaneAI/pennylane-lightning/pull/289)
+
 ### Breaking changes
+
+* Codebase is now moving to C++20. The default compiler for Linux is now GCC10.
+[(#295)](https://github.com/PennyLaneAI/pennylane-lightning/pull/295)
+
+* Minimum macOS version is changed to 10.15 (Catalina).
+[(#295)](https://github.com/PennyLaneAI/pennylane-lightning/pull/295)
 
 ### Improvements
 
@@ -17,6 +26,9 @@ dev2 = qml.device('lightning.qubit', wires=4, c_dtype=np.complex128) # for doubl
 * Split matrix operations, refactor dispatch mechanisms, and add a benchmark suits.
 [(#274)](https://github.com/PennyLaneAI/pennylane-lightning/pull/274)
 
+* Add native support for the calculation of sparse Hamiltonians' expectation values. Sparse operations are offloaded to [Kokkos](https://github.com/kokkos/kokkos) and [Kokkos-Kernels](https://github.com/kokkos/kokkos-kernels).
+[(#283)](https://github.com/PennyLaneAI/pennylane-lightning/pull/283)
+
 ### Documentation
 
 * Use the centralized [Xanadu Sphinx Theme](https://github.com/XanaduAI/xanadu-sphinx-theme)
@@ -25,11 +37,14 @@ dev2 = qml.device('lightning.qubit', wires=4, c_dtype=np.complex128) # for doubl
 
 ### Bug fixes
 
+* Fix the issue with using available `clang-format` version in format.
+[#(288)](https://github.com/PennyLaneAI/pennylane-lightning/pull/288)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Mikhail Andrenkov, Chae-Yeun Park
+Ali Asadi, Amintor Dusko, Chae-Yeun Park, Lee James O'Riordan, Mikhail Andrenkov
 
 ---
 

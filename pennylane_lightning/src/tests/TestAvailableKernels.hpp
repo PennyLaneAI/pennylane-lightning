@@ -29,15 +29,9 @@ constexpr auto is_available_kernel(KernelType kernel) -> bool {
 template <size_t size>
 constexpr auto
 check_kernels_are_available(const std::array<KernelType, size> &arr) -> bool {
-    // TODO: change to constexpr std::all_of in C++20
-    // which is not constexpr in C++17.
-    // NOLINTNEXTLINE (readability-use-anyofallof)
-    for (const auto &kernel : arr) {
-        if (!is_available_kernel(kernel)) {
-            return false;
-        }
-    }
-    return true;
+    return std::all_of(std::begin(arr), std::end(arr), [](KernelType kernel) {
+        return is_available_kernel(kernel);
+    });
 }
 
 /*******************************************************************************

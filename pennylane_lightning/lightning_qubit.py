@@ -57,6 +57,7 @@ try:
         allocate_aligned_array,
         get_alignment,
         best_alignment,
+        Kokkos_info,
     )
 
     from ._serialize import _serialize_obs, _serialize_ops
@@ -64,16 +65,6 @@ try:
     CPP_BINARY_AVAILABLE = True
 except ModuleNotFoundError:
     CPP_BINARY_AVAILABLE = False
-
-
-UNSUPPORTED_PARAM_GATES_ADJOINT = (
-    "SingleExcitation",
-    "SingleExcitationPlus",
-    "SingleExcitationMinus",
-    "DoubleExcitation",
-    "DoubleExcitationPlus",
-    "DoubleExcitationMinus",
-)
 
 
 def _chunk_iterable(it, num_chunks):
@@ -267,9 +258,7 @@ class LightningQubit(DefaultQubit):
                     )
 
         for op in tape.operations:
-            if (
-                op.num_params > 1 and not isinstance(op, Rot)
-            ) or op.name in UNSUPPORTED_PARAM_GATES_ADJOINT:
+            if op.num_params > 1 and not isinstance(op, Rot):
                 raise QuantumFunctionError(
                     f"The {op.name} operation is not supported using "
                     'the "adjoint" differentiation method'
@@ -304,7 +293,7 @@ class LightningQubit(DefaultQubit):
             adj = AdjointJacobianC128()
 
         obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=self.use_csingle)
-        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map, use_csingle=self.use_csingle)
+        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map)
 
         ops_serialized = adj.create_ops_list(*ops_serialized)
 
@@ -439,9 +428,7 @@ class LightningQubit(DefaultQubit):
                 ket = np.ravel(self._pre_rotated_state)
 
             obs_serialized = _serialize_obs(tape, self.wire_map, use_csingle=self.use_csingle)
-            ops_serialized, use_sp = _serialize_ops(
-                tape, self.wire_map, use_csingle=self.use_csingle
-            )
+            ops_serialized, use_sp = _serialize_ops(tape, self.wire_map)
 
             ops_serialized = V.create_ops_list(*ops_serialized)
 
@@ -579,7 +566,6 @@ class LightningQubit(DefaultQubit):
             "Projector",
             "Hermitian",
             "Hamiltonian",
-            "SparseHamiltonian",
         ]:
             return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
@@ -594,6 +580,16 @@ class LightningQubit(DefaultQubit):
 
         state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
+        if observable.name == "SparseHamiltonian":
+            if Kokkos_info()["USE_KOKKOS"] == True:
+                # converting COO to CSR sparse representation.
+                CSR_SparseHamiltonian = observable.data[0].tocsr(copy=False)
+                return M.expval(
+                    CSR_SparseHamiltonian.indptr,
+                    CSR_SparseHamiltonian.indices,
+                    CSR_SparseHamiltonian.data,
+                )
+            return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
         # translate to wire labels used by device
         observable_wires = self.map_wires(observable.wires)

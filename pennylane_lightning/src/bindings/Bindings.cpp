@@ -51,6 +51,16 @@ void lightning_class_bindings(py::module_ &m) {
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
+    using np_arr_c = py::array_t<std::complex<ParamT>,
+                                 py::array::c_style | py::array::forcecast>;
+    using np_arr_r =
+        py::array_t<ParamT, py::array::c_style | py::array::forcecast>;
+    using sparse_index_type =
+        long int; // Kokkos Kernels needs signed int as Ordinal type.
+    using np_arr_sparse_ind =
+        py::array_t<sparse_index_type,
+                    py::array::c_style | py::array::forcecast>;
+
     //***********************************************************************//
     //                              StateVector
     //***********************************************************************//
@@ -71,11 +81,6 @@ void lightning_class_bindings(py::module_ &m) {
     //***********************************************************************//
 
     class_name = "ObsStructC" + bitsize;
-    using np_arr_c = py::array_t<std::complex<ParamT>,
-                                 py::array::c_style | py::array::forcecast>;
-    using np_arr_r =
-        py::array_t<ParamT, py::array::c_style | py::array::forcecast>;
-
     using obs_data_var = std::variant<std::monostate, np_arr_r, np_arr_c>;
     py::class_<ObsDatum<PrecisionT>>(m, class_name.c_str(), py::module_local())
         .def(py::init([](const std::vector<std::string> &names,
@@ -161,6 +166,7 @@ void lightning_class_bindings(py::module_ &m) {
     //***********************************************************************//
     //                              Operations
     //***********************************************************************//
+
     class_name = "OpsStructC" + bitsize;
     py::class_<OpsData<PrecisionT>>(m, class_name.c_str(), py::module_local())
         .def(py::init<
@@ -325,10 +331,23 @@ void lightning_class_bindings(py::module_ &m) {
                  return py::array_t<ParamT>(py::cast(M.probs(wires)));
              })
         .def("expval",
-             [](Measures<PrecisionT> &M, const std::string &operation,
-                const std::vector<size_t> &wires) {
-                 return M.expval(operation, wires);
-             })
+             static_cast<PrecisionT (Measures<PrecisionT>::*)(
+                 const std::string &, const std::vector<size_t> &)>(
+                 &Measures<PrecisionT>::expval),
+             "Expected value of an operation by name.")
+        .def(
+            "expval",
+            [](Measures<PrecisionT> &M, const np_arr_sparse_ind row_map,
+               const np_arr_sparse_ind entries, const np_arr_c values) {
+                return M.expval(
+                    static_cast<sparse_index_type *>(row_map.request().ptr),
+                    static_cast<sparse_index_type>(row_map.request().size),
+                    static_cast<sparse_index_type *>(entries.request().ptr),
+                    static_cast<std::complex<PrecisionT> *>(
+                        values.request().ptr),
+                    static_cast<sparse_index_type>(values.request().size));
+            },
+            "Expected value of a sparse Hamiltonian.")
         .def("generate_samples",
              [](Measures<PrecisionT> &M, size_t num_wires, size_t num_shots) {
                  auto &&result = M.generate_samples(num_shots);
@@ -405,6 +424,10 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
 
     /* Add compile info */
     m.def("runtime_info", &getRuntimeInfo, "Runtime information.");
+
+    /* Add Kokkos and Kokkos Kernels info */
+    m.def("Kokkos_info", &getKokkosInfo,
+          "Kokkos and Kokkos Kernels information.");
 
     lightning_class_bindings<float, float>(m);
     lightning_class_bindings<double, double>(m);

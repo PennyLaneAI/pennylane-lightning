@@ -64,7 +64,7 @@ struct testDispatchForKernel<
         // and compare it to the dynamic dispatcher
         auto test_st = ini_st;
         const auto gate_name =
-            std::string(Util::static_lookup<gate_op>(Constant::gate_names));
+            std::string(Util::lookup(Constant::gate_names, gate_op));
         DynamicDispatcher<PrecisionT>::getInstance().applyOperation(
             GateImplementation::kernel_id, test_st.data(), num_qubits,
             gate_name, wires, false, params);
@@ -72,14 +72,21 @@ struct testDispatchForKernel<
     }
 };
 
+constexpr auto calcMinNumWires(GateOperation gate_op) -> size_t {
+    if (Util::array_has_elt(Constant::multi_qubit_gates, gate_op)) {
+        return size_t{3};
+    }
+    return Util::lookup(Constant::gate_wires, gate_op);
+}
+
 template <typename PrecisionT, typename ParamT, class GateImplementation,
           size_t idx, class RandomEngine>
 constexpr void testAllGatesForKernelIter(RandomEngine &re,
                                          size_t max_num_qubits) {
     if constexpr (idx < static_cast<int>(GateOperation::END)) {
         constexpr auto gate_op = static_cast<GateOperation>(idx);
-
-        for (size_t num_qubits = 3; num_qubits <= max_num_qubits;
+        constexpr auto num_wires = calcMinNumWires(gate_op);
+        for (size_t num_qubits = num_wires; num_qubits <= max_num_qubits;
              num_qubits++) {
             testDispatchForKernel<PrecisionT, ParamT, GateImplementation,
                                   gate_op, RandomEngine>::test(re, num_qubits);

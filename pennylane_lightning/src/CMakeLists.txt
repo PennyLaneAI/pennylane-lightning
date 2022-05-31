@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 
 project(lightning_components LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20) # At least C++20 is required
 
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_OPENMP "Enable OpenMP" ON)
@@ -13,7 +13,7 @@ if(ENABLE_CLANG_TIDY)
     endif()
     message(STATUS "Using CLANG_TIDY_BINARY=${CLANG_TIDY_BINARY}")
     set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY_BINARY};
-                             -extra-arg=-std=c++17;
+                             -extra-arg=-std=c++20;
     )
 endif()
 

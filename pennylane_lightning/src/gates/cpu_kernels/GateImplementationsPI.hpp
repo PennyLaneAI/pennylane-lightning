@@ -32,6 +32,7 @@
 #include "LinearAlgebra.hpp"
 #include "PauliGenerator.hpp"
 
+#include <bit>
 #include <complex>
 #include <vector>
 
@@ -81,6 +82,9 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         GateOperation::CRot,
         GateOperation::Toffoli,
         GateOperation::CSWAP,
+        GateOperation::DoubleExcitation,
+        GateOperation::DoubleExcitationMinus,
+        GateOperation::DoubleExcitationPlus,
         GateOperation::MultiRZ};
 
     constexpr static std::array implemented_generators = {
@@ -94,6 +98,9 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         GeneratorOperation::CRX,
         GeneratorOperation::CRY,
         GeneratorOperation::CRZ,
+        GeneratorOperation::DoubleExcitation,
+        GeneratorOperation::DoubleExcitationMinus,
+        GeneratorOperation::DoubleExcitationPlus,
         GeneratorOperation::ControlledPhaseShift};
 
     constexpr static std::array implemented_matrices = {
@@ -789,6 +796,25 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         }
     }
 
+    /* Four-qubit gates */
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void
+    applyDoubleExcitation(std::complex<PrecisionT> *arr, size_t num_qubits,
+                          const std::vector<size_t> &wires,
+                          [[maybe_unused]] bool inverse, ParamT angle);
+
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void
+    applyDoubleExcitationMinus(std::complex<PrecisionT> *arr, size_t num_qubits,
+                               const std::vector<size_t> &wires,
+                               [[maybe_unused]] bool inverse, ParamT angle);
+
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void
+    applyDoubleExcitationPlus(std::complex<PrecisionT> *arr, size_t num_qubits,
+                              const std::vector<size_t> &wires,
+                              [[maybe_unused]] bool inverse, ParamT angle);
+
     /* Multi-qubit gates */
     template <class PrecisionT, class ParamT>
     static void applyMultiRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
@@ -808,7 +834,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             for (size_t k = 0; k < indices.size(); k++) {
-                shiftedState[indices[k]] *= shifts[Util::popcount(k) % 2];
+                shiftedState[indices[k]] *= shifts[std::popcount(k) % 2];
             }
         }
     }
@@ -961,5 +987,25 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         // NOLINTNEXTLINE(readability-magic-numbers)
         return static_cast<PrecisionT>(1);
     }
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto
+    applyGeneratorDoubleExcitation(std::complex<PrecisionT> *arr,
+                                   size_t num_qubits,
+                                   const std::vector<size_t> &wires,
+                                   [[maybe_unused]] bool adj) -> PrecisionT;
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto applyGeneratorDoubleExcitationMinus(
+        std::complex<PrecisionT> *arr, size_t num_qubits,
+        const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
+        -> PrecisionT;
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto
+    applyGeneratorDoubleExcitationPlus(std::complex<PrecisionT> *arr,
+                                       size_t num_qubits,
+                                       const std::vector<size_t> &wires,
+                                       [[maybe_unused]] bool adj) -> PrecisionT;
 };
 } // namespace Pennylane::Gates

@@ -224,7 +224,7 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
                            const Util::IntegerInterval<size_t> &interval,
                            Gates::KernelType kernel) {
         /* Priority for all threading is 1 */
-        Util::for_each_enum<Threading>([=](Threading threading) {
+        Util::for_each_enum<Threading>([=, this](Threading threading) {
             assignKernelForOp(op, threading, memory_model, 1, interval, kernel);
         });
     }
@@ -238,7 +238,7 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
                            const Util::IntegerInterval<size_t> &interval,
                            Gates::KernelType kernel) {
         /* Priority for all memory model is 2 */
-        Util::for_each_enum<CPUMemoryModel>([=](CPUMemoryModel memory_model) {
+        Util::for_each_enum<CPUMemoryModel>([=, this](CPUMemoryModel memory_model) {
             assignKernelForOp(op, threading, memory_model, 2, interval, kernel);
         });
     }
@@ -253,7 +253,7 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
                            Gates::KernelType kernel) {
         /* Priority is 0 */
         Util::for_each_enum<Threading, CPUMemoryModel>(
-            [=](Threading threading, CPUMemoryModel memory_model) {
+            [=, this](Threading threading, CPUMemoryModel memory_model) {
                 assignKernelForOp(op, threading, memory_model, 0, interval,
                                   kernel);
             });
