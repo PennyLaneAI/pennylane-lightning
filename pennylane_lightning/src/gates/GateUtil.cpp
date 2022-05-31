@@ -78,9 +78,6 @@ auto ValueForKernelHelper(
 /**
  * @brief For a given gate implementation class, this variable records the
  * pointer to the first and last + 1 elements of implemented_gates.
- *
- * TODO: change to std::begin and std::end when they become constrpx
- * in all supported compilers.
  */
 template <class GateImplementation>
 constexpr auto implementedGatesIterPair =

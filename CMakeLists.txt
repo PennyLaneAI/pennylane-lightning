@@ -7,12 +7,11 @@ set(LOGO [=[
 ]=])
 message(${LOGO})
 
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
 
-project(pennylane_lightning)
+set(CMAKE_CXX_STANDARD 20) # At least C++20 is required
 
 project(pennylane_lightning
-
     DESCRIPTION "C++ state-vector simulator bindings for PennyLane. "
     LANGUAGES CXX
 )
@@ -34,8 +33,6 @@ set_pennylane_lightning_version(${PROJECT_SOURCE_DIR}/pennylane_lightning/_versi
 
 message(STATUS "pennylane_lightning version ${VERSION_STRING}")
 set(PROJECT_VERSION ${VERSION_STRING})
-
-set(CMAKE_CXX_STANDARD 17) # At least C++17 is required
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE RelWithDebInfo)
