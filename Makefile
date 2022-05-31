@@ -102,7 +102,7 @@ test-cpp-kokkos:
 benchmark:
 	cmake --build BuildBench --target clean || true
 	rm -rf ./BuildBench/CMakeCache.txt ./BuildBench/compiler_info.txt ./BuildBench/run_gate_benchmark.sh
-	cmake $(LIGHTNING_CPP_DIR) -BBuildBench -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_AVX=ON
+	cmake $(LIGHTNING_CPP_DIR) -BBuildBench -DCMAKE_BUILD_TYPE=Release -DENABLE_AVX=ON
 	cmake --build ./BuildBench
 
 .PHONY: gbenchmark

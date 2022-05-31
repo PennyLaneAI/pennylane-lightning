@@ -52,7 +52,6 @@ option(ENABLE_BLAS "Enable BLAS" OFF)
 
 # Other build options
 option(BUILD_TESTS "Build cpp tests" OFF)
-option(BUILD_EXAMPLES "Build cpp examples" OFF)
 option(BUILD_BENCHMARKS "Enable cpp benchmarks" OFF)
 
 # Process compile options
