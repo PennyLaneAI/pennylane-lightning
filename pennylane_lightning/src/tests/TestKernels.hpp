@@ -4,9 +4,9 @@
  * We define test kernels. Note that kernels not registered to
  * AvailableKernels can be also tested by adding it to here.
  */
+#include "AvailableKernels.hpp"
 #include "Macros.hpp"
 #include "TypeList.hpp"
-#include "AvailableKernels.hpp"
 
 #include "cpu_kernels/GateImplementationsLM.hpp"
 #include "cpu_kernels/GateImplementationsPI.hpp"

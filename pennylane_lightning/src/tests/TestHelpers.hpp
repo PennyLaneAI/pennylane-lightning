@@ -5,8 +5,8 @@
 #include "LinearAlgebra.hpp"
 #include "Macros.hpp"
 #include "Memory.hpp"
-#include "TestKernels.hpp"
 #include "StateVectorManagedCPU.hpp"
+#include "TestKernels.hpp"
 #include "Util.hpp"
 
 #include <catch2/catch.hpp>

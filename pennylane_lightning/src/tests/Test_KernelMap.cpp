@@ -78,16 +78,16 @@ TEST_CASE("Test several limiting cases of default kernels", "[KernelMap]") {
     auto &instance = OperationKernelMap<Gates::GateOperation>::getInstance();
     SECTION("Single thread, large number of qubits") {
         // For large N, single thread calls "LM" for all single- and two-qubit
-        // gates. For three-qubit gates, we use PI.
-        auto gate_map = instance.getKernelMap(24, Threading::SingleThread,
+        // gates. For k-qubit gates with k >= 3, we use PI.
+        auto gate_map = instance.getKernelMap(28, Threading::SingleThread,
                                               CPUMemoryModel::Unaligned);
         Util::for_each_enum<Gates::GateOperation>(
             [&gate_map](Gates::GateOperation gate_op) {
                 INFO(Util::lookup(Gates::Constant::gate_names, gate_op));
                 if (gate_op == Gates::GateOperation::MultiRZ) {
                     REQUIRE(gate_map[gate_op] == Gates::KernelType::LM);
-                } else if (Util::lookup(Gates::Constant::gate_wires, gate_op) !=
-                           3) {
+                } else if (Util::lookup(Gates::Constant::gate_wires, gate_op) <=
+                           2) {
                     REQUIRE(gate_map[gate_op] == Gates::KernelType::LM);
                 } else {
                     REQUIRE(gate_map[gate_op] == Gates::KernelType::PI);
