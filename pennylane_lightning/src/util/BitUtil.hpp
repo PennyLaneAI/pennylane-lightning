@@ -75,6 +75,9 @@ inline auto constexpr fillTrailingOnes(size_t nbits) -> IntegerType {
  */
 template <class IntegerType = size_t>
 inline auto constexpr fillLeadingOnes(size_t pos) -> size_t {
+    static_assert(std::is_integral_v<IntegerType> &&
+                  std::is_unsigned_v<IntegerType>);
+
     return (~IntegerType{0}) << pos;
 }
 
