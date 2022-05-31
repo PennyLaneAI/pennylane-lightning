@@ -79,8 +79,7 @@ using const_data_view_type =
  * @brief Create a Kokkos Sparse Matrix object with unmanaged views.
  *
  * @param row_map_ptr   Pointer to the row_map array.
- *                      The j element encodes the number of non-zeros above row
- * j.
+ * The j element encodes the number of non-zeros above row j.
  * @param numRows       Matrix total number or rows.
  * @param entries_ptr   Pointer to the array with the non-zero elements column
  * indices.
@@ -113,8 +112,7 @@ const_crs_matrix_type<fp_precision> create_Kokkos_Sparse_Matrix(
  * @param vector_ptr    pointer to the vector.
  * @param vector_size   size of the vector.
  * @param row_map_ptr   pointer to the row_map.
- *                      The j element encodes the number of non-zeros above row
- * j.
+ * The j element encodes the number of non-zeros above row j.
  * @param row_map_size  number of elements in the row_map.
  * @param entries_ptr   pointer to the column indices of the non-zero elements.
  * @param values_ptr    non-zero elements.
@@ -167,14 +165,12 @@ namespace Pennylane::Util {
  * @param vector_ptr    pointer to the vector.
  * @param vector_size   size of the vector.
  * @param row_map_ptr   pointer to the row_map.
- *                      The j element encodes the number of non-zeros above row
- * j.
+ * The j element encodes the number of non-zeros above row j.
  * @param row_map_size  number of elements in the row_map.
  * @param entries_ptr   pointer to the column indices of the non-zero elements.
  * @param values_ptr    non-zero elements.
  * @param numNNZ        number of non-zero elements.
  * @param result        result of the matrix vector multiplication.
- * @param throw_exception if will true an exception.
  */
 template <class fp_precision, class index_type>
 void apply_Sparse_Matrix_Kokkos(
@@ -185,12 +181,9 @@ void apply_Sparse_Matrix_Kokkos(
     [[maybe_unused]] const index_type *entries_ptr,
     [[maybe_unused]] const std::complex<fp_precision> *values_ptr,
     [[maybe_unused]] const index_type numNNZ,
-    [[maybe_unused]] std::vector<std::complex<fp_precision>> &result,
-    bool throw_exception = true) {
-    if (throw_exception) {
-        PL_ABORT("Executing the product of a Sparse matrix and a vector needs "
-                 "Kokkos and Kokkos Kernels installation.");
-    }
+    [[maybe_unused]] std::vector<std::complex<fp_precision>> &result) {
+    PL_ABORT("Executing the product of a Sparse matrix and a vector needs "
+             "Kokkos and Kokkos Kernels installation.");
 };
 } // namespace Pennylane::Util
 #endif
@@ -205,8 +198,7 @@ namespace Pennylane::Util {
  * @param vector_ptr    pointer to the vector.
  * @param vector_size   size of the vector.
  * @param row_map_ptr   pointer to the row_map.
- *                      The j element encodes the number of non-zeros above row
- * j.
+ * The j element encodes the number of non-zeros above row j.
  * @param row_map_size  number of elements in the row_map.
  * @param entries_ptr   pointer to the column indices of the non-zero elements.
  * @param values_ptr    non-zero elements.
