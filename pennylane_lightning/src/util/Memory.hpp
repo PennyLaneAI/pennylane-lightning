@@ -36,7 +36,7 @@ namespace Pennylane::Util {
  * @return Pointer to the allocated memory
  */
 inline auto alignedAlloc(uint32_t alignment, size_t bytes) -> void * {
-#if defined(__clang__)
+#if defined(__clang__) && defined(__APPLE__)
     /* Apple clang does not support std::aligned_alloc in Mac 10.14.
      * Thus we use Posix function instead. */
     void *p;
