@@ -199,7 +199,7 @@ namespace Pennylane::Util {
 
 /**
  * @brief Apply a sparse matrix to a vector with Kokkos.
- * 
+ *
  * @tparam fp_precision data float point precision.
  * @tparam index_type integer type used as indices of the sparse matrix.
  * @param vector_ptr    pointer to the vector.
@@ -211,7 +211,8 @@ namespace Pennylane::Util {
  * @param entries_ptr   pointer to the column indices of the non-zero elements.
  * @param values_ptr    non-zero elements.
  * @param numNNZ        number of non-zero elements.
- * @return std::vector<std::complex<fp_precision>> result of the matrix vector multiplication.
+ * @return std::vector<std::complex<fp_precision>> result of the matrix vector
+ * multiplication.
  */
 template <class fp_precision, class index_type>
 std::vector<std::complex<fp_precision>> apply_Sparse_Matrix(
