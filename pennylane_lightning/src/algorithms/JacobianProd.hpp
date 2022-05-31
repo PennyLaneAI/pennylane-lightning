@@ -117,7 +117,7 @@ template <class T = double> class VectorJacobianProduct {
                     -> std::vector<T> { return std::vector<T>(num_params, 0); };
         }
 
-        return [=](const JacobianData<T> &jd) -> std::vector<T> {
+        return [=, this](const JacobianData<T> &jd) -> std::vector<T> {
             if (!jd.hasTrainableParams()) {
                 // The jd has no trainable parameters;
                 // the VJP is simple {}.
