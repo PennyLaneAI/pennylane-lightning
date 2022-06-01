@@ -35,7 +35,13 @@ namespace Pennylane::Util {
  */
 inline auto alignedAlloc(uint32_t alignment, size_t bytes) -> void * {
 #if defined(__clang__) && defined(__APPLE__)
-    return ::aligned_alloc(alignment, bytes);
+    /*
+     * We use `posix_memalign` for MacOS as Mac does not support
+     * `std::aligned_alloc` properly yet (even in MacOS 10.15).
+     */
+    void *p;
+    posix_memalign(&p, alignment, bytes);
+    return p;
 #elif defined(_MSC_VER)
     return _aligned_malloc(bytes, alignment);
 #else

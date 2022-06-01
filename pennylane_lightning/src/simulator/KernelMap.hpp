@@ -125,7 +125,14 @@ class PriorityDispatchSet {
 };
 ///@endcond
 
+/**
+ * @brief A dummy type used as a tag for a function.
+ */
 struct AllThreading {};
+
+/**
+ * @brief A dummy type used as a tag for a function.
+ */
 struct AllMemoryModel {};
 
 constexpr static AllThreading all_threading{};
