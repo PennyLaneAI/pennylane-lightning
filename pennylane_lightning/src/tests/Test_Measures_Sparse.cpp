@@ -31,7 +31,7 @@ TEMPLATE_TEST_CASE("Expected Values - Sparse Hamiltonian [Kokkos]",
     auto Measured_StateVector = Initializing_StateVector<TestType>();
 
     // Initializing the measures class.
-    // This object attachs to the statevector allowing several measures.
+    // This object attaches to the statevector allowing several measures.
     Measures<TestType, StateVectorManagedCPU<TestType>> Measurer(
         Measured_StateVector);
 
