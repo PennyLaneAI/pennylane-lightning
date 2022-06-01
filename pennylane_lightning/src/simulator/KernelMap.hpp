@@ -207,7 +207,7 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
         if (std::find(allowed_kernels_.at(memory_model).cbegin(),
                       allowed_kernels_.at(memory_model).cend(),
                       kernel) == allowed_kernels_.at(memory_model).cend()) {
-            PL_ABORT("The given kernel is now allowed for "
+            PL_ABORT("The given kernel is not allowed for "
                      "the given memory model.");
         }
         const auto dispatch_key = toDispatchKey(threading, memory_model);
