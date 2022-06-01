@@ -84,14 +84,15 @@ void testGeneratorForGate(RandomEngine &re, bool inverse) {
     constexpr static auto eps = PrecisionT{1e-3}; // For finite difference
 
     constexpr static auto gate_op = Util::lookup(generator_gate_pairs, gntr_op);
-    constexpr static auto gate_name = Util::lookup(Constant::gate_names, gate_op);
+    constexpr static auto gate_name =
+        Util::lookup(Constant::gate_names, gate_op);
     constexpr static auto min_num_qubits = minNumQubitsFor(gntr_op);
     constexpr static size_t max_num_qubits = 6;
 
     DYNAMIC_SECTION("Test generator of " << gate_name << " for kernel "
                                          << GateImplementation::name) {
         for (size_t num_qubits = min_num_qubits; num_qubits < max_num_qubits;
-                num_qubits++) {
+             num_qubits++) {
             const auto wires = createWires(gate_op);
             const auto ini_st = createRandomState<PrecisionT>(re, num_qubits);
 
@@ -104,14 +105,15 @@ void testGeneratorForGate(RandomEngine &re, bool inverse) {
 
             /* Apply generator to gntr_st */
             auto gntr_st = ini_st;
-            PrecisionT scale = gntr_func(gntr_st.data(), num_qubits, wires, false);
+            PrecisionT scale =
+                gntr_func(gntr_st.data(), num_qubits, wires, false);
             if (inverse) {
                 scale *= -1;
             }
             scaleVector(gntr_st, I * scale);
 
-            /* Compute the derivative of the unitary gate applied to ini_st using
-             * finite difference */
+            /* Compute the derivative of the unitary gate applied to ini_st
+             * using finite difference */
 
             auto diff_st_1 = ini_st;
             auto diff_st_2 = ini_st;
@@ -119,7 +121,8 @@ void testGeneratorForGate(RandomEngine &re, bool inverse) {
             gate_func(diff_st_1.data(), num_qubits, wires, inverse, eps);
             gate_func(diff_st_2.data(), num_qubits, wires, inverse, -eps);
 
-            std::vector<ComplexPrecisionT> gate_der_st(size_t{1U} << num_qubits);
+            std::vector<ComplexPrecisionT> gate_der_st(size_t{1U}
+                                                       << num_qubits);
 
             std::transform(
                 diff_st_1.cbegin(), diff_st_1.cend(), diff_st_2.cbegin(),
