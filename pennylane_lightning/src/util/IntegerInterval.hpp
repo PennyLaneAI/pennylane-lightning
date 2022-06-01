@@ -13,7 +13,9 @@
 // limitations under the License.
 /**
  * @file
+ * Define IntegerInterval class
  */
+#pragma once
 #include <algorithm>
 #include <cassert>
 #include <limits>
@@ -98,7 +100,8 @@ constexpr auto full_domain() -> IntegerInterval<IntegerType> {
 /**
  * @brief
  * @rst
- * Test if :math:`I_1 \cap I_2 = \phi`.
+ * Test if the intersection of two intervals are empty, i.e.
+ * :math:`I_1 \cap I_2 = \phi`.
  * @endrst
  */
 template <typename IntegerType>

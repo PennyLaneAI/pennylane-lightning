@@ -1,6 +1,7 @@
 #include "Constant.hpp"
 #include "ConstantUtil.hpp"
 #include "KernelMap.hpp"
+#include "TestHelpers.hpp"
 #include "Util.hpp"
 
 #include <catch2/catch.hpp>
@@ -23,8 +24,8 @@ TEST_CASE("Test PriorityDispatchSet", "[PriorityDispatchSet]") {
 
     SECTION("Get Kernel") {
         REQUIRE(pds.getKernel(15) == Gates::KernelType::PI);
-        REQUIRE_THROWS_WITH(pds.getKernel(30),
-                            Contains("Cannot find a kernel"));
+        PL_CHECK_THROWS_MATCHES(pds.getKernel(30), Util::LightningException,
+                                "Cannot find a kernel");
     }
 }
 
@@ -132,9 +133,9 @@ TEST_CASE("Test KernelMap functionalities", "[KernelMap]") {
                 original_kernel);
     }
     SECTION("Test remove non-existing element") {
-        REQUIRE_THROWS_WITH(
+        PL_CHECK_THROWS_MATCHES(
             instance.removeKernelForOp(GateOperation::PauliX, Threading::END,
                                        CPUMemoryModel::Unaligned, 100),
-            Contains("does not exist"));
+            Util::LightningException, "does not exist");
     }
 }

@@ -15,6 +15,7 @@
  * @file
  * Set/get Default kernels for statevector
  */
+#pragma once
 #include "Error.hpp"
 #include "GateOperation.hpp"
 #include "IntegerInterval.hpp"
