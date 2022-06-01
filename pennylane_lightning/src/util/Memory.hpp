@@ -37,8 +37,6 @@ namespace Pennylane::Util {
  */
 inline auto alignedAlloc(uint32_t alignment, size_t bytes) -> void * {
 #if defined(__clang__) && defined(__APPLE__)
-    /* Apple clang does not support std::aligned_alloc in Mac 10.14.
-     * Thus we use Posix function instead. */
     void *p;
     posix_memalign(&p, alignment, bytes);
     return p;
@@ -55,7 +53,7 @@ inline auto alignedAlloc(uint32_t alignment, size_t bytes) -> void * {
  * @param p Pointer to the memory location allocated by aligendAlloc
  */
 inline void alignedFree(void *p) {
-#if defined(__clang__)
+#if defined(__clang__) && defined(__APPLE__)
     return ::free(p); // NOLINT(hicpp-no-malloc)
 #elif defined(_MSC_VER)
     return _aligned_free(p);
