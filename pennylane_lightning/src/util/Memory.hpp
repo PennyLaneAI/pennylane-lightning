@@ -23,27 +23,6 @@
 #include "TypeList.hpp"
 
 namespace Pennylane::Util {
-template <OperatingSystem os>
-inline auto alignedAllocImpl(uint32_t alignment, size_t bytes) -> void * {
-    return std::aligned_alloc(alignment, bytes);
-}
-
-/*
- * We use `posix_memalign` for MacOS as Mac does not support
- * `std::aligned_alloc` properly yet (even in MacOS 10.15).
- */
-inline auto alignedAllocImpl<OperatingSystem::MacOS>(uint32_t alignment,
-                                                     size_t bytes) -> void * {
-    void *p;
-    posix_memalign(&p, alignment, bytes);
-    return p;
-}
-
-inline auto alignedAllocImpl<OperatingSystem::Windows>(uint32_t alignment,
-                                                       size_t bytes) -> void * {
-    return _aligned_malloc(bytes, alignment);
-}
-
 /**
  * @brief Custom aligned allocate function.
  *
@@ -55,7 +34,19 @@ inline auto alignedAllocImpl<OperatingSystem::Windows>(uint32_t alignment,
  * @return Pointer to the allocated memory
  */
 inline auto alignedAlloc(uint32_t alignment, size_t bytes) -> void * {
-    return alignedAllocImpl<Constant::operating_system>(alignment, bytes);
+#if defined(__clang__) && defined(__APPLE__)
+    /*
+     * We use `posix_memalign` for MacOS as Mac does not support
+     * `std::aligned_alloc` properly yet (even in MacOS 10.15).
+     */
+    void *p;
+    posix_memalign(&p, alignment, bytes);
+    return p;
+#elif defined(_MSC_VER)
+    return _aligned_malloc(bytes, alignment);
+#else
+    return std::aligned_alloc(alignment, bytes);
+#endif
 }
 
 /**
