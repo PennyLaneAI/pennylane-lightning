@@ -411,7 +411,7 @@ auto GateImplementationsPI::applyGeneratorDoubleExcitationPlus(
     for (const size_t &externalIndex : externalIndices) {
         std::complex<PrecisionT> *shiftedState = arr + externalIndex;
         for (const size_t &i : indices) {
-            shiftedState[indices[i]] *= -1;
+            shiftedState[i] *= -1;
         }
 
         shiftedState[indices[i0]] *= -Util::IMAG<PrecisionT>();
