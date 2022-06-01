@@ -135,7 +135,13 @@ struct AllThreading {};
  */
 struct AllMemoryModel {};
 
+/**
+ * @brief A dummy variable used as a tag for indicating all threading options.
+ */
 constexpr static AllThreading all_threading{};
+/**
+ * @brief A dummy variable used as a tag for indicating all memory models.
+ */
 constexpr static AllMemoryModel all_memory_model{};
 
 /**
