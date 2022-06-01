@@ -54,7 +54,7 @@ inline void alignedFree(void *p) {
 #elif defined(_MSC_VER)
     return _aligned_free(p);
 #else
-    return std::free(p);
+    return std::free(p); // NOLINT(hicpp-no-malloc)
 #endif
 }
 
