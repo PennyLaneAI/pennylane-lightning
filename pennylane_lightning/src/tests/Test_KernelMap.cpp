@@ -95,13 +95,6 @@ TEST_CASE("Test several limiting cases of default kernels", "[KernelMap]") {
                 }
             });
     }
-    SECTION("Single thread, N = 14") {
-        // For large N = 14, IsingXX with "PI" is slightly faster
-        auto gate_map = instance.getKernelMap(14, Threading::SingleThread,
-                                              CPUMemoryModel::Unaligned);
-        REQUIRE(gate_map[Gates::GateOperation::IsingXX] ==
-                Gates::KernelType::PI);
-    }
 }
 
 TEST_CASE("Test KernelMap functionalities", "[KernelMap]") {
