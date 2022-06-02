@@ -2,7 +2,7 @@
 /**
  * @file
  * We define test kernels. Note that kernels not registered to
- * AvailableKernels can be also tested by adding it to here.
+ * AvailableKernels can also be tested by adding it here.
  */
 #include "AvailableKernels.hpp"
 #include "Macros.hpp"
