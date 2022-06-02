@@ -43,6 +43,7 @@ namespace Pennylane {
  * string-based function dispatch.
  *
  * @tparam fp_t Floating point precision of underlying measurements.
+ * @tparam SVType type of the statevector to be measured.
  */
 template <class fp_t = double, class SVType = StateVectorRaw<fp_t>>
 class Measures {
@@ -194,7 +195,7 @@ class Measures {
     /**
      * @brief Expected value for a list of observables.
      *
-     * @tparam operation type.
+     * @tparam op_type Operation type.
      * @param operations_list List of operations to measure.
      * @param wires_list List of wires where to apply the operators.
      * @return Floating point std::vector with expected values for the
@@ -271,6 +272,7 @@ class Measures {
     /**
      * @brief Variance for a list of observables.
      *
+     * @tparam op_type Operation type.
      * @param operations_list List of operations to measure.
      * Square matrix in row-major order or string with the operator name.
      * @param wires_list List of wires where to apply the operators.

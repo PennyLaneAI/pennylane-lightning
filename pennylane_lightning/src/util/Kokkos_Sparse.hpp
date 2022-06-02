@@ -78,8 +78,8 @@ using const_data_view_type =
 /**
  * @brief Create a Kokkos Sparse Matrix object with unmanaged views.
  *
- * @param row_map_ptr   Pointer to the row_map array.
- * The j element encodes the number of non-zeros above row j.
+ * @param row_map_ptr   Pointer to the row_map array. The j element of this
+ * array returns the number of non-zeros above the row j.
  * @param numRows       Matrix total number or rows.
  * @param entries_ptr   Pointer to the array with the non-zero elements column
  * indices.
@@ -111,8 +111,8 @@ const_crs_matrix_type<fp_precision> create_Kokkos_Sparse_Matrix(
  * @tparam index_type integer type used as indices of the sparse matrix.
  * @param vector_ptr    pointer to the vector.
  * @param vector_size   size of the vector.
- * @param row_map_ptr   pointer to the row_map.
- * The j element encodes the number of non-zeros above row j.
+ * @param row_map_ptr   Pointer to the row_map array. The j element of this
+ * array returns the number of non-zeros above the row j.
  * @param row_map_size  number of elements in the row_map.
  * @param entries_ptr   pointer to the column indices of the non-zero elements.
  * @param values_ptr    non-zero elements.
@@ -164,8 +164,8 @@ namespace Pennylane::Util {
  * @tparam index_type integer type used as indices of the sparse matrix.
  * @param vector_ptr    pointer to the vector.
  * @param vector_size   size of the vector.
- * @param row_map_ptr   pointer to the row_map.
- * The j element encodes the number of non-zeros above row j.
+ * @param row_map_ptr   Pointer to the row_map array. The j element of this
+ * array returns the number of non-zeros above the row j.
  * @param row_map_size  number of elements in the row_map.
  * @param entries_ptr   pointer to the column indices of the non-zero elements.
  * @param values_ptr    non-zero elements.
@@ -197,8 +197,8 @@ namespace Pennylane::Util {
  * @tparam index_type integer type used as indices of the sparse matrix.
  * @param vector_ptr    pointer to the vector.
  * @param vector_size   size of the vector.
- * @param row_map_ptr   pointer to the row_map.
- * The j element encodes the number of non-zeros above row j.
+ * @param row_map_ptr   Pointer to the row_map array. The j element of this
+ * array returns the number of non-zeros above the row j.
  * @param row_map_size  number of elements in the row_map.
  * @param entries_ptr   pointer to the column indices of the non-zero elements.
  * @param values_ptr    non-zero elements.
