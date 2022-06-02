@@ -89,20 +89,9 @@ int assignDefaultKernelsForGateOp() {
     instance.assignKernelForOp(GateOperation::SWAP, all_threading,
                                all_memory_model, all_qubit_numbers,
                                Gates::KernelType::LM);
-
     instance.assignKernelForOp(GateOperation::IsingXX, all_threading,
-                               // NOLINTNEXTLINE(readability-magic-numbers)
-                               all_memory_model, less_than<size_t>(12),
+                               all_memory_model, all_qubit_numbers,
                                Gates::KernelType::LM);
-    instance.assignKernelForOp(
-        GateOperation::IsingXX, all_threading, all_memory_model,
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        in_between_closed<size_t>(12, 20), Gates::KernelType::PI);
-    instance.assignKernelForOp(GateOperation::IsingXX, all_threading,
-                               // NOLINTNEXTLINE(readability-magic-numbers)
-                               all_memory_model, larger_than<size_t>(20),
-                               Gates::KernelType::LM);
-
     instance.assignKernelForOp(GateOperation::IsingYY, all_threading,
                                all_memory_model, all_qubit_numbers,
                                Gates::KernelType::LM);
