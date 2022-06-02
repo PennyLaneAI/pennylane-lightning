@@ -179,10 +179,10 @@ namespace Pennylane::Gates::Constant {
     std::pair<GateOperation, size_t>{GateOperation::SingleExcitationMinus, 2},
     std::pair<GateOperation, size_t>{GateOperation::SingleExcitationPlus, 2},
     std::pair<GateOperation, size_t>{GateOperation::Toffoli, 3},
+    std::pair<GateOperation, size_t>{GateOperation::CSWAP, 3},
     std::pair<GateOperation, size_t>{GateOperation::DoubleExcitation, 4},
     std::pair<GateOperation, size_t>{GateOperation::DoubleExcitationMinus, 4},
     std::pair<GateOperation, size_t>{GateOperation::DoubleExcitationPlus, 4},
-    std::pair<GateOperation, size_t>{GateOperation::CSWAP, 3},
 };
 
 /**
