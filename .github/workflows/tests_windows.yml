@@ -86,7 +86,7 @@ jobs:
             Subst Z: (pwd)
             Set-Location -Path "Z:\"
             cmake ./pennylane_lightning/src -BBuild  -DBUILD_TESTS=ON -DENABLE_KOKKOS=ON -DENABLE_OPENMP=OFF -DENABLE_WARNINGS=OFF -T clangcl
-            cmake --build ./Build --config Debug
+            cmake --build ./Build --config Debug --parallel 2
             mkdir -p ./Build/tests/results
             .\Build\tests\Debug\runner.exe --order lex --reporter junit --out .\Build\tests\results\report.xml
             OpenCppCoverage --sources pennylane_lightning\src --export_type cobertura:coverage.xml Build\tests\Debug\runner.exe

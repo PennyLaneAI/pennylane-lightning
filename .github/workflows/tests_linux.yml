@@ -160,7 +160,7 @@ jobs:
       - name: Build and run unit tests for code coverage
         run: |
             cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DENABLE_KOKKOS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
-            cmake --build ./BuildCov
+            cmake --build ./BuildCov --parallel 2
             cd ./BuildCov
             mkdir -p ./tests/results
             ./tests/runner --order lex --reporter junit --out ./tests/results/report.xml
