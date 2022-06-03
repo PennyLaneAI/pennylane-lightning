@@ -24,7 +24,7 @@ using namespace Pennylane::Algorithms;
  * @param
  */
 template <class PrecisionT, class RandomEngine>
-auto createRandomOps(RandomEngine &re, size_t length) -> OpsData<PrecisionT> {
+auto createRandomOps(RandomEngine &re, size_t length, size_t wires) -> OpsData<PrecisionT> {
     using namespace Pennylane::Gates;
 
     std::array gates_to_use = {GateOperation::RX, GateOperation::RY,
@@ -46,7 +46,7 @@ auto createRandomOps(RandomEngine &re, size_t length) -> OpsData<PrecisionT> {
         ops_names.emplace_back(gate_name);
         ops_params.emplace_back(std::vector<PrecisionT>{param_dist(re)});
         ops_inverses.emplace_back(inverse_dist(re));
-        ops_wires.emplace_back(createWires(gate_op));
+        ops_wires.emplace_back(createWires(gate_op, wires));
     }
 
     return {ops_names, ops_params, ops_wires, ops_inverses, {{}}};
@@ -178,7 +178,7 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
     SECTION(
         "Check the result is consistent with adjoint diff with observables") {
         std::mt19937 re{1337};
-        auto ops_data = createRandomOps<TestType>(re, 10);
+        auto ops_data = createRandomOps<TestType>(re, 10, 3);
         auto obs = std::make_shared<NamedObs<TestType>>("PauliZ",
                                                         std::vector<size_t>{0});
 
@@ -197,7 +197,7 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
 
         const auto ini_st = createProductState<TestType>("+++");
 
-        StateVectorManaged<TestType> sv(ini_st.data(), ini_st.size());
+        StateVectorManagedCPU<TestType> sv(ini_st.data(), ini_st.size());
         applyOperations(sv, ops_data);
         JacobianData<TestType> jd{
             num_params, 8,        sv.getDataVector().data(),

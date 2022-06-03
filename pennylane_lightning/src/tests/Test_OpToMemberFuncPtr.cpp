@@ -129,9 +129,15 @@ class DummyImplementation {
     PENNYLANE_TESTS_DEFINE_GATE_OP(CRX, 1)
     PENNYLANE_TESTS_DEFINE_GATE_OP(CRY, 1)
     PENNYLANE_TESTS_DEFINE_GATE_OP(CRZ, 1)
+    PENNYLANE_TESTS_DEFINE_GATE_OP(SingleExcitation, 1)
+    PENNYLANE_TESTS_DEFINE_GATE_OP(SingleExcitationMinus, 1)
+    PENNYLANE_TESTS_DEFINE_GATE_OP(SingleExcitationPlus, 1)
     PENNYLANE_TESTS_DEFINE_GATE_OP(CRot, 3)
     PENNYLANE_TESTS_DEFINE_GATE_OP(Toffoli, 0)
     PENNYLANE_TESTS_DEFINE_GATE_OP(CSWAP, 0)
+    PENNYLANE_TESTS_DEFINE_GATE_OP(DoubleExcitation, 1)
+    PENNYLANE_TESTS_DEFINE_GATE_OP(DoubleExcitationMinus, 1)
+    PENNYLANE_TESTS_DEFINE_GATE_OP(DoubleExcitationPlus, 1)
     PENNYLANE_TESTS_DEFINE_GATE_OP(MultiRZ, 1)
 
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(PhaseShift)
@@ -145,6 +151,12 @@ class DummyImplementation {
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(CRY)
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(CRZ)
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(ControlledPhaseShift)
+    PENNYLANE_TESTS_DEFINE_GENERATOR_OP(SingleExcitation)
+    PENNYLANE_TESTS_DEFINE_GENERATOR_OP(SingleExcitationMinus)
+    PENNYLANE_TESTS_DEFINE_GENERATOR_OP(SingleExcitationPlus)
+    PENNYLANE_TESTS_DEFINE_GENERATOR_OP(DoubleExcitation)
+    PENNYLANE_TESTS_DEFINE_GENERATOR_OP(DoubleExcitationMinus)
+    PENNYLANE_TESTS_DEFINE_GENERATOR_OP(DoubleExcitationPlus)
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(MultiRZ)
 };
 
@@ -208,8 +220,8 @@ constexpr auto gateOpFuncPtrPairsWithNumParamsIter() {
                       decltype(gate_op_func_ptr_pairs<PrecisionT, ParamT>)>) {
         constexpr auto elt =
             std::get<tuple_idx>(gate_op_func_ptr_pairs<PrecisionT, ParamT>);
-        if constexpr (Util::static_lookup<elt.first>(
-                          Constant::gate_num_params) == num_params) {
+        if constexpr (Util::lookup(Constant::gate_num_params, elt.first) ==
+                      num_params) {
             return Util::prepend_to_tuple(
                 elt, gateOpFuncPtrPairsWithNumParamsIter<
                          PrecisionT, ParamT, num_params, tuple_idx + 1>());

@@ -20,7 +20,7 @@
 #include "Error.hpp"
 #include "JacobianTape.hpp"
 #include "LinearAlgebra.hpp"
-#include "StateVectorManaged.hpp"
+#include "StateVectorManagedCPU.hpp"
 
 #include <complex>
 #include <numeric>
@@ -35,7 +35,7 @@ namespace Pennylane::Algorithms {
  * of parametric gates.
  *
  * For the statevector data associated with `psi` of length `num_elements`,
- * we make internal copies to a `%StateVectorManaged<T>` object, with one
+ * we make internal copies to a `%StateVectorManagedCPU<T>` object, with one
  * per required observable. The `operations` will be applied to the internal
  * statevector copies, with the operation indices participating in the
  * gradient calculations given in `trainableParams`, and the overall number
@@ -71,7 +71,7 @@ void adjointJacobian(std::vector<T> &jac, const JacobianData<T> &jd,
         num_param_ops - 1; // total number of parametric ops
 
     // Create $U_{1:p}\vert \lambda \rangle$
-    StateVectorManaged<T> lambda(jd.getPtrStateVec(), jd.getSizeStateVec());
+    StateVectorManagedCPU<T> lambda(jd.getPtrStateVec(), jd.getSizeStateVec());
 
     // Apply given operations to statevector if requested
     if (apply_operations) {
@@ -82,11 +82,11 @@ void adjointJacobian(std::vector<T> &jac, const JacobianData<T> &jd,
     auto tp_it = tp.rbegin();
 
     // Create observable-applied state-vectors
-    std::vector<StateVectorManaged<T>> H_lambda(
-        num_observables, StateVectorManaged<T>{lambda.getNumQubits()});
+    std::vector<StateVectorManagedCPU<T>> H_lambda(
+        num_observables, StateVectorManagedCPU<T>{lambda.getNumQubits()});
     applyObservables(H_lambda, lambda, obs);
 
-    StateVectorManaged<T> mu(lambda.getNumQubits());
+    StateVectorManagedCPU<T> mu(lambda.getNumQubits());
 
     for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
          op_idx--) {

@@ -33,7 +33,7 @@ namespace Pennylane::Gates {
 template <class PrecisionT, class ParamT, class GateImplementation,
           GateOperation gate_op>
 struct GateOpToMemberFuncPtr {
-    // raises compile error when instantiated
+    // raises compile error when this struct is instantiated.
     static_assert(sizeof(PrecisionT) == -1,
                   "GateOpToMemberFuncPtr is not defined for the given gate. "
                   "When you define a new GateOperation, check that you also "
@@ -189,6 +189,26 @@ struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
 };
 template <class PrecisionT, class ParamT, class GateImplementation>
 struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                             GateOperation::SingleExcitation> {
+    constexpr static auto value =
+        &GateImplementation::template applySingleExcitation<PrecisionT, ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                             GateOperation::SingleExcitationMinus> {
+    constexpr static auto value =
+        &GateImplementation::template applySingleExcitationMinus<PrecisionT,
+                                                                 ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                             GateOperation::SingleExcitationPlus> {
+    constexpr static auto value =
+        &GateImplementation::template applySingleExcitationPlus<PrecisionT,
+                                                                ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::Toffoli> {
     constexpr static auto value =
         &GateImplementation::template applyToffoli<PrecisionT>;
@@ -198,6 +218,26 @@ struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::CSWAP> {
     constexpr static auto value =
         &GateImplementation::template applyCSWAP<PrecisionT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                             GateOperation::DoubleExcitation> {
+    constexpr static auto value =
+        &GateImplementation::template applyDoubleExcitation<PrecisionT, ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                             GateOperation::DoubleExcitationMinus> {
+    constexpr static auto value =
+        &GateImplementation::template applyDoubleExcitationMinus<PrecisionT,
+                                                                 ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                             GateOperation::DoubleExcitationPlus> {
+    constexpr static auto value =
+        &GateImplementation::template applyDoubleExcitationPlus<PrecisionT,
+                                                                ParamT>;
 };
 template <class PrecisionT, class ParamT, class GateImplementation>
 struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
@@ -213,7 +253,7 @@ struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
 template <class PrecisionT, class GateImplementation,
           GeneratorOperation gntr_op>
 struct GeneratorOpToMemberFuncPtr {
-    // raises compile error when instantiated
+    // raises compile error when this struct is instantiated.
     static_assert(
         sizeof(GateImplementation) == -1,
         "GeneratorOpToMemberFuncPtr is not defined for the given generator. "
@@ -286,6 +326,48 @@ struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
                                   GeneratorOperation::ControlledPhaseShift> {
     constexpr static auto value =
         &GateImplementation::template applyGeneratorControlledPhaseShift<
+            PrecisionT>;
+};
+template <class PrecisionT, class GateImplementation>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
+                                  GeneratorOperation::SingleExcitation> {
+    constexpr static auto value =
+        &GateImplementation::template applyGeneratorSingleExcitation<
+            PrecisionT>;
+};
+template <class PrecisionT, class GateImplementation>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
+                                  GeneratorOperation::SingleExcitationMinus> {
+    constexpr static auto value =
+        &GateImplementation::template applyGeneratorSingleExcitationMinus<
+            PrecisionT>;
+};
+template <class PrecisionT, class GateImplementation>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
+                                  GeneratorOperation::SingleExcitationPlus> {
+    constexpr static auto value =
+        &GateImplementation::template applyGeneratorSingleExcitationPlus<
+            PrecisionT>;
+};
+template <class PrecisionT, class GateImplementation>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
+                                  GeneratorOperation::DoubleExcitation> {
+    constexpr static auto value =
+        &GateImplementation::template applyGeneratorDoubleExcitation<
+            PrecisionT>;
+};
+template <class PrecisionT, class GateImplementation>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
+                                  GeneratorOperation::DoubleExcitationMinus> {
+    constexpr static auto value =
+        &GateImplementation::template applyGeneratorDoubleExcitationMinus<
+            PrecisionT>;
+};
+template <class PrecisionT, class GateImplementation>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
+                                  GeneratorOperation::DoubleExcitationPlus> {
+    constexpr static auto value =
+        &GateImplementation::template applyGeneratorDoubleExcitationPlus<
             PrecisionT>;
 };
 template <class PrecisionT, class GateImplementation>
@@ -421,13 +503,13 @@ using GateFuncPtrT =
     typename Internal::GateFuncPtr<PrecisionT, ParamT, num_params>::Type;
 
 /**
- * @brief Convenient type alias for GeneratorFuncPtrT.
+ * @brief Convenient type alias for GeneratorFuncPtr.
  */
 template <class PrecisionT>
 using GeneratorFuncPtrT = typename Internal::GeneratorFuncPtr<PrecisionT>::Type;
 
 /**
- * @brief Convenient type alias for GeneratorFuncPtrT.
+ * @brief Convenient type alias for MatrixfuncPtr.
  */
 template <class PrecisionT>
 using MatrixFuncPtrT = typename Internal::MatrixFuncPtr<PrecisionT>::Type;
@@ -493,5 +575,17 @@ inline PrecisionT callGeneratorOps(GeneratorFuncPtrT<PrecisionT> func,
                                    size_t num_qubits,
                                    const std::vector<size_t> &wires, bool adj) {
     return func(data, num_qubits, wires, adj);
+}
+
+/**
+ * @brief Call a matrix operation.
+ * @tparam PrecisionT Floating point type for the state-vector.
+ */
+template <class PrecisionT>
+inline void callMatrixOp(MatrixFuncPtrT<PrecisionT> func,
+                         std::complex<PrecisionT> *data, size_t num_qubits,
+                         const std::complex<PrecisionT *> matrix,
+                         const std::vector<size_t> &wires, bool adj) {
+    return func(data, num_qubits, matrix, wires, adj);
 }
 } // namespace Pennylane::Gates

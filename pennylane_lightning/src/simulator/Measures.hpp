@@ -1,4 +1,4 @@
-// Copyright 2021 Xanadu Quantum Technologies Inc.
+// Copyright 2022 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,9 +28,10 @@
 #include <unordered_map>
 #include <vector>
 
+#include "Kokkos_Sparse.hpp"
 #include "LinearAlgebra.hpp"
-#include "StateVectorManaged.hpp"
-#include "StateVectorRaw.hpp"
+#include "StateVectorManagedCPU.hpp"
+#include "StateVectorRawCPU.hpp"
 
 namespace Pennylane {
 
@@ -43,7 +44,7 @@ namespace Pennylane {
  *
  * @tparam fp_t Floating point precision of underlying measurements.
  */
-template <class fp_t = double, class SVType = StateVectorRaw<fp_t>>
+template <class fp_t = double, class SVType = StateVectorRawCPU<fp_t>>
 class Measures {
   private:
     const SVType &original_statevector;
@@ -66,7 +67,6 @@ class Measures {
         std::transform(arr_data, arr_data + original_statevector.getLength(),
                        basis_probs.begin(),
                        [](const CFP_t &z) -> fp_t { return std::norm(z); });
-
         return basis_probs;
     };
 
@@ -81,8 +81,7 @@ class Measures {
     std::vector<fp_t> probs(const std::vector<size_t> &wires) {
         // Determining index that would sort the vector.
         // This information is needed later.
-        const std::vector<size_t> sorted_ind_wires(
-            Util::sorting_indices(wires));
+        const auto sorted_ind_wires = Util::sorting_indices(wires);
         // Sorting wires.
         std::vector<size_t> sorted_wires(wires.size());
         for (size_t pos = 0; pos < wires.size(); pos++) {
@@ -116,6 +115,7 @@ class Measures {
         }
         return probabilities;
     }
+
     /**
      * @brief Expected value of an observable.
      *
@@ -127,7 +127,7 @@ class Measures {
                 const std::vector<size_t> &wires) {
         // Copying the original state vector, for the application of the
         // observable operator.
-        StateVectorManaged<fp_t> operator_statevector(original_statevector);
+        StateVectorManagedCPU<fp_t> operator_statevector(original_statevector);
 
         operator_statevector.applyMatrix(matrix, wires);
 
@@ -136,6 +136,7 @@ class Measures {
             original_statevector.getLength());
         return std::real(expected_value);
     };
+
     /**
      * @brief Expected value of an observable.
      *
@@ -147,12 +148,43 @@ class Measures {
                 const std::vector<size_t> &wires) {
         // Copying the original state vector, for the application of the
         // observable operator.
-        StateVectorManaged<fp_t> operator_statevector(original_statevector);
+        StateVectorManagedCPU<fp_t> operator_statevector(original_statevector);
 
         operator_statevector.applyOperation(operation, wires);
 
         CFP_t expected_value = Util::innerProdC(
             original_statevector.getData(), operator_statevector.getData(),
+            original_statevector.getLength());
+        return std::real(expected_value);
+    };
+
+    /**
+     * @brief Expected value of a Sparse Hamiltonian.
+     *
+     * @param row_map_ptr   row_map array pointer.
+     *                      The j element encodes the number of non-zeros above
+     * row j.
+     * @param row_map_size  row_map array size.
+     * @param entries_ptr   pointer to an array with column indices of the
+     * non-zero elements.
+     * @param values_ptr    pointer to an array with the non-zero elements.
+     * @param numNNZ        number of non-zero elements.
+     * @return fp_t
+     */
+    template <class index_type>
+    fp_t expval(const index_type *row_map_ptr, const index_type row_map_size,
+                const index_type *entries_ptr, const CFP_t *values_ptr,
+                const index_type numNNZ) {
+        PL_ABORT_IF(
+            (original_statevector.getLength() != (size_t(row_map_size) - 1)),
+            "Statevector and Hamiltonian have incompatible sizes.");
+        auto operator_vector = Util::apply_Sparse_Matrix(
+            original_statevector.getData(),
+            static_cast<index_type>(original_statevector.getLength()),
+            row_map_ptr, row_map_size, entries_ptr, values_ptr, numNNZ);
+
+        CFP_t expected_value = Util::innerProdC(
+            original_statevector.getData(), operator_vector.data(),
             original_statevector.getLength());
         return std::real(expected_value);
     };
@@ -169,11 +201,9 @@ class Measures {
     std::vector<fp_t>
     expval(const std::vector<op_type> &operations_list,
            const std::vector<std::vector<size_t>> &wires_list) {
-        if (operations_list.size() != wires_list.size()) {
-            throw std::out_of_range("The lengths of the list of operations and "
-                                    "wires do not match.");
-        }
-
+        PL_ABORT_IF(
+            (operations_list.size() != wires_list.size()),
+            "The lengths of the list of operations and wires do not match.");
         std::vector<fp_t> expected_value_list;
 
         for (size_t index = 0; index < operations_list.size(); index++) {
@@ -182,7 +212,7 @@ class Measures {
         }
 
         return expected_value_list;
-    };
+    }
 
     /**
      * @brief Variance of an observable.
@@ -194,7 +224,7 @@ class Measures {
     fp_t var(const std::string &operation, const std::vector<size_t> &wires) {
         // Copying the original state vector, for the application of the
         // observable operator.
-        StateVectorManaged<fp_t> operator_statevector(original_statevector);
+        StateVectorManagedCPU<fp_t> operator_statevector(original_statevector);
 
         operator_statevector.applyOperation(operation, wires);
 
@@ -220,7 +250,7 @@ class Measures {
              const std::vector<size_t> &wires) {
         // Copying the original state vector, for the application of the
         // observable operator.
-        StateVectorManaged<fp_t> operator_statevector(original_statevector);
+        StateVectorManagedCPU<fp_t> operator_statevector(original_statevector);
 
         operator_statevector.applyMatrix(matrix, wires);
 
@@ -246,10 +276,9 @@ class Measures {
     template <typename op_type>
     std::vector<fp_t> var(const std::vector<op_type> &operations_list,
                           const std::vector<std::vector<size_t>> &wires_list) {
-        if (operations_list.size() != wires_list.size()) {
-            throw std::out_of_range("The lengths of the list of operations and "
-                                    "wires do not match.");
-        }
+        PL_ABORT_IF(
+            (operations_list.size() != wires_list.size()),
+            "The lengths of the list of operations and wires do not match.");
 
         std::vector<fp_t> expected_value_list;
 
@@ -344,7 +373,6 @@ class Measures {
                 cache[idx] = i;
             }
         }
-
         return samples;
     }
 }; // class Measures

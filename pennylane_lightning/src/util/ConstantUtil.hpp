@@ -16,12 +16,20 @@
  * Contains utility functions for processing constants
  */
 #pragma once
+
+#include "TypeTraits.hpp"
+#include "Util.hpp"
+
+#include <algorithm>
 #include <array>
+#include <compare>
 #include <cstdlib>
 #include <stdexcept>
 #include <tuple>
 
-#include "Util.hpp"
+#if __has_include(<version>)
+#include <version>
+#endif
 
 namespace Pennylane::Util {
 /**
@@ -74,13 +82,11 @@ constexpr auto array_has_elt(const std::array<U, size> &arr, const U &elt)
 template <typename T, typename U, size_t size>
 constexpr std::array<T, size>
 first_elts_of(const std::array<std::pair<T, U>, size> &arr) {
-    // TODO: change to std::transform in C++20
     std::array<T, size> res = {
         T{},
     };
-    for (size_t i = 0; i < size; i++) {
-        res[i] = std::get<0>(arr[i]);
-    }
+    std::transform(arr.begin(), arr.end(), res.begin(),
+                   [](const auto &elt) { return std::get<0>(elt); });
     return res;
 }
 /**
@@ -94,21 +100,18 @@ first_elts_of(const std::array<std::pair<T, U>, size> &arr) {
 template <typename T, typename U, size_t size>
 constexpr std::array<U, size>
 second_elts_of(const std::array<std::pair<T, U>, size> &arr) {
-    // TODO: change to std::transform in C++20
     std::array<U, size> res = {
         U{},
     };
-    for (size_t i = 0; i < size; i++) {
-        res[i] = std::get<1>(arr[i]);
-    }
+    std::transform(arr.begin(), arr.end(), res.begin(),
+                   [](const auto &elt) { return std::get<1>(elt); });
     return res;
 }
 
 /**
  * @brief Count the number of unique elements in the array.
  *
- * Current runtime is O(n^2).
- * TODO: count using sorted array in C++20 using constexpr std::sort.
+ * This is O(n^2) version for all T
  *
  * @tparam T Type of array elements
  * @tparam size Size of the array
@@ -132,6 +135,30 @@ constexpr size_t count_unique(const std::array<T, size> &arr) {
     }
     return res;
 }
+
+#if __cpp_lib_three_way_comparison >= 201907L
+/**
+ * @brief Count the number of unique elements in the array.
+ *
+ * This is a specialized version for partially ordered type T.
+ *
+ * @tparam T Type of array elements
+ * @tparam size Size of the array
+ * @return size_t
+ */
+template <std::three_way_comparable T, size_t size>
+constexpr size_t count_unique(const std::array<T, size> &arr) {
+    auto arr_cpd = arr;
+    size_t dup_cnt = 0;
+    std::sort(std::begin(arr_cpd), std::end(arr_cpd));
+    for (size_t i = 0; i < size - 1; i++) {
+        if (arr_cpd[i] == arr_cpd[i + 1]) {
+            dup_cnt++;
+        }
+    }
+    return size - dup_cnt;
+}
+#endif
 
 /// @cond DEV
 namespace Internal {
@@ -174,7 +201,7 @@ constexpr auto prepend_to_tuple(T &&elt, Tuple &&t) {
  * @param tuple Tuple to transform
  */
 template <class Tuple> constexpr auto tuple_to_array(Tuple &&tuple) {
-    using T = std::tuple_element_t<0, remove_cvref_t<Tuple>>;
+    using T = std::tuple_element_t<0, std::remove_cvref_t<Tuple>>;
     return std::apply(
         [](auto... n) { return std::array<T, sizeof...(n)>{n...}; },
         std::forward<Tuple>(tuple));
@@ -217,6 +244,8 @@ constexpr auto reverse_pairs(const std::array<std::pair<T, U>, size> &arr)
  * As Util::lookup can be used in constexpr context, this function is redundant
  * (by the standard). But GCC 9 still does not accept Util::lookup in constexpr
  * some cases.
+ *
+ * As we now move to GCC>=10, this function is deprecated.
  */
 template <auto op, class T, size_t size>
 constexpr auto
@@ -227,20 +256,5 @@ static_lookup(const std::array<std::pair<decltype(op), T>, size> &arr) -> T {
         }
     }
     return T{};
-}
-
-/**
- * @brief Constexpr function that check whether the given value is a power of 2.
- *
- * Can be merged with isPerfectPowerOf2 in C++20 using constexpr std::popcount.
- *
- * @param value Value to check
- * @return True when the given value is a power of 2
- */
-constexpr auto constIsPerfectPowerOf2(size_t value) -> bool {
-    while ((value & 1U) == 0) {
-        value >>= 1U;
-    }
-    return value == 1;
 }
 } // namespace Pennylane::Util

@@ -51,6 +51,7 @@ try:
         StateVectorC64,
         MeasuresC128,
         StateVectorC128,
+        Kokkos_info,
     )
 
     from ._serialize import _serialize_observables, _serialize_operations
@@ -58,16 +59,6 @@ try:
     CPP_BINARY_AVAILABLE = True
 except ModuleNotFoundError:
     CPP_BINARY_AVAILABLE = False
-
-
-UNSUPPORTED_PARAM_GATES_ADJOINT = (
-    "SingleExcitation",
-    "SingleExcitationPlus",
-    "SingleExcitationMinus",
-    "DoubleExcitation",
-    "DoubleExcitationPlus",
-    "DoubleExcitationMinus",
-)
 
 
 def _chunk_iterable(it, num_chunks):
@@ -121,6 +112,21 @@ class LightningQubit(DefaultQubit):
             raise TypeError(f"Unsupported complex Type: {c_dtype}")
         super().__init__(wires, r_dtype=r_dtype, c_dtype=c_dtype, shots=shots)
         self._batch_obs = batch_obs
+
+    @staticmethod
+    def _asarray(arr, dtype=None):
+        arr = np.asarray(arr)  # arr is not copied
+        if not dtype:
+            dtype = arr.dtype
+
+        # We allocate a new aligned memory and copy data to there if alignment or dtype mismatches
+        # Note that get_alignment does not neccsarily returns CPUMemoryModel(Unaligned) even for
+        # numpy allocated memory as the memory location happens to be aligend.
+        if int(get_alignment(arr)) < int(best_alignment()) or arr.dtype != dtype:
+            new_arr = allocate_aligned_array(arr.size, np.dtype(dtype)).reshape(arr.shape)
+            np.copyto(new_arr, arr)
+            arr = new_arr
+        return arr
 
     @classmethod
     def capabilities(cls):
@@ -582,7 +588,6 @@ class LightningQubit(DefaultQubit):
             "Projector",
             "Hermitian",
             "Hamiltonian",
-            "SparseHamiltonian",
         ]:
             return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
@@ -597,6 +602,16 @@ class LightningQubit(DefaultQubit):
 
         state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
+        if observable.name == "SparseHamiltonian":
+            if Kokkos_info()["USE_KOKKOS"] == True:
+                # converting COO to CSR sparse representation.
+                CSR_SparseHamiltonian = observable.data[0].tocsr(copy=False)
+                return M.expval(
+                    CSR_SparseHamiltonian.indptr,
+                    CSR_SparseHamiltonian.indices,
+                    CSR_SparseHamiltonian.data,
+                )
+            return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
         # translate to wire labels used by device
         observable_wires = self.map_wires(observable.wires)

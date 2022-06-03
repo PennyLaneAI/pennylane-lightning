@@ -14,9 +14,9 @@
 #pragma once
 
 #include "Macros.hpp"
-#include "StateVectorManaged.hpp"
-#include "StateVectorRaw.hpp"
+#include "StateVectorManagedCPU.hpp"
 #include "Util.hpp"
+#include "LinearAlgebra.hpp"
 
 #if defined(_OPENMP)
 #include <omp.h>
@@ -46,7 +46,7 @@ template <typename T> class Observable {
     /**
      * @brief Apply the observable to the given statevector in place.
      */
-    virtual void applyInPlace(StateVectorManaged<T> &sv) const = 0;
+    virtual void applyInPlace(StateVectorManagedCPU<T> &sv) const = 0;
 
     /**
      * @brief Get the name of the observable
@@ -102,7 +102,7 @@ template <typename T> class NamedObs final : public Observable<T> {
         return wires_;
     }
 
-    void applyInPlace(StateVectorManaged<T> &sv) const final {
+    void applyInPlace(StateVectorManagedCPU<T> &sv) const final {
         sv.applyOperation(obs_name_, wires_, false, params_);
     }
 };
@@ -142,7 +142,7 @@ template <typename T> class HermitianObs final : public Observable<T> {
         return "Hermitian";
     }
 
-    void applyInPlace(StateVectorManaged<T> &sv) const final {
+    void applyInPlace(StateVectorManagedCPU<T> &sv) const final {
         sv.applyMatrix(matrix_, wires_);
     }
 };
@@ -182,7 +182,7 @@ template <typename T> class TensorProdObs final : public Observable<T> {
         return std::vector<size_t>(wires.begin(), wires.end());
     }
 
-    void applyInPlace(StateVectorManaged<T> &sv) const final {
+    void applyInPlace(StateVectorManagedCPU<T> &sv) const final {
         for (const auto &ob : obs_) {
             ob->applyInPlace(sv);
         }
@@ -211,24 +211,25 @@ namespace detail {
 template <class T, bool use_openmp> struct HamiltonianApplyInPlace {
     static void run(const std::vector<T> &coeffs,
                     const std::vector<std::shared_ptr<Observable<T>>> &terms,
-                    StateVectorManaged<T> &sv) {
-        StateVectorManaged<T> res(sv.getNumQubits());
-        res.setZero();
+                    StateVectorManagedCPU<T> &sv) {
+        auto allocator = sv.allocator();
+        std::vector<std::complex<T>, decltype(allocator)> res(sv.getLength(), std::complex<T>{0.0, 0.0},
+                allocator);
         for (size_t term_idx = 0; term_idx < coeffs.size(); term_idx++) {
-            StateVectorManaged<T> tmp(sv);
+            StateVectorManagedCPU<T> tmp(sv);
             terms[term_idx]->applyInPlace(tmp);
             Util::scaleAndAdd(tmp.getLength(),
                               std::complex<T>{coeffs[term_idx], 0.0},
-                              tmp.getData(), res.getData());
+                              tmp.getData(), res.data());
         }
-        sv = std::move(res);
+        sv.updateData(res);
     }
 };
 #if defined(_OPENMP)
 template <class T> struct HamiltonianApplyInPlace<T, true> {
     static void run(const std::vector<T> &coeffs,
                     const std::vector<std::shared_ptr<Observable<T>>> &terms,
-                    StateVectorManaged<T> &sv) {
+                    StateVectorManagedCPU<T> &sv) {
         const size_t length = sv.getLength();
 #pragma omp parallel default(none) firstprivate(length)                        \
     shared(coeffs, terms, sv)
@@ -241,7 +242,7 @@ template <class T> struct HamiltonianApplyInPlace<T, true> {
 
 #pragma omp for
             for (size_t term_idx = 0; term_idx < terms.size(); term_idx++) {
-                StateVectorManaged<T> tmp(sv);
+                StateVectorManagedCPU<T> tmp(sv);
                 terms[term_idx]->applyInPlace(tmp);
                 Util::scaleAndAdd(
                     length, std::complex<T>{coeffs[term_idx], 0.0},
@@ -302,7 +303,7 @@ template <typename T> class Hamiltonian final : public Observable<T> {
             new Hamiltonian<T>{std::move(arg1), std::move(arg2)});
     }
 
-    void applyInPlace(StateVectorManaged<T> &sv) const final {
+    void applyInPlace(StateVectorManagedCPU<T> &sv) const final {
         detail::HamiltonianApplyInPlace<T, Util::Constant::use_openmp>::run(
             coeffs_, obs_, sv);
     }

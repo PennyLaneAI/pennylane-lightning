@@ -15,7 +15,7 @@
 
 #include "JacobianTape.hpp"
 #include "LinearAlgebra.hpp"
-#include "StateVectorManaged.hpp"
+#include "StateVectorManagedCPU.hpp"
 #include "Util.hpp"
 
 #include <stdexcept>
@@ -24,14 +24,14 @@
 namespace Pennylane::Algorithms {
 /**
  * @brief Utility method to apply all operations from given `%OpsData<T>`
- * object to `%StateVectorManaged<T>`
+ * object to `%StateVectorManagedCPU<T>`
  *
  * @param state Statevector to be updated.
  * @param operations Operations to apply.
  * @param adj Take the adjoint of the given operations.
  */
 template <typename T>
-inline void applyOperations(StateVectorManaged<T> &state,
+inline void applyOperations(StateVectorManagedCPU<T> &state,
                             const OpsData<T> &operations, bool adj = false) {
     for (size_t op_idx = 0; op_idx < operations.getOpsName().size(); op_idx++) {
         state.applyOperation(operations.getOpsName()[op_idx],
@@ -42,14 +42,14 @@ inline void applyOperations(StateVectorManaged<T> &state,
 }
 /**
  * @brief Utility method to apply the adjoint indexed operation from
- * `%OpsData<T>` object to `%StateVectorManaged<T>`.
+ * `%OpsData<T>` object to `%StateVectorManagedCPU<T>`.
  *
  * @param state Statevector to be updated.
  * @param operations Operations to apply.
  * @param op_idx Adjointed operation index to apply.
  */
 template <typename T>
-inline void applyOperationAdj(StateVectorManaged<T> &state,
+inline void applyOperationAdj(StateVectorManagedCPU<T> &state,
                               const OpsData<T> &operations, size_t op_idx) {
     state.applyOperation(operations.getOpsName()[op_idx],
                          operations.getOpsWires()[op_idx],
@@ -59,13 +59,13 @@ inline void applyOperationAdj(StateVectorManaged<T> &state,
 
 /**
  * @brief Utility method to apply a given operations from given
- * `%ObsDatum<T>` object to `%StateVectorManaged<T>`
+ * `%ObsDatum<T>` object to `%StateVectorManagedCPU<T>`
  *
  * @param state Statevector to be updated.
  * @param observable Observable to apply.
  */
 template <typename T>
-inline void applyObservable(StateVectorManaged<T> &state,
+inline void applyObservable(StateVectorManagedCPU<T> &state,
                             Observable<T> &observable) {
     observable.applyInPlace(state);
 }
@@ -80,8 +80,8 @@ inline void applyObservable(StateVectorManaged<T> &state,
  */
 template <typename T>
 inline void applyObservables(
-    std::vector<StateVectorManaged<T>> &states,
-    const StateVectorManaged<T> &reference_state,
+    std::vector<StateVectorManagedCPU<T>> &states,
+    const StateVectorManagedCPU<T> &reference_state,
     const std::vector<std::shared_ptr<Observable<T>>> &observables) {
     // clang-format off
     // Globally scoped exception value to be captured within OpenMP block.
@@ -131,7 +131,7 @@ inline void applyObservables(
  * adjoint of.
  */
 template <typename T>
-inline void applyOperationsAdj(std::vector<StateVectorManaged<T>> &states,
+inline void applyOperationsAdj(std::vector<StateVectorManagedCPU<T>> &states,
                                const OpsData<T> &operations, size_t op_idx) {
     // clang-format off
     // Globally scoped exception value to be captured within OpenMP block.

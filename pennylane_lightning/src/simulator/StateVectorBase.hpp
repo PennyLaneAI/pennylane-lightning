@@ -20,10 +20,8 @@
 
 #include "Constant.hpp"
 #include "ConstantUtil.hpp"
-#include "DefaultKernels.hpp"
 #include "DynamicDispatcher.hpp"
 #include "Error.hpp"
-#include "SelectKernel.hpp"
 #include "Util.hpp"
 
 /// @cond DEV
@@ -41,43 +39,7 @@
 #include <utility>
 #include <vector>
 
-/**
- * @brief This macro defines methods for State-vector class. The kernel template
- * argument choose the kernel to run.
- */
-#define PENNYLANE_STATEVECTOR_DEFINE_GATE(GATE_NAME)                           \
-    template <Gates::KernelType kernel, typename... Ts>                        \
-    inline void apply##GATE_NAME##_(const std::vector<size_t> &wires,          \
-                                    bool inverse, Ts &&...args) {              \
-        auto *arr = getData();                                                 \
-        static_assert(Util::static_lookup<Gates::GateOperation::GATE_NAME>(    \
-                          Gates::Constant::gate_num_params) == sizeof...(Ts),  \
-                      "The provided number of parameters for gate " #GATE_NAME \
-                      " is wrong.");                                           \
-        static_assert(Util::array_has_elt(                                     \
-                          Gates::SelectKernel<kernel>::implemented_gates,      \
-                          Gates::GateOperation::GATE_NAME),                    \
-                      "The kernel does not implement the gate.");              \
-        Gates::SelectKernel<kernel>::apply##GATE_NAME(                         \
-            arr, num_qubits_, wires, inverse, std::forward<Ts>(args)...);      \
-    }
-
-#define PENNYLANE_STATEVECTOR_DEFINE_GENERATOR(GENERATOR_NAME)                 \
-    template <KernelType kernel, typename... Ts>                               \
-    inline void applyGenerator##GENERATOR_NAME##_(                             \
-        const std::vector<size_t> &wires, bool adj) {                          \
-        auto *arr = getData();                                                 \
-        static_assert(Util::array_has_elt(                                     \
-                          Gates::SelectKernel<PrecisionT,                      \
-                                              kernel>::implemented_generators, \
-                          Gates::GeneratorOperation::GENERATOR_NAME),          \
-                      "The kernel does not implement the gate generator.");    \
-        SelectKernel<kernel>::applyGenerator##GENERATOR_NAME(arr, num_qubits_, \
-                                                             wires, adj);      \
-    }
-
 namespace Pennylane {
-
 /**
  * @brief State-vector base class.
  *
@@ -149,6 +111,24 @@ template <class T, class Derived> class StateVectorBase {
         return static_cast<const Derived *>(this)->getData();
     }
 
+    [[nodiscard]] inline auto
+    getKernelForGate(Gates::GateOperation gate_op) const -> Gates::KernelType {
+        return static_cast<const Derived *>(this)->getKernelForGate(gate_op);
+    }
+
+    [[nodiscard]] inline auto
+    getKernelForGenerator(Gates::GeneratorOperation gntr_op) const
+        -> Gates::KernelType {
+        return static_cast<const Derived *>(this)->getKernelForGenerator(
+            gntr_op);
+    }
+
+    [[nodiscard]] inline auto
+    getKernelForMatrix(Gates::MatrixOperation mat_op) const
+        -> Gates::KernelType {
+        return static_cast<const Derived *>(this)->getKernelForMatrix(mat_op);
+    }
+
     /**
      * @brief Compare two statevectors.
      *
@@ -202,8 +182,8 @@ template <class T, class Derived> class StateVectorBase {
         auto *arr = getData();
         auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         const auto gate_op = dispatcher.strToGateOp(opName);
-        dispatcher.applyOperation(getDefaultKernelForGate(gate_op), arr,
-                                  num_qubits_, gate_op, wires, inverse, params);
+        dispatcher.applyOperation(getKernelForGate(gate_op), arr, num_qubits_,
+                                  gate_op, wires, inverse, params);
     }
 
     /**
@@ -222,21 +202,18 @@ template <class T, class Derived> class StateVectorBase {
                     const std::vector<bool> &ops_inverse,
                     const std::vector<std::vector<PrecisionT>> &ops_params) {
         const size_t numOperations = ops.size();
-        if (numOperations != ops_wires.size()) {
-            throw std::invalid_argument(
-                "Invalid arguments: number of operations, wires, and "
-                "parameters must all be equal");
-        }
-        if (numOperations != ops_inverse.size()) {
-            throw std::invalid_argument(
-                "Invalid arguments: number of operations, wires, and "
-                "parameters must all be equal");
-        }
-        if (numOperations != ops_params.size()) {
-            throw std::invalid_argument(
-                "Invalid arguments: number of operations, wires, and "
-                "parameters must all be equal");
-        }
+        PL_ABORT_IF(
+            numOperations != ops_wires.size(),
+            "Invalid arguments: number of operations, wires, inverses, and "
+            "parameters must all be equal");
+        PL_ABORT_IF(
+            numOperations != ops_inverse.size(),
+            "Invalid arguments: number of operations, wires, inverses, and "
+            "parameters must all be equal");
+        PL_ABORT_IF(
+            numOperations != ops_params.size(),
+            "Invalid arguments: number of operations, wires, inverses, and "
+            "parameters must all be equal");
         for (size_t i = 0; i < numOperations; i++) {
             applyOperation(ops[i], ops_wires[i], ops_inverse[i], ops_params[i]);
         }
@@ -256,13 +233,13 @@ template <class T, class Derived> class StateVectorBase {
                          const std::vector<bool> &ops_inverse) {
         const size_t numOperations = ops.size();
         if (numOperations != ops_wires.size()) {
-            throw std::invalid_argument(
-                "Invalid arguments: number of operations and wires "
+            PL_ABORT(
+                "Invalid arguments: number of operations, wires, and inverses "
                 "must all be equal");
         }
         if (numOperations != ops_inverse.size()) {
-            throw std::invalid_argument(
-                "Invalid arguments: number of operations and wires "
+            PL_ABORT(
+                "Invalid arguments: number of operations, wires and inverses"
                 "must all be equal");
         }
         for (size_t i = 0; i < numOperations; i++) {
@@ -300,8 +277,8 @@ template <class T, class Derived> class StateVectorBase {
         auto *arr = getData();
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         const auto gntr_op = dispatcher.strToGeneratorOp(opName);
-        return dispatcher.applyGenerator(getDefaultKernelForGenerator(gntr_op),
-                                         arr, num_qubits_, gntr_op, wires, adj);
+        return dispatcher.applyGenerator(getKernelForGenerator(gntr_op), arr,
+                                         num_qubits_, opName, wires, adj);
     }
 
     /**
@@ -321,6 +298,9 @@ template <class T, class Derived> class StateVectorBase {
 
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         auto *arr = getData();
+
+        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
+
         dispatcher.applyMatrix(kernel, arr, num_qubits_, matrix, wires,
                                inverse);
     }
@@ -340,11 +320,9 @@ template <class T, class Derived> class StateVectorBase {
                             bool inverse = false) {
         using Gates::MatrixOperation;
 
-        if (matrix.size() != Util::exp2(2 * wires.size())) {
-            throw std::invalid_argument(
-                "The size of matrix does not match with the given "
-                "number of wires");
-        }
+        PL_ABORT_IF(matrix.size() != Util::exp2(2 * wires.size()),
+                    "The size of matrix does not match with the given "
+                    "number of wires");
 
         applyMatrix(kernel, matrix.data(), wires, inverse);
     }
@@ -362,20 +340,16 @@ template <class T, class Derived> class StateVectorBase {
                             bool inverse = false) {
         using Gates::MatrixOperation;
 
-        if (wires.empty()) {
-            throw std::invalid_argument(
-                "Number of wires must be larger than 0");
-        }
+        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
 
-        const auto kernel = [n_wires = wires.size()]() {
+        const auto kernel = [n_wires = wires.size(), this]() {
             switch (n_wires) {
             case 1:
-                return getDefaultKernelForMatrix(
-                    MatrixOperation::SingleQubitOp);
+                return getKernelForMatrix(MatrixOperation::SingleQubitOp);
             case 2:
-                return getDefaultKernelForMatrix(MatrixOperation::TwoQubitOp);
+                return getKernelForMatrix(MatrixOperation::TwoQubitOp);
             default:
-                return getDefaultKernelForMatrix(MatrixOperation::MultiQubitOp);
+                return getKernelForMatrix(MatrixOperation::MultiQubitOp);
             }
         }();
         applyMatrix(kernel, matrix, wires, inverse);
@@ -392,215 +366,12 @@ template <class T, class Derived> class StateVectorBase {
     inline void applyMatrix(const std::vector<ComplexPrecisionT, Alloc> &matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
-        if (matrix.size() != Util::exp2(2 * wires.size())) {
-            throw std::invalid_argument(
-                "The size of matrix does not match with the given "
-                "number of wires");
-        }
+        PL_ABORT_IF(matrix.size() != Util::exp2(2 * wires.size()),
+                    "The size of matrix does not match with the given "
+                    "number of wires");
 
         applyMatrix(matrix.data(), wires, inverse);
     }
-
-    /**
-     * @brief Apply Identity gate operation to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(Identity)
-
-    /**
-     * @brief Apply PauliX gate operation to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(PauliX)
-
-    /**
-     * @brief Apply PauliY gate operation to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(PauliY)
-
-    /**
-     * @brief Apply PauliZ gate operation to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(PauliZ)
-
-    /**
-     * @brief Apply Hadamard gate operation to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(Hadamard)
-
-    /**
-     * @brief Apply S gate operation to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(S)
-
-    /**
-     * @brief Apply T gate operation to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(T)
-
-    /**
-     * @brief Apply RX gate operation to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     * @param angle Rotation angle of gate.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(RX)
-
-    /**
-     * @brief Apply RY gate operation to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     * @param angle Rotation angle of gate.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(RY)
-
-    /**
-     * @brief Apply RZ gate operation to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     * @param angle Rotation angle of gate.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(RZ)
-
-    /**
-     * @brief Apply phase shift gate operation to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     * @param angle Phase shift angle.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(PhaseShift)
-
-    /*
-     * @brief Apply Rot gate \f$RZ(\omega)RY(\theta)RZ(\phi)\f$ to given indices
-     * of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     * @param phi Gate rotation parameter \f$\phi\f$.
-     * @param theta Gate rotation parameter \f$\theta\f$.
-     * @param omega Gate rotation parameter \f$\omega\f$.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(Rot)
-
-    /**
-     * @brief Apply controlled phase shift gate operation to given indices of
-     * statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     * @param angle Phase shift angle.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(ControlledPhaseShift)
-
-    /**
-     * @brief Apply CNOT (CX) gate to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(CNOT)
-
-    /**
-     * @brief Apply CY gate to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(CY)
-
-    /**
-     * @brief Apply CZ gate to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(CZ)
-
-    /**
-     * @brief Apply SWAP gate to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(SWAP)
-
-    /**
-     * @brief Apply CRX gate to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     * @param angle Rotation angle of gate.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(CRX)
-
-    /**
-     * @brief Apply CRY gate to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     * @param angle Rotation angle of gate.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(CRY)
-
-    /**
-     * @brief Apply CRZ gate to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     * @param angle Rotation angle of gate.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(CRZ)
-
-    /**
-     * @brief Apply CRot gate (controlled \f$RZ(\omega)RY(\theta)RZ(\phi)\f$) to
-     * given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     * @param phi Gate rotation parameter \f$\phi\f$.
-     * @param theta Gate rotation parameter \f$\theta\f$.
-     * @param omega Gate rotation parameter \f$\omega\f$.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(CRot)
-
-    /**
-     * @brief Apply Toffoli (CCX) gate to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(Toffoli)
-
-    /**
-     * @brief Apply CSWAP gate to given indices of statevector.
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Take adjoint of given operation.
-     */
-    PENNYLANE_STATEVECTOR_DEFINE_GATE(CSWAP)
 };
 
 /**
@@ -627,5 +398,4 @@ inline auto operator<<(std::ostream &out, const StateVectorBase<T, Derived> &sv)
 
     return out;
 }
-
 } // namespace Pennylane

@@ -19,6 +19,7 @@
 
 #include "Macros.hpp"
 #include "Util.hpp"
+#include "TypeTraits.hpp"
 
 #include <algorithm>
 #include <complex>

@@ -146,8 +146,8 @@ def _serialize_observables(tape: QuantumTape, wires_map: dict, use_csingle: bool
     return obs
 
 
-def _serialize_operations(
-    tape: QuantumTape, wires_map: dict, use_csingle: bool = False
+def _serialize_ops(
+    tape: QuantumTape, wires_map: dict
 ) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]], List[bool], List[np.ndarray]]:
     """Serializes the operations of an input tape.
 
@@ -156,7 +156,6 @@ def _serialize_operations(
     Args:
         tape (QuantumTape): the input quantum tape
         wires_map (dict): a dictionary mapping input wires to the device's backend wires
-        use_csingle (bool): whether to use np.complex64 instead of np.complex128
 
     Returns:
         Tuple[list, list, list, list, list]: A serialization of the operations, containing a list
@@ -168,10 +167,6 @@ def _serialize_operations(
     wires = []
     inverses = []
     mats = []
-
-    sv_py = StateVectorC64 if use_csingle else StateVectorC128
-
-    float_type = np.float32 if use_csingle else np.float64
 
     uses_stateprep = False
 

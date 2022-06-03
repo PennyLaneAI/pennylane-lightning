@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 
 set(LOGO [=[
 ░█░░░▀█▀░█▀▀░█░█░▀█▀░█▀█░▀█▀░█▀█░█▀▀░░░░▄▀▄░█░█░█▀▄░▀█▀░▀█▀
@@ -7,12 +7,11 @@ set(LOGO [=[
 ]=])
 message(${LOGO})
 
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
 
-project(pennylane_lightning)
+set(CMAKE_CXX_STANDARD 20) # At least C++20 is required
 
 project(pennylane_lightning
-
     DESCRIPTION "C++ state-vector simulator bindings for PennyLane. "
     LANGUAGES CXX
 )
@@ -35,8 +34,6 @@ set_pennylane_lightning_version(${PROJECT_SOURCE_DIR}/pennylane_lightning/_versi
 message(STATUS "pennylane_lightning version ${VERSION_STRING}")
 set(PROJECT_VERSION ${VERSION_STRING})
 
-set(CMAKE_CXX_STANDARD 17) # At least C++17 is required
-
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE RelWithDebInfo)
 endif()
@@ -50,11 +47,11 @@ option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_AVX "Enable AVX support" OFF)
 option(ENABLE_OPENMP "Enable OpenMP" ON)
+option(ENABLE_KOKKOS "Enable Kokkos" OFF)
 option(ENABLE_BLAS "Enable BLAS" OFF)
 
 # Other build options
 option(BUILD_TESTS "Build cpp tests" OFF)
-option(BUILD_EXAMPLES "Build cpp examples" OFF)
 option(BUILD_BENCHMARKS "Enable cpp benchmarks" OFF)
 
 # Process compile options

@@ -26,8 +26,7 @@ using namespace Pennylane::Gates;
 template <typename PrecisionT, typename ParamT, class GateImplementation,
           GateOperation gate_op, class RandomEngine>
 void testInverseKernelGate(RandomEngine &re, size_t num_qubits) {
-    constexpr auto gate_name =
-        Util::static_lookup<gate_op>(Constant::gate_names);
+    constexpr auto gate_name = Util::lookup(Constant::gate_names, gate_op);
     DYNAMIC_SECTION("Test inverse of " << gate_name << " for kernel "
                                        << GateImplementation::name) {
         const auto ini_st = createRandomState<PrecisionT>(re, num_qubits);
@@ -38,7 +37,7 @@ void testInverseKernelGate(RandomEngine &re, size_t num_qubits) {
             GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                                   gate_op>::value;
 
-        const auto wires = createWires(gate_op);
+        const auto wires = createWires(gate_op, num_qubits);
         const auto params = createParams<ParamT>(gate_op);
 
         callGateOps(func_ptr, st.data(), num_qubits, wires, false, params);

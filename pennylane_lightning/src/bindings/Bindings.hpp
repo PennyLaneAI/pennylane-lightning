@@ -18,11 +18,16 @@
  */
 #pragma once
 #include "AdjointDiff.hpp"
+#include "CPUMemoryModel.hpp"
+#include "JacobianProd.hpp"
+#include "Kokkos_Sparse.hpp"
 #include "Macros.hpp"
 #include "Measures.hpp"
+#include "Memory.hpp"
 #include "OpToMemberFuncPtr.hpp"
 #include "RuntimeInfo.hpp"
-#include "StateVectorRaw.hpp"
+#include "SelectKernel.hpp"
+#include "StateVectorManagedCPU.hpp"
 
 #include "pybind11/complex.h"
 #include "pybind11/functional.h"
@@ -39,15 +44,16 @@
 
 namespace Pennylane {
 /**
- * @brief Create a `%StateVector` object from a 1D numpy complex data array.
+ * @brief Create a @ref Pennylane::StateVectorRawCPU object from a 1D numpy
+ * complex data array.
  *
  * @tparam PrecisionT Precision data type
  * @param numpyArray Numpy data array.
- * @return StateVector<PrecisionT> `%StateVector` object.
+ * @return StateVectorRawCPU object.
  */
 template <class PrecisionT = double>
-static auto createRaw(pybind11::array_t<std::complex<PrecisionT>> &numpyArray)
-    -> StateVectorRaw<PrecisionT> {
+auto createRaw(const pybind11::array_t<std::complex<PrecisionT>> &numpyArray)
+    -> StateVectorRawCPU<PrecisionT> {
     pybind11::buffer_info numpyArrayInfo = numpyArray.request();
 
     if (numpyArrayInfo.ndim != 1) {
@@ -60,7 +66,7 @@ static auto createRaw(pybind11::array_t<std::complex<PrecisionT>> &numpyArray)
     }
     auto *data_ptr =
         static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
-    return StateVectorRaw<PrecisionT>(
+    return StateVectorRawCPU<PrecisionT>(
         {data_ptr, static_cast<size_t>(numpyArrayInfo.shape[0])});
 }
 
@@ -75,7 +81,7 @@ static auto createRaw(pybind11::array_t<std::complex<PrecisionT>> &numpyArray)
 template <class PrecisionT = double>
 auto createManaged(
     const pybind11::array_t<std::complex<PrecisionT>> &numpyArray)
-    -> StateVectorManaged<PrecisionT> {
+    -> StateVectorManagedCPU<PrecisionT> {
     pybind11::buffer_info numpyArrayInfo = numpyArray.request();
 
     if (numpyArrayInfo.ndim != 1) {
@@ -88,12 +94,90 @@ auto createManaged(
     }
     auto *data_ptr =
         static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
-    return StateVectorManaged<PrecisionT>(
-        {data_ptr, static_cast<size_t>(numpyArrayInfo.size)});
+    return StateVectorManagedCPU<PrecisionT>(
+        {data_ptr, static_cast<size_t>(numpyArrayInfo.shape[0])});
 }
+
+/**
+ * @brief Create numpy array view for the underlying data of
+ * `%StateVectorManagedCPU` object.
+ *
+ * @tparam PrecisionT Floating point data type
+ * @param sv `%StateVectorManagedCPU` object
+ * @return A numpy array
+ */
+template <class PrecisionT = double>
+auto toNumpyArray(const StateVectorManagedCPU<PrecisionT> &sv)
+    -> pybind11::array_t<std::complex<PrecisionT>> {
+    return pybind11::array_t<std::complex<PrecisionT>>(
+        {sv.getLength()}, {2 * sizeof(PrecisionT)}, sv.getData());
+}
+
+/**
+ * @brief Get memory alignment of a given numpy array.
+ *
+ * @param numpyArray Pybind11's numpy array type.
+ * @return Memory model describing alignment
+ */
+auto getNumpyArrayAlignment(const pybind11::array &numpyArray)
+    -> CPUMemoryModel {
+    return getMemoryModel(numpyArray.request().ptr);
+}
+
+/**
+ * @brief Create an aligned numpy array for a given type, memory model and array
+ * size.
+ *
+ * @tparam T Datatype of numpy array to create
+ * @param memory_model Memory model to use
+ * @param size Size of the array to create
+ * @return Numpy array
+ */
+template <typename T>
+auto alignedNumpyArray(CPUMemoryModel memory_model, size_t size)
+    -> pybind11::array {
+    if (getAlignment<T>(memory_model) > alignof(std::max_align_t)) {
+        void *ptr =
+            alignedAlloc(getAlignment<T>(memory_model), sizeof(T) * size);
+        auto capsule = pybind11::capsule(ptr, &alignedFree);
+        return pybind11::array{
+            pybind11::dtype::of<T>(), {size}, {sizeof(T)}, ptr, capsule};
+    } // else
+    void *ptr = malloc(sizeof(T) * size);
+    auto capsule = pybind11::capsule(ptr, free);
+    return pybind11::array{
+        pybind11::dtype::of<T>(), {size}, {sizeof(T)}, ptr, capsule};
+}
+
+/**
+ * @brief Create a numpy array whose underlying data is allocated by
+ * lightning.
+ *
+ * See https://github.com/pybind/pybind11/issues/1042#issuecomment-325941022
+ * for capsule usage.
+ *
+ * @param size Size of the array to create
+ * @param dt Pybind11's datatype object
+ */
+auto allocateAlignedArray(size_t size, pybind11::dtype dt) -> pybind11::array {
+    auto memory_model = bestCPUMemoryModel();
+
+    if (dt.is(pybind11::dtype::of<float>())) {
+        return alignedNumpyArray<float>(memory_model, size);
+    } else if (dt.is(pybind11::dtype::of<double>())) {
+        return alignedNumpyArray<double>(memory_model, size);
+    } else if (dt.is(pybind11::dtype::of<std::complex<float>>())) {
+        return alignedNumpyArray<std::complex<float>>(memory_model, size);
+    } else if (dt.is(pybind11::dtype::of<std::complex<double>>())) {
+        return alignedNumpyArray<std::complex<double>>(memory_model, size);
+    } else {
+        throw pybind11::type_error("Unsupported datatype.");
+    }
+}
+
 /**
  * @brief Apply given list of operations to Numpy data array using C++
- * `%StateVector` class.
+ * StateVectorRawCPU class.
  *
  * @tparam PrecisionT Precision data type
  * @param stateNumpyArray Complex numpy data array representing statevector.
@@ -158,6 +242,40 @@ void registerGatesForStateVector(PyClass &pyclass) {
 }
 
 /**
+ * @brief Get a gate kernel map for a statevector
+ */
+template <class PrecisionT>
+auto svKernelMap(const StateVectorRawCPU<PrecisionT> &sv) -> pybind11::dict {
+    pybind11::dict res_map;
+    namespace Constant = Gates::Constant;
+
+    for (const auto &[gate_op, kernel] : sv.getGateKernelMap()) {
+        const auto key =
+            std::string(Util::lookup(Constant::gate_names, gate_op));
+        const auto value = Util::lookup(Gates::kernel_id_name_pairs, kernel);
+
+        res_map[key.c_str()] = value;
+    }
+
+    for (const auto &[gntr_op, kernel] : sv.getGeneratorKernelMap()) {
+        const auto key =
+            std::string(Util::lookup(Constant::generator_names, gntr_op));
+        const auto value = Util::lookup(Gates::kernel_id_name_pairs, kernel);
+
+        res_map[key.c_str()] = value;
+    }
+
+    for (const auto &[mat_op, kernel] : sv.getMatrixKernelMap()) {
+        const auto key =
+            std::string(Util::lookup(Constant::matrix_names, mat_op));
+        const auto value = Util::lookup(Gates::kernel_id_name_pairs, kernel);
+
+        res_map[key.c_str()] = value;
+    }
+    return res_map;
+}
+
+/**
  * @brief Return basic information of the compiled binary.
  */
 auto getCompileInfo() -> pybind11::dict {
@@ -212,5 +330,14 @@ auto getRuntimeInfo() -> pybind11::dict {
     return pybind11::dict("AVX"_a = RuntimeInfo::AVX(),
                           "AVX2"_a = RuntimeInfo::AVX2(),
                           "AVX512F"_a = RuntimeInfo::AVX512F());
+}
+
+/**
+ * @brief Provide information regarding Kokkos and Kokkos Kernels backend.
+ */
+auto getKokkosInfo() -> pybind11::dict {
+    using namespace pybind11::literals;
+
+    return pybind11::dict("USE_KOKKOS"_a = USE_KOKKOS);
 }
 } // namespace Pennylane

@@ -63,15 +63,15 @@ void statevectorVJP(std::vector<std::complex<PrecisionT>> &jac,
     assert(jac.size() == trainable_params.size());
 
     // Create $U_{1:p}\vert \lambda \rangle$
-    StateVectorManaged<PrecisionT> lambda(jd.getPtrStateVec(),
+    StateVectorManagedCPU<PrecisionT> lambda(jd.getPtrStateVec(),
                                           jd.getSizeStateVec());
 
     // Apply given operations to statevector if requested
     if (apply_operations) {
         applyOperations(lambda, ops);
     }
-    StateVectorManaged<PrecisionT> mu(dy, jd.getSizeStateVec());
-    StateVectorManaged<PrecisionT> mu_d(
+    StateVectorManagedCPU<PrecisionT> mu(dy, jd.getSizeStateVec());
+    StateVectorManagedCPU<PrecisionT> mu_d(
         Util::log2PerfectPower(jd.getSizeStateVec()));
 
     const auto tp_rend = trainable_params.rend();

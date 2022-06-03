@@ -32,6 +32,12 @@ namespace Pennylane::Gates::Constant {
 [[maybe_unused]] constexpr std::array multi_qubit_generators{
     GeneratorOperation::MultiRZ,
 };
+/**
+ * @brief List of multi-qubit matrix operation
+ */
+[[maybe_unused]] constexpr std::array multi_qubit_matrix_ops{
+    MatrixOperation::MultiQubitOp,
+};
 
 /**
  * @brief Gate names
@@ -68,12 +74,23 @@ namespace Pennylane::Gates::Constant {
     std::pair<GateOperation, std::string_view>{GateOperation::CRY, "CRY"},
     std::pair<GateOperation, std::string_view>{GateOperation::CRZ, "CRZ"},
     std::pair<GateOperation, std::string_view>{GateOperation::CRot, "CRot"},
+    std::pair<GateOperation, std::string_view>{GateOperation::SingleExcitation,
+                                               "SingleExcitation"},
+    std::pair<GateOperation, std::string_view>{
+        GateOperation::SingleExcitationMinus, "SingleExcitationMinus"},
+    std::pair<GateOperation, std::string_view>{
+        GateOperation::SingleExcitationPlus, "SingleExcitationPlus"},
     std::pair<GateOperation, std::string_view>{GateOperation::Toffoli,
                                                "Toffoli"},
     std::pair<GateOperation, std::string_view>{GateOperation::CSWAP, "CSWAP"},
+    std::pair<GateOperation, std::string_view>{GateOperation::DoubleExcitation,
+                                               "DoubleExcitation"},
+    std::pair<GateOperation, std::string_view>{
+        GateOperation::DoubleExcitationMinus, "DoubleExcitationMinus"},
+    std::pair<GateOperation, std::string_view>{
+        GateOperation::DoubleExcitationPlus, "DoubleExcitationPlus"},
     std::pair<GateOperation, std::string_view>{GateOperation::MultiRZ,
-                                               "MultiRZ"},
-};
+                                               "MultiRZ"}};
 /**
  * @brief Generator names.
  *
@@ -104,8 +121,24 @@ namespace Pennylane::Gates::Constant {
     std::pair<GeneratorOperation, std::string_view>{
         GeneratorOperation::ControlledPhaseShift,
         "GeneratorControlledPhaseShift"},
+    std::pair<GeneratorOperation, std::string_view>{
+        GeneratorOperation::SingleExcitation, "GeneratorSingleExcitation"},
+    std::pair<GeneratorOperation, std::string_view>{
+        GeneratorOperation::SingleExcitationMinus,
+        "GeneratorSingleExcitationMinus"},
+    std::pair<GeneratorOperation, std::string_view>{
+        GeneratorOperation::SingleExcitationPlus,
+        "GeneratorSingleExcitationPlus"},
     std::pair<GeneratorOperation, std::string_view>{GeneratorOperation::MultiRZ,
                                                     "GeneratorMultiRZ"},
+    std::pair<GeneratorOperation, std::string_view>{
+        GeneratorOperation::DoubleExcitation, "GeneratorDoubleExcitation"},
+    std::pair<GeneratorOperation, std::string_view>{
+        GeneratorOperation::DoubleExcitationMinus,
+        "GeneratorDoubleExcitationMinus"},
+    std::pair<GeneratorOperation, std::string_view>{
+        GeneratorOperation::DoubleExcitationPlus,
+        "GeneratorDoubleExcitationPlus"},
 };
 /**
  * @brief Matrix names.
@@ -147,8 +180,14 @@ namespace Pennylane::Gates::Constant {
     std::pair<GateOperation, size_t>{GateOperation::CRY, 2},
     std::pair<GateOperation, size_t>{GateOperation::CRZ, 2},
     std::pair<GateOperation, size_t>{GateOperation::CRot, 2},
+    std::pair<GateOperation, size_t>{GateOperation::SingleExcitation, 2},
+    std::pair<GateOperation, size_t>{GateOperation::SingleExcitationMinus, 2},
+    std::pair<GateOperation, size_t>{GateOperation::SingleExcitationPlus, 2},
     std::pair<GateOperation, size_t>{GateOperation::Toffoli, 3},
     std::pair<GateOperation, size_t>{GateOperation::CSWAP, 3},
+    std::pair<GateOperation, size_t>{GateOperation::DoubleExcitation, 4},
+    std::pair<GateOperation, size_t>{GateOperation::DoubleExcitationMinus, 4},
+    std::pair<GateOperation, size_t>{GateOperation::DoubleExcitationPlus, 4},
 };
 
 /**
@@ -167,7 +206,19 @@ namespace Pennylane::Gates::Constant {
     std::pair<GeneratorOperation, std::size_t>{GeneratorOperation::CRY, 2},
     std::pair<GeneratorOperation, std::size_t>{GeneratorOperation::CRZ, 2},
     std::pair<GeneratorOperation, std::size_t>{
+        GeneratorOperation::SingleExcitation, 2},
+    std::pair<GeneratorOperation, std::size_t>{
+        GeneratorOperation::SingleExcitationMinus, 2},
+    std::pair<GeneratorOperation, std::size_t>{
+        GeneratorOperation::SingleExcitationPlus, 2},
+    std::pair<GeneratorOperation, std::size_t>{
         GeneratorOperation::ControlledPhaseShift, 2},
+    std::pair<GeneratorOperation, std::size_t>{
+        GeneratorOperation::DoubleExcitation, 4},
+    std::pair<GeneratorOperation, std::size_t>{
+        GeneratorOperation::DoubleExcitationMinus, 4},
+    std::pair<GeneratorOperation, std::size_t>{
+        GeneratorOperation::DoubleExcitationPlus, 4},
 };
 
 /**
@@ -197,8 +248,14 @@ namespace Pennylane::Gates::Constant {
     std::pair<GateOperation, size_t>{GateOperation::CRX, 1},
     std::pair<GateOperation, size_t>{GateOperation::CRY, 1},
     std::pair<GateOperation, size_t>{GateOperation::CRZ, 1},
+    std::pair<GateOperation, size_t>{GateOperation::SingleExcitation, 1},
+    std::pair<GateOperation, size_t>{GateOperation::SingleExcitationMinus, 1},
+    std::pair<GateOperation, size_t>{GateOperation::SingleExcitationPlus, 1},
     std::pair<GateOperation, size_t>{GateOperation::CRot, 3},
     std::pair<GateOperation, size_t>{GateOperation::Toffoli, 0},
+    std::pair<GateOperation, size_t>{GateOperation::DoubleExcitation, 1},
+    std::pair<GateOperation, size_t>{GateOperation::DoubleExcitationMinus, 1},
+    std::pair<GateOperation, size_t>{GateOperation::DoubleExcitationPlus, 1},
     std::pair<GateOperation, size_t>{GateOperation::CSWAP, 0},
     std::pair<GateOperation, size_t>{GateOperation::MultiRZ, 1},
 };

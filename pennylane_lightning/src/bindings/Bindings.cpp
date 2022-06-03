@@ -19,7 +19,11 @@
 
 #include "GateUtil.hpp"
 #include "SelectKernel.hpp"
+<<<<<<< HEAD
 #include "StateVecAdjDiff.hpp"
+=======
+#include "StateVectorManagedCPU.hpp"
+>>>>>>> new_kernel_dispatch
 
 #include "pybind11/pybind11.h"
 
@@ -30,7 +34,7 @@ using namespace Pennylane::Util;
 using namespace Pennylane::Algorithms;
 using namespace Pennylane::Gates;
 
-using Pennylane::StateVectorRaw;
+using Pennylane::StateVectorRawCPU;
 
 using std::complex;
 using std::string;
@@ -48,22 +52,35 @@ namespace py = pybind11;
  * @param m Pybind11 module.
  */
 template <class PrecisionT, class ParamT>
-void lightning_class_bindings(py::module &m) {
+void lightning_class_bindings(py::module_ &m) {
     // Enable module name to be based on size of complex datatype
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
+    using np_arr_c = py::array_t<std::complex<ParamT>,
+                                 py::array::c_style | py::array::forcecast>;
+    using np_arr_r =
+        py::array_t<ParamT, py::array::c_style | py::array::forcecast>;
+    using sparse_index_type =
+        long int; // Kokkos Kernels needs signed int as Ordinal type.
+    using np_arr_sparse_ind =
+        py::array_t<sparse_index_type,
+                    py::array::c_style | py::array::forcecast>;
+
     //***********************************************************************//
     //                              StateVector
     //***********************************************************************//
-
+    //
     std::string class_name = "StateVectorC" + bitsize;
-    auto pyclass = py::class_<StateVectorRaw<PrecisionT>>(m, class_name.c_str(),
-                                                          py::module_local());
+    auto pyclass = py::class_<StateVectorRawCPU<PrecisionT>>(
+        m, class_name.c_str(), py::module_local());
     pyclass.def(py::init(&createRaw<PrecisionT>));
 
-    registerGatesForStateVector<PrecisionT, ParamT, StateVectorRaw<PrecisionT>>(
-        pyclass);
+    registerGatesForStateVector<PrecisionT, ParamT,
+                                StateVectorRawCPU<PrecisionT>>(pyclass);
+
+    pyclass.def("kernel_map", &svKernelMap<PrecisionT>,
+                "Get internal kernels for operations");
 
     //***********************************************************************//
     //                              Measures
@@ -71,7 +88,7 @@ void lightning_class_bindings(py::module &m) {
 
     class_name = "MeasuresC" + bitsize;
     py::class_<Measures<PrecisionT>>(m, class_name.c_str(), py::module_local())
-        .def(py::init<const StateVectorRaw<PrecisionT> &>())
+        .def(py::init<const StateVectorRawCPU<PrecisionT> &>())
         .def("probs",
              [](Measures<PrecisionT> &M, const std::vector<size_t> &wires) {
                  if (wires.empty()) {
@@ -80,10 +97,23 @@ void lightning_class_bindings(py::module &m) {
                  return py::array_t<ParamT>(py::cast(M.probs(wires)));
              })
         .def("expval",
-             [](Measures<PrecisionT> &M, const std::string &operation,
-                const std::vector<size_t> &wires) {
-                 return M.expval(operation, wires);
-             })
+             static_cast<PrecisionT (Measures<PrecisionT>::*)(
+                 const std::string &, const std::vector<size_t> &)>(
+                 &Measures<PrecisionT>::expval),
+             "Expected value of an operation by name.")
+        .def(
+            "expval",
+            [](Measures<PrecisionT> &M, const np_arr_sparse_ind row_map,
+               const np_arr_sparse_ind entries, const np_arr_c values) {
+                return M.expval(
+                    static_cast<sparse_index_type *>(row_map.request().ptr),
+                    static_cast<sparse_index_type>(row_map.request().size),
+                    static_cast<sparse_index_type *>(entries.request().ptr),
+                    static_cast<std::complex<PrecisionT> *>(
+                        values.request().ptr),
+                    static_cast<sparse_index_type>(values.request().size));
+            },
+            "Expected value of a sparse Hamiltonian.")
         .def("generate_samples",
              [](Measures<PrecisionT> &M, size_t num_wires, size_t num_shots) {
                  auto &&result = M.generate_samples(num_shots);
@@ -329,11 +359,29 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
     registerAlgorithms<float, float>(alg_submodule);
     registerAlgorithms<double, double>(alg_submodule);
 
+    /* Add CPUMemoryModel enum class */
+    py::enum_<CPUMemoryModel>(m, "CPUMemoryModel")
+        .value("Unaligned", CPUMemoryModel::Unaligned)
+        .value("Aligned256", CPUMemoryModel::Aligned256)
+        .value("Aligned512", CPUMemoryModel::Aligned512);
+
+    /* Add array */
+    m.def("allocate_aligned_array", &allocateAlignedArray,
+          "Get numpy array whose underlying data is aligned.");
+    m.def("get_alignment", &getNumpyArrayAlignment,
+          "Get alignment of an underlying data for a numpy array.");
+    m.def("best_alignment", &bestCPUMemoryModel,
+          "Best memory alignment. for the simulator.");
+
     /* Add compile info */
     m.def("compile_info", &getCompileInfo, "Compiled binary information.");
 
-    /* Add runtime info */
+    /* Add compile info */
     m.def("runtime_info", &getRuntimeInfo, "Runtime information.");
+
+    /* Add Kokkos and Kokkos Kernels info */
+    m.def("Kokkos_info", &getKokkosInfo,
+          "Kokkos and Kokkos Kernels information.");
 
     lightning_class_bindings<float, float>(m);
     lightning_class_bindings<double, double>(m);

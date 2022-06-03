@@ -31,6 +31,14 @@
 #include <type_traits>
 #include <vector>
 
+#if __has_include(<version>)
+#include <version>
+#endif
+
+#if __cpp_lib_math_constants >= 201907L
+#include <numbers>
+#endif
+
 namespace Pennylane::Util {
 /**
  * @brief Compile-time scalar real times complex number.
@@ -121,11 +129,15 @@ template <class T> inline static constexpr auto IMAG() -> std::complex<T> {
  * @return constexpr T sqrt(2)
  */
 template <class T> inline static constexpr auto SQRT2() -> T {
+#if __cpp_lib_math_constants >= 201907L
+    return std::numbers::sqrt2_v<T>;
+#else
     if constexpr (std::is_same_v<T, float>) {
         return 0x1.6a09e6p+0F; // NOLINT: To be replaced in C++20
     } else {
         return 0x1.6a09e667f3bcdp+0; // NOLINT: To be replaced in C++20
     }
+#endif
 }
 
 /**
@@ -343,11 +355,6 @@ class NotImplementedException : public std::logic_error {
                            fname){};
 };
 
-// Enable until C++20 support is explicitly allowed
-template <class T> struct remove_cvref {
-    using type = std::remove_cv_t<std::remove_reference_t<T>>;
-};
-
 /**
  * @brief Chunk the data using the requested chunk size.
  *
@@ -418,21 +425,6 @@ struct PairHash {
         return std::hash<T>()(p.first) ^ std::hash<U>()(p.second);
     }
 };
-
-// type alias
-template <class T> using remove_cvref_t = typename remove_cvref<T>::type;
-
-template <typename T> struct remove_complex { using type = T; };
-template <typename T> struct remove_complex<std::complex<T>> {
-    using type = T;
-};
-template <typename T> using remove_complex_t = typename remove_complex<T>::type;
-
-template <typename T> struct is_complex : std::false_type {};
-
-template <typename T> struct is_complex<std::complex<T>> : std::true_type {};
-
-template <typename T> constexpr bool is_complex_v = is_complex<T>::value;
 
 /**
  * @brief Iterate over all enum values (if BEGIN and END are defined).

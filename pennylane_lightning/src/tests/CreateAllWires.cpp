@@ -1,4 +1,7 @@
 #include "CreateAllWires.hpp"
+
+#include <bit>
+
 namespace Pennylane {
 auto createAllWires(size_t n_qubits, Gates::GateOperation gate_op, bool order)
     -> std::vector<std::vector<size_t>> {
@@ -8,7 +11,7 @@ auto createAllWires(size_t n_qubits, Gates::GateOperation gate_op, bool order)
         res.reserve((1U << n_qubits) - 1);
         for (size_t k = 1; k < (static_cast<size_t>(1U) << n_qubits); k++) {
             std::vector<size_t> wires;
-            wires.reserve(Util::popcount(k));
+            wires.reserve(std::popcount(k));
 
             for (size_t i = 0; i < n_qubits; i++) {
                 if (((k >> i) & 1U) == 1U) {
