@@ -12,6 +12,7 @@
 #include "BitUtil.hpp"
 #include "Error.hpp"
 #include "LinearAlgebra.hpp"
+#include "Memory.hpp"
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"
@@ -21,6 +22,7 @@
 #endif
 
 using namespace Pennylane;
+using namespace Pennylane::Util;
 
 /**
  * @brief This tests the compile-time calculation of a given scalar
@@ -143,6 +145,21 @@ TEST_CASE("Utility bit operations", "[Util][BitUtil]") {
             }
         }
     }
+
+    SECTION("Bitswap") {
+        CHECK(Util::bitswap(0B001101, 0, 1) == 0B001110);
+        CHECK(Util::bitswap(0B001101, 0, 2) == 0B001101);
+        CHECK(Util::bitswap(0B001101, 0, 3) == 0B001101);
+        CHECK(Util::bitswap(0B001101, 0, 4) == 0B011100);
+    }
+
+    SECTION("fillTrailingOnes") {
+        CHECK(Util::fillTrailingOnes<uint8_t>(4) == 0B1111);
+        CHECK(Util::fillTrailingOnes<uint8_t>(6) == 0B111111);
+        CHECK(Util::fillTrailingOnes<uint32_t>(17) == 0B1'1111'1111'1111'1111);
+        CHECK(Util::fillTrailingOnes<uint64_t>(54) ==
+              0x3F'FFFF'FFFF'FFFF); // 54 == 4*13 + 2
+    }
 }
 
 TEST_CASE("Utility array and tuples", "[Util]") {
@@ -248,4 +265,13 @@ TEST_CASE("Test utility functions for constants", "[Util][ConstantUtil]") {
         // The following line must not be compiled
         // static_assert(Util::lookup(test_pairs, TestEnum::Many) == 2U);
     }
+}
+
+TEST_CASE("Test AlignedAllocator", "[Util][Memory]") {
+    AlignedAllocator<double> allocator(8);
+    REQUIRE(allocator.allocate(0) == nullptr);
+    /* Allocate 1 PiB */
+    REQUIRE_THROWS_AS(std::unique_ptr<double>(allocator.allocate(
+                          size_t{1024 * 1024} * size_t{1024 * 1024})),
+                      std::bad_alloc);
 }

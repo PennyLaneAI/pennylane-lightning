@@ -355,11 +355,6 @@ class NotImplementedException : public std::logic_error {
                            fname){};
 };
 
-// Enable until C++20 support is explicitly allowed
-template <class T> struct remove_cvref {
-    using type = std::remove_cv_t<std::remove_reference_t<T>>;
-};
-
 /**
  * @brief Chunk the data using the requested chunk size.
  *
@@ -430,21 +425,6 @@ struct PairHash {
         return std::hash<T>()(p.first) ^ std::hash<U>()(p.second);
     }
 };
-
-// type alias
-template <class T> using remove_cvref_t = typename remove_cvref<T>::type;
-
-template <typename T> struct remove_complex { using type = T; };
-template <typename T> struct remove_complex<std::complex<T>> {
-    using type = T;
-};
-template <typename T> using remove_complex_t = typename remove_complex<T>::type;
-
-template <typename T> struct is_complex : std::false_type {};
-
-template <typename T> struct is_complex<std::complex<T>> : std::true_type {};
-
-template <typename T> constexpr bool is_complex_v = is_complex<T>::value;
 
 /**
  * @brief Iterate over all enum values (if BEGIN and END are defined).

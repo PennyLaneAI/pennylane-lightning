@@ -80,14 +80,15 @@ set(TEST_SOURCES CreateAllWires.cpp
                  Test_GateImplementations_Param.cpp
                  Test_GateUtil.cpp
                  Test_Internal.cpp
+                 Test_KernelMap.cpp
                  Test_LinearAlgebra.cpp
                  Test_Measures.cpp
                  Test_Kokkos_Sparse.cpp
                  Test_Measures_Sparse.cpp
                  Test_OpToMemberFuncPtr.cpp
                  Test_RuntimeInfo.cpp
-                 Test_StateVectorManaged.cpp
-                 Test_StateVectorRaw.cpp
+                 Test_StateVectorManagedCPU.cpp
+                 Test_StateVectorRawCPU.cpp
                  Test_Util.cpp
                  Test_VectorJacobianProduct.cpp)
 

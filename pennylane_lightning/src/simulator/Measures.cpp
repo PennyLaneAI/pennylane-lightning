@@ -15,5 +15,6 @@
 #include "Measures.hpp"
 
 // explicit instantiation
-template class Pennylane::Measures<float, Pennylane::StateVectorRaw<float>>;
-template class Pennylane::Measures<double, Pennylane::StateVectorRaw<double>>;
+template class Pennylane::Measures<float, Pennylane::StateVectorRawCPU<float>>;
+template class Pennylane::Measures<double,
+                                   Pennylane::StateVectorRawCPU<double>>;

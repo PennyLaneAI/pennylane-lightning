@@ -4,8 +4,7 @@
 
 #include "Kokkos_Sparse.hpp"
 #include "Measures.hpp"
-#include "StateVectorManaged.hpp"
-#include "StateVectorRaw.hpp"
+#include "StateVectorManagedCPU.hpp"
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"
@@ -18,12 +17,10 @@
 using namespace Pennylane;
 using namespace Pennylane::Util;
 
-namespace {
 using std::complex;
 using std::size_t;
 using std::string;
 using std::vector;
-}; // namespace
 
 TEST_CASE("Probabilities", "[Measures]") {
     // Probabilities calculated with Pennylane default_qbit:
@@ -50,12 +47,12 @@ TEST_CASE("Probabilities", "[Measures]") {
         {1, 2},    {2, 1},    {0},       {1},       {2}};
 
     // Defining the State Vector that will be measured.
-    StateVectorManaged<double> Measured_StateVector =
-        Initializing_StateVector();
+    auto Measured_StateVector = Initializing_StateVector();
 
     // Initializing the measures class.
-    // This object attachs to the statevector allowing several measures.
-    Measures<double, StateVectorManaged<double>> Measurer(Measured_StateVector);
+    // This object attaches to the statevector allowing several measures.
+    Measures<double, StateVectorManagedCPU<double>> Measurer(
+        Measured_StateVector);
 
     vector<double> probabilities;
 
@@ -71,12 +68,11 @@ TEST_CASE("Probabilities", "[Measures]") {
 
 TEMPLATE_TEST_CASE("Expected Values", "[Measures]", float, double) {
     // Defining the State Vector that will be measured.
-    StateVectorManaged<TestType> Measured_StateVector =
-        Initializing_StateVector<TestType>();
+    auto Measured_StateVector = Initializing_StateVector<TestType>();
 
     // Initializing the measures class.
-    // This object attachs to the statevector allowing several measures.
-    Measures<TestType, StateVectorManaged<TestType>> Measurer(
+    // This object attaches to the statevector allowing several measures.
+    Measures<TestType, StateVectorManagedCPU<TestType>> Measurer(
         Measured_StateVector);
 
     SECTION("Testing single operation defined by a matrix:") {
@@ -153,12 +149,12 @@ TEMPLATE_TEST_CASE("Sample", "[Measures]", float, double) {
         1U << 30U, 1U << 31U};
 
     // Defining the State Vector that will be measured.
-    StateVectorManaged<TestType> Measured_StateVector =
+    StateVectorManagedCPU<TestType> Measured_StateVector =
         Initializing_StateVector<TestType>();
 
     // Initializing the measures class.
-    // This object attachs to the statevector allowing several measures.
-    Measures<TestType, StateVectorManaged<TestType>> Measurer(
+    // This object attaches to the statevector allowing several measures.
+    Measures<TestType, StateVectorManagedCPU<TestType>> Measurer(
         Measured_StateVector);
     vector<TestType> expected_probabilities = {
         0.67078706, 0.03062806, 0.0870997,  0.00397696,
@@ -197,12 +193,12 @@ TEMPLATE_TEST_CASE("Sample", "[Measures]", float, double) {
 
 TEMPLATE_TEST_CASE("Variances", "[Measures]", float, double) {
     // Defining the State Vector that will be measured.
-    StateVectorManaged<TestType> Measured_StateVector =
+    StateVectorManagedCPU<TestType> Measured_StateVector =
         Initializing_StateVector<TestType>();
 
     // Initializing the measures class.
-    // This object attachs to the statevector allowing several measures.
-    Measures<TestType, StateVectorManaged<TestType>> Measurer(
+    // This object attaches to the statevector allowing several measures.
+    Measures<TestType, StateVectorManagedCPU<TestType>> Measurer(
         Measured_StateVector);
 
     SECTION("Testing single operation defined by a matrix:") {
