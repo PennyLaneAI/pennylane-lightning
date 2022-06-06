@@ -315,7 +315,7 @@ auto createParams(Gates::GateOperation op) -> std::vector<PrecisionT> {
 /**
  * @brief Initialize the statevector in a non-trivial configuration.
  *
- * @tparam T
+ * @tparam T statevector float point precision.
  * @param num_qubits number of qubits
  * @return StateVectorManaged<T>
  */
@@ -354,8 +354,8 @@ StateVectorManagedCPU<T> Initializing_StateVector(size_t num_qubits = 3) {
  * matrix representation for a tridiagonal + periodic boundary conditions
  * Hamiltonian.
  *
- * @tparam fp_precision
- * @tparam index_type
+ * @tparam fp_precision data float point precision.
+ * @tparam index_type integer type used as indices of the sparse matrix.
  * @param row_map the j element encodes the total number of non-zeros above
  * row j.
  * @param entries column indices.
