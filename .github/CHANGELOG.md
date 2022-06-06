@@ -5,6 +5,9 @@
 * Add `SingleExcitation` and `DoubleExcitation` qchem gates and generators.
 [(#289)](https://github.com/PennyLaneAI/pennylane-lightning/pull/289)
 
+* Add a new dispatch mechanism for future kernels.
+[(#291)](https://github.com/PennyLaneAI/pennylane-lightning/pull/291)
+
 ### Breaking changes
 
 * Codebase is now moving to C++20. The default compiler for Linux is now GCC10.

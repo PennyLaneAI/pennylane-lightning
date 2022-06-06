@@ -96,7 +96,7 @@ Check **GB CLI Flags** for the list of flags.
 
 
 ### `benchmarks/apply_operations`
-To benchmark the `Pennylane::StateVectorManaged` and `applyOperation` in PennyLane-Lightning, one can run:
+To benchmark the `Pennylane::StateVectorManagedCPU` and `applyOperation` in PennyLane-Lightning, one can run:
 ```console
 $ make gbenchmark
 $ ./BuildGBench/benchmarks/apply_operations
@@ -151,7 +151,7 @@ Check **GB CLI Flags** for the list of flags.
 
 
 ### `benchmarks/bench_kernels`
-To benchmark the `Pennylane::StateVectorManaged` for all gates, generators, matrix operations using different kernels:
+To benchmark the `Pennylane::StateVectorManagedCPU` for all gates, generators, matrix operations using different kernels:
 ```console
 $ make gbenchmark
 $ ./BuildGBench/benchmarks/bench_kernels

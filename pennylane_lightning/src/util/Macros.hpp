@@ -151,6 +151,22 @@ constexpr auto getCPUArchMSVC() {
 #endif
 /// @endcond
 
+enum class OperatingSystem { Linux, Windows, MacOS, Unknown };
+
+#if defined(__APPLE__)
+[[maybe_unused]] constexpr static auto operating_system =
+    OperatingSystem::MacOS;
+#elif defined(__linux__)
+[[maybe_unused]] constexpr static auto operating_system =
+    OperatingSystem::Linux;
+#elif defined(_MSC_VER)
+[[maybe_unused]] constexpr static auto operating_system =
+    OperatingSystem::Windows;
+#else
+[[maybe_unused]] constexpr static auto operating_system =
+    OperatingSystem::Unknown;
+#endif
+
 enum class Compiler { GCC, Clang, MSVC, NVCC, NVHPC, Unknown };
 
 /**

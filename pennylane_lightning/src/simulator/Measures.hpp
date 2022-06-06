@@ -30,8 +30,8 @@
 
 #include "Kokkos_Sparse.hpp"
 #include "LinearAlgebra.hpp"
-#include "StateVectorManaged.hpp"
-#include "StateVectorRaw.hpp"
+#include "StateVectorManagedCPU.hpp"
+#include "StateVectorRawCPU.hpp"
 
 namespace Pennylane {
 
@@ -45,7 +45,7 @@ namespace Pennylane {
  * @tparam fp_t Floating point precision of underlying measurements.
  * @tparam SVType type of the statevector to be measured.
  */
-template <class fp_t = double, class SVType = StateVectorRaw<fp_t>>
+template <class fp_t = double, class SVType = StateVectorRawCPU<fp_t>>
 class Measures {
   private:
     const SVType &original_statevector;
@@ -82,8 +82,7 @@ class Measures {
     std::vector<fp_t> probs(const std::vector<size_t> &wires) {
         // Determining index that would sort the vector.
         // This information is needed later.
-        const std::vector<size_t> sorted_ind_wires(
-            Util::sorting_indices(wires));
+        const auto sorted_ind_wires = Util::sorting_indices(wires);
         // Sorting wires.
         std::vector<size_t> sorted_wires(wires.size());
         for (size_t pos = 0; pos < wires.size(); pos++) {
@@ -129,7 +128,7 @@ class Measures {
                 const std::vector<size_t> &wires) {
         // Copying the original state vector, for the application of the
         // observable operator.
-        StateVectorManaged<fp_t> operator_statevector(original_statevector);
+        StateVectorManagedCPU<fp_t> operator_statevector(original_statevector);
 
         operator_statevector.applyMatrix(matrix, wires);
 
@@ -150,7 +149,7 @@ class Measures {
                 const std::vector<size_t> &wires) {
         // Copying the original state vector, for the application of the
         // observable operator.
-        StateVectorManaged<fp_t> operator_statevector(original_statevector);
+        StateVectorManagedCPU<fp_t> operator_statevector(original_statevector);
 
         operator_statevector.applyOperation(operation, wires);
 
@@ -216,7 +215,7 @@ class Measures {
         }
 
         return expected_value_list;
-    };
+    }
 
     /**
      * @brief Variance of an observable.
@@ -228,7 +227,7 @@ class Measures {
     fp_t var(const std::string &operation, const std::vector<size_t> &wires) {
         // Copying the original state vector, for the application of the
         // observable operator.
-        StateVectorManaged<fp_t> operator_statevector(original_statevector);
+        StateVectorManagedCPU<fp_t> operator_statevector(original_statevector);
 
         operator_statevector.applyOperation(operation, wires);
 
@@ -254,7 +253,7 @@ class Measures {
              const std::vector<size_t> &wires) {
         // Copying the original state vector, for the application of the
         // observable operator.
-        StateVectorManaged<fp_t> operator_statevector(original_statevector);
+        StateVectorManagedCPU<fp_t> operator_statevector(original_statevector);
 
         operator_statevector.applyMatrix(matrix, wires);
 
@@ -378,7 +377,6 @@ class Measures {
                 cache[idx] = i;
             }
         }
-
         return samples;
     }
 }; // class Measures

@@ -4,8 +4,8 @@
 
 #include "Kokkos_Sparse.hpp"
 #include "Measures.hpp"
-#include "StateVectorManaged.hpp"
-#include "StateVectorRaw.hpp"
+#include "StateVectorManagedCPU.hpp"
+#include "StateVectorRawCPU.hpp"
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"
@@ -28,12 +28,11 @@ using std::vector;
 TEMPLATE_TEST_CASE("Expected Values - Sparse Hamiltonian [Kokkos]",
                    "[Measures]", float, double) {
     // Defining the State Vector that will be measured.
-    StateVectorManaged<TestType> Measured_StateVector =
-        Initializing_StateVector<TestType>();
+    auto Measured_StateVector = Initializing_StateVector<TestType>();
 
     // Initializing the measures class.
-    // This object attachs to the statevector allowing several measures.
-    Measures<TestType, StateVectorManaged<TestType>> Measurer(
+    // This object attaches to the statevector allowing several measures.
+    Measures<TestType, StateVectorManagedCPU<TestType>> Measurer(
         Measured_StateVector);
 
     if constexpr (USE_KOKKOS) {

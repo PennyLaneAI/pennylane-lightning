@@ -17,14 +17,15 @@
  */
 #pragma once
 
+#include "TypeTraits.hpp"
+#include "Util.hpp"
+
 #include <algorithm>
 #include <complex>
 #include <cstdlib>
 #include <numeric>
 #include <random>
 #include <vector>
-
-#include "Util.hpp"
 
 /// @cond DEV
 #if __has_include(<cblas.h>) && defined _ENABLE_BLAS

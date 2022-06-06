@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "StateVectorRaw.hpp"
+#include "StateVectorManagedCPU.hpp"
 
 // explicit instantiation
-template class Pennylane::StateVectorRaw<float>;
-template class Pennylane::StateVectorRaw<double>;
+template class Pennylane::StateVectorManagedCPU<float>;
+template class Pennylane::StateVectorManagedCPU<double>;

@@ -1,7 +1,6 @@
-#include "DefaultKernels.hpp"
 #include "LinearAlgebra.hpp"
-#include "StateVectorManaged.hpp"
-#include "StateVectorRaw.hpp"
+#include "StateVectorManagedCPU.hpp"
+#include "StateVectorRawCPU.hpp"
 #include "Util.hpp"
 #include "cpu_kernels/GateImplementationsPI.hpp"
 
@@ -19,45 +18,67 @@
 
 using namespace Pennylane;
 
-TEMPLATE_TEST_CASE("StateVectorManaged::StateVectorManaged",
-                   "[StateVectorManaged]", float, double) {
+TEMPLATE_TEST_CASE("StateVectorManagedCPU::StateVectorManagedCPU",
+                   "[StateVectorManagedCPU]", float, double) {
     using PrecisionT = TestType;
 
-    SECTION("StateVectorManaged") {
-        REQUIRE(!std::is_constructible_v<StateVectorManaged<>>);
+    SECTION("StateVectorManagedCPU") {
+        REQUIRE(!std::is_constructible_v<StateVectorManagedCPU<>>);
     }
-    SECTION("StateVectorManaged<TestType>") {
-        REQUIRE(!std::is_constructible_v<StateVectorManaged<TestType>>);
+    SECTION("StateVectorManagedCPU<TestType>") {
+        REQUIRE(!std::is_constructible_v<StateVectorManagedCPU<TestType>>);
     }
-    SECTION("StateVectorManaged<TestType> {size_t}") {
-        REQUIRE(std::is_constructible_v<StateVectorManaged<TestType>, size_t>);
+    SECTION("StateVectorManagedCPU<TestType> {size_t}") {
+        REQUIRE(
+            std::is_constructible_v<StateVectorManagedCPU<TestType>, size_t>);
         const size_t num_qubits = 4;
-        StateVectorManaged<PrecisionT> sv(num_qubits);
+        StateVectorManagedCPU<PrecisionT> sv(num_qubits);
 
         REQUIRE(sv.getNumQubits() == 4);
         REQUIRE(sv.getLength() == 16);
         REQUIRE(sv.getDataVector().size() == 16);
     }
-    SECTION("StateVectorManaged<TestType> {const StateVectorRaw<TestType>&}") {
-        REQUIRE(std::is_constructible_v<StateVectorManaged<TestType>,
-                                        const StateVectorRaw<TestType> &>);
+    SECTION("StateVectorManagedCPU<TestType> {const "
+            "StateVectorRawCPU<TestType>&}") {
+        REQUIRE(std::is_constructible_v<StateVectorManagedCPU<TestType>,
+                                        const StateVectorRawCPU<TestType> &>);
+    }
+    SECTION("StateVectorManagedCPU<TestType> {const "
+            "StateVectorManagedCPU<TestType>&}") {
+        REQUIRE(std::is_copy_constructible_v<StateVectorManagedCPU<TestType>>);
     }
     SECTION(
-        "StateVectorManaged<TestType> {const StateVectorManaged<TestType>&}") {
-        REQUIRE(std::is_copy_constructible_v<StateVectorManaged<TestType>>);
+        "StateVectorManagedCPU<TestType> {StateVectorManagedCPU<TestType>&&}") {
+        REQUIRE(std::is_move_constructible_v<StateVectorManagedCPU<TestType>>);
     }
-    SECTION("StateVectorManaged<TestType> {StateVectorManaged<TestType>&&}") {
-        REQUIRE(std::is_move_constructible_v<StateVectorManaged<TestType>>);
+    SECTION("Aligned 256bit statevector") {
+        const auto memory_model = CPUMemoryModel::Aligned256;
+        StateVectorManagedCPU<PrecisionT> sv(4, Threading::SingleThread,
+                                             memory_model);
+        /* Even when we allocate 256 bit aligend memory, it is possible that the
+         * alignment happens to be 512 bit */
+        REQUIRE(((getMemoryModel(sv.getDataVector().data()) ==
+                  CPUMemoryModel::Aligned256) ||
+                 (getMemoryModel(sv.getDataVector().data()) ==
+                  CPUMemoryModel::Aligned512)));
+    }
+
+    SECTION("Aligned 512bit statevector") {
+        const auto memory_model = CPUMemoryModel::Aligned512;
+        StateVectorManagedCPU<PrecisionT> sv(4, Threading::SingleThread,
+                                             memory_model);
+        REQUIRE((getMemoryModel(sv.getDataVector().data()) ==
+                 CPUMemoryModel::Aligned512));
     }
 }
 
-TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix with std::vector",
-                   "[StateVectorManaged]", float, double) {
+TEMPLATE_TEST_CASE("StateVectorManagedCPU::applyMatrix with std::vector",
+                   "[StateVectorManagedCPU]", float, double) {
     using PrecisionT = TestType;
     SECTION("Test wrong matrix size") {
         std::vector<std::complex<TestType>> m(7, 0.0);
         const size_t num_qubits = 4;
-        StateVectorManaged<PrecisionT> sv(num_qubits);
+        StateVectorManagedCPU<PrecisionT> sv(num_qubits);
         REQUIRE_THROWS_WITH(
             sv.applyMatrix(m, {0, 1}),
             Catch::Contains(
@@ -67,7 +88,7 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix with std::vector",
     SECTION("Test wrong number of wires") {
         std::vector<std::complex<TestType>> m(8, 0.0);
         const size_t num_qubits = 4;
-        StateVectorManaged<PrecisionT> sv(num_qubits);
+        StateVectorManagedCPU<PrecisionT> sv(num_qubits);
         REQUIRE_THROWS_WITH(
             sv.applyMatrix(m, {0}),
             Catch::Contains(
@@ -75,13 +96,13 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix with std::vector",
     }
 }
 
-TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix with a pointer",
-                   "[StateVectorManaged]", float, double) {
+TEMPLATE_TEST_CASE("StateVectorManagedCPU::applyMatrix with a pointer",
+                   "[StateVectorManagedCPU]", float, double) {
     using PrecisionT = TestType;
     SECTION("Test wrong matrix") {
         std::vector<std::complex<TestType>> m(8, 0.0);
         const size_t num_qubits = 4;
-        StateVectorManaged<PrecisionT> sv(num_qubits);
+        StateVectorManagedCPU<PrecisionT> sv(num_qubits);
         REQUIRE_THROWS_WITH(sv.applyMatrix(m.data(), {}),
                             Catch::Contains("must be larger than 0"));
     }
@@ -90,8 +111,8 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix with a pointer",
         std::default_random_engine re{1337};
         const size_t num_qubits = 5;
         for (size_t num_wires = 1; num_wires < num_qubits; num_wires++) {
-            StateVectorManaged<PrecisionT> sv1(num_qubits);
-            StateVectorManaged<PrecisionT> sv2(num_qubits);
+            StateVectorManagedCPU<PrecisionT> sv1(num_qubits);
+            StateVectorManagedCPU<PrecisionT> sv2(num_qubits);
 
             std::vector<size_t> wires(num_wires);
             std::iota(wires.begin(), wires.end(), 0);
@@ -106,15 +127,15 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyMatrix with a pointer",
     }
 }
 
-TEMPLATE_TEST_CASE("StateVectorManaged::applyOperations",
-                   "[StateVectorManaged]", float, double) {
+TEMPLATE_TEST_CASE("StateVectorManagedCPU::applyOperations",
+                   "[StateVectorManagedCPU]", float, double) {
     using PrecisionT = TestType;
 
     std::mt19937 re{1337};
 
     SECTION("Test invalid arguments without params") {
         const size_t num_qubits = 4;
-        StateVectorManaged<PrecisionT> sv(num_qubits);
+        StateVectorManagedCPU<PrecisionT> sv(num_qubits);
         REQUIRE_THROWS_WITH(
             sv.applyOperations({"PauliX", "PauliY"}, {{0}}, {false, false}),
             Catch::Contains("must all be equal")); // invalid wires
@@ -125,10 +146,10 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyOperations",
 
     SECTION("applyOperations without params works as expected") {
         const size_t num_qubits = 3;
-        StateVectorManaged<PrecisionT> sv1(num_qubits);
+        StateVectorManagedCPU<PrecisionT> sv1(num_qubits);
 
         sv1.updateData(createRandomState<PrecisionT>(re, num_qubits));
-        StateVectorManaged<PrecisionT> sv2 = sv1;
+        StateVectorManagedCPU<PrecisionT> sv2 = sv1;
 
         sv1.applyOperations({"PauliX", "PauliY"}, {{0}, {1}}, {false, false});
 
@@ -140,7 +161,7 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyOperations",
 
     SECTION("Test invalid arguments with params") {
         const size_t num_qubits = 4;
-        StateVectorManaged<PrecisionT> sv(num_qubits);
+        StateVectorManagedCPU<PrecisionT> sv(num_qubits);
         REQUIRE_THROWS_WITH(
             sv.applyOperations({"RX", "RY"}, {{0}}, {false, false},
                                {{0.0}, {0.0}}),
@@ -158,10 +179,10 @@ TEMPLATE_TEST_CASE("StateVectorManaged::applyOperations",
 
     SECTION("applyOperations with params works as expected") {
         const size_t num_qubits = 3;
-        StateVectorManaged<PrecisionT> sv1(num_qubits);
+        StateVectorManagedCPU<PrecisionT> sv1(num_qubits);
 
         sv1.updateData(createRandomState<PrecisionT>(re, num_qubits));
-        StateVectorManaged<PrecisionT> sv2 = sv1;
+        StateVectorManagedCPU<PrecisionT> sv2 = sv1;
 
         sv1.applyOperations({"RX", "RY"}, {{0}, {1}}, {false, false},
                             {{0.1}, {0.2}});

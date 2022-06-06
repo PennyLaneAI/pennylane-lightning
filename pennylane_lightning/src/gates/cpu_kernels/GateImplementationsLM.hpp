@@ -16,6 +16,7 @@
  * Defines kernel functions with less memory (and fast)
  */
 #pragma once
+
 #include "BitUtil.hpp"
 #include "Error.hpp"
 #include "GateOperation.hpp"
