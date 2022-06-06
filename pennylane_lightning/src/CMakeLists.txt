@@ -41,11 +41,6 @@ if (BUILD_TESTS)
     add_subdirectory("tests" "tests")
 endif()
 
-if (BUILD_EXAMPLES)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
-    add_subdirectory("examples" "examples")
-endif()
-
 if (BUILD_BENCHMARKS)
     add_subdirectory("benchmarks" "benchmarks")
 endif()

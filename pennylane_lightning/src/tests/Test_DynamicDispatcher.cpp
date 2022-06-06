@@ -28,13 +28,17 @@ using Pennylane::Gates::callGateOps;
  * We just check DynamicDispacther calls the correct functuion by comparing
  * the result from it with that of the direct call.
  */
+
 template <typename PrecisionT, typename ParamT, class GateImplementation,
-          GateOperation gate_op, class RandomEngine, typename Enable = void>
+          GateOperation gate_op, class RandomEngine, class Enable = void>
 struct testDispatchForKernel {
     static void test(RandomEngine &re, size_t num_qubits) {
+        // Keep source, but allow clang-tidy to pass for unused
         static_cast<void>(re);
         static_cast<void>(num_qubits);
-    }
+    } // Do nothing if not implemented;
+      // This could probably be replaced with an enable_if or SFINAE-like
+      // pattern.
 };
 template <typename PrecisionT, typename ParamT, class GateImplementation,
           GateOperation gate_op, class RandomEngine>
@@ -43,12 +47,10 @@ struct testDispatchForKernel<
     std::enable_if_t<Util::array_has_elt(GateImplementation::implemented_gates,
                                          gate_op)>> {
     static void test(RandomEngine &re, size_t num_qubits) {
-        using CFP_t = std::complex<PrecisionT>;
-        const std::vector<CFP_t> ini_st =
-            createRandomState<PrecisionT>(re, num_qubits);
-        std::vector<CFP_t> expected = ini_st;
+        const auto ini_st = createRandomState<PrecisionT>(re, num_qubits);
+        auto expected = ini_st;
 
-        const auto wires = createWires(gate_op);
+        const auto wires = createWires(gate_op, num_qubits);
         const auto params = createParams<PrecisionT>(gate_op);
 
         // We first calculate expected directly calling a static member function
@@ -69,12 +71,6 @@ struct testDispatchForKernel<
         REQUIRE(test_st == expected);
     }
 };
-template <typename PrecisionT, typename ParamT, class GateImplementation,
-          GateOperation gate_op, class RandomEngine>
-void testDynamicDispatch(RandomEngine &re, size_t num_qubits) {
-    testDispatchForKernel<PrecisionT, ParamT, GateImplementation, gate_op,
-                          RandomEngine>::test(re, num_qubits);
-}
 
 constexpr auto calcMinNumWires(GateOperation gate_op) -> size_t {
     if (Util::array_has_elt(Constant::multi_qubit_gates, gate_op)) {
@@ -92,9 +88,10 @@ constexpr void testAllGatesForKernelIter(RandomEngine &re,
         constexpr auto num_wires = calcMinNumWires(gate_op);
         for (size_t num_qubits = num_wires; num_qubits <= max_num_qubits;
              num_qubits++) {
-            testDynamicDispatch<PrecisionT, ParamT, GateImplementation,
-                                gate_op>(re, num_qubits);
+            testDispatchForKernel<PrecisionT, ParamT, GateImplementation,
+                                  gate_op, RandomEngine>::test(re, num_qubits);
         }
+
         testAllGatesForKernelIter<PrecisionT, ParamT, GateImplementation,
                                   idx + 1>(re, max_num_qubits);
     }

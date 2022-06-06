@@ -111,8 +111,8 @@ class LightningException : public std::exception {
  * @param line line of source file
  * @param function_name function in which error occured
  */
-inline void Abort(const char *message, const char *file_name, int line,
-                  const char *function_name) {
+[[noreturn]] inline void Abort(const char *message, const char *file_name,
+                               int line, const char *function_name) {
     std::stringstream err_msg;
     err_msg << "[" << file_name << "][Line:" << line
             << "][Method:" << function_name
@@ -130,8 +130,9 @@ inline void Abort(const char *message, const char *file_name, int line,
  * @param line line of source file
  * @param function_name function in which error occured
  */
-inline void Abort(const std::string &message, const char *file_name, int line,
-                  const char *function_name) {
+[[noreturn]] inline void Abort(const std::string &message,
+                               const char *file_name, int line,
+                               const char *function_name) {
     std::stringstream err_msg;
     err_msg << "[" << file_name << "][Line:" << line
             << "][Method:" << function_name

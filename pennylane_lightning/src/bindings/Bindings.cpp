@@ -19,6 +19,7 @@
 
 #include "GateUtil.hpp"
 #include "SelectKernel.hpp"
+#include "StateVectorManagedCPU.hpp"
 
 #include "pybind11/pybind11.h"
 
@@ -27,7 +28,7 @@ namespace {
 using namespace Pennylane::Algorithms;
 using namespace Pennylane::Gates;
 
-using Pennylane::StateVectorRaw;
+using Pennylane::StateVectorRawCPU;
 
 using std::complex;
 using std::string;
@@ -45,7 +46,7 @@ namespace py = pybind11;
  * @param m Pybind11 module.
  */
 template <class PrecisionT, class ParamT>
-void lightning_class_bindings(py::module &m) {
+void lightning_class_bindings(py::module_ &m) {
     // Enable module name to be based on size of complex datatype
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
@@ -63,14 +64,17 @@ void lightning_class_bindings(py::module &m) {
     //***********************************************************************//
     //                              StateVector
     //***********************************************************************//
-
+    //
     std::string class_name = "StateVectorC" + bitsize;
-    auto pyclass = py::class_<StateVectorRaw<PrecisionT>>(m, class_name.c_str(),
-                                                          py::module_local());
+    auto pyclass = py::class_<StateVectorRawCPU<PrecisionT>>(
+        m, class_name.c_str(), py::module_local());
     pyclass.def(py::init(&createRaw<PrecisionT>));
 
-    registerGatesForStateVector<PrecisionT, ParamT, StateVectorRaw<PrecisionT>>(
-        pyclass);
+    registerGatesForStateVector<PrecisionT, ParamT,
+                                StateVectorRawCPU<PrecisionT>>(pyclass);
+
+    pyclass.def("kernel_map", &svKernelMap<PrecisionT>,
+                "Get internal kernels for operations");
 
     //***********************************************************************//
     //                              Observable
@@ -229,7 +233,7 @@ void lightning_class_bindings(py::module &m) {
         .def("adjoint_jacobian", &AdjointJacobian<PrecisionT>::adjointJacobian)
         .def("adjoint_jacobian",
              [](AdjointJacobian<PrecisionT> &adj,
-                const StateVectorRaw<PrecisionT> &sv,
+                const StateVectorRawCPU<PrecisionT> &sv,
                 const std::vector<ObsDatum<PrecisionT>> &observables,
                 const OpsData<PrecisionT> &operations,
                 const std::vector<size_t> &trainableParams, size_t num_params) {
@@ -301,7 +305,7 @@ void lightning_class_bindings(py::module &m) {
                  auto fn = v.vectorJacobianProduct(dy, num_params);
                  return py::cpp_function(
                      [fn, num_params](
-                         const StateVectorRaw<PrecisionT> &sv,
+                         const StateVectorRawCPU<PrecisionT> &sv,
                          const std::vector<ObsDatum<PrecisionT>> &observables,
                          const OpsData<PrecisionT> &operations,
                          const std::vector<size_t> &trainableParams) {
@@ -318,7 +322,7 @@ void lightning_class_bindings(py::module &m) {
 
     class_name = "MeasuresC" + bitsize;
     py::class_<Measures<PrecisionT>>(m, class_name.c_str(), py::module_local())
-        .def(py::init<const StateVectorRaw<PrecisionT> &>())
+        .def(py::init<const StateVectorRawCPU<PrecisionT> &>())
         .def("probs",
              [](Measures<PrecisionT> &M, const std::vector<size_t> &wires) {
                  if (wires.empty()) {
@@ -401,10 +405,24 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
               &Gates::getIndicesAfterExclusion),
           "Get statevector indices for gate application");
 
+    /* Add CPUMemoryModel enum class */
+    py::enum_<CPUMemoryModel>(m, "CPUMemoryModel")
+        .value("Unaligned", CPUMemoryModel::Unaligned)
+        .value("Aligned256", CPUMemoryModel::Aligned256)
+        .value("Aligned512", CPUMemoryModel::Aligned512);
+
+    /* Add array */
+    m.def("allocate_aligned_array", &allocateAlignedArray,
+          "Get numpy array whose underlying data is aligned.");
+    m.def("get_alignment", &getNumpyArrayAlignment,
+          "Get alignment of an underlying data for a numpy array.");
+    m.def("best_alignment", &bestCPUMemoryModel,
+          "Best memory alignment. for the simulator.");
+
     /* Add compile info */
     m.def("compile_info", &getCompileInfo, "Compiled binary information.");
 
-    /* Add runtime info */
+    /* Add compile info */
     m.def("runtime_info", &getRuntimeInfo, "Runtime information.");
 
     /* Add Kokkos and Kokkos Kernels info */
