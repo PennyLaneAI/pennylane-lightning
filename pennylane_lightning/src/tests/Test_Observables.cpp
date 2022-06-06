@@ -1,0 +1,224 @@
+#include "Observables.hpp"
+#include "TestHelpers.hpp"
+
+#include <catch2/catch.hpp>
+
+using namespace Pennylane;
+using namespace Pennylane::Algorithms;
+using Pennylane::Util::LightningException;
+
+TEMPLATE_TEST_CASE("NamedObs", "[Observables]", float, double) {
+    using PrecisionT = TestType;
+    SECTION("NamedObs only accepts correct arguments") {
+        REQUIRE_THROWS_AS(NamedObs<TestType>("PauliX", {}), LightningException);
+        REQUIRE_THROWS_AS(NamedObs<TestType>("PauliX", {0, 3}),
+                          LightningException);
+
+        REQUIRE_THROWS_AS(NamedObs<TestType>("RX", {0}), LightningException);
+        REQUIRE_THROWS_AS(NamedObs<TestType>("RX", {0, 1, 2, 3}),
+                          LightningException);
+        REQUIRE_THROWS_AS(
+            NamedObs<TestType>("RX", {0}, std::vector<PrecisionT>{0.3, 0.4}),
+            LightningException);
+        REQUIRE_NOTHROW(NamedObs<TestType>(
+            "Rot", {0}, std::vector<PrecisionT>{0.3, 0.4, 0.5}));
+    }
+    SECTION("Objects with different names") {
+        auto ob1 = NamedObs<TestType>("PauliX", {0});
+        auto ob2 = NamedObs<TestType>("PauliX", {0});
+        auto ob3 = NamedObs<TestType>("PauliZ", {0});
+
+        REQUIRE(ob1 == ob2);
+        REQUIRE(ob2 != ob3);
+        REQUIRE(ob1 != ob3);
+    }
+    SECTION("Objects with different wires") {
+        auto ob1 = NamedObs<TestType>("PauliY", {0});
+        auto ob2 = NamedObs<TestType>("PauliY", {0});
+        auto ob3 = NamedObs<TestType>("PauliY", {1});
+
+        REQUIRE(ob1 == ob2);
+        REQUIRE(ob2 != ob3);
+        REQUIRE(ob1 != ob3);
+    }
+    SECTION("Objects with different parameters") {
+        auto ob1 = NamedObs<TestType>("RZ", {0}, {0.4});
+        auto ob2 = NamedObs<TestType>("RZ", {0}, {0.4});
+        auto ob3 = NamedObs<TestType>("RZ", {0}, {0.1});
+
+        REQUIRE(ob1 == ob2);
+        REQUIRE(ob2 != ob3);
+        REQUIRE(ob1 != ob3);
+    }
+}
+
+TEMPLATE_TEST_CASE("HermitianObs", "[Observables]", float, double) {
+    using PrecisionT = TestType;
+    using ComplexPrecisionT = std::complex<TestType>;
+    SECTION("HermitianObs only accepts correct arguments") {
+        auto ob1 = HermitianObs<TestType>{
+            std::vector<ComplexPrecisionT>{0.0, 0.0, 0.0, 0.0}, {0}};
+        auto ob2 = HermitianObs<TestType>{
+            std::vector<ComplexPrecisionT>(16, ComplexPrecisionT{}), {0, 1}};
+        REQUIRE_THROWS_AS(
+            HermitianObs<TestType>(
+                std::vector<ComplexPrecisionT>{0.0, 0.0, 0.0}, {0}),
+            LightningException);
+        REQUIRE_THROWS_AS(
+            HermitianObs<TestType>(
+                std::vector<ComplexPrecisionT>{0.0, 0.0, 0.0, 0.0, 0.0},
+                {0, 1}),
+            LightningException);
+    }
+    SECTION("Objects with different matrices") {
+        auto ob1 = HermitianObs<PrecisionT>{
+            std::vector<ComplexPrecisionT>{1.0, 0.0, 0.0, 0.0}, {0}};
+        auto ob2 = HermitianObs<PrecisionT>{
+            std::vector<ComplexPrecisionT>{1.0, 0.0, 0.0, 0.0}, {0}};
+        auto ob3 = HermitianObs<PrecisionT>{
+            std::vector<ComplexPrecisionT>{0.0, 1.0, 0.0, 0.0}, {0}};
+        REQUIRE(ob1 == ob2);
+        REQUIRE(ob1 != ob3);
+        REQUIRE(ob2 != ob3);
+    }
+    SECTION("Objects with different wires") {
+        auto ob1 = HermitianObs<PrecisionT>{
+            std::vector<ComplexPrecisionT>{1.0, 0.0, -1.0, 0.0}, {0}};
+        auto ob2 = HermitianObs<PrecisionT>{
+            std::vector<ComplexPrecisionT>{1.0, 0.0, -1.0, 0.0}, {0}};
+        auto ob3 = HermitianObs<PrecisionT>{
+            std::vector<ComplexPrecisionT>{1.0, 0.0, -1.0, 0.0}, {1}};
+        REQUIRE(ob1 == ob2);
+        REQUIRE(ob1 != ob3);
+        REQUIRE(ob2 != ob3);
+    }
+}
+
+TEMPLATE_TEST_CASE("TensorProdObs", "[Observables]", float, double) {
+    using PrecisionT = TestType;
+    using ComplexPrecisionT = std::complex<TestType>;
+
+    SECTION("Overlapping wires throw an exception") {
+        auto ob1 = std::make_shared<HermitianObs<PrecisionT>>(
+            std::vector<ComplexPrecisionT>(16, ComplexPrecisionT{0.0, 0.0}),
+            std::vector<size_t>{0, 1});
+        auto ob2_1 = std::make_shared<NamedObs<PrecisionT>>(
+            "PauliX", std::vector<size_t>{1});
+        auto ob2_2 = std::make_shared<NamedObs<PrecisionT>>(
+            "PauliZ", std::vector<size_t>{2});
+        auto ob2 = std::make_shared<TensorProdObs<PrecisionT>>(ob2_1, ob2_2);
+
+        REQUIRE_THROWS_AS(TensorProdObs<PrecisionT>(ob1, ob2),
+                          LightningException);
+    }
+
+    SECTION("Can construct an observable with non-overlapping wires") {
+        auto ob1 = std::make_shared<HermitianObs<PrecisionT>>(
+            std::vector<ComplexPrecisionT>(16, ComplexPrecisionT{0.0, 0.0}),
+            std::vector<size_t>{0, 1});
+        auto ob2_1 = std::make_shared<NamedObs<PrecisionT>>(
+            "PauliX", std::vector<size_t>{2});
+        auto ob2_2 = std::make_shared<NamedObs<PrecisionT>>(
+            "PauliZ", std::vector<size_t>{3});
+        auto ob2 = std::make_shared<TensorProdObs<PrecisionT>>(ob2_1, ob2_2);
+
+        REQUIRE_NOTHROW(std::make_shared<TensorProdObs<PrecisionT>>(ob1, ob2));
+    }
+
+    SECTION("Tensor product applies to a statevector correctly") {
+        auto ob = TensorProdObs<PrecisionT>{
+            std::make_shared<NamedObs<PrecisionT>>("PauliX",
+                                                   std::vector<size_t>{0}),
+            std::make_shared<NamedObs<PrecisionT>>("PauliX",
+                                                   std::vector<size_t>{2}),
+        };
+
+        SECTION("Test using |1+0>") {
+            constexpr auto num_qubits = size_t{3};
+            StateVectorManagedCPU<PrecisionT> sv(num_qubits);
+
+            sv.updateData(createProductState<PrecisionT>("1+0"));
+            ob.applyInPlace(sv);
+
+            REQUIRE(sv.getDataVector() ==
+                    PLApprox(createProductState<PrecisionT>("0+1")));
+        }
+
+        SECTION("Test using |+-01>") {
+            constexpr auto num_qubits = size_t{4};
+            StateVectorManagedCPU<PrecisionT> sv(num_qubits);
+
+            sv.updateData(createProductState<PrecisionT>("+-01"));
+            ob.applyInPlace(sv);
+
+            REQUIRE(sv.getDataVector() ==
+                    PLApprox(createProductState<PrecisionT>("+-11")));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("Hamiltonian", "[Observables]", float, double) {
+    using PrecisionT = TestType;
+    using ComplexPrecisionT = std::complex<TestType>;
+
+    const auto h = PrecisionT{0.809}; // half of the golden ratio
+
+    auto zz = std::make_shared<TensorProdObs<PrecisionT>>(
+        std::make_shared<NamedObs<PrecisionT>>("PauliZ",
+                                               std::vector<size_t>{0}),
+        std::make_shared<NamedObs<PrecisionT>>("PauliZ",
+                                               std::vector<size_t>{1}));
+
+    auto x1 = std::make_shared<NamedObs<PrecisionT>>("PauliX",
+                                                     std::vector<size_t>{0});
+    auto x2 = std::make_shared<NamedObs<PrecisionT>>("PauliX",
+                                                     std::vector<size_t>{1});
+
+    SECTION("Hamiltonian constructor only accepts valid arguments") {
+        REQUIRE_NOTHROW(Hamiltonian<PrecisionT>::create({PrecisionT{1.0}, h, h},
+                                                        {zz, x1, x2}));
+
+        REQUIRE_THROWS_AS(
+            Hamiltonian<PrecisionT>::create({PrecisionT{1.0}, h}, {zz, x1, x2}),
+            LightningException);
+    }
+
+    auto ham =
+        Hamiltonian<PrecisionT>::create({PrecisionT{1.0}, h, h}, {zz, x1, x2});
+
+    SECTION("Hamiltonian applies correctly to |+->") {
+        constexpr auto num_qubits = size_t{2};
+        StateVectorManagedCPU<PrecisionT> sv(num_qubits);
+
+        sv.updateData(createProductState<PrecisionT>("+-"));
+
+        ham->applyInPlace(sv);
+
+        auto expected = std::vector<ComplexPrecisionT>{
+            ComplexPrecisionT{0.5, 0.0},
+            ComplexPrecisionT{0.5, 0.0},
+            ComplexPrecisionT{-0.5, 0.0},
+            ComplexPrecisionT{-0.5, 0.0},
+        };
+
+        REQUIRE(sv.getDataVector() == PLApprox(expected));
+    }
+
+    SECTION("Hamiltonian applies correctly to |01>") {
+        constexpr auto num_qubits = size_t{2};
+        StateVectorManagedCPU<PrecisionT> sv(num_qubits);
+
+        sv.updateData(createProductState<PrecisionT>("01"));
+
+        ham->applyInPlace(sv);
+
+        auto expected = std::vector<ComplexPrecisionT>{
+            ComplexPrecisionT{h, 0.0},
+            ComplexPrecisionT{-1.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{h, 0.0},
+        };
+
+        REQUIRE(sv.getDataVector() == PLApprox(expected));
+    }
+}

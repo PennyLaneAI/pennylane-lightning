@@ -19,7 +19,6 @@
 #pragma once
 #include "AdjointDiff.hpp"
 #include "CPUMemoryModel.hpp"
-#include "JacobianProd.hpp"
 #include "Kokkos_Sparse.hpp"
 #include "Macros.hpp"
 #include "Measures.hpp"
@@ -138,8 +137,8 @@ auto alignedNumpyArray(CPUMemoryModel memory_model, size_t size)
     -> pybind11::array {
     if (getAlignment<T>(memory_model) > alignof(std::max_align_t)) {
         void *ptr =
-            alignedAlloc(getAlignment<T>(memory_model), sizeof(T) * size);
-        auto capsule = pybind11::capsule(ptr, &alignedFree);
+            Util::alignedAlloc(getAlignment<T>(memory_model), sizeof(T) * size);
+        auto capsule = pybind11::capsule(ptr, &Util::alignedFree);
         return pybind11::array{
             pybind11::dtype::of<T>(), {size}, {sizeof(T)}, ptr, capsule};
     } // else

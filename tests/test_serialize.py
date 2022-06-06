@@ -21,7 +21,7 @@ import pennylane_lightning
 
 from pennylane_lightning._serialize import (
     _serialize_observables,
-    _serialize_operations,
+    _serialize_ops,
     _obs_has_kernel,
 )
 import pytest
@@ -359,12 +359,8 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
 
-<<<<<<< HEAD
-        s = _serialize_operations(tape, self.wires_dict, use_csingle=C)
-        dtype = np.float32 if C else np.float64
-=======
         s = _serialize_ops(tape, self.wires_dict)
->>>>>>> new_kernel_dispatch
+        dtype = np.float32 if C else np.float64
         s_expected = (
             (
                 ["RX", "RY", "CNOT"],
@@ -388,11 +384,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
 
-<<<<<<< HEAD
-        s = _serialize_operations(tape, self.wires_dict, use_csingle=C)
-=======
         s = _serialize_ops(tape, self.wires_dict)
->>>>>>> new_kernel_dispatch
         s_expected = (
             (
                 ["RX", "RY", "CNOT"],
@@ -412,11 +404,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1).inv()
             qml.CNOT(wires=[0, 1])
 
-<<<<<<< HEAD
-        s = _serialize_operations(tape, self.wires_dict, use_csingle=C)
-=======
         s = _serialize_ops(tape, self.wires_dict)
->>>>>>> new_kernel_dispatch
         s_expected = (
             (
                 ["RX", "RY", "CNOT"],
@@ -436,11 +424,7 @@ class TestSerializeOps:
             qml.CNOT(wires=[0, 1])
             qml.RZ(0.2, wires=2)
 
-<<<<<<< HEAD
-        s = _serialize_operations(tape, self.wires_dict, use_csingle=C)
-=======
         s = _serialize_ops(tape, self.wires_dict)
->>>>>>> new_kernel_dispatch
         s_expected = (
             (
                 ["CNOT", "RZ"],
@@ -464,13 +448,7 @@ class TestSerializeOps:
             qml.SingleExcitationPlus(0.4, wires=["a", 3.2])
             qml.SingleExcitationMinus(0.5, wires=["a", 3.2]).inv()
 
-<<<<<<< HEAD
-        s = _serialize_operations(tape, wires_dict, use_csingle=C)
-=======
         s = _serialize_ops(tape, wires_dict)
-        print(s)
-        print()
->>>>>>> new_kernel_dispatch
         s_expected = (
             (
                 [

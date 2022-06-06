@@ -64,7 +64,7 @@ void statevectorVJP(std::vector<std::complex<PrecisionT>> &jac,
 
     // Create $U_{1:p}\vert \lambda \rangle$
     StateVectorManagedCPU<PrecisionT> lambda(jd.getPtrStateVec(),
-                                          jd.getSizeStateVec());
+                                             jd.getSizeStateVec());
 
     // Apply given operations to statevector if requested
     if (apply_operations) {

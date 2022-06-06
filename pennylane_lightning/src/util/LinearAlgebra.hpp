@@ -18,8 +18,8 @@
 #pragma once
 
 #include "Macros.hpp"
-#include "Util.hpp"
 #include "TypeTraits.hpp"
+#include "Util.hpp"
 
 #include <algorithm>
 #include <complex>

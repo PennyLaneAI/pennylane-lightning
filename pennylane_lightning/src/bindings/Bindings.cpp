@@ -19,11 +19,8 @@
 
 #include "GateUtil.hpp"
 #include "SelectKernel.hpp"
-<<<<<<< HEAD
 #include "StateVecAdjDiff.hpp"
-=======
 #include "StateVectorManagedCPU.hpp"
->>>>>>> new_kernel_dispatch
 
 #include "pybind11/pybind11.h"
 
@@ -165,7 +162,9 @@ void registerAlgorithms(py::module_ &m) {
             }))
         .def("__repr__", &NamedObs<PrecisionT>::getObsName)
         .def("get_wires", &NamedObs<PrecisionT>::getWires,
-             "Get wires of observables");
+             "Get wires of observables")
+        .def("__eq__", &NamedObs<PrecisionT>::operator==,
+             "Compare two observables");
 
     class_name = "HermitianObsC" + bitsize;
     py::class_<HermitianObs<PrecisionT>,
@@ -183,7 +182,9 @@ void registerAlgorithms(py::module_ &m) {
         }))
         .def("__repr__", &HermitianObs<PrecisionT>::getObsName)
         .def("get_wires", &HermitianObs<PrecisionT>::getWires,
-             "Get wires of observables");
+             "Get wires of observables")
+        .def("__eq__", &HermitianObs<PrecisionT>::operator==,
+             "Compare two observables");
 
     class_name = "TensorProdObsC" + bitsize;
     py::class_<TensorProdObs<PrecisionT>,
@@ -195,7 +196,9 @@ void registerAlgorithms(py::module_ &m) {
                    &obs) { return TensorProdObs<PrecisionT>(obs); }))
         .def("__repr__", &TensorProdObs<PrecisionT>::getObsName)
         .def("get_wires", &TensorProdObs<PrecisionT>::getWires,
-             "Get wires of observables");
+             "Get wires of observables")
+        .def("__eq__", &TensorProdObs<PrecisionT>::operator==,
+             "Compare two observables");
 
     class_name = "HamiltonianC" + bitsize;
     using ObsPtr = std::shared_ptr<Observable<PrecisionT>>;
@@ -212,7 +215,9 @@ void registerAlgorithms(py::module_ &m) {
         }))
         .def("__repr__", &Hamiltonian<PrecisionT>::getObsName)
         .def("get_wires", &Hamiltonian<PrecisionT>::getWires,
-             "Get wires of observables");
+             "Get wires of observables")
+        .def("__eq__", &Hamiltonian<PrecisionT>::operator==,
+             "Compare two observables");
 
     //***********************************************************************//
     //                              Operations
@@ -269,7 +274,7 @@ void registerAlgorithms(py::module_ &m) {
         "Create a list of operations from data.");
     m.def(
         "adjoint_jacobian",
-        [](const StateVectorRaw<PrecisionT> &sv,
+        [](const StateVectorRawCPU<PrecisionT> &sv,
            const std::vector<std::shared_ptr<Observable<PrecisionT>>>
                &observables,
            const OpsData<PrecisionT> &operations,
@@ -295,7 +300,7 @@ void registerAlgorithms(py::module_ &m) {
         /* Do not cast non-conforming array. Argument trainableParams should
          * only contain indices for operations.
          */
-        [](const StateVectorRaw<PrecisionT> &sv,
+        [](const StateVectorRawCPU<PrecisionT> &sv,
            const OpsData<PrecisionT> &operations, const np_arr_c &dy,
            const std::vector<size_t> &trainableParams) {
             std::vector<std::complex<PrecisionT>> vjp(

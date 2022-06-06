@@ -52,9 +52,12 @@ try:
         MeasuresC128,
         StateVectorC128,
         Kokkos_info,
+        allocate_aligned_array,
+        get_alignment,
+        best_alignment,
     )
 
-    from ._serialize import _serialize_observables, _serialize_operations
+    from ._serialize import _serialize_observables, _serialize_ops
 
     CPP_BINARY_AVAILABLE = True
 except ModuleNotFoundError:
@@ -267,9 +270,7 @@ class LightningQubit(DefaultQubit):
 
         """
         for op in operations:
-            if (
-                op.num_params > 1 and not isinstance(op, Rot)
-            ) or op.name in UNSUPPORTED_PARAM_GATES_ADJOINT:
+            if op.num_params > 1 and not isinstance(op, Rot):
                 raise QuantumFunctionError(
                     f"The {op.name} operation is not supported using "
                     'the "adjoint" differentiation method'
@@ -297,9 +298,7 @@ class LightningQubit(DefaultQubit):
             ket = self._pre_rotated_state
 
         obs_serialized = _serialize_observables(tape, self.wire_map, use_csingle=self.use_csingle)
-        ops_serialized, use_sp = _serialize_operations(
-            tape, self.wire_map, use_csingle=self.use_csingle
-        )
+        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map)
 
         ops_serialized = create_ops_list(*ops_serialized)
 

@@ -24,7 +24,8 @@ using namespace Pennylane::Algorithms;
  * @param
  */
 template <class PrecisionT, class RandomEngine>
-auto createRandomOps(RandomEngine &re, size_t length, size_t wires) -> OpsData<PrecisionT> {
+auto createRandomOps(RandomEngine &re, size_t length, size_t wires)
+    -> OpsData<PrecisionT> {
     using namespace Pennylane::Gates;
 
     std::array gates_to_use = {GateOperation::RX, GateOperation::RY,

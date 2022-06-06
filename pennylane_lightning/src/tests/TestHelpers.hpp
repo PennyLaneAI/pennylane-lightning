@@ -278,6 +278,7 @@ auto createRandomState(RandomEngine &re, size_t num_qubits)
  * @brief Create an arbitrary product state in X- or Z-basis.
  *
  * Example: createProductState("+01") will produce |+01> state.
+ * Note that the wire index starts from the left.
  */
 template <typename PrecisionT>
 auto createProductState(std::string_view str)
