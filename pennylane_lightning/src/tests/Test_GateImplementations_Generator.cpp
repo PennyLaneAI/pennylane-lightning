@@ -93,7 +93,7 @@ void testGeneratorForGate(RandomEngine &re, bool inverse) {
                                          << GateImplementation::name) {
         for (size_t num_qubits = min_num_qubits; num_qubits < max_num_qubits;
              num_qubits++) {
-            const auto wires = createWires(gate_op);
+            const auto wires = createWires(gate_op, num_qubits);
             const auto ini_st = createRandomState<PrecisionT>(re, num_qubits);
 
             auto gntr_func =

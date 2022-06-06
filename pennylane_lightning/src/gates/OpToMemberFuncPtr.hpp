@@ -33,7 +33,7 @@ namespace Pennylane::Gates {
 template <class PrecisionT, class ParamT, class GateImplementation,
           GateOperation gate_op>
 struct GateOpToMemberFuncPtr {
-    // raises compile error when instantiated
+    // raises compile error when this struct is instantiated.
     static_assert(sizeof(PrecisionT) == -1,
                   "GateOpToMemberFuncPtr is not defined for the given gate. "
                   "When you define a new GateOperation, check that you also "
@@ -253,7 +253,7 @@ struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
 template <class PrecisionT, class GateImplementation,
           GeneratorOperation gntr_op>
 struct GeneratorOpToMemberFuncPtr {
-    // raises compile error when instantiated
+    // raises compile error when this struct is instantiated.
     static_assert(
         sizeof(GateImplementation) == -1,
         "GeneratorOpToMemberFuncPtr is not defined for the given generator. "
@@ -503,13 +503,13 @@ using GateFuncPtrT =
     typename Internal::GateFuncPtr<PrecisionT, ParamT, num_params>::Type;
 
 /**
- * @brief Convenient type alias for GeneratorFuncPtrT.
+ * @brief Convenient type alias for GeneratorFuncPtr.
  */
 template <class PrecisionT>
 using GeneratorFuncPtrT = typename Internal::GeneratorFuncPtr<PrecisionT>::Type;
 
 /**
- * @brief Convenient type alias for GeneratorFuncPtrT.
+ * @brief Convenient type alias for MatrixfuncPtr.
  */
 template <class PrecisionT>
 using MatrixFuncPtrT = typename Internal::MatrixFuncPtr<PrecisionT>::Type;
@@ -575,5 +575,17 @@ inline PrecisionT callGeneratorOps(GeneratorFuncPtrT<PrecisionT> func,
                                    size_t num_qubits,
                                    const std::vector<size_t> &wires, bool adj) {
     return func(data, num_qubits, wires, adj);
+}
+
+/**
+ * @brief Call a matrix operation.
+ * @tparam PrecisionT Floating point type for the state-vector.
+ */
+template <class PrecisionT>
+inline void callMatrixOp(MatrixFuncPtrT<PrecisionT> func,
+                         std::complex<PrecisionT> *data, size_t num_qubits,
+                         const std::complex<PrecisionT *> matrix,
+                         const std::vector<size_t> &wires, bool adj) {
+    return func(data, num_qubits, matrix, wires, adj);
 }
 } // namespace Pennylane::Gates

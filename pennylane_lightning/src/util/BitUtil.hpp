@@ -20,6 +20,7 @@
 #include <climits>
 #include <cstdint>
 #include <cstdlib>
+#include <type_traits>
 
 #if __has_include(<version>)
 #include <version>
@@ -37,10 +38,9 @@ inline auto constexpr log2PerfectPower(uint64_t val) -> size_t {
 }
 
 /**
- * @brief Check if there is a positive integer n such that value == 2^n.
+ * @brief Compute log2 of value in a compile-time.
  *
- * @param value Value to calculate for.
- * @return bool
+ * @param value Number to compute log2
  */
 inline auto constexpr isPerfectPowerOf2(size_t value) -> bool {
 #if __cpp_lib_int_pow2 >= 202002L
@@ -49,17 +49,36 @@ inline auto constexpr isPerfectPowerOf2(size_t value) -> bool {
     return std::popcount(value) == 1;
 #endif
 }
+
 /**
- * @brief Fill ones from LSB to rev_wire
+ * @brief Fill ones from LSB to nbits. Runnable in a compile-time and for any
+ * integer type.
+ *
+ * @tparam IntegerType Integer type to use
+ * @param nbits Number of bits to fill
  */
-inline auto constexpr fillTrailingOnes(size_t pos) -> size_t {
-    return (pos == 0) ? 0 : (~size_t(0) >> (CHAR_BIT * sizeof(size_t) - pos));
+template <class IntegerType = size_t>
+inline auto constexpr fillTrailingOnes(size_t nbits) -> IntegerType {
+    static_assert(std::is_integral_v<IntegerType> &&
+                  std::is_unsigned_v<IntegerType>);
+
+    return (nbits == 0) ? 0
+                        : static_cast<IntegerType>(~IntegerType(0)) >>
+                              static_cast<IntegerType>(
+                                  CHAR_BIT * sizeof(IntegerType) - nbits);
 }
 /**
  * @brief Fill ones from MSB to pos
+ *
+ * @tparam IntegerType Integer type to use
+ * @param pos Position up to which bit one is filled.
  */
+template <class IntegerType = size_t>
 inline auto constexpr fillLeadingOnes(size_t pos) -> size_t {
-    return (~size_t(0)) << pos;
+    static_assert(std::is_integral_v<IntegerType> &&
+                  std::is_unsigned_v<IntegerType>);
+
+    return (~IntegerType{0}) << pos;
 }
 
 /**
@@ -70,4 +89,5 @@ inline auto constexpr bitswap(size_t bits, const size_t i, const size_t j)
     size_t x = ((bits >> i) ^ (bits >> j)) & 1U;
     return bits ^ ((x << i) | (x << j));
 }
+
 } // namespace Pennylane::Util

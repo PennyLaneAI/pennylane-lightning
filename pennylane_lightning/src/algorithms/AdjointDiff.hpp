@@ -26,7 +26,7 @@
 #include "Error.hpp"
 #include "JacobianTape.hpp"
 #include "LinearAlgebra.hpp"
-#include "StateVectorManaged.hpp"
+#include "StateVectorManagedCPU.hpp"
 
 #include <iostream>
 
@@ -48,7 +48,7 @@ namespace Pennylane::Algorithms {
  */
 template <class T = double> class AdjointJacobian {
   private:
-    using GeneratorFunc = void (*)(StateVectorManaged<T> &,
+    using GeneratorFunc = void (*)(StateVectorManagedCPU<T> &,
                                    const std::vector<size_t> &,
                                    const bool); // function pointer type
 
@@ -63,8 +63,8 @@ template <class T = double> class AdjointJacobian {
      * @param obs_index Observable index position of Jacobian to update.
      * @param param_index Parameter index position of Jacobian to update.
      */
-    inline void updateJacobian(const StateVectorManaged<T> &sv1,
-                               const StateVectorManaged<T> &sv2,
+    inline void updateJacobian(const StateVectorManagedCPU<T> &sv1,
+                               const StateVectorManagedCPU<T> &sv2,
                                std::vector<std::vector<T>> &jac,
                                T scaling_coeff, size_t obs_index,
                                size_t param_index) {
@@ -75,13 +75,13 @@ template <class T = double> class AdjointJacobian {
 
     /**
      * @brief Utility method to apply all operations from given `%OpsData<T>`
-     * object to `%StateVectorManaged<T>`
+     * object to `%StateVectorManagedCPU<T>`
      *
      * @param state Statevector to be updated.
      * @param operations Operations to apply.
      * @param adj Take the adjoint of the given operations.
      */
-    inline void applyOperations(StateVectorManaged<T> &state,
+    inline void applyOperations(StateVectorManagedCPU<T> &state,
                                 const OpsData<T> &operations,
                                 bool adj = false) {
         for (size_t op_idx = 0; op_idx < operations.getOpsName().size();
@@ -94,13 +94,13 @@ template <class T = double> class AdjointJacobian {
     }
     /**
      * @brief Utility method to apply the adjoint indexed operation from
-     * `%OpsData<T>` object to `%StateVectorManaged<T>`.
+     * `%OpsData<T>` object to `%StateVectorManagedCPU<T>`.
      *
      * @param state Statevector to be updated.
      * @param operations Operations to apply.
      * @param op_idx Adjointed operation index to apply.
      */
-    inline void applyOperationAdj(StateVectorManaged<T> &state,
+    inline void applyOperationAdj(StateVectorManagedCPU<T> &state,
                                   const OpsData<T> &operations, size_t op_idx) {
         state.applyOperation(operations.getOpsName()[op_idx],
                              operations.getOpsWires()[op_idx],
@@ -110,12 +110,12 @@ template <class T = double> class AdjointJacobian {
 
     /**
      * @brief Utility method to apply a given operations from given
-     * `%ObsDatum<T>` object to `%StateVectorManaged<T>`
+     * `%ObsDatum<T>` object to `%StateVectorManagedCPU<T>`
      *
      * @param state Statevector to be updated.
      * @param observable Observable to apply.
      */
-    inline void applyObservable(StateVectorManaged<T> &state,
+    inline void applyObservable(StateVectorManagedCPU<T> &state,
                                 const ObsDatum<T> &observable) {
         using namespace Pennylane::Util;
         for (size_t j = 0; j < observable.getSize(); j++) {
@@ -157,9 +157,10 @@ template <class T = double> class AdjointJacobian {
      * @param reference_state Reference statevector
      * @param observables Vector of observables to apply to each statevector.
      */
-    inline void applyObservables(std::vector<StateVectorManaged<T>> &states,
-                                 const StateVectorManaged<T> &reference_state,
-                                 const std::vector<ObsDatum<T>> &observables) {
+    inline void
+    applyObservables(std::vector<StateVectorManagedCPU<T>> &states,
+                     const StateVectorManagedCPU<T> &reference_state,
+                     const std::vector<ObsDatum<T>> &observables) {
         // clang-format off
         // Globally scoped exception value to be captured within OpenMP block.
         // See the following for OpenMP design decisions:
@@ -207,9 +208,9 @@ template <class T = double> class AdjointJacobian {
      * @param op_idx Index of given operation within operations list to take
      * adjoint of.
      */
-    inline void applyOperationsAdj(std::vector<StateVectorManaged<T>> &states,
-                                   const OpsData<T> &operations,
-                                   size_t op_idx) {
+    inline void
+    applyOperationsAdj(std::vector<StateVectorManagedCPU<T>> &states,
+                       const OpsData<T> &operations, size_t op_idx) {
         // clang-format off
         // Globally scoped exception value to be captured within OpenMP block.
         // See the following for OpenMP design decisions:
@@ -298,7 +299,7 @@ template <class T = double> class AdjointJacobian {
      * of parametric gates.
      *
      * For the statevector data associated with `psi` of length `num_elements`,
-     * we make internal copies to a `%StateVectorManaged<T>` object, with one
+     * we make internal copies to a `%StateVectorManagedCPU<T>` object, with one
      * per required observable. The `operations` will be applied to the internal
      * statevector copies, with the operation indices participating in the
      * gradient calculations given in `trainableParams`, and the overall number
@@ -333,7 +334,8 @@ template <class T = double> class AdjointJacobian {
             num_param_ops - 1; // total number of parametric ops
 
         // Create $U_{1:p}\vert \lambda \rangle$
-        StateVectorManaged<T> lambda(jd.getPtrStateVec(), jd.getSizeStateVec());
+        StateVectorManagedCPU<T> lambda(jd.getPtrStateVec(),
+                                        jd.getSizeStateVec());
 
         // Apply given operations to statevector if requested
         if (apply_operations) {
@@ -344,11 +346,11 @@ template <class T = double> class AdjointJacobian {
         const auto tp_rend = tp.rend();
 
         // Create observable-applied state-vectors
-        std::vector<StateVectorManaged<T>> H_lambda(
-            num_observables, StateVectorManaged<T>{lambda.getNumQubits()});
+        std::vector<StateVectorManagedCPU<T>> H_lambda(
+            num_observables, StateVectorManagedCPU<T>{lambda.getNumQubits()});
         applyObservables(H_lambda, lambda, obs);
 
-        StateVectorManaged<T> mu(lambda.getNumQubits());
+        StateVectorManagedCPU<T> mu(lambda.getNumQubits());
 
         for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
              op_idx--) {
