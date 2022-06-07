@@ -71,7 +71,7 @@ def _obs_has_kernel(ob: Observable) -> bool:
     return False
 
 
-def _serialize_ob(o, wires_map: dict, use_csingle: bool):
+def _serialize_named_hermitian_ob(o, wires_map: dict, use_csingle: bool):
     """Serializes an abservable (Named or Hermitian)"""
     assert not isinstance(o, Tensor)
 
@@ -112,13 +112,17 @@ def _serialize_hamiltonian(ob, wires_map: dict, use_csingle: bool):
         hamiltonian_obs = HamiltonianC128
 
     coeffs = np.array(ob.coeffs).astype(rtype)
-    ops = []
-    for op in ob.ops:
-        if isinstance(op, Tensor):
-            ops.append(_serialize_tensor_ob(op, wires_map, use_csingle))
-        else:
-            ops.append(_serialize_ob(op, wires_map, use_csingle))
-    return hamiltonian_obs(coeffs, ops)
+    terms = [_serialize_ob(t, wires_map, use_csingle) for t in ob.ops]
+    return hamiltonian_obs(coeffs, terms)
+
+
+def _serialize_ob(ob, wires_map, use_csingle):
+    if isinstance(ob, Tensor):
+        return _serialize_tensor_ob(ob, wires_map, use_csingle)
+    elif ob.name == "Hamiltonian":
+        return _serialize_hamiltonian(ob, wires_map, use_csingle)
+    else:
+        return _serialize_named_hermitian_ob(ob, wires_map, use_csingle)
 
 
 def _serialize_observables(tape: QuantumTape, wires_map: dict, use_csingle: bool = False) -> List:
@@ -132,18 +136,8 @@ def _serialize_observables(tape: QuantumTape, wires_map: dict, use_csingle: bool
     Returns:
         list(ObsStructC128 or ObsStructC64): A list of observable objects compatible with the C++ backend
     """
-    obs = []
 
-    for o in tape.observables:
-        if isinstance(o, Tensor):
-            ob = _serialize_tensor_ob(o, wires_map, use_csingle)
-        elif o.name == "Hamiltonian":
-            ob = _serialize_hamiltonian(o, wires_map, use_csingle)
-        else:
-            ob = _serialize_ob(o, wires_map, use_csingle)
-        obs.append(ob)
-
-    return obs
+    return [_serialize_ob(ob, wires_map, use_csingle) for ob in tape.observables]
 
 
 def _serialize_ops(

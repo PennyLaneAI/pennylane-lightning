@@ -163,8 +163,16 @@ void registerAlgorithms(py::module_ &m) {
         .def("__repr__", &NamedObs<PrecisionT>::getObsName)
         .def("get_wires", &NamedObs<PrecisionT>::getWires,
              "Get wires of observables")
-        .def("__eq__", &NamedObs<PrecisionT>::operator==,
-             "Compare two observables");
+        .def(
+            "__eq__",
+            [](const NamedObs<PrecisionT> &self, py::handle other) -> bool {
+                if (!py::isinstance<NamedObs<PrecisionT>>(other)) {
+                    return false;
+                }
+                auto other_cast = other.cast<NamedObs<PrecisionT>>();
+                return self == other_cast;
+            },
+            "Compare two observables");
 
     class_name = "HermitianObsC" + bitsize;
     py::class_<HermitianObs<PrecisionT>,
@@ -183,8 +191,16 @@ void registerAlgorithms(py::module_ &m) {
         .def("__repr__", &HermitianObs<PrecisionT>::getObsName)
         .def("get_wires", &HermitianObs<PrecisionT>::getWires,
              "Get wires of observables")
-        .def("__eq__", &HermitianObs<PrecisionT>::operator==,
-             "Compare two observables");
+        .def(
+            "__eq__",
+            [](const HermitianObs<PrecisionT> &self, py::handle other) -> bool {
+                if (!py::isinstance<HermitianObs<PrecisionT>>(other)) {
+                    return false;
+                }
+                auto other_cast = other.cast<HermitianObs<PrecisionT>>();
+                return self == other_cast;
+            },
+            "Compare two observables");
 
     class_name = "TensorProdObsC" + bitsize;
     py::class_<TensorProdObs<PrecisionT>,
@@ -197,8 +213,17 @@ void registerAlgorithms(py::module_ &m) {
         .def("__repr__", &TensorProdObs<PrecisionT>::getObsName)
         .def("get_wires", &TensorProdObs<PrecisionT>::getWires,
              "Get wires of observables")
-        .def("__eq__", &TensorProdObs<PrecisionT>::operator==,
-             "Compare two observables");
+        .def(
+            "__eq__",
+            [](const TensorProdObs<PrecisionT> &self,
+               py::handle other) -> bool {
+                if (!py::isinstance<TensorProdObs<PrecisionT>>(other)) {
+                    return false;
+                }
+                auto other_cast = other.cast<TensorProdObs<PrecisionT>>();
+                return self == other_cast;
+            },
+            "Compare two observables");
 
     class_name = "HamiltonianC" + bitsize;
     using ObsPtr = std::shared_ptr<Observable<PrecisionT>>;
@@ -216,8 +241,16 @@ void registerAlgorithms(py::module_ &m) {
         .def("__repr__", &Hamiltonian<PrecisionT>::getObsName)
         .def("get_wires", &Hamiltonian<PrecisionT>::getWires,
              "Get wires of observables")
-        .def("__eq__", &Hamiltonian<PrecisionT>::operator==,
-             "Compare two observables");
+        .def(
+            "__eq__",
+            [](const Hamiltonian<PrecisionT> &self, py::handle other) -> bool {
+                if (!py::isinstance<Hamiltonian<PrecisionT>>(other)) {
+                    return false;
+                }
+                auto other_cast = other.cast<Hamiltonian<PrecisionT>>();
+                return self == other_cast;
+            },
+            "Compare two observables");
 
     //***********************************************************************//
     //                              Operations

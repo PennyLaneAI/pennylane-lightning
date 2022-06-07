@@ -14,6 +14,7 @@
 """
 Unit tests for the serialization helper functions
 """
+from asyncio import set_child_watcher
 import pennylane as qml
 from pennylane import numpy as qnp
 import numpy as np
@@ -136,191 +137,233 @@ class TestSerializeObs:
 
         assert s == s_expected
 
-    @pytest.mark.parametrize("ObsFunc", [NamedObsC128, NamedObsC64])
-    def test_tensor_non_tensor_return(self, monkeypatch, ObsFunc):
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    def test_tensor_non_tensor_return(self, use_csingle):
         """Test expected serialization for a mixture of tensor product and non-tensor product
         return"""
         with qml.tape.QuantumTape() as tape:
             qml.expval(qml.PauliZ(0) @ qml.PauliX(1))
             qml.expval(qml.Hadamard(1))
 
-        mock_obs = mock.MagicMock()
+        tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
+        named_obs = NamedObsC64 if use_csingle else NamedObsC128
 
-        use_csingle = True if ObsFunc == NamedObsC64 else False
-        obs_str = "NamedObsC64" if ObsFunc == NamedObsC64 else "NamedObsC128"
-
-        with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
-            _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
-
-        s = mock_obs.call_args_list
+        s = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
 
         s_expected = [
-            (["PauliZ", "PauliX"], [], [[0], [1]]),
-            (["Hadamard"], [], [[1]]),
+            tensor_prod_obs([named_obs("PauliZ", [0]), named_obs("PauliX", [1])]),
+            named_obs("Hadamard", [1]),
         ]
-        [ObsFunc(*s_expected) for s_expected in s_expected]
 
-        assert s[0][0] == s_expected[0]
-        assert s[1][0] == s_expected[1]
+        assert s == s_expected
 
-    @pytest.mark.parametrize("ObsFunc", [NamedObsC128, NamedObsC64])
-    def test_hermitian_return(self, monkeypatch, ObsFunc):
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    def test_hermitian_return(self, use_csingle):
         """Test expected serialization for a Hermitian return"""
         with qml.tape.QuantumTape() as tape:
             qml.expval(qml.Hermitian(np.eye(4), wires=[0, 1]))
 
-        mock_obs = mock.MagicMock()
+        hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
+        c_dtype = np.complex64 if use_csingle else np.complex128
 
-        use_csingle = True if ObsFunc == NamedObsC64 else False
-        obs_str = "NamedObsC64" if ObsFunc == NamedObsC64 else "NamedObsC128"
+        s = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
+        s_expected = hermitian_obs(
+            np.array(
+                [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                dtype=c_dtype,
+            ),
+            [0, 1],
+        )
+        s[0] == s_expected
 
-        dtype = np.float32 if use_csingle else np.float64
-
-        with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
-            _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
-
-        s = mock_obs.call_args[0]
-        s_expected = (["Hermitian"], [np.eye(4, dtype=dtype).ravel()], [[0, 1]])
-        ObsFunc(*s_expected)
-
-        assert s[0] == s_expected[0]
-        assert np.allclose(s[1], s_expected[1])
-        assert s[2] == s_expected[2]
-
-    @pytest.mark.parametrize("ObsFunc", [HermitianObsC128, HermitianObsC64])
-    def test_hermitian_tensor_return(self, monkeypatch, ObsFunc):
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    def test_hermitian_tensor_return(self, use_csingle):
         """Test expected serialization for a Hermitian return"""
         with qml.tape.QuantumTape() as tape:
             qml.expval(qml.Hermitian(np.eye(4), wires=[0, 1]) @ qml.Hermitian(np.eye(2), wires=[2]))
 
-        mock_obs = mock.MagicMock()
+        c_dtype = np.complex64 if use_csingle else np.complex128
+        tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
+        hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
+        s = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
 
-        use_csingle = True if ObsFunc == HermitianObsC64 else False
-        dtype = np.complex64 if use_csingle else np.complex128
-        obs_str = "HermitianObsC64" if ObsFunc == HermitianObsC64 else "HermitianObsC128"
-
-        with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
-            _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
-
-        s = mock_obs.call_args[0]
-        s_expected = (
-            ["Hermitian", "Hermitian"],
-            [np.eye(4, dtype=dtype).ravel(), np.eye(2, dtype=dtype).ravel()],
-            [[0, 1], [2]],
+        s_expected = tensor_prod_obs(
+            [
+                hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
+                hermitian_obs(np.eye(2, dtype=c_dtype).ravel(), [2]),
+            ]
         )
-        ObsFunc(*s_expected)
 
-        assert s[0] == s_expected[0]
-        assert np.allclose(s[1][0], s_expected[1][0])
-        assert np.allclose(s[1][1], s_expected[1][1])
-        assert s[2] == s_expected[2]
+        assert s[0] == s_expected
 
     @pytest.mark.parametrize("use_csingle", [True, False])
-    def test_mixed_tensor_return(self, monkeypatch, use_csingle):
+    def test_mixed_tensor_return(self, use_csingle):
         """Test expected serialization for a mixture of Hermitian and Pauli return"""
         with qml.tape.QuantumTape() as tape:
             qml.expval(qml.Hermitian(np.eye(4), wires=[0, 1]) @ qml.PauliY(2))
 
-        mock_obs = mock.MagicMock()
+        c_dtype = np.complex64 if use_csingle else np.complex128
+        tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
+        hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
+        named_obs = NamedObsC64 if use_csingle else NamedObsC128
 
-        dtype = np.complex64 if use_csingle else np.complex128
-        ObsFunc = TensorProdObsC64 if use_csingle else TensorProdObsC128
-        obs_str = "TensorProdObsC64" if ObsFunc == TensorProdObsC64 else "TensorProdObsC128"
+        s = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
 
-        with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
-            _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
+        s_expected = tensor_prod_obs(
+            [hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]), named_obs("PauliY", [2])]
+        )
 
-        s = mock_obs.call_args[0]
-        s_expected = (["Hermitian", "PauliY"], [np.eye(4, dtype=dtype).ravel()], [[0, 1], [2]])
-        ObsFunc(*s_expected)
+        assert s[0] == s_expected
 
-        assert s[0] == s_expected[0]
-        assert np.allclose(s[1][0], s_expected[1][0])
-        assert s[2] == s_expected[2]
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    def test_hamiltonian_return(self, use_csingle):
+        """Test expected serialization for a Hamiltonian return"""
 
-    def test_integration_c64(self, monkeypatch):
-        """Test for a comprehensive range of returns"""
-        wires_dict = {"a": 0, 1: 1, "b": 2, -1: 3, 3.141: 4, "five": 5, 6: 6, 77: 7, 9: 8}
-        I = np.eye(2).astype(np.complex64)
-        X = qml.PauliX.compute_matrix().astype(np.complex64)
-        Y = qml.PauliY.compute_matrix().astype(np.complex64)
-        Z = qml.PauliZ.compute_matrix().astype(np.complex64)
-
-        mock_obs = mock.MagicMock()
-
-        use_csingle = True
+        ham = qml.Hamiltonian(
+            [0.3, 0.5, 0.4],
+            [
+                qml.Hermitian(np.eye(4), wires=[0, 1]) @ qml.PauliY(2),
+                qml.PauliX(0) @ qml.PauliY(2),
+                qml.Hermitian(np.ones((8, 8)), wires=range(3)),
+            ],
+        )
 
         with qml.tape.QuantumTape() as tape:
-            qml.expval(qml.PauliZ("a") @ qml.PauliX("b"))
-            qml.expval(qml.Hermitian(I, wires=1))
-            qml.expval(qml.PauliZ(-1) @ qml.Hermitian(X, wires=3.141) @ qml.Hadamard("five"))
-            # qml.expval(qml.Projector([1, 1], wires=[6, 77]) @ qml.Hermitian(Y, wires=9))
-            qml.expval(qml.Hermitian(Z, wires="a") @ qml.Identity(1))
+            qml.expval(ham)
 
-        with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, "ObsTermC64", mock_obs)
-            _serialize_observables(tape, wires_dict, use_csingle=use_csingle)
+        obs_str = "HamiltonianC64" if use_csingle else "HamiltonianC128"
+        hamiltonian_obs = HamiltonianC64 if use_csingle else HamiltonianC128
+        named_obs = NamedObsC64 if use_csingle else NamedObsC128
+        hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
+        tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
+        r_dtype = np.float32 if use_csingle else np.float64
+        c_dtype = np.complex64 if use_csingle else np.complex128
 
-        s = mock_obs.call_args_list
+        s = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
 
-        s_expected = [
-            (["PauliZ", "PauliX"], [], [[0], [2]]),
-            (["Hermitian"], [I.ravel()], [[1]]),
-            (["PauliZ", "Hermitian", "Hadamard"], [[], X.ravel(), []], [[3], [4], [5]]),
-            # (["Projector", "Hermitian"], [[],Y.ravel()], [[6, 7], [8]]),
-            (["Hermitian", "Identity"], [Z.ravel(), []], [[0], [1]]),
-        ]
-        [ObsTermC64(*s_expected) for s_expected in s_expected]
+        s_expected = hamiltonian_obs(
+            np.array([0.3, 0.5, 0.4], dtype=r_dtype),
+            [
+                tensor_prod_obs(
+                    [
+                        hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
+                        named_obs("PauliY", [2]),
+                    ]
+                ),
+                tensor_prod_obs([named_obs("PauliX", [0]), named_obs("PauliY", [2])]),
+                hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2]),
+            ],
+        )
 
-        assert all(s1[0][0] == s2[0] for s1, s2 in zip(s, s_expected))
-        for s1, s2 in zip(s, s_expected):
-            for v1, v2 in zip(s1[0][1], s2[1]):
-                assert np.allclose(v1, v2)
-        assert all(s1[0][2] == s2[2] for s1, s2 in zip(s, s_expected))
+        assert s[0] == s_expected
 
-    def test_integration_c128(self, monkeypatch):
-        """Test for a comprehensive range of returns"""
-        wires_dict = {"a": 0, 1: 1, "b": 2, -1: 3, 3.141: 4, "five": 5, 6: 6, 77: 7, 9: 8}
-        I = np.eye(2).astype(np.complex128)
-        X = qml.PauliX.compute_matrix().astype(np.complex128)
-        Y = qml.PauliY.compute_matrix().astype(np.complex128)
-        Z = qml.PauliZ.compute_matrix().astype(np.complex128)
-
-        mock_obs = mock.MagicMock()
-
-        use_csingle = False
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    def test_hamiltonian_tensor_return(self, use_csingle):
+        """Test expected serialization for a Hamiltonian return"""
 
         with qml.tape.QuantumTape() as tape:
-            qml.expval(qml.PauliZ("a") @ qml.PauliX("b"))
-            qml.expval(qml.Hermitian(I, wires=1))
-            qml.expval(qml.PauliZ(-1) @ qml.Hermitian(X, wires=3.141) @ qml.Hadamard("five"))
-            # qml.expval(qml.Projector([1, 1], wires=[6, 77]) @ qml.Hermitian(Y, wires=9))
-            qml.expval(qml.Hermitian(Z, wires="a") @ qml.Identity(1))
+            ham = qml.Hamiltonian(
+                [0.3, 0.5, 0.4],
+                [
+                    qml.Hermitian(np.eye(4), wires=[0, 1]) @ qml.PauliY(2),
+                    qml.PauliX(0) @ qml.PauliY(2),
+                    qml.Hermitian(np.ones((8, 8)), wires=range(3)),
+                ],
+            )
+            qml.expval(ham @ qml.PauliZ(3))
 
-        with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, "ObsTermC128", mock_obs)
-            _serialize_observables(tape, wires_dict, use_csingle=use_csingle)
+        obs_str = "HamiltonianC64" if use_csingle else "HamiltonianC128"
+        hamiltonian_obs = HamiltonianC64 if use_csingle else HamiltonianC128
+        named_obs = NamedObsC64 if use_csingle else NamedObsC128
+        hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
+        tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
+        r_dtype = np.float32 if use_csingle else np.float64
+        c_dtype = np.complex64 if use_csingle else np.complex128
 
-        s = mock_obs.call_args_list
+        s = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
 
-        s_expected = [
-            (["PauliZ", "PauliX"], [], [[0], [2]]),
-            (["Hermitian"], [I.ravel()], [[1]]),
-            (["PauliZ", "Hermitian", "Hadamard"], [[], X.ravel(), []], [[3], [4], [5]]),
-            # (["Projector", "Hermitian"], [[],Y.ravel()], [[6, 7], [8]]),
-            (["Hermitian", "Identity"], [Z.ravel(), []], [[0], [1]]),
-        ]
-        [ObsTermC128(*s_expected) for s_expected in s_expected]
+        # Expression (ham @ obs) is converted internally by Pennylane
+        # where obs is appended to each term of the ham
+        s_expected = hamiltonian_obs(
+            np.array([0.3, 0.5, 0.4], dtype=r_dtype),
+            [
+                tensor_prod_obs(
+                    [
+                        hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
+                        named_obs("PauliY", [2]),
+                        named_obs("PauliZ", [3]),
+                    ]
+                ),
+                tensor_prod_obs(
+                    [named_obs("PauliX", [0]), named_obs("PauliY", [2]), named_obs("PauliZ", [3])]
+                ),
+                tensor_prod_obs(
+                    [hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2]), named_obs("PauliZ", [3])]
+                ),
+            ],
+        )
 
-        assert all(s1[0][0] == s2[0] for s1, s2 in zip(s, s_expected))
-        for s1, s2 in zip(s, s_expected):
-            for v1, v2 in zip(s1[0][1], s2[1]):
-                assert np.allclose(v1, v2)
-        assert all(s1[0][2] == s2[2] for s1, s2 in zip(s, s_expected))
+        assert s[0] == s_expected
+
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    def test_hamiltonian_mix_return(self, use_csingle):
+        """Test expected serialization for a Hamiltonian return"""
+
+        ham1 = qml.Hamiltonian(
+            [0.3, 0.5, 0.4],
+            [
+                qml.Hermitian(np.eye(4), wires=[0, 1]) @ qml.PauliY(2),
+                qml.PauliX(0) @ qml.PauliY(2),
+                qml.Hermitian(np.ones((8, 8)), wires=range(3)),
+            ],
+        )
+        ham2 = qml.Hamiltonian(
+            [0.7, 0.3],
+            [qml.PauliX(0) @ qml.Hermitian(np.eye(4), wires=[1, 2]), qml.PauliY(0) @ qml.PauliX(2)],
+        )
+
+        with qml.tape.QuantumTape() as tape:
+            qml.expval(ham1)
+            qml.expval(ham2)
+
+        obs_str = "HamiltonianC64" if use_csingle else "HamiltonianC128"
+        hamiltonian_obs = HamiltonianC64 if use_csingle else HamiltonianC128
+        named_obs = NamedObsC64 if use_csingle else NamedObsC128
+        hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
+        tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
+        r_dtype = np.float32 if use_csingle else np.float64
+        c_dtype = np.complex64 if use_csingle else np.complex128
+
+        s = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
+
+        s_expected1 = hamiltonian_obs(
+            np.array([0.3, 0.5, 0.4], dtype=r_dtype),
+            [
+                tensor_prod_obs(
+                    [
+                        hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
+                        named_obs("PauliY", [2]),
+                    ]
+                ),
+                tensor_prod_obs([named_obs("PauliX", [0]), named_obs("PauliY", [2])]),
+                hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2]),
+            ],
+        )
+        s_expected2 = hamiltonian_obs(
+            np.array([0.7, 0.3], dtype=r_dtype),
+            [
+                tensor_prod_obs(
+                    [
+                        named_obs("PauliX", [0]),
+                        hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [1, 2]),
+                    ]
+                ),
+                tensor_prod_obs([named_obs("PauliY", [0]), named_obs("PauliX", [2])]),
+            ],
+        )
+
+        assert s[0] == s_expected1
+        assert s[1] == s_expected2
 
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("ObsChunk", list(range(1, 5)))
@@ -330,18 +373,9 @@ class TestSerializeObs:
             qml.expval(qml.PauliZ(0) @ qml.PauliX(1))
             qml.expval(qml.PauliY(wires=1))
             qml.expval(qml.PauliX(0) @ qml.Hermitian([[0, 1], [1, 0]], wires=3) @ qml.Hadamard(2))
-            qml.expval(qml.Hermitian(qml.PauliZ.compute_matrix(), wires=1) @ qml.Identity(1))
+            qml.expval(qml.Hermitian(qml.PauliZ.compute_matrix(), wires=0) @ qml.Identity(1))
 
-        mock_obs = mock.MagicMock()
-
-        ObsFunc = ObsTermC64 if use_csingle else ObsTermc128
-        obs_str = "ObsTermC64" if ObsFunc == ObsTermC64 else "ObsTermC128"
-
-        with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
-            _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
-
-        s = mock_obs.call_args_list
+        s = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
 
         obtained_chunks = pennylane_lightning.lightning_qubit._chunk_iterable(s, ObsChunk)
         assert len(list(obtained_chunks)) == int(np.ceil(len(s) / ObsChunk))
@@ -360,11 +394,10 @@ class TestSerializeOps:
             qml.CNOT(wires=[0, 1])
 
         s = _serialize_ops(tape, self.wires_dict)
-        dtype = np.float32 if C else np.float64
         s_expected = (
             (
                 ["RX", "RY", "CNOT"],
-                [np.array([0.4], dtype=dtype), np.array([0.6], dtype=dtype), []],
+                [np.array([0.4]), np.array([0.6]), []],
                 [[0], [1], [0, 1]],
                 [False, False, False],
                 [[], [], []],

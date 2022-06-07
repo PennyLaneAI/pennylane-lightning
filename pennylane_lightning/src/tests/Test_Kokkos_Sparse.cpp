@@ -82,18 +82,6 @@ TEMPLATE_TEST_CASE("apply_Sparse_Matrix_Kokkos", "[Kokkos Sparse]", float,
                 "Executing the product of a Sparse matrix and a vector "
                 "needs Kokkos and Kokkos Kernels installation.");
         }
-        SECTION("Checking the full scope of the apply_Sparse_Matrix_Kokkos") {
-            // Testing if nothing happens in case apply_Sparse_Matrix is called
-            // without Kokkos but does not call an Exception.
-            std::vector<complex<TestType>> result_before(10, 1);
-            std::vector<complex<TestType>> result_after(result_before);
-            apply_Sparse_Matrix_Kokkos(
-                result_before.data(), static_cast<long>(result_before.size()),
-                row_map.data(), static_cast<long>(row_map.size()),
-                entries.data(), values.data(), static_cast<long>(values.size()),
-                result_after, false);
-            REQUIRE(result_before == approx(result_after).margin(1e-6));
-        }
     }
 }
 

@@ -125,6 +125,33 @@ TEMPLATE_TEST_CASE("TensorProdObs", "[Observables]", float, double) {
         REQUIRE_NOTHROW(std::make_shared<TensorProdObs<PrecisionT>>(ob1, ob2));
     }
 
+    SECTION("Compare two tensor product observables") {
+        auto ob1 =
+            TensorProdObs<PrecisionT>{std::make_shared<NamedObs<PrecisionT>>(
+                                          "PauliX", std::vector<size_t>{0}),
+                                      std::make_shared<NamedObs<PrecisionT>>(
+                                          "PauliZ", std::vector<size_t>{1})};
+        auto ob2 =
+            TensorProdObs<PrecisionT>{std::make_shared<NamedObs<PrecisionT>>(
+                                          "PauliX", std::vector<size_t>{0}),
+                                      std::make_shared<NamedObs<PrecisionT>>(
+                                          "PauliZ", std::vector<size_t>{1})};
+        auto ob3 =
+            TensorProdObs<PrecisionT>{std::make_shared<NamedObs<PrecisionT>>(
+                                          "PauliX", std::vector<size_t>{0}),
+                                      std::make_shared<NamedObs<PrecisionT>>(
+                                          "PauliZ", std::vector<size_t>{2})};
+        auto ob4 =
+            TensorProdObs<PrecisionT>{std::make_shared<NamedObs<PrecisionT>>(
+                                          "PauliZ", std::vector<size_t>{0}),
+                                      std::make_shared<NamedObs<PrecisionT>>(
+                                          "PauliZ", std::vector<size_t>{1})};
+
+        REQUIRE(ob1 == ob2);
+        REQUIRE(ob1 != ob3);
+        REQUIRE(ob1 != ob4);
+    }
+
     SECTION("Tensor product applies to a statevector correctly") {
         auto ob = TensorProdObs<PrecisionT>{
             std::make_shared<NamedObs<PrecisionT>>("PauliX",
@@ -183,42 +210,95 @@ TEMPLATE_TEST_CASE("Hamiltonian", "[Observables]", float, double) {
             LightningException);
     }
 
-    auto ham =
-        Hamiltonian<PrecisionT>::create({PrecisionT{1.0}, h, h}, {zz, x1, x2});
+    SECTION("Compare Hamiltonians") {
+        auto X0 = std::make_shared<NamedObs<PrecisionT>>(
+            "PauliX", std::vector<size_t>{0});
+        auto X1 = std::make_shared<NamedObs<PrecisionT>>(
+            "PauliX", std::vector<size_t>{1});
+        auto X2 = std::make_shared<NamedObs<PrecisionT>>(
+            "PauliX", std::vector<size_t>{2});
 
-    SECTION("Hamiltonian applies correctly to |+->") {
-        constexpr auto num_qubits = size_t{2};
-        StateVectorManagedCPU<PrecisionT> sv(num_qubits);
+        auto Y0 = std::make_shared<NamedObs<PrecisionT>>(
+            "PauliY", std::vector<size_t>{0});
+        auto Y1 = std::make_shared<NamedObs<PrecisionT>>(
+            "PauliY", std::vector<size_t>{1});
+        auto Y2 = std::make_shared<NamedObs<PrecisionT>>(
+            "PauliY", std::vector<size_t>{2});
 
-        sv.updateData(createProductState<PrecisionT>("+-"));
+        auto Z0 = std::make_shared<NamedObs<PrecisionT>>(
+            "PauliZ", std::vector<size_t>{0});
+        auto Z1 = std::make_shared<NamedObs<PrecisionT>>(
+            "PauliZ", std::vector<size_t>{1});
+        auto Z2 = std::make_shared<NamedObs<PrecisionT>>(
+            "PauliZ", std::vector<size_t>{2});
 
-        ham->applyInPlace(sv);
+        auto ham1 = Hamiltonian<PrecisionT>::create(
+            {0.8, 0.5, 0.7},
+            {
+                std::make_shared<TensorProdObs<PrecisionT>>(X0, Y1, Z2),
+                std::make_shared<TensorProdObs<PrecisionT>>(Z0, X1, Y2),
+                std::make_shared<TensorProdObs<PrecisionT>>(Y0, Z1, X2),
+            });
 
-        auto expected = std::vector<ComplexPrecisionT>{
-            ComplexPrecisionT{0.5, 0.0},
-            ComplexPrecisionT{0.5, 0.0},
-            ComplexPrecisionT{-0.5, 0.0},
-            ComplexPrecisionT{-0.5, 0.0},
-        };
+        auto ham2 = Hamiltonian<PrecisionT>::create(
+            {0.8, 0.5, 0.7},
+            {
+                std::make_shared<TensorProdObs<PrecisionT>>(X0, Y1, Z2),
+                std::make_shared<TensorProdObs<PrecisionT>>(Z0, X1, Y2),
+                std::make_shared<TensorProdObs<PrecisionT>>(Y0, Z1, X2),
+            });
 
-        REQUIRE(sv.getDataVector() == PLApprox(expected));
+        auto ham3 = Hamiltonian<PrecisionT>::create(
+            {0.8, 0.5, 0.642},
+            {
+                std::make_shared<TensorProdObs<PrecisionT>>(X0, Y1, Z2),
+                std::make_shared<TensorProdObs<PrecisionT>>(Z0, X1, Y2),
+                std::make_shared<TensorProdObs<PrecisionT>>(Y0, Z1, X2),
+            });
+
+        REQUIRE(*ham1 == *ham2);
+        REQUIRE(*ham1 != *ham3);
+        REQUIRE(*ham2 != *ham3);
     }
 
-    SECTION("Hamiltonian applies correctly to |01>") {
-        constexpr auto num_qubits = size_t{2};
-        StateVectorManagedCPU<PrecisionT> sv(num_qubits);
+    SECTION("Hamiltonian::applyInPlace") {
+        auto ham = Hamiltonian<PrecisionT>::create({PrecisionT{1.0}, h, h},
+                                                   {zz, x1, x2});
 
-        sv.updateData(createProductState<PrecisionT>("01"));
+        SECTION(" to |+->") {
+            constexpr auto num_qubits = size_t{2};
+            StateVectorManagedCPU<PrecisionT> sv(num_qubits);
 
-        ham->applyInPlace(sv);
+            sv.updateData(createProductState<PrecisionT>("+-"));
 
-        auto expected = std::vector<ComplexPrecisionT>{
-            ComplexPrecisionT{h, 0.0},
-            ComplexPrecisionT{-1.0, 0.0},
-            ComplexPrecisionT{0.0, 0.0},
-            ComplexPrecisionT{h, 0.0},
-        };
+            ham->applyInPlace(sv);
 
-        REQUIRE(sv.getDataVector() == PLApprox(expected));
+            auto expected = std::vector<ComplexPrecisionT>{
+                ComplexPrecisionT{0.5, 0.0},
+                ComplexPrecisionT{0.5, 0.0},
+                ComplexPrecisionT{-0.5, 0.0},
+                ComplexPrecisionT{-0.5, 0.0},
+            };
+
+            REQUIRE(sv.getDataVector() == PLApprox(expected));
+        }
+
+        SECTION("Hamiltonian applies correctly to |01>") {
+            constexpr auto num_qubits = size_t{2};
+            StateVectorManagedCPU<PrecisionT> sv(num_qubits);
+
+            sv.updateData(createProductState<PrecisionT>("01"));
+
+            ham->applyInPlace(sv);
+
+            auto expected = std::vector<ComplexPrecisionT>{
+                ComplexPrecisionT{h, 0.0},
+                ComplexPrecisionT{-1.0, 0.0},
+                ComplexPrecisionT{0.0, 0.0},
+                ComplexPrecisionT{h, 0.0},
+            };
+
+            REQUIRE(sv.getDataVector() == PLApprox(expected));
+        }
     }
 }

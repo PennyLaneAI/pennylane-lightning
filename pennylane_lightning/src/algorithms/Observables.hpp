@@ -190,7 +190,16 @@ template <typename T> class TensorProdObs final : public Observable<T> {
     bool isEqual(const Observable<T> &other) const final {
         const auto &other_cast = static_cast<const TensorProdObs<T> &>(other);
 
-        return (obs_ == other_cast.obs_);
+        if (obs_.size() != other_cast.obs_.size()) {
+            return false;
+        }
+
+        for (size_t i = 0; i < obs_.size(); i++) {
+            if (*obs_[i] != *other_cast.obs_[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 
   public:
