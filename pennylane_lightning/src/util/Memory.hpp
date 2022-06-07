@@ -107,7 +107,7 @@ template <class T> class AlignedAllocator {
      * @param size The number of T objects for the allocation
      * @return Allocated aligned memory
      */
-    [[nodiscard]] T *allocate(std::size_t size) {
+    [[nodiscard]] T *allocate(std::size_t size) const {
         if (size == 0) {
             return nullptr;
         }
@@ -130,7 +130,7 @@ template <class T> class AlignedAllocator {
      * @param p Pointer to the allocated data
      * @param size Size of the data we allocated (unused).
      */
-    void deallocate(T *p, [[maybe_unused]] std::size_t size) noexcept {
+    void deallocate(T *p, [[maybe_unused]] std::size_t size) const noexcept {
         if (alignment_ > alignof(std::max_align_t)) {
             alignedFree(p);
         } else {
