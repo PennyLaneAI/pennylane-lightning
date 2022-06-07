@@ -3,9 +3,9 @@ doc/_build/
 PennyLane_Lightning.egg-info/
 build/
 Build/
-BuildBench/
 BuildGBench/
 BuildTests/
+BuildTidy/
 dist/
 tests/__pycache__/
 .idea

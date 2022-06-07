@@ -56,8 +56,6 @@ void lightning_class_bindings(py::module_ &m) {
 
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
-    using np_arr_r =
-        py::array_t<ParamT, py::array::c_style | py::array::forcecast>;
     using sparse_index_type =
         long int; // Kokkos Kernels needs signed int as Ordinal type.
     using np_arr_sparse_ind =

@@ -37,7 +37,7 @@ template <typename T> class Observable {
      *
      * @param Another instance of subclass of Observable<T> to compare
      */
-    virtual bool isEqual(const Observable<T> &other) const = 0;
+    [[nodiscard]] virtual bool isEqual(const Observable<T> &other) const = 0;
 
   protected:
     Observable() = default;
@@ -90,7 +90,7 @@ template <typename T> class NamedObs final : public Observable<T> {
     std::vector<size_t> wires_;
     std::vector<T> params_;
 
-    bool isEqual(const Observable<T> &other) const final {
+    [[nodiscard]] bool isEqual(const Observable<T> &other) const final {
         const auto &other_cast = static_cast<const NamedObs<T> &>(other);
 
         return (obs_name_ == other_cast.obs_name_) &&
@@ -144,7 +144,7 @@ template <typename T> class HermitianObs final : public Observable<T> {
     MatrixT matrix_;
     std::vector<size_t> wires_;
 
-    bool isEqual(const Observable<T> &other) const final {
+    [[nodiscard]] bool isEqual(const Observable<T> &other) const final {
         const auto &other_cast = static_cast<const HermitianObs<T> &>(other);
 
         return (matrix_ == other_cast.matrix_) && (wires_ == other_cast.wires_);
@@ -187,7 +187,7 @@ template <typename T> class TensorProdObs final : public Observable<T> {
     std::vector<std::shared_ptr<Observable<T>>> obs_;
     std::vector<size_t> all_wires_;
 
-    bool isEqual(const Observable<T> &other) const final {
+    [[nodiscard]] bool isEqual(const Observable<T> &other) const final {
         const auto &other_cast = static_cast<const TensorProdObs<T> &>(other);
 
         if (obs_.size() != other_cast.obs_.size()) {
@@ -340,7 +340,7 @@ template <typename T> class Hamiltonian final : public Observable<T> {
     std::vector<T> coeffs_;
     std::vector<std::shared_ptr<Observable<T>>> obs_;
 
-    bool isEqual(const Observable<T> &other) const final {
+    [[nodiscard]] bool isEqual(const Observable<T> &other) const final {
         const auto &other_cast = static_cast<const Hamiltonian<T> &>(other);
 
         if (coeffs_ != other_cast.coeffs_) {
@@ -362,9 +362,9 @@ template <typename T> class Hamiltonian final : public Observable<T> {
      * @param arg1 Arguments to construct coefficients
      * @param arg2 Arguments to construct observables
      */
-    Hamiltonian(auto &&arg1, auto &&arg2)
-        : coeffs_{std::forward<decltype(arg1)>(arg1)},
-          obs_{std::forward<decltype(arg2)>(arg2)} {
+    template <typename T1, typename T2>
+    Hamiltonian(T1 &&arg1, T2 &&arg2)
+        : coeffs_{std::forward<T1>(arg1)}, obs_{std::forward<T2>(arg2)} {
         PL_ASSERT(coeffs_.size() == obs_.size());
     }
 
@@ -395,6 +395,7 @@ template <typename T> class Hamiltonian final : public Observable<T> {
             const auto ob_wires = ob->getWires();
             wires.insert(ob_wires.begin(), ob_wires.end());
         }
+        // NOLINTNEXTLINE(modernize-return-braced-init-list)
         return std::vector<size_t>(wires.begin(), wires.end());
     }
 
