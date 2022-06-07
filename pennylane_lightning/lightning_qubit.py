@@ -186,7 +186,7 @@ class LightningQubit(DefaultQubit):
         Returns:
             array[complex]: the output state tensor
         """
-        state_vector = state.reshape(-1)
+        state_vector = np.ravel(state)
 
         if self.use_csingle:
             # use_csingle

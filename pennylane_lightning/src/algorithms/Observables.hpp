@@ -41,9 +41,9 @@ template <typename T> class Observable {
 
   protected:
     Observable() = default;
-    Observable(Observable &) = default;
+    Observable(const Observable &) = default;
     Observable(Observable &&) noexcept = default;
-    Observable &operator=(Observable &) = default;
+    Observable &operator=(const Observable &) = default;
     Observable &operator=(Observable &&) noexcept = default;
 
   public:
