@@ -72,7 +72,7 @@ def _obs_has_kernel(ob: Observable) -> bool:
 
 
 def _serialize_named_hermitian_ob(o, wires_map: dict, use_csingle: bool):
-    """Serializes an abservable (Named or Hermitian)"""
+    """Serializes an observable (Named or Hermitian)"""
     assert not isinstance(o, Tensor)
 
     if use_csingle:

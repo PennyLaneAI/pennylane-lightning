@@ -313,7 +313,7 @@ class LightningQubit(DefaultQubit):
         for op_idx, tp in enumerate(trainable_params):
             op, _ = tape.get_operation(
                 op_idx
-            )  # get op_idx-th operator amond differentiable operators
+            )  # get op_idx-th operator among differentiable operators
             if isinstance(op, Operation):
                 # We now just ignore them
                 tp_shift.append(tp)
