@@ -7,6 +7,7 @@ using namespace Pennylane;
 using namespace Pennylane::Algorithms;
 using Pennylane::Util::LightningException;
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEMPLATE_TEST_CASE("NamedObs", "[Observables]", float, double) {
     using PrecisionT = TestType;
     SECTION("NamedObs only accepts correct arguments") {
@@ -23,6 +24,7 @@ TEMPLATE_TEST_CASE("NamedObs", "[Observables]", float, double) {
         REQUIRE_NOTHROW(NamedObs<TestType>(
             "Rot", {0}, std::vector<PrecisionT>{0.3, 0.4, 0.5}));
     }
+
     SECTION("Objects with different names") {
         auto ob1 = NamedObs<TestType>("PauliX", {0});
         auto ob2 = NamedObs<TestType>("PauliX", {0});
@@ -32,6 +34,7 @@ TEMPLATE_TEST_CASE("NamedObs", "[Observables]", float, double) {
         REQUIRE(ob2 != ob3);
         REQUIRE(ob1 != ob3);
     }
+
     SECTION("Objects with different wires") {
         auto ob1 = NamedObs<TestType>("PauliY", {0});
         auto ob2 = NamedObs<TestType>("PauliY", {0});
@@ -41,6 +44,7 @@ TEMPLATE_TEST_CASE("NamedObs", "[Observables]", float, double) {
         REQUIRE(ob2 != ob3);
         REQUIRE(ob1 != ob3);
     }
+
     SECTION("Objects with different parameters") {
         auto ob1 = NamedObs<TestType>("RZ", {0}, {0.4});
         auto ob2 = NamedObs<TestType>("RZ", {0}, {0.4});
