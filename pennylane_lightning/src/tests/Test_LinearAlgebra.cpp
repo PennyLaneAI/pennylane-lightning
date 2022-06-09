@@ -15,10 +15,7 @@
 
 using namespace Pennylane;
 
-// NOLINTNEXTLINE: Avoid complexity errors
-TEMPLATE_TEST_CASE("Test linear algebra functions", "[Util][LinearAlgebra]",
-                   float, double) {
-    using Util::Trans;
+TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
     SECTION("innerProd") {
         SECTION("Iterative increment") {
             for (size_t i = 0; i < 12; i++) {
@@ -129,6 +126,10 @@ TEMPLATE_TEST_CASE("Test linear algebra functions", "[Util][LinearAlgebra]",
             CHECK(imag(result) == Approx(imag(expected_result)).margin(1e-7));
         }
     }
+}
+
+TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
+    using Util::Trans;
     SECTION("matrixVecProd") {
         SECTION("Simple Iterative with NoTranspose") {
             for (size_t m = 2; m < 8; m++) {
@@ -207,6 +208,44 @@ TEMPLATE_TEST_CASE("Test linear algebra functions", "[Util][LinearAlgebra]",
 
             CHECK(v_out == approx(v_expected).margin(1e-7));
         }
+        SECTION("Random Complex with Adjoint") {
+            std::vector<std::complex<TestType>> v_in{
+                {0.643624335855, 0.578590708232},
+                {0.538989919338, 0.466635790378},
+                {0.618764845639, 0.599437240657},
+                {0.357299642534, 0.053014685781},
+            };
+            std::vector<std::complex<TestType>> mat{
+                {0.532146153405, 0.701149723765},
+                {0.846447557122, 0.115252356911},
+                {0.054946913257, 0.827064042981},
+                {0.716903475670, 0.676278287205},
+                {0.695253133818, 0.701356633873},
+                {0.652528065087, 0.918467022349},
+                {0.977379072529, 0.855331203864},
+                {0.254556889390, 0.518154071409},
+                {0.772606503900, 0.513854930480},
+                {0.536592010310, 0.154591920456},
+                {0.415274560257, 0.825736069441},
+                {0.634991477205, 0.533747170519},
+                {0.347378131788, 0.235064960717},
+                {0.936386930317, 0.181149920417},
+                {0.375506408059, 0.085886487536},
+                {0.249630514363, 0.514992726206},
+            };
+            std::vector<std::complex<TestType>> v_expected{
+                {2.372858970605, -0.117375105278},
+                {2.160640571918, 0.435930598280},
+                {2.330478161419, -0.778246884580},
+                {2.061051094071, -0.301369019950},
+            };
+
+            std::vector<std::complex<TestType>> v_out =
+                Util::matrixVecProd(mat, v_in, 4, 4, Trans::Adjoint);
+            CAPTURE(v_out);
+
+            CHECK(v_out == approx(v_expected).margin(1e-7));
+        }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
             std::vector<std::complex<TestType>> mat(2 * 3, {1.0, 1.0});
@@ -276,6 +315,18 @@ TEMPLATE_TEST_CASE("Test linear algebra functions", "[Util][LinearAlgebra]",
 
             CHECK(v_out == approx(v_expected).margin(1e-7));
         }
+        SECTION("In Place") {
+            std::vector<TestType> v_in{1.0, 2.0, 3.0, 4.0};
+            std::vector<TestType> mat{1.0, 0.1,  0.2, 0.2,  0.6,  0.1,
+                                      0.4, -0.7, 1.2, -0.5, -0.6, 0.7};
+            std::vector<TestType> v_expected{0.6, -3.2, 6.8};
+            std::vector<TestType> v_out1 = Util::vecMatrixProd(v_in, mat, 4, 3);
+
+            std::vector<TestType> v_out2(3, TestType{});
+            Util::vecMatrixProd(v_out2, v_in, mat, 4, 3);
+
+            CHECK(v_out2 == v_out1);
+        }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
             std::vector<TestType> v_in(4, {1.0});
@@ -314,121 +365,6 @@ TEMPLATE_TEST_CASE("Test linear algebra functions", "[Util][LinearAlgebra]",
             auto v_out = nullptr;
             Util::vecMatrixProd<TestType>(v_in.data(), mat.data(), v_out, 4, 2);
             CHECK(v_out == nullptr);
-        }
-    }
-    SECTION("CFTranspose") {
-        SECTION("Simple Matrix") {
-            for (size_t m = 2; m < 10; m++) {
-                std::vector<TestType> mat(m * m, {0});
-                for (size_t i = 0; i < m; i++) {
-                    mat[i * m + i] = 1.0;
-                }
-                std::vector<TestType> mat_t(m * m);
-                Util::CFTranspose<TestType, 4>(mat.data(), mat_t.data(), m, m,
-                                               0, m, 0, m);
-
-                CAPTURE(mat_t);
-                CAPTURE(mat);
-
-                CHECK(mat_t == approx(mat).margin(1e-7));
-            }
-        }
-        SECTION("Random Complex") {
-            std::vector<TestType> mat{
-                0.417876, 0.27448,   0.601209, 0.723548, 0.781624,
-                0.538222, 0.0597232, 0.27755,  0.836569,
-            };
-            std::vector<TestType> mat_t_exp{
-                0.417876, 0.723548, 0.0597232, 0.27448,  0.781624,
-                0.27755,  0.601209, 0.538222,  0.836569,
-            };
-            std::vector<TestType> mat_t(9);
-            Util::CFTranspose<TestType, 2>(mat.data(), mat_t.data(), 3, 3, 0, 3,
-                                           0, 3);
-
-            CAPTURE(mat_t);
-            CAPTURE(mat_t_exp);
-
-            CHECK(mat_t == approx(mat_t_exp));
-        }
-        SECTION("Random Complex non-square") {
-            std::vector<TestType> mat{
-                0.417876, 0.27448,  0.601209,  0.723548,
-                0.781624, 0.538222, 0.0597232, 0.27755,
-            };
-            std::vector<TestType> mat_t_exp{0.417876, 0.781624, 0.27448,
-                                            0.538222, 0.601209, 0.0597232,
-                                            0.723548, 0.27755};
-            std::vector<TestType> mat_t(8);
-            Util::CFTranspose<TestType, 2>(mat.data(), mat_t.data(), 2, 4, 0, 2,
-                                           0, 4);
-
-            CAPTURE(mat_t);
-            CAPTURE(mat_t_exp);
-
-            CHECK(mat_t == approx(mat_t_exp));
-        }
-        SECTION("Invalid Arguments") {
-            using namespace Catch::Matchers;
-            std::vector<TestType> mat(2 * 3, {1.0});
-            CHECK_THROWS_AS(Util::Transpose(mat, 2, 2), std::invalid_argument);
-            CHECK_THROWS_WITH(
-                Util::Transpose(mat, 2, 2),
-                Contains(
-                    "Invalid number of rows and columns for the input matrix"));
-        }
-    }
-    SECTION("Transpose<complex<T>>") {
-        SECTION("Simple Matrix") {
-            for (size_t m = 2; m < 8; m++) {
-                std::vector<std::complex<TestType>> mat(m * m, {0, 0});
-                for (size_t i = 0; i < m; i++) {
-                    mat[i * m + i] = {1.0, 1.0};
-                }
-                std::vector<std::complex<TestType>> mat_t =
-                    Util::Transpose(mat, m, m);
-
-                CAPTURE(mat_t);
-                CAPTURE(mat);
-
-                CHECK(mat_t == approx(mat).margin(1e-7));
-            }
-        }
-        SECTION("Random Complex") {
-            std::vector<std::complex<TestType>> mat{
-                {0.417876, 0.27448},   {0.601209, 0.723548},
-                {0.781624, 0.538222},  {0.0597232, 0.27755},
-                {0.0431741, 0.593319}, {0.224124, 0.130335},
-                {0.237877, 0.01557},   {0.931634, 0.786367},
-                {0.378397, 0.894381},  {0.840747, 0.889789},
-                {0.530623, 0.463644},  {0.868736, 0.760685},
-                {0.258175, 0.836569},  {0.495012, 0.667726},
-                {0.298962, 0.384992},  {0.659472, 0.232696}};
-            std::vector<std::complex<TestType>> mat_t_exp{
-                {0.417876, 0.27448},  {0.0431741, 0.593319},
-                {0.378397, 0.894381}, {0.258175, 0.836569},
-                {0.601209, 0.723548}, {0.224124, 0.130335},
-                {0.840747, 0.889789}, {0.495012, 0.667726},
-                {0.781624, 0.538222}, {0.237877, 0.01557},
-                {0.530623, 0.463644}, {0.298962, 0.384992},
-                {0.0597232, 0.27755}, {0.931634, 0.786367},
-                {0.868736, 0.760685}, {0.659472, 0.232696}};
-            std::vector<std::complex<TestType>> mat_t =
-                Util::Transpose(mat, 4, 4);
-
-            CAPTURE(mat_t);
-            CAPTURE(mat_t_exp);
-
-            CHECK(mat_t == approx(mat_t_exp));
-        }
-        SECTION("Invalid Arguments") {
-            using namespace Catch::Matchers;
-            std::vector<std::complex<TestType>> mat(2 * 3, {1.0, 1.0});
-            CHECK_THROWS_AS(Util::Transpose(mat, 2, 2), std::invalid_argument);
-            CHECK_THROWS_WITH(
-                Util::Transpose(mat, 2, 2),
-                Contains(
-                    "Invalid number of rows and columns for the input matrix"));
         }
     }
     SECTION("matrixMatProd") {
@@ -621,15 +557,215 @@ TEMPLATE_TEST_CASE("Test linear algebra functions", "[Util][LinearAlgebra]",
             CHECK(m_out == nullptr);
         }
     }
-    SECTION("SquaredNorm") {
-        SECTION("For real type") {
-            std::vector<TestType> vec{0.0, 1.0, 3.0, 10.0};
-            CHECK(Util::squaredNorm(vec) == Approx(110.0));
-        }
+}
 
-        SECTION("For complex type") {
-            std::vector<std::complex<TestType>> vec{{0.0, 1.0}, {3.0, 10.0}};
-            CHECK(Util::squaredNorm(vec) == Approx(110.0));
+TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
+    SECTION("CFTranspose") {
+        SECTION("Simple Matrix") {
+            for (size_t m = 2; m < 10; m++) {
+                std::vector<TestType> mat(m * m, {0});
+                for (size_t i = 0; i < m; i++) {
+                    mat[i * m + i] = 1.0;
+                }
+                std::vector<TestType> mat_t(m * m);
+                Util::CFTranspose<TestType, 4>(mat.data(), mat_t.data(), m, m,
+                                               0, m, 0, m);
+
+                CAPTURE(mat_t);
+                CAPTURE(mat);
+
+                CHECK(mat_t == approx(mat).margin(1e-7));
+            }
         }
+        SECTION("Random Complex") {
+            std::vector<TestType> mat{
+                0.417876, 0.27448,   0.601209, 0.723548, 0.781624,
+                0.538222, 0.0597232, 0.27755,  0.836569,
+            };
+            std::vector<TestType> mat_t_exp{
+                0.417876, 0.723548, 0.0597232, 0.27448,  0.781624,
+                0.27755,  0.601209, 0.538222,  0.836569,
+            };
+            std::vector<TestType> mat_t(9);
+            Util::CFTranspose<TestType, 2>(mat.data(), mat_t.data(), 3, 3, 0, 3,
+                                           0, 3);
+
+            CAPTURE(mat_t);
+            CAPTURE(mat_t_exp);
+
+            CHECK(mat_t == approx(mat_t_exp));
+        }
+        SECTION("Random Complex non-square") {
+            std::vector<TestType> mat{
+                0.417876, 0.27448,  0.601209,  0.723548,
+                0.781624, 0.538222, 0.0597232, 0.27755,
+            };
+            std::vector<TestType> mat_t_exp{0.417876, 0.781624, 0.27448,
+                                            0.538222, 0.601209, 0.0597232,
+                                            0.723548, 0.27755};
+            std::vector<TestType> mat_t(8);
+            Util::CFTranspose<TestType, 2>(mat.data(), mat_t.data(), 2, 4, 0, 2,
+                                           0, 4);
+
+            CAPTURE(mat_t);
+            CAPTURE(mat_t_exp);
+
+            CHECK(mat_t == approx(mat_t_exp));
+        }
+        SECTION("Invalid Arguments") {
+            using namespace Catch::Matchers;
+            std::vector<TestType> mat(2 * 3, {1.0});
+            CHECK_THROWS_AS(Util::Transpose(mat, 2, 2), std::invalid_argument);
+            CHECK_THROWS_WITH(
+                Util::Transpose(mat, 2, 2),
+                Contains(
+                    "Invalid number of rows and columns for the input matrix"));
+        }
+    }
+    SECTION("Transpose<complex<T>>") {
+        SECTION("Simple Matrix") {
+            for (size_t m = 2; m < 8; m++) {
+                std::vector<std::complex<TestType>> mat(m * m, {0, 0});
+                for (size_t i = 0; i < m; i++) {
+                    mat[i * m + i] = {1.0, 1.0};
+                }
+                std::vector<std::complex<TestType>> mat_t =
+                    Util::Transpose(mat, m, m);
+
+                CAPTURE(mat_t);
+                CAPTURE(mat);
+
+                CHECK(mat_t == approx(mat).margin(1e-7));
+            }
+        }
+        SECTION("Random Complex") {
+            std::vector<std::complex<TestType>> mat{
+                {0.417876, 0.27448},   {0.601209, 0.723548},
+                {0.781624, 0.538222},  {0.0597232, 0.27755},
+                {0.0431741, 0.593319}, {0.224124, 0.130335},
+                {0.237877, 0.01557},   {0.931634, 0.786367},
+                {0.378397, 0.894381},  {0.840747, 0.889789},
+                {0.530623, 0.463644},  {0.868736, 0.760685},
+                {0.258175, 0.836569},  {0.495012, 0.667726},
+                {0.298962, 0.384992},  {0.659472, 0.232696}};
+            std::vector<std::complex<TestType>> mat_t_exp{
+                {0.417876, 0.27448},  {0.0431741, 0.593319},
+                {0.378397, 0.894381}, {0.258175, 0.836569},
+                {0.601209, 0.723548}, {0.224124, 0.130335},
+                {0.840747, 0.889789}, {0.495012, 0.667726},
+                {0.781624, 0.538222}, {0.237877, 0.01557},
+                {0.530623, 0.463644}, {0.298962, 0.384992},
+                {0.0597232, 0.27755}, {0.931634, 0.786367},
+                {0.868736, 0.760685}, {0.659472, 0.232696}};
+            std::vector<std::complex<TestType>> mat_t =
+                Util::Transpose(mat, 4, 4);
+
+            CAPTURE(mat_t);
+            CAPTURE(mat_t_exp);
+
+            CHECK(mat_t == approx(mat_t_exp));
+        }
+        SECTION("Invalid Arguments") {
+            using namespace Catch::Matchers;
+            std::vector<std::complex<TestType>> mat(2 * 3, {1.0, 1.0});
+            CHECK_THROWS_AS(Util::Transpose(mat, 2, 2), std::invalid_argument);
+            CHECK_THROWS_WITH(
+                Util::Transpose(mat, 2, 2),
+                Contains(
+                    "Invalid number of rows and columns for the input matrix"));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("Util::squaredNorm", "[Util][LinearAlgebra]", float,
+                   double) {
+    SECTION("For real type") {
+        std::vector<TestType> vec{0.0, 1.0, 3.0, 10.0};
+        CHECK(Util::squaredNorm(vec) == Approx(110.0));
+    }
+
+    SECTION("For complex type") {
+        std::vector<std::complex<TestType>> vec{{0.0, 1.0}, {3.0, 10.0}};
+        CHECK(Util::squaredNorm(vec) == Approx(110.0));
+    }
+}
+
+TEMPLATE_TEST_CASE("Util::scaleAndAdd", "[Util][LinearAlgebra]", float,
+                   double) {
+    using PrecisionT = TestType;
+    using ComplexPrecisionT = std::complex<PrecisionT>;
+
+    SECTION("Test result is correct") {
+        auto a = ComplexPrecisionT{0.36572644485147254, 0.4729529811649217};
+        std::vector<ComplexPrecisionT> x{
+            ComplexPrecisionT{0.481941495077, 0.734106237571},
+            ComplexPrecisionT{0.960470937496, 0.880529982024},
+            ComplexPrecisionT{0.135982489400, 0.049663856666},
+            ComplexPrecisionT{0.589227566883, 0.646648171030},
+            ComplexPrecisionT{0.051294350194, 0.013730433456},
+            ComplexPrecisionT{0.716464613724, 0.296251370128},
+            ComplexPrecisionT{0.820197028755, 0.199230854010},
+            ComplexPrecisionT{0.100767632907, 0.745810000609},
+            ComplexPrecisionT{0.603122469037, 0.437680494447},
+            ComplexPrecisionT{0.815084269631, 0.501486284044},
+            ComplexPrecisionT{0.554633849948, 0.437321144284},
+            ComplexPrecisionT{0.822295519809, 0.810051588437},
+            ComplexPrecisionT{0.217638951648, 0.663920104700},
+            ComplexPrecisionT{0.289819402719, 0.839919161595},
+            ComplexPrecisionT{0.498496405040, 0.906874924446},
+            ComplexPrecisionT{0.365971064862, 0.230694150520},
+        };
+        std::vector<ComplexPrecisionT> y{
+            ComplexPrecisionT{0.516438479285, 0.970319841313},
+            ComplexPrecisionT{0.085702308539, 0.005302125762},
+            ComplexPrecisionT{0.591955559108, 0.945946312721},
+            ComplexPrecisionT{0.710102120659, 0.410003006045},
+            ComplexPrecisionT{0.171020364152, 0.020935262021},
+            ComplexPrecisionT{0.904267565256, 0.235752839391},
+            ComplexPrecisionT{0.715111137847, 0.402137049186},
+            ComplexPrecisionT{0.590485707389, 0.550485111898},
+            ComplexPrecisionT{0.830734963458, 0.777755725832},
+            ComplexPrecisionT{0.988885576027, 0.541038298049},
+            ComplexPrecisionT{0.375479099161, 0.275849441779},
+            ComplexPrecisionT{0.441329976617, 0.825285998539},
+            ComplexPrecisionT{0.376823807696, 0.896094272876},
+            ComplexPrecisionT{0.558768533750, 0.963077088666},
+            ComplexPrecisionT{0.402000571969, 0.344065008137},
+            ComplexPrecisionT{0.805773653517, 0.316132703093},
+        };
+        std::vector<ComplexPrecisionT> expected{
+            ComplexPrecisionT{0.345499495355, 1.466737572567},
+            ComplexPrecisionT{0.020522649889, 0.781592818884},
+            ComplexPrecisionT{0.618199282452, 1.028423022205},
+            ComplexPrecisionT{0.619764043650, 0.925176277047},
+            ComplexPrecisionT{0.183286215053, 0.050216660476},
+            ComplexPrecisionT{1.026184652619, 0.682953874730},
+            ComplexPrecisionT{0.920852054907, 0.862915671020},
+            ComplexPrecisionT{0.274606032358, 0.870905904344},
+            ComplexPrecisionT{0.844310505222, 1.223075626786},
+            ComplexPrecisionT{1.049804015161, 1.109941629077},
+            ComplexPrecisionT{0.371491026381, 0.698105081924},
+            ComplexPrecisionT{0.358948880046, 1.510450403616},
+            ComplexPrecisionT{0.142417134970, 1.241840403433},
+            ComplexPrecisionT{0.267520882141, 1.407328688114},
+            ComplexPrecisionT{0.155404690895, 0.911498511043},
+            ComplexPrecisionT{0.830511463762, 0.573590760757},
+        };
+        Util::scaleAndAdd(a, x, y);
+        REQUIRE(y == approx(expected));
+    }
+    SECTION("Throws exception when the size mismatches") {
+        std::vector<ComplexPrecisionT> x(8, ComplexPrecisionT{});
+        std::vector<ComplexPrecisionT> y(4, ComplexPrecisionT{});
+
+        PL_REQUIRE_THROWS_MATCHES(
+            Util::scaleAndAdd(ComplexPrecisionT{0.5, 0.4}, x, y),
+            std::invalid_argument, "Dimensions of vectors mismatch");
+    }
+    SECTION("omp_scaleAndAdd uses STD_CROSSOVER") {
+        std::vector<ComplexPrecisionT> x(32);
+        std::vector<ComplexPrecisionT> y(32);
+        REQUIRE_NOTHROW(Util::omp_scaleAndAdd<PrecisionT, 16>(
+            32, {1.0, 0.0}, x.data(), y.data()));
     }
 }

@@ -946,7 +946,7 @@ template <class T>
 void scaleAndAdd(std::complex<T> a, const std::vector<std::complex<T>> &x,
                  std::vector<std::complex<T>> &y) {
     if (x.size() != y.size()) {
-        throw std::invalid_argument("Dimensions of parameters mismatch");
+        throw std::invalid_argument("Dimensions of vectors mismatch");
     }
     scaleAndAdd(x.size(), a, x.data(), y.data());
 }
