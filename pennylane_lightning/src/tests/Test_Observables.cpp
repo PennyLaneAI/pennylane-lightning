@@ -25,6 +25,10 @@ TEMPLATE_TEST_CASE("NamedObs", "[Observables]", float, double) {
             "Rot", {0}, std::vector<PrecisionT>{0.3, 0.4, 0.5}));
     }
 
+    SECTION("Named of the Observable must be correct") {
+        REQUIRE(NamedObs<TestType>("PauliZ", {0}).getObsName() == "PauliZ[0]");
+    }
+
     SECTION("Objects with different names") {
         auto ob1 = NamedObs<TestType>("PauliX", {0});
         auto ob2 = NamedObs<TestType>("PauliX", {0});
@@ -73,6 +77,11 @@ TEMPLATE_TEST_CASE("HermitianObs", "[Observables]", float, double) {
                 std::vector<ComplexPrecisionT>{0.0, 0.0, 0.0, 0.0, 0.0},
                 {0, 1}),
             LightningException);
+    }
+    SECTION("getObsName") {
+        REQUIRE(HermitianObs<TestType>(
+                    std::vector<ComplexPrecisionT>{1.0, 0.0, 2.0, 0.0}, {0})
+                    .getObsName() == "Hermitian");
     }
     SECTION("Objects with different matrices") {
         auto ob1 = HermitianObs<PrecisionT>{
@@ -127,6 +136,15 @@ TEMPLATE_TEST_CASE("TensorProdObs", "[Observables]", float, double) {
         auto ob2 = std::make_shared<TensorProdObs<PrecisionT>>(ob2_1, ob2_2);
 
         REQUIRE_NOTHROW(std::make_shared<TensorProdObs<PrecisionT>>(ob1, ob2));
+    }
+
+    SECTION("getObsName") {
+        auto ob =
+            TensorProdObs<PrecisionT>{std::make_shared<NamedObs<PrecisionT>>(
+                                          "PauliX", std::vector<size_t>{0}),
+                                      std::make_shared<NamedObs<PrecisionT>>(
+                                          "PauliZ", std::vector<size_t>{1})};
+        REQUIRE(ob.getObsName() == "PauliX[0] @ PauliZ[1]");
     }
 
     SECTION("Compare two tensor product observables") {
@@ -212,6 +230,18 @@ TEMPLATE_TEST_CASE("Hamiltonian", "[Observables]", float, double) {
         REQUIRE_THROWS_AS(
             Hamiltonian<PrecisionT>::create({PrecisionT{1.0}, h}, {zz, x1, x2}),
             LightningException);
+    }
+
+    SECTION("getObsName") {
+        auto X0 = std::make_shared<NamedObs<PrecisionT>>(
+            "PauliX", std::vector<size_t>{0});
+        auto Z2 = std::make_shared<NamedObs<PrecisionT>>(
+            "PauliZ", std::vector<size_t>{2});
+
+        REQUIRE(Hamiltonian<PrecisionT>::create({0.3, 0.5}, {X0, Z2})
+                    ->getObsName() ==
+                "Hamiltonian: { 'coeffs' : [0.3, 0.5], "
+                "'observables' : [PauliX[0], PauliZ[2]]}");
     }
 
     SECTION("Compare Hamiltonians") {

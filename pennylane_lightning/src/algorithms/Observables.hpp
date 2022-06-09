@@ -121,7 +121,10 @@ template <typename T> class NamedObs final : public Observable<T> {
     }
 
     [[nodiscard]] auto getObsName() const -> std::string override {
-        return obs_name_;
+        using Util::operator<<;
+        std::ostringstream obs_stream;
+        obs_stream << obs_name_ << wires_;
+        return obs_stream.str();
     }
 
     [[nodiscard]] auto getWires() const -> std::vector<size_t> final {
@@ -251,7 +254,6 @@ template <typename T> class TensorProdObs final : public Observable<T> {
     [[nodiscard]] auto getObsName() const -> std::string final {
         using Util::operator<<;
         std::ostringstream obs_stream;
-        obs_stream << "Observable: { 'name' : ";
         const auto obs_size = obs_.size();
         for (size_t idx = 0; idx < obs_size; idx++) {
             obs_stream << obs_[idx]->getObsName();
@@ -259,7 +261,6 @@ template <typename T> class TensorProdObs final : public Observable<T> {
                 obs_stream << " @ ";
             }
         }
-        obs_stream << ", 'wires' : " << getWires() << " }";
         return obs_stream.str();
     }
 };
@@ -403,8 +404,7 @@ template <typename T> class Hamiltonian final : public Observable<T> {
     [[nodiscard]] auto getObsName() const -> std::string final {
         using Util::operator<<;
         std::ostringstream ss;
-        ss << "Hamiltonian: { 'coeffs' : " << coeffs_
-           << "}, { 'observables' : ";
+        ss << "Hamiltonian: { 'coeffs' : " << coeffs_ << ", 'observables' : [";
         const auto term_size = coeffs_.size();
         for (size_t t = 0; t < term_size; t++) {
             ss << obs_[t]->getObsName();
@@ -412,7 +412,7 @@ template <typename T> class Hamiltonian final : public Observable<T> {
                 ss << ", ";
             }
         }
-        ss << "}";
+        ss << "]}";
         return ss.str();
     }
 };
