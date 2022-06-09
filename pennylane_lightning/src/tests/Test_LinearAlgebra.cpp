@@ -129,6 +129,7 @@ TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
     }
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
     using Util::Trans;
     SECTION("matrixVecProd") {
