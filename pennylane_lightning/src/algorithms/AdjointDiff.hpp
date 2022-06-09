@@ -116,7 +116,7 @@ void adjointJacobian(std::vector<T> &jac, const JacobianData<T> &jd,
                 const size_t mat_row_idx =
                     trainableParamNumber * num_observables;
 
-                // clang-format off
+// clang-format off
                 #if defined(_OPENMP)
                     #pragma omp parallel for default(none)                \
                     shared(H_lambda, jac, mu, scalingFactor, mat_row_idx, \
