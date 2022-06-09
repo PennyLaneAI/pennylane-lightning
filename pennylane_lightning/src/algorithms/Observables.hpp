@@ -16,6 +16,7 @@
 #include "Error.hpp"
 #include "LinearAlgebra.hpp"
 #include "StateVectorManagedCPU.hpp"
+#include "Util.hpp"
 
 #include <memory>
 #include <unordered_set>

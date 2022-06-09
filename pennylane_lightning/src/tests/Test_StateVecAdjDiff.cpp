@@ -86,7 +86,7 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
                 std::fill(dy.begin(), dy.end(), ComplexPrecisionT{0.0, 0.0});
                 dy[i] = {1.0, 0.0};
                 std::vector<ComplexPrecisionT> vjp(1);
-                statevectorVJP(vjp, jd, dy.data(), dy.size(), true);
+                statevectorVJP(vjp, jd, std::span{dy}, true);
 
                 REQUIRE(vjp == PLApprox(expected[i]).margin(1e-5));
             }
@@ -102,7 +102,7 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
                           std::complex<TestType>{0.0, 0.0});
                 dy[i] = {1.0, 0.0};
                 std::vector<ComplexPrecisionT> vjp(1);
-                statevectorVJP(vjp, jd, dy.data(), dy.size(), false);
+                statevectorVJP(vjp, jd, std::span{dy}, false);
 
                 REQUIRE(vjp == PLApprox(expected[i]).margin(1e-5));
             }
@@ -149,7 +149,7 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
                           std::complex<TestType>{0.0, 0.0});
                 dy[i] = {1.0, 0.0};
                 std::vector<ComplexPrecisionT> vjp(2);
-                statevectorVJP(vjp, jd, dy.data(), dy.size(), true);
+                statevectorVJP(vjp, jd, std::span{dy}, true);
 
                 REQUIRE(vjp[0] == approx(expected_der0[i]).margin(1e-5));
                 REQUIRE(vjp[1] == approx(expected_der1[i]).margin(1e-5));
@@ -168,7 +168,7 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
                           std::complex<TestType>{0.0, 0.0});
                 dy[i] = {1.0, 0.0};
                 std::vector<ComplexPrecisionT> vjp(2);
-                statevectorVJP(vjp, jd, dy.data(), dy.size(), false);
+                statevectorVJP(vjp, jd, std::span{dy}, false);
 
                 REQUIRE(vjp[0] == approx(expected_der0[i]).margin(1e-5));
                 REQUIRE(vjp[1] == approx(expected_der1[i]).margin(1e-5));
@@ -209,8 +209,7 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
 
         std::vector<TestType> grad_vjp = [&]() {
             std::vector<ComplexPrecisionT> vjp(num_params);
-            statevectorVJP(vjp, jd, o_sv.getDataVector().data(),
-                           o_sv.getLength(), false);
+            statevectorVJP(vjp, jd, std::span{o_sv.getDataVector()}, false);
             std::vector<TestType> res(vjp.size());
             std::transform(vjp.begin(), vjp.end(), res.begin(),
                            [](const auto &x) { return 2 * std::real(x); });

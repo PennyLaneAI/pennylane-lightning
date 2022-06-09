@@ -16,9 +16,10 @@
  * Define vjp algorithm for a statevector
  */
 #pragma once
-#include <cassert>
-
 #include "AlgUtil.hpp"
+
+#include <cassert>
+#include <span>
 
 namespace Pennylane::Algorithms {
 /**
@@ -43,12 +44,11 @@ namespace Pennylane::Algorithms {
 template <typename PrecisionT>
 void statevectorVJP(std::vector<std::complex<PrecisionT>> &jac,
                     const JacobianData<PrecisionT> &jd,
-                    const std::complex<PrecisionT> *dy,
-                    [[maybe_unused]] size_t dy_size,
+                    const std::span<std::complex<PrecisionT>> &dy,
                     bool apply_operations = false) {
     using ComplexPrecisionT = std::complex<PrecisionT>;
 
-    assert(dy_size == jd.getSizeStateVec());
+    assert(dy.size() == jd.getSizeStateVec());
 
     if (!jd.hasTrainableParams()) {
         return;
@@ -70,7 +70,7 @@ void statevectorVJP(std::vector<std::complex<PrecisionT>> &jac,
     if (apply_operations) {
         applyOperations(lambda, ops);
     }
-    StateVectorManagedCPU<PrecisionT> mu(dy, jd.getSizeStateVec());
+    StateVectorManagedCPU<PrecisionT> mu(dy.data(), dy.size());
     StateVectorManagedCPU<PrecisionT> mu_d(
         Util::log2PerfectPower(jd.getSizeStateVec()));
 
