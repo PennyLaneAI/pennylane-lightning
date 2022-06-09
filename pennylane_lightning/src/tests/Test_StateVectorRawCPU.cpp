@@ -36,7 +36,7 @@ TEMPLATE_TEST_CASE("StateVectorRawCPU::setData", "[StateVectorRawCPU]", float,
                    double) {
     using PrecisionT = TestType;
 
-    SECTION("setData correctly update data") {
+    SECTION("changeDataPtr correctly update data") {
         auto st_data = createRandomState<PrecisionT>(re, 4);
         StateVectorRawCPU<PrecisionT> sv(st_data.data(), st_data.size());
 
@@ -48,12 +48,32 @@ TEMPLATE_TEST_CASE("StateVectorRawCPU::setData", "[StateVectorRawCPU]", float,
         REQUIRE(sv.getLength() == (1U << 8U));
     }
 
-    SECTION("setData throws an exception when the data is incorrect") {
+    SECTION("changeDataPtr throws an exception when the data is incorrect") {
         auto st_data = createRandomState<PrecisionT>(re, 4);
         StateVectorRawCPU<PrecisionT> sv(st_data.data(), st_data.size());
 
         std::vector<std::complex<PrecisionT>> new_data(7, PrecisionT{0.0});
 
-        REQUIRE_THROWS(sv.setDataFrom(new_data.data(), new_data.size()));
+        REQUIRE_THROWS_AS(sv.changeDataPtr(new_data.data(), new_data.size()),
+                          Util::LightningException);
+    }
+
+    SECTION("setDataFrom correctly update data") {
+        auto st_data1 = createRandomState<PrecisionT>(re, 4);
+        auto st_data2 = createRandomState<PrecisionT>(re, 4);
+        StateVectorRawCPU<PrecisionT> sv(st_data1.data(), st_data1.size());
+
+        sv.setDataFrom(st_data2.data(),
+                       st_data2.size()); // Should update st_data1
+        REQUIRE(st_data1 == st_data2);
+    }
+
+    SECTION("setDataFrom throws an exception when the data is incorrect") {
+        auto st_data1 = createRandomState<PrecisionT>(re, 4);
+        auto st_data2 = createRandomState<PrecisionT>(re, 8);
+        StateVectorRawCPU<PrecisionT> sv(st_data1.data(), st_data1.size());
+
+        REQUIRE_THROWS_AS(sv.setDataFrom(st_data2.data(), st_data2.size()),
+                          Util::LightningException);
     }
 }
