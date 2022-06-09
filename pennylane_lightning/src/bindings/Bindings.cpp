@@ -348,7 +348,7 @@ void registerAlgorithms(py::module_ &m) {
             statevectorVJP<PrecisionT>(
                 vjp, jd,
                 std::span{static_cast<std::complex<PrecisionT> *>(buffer.ptr),
-                          buffer.size});
+                          static_cast<size_t>(buffer.size)});
 
             return py::array_t<std::complex<PrecisionT>>(py::cast(vjp));
         },
