@@ -15,6 +15,7 @@
 
 using namespace Pennylane;
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
     SECTION("innerProd") {
         SECTION("Iterative increment") {
