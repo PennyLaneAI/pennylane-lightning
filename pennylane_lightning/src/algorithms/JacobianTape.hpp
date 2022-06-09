@@ -198,7 +198,7 @@ template <class T> class OpsData {
  */
 template <class T> class JacobianData {
   private:
-    size_t num_parameters;      /**< Number of paramters in the tape */
+    size_t num_parameters;      /**< Number of parameters in the tape */
     size_t num_elements;        /**< Length of the statevector data */
     const std::complex<T> *psi; /**< Pointer to the statevector data */
 
@@ -243,7 +243,7 @@ template <class T> class JacobianData {
         : num_parameters(num_params), num_elements(num_elem), psi(ps),
           observables(std::move(obs)), operations(std::move(ops)),
           trainableParams(std::move(trainP)) {
-        /* When the Hamiltonain has parameters, trainable parameters include
+        /* When the Hamiltonian has parameters, trainable parameters include
          * these. We explicitly ignore them. */
     }
 

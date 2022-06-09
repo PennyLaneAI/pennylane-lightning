@@ -65,14 +65,14 @@ template <typename T> class Observable {
     [[nodiscard]] virtual auto getWires() const -> std::vector<size_t> = 0;
 
     /**
-     * @brief Test whether this object is equals to another object
+     * @brief Test whether this object is equal to another object
      */
     [[nodiscard]] bool operator==(const Observable<T> &other) const {
         return typeid(*this) == typeid(other) && isEqual(other);
     }
 
     /**
-     * @brief Test whether this object is equals to another object
+     * @brief Test whether this object is different from another object.
      */
     [[nodiscard]] bool operator!=(const Observable<T> &other) const {
         return !(*this == other);
