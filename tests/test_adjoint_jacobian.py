@@ -97,6 +97,15 @@ class TestAdjointJacobian:
         ):
             dev.adjoint_jacobian(tape)
 
+    def test_empty_measurements(self, tol, dev):
+        """Tests if an empty array is returned when the measurments of the tape is empty."""
+
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(0.4, wires=[0])
+
+        jac = dev.adjoint_jacobian(tape)
+        assert len(jac) == 0
+
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_unsupported_op(self, dev):
         """Test if a QuantumFunctionError is raised for an unsupported operation, i.e.,
@@ -530,6 +539,37 @@ class TestAdjointJacobian:
         dM2 = dev.adjoint_jacobian(tape, starting_state=dev._pre_rotated_state)
 
         assert np.allclose(dM1, dM2, atol=tol, rtol=0)
+
+    def test_provide_wrong_starting_state(self, dev):
+        """Tests raise an exception when provided starting state mismatches."""
+        x, y, z = [0.5, 0.3, -0.7]
+
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(0.4, wires=[0])
+            qml.Rot(x, y, z, wires=[0])
+            qml.RY(-0.2, wires=[0])
+            qml.expval(qml.PauliZ(0))
+
+        tape.trainable_params = {1, 2, 3}
+
+        with pytest.raises(
+            qml.QuantumFunctionError,
+            match="The number of qubits of starting_state must be the same as",
+        ):
+            dev.adjoint_jacobian(tape, starting_state=np.ones(7))
+
+    def test_state_return_type(self, dev):
+        """Tests raise an exception when the return type is State"""
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(0.4, wires=[0])
+            qml.state()
+
+        tape.trainable_params = {0}
+
+        with pytest.raises(
+            qml.QuantumFunctionError, match="This method does not support statevector return type."
+        ):
+            dev.adjoint_jacobian(tape)
 
 
 class TestAdjointJacobianQNode:

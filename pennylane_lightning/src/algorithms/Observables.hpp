@@ -154,11 +154,11 @@ template <typename T> class HermitianObs final : public Observable<T> {
     /**
      * @brief Create Hermitian observable
      *
-     * @param arg1 Matrix in row major format.
-     * @param arg2 Wires the observable applies to.
+     * @param matrix Matrix in row major format.
+     * @param wires Wires the observable applies to.
      */
     template <typename T1>
-    HermitianObs(T1 &&arg1, std::vector<size_t> wires)
+    HermitianObs(T1 &&matrix, std::vector<size_t> wires)
         : matrix_{std::forward<T1>(arg1)}, wires_{std::move(wires)} {
         PL_ASSERT(matrix_.size() ==
                   Util::exp2(wires_.size()) * Util::exp2(wires_.size()));
