@@ -57,20 +57,6 @@ class TestVectorJacobianProduct:
 
         assert np.allclose(vjp1, vjp2, atol=tol, rtol=0)
 
-    def test_empty_measurements(self, tol, dev):
-        """Tests that when the measurments of the tape is emplty, vjp returns an empty array"""
-
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.4, wires=[0])
-
-        dy = np.array([1.0])
-        fn = dev.vjp(tape.measurements, dy)
-
-        vjp = fn(tape)
-        print(vjp)
-
-        assert np.empty(vjp)
-
     def test_provide_starting_state(self, tol, dev):
         """Tests provides correct answer when provided starting state."""
         x, y, z = [0.5, 0.3, -0.7]

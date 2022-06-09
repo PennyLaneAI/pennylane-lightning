@@ -540,6 +540,7 @@ class TestAdjointJacobian:
 
         assert np.allclose(dM1, dM2, atol=tol, rtol=0)
 
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_provide_wrong_starting_state(self, dev):
         """Tests raise an exception when provided starting state mismatches."""
         x, y, z = [0.5, 0.3, -0.7]
@@ -558,6 +559,7 @@ class TestAdjointJacobian:
         ):
             dev.adjoint_jacobian(tape, starting_state=np.ones(7))
 
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_state_return_type(self, dev):
         """Tests raise an exception when the return type is State"""
         with qml.tape.QuantumTape() as tape:
