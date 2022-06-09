@@ -116,13 +116,12 @@ void adjointJacobian(std::vector<T> &jac, const JacobianData<T> &jd,
                 const size_t mat_row_idx =
                     trainableParamNumber * num_observables;
 
-                // clang-format off
+// clang-format off
                 #if defined(_OPENMP)
                     #pragma omp parallel for default(none)                \
                     shared(H_lambda, jac, mu, scalingFactor, mat_row_idx, \
                            num_observables)
                 #endif
-
                 // clang-format on
                 for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
                     jac[mat_row_idx + obs_idx] =
