@@ -15,14 +15,19 @@ template <typename T> class TestObservable : public Observable<T> {
         throw TestException();
     }
 
-    auto isEqual([[maybe_unused]] const Observable<T> &other) const
+    [[nodiscard]] auto
+    isEqual([[maybe_unused]] const Observable<T> &other) const
         -> bool override {
         return true;
     }
 
-    auto getObsName() const -> std::string override { return "TestObservable"; }
+    [[nodiscard]] auto getObsName() const -> std::string override {
+        return "TestObservable";
+    }
 
-    auto getWires() const -> std::vector<size_t> { return {}; }
+    [[nodiscard]] auto getWires() const -> std::vector<size_t> override {
+        return {};
+    }
 };
 
 TEMPLATE_TEST_CASE("applyObservables", "[Algorithms]", float, double) {
