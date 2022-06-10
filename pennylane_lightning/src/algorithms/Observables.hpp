@@ -397,8 +397,9 @@ template <typename T> class Hamiltonian final : public Observable<T> {
             const auto ob_wires = ob->getWires();
             wires.insert(ob_wires.begin(), ob_wires.end());
         }
-        // NOLINTNEXTLINE(modernize-return-braced-init-list)
-        return std::vector<size_t>(wires.begin(), wires.end());
+        auto all_wires = std::vector<size_t>(wires.begin(), wires.end());
+        std::sort(all_wires.begin(), all_wires.end());
+        return all_wires;
     }
 
     [[nodiscard]] auto getObsName() const -> std::string final {

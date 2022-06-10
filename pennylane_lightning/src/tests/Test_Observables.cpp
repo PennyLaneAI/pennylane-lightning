@@ -169,9 +169,14 @@ TEMPLATE_TEST_CASE("TensorProdObs", "[Observables]", float, double) {
                                       std::make_shared<NamedObs<PrecisionT>>(
                                           "PauliZ", std::vector<size_t>{1})};
 
+        auto ob5 =
+            TensorProdObs<PrecisionT>{std::make_shared<NamedObs<PrecisionT>>(
+                "PauliZ", std::vector<size_t>{0})};
+
         REQUIRE(ob1 == ob2);
         REQUIRE(ob1 != ob3);
         REQUIRE(ob1 != ob4);
+        REQUIRE(ob1 != ob5);
     }
 
     SECTION("Tensor product applies to a statevector correctly") {
@@ -290,9 +295,26 @@ TEMPLATE_TEST_CASE("Hamiltonian", "[Observables]", float, double) {
                 std::make_shared<TensorProdObs<PrecisionT>>(Y0, Z1, X2),
             });
 
+        auto ham4 = Hamiltonian<PrecisionT>::create(
+            {0.8, 0.5},
+            {
+                std::make_shared<TensorProdObs<PrecisionT>>(X0, Y1, Z2),
+                std::make_shared<TensorProdObs<PrecisionT>>(Z0, X1, Y2),
+            });
+
+        auto ham5 = Hamiltonian<PrecisionT>::create(
+            {0.8, 0.5, 0.7},
+            {
+                std::make_shared<TensorProdObs<PrecisionT>>(X0, Y1, Z2),
+                std::make_shared<TensorProdObs<PrecisionT>>(Z0, X1, Y2),
+                std::make_shared<TensorProdObs<PrecisionT>>(Y0, Z1, Y2),
+            });
+
         REQUIRE(*ham1 == *ham2);
         REQUIRE(*ham1 != *ham3);
         REQUIRE(*ham2 != *ham3);
+        REQUIRE(*ham2 != *ham4);
+        REQUIRE(*ham1 != *ham5);
     }
 
     SECTION("Hamiltonian::applyInPlace") {
@@ -334,5 +356,19 @@ TEMPLATE_TEST_CASE("Hamiltonian", "[Observables]", float, double) {
 
             REQUIRE(sv.getDataVector() == PLApprox(expected));
         }
+    }
+
+    SECTION("getWires") {
+        auto Z0 = std::make_shared<NamedObs<PrecisionT>>(
+            "PauliZ", std::vector<size_t>{0});
+        auto Z5 = std::make_shared<NamedObs<PrecisionT>>(
+            "PauliZ", std::vector<size_t>{5});
+        auto Z9 = std::make_shared<NamedObs<PrecisionT>>(
+            "PauliZ", std::vector<size_t>{9});
+
+        auto ham1 =
+            Hamiltonian<PrecisionT>::create({0.8, 0.5, 0.7}, {Z0, Z5, Z9});
+
+        REQUIRE(ham1->getWires() == std::vector<size_t>{0, 5, 9});
     }
 }
