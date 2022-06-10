@@ -59,6 +59,24 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
     constexpr static auto isqrt2 = INVSQRT2<TestType>();
     using ComplexPrecisionT = std::complex<TestType>;
 
+    SECTION("Do nothing if the tape does not have trainable parameters") {
+        std::vector<ComplexPrecisionT> vjp(1);
+        OpsData<TestType> ops_data{
+            {"CNOT", "RX"}, // names
+            {{}, {M_PI}},   // params
+            {{0, 1}, {1}},  // wires
+            {false, false}, // inverses
+            {}              // matrices
+        };
+
+        auto dy = std::vector<ComplexPrecisionT>(4);
+        std::vector<ComplexPrecisionT> ini_st{
+            {isqrt2, 0.0}, {0.0, 0.0}, {isqrt2, 0.0}, {0.0, 0.0}};
+        JacobianData<TestType> jd{1, 4, ini_st.data(), {}, ops_data, {}};
+        REQUIRE_NOTHROW(statevectorVJP(
+            std::span{vjp}, jd, std::span<const ComplexPrecisionT>{dy}, true));
+    }
+
     SECTION("CNOT RX1") {
         OpsData<TestType> ops_data{
             {"CNOT", "RX"}, // names

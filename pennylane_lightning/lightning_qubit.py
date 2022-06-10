@@ -503,11 +503,6 @@ class LightningQubit(DefaultQubit):
             for t, f in zip(tapes, fns):
                 vjp = f(t)
 
-                if vjp is None:
-                    if reduction == "append":
-                        vjps.append(None)
-                    continue
-
                 if isinstance(reduction, str):
                     getattr(vjps, reduction)(vjp)
                 elif callable(reduction):

@@ -91,7 +91,7 @@ template <typename T> class NamedObs final : public Observable<T> {
     std::vector<size_t> wires_;
     std::vector<T> params_;
 
-    [[nodiscard]] bool isEqual(const Observable<T> &other) const final {
+    [[nodiscard]] bool isEqual(const Observable<T> &other) const override {
         const auto &other_cast = static_cast<const NamedObs<T> &>(other);
 
         return (obs_name_ == other_cast.obs_name_) &&
@@ -127,11 +127,11 @@ template <typename T> class NamedObs final : public Observable<T> {
         return obs_stream.str();
     }
 
-    [[nodiscard]] auto getWires() const -> std::vector<size_t> final {
+    [[nodiscard]] auto getWires() const -> std::vector<size_t> override {
         return wires_;
     }
 
-    void applyInPlace(StateVectorManagedCPU<T> &sv) const final {
+    void applyInPlace(StateVectorManagedCPU<T> &sv) const override {
         sv.applyOperation(obs_name_, wires_, false, params_);
     }
 };
@@ -148,7 +148,7 @@ template <typename T> class HermitianObs final : public Observable<T> {
     MatrixT matrix_;
     std::vector<size_t> wires_;
 
-    [[nodiscard]] bool isEqual(const Observable<T> &other) const final {
+    [[nodiscard]] bool isEqual(const Observable<T> &other) const override {
         const auto &other_cast = static_cast<const HermitianObs<T> &>(other);
 
         return (matrix_ == other_cast.matrix_) && (wires_ == other_cast.wires_);
@@ -170,15 +170,15 @@ template <typename T> class HermitianObs final : public Observable<T> {
 
     [[nodiscard]] auto getMatrix() const -> const MatrixT & { return matrix_; }
 
-    [[nodiscard]] auto getWires() const -> std::vector<size_t> final {
+    [[nodiscard]] auto getWires() const -> std::vector<size_t> override {
         return wires_;
     }
 
-    [[nodiscard]] auto getObsName() const -> std::string final {
+    [[nodiscard]] auto getObsName() const -> std::string override {
         return "Hermitian";
     }
 
-    void applyInPlace(StateVectorManagedCPU<T> &sv) const final {
+    void applyInPlace(StateVectorManagedCPU<T> &sv) const override {
         sv.applyMatrix(matrix_, wires_);
     }
 };
@@ -191,7 +191,7 @@ template <typename T> class TensorProdObs final : public Observable<T> {
     std::vector<std::shared_ptr<Observable<T>>> obs_;
     std::vector<size_t> all_wires_;
 
-    [[nodiscard]] bool isEqual(const Observable<T> &other) const final {
+    [[nodiscard]] bool isEqual(const Observable<T> &other) const override {
         const auto &other_cast = static_cast<const TensorProdObs<T> &>(other);
 
         if (obs_.size() != other_cast.obs_.size()) {
@@ -241,17 +241,17 @@ template <typename T> class TensorProdObs final : public Observable<T> {
      *
      * @return const std::vector<std::vector<size_t>>&
      */
-    [[nodiscard]] auto getWires() const -> std::vector<size_t> final {
+    [[nodiscard]] auto getWires() const -> std::vector<size_t> override {
         return all_wires_;
     }
 
-    void applyInPlace(StateVectorManagedCPU<T> &sv) const final {
+    void applyInPlace(StateVectorManagedCPU<T> &sv) const override {
         for (const auto &ob : obs_) {
             ob->applyInPlace(sv);
         }
     }
 
-    [[nodiscard]] auto getObsName() const -> std::string final {
+    [[nodiscard]] auto getObsName() const -> std::string override {
         using Util::operator<<;
         std::ostringstream obs_stream;
         const auto obs_size = obs_.size();
@@ -342,7 +342,7 @@ template <typename T> class Hamiltonian final : public Observable<T> {
     std::vector<T> coeffs_;
     std::vector<std::shared_ptr<Observable<T>>> obs_;
 
-    [[nodiscard]] bool isEqual(const Observable<T> &other) const final {
+    [[nodiscard]] bool isEqual(const Observable<T> &other) const override {
         const auto &other_cast = static_cast<const Hamiltonian<T> &>(other);
 
         if (coeffs_ != other_cast.coeffs_) {
@@ -385,12 +385,12 @@ template <typename T> class Hamiltonian final : public Observable<T> {
             new Hamiltonian<T>{std::move(arg1), std::move(arg2)});
     }
 
-    void applyInPlace(StateVectorManagedCPU<T> &sv) const final {
+    void applyInPlace(StateVectorManagedCPU<T> &sv) const override {
         detail::HamiltonianApplyInPlace<T, Util::Constant::use_openmp>::run(
             coeffs_, obs_, sv);
     }
 
-    [[nodiscard]] auto getWires() const -> std::vector<size_t> final {
+    [[nodiscard]] auto getWires() const -> std::vector<size_t> override {
         std::unordered_set<size_t> wires;
 
         for (const auto &ob : obs_) {
@@ -402,7 +402,7 @@ template <typename T> class Hamiltonian final : public Observable<T> {
         return all_wires;
     }
 
-    [[nodiscard]] auto getObsName() const -> std::string final {
+    [[nodiscard]] auto getObsName() const -> std::string override {
         using Util::operator<<;
         std::ostringstream ss;
         ss << "Hamiltonian: { 'coeffs' : " << coeffs_ << ", 'observables' : [";
