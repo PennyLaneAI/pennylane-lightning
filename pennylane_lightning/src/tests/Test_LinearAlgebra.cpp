@@ -561,6 +561,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
     }
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
     SECTION("CFTranspose") {
         SECTION("Simple Matrix") {
