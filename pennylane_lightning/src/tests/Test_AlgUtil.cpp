@@ -56,3 +56,18 @@ TEMPLATE_TEST_CASE("applyObservables", "[Algorithms]", float, double) {
             TestException);
     }
 }
+
+TEMPLATE_TEST_CASE("applyOperationsAdj", "[Algorithms]", float, double) {
+    using PrecisionT = TestType;
+
+    const size_t num_qubits = 8;
+
+    SECTION("Exceptions are rethrown correctly") {
+        std::vector<StateVectorManagedCPU<PrecisionT>> states(
+            8, StateVectorManagedCPU<PrecisionT>(num_qubits));
+
+        OpsData<PrecisionT> ops_data{{"InvalidOpsName"}, {{}}, {{0, 1}}, {{}}};
+
+        REQUIRE_THROWS(applyOperationsAdj<PrecisionT>(states, ops_data, 0));
+    }
+}

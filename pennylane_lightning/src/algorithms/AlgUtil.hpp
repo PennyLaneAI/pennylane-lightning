@@ -145,9 +145,9 @@ inline void applyOperationsAdj(std::vector<StateVectorManagedCPU<T>> &states,
     {
         #pragma omp for
     #endif
-        for (size_t obs_idx = 0; obs_idx < num_states; obs_idx++) {
+        for (size_t st_idx = 0; st_idx < num_states; st_idx++) {
             try {
-                applyOperationAdj(states[obs_idx], operations, op_idx);
+                applyOperationAdj(states[st_idx], operations, op_idx);
             } catch (...) {
                 #if defined(_OPENMP)
                     #pragma omp critical
