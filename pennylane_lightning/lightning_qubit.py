@@ -388,9 +388,11 @@ class LightningQubit(DefaultQubit):
 
     def vjp(self, measurements, dy, starting_state=None, use_device_state=False):
         """Generate the processing function required to compute the vector-Jacobian products of a tape.
+
         Args:
             measurements (list): List of measurement processes for vector-Jacobian product
             dy (tensor_like): Gradient-output vector. Must have shape matching the output shape of the corresponding tape, i.e. number of measrurements if the return type is expectation or :math:`2^N` if the return type is statevector
+
         Keyword Args:
             starting_state (tensor_like): post-forward pass state to start execution with. It should be
                 complex-valued. Takes precedence over ``use_device_state``.

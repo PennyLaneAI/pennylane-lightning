@@ -39,8 +39,6 @@ namespace Pennylane::Algorithms {
  * @param apply_operations Assume the given state is an input state and apply
  * operations if true
  * @return a vector length of the number of trainable parameters
- *
- * TODO: change pointer parameters to std::span in C++20
  */
 template <typename PrecisionT>
 void statevectorVJP(std::span<std::complex<PrecisionT>> jac,

@@ -53,6 +53,7 @@ auto createRandomOps(RandomEngine &re, size_t length, size_t wires)
     return {ops_names, ops_params, ops_wires, ops_inverses, {{}}};
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
     using std::sqrt;
 
