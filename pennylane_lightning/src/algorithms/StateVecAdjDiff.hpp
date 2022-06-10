@@ -33,6 +33,7 @@ namespace Pennylane::Algorithms {
  * Thus the result vector is length :math:`m`.
  * @endrst
  *
+ * @param jac Preallocated vector for Jacobian data results.
  * @param jd Jacobian data
  * @param vec A cotangent vector of size 2^n
  * @param apply_operations Assume the given state is an input state and apply
@@ -42,9 +43,9 @@ namespace Pennylane::Algorithms {
  * TODO: change pointer parameters to std::span in C++20
  */
 template <typename PrecisionT>
-void statevectorVJP(std::vector<std::complex<PrecisionT>> &jac,
+void statevectorVJP(std::span<std::complex<PrecisionT>> jac,
                     const JacobianData<PrecisionT> &jd,
-                    const std::span<std::complex<PrecisionT>> &dy,
+                    std::span<const std::complex<PrecisionT>> dy,
                     bool apply_operations = false) {
     using ComplexPrecisionT = std::complex<PrecisionT>;
 
@@ -53,6 +54,7 @@ void statevectorVJP(std::vector<std::complex<PrecisionT>> &jac,
     if (!jd.hasTrainableParams()) {
         return;
     }
+
     const OpsData<PrecisionT> &ops = jd.getOperations();
     const std::vector<std::string> &ops_name = ops.getOpsName();
 
@@ -60,7 +62,9 @@ void statevectorVJP(std::vector<std::complex<PrecisionT>> &jac,
     const size_t num_param_ops = ops.getNumParOps();
     const auto &trainable_params = jd.getTrainableParams();
 
-    assert(jac.size() == trainable_params.size());
+    PL_ABORT_IF_NOT(jac.size() == trainable_params.size(),
+                    "The size of preallocated jacobian must be same as "
+                    "the number of trainable parameters.");
 
     // Create $U_{1:p}\vert \lambda \rangle$
     StateVectorManagedCPU<PrecisionT> lambda(jd.getPtrStateVec(),

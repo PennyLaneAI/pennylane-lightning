@@ -420,7 +420,7 @@ class LightningQubit(DefaultQubit):
 
             if np.iscomplexobj(dy):
                 raise ValueError(
-                    "The vjp method only works with real-valued dy when the tape is returning an expectation value"
+                    "The vjp method only works with a real-valued dy when the tape is returning an expectation value"
                 )
 
             ham = qml.Hamiltonian(dy, [m.obs for m in measurements])

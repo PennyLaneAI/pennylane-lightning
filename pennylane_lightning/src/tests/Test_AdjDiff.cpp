@@ -45,12 +45,67 @@ TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=Z", "[Algorithms]") {
             JacobianData<double> tape{
                 num_params, psi.getLength(), psi.getData(), {obs}, ops, tp};
 
-            adjointJacobian(jacobian, tape, true);
+            adjointJacobian(std::span{jacobian}, tape, true);
 
             CAPTURE(jacobian);
             CHECK(-sin(p) == Approx(jacobian[0]));
         }
     }
+}
+
+TEST_CASE("Algorithms::adjointJacobian without trainable params",
+          "[Algorithms]") {
+    const std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+    const std::vector<size_t> tp{};
+    {
+        const size_t num_qubits = 1;
+        const size_t num_params = 3;
+        const size_t num_obs = 1;
+        const auto obs = std::make_shared<NamedObs<double>>(
+            "PauliZ", std::vector<size_t>{0});
+        std::vector<double> jacobian(num_obs * tp.size(), 0);
+
+        for (const auto &p : param) {
+            auto ops = OpsData<double>({"RX"}, {{p}}, {{0}}, {false});
+
+            std::vector<std::complex<double>> cdata(1U << num_qubits);
+            cdata[0] = std::complex<double>{1, 0};
+
+            StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
+
+            JacobianData<double> tape{
+                num_params, psi.getLength(), psi.getData(), {obs}, ops, tp};
+
+            REQUIRE_NOTHROW(adjointJacobian(std::span{jacobian}, tape, true));
+        }
+    }
+}
+
+TEST_CASE(
+    "Algorithms::adjointJacobian throws an exception when size mismatches",
+    "[Algorithms]") {
+    const std::vector<size_t> tp{0, 1};
+    const size_t num_qubits = 1;
+    const size_t num_params = 3;
+    const size_t num_obs = 1;
+    const auto obs =
+        std::make_shared<NamedObs<double>>("PauliZ", std::vector<size_t>{0});
+    std::vector<double> jacobian(num_obs * tp.size() - 1, 0);
+
+    auto ops = OpsData<double>({"RX"}, {{0.742}}, {{0}}, {false});
+
+    std::vector<std::complex<double>> cdata(1U << num_qubits);
+    cdata[0] = std::complex<double>{1, 0};
+
+    StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
+
+    JacobianData<double> tape{
+        num_params, psi.getLength(), psi.getData(), {obs}, ops, tp};
+
+    PL_REQUIRE_THROWS_MATCHES(
+        adjointJacobian(std::span{jacobian}, tape, true),
+        Util::LightningException,
+        "The size of preallocated jacobian must be same as");
 }
 
 TEST_CASE("Algorithms::adjointJacobian Op=RY, Obs=X", "[Algorithms]") {
@@ -76,7 +131,7 @@ TEST_CASE("Algorithms::adjointJacobian Op=RY, Obs=X", "[Algorithms]") {
             JacobianData<double> tape{
                 num_params, psi.getLength(), psi.getData(), {obs}, ops, tp};
 
-            adjointJacobian(jacobian, tape, true);
+            adjointJacobian(std::span{jacobian}, tape, true);
 
             CAPTURE(jacobian);
             CHECK(cos(p) == Approx(jacobian[0]).margin(1e-7));
@@ -107,7 +162,7 @@ TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=[Z,Z]", "[Algorithms]") {
         JacobianData<double> tape{
             num_params, psi.getLength(), psi.getData(), {obs1, obs2}, ops, tp};
 
-        adjointJacobian(jacobian, tape, true);
+        adjointJacobian(std::span{jacobian}, tape, true);
 
         CAPTURE(jacobian);
         CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
@@ -144,7 +199,7 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z]",
                                   psi.getData(), {obs1, obs2, obs3},
                                   ops,           tp};
 
-        adjointJacobian(jacobian, tape, true);
+        adjointJacobian(std::span{jacobian}, tape, true);
 
         CAPTURE(jacobian);
         CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
@@ -185,7 +240,7 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z], "
                                   psi.getData(), {obs1, obs2, obs3},
                                   ops,           t_params};
 
-        adjointJacobian(jacobian, tape, true);
+        adjointJacobian(std::span{jacobian}, tape, true);
 
         CAPTURE(jacobian);
         CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
@@ -223,7 +278,7 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
         JacobianData<double> tape{
             num_params, psi.getLength(), psi.getData(), {obs}, ops, tp};
 
-        adjointJacobian(jacobian, tape, true);
+        adjointJacobian(std::span{jacobian}, tape, true);
 
         CAPTURE(jacobian);
 
@@ -270,7 +325,7 @@ TEST_CASE("Algorithms::adjointJacobian Op=Mixed, Obs=[XXX]", "[Algorithms]") {
         JacobianData<double> tape{
             num_params, psi.getLength(), psi.getData(), {obs}, ops, tp};
 
-        adjointJacobian(jacobian, tape, true);
+        adjointJacobian(std::span{jacobian}, tape, true);
 
         CAPTURE(jacobian);
 
@@ -325,7 +380,7 @@ TEST_CASE("Algorithms::adjointJacobian Decomposed Rot gate, non "
             JacobianData<double> tape{
                 num_params, psi.getLength(), psi.getData(), {obs}, ops, tp};
 
-            adjointJacobian(jacobian, tape, true);
+            adjointJacobian(std::span{jacobian}, tape, true);
 
             CAPTURE(theta);
             CAPTURE(jacobian);
@@ -385,7 +440,7 @@ TEST_CASE("Algorithms::adjointJacobian Mixed Ops, Obs and TParams",
             t_params.size(), psi.getLength(), psi.getData(), {obs}, ops,
             t_params};
 
-        adjointJacobian(jacobian, tape, true);
+        adjointJacobian(std::span{jacobian}, tape, true);
 
         std::vector<double> expected{-0.71429188, 0.04998561, -0.71904837};
         // Computed with PennyLane using default.qubit
@@ -420,7 +475,7 @@ TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=Ham[Z0+Z1]", "[Algorithms]") {
         JacobianData<double> tape{
             num_params, psi.getLength(), psi.getData(), {ham}, ops, tp};
 
-        adjointJacobian(jacobian, tape, true);
+        adjointJacobian(std::span{jacobian}, tape, true);
 
         CAPTURE(jacobian);
         CHECK(-0.3 * sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
@@ -459,7 +514,7 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=Ham[Z0+Z1+Z2], "
         JacobianData<double> tape{
             num_params, psi.getLength(), psi.getData(), {ham}, ops, t_params};
 
-        adjointJacobian(jacobian, tape, true);
+        adjointJacobian(std::span{jacobian}, tape, true);
 
         CAPTURE(jacobian);
         CHECK((-0.47 * sin(param[0]) == Approx(jacobian[0]).margin(1e-7)));
@@ -501,8 +556,8 @@ TEST_CASE("Algorithms::adjointJacobian Test HermitianObs", "[Algorithms]") {
         JacobianData<double> tape2{
             num_params, psi.getLength(), psi.getData(), {obs2}, ops, t_params};
 
-        adjointJacobian(jacobian1, tape1, true);
-        adjointJacobian(jacobian2, tape2, true);
+        adjointJacobian(std::span{jacobian1}, tape1, true);
+        adjointJacobian(std::span{jacobian2}, tape2, true);
 
         CHECK((jacobian1 == PLApprox(jacobian2).margin(1e-7)));
     }

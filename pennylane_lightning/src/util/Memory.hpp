@@ -67,6 +67,9 @@ inline void alignedFree(void *p) {
 /**
  * @brief C++ Allocator class for aligned memory.
  *
+ * C++17's std::pmr::polymorphic_allocator substitutes this whole class.
+ * However, clang (even the latest version 13) does not support pmr yet.
+ *
  * @tparam T Datatype to allocate
  */
 template <class T> class AlignedAllocator {

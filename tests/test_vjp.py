@@ -80,6 +80,61 @@ class TestVectorJacobianProduct:
 
         assert np.allclose(vjp1, vjp2, atol=tol, rtol=0)
 
+    def test_multiple_measurements(self, tol, dev):
+        """Tests provides correct answer when provided starting state."""
+        x, y, z = [0.5, 0.3, -0.7]
+
+        with qml.tape.QuantumTape() as tape1:
+            qml.RX(0.4, wires=[0])
+            qml.Rot(x, y, z, wires=[0])
+            qml.RY(-0.2, wires=[0])
+            qml.expval(qml.PauliX(0))
+            qml.expval(qml.PauliY(1))
+            qml.expval(qml.PauliZ(1))
+
+        dy = np.array([1.0, 2.0, 3.0])
+        tape1.trainable_params = {1, 2, 3}
+
+        with qml.tape.QuantumTape() as tape2:
+            ham = qml.Hamiltonian(dy, [qml.PauliX(0), qml.PauliY(1), qml.PauliY(1)])
+            qml.RX(0.4, wires=[0])
+            qml.Rot(x, y, z, wires=[0])
+            qml.RY(-0.2, wires=[0])
+            qml.expval(ham)
+
+        tape2.trainable_params = {1, 2, 3}
+
+        fn1 = dev.vjp(tape1.measurements, dy)
+        vjp1 = fn1(tape1)
+
+        vjp2 = dev.adjoint_jacobian(tape2)
+
+        assert np.allclose(vjp1, vjp2, atol=tol, rtol=0)
+
+    def test_wrong_dy_expval(self, tol, dev):
+        """Tests raise an exception when dy is incorrect"""
+        x, y, z = [0.5, 0.3, -0.7]
+
+        with qml.tape.QuantumTape() as tape1:
+            qml.RX(0.4, wires=[0])
+            qml.Rot(x, y, z, wires=[0])
+            qml.RY(-0.2, wires=[0])
+            qml.expval(qml.PauliX(0))
+            qml.expval(qml.PauliY(1))
+            qml.expval(qml.PauliZ(1))
+
+        dy1 = np.array([1.0, 2.0])
+        tape1.trainable_params = {1, 2, 3}
+
+        with pytest.raises(
+            ValueError, match="Number of observables in the tape must be the same as"
+        ):
+            dev.vjp(tape1.measurements, dy1)
+
+        dy2 = np.array([1.0 + 3.0j, 0.3 + 2.0j, 0.5 + 0.1j])
+        with pytest.raises(ValueError, match="The vjp method only works with a real-valued dy"):
+            dev.vjp(tape1.measurements, dy2)
+
     def test_not_expval(self, dev):
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
         expectation values"""
@@ -109,9 +164,6 @@ class TestVectorJacobianProduct:
         ):
             dev.vjp(tape.measurements, dy)(tape)
 
-    from pennylane_lightning import LightningQubit as lq
-
-    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_unsupported_op(self, dev):
         """Test if a QuantumFunctionError is raised for an unsupported operation, i.e.,
         multi-parameter operations that are not qml.Rot"""
@@ -127,7 +179,6 @@ class TestVectorJacobianProduct:
         ):
             dev.vjp(tape.measurements, dy)(tape)
 
-    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_proj_unsupported(self, dev):
         """Test if a QuantumFunctionError is raised for a Projector observable"""
 
@@ -151,7 +202,6 @@ class TestVectorJacobianProduct:
         ):
             dev.vjp(tape.measurements, dy)(tape)
 
-    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_hermitian_expectation(self, dev, tol):
         obs = np.array([[1, 0], [0, -1]], dtype=dev.C_DTYPE, requires_grad=False)
         dy = np.array([0.8])
@@ -164,7 +214,6 @@ class TestVectorJacobianProduct:
             vjp = fn(tape)
             assert np.allclose(vjp[0], -0.8 * np.sin(x), atol=tol)
 
-    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_hermitian_tensor_expectation(self, dev, tol):
         obs = np.array([[1, 0], [0, -1]], dtype=dev.C_DTYPE, requires_grad=False)
         dy = np.array([0.8])
@@ -176,7 +225,6 @@ class TestVectorJacobianProduct:
                 qml.RY(x, wires=(0,))
             assert np.allclose(fn(tape), -0.8 * np.sin(x), atol=tol)
 
-    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_statevector_ry(self, dev, tol):
         dy = np.array(
             [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
@@ -194,7 +242,30 @@ class TestVectorJacobianProduct:
             assert np.allclose(fn2(tape), 0.0, atol=tol)
             assert np.allclose(fn3(tape), 0.0, atol=tol)
 
-    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    def test_wrong_dy_statevector(self, tol, dev):
+        """Tests raise an exception when dy is incorrect"""
+        x, y, z = [0.5, 0.3, -0.7]
+
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(0.4, wires=[0])
+            qml.Rot(x, y, z, wires=[0])
+            qml.RY(-0.2, wires=[0])
+            qml.state()
+
+        tape.trainable_params = {1, 2, 3}
+
+        dy1 = np.ones(3, dtype=dev.C_DTYPE)
+
+        with pytest.raises(
+            ValueError, match="Size of the provided vector dy must be the same as the size of"
+        ):
+            dev.vjp(tape.measurements, dy1)
+
+        dy2 = np.ones(4, dtype=dev.R_DTYPE)
+
+        with pytest.warns(UserWarning, match="The vjp method only works with complex-valued dy"):
+            dev.vjp(tape.measurements, dy2)
+
     def test_statevector_complex_circuit(self, dev, tol):
         dy = np.array(
             [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
@@ -275,7 +346,7 @@ class TestVectorJacobianProduct:
 
         assert len(vjp) == 0
 
-    def test_no_trainable_parameters_(self, dev):
+    def test_no_trainable_parameters(self, dev):
         """A tape with no trainable parameters will simply return None"""
         x = 0.4
 

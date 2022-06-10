@@ -24,6 +24,7 @@
 
 #include <complex>
 #include <numeric>
+#include <span>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -50,10 +51,8 @@ namespace Pennylane::Algorithms {
  * prior to calculation.
  */
 template <typename T>
-void adjointJacobian(std::vector<T> &jac, const JacobianData<T> &jd,
+void adjointJacobian(std::span<T> jac, const JacobianData<T> &jd,
                      bool apply_operations = false) {
-    PL_ABORT_IF(!jd.hasTrainableParams(), "No trainable parameters provided.");
-
     const OpsData<T> &ops = jd.getOperations();
     const std::vector<std::string> &ops_name = ops.getOpsName();
 
@@ -64,6 +63,15 @@ void adjointJacobian(std::vector<T> &jac, const JacobianData<T> &jd,
     const std::vector<size_t> &tp = jd.getTrainableParams();
     const size_t tp_size = tp.size();
     const size_t num_param_ops = ops.getNumParOps();
+
+    if (!jd.hasTrainableParams()) {
+        return;
+    }
+
+    PL_ABORT_IF_NOT(jac.size() == tp_size * num_observables,
+                    "The size of preallocated jacobian must be same as "
+                    "the number of trainable parameters times the number of "
+                    "observables provided.");
 
     // Track positions within par and non-par operations
     size_t trainableParamNumber = tp_size - 1;
@@ -139,6 +147,9 @@ void adjointJacobian(std::vector<T> &jac, const JacobianData<T> &jd,
         }
         applyOperationsAdj(H_lambda, ops, static_cast<size_t>(op_idx));
     }
-    jac = Util::Transpose(jac, tp_size, num_observables);
+    const auto jac_transpose =
+        Util::Transpose(std::span<const T>{jac}, tp_size, num_observables);
+    std::copy(std::begin(jac_transpose), std::end(jac_transpose),
+              std::begin(jac));
 }
 } // namespace Pennylane::Algorithms

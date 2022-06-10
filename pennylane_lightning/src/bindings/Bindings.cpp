@@ -320,7 +320,7 @@ void registerAlgorithms(py::module_ &m) {
                                               operations,
                                               trainableParams};
 
-            adjointJacobian(jac, jd);
+            adjointJacobian(std::span{jac}, jd);
 
             return py::array_t<ParamT>(py::cast(jac));
         },
@@ -346,9 +346,10 @@ void registerAlgorithms(py::module_ &m) {
             const auto buffer = dy.request();
 
             statevectorVJP<PrecisionT>(
-                vjp, jd,
-                std::span{static_cast<std::complex<PrecisionT> *>(buffer.ptr),
-                          static_cast<size_t>(buffer.size)});
+                std::span{vjp}, jd,
+                std::span{
+                    static_cast<const std::complex<PrecisionT> *>(buffer.ptr),
+                    static_cast<size_t>(buffer.size)});
 
             return py::array_t<std::complex<PrecisionT>>(py::cast(vjp));
         },

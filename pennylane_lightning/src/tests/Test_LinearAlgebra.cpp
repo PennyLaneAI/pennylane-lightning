@@ -615,10 +615,56 @@ TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
 
             CHECK(mat_t == approx(mat_t_exp));
         }
+    }
+    SECTION("Transpose") {
+        SECTION("Simple Matrix") {
+            for (size_t m = 2; m < 8; m++) {
+                std::vector<std::complex<TestType>> mat(m * m, {0, 0});
+                for (size_t i = 0; i < m; i++) {
+                    mat[i * m + i] = {1, 1};
+                }
+                std::vector<std::complex<TestType>> mat_t =
+                    Util::Transpose(mat, m, m);
+
+                CAPTURE(mat_t);
+                CAPTURE(mat);
+
+                CHECK(mat_t == approx(mat).margin(1e-7));
+            }
+        }
+        SECTION("Random Complex") {
+            std::vector<std::complex<TestType>> mat{
+                {0.417876, 0.27448},   {0.601209, 0.723548},
+                {0.781624, 0.538222},  {0.0597232, 0.27755},
+                {0.0431741, 0.593319}, {0.224124, 0.130335},
+                {0.237877, 0.01557},   {0.931634, 0.786367},
+                {0.378397, 0.894381},  {0.840747, 0.889789},
+                {0.530623, 0.463644},  {0.868736, 0.760685},
+                {0.258175, 0.836569},  {0.495012, 0.667726},
+                {0.298962, 0.384992},  {0.659472, 0.232696}};
+            std::vector<std::complex<TestType>> mat_t_exp{
+                {0.417876, 0.27448},  {0.0431741, 0.593319},
+                {0.378397, 0.894381}, {0.258175, 0.836569},
+                {0.601209, 0.723548}, {0.224124, 0.130335},
+                {0.840747, 0.889789}, {0.495012, 0.667726},
+                {0.781624, 0.538222}, {0.237877, 0.01557},
+                {0.530623, 0.463644}, {0.298962, 0.384992},
+                {0.0597232, 0.27755}, {0.931634, 0.786367},
+                {0.868736, 0.760685}, {0.659472, 0.232696}};
+            std::vector<std::complex<TestType>> mat_t =
+                Util::Transpose(mat, 4, 4);
+
+            CAPTURE(mat_t);
+            CAPTURE(mat_t_exp);
+
+            CHECK(mat_t == approx(mat_t_exp));
+        }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
             std::vector<TestType> mat(2 * 3, {1.0});
-            CHECK_THROWS_AS(Util::Transpose(mat, 2, 2), std::invalid_argument);
+            CHECK_THROWS_AS(
+                Util::Transpose(std::span<const TestType>{mat}, 2, 2),
+                std::invalid_argument);
             CHECK_THROWS_WITH(
                 Util::Transpose(mat, 2, 2),
                 Contains(

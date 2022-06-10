@@ -18,9 +18,9 @@
 
 // explicit template instantiations
 template void Pennylane::Algorithms::statevectorVJP<float>(
-    std::vector<std::complex<float>> &jac, const JacobianData<float> &jd,
-    const std::span<std::complex<float>> &dy, bool apply_operations);
+    std::span<std::complex<float>> jac, const JacobianData<float> &jd,
+    std::span<const std::complex<float>> dy, bool apply_operations);
 
 template void Pennylane::Algorithms::statevectorVJP<double>(
-    std::vector<std::complex<double>> &jac, const JacobianData<double> &jd,
-    const std::span<std::complex<double>> &dy, bool apply_operations);
+    std::span<std::complex<double>> jac, const JacobianData<double> &jd,
+    std::span<const std::complex<double>> dy, bool apply_operations);

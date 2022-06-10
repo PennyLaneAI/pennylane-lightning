@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <numeric>
 #include <random>
+#include <span>
 #include <vector>
 
 /// @cond DEV
@@ -343,8 +344,8 @@ inline void matrixVecProd(const std::complex<T> *mat,
  * nthreads = 1, bool transpose = false)
  */
 template <class T>
-inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
-                          const std::vector<std::complex<T>> v_in, size_t m,
+inline auto matrixVecProd(const std::vector<std::complex<T>> &mat,
+                          const std::vector<std::complex<T>> &v_in, size_t m,
                           size_t n, Trans transpose = Trans::NoTranspose)
     -> std::vector<std::complex<T>> {
     if (mat.size() != m * n) {
@@ -467,15 +468,16 @@ inline static void CFTranspose(const std::complex<T> *mat,
  * @param n Number of columns of `mat`.
  * @return mat transpose of shape n * m.
  */
-template <class T>
-inline auto Transpose(const std::vector<std::complex<T>> &mat, size_t m,
-                      size_t n) -> std::vector<std::complex<T>> {
+template <class T, class Allocator = std::allocator<T>>
+inline auto Transpose(std::span<const T> mat, size_t m, size_t n,
+                      Allocator allocator = std::allocator<T>())
+    -> std::vector<T, Allocator> {
     if (mat.size() != m * n) {
         throw std::invalid_argument(
             "Invalid number of rows and columns for the input matrix");
     }
 
-    std::vector<std::complex<T>> mat_t(n * m);
+    std::vector<T, Allocator> mat_t(n * m, allocator);
     CFTranspose(mat.data(), mat_t.data(), m, n, 0, m, 0, n);
     return mat_t;
 }
@@ -484,23 +486,19 @@ inline auto Transpose(const std::vector<std::complex<T>> &mat, size_t m,
  * @brief Transpose a matrix of shape m * n to n * m using the
  * best available method.
  *
+ * This version may be merged with the above one when std::ranges is well
+ * supported.
+ *
  * @tparam T Floating point precision type.
  * @param mat Row-wise flatten matrix of shape m * n.
  * @param m Number of rows of `mat`.
  * @param n Number of columns of `mat`.
  * @return mat transpose of shape n * m.
  */
-template <class T>
-inline auto Transpose(const std::vector<T> &mat, size_t m, size_t n)
-    -> std::vector<T> {
-    if (mat.size() != m * n) {
-        throw std::invalid_argument(
-            "Invalid number of rows and columns for the input matrix");
-    }
-
-    std::vector<T> mat_t(n * m);
-    CFTranspose(mat.data(), mat_t.data(), m, n, 0, m, 0, n);
-    return mat_t;
+template <class T, class Allocator>
+inline auto Transpose(const std::vector<T, Allocator> &mat, size_t m, size_t n)
+    -> std::vector<T, Allocator> {
+    return Transpose(std::span<const T>{mat}, m, n, mat.get_allocator());
 }
 
 /**
