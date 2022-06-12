@@ -12,6 +12,7 @@
 #include <catch2/catch.hpp>
 
 #include <cmath>
+#include <numbers>
 
 using namespace Pennylane;
 using namespace Pennylane::Util;
@@ -55,19 +56,23 @@ auto createRandomOps(RandomEngine &re, size_t length, size_t wires)
 
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
+    using std::cos;
+    using std::sin;
     using std::sqrt;
 
-    constexpr static auto isqrt2 = INVSQRT2<TestType>();
-    using ComplexPrecisionT = std::complex<TestType>;
+    using PrecisionT = TestType;
+    using ComplexPrecisionT = std::complex<PrecisionT>;
+
+    constexpr static auto isqrt2 = INVSQRT2<PrecisionT>();
 
     SECTION("Do nothing if the tape does not have trainable parameters") {
         std::vector<ComplexPrecisionT> vjp(1);
         OpsData<TestType> ops_data{
-            {"CNOT", "RX"}, // names
-            {{}, {M_PI}},   // params
-            {{0, 1}, {1}},  // wires
-            {false, false}, // inverses
-            {}              // matrices
+            {"CNOT", "RX"},   // names
+            {{}, {M_PI / 7}}, // params
+            {{0, 1}, {1}},    // wires
+            {false, false},   // inverses
+            {}                // matrices
         };
 
         auto dy = std::vector<ComplexPrecisionT>(4);
@@ -79,9 +84,10 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
     }
 
     SECTION("CNOT RX1") {
+        const PrecisionT theta = std::numbers::pi_v<PrecisionT> / 7;
         OpsData<TestType> ops_data{
             {"CNOT", "RX"}, // names
-            {{}, {M_PI}},   // params
+            {{}, {theta}},  // params
             {{0, 1}, {1}},  // wires
             {false, false}, // inverses
             {}              // matrices
@@ -90,10 +96,10 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
         auto dy = std::vector<ComplexPrecisionT>(4);
 
         std::vector<std::vector<ComplexPrecisionT>> expected = {
-            {{-isqrt2 / 2.0, 0.0}},
-            {{0.0, 0.0}},
-            {{0.0, 0.0}},
-            {{-isqrt2 / 2.0, 0.0}},
+            {{-isqrt2 / PrecisionT{2.0} * sin(theta / 2), 0.0}},
+            {{0.0, -isqrt2 / PrecisionT{2.0} * cos(theta / 2)}},
+            {{0.0, -isqrt2 / PrecisionT{2.0} * cos(theta / 2)}},
+            {{-isqrt2 / PrecisionT{2.0} * sin(theta / 2), 0.0}},
         };
 
         SECTION("with apply_operations = true") {
@@ -114,7 +120,10 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
 
         SECTION("with apply_operations = false") {
             std::vector<std::complex<TestType>> final_st{
-                {0.0, 0.0}, {0.0, -isqrt2}, {0.0, -isqrt2}, {0.0, 0.0}};
+                {cos(theta / 2) * isqrt2, 0.0},
+                {0.0, -isqrt2 * sin(theta / 2)},
+                {0.0, -isqrt2 * sin(theta / 2)},
+                {cos(theta / 2) * isqrt2, 0.0}};
             JacobianData<TestType> jd{1, 4, final_st.data(), {}, ops_data, {0}};
 
             for (size_t i = 0; i < 4; i++) {
@@ -143,8 +152,6 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
             {}       // matrices
         };
 
-        auto dy = std::vector<std::complex<TestType>>(4);
-
         std::vector<std::complex<TestType>> expected_der0 = {
             {0.0, -isqrt2 / 2.0},
             {0.0, 0.0},
@@ -165,6 +172,9 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
             JacobianData<TestType> jd{
                 1, 4, ini_st.data(), {}, ops_data, {1, 2} // trainable params
             };
+
+            auto dy = std::vector<std::complex<TestType>>(4);
+
             for (size_t i = 0; i < 4; i++) {
                 std::fill(dy.begin(), dy.end(),
                           std::complex<TestType>{0.0, 0.0});
@@ -185,6 +195,9 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
             JacobianData<TestType> jd{
                 4, 4, final_st.data(), {}, ops_data, {1, 2} // trainable params
             };
+
+            auto dy = std::vector<std::complex<TestType>>(4);
+
             for (size_t i = 0; i < 4; i++) {
                 std::fill(dy.begin(), dy.end(),
                           std::complex<TestType>{0.0, 0.0});
@@ -197,6 +210,46 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
                 REQUIRE(vjp[1] == approx(expected_der1[i]).margin(1e-5));
             }
         }
+    }
+
+    SECTION("Test complex dy") {
+        OpsData<TestType> ops_data1{
+            {"CNOT", "RX"},   // names
+            {{}, {M_PI / 7}}, // params
+            {{0, 1}, {1}},    // wires
+            {false, false},   // inverses
+            {}                // matrices
+        };
+
+        auto dy1 = std::vector<ComplexPrecisionT>{
+            {0.4, 0.4}, {0.4, 0.4}, {0.4, 0.4}, {0.4, 0.4}};
+
+        OpsData<TestType> ops_data2{
+            {"CNOT", "RX"},    // names
+            {{}, {-M_PI / 7}}, // params
+            {{0, 1}, {1}},     // wires
+            {false, false},    // inverses
+            {}                 // matrices
+        };
+
+        auto dy2 = std::vector<ComplexPrecisionT>{
+            {0.4, -0.4}, {0.4, -0.4}, {0.4, -0.4}, {0.4, -0.4}};
+        std::vector<ComplexPrecisionT> ini_st{
+            {isqrt2, 0.0}, {0.0, 0.0}, {isqrt2, 0.0}, {0.0, 0.0}};
+
+        JacobianData<TestType> jd1{1, 4, ini_st.data(), {}, ops_data1, {0}};
+        JacobianData<TestType> jd2{1, 4, ini_st.data(), {}, ops_data2, {0}};
+
+        std::vector<ComplexPrecisionT> vjp1(1);
+        std::vector<ComplexPrecisionT> vjp2(1);
+
+        statevectorVJP(std::span{vjp1}, jd1,
+                       std::span<const ComplexPrecisionT>{dy1}, true);
+
+        statevectorVJP(std::span{vjp2}, jd2,
+                       std::span<const ComplexPrecisionT>{dy2}, true);
+
+        REQUIRE(vjp1[0] == approx(-std::conj(vjp2[0])));
     }
 
     SECTION(

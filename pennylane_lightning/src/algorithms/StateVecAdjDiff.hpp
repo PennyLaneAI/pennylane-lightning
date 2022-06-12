@@ -26,8 +26,19 @@ namespace Pennylane::Algorithms {
  * @brief Compute vector Jacobian product for a statevector Jacobian.
  *
  * @rst
- * Product of statevector Jacobian :math:`J_{ij} = \partial_j \psi(i)` and
- * a vector. Note that :math:`J` is :math:`2^n \times m` matrix where
+ * Product of statevector Jacobian :math:`J_{ij} = \partial_{\theta_j}
+ * \psi_{\pmb{\theta}}(i)` and a vector, i.e. this function returns
+ * :math:`w = v^\dagger J`. This is
+ * equivalent to
+ *
+ * .. math::
+ *
+ *     w_j = \langle v | \partial_{\theta_j} \psi_{\pmb{\theta}} \rangle
+ *
+ * where :math:`\pmb{\theta}=(\theta_1, \theta_2, \cdots)` is a list of all
+ * parameters and $v = dy$.
+ *
+ * Note that :math:`J` is :math:`2^n \times m` matrix where
  * :math:`n` is the number of qubits and :math:`m` is the number of
  * trainable parameters in the tape.
  * Thus the result vector is length :math:`m`.
@@ -119,5 +130,4 @@ void statevectorVJP(std::span<std::complex<PrecisionT>> jac,
         applyOperationAdj(mu, ops, static_cast<size_t>(op_idx));
     }
 };
-
 } // namespace Pennylane::Algorithms
