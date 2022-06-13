@@ -397,7 +397,14 @@ class LightningQubit(DefaultQubit):
             vjp_f = dev.vjp([qml.state()], dy)
             vjp = vjp_f(tape)
 
-        computes
+        computes :math:`w = (w_1,\cdots,w_m)` where
+
+        .. math::
+
+            w_k = \langle v| \frac{\partial}{\partial \theta_k} | \psi_{\pmb{\theta}} \rangle.
+
+        Here, :math:`m` is the total number of trainable parameters, :math:`\pmb{\theta}` is the vector of trainable parameters and :math:`\psi_{\pmb{\theta}}`
+        is the output quantum state.
 
         Args:
             measurements (list): List of measurement processes for vector-Jacobian product. Now it must be expectation values or a quantum state.
