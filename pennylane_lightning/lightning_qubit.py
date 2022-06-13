@@ -401,9 +401,9 @@ class LightningQubit(DefaultQubit):
 
         .. math::
 
-            w_k = \langle v| \frac{\partial}{\partial \theta_k} | \psi_{\pmb{\theta}} \rangle.
+            w_k = \\langle v| \\frac{\partial}{\partial \\theta_k} | \psi_{\pmb{\\theta}} \\rangle.
 
-        Here, :math:`m` is the total number of trainable parameters, :math:`\pmb{\theta}` is the vector of trainable parameters and :math:`\psi_{\pmb{\theta}}`
+        Here, :math:`m` is the total number of trainable parameters, :math:`\pmb{\\theta}` is the vector of trainable parameters and :math:`\psi_{\pmb{\\theta}}`
         is the output quantum state.
 
         Args:
