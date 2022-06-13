@@ -1,5 +1,3 @@
-#include "VectorStream.hpp"
-
 #include "AdjointDiff.hpp"
 #include "AlgUtil.hpp"
 #include "Constant.hpp"

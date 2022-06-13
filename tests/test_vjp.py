@@ -81,7 +81,7 @@ class TestVectorJacobianProduct:
         assert np.allclose(vjp1, vjp2, atol=tol, rtol=0)
 
     def test_multiple_measurements(self, tol, dev):
-        """Tests provides correct answer when provided starting state."""
+        """Tests provides correct answer when provided multiple measurements."""
         x, y, z = [0.5, 0.3, -0.7]
 
         with qml.tape.QuantumTape() as tape1:
