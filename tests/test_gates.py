@@ -42,6 +42,7 @@ def op(op_name):
         "CSWAP": qml.CSWAP(wires=[0, 1, 2]),
         "PauliRot": qml.PauliRot(0.123, "Y", wires=0),
         "IsingXX": qml.IsingXX(0.123, wires=[0, 1]),
+        "IsingXY": qml.IsingXY(0.123, wires=[0, 1]),
         "IsingYY": qml.IsingYY(0.123, wires=[0, 1]),
         "IsingZZ": qml.IsingZZ(0.123, wires=[0, 1]),
         "Identity": qml.Identity(wires=0),

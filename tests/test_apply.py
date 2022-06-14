@@ -360,6 +360,13 @@ class TestApply:
             [-0.5j, 0.5, -0.5j, 0.5],
             [math.pi / 2],
         ),
+        (qml.IsingXY, [1, 0, 0, 0], [1, 0, 0, 0], [math.pi / 2]),
+        (
+            qml.IsingXY,
+            [0, 1 / math.sqrt(2), 0, 1 / math.sqrt(2)],
+            [0, 0.5, 0.5j, 1 / math.sqrt(2)],
+            [math.pi / 2],
+        ),
         (qml.IsingYY, [1, 0, 0, 0], [1 / math.sqrt(2), 0, 0, 1j / math.sqrt(2)], [math.pi / 2]),
         (
             qml.IsingYY,
