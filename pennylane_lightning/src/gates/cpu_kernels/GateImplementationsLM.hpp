@@ -98,6 +98,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GateOperation::CRZ,
         GateOperation::CRot,
         GateOperation::IsingXX,
+        GateOperation::IsingXY,
         GateOperation::IsingYY,
         GateOperation::IsingZZ,
         GateOperation::SingleExcitation,
@@ -759,6 +760,49 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                          cr * imag(v10) - sj * real(v01)};
             arr[i11] = ComplexPrecisionT{cr * real(v11) + sj * imag(v00),
                                          cr * imag(v11) - sj * real(v00)};
+        }
+    }
+
+    template <class PrecisionT, class ParamT>
+    static void
+    applyIsingXY(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                 const std::vector<size_t> &wires, bool inverse, ParamT angle) {
+        using ComplexPrecisionT = std::complex<PrecisionT>;
+        using std::imag;
+        using std::real;
+        PL_ASSERT(wires.size() == 2);
+
+        const size_t rev_wire0 = num_qubits - wires[1] - 1;
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
+
+        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
+        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+
+        const auto [parity_high, parity_middle, parity_low] =
+            revWireParity(rev_wire0, rev_wire1);
+
+        const PrecisionT cr = std::cos(angle / 2);
+        const PrecisionT sj =
+            inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
+
+        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
+            const size_t i00 = ((k << 2U) & parity_high) |
+                               ((k << 1U) & parity_middle) | (k & parity_low);
+            const size_t i10 = i00 | rev_wire1_shift;
+            const size_t i01 = i00 | rev_wire0_shift;
+            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
+
+            const ComplexPrecisionT v00 = arr[i00];
+            const ComplexPrecisionT v01 = arr[i01];
+            const ComplexPrecisionT v10 = arr[i10];
+            const ComplexPrecisionT v11 = arr[i11];
+
+            arr[i00] = ComplexPrecisionT{real(v00), imag(v00)};
+            arr[i01] = ComplexPrecisionT{cr * real(v01) - sj * imag(v10),
+                                         cr * imag(v01) + sj * real(v10)};
+            arr[i10] = ComplexPrecisionT{cr * real(v10) - sj * imag(v01),
+                                         cr * imag(v10) + sj * real(v01)};
+            arr[i11] = ComplexPrecisionT{real(v11), imag(v11)};
         }
     }
 
