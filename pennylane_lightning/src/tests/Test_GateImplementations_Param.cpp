@@ -412,6 +412,161 @@ void testApplyIsingXX() {
 PENNYLANE_RUN_TEST(IsingXX);
 
 template <typename PrecisionT, typename ParamT, class GateImplementation>
+void testApplyIsingXY() {
+    using ComplexPrecisionT = std::complex<PrecisionT>;
+    using std::cos;
+    using std::sin;
+
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", IsingXY0,1 |000> -> a|000> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+        const auto ini_st = createZeroState<PrecisionT>(num_qubits);
+        ParamT angle = 0.312;
+
+        const std::vector<ComplexPrecisionT> expected_results{
+            ComplexPrecisionT{1.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applyIsingXY(st.data(), num_qubits, {0, 1}, false,
+                                         angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", IsingXY0,1 |100> -> a|100> + b|010> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+        const auto ini_st = createProductState<PrecisionT>("100");
+        ParamT angle = 0.312;
+
+        const std::vector<ComplexPrecisionT> expected_results{
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, sin(angle / 2)},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{cos(angle / 2), 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applyIsingXY(st.data(), num_qubits, {0, 1}, false,
+                                         angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", IsingXY0,1 |010> -> a|010> + b|100> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+        const auto ini_st = createProductState<PrecisionT>("010");
+        ParamT angle = 0.312;
+
+        const std::vector<ComplexPrecisionT> expected_results{
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{cos(angle / 2), 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, sin(angle / 2)},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applyIsingXY(st.data(), num_qubits, {0, 1}, false,
+                                         angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", IsingXY0,1 |110> -> a|110> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 3;
+        const auto ini_st = createProductState<PrecisionT>("110");
+        ParamT angle = 0.312;
+
+        const std::vector<ComplexPrecisionT> expected_results{
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{1.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applyIsingXY(st.data(), num_qubits, {0, 1}, false,
+                                         angle);
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", IsingXY0,1 - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const size_t num_qubits = 4;
+
+        std::vector<ComplexPrecisionT> ini_st{
+            ComplexPrecisionT{0.267462841882, 0.010768564798},
+            ComplexPrecisionT{0.228575129706, 0.010564590956},
+            ComplexPrecisionT{0.099492749900, 0.260849823392},
+            ComplexPrecisionT{0.093690204310, 0.189847108173},
+            ComplexPrecisionT{0.033390732374, 0.203836830144},
+            ComplexPrecisionT{0.226979395737, 0.081852150975},
+            ComplexPrecisionT{0.031235505729, 0.176933497281},
+            ComplexPrecisionT{0.294287602843, 0.145156781198},
+            ComplexPrecisionT{0.152742706049, 0.111628061129},
+            ComplexPrecisionT{0.012553863703, 0.120027860480},
+            ComplexPrecisionT{0.237156555364, 0.154658769755},
+            ComplexPrecisionT{0.117001120872, 0.228059505033},
+            ComplexPrecisionT{0.041495873225, 0.065934827444},
+            ComplexPrecisionT{0.089653239407, 0.221581340372},
+            ComplexPrecisionT{0.217892322429, 0.291261296999},
+            ComplexPrecisionT{0.292993251871, 0.186570798697},
+        };
+
+        const std::vector<size_t> wires = {0, 1};
+        const ParamT angle = 0.312;
+
+        std::vector<ComplexPrecisionT> expected{
+            ComplexPrecisionT{0.267462849617, 0.010768564418},
+            ComplexPrecisionT{0.228575125337, 0.010564590804},
+            ComplexPrecisionT{0.099492751062, 0.260849833488},
+            ComplexPrecisionT{0.093690201640, 0.189847111702},
+            ComplexPrecisionT{0.015641822883, 0.225092900621},
+            ComplexPrecisionT{0.205574608177, 0.082808663337},
+            ComplexPrecisionT{0.006827173322, 0.211631480575},
+            ComplexPrecisionT{0.255280800811, 0.161572331669},
+            ComplexPrecisionT{0.119218164572, 0.115460377284},
+            ComplexPrecisionT{-0.000315789761, 0.153835664378},
+            ComplexPrecisionT{0.206786872079, 0.157633689097},
+            ComplexPrecisionT{0.093027614553, 0.271012980118},
+            ComplexPrecisionT{0.041495874524, 0.065934829414},
+            ComplexPrecisionT{0.089653238654, 0.221581339836},
+            ComplexPrecisionT{0.217892318964, 0.291261285543},
+            ComplexPrecisionT{0.292993247509, 0.186570793390},
+        };
+
+        auto st = ini_st;
+        GateImplementation::applyIsingXY(st.data(), num_qubits, wires, false,
+                                         angle);
+        REQUIRE(st == approx(expected).margin(1e-5));
+    }
+}
+PENNYLANE_RUN_TEST(IsingXY);
+
+template <typename PrecisionT, typename ParamT, class GateImplementation>
 void testApplyIsingYY() {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     using std::cos;
