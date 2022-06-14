@@ -92,6 +92,9 @@ int assignDefaultKernelsForGateOp() {
     instance.assignKernelForOp(GateOperation::IsingXX, all_threading,
                                all_memory_model, all_qubit_numbers,
                                Gates::KernelType::LM);
+    instance.assignKernelForOp(GateOperation::IsingXY, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               Gates::KernelType::LM);
     instance.assignKernelForOp(GateOperation::IsingYY, all_threading,
                                all_memory_model, all_qubit_numbers,
                                Gates::KernelType::LM);
