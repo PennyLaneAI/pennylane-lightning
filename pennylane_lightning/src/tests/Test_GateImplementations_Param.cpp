@@ -425,14 +425,10 @@ void testApplyIsingXY() {
         ParamT angle = 0.312;
 
         const std::vector<ComplexPrecisionT> expected_results{
-            ComplexPrecisionT{1.0, 0.0},
-            ComplexPrecisionT{0.0, 0.0},
-            ComplexPrecisionT{0.0, 0.0},
-            ComplexPrecisionT{0.0, 0.0},
-            ComplexPrecisionT{0.0, 0.0},
-            ComplexPrecisionT{0.0, 0.0},
-            ComplexPrecisionT{0.0, 0.0},
-            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{1.0, 0.0}, ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0}, ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0}, ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0}, ComplexPrecisionT{0.0, 0.0},
         };
 
         auto st = ini_st;
@@ -496,14 +492,10 @@ void testApplyIsingXY() {
         ParamT angle = 0.312;
 
         const std::vector<ComplexPrecisionT> expected_results{
-            ComplexPrecisionT{0.0, 0.0},
-            ComplexPrecisionT{0.0, 0.0},
-            ComplexPrecisionT{0.0, 0.0},
-            ComplexPrecisionT{0.0, 0.0},
-            ComplexPrecisionT{0.0, 0.0},
-            ComplexPrecisionT{0.0, 0.0},
-            ComplexPrecisionT{1.0, 0.0},
-            ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0}, ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0}, ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{0.0, 0.0}, ComplexPrecisionT{0.0, 0.0},
+            ComplexPrecisionT{1.0, 0.0}, ComplexPrecisionT{0.0, 0.0},
         };
 
         auto st = ini_st;
@@ -511,7 +503,7 @@ void testApplyIsingXY() {
                                          angle);
         REQUIRE(st == approx(expected_results).margin(1e-7));
     }
-    
+
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingXY0,1 - "
                     << PrecisionToName<PrecisionT>::value) {

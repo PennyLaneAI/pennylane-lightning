@@ -764,7 +764,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT, class ParamT>
-    static void 
+    static void
     applyIsingXY(std::complex<PrecisionT> *arr, const size_t num_qubits,
                  const std::vector<size_t> &wires, bool inverse, ParamT angle) {
         using ComplexPrecisionT = std::complex<PrecisionT>;
@@ -796,14 +796,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             const ComplexPrecisionT v01 = arr[i01];
             const ComplexPrecisionT v10 = arr[i10];
             const ComplexPrecisionT v11 = arr[i11];
-           
+
             arr[i00] = ComplexPrecisionT{real(v00), imag(v00)};
             arr[i01] = ComplexPrecisionT{cr * real(v01) - sj * imag(v10),
                                          cr * imag(v01) + sj * real(v10)};
             arr[i10] = ComplexPrecisionT{cr * real(v10) - sj * imag(v01),
                                          cr * imag(v10) + sj * real(v01)};
             arr[i11] = ComplexPrecisionT{real(v11), imag(v11)};
-        }             
+        }
     }
 
     template <class PrecisionT, class ParamT>

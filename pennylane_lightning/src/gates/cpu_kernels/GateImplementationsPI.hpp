@@ -600,7 +600,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
                 cr * real(v3) + sj * imag(v0), cr * imag(v3) - sj * real(v0)};
         }
     }
-   
+
     template <class PrecisionT, class ParamT = PrecisionT>
     static void applyIsingXY(std::complex<PrecisionT> *arr, size_t num_qubits,
                              const std::vector<size_t> &wires, bool inverse,
@@ -620,8 +620,8 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
             const auto v1 = shiftedState[indices[1]];
             const auto v2 = shiftedState[indices[2]];
             const auto v3 = shiftedState[indices[3]];
-            
-            shiftedState[indices[0]] = ComplexPrecisionT{ real(v0), imag(v0)};
+
+            shiftedState[indices[0]] = ComplexPrecisionT{real(v0), imag(v0)};
             shiftedState[indices[1]] = ComplexPrecisionT{
                 cr * real(v1) - sj * imag(v2), cr * imag(v1) + sj * real(v2)};
             shiftedState[indices[2]] = ComplexPrecisionT{
