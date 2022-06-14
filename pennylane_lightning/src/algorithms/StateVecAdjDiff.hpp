@@ -49,7 +49,6 @@ namespace Pennylane::Algorithms {
  * @param vec A cotangent vector of size 2^n
  * @param apply_operations Assume the given state is an input state and apply
  * operations if true
- * @return a vector length of the number of trainable parameters
  */
 template <typename PrecisionT>
 void statevectorVJP(std::span<std::complex<PrecisionT>> jac,
