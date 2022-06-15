@@ -24,7 +24,9 @@
 * Split matrix operations, refactor dispatch mechanisms, and add a benchmark suits.
 [(#274)](https://github.com/PennyLaneAI/pennylane-lightning/pull/274)
 
-* Add native support for the calculation of sparse Hamiltonians' expectation values. Sparse operations are offloaded to [Kokkos](https://github.com/kokkos/kokkos) and [Kokkos-Kernels](https://github.com/kokkos/kokkos-kernels).
+* Add native support for the calculation of sparse Hamiltonians' expectation values. 
+Sparse operations are offloaded to [Kokkos](https://github.com/kokkos/kokkos) and 
+[Kokkos-Kernels](https://github.com/kokkos/kokkos-kernels).
 [(#283)](https://github.com/PennyLaneAI/pennylane-lightning/pull/283)
 
 * Device `lightning.qubit` now accepts a datatype for a statevector.
