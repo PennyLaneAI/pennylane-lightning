@@ -77,11 +77,16 @@ class CMakeBuild(build_ext):
 
         # Add more platform dependent options
         if platform.system() == "Darwin":
+            #To support ARM64
+            if os.getenv('ARCHS') == "arm64":
+                configure_args += ["-DCMAKE_CXX_FLAGS='-target arm64-apple-macos11'"]
+            else:
+                configure_args += []
             # Disable OpenMP in M1 Macs
             if os.environ.get("USE_OMP"):
                 configure_args += []
             else:
-                configure_args += ["-DENABLE_OPENMP=OFF"]
+                configure_args += ["-DENABLE_OPENMP=OFF"]  
         elif platform.system() == "Linux":
             if platform.machine() == "x86_64":
                 configure_args += ["-DENABLE_AVX=ON"]  # Enable AVX if x64 on Linux
