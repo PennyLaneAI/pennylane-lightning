@@ -94,6 +94,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         GeneratorOperation::RZ,
         GeneratorOperation::PhaseShift,
         GeneratorOperation::IsingXX,
+        GeneratorOperation::IsingXY,
         GeneratorOperation::IsingYY,
         GeneratorOperation::IsingZZ,
         GeneratorOperation::CRX,
@@ -920,6 +921,30 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
         // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
+    }
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto
+    applyGeneratorIsingXY(std::complex<PrecisionT> *arr, size_t num_qubits,
+                          const std::vector<size_t> &wires,
+                          [[maybe_unused]] bool adj) -> PrecisionT {
+        PL_ASSERT(wires.size() == 2);
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+
+        for (const size_t &externalIndex : externalIndices) {
+            std::complex<PrecisionT> *shiftedState = arr + externalIndex;
+            /*
+            const auto v01 = shiftedState[indices[1]];
+            shiftedState[indices[1]] = shiftedState[indices[2]];
+            shiftedState[indices[2]] = v01;
+            */
+            std::swap(shiftedState[indices[2]], shiftedState[indices[1]]);
+            shiftedState[indices[0]] = std::complex<PrecisionT>{0.0, 0.0};
+            shiftedState[indices[3]] = std::complex<PrecisionT>{0.0, 0.0};
+        }
+
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return static_cast<PrecisionT>(0.5);
     }
 
     template <class PrecisionT>
