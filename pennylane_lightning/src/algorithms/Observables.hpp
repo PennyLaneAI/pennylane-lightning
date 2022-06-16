@@ -298,13 +298,13 @@ template <class T> struct HamiltonianApplyInPlace<T, true> {
         std::vector<std::complex<T>, decltype(allocator)> local_sv(allocator);
         size_t nthreads = 1;
 
-#pragma omp parallel default(none) firstprivate(length, allocator)             \
+#pragma omp parallel default(none) firstprivate(length)                        \
     shared(coeffs, terms, sv, sum, nthreads, local_sv)
         {
 #pragma omp single
             {
                 nthreads = static_cast<size_t>(omp_get_num_threads());
-                local_sv.resize(nthreads * length, std::complex<T>{});
+                local_sv.resize(nthreads * length, std::complex<T>{0.0, 0.0});
             }
 
             int tid = omp_get_thread_num();
