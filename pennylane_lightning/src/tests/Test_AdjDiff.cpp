@@ -575,7 +575,7 @@ TEST_CASE(
         coeffs.emplace_back(dist(re));
         terms.emplace_back(TensorProdObs<double>::create(term_comp));
     }
-    std::vector<std::complex<double>> psi(1 << num_qubits);
+    std::vector<std::complex<double>> psi(size_t{1} << num_qubits);
     std::normal_distribution<double> ndist;
     for (auto &e : psi) {
         e = ndist(re);
