@@ -150,5 +150,9 @@ class StateVectorManagedCPU
         std::copy(new_data.data(), new_data.data() + new_data.size(),
                   data_.data());
     }
+
+    Util::AlignedAllocator<ComplexPrecisionT> allocator() const {
+        return data_.get_allocator();
+    }
 };
 } // namespace Pennylane

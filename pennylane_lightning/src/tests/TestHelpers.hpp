@@ -99,6 +99,55 @@ bool operator!=(const std::vector<T, AllocA> &lhs,
     return !rhs.compare(lhs);
 }
 
+template <class PrecisionT> struct PLApproxComplex {
+    const std::complex<PrecisionT> comp_;
+
+    explicit PLApproxComplex(const std::complex<PrecisionT> &comp)
+        : comp_{comp} {}
+
+    PrecisionT margin_{};
+    PrecisionT epsilon_ = std::numeric_limits<float>::epsilon() * 100;
+
+    [[nodiscard]] bool compare(const std::complex<PrecisionT> &lhs) const {
+        return (lhs.real() ==
+                Approx(comp_.real()).epsilon(epsilon_).margin(margin_)) &&
+               (lhs.imag() ==
+                Approx(comp_.imag()).epsilon(epsilon_).margin(margin_));
+    }
+    [[nodiscard]] std::string describe() const {
+        std::ostringstream ss;
+        ss << "is Approx to " << comp_;
+        return ss.str();
+    }
+    PLApproxComplex &epsilon(PrecisionT eps) {
+        epsilon_ = eps;
+        return *this;
+    }
+    PLApproxComplex &margin(PrecisionT m) {
+        margin_ = m;
+        return *this;
+    }
+};
+
+template <class T>
+bool operator==(const std::complex<T> &lhs, const PLApproxComplex<T> &rhs) {
+    return rhs.compare(lhs);
+}
+template <class T>
+bool operator!=(const std::complex<T> &lhs, const PLApproxComplex<T> &rhs) {
+    return !rhs.compare(lhs);
+}
+
+template <typename T> PLApproxComplex<T> approx(const std::complex<T> &val) {
+    return PLApproxComplex<T>{val};
+}
+
+template <typename T>
+std::ostream &operator<<(std::ostream &os, const PLApproxComplex<T> &approx) {
+    os << approx.describe();
+    return os;
+}
+
 /**
  * @brief Utility function to compare complex statevector data.
  *
@@ -229,6 +278,7 @@ auto createRandomState(RandomEngine &re, size_t num_qubits)
  * @brief Create an arbitrary product state in X- or Z-basis.
  *
  * Example: createProductState("+01") will produce |+01> state.
+ * Note that the wire index starts from the left.
  */
 template <typename PrecisionT>
 auto createProductState(std::string_view str)

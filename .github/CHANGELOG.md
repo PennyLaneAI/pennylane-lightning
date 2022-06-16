@@ -8,6 +8,9 @@
 * Add a new dispatch mechanism for future kernels.
 [(#291)](https://github.com/PennyLaneAI/pennylane-lightning/pull/291)
 
+* Support qml.state() in vjp and Hamiltonian in adjoint jacobian.
+[(#294)](https://github.com/PennyLaneAI/pennylane-lightning/pull/294)
+
 ### Breaking changes
 
 * Codebase is now moving to C++20. The default compiler for Linux is now GCC10.

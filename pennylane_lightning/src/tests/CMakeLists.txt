@@ -68,7 +68,8 @@ target_link_libraries(compile_time_tests lightning_compile_options lightning_gat
 
 set(TEST_SOURCES CreateAllWires.cpp
                  Test_AdjDiff.cpp
-#                 Test_Bindings.cpp
+                 Test_AlgUtil.cpp
+                 #Test_Bindings.cpp
                  Test_CompilerSupport.cpp
                  Test_DynamicDispatcher.cpp
                  Test_Error.cpp
@@ -81,16 +82,18 @@ set(TEST_SOURCES CreateAllWires.cpp
                  Test_GateUtil.cpp
                  Test_Internal.cpp
                  Test_KernelMap.cpp
+                 Test_Kokkos_Sparse.cpp
                  Test_LinearAlgebra.cpp
                  Test_Measures.cpp
-                 Test_Kokkos_Sparse.cpp
                  Test_Measures_Sparse.cpp
+                 Test_Observables.cpp
                  Test_OpToMemberFuncPtr.cpp
                  Test_RuntimeInfo.cpp
+                 Test_StateVecAdjDiff.cpp
                  Test_StateVectorManagedCPU.cpp
                  Test_StateVectorRawCPU.cpp
-                 Test_Util.cpp
-                 Test_VectorJacobianProduct.cpp)
+                 Test_Util.cpp)
+                 #Test_VectorJacobianProduct.cpp)
 
 add_executable(runner ${TEST_SOURCES})
 target_link_libraries(runner PRIVATE lightning_tests_dependency

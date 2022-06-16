@@ -17,6 +17,7 @@
  */
 #pragma once
 
+#include "Macros.hpp"
 #include "TypeTraits.hpp"
 #include "Util.hpp"
 
@@ -25,6 +26,7 @@
 #include <cstdlib>
 #include <numeric>
 #include <random>
+#include <span>
 #include <vector>
 
 /// @cond DEV
@@ -60,7 +62,6 @@ enum class Trans : int {
     Transpose = CblasTrans,
     Adjoint = CblasConjTrans
 };
-
 /**
  * @brief Calculates the inner-product using OpenMP.
  *
@@ -343,8 +344,8 @@ inline void matrixVecProd(const std::complex<T> *mat,
  * nthreads = 1, bool transpose = false)
  */
 template <class T>
-inline auto matrixVecProd(const std::vector<std::complex<T>> mat,
-                          const std::vector<std::complex<T>> v_in, size_t m,
+inline auto matrixVecProd(const std::vector<std::complex<T>> &mat,
+                          const std::vector<std::complex<T>> &v_in, size_t m,
                           size_t n, Trans transpose = Trans::NoTranspose)
     -> std::vector<std::complex<T>> {
     if (mat.size() != m * n) {
@@ -467,15 +468,16 @@ inline static void CFTranspose(const std::complex<T> *mat,
  * @param n Number of columns of `mat`.
  * @return mat transpose of shape n * m.
  */
-template <class T, class Alloc>
-inline auto Transpose(const std::vector<std::complex<T>, Alloc> &mat, size_t m,
-                      size_t n) -> std::vector<std::complex<T>, Alloc> {
+template <class T, class Allocator = std::allocator<T>>
+inline auto Transpose(std::span<const T> mat, size_t m, size_t n,
+                      Allocator allocator = std::allocator<T>())
+    -> std::vector<T, Allocator> {
     if (mat.size() != m * n) {
         throw std::invalid_argument(
             "Invalid number of rows and columns for the input matrix");
     }
 
-    std::vector<std::complex<T>, Alloc> mat_t(n * m, mat.get_allocator());
+    std::vector<T, Allocator> mat_t(n * m, allocator);
     CFTranspose(mat.data(), mat_t.data(), m, n, 0, m, 0, n);
     return mat_t;
 }
@@ -484,23 +486,19 @@ inline auto Transpose(const std::vector<std::complex<T>, Alloc> &mat, size_t m,
  * @brief Transpose a matrix of shape m * n to n * m using the
  * best available method.
  *
+ * This version may be merged with the above one when std::ranges is well
+ * supported.
+ *
  * @tparam T Floating point precision type.
  * @param mat Row-wise flatten matrix of shape m * n.
  * @param m Number of rows of `mat`.
  * @param n Number of columns of `mat`.
  * @return mat transpose of shape n * m.
  */
-template <class T, class Alloc>
-inline auto Transpose(const std::vector<T, Alloc> &mat, size_t m, size_t n)
-    -> std::vector<T, Alloc> {
-    if (mat.size() != m * n) {
-        throw std::invalid_argument(
-            "Invalid number of rows and columns for the input matrix");
-    }
-
-    std::vector<T, Alloc> mat_t(n * m, mat.get_allocator());
-    CFTranspose(mat.data(), mat_t.data(), m, n, 0, m, 0, n);
-    return mat_t;
+template <class T, class Allocator>
+inline auto Transpose(const std::vector<T, Allocator> &mat, size_t m, size_t n)
+    -> std::vector<T, Allocator> {
+    return Transpose(std::span<const T>{mat}, m, n, mat.get_allocator());
 }
 
 /**
@@ -554,10 +552,10 @@ inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, size_t m,
  * @see inline void vecMatrixProd(const T *v_in,
  * const T *mat, T *v_out, size_t m, size_t n)
  */
-template <class T, class Alloc>
-inline auto vecMatrixProd(const std::vector<T, Alloc> &v_in,
-                          const std::vector<T, Alloc> &mat, size_t m, size_t n)
-    -> std::vector<T, Alloc> {
+template <class T, class AllocA, class AllocB>
+inline auto vecMatrixProd(const std::vector<T, AllocA> &v_in,
+                          const std::vector<T, AllocB> &mat, size_t m, size_t n)
+    -> std::vector<T> {
     if (v_in.size() != m) {
         throw std::invalid_argument("Invalid size for the input vector");
     }
@@ -566,7 +564,7 @@ inline auto vecMatrixProd(const std::vector<T, Alloc> &v_in,
             "Invalid number of rows and columns for the input matrix");
     }
 
-    std::vector<T, Alloc> v_out(n, mat.get_allocator());
+    std::vector<T, AllocA> v_out(n);
     vecMatrixProd(v_in.data(), mat.data(), v_out.data(), m, n);
 
     return v_out;
@@ -578,9 +576,10 @@ inline auto vecMatrixProd(const std::vector<T, Alloc> &v_in,
  * @see inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, size_t
  * m, size_t n)
  */
-template <class T>
-inline void vecMatrixProd(std::vector<T> &v_out, const std::vector<T> &v_in,
-                          const std::vector<T> &mat, size_t m, size_t n) {
+template <class T, class AllocA, class AllocB, class AllocC>
+inline void
+vecMatrixProd(std::vector<T, AllocA> &v_out, const std::vector<T, AllocB> &v_in,
+              const std::vector<T, AllocC> &mat, size_t m, size_t n) {
     if (mat.size() != m * n) {
         throw std::invalid_argument(
             "Invalid number of rows and columns for the input matrix");
@@ -715,6 +714,11 @@ inline void matrixMatProd(const std::complex<T> *m_left,
             cblas_zgemm(CblasRowMajor, CblasNoTrans, tr, m, n, k, &co, m_left,
                         k, m_right, (transpose != Trans::NoTranspose) ? k : n,
                         &cz, m_out, n);
+        } else {
+            static_assert(
+                std::is_same_v<T, float> || std::is_same_v<T, double>,
+                "This procedure only supports a single or double precision "
+                "floating point types.");
         }
     } else {
         omp_matrixMatProd(m_left, m_right, m_out, m, n, k, transpose);
@@ -845,5 +849,103 @@ auto randomUnitary(RandomEngine &re, size_t num_qubits)
         });
     }
     return res;
+}
+
+/**
+ * @brief @rst
+ * Calculate :math:`y += a*x` for a scalar :math:`a` and a vector :math:`x`
+ * using OpenMP
+ * @endrst
+ *
+ * @tparam STD_CROSSOVER The number of dimension after which OpenMP version
+ * outperforms the standard method.
+ *
+ * @param dim Dimension of data
+ * @param a Scalar to scale x
+ * @param x Vector to add
+ * @param y Vector to be added
+ */
+template <class T,
+          size_t STD_CROSSOVER = 1U << 12U> // NOLINT(readability-magic-numbers)
+void omp_scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T> *x,
+                     std::complex<T> *y) {
+    if (dim < STD_CROSSOVER) {
+        for (size_t i = 0; i < dim; i++) {
+            y[i] += a * x[i];
+        }
+    } else {
+#if defined(_OPENMP)
+#pragma omp parallel for default(none) firstprivate(a, dim, x, y)
+#endif
+        for (size_t i = 0; i < dim; i++) {
+            y[i] += a * x[i];
+        }
+    }
+}
+
+/**
+ * @brief @rst
+ * Calculate :math:`y += a*x` for a scalar :math:`a` and a vector :math:`x`
+ * using BLAS.
+ * @endrst
+ *
+ * @param dim Dimension of data
+ * @param a Scalar to scale x
+ * @param x Vector to add
+ * @param y Vector to be added
+ */
+template <class T>
+void blas_scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T> *x,
+                      std::complex<T> *y) {
+    if constexpr (std::is_same_v<T, float>) {
+        cblas_caxpy(dim, &a, x, 1, y, 1);
+    } else if (std::is_same_v<T, double>) {
+        cblas_zaxpy(dim, &a, x, 1, y, 1);
+    } else {
+        static_assert(
+            std::is_same_v<T, float> || std::is_same_v<T, double>,
+            "This procedure only supports a single or double precision "
+            "floating point types.");
+    }
+}
+
+/**
+ * @brief @rst
+ * Calculate :math:`y += a*x` for a scalar :math:`a` and a vector :math:`x`
+ * using the best available method.
+ * @endrst
+ *
+ *
+ * @param dim Dimension of data
+ * @param a Scalar to scale x
+ * @param x Vector to add
+ * @param y Vector to be added
+ */
+template <class T>
+void scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T> *x,
+                 std::complex<T> *y) {
+    if constexpr (USE_CBLAS) {
+        blas_scaleAndAdd(dim, a, x, y);
+    } else {
+        omp_scaleAndAdd(dim, a, x, y);
+    }
+}
+/**
+ * @brief @rst
+ * Calculate :math:`y += a*x` for a scalar :math:`a` and a vector :math:`x`.
+ * @endrst
+ *
+ * @param dim Dimension of data
+ * @param a Scalar to scale x
+ * @param x Vector to add
+ * @param y Vector to be added
+ */
+template <class T>
+void scaleAndAdd(std::complex<T> a, const std::vector<std::complex<T>> &x,
+                 std::vector<std::complex<T>> &y) {
+    if (x.size() != y.size()) {
+        throw std::invalid_argument("Dimensions of vectors mismatch");
+    }
+    scaleAndAdd(x.size(), a, x.data(), y.data());
 }
 } // namespace Pennylane::Util

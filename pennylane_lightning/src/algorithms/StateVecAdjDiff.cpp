@@ -11,9 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+/**
+ * @file
+ */
+#include "StateVecAdjDiff.hpp"
 
-#include "JacobianProd.hpp"
+// explicit template instantiations
+template void Pennylane::Algorithms::statevectorVJP<float>(
+    std::span<std::complex<float>> jac, const JacobianData<float> &jd,
+    std::span<const std::complex<float>> dy, bool apply_operations);
 
-// explicit instantiation
-template class Pennylane::Algorithms::VectorJacobianProduct<float>;
-template class Pennylane::Algorithms::VectorJacobianProduct<double>;
+template void Pennylane::Algorithms::statevectorVJP<double>(
+    std::span<std::complex<double>> jac, const JacobianData<double> &jd,
+    std::span<const std::complex<double>> dy, bool apply_operations);
