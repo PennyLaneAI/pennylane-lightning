@@ -322,7 +322,6 @@ class LightningQubit(DefaultQubit):
                 record_tp_rows.append(all_params)
             all_params += 1
 
-
         if use_sp:
             # When the first element of the tape is state preparation. Still, I am not sure
             # whether there must be only one state preparation...
@@ -336,7 +335,7 @@ class LightningQubit(DefaultQubit):
             "ops_serialized": ops_serialized,
             "tp_shift": tp_shift,
             "record_tp_rows": record_tp_rows,
-            "all_params": all_params
+            "all_params": all_params,
         }
 
     def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
@@ -392,9 +391,8 @@ class LightningQubit(DefaultQubit):
             )
         jac = jac.reshape(-1, len(trainable_params))
         jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
-        jac_r[:,processed_data["record_tp_rows"]] = jac
+        jac_r[:, processed_data["record_tp_rows"]] = jac
         return jac_r
-
 
     def vjp(self, measurements, dy, starting_state=None, use_device_state=False):
         """Generate the processing function required to compute the vector-Jacobian products of a tape.
