@@ -91,8 +91,8 @@ inline void applyObservables(
          * See the following for OpenMP design decisions:
          * https://www.openmp.org/wp-content/uploads/openmp-examples-4.5.0.pdf
          * */
+        // clang-format off
 
-        /* clang-format off */
         #if defined(_OPENMP)
             #pragma omp parallel default(none)                                 \
             shared(states, reference_state, observables, ex, num_observables)
@@ -122,7 +122,7 @@ inline void applyObservables(
         if (ex) {
             std::rethrow_exception(ex);
         }
-        /* clang-format on */
+        // clang-format on
     } else {
         states[0].updateData(reference_state.getDataVector());
         applyObservable(states[0], *observables[0]);
