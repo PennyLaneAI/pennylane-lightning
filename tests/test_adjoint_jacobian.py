@@ -823,6 +823,7 @@ class TestAdjointJacobianQNode:
     "r_dtype,c_dtype", [[np.float32, np.complex64], [np.float64, np.complex128]]
 )
 def test_qchem_expvalcost_correct(r_dtype, c_dtype):
+    """EvpvalCost with qchem Hamiltonian work corectly"""
     from pennylane import qchem
 
     symbols = ["Li", "H"]
@@ -841,10 +842,7 @@ def test_qchem_expvalcost_correct(r_dtype, c_dtype):
         qml.Hadamard(wires=1)
 
     diff_method = "adjoint"
-    custom_decomps = {"DoubleExcitation": qml.DoubleExcitation.compute_decomposition}
-    dev_lig = qml.device(
-        "lightning.qubit", wires=qubits, c_dtype=c_dtype, custom_decomps=custom_decomps
-    )
+    dev_lig = qml.device("lightning.qubit", wires=qubits, c_dtype=c_dtype)
     cost_fn_lig = qml.ExpvalCost(circuit_1, H, dev_lig, optimize=False, diff_method=diff_method)
     circuit_gradient_lig = qml.grad(cost_fn_lig, argnum=0)
     params = np.array([0.123], requires_grad=True)
