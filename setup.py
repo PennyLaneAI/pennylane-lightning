@@ -86,7 +86,7 @@ class CMakeBuild(build_ext):
             if os.environ.get("USE_OMP"):
                 configure_args += []
             else:
-                configure_args += ["-DENABLE_OPENMP=OFF"]  
+                configure_args += ["-DENABLE_OPENMP=OFF"]
         elif platform.system() == "Linux":
             if platform.machine() == "x86_64":
                 configure_args += ["-DENABLE_AVX=ON"]  # Enable AVX if x64 on Linux
