@@ -1,4 +1,4 @@
-# Release 0.24.0-dev
+# Release 0.24.0
 
 ### New features since last release
 
@@ -7,6 +7,9 @@
 
 * Add a new dispatch mechanism for future kernels.
 [(#291)](https://github.com/PennyLaneAI/pennylane-lightning/pull/291)
+
+* Add IsingXY gate operation. 
+[(#303)](https://github.com/PennyLaneAI/pennylane-lightning/pull/303)
 
 ### Breaking changes
 
@@ -18,6 +21,14 @@
 
 ### Improvements
 
+* Split matrix operations, refactor dispatch mechanisms, and add a benchmark suits.
+[(#274)](https://github.com/PennyLaneAI/pennylane-lightning/pull/274)
+
+* Add native support for the calculation of sparse Hamiltonians' expectation values. 
+Sparse operations are offloaded to [Kokkos](https://github.com/kokkos/kokkos) and 
+[Kokkos-Kernels](https://github.com/kokkos/kokkos-kernels).
+[(#283)](https://github.com/PennyLaneAI/pennylane-lightning/pull/283)
+
 * Device `lightning.qubit` now accepts a datatype for a statevector.
 [(#290)](https://github.com/PennyLaneAI/pennylane-lightning/pull/290)
 
@@ -25,12 +36,6 @@
 dev1 = qml.device('lightning.qubit', wires=4, c_dtype=np.complex64) # for single precision
 dev2 = qml.device('lightning.qubit', wires=4, c_dtype=np.complex128) # for double precision
 ```
-
-* Split matrix operations, refactor dispatch mechanisms, and add a benchmark suits.
-[(#274)](https://github.com/PennyLaneAI/pennylane-lightning/pull/274)
-
-* Add native support for the calculation of sparse Hamiltonians' expectation values. Sparse operations are offloaded to [Kokkos](https://github.com/kokkos/kokkos) and [Kokkos-Kernels](https://github.com/kokkos/kokkos-kernels).
-[(#283)](https://github.com/PennyLaneAI/pennylane-lightning/pull/283)
 
 ### Documentation
 
@@ -41,13 +46,16 @@ dev2 = qml.device('lightning.qubit', wires=4, c_dtype=np.complex128) # for doubl
 ### Bug fixes
 
 * Fix the issue with using available `clang-format` version in format.
-[#(288)](https://github.com/PennyLaneAI/pennylane-lightning/pull/288)
+[(#288)](https://github.com/PennyLaneAI/pennylane-lightning/pull/288)
+
+* Fix a bug in the generator of `DoubleExcitationPlus`.
+[(#298)](https://github.com/PennyLaneAI/pennylane-lightning/pull/298)
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Chae-Yeun Park, Lee James O'Riordan, Mikhail Andrenkov
+Mikhail Andrenkov, Ali Asadi, Amintor Dusko, Lee James O'Riordan, Chae-Yeun Park, and Shuli Shu
 
 ---
 
