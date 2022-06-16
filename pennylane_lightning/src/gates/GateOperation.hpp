@@ -45,6 +45,7 @@ enum class GateOperation : uint32_t {
     CZ,
     SWAP,
     IsingXX,
+    IsingXY,
     IsingYY,
     IsingZZ,
     ControlledPhaseShift,

@@ -146,6 +146,12 @@ struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
 };
 template <class PrecisionT, class ParamT, class GateImplementation>
 struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                             GateOperation::IsingXY> {
+    constexpr static auto value =
+        &GateImplementation::template applyIsingXY<PrecisionT, ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::IsingYY> {
     constexpr static auto value =
         &GateImplementation::template applyIsingYY<PrecisionT, ParamT>;
