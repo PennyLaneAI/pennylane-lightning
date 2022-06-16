@@ -88,6 +88,7 @@ inline void applyObservables(
 
     if (num_observables > 1) {
         // clang-format off
+        //
         // Globally scoped exception value to be captured within OpenMP block.
         // See the following for OpenMP design decisions:
         // https://www.openmp.org/wp-content/uploads/openmp-examples-4.5.0.pdf
