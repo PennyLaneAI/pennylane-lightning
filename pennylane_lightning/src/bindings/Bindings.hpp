@@ -19,7 +19,6 @@
 #pragma once
 #include "AdjointDiff.hpp"
 #include "CPUMemoryModel.hpp"
-#include "JacobianProd.hpp"
 #include "Kokkos_Sparse.hpp"
 #include "Macros.hpp"
 #include "Measures.hpp"
@@ -138,8 +137,8 @@ auto alignedNumpyArray(CPUMemoryModel memory_model, size_t size)
     -> pybind11::array {
     if (getAlignment<T>(memory_model) > alignof(std::max_align_t)) {
         void *ptr =
-            alignedAlloc(getAlignment<T>(memory_model), sizeof(T) * size);
-        auto capsule = pybind11::capsule(ptr, &alignedFree);
+            Util::alignedAlloc(getAlignment<T>(memory_model), sizeof(T) * size);
+        auto capsule = pybind11::capsule(ptr, &Util::alignedFree);
         return pybind11::array{
             pybind11::dtype::of<T>(), {size}, {sizeof(T)}, ptr, capsule};
     } // else
@@ -230,7 +229,7 @@ void registerGatesForStateVector(PyClass &pyclass) {
 
     Util::for_each_enum<GateOperation>([&pyclass](GateOperation gate_op) {
         const auto gate_name =
-            std::string(lookup(Constant::gate_names, gate_op));
+            std::string(Util::lookup(Constant::gate_names, gate_op));
         const std::string doc = "Apply the " + gate_name + " gate.";
         auto func = [gate_name = gate_name](
                         SVType &sv, const std::vector<size_t> &wires,
@@ -324,7 +323,7 @@ auto getCompileInfo() -> pybind11::dict {
  * @brief Return basic information of runtime environment
  */
 auto getRuntimeInfo() -> pybind11::dict {
-    using namespace Util::Constant;
+    using Util::RuntimeInfo;
     using namespace pybind11::literals;
 
     return pybind11::dict("AVX"_a = RuntimeInfo::AVX(),
