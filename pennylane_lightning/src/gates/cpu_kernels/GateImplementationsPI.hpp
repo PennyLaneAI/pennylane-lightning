@@ -933,11 +933,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
-            /*
-            const auto v01 = shiftedState[indices[1]];
-            shiftedState[indices[1]] = shiftedState[indices[2]];
-            shiftedState[indices[2]] = v01;
-            */
+
             std::swap(shiftedState[indices[2]], shiftedState[indices[1]]);
             shiftedState[indices[0]] = std::complex<PrecisionT>{0.0, 0.0};
             shiftedState[indices[3]] = std::complex<PrecisionT>{0.0, 0.0};

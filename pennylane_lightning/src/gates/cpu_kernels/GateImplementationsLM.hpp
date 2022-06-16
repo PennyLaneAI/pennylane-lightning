@@ -1131,11 +1131,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             const size_t i01 = i00 | rev_wire0_shift;
             const size_t i10 = i00 | rev_wire1_shift;
             const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
-            /*
-            const auto v01 = arr[i01];
-            arr[i01] = arr[i10];
-            arr[i10] = v01;
-            */
+
             std::swap(arr[i10], arr[i01]);
             arr[i00] = std::complex<PrecisionT>{0.0, 0.0};
             arr[i11] = std::complex<PrecisionT>{0.0, 0.0};
