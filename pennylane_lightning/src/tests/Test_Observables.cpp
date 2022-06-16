@@ -119,9 +119,9 @@ TEMPLATE_TEST_CASE("TensorProdObs", "[Observables]", float, double) {
             "PauliX", std::vector<size_t>{1});
         auto ob2_2 = std::make_shared<NamedObs<PrecisionT>>(
             "PauliZ", std::vector<size_t>{2});
-        auto ob2 = std::make_shared<TensorProdObs<PrecisionT>>(ob2_1, ob2_2);
+        auto ob2 = TensorProdObs<PrecisionT>::create({ob2_1, ob2_2});
 
-        REQUIRE_THROWS_AS(TensorProdObs<PrecisionT>(ob1, ob2),
+        REQUIRE_THROWS_AS(TensorProdObs<PrecisionT>::create({ob1, ob2}),
                           LightningException);
     }
 
@@ -133,17 +133,17 @@ TEMPLATE_TEST_CASE("TensorProdObs", "[Observables]", float, double) {
             "PauliX", std::vector<size_t>{2});
         auto ob2_2 = std::make_shared<NamedObs<PrecisionT>>(
             "PauliZ", std::vector<size_t>{3});
-        auto ob2 = std::make_shared<TensorProdObs<PrecisionT>>(ob2_1, ob2_2);
+        auto ob2 = TensorProdObs<PrecisionT>::create({ob2_1, ob2_2});
 
-        REQUIRE_NOTHROW(std::make_shared<TensorProdObs<PrecisionT>>(ob1, ob2));
+        REQUIRE_NOTHROW(TensorProdObs<PrecisionT>::create({ob1, ob2}));
     }
 
     SECTION("getObsName") {
         auto ob =
-            TensorProdObs<PrecisionT>{std::make_shared<NamedObs<PrecisionT>>(
+            TensorProdObs<PrecisionT>(std::make_shared<NamedObs<PrecisionT>>(
                                           "PauliX", std::vector<size_t>{0}),
                                       std::make_shared<NamedObs<PrecisionT>>(
-                                          "PauliZ", std::vector<size_t>{1})};
+                                          "PauliZ", std::vector<size_t>{1}));
         REQUIRE(ob.getObsName() == "PauliX[0] @ PauliZ[1]");
     }
 

@@ -3,6 +3,7 @@
 #include <complex>
 #include <iostream>
 #include <limits>
+#include <random>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -520,6 +521,73 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=Ham[Z0+Z1+Z2], "
         CHECK((-0.47 * sin(param[0]) == Approx(jacobian[0]).margin(1e-7)));
         CHECK((-0.96 * sin(param[2]) == Approx(jacobian[1]).margin(1e-7)));
     }
+}
+
+template <typename RandomEngine>
+std::vector<int> randomIntVector(RandomEngine &re, size_t size, int min,
+                                 int max) {
+    std::uniform_int_distribution<int> dist(min, max);
+    std::vector<int> res;
+
+    res.reserve(size);
+    for (size_t i = 0; i < size; i++) {
+        res.emplace_back(dist(re));
+    }
+    return res;
+}
+
+TEST_CASE(
+    "Algorithms::adjointJacobian with exceedingly complicated Hamiltonian",
+    "[Algorithms]") {
+    using namespace std::literals;
+    using Pennylane::Algorithms::detail::HamiltonianApplyInPlace;
+
+    std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+    std::vector<size_t> t_params{0, 2};
+
+    std::mt19937 re{1337};
+    const size_t num_qubits = 8;
+    const size_t n_terms = 1024;
+
+    std::array<std::string_view, 4> pauli_strs = {""sv, "PauliX"sv, "PauliY"sv,
+                                                  "PauliZ"sv};
+
+    std::vector<double> coeffs;
+    std::vector<std::shared_ptr<Observable<double>>> terms;
+
+    std::uniform_real_distribution<double> dist(-1.0, 1.0);
+
+    for (size_t k = 0; k < n_terms; k++) {
+        auto term_pauli = randomIntVector(re, num_qubits, 0, 3);
+
+        std::vector<std::shared_ptr<Observable<double>>> term_comp;
+        for (size_t i = 0; i < num_qubits; i++) {
+            if (term_pauli[i] == 0) {
+                continue;
+            }
+            auto wires = std::vector<size_t>();
+            wires.emplace_back(i);
+            auto ob = std::make_shared<NamedObs<double>>(
+                std::string{pauli_strs[term_pauli[i]]}, wires);
+            term_comp.push_back(std::move(ob));
+        }
+
+        coeffs.emplace_back(dist(re));
+        terms.emplace_back(TensorProdObs<double>::create(term_comp));
+    }
+    std::vector<std::complex<double>> psi(1 << num_qubits);
+    std::normal_distribution<double> ndist;
+    for (auto &e : psi) {
+        e = ndist(re);
+    }
+
+    StateVectorManagedCPU<double> sv1(psi.data(), psi.size());
+    StateVectorManagedCPU<double> sv2(psi.data(), psi.size());
+
+    HamiltonianApplyInPlace<double, false>::run(coeffs, terms, sv1);
+    HamiltonianApplyInPlace<double, true>::run(coeffs, terms, sv2);
+
+    REQUIRE(sv1.getDataVector() == PLApprox(sv2.getDataVector()).margin(1e-7));
 }
 
 TEST_CASE("Algorithms::adjointJacobian Test HermitianObs", "[Algorithms]") {

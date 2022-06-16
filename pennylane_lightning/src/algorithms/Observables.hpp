@@ -230,6 +230,28 @@ template <typename T> class TensorProdObs final : public Observable<T> {
     }
 
     /**
+     * @brief Convenient wrapper for the constructor as the constructor does not
+     * convert the std::shared_ptr with a derived class correctly.
+     *
+     * This function is useful as std::make_shared does not handle
+     * brace-enclosed initializer list correctly.
+     *
+     * @param obs List of observables
+     */
+    static auto
+    create(std::initializer_list<std::shared_ptr<Observable<T>>> obs)
+        -> std::shared_ptr<TensorProdObs<T>> {
+        return std::shared_ptr<TensorProdObs<T>>{
+            new TensorProdObs(std::move(obs))};
+    }
+
+    static auto create(std::vector<std::shared_ptr<Observable<T>>> obs)
+        -> std::shared_ptr<TensorProdObs<T>> {
+        return std::shared_ptr<TensorProdObs<T>>{
+            new TensorProdObs(std::move(obs))};
+    }
+
+    /**
      * @brief Get the number of operations in observable.
      *
      * @return size_t
@@ -375,6 +397,9 @@ template <typename T> class Hamiltonian final : public Observable<T> {
      *
      * This function is useful as std::make_shared does not handle
      * brace-enclosed initializer list correctly.
+     *
+     * @param arg1 Argument to construct coefficients
+     * @param arg2 Argument to construct terms
      */
     static auto
     create(std::initializer_list<T> arg1,
