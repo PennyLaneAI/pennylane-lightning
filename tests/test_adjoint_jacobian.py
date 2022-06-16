@@ -623,6 +623,7 @@ def circuit_ansatz(params, wires):
     # #     qml.PauliRot(params[12], "XXYZ", wires=[wires[0], wires[1], wires[2], wires[3]])
     qml.CPhase(params[12], wires=[wires[3], wires[2]])
     qml.IsingXX(params[13], wires=[wires[1], wires[0]])
+    qml.IsingXY(params[14], wires=[wires[3], wires[2]])
     qml.IsingYY(params[14], wires=[wires[3], wires[2]])
     qml.IsingZZ(params[14], wires=[wires[2], wires[1]])
     qml.U1(params[15], wires=wires[0])
