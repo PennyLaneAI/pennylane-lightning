@@ -309,14 +309,19 @@ class LightningQubit(DefaultQubit):
             return None
 
         tp_shift = []
+        record_tp_rows = []
+        all_params = 0
 
         for op_idx, tp in enumerate(trainable_params):
             op, _ = tape.get_operation(
                 op_idx
             )  # get op_idx-th operator among differentiable operators
-            if isinstance(op, Operation):
-                # We now just ignore them
+            if isinstance(op, Operation) and not isinstance(op, (BasisState, QubitStateVector)):
+                # We now just ignore non-op or state preps
                 tp_shift.append(tp)
+                record_tp_rows.append(all_params)
+            all_params += 1
+
 
         if use_sp:
             # When the first element of the tape is state preparation. Still, I am not sure
@@ -330,6 +335,8 @@ class LightningQubit(DefaultQubit):
             "obs_serialized": obs_serialized,
             "ops_serialized": ops_serialized,
             "tp_shift": tp_shift,
+            "record_tp_rows": record_tp_rows,
+            "all_params": all_params
         }
 
     def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
@@ -376,7 +383,6 @@ class LightningQubit(DefaultQubit):
                     trainable_params,
                 )
                 jac.extend(jac_local)
-            jac = np.array(jac)
         else:
             jac = adjoint_diff.adjoint_jacobian(
                 processed_data["state_vector"],
@@ -384,7 +390,11 @@ class LightningQubit(DefaultQubit):
                 processed_data["ops_serialized"],
                 trainable_params,
             )
-        return jac.reshape(-1, len(trainable_params))
+        jac = jac.reshape(-1, len(trainable_params))
+        jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
+        jac_r[:,processed_data["record_tp_rows"]] = jac
+        return jac_r
+
 
     def vjp(self, measurements, dy, starting_state=None, use_device_state=False):
         """Generate the processing function required to compute the vector-Jacobian products of a tape.

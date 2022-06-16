@@ -818,6 +818,45 @@ class TestAdjointJacobianQNode:
 
         assert np.allclose(grad_adjoint, grad_fd, atol=tol)
 
+@pytest.mark.parametrize("r_dtype,c_dtype", [[np.float32, np.complex64], [np.float64, np.complex128]])
+def test_qchem_expvalcost_correct(r_dtype, c_dtype):
+    from pennylane import qchem
+
+    symbols = ["Li", "H"]
+    geometry = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 2.969280527])
+    H, qubits = qchem.molecular_hamiltonian(
+        symbols,
+        geometry,
+        active_electrons=2,
+        active_orbitals=5
+    )
+    active_electrons = 2
+    hf_state = qchem.hf_state(active_electrons, qubits)
+
+    def circuit_1(params, wires):
+        qml.BasisState(hf_state, wires=wires)
+        qml.RX(params[0], wires=0)
+        qml.RY(params[0], wires=1)
+        qml.RZ(params[0], wires=2)
+        qml.Hadamard(wires=1)
+
+    diff_method='adjoint'
+    custom_decomps={'DoubleExcitation': qml.DoubleExcitation.compute_decomposition}
+    dev_lig = qml.device("lightning.qubit", wires=qubits, c_dtype = c_dtype,
+            custom_decomps=custom_decomps)
+    cost_fn_lig = qml.ExpvalCost(circuit_1, H, dev_lig, optimize=False, diff_method=diff_method)
+    circuit_gradient_lig = qml.grad(cost_fn_lig, argnum=0)
+    params = np.array([0.123], requires_grad=True)
+    grads_lig = circuit_gradient_lig(params)
+
+    dev_def = qml.device("default.qubit", wires=qubits)
+    cost_fn_def = qml.ExpvalCost(circuit_1, H, dev_def, optimize=False, diff_method=diff_method)
+    circuit_gradient_def = qml.grad(cost_fn_def, argnum=0)
+    params = np.array([0.123], requires_grad=True)
+    grads_def = circuit_gradient_def(params)
+
+    assert np.allclose(grads_lig, grads_def)
+
 
 def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
