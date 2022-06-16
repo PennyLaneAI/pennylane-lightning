@@ -294,31 +294,35 @@ template <class T> struct HamiltonianApplyInPlace<T, true> {
 
         std::vector<std::complex<T>, decltype(allocator)> sum(
             length, std::complex<T>{}, allocator);
+
+        std::vector<std::complex<T>, decltype(allocator)> local_sv(allocator);
+        size_t nthreads = 1;
+
 #pragma omp parallel default(none) firstprivate(length, allocator)             \
-    shared(coeffs, terms, sv, sum)
+    shared(coeffs, terms, sv, sum, nthreads, local_sv)
         {
-            const auto nthreads = static_cast<size_t>(omp_get_num_threads());
-            std::vector<std::complex<T>, decltype(allocator)> local_sv(
-                nthreads * length, std::complex<T>{}, allocator);
+#pragma omp single
+            {
+                nthreads = static_cast<size_t>(omp_get_num_threads());
+                local_sv.resize(nthreads * length, std::complex<T>{});
+            }
 
             int tid = omp_get_thread_num();
+            StateVectorManagedCPU<T> tmp(sv.getNumQubits());
 
 #pragma omp for
             for (size_t term_idx = 0; term_idx < terms.size(); term_idx++) {
-                StateVectorManagedCPU<T> tmp(sv);
+                tmp.updateData(sv.getDataVector());
                 terms[term_idx]->applyInPlace(tmp);
                 Util::scaleAndAdd(
                     length, std::complex<T>{coeffs[term_idx], 0.0},
                     tmp.getData(), local_sv.data() + length * tid);
             }
+        }
 
-#pragma omp critical
-            {
-                for (size_t i = 0; i < nthreads; i++) {
-                    Util::scaleAndAdd(length, std::complex<T>{1.0, 0.0},
-                                      local_sv.data() + length * i, sum.data());
-                }
-            }
+        for (size_t i = 0; i < nthreads; i++) {
+            Util::scaleAndAdd(length, std::complex<T>{1.0, 0.0},
+                              local_sv.data() + length * i, sum.data());
         }
         sv.updateData(sum);
     }
