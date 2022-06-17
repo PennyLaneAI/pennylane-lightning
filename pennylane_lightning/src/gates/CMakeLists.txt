@@ -1,6 +1,13 @@
 project(lightning_gates)
 
-set(GATES_FILES GateUtil.cpp DynamicDispatcher.cpp CACHE INTERNAL "" FORCE)
+set(GATES_FILES GateUtil.cpp CACHE INTERNAL "" FORCE)
+
+if ((${CMAKE_SYSTEM_NAME} STREQUAL "Linux") AND (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(AMD64)|(X64)|(x64)|(x86_64)"))
+    message(STATUS "Enable AVX2/AVX512 kernels")
+    list(APPEND GATES_FILES "RegisterKernels_x64.cpp")
+else()
+    list(APPEND GATES_FILES "RegisterKernelsDefault.cpp")
+endif()
 
 add_library(lightning_gates STATIC ${GATES_FILES})
 target_link_libraries(lightning_gates PRIVATE lightning_compile_options

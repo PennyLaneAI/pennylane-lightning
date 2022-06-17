@@ -61,14 +61,11 @@ inline auto getMemoryModel(const void *ptr) -> CPUMemoryModel {
  * @return CPUMemoryModel
  */
 inline auto bestCPUMemoryModel() -> CPUMemoryModel {
-    if constexpr (Util::Constant::use_avx512f) {
-        // If the binary is compiled with AVX512F support
+    if constexpr (Util::Constant::cpu_arch == Util::Constant::CPUArch::X86_64) {
         if (Util::RuntimeInfo::AVX512F()) {
             // and the CPU support it as well
             return CPUMemoryModel::Aligned512;
         }
-    }
-    if constexpr (Util::Constant::use_avx2) {
         if (Util::RuntimeInfo::AVX2()) {
             return CPUMemoryModel::Aligned256;
         }
@@ -107,5 +104,10 @@ template <class T>
 constexpr auto getAllocator(CPUMemoryModel memory_model)
     -> Util::AlignedAllocator<T> {
     return Util::AlignedAllocator<T>{getAlignment<T>(memory_model)};
+}
+
+template <class T>
+constexpr auto getBestAllocator() -> Util::AlignedAllocator<T> {
+    return getAllocator<T>(bestCPUMemoryModel());
 }
 } // namespace Pennylane

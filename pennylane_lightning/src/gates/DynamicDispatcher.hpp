@@ -33,6 +33,7 @@
 #include <functional>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -115,6 +116,8 @@ template <typename PrecisionT> class DynamicDispatcher {
                        MatrixFunc, Util::PairHash>
         matrices_;
 
+    std::unordered_set<Gates::KernelType> kernels_;
+
     DynamicDispatcher() {
         using Gates::KernelType;
         constexpr static auto gntr_names_without_prefix =
@@ -135,6 +138,13 @@ template <typename PrecisionT> class DynamicDispatcher {
     static DynamicDispatcher &getInstance() {
         static DynamicDispatcher singleton;
         return singleton;
+    }
+
+    /**
+     * @brief All registered kernels
+     */
+    [[nodiscard]] auto registerdKernels() const -> const std::unordered_set<Gates::KernelType>& {
+        return kernels_;
     }
 
     /**
@@ -167,6 +177,7 @@ template <typename PrecisionT> class DynamicDispatcher {
         // TODO: Add mutex when we go to multithreading
         gates_.emplace(std::make_pair(gate_op, kernel),
                        std::forward<FunctionType>(func));
+        kernels_.insert(kernel);
     }
 
     /**
@@ -180,18 +191,18 @@ template <typename PrecisionT> class DynamicDispatcher {
         // TODO: Add mutex when we go to multithreading
         generators_.emplace(std::make_pair(gntr_op, kernel),
                             std::forward<FunctionType>(func));
+        kernels_.insert(kernel);
     }
 
     /**
      * @brief Register a new matrix operation. Can pass a custom
      * kernel
      */
-    // template <typename FunctionType>
     void registerMatrixOperation(Gates::MatrixOperation mat_op,
                                  Gates::KernelType kernel, MatrixFunc func) {
-        // FunctionType&& func) {
         // TODO: Add mutex when we go to multithreading
         matrices_.emplace(std::make_pair(mat_op, kernel), func);
+        kernels_.insert(kernel);
     }
 
     /**

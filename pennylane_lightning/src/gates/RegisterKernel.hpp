@@ -12,21 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file DynamicDispatcher.cpp
+ * @file RegisterKernel.hpp
  * Register all gate and generator implementations
  */
 #include "DynamicDispatcher.hpp"
-#include "AvailableKernels.hpp"
+#include "GateOperation.hpp"
 #include "Constant.hpp"
 #include "ConstantUtil.hpp"
 #include "GateUtil.hpp"
 #include "OpToMemberFuncPtr.hpp"
 #include "SelectKernel.hpp"
 
-using namespace Pennylane;
-
 /// @cond DEV
-namespace {
+namespace Pennylane {
 /**
  * @brief return a lambda function for the given kernel and gate operation
  *
@@ -53,9 +51,7 @@ constexpr auto gateOpToFunctor() {
         Gates::callGateOps(func_ptr, data, num_qubits, wires, inverse, params);
     };
 }
-/// @endcond
 
-/// @cond DEV
 /**
  * @brief Internal recursion function for constructGateOpsFunctorTuple
  *
@@ -222,37 +218,15 @@ void registerAllImplementedMatrixOps() {
         matrix_op_functor_tuple<PrecisionT, GateImplementation>);
 }
 
-/// @cond DEV
 /**
  * @brief Internal function to iterate over all available kernels in
  * the compile time
  */
-template <class PrecisionT, class ParamT, class TypeList>
-void registerKernelIter() {
-    if constexpr (std::is_same_v<TypeList, void>) {
-        return;
-    } else {
-        registerAllImplementedGateOps<PrecisionT, ParamT,
-                                      typename TypeList::Type>();
-        registerAllImplementedGeneratorOps<PrecisionT,
-                                           typename TypeList::Type>();
-        registerAllImplementedMatrixOps<PrecisionT, typename TypeList::Type>();
-        registerKernelIter<PrecisionT, ParamT, typename TypeList::Next>();
-    }
+template <class PrecisionT, class ParamT, class GateImplementation>
+void registerKernel() {
+    registerAllImplementedGateOps<PrecisionT, ParamT, GateImplementation>();
+    registerAllImplementedGeneratorOps<PrecisionT, GateImplementation>();
+    registerAllImplementedMatrixOps<PrecisionT, GateImplementation>();
 }
+} // namespace Pennylane
 /// @endcond
-} // namespace
-
-/// @cond DEV
-namespace Pennylane::Internal {
-template <class PrecisionT, class ParamT> int registerAllAvailableKernels() {
-    registerKernelIter<PrecisionT, ParamT, AvailableKernels>();
-    return 1;
-}
-/// @endcond
-
-// explicit instantiations
-template int registerAllAvailableKernels<float, float>();
-template int registerAllAvailableKernels<double, double>();
-
-} // namespace Pennylane::Internal
