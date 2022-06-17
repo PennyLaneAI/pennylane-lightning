@@ -80,6 +80,7 @@ enum class GeneratorOperation : uint32_t {
     RY,
     RZ,
     IsingXX,
+    IsingXY,
     IsingYY,
     IsingZZ,
     CRX,
