@@ -10,14 +10,14 @@
 // limitations under the License.
 #pragma once
 
+#include "Util.hpp"
+
 #include <exception>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <type_traits>
 #include <utility>
-
-#include "Util.hpp"
 
 /**
  * @brief Macro that throws `%LightningException` with given message.

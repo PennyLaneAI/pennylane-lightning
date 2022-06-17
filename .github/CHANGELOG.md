@@ -10,6 +10,8 @@
 
 * Add IsingXY gate operation. 
 [(#303)](https://github.com/PennyLaneAI/pennylane-lightning/pull/303)
+* Support qml.state() in vjp and Hamiltonian in adjoint jacobian.
+[(#294)](https://github.com/PennyLaneAI/pennylane-lightning/pull/294)
 
 ### Breaking changes
 

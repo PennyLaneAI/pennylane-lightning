@@ -15,5 +15,9 @@
 #include "AdjointDiff.hpp"
 
 // explicit instantiation
-template class Pennylane::Algorithms::AdjointJacobian<float>;
-template class Pennylane::Algorithms::AdjointJacobian<double>;
+template void Pennylane::Algorithms::adjointJacobian<float>(
+    std::span<float> jac, const JacobianData<float> &jd, bool apply_operations);
+template void
+Pennylane::Algorithms::adjointJacobian<double>(std::span<double> jac,
+                                               const JacobianData<double> &jd,
+                                               bool apply_operations);

@@ -13,88 +13,27 @@
 // limitations under the License.
 #pragma once
 
+#include "Macros.hpp"
+#include "Observables.hpp"
+#include "StateVectorManagedCPU.hpp"
+#include "Util.hpp"
+
+#if defined(_OPENMP)
+#include <omp.h>
+#endif
+
 #include <complex>
 #include <cstring>
+#include <memory>
+#include <stdexcept>
+#include <typeinfo>
 #include <utility>
-#include <variant>
 #include <vector>
 
 namespace Pennylane::Algorithms {
-
-/**
- * @brief Utility struct for observable operations used by AdjointJacobian
- * class.
- *
- */
-template <class T = double> class ObsDatum {
-  public:
-    /**
-     * @brief Variant type of stored parameter data.
-     */
-    using param_var_t = std::variant<std::monostate, std::vector<T>,
-                                     std::vector<std::complex<T>>>;
-
-    /**
-     * @brief Copy constructor for an ObsDatum object, representing a given
-     * observable.
-     *
-     * @param obs_name Name of each operation of the observable. Tensor product
-     * observables have more than one operation.
-     * @param obs_params Parameters for a given observable operation ({} if
-     * optional).
-     * @param obs_wires Wires upon which to apply operation. Each observable
-     * operation will be a separate nested list.
-     */
-    ObsDatum(std::vector<std::string> obs_name,
-             std::vector<param_var_t> obs_params,
-             std::vector<std::vector<size_t>> obs_wires)
-        : obs_name_{std::move(obs_name)},
-          obs_params_(std::move(obs_params)), obs_wires_{
-                                                  std::move(obs_wires)} {};
-
-    /**
-     * @brief Get the number of operations in observable.
-     *
-     * @return size_t
-     */
-    [[nodiscard]] auto getSize() const -> size_t { return obs_name_.size(); }
-    /**
-     * @brief Get the name of the observable operations.
-     *
-     * @return const std::vector<std::string>&
-     */
-    [[nodiscard]] auto getObsName() const -> const std::vector<std::string> & {
-        return obs_name_;
-    }
-    /**
-     * @brief Get the parameters for the observable operations.
-     *
-     * @return const std::vector<std::vector<T>>&
-     */
-    [[nodiscard]] auto getObsParams() const
-        -> const std::vector<param_var_t> & {
-        return obs_params_;
-    }
-    /**
-     * @brief Get the wires for each observable operation.
-     *
-     * @return const std::vector<std::vector<size_t>>&
-     */
-    [[nodiscard]] auto getObsWires() const
-        -> const std::vector<std::vector<size_t>> & {
-        return obs_wires_;
-    }
-
-  private:
-    const std::vector<std::string> obs_name_;
-    const std::vector<param_var_t> obs_params_;
-    const std::vector<std::vector<size_t>> obs_wires_;
-};
-
 /**
  * @brief Utility class for encapsulating operations used by AdjointJacobian
  * class.
- *
  */
 template <class T> class OpsData {
   private:
@@ -243,26 +182,39 @@ template <class T> class OpsData {
     [[nodiscard]] auto getNumNonParOps() const -> size_t {
         return num_nonpar_ops_;
     }
+
+    /**
+     * @brief Get total number of parameters.
+     */
+    [[nodiscard]] auto getTotalNumParams() const -> size_t {
+        return std::accumulate(
+            ops_params_.begin(), ops_params_.end(), size_t{0U},
+            [](size_t acc, auto &params) { return acc + params.size(); });
+    }
 };
 
 /**
  * @brief Represent the serialized data of a QuantumTape to differentiate
- *
- * @param num_parameters Number of parameters in the Tape.
- * @param num_elements Length of the statevector data.
- * @param psi Pointer to the statevector data.
- * @param observables Observables for which to calculate Jacobian.
- * @param operations Operations used to create given state.
- * @param trainableParams List of parameters participating in Jacobian
- * calculation.
  */
 template <class T> class JacobianData {
   private:
-    size_t num_parameters;
-    size_t num_elements;
-    const std::complex<T> *psi;
-    const std::vector<ObsDatum<T>> observables;
+    size_t num_parameters;      /**< Number of parameters in the tape */
+    size_t num_elements;        /**< Length of the statevector data */
+    const std::complex<T> *psi; /**< Pointer to the statevector data */
+
+    /**
+     * @var observables
+     * Observables for which to calculate Jacobian.
+     */
+    const std::vector<std::shared_ptr<Observable<T>>> observables;
+
+    /**
+     * @var operations
+     * operations Operations used to create given state.
+     */
     const OpsData<T> operations;
+
+    /* @var trainableParams      */
     const std::vector<size_t> trainableParams;
 
   public:
@@ -274,15 +226,26 @@ template <class T> class JacobianData {
      * @param ps Pointer to the statevector data.
      * @param obs Observables for which to calculate Jacobian.
      * @param ops Operations used to create given state.
-     * @param trainP List of parameters participating in Jacobian
-     * calculation. This must be sorted.
+     * @param trainP Sorted list of parameters participating in Jacobian
+     * computation.
+     *
+     * @rst
+     * Each value :math:`i` in trainable params means that
+     * we want to take a derivative respect to the :math:`i`-th operation.
+     *
+     * Further note that ``ops`` does not contain state preparation operations
+     * (e.g. QubitStateVector) or Hamiltonian coefficients.
+     * @endrst
      */
     JacobianData(size_t num_params, size_t num_elem, std::complex<T> *ps,
-                 std::vector<ObsDatum<T>> obs, OpsData<T> ops,
-                 std::vector<size_t> trainP)
+                 std::vector<std::shared_ptr<Observable<T>>> obs,
+                 OpsData<T> ops, std::vector<size_t> trainP)
         : num_parameters(num_params), num_elements(num_elem), psi(ps),
           observables(std::move(obs)), operations(std::move(ops)),
-          trainableParams(std::move(trainP)) {}
+          trainableParams(std::move(trainP)) {
+        /* When the Hamiltonian has parameters, trainable parameters include
+         * these. We explicitly ignore them. */
+    }
 
     /**
      * @brief Get Number of parameters in the Tape.
@@ -312,10 +275,10 @@ template <class T> class JacobianData {
     /**
      * @brief Get observables for which to calculate Jacobian.
      *
-     * @return std::vector<ObsDatum<T>>&
+     * @return List of observables
      */
     [[nodiscard]] auto getObservables() const
-        -> const std::vector<ObsDatum<T>> & {
+        -> const std::vector<std::shared_ptr<Observable<T>>> & {
         return observables;
     }
 
