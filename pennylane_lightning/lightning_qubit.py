@@ -224,7 +224,7 @@ class LightningQubit(DefaultQubit):
 
     @staticmethod
     def _check_adjdiff_supported_measurements(measurements: List[MeasurementProcess]):
-        """Check whether given list of measurement is supported by adjoint_diff
+        """Check whether given list of measurement is supported by adjoint_diff.
 
         Args:
             measurements (List[MeasurementProcess]): a list of measurement processes to check.
@@ -266,8 +266,7 @@ class LightningQubit(DefaultQubit):
         observables, or operations by the Lightning adjoint differentiation method.
 
         Args:
-            tape (.QuantumTape): quantum tape to differentiate
-
+            tape (.QuantumTape): quantum tape to differentiate.
         """
         for op in operations:
             if op.num_params > 1 and not isinstance(op, Rot):
@@ -396,7 +395,7 @@ class LightningQubit(DefaultQubit):
         return jac_r
 
     def vjp(self, measurements, dy, starting_state=None, use_device_state=False):
-        """Generate the processing function required to compute the vector-Jacobian products of a tape.
+        r"""Generate the processing function required to compute the vector-Jacobian products of a tape.
 
         This function can be used with multiple expectation values or a quantum state. When a quantum state
         is given,
@@ -423,6 +422,7 @@ class LightningQubit(DefaultQubit):
             use_device_state (bool): use current device state to initialize. A forward pass of the same
                 circuit should be the last thing the device has executed. If a ``starting_state`` is
                 provided, that takes precedence.
+
         Returns:
             The processing function required to compute the vector-Jacobian products of a tape.
         """
@@ -509,6 +509,7 @@ class LightningQubit(DefaultQubit):
             use_device_state (bool): use current device state to initialize. A forward pass of the same
                 circuit should be the last thing the device has executed. If a ``starting_state`` is
                 provided, that takes precedence.
+
         Returns:
             The processing function required to compute the vector-Jacobian products of a batch of tapes.
         """
