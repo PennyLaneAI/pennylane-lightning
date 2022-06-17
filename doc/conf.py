@@ -120,8 +120,7 @@ exhale_args = {
     # TIP: if using the sphinx-bootstrap-theme, you need
     # "treeViewIsBootstrap": True,
     "exhaleExecutesDoxygen": True,
-    # "exhaleDoxygenStdin": ("INPUT = " + " ".join(CPP_FILES) + "\nEXCLUDE_SYMBOLS = std::* "),
-    "exhaleDoxygenStdin": ("INPUT = " + " ".join(CPP_FILES) + " " "EXCLUDE_SYMBOLS = std::* "),
+    "exhaleDoxygenStdin": ("INPUT = " + " ".join(CPP_FILES) + "\nEXCLUDE_SYMBOLS = std::* "),
     "afterTitleDescription": inspect.cleandoc(
         """
         The Pennylane Lightning C++ API is intended to be called from Python through Pybind11. Direct use of the C++ API is currently unsupported and is provided for reference only.
