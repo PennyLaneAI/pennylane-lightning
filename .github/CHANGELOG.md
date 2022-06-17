@@ -1,19 +1,3 @@
-# Release 0.25.0-dev
-
-### New features since last release
-
-### Breaking changes
-
-### Improvements
-
-### Documentation
-
-### Bug fixes
-
-### Contributors
-
----
-
 # Release 0.24.0
 
 ### New features since last release

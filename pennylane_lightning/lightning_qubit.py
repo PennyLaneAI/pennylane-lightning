@@ -395,7 +395,7 @@ class LightningQubit(DefaultQubit):
         return jac_r
 
     def vjp(self, measurements, dy, starting_state=None, use_device_state=False):
-        r"""Generate the processing function required to compute the vector-Jacobian products of a tape.
+        """Generate the processing function required to compute the vector-Jacobian products of a tape.
 
         This function can be used with multiple expectation values or a quantum state. When a quantum state
         is given,
