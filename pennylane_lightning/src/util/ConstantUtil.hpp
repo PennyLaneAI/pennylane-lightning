@@ -201,7 +201,7 @@ constexpr auto prepend_to_tuple(T &&elt, Tuple &&t) {
  * @param tuple Tuple to transform
  */
 template <class Tuple> constexpr auto tuple_to_array(Tuple &&tuple) {
-    using T = std::tuple_element_t<0, remove_cvref_t<Tuple>>;
+    using T = std::tuple_element_t<0, std::remove_cvref_t<Tuple>>;
     return std::apply(
         [](auto... n) { return std::array<T, sizeof...(n)>{n...}; },
         std::forward<Tuple>(tuple));

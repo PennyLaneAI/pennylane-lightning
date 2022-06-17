@@ -8,6 +8,9 @@
 * Add a new dispatch mechanism for future kernels.
 [(#291)](https://github.com/PennyLaneAI/pennylane-lightning/pull/291)
 
+* Support qml.state() in vjp and Hamiltonian in adjoint jacobian.
+[(#294)](https://github.com/PennyLaneAI/pennylane-lightning/pull/294)
+
 * Add IsingXY gate operation. 
 [(#303)](https://github.com/PennyLaneAI/pennylane-lightning/pull/303)
 
