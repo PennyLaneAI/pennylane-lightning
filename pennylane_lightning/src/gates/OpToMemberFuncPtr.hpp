@@ -299,6 +299,12 @@ struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
 };
 template <class PrecisionT, class GateImplementation>
 struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
+                                  GeneratorOperation::IsingXY> {
+    constexpr static auto value =
+        &GateImplementation::template applyGeneratorIsingXY<PrecisionT>;
+};
+template <class PrecisionT, class GateImplementation>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
                                   GeneratorOperation::IsingYY> {
     constexpr static auto value =
         &GateImplementation::template applyGeneratorIsingYY<PrecisionT>;

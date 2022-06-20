@@ -51,13 +51,6 @@ jobs:
           name: ubuntu-test-report
           path: Build/tests/results/report.xml
 
-      - name: Publish test results
-        uses: EnricoMi/publish-unit-test-result-action@v1
-        if: always()
-        with:
-          check_name: Test Report (C++) on Ubuntu
-          files: Build/tests/results/report.xml
-
       - name: Build and run unit tests for code Coverage
         run: |
             cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
@@ -110,13 +103,6 @@ jobs:
         with:
           name: ubuntu-test-report
           path: Build/tests/results/report.xml
-
-      - name: Publish test results
-        uses: EnricoMi/publish-unit-test-result-action@v1
-        if: always()
-        with:
-          check_name: Test Report (C++) on Ubuntu
-          files: Build/tests/results/report.xml
 
       - name: Build and run unit tests for code coverage
         run: |
@@ -184,7 +170,7 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v1
         if: always()
         with:
-          check_name: Test Report (C++) on Ubuntu
+          check_name: Test Report (Linux, Kokkos, and Kokkos Kernels) on Ubuntu
           files: BuildCov/tests/results/report.xml
 
   cppbenchmarksuite:

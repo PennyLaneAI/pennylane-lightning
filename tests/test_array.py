@@ -15,9 +15,7 @@
 Unit tests for the :mod:`pennylane_lightning.LightningQubit` device.
 """
 import numpy as np
-import pennylane as qml
 import pytest
-from pennylane import DeviceError
 
 from pennylane_lightning.lightning_qubit import CPP_BINARY_AVAILABLE
 

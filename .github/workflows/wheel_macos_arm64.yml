@@ -10,6 +10,8 @@ on:
 env:
   CIBW_BUILD: 'cp37-* cp38-* cp39-* cp310-*'
 
+  ARCHS: 'arm64'
+
   # MacOS specific build settings
   CIBW_BEFORE_ALL_MACOS: |
     brew uninstall --force oclint
