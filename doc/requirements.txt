@@ -1,6 +1,6 @@
 breathe
 docutils==0.16
-exhale
+exhale==0.3.1
 graphviz
 pybind11
 sphinx
