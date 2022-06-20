@@ -17,6 +17,7 @@
  */
 #include "cpu_kernels/GateImplementationsAVX2.hpp"
 #include "RegisterKernel.hpp"
+#include "RegisterKernels_x64.hpp"
 
 namespace Pennylane::Internal {
 void registerKernelsAVX2_Float() {

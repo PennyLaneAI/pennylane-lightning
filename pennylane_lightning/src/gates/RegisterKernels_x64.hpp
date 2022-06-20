@@ -17,8 +17,8 @@
 #pragma once
 
 namespace Pennylane::Internal {
-void registerKenelsAVX2_Float();
-void registerKenelsAVX2_Double();
+void registerKernelsAVX2_Float();
+void registerKernelsAVX2_Double();
 //void registerKenelsAVX512_Float();
 //void registerKenelsAVX512_Double();
 }  // namespace Pennylane::Internal

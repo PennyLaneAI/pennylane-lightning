@@ -1,3 +1,5 @@
+#include "cpu_kernels/GateImplementationsLM.hpp"
+#include "cpu_kernels/GateImplementationsPI.hpp"
 #include "TestHelpers.hpp"
 #include "CPUMemoryModel.hpp"
 #include "Util.hpp"
@@ -12,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+
 #if defined(_MSC_VER)
 #pragma warning(disable : 4305)
 #endif
@@ -22,6 +25,7 @@
  */
 
 using namespace Pennylane;
+
 /**
  * @brief Run test suit only when the gate is defined
  */

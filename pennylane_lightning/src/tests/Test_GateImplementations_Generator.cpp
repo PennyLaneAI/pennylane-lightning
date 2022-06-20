@@ -136,8 +136,7 @@ void testGeneratorForGate(RandomEngine &re, bool inverse) {
     }
 }
 
-template <typename PrecisionT, typename ParamT, class GateImplementation,
-          size_t gntr_idx, class RandomEngine>
+template <typename PrecisionT, typename ParamT, size_t gntr_idx, class RandomEngine>
 void testAllGeneratorForKernel(RandomEngine &re) {
     if constexpr (gntr_idx <
                   GateImplementation::implemented_generators.size()) {
@@ -162,5 +161,5 @@ TEMPLATE_TEST_CASE("Test all generators of all kernels",
 
     std::mt19937 re{1337};
 
-    testAllGeneratorsAndKernels<PrecisionT, ParamT, TestKernels>(re);
+    testAllGeneratorsForAllKernels<PrecisionT, ParamT>(re);
 }

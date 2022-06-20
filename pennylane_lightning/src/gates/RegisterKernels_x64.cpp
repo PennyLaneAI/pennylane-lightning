@@ -31,7 +31,7 @@ template <class PrecisionT, class ParamT> int registerAllAvailableKernels() {
         registerKernel<float, float, Gates::GateImplementationsPI>();
 
         if(RuntimeInfo::AVX2()) {
-            registerKenelsAVX2_Float();
+            registerKernelsAVX2_Float();
         }
         return 1;
     }
@@ -40,7 +40,7 @@ template <class PrecisionT, class ParamT> int registerAllAvailableKernels() {
         registerKernel<double, double, Gates::GateImplementationsPI>();
 
         if(RuntimeInfo::AVX2()) {
-            registerKenelsAVX2_Double();
+            registerKernelsAVX2_Double();
         }
         return 1;
     }

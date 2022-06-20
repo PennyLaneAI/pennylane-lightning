@@ -15,8 +15,9 @@ if ((${CMAKE_SYSTEM_NAME} STREQUAL "Linux") AND (${CMAKE_SYSTEM_PROCESSOR} MATCH
     add_library(lightning_gates_register_kernels_x64 STATIC RegisterKernels_x64.cpp)
     target_link_libraries(lightning_gates_register_kernels_x64 PRIVATE lightning_external_libs lightning_compile_options lightning_utils)
     target_include_directories(lightning_gates_register_kernels_x64 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(lightning_gates_register_kernels_x64 PRIVATE lightning_gates_register_kernels_avx2)
 
-    target_link_libraries(lightning_gates_register_kernels INTERFACE lightning_gates_register_kernels_avx2 lightning_gates_register_kernels_x64)
+    target_link_libraries(lightning_gates_register_kernels INTERFACE lightning_gates_register_kernels_x64)
 else()
     add_library(lightning_gates_register_kernels_default STATIC RegisterKernels_Default.cpp)
     target_include_directories(lightning_gates_register_kernels_default PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

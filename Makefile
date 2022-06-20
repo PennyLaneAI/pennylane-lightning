@@ -45,7 +45,7 @@ clean:
 	find . -type d -name '__pycache__' -exec rm -r {} \+
 	rm -rf dist
 	rm -rf build
-	rm -rf BuildTests BuildBench BuildGBench
+	rm -rf BuildTests BuildTidy BuildGBench
 	rm -rf .coverage coverage_html_report/
 	rm -rf tmp
 	rm -rf *.dat
@@ -76,7 +76,7 @@ coverage:
 
 test-cpp:
 	rm -rf ./BuildTests
-	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON
+	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON -DENABLE_AVX=ON
 	cmake --build ./BuildTests --target runner
 	cmake --build ./BuildTests --target test
 
