@@ -167,6 +167,9 @@ int assignDefaultKernelsForGeneratorOp() {
     instance.assignKernelForOp(GeneratorOperation::IsingXX, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
+    instance.assignKernelForOp(GeneratorOperation::IsingXY, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
     instance.assignKernelForOp(GeneratorOperation::IsingYY, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
