@@ -12,40 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file DynamicDispatcher.cpp
- * Register all gate and generator implementations
+ * @file
+ * Register all gate and generator implementations for X86
  */
 #include "DynamicDispatcher.hpp"
 #include "RegisterKernel.hpp"
+#include "RegisterKernels_x64.hpp"
 #include "cpu_kernels/GateImplementationsLM.hpp"
 #include "cpu_kernels/GateImplementationsPI.hpp"
+#include "RuntimeInfo.hpp"
 
 namespace Pennylane::Internal {
 
-__attribute__ ((target ("default")))
-void registerKernelsFloat() {
-    using namespace Pennylane::Gates;
-    registerKernel<float, float, GateImplementationsLM>();
-    registerKernel<float, float, GateImplementationsPI>();
-}
-
-__attribute__ ((target ("default")))
-void registerKernelsDouble() {
-    using namespace Pennylane::Gates;
-    registerKernel<double, double, GateImplementationsLM>();
-    registerKernel<double, double, GateImplementationsPI>();
-}
-
 template <class PrecisionT, class ParamT> int registerAllAvailableKernels() {
+    using Pennylane::Util::RuntimeInfo;
     if constexpr (std::is_same_v<PrecisionT, float> && std::is_same_v<ParamT, float>) {
-        registerKernelsFloat();
+        registerKernel<float, float, Gates::GateImplementationsLM>();
+        registerKernel<float, float, Gates::GateImplementationsPI>();
+
+        if(RuntimeInfo::AVX2()) {
+            registerKenelsAVX2_Float();
+        }
         return 1;
     }
     if constexpr (std::is_same_v<PrecisionT, double> && std::is_same_v<ParamT, double>) {
-        registerKernelsDouble();
+        registerKernel<double, double, Gates::GateImplementationsLM>();
+        registerKernel<double, double, Gates::GateImplementationsPI>();
+
+        if(RuntimeInfo::AVX2()) {
+            registerKenelsAVX2_Double();
+        }
         return 1;
     }
-
     return 0;
 }
 

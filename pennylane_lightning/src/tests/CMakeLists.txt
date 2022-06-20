@@ -73,12 +73,12 @@ set(TEST_SOURCES CreateAllWires.cpp
                  Test_CompilerSupport.cpp
                  Test_DynamicDispatcher.cpp
                  Test_Error.cpp
-                 Test_GateImplementations_CompareKernels.cpp
-                 Test_GateImplementations_Generator.cpp
-                 Test_GateImplementations_Inverse.cpp
-                 Test_GateImplementations_Matrix.cpp
-                 Test_GateImplementations_Nonparam.cpp
-                 Test_GateImplementations_Param.cpp
+                 #Test_GateImplementations_CompareKernels.cpp
+                 #Test_GateImplementations_Generator.cpp
+                 #Test_GateImplementations_Inverse.cpp
+                 #Test_GateImplementations_Matrix.cpp
+                 #Test_GateImplementations_Nonparam.cpp
+                 #Test_GateImplementations_Param.cpp
                  Test_GateUtil.cpp
                  Test_Internal.cpp
                  Test_KernelMap.cpp
@@ -93,7 +93,6 @@ set(TEST_SOURCES CreateAllWires.cpp
                  Test_StateVectorManagedCPU.cpp
                  Test_StateVectorRawCPU.cpp
                  Test_Util.cpp)
-                 #Test_VectorJacobianProduct.cpp)
 
 add_executable(runner ${TEST_SOURCES})
 target_link_libraries(runner PRIVATE lightning_tests_dependency

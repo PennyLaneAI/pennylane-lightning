@@ -34,6 +34,20 @@
 #define PL_UNREACHABLE
 #endif
 
+#if defined(__AVX2__)
+#define PL_USE_AVX2 1
+[[maybe_unused]] static constexpr bool use_avx2 = true;
+#else
+[[maybe_unused]] static constexpr bool use_avx2 = false;
+#endif
+
+#if defined(__AVX512F__)
+#define PL_USE_AVX512F 1
+[[maybe_unused]] static constexpr bool use_avx512f = true;
+#else
+[[maybe_unused]] static constexpr bool use_avx512f = false;
+#endif
+
 #if defined(_OPENMP)
 #define PL_USE_OMP 1
 #endif

@@ -1,5 +1,4 @@
 #include "TestHelpers.hpp"
-#include "TestKernels.hpp"
 #include "CPUMemoryModel.hpp"
 #include "Util.hpp"
 
