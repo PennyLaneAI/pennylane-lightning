@@ -72,16 +72,18 @@ class GateImplementationsAVX2 : public PauliGenerator<GateImplementationsAVX2> {
         /* ControlledPhaseShift, CRX, CRY, CRZ, CRot */
     };
 
-    constexpr static std::array implemented_generators =
-        {GeneratorOperation::RX, GeneratorOperation::RY, GeneratorOperation::RZ};
+    constexpr static std::array implemented_generators = {
+        GeneratorOperation::RX, GeneratorOperation::RY, GeneratorOperation::RZ};
 
-    constexpr static std::array<MatrixOperation, 0> implemented_matrices = {};
+    constexpr static std::array implemented_matrices = {
+        MatrixOperation::SingleQubitOp,
+    };
 
     template <typename PrecisionT>
-    static void applySingleQubitOp(std::complex<PrecisionT> *arr,
-                                   const size_t num_qubits,
-                                   const std::complex<PrecisionT> *matrix,
-                                   const std::vector<size_t>& wires, bool inverse = false) {
+    static void
+    applySingleQubitOp(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                       const std::complex<PrecisionT> *matrix,
+                       const std::vector<size_t> &wires, bool inverse = false) {
         PL_ASSERT(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
 

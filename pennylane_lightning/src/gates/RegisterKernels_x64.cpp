@@ -15,31 +15,33 @@
  * @file
  * Register all gate and generator implementations for X86
  */
+#include "RegisterKernels_x64.hpp"
 #include "DynamicDispatcher.hpp"
 #include "RegisterKernel.hpp"
-#include "RegisterKernels_x64.hpp"
+#include "RuntimeInfo.hpp"
 #include "cpu_kernels/GateImplementationsLM.hpp"
 #include "cpu_kernels/GateImplementationsPI.hpp"
-#include "RuntimeInfo.hpp"
 
 namespace Pennylane::Internal {
 
 template <class PrecisionT, class ParamT> int registerAllAvailableKernels() {
     using Pennylane::Util::RuntimeInfo;
-    if constexpr (std::is_same_v<PrecisionT, float> && std::is_same_v<ParamT, float>) {
+    if constexpr (std::is_same_v<PrecisionT, float> &&
+                  std::is_same_v<ParamT, float>) {
         registerKernel<float, float, Gates::GateImplementationsLM>();
         registerKernel<float, float, Gates::GateImplementationsPI>();
 
-        if(RuntimeInfo::AVX2()) {
+        if (RuntimeInfo::AVX2()) {
             registerKernelsAVX2_Float();
         }
         return 1;
     }
-    if constexpr (std::is_same_v<PrecisionT, double> && std::is_same_v<ParamT, double>) {
+    if constexpr (std::is_same_v<PrecisionT, double> &&
+                  std::is_same_v<ParamT, double>) {
         registerKernel<double, double, Gates::GateImplementationsLM>();
         registerKernel<double, double, Gates::GateImplementationsPI>();
 
-        if(RuntimeInfo::AVX2()) {
+        if (RuntimeInfo::AVX2()) {
             registerKernelsAVX2_Double();
         }
         return 1;

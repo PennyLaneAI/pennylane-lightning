@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file 
+ * @file
  * Register all gate and generator implementations
  */
-#include "cpu_kernels/GateImplementationsAVX2.hpp"
 #include "RegisterKernel.hpp"
 #include "RegisterKernels_x64.hpp"
+#include "cpu_kernels/GateImplementationsAVX2.hpp"
 
 namespace Pennylane::Internal {
 void registerKernelsAVX2_Float() {

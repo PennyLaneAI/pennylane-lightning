@@ -51,15 +51,13 @@ constexpr __m256i setr256i(int32_t  e0, int32_t  e1, int32_t  e2, int32_t  e3,
 }
 // clang-format on
 
-template<>
-struct AVXIntrinsic<float, 8> {
-	// AVX2
-	using Type = __m256;
+template <> struct AVXIntrinsic<float, 8> {
+    // AVX2
+    using Type = __m256;
 };
-template<>
-struct AVXIntrinsic<double, 4> {
-	// AVX2
-	using Type = __m256d;
+template <> struct AVXIntrinsic<double, 4> {
+    // AVX2
+    using Type = __m256d;
 };
 
 template <typename T> struct AVX2Concept {

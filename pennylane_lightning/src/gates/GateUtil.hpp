@@ -86,21 +86,4 @@ struct GateIndices {
           external{generateBitPatterns(
               getIndicesAfterExclusion(wires, num_qubits), num_qubits)} {}
 };
-
-/**
- * @brief Return implemented_gates constexpr member variables for a given kernel
- *
- * This function interfaces the runtime variable kernel with the constant time
- * variable implemented_gates
- */
-auto implementedGatesForKernel(KernelType kernel) -> std::vector<GateOperation>;
-/**
- * @brief Return implemented_generators constexpr member variables for a given
- * kernel
- *
- * This function interfaces the runtime variable kernel with the constant time
- * variable implemented_gates
- */
-auto implementedGeneratorsForKernel(KernelType kernel)
-    -> std::vector<GeneratorOperation>;
 } // namespace Pennylane::Gates

@@ -1,7 +1,5 @@
-#include "OpToMemberFuncPtr.hpp"
-#include "SelectKernel.hpp"
+#include "DynamicDispatcher.hpp"
 #include "TestHelpers.hpp"
-#include "TestKernels.hpp"
 #include "Util.hpp"
 
 #include <catch2/catch.hpp>
@@ -75,38 +73,35 @@ constexpr auto minNumQubitsFor(GeneratorOperation gntr_op) -> size_t {
 constexpr static auto generator_gate_pairs =
     Util::tuple_to_array(generatorGatePairsIter<0>());
 
-template <class PrecisionT, class ParamT, class GateImplementation,
-          GeneratorOperation gntr_op, class RandomEngine>
-void testGeneratorForGate(RandomEngine &re, bool inverse) {
+template <class PrecisionT, class RandomEngine>
+void testGeneratorEqualsGateDerivativeForKernel(
+    RandomEngine &re, Gates::KernelType kernel,
+    Gates::GeneratorOperation gntr_op, bool inverse) {
     using ComplexPrecisionT = std::complex<PrecisionT>;
     constexpr static auto I = Util::IMAG<PrecisionT>();
 
     constexpr static auto eps = PrecisionT{1e-3}; // For finite difference
 
-    constexpr static auto gate_op = Util::lookup(generator_gate_pairs, gntr_op);
-    constexpr static auto gate_name =
-        Util::lookup(Constant::gate_names, gate_op);
-    constexpr static auto min_num_qubits = minNumQubitsFor(gntr_op);
+    const auto gate_op = Util::lookup(generator_gate_pairs, gntr_op);
+    const auto gate_name = Util::lookup(Constant::gate_names, gate_op);
+    const auto min_num_qubits = minNumQubitsFor(gntr_op);
     constexpr static size_t max_num_qubits = 6;
 
+    const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+
+    const auto kernel_name = dispatcher.getKernelName(kernel);
+
     DYNAMIC_SECTION("Test generator of " << gate_name << " for kernel "
-                                         << GateImplementation::name) {
+                                         << kernel_name) {
         for (size_t num_qubits = min_num_qubits; num_qubits < max_num_qubits;
              num_qubits++) {
             const auto wires = createWires(gate_op, num_qubits);
             const auto ini_st = createRandomState<PrecisionT>(re, num_qubits);
 
-            auto gntr_func =
-                GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
-                                           gntr_op>::value;
-            auto gate_func =
-                GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
-                                      gate_op>::value;
-
             /* Apply generator to gntr_st */
             auto gntr_st = ini_st;
-            PrecisionT scale =
-                gntr_func(gntr_st.data(), num_qubits, wires, false);
+            PrecisionT scale = dispatcher.applyGenerator(
+                kernel, gntr_st.data(), num_qubits, gntr_op, wires, false);
             if (inverse) {
                 scale *= -1;
             }
@@ -118,8 +113,10 @@ void testGeneratorForGate(RandomEngine &re, bool inverse) {
             auto diff_st_1 = ini_st;
             auto diff_st_2 = ini_st;
 
-            gate_func(diff_st_1.data(), num_qubits, wires, inverse, eps);
-            gate_func(diff_st_2.data(), num_qubits, wires, inverse, -eps);
+            dispatcher.applyOperation(kernel, diff_st_1.data(), num_qubits,
+                                      gate_op, wires, inverse, {eps});
+            dispatcher.applyOperation(kernel, diff_st_2.data(), num_qubits,
+                                      gate_op, wires, inverse, {-eps});
 
             std::vector<ComplexPrecisionT> gate_der_st(size_t{1U}
                                                        << num_qubits);
@@ -136,30 +133,28 @@ void testGeneratorForGate(RandomEngine &re, bool inverse) {
     }
 }
 
-template <typename PrecisionT, typename ParamT, size_t gntr_idx, class RandomEngine>
-void testAllGeneratorForKernel(RandomEngine &re) {
-    if constexpr (gntr_idx <
-                  GateImplementation::implemented_generators.size()) {
-        constexpr auto gntr_op =
-            GateImplementation::implemented_generators[gntr_idx];
-        testGeneratorForGate<PrecisionT, ParamT, GateImplementation, gntr_op>(
-            re, false);
-        testGeneratorForGate<PrecisionT, ParamT, GateImplementation, gntr_op>(
-            re, true);
-        testAllGeneratorForKernel<PrecisionT, ParamT, GateImplementation,
-                                  gntr_idx + 1>(re);
-    } else {
-        static_cast<void>(re);
+template <typename PrecisionT, class RandomEngine>
+void testAllGeneratorsForKernel(RandomEngine &re, Gates::KernelType kernel) {
+    const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+    const auto all_gntr_ops = dispatcher.registeredGeneratorsForKernel(kernel);
+
+    for (const auto gntr_op : all_gntr_ops) {
+        testGeneratorEqualsGateDerivativeForKernel<PrecisionT>(re, kernel,
+                                                               gntr_op, false);
+        testGeneratorEqualsGateDerivativeForKernel<PrecisionT>(re, kernel,
+                                                               gntr_op, true);
     }
 }
-
 
 TEMPLATE_TEST_CASE("Test all generators of all kernels",
                    "[GateImplementations_Generator]", float, double) {
     using PrecisionT = TestType;
-    using ParamT = TestType;
 
     std::mt19937 re{1337};
 
-    testAllGeneratorsForAllKernels<PrecisionT, ParamT>(re);
+    const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+
+    for (auto kernel : dispatcher.registeredKernels()) {
+        testAllGeneratorsForKernel<PrecisionT>(re, kernel);
+    }
 }

@@ -15,10 +15,10 @@
  * @file RegisterKernel.hpp
  * Register all gate and generator implementations
  */
-#include "DynamicDispatcher.hpp"
-#include "GateOperation.hpp"
 #include "Constant.hpp"
 #include "ConstantUtil.hpp"
+#include "DynamicDispatcher.hpp"
+#include "GateOperation.hpp"
 #include "GateUtil.hpp"
 #include "OpToMemberFuncPtr.hpp"
 #include "SelectKernel.hpp"
@@ -163,7 +163,7 @@ void registerAllImplementedGateOps() {
         return gate_op;
     };
 
-    [[maybe_unused]] const auto registerd_gate_ops = std::apply(
+    [[maybe_unused]] const auto registered_gate_ops = std::apply(
         [&registerGateToDispatcher](auto... elt) {
             return std::make_tuple(registerGateToDispatcher(elt)...);
         },
@@ -187,7 +187,7 @@ void registerAllImplementedGeneratorOps() {
             return gntr_op;
         };
 
-    [[maybe_unused]] const auto registerd_gntr_ops = std::apply(
+    [[maybe_unused]] const auto registered_gntr_ops = std::apply(
         [&registerGeneratorToDispatcher](auto... elt) {
             return std::make_tuple(registerGeneratorToDispatcher(elt)...);
         },
@@ -211,7 +211,7 @@ void registerAllImplementedMatrixOps() {
         return mat_op;
     };
 
-    [[maybe_unused]] const auto registerd_mat_ops = std::apply(
+    [[maybe_unused]] const auto registered_mat_ops = std::apply(
         [&registerMatrixToDispatcher](auto... elt) {
             return std::make_tuple(registerMatrixToDispatcher(elt)...);
         },
@@ -227,6 +227,9 @@ void registerKernel() {
     registerAllImplementedGateOps<PrecisionT, ParamT, GateImplementation>();
     registerAllImplementedGeneratorOps<PrecisionT, GateImplementation>();
     registerAllImplementedMatrixOps<PrecisionT, GateImplementation>();
+
+    DynamicDispatcher<PrecisionT>::getInstance().registerKernelName(
+        GateImplementation::kernel_id, std::string{GateImplementation::name});
 }
 } // namespace Pennylane
 /// @endcond

@@ -10,10 +10,10 @@
 #include <catch2/catch.hpp>
 
 #include "DynamicDispatcher.hpp"
+#include "Macros.hpp"
 #include "OpToMemberFuncPtr.hpp"
 #include "SelectKernel.hpp"
 #include "Util.hpp"
-#include "Macros.hpp"
 
 /* Kernels */
 #include "cpu_kernels/GateImplementationsLM.hpp"
@@ -33,6 +33,24 @@ using Pennylane::Gates::callGateOps;
  * We just check DynamicDispatcher calls the correct function by comparing
  * the result from it with that of the direct call.
  */
+
+TEMPLATE_TEST_CASE("Print registered kernels", "[DynamicDispatcher]", float,
+                   double) {
+    using Pennylane::Util::operator<<;
+    const auto &dispatcher = DynamicDispatcher<TestType>::getInstance();
+    const auto kernels = dispatcher.registeredKernels();
+
+    std::ostringstream ss;
+    ss << "Registered kernels: ";
+    for (size_t n = 0; n < kernels.size(); n++) {
+        ss << dispatcher.getKernelName(kernels[n]);
+        if (n != kernels.size() - 1) {
+            ss << ", ";
+        }
+    }
+    WARN(ss.str());
+    REQUIRE(true);
+}
 
 TEMPLATE_TEST_CASE("DynamicDispatcher::applyOperation", "[DynamicDispatcher]",
                    float, double) {

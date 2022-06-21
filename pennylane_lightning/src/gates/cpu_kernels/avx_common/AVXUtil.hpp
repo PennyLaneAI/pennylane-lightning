@@ -32,37 +32,37 @@ namespace Pennylane::Gates::AVX {
     Pennylane::Util::fillTrailingOnes<size_t>;
 [[maybe_unused]] constexpr static auto &exp2 = Pennylane::Util::exp2;
 
-
-template<typename PrecisionT, size_t packed_size>
-struct AVXIntrinsic{
-	static_assert((sizeof(PrecisionT) * packed_size == 32) || (sizeof(PrecisionT) * packed_size == 64));
+template <typename PrecisionT, size_t packed_size> struct AVXIntrinsic {
+    static_assert((sizeof(PrecisionT) * packed_size == 32) ||
+                  (sizeof(PrecisionT) * packed_size == 64));
 };
-template<typename T, size_t size>
+template <typename T, size_t size>
 using AVXIntrinsicType = typename AVXIntrinsic<T, size>::Type;
 
-template<class PrecisionT, size_t packed_size>
-struct AVXConcept;
+template <class PrecisionT, size_t packed_size> struct AVXConcept;
 
-template<class PrecisionT, size_t packed_size>
+template <class PrecisionT, size_t packed_size>
 using AVXConceptType = typename AVXConcept<PrecisionT, packed_size>::Type;
 
-template<typename PrecisionT, size_t packed_size, typename Func>
-auto toParity(Func&& func) -> decltype(auto) {
-    std::array<PrecisionT, packed_size>
-        data = {};
-    for(size_t idx = 0; idx < packed_size / 2; idx++) {
-        data[2*idx + 0] = static_cast<PrecisionT>(1.0) - 2*static_cast<PrecisionT>(func(idx));
-        data[2*idx + 1] = static_cast<PrecisionT>(1.0) - 2*static_cast<PrecisionT>(func(idx));
+template <typename PrecisionT, size_t packed_size, typename Func>
+auto toParity(Func &&func) -> decltype(auto) {
+    std::array<PrecisionT, packed_size> data = {};
+    for (size_t idx = 0; idx < packed_size / 2; idx++) {
+        data[2 * idx + 0] = static_cast<PrecisionT>(1.0) -
+                            2 * static_cast<PrecisionT>(func(idx));
+        data[2 * idx + 1] = static_cast<PrecisionT>(1.0) -
+                            2 * static_cast<PrecisionT>(func(idx));
     }
     return AVXConceptType<PrecisionT, packed_size>::loadu(data.data());
 }
-template<typename PrecisionT, size_t packed_size, typename Func>
-auto setValueOneTwo(Func&& func)
-    -> decltype(auto) {
-    std::array<PrecisionT, packed_size> data = {0, };
-    for(size_t idx = 0; idx < packed_size / 2; idx++) {
-        data[2*idx +0] = func(idx);
-        data[2*idx +1] = func(idx);
+template <typename PrecisionT, size_t packed_size, typename Func>
+auto setValueOneTwo(Func &&func) -> decltype(auto) {
+    std::array<PrecisionT, packed_size> data = {
+        0,
+    };
+    for (size_t idx = 0; idx < packed_size / 2; idx++) {
+        data[2 * idx + 0] = func(idx);
+        data[2 * idx + 1] = func(idx);
     }
     return AVXConceptType<PrecisionT, packed_size>::loadu(data.data());
 }
@@ -70,10 +70,12 @@ auto setValueOneTwo(Func&& func)
 /**
  * @brief one or minus one parity for reverse wire in packed data.
  *
- * All specializations are defined in AVX2Concept.hpp and AVX512Concept.hpp files.
+ * All specializations are defined in AVX2Concept.hpp and AVX512Concept.hpp
+ * files.
  */
 template <typename PrecisionT, size_t packed_size>
-constexpr auto internalParity(size_t rev_wire) -> AVXIntrinsicType<PrecisionT, packed_size>;
+constexpr auto internalParity(size_t rev_wire)
+    -> AVXIntrinsicType<PrecisionT, packed_size>;
 
 /**
  * @brief Factor that is applied to the intrinsic type for product of

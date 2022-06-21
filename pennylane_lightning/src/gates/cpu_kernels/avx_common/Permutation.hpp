@@ -227,7 +227,8 @@ constexpr auto
 compilePermutation(const std::array<uint8_t, packed_size> &permutation)
     -> CompiledPermutation<PrecisionT, packed_size> {
     // Raise a compile error when instantiated
-    static_assert(sizeof(PrecisionT) == -1, "Only specialized classes can be used");
+    static_assert(sizeof(PrecisionT) == -1,
+                  "Only specialized classes can be used");
 };
 
 #ifdef PL_USE_AVX2 // Specializations for AVX2 begin
@@ -243,9 +244,8 @@ compilePermutation<float, 8>(const std::array<uint8_t, 8> &permutation)
     } // else
     return {within_lane, getPermutation8x256i(permutation)};
 }
-template<>
-constexpr auto
-compilePermutation(const std::array<uint8_t, 4> &permutation)
+template <>
+constexpr auto compilePermutation(const std::array<uint8_t, 4> &permutation)
     -> CompiledPermutation<double, 4> {
     bool within_lane = isWithinLane<double>(permutation);
 
@@ -259,8 +259,7 @@ compilePermutation(const std::array<uint8_t, 4> &permutation)
 
 #ifdef PL_USE_AVX512F // Specializations for AVX512 begin
 template <>
-constexpr auto
-compilePermutation(const std::array<uint8_t, 16> &permutation)
+constexpr auto compilePermutation(const std::array<uint8_t, 16> &permutation)
     -> CompiledPermutation<float, 16> {
     bool within_lane = isWithinLane<float>(permutation);
 
@@ -271,8 +270,7 @@ compilePermutation(const std::array<uint8_t, 16> &permutation)
     return {within_lane, getPermutation16x512i(permutation)};
 }
 template <>
-constexpr auto
-compilePermutation(const std::array<uint8_t, 8> &permutation)
+constexpr auto compilePermutation(const std::array<uint8_t, 8> &permutation)
     -> CompiledPermutation<double, 8> {
     bool within_lane = isWithinLane<double>(permutation);
 

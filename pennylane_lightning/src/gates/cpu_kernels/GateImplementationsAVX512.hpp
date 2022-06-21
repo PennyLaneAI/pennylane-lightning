@@ -51,7 +51,8 @@
 
 namespace Pennylane::Gates {
 
-class GateImplementationsAVX512 : public PauliGenerator<GateImplementationsAVX512> {
+class GateImplementationsAVX512
+    : public PauliGenerator<GateImplementationsAVX512> {
   public:
     constexpr static KernelType kernel_id = KernelType::AVX512;
     constexpr static std::string_view name = "AVX512";
@@ -72,7 +73,8 @@ class GateImplementationsAVX512 : public PauliGenerator<GateImplementationsAVX51
     };
 
     constexpr static std::array<GeneratorOperation, 0> implemented_generators =
-        {GeneratorOperation::RX, GeneratorOperation::RY, GeneratorOperation::RZ};
+        {GeneratorOperation::RX, GeneratorOperation::RY,
+         GeneratorOperation::RZ};
 
     template <typename PrecisionT>
     static void applySingleQubitOp(std::complex<PrecisionT> *arr,

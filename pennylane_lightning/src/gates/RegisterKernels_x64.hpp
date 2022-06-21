@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file 
+ * @file
  */
 #pragma once
 
 namespace Pennylane::Internal {
 void registerKernelsAVX2_Float();
 void registerKernelsAVX2_Double();
-//void registerKenelsAVX512_Float();
-//void registerKenelsAVX512_Double();
-}  // namespace Pennylane::Internal
+// void registerKenelsAVX512_Float();
+// void registerKenelsAVX512_Double();
+} // namespace Pennylane::Internal

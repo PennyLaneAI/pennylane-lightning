@@ -1,8 +1,8 @@
+#include "CPUMemoryModel.hpp"
+#include "TestHelpers.hpp"
+#include "Util.hpp"
 #include "cpu_kernels/GateImplementationsLM.hpp"
 #include "cpu_kernels/GateImplementationsPI.hpp"
-#include "TestHelpers.hpp"
-#include "CPUMemoryModel.hpp"
-#include "Util.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -13,7 +13,6 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-
 
 #if defined(_MSC_VER)
 #pragma warning(disable : 4305)

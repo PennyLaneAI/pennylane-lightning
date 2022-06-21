@@ -62,17 +62,14 @@ constexpr __m512i setr512i(int64_t  e0, int64_t  e1, int64_t  e2, int64_t  e3,
 }
 // clang-format on
 //
-template<>
-struct AVXIntrinsic<float, 16> {
-	// AVX512
-	using Type = __m512;
+template <> struct AVXIntrinsic<float, 16> {
+    // AVX512
+    using Type = __m512;
 };
-template<>
-struct AVXIntrinsic<double, 8> {
-	// AVX512
-	using Type = __m512d;
+template <> struct AVXIntrinsic<double, 8> {
+    // AVX512
+    using Type = __m512d;
 };
-
 
 template <typename T> struct AVX512Concept {
     using PrecisionT = T;
