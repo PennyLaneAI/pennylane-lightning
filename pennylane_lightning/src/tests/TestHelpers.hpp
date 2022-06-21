@@ -18,170 +18,91 @@
 #include <type_traits>
 #include <variant>
 #include <vector>
+#include <sstream>
 
 namespace Pennylane {
-template <class T, class Alloc = std::allocator<T>> struct PLApprox {
-    using param_t = std::variant<std::vector<T, Alloc>, T, std::monostate>;
-    const param_t &comp_;
+template<typename T, typename AllocComp>
+struct ComplexVectorApprox : Catch::Matchers::MatcherGenericBase {
+    static_assert(is_complex_v<T>, "Parameter type must be complex.");
 
-    explicit PLApprox(const std::vector<T, Alloc> &comp) : comp_{comp} {}
-    explicit PLApprox(const T &comp) : comp_{comp} {}
+private:
+    const std::vector<T>& comp_;
+    mutable Catch::Approx approx = Catch::Approx::custom();
 
-    Util::remove_complex_t<T> margin_{};
-    Util::remove_complex_t<T> epsilon_ =
-        std::numeric_limits<float>::epsilon() * 100;
+public:
+    ComplexVectorApprox(const std::vector<T, AllocComp>& comp) : comp_{comp} { }
 
-    template <class AllocA>
-    [[nodiscard]] bool compare(const param_t &lhs) const {
-        if (lhs.size() != comp_.size()) {
+    std::string describe() const {
+        std::ostringstream ss;
+        ss << "is approx to " << comp_;
+        return ss.str();
+    }
+
+    template<typename AllocMatch> bool match(const std::vector<T, AllocMatch>& v) const {
+        if(comp_.size() != v.size()) {
             return false;
         }
-        bool result = false;
-        std::visit([&](const auto &p) {
-            using local_t = std::decay_t<decltype(p)>;
-            if constexpr (std::is_same_v<local_t, std::vector<T, Alloc>>) {
-                for (size_t i = 0; i < lhs.size(); i++) {
-                    if constexpr (Util::is_complex_v<T>) {
-                        if (lhs[i].real() != Approx(comp_[i].real())
-                                                 .epsilon(epsilon_)
-                                                 .margin(margin_) ||
-                            lhs[i].imag() != Approx(comp_[i].imag())
-                                                 .epsilon(epsilon_)
-                                                 .margin(margin_)) {
-                            break;
-                        }
-                    } else {
-                        if (lhs[i] != Approx(comp_[i]).epsilon(epsilon_).margin(
-                                          margin_)) {
-                            break;
-                        }
-                    }
-                    result = true;
-                }
-            } else if (std::is_same_v<local_t, T>) {
-                if constexpr (Util::is_complex_v<T>) {
-                    if (lhs.real() != Approx(comp_.real())
-                                          .epsilon(epsilon_)
-                                          .margin(margin_) ||
-                        lhs.imag() != Approx(comp_.imag())
-                                          .epsilon(epsilon_)
-                                          .margin(margin_)) {
-                        return;
-                    }
-                } else {
-                    if (lhs !=
-                        Approx(comp_).epsilon(epsilon_).margin(margin_)) {
-                        return;
-                    }
-                }
-                result = true;
-            } else {
-                PL_ABORT("Parameter datatype not current supported");
+        for(size_t i = 0; i < v.size(); i++) {
+            if((std::real(comp_[i]) != approx(std::real(v[i])))
+               || (std::imag(comp_[i]) != approx(std::imag(v[i])))) {
+                return false;
             }
-        });
-
-        return result;
-    }
-
-    [[nodiscard]] std::string describe() const {
-        std::ostringstream ss;
-        ss << "is Approx to {";
-        for (const auto &elt : comp_) {
-            ss << elt << ", ";
         }
-        ss << "}" << std::endl;
-        return ss.str();
+        return true;
     }
 
-    PLApprox &epsilon(Util::remove_complex_t<T> eps) {
-        epsilon_ = eps;
+    ComplexVectorApprox& epsilon(Util::remove_complex_t<T> new_eps) {
+        approx.epsilon(new_eps);
         return *this;
     }
-    PLApprox &margin(Util::remove_complex_t<T> m) {
-        margin_ = m;
+
+    ComplexVectorApprox& margin(Util::remove_complex_t<T> new_margin) {
+        approx.margin(new_margin);
         return *this;
     }
 };
 
-/**
- * @brief Simple helper for PLApprox for the cases when the class template
- * deduction does not work well.
- */
-template <typename T, class Alloc>
-PLApprox<T, Alloc> approx(const std::vector<T, Alloc> &vec) {
-    return PLApprox<T, Alloc>(vec);
-}
-template <typename T, class Alloc> PLApprox<T, Alloc> approx(const T &dat) {
-    return PLApprox<T, Alloc>(dat);
+template<typename T, typename AllocComp>
+ComplexVectorApprox<std::complex<T>, AllocComp>
+Approx(const std::vector<std::complex<T>, AllocComp>& comp) {
+    return ComplexVectorApprox(comp);
 }
 
-template <typename T, class Alloc>
-std::ostream &operator<<(std::ostream &os, const PLApprox<T, Alloc> &approx) {
-    os << approx.describe();
-    return os;
-}
-template <class T, class AllocA, class AllocB>
-bool operator==(const std::vector<T, AllocA> &lhs,
-                const PLApprox<T, AllocB> &rhs) {
-    return rhs.compare(lhs);
-}
-template <class T, class AllocB>
-bool operator==(const T &lhs, const PLApprox<T, AllocB> &rhs) {
-    return rhs.compare(lhs);
-}
-template <class T, class AllocA, class AllocB>
-bool operator!=(const std::vector<T, AllocA> &lhs,
-                const PLApprox<T, AllocB> &rhs) {
-    return !rhs.compare(lhs);
-}
+template <class T>
+struct ComplexNumberApprox : Catch::Matchers::MatcherGenericBase {
+private:
+    const std::complex<T> comp_;
+    mutable Catch::Approx approx = Catch::Approx::custom();
 
-template <class PrecisionT> struct PLApproxComplex {
-    const std::complex<PrecisionT> comp_;
+public:
+    ComplexVectorApprox(const std::complex<T>& comp) : comp_{comp} { }
 
-    explicit PLApproxComplex(const std::complex<PrecisionT> &comp)
-        : comp_{comp} {}
-
-    PrecisionT margin_{};
-    PrecisionT epsilon_ = std::numeric_limits<float>::epsilon() * 100;
-
-    [[nodiscard]] bool compare(const std::complex<PrecisionT> &lhs) const {
-        return (lhs.real() ==
-                Approx(comp_.real()).epsilon(epsilon_).margin(margin_)) &&
-               (lhs.imag() ==
-                Approx(comp_.imag()).epsilon(epsilon_).margin(margin_));
-    }
-    [[nodiscard]] std::string describe() const {
+    std::string describe() const {
         std::ostringstream ss;
-        ss << "is Approx to " << comp_;
+        ss << "is approx to " << comp_;
         return ss.str();
     }
-    PLApproxComplex &epsilon(PrecisionT eps) {
-        epsilon_ = eps;
+
+    template<typename AllocMatch> bool match(const std::vector<T, AllocMatch>& v) const {
+        return ((std::real(comp_) == approx(std::real(v)))
+               && (std::imag(comp_) == approx(std::imag(v))));
+    }
+
+    ComplexNumberApprox& epsilon(T new_eps) {
+        approx.epsilon(new_eps);
         return *this;
     }
-    PLApproxComplex &margin(PrecisionT m) {
-        margin_ = m;
+
+    ComplexNumberApprox& margin(T new_margin) {
+        approx.margin(new_margin);
         return *this;
     }
 };
 
-template <class T>
-bool operator==(const std::complex<T> &lhs, const PLApproxComplex<T> &rhs) {
-    return rhs.compare(lhs);
-}
-template <class T>
-bool operator!=(const std::complex<T> &lhs, const PLApproxComplex<T> &rhs) {
-    return !rhs.compare(lhs);
-}
-
-template <typename T> PLApproxComplex<T> approx(const std::complex<T> &val) {
-    return PLApproxComplex<T>{val};
-}
-
-template <typename T>
-std::ostream &operator<<(std::ostream &os, const PLApproxComplex<T> &approx) {
-    os << approx.describe();
-    return os;
+template<typename T>
+ComplexNumberApprox<T>
+Approx(std::complex<T> comp) {
+    return ComplexNumberApprox(comp);
 }
 
 /**
