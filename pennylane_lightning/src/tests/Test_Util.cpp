@@ -89,17 +89,19 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
             std::modf(sqrt(static_cast<TestType>(i)), &rem);
             if (i < 4) {
                 CHECK_THROWS_AS(Util::dimSize(data), std::invalid_argument);
-                CHECK_THROWS_WITH(Util::dimSize(data),
-                                  Contains("The dataset must be at least 2x2"));
+                CHECK_THROWS_WITH(
+                    Util::dimSize(data),
+                    ContainsSubstring("The dataset must be at least 2x2"));
             } else if (rem != 0.0 && i >= 4 && (i & (i - 1))) {
                 CHECK_THROWS_AS(Util::dimSize(data), std::invalid_argument);
-                CHECK_THROWS_WITH(Util::dimSize(data),
-                                  Contains("The dataset must be a power of 2"));
+                CHECK_THROWS_WITH(
+                    Util::dimSize(data),
+                    ContainsSubstring("The dataset must be a power of 2"));
             } else if (std::sqrt(i) * std::sqrt(i) != i) {
                 CHECK_THROWS_AS(Util::dimSize(data), std::invalid_argument);
                 CHECK_THROWS_WITH(
                     Util::dimSize(data),
-                    Contains("The dataset must be a perfect square"));
+                    ContainsSubstring("The dataset must be a perfect square"));
             } else {
                 CHECK(Util::dimSize(data) == std::log2(std::sqrt(i)));
             }
@@ -215,7 +217,7 @@ TEMPLATE_TEST_CASE("randomUnitary", "[Util]", float, double) {
             identity[i * dim + i] = std::complex<PrecisionT>{1.0, 0.0};
         }
 
-        REQUIRE(mat == Approx(identity).margin(1e-5));
+        REQUIRE_THAT(mat, Approx(identity).margin(1e-5));
     }
 }
 

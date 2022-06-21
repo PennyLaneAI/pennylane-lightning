@@ -74,7 +74,7 @@ void testApplyIdentity() {
 
         GateImplementation::applyIdentity(st_pre.data(), num_qubits, {index},
                                           false);
-        CHECK(std::equal(st_pre.begin(), st_pre.end(), st_post.begin()));
+        REQUIRE(std::equal(st_pre.begin(), st_pre.end(), st_post.begin()));
     }
     for (size_t index = 0; index < num_qubits; index++) {
         auto st_pre = createZeroState<PrecisionT>(num_qubits);
@@ -86,7 +86,7 @@ void testApplyIdentity() {
 
         GateImplementation::applyIdentity(st_pre.data(), num_qubits, {index},
                                           false);
-        CHECK(std::equal(st_pre.begin(), st_pre.end(), st_post.begin()));
+        REQUIRE(std::equal(st_pre.begin(), st_pre.end(), st_post.begin()));
     }
 }
 PENNYLANE_RUN_TEST(Identity);
@@ -104,7 +104,8 @@ void testApplyPauliX() {
 
             std::string expected_str("000");
             expected_str[index] = '1';
-            REQUIRE(st == approx(createProductState<PrecisionT>(expected_str)));
+            REQUIRE_THAT(st,
+                         Approx(createProductState<PrecisionT>(expected_str)));
         }
     }
 }
@@ -131,7 +132,7 @@ void testApplyPauliY() {
 
         GateImplementation::applyPauliY(st.data(), num_qubits, {index}, false);
 
-        CHECK(st == approx(expected_results[index]));
+        REQUIRE_THAT(st, Approx(expected_results[index]));
     }
 }
 PENNYLANE_RUN_TEST(PauliY);
@@ -154,7 +155,7 @@ void testApplyPauliZ() {
         auto st = createPlusState<PrecisionT>(num_qubits);
         GateImplementation::applyPauliZ(st.data(), num_qubits, {index}, false);
 
-        CHECK(st == approx(expected_results[index]));
+        REQUIRE_THAT(st, Approx(expected_results[index]));
     }
 }
 PENNYLANE_RUN_TEST(PauliZ);
@@ -174,7 +175,7 @@ void testApplyHadamard() {
         expected_string[index] = '+';
         const auto expected = createProductState<PrecisionT>(
             std::string_view{expected_string.data(), num_qubits});
-        CHECK(expected == approx(st));
+        REQUIRE_THAT(expected, Approx(st));
     }
 }
 PENNYLANE_RUN_TEST(Hadamard);
@@ -197,7 +198,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyS() {
 
         GateImplementation::applyS(st.data(), num_qubits, {index}, false);
 
-        CHECK(st == approx(expected_results[index]));
+        REQUIRE_THAT(st, Approx(expected_results[index]));
     }
 }
 PENNYLANE_RUN_TEST(S);
@@ -220,7 +221,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyT() {
 
         GateImplementation::applyT(st.data(), num_qubits, {index}, false);
 
-        CHECK(st == approx(expected_results[index]));
+        REQUIRE_THAT(st, Approx(expected_results[index]));
     }
 }
 PENNYLANE_RUN_TEST(T);
@@ -235,22 +236,22 @@ template <typename PrecisionT, class GateImplementation> void testApplyCNOT() {
         const auto ini_st = createProductState<PrecisionT>("000");
         auto st = ini_st;
         GateImplementation::applyCNOT(st.data(), num_qubits, {0, 1}, false);
-        CHECK(st == ini_st);
+        REQUIRE(st == ini_st);
     }
 
     SECTION("CNOT0,1 |100> = |110>") {
         const auto ini_st = createProductState<PrecisionT>("100");
         auto st = ini_st;
         GateImplementation::applyCNOT(st.data(), num_qubits, {0, 1}, false);
-        CHECK(st ==
-              Approx(createProductState<PrecisionT>("110")).margin(1e-7));
+        REQUIRE_THAT(
+            st, Approx(createProductState<PrecisionT>("110")).margin(1e-7));
     }
     SECTION("CNOT1,2 |110> = |111>") {
         const auto ini_st = createProductState<PrecisionT>("110");
         auto st = ini_st;
         GateImplementation::applyCNOT(st.data(), num_qubits, {1, 2}, false);
-        CHECK(st ==
-              Approx(createProductState<PrecisionT>("111")).margin(1e-7));
+        REQUIRE_THAT(
+            st, Approx(createProductState<PrecisionT>("111")).margin(1e-7));
     }
 
     SECTION("Generate GHZ state") {
@@ -261,8 +262,8 @@ template <typename PrecisionT, class GateImplementation> void testApplyCNOT() {
             GateImplementation::applyCNOT(st.data(), num_qubits,
                                           {index - 1, index}, false);
         }
-        CHECK(st.front() == Util::INVSQRT2<PrecisionT>());
-        CHECK(st.back() == Util::INVSQRT2<PrecisionT>());
+        REQUIRE(st.front() == Util::INVSQRT2<PrecisionT>());
+        REQUIRE(st.back() == Util::INVSQRT2<PrecisionT>());
     }
 }
 PENNYLANE_RUN_TEST(CNOT);
@@ -274,13 +275,13 @@ template <typename PrecisionT, class GateImplementation> void testApplyCY() {
     auto ini_st =
         createProductState<PrecisionT>("+10"); // Test using |+10> state
 
-    CHECK(ini_st == std::vector<ComplexPrecisionT>{
-                        Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
-                        std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                        Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
-                        Util::ZERO<PrecisionT>(),
-                        std::complex<PrecisionT>(1.0 / sqrt(2), 0),
-                        Util::ZERO<PrecisionT>()});
+    REQUIRE(ini_st == std::vector<ComplexPrecisionT>{
+                          Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
+                          std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+                          Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
+                          Util::ZERO<PrecisionT>(),
+                          std::complex<PrecisionT>(1.0 / sqrt(2), 0),
+                          Util::ZERO<PrecisionT>()});
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CY 0,1 |+10> -> i|100> - "
@@ -297,7 +298,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyCY() {
 
         auto sv01 = ini_st;
         GateImplementation::applyCY(sv01.data(), num_qubits, {0, 1}, false);
-        CHECK(sv01 == expected);
+        REQUIRE(sv01 == expected);
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -316,7 +317,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyCY() {
         auto sv02 = ini_st;
 
         GateImplementation::applyCY(sv02.data(), num_qubits, {0, 2}, false);
-        CHECK(sv02 == expected);
+        REQUIRE(sv02 == expected);
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CY 1,2 |+10> -> i|+11> - "
@@ -334,7 +335,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyCY() {
         auto sv12 = ini_st;
 
         GateImplementation::applyCY(sv12.data(), num_qubits, {1, 2}, false);
-        CHECK(sv12 == expected);
+        REQUIRE(sv12 == expected);
     }
 }
 PENNYLANE_RUN_TEST(CY);
@@ -365,8 +366,8 @@ template <typename PrecisionT, class GateImplementation> void testApplyCZ() {
         GateImplementation::applyCZ(sv01.data(), num_qubits, {0, 1}, false);
         GateImplementation::applyCZ(sv10.data(), num_qubits, {1, 0}, false);
 
-        CHECK(sv01 == expected);
-        CHECK(sv10 == expected);
+        REQUIRE(sv01 == expected);
+        REQUIRE(sv10 == expected);
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -380,8 +381,8 @@ template <typename PrecisionT, class GateImplementation> void testApplyCZ() {
         GateImplementation::applyCZ(sv02.data(), num_qubits, {0, 2}, false);
         GateImplementation::applyCZ(sv20.data(), num_qubits, {2, 0}, false);
 
-        CHECK(sv02 == expected);
-        CHECK(sv20 == expected);
+        REQUIRE(sv02 == expected);
+        REQUIRE(sv20 == expected);
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CZ1,2 |+10> -> |+10> - "
@@ -394,8 +395,8 @@ template <typename PrecisionT, class GateImplementation> void testApplyCZ() {
         GateImplementation::applyCZ(sv12.data(), num_qubits, {1, 2}, false);
         GateImplementation::applyCZ(sv21.data(), num_qubits, {2, 1}, false);
 
-        CHECK(sv12 == expected);
-        CHECK(sv21 == expected);
+        REQUIRE(sv12 == expected);
+        REQUIRE(sv21 == expected);
     }
 }
 PENNYLANE_RUN_TEST(CZ);
@@ -408,12 +409,12 @@ template <typename PrecisionT, class GateImplementation> void testApplySWAP() {
 
     // Test using |+10> state
 
-    CHECK(ini_st == std::vector<ComplexPrecisionT>{
-                        Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
-                        Util::INVSQRT2<PrecisionT>(), Util::ZERO<PrecisionT>(),
-                        Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
-                        Util::INVSQRT2<PrecisionT>(),
-                        Util::ZERO<PrecisionT>()});
+    REQUIRE(ini_st ==
+            std::vector<ComplexPrecisionT>{
+                Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
+                Util::INVSQRT2<PrecisionT>(), Util::ZERO<PrecisionT>(),
+                Util::ZERO<PrecisionT>(), Util::ZERO<PrecisionT>(),
+                Util::INVSQRT2<PrecisionT>(), Util::ZERO<PrecisionT>()});
 
     DYNAMIC_SECTION(GateImplementation::name
                     << ", SWAP0,1 |+10> -> |1+0> - "
@@ -433,8 +434,8 @@ template <typename PrecisionT, class GateImplementation> void testApplySWAP() {
         GateImplementation::applySWAP(sv01.data(), num_qubits, {0, 1}, false);
         GateImplementation::applySWAP(sv10.data(), num_qubits, {1, 0}, false);
 
-        CHECK(sv01 == expected);
-        CHECK(sv10 == expected);
+        REQUIRE(sv01 == expected);
+        REQUIRE(sv10 == expected);
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -456,8 +457,8 @@ template <typename PrecisionT, class GateImplementation> void testApplySWAP() {
         GateImplementation::applySWAP(sv02.data(), num_qubits, {0, 2}, false);
         GateImplementation::applySWAP(sv20.data(), num_qubits, {2, 0}, false);
 
-        CHECK(sv02 == expected);
-        CHECK(sv20 == expected);
+        REQUIRE(sv02 == expected);
+        REQUIRE(sv20 == expected);
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", SWAP1,2 |+10> -> |+01> - "
@@ -478,8 +479,8 @@ template <typename PrecisionT, class GateImplementation> void testApplySWAP() {
         GateImplementation::applySWAP(sv12.data(), num_qubits, {1, 2}, false);
         GateImplementation::applySWAP(sv21.data(), num_qubits, {2, 1}, false);
 
-        CHECK(sv12 == expected);
-        CHECK(sv21 == expected);
+        REQUIRE(sv12 == expected);
+        REQUIRE(sv21 == expected);
     }
 }
 PENNYLANE_RUN_TEST(SWAP);
@@ -512,7 +513,7 @@ void testApplyToffoli() {
         GateImplementation::applyToffoli(sv012.data(), num_qubits, {0, 1, 2},
                                          false);
 
-        CHECK(sv012 == expected);
+        REQUIRE(sv012 == expected);
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -533,7 +534,7 @@ void testApplyToffoli() {
         GateImplementation::applyToffoli(sv102.data(), num_qubits, {1, 0, 2},
                                          false);
 
-        CHECK(sv102 == expected);
+        REQUIRE(sv102 == expected);
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -546,7 +547,7 @@ void testApplyToffoli() {
         GateImplementation::applyToffoli(sv021.data(), num_qubits, {0, 2, 1},
                                          false);
 
-        CHECK(sv021 == expected);
+        REQUIRE(sv021 == expected);
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -557,7 +558,7 @@ void testApplyToffoli() {
         auto sv120 = ini_st;
         GateImplementation::applyToffoli(sv120.data(), num_qubits, {1, 2, 0},
                                          false);
-        CHECK(sv120 == expected);
+        REQUIRE(sv120 == expected);
     }
 }
 PENNYLANE_RUN_TEST(Toffoli);
@@ -585,7 +586,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyCSWAP() {
         auto sv012 = ini_st;
         GateImplementation::applyCSWAP(sv012.data(), num_qubits, {0, 1, 2},
                                        false);
-        CHECK(sv012 == expected);
+        REQUIRE(sv012 == expected);
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -604,7 +605,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyCSWAP() {
         auto sv102 = ini_st;
         GateImplementation::applyCSWAP(sv102.data(), num_qubits, {1, 0, 2},
                                        false);
-        CHECK(sv102 == expected);
+        REQUIRE(sv102 == expected);
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CSWAP 2,1,0 |+10> -> |+10> - "
@@ -614,7 +615,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyCSWAP() {
         auto sv210 = ini_st;
         GateImplementation::applyCSWAP(sv210.data(), num_qubits, {2, 1, 0},
                                        false);
-        CHECK(sv210 == expected);
+        REQUIRE(sv210 == expected);
     }
 }
 PENNYLANE_RUN_TEST(CSWAP);

@@ -20,7 +20,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Catch2)
 
 # Required for catch_discover_tests().
-list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/contrib)
+list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 
 # Modify `ctest` to only run the supported subset of tests.
 include(CTest)

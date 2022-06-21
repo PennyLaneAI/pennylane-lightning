@@ -15,19 +15,19 @@ TEST_CASE("Error.hpp", "[Error]") {
         auto e_mut =
             Pennylane::Util::LightningException("Test exception e_mut");
 
-        REQUIRE_THROWS_WITH(throw e,
-                            Catch::Matchers::ContainsSubstring("Test exception e"));
+        REQUIRE_THROWS_WITH(
+            throw e, Catch::Matchers::ContainsSubstring("Test exception e"));
         REQUIRE_THROWS_AS(throw e, Pennylane::Util::LightningException);
 
         // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
         const Pennylane::Util::LightningException e_copy(e);
-        REQUIRE_THROWS_WITH(throw e_copy,
-                            Catch::Matchers::ContainsSubstring("Test exception e"));
+        REQUIRE_THROWS_WITH(throw e_copy, Catch::Matchers::ContainsSubstring(
+                                              "Test exception e"));
         REQUIRE_THROWS_AS(throw e_copy, Pennylane::Util::LightningException);
 
         Pennylane::Util::LightningException e_move(std::move(e_mut));
-        REQUIRE_THROWS_WITH(throw e_move,
-                            Catch::Matchers::ContainsSubstring("Test exception e_mut"));
+        REQUIRE_THROWS_WITH(throw e_move, Catch::Matchers::ContainsSubstring(
+                                              "Test exception e_mut"));
         REQUIRE_THROWS_AS(throw e_move, Pennylane::Util::LightningException);
 
         REQUIRE(std::strcmp(e.what(), "Test exception e") == 0);

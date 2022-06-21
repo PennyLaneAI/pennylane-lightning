@@ -59,9 +59,8 @@ TEST_CASE("Probabilities", "[Measures]") {
     SECTION("Looping over different wire configurations:") {
         for (size_t conf = 0; conf < Expected_Probabilities.size(); conf++) {
             probabilities = Measurer.probs(Wires_Configuration[conf]);
-            REQUIRE_THAT(
-                probabilities,
-                Catch::Approx(Expected_Probabilities[conf]).margin(1e-6));
+            REQUIRE_THAT(probabilities,
+                         Approx(Expected_Probabilities[conf]).margin(1e-6));
         }
     }
 }
@@ -80,14 +79,14 @@ TEMPLATE_TEST_CASE("Expected Values", "[Measures]", float, double) {
         vector<size_t> wires_single = {0};
         TestType exp_value = Measurer.expval(PauliX, wires_single);
         TestType exp_values_ref = 0.492725;
-        REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_value, Approx(exp_values_ref).margin(1e-6));
     }
 
     SECTION("Testing single operation defined by its name:") {
         vector<size_t> wires_single = {0};
         TestType exp_value = Measurer.expval("PauliX", wires_single);
         TestType exp_values_ref = 0.492725;
-        REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_value, Approx(exp_values_ref).margin(1e-6));
     }
 
     SECTION("Testing list of operators defined by a matrix:") {
@@ -103,17 +102,17 @@ TEMPLATE_TEST_CASE("Expected Values", "[Measures]", float, double) {
         operations_list = {PauliX, PauliX, PauliX};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.49272486, 0.42073549, 0.28232124};
-        REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values, Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {PauliY, PauliY, PauliY};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {-0.64421768, -0.47942553, -0.29552020};
-        REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values, Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {PauliZ, PauliZ, PauliZ};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.58498357, 0.77015115, 0.91266780};
-        REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values, Approx(exp_values_ref).margin(1e-6));
     }
 
     SECTION("Testing list of operators defined by its name:") {
@@ -125,17 +124,17 @@ TEMPLATE_TEST_CASE("Expected Values", "[Measures]", float, double) {
         operations_list = {"PauliX", "PauliX", "PauliX"};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.49272486, 0.42073549, 0.28232124};
-        REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values, Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {"PauliY", "PauliY", "PauliY"};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {-0.64421768, -0.47942553, -0.29552020};
-        REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values, Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {"PauliZ", "PauliZ", "PauliZ"};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.58498357, 0.77015115, 0.91266780};
-        REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+        REQUIRE_THAT(exp_values, Approx(exp_values_ref).margin(1e-6));
     }
 }
 
@@ -186,8 +185,7 @@ TEMPLATE_TEST_CASE("Sample", "[Measures]", float, double) {
 
     // compare estimated probabilities to real probabilities
     SECTION("No wires provided:") {
-        REQUIRE_THAT(probabilities,
-                     Catch::Approx(expected_probabilities).margin(.05));
+        REQUIRE_THAT(probabilities, Approx(expected_probabilities).margin(.05));
     }
 }
 
@@ -206,14 +204,14 @@ TEMPLATE_TEST_CASE("Variances", "[Measures]", float, double) {
         vector<size_t> wires_single = {0};
         TestType variance = Measurer.var(PauliX, wires_single);
         TestType variances_ref = 0.7572222;
-        REQUIRE(variance == Approx(variances_ref).margin(1e-6));
+        REQUIRE_THAT(variance, Approx(variances_ref).margin(1e-6));
     }
 
     SECTION("Testing single operation defined by its name:") {
         vector<size_t> wires_single = {0};
         TestType variance = Measurer.var("PauliX", wires_single);
         TestType variances_ref = 0.7572222;
-        REQUIRE(variance == Approx(variances_ref).margin(1e-6));
+        REQUIRE_THAT(variance, Approx(variances_ref).margin(1e-6));
     }
 
     SECTION("Testing list of operators defined by a matrix:") {
@@ -232,17 +230,17 @@ TEMPLATE_TEST_CASE("Variances", "[Measures]", float, double) {
         operations_list = {PauliX, PauliX, PauliX};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.7572222, 0.8229816, 0.9202947};
-        REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
+        REQUIRE_THAT(variances, Approx(variances_ref).margin(1e-6));
 
         operations_list = {PauliY, PauliY, PauliY};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.5849835, 0.7701511, 0.9126678};
-        REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
+        REQUIRE_THAT(variances, Approx(variances_ref).margin(1e-6));
 
         operations_list = {PauliZ, PauliZ, PauliZ};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.6577942, 0.4068672, 0.1670374};
-        REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
+        REQUIRE_THAT(variances, Approx(variances_ref).margin(1e-6));
     }
 
     SECTION("Testing list of operators defined by its name:") {
@@ -254,16 +252,16 @@ TEMPLATE_TEST_CASE("Variances", "[Measures]", float, double) {
         operations_list = {"PauliX", "PauliX", "PauliX"};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.7572222, 0.8229816, 0.9202947};
-        REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
+        REQUIRE_THAT(variances, Approx(variances_ref).margin(1e-6));
 
         operations_list = {"PauliY", "PauliY", "PauliY"};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.5849835, 0.7701511, 0.9126678};
-        REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
+        REQUIRE_THAT(variances, Approx(variances_ref).margin(1e-6));
 
         operations_list = {"PauliZ", "PauliZ", "PauliZ"};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.6577942, 0.4068672, 0.1670374};
-        REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
+        REQUIRE_THAT(variances, Approx(variances_ref).margin(1e-6));
     }
 }

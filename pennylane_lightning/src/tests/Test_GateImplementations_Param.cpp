@@ -111,7 +111,7 @@ void testApplyPhaseShift() {
         GateImplementation::applyPhaseShift(st.data(), num_qubits, {index},
                                             false, {angles[index]});
 
-        CHECK(st == Approx(expected_results[index]));
+        REQUIRE_THAT(st, Approx(expected_results[index]));
     }
 }
 PENNYLANE_RUN_TEST(PhaseShift);
@@ -136,7 +136,7 @@ void testApplyRX() {
         GateImplementation::applyRX(st.data(), num_qubits, {0}, false,
                                     {angles[index]});
 
-        CHECK(st == Approx(expected_results[index]).epsilon(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results[index]).epsilon(1e-7));
     }
 }
 PENNYLANE_RUN_TEST(RX);
@@ -177,7 +177,7 @@ void testApplyRY() {
             auto st = init_state;
             GateImplementation::applyRY(st.data(), num_qubits, {0}, false,
                                         {angles[index]});
-            CHECK(st == Approx(expected_results[index]).epsilon(1e-5));
+            REQUIRE_THAT(st, Approx(expected_results[index]).epsilon(1e-5));
         }
     }
 }
@@ -226,7 +226,7 @@ void testApplyRZ() {
         GateImplementation::applyRZ(st.data(), num_qubits, {index}, false,
                                     {angles[index]});
 
-        CHECK(st == Approx(expected_results[index]));
+        REQUIRE_THAT(st, Approx(expected_results[index]));
     }
 
     for (size_t index = 0; index < num_qubits; index++) {
@@ -234,7 +234,7 @@ void testApplyRZ() {
 
         GateImplementation::applyRZ(st.data(), num_qubits, {index}, true,
                                     {-angles[index]});
-        CHECK(st == Approx(expected_results[index]));
+        REQUIRE_THAT(st, Approx(expected_results[index]));
     }
 }
 PENNYLANE_RUN_TEST(RZ);
@@ -268,7 +268,7 @@ void testApplyRot() {
                                      angles[index][0], angles[index][1],
                                      angles[index][2]);
 
-        CHECK(st == Approx(expected_results[index]));
+        REQUIRE_THAT(st, Approx(expected_results[index]));
     }
 }
 PENNYLANE_RUN_TEST(Rot);
@@ -303,7 +303,7 @@ void testApplyIsingXX() {
         auto st = ini_st;
         GateImplementation::applyIsingXX(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingXX0,1 |100> -> a|100> + b|010> - "
@@ -326,7 +326,7 @@ void testApplyIsingXX() {
         auto st = ini_st;
         GateImplementation::applyIsingXX(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingXX0,1 |010> -> a|010> + b|100> - "
@@ -349,7 +349,7 @@ void testApplyIsingXX() {
         auto st = ini_st;
         GateImplementation::applyIsingXX(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingXX0,1 |110> -> a|110> + b|000> - "
@@ -372,7 +372,7 @@ void testApplyIsingXX() {
         auto st = ini_st;
         GateImplementation::applyIsingXX(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingXX0,2 - "
@@ -406,7 +406,7 @@ void testApplyIsingXX() {
         auto st = ini_st;
         GateImplementation::applyIsingXX(st.data(), num_qubits, wires, false,
                                          angle);
-        REQUIRE(st == Approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 }
 PENNYLANE_RUN_TEST(IsingXX);
@@ -434,7 +434,7 @@ void testApplyIsingXY() {
         auto st = ini_st;
         GateImplementation::applyIsingXY(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingXY0,1 |100> -> a|100> + b|010> - "
@@ -457,7 +457,7 @@ void testApplyIsingXY() {
         auto st = ini_st;
         GateImplementation::applyIsingXY(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -481,7 +481,7 @@ void testApplyIsingXY() {
         auto st = ini_st;
         GateImplementation::applyIsingXY(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -501,7 +501,7 @@ void testApplyIsingXY() {
         auto st = ini_st;
         GateImplementation::applyIsingXY(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -553,7 +553,7 @@ void testApplyIsingXY() {
         auto st = ini_st;
         GateImplementation::applyIsingXY(st.data(), num_qubits, wires, false,
                                          angle);
-        REQUIRE(st == Approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 }
 PENNYLANE_RUN_TEST(IsingXY);
@@ -585,7 +585,7 @@ void testApplyIsingYY() {
         auto st = ini_st;
         GateImplementation::applyIsingYY(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingYY0,1 |100> -> a|100> + b|010> - "
@@ -608,7 +608,7 @@ void testApplyIsingYY() {
         auto st = ini_st;
         GateImplementation::applyIsingYY(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingYY0,1 |010> -> a|010> + b|100> - "
@@ -631,7 +631,7 @@ void testApplyIsingYY() {
         auto st = ini_st;
         GateImplementation::applyIsingYY(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingYY0,1 |110> -> a|110> + b|000> - "
@@ -654,7 +654,7 @@ void testApplyIsingYY() {
         auto st = ini_st;
         GateImplementation::applyIsingYY(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingYY0,1 - "
@@ -705,7 +705,7 @@ void testApplyIsingYY() {
         auto st = ini_st;
         GateImplementation::applyIsingYY(st.data(), num_qubits, wires, false,
                                          angle);
-        REQUIRE(st == Approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 }
 PENNYLANE_RUN_TEST(IsingYY);
@@ -737,7 +737,7 @@ void testApplyIsingZZ() {
         auto st = ini_st;
         GateImplementation::applyIsingZZ(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingZZ0,1 |100> -> |100> - "
@@ -760,7 +760,7 @@ void testApplyIsingZZ() {
         auto st = ini_st;
         GateImplementation::applyIsingZZ(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -784,7 +784,7 @@ void testApplyIsingZZ() {
         auto st = ini_st;
         GateImplementation::applyIsingZZ(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -808,7 +808,7 @@ void testApplyIsingZZ() {
         auto st = ini_st;
         GateImplementation::applyIsingZZ(st.data(), num_qubits, {0, 1}, false,
                                          angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", IsingZZ0,1 - "
@@ -859,7 +859,7 @@ void testApplyIsingZZ() {
         auto st = ini_st;
         GateImplementation::applyIsingZZ(st.data(), num_qubits, wires, false,
                                          angle);
-        REQUIRE(st == Approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 }
 PENNYLANE_RUN_TEST(IsingZZ);
@@ -899,7 +899,7 @@ void testApplyControlledPhaseShift() {
     GateImplementation::applyControlledPhaseShift(st.data(), num_qubits, {0, 1},
                                                   false, angles[0]);
     CAPTURE(st);
-    CHECK(st == Approx(expected_results[0]));
+    REQUIRE_THAT(st, Approx(expected_results[0]));
 }
 PENNYLANE_RUN_TEST(ControlledPhaseShift);
 
@@ -954,7 +954,7 @@ void testApplyCRX() {
         auto st = ini_st;
         GateImplementation::applyCRX(st.data(), num_qubits, wires, false,
                                      angle);
-        REQUIRE(st == Approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CRX0,2 - " << PrecisionToName<PrecisionT>::value) {
@@ -1004,7 +1004,7 @@ void testApplyCRX() {
         auto st = ini_st;
         GateImplementation::applyCRX(st.data(), num_qubits, wires, false,
                                      angle);
-        REQUIRE(st == Approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CRX1,3 - " << PrecisionToName<PrecisionT>::value) {
@@ -1054,7 +1054,7 @@ void testApplyCRX() {
         auto st = ini_st;
         GateImplementation::applyCRX(st.data(), num_qubits, wires, false,
                                      angle);
-        REQUIRE(st == Approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 }
 PENNYLANE_RUN_TEST(CRX);
@@ -1111,7 +1111,7 @@ void testApplyCRY() {
         auto st = ini_st;
         GateImplementation::applyCRY(st.data(), num_qubits, wires, false,
                                      angle);
-        REQUIRE(st == Approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -1162,7 +1162,7 @@ void testApplyCRY() {
         auto st = ini_st;
         GateImplementation::applyCRY(st.data(), num_qubits, wires, false,
                                      angle);
-        REQUIRE(st == Approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -1213,7 +1213,7 @@ void testApplyCRY() {
         auto st = ini_st;
         GateImplementation::applyCRY(st.data(), num_qubits, wires, false,
                                      angle);
-        REQUIRE(st == Approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 }
 
@@ -1271,7 +1271,7 @@ void testApplyCRZ() {
         auto st = ini_st;
         GateImplementation::applyCRZ(st.data(), num_qubits, wires, false,
                                      angle);
-        REQUIRE(st == Approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -1322,7 +1322,7 @@ void testApplyCRZ() {
         auto st = ini_st;
         GateImplementation::applyCRZ(st.data(), num_qubits, wires, false,
                                      angle);
-        REQUIRE(st == Approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -1373,7 +1373,7 @@ void testApplyCRZ() {
         auto st = ini_st;
         GateImplementation::applyCRZ(st.data(), num_qubits, wires, false,
                                      angle);
-        REQUIRE(st == Approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 }
 PENNYLANE_RUN_TEST(CRZ);
@@ -1394,7 +1394,7 @@ void testApplyCRot() {
         GateImplementation::applyCRot(st.data(), num_qubits, {0, 1}, false,
                                       angles[0], angles[1], angles[2]);
 
-        CHECK(st == Approx(ini_st));
+        REQUIRE_THAT(st, Approx(ini_st));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CRot0,1 |100> -> |1>(a|0>+b|1>)|0> - "
@@ -1414,7 +1414,7 @@ void testApplyCRot() {
         GateImplementation::applyCRot(st.data(), num_qubits, {0, 1}, false,
                                       angles[0], angles[1], angles[2]);
 
-        CHECK(st == Approx(expected_results));
+        REQUIRE_THAT(st, Approx(expected_results));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -1467,7 +1467,7 @@ void testApplyCRot() {
         auto st = ini_st;
         GateImplementation::applyCRot(st.data(), num_qubits, wires, false, phi,
                                       theta, omega);
-        REQUIRE(st == Approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 }
 PENNYLANE_RUN_TEST(CRot);
@@ -1485,7 +1485,7 @@ void testApplySingleExcitation() {
         auto st = ini_st;
         GateImplementation::applySingleExcitation(st.data(), num_qubits, {0, 1},
                                                   false, angle);
-        CHECK(st == Approx(ini_st));
+        REQUIRE_THAT(st, Approx(ini_st));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", SingleExcitation0,1 |100> - "
@@ -1504,7 +1504,7 @@ void testApplySingleExcitation() {
         auto st = ini_st;
         GateImplementation::applySingleExcitation(st.data(), num_qubits, {0, 1},
                                                   false, angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", SingleExcitation0,1 |010> - "
@@ -1523,7 +1523,7 @@ void testApplySingleExcitation() {
         auto st = ini_st;
         GateImplementation::applySingleExcitation(st.data(), num_qubits, {0, 1},
                                                   false, angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", SingleExcitation0,1 |110> - "
@@ -1535,7 +1535,7 @@ void testApplySingleExcitation() {
         auto st = ini_st;
         GateImplementation::applySingleExcitation(st.data(), num_qubits, {0, 1},
                                                   false, angle);
-        CHECK(st == Approx(ini_st));
+        REQUIRE_THAT(st, Approx(ini_st));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", SingleExcitation0,1 - "
@@ -1567,7 +1567,7 @@ void testApplySingleExcitation() {
         auto st = ini_st;
         GateImplementation::applySingleExcitation(st.data(), num_qubits, wires,
                                                   false, angle);
-        REQUIRE(st == Approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 }
 PENNYLANE_RUN_TEST(SingleExcitation);
@@ -1597,7 +1597,7 @@ void testApplySingleExcitationMinus() {
         auto st = ini_st;
         GateImplementation::applySingleExcitationMinus(st.data(), num_qubits,
                                                        {0, 1}, false, angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", SingleExcitationMinus0,1 |100> - "
@@ -1616,7 +1616,7 @@ void testApplySingleExcitationMinus() {
         auto st = ini_st;
         GateImplementation::applySingleExcitationMinus(st.data(), num_qubits,
                                                        {0, 1}, false, angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", SingleExcitationMinus0,1 |010> - "
@@ -1635,7 +1635,7 @@ void testApplySingleExcitationMinus() {
         auto st = ini_st;
         GateImplementation::applySingleExcitationMinus(st.data(), num_qubits,
                                                        {0, 1}, false, angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", SingleExcitationMinus0,1 |110> - "
@@ -1658,7 +1658,7 @@ void testApplySingleExcitationMinus() {
         auto st = ini_st;
         GateImplementation::applySingleExcitationMinus(st.data(), num_qubits,
                                                        {0, 1}, false, angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", SingleExcitationMinus0,1 - "
@@ -1689,7 +1689,7 @@ void testApplySingleExcitationMinus() {
         auto st = ini_st;
         GateImplementation::applySingleExcitationMinus(st.data(), num_qubits,
                                                        wires, false, angle);
-        REQUIRE(st == Approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 }
 PENNYLANE_RUN_TEST(SingleExcitationMinus);
@@ -1719,7 +1719,7 @@ void testApplySingleExcitationPlus() {
         auto st = ini_st;
         GateImplementation::applySingleExcitationPlus(st.data(), num_qubits,
                                                       {0, 1}, false, angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", SingleExcitationPlus0,1 |100> - "
@@ -1738,7 +1738,7 @@ void testApplySingleExcitationPlus() {
         auto st = ini_st;
         GateImplementation::applySingleExcitationPlus(st.data(), num_qubits,
                                                       {0, 1}, false, angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", SingleExcitationPlus0,1 |010> - "
@@ -1757,7 +1757,7 @@ void testApplySingleExcitationPlus() {
         auto st = ini_st;
         GateImplementation::applySingleExcitationPlus(st.data(), num_qubits,
                                                       {0, 1}, false, angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", SingleExcitationPlus0,1 |110> - "
@@ -1780,7 +1780,7 @@ void testApplySingleExcitationPlus() {
         auto st = ini_st;
         GateImplementation::applySingleExcitationPlus(st.data(), num_qubits,
                                                       {0, 1}, false, angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", SingleExcitationPlus0,1 - "
@@ -1811,7 +1811,7 @@ void testApplySingleExcitationPlus() {
         auto st = ini_st;
         GateImplementation::applySingleExcitationPlus(st.data(), num_qubits,
                                                       wires, false, angle);
-        REQUIRE(st == Approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 }
 PENNYLANE_RUN_TEST(SingleExcitationPlus);
@@ -1832,7 +1832,7 @@ void testApplyDoubleExcitation() {
         auto st = ini_st;
         GateImplementation::applyDoubleExcitation(st.data(), num_qubits,
                                                   {0, 1, 2, 3}, false, angle);
-        CHECK(st == Approx(ini_st));
+        REQUIRE_THAT(st, Approx(ini_st));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", DoubleExcitation0,1,2,3 |1100> - "
@@ -1849,7 +1849,7 @@ void testApplyDoubleExcitation() {
         auto st = ini_st;
         GateImplementation::applyDoubleExcitation(st.data(), num_qubits,
                                                   {0, 1, 2, 3}, false, angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", DoubleExcitation0,1,2,3 |0011> - "
@@ -1866,7 +1866,7 @@ void testApplyDoubleExcitation() {
         auto st = ini_st;
         GateImplementation::applyDoubleExcitation(st.data(), num_qubits,
                                                   {0, 1, 2, 3}, false, angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", DoubleExcitation0,1,2,3 - "
@@ -1914,7 +1914,7 @@ void testApplyDoubleExcitation() {
         auto st = ini_st;
         GateImplementation::applyDoubleExcitation(st.data(), num_qubits, wires,
                                                   false, angle);
-        REQUIRE(st == Approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 }
 PENNYLANE_RUN_TEST(DoubleExcitation);
@@ -1938,7 +1938,7 @@ void testApplyDoubleExcitationMinus() {
         auto st = ini_st;
         GateImplementation::applyDoubleExcitationMinus(
             st.data(), num_qubits, {0, 1, 2, 3}, false, angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", DoubleExcitationMinus0,1,2,3 |1100> - "
@@ -1955,7 +1955,7 @@ void testApplyDoubleExcitationMinus() {
         auto st = ini_st;
         GateImplementation::applyDoubleExcitationMinus(
             st.data(), num_qubits, {0, 1, 2, 3}, false, angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", DoubleExcitationMinus0,1,2,3 |0011> - "
@@ -1972,7 +1972,7 @@ void testApplyDoubleExcitationMinus() {
         auto st = ini_st;
         GateImplementation::applyDoubleExcitationMinus(
             st.data(), num_qubits, {0, 1, 2, 3}, false, angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", DoubleExcitationMinus0,1,2,3 - "
@@ -2020,7 +2020,7 @@ void testApplyDoubleExcitationMinus() {
         auto st = ini_st;
         GateImplementation::applyDoubleExcitationMinus(st.data(), num_qubits,
                                                        wires, false, angle);
-        REQUIRE(st == Approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 }
 PENNYLANE_RUN_TEST(DoubleExcitationMinus);
@@ -2044,7 +2044,7 @@ void testApplyDoubleExcitationPlus() {
         auto st = ini_st;
         GateImplementation::applyDoubleExcitationPlus(
             st.data(), num_qubits, {0, 1, 2, 3}, false, angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", DoubleExcitationPlus0,1,2,3 |1100> - "
@@ -2061,7 +2061,7 @@ void testApplyDoubleExcitationPlus() {
         auto st = ini_st;
         GateImplementation::applyDoubleExcitationPlus(
             st.data(), num_qubits, {0, 1, 2, 3}, false, angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", DoubleExcitationPlus0,1,2,3 |0011> - "
@@ -2078,7 +2078,7 @@ void testApplyDoubleExcitationPlus() {
         auto st = ini_st;
         GateImplementation::applyDoubleExcitationPlus(
             st.data(), num_qubits, {0, 1, 2, 3}, false, angle);
-        REQUIRE(st == Approx(expected_results).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected_results).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", DoubleExcitationPlus0,1,2,3 - "
@@ -2126,7 +2126,7 @@ void testApplyDoubleExcitationPlus() {
         auto st = ini_st;
         GateImplementation::applyDoubleExcitationPlus(st.data(), num_qubits,
                                                       wires, false, angle);
-        REQUIRE(st == Approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 }
 PENNYLANE_RUN_TEST(DoubleExcitationPlus);
@@ -2159,7 +2159,7 @@ void testApplyMultiRZ() {
         GateImplementation::applyMultiRZ(st.data(), num_qubits, {0}, false,
                                          angle);
 
-        REQUIRE(st == Approx(expected).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", MultiRZ0 |++++> - "
@@ -2182,7 +2182,7 @@ void testApplyMultiRZ() {
         GateImplementation::applyMultiRZ(st.data(), num_qubits, {0}, false,
                                          angle);
 
-        REQUIRE(st == Approx(expected).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", MultiRZ01 |++++> - "
@@ -2205,7 +2205,7 @@ void testApplyMultiRZ() {
         GateImplementation::applyMultiRZ(st.data(), num_qubits, {0, 1}, false,
                                          angle);
 
-        REQUIRE(st == Approx(expected).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", MultiRZ012 |++++> - "
@@ -2228,7 +2228,7 @@ void testApplyMultiRZ() {
         GateImplementation::applyMultiRZ(st.data(), num_qubits, {0, 1, 2},
                                          false, angle);
 
-        REQUIRE(st == Approx(expected).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-7));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", MultiRZ0123 |++++> - "
@@ -2251,7 +2251,7 @@ void testApplyMultiRZ() {
         GateImplementation::applyMultiRZ(st.data(), num_qubits, {0, 1, 2, 3},
                                          false, angle);
 
-        REQUIRE(st == Approx(expected).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-7));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -2301,7 +2301,7 @@ void testApplyMultiRZ() {
 
         GateImplementation::applyMultiRZ(st.data(), num_qubits, wires, false,
                                          angle);
-        REQUIRE(st == Approx(expected).margin(1e-7));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-7));
     }
 }
 PENNYLANE_RUN_TEST(MultiRZ);

@@ -43,7 +43,7 @@ void testInverseKernelGate(RandomEngine &re, size_t num_qubits) {
         callGateOps(func_ptr, st.data(), num_qubits, wires, false, params);
         callGateOps(func_ptr, st.data(), num_qubits, wires, true, params);
 
-        REQUIRE(st == approx(ini_st).margin(PrecisionT{1e-7}));
+        REQUIRE_THAT(st, Approx(ini_st).margin(PrecisionT{1e-7}));
     }
 }
 

@@ -194,10 +194,10 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyMatrix", "[DynamicDispatcher]",
 
         std::vector<std::complex<PrecisionT>> matrix(4, 0.0);
 
-        REQUIRE_THROWS_WITH(dispatcher.applyMatrix(Gates::KernelType::None,
-                                                   st.data(), num_qubits,
-                                                   matrix.data(), {0}, false),
-                            Catch::Matchers::ContainsSubstring("is not registered") &&
-                                Catch::Matchers::ContainsSubstring("SingleQubitOp"));
+        REQUIRE_THROWS_WITH(
+            dispatcher.applyMatrix(Gates::KernelType::None, st.data(),
+                                   num_qubits, matrix.data(), {0}, false),
+            Catch::Matchers::ContainsSubstring("is not registered") &&
+                Catch::Matchers::ContainsSubstring("SingleQubitOp"));
     }
 }

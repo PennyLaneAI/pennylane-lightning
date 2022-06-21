@@ -69,7 +69,7 @@ void testApplySingleQubitOp() {
         auto st = ini_st;
         GateImplementation::applySingleQubitOp(st.data(), num_qubits,
                                                matrix.data(), wires, false);
-        REQUIRE(st == approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -125,7 +125,7 @@ void testApplySingleQubitOp() {
         auto st = ini_st;
         GateImplementation::applySingleQubitOp(st.data(), num_qubits,
                                                matrix.data(), wires, false);
-        REQUIRE(st == approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -181,7 +181,7 @@ void testApplySingleQubitOp() {
         auto st = ini_st;
         GateImplementation::applySingleQubitOp(st.data(), num_qubits,
                                                matrix.data(), wires, false);
-        REQUIRE(st == approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 }
 
@@ -253,7 +253,7 @@ void testApplyTwoQubitOp() {
         auto st = ini_st;
         GateImplementation::applyTwoQubitOp(st.data(), num_qubits,
                                             matrix.data(), wires, false);
-        REQUIRE(st == approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -321,7 +321,7 @@ void testApplyTwoQubitOp() {
         auto st = ini_st;
         GateImplementation::applyTwoQubitOp(st.data(), num_qubits,
                                             matrix.data(), wires, false);
-        REQUIRE(st == approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 }
 
@@ -442,7 +442,7 @@ void testApplyMultiQubitOp() {
         auto st = ini_st;
         GateImplementation::applyMultiQubitOp(st.data(), num_qubits,
                                               matrix.data(), wires, false);
-        REQUIRE(st == approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -751,7 +751,7 @@ void testApplyMultiQubitOp() {
         auto st = ini_st;
         GateImplementation::applyMultiQubitOp(st.data(), num_qubits,
                                               matrix.data(), wires, false);
-        REQUIRE(st == approx(expected).margin(1e-5));
+        REQUIRE_THAT(st, Approx(expected).margin(1e-5));
     }
 }
 
@@ -807,7 +807,7 @@ void testApplySingleQubitOpInverse() {
                                                matrix.data(), wires, false);
         GateImplementation::applySingleQubitOp(st.data(), num_qubits,
                                                matrix.data(), wires, true);
-        REQUIRE(st == approx(ini_st).margin(margin));
+        REQUIRE_THAT(st, Approx(ini_st).margin(margin));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -825,7 +825,7 @@ void testApplySingleQubitOpInverse() {
         GateImplementation::applySingleQubitOp(st.data(), num_qubits,
                                                matrix.data(), wires, true);
 
-        REQUIRE(st == approx(ini_st).margin(margin));
+        REQUIRE_THAT(st, Approx(ini_st).margin(margin));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -843,7 +843,7 @@ void testApplySingleQubitOpInverse() {
         GateImplementation::applySingleQubitOp(st.data(), num_qubits,
                                                matrix.data(), wires, true);
 
-        REQUIRE(st == approx(ini_st).margin(margin));
+        REQUIRE_THAT(st, Approx(ini_st).margin(margin));
     }
 
     DYNAMIC_SECTION(GateImplementation::name
@@ -861,7 +861,7 @@ void testApplySingleQubitOpInverse() {
         GateImplementation::applySingleQubitOp(st.data(), num_qubits,
                                                matrix.data(), wires, true);
 
-        REQUIRE(st == approx(ini_st).margin(margin));
+        REQUIRE_THAT(st, Approx(ini_st).margin(margin));
     }
 }
 
@@ -885,7 +885,7 @@ void testApplyTwoQubitOpInverse() {
         GateImplementation::applyTwoQubitOp(st.data(), num_qubits,
                                             matrix.data(), wires, true);
 
-        REQUIRE(st == approx(ini_st).margin(margin));
+        REQUIRE_THAT(st, Approx(ini_st).margin(margin));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", wires = {1,2} - "
@@ -901,7 +901,7 @@ void testApplyTwoQubitOpInverse() {
         GateImplementation::applyTwoQubitOp(st.data(), num_qubits,
                                             matrix.data(), wires, true);
 
-        REQUIRE(st == approx(ini_st).margin(margin));
+        REQUIRE_THAT(st, Approx(ini_st).margin(margin));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", wires = {1,3} - "
@@ -917,7 +917,7 @@ void testApplyTwoQubitOpInverse() {
         GateImplementation::applyTwoQubitOp(st.data(), num_qubits,
                                             matrix.data(), wires, true);
 
-        REQUIRE(st == approx(ini_st).margin(margin));
+        REQUIRE_THAT(st, Approx(ini_st).margin(margin));
     }
 }
 
@@ -941,7 +941,7 @@ void testApplyMultiQubitOpInverse() {
         GateImplementation::applyMultiQubitOp(st.data(), num_qubits,
                                               matrix.data(), wires, true);
 
-        REQUIRE(st == approx(ini_st).margin(margin));
+        REQUIRE_THAT(st, Approx(ini_st).margin(margin));
     }
     DYNAMIC_SECTION(GateImplementation::name
                     << ", wires = {0,1,2,3} - "
@@ -957,7 +957,7 @@ void testApplyMultiQubitOpInverse() {
         GateImplementation::applyMultiQubitOp(st.data(), num_qubits,
                                               matrix.data(), wires, true);
 
-        REQUIRE(st == approx(ini_st).margin(margin));
+        REQUIRE_THAT(st, Approx(ini_st).margin(margin));
     }
 }
 

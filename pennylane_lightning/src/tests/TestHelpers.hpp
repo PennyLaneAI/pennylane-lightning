@@ -13,24 +13,33 @@
 
 #include <algorithm>
 #include <complex>
+#include <concepts>
 #include <random>
+#include <sstream>
 #include <string>
 #include <type_traits>
 #include <variant>
 #include <vector>
-#include <sstream>
 
 namespace Pennylane {
-template<typename T, typename AllocComp>
-struct ComplexVectorApprox : Catch::Matchers::MatcherGenericBase {
-    static_assert(Util::is_complex_v<T>, "Parameter type must be complex.");
 
-private:
-    const std::vector<T>& comp_;
+template <class T> struct is_std_vector {
+    constexpr static bool value = false;
+};
+template <class T, class Alloc> struct is_std_vector<std::vector<T, Alloc>> {
+    constexpr static bool value = true;
+};
+template <class T>
+concept std_vector = is_std_vector<T>::value;
+
+template <typename T, typename AllocComp>
+struct VectorApprox : Catch::Matchers::MatcherGenericBase {
+  private:
+    const std::vector<T, AllocComp> &comp_;
     mutable Catch::Approx approx = Catch::Approx::custom();
 
-public:
-    ComplexVectorApprox(const std::vector<T, AllocComp>& comp) : comp_{comp} { }
+  public:
+    VectorApprox(const std::vector<T, AllocComp> &comp) : comp_{comp} {}
 
     std::string describe() const {
         using Util::operator<<;
@@ -39,44 +48,52 @@ public:
         return ss.str();
     }
 
-    template<typename AllocMatch> bool match(const std::vector<T, AllocMatch>& v) const {
-        if(comp_.size() != v.size()) {
+    template <typename AllocMatch>
+    bool match(const std::vector<T, AllocMatch> &v) const {
+        if (comp_.size() != v.size()) {
             return false;
         }
-        for(size_t i = 0; i < v.size(); i++) {
-            if((std::real(comp_[i]) != approx(std::real(v[i])))
-               || (std::imag(comp_[i]) != approx(std::imag(v[i])))) {
-                return false;
+
+        if constexpr (Util::is_complex_v<T>) {
+            for (size_t i = 0; i < v.size(); i++) {
+                if ((std::real(comp_[i]) != approx(std::real(v[i]))) ||
+                    (std::imag(comp_[i]) != approx(std::imag(v[i])))) {
+                    return false;
+                }
+            }
+        } else {
+            for (size_t i = 0; i < v.size(); i++) {
+                if (comp_[i] != approx(v[i])) {
+                    return false;
+                }
             }
         }
         return true;
     }
 
-    ComplexVectorApprox& epsilon(Util::remove_complex_t<T> new_eps) {
+    VectorApprox &epsilon(Util::remove_complex_t<T> new_eps) {
         approx.epsilon(new_eps);
         return *this;
     }
 
-    ComplexVectorApprox& margin(Util::remove_complex_t<T> new_margin) {
+    VectorApprox &margin(Util::remove_complex_t<T> new_margin) {
         approx.margin(new_margin);
         return *this;
     }
 };
 
-template<typename T, typename AllocComp>
-ComplexVectorApprox<std::complex<T>, AllocComp>
-Approx(const std::vector<std::complex<T>, AllocComp>& comp) {
-    return ComplexVectorApprox(comp);
+template <std_vector T> auto Approx(const T &comp) -> decltype(auto) {
+    return VectorApprox(comp);
 }
 
 template <class T>
 struct ComplexNumberApprox : Catch::Matchers::MatcherGenericBase {
-private:
+  private:
     const std::complex<T> comp_;
     mutable Catch::Approx approx = Catch::Approx::custom();
 
-public:
-    ComplexNumberApprox(const std::complex<T>& comp) : comp_{comp} { }
+  public:
+    ComplexNumberApprox(const std::complex<T> &comp) : comp_{comp} {}
 
     std::string describe() const {
         std::ostringstream ss;
@@ -84,30 +101,55 @@ public:
         return ss.str();
     }
 
-    template<typename AllocMatch> bool match(const std::vector<T, AllocMatch>& v) const {
-        return ((std::real(comp_) == approx(std::real(v)))
-               && (std::imag(comp_) == approx(std::imag(v))));
+    bool match(const std::complex<T> &v) const {
+        return ((std::real(comp_) == approx(std::real(v))) &&
+                (std::imag(comp_) == approx(std::imag(v))));
     }
 
-    ComplexNumberApprox& epsilon(T new_eps) {
+    ComplexNumberApprox &epsilon(T new_eps) {
         approx.epsilon(new_eps);
         return *this;
     }
 
-    ComplexNumberApprox& margin(T new_margin) {
+    ComplexNumberApprox &margin(T new_margin) {
         approx.margin(new_margin);
         return *this;
     }
 };
 
-template<typename T>
-ComplexNumberApprox<T> Approx(std::complex<T> comp) {
+template <class T>
+struct RealNumberApprox : Catch::Matchers::MatcherGenericBase {
+  private:
+    const T comp_;
+    mutable Catch::Approx approx = Catch::Approx::custom();
+
+  public:
+    RealNumberApprox(T comp) : comp_{comp} {}
+
+    std::string describe() const {
+        std::ostringstream ss;
+        ss << "is approx to " << comp_;
+        return ss.str();
+    }
+
+    bool match(T v) const { return comp_ == approx(std::real(v)); }
+
+    RealNumberApprox &epsilon(T new_eps) {
+        approx.epsilon(new_eps);
+        return *this;
+    }
+
+    RealNumberApprox &margin(T new_margin) {
+        approx.margin(new_margin);
+        return *this;
+    }
+};
+
+template <typename T> ComplexNumberApprox<T> Approx(std::complex<T> comp) {
     return ComplexNumberApprox(comp);
 }
-
-template<typename T>
-Catch::Approx Approx(T comp) {
-    return Catch::Approx(double{comp});
+template <std::floating_point T> RealNumberApprox<T> Approx(T comp) {
+    return RealNumberApprox(comp);
 }
 
 /**
@@ -144,8 +186,8 @@ isApproxEqual(const Data_t &data1, const Data_t &data2,
               typename Data_t::value_type eps =
                   std::numeric_limits<typename Data_t::value_type>::epsilon() *
                   100) {
-    return !(data1.real() != Approx(data2.real()).epsilon(eps) ||
-             data1.imag() != Approx(data2.imag()).epsilon(eps));
+    return !(data1.real() != Catch::Approx(data2.real()).epsilon(eps) ||
+             data1.imag() != Catch::Approx(data2.imag()).epsilon(eps));
 }
 
 template <typename T>
@@ -430,13 +472,15 @@ template <> struct PrecisionToName<double> {
 #define PL_REQUIRE_THROWS_MATCHES(expr, type, message_match)                   \
     do {                                                                       \
         REQUIRE_THROWS_AS(expr, type);                                         \
-        REQUIRE_THROWS_WITH(expr, Catch::Matchers::ContainsSubstring(message_match));   \
+        REQUIRE_THROWS_WITH(                                                   \
+            expr, Catch::Matchers::ContainsSubstring(message_match));          \
     } while (false);
 
 #define PL_CHECK_THROWS_MATCHES(expr, type, message_match)                     \
     do {                                                                       \
         CHECK_THROWS_AS(expr, type);                                           \
-        CHECK_THROWS_WITH(expr, Catch::Matchers::ContainsSubstring(message_match));     \
+        CHECK_THROWS_WITH(expr,                                                \
+                          Catch::Matchers::ContainsSubstring(message_match));  \
     } while (false);
 
 } // namespace Pennylane

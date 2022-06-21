@@ -50,7 +50,7 @@ TEMPLATE_TEST_CASE("Expected Values - Sparse Hamiltonian [Kokkos]",
                 entries.data(), values.data(),
                 static_cast<long>(values.size()));
             TestType exp_values_ref = 0.5930885;
-            REQUIRE(exp_values == Approx(exp_values_ref).margin(1e-6));
+            REQUIRE_THAT(exp_values, Approx(exp_values_ref).margin(1e-6));
         }
 
         SECTION("Testing Sparse Hamiltonian (incompatible sizes):") {

@@ -136,8 +136,8 @@ void testApplyGate(RandomEngine &re, size_t num_qubits) {
                 res.emplace_back(std::move(st));
             }
             for (size_t i = 0; i < res.size() - 1; i++) {
-                REQUIRE(
-                    res[i] ==
+                REQUIRE_THAT(
+                    res[i],
                     Approx(res[i + 1]).margin(static_cast<PrecisionT>(1e-5)));
             }
         }
@@ -154,8 +154,8 @@ void testApplyGate(RandomEngine &re, size_t num_qubits) {
                 res.emplace_back(std::move(st));
             }
             for (size_t i = 0; i < res.size() - 1; i++) {
-                REQUIRE(
-                    res[i] ==
+                REQUIRE_THAT(
+                    res[i],
                     Approx(res[i + 1]).margin(static_cast<PrecisionT>(1e-5)));
             }
         }
@@ -219,7 +219,7 @@ void testSingleQubitOp(RandomEngine &re, size_t num_qubits, bool inverse) {
                 res.emplace_back(std::move(st));
             }
             for (size_t idx = 0; idx < all_kernels.size() - 1; idx++) {
-                REQUIRE(res[idx] == Approx(res[idx + 1]).margin(1e-7));
+                REQUIRE_THAT(res[idx], Approx(res[idx + 1]).margin(1e-7));
             }
         }
     }
@@ -254,7 +254,7 @@ void testTwoQubitOp(RandomEngine &re, size_t num_qubits, bool inverse) {
                 res.emplace_back(std::move(st));
             }
             for (size_t idx = 0; idx < all_kernels.size() - 1; idx++) {
-                REQUIRE(res[idx] == Approx(res[idx + 1]).margin(1e-7));
+                REQUIRE_THAT(res[idx], Approx(res[idx + 1]).margin(1e-7));
             }
         }
     }
@@ -289,7 +289,7 @@ void testMultiQubitOp(RandomEngine &re, size_t num_qubits, size_t num_wires,
                 res.emplace_back(std::move(st));
             }
             for (size_t idx = 0; idx < all_kernels.size() - 1; idx++) {
-                REQUIRE(res[idx] == Approx(res[idx + 1]).margin(1e-7));
+                REQUIRE_THAT(res[idx], Approx(res[idx + 1]).margin(1e-7));
             }
         }
     }

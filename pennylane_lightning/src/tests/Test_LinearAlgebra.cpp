@@ -14,6 +14,7 @@
 #endif
 
 using namespace Pennylane;
+using Catch::Matchers::ContainsSubstring;
 
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
@@ -26,7 +27,7 @@ TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
                 std::complex<TestType> expected_result(0,
                                                        size_t{1U} << (i + 1));
                 std::complex<TestType> result = Util::innerProd(data1, data2);
-                CHECK(isApproxEqual(result, expected_result));
+                REQUIRE(isApproxEqual(result, expected_result));
             }
         }
         SECTION("Random complex") {
@@ -38,7 +39,7 @@ TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
                 {0.877583, 0},  {0, 0}, {0, 0},           {0, 0}};
             std::complex<TestType> expected_result(0, -0.312985152368);
             std::complex<TestType> result = Util::innerProd(data1, data2);
-            CHECK(isApproxEqual(result, expected_result));
+            REQUIRE(isApproxEqual(result, expected_result));
         }
     }
     SECTION("innerProd-inline") {
@@ -51,7 +52,7 @@ TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
                                                        size_t{1U} << (i + 1));
                 std::complex<TestType> result = Util::innerProd<TestType, 1>(
                     data1.data(), data2.data(), sz);
-                CHECK(isApproxEqual(result, expected_result));
+                REQUIRE(isApproxEqual(result, expected_result));
             }
         }
         SECTION("Random complex") {
@@ -64,7 +65,7 @@ TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
             std::complex<TestType> expected_result(0, -0.312985152368);
             std::complex<TestType> result =
                 Util::innerProd<TestType, 1>(data1.data(), data2.data(), 8);
-            CHECK(isApproxEqual(result, expected_result));
+            REQUIRE(isApproxEqual(result, expected_result));
         }
     }
     SECTION("innerProdC") {
@@ -78,7 +79,7 @@ TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
                 std::complex<TestType> result = Util::innerProdC(data1, data2);
                 CAPTURE(result);
                 CAPTURE(expected_result);
-                CHECK(isApproxEqual(result, expected_result));
+                REQUIRE(isApproxEqual(result, expected_result));
             }
         }
         SECTION("Random complex") {
@@ -92,8 +93,7 @@ TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
             std::complex<TestType> result = Util::innerProdC(data1, data2);
             CAPTURE(result);
             CAPTURE(expected_result);
-            CHECK(real(result) == Approx(real(expected_result)).margin(1e-7));
-            CHECK(imag(result) == Approx(imag(expected_result)).margin(1e-7));
+            REQUIRE_THAT(result, Approx(expected_result).margin(1e-7));
         }
     }
     SECTION("innerProdC-inline") {
@@ -108,7 +108,7 @@ TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
                     data1.data(), data2.data(), sz);
                 CAPTURE(result);
                 CAPTURE(expected_result);
-                CHECK(isApproxEqual(result, expected_result));
+                REQUIRE(isApproxEqual(result, expected_result));
             }
         }
         SECTION("Random complex") {
@@ -123,8 +123,7 @@ TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
                 Util::innerProdC<TestType, 1>(data1.data(), data2.data(), 8);
             CAPTURE(result);
             CAPTURE(expected_result);
-            CHECK(real(result) == Approx(real(expected_result)).margin(1e-7));
-            CHECK(imag(result) == Approx(imag(expected_result)).margin(1e-7));
+            REQUIRE_THAT(result, Approx(expected_result).margin(1e-7));
         }
     }
 }
@@ -144,7 +143,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
                 CAPTURE(v_out);
                 CAPTURE(v_expected);
 
-                CHECK(v_out == Approx(v_expected).margin(1e-7));
+                REQUIRE_THAT(v_out, Approx(v_expected).margin(1e-7));
             }
         }
         SECTION("Simple Iterative with Transpose") {
@@ -158,7 +157,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
                 CAPTURE(v_out);
                 CAPTURE(v_expected);
 
-                CHECK(v_out == Approx(v_expected).margin(1e-7));
+                REQUIRE_THAT(v_out, Approx(v_expected).margin(1e-7));
             }
         }
         SECTION("Random Complex with NoTranspose") {
@@ -184,7 +183,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
                 Util::matrixVecProd(mat, v_in, 4, 4, Trans::NoTranspose);
             CAPTURE(v_out);
 
-            CHECK(v_out == Approx(v_expected).margin(1e-7));
+            REQUIRE_THAT(v_out, Approx(v_expected).margin(1e-7));
         }
         SECTION("Random Complex with Transpose") {
             std::vector<std::complex<TestType>> mat{
@@ -208,7 +207,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
                 Util::matrixVecProd(mat, v_in, 4, 4, Trans::Transpose);
             CAPTURE(v_out);
 
-            CHECK(v_out == Approx(v_expected).margin(1e-7));
+            REQUIRE_THAT(v_out, Approx(v_expected).margin(1e-7));
         }
         SECTION("Random Complex with Adjoint") {
             std::vector<std::complex<TestType>> v_in{
@@ -246,21 +245,22 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
                 Util::matrixVecProd(mat, v_in, 4, 4, Trans::Adjoint);
             CAPTURE(v_out);
 
-            CHECK(v_out == Approx(v_expected).margin(1e-7));
+            REQUIRE_THAT(v_out, Approx(v_expected).margin(1e-7));
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
             std::vector<std::complex<TestType>> mat(2 * 3, {1.0, 1.0});
             std::vector<std::complex<TestType>> v_in(2, {1.0, 1.0});
-            CHECK_THROWS_AS(Util::matrixVecProd(mat, v_in, 2, 3),
-                            std::invalid_argument);
-            CHECK_THROWS_WITH(Util::matrixVecProd(mat, v_in, 2, 3),
-                              Contains("Invalid size for the input vector"));
-            CHECK_THROWS_AS(Util::matrixVecProd(mat, v_in, 2, 2),
-                            std::invalid_argument);
-            CHECK_THROWS_WITH(
+            REQUIRE_THROWS_AS(Util::matrixVecProd(mat, v_in, 2, 3),
+                              std::invalid_argument);
+            REQUIRE_THROWS_WITH(
+                Util::matrixVecProd(mat, v_in, 2, 3),
+                ContainsSubstring("Invalid size for the input vector"));
+            REQUIRE_THROWS_AS(Util::matrixVecProd(mat, v_in, 2, 2),
+                              std::invalid_argument);
+            REQUIRE_THROWS_WITH(
                 Util::matrixVecProd(mat, v_in, 2, 2),
-                Contains(
+                ContainsSubstring(
                     "Invalid number of rows and columns for the input matrix"));
         }
         SECTION("nullptr for v_out") {
@@ -269,11 +269,11 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
             auto v_out = nullptr;
             Util::matrixVecProd<TestType>(mat.data(), v_in.data(), v_out, 2, 3,
                                           Trans::NoTranspose);
-            CHECK(v_out == nullptr);
+            REQUIRE(v_out == nullptr);
 
             Util::omp_matrixVecProd<TestType>(mat.data(), v_in.data(), v_out, 2,
                                               3, Trans::NoTranspose);
-            CHECK(v_out == nullptr);
+            REQUIRE(v_out == nullptr);
         }
     }
     SECTION("vecMatrixProd") {
@@ -288,7 +288,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
                 CAPTURE(v_out);
                 CAPTURE(v_expected);
 
-                CHECK(v_out == Approx(v_expected).margin(1e-7));
+                REQUIRE_THAT(v_out, Approx(v_expected).margin(1e-7));
             }
         }
         SECTION("Zero Vector") {
@@ -302,7 +302,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
                 CAPTURE(v_out);
                 CAPTURE(v_expected);
 
-                CHECK(v_out == Approx(v_expected).margin(1e-7));
+                REQUIRE_THAT(v_out, Approx(v_expected).margin(1e-7));
             }
         }
         SECTION("Random Matrix") {
@@ -315,7 +315,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
             CAPTURE(v_out);
             CAPTURE(v_expected);
 
-            CHECK(v_out == Approx(v_expected).margin(1e-7));
+            REQUIRE_THAT(v_out, Approx(v_expected).margin(1e-7));
         }
         SECTION("In Place") {
             std::vector<TestType> v_in{1.0, 2.0, 3.0, 4.0};
@@ -327,46 +327,48 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
             std::vector<TestType> v_out2(3, TestType{});
             Util::vecMatrixProd(v_out2, v_in, mat, 4, 3);
 
-            CHECK(v_out2 == v_out1);
+            REQUIRE(v_out2 == v_out1);
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
             std::vector<TestType> v_in(4, {1.0});
             std::vector<TestType> mat(8, {1.0});
-            CHECK_THROWS_AS(Util::vecMatrixProd(v_in, mat, 2, 3),
-                            std::invalid_argument);
-            CHECK_THROWS_WITH(Util::vecMatrixProd(v_in, mat, 2, 3),
-                              Contains("Invalid size for the input vector"));
-            CHECK_THROWS_AS(Util::vecMatrixProd(v_in, mat, 4, 3),
-                            std::invalid_argument);
-            CHECK_THROWS_WITH(
+            REQUIRE_THROWS_AS(Util::vecMatrixProd(v_in, mat, 2, 3),
+                              std::invalid_argument);
+            REQUIRE_THROWS_WITH(
+                Util::vecMatrixProd(v_in, mat, 2, 3),
+                ContainsSubstring("Invalid size for the input vector"));
+            REQUIRE_THROWS_AS(Util::vecMatrixProd(v_in, mat, 4, 3),
+                              std::invalid_argument);
+            REQUIRE_THROWS_WITH(
                 Util::vecMatrixProd(v_in, mat, 4, 3),
-                Contains(
+                ContainsSubstring(
                     "Invalid number of rows and columns for the input matrix"));
 
             std::vector<TestType> v_out(3);
-            CHECK_THROWS_AS(Util::vecMatrixProd(v_out, v_in, mat, 2, 3),
-                            std::invalid_argument);
-            CHECK_THROWS_WITH(
+            REQUIRE_THROWS_AS(Util::vecMatrixProd(v_out, v_in, mat, 2, 3),
+                              std::invalid_argument);
+            REQUIRE_THROWS_WITH(
                 Util::vecMatrixProd(v_out, v_in, mat, 2, 3),
-                Contains(
+                ContainsSubstring(
                     "Invalid number of rows and columns for the input matrix"));
-            CHECK_THROWS_AS(Util::vecMatrixProd(v_out, v_in, mat, 2, 4),
-                            std::invalid_argument);
-            CHECK_THROWS_WITH(Util::vecMatrixProd(v_out, v_in, mat, 2, 4),
-                              Contains("Invalid size for the input vector"));
-            CHECK_THROWS_AS(Util::vecMatrixProd(v_out, v_in, mat, 4, 2),
-                            std::invalid_argument);
-            CHECK_THROWS_WITH(
+            REQUIRE_THROWS_AS(Util::vecMatrixProd(v_out, v_in, mat, 2, 4),
+                              std::invalid_argument);
+            REQUIRE_THROWS_WITH(
+                Util::vecMatrixProd(v_out, v_in, mat, 2, 4),
+                ContainsSubstring("Invalid size for the input vector"));
+            REQUIRE_THROWS_AS(Util::vecMatrixProd(v_out, v_in, mat, 4, 2),
+                              std::invalid_argument);
+            REQUIRE_THROWS_WITH(
                 Util::vecMatrixProd(v_out, v_in, mat, 4, 2),
-                Contains("Invalid preallocated size for the result"));
+                ContainsSubstring("Invalid preallocated size for the result"));
         }
         SECTION("nullptr for v_out") {
             std::vector<TestType> v_in(4, {1.0});
             std::vector<TestType> mat{4 * 2, {1.0}};
             auto v_out = nullptr;
             Util::vecMatrixProd<TestType>(v_in.data(), mat.data(), v_out, 4, 2);
-            CHECK(v_out == nullptr);
+            REQUIRE(v_out == nullptr);
         }
     }
     SECTION("matrixMatProd") {
@@ -382,7 +384,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
                 CAPTURE(m_out);
                 CAPTURE(m_out_exp);
 
-                CHECK(m_out == Approx(m_out_exp));
+                REQUIRE_THAT(m_out, Approx(m_out_exp));
             }
         }
         SECTION("Simple Iterative (Trans::Adjoint)") {
@@ -397,7 +399,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
                 CAPTURE(m_out);
                 CAPTURE(m_out_exp);
 
-                CHECK(m_out == Approx(m_out_exp));
+                REQUIRE_THAT(m_out, Approx(m_out_exp));
             }
         }
         SECTION("Random Complex") {
@@ -454,8 +456,8 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
             CAPTURE(m_out_2);
             CAPTURE(m_out_exp);
 
-            CHECK(m_out_1 == Approx(m_out_2));
-            CHECK(m_out_1 == Approx(m_out_exp));
+            REQUIRE_THAT(m_out_1, Approx(m_out_2));
+            REQUIRE_THAT(m_out_1, Approx(m_out_exp));
         }
         SECTION("Random complex non-square") {
             const size_t m = 4;
@@ -528,22 +530,24 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
 
             const auto m_out = Util::matrixMatProd(mat1, mat2, m, n, k);
 
-            CHECK(m_out == Approx(expected));
+            REQUIRE_THAT(m_out, Approx(expected));
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
             std::vector<std::complex<TestType>> m_left(2 * 3, {1.0, 1.0});
             std::vector<std::complex<TestType>> m_right(3 * 4, {1.0, 1.0});
-            CHECK_THROWS_AS(Util::matrixMatProd(m_left, m_right, 2, 3, 4),
-                            std::invalid_argument);
-            CHECK_THROWS_WITH(Util::matrixMatProd(m_left, m_right, 2, 3, 4),
-                              Contains("Invalid number of rows and columns for "
-                                       "the input left matrix"));
-            CHECK_THROWS_AS(Util::matrixMatProd(m_left, m_right, 2, 3, 3),
-                            std::invalid_argument);
-            CHECK_THROWS_WITH(Util::matrixMatProd(m_left, m_right, 2, 3, 3),
-                              Contains("Invalid number of rows and columns for "
-                                       "the input right matrix"));
+            REQUIRE_THROWS_AS(Util::matrixMatProd(m_left, m_right, 2, 3, 4),
+                              std::invalid_argument);
+            REQUIRE_THROWS_WITH(
+                Util::matrixMatProd(m_left, m_right, 2, 3, 4),
+                ContainsSubstring("Invalid number of rows and columns for "
+                                  "the input left matrix"));
+            REQUIRE_THROWS_AS(Util::matrixMatProd(m_left, m_right, 2, 3, 3),
+                              std::invalid_argument);
+            REQUIRE_THROWS_WITH(
+                Util::matrixMatProd(m_left, m_right, 2, 3, 3),
+                ContainsSubstring("Invalid number of rows and columns for "
+                                  "the input right matrix"));
         }
         SECTION("nullptr for m_out") {
             std::vector<std::complex<TestType>> m_left(2 * 3, {1.0, 1.0});
@@ -551,12 +555,12 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
             auto m_out = nullptr;
             Util::matrixMatProd<TestType>(m_left.data(), m_right.data(), m_out,
                                           2, 3, 4, Trans::NoTranspose);
-            CHECK(m_out == nullptr);
+            REQUIRE(m_out == nullptr);
 
             Util::omp_matrixMatProd<TestType>(m_left.data(), m_right.data(),
                                               m_out, 2, 3, 4,
                                               Trans::NoTranspose);
-            CHECK(m_out == nullptr);
+            REQUIRE(m_out == nullptr);
         }
     }
 }
@@ -577,7 +581,7 @@ TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
                 CAPTURE(mat_t);
                 CAPTURE(mat);
 
-                CHECK(mat_t == Approx(mat).margin(1e-7));
+                REQUIRE_THAT(mat_t, Approx(mat).margin(1e-7));
             }
         }
         SECTION("Random Complex") {
@@ -596,7 +600,7 @@ TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
             CAPTURE(mat_t);
             CAPTURE(mat_t_exp);
 
-            CHECK(mat_t == Approx(mat_t_exp));
+            REQUIRE_THAT(mat_t, Approx(mat_t_exp));
         }
         SECTION("Random Complex non-square") {
             std::vector<TestType> mat{
@@ -613,7 +617,7 @@ TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
             CAPTURE(mat_t);
             CAPTURE(mat_t_exp);
 
-            CHECK(mat_t == Approx(mat_t_exp));
+            REQUIRE_THAT(mat_t, Approx(mat_t_exp));
         }
     }
     SECTION("Transpose") {
@@ -629,7 +633,7 @@ TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
                 CAPTURE(mat_t);
                 CAPTURE(mat);
 
-                CHECK(mat_t == Approx(mat).margin(1e-7));
+                REQUIRE_THAT(mat_t, Approx(mat).margin(1e-7));
             }
         }
         SECTION("Random Complex") {
@@ -657,17 +661,17 @@ TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
             CAPTURE(mat_t);
             CAPTURE(mat_t_exp);
 
-            CHECK(mat_t == Approx(mat_t_exp));
+            REQUIRE_THAT(mat_t, Approx(mat_t_exp));
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
             std::vector<TestType> mat(2 * 3, {1.0});
-            CHECK_THROWS_AS(
+            REQUIRE_THROWS_AS(
                 Util::Transpose(std::span<const TestType>{mat}, 2, 2),
                 std::invalid_argument);
-            CHECK_THROWS_WITH(
+            REQUIRE_THROWS_WITH(
                 Util::Transpose(mat, 2, 2),
-                Contains(
+                ContainsSubstring(
                     "Invalid number of rows and columns for the input matrix"));
         }
     }
@@ -684,7 +688,7 @@ TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
                 CAPTURE(mat_t);
                 CAPTURE(mat);
 
-                CHECK(mat_t == Approx(mat).margin(1e-7));
+                REQUIRE_THAT(mat_t, Approx(mat).margin(1e-7));
             }
         }
         SECTION("Random Complex") {
@@ -712,15 +716,16 @@ TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
             CAPTURE(mat_t);
             CAPTURE(mat_t_exp);
 
-            CHECK(mat_t == Approx(mat_t_exp));
+            REQUIRE_THAT(mat_t, Approx(mat_t_exp));
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
             std::vector<std::complex<TestType>> mat(2 * 3, {1.0, 1.0});
-            CHECK_THROWS_AS(Util::Transpose(mat, 2, 2), std::invalid_argument);
-            CHECK_THROWS_WITH(
+            REQUIRE_THROWS_AS(Util::Transpose(mat, 2, 2),
+                              std::invalid_argument);
+            REQUIRE_THROWS_WITH(
                 Util::Transpose(mat, 2, 2),
-                Contains(
+                ContainsSubstring(
                     "Invalid number of rows and columns for the input matrix"));
         }
     }
@@ -730,12 +735,12 @@ TEMPLATE_TEST_CASE("Util::squaredNorm", "[Util][LinearAlgebra]", float,
                    double) {
     SECTION("For real type") {
         std::vector<TestType> vec{0.0, 1.0, 3.0, 10.0};
-        CHECK(Util::squaredNorm(vec) == Approx(110.0));
+        REQUIRE_THAT(Util::squaredNorm(vec), Approx(110.0));
     }
 
     SECTION("For complex type") {
         std::vector<std::complex<TestType>> vec{{0.0, 1.0}, {3.0, 10.0}};
-        CHECK(Util::squaredNorm(vec) == Approx(110.0));
+        REQUIRE_THAT(Util::squaredNorm(vec), Approx(110.0));
     }
 }
 
@@ -801,7 +806,7 @@ TEMPLATE_TEST_CASE("Util::scaleAndAdd", "[Util][LinearAlgebra]", float,
             ComplexPrecisionT{0.830511463762, 0.573590760757},
         };
         Util::scaleAndAdd(a, x, y);
-        REQUIRE(y == Approx(expected));
+        REQUIRE_THAT(y, Approx(expected));
     }
     SECTION("Throws exception when the size mismatches") {
         std::vector<ComplexPrecisionT> x(8, ComplexPrecisionT{});

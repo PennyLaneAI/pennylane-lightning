@@ -17,6 +17,7 @@
 #include <vector>
 
 using namespace Pennylane;
+using Catch::Matchers::ContainsSubstring;
 
 TEMPLATE_TEST_CASE("StateVectorManagedCPU::StateVectorManagedCPU",
                    "[StateVectorManagedCPU]", float, double) {
@@ -81,7 +82,7 @@ TEMPLATE_TEST_CASE("StateVectorManagedCPU::applyMatrix with std::vector",
         StateVectorManagedCPU<PrecisionT> sv(num_qubits);
         REQUIRE_THROWS_WITH(
             sv.applyMatrix(m, {0, 1}),
-            Catch::Contains(
+            ContainsSubstring(
                 "The size of matrix does not match with the given"));
     }
 
@@ -91,7 +92,7 @@ TEMPLATE_TEST_CASE("StateVectorManagedCPU::applyMatrix with std::vector",
         StateVectorManagedCPU<PrecisionT> sv(num_qubits);
         REQUIRE_THROWS_WITH(
             sv.applyMatrix(m, {0}),
-            Catch::Contains(
+            ContainsSubstring(
                 "The size of matrix does not match with the given"));
     }
 }
@@ -104,7 +105,7 @@ TEMPLATE_TEST_CASE("StateVectorManagedCPU::applyMatrix with a pointer",
         const size_t num_qubits = 4;
         StateVectorManagedCPU<PrecisionT> sv(num_qubits);
         REQUIRE_THROWS_WITH(sv.applyMatrix(m.data(), {}),
-                            Catch::Contains("must be larger than 0"));
+                            ContainsSubstring("must be larger than 0"));
     }
 
     SECTION("Test with different number of wires") {
@@ -121,8 +122,8 @@ TEMPLATE_TEST_CASE("StateVectorManagedCPU::applyMatrix with a pointer",
             sv1.applyMatrix(m, wires);
             Gates::GateImplementationsPI::applyMultiQubitOp<PrecisionT>(
                 sv2.getData(), num_qubits, m.data(), wires, false);
-            REQUIRE(sv1.getDataVector() ==
-                    Approx(sv2.getDataVector()).margin(PrecisionT{1e-5}));
+            REQUIRE_THAT(sv1.getDataVector(),
+                         Approx(sv2.getDataVector()).margin(PrecisionT{1e-5}));
         }
     }
 }
@@ -138,10 +139,10 @@ TEMPLATE_TEST_CASE("StateVectorManagedCPU::applyOperations",
         StateVectorManagedCPU<PrecisionT> sv(num_qubits);
         REQUIRE_THROWS_WITH(
             sv.applyOperations({"PauliX", "PauliY"}, {{0}}, {false, false}),
-            Catch::Contains("must all be equal")); // invalid wires
+            ContainsSubstring("must all be equal")); // invalid wires
         REQUIRE_THROWS_WITH(
             sv.applyOperations({"PauliX", "PauliY"}, {{0}, {1}}, {false}),
-            Catch::Contains("must all be equal")); // invalid inverse
+            ContainsSubstring("must all be equal")); // invalid inverse
     }
 
     SECTION("applyOperations without params works as expected") {
@@ -156,7 +157,7 @@ TEMPLATE_TEST_CASE("StateVectorManagedCPU::applyOperations",
         sv2.applyOperation("PauliX", {0}, false);
         sv2.applyOperation("PauliY", {1}, false);
 
-        REQUIRE(sv1.getDataVector() == Approx(sv2.getDataVector()));
+        REQUIRE_THAT(sv1.getDataVector(), Approx(sv2.getDataVector()));
     }
 
     SECTION("Test invalid arguments with params") {
@@ -165,16 +166,16 @@ TEMPLATE_TEST_CASE("StateVectorManagedCPU::applyOperations",
         REQUIRE_THROWS_WITH(
             sv.applyOperations({"RX", "RY"}, {{0}}, {false, false},
                                {{0.0}, {0.0}}),
-            Catch::Contains("must all be equal")); // invalid wires
+            ContainsSubstring("must all be equal")); // invalid wires
         REQUIRE_THROWS_WITH(
             sv.applyOperations({"RX", "RY"}, {{0}, {1}}, {false},
                                {{0.0}, {0.0}}),
-            Catch::Contains("must all be equal")); // invalid inverse
+            ContainsSubstring("must all be equal")); // invalid inverse
 
         REQUIRE_THROWS_WITH(
             sv.applyOperations({"RX", "RY"}, {{0}, {1}}, {false, false},
                                {{0.0}}),
-            Catch::Contains("must all be equal")); // invalid params
+            ContainsSubstring("must all be equal")); // invalid params
     }
 
     SECTION("applyOperations with params works as expected") {
@@ -190,6 +191,6 @@ TEMPLATE_TEST_CASE("StateVectorManagedCPU::applyOperations",
         sv2.applyOperation("RX", {0}, false, {0.1});
         sv2.applyOperation("RY", {1}, false, {0.2});
 
-        REQUIRE(sv1.getDataVector() == Approx(sv2.getDataVector()));
+        REQUIRE_THAT(sv1.getDataVector(), Approx(sv2.getDataVector()));
     }
 }
