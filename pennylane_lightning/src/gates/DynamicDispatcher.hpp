@@ -204,7 +204,7 @@ template <typename PrecisionT> class DynamicDispatcher {
     }
 
     [[nodiscard]] auto
-    registeredMatrixsForKernel(Gates::KernelType kernel) const
+    registeredMatricesForKernel(Gates::KernelType kernel) const
         -> std::unordered_set<Gates::MatrixOperation> {
         std::unordered_set<Gates::MatrixOperation> matrices;
 

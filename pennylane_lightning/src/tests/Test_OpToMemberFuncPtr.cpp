@@ -1,7 +1,7 @@
-#include "OpToMemberFuncPtr.hpp"
-#include "ConstantUtil.hpp"
-#include "Util.hpp"
 #include "Constant.hpp"
+#include "ConstantUtil.hpp"
+#include "OpToMemberFuncPtr.hpp"
+#include "Util.hpp"
 
 #include <catch2/catch.hpp>
 
