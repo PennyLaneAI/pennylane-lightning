@@ -13,12 +13,17 @@
 // limitations under the License.
 /**
  * @file
+ * Register all gate and generator implementations
  */
-#pragma once
+#include "RegisterKernel.hpp"
+#include "RegisterKernels_x64.hpp"
+#include "cpu_kernels/GateImplementationsAVX512.hpp"
 
 namespace Pennylane::Internal {
-void registerKernelsAVX2_Float();
-void registerKernelsAVX2_Double();
-void registerKernelsAVX512_Float();
-void registerKernelsAVX512_Double();
+void registerKernelsAVX512_Float() {
+    registerKernel<float, float, Gates::GateImplementationsAVX512>();
+}
+void registerKernelsAVX512_Double() {
+    registerKernel<double, double, Gates::GateImplementationsAVX512>();
+}
 } // namespace Pennylane::Internal

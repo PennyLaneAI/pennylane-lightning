@@ -103,4 +103,35 @@ template <size_t packed_size> struct InternalWires {
 template <size_t packed_size>
 constexpr auto internal_wires_v = InternalWires<packed_size>::value;
 
+// clang-format off
+#ifdef PL_USE_AVX2
+constexpr __m256i setr256i(int32_t  e0, int32_t  e1, int32_t  e2, int32_t  e3,
+		                   int32_t  e4, int32_t  e5, int32_t  e6, int32_t  e7) {
+    return __m256i{(int64_t(e1) << 32) | e0,  // NOLINT(hicpp-signed-bitwise)
+                   (int64_t(e3) << 32) | e2,  // NOLINT(hicpp-signed-bitwise)
+                   (int64_t(e5) << 32) | e4,  // NOLINT(hicpp-signed-bitwise)
+                   (int64_t(e7) << 32) | e6}; // NOLINT(hicpp-signed-bitwise)
+}
+#endif
+#ifdef PL_USE_AVX512F
+constexpr __m512i setr512i(int32_t  e0, int32_t  e1, int32_t  e2, int32_t  e3,
+		                   int32_t  e4, int32_t  e5, int32_t  e6, int32_t  e7, 
+		                   int32_t  e8, int32_t  e9, int32_t e10, int32_t e11, 
+		                   int32_t e12, int32_t e13, int32_t e14, int32_t e15) {
+    return __m512i{(int64_t(e1) << 32)  |  e0,  // NOLINT(hicpp-signed-bitwise)
+                   (int64_t(e3) << 32)  |  e2,  // NOLINT(hicpp-signed-bitwise)
+                   (int64_t(e5) << 32)  |  e4,  // NOLINT(hicpp-signed-bitwise)
+                   (int64_t(e7) << 32)  |  e6,  // NOLINT(hicpp-signed-bitwise)
+                   (int64_t(e9) << 32)  |  e8,  // NOLINT(hicpp-signed-bitwise)
+                   (int64_t(e11) << 32) | e10,  // NOLINT(hicpp-signed-bitwise)
+                   (int64_t(e13) << 32) | e12,  // NOLINT(hicpp-signed-bitwise)
+                   (int64_t(e15) << 32) | e14}; // NOLINT(hicpp-signed-bitwise)
+}
+constexpr __m512i setr512i(int64_t  e0, int64_t  e1, int64_t  e2, int64_t  e3,
+		                   int64_t  e4, int64_t  e5, int64_t  e6, int64_t  e7) {
+    return __m512i{e0, e1, e2, e3, e4, e5, e6, e7};
+}
+#endif
+// clang-format on
+
 } // namespace Pennylane::Gates::AVX

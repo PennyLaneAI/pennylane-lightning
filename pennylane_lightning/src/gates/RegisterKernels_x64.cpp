@@ -21,6 +21,7 @@
 #include "RuntimeInfo.hpp"
 #include "cpu_kernels/GateImplementationsLM.hpp"
 #include "cpu_kernels/GateImplementationsPI.hpp"
+#include "cpu_kernels/QChemGateImplementations.hpp"
 
 namespace Pennylane::Internal {
 
@@ -34,6 +35,9 @@ template <class PrecisionT, class ParamT> int registerAllAvailableKernels() {
         if (RuntimeInfo::AVX2()) {
             registerKernelsAVX2_Float();
         }
+        if (RuntimeInfo::AVX512F()) {
+            registerKernelsAVX512_Float();
+        }
         return 1;
     }
     if constexpr (std::is_same_v<PrecisionT, double> &&
@@ -43,6 +47,9 @@ template <class PrecisionT, class ParamT> int registerAllAvailableKernels() {
 
         if (RuntimeInfo::AVX2()) {
             registerKernelsAVX2_Double();
+        }
+        if (RuntimeInfo::AVX512F()) {
+            registerKernelsAVX512_Double();
         }
         return 1;
     }

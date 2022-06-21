@@ -1,6 +1,7 @@
 #include "OpToMemberFuncPtr.hpp"
-#include "SelectKernel.hpp"
+#include "ConstantUtil.hpp"
 #include "Util.hpp"
+#include "Constant.hpp"
 
 #include <catch2/catch.hpp>
 

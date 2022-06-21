@@ -21,7 +21,6 @@
 #include "GateOperation.hpp"
 #include "GateUtil.hpp"
 #include "OpToMemberFuncPtr.hpp"
-#include "SelectKernel.hpp"
 
 /// @cond DEV
 namespace Pennylane {

@@ -1,10 +1,8 @@
 #pragma once
 /**
  * @file
- * We define test kernels. Note that kernels not registered to
- * AvailableKernels can also be tested by adding it here.
+ * We define default test kernels.
  */
-#include "AvailableKernels.hpp"
 #include "Macros.hpp"
 #include "TypeList.hpp"
 

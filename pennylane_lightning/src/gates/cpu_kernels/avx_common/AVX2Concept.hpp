@@ -41,16 +41,6 @@ using IntrinsicType = typename Intrinsic<PrecisionT>::Type;
 } // namespace Pennylane::Gates::AVX2
 
 namespace Pennylane::Gates::AVX {
-// clang-format off
-constexpr __m256i setr256i(int32_t  e0, int32_t  e1, int32_t  e2, int32_t  e3,
-		                   int32_t  e4, int32_t  e5, int32_t  e6, int32_t  e7) {
-    return __m256i{(int64_t(e1) << 32) | e0,  // NOLINT(hicpp-signed-bitwise)
-                   (int64_t(e3) << 32) | e2,  // NOLINT(hicpp-signed-bitwise)
-                   (int64_t(e5) << 32) | e4,  // NOLINT(hicpp-signed-bitwise)
-                   (int64_t(e7) << 32) | e6}; // NOLINT(hicpp-signed-bitwise)
-}
-// clang-format on
-
 template <> struct AVXIntrinsic<float, 8> {
     // AVX2
     using Type = __m256;

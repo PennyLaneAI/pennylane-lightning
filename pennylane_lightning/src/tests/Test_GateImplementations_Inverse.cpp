@@ -1,6 +1,5 @@
 #include "DynamicDispatcher.hpp"
 #include "OpToMemberFuncPtr.hpp"
-#include "SelectKernel.hpp"
 #include "TestHelpers.hpp"
 #include "TestKernels.hpp"
 #include "Util.hpp"

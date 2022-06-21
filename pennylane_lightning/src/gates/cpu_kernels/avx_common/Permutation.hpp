@@ -275,7 +275,7 @@ constexpr auto compilePermutation(const std::array<uint8_t, 8> &permutation)
     bool within_lane = isWithinLane<double>(permutation);
 
     if (within_lane) {
-        int permute_val = getPermutation2x(permutation);
+        const auto permute_val = getPermutation2x(permutation);
         return {within_lane, permute_val};
     } // else
     return {within_lane, getPermutation8x512i(permutation)};

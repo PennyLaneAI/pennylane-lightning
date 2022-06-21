@@ -72,16 +72,21 @@ class GateImplementationsAVX512
         /* CRX, CRY, CRZ, CRot */
     };
 
-    constexpr static std::array<GeneratorOperation, 0> implemented_generators =
+    constexpr static std::array implemented_generators =
         {GeneratorOperation::RX, GeneratorOperation::RY,
          GeneratorOperation::RZ};
+
+    constexpr static std::array implemented_matrices = {
+        MatrixOperation::SingleQubitOp,
+    };
 
     template <typename PrecisionT>
     static void applySingleQubitOp(std::complex<PrecisionT> *arr,
                                    const size_t num_qubits,
                                    const std::complex<PrecisionT> *matrix,
-                                   const size_t wire, bool inverse = false) {
-        const size_t rev_wire = num_qubits - wire - 1;
+                                   const std::vector<size_t>& wires, bool inverse = false) {
+        PL_ASSERT(wires.size() == 1);
+        const size_t rev_wire = num_qubits - wires[0] - 1;
 
         using SingleQubitOpProdAVX512 =
             AVX::ApplySingleQubitOp<PrecisionT,
@@ -90,7 +95,7 @@ class GateImplementationsAVX512
         if (num_qubits <
             AVX::internal_wires_v<packed_bytes / sizeof(PrecisionT)>) {
             GateImplementationsLM::applySingleQubitOp(arr, num_qubits, matrix,
-                                                      wire, inverse);
+                                                      wires, inverse);
             return;
         }
 
@@ -692,7 +697,7 @@ class GateImplementationsAVX512
             (inverse) ? Gates::getRot<PrecisionT>(-omega, -theta, -phi)
                       : Gates::getRot<PrecisionT>(phi, theta, omega);
 
-        applySingleQubitOp(arr, num_qubits, rotMat.data(), wires[0]);
+        applySingleQubitOp(arr, num_qubits, rotMat.data(), wires);
     }
 
     /* Two-qubit gates*/

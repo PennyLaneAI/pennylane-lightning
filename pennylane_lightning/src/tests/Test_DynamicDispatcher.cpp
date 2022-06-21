@@ -12,7 +12,6 @@
 #include "DynamicDispatcher.hpp"
 #include "Macros.hpp"
 #include "OpToMemberFuncPtr.hpp"
-#include "SelectKernel.hpp"
 #include "Util.hpp"
 
 /* Kernels */
