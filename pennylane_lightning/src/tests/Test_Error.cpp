@@ -16,18 +16,18 @@ TEST_CASE("Error.hpp", "[Error]") {
             Pennylane::Util::LightningException("Test exception e_mut");
 
         REQUIRE_THROWS_WITH(throw e,
-                            Catch::Matchers::Contains("Test exception e"));
+                            Catch::Matchers::ContainsSubstring("Test exception e"));
         REQUIRE_THROWS_AS(throw e, Pennylane::Util::LightningException);
 
         // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
         const Pennylane::Util::LightningException e_copy(e);
         REQUIRE_THROWS_WITH(throw e_copy,
-                            Catch::Matchers::Contains("Test exception e"));
+                            Catch::Matchers::ContainsSubstring("Test exception e"));
         REQUIRE_THROWS_AS(throw e_copy, Pennylane::Util::LightningException);
 
         Pennylane::Util::LightningException e_move(std::move(e_mut));
         REQUIRE_THROWS_WITH(throw e_move,
-                            Catch::Matchers::Contains("Test exception e_mut"));
+                            Catch::Matchers::ContainsSubstring("Test exception e_mut"));
         REQUIRE_THROWS_AS(throw e_move, Pennylane::Util::LightningException);
 
         REQUIRE(std::strcmp(e.what(), "Test exception e") == 0);
@@ -37,13 +37,13 @@ TEST_CASE("Error.hpp", "[Error]") {
     SECTION("Abort") {
         REQUIRE_THROWS_WITH(
             Pennylane::Util::Abort("Test abort", __FILE__, __LINE__, __func__),
-            Catch::Matchers::Contains("Test abort"));
+            Catch::Matchers::ContainsSubstring("Test abort"));
         REQUIRE_THROWS_AS(
             Pennylane::Util::Abort("Test abort", __FILE__, __LINE__, __func__),
             Pennylane::Util::LightningException);
 
         REQUIRE_THROWS_WITH(PL_ABORT("Test abort"),
-                            Catch::Matchers::Contains("Test abort"));
+                            Catch::Matchers::ContainsSubstring("Test abort"));
         REQUIRE_THROWS_AS(PL_ABORT("Test abort"),
                           Pennylane::Util::LightningException);
     }

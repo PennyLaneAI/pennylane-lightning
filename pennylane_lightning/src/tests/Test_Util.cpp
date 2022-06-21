@@ -215,7 +215,7 @@ TEMPLATE_TEST_CASE("randomUnitary", "[Util]", float, double) {
             identity[i * dim + i] = std::complex<PrecisionT>{1.0, 0.0};
         }
 
-        REQUIRE(mat == approx(identity).margin(1e-5));
+        REQUIRE(mat == Approx(identity).margin(1e-5));
     }
 }
 

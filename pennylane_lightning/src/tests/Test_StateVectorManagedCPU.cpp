@@ -122,7 +122,7 @@ TEMPLATE_TEST_CASE("StateVectorManagedCPU::applyMatrix with a pointer",
             Gates::GateImplementationsPI::applyMultiQubitOp<PrecisionT>(
                 sv2.getData(), num_qubits, m.data(), wires, false);
             REQUIRE(sv1.getDataVector() ==
-                    approx(sv2.getDataVector()).margin(PrecisionT{1e-5}));
+                    Approx(sv2.getDataVector()).margin(PrecisionT{1e-5}));
         }
     }
 }
@@ -156,7 +156,7 @@ TEMPLATE_TEST_CASE("StateVectorManagedCPU::applyOperations",
         sv2.applyOperation("PauliX", {0}, false);
         sv2.applyOperation("PauliY", {1}, false);
 
-        REQUIRE(sv1.getDataVector() == approx(sv2.getDataVector()));
+        REQUIRE(sv1.getDataVector() == Approx(sv2.getDataVector()));
     }
 
     SECTION("Test invalid arguments with params") {
@@ -190,6 +190,6 @@ TEMPLATE_TEST_CASE("StateVectorManagedCPU::applyOperations",
         sv2.applyOperation("RX", {0}, false, {0.1});
         sv2.applyOperation("RY", {1}, false, {0.2});
 
-        REQUIRE(sv1.getDataVector() == approx(sv2.getDataVector()));
+        REQUIRE(sv1.getDataVector() == Approx(sv2.getDataVector()));
     }
 }

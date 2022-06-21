@@ -144,7 +144,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
                 CAPTURE(v_out);
                 CAPTURE(v_expected);
 
-                CHECK(v_out == approx(v_expected).margin(1e-7));
+                CHECK(v_out == Approx(v_expected).margin(1e-7));
             }
         }
         SECTION("Simple Iterative with Transpose") {
@@ -158,7 +158,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
                 CAPTURE(v_out);
                 CAPTURE(v_expected);
 
-                CHECK(v_out == approx(v_expected).margin(1e-7));
+                CHECK(v_out == Approx(v_expected).margin(1e-7));
             }
         }
         SECTION("Random Complex with NoTranspose") {
@@ -184,7 +184,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
                 Util::matrixVecProd(mat, v_in, 4, 4, Trans::NoTranspose);
             CAPTURE(v_out);
 
-            CHECK(v_out == approx(v_expected).margin(1e-7));
+            CHECK(v_out == Approx(v_expected).margin(1e-7));
         }
         SECTION("Random Complex with Transpose") {
             std::vector<std::complex<TestType>> mat{
@@ -208,7 +208,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
                 Util::matrixVecProd(mat, v_in, 4, 4, Trans::Transpose);
             CAPTURE(v_out);
 
-            CHECK(v_out == approx(v_expected).margin(1e-7));
+            CHECK(v_out == Approx(v_expected).margin(1e-7));
         }
         SECTION("Random Complex with Adjoint") {
             std::vector<std::complex<TestType>> v_in{
@@ -246,7 +246,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
                 Util::matrixVecProd(mat, v_in, 4, 4, Trans::Adjoint);
             CAPTURE(v_out);
 
-            CHECK(v_out == approx(v_expected).margin(1e-7));
+            CHECK(v_out == Approx(v_expected).margin(1e-7));
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
@@ -288,7 +288,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
                 CAPTURE(v_out);
                 CAPTURE(v_expected);
 
-                CHECK(v_out == approx(v_expected).margin(1e-7));
+                CHECK(v_out == Approx(v_expected).margin(1e-7));
             }
         }
         SECTION("Zero Vector") {
@@ -302,7 +302,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
                 CAPTURE(v_out);
                 CAPTURE(v_expected);
 
-                CHECK(v_out == approx(v_expected).margin(1e-7));
+                CHECK(v_out == Approx(v_expected).margin(1e-7));
             }
         }
         SECTION("Random Matrix") {
@@ -315,7 +315,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
             CAPTURE(v_out);
             CAPTURE(v_expected);
 
-            CHECK(v_out == approx(v_expected).margin(1e-7));
+            CHECK(v_out == Approx(v_expected).margin(1e-7));
         }
         SECTION("In Place") {
             std::vector<TestType> v_in{1.0, 2.0, 3.0, 4.0};
@@ -382,7 +382,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
                 CAPTURE(m_out);
                 CAPTURE(m_out_exp);
 
-                CHECK(m_out == approx(m_out_exp));
+                CHECK(m_out == Approx(m_out_exp));
             }
         }
         SECTION("Simple Iterative (Trans::Adjoint)") {
@@ -397,7 +397,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
                 CAPTURE(m_out);
                 CAPTURE(m_out_exp);
 
-                CHECK(m_out == approx(m_out_exp));
+                CHECK(m_out == Approx(m_out_exp));
             }
         }
         SECTION("Random Complex") {
@@ -454,8 +454,8 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
             CAPTURE(m_out_2);
             CAPTURE(m_out_exp);
 
-            CHECK(m_out_1 == approx(m_out_2));
-            CHECK(m_out_1 == approx(m_out_exp));
+            CHECK(m_out_1 == Approx(m_out_2));
+            CHECK(m_out_1 == Approx(m_out_exp));
         }
         SECTION("Random complex non-square") {
             const size_t m = 4;
@@ -528,7 +528,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
 
             const auto m_out = Util::matrixMatProd(mat1, mat2, m, n, k);
 
-            CHECK(m_out == approx(expected));
+            CHECK(m_out == Approx(expected));
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
@@ -577,7 +577,7 @@ TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
                 CAPTURE(mat_t);
                 CAPTURE(mat);
 
-                CHECK(mat_t == approx(mat).margin(1e-7));
+                CHECK(mat_t == Approx(mat).margin(1e-7));
             }
         }
         SECTION("Random Complex") {
@@ -596,7 +596,7 @@ TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
             CAPTURE(mat_t);
             CAPTURE(mat_t_exp);
 
-            CHECK(mat_t == approx(mat_t_exp));
+            CHECK(mat_t == Approx(mat_t_exp));
         }
         SECTION("Random Complex non-square") {
             std::vector<TestType> mat{
@@ -613,7 +613,7 @@ TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
             CAPTURE(mat_t);
             CAPTURE(mat_t_exp);
 
-            CHECK(mat_t == approx(mat_t_exp));
+            CHECK(mat_t == Approx(mat_t_exp));
         }
     }
     SECTION("Transpose") {
@@ -629,7 +629,7 @@ TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
                 CAPTURE(mat_t);
                 CAPTURE(mat);
 
-                CHECK(mat_t == approx(mat).margin(1e-7));
+                CHECK(mat_t == Approx(mat).margin(1e-7));
             }
         }
         SECTION("Random Complex") {
@@ -657,7 +657,7 @@ TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
             CAPTURE(mat_t);
             CAPTURE(mat_t_exp);
 
-            CHECK(mat_t == approx(mat_t_exp));
+            CHECK(mat_t == Approx(mat_t_exp));
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
@@ -684,7 +684,7 @@ TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
                 CAPTURE(mat_t);
                 CAPTURE(mat);
 
-                CHECK(mat_t == approx(mat).margin(1e-7));
+                CHECK(mat_t == Approx(mat).margin(1e-7));
             }
         }
         SECTION("Random Complex") {
@@ -712,7 +712,7 @@ TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
             CAPTURE(mat_t);
             CAPTURE(mat_t_exp);
 
-            CHECK(mat_t == approx(mat_t_exp));
+            CHECK(mat_t == Approx(mat_t_exp));
         }
         SECTION("Invalid Arguments") {
             using namespace Catch::Matchers;
@@ -801,7 +801,7 @@ TEMPLATE_TEST_CASE("Util::scaleAndAdd", "[Util][LinearAlgebra]", float,
             ComplexPrecisionT{0.830511463762, 0.573590760757},
         };
         Util::scaleAndAdd(a, x, y);
-        REQUIRE(y == approx(expected));
+        REQUIRE(y == Approx(expected));
     }
     SECTION("Throws exception when the size mismatches") {
         std::vector<ComplexPrecisionT> x(8, ComplexPrecisionT{});

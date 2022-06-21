@@ -23,7 +23,7 @@
 namespace Pennylane {
 template<typename T, typename AllocComp>
 struct ComplexVectorApprox : Catch::Matchers::MatcherGenericBase {
-    static_assert(is_complex_v<T>, "Parameter type must be complex.");
+    static_assert(Util::is_complex_v<T>, "Parameter type must be complex.");
 
 private:
     const std::vector<T>& comp_;
@@ -33,6 +33,7 @@ public:
     ComplexVectorApprox(const std::vector<T, AllocComp>& comp) : comp_{comp} { }
 
     std::string describe() const {
+        using Util::operator<<;
         std::ostringstream ss;
         ss << "is approx to " << comp_;
         return ss.str();
@@ -75,7 +76,7 @@ private:
     mutable Catch::Approx approx = Catch::Approx::custom();
 
 public:
-    ComplexVectorApprox(const std::complex<T>& comp) : comp_{comp} { }
+    ComplexNumberApprox(const std::complex<T>& comp) : comp_{comp} { }
 
     std::string describe() const {
         std::ostringstream ss;
@@ -100,9 +101,13 @@ public:
 };
 
 template<typename T>
-ComplexNumberApprox<T>
-Approx(std::complex<T> comp) {
+ComplexNumberApprox<T> Approx(std::complex<T> comp) {
     return ComplexNumberApprox(comp);
+}
+
+template<typename T>
+Catch::Approx Approx(T comp) {
+    return Catch::Approx(double{comp});
 }
 
 /**
@@ -121,7 +126,7 @@ isApproxEqual(const std::vector<Data_t, AllocA> &data1,
               const typename Data_t::value_type eps =
                   std::numeric_limits<typename Data_t::value_type>::epsilon() *
                   100) {
-    return data1 == PLApprox<Data_t, AllocB>(data2).epsilon(eps);
+    return data1 == Approx<Data_t, AllocB>(data2).epsilon(eps);
 }
 
 /**
@@ -425,13 +430,13 @@ template <> struct PrecisionToName<double> {
 #define PL_REQUIRE_THROWS_MATCHES(expr, type, message_match)                   \
     do {                                                                       \
         REQUIRE_THROWS_AS(expr, type);                                         \
-        REQUIRE_THROWS_WITH(expr, Catch::Matchers::Contains(message_match));   \
+        REQUIRE_THROWS_WITH(expr, Catch::Matchers::ContainsSubstring(message_match));   \
     } while (false);
 
 #define PL_CHECK_THROWS_MATCHES(expr, type, message_match)                     \
     do {                                                                       \
         CHECK_THROWS_AS(expr, type);                                           \
-        CHECK_THROWS_WITH(expr, Catch::Matchers::Contains(message_match));     \
+        CHECK_THROWS_WITH(expr, Catch::Matchers::ContainsSubstring(message_match));     \
     } while (false);
 
 } // namespace Pennylane

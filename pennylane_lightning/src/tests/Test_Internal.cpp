@@ -34,7 +34,7 @@ TEMPLATE_TEST_CASE("Approx", "[Test_Internal]", float, double) {
             ComplexPrecisionT{1.0001, 0.0},
             ComplexPrecisionT{0.0, 0.9999},
         };
-        REQUIRE(test1 == approx(test2).margin(margin));
+        REQUIRE(test1 == Approx(test2).margin(margin));
     }
     SECTION("vector{1.0, 1.0*I} does not approx vector{1.0002, 0.9998*I} with "
             "margin 0.00015") {
@@ -46,7 +46,7 @@ TEMPLATE_TEST_CASE("Approx", "[Test_Internal]", float, double) {
             ComplexPrecisionT{1.0002, 0.0},
             ComplexPrecisionT{0.0, 0.9998},
         };
-        REQUIRE(test1 != approx(test2).margin(margin));
+        REQUIRE(test1 != Approx(test2).margin(margin));
     }
     SECTION("vector{1.0, 1.0*I} does not approx vector{1.0I, 1.0} with margin "
             "0.00015") {
@@ -58,7 +58,7 @@ TEMPLATE_TEST_CASE("Approx", "[Test_Internal]", float, double) {
             ComplexPrecisionT{0.0, 1.0},
             ComplexPrecisionT{1.0, 0.0},
         };
-        REQUIRE(test1 != approx(test2).margin(margin));
+        REQUIRE(test1 != Approx(test2).margin(margin));
     }
 }
 
@@ -76,7 +76,7 @@ TEMPLATE_TEST_CASE("createProductState", "[Test_Internal]", float, double) {
         GateImplementationsPI::applyPauliX(expected.data(), 3, {1}, false);
         GateImplementationsPI::applyHadamard(expected.data(), 3, {1}, false);
 
-        REQUIRE(st == approx(expected).margin(margin));
+        REQUIRE(st == Approx(expected).margin(margin));
     }
     SECTION("createProductState(\"+-0\") != |+-1> ") {
         const auto st = createProductState<PrecisionT>("+-0");
@@ -93,7 +93,7 @@ TEMPLATE_TEST_CASE("createProductState", "[Test_Internal]", float, double) {
         GateImplementationsPI::applyPauliX(expected.data(), 3, {2},
                                            false); // |+-1>
 
-        REQUIRE(st != approx(expected).margin(margin));
+        REQUIRE(st != Approx(expected).margin(margin));
     }
 }
 
