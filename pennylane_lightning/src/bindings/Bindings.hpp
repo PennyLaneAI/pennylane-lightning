@@ -141,9 +141,10 @@ auto alignedNumpyArray(CPUMemoryModel memory_model, size_t size)
         auto capsule = pybind11::capsule(ptr, &Util::alignedFree);
         return pybind11::array{
             pybind11::dtype::of<T>(), {size}, {sizeof(T)}, ptr, capsule};
-    } // else
-    void *ptr = malloc(sizeof(T) * size);
-    auto capsule = pybind11::capsule(ptr, free);
+    }
+    void *ptr = static_cast<void *>(new T[size]);
+    auto capsule =
+        pybind11::capsule(ptr, [](void *p) { delete static_cast<T *>(p); });
     return pybind11::array{
         pybind11::dtype::of<T>(), {size}, {sizeof(T)}, ptr, capsule};
 }

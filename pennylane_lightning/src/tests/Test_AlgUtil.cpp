@@ -1,7 +1,7 @@
 #include "AlgUtil.hpp"
 #include "Observables.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 using namespace Pennylane;
 using namespace Pennylane::Algorithms;

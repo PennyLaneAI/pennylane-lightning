@@ -6,7 +6,7 @@
 #include "TestHelpers.hpp"
 #include "Util.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 using namespace Pennylane;
 

@@ -9,7 +9,7 @@
 #include <variant>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "AdjointDiff.hpp"
 #include "StateVectorRawCPU.hpp"
@@ -49,7 +49,7 @@ TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=Z", "[Algorithms]") {
             adjointJacobian(std::span{jacobian}, tape, true);
 
             CAPTURE(jacobian);
-            CHECK(-sin(p) == Approx(jacobian[0]));
+            CHECK(-sin(p) == PLApprox(jacobian[0]));
         }
     }
 }
@@ -135,7 +135,7 @@ TEST_CASE("Algorithms::adjointJacobian Op=RY, Obs=X", "[Algorithms]") {
             adjointJacobian(std::span{jacobian}, tape, true);
 
             CAPTURE(jacobian);
-            CHECK(cos(p) == Approx(jacobian[0]).margin(1e-7));
+            CHECK(cos(p) == PLApprox(jacobian[0]).margin(1e-7));
         }
     }
 }
@@ -166,8 +166,8 @@ TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=[Z,Z]", "[Algorithms]") {
         adjointJacobian(std::span{jacobian}, tape, true);
 
         CAPTURE(jacobian);
-        CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
-        CHECK(0.0 == Approx(jacobian[1 * num_obs - 1]).margin(1e-7));
+        CHECK(-sin(param[0]) == PLApprox(jacobian[0]).margin(1e-7));
+        CHECK(0.0 == PLApprox(jacobian[1 * num_obs - 1]).margin(1e-7));
     }
 }
 
@@ -203,11 +203,11 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z]",
         adjointJacobian(std::span{jacobian}, tape, true);
 
         CAPTURE(jacobian);
-        CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
+        CHECK(-sin(param[0]) == PLApprox(jacobian[0]).margin(1e-7));
         CHECK(-sin(param[1]) ==
-              Approx(jacobian[1 * num_params + 1]).margin(1e-7));
+              PLApprox(jacobian[1 * num_params + 1]).margin(1e-7));
         CHECK(-sin(param[2]) ==
-              Approx(jacobian[2 * num_params + 2]).margin(1e-7));
+              PLApprox(jacobian[2 * num_params + 2]).margin(1e-7));
     }
 }
 
@@ -244,10 +244,10 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z], "
         adjointJacobian(std::span{jacobian}, tape, true);
 
         CAPTURE(jacobian);
-        CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
-        CHECK(0 == Approx(jacobian[1 * t_params.size() + 1]).margin(1e-7));
+        CHECK(-sin(param[0]) == PLApprox(jacobian[0]).margin(1e-7));
+        CHECK(0 == PLApprox(jacobian[1 * t_params.size() + 1]).margin(1e-7));
         CHECK(-sin(param[2]) ==
-              Approx(jacobian[2 * t_params.size() + 1]).margin(1e-7));
+              PLApprox(jacobian[2 * t_params.size() + 1]).margin(1e-7));
     }
 }
 
@@ -284,9 +284,9 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
         CAPTURE(jacobian);
 
         // Computed with parameter shift
-        CHECK(-0.1755096592645253 == Approx(jacobian[0]).margin(1e-7));
-        CHECK(0.26478810666384334 == Approx(jacobian[1]).margin(1e-7));
-        CHECK(-0.6312451595102775 == Approx(jacobian[2]).margin(1e-7));
+        CHECK(-0.1755096592645253 == PLApprox(jacobian[0]).margin(1e-7));
+        CHECK(0.26478810666384334 == PLApprox(jacobian[1]).margin(1e-7));
+        CHECK(-0.6312451595102775 == PLApprox(jacobian[2]).margin(1e-7));
     }
 }
 
@@ -331,12 +331,12 @@ TEST_CASE("Algorithms::adjointJacobian Op=Mixed, Obs=[XXX]", "[Algorithms]") {
         CAPTURE(jacobian);
 
         // Computed with PennyLane using default.qubit.adjoint_jacobian
-        CHECK(0.0 == Approx(jacobian[0]).margin(1e-7));
-        CHECK(-0.674214427 == Approx(jacobian[1]).margin(1e-7));
-        CHECK(0.275139672 == Approx(jacobian[2]).margin(1e-7));
-        CHECK(0.275139672 == Approx(jacobian[3]).margin(1e-7));
-        CHECK(-0.0129093062 == Approx(jacobian[4]).margin(1e-7));
-        CHECK(0.323846156 == Approx(jacobian[5]).margin(1e-7));
+        CHECK(0.0 == PLApprox(jacobian[0]).margin(1e-7));
+        CHECK(-0.674214427 == PLApprox(jacobian[1]).margin(1e-7));
+        CHECK(0.275139672 == PLApprox(jacobian[2]).margin(1e-7));
+        CHECK(0.275139672 == PLApprox(jacobian[3]).margin(1e-7));
+        CHECK(-0.0129093062 == PLApprox(jacobian[4]).margin(1e-7));
+        CHECK(0.323846156 == PLApprox(jacobian[5]).margin(1e-7));
     }
 }
 
@@ -387,9 +387,9 @@ TEST_CASE("Algorithms::adjointJacobian Decomposed Rot gate, non "
             CAPTURE(jacobian);
 
             // Computed with PennyLane using default.qubit
-            CHECK(expec_results[i][0] == Approx(jacobian[0]).margin(1e-7));
-            CHECK(expec_results[i][1] == Approx(jacobian[1]).margin(1e-7));
-            CHECK(expec_results[i][2] == Approx(jacobian[2]).margin(1e-7));
+            CHECK(expec_results[i][0] == PLApprox(jacobian[0]).margin(1e-7));
+            CHECK(expec_results[i][1] == PLApprox(jacobian[1]).margin(1e-7));
+            CHECK(expec_results[i][2] == PLApprox(jacobian[2]).margin(1e-7));
         }
     }
 }
@@ -445,9 +445,9 @@ TEST_CASE("Algorithms::adjointJacobian Mixed Ops, Obs and TParams",
 
         std::vector<double> expected{-0.71429188, 0.04998561, -0.71904837};
         // Computed with PennyLane using default.qubit
-        CHECK(expected[0] == Approx(jacobian[0]));
-        CHECK(expected[1] == Approx(jacobian[1]));
-        CHECK(expected[2] == Approx(jacobian[2]));
+        CHECK(expected[0] == PLApprox(jacobian[0]));
+        CHECK(expected[1] == PLApprox(jacobian[1]));
+        CHECK(expected[2] == PLApprox(jacobian[2]));
     }
 }
 
@@ -479,7 +479,7 @@ TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=Ham[Z0+Z1]", "[Algorithms]") {
         adjointJacobian(std::span{jacobian}, tape, true);
 
         CAPTURE(jacobian);
-        CHECK(-0.3 * sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
+        CHECK(-0.3 * sin(param[0]) == approx(jacobian[0]).margin(1e-7));
     }
 }
 
@@ -518,8 +518,8 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=Ham[Z0+Z1+Z2], "
         adjointJacobian(std::span{jacobian}, tape, true);
 
         CAPTURE(jacobian);
-        CHECK((-0.47 * sin(param[0]) == Approx(jacobian[0]).margin(1e-7)));
-        CHECK((-0.96 * sin(param[2]) == Approx(jacobian[1]).margin(1e-7)));
+        CHECK((-0.47 * sin(param[0]) == approx(jacobian[0]).margin(1e-7)));
+        CHECK((-0.96 * sin(param[2]) == approx(jacobian[1]).margin(1e-7)));
     }
 }
 

@@ -4,7 +4,7 @@
 #include "TestKernels.hpp"
 #include "Util.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include <complex>
 #include <type_traits>

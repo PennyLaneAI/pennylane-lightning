@@ -3,7 +3,7 @@
 #include "TestHelpers.hpp"
 #include "Util.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #if defined(_MSC_VER)
 #pragma warning(disable : 4305)

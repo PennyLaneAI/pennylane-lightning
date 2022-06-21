@@ -2,7 +2,7 @@
 #include "TestHelpers.hpp"
 #include "cpu_kernels/GateImplementationsPI.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include <algorithm>
 #include <random>

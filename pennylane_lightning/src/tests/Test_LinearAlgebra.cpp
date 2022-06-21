@@ -2,7 +2,7 @@
 #include <complex>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "LinearAlgebra.hpp"
 #include "Util.hpp"

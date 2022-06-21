@@ -1,7 +1,7 @@
 #include "Macros.hpp"
 #include "RuntimeInfo.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 using namespace Pennylane::Util;
 

@@ -14,7 +14,7 @@ Include(FetchContent)
 FetchContent_Declare(
   Catch2
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG        v2.13.9
+  GIT_TAG        v3.0.1
 )
 
 FetchContent_MakeAvailable(Catch2)
@@ -36,7 +36,7 @@ target_link_libraries(lightning_tests_dependency INTERFACE lightning_algorithms
                                                            lightning_gates
                                                            lightning_simulator
                                                            lightning_utils
-                                                           Catch2::Catch2)
+                                                           Catch2::Catch2WithMain)
 if(ENABLE_WARNINGS)
     message(STATUS "ENABLE_WARNINGS is ON.")
     if(MSVC)
@@ -52,7 +52,7 @@ else()
     endif()
 endif()
 
-target_sources(lightning_tests_dependency INTERFACE runner_main.cpp)
+#target_sources(lightning_tests_dependency INTERFACE runner_main.cpp)
 
 if(ENABLE_NATIVE)
     message(STATUS "ENABLE_NATIVE is ON. Use -march=native for cpptests.")

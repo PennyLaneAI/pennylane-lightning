@@ -9,49 +9,78 @@
 #include "TestKernels.hpp"
 #include "Util.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include <algorithm>
 #include <complex>
 #include <random>
 #include <string>
 #include <type_traits>
+#include <variant>
 #include <vector>
 
 namespace Pennylane {
 template <class T, class Alloc = std::allocator<T>> struct PLApprox {
-    const std::vector<T, Alloc> &comp_;
+    using param_t = std::variant<std::vector<T, Alloc>, T, std::monostate>;
+    const param_t &comp_;
 
     explicit PLApprox(const std::vector<T, Alloc> &comp) : comp_{comp} {}
+    explicit PLApprox(const T &comp) : comp_{comp} {}
 
     Util::remove_complex_t<T> margin_{};
     Util::remove_complex_t<T> epsilon_ =
         std::numeric_limits<float>::epsilon() * 100;
 
     template <class AllocA>
-    [[nodiscard]] bool compare(const std::vector<T, AllocA> &lhs) const {
+    [[nodiscard]] bool compare(const param_t &lhs) const {
         if (lhs.size() != comp_.size()) {
             return false;
         }
-
-        for (size_t i = 0; i < lhs.size(); i++) {
-            if constexpr (Util::is_complex_v<T>) {
-                if (lhs[i].real() != Approx(comp_[i].real())
-                                         .epsilon(epsilon_)
-                                         .margin(margin_) ||
-                    lhs[i].imag() != Approx(comp_[i].imag())
-                                         .epsilon(epsilon_)
-                                         .margin(margin_)) {
-                    return false;
+        bool result = false;
+        std::visit([&](const auto &p) {
+            using local_t = std::decay_t<decltype(p)>;
+            if constexpr (std::is_same_v<local_t, std::vector<T, Alloc>>) {
+                for (size_t i = 0; i < lhs.size(); i++) {
+                    if constexpr (Util::is_complex_v<T>) {
+                        if (lhs[i].real() != Approx(comp_[i].real())
+                                                 .epsilon(epsilon_)
+                                                 .margin(margin_) ||
+                            lhs[i].imag() != Approx(comp_[i].imag())
+                                                 .epsilon(epsilon_)
+                                                 .margin(margin_)) {
+                            break;
+                        }
+                    } else {
+                        if (lhs[i] != Approx(comp_[i]).epsilon(epsilon_).margin(
+                                          margin_)) {
+                            break;
+                        }
+                    }
+                    result = true;
                 }
+            } else if (std::is_same_v<local_t, T>) {
+                if constexpr (Util::is_complex_v<T>) {
+                    if (lhs.real() != Approx(comp_.real())
+                                          .epsilon(epsilon_)
+                                          .margin(margin_) ||
+                        lhs.imag() != Approx(comp_.imag())
+                                          .epsilon(epsilon_)
+                                          .margin(margin_)) {
+                        return;
+                    }
+                } else {
+                    if (lhs !=
+                        Approx(comp_).epsilon(epsilon_).margin(margin_)) {
+                        return;
+                    }
+                }
+                result = true;
             } else {
-                if (lhs[i] !=
-                    Approx(comp_[i]).epsilon(epsilon_).margin(margin_)) {
-                    return false;
-                }
+                PL_ABORT("Parameter datatype not current supported");
             }
-        }
-        return true;
+        });
+
+        return result;
     }
 
     [[nodiscard]] std::string describe() const {
@@ -82,6 +111,9 @@ template <typename T, class Alloc>
 PLApprox<T, Alloc> approx(const std::vector<T, Alloc> &vec) {
     return PLApprox<T, Alloc>(vec);
 }
+template <typename T, class Alloc> PLApprox<T, Alloc> approx(const T &dat) {
+    return PLApprox<T, Alloc>(dat);
+}
 
 template <typename T, class Alloc>
 std::ostream &operator<<(std::ostream &os, const PLApprox<T, Alloc> &approx) {
@@ -91,6 +123,10 @@ std::ostream &operator<<(std::ostream &os, const PLApprox<T, Alloc> &approx) {
 template <class T, class AllocA, class AllocB>
 bool operator==(const std::vector<T, AllocA> &lhs,
                 const PLApprox<T, AllocB> &rhs) {
+    return rhs.compare(lhs);
+}
+template <class T, class AllocB>
+bool operator==(const T &lhs, const PLApprox<T, AllocB> &rhs) {
     return rhs.compare(lhs);
 }
 template <class T, class AllocA, class AllocB>
