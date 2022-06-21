@@ -148,7 +148,6 @@ auto alignedNumpyArray(CPUMemoryModel memory_model, size_t size)
     return pybind11::array{
         pybind11::dtype::of<T>(), {size}, {sizeof(T)}, ptr, capsule};
 }
-
 /**
  * @brief Create a numpy array whose underlying data is allocated by
  * lightning.
