@@ -1,8 +1,10 @@
 project(lightning_simulator)
 
-set(SIMULATOR_FILES KernelMap.cpp StateVectorRawCPU.cpp StateVectorManagedCPU.cpp Measures.cpp CACHE INTERNAL "" FORCE)
+set(SIMULATOR_FILES StateVectorRawCPU.cpp StateVectorManagedCPU.cpp Measures.cpp CACHE INTERNAL "" FORCE)
 
 add_library(lightning_simulator STATIC ${SIMULATOR_FILES})
+
+
 
 target_include_directories(lightning_simulator PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(lightning_simulator PRIVATE lightning_compile_options

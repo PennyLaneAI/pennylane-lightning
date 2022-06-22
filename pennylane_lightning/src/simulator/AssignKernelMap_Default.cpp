@@ -34,7 +34,7 @@ namespace Pennylane::KernelMap::Internal {
 
 constexpr static auto all_qubit_numbers = Util::full_domain<size_t>();
 
-int assignDefaultKernelsForGateOp() {
+int assignKernelsForGateOp_Default() {
     auto &instance = OperationKernelMap<GateOperation>::getInstance();
 
     instance.assignKernelForOp(GateOperation::Identity, all_threading,
@@ -149,7 +149,7 @@ int assignDefaultKernelsForGateOp() {
     return 1;
 }
 
-int assignDefaultKernelsForGeneratorOp() {
+int assignKernelsForGeneratorOp_Default() {
     auto &instance = OperationKernelMap<GeneratorOperation>::getInstance();
 
     instance.assignKernelForOp(GeneratorOperation::PhaseShift, all_threading,
@@ -210,7 +210,7 @@ int assignDefaultKernelsForGeneratorOp() {
                                KernelType::LM);
     return 1;
 }
-int assignDefaultKernelsForMatrixOp() {
+int assignKernelsForMatrixOp_Default() {
     auto &instance = OperationKernelMap<MatrixOperation>::getInstance();
 
     instance.assignKernelForOp(MatrixOperation::SingleQubitOp, all_threading,
