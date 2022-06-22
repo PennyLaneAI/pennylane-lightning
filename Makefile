@@ -123,6 +123,6 @@ endif
 
 .PHONY: check-tidy
 check-tidy:
-	rm -rf ./Build
-	cmake . -BBuild -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON
+	rm -rf ./BuildTidy
+	cmake . -BBuildTidy -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON
 	cmake --build ./Build
