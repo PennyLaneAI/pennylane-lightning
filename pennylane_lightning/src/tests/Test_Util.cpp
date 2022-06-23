@@ -273,6 +273,7 @@ TEST_CASE("Test AlignedAllocator", "[Util][Memory]") {
     AlignedAllocator<double> allocator(8);
     REQUIRE(allocator.allocate(0) == nullptr);
     /* Allocate 1 PiB */
+    // NOLINTNEXTLINE(clang-analyzer-unix.Malloc)
     REQUIRE_THROWS_AS(
         allocator.allocate(size_t{1024 * 1024} * size_t{1024 * 1024}),
         std::bad_alloc);
