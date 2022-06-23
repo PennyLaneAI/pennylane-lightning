@@ -76,7 +76,7 @@ coverage:
 
 test-cpp:
 	rm -rf ./BuildTests
-	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON -DENABLE_AVX=ON
+	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON
 	cmake --build ./BuildTests --target runner
 	cmake --build ./BuildTests --target test
 

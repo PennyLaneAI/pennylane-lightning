@@ -80,27 +80,6 @@ if(ENABLE_NATIVE)
     target_compile_options(lightning_compile_options INTERFACE -march=native)
 endif()
 
-if(ENABLE_AVX)
-    message(STATUS "ENABLE_AVX is ON.")
-    target_compile_options(lightning_compile_options INTERFACE -mavx)
-else()
-    message(STATUS "ENABLE_AVX is OFF.")
-endif()
-
-if(ENABLE_AVX2)
-    message(STATUS "ENABLE_AVX2 is ON.")
-    target_compile_options(lightning_compile_options INTERFACE -mavx2)
-else()
-    message(STATUS "ENABLE_AVX2 is OFF")
-endif()
-
-if(ENABLE_AVX512)
-    message(STATUS "ENABLE_AVX512 is ON.")
-    target_compile_options(lightning_compile_options INTERFACE -mavx512f) # Now we only use avx512f
-else()
-    message(STATUS "ENABLE_AVX512 is OFF")
-endif()
-
 if(ENABLE_OPENMP)
     message(STATUS "ENABLE_OPENMP is ON.")
     find_package(OpenMP)
@@ -171,3 +150,9 @@ if(ENABLE_KOKKOS)
 else()
     message(STATUS "ENABLE_KOKKOS is OFF.")
 endif()
+
+if ((${CMAKE_SYSTEM_NAME} STREQUAL "Linux") AND (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(AMD64)|(X64)|(x64)|(x86_64)"))
+    message(STATUS "ENABLE AVX for X64 on Linux.")
+    target_compile_options(lightning_compile_options INTERFACE -mavx)
+endif()
+
