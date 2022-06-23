@@ -39,7 +39,8 @@ struct VectorApprox : Catch::Matchers::MatcherGenericBase {
     mutable Catch::Approx approx = Catch::Approx::custom();
 
   public:
-    explicit VectorApprox(const std::vector<T, AllocComp> &comp) : comp_{comp} {}
+    explicit VectorApprox(const std::vector<T, AllocComp> &comp)
+        : comp_{comp} {}
 
     std::string describe() const override {
         using Util::operator<<;
