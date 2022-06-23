@@ -2,8 +2,8 @@ project(lightning_gates)
 
 set(GATES_FILES GateUtil.cpp CACHE INTERNAL "" FORCE)
 
-
 add_library(lightning_gates_register_kernels INTERFACE)
+
 if ((${CMAKE_SYSTEM_NAME} STREQUAL "Linux") AND (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(AMD64)|(X64)|(x64)|(x86_64)"))
     message(STATUS "Compiling for x86. Enable AVX2/AVX512 kernels (runtime enabled).")
 

@@ -17,8 +17,8 @@
  * Assign kernel map
  */
 
-#include "KernelMap.hpp"
 #include "AssignKernelMap_Default.hpp"
+#include "KernelMap.hpp"
 
 namespace Pennylane::KernelMap::Internal {
 

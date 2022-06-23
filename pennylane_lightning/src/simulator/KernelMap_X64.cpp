@@ -17,24 +17,26 @@
  * Assign kernel map
  */
 
-#include "KernelMap.hpp"
-#include "AssignKernelMap_Default.hpp"
 #include "AssignKernelMap_AVX2.hpp"
 #include "AssignKernelMap_AVX512.hpp"
+#include "AssignKernelMap_Default.hpp"
+#include "KernelMap.hpp"
 #include "RuntimeInfo.hpp"
+
+using Pennylane::Util::RuntimeInfo;
 
 namespace Pennylane::KernelMap::Internal {
 
 int assignKernelsForGateOp() {
     assignKernelsForGateOp_Default();
 
-    if(RuntimeInfo::AVX2()) {
+    if (RuntimeInfo::AVX2()) {
         assignKernelsForGateOp_AVX2(CPUMemoryModel::Aligned256);
-        if(!RuntimeInfo::AVX512()) {
+        if (!RuntimeInfo::AVX512F()) {
             assignKernelsForGateOp_AVX2(CPUMemoryModel::Aligned512);
         }
     }
-    if(RuntimeInfo::AVX512()) {
+    if (RuntimeInfo::AVX512F()) {
         assignKernelsForGateOp_AVX512(CPUMemoryModel::Aligned512);
     }
     return 1;
@@ -42,13 +44,13 @@ int assignKernelsForGateOp() {
 int assignKernelsForGeneratorOp() {
     assignKernelsForGeneratorOp_Default();
 
-    if(RuntimeInfo::AVX2()) {
+    if (RuntimeInfo::AVX2()) {
         assignKernelsForGeneratorOp_AVX2(CPUMemoryModel::Aligned256);
-        if(!RuntimeInfo::AVX512()) {
+        if (!RuntimeInfo::AVX512F()) {
             assignKernelsForGeneratorOp_AVX2(CPUMemoryModel::Aligned512);
         }
     }
-    if(RuntimeInfo::AVX512()) {
+    if (RuntimeInfo::AVX512F()) {
         assignKernelsForGeneratorOp_AVX512(CPUMemoryModel::Aligned512);
     }
     return 1;
@@ -56,13 +58,13 @@ int assignKernelsForGeneratorOp() {
 int assignKernelsForMatrixOp() {
     assignKernelsForMatrixOp_Default();
 
-    if(RuntimeInfo::AVX2()) {
+    if (RuntimeInfo::AVX2()) {
         assignKernelsForMatrixOp_AVX2(CPUMemoryModel::Aligned256);
-        if(!RuntimeInfo::AVX512()) {
+        if (!RuntimeInfo::AVX512F()) {
             assignKernelsForMatrixOp_AVX2(CPUMemoryModel::Aligned512);
         }
     }
-    if(RuntimeInfo::AVX512()) {
+    if (RuntimeInfo::AVX512F()) {
         assignKernelsForMatrixOp_AVX512(CPUMemoryModel::Aligned512);
     }
     return 1;

@@ -174,9 +174,11 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
               {CPUMemoryModel::Unaligned,
                {Gates::KernelType::LM, Gates::KernelType::PI}},
               {CPUMemoryModel::Aligned256,
-               {Gates::KernelType::LM, Gates::KernelType::PI, Gates::KernelType::AVX2}},
+               {Gates::KernelType::LM, Gates::KernelType::PI,
+                Gates::KernelType::AVX2}},
               {CPUMemoryModel::Aligned512,
-               {Gates::KernelType::LM, Gates::KernelType::PI, Gates::KernelType::AVX2, Gates::KernelType::AVX512}},
+               {Gates::KernelType::LM, Gates::KernelType::PI,
+                Gates::KernelType::AVX2, Gates::KernelType::AVX512}},
               // LCOV_EXCL_STOP
           } {}
 

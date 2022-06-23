@@ -69,7 +69,7 @@ class GateImplementationsAVX2 : public PauliGenerator<GateImplementationsAVX2> {
         GateOperation::CNOT,       GateOperation::SWAP,
         GateOperation::IsingXX,    GateOperation::IsingYY,
         GateOperation::IsingZZ,
-        /* CY, ControlledPhaseShift, CRX, CRY, CRZ, CRot */
+        /* CY, IsingXY, ControlledPhaseShift, CRX, CRY, CRZ, CRot */
     };
 
     constexpr static std::array implemented_generators = {

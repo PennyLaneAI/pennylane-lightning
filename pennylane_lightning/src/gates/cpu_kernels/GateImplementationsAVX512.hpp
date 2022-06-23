@@ -61,14 +61,14 @@ class GateImplementationsAVX512
     constexpr static uint32_t packed_bytes = 64;
 
     constexpr static std::array implemented_gates = {
-        GateOperation::PauliX,     GateOperation::PauliY,
-        GateOperation::Hadamard,   GateOperation::S,
-        GateOperation::SWAP,       GateOperation::T,
-        GateOperation::PhaseShift, GateOperation::RX,
-        GateOperation::RY,         GateOperation::RZ,
-        GateOperation::Rot,        GateOperation::CZ,
-        GateOperation::IsingXX,    GateOperation::IsingYY,
-        GateOperation::IsingZZ,
+        GateOperation::PauliX,  GateOperation::PauliY,
+        GateOperation::PauliZ,  GateOperation::Hadamard,
+        GateOperation::S,       GateOperation::SWAP,
+        GateOperation::T,       GateOperation::PhaseShift,
+        GateOperation::RX,      GateOperation::RY,
+        GateOperation::RZ,      GateOperation::Rot,
+        GateOperation::CZ,      GateOperation::IsingXX,
+        GateOperation::IsingYY, GateOperation::IsingZZ,
         /* CRX, CRY, CRZ, CRot */
     };
 

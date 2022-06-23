@@ -13,8 +13,10 @@
 // limitations under the License.
 #pragma once
 
+#include "CPUMemoryModel.hpp"
+
 namespace Pennylane::KernelMap::Internal {
-void assignKernelsForGateOp_AVX2();
-void assignKernelsForGeneratorOp_AVX2();
-void assignKernelsForMatrixOp_AVX2();
+void assignKernelsForGateOp_AVX2(CPUMemoryModel);
+void assignKernelsForGeneratorOp_AVX2(CPUMemoryModel);
+void assignKernelsForMatrixOp_AVX2(CPUMemoryModel);
 } // namespace Pennylane::KernelMap::Internal
