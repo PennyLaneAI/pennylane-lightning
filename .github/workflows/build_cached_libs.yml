@@ -1,0 +1,68 @@
+name: Build cached libs
+
+jobs:
+  kokkos_libs:
+    name: Kokkos core & kernels
+    runs-on: ubuntu-20.04 # ubuntu-20.04 ${{ matrix.os }}
+    strategy:
+      matrix:
+        exec_model: [OPENMP, THREADS, SERIAL]
+    steps:
+      #- name: Cancel previous runs
+      #  uses: styfle/cancel-workflow-action@0.4.1
+      #  with:
+      #    access_token: ${{ github.token }}
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10
+
+      - name: Clone Kokkos libs
+        run: |
+          pushd . &> /dev/null
+          git clone https://github.com/kokkos/kokkos.git
+          cd kokkos 
+          git checkout 3.6.00
+          popd &> /dev/null
+
+          pushd . &> /dev/null
+          git clone https://github.com/kokkos/kokkos-kernels.git
+          cd kokkos-kernels
+          git checkout 3.6.00
+          popd &> /dev/null
+
+      - name: Build Kokkos core library
+        run: |
+          pushd . &> /dev/null
+          mkdir -p install_dir/${{ matrix.exec_model }}
+          cd kokkos
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=$PWD/../install_dir/${{ matrix.exec_model }} \
+                          -DKokkos_ENABLE_COMPLEX_ALIGN=off \
+                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
+                          -DCMAKE_CXX_COMPILER=g++-10 \
+                          -DCMAKE_CXX_STANDARD=20
+          cmake --build ./Build --verbose
+          cmake --install ./Build
+          popd . &> /dev/null
+
+      - name: Build Kokkos kernels library
+        run: |
+          pushd . &> /dev/null
+          mkdir -p install_dir/${{ matrix.exec_model }}
+          cd kokkos-kernels
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=$PWD/../install_dir/${{ matrix.exec_model }} \
+                          -DKokkos_ENABLE_COMPLEX_ALIGN=off \
+                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
+                          -DCMAKE_CXX_COMPILER=g++-10 \
+                          -DCMAKE_CXX_STANDARD=20 \
+                          -DKokkos_DIR=$PWD/../install_dir/${{ matrix.exec_model }}
+
+          cmake --build ./Build --verbose
+          cmake --install ./Build
+          popd . &> /dev/null
+
+      - name: Cache installation directories
+        uses: actions/cache@v3
+        with:
+          path: |
+            install_dir/${{ matrix.exec_model }}
+          key: ${{ runner.os }}-kokkos-${{ matrix.exec_model }}
