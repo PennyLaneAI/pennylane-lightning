@@ -45,7 +45,10 @@ jobs:
           python-version: 3.7
 
       - name: Install dependencies
-        run: sudo apt update && sudo apt -y install clang-tidy-12 cmake g++-10 libomp-12-dev
+        run: |
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
+          sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main'
+          sudo apt update && sudo apt -y install clang-tidy-13 cmake g++-10 libomp-13-dev
         env:
           DEBIAN_FRONTEND: noninteractive
 
@@ -54,7 +57,7 @@ jobs:
 
       - name: Run clang-tidy compilation
         run: |
-          cmake -BBuild -DENABLE_CLANG_TIDY=ON -DCLANG_TIDY_BINARY=clang-tidy-12 -DBUILD_TESTS=ON -DENABLE_WARNINGS=ON -DCMAKE_CXX_COMPILER="$(which g++-10)" .
+          cmake -BBuild -DENABLE_CLANG_TIDY=ON -DCLANG_TIDY_BINARY=clang-tidy-13 -DBUILD_TESTS=ON -DENABLE_WARNINGS=ON -DCMAKE_CXX_COMPILER="$(which g++-10)" .
           cmake --build ./Build --parallel 2
 
   format-cpp:
