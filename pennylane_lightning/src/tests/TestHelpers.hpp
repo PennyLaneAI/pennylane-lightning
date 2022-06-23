@@ -39,9 +39,9 @@ struct VectorApprox : Catch::Matchers::MatcherGenericBase {
     mutable Catch::Approx approx = Catch::Approx::custom();
 
   public:
-    VectorApprox(const std::vector<T, AllocComp> &comp) : comp_{comp} {}
+    explicit VectorApprox(const std::vector<T, AllocComp> &comp) : comp_{comp} {}
 
-    std::string describe() const {
+    std::string describe() const override {
         using Util::operator<<;
         std::ostringstream ss;
         ss << "is approx to " << comp_;
@@ -93,9 +93,9 @@ struct ComplexNumberApprox : Catch::Matchers::MatcherGenericBase {
     mutable Catch::Approx approx = Catch::Approx::custom();
 
   public:
-    ComplexNumberApprox(const std::complex<T> &comp) : comp_{comp} {}
+    explicit ComplexNumberApprox(const std::complex<T> &comp) : comp_{comp} {}
 
-    std::string describe() const {
+    std::string describe() const override {
         std::ostringstream ss;
         ss << "is approx to " << comp_;
         return ss.str();
@@ -124,9 +124,9 @@ struct RealNumberApprox : Catch::Matchers::MatcherGenericBase {
     mutable Catch::Approx approx = Catch::Approx::custom();
 
   public:
-    RealNumberApprox(T comp) : comp_{comp} {}
+    explicit RealNumberApprox(T comp) : comp_{comp} {}
 
-    std::string describe() const {
+    std::string describe() const override {
         std::ostringstream ss;
         ss << "is approx to " << comp_;
         return ss.str();

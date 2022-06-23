@@ -125,4 +125,4 @@ endif
 check-tidy:
 	rm -rf ./BuildTidy
 	cmake . -BBuildTidy -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON
-	cmake --build ./Build
+	cmake --build ./BuildTidy
