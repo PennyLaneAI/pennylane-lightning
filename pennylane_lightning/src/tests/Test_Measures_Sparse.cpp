@@ -9,7 +9,7 @@
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 
 #if defined(_MSC_VER)
 #pragma warning(disable : 4305)

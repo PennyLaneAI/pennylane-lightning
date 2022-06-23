@@ -9,7 +9,9 @@
 #include "TestKernels.hpp"
 #include "Util.hpp"
 
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_approx.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
+#include <catch2/matchers/catch_matchers_templated.hpp>
 
 #include <algorithm>
 #include <complex>

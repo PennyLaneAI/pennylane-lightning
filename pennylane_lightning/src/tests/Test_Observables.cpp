@@ -1,7 +1,7 @@
 #include "Observables.hpp"
 #include "TestHelpers.hpp"
 
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 
 using namespace Pennylane;
 using namespace Pennylane::Algorithms;

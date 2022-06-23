@@ -2,7 +2,7 @@
 #include "SelectKernel.hpp"
 #include "Util.hpp"
 
-#include <catch2/catch_all.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 
 using namespace Pennylane;
 using namespace Pennylane::Gates;
