@@ -46,8 +46,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main'
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
+          sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main'
           sudo apt update && sudo apt -y install clang-tidy-13 cmake g++-10 libomp-13-dev
         env:
           DEBIAN_FRONTEND: noninteractive
