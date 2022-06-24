@@ -38,6 +38,7 @@ jobs:
           popd &> /dev/null
 
       - name: Cache installation directories
+        id: kokkos-cache
         uses: actions/cache@v3
         with:
           path: |
@@ -46,7 +47,7 @@ jobs:
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Build Kokkos core library
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           pushd . &> /dev/null
           mkdir -p ${{ github.workspace }}/install_dir/${{ matrix.exec_model }}
@@ -58,13 +59,13 @@ jobs:
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                           -G Ninja
-                          
+
           cmake --build ./Build --verbose
           cmake --install ./Build
           popd &> /dev/null
 
       - name: Build Kokkos kernels library
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           pushd . &> /dev/null
           mkdir -p ${{ github.workspace }}/install_dir/${{ matrix.exec_model }}
