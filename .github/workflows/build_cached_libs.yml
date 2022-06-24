@@ -22,6 +22,15 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
+      - name: Cache installation directories
+        id: kokkos-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ github.workspace }}/install_dir/${{ matrix.exec_model }}
+            $HOME/.ccache
+          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
       - name: Install dependencies (Ubuntu)
         if: ${{ matrix.container_img == 'ubuntu:20.04' }}
         run: |
@@ -46,15 +55,6 @@ jobs:
           cd kokkos-kernels
           git checkout ${{ matrix.kokkos_version }}
           cd -
-
-      - name: Cache installation directories
-        id: kokkos-cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ${{ github.workspace }}/install_dir/${{ matrix.exec_model }}
-            $HOME/.ccache
-          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Build Kokkos core library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
