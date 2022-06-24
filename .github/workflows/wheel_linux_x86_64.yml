@@ -26,7 +26,92 @@ env:
 
   CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
+  KOKKOS_INC: kokkos_dir/include
+  KOKKOS_LIB: kokkos_dir/lib
+
 jobs:
+  kokkos_libs:
+    name: Kokkos core & kernels
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container_img }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+        exec_model: [SERIAL, OPENMP, THREADS]
+        kokkos_version: ["3.6.00"]
+        container_img: ["ubuntu:20.04", "quay.io/pypa/manylinux2014_x86_64"]
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Cache installation directories
+        id: kokkos-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            /root/install_dir/${{ matrix.exec_model }}
+            /root/.ccache
+          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
+      - name: Install dependencies (Ubuntu)
+        if: ${{ matrix.container_img == 'ubuntu:20.04' }}
+        run: |
+          apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-10 g++-10 ccache ninja-build git
+          echo "COMPILER=g++-10" >> $GITHUB_ENV
+
+      - name: Install dependencies (CentOS)
+        if: ${{ matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64' }}
+        run: |
+          yum update && yum install -y cmake ccache ninja-build
+          echo "COMPILER=g++" >> $GITHUB_ENV
+
+      - name: Clone Kokkos libs
+        run: |
+          git clone https://github.com/kokkos/kokkos.git
+          cd kokkos 
+          git checkout ${{ matrix.kokkos_version }}
+          cd -
+
+          pushd . &> /dev/null
+          git clone https://github.com/kokkos/kokkos-kernels.git
+          cd kokkos-kernels
+          git checkout ${{ matrix.kokkos_version }}
+          cd -
+
+      - name: Build Kokkos core library
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p /root/install_dir/${{ matrix.exec_model }}
+          cd kokkos
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/root/install_dir/${{ matrix.exec_model }} \
+                          -DKokkos_ENABLE_COMPLEX_ALIGN=off \
+                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
+                          -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
+                          -DCMAKE_CXX_STANDARD=20 \
+                          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                          -G Ninja
+
+          cmake --build ./Build --verbose
+          cmake --install ./Build
+          cd -
+
+      - name: Build Kokkos kernels library
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p /root/install_dir/${{ matrix.exec_model }}
+          cd kokkos-kernels
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/root/install_dir/${{ matrix.exec_model }} \
+                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
+                          -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
+                          -DCMAKE_CXX_STANDARD=20 \
+                          -DKokkos_DIR=$PWD/../install_dir/${{ matrix.exec_model }} \
+                          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                          -G Ninja
+          cmake --build ./Build --verbose
+          cmake --install ./Build
+
   linux-wheels-x86-64:
     strategy:
       fail-fast: false
@@ -42,6 +127,18 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
+      - name: Cache installation directories
+        id: kokkos-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            /root/install_dir/OPENMP
+            /root/.ccache
+          key: "quay.io/pypa/manylinux2014_x86_64-kokkos3.6.00-OPENMP"
+          restore-keys: |
+            "quay.io/pypa/manylinux2014_x86_64-kokkos3.6.00-THREADS"
+            "quay.io/pypa/manylinux2014_x86_64-kokkos3.6.00-SERIAL"
+
       - uses: actions/checkout@v2
 
       - uses: actions/setup-python@v2
@@ -50,12 +147,14 @@ jobs:
           python-version: '3.7'
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.3.0
+        run: |
+          cp -rf /root/install_dir/ kokkos_dir
+          python -m pip install cibuildwheel==2.3.0
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_ARCHS_LINUX: ${{matrix.arch}}
+          CIBW_ARCHS_LINUX: ${{matrix.arch}}         
 
       - uses: actions-ecosystem/action-regex-match@v2
         id: rc_build
