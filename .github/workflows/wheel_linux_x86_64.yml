@@ -113,6 +113,7 @@ jobs:
           cmake --install ./Build
 
   linux-wheels-x86-64:
+    needs: kokkos_libs
     strategy:
       fail-fast: false
       matrix:
