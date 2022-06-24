@@ -21,7 +21,7 @@ jobs:
           access_token: ${{ github.token }}
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 ccache ninja
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 ccache ninja-build
 
       - name: Clone Kokkos libs
         run: |
@@ -37,7 +37,16 @@ jobs:
           git checkout ${{ matrix.kokkos_version }}
           popd &> /dev/null
 
+      - name: Cache installation directories
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ github.workspace }}/install_dir/${{ matrix.exec_model }}
+            $HOME/.ccache
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
       - name: Build Kokkos core library
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           pushd . &> /dev/null
           mkdir -p ${{ github.workspace }}/install_dir/${{ matrix.exec_model }}
@@ -54,6 +63,7 @@ jobs:
           popd &> /dev/null
 
       - name: Build Kokkos kernels library
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           pushd . &> /dev/null
           mkdir -p ${{ github.workspace }}/install_dir/${{ matrix.exec_model }}
@@ -69,10 +79,3 @@ jobs:
           cmake --install ./Build
           popd &> /dev/null
 
-      - name: Cache installation directories
-        uses: actions/cache@v3
-        with:
-          path: |
-            ${{ github.workspace }}/install_dir/${{ matrix.exec_model }}
-            $HOME/.ccache
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
