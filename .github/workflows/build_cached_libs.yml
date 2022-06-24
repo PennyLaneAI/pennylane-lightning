@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-20.04] #, quay.io/pypa/manylinux2014_x86_64]
-        exec_model: [OPENMP, THREADS, SERIAL]
+        exec_model: [SERIAL] #[OPENMP, THREADS, SERIAL]
     steps:
       - name: Cancel previous runs
         uses: styfle/cancel-workflow-action@0.4.1
@@ -20,7 +20,7 @@ jobs:
           access_token: ${{ github.token }}
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 ccache
 
       - name: Clone Kokkos libs
         run: |
@@ -39,36 +39,39 @@ jobs:
       - name: Build Kokkos core library
         run: |
           pushd . &> /dev/null
-          mkdir -p install_dir/${{ matrix.exec_model }}
+          mkdir -p $HOME/install_dir/${{ matrix.exec_model }}
           cd kokkos
-          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=$PWD/../install_dir/${{ matrix.exec_model }} \
-                          -DKokkos_ENABLE_COMPLEX_ALIGN=off \
-                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
-                          -DCMAKE_CXX_COMPILER=g++-10 \
-                          -DCMAKE_CXX_STANDARD=20
-          cmake --build ./Build --verbose
-          cmake --install ./Build
-          popd . &> /dev/null
-
-      - name: Build Kokkos kernels library
-        run: |
-          pushd . &> /dev/null
-          mkdir -p install_dir/${{ matrix.exec_model }}
-          cd kokkos-kernels
-          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=$PWD/../install_dir/${{ matrix.exec_model }} \
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=$HOME/install_dir/${{ matrix.exec_model }} \
                           -DKokkos_ENABLE_COMPLEX_ALIGN=off \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                           -DCMAKE_CXX_COMPILER=g++-10 \
                           -DCMAKE_CXX_STANDARD=20 \
-                          -DKokkos_DIR=$PWD/../install_dir/${{ matrix.exec_model }}
+                          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake --build ./Build --verbose
+          cmake --install ./Build
+          popd &> /dev/null
+
+      - name: Build Kokkos kernels library
+        run: |
+          pushd . &> /dev/null
+          mkdir -p $HOME/install_dir/${{ matrix.exec_model }}
+          cd kokkos-kernels
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=$HOME/install_dir/${{ matrix.exec_model }} \
+                          -DKokkos_ENABLE_COMPLEX_ALIGN=off \
+                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
+                          -DCMAKE_CXX_COMPILER=g++-10 \
+                          -DCMAKE_CXX_STANDARD=20 \
+                          -DKokkos_DIR=$PWD/../install_dir/${{ matrix.exec_model }} \
+                          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
           cmake --build ./Build --verbose
           cmake --install ./Build
-          popd . &> /dev/null
+          popd &> /dev/null
 
       - name: Cache installation directories
         uses: actions/cache@v3
         with:
           path: |
             install_dir/${{ matrix.exec_model }}
+            $HOME/.ccache
           key: ${{ matrix.os }}-kokkos-${{ matrix.exec_model }}
