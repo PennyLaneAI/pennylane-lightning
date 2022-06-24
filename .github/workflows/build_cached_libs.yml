@@ -1,17 +1,23 @@
 name: Build cached libs
+on:
+  push:
+    branches:
+      - master
+  pull_request:
 
 jobs:
   kokkos_libs:
     name: Kokkos core & kernels
-    runs-on: ubuntu-20.04 # ubuntu-20.04 ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-20.04] #, quay.io/pypa/manylinux2014_x86_64]
         exec_model: [OPENMP, THREADS, SERIAL]
     steps:
-      #- name: Cancel previous runs
-      #  uses: styfle/cancel-workflow-action@0.4.1
-      #  with:
-      #    access_token: ${{ github.token }}
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10
@@ -65,4 +71,4 @@ jobs:
         with:
           path: |
             install_dir/${{ matrix.exec_model }}
-          key: ${{ runner.os }}-kokkos-${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos-${{ matrix.exec_model }}
