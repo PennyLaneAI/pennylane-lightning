@@ -114,17 +114,17 @@ template <class T> class AlignedAllocator {
         if (size == 0) {
             return nullptr;
         }
-        T *p;
+        void *p;
         if (alignment_ > alignof(std::max_align_t)) {
-            p = static_cast<T *>(alignedAlloc(alignment_, sizeof(T) * size));
+            p = alignedAlloc(alignment_, sizeof(T) * size);
         } else {
             // NOLINTNEXTLINE(hicpp-no-malloc)
-            p = static_cast<T *>(std::malloc(sizeof(T) * size));
+            p = malloc(sizeof(T) * size);
         }
         if (p == nullptr) {
             throw std::bad_alloc();
         }
-        return p;
+        return static_cast<T *>(p);
     }
 
     /**
@@ -138,15 +138,16 @@ template <class T> class AlignedAllocator {
             alignedFree(p);
         } else {
             // NOLINTNEXTLINE(hicpp-no-malloc)
-            std::free(p);
+            free(p);
         }
     }
 
-    template <class U> void construct(U *ptr) {
-        ::new (static_cast<void *>(ptr)) U();
-    }
+    template <class U> void construct(U *ptr) { ::new ((void *)ptr) U(); }
 
-    template <class U> void destroy(U *ptr) { ptr->~U(); }
+    template <class U> void destroy(U *ptr) {
+        (void)ptr;
+        ptr->~U();
+    }
 };
 
 /**
