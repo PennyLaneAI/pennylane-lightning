@@ -26,8 +26,8 @@ env:
 
   CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
-  KOKKOS_INC: kokkos_dir/include
-  KOKKOS_LIB: kokkos_dir/lib
+  KOKKOS_INC: kokkos_install_dir/include
+  KOKKOS_LIB: kokkos_install_dir/lib
 
 jobs:
   kokkos_libs:
@@ -133,12 +133,11 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            /root/install_dir/OPENMP
-            /root/.ccache
-          key: "quay.io/pypa/manylinux2014_x86_64-kokkos3.6.00-OPENMP"
+            ./kokkos_install_dir
+          key: quay.io/pypa/manylinux2014_x86_64-kokkos3.6.00-OPENMP
           restore-keys: |
-            "quay.io/pypa/manylinux2014_x86_64-kokkos3.6.00-THREADS"
-            "quay.io/pypa/manylinux2014_x86_64-kokkos3.6.00-SERIAL"
+            quay.io/pypa/manylinux2014_x86_64-kokkos3.6.00-THREADS
+            quay.io/pypa/manylinux2014_x86_64-kokkos3.6.00-SERIAL
 
       - uses: actions/checkout@v2
 
@@ -149,7 +148,6 @@ jobs:
 
       - name: Install cibuildwheel
         run: |
-          cp -rf /root/install_dir/ kokkos_dir
           python -m pip install cibuildwheel==2.3.0
 
       - name: Build wheels
