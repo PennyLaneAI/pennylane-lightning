@@ -24,7 +24,7 @@ jobs:
 
       - name: Install dependencies (Ubuntu)
         if: ${{ matrix.container_img == 'ubuntu:20.04' }}
-        run: apt-get update && apt-get -y -q install cmake gcc-10 g++-10 ccache ninja-build git
+        run: apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-10 g++-10 ccache ninja-build git
 
       - name: Install dependencies (CentOS)
         if: ${{ matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64' }}
