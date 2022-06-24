@@ -25,9 +25,8 @@ env:
     pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
   CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-
-  KOKKOS_INC: kokkos_install_dir/include
-  KOKKOS_LIB: kokkos_install_dir/lib
+  
+  CIBW_ENVIRONMENT: KOKKOS_INC="kokkos_install_dir/include" KOKKOS_LIB="kokkos_install_dir/lib"
 
 jobs:
   kokkos_libs:
