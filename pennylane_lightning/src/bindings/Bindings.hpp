@@ -19,6 +19,7 @@
 #pragma once
 #include "AdjointDiff.hpp"
 #include "CPUMemoryModel.hpp"
+#include "ExternDefinitions.hpp"
 #include "Kokkos_Sparse.hpp"
 #include "Macros.hpp"
 #include "Measures.hpp"
@@ -144,7 +145,7 @@ auto alignedNumpyArray(CPUMemoryModel memory_model, size_t size)
     }
     void *ptr = static_cast<void *>(new T[size]);
     auto capsule =
-        pybind11::capsule(ptr, [](void *p) { delete static_cast<T *>(p); });
+        pybind11::capsule(ptr, [](void *p) { delete[] static_cast<T *>(p); });
     return pybind11::array{
         pybind11::dtype::of<T>(), {size}, {sizeof(T)}, ptr, capsule};
 }

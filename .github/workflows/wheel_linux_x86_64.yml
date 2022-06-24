@@ -8,12 +8,13 @@ on:
   pull_request:
 
 env:
-  CIBW_BUILD: 'cp37-* cp38-* cp39-* cp310-*'
   CIBW_SKIP: "*-musllinux*"
+
+  CIBW_BUILD: "cp37-* cp38-* cp39-* cp310-*"
 
   # Python build settings
   CIBW_BEFORE_BUILD: |
-    pip install pybind11 ninja cmake && yum install -y gcc gcc-c++
+    pip install pybind11 ninja cmake && yum install -y gcc gcc-c++ ccache
 
   # Testing of built wheels
   CIBW_TEST_REQUIRES: numpy~=1.21 scipy pytest pytest-cov pytest-mock flaky
@@ -26,6 +27,8 @@ env:
 
   CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
+  BUILD_CACHE: "True"
+
 jobs:
   linux-wheels-x86-64:
     strategy:
@@ -33,7 +36,8 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         arch: [x86_64]
-    name: ${{ matrix.os }}
+        #py_version: [cp37-*, cp38-*, cp39-*, cp310-*]
+    name: ${{ matrix.os }} #(Python ${{ matrix.py_version}})
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -50,12 +54,13 @@ jobs:
           python-version: '3.7'
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.3.0
+        run: python -m pip install cibuildwheel==2.7.0
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ARCHS_LINUX: ${{matrix.arch}}
+          #CIBW_BUILD: ${{ matrix.py_version }}
 
       - uses: actions-ecosystem/action-regex-match@v2
         id: rc_build

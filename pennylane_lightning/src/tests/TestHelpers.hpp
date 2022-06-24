@@ -9,44 +9,64 @@
 #include "TestKernels.hpp"
 #include "Util.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_approx.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
+#include <catch2/matchers/catch_matchers_templated.hpp>
 
 #include <algorithm>
 #include <complex>
+#include <concepts>
 #include <random>
+#include <sstream>
 #include <string>
 #include <type_traits>
+#include <variant>
 #include <vector>
 
 namespace Pennylane {
-template <class T, class Alloc = std::allocator<T>> struct PLApprox {
-    const std::vector<T, Alloc> &comp_;
 
-    explicit PLApprox(const std::vector<T, Alloc> &comp) : comp_{comp} {}
+template <class T> struct is_std_vector {
+    constexpr static bool value = false;
+};
+template <class T, class Alloc> struct is_std_vector<std::vector<T, Alloc>> {
+    constexpr static bool value = true;
+};
+template <class T>
+concept std_vector = is_std_vector<T>::value;
 
-    Util::remove_complex_t<T> margin_{};
-    Util::remove_complex_t<T> epsilon_ =
-        std::numeric_limits<float>::epsilon() * 100;
+template <typename T, typename AllocComp>
+struct VectorApprox : Catch::Matchers::MatcherGenericBase {
+  private:
+    const std::vector<T, AllocComp> &comp_;
+    mutable Catch::Approx approx = Catch::Approx::custom();
 
-    template <class AllocA>
-    [[nodiscard]] bool compare(const std::vector<T, AllocA> &lhs) const {
-        if (lhs.size() != comp_.size()) {
+  public:
+    explicit VectorApprox(const std::vector<T, AllocComp> &comp)
+        : comp_{comp} {}
+
+    std::string describe() const override {
+        using Util::operator<<;
+        std::ostringstream ss;
+        ss << "is approx to " << comp_;
+        return ss.str();
+    }
+
+    template <typename AllocMatch>
+    bool match(const std::vector<T, AllocMatch> &v) const {
+        if (comp_.size() != v.size()) {
             return false;
         }
 
-        for (size_t i = 0; i < lhs.size(); i++) {
-            if constexpr (Util::is_complex_v<T>) {
-                if (lhs[i].real() != Approx(comp_[i].real())
-                                         .epsilon(epsilon_)
-                                         .margin(margin_) ||
-                    lhs[i].imag() != Approx(comp_[i].imag())
-                                         .epsilon(epsilon_)
-                                         .margin(margin_)) {
+        if constexpr (Util::is_complex_v<T>) {
+            for (size_t i = 0; i < v.size(); i++) {
+                if ((std::real(comp_[i]) != approx(std::real(v[i]))) ||
+                    (std::imag(comp_[i]) != approx(std::imag(v[i])))) {
                     return false;
                 }
-            } else {
-                if (lhs[i] !=
-                    Approx(comp_[i]).epsilon(epsilon_).margin(margin_)) {
+            }
+        } else {
+            for (size_t i = 0; i < v.size(); i++) {
+                if (comp_[i] != approx(v[i])) {
                     return false;
                 }
             }
@@ -54,98 +74,85 @@ template <class T, class Alloc = std::allocator<T>> struct PLApprox {
         return true;
     }
 
-    [[nodiscard]] std::string describe() const {
-        std::ostringstream ss;
-        ss << "is Approx to {";
-        for (const auto &elt : comp_) {
-            ss << elt << ", ";
-        }
-        ss << "}" << std::endl;
-        return ss.str();
-    }
-
-    PLApprox &epsilon(Util::remove_complex_t<T> eps) {
-        epsilon_ = eps;
+    VectorApprox &epsilon(Util::remove_complex_t<T> new_eps) {
+        approx.epsilon(new_eps);
         return *this;
     }
-    PLApprox &margin(Util::remove_complex_t<T> m) {
-        margin_ = m;
+
+    VectorApprox &margin(Util::remove_complex_t<T> new_margin) {
+        approx.margin(new_margin);
         return *this;
     }
 };
 
-/**
- * @brief Simple helper for PLApprox for the cases when the class template
- * deduction does not work well.
- */
-template <typename T, class Alloc>
-PLApprox<T, Alloc> approx(const std::vector<T, Alloc> &vec) {
-    return PLApprox<T, Alloc>(vec);
+template <std_vector T> auto Approx(const T &comp) -> decltype(auto) {
+    return VectorApprox(comp);
 }
 
-template <typename T, class Alloc>
-std::ostream &operator<<(std::ostream &os, const PLApprox<T, Alloc> &approx) {
-    os << approx.describe();
-    return os;
-}
-template <class T, class AllocA, class AllocB>
-bool operator==(const std::vector<T, AllocA> &lhs,
-                const PLApprox<T, AllocB> &rhs) {
-    return rhs.compare(lhs);
-}
-template <class T, class AllocA, class AllocB>
-bool operator!=(const std::vector<T, AllocA> &lhs,
-                const PLApprox<T, AllocB> &rhs) {
-    return !rhs.compare(lhs);
-}
+template <class T>
+struct ComplexNumberApprox : Catch::Matchers::MatcherGenericBase {
+  private:
+    const std::complex<T> comp_;
+    mutable Catch::Approx approx = Catch::Approx::custom();
 
-template <class PrecisionT> struct PLApproxComplex {
-    const std::complex<PrecisionT> comp_;
+  public:
+    explicit ComplexNumberApprox(const std::complex<T> &comp) : comp_{comp} {}
 
-    explicit PLApproxComplex(const std::complex<PrecisionT> &comp)
-        : comp_{comp} {}
-
-    PrecisionT margin_{};
-    PrecisionT epsilon_ = std::numeric_limits<float>::epsilon() * 100;
-
-    [[nodiscard]] bool compare(const std::complex<PrecisionT> &lhs) const {
-        return (lhs.real() ==
-                Approx(comp_.real()).epsilon(epsilon_).margin(margin_)) &&
-               (lhs.imag() ==
-                Approx(comp_.imag()).epsilon(epsilon_).margin(margin_));
-    }
-    [[nodiscard]] std::string describe() const {
+    std::string describe() const override {
         std::ostringstream ss;
-        ss << "is Approx to " << comp_;
+        ss << "is approx to " << comp_;
         return ss.str();
     }
-    PLApproxComplex &epsilon(PrecisionT eps) {
-        epsilon_ = eps;
+
+    bool match(const std::complex<T> &v) const {
+        return ((std::real(comp_) == approx(std::real(v))) &&
+                (std::imag(comp_) == approx(std::imag(v))));
+    }
+
+    ComplexNumberApprox &epsilon(T new_eps) {
+        approx.epsilon(new_eps);
         return *this;
     }
-    PLApproxComplex &margin(PrecisionT m) {
-        margin_ = m;
+
+    ComplexNumberApprox &margin(T new_margin) {
+        approx.margin(new_margin);
         return *this;
     }
 };
 
 template <class T>
-bool operator==(const std::complex<T> &lhs, const PLApproxComplex<T> &rhs) {
-    return rhs.compare(lhs);
-}
-template <class T>
-bool operator!=(const std::complex<T> &lhs, const PLApproxComplex<T> &rhs) {
-    return !rhs.compare(lhs);
-}
+struct RealNumberApprox : Catch::Matchers::MatcherGenericBase {
+  private:
+    const T comp_;
+    mutable Catch::Approx approx = Catch::Approx::custom();
 
-template <typename T> PLApproxComplex<T> approx(const std::complex<T> &val) {
-    return PLApproxComplex<T>{val};
-}
+  public:
+    explicit RealNumberApprox(T comp) : comp_{comp} {}
 
-template <typename T>
-std::ostream &operator<<(std::ostream &os, const PLApproxComplex<T> &approx) {
-    os << approx.describe();
-    return os;
+    std::string describe() const override {
+        std::ostringstream ss;
+        ss << "is approx to " << comp_;
+        return ss.str();
+    }
+
+    bool match(T v) const { return comp_ == approx(std::real(v)); }
+
+    RealNumberApprox &epsilon(T new_eps) {
+        approx.epsilon(new_eps);
+        return *this;
+    }
+
+    RealNumberApprox &margin(T new_margin) {
+        approx.margin(new_margin);
+        return *this;
+    }
+};
+
+template <typename T> ComplexNumberApprox<T> Approx(std::complex<T> comp) {
+    return ComplexNumberApprox(comp);
+}
+template <std::floating_point T> RealNumberApprox<T> Approx(T comp) {
+    return RealNumberApprox(comp);
 }
 
 /**
@@ -164,7 +171,7 @@ isApproxEqual(const std::vector<Data_t, AllocA> &data1,
               const typename Data_t::value_type eps =
                   std::numeric_limits<typename Data_t::value_type>::epsilon() *
                   100) {
-    return data1 == PLApprox<Data_t, AllocB>(data2).epsilon(eps);
+    return data1 == Approx<Data_t, AllocB>(data2).epsilon(eps);
 }
 
 /**
@@ -182,8 +189,8 @@ isApproxEqual(const Data_t &data1, const Data_t &data2,
               typename Data_t::value_type eps =
                   std::numeric_limits<typename Data_t::value_type>::epsilon() *
                   100) {
-    return !(data1.real() != Approx(data2.real()).epsilon(eps) ||
-             data1.imag() != Approx(data2.imag()).epsilon(eps));
+    return !(data1.real() != Catch::Approx(data2.real()).epsilon(eps) ||
+             data1.imag() != Catch::Approx(data2.imag()).epsilon(eps));
 }
 
 template <typename T>
@@ -468,13 +475,15 @@ template <> struct PrecisionToName<double> {
 #define PL_REQUIRE_THROWS_MATCHES(expr, type, message_match)                   \
     do {                                                                       \
         REQUIRE_THROWS_AS(expr, type);                                         \
-        REQUIRE_THROWS_WITH(expr, Catch::Matchers::Contains(message_match));   \
+        REQUIRE_THROWS_WITH(                                                   \
+            expr, Catch::Matchers::ContainsSubstring(message_match));          \
     } while (false);
 
 #define PL_CHECK_THROWS_MATCHES(expr, type, message_match)                     \
     do {                                                                       \
         CHECK_THROWS_AS(expr, type);                                           \
-        CHECK_THROWS_WITH(expr, Catch::Matchers::Contains(message_match));     \
+        CHECK_THROWS_WITH(expr,                                                \
+                          Catch::Matchers::ContainsSubstring(message_match));  \
     } while (false);
 
 } // namespace Pennylane

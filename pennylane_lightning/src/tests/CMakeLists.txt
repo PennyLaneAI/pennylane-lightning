@@ -14,13 +14,16 @@ Include(FetchContent)
 FetchContent_Declare(
   Catch2
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG        v2.13.9
+  GIT_TAG        v3.0.1
 )
 
 FetchContent_MakeAvailable(Catch2)
 
+get_target_property(Catch2_INC_DIR Catch2 INTERFACE_INCLUDE_DIRECTORIES)
+set_target_properties(Catch2 PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${Catch2_INC_DIR}")
+
 # Required for catch_discover_tests().
-list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/contrib)
+list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 
 # Modify `ctest` to only run the supported subset of tests.
 include(CTest)
@@ -36,7 +39,7 @@ target_link_libraries(lightning_tests_dependency INTERFACE lightning_algorithms
                                                            lightning_gates
                                                            lightning_simulator
                                                            lightning_utils
-                                                           Catch2::Catch2)
+                                                           Catch2::Catch2WithMain)
 if(ENABLE_WARNINGS)
     message(STATUS "ENABLE_WARNINGS is ON.")
     if(MSVC)
@@ -52,7 +55,7 @@ else()
     endif()
 endif()
 
-target_sources(lightning_tests_dependency INTERFACE runner_main.cpp)
+#target_sources(lightning_tests_dependency INTERFACE runner_main.cpp)
 
 if(ENABLE_NATIVE)
     message(STATUS "ENABLE_NATIVE is ON. Use -march=native for cpptests.")
@@ -69,7 +72,6 @@ target_link_libraries(compile_time_tests lightning_compile_options lightning_gat
 set(TEST_SOURCES CreateAllWires.cpp
                  Test_AdjDiff.cpp
                  Test_AlgUtil.cpp
-                 #Test_Bindings.cpp
                  Test_CompilerSupport.cpp
                  Test_DynamicDispatcher.cpp
                  Test_Error.cpp
@@ -93,7 +95,6 @@ set(TEST_SOURCES CreateAllWires.cpp
                  Test_StateVectorManagedCPU.cpp
                  Test_StateVectorRawCPU.cpp
                  Test_Util.cpp)
-                 #Test_VectorJacobianProduct.cpp)
 
 add_executable(runner ${TEST_SOURCES})
 target_link_libraries(runner PRIVATE lightning_tests_dependency

@@ -147,6 +147,7 @@ void apply_Sparse_Matrix_Kokkos(
             reinterpret_cast<std::complex<fp_precision> *>(result_view.data()) +
                 result_view.size()));
     }
+    // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
     Kokkos::finalize();
 };
 

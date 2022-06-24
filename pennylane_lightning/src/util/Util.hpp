@@ -215,8 +215,8 @@ template <class T> inline auto dimSize(const std::vector<T> &data) -> size_t {
  * @param vec Vector data.
  * @return std::ostream&
  */
-template <class T>
-inline auto operator<<(std::ostream &os, const std::vector<T> &vec)
+template <class T, class Alloc>
+inline auto operator<<(std::ostream &os, const std::vector<T, Alloc> &vec)
     -> std::ostream & {
     os << '[';
     if (!vec.empty()) {

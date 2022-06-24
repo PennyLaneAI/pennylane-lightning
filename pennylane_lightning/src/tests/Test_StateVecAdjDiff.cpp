@@ -7,7 +7,7 @@
 
 #include "TestHelpers.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 
 #include <cmath>
 #include <numbers>
@@ -15,6 +15,11 @@
 using namespace Pennylane;
 using namespace Pennylane::Util;
 using namespace Pennylane::Algorithms;
+
+extern template class Pennylane::Algorithms::JacobianData<float>;
+extern template class Pennylane::Algorithms::JacobianData<double>;
+extern template class Pennylane::Algorithms::OpsData<float>;
+extern template class Pennylane::Algorithms::OpsData<double>;
 
 /**
  * @brief
@@ -112,7 +117,7 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
                 statevectorVJP(std::span{vjp}, jd,
                                std::span<const ComplexPrecisionT>{dy}, true);
 
-                REQUIRE(vjp == PLApprox(expected[i]).margin(1e-5));
+                REQUIRE_THAT(vjp, Approx(expected[i]).margin(1e-5));
             }
         }
 
@@ -132,7 +137,7 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
                 statevectorVJP(std::span{vjp}, jd,
                                std::span<const ComplexPrecisionT>{dy}, false);
 
-                REQUIRE(vjp == PLApprox(expected[i]).margin(1e-5));
+                REQUIRE_THAT(vjp, Approx(expected[i]).margin(1e-5));
             }
         }
     }
@@ -181,8 +186,8 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
                 statevectorVJP(std::span{vjp}, jd,
                                std::span<const ComplexPrecisionT>{dy}, true);
 
-                REQUIRE(vjp[0] == approx(expected_der0[i]).margin(1e-5));
-                REQUIRE(vjp[1] == approx(expected_der1[i]).margin(1e-5));
+                REQUIRE_THAT(vjp[0], Approx(expected_der0[i]).margin(1e-5));
+                REQUIRE_THAT(vjp[1], Approx(expected_der1[i]).margin(1e-5));
             }
         }
 
@@ -204,8 +209,8 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
                 statevectorVJP(std::span{vjp}, jd,
                                std::span<const ComplexPrecisionT>{dy}, false);
 
-                REQUIRE(vjp[0] == approx(expected_der0[i]).margin(1e-5));
-                REQUIRE(vjp[1] == approx(expected_der1[i]).margin(1e-5));
+                REQUIRE_THAT(vjp[0], Approx(expected_der0[i]).margin(1e-5));
+                REQUIRE_THAT(vjp[1], Approx(expected_der1[i]).margin(1e-5));
             }
         }
     }
@@ -247,7 +252,7 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
         statevectorVJP(std::span{vjp2}, jd2,
                        std::span<const ComplexPrecisionT>{dy2}, true);
 
-        REQUIRE(vjp1[0] == approx(-std::conj(vjp2[0])));
+        REQUIRE_THAT(vjp1[0], Approx(-std::conj(vjp2[0])));
     }
 
     SECTION(
@@ -296,6 +301,6 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
         std::vector<TestType> jac(num_params);
         adjointJacobian<TestType>(std::span{jac}, jd);
 
-        REQUIRE(grad_vjp == PLApprox(jac).margin(1e-5));
+        REQUIRE_THAT(grad_vjp, Approx(jac).margin(1e-5));
     }
 }

@@ -1,11 +1,20 @@
 #include "Observables.hpp"
 #include "TestHelpers.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 
 using namespace Pennylane;
 using namespace Pennylane::Algorithms;
 using Pennylane::Util::LightningException;
+
+extern template class Pennylane::Algorithms::NamedObs<float>;
+extern template class Pennylane::Algorithms::NamedObs<double>;
+extern template class Pennylane::Algorithms::HermitianObs<float>;
+extern template class Pennylane::Algorithms::HermitianObs<double>;
+extern template class Pennylane::Algorithms::TensorProdObs<float>;
+extern template class Pennylane::Algorithms::TensorProdObs<double>;
+extern template class Pennylane::Algorithms::Hamiltonian<float>;
+extern template class Pennylane::Algorithms::Hamiltonian<double>;
 
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEMPLATE_TEST_CASE("NamedObs", "[Observables]", float, double) {
@@ -194,8 +203,8 @@ TEMPLATE_TEST_CASE("TensorProdObs", "[Observables]", float, double) {
             sv.updateData(createProductState<PrecisionT>("1+0"));
             ob.applyInPlace(sv);
 
-            REQUIRE(sv.getDataVector() ==
-                    PLApprox(createProductState<PrecisionT>("0+1")));
+            REQUIRE_THAT(sv.getDataVector(),
+                         Approx(createProductState<PrecisionT>("0+1")));
         }
 
         SECTION("Test using |+-01>") {
@@ -205,8 +214,8 @@ TEMPLATE_TEST_CASE("TensorProdObs", "[Observables]", float, double) {
             sv.updateData(createProductState<PrecisionT>("+-01"));
             ob.applyInPlace(sv);
 
-            REQUIRE(sv.getDataVector() ==
-                    PLApprox(createProductState<PrecisionT>("+-11")));
+            REQUIRE_THAT(sv.getDataVector(),
+                         Approx(createProductState<PrecisionT>("+-11")));
         }
     }
 }
@@ -336,7 +345,7 @@ TEMPLATE_TEST_CASE("Hamiltonian", "[Observables]", float, double) {
                 ComplexPrecisionT{-0.5, 0.0},
             };
 
-            REQUIRE(sv.getDataVector() == PLApprox(expected));
+            REQUIRE_THAT(sv.getDataVector(), Approx(expected));
         }
 
         SECTION("Hamiltonian applies correctly to |01>") {
@@ -354,7 +363,7 @@ TEMPLATE_TEST_CASE("Hamiltonian", "[Observables]", float, double) {
                 ComplexPrecisionT{h, 0.0},
             };
 
-            REQUIRE(sv.getDataVector() == PLApprox(expected));
+            REQUIRE_THAT(sv.getDataVector(), Approx(expected));
         }
     }
 

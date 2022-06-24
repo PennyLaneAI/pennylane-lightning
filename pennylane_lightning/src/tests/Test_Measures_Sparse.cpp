@@ -9,7 +9,7 @@
 #include "Util.hpp"
 
 #include "TestHelpers.hpp"
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 
 #if defined(_MSC_VER)
 #pragma warning(disable : 4305)
@@ -24,6 +24,11 @@ using std::size_t;
 using std::string;
 using std::vector;
 }; // namespace
+
+extern template class Pennylane::Measures<float,
+                                          Pennylane::StateVectorRawCPU<float>>;
+extern template class Pennylane::Measures<double,
+                                          Pennylane::StateVectorRawCPU<double>>;
 
 TEMPLATE_TEST_CASE("Expected Values - Sparse Hamiltonian [Kokkos]",
                    "[Measures]", float, double) {
@@ -50,7 +55,7 @@ TEMPLATE_TEST_CASE("Expected Values - Sparse Hamiltonian [Kokkos]",
                 entries.data(), values.data(),
                 static_cast<long>(values.size()));
             TestType exp_values_ref = 0.5930885;
-            REQUIRE(exp_values == Approx(exp_values_ref).margin(1e-6));
+            REQUIRE_THAT(exp_values, Approx(exp_values_ref).margin(1e-6));
         }
 
         SECTION("Testing Sparse Hamiltonian (incompatible sizes):") {

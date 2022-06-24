@@ -31,4 +31,7 @@ template <typename T> struct is_complex : std::false_type {};
 template <typename T> struct is_complex<std::complex<T>> : std::true_type {};
 
 template <typename T> constexpr bool is_complex_v = is_complex<T>::value;
+
+template <typename T>
+concept std_complex = is_complex_v<T>;
 } // namespace Pennylane::Util

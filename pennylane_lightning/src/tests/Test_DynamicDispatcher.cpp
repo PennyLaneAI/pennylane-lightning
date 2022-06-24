@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 
 #include "DynamicDispatcher.hpp"
 #include "OpToMemberFuncPtr.hpp"
@@ -145,12 +145,12 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyOperation", "[DynamicDispatcher]",
         REQUIRE_THROWS_WITH(
             dispatcher.applyOperation(Gates::KernelType::None, st.data(),
                                       num_qubits, "Toffoli", {0, 1, 2}, false),
-            Catch::Contains("Cannot find"));
+            Catch::Matchers::ContainsSubstring("Cannot find"));
 
         REQUIRE_THROWS_WITH(dispatcher.applyOperation(
                                 Gates::KernelType::None, st.data(), num_qubits,
                                 GateOperation::Toffoli, {0, 1, 2}, false),
-                            Catch::Contains("Cannot find"));
+                            Catch::Matchers::ContainsSubstring("Cannot find"));
     }
 }
 
@@ -170,12 +170,12 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyGenerator", "[DynamicDispatcher]",
         REQUIRE_THROWS_WITH(dispatcher.applyGenerator(Gates::KernelType::None,
                                                       st.data(), num_qubits,
                                                       "RX", {0, 1, 2}, false),
-                            Catch::Contains("Cannot find"));
+                            Catch::Matchers::ContainsSubstring("Cannot find"));
 
         REQUIRE_THROWS_WITH(dispatcher.applyGenerator(
                                 Gates::KernelType::None, st.data(), num_qubits,
                                 GeneratorOperation::RX, {0, 1, 2}, false),
-                            Catch::Contains("Cannot find"));
+                            Catch::Matchers::ContainsSubstring("Cannot find"));
     }
 }
 
@@ -194,10 +194,10 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyMatrix", "[DynamicDispatcher]",
 
         std::vector<std::complex<PrecisionT>> matrix(4, 0.0);
 
-        REQUIRE_THROWS_WITH(dispatcher.applyMatrix(Gates::KernelType::None,
-                                                   st.data(), num_qubits,
-                                                   matrix.data(), {0}, false),
-                            Catch::Contains("is not registered") &&
-                                Catch::Contains("SingleQubitOp"));
+        REQUIRE_THROWS_WITH(
+            dispatcher.applyMatrix(Gates::KernelType::None, st.data(),
+                                   num_qubits, matrix.data(), {0}, false),
+            Catch::Matchers::ContainsSubstring("is not registered") &&
+                Catch::Matchers::ContainsSubstring("SingleQubitOp"));
     }
 }

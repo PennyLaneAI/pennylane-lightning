@@ -5,7 +5,7 @@
 #include "Kokkos_Sparse.hpp"
 
 #include "TestHelpers.hpp"
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 
 #if defined(_MSC_VER)
 #pragma warning(disable : 4305)
@@ -64,7 +64,7 @@ TEMPLATE_TEST_CASE("apply_Sparse_Matrix_Kokkos", "[Kokkos Sparse]", float,
                     row_map.data(), static_cast<long>(row_map.size()),
                     entries.data(), values.data(),
                     static_cast<long>(values.size()), result);
-                REQUIRE(result_refs[vec] == approx(result).margin(1e-6));
+                REQUIRE_THAT(result_refs[vec], Approx(result).margin(1e-6));
             };
         }
     } else {
@@ -126,7 +126,7 @@ TEMPLATE_TEST_CASE("apply_Sparse_Matrix", "[Kokkos Sparse]", float, double) {
                     row_map.data(), static_cast<long>(row_map.size()),
                     entries.data(), values.data(),
                     static_cast<long>(values.size()));
-                REQUIRE(result_refs[vec] == approx(result).margin(1e-6));
+                REQUIRE_THAT(result_refs[vec], Approx(result).margin(1e-6));
             };
         }
     } else {

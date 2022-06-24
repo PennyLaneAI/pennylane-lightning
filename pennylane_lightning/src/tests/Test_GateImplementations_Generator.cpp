@@ -4,7 +4,7 @@
 #include "TestKernels.hpp"
 #include "Util.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_template_test_macros.hpp>
 
 #include <algorithm>
 #include <complex>
@@ -131,7 +131,7 @@ void testGeneratorForGate(RandomEngine &re, bool inverse) {
 
             scaleVector(gate_der_st, static_cast<PrecisionT>(0.5) / eps);
 
-            REQUIRE(gntr_st == approx(gate_der_st).margin(PrecisionT{1e-3}));
+            REQUIRE_THAT(gntr_st, Approx(gate_der_st).margin(PrecisionT{1e-3}));
         }
     }
 }
