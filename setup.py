@@ -90,6 +90,9 @@ class CMakeBuild(build_ext):
         elif platform.system() == "Linux":
             if platform.machine() == "x86_64":
                 configure_args += ["-DENABLE_AVX=ON"]  # Enable AVX if x64 on Linux
+            from shutil import which
+            if os.getenv('BUILD_CACHE') and which("ccache"):
+                configure_args += ["-DCMAKE_CXX_COMPILER_LAUNCHER=ccache"]  # Enable caching if available
         elif platform.system() == "Windows":
             configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
         else:
