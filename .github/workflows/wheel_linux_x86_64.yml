@@ -56,13 +56,13 @@ jobs:
           key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Install dependencies (Ubuntu)
-        if: ${{ matrix.container_img == 'ubuntu:20.04' }} && ${{ steps.kokkos-cache.outputs.cache-hit != 'true' }}
+        if: ${{ (matrix.container_img == 'ubuntu:20.04') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
           apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-10 g++-10 ccache ninja-build git
           echo "COMPILER=g++-10" >> $GITHUB_ENV
 
       - name: Install dependencies (CentOS)
-        if: ${{ matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64' }} && ${{ steps.kokkos-cache.outputs.cache-hit != 'true' }}
+        if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
           yum update && yum install -y cmake ccache ninja-build
           echo "COMPILER=g++" >> $GITHUB_ENV
