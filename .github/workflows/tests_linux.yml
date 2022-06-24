@@ -11,6 +11,7 @@ env:
   GCC_VERSION: 10
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
   OMP_NUM_THREADS: "2"
+  KOKKOS_INC: /root/install_dir/OPENMP
 
 jobs:
   cpptests:
@@ -53,7 +54,7 @@ jobs:
 
       - name: Build and run unit tests for code Coverage
         run: |
-            cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
+            cmake pennylane_lightning/src -BBuildCov -DENABLE_KOKKOS=OFF -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
             cmake --build ./BuildCov
             cd ./BuildCov
             ./tests/runner
@@ -106,7 +107,7 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
-            cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DENABLE_BLAS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
+            cmake pennylane_lightning/src -BBuildCov -DENABLE_KOKKOS=OFF -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DENABLE_BLAS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
             cmake --build ./BuildCov
             cd ./BuildCov
             ./tests/runner
@@ -130,6 +131,18 @@ jobs:
         uses: styfle/cancel-workflow-action@0.4.1
         with:
           access_token: ${{ github.token }}
+
+      - name: Cache installation directories
+        id: kokkos-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            /root/install_dir/OPENMP
+            /root/.ccache
+          key: ubuntu:20.04-kokkos3.6.00-OPENMP
+          restore-keys: |
+            ubuntu:20.04-kokkos3.6.00-THREADS
+            ubuntu:20.04-kokkos3.6.00-SERIAL
 
       - uses: actions/setup-python@v2
         name: Install Python
