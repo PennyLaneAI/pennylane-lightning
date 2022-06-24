@@ -11,8 +11,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04] #, quay.io/pypa/manylinux2014_x86_64]
-        exec_model: [SERIAL] #[OPENMP, THREADS, SERIAL]
+        os: [ubuntu-20.04, quay.io/pypa/manylinux2014_x86_64]
+        exec_model: [SERIAL, OPENMP, THREADS]
         kokkos_version: ["3.6.00"]
     steps:
       - name: Cancel previous runs
@@ -20,8 +20,13 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - name: Install dependencies
+      - name: Install dependencies (Ubuntu)
+        if: ${{ matrix.os == "ubuntu-20.04" }}
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 ccache ninja-build
+
+      - name: Install dependencies (CentOS)
+        if: ${{ matrix.os == "quay.io/pypa/manylinux2014_x86_64" }}
+        run: sudo yum update && sudo yum install -y cmake ccache ninja-build
 
       - name: Clone Kokkos libs
         run: |
