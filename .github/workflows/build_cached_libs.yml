@@ -27,7 +27,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ${{ github.workspace }}/install_dir/${{ matrix.exec_model }}
+            $HOME/install_dir/${{ matrix.exec_model }}
             $HOME/.ccache
           key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
@@ -60,9 +60,9 @@ jobs:
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           pushd . &> /dev/null
-          mkdir -p ${{ github.workspace }}/install_dir/${{ matrix.exec_model }}
+          mkdir -p $HOME/install_dir/${{ matrix.exec_model }}
           cd kokkos
-          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install_dir/${{ matrix.exec_model }} \
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=$HOME/install_dir/${{ matrix.exec_model }} \
                           -DKokkos_ENABLE_COMPLEX_ALIGN=off \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                           -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
@@ -78,9 +78,9 @@ jobs:
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           pushd . &> /dev/null
-          mkdir -p ${{ github.workspace }}/install_dir/${{ matrix.exec_model }}
+          mkdir -p $HOME/install_dir/${{ matrix.exec_model }}
           cd kokkos-kernels
-          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install_dir/${{ matrix.exec_model }} \
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=$HOME/install_dir/${{ matrix.exec_model }} \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                           -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
                           -DCMAKE_CXX_STANDARD=20 \
