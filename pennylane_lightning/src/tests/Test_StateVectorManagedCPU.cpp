@@ -20,6 +20,9 @@
 using namespace Pennylane;
 using Catch::Matchers::ContainsSubstring;
 
+extern template class Pennylane::StateVectorManagedCPU<float>;
+extern template class Pennylane::StateVectorManagedCPU<double>;
+
 TEMPLATE_TEST_CASE("StateVectorManagedCPU::StateVectorManagedCPU",
                    "[StateVectorManagedCPU]", float, double) {
     using PrecisionT = TestType;

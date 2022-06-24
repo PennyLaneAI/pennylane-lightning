@@ -7,6 +7,15 @@ using namespace Pennylane;
 using namespace Pennylane::Algorithms;
 using Pennylane::Util::LightningException;
 
+extern template class Pennylane::Algorithms::NamedObs<float>;
+extern template class Pennylane::Algorithms::NamedObs<double>;
+extern template class Pennylane::Algorithms::HermitianObs<float>;
+extern template class Pennylane::Algorithms::HermitianObs<double>;
+extern template class Pennylane::Algorithms::TensorProdObs<float>;
+extern template class Pennylane::Algorithms::TensorProdObs<double>;
+extern template class Pennylane::Algorithms::Hamiltonian<float>;
+extern template class Pennylane::Algorithms::Hamiltonian<double>;
+
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEMPLATE_TEST_CASE("NamedObs", "[Observables]", float, double) {
     using PrecisionT = TestType;

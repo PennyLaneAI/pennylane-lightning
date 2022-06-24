@@ -22,6 +22,11 @@ using std::size_t;
 using std::string;
 using std::vector;
 
+extern template class Pennylane::Measures<float,
+                                          Pennylane::StateVectorRawCPU<float>>;
+extern template class Pennylane::Measures<double,
+                                          Pennylane::StateVectorRawCPU<double>>;
+
 TEST_CASE("Probabilities", "[Measures]") {
     // Probabilities calculated with Pennylane default_qbit:
     std::vector<std::vector<double>> Expected_Probabilities = {

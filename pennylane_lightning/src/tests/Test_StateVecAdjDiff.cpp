@@ -16,6 +16,11 @@ using namespace Pennylane;
 using namespace Pennylane::Util;
 using namespace Pennylane::Algorithms;
 
+extern template class Pennylane::Algorithms::JacobianData<float>;
+extern template class Pennylane::Algorithms::JacobianData<double>;
+extern template class Pennylane::Algorithms::OpsData<float>;
+extern template class Pennylane::Algorithms::OpsData<double>;
+
 /**
  * @brief
  *

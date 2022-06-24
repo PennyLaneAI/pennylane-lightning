@@ -30,6 +30,24 @@
 #include <utility>
 #include <vector>
 
+extern template class Pennylane::Algorithms::NamedObs<float>;
+extern template class Pennylane::Algorithms::NamedObs<double>;
+extern template class Pennylane::Algorithms::HermitianObs<float>;
+extern template class Pennylane::Algorithms::HermitianObs<double>;
+extern template class Pennylane::Algorithms::TensorProdObs<float>;
+extern template class Pennylane::Algorithms::TensorProdObs<double>;
+extern template class Pennylane::Algorithms::Hamiltonian<float>;
+extern template class Pennylane::Algorithms::Hamiltonian<double>;
+
+extern template class Pennylane::Algorithms::OpsData<float>;
+extern template class Pennylane::Algorithms::OpsData<double>;
+
+extern template class Pennylane::Algorithms::JacobianData<float>;
+extern template class Pennylane::Algorithms::JacobianData<double>;
+
+extern template class Pennylane::StateVectorManagedCPU<float>;
+extern template class Pennylane::StateVectorManagedCPU<double>;
+
 namespace Pennylane::Algorithms {
 /**
  * @brief Calculates the Jacobian for the statevector for the selected set

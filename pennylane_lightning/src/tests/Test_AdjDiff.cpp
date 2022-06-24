@@ -24,6 +24,11 @@
 using namespace Pennylane;
 using namespace Pennylane::Algorithms;
 
+extern template class Pennylane::StateVectorRawCPU<float>;
+extern template class Pennylane::StateVectorRawCPU<double>;
+extern template class Pennylane::Algorithms::JacobianData<float>;
+extern template class Pennylane::Algorithms::JacobianData<double>;
+
 TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=Z", "[Algorithms]") {
     const std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     const std::vector<size_t> tp{0};

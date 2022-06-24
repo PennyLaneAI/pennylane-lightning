@@ -25,6 +25,11 @@ using std::string;
 using std::vector;
 }; // namespace
 
+extern template class Pennylane::Measures<float,
+                                          Pennylane::StateVectorRawCPU<float>>;
+extern template class Pennylane::Measures<double,
+                                          Pennylane::StateVectorRawCPU<double>>;
+
 TEMPLATE_TEST_CASE("Expected Values - Sparse Hamiltonian [Kokkos]",
                    "[Measures]", float, double) {
     // Defining the State Vector that will be measured.
