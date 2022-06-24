@@ -23,11 +23,11 @@ jobs:
           access_token: ${{ github.token }}
 
       - name: Install dependencies (Ubuntu)
-        if: ${{ matrix.container_img }} == "ubuntu-20.04"
+        if: ${{ matrix.container_img == 'ubuntu:20.04' }}
         run: apt-get update && apt-get -y -q install cmake gcc-10 g++-10 ccache ninja-build
 
       - name: Install dependencies (CentOS)
-        if: ${{ matrix.container_img}} == "quay.io/pypa/manylinux2014_x86_64"
+        if: ${{ matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64' }}
         run: yum update && yum install -y cmake ccache ninja-build
 
       - name: Clone Kokkos libs
