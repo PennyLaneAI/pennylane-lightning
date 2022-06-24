@@ -132,18 +132,6 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - name: Cache installation directories
-        id: kokkos-cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            /root/install_dir/OPENMP
-            /root/.ccache
-          key: "ubuntu:20.04-kokkos3.6.00-OPENMP"
-          restore-keys: |
-            ubuntu:20.04-kokkos3.6.00-THREADS
-            ubuntu:20.04-kokkos3.6.00-SERIAL
-
       - uses: actions/setup-python@v2
         name: Install Python
         with:

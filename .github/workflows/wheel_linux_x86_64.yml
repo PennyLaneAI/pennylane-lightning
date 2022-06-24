@@ -39,7 +39,7 @@ jobs:
         os: [ubuntu-20.04]
         exec_model: [SERIAL, OPENMP, THREADS]
         kokkos_version: ["3.6.00"]
-        container_img: ["ubuntu:20.04", "quay.io/pypa/manylinux2014_x86_64"]
+        container_img: ["quay.io/pypa/manylinux2014_x86_64"]
     steps:
       - name: Cancel previous runs
         uses: styfle/cancel-workflow-action@0.4.1

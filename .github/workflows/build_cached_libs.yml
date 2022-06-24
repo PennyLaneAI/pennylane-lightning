@@ -59,7 +59,6 @@ jobs:
       - name: Build Kokkos core library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
-          pushd . &> /dev/null
           mkdir -p /root/install_dir/${{ matrix.exec_model }}
           cd kokkos
           cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/root/install_dir/${{ matrix.exec_model }} \
@@ -72,12 +71,11 @@ jobs:
 
           cmake --build ./Build --verbose
           cmake --install ./Build
-          popd &> /dev/null
+          cd -
 
       - name: Build Kokkos kernels library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
-          pushd . &> /dev/null
           mkdir -p /root/install_dir/${{ matrix.exec_model }}
           cd kokkos-kernels
           cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/root/install_dir/${{ matrix.exec_model }} \
@@ -89,5 +87,4 @@ jobs:
                           -G Ninja
           cmake --build ./Build --verbose
           cmake --install ./Build
-          popd &> /dev/null
 
