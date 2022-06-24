@@ -24,11 +24,15 @@ jobs:
 
       - name: Install dependencies (Ubuntu)
         if: ${{ matrix.container_img == 'ubuntu:20.04' }}
-        run: apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-10 g++-10 ccache ninja-build git
+        run: |
+          apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-10 g++-10 ccache ninja-build git
+          echo "COMPILER=g++-10" >> $GITHUB_ENV
 
       - name: Install dependencies (CentOS)
         if: ${{ matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64' }}
-        run: yum update && yum install -y cmake ccache ninja-build
+        run: |
+          yum update && yum install -y cmake ccache ninja-build
+          echo "COMPILER=g++" >> $GITHUB_ENV
 
       - name: Clone Kokkos libs
         run: |
@@ -61,7 +65,7 @@ jobs:
           cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install_dir/${{ matrix.exec_model }} \
                           -DKokkos_ENABLE_COMPLEX_ALIGN=off \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
-                          -DCMAKE_CXX_COMPILER=g++-10 \
+                          -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                           -G Ninja
@@ -78,7 +82,7 @@ jobs:
           cd kokkos-kernels
           cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/install_dir/${{ matrix.exec_model }} \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
-                          -DCMAKE_CXX_COMPILER=g++-10 \
+                          -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
                           -DCMAKE_CXX_STANDARD=20 \
                           -DKokkos_DIR=$PWD/../install_dir/${{ matrix.exec_model }} \
                           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
