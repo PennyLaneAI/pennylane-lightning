@@ -9,11 +9,13 @@ jobs:
   kokkos_libs:
     name: Kokkos core & kernels
     runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container_img }}
     strategy:
       matrix:
-        os: ["ubuntu-20.04", "quay.io/pypa/manylinux2014_x86_64"]
+        os: [ubuntu-20.04]
         exec_model: [SERIAL, OPENMP, THREADS]
         kokkos_version: ["3.6.00"]
+        container_img: [ubuntu:20.04, quay.io/pypa/manylinux2014_x86_64]
     steps:
       - name: Cancel previous runs
         uses: styfle/cancel-workflow-action@0.4.1
@@ -21,7 +23,7 @@ jobs:
           access_token: ${{ github.token }}
 
       - name: Install dependencies (Ubuntu)
-        if: ${{ matrix.os == "ubuntu-20.04" }}
+        if: ${{ matrix.container_img == "ubuntu-20.04" }}
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 ccache ninja-build
 
       - name: Install dependencies (CentOS)
