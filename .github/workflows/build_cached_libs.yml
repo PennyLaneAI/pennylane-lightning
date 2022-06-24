@@ -56,7 +56,7 @@ jobs:
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                           -DCMAKE_CXX_COMPILER=g++-10 \
                           -DCMAKE_CXX_STANDARD=20 \
-                          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+                          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                           -G Ninja
           cmake --build ./Build --verbose
           cmake --install ./Build
@@ -73,7 +73,7 @@ jobs:
                           -DCMAKE_CXX_COMPILER=g++-10 \
                           -DCMAKE_CXX_STANDARD=20 \
                           -DKokkos_DIR=$PWD/../install_dir/${{ matrix.exec_model }} \
-                          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+                          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                           -G Ninja
           cmake --build ./Build --verbose
           cmake --install ./Build
