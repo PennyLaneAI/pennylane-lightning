@@ -33,7 +33,7 @@ using Util::less_than_equal_to;
 namespace Pennylane::KernelMap::Internal {
 constexpr static auto all_qubit_numbers = Util::full_domain<size_t>();
 
-int assignKernelsForGateOp_Default() {
+void assignKernelsForGateOp_Default() {
     auto &instance = OperationKernelMap<GateOperation>::getInstance();
 
     instance.assignKernelForOp(GateOperation::Identity, all_threading,
@@ -145,10 +145,9 @@ int assignKernelsForGateOp_Default() {
     instance.assignKernelForOp(GateOperation::MultiRZ, all_threading,
                                all_memory_model, all_qubit_numbers,
                                Gates::KernelType::LM);
-    return 1;
 }
 
-int assignKernelsForGeneratorOp_Default() {
+void assignKernelsForGeneratorOp_Default() {
     auto &instance = OperationKernelMap<GeneratorOperation>::getInstance();
 
     instance.assignKernelForOp(GeneratorOperation::PhaseShift, all_threading,
@@ -210,9 +209,8 @@ int assignKernelsForGeneratorOp_Default() {
     instance.assignKernelForOp(GeneratorOperation::MultiRZ, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
-    return 1;
 }
-int assignKernelsForMatrixOp_Default() {
+void assignKernelsForMatrixOp_Default() {
     auto &instance = OperationKernelMap<MatrixOperation>::getInstance();
 
     instance.assignKernelForOp(MatrixOperation::SingleQubitOp, all_threading,
@@ -224,6 +222,5 @@ int assignKernelsForMatrixOp_Default() {
     instance.assignKernelForOp(MatrixOperation::MultiQubitOp, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::PI);
-    return 1;
 }
 } // namespace Pennylane::KernelMap::Internal
