@@ -23,14 +23,14 @@
 
 namespace Pennylane::Internal {
 int registerAllAvailableKernels_Float() {
-    registerKernel<float, float, GateImplementationsLM>();
-    registerKernel<float, float, GateImplementationsPI>();
+    registerKernel<float, float, Gates::GateImplementationsLM>();
+    registerKernel<float, float, Gates::GateImplementationsPI>();
     return 1;
 }
 
 int registerAllAvailableKernels_Double() {
-    registerKernel<double, double, GateImplementationsLM>();
-    registerKernel<double, double, GateImplementationsPI>();
+    registerKernel<double, double, Gates::GateImplementationsLM>();
+    registerKernel<double, double, Gates::GateImplementationsPI>();
     return 1;
 }
 } // namespace Pennylane::Internal

@@ -51,7 +51,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
     template <size_t control, size_t target>
     static void applyInternalInternal(std::complex<PrecisionT> *arr,
                                       size_t num_qubits) {
-
         constexpr static auto perm =
             permutationInternalInternal<control, target>();
 

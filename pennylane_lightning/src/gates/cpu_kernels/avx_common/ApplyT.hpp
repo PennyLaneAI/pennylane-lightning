@@ -93,7 +93,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyT {
     template <size_t rev_wire>
     static void applyInternal(std::complex<PrecisionT> *arr,
                               const size_t num_qubits, bool inverse) {
-
         constexpr static auto perm = createPermutation(rev_wire);
         const auto cos_factor = cosFactor(rev_wire);
         const auto isin_factor = isinFactor(rev_wire, inverse);

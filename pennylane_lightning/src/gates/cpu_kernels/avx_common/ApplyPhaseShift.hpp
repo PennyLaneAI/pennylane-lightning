@@ -87,7 +87,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyPhaseShift {
     static void applyInternal(std::complex<PrecisionT> *arr,
                               const size_t num_qubits, bool inverse,
                               ParamT angle) {
-
         constexpr static auto perm = createPermutation(rev_wire);
         const auto cos_factor =
             cosFactor(rev_wire, static_cast<PrecisionT>(cos(angle)));
