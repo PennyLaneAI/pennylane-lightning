@@ -25,7 +25,6 @@
 #include "Memory.hpp"
 #include "OpToMemberFuncPtr.hpp"
 #include "RuntimeInfo.hpp"
-#include "SelectKernel.hpp"
 #include "StateVectorManagedCPU.hpp"
 
 #include "pybind11/complex.h"
@@ -248,10 +247,12 @@ auto svKernelMap(const StateVectorRawCPU<PrecisionT> &sv) -> pybind11::dict {
     pybind11::dict res_map;
     namespace Constant = Gates::Constant;
 
+    const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+
     for (const auto &[gate_op, kernel] : sv.getGateKernelMap()) {
         const auto key =
             std::string(Util::lookup(Constant::gate_names, gate_op));
-        const auto value = Util::lookup(Gates::kernel_id_name_pairs, kernel);
+        const auto value = dispatcher.getKernelName(kernel);
 
         res_map[key.c_str()] = value;
     }
@@ -259,7 +260,7 @@ auto svKernelMap(const StateVectorRawCPU<PrecisionT> &sv) -> pybind11::dict {
     for (const auto &[gntr_op, kernel] : sv.getGeneratorKernelMap()) {
         const auto key =
             std::string(Util::lookup(Constant::generator_names, gntr_op));
-        const auto value = Util::lookup(Gates::kernel_id_name_pairs, kernel);
+        const auto value = dispatcher.getKernelName(kernel);
 
         res_map[key.c_str()] = value;
     }
@@ -267,7 +268,7 @@ auto svKernelMap(const StateVectorRawCPU<PrecisionT> &sv) -> pybind11::dict {
     for (const auto &[mat_op, kernel] : sv.getMatrixKernelMap()) {
         const auto key =
             std::string(Util::lookup(Constant::matrix_names, mat_op));
-        const auto value = Util::lookup(Gates::kernel_id_name_pairs, kernel);
+        const auto value = dispatcher.getKernelName(kernel);
 
         res_map[key.c_str()] = value;
     }

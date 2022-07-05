@@ -33,6 +33,18 @@ using Pennylane::Gates::callGateOps;
  * the result from it with that of the direct call.
  */
 
+TEMPLATE_TEST_CASE("Test DynamicDispatcher constructors", "[DynamicDispatcher]",
+                   float, double) {
+    using DispatcherT = DynamicDispatcher<TestType>;
+
+    static_assert(!std::is_default_constructible_v<DispatcherT>,
+                  "DynamicDispatcher is not default constructible.");
+    static_assert(!std::is_move_constructible_v<DispatcherT>,
+                  "DynamicDispatcher is not move constructible.");
+    static_assert(!std::is_copy_constructible_v<DispatcherT>,
+                  "DynamicDispatcher is not copy constructible.");
+}
+
 TEMPLATE_TEST_CASE("Print registered kernels", "[DynamicDispatcher]", float,
                    double) {
     using Pennylane::Util::operator<<;

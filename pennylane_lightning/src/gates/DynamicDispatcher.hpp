@@ -39,14 +39,6 @@
 
 /// @cond DEV
 namespace Pennylane::Internal {
-/**
- * @brief Register all implemented gates for all available kernels.
- *
- * @tparam PrecisionT Floating point precision of underlying statevector data.
- * @tparam ParamT Floating point type for parameters
- */
-template <class PrecisionT, class ParamT> int registerAllAvailableKernels();
-
 constexpr auto generatorNamesWithoutPrefix() {
     constexpr std::string_view prefix = "Generator";
     namespace GateConstant = Gates::Constant;
@@ -65,23 +57,6 @@ constexpr auto generatorNamesWithoutPrefix() {
 /// @endcond
 
 namespace Pennylane {
-/**
- * @brief These functions are only used to register kernels to the dynamic
- * dispatcher.
- */
-template <class PrecisionT, class ParamT> struct RegisterBeforeMain;
-
-/// @cond DEV
-template <> struct RegisterBeforeMain<float, float> {
-    const static inline int dummy =
-        Internal::registerAllAvailableKernels<float, float>();
-};
-
-template <> struct RegisterBeforeMain<double, double> {
-    const static inline int dummy =
-        Internal::registerAllAvailableKernels<double, double>();
-};
-/// @endcond
 
 /**
  * @brief DynamicDispatcher class
@@ -132,6 +107,12 @@ template <typename PrecisionT> class DynamicDispatcher {
     }
 
   public:
+    DynamicDispatcher(const DynamicDispatcher &) = delete;
+    DynamicDispatcher(DynamicDispatcher &&) = delete;
+    DynamicDispatcher &operator=(const DynamicDispatcher &) = delete;
+    DynamicDispatcher &operator=(DynamicDispatcher &&) = delete;
+    ~DynamicDispatcher() = default;
+
     /**
      * @brief Get the singleton instance
      */
@@ -151,6 +132,13 @@ template <typename PrecisionT> class DynamicDispatcher {
             kernels.emplace_back(kernel);
         }
         return kernels;
+    }
+
+    /**
+     * @brief Check whether the kernel is registered to a dispatcher
+     */
+    [[nodiscard]] auto isRegisteredKernel(Gates::KernelType kernel) const {
+        return kernel_names_.contains(kernel);
     }
 
     /**
@@ -525,3 +513,22 @@ template <typename PrecisionT> class DynamicDispatcher {
     }
 };
 } // namespace Pennylane
+
+/// @cond DEV
+namespace Pennylane::Internal {
+int registerAllAvailableKernels_Float();
+int registerAllAvailableKernels_Double();
+
+/**
+ * @brief These functions are only used to register kernels to the dynamic
+ * dispatcher.
+ */
+struct RegisterBeforeMain_Float {
+    const static inline int dummy = registerAllAvailableKernels_Float();
+};
+
+struct RegisterBeforeMain_Double {
+    const static inline int dummy = registerAllAvailableKernels_Double();
+};
+} // namespace Pennylane::Internal
+/// @endcond

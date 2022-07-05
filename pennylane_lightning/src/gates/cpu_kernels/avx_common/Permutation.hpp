@@ -223,8 +223,8 @@ constexpr __m512i getPermutation16x512i(const std::array<uint8_t, 16>& permutati
 // clang-format on
 
 template <typename PrecisionT, size_t packed_size>
-constexpr auto
-compilePermutation(const std::array<uint8_t, packed_size> &permutation)
+constexpr auto compilePermutation(
+    [[maybe_unused]] const std::array<uint8_t, packed_size> &permutation)
     -> CompiledPermutation<PrecisionT, packed_size> {
     // Raise a compile error when instantiated
     static_assert(sizeof(PrecisionT) == -1,

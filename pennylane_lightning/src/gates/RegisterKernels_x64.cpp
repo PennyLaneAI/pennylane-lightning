@@ -25,35 +25,31 @@
 
 namespace Pennylane::Internal {
 
-template <class PrecisionT, class ParamT> int registerAllAvailableKernels() {
+int registerAllAvailableKernels_Float() {
     using Pennylane::Util::RuntimeInfo;
-    if constexpr (std::is_same_v<PrecisionT, float> &&
-                  std::is_same_v<ParamT, float>) {
-        registerKernel<float, float, Gates::GateImplementationsLM>();
-        registerKernel<float, float, Gates::GateImplementationsPI>();
+    registerKernel<float, float, Gates::GateImplementationsLM>();
+    registerKernel<float, float, Gates::GateImplementationsPI>();
 
-        if (RuntimeInfo::AVX2()) {
-            registerKernelsAVX2_Float();
-        }
-        if (RuntimeInfo::AVX512F()) {
-            registerKernelsAVX512_Float();
-        }
-        return 1;
+    if (RuntimeInfo::AVX2()) {
+        registerKernelsAVX2_Float();
     }
-    if constexpr (std::is_same_v<PrecisionT, double> &&
-                  std::is_same_v<ParamT, double>) {
-        registerKernel<double, double, Gates::GateImplementationsLM>();
-        registerKernel<double, double, Gates::GateImplementationsPI>();
-
-        if (RuntimeInfo::AVX2()) {
-            registerKernelsAVX2_Double();
-        }
-        if (RuntimeInfo::AVX512F()) {
-            registerKernelsAVX512_Double();
-        }
-        return 1;
+    if (RuntimeInfo::AVX512F()) {
+        registerKernelsAVX512_Float();
     }
-    return 0;
+    return 1;
 }
 
+int registerAllAvailableKernels_Double() {
+    using Pennylane::Util::RuntimeInfo;
+    registerKernel<double, double, Gates::GateImplementationsLM>();
+    registerKernel<double, double, Gates::GateImplementationsPI>();
+
+    if (RuntimeInfo::AVX2()) {
+        registerKernelsAVX2_Double();
+    }
+    if (RuntimeInfo::AVX512F()) {
+        registerKernelsAVX512_Double();
+    }
+    return 1;
+}
 } // namespace Pennylane::Internal

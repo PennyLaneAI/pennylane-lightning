@@ -19,17 +19,18 @@
 #include "RegisterKernel.hpp"
 #include "cpu_kernels/GateImplementationsLM.hpp"
 #include "cpu_kernels/GateImplementationsPI.hpp"
+#include "cpu_kernels/QChemGateImplementations.hpp"
 
 namespace Pennylane::Internal {
-template <class PrecisionT, class ParamT> int registerAllAvailableKernels() {
-    using namespace Pennylane::Gates;
-    registerKernel<PrecisionT, ParamT, GateImplementationsLM>();
-    registerKernel<PrecisionT, ParamT, GateImplementationsPI>();
+int registerAllAvailableKernels_Float() {
+    registerKernel<float, float, GateImplementationsLM>();
+    registerKernel<float, float, GateImplementationsPI>();
     return 1;
 }
 
-// explicit instantiations
-template int registerAllAvailableKernels<float, float>();
-template int registerAllAvailableKernels<double, double>();
-
+int registerAllAvailableKernels_Double() {
+    registerKernel<double, double, GateImplementationsLM>();
+    registerKernel<double, double, GateImplementationsPI>();
+    return 1;
+}
 } // namespace Pennylane::Internal

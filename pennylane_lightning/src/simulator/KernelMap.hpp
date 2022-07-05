@@ -16,6 +16,7 @@
  * Define kernel map for statevector
  */
 #pragma once
+#include "DynamicDispatcher.hpp"
 #include "Error.hpp"
 #include "GateOperation.hpp"
 #include "IntegerInterval.hpp"
@@ -213,6 +214,9 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
                            CPUMemoryModel memory_model, uint32_t priority,
                            const Util::IntegerInterval<size_t> &interval,
                            Gates::KernelType kernel) {
+        const auto &dispatcher = DynamicDispatcher<double>::getInstance();
+        PL_ABORT_IF(!dispatcher.isRegisteredKernel(kernel),
+                    "The given kernel is not registered.");
         if (std::find(allowed_kernels_.at(memory_model).cbegin(),
                       allowed_kernels_.at(memory_model).cend(),
                       kernel) == allowed_kernels_.at(memory_model).cend()) {

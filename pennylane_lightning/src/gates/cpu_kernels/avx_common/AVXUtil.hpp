@@ -25,12 +25,9 @@
 #include <cstdlib>
 
 namespace Pennylane::Gates::AVX {
-// function aliases
-[[maybe_unused]] constexpr static auto &fillLeadingOnes =
-    Pennylane::Util::fillLeadingOnes<size_t>;
-[[maybe_unused]] constexpr static auto &fillTrailingOnes =
-    Pennylane::Util::fillTrailingOnes<size_t>;
-[[maybe_unused]] constexpr static auto &exp2 = Pennylane::Util::exp2;
+using Pennylane::Util::exp2;
+using Pennylane::Util::fillLeadingOnes;
+using Pennylane::Util::fillTrailingOnes;
 
 template <typename PrecisionT, size_t packed_size> struct AVXIntrinsic {
     static_assert((sizeof(PrecisionT) * packed_size == 32) ||
