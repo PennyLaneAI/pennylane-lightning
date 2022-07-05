@@ -115,6 +115,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GeneratorOperation::CRY,
         GeneratorOperation::CRZ,
         GeneratorOperation::IsingXX,
+        GeneratorOperation::IsingXY,
         GeneratorOperation::IsingYY,
         GeneratorOperation::IsingZZ,
         GeneratorOperation::ControlledPhaseShift,
@@ -1113,6 +1114,34 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
     template <class PrecisionT>
     [[nodiscard]] static auto
+    applyGeneratorIsingXY(std::complex<PrecisionT> *arr, size_t num_qubits,
+                          const std::vector<size_t> &wires,
+                          [[maybe_unused]] bool adj) -> PrecisionT {
+        PL_ASSERT(wires.size() == 2);
+        const size_t rev_wire0 = num_qubits - wires[1] - 1;
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
+        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
+        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+        const auto [parity_high, parity_middle, parity_low] =
+            revWireParity(rev_wire0, rev_wire1);
+
+        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
+            const size_t i00 = ((k << 2U) & parity_high) |
+                               ((k << 1U) & parity_middle) | (k & parity_low);
+            const size_t i01 = i00 | rev_wire0_shift;
+            const size_t i10 = i00 | rev_wire1_shift;
+            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
+
+            std::swap(arr[i10], arr[i01]);
+            arr[i00] = std::complex<PrecisionT>{0.0, 0.0};
+            arr[i11] = std::complex<PrecisionT>{0.0, 0.0};
+        }
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return static_cast<PrecisionT>(0.5);
+    }
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto
     applyGeneratorIsingYY(std::complex<PrecisionT> *arr, size_t num_qubits,
                           const std::vector<size_t> &wires,
                           [[maybe_unused]] bool adj) -> PrecisionT {
@@ -1320,10 +1349,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         for (size_t k = 0; k < Util::exp2(num_qubits); k++) {
             arr[k] *= static_cast<PrecisionT>(
-                2 * int(std::popcount(k & wires_parity) % 2) - 1);
+                1 - 2 * int(std::popcount(k & wires_parity) % 2));
         }
         // NOLINTNEXTLINE(readability-magic-numbers)
-        return static_cast<PrecisionT>(0.5);
+        return -static_cast<PrecisionT>(0.5);
     }
 };
 } // namespace Pennylane::Gates

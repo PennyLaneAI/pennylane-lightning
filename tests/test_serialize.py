@@ -14,9 +14,7 @@
 """
 Unit tests for the serialization helper functions
 """
-from asyncio import set_child_watcher
 import pennylane as qml
-from pennylane import numpy as qnp
 import numpy as np
 import pennylane_lightning
 
