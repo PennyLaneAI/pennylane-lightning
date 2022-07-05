@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "KernelMap.hpp"
-
+#include "AssignKernelMap_Default.hpp"
 #include "GateOperation.hpp"
+#include "KernelMap.hpp"
 #include "KernelType.hpp"
 
 using namespace Pennylane;
@@ -31,7 +31,6 @@ using Util::less_than;
 using Util::less_than_equal_to;
 
 namespace Pennylane::KernelMap::Internal {
-
 constexpr static auto all_qubit_numbers = Util::full_domain<size_t>();
 
 int assignKernelsForGateOp_Default() {
