@@ -1,9 +1,9 @@
 name: Wheel::Windows::x86_64
 on:
+  pull_request:
   push:
     branches:
       - master
-  pull_request:
   release:
     types: [published]
 

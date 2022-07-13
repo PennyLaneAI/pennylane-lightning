@@ -1,5 +1,6 @@
 name: Wheel::Linux::PowerPC
 on:
+  pull_request: # for tests
   push:
     branches:
       - master
