@@ -1,34 +1,14 @@
 name: Wheel::MacOS::ARM
 on:
-  pull_request:
   push:
     branches:
       - master
+  pull_request:
   release:
     types: [published]
 
 env:
-  CIBW_BUILD: 'cp37-* cp38-* cp39-* cp310-*'
-
   ARCHS: 'arm64'
-
-  # MacOS specific build settings
-  CIBW_BEFORE_ALL_MACOS: |
-    brew uninstall --force oclint
-
-  # Python build settings
-  CIBW_BEFORE_BUILD: |
-    pip install pybind11 ninja cmake
-
-  # Testing of built wheels
-  CIBW_TEST_REQUIRES: numpy~=1.21 scipy pytest pytest-cov pytest-mock flaky
-
-  CIBW_BEFORE_TEST: pip install git+https://github.com/PennyLaneAI/pennylane.git@master
-
-  CIBW_TEST_COMMAND: |
-    pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
-
-  CIBW_BUILD_VERBOSITY: 1
 
 jobs:
   mac-wheels-arm64:
@@ -37,7 +17,8 @@ jobs:
       matrix:
         os: [macos-11]
         arch: [arm64]
-    name: macos-latest::arm64
+        cibw_build: [cp38-*, cp39-*, cp310-*]
+    name: ${{ matrix.cibw_build }}-macos-latest::arm64
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -57,13 +38,34 @@ jobs:
         run: python -m pip install cibuildwheel==2.3.0
 
       - name: Build wheels
-        run: |
-          python -m cibuildwheel --output-dir wheelhouse
         env:
+          CIBW_BUILD: ${{ matrix.cibw_build }}
+
+          # MacOS specific build settings
+          CIBW_BEFORE_ALL_MACOS: |
+            brew uninstall --force oclint
+
+          # Python build settings
+          CIBW_BEFORE_BUILD: |
+            pip install pybind11 ninja cmake
+
+          # Testing of built wheels
+          CIBW_TEST_REQUIRES: numpy~=1.21 scipy pytest pytest-cov pytest-mock flaky
+
+          CIBW_BEFORE_TEST: pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+
+          CIBW_TEST_COMMAND: |
+            pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+
+          CIBW_BUILD_VERBOSITY: 1
+
           CIBW_ARCHS_MACOS: ${{ matrix.arch }}
 
+        run: |
+          python -m cibuildwheel --output-dir wheelhouse
+
       - uses: actions/upload-artifact@v2
-        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
+        # if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl

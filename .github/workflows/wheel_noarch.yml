@@ -1,9 +1,9 @@
 name: Wheel::Any::None
 on:
-  pull_request:
   push:
     branches:
       - master
+  pull_request:
   release:
     types: [published]
 

@@ -7,25 +7,6 @@ on:
   release:
     types: [published]
 
-env:
-  CIBW_BUILD: 'cp37-* cp38-* cp39-* cp310-*'
-  CIBW_SKIP: "*-musllinux*"
-
-  # Python build settings
-  CIBW_BEFORE_BUILD: |
-    pip install pybind11 ninja cmake && yum install -y gcc gcc-c++
-
-  # Testing of built wheels
-  CIBW_TEST_REQUIRES: numpy~=1.21 scipy pytest pytest-cov pytest-mock flaky
-
-  CIBW_BEFORE_TEST: |
-    pip install git+https://github.com/PennyLaneAI/pennylane.git@master
-
-  CIBW_TEST_COMMAND: |
-    pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
-
-  CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-
 jobs:
   linux-wheels-x86-64:
     strategy:
@@ -33,7 +14,8 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         arch: [x86_64]
-    name: ${{ matrix.os }}
+        cibw_build: [cp37-*, cp38-*, cp39-*, cp310-*]
+    name: ${{ matrix.cibw_build }}-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -53,9 +35,27 @@ jobs:
         run: python -m pip install cibuildwheel==2.3.0
 
       - name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
         env:
+          CIBW_BUILD: ${{ matrix.cibw_build }}
+          CIBW_SKIP: "*-musllinux*"
+
+          # Python build settings
+          CIBW_BEFORE_BUILD: |
+            pip install pybind11 ninja cmake && yum install -y gcc gcc-c++
+
+          # Testing of built wheels
+          CIBW_TEST_REQUIRES: numpy~=1.21 scipy pytest pytest-cov pytest-mock flaky
+
+          CIBW_BEFORE_TEST: |
+            pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+
+          CIBW_TEST_COMMAND: |
+            pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
           CIBW_ARCHS_LINUX: ${{matrix.arch}}
+
+        run: python -m cibuildwheel --output-dir wheelhouse
 
       - uses: actions-ecosystem/action-regex-match@v2
         id: rc_build

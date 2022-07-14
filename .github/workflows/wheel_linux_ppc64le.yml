@@ -7,22 +7,6 @@ on:
   release:
     types: [published]
 
-env:
-  CIBW_BUILD: 'cp37-* cp38-* cp39-* cp310-*'
-  CIBW_SKIP: "*-musllinux*"
-
-  # Python build settings
-  CIBW_BEFORE_BUILD: |
-    pip install pybind11 ninja cmake && yum install -y gcc gcc-c++
-
-  # Skip PPC tests due to lack of numpy/scipy wheel support
-  CIBW_TEST_SKIP: "*-manylinux_{ppc64le}"
-
-  CIBW_BEFORE_TEST: pip install git+https://github.com/PennyLaneAI/pennylane.git@master
-
-  # Use CentOS 7 image for PPC
-  CIBW_MANYLINUX_PPC64LE_IMAGE: manylinux2014
-
 jobs:
   linux-wheels-ppc64le:
     strategy:
@@ -30,7 +14,8 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         arch: [ppc64le]
-    name: ubuntu-latest::ppc64le
+        cibw_build: [cp37-*, cp38-*, cp39-*, cp310-*]
+    name: ${{ matrix.cibw_build }}-ubuntu-latest::ppc64le
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -55,10 +40,25 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
+          CIBW_BUILD: ${{ matrix.cibw_build }}
+          CIBW_SKIP: "*-musllinux*"
+
+          # Python build settings
+          CIBW_BEFORE_BUILD: |
+            pip install pybind11 ninja cmake && yum install -y gcc gcc-c++
+
+          # Skip PPC tests due to lack of numpy/scipy wheel support
+          CIBW_TEST_SKIP: "*-manylinux_{ppc64le}"
+
+          CIBW_BEFORE_TEST: pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+
+          # Use CentOS 7 image for PPC
+          CIBW_MANYLINUX_PPC64LE_IMAGE: manylinux2014
+          
           CIBW_ARCHS_LINUX: ${{matrix.arch}}
 
       - uses: actions/upload-artifact@v2
-        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
+        # if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
