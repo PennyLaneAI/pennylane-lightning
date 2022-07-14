@@ -15,7 +15,8 @@ jobs:
         os: [ubuntu-latest]
         arch: [ppc64le]
         cibw_build: [cp37-*, cp38-*, cp39-*, cp310-*]
-    name: ${{ matrix.cibw_build }}-ubuntu-latest::ppc64le
+
+    name: ubuntu-latest::ppc64le (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -54,7 +55,7 @@ jobs:
 
           # Use CentOS 7 image for PPC
           CIBW_MANYLINUX_PPC64LE_IMAGE: manylinux2014
-          
+
           CIBW_ARCHS_LINUX: ${{matrix.arch}}
 
       - uses: actions/upload-artifact@v2
