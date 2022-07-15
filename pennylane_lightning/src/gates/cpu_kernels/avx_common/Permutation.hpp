@@ -33,37 +33,8 @@
 #endif
 
 namespace Pennylane::Gates::AVX::Permutation {
-
-/// @cond DEV
-namespace Internal {
-/**
- * @brief Custom bubble sort. Let's use this until we have constexpr
- * std::sort in C++20.
- */
-template <typename iterator>
-constexpr void bubble_sort(iterator begin, iterator end) {
-    bool swapped = false;
-    auto n = std::distance(begin, end);
-    do {
-        swapped = false;
-        for (typename std::iterator_traits<iterator>::difference_type idx = 0;
-             idx < n - 1; idx++) {
-            if (*(begin + idx) > *(begin + idx + 1)) {
-                const auto tmp = *(begin + idx + 1);
-                *(begin + idx + 1) = *(begin + idx);
-                *(begin + idx) = tmp;
-                swapped = true;
-            }
-        }
-    } while (swapped);
-}
-} // namespace Internal
-/// @endcond
-
 /**
  * @brief Maintain permutation related data in a compile time.
- *
- * TODO: This must be cleaned in C++20.
  */
 template <typename PrecisionT, size_t packed_size> struct CompiledPermutation {
     // Cannot use unspecialized version
@@ -398,5 +369,4 @@ PL_FORCE_INLINE __m512d maskPermute(const __m512d &src, const __m512d &a) {
         return _mm512_mask_permutexvar_pd(src, k, perm.permute512_, a);
     }
 }
-
 } // namespace Pennylane::Gates::AVX::Permutation

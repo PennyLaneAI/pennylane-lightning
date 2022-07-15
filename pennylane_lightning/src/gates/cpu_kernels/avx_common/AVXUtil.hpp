@@ -42,7 +42,7 @@ template <class PrecisionT, size_t packed_size>
 using AVXConceptType = typename AVXConcept<PrecisionT, packed_size>::Type;
 
 template <typename PrecisionT, size_t packed_size, typename Func>
-auto toParity(Func &&func) -> decltype(auto) {
+auto toParity(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
     std::array<PrecisionT, packed_size> data = {};
     for (size_t idx = 0; idx < packed_size / 2; idx++) {
         data[2 * idx + 0] = static_cast<PrecisionT>(1.0) -
@@ -53,7 +53,7 @@ auto toParity(Func &&func) -> decltype(auto) {
     return AVXConceptType<PrecisionT, packed_size>::loadu(data.data());
 }
 template <typename PrecisionT, size_t packed_size, typename Func>
-auto setValueOneTwo(Func &&func) -> decltype(auto) {
+auto setValueOneTwo(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
     std::array<PrecisionT, packed_size> data = {
         0,
     };

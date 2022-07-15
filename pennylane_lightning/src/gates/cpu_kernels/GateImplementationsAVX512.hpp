@@ -18,6 +18,7 @@
 #pragma once
 #include "avx_common/AVX512Concept.hpp"
 
+#include "avx_common/ApplyCNOT.hpp"
 #include "avx_common/ApplyCZ.hpp"
 #include "avx_common/ApplyHadamard.hpp"
 #include "avx_common/ApplyIsingXX.hpp"
@@ -34,6 +35,7 @@
 #include "avx_common/ApplySWAP.hpp"
 #include "avx_common/ApplySingleQubitOp.hpp"
 #include "avx_common/ApplyT.hpp"
+#include "avx_common/TwoQubitGateHelper.hpp"
 
 #include "BitUtil.hpp"
 #include "Error.hpp"
@@ -67,6 +69,7 @@ class GateImplementationsAVX512
         GateOperation::T,       GateOperation::PhaseShift,
         GateOperation::RX,      GateOperation::RY,
         GateOperation::RZ,      GateOperation::Rot,
+        GateOperation::CNOT,
         GateOperation::CZ,      GateOperation::IsingXX,
         GateOperation::IsingYY, GateOperation::IsingZZ,
         /* CRX, CRY, CRZ, CRot */
@@ -701,49 +704,43 @@ class GateImplementationsAVX512
 
     /* Two-qubit gates*/
     template <class PrecisionT>
-    static void applyCZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                        const std::vector<size_t> &wires,
-                        [[maybe_unused]] bool inverse) {
-        using ApplyCZAVX512 =
-            AVX::ApplyCZ<PrecisionT, packed_bytes / sizeof(PrecisionT)>;
+    static void
+    applyCNOT(std::complex<PrecisionT> *arr, const size_t num_qubits,
+              const std::vector<size_t> &wires, [[maybe_unused]] bool inverse) {
         assert(wires.size() == 2);
 
+        constexpr size_t packed_size = packed_bytes / sizeof(PrecisionT);
         if constexpr (std::is_same_v<PrecisionT, float>) {
             if (num_qubits < 3) {
-                GateImplementationsLM::applyCZ(arr, num_qubits, wires, inverse);
-                return;
+                GateImplementationsLM::applyCNOT(arr, num_qubits, wires, inverse);
             }
-            const size_t rev_wire0 = num_qubits - wires[1] - 1;
-            const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-            if (rev_wire0 < 3 && rev_wire1 < 3) {
-                ApplyCZAVX512::applyInternalInternal(arr, num_qubits, rev_wire0,
-                                                     rev_wire1);
-            } else if (std::min(rev_wire0, rev_wire1) < 3) {
-                ApplyCZAVX512::applyInternalExternal(arr, num_qubits, rev_wire0,
-                                                     rev_wire1);
-            } else {
-                ApplyCZAVX512::applyExternalExternal(arr, num_qubits, rev_wire0,
-                                                     rev_wire1);
-            }
+            AVX::applyCNOT<PrecisionT, packed_size>(arr, num_qubits, wires);
         } else if (std::is_same_v<PrecisionT, double>) {
-            const size_t rev_wire0 = num_qubits - wires[1] - 1;
-            const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-
-            if (rev_wire0 < 2 && rev_wire1 < 2) {
-                ApplyCZAVX512::applyInternalInternal(arr, num_qubits, rev_wire0,
-                                                     rev_wire1);
-            } else if (std::min(rev_wire0, rev_wire1) < 2) {
-                ApplyCZAVX512::applyInternalExternal(arr, num_qubits, rev_wire0,
-                                                     rev_wire1);
-            } else {
-                ApplyCZAVX512::applyExternalExternal(arr, num_qubits, rev_wire0,
-                                                     rev_wire1);
-            }
+            AVX::applyCNOT<PrecisionT, packed_size>(arr, num_qubits, wires);
         } else {
             static_assert(std::is_same_v<PrecisionT, float> ||
                               std::is_same_v<PrecisionT, double>,
                           "Only float and double are supported.");
         }
+    }
+
+    template <class PrecisionT>
+    static void applyCZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                        const std::vector<size_t> &wires,
+                        [[maybe_unused]] bool inverse) {
+        using ApplyCZAVX512 =
+            AVX::ApplyCZ<PrecisionT, packed_bytes / sizeof(PrecisionT)>;
+
+        static_assert(std::is_same_v<PrecisionT, float> ||
+                          std::is_same_v<PrecisionT, double>,
+                      "Only float and double are supported.");
+
+        assert(wires.size() == 2);
+
+        const AVX::TwoQubitGateHelper<ApplyCZAVX512>
+            gate_helper(&GateImplementationsLM::applyCZ<PrecisionT>);
+
+        gate_helper(arr, num_qubits, wires, inverse);
     }
 
     template <class PrecisionT>
