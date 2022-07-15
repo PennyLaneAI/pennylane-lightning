@@ -66,8 +66,8 @@ class GateImplementationsAVX2 : public PauliGenerator<GateImplementationsAVX2> {
         GateOperation::S,          GateOperation::T,
         GateOperation::PhaseShift, GateOperation::RX,
         GateOperation::RY,         GateOperation::RZ,
-        GateOperation::Rot,        GateOperation::CZ,
-        GateOperation::CNOT,       GateOperation::SWAP,
+        GateOperation::Rot,        GateOperation::CNOT,
+        GateOperation::CZ,         GateOperation::SWAP,
         GateOperation::IsingXX,    GateOperation::IsingYY,
         GateOperation::IsingZZ,
         /* CY, IsingXY, ControlledPhaseShift, CRX, CRY, CRZ, CRot */
