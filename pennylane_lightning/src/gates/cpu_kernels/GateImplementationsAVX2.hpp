@@ -591,8 +591,8 @@ class GateImplementationsAVX2 : public PauliGenerator<GateImplementationsAVX2> {
                       "Only float and double are supported.");
         assert(wires.size() == 2);
 
-        const AVX::TwoQubitGateHelper<ApplyCZAVX2>
-            gate_helper(&GateImplementationsLM::applyCZ<PrecisionT>);
+        const AVX::TwoQubitGateHelper<ApplyCZAVX2> gate_helper(
+            &GateImplementationsLM::applyCZ<PrecisionT>);
 
         gate_helper(arr, num_qubits, wires, inverse);
     }

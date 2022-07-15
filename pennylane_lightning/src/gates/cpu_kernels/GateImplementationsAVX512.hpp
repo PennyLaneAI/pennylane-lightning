@@ -69,9 +69,9 @@ class GateImplementationsAVX512
         GateOperation::T,       GateOperation::PhaseShift,
         GateOperation::RX,      GateOperation::RY,
         GateOperation::RZ,      GateOperation::Rot,
-        GateOperation::CNOT,
-        GateOperation::CZ,      GateOperation::IsingXX,
-        GateOperation::IsingYY, GateOperation::IsingZZ,
+        GateOperation::CNOT,    GateOperation::CZ,
+        GateOperation::IsingXX, GateOperation::IsingYY,
+        GateOperation::IsingZZ,
         /* CRX, CRY, CRZ, CRot */
     };
 
@@ -712,7 +712,8 @@ class GateImplementationsAVX512
         constexpr size_t packed_size = packed_bytes / sizeof(PrecisionT);
         if constexpr (std::is_same_v<PrecisionT, float>) {
             if (num_qubits < 3) {
-                GateImplementationsLM::applyCNOT(arr, num_qubits, wires, inverse);
+                GateImplementationsLM::applyCNOT(arr, num_qubits, wires,
+                                                 inverse);
             }
             AVX::applyCNOT<PrecisionT, packed_size>(arr, num_qubits, wires);
         } else if (std::is_same_v<PrecisionT, double>) {
@@ -737,8 +738,8 @@ class GateImplementationsAVX512
 
         assert(wires.size() == 2);
 
-        const AVX::TwoQubitGateHelper<ApplyCZAVX512>
-            gate_helper(&GateImplementationsLM::applyCZ<PrecisionT>);
+        const AVX::TwoQubitGateHelper<ApplyCZAVX512> gate_helper(
+            &GateImplementationsLM::applyCZ<PrecisionT>);
 
         gate_helper(arr, num_qubits, wires, inverse);
     }

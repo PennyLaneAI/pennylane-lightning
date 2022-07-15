@@ -28,14 +28,15 @@ namespace Pennylane::Gates::AVX {
 template <typename PrecisionT, size_t packed_size> struct ApplyCZ {
     using Precision = PrecisionT;
     using PrecisionAVXConcept = AVXConceptType<PrecisionT, packed_size>;
-    using InternalInternalFuncT = void (*)(std::complex<PrecisionT>*, size_t);
+    using InternalInternalFuncT = void (*)(std::complex<PrecisionT> *, size_t);
 
     constexpr static size_t packed_size_ = packed_size;
     constexpr static bool symmetric = true;
 
-    template<size_t rev_wire0, size_t rev_wire1>
+    template <size_t rev_wire0, size_t rev_wire1>
     static void applyInternalInternal(std::complex<PrecisionT> *arr,
-                                      size_t num_qubits, [[maybe_unused]] bool inverse) {
+                                      size_t num_qubits,
+                                      [[maybe_unused]] bool inverse) {
         const auto parity = toParity<PrecisionT, packed_size>([](size_t idx) {
             return ((idx >> rev_wire0) & 1U) & ((idx >> rev_wire1) & 1U);
         });
@@ -46,9 +47,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCZ {
         }
     }
 
-    template<size_t rev_wire0>
+    template <size_t rev_wire0>
     static void applyInternalExternal(std::complex<PrecisionT> *arr,
-                                      size_t num_qubits, size_t rev_wire1, [[maybe_unused]] bool inverse) {
+                                      size_t num_qubits, size_t rev_wire1,
+                                      [[maybe_unused]] bool inverse) {
         const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
         const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
 
