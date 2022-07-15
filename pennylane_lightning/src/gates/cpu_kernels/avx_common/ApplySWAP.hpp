@@ -29,8 +29,13 @@
 namespace Pennylane::Gates::AVX {
 
 template <typename PrecisionT, size_t packed_size> struct ApplySWAP {
+    using Precision = PrecisionT;
     using PrecisionAVXConcept =
         typename AVXConcept<PrecisionT, packed_size>::Type;
+
+    constexpr static size_t packed_size_ = packed_size;
+    constexpr static bool symmetric = true;
+
     template <size_t rev_wire0, size_t rev_wire1>
     constexpr static auto swapPermutation() {
         const auto identity_perm = Permutation::identity<packed_size>();
@@ -50,7 +55,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplySWAP {
 
     template <size_t rev_wire0, size_t rev_wire1>
     static void applyInternalInternal(std::complex<PrecisionT> *arr,
-                                      size_t num_qubits) {
+                                      size_t num_qubits,
+                                      [[maybe_unused]] bool inverse) {
         using namespace Permutation;
         constexpr static auto perm = swapPermutation<rev_wire0, rev_wire1>();
 
@@ -93,7 +99,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplySWAP {
 
     template <size_t min_rev_wire>
     static void applyInternalExternal(std::complex<PrecisionT> *arr,
-                                      size_t num_qubits, size_t max_rev_wire) {
+                                      size_t num_qubits, size_t max_rev_wire,
+                                      [[maybe_unused]] bool inverse) {
         using namespace Permutation;
 
         const size_t max_rev_wire_shift =
@@ -125,7 +132,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplySWAP {
     static void applyExternalExternal(std::complex<PrecisionT> *arr,
                                       const size_t num_qubits,
                                       const size_t rev_wire0,
-                                      const size_t rev_wire1) {
+                                      const size_t rev_wire1,
+                                      [[maybe_unused]] bool inverse) {
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
 

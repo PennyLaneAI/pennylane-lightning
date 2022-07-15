@@ -138,7 +138,17 @@ TEMPLATE_TEST_CASE("Test all kernels give the same results for gates",
     constexpr size_t max_num_qubits = 6;
     std::mt19937 re{1337};
     Util::for_each_enum<GateOperation>([&](GateOperation gate_op) {
-        testApplyGate<TestType>(re, gate_op, max_num_qubits);
+        const size_t min_num_qubits = [=] {
+            if (Util::array_has_elt(Gates::Constant::multi_qubit_gates,
+                                    gate_op)) {
+                return size_t{1};
+            }
+            return Util::lookup(Gates::Constant::gate_wires, gate_op);
+        }();
+        for (size_t num_qubits = min_num_qubits; num_qubits <= max_num_qubits;
+             num_qubits++) {
+            testApplyGate<TestType>(re, gate_op, num_qubits);
+        }
     });
 }
 

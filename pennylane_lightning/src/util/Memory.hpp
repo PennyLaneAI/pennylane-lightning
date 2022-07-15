@@ -34,6 +34,9 @@ namespace Pennylane::Util {
  * @return Pointer to the allocated memory
  */
 inline auto alignedAlloc(uint32_t alignment, size_t bytes) -> void * {
+    if (bytes <= alignment) {
+        bytes = alignment;
+    }
 #if defined(__clang__) && defined(__APPLE__)
     /*
      * We use `posix_memalign` for MacOS as Mac does not support

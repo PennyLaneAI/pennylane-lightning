@@ -28,8 +28,12 @@
 namespace Pennylane::Gates::AVX {
 
 template <typename PrecisionT, size_t packed_size> struct ApplyIsingXX {
+    using Precision = PrecisionT;
     using PrecisionAVXConcept =
         typename AVXConcept<PrecisionT, packed_size>::Type;
+
+    constexpr static size_t packed_size_ = packed_size;
+    constexpr static bool symmetric = true;
 
     template <size_t rev_wire0, size_t rev_wire1>
     static constexpr auto permutationInternalInternal() {

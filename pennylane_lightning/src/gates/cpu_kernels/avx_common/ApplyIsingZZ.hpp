@@ -30,15 +30,17 @@ namespace Pennylane::Gates::AVX {
 template <typename PrecisionT, size_t packed_size> struct ApplyIsingZZ {
     using PrecisionAVXConcept =
         typename AVXConcept<PrecisionT, packed_size>::Type;
+    using Precision = PrecisionT;
+
     constexpr static auto perm = Permutation::compilePermutation<PrecisionT>(
         Permutation::swapRealImag(Permutation::identity<packed_size>()));
+    constexpr static size_t packed_size_ = packed_size;
+    constexpr static bool symmetric = true;
 
-    template <class ParamT>
+    template <size_t rev_wire0, size_t rev_wire1, class ParamT>
     static void applyInternalInternal(std::complex<PrecisionT> *arr,
-                                      size_t num_qubits,
-                                      [[maybe_unused]] size_t rev_wire0,
-                                      [[maybe_unused]] size_t rev_wire1,
-                                      bool inverse, ParamT angle) {
+                                      size_t num_qubits, bool inverse,
+                                      ParamT angle) {
         // This function is allowed for AVX512 and AVX2 with float
 
         const double isin =
@@ -60,18 +62,15 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingZZ {
             PrecisionAVXConcept::store(arr + n, prod_cos + prod_sin);
         }
     }
-    template <class ParamT>
-    static void applyInternalExternal(std::complex<PrecisionT> *arr,
-                                      size_t num_qubits, size_t rev_wire0,
-                                      size_t rev_wire1, bool inverse,
-                                      ParamT angle) {
-        const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
-        const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
 
+    template <size_t min_rev_wire, class ParamT>
+    static void applyInternalExternal(std::complex<PrecisionT> *arr,
+                                      size_t num_qubits, size_t max_rev_wire,
+                                      bool inverse, ParamT angle) {
         const size_t max_rev_wire_shift =
-            (static_cast<size_t>(1U) << rev_wire_max);
-        const size_t max_wire_parity = fillTrailingOnes(rev_wire_max);
-        const size_t max_wire_parity_inv = fillLeadingOnes(rev_wire_max + 1);
+            (static_cast<size_t>(1U) << max_rev_wire);
+        const size_t max_wire_parity = fillTrailingOnes(max_rev_wire);
+        const size_t max_wire_parity_inv = fillLeadingOnes(max_rev_wire + 1);
 
         const double isin =
             inverse ? std::sin(angle / 2) : -std::sin(angle / 2);
@@ -80,7 +79,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingZZ {
         const auto imag_sin = imagFactor<PrecisionT, packed_size>(isin);
 
         const auto imag_sin_parity0 =
-            imag_sin * internalParity<PrecisionT, packed_size>(rev_wire_min);
+            imag_sin * internalParity<PrecisionT, packed_size>(min_rev_wire);
         const auto imag_sin_parity1 = imag_sin_parity0 * -1.0;
 
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {

@@ -31,8 +31,11 @@
 
 namespace Pennylane::Gates::AVX {
 template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
-    constexpr static auto packed_size_ = packed_size;
+    using Precision = PrecisionT;
     using PrecisionAVXConcept = AVXConceptType<PrecisionT, packed_size>;
+
+    constexpr static auto packed_size_ = packed_size;
+    constexpr static bool symmetric = false;
 
     template <size_t control /* = control */, size_t target>
     static constexpr auto permutationInternalInternal() {
@@ -54,7 +57,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
 
     template <size_t control, size_t target>
     static void applyInternalInternal(std::complex<PrecisionT> *arr,
-                                      size_t num_qubits) {
+                                      size_t num_qubits,
+                                      [[maybe_unused]] bool inverse) {
         constexpr static auto perm =
             permutationInternalInternal<control, target>();
 
@@ -84,7 +88,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
      */
     template <size_t control>
     static void applyInternalExternal(std::complex<PrecisionT> *arr,
-                                      size_t num_qubits, size_t target) {
+                                      size_t num_qubits, size_t target,
+                                      [[maybe_unused]] bool inverse) {
         // control qubit is internal but target qubit is external
         // const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
         const size_t rev_wire_max = std::max(control, target);
@@ -123,7 +128,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
 
     template <size_t target>
     static void applyExternalInternal(std::complex<PrecisionT> *arr,
-                                      size_t num_qubits, size_t control) {
+                                      size_t num_qubits, size_t control,
+                                      [[maybe_unused]] bool inverse) {
         // control qubit is external but target qubit is external
         // const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
         const size_t rev_wire_max = std::max(control, target);
@@ -148,8 +154,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
 
     static void applyExternalExternal(std::complex<PrecisionT> *arr,
                                       const size_t num_qubits,
-                                      const size_t control,
-                                      const size_t target) {
+                                      const size_t control, const size_t target,
+                                      [[maybe_unused]] bool inverse) {
         const size_t control_shift = static_cast<size_t>(1U) << control;
         const size_t target_shift = static_cast<size_t>(1U) << target;
 
@@ -175,102 +181,4 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
         }
     }
 };
-
-namespace Internal {
-template <typename PrecisionT, size_t packed_size, size_t control,
-          size_t... targets>
-constexpr auto applyCNOT_InternalInternalFunctions_IterTargets(
-    [[maybe_unused]] std::index_sequence<targets...> dummy) {
-    return Util::tuple_to_array(std::tuple{
-        &ApplyCNOT<PrecisionT, packed_size>::template applyInternalInternal<
-            control, targets>...});
-}
-
-template <typename PrecisionT, size_t packed_size, size_t... controls>
-constexpr auto applyCNOT_InternalInternalFunctions_Iter(
-    [[maybe_unused]] std::index_sequence<controls...> dummy) {
-    constexpr size_t internal_wires = Util::log2PerfectPower(packed_size / 2);
-    return Util::tuple_to_array(std::tuple{
-        applyCNOT_InternalInternalFunctions_IterTargets<PrecisionT, packed_size,
-                                                        controls>(
-            std::make_index_sequence<internal_wires>())...});
-}
-
-template <typename PrecisionT, size_t packed_size>
-constexpr auto applyCNOT_InternalInternalFunctions() -> decltype(auto) {
-    constexpr size_t internal_wires = Util::log2PerfectPower(packed_size / 2);
-    return applyCNOT_InternalInternalFunctions_Iter<PrecisionT, packed_size>(
-        std::make_index_sequence<internal_wires>());
-}
-
-template <typename PrecisionT, size_t packed_size, size_t... controls>
-constexpr auto applyCNOT_InternalExternalFunctions_Iter(
-    [[maybe_unused]] std::index_sequence<controls...> dummy) -> decltype(auto) {
-    return Util::tuple_to_array(std::tuple{
-        &ApplyCNOT<PrecisionT,
-                   packed_size>::template applyInternalExternal<controls>...});
-}
-
-template <typename PrecisionT, size_t packed_size>
-constexpr auto applyCNOT_InternalExternalFunctions() -> decltype(auto) {
-    constexpr size_t internal_wires = Util::log2PerfectPower(packed_size / 2);
-    return applyCNOT_InternalExternalFunctions_Iter<PrecisionT, packed_size>(
-        std::make_index_sequence<internal_wires>());
-}
-
-template <typename PrecisionT, size_t packed_size, size_t... targets>
-constexpr auto applyCNOT_ExternalInternalFunctions_Iter(
-    [[maybe_unused]] std::index_sequence<targets...> dummy) -> decltype(auto) {
-    return Util::tuple_to_array(std::tuple{
-        &ApplyCNOT<PrecisionT,
-                   packed_size>::template applyExternalInternal<targets>...});
-}
-
-template <typename PrecisionT, size_t packed_size>
-constexpr auto applyCNOT_ExternalInternalFunctions() -> decltype(auto) {
-    constexpr size_t internal_wires = Util::log2PerfectPower(packed_size / 2);
-    return applyCNOT_ExternalInternalFunctions_Iter<PrecisionT, packed_size>(
-        std::make_index_sequence<internal_wires>());
-}
-} // namespace Internal
-
-template <typename PrecisionT, size_t packed_size>
-void applyCNOT(std::complex<PrecisionT> *arr, const size_t num_qubits,
-               const std::vector<size_t> &wires) {
-    assert(wires.size() == 2);
-    constexpr static size_t internal_wires =
-        Util::log2PerfectPower(packed_size / 2);
-    constexpr static auto internal_internal_functions =
-        Internal::applyCNOT_InternalInternalFunctions<PrecisionT,
-                                                      packed_size>();
-
-    constexpr static auto internal_external_functions =
-        Internal::applyCNOT_InternalExternalFunctions<PrecisionT,
-                                                      packed_size>();
-
-    constexpr static auto external_internal_functions =
-        Internal::applyCNOT_ExternalInternalFunctions<PrecisionT,
-                                                      packed_size>();
-
-    const size_t target = num_qubits - wires[1] - 1;
-    const size_t control = num_qubits - wires[0] - 1;
-
-    if (target < internal_wires && control < internal_wires) {
-        (*internal_internal_functions[control][target])(arr, num_qubits);
-        return;
-    }
-
-    if (control < internal_wires) {
-        (*internal_external_functions[control])(arr, num_qubits, target);
-        return;
-    }
-
-    if (target < internal_wires) {
-        (*external_internal_functions[target])(arr, num_qubits, control);
-        return;
-    }
-
-    ApplyCNOT<PrecisionT, packed_size>::applyExternalExternal(arr, num_qubits,
-                                                              control, target);
-}
 } // namespace Pennylane::Gates::AVX
