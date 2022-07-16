@@ -71,6 +71,7 @@ auto kernelsImplementingMatrix(MatrixOperation mat_op)
 template <typename PrecisionT, class RandomEngine>
 void testApplyGate(RandomEngine &re, GateOperation gate_op, size_t num_qubits) {
     using Gates::Constant::gate_names;
+
     const auto implementing_kernels =
         kernelsImplementingGate<PrecisionT>(gate_op);
     const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
@@ -90,8 +91,14 @@ void testApplyGate(RandomEngine &re, GateOperation gate_op, size_t num_qubits) {
         const auto params = createParams<PrecisionT>(gate_op);
         const auto gate_name = lookup(gate_names, gate_op);
 
+        std::ostringstream ss;
+        ss << wires;
+        auto wires_str = ss.str();
+
         // Test with inverse = false
-        DYNAMIC_SECTION("Test gate " << gate_name << " with inverse = false") {
+        DYNAMIC_SECTION("Test gate "
+                        << gate_name
+                        << ", inverse = false, wires = " << wires_str) {
             std::vector<TestVector<std::complex<PrecisionT>>> res;
 
             // Collect results from all implementing kernels
@@ -111,7 +118,9 @@ void testApplyGate(RandomEngine &re, GateOperation gate_op, size_t num_qubits) {
         }
 
         // Test with inverse = true
-        DYNAMIC_SECTION("Test gate " << gate_name << " with inverse = true") {
+        DYNAMIC_SECTION("Test gate "
+                        << gate_name
+                        << " with inverse = true, wires = " << wires_str) {
             std::vector<TestVector<std::complex<PrecisionT>>> res;
 
             // Collect results from all implementing kernels
@@ -135,7 +144,7 @@ void testApplyGate(RandomEngine &re, GateOperation gate_op, size_t num_qubits) {
 TEMPLATE_TEST_CASE("Test all kernels give the same results for gates",
                    "[GateImplementations_CompareKernels]", float, double) {
     /* We test all gate operations up to the number of qubits we give */
-    constexpr size_t max_num_qubits = 6;
+    constexpr size_t max_num_qubits = 5;
     std::mt19937 re{1337};
     Util::for_each_enum<GateOperation>([&](GateOperation gate_op) {
         const size_t min_num_qubits = [=] {
