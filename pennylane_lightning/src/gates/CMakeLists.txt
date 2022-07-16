@@ -7,7 +7,7 @@ target_link_libraries(lightning_gates PRIVATE lightning_compile_options
                                               lightning_external_libs
                                               lightning_utils)
 
-if ((${CMAKE_SYSTEM_NAME} STREQUAL "Linux") AND (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(AMD64)|(X64)|(x64)|(x86_64)"))
+if ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") AND (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(AMD64)|(X64)|(x64)|(x86_64)"))
     message(STATUS "Compiling for x86. Enable AVX2/AVX512 kernels (runtime enabled).")
 
     add_library(lightning_gates_register_kernels_avx2 STATIC RegisterKernels_AVX2.cpp GateUtil.cpp)

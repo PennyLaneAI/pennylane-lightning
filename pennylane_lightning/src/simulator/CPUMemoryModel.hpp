@@ -83,18 +83,13 @@ inline auto bestCPUMemoryModel() -> CPUMemoryModel {
 template <class T>
 constexpr inline auto getAlignment(CPUMemoryModel memory_model) -> uint32_t {
     switch (memory_model) {
-    case CPUMemoryModel::Unaligned:
-        return alignof(T);
     case CPUMemoryModel::Aligned256:
         return 32U;
     case CPUMemoryModel::Aligned512:
         return 64U;
-    // LCOV_EXCL_START
     default:
-        break;
+        return alignof(T);
     }
-    PL_UNREACHABLE;
-    // LCOV_EXCL_STOP
 }
 
 /**
