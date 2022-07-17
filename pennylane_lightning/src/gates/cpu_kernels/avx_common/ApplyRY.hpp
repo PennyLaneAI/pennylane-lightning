@@ -28,8 +28,11 @@
 namespace Pennylane::Gates::AVX {
 
 template <typename PrecisionT, size_t packed_size> struct ApplyRY {
+    using Precision = PrecisionT;
     using PrecisionAVXConcept =
         typename AVXConcept<PrecisionT, packed_size>::Type;
+
+    constexpr static size_t packed_size_ = packed_size;
 
     template <size_t rev_wire, class ParamT>
     static void applyInternal(std::complex<PrecisionT> *arr,

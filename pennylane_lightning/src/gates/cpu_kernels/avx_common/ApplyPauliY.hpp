@@ -27,12 +27,15 @@
 
 namespace Pennylane::Gates::AVX {
 template <typename PrecisionT, size_t packed_size> struct ApplyPauliY {
-    using PrecisionAVXConcept =
-        typename AVXConcept<PrecisionT, packed_size>::Type;
+    using Precision = PrecisionT;
+    using PrecisionAVXConcept = AVXConceptType<PrecisionT, packed_size>;
+
+    constexpr static size_t packed_size_ = packed_size;
 
     template <size_t rev_wire>
     static void applyInternal(std::complex<PrecisionT> *arr,
-                              const size_t num_qubits) {
+                              const size_t num_qubits,
+                              [[maybe_unused]] bool inverse) {
         using namespace Permutation;
         const auto factor = internalParity<PrecisionT, packed_size>(rev_wire) *
                             (-imagFactor<PrecisionT, packed_size>());
@@ -47,7 +50,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyPauliY {
     }
 
     static void applyExternal(std::complex<PrecisionT> *arr,
-                              const size_t num_qubits, const size_t rev_wire) {
+                              const size_t num_qubits, const size_t rev_wire,
+                              [[maybe_unused]] bool inverse) {
         using namespace Permutation;
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
         const size_t wire_parity = fillTrailingOnes(rev_wire);

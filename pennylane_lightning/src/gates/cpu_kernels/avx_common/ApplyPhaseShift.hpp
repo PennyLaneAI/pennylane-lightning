@@ -26,10 +26,12 @@
 #include <complex>
 
 namespace Pennylane::Gates::AVX {
-
 template <typename PrecisionT, size_t packed_size> struct ApplyPhaseShift {
+    using Precision = PrecisionT;
     using PrecisionAVXConcept =
         typename AVXConcept<PrecisionT, packed_size>::Type;
+
+    constexpr static size_t packed_size_ = packed_size;
 
     static constexpr auto createPermutation(size_t rev_wire) {
         std::array<uint8_t, packed_size> perm = {

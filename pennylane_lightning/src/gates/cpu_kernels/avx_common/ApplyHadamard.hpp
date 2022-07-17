@@ -28,11 +28,15 @@
 namespace Pennylane::Gates::AVX {
 
 template <typename PrecisionT, size_t packed_size> struct ApplyHadamard {
+    using Precision = PrecisionT;
     using PrecisionAVXConcept = AVXConceptType<PrecisionT, packed_size>;
+
+    constexpr static size_t packed_size_ = packed_size;
 
     template <size_t rev_wire>
     static void applyInternal(std::complex<PrecisionT> *arr,
-                              const size_t num_qubits) {
+                              const size_t num_qubits,
+                              [[maybe_unused]] bool inverse) {
         using namespace Permutation;
         constexpr static auto isqrt2 = Pennylane::Util::INVSQRT2<PrecisionT>();
 
@@ -54,8 +58,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyHadamard {
             PrecisionAVXConcept::store(arr + k, w_diag + w_offdiag);
         }
     }
+
     static void applyExternal(std::complex<PrecisionT> *arr,
-                              const size_t num_qubits, const size_t rev_wire) {
+                              const size_t num_qubits, const size_t rev_wire,
+                              [[maybe_unused]] bool inverse) {
         constexpr auto isqrt2 = Pennylane::Util::INVSQRT2<PrecisionT>();
 
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);

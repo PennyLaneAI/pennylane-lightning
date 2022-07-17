@@ -26,10 +26,11 @@
 #include <complex>
 
 namespace Pennylane::Gates::AVX {
-
 template <typename PrecisionT, size_t packed_size> struct ApplyS {
-    using PrecisionAVXConcept =
-        typename AVXConcept<PrecisionT, packed_size>::Type;
+    using Precision = PrecisionT;
+    using PrecisionAVXConcept = AVXConceptType<PrecisionT, packed_size>;
+
+    constexpr static size_t packed_size_ = packed_size;
 
     static constexpr auto createPermutation(size_t rev_wire) {
         std::array<uint8_t, packed_size> perm = {
@@ -45,9 +46,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyS {
                 perm[2 * n + 1] = 2 * n + 0;
             }
         }
-
         return Permutation::compilePermutation<PrecisionT>(perm);
     }
+
     static auto createFactor(size_t rev_wire, bool inverse)
         -> AVXIntrinsicType<PrecisionT, packed_size> {
         std::array<PrecisionT, packed_size> data = {
