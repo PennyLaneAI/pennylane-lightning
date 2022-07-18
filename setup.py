@@ -77,7 +77,7 @@ class CMakeBuild(build_ext):
 
         # Add more platform dependent options
         if platform.system() == "Darwin":
-            llvmpath = subprocess.check_output(["brew", "--prefix", "llvm"])
+            llvmpath = subprocess.check_output(["brew", "--prefix", "llvm"]).strip()
             configure_args += [f"-DCMAKE_CXX_COMPILER={llvmpath}/bin/clang++"] # Use clang instead of appleclang
             #To support ARM64
             if os.getenv('ARCHS') == "arm64":
