@@ -85,7 +85,7 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyOperation", "[DynamicDispatcher]",
     }
 
     SECTION("Test some gate operations") {
-        std::mt19937 re{1337u};
+        std::mt19937 re{1337U};
         SECTION("PauliX") {
             const size_t num_qubits = 3;
             const auto ini = createRandomState<PrecisionT>(re, num_qubits);
@@ -102,7 +102,7 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyOperation", "[DynamicDispatcher]",
 
         SECTION("IsingXY") {
             const size_t num_qubits = 3;
-            const auto angle = 0.4312;
+            const auto angle = TestType{0.4312};
             const auto ini = createRandomState<PrecisionT>(re, num_qubits);
             auto st1 = ini;
             auto st2 = ini;
