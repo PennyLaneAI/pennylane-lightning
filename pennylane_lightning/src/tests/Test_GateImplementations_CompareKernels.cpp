@@ -186,6 +186,7 @@ void testMatrixOp(RandomEngine &re, size_t num_qubits, size_t num_wires,
         ss << dispatcher.getKernelName(kernel) << ", ";
     }
     ss << "inverse: " << inverse;
+    ss << ", num_qubits: " << num_qubits;
 
     const auto ini_st = createRandomState<PrecisionT>(re, num_qubits);
     const auto matrix = randomUnitary<PrecisionT>(re, num_qubits);

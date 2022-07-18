@@ -4,7 +4,7 @@ set(SIMULATOR_FILES StateVectorRawCPU.cpp StateVectorManagedCPU.cpp Measures.cpp
 
 add_library(lightning_simulator STATIC ${SIMULATOR_FILES})
 
-if ((${CMAKE_SYSTEM_NAME} STREQUAL "Linux") AND (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(AMD64)|(X64)|(x64)|(x86_64)"))
+if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(AMD64)|(X64)|(x64)|(x86_64)")
     add_library(lightning_simulator_assign_kernels_x64 STATIC KernelMap_X64.cpp AssignKernelMap_AVX2.cpp AssignKernelMap_AVX512.cpp AssignKernelMap_Default.cpp)
     target_link_libraries(lightning_simulator_assign_kernels_x64 PRIVATE lightning_compile_options
                                                       lightning_external_libs

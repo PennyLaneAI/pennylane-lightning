@@ -61,8 +61,7 @@ inline auto getMemoryModel(const void *ptr) -> CPUMemoryModel {
  * @return CPUMemoryModel
  */
 inline auto bestCPUMemoryModel() -> CPUMemoryModel {
-    if constexpr (Util::Constant::cpu_arch == Util::Constant::CPUArch::X86_64 &&
-                  Util::Constant::compiler == Util::Constant::Compiler::GCC) {
+    if constexpr (Util::Constant::cpu_arch == Util::Constant::CPUArch::X86_64) {
         // We enable AVX2/512 only for X86_64 arch with GCC
         if (Util::RuntimeInfo::AVX512F()) {
             // and the CPU support it as well
