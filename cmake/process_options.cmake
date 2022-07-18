@@ -151,8 +151,8 @@ else()
     message(STATUS "ENABLE_KOKKOS is OFF.")
 endif()
 
-if ((${CMAKE_SYSTEM_NAME} STREQUAL "Linux") AND (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(AMD64)|(X64)|(x64)|(x86_64)"))
-    message(STATUS "ENABLE AVX for X64 on Linux.")
+if (UNIX AND (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(AMD64)|(X64)|(x64)|(x86_64)"))
+    message(STATUS "ENABLE AVX for X64 on UNIX compatible system.")
     target_compile_options(lightning_compile_options INTERFACE -mavx)
 endif()
 
