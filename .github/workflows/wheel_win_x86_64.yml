@@ -1,4 +1,10 @@
 name: Wheel::Windows::x86_64
+
+# **What it does**: Builds python wheels for Windows (windows-latest) and store it as artifacts.
+#                   Python versions: 3.7, 3.8, 3.9, 3.10.
+# **Why we have it**: To build wheels for pennylane-lightning instalation.
+# **Who does it impact**: Wheels to be uploaded to PyPI.
+
 on:
   pull_request:
   push:

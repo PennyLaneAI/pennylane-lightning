@@ -1,4 +1,10 @@
 name: Wheel::MacOS::Intel
+
+# **What it does**: Builds python wheels for MacOS (10.15) architecture x86_64 and store it as artifacts.
+#                   Python versions: 3.7, 3.8, 3.9, 3.10.
+# **Why we have it**: To build wheels for pennylane-lightning instalation.
+# **Who does it impact**: Wheels to be uploaded to PyPI.
+
 on:
   pull_request:
   push:
