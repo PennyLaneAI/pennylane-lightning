@@ -79,7 +79,8 @@ class CMakeBuild(build_ext):
         if platform.system() == "Darwin":
             #To support ARM64
             if os.getenv('ARCHS') == "arm64":
-                configure_args += ["-DCMAKE_CXX_FLAGS='-target arm64-apple-macos11'"]
+                configure_args += ["-DCMAKE_CXX_FLAGS='-target arm64-apple-macos11'",
+                                   "-DCMAKE_SYSTEM_PROCESSOR=ARM64"]
             else:
                 configure_args += []
             # Disable OpenMP in M1 Macs
