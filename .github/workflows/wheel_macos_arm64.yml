@@ -1,9 +1,9 @@
 name: Wheel::MacOS::ARM
 on:
+  pull_request:
   push:
     branches:
       - master
-  pull_request:
   release:
     types: [published]
 
@@ -66,7 +66,7 @@ jobs:
           python -m cibuildwheel --output-dir wheelhouse
 
       - uses: actions/upload-artifact@v2
-        # if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
