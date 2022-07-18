@@ -86,13 +86,18 @@ void testApplyGate(RandomEngine &re, GateOperation gate_op, size_t num_qubits) {
 
     const auto ini = createRandomState<PrecisionT>(re, num_qubits);
 
+    const auto params = createParams<PrecisionT>(gate_op);
+    // const auto gate_name = lookup(gate_names, gate_op);
     const auto all_wires = createAllWires(num_qubits, gate_op, true);
+
     for (const auto &wires : all_wires) {
-        const auto params = createParams<PrecisionT>(gate_op);
-        const auto gate_name = lookup(gate_names, gate_op);
+        std::ostringstream ss;
+        ss << wires;
+        auto wires_str = ss.str();
+        INFO(wires_str);
 
         // Test with inverse = false
-        DYNAMIC_SECTION("Test gate " << gate_name << ", inverse = false") {
+        {
             std::vector<TestVector<std::complex<PrecisionT>>> res;
 
             // Collect results from all implementing kernels
@@ -112,7 +117,7 @@ void testApplyGate(RandomEngine &re, GateOperation gate_op, size_t num_qubits) {
         }
 
         // Test with inverse = true
-        DYNAMIC_SECTION("Test gate " << gate_name << " with inverse = true") {
+        {
             std::vector<TestVector<std::complex<PrecisionT>>> res;
 
             // Collect results from all implementing kernels

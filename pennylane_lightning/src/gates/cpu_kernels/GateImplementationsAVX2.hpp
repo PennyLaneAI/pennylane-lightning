@@ -18,30 +18,8 @@
 #pragma once
 
 // General implementations
-#include "avx_common/AVX2Concept.hpp"
-
-#include "avx_common/ApplyCNOT.hpp"
-#include "avx_common/ApplyCZ.hpp"
-#include "avx_common/ApplyHadamard.hpp"
-#include "avx_common/ApplyIsingXX.hpp"
-#include "avx_common/ApplyIsingYY.hpp"
-#include "avx_common/ApplyIsingZZ.hpp"
-#include "avx_common/ApplyPauliX.hpp"
-#include "avx_common/ApplyPauliY.hpp"
-#include "avx_common/ApplyPauliZ.hpp"
-#include "avx_common/ApplyPhaseShift.hpp"
-#include "avx_common/ApplyRX.hpp"
-#include "avx_common/ApplyRY.hpp"
-#include "avx_common/ApplyRZ.hpp"
-#include "avx_common/ApplyS.hpp"
-#include "avx_common/ApplySWAP.hpp"
-#include "avx_common/ApplySingleQubitOp.hpp"
-#include "avx_common/ApplyT.hpp"
-#include "avx_common/TwoQubitGateHelper.hpp"
-
 #include "Error.hpp"
 #include "GateImplementationsAVXCommon.hpp"
-#include "GateImplementationsLM.hpp"
 #include "GateOperation.hpp"
 #include "Gates.hpp"
 #include "KernelType.hpp"

@@ -77,6 +77,7 @@ template <typename T> struct AVX2Concept {
                           std::is_same_v<PrecisionT, double>);
         }
     }
+
     PL_FORCE_INLINE
     static auto loadu(PrecisionT *p) -> IntrinsicType {
         if constexpr (std::is_same_v<PrecisionT, float>) {

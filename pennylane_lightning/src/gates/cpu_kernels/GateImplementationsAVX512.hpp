@@ -16,7 +16,6 @@
  * Defines kernel functions with AVX512F and AVX512DQ
  */
 #pragma once
-#include "BitUtil.hpp"
 #include "Error.hpp"
 #include "GateImplementationsAVXCommon.hpp"
 #include "GateOperation.hpp"

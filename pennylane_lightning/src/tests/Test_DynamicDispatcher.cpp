@@ -67,11 +67,11 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyOperation", "[DynamicDispatcher]",
                    float, double) {
     using PrecisionT = TestType;
 
+    auto &dispatcher = DynamicDispatcher<TestType>::getInstance();
+
     SECTION("Throw an exception for a kernel not registered") {
         const size_t num_qubits = 3;
         auto st = createProductState<PrecisionT>("000");
-
-        auto &dispatcher = DynamicDispatcher<TestType>::getInstance();
 
         REQUIRE_THROWS_WITH(
             dispatcher.applyOperation(Gates::KernelType::None, st.data(),
@@ -82,6 +82,39 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyOperation", "[DynamicDispatcher]",
                                 Gates::KernelType::None, st.data(), num_qubits,
                                 GateOperation::Toffoli, {0, 1, 2}, false),
                             Catch::Contains("Cannot find"));
+    }
+
+    SECTION("Test some gate operations") {
+        std::mt19937 re{1337u};
+        SECTION("PauliX") {
+            const size_t num_qubits = 3;
+            const auto ini = createRandomState<PrecisionT>(re, num_qubits);
+            auto st1 = ini;
+            auto st2 = ini;
+
+            dispatcher.applyOperation(Gates::KernelType::LM, st1.data(),
+                                      num_qubits, "PauliX", {2}, false);
+            Gates::GateImplementationsLM::applyPauliX(st2.data(), num_qubits,
+                                                      {2}, false);
+
+            REQUIRE(st1 == st2);
+        }
+
+        SECTION("IsingXY") {
+            const size_t num_qubits = 3;
+            const auto angle = 0.4312;
+            const auto ini = createRandomState<PrecisionT>(re, num_qubits);
+            auto st1 = ini;
+            auto st2 = ini;
+
+            dispatcher.applyOperation(Gates::KernelType::LM, st1.data(),
+                                      num_qubits, "IsingXY", {0, 2}, false,
+                                      {angle});
+            Gates::GateImplementationsLM::applyIsingXY(st2.data(), num_qubits,
+                                                       {0, 2}, false, angle);
+
+            REQUIRE(st1 == st2);
+        }
     }
 }
 
