@@ -81,7 +81,7 @@ class CMakeBuild(build_ext):
             configure_args += [f"-DCMAKE_CXX_COMPILER={llvmpath}/bin/clang++"] # Use clang instead of appleclang
             #To support ARM64
             if os.getenv('ARCHS') == "arm64":
-                configure_args += ["-DCMAKE_CXX_FLAGS='-target arm64-apple-macos11'",
+                configure_args += ["-DCMAKE_CXX_COMPILER_TARGET='arm64-apple-macos11'",
                                    "-DCMAKE_SYSTEM_PROCESSOR=ARM64"]
             else:
                 configure_args += []
