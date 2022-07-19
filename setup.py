@@ -83,7 +83,7 @@ class CMakeBuild(build_ext):
                                    "-DCMAKE_SYSTEM_NAME=Darwin",
                                    "-DCMAKE_SYSTEM_PROCESSOR=ARM64"]
             else: # X64 arch
-                llvmpath = subprocess.check_output(["brew", "--prefix", "llvm@14"]).decode().strip()
+                llvmpath = subprocess.check_output(["brew", "--prefix", "llvm"]).decode().strip()
                 configure_args += [f"-DCMAKE_CXX_COMPILER={llvmpath}/bin/clang++"] # Use clang instead of appleclang
             # Disable OpenMP in M1 Macs
             if os.environ.get("USE_OMP"):
