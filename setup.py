@@ -77,14 +77,14 @@ class CMakeBuild(build_ext):
 
         # Add more platform dependent options
         if platform.system() == "Darwin":
-            llvmpath = subprocess.check_output(["brew", "--prefix", "llvm"]).decode().strip()
-            configure_args += [f"-DCMAKE_CXX_COMPILER={llvmpath}/bin/clang++"] # Use clang instead of appleclang
             #To support ARM64
             if os.getenv('ARCHS') == "arm64":
-                configure_args += ["-DCMAKE_CXX_COMPILER_TARGET='arm64-apple-macos11'",
+                configure_args += ["-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11",
+                                   "-DCMAKE_SYSTEM_NAME=Darwin",
                                    "-DCMAKE_SYSTEM_PROCESSOR=ARM64"]
-            else:
-                configure_args += []
+            else: # X64 arch
+                llvmpath = subprocess.check_output(["brew", "--prefix", "llvm"]).decode().strip()
+                configure_args += [f"-DCMAKE_CXX_COMPILER={llvmpath}/bin/clang++"] # Use clang instead of appleclang
             # Disable OpenMP in M1 Macs
             if os.environ.get("USE_OMP"):
                 configure_args += []
