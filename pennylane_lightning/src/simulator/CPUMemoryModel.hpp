@@ -61,8 +61,12 @@ inline auto getMemoryModel(const void *ptr) -> CPUMemoryModel {
  * @return CPUMemoryModel
  */
 inline auto bestCPUMemoryModel() -> CPUMemoryModel {
-    if constexpr (Util::Constant::cpu_arch == Util::Constant::CPUArch::X86_64) {
-        // We enable AVX2/512 only for X86_64 arch with GCC
+    using namespace Util::Constant;
+    constexpr static bool is_unix =
+        (operating_system == OperatingSystem::MacOS) ||
+        (operating_system == OperatingSystem::Linux);
+    if constexpr ((cpu_arch == CPUArch::X86_64) && is_unix) {
+        // We enable AVX2/512 only for X86_64 arch with UNIX compatible OSs
         if (Util::RuntimeInfo::AVX512F()) {
             // and the CPU support it as well
             return CPUMemoryModel::Aligned512;
