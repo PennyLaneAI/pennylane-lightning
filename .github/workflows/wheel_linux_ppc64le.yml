@@ -1,26 +1,16 @@
 name: Wheel::Linux::PowerPC
+
+# **What it does**: Build python wheels for Linux (ubuntu-latest) architecture PowerPC 64 and store it as artifacts.
+#                   Python versions: 3.7, 3.8, 3.9, 3.10.
+# **Why we have it**: To build wheels for pennylane-lightning installation.
+# **Who does it impact**: Wheels to be uploaded to PyPI.
+
 on:
   push:
     branches:
       - master
   release:
     types: [published]
-
-env:
-  CIBW_BUILD: 'cp37-* cp38-* cp39-* cp310-*'
-  CIBW_SKIP: "*-musllinux*"
-
-  # Python build settings
-  CIBW_BEFORE_BUILD: |
-    pip install pybind11 ninja cmake && yum install -y gcc gcc-c++
-
-  # Skip PPC tests due to lack of numpy/scipy wheel support
-  CIBW_TEST_SKIP: "*-manylinux_{ppc64le}"
-
-  CIBW_BEFORE_TEST: pip install git+https://github.com/PennyLaneAI/pennylane.git@master
-
-  # Use CentOS 7 image for PPC
-  CIBW_MANYLINUX_PPC64LE_IMAGE: manylinux2014
 
 jobs:
   linux-wheels-ppc64le:
@@ -29,7 +19,9 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         arch: [ppc64le]
-    name: ubuntu-latest::ppc64le
+        cibw_build: [cp37-*, cp38-*, cp39-*, cp310-*]
+
+    name: ubuntu-latest::ppc64le (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -54,6 +46,21 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
+          CIBW_BUILD: ${{ matrix.cibw_build }}
+          CIBW_SKIP: "*-musllinux*"
+
+          # Python build settings
+          CIBW_BEFORE_BUILD: |
+            pip install pybind11 ninja cmake && yum install -y gcc gcc-c++
+
+          # Skip PPC tests due to lack of numpy/scipy wheel support
+          CIBW_TEST_SKIP: "*-manylinux_{ppc64le}"
+
+          CIBW_BEFORE_TEST: pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+
+          # Use CentOS 7 image for PPC
+          CIBW_MANYLINUX_PPC64LE_IMAGE: manylinux2014
+
           CIBW_ARCHS_LINUX: ${{matrix.arch}}
 
       - uses: actions/upload-artifact@v2
