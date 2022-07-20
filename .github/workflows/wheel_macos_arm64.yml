@@ -2,7 +2,7 @@ name: Wheel::MacOS::ARM
 
 # **What it does**: Builds python wheels for MacOS (11) architecture ARM 64 and store it as artifacts.
 #                   Python versions: 3.8, 3.9, 3.10.
-# **Why we have it**: To build wheels for pennylane-lightning instalation.
+# **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
 on:
