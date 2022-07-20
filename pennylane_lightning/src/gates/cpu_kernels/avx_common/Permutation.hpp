@@ -26,8 +26,7 @@
 #include <cstdlib>
 #include <iostream>
 
-// Clang does not allow constexpr __m256i constructor, but it works
-// with GCC. Does we just disable this diagnostic error.
+// Clang warns constexpr __m256i constructor, but it works.
 #if defined(__clang__)
 #pragma clang diagnostic ignored "-Winvalid-constexpr"
 #endif

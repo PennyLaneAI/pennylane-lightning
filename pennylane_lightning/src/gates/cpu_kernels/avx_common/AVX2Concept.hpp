@@ -132,8 +132,10 @@ template <> struct AVXConcept<double, 4> { using Type = AVX2Concept<double>; };
 template <> constexpr auto internalParity<float, 8>(size_t rev_wire) -> __m256 {
     switch (rev_wire) {
     case 0:
+        // When Z is applied to 0th qubit
         return __m256{1.0F, 1.0F, -1.0F, -1.0F, 1.0F, 1.0F, -1.0F, -1.0F};
     case 1:
+        // When Z is applied to 1st qubit
         return __m256{1.0F, 1.0F, 1.0F, 1.0F, -1.0F, -1.0F, -1.0F, -1.0F};
     default:
         PL_UNREACHABLE;
@@ -142,15 +144,9 @@ template <> constexpr auto internalParity<float, 8>(size_t rev_wire) -> __m256 {
 }
 template <>
 constexpr auto internalParity<double, 4>(size_t rev_wire) -> __m256d {
-    switch (rev_wire) {
-    case 0:
-        return __m256d{1.0, 1.0, -1.0, -1.0};
-    case 1:
-        return __m256d{1.0, 1.0, 1.0, 1.0};
-    default:
-        PL_UNREACHABLE;
-    }
-    return _mm256_setzero_pd();
+    assert(rev_wire == 0);
+    // When Z is applied to 0th qubit
+    return __m256d{1.0, 1.0, -1.0, -1.0};
 }
 
 template <> struct ImagFactor<float, 8> {

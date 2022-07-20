@@ -134,16 +134,19 @@ template <> struct AVXConcept<double, 8> {
 
 template <>
 constexpr auto internalParity<float, 16>(size_t rev_wire) -> __m512 {
-    // AVX2 with float
+    // AVX512 with float
     // clang-format off
     switch(rev_wire) {
     case 0:
+        // When Z is applied to 0th qubit
         return __m512{1.0F, 1.0F, -1.0F, -1.0F, 1.0F, 1.0F, -1.0F, -1.0F,
                       1.0F, 1.0F, -1.0F, -1.0F, 1.0F, 1.0F, -1.0F, -1.0F};
     case 1:
+        // When Z is applied to 1st qubit
         return __m512{1.0F, 1.0F, 1.0F, 1.0F, -1.0F, -1.0F, -1.0F, -1.0F,
                       1.0F, 1.0F, 1.0F, 1.0F, -1.0F,- 1.0F, -1.0F, -1.0F};
     case 2:
+        // When Z is applied to 2nd qubit
         return __m512{ 1.0F,  1.0F,  1.0F,  1.0F,
                        1.0F,  1.0F,  1.0F,  1.0F,
                       -1.0F, -1.0F, -1.0F, -1.0F,
@@ -159,11 +162,13 @@ constexpr auto internalParity<float, 16>(size_t rev_wire) -> __m512 {
 
 template <>
 constexpr auto internalParity<double, 8>(size_t rev_wire) -> __m512d {
-    // AVX2 with float
+    // AVX512 with double
     switch (rev_wire) {
     case 0:
+        // When Z is applied to 0th qubit
         return __m512d{1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0};
     case 1:
+        // When Z is applied to 1st qubit
         return __m512d{1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0};
     default:
         PL_UNREACHABLE;
