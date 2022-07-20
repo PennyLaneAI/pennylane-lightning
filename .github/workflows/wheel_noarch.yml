@@ -1,9 +1,15 @@
 name: Wheel::Any::None
+
+# **What it does**: Builds a pure python wheel for Linux (ubuntu-latest) and store it as an artifact.
+#                   Python version: 3.7.
+# **Why we have it**: To test the wheel build in the python layer, with no compilation.
+# **Who does it impact**: Wheels to be uploaded to PyPI.
+
 on:
+  pull_request:
   push:
     branches:
       - master
-  pull_request:
   release:
     types: [published]
 
