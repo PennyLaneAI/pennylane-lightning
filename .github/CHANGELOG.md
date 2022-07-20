@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Parallelize wheel-builds where applicable.
+[(#314)](https://github.com/PennyLaneAI/pennylane-lightning/pull/314)
+
 ### Documentation
 
 ### Bug fixes
@@ -13,6 +16,8 @@
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Amintor Dusko
 
 ---
 
