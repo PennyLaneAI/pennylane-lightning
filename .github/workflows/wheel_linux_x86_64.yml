@@ -6,44 +6,133 @@ name: Wheel::Linux::x86_64
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
 on:
-  pull_request:
   push:
     branches:
       - master
+  pull_request:
   release:
     types: [published]
 
 jobs:
+  build_dependencies:
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+        exec_model: [SERIAL, OPENMP, THREADS]
+        kokkos_version: ["3.6.00"]
+        container_img: ["quay.io/pypa/manylinux2014_x86_64"]
+    name: Kokkos core & kernels (${{ matrix.exec_model }})
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container_img }}
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Cache installation directories
+        id: kokkos-cache
+        uses: actions/cache@v3
+        with:
+          path: /root/install_dir/${{ matrix.exec_model }}
+          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
+      - name: Install dependencies (Ubuntu)
+        if: ${{ (matrix.container_img == 'ubuntu:20.04') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        run: |
+          apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-10 g++-10 ninja-build git
+          echo "COMPILER=g++-10" >> $GITHUB_ENV
+      - name: Install dependencies (CentOS)
+        if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        run: |
+          yum update && yum install -y cmake ninja-build
+          echo "COMPILER=g++" >> $GITHUB_ENV
+      - name: Clone Kokkos libs
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone https://github.com/kokkos/kokkos.git
+          cd kokkos
+          git checkout ${{ matrix.kokkos_version }}
+          cd -
+          pushd . &> /dev/null
+          git clone https://github.com/kokkos/kokkos-kernels.git
+          cd kokkos-kernels
+          git checkout ${{ matrix.kokkos_version }}
+          cd -
+      - name: Build Kokkos core library
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p /root/install_dir/${{ matrix.exec_model }}
+          cd kokkos
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/root/install_dir/${{ matrix.exec_model }} \
+                          -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
+                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
+                          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                          -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
+                          -DCMAKE_CXX_STANDARD=20 \
+                          -G Ninja
+          cmake --build ./Build --verbose
+          cmake --install ./Build
+          cd -
+      - name: Build Kokkos kernels library
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p /root/install_dir/${{ matrix.exec_model }}
+          cd kokkos-kernels
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/root/install_dir/${{ matrix.exec_model }} \
+                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
+                          -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
+                          -DCMAKE_CXX_STANDARD=20 \
+                          -DKokkos_DIR=/root/install_dir/${{ matrix.exec_model }} \
+                          -G Ninja
+          cmake --build ./Build --verbose
+          cmake --install ./Build
+
   linux-wheels-x86-64:
+    needs: build_dependencies
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-20.04]
         arch: [x86_64]
         cibw_build: [cp37-*, cp38-*, cp39-*, cp310-*]
+        exec_model: [SERIAL]
+        kokkos_version: ["3.6.00"]
+        container_img: ["quay.io/pypa/manylinux2014_x86_64"]
 
     name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
-
+    container: ${{ matrix.container_img }}
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.4.1
         with:
           access_token: ${{ github.token }}
 
+      - name: Restoring cached dependencies
+        id: kokkos-cache
+        uses: actions/cache@v3
+        with:
+          path: /root/install_dir/${{ matrix.exec_model }}
+          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
       - uses: actions/checkout@v2
 
-      - uses: actions/setup-python@v2
-        name: Install Python
-        with:
-          python-version: '3.7'
+      - name: Install dependencies (CentOS)
+        if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') }}
+        run: |
+          yum update && yum install -y docker
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.3.0
+        run: python3.7 -m pip install cibuildwheel==2.8.0
 
       - name: Build wheels
         env:
+          CIBW_ARCHS_LINUX: ${{matrix.arch}}
+
           CIBW_BUILD: ${{ matrix.cibw_build }}
+
           CIBW_SKIP: "*-musllinux*"
 
           # Python build settings
@@ -60,9 +149,10 @@ jobs:
             pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-          CIBW_ARCHS_LINUX: ${{matrix.arch}}
+          
+          CIBW_BUILD_VERBOSITY: 3
 
-        run: python -m cibuildwheel --output-dir wheelhouse
+        run: python3.7 -m cibuildwheel --output-dir wheelhouse
 
       - uses: actions-ecosystem/action-regex-match@v2
         id: rc_build

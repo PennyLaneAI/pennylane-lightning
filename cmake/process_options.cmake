@@ -137,37 +137,117 @@ else()
 endif()
 
 if(ENABLE_KOKKOS)
-    # Setting the Serial device for all cases.
-    option(Kokkos_ENABLE_SERIAL  "Enable Kokkos SERIAL device" ON)
-    message(STATUS "KOKKOS SERIAL DEVICE ENABLED.")
+    find_library( KOKKOS_CORE_STATIC
+    NAMES   libkokkoscore.a
+    HINTS   /root/install_dir/SERIAL/lib64
+            /usr/lib
+            /usr/local/lib
+            /opt
+            lib
+            lib64
+            ENV KOKKOS_LIB
+            ENV LD_LIBRARY_PATH
 
-    option(Kokkos_ENABLE_COMPLEX_ALIGN "Enable complex alignment in memory" OFF)
-
-    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-    include(FetchContent)
-
-    FetchContent_Declare(kokkos
-                         GIT_REPOSITORY https://github.com/kokkos/kokkos.git
-                         GIT_TAG        3.6.00
     )
-  
-    FetchContent_MakeAvailable(kokkos)
-
-    get_target_property(kokkos_INC_DIR kokkos INTERFACE_INCLUDE_DIRECTORIES)
-    set_target_properties(kokkos PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkos_INC_DIR}")
-
-    FetchContent_Declare(kokkoskernels
-                         GIT_REPOSITORY https://github.com/kokkos/kokkos-kernels.git
-                         GIT_TAG        3.6.00
+    find_library( KOKKOS_CONTAINERS_STATIC
+    NAMES   libkokkoscontainers.a
+    HINTS   /root/install_dir/SERIAL/lib64
+            /usr/lib
+            /usr/local/lib
+            /opt
+            lib
+            lib64
+            ENV KOKKOS_LIB
+            ENV LD_LIBRARY_PATH
     )
- 
-    FetchContent_MakeAvailable(kokkoskernels)
- 
-    get_target_property(kokkoskernels_INC_DIR kokkoskernels INTERFACE_INCLUDE_DIRECTORIES)
-    set_target_properties(kokkoskernels PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkoskernels_INC_DIR}")
+    find_library( KOKKOS_KERNELS_STATIC
+    NAMES   libkokkoskernels.a
+    HINTS   /root/install_dir/SERIAL/lib64
+            /usr/lib
+            /usr/local/lib
+            /opt
+            lib
+            lib64
+            ENV KOKKOS_LIB
+            ENV LD_LIBRARY_PATH
+    )
+    find_file( KOKKOS_CORE_INC
+    NAMES   Kokkos_Core.hpp
+    HINTS   /root/install_dir/SERIAL/include
+            /usr/include
+            /usr/local/include
+            /opt
+            include
+            ENV KOKKOS_INC
+            ENV CPATH
+    )
+    find_file( KOKKOS_KERNELS_INC
+    NAMES   KokkosSparse.hpp
+    HINTS   /root/install_dir/SERIAL/include
+            /usr/include
+            /usr/local/include
+            /opt
+            include
+            ENV KOKKOS_INC
+            ENV CPATH
+    )
 
-    target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_KOKKOS=1")
-    target_link_libraries(lightning_external_libs INTERFACE Kokkos::kokkos Kokkos::kokkoskernels)
+    if(KOKKOS_CORE_STATIC AND KOKKOS_CONTAINERS_STATIC AND KOKKOS_KERNELS_STATIC AND KOKKOS_CORE_INC AND KOKKOS_KERNELS_INC)
+        message(STATUS "Found existing Kokkos build")
+        get_filename_component(kokkos_INC_DIR KOKKOS_CORE_INC DIRECTORY [CACHE])
+        get_filename_component(kokkos_LIB_DIR KOKKOS_CORE_STATIC DIRECTORY [CACHE])
+        get_filename_component(kokkos_kernels_INC_DIR KOKKOS_KERNELS_INC DIRECTORY [CACHE])
+        get_filename_component(kokkos_kernels_LIB_DIR KOKKOS_KERNELS_STATIC DIRECTORY [CACHE])
+
+        add_library(kokkoscore STATIC IMPORTED [GLOBAL])
+        add_library(kokkoscontainers STATIC IMPORTED [GLOBAL])
+        add_library(kokkoskernels STATIC IMPORTED [GLOBAL])
+
+        set_target_properties(kokkoscore PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkos_INC_DIR}")
+        set_target_properties(kokkoscontainers PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkos_INC_DIR}")
+        set_target_properties(kokkoskernels PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkos_kernels_INC_DIR}")
+
+        set_target_properties(kokkoscore PROPERTIES IMPORTED_LOCATION kokkos_LIB_DIR)
+        set_target_properties(kokkoscontainers PROPERTIES IMPORTED_LOCATION kokkos_LIB_DIR)
+        set_target_properties(kokkoskernels PROPERTIES IMPORTED_LOCATION kokkos_kernels_LIB_DIR)
+
+        target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_KOKKOS=1")
+        target_link_libraries(lightning_external_libs PRIVATE kokkoscore kokkoskernels)
+
+    else()
+        # Setting the Serial device for all cases.
+        option(Kokkos_ENABLE_SERIAL  "Enable Kokkos SERIAL device" ON)
+        message(STATUS "KOKKOS SERIAL DEVICE ENABLED.")
+
+        option(Kokkos_ENABLE_COMPLEX_ALIGN "Enable complex alignment in memory" OFF)
+
+        set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+        include(FetchContent)
+
+        FetchContent_Declare(kokkos
+                            GIT_REPOSITORY https://github.com/kokkos/kokkos.git
+                            GIT_TAG        3.6.00
+        )
+    
+        FetchContent_MakeAvailable(kokkos)
+
+        get_target_property(kokkos_INC_DIR kokkos INTERFACE_INCLUDE_DIRECTORIES)
+        set_target_properties(kokkos PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkos_INC_DIR}")
+
+        FetchContent_Declare(kokkoskernels
+                            GIT_REPOSITORY https://github.com/kokkos/kokkos-kernels.git
+                            GIT_TAG        3.6.00
+        )
+    
+        FetchContent_MakeAvailable(kokkoskernels)
+    
+        get_target_property(kokkoskernels_INC_DIR kokkoskernels INTERFACE_INCLUDE_DIRECTORIES)
+        set_target_properties(kokkoskernels PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkoskernels_INC_DIR}")
+
+        target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_KOKKOS=1")
+        target_link_libraries(lightning_external_libs INTERFACE Kokkos::kokkos Kokkos::kokkoskernels)
+    endif()
+
 else()
     message(STATUS "ENABLE_KOKKOS is OFF.")
 endif()
