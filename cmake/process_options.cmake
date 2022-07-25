@@ -220,6 +220,7 @@ if(ENABLE_KOKKOS)
 
         target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_KOKKOS=1")
         target_link_libraries(lightning_external_libs INTERFACE kokkoscore kokkoskernels)
+        message(STATUS "${kokkos_INC_DIR} ${kokkos_LIB_DIR} ${kokkos_kernels_INC_DIR} ${kokkos_kernels_LIB_DIR}")
 
     else()
         # Setting the Serial device for all cases.
