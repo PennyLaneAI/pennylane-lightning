@@ -121,7 +121,10 @@ jobs:
 
       - name: Copy cached libraries
         run: |
-          cp -rf /root/install_dir/${{ matrix.exec_model }}/* ${{ github.workspace }}/
+          ls ${{ github.workspace }}
+          ls ${{ github.workspace }}/../
+
+          cp -rf /root/install_dir/${{ matrix.exec_model }}/* ${{ github.workspace }}/../
 
       - name: Install dependencies (CentOS)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') }}
