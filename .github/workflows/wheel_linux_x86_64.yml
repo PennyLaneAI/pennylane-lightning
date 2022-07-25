@@ -36,7 +36,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /root/install_dir/${{ matrix.exec_model }}
-          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-static
 
       - name: Install dependencies (Ubuntu)
         if: ${{ (matrix.container_img == 'ubuntu:20.04') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
@@ -117,7 +117,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /root/install_dir/${{ matrix.exec_model }}
-          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-static
 
       - uses: actions/checkout@v3
 
