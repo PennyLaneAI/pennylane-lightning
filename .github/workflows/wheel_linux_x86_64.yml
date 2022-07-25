@@ -99,7 +99,7 @@ jobs:
         cibw_build: [cp37-*, cp38-*, cp39-*, cp310-*]
         exec_model: [SERIAL]
         kokkos_version: ["3.6.00"]
-        container_img: ["quay.io/pypa/manylinux2014_x86_64"]
+        #container_img: ["quay.io/pypa/manylinux2014_x86_64"]
 
     name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
@@ -115,7 +115,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /root/install_dir/${{ matrix.exec_model }}
-          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          key: quay.io/pypa/manylinux2014_x86_64-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - uses: actions/checkout@v3
 
@@ -124,7 +124,7 @@ jobs:
           ls ${{ github.workspace }}
           ls ${{ github.workspace }}/../
 
-          cp -rf /root/install_dir/${{ matrix.exec_model }}/* ${{ github.workspace }}/../
+          cp -rf /root/install_dir/${{ matrix.exec_model }}/* ${{ github.workspace }}/
 
       - name: Install dependencies (CentOS)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') }}
