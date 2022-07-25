@@ -71,6 +71,7 @@ jobs:
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                           -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
                           -DCMAKE_CXX_STANDARD=20 \
+                          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                           -G Ninja
           cmake --build ./Build --verbose
           cmake --install ./Build
@@ -85,6 +86,7 @@ jobs:
                           -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
                           -DCMAKE_CXX_STANDARD=20 \
                           -DKokkos_DIR=/root/install_dir/${{ matrix.exec_model }} \
+                          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                           -G Ninja
           cmake --build ./Build --verbose
           cmake --install ./Build
@@ -126,6 +128,8 @@ jobs:
       - name: Install dependencies (CentOS)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') }}
         run: |
+          # Reduce wait time for repos not responding
+          cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=1/g" > /etc/yum.conf
           yum update && yum install -y docker
 
       - name: Install cibuildwheel
@@ -141,6 +145,7 @@ jobs:
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
+            cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=1/g" > /etc/yum.conf
             pip install pybind11 ninja cmake && yum install -y gcc gcc-c++
 
           # Testing of built wheels
