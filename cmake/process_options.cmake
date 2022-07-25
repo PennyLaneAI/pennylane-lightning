@@ -145,9 +145,10 @@ if(ENABLE_KOKKOS)
             /opt
             lib
             lib64
+            ${CMAKE_SOURCE_DIR}/lib
+            ${CMAKE_SOURCE_DIR}/lib64
             ENV KOKKOS_LIB
             ENV LD_LIBRARY_PATH
-
     )
     find_library( KOKKOS_CONTAINERS_STATIC
     NAMES   libkokkoscontainers.a
@@ -157,6 +158,8 @@ if(ENABLE_KOKKOS)
             /opt
             lib
             lib64
+            ${CMAKE_SOURCE_DIR}/lib
+            ${CMAKE_SOURCE_DIR}/lib64
             ENV KOKKOS_LIB
             ENV LD_LIBRARY_PATH
     )
@@ -168,6 +171,8 @@ if(ENABLE_KOKKOS)
             /opt
             lib
             lib64
+            ${CMAKE_SOURCE_DIR}/lib
+            ${CMAKE_SOURCE_DIR}/lib64
             ENV KOKKOS_LIB
             ENV LD_LIBRARY_PATH
     )
@@ -178,6 +183,7 @@ if(ENABLE_KOKKOS)
             /usr/local/include
             /opt
             include
+            ${CMAKE_SOURCE_DIR}/include
             ENV KOKKOS_INC
             ENV CPATH
     )
@@ -188,6 +194,7 @@ if(ENABLE_KOKKOS)
             /usr/local/include
             /opt
             include
+            ${CMAKE_SOURCE_DIR}/include
             ENV KOKKOS_INC
             ENV CPATH
     )

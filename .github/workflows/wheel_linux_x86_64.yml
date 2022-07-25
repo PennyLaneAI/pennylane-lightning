@@ -124,7 +124,7 @@ jobs:
           pwd
           ls
 
-          cp -rf /root/install_dir/${{ matrix.exec_model }}/* /pennylane-lightning/
+          cp -rf /root/install_dir/${{ matrix.exec_model }}/* ./
 
       - name: Install dependencies (CentOS)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') }}
