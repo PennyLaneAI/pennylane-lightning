@@ -121,9 +121,6 @@ jobs:
 
       - name: Copy cached libraries
         run: |
-          pwd
-          ls
-
           cp -rf /root/install_dir/${{ matrix.exec_model }}/* ./
 
       - name: Install dependencies (CentOS)
