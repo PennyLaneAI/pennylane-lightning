@@ -126,6 +126,10 @@ jobs:
       - name: Install dependencies (CentOS)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') }}
         run: |
+          # Avoid outdated public yum mirrors
+          cat /etc/yum.repos.d/CentOS-Base.repo | \
+            sed "s/mirrorlist=/#mirrorlist=/g" | \
+            sed "s/#baseurl=/baseurl=/g" > /etc/yum.repos.d/CentOS-Base.repo
           yum update && yum install -y docker
 
       - name: Install cibuildwheel
@@ -141,6 +145,9 @@ jobs:
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
+            cat /etc/yum.repos.d/CentOS-Base.repo | \
+              sed "s/mirrorlist=/#mirrorlist=/g" | \
+              sed "s/#baseurl=/baseurl=/g" > /etc/yum.repos.d/CentOS-Base.repo
             pip install pybind11 ninja cmake && yum install -y gcc gcc-c++
 
           # Testing of built wheels
