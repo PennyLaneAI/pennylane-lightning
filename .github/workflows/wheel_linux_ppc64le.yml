@@ -21,10 +21,12 @@ jobs:
         arch: [ppc64le]
         exec_model: [SERIAL, OPENMP, THREADS]
         kokkos_version: ["3.6.00"]
-        container_img: ["quay.io/pypa/manylinux2014_ppc64le"]
+        xcontainer_img: ["quay.io/pypa/manylinux2014_ppc64le"]
+        container_img: ["quay.io/pypa/manylinux2014_x86_64"]
+
     name: Kokkos core & kernels (${{ matrix.exec_model }}::${{ matrix.arch }} )
     runs-on: ${{ matrix.os }}
-    #container: ${{ matrix.container_img }}
+    container: ${{ matrix.container_img }}
 
     steps:
       - name: Cancel previous runs
@@ -40,15 +42,15 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /root/install_dir/${{ matrix.exec_model }}
-          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-static
+          key: ${{ matrix.xcontainer_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-static
 
       - name: Install dependencies (Ubuntu)
-        if: ${{ (matrix.container_img == 'ubuntu:20.04') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        if: ${{ (matrix.xcontainer_img == 'ubuntu:20.04') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
           apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-10 g++-10 ninja-build git
           echo "COMPILER=g++-10" >> $GITHUB_ENV
       - name: Install dependencies (CentOS)
-        if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_ppc64le') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        if: ${{ (matrix.xcontainer_img == 'quay.io/pypa/manylinux2014_ppc64le') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
           yum update && yum install -y cmake ninja-build
           echo "COMPILER=g++" >> $GITHUB_ENV
@@ -69,7 +71,7 @@ jobs:
         run: |
           mkdir -p /root/install_dir/${{ matrix.exec_model }}
           cd kokkos
-          docker run --platform linux/ppc64le -v `pwd`:/io -v /root/install_dir/${{ matrix.exec_model }}:/install -ti ${{ matrix.container_img }} \
+          docker run --platform linux/ppc64le -v `pwd`:/io -v /root/install_dir/${{ matrix.exec_model }}:/install -ti ${{ matrix.xcontainer_img }} \
             bash -c "cd /io && \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
                           -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
@@ -86,7 +88,7 @@ jobs:
         run: |
           mkdir -p /root/install_dir/${{ matrix.exec_model }}
           cd kokkos-kernels
-          docker run --platform linux/ppc64le -v `pwd`:/io -v /root/install_dir/${{ matrix.exec_model }}:/install -ti ${{ matrix.container_img }} \
+          docker run --platform linux/ppc64le -v `pwd`:/io -v /root/install_dir/${{ matrix.exec_model }}:/install -ti ${{ matrix.xcontainer_img }} \
             bash -c "cd /io && \
             mkdir -p /io/${{ matrix.exec_model }} \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
@@ -110,11 +112,13 @@ jobs:
         cibw_build: [cp37-*, cp38-*, cp39-*, cp310-*]
         exec_model: [SERIAL]
         kokkos_version: ["3.6.00"]
-        container_img: ["quay.io/pypa/manylinux2014_ppc64le"]
+        xcontainer_img: ["quay.io/pypa/manylinux2014_ppc64le"]
+        container_img: ["quay.io/pypa/manylinux2014_x86_64"]
+
 
     name: ${{ matrix.os }}::${{ matrix.arch }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
-    #container: ${{ matrix.container_img }}
+    container: ${{ matrix.container_img }}
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.4.1
@@ -129,7 +133,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /root/install_dir/${{ matrix.exec_model }}
-          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-static
+          key: ${{ matrix.xcontainer_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-static
 
       - uses: actions/checkout@v3
 
