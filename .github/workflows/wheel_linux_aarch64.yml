@@ -1,6 +1,6 @@
-name: Wheel::Linux::ARM
+name: Wheel::Linux::PowerPC
 
-# **What it does**: Builds python wheels for Linux (ubuntu-latest) architecture ARM 64 and store it as artifacts.
+# **What it does**: Build python wheels for Linux (ubuntu-latest) architecture PowerPC 64 and store it as artifacts.
 #                   Python versions: 3.7, 3.8, 3.9, 3.10.
 # **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
@@ -9,65 +9,176 @@ on:
   push:
     branches:
       - master
+  pull_request:
   release:
     types: [published]
 
 jobs:
+  build_dependencies:
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+        arch: [aarch64]
+        exec_model: [SERIAL, OPENMP, THREADS]
+        kokkos_version: ["3.6.00"]
+        xcontainer_img: ["quay.io/pypa/manylinux2014_aarch64"]
+
+    name: Kokkos core & kernels (${{ matrix.exec_model }}::${{ matrix.arch }} )
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Cache installation directories
+        id: kokkos-cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}
+          key: ${{ matrix.xcontainer_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-static
+
+      - name: Install dependencies (Ubuntu)
+        if: ${{ (matrix.xcontainer_img == 'ubuntu:20.04') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        run: |
+          apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-10 g++-10 ninja-build git
+          echo "COMPILER=g++-10" >> $GITHUB_ENV
+      - name: Install dependencies (CentOS)
+        if: ${{ (matrix.xcontainer_img == 'quay.io/pypa/manylinux2014_aarch64') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        run: |
+          yum update && yum install -y cmake ninja-build docker
+          echo "COMPILER=g++" >> $GITHUB_ENV
+      - name: Clone Kokkos libs
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone https://github.com/kokkos/kokkos.git
+          cd kokkos
+          git checkout ${{ matrix.kokkos_version }}
+          cd -
+          pushd . &> /dev/null
+          git clone https://github.com/kokkos/kokkos-kernels.git
+          cd kokkos-kernels
+          git checkout ${{ matrix.kokkos_version }}
+          cd -
+
+      - uses: docker/setup-qemu-action@v2
+        name: Set up QEMU
+
+      - name: Build Kokkos core library
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}
+          cd kokkos
+          docker run --platform linux/aarch64 \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v `pwd`:/io \
+            -v ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}:/install \
+            -i ${{ matrix.xcontainer_img }} \
+            bash -c "cd /io && \
+            export PATH=$PATH:/opt/python/cp37-cp37m/bin/ \
+            python3.7 -m pip install ninja \
+            cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
+                          -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
+                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
+                          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                          -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
+                          -DCMAKE_CXX_STANDARD=20 \
+                          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                          -G Ninja && \
+            cmake --build ./Build --verbose && \
+            cmake --install ./Build; "
+          cd -
+      - name: Build Kokkos kernels library
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          cd kokkos-kernels
+          docker run --platform linux/aarch64 \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v `pwd`:/io \
+            -v ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}:/install \
+            -i ${{ matrix.xcontainer_img }} \
+            bash -c "cd /io && \
+            export PATH=$PATH:/opt/python/cp37-cp37m/bin/ \
+            python3.7 -m pip install ninja \
+            cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
+                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
+                          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                          -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
+                          -DCMAKE_CXX_STANDARD=20 \
+                          -DKokkos_DIR=/install \
+                          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                          -G Ninja && \
+            cmake --build ./Build --verbose && \
+            cmake --install ./Build; "
+          cd -
+
   linux-wheels-aarch64:
+    needs: build_dependencies
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-20.04]
         arch: [aarch64]
         cibw_build: [cp37-*, cp38-*, cp39-*, cp310-*]
+        exec_model: [SERIAL]
+        kokkos_version: ["3.6.00"]
+        xcontainer_img: ["quay.io/pypa/manylinux2014_aarch64"]
 
-    name: ubuntu-latest::aarch64 (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
+    name: ${{ matrix.os }}::${{ matrix.arch }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
-
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.4.1
         with:
           access_token: ${{ github.token }}
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: docker/setup-qemu-action@v1
-        name: Set up QEMU
-
-      - uses: actions/setup-python@v2
-        name: Install Python
+      - name: Restoring cached dependencies
+        id: kokkos-cache
+        uses: actions/cache@v3
         with:
-          python-version: '3.7'
+          path: ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}
+          key: ${{ matrix.xcontainer_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-static
+
+      - name: Copy cached libraries
+        run: |
+          cp -rf ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}/* ./
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.3.0
+        run: python3 -m pip install cibuildwheel==2.8.0
+
+      - uses: docker/setup-qemu-action@v2
+        name: Set up QEMU
 
       - name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
         env:
+          CIBW_ARCHS_LINUX: ${{matrix.arch}}
+
           CIBW_BUILD: ${{ matrix.cibw_build }}
+
           CIBW_SKIP: "*-musllinux*"
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            pip install pybind11 ninja cmake && yum install -y gcc gcc-c++
+            cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
+            pip install ninja cmake
 
-          # Testing of built wheels
-          CIBW_TEST_REQUIRES: numpy~=1.21 scipy pytest pytest-cov pytest-mock flaky
-
-          CIBW_BEFORE_TEST: pip install git+https://github.com/PennyLaneAI/pennylane.git@master
-
-          CIBW_TEST_COMMAND: |
-            pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
-
-          # Use Centos 7 wheel-builder for ARM
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
+          
+          CIBW_BUILD_VERBOSITY: 3
 
-          CIBW_ARCHS_LINUX: ${{matrix.arch}}
+        run: python3 -m cibuildwheel --output-dir wheelhouse
+
+      - uses: actions-ecosystem/action-regex-match@v2
+        id: rc_build
+        with:
+          text: ${{ github.event.pull_request.head.ref }}
+          regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
       - uses: actions/upload-artifact@v2
-        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
+        #if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
