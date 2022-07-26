@@ -24,7 +24,7 @@ jobs:
         container_img: ["quay.io/pypa/manylinux2014_ppc64le"]
     name: Kokkos core & kernels (${{ matrix.exec_model }}::${{ matrix.arch }} )
     runs-on: ${{ matrix.os }}
-    container: ${{ matrix.container_img }}
+    #container: ${{ matrix.container_img }}
 
     steps:
       - name: Cancel previous runs
@@ -114,7 +114,7 @@ jobs:
 
     name: ${{ matrix.os }}::${{ matrix.arch }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
-    container: ${{ matrix.container_img }}
+    #container: ${{ matrix.container_img }}
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.4.1
