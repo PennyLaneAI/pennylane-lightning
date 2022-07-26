@@ -52,7 +52,7 @@ jobs:
       - name: Install dependencies (CentOS)
         if: ${{ (matrix.xcontainer_img == 'quay.io/pypa/manylinux2014_ppc64le') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
-          yum update && yum install -y cmake ninja-build
+          yum update && yum install -y cmake ninja-build docker
           echo "COMPILER=g++" >> $GITHUB_ENV
       - name: Clone Kokkos libs
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
@@ -71,7 +71,11 @@ jobs:
         run: |
           mkdir -p /root/install_dir/${{ matrix.exec_model }}
           cd kokkos
-          docker run --platform linux/ppc64le -v `pwd`:/io -v /root/install_dir/${{ matrix.exec_model }}:/install -ti ${{ matrix.xcontainer_img }} \
+          docker run --platform linux/ppc64le \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v `pwd`:/io \
+            -v /root/install_dir/${{ matrix.exec_model }}:/install \
+            -ti ${{ matrix.xcontainer_img }} \
             bash -c "cd /io && \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
                           -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
@@ -88,7 +92,11 @@ jobs:
         run: |
           mkdir -p /root/install_dir/${{ matrix.exec_model }}
           cd kokkos-kernels
-          docker run --platform linux/ppc64le -v `pwd`:/io -v /root/install_dir/${{ matrix.exec_model }}:/install -ti ${{ matrix.xcontainer_img }} \
+          docker run --platform linux/ppc64le \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v `pwd`:/io \
+            -v /root/install_dir/${{ matrix.exec_model }}:/install \
+            -ti ${{ matrix.xcontainer_img }} \
             bash -c "cd /io && \
             mkdir -p /io/${{ matrix.exec_model }} \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
