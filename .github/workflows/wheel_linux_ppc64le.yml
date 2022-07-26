@@ -9,7 +9,7 @@ on:
   push:
     branches:
       - master
-    pull_request:
+  pull_request:
   release:
     types: [published]
 
