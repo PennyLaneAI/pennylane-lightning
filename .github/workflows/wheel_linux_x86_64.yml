@@ -43,11 +43,13 @@ jobs:
         run: |
           apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-10 g++-10 ninja-build git
           echo "COMPILER=g++-10" >> $GITHUB_ENV
+
       - name: Install dependencies (CentOS)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
           yum update && yum install -y cmake ninja-build
           echo "COMPILER=g++" >> $GITHUB_ENV
+
       - name: Clone Kokkos libs
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
@@ -60,6 +62,7 @@ jobs:
           cd kokkos-kernels
           git checkout ${{ matrix.kokkos_version }}
           cd -
+
       - name: Build Kokkos core library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
@@ -76,6 +79,7 @@ jobs:
           cmake --build ./Build --verbose
           cmake --install ./Build
           cd -
+
       - name: Build Kokkos kernels library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
@@ -146,7 +150,7 @@ jobs:
           # Python build settings
           CIBW_BEFORE_BUILD: |
             cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
-            pip install pybind11 ninja cmake && yum install -y gcc gcc-c++
+            pip install ninja cmake
 
           # Testing of built wheels
           CIBW_TEST_REQUIRES: numpy~=1.21 scipy pytest pytest-cov pytest-mock flaky
