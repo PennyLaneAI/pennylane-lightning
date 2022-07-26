@@ -9,62 +9,163 @@ on:
   push:
     branches:
       - master
+    pull_request:
   release:
     types: [published]
 
 jobs:
+  build_dependencies:
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+        exec_model: [SERIAL, OPENMP, THREADS]
+        kokkos_version: ["3.6.00"]
+        container_img: ["quay.io/pypa/manylinux2014_ppc64le"]
+    name: Kokkos core & kernels (${{ matrix.exec_model }})
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container_img }}
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: docker/setup-qemu-action@v2
+        name: Set up QEMU
+
+      - name: Cache installation directories
+        id: kokkos-cache
+        uses: actions/cache@v3
+        with:
+          path: /root/install_dir/${{ matrix.exec_model }}
+          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-static
+
+      - name: Install dependencies (Ubuntu)
+        if: ${{ (matrix.container_img == 'ubuntu:20.04') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        run: |
+          apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-10 g++-10 ninja-build git
+          echo "COMPILER=g++-10" >> $GITHUB_ENV
+      - name: Install dependencies (CentOS)
+        if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_ppc64le') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        run: |
+          yum update && yum install -y cmake ninja-build
+          echo "COMPILER=g++" >> $GITHUB_ENV
+      - name: Clone Kokkos libs
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone https://github.com/kokkos/kokkos.git
+          cd kokkos
+          git checkout ${{ matrix.kokkos_version }}
+          cd -
+          pushd . &> /dev/null
+          git clone https://github.com/kokkos/kokkos-kernels.git
+          cd kokkos-kernels
+          git checkout ${{ matrix.kokkos_version }}
+          cd -
+      - name: Build Kokkos core library
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p /root/install_dir/${{ matrix.exec_model }}
+          cd kokkos
+          docker run --platform linux/ppc64le -v `pwd`:/io -v /root/install_dir/${{ matrix.exec_model }}:/install -ti ${{ container_img }} \
+            bash -c "cd /io && \
+            cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
+                          -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
+                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
+                          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                          -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
+                          -DCMAKE_CXX_STANDARD=20 \
+                          -DCMAKE_POSITION_INDEPENDENT_CODE=ON && \
+            cmake --build ./Build --verbose && \
+            cmake --install ./Build"
+          cd -
+      - name: Build Kokkos kernels library
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p /root/install_dir/${{ matrix.exec_model }}
+          cd kokkos-kernels
+          docker run --platform linux/ppc64le -v `pwd`:/io -v /root/install_dir/${{ matrix.exec_model }}:/install -ti ${{ container_img }} \
+            bash -c "cd /io && \
+            mkdir -p /io/${{ matrix.exec_model }} \
+            cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
+                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
+                          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                          -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
+                          -DCMAKE_CXX_STANDARD=20 \
+                          -DKokkos_DIR=/install \
+                          -DCMAKE_POSITION_INDEPENDENT_CODE=ON && \
+            cmake --build ./Build --verbose && \
+            cmake --install ./Build"
+          cd -
+
   linux-wheels-ppc64le:
+    needs: build_dependencies
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-20.04]
         arch: [ppc64le]
         cibw_build: [cp37-*, cp38-*, cp39-*, cp310-*]
+        exec_model: [SERIAL]
+        kokkos_version: ["3.6.00"]
+        container_img: ["quay.io/pypa/manylinux2014_ppc64le"]
 
-    name: ubuntu-latest::ppc64le (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
+    name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
-
+    container: ${{ matrix.container_img }}
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.4.1
         with:
           access_token: ${{ github.token }}
 
-      - uses: actions/checkout@v2
-
-      - uses: docker/setup-qemu-action@v1
+      - uses: docker/setup-qemu-action@v2
         name: Set up QEMU
 
-      - uses: actions/setup-python@v2
-        name: Install Python
+      - name: Restoring cached dependencies
+        id: kokkos-cache
+        uses: actions/cache@v3
         with:
-          python-version: '3.7'
+          path: /root/install_dir/${{ matrix.exec_model }}
+          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-static
+
+      - uses: actions/checkout@v3
+
+      - name: Copy cached libraries
+        run: |
+          cp -rf /root/install_dir/${{ matrix.exec_model }}/* ./
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.3.0
+        run: python3.7 -m pip install cibuildwheel==2.8.0
 
       - name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
         env:
+          CIBW_ARCHS_LINUX: ${{matrix.arch}}
+
           CIBW_BUILD: ${{ matrix.cibw_build }}
+
           CIBW_SKIP: "*-musllinux*"
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            pip install pybind11 ninja cmake && yum install -y gcc gcc-c++
+            cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
+            pip install ninja cmake
 
-          # Skip PPC tests due to lack of numpy/scipy wheel support
-          CIBW_TEST_SKIP: "*-manylinux_{ppc64le}"
-
-          CIBW_BEFORE_TEST: pip install git+https://github.com/PennyLaneAI/pennylane.git@master
-
-          # Use CentOS 7 image for PPC
           CIBW_MANYLINUX_PPC64LE_IMAGE: manylinux2014
+          
+          CIBW_BUILD_VERBOSITY: 3
 
-          CIBW_ARCHS_LINUX: ${{matrix.arch}}
+        run: python3.7 -m cibuildwheel --output-dir wheelhouse
+
+      - uses: actions-ecosystem/action-regex-match@v2
+        id: rc_build
+        with:
+          text: ${{ github.event.pull_request.head.ref }}
+          regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
       - uses: actions/upload-artifact@v2
-        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
+        #if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
