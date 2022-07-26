@@ -66,13 +66,12 @@ jobs:
             -v ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}:/install \
             -i ${{ matrix.xcontainer_img }} \
             bash -c "cd /io && \
-            export PATH=`printenv PATH`:/opt/python/cp37-cp37m/bin/ && \
             python3.7 -m pip install ninja && \
+            ln -s /opt/python/cp37-cp37m/bin/ninja /usr/bin/ninja && \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
                           -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
-                          -DCMAKE_CXX_COMPILER=`which g++` \
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                           -G Ninja && \
@@ -89,12 +88,11 @@ jobs:
             -v ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}:/install \
             -i ${{ matrix.xcontainer_img }} \
             bash -c "cd /io && \
-            export PATH=`printenv PATH`:/opt/python/cp37-cp37m/bin/ && \
             python3.7 -m pip install ninja && \
+            ln -s /opt/python/cp37-cp37m/bin/ninja /usr/bin/ninja && \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
-                          -DCMAKE_CXX_COMPILER=`which g++` \
                           -DCMAKE_CXX_STANDARD=20 \
                           -DKokkos_DIR=/install \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
