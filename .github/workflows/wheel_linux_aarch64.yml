@@ -1,4 +1,4 @@
-name: Wheel::Linux::PowerPC
+name: Wheel::Linux::ARM
 
 # **What it does**: Build python wheels for Linux (ubuntu-latest) architecture PowerPC 64 and store it as artifacts.
 #                   Python versions: 3.7, 3.8, 3.9, 3.10.
