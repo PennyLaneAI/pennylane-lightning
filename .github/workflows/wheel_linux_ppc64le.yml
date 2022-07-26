@@ -86,7 +86,7 @@ jobs:
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON && \
             cmake --build ./Build --verbose && \
-            cmake --install ./Build"
+            cmake --install ./Build; "
           cd -
       - name: Build Kokkos kernels library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
@@ -98,7 +98,6 @@ jobs:
             -v ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}:/install \
             -i ${{ matrix.xcontainer_img }} \
             bash -c "cd /io && \
-            mkdir -p /io/${{ matrix.exec_model }} \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
