@@ -72,7 +72,7 @@ jobs:
                           -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
-                          -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
+                          -DCMAKE_CXX_COMPILER=`which g++` \
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                           -G Ninja && \
@@ -94,7 +94,7 @@ jobs:
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
-                          -DCMAKE_CXX_COMPILER=g++ \
+                          -DCMAKE_CXX_COMPILER=`which g++` \
                           -DCMAKE_CXX_STANDARD=20 \
                           -DKokkos_DIR=/install \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
