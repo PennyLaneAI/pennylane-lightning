@@ -76,7 +76,7 @@ jobs:
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v `pwd`:/io \
             -v ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}:/install \
-            -ti ${{ matrix.xcontainer_img }} \
+            -i ${{ matrix.xcontainer_img }} \
             bash -c "cd /io && \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
                           -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
@@ -97,7 +97,7 @@ jobs:
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v `pwd`:/io \
             -v ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}:/install \
-            -ti ${{ matrix.xcontainer_img }} \
+            -i ${{ matrix.xcontainer_img }} \
             bash -c "cd /io && \
             mkdir -p /io/${{ matrix.exec_model }} \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
