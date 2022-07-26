@@ -91,7 +91,6 @@ jobs:
       - name: Build Kokkos kernels library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
-          mkdir -p ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}
           cd kokkos-kernels
           docker run --platform linux/ppc64le \
             -v /var/run/docker.sock:/var/run/docker.sock \
