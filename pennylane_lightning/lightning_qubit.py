@@ -139,6 +139,7 @@ class LightningQubit(DefaultQubit):
             supports_reversible_diff=False,
             supports_inverse_operations=True,
             supports_analytic_computation=True,
+            supports_broadcasting=False,
             returns_state=True,
         )
         capabilities.pop("passthru_devices", None)
