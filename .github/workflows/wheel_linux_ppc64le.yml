@@ -18,10 +18,11 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-20.04]
+        arch: [ppc64le]
         exec_model: [SERIAL, OPENMP, THREADS]
         kokkos_version: ["3.6.00"]
         container_img: ["quay.io/pypa/manylinux2014_ppc64le"]
-    name: Kokkos core & kernels (${{ matrix.exec_model }})
+    name: Kokkos core & kernels (${{ matrix.exec_model }}::${{ matrix.arch }} )
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container_img }}
 
@@ -68,7 +69,7 @@ jobs:
         run: |
           mkdir -p /root/install_dir/${{ matrix.exec_model }}
           cd kokkos
-          docker run --platform linux/ppc64le -v `pwd`:/io -v /root/install_dir/${{ matrix.exec_model }}:/install -ti ${{ container_img }} \
+          docker run --platform linux/ppc64le -v `pwd`:/io -v /root/install_dir/${{ matrix.exec_model }}:/install -ti ${{ matrix.container_img }} \
             bash -c "cd /io && \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
                           -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
@@ -85,7 +86,7 @@ jobs:
         run: |
           mkdir -p /root/install_dir/${{ matrix.exec_model }}
           cd kokkos-kernels
-          docker run --platform linux/ppc64le -v `pwd`:/io -v /root/install_dir/${{ matrix.exec_model }}:/install -ti ${{ container_img }} \
+          docker run --platform linux/ppc64le -v `pwd`:/io -v /root/install_dir/${{ matrix.exec_model }}:/install -ti ${{ matrix.container_img }} \
             bash -c "cd /io && \
             mkdir -p /io/${{ matrix.exec_model }} \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
@@ -111,7 +112,7 @@ jobs:
         kokkos_version: ["3.6.00"]
         container_img: ["quay.io/pypa/manylinux2014_ppc64le"]
 
-    name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
+    name: ${{ matrix.os }}::${{ matrix.arch }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container_img }}
     steps:
