@@ -22,11 +22,11 @@ jobs:
         exec_model: [SERIAL, OPENMP, THREADS]
         kokkos_version: ["3.6.00"]
         xcontainer_img: ["quay.io/pypa/manylinux2014_ppc64le"]
-        container_img: ["quay.io/pypa/manylinux2014_x86_64"]
+        #container_img: ["quay.io/pypa/manylinux2014_x86_64"]
 
     name: Kokkos core & kernels (${{ matrix.exec_model }}::${{ matrix.arch }} )
     runs-on: ${{ matrix.os }}
-    container: ${{ matrix.container_img }}
+    #container: ${{ matrix.container_img }}
 
     steps:
       - name: Cancel previous runs
@@ -38,7 +38,7 @@ jobs:
         id: kokkos-cache
         uses: actions/cache@v3
         with:
-          path: /root/install_dir/${{ matrix.exec_model }}
+          path: ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}
           key: ${{ matrix.xcontainer_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-static
 
       - name: Install dependencies (Ubuntu)
@@ -70,12 +70,12 @@ jobs:
       - name: Build Kokkos core library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
-          mkdir -p /root/install_dir/${{ matrix.exec_model }}
+          mkdir -p ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}
           cd kokkos
           docker run --platform linux/ppc64le \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v `pwd`:/io \
-            -v /root/install_dir/${{ matrix.exec_model }}:/install \
+            -v ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}:/install \
             -ti ${{ matrix.xcontainer_img }} \
             bash -c "cd /io && \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
@@ -91,12 +91,12 @@ jobs:
       - name: Build Kokkos kernels library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
-          mkdir -p /root/install_dir/${{ matrix.exec_model }}
+          mkdir -p ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}
           cd kokkos-kernels
           docker run --platform linux/ppc64le \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v `pwd`:/io \
-            -v /root/install_dir/${{ matrix.exec_model }}:/install \
+            -v ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}:/install \
             -ti ${{ matrix.xcontainer_img }} \
             bash -c "cd /io && \
             mkdir -p /io/${{ matrix.exec_model }} \
@@ -127,7 +127,7 @@ jobs:
 
     name: ${{ matrix.os }}::${{ matrix.arch }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
-    container: ${{ matrix.container_img }}
+    #container: ${{ matrix.container_img }}
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.4.1
@@ -138,14 +138,14 @@ jobs:
         id: kokkos-cache
         uses: actions/cache@v3
         with:
-          path: /root/install_dir/${{ matrix.exec_model }}
+          path: ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}
           key: ${{ matrix.xcontainer_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-static
 
       - uses: actions/checkout@v3
 
       - name: Copy cached libraries
         run: |
-          cp -rf /root/install_dir/${{ matrix.exec_model }}/* ./
+          cp -rf ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}/* ./
 
       - name: Install cibuildwheel
         run: python3.7 -m pip install cibuildwheel==2.8.0
