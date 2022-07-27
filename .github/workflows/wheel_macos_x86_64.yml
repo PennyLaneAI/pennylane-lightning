@@ -27,6 +27,7 @@ jobs:
 
     name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
+    if: ${{ github.event_name == "pull_request" }} && (${{ matrix.cibw_build != "cp37-*" }} || ${{ matrix.cibw_build != "cp310-*" }})
 
     steps:
       - name: Cancel Previous Runs
