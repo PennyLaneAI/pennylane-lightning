@@ -22,6 +22,8 @@ jobs:
   mac-set-matrix-x86:
     name: Set builder matrix versions
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.mat_output.matrix}}
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.4.1
@@ -42,8 +44,8 @@ jobs:
             --min-version=${{ env.PYTHON_MIN_VERSION }} \
             --max-version=${{ env.PYTHON_MAX_VERSION }} \
             --range)" >> $GITHUB_ENV
-      - name: Output
-        run: echo "::set-output ${{ env.PYVER_MATRIX }}"
+      - id: mat_output
+        run: echo "::set-output name=matrix::${{ env.PYVER_MATRIX }}"
 
   mac-wheels-x86:
     needs: mac-set-matrix-x86
@@ -52,7 +54,7 @@ jobs:
       matrix:
         os: [macos-11]
         arch: [x86_64]
-        include: ${{ fromJson( needs.mac-set-matrix-x86.Output ) }}
+        include: ${{ fromJson( needs.mac-set-matrix-x86.outputs.matrix ) }}
         #cibw_build: [cp37-*, cp38-*, cp39-*, cp310-*]
 
     name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
