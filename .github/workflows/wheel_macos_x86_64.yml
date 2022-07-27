@@ -17,7 +17,6 @@ env:
   MACOSX_DEPLOYMENT_TARGET: 10.15
   PYTHON_MIN_VERSION: cp37-*
   PYTHON_MAX_VERSION: cp310-*
-  
 
 jobs:
   mac-wheels-x86:
@@ -75,7 +74,10 @@ jobs:
 
           USE_OMP: 1
 
-        run: python -m cibuildwheel --output-dir wheelhouse
+        run: |
+          echo ${{ github.event_name }}
+          echo ${{ matrix.cibw_build }}
+          python -m cibuildwheel --output-dir wheelhouse
 
       - uses: actions-ecosystem/action-regex-match@v2
         id: rc_build
