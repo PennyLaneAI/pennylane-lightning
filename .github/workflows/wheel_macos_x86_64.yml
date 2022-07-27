@@ -45,7 +45,7 @@ jobs:
       matrix:
         os: [macos-11]
         arch: [x86_64]
-        include: ${{ fromJson(env.PYVER_MATRIX) }}
+        include: ${{ fromJson( ${{ env.PYVER_MATRIX }}) }}
         #cibw_build: [cp37-*, cp38-*, cp39-*, cp310-*]
 
     name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
