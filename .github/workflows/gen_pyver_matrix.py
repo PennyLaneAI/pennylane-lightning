@@ -13,14 +13,16 @@ if __name__ == "__main__":
     parser.add_argument("--range", dest = "range", required=False, action='store_true', help="Include all Python values between the extrema")
 
     args = parser.parse_args()
-    output = { "cibw_build" : [version_map(args.min), version_map(args.max)] }
+    
+    v_minor_min = int(args.min.split(".")[-1])
+    v_minor_max = int(args.max.split(".")[-1])
 
-    if args.range:
-        minor_min = int(args.min.split(".")[-1])
-        minor_max = int(args.max.split(".")[-1])
-        for v in range(minor_min+1, minor_max):
-            v_str = f"3.{v}"
-            output["cibw_build"].append(version_map(v_str) )
+    out_range = range(v_minor_min, v_minor_max+1) if args.range else [v_minor_min, v_minor_max]
+    output_list = []
 
-    json_out = json.dumps([output])
-    print(json_out.replace("\"", "\\\""))
+    for v in out_range:
+        v_str = f"3.{v}"
+        output_list.append({"cibw_build" : version_map(v_str)})
+
+    json_out = json.dumps(output_list)
+    print(json_out)#.replace("\"", "\\\""))
