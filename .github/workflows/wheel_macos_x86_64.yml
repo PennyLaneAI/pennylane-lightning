@@ -15,17 +15,40 @@ on:
 
 env:
   MACOSX_DEPLOYMENT_TARGET: 10.15
-  PYTHON_MIN_VERSION: cp37-*
-  PYTHON_MAX_VERSION: cp310-*
+  PYTHON_MIN_VERSION: 3.7
+  PYTHON_MAX_VERSION: 3.10
 
 jobs:
+  mac-set-matrix-x86:
+    name: Set builder matrix versions
+    runs-on: ubuntu-latest
+    output:
+      matrix-out: ${{ steps.matrix-output.matrix }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: matrix-output-pr
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          echo "PYVER_MATRIX=`python .github/workflows/gen_pyver_matrix.py \
+            --min-version=${{ env.PYTHON_MIN_VERSION }} \
+            --max-version=${{ env.PYTHON_MAX_VERSION }}`" >> $GITHUB_ENV
+      - name: matrix-output-non-pr
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+           echo "PYVER_MATRIX=`python .github/workflows/gen_pyver_matrix.py \
+            --min-version=${{ env.PYTHON_MIN_VERSION }} \
+            --max-version=${{ env.PYTHON_MAX_VERSION }} \
+            --range`" >> $GITHUB_ENV
+
   mac-wheels-x86:
+    need: mac-set-matrix-x86
     strategy:
       fail-fast: false
       matrix:
         os: [macos-11]
         arch: [x86_64]
-        cibw_build: [cp37-*, cp38-*, cp39-*, cp310-*]
+        include: ${{ fromJson(env.PYVER_MATRIX) }}
+        #cibw_build: [cp37-*, cp38-*, cp39-*, cp310-*]
 
     name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
@@ -47,7 +70,6 @@ jobs:
         run: python -m pip install cibuildwheel==2.3.0
 
       - name: Build wheels
-        if: ${{ github.event_name == pull_request }} && (${{ matrix.cibw_build == env.PYTHON_MIN_VERSION }} || ${{ matrix.cibw_build == env.PYTHON_MAX_VERSION }})
         env:
           CIBW_BUILD: ${{ matrix.cibw_build }}
 
@@ -75,11 +97,6 @@ jobs:
           USE_OMP: 1
 
         run: |
-          echo ${{ github.event_name }}
-          echo ${{ matrix.cibw_build }}
-          echo ${{ matrix.cibw_build == env.PYTHON_MIN_VERSION }}
-          echo ${{ matrix.cibw_build == env.PYTHON_MAX_VERSION }}
-          echo ${{ github.event_name == "pull_request" }}
           python -m cibuildwheel --output-dir wheelhouse
 
       - uses: actions-ecosystem/action-regex-match@v2
