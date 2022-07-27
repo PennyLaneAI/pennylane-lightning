@@ -15,15 +15,14 @@ on:
 
 env:
   MACOSX_DEPLOYMENT_TARGET: 10.15
-  PYTHON_MIN_VERSION: "3.7"
-  PYTHON_MAX_VERSION: "3.10"
+  PYTHON3_MIN_VERSION: "7"
+  PYTHON3_MAX_VERSION: "10"
 
 jobs:
   mac-set-matrix-x86:
     name: Set builder matrix versions
     runs-on: ubuntu-latest
-    outputs:
-      matrix-json: ${{ steps.mat_output.matrix }}
+
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.4.1
@@ -31,21 +30,31 @@ jobs:
           access_token: ${{ github.token }}
 
       - uses: actions/checkout@v2
-      - name: matrix-output-pr
-        if: ${{ github.event_name == 'pull_request' }}
+
+      - if: ${{ github.event_name == 'pull_request' }}
         run: |
           echo "PYVER_MATRIX=$(python3 .github/workflows/gen_pyver_matrix.py \
-            --min-version=${{ env.PYTHON_MIN_VERSION }} \
-            --max-version=${{ env.PYTHON_MAX_VERSION }})" >> $GITHUB_ENV
-      - name: matrix-output-non-pr
-        if: ${{ github.event_name != 'pull_request' }}
+            --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+            --max-version=3.${{ env.PYTHON3_MAX_VERSION }})" >> $GITHUB_ENV
+          echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
+            --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+            --max-version=3.${{ env.PYTHON3_MAX_VERSION }})"
+        id: pyver_pr
+      - if: ${{ github.event_name != 'pull_request' }}
         run: |
-           echo "PYVER_MATRIX=$(python3 .github/workflows/gen_pyver_matrix.py \
-            --min-version=${{ env.PYTHON_MIN_VERSION }} \
-            --max-version=${{ env.PYTHON_MAX_VERSION }} \
+          echo "PYVER_MATRIX=$(python3 .github/workflows/gen_pyver_matrix.py \
+            --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+            --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
             --range)" >> $GITHUB_ENV
+          echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
+            --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+            --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
+            --range)"
+        id: pyver_nonpr
       - id: mat_output
-        run: echo '::set-output name=matrix::${{ env.PYVER_MATRIX }}'
+        run: echo "::set-output name=matrix::${{ env.PYVER_MATRIX }}"
+      outputs:
+        matrix: ${{ env.PYVER_MATRIX }}
 
   mac-wheels-x86:
     needs: [mac-set-matrix-x86]
@@ -54,7 +63,7 @@ jobs:
       matrix:
         os: [macos-11]
         arch: [x86_64]
-        include: ${{ fromJson(needs.mac-set-matrix-x86.outputs.matrix-json) }}
+        include: ${{fromJson(needs.mac-set-matrix-x86.outputs.matrix)}}
         #cibw_build: [cp37-*, cp38-*, cp39-*, cp310-*]
 
     name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})

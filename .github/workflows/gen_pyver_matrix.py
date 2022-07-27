@@ -1,9 +1,9 @@
-import json
 import argparse
 import re
+import json
 
 def version_map(py_ver):
-    ci_ver = re.sub('\.', '', py_ver)
+    ci_ver = re.sub("\.", "", py_ver)
     return f"cp{ci_ver}-*"
 
 if __name__ == "__main__":
@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     for v in out_range:
         v_str = f"3.{v}"
-        output_list.append({"cibw_build" : version_map(v_str)})
+        output_list.append(repr(version_map(v_str)))
 
     json_out = json.dumps(output_list)
-    print(json_out)#.replace("\"", "\\\""))
+    print(json_out)
