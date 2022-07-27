@@ -23,6 +23,11 @@ jobs:
     name: Set builder matrix versions
     runs-on: ubuntu-latest
     steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
       - uses: actions/checkout@v2
       - name: matrix-output-pr
         if: ${{ github.event_name == 'pull_request' }}
@@ -31,7 +36,7 @@ jobs:
             --min-version=${{ env.PYTHON_MIN_VERSION }} \
             --max-version=${{ env.PYTHON_MAX_VERSION }})" >> $GITHUB_ENV
       - name: matrix-output-non-pr
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name != 'pull_request' }}
         run: |
            echo "PYVER_MATRIX=$(python3 .github/workflows/gen_pyver_matrix.py \
             --min-version=${{ env.PYTHON_MIN_VERSION }} \
