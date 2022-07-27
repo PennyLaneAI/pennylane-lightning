@@ -22,4 +22,5 @@ if __name__ == "__main__":
             v_str = f"3.{v}"
             output["cibw_build"].append(version_map(v_str) )
 
-    print(json.dumps([output]))
+    json_out = json.dumps([output])
+    print(json_out.replace("\"", "\\\""))
