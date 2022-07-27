@@ -41,7 +41,7 @@ jobs:
             --range`" >> $GITHUB_ENV
 
   mac-wheels-x86:
-    need: mac-set-matrix-x86
+    needs: mac-set-matrix-x86
     strategy:
       fail-fast: false
       matrix:
