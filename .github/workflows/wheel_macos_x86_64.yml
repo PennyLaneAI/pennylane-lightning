@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-10.15]
+        os: [macos-11]
         arch: [x86_64]
         cibw_build: [cp37-*, cp38-*, cp39-*, cp310-*]
 
