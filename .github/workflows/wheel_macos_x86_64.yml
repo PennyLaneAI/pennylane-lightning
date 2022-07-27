@@ -48,7 +48,7 @@ jobs:
         run: echo '::set-output name=matrix::${{ env.PYVER_MATRIX }}'
 
   mac-wheels-x86:
-    needs: mac-set-matrix-x86
+    needs: [mac-set-matrix-x86]
     strategy:
       fail-fast: false
       matrix:
