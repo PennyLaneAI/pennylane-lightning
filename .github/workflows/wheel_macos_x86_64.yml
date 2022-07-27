@@ -47,7 +47,7 @@ jobs:
         run: python -m pip install cibuildwheel==2.3.0
 
       - name: Build wheels
-        if: ${{ github.event_name == "pull_request" }} && (${{ matrix.cibw_build == env.PYTHON_MIN_VERSION }} || ${{ matrix.cibw_build == env.PYTHON_MAX_VERSION }})
+        if: ${{ github.event_name == pull_request }} && (${{ matrix.cibw_build == env.PYTHON_MIN_VERSION }} || ${{ matrix.cibw_build == env.PYTHON_MAX_VERSION }})
         env:
           CIBW_BUILD: ${{ matrix.cibw_build }}
 
