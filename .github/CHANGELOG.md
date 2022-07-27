@@ -16,6 +16,9 @@
 
 ### Bug fixes
 
+* Test updates to reflect new additions to PennyLane.
+[(#318)](https://github.com/PennyLaneAI/pennylane-lightning/pull/318)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
