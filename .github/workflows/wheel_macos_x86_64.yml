@@ -47,7 +47,7 @@ jobs:
         run: python -m pip install cibuildwheel==2.3.0
 
       - name: Build wheels
-        if: (github.event_name == pull_request) && (${{ matrix.cibw_build == env.PYTHON_MIN_VERSION }} || ${{ matrix.cibw_build == env.PYTHON_MAX_VERSION }})
+        if: ${{ github.event_name == "pull_request" }} && (${{ matrix.cibw_build == env.PYTHON_MIN_VERSION }} || ${{ matrix.cibw_build == env.PYTHON_MAX_VERSION }})
         env:
           CIBW_BUILD: ${{ matrix.cibw_build }}
 
@@ -79,7 +79,7 @@ jobs:
           echo ${{ matrix.cibw_build }}
           echo ${{ matrix.cibw_build == env.PYTHON_MIN_VERSION }}
           echo ${{ matrix.cibw_build == env.PYTHON_MAX_VERSION }}
-          echo ${{ github.event_name == pull_request }}
+          echo ${{ github.event_name == "pull_request" }}
           python -m cibuildwheel --output-dir wheelhouse
 
       - uses: actions-ecosystem/action-regex-match@v2
