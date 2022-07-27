@@ -22,8 +22,6 @@ jobs:
   mac-set-matrix-x86:
     name: Set builder matrix versions
     runs-on: ubuntu-latest
-    output:
-      matrix-out: ${{ steps.matrix-output.matrix }}
     steps:
       - uses: actions/checkout@v2
       - name: matrix-output-pr
