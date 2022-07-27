@@ -23,7 +23,7 @@ jobs:
     name: Set builder matrix versions
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.mat_output.matrix}}
+      matrix-json: ${{ steps.mat_output.matrix }}
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.4.1
@@ -54,7 +54,7 @@ jobs:
       matrix:
         os: [macos-11]
         arch: [x86_64]
-        include: ${{ fromJson( needs.mac-set-matrix-x86.outputs.matrix ) }}
+        include: ${{ fromJson(needs.mac-set-matrix-x86.outputs.matrix-json) }}
         #cibw_build: [cp37-*, cp38-*, cp39-*, cp310-*]
 
     name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
