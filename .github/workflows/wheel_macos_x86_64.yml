@@ -45,7 +45,7 @@ jobs:
             --max-version=${{ env.PYTHON_MAX_VERSION }} \
             --range)" >> $GITHUB_ENV
       - id: mat_output
-        run: echo "::set-output name=matrix::'${{ env.PYVER_MATRIX }}'"
+        run: echo "::set-output name=matrix::${{ env.PYVER_MATRIX }}"
 
   mac-wheels-x86:
     needs: mac-set-matrix-x86
