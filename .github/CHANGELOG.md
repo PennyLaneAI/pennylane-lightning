@@ -22,7 +22,6 @@
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
-Lee James O'Riordan
 
 Amintor Dusko, Lee James O'Riordan
 
