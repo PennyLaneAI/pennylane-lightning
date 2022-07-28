@@ -30,7 +30,7 @@ int registerAllAvailableKernels_Float() {
     registerKernel<float, float, Gates::GateImplementationsLM>();
     registerKernel<float, float, Gates::GateImplementationsPI>();
 
-    if (RuntimeInfo::AVX2()) {
+    if (RuntimeInfo::AVX2() && RuntimeInfo::FMA()) {
         registerKernelsAVX2_Float();
     }
     if (RuntimeInfo::AVX512F()) {
@@ -44,7 +44,7 @@ int registerAllAvailableKernels_Double() {
     registerKernel<double, double, Gates::GateImplementationsLM>();
     registerKernel<double, double, Gates::GateImplementationsPI>();
 
-    if (RuntimeInfo::AVX2()) {
+    if (RuntimeInfo::AVX2() && RuntimeInfo::FMA()) {
         registerKernelsAVX2_Double();
     }
     if (RuntimeInfo::AVX512F()) {

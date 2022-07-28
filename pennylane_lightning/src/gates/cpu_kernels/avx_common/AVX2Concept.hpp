@@ -143,7 +143,8 @@ template <> constexpr auto internalParity<float, 8>(size_t rev_wire) -> __m256 {
     return _mm256_setzero_ps();
 }
 template <>
-constexpr auto internalParity<double, 4>(size_t rev_wire) -> __m256d {
+constexpr auto internalParity<double, 4>([[maybe_unused]] size_t rev_wire)
+    -> __m256d {
     assert(rev_wire == 0);
     // When Z is applied to 0th qubit
     return __m256d{1.0, 1.0, -1.0, -1.0};

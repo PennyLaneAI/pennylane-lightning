@@ -30,7 +30,7 @@ namespace Pennylane::KernelMap::Internal {
 int assignKernelsForGateOp() {
     assignKernelsForGateOp_Default();
 
-    if (RuntimeInfo::AVX2()) {
+    if (RuntimeInfo::AVX2() && RuntimeInfo::FMA()) {
         assignKernelsForGateOp_AVX2(CPUMemoryModel::Aligned256);
         if (!RuntimeInfo::AVX512F()) {
             assignKernelsForGateOp_AVX2(CPUMemoryModel::Aligned512);
@@ -44,7 +44,7 @@ int assignKernelsForGateOp() {
 int assignKernelsForGeneratorOp() {
     assignKernelsForGeneratorOp_Default();
 
-    if (RuntimeInfo::AVX2()) {
+    if (RuntimeInfo::AVX2() && RuntimeInfo::FMA()) {
         assignKernelsForGeneratorOp_AVX2(CPUMemoryModel::Aligned256);
         if (!RuntimeInfo::AVX512F()) {
             assignKernelsForGeneratorOp_AVX2(CPUMemoryModel::Aligned512);
@@ -58,7 +58,7 @@ int assignKernelsForGeneratorOp() {
 int assignKernelsForMatrixOp() {
     assignKernelsForMatrixOp_Default();
 
-    if (RuntimeInfo::AVX2()) {
+    if (RuntimeInfo::AVX2() && RuntimeInfo::FMA()) {
         assignKernelsForMatrixOp_AVX2(CPUMemoryModel::Aligned256);
         if (!RuntimeInfo::AVX512F()) {
             assignKernelsForMatrixOp_AVX2(CPUMemoryModel::Aligned512);
