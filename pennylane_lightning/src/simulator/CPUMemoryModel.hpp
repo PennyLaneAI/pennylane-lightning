@@ -71,7 +71,7 @@ inline auto bestCPUMemoryModel() -> CPUMemoryModel {
             // and the CPU support it as well
             return CPUMemoryModel::Aligned512;
         }
-        if (Util::RuntimeInfo::AVX2()) {
+        if (Util::RuntimeInfo::AVX2() && Util::RuntimeInfo::FMA()) {
             return CPUMemoryModel::Aligned256;
         }
     }
