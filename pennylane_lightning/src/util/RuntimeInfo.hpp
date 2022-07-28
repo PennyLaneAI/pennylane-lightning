@@ -53,7 +53,7 @@ class RuntimeInfo {
     }
     static inline bool FMA() {
         // NOLINTNEXTLINE(readability-magic-numbers)
-        return getInternalRuntimeInfo().f_7_ecx[12];
+        return getInternalRuntimeInfo().f_1_ecx[12];
     }
     static inline bool AVX512F() {
         // NOLINTNEXTLINE(readability-magic-numbers)
