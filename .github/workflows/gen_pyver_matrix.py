@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     for v in out_range:
         v_str = f"3.{v}"
-        output_list.append(repr(version_map(v_str)))
+        output_list.append((version_map(v_str)))
 
     json_out = json.dumps(output_list)
 
