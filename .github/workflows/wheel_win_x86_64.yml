@@ -54,7 +54,7 @@ jobs:
       matrix:
         os: [windows-latest]
         py_version: ${{fromJson(needs.win-set-matrix-x86.outputs.matrix)}}
-    name: ${{ matrix.os }} (Python ${{ matrix.py_version}})
+    name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.py_version] }})
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -76,7 +76,7 @@ jobs:
       - uses: actions/setup-python@v2
         name: Install Python
         with:
-          python-version: ${{ matrix.py_version }}
+          python-version: ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.py_version]
 
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel==2.3.0
