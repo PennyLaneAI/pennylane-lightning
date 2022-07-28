@@ -189,21 +189,21 @@ TEMPLATE_TEST_CASE("StateVectorDynamicCPU::applyOperations",
 
         using WIRE_STATUS = StateVectorDynamicCPU<PrecisionT>::WIRE_STATUS;
 
-        sv1.releaseWire(0);
-        REQUIRE(sv1.getWireStatus(0) == WIRE_STATUS::RELEASED);
+        size_t new_idx = sv1.activateWire();
+        REQUIRE(sv1.getWireStatus(new_idx) == WIRE_STATUS::ACTIVE);
 
-        sv1.releaseWire(2);
-        REQUIRE((sv1.getWireStatus(2) == WIRE_STATUS::RELEASED &&
-                 sv1.getWireStatus(1) == WIRE_STATUS::ACTIVE));
+        sv1.releaseWire(new_idx);
+        REQUIRE((sv1.getWireStatus(new_idx) == WIRE_STATUS::RELEASED &&
+                 sv1.getWireStatus(0) == WIRE_STATUS::ACTIVE));
 
-        REQUIRE(sv1.getNumQubits() == 1);
-
-        REQUIRE(sv1.getTotalNumWires() == num_qubits);
-        REQUIRE(
-            (sv1.getNumReleasedWires() == 2 && sv1.getNumActiveWires() == 1));
+        REQUIRE(sv1.getNumQubits() == num_qubits);
+        REQUIRE(sv1.getTotalNumWires() == num_qubits + 1);
+        REQUIRE((sv1.getNumReleasedWires() == 1 &&
+                 sv1.getNumActiveWires() == num_qubits));
 
         REQUIRE_THROWS_WITH(sv1.applyOperations({"PauliX", "PauliY"},
-                                                {{2}, {1}}, {false, false}),
+                                                {{new_idx}, {1}},
+                                                {false, false}),
                             Catch::Contains("Invalid list of wires"));
     }
 
@@ -239,5 +239,52 @@ TEMPLATE_TEST_CASE("StateVectorDynamicCPU::applyOperations",
         sv2.applyOperation("RY", {1}, false, {0.2});
 
         REQUIRE(sv1.getDataVector() == approx(sv2.getDataVector()));
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorDynamicCPU::computeSystemPurity",
+                   "[StateVectorDynamicCPU]", float, double) {
+    using PrecisionT = TestType;
+    std::mt19937 re{1337};
+
+    SECTION("Test computeSystemPurity for a state-vector with RX-RY") {
+        const size_t num_qubits = 3;
+        StateVectorDynamicCPU<PrecisionT> sv1(num_qubits);
+
+        sv1.applyOperations({"RX", "RY"}, {{0}, {1}}, {false, false},
+                            {{0.1}, {0.2}});
+
+        REQUIRE(sv1.computeSystemPurity(0) ==
+                approx(std::complex<PrecisionT>{1, 0}));
+        REQUIRE(sv1.computeSystemPurity(1) ==
+                approx(std::complex<PrecisionT>{1, 0}));
+        REQUIRE(sv1.computeSystemPurity(2) ==
+                approx(std::complex<PrecisionT>{1, 0}));
+    }
+
+    SECTION("Test isPureSystem for a state-vector with RX-RY") {
+        const size_t num_qubits = 3;
+        StateVectorDynamicCPU<PrecisionT> sv1(num_qubits);
+
+        sv1.applyOperations({"RX", "RY"}, {{0}, {1}}, {false, false},
+                            {{0.1}, {0.2}});
+
+        REQUIRE((sv1.isPureSystem(0) && sv1.isPureSystem(1)));
+        REQUIRE(sv1.isPureSystem(2));
+    }
+
+    SECTION("Test computeSystemPurity for a state-vector with CNOT-RY") {
+        const size_t num_qubits = 3;
+        StateVectorDynamicCPU<PrecisionT> sv1(num_qubits);
+
+        sv1.applyOperations({"CNOT", "RY"}, {{0, 1}, {1}}, {false, false},
+                            {{}, {0.2}});
+
+        // REQUIRE((sv1.isPureSystem(0) && sv1.isPureSystem(1)));
+        REQUIRE(sv1.computeSystemPurity(0) ==
+                approx(std::complex<PrecisionT>{1, 0}));
+        REQUIRE(sv1.computeSystemPurity(1) ==
+                approx(std::complex<PrecisionT>{1, 0}));
+        REQUIRE(sv1.isPureSystem(2));
     }
 }

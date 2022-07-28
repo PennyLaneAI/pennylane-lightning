@@ -3,6 +3,8 @@
 #include <vector>
 
 #include "BitUtil.hpp"
+#include "LinearAlgebra.hpp"
+
 #include "Error.hpp"
 
 #include <StateVectorCPU.hpp>
@@ -10,49 +12,17 @@
 #include <iostream>
 
 namespace Pennylane {
-
-// template<class T = size_t>
-// class Wires {
-//     private:
-//         std::vector<T> map_;
-//         T num_wires_;
-
-//     public:
-//         static constexpr T invalid_wire_id = std::numeric_limits<T>::max();
-
-//     public:
-//         Wires(T num_wires) : num_wires_(num_wires),
-//             std::iota(map_.begin(), map_.end(), 0) {}
-//         ~Wires() = default;
-
-//         auto getNumWires() const -> T {
-//             return num_wires_;
-//         }
-
-//         auto getWireId(T w) const -> T {
-//             assert(w < num_wires_);
-//             return map_.at(w);
-//         }
-
-//         auto isActiveWire(T w) -> bool {
-//             assert(w < num_wires_);
-//             return map_[w] != invalid_wire_id;
-//         }
-
-//         void updateWire(T w, T new_id) {
-//             if(w < num_wires_) {
-//                 map_[w] = new_id;
-//             }
-//         }
-// };
-
 /**
  * @brief State-vector dynamic class.
  *
- * This class allocates and deallocates dynamically, and defines all operations
- * to manipulate the statevector data for quantum circuit simulation.
+ * This class allocates and deallocates the number of qubits/wires dynamically,
+ * and defines all operations to manipulate the statevector data for
+ * quantum circuit simulation.
  *
- * @note
+ * @note This class introduces `WIRE_STATUS` so that operations can be applied
+ * only on `ACTIVE` wires. `RELEASED` wires can be re-activated while `DISABLED`
+ * wires are permanently destroyed.
+ *
  */
 template <class PrecisionT = double>
 class StateVectorDynamicCPU
@@ -60,6 +30,7 @@ class StateVectorDynamicCPU
   public:
     using BaseType =
         StateVectorCPU<PrecisionT, StateVectorDynamicCPU<PrecisionT>>;
+
     using ComplexPrecisionT = std::complex<PrecisionT>;
 
     enum class WIRE_STATUS {
@@ -71,7 +42,9 @@ class StateVectorDynamicCPU
   private:
     std::vector<ComplexPrecisionT, Util::AlignedAllocator<ComplexPrecisionT>>
         data_;
-    std::vector<WIRE_STATUS> wmap_;
+
+    std::vector<WIRE_STATUS> wstatus_;
+    // std::vector<long long> wmap_;
 
     template <class IIter, class OIter>
     OIter _move_data_elements(IIter first, size_t distance, OIter second) {
@@ -94,6 +67,23 @@ class StateVectorDynamicCPU
         return second;
     }
 
+    void _scalar_mul_data(
+        std::vector<ComplexPrecisionT,
+                    Util::AlignedAllocator<ComplexPrecisionT>> &data,
+        ComplexPrecisionT scalar) {
+        std::transform(
+            data.begin(), data.end(), data.begin(),
+            [scalar](const ComplexPrecisionT &elem) { return elem * scalar; });
+    }
+
+    void _normalize_data(
+        std::vector<ComplexPrecisionT,
+                    Util::AlignedAllocator<ComplexPrecisionT>> &data) {
+        _scalar_mul_data(
+            data, std::complex<PrecisionT>{1, 0} /
+                      std::sqrt(Util::squaredNorm(data.data(), data.size())));
+    }
+
   public:
     /**
      * @brief Create a new statevector
@@ -110,7 +100,7 @@ class StateVectorDynamicCPU
                 getAllocator<ComplexPrecisionT>(this->memory_model_)} {
         data_[0] = {1, 0};
 
-        wmap_.resize(num_qubits); // all of wires are ACTIVE.
+        wstatus_.resize(num_qubits); // all of wires are ACTIVE.
     }
     /**
      * @brief Construct a statevector from another statevector
@@ -126,7 +116,7 @@ class StateVectorDynamicCPU
                    other.memoryModel()),
           data_{other.getData(), other.getData() + other.getLength(),
                 getAllocator<ComplexPrecisionT>(this->memory_model_)} {
-        wmap_.resize(other.getNumQubits()); // all of wires are ACTIVE.
+        wstatus_.resize(other.getNumQubits()); // all of wires are ACTIVE.
     }
 
     /**
@@ -146,7 +136,7 @@ class StateVectorDynamicCPU
                 getAllocator<ComplexPrecisionT>(this->memory_model_)} {
         PL_ABORT_IF_NOT(Util::isPerfectPowerOf2(other_size),
                         "The size of provided data must be a power of 2.");
-        wmap_.resize(Util::log2PerfectPower(other_size));
+        wstatus_.resize(Util::log2PerfectPower(other_size));
     }
 
     /**
@@ -178,52 +168,57 @@ class StateVectorDynamicCPU
     /**
      * @brief Get the status of a wire.
      *
-     * @param wire The index of wire.
+     * @param wire Index of the wire.
      * @return WIRE_STATUS
      */
     [[nodiscard]] auto getWireStatus(size_t wire) -> WIRE_STATUS {
-        assert(wire < wmap_.size());
-        return wmap_[wire];
+        assert(wire < wstatus_.size());
+        return wstatus_[wire];
     }
 
     /**
      * @brief Get the total number of wires.
      */
     [[nodiscard]] auto getTotalNumWires() const -> size_t {
-        return wmap_.size();
+        return wstatus_.size();
     }
 
     /**
      * @brief Get the number of active wires.
      */
     [[nodiscard]] auto getNumActiveWires() const -> size_t {
-        return std::count(wmap_.begin(), wmap_.end(), WIRE_STATUS::ACTIVE);
+        return std::count(wstatus_.begin(), wstatus_.end(),
+                          WIRE_STATUS::ACTIVE);
+    }
+
+    /**
+     * @brief Get the number of active wires up to `wire`.
+     */
+    [[nodiscard]] auto getNumActiveWires(size_t wire) const -> size_t {
+        return std::count(wstatus_.begin(), wstatus_.begin() + wire,
+                          WIRE_STATUS::ACTIVE);
     }
 
     /**
      * @brief Get the number of released wires.
      */
     [[nodiscard]] auto getNumReleasedWires() const -> size_t {
-        return std::count(wmap_.begin(), wmap_.end(), WIRE_STATUS::RELEASED);
+        return std::count(wstatus_.begin(), wstatus_.end(),
+                          WIRE_STATUS::RELEASED);
     }
 
     /**
      * @brief Get the number of disabled wires.
      */
     [[nodiscard]] auto getNumDisabledWires() const -> size_t {
-        return std::count(wmap_.begin(), wmap_.end(), WIRE_STATUS::DISABLED);
-    }
-
-    // TODO(ali): remove after debugging
-    void setWireStatus_debug(size_t wire, WIRE_STATUS status) {
-        assert(wire < wmap_.size());
-        wmap_[wire] = status;
+        return std::count(wstatus_.begin(), wstatus_.end(),
+                          WIRE_STATUS::DISABLED);
     }
 
     /**
      * @brief Check if all of wires are ACTIVE.
      *
-     * @param wires The list of wires.
+     * @param wires List of wires.
      * @return bool
      */
     [[nodiscard]] auto isActiveWires([[maybe_unused]] std::vector<size_t> wires)
@@ -237,40 +232,110 @@ class StateVectorDynamicCPU
     }
 
     /**
-     * @brief Add a new wire or re-use a released wire
+     * @brief Compute the purity of the system after releasing (a qubit) `wire`.
      *
-     * @param index If < 0, it first tries to reuse the smallest released
-     * wire, in case of the failure, it adds a new one at the end of the
-     * list of `ACTIVE` wires. If >= 0, then the status of the index-wire must
-     * be `RELEASED`, otherwise it throws LightningException. @note the value
-     * of index = -1 by default.
-     * @return It updates the state-vector and the number of qubits,
-     * and returns index of the activated wire.
+     * This traces out the complement of the wire for a more efficient
+     * computation of the purity in O(N) with calculating the reduced density
+     * matrix after tracing out the complement of qubit `wire`.
+     *
+     * @param wire Index of the wire.
+     * @return ComplexPrecisionT
      */
-    auto activateWire(long index = -1) -> size_t {
-        assert(index < static_cast<long>(wmap_.size()));
+    auto computeSystemPurity(size_t wire) -> ComplexPrecisionT {
+        PL_ABORT_IF_NOT(getWireStatus(wire) == WIRE_STATUS::ACTIVE,
+                        "Invalid wire status: The wire must be ACTIVE");
+
+        const size_t sv_size = data_.size();
+        const size_t local_wire_idx = getNumActiveWires(wire);
+
+        // With `k` indexing the subsystem on n-1 qubits, we need to insert an
+        // addtional bit into the index of the full state-vector at position
+        // `wire`. These masks enable us to split the bits of the index `k` into
+        // those above and below `wire`.
+        const size_t lower_mask = (1 << local_wire_idx) - 1;
+        const size_t upper_mask = sv_size - lower_mask - 1;
+
+        // The resulting 2x2 reduced density matrix of the complement system to
+        // qubit `wire`.
+        std::vector<ComplexPrecisionT> rho(4, {0, 0});
+
+        for (uint8_t i = 0; i < 2; i++) {
+            for (uint8_t j = 0; j < 2; j++) {
+                ComplexPrecisionT sum{0, 0};
+                for (size_t k = 0; k < (sv_size >> 1); k++) {
+                    size_t idx_wire_0 =
+                        (/* upper_bits: */ (upper_mask & k) << 1) +
+                        /* lower_bits: */ (lower_mask & k);
+                    size_t idx_i = idx_wire_0 + (i << local_wire_idx);
+                    size_t idx_j = idx_wire_0 + (j << local_wire_idx);
+
+                    // This computes <00..i..00|psi><psi|00..j..00> on the first
+                    // iteration, with the last iteration computing
+                    // <11..i..11|psi><psi|11..j..11>.
+                    sum += data_[idx_i] * std::conj(data_[idx_j]);
+                }
+                rho[2 * i + j] = sum;
+            }
+        }
+
+        // Compute/Return the trace of rho**2
+        return (rho[0] * rho[0]) + (ComplexPrecisionT{2, 0} * rho[1] * rho[2]) +
+               (rho[3] * rho[3]);
+    }
+
+    /**
+     * @brief Check the purity of a system after releasing/disabling `wire`.
+     *
+     * @param wire Index of the wire.
+     * @param eps The comparing precision threshold.
+     * @return bool
+     */
+    [[nodiscard]] auto
+    isPureSystem(size_t wire,
+                 double eps = std::numeric_limits<float>::epsilon() * 100)
+        -> bool {
+        ComplexPrecisionT purity = computeSystemPurity(wire);
+        // std::cerr << "purity: " << purity << std::endl;
+        return (std::abs(1.0 - purity.real()) < eps) && (purity.imag() < eps);
+    }
+
+    /**
+     * @brief Add a new wire or re-use a released one
+     *
+     * @param wire If < 0, it first tries to reuse the smallest released
+     * wire, in case of the failure, it adds a new one at the end of the
+     * list of `ACTIVE` wires. If >= 0, then the status of the `wire` must
+     * be `RELEASED`, otherwise it throws LightningException. @note the value
+     * of wire = -1 by default.
+     *
+     * @return It updates the state-vector and the number of qubits,
+     * and returns wire of the activated wire.
+     */
+    auto activateWire(long wire = -1) -> size_t {
+        assert(wire < static_cast<long>(wstatus_.size()));
         size_t next_idx;
         bool in_middle = true;
-        if (index < 0) {
-            auto released_wire =
-                std::find(wmap_.begin(), wmap_.end(), WIRE_STATUS::RELEASED);
-            if (released_wire == std::end(wmap_)) {
-                next_idx = wmap_.size();
-                wmap_.push_back(WIRE_STATUS::ACTIVE);
+        if (wire < 0) {
+            auto released_wire = std::find(wstatus_.begin(), wstatus_.end(),
+                                           WIRE_STATUS::RELEASED);
+            if (released_wire == std::end(wstatus_)) {
+                next_idx = wstatus_.size();
+                wstatus_.push_back(WIRE_STATUS::ACTIVE);
                 in_middle = false;
             } else {
-                next_idx = released_wire - wmap_.begin();
+                next_idx = released_wire - wstatus_.begin();
                 *released_wire = WIRE_STATUS::ACTIVE;
             }
         } else {
-            PL_ABORT_IF_NOT(getWireStatus(index) == WIRE_STATUS::RELEASED,
+            PL_ABORT_IF_NOT(getWireStatus(wire) == WIRE_STATUS::RELEASED,
                             "The wire must be released before activation.");
-            next_idx = index;
+            next_idx = wire;
         }
 
         data_.resize(data_.size() << 1);
         if (in_middle) {
-            const size_t distance = 1ul << next_idx;
+            const size_t local_wire_idx = getNumActiveWires(wire);
+            const size_t distance = 1ul << local_wire_idx;
             ComplexPrecisionT *second = &data_[data_.size() >> 1];
             second -= distance;
             for (auto first = data_.end() - distance; second >= &data_[0];
@@ -286,21 +351,29 @@ class StateVectorDynamicCPU
     /**
      * @brief Release an `ACTIVE` wire
      *
-     * @param index The index of wire to be released.
+     * @param wire Index of the wire to be released.
      *
      * @note This updates the state-vector and reduces the number
      * of qubits. But does nothing if the wire's status is either
      * `RELEASED` or `DISABLED`.
      */
-    void releaseWire(size_t index) {
-        const auto status = getWireStatus(index);
+    void releaseWire(size_t wire) {
+        const auto status = getWireStatus(wire);
         if (status == WIRE_STATUS::RELEASED ||
             status == WIRE_STATUS::DISABLED) {
             return;
         }
 
+        PL_ABORT_IF_NOT(
+            isPureSystem(wire),
+            "Invalid wire: "
+            "The state-vector must remain pure after releasing a wire")
+
+        // To catch cases with multiple released/disabled wires,
+        const size_t local_wire_idx = getNumActiveWires(wire);
+
         // if it's either |0> or |1> but not both,
-        const long distance = 1l << index;
+        const long distance = 1l << local_wire_idx;
         auto second = data_.begin();
         for (auto first = second + distance; first < data_.end();
              first += distance << 1, second += distance) {
@@ -309,29 +382,37 @@ class StateVectorDynamicCPU
 
         data_.resize(data_.size() >> 1);
         this->setNumQubits(this->getNumQubits() - 1);
-        wmap_[index] = WIRE_STATUS::RELEASED;
+        wstatus_[wire] = WIRE_STATUS::RELEASED;
     }
 
     /**
      * @brief Disable an `ACTIVE` or `RELEASED` wire
      *
-     * @param index The index of wire to be disabled.
+     * @param wire Index of the wire to be disabled.
      *
      * @note This updates the state-vector and reduces the number
      * of qubits. But does nothing if the wire's status is `DISABLED`.
      *
      * @note The `DISABLED` wires cannot be activated.
      */
-    void disableWire(size_t index) {
-        const auto status = getWireStatus(index);
+    void disableWire(size_t wire) {
+        const auto status = getWireStatus(wire);
         if (status == WIRE_STATUS::DISABLED) {
             return;
         } else if (status == WIRE_STATUS::RELEASED) {
-            wmap_[index] = WIRE_STATUS::DISABLED;
+            wstatus_[wire] = WIRE_STATUS::DISABLED;
             return;
         }
 
-        const long distance = 1l << index;
+        PL_ABORT_IF_NOT(
+            isPureSystem(wire),
+            "Invalid wire: "
+            "The state-vector must remain pure after disabling a wire")
+
+        // To catch cases with multiple released/disabled wires,
+        const size_t local_wire_idx = getNumActiveWires(wire);
+
+        const long distance = 1l << local_wire_idx;
         auto second = data_.begin();
         for (auto first = second + distance; first < data_.end();
              first += distance << 1, second += distance) {
@@ -340,7 +421,7 @@ class StateVectorDynamicCPU
 
         data_.resize(data_.size() >> 1);
         this->setNumQubits(this->getNumQubits() - 1);
-        wmap_[index] = WIRE_STATUS::DISABLED;
+        wstatus_[wire] = WIRE_STATUS::DISABLED;
     }
 
     [[nodiscard]] auto getData() -> ComplexPrecisionT * { return data_.data(); }

@@ -75,7 +75,7 @@ coverage:
 	pl-device-test --device lightning.qubit --shots=None --skip-ops $(COVERAGE) --cov-append
 
 test-cpp:
-	rm -rf ./BuildTests
+	# rm -rf ./BuildTests
 	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON
 	cmake --build ./BuildTests --target runner
 	cmake --build ./BuildTests --target test
