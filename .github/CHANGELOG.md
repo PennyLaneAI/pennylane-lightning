@@ -4,6 +4,9 @@
 
 ### Breaking changes
 
+* We explicitly disable support for PennyLane's parameter broadcasting.
+[#317](https://github.com/PennyLaneAI/pennylane-lightning/pull/317)
+
 ### Improvements
 
 * Parallelize wheel-builds where applicable.
@@ -13,11 +16,14 @@
 
 ### Bug fixes
 
+* Test updates to reflect new additions to PennyLane.
+[(#318)](https://github.com/PennyLaneAI/pennylane-lightning/pull/318)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko
+Amintor Dusko, Lee James O'Riordan
 
 ---
 
