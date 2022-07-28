@@ -90,6 +90,7 @@ set(TEST_SOURCES CreateAllWires.cpp
                  Test_OpToMemberFuncPtr.cpp
                  Test_RuntimeInfo.cpp
                  Test_StateVecAdjDiff.cpp
+                 Test_StateVectorDynamicCPU.cpp
                  Test_StateVectorManagedCPU.cpp
                  Test_StateVectorRawCPU.cpp
                  Test_Util.cpp)

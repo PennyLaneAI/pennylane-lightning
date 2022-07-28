@@ -1,6 +1,11 @@
 project(lightning_simulator)
 
-set(SIMULATOR_FILES KernelMap.cpp StateVectorRawCPU.cpp StateVectorManagedCPU.cpp Measures.cpp CACHE INTERNAL "" FORCE)
+set(SIMULATOR_FILES KernelMap.cpp 
+                    StateVectorRawCPU.cpp 
+                    StateVectorManagedCPU.cpp 
+                    StateVectorDynamicCPU.cpp 
+                    Measures.cpp 
+                    CACHE INTERNAL "" FORCE)
 
 add_library(lightning_simulator STATIC ${SIMULATOR_FILES})
 
