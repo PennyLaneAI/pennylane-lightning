@@ -28,33 +28,23 @@ jobs:
         uses: styfle/cancel-workflow-action@0.4.1
         with:
           access_token: ${{ github.token }}
-
+  
       - uses: actions/checkout@v2
 
-      - if: ${{ github.event_name == 'pull_request' }}
+      - id: pyver
         run: |
-          echo "PYVER_MATRIX=$(python3 .github/workflows/gen_pyver_matrix.py \
-            --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-            --max-version=3.${{ env.PYTHON3_MAX_VERSION }})" >> $GITHUB_ENV
-          echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
-            --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-            --max-version=3.${{ env.PYTHON3_MAX_VERSION }})"
-        id: pyver_pr
-      - if: ${{ github.event_name != 'pull_request' }}
-        run: |
-          echo "PYVER_MATRIX=$(python3 .github/workflows/gen_pyver_matrix.py \
-            --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-            --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
-            --range)" >> $GITHUB_ENV
-          echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
-            --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-            --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
-            --range)"
-        id: pyver_nonpr
-      - id: mat_output
-        run: echo "::set-output name=matrix::${{ env.PYVER_MATRIX }}"
-      outputs:
-        matrix: ${{ env.PYVER_MATRIX }}
+          if [[ ${{ github.event_name }} == 'pull_request' ]]; then
+            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
+              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }})"
+          else
+            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
+              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
+              --range)"
+          fi
+    outputs:
+      matrix: ${{ steps.pyver.outputs.matrix }}
 
   mac-wheels-x86:
     needs: [mac-set-matrix-x86]
@@ -63,7 +53,7 @@ jobs:
       matrix:
         os: [macos-11]
         arch: [x86_64]
-        include: ${{fromJson(needs.mac-set-matrix-x86.outputs.matrix)}}
+        cibw_build: ${{fromJson(needs.mac-set-matrix-x86.outputs.matrix)}}
         #cibw_build: [cp37-*, cp38-*, cp39-*, cp310-*]
 
     name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})

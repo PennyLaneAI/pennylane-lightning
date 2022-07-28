@@ -25,4 +25,5 @@ if __name__ == "__main__":
         output_list.append(repr(version_map(v_str)))
 
     json_out = json.dumps(output_list)
+
     print(json_out)
