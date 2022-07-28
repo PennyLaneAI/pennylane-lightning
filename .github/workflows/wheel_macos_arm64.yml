@@ -15,17 +15,47 @@ on:
 
 env:
   ARCHS: 'arm64'
+  PYTHON3_MIN_VERSION: "8"
+  PYTHON3_MAX_VERSION: "10"
 
 jobs:
+  mac-set-matrix-arm:
+    name: Set builder matrix versions
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+  
+      - uses: actions/checkout@v2
+
+      - id: pyver
+        run: |
+          if [[ ${{ github.event_name }} == 'pull_request' ]]; then
+            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
+              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }})"
+          else
+            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
+              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
+              --range)"
+          fi
+    outputs:
+      matrix: ${{ steps.pyver.outputs.matrix }}
+
   mac-wheels-arm64:
+    needs: [mac-set-matrix-arm]
     strategy:
       fail-fast: false
       matrix:
         os: [macos-11]
         arch: [arm64]
-        cibw_build: [cp38-*, cp39-*, cp310-*]
+        cibw_build: ${{fromJson(needs.mac-set-matrix-arm.outputs.matrix)}}
 
-    name: macos-latest::arm64 (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
+    name: macos-latest::arm64 (Python ${{ fromJson('{ "cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -39,7 +69,7 @@ jobs:
       - uses: actions/setup-python@v2
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.8'
 
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel==2.3.0
