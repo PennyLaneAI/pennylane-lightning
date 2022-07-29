@@ -1,0 +1,101 @@
+name: Testing (MacOS)
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+env:
+  TF_VERSION: 2.6.0
+  TORCH_VERSION: 1.10.0+cpu
+  GCC_VERSION: 10
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
+  OMP_NUM_THREADS: "2"
+
+jobs:
+  cpptests:
+    name: C++ tests (MacOS)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-11]
+        arch: [x86_64]
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.7'
+
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2 # for codecov
+
+      - name: Install dependencies
+        run: brew install llvm
+
+      - name: Build and run unit tests
+        run: |
+            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER="$(brew --prefix llvm)/bin/clang++"
+            cmake --build ./Build
+            mkdir -p ./Build/tests/results
+            ./Build/pennylane_lightning/src/tests/runner -s
+
+  pythontests:
+    name: Python tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-11]
+
+    steps:
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v2
+        with:
+          path: main
+          fetch-depth: 2
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.7'
+
+      - name: Install dependencies
+        run: brew install llvm 
+
+      - name: Get required Python packages
+        run: |
+          cd main
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip uninstall pennylane -y
+          pip install git+https://github.com/PennyLaneAI/pennylane.git
+
+      - name: Install ML libraries for interfaces
+        run: |
+          pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
+          pip install --upgrade "jax[cpu]"  # This also installs jaxlib
+          pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
+
+      - name: Install lightning.qubit device
+        run: |
+          cd main
+          python setup.py build_ext -i --define="CMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++"
+          pip install -e .
+
+      - name: Run PennyLane-Lightning unit tests
+        run: |
+          cd main/
+          pytest tests/ $COVERAGE_FLAGS
+          pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          files: ./main/coverage.xml
+          fail_ci_if_error: true
