@@ -75,7 +75,7 @@ jobs:
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-                          -DCMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++
+                          -DCMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++ \
                           -G Ninja && \
           cmake --build ./Build --verbose && \
           cmake --install ./Build;
@@ -92,7 +92,7 @@ jobs:
                           -DCMAKE_CXX_STANDARD=20 \
                           -DKokkos_DIR=$HOME/KOKKOS/${{ matrix.exec_model }} \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-                          -DCMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++
+                          -DCMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++ \
                           -G Ninja && \
             cmake --build ./Build --verbose && \
             cmake --install ./Build; "
