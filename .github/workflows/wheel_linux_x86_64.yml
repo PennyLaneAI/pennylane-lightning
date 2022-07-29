@@ -21,6 +21,7 @@ jobs:
         exec_model: [SERIAL, OPENMP, THREADS]
         kokkos_version: ["3.6.00"]
         container_img: ["quay.io/pypa/manylinux2014_x86_64"]
+
     name: Kokkos core & kernels (${{ matrix.exec_model }})
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container_img }}
