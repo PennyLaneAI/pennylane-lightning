@@ -26,7 +26,7 @@
 #include <vector>
 
 namespace Pennylane::Gates::AVX {
-
+/// @cond DEV
 template <class T, class = void>
 struct HasInternalWithoutParam : std::false_type {};
 
@@ -103,6 +103,7 @@ namespace Internal {
             std::make_index_sequence<internal_wires>());
     }
 } // namespace Internal
+/// @endcond
 
 template <SingleQubitGateWithoutParam AVXImpl>
 class SingleQubitGateWithoutParamHelper {
@@ -172,11 +173,13 @@ class SingleQubitGateWithParamHelper {
 
         const size_t rev_wire = num_qubits - wires[0] - 1;
 
+        // When the size of an array is smaller than the AVX type
         if (Util::exp2(num_qubits) < packed_size / 2) {
             fallback_func_(arr, num_qubits, wires, inverse, angle);
             return;
         }
 
+        // The gate applies within a register (packed bytes)
         if (rev_wire < internal_wires) {
             auto func = internal_functions[rev_wire];
             (*func)(arr, num_qubits, inverse, angle);

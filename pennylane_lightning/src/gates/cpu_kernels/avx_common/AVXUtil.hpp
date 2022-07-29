@@ -41,6 +41,25 @@ template <class PrecisionT, size_t packed_size> struct AVXConcept;
 template <class PrecisionT, size_t packed_size>
 using AVXConceptType = typename AVXConcept<PrecisionT, packed_size>::Type;
 
+/**
+ * @brief @rst
+ * For a function :math:`f(x)` with binary output, this function create 
+ * an AVX intrinsic floating-point type with values :math:`(-1)^{f(x)}`
+ * where :math:`x` is index of an array (viewed as a complex-valued array).
+ * @endrst
+ *
+ * @rst
+ * For example, when :math:`f(x) = x % 2`, this returns a packed array
+ * with values [1, 1, -1, -1, 1, 1, -1, -1]. Note that each value is repeated
+ * twice as it applies to the both real and imaginary parts. This function is
+ * used e.g. in CZ gate.
+ * @endrst
+ *
+ * @tparam PrecisionT Floating point precision type
+ * @tparam packed_size Number of packed values for a AVX intrinsic type
+ * @tparam Func Type of a function
+ * @param func Binary output function
+ */
 template <typename PrecisionT, size_t packed_size, typename Func>
 auto toParity(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
     std::array<PrecisionT, packed_size> data = {};
@@ -52,6 +71,11 @@ auto toParity(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
     }
     return AVXConceptType<PrecisionT, packed_size>::loadu(data.data());
 }
+
+/**
+ * @brief @rst
+ *
+ */
 template <typename PrecisionT, size_t packed_size, typename Func>
 auto setValueOneTwo(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
     std::array<PrecisionT, packed_size> data = {

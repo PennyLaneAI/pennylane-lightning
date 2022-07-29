@@ -26,7 +26,7 @@
 #include <vector>
 
 namespace Pennylane::Gates::AVX {
-
+/// @cond DEV
 template <class T, class = void>
 struct HasInternalInternalWithoutParam : std::false_type {};
 
@@ -217,6 +217,7 @@ namespace Internal {
     }
     // Symmetric two qubit gate with param end
 } // namespace Internal
+/// @endcond
 
 template <class T, class ParamT> class TwoQubitGateWithParamHelper {
     static_assert(sizeof(T) == -1, "Only specialized template can be used.");
