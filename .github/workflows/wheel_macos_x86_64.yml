@@ -99,6 +99,7 @@ jobs:
           cd -
 
   mac-wheels-x86:
+    needs: build_dependencies
     strategy:
       fail-fast: false
       matrix:
