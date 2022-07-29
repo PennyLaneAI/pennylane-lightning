@@ -41,6 +41,13 @@
 [[maybe_unused]] static constexpr bool use_avx2 = false;
 #endif
 
+#if defined(__FMA__)
+#define PL_USE_FMA 1
+[[maybe_unused]] static constexpr bool use_fma = true;
+#else
+[[maybe_unused]] static constexpr bool use_fma = false;
+#endif
+
 #if defined(__AVX512F__)
 #define PL_USE_AVX512F 1
 [[maybe_unused]] static constexpr bool use_avx512f = true;
