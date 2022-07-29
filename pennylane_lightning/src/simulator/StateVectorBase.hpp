@@ -129,11 +129,6 @@ template <class T, class Derived> class StateVectorBase {
         return static_cast<const Derived *>(this)->getKernelForMatrix(mat_op);
     }
 
-    [[nodiscard]] virtual auto
-    isActiveWires([[maybe_unused]] std::vector<size_t> wires) -> bool {
-        return true;
-    }
-
     /**
      * @brief Compare two statevectors.
      *
@@ -168,8 +163,6 @@ template <class T, class Derived> class StateVectorBase {
     void applyOperation(Gates::KernelType kernel, const std::string &opName,
                         const std::vector<size_t> &wires, bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
-        PL_ABORT_IF_NOT(isActiveWires(wires),
-                        "Invalid list of wires: All of wires must be ACTIVE")
         auto *arr = getData();
         DynamicDispatcher<PrecisionT>::getInstance().applyOperation(
             kernel, arr, num_qubits_, opName, wires, inverse, params);
@@ -186,8 +179,6 @@ template <class T, class Derived> class StateVectorBase {
     void applyOperation(const std::string &opName,
                         const std::vector<size_t> &wires, bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
-        PL_ABORT_IF_NOT(isActiveWires(wires),
-                        "Invalid list of wires: All of wires must be ACTIVE")
         auto *arr = getData();
         auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         const auto gate_op = dispatcher.strToGateOp(opName);
@@ -224,9 +215,6 @@ template <class T, class Derived> class StateVectorBase {
             "Invalid arguments: number of operations, wires, inverses, and "
             "parameters must all be equal");
         for (size_t i = 0; i < numOperations; i++) {
-            PL_ABORT_IF_NOT(
-                isActiveWires(ops_wires[i]),
-                "Invalid list of wires: All of wires must be ACTIVE")
             applyOperation(ops[i], ops_wires[i], ops_inverse[i], ops_params[i]);
         }
     }
@@ -255,9 +243,6 @@ template <class T, class Derived> class StateVectorBase {
                 "must all be equal");
         }
         for (size_t i = 0; i < numOperations; i++) {
-            PL_ABORT_IF_NOT(
-                isActiveWires(ops_wires[i]),
-                "Invalid list of wires: All of wires must be ACTIVE")
             applyOperation(ops[i], ops_wires[i], ops_inverse[i], {});
         }
     }
@@ -274,8 +259,6 @@ template <class T, class Derived> class StateVectorBase {
                                              const std::string &opName,
                                              const std::vector<size_t> &wires,
                                              bool adj = false) -> PrecisionT {
-        PL_ABORT_IF_NOT(isActiveWires(wires),
-                        "Invalid list of wires: All of wires must be ACTIVE")
         auto *arr = getData();
         return DynamicDispatcher<PrecisionT>::getInstance().applyGenerator(
             kernel, arr, num_qubits_, opName, wires, adj);
@@ -291,8 +274,6 @@ template <class T, class Derived> class StateVectorBase {
     [[nodiscard]] auto applyGenerator(const std::string &opName,
                                       const std::vector<size_t> &wires,
                                       bool adj = false) -> PrecisionT {
-        PL_ABORT_IF_NOT(isActiveWires(wires),
-                        "Invalid list of wires: All of wires must be ACTIVE")
         auto *arr = getData();
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         const auto gntr_op = dispatcher.strToGeneratorOp(opName);
@@ -313,9 +294,6 @@ template <class T, class Derived> class StateVectorBase {
                             const ComplexPrecisionT *matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
-        PL_ABORT_IF_NOT(isActiveWires(wires),
-                        "Invalid list of wires: All of wires must be ACTIVE")
-
         using Gates::MatrixOperation;
 
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
@@ -340,9 +318,6 @@ template <class T, class Derived> class StateVectorBase {
                             const std::vector<ComplexPrecisionT> &matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
-        PL_ABORT_IF_NOT(isActiveWires(wires),
-                        "Invalid list of wires: All of wires must be ACTIVE")
-
         using Gates::MatrixOperation;
 
         PL_ABORT_IF(matrix.size() != Util::exp2(2 * wires.size()),
@@ -363,9 +338,6 @@ template <class T, class Derived> class StateVectorBase {
     inline void applyMatrix(const ComplexPrecisionT *matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
-        PL_ABORT_IF_NOT(isActiveWires(wires),
-                        "Invalid list of wires: All of wires must be ACTIVE")
-
         using Gates::MatrixOperation;
 
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
@@ -394,9 +366,6 @@ template <class T, class Derived> class StateVectorBase {
     inline void applyMatrix(const std::vector<ComplexPrecisionT, Alloc> &matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
-        PL_ABORT_IF_NOT(isActiveWires(wires),
-                        "Invalid list of wires: All of wires must be ACTIVE")
-
         PL_ABORT_IF(matrix.size() != Util::exp2(2 * wires.size()),
                     "The size of matrix does not match with the given "
                     "number of wires");

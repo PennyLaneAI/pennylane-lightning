@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add `StateVectorDynamicCPU` that allows the allocation and deallocation 
+of qubits/wires dynamically. 
+
 ### Breaking changes
 
 * We explicitly disable support for PennyLane's parameter broadcasting.
