@@ -36,7 +36,7 @@ else()
     target_link_libraries(lightning_gates_register_kernels_default PRIVATE lightning_external_libs lightning_compile_options lightning_utils)
     set_target_properties(lightning_gates_register_kernels_default PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-    target_link_libraries(lightning_gates PRIVATE lightning_gates_register_kernels_default)
+    target_link_libraries(lightning_gates PRIVATE lightning_gates_register_kernels_default lightning_gates_default_kernels)
 endif()
 
 target_include_directories(lightning_gates PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
