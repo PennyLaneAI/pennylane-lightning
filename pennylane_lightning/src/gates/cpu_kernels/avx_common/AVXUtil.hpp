@@ -43,7 +43,7 @@ using AVXConceptType = typename AVXConcept<PrecisionT, packed_size>::Type;
 
 /**
  * @brief @rst
- * For a function :math:`f(x)` with binary output, this function create 
+ * For a function :math:`f(x)` with binary output, this function create
  * an AVX intrinsic floating-point type with values :math:`(-1)^{f(x)}`
  * where :math:`x` is index of an array (viewed as a complex-valued array).
  * @endrst

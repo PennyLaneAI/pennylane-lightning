@@ -7,6 +7,8 @@ target_link_libraries(lightning_gates PRIVATE lightning_compile_options
                                               lightning_external_libs
                                               lightning_utils)
 
+add_subdirectory(cpu_kernels)
+
 if (UNIX AND (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(AMD64)|(X64)|(x64)|(x86_64)"))
     message(STATUS "Compiling for x86. Enable AVX2/AVX512 kernels (runtime enabled).")
 
@@ -27,7 +29,7 @@ if (UNIX AND (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(AMD64)|(X64)|(x64)|(x86_64)"))
     target_include_directories(lightning_gates_register_kernels_x64 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
     set_target_properties(lightning_gates_register_kernels_x64 PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-    target_link_libraries(lightning_gates PRIVATE lightning_gates_register_kernels_x64 lightning_gates_register_kernels_avx2 lightning_gates_register_kernels_avx512)
+    target_link_libraries(lightning_gates PRIVATE lightning_gates_register_kernels_x64 lightning_gates_register_kernels_avx2 lightning_gates_register_kernels_avx512 lightning_gates_default_kernels)
 else()
     add_library(lightning_gates_register_kernels_default STATIC RegisterKernels_Default.cpp GateUtil.cpp)
     target_include_directories(lightning_gates_register_kernels_default PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

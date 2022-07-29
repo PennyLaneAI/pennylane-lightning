@@ -1,0 +1,4 @@
+# export lightning_gates_default_kernels
+
+add_library(lightning_gates_default_kernels STATIC GateImplementationsLM.cpp)
+target_link_libraries(lightning_gates_default_kernels PRIVATE lightning_external_libs lightning_compile_options lightning_utils)

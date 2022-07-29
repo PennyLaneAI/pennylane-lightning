@@ -36,11 +36,11 @@ jobs:
           fetch-depth: 2 # for codecov
 
       - name: Install dependencies
-        run: brew install llvm@14
+        run: brew install llvm
 
       - name: Build and run unit tests
         run: |
-            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER="$(brew --prefix llvm@14)/bin/clang++"
+            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER="$(brew --prefix llvm)/bin/clang++"
             cmake --build ./Build
             ./Build/pennylane_lightning/src/tests/runner -s "[Test_RuntimeInfo]"
             ./Build/pennylane_lightning/src/tests/runner -s
