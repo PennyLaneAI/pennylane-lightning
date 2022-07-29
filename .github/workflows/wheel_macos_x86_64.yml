@@ -78,8 +78,9 @@ jobs:
                           -DCMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++ \
                           -G Ninja && \
           cmake --build ./Build --verbose && \
-          cmake --install ./Build;
+          cmake --install ./Build && \
           cd -
+
       - name: Build Kokkos kernels library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
@@ -94,8 +95,8 @@ jobs:
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                           -DCMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++ \
                           -G Ninja && \
-            cmake --build ./Build --verbose && \
-            cmake --install ./Build; "
+          cmake --build ./Build --verbose && \
+          cmake --install ./Build && \
           cd -
 
   mac-wheels-x86:
