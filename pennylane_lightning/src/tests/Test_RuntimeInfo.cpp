@@ -9,6 +9,7 @@ TEST_CASE("Runtime information is correct", "[Test_RuntimeInfo]") {
     INFO("RuntimeInfo::AVX " << RuntimeInfo::AVX());
     INFO("RuntimeInfo::AVX2 " << RuntimeInfo::AVX2());
     INFO("RuntimeInfo::AVX512F " << RuntimeInfo::AVX512F());
+    INFO("RuntimeInfo::FMA " << RuntimeInfo::FMA());
     INFO("RuntimeInfo::vendor " << RuntimeInfo::vendor());
     INFO("RuntimeInfo::brand " << RuntimeInfo::brand());
     REQUIRE(true);
