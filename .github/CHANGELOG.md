@@ -2,13 +2,15 @@
 
 ### New features since last release
 
-* Add `StateVectorDynamicCPU` that allows the allocation and deallocation 
-of qubits/wires dynamically. 
+* Dynamic allocation and deallocation of qubits/wires support by `StateVectorDynamicCPU`
+with introducing `WIRE_STATUS` so that operations can be only applied on `ACTIVE` wires. 
+`RELEASED` wires can be re-activated while `DISABLED` wires are permanently destroyed.
+[(#323)](https://github.com/PennyLaneAI/pennylane-lightning/pull/323)
 
 ### Breaking changes
 
 * We explicitly disable support for PennyLane's parameter broadcasting.
-[#317](https://github.com/PennyLaneAI/pennylane-lightning/pull/317)
+[(#317)](https://github.com/PennyLaneAI/pennylane-lightning/pull/317)
 
 ### Improvements
 

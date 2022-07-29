@@ -20,9 +20,9 @@ namespace Pennylane {
  * and defines all operations to manipulate the statevector data for
  * quantum circuit simulation.
  *
- * @note This class introduces `WIRE_STATUS` so that operations can be applied
- * only on `ACTIVE` wires. `RELEASED` wires can be re-activated while `DISABLED`
- * wires are permanently destroyed.
+ * @note This class introduces `WIRE_STATUS` so that operations can be only
+ * applied on `ACTIVE` wires. `RELEASED` wires can be re-activated while
+ * `DISABLED` wires are permanently destroyed.
  */
 template <class PrecisionT = double>
 class StateVectorDynamicCPU
