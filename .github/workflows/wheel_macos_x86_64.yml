@@ -41,6 +41,9 @@ jobs:
           path: $HOME/KOKKOS/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-static
 
+      - name: Install clang
+        run: brew install llvm
+
       - name: Clone Kokkos libs
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
@@ -72,6 +75,7 @@ jobs:
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                          -DCMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++
                           -G Ninja && \
           cmake --build ./Build --verbose && \
           cmake --install ./Build;
@@ -88,12 +92,11 @@ jobs:
                           -DCMAKE_CXX_STANDARD=20 \
                           -DKokkos_DIR=$HOME/KOKKOS/${{ matrix.exec_model }} \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                          -DCMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++
                           -G Ninja && \
             cmake --build ./Build --verbose && \
             cmake --install ./Build; "
           cd -
-
-
 
   mac-wheels-x86:
     strategy:
