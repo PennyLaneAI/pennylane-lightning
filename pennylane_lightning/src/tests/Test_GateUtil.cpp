@@ -91,20 +91,3 @@ TEST_CASE("getIndicesAfterExclusion", "[GateUtil]") {
         CHECK(indices == expected);
     }
 }
-
-template <class GateImplementation> void testKernel() {
-    REQUIRE(implementedGatesForKernel(GateImplementation::kernel_id) ==
-            std::vector(std::begin(GateImplementation::implemented_gates),
-                        std::end(GateImplementation::implemented_gates)));
-}
-
-template <class TypeList, size_t... Is>
-void testAllTestKernels([[maybe_unused]] std::index_sequence<Is...> indices) {
-    using Util::getNthType;
-    (testKernel<getNthType<TypeList, Is>>(), ...);
-}
-
-TEST_CASE("implementedGatesForKernel", "[GateUtil]") {
-    constexpr static size_t num_kernels = Util::length<TestKernels>();
-    testAllTestKernels<TestKernels>(std::make_index_sequence<num_kernels>());
-}

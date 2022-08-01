@@ -18,7 +18,6 @@
 #include "Bindings.hpp"
 
 #include "GateUtil.hpp"
-#include "SelectKernel.hpp"
 #include "StateVecAdjDiff.hpp"
 #include "StateVectorManagedCPU.hpp"
 

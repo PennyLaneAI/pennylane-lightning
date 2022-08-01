@@ -73,6 +73,11 @@ TEST_CASE("Test unallowed kernel", "[KernelMap]") {
         GateOperation::PauliX, Threading::SingleThread,
         CPUMemoryModel::Unaligned, 0, Util::full_domain<size_t>(),
         KernelType::None));
+
+    REQUIRE_THROWS(instance.assignKernelForOp(
+        GateOperation::PauliX, Threading::SingleThread,
+        CPUMemoryModel::Unaligned, 0, Util::full_domain<size_t>(),
+        KernelType::AVX2));
 }
 
 TEST_CASE("Test several limiting cases of default kernels", "[KernelMap]") {

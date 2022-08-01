@@ -45,7 +45,7 @@ clean:
 	find . -type d -name '__pycache__' -exec rm -r {} \+
 	rm -rf dist
 	rm -rf build
-	rm -rf BuildTests BuildBench BuildGBench
+	rm -rf BuildTests BuildTidy BuildGBench
 	rm -rf .coverage coverage_html_report/
 	rm -rf tmp
 	rm -rf *.dat
@@ -123,6 +123,6 @@ endif
 
 .PHONY: check-tidy
 check-tidy:
-	rm -rf ./Build
-	cmake . -BBuild -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON
-	cmake --build ./Build
+	rm -rf ./BuildTidy
+	cmake . -BBuildTidy -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON
+	cmake --build ./BuildTidy

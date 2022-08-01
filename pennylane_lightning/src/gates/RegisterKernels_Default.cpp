@@ -1,4 +1,4 @@
-// Copyright 2021 Xanadu Quantum Technologies Inc.
+// Copyright 2022 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,27 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file AvailableKernels.hpp
- * Defines available kernels. Be careful when including this file as
- * it also includes all gate implementations.
+ * @file DynamicDispatcher.cpp
+ * Register all gate and generator implementations
  */
-#pragma once
-
-#include "TypeList.hpp"
+#include "DynamicDispatcher.hpp"
+#include "RegisterKernel.hpp"
 #include "cpu_kernels/GateImplementationsLM.hpp"
 #include "cpu_kernels/GateImplementationsPI.hpp"
 #include "cpu_kernels/QChemGateImplementations.hpp"
 
-namespace Pennylane {
-/**
- * @brief List of all available kernels (gate implementations).
- *
- * If you want to add another gate implementation, just add it to this type
- * list.
- * @rst
- * See :ref:`lightning_add_gate_implementation` for details.
- * @endrst
- */
-using AvailableKernels = Util::TypeList<Gates::GateImplementationsLM,
-                                        Gates::GateImplementationsPI, void>;
-} // namespace Pennylane
+namespace Pennylane::Internal {
+int registerAllAvailableKernels_Float() {
+    registerKernel<float, float, Gates::GateImplementationsLM>();
+    registerKernel<float, float, Gates::GateImplementationsPI>();
+    return 1;
+}
+
+int registerAllAvailableKernels_Double() {
+    registerKernel<double, double, Gates::GateImplementationsLM>();
+    registerKernel<double, double, Gates::GateImplementationsPI>();
+    return 1;
+}
+} // namespace Pennylane::Internal

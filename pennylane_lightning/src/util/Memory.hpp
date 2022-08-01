@@ -34,6 +34,9 @@ namespace Pennylane::Util {
  * @return Pointer to the allocated memory
  */
 inline auto alignedAlloc(uint32_t alignment, size_t bytes) -> void * {
+    if (bytes <= alignment) {
+        bytes = alignment;
+    }
 #if defined(__clang__) && defined(__APPLE__)
     /*
      * We use `posix_memalign` for MacOS as Mac does not support
@@ -182,19 +185,4 @@ template <class PrecisionT> struct commonAlignmentHelper<PrecisionT, void> {
     constexpr static size_t value = 1;
 };
 /// @endcond
-
-/**
- * @brief This function calculate the common multiplier of alignments of the
- * given kernels in TypeList.
- *
- * As all alignment must be a power of 2, we just can choose the maximum
- * alignment.
- *
- * @tparam PrecisionT Floating point type
- * @tparam TypeList Type list of kernels.
- */
-template <class PrecisionT, class TypeList>
-[[maybe_unused]] constexpr static auto common_alignment_v =
-    commonAlignmentHelper<PrecisionT, TypeList>::value;
-
 } // namespace Pennylane::Util
