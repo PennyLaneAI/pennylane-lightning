@@ -17,20 +17,31 @@
  */
 #include "DynamicDispatcher.hpp"
 #include "RegisterKernel.hpp"
+#include "Macros.hpp"
+
 #include "cpu_kernels/GateImplementationsLM.hpp"
 #include "cpu_kernels/GateImplementationsPI.hpp"
+#if PL_USE_OMP
+#include "cpu_kernels/GateImplementationsParallelLM.hpp"
+#endif
 #include "cpu_kernels/QChemGateImplementations.hpp"
 
 namespace Pennylane::Internal {
 int registerAllAvailableKernels_Float() {
     registerKernel<float, float, Gates::GateImplementationsLM>();
     registerKernel<float, float, Gates::GateImplementationsPI>();
+#if PL_USE_OMP
+    registerKernel<float, float, Gates::GateImplementationsParallelLM>();
+#endif
     return 1;
 }
 
 int registerAllAvailableKernels_Double() {
     registerKernel<double, double, Gates::GateImplementationsLM>();
     registerKernel<double, double, Gates::GateImplementationsPI>();
+#if PL_USE_OMP
+    registerKernel<double, double, Gates::GateImplementationsParallelLM>();
+#endif
     return 1;
 }
 } // namespace Pennylane::Internal

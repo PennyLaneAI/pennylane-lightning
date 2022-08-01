@@ -19,8 +19,13 @@
 #include "DynamicDispatcher.hpp"
 #include "RegisterKernel.hpp"
 #include "RuntimeInfo.hpp"
+#include "Macros.hpp"
+
 #include "cpu_kernels/GateImplementationsLM.hpp"
 #include "cpu_kernels/GateImplementationsPI.hpp"
+#if PL_USE_OMP
+#include "cpu_kernels/GateImplementationsParallelLM.hpp"
+#endif
 #include "cpu_kernels/QChemGateImplementations.hpp"
 
 namespace Pennylane::Internal {
@@ -29,6 +34,9 @@ int registerAllAvailableKernels_Float() {
     using Pennylane::Util::RuntimeInfo;
     registerKernel<float, float, Gates::GateImplementationsLM>();
     registerKernel<float, float, Gates::GateImplementationsPI>();
+#if PL_USE_OMP
+    registerKernel<float, float, Gates::GateImplementationsParallelLM>();
+#endif
 
     if (RuntimeInfo::AVX2() && RuntimeInfo::FMA()) {
         registerKernelsAVX2_Float();
@@ -43,6 +51,9 @@ int registerAllAvailableKernels_Double() {
     using Pennylane::Util::RuntimeInfo;
     registerKernel<double, double, Gates::GateImplementationsLM>();
     registerKernel<double, double, Gates::GateImplementationsPI>();
+#if PL_USE_OMP
+    registerKernel<double, double, Gates::GateImplementationsParallelLM>();
+#endif
 
     if (RuntimeInfo::AVX2() && RuntimeInfo::FMA()) {
         registerKernelsAVX2_Double();

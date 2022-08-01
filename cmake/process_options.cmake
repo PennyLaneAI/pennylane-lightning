@@ -89,7 +89,7 @@ if(ENABLE_OPENMP)
             "Install OpenMP or set ENABLE_OPENMP OFF.")
     endif()
 
-    target_link_libraries(lightning_external_libs INTERFACE OpenMP::OpenMP_CXX)
+    target_link_libraries(lightning_external_libs INTERFACE OpenMP::OpenMP_CXX "-lc")
 else()
     message(STATUS "ENABLE_OPENMP is OFF.")
 endif()

@@ -10,6 +10,10 @@
 // limitations under the License.
 #pragma once
 
+#include "BitUtil.hpp"
+#include "TypeList.hpp"
+#include "Macros.hpp"
+
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
@@ -18,9 +22,6 @@
 #include <limits>
 #include <memory>
 #include <new>
-
-#include "BitUtil.hpp"
-#include "TypeList.hpp"
 
 namespace Pennylane::Util {
 /**
@@ -34,8 +35,8 @@ namespace Pennylane::Util {
  * @return Pointer to the allocated memory
  */
 inline auto alignedAlloc(uint32_t alignment, size_t bytes) -> void * {
-    if (bytes <= alignment) {
-        bytes = alignment;
+    if (bytes % alignment != 0) {
+        bytes = alignment * (bytes / alignment + 1);
     }
 #if defined(__clang__) && defined(__APPLE__)
     /*

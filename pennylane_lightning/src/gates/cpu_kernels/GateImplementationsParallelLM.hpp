@@ -29,6 +29,10 @@
 #include <complex>
 #include <vector>
 
+#include <climits>
+#include <complex>
+#include <vector>
+
 namespace Pennylane::Gates {
 /**
  * @brief A gate operation implementation with less memory.
@@ -38,7 +42,8 @@ namespace Pennylane::Gates {
  *
  * @tparam PrecisionT Floating point precision of underlying statevector data
  */
-class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
+class GateImplementationsParallelLM
+    : public PauliGenerator<GateImplementationsParallelLM> {
   private:
     /* Alias utility functions */
     static std::pair<size_t, size_t> revWireParity(size_t rev_wire) {
@@ -67,8 +72,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
   public:
-    constexpr static KernelType kernel_id = KernelType::LM;
-    constexpr static std::string_view name = "LM";
+    constexpr static KernelType kernel_id = KernelType::ParallelLM;
+    constexpr static std::string_view name = "ParallelLM";
+
     template <typename PrecisionT>
     constexpr static size_t required_alignment =
         std::alignment_of_v<PrecisionT>;
@@ -76,7 +82,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     constexpr static size_t packed_bytes = sizeof(PrecisionT);
 
     constexpr static std::array implemented_gates = {
-        GateOperation::Identity,
         GateOperation::PauliX,
         GateOperation::PauliY,
         GateOperation::PauliZ,
@@ -88,22 +93,18 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GateOperation::RZ,
         GateOperation::PhaseShift,
         GateOperation::Rot,
+        GateOperation::CNOT,
         GateOperation::CY,
         GateOperation::CZ,
-        GateOperation::CNOT,
         GateOperation::SWAP,
+        GateOperation::IsingXX,
+        GateOperation::IsingYY,
+        GateOperation::IsingZZ,
         GateOperation::ControlledPhaseShift,
         GateOperation::CRX,
         GateOperation::CRY,
         GateOperation::CRZ,
         GateOperation::CRot,
-        GateOperation::IsingXX,
-        GateOperation::IsingXY,
-        GateOperation::IsingYY,
-        GateOperation::IsingZZ,
-        GateOperation::SingleExcitation,
-        GateOperation::SingleExcitationMinus,
-        GateOperation::SingleExcitationPlus,
         GateOperation::MultiRZ};
 
     constexpr static std::array implemented_generators = {
@@ -115,19 +116,13 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GeneratorOperation::CRY,
         GeneratorOperation::CRZ,
         GeneratorOperation::IsingXX,
-        GeneratorOperation::IsingXY,
         GeneratorOperation::IsingYY,
         GeneratorOperation::IsingZZ,
         GeneratorOperation::ControlledPhaseShift,
-        GeneratorOperation::SingleExcitation,
-        GeneratorOperation::SingleExcitationMinus,
-        GeneratorOperation::SingleExcitationPlus,
         GeneratorOperation::MultiRZ,
     };
-
     constexpr static std::array implemented_matrices = {
-        MatrixOperation::SingleQubitOp, MatrixOperation::TwoQubitOp,
-        MatrixOperation::MultiQubitOp};
+        MatrixOperation::SingleQubitOp, MatrixOperation::TwoQubitOp};
 
     /**
      * @brief Apply a single qubit gate to the statevector.
@@ -142,37 +137,54 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static inline void
     applySingleQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
                        const std::complex<PrecisionT> *matrix,
-                       const std::vector<size_t> &wires, bool inverse = false) {
+                       const std::vector<size_t>& wires,
+                       bool inverse = false) {
         PL_ASSERT(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
         const auto [parity_high, parity_low] = revWireParity(rev_wire);
 
+        constexpr size_t stepsize = 8;
+
         if (inverse) {
-            for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
-                const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
-                const size_t i1 = i0 | rev_wire_shift;
-                const std::complex<PrecisionT> v0 = arr[i0];
-                const std::complex<PrecisionT> v1 = arr[i1];
-                arr[i0] = std::conj(matrix[0B00]) * v0 +
-                          std::conj(matrix[0B10]) *
-                              v1; // NOLINT(readability-magic-numbers)
-                arr[i1] = std::conj(matrix[0B01]) * v0 +
-                          std::conj(matrix[0B11]) *
-                              v1; // NOLINT(readability-magic-numbers)
+#pragma omp parallel for default(none) firstprivate(                           \
+    parity_high, parity_low, rev_wire_shift, arr, num_qubits, matrix)
+            for (size_t n = 0; n < Util::exp2(num_qubits - 1); n += stepsize) {
+                PL_UNROLL_LOOP
+                for (size_t idx = 0; idx < stepsize; idx++) {
+                    const size_t k = n + idx;
+                    const size_t i0 =
+                        ((k << 1U) & parity_high) | (parity_low & k);
+                    const size_t i1 = i0 | rev_wire_shift;
+                    const std::complex<PrecisionT> v0 = arr[i0];
+                    const std::complex<PrecisionT> v1 = arr[i1];
+                    arr[i0] = std::conj(matrix[0B00]) * v0 +
+                              std::conj(matrix[0B10]) *
+                                  v1; // NOLINT(readability-magic-numbers)
+                    arr[i1] = std::conj(matrix[0B01]) * v0 +
+                              std::conj(matrix[0B11]) *
+                                  v1; // NOLINT(readability-magic-numbers)
+                }
             }
         } else {
-            for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
-                const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
-                const size_t i1 = i0 | rev_wire_shift;
-                const std::complex<PrecisionT> v0 = arr[i0];
-                const std::complex<PrecisionT> v1 = arr[i1];
-                arr[i0] =
-                    matrix[0B00] * v0 +
-                    matrix[0B01] * v1; // NOLINT(readability-magic-numbers)
-                arr[i1] =
-                    matrix[0B10] * v0 +
-                    matrix[0B11] * v1; // NOLINT(readability-magic-numbers)
+#pragma omp parallel for default(none) firstprivate(                           \
+    parity_high, parity_low, rev_wire_shift, arr, num_qubits, matrix)
+            for (size_t n = 0; n < Util::exp2(num_qubits - 1); n += stepsize) {
+                PL_UNROLL_LOOP
+                for (size_t idx = 0; idx < stepsize; idx++) {
+                    const size_t k = n + idx;
+                    const size_t i0 =
+                        ((k << 1U) & parity_high) | (parity_low & k);
+                    const size_t i1 = i0 | rev_wire_shift;
+                    const std::complex<PrecisionT> v0 = arr[i0];
+                    const std::complex<PrecisionT> v1 = arr[i1];
+                    arr[i0] =
+                        matrix[0B00] * v0 +
+                        matrix[0B01] * v1; // NOLINT(readability-magic-numbers)
+                    arr[i1] =
+                        matrix[0B10] * v0 +
+                        matrix[0B11] * v1; // NOLINT(readability-magic-numbers)
+                }
             }
         }
     }
@@ -191,6 +203,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                     const std::complex<PrecisionT> *matrix,
                     const std::vector<size_t> &wires, bool inverse = false) {
         PL_ASSERT(wires.size() == 2);
+        constexpr static size_t stepsize = 8;
+
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
@@ -201,157 +215,98 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             revWireParity(rev_wire0, rev_wire1);
 
         if (inverse) {
-            for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
-                const size_t i00 = ((k << 2U) & parity_high) |
-                                   ((k << 1U) & parity_middle) |
-                                   (k & parity_low);
-                const size_t i10 = i00 | rev_wire1_shift;
-                const size_t i01 = i00 | rev_wire0_shift;
-                const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
+#pragma omp parallel for default(none)                                         \
+    firstprivate(parity_high, parity_middle, parity_low, rev_wire0_shift,      \
+                 rev_wire1_shift, arr, num_qubits, matrix)
+            for (size_t n = 0; n < Util::exp2(num_qubits - 2); n += stepsize) {
+                PL_UNROLL_LOOP
+                for (size_t idx = 0; idx < stepsize; idx++) {
+                    const size_t k = n + idx;
+                    const size_t i00 = ((k << 2U) & parity_high) |
+                                       ((k << 1U) & parity_middle) |
+                                       (k & parity_low);
+                    const size_t i10 = i00 | rev_wire1_shift;
+                    const size_t i01 = i00 | rev_wire0_shift;
+                    const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
 
-                const std::complex<PrecisionT> v00 = arr[i00];
-                const std::complex<PrecisionT> v01 = arr[i01];
-                const std::complex<PrecisionT> v10 = arr[i10];
-                const std::complex<PrecisionT> v11 = arr[i11];
+                    const std::complex<PrecisionT> v00 = arr[i00];
+                    const std::complex<PrecisionT> v01 = arr[i01];
+                    const std::complex<PrecisionT> v10 = arr[i10];
+                    const std::complex<PrecisionT> v11 = arr[i11];
 
-                // NOLINTNEXTLINE(readability-magic-numbers)
-                arr[i00] = std::conj(matrix[0b0000]) * v00 +
-                           // NOLINTNEXTLINE(readability-magic-numbers)
-                           std::conj(matrix[0b0100]) * v01 +
-                           // NOLINTNEXTLINE(readability-magic-numbers)
-                           std::conj(matrix[0b1000]) * v10 +
-                           // NOLINTNEXTLINE(readability-magic-numbers)
-                           std::conj(matrix[0b1100]) * v11;
-                // NOLINTNEXTLINE(readability-magic-numbers)
-                arr[i01] = std::conj(matrix[0b0001]) * v00 +
-                           // NOLINTNEXTLINE(readability-magic-numbers)
-                           std::conj(matrix[0b0101]) * v01 +
-                           // NOLINTNEXTLINE(readability-magic-numbers)
-                           std::conj(matrix[0b1001]) * v10 +
-                           // NOLINTNEXTLINE(readability-magic-numbers)
-                           std::conj(matrix[0b1101]) * v11;
-                // NOLINTNEXTLINE(readability-magic-numbers)
-                arr[i10] = std::conj(matrix[0b0010]) * v00 +
-                           // NOLINTNEXTLINE(readability-magic-numbers)
-                           std::conj(matrix[0b0110]) * v01 +
-                           // NOLINTNEXTLINE(readability-magic-numbers)
-                           std::conj(matrix[0b1010]) * v10 +
-                           // NOLINTNEXTLINE(readability-magic-numbers)
-                           std::conj(matrix[0b1110]) * v11;
-                // NOLINTNEXTLINE(readability-magic-numbers)
-                arr[i11] = std::conj(matrix[0b0011]) * v00 +
-                           // NOLINTNEXTLINE(readability-magic-numbers)
-                           std::conj(matrix[0b0111]) * v01 +
-                           // NOLINTNEXTLINE(readability-magic-numbers)
-                           std::conj(matrix[0b1011]) * v10 +
-                           // NOLINTNEXTLINE(readability-magic-numbers)
-                           std::conj(matrix[0b1111]) * v11;
-            }
-        } else {
-            for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
-                const size_t i00 = ((k << 2U) & parity_high) |
-                                   ((k << 1U) & parity_middle) |
-                                   (k & parity_low);
-                const size_t i10 = i00 | rev_wire1_shift;
-                const size_t i01 = i00 | rev_wire0_shift;
-                const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
-
-                const std::complex<PrecisionT> v00 = arr[i00];
-                const std::complex<PrecisionT> v01 = arr[i01];
-                const std::complex<PrecisionT> v10 = arr[i10];
-                const std::complex<PrecisionT> v11 = arr[i11];
-
-                // NOLINTNEXTLINE(readability-magic-numbers)
-                arr[i00] = matrix[0b0000] * v00 + matrix[0b0001] * v01 +
-                           // NOLINTNEXTLINE(readability-magic-numbers)
-                           matrix[0b0010] * v10 + matrix[0b0011] * v11;
-                // NOLINTNEXTLINE(readability-magic-numbers)
-                arr[i01] = matrix[0b0100] * v00 + matrix[0b0101] * v01 +
-                           // NOLINTNEXTLINE(readability-magic-numbers)
-                           matrix[0b0110] * v10 + matrix[0b0111] * v11;
-                // NOLINTNEXTLINE(readability-magic-numbers)
-                arr[i10] = matrix[0b1000] * v00 + matrix[0b1001] * v01 +
-                           // NOLINTNEXTLINE(readability-magic-numbers)
-                           matrix[0b1010] * v10 + matrix[0b1011] * v11;
-                // NOLINTNEXTLINE(readability-magic-numbers)
-                arr[i11] = matrix[0b1100] * v00 + matrix[0b1101] * v01 +
-                           // NOLINTNEXTLINE(readability-magic-numbers)
-                           matrix[0b1110] * v10 + matrix[0b1111] * v11;
-            }
-        }
-    }
-
-    template <class PrecisionT>
-    static void
-    applyMultiQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
-                      const std::complex<PrecisionT> *matrix,
-                      const std::vector<size_t> &wires, bool inverse) {
-        using Util::bitswap;
-        PL_ASSERT(num_qubits >= wires.size());
-
-        const size_t dim = static_cast<size_t>(1U) << wires.size();
-        std::vector<size_t> indices(dim);
-        std::vector<std::complex<PrecisionT>> coeffs_in(dim, 0.0);
-
-        if (inverse) {
-            for (size_t k = 0; k < Util::exp2(num_qubits); k += dim) {
-                for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
-                    size_t idx = k | inner_idx;
-                    const size_t n_wires = wires.size();
-                    for (size_t pos = 0; pos < n_wires; pos++) {
-                        idx = bitswap(idx, n_wires - pos - 1,
-                                      num_qubits - wires[pos] - 1);
-                    }
-                    indices[inner_idx] = idx;
-                    coeffs_in[inner_idx] = arr[idx];
-                }
-
-                for (size_t i = 0; i < dim; i++) {
-                    const auto idx = indices[i];
-                    arr[idx] = 0.0;
-
-                    for (size_t j = 0; j < dim; j++) {
-                        const size_t base_idx = j * dim;
-                        arr[idx] +=
-                            std::conj(matrix[base_idx + i]) * coeffs_in[j];
-                    }
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    arr[i00] = std::conj(matrix[0b0000]) * v00 +
+                               // NOLINTNEXTLINE(readability-magic-numbers)
+                               std::conj(matrix[0b0100]) * v01 +
+                               // NOLINTNEXTLINE(readability-magic-numbers)
+                               std::conj(matrix[0b1000]) * v10 +
+                               // NOLINTNEXTLINE(readability-magic-numbers)
+                               std::conj(matrix[0b1100]) * v11;
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    arr[i01] = std::conj(matrix[0b0001]) * v00 +
+                               // NOLINTNEXTLINE(readability-magic-numbers)
+                               std::conj(matrix[0b0101]) * v01 +
+                               // NOLINTNEXTLINE(readability-magic-numbers)
+                               std::conj(matrix[0b1001]) * v10 +
+                               // NOLINTNEXTLINE(readability-magic-numbers)
+                               std::conj(matrix[0b1101]) * v11;
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    arr[i10] = std::conj(matrix[0b0010]) * v00 +
+                               // NOLINTNEXTLINE(readability-magic-numbers)
+                               std::conj(matrix[0b0110]) * v01 +
+                               // NOLINTNEXTLINE(readability-magic-numbers)
+                               std::conj(matrix[0b1010]) * v10 +
+                               // NOLINTNEXTLINE(readability-magic-numbers)
+                               std::conj(matrix[0b1110]) * v11;
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    arr[i11] = std::conj(matrix[0b0011]) * v00 +
+                               // NOLINTNEXTLINE(readability-magic-numbers)
+                               std::conj(matrix[0b0111]) * v01 +
+                               // NOLINTNEXTLINE(readability-magic-numbers)
+                               std::conj(matrix[0b1011]) * v10 +
+                               // NOLINTNEXTLINE(readability-magic-numbers)
+                               std::conj(matrix[0b1111]) * v11;
                 }
             }
         } else {
-            for (size_t k = 0; k < Util::exp2(num_qubits); k += dim) {
-                for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
-                    size_t idx = k | inner_idx;
-                    const size_t n_wires = wires.size();
-                    for (size_t pos = 0; pos < n_wires; pos++) {
-                        idx = bitswap(idx, n_wires - pos - 1,
-                                      num_qubits - wires[pos] - 1);
-                    }
-                    indices[inner_idx] = idx;
-                    coeffs_in[inner_idx] = arr[idx];
-                }
+#pragma omp parallel for default(none)                                         \
+    firstprivate(parity_high, parity_middle, parity_low, rev_wire0_shift,      \
+                 rev_wire1_shift, arr, num_qubits, matrix)
+            for (size_t n = 0; n < Util::exp2(num_qubits - 2); n += stepsize) {
+                PL_UNROLL_LOOP
+                for (size_t idx = 0; idx < stepsize; idx++) {
+                    const size_t k = n + idx;
+                    const size_t i00 = ((k << 2U) & parity_high) |
+                                       ((k << 1U) & parity_middle) |
+                                       (k & parity_low);
+                    const size_t i10 = i00 | rev_wire1_shift;
+                    const size_t i01 = i00 | rev_wire0_shift;
+                    const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
 
-                for (size_t i = 0; i < dim; i++) {
-                    const auto idx = indices[i];
-                    arr[idx] = 0.0;
-                    const size_t base_idx = i * dim;
+                    const std::complex<PrecisionT> v00 = arr[i00];
+                    const std::complex<PrecisionT> v01 = arr[i01];
+                    const std::complex<PrecisionT> v10 = arr[i10];
+                    const std::complex<PrecisionT> v11 = arr[i11];
 
-                    for (size_t j = 0; j < dim; j++) {
-                        arr[idx] += matrix[base_idx + j] * coeffs_in[j];
-                    }
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    arr[i00] = matrix[0b0000] * v00 + matrix[0b0001] * v01 +
+                               // NOLINTNEXTLINE(readability-magic-numbers)
+                               matrix[0b0010] * v10 + matrix[0b0011] * v11;
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    arr[i01] = matrix[0b0100] * v00 + matrix[0b0101] * v01 +
+                               // NOLINTNEXTLINE(readability-magic-numbers)
+                               matrix[0b0110] * v10 + matrix[0b0111] * v11;
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    arr[i10] = matrix[0b1000] * v00 + matrix[0b1001] * v01 +
+                               // NOLINTNEXTLINE(readability-magic-numbers)
+                               matrix[0b1010] * v10 + matrix[0b1011] * v11;
+                    // NOLINTNEXTLINE(readability-magic-numbers)
+                    arr[i11] = matrix[0b1100] * v00 + matrix[0b1101] * v01 +
+                               // NOLINTNEXTLINE(readability-magic-numbers)
+                               matrix[0b1110] * v10 + matrix[0b1111] * v11;
                 }
             }
         }
-    }
-
-    template <class PrecisionT>
-    static void applyIdentity(std::complex<PrecisionT> *arr,
-                              const size_t num_qubits,
-                              const std::vector<size_t> &wires,
-                              [[maybe_unused]] bool inverse) {
-        PL_ASSERT(wires.size() == 1);
-        static_cast<void>(arr);        // No-op
-        static_cast<void>(num_qubits); // No-op
-        static_cast<void>(wires);      // No-op
     }
 
     template <class PrecisionT>
@@ -359,13 +314,15 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                             const size_t num_qubits,
                             const std::vector<size_t> &wires,
                             [[maybe_unused]] bool inverse) {
-        PL_ASSERT(wires.size() == 1);
+        assert(wires.size() == 1);
 
         const size_t rev_wire = num_qubits - wires[0] - 1;
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
 
         const auto [parity_high, parity_low] = revWireParity(rev_wire);
 
+#pragma omp parallel for default(none) firstprivate(                           \
+    num_qubits, rev_wire_shift, parity_high, parity_low, arr)
         for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -378,12 +335,15 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                             const size_t num_qubits,
                             const std::vector<size_t> &wires,
                             [[maybe_unused]] bool inverse) {
-        PL_ASSERT(wires.size() == 1);
+        assert(wires.size() == 1);
+
         const size_t rev_wire = num_qubits - wires[0] - 1;
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
 
         const auto [parity_high, parity_low] = revWireParity(rev_wire);
 
+#pragma omp parallel for default(none) firstprivate(                           \
+    num_qubits, rev_wire_shift, parity_low, parity_high, arr)
         for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -399,11 +359,15 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                             const size_t num_qubits,
                             const std::vector<size_t> &wires,
                             [[maybe_unused]] bool inverse) {
-        PL_ASSERT(wires.size() == 1);
+        assert(wires.size() == 1);
+
         const size_t rev_wire = num_qubits - wires[0] - 1;
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+
         const auto [parity_high, parity_low] = revWireParity(rev_wire);
 
+#pragma omp parallel for default(none) firstprivate(                           \
+    num_qubits, rev_wire_shift, parity_low, parity_high, arr)
         for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -416,12 +380,16 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                               const size_t num_qubits,
                               const std::vector<size_t> &wires,
                               [[maybe_unused]] bool inverse) {
-        PL_ASSERT(wires.size() == 1);
-        constexpr static auto isqrt2 = Util::INVSQRT2<PrecisionT>();
+        assert(wires.size() == 1);
+
+        constexpr auto isqrt2 = Util::INVSQRT2<PrecisionT>();
         const size_t rev_wire = num_qubits - wires[0] - 1;
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+
         const auto [parity_high, parity_low] = revWireParity(rev_wire);
 
+#pragma omp parallel for default(none) firstprivate(                           \
+    num_qubits, rev_wire_shift, parity_low, parity_high, arr, isqrt2)
         for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -436,14 +404,18 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void applyS(std::complex<PrecisionT> *arr, const size_t num_qubits,
                        const std::vector<size_t> &wires,
                        [[maybe_unused]] bool inverse) {
-        PL_ASSERT(wires.size() == 1);
+        assert(wires.size() == 1);
+
         const size_t rev_wire = num_qubits - wires[0] - 1;
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+
         const auto [parity_high, parity_low] = revWireParity(rev_wire);
 
         const std::complex<PrecisionT> shift =
             (inverse) ? -Util::IMAG<PrecisionT>() : Util::IMAG<PrecisionT>();
 
+#pragma omp parallel for default(none) firstprivate(                           \
+    num_qubits, rev_wire_shift, parity_low, parity_high, shift, arr)
         for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -455,16 +427,21 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void applyT(std::complex<PrecisionT> *arr, const size_t num_qubits,
                        const std::vector<size_t> &wires,
                        [[maybe_unused]] bool inverse) {
-        PL_ASSERT(wires.size() == 1);
+        assert(wires.size() == 1);
+
         const size_t rev_wire = num_qubits - wires[0] - 1;
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+
         const auto [parity_high, parity_low] = revWireParity(rev_wire);
 
-        constexpr static auto isqrt2 = Util::INVSQRT2<PrecisionT>();
+        const std::complex<PrecisionT> shift =
+            (inverse) ? std::conj(std::exp(std::complex<PrecisionT>(
+                            0, static_cast<PrecisionT>(M_PI / 4))))
+                      : std::exp(std::complex<PrecisionT>(
+                            0, static_cast<PrecisionT>(M_PI / 4)));
 
-        const std::complex<PrecisionT> shift = {isqrt2,
-                                                inverse ? -isqrt2 : isqrt2};
-
+#pragma omp parallel for default(none) firstprivate(                           \
+    num_qubits, rev_wire_shift, parity_low, parity_high, shift, arr)
         for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -477,15 +454,18 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                 const size_t num_qubits,
                                 const std::vector<size_t> &wires, bool inverse,
                                 ParamT angle) {
-        PL_ASSERT(wires.size() == 1);
+        assert(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+
         const auto [parity_high, parity_low] = revWireParity(rev_wire);
 
         const std::complex<PrecisionT> s =
             inverse ? std::exp(-std::complex<PrecisionT>(0, angle))
                     : std::exp(std::complex<PrecisionT>(0, angle));
 
+#pragma omp parallel for default(none) firstprivate(                           \
+    num_qubits, rev_wire_shift, parity_low, parity_high, s, arr)
         for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -497,15 +477,19 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void applyRX(std::complex<PrecisionT> *arr, const size_t num_qubits,
                         const std::vector<size_t> &wires, bool inverse,
                         ParamT angle) {
-        PL_ASSERT(wires.size() == 1);
+        assert(wires.size() == 1);
+
         const size_t rev_wire = num_qubits - wires[0] - 1;
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+
         const auto [parity_high, parity_low] = revWireParity(rev_wire);
 
         const PrecisionT c = std::cos(angle / 2);
         const PrecisionT js =
             (inverse) ? -std::sin(-angle / 2) : std::sin(-angle / 2);
 
+#pragma omp parallel for default(none) firstprivate(                           \
+    num_qubits, rev_wire_shift, parity_low, parity_high, arr, c, js)
         for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -522,15 +506,19 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void applyRY(std::complex<PrecisionT> *arr, const size_t num_qubits,
                         const std::vector<size_t> &wires, bool inverse,
                         ParamT angle) {
-        PL_ASSERT(wires.size() == 1);
+        assert(wires.size() == 1);
+
         const size_t rev_wire = num_qubits - wires[0] - 1;
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+
         const auto [parity_high, parity_low] = revWireParity(rev_wire);
 
         const PrecisionT c = std::cos(angle / 2);
         const PrecisionT s =
             (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
 
+#pragma omp parallel for default(none) firstprivate(                           \
+    num_qubits, rev_wire_shift, parity_low, parity_high, c, s, arr)
         for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -547,10 +535,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void applyRZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
                         const std::vector<size_t> &wires, bool inverse,
                         ParamT angle) {
-        PL_ASSERT(wires.size() == 1);
+        assert(wires.size() == 1);
 
         const size_t rev_wire = num_qubits - wires[0] - 1;
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+
         const auto [parity_high, parity_low] = revWireParity(rev_wire);
 
         const std::complex<PrecisionT> first =
@@ -562,6 +551,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             (inverse) ? std::conj(first) : first,
             (inverse) ? std::conj(second) : second};
 
+#pragma omp parallel for default(none) firstprivate(                           \
+    num_qubits, rev_wire_shift, parity_low, parity_high, shifts, arr)
         for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -574,7 +565,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void applyRot(std::complex<PrecisionT> *arr, const size_t num_qubits,
                          const std::vector<size_t> &wires, bool inverse,
                          ParamT phi, ParamT theta, ParamT omega) {
-        PL_ASSERT(wires.size() == 1);
+        assert(wires.size() == 1);
 
         const auto rotMat =
             (inverse) ? Gates::getRot<PrecisionT>(-omega, -theta, -phi)
@@ -589,7 +580,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void
     applyCNOT(std::complex<PrecisionT> *arr, const size_t num_qubits,
               const std::vector<size_t> &wires, [[maybe_unused]] bool inverse) {
-        PL_ASSERT(wires.size() == 2);
+        assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
@@ -600,6 +591,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, parity_low, parity_middle, parity_high,           \
+                 rev_wire0_shift, rev_wire1_shift, arr)
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -614,7 +608,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void applyCY(std::complex<PrecisionT> *arr, const size_t num_qubits,
                         const std::vector<size_t> &wires,
                         [[maybe_unused]] bool inverse) {
-        PL_ASSERT(wires.size() == 2);
+        assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
@@ -625,7 +619,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
-        /* This is faster than iterate over all indices */
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, parity_low, parity_middle, parity_high,           \
+                 rev_wire0_shift, rev_wire1_shift, arr)
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -643,7 +639,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void applyCZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
                         const std::vector<size_t> &wires,
                         [[maybe_unused]] bool inverse) {
-        PL_ASSERT(wires.size() == 2);
+        assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
@@ -654,6 +650,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, parity_low, parity_middle, parity_high,           \
+                 rev_wire0_shift, rev_wire1_shift, arr)
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -666,7 +665,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void applyCRot(std::complex<PrecisionT> *arr, size_t num_qubits,
                           const std::vector<size_t> &wires, bool inverse,
                           ParamT phi, ParamT theta, ParamT omega) {
-        PL_ASSERT(wires.size() == 2);
+        assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
@@ -681,6 +680,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             (inverse) ? Gates::getRot<PrecisionT>(-omega, -theta, -phi)
                       : Gates::getRot<PrecisionT>(phi, theta, omega);
 
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, parity_low, parity_middle, parity_high,           \
+                 rev_wire0_shift, rev_wire1_shift, arr, rotMat)
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -698,7 +700,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void applySWAP(std::complex<PrecisionT> *arr, size_t num_qubits,
                           const std::vector<size_t> &wires,
                           [[maybe_unused]] bool inverse) {
-        PL_ASSERT(wires.size() == 2);
+        assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
@@ -709,6 +711,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, parity_low, parity_middle, parity_high,           \
+                 rev_wire0_shift, rev_wire1_shift, arr)
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -725,7 +730,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         using ComplexPrecisionT = std::complex<PrecisionT>;
         using std::imag;
         using std::real;
-        PL_ASSERT(wires.size() == 2);
+        assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
@@ -740,6 +745,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const PrecisionT sj =
             inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
 
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, parity_low, parity_middle, parity_high,           \
+                 rev_wire0_shift, rev_wire1_shift, cr, sj, arr)
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -764,56 +772,13 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT, class ParamT>
-    static void
-    applyIsingXY(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                 const std::vector<size_t> &wires, bool inverse, ParamT angle) {
-        using ComplexPrecisionT = std::complex<PrecisionT>;
-        using std::imag;
-        using std::real;
-        PL_ASSERT(wires.size() == 2);
-
-        const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-
-        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-
-        const auto [parity_high, parity_middle, parity_low] =
-            revWireParity(rev_wire0, rev_wire1);
-
-        const PrecisionT cr = std::cos(angle / 2);
-        const PrecisionT sj =
-            inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
-
-        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
-            const size_t i00 = ((k << 2U) & parity_high) |
-                               ((k << 1U) & parity_middle) | (k & parity_low);
-            const size_t i10 = i00 | rev_wire1_shift;
-            const size_t i01 = i00 | rev_wire0_shift;
-            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
-
-            const ComplexPrecisionT v00 = arr[i00];
-            const ComplexPrecisionT v01 = arr[i01];
-            const ComplexPrecisionT v10 = arr[i10];
-            const ComplexPrecisionT v11 = arr[i11];
-
-            arr[i00] = ComplexPrecisionT{real(v00), imag(v00)};
-            arr[i01] = ComplexPrecisionT{cr * real(v01) - sj * imag(v10),
-                                         cr * imag(v01) + sj * real(v10)};
-            arr[i10] = ComplexPrecisionT{cr * real(v10) - sj * imag(v01),
-                                         cr * imag(v10) + sj * real(v01)};
-            arr[i11] = ComplexPrecisionT{real(v11), imag(v11)};
-        }
-    }
-
-    template <class PrecisionT, class ParamT>
     static void applyIsingYY(std::complex<PrecisionT> *arr, size_t num_qubits,
                              const std::vector<size_t> &wires, bool inverse,
                              ParamT angle) {
         using ComplexPrecisionT = std::complex<PrecisionT>;
         using std::imag;
         using std::real;
-        PL_ASSERT(wires.size() == 2);
+        assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
@@ -828,6 +793,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const PrecisionT sj =
             inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
 
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, parity_low, parity_middle, parity_high,           \
+                 rev_wire0_shift, rev_wire1_shift, cr, sj, arr)
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -855,7 +823,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void
     applyIsingZZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
                  const std::vector<size_t> &wires, bool inverse, ParamT angle) {
-        PL_ASSERT(wires.size() == 2);
+        assert(wires.size() == 2);
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
@@ -875,6 +843,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             (inverse) ? std::conj(first) : first,
             (inverse) ? std::conj(second) : second};
 
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, parity_low, parity_middle, parity_high,           \
+                 rev_wire0_shift, rev_wire1_shift, shifts, arr)
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -889,42 +860,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         }
     }
 
-    template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyControlledPhaseShift(std::complex<PrecisionT> *arr,
-                                          const size_t num_qubits,
-                                          const std::vector<size_t> &wires,
-                                          [[maybe_unused]] bool inverse,
-                                          ParamT angle) {
-        PL_ASSERT(wires.size() == 2);
-
-        const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-
-        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-
-        const auto [parity_high, parity_middle, parity_low] =
-            revWireParity(rev_wire0, rev_wire1);
-
-        const std::complex<PrecisionT> s =
-            inverse ? std::exp(-std::complex<PrecisionT>(0, angle))
-                    : std::exp(std::complex<PrecisionT>(0, angle));
-
-        /* This is faster than iterate over all indices */
-        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
-            const size_t i00 = ((k << 2U) & parity_high) |
-                               ((k << 1U) & parity_middle) | (k & parity_low);
-            const size_t i11 = i00 | rev_wire1_shift | rev_wire0_shift;
-
-            arr[i11] *= s;
-        }
-    }
-
     template <class PrecisionT, class ParamT>
     static void applyCRX(std::complex<PrecisionT> *arr, const size_t num_qubits,
                          const std::vector<size_t> &wires, bool inverse,
                          ParamT angle) {
-        PL_ASSERT(wires.size() == 2);
+        assert(wires.size() == 2);
 
         const PrecisionT c = std::cos(angle / 2);
         const PrecisionT js =
@@ -939,6 +879,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, parity_low, parity_middle, parity_high,           \
+                 rev_wire0_shift, rev_wire1_shift, arr, c, js)
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -961,7 +904,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void applyCRY(std::complex<PrecisionT> *arr, const size_t num_qubits,
                          const std::vector<size_t> &wires, bool inverse,
                          ParamT angle) {
-        PL_ASSERT(wires.size() == 2);
+        assert(wires.size() == 2);
 
         const PrecisionT c = std::cos(angle / 2);
         const PrecisionT s =
@@ -976,6 +919,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, parity_low, parity_middle, parity_high,           \
+                 rev_wire0_shift, rev_wire1_shift, arr, c, s)
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -985,10 +931,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             const std::complex<PrecisionT> v10 = arr[i10];
             const std::complex<PrecisionT> v11 = arr[i11];
 
-            arr[i10] = std::complex<PrecisionT>{c * real(v10) - s * real(v11),
-                                                c * imag(v10) - s * imag(v11)};
-            arr[i11] = std::complex<PrecisionT>{s * real(v10) + c * real(v11),
-                                                s * imag(v10) + c * imag(v11)};
+            arr[i10] = c * v10 + -s * v11;
+            arr[i11] = s * v10 + c * v11;
         }
     }
 
@@ -996,7 +940,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void applyCRZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
                          const std::vector<size_t> &wires, bool inverse,
                          ParamT angle) {
-        PL_ASSERT(wires.size() == 2);
+        assert(wires.size() == 2);
 
         const std::complex<PrecisionT> first =
             std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
@@ -1016,6 +960,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, parity_low, parity_middle, parity_high,           \
+                 rev_wire0_shift, rev_wire1_shift, arr, shifts)
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -1027,33 +974,55 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         }
     }
 
-    template <class PrecisionT, class ParamT>
-    static void applySingleExcitation(std::complex<PrecisionT> *arr,
-                                      size_t num_qubits,
-                                      const std::vector<size_t> &wires,
-                                      bool inverse, ParamT angle);
-
-    template <class PrecisionT, class ParamT>
-    static void applySingleExcitationMinus(std::complex<PrecisionT> *arr,
-                                           size_t num_qubits,
-                                           const std::vector<size_t> &wires,
-                                           bool inverse, ParamT angle);
-
-    template <class PrecisionT, class ParamT>
-    static void applySingleExcitationPlus(std::complex<PrecisionT> *arr,
-                                          size_t num_qubits,
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void applyControlledPhaseShift(std::complex<PrecisionT> *arr,
+                                          const size_t num_qubits,
                                           const std::vector<size_t> &wires,
-                                          bool inverse, ParamT angle);
+                                          [[maybe_unused]] bool inverse,
+                                          ParamT angle) {
+        assert(wires.size() == 2);
+
+        const size_t rev_wire0 = num_qubits - wires[1] - 1;
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
+
+        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
+        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+
+        const auto [parity_high, parity_middle, parity_low] =
+            revWireParity(rev_wire0, rev_wire1);
+
+        const std::complex<PrecisionT> s =
+            inverse ? std::exp(-std::complex<PrecisionT>(0, angle))
+                    : std::exp(std::complex<PrecisionT>(0, angle));
+
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, parity_low, parity_middle, parity_high,           \
+                 rev_wire0_shift, rev_wire1_shift, s, arr)
+        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
+            const size_t i00 = ((k << 2U) & parity_high) |
+                               ((k << 1U) & parity_middle) | (k & parity_low);
+            const size_t i11 = i00 | rev_wire1_shift | rev_wire0_shift;
+
+            arr[i11] *= s;
+        }
+    }
 
     /* Multi-qubit gates */
+
     template <class PrecisionT, class ParamT>
     static void applyMultiRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
                              const std::vector<size_t> &wires, bool inverse,
                              ParamT angle) {
+        if (num_qubits < 3) {
+            GateImplementationsLM::applyMultiRZ(arr, num_qubits, wires, inverse,
+                                                angle);
+            return;
+        }
         const std::complex<PrecisionT> first =
             std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
         const std::complex<PrecisionT> second =
             std::complex<PrecisionT>{std::cos(angle / 2), std::sin(angle / 2)};
+
         const std::array<std::complex<PrecisionT>, 2> shifts = {
             (inverse) ? std::conj(first) : first,
             (inverse) ? std::conj(second) : second};
@@ -1064,11 +1033,12 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 (static_cast<size_t>(1U) << (num_qubits - wire - 1));
         }
 
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, arr, wires_parity, shifts)
         for (size_t k = 0; k < Util::exp2(num_qubits); k++) {
             arr[k] *= shifts[std::popcount(k & wires_parity) % 2];
         }
     }
-
     /* Define generators */
 
     template <class PrecisionT>
@@ -1076,10 +1046,12 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     applyGeneratorPhaseShift(std::complex<PrecisionT> *arr, size_t num_qubits,
                              const std::vector<size_t> &wires,
                              [[maybe_unused]] bool adj) -> PrecisionT {
-        PL_ASSERT(wires.size() == 1);
+        assert(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
         const auto [parity_high, parity_low] = revWireParity(rev_wire);
 
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, arr, parity_low, parity_high)
         for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             arr[i0] = std::complex<PrecisionT>{0.0, 0.0};
@@ -1093,14 +1065,20 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     applyGeneratorIsingXX(std::complex<PrecisionT> *arr, size_t num_qubits,
                           const std::vector<size_t> &wires,
                           [[maybe_unused]] bool adj) -> PrecisionT {
-        PL_ASSERT(wires.size() == 2);
+        assert(wires.size() == 2);
+
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
+
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, arr, parity_low, parity_middle, parity_high,      \
+                 rev_wire0_shift, rev_wire1_shift)
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -1117,45 +1095,23 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
     template <class PrecisionT>
     [[nodiscard]] static auto
-    applyGeneratorIsingXY(std::complex<PrecisionT> *arr, size_t num_qubits,
-                          const std::vector<size_t> &wires,
-                          [[maybe_unused]] bool adj) -> PrecisionT {
-        PL_ASSERT(wires.size() == 2);
-        const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-        const auto [parity_high, parity_middle, parity_low] =
-            revWireParity(rev_wire0, rev_wire1);
-
-        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
-            const size_t i00 = ((k << 2U) & parity_high) |
-                               ((k << 1U) & parity_middle) | (k & parity_low);
-            const size_t i01 = i00 | rev_wire0_shift;
-            const size_t i10 = i00 | rev_wire1_shift;
-            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
-
-            std::swap(arr[i10], arr[i01]);
-            arr[i00] = std::complex<PrecisionT>{0.0, 0.0};
-            arr[i11] = std::complex<PrecisionT>{0.0, 0.0};
-        }
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        return static_cast<PrecisionT>(0.5);
-    }
-
-    template <class PrecisionT>
-    [[nodiscard]] static auto
     applyGeneratorIsingYY(std::complex<PrecisionT> *arr, size_t num_qubits,
                           const std::vector<size_t> &wires,
                           [[maybe_unused]] bool adj) -> PrecisionT {
-        PL_ASSERT(wires.size() == 2);
+        assert(wires.size() == 2);
+
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
+
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, arr, parity_low, parity_middle, parity_high,      \
+                 rev_wire0_shift, rev_wire1_shift)
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -1171,20 +1127,25 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
     }
-
     template <class PrecisionT>
     [[nodiscard]] static auto
     applyGeneratorIsingZZ(std::complex<PrecisionT> *arr, size_t num_qubits,
                           const std::vector<size_t> &wires,
                           [[maybe_unused]] bool adj) -> PrecisionT {
-        PL_ASSERT(wires.size() == 2);
+        assert(wires.size() == 2);
+
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
+
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, arr, parity_low, parity_middle, parity_high,      \
+                 rev_wire0_shift, rev_wire1_shift)
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -1204,14 +1165,20 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                       const std::vector<size_t> &wires,
                       [[maybe_unused]] bool adj) -> PrecisionT {
         using ComplexPrecisionT = std::complex<PrecisionT>;
-        PL_ASSERT(wires.size() == 2);
+        assert(wires.size() == 2);
+
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
+
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, arr, parity_low, parity_middle, parity_high,      \
+                 rev_wire0_shift, rev_wire1_shift)
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -1235,14 +1202,20 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                       const std::vector<size_t> &wires,
                       [[maybe_unused]] bool adj) -> PrecisionT {
         using ComplexPrecisionT = std::complex<PrecisionT>;
-        PL_ASSERT(wires.size() == 2);
+        assert(wires.size() == 2);
+
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
+
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, arr, parity_low, parity_middle, parity_high,      \
+                 rev_wire0_shift, rev_wire1_shift)
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -1269,14 +1242,20 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                       const std::vector<size_t> &wires,
                       [[maybe_unused]] bool adj) -> PrecisionT {
         using ComplexPrecisionT = std::complex<PrecisionT>;
-        PL_ASSERT(wires.size() == 2);
+        assert(wires.size() == 2);
+
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
+
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, arr, parity_low, parity_middle, parity_high,      \
+                 rev_wire0_shift, rev_wire1_shift)
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -1297,14 +1276,20 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
         -> PrecisionT {
         using ComplexPrecisionT = std::complex<PrecisionT>;
-        PL_ASSERT(wires.size() == 2);
+        assert(wires.size() == 2);
+
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
+
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, arr, parity_low, parity_middle, parity_high,      \
+                 rev_wire0_shift, rev_wire1_shift)
         for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -1321,26 +1306,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
     template <class PrecisionT>
     [[nodiscard]] static auto
-    applyGeneratorSingleExcitation(std::complex<PrecisionT> *arr,
-                                   size_t num_qubits,
-                                   const std::vector<size_t> &wires,
-                                   [[maybe_unused]] bool adj) -> PrecisionT;
-
-    template <class PrecisionT>
-    [[nodiscard]] static auto applyGeneratorSingleExcitationMinus(
-        std::complex<PrecisionT> *arr, size_t num_qubits,
-        const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
-        -> PrecisionT;
-
-    template <class PrecisionT>
-    [[nodiscard]] static auto
-    applyGeneratorSingleExcitationPlus(std::complex<PrecisionT> *arr,
-                                       size_t num_qubits,
-                                       const std::vector<size_t> &wires,
-                                       [[maybe_unused]] bool adj) -> PrecisionT;
-
-    template <class PrecisionT>
-    [[nodiscard]] static auto
     applyGeneratorMultiRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
                           const std::vector<size_t> &wires,
                           [[maybe_unused]] bool adj) -> PrecisionT {
@@ -1350,12 +1315,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 (static_cast<size_t>(1U) << (num_qubits - wire - 1));
         }
 
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, arr, wires_parity)
         for (size_t k = 0; k < Util::exp2(num_qubits); k++) {
             arr[k] *= static_cast<PrecisionT>(
-                1 - 2 * int(std::popcount(k & wires_parity) % 2));
+                    1 - 2 * int(std::popcount(k & wires_parity) % 2));
         }
         // NOLINTNEXTLINE(readability-magic-numbers)
-        return -static_cast<PrecisionT>(0.5);
+        return static_cast<PrecisionT>(0.5);
     }
 };
 } // namespace Pennylane::Gates
