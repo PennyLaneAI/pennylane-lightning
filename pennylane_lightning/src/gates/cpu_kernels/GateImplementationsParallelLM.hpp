@@ -144,47 +144,35 @@ class GateImplementationsParallelLM
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
         const auto [parity_high, parity_low] = revWireParity(rev_wire);
 
-        constexpr size_t stepsize = 8;
-
         if (inverse) {
 #pragma omp parallel for default(none) firstprivate(                           \
     parity_high, parity_low, rev_wire_shift, arr, num_qubits, matrix)
-            for (size_t n = 0; n < Util::exp2(num_qubits - 1); n += stepsize) {
-                PL_UNROLL_LOOP
-                for (size_t idx = 0; idx < stepsize; idx++) {
-                    const size_t k = n + idx;
-                    const size_t i0 =
-                        ((k << 1U) & parity_high) | (parity_low & k);
-                    const size_t i1 = i0 | rev_wire_shift;
-                    const std::complex<PrecisionT> v0 = arr[i0];
-                    const std::complex<PrecisionT> v1 = arr[i1];
-                    arr[i0] = std::conj(matrix[0B00]) * v0 +
-                              std::conj(matrix[0B10]) *
-                                  v1; // NOLINT(readability-magic-numbers)
-                    arr[i1] = std::conj(matrix[0B01]) * v0 +
-                              std::conj(matrix[0B11]) *
-                                  v1; // NOLINT(readability-magic-numbers)
-                }
+            for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
+                const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
+                const size_t i1 = i0 | rev_wire_shift;
+                const std::complex<PrecisionT> v0 = arr[i0];
+                const std::complex<PrecisionT> v1 = arr[i1];
+                arr[i0] = std::conj(matrix[0B00]) * v0 +
+                          std::conj(matrix[0B10]) *
+                              v1; // NOLINT(readability-magic-numbers)
+                arr[i1] = std::conj(matrix[0B01]) * v0 +
+                          std::conj(matrix[0B11]) *
+                              v1; // NOLINT(readability-magic-numbers)
             }
         } else {
 #pragma omp parallel for default(none) firstprivate(                           \
     parity_high, parity_low, rev_wire_shift, arr, num_qubits, matrix)
-            for (size_t n = 0; n < Util::exp2(num_qubits - 1); n += stepsize) {
-                PL_UNROLL_LOOP
-                for (size_t idx = 0; idx < stepsize; idx++) {
-                    const size_t k = n + idx;
-                    const size_t i0 =
-                        ((k << 1U) & parity_high) | (parity_low & k);
-                    const size_t i1 = i0 | rev_wire_shift;
-                    const std::complex<PrecisionT> v0 = arr[i0];
-                    const std::complex<PrecisionT> v1 = arr[i1];
-                    arr[i0] =
-                        matrix[0B00] * v0 +
-                        matrix[0B01] * v1; // NOLINT(readability-magic-numbers)
-                    arr[i1] =
-                        matrix[0B10] * v0 +
-                        matrix[0B11] * v1; // NOLINT(readability-magic-numbers)
-                }
+            for (size_t k = 0; k < Util::exp2(num_qubits - 1); k++) {
+                const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
+                const size_t i1 = i0 | rev_wire_shift;
+                const std::complex<PrecisionT> v0 = arr[i0];
+                const std::complex<PrecisionT> v1 = arr[i1];
+                arr[i0] =
+                    matrix[0B00] * v0 +
+                    matrix[0B01] * v1; // NOLINT(readability-magic-numbers)
+                arr[i1] =
+                    matrix[0B10] * v0 +
+                    matrix[0B11] * v1; // NOLINT(readability-magic-numbers)
             }
         }
     }
@@ -203,7 +191,6 @@ class GateImplementationsParallelLM
                     const std::complex<PrecisionT> *matrix,
                     const std::vector<size_t> &wires, bool inverse = false) {
         PL_ASSERT(wires.size() == 2);
-        constexpr static size_t stepsize = 8;
 
         const size_t rev_wire0 = num_qubits - wires[1] - 1;
         const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
@@ -218,93 +205,85 @@ class GateImplementationsParallelLM
 #pragma omp parallel for default(none)                                         \
     firstprivate(parity_high, parity_middle, parity_low, rev_wire0_shift,      \
                  rev_wire1_shift, arr, num_qubits, matrix)
-            for (size_t n = 0; n < Util::exp2(num_qubits - 2); n += stepsize) {
-                PL_UNROLL_LOOP
-                for (size_t idx = 0; idx < stepsize; idx++) {
-                    const size_t k = n + idx;
-                    const size_t i00 = ((k << 2U) & parity_high) |
-                                       ((k << 1U) & parity_middle) |
-                                       (k & parity_low);
-                    const size_t i10 = i00 | rev_wire1_shift;
-                    const size_t i01 = i00 | rev_wire0_shift;
-                    const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
+            for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
+                const size_t i00 = ((k << 2U) & parity_high) |
+                                   ((k << 1U) & parity_middle) |
+                                   (k & parity_low);
+                const size_t i10 = i00 | rev_wire1_shift;
+                const size_t i01 = i00 | rev_wire0_shift;
+                const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
 
-                    const std::complex<PrecisionT> v00 = arr[i00];
-                    const std::complex<PrecisionT> v01 = arr[i01];
-                    const std::complex<PrecisionT> v10 = arr[i10];
-                    const std::complex<PrecisionT> v11 = arr[i11];
+                const std::complex<PrecisionT> v00 = arr[i00];
+                const std::complex<PrecisionT> v01 = arr[i01];
+                const std::complex<PrecisionT> v10 = arr[i10];
+                const std::complex<PrecisionT> v11 = arr[i11];
 
-                    // NOLINTNEXTLINE(readability-magic-numbers)
-                    arr[i00] = std::conj(matrix[0b0000]) * v00 +
-                               // NOLINTNEXTLINE(readability-magic-numbers)
-                               std::conj(matrix[0b0100]) * v01 +
-                               // NOLINTNEXTLINE(readability-magic-numbers)
-                               std::conj(matrix[0b1000]) * v10 +
-                               // NOLINTNEXTLINE(readability-magic-numbers)
-                               std::conj(matrix[0b1100]) * v11;
-                    // NOLINTNEXTLINE(readability-magic-numbers)
-                    arr[i01] = std::conj(matrix[0b0001]) * v00 +
-                               // NOLINTNEXTLINE(readability-magic-numbers)
-                               std::conj(matrix[0b0101]) * v01 +
-                               // NOLINTNEXTLINE(readability-magic-numbers)
-                               std::conj(matrix[0b1001]) * v10 +
-                               // NOLINTNEXTLINE(readability-magic-numbers)
-                               std::conj(matrix[0b1101]) * v11;
-                    // NOLINTNEXTLINE(readability-magic-numbers)
-                    arr[i10] = std::conj(matrix[0b0010]) * v00 +
-                               // NOLINTNEXTLINE(readability-magic-numbers)
-                               std::conj(matrix[0b0110]) * v01 +
-                               // NOLINTNEXTLINE(readability-magic-numbers)
-                               std::conj(matrix[0b1010]) * v10 +
-                               // NOLINTNEXTLINE(readability-magic-numbers)
-                               std::conj(matrix[0b1110]) * v11;
-                    // NOLINTNEXTLINE(readability-magic-numbers)
-                    arr[i11] = std::conj(matrix[0b0011]) * v00 +
-                               // NOLINTNEXTLINE(readability-magic-numbers)
-                               std::conj(matrix[0b0111]) * v01 +
-                               // NOLINTNEXTLINE(readability-magic-numbers)
-                               std::conj(matrix[0b1011]) * v10 +
-                               // NOLINTNEXTLINE(readability-magic-numbers)
-                               std::conj(matrix[0b1111]) * v11;
-                }
+                // NOLINTNEXTLINE(readability-magic-numbers)
+                arr[i00] = std::conj(matrix[0b0000]) * v00 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
+                           std::conj(matrix[0b0100]) * v01 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
+                           std::conj(matrix[0b1000]) * v10 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
+                           std::conj(matrix[0b1100]) * v11;
+                // NOLINTNEXTLINE(readability-magic-numbers)
+                arr[i01] = std::conj(matrix[0b0001]) * v00 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
+                           std::conj(matrix[0b0101]) * v01 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
+                           std::conj(matrix[0b1001]) * v10 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
+                           std::conj(matrix[0b1101]) * v11;
+                // NOLINTNEXTLINE(readability-magic-numbers)
+                arr[i10] = std::conj(matrix[0b0010]) * v00 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
+                           std::conj(matrix[0b0110]) * v01 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
+                           std::conj(matrix[0b1010]) * v10 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
+                           std::conj(matrix[0b1110]) * v11;
+                // NOLINTNEXTLINE(readability-magic-numbers)
+                arr[i11] = std::conj(matrix[0b0011]) * v00 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
+                           std::conj(matrix[0b0111]) * v01 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
+                           std::conj(matrix[0b1011]) * v10 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
+                           std::conj(matrix[0b1111]) * v11;
             }
         } else {
 #pragma omp parallel for default(none)                                         \
     firstprivate(parity_high, parity_middle, parity_low, rev_wire0_shift,      \
                  rev_wire1_shift, arr, num_qubits, matrix)
-            for (size_t n = 0; n < Util::exp2(num_qubits - 2); n += stepsize) {
-                PL_UNROLL_LOOP
-                for (size_t idx = 0; idx < stepsize; idx++) {
-                    const size_t k = n + idx;
-                    const size_t i00 = ((k << 2U) & parity_high) |
-                                       ((k << 1U) & parity_middle) |
-                                       (k & parity_low);
-                    const size_t i10 = i00 | rev_wire1_shift;
-                    const size_t i01 = i00 | rev_wire0_shift;
-                    const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
+            for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
+                const size_t i00 = ((k << 2U) & parity_high) |
+                                   ((k << 1U) & parity_middle) |
+                                   (k & parity_low);
+                const size_t i10 = i00 | rev_wire1_shift;
+                const size_t i01 = i00 | rev_wire0_shift;
+                const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
 
-                    const std::complex<PrecisionT> v00 = arr[i00];
-                    const std::complex<PrecisionT> v01 = arr[i01];
-                    const std::complex<PrecisionT> v10 = arr[i10];
-                    const std::complex<PrecisionT> v11 = arr[i11];
+                const std::complex<PrecisionT> v00 = arr[i00];
+                const std::complex<PrecisionT> v01 = arr[i01];
+                const std::complex<PrecisionT> v10 = arr[i10];
+                const std::complex<PrecisionT> v11 = arr[i11];
 
-                    // NOLINTNEXTLINE(readability-magic-numbers)
-                    arr[i00] = matrix[0b0000] * v00 + matrix[0b0001] * v01 +
-                               // NOLINTNEXTLINE(readability-magic-numbers)
-                               matrix[0b0010] * v10 + matrix[0b0011] * v11;
-                    // NOLINTNEXTLINE(readability-magic-numbers)
-                    arr[i01] = matrix[0b0100] * v00 + matrix[0b0101] * v01 +
-                               // NOLINTNEXTLINE(readability-magic-numbers)
-                               matrix[0b0110] * v10 + matrix[0b0111] * v11;
-                    // NOLINTNEXTLINE(readability-magic-numbers)
-                    arr[i10] = matrix[0b1000] * v00 + matrix[0b1001] * v01 +
-                               // NOLINTNEXTLINE(readability-magic-numbers)
-                               matrix[0b1010] * v10 + matrix[0b1011] * v11;
-                    // NOLINTNEXTLINE(readability-magic-numbers)
-                    arr[i11] = matrix[0b1100] * v00 + matrix[0b1101] * v01 +
-                               // NOLINTNEXTLINE(readability-magic-numbers)
-                               matrix[0b1110] * v10 + matrix[0b1111] * v11;
-                }
+                // NOLINTNEXTLINE(readability-magic-numbers)
+                arr[i00] = matrix[0b0000] * v00 + matrix[0b0001] * v01 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
+                           matrix[0b0010] * v10 + matrix[0b0011] * v11;
+                // NOLINTNEXTLINE(readability-magic-numbers)
+                arr[i01] = matrix[0b0100] * v00 + matrix[0b0101] * v01 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
+                           matrix[0b0110] * v10 + matrix[0b0111] * v11;
+                // NOLINTNEXTLINE(readability-magic-numbers)
+                arr[i10] = matrix[0b1000] * v00 + matrix[0b1001] * v01 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
+                           matrix[0b1010] * v10 + matrix[0b1011] * v11;
+                // NOLINTNEXTLINE(readability-magic-numbers)
+                arr[i11] = matrix[0b1100] * v00 + matrix[0b1101] * v01 +
+                           // NOLINTNEXTLINE(readability-magic-numbers)
+                           matrix[0b1110] * v10 + matrix[0b1111] * v11;
             }
         }
     }
@@ -1322,7 +1301,7 @@ class GateImplementationsParallelLM
                     1 - 2 * int(std::popcount(k & wires_parity) % 2));
         }
         // NOLINTNEXTLINE(readability-magic-numbers)
-        return static_cast<PrecisionT>(0.5);
+        return -static_cast<PrecisionT>(0.5);
     }
 };
 } // namespace Pennylane::Gates
