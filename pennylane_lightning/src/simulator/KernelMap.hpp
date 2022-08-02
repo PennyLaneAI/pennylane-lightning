@@ -173,13 +173,13 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
         : allowed_kernels_{
               // LCOV_EXCL_START
               {CPUMemoryModel::Unaligned,
-               {Gates::KernelType::LM, Gates::KernelType::PI}},
+               {Gates::KernelType::LM, Gates::KernelType::PI, Gates::KernelType::ParallelLM}},
               {CPUMemoryModel::Aligned256,
                {Gates::KernelType::LM, Gates::KernelType::PI,
-                Gates::KernelType::AVX2}},
+                Gates::KernelType::AVX2, Gates::KernelType::ParallelLM}},
               {CPUMemoryModel::Aligned512,
                {Gates::KernelType::LM, Gates::KernelType::PI,
-                Gates::KernelType::AVX2, Gates::KernelType::AVX512}},
+                Gates::KernelType::AVX2, Gates::KernelType::AVX512, Gates::KernelType::ParallelLM}},
               // LCOV_EXCL_STOP
           } {}
 

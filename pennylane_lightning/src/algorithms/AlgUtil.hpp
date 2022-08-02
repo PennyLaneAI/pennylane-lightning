@@ -87,42 +87,10 @@ inline void applyObservables(
     size_t num_observables = observables.size();
 
     if (num_observables > 1) {
-        /* Globally scoped exception value to be captured within OpenMP block.
-         * See the following for OpenMP design decisions:
-         * https://www.openmp.org/wp-content/uploads/openmp-examples-4.5.0.pdf
-         * */
-        // clang-format off
-
-        #if defined(_OPENMP)
-            #pragma omp parallel default(none)                                 \
-            shared(states, reference_state, observables, ex, num_observables)
-        {
-            #pragma omp for
-        #endif
-            for (size_t h_i = 0; h_i < num_observables; h_i++) {
-                try {
-                    states[h_i].updateData(reference_state.getDataVector());
-                    applyObservable(states[h_i], *observables[h_i]);
-                } catch (...) {
-                    #if defined(_OPENMP)
-                        #pragma omp critical
-                    #endif
-                    ex = std::current_exception();
-                    #if defined(_OPENMP)
-                        #pragma omp cancel for
-                    #endif
-                }
-            }
-        #if defined(_OPENMP)
-            if (ex) {
-                #pragma omp cancel parallel
-            }
+        for (size_t h_i = 0; h_i < num_observables; h_i++) {
+            states[h_i].updateData(reference_state.getDataVector());
+            applyObservable(states[h_i], *observables[h_i]);
         }
-        #endif
-        if (ex) {
-            std::rethrow_exception(ex);
-        }
-        // clang-format on
     } else {
         states[0].updateData(reference_state.getDataVector());
         applyObservable(states[0], *observables[0]);
@@ -145,36 +113,11 @@ inline void applyOperationsAdj(std::vector<StateVectorManagedCPU<T>> &states,
     // Globally scoped exception value to be captured within OpenMP block.
     // See the following for OpenMP design decisions:
     // https://www.openmp.org/wp-content/uploads/openmp-examples-4.5.0.pdf
+
     std::exception_ptr ex = nullptr;
     size_t num_states = states.size();
-    #if defined(_OPENMP)
-        #pragma omp parallel default(none)                                 \
-            shared(states, operations, op_idx, ex, num_states)
-    {
-        #pragma omp for
-    #endif
-        for (size_t st_idx = 0; st_idx < num_states; st_idx++) {
-            try {
-                applyOperationAdj(states[st_idx], operations, op_idx);
-            } catch (...) {
-                #if defined(_OPENMP)
-                    #pragma omp critical
-                #endif
-                ex = std::current_exception();
-                #if defined(_OPENMP)
-                    #pragma omp cancel for
-                #endif
-            }
-        }
-    #if defined(_OPENMP)
-        if (ex) {
-            #pragma omp cancel parallel
-        }
+    for (size_t st_idx = 0; st_idx < num_states; st_idx++) {
+        applyOperationAdj(states[st_idx], operations, op_idx);
     }
-    #endif
-    if (ex) {
-        std::rethrow_exception(ex);
-    }
-    // clang-format on
 }
 } // namespace Pennylane::Algorithms

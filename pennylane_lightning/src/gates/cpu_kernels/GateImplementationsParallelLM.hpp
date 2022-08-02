@@ -108,10 +108,10 @@ class GateImplementationsParallelLM
         GateOperation::MultiRZ};
 
     constexpr static std::array implemented_generators = {
+        GeneratorOperation::PhaseShift,
         GeneratorOperation::RX,
         GeneratorOperation::RY,
         GeneratorOperation::RZ,
-        GeneratorOperation::PhaseShift,
         GeneratorOperation::CRX,
         GeneratorOperation::CRY,
         GeneratorOperation::CRZ,

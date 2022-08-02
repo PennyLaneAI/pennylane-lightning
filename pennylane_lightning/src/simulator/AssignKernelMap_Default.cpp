@@ -32,6 +32,7 @@ using Util::less_than_equal_to;
 
 namespace Pennylane::KernelMap::Internal {
 constexpr static auto all_qubit_numbers = Util::full_domain<size_t>();
+constexpr static auto qubit_leq_20 = Util::larger_than_equal_to<size_t>(20);
 
 void assignKernelsForGateOp_Default() {
     auto &instance = OperationKernelMap<GateOperation>::getInstance();
@@ -145,6 +146,84 @@ void assignKernelsForGateOp_Default() {
     instance.assignKernelForOp(GateOperation::MultiRZ, all_threading,
                                all_memory_model, all_qubit_numbers,
                                Gates::KernelType::LM);
+#if defined(PL_USE_OMP)
+    /* Single-qubit gates */
+    instance.assignKernelForOp(GateOperation::PauliX, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::PauliY, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::PauliZ, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::Hadamard, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::S, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::T, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::RX, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::RY, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::RZ, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::PhaseShift, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::Rot, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+
+    /* Two-qubit gates*/
+    instance.assignKernelForOp(GateOperation::CNOT, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::CY, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::CZ, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::SWAP, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::IsingXX, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::IsingYY, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::IsingZZ, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::ControlledPhaseShift, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::CRX, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::CRY, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::CRZ, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::CRot, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+    /* Multi-qubit gates */
+    instance.assignKernelForOp(GateOperation::MultiRZ, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               Gates::KernelType::ParallelLM);
+#endif
 }
 
 void assignKernelsForGeneratorOp_Default() {
@@ -209,6 +288,45 @@ void assignKernelsForGeneratorOp_Default() {
     instance.assignKernelForOp(GeneratorOperation::MultiRZ, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
+#if defined(PL_USE_OMP)
+    instance.assignKernelForOp(GeneratorOperation::PhaseShift, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               KernelType::LM);
+    instance.assignKernelForOp(GeneratorOperation::RX, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               KernelType::LM);
+    instance.assignKernelForOp(GeneratorOperation::RY, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               KernelType::LM);
+    instance.assignKernelForOp(GeneratorOperation::RZ, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               KernelType::LM);
+    instance.assignKernelForOp(GeneratorOperation::IsingXX, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               KernelType::LM);
+    instance.assignKernelForOp(GeneratorOperation::IsingXY, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               KernelType::LM);
+    instance.assignKernelForOp(GeneratorOperation::IsingYY, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               KernelType::LM);
+    instance.assignKernelForOp(GeneratorOperation::IsingZZ, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               KernelType::LM);
+    instance.assignKernelForOp(GeneratorOperation::CRX, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               KernelType::LM);
+    instance.assignKernelForOp(GeneratorOperation::CRY, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               KernelType::LM);
+    instance.assignKernelForOp(GeneratorOperation::CRZ, Threading::MultiThread,
+                               all_memory_model, qubit_leq_20,
+                               KernelType::LM);
+    instance.assignKernelForOp(GeneratorOperation::ControlledPhaseShift,
+                               Threading::MultiThread, all_memory_model,
+                               qubit_leq_20, KernelType::LM);
+
+#endif
 }
 void assignKernelsForMatrixOp_Default() {
     auto &instance = OperationKernelMap<MatrixOperation>::getInstance();

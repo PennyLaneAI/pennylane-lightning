@@ -79,7 +79,7 @@ void adjointJacobian(std::span<T> jac, const JacobianData<T> &jd,
         num_param_ops - 1; // total number of parametric ops
 
     // Create $U_{1:p}\vert \lambda \rangle$
-    StateVectorManagedCPU<T> lambda(jd.getPtrStateVec(), jd.getSizeStateVec());
+    StateVectorManagedCPU<T> lambda(jd.getPtrStateVec(), jd.getSizeStateVec(), Threading::MultiThread);
 
     // Apply given operations to statevector if requested
     if (apply_operations) {
@@ -91,10 +91,10 @@ void adjointJacobian(std::span<T> jac, const JacobianData<T> &jd,
 
     // Create observable-applied state-vectors
     std::vector<StateVectorManagedCPU<T>> H_lambda(
-        num_observables, StateVectorManagedCPU<T>{lambda.getNumQubits()});
+        num_observables, StateVectorManagedCPU<T>{lambda.getNumQubits(), Threading::MultiThread});
     applyObservables(H_lambda, lambda, obs);
 
-    StateVectorManagedCPU<T> mu(lambda.getNumQubits());
+    StateVectorManagedCPU<T> mu(lambda.getNumQubits(), Threading::MultiThread);
 
     for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
          op_idx--) {
@@ -123,15 +123,6 @@ void adjointJacobian(std::span<T> jac, const JacobianData<T> &jd,
 
                 const size_t mat_row_idx =
                     trainableParamNumber * num_observables;
-
-                // clang-format off
-                
-                #if defined(_OPENMP)
-                #pragma omp parallel for default(none)                         \
-                    shared(H_lambda, jac, mu, scalingFactor, mat_row_idx,      \
-                            num_observables)
-                #endif
-                // clang-format on
 
                 for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
                     jac[mat_row_idx + obs_idx] =
