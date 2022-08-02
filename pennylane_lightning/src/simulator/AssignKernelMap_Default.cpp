@@ -291,40 +291,40 @@ void assignKernelsForGeneratorOp_Default() {
 #if defined(PL_USE_OMP)
     instance.assignKernelForOp(GeneratorOperation::PhaseShift, Threading::MultiThread,
                                all_memory_model, qubit_leq_20,
-                               KernelType::LM);
+                               KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::RX, Threading::MultiThread,
                                all_memory_model, qubit_leq_20,
-                               KernelType::LM);
+                               KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::RY, Threading::MultiThread,
                                all_memory_model, qubit_leq_20,
-                               KernelType::LM);
+                               KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::RZ, Threading::MultiThread,
                                all_memory_model, qubit_leq_20,
-                               KernelType::LM);
+                               KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::IsingXX, Threading::MultiThread,
                                all_memory_model, qubit_leq_20,
-                               KernelType::LM);
+                               KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::IsingXY, Threading::MultiThread,
                                all_memory_model, qubit_leq_20,
-                               KernelType::LM);
+                               KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::IsingYY, Threading::MultiThread,
                                all_memory_model, qubit_leq_20,
-                               KernelType::LM);
+                               KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::IsingZZ, Threading::MultiThread,
                                all_memory_model, qubit_leq_20,
-                               KernelType::LM);
+                               KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::CRX, Threading::MultiThread,
                                all_memory_model, qubit_leq_20,
-                               KernelType::LM);
+                               KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::CRY, Threading::MultiThread,
                                all_memory_model, qubit_leq_20,
-                               KernelType::LM);
+                               KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::CRZ, Threading::MultiThread,
                                all_memory_model, qubit_leq_20,
-                               KernelType::LM);
+                               KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::ControlledPhaseShift,
                                Threading::MultiThread, all_memory_model,
-                               qubit_leq_20, KernelType::LM);
+                               qubit_leq_20, KernelType::ParallelLM);
 
 #endif
 }
