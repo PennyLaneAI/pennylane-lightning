@@ -61,7 +61,13 @@ namespace Pennylane {
 /**
  * @brief DynamicDispatcher class
  *
- * This class calls a gate/generator operation dynamically
+ * This is a singleton class that can call a gate/generator operation
+ * dynamically. Currently, all gate operations (gates/generators/matrices) are
+ * registered to this class when the library is loaded. As all functions besides
+ * registration functions are already thread-safe, we can use this class
+ * in multithreading environment without any problem.
+ * In addition, adding mutex is not required unless kernel functions are
+ * registered in multiple threads.
  */
 template <typename PrecisionT> class DynamicDispatcher {
   public:
@@ -231,7 +237,6 @@ template <typename PrecisionT> class DynamicDispatcher {
     template <typename FunctionType>
     void registerGateOperation(Gates::GateOperation gate_op,
                                Gates::KernelType kernel, FunctionType &&func) {
-        // TODO: Add mutex when we go to multithreading
         gate_kernels_.emplace(std::make_pair(gate_op, kernel),
                               std::forward<FunctionType>(func));
     }
@@ -244,7 +249,6 @@ template <typename PrecisionT> class DynamicDispatcher {
     void registerGeneratorOperation(Gates::GeneratorOperation gntr_op,
                                     Gates::KernelType kernel,
                                     FunctionType &&func) {
-        // TODO: Add mutex when we go to multithreading
         generator_kernels_.emplace(std::make_pair(gntr_op, kernel),
                                    std::forward<FunctionType>(func));
     }
@@ -255,7 +259,6 @@ template <typename PrecisionT> class DynamicDispatcher {
      */
     void registerMatrixOperation(Gates::MatrixOperation mat_op,
                                  Gates::KernelType kernel, MatrixFunc func) {
-        // TODO: Add mutex when we go to multithreading
         matrix_kernels_.emplace(std::make_pair(mat_op, kernel), func);
     }
 

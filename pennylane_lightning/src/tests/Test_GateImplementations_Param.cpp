@@ -3,7 +3,6 @@
 #include "Util.hpp"
 #include "cpu_kernels/GateImplementationsLM.hpp"
 #include "cpu_kernels/GateImplementationsPI.hpp"
-#include "cpu_kernels/QChemGateImplementations.hpp"
 
 #include <catch2/catch.hpp>
 

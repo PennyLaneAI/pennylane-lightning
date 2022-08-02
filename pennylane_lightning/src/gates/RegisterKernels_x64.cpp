@@ -21,7 +21,6 @@
 #include "RuntimeInfo.hpp"
 #include "cpu_kernels/GateImplementationsLM.hpp"
 #include "cpu_kernels/GateImplementationsPI.hpp"
-#include "cpu_kernels/QChemGateImplementations.hpp"
 
 namespace Pennylane::Internal {
 
