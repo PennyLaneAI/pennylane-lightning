@@ -12,21 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**
- * @file DynamicDispatcher.cpp
+ * @file RegisterKernel.hpp
  * Register all gate and generator implementations
  */
-#include "DynamicDispatcher.hpp"
-#include "AvailableKernels.hpp"
 #include "Constant.hpp"
 #include "ConstantUtil.hpp"
+#include "DynamicDispatcher.hpp"
+#include "GateOperation.hpp"
 #include "GateUtil.hpp"
 #include "OpToMemberFuncPtr.hpp"
-#include "SelectKernel.hpp"
-
-using namespace Pennylane;
 
 /// @cond DEV
-namespace {
+namespace Pennylane {
 /**
  * @brief return a lambda function for the given kernel and gate operation
  *
@@ -53,9 +50,7 @@ constexpr auto gateOpToFunctor() {
         Gates::callGateOps(func_ptr, data, num_qubits, wires, inverse, params);
     };
 }
-/// @endcond
 
-/// @cond DEV
 /**
  * @brief Internal recursion function for constructGateOpsFunctorTuple
  *
@@ -167,7 +162,7 @@ void registerAllImplementedGateOps() {
         return gate_op;
     };
 
-    [[maybe_unused]] const auto registerd_gate_ops = std::apply(
+    [[maybe_unused]] const auto registered_gate_ops = std::apply(
         [&registerGateToDispatcher](auto... elt) {
             return std::make_tuple(registerGateToDispatcher(elt)...);
         },
@@ -191,7 +186,7 @@ void registerAllImplementedGeneratorOps() {
             return gntr_op;
         };
 
-    [[maybe_unused]] const auto registerd_gntr_ops = std::apply(
+    [[maybe_unused]] const auto registered_gntr_ops = std::apply(
         [&registerGeneratorToDispatcher](auto... elt) {
             return std::make_tuple(registerGeneratorToDispatcher(elt)...);
         },
@@ -215,44 +210,25 @@ void registerAllImplementedMatrixOps() {
         return mat_op;
     };
 
-    [[maybe_unused]] const auto registerd_mat_ops = std::apply(
+    [[maybe_unused]] const auto registered_mat_ops = std::apply(
         [&registerMatrixToDispatcher](auto... elt) {
             return std::make_tuple(registerMatrixToDispatcher(elt)...);
         },
         matrix_op_functor_tuple<PrecisionT, GateImplementation>);
 }
 
-/// @cond DEV
 /**
  * @brief Internal function to iterate over all available kernels in
  * the compile time
  */
-template <class PrecisionT, class ParamT, class TypeList>
-void registerKernelIter() {
-    if constexpr (std::is_same_v<TypeList, void>) {
-        return;
-    } else {
-        registerAllImplementedGateOps<PrecisionT, ParamT,
-                                      typename TypeList::Type>();
-        registerAllImplementedGeneratorOps<PrecisionT,
-                                           typename TypeList::Type>();
-        registerAllImplementedMatrixOps<PrecisionT, typename TypeList::Type>();
-        registerKernelIter<PrecisionT, ParamT, typename TypeList::Next>();
-    }
+template <class PrecisionT, class ParamT, class GateImplementation>
+void registerKernel() {
+    registerAllImplementedGateOps<PrecisionT, ParamT, GateImplementation>();
+    registerAllImplementedGeneratorOps<PrecisionT, GateImplementation>();
+    registerAllImplementedMatrixOps<PrecisionT, GateImplementation>();
+
+    DynamicDispatcher<PrecisionT>::getInstance().registerKernelName(
+        GateImplementation::kernel_id, std::string{GateImplementation::name});
 }
+} // namespace Pennylane
 /// @endcond
-} // namespace
-
-/// @cond DEV
-namespace Pennylane::Internal {
-template <class PrecisionT, class ParamT> int registerAllAvailableKernels() {
-    registerKernelIter<PrecisionT, ParamT, AvailableKernels>();
-    return 1;
-}
-/// @endcond
-
-// explicit instantiations
-template int registerAllAvailableKernels<float, float>();
-template int registerAllAvailableKernels<double, double>();
-
-} // namespace Pennylane::Internal
