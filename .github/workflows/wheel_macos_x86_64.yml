@@ -6,7 +6,6 @@ name: Wheel::MacOS::Intel
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
 on:
-  pull_request:
   push:
     branches:
       - master
@@ -15,15 +14,45 @@ on:
 
 env:
   MACOSX_DEPLOYMENT_TARGET: 10.15
+  PYTHON3_MIN_VERSION: "7"
+  PYTHON3_MAX_VERSION: "10"
 
 jobs:
+  mac-set-matrix-x86:
+    name: Set builder matrix versions
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/checkout@v2
+
+      - id: pyver
+        run: |
+          if [[ ${{ github.event_name }} == 'pull_request' ]]; then
+            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
+              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }})"
+          else
+            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
+              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
+              --range)"
+          fi
+    outputs:
+      matrix: ${{ steps.pyver.outputs.matrix }}
+
   mac-wheels-x86:
+    needs: [mac-set-matrix-x86]
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-10.15]
+        os: [macos-11]
         arch: [x86_64]
-        cibw_build: [cp37-*, cp38-*, cp39-*, cp310-*]
+        cibw_build: ${{fromJson(needs.mac-set-matrix-x86.outputs.matrix)}}
 
     name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
@@ -73,7 +102,8 @@ jobs:
 
           USE_OMP: 1
 
-        run: python -m cibuildwheel --output-dir wheelhouse
+        run: |
+          python -m cibuildwheel --output-dir wheelhouse
 
       - uses: actions-ecosystem/action-regex-match@v2
         id: rc_build

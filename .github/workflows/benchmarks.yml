@@ -1,6 +1,8 @@
 name: Benchmarking
 on:
-  pull_request:
+  push:
+    branches:
+      - master
 
 jobs:
   benchmarks:
