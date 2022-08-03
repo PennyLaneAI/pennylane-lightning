@@ -21,7 +21,7 @@ jobs:
   build_dependencies:
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-latest]
         exec_model: [SERIAL, OPENMP, THREADS]
         kokkos_version: ["3.6.00"]
         container_img: ["quay.io/pypa/manylinux2014_x86_64"]
@@ -44,7 +44,7 @@ jobs:
           key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-static
 
       - name: Install dependencies (Ubuntu)
-        if: ${{ (matrix.container_img == 'ubuntu:20.04') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        if: ${{ (matrix.container_img == 'ubuntu:latest') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
           apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-10 g++-10 ninja-build git
           echo "COMPILER=g++-10" >> $GITHUB_ENV
@@ -132,7 +132,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-latest]
         arch: [x86_64]
         cibw_build: ${{fromJson(needs.linux-set-matrix-x86_64.outputs.matrix)}}
         exec_model: [SERIAL]

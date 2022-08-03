@@ -20,7 +20,7 @@ jobs:
   build_dependencies:
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-latest]
         arch: [ppc64le]
         exec_model: [SERIAL, OPENMP, THREADS]
         kokkos_version: ["3.6.00"]
@@ -172,7 +172,6 @@ jobs:
         name: Set up QEMU
 
       - name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ARCHS_LINUX: ${{matrix.arch}}
 

@@ -20,7 +20,7 @@ jobs:
   build_dependencies:
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-latest]
         arch: [aarch64]
         exec_model: [SERIAL, OPENMP, THREADS]
         kokkos_version: ["3.6.00"]
@@ -136,7 +136,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-latest]
         arch: [aarch64]
         exec_model: [SERIAL]
         kokkos_version: ["3.6.00"]
