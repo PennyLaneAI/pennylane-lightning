@@ -55,7 +55,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingYY {
                                       ParamT angle) {
         // This function is allowed for AVX512 and AVX2 with float
 
-        const double isin =
+        const auto isin =
             inverse ? std::sin(angle / 2) : -std::sin(angle / 2);
 
         const auto real_cos =
@@ -93,7 +93,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingYY {
         const size_t max_wire_parity = fillTrailingOnes(max_rev_wire);
         const size_t max_wire_parity_inv = fillLeadingOnes(max_rev_wire + 1);
 
-        const double isin =
+        const auto isin =
             inverse ? std::sin(angle / 2) : -std::sin(angle / 2);
         const auto cos_factor =
             set1<PrecisionT, packed_size>(std::cos(angle / 2));
@@ -146,7 +146,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingYY {
         const size_t parity_middle =
             fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
 
-        const double isin =
+        const auto isin =
             inverse ? std::sin(angle / 2) : -std::sin(angle / 2);
 
         const auto cos_factor =
