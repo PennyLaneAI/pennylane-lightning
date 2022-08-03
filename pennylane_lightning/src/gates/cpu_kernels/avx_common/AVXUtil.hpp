@@ -104,8 +104,8 @@ auto setValueOneTwo(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
         0,
     };
     for (size_t idx = 0; idx < packed_size / 2; idx++) {
-        data[2 * idx + 0] = func(idx);
-        data[2 * idx + 1] = func(idx);
+        data[2 * idx + 0] = static_cast<PrecisionT>(func(idx));
+        data[2 * idx + 1] = static_cast<PrecisionT>(func(idx));
     }
     return AVXConceptType<PrecisionT, packed_size>::loadu(data.data());
 }
