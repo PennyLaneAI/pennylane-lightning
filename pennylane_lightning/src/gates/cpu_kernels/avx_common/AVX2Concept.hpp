@@ -25,34 +25,25 @@
 
 #include <type_traits>
 
-namespace Pennylane::Gates::AVX2 {
-template <class PrecisionT> struct Intrinsic {
-    static_assert(std::is_same_v<PrecisionT, float> ||
-                      std::is_same_v<PrecisionT, double>,
-                  "Data type for AVX256 must be float or double");
+namespace Pennylane::Gates::AVXCommon {
+namespace Internal {
+template <typename T>
+struct AVX2Intrinsic {
+    static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
 };
-
-template <> struct Intrinsic<float> { using Type = __m256; };
-
-template <> struct Intrinsic<double> { using Type = __m256d; };
-
-template <class PrecisionT>
-using IntrinsicType = typename Intrinsic<PrecisionT>::Type;
-} // namespace Pennylane::Gates::AVX2
-
-namespace Pennylane::Gates::AVX {
-template <> struct AVXIntrinsic<float, 8> {
-    // AVX2
+template <>
+struct AVX2Intrinsic<float> {
     using Type = __m256;
 };
-template <> struct AVXIntrinsic<double, 4> {
-    // AVX2
+template <>
+struct AVX2Intrinsic<double> {
     using Type = __m256d;
 };
+} // namespace Internal
 
 template <typename T> struct AVX2Concept {
     using PrecisionT = T;
-    using IntrinsicType = AVX2::IntrinsicType<PrecisionT>;
+    using IntrinsicType = typename Internal::AVX2Intrinsic<PrecisionT>::Type;
 
     PL_FORCE_INLINE
     static auto load(const std::complex<PrecisionT> *p) -> IntrinsicType {
@@ -128,46 +119,4 @@ template <typename T> struct AVX2Concept {
 };
 template <> struct AVXConcept<float, 8> { using Type = AVX2Concept<float>; };
 template <> struct AVXConcept<double, 4> { using Type = AVX2Concept<double>; };
-
-template <> constexpr auto internalParity<float, 8>(size_t rev_wire) -> __m256 {
-    switch (rev_wire) {
-    case 0:
-        // When Z is applied to 0th qubit
-        return __m256{1.0F, 1.0F, -1.0F, -1.0F, 1.0F, 1.0F, -1.0F, -1.0F};
-    case 1:
-        // When Z is applied to 1st qubit
-        return __m256{1.0F, 1.0F, 1.0F, 1.0F, -1.0F, -1.0F, -1.0F, -1.0F};
-    default:
-        PL_UNREACHABLE;
-    }
-    return _mm256_setzero_ps();
-}
-template <>
-constexpr auto internalParity<double, 4>([[maybe_unused]] size_t rev_wire)
-    -> __m256d {
-    assert(rev_wire == 0);
-    // When Z is applied to 0th qubit
-    return __m256d{1.0, 1.0, -1.0, -1.0};
-}
-
-template <> struct ImagFactor<float, 8> {
-    constexpr static auto create(float val) -> AVXIntrinsicType<float, 8> {
-        return __m256{-val, val, -val, val, -val, val, -val, val};
-    };
-};
-template <> struct ImagFactor<double, 4> {
-    constexpr static auto create(double val) -> AVXIntrinsicType<double, 4> {
-        return __m256d{-val, val, -val, val};
-    };
-};
-template <> struct Set1<float, 8> {
-    constexpr static auto create(float val) -> AVXIntrinsicType<float, 8> {
-        return __m256{val, val, val, val, val, val, val, val};
-    }
-};
-template <> struct Set1<double, 4> {
-    constexpr static auto create(double val) -> AVXIntrinsicType<double, 4> {
-        return __m256d{val, val, val, val};
-    }
-};
-} // namespace Pennylane::Gates::AVX
+} // namespace Pennylane::Gates::AVXCommon

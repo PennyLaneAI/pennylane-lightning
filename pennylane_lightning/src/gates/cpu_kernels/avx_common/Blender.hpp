@@ -21,7 +21,7 @@
 
 #include <immintrin.h>
 
-namespace Pennylane::Gates::AVX {
+namespace Pennylane::Gates::AVXCommon {
 
 template <typename PrecisionT, size_t packed_size> struct CompileMask {
     static_assert(sizeof(PrecisionT) == -1,
@@ -101,4 +101,4 @@ PL_FORCE_INLINE __m512d blend(const __m512d &a, const __m512d &b) {
     return _mm512_mask_blend_pd(k, a, b);
 }
 
-} // namespace Pennylane::Gates::AVX
+} // namespace Pennylane::Gates::AVXCommon

@@ -25,34 +25,25 @@
 
 #include <type_traits>
 
-namespace Pennylane::Gates::AVX512 {
-template <class PrecisionT> struct Intrinsic {
-    static_assert(std::is_same_v<PrecisionT, float> ||
-                      std::is_same_v<PrecisionT, double>,
-                  "Data type for AVX512 must be float or double");
+namespace Pennylane::Gates::AVXCommon {
+namespace Internal {
+template <typename T>
+struct AVX512Intrinsic {
+    static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
 };
-
-template <> struct Intrinsic<float> { using Type = __m512; };
-
-template <> struct Intrinsic<double> { using Type = __m512d; };
-
-template <class PrecisionT>
-using IntrinsicType = typename Intrinsic<PrecisionT>::Type;
-} // namespace Pennylane::Gates::AVX512
-
-namespace Pennylane::Gates::AVX {
-template <> struct AVXIntrinsic<float, 16> {
-    // AVX512
+template <>
+struct AVX512Intrinsic<float> {
     using Type = __m512;
 };
-template <> struct AVXIntrinsic<double, 8> {
-    // AVX512
+template <>
+struct AVX512Intrinsic<double> {
     using Type = __m512d;
 };
+} // nameapce Internal
 
 template <typename T> struct AVX512Concept {
     using PrecisionT = T;
-    using IntrinsicType = AVX512::IntrinsicType<PrecisionT>;
+    using IntrinsicType = typename Internal::AVX512Intrinsic<PrecisionT>::Type;
 
     PL_FORCE_INLINE
     static auto load(std::complex<PrecisionT> *p) -> IntrinsicType {
@@ -131,74 +122,4 @@ template <> struct AVXConcept<float, 16> { using Type = AVX512Concept<float>; };
 template <> struct AVXConcept<double, 8> {
     using Type = AVX512Concept<double>;
 };
-
-template <>
-constexpr auto internalParity<float, 16>(size_t rev_wire) -> __m512 {
-    // AVX512 with float
-    // clang-format off
-    switch(rev_wire) {
-    case 0:
-        // When Z is applied to 0th qubit
-        return __m512{1.0F, 1.0F, -1.0F, -1.0F, 1.0F, 1.0F, -1.0F, -1.0F,
-                      1.0F, 1.0F, -1.0F, -1.0F, 1.0F, 1.0F, -1.0F, -1.0F};
-    case 1:
-        // When Z is applied to 1st qubit
-        return __m512{1.0F, 1.0F, 1.0F, 1.0F, -1.0F, -1.0F, -1.0F, -1.0F,
-                      1.0F, 1.0F, 1.0F, 1.0F, -1.0F,- 1.0F, -1.0F, -1.0F};
-    case 2:
-        // When Z is applied to 2nd qubit
-        return __m512{ 1.0F,  1.0F,  1.0F,  1.0F,
-                       1.0F,  1.0F,  1.0F,  1.0F,
-                      -1.0F, -1.0F, -1.0F, -1.0F,
-                      -1.0F,- 1.0F, -1.0F, -1.0F};
-    default:
-        PL_UNREACHABLE;
-    }
-    // clang-format on
-    return __m512{
-        0,
-    };
-};
-
-template <>
-constexpr auto internalParity<double, 8>(size_t rev_wire) -> __m512d {
-    // AVX512 with double
-    switch (rev_wire) {
-    case 0:
-        // When Z is applied to 0th qubit
-        return __m512d{1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0};
-    case 1:
-        // When Z is applied to 1st qubit
-        return __m512d{1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0};
-    default:
-        PL_UNREACHABLE;
-    }
-    return __m512d{
-        0,
-    };
-}
-
-template <> struct ImagFactor<float, 16> {
-    constexpr static auto create(float val) -> AVXIntrinsicType<float, 16> {
-        return __m512{-val, val, -val, val, -val, val, -val, val,
-                      -val, val, -val, val, -val, val, -val, val};
-    };
-};
-template <> struct ImagFactor<double, 8> {
-    constexpr static auto create(double val) -> AVXIntrinsicType<double, 8> {
-        return __m512d{-val, val, -val, val, -val, val, -val, val};
-    };
-};
-
-template <> struct Set1<float, 16> {
-    constexpr static auto create(float val) -> AVXIntrinsicType<float, 16> {
-        return __m512{val, val, val, val, val, val, val, val,
-                      val, val, val, val, val, val, val, val};
-    }
-};
-template <> struct Set1<double, 8> {
-    constexpr static auto create(double val) -> AVXIntrinsicType<double, 8> {
-        return __m512d{val, val, val, val, val, val, val, val};
-    }
-};
-} // namespace Pennylane::Gates::AVX
+} // namespace Pennylane::Gates::AVXCommon

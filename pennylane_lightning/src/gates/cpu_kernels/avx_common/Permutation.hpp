@@ -31,7 +31,7 @@
 #pragma clang diagnostic ignored "-Winvalid-constexpr"
 #endif
 
-namespace Pennylane::Gates::AVX::Permutation {
+namespace Pennylane::Gates::AVXCommon::Permutation {
 /**
  * @brief Maintain permutation related data in a compile time.
  */
@@ -368,4 +368,4 @@ PL_FORCE_INLINE __m512d maskPermute(const __m512d &src, const __m512d &a) {
         return _mm512_mask_permutexvar_pd(src, k, perm.permute512_, a);
     }
 }
-} // namespace Pennylane::Gates::AVX::Permutation
+} // namespace Pennylane::Gates::AVXCommon::Permutation

@@ -85,14 +85,14 @@ class GateImplementationsAVXCommon
                             const std::vector<size_t> &wires,
                             [[maybe_unused]] bool inverse) {
         using ApplyPauliXAVX =
-            AVX::ApplyPauliX<PrecisionT,
+            AVXCommon::ApplyPauliX<PrecisionT,
                              Derived::packed_bytes / sizeof(PrecisionT)>;
         static_assert(std::is_same_v<PrecisionT, float> ||
                           std::is_same_v<PrecisionT, double>,
                       "Only float and double are supported.");
 
         assert(wires.size() == 1);
-        auto helper = AVX::SingleQubitGateWithoutParamHelper<ApplyPauliXAVX>(
+        auto helper = AVXCommon::SingleQubitGateWithoutParamHelper<ApplyPauliXAVX>(
             &GateImplementationsLM::applyPauliX);
         helper(arr, num_qubits, wires, inverse);
     }
@@ -103,14 +103,14 @@ class GateImplementationsAVXCommon
                             const std::vector<size_t> &wires,
                             [[maybe_unused]] bool inverse) {
         using ApplyPauliYAVX =
-            AVX::ApplyPauliY<PrecisionT,
+            AVXCommon::ApplyPauliY<PrecisionT,
                              Derived::packed_bytes / sizeof(PrecisionT)>;
         static_assert(std::is_same_v<PrecisionT, float> ||
                           std::is_same_v<PrecisionT, double>,
                       "Only float and double are supported.");
 
         assert(wires.size() == 1);
-        auto helper = AVX::SingleQubitGateWithoutParamHelper<ApplyPauliYAVX>(
+        auto helper = AVXCommon::SingleQubitGateWithoutParamHelper<ApplyPauliYAVX>(
             &GateImplementationsLM::applyPauliY);
         helper(arr, num_qubits, wires, inverse);
     }
@@ -121,14 +121,14 @@ class GateImplementationsAVXCommon
                             const std::vector<size_t> &wires,
                             [[maybe_unused]] bool inverse) {
         using ApplyPauliZAVX =
-            AVX::ApplyPauliZ<PrecisionT,
+            AVXCommon::ApplyPauliZ<PrecisionT,
                              Derived::packed_bytes / sizeof(PrecisionT)>;
         static_assert(std::is_same_v<PrecisionT, float> ||
                           std::is_same_v<PrecisionT, double>,
                       "Only float and double are supported.");
 
         assert(wires.size() == 1);
-        auto helper = AVX::SingleQubitGateWithoutParamHelper<ApplyPauliZAVX>(
+        auto helper = AVXCommon::SingleQubitGateWithoutParamHelper<ApplyPauliZAVX>(
             &GateImplementationsLM::applyPauliZ);
         helper(arr, num_qubits, wires, inverse);
     }
@@ -138,12 +138,12 @@ class GateImplementationsAVXCommon
                        const std::vector<size_t> &wires,
                        [[maybe_unused]] bool inverse) {
         using ApplySAVX =
-            AVX::ApplyS<PrecisionT, Derived::packed_bytes / sizeof(PrecisionT)>;
+            AVXCommon::ApplyS<PrecisionT, Derived::packed_bytes / sizeof(PrecisionT)>;
         static_assert(std::is_same_v<PrecisionT, float> ||
                           std::is_same_v<PrecisionT, double>,
                       "Only float and double are supported.");
 
-        auto helper = AVX::SingleQubitGateWithoutParamHelper<ApplySAVX>(
+        auto helper = AVXCommon::SingleQubitGateWithoutParamHelper<ApplySAVX>(
             &GateImplementationsLM::applyS);
         helper(arr, num_qubits, wires, inverse);
     }
@@ -153,13 +153,13 @@ class GateImplementationsAVXCommon
                        const std::vector<size_t> &wires,
                        [[maybe_unused]] bool inverse) {
         using ApplyTAVX =
-            AVX::ApplyT<PrecisionT, Derived::packed_bytes / sizeof(PrecisionT)>;
+            AVXCommon::ApplyT<PrecisionT, Derived::packed_bytes / sizeof(PrecisionT)>;
         static_assert(std::is_same_v<PrecisionT, float> ||
                           std::is_same_v<PrecisionT, double>,
                       "Only float and double are supported.");
 
         assert(wires.size() == 1);
-        auto helper = AVX::SingleQubitGateWithoutParamHelper<ApplyTAVX>(
+        auto helper = AVXCommon::SingleQubitGateWithoutParamHelper<ApplyTAVX>(
             &GateImplementationsLM::applyT);
         helper(arr, num_qubits, wires, inverse);
     }
@@ -170,7 +170,7 @@ class GateImplementationsAVXCommon
                                 const std::vector<size_t> &wires, bool inverse,
                                 ParamT angle) {
         using ApplyPhaseShiftAVX =
-            AVX::ApplyPhaseShift<PrecisionT,
+            AVXCommon::ApplyPhaseShift<PrecisionT,
                                  Derived::packed_bytes / sizeof(PrecisionT)>;
         static_assert(std::is_same_v<PrecisionT, float> ||
                           std::is_same_v<PrecisionT, double>,
@@ -178,7 +178,7 @@ class GateImplementationsAVXCommon
 
         assert(wires.size() == 1);
         auto helper =
-            AVX::SingleQubitGateWithParamHelper<ApplyPhaseShiftAVX, ParamT>(
+            AVXCommon::SingleQubitGateWithParamHelper<ApplyPhaseShiftAVX, ParamT>(
                 &GateImplementationsLM::applyPhaseShift);
         helper(arr, num_qubits, wires, inverse, angle);
     }
@@ -189,13 +189,13 @@ class GateImplementationsAVXCommon
                               const std::vector<size_t> &wires,
                               [[maybe_unused]] bool inverse) {
         using ApplyHadamardAVX =
-            AVX::ApplyHadamard<PrecisionT,
+            AVXCommon::ApplyHadamard<PrecisionT,
                                Derived::packed_bytes / sizeof(PrecisionT)>;
         static_assert(std::is_same_v<PrecisionT, float> ||
                           std::is_same_v<PrecisionT, double>,
                       "Only float and double are supported.");
         assert(wires.size() == 1);
-        auto helper = AVX::SingleQubitGateWithoutParamHelper<ApplyHadamardAVX>(
+        auto helper = AVXCommon::SingleQubitGateWithoutParamHelper<ApplyHadamardAVX>(
             &GateImplementationsLM::applyHadamard);
         helper(arr, num_qubits, wires, inverse);
     }
@@ -204,13 +204,13 @@ class GateImplementationsAVXCommon
     static void applyRX(std::complex<PrecisionT> *arr, const size_t num_qubits,
                         const std::vector<size_t> &wires, bool inverse,
                         ParamT angle) {
-        using ApplyRXAVX = AVX::ApplyRX<PrecisionT, Derived::packed_bytes /
+        using ApplyRXAVX = AVXCommon::ApplyRX<PrecisionT, Derived::packed_bytes /
                                                         sizeof(PrecisionT)>;
         static_assert(std::is_same_v<PrecisionT, float> ||
                           std::is_same_v<PrecisionT, double>,
                       "Only float and double are supported.");
         assert(wires.size() == 1);
-        auto helper = AVX::SingleQubitGateWithParamHelper<ApplyRXAVX, ParamT>(
+        auto helper = AVXCommon::SingleQubitGateWithParamHelper<ApplyRXAVX, ParamT>(
             &GateImplementationsLM::applyRX);
         helper(arr, num_qubits, wires, inverse, angle);
     }
@@ -219,13 +219,13 @@ class GateImplementationsAVXCommon
     static void applyRY(std::complex<PrecisionT> *arr, const size_t num_qubits,
                         const std::vector<size_t> &wires, bool inverse,
                         ParamT angle) {
-        using ApplyRYAVX = AVX::ApplyRY<PrecisionT, Derived::packed_bytes /
+        using ApplyRYAVX = AVXCommon::ApplyRY<PrecisionT, Derived::packed_bytes /
                                                         sizeof(PrecisionT)>;
         static_assert(std::is_same_v<PrecisionT, float> ||
                           std::is_same_v<PrecisionT, double>,
                       "Only float and double are supported.");
         assert(wires.size() == 1);
-        auto helper = AVX::SingleQubitGateWithParamHelper<ApplyRYAVX, ParamT>(
+        auto helper = AVXCommon::SingleQubitGateWithParamHelper<ApplyRYAVX, ParamT>(
             &GateImplementationsLM::applyRY);
         helper(arr, num_qubits, wires, inverse, angle);
     }
@@ -234,13 +234,13 @@ class GateImplementationsAVXCommon
     static void applyRZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
                         const std::vector<size_t> &wires, bool inverse,
                         ParamT angle) {
-        using ApplyRZAVX = AVX::ApplyRZ<PrecisionT, Derived::packed_bytes /
+        using ApplyRZAVX = AVXCommon::ApplyRZ<PrecisionT, Derived::packed_bytes /
                                                         sizeof(PrecisionT)>;
         static_assert(std::is_same_v<PrecisionT, float> ||
                           std::is_same_v<PrecisionT, double>,
                       "Only float and double are supported.");
         assert(wires.size() == 1);
-        auto helper = AVX::SingleQubitGateWithParamHelper<ApplyRZAVX, ParamT>(
+        auto helper = AVXCommon::SingleQubitGateWithParamHelper<ApplyRZAVX, ParamT>(
             &GateImplementationsLM::applyRZ);
         helper(arr, num_qubits, wires, inverse, angle);
     }
@@ -263,7 +263,7 @@ class GateImplementationsAVXCommon
     static void applyCZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
                         const std::vector<size_t> &wires,
                         [[maybe_unused]] bool inverse) {
-        using ApplyCZAVX = AVX::ApplyCZ<PrecisionT, Derived::packed_bytes /
+        using ApplyCZAVX = AVXCommon::ApplyCZ<PrecisionT, Derived::packed_bytes /
                                                         sizeof(PrecisionT)>;
 
         static_assert(std::is_same_v<PrecisionT, float> ||
@@ -272,7 +272,7 @@ class GateImplementationsAVXCommon
 
         assert(wires.size() == 2);
 
-        const AVX::TwoQubitGateWithoutParamHelper<ApplyCZAVX> gate_helper(
+        const AVXCommon::TwoQubitGateWithoutParamHelper<ApplyCZAVX> gate_helper(
             &GateImplementationsLM::applyCZ<PrecisionT>);
 
         gate_helper(arr, num_qubits, wires, inverse);
@@ -282,7 +282,7 @@ class GateImplementationsAVXCommon
     static void
     applySWAP(std::complex<PrecisionT> *arr, const size_t num_qubits,
               const std::vector<size_t> &wires, [[maybe_unused]] bool inverse) {
-        using ApplySWAPAVX = AVX::ApplySWAP<PrecisionT, Derived::packed_bytes /
+        using ApplySWAPAVX = AVXCommon::ApplySWAP<PrecisionT, Derived::packed_bytes /
                                                             sizeof(PrecisionT)>;
 
         static_assert(std::is_same_v<PrecisionT, float> ||
@@ -291,7 +291,7 @@ class GateImplementationsAVXCommon
 
         assert(wires.size() == 2);
 
-        const AVX::TwoQubitGateWithoutParamHelper<ApplySWAPAVX> gate_helper(
+        const AVXCommon::TwoQubitGateWithoutParamHelper<ApplySWAPAVX> gate_helper(
             &GateImplementationsLM::applySWAP<PrecisionT>);
 
         gate_helper(arr, num_qubits, wires, inverse);
@@ -303,10 +303,10 @@ class GateImplementationsAVXCommon
               const std::vector<size_t> &wires, [[maybe_unused]] bool inverse) {
         assert(wires.size() == 2);
 
-        using ApplyCNOTAVX = AVX::ApplyCNOT<PrecisionT, Derived::packed_bytes /
+        using ApplyCNOTAVX = AVXCommon::ApplyCNOT<PrecisionT, Derived::packed_bytes /
                                                             sizeof(PrecisionT)>;
 
-        static_assert(AVX::AsymmetricTwoQubitGateWithoutParam<ApplyCNOTAVX>);
+        static_assert(AVXCommon::AsymmetricTwoQubitGateWithoutParam<ApplyCNOTAVX>);
 
         static_assert(std::is_same_v<PrecisionT, float> ||
                           std::is_same_v<PrecisionT, double>,
@@ -314,7 +314,7 @@ class GateImplementationsAVXCommon
 
         assert(wires.size() == 2);
 
-        const AVX::TwoQubitGateWithoutParamHelper<ApplyCNOTAVX> gate_helper(
+        const AVXCommon::TwoQubitGateWithoutParamHelper<ApplyCNOTAVX> gate_helper(
             &GateImplementationsLM::applyCNOT<PrecisionT>);
 
         gate_helper(arr, num_qubits, wires, inverse);
@@ -328,14 +328,14 @@ class GateImplementationsAVXCommon
         assert(wires.size() == 2);
 
         using ApplyIsingXXAVX =
-            AVX::ApplyIsingXX<PrecisionT,
+            AVXCommon::ApplyIsingXX<PrecisionT,
                               Derived::packed_bytes / sizeof(PrecisionT)>;
 
         static_assert(std::is_same_v<PrecisionT, float> ||
                           std::is_same_v<PrecisionT, double>,
                       "Only float and double are supported.");
 
-        const AVX::TwoQubitGateWithParamHelper<ApplyIsingXXAVX, ParamT>
+        const AVXCommon::TwoQubitGateWithParamHelper<ApplyIsingXXAVX, ParamT>
             gate_helper(
                 &GateImplementationsLM::applyIsingXX<PrecisionT, ParamT>);
 
@@ -350,14 +350,14 @@ class GateImplementationsAVXCommon
         assert(wires.size() == 2);
 
         using ApplyIsingYYAVX =
-            AVX::ApplyIsingYY<PrecisionT,
+            AVXCommon::ApplyIsingYY<PrecisionT,
                               Derived::packed_bytes / sizeof(PrecisionT)>;
 
         static_assert(std::is_same_v<PrecisionT, float> ||
                           std::is_same_v<PrecisionT, double>,
                       "Only float and double are supported.");
 
-        const AVX::TwoQubitGateWithParamHelper<ApplyIsingYYAVX, ParamT>
+        const AVXCommon::TwoQubitGateWithParamHelper<ApplyIsingYYAVX, ParamT>
             gate_helper(
                 &GateImplementationsLM::applyIsingYY<PrecisionT, ParamT>);
 
@@ -370,7 +370,7 @@ class GateImplementationsAVXCommon
                              const std::vector<size_t> &wires,
                              [[maybe_unused]] bool inverse, ParamT angle) {
         using ApplyIsingZZAVX =
-            AVX::ApplyIsingZZ<PrecisionT,
+            AVXCommon::ApplyIsingZZ<PrecisionT,
                               Derived::packed_bytes / sizeof(PrecisionT)>;
 
         static_assert(std::is_same_v<PrecisionT, float> ||
@@ -379,7 +379,7 @@ class GateImplementationsAVXCommon
 
         assert(wires.size() == 2);
 
-        const AVX::TwoQubitGateWithParamHelper<ApplyIsingZZAVX, ParamT>
+        const AVXCommon::TwoQubitGateWithParamHelper<ApplyIsingZZAVX, ParamT>
             gate_helper(
                 &GateImplementationsLM::applyIsingZZ<PrecisionT, ParamT>);
 

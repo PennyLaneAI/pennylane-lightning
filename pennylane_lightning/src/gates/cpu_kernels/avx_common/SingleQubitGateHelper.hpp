@@ -25,7 +25,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace Pennylane::Gates::AVX {
+namespace Pennylane::Gates::AVXCommon {
 /// @cond DEV
 template <class T, class = void>
 struct HasInternalWithoutParam : std::false_type {};
@@ -189,4 +189,4 @@ class SingleQubitGateWithParamHelper {
         AVXImpl::applyExternal(arr, num_qubits, rev_wire, inverse, angle);
     }
 };
-} // namespace Pennylane::Gates::AVX
+} // namespace Pennylane::Gates::AVXCommon

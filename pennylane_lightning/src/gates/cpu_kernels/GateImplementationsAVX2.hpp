@@ -52,11 +52,11 @@ class GateImplementationsAVX2
         const size_t rev_wire = num_qubits - wires[0] - 1;
 
         using SingleQubitOpProdAVX2 =
-            AVX::ApplySingleQubitOp<PrecisionT,
+            AVXCommon::ApplySingleQubitOp<PrecisionT,
                                     packed_bytes / sizeof(PrecisionT)>;
 
         if (num_qubits <
-            AVX::internal_wires_v<packed_bytes / sizeof(PrecisionT)>) {
+            AVXCommon::internal_wires_v<packed_bytes / sizeof(PrecisionT)>) {
             GateImplementationsLM::applySingleQubitOp(arr, num_qubits, matrix,
                                                       wires, inverse);
             return;
@@ -65,23 +65,28 @@ class GateImplementationsAVX2
         if constexpr (std::is_same_v<PrecisionT, float>) {
             switch (rev_wire) {
             case 0:
+                // intra register
                 SingleQubitOpProdAVX2::template applyInternal<0>(
                     arr, num_qubits, matrix, inverse);
                 return;
             case 1:
+                // intra register
                 SingleQubitOpProdAVX2::template applyInternal<1>(
                     arr, num_qubits, matrix, inverse);
                 return;
             default:
+                // inter register
                 SingleQubitOpProdAVX2::applyExternal(arr, num_qubits, rev_wire,
                                                      matrix, inverse);
                 return;
             }
         } else if (std::is_same_v<PrecisionT, double>) {
             if (rev_wire == 0) {
+                // intra register
                 SingleQubitOpProdAVX2::template applyInternal<0>(
                     arr, num_qubits, matrix, inverse);
             } else {
+                // inter register
                 SingleQubitOpProdAVX2::applyExternal(arr, num_qubits, rev_wire,
                                                      matrix, inverse);
             }

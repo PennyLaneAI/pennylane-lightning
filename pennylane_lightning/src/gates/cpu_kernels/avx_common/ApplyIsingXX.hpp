@@ -25,7 +25,7 @@
 
 #include <complex>
 
-namespace Pennylane::Gates::AVX {
+namespace Pennylane::Gates::AVXCommon {
 
 template <typename PrecisionT, size_t packed_size> struct ApplyIsingXX {
     using Precision = PrecisionT;
@@ -172,4 +172,4 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXX {
         }
     }
 };
-} // namespace Pennylane::Gates::AVX
+} // namespace Pennylane::Gates::AVXCommon

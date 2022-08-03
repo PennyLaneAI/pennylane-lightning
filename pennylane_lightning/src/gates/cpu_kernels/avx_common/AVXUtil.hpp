@@ -24,7 +24,7 @@
 
 #include <cstdlib>
 
-namespace Pennylane::Gates::AVX {
+namespace Pennylane::Gates::AVXCommon {
 using Pennylane::Util::exp2;
 using Pennylane::Util::fillLeadingOnes;
 using Pennylane::Util::fillTrailingOnes;
@@ -35,6 +35,26 @@ template <typename PrecisionT, size_t packed_size> struct AVXIntrinsic {
 };
 template <typename T, size_t size>
 using AVXIntrinsicType = typename AVXIntrinsic<T, size>::Type;
+#ifdef PL_USE_AVX2
+template <> struct AVXIntrinsic<float, 8> {
+    // AVX2
+    using Type = __m256;
+};
+template <> struct AVXIntrinsic<double, 4> {
+    // AVX2
+    using Type = __m256d;
+};
+#endif
+#ifdef PL_USE_AVX512F
+template <> struct AVXIntrinsic<float, 16> {
+    // AVX512
+    using Type = __m512;
+};
+template <> struct AVXIntrinsic<double, 8> {
+    // AVX512
+    using Type = __m512d;
+};
+#endif
 
 template <class PrecisionT, size_t packed_size> struct AVXConcept;
 
@@ -73,8 +93,10 @@ auto toParity(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
 }
 
 /**
- * @brief @rst
+ * @brief Repeat the value of the function twice.
  *
+ * As we treat a complex number as two real numbers, this helps when we
+ * multiply function outcomes to a AVX intrinsic type.
  */
 template <typename PrecisionT, size_t packed_size, typename Func>
 auto setValueOneTwo(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
@@ -90,19 +112,82 @@ auto setValueOneTwo(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
 
 /**
  * @brief one or minus one parity for reverse wire in packed data.
- *
- * All specializations are defined in AVX2Concept.hpp and AVX512Concept.hpp
- * files.
  */
 template <typename PrecisionT, size_t packed_size>
 constexpr auto internalParity(size_t rev_wire)
     -> AVXIntrinsicType<PrecisionT, packed_size>;
+#ifdef PL_USE_AVX2
+template <> constexpr auto internalParity<float, 8>(size_t rev_wire) -> __m256 {
+    switch (rev_wire) {
+    case 0:
+        // When Z is applied to the 0th qubit
+        return __m256{1.0F, 1.0F, -1.0F, -1.0F, 1.0F, 1.0F, -1.0F, -1.0F};
+    case 1:
+        // When Z is applied to the 1st qubit
+        return __m256{1.0F, 1.0F, 1.0F, 1.0F, -1.0F, -1.0F, -1.0F, -1.0F};
+    default:
+        PL_UNREACHABLE;
+    }
+    return _mm256_setzero_ps();
+}
+template <>
+constexpr auto internalParity<double, 4>([[maybe_unused]] size_t rev_wire)
+    -> __m256d {
+    assert(rev_wire == 0);
+    // When Z is applied to the 0th qubit
+    return __m256d{1.0, 1.0, -1.0, -1.0};
+}
+#endif
+#ifdef PL_USE_AVX512F
+template <>
+constexpr auto internalParity<float, 16>(size_t rev_wire) -> __m512 {
+    // AVX512 with float
+    // clang-format off
+    switch(rev_wire) {
+    case 0:
+        // When Z is applied to the 0th qubit
+        return __m512{1.0F, 1.0F, -1.0F, -1.0F, 1.0F, 1.0F, -1.0F, -1.0F,
+                      1.0F, 1.0F, -1.0F, -1.0F, 1.0F, 1.0F, -1.0F, -1.0F};
+    case 1:
+        // When Z is applied to the 1st qubit
+        return __m512{1.0F, 1.0F, 1.0F, 1.0F, -1.0F, -1.0F, -1.0F, -1.0F,
+                      1.0F, 1.0F, 1.0F, 1.0F, -1.0F,- 1.0F, -1.0F, -1.0F};
+    case 2:
+        // When Z is applied to the 2nd qubit
+        return __m512{ 1.0F,  1.0F,  1.0F,  1.0F,
+                       1.0F,  1.0F,  1.0F,  1.0F,
+                      -1.0F, -1.0F, -1.0F, -1.0F,
+                      -1.0F,- 1.0F, -1.0F, -1.0F};
+    default:
+        PL_UNREACHABLE;
+    }
+    // clang-format on
+    return __m512{
+        0,
+    };
+};
+template <>
+constexpr auto internalParity<double, 8>(size_t rev_wire) -> __m512d {
+    // AVX512 with double
+    switch (rev_wire) {
+    case 0:
+        // When Z is applied to the 0th qubit
+        return __m512d{1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0};
+    case 1:
+        // When Z is applied to the 1st qubit
+        return __m512d{1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0};
+    default:
+        PL_UNREACHABLE;
+    }
+    return __m512d{
+        0,
+    };
+}
+#endif
 
 /**
  * @brief Factor that is applied to the intrinsic type for product of
  * pure imaginary value.
- *
- * Template specializations are defined in each AVX(2|512)Concept.hpp file.
  */
 template <typename PrecisionT, size_t packed_size> struct ImagFactor;
 
@@ -110,8 +195,58 @@ template <typename PrecisionT, size_t packed_size>
 constexpr auto imagFactor(PrecisionT val = 1.0) {
     return ImagFactor<PrecisionT, packed_size>::create(val);
 }
+#ifdef PL_USE_AVX2
+template <> struct ImagFactor<float, 8> {
+    constexpr static auto create(float val) -> AVXIntrinsicType<float, 8> {
+        return __m256{-val, val, -val, val, -val, val, -val, val};
+    };
+};
+template <> struct ImagFactor<double, 4> {
+    constexpr static auto create(double val) -> AVXIntrinsicType<double, 4> {
+        return __m256d{-val, val, -val, val};
+    };
+};
+#endif
+#ifdef PL_USE_AVX512F
+template <> struct ImagFactor<float, 16> {
+    constexpr static auto create(float val) -> AVXIntrinsicType<float, 16> {
+        return __m512{-val, val, -val, val, -val, val, -val, val,
+                      -val, val, -val, val, -val, val, -val, val};
+    };
+};
+template <> struct ImagFactor<double, 8> {
+    constexpr static auto create(double val) -> AVXIntrinsicType<double, 8> {
+        return __m512d{-val, val, -val, val, -val, val, -val, val};
+    };
+};
+#endif
 
 template <typename PrecisionT, size_t packed_size> struct Set1;
+#ifdef PL_USE_AVX2
+template <> struct Set1<float, 8> {
+    constexpr static auto create(float val) -> AVXIntrinsicType<float, 8> {
+        return __m256{val, val, val, val, val, val, val, val};
+    }
+};
+template <> struct Set1<double, 4> {
+    constexpr static auto create(double val) -> AVXIntrinsicType<double, 4> {
+        return __m256d{val, val, val, val};
+    }
+};
+#endif
+#ifdef PL_USE_AVX512F
+template <> struct Set1<float, 16> {
+    constexpr static auto create(float val) -> AVXIntrinsicType<float, 16> {
+        return __m512{val, val, val, val, val, val, val, val,
+                      val, val, val, val, val, val, val, val};
+    }
+};
+template <> struct Set1<double, 8> {
+    constexpr static auto create(double val) -> AVXIntrinsicType<double, 8> {
+        return __m512d{val, val, val, val, val, val, val, val};
+    }
+};
+#endif
 
 template <typename PrecisionT, size_t packed_size>
 constexpr auto set1(PrecisionT val) {
@@ -128,10 +263,10 @@ constexpr auto internal_wires_v = InternalWires<packed_size>::value;
 #ifdef PL_USE_AVX2
 constexpr __m256i setr256i(int32_t  e0, int32_t  e1, int32_t  e2, int32_t  e3,
 		                   int32_t  e4, int32_t  e5, int32_t  e6, int32_t  e7) {
-    return __m256i{(int64_t(e1) << 32) | e0,  // NOLINT(hicpp-signed-bitwise)
-                   (int64_t(e3) << 32) | e2,  // NOLINT(hicpp-signed-bitwise)
-                   (int64_t(e5) << 32) | e4,  // NOLINT(hicpp-signed-bitwise)
-                   (int64_t(e7) << 32) | e6}; // NOLINT(hicpp-signed-bitwise)
+    return __m256i{(static_cast<int64_t>(e1) << 32) | e0,  // NOLINT(hicpp-signed-bitwise)
+                   (static_cast<int64_t>(e3) << 32) | e2,  // NOLINT(hicpp-signed-bitwise)
+                   (static_cast<int64_t>(e5) << 32) | e4,  // NOLINT(hicpp-signed-bitwise)
+                   (static_cast<int64_t>(e7) << 32) | e6}; // NOLINT(hicpp-signed-bitwise)
 }
 #endif
 #ifdef PL_USE_AVX512F
@@ -139,14 +274,14 @@ constexpr __m512i setr512i(int32_t  e0, int32_t  e1, int32_t  e2, int32_t  e3,
 		                   int32_t  e4, int32_t  e5, int32_t  e6, int32_t  e7, 
 		                   int32_t  e8, int32_t  e9, int32_t e10, int32_t e11, 
 		                   int32_t e12, int32_t e13, int32_t e14, int32_t e15) {
-    return __m512i{(int64_t(e1) << 32)  |  e0,  // NOLINT(hicpp-signed-bitwise)
-                   (int64_t(e3) << 32)  |  e2,  // NOLINT(hicpp-signed-bitwise)
-                   (int64_t(e5) << 32)  |  e4,  // NOLINT(hicpp-signed-bitwise)
-                   (int64_t(e7) << 32)  |  e6,  // NOLINT(hicpp-signed-bitwise)
-                   (int64_t(e9) << 32)  |  e8,  // NOLINT(hicpp-signed-bitwise)
-                   (int64_t(e11) << 32) | e10,  // NOLINT(hicpp-signed-bitwise)
-                   (int64_t(e13) << 32) | e12,  // NOLINT(hicpp-signed-bitwise)
-                   (int64_t(e15) << 32) | e14}; // NOLINT(hicpp-signed-bitwise)
+    return __m512i{(static_cast<int64_t>(e1) << 32)  |  e0,  // NOLINT(hicpp-signed-bitwise)
+                   (static_cast<int64_t>(e3) << 32)  |  e2,  // NOLINT(hicpp-signed-bitwise)
+                   (static_cast<int64_t>(e5) << 32)  |  e4,  // NOLINT(hicpp-signed-bitwise)
+                   (static_cast<int64_t>(e7) << 32)  |  e6,  // NOLINT(hicpp-signed-bitwise)
+                   (static_cast<int64_t>(e9) << 32)  |  e8,  // NOLINT(hicpp-signed-bitwise)
+                   (static_cast<int64_t>(e11) << 32) | e10,  // NOLINT(hicpp-signed-bitwise)
+                   (static_cast<int64_t>(e13) << 32) | e12,  // NOLINT(hicpp-signed-bitwise)
+                   (static_cast<int64_t>(e15) << 32) | e14}; // NOLINT(hicpp-signed-bitwise)
 }
 constexpr __m512i setr512i(int64_t  e0, int64_t  e1, int64_t  e2, int64_t  e3,
 		                   int64_t  e4, int64_t  e5, int64_t  e6, int64_t  e7) {
@@ -155,4 +290,4 @@ constexpr __m512i setr512i(int64_t  e0, int64_t  e1, int64_t  e2, int64_t  e3,
 #endif
 // clang-format on
 
-} // namespace Pennylane::Gates::AVX
+} // namespace Pennylane::Gates::AVXCommon

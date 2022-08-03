@@ -25,7 +25,7 @@
 
 #include <complex>
 
-namespace Pennylane::Gates::AVX {
+namespace Pennylane::Gates::AVXCommon {
 template <typename PrecisionT, size_t packed_size> struct ApplyPauliX {
     using Precision = PrecisionT;
     using PrecisionAVXConcept = AVXConceptType<PrecisionT, packed_size>;
@@ -64,4 +64,4 @@ template <typename PrecisionT, size_t packed_size> struct ApplyPauliX {
         }
     }
 };
-} // namespace Pennylane::Gates::AVX
+} // namespace Pennylane::Gates::AVXCommon

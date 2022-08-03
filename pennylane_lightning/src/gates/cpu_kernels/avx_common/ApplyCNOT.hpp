@@ -29,7 +29,7 @@
 #include <complex>
 #include <utility>
 
-namespace Pennylane::Gates::AVX {
+namespace Pennylane::Gates::AVXCommon {
 template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
     using Precision = PrecisionT;
     using PrecisionAVXConcept = AVXConceptType<PrecisionT, packed_size>;
@@ -181,4 +181,4 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
         }
     }
 };
-} // namespace Pennylane::Gates::AVX
+} // namespace Pennylane::Gates::AVXCommon
