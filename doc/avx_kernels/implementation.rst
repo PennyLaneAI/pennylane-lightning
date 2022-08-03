@@ -97,7 +97,7 @@ When such a function is given, we can choose a proper function to call for a giv
       }
    }
 
-Note that we used a switch-case statement for calling internal functions as the wire index must be a compile-time template parameter for calling ``applyInternal``.
+Note that we used a switch-case statement for calling internal functions as the wire index must be a compile-time template parameter for ``applyInternal``.
 Since all single-qubit gate functions share the same structure,
 it might be beneficial to make a simple helper function that automatically finds a target function depending on the given information.
 Two classes :cpp:class:`Pennylane::Gates::AVXCommon::SingleQubitGateWithParamHelper` and :cpp:class:`Pennylane::Gates::AVXCommon::SingleQubitGateWithoutParamHelper` provide such functionality for a single-qubit gate with and without parameters, respectively.
