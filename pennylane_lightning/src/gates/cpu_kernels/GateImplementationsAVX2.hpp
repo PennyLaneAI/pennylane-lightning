@@ -53,7 +53,7 @@ class GateImplementationsAVX2
 
         using SingleQubitOpProdAVX2 =
             AVXCommon::ApplySingleQubitOp<PrecisionT,
-                                    packed_bytes / sizeof(PrecisionT)>;
+                                          packed_bytes / sizeof(PrecisionT)>;
 
         if (num_qubits <
             AVXCommon::internal_wires_v<packed_bytes / sizeof(PrecisionT)>) {

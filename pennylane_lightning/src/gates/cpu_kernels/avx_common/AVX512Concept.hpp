@@ -27,19 +27,12 @@
 
 namespace Pennylane::Gates::AVXCommon {
 namespace Internal {
-template <typename T>
-struct AVX512Intrinsic {
+template <typename T> struct AVX512Intrinsic {
     static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
 };
-template <>
-struct AVX512Intrinsic<float> {
-    using Type = __m512;
-};
-template <>
-struct AVX512Intrinsic<double> {
-    using Type = __m512d;
-};
-} // nameapce Internal
+template <> struct AVX512Intrinsic<float> { using Type = __m512; };
+template <> struct AVX512Intrinsic<double> { using Type = __m512d; };
+} // namespace Internal
 
 template <typename T> struct AVX512Concept {
     using PrecisionT = T;
