@@ -80,6 +80,7 @@ jobs:
           # MacOS specific build settings
           CIBW_BEFORE_ALL_MACOS: |
             brew uninstall --force oclint
+            brew install llvm
             brew install libomp
 
           # Python build settings
