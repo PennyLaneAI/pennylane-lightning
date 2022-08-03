@@ -66,8 +66,8 @@ Following simple (C++ style) pseudocode shows how the algorithm is implemented.
    }
 
 Note that this is a general high level code and does not care details such as how many elements in a row.
-However, one can translate it to C++ code without runtime overhead with proper techniques (``constexpr`` and ``template`` classes/functions). One tricky part is how we implement permutations efficiently which can be found in :ref:`namespace_Pennylane__Gates__AVXCommon__Permutation`.
-As some AVX2/512 permutation functions require its permutation data to be compile-time constant, we require `wire` to be a compile-time parameter for ``applyInternal``.
+However, one can translate it to C++ code without runtime overhead with proper techniques (``constexpr`` and ``template`` classes/functions). One tricky part is how we implement permutations efficiently, which can be found in :ref:`namespace_Pennylane__Gates__AVXCommon__Permutation`.
+As some AVX2/512 permutation functions require its permutation data to be a compile-time constant, we require `wire` to be a compile-time parameter for ``applyInternal``.
 The full implementation of the functions can be found in :cpp:class:`Pennylane::Gates::AVXCommon::ApplyPauliX`.
 
 
@@ -100,7 +100,7 @@ When such a function is given, we can choose a proper function to call for a giv
 As the wire the gate applies to for the internal function should be a compile-time parameter, we need a switch-case statement for calling internal functions.
 Still, one might see that all single-qubit gate functions share the same structure.
 Thus it might be beneficial to make a simple helper function that automatically finds a target function depending on the given information.
-Two classes :cpp:class:`Pennylane::Gates::AVXCommon::SingleQubitGateWithParamHelper` and :cpp:class:`Pennylane::Gates::AVXCommon::SingleQubitGateWithoutParamHelper` provide such a functionality for a single-qubit gate with and without parameters, respectively.
+Two classes :cpp:class:`Pennylane::Gates::AVXCommon::SingleQubitGateWithParamHelper` and :cpp:class:`Pennylane::Gates::AVXCommon::SingleQubitGateWithoutParamHelper` provide such functionality for a single-qubit gate with and without parameters, respectively.
 
 
 Two-qubit gates
