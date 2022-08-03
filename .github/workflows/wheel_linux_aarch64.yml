@@ -22,12 +22,15 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         arch: [aarch64]
-        exec_model: [SERIAL, OPENMP, THREADS]
+        exec_model: [SERIAL]
         kokkos_version: ["3.6.00"]
         xcontainer_img: ["quay.io/pypa/manylinux2014_aarch64"]
 
     name: Kokkos core & kernels (${{ matrix.exec_model }}::${{ matrix.arch }} )
     runs-on: ${{ matrix.os }}
+    outputs:
+      exec_model: ${{ matrix.exec_model }}
+      kokkos_version: ${{ matrix.kokkos_version }}
 
     steps:
       - name: Cancel previous runs
@@ -138,8 +141,8 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         arch: [aarch64]
-        exec_model: [SERIAL]
-        kokkos_version: ["3.6.00"]
+        kokkos_version: ${{ needs.build_dependencies.outputs.kokkos_version }}
+        exec_model: ${{ needs.build_dependencies.outputs.exec_model }}
         cibw_build: ${{fromJson(needs.linux-set-matrix-aarch64.outputs.matrix)}}
 
     name: ubuntu-latest::aarch64 (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
