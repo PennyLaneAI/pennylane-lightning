@@ -9,6 +9,9 @@
 
 ### Improvements
 
+* CI builders use a reduced set of resources and redundant tests for PRs
+[(#319)](https://github.com/PennyLaneAI/pennylane-lightning/pull/319)
+
 * Parallelize wheel-builds where applicable.
 [(#314)](https://github.com/PennyLaneAI/pennylane-lightning/pull/314)
 
