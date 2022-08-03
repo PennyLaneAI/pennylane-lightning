@@ -24,11 +24,14 @@ jobs:
       matrix:
         os: [macos-11]
         arch: [x86_64]
-        exec_model: [SERIAL, OPENMP, THREADS]
+        exec_model: [SERIAL] # We may also adopt [OPENMP, THREADS] in later iterations
         kokkos_version: ["3.6.00"]
 
     name: Kokkos core & kernels (${{ matrix.exec_model }}::${{ matrix.arch }} )
     runs-on: ${{ matrix.os }}
+    outputs:
+      exec_model: ${{ matrix.exec_model }}
+      kokkos_version: ${{ matrix.kokkos_version }}
 
     steps:
       - name: Cancel previous runs
@@ -138,6 +141,8 @@ jobs:
         os: [macos-11]
         arch: [x86_64]
         cibw_build: ${{fromJson(needs.mac-set-matrix-x86.outputs.matrix)}}
+        kokkos_version: ${{ needs.build_dependencies.outputs.kokkos_version }}
+        exec_model: ${{ needs.build_dependencies.outputs.exec_model }}
 
     name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
