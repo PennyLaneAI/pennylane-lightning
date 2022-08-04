@@ -31,6 +31,7 @@
 
 namespace Pennylane::Gates {
 
+// LCOV_EXCL_START
 class GateImplementationsAVX512
     : public GateImplementationsAVXCommon<GateImplementationsAVX512> {
   public:
@@ -105,4 +106,5 @@ class GateImplementationsAVX512
         }
     }
 };
+// LCOV_EXCL_STOP
 } // namespace Pennylane::Gates

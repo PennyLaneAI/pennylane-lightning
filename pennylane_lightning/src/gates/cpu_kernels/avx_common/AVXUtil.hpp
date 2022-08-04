@@ -139,6 +139,7 @@ constexpr auto internalParity<double, 4>([[maybe_unused]] size_t rev_wire)
 }
 #endif
 #ifdef PL_USE_AVX512F
+// LCOV_EXCL_START
 template <>
 constexpr auto internalParity<float, 16>(size_t rev_wire) -> __m512 {
     // AVX512 with float
@@ -183,6 +184,7 @@ constexpr auto internalParity<double, 8>(size_t rev_wire) -> __m512d {
         0,
     };
 }
+// LCOV_EXCL_STOP
 #endif
 
 /**
@@ -208,6 +210,7 @@ template <> struct ImagFactor<double, 4> {
 };
 #endif
 #ifdef PL_USE_AVX512F
+// LCOV_EXCL_START
 template <> struct ImagFactor<float, 16> {
     constexpr static auto create(float val) -> AVXIntrinsicType<float, 16> {
         return __m512{-val, val, -val, val, -val, val, -val, val,
@@ -219,6 +222,7 @@ template <> struct ImagFactor<double, 8> {
         return __m512d{-val, val, -val, val, -val, val, -val, val};
     };
 };
+// LCOV_EXCL_STOP
 #endif
 
 template <typename PrecisionT, size_t packed_size> struct Set1;
@@ -235,6 +239,7 @@ template <> struct Set1<double, 4> {
 };
 #endif
 #ifdef PL_USE_AVX512F
+// LCOV_EXCL_START
 template <> struct Set1<float, 16> {
     constexpr static auto create(float val) -> AVXIntrinsicType<float, 16> {
         return __m512{val, val, val, val, val, val, val, val,
@@ -246,6 +251,7 @@ template <> struct Set1<double, 8> {
         return __m512d{val, val, val, val, val, val, val, val};
     }
 };
+// LCOV_EXCL_STOP
 #endif
 
 template <typename PrecisionT, size_t packed_size>
@@ -270,6 +276,7 @@ constexpr __m256i setr256i(int32_t  e0, int32_t  e1, int32_t  e2, int32_t  e3,
 }
 #endif
 #ifdef PL_USE_AVX512F
+// LCOV_EXCL_START
 constexpr __m512i setr512i(int32_t  e0, int32_t  e1, int32_t  e2, int32_t  e3,
 		                   int32_t  e4, int32_t  e5, int32_t  e6, int32_t  e7, 
 		                   int32_t  e8, int32_t  e9, int32_t e10, int32_t e11, 
@@ -287,6 +294,7 @@ constexpr __m512i setr512i(int64_t  e0, int64_t  e1, int64_t  e2, int64_t  e3,
 		                   int64_t  e4, int64_t  e5, int64_t  e6, int64_t  e7) {
     return __m512i{e0, e1, e2, e3, e4, e5, e6, e7};
 }
+// LCOV_EXCL_STOP
 #endif
 // clang-format on
 

@@ -173,6 +173,7 @@ constexpr __m256i getPermutation8x256i(const std::array<uint8_t, 8>& permutation
 }
 #endif
 #ifdef PL_USE_AVX512F
+// LCOV_EXCL_START
 constexpr __m512i getPermutation8x512i(const std::array<uint8_t, 8>& permutation) {
     return setr512i(permutation[0], permutation[1], // NOLINT(readability-magic-numbers)
                     permutation[2], permutation[3], // NOLINT(readability-magic-numbers)
@@ -189,6 +190,7 @@ constexpr __m512i getPermutation16x512i(const std::array<uint8_t, 16>& permutati
                     permutation[12], permutation[13],  // NOLINT(readability-magic-numbers)
                     permutation[14], permutation[15]); // NOLINT(readability-magic-numbers)
 }
+// LCOV_EXCL_STOP
 #endif
 // clang-format on
 
@@ -228,6 +230,7 @@ constexpr auto compilePermutation(const std::array<uint8_t, 4> &permutation)
 #endif // Specializations for AVX2 end
 
 #ifdef PL_USE_AVX512F // Specializations for AVX512 begin
+// LCOV_EXCL_START
 template <>
 constexpr auto compilePermutation(const std::array<uint8_t, 16> &permutation)
     -> CompiledPermutation<float, 16> {
@@ -250,6 +253,7 @@ constexpr auto compilePermutation(const std::array<uint8_t, 8> &permutation)
     } // else
     return {within_lane, getPermutation8x512i(permutation)};
 }
+// LCOV_EXCL_STOP
 #endif // Specializations for AVX512 end
 
 template <size_t packed_size>
