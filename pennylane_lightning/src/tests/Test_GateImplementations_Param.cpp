@@ -1,6 +1,8 @@
+#include "CPUMemoryModel.hpp"
 #include "TestHelpers.hpp"
-#include "TestKernels.hpp"
 #include "Util.hpp"
+#include "cpu_kernels/GateImplementationsLM.hpp"
+#include "cpu_kernels/GateImplementationsPI.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -22,6 +24,7 @@
  */
 
 using namespace Pennylane;
+
 /**
  * @brief Run test suit only when the gate is defined
  */
@@ -170,7 +173,7 @@ void testApplyRY() {
 
     const TestVector<ComplexPrecisionT> init_state{
         {{0.8775825618903728, 0.0}, {0.0, -0.47942553860420306}},
-        test_allocator<ComplexPrecisionT>};
+        getBestAllocator<ComplexPrecisionT>()};
     DYNAMIC_SECTION(GateImplementation::name
                     << ", RY - " << PrecisionToName<PrecisionT>::value) {
         for (size_t index = 0; index < angles.size(); index++) {
@@ -389,7 +392,7 @@ void testApplyIsingXX() {
                 ComplexPrecisionT{0.173146612336, 0.092249594834},
                 ComplexPrecisionT{0.298857179897, 0.269627836165},
             },
-            test_allocator<ComplexPrecisionT>};
+            getBestAllocator<ComplexPrecisionT>()};
         const std::vector<size_t> wires = {0, 2};
         const ParamT angle = 0.267030328057308;
         std::vector<ComplexPrecisionT> expected{
@@ -678,7 +681,7 @@ void testApplyIsingYY() {
              ComplexPrecisionT{0.032991360504, 0.024025500927},
              ComplexPrecisionT{0.121553926676, 0.263606060346},
              ComplexPrecisionT{0.177173454285, 0.267447421480}},
-            test_allocator<ComplexPrecisionT>};
+            getBestAllocator<ComplexPrecisionT>()};
 
         const std::vector<size_t> wires = {0, 1};
         const ParamT angle = 0.312;
@@ -832,7 +835,7 @@ void testApplyIsingZZ() {
              ComplexPrecisionT{0.089653239407, 0.221581340372},
              ComplexPrecisionT{0.217892322429, 0.291261296999},
              ComplexPrecisionT{0.292993251871, 0.186570798697}},
-            test_allocator<ComplexPrecisionT>};
+            getBestAllocator<ComplexPrecisionT>()};
 
         const std::vector<size_t> wires = {0, 1};
         const ParamT angle = 0.312;

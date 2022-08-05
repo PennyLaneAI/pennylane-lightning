@@ -242,15 +242,13 @@ template <typename PrecisionT, class GateImplementation> void testApplyCNOT() {
         const auto ini_st = createProductState<PrecisionT>("100");
         auto st = ini_st;
         GateImplementation::applyCNOT(st.data(), num_qubits, {0, 1}, false);
-        CHECK(st ==
-              PLApprox(createProductState<PrecisionT>("110")).margin(1e-7));
+        CHECK(st == approx(createProductState<PrecisionT>("110")).margin(1e-7));
     }
     SECTION("CNOT1,2 |110> = |111>") {
         const auto ini_st = createProductState<PrecisionT>("110");
         auto st = ini_st;
         GateImplementation::applyCNOT(st.data(), num_qubits, {1, 2}, false);
-        CHECK(st ==
-              PLApprox(createProductState<PrecisionT>("111")).margin(1e-7));
+        CHECK(st == approx(createProductState<PrecisionT>("111")).margin(1e-7));
     }
 
     SECTION("Generate GHZ state") {

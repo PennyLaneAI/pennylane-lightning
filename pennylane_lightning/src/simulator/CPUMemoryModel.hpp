@@ -61,15 +61,17 @@ inline auto getMemoryModel(const void *ptr) -> CPUMemoryModel {
  * @return CPUMemoryModel
  */
 inline auto bestCPUMemoryModel() -> CPUMemoryModel {
-    if constexpr (Util::Constant::use_avx512f) {
-        // If the binary is compiled with AVX512F support
+    using namespace Util::Constant;
+    constexpr static bool is_unix =
+        (operating_system == OperatingSystem::MacOS) ||
+        (operating_system == OperatingSystem::Linux);
+    if constexpr ((cpu_arch == CPUArch::X86_64) && is_unix) {
+        // We enable AVX2/512 only for X86_64 arch with UNIX compatible OSs
         if (Util::RuntimeInfo::AVX512F()) {
             // and the CPU support it as well
             return CPUMemoryModel::Aligned512;
         }
-    }
-    if constexpr (Util::Constant::use_avx2) {
-        if (Util::RuntimeInfo::AVX2()) {
+        if (Util::RuntimeInfo::AVX2() && Util::RuntimeInfo::FMA()) {
             return CPUMemoryModel::Aligned256;
         }
     }
@@ -84,18 +86,13 @@ inline auto bestCPUMemoryModel() -> CPUMemoryModel {
 template <class T>
 constexpr inline auto getAlignment(CPUMemoryModel memory_model) -> uint32_t {
     switch (memory_model) {
-    case CPUMemoryModel::Unaligned:
-        return alignof(T);
     case CPUMemoryModel::Aligned256:
         return 32U;
     case CPUMemoryModel::Aligned512:
         return 64U;
-    // LCOV_EXCL_START
     default:
-        break;
+        return alignof(T);
     }
-    PL_UNREACHABLE;
-    // LCOV_EXCL_STOP
 }
 
 /**
@@ -107,5 +104,10 @@ template <class T>
 constexpr auto getAllocator(CPUMemoryModel memory_model)
     -> Util::AlignedAllocator<T> {
     return Util::AlignedAllocator<T>{getAlignment<T>(memory_model)};
+}
+
+template <class T>
+constexpr auto getBestAllocator() -> Util::AlignedAllocator<T> {
+    return getAllocator<T>(bestCPUMemoryModel());
 }
 } // namespace Pennylane
