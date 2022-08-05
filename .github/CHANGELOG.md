@@ -9,11 +9,14 @@
 
 ### Improvements
 
-* CI builders use a reduced set of resources and redundant tests for PRs
+* CI builders use a reduced set of resources and redundant tests for PRs.
 [(#319)](https://github.com/PennyLaneAI/pennylane-lightning/pull/319)
 
 * Parallelize wheel-builds where applicable.
 [(#314)](https://github.com/PennyLaneAI/pennylane-lightning/pull/314)
+
+* AVX2/512 kernels are now available on Linux/MacOS with x86-64 architecture.
+[(#313)](https://github.com/PennyLaneAI/pennylane-lightning/pull/313)
 
 ### Documentation
 
@@ -26,7 +29,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Lee James O'Riordan
+Amintor Dusko, Lee James O'Riordan, Chae-Yeun Park
 
 ---
 
