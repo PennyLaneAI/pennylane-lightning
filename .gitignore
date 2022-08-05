@@ -3,6 +3,7 @@ doc/_build/
 PennyLane_Lightning.egg-info/
 build/
 Build/
+BuildCov/
 BuildGBench/
 BuildTests/
 BuildTidy/

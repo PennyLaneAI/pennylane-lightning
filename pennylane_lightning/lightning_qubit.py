@@ -119,6 +119,10 @@ class LightningQubit(DefaultQubit):
     @staticmethod
     def _asarray(arr, dtype=None):
         arr = np.asarray(arr)  # arr is not copied
+
+        if arr.dtype.kind not in ["f", "c"]:
+            return arr
+
         if not dtype:
             dtype = arr.dtype
 

@@ -45,7 +45,7 @@ clean:
 	find . -type d -name '__pycache__' -exec rm -r {} \+
 	rm -rf dist
 	rm -rf build
-	rm -rf BuildTests BuildBench BuildGBench
+	rm -rf BuildTests BuildTidy BuildGBench
 	rm -rf .coverage coverage_html_report/
 	rm -rf tmp
 	rm -rf *.dat
@@ -58,7 +58,7 @@ docs:
 clean-docs:
 	$(MAKE) -C doc clean
 
-.PHONY : test-builtin test-suite test-python coverage test-cpp test-cpp-no-omp test-cpp-blas test-cpp-kokkos
+.PHONY : test-builtin test-suite test-python coverage coverage-cpp test-cpp test-cpp-no-omp test-cpp-blas test-cpp-kokkos
 test-builtin:
 	$(PYTHON) -I $(TESTRUNNER)
 
@@ -73,6 +73,15 @@ coverage:
 	$(PYTHON) $(TESTRUNNER) $(COVERAGE)
 	pl-device-test --device lightning.qubit --skip-ops --shots=20000 $(COVERAGE) --cov-append
 	pl-device-test --device lightning.qubit --shots=None --skip-ops $(COVERAGE) --cov-append
+
+coverage-cpp:
+	@echo "Generating cpp coverage report in BuildCov/out .."
+	rm -rf ./BuildCov
+	cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON
+	cmake --build ./BuildCov
+	cd ./BuildCov; ./tests/runner; \
+	lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info; \
+	genhtml coverage.info --output-directory out
 
 test-cpp:
 	rm -rf ./BuildTests
@@ -123,6 +132,6 @@ endif
 
 .PHONY: check-tidy
 check-tidy:
-	rm -rf ./Build
-	cmake . -BBuild -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON
-	cmake --build ./Build
+	rm -rf ./BuildTidy
+	cmake . -BBuildTidy -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON
+	cmake --build ./BuildTidy

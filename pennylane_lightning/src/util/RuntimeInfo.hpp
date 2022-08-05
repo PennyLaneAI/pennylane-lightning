@@ -37,22 +37,31 @@ class RuntimeInfo {
     };
     /// @endcond
 
-    static const inline InternalRuntimeInfo internal_runtime_info_;
+    static const InternalRuntimeInfo &getInternalRuntimeInfo() {
+        static InternalRuntimeInfo internal_runtime_info;
+        return internal_runtime_info;
+    }
 
   public:
     static inline bool AVX() {
         // NOLINTNEXTLINE(readability-magic-numbers)
-        return internal_runtime_info_.f_1_ecx[28];
+        return getInternalRuntimeInfo().f_1_ecx[28];
     }
     static inline bool AVX2() {
         // NOLINTNEXTLINE(readability-magic-numbers)
-        return internal_runtime_info_.f_7_ebx[5];
+        return getInternalRuntimeInfo().f_7_ebx[5];
+    }
+    static inline bool FMA() {
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return getInternalRuntimeInfo().f_1_ecx[12];
     }
     static inline bool AVX512F() {
         // NOLINTNEXTLINE(readability-magic-numbers)
-        return internal_runtime_info_.f_7_ebx[16];
+        return getInternalRuntimeInfo().f_7_ebx[16];
     }
-    static const std::string &vendor() { return internal_runtime_info_.vendor; }
-    static const std::string &brand() { return internal_runtime_info_.brand; }
+    static const std::string &vendor() {
+        return getInternalRuntimeInfo().vendor;
+    }
+    static const std::string &brand() { return getInternalRuntimeInfo().brand; }
 };
 } // namespace Pennylane::Util
