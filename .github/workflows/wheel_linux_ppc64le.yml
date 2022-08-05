@@ -44,7 +44,7 @@ jobs:
     outputs:
       matrix: ${{ steps.pyver.outputs.matrix }}
 
-linux-wheels-ppc64le:
+  linux-wheels-ppc64le:
     needs: [linux-set-matrix-ppc64le]
     strategy:
       fail-fast: false
