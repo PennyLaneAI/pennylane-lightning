@@ -25,14 +25,14 @@ using Gates::KernelType;
 using Gates::MatrixOperation;
 using Util::full_domain;
 using Util::in_between_closed;
-using Util::larger_than;
-using Util::larger_than_equal_to;
+using Util::greater_than;
+using Util::greater_than_equal_to;
 using Util::less_than;
 using Util::less_than_equal_to;
 
 namespace Pennylane::KernelMap::Internal {
 constexpr static auto all_qubit_numbers = Util::full_domain<size_t>();
-constexpr static auto qubit_leq_20 = Util::larger_than_equal_to<size_t>(20);
+constexpr static auto qubit_geq_20 = Util::greater_than_equal_to<size_t>(20);
 
 void assignKernelsForGateOp_Default() {
     auto &instance = OperationKernelMap<GateOperation>::getInstance();
@@ -149,79 +149,82 @@ void assignKernelsForGateOp_Default() {
 #if defined(PL_USE_OMP)
     /* Single-qubit gates */
     instance.assignKernelForOp(GateOperation::PauliX, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::PauliY, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::PauliZ, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::Hadamard, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::S, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::T, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::RX, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::RY, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::RZ, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::PhaseShift, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::Rot, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
 
     /* Two-qubit gates*/
     instance.assignKernelForOp(GateOperation::CNOT, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::CY, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::CZ, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::SWAP, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::IsingXX, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
+                               Gates::KernelType::ParallelLM);
+    instance.assignKernelForOp(GateOperation::IsingXY, Threading::MultiThread,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::IsingYY, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::IsingZZ, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::ControlledPhaseShift, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::CRX, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::CRY, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::CRZ, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     instance.assignKernelForOp(GateOperation::CRot, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
     /* Multi-qubit gates */
     instance.assignKernelForOp(GateOperation::MultiRZ, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                Gates::KernelType::ParallelLM);
 #endif
 }
@@ -290,41 +293,41 @@ void assignKernelsForGeneratorOp_Default() {
                                KernelType::LM);
 #if defined(PL_USE_OMP)
     instance.assignKernelForOp(GeneratorOperation::PhaseShift, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::RX, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::RY, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::RZ, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::IsingXX, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::IsingXY, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::IsingYY, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::IsingZZ, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::CRX, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::CRY, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::CRZ, Threading::MultiThread,
-                               all_memory_model, qubit_leq_20,
+                               all_memory_model, qubit_geq_20,
                                KernelType::ParallelLM);
     instance.assignKernelForOp(GeneratorOperation::ControlledPhaseShift,
                                Threading::MultiThread, all_memory_model,
-                               qubit_leq_20, KernelType::ParallelLM);
+                               qubit_geq_20, KernelType::ParallelLM);
 
 #endif
 }

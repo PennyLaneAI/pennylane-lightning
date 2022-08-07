@@ -25,14 +25,14 @@ using Gates::KernelType;
 using Gates::MatrixOperation;
 using Util::full_domain;
 using Util::in_between_closed;
-using Util::larger_than;
-using Util::larger_than_equal_to;
+using Util::greater_than;
+using Util::greater_than_equal_to;
 using Util::less_than;
 using Util::less_than_equal_to;
 
 namespace Pennylane::KernelMap::Internal {
 
-constexpr static auto leq_four = Util::larger_than_equal_to<size_t>(4);
+constexpr static auto leq_four = Util::greater_than_equal_to<size_t>(4);
 
 void assignKernelsForGateOp_AVX512(CPUMemoryModel memory_model) {
     auto &instance = OperationKernelMap<GateOperation>::getInstance();

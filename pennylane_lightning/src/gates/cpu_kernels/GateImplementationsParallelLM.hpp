@@ -98,6 +98,7 @@ class GateImplementationsParallelLM
         GateOperation::CZ,
         GateOperation::SWAP,
         GateOperation::IsingXX,
+        GateOperation::IsingXY,
         GateOperation::IsingYY,
         GateOperation::IsingZZ,
         GateOperation::ControlledPhaseShift,
@@ -116,6 +117,7 @@ class GateImplementationsParallelLM
         GeneratorOperation::CRY,
         GeneratorOperation::CRZ,
         GeneratorOperation::IsingXX,
+        GeneratorOperation::IsingXY,
         GeneratorOperation::IsingYY,
         GeneratorOperation::IsingZZ,
         GeneratorOperation::ControlledPhaseShift,
@@ -751,6 +753,52 @@ class GateImplementationsParallelLM
     }
 
     template <class PrecisionT, class ParamT>
+    static void
+    applyIsingXY(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                 const std::vector<size_t> &wires, bool inverse, ParamT angle) {
+        using ComplexPrecisionT = std::complex<PrecisionT>;
+        using std::imag;
+        using std::real;
+        PL_ASSERT(wires.size() == 2);
+
+        const size_t rev_wire0 = num_qubits - wires[1] - 1;
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
+
+        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
+        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+
+        const auto [parity_high, parity_middle, parity_low] =
+            revWireParity(rev_wire0, rev_wire1);
+
+        const PrecisionT cr = std::cos(angle / 2);
+        const PrecisionT sj =
+            inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
+
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, parity_low, parity_middle, parity_high,           \
+                 rev_wire0_shift, rev_wire1_shift, cr, sj, arr)
+        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
+            const size_t i00 = ((k << 2U) & parity_high) |
+                               ((k << 1U) & parity_middle) | (k & parity_low);
+            const size_t i10 = i00 | rev_wire1_shift;
+            const size_t i01 = i00 | rev_wire0_shift;
+            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
+
+            const ComplexPrecisionT v00 = arr[i00];
+            const ComplexPrecisionT v01 = arr[i01];
+            const ComplexPrecisionT v10 = arr[i10];
+            const ComplexPrecisionT v11 = arr[i11];
+
+            arr[i00] = ComplexPrecisionT{real(v00), imag(v00)};
+            arr[i01] = ComplexPrecisionT{cr * real(v01) - sj * imag(v10),
+                                         cr * imag(v01) + sj * real(v10)};
+            arr[i10] = ComplexPrecisionT{cr * real(v10) - sj * imag(v01),
+                                         cr * imag(v10) + sj * real(v01)};
+            arr[i11] = ComplexPrecisionT{real(v11), imag(v11)};
+        }
+    }
+
+    template <class PrecisionT, class ParamT>
     static void applyIsingYY(std::complex<PrecisionT> *arr, size_t num_qubits,
                              const std::vector<size_t> &wires, bool inverse,
                              ParamT angle) {
@@ -1074,6 +1122,37 @@ class GateImplementationsParallelLM
 
     template <class PrecisionT>
     [[nodiscard]] static auto
+    applyGeneratorIsingXY(std::complex<PrecisionT> *arr, size_t num_qubits,
+                          const std::vector<size_t> &wires,
+                          [[maybe_unused]] bool adj) -> PrecisionT {
+        PL_ASSERT(wires.size() == 2);
+        const size_t rev_wire0 = num_qubits - wires[1] - 1;
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
+        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
+        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+        const auto [parity_high, parity_middle, parity_low] =
+            revWireParity(rev_wire0, rev_wire1);
+
+#pragma omp parallel for default(none)                                         \
+    firstprivate(num_qubits, arr, parity_low, parity_middle, parity_high,      \
+                 rev_wire0_shift, rev_wire1_shift)
+        for (size_t k = 0; k < Util::exp2(num_qubits - 2); k++) {
+            const size_t i00 = ((k << 2U) & parity_high) |
+                               ((k << 1U) & parity_middle) | (k & parity_low);
+            const size_t i01 = i00 | rev_wire0_shift;
+            const size_t i10 = i00 | rev_wire1_shift;
+            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
+
+            std::swap(arr[i10], arr[i01]);
+            arr[i00] = std::complex<PrecisionT>{0.0, 0.0};
+            arr[i11] = std::complex<PrecisionT>{0.0, 0.0};
+        }
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return static_cast<PrecisionT>(0.5);
+    }
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto
     applyGeneratorIsingYY(std::complex<PrecisionT> *arr, size_t num_qubits,
                           const std::vector<size_t> &wires,
                           [[maybe_unused]] bool adj) -> PrecisionT {
@@ -1106,6 +1185,7 @@ class GateImplementationsParallelLM
         // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
     }
+
     template <class PrecisionT>
     [[nodiscard]] static auto
     applyGeneratorIsingZZ(std::complex<PrecisionT> *arr, size_t num_qubits,
