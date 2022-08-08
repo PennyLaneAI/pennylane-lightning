@@ -39,3 +39,19 @@ def test_create_device_with_dtype(C):
 def test_create_device_with_unsupported_dtype():
     with pytest.raises(TypeError, match="Unsupported complex Type:"):
         dev = qml.device("lightning.qubit", wires=1, c_dtype=np.complex256)
+
+def test_no_op_arithmetic_support():
+    """Test that lightning qubit explicitly does not support SProd, Prod, and Sum."""
+
+    dev = qml.device('lightning.qubit', wires=2)
+    for name in {'Prod', 'SProd', 'Sum'}:
+        assert name not in dev.operations
+
+    obs = qml.prod(qml.PauliX(0), qml.PauliY(1))
+
+    @qml.qnode(dev)
+    def circuit():
+        return qml.expval(obs)
+
+    with pytest.raises(qml.DeviceError, match=r"Observable Prod not supported on device"):
+        circuit()

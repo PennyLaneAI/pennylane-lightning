@@ -75,6 +75,13 @@ def _remove_snapshot_from_operations(operations):
     operations.discard("Snapshot")
     return operations
 
+def _remove_op_arithmetic_from_observables(observables):
+    observables = observables.copy()
+    observables.discard("Sum")
+    observables.discard("SProd")
+    observables.discard("Prod")
+    return observables
+
 
 class LightningQubit(DefaultQubit):
     """PennyLane Lightning device.
@@ -103,6 +110,7 @@ class LightningQubit(DefaultQubit):
     author = "Xanadu Inc."
     _CPP_BINARY_AVAILABLE = True
     operations = _remove_snapshot_from_operations(DefaultQubit.operations)
+    observables = _remove_op_arithmetic_from_observables(DefaultQubit.observables)
 
     def __init__(self, wires, *, c_dtype=np.complex128, shots=None, batch_obs=False):
         if c_dtype is np.complex64:
