@@ -7,6 +7,10 @@
 * We explicitly disable support for PennyLane's parameter broadcasting.
 [#317](https://github.com/PennyLaneAI/pennylane-lightning/pull/317)
 
+* We explicitly remove support for PennyLane's `Sum`, `SProd` and `Prod`
+  as observables.
+  [(#326)](https://github.com/PennyLaneAI/pennylane-lightning/pull/326)
+
 ### Improvements
 
 * CI builders use a reduced set of resources and redundant tests for PRs.
