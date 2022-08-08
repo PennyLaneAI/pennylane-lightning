@@ -75,6 +75,7 @@ def _remove_snapshot_from_operations(operations):
     operations.discard("Snapshot")
     return operations
 
+
 def _remove_op_arithmetic_from_observables(observables):
     observables = observables.copy()
     observables.discard("Sum")
