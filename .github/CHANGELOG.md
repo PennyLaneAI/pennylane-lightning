@@ -16,6 +16,8 @@
 [(#314)](https://github.com/PennyLaneAI/pennylane-lightning/pull/314)
 
 ### Documentation
+* Updated ReadTheDocs runner version from Ubuntu 20.04 to 22.04 
+[(#327)](https://github.com/PennyLaneAI/pennylane-lightning/pull/327)
 
 ### Bug fixes
 
@@ -693,4 +695,4 @@ Initial release.
 
 This release contains contributions from (in alphabetical order):
 
-Tom Bromley, Josh Izaac, Nathan Killoran, Antal Száva
+Tom Bromley, Josh Izaac, Nathan Killoran, Rashid N H M, Antal Száva
