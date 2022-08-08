@@ -19,12 +19,13 @@
    devices
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Development
    :hidden:
 
    add_kernel
    benchmark
+   avx_kernels/index
 
 .. toctree::
    :maxdepth: 1

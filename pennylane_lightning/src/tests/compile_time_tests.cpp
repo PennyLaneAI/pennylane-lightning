@@ -1,4 +1,3 @@
-#include "TestAvailableKernels.hpp"
 #include "TestConstant.hpp"
 
 /**

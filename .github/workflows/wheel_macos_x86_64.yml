@@ -82,6 +82,7 @@ jobs:
             brew uninstall --force oclint
             brew install llvm
             brew install libomp
+            brew install llvm
 
           # Python build settings
           CIBW_BEFORE_BUILD: |

@@ -86,10 +86,6 @@ inline auto addCompileInfo() {
     constexpr auto compiler_name =
         Util::lookup(Util::Constant::compiler_names, Util::Constant::compiler);
     benchmark::AddCustomContext("Compiler::Name", std::string(compiler_name));
-    benchmark::AddCustomContext("Compiler::AVX2",
-                                std::to_string(Util::Constant::use_avx2));
-    benchmark::AddCustomContext("Compiler::AVX512F",
-                                std::to_string(Util::Constant::use_avx512f));
     benchmark::AddCustomContext(
         "Compiler::Version",
         std::string(

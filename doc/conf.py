@@ -29,7 +29,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath("doc")), "doc"))
 currdir = Path(__file__).resolve().parent  # PROJECT_SOURCE_DIR/docs
 PROJECT_SOURCE_DIR = currdir.parent
 CPP_SOURCE_DIR = PROJECT_SOURCE_DIR.joinpath("pennylane_lightning/src")
-CPP_EXCLUDE_DIRS = ["examples", "tests", "benchmarks"]  # relative to CPP_SOURCE_DIR
+CPP_EXCLUDE_DIRS = ["tests", "benchmarks"]  # relative to CPP_SOURCE_DIR
 
 
 def obtain_cpp_files():
@@ -194,6 +194,10 @@ html_favicon = "_static/favicon.ico"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+
+html_css_files = [
+    'css/custom.css',
+]
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.

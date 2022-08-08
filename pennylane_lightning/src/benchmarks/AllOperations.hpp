@@ -14,8 +14,9 @@
 #pragma once
 #include "Bench_Utils.hpp"
 
-#include "AvailableKernels.hpp"
 #include "Constant.hpp"
+#include "DynamicDispatcher.hpp"
+#include "LinearAlgebra.hpp"
 #include "StateVectorManagedCPU.hpp"
 
 #include <algorithm>

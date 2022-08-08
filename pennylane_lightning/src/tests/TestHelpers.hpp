@@ -187,10 +187,6 @@ isApproxEqual(const Data_t &data1, const Data_t &data2,
 }
 
 template <typename T>
-constexpr static auto test_allocator =
-    Util::AlignedAllocator<T>{Util::common_alignment_v<T, TestKernels>};
-
-template <typename T>
 using TestVector = std::vector<T, Util::AlignedAllocator<T>>;
 
 /**
@@ -233,7 +229,7 @@ auto createZeroState(size_t num_qubits)
     -> TestVector<std::complex<PrecisionT>> {
     TestVector<std::complex<PrecisionT>> res(
         size_t{1U} << num_qubits, {0.0, 0.0},
-        test_allocator<std::complex<PrecisionT>>);
+        getBestAllocator<std::complex<PrecisionT>>());
     res[0] = std::complex<PrecisionT>{1.0, 0.0};
     return res;
 }
@@ -246,7 +242,7 @@ auto createPlusState(size_t num_qubits)
     -> TestVector<std::complex<PrecisionT>> {
     TestVector<std::complex<PrecisionT>> res(
         size_t{1U} << num_qubits, {1.0, 0.0},
-        test_allocator<std::complex<PrecisionT>>);
+        getBestAllocator<std::complex<PrecisionT>>());
     for (auto &elt : res) {
         elt /= std::sqrt(1U << num_qubits);
     }
@@ -263,7 +259,7 @@ auto createRandomState(RandomEngine &re, size_t num_qubits)
 
     TestVector<std::complex<PrecisionT>> res(
         size_t{1U} << num_qubits, {0.0, 0.0},
-        test_allocator<std::complex<PrecisionT>>);
+        getBestAllocator<std::complex<PrecisionT>>());
     std::uniform_real_distribution<PrecisionT> dist;
     for (size_t idx = 0; idx < (size_t{1U} << num_qubits); idx++) {
         res[idx] = {dist(re), dist(re)};
@@ -285,7 +281,7 @@ auto createProductState(std::string_view str)
     -> TestVector<std::complex<PrecisionT>> {
     using Pennylane::Util::INVSQRT2;
     TestVector<std::complex<PrecisionT>> st(
-        test_allocator<std::complex<PrecisionT>>);
+        getBestAllocator<std::complex<PrecisionT>>());
     st.resize(1U << str.length());
 
     std::vector<PrecisionT> zero{1.0, 0.0};

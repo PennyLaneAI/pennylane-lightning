@@ -93,7 +93,6 @@ set(TEST_SOURCES CreateAllWires.cpp
                  Test_StateVectorManagedCPU.cpp
                  Test_StateVectorRawCPU.cpp
                  Test_Util.cpp)
-                 #Test_VectorJacobianProduct.cpp)
 
 add_executable(runner ${TEST_SOURCES})
 target_link_libraries(runner PRIVATE lightning_tests_dependency
