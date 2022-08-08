@@ -9,6 +9,7 @@
 
 * We explicitly remove support for PennyLane's `Sum`, `SProd` and `Prod`
   as observables.
+  [(#326)](https://github.com/PennyLaneAI/pennylane-lightning/pull/326)
 
 ### Improvements
 
