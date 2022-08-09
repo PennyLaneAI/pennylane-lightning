@@ -1,4 +1,4 @@
-# Release 0.25.0-dev
+# Release 0.25.0
 
 ### New features since last release
 
@@ -23,6 +23,7 @@
 [(#313)](https://github.com/PennyLaneAI/pennylane-lightning/pull/313)
 
 ### Documentation
+
 * Updated ReadTheDocs runner version from Ubuntu 20.04 to 22.04 
 [(#327)](https://github.com/PennyLaneAI/pennylane-lightning/pull/327)
 
