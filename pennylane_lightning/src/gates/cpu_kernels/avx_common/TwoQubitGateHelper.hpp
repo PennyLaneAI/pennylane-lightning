@@ -216,8 +216,23 @@ namespace Internal {
             std::make_index_sequence<internal_wires>());
     }
     // Symmetric two qubit gate with param end
+template <class F>
+struct FuncReturn;
+
+template <class R, class... A>
+struct FuncReturn<R (*)(A...)>
+{
+    using Type = R;
+};
+
+template <class R, class... A>
+struct FuncReturn<R (A...)>
+{
+    using Type = R;
+};
 } // namespace Internal
 /// @endcond
+
 
 template <class T, class ParamT> class TwoQubitGateWithParamHelper {
     static_assert(sizeof(T) == -1, "Only specialized template can be used.");
@@ -228,7 +243,8 @@ requires TwoQubitGateWithoutParam<AVXImpl>
 class TwoQubitGateWithoutParamHelper {
   public:
     using Precision = typename AVXImpl::Precision;
-    using FuncType = void (*)(std::complex<Precision> *, size_t,
+    using ReturnType = typename Internal::FuncReturn<decltype(AVXImpl::applyExternalExternal)>::Type;
+    using FuncType = ReturnType (*)(std::complex<Precision> *, size_t,
                               const std::vector<size_t> &, bool);
     constexpr static size_t packed_size = AVXImpl::packed_size_;
 
@@ -239,9 +255,10 @@ class TwoQubitGateWithoutParamHelper {
     explicit TwoQubitGateWithoutParamHelper(FuncType fallback_func)
         : fallback_func_{fallback_func} {}
 
-    void operator()(std::complex<Precision> *arr, const size_t num_qubits,
+    auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse)
-        const requires SymmetricTwoQubitGateWithoutParam<AVXImpl> {
+        const ->
+        ReturnType requires SymmetricTwoQubitGateWithoutParam<AVXImpl> {
         assert(wires.size() == 2);
 
         constexpr static size_t internal_wires =
@@ -256,32 +273,29 @@ class TwoQubitGateWithoutParamHelper {
         const size_t rev_wire1 = num_qubits - wires[0] - 1;
 
         if (Util::exp2(num_qubits) < packed_size / 2) {
-            fallback_func_(arr, num_qubits, wires, inverse);
-            return;
+            return fallback_func_(arr, num_qubits, wires, inverse);
         }
 
         if (rev_wire0 < internal_wires && rev_wire1 < internal_wires) {
             auto func = internal_internal_functions[rev_wire0][rev_wire1];
-            (*func)(arr, num_qubits, inverse);
-            return;
+            return (*func)(arr, num_qubits, inverse);
         }
 
         const auto min_rev_wire = std::min(rev_wire0, rev_wire1);
         const auto max_rev_wire = std::max(rev_wire0, rev_wire1);
 
         if (min_rev_wire < internal_wires) {
-            (*internal_external_functions[min_rev_wire])(arr, num_qubits,
+            return (*internal_external_functions[min_rev_wire])(arr, num_qubits,
                                                          max_rev_wire, inverse);
-            return;
         }
 
-        AVXImpl::applyExternalExternal(arr, num_qubits, rev_wire0, rev_wire1,
+        return AVXImpl::applyExternalExternal(arr, num_qubits, rev_wire0, rev_wire1,
                                        inverse);
     }
 
-    void operator()(std::complex<Precision> *arr, const size_t num_qubits,
+    auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse)
-        const requires AsymmetricTwoQubitGateWithoutParam<AVXImpl> {
+        const -> ReturnType requires AsymmetricTwoQubitGateWithoutParam<AVXImpl> {
         assert(wires.size() == 2);
 
         constexpr static size_t internal_wires =
@@ -299,29 +313,25 @@ class TwoQubitGateWithoutParamHelper {
         const size_t control = num_qubits - wires[0] - 1;
 
         if (Util::exp2(num_qubits) < packed_size / 2) {
-            fallback_func_(arr, num_qubits, wires, inverse);
-            return;
+            return fallback_func_(arr, num_qubits, wires, inverse);
         }
 
         if (control < internal_wires && target < internal_wires) {
             auto func = internal_internal_functions[control][target];
-            (*func)(arr, num_qubits, inverse);
-            return;
+            return (*func)(arr, num_qubits, inverse);
         }
 
         if (control < internal_wires) {
-            (*internal_external_functions[control])(arr, num_qubits, target,
+            return (*internal_external_functions[control])(arr, num_qubits, target,
                                                     inverse);
-            return;
         }
 
         if (target < internal_wires) {
-            (*external_internal_functions[target])(arr, num_qubits, control,
+            return (*external_internal_functions[target])(arr, num_qubits, control,
                                                    inverse);
-            return;
         }
 
-        AVXImpl::applyExternalExternal(arr, num_qubits, control, target,
+        return AVXImpl::applyExternalExternal(arr, num_qubits, control, target,
                                        inverse);
     }
 };
@@ -331,7 +341,8 @@ requires SymmetricTwoQubitGateWithParam<AVXImpl>
 class TwoQubitGateWithParamHelper<AVXImpl, ParamT> {
   public:
     using Precision = typename AVXImpl::Precision;
-    using FuncType = void (*)(std::complex<Precision> *, size_t,
+    using ReturnType = typename Internal::FuncReturn<decltype(AVXImpl::template applyExternalExternal<Precision>)>::Type;
+    using FuncType = ReturnType (*)(std::complex<Precision> *, size_t,
                               const std::vector<size_t> &, bool, ParamT);
     constexpr static size_t packed_size = AVXImpl::packed_size_;
 
@@ -342,9 +353,9 @@ class TwoQubitGateWithParamHelper<AVXImpl, ParamT> {
     explicit TwoQubitGateWithParamHelper(FuncType fallback_func)
         : fallback_func_{fallback_func} {}
 
-    void operator()(std::complex<Precision> *arr, const size_t num_qubits,
+    auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse,
-                    ParamT angle) const {
+                    ParamT angle) const -> ReturnType {
         assert(wires.size() == 2);
 
         constexpr static size_t internal_wires =
@@ -359,25 +370,22 @@ class TwoQubitGateWithParamHelper<AVXImpl, ParamT> {
         const size_t rev_wire1 = num_qubits - wires[0] - 1;
 
         if (Util::exp2(num_qubits) < packed_size / 2) {
-            fallback_func_(arr, num_qubits, wires, inverse, angle);
-            return;
+            return fallback_func_(arr, num_qubits, wires, inverse, angle);
         }
 
         if (rev_wire0 < internal_wires && rev_wire1 < internal_wires) {
             auto func = internal_internal_functions[rev_wire0][rev_wire1];
-            (*func)(arr, num_qubits, inverse, angle);
-            return;
+            return (*func)(arr, num_qubits, inverse, angle);
         }
 
         const auto min_rev_wire = std::min(rev_wire0, rev_wire1);
         const auto max_rev_wire = std::max(rev_wire0, rev_wire1);
 
         if (min_rev_wire < internal_wires) {
-            (*internal_external_functions[min_rev_wire])(
+            return (*internal_external_functions[min_rev_wire])(
                 arr, num_qubits, max_rev_wire, inverse, angle);
-            return;
         }
-        AVXImpl::applyExternalExternal(arr, num_qubits, rev_wire0, rev_wire1,
+        return AVXImpl::applyExternalExternal(arr, num_qubits, rev_wire0, rev_wire1,
                                        inverse, angle);
     }
 };
