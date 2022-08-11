@@ -79,13 +79,15 @@ jobs:
           python-version: ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.py_version] }}
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.3.0
+        run: python -m pip install cibuildwheel==2.8.1
 
       - name: Build wheels
         run: |
+          powershell.exe New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
+          git config --system core.longpaths true
           Subst Z: (pwd)
           Set-Location -Path "Z:\"
-          python -m pip install wheel cmake ninja build
+          python -m pip install wheel cmake==3.21 ninja build
           python setup.py bdist_wheel
           Set-Location -Path "./dist"
           foreach ($i in Get-ChildItem -Path ./*.whl){
