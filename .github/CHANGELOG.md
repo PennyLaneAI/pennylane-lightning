@@ -36,7 +36,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Lee James O'Riordan, Chae-Yeun Park
+Amintor Dusko, Rashid N H M, Lee James O'Riordan, Chae-Yeun Park
 
 ---
 
@@ -703,4 +703,4 @@ Initial release.
 
 This release contains contributions from (in alphabetical order):
 
-Tom Bromley, Josh Izaac, Nathan Killoran, Rashid N H M, Antal Száva
+Tom Bromley, Josh Izaac, Nathan Killoran, Antal Száva
