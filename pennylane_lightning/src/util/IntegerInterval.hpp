@@ -52,7 +52,7 @@ template <typename IntegerType> class IntegerInterval {
  * @brief Create integer interval (from, inf)
  */
 template <typename IntegerType>
-auto larger_than(IntegerType from) -> IntegerInterval<IntegerType> {
+constexpr auto larger_than(IntegerType from) -> IntegerInterval<IntegerType> {
     return IntegerInterval<IntegerType>{
         from + 1, std::numeric_limits<IntegerType>::max()};
 }
@@ -60,7 +60,8 @@ auto larger_than(IntegerType from) -> IntegerInterval<IntegerType> {
  * @brief Create integer interval [from, inf)
  */
 template <typename IntegerType>
-auto larger_than_equal_to(IntegerType from) -> IntegerInterval<IntegerType> {
+constexpr auto larger_than_equal_to(IntegerType from)
+    -> IntegerInterval<IntegerType> {
     return IntegerInterval<IntegerType>{
         from, std::numeric_limits<IntegerType>::max()};
 }
@@ -68,14 +69,15 @@ auto larger_than_equal_to(IntegerType from) -> IntegerInterval<IntegerType> {
  * @brief Create integer interval [0, to)
  */
 template <typename IntegerType>
-auto less_than(IntegerType to) -> IntegerInterval<IntegerType> {
+constexpr auto less_than(IntegerType to) -> IntegerInterval<IntegerType> {
     return IntegerInterval<IntegerType>{0, to};
 }
 /**
  * @brief Create integer interval [0, to]
  */
 template <typename IntegerType>
-auto less_than_equal_to(IntegerType to) -> IntegerInterval<IntegerType> {
+constexpr auto less_than_equal_to(IntegerType to)
+    -> IntegerInterval<IntegerType> {
     return IntegerInterval<IntegerType>{0, to + 1};
 }
 
@@ -83,7 +85,7 @@ auto less_than_equal_to(IntegerType to) -> IntegerInterval<IntegerType> {
  * @brief Create integer interval [from, to]
  */
 template <typename IntegerType>
-auto in_between_closed(IntegerType from, IntegerType to)
+constexpr auto in_between_closed(IntegerType from, IntegerType to)
     -> IntegerInterval<IntegerType> {
     return IntegerInterval<IntegerType>{from, to + 1};
 }

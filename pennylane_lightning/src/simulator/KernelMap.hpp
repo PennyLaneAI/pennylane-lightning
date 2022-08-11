@@ -13,9 +13,10 @@
 // limitations under the License.
 /**
  * @file
- * Set/get Default kernels for statevector
+ * Define kernel map for statevector
  */
 #pragma once
+#include "DynamicDispatcher.hpp"
 #include "Error.hpp"
 #include "GateOperation.hpp"
 #include "IntegerInterval.hpp"
@@ -32,20 +33,20 @@ namespace Pennylane::KernelMap {
 ///@cond DEV
 namespace Internal {
 
-int assignDefaultKernelsForGateOp();
-int assignDefaultKernelsForGeneratorOp();
-int assignDefaultKernelsForMatrixOp();
+int assignKernelsForGateOp();
+int assignKernelsForGeneratorOp();
+int assignKernelsForMatrixOp();
 
 template <class Operation> struct AssignKernelForOp;
 
 template <> struct AssignKernelForOp<Gates::GateOperation> {
-    static inline const int dummy = assignDefaultKernelsForGateOp();
+    static inline const int dummy = assignKernelsForGateOp();
 };
 template <> struct AssignKernelForOp<Gates::GeneratorOperation> {
-    static inline const int dummy = assignDefaultKernelsForGeneratorOp();
+    static inline const int dummy = assignKernelsForGeneratorOp();
 };
 template <> struct AssignKernelForOp<Gates::MatrixOperation> {
-    static inline const int dummy = assignDefaultKernelsForMatrixOp();
+    static inline const int dummy = assignKernelsForMatrixOp();
 };
 } // namespace Internal
 ///@endcond
@@ -174,9 +175,11 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
               {CPUMemoryModel::Unaligned,
                {Gates::KernelType::LM, Gates::KernelType::PI}},
               {CPUMemoryModel::Aligned256,
-               {Gates::KernelType::LM, Gates::KernelType::PI}},
+               {Gates::KernelType::LM, Gates::KernelType::PI,
+                Gates::KernelType::AVX2}},
               {CPUMemoryModel::Aligned512,
-               {Gates::KernelType::LM, Gates::KernelType::PI}},
+               {Gates::KernelType::LM, Gates::KernelType::PI,
+                Gates::KernelType::AVX2, Gates::KernelType::AVX512}},
               // LCOV_EXCL_STOP
           } {}
 
@@ -211,6 +214,9 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
                            CPUMemoryModel memory_model, uint32_t priority,
                            const Util::IntegerInterval<size_t> &interval,
                            Gates::KernelType kernel) {
+        const auto &dispatcher = DynamicDispatcher<double>::getInstance();
+        PL_ABORT_IF(!dispatcher.isRegisteredKernel(kernel),
+                    "The given kernel is not registered.");
         if (std::find(allowed_kernels_.at(memory_model).cbegin(),
                       allowed_kernels_.at(memory_model).cend(),
                       kernel) == allowed_kernels_.at(memory_model).cend()) {

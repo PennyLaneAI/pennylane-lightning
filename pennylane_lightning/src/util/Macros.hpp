@@ -36,18 +36,16 @@
 
 #if defined(__AVX2__)
 #define PL_USE_AVX2 1
+[[maybe_unused]] static constexpr bool use_avx2 = true;
+#else
+[[maybe_unused]] static constexpr bool use_avx2 = false;
 #endif
 
 #if defined(__AVX512F__)
 #define PL_USE_AVX512F 1
-#endif
-
-#if defined(__AVX512DQ__)
-#define PL_USE_AVX512DQ 1
-#endif
-
-#if defined(__AVX512VL__)
-#define PL_USE_AVX512VL 1
+[[maybe_unused]] static constexpr bool use_avx512f = true;
+#else
+[[maybe_unused]] static constexpr bool use_avx512f = false;
 #endif
 
 #if defined(_OPENMP)
@@ -88,26 +86,6 @@
 namespace Pennylane::Util::Constant {
 /* Create constexpr values */
 /// @cond DEV
-#if defined(PL_USE_AVX2)
-[[maybe_unused]] static constexpr bool use_avx2 = true;
-#else
-[[maybe_unused]] static constexpr bool use_avx2 = false;
-#endif
-#if defined(PL_USE_AVX512F)
-[[maybe_unused]] static constexpr bool use_avx512f = true;
-#else
-[[maybe_unused]] static constexpr bool use_avx512f = false;
-#endif
-#if defined(PL_USE_AVX512DQ)
-[[maybe_unused]] static constexpr bool use_avx512dq = true;
-#else
-[[maybe_unused]] static constexpr bool use_avx512dq = false;
-#endif
-#if defined(PL_USE_AVX512VL)
-[[maybe_unused]] static constexpr bool use_avx512vl = true;
-#else
-[[maybe_unused]] static constexpr bool use_avx512vl = false;
-#endif
 #if defined(PL_USE_OMP)
 [[maybe_unused]] static constexpr bool use_openmp = true;
 #else

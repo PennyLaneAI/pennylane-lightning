@@ -1,13 +1,7 @@
-#include "AvailableKernels.hpp"
-#include "SelectKernel.hpp"
 #include "TestHelpers.hpp"
 #include "Util.hpp"
 
 #include <catch2/catch.hpp>
-
-#if defined(_MSC_VER)
-#pragma warning(disable : 4305)
-#endif
 
 using namespace Pennylane;
 using Pennylane::Util::randomUnitary;
@@ -784,7 +778,7 @@ TEMPLATE_TEST_CASE("GateImplementation::applyMatrix, inverse = false",
                    "[GateImplementations_Matrix]", float, double) {
     using PrecisionT = TestType;
 
-    testApplyMatrixForKernels<PrecisionT, AvailableKernels>();
+    testApplyMatrixForKernels<PrecisionT, TestKernels>();
 }
 
 template <typename PrecisionT, class GateImplementation>
@@ -989,5 +983,5 @@ TEMPLATE_TEST_CASE("GateImplementation::applyMatrix, inverse = true",
                    "[GateImplementations_Matrix]", float, double) {
     using PrecisionT = TestType;
 
-    testApplyMatrixInverseForKernels<PrecisionT, AvailableKernels>();
+    testApplyMatrixInverseForKernels<PrecisionT, TestKernels>();
 }

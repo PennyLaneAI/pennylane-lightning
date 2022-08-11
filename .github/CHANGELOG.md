@@ -7,15 +7,24 @@
 * We explicitly disable support for PennyLane's parameter broadcasting.
 [#317](https://github.com/PennyLaneAI/pennylane-lightning/pull/317)
 
+* We explicitly remove support for PennyLane's `Sum`, `SProd` and `Prod`
+  as observables.
+  [(#326)](https://github.com/PennyLaneAI/pennylane-lightning/pull/326)
+
 ### Improvements
 
-* CI builders use a reduced set of resources and redundant tests for PRs
+* CI builders use a reduced set of resources and redundant tests for PRs.
 [(#319)](https://github.com/PennyLaneAI/pennylane-lightning/pull/319)
 
 * Parallelize wheel-builds where applicable.
 [(#314)](https://github.com/PennyLaneAI/pennylane-lightning/pull/314)
 
+* AVX2/512 kernels are now available on Linux/MacOS with x86-64 architecture.
+[(#313)](https://github.com/PennyLaneAI/pennylane-lightning/pull/313)
+
 ### Documentation
+* Updated ReadTheDocs runner version from Ubuntu 20.04 to 22.04 
+[(#327)](https://github.com/PennyLaneAI/pennylane-lightning/pull/327)
 
 ### Bug fixes
 
@@ -26,7 +35,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Lee James O'Riordan
+Amintor Dusko, Lee James O'Riordan, Chae-Yeun Park
 
 ---
 
@@ -693,4 +702,4 @@ Initial release.
 
 This release contains contributions from (in alphabetical order):
 
-Tom Bromley, Josh Izaac, Nathan Killoran, Antal Száva
+Tom Bromley, Josh Izaac, Nathan Killoran, Rashid N H M, Antal Száva

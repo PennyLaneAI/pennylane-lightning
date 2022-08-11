@@ -1,0 +1,9 @@
+#avx2-512-kernel-implementation table {
+  border-collapse: collapse;
+  border: 1px solid grey;
+}
+
+#avx2-512-kernel-implementation tr,
+#avx2-512-kernel-implementation td {
+  border: 1px solid grey;
+}
