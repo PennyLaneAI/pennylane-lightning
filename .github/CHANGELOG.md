@@ -36,7 +36,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Rashid N H M, Lee James O'Riordan, Chae-Yeun Park
+Amintor Dusko, Christina Lee, Rashid N H M, Lee J. O'Riordan, Chae-Yeun Park
 
 ---
 
