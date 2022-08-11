@@ -187,7 +187,7 @@ jobs:
             pip install ninja cmake
 
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
-          
+
           CIBW_BUILD_VERBOSITY: 3
 
         run: python3 -m cibuildwheel --output-dir wheelhouse

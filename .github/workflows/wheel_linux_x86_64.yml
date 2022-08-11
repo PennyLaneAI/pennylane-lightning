@@ -197,7 +197,7 @@ jobs:
             pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-          
+
           CIBW_BUILD_VERBOSITY: 3
 
         run: python3.7 -m cibuildwheel --output-dir wheelhouse
