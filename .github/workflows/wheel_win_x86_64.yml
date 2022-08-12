@@ -52,7 +52,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        os: [windows-2019]
         py_version: ${{fromJson(needs.win-set-matrix-x86.outputs.matrix)}}
     name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.py_version] }})
     runs-on: ${{ matrix.os }}
@@ -73,13 +73,13 @@ jobs:
 
       - uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.py_version] }}
+          python-version: ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10.5" }')[matrix.py_version] }}
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.3.0
+        run: python -m pip install cibuildwheel==2.8.1
 
       - name: Build wheels
         run: |
@@ -87,8 +87,8 @@ jobs:
           Set-Location -Path "Z:\"
           python -m pip install wheel cmake ninja build
           python setup.py bdist_wheel
-          Set-Location -Path "./dist"
-          foreach ($i in Get-ChildItem -Path ./*.whl){
+          Set-Location -Path ".\dist"
+          foreach ($i in Get-ChildItem -Path .\*.whl){
             python -m wheel unpack $i.Name
             $name = $i.Name
             $dirName = python -c "s = '$name'; print('-'.join(s.split('-')[0:2]))"

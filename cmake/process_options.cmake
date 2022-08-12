@@ -10,8 +10,8 @@ include_guard()
 
 if (WIN32)
     # Increasing maximum full-path length allowed.
-  message("Setting default path length to 249 characters")
-  set(CMAKE_OBJECT_PATH_MAX 249)
+  message("Setting default path length to 240 characters")
+  set(CMAKE_OBJECT_PATH_MAX 240)
 endif ()
 
 # Check GCC version
@@ -128,6 +128,8 @@ if(ENABLE_KOKKOS)
     FetchContent_Declare(kokkos
                          GIT_REPOSITORY https://github.com/kokkos/kokkos.git
                          GIT_TAG        3.6.00
+                         GIT_SUBMODULES "" # Avoid recursively cloning all submodules
+
     )
   
     FetchContent_MakeAvailable(kokkos)
@@ -138,6 +140,7 @@ if(ENABLE_KOKKOS)
     FetchContent_Declare(kokkoskernels
                          GIT_REPOSITORY https://github.com/kokkos/kokkos-kernels.git
                          GIT_TAG        3.6.00
+                         GIT_SUBMODULES "" # Avoid recursively cloning all submodules
     )
  
     FetchContent_MakeAvailable(kokkoskernels)
