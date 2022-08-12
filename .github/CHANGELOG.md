@@ -31,6 +31,9 @@
 * Test updates to reflect new additions to PennyLane.
 [(#318)](https://github.com/PennyLaneAI/pennylane-lightning/pull/318)
 
+* Lightning requirements updated to point to PennyLane master version.
+[(#330)](https://github.com/PennyLaneAI/pennylane-lightning/pull/330)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
