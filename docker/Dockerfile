@@ -40,7 +40,8 @@ RUN apt-get update \
     && apt-get upgrade -y
 
 # Install and setup gcc 10.
-RUN apt-get install gcc-10 g++-10 cpp-10 -y \
+RUN apt-get install --no-install-recommends -y gcc-10 g++-10 cpp-10 \
+    && apt-get clean \
     && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10 --slave /usr/bin/gcov gcov /usr/bin/gcov-10
 
 ENV PATH="/opt/venv/bin:$PATH"
