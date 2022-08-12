@@ -10,8 +10,8 @@ include_guard()
 
 if (WIN32)
     # Increasing maximum full-path length allowed.
-  message("Setting default path length to 249 characters")
-  set(CMAKE_OBJECT_PATH_MAX 249)
+  message("Setting default path length to 240 characters")
+  set(CMAKE_OBJECT_PATH_MAX 240)
 endif ()
 
 # Check GCC version
@@ -186,8 +186,14 @@ if(ENABLE_KOKKOS)
         add_library(kokkoscore STATIC IMPORTED [GLOBAL])
         add_library(kokkoskernels STATIC IMPORTED [GLOBAL])
 
-        target_include_directories(kokkoscore INTERFACE ${kokkos_INC_DIR})
-        target_include_directories(kokkoskernels INTERFACE ${kokkos_kernels_INC_DIR})
+        FetchContent_Declare(kokkos
+                            GIT_REPOSITORY https://github.com/kokkos/kokkos.git
+                            GIT_TAG        3.6.00
+                            GIT_SUBMODULES "" # Avoid recursively cloning all submodules
+
+        )
+    
+        FetchContent_MakeAvailable(kokkos)
 
         set_target_properties(kokkoscore PROPERTIES IMPORTED_LOCATION ${KOKKOS_CORE_STATIC})
         set_target_properties(kokkoskernels PROPERTIES IMPORTED_LOCATION ${KOKKOS_KERNELS_STATIC})
@@ -229,6 +235,19 @@ if(ENABLE_KOKKOS)
         target_link_libraries(lightning_external_libs INTERFACE Kokkos::kokkos Kokkos::kokkoskernels)
     endif()
 
+    FetchContent_Declare(kokkoskernels
+                         GIT_REPOSITORY https://github.com/kokkos/kokkos-kernels.git
+                         GIT_TAG        3.6.00
+                         GIT_SUBMODULES "" # Avoid recursively cloning all submodules
+    )
+ 
+    FetchContent_MakeAvailable(kokkoskernels)
+ 
+    get_target_property(kokkoskernels_INC_DIR kokkoskernels INTERFACE_INCLUDE_DIRECTORIES)
+    set_target_properties(kokkoskernels PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkoskernels_INC_DIR}")
+
+    target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_KOKKOS=1")
+    target_link_libraries(lightning_external_libs INTERFACE Kokkos::kokkos Kokkos::kokkoskernels)
 else()
     message(STATUS "ENABLE_KOKKOS is OFF.")
 endif()
