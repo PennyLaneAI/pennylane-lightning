@@ -27,7 +27,11 @@
 #include "avx_common/AVX512Concept.hpp"
 #endif
 #include "avx_common/ApplyCNOT.hpp"
+#include "avx_common/ApplyCY.hpp"
 #include "avx_common/ApplyCZ.hpp"
+#include "avx_common/ApplyGeneratorIsingXX.hpp"
+#include "avx_common/ApplyGeneratorIsingYY.hpp"
+#include "avx_common/ApplyGeneratorIsingZZ.hpp"
 #include "avx_common/ApplyHadamard.hpp"
 #include "avx_common/ApplyIsingXX.hpp"
 #include "avx_common/ApplyIsingYY.hpp"
@@ -45,8 +49,6 @@
 #include "avx_common/ApplyT.hpp"
 #include "avx_common/SingleQubitGateHelper.hpp"
 #include "avx_common/TwoQubitGateHelper.hpp"
-#include "avx_common/ApplyGeneratorIsingXX.hpp"
-#include "avx_common/ApplyGeneratorIsingYY.hpp"
 
 #include "Error.hpp"
 #include "GateImplementationsLM.hpp"
@@ -74,15 +76,18 @@ class GateImplementationsAVXCommon
         GateOperation::Rot,        GateOperation::CNOT,
         GateOperation::CZ,         GateOperation::SWAP,
         GateOperation::IsingXX,    GateOperation::IsingYY,
-        GateOperation::IsingZZ,
-        /* CY, IsingXY, ControlledPhaseShift, CRX, CRY, CRZ, CRot */
+        GateOperation::IsingZZ,    GateOperation::CY,
+        /* IsingXY, ControlledPhaseShift, CRX, CRY, CRZ, CRot */
     };
 
     constexpr static std::array implemented_generators = {
-        GeneratorOperation::RX, GeneratorOperation::RY, GeneratorOperation::RZ,
-        GeneratorOperation::IsingXX, GeneratorOperation::IsingYY,
-        /* PhaseShift, IsingXY, IsingZZ, CRX, CRY, CRZ, ControllPhaseShift
-         */
+        GeneratorOperation::RX,
+        GeneratorOperation::RY,
+        GeneratorOperation::RZ,
+        GeneratorOperation::IsingXX,
+        GeneratorOperation::IsingYY,
+        GeneratorOperation::IsingZZ
+        /* PhaseShift, IsingXY, CRX, CRY, CRZ, ControllPhaseShift */
     };
 
     template <class PrecisionT>
@@ -297,6 +302,26 @@ class GateImplementationsAVXCommon
     }
 
     template <class PrecisionT>
+    static void applyCY(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                        const std::vector<size_t> &wires,
+                        [[maybe_unused]] bool inverse) {
+        using ApplyCYAVX =
+            AVXCommon::ApplyCY<PrecisionT,
+                               Derived::packed_bytes / sizeof(PrecisionT)>;
+
+        static_assert(std::is_same_v<PrecisionT, float> ||
+                          std::is_same_v<PrecisionT, double>,
+                      "Only float and double are supported.");
+
+        assert(wires.size() == 2);
+
+        const AVXCommon::TwoQubitGateWithoutParamHelper<ApplyCYAVX> gate_helper(
+            &GateImplementationsLM::applyCY<PrecisionT>);
+
+        gate_helper(arr, num_qubits, wires, inverse);
+    }
+
+    template <class PrecisionT>
     static void
     applySWAP(std::complex<PrecisionT> *arr, const size_t num_qubits,
               const std::vector<size_t> &wires, [[maybe_unused]] bool inverse) {
@@ -411,20 +436,21 @@ class GateImplementationsAVXCommon
 
     template <class PrecisionT>
     static auto applyGeneratorIsingXX(std::complex<PrecisionT> *arr,
-                             const size_t num_qubits,
-                             const std::vector<size_t> &wires,
-                             [[maybe_unused]] bool inverse) -> PrecisionT {
-        using ApplyGeneratorIsingXXAVX =
-            AVXCommon::ApplyGeneratorIsingXX<PrecisionT,
-                                    Derived::packed_bytes / sizeof(PrecisionT)>;
+                                      const size_t num_qubits,
+                                      const std::vector<size_t> &wires,
+                                      [[maybe_unused]] bool inverse)
+        -> PrecisionT {
+        using ApplyGeneratorIsingXXAVX = AVXCommon::ApplyGeneratorIsingXX<
+            PrecisionT, Derived::packed_bytes / sizeof(PrecisionT)>;
 
         static_assert(std::is_same_v<PrecisionT, float> ||
                           std::is_same_v<PrecisionT, double>,
                       "Only float and double are supported.");
 
         assert(wires.size() == 2);
-        
-        const AVXCommon::TwoQubitGateWithoutParamHelper<ApplyGeneratorIsingXXAVX>
+
+        const AVXCommon::TwoQubitGateWithoutParamHelper<
+            ApplyGeneratorIsingXXAVX>
             gate_helper(
                 &GateImplementationsLM::applyGeneratorIsingXX<PrecisionT>);
 
@@ -433,12 +459,12 @@ class GateImplementationsAVXCommon
 
     template <class PrecisionT>
     static auto applyGeneratorIsingYY(std::complex<PrecisionT> *arr,
-                             const size_t num_qubits,
-                             const std::vector<size_t> &wires,
-                             [[maybe_unused]] bool inverse) -> PrecisionT {
-        using ApplyGeneratorIsingYYAVX =
-            AVXCommon::ApplyGeneratorIsingYY<PrecisionT,
-                                    Derived::packed_bytes / sizeof(PrecisionT)>;
+                                      const size_t num_qubits,
+                                      const std::vector<size_t> &wires,
+                                      [[maybe_unused]] bool inverse)
+        -> PrecisionT {
+        using ApplyGeneratorIsingYYAVX = AVXCommon::ApplyGeneratorIsingYY<
+            PrecisionT, Derived::packed_bytes / sizeof(PrecisionT)>;
 
         static_assert(std::is_same_v<PrecisionT, float> ||
                           std::is_same_v<PrecisionT, double>,
@@ -446,12 +472,35 @@ class GateImplementationsAVXCommon
 
         assert(wires.size() == 2);
 
-        const AVXCommon::TwoQubitGateWithoutParamHelper<ApplyGeneratorIsingYYAVX>
+        const AVXCommon::TwoQubitGateWithoutParamHelper<
+            ApplyGeneratorIsingYYAVX>
             gate_helper(
                 &GateImplementationsLM::applyGeneratorIsingYY<PrecisionT>);
 
         return gate_helper(arr, num_qubits, wires, inverse);
     }
-};
 
+    template <class PrecisionT>
+    static auto applyGeneratorIsingZZ(std::complex<PrecisionT> *arr,
+                                      const size_t num_qubits,
+                                      const std::vector<size_t> &wires,
+                                      [[maybe_unused]] bool inverse)
+        -> PrecisionT {
+        using ApplyGeneratorIsingZZAVX = AVXCommon::ApplyGeneratorIsingZZ<
+            PrecisionT, Derived::packed_bytes / sizeof(PrecisionT)>;
+
+        static_assert(std::is_same_v<PrecisionT, float> ||
+                          std::is_same_v<PrecisionT, double>,
+                      "Only float and double are supported.");
+
+        assert(wires.size() == 2);
+
+        const AVXCommon::TwoQubitGateWithoutParamHelper<
+            ApplyGeneratorIsingZZAVX>
+            gate_helper(
+                &GateImplementationsLM::applyGeneratorIsingZZ<PrecisionT>);
+
+        return gate_helper(arr, num_qubits, wires, inverse);
+    }
+};
 } // namespace Pennylane::Gates

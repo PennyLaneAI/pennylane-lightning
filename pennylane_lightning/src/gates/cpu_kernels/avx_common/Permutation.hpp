@@ -217,7 +217,8 @@ compilePermutation<float, 8>(const std::array<uint8_t, 8> &permutation)
     return {within_lane, getPermutation8x256i(permutation)};
 }
 template <>
-constexpr auto compilePermutation(const std::array<uint8_t, 4> &permutation)
+constexpr auto
+compilePermutation<double, 4>(const std::array<uint8_t, 4> &permutation)
     -> CompiledPermutation<double, 4> {
     bool within_lane = isWithinLane<double>(permutation);
 
@@ -232,7 +233,8 @@ constexpr auto compilePermutation(const std::array<uint8_t, 4> &permutation)
 #ifdef PL_USE_AVX512F // Specializations for AVX512 begin
 // LCOV_EXCL_START
 template <>
-constexpr auto compilePermutation(const std::array<uint8_t, 16> &permutation)
+constexpr auto
+compilePermutation<float, 16>(const std::array<uint8_t, 16> &permutation)
     -> CompiledPermutation<float, 16> {
     bool within_lane = isWithinLane<float>(permutation);
 
@@ -243,7 +245,8 @@ constexpr auto compilePermutation(const std::array<uint8_t, 16> &permutation)
     return {within_lane, getPermutation16x512i(permutation)};
 }
 template <>
-constexpr auto compilePermutation(const std::array<uint8_t, 8> &permutation)
+constexpr auto
+compilePermutation<double, 8>(const std::array<uint8_t, 8> &permutation)
     -> CompiledPermutation<double, 8> {
     bool within_lane = isWithinLane<double>(permutation);
 

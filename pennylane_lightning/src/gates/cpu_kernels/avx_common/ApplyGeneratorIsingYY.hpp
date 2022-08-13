@@ -27,7 +27,8 @@
 
 namespace Pennylane::Gates::AVXCommon {
 
-template <typename PrecisionT, size_t packed_size> struct ApplyGeneratorIsingYY {
+template <typename PrecisionT, size_t packed_size>
+struct ApplyGeneratorIsingYY {
     using Precision = PrecisionT;
     using PrecisionAVXConcept =
         typename AVXConcept<PrecisionT, packed_size>::Type;
@@ -37,14 +38,15 @@ template <typename PrecisionT, size_t packed_size> struct ApplyGeneratorIsingYY 
 
     template <size_t rev_wire0, size_t rev_wire1>
     static auto applyInternalInternal(std::complex<PrecisionT> *arr,
-                                      size_t num_qubits, [[maybe_unused]] bool adj) -> PrecisionT {
+                                      size_t num_qubits,
+                                      [[maybe_unused]] bool adj) -> PrecisionT {
         using namespace Permutation;
         constexpr static auto perm = compilePermutation<Precision, packed_size>(
-            flip(flip(identity<packed_size>(), rev_wire0), rev_wire1)
-        );
+            flip(flip(identity<packed_size>(), rev_wire0), rev_wire1));
 
         auto parityFunc = [](size_t idx) -> size_t {
-            return size_t{1U} - (((idx >> rev_wire0) & size_t{1U}) ^ ((idx >> rev_wire1) & size_t{1U}));
+            return size_t{1U} - (((idx >> rev_wire0) & size_t{1U}) ^
+                                 ((idx >> rev_wire1) & size_t{1U}));
         };
 
         const auto signs = toParity<PrecisionT, packed_size>(parityFunc);
@@ -70,7 +72,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyGeneratorIsingYY 
         constexpr static auto perm = compilePermutation<PrecisionT>(
             flip(identity<packed_size>(), min_rev_wire));
 
-        const auto sign0 = -internalParity<Precision, packed_size>(min_rev_wire);
+        const auto sign0 =
+            -internalParity<Precision, packed_size>(min_rev_wire);
         const auto sign1 = internalParity<Precision, packed_size>(min_rev_wire);
 
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
@@ -87,10 +90,11 @@ template <typename PrecisionT, size_t packed_size> struct ApplyGeneratorIsingYY 
         return -static_cast<PrecisionT>(0.5);
     }
 
-    static auto
-    applyExternalExternal(std::complex<PrecisionT> *arr,
-                          const size_t num_qubits, const size_t rev_wire0,
-                          const size_t rev_wire1, [[maybe_unused]] bool adj) -> PrecisionT{
+    static auto applyExternalExternal(std::complex<PrecisionT> *arr,
+                                      const size_t num_qubits,
+                                      const size_t rev_wire0,
+                                      const size_t rev_wire1,
+                                      [[maybe_unused]] bool adj) -> PrecisionT {
         using namespace Permutation;
 
         const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;

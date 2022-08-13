@@ -265,6 +265,45 @@ template <size_t packed_size> struct InternalWires {
 template <size_t packed_size>
 constexpr auto internal_wires_v = InternalWires<packed_size>::value;
 
+template <typename PrecisionT, size_t packed_size> struct Set;
+#ifdef PL_USE_AVX2
+template <> struct Set<float, 8> {
+    constexpr static auto create(const std::array<float, 8> &arr)
+        -> AVXIntrinsicType<float, 8> {
+        return __m256{arr[0], arr[1], arr[2], arr[3],
+                      arr[4], arr[5], arr[6], arr[7]};
+    }
+};
+template <> struct Set<double, 4> {
+    constexpr static auto create(const std::array<double, 4> &arr)
+        -> AVXIntrinsicType<double, 4> {
+        return __m256d{arr[0], arr[1], arr[2], arr[3]};
+    }
+};
+#endif
+#ifdef PL_USE_AVX512F
+template <> struct Set<float, 16> {
+    constexpr static auto create(const std::array<float, 16> &arr)
+        -> AVXIntrinsicType<float, 16> {
+        return __m512{arr[0],  arr[1],  arr[2],  arr[3], arr[4],  arr[5],
+                      arr[6],  arr[7],  arr[8],  arr[9], arr[10], arr[11],
+                      arr[12], arr[13], arr[14], arr[15]};
+    }
+};
+template <> struct Set<double, 8> {
+    constexpr static auto create(const std::array<double, 8> &arr)
+        -> AVXIntrinsicType<double, 8> {
+        return __m512d{arr[0], arr[1], arr[2], arr[3],
+                       arr[4], arr[5], arr[6], arr[7]};
+    }
+};
+#endif
+template <typename PrecisionT, size_t packed_size>
+constexpr auto set(const std::array<PrecisionT, packed_size> &arr)
+    -> AVXIntrinsicType<PrecisionT, packed_size> {
+    return Set<PrecisionT, packed_size>::create(arr);
+}
+
 // clang-format off
 #ifdef PL_USE_AVX2
 constexpr __m256i setr256i(int32_t  e0, int32_t  e1, int32_t  e2, int32_t  e3,
