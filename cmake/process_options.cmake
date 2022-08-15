@@ -186,15 +186,6 @@ if(ENABLE_KOKKOS)
         add_library(kokkoscore STATIC IMPORTED [GLOBAL])
         add_library(kokkoskernels STATIC IMPORTED [GLOBAL])
 
-        FetchContent_Declare(kokkos
-                            GIT_REPOSITORY https://github.com/kokkos/kokkos.git
-                            GIT_TAG        3.6.00
-                            GIT_SUBMODULES "" # Avoid recursively cloning all submodules
-
-        )
-    
-        FetchContent_MakeAvailable(kokkos)
-
         set_target_properties(kokkoscore PROPERTIES IMPORTED_LOCATION ${KOKKOS_CORE_STATIC})
         set_target_properties(kokkoskernels PROPERTIES IMPORTED_LOCATION ${KOKKOS_KERNELS_STATIC})
 
@@ -214,6 +205,7 @@ if(ENABLE_KOKKOS)
         FetchContent_Declare(kokkos
                             GIT_REPOSITORY https://github.com/kokkos/kokkos.git
                             GIT_TAG        3.6.00
+                            GIT_SUBMODULES "" # Avoid recursively cloning all submodules
         )
     
         FetchContent_MakeAvailable(kokkos)
@@ -224,6 +216,7 @@ if(ENABLE_KOKKOS)
         FetchContent_Declare(kokkoskernels
                             GIT_REPOSITORY https://github.com/kokkos/kokkos-kernels.git
                             GIT_TAG        3.6.00
+                            GIT_SUBMODULES "" # Avoid recursively cloning all submodules
         )
     
         FetchContent_MakeAvailable(kokkoskernels)
@@ -234,20 +227,6 @@ if(ENABLE_KOKKOS)
         target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_KOKKOS=1")
         target_link_libraries(lightning_external_libs INTERFACE Kokkos::kokkos Kokkos::kokkoskernels)
     endif()
-
-    FetchContent_Declare(kokkoskernels
-                         GIT_REPOSITORY https://github.com/kokkos/kokkos-kernels.git
-                         GIT_TAG        3.6.00
-                         GIT_SUBMODULES "" # Avoid recursively cloning all submodules
-    )
- 
-    FetchContent_MakeAvailable(kokkoskernels)
- 
-    get_target_property(kokkoskernels_INC_DIR kokkoskernels INTERFACE_INCLUDE_DIRECTORIES)
-    set_target_properties(kokkoskernels PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkoskernels_INC_DIR}")
-
-    target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_KOKKOS=1")
-    target_link_libraries(lightning_external_libs INTERFACE Kokkos::kokkos Kokkos::kokkoskernels)
 else()
     message(STATUS "ENABLE_KOKKOS is OFF.")
 endif()
