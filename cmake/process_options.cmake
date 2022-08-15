@@ -118,21 +118,7 @@ endif()
 if(ENABLE_KOKKOS)
     find_library( KOKKOS_CORE_STATIC
     NAMES   libkokkoscore.a
-    HINTS   /root/install_dir/SERIAL/lib64
-            /usr/lib
-            /usr/local/lib
-            /opt
-            lib
-            lib64
-            ${CMAKE_SOURCE_DIR}/lib
-            ${CMAKE_SOURCE_DIR}/lib64
-            ENV KOKKOS_LIB
-            ENV LD_LIBRARY_PATH
-    )
-    find_library( KOKKOS_CONTAINERS_STATIC
-    NAMES   libkokkoscontainers.a
-    HINTS   /root/install_dir/SERIAL/lib64
-            /usr/lib
+    HINTS   /usr/lib
             /usr/local/lib
             /opt
             lib
@@ -144,8 +130,7 @@ if(ENABLE_KOKKOS)
     )
     find_library( KOKKOS_KERNELS_STATIC
     NAMES   libkokkoskernels.a
-    HINTS   /root/install_dir/SERIAL/lib64
-            /usr/lib
+    HINTS   /usr/lib
             /usr/local/lib
             /opt
             lib
@@ -157,8 +142,7 @@ if(ENABLE_KOKKOS)
     )
     find_file( KOKKOS_CORE_INC
     NAMES   Kokkos_Core.hpp
-    HINTS   /root/install_dir/SERIAL/include
-            /usr/include
+    HINTS   /usr/include
             /usr/local/include
             /opt
             include
@@ -168,8 +152,7 @@ if(ENABLE_KOKKOS)
     )
     find_file( KOKKOS_KERNELS_INC
     NAMES   KokkosSparse.hpp
-    HINTS   /root/install_dir/SERIAL/include
-            /usr/include
+    HINTS   /usr/include
             /usr/local/include
             /opt
             include
@@ -178,20 +161,23 @@ if(ENABLE_KOKKOS)
             ENV CPATH
     )
 
-    if(KOKKOS_CORE_STATIC AND KOKKOS_CONTAINERS_STATIC AND KOKKOS_KERNELS_STATIC AND KOKKOS_CORE_INC AND KOKKOS_KERNELS_INC)
+    if(KOKKOS_CORE_STATIC AND KOKKOS_KERNELS_STATIC AND KOKKOS_CORE_INC AND KOKKOS_KERNELS_INC)
         message(STATUS "Found existing Kokkos build")
+
         get_filename_component(kokkos_INC_DIR ${KOKKOS_CORE_INC} DIRECTORY [CACHE])
         get_filename_component(kokkos_kernels_INC_DIR ${KOKKOS_KERNELS_INC} DIRECTORY [CACHE])
 
         add_library(kokkoscore STATIC IMPORTED [GLOBAL])
         add_library(kokkoskernels STATIC IMPORTED [GLOBAL])
 
+        target_include_directories(kokkoscore INTERFACE ${kokkos_INC_DIR})
+        target_include_directories(kokkoskernels INTERFACE ${kokkos_kernels_INC_DIR})
+
         set_target_properties(kokkoscore PROPERTIES IMPORTED_LOCATION ${KOKKOS_CORE_STATIC})
         set_target_properties(kokkoskernels PROPERTIES IMPORTED_LOCATION ${KOKKOS_KERNELS_STATIC})
 
         target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_KOKKOS=1")
         target_link_libraries(lightning_external_libs INTERFACE kokkoscore kokkoskernels)
-
     else()
         # Setting the Serial device for all cases.
         option(Kokkos_ENABLE_SERIAL  "Enable Kokkos SERIAL device" ON)
