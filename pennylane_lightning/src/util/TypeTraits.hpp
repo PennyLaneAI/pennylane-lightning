@@ -31,4 +31,16 @@ template <typename T> struct is_complex : std::false_type {};
 template <typename T> struct is_complex<std::complex<T>> : std::true_type {};
 
 template <typename T> constexpr bool is_complex_v = is_complex<T>::value;
+
+/**
+ * @brief Function return type
+ */
+template <class F> struct FuncReturn;
+
+template <class R, class... A> struct FuncReturn<R (*)(A...)> {
+    using Type = R;
+};
+
+template <class R, class... A> struct FuncReturn<R(A...)> { using Type = R; };
+
 } // namespace Pennylane::Util

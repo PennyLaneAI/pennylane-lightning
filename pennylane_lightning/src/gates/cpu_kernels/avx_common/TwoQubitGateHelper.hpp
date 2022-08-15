@@ -18,6 +18,7 @@
 #pragma once
 #include "BitUtil.hpp"
 #include "ConstantUtil.hpp"
+#include "TypeTraits.hpp"
 
 #include <cassert>
 #include <complex>
@@ -214,13 +215,6 @@ constexpr auto InternalExternalFunctions() {
         std::make_index_sequence<internal_wires>());
 }
 // Symmetric two qubit gate with param end
-template <class F> struct FuncReturn;
-
-template <class R, class... A> struct FuncReturn<R (*)(A...)> {
-    using Type = R;
-};
-
-template <class R, class... A> struct FuncReturn<R(A...)> { using Type = R; };
 } // namespace Internal
 /// @endcond
 
@@ -233,7 +227,7 @@ requires TwoQubitGateWithoutParam<AVXImpl>
 class TwoQubitGateWithoutParamHelper {
   public:
     using Precision = typename AVXImpl::Precision;
-    using ReturnType = typename Internal::FuncReturn<
+    using ReturnType = typename Util::FuncReturn<
         decltype(AVXImpl::applyExternalExternal)>::Type;
     using FuncType = ReturnType (*)(std::complex<Precision> *, size_t,
                                     const std::vector<size_t> &, bool);
@@ -331,7 +325,7 @@ requires SymmetricTwoQubitGateWithParam<AVXImpl>
 class TwoQubitGateWithParamHelper<AVXImpl, ParamT> {
   public:
     using Precision = typename AVXImpl::Precision;
-    using ReturnType = typename Internal::FuncReturn<
+    using ReturnType = typename Util::FuncReturn<
         decltype(AVXImpl::template applyExternalExternal<Precision>)>::Type;
     using FuncType = ReturnType (*)(std::complex<Precision> *, size_t,
                                     const std::vector<size_t> &, bool, ParamT);

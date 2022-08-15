@@ -18,6 +18,7 @@
 #pragma once
 #include "BitUtil.hpp"
 #include "ConstantUtil.hpp"
+#include "TypeTraits.hpp"
 
 #include <cassert>
 #include <complex>
@@ -107,8 +108,10 @@ template <SingleQubitGateWithoutParam AVXImpl>
 class SingleQubitGateWithoutParamHelper {
   public:
     using Precision = typename AVXImpl::Precision;
-    using FuncType = void (*)(std::complex<Precision> *, size_t,
-                              const std::vector<size_t> &, bool);
+    using ReturnType =
+        typename Util::FuncReturn<decltype(AVXImpl::applyExternal)>::Type;
+    using FuncType = ReturnType (*)(std::complex<Precision> *, size_t,
+                                    const std::vector<size_t> &, bool);
     constexpr static size_t packed_size = AVXImpl::packed_size_;
 
   private:
@@ -118,8 +121,9 @@ class SingleQubitGateWithoutParamHelper {
     explicit SingleQubitGateWithoutParamHelper(FuncType fallback_func)
         : fallback_func_{fallback_func} {}
 
-    void operator()(std::complex<Precision> *arr, const size_t num_qubits,
-                    const std::vector<size_t> &wires, bool inverse) {
+    auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
+                    const std::vector<size_t> &wires, bool inverse) const
+        -> ReturnType {
         assert(wires.size() == 1);
 
         constexpr static size_t internal_wires =
@@ -130,17 +134,15 @@ class SingleQubitGateWithoutParamHelper {
         const size_t rev_wire = num_qubits - wires[0] - 1;
 
         if (Util::exp2(num_qubits) < packed_size / 2) {
-            fallback_func_(arr, num_qubits, wires, inverse);
-            return;
+            return fallback_func_(arr, num_qubits, wires, inverse);
         }
 
         if (rev_wire < internal_wires) {
             auto func = internal_functions[rev_wire];
-            (*func)(arr, num_qubits, inverse);
-            return;
+            return (*func)(arr, num_qubits, inverse);
         }
 
-        AVXImpl::applyExternal(arr, num_qubits, rev_wire, inverse);
+        return AVXImpl::applyExternal(arr, num_qubits, rev_wire, inverse);
     }
 };
 
@@ -148,8 +150,10 @@ template <SingleQubitGateWithParam AVXImpl, typename ParamT>
 class SingleQubitGateWithParamHelper {
   public:
     using Precision = typename AVXImpl::Precision;
-    using FuncType = void (*)(std::complex<Precision> *, size_t,
-                              const std::vector<size_t> &, bool, ParamT);
+    using ReturnType = typename Util::FuncReturn<
+        decltype(AVXImpl::template applyExternal<ParamT>)>::Type;
+    using FuncType = ReturnType (*)(std::complex<Precision> *, size_t,
+                                    const std::vector<size_t> &, bool, ParamT);
     constexpr static size_t packed_size = AVXImpl::packed_size_;
 
   private:
@@ -159,9 +163,9 @@ class SingleQubitGateWithParamHelper {
     explicit SingleQubitGateWithParamHelper(FuncType fallback_func)
         : fallback_func_{fallback_func} {}
 
-    void operator()(std::complex<Precision> *arr, const size_t num_qubits,
+    auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse,
-                    ParamT angle) {
+                    ParamT angle) const -> ReturnType {
         assert(wires.size() == 1);
 
         constexpr static size_t internal_wires =
@@ -173,18 +177,16 @@ class SingleQubitGateWithParamHelper {
 
         // When the size of an array is smaller than the AVX type
         if (Util::exp2(num_qubits) < packed_size / 2) {
-            fallback_func_(arr, num_qubits, wires, inverse, angle);
-            return;
+            return fallback_func_(arr, num_qubits, wires, inverse, angle);
         }
 
         // The gate applies within a register (packed bytes)
         if (rev_wire < internal_wires) {
             auto func = internal_functions[rev_wire];
-            (*func)(arr, num_qubits, inverse, angle);
-            return;
+            return (*func)(arr, num_qubits, inverse, angle);
         }
-
-        AVXImpl::applyExternal(arr, num_qubits, rev_wire, inverse, angle);
+        return AVXImpl::applyExternal(arr, num_qubits, rev_wire, inverse,
+                                      angle);
     }
 };
 } // namespace Pennylane::Gates::AVXCommon

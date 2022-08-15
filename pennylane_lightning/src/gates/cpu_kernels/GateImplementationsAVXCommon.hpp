@@ -32,6 +32,7 @@
 #include "avx_common/ApplyGeneratorIsingXX.hpp"
 #include "avx_common/ApplyGeneratorIsingYY.hpp"
 #include "avx_common/ApplyGeneratorIsingZZ.hpp"
+#include "avx_common/ApplyGeneratorPhaseShift.hpp"
 #include "avx_common/ApplyHadamard.hpp"
 #include "avx_common/ApplyIsingXX.hpp"
 #include "avx_common/ApplyIsingYY.hpp"
@@ -81,12 +82,10 @@ class GateImplementationsAVXCommon
     };
 
     constexpr static std::array implemented_generators = {
-        GeneratorOperation::RX,
-        GeneratorOperation::RY,
-        GeneratorOperation::RZ,
-        GeneratorOperation::IsingXX,
-        GeneratorOperation::IsingYY,
-        GeneratorOperation::IsingZZ
+        GeneratorOperation::PhaseShift, GeneratorOperation::RX,
+        GeneratorOperation::RY,         GeneratorOperation::RZ,
+        GeneratorOperation::IsingXX,    GeneratorOperation::IsingYY,
+        GeneratorOperation::IsingZZ,
         /* PhaseShift, IsingXY, CRX, CRY, CRZ, ControllPhaseShift */
     };
 
@@ -433,6 +432,28 @@ class GateImplementationsAVXCommon
     }
 
     /* Generators */
+    template <class PrecisionT>
+    static auto applyGeneratorPhaseShift(std::complex<PrecisionT> *arr,
+                                         const size_t num_qubits,
+                                         const std::vector<size_t> &wires,
+                                         [[maybe_unused]] bool inverse)
+        -> PrecisionT {
+        using ApplyGeneratorPhaseShiftAVX = AVXCommon::ApplyGeneratorPhaseShift<
+            PrecisionT, Derived::packed_bytes / sizeof(PrecisionT)>;
+
+        static_assert(std::is_same_v<PrecisionT, float> ||
+                          std::is_same_v<PrecisionT, double>,
+                      "Only float and double are supported.");
+
+        assert(wires.size() == 1);
+
+        const AVXCommon::SingleQubitGateWithoutParamHelper<
+            ApplyGeneratorPhaseShiftAVX>
+            gate_helper(
+                &GateImplementationsLM::applyGeneratorPhaseShift<PrecisionT>);
+
+        return gate_helper(arr, num_qubits, wires, inverse);
+    }
 
     template <class PrecisionT>
     static auto applyGeneratorIsingXX(std::complex<PrecisionT> *arr,
