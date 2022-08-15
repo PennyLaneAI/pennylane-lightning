@@ -1,3 +1,26 @@
+# Release 0.26.0-dev
+
+### New features since last release
+
+### Breaking changes
+
+### Improvements
+
+* Introduces requirements-dev.txt and improves dockerfile.
+[(#330)](https://github.com/PennyLaneAI/pennylane-lightning/pull/330)
+
+### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Amintor Dusko
+
+---
+
 # Release 0.25.0
 
 ### New features since last release
@@ -31,9 +54,6 @@
 
 * Test updates to reflect new additions to PennyLane.
 [(#318)](https://github.com/PennyLaneAI/pennylane-lightning/pull/318)
-
-* Updates to lightning requirements and dockerfile.
-[(#330)](https://github.com/PennyLaneAI/pennylane-lightning/pull/330)
 
 ### Contributors
 
