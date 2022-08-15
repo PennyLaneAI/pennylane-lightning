@@ -47,7 +47,7 @@ COPY . .
 
 RUN pip install --no-cache-dir wheel \
     sphinx \
-    && pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir -r requirements-dev.txt \
     && pip uninstall -y PennyLane_Lightning \
     && make install \
     && make test-python \
