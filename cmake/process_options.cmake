@@ -119,8 +119,7 @@ if(ENABLE_KOKKOS)
     message(STATUS "ENABLE_KOKKOS is ON.")
     find_library( KOKKOS_CORE_STATIC
     NAMES   libkokkoscore.a
-    HINTS   /home/amintor/Projects/new_Kokkos/SERIAL/lib
-            /usr/lib
+    HINTS   /usr/lib
             /usr/local/lib
             /opt
             lib
@@ -132,8 +131,7 @@ if(ENABLE_KOKKOS)
     )
     find_library( KOKKOS_KERNELS_STATIC
     NAMES   libkokkoskernels.a
-    HINTS   /home/amintor/Projects/new_Kokkos/SERIAL/lib
-            /usr/lib
+    HINTS   /usr/lib
             /usr/local/lib
             /opt
             lib
@@ -145,8 +143,7 @@ if(ENABLE_KOKKOS)
     )
     find_file( KOKKOS_CORE_INC
     NAMES   Kokkos_Core.hpp
-    HINTS   /home/amintor/Projects/new_Kokkos/SERIAL/include
-            /usr/include
+    HINTS   /usr/include
             /usr/local/include
             /opt
             include
@@ -156,8 +153,7 @@ if(ENABLE_KOKKOS)
     )
     find_file( KOKKOS_KERNELS_INC
     NAMES   KokkosSparse.hpp
-    HINTS   /home/amintor/Projects/new_Kokkos/SERIAL/include
-            /usr/include
+    HINTS   /usr/include
             /usr/local/include
             /opt
             include
