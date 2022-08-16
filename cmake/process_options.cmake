@@ -116,6 +116,7 @@ else()
 endif()
 
 if(ENABLE_KOKKOS)
+    message(STATUS "ENABLE_KOKKOS is ON.")
     find_library( KOKKOS_CORE_STATIC
     NAMES   libkokkoscore.a
     HINTS   /usr/lib
@@ -177,7 +178,7 @@ if(ENABLE_KOKKOS)
         set_target_properties(kokkoskernels PROPERTIES IMPORTED_LOCATION ${KOKKOS_KERNELS_STATIC})
 
         target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_KOKKOS=1")
-        target_link_libraries(lightning_external_libs INTERFACE kokkoscore kokkoskernels)
+        target_link_libraries(lightning_external_libs INTERFACE kokkoscore kokkoskernels ${CMAKE_DL_LIBS})
     else()
         # Setting the Serial device for all cases.
         option(Kokkos_ENABLE_SERIAL  "Enable Kokkos SERIAL device" ON)
