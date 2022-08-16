@@ -86,7 +86,7 @@ class GateImplementationsAVXCommon
         GeneratorOperation::RY,         GeneratorOperation::RZ,
         GeneratorOperation::IsingXX,    GeneratorOperation::IsingYY,
         GeneratorOperation::IsingZZ,
-        /* PhaseShift, IsingXY, CRX, CRY, CRZ, ControllPhaseShift */
+        /* IsingXY, CRX, CRY, CRZ, ControllPhaseShift */
     };
 
     template <class PrecisionT>
