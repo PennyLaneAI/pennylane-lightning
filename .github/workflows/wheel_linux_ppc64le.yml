@@ -78,7 +78,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}
-          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-static-dev1
+          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Clone Kokkos libs
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
@@ -170,7 +170,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/KOKKOS/${{ matrix.exec_model }}
-          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-static-dev1
+          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Copy cached libraries
         run: |
