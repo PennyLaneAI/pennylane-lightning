@@ -19,19 +19,53 @@ env:
   PYTHON3_MAX_VERSION: "10"
 
 jobs:
+  mac-set-matrix-x86:
+    name: Set builder matrix
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/checkout@v3
+
+      - id: pyver
+        run: |
+          if [[ ${{ github.event_name }} == 'pull_request' ]]; then
+            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
+              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }})"
+          else
+            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
+              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
+              --range)"
+          fi
+
+      - id: exec_model
+        run: echo "::set-output name=exec_model::[\"SERIAL\"]" # We may also adopt [OPENMP, THREADS] in later iterations
+
+      - id: kokkos_version
+        run: echo "::set-output name=kokkos_version::[\"3.6.00\"]"
+
+    outputs:
+      matrix: ${{ steps.pyver.outputs.matrix }}
+      exec_model: ${{ steps.exec_model.outputs.exec_model }}
+      kokkos_version: ${{ steps.kokkos_version.outputs.kokkos_version }}
+
   build_dependencies:
+    needs: [mac-set-matrix-x86]
     strategy:
       matrix:
         os: [macos-11]
         arch: [x86_64]
-        exec_model: [SERIAL] # We may also adopt [OPENMP, THREADS] in later iterations
-        kokkos_version: ["3.6.00"]
+        exec_model: ${{ fromJson(needs.mac-set-matrix-x86.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.mac-set-matrix-x86.outputs.kokkos_version) }}
 
     name: Kokkos core & kernels (${{ matrix.exec_model }}::${{ matrix.arch }} )
     runs-on: ${{ matrix.os }}
-    outputs:
-      exec_model: ${{ matrix.exec_model }}
-      kokkos_version: ${{ matrix.kokkos_version }}
 
     steps:
       - name: Cancel previous runs
@@ -39,14 +73,12 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - uses: actions/checkout@v3
-
       - name: Cache installation directories
         id: kokkos-cache
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace}}/KOKKOS/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-static
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-static-dev1
 
       - name: Install clang
         run: brew install llvm
@@ -83,9 +115,9 @@ jobs:
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                           -DCMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++ \
-                          -G Ninja && \
-          cmake --build ./Build --verbose && \
-          cmake --install ./Build && \
+                          -G Ninja
+          cmake --build ./Build --verbose
+          cmake --install ./Build
           cd -
 
       - name: Build Kokkos kernels library
@@ -98,51 +130,24 @@ jobs:
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                           -DCMAKE_CXX_STANDARD=20 \
-                          -DKokkos_DIR=${{ github.workspace}}/KOKKOS/${{ matrix.exec_model }} \
+                          -DCMAKE_PREFIX_PATH=${{ github.workspace}}/KOKKOS/${{ matrix.exec_model }} \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                           -DCMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++ \
-                          -G Ninja && \
-          cmake --build ./Build --verbose && \
-          cmake --install ./Build && \
+                          -G Ninja
+          cmake --build ./Build --verbose
+          cmake --install ./Build
           cd -
 
-  mac-set-matrix-x86:
-    name: Set builder matrix versions
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.4.1
-        with:
-          access_token: ${{ github.token }}
-
-      - uses: actions/checkout@v2
-
-      - id: pyver
-        run: |
-          if [[ ${{ github.event_name }} == 'pull_request' ]]; then
-            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
-              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-              --max-version=3.${{ env.PYTHON3_MAX_VERSION }})"
-          else
-            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
-              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-              --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
-              --range)"
-          fi
-    outputs:
-      matrix: ${{ steps.pyver.outputs.matrix }}
-
   mac-wheels-x86:
-    needs: [build_dependencies, mac-set-matrix-x86]
+    needs: [mac-set-matrix-x86, build_dependencies]
     strategy:
       fail-fast: false
       matrix:
         os: [macos-11]
         arch: [x86_64]
         cibw_build: ${{fromJson(needs.mac-set-matrix-x86.outputs.matrix)}}
-        kokkos_version: ${{ needs.build_dependencies.outputs.kokkos_version }}
-        exec_model: ${{ needs.build_dependencies.outputs.exec_model }}
+        exec_model: ${{ fromJson(needs.mac-set-matrix-x86.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.mac-set-matrix-x86.outputs.kokkos_version) }}
 
     name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
@@ -159,8 +164,8 @@ jobs:
         id: kokkos-cache
         uses: actions/cache@v3
         with:
-          path: $HOME/KOKKOS/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-static
+          path: ${{ github.workspace}}/KOKKOS/${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-static-dev1
 
       - name: Copy cached libraries
         run: |

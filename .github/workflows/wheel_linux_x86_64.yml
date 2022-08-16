@@ -1,7 +1,7 @@
 name: Wheel::Linux::x86_64
 
 # **What it does**: Builds python wheels for Linux (ubuntu-latest) architecture x86_64 and store it as artifacts.
-#                   Python versions: 3.7 and 3.10.
+#                   Python versions: 3.7, 3.8, 3.9, 3.10.
 # **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
@@ -28,7 +28,7 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - id: pyver
         run: |
@@ -44,7 +44,7 @@ jobs:
           fi
 
       - id: exec_model
-        run: echo "::set-output name=exec_model::[\"SERIAL\"]"
+        run: echo "::set-output name=exec_model::[\"SERIAL\"]" # We may also adopt [OPENMP, THREADS] in later iterations
 
       - id: kokkos_version
         run: echo "::set-output name=kokkos_version::[\"3.6.00\"]"
@@ -138,7 +138,7 @@ jobs:
           cmake --install ./Build
 
   linux-wheels-x86-64:
-    needs: [build_dependencies, linux-set-matrix-x86_64]
+    needs: [linux-set-matrix-x86_64, build_dependencies]
     strategy:
       fail-fast: false
       matrix:
@@ -152,6 +152,7 @@ jobs:
     name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container_img }}
+
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.4.1
