@@ -10,6 +10,7 @@ if (UNIX AND (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(AMD64)|(X64)|(x64)|(x86_64)"))
                                                       lightning_external_libs
                                                       lightning_gates
                                                       lightning_utils)
+    set_property(TARGET lightning_simulator_assign_kernels_x64 PROPERTY POSITION_INDEPENDENT_CODE ON)
     target_link_libraries(lightning_simulator PRIVATE lightning_simulator_assign_kernels_x64)
 else()
     add_library(lightning_simulator_assign_kernels_default STATIC KernelMap_Default.cpp AssignKernelMap_Default.cpp)
@@ -17,6 +18,7 @@ else()
                                                       lightning_external_libs
                                                       lightning_gates
                                                       lightning_utils)
+    set_property(TARGET lightning_simulator_assign_kernels_default PROPERTY POSITION_INDEPENDENT_CODE ON)
     target_link_libraries(lightning_simulator PRIVATE lightning_simulator_assign_kernels_default)
 endif()
 
