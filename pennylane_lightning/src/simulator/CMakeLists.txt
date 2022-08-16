@@ -5,21 +5,9 @@ set(SIMULATOR_FILES StateVectorRawCPU.cpp StateVectorManagedCPU.cpp Measures.cpp
 add_library(lightning_simulator STATIC ${SIMULATOR_FILES})
 
 if (UNIX AND (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(AMD64)|(X64)|(x64)|(x86_64)"))
-    add_library(lightning_simulator_assign_kernels_x64 STATIC KernelMap_X64.cpp AssignKernelMap_AVX2.cpp AssignKernelMap_AVX512.cpp AssignKernelMap_Default.cpp)
-    target_link_libraries(lightning_simulator_assign_kernels_x64 PRIVATE lightning_compile_options
-                                                      lightning_external_libs
-                                                      lightning_gates
-                                                      lightning_utils)
-    set_property(TARGET lightning_simulator_assign_kernels_x64 PROPERTY POSITION_INDEPENDENT_CODE ON)
-    target_link_libraries(lightning_simulator PRIVATE lightning_simulator_assign_kernels_x64)
+    target_sources(lightning_simulator PRIVATE KernelMap_X64.cpp AssignKernelMap_AVX2.cpp AssignKernelMap_AVX512.cpp AssignKernelMap_Default.cpp)
 else()
-    add_library(lightning_simulator_assign_kernels_default STATIC KernelMap_Default.cpp AssignKernelMap_Default.cpp)
-    target_link_libraries(lightning_simulator_assign_kernels_default PRIVATE lightning_compile_options
-                                                      lightning_external_libs
-                                                      lightning_gates
-                                                      lightning_utils)
-    set_property(TARGET lightning_simulator_assign_kernels_default PROPERTY POSITION_INDEPENDENT_CODE ON)
-    target_link_libraries(lightning_simulator PRIVATE lightning_simulator_assign_kernels_default)
+    target_sources(lightning_simulator PRIVATE KernelMap_Default.cpp AssignKernelMap_Default.cpp)
 endif()
 
 target_include_directories(lightning_simulator PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
