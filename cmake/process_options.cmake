@@ -1,6 +1,6 @@
 ##############################################################################
-# This file processes ENABLE_WARNINGS, ENABLE_NATIVE, ENABLE_AVX, 
-# ENABLE_OPENMP, ENABLE_KOKKOS, and ENABLE_BLAS 
+# This file processes ENABLE_WARNINGS, ENABLE_NATIVE, ENABLE_OPENMP, 
+# ENABLE_KOKKOS, and ENABLE_BLAS 
 # options and produces interface libraries
 # lightning_compile_options and lightning_external_libs.
 ##############################################################################

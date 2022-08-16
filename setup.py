@@ -93,13 +93,11 @@ class CMakeBuild(build_ext):
                 configure_args += []
             else:
                 configure_args += ["-DENABLE_OPENMP=OFF"]
-        elif platform.system() == "Linux":
-            if platform.machine() == "x86_64":
-                configure_args += ["-DENABLE_AVX=ON"]  # Enable AVX if x64 on Linux
         elif platform.system() == "Windows":
             configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
         else:
-            raise RuntimeError(f"Unsupported '{platform.system()}' platform")
+            if platform.system() != "Linux":
+                raise RuntimeError(f"Unsupported '{platform.system()}' platform")
 
         if not Path(self.build_temp).exists():
             os.makedirs(self.build_temp)
