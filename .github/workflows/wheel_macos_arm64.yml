@@ -20,7 +20,7 @@ env:
 
 jobs:
   mac-set-matrix-arm:
-    name: Set builder matrix versions
+    name: Set builder matrix
     runs-on: ubuntu-latest
 
     steps:

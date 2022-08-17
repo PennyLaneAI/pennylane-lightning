@@ -30,7 +30,8 @@ jobs:
 
       - uses: actions/checkout@v2
 
-      - id: pyver
+      - name: Python version
+        id: pyver
         run: |
           if [[ ${{ github.event_name }} == 'pull_request' ]]; then
             echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
@@ -43,10 +44,12 @@ jobs:
               --range)"
           fi
 
-      - id: exec_model
+      - name: Kokkos execution strategy
+        id: exec_model
         run: echo "::set-output name=exec_model::[\"SERIAL\"]" # We may also adopt [OPENMP, THREADS] in later iterations
 
-      - id: kokkos_version
+      - name: Kokkos version
+        id: kokkos_version
         run: echo "::set-output name=kokkos_version::[\"3.6.00\"]"
 
     outputs:

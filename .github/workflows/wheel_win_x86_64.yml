@@ -21,7 +21,7 @@ env:
 
 jobs:
   win-set-matrix-x86:
-    name: Set builder matrix versions
+    name: Set builder matrix
     runs-on: ubuntu-latest
 
     steps:
