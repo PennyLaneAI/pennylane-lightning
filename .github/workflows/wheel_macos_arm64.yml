@@ -31,7 +31,8 @@ jobs:
 
       - uses: actions/checkout@v2
 
-      - id: pyver
+      - name: Python version
+        id: pyver
         run: |
           if [[ ${{ github.event_name }} == 'pull_request' ]]; then
             echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
@@ -43,6 +44,7 @@ jobs:
               --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
               --range)"
           fi
+
     outputs:
       matrix: ${{ steps.pyver.outputs.matrix }}
 
