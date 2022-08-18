@@ -230,9 +230,7 @@ jobs:
         run: |
           cd main
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip uninstall pennylane -y
-          pip install git+https://github.com/PennyLaneAI/pennylane.git
+          pip install -r requirements-dev.txt
 
       - name: Install ML libraries for interfaces
         run: |
@@ -285,9 +283,7 @@ jobs:
         run: |
           cd main
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip uninstall pennylane -y
-          pip install git+https://github.com/PennyLaneAI/pennylane.git
+          pip install -r requirements-dev.txt
 
       - name: Install ML libraries for interfaces
         run: |
