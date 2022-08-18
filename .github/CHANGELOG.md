@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Introduces requirements-dev.txt and improves dockerfile.
+[(#330)](https://github.com/PennyLaneAI/pennylane-lightning/pull/330)
+
 ### Documentation
 
 ### Bug fixes
@@ -13,6 +16,8 @@
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Amintor Dusko
 
 ---
 
