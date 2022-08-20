@@ -227,6 +227,41 @@ class TestExpval:
 
         assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
+    @pytest.mark.parametrize(
+        "obs, coeffs, res",
+        [
+            ([qml.PauliX(0) @ qml.PauliZ(1)], [1.0], 0.0),
+            ([qml.PauliZ(0) @ qml.PauliZ(1)], [1.0], math.cos(0.4) * math.cos(-0.2)),
+            (
+                [
+                    qml.PauliX(0) @ qml.PauliZ(1),
+                    qml.Hermitian(
+                        [
+                            [1.0, 0.0, 0.0, 0.0],
+                            [0.0, 3.0, 0.0, 0.0],
+                            [0.0, 0.0, -1.0, 1.0],
+                            [0.0, 0.0, 1.0, -2.0],
+                        ],
+                        wires=[0, 1],
+                    ),
+                ],
+                [0.3, 1.0],
+                0.9319728930156066,
+            ),
+        ],
+    )
+    def test_expval_hamiltonian(self, obs, coeffs, res, tol, dev):
+        """Test expval with Hamiltonian"""
+        ham = qml.Hamiltonian(coeffs, obs)
+
+        @qml.qnode(dev)
+        def circuit():
+            qml.RX(0.4, wires=[0])
+            qml.RY(-0.2, wires=[1])
+            return qml.expval(ham)
+
+        assert np.allclose(circuit(), res, atol=tol, rtol=0)
+
     def test_value(self, dev, tol):
         """Test that the expval interface works"""
 
@@ -425,6 +460,55 @@ class TestWiresInExpval:
             if n_wires > 1:
                 qml.CNOT(wires=[wires2[0], wires2[1]])
             return [qml.expval(qml.PauliZ(wires=w)) for w in wires2]
+
+        assert np.allclose(circuit1(), circuit2(), atol=tol)
+
+    @pytest.mark.parametrize(
+        "wires1, wires2",
+        [
+            ([2, 3, 0], [2, 3, 0]),
+            ([0, 1], [0, 1]),
+            ([0, 2, 3], [2, 0, 3]),
+            (["a", "c", "d"], [2, 3, 0]),
+            ([-1, -2, -3], ["q1", "ancilla", 2]),
+            (["a", "c"], [3, 0]),
+            ([-1, -2], ["ancilla", 2]),
+        ],
+    )
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_wires_expval_hermitian(self, wires1, wires2, C, tol):
+        """Test that the expectation of a circuit is independent from the wire labels used."""
+        dev1 = qml.device("lightning.qubit", wires=wires1, c_dtype=C)
+        dev1._state = dev1._asarray(dev1._state, C)
+
+        dev2 = qml.device("lightning.qubit", wires=wires2)
+        dev2._state = dev2._asarray(dev2._state, C)
+        ob_mat = [
+            [1.0, 2.0, 0.0, 1.0],
+            [2.0, -1.0, 0.0, 0.0],
+            [0.0, 0.0, 2.0, 0.0],
+            [1.0, 0.0, 0.0, -1.0],
+        ]
+
+        n_wires = len(wires1)
+        ob1 = qml.Hermitian(ob_mat, wires=[wires1[0 % n_wires], wires1[1 % n_wires]])
+        ob2 = qml.Hermitian(ob_mat, wires=[wires2[0 % n_wires], wires2[1 % n_wires]])
+
+        @qml.qnode(dev1)
+        def circuit1():
+            qml.RX(0.5, wires=wires1[0 % n_wires])
+            qml.RY(2.0, wires=wires1[1 % n_wires])
+            if n_wires > 1:
+                qml.CNOT(wires=[wires1[0], wires1[1]])
+            return [qml.expval(ob1)]
+
+        @qml.qnode(dev2)
+        def circuit2():
+            qml.RX(0.5, wires=wires2[0 % n_wires])
+            qml.RY(2.0, wires=wires2[1 % n_wires])
+            if n_wires > 1:
+                qml.CNOT(wires=[wires2[0], wires2[1]])
+            return [qml.expval(ob2)]
 
         assert np.allclose(circuit1(), circuit2(), atol=tol)
 
