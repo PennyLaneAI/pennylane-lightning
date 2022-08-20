@@ -35,8 +35,6 @@ namespace Pennylane::Algorithms {
  * @brief Utility class for encapsulating operations used by AdjointJacobian
  * class.
  */
-// import Observable
-using Pennylane::Simulators::Observable;
 
 template <class T> class OpsData {
   private:
@@ -209,7 +207,7 @@ template <class T> class JacobianData {
      * @var observables
      * Observables for which to calculate Jacobian.
      */
-    const std::vector<std::shared_ptr<Observable<T>>> observables;
+    const std::vector<std::shared_ptr<Simulators::Observable<T>>> observables;
 
     /**
      * @var operations
@@ -241,7 +239,7 @@ template <class T> class JacobianData {
      * @endrst
      */
     JacobianData(size_t num_params, size_t num_elem, std::complex<T> *ps,
-                 std::vector<std::shared_ptr<Observable<T>>> obs,
+                 std::vector<std::shared_ptr<Simulators::Observable<T>>> obs,
                  OpsData<T> ops, std::vector<size_t> trainP)
         : num_parameters(num_params), num_elements(num_elem), psi(ps),
           observables(std::move(obs)), operations(std::move(ops)),
@@ -281,7 +279,7 @@ template <class T> class JacobianData {
      * @return List of observables
      */
     [[nodiscard]] auto getObservables() const
-        -> const std::vector<std::shared_ptr<Observable<T>>> & {
+        -> const std::vector<std::shared_ptr<Simulators::Observable<T>>> & {
         return observables;
     }
 
