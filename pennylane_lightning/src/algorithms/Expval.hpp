@@ -12,16 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/**
+ * @file A new expval module
+ */
+
+#pragma once
+#include "LinearAlgebra.hpp"
 #include "Observables.hpp"
 
-template class Pennylane::Algorithms::NamedObs<float>;
-template class Pennylane::Algorithms::NamedObs<double>;
-
-template class Pennylane::Algorithms::HermitianObs<float>;
-template class Pennylane::Algorithms::HermitianObs<double>;
-
-template class Pennylane::Algorithms::TensorProdObs<float>;
-template class Pennylane::Algorithms::TensorProdObs<double>;
-
-template class Pennylane::Algorithms::Hamiltonian<float>;
-template class Pennylane::Algorithms::Hamiltonian<double>;
+template <typename PrecisionT>
+auto expval(const Observable &ob, const StateVectorRawCPU<PrecisionT> &sv)
+    -> PrecisionT {
+    StateVectorManagedCPU<PrecisionT> op_sv(sv);
+    ob.applyInPlace(op_sv);
+    const auto inner_prod =
+        Util::innerProdC(sv.getData(), op_sv.data(), sv.getLength());
+    return std::real(inner_prod);
+}

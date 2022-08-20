@@ -12,10 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "Measures.hpp"
+#include "Observables.hpp"
 
-// explicit instantiation
-template class Pennylane::Simulators::Measures<
-    float, Pennylane::StateVectorRawCPU<float>>;
-template class Pennylane::Simulators::Measures<
-    double, Pennylane::StateVectorRawCPU<double>>;
+template class Pennylane::Simulators::NamedObs<float>;
+template class Pennylane::Simulators::NamedObs<double>;
+
+template class Pennylane::Simulators::HermitianObs<float>;
+template class Pennylane::Simulators::HermitianObs<double>;
+
+template class Pennylane::Simulators::TensorProdObs<float>;
+template class Pennylane::Simulators::TensorProdObs<double>;
+
+template class Pennylane::Simulators::Hamiltonian<float>;
+template class Pennylane::Simulators::Hamiltonian<double>;
