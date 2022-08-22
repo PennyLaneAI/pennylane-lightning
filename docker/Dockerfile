@@ -29,8 +29,10 @@ RUN apt-get update \
     python3-pip \
     python3-venv \
     python3-dev \
+    gcc-10 g++-10 cpp-10 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10 --slave /usr/bin/gcov gcov /usr/bin/gcov-10 \
     && /usr/sbin/update-ccache-symlinks \
     && mkdir /opt/ccache \
     && ccache --set-config=cache_dir=/opt/ccache \
@@ -44,12 +46,8 @@ WORKDIR /opt/pennylane-lightning
 COPY . .
 
 RUN pip install --no-cache-dir wheel \
-    pytest \
-    pytest-cov \
-    pytest-mock \
-    flaky \
     sphinx \
-    && pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir -r requirements-dev.txt \
     && pip uninstall -y PennyLane_Lightning \
     && make install \
     && make test-python \
