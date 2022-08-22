@@ -80,7 +80,7 @@ jobs:
         id: kokkos-cache
         uses: actions/cache@v3
         with:
-          path: ${{ github.workspace}}/KOKKOS/${{ matrix.exec_model }}
+          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Install clang
@@ -107,11 +107,11 @@ jobs:
       - name: Build Kokkos core library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
-          mkdir -p ${{ github.workspace}}/KOKKOS/${{ matrix.exec_model }}
+          mkdir -p ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos
           python -m pip install cmake ninja
 
-          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/KOKKOS/${{ matrix.exec_model }} \
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }} \
                           -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
@@ -129,11 +129,11 @@ jobs:
           cd kokkos-kernels
           python -m pip install cmake ninja
 
-          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/KOKKOS/${{ matrix.exec_model }} \
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }} \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                           -DCMAKE_CXX_STANDARD=20 \
-                          -DCMAKE_PREFIX_PATH=${{ github.workspace}}/KOKKOS/${{ matrix.exec_model }} \
+                          -DCMAKE_PREFIX_PATH=${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }} \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                           -DCMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++ \
                           -G Ninja
@@ -167,12 +167,13 @@ jobs:
         id: kokkos-cache
         uses: actions/cache@v3
         with:
-          path: ${{ github.workspace}}/KOKKOS/${{ matrix.exec_model }}
+          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Copy cached libraries
         run: |
-          cp -rf ${{ github.workspace}}/KOKKOS/${{ matrix.exec_model }}/* ./
+          mkdir Kokkos
+          cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - uses: actions/setup-python@v2
         name: Install Python
