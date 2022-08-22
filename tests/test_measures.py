@@ -248,9 +248,9 @@ class TestExpval:
         @qml.qnode(dev)
         def circuit():
             qml.RX(0.52, wires=0)
-            return qml.expval(qml.CNOT(wires=[0, 1]))
+            return qml.expval(qml.RX(0.742, wires=[0]))
 
-        with pytest.raises(qml.QuantumFunctionError, match="CNOT is not an observable"):
+        with pytest.raises(qml._device.DeviceError, match="Observable RX not supported"):
             circuit()
 
     def test_observable_return_type_is_expectation(self, dev):
@@ -348,10 +348,10 @@ class TestVar:
         @qml.qnode(dev)
         def circuit():
             qml.RX(0.52, wires=0)
-            return qml.var(qml.CNOT(wires=[0, 1]))
+            return qml.var(qml.RX(0.742, wires=[0]))
 
-        with pytest.raises(qml.QuantumFunctionError, match="CNOT is not an observable"):
-            res = circuit()
+        with pytest.raises(qml._device.DeviceError, match="Observable RX not supported"):
+            circuit()
 
     def test_observable_return_type_is_variance(self, dev):
         """Test that the return type of the observable is :attr:`ObservableReturnTypes.Variance`"""
@@ -377,9 +377,9 @@ class TestBetaStatisticsError:
         @qml.qnode(dev)
         def circuit():
             qml.RX(0.52, wires=0)
-            return stat_func(qml.CNOT(wires=[0, 1]))
+            return qml.var(qml.RX(0.742, wires=[0]))
 
-        with pytest.raises(qml.QuantumFunctionError, match="CNOT is not an observable"):
+        with pytest.raises(qml._device.DeviceError, match="Observable RX not supported"):
             circuit()
 
 

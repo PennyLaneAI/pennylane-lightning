@@ -13,11 +13,14 @@
 
 ### Bug fixes
 
+* Test updates to reflect new measurement error messages.
+[(#334)](https://github.com/PennyLaneAI/pennylane-lightning/pull/334)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko
+Amintor Dusko, Chae-Yeun Park
 
 ---
 
