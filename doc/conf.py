@@ -218,6 +218,8 @@ html_theme_options = {
     "navbar_logo_colour": "#2d7c7f",
 
     "navbar_home_link": "https://pennylane.ai",
+    
+    "google_analytics_tracking_id": "UA-130507810-1",
 
     "navbar_left_links": [
         {
