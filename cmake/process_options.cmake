@@ -125,7 +125,7 @@ if(ENABLE_KOKKOS)
             /opt
     )
     if(Kokkos_FOUND)
-        message(STATUS "Found existing Kokkos build")
+        message(STATUS "Found existing Kokkos installation")
     endif()
 
     find_package(KokkosKernels
@@ -136,7 +136,7 @@ if(ENABLE_KOKKOS)
             /opt
     )
     if(KokkosKernels_FOUND)
-        message(STATUS "Found existing Kokkos Kernels build")
+        message(STATUS "Found existing Kokkos Kernels installation")
     endif()
 
     if (NOT (Kokkos_FOUND AND KokkosKernels_FOUND))
