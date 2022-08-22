@@ -71,35 +71,37 @@ concept SingleQubitGate =
     SingleQubitGateWithoutParam<T> || SingleQubitGateWithParam<T>;
 
 namespace Internal {
-template <SingleQubitGateWithoutParam AVXImpl, size_t... rev_wire>
-constexpr auto
-InternalFunctions_Iter([[maybe_unused]] std::index_sequence<rev_wire...> dummy)
-    -> decltype(auto) {
-    return std::array{&AVXImpl::template applyInternal<rev_wire>...};
-}
+    template <SingleQubitGateWithoutParam AVXImpl, size_t... rev_wire>
+    constexpr auto InternalFunctions_Iter(
+        [[maybe_unused]] std::index_sequence<rev_wire...> dummy)
+        ->decltype(auto) {
+        return std::array{&AVXImpl::template applyInternal<rev_wire>...};
+    }
 
-template <SingleQubitGateWithParam AVXImpl, typename ParamT, size_t... rev_wire>
-constexpr auto
-InternalFunctions_Iter([[maybe_unused]] std::index_sequence<rev_wire...> dummy)
-    -> decltype(auto) {
-    return std::array{&AVXImpl::template applyInternal<rev_wire, ParamT>...};
-}
+    template <SingleQubitGateWithParam AVXImpl, typename ParamT,
+              size_t... rev_wire>
+    constexpr auto InternalFunctions_Iter(
+        [[maybe_unused]] std::index_sequence<rev_wire...> dummy)
+        ->decltype(auto) {
+        return std::array{
+            &AVXImpl::template applyInternal<rev_wire, ParamT>...};
+    }
 
-template <SingleQubitGateWithoutParam AVXImpl>
-constexpr auto InternalFunctions() -> decltype(auto) {
-    constexpr size_t internal_wires =
-        Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
-    return InternalFunctions_Iter<AVXImpl>(
-        std::make_index_sequence<internal_wires>());
-}
+    template <SingleQubitGateWithoutParam AVXImpl>
+    constexpr auto InternalFunctions()->decltype(auto) {
+        constexpr size_t internal_wires =
+            Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
+        return InternalFunctions_Iter<AVXImpl>(
+            std::make_index_sequence<internal_wires>());
+    }
 
-template <SingleQubitGateWithParam AVXImpl, typename ParamT>
-constexpr auto InternalFunctions() -> decltype(auto) {
-    constexpr size_t internal_wires =
-        Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
-    return InternalFunctions_Iter<AVXImpl, ParamT>(
-        std::make_index_sequence<internal_wires>());
-}
+    template <SingleQubitGateWithParam AVXImpl, typename ParamT>
+    constexpr auto InternalFunctions()->decltype(auto) {
+        constexpr size_t internal_wires =
+            Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
+        return InternalFunctions_Iter<AVXImpl, ParamT>(
+            std::make_index_sequence<internal_wires>());
+    }
 } // namespace Internal
 /// @endcond
 
