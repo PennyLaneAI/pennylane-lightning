@@ -21,7 +21,6 @@ env:
 
 jobs:
   test-win-wheels:
-    needs: [win-set-matrix-x86]
     strategy:
       fail-fast: false
       matrix:
