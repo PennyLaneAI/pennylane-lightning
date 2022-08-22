@@ -1,4 +1,4 @@
-name: Wheel::Windows::x86_64
+name: TestWheel::Windows::x86_64
 
 # **What it does**: Builds python wheels for Windows (windows-latest) and store it as artifacts.
 #                   Python versions: 3.7, 3.8, 3.9, 3.10.
