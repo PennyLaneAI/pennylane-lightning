@@ -26,8 +26,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-2019]
-        py_version: ${{fromJson(needs.win-set-matrix-x86.outputs.matrix)}}
-    name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.py_version] }})
+        py_version: 3.10.6
+    name: ${{ matrix.os }}TEST
     runs-on: ${{ matrix.os }}
 
     steps:
