@@ -25,7 +25,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-2019]
-    name: TestWheel
+        pyver: ["3.10.1", "3.10.2", "3.10.3", "3.10.4", "3.10.5", "3.10.6"]
+    name: TestWheel::${{ matrix.pyver }}
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -39,7 +40,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: "3.10.6" #${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10.6" }')[matrix.py_version] }}
+          python-version: "${{ matrix.pyver }}"
 
       - name: Test wheel
         run: |
