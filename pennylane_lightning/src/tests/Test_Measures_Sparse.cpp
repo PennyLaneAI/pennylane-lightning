@@ -17,6 +17,7 @@
 
 using namespace Pennylane;
 using namespace Pennylane::Util;
+using namespace Pennylane::Simulators;
 
 namespace {
 using std::complex;

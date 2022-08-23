@@ -23,6 +23,7 @@
 
 using namespace Pennylane;
 using namespace Pennylane::Algorithms;
+using namespace Pennylane::Simulators;
 
 TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=Z", "[Algorithms]") {
     const std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
@@ -540,7 +541,7 @@ TEST_CASE(
     "Algorithms::adjointJacobian with exceedingly complicated Hamiltonian",
     "[Algorithms]") {
     using namespace std::literals;
-    using Pennylane::Algorithms::detail::HamiltonianApplyInPlace;
+    using Pennylane::Simulators::detail::HamiltonianApplyInPlace;
 
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     std::vector<size_t> t_params{0, 2};
