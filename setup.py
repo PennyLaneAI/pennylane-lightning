@@ -62,6 +62,7 @@ class CMakeBuild(build_ext):
             #  (https://github.com/ninja-build/ninja/pull/2056)
             configure_args += [
                 "-T clangcl",
+                "-DCMAKE_BUILD_TYPE=Release"
             ]
         else:
             configure_args += [
