@@ -180,7 +180,7 @@ jobs:
           cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install cibuildwheel
-        run: python3 -m pip install cibuildwheel==2.8.0
+        run: python3 -m pip install cibuildwheel==2.8.1
 
       - uses: docker/setup-qemu-action@v2
         name: Set up QEMU
