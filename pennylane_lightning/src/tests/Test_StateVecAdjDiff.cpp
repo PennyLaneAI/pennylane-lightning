@@ -15,6 +15,7 @@
 using namespace Pennylane;
 using namespace Pennylane::Util;
 using namespace Pennylane::Algorithms;
+using namespace Pennylane::Simulators;
 
 /**
  * @brief

@@ -21,7 +21,7 @@
 #include <memory>
 #include <unordered_set>
 
-namespace Pennylane::Algorithms {
+namespace Pennylane::Simulators {
 
 /**
  * @brief A base class for all observable classes.
@@ -442,4 +442,4 @@ template <typename T> class Hamiltonian final : public Observable<T> {
     }
 };
 
-} // namespace Pennylane::Algorithms
+} // namespace Pennylane::Simulators

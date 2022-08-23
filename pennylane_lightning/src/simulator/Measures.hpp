@@ -30,10 +30,11 @@
 
 #include "Kokkos_Sparse.hpp"
 #include "LinearAlgebra.hpp"
+#include "Observables.hpp"
 #include "StateVectorManagedCPU.hpp"
 #include "StateVectorRawCPU.hpp"
 
-namespace Pennylane {
+namespace Pennylane::Simulators {
 
 /**
  * @brief Observable's Measurement Class.
@@ -218,6 +219,20 @@ class Measures {
     }
 
     /**
+     * @brief Expectation value for a general Observable
+     *
+     * @param ob Observable
+     */
+    auto expval(const Observable<fp_t> &ob) -> fp_t {
+        StateVectorManagedCPU<fp_t> op_sv(original_statevector);
+        ob.applyInPlace(op_sv);
+        const auto inner_prod =
+            Util::innerProdC(original_statevector.getData(), op_sv.getData(),
+                             original_statevector.getLength());
+        return std::real(inner_prod);
+    }
+
+    /**
      * @brief Variance of an observable.
      *
      * @param operation String with the operator name.
@@ -380,4 +395,4 @@ class Measures {
         return samples;
     }
 }; // class Measures
-} // namespace Pennylane
+} // namespace Pennylane::Simulators
