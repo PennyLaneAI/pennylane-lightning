@@ -35,6 +35,7 @@ namespace Pennylane::Algorithms {
  * @brief Utility class for encapsulating operations used by AdjointJacobian
  * class.
  */
+
 template <class T> class OpsData {
   private:
     size_t num_par_ops_;

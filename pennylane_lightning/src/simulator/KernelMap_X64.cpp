@@ -32,13 +32,17 @@ int assignKernelsForGateOp() {
 
     if (RuntimeInfo::AVX2() && RuntimeInfo::FMA()) {
         assignKernelsForGateOp_AVX2(CPUMemoryModel::Aligned256);
+        // LCOV_EXCL_START
         if (!RuntimeInfo::AVX512F()) {
             assignKernelsForGateOp_AVX2(CPUMemoryModel::Aligned512);
         }
+        // LCOV_EXCL_STOP
     }
+    // LCOV_EXCL_START
     if (RuntimeInfo::AVX512F()) {
         assignKernelsForGateOp_AVX512(CPUMemoryModel::Aligned512);
     }
+    // LCOV_EXCL_STOP
     return 1;
 }
 int assignKernelsForGeneratorOp() {
@@ -46,13 +50,17 @@ int assignKernelsForGeneratorOp() {
 
     if (RuntimeInfo::AVX2() && RuntimeInfo::FMA()) {
         assignKernelsForGeneratorOp_AVX2(CPUMemoryModel::Aligned256);
+        // LCOV_EXCL_START
         if (!RuntimeInfo::AVX512F()) {
             assignKernelsForGeneratorOp_AVX2(CPUMemoryModel::Aligned512);
         }
+        // LCOV_EXCL_STOP
     }
+    // LCOV_EXCL_START
     if (RuntimeInfo::AVX512F()) {
         assignKernelsForGeneratorOp_AVX512(CPUMemoryModel::Aligned512);
     }
+    // LCOV_EXCL_STOP
     return 1;
 }
 int assignKernelsForMatrixOp() {
@@ -60,13 +68,17 @@ int assignKernelsForMatrixOp() {
 
     if (RuntimeInfo::AVX2() && RuntimeInfo::FMA()) {
         assignKernelsForMatrixOp_AVX2(CPUMemoryModel::Aligned256);
+        // LCOV_EXCL_START
         if (!RuntimeInfo::AVX512F()) {
             assignKernelsForMatrixOp_AVX2(CPUMemoryModel::Aligned512);
         }
+        // LCOV_EXCL_STOP
     }
+    // LCOV_EXCL_START
     if (RuntimeInfo::AVX512F()) {
         assignKernelsForMatrixOp_AVX512(CPUMemoryModel::Aligned512);
     }
+    // LCOV_EXCL_STOP
     return 1;
 }
 } // namespace Pennylane::KernelMap::Internal
