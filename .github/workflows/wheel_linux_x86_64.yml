@@ -184,7 +184,7 @@ jobs:
           yum update -y && yum install -y docker
 
       - name: Install cibuildwheel
-        run: python3.7 -m pip install cibuildwheel==2.8.1
+        run: python3 -m pip install cibuildwheel==2.8.1
 
       - name: Build wheels
         env:
@@ -212,7 +212,7 @@ jobs:
 
           CIBW_BUILD_VERBOSITY: 3
 
-        run: python3.7 -m cibuildwheel --output-dir wheelhouse
+        run: python3 -m cibuildwheel --output-dir wheelhouse
 
       - uses: actions-ecosystem/action-regex-match@v2
         id: rc_build

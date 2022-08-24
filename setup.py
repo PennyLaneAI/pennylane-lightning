@@ -75,6 +75,9 @@ class CMakeBuild(build_ext):
 
         build_args = []
 
+        if not debug:
+            build_args += ["--config", "RelWithDebInfo"]
+        
         # Add more platform dependent options
         if platform.system() == "Darwin":
             #To support ARM64
@@ -95,8 +98,6 @@ class CMakeBuild(build_ext):
                 configure_args += ["-DENABLE_OPENMP=OFF"]
         elif platform.system() == "Windows":
             configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
-            if not debug:
-                build_args += ["--config", "RelWithDebInfo"]
         else:
             if platform.system() != "Linux":
                 raise RuntimeError(f"Unsupported '{platform.system()}' platform")
