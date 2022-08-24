@@ -62,7 +62,6 @@ class CMakeBuild(build_ext):
             #  (https://github.com/ninja-build/ninja/pull/2056)
             configure_args += [
                 "-T clangcl",
-                "-DCMAKE_BUILD_TYPE=Release"
             ]
         else:
             configure_args += [
@@ -96,6 +95,8 @@ class CMakeBuild(build_ext):
                 configure_args += ["-DENABLE_OPENMP=OFF"]
         elif platform.system() == "Windows":
             configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
+            if not debug:
+                build_args += ["--config", "RelWithDebInfo"]
         else:
             if platform.system() != "Linux":
                 raise RuntimeError(f"Unsupported '{platform.system()}' platform")
@@ -105,7 +106,6 @@ class CMakeBuild(build_ext):
 
         subprocess.check_call(["cmake", str(ext.sourcedir)] + configure_args, cwd=self.build_temp)
         subprocess.check_call(["cmake", "--build", ".", "--verbose"] + build_args, cwd=self.build_temp)
-
 
 with open(os.path.join("pennylane_lightning", "_version.py")) as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")

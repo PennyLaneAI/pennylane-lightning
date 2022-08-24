@@ -82,7 +82,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: D:\a\install_dir\${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-dev1
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Clone Kokkos libs
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
@@ -116,10 +116,10 @@ jobs:
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF `
                           -DCMAKE_CXX_STANDARD=20 `
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
-                          -DCMAKE_BUILD_TYPE=Release `
+                          -DCMAKE_BUILD_TYPE=RelWithDebInfo `
                           -T clangcl
-          cmake --build ./Build --config Release --verbose
-          cmake --install ./Build --config Release --verbose
+          cmake --build ./Build --config RelWithDebInfo --verbose
+          cmake --install ./Build --config RelWithDebInfo --verbose
 
       - name: Build Kokkos kernels library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
@@ -130,10 +130,10 @@ jobs:
                           -DCMAKE_CXX_STANDARD=20 `
                           -DCMAKE_PREFIX_PATH=D:\a\install_dir\${{ matrix.exec_model }} `
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
-                          -DCMAKE_BUILD_TYPE=Release `
+                          -DCMAKE_BUILD_TYPE=RelWithDebInfo `
                           -T clangcl
-          cmake --build ./Build --config Release --verbose
-          cmake --install ./Build --config Release --verbose
+          cmake --build ./Build --config RelWithDebInfo --verbose
+          cmake --install ./Build --config RelWithDebInfo --verbose
 
   win-wheels:
     needs: [win-set-matrix-x86, build_dependencies]
@@ -159,7 +159,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: D:\a\install_dir\${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-dev1
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - uses: actions/checkout@v3
 
