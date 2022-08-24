@@ -1,3 +1,12 @@
+# Release 0.25.1
+
+### Bug fixes
+
+* Ensure build type for cmake in all compilers, and operational systems.
+[(#340)](https://github.com/PennyLaneAI/pennylane-lightning/pull/340)
+
+---
+
 # Release 0.25.0
 
 ### New features since last release

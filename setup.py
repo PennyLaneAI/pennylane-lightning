@@ -75,6 +75,9 @@ class CMakeBuild(build_ext):
 
         build_args = []
 
+        if not debug:
+            build_args += ["--config", "RelWithDebInfo"]
+
         # Add more platform dependent options
         if platform.system() == "Darwin":
             #To support ARM64
@@ -105,7 +108,7 @@ class CMakeBuild(build_ext):
             os.makedirs(self.build_temp)
 
         subprocess.check_call(["cmake", str(ext.sourcedir)] + configure_args, cwd=self.build_temp)
-        subprocess.check_call(["cmake", "--build", "."] + build_args, cwd=self.build_temp)
+        subprocess.check_call(["cmake", "--build", ".", "--verbose"] + build_args, cwd=self.build_temp)
 
 
 with open(os.path.join("pennylane_lightning", "_version.py")) as f:
