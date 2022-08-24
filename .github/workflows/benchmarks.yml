@@ -34,7 +34,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install matplotlib
-          pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+          pip install git+https://github.com/PennyLaneAI/pennylane.git@v0.25.1
 
       - name: Install lightning.qubit device (master)
         run: |

@@ -88,7 +88,7 @@ jobs:
           # Skip PPC tests due to lack of numpy/scipy wheel support
           CIBW_TEST_SKIP: "*-manylinux_{ppc64le}"
 
-          CIBW_BEFORE_TEST: pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+          CIBW_BEFORE_TEST: pip install git+https://github.com/PennyLaneAI/pennylane.git@v0.25.1
 
           # Use CentOS 7 image for PPC
           CIBW_MANYLINUX_PPC64LE_IMAGE: manylinux2014
