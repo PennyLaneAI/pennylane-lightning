@@ -9,6 +9,9 @@
 * Introduces requirements-dev.txt and improves dockerfile.
 [(#330)](https://github.com/PennyLaneAI/pennylane-lightning/pull/330)
 
+* Support `expval` for a Hamiltonian.
+[(#333)](https://github.com/PennyLaneAI/pennylane-lightning/pull/333)
+
 ### Documentation
 
 ### Bug fixes
