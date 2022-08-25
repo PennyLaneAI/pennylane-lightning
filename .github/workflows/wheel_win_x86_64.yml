@@ -104,7 +104,7 @@ jobs:
         run: |
           Set-Location -Path "Z:\"
           foreach ($i in Get-ChildItem -Path Z:\dist\*.whl){ python -m pip install $i }
-          python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@0.25.1 && `
+          python -m pip install pennylane~=0.25.0 && `
           python -m pip install pytest pytest-cov pytest-mock flaky && `
           pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 

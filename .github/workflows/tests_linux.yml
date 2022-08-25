@@ -232,7 +232,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip uninstall pennylane -y
-          pip install git+https://github.com/PennyLaneAI/pennylane.git@v0.25.1
+          pip install pennylane~=0.25.0
 
       - name: Install ML libraries for interfaces
         run: |
@@ -287,7 +287,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip uninstall pennylane -y
-          pip install git+https://github.com/PennyLaneAI/pennylane.git@v0.25.1
+          pip install pennylane~=0.25.0
 
       - name: Install ML libraries for interfaces
         run: |
