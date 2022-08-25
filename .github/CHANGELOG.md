@@ -1,4 +1,4 @@
-# Release 0.26.0-dev
+# Release 0.26.1-dev
 
 ### New features since last release
 
@@ -6,13 +6,17 @@
 
 ### Improvements
 
-* Introduces requirements-dev.txt and improves dockerfile.
-[(#330)](https://github.com/PennyLaneAI/pennylane-lightning/pull/330)
-
-* Support `expval` for a Hamiltonian.
-[(#333)](https://github.com/PennyLaneAI/pennylane-lightning/pull/333)
-
 ### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+---
+
+# Release 0.25.1
 
 ### Bug fixes
 
