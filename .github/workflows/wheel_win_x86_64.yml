@@ -92,9 +92,9 @@ jobs:
             python -m wheel unpack $i.Name
             $name = $i.Name
             $dirName = python -c "s = '$name'; print('-'.join(s.split('-')[0:2]))"
-            if (Test-Path -Path $dirName\pennylane_lightning\Debug) {
-              Move-Item -Path $dirName\pennylane_lightning\Debug\* -Destination $dirName\pennylane_lightning
-              Remove-Item $dirName\pennylane_lightning\Debug -Recurse
+            if (Test-Path -Path $dirName\pennylane_lightning\RelWithDebInfo) {
+              Move-Item -Path $dirName\pennylane_lightning\RelWithDebInfo\* -Destination $dirName\pennylane_lightning
+              Remove-Item $dirName\pennylane_lightning\RelWithDebInfo -Recurse
               python -m wheel pack $dirName
             }
             Remove-Item $dirName -Recurse
