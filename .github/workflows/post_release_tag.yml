@@ -5,7 +5,7 @@ on:
     types: [published]
 
 env:
-  TAG_NAME: latest
+  TAG_NAME: latest_release
 
 jobs:
   post_release_tag_latest:
