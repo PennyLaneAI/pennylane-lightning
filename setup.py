@@ -69,14 +69,15 @@ class CMakeBuild(build_ext):
                 f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
             ]
         
-        if debug:
-            configure_args += ["-DCMAKE_BUILD_TYPE=Debug"]
-        configure_args += self.cmake_defines
-
         build_args = []
 
-        if not debug:
+        if debug:
+            configure_args += ["-DCMAKE_BUILD_TYPE=Debug"]
+            build_args += ["--config", "Debug"]
+        else:
             build_args += ["--config", "RelWithDebInfo"]
+        
+        configure_args += self.cmake_defines
 
         # Add more platform dependent options
         if platform.system() == "Darwin":
