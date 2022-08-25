@@ -18,7 +18,7 @@ env:
 
 jobs:
   linux-set-matrix-aarch64:
-    name: Set builder matrix versions
+    name: Set builder matrix
     runs-on: ubuntu-latest
 
     steps:
@@ -29,7 +29,8 @@ jobs:
 
       - uses: actions/checkout@v2
 
-      - id: pyver
+      - name: Python version
+        id: pyver
         run: |
           if [[ ${{ github.event_name }} == 'pull_request' ]]; then
             echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
@@ -41,17 +42,119 @@ jobs:
               --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
               --range)"
           fi
+
+      - name: Kokkos execution strategy
+        id: exec_model
+        run: echo "::set-output name=exec_model::[\"SERIAL\"]" # We may also adopt [OPENMP, THREADS] in later iterations
+
+      - name: Kokkos version
+        id: kokkos_version
+        run: echo "::set-output name=kokkos_version::[\"3.6.00\"]"
+
     outputs:
       matrix: ${{ steps.pyver.outputs.matrix }}
+      exec_model: ${{ steps.exec_model.outputs.exec_model }}
+      kokkos_version: ${{ steps.kokkos_version.outputs.kokkos_version }}
+
+  build_dependencies:
+    needs: [linux-set-matrix-aarch64]
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        arch: [aarch64]
+        exec_model: ${{ fromJson(needs.linux-set-matrix-aarch64.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.linux-set-matrix-aarch64.outputs.kokkos_version) }}
+        container_img: ["quay.io/pypa/manylinux2014_aarch64"]
+
+    name: Kokkos core & kernels (${{ matrix.exec_model }}::${{ matrix.arch }} )
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.4.1
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Cache installation directories
+        id: kokkos-cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
+      - name: Clone Kokkos libs
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone https://github.com/kokkos/kokkos.git
+          cd kokkos
+          git checkout ${{ matrix.kokkos_version }}
+          cd -
+          pushd . &> /dev/null
+          git clone https://github.com/kokkos/kokkos-kernels.git
+          cd kokkos-kernels
+          git checkout ${{ matrix.kokkos_version }}
+          cd -
+
+      - uses: docker/setup-qemu-action@v2
+        name: Set up QEMU
+
+      - name: Build Kokkos core library
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          cd kokkos
+          docker run --platform linux/aarch64 \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v `pwd`:/io \
+            -v ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}:/install \
+            -i ${{ matrix.container_img }} \
+            bash -c "cd /io && \
+            python3.7 -m pip install ninja && \
+            ln -s /opt/python/cp37-cp37m/bin/ninja /usr/bin/ninja && \
+            cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
+                            -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
+                            -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
+                            -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                            -DCMAKE_CXX_STANDARD=20 \
+                            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                            -G Ninja && \
+            cmake --build ./Build --verbose && \
+            cmake --install ./Build; "
+          cd -
+      - name: Build Kokkos kernels library
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          cd kokkos-kernels
+          docker run --platform linux/aarch64 \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v `pwd`:/io \
+            -v ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}:/install \
+            -i ${{ matrix.container_img }} \
+            bash -c "cd /io && \
+            python3.7 -m pip install ninja && \
+            ln -s /opt/python/cp37-cp37m/bin/ninja /usr/bin/ninja && \
+            cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
+                            -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
+                            -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                            -DCMAKE_CXX_STANDARD=20 \
+                            -DCMAKE_PREFIX_PATH=/install \
+                            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                            -G Ninja && \
+            cmake --build ./Build --verbose && \
+            cmake --install ./Build; "
+          cd -
 
   linux-wheels-aarch64:
-    needs: [linux-set-matrix-aarch64]
+    needs: [linux-set-matrix-aarch64, build_dependencies]
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
         arch: [aarch64]
-        cibw_build: ${{fromJson(needs.linux-set-matrix-aarch64.outputs.matrix)}}
+        cibw_build: ${{ fromJson(needs.linux-set-matrix-aarch64.outputs.matrix) }}
+        exec_model: ${{ fromJson(needs.linux-set-matrix-aarch64.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.linux-set-matrix-aarch64.outputs.kokkos_version) }}
+        container_img: ["quay.io/pypa/manylinux2014_aarch64"]
 
     name: ubuntu-latest::aarch64 (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
@@ -62,41 +165,50 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: docker/setup-qemu-action@v1
-        name: Set up QEMU
-
-      - uses: actions/setup-python@v2
-        name: Install Python
+      - name: Restoring cached dependencies
+        id: kokkos-cache
+        uses: actions/cache@v3
         with:
-          python-version: '3.7'
+          path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
+      - name: Copy cached libraries
+        run: |
+          mkdir Kokkos
+          cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.3.0
+        run: python3 -m pip install cibuildwheel==2.8.1
+
+      - uses: docker/setup-qemu-action@v2
+        name: Set up QEMU
 
       - name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
         env:
+          CIBW_ARCHS_LINUX: ${{matrix.arch}}
+
           CIBW_BUILD: ${{ matrix.cibw_build }}
+
           CIBW_SKIP: "*-musllinux*"
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            pip install pybind11 ninja cmake && yum install -y gcc gcc-c++
+            cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
+            pip install ninja cmake
 
-          # Testing of built wheels
-          CIBW_TEST_REQUIRES: numpy~=1.21 scipy pytest pytest-cov pytest-mock flaky
-
-          CIBW_BEFORE_TEST: pip install git+https://github.com/PennyLaneAI/pennylane.git@master
-
-          CIBW_TEST_COMMAND: |
-            pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
-
-          # Use Centos 7 wheel-builder for ARM
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
 
-          CIBW_ARCHS_LINUX: ${{matrix.arch}}
+          CIBW_BUILD_VERBOSITY: 3
+
+        run: python3 -m cibuildwheel --output-dir wheelhouse
+
+      - uses: actions-ecosystem/action-regex-match@v2
+        id: rc_build
+        with:
+          text: ${{ github.event.pull_request.head.ref }}
+          regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
       - uses: actions/upload-artifact@v2
         if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
