@@ -5,6 +5,10 @@
 * Ensure build type for cmake in all compilers and operational systems.
 [(#341)](https://github.com/PennyLaneAI/pennylane-lightning/pull/341)
 
+### Contributor
+
+Amintor Dusko
+
 ---
 
 # Release 0.25.0
