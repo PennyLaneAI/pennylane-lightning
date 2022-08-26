@@ -18,7 +18,7 @@ jobs:
 
       - name: Overwrite tag
         run: |
-          git config --local user.email "chae-yeun@xanadu.ai"
+          git config --local user.email 'github-actions[bot]@users.noreply.github.com'
           git config --local user.name "Latest tag update bot"
           git tag -d $TAG_NAME || true
           if git push --delete origin $TAG_NAME; then

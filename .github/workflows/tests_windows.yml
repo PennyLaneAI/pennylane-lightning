@@ -14,7 +14,7 @@ jobs:
         os: [windows-latest]
     steps:
       - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.4.1
+        uses: styfle/cancel-workflow-action@0.10.0
         with:
           access_token: ${{ github.token }}
       - uses: actions/checkout@v2
@@ -60,7 +60,7 @@ jobs:
         os: [windows-latest]
     steps:
       - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.4.1
+        uses: styfle/cancel-workflow-action@0.10.0
         with:
           access_token: ${{ github.token }}
       - uses: actions/checkout@v2
