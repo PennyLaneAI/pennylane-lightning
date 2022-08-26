@@ -19,6 +19,9 @@
 * Test updates to reflect new measurement error messages.
 [(#334)](https://github.com/PennyLaneAI/pennylane-lightning/pull/334)
 
+* Updates to the release tagger to fix incompatibilities with RTD.
+[(#344)](https://github.com/PennyLaneAI/pennylane-lightning/pull/344)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
