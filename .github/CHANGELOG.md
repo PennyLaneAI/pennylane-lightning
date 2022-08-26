@@ -12,6 +12,9 @@
 * Support `expval` for a Hamiltonian.
 [(#333)](https://github.com/PennyLaneAI/pennylane-lightning/pull/333)
 
+* Implements caching for Kokkos installation.
+[(#316)](https://github.com/PennyLaneAI/pennylane-lightning/pull/316)
+
 ### Documentation
 
 ### Bug fixes
