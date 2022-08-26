@@ -22,7 +22,7 @@ jobs:
       - name: Checkout PennyLane-Lightning PR
         uses: actions/checkout@v2
         with:
-          token: ${{ github.token }}
+          token: ${{ secrets.DEV_TOKEN }}
           ref: ${{ github.head_ref }}
           path: pr
 
