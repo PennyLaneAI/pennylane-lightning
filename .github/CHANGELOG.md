@@ -22,6 +22,9 @@
 * Updates to the release tagger to fix incompatibilities with RTD.
 [(#344)](https://github.com/PennyLaneAI/pennylane-lightning/pull/344)
 
+* Update cancel-workflow-action and bot credentials.
+[(#345)](https://github.com/PennyLaneAI/pennylane-lightning/pull/345)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
