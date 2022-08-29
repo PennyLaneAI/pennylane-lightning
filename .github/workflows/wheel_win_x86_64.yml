@@ -206,8 +206,8 @@ jobs:
       - uses: actions/upload-artifact@v2
         if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         with:
-          name: ${{ runner.os }}-wheels.zip
-          path: Z:\dist\*.whl
+          name: ${{ runner.os }}-wheels-${{ matrix.arch }}.zip
+          path: ./wheelhouse/*.whl
 
   upload-pypi:
     needs: win-wheels
@@ -216,7 +216,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v2
         with:
-          name: Windows-wheels.zip
+          name: Windows-wheels-AMD64.zip
           path: dist
 
       - name: Upload wheels to PyPI
