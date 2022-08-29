@@ -13,7 +13,7 @@ PennyLane-Lightning Plugin
     :alt: CodeFactor Grade
     :target: https://www.codefactor.io/repository/github/pennylaneai/pennylane-lightning
 
-.. image:: https://img.shields.io/readthedocs/pennylane-lightning.svg?logo=read-the-docs&style=flat-square
+.. image:: https://readthedocs.com/projects/xanaduai-pennylane-lightning/badge/?version=latest&style=flat-square
     :alt: Read the Docs
     :target: https://docs.pennylane.ai/projects/lightning
 
