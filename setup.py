@@ -69,12 +69,16 @@ class CMakeBuild(build_ext):
                 f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
             ]
         
-        if debug:
-            configure_args += ["-DCMAKE_BUILD_TYPE=Debug"]
-        configure_args += self.cmake_defines
-
         build_args = []
 
+        if debug:
+            configure_args += ["-DCMAKE_BUILD_TYPE=Debug"]
+            build_args += ["--config", "Debug"]
+        else:
+            build_args += ["--config", "RelWithDebInfo"]
+        
+        configure_args += self.cmake_defines
+        
         # Add more platform dependent options
         if platform.system() == "Darwin":
             #To support ARM64
@@ -93,20 +97,17 @@ class CMakeBuild(build_ext):
                 configure_args += []
             else:
                 configure_args += ["-DENABLE_OPENMP=OFF"]
-        elif platform.system() == "Linux":
-            if platform.machine() == "x86_64":
-                configure_args += ["-DENABLE_AVX=ON"]  # Enable AVX if x64 on Linux
         elif platform.system() == "Windows":
             configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
         else:
-            raise RuntimeError(f"Unsupported '{platform.system()}' platform")
+            if platform.system() != "Linux":
+                raise RuntimeError(f"Unsupported '{platform.system()}' platform")
 
         if not Path(self.build_temp).exists():
             os.makedirs(self.build_temp)
 
         subprocess.check_call(["cmake", str(ext.sourcedir)] + configure_args, cwd=self.build_temp)
-        subprocess.check_call(["cmake", "--build", "."] + build_args, cwd=self.build_temp)
-
+        subprocess.check_call(["cmake", "--build", ".", "--verbose"] + build_args, cwd=self.build_temp)
 
 with open(os.path.join("pennylane_lightning", "_version.py")) as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")

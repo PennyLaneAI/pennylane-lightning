@@ -9,12 +9,24 @@
 * Introduces requirements-dev.txt and improves dockerfile.
 [(#330)](https://github.com/PennyLaneAI/pennylane-lightning/pull/330)
 
+* Support `expval` for a Hamiltonian.
+[(#333)](https://github.com/PennyLaneAI/pennylane-lightning/pull/333)
+
+* Implements caching for Kokkos installation.
+[(#316)](https://github.com/PennyLaneAI/pennylane-lightning/pull/316)
+
 ### Documentation
 
 ### Bug fixes
 
 * Test updates to reflect new measurement error messages.
 [(#334)](https://github.com/PennyLaneAI/pennylane-lightning/pull/334)
+
+* Updates to the release tagger to fix incompatibilities with RTD.
+[(#344)](https://github.com/PennyLaneAI/pennylane-lightning/pull/344)
+
+* Update cancel-workflow-action and bot credentials.
+[(#345)](https://github.com/PennyLaneAI/pennylane-lightning/pull/345)
 
 ### Contributors
 

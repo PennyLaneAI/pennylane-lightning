@@ -18,6 +18,7 @@
 #include "Bindings.hpp"
 
 #include "GateUtil.hpp"
+#include "Measures.hpp"
 #include "StateVecAdjDiff.hpp"
 #include "StateVectorManagedCPU.hpp"
 
@@ -27,6 +28,7 @@
 namespace {
 using namespace Pennylane;
 using namespace Pennylane::Util;
+using namespace Pennylane::Simulators;
 using namespace Pennylane::Algorithms;
 using namespace Pennylane::Gates;
 
@@ -95,6 +97,13 @@ void lightning_class_bindings(py::module_ &m) {
                  const std::string &, const std::vector<size_t> &)>(
                  &Measures<PrecisionT>::expval),
              "Expected value of an operation by name.")
+        .def(
+            "expval",
+            [](Measures<PrecisionT> &M,
+               const std::shared_ptr<Observable<PrecisionT>> &ob) {
+                return M.expval(*ob);
+            },
+            "Expected value of an operation object.")
         .def(
             "expval",
             [](Measures<PrecisionT> &M, const np_arr_sparse_ind row_map,
@@ -413,7 +422,7 @@ PYBIND11_MODULE(lightning_qubit_ops, // NOLINT: No control over Pybind internals
     /* Add compile info */
     m.def("compile_info", &getCompileInfo, "Compiled binary information.");
 
-    /* Add compile info */
+    /* Add runtime info */
     m.def("runtime_info", &getRuntimeInfo, "Runtime information.");
 
     /* Add Kokkos and Kokkos Kernels info */

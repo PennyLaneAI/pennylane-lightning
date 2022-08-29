@@ -1,6 +1,6 @@
 project(lightning_algorithms LANGUAGES CXX)
 
-set(ALGORITHM_FILES AdjointDiff.cpp Observables.cpp JacobianTape.cpp StateVecAdjDiff.cpp CACHE INTERNAL "" FORCE)
+set(ALGORITHM_FILES AdjointDiff.cpp JacobianTape.cpp StateVecAdjDiff.cpp CACHE INTERNAL "" FORCE)
 add_library(lightning_algorithms STATIC ${ALGORITHM_FILES})
 
 target_link_libraries(lightning_algorithms PRIVATE lightning_compile_options

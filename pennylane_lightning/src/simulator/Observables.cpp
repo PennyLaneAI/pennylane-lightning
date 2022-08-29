@@ -14,14 +14,14 @@
 
 #include "Observables.hpp"
 
-template class Pennylane::Algorithms::NamedObs<float>;
-template class Pennylane::Algorithms::NamedObs<double>;
+template class Pennylane::Simulators::NamedObs<float>;
+template class Pennylane::Simulators::NamedObs<double>;
 
-template class Pennylane::Algorithms::HermitianObs<float>;
-template class Pennylane::Algorithms::HermitianObs<double>;
+template class Pennylane::Simulators::HermitianObs<float>;
+template class Pennylane::Simulators::HermitianObs<double>;
 
-template class Pennylane::Algorithms::TensorProdObs<float>;
-template class Pennylane::Algorithms::TensorProdObs<double>;
+template class Pennylane::Simulators::TensorProdObs<float>;
+template class Pennylane::Simulators::TensorProdObs<double>;
 
-template class Pennylane::Algorithms::Hamiltonian<float>;
-template class Pennylane::Algorithms::Hamiltonian<double>;
+template class Pennylane::Simulators::Hamiltonian<float>;
+template class Pennylane::Simulators::Hamiltonian<double>;

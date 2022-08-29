@@ -57,7 +57,7 @@ try:
         best_alignment,
     )
 
-    from ._serialize import _serialize_observables, _serialize_ops
+    from ._serialize import _serialize_ob, _serialize_observables, _serialize_ops
 
     CPP_BINARY_AVAILABLE = True
 except ModuleNotFoundError:
@@ -620,8 +620,6 @@ class LightningQubit(DefaultQubit):
         if isinstance(observable.name, List) or observable.name in [
             "Identity",
             "Projector",
-            "Hermitian",
-            "Hamiltonian",
         ]:
             return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
@@ -646,6 +644,10 @@ class LightningQubit(DefaultQubit):
                     CSR_SparseHamiltonian.data,
                 )
             return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
+
+        if observable.name in ["Hamiltonian", "Hermitian"]:
+            ob_serialized = _serialize_ob(observable, self.wire_map, use_csingle=self.use_csingle)
+            return M.expval(ob_serialized)
 
         # translate to wire labels used by device
         observable_wires = self.map_wires(observable.wires)

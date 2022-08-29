@@ -4,7 +4,7 @@
 #include <catch2/catch.hpp>
 
 using namespace Pennylane;
-using namespace Pennylane::Algorithms;
+using namespace Pennylane::Simulators;
 using Pennylane::Util::LightningException;
 
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)

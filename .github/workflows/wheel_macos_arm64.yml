@@ -20,18 +20,19 @@ env:
 
 jobs:
   mac-set-matrix-arm:
-    name: Set builder matrix versions
+    name: Set builder matrix
     runs-on: ubuntu-latest
 
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.4.1
+        uses: styfle/cancel-workflow-action@0.10.0
         with:
           access_token: ${{ github.token }}
 
       - uses: actions/checkout@v2
 
-      - id: pyver
+      - name: Python version
+        id: pyver
         run: |
           if [[ ${{ github.event_name }} == 'pull_request' ]]; then
             echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
@@ -43,6 +44,7 @@ jobs:
               --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
               --range)"
           fi
+
     outputs:
       matrix: ${{ steps.pyver.outputs.matrix }}
 
@@ -60,7 +62,7 @@ jobs:
 
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.4.1
+        uses: styfle/cancel-workflow-action@0.10.0
         with:
           access_token: ${{ github.token }}
 
@@ -72,7 +74,7 @@ jobs:
           python-version: '3.8'
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.3.0
+        run: python -m pip install cibuildwheel==2.8.1
 
       - name: Build wheels
         env:

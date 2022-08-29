@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <memory>
 
+// LCOV_EXCL_START
 namespace Pennylane {
 
 /**
@@ -111,3 +112,4 @@ constexpr auto getBestAllocator() -> Util::AlignedAllocator<T> {
     return getAllocator<T>(bestCPUMemoryModel());
 }
 } // namespace Pennylane
+// LCOV_EXCL_STOP

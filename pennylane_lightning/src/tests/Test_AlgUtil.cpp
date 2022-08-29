@@ -5,6 +5,7 @@
 
 using namespace Pennylane;
 using namespace Pennylane::Algorithms;
+using namespace Pennylane::Simulators;
 
 class TestException : public std::exception {};
 
