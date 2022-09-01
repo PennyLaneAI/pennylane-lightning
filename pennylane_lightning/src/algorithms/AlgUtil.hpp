@@ -102,7 +102,7 @@ applyObservables(std::vector<StateVectorManagedCPU<T>> &states,
         #endif
             for (size_t h_i = 0; h_i < num_observables; h_i++) {
                 try {
-                    states[h_i].updateData(reference_state.getData());
+                    states[h_i].updateData(reference_state);
                     applyObservable(states[h_i], *observables[h_i]);
                 } catch (...) {
                     #if defined(_OPENMP)
@@ -125,7 +125,7 @@ applyObservables(std::vector<StateVectorManagedCPU<T>> &states,
         }
         // clang-format on
     } else {
-        states[0].updateData(reference_state.getData());
+        states[0].updateData(reference_state);
         applyObservable(states[0], *observables[0]);
     }
 }

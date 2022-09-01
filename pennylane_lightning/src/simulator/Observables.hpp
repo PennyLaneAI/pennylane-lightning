@@ -303,7 +303,7 @@ template <class T, bool use_openmp> struct HamiltonianApplyInPlace {
                               std::complex<T>{coeffs[term_idx], 0.0},
                               tmp.getData(), res.data());
         }
-        sv.updateData(res.data());
+        sv.updateData(res);
     }
 };
 #if defined(_OPENMP)
@@ -317,8 +317,10 @@ template <class T> struct HamiltonianApplyInPlace<T, true> {
         std::vector<std::complex<T>, decltype(allocator)> sum(
             length, std::complex<T>{}, allocator);
 
+        std::exception_ptr ex = nullptr;
+
 #pragma omp parallel default(none) firstprivate(length, allocator)             \
-    shared(coeffs, terms, sv, sum)
+    shared(coeffs, terms, sv, sum, ex)
         {
             StateVectorManagedCPU<T> tmp(sv.getNumQubits());
 
@@ -327,12 +329,23 @@ template <class T> struct HamiltonianApplyInPlace<T, true> {
 
 #pragma omp for
             for (size_t term_idx = 0; term_idx < terms.size(); term_idx++) {
-                tmp.updateData(sv.getData());
-                terms[term_idx]->applyInPlace(tmp);
-                Util::scaleAndAdd(length,
-                                  std::complex<T>{coeffs[term_idx], 0.0},
-                                  tmp.getData(), local_sv.data());
+                try {
+                    tmp.updateData(sv);
+                    terms[term_idx]->applyInPlace(tmp);
+                    Util::scaleAndAdd(length,
+                                      std::complex<T>{coeffs[term_idx], 0.0},
+                                      tmp.getData(), local_sv.data());
+                } catch (...) {
+                    #pragma omp critical
+                    ex = std::current_exception();
+                    #pragma omp cancel for
+                }
             }
+
+            if(ex) {
+                #pragma omp cancel parallel
+            }
+
 
 #pragma omp critical
             {
@@ -341,7 +354,11 @@ template <class T> struct HamiltonianApplyInPlace<T, true> {
             }
         }
 
-        sv.updateData(sum.data());
+        if(ex) {
+            std::rethrow_exception(ex);
+        }
+
+        sv.updateData(sum);
     }
 };
 #endif

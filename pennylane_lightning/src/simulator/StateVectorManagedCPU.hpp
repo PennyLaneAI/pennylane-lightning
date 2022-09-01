@@ -19,8 +19,10 @@
 #include "StateVectorCPU.hpp"
 #include "Threading.hpp"
 #include "Util.hpp"
+#include "Error.hpp"
 
 #include <cstring>
+#include <span>
 
 namespace Pennylane {
 
@@ -54,7 +56,6 @@ class StateVectorManagedCPU
         CPUMemoryModel memory_model = bestCPUMemoryModel())
         : BaseType{num_qubits, threading, memory_model} {
         data_ = getAllocator<ComplexPrecisionT>(this->memory_model_).allocate(this->getLength());
-        //memset(static_cast<void*>(data_), 0, sizeof(ComplexPrecisionT) * this->getLength());
         std::fill(data_, data_ + this->getLength(), ComplexPrecisionT{0.0, 0.0});
         data_[0] = {1, 0};
     }
@@ -117,11 +118,16 @@ class StateVectorManagedCPU
         data_ = getAllocator<ComplexPrecisionT>(this->memory_model_).allocate(this->getLength());
         std::copy(rhs.data_, rhs.data_ + this->getLength(), data_);
     }
-    StateVectorManagedCPU(StateVectorManagedCPU &&) noexcept = default;
+
+    StateVectorManagedCPU(StateVectorManagedCPU && rhs) noexcept
+        : BaseType(std::move(rhs)) {
+        data_ = rhs.data_;
+        rhs.data_ = nullptr;
+    }
 
     /* Use updateData instead */
     StateVectorManagedCPU &operator=(const StateVectorManagedCPU &rhs) = delete;
-    StateVectorManagedCPU &operator=(StateVectorManagedCPU &&) noexcept = default;
+    StateVectorManagedCPU &operator=(StateVectorManagedCPU &&) noexcept = delete;
 
     ~StateVectorManagedCPU() {
         getAllocator<ComplexPrecisionT>(this->memory_model_).deallocate(data_, this->getLength());
@@ -138,8 +144,18 @@ class StateVectorManagedCPU
      *
      * @param new_data new pointer contains data.
      */
-    void updateData(const ComplexPrecisionT* new_data) {
-        std::copy(new_data, new_data + this->getLength(), data_);
+    void updateData(std::span<const ComplexPrecisionT> new_data) {
+        PL_ASSERT(new_data.size() == this->getLength());
+        std::copy(new_data.data(), new_data.data() + new_data.size(), data_);
+    }
+
+    /**
+     * @brief Update data of the class to new_data
+     *
+     * @param rhs new statevector 
+     */
+    void updateData(const StateVectorManagedCPU<PrecisionT>& rhs) {
+        updateData(std::span{rhs.data_, rhs.getLength()});
     }
 
     /**
@@ -150,7 +166,7 @@ class StateVectorManagedCPU
      */
     template <typename Alloc>
     void updateData(const std::vector<ComplexPrecisionT, Alloc>& new_data) {
-        assert(this->getLength() == new_data.size());
+        PL_ASSERT(this->getLength() == new_data.size());
         std::copy(new_data.begin(), new_data.end(), data_);
     }
 

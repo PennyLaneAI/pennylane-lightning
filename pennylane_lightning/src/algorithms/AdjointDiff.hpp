@@ -109,7 +109,7 @@ void adjointJacobian(std::span<T> jac, const JacobianData<T> &jd,
         if (tp_it == tp_rend) {
             break; // All done
         }
-        mu.updateData(lambda.getData());
+        mu.updateData(lambda);
         applyOperationAdj(lambda, ops, op_idx);
 
         if (ops.hasParams(op_idx)) {

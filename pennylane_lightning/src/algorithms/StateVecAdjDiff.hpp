@@ -109,7 +109,7 @@ void statevectorVJP(std::span<std::complex<PrecisionT>> jac,
         if (ops.hasParams(op_idx)) {
             if (current_param_idx == *tp_it) {
                 // if current parameter is a trainable parameter
-                mu_d.updateData(mu.getData());
+                mu_d.updateData(mu);
                 const auto scalingFactor =
                     mu_d.applyGenerator(ops_name[op_idx],
                                         ops.getOpsWires()[op_idx],
