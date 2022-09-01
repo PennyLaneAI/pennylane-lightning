@@ -276,7 +276,7 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
         StateVectorManagedCPU<TestType> sv(ini_st.data(), ini_st.size());
         applyOperations(sv, ops_data);
         JacobianData<TestType> jd{
-            num_params, 8,        sv.getDataVector().data(),
+            num_params, 8,        sv.getData(),
             {obs},      ops_data, trainable_params};
 
         auto o_sv = sv;
@@ -286,7 +286,7 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
             std::vector<ComplexPrecisionT> vjp(num_params);
             statevectorVJP(
                 std::span{vjp}, jd,
-                std::span<const ComplexPrecisionT>{o_sv.getDataVector()},
+                std::span<const ComplexPrecisionT>{o_sv.getData(), o_sv.getLength()},
                 false);
             std::vector<TestType> res(vjp.size());
             std::transform(vjp.begin(), vjp.end(), res.begin(),

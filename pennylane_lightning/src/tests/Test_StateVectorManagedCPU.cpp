@@ -36,7 +36,7 @@ TEMPLATE_TEST_CASE("StateVectorManagedCPU::StateVectorManagedCPU",
 
         REQUIRE(sv.getNumQubits() == 4);
         REQUIRE(sv.getLength() == 16);
-        REQUIRE(sv.getDataVector().size() == 16);
+        REQUIRE(sv.toVector().size() == 16);
     }
     SECTION("StateVectorManagedCPU<TestType> {const "
             "StateVectorRawCPU<TestType>&}") {
@@ -57,9 +57,9 @@ TEMPLATE_TEST_CASE("StateVectorManagedCPU::StateVectorManagedCPU",
                                              memory_model);
         /* Even when we allocate 256 bit aligend memory, it is possible that the
          * alignment happens to be 512 bit */
-        REQUIRE(((getMemoryModel(sv.getDataVector().data()) ==
+        REQUIRE(((getMemoryModel(sv.getData()) ==
                   CPUMemoryModel::Aligned256) ||
-                 (getMemoryModel(sv.getDataVector().data()) ==
+                 (getMemoryModel(sv.getData()) ==
                   CPUMemoryModel::Aligned512)));
     }
 
@@ -67,7 +67,7 @@ TEMPLATE_TEST_CASE("StateVectorManagedCPU::StateVectorManagedCPU",
         const auto memory_model = CPUMemoryModel::Aligned512;
         StateVectorManagedCPU<PrecisionT> sv(4, Threading::SingleThread,
                                              memory_model);
-        REQUIRE((getMemoryModel(sv.getDataVector().data()) ==
+        REQUIRE((getMemoryModel(sv.getData()) ==
                  CPUMemoryModel::Aligned512));
     }
 }
@@ -121,8 +121,8 @@ TEMPLATE_TEST_CASE("StateVectorManagedCPU::applyMatrix with a pointer",
             sv1.applyMatrix(m, wires);
             Gates::GateImplementationsPI::applyMultiQubitOp<PrecisionT>(
                 sv2.getData(), num_qubits, m.data(), wires, false);
-            REQUIRE(sv1.getDataVector() ==
-                    approx(sv2.getDataVector()).margin(PrecisionT{1e-5}));
+            REQUIRE(sv1.toVector() ==
+                    approx(sv2.toVector()).margin(PrecisionT{1e-5}));
         }
     }
 }
@@ -156,7 +156,7 @@ TEMPLATE_TEST_CASE("StateVectorManagedCPU::applyOperations",
         sv2.applyOperation("PauliX", {0}, false);
         sv2.applyOperation("PauliY", {1}, false);
 
-        REQUIRE(sv1.getDataVector() == approx(sv2.getDataVector()));
+        REQUIRE(sv1.toVector() == approx(sv2.toVector()));
     }
 
     SECTION("Test invalid arguments with params") {
@@ -190,6 +190,6 @@ TEMPLATE_TEST_CASE("StateVectorManagedCPU::applyOperations",
         sv2.applyOperation("RX", {0}, false, {0.1});
         sv2.applyOperation("RY", {1}, false, {0.2});
 
-        REQUIRE(sv1.getDataVector() == approx(sv2.getDataVector()));
+        REQUIRE(sv1.toVector() == approx(sv2.toVector()));
     }
 }

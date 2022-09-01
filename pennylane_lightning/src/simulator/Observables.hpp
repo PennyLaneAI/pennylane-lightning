@@ -303,7 +303,7 @@ template <class T, bool use_openmp> struct HamiltonianApplyInPlace {
                               std::complex<T>{coeffs[term_idx], 0.0},
                               tmp.getData(), res.data());
         }
-        sv.updateData(res);
+        sv.updateData(res.data());
     }
 };
 #if defined(_OPENMP)
@@ -327,7 +327,7 @@ template <class T> struct HamiltonianApplyInPlace<T, true> {
 
 #pragma omp for
             for (size_t term_idx = 0; term_idx < terms.size(); term_idx++) {
-                tmp.updateData(sv.getDataVector());
+                tmp.updateData(sv.getData());
                 terms[term_idx]->applyInPlace(tmp);
                 Util::scaleAndAdd(length,
                                   std::complex<T>{coeffs[term_idx], 0.0},
@@ -341,7 +341,7 @@ template <class T> struct HamiltonianApplyInPlace<T, true> {
             }
         }
 
-        sv.updateData(sum);
+        sv.updateData(sum.data());
     }
 };
 #endif

@@ -194,7 +194,7 @@ TEMPLATE_TEST_CASE("TensorProdObs", "[Observables]", float, double) {
             sv.updateData(createProductState<PrecisionT>("1+0"));
             ob.applyInPlace(sv);
 
-            REQUIRE(sv.getDataVector() ==
+            REQUIRE(sv.toVector() ==
                     PLApprox(createProductState<PrecisionT>("0+1")));
         }
 
@@ -205,7 +205,7 @@ TEMPLATE_TEST_CASE("TensorProdObs", "[Observables]", float, double) {
             sv.updateData(createProductState<PrecisionT>("+-01"));
             ob.applyInPlace(sv);
 
-            REQUIRE(sv.getDataVector() ==
+            REQUIRE(sv.toVector() ==
                     PLApprox(createProductState<PrecisionT>("+-11")));
         }
     }
@@ -336,7 +336,7 @@ TEMPLATE_TEST_CASE("Hamiltonian", "[Observables]", float, double) {
                 ComplexPrecisionT{-0.5, 0.0},
             };
 
-            REQUIRE(sv.getDataVector() == PLApprox(expected));
+            REQUIRE(sv.toVector() == PLApprox(expected));
         }
 
         SECTION("Hamiltonian applies correctly to |01>") {
@@ -354,7 +354,7 @@ TEMPLATE_TEST_CASE("Hamiltonian", "[Observables]", float, double) {
                 ComplexPrecisionT{h, 0.0},
             };
 
-            REQUIRE(sv.getDataVector() == PLApprox(expected));
+            REQUIRE(sv.toVector() == PLApprox(expected));
         }
     }
 

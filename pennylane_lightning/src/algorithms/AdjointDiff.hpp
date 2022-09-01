@@ -109,7 +109,7 @@ void adjointJacobian(std::span<T> jac, const JacobianData<T> &jd,
         if (tp_it == tp_rend) {
             break; // All done
         }
-        mu.updateData(lambda.getDataVector());
+        mu.updateData(lambda.getData());
         applyOperationAdj(lambda, ops, op_idx);
 
         if (ops.hasParams(op_idx)) {
@@ -137,8 +137,9 @@ void adjointJacobian(std::span<T> jac, const JacobianData<T> &jd,
                     jac[mat_row_idx + obs_idx] =
                         -2 * scalingFactor *
                         std::imag(
-                            Util::innerProdC(H_lambda[obs_idx].getDataVector(),
-                                             mu.getDataVector()));
+                            Util::innerProdC(H_lambda[obs_idx].getData(),
+                                             mu.getData(),
+                                             mu.getLength()));
                 }
                 trainableParamNumber--;
                 ++tp_it;

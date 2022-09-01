@@ -20,6 +20,8 @@
 #include "Threading.hpp"
 #include "Util.hpp"
 
+#include <cstring>
+
 namespace Pennylane {
 
 /**
@@ -37,8 +39,7 @@ class StateVectorManagedCPU
   private:
     using BaseType = StateVectorCPU<PrecisionT, StateVectorManagedCPU>;
 
-    std::vector<ComplexPrecisionT, Util::AlignedAllocator<ComplexPrecisionT>>
-        data_;
+    ComplexPrecisionT* data_;
 
   public:
     /**
@@ -51,9 +52,10 @@ class StateVectorManagedCPU
     explicit StateVectorManagedCPU(
         size_t num_qubits, Threading threading = Threading::SingleThread,
         CPUMemoryModel memory_model = bestCPUMemoryModel())
-        : BaseType{num_qubits, threading, memory_model},
-          data_{Util::exp2(num_qubits), ComplexPrecisionT{0.0, 0.0},
-                getAllocator<ComplexPrecisionT>(this->memory_model_)} {
+        : BaseType{num_qubits, threading, memory_model} {
+        data_ = getAllocator<ComplexPrecisionT>(this->memory_model_).allocate(this->getLength());
+        //memset(static_cast<void*>(data_), 0, sizeof(ComplexPrecisionT) * this->getLength());
+        std::fill(data_, data_ + this->getLength(), ComplexPrecisionT{0.0, 0.0});
         data_[0] = {1, 0};
     }
 
@@ -68,9 +70,10 @@ class StateVectorManagedCPU
     explicit StateVectorManagedCPU(
         const StateVectorCPU<PrecisionT, OtherDerived> &other)
         : BaseType(other.getNumQubits(), other.threading(),
-                   other.memoryModel()),
-          data_{other.getData(), other.getData() + other.getLength(),
-                getAllocator<ComplexPrecisionT>(this->memory_model_)} {}
+                   other.memoryModel()) {
+        data_ = getAllocator<ComplexPrecisionT>(this->memory_model_).allocate(other.getLength());
+        std::copy(other.getData(), other.getData() + other.getLength(), data_);
+    }
 
     /**
      * @brief Construct a statevector from data pointer
@@ -84,11 +87,12 @@ class StateVectorManagedCPU
                           size_t other_size,
                           Threading threading = Threading::SingleThread,
                           CPUMemoryModel memory_model = bestCPUMemoryModel())
-        : BaseType(Util::log2PerfectPower(other_size), threading, memory_model),
-          data_{other_data, other_data + other_size,
-                getAllocator<ComplexPrecisionT>(this->memory_model_)} {
+        : BaseType(Util::log2PerfectPower(other_size), threading, memory_model)
+    {
         PL_ABORT_IF_NOT(Util::isPerfectPowerOf2(other_size),
                         "The size of provided data must be a power of 2.");
+        data_ = getAllocator<ComplexPrecisionT>(this->memory_model_).allocate(other_size);
+        std::copy(other_data, other_data + other_size, data_);
     }
 
     /**
@@ -108,34 +112,34 @@ class StateVectorManagedCPU
         : StateVectorManagedCPU(other.data(), other.size(), threading,
                                 memory_model) {}
 
-    StateVectorManagedCPU(const StateVectorManagedCPU &rhs) = default;
+    StateVectorManagedCPU(const StateVectorManagedCPU &rhs)
+        : BaseType(rhs) {
+        data_ = getAllocator<ComplexPrecisionT>(this->memory_model_).allocate(this->getLength());
+        std::copy(rhs.data_, rhs.data_ + this->getLength(), data_);
+    }
     StateVectorManagedCPU(StateVectorManagedCPU &&) noexcept = default;
 
-    StateVectorManagedCPU &operator=(const StateVectorManagedCPU &) = default;
-    StateVectorManagedCPU &
-    operator=(StateVectorManagedCPU &&) noexcept = default;
+    /* Use updateData instead */
+    StateVectorManagedCPU &operator=(const StateVectorManagedCPU &rhs) = delete;
+    StateVectorManagedCPU &operator=(StateVectorManagedCPU &&) noexcept = default;
 
-    ~StateVectorManagedCPU() = default;
+    ~StateVectorManagedCPU() {
+        getAllocator<ComplexPrecisionT>(this->memory_model_).deallocate(data_, this->getLength());
+    }
 
-    [[nodiscard]] auto getData() -> ComplexPrecisionT * { return data_.data(); }
+    [[nodiscard]] auto getData() -> ComplexPrecisionT * { return data_; }
 
     [[nodiscard]] auto getData() const -> const ComplexPrecisionT * {
-        return data_.data();
+        return data_;
     }
 
     /**
-     * @brief Get underlying data vector
+     * @brief Update data of the class to new_data
+     *
+     * @param new_data new pointer contains data.
      */
-    [[nodiscard]] auto getDataVector()
-        -> std::vector<ComplexPrecisionT,
-                       Util::AlignedAllocator<ComplexPrecisionT>> & {
-        return data_;
-    }
-
-    [[nodiscard]] auto getDataVector() const
-        -> const std::vector<ComplexPrecisionT,
-                             Util::AlignedAllocator<ComplexPrecisionT>> & {
-        return data_;
+    void updateData(const ComplexPrecisionT* new_data) {
+        std::copy(new_data, new_data + this->getLength(), data_);
     }
 
     /**
@@ -144,15 +148,21 @@ class StateVectorManagedCPU
      * @tparam Alloc Allocator type of std::vector to use for updating data.
      * @param new_data std::vector contains data.
      */
-    template <class Alloc>
-    void updateData(const std::vector<ComplexPrecisionT, Alloc> &new_data) {
-        assert(data_.size() == new_data.size());
-        std::copy(new_data.data(), new_data.data() + new_data.size(),
-                  data_.data());
+    template <typename Alloc>
+    void updateData(const std::vector<ComplexPrecisionT, Alloc>& new_data) {
+        assert(this->getLength() == new_data.size());
+        std::copy(new_data.begin(), new_data.end(), data_);
+    }
+
+    auto toVector() ->
+    std::vector<ComplexPrecisionT, Util::AlignedAllocator<ComplexPrecisionT>> {
+        return std::vector<ComplexPrecisionT, Util::AlignedAllocator<ComplexPrecisionT>>(
+                data_, data_ + this->getLength(), getAllocator<ComplexPrecisionT>(this->memory_model_)
+        );
     }
 
     Util::AlignedAllocator<ComplexPrecisionT> allocator() const {
-        return data_.get_allocator();
+        return getAllocator<ComplexPrecisionT>(this->memory_model_);
     }
 };
 } // namespace Pennylane

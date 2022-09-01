@@ -587,8 +587,11 @@ TEST_CASE(
 
     HamiltonianApplyInPlace<double, false>::run(coeffs, terms, sv1);
     HamiltonianApplyInPlace<double, true>::run(coeffs, terms, sv2);
+    
+    const auto sv1_vector = std::vector(sv1.getData(), sv1.getData() + sv1.getLength());
+    const auto sv2_vector = std::vector(sv2.getData(), sv2.getData() + sv2.getLength());
 
-    REQUIRE(sv1.getDataVector() == PLApprox(sv2.getDataVector()).margin(1e-7));
+    REQUIRE(sv1_vector == PLApprox(sv2_vector).margin(1e-7));
 }
 
 TEST_CASE("Algorithms::adjointJacobian Test HermitianObs", "[Algorithms]") {
