@@ -1,0 +1,105 @@
+name: Testing (Windows)
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  cpptests:
+    name: C++ tests (Windows)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest]
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+
+      - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
+
+      - name: Setup OpenCppCoverage and add to PATH
+        run: |
+          choco install OpenCppCoverage -y
+          echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
+
+      - name: Build and run unit tests for code coverage
+        run: |
+            cmake ./pennylane_lightning/src -BBuild  -DBUILD_TESTS=ON -DENABLE_OPENMP=OFF -DENABLE_WARNINGS=OFF
+            cmake --build ./Build --config Debug
+            mkdir -p ./Build/tests/results
+            .\Build\tests\Debug\runner.exe --order lex --reporter junit --out .\Build\tests\results\report.xml
+            OpenCppCoverage --sources pennylane_lightning\src --export_type cobertura:coverage.xml Build\tests\Debug\runner.exe
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: windows-test-report
+          path: .\Build\tests\results\report.xml
+
+      - name: Upload Report to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: true
+
+  cpptestswithkokkos:
+    name: C++ tests (Windows, Kokkos and Kokkos Kernels)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest]
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+
+      - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
+
+      - name: Setup OpenCppCoverage and add to PATH
+        run: |
+          choco install OpenCppCoverage -y
+          echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
+
+      - name: Enable long paths
+        run: |
+          powershell.exe New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
+
+      - name: Build and run unit tests for code coverage
+        run: |
+            Subst Z: (pwd)
+            Set-Location -Path "Z:\"
+            cmake ./pennylane_lightning/src -BBuild  -DBUILD_TESTS=ON -DENABLE_KOKKOS=ON -DENABLE_OPENMP=OFF -DENABLE_WARNINGS=OFF -T clangcl
+            cmake --build ./Build --config Debug -- /p:UseMultiToolTask=true /p:EnforceProcessCountAcrossBuilds=true /p:MultiProcMaxCount=2
+            mkdir -p ./Build/tests/results
+            .\Build\tests\Debug\runner.exe --order lex --reporter junit --out .\Build\tests\results\report.xml
+            OpenCppCoverage --sources pennylane_lightning\src --export_type cobertura:coverage.xml Build\tests\Debug\runner.exe
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: windows-test-report
+          path: .\Build\tests\results\report.xml
+
+      - name: Upload Report to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: true

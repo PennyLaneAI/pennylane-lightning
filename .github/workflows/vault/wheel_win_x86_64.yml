@@ -1,0 +1,227 @@
+name: Wheel::Windows::x86_64
+
+# **What it does**: Builds python wheels for Windows (windows-latest) and store it as artifacts.
+#                   Python versions: 3.7, 3.8, 3.9, 3.10.
+# **Why we have it**: To build wheels for pennylane-lightning installation.
+# **Who does it impact**: Wheels to be uploaded to PyPI.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  release:
+    types: [published]
+
+env:
+  DISTUTILS_USE_SDK: 1
+  MSSdk: 1
+  PYTHON3_MIN_VERSION: "7"
+  PYTHON3_MAX_VERSION: "10"
+
+jobs:
+  win-set-matrix-x86:
+    name: Set builder matrix
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/checkout@v2
+
+      - name: Python version
+        id: pyver
+        run: |
+          if [[ ${{ github.event_name }} == 'pull_request' ]]; then
+            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
+              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }})"
+          else
+            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
+              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
+              --range)"
+          fi
+
+      - name: Kokkos execution strategy
+        id: exec_model
+        run: echo "::set-output name=exec_model::[\"SERIAL\"]" # We may also adopt [OPENMP, THREADS] in later iterations
+
+      - name: Kokkos version
+        id: kokkos_version
+        run: echo "::set-output name=kokkos_version::[\"3.6.00\"]"
+
+    outputs:
+      matrix: ${{ steps.pyver.outputs.matrix }}
+      exec_model: ${{ steps.exec_model.outputs.exec_model }}
+      kokkos_version: ${{ steps.kokkos_version.outputs.kokkos_version }}
+
+  build_dependencies:
+    needs: [win-set-matrix-x86]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2019]
+        exec_model: ${{ fromJson(needs.win-set-matrix-x86.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.win-set-matrix-x86.outputs.kokkos_version) }}
+
+    name: Kokkos core & kernels (${{ matrix.exec_model }})
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Cache installation directories
+        id: kokkos-cache
+        uses: actions/cache@v3
+        with:
+          path: D:\a\install_dir\${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
+      - name: Clone Kokkos libs
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          cd D:\a
+          git clone https://github.com/kokkos/kokkos.git
+          cd D:\a\kokkos
+          git checkout ${{ matrix.kokkos_version }}
+          cd D:\a\
+          git clone https://github.com/kokkos/kokkos-kernels.git
+          cd D:\a\kokkos-kernels
+          git checkout ${{ matrix.kokkos_version }}
+          cd ..
+
+      - name: Create installation directory
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: mkdir -p D:\a\install_dir\${{ matrix.exec_model }}
+
+      - name: Install dependencies
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install cmake build
+
+      - name: Build Kokkos core library
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          cd D:\a\kokkos
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\${{ matrix.exec_model }} `
+                          -DKokkos_ENABLE_COMPLEX_ALIGN=OFF `
+                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON `
+                          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF `
+                          -DCMAKE_CXX_STANDARD=20 `
+                          -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
+                          -DCMAKE_BUILD_TYPE=RelWithDebInfo `
+                          -T clangcl
+          cmake --build ./Build --config RelWithDebInfo --verbose
+          cmake --install ./Build --config RelWithDebInfo --verbose
+
+      - name: Build Kokkos kernels library
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          cd D:\a\kokkos-kernels
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\${{ matrix.exec_model }} `
+                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON `
+                          -DCMAKE_CXX_STANDARD=20 `
+                          -DCMAKE_PREFIX_PATH=D:\a\install_dir\${{ matrix.exec_model }} `
+                          -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
+                          -DCMAKE_BUILD_TYPE=RelWithDebInfo `
+                          -T clangcl
+          cmake --build ./Build --config RelWithDebInfo --verbose
+          cmake --install ./Build --config RelWithDebInfo --verbose
+
+  win-wheels:
+    needs: [win-set-matrix-x86, build_dependencies]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2019]
+        arch: [AMD64]
+        cibw_build: ${{ fromJson(needs.win-set-matrix-x86.outputs.matrix) }}
+        exec_model: ${{ fromJson(needs.win-set-matrix-x86.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.win-set-matrix-x86.outputs.kokkos_version) }}
+    name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Restoring cached dependencies
+        id: kokkos-cache
+        uses: actions/cache@v3
+        with:
+          path: D:\a\install_dir\${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
+      - uses: actions/checkout@v3
+
+      - name: Copy cached libraries
+        if: steps.kokkos-cache.outputs.cache-hit == 'true'
+        run: |
+          Copy-Item -Path "D:\a\install_dir\${{ matrix.exec_model }}\" `
+                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\Kokkos" -Recurse -Force
+
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==2.8.1
+
+      - name: Build wheels
+        env:
+          CIBW_ARCHS_WINDOWS: ${{matrix.arch}}
+
+          CIBW_BUILD: ${{ matrix.cibw_build }}
+
+          # Python build settings
+          CIBW_BEFORE_BUILD: |
+            pip install pybind11 cmake
+
+          # Testing of built wheels
+          CIBW_TEST_REQUIRES: numpy~=1.21 scipy pytest pytest-cov pytest-mock flaky
+
+          CIBW_BEFORE_TEST: |
+            pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+
+          CIBW_TEST_COMMAND: |
+            pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+
+          CIBW_BUILD_VERBOSITY: 3
+
+        run: python -m cibuildwheel --output-dir wheelhouse
+
+      - uses: actions-ecosystem/action-regex-match@v2
+        id: rc_build
+        with:
+          text: ${{ github.event.pull_request.head.ref }}
+          regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
+
+      - uses: actions/upload-artifact@v2
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
+        with:
+          name: ${{ runner.os }}-wheels-${{ matrix.arch }}.zip
+          path: ./wheelhouse/*.whl
+
+  upload-pypi:
+    needs: win-wheels
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: Windows-wheels-AMD64.zip
+          path: dist
+
+      - name: Upload wheels to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/

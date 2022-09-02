@@ -1,0 +1,66 @@
+name: Wheel::Any::None
+
+# **What it does**: Builds a pure python wheel for Linux (ubuntu-latest) and store it as an artifact.
+#                   Python version: 3.7.
+# **Why we have it**: To test the wheel build in the python layer, with no compilation.
+# **Who does it impact**: Wheels to be uploaded to PyPI.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  release:
+    types: [published]
+
+jobs:
+  build-pure-python-wheel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v2
+        with:
+          path: main
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+
+      - name: Upgrade pip
+        run: |
+          python -m pip install --upgrade pip
+
+      - name: Install CMake and ninja
+        run: |
+          python -m pip install --upgrade cmake ninja
+
+      - name: Build wheels
+        run: |
+          python -m pip install --upgrade pip wheel
+          cd main
+          python setup.py bdist_wheel
+        env:
+          SKIP_COMPILATION: True
+
+      - uses: actions/upload-artifact@v2
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
+        with:
+          name: pure-python-wheels.zip
+          path: main/dist/*.whl
+
+  upload-pypi:
+    needs: build-pure-python-wheel
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: pure-python-wheels.zip
+          path: dist
+
+      - name: Upload wheels to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/

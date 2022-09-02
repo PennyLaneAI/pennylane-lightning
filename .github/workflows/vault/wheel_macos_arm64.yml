@@ -1,0 +1,127 @@
+name: Wheel::MacOS::ARM
+
+# **What it does**: Builds python wheels for MacOS (11) architecture ARM 64 and store it as artifacts.
+#                   Python versions: 3.8, 3.9, 3.10.
+# **Why we have it**: To build wheels for pennylane-lightning installation.
+# **Who does it impact**: Wheels to be uploaded to PyPI.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  release:
+    types: [published]
+
+env:
+  ARCHS: 'arm64'
+  PYTHON3_MIN_VERSION: "8"
+  PYTHON3_MAX_VERSION: "10"
+
+jobs:
+  mac-set-matrix-arm:
+    name: Set builder matrix
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/checkout@v2
+
+      - name: Python version
+        id: pyver
+        run: |
+          if [[ ${{ github.event_name }} == 'pull_request' ]]; then
+            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
+              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }})"
+          else
+            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
+              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
+              --range)"
+          fi
+
+    outputs:
+      matrix: ${{ steps.pyver.outputs.matrix }}
+
+  mac-wheels-arm64:
+    needs: [mac-set-matrix-arm]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-11]
+        arch: [arm64]
+        cibw_build: ${{fromJson(needs.mac-set-matrix-arm.outputs.matrix)}}
+
+    name: macos-latest::arm64 (Python ${{ fromJson('{ "cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.8'
+
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==2.8.1
+
+      - name: Build wheels
+        env:
+          CIBW_BUILD: ${{ matrix.cibw_build }}
+
+          # MacOS specific build settings
+          CIBW_BEFORE_ALL_MACOS: |
+            brew uninstall --force oclint
+
+          # Python build settings
+          CIBW_BEFORE_BUILD: |
+            pip install pybind11 ninja cmake
+
+          # Testing of built wheels
+          CIBW_TEST_REQUIRES: numpy~=1.21 scipy pytest pytest-cov pytest-mock flaky
+
+          CIBW_BEFORE_TEST: pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+
+          CIBW_TEST_COMMAND: |
+            pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+
+          CIBW_BUILD_VERBOSITY: 1
+
+          CIBW_ARCHS_MACOS: ${{ matrix.arch }}
+
+        run: |
+          python -m cibuildwheel --output-dir wheelhouse
+
+      - uses: actions/upload-artifact@v2
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
+        with:
+          name: ${{ runner.os }}-wheels-${{ matrix.arch }}.zip
+          path: ./wheelhouse/*.whl
+
+  upload-pypi:
+    needs: mac-wheels-arm64
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: macOS-wheels-arm64.zip
+          path: dist
+
+      - name: Upload wheels to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/

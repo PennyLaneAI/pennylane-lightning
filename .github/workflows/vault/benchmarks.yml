@@ -1,0 +1,83 @@
+name: Benchmarking
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  benchmarks:
+    name: Gate benchmarks
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+
+    steps:
+
+      - name: Checkout PennyLane-Lightning master
+        uses: actions/checkout@v2
+        with:
+          ref: master
+          path: main
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.7'
+
+      - name: Install dependencies
+        run: sudo apt-get -y -q install cmake gcc
+
+      - name: Get required Python packages
+        run: |
+          cd main
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+          pip install matplotlib
+
+      - name: Install lightning.qubit device (master)
+        run: |
+          cd main
+          python3 setup.py build_ext -i --define="CMAKE_CXX_COMPILER=$(which g++-10)"
+          pip install -e .
+
+      - name: Benchmark lightning master device
+        run: |
+          cd main
+          python .github/workflows/benchmarks/run_bench.py lightning.qubit lightning_master.json
+
+      - name: Benchmark default qubit device
+        run: |
+          cd main
+          python .github/workflows/benchmarks/run_bench.py default.qubit default_qubit.json
+
+      - name: Checkout PennyLane-Lightning PR
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: pr
+
+      - name: Install lightning.qubit device (PR)
+        run: |
+          cd main
+          make clean || true
+          pip uninstall pennylane-lightning -y
+          cd ../pr
+          python3 setup.py build_ext -i --define="CMAKE_CXX_COMPILER=$(which g++-10)"
+          pip install -e .
+
+      - name: Benchmark lightning PR device
+        run: |
+          cd pr
+          python .github/workflows/benchmarks/run_bench.py lightning.qubit lightning_pr.json
+          mv lightning_pr.json ../main
+
+      - name: Plot results
+        run: |
+          cd main
+          python .github/workflows/benchmarks/plot_results.py
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: gates.png
+          path: ./main/gates.png

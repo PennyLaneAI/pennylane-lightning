@@ -1,0 +1,77 @@
+name: Formatting check
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  black:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      - name: Install dependencies
+        run:
+            python -m pip install --upgrade pip
+            pip install click==8.0.4 black
+
+      - uses: actions/checkout@v2
+
+      - name: Run Black
+        run: black -l 100 pennylane_lightning/ tests/ --check
+
+  tidy-cpp:
+    name: Tidy (C++)
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      - name: Install dependencies
+        run: sudo apt update && sudo apt -y install clang-tidy-13 cmake g++-10 libomp-13-dev
+        env:
+          DEBIAN_FRONTEND: noninteractive
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run clang-tidy compilation
+        run: |
+          cmake -BBuild -DENABLE_CLANG_TIDY=ON -DCLANG_TIDY_BINARY=clang-tidy-13 -DBUILD_TESTS=ON -DENABLE_WARNINGS=ON -DCMAKE_CXX_COMPILER="$(which g++-10)" .
+          cmake --build ./Build --parallel 2
+
+  format-cpp:
+    name: Format (C++)
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Install dependencies
+        run: sudo apt update && sudo apt -y install clang-format-13 python3
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run formatter
+        run: ./bin/format --check --cfversion 13 ./pennylane_lightning/src

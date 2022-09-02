@@ -1,0 +1,30 @@
+name: Automated Latest Release Tag
+
+on:
+  release:
+    types: [published]
+
+env:
+  TAG_NAME: latest_release
+
+jobs:
+  post_release_tag_latest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Overwrite tag
+        run: |
+          git config --local user.email 'github-actions[bot]@users.noreply.github.com'
+          git config --local user.name "Latest tag update bot"
+          git tag -d $TAG_NAME || true
+          if git push --delete origin $TAG_NAME; then
+            echo "Remove tag $TAG_NAME from remote."
+          else
+            echo "$TAG_NAME does not exist in remote. Just proceed."
+          fi
+          git tag $TAG_NAME
+          git push --tags
