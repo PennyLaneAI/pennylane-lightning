@@ -84,7 +84,16 @@ jobs:
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Install clang
-        run: brew install llvm
+        run: | 
+          brew install llvm
+
+      - name: Install clang
+        run: | 
+          brew --prefix llvm
+
+      - name: Install clang
+        run: | 
+          which llvm
 
       - name: Clone Kokkos libs
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
