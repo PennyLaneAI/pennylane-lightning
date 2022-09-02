@@ -608,11 +608,15 @@ class LightningQubit(DefaultQubit):
         Returns:
             Expectation value of the observable
         """
-        if (observable.arithmetic_depth > 0) or isinstance(observable.name, List) or observable.name in [
-            "Identity",
-            "Projector",
-
-        ]:
+        if (
+            (observable.arithmetic_depth > 0)
+            or isinstance(observable.name, List)
+            or observable.name
+            in [
+                "Identity",
+                "Projector",
+            ]
+        ):
             return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
         if self.shots is not None:

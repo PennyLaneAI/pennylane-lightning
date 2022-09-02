@@ -110,6 +110,72 @@ class TestExpval:
         assert np.allclose(res, expected, tol)
 
 
+class TestExpOperatorArithmetic:
+    """Test integration of lightning with SProd, Prod, and Sum."""
+
+    dev = qml.device("lightning.qubit", wires=2)
+
+    def test_sprod(self):
+        """Test the `SProd` class with lightning qubit."""
+
+        @qml.qnode(self.dev)
+        def circuit(x):
+            qml.RX(x, wires=0)
+            return qml.expval(qml.s_prod(0.5, qml.PauliZ(0)))
+
+        x = np.array(0.123)
+        res = circuit(x)
+        assert qml.math.allclose(res, 0.5 * np.cos(x))
+
+    def test_prod(self):
+        """Test the `Prod` class with lightning qubit."""
+
+        @qml.qnode(self.dev)
+        def circuit(x):
+            qml.RX(x, wires=0)
+            qml.Hadamard(1)
+            qml.PauliZ(1)
+            return qml.expval(qml.prod(qml.PauliZ(0), qml.PauliX(1)))
+
+        x = np.array(0.123)
+        res = circuit(x)
+        assert qml.math.allclose(res, -np.cos(x))
+
+    def test_sum(self):
+        """Test the `Sum` class with lightning qubit."""
+
+        @qml.qnode(self.dev)
+        def circuit(x, y):
+            qml.RX(x, wires=0)
+            qml.RY(y, wires=1)
+            return qml.expval(qml.op_sum(qml.PauliZ(0), qml.PauliX(1)))
+
+        x = np.array(-3.21)
+        y = np.array(2.34)
+        res = circuit(x, y)
+        assert qml.math.allclose(res, np.cos(x) + np.sin(y))
+
+    def test_integration(self):
+        """Test a Combination of `Sum`, `SProd`, and `Prod`."""
+
+        obs = qml.op_sum(
+            qml.s_prod(2.3, qml.PauliZ(0)), -0.5 * qml.prod(qml.PauliY(0), qml.PauliZ(1))
+        )
+
+        @qml.qnode(self.dev)
+        def circuit(x, y):
+            qml.RX(x, wires=0)
+            qml.RY(y, wires=1)
+            return qml.expval(obs)
+
+        x = np.array(0.654)
+        y = np.array(-0.634)
+
+        res = circuit(x, y)
+        expected = 2.3 * np.cos(x) + 0.5 * np.sin(x) * np.cos(y)
+        assert qml.math.allclose(res, expected)
+
+
 @pytest.mark.parametrize("theta,phi,varphi", list(zip(THETA, PHI, VARPHI)))
 class TestTensorExpval:
     """Test tensor expectation values"""

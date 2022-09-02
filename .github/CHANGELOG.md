@@ -15,6 +15,17 @@
 * Implements caching for Kokkos installation.
 [(#316)](https://github.com/PennyLaneAI/pennylane-lightning/pull/316)
 
+* Supports measurements of operator arithmetic classes such as `Sum`, `Prod`,
+  and `SProd` by deferring handling of them to `DefaultQubit`.
+  [(#349)](https://github.com/PennyLaneAI/pennylane-lightning/pull/349)
+
+```
+@qml.qnode(qml.device('lightning.qubit', wires=2))
+def circuit():
+    obs = qml.s_prod(2.1, qml.PauliZ(0)) + qml.op_sum(qml.PauliX(0), qml.PauliZ(1))
+    return qml.expval(obs)
+```
+
 ### Documentation
 
 ### Bug fixes
@@ -32,7 +43,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Chae-Yeun Park
+Amintor Dusko, Christina Lee, Chae-Yeun Park
 
 ---
 
