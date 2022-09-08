@@ -189,7 +189,7 @@ class TestExpOperatorArithmetic:
         assert qml.math.allclose(res, expected)
 
         g = qml.grad(circuit)(x, y)
-        expected = (-2.3*np.sin(x)+0.5*np.cos(y)*np.cos(x), -0.5*np.sin(x)*np.sin(y))
+        expected = (-2.3 * np.sin(x) + 0.5 * np.cos(y) * np.cos(x), -0.5 * np.sin(x) * np.sin(y))
         assert qml.math.allclose(g, expected)
 
 
