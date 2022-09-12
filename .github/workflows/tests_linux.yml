@@ -257,6 +257,59 @@ jobs:
           files: ./main/coverage.xml
           fail_ci_if_error: true
 
+  pythontestsBLAS:
+    name: Python tests with Kokkos and Kokkos Kernels
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+
+    steps:
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v2
+        with:
+          path: main
+          fetch-depth: 2
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.7'
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 libopenblas-dev gcovr lcov
+
+      - name: Get required Python packages
+        run: |
+          cd main
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Install ML libraries for interfaces
+        run: |
+          pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
+          pip install --upgrade "jax[cpu]"  # This also installs jaxlib
+          pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
+
+      - name: Install lightning.qubit device
+        run: |
+          cd main
+          python setup.py build_ext -i --define="ENABLE_BLAS=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION);"
+          pip install -e .
+
+      - name: Run PennyLane-Lightning unit tests
+        run: |
+          cd main/
+          pytest tests/ $COVERAGE_FLAGS
+          pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          files: ./main/coverage.xml
+          fail_ci_if_error: true
+
   pythontestsKokkos:
     name: Python tests with Kokkos and Kokkos Kernels
     runs-on: ${{ matrix.os }}
