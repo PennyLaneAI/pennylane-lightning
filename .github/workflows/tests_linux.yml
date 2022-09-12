@@ -258,7 +258,7 @@ jobs:
           fail_ci_if_error: true
 
   pythontestsBLAS:
-    name: Python tests with Kokkos and Kokkos Kernels
+    name: Python tests with BLAS expval
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -294,7 +294,7 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          python setup.py build_ext -i --define="ENABLE_BLAS=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION);"
+          python setup.py build_ext -i --define="ENABLE_BLAS=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           pip install -e .
 
       - name: Run PennyLane-Lightning unit tests
