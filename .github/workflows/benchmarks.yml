@@ -12,7 +12,7 @@ jobs:
   benchmarks:
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
 
     name: Gate benchmarks
     runs-on: ${{ matrix.os }}

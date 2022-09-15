@@ -16,7 +16,7 @@ jobs:
   cpptests:
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-22.04]
 
     name: C++ tests (Linux)
     runs-on: ${{ matrix.os }}
@@ -66,7 +66,7 @@ jobs:
   pythontests:
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-22.04]
 
     name: Python tests
     runs-on: ${{ matrix.os }}
@@ -116,7 +116,7 @@ jobs:
   cpptestswithOpenBLAS:
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-22.04]
 
     name: C++ tests (Linux, OpenBLAS)
     runs-on: ${{ matrix.os }}
@@ -165,7 +165,7 @@ jobs:
   pythontestswithBLAS:
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-22.04]
 
     name: Python tests with OpenBLAS
     runs-on: ${{ matrix.os }}
@@ -219,7 +219,7 @@ jobs:
 
   linux-set-builder-matrix:
     name: Set Kokkos builder matrix
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Cancel Previous Runs
@@ -246,7 +246,7 @@ jobs:
     needs: [linux-set-builder-matrix]
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-22.04]
         exec_model: ${{ fromJson(needs.linux-set-builder-matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.linux-set-builder-matrix.outputs.kokkos_version) }}
 
@@ -267,7 +267,7 @@ jobs:
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Install dependencies (Ubuntu)
-        if: ${{ (matrix.os == 'ubuntu-latest') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        if: ${{ (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 ninja-build git
           echo "COMPILER=g++-10" >> $GITHUB_ENV
@@ -321,7 +321,7 @@ jobs:
     needs: [linux-set-builder-matrix, build_dependencies]
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-22.04]
         exec_model: ${{ fromJson(needs.linux-set-builder-matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.linux-set-builder-matrix.outputs.kokkos_version) }}
 
@@ -386,7 +386,7 @@ jobs:
     needs: [linux-set-builder-matrix, build_dependencies]
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-22.04]
         exec_model: ${{ fromJson(needs.linux-set-builder-matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.linux-set-builder-matrix.outputs.kokkos_version) }}
 
@@ -461,7 +461,7 @@ jobs:
     needs: [linux-set-builder-matrix, build_dependencies]
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-22.04]
         exec_model: ${{ fromJson(needs.linux-set-builder-matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.linux-set-builder-matrix.outputs.kokkos_version) }}
 
@@ -526,7 +526,7 @@ jobs:
     needs: [linux-set-builder-matrix, build_dependencies]
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-22.04]
         exec_model: ${{ fromJson(needs.linux-set-builder-matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.linux-set-builder-matrix.outputs.kokkos_version) }}
 
