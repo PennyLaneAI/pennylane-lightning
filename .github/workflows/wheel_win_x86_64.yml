@@ -82,7 +82,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: D:\a\install_dir\${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-RelWithDebInfo
 
       - name: Clone Kokkos libs
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
@@ -159,7 +159,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: D:\a\install_dir\${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-RelWithDebInfo
 
       - uses: actions/checkout@v3
 
