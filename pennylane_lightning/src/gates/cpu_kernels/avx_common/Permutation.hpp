@@ -163,36 +163,38 @@ getPermutation4x(const std::array<uint8_t, size> &permutation) {
 }
 //@endcond
 
-// clang-format off
 #ifdef PL_USE_AVX2
-constexpr __m256i getPermutation8x256i(const std::array<uint8_t, 8>& permutation) {
-    return setr256i(permutation[0], permutation[1], // NOLINT(readability-magic-numbers)
-				    permutation[2], permutation[3], // NOLINT(readability-magic-numbers)
-				    permutation[4], permutation[5], // NOLINT(readability-magic-numbers)
-				    permutation[6], permutation[7]);// NOLINT(readability-magic-numbers)
+constexpr __m256i
+getPermutation8x256i(const std::array<uint8_t, 8> &permutation) {
+    // NOLINTBEGIN(readability-magic-numbers)
+    return setr256i(permutation[0], permutation[1], permutation[2],
+                    permutation[3], permutation[4], permutation[5],
+                    permutation[6], permutation[7]);
+    // NOLINTEND(readability-magic-numbers)
 }
 #endif
 #ifdef PL_USE_AVX512F
 // LCOV_EXCL_START
-constexpr __m512i getPermutation8x512i(const std::array<uint8_t, 8>& permutation) {
-    return setr512i(permutation[0], permutation[1], // NOLINT(readability-magic-numbers)
-                    permutation[2], permutation[3], // NOLINT(readability-magic-numbers)
-                    permutation[4], permutation[5], // NOLINT(readability-magic-numbers)
-                    permutation[6], permutation[7]);// NOLINT(readability-magic-numbers)
+constexpr __m512i
+getPermutation8x512i(const std::array<uint8_t, 8> &permutation) {
+    // NOLINTBEGIN(readability-magic-numbers)
+    return setr512i(permutation[0], permutation[1], permutation[2],
+                    permutation[3], permutation[4], permutation[5],
+                    permutation[6], permutation[7]);
+    // NOLINTEND(readability-magic-numbers)
 }
-constexpr __m512i getPermutation16x512i(const std::array<uint8_t, 16>& permutation) {
-    return setr512i( permutation[0],  permutation[1],  // NOLINT(readability-magic-numbers)
-                     permutation[2],  permutation[3],  // NOLINT(readability-magic-numbers)
-                     permutation[4],  permutation[5],  // NOLINT(readability-magic-numbers)
-                     permutation[6],  permutation[7],  // NOLINT(readability-magic-numbers)
-                     permutation[8],  permutation[9],  // NOLINT(readability-magic-numbers)
-                    permutation[10], permutation[11],  // NOLINT(readability-magic-numbers)
-                    permutation[12], permutation[13],  // NOLINT(readability-magic-numbers)
-                    permutation[14], permutation[15]); // NOLINT(readability-magic-numbers)
+constexpr __m512i
+getPermutation16x512i(const std::array<uint8_t, 16> &permutation) {
+    // NOLINTBEGIN(readability-magic-numbers)
+    return setr512i(
+        permutation[0], permutation[1], permutation[2], permutation[3],
+        permutation[4], permutation[5], permutation[6], permutation[7],
+        permutation[8], permutation[9], permutation[10], permutation[11],
+        permutation[12], permutation[13], permutation[14], permutation[15]);
+    // NOLINTEND(readability-magic-numbers)
 }
 // LCOV_EXCL_STOP
 #endif
-// clang-format on
 
 template <typename PrecisionT, size_t packed_size>
 constexpr auto compilePermutation(
