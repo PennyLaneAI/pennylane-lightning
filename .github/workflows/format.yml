@@ -50,7 +50,7 @@ jobs:
 
   build_and_cache_Kokkos:
     name: "Build and cache Kokkos and Kokkos Kernels"
-    uses: ./.github/workflows/build_and_cache_Kokkos.yml
+    uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
       os: ubuntu-22.04
 

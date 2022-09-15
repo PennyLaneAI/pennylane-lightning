@@ -25,9 +25,6 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
-
       - name: Kokkos execution strategy
         id: exec_model
         run: echo "::set-output name=exec_model::[\"SERIAL\"]" # We may also adopt [OPENMP, THREADS] in later iterations
@@ -77,17 +74,13 @@ jobs:
           cd -
 
       - name: Install dependencies (Ubuntu)
-        if: |
-          ${{ ((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04'))
-          && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        if: ${{ (((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04')) && (steps.kokkos-cache.outputs.cache-hit != 'true')) }}
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 ninja-build git
           echo "COMPILER=g++-10" >> $GITHUB_ENV
 
       - name: Build Kokkos core library (Ubuntu)
-        if: |
-          ${{ ((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04'))
-          && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        if: ${{ (((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04')) && (steps.kokkos-cache.outputs.cache-hit != 'true')) }}
         run: |
           mkdir -p ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos
@@ -104,9 +97,7 @@ jobs:
           cd -
 
       - name: Build Kokkos kernels library (Ubuntu)
-        if: |
-          ${{ ((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04'))
-          && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        if: ${{ (((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04')) && (steps.kokkos-cache.outputs.cache-hit != 'true')) }}
         run: |
           mkdir -p ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos-kernels
