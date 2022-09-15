@@ -1,0 +1,121 @@
+name: Build and Cache Kokkos and Kokkos Kernels
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+    outputs:
+      exec_model:
+        description: "The execution model for Kokkos."
+        value: ${{ jobs.linux-set-builder-matrix.outputs.exec_model }}
+      kokkos_version:
+        description: "Kokkos version"
+        value: ${{ jobs.linux-set-builder-matrix.outputs.kokkos_version }}
+
+jobs:
+  linux-set-builder-matrix:
+    name: Set Kokkos builder matrix
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
+
+      - name: Kokkos execution strategy
+        id: exec_model
+        run: echo "::set-output name=exec_model::[\"SERIAL\"]" # We may also adopt [OPENMP, THREADS] in later iterations
+
+      - name: Kokkos version
+        id: kokkos_version
+        run: echo "::set-output name=kokkos_version::[\"3.6.00\"]"
+
+    outputs:
+      exec_model: ${{ steps.exec_model.outputs.exec_model }}
+      kokkos_version: ${{ steps.kokkos_version.outputs.kokkos_version }}
+
+  build_dependencies:
+    needs: [linux-set-builder-matrix]
+    strategy:
+      matrix:
+        exec_model: ${{ fromJson(needs.linux-set-builder-matrix.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.linux-set-builder-matrix.outputs.kokkos_version) }}
+
+    name: Kokkos core & kernels (${{ matrix.exec_model }})
+    runs-on: ${{ inputs.os }}
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Cache installation directories
+        id: kokkos-cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          key: ${{ inputs.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
+      - name: Clone Kokkos repository
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone https://github.com/kokkos/kokkos.git
+          cd kokkos
+          git checkout ${{ matrix.kokkos_version }}
+          cd -
+          pushd . &> /dev/null
+          git clone https://github.com/kokkos/kokkos-kernels.git
+          cd kokkos-kernels
+          git checkout ${{ matrix.kokkos_version }}
+          cd -
+
+      - name: Install dependencies (Ubuntu)
+        if: |
+          ${{ ((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04'))
+          && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        run: |
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 ninja-build git
+          echo "COMPILER=g++-10" >> $GITHUB_ENV
+
+      - name: Build Kokkos core library (Ubuntu)
+        if: |
+          ${{ ((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04'))
+          && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        run: |
+          mkdir -p ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          cd kokkos
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }} \
+                          -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
+                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
+                          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                          -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
+                          -DCMAKE_CXX_STANDARD=20 \
+                          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                          -G Ninja
+          cmake --build ./Build --verbose
+          cmake --install ./Build
+          cd -
+
+      - name: Build Kokkos kernels library (Ubuntu)
+        if: |
+          ${{ ((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04'))
+          && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        run: |
+          mkdir -p ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          cd kokkos-kernels
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }} \
+                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
+                          -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
+                          -DCMAKE_CXX_STANDARD=20 \
+                          -DCMAKE_PREFIX_PATH=${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }} \
+                          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                          -G Ninja
+          cmake --build ./Build --verbose
+          cmake --install ./Build
