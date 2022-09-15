@@ -46,7 +46,7 @@ jobs:
             cmake --build ./BuildCov --parallel 2
             cd ./BuildCov
             mkdir -p ./tests/results
-            ./tests/runner --order lex --reporter junit --out ./tests/results/report.xml
+            ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptests.xml
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
 
@@ -60,8 +60,8 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: ubuntu-test-report
-          path: BuildCov/tests/results/report.xml
+          name: ubuntu-tests-reports
+          path: BuildCov/tests/results/report_cpptests.xml
 
   pythontests:
     strategy:
@@ -145,7 +145,7 @@ jobs:
             cmake --build ./BuildCov --parallel 2
             cd ./BuildCov
             mkdir -p ./tests/results
-            ./tests/runner --order lex --reporter junit --out ./tests/results/report.xml
+            ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptestswithOpenBLAS.xml
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
 
@@ -159,10 +159,10 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: ubuntu-test-report
-          path: BuildCov/tests/results/report.xml
+          name: ubuntu-tests-reports
+          path: BuildCov/tests/results/report_cpptestswithOpenBLAS.xml
 
-  pythontestsBLAS:
+  pythontestswithBLAS:
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -317,7 +317,7 @@ jobs:
           cmake --build ./Build --verbose
           cmake --install ./Build
 
-  cpptestswithkokkos:
+  cpptestswithKokkos:
     needs: [linux-set-builder-matrix, build_dependencies]
     strategy:
       matrix:
@@ -365,7 +365,7 @@ jobs:
             cmake --build ./BuildCov --parallel 2
             cd ./BuildCov
             mkdir -p ./tests/results
-            ./tests/runner --order lex --reporter junit --out ./tests/results/report.xml
+            ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptestswithKokkos.xml
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
 
@@ -379,10 +379,10 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: ubuntu-test-report
-          path: BuildCov/tests/results/report.xml
+          name: ubuntu-tests-reports
+          path: BuildCov/tests/results/report_cpptestswithKokkos.xml
 
-  pythontestsKokkos:
+  pythontestswithKokkos:
     needs: [linux-set-builder-matrix, build_dependencies]
     strategy:
       matrix:
@@ -457,7 +457,7 @@ jobs:
           files: ./main/coverage.xml
           fail_ci_if_error: true
 
-  cpptestswithkokkosAndOpenBLAS:
+  cpptestswithKokkosAndOpenBLAS:
     needs: [linux-set-builder-matrix, build_dependencies]
     strategy:
       matrix:
@@ -505,7 +505,7 @@ jobs:
             cmake --build ./BuildCov --parallel 2
             cd ./BuildCov
             mkdir -p ./tests/results
-            ./tests/runner --order lex --reporter junit --out ./tests/results/report.xml
+            ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptestswithKokkosAndOpenBLAS.xml
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
 
@@ -519,10 +519,10 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: ubuntu-test-report
-          path: BuildCov/tests/results/report.xml
+          name: ubuntu-tests-reports
+          path: BuildCov/tests/results/report_cpptestswithKokkosAndOpenBLAS.xml
 
-  pythontestsKokkosAndOpenBLAS:
+  pythontestswithKokkosAndOpenBLAS:
     needs: [linux-set-builder-matrix, build_dependencies]
     strategy:
       matrix:
