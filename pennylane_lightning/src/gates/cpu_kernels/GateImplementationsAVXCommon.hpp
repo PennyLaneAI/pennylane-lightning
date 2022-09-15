@@ -35,6 +35,7 @@
 #include "avx_common/ApplyGeneratorPhaseShift.hpp"
 #include "avx_common/ApplyHadamard.hpp"
 #include "avx_common/ApplyIsingXX.hpp"
+#include "avx_common/ApplyIsingXY.hpp"
 #include "avx_common/ApplyIsingYY.hpp"
 #include "avx_common/ApplyIsingZZ.hpp"
 #include "avx_common/ApplyPauliX.hpp"
@@ -78,7 +79,8 @@ class GateImplementationsAVXCommon
         GateOperation::CZ,         GateOperation::SWAP,
         GateOperation::IsingXX,    GateOperation::IsingYY,
         GateOperation::IsingZZ,    GateOperation::CY,
-        /* IsingXY, ControlledPhaseShift, CRX, CRY, CRZ, CRot */
+        GateOperation::IsingXY,
+        /* ControlledPhaseShift, CRX, CRY, CRZ, CRot */
     };
 
     constexpr static std::array implemented_generators = {
@@ -383,6 +385,28 @@ class GateImplementationsAVXCommon
         const AVXCommon::TwoQubitGateWithParamHelper<ApplyIsingXXAVX, ParamT>
             gate_helper(
                 &GateImplementationsLM::applyIsingXX<PrecisionT, ParamT>);
+
+        gate_helper(arr, num_qubits, wires, inverse, angle);
+    }
+
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void applyIsingXY(std::complex<PrecisionT> *arr,
+                             const size_t num_qubits,
+                             const std::vector<size_t> &wires,
+                             [[maybe_unused]] bool inverse, ParamT angle) {
+        assert(wires.size() == 2);
+
+        using ApplyIsingXYAVX =
+            AVXCommon::ApplyIsingXY<PrecisionT,
+                                    Derived::packed_bytes / sizeof(PrecisionT)>;
+
+        static_assert(std::is_same_v<PrecisionT, float> ||
+                          std::is_same_v<PrecisionT, double>,
+                      "Only float and double are supported.");
+
+        const AVXCommon::TwoQubitGateWithParamHelper<ApplyIsingXYAVX, ParamT>
+            gate_helper(
+                &GateImplementationsLM::applyIsingXY<PrecisionT, ParamT>);
 
         gate_helper(arr, num_qubits, wires, inverse, angle);
     }
