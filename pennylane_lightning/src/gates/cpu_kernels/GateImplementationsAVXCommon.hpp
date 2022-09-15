@@ -29,6 +29,7 @@
 #include "avx_common/ApplyCNOT.hpp"
 #include "avx_common/ApplyCY.hpp"
 #include "avx_common/ApplyCZ.hpp"
+#include "avx_common/ApplyControlledPhaseShift.hpp"
 #include "avx_common/ApplyGeneratorIsingXX.hpp"
 #include "avx_common/ApplyGeneratorIsingYY.hpp"
 #include "avx_common/ApplyGeneratorIsingZZ.hpp"
@@ -79,8 +80,8 @@ class GateImplementationsAVXCommon
         GateOperation::CZ,         GateOperation::SWAP,
         GateOperation::IsingXX,    GateOperation::IsingYY,
         GateOperation::IsingZZ,    GateOperation::CY,
-        GateOperation::IsingXY,
-        /* ControlledPhaseShift, CRX, CRY, CRZ, CRot */
+        GateOperation::IsingXY,    GateOperation::ControlledPhaseShift,
+        /*CRX, CRY, CRZ, CRot */
     };
 
     constexpr static std::array implemented_generators = {
@@ -451,6 +452,31 @@ class GateImplementationsAVXCommon
         const AVXCommon::TwoQubitGateWithParamHelper<ApplyIsingZZAVX, ParamT>
             gate_helper(
                 &GateImplementationsLM::applyIsingZZ<PrecisionT, ParamT>);
+
+        gate_helper(arr, num_qubits, wires, inverse, angle);
+    }
+
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void applyControlledPhaseShift(std::complex<PrecisionT> *arr,
+                                          const size_t num_qubits,
+                                          const std::vector<size_t> &wires,
+                                          [[maybe_unused]] bool inverse,
+                                          ParamT angle) {
+        using ApplyControlledPhaseShiftAVX =
+            AVXCommon::ApplyControlledPhaseShift<
+                PrecisionT, Derived::packed_bytes / sizeof(PrecisionT)>;
+
+        static_assert(std::is_same_v<PrecisionT, float> ||
+                          std::is_same_v<PrecisionT, double>,
+                      "Only float and double are supported.");
+
+        assert(wires.size() == 2);
+
+        const AVXCommon::TwoQubitGateWithParamHelper<
+            ApplyControlledPhaseShiftAVX, ParamT>
+            gate_helper(
+                &GateImplementationsLM::applyControlledPhaseShift<PrecisionT,
+                                                                  ParamT>);
 
         gate_helper(arr, num_qubits, wires, inverse, angle);
     }

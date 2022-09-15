@@ -41,8 +41,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingZZ {
     static void applyInternalInternal(std::complex<PrecisionT> *arr,
                                       size_t num_qubits, bool inverse,
                                       ParamT angle) {
-        // This function is allowed for AVX512 and AVX2 with float
-
         const auto isin = inverse ? std::sin(angle / 2) : -std::sin(angle / 2);
         const auto parity = toParity<PrecisionT, packed_size>([=](size_t idx) {
             return ((idx >> rev_wire0) & 1U) ^ ((idx >> rev_wire1) & 1U);

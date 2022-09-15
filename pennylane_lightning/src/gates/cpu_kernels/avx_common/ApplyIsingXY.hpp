@@ -43,11 +43,11 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
 
         size_t m = (1U << rev_wire0) | (1U << rev_wire1);
         for (size_t k = 0; k < packed_size / 2; k++) {
-            if((((k >> rev_wire0) & 1U) ^ ((k >> rev_wire1) & 1U)) == 0) {
+            if ((((k >> rev_wire0) & 1U) ^ ((k >> rev_wire1) & 1U)) == 0) {
                 perm[2 * k + 0] = 2 * k + 0;
                 perm[2 * k + 1] = 2 * k + 1;
             } else {
-                //swap 01 and 10 and apply imaginary
+                // swap 01 and 10 and apply imaginary
                 perm[2 * k + 0] = 2 * (k ^ m) + 1;
                 perm[2 * k + 1] = 2 * (k ^ m) + 0;
             }
@@ -62,24 +62,28 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
         const auto isin = inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
 
         const auto real_factor = [angle] {
-            std::array<PrecisionT, packed_size> arr = {0.0,};
+            std::array<PrecisionT, packed_size> arr = {
+                0.0,
+            };
             for (size_t k = 0; k < packed_size / 2; k++) {
-                if((((k >> rev_wire0) & 1U) ^ ((k >> rev_wire1) & 1U)) == 0) {
+                if ((((k >> rev_wire0) & 1U) ^ ((k >> rev_wire1) & 1U)) == 0) {
                     // 00 or 11
                     arr[2 * k + 0] = 1.0;
                     arr[2 * k + 1] = 1.0;
                 } else {
                     // 01 or 10
-                    arr[2 * k + 0] = std::cos(angle/2);
-                    arr[2 * k + 1] = std::cos(angle/2);
+                    arr[2 * k + 0] = std::cos(angle / 2);
+                    arr[2 * k + 1] = std::cos(angle / 2);
                 }
             }
             return set(arr);
         }();
         const auto imag_factor = [isin]() {
-            std::array<PrecisionT, packed_size> arr = {0.0,};
+            std::array<PrecisionT, packed_size> arr = {
+                0.0,
+            };
             for (size_t k = 0; k < packed_size / 2; k++) {
-                if((((k >> rev_wire0) & 1U) ^ ((k >> rev_wire1) & 1U)) == 0) {
+                if ((((k >> rev_wire0) & 1U) ^ ((k >> rev_wire1) & 1U)) == 0) {
                     // 00 or 11
                     arr[2 * k + 0] = 0.0;
                     arr[2 * k + 1] = 0.0;
@@ -114,7 +118,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
         size_t m = 1U << min_rev_wire;
 
         for (size_t k = 0; k < packed_size / 2; k++) {
-            //swap 01 and 10 and apply imaginary
+            // swap 01 and 10 and apply imaginary
             perm[2 * k + 0] = 2 * (k ^ m) + 1;
             perm[2 * k + 1] = 2 * (k ^ m) + 0;
         }
@@ -134,25 +138,29 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
 
         const auto isin = inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
         const auto real_factor0 = [angle]() {
-            std::array<PrecisionT, packed_size> arr = {0.0,};
+            std::array<PrecisionT, packed_size> arr = {
+                0.0,
+            };
             for (size_t k = 0; k < packed_size / 2; k++) {
-                if(((k >> min_rev_wire) & 1U) == 0) {
+                if (((k >> min_rev_wire) & 1U) == 0) {
                     arr[2 * k + 0] = 1.0;
                     arr[2 * k + 1] = 1.0;
                 } else {
-                    arr[2 * k + 0] = std::cos(angle/2);
-                    arr[2 * k + 1] = std::cos(angle/2);
+                    arr[2 * k + 0] = std::cos(angle / 2);
+                    arr[2 * k + 1] = std::cos(angle / 2);
                 }
             }
             return set(arr);
         }();
 
         const auto real_factor1 = [angle]() {
-            std::array<PrecisionT, packed_size> arr = {0.0,};
+            std::array<PrecisionT, packed_size> arr = {
+                0.0,
+            };
             for (size_t k = 0; k < packed_size / 2; k++) {
-                if(((k >> min_rev_wire) & 1U) == 0) {
-                    arr[2 * k + 0] = std::cos(angle/2);
-                    arr[2 * k + 1] = std::cos(angle/2);
+                if (((k >> min_rev_wire) & 1U) == 0) {
+                    arr[2 * k + 0] = std::cos(angle / 2);
+                    arr[2 * k + 1] = std::cos(angle / 2);
                 } else {
                     arr[2 * k + 0] = 1.0;
                     arr[2 * k + 1] = 1.0;
@@ -162,9 +170,11 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
         }();
 
         const auto imag_factor0 = [isin]() {
-            std::array<PrecisionT, packed_size> arr = {0.0,};
+            std::array<PrecisionT, packed_size> arr = {
+                0.0,
+            };
             for (size_t k = 0; k < packed_size / 2; k++) {
-                if(((k >> min_rev_wire) & 1U) == 0) {
+                if (((k >> min_rev_wire) & 1U) == 0) {
                     arr[2 * k + 0] = 0.0;
                     arr[2 * k + 1] = 0.0;
                 } else {
@@ -176,9 +186,11 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
         }();
 
         const auto imag_factor1 = [isin]() {
-            std::array<PrecisionT, packed_size> arr = {0.0,};
+            std::array<PrecisionT, packed_size> arr = {
+                0.0,
+            };
             for (size_t k = 0; k < packed_size / 2; k++) {
-                if(((k >> min_rev_wire) & 1U) == 0) {
+                if (((k >> min_rev_wire) & 1U) == 0) {
                     arr[2 * k + 0] = -isin;
                     arr[2 * k + 1] = isin;
                 } else {
@@ -188,9 +200,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
             }
             return set(arr);
         }();
-;
+        ;
 
-        constexpr static auto perm = permutationInternalExternal<min_rev_wire>();
+        constexpr static auto perm =
+            permutationInternalExternal<min_rev_wire>();
 
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
@@ -201,10 +214,12 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
             const auto v1 = PrecisionAVXConcept::load(arr + i1);
 
             const auto prod_real0 = real_factor0 * v0;
-            const auto prod_imag0 = imag_factor0 * Permutation::permute<perm>(v1);
+            const auto prod_imag0 =
+                imag_factor0 * Permutation::permute<perm>(v1);
 
             const auto prod_real1 = real_factor1 * v1;
-            const auto prod_imag1 = imag_factor1 * Permutation::permute<perm>(v0);
+            const auto prod_imag1 =
+                imag_factor1 * Permutation::permute<perm>(v0);
 
             PrecisionAVXConcept::store(arr + i0, prod_real0 + prod_imag0);
             PrecisionAVXConcept::store(arr + i1, prod_real1 + prod_imag1);
