@@ -1,83 +1,45 @@
 name: Benchmarking
 on:
+  pull_request:
   push:
     branches:
       - master
 
+env:
+  GCC_VERSION: 10
+
 jobs:
   benchmarks:
-    name: Gate benchmarks
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-20.04]
+        
+    name: Gate benchmarks
+    runs-on: ${{ matrix.os }}
 
     steps:
-
-      - name: Checkout PennyLane-Lightning master
-        uses: actions/checkout@v2
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.10.0
         with:
-          ref: master
-          path: main
+          access_token: ${{ github.token }}
 
-      - uses: actions/setup-python@v2
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
         name: Install Python
         with:
           python-version: '3.7'
 
       - name: Install dependencies
-        run: sudo apt-get -y -q install cmake gcc
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 libopenblas-dev
 
-      - name: Get required Python packages
+      - name: Build GBenchmark
         run: |
-          cd main
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
-          pip install matplotlib
+            cmake pennylane_lightning/src/ -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
+            cmake --build ./BuildGBench  --parallel 2
 
-      - name: Install lightning.qubit device (master)
+      - name: Run GBenchmark
         run: |
-          cd main
-          python3 setup.py build_ext -i --define="CMAKE_CXX_COMPILER=$(which g++-10)"
-          pip install -e .
-
-      - name: Benchmark lightning master device
-        run: |
-          cd main
-          python .github/workflows/benchmarks/run_bench.py lightning.qubit lightning_master.json
-
-      - name: Benchmark default qubit device
-        run: |
-          cd main
-          python .github/workflows/benchmarks/run_bench.py default.qubit default_qubit.json
-
-      - name: Checkout PennyLane-Lightning PR
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          path: pr
-
-      - name: Install lightning.qubit device (PR)
-        run: |
-          cd main
-          make clean || true
-          pip uninstall pennylane-lightning -y
-          cd ../pr
-          python3 setup.py build_ext -i --define="CMAKE_CXX_COMPILER=$(which g++-10)"
-          pip install -e .
-
-      - name: Benchmark lightning PR device
-        run: |
-          cd pr
-          python .github/workflows/benchmarks/run_bench.py lightning.qubit lightning_pr.json
-          mv lightning_pr.json ../main
-
-      - name: Plot results
-        run: |
-          cd main
-          python .github/workflows/benchmarks/plot_results.py
-
-      - uses: actions/upload-artifact@v2
-        with:
-          name: gates.png
-          path: ./main/gates.png
+            ./BuildGBench/benchmarks/utils
+            ./BuildGBench/benchmarks/apply_operations
