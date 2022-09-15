@@ -1,9 +1,9 @@
 name: Testing (Linux)
 on:
+  pull_request:
   push:
     branches:
       - master
-  pull_request:
 
 env:
   TF_VERSION: 2.6.0
@@ -14,138 +14,35 @@ env:
 
 jobs:
   cpptests:
-    name: C++ tests (Linux)
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-latest]
+
+    name: C++ tests
+    runs-on: ${{ matrix.os }}
+
     steps:
       - name: Cancel previous runs
         uses: styfle/cancel-workflow-action@0.10.0
         with:
           access_token: ${{ github.token }}
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         name: Install Python
         with:
           python-version: '3.7'
 
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 2 # for codecov
-
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 gcovr lcov
-
-      - name: Build and run unit tests
-        run: |
-            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
-            cmake --build ./Build
-            mkdir -p ./Build/tests/results
-            ./Build/pennylane_lightning/src/tests/runner --order lex --reporter junit --out ./Build/tests/results/report.xml
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          name: ubuntu-test-report
-          path: Build/tests/results/report.xml
-
-      - name: Build and run unit tests for code Coverage
-        run: |
-            cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
-            cmake --build ./BuildCov
-            cd ./BuildCov
-            ./tests/runner
-            lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
-            lcov --remove coverage.info '/usr/*' --output-file coverage.info
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
-        with:
-          files: ./BuildCov/coverage.info
-          fail_ci_if_error: true
-
-  cpptestswithblas:
-    name: C++ tests (Linux, OpenBLAS)
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-20.04]
-    steps:
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.10.0
-        with:
-          access_token: ${{ github.token }}
-
-      - uses: actions/setup-python@v2
-        name: Install Python
-        with:
-          python-version: '3.7'
-
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 2
-
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 libopenblas-dev gcovr lcov
-
-      - name: Build and run unit tests
-        run: |
-            cmake . -BBuild  -DCMAKE_BUILD_TYPE=Release -DENABLE_BLAS=ON -DBUILD_TESTS=1 -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
-            cmake --build ./Build
-            mkdir -p ./Build/tests/results
-            ./Build/pennylane_lightning/src/tests/runner --order lex --reporter junit --out ./Build/tests/results/report.xml
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          name: ubuntu-test-report
-          path: Build/tests/results/report.xml
-
-      - name: Build and run unit tests for code coverage
-        run: |
-            cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DENABLE_BLAS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
-            cmake --build ./BuildCov
-            cd ./BuildCov
-            ./tests/runner
-            lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
-            lcov --remove coverage.info '/usr/*' --output-file coverage.info
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
-        with:
-          files: ./BuildCov/coverage.info
-          fail_ci_if_error: true
-
-  cpptestswithkokkos:
-    name: C++ tests (Linux, Kokkos and Kokkos Kernels)
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-20.04]
-    steps:
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.10.0
-        with:
-          access_token: ${{ github.token }}
-
-      - uses: actions/setup-python@v2
-        name: Install Python
-        with:
-          python-version: '3.7'
-
-      - uses: actions/checkout@v2
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
         with:
           fetch-depth: 2
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 gcovr lcov
 
-      - name: Build and run unit tests for code coverage
+      - name: Build and run unit tests with code coverage
         run: |
-            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DENABLE_KOKKOS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
+            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
             cmake --build ./BuildCov --parallel 2
             cd ./BuildCov
             mkdir -p ./tests/results
@@ -154,62 +51,25 @@ jobs:
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           files: ./BuildCov/coverage.info
           fail_ci_if_error: true
 
       - name: Upload test results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: always()
         with:
           name: ubuntu-test-report
           path: BuildCov/tests/results/report.xml
 
-      - name: Publish test results
-        uses: EnricoMi/publish-unit-test-result-action@v1
-        if: always()
-        with:
-          check_name: Test Report (Linux, Kokkos, and Kokkos Kernels) on Ubuntu
-          files: BuildCov/tests/results/report.xml
-
-  cppbenchmarksuite:
-    name: C++ Benchmark Suite (Linux, OpenBLAS)
-    runs-on: ${{ matrix.os }}
+  pythontests:
     strategy:
       matrix:
-        os: [ubuntu-20.04]
-    steps:
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.10.0
-        with:
-          access_token: ${{ github.token }}
+        os: [ubuntu-latest]
 
-      - uses: actions/setup-python@v2
-        name: Install Python
-        with:
-          python-version: '3.7'
-
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 2
-
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 libopenblas-dev gcovr lcov
-
-      - name: Build and run gbenchmark
-        run: |
-            cmake pennylane_lightning/src/ -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
-            cmake --build ./BuildGBench
-            ./BuildGBench/benchmarks/utils
-            ./BuildGBench/benchmarks/apply_operations
-
-  pythontests:
     name: Python tests
     runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-20.04]
 
     steps:
       - name: Checkout PennyLane-Lightning
@@ -231,40 +91,91 @@ jobs:
           cd main
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
-
       - name: Install ML libraries for interfaces
         run: |
           pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
           pip install --upgrade "jax[cpu]"  # This also installs jaxlib
           pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
-
       - name: Install lightning.qubit device
         run: |
           cd main
-          python setup.py build_ext -i --define="CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
+          python setup.py build_ext -i --define="ENABLE_KOKKOS=OFF;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           pip install -e .
-
       - name: Run PennyLane-Lightning unit tests
         run: |
           cd main/
           pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
           files: ./main/coverage.xml
           fail_ci_if_error: true
 
-  pythontestsKokkos:
-    name: Python tests with Kokkos and Kokkos Kernels
-    runs-on: ${{ matrix.os }}
+  cpptestswithOpenBLAS:
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-latest]
+
+    name: C++ tests (OpenBLAS)
+    runs-on: ${{ matrix.os }}
 
     steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.7'
+
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 libopenblas-dev gcovr lcov
+
+      - name: Build and run unit tests with code coverage
+        run: |
+            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_BLAS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
+            cmake --build ./BuildCov --parallel 2
+            cd ./BuildCov
+            mkdir -p ./tests/results
+            ./tests/runner --order lex --reporter junit --out ./tests/results/report.xml
+            lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
+            lcov --remove coverage.info '/usr/*' --output-file coverage.info
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./BuildCov/coverage.info
+          fail_ci_if_error: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ubuntu-test-report
+          path: BuildCov/tests/results/report.xml
+
+  pythontestsBLAS:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    name: Python tests with OpenBLAS
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v2
         with:
@@ -277,7 +188,243 @@ jobs:
           python-version: '3.7'
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc g++
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 libopenblas-dev
+
+      - name: Get required Python packages
+        run: |
+          cd main
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+      - name: Install ML libraries for interfaces
+        run: |
+          pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
+          pip install --upgrade "jax[cpu]"  # This also installs jaxlib
+          pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
+      - name: Install lightning.qubit device
+        run: |
+          cd main
+          python setup.py build_ext -i --define="ENABLE_BLAS=ON;ENABLE_KOKKOS=OFF;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
+          pip install -e .
+      - name: Run PennyLane-Lightning unit tests
+        run: |
+          cd main/
+          pytest tests/ $COVERAGE_FLAGS
+          pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          files: ./main/coverage.xml
+          fail_ci_if_error: true
+
+  linux-set-builder-matrix:
+    name: Set Kokkos builder matrix
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
+
+      - name: Kokkos execution strategy
+        id: exec_model
+        run: echo "::set-output name=exec_model::[\"SERIAL\"]" # We may also adopt [OPENMP, THREADS] in later iterations
+
+      - name: Kokkos version
+        id: kokkos_version
+        run: echo "::set-output name=kokkos_version::[\"3.6.00\"]"
+
+    outputs:
+      exec_model: ${{ steps.exec_model.outputs.exec_model }}
+      kokkos_version: ${{ steps.kokkos_version.outputs.kokkos_version }}
+
+  build_dependencies:
+    needs: [linux-set-builder-matrix]
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        exec_model: ${{ fromJson(needs.linux-set-builder-matrix.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.linux-set-builder-matrix.outputs.kokkos_version) }}
+
+    name: Kokkos core & kernels (${{ matrix.exec_model }})
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Cache installation directories
+        id: kokkos-cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
+      - name: Install dependencies (Ubuntu)
+        if: ${{ (matrix.os == 'ubuntu-latest') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        run: |
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 ninja-build git
+          echo "COMPILER=g++-10" >> $GITHUB_ENV
+
+      - name: Clone Kokkos repository
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone https://github.com/kokkos/kokkos.git
+          cd kokkos
+          git checkout ${{ matrix.kokkos_version }}
+          cd -
+          pushd . &> /dev/null
+          git clone https://github.com/kokkos/kokkos-kernels.git
+          cd kokkos-kernels
+          git checkout ${{ matrix.kokkos_version }}
+          cd -
+
+      - name: Build Kokkos core library
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          cd kokkos
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }} \
+                          -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
+                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
+                          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                          -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
+                          -DCMAKE_CXX_STANDARD=20 \
+                          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                          -G Ninja
+          cmake --build ./Build --verbose
+          cmake --install ./Build
+          cd -
+
+      - name: Build Kokkos kernels library
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          cd kokkos-kernels
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }} \
+                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
+                          -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
+                          -DCMAKE_CXX_STANDARD=20 \
+                          -DCMAKE_PREFIX_PATH=${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }} \
+                          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                          -G Ninja
+          cmake --build ./Build --verbose
+          cmake --install ./Build
+
+  cpptestswithkokkos:
+    needs: [linux-set-builder-matrix, build_dependencies]
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        exec_model: ${{ fromJson(needs.linux-set-builder-matrix.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.linux-set-builder-matrix.outputs.kokkos_version) }}
+
+    name: C++ tests (Kokkos and Kokkos Kernels)
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.7'
+
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Restoring cached dependencies
+        id: kokkos-cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
+      - name: Copy cached libraries
+        run: |
+          mkdir Kokkos/
+          cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 gcovr lcov
+
+      - name: Build and run unit tests with code coverage
+        run: |
+            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_KOKKOS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
+            cmake --build ./BuildCov --parallel 2
+            cd ./BuildCov
+            mkdir -p ./tests/results
+            ./tests/runner --order lex --reporter junit --out ./tests/results/report.xml
+            lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
+            lcov --remove coverage.info '/usr/*' --output-file coverage.info
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./BuildCov/coverage.info
+          fail_ci_if_error: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ubuntu-test-report
+          path: BuildCov/tests/results/report.xml
+
+  pythontestsKokkos:
+    needs: [linux-set-builder-matrix, build_dependencies]
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        exec_model: ${{ fromJson(needs.linux-set-builder-matrix.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.linux-set-builder-matrix.outputs.kokkos_version) }}
+
+    name: Python tests with Kokkos and Kokkos Kernels
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
+        with:
+          path: main
+          fetch-depth: 2
+
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.7'
+
+      - name: Restoring cached dependencies
+        id: kokkos-cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
+      - name: Copy cached libraries
+        run: |
+          mkdir Kokkos/
+          cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+          pwd
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10
 
       - name: Get required Python packages
         run: |
@@ -294,7 +441,7 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          python setup.py build_ext -i --define="ENABLE_KOKKOS=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
+          python setup.py build_ext -i --define="CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           pip install -e .
 
       - name: Run PennyLane-Lightning unit tests
@@ -305,7 +452,147 @@ jobs:
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./main/coverage.xml
+          fail_ci_if_error: true
+
+  cpptestswithkokkosAndOpenBLAS:
+    needs: [linux-set-builder-matrix, build_dependencies]
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        exec_model: ${{ fromJson(needs.linux-set-builder-matrix.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.linux-set-builder-matrix.outputs.kokkos_version) }}
+
+    name: C++ tests (OpenBLAS, Kokkos and Kokkos Kernels)
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.7'
+
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Restoring cached dependencies
+        id: kokkos-cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
+      - name: Copy cached libraries
+        run: |
+          mkdir Kokkos/
+          cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 libopenblas-dev gcovr lcov
+
+      - name: Build and run unit tests with code coverage
+        run: |
+            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_BLAS=ON -DENABLE_KOKKOS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
+            cmake --build ./BuildCov --parallel 2
+            cd ./BuildCov
+            mkdir -p ./tests/results
+            ./tests/runner --order lex --reporter junit --out ./tests/results/report.xml
+            lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
+            lcov --remove coverage.info '/usr/*' --output-file coverage.info
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./BuildCov/coverage.info
+          fail_ci_if_error: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ubuntu-test-report
+          path: BuildCov/tests/results/report.xml
+
+  pythontestsKokkosAndOpenBLAS:
+    needs: [linux-set-builder-matrix, build_dependencies]
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        exec_model: ${{ fromJson(needs.linux-set-builder-matrix.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.linux-set-builder-matrix.outputs.kokkos_version) }}
+
+    name: Python tests with OpenBLAS, Kokkos and Kokkos Kernels
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
+        with:
+          path: main
+          fetch-depth: 2
+
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.7'
+
+      - name: Restoring cached dependencies
+        id: kokkos-cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
+      - name: Copy cached libraries
+        run: |
+          mkdir Kokkos/
+          cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+          pwd
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 libopenblas-dev
+
+      - name: Get required Python packages
+        run: |
+          cd main
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Install ML libraries for interfaces
+        run: |
+          pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
+          pip install --upgrade "jax[cpu]"  # This also installs jaxlib
+          pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
+
+      - name: Install lightning.qubit device
+        run: |
+          cd main
+          python setup.py build_ext -i --define="ENABLE_BLAS=ON;ENABLE_KOKKOS=ON;CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
+          pip install -e .
+
+      - name: Run PennyLane-Lightning unit tests
+        run: |
+          cd main/
+          pytest tests/ $COVERAGE_FLAGS
+          pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
         with:
           files: ./main/coverage.xml
           fail_ci_if_error: true
