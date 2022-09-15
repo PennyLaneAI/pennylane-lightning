@@ -18,7 +18,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
 
-    name: C++ tests
+    name: C++ tests (Linux)
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -118,7 +118,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
 
-    name: C++ tests (OpenBLAS)
+    name: C++ tests (Linux, OpenBLAS)
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -325,7 +325,7 @@ jobs:
         exec_model: ${{ fromJson(needs.linux-set-builder-matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.linux-set-builder-matrix.outputs.kokkos_version) }}
 
-    name: C++ tests (Kokkos and Kokkos Kernels)
+    name: C++ tests (Linux, Kokkos and Kokkos Kernels)
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -465,7 +465,7 @@ jobs:
         exec_model: ${{ fromJson(needs.linux-set-builder-matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.linux-set-builder-matrix.outputs.kokkos_version) }}
 
-    name: C++ tests (OpenBLAS, Kokkos and Kokkos Kernels)
+    name: C++ tests (Linux, OpenBLAS, Kokkos and Kokkos Kernels)
     runs-on: ${{ matrix.os }}
 
     steps:
