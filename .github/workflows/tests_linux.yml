@@ -38,12 +38,12 @@ jobs:
           fetch-depth: 2
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 ninja-build gcovr lcov
 
       - name: Build and run unit tests with code coverage
         run: |
-            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
-            cmake --build ./BuildCov --parallel 2
+            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake --build ./BuildCov
             cd ./BuildCov
             mkdir -p ./tests/results
             ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptests.xml
@@ -137,12 +137,12 @@ jobs:
           fetch-depth: 2
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 libopenblas-dev gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 libopenblas-dev ninja-build gcovr lcov
 
       - name: Build and run unit tests with code coverage
         run: |
-            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_BLAS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
-            cmake --build ./BuildCov --parallel 2
+            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_BLAS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake --build ./BuildCov
             cd ./BuildCov
             mkdir -p ./tests/results
             ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptestswithOpenBLAS.xml
@@ -263,12 +263,12 @@ jobs:
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 ninja-build gcovr lcov
 
       - name: Build and run unit tests with code coverage
         run: |
-            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_KOKKOS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
-            cmake --build ./BuildCov --parallel 2
+            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_KOKKOS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake --build ./BuildCov
             cd ./BuildCov
             mkdir -p ./tests/results
             ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptestswithKokkos.xml
@@ -403,12 +403,12 @@ jobs:
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 libopenblas-dev gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 libopenblas-dev ninja-build gcovr lcov
 
       - name: Build and run unit tests with code coverage
         run: |
-            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_BLAS=ON -DENABLE_KOKKOS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
-            cmake --build ./BuildCov --parallel 2
+            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_BLAS=ON -DENABLE_KOKKOS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake --build ./BuildCov
             cd ./BuildCov
             mkdir -p ./tests/results
             ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptestswithKokkosAndOpenBLAS.xml

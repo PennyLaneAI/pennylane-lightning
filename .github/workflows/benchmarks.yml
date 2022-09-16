@@ -32,11 +32,11 @@ jobs:
           python-version: '3.7'
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 libopenblas-dev
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 ninja-build libopenblas-dev
 
       - name: Build GBenchmark
         run: |
-            cmake pennylane_lightning/src/ -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
+            cmake pennylane_lightning/src/ -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
             cmake --build ./BuildGBench  --parallel 2
 
       - name: Run GBenchmark
