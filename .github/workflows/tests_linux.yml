@@ -16,7 +16,7 @@ jobs:
   cpptests:
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
 
     name: C++ tests (Linux)
     runs-on: ${{ matrix.os }}
@@ -66,7 +66,7 @@ jobs:
   pythontests:
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
 
     name: Python tests
     runs-on: ${{ matrix.os }}
@@ -116,7 +116,7 @@ jobs:
   cpptestswithOpenBLAS:
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
 
     name: C++ tests (Linux, OpenBLAS)
     runs-on: ${{ matrix.os }}
@@ -165,7 +165,7 @@ jobs:
   pythontestswithBLAS:
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
 
     name: Python tests with OpenBLAS
     runs-on: ${{ matrix.os }}
@@ -221,13 +221,13 @@ jobs:
     name: "Build and cache Kokkos and Kokkos Kernels"
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
-      os: ubuntu-20.04
+      os: ubuntu-22.04
 
   cpptestswithKokkos:
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
 
@@ -292,7 +292,7 @@ jobs:
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
 
@@ -367,7 +367,7 @@ jobs:
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
 
@@ -432,7 +432,7 @@ jobs:
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
 
