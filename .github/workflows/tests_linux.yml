@@ -6,10 +6,10 @@ on:
       - master
 
 env:
-  TF_VERSION: 2.6.0
-  TORCH_VERSION: 1.10.0+cpu
-  GCC_VERSION: 10
+  TF_VERSION: 2.10.0
+  TORCH_VERSION: 1.11.0+cpu
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
+  GCC_VERSION: 10
   OMP_NUM_THREADS: "2"
 
 jobs:
