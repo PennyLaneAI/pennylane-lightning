@@ -27,6 +27,7 @@ from pennylane import (
 from pennylane.grouping import is_pauli_word
 from pennylane.operation import Observable, Tensor
 from pennylane.tape import QuantumTape
+from pennylane.math import unwrap
 
 # Remove after the next release of PL
 # Add from pennylane import matrix
@@ -111,7 +112,7 @@ def _serialize_hamiltonian(ob, wires_map: dict, use_csingle: bool):
         rtype = np.float64
         hamiltonian_obs = HamiltonianC128
 
-    coeffs = np.array(ob.coeffs).astype(rtype)
+    coeffs = np.array(unwrap(ob.coeffs)).astype(rtype)
     terms = [_serialize_ob(t, wires_map, use_csingle) for t in ob.ops]
     return hamiltonian_obs(coeffs, terms)
 

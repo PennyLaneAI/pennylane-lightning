@@ -57,7 +57,7 @@ try:
         best_alignment,
     )
 
-    from ._serialize import _serialize_observables, _serialize_ops
+    from ._serialize import _serialize_ob, _serialize_observables, _serialize_ops
 
     CPP_BINARY_AVAILABLE = True
 except ModuleNotFoundError:
@@ -74,14 +74,6 @@ def _remove_snapshot_from_operations(operations):
     operations = operations.copy()
     operations.discard("Snapshot")
     return operations
-
-
-def _remove_op_arithmetic_from_observables(observables):
-    observables = observables.copy()
-    observables.discard("Sum")
-    observables.discard("SProd")
-    observables.discard("Prod")
-    return observables
 
 
 class LightningQubit(DefaultQubit):
@@ -111,7 +103,6 @@ class LightningQubit(DefaultQubit):
     author = "Xanadu Inc."
     _CPP_BINARY_AVAILABLE = True
     operations = _remove_snapshot_from_operations(DefaultQubit.operations)
-    observables = _remove_op_arithmetic_from_observables(DefaultQubit.observables)
 
     def __init__(self, wires, *, c_dtype=np.complex128, shots=None, batch_obs=False):
         if c_dtype is np.complex64:
@@ -149,7 +140,6 @@ class LightningQubit(DefaultQubit):
         capabilities = super().capabilities().copy()
         capabilities.update(
             model="qubit",
-            supports_reversible_diff=False,
             supports_inverse_operations=True,
             supports_analytic_computation=True,
             supports_broadcasting=False,
@@ -618,12 +608,15 @@ class LightningQubit(DefaultQubit):
         Returns:
             Expectation value of the observable
         """
-        if isinstance(observable.name, List) or observable.name in [
-            "Identity",
-            "Projector",
-            "Hermitian",
-            "Hamiltonian",
-        ]:
+        if (
+            (observable.arithmetic_depth > 0)
+            or isinstance(observable.name, List)
+            or observable.name
+            in [
+                "Identity",
+                "Projector",
+            ]
+        ):
             return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
         if self.shots is not None:
@@ -647,6 +640,10 @@ class LightningQubit(DefaultQubit):
                     CSR_SparseHamiltonian.data,
                 )
             return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
+
+        if observable.name in ["Hamiltonian", "Hermitian"]:
+            ob_serialized = _serialize_ob(observable, self.wire_map, use_csingle=self.use_csingle)
+            return M.expval(ob_serialized)
 
         # translate to wire labels used by device
         observable_wires = self.map_wires(observable.wires)

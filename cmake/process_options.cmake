@@ -1,6 +1,6 @@
 ##############################################################################
-# This file processes ENABLE_WARNINGS, ENABLE_NATIVE, ENABLE_AVX, 
-# ENABLE_OPENMP, ENABLE_KOKKOS, and ENABLE_BLAS 
+# This file processes ENABLE_WARNINGS, ENABLE_NATIVE, ENABLE_OPENMP, 
+# ENABLE_KOKKOS, and ENABLE_BLAS 
 # options and produces interface libraries
 # lightning_compile_options and lightning_external_libs.
 ##############################################################################
@@ -10,8 +10,8 @@ include_guard()
 
 if (WIN32)
     # Increasing maximum full-path length allowed.
-  message("Setting default path length to 249 characters")
-  set(CMAKE_OBJECT_PATH_MAX 249)
+  message("Setting default path length to 240 characters")
+  set(CMAKE_OBJECT_PATH_MAX 240)
 endif ()
 
 # Check GCC version
@@ -116,35 +116,62 @@ else()
 endif()
 
 if(ENABLE_KOKKOS)
-    # Setting the Serial device for all cases.
-    option(Kokkos_ENABLE_SERIAL  "Enable Kokkos SERIAL device" ON)
-    message(STATUS "KOKKOS SERIAL DEVICE ENABLED.")
+    message(STATUS "ENABLE_KOKKOS is ON.")
 
-    option(Kokkos_ENABLE_COMPLEX_ALIGN "Enable complex alignment in memory" OFF)
-
-    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-    include(FetchContent)
-
-    FetchContent_Declare(kokkos
-                         GIT_REPOSITORY https://github.com/kokkos/kokkos.git
-                         GIT_TAG        3.6.00
+    find_package(Kokkos
+    HINTS   ${CMAKE_SOURCE_DIR}/Kokkos
+            /usr
+            /usr/local
+            /opt
     )
-  
-    FetchContent_MakeAvailable(kokkos)
+    if(Kokkos_FOUND)
+        message(STATUS "Found existing Kokkos library")
+    endif()
 
-    get_target_property(kokkos_INC_DIR kokkos INTERFACE_INCLUDE_DIRECTORIES)
-    set_target_properties(kokkos PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkos_INC_DIR}")
-
-    FetchContent_Declare(kokkoskernels
-                         GIT_REPOSITORY https://github.com/kokkos/kokkos-kernels.git
-                         GIT_TAG        3.6.00
+    find_package(KokkosKernels
+    HINTS   ${CMAKE_SOURCE_DIR}/Kokkos
+            ${CMAKE_SOURCE_DIR}/KokkosKernels
+            /usr
+            /usr/local
+            /opt
     )
- 
-    FetchContent_MakeAvailable(kokkoskernels)
- 
-    get_target_property(kokkoskernels_INC_DIR kokkoskernels INTERFACE_INCLUDE_DIRECTORIES)
-    set_target_properties(kokkoskernels PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkoskernels_INC_DIR}")
+    if(KokkosKernels_FOUND)
+        message(STATUS "Found existing Kokkos Kernels library")
+    endif()
 
+    if (NOT (Kokkos_FOUND AND KokkosKernels_FOUND))
+        # Setting the Serial device.
+        option(Kokkos_ENABLE_SERIAL  "Enable Kokkos SERIAL device" ON)
+        message(STATUS "KOKKOS SERIAL DEVICE ENABLED.")
+
+        option(Kokkos_ENABLE_COMPLEX_ALIGN "Enable complex alignment in memory" OFF)
+
+        set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+        include(FetchContent)
+
+        FetchContent_Declare(kokkos
+                            GIT_REPOSITORY https://github.com/kokkos/kokkos.git
+                            GIT_TAG        3.6.00
+                            GIT_SUBMODULES "" # Avoid recursively cloning all submodules
+        )
+    
+        FetchContent_MakeAvailable(kokkos)
+
+        get_target_property(kokkos_INC_DIR kokkos INTERFACE_INCLUDE_DIRECTORIES)
+        set_target_properties(kokkos PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkos_INC_DIR}")
+
+        FetchContent_Declare(kokkoskernels
+                            GIT_REPOSITORY https://github.com/kokkos/kokkos-kernels.git
+                            GIT_TAG        3.6.00
+                            GIT_SUBMODULES "" # Avoid recursively cloning all submodules
+        )
+    
+        FetchContent_MakeAvailable(kokkoskernels)
+    
+        get_target_property(kokkoskernels_INC_DIR kokkoskernels INTERFACE_INCLUDE_DIRECTORIES)
+        set_target_properties(kokkoskernels PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkoskernels_INC_DIR}")
+
+    endif()
     target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_KOKKOS=1")
     target_link_libraries(lightning_external_libs INTERFACE Kokkos::kokkos Kokkos::kokkoskernels)
 else()
@@ -155,4 +182,3 @@ if (UNIX AND (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(AMD64)|(X64)|(x64)|(x86_64)"))
     message(STATUS "ENABLE AVX for X64 on UNIX compatible system.")
     target_compile_options(lightning_compile_options INTERFACE -mavx)
 endif()
-

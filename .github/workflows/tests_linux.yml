@@ -21,7 +21,7 @@ jobs:
         os: [ubuntu-20.04]
     steps:
       - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.4.1
+        uses: styfle/cancel-workflow-action@0.10.0
         with:
           access_token: ${{ github.token }}
 
@@ -74,7 +74,7 @@ jobs:
         os: [ubuntu-20.04]
     steps:
       - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.4.1
+        uses: styfle/cancel-workflow-action@0.10.0
         with:
           access_token: ${{ github.token }}
 
@@ -127,7 +127,7 @@ jobs:
         os: [ubuntu-20.04]
     steps:
       - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.4.1
+        uses: styfle/cancel-workflow-action@0.10.0
         with:
           access_token: ${{ github.token }}
 
@@ -181,7 +181,7 @@ jobs:
         os: [ubuntu-20.04]
     steps:
       - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.4.1
+        uses: styfle/cancel-workflow-action@0.10.0
         with:
           access_token: ${{ github.token }}
 
@@ -230,9 +230,7 @@ jobs:
         run: |
           cd main
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip uninstall pennylane -y
-          pip install git+https://github.com/PennyLaneAI/pennylane.git
+          pip install -r requirements-dev.txt
 
       - name: Install ML libraries for interfaces
         run: |
@@ -285,9 +283,7 @@ jobs:
         run: |
           cd main
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip uninstall pennylane -y
-          pip install git+https://github.com/PennyLaneAI/pennylane.git
+          pip install -r requirements-dev.txt
 
       - name: Install ML libraries for interfaces
         run: |

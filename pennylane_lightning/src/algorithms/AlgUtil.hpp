@@ -66,7 +66,7 @@ inline void applyOperationAdj(StateVectorManagedCPU<T> &state,
  */
 template <typename T>
 inline void applyObservable(StateVectorManagedCPU<T> &state,
-                            Observable<T> &observable) {
+                            Simulators::Observable<T> &observable) {
     observable.applyInPlace(state);
 }
 
@@ -79,10 +79,11 @@ inline void applyObservable(StateVectorManagedCPU<T> &state,
  * @param observables Vector of observables to apply to each statevector.
  */
 template <typename T>
-inline void applyObservables(
-    std::vector<StateVectorManagedCPU<T>> &states,
-    const StateVectorManagedCPU<T> &reference_state,
-    const std::vector<std::shared_ptr<Observable<T>>> &observables) {
+inline void
+applyObservables(std::vector<StateVectorManagedCPU<T>> &states,
+                 const StateVectorManagedCPU<T> &reference_state,
+                 const std::vector<std::shared_ptr<Simulators::Observable<T>>>
+                     &observables) {
     std::exception_ptr ex = nullptr;
     size_t num_observables = observables.size();
 

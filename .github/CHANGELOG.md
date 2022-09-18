@@ -1,4 +1,53 @@
-# Release 0.25.0-dev
+# Release 0.26.0-dev
+
+### New features since last release
+
+### Breaking changes
+
+### Improvements
+
+* Introduces requirements-dev.txt and improves dockerfile.
+[(#330)](https://github.com/PennyLaneAI/pennylane-lightning/pull/330)
+
+* Support `expval` for a Hamiltonian.
+[(#333)](https://github.com/PennyLaneAI/pennylane-lightning/pull/333)
+
+* Implements caching for Kokkos installation.
+[(#316)](https://github.com/PennyLaneAI/pennylane-lightning/pull/316)
+
+* Supports measurements of operator arithmetic classes such as `Sum`, `Prod`,
+  and `SProd` by deferring handling of them to `DefaultQubit`.
+  [(#349)](https://github.com/PennyLaneAI/pennylane-lightning/pull/349)
+
+```
+@qml.qnode(qml.device('lightning.qubit', wires=2))
+def circuit():
+    obs = qml.s_prod(2.1, qml.PauliZ(0)) + qml.op_sum(qml.PauliX(0), qml.PauliZ(1))
+    return qml.expval(obs)
+```
+
+### Documentation
+
+### Bug fixes
+
+* Test updates to reflect new measurement error messages.
+[(#334)](https://github.com/PennyLaneAI/pennylane-lightning/pull/334)
+
+* Updates to the release tagger to fix incompatibilities with RTD.
+[(#344)](https://github.com/PennyLaneAI/pennylane-lightning/pull/344)
+
+* Update cancel-workflow-action and bot credentials.
+[(#345)](https://github.com/PennyLaneAI/pennylane-lightning/pull/345)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Amintor Dusko, Christina Lee, Chae-Yeun Park
+
+---
+
+# Release 0.25.0
 
 ### New features since last release
 
@@ -23,6 +72,7 @@
 [(#313)](https://github.com/PennyLaneAI/pennylane-lightning/pull/313)
 
 ### Documentation
+
 * Updated ReadTheDocs runner version from Ubuntu 20.04 to 22.04 
 [(#327)](https://github.com/PennyLaneAI/pennylane-lightning/pull/327)
 
@@ -35,7 +85,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Lee James O'Riordan, Chae-Yeun Park
+Amintor Dusko, Christina Lee, Rashid N H M, Lee J. O'Riordan, Chae-Yeun Park
 
 ---
 
@@ -702,4 +752,4 @@ Initial release.
 
 This release contains contributions from (in alphabetical order):
 
-Tom Bromley, Josh Izaac, Nathan Killoran, Rashid N H M, Antal Száva
+Tom Bromley, Josh Izaac, Nathan Killoran, Antal Száva

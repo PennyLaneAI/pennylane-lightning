@@ -13,9 +13,9 @@ PennyLane-Lightning Plugin
     :alt: CodeFactor Grade
     :target: https://www.codefactor.io/repository/github/pennylaneai/pennylane-lightning
 
-.. image:: https://img.shields.io/readthedocs/pennylane-lightning.svg?logo=read-the-docs&style=flat-square
+.. image:: https://readthedocs.com/projects/xanaduai-pennylane-lightning/badge/?version=latest&style=flat-square
     :alt: Read the Docs
-    :target: https://pennylane-lightning.readthedocs.io
+    :target: https://docs.pennylane.ai/projects/lightning
 
 .. image:: https://img.shields.io/pypi/v/PennyLane-Lightning.svg?style=flat-square
     :alt: PyPI
@@ -29,7 +29,7 @@ PennyLane-Lightning Plugin
 
 The PennyLane-Lightning plugin provides a fast state-vector simulator written in C++.
 
-`PennyLane <https://pennylane.readthedocs.io>`_ is a cross-platform Python library for quantum machine
+`PennyLane <https://docs.pennylane.ai>`_ is a cross-platform Python library for quantum machine
 learning, automatic differentiation, and optimization of hybrid quantum-classical computations.
 
 .. header-end-inclusion-marker-do-not-remove
@@ -103,7 +103,7 @@ For GPU support, `PennyLane-Lightning-GPU <https://github.com/PennyLaneAI/pennyl
 
     $ pip install pennylane-lightning[gpu]
 
-For more information, please refer to the PennyLane Lightning GPU `documentation <https://pennylane-lightning-gpu.readthedocs.io/>`_.
+For more information, please refer to the PennyLane Lightning GPU `documentation <https://docs.pennylane.ai/projects/lightning-gpu>`_.
 
 Testing
 -------
@@ -172,8 +172,8 @@ Note that OpenMP and BLAS are disabled in this setting.
 .. installation-end-inclusion-marker-do-not-remove
 
 
-Please refer to the `plugin documentation <https://pennylane-lightning.readthedocs.io/>`_ as
-well as to the `PennyLane documentation <https://pennylane.readthedocs.io/>`_ for further reference.
+Please refer to the `plugin documentation <https://docs.pennylane.ai/projects/lightning/>`_ as
+well as to the `PennyLane documentation <https://docs.pennylane.ai/>`_ for further reference.
 
 
 Docker Support
@@ -186,7 +186,7 @@ One can also build the Pennylane-Lightning image using Docker:
     $ cd pennylane-lightning
     $ docker build -t lightning/base -f docker/Dockerfile .
 
-Please refer to the `PennyLane installation <https://pennylane.readthedocs.io/en/stable/development/guide/installation.html#installation>`_ for detailed description about PennyLane Docker support.
+Please refer to the `PennyLane installation <https://docs.pennylane.ai/en/stable/development/guide/installation.html#installation>`_ for detailed description about PennyLane Docker support.
 
 
 Contributing
