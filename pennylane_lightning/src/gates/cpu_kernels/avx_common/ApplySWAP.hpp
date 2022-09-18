@@ -39,9 +39,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplySWAP {
     template <size_t rev_wire0, size_t rev_wire1>
     constexpr static auto swapPermutation() {
         const auto identity_perm = Permutation::identity<packed_size>();
-        std::array<uint8_t, packed_size> perm = {
-            0,
-        };
+        std::array<uint8_t, packed_size> perm;
 
         for (size_t i = 0; i < packed_size / 2; i++) {
             // swap rev_wire1 and rev_wire0 bits
@@ -67,9 +65,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplySWAP {
     }
 
     template <size_t min_rev_wire> constexpr static auto createMask0() {
-        std::array<bool, packed_size> m = {
-            false,
-        };
+        std::array<bool, packed_size> m;
         for (size_t i = 0; i < packed_size / 2; i++) {
             if ((i & (1U << min_rev_wire)) != 0) {
                 m[2 * i + 0] = true;

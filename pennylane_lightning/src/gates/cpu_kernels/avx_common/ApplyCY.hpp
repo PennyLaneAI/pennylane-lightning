@@ -39,9 +39,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
 
     template <size_t control, size_t target>
     static constexpr auto permutationInternalInternal() {
-        std::array<uint8_t, packed_size> perm = {
-            0,
-        };
+        std::array<uint8_t, packed_size> perm;
 
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
@@ -167,14 +165,13 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
         // control qubit is internal but target qubit is external
         // const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
         using namespace Permutation;
-        const size_t rev_wire_max = std::max(control, target);
 
         constexpr static auto perm = permuatationInternalExternal<control>();
 
-        const size_t max_rev_wire_shift =
-            (static_cast<size_t>(1U) << rev_wire_max);
-        const size_t max_wire_parity = fillTrailingOnes(rev_wire_max);
-        const size_t max_wire_parity_inv = fillLeadingOnes(rev_wire_max + 1);
+        const size_t target_rev_wire_shift =
+            (static_cast<size_t>(1U) << target);
+        const size_t target_wire_parity = fillTrailingOnes(target);
+        const size_t target_wire_parity_inv = fillLeadingOnes(target + 1);
 
         constexpr static auto mask = maskInternalExternal<control>();
 
@@ -183,8 +180,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
 
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
-                ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
-            const size_t i1 = i0 | max_rev_wire_shift;
+                ((k << 1U) & target_wire_parity_inv) | (target_wire_parity & k);
+            const size_t i1 = i0 | target_rev_wire_shift;
 
             const auto v0 = PrecisionAVXConcept::load(arr + i0); // target is 0
             const auto v1 = PrecisionAVXConcept::load(arr + i1); // target is 1
