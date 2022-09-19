@@ -115,21 +115,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
         }
     }
 
-    template <size_t control> static constexpr auto applyInternalExternalMask() {
-        std::array<bool, packed_size> mask;
-        for (size_t k = 0; k < packed_size / 2; k++) {
-            if ((k >> control) & 1U) {
-                // if control bit is 1
-                mask[2 * k + 0] = true;
-                mask[2 * k + 1] = true;
-            } else {
-                mask[2 * k + 0] = false;
-                mask[2 * k + 1] = false;
-            }
-        }
-        return compileMask<PrecisionT>(mask);
-    }
-
     template <size_t control, typename ParamT>
     static auto applyInternalExternalDiag(ParamT angle) {
         std::array<Precision, packed_size> arr;
@@ -182,8 +167,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
             (static_cast<size_t>(1U) << target);
         const size_t target_wire_parity = fillTrailingOnes(target);
         const size_t target_wire_parity_inv = fillLeadingOnes(target + 1);
-
-        //constexpr static auto mask = applyInternalExternalMask<control>();
 
         if(inverse) {
             angle *= -1.0;

@@ -83,7 +83,7 @@ class GateImplementationsAVXCommon
         GateOperation::IsingZZ,    GateOperation::CY,
         GateOperation::IsingXY,    GateOperation::ControlledPhaseShift,
         GateOperation::CRY,
-        /*CRX, CRZ, CRot */
+        /* CRX, CRZ, CRot */
     };
 
     constexpr static std::array implemented_generators = {
