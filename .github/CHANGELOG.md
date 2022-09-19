@@ -1,8 +1,4 @@
-# Release 0.26.0-dev
-
-### New features since last release
-
-### Breaking changes
+# Release 0.26.0
 
 ### Improvements
 
@@ -26,8 +22,6 @@ def circuit():
     return qml.expval(obs)
 ```
 
-### Documentation
-
 ### Bug fixes
 
 * Test updates to reflect new measurement error messages.
@@ -43,7 +37,7 @@ def circuit():
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Christina Lee, Chae-Yeun Park
+Amintor Dusko, Christina Lee, Lee J. O'Riordan, Chae-Yeun Park
 
 ---
 
