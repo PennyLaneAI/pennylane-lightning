@@ -65,6 +65,7 @@ jobs:
         with:
           files: ./BuildCov/coverage.info
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   cpptestswithblas:
     name: C++ tests (Linux, OpenBLAS)
@@ -118,6 +119,7 @@ jobs:
         with:
           files: ./BuildCov/coverage.info
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   cpptestswithkokkos:
     name: C++ tests (Linux, Kokkos and Kokkos Kernels)
@@ -158,6 +160,7 @@ jobs:
         with:
           files: ./BuildCov/coverage.info
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload test results
         uses: actions/upload-artifact@v2
@@ -256,6 +259,7 @@ jobs:
         with:
           files: ./main/coverage.xml
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   pythontestsKokkos:
     name: Python tests with Kokkos and Kokkos Kernels
@@ -309,3 +313,4 @@ jobs:
         with:
           files: ./main/coverage.xml
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}

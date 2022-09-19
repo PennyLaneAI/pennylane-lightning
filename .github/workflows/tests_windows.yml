@@ -51,6 +51,7 @@ jobs:
         with:
           files: ./coverage.xml
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   cpptestswithkokkos:
     name: C++ tests (Windows, Kokkos and Kokkos Kernels)
@@ -103,3 +104,4 @@ jobs:
         with:
           files: ./coverage.xml
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
