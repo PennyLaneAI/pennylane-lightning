@@ -42,4 +42,4 @@ jobs:
       - name: Run GBenchmark
         run: |
             ./BuildGBench/benchmarks/utils
-            ./BuildGBench/benchmarks/apply_operations
+            ./BuildGBench/benchmarks/apply_operations --benchmark_filter="^applyOperations_RandOps<double>/LM_all/32/[0-9]+$"
