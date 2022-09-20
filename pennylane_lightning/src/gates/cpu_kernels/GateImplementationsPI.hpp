@@ -182,42 +182,24 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
                 const std::complex<PrecisionT> v10 = shiftedState[indices[2]];
                 const std::complex<PrecisionT> v11 = shiftedState[indices[3]];
 
-                // NOLINTNEXTLINE(readability-magic-numbers)
-                shiftedState[indices[0]] =
-                    std::conj(matrix[0b0000]) * v00 +
-                    // NOLINTNEXTLINE(readability-magic-numbers)
-                    std::conj(matrix[0b0100]) * v01 +
-                    // NOLINTNEXTLINE(readability-magic-numbers)
-                    std::conj(matrix[0b1000]) * v10 +
-                    // NOLINTNEXTLINE(readability-magic-numbers)
-                    std::conj(matrix[0b1100]) * v11;
-                // NOLINTNEXTLINE(readability-magic-numbers)
-                shiftedState[indices[1]] =
-                    std::conj(matrix[0b0001]) * v00 +
-                    // NOLINTNEXTLINE(readability-magic-numbers)
-                    std::conj(matrix[0b0101]) * v01 +
-                    // NOLINTNEXTLINE(readability-magic-numbers)
-                    std::conj(matrix[0b1001]) * v10 +
-                    // NOLINTNEXTLINE(readability-magic-numbers)
-                    std::conj(matrix[0b1101]) * v11;
-                // NOLINTNEXTLINE(readability-magic-numbers)
-                shiftedState[indices[2]] =
-                    std::conj(matrix[0b0010]) * v00 +
-                    // NOLINTNEXTLINE(readability-magic-numbers)
-                    std::conj(matrix[0b0110]) * v01 +
-                    // NOLINTNEXTLINE(readability-magic-numbers)
-                    std::conj(matrix[0b1010]) * v10 +
-                    // NOLINTNEXTLINE(readability-magic-numbers)
-                    std::conj(matrix[0b1110]) * v11;
-                // NOLINTNEXTLINE(readability-magic-numbers)
-                shiftedState[indices[3]] =
-                    std::conj(matrix[0b0011]) * v00 +
-                    // NOLINTNEXTLINE(readability-magic-numbers)
-                    std::conj(matrix[0b0111]) * v01 +
-                    // NOLINTNEXTLINE(readability-magic-numbers)
-                    std::conj(matrix[0b1011]) * v10 +
-                    // NOLINTNEXTLINE(readability-magic-numbers)
-                    std::conj(matrix[0b1111]) * v11;
+                // NOLINTBEGIN(readability-magic-numbers)
+                shiftedState[indices[0]] = std::conj(matrix[0b0000]) * v00 +
+                                           std::conj(matrix[0b0100]) * v01 +
+                                           std::conj(matrix[0b1000]) * v10 +
+                                           std::conj(matrix[0b1100]) * v11;
+                shiftedState[indices[1]] = std::conj(matrix[0b0001]) * v00 +
+                                           std::conj(matrix[0b0101]) * v01 +
+                                           std::conj(matrix[0b1001]) * v10 +
+                                           std::conj(matrix[0b1101]) * v11;
+                shiftedState[indices[2]] = std::conj(matrix[0b0010]) * v00 +
+                                           std::conj(matrix[0b0110]) * v01 +
+                                           std::conj(matrix[0b1010]) * v10 +
+                                           std::conj(matrix[0b1110]) * v11;
+                shiftedState[indices[3]] = std::conj(matrix[0b0011]) * v00 +
+                                           std::conj(matrix[0b0111]) * v01 +
+                                           std::conj(matrix[0b1011]) * v10 +
+                                           std::conj(matrix[0b1111]) * v11;
+                // NOLINTEND(readability-magic-numbers)
             }
         } else {
             for (const size_t &externalIndex : externalIndices) {
@@ -228,26 +210,20 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
                 const std::complex<PrecisionT> v10 = shiftedState[indices[2]];
                 const std::complex<PrecisionT> v11 = shiftedState[indices[3]];
 
+                // NOLINTBEGIN(readability-magic-numbers)
                 shiftedState[indices[0]] =
-                    // NOLINTNEXTLINE(readability-magic-numbers)
                     matrix[0b0000] * v00 + matrix[0b0001] * v01 +
-                    // NOLINTNEXTLINE(readability-magic-numbers)
                     matrix[0b0010] * v10 + matrix[0b0011] * v11;
                 shiftedState[indices[1]] =
-                    // NOLINTNEXTLINE(readability-magic-numbers)
                     matrix[0b0100] * v00 + matrix[0b0101] * v01 +
-                    // NOLINTNEXTLINE(readability-magic-numbers)
                     matrix[0b0110] * v10 + matrix[0b0111] * v11;
                 shiftedState[indices[2]] =
-                    // NOLINTNEXTLINE(readability-magic-numbers)
                     matrix[0b1000] * v00 + matrix[0b1001] * v01 +
-                    // NOLINTNEXTLINE(readability-magic-numbers)
                     matrix[0b1010] * v10 + matrix[0b1011] * v11;
                 shiftedState[indices[3]] =
-                    // NOLINTNEXTLINE(readability-magic-numbers)
                     matrix[0b1100] * v00 + matrix[0b1101] * v01 +
-                    // NOLINTNEXTLINE(readability-magic-numbers)
                     matrix[0b1110] * v10 + matrix[0b1111] * v11;
+                // NOLINTEND(readability-magic-numbers)
             }
         }
     }
