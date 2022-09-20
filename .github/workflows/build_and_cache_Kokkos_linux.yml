@@ -1,5 +1,8 @@
 name: Build and Cache Kokkos and Kokkos Kernels
 
+env:
+  GCC_VERSION: 10
+
 on:
   workflow_call:
     inputs:
@@ -76,8 +79,7 @@ jobs:
       - name: Install dependencies (Ubuntu)
         if: ${{ (((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04')) && (steps.kokkos-cache.outputs.cache-hit != 'true')) }}
         run: |
-          sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 ninja-build git
-          echo "COMPILER=g++-10" >> $GITHUB_ENV
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build git
 
       - name: Build Kokkos core library (Ubuntu)
         if: ${{ (((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04')) && (steps.kokkos-cache.outputs.cache-hit != 'true')) }}
@@ -88,7 +90,7 @@ jobs:
                           -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
-                          -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
+                          -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" \
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                           -G Ninja
@@ -103,7 +105,7 @@ jobs:
           cd kokkos-kernels
           cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }} \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
-                          -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
+                          -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" \
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_PREFIX_PATH=${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }} \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
