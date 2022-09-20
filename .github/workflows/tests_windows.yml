@@ -62,7 +62,8 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - uses: actions/checkout@v2
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
 
       - name: Kokkos execution strategy
         id: exec_model
