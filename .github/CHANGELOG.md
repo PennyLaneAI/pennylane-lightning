@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Update clang-tools version in Github workflows.
+[(#351)](https://github.com/PennyLaneAI/pennylane-lightning/pull/351)
+
 ### Documentation
 
 ### Bug fixes
@@ -13,6 +16,8 @@
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Chae-Yeun Park
 
 ---
 
