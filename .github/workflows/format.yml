@@ -40,13 +40,13 @@ jobs:
           access_token: ${{ github.token }}
 
       - name: Install dependencies
-        run: sudo apt update && sudo apt -y install clang-format-13 python3
+        run: sudo apt update && sudo apt -y install clang-format-14 python3
 
       - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Run formatter
-        run: ./bin/format --check --cfversion 13 ./pennylane_lightning/src
+        run: ./bin/format --check --cfversion 14 ./pennylane_lightning/src
 
   build_and_cache_Kokkos:
     name: "Build and cache Kokkos and Kokkos Kernels"
@@ -92,11 +92,11 @@ jobs:
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies
-        run: sudo apt update && sudo apt -y install clang-tidy-13 cmake g++-10 ninja-build libomp-13-dev
+        run: sudo apt update && sudo apt -y install clang-tidy-14 cmake g++-10 ninja-build libomp-14-dev
         env:
           DEBIAN_FRONTEND: noninteractive
 
       - name: Run clang-tidy compilation
         run: |
-          cmake -BBuild -DENABLE_CLANG_TIDY=ON -DCLANG_TIDY_BINARY=clang-tidy-13 -DBUILD_TESTS=ON -DENABLE_WARNINGS=ON -DCMAKE_CXX_COMPILER="$(which g++-10)" -G Ninja .
+          cmake -BBuild -DENABLE_CLANG_TIDY=ON -DCLANG_TIDY_BINARY=clang-tidy-14 -DBUILD_TESTS=ON -DENABLE_WARNINGS=ON -DCMAKE_CXX_COMPILER="$(which g++-10)" -G Ninja .
           cmake --build ./Build
