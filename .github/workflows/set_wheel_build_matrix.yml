@@ -1,4 +1,4 @@
-name: Set wheel builder matrix
+name: Set wheel build matrix
 
 env:
   PYTHON3_MIN_VERSION: "7"
