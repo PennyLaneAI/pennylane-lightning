@@ -377,7 +377,7 @@ class Measures {
                 idx = bucket_partner[idx];
             }
             // If cached, retrieve sample from cache
-            if (cache.count(idx) != 0) {
+            if (cache.contains(idx)) {
                 size_t cache_id = cache[idx];
                 auto it_temp = samples.begin() + cache_id * num_qubits;
                 std::copy(it_temp, it_temp + num_qubits,
