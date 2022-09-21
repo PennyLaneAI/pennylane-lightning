@@ -13,10 +13,6 @@ on:
   release:
     types: [published]
 
-env:
-  PYTHON3_MIN_VERSION: "7"
-  PYTHON3_MAX_VERSION: "10"
-
 jobs:
   set_wheel_build_matrix:
     name: "Set wheel build matrix"

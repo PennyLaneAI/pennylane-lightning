@@ -23,7 +23,6 @@ on:
 
 jobs:
   set-builder-matrix:
-    name: Set Kokkos builder matrix
     runs-on: ubuntu-22.04
 
     steps:
