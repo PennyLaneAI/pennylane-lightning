@@ -6,6 +6,10 @@ env:
 
 on:
   workflow_call:
+    inputs:
+      event_name:
+        required: true
+        type: string
     outputs:
       python_version:
         description: "Python versions."
@@ -28,15 +32,18 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
+
       - name: Python version
         id: pyver
         run: |
-          if [[ ${{ github.event_name }} == 'pull_request' ]]; then
-            echo "::set-output name=python_version::$(python3 .github/workflows/gen_pyver_matrix.py \
+          if [[ ${{ inputs.event_name }} == 'pull_request' ]]; then
+            echo "::set-output name=python_version::$(python3 scripts/gen_pyver_matrix.py \
               --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
               --max-version=3.${{ env.PYTHON3_MAX_VERSION }})"
           else
-            echo "::set-output name=python_version::$(python3 .github/workflows/gen_pyver_matrix.py \
+            echo "::set-output name=python_version::$(python3 scripts/gen_pyver_matrix.py \
               --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
               --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
               --range)"

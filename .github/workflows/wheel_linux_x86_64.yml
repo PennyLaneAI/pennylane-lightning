@@ -18,9 +18,11 @@ env:
   PYTHON3_MAX_VERSION: "10"
 
 jobs:
-    set_wheel_build_matrix:
+  set_wheel_build_matrix:
     name: "Set wheel build matrix"
     uses: ./.github/workflows/set_wheel_build_matrix.yml
+    with:
+      event_name: ${{ github.event_name }}
 
   build_dependencies:
     needs: [set_wheel_build_matrix]
@@ -134,7 +136,8 @@ jobs:
           path: /root/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
-      - uses: actions/checkout@v3
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
 
       - name: Copy cached libraries
         run: |
