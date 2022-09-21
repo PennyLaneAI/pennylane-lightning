@@ -1,7 +1,7 @@
 ninja
 flaky
 numpy
-pennylane~=0.25
+pennylane~=0.26
 pybind11
 pytest
 pytest-cov

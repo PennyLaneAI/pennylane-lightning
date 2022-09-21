@@ -29,7 +29,8 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - uses: actions/checkout@v2
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
 
       - name: Python version
         id: pyver
@@ -66,7 +67,8 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - uses: actions/checkout@v2
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
 
       - uses: actions/setup-python@v2
         name: Install Python
