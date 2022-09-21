@@ -191,6 +191,48 @@ static void applyOperations_RandOps(benchmark::State &state,
     }
 }
 
+BENCHMARK_APPLYOPS(applyOperations_RandOps, double, LM_CSWAP, Kernel::LM,
+                   {"CSWAP"})
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2),       // num_gates
+        benchmark::CreateDenseRange(6, 24, /*step=*/2), // num_qubits
+    });
+
+BENCHMARK_APPLYOPS(applyOperations_RandOps, double, PI_CSWAP, Kernel::PI,
+                   {"CSWAP"})
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2),       // num_gates
+        benchmark::CreateDenseRange(6, 24, /*step=*/2), // num_qubits
+    });
+
+BENCHMARK_APPLYOPS(applyOperations_RandOps, double, LM_DoubleExcitation,
+                   Kernel::LM, {"DoubleExcitation"})
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2),       // num_gates
+        benchmark::CreateDenseRange(6, 24, /*step=*/2), // num_qubits
+    });
+
+BENCHMARK_APPLYOPS(applyOperations_RandOps, double, PI_DoubleExcitation,
+                   Kernel::PI, {"DoubleExcitation"})
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2),       // num_gates
+        benchmark::CreateDenseRange(6, 24, /*step=*/2), // num_qubits
+    });
+
+BENCHMARK_APPLYOPS(applyOperations_RandOps, double, LM_DoubleExcitationPlus,
+                   Kernel::LM, {"DoubleExcitationPlus"})
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2),       // num_gates
+        benchmark::CreateDenseRange(6, 24, /*step=*/2), // num_qubits
+    });
+
+BENCHMARK_APPLYOPS(applyOperations_RandOps, double, PI_DoubleExcitationPlus,
+                   Kernel::PI, {"DoubleExcitationPlus"})
+    ->ArgsProduct({
+        benchmark::CreateRange(8, 64, /*mul=*/2),       // num_gates
+        benchmark::CreateDenseRange(6, 24, /*step=*/2), // num_qubits
+    });
+
 /* RXYZ */
 BENCHMARK_APPLYOPS(applyOperations_RandOps, float, LM_RXYZ, Kernel::LM,
                    {"RX", "RY", "RZ"})
