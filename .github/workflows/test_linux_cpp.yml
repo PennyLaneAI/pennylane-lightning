@@ -1,4 +1,4 @@
-name: Testing (Linux)
+name: Testing (Linux, C++)
 on:
   pull_request:
   push:
@@ -72,62 +72,6 @@ jobs:
           name: ubuntu-codecov-results-cpp
           path: ./BuildCov/coverage-${{ github.job }}.info
 
-  pythontests:
-    strategy:
-      matrix:
-        os: [ubuntu-22.04]
-
-    name: Python tests
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
-        with:
-          path: main
-          fetch-depth: 2
-
-      - uses: actions/setup-python@v4
-        name: Install Python
-        with:
-          python-version: '3.7'
-
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10
-
-      - name: Get required Python packages
-        run: |
-          cd main
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
-
-      - name: Install ML libraries for interfaces
-        run: |
-          pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
-          pip install --upgrade "jax[cpu]"  # This also installs jaxlib
-          pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
-
-      - name: Install lightning.qubit device
-        run: |
-          cd main
-          python setup.py build_ext -i --define="ENABLE_KOKKOS=OFF;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
-          pip install -e .
-
-      - name: Run PennyLane-Lightning unit tests
-        run: |
-          cd main/
-          pytest tests/ $COVERAGE_FLAGS
-          pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv coverage.xml coverage-${{ github.job }}.xml
-
-      - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: ubuntu-codecov-results-python
-          path: ./main/coverage-${{ github.job }}.xml
-
   cpptestswithOpenBLAS:
     strategy:
       matrix:
@@ -186,67 +130,6 @@ jobs:
         with:
           name: ubuntu-codecov-results-cpp
           path: ./BuildCov/coverage-${{ github.job }}.info
-
-  pythontestswithBLAS:
-    strategy:
-      matrix:
-        os: [ubuntu-22.04]
-
-    name: Python tests with OpenBLAS
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.10.0
-        with:
-          access_token: ${{ github.token }}
-
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
-        with:
-          path: main
-          fetch-depth: 2
-
-      - uses: actions/setup-python@v4
-        name: Install Python
-        with:
-          python-version: '3.7'
-
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 libopenblas-dev
-
-      - name: Get required Python packages
-        run: |
-          cd main
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
-
-      - name: Install ML libraries for interfaces
-        run: |
-          pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
-          pip install --upgrade "jax[cpu]"  # This also installs jaxlib
-          pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
-
-      - name: Install lightning.qubit device
-        run: |
-          cd main
-          python setup.py build_ext -i --define="ENABLE_BLAS=ON;ENABLE_KOKKOS=OFF;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
-          pip install -e .
-
-      - name: Run PennyLane-Lightning unit tests
-        run: |
-          cd main/
-          pytest tests/ $COVERAGE_FLAGS
-          pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv coverage.xml coverage-${{ github.job }}.xml
-
-      - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: ubuntu-codecov-results-python
-          path: ./main/coverage-${{ github.job }}.xml
 
   build_and_cache_Kokkos:
     name: "Build and cache Kokkos and Kokkos Kernels"
@@ -328,83 +211,6 @@ jobs:
           name: ubuntu-codecov-results-cpp
           path: ./BuildCov/coverage-${{ github.job }}.info
 
-  pythontestswithKokkos:
-    needs: [build_and_cache_Kokkos]
-    strategy:
-      matrix:
-        os: [ubuntu-22.04]
-        exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
-        kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
-
-    name: Python tests with Kokkos and Kokkos Kernels
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.10.0
-        with:
-          access_token: ${{ github.token }}
-
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
-        with:
-          path: main
-          fetch-depth: 2
-
-      - uses: actions/setup-python@v4
-        name: Install Python
-        with:
-          python-version: '3.7'
-
-      - name: Restoring cached dependencies
-        id: kokkos-cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
-
-      - name: Copy cached libraries
-        run: |
-          mkdir Kokkos/
-          cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
-          pwd
-
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10
-
-      - name: Get required Python packages
-        run: |
-          cd main
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
-
-      - name: Install ML libraries for interfaces
-        run: |
-          pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
-          pip install --upgrade "jax[cpu]"  # This also installs jaxlib
-          pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
-
-      - name: Install lightning.qubit device
-        run: |
-          cd main
-          python setup.py build_ext -i --define="CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
-          pip install -e .
-
-      - name: Run PennyLane-Lightning unit tests
-        run: |
-          cd main/
-          pytest tests/ $COVERAGE_FLAGS
-          pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv coverage.xml coverage-${{ github.job }}.xml
-
-      - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: ubuntu-codecov-results-python
-          path: ./main/coverage-${{ github.job }}.xml
-
   cpptestswithKokkosAndOpenBLAS:
     needs: [build_and_cache_Kokkos]
     strategy:
@@ -479,83 +285,6 @@ jobs:
           name: ubuntu-codecov-results-cpp
           path: ./BuildCov/coverage-${{ github.job }}.info
 
-  pythontestswithKokkosAndOpenBLAS:
-    needs: [build_and_cache_Kokkos]
-    strategy:
-      matrix:
-        os: [ubuntu-22.04]
-        exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
-        kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
-
-    name: Python tests with OpenBLAS, Kokkos and Kokkos Kernels
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.10.0
-        with:
-          access_token: ${{ github.token }}
-
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
-        with:
-          path: main
-          fetch-depth: 2
-
-      - uses: actions/setup-python@v4
-        name: Install Python
-        with:
-          python-version: '3.7'
-
-      - name: Restoring cached dependencies
-        id: kokkos-cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
-
-      - name: Copy cached libraries
-        run: |
-          mkdir Kokkos/
-          cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
-          pwd
-
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 libopenblas-dev
-
-      - name: Get required Python packages
-        run: |
-          cd main
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
-
-      - name: Install ML libraries for interfaces
-        run: |
-          pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
-          pip install --upgrade "jax[cpu]"  # This also installs jaxlib
-          pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
-
-      - name: Install lightning.qubit device
-        run: |
-          cd main
-          python setup.py build_ext -i --define="ENABLE_BLAS=ON;ENABLE_KOKKOS=ON;CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
-          pip install -e .
-
-      - name: Run PennyLane-Lightning unit tests
-        run: |
-          cd main/
-          pytest tests/ $COVERAGE_FLAGS
-          pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv coverage.xml coverage-${{ github.job }}.xml
-
-      - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: ubuntu-codecov-results-python
-          path: ./main/coverage-${{ github.job }}.xml
-
   upload-to-codecov-cpp:
     needs: [cpptests, cpptestswithOpenBLAS, cpptestswithKokkos, cpptestswithKokkosAndOpenBLAS]
     name: Upload coverage data to codecov
@@ -565,23 +294,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: ubuntu-codecov-results-cpp
-
-      - name: Upload to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-  upload-to-codecov-python:
-    needs: [pythontests, pythontestswithBLAS, pythontestswithKokkos, pythontestswithKokkosAndOpenBLAS]
-    name: Upload coverage data to codecov
-    runs-on: ubuntu-latest
-    steps:
-
-      - name: Download coverage reports
-        uses: actions/download-artifact@v3
-        with:
-          name: ubuntu-codecov-results-python
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v3
