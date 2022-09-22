@@ -38,6 +38,7 @@ jobs:
             mkdir -p ./Build/tests/results
             .\Build\tests\Debug\runner.exe --order lex --reporter junit --out .\Build\tests\results\report_cpptests.xml
             OpenCppCoverage --sources pennylane_lightning\src --export_type cobertura:coverage.xml Build\tests\Debug\runner.exe
+            Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v2
@@ -46,12 +47,13 @@ jobs:
           name: windows-test-report
           path: .\Build\tests\results\report_cpptests.xml
 
-      - name: Upload Report to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Upload coverage results
+        uses: actions/upload-artifact@v3
+        if: always()
         with:
-          files: ./coverage.xml
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: windows-coverage-report
+          path: .\coverage-${{ github.job }}.xml
+
 
   win-set-matrix-x86:
     name: Set builder matrix
@@ -209,6 +211,7 @@ jobs:
             mkdir -p ./Build/tests/results
             .\Build\tests\Debug\runner.exe --order lex --reporter junit --out .\Build\tests\results\report_cpptestswithKokkos.xml
             OpenCppCoverage --sources pennylane_lightning\src --export_type cobertura:coverage.xml Build\tests\Debug\runner.exe
+            Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -217,9 +220,25 @@ jobs:
           name: windows-test-report
           path: .\Build\tests\results\report_cpptestswithKokkos.xml
 
-      - name: Upload Report to Codecov
+      - name: Upload coverage results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: windows-coverage-report
+          path: .\coverage-${{ github.job }}.xml
+
+  upload-to-codecov-windows:
+    needs: [cpptests, cpptestswithKokkos]
+    name: Upload coverage data to codecov
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          name: windows-coverage-report 
+
+      - name: Upload to Codecov
         uses: codecov/codecov-action@v3
         with:
-          files: ./coverage.xml
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}

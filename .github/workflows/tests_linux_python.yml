@@ -290,7 +290,7 @@ jobs:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}.xml
 
-  upload-to-codecov-python:
+  upload-to-codecov-linux-python:
     needs: [pythontests, pythontestswithBLAS, pythontestswithKokkos, pythontestswithKokkosAndOpenBLAS]
     name: Upload coverage data to codecov
     runs-on: ubuntu-latest

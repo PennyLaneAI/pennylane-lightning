@@ -285,7 +285,7 @@ jobs:
           name: ubuntu-codecov-results-cpp
           path: ./BuildCov/coverage-${{ github.job }}.info
 
-  upload-to-codecov-cpp:
+  upload-to-codecov-linux-cpp:
     needs: [cpptests, cpptestswithOpenBLAS, cpptestswithKokkos, cpptestswithKokkosAndOpenBLAS]
     name: Upload coverage data to codecov
     runs-on: ubuntu-latest
