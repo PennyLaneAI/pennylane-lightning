@@ -112,7 +112,7 @@ jobs:
         if: always()
         with:
           name: ubuntu-tests-reports
-          path: BuildCov/tests/results/report_cpptestswithOpenBLAS.xml
+          path: Build/tests/results/report_cpptestswithOpenBLAS.xml
 
       - name: Build and run unit tests for code coverage
         run: |
@@ -192,7 +192,7 @@ jobs:
         if: always()
         with:
           name: ubuntu-tests-reports
-          path: BuildCov/tests/results/report_cpptestswithKokkos.xml
+          path: Build/tests/results/report_cpptestswithKokkos.xml
 
       - name: Build and run unit tests for code coverage
         run: |
@@ -266,7 +266,7 @@ jobs:
         if: always()
         with:
           name: ubuntu-tests-reports
-          path: BuildCov/tests/results/report_cpptestswithKokkosAndOpenBLAS.xml
+          path: Build/tests/results/report_cpptestswithKokkosAndOpenBLAS.xml
 
       - name: Build and run unit tests for code coverage
         run: |
