@@ -76,7 +76,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         std::sort(rev_wire.begin(), rev_wire.end());
 
-        std::array<size_t, 4> parity{};
+        std::array<size_t, 4> parity{0,0,0,0};
 
         parity[0] = fillTrailingOnes(rev_wire[0]);
         parity[1] =
@@ -99,7 +99,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         std::sort(rev_wire.begin(), rev_wire.end());
 
-        std::array<size_t, 5> parity{};
+        std::array<size_t, 5> parity{0,0,0,0,0};
 
         parity[0] = fillTrailingOnes(rev_wire[0]);
         parity[1] =
