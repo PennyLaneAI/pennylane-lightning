@@ -529,7 +529,7 @@ jobs:
         with:
           name: ubuntu-codecov-results
 
-      - name: name: Upload to Codecov
+      - name: Upload to Codecov
         uses: codecov/codecov-action@v3
         with:
           fail_ci_if_error: true
