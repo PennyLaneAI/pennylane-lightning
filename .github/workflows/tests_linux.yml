@@ -49,7 +49,7 @@ jobs:
             ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptests.xml
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
-            mv converage.info coverage-${{ github.job }}.info
+            mv coverage.info coverage-${{ github.job }}.info
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -435,7 +435,7 @@ jobs:
             ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptestswithKokkosAndOpenBLAS.xml
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
-            mv converage.info coverage-${{ github.job }}.info
+            mv coverage.info coverage-${{ github.job }}.info
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
