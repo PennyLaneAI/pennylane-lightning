@@ -53,7 +53,7 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          files: ./BuildCov/coverage.info
+          files: 
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -63,6 +63,13 @@ jobs:
         with:
           name: ubuntu-tests-reports
           path: BuildCov/tests/results/report_cpptests.xml
+
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ubuntu-codecov-results
+          path: ./BuildCov/coverage.info
 
   pythontests:
     strategy:
@@ -112,12 +119,12 @@ jobs:
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
+        if: always()
         with:
-          files: ./main/coverage.xml
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: ubuntu-codecov-results
+          path: ./main/coverage.xml
 
   cpptestswithOpenBLAS:
     strategy:
@@ -156,19 +163,19 @@ jobs:
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./BuildCov/coverage.info
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-
       - name: Upload test results
         uses: actions/upload-artifact@v3
         if: always()
         with:
           name: ubuntu-tests-reports
           path: BuildCov/tests/results/report_cpptestswithOpenBLAS.xml
+
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ubuntu-codecov-results
+          path: ./BuildCov/coverage.info
 
   pythontestswithBLAS:
     strategy:
@@ -229,6 +236,13 @@ jobs:
           files: ./main/coverage.xml
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ubuntu-codecov-results
+          path: ./main/coverage.xml
 
   build_and_cache_Kokkos:
     name: "Build and cache Kokkos and Kokkos Kernels"
@@ -294,6 +308,13 @@ jobs:
           files: ./BuildCov/coverage.info
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ubuntu-codecov-results
+          path: ./BuildCov/coverage.info
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -378,6 +399,13 @@ jobs:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ubuntu-codecov-results
+          path: ./main/coverage.xml
+
   cpptestswithKokkosAndOpenBLAS:
     needs: [build_and_cache_Kokkos]
     strategy:
@@ -430,12 +458,12 @@ jobs:
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
+        if: always()
         with:
-          files: ./BuildCov/coverage.info
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: ubuntu-codecov-results
+          path: ./BuildCov/coverage.info
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -513,9 +541,24 @@ jobs:
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
-      - name: Upload coverage to Codecov
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ubuntu-codecov-results
+          path: ./main/coverage.xml
+
+  upload-to-codecov:
+    needs: [cpptests, pythontests, cpptestswithOpenBLAS, pythontestswithBLAS, cpptestswithKokkos, pythontestwithKokkos, cpptestswithKokkosAndOpenBLAS, pythontestswithKokkosAndOpenBLAS]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-codecov-results
+
+      - name: name: Upload to Codecov
         uses: codecov/codecov-action@v3
         with:
-          files: ./main/coverage.xml
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
