@@ -71,28 +71,20 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         using Util::fillLeadingOnes;
         using Util::fillTrailingOnes;
 
-        size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
-        size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
-        size_t rev_wire_mid;
+        std::array<size_t, 3> rev_wire{rev_wire0, rev_wire1, rev_wire2};
 
-        if (rev_wire2 < rev_wire_min) {
-            rev_wire_mid = rev_wire_min;
-            rev_wire_min = rev_wire2;
-        } else if (rev_wire2 > rev_wire_max) {
-            rev_wire_mid = rev_wire_max;
-            rev_wire_max = rev_wire2;
-        } else {
-            rev_wire_mid = rev_wire2;
-        }
+        std::sort(rev_wire.begin(), rev_wire.end());
 
-        size_t parity_low = fillTrailingOnes(rev_wire_min);
-        size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
-        size_t parity_lmiddle =
-            fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_mid);
-        size_t parity_hmiddle =
-            fillLeadingOnes(rev_wire_mid + 1) & fillTrailingOnes(rev_wire_max);
+        std::array<size_t, 4> parity;
 
-        return {parity_high, parity_hmiddle, parity_lmiddle, parity_low};
+        parity[0] = fillTrailingOnes(rev_wire[0]);
+        parity[1] =
+            fillLeadingOnes(rev_wire[0] + 1) & fillTrailingOnes(rev_wire[1]);
+        parity[2] =
+            fillLeadingOnes(rev_wire[1] + 1) & fillTrailingOnes(rev_wire[2]);
+        parity[3] = fillLeadingOnes(rev_wire[2] + 1);
+
+        return {parity[3], parity[2], parity[1], parity[0]};
     }
 
     static std::tuple<size_t, size_t, size_t, size_t, size_t>
@@ -101,57 +93,23 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         using Util::fillLeadingOnes;
         using Util::fillTrailingOnes;
 
-        size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
-        size_t rev_wire_min_mid = std::max(rev_wire0, rev_wire1);
-        size_t rev_wire_max_mid = std::min(rev_wire2, rev_wire3);
-        size_t rev_wire_max = std::max(rev_wire2, rev_wire3);
+        std::array<size_t, 4> rev_wire{rev_wire0, rev_wire1, rev_wire2,
+                                       rev_wire3};
 
-        if (rev_wire_max_mid > rev_wire_min_mid) {
-        } else if (rev_wire_max_mid < rev_wire_min) {
-            if (rev_wire_max < rev_wire_min) {
-                std::size_t tmp = rev_wire_min;
-                rev_wire_min = rev_wire_max_mid;
-                rev_wire_max_mid = tmp;
+        std::sort(rev_wire.begin(), rev_wire.end());
 
-                tmp = rev_wire_max;
-                rev_wire_max = rev_wire_min_mid;
-                rev_wire_min_mid = tmp;
-            } else if (rev_wire_max > rev_wire_min_mid) {
-                std::size_t tmp = rev_wire_min;
-                rev_wire_min = rev_wire_max_mid;
-                rev_wire_max_mid = rev_wire_min_mid;
-                rev_wire_min_mid = tmp;
-            } else {
-                std::size_t tmp = rev_wire_min;
-                rev_wire_min = rev_wire_max_mid;
-                rev_wire_max_mid = rev_wire_max;
-                rev_wire_max = rev_wire_min_mid;
-                rev_wire_min_mid = tmp;
-            }
-        } else {
-            if (rev_wire_max > rev_wire_min_mid) {
-                std::size_t tmp = rev_wire_min_mid;
-                rev_wire_min_mid = rev_wire_max_mid;
-                rev_wire_max_mid = tmp;
-            } else {
-                std::size_t tmp = rev_wire_min_mid;
-                rev_wire_min_mid = rev_wire_max_mid;
-                rev_wire_max_mid = rev_wire_max;
-                rev_wire_max = tmp;
-            }
-        }
+        std::array<size_t, 5> parity;
 
-        const size_t parity_low = fillTrailingOnes(rev_wire_min);
-        const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
-        const size_t parity_lmiddle = fillLeadingOnes(rev_wire_min + 1) &
-                                      fillTrailingOnes(rev_wire_min_mid);
-        const size_t parity_hmiddle = fillLeadingOnes(rev_wire_max_mid + 1) &
-                                      fillTrailingOnes(rev_wire_max);
-        const size_t parity_middle = fillLeadingOnes(rev_wire_min_mid + 1) &
-                                     fillTrailingOnes(rev_wire_max_mid);
+        parity[0] = fillTrailingOnes(rev_wire[0]);
+        parity[1] =
+            fillLeadingOnes(rev_wire[0] + 1) & fillTrailingOnes(rev_wire[1]);
+        parity[2] =
+            fillLeadingOnes(rev_wire[1] + 1) & fillTrailingOnes(rev_wire[2]);
+        parity[3] =
+            fillLeadingOnes(rev_wire[2] + 1) & fillTrailingOnes(rev_wire[3]);
+        parity[4] = fillLeadingOnes(rev_wire[3] + 1);
 
-        return {parity_high, parity_hmiddle, parity_middle, parity_lmiddle,
-                parity_low};
+        return {parity[4], parity[3], parity[2], parity[1], parity[0]};
     }
 
   public:
