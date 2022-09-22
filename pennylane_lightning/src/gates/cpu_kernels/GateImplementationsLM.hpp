@@ -66,7 +66,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         return {parity_high, parity_middle, parity_low};
     }
 
-    static std::tuple<size_t, size_t, size_t, size_t>
+    static std::array<size_t, 4>
     revWireParity(size_t rev_wire0, size_t rev_wire1, size_t rev_wire2) {
         using Util::fillLeadingOnes;
         using Util::fillTrailingOnes;
@@ -84,12 +84,13 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             fillLeadingOnes(rev_wire[1] + 1) & fillTrailingOnes(rev_wire[2]);
         parity[3] = fillLeadingOnes(rev_wire[2] + 1);
 
-        return {parity[3], parity[2], parity[1], parity[0]};
+        return parity;
     }
 
-    static std::tuple<size_t, size_t, size_t, size_t, size_t>
-    revWireParity(size_t rev_wire0, size_t rev_wire1, size_t rev_wire2,
-                  size_t rev_wire3) {
+    static std::array<size_t, 5> revWireParity(size_t rev_wire0,
+                                               size_t rev_wire1,
+                                               size_t rev_wire2,
+                                               size_t rev_wire3) {
         using Util::fillLeadingOnes;
         using Util::fillTrailingOnes;
 
@@ -109,7 +110,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             fillLeadingOnes(rev_wire[2] + 1) & fillTrailingOnes(rev_wire[3]);
         parity[4] = fillLeadingOnes(rev_wire[3] + 1);
 
-        return {parity[4], parity[3], parity[2], parity[1], parity[0]};
+        return parity;
     }
 
   public:
@@ -1069,13 +1070,12 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
         const size_t rev_wire2_shift = static_cast<size_t>(1U) << rev_wire2;
 
-        const auto [parity_high, parity_hmiddle, parity_lmiddle, parity_low] =
-            revWireParity(rev_wire0, rev_wire1, rev_wire2);
+        auto parity = revWireParity(rev_wire0, rev_wire1, rev_wire2);
 
         for (size_t k = 0; k < Util::exp2(num_qubits - 3); k++) {
-            const size_t i000 = ((k << 3U) & parity_high) |
-                                ((k << 2U) & parity_hmiddle) |
-                                ((k << 1U) & parity_lmiddle) | (k & parity_low);
+            const size_t i000 = ((k << 3U) & parity[3]) |
+                                ((k << 2U) & parity[2]) |
+                                ((k << 1U) & parity[1]) | (k & parity[0]);
             const size_t i101 = i000 | rev_wire2_shift | rev_wire0_shift;
             const size_t i110 = i000 | rev_wire2_shift | rev_wire1_shift;
             std::swap(arr[i101], arr[i110]);
@@ -1096,13 +1096,12 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
         const size_t rev_wire2_shift = static_cast<size_t>(1U) << rev_wire2;
 
-        const auto [parity_high, parity_hmiddle, parity_lmiddle, parity_low] =
-            revWireParity(rev_wire0, rev_wire1, rev_wire2);
+        auto parity = revWireParity(rev_wire0, rev_wire1, rev_wire2);
 
         for (size_t k = 0; k < Util::exp2(num_qubits - 3); k++) {
-            const size_t i000 = ((k << 3U) & parity_high) |
-                                ((k << 2U) & parity_hmiddle) |
-                                ((k << 1U) & parity_lmiddle) | (k & parity_low);
+            const size_t i000 = ((k << 3U) & parity[3]) |
+                                ((k << 2U) & parity[2]) |
+                                ((k << 1U) & parity[1]) | (k & parity[0]);
             const size_t i111 =
                 i000 | rev_wire2_shift | rev_wire1_shift | rev_wire0_shift;
             const size_t i110 = i000 | rev_wire2_shift | rev_wire1_shift;
@@ -1152,17 +1151,15 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire2_shift = static_cast<size_t>(1U) << rev_wire2;
         const size_t rev_wire3_shift = static_cast<size_t>(1U) << rev_wire3;
 
-        const auto [parity_high, parity_hmiddle, parity_middle, parity_lmiddle,
-                    parity_low] =
-            revWireParity(rev_wire0, rev_wire1, rev_wire2, rev_wire3);
+        auto parity = revWireParity(rev_wire0, rev_wire1, rev_wire2, rev_wire3);
 
         for (size_t k = 0; k < Util::exp2(num_qubits - 4); k++) {
-            const std::size_t i0000 =
-                ((k << 4U) & parity_high) | ((k << 3U) & parity_hmiddle) |
-                ((k << 2U) & parity_middle) | ((k << 1U) & parity_lmiddle) |
-                (k & parity_low);
-            const std::size_t i0011 = i0000 | rev_wire1_shift | rev_wire0_shift;
-            const std::size_t i1100 = i0000 | rev_wire3_shift | rev_wire2_shift;
+            const std::size_t i0000 = ((k << 4U) & parity[4]) |
+                                      ((k << 3U) & parity[3]) |
+                                      ((k << 2U) & parity[2]) |
+                                      ((k << 1U) & parity[1]) | (k & parity[0]);
+            const size_t i0011 = i0000 | rev_wire1_shift | rev_wire0_shift;
+            const size_t i1100 = i0000 | rev_wire3_shift | rev_wire2_shift;
 
             const std::complex<PrecisionT> v3 = arr[i0011];
             const std::complex<PrecisionT> v12 = arr[i1100];
@@ -1195,36 +1192,33 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire2_shift = static_cast<size_t>(1U) << rev_wire2;
         const size_t rev_wire3_shift = static_cast<size_t>(1U) << rev_wire3;
 
-        const auto [parity_high, parity_hmiddle, parity_middle, parity_lmiddle,
-                    parity_low] =
-            revWireParity(rev_wire0, rev_wire1, rev_wire2, rev_wire3);
+        auto parity = revWireParity(rev_wire0, rev_wire1, rev_wire2, rev_wire3);
 
         for (size_t k = 0; k < Util::exp2(num_qubits - 4); k++) {
-            const std::size_t i0000 =
-                ((k << 4U) & parity_high) | ((k << 3U) & parity_hmiddle) |
-                ((k << 2U) & parity_middle) | ((k << 1U) & parity_lmiddle) |
-                (k & parity_low);
-            const std::size_t i0001 = i0000 | rev_wire0_shift;
-            const std::size_t i0010 = i0000 | rev_wire1_shift;
-            const std::size_t i0011 = i0000 | rev_wire1_shift | rev_wire0_shift;
-            const std::size_t i0100 = i0000 | rev_wire2_shift;
-            const std::size_t i0101 = i0000 | rev_wire2_shift | rev_wire0_shift;
-            const std::size_t i0110 = i0000 | rev_wire2_shift | rev_wire1_shift;
-            const std::size_t i0111 =
+            const std::size_t i0000 = ((k << 4U) & parity[4]) |
+                                      ((k << 3U) & parity[3]) |
+                                      ((k << 2U) & parity[2]) |
+                                      ((k << 1U) & parity[1]) | (k & parity[0]);
+            const size_t i0001 = i0000 | rev_wire0_shift;
+            const size_t i0010 = i0000 | rev_wire1_shift;
+            const size_t i0011 = i0000 | rev_wire1_shift | rev_wire0_shift;
+            const size_t i0100 = i0000 | rev_wire2_shift;
+            const size_t i0101 = i0000 | rev_wire2_shift | rev_wire0_shift;
+            const size_t i0110 = i0000 | rev_wire2_shift | rev_wire1_shift;
+            const size_t i0111 =
                 i0000 | rev_wire2_shift | rev_wire1_shift | rev_wire0_shift;
-            const std::size_t i1000 = i0000 | rev_wire3_shift;
-            const std::size_t i1001 = i0000 | rev_wire3_shift | rev_wire0_shift;
-            const std::size_t i1010 = i0000 | rev_wire3_shift | rev_wire1_shift;
-            const std::size_t i1011 =
+            const size_t i1000 = i0000 | rev_wire3_shift;
+            const size_t i1001 = i0000 | rev_wire3_shift | rev_wire0_shift;
+            const size_t i1010 = i0000 | rev_wire3_shift | rev_wire1_shift;
+            const size_t i1011 =
                 i0000 | rev_wire3_shift | rev_wire1_shift | rev_wire0_shift;
-            const std::size_t i1100 = i0000 | rev_wire3_shift | rev_wire2_shift;
-            const std::size_t i1101 =
+            const size_t i1100 = i0000 | rev_wire3_shift | rev_wire2_shift;
+            const size_t i1101 =
                 i0000 | rev_wire3_shift | rev_wire2_shift | rev_wire0_shift;
-            const std::size_t i1110 =
+            const size_t i1110 =
                 i0000 | rev_wire3_shift | rev_wire2_shift | rev_wire1_shift;
-            const std::size_t i1111 = i0000 | rev_wire3_shift |
-                                      rev_wire2_shift | rev_wire1_shift |
-                                      rev_wire0_shift;
+            const size_t i1111 = i0000 | rev_wire3_shift | rev_wire2_shift |
+                                 rev_wire1_shift | rev_wire0_shift;
 
             const std::complex<PrecisionT> v3 = arr[i0011];
             const std::complex<PrecisionT> v12 = arr[i1100];
@@ -1271,36 +1265,33 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire2_shift = static_cast<size_t>(1U) << rev_wire2;
         const size_t rev_wire3_shift = static_cast<size_t>(1U) << rev_wire3;
 
-        const auto [parity_high, parity_hmiddle, parity_middle, parity_lmiddle,
-                    parity_low] =
-            revWireParity(rev_wire0, rev_wire1, rev_wire2, rev_wire3);
+        auto parity = revWireParity(rev_wire0, rev_wire1, rev_wire2, rev_wire3);
 
         for (size_t k = 0; k < Util::exp2(num_qubits - 4); k++) {
-            const std::size_t i0000 =
-                ((k << 4U) & parity_high) | ((k << 3U) & parity_hmiddle) |
-                ((k << 2U) & parity_middle) | ((k << 1U) & parity_lmiddle) |
-                (k & parity_low);
-            const std::size_t i0001 = i0000 | rev_wire0_shift;
-            const std::size_t i0010 = i0000 | rev_wire1_shift;
-            const std::size_t i0011 = i0000 | rev_wire1_shift | rev_wire0_shift;
-            const std::size_t i0100 = i0000 | rev_wire2_shift;
-            const std::size_t i0101 = i0000 | rev_wire2_shift | rev_wire0_shift;
-            const std::size_t i0110 = i0000 | rev_wire2_shift | rev_wire1_shift;
-            const std::size_t i0111 =
+            const std::size_t i0000 = ((k << 4U) & parity[4]) |
+                                      ((k << 3U) & parity[3]) |
+                                      ((k << 2U) & parity[2]) |
+                                      ((k << 1U) & parity[1]) | (k & parity[0]);
+            const size_t i0001 = i0000 | rev_wire0_shift;
+            const size_t i0010 = i0000 | rev_wire1_shift;
+            const size_t i0011 = i0000 | rev_wire1_shift | rev_wire0_shift;
+            const size_t i0100 = i0000 | rev_wire2_shift;
+            const size_t i0101 = i0000 | rev_wire2_shift | rev_wire0_shift;
+            const size_t i0110 = i0000 | rev_wire2_shift | rev_wire1_shift;
+            const size_t i0111 =
                 i0000 | rev_wire2_shift | rev_wire1_shift | rev_wire0_shift;
-            const std::size_t i1000 = i0000 | rev_wire3_shift;
-            const std::size_t i1001 = i0000 | rev_wire3_shift | rev_wire0_shift;
-            const std::size_t i1010 = i0000 | rev_wire3_shift | rev_wire1_shift;
-            const std::size_t i1011 =
+            const size_t i1000 = i0000 | rev_wire3_shift;
+            const size_t i1001 = i0000 | rev_wire3_shift | rev_wire0_shift;
+            const size_t i1010 = i0000 | rev_wire3_shift | rev_wire1_shift;
+            const size_t i1011 =
                 i0000 | rev_wire3_shift | rev_wire1_shift | rev_wire0_shift;
-            const std::size_t i1100 = i0000 | rev_wire3_shift | rev_wire2_shift;
-            const std::size_t i1101 =
+            const size_t i1100 = i0000 | rev_wire3_shift | rev_wire2_shift;
+            const size_t i1101 =
                 i0000 | rev_wire3_shift | rev_wire2_shift | rev_wire0_shift;
-            const std::size_t i1110 =
+            const size_t i1110 =
                 i0000 | rev_wire3_shift | rev_wire2_shift | rev_wire1_shift;
-            const std::size_t i1111 = i0000 | rev_wire3_shift |
-                                      rev_wire2_shift | rev_wire1_shift |
-                                      rev_wire0_shift;
+            const size_t i1111 = i0000 | rev_wire3_shift | rev_wire2_shift |
+                                 rev_wire1_shift | rev_wire0_shift;
 
             const std::complex<PrecisionT> v3 = arr[i0011];
             const std::complex<PrecisionT> v12 = arr[i1100];
