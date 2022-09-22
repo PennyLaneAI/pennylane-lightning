@@ -40,23 +40,30 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 ninja-build gcovr lcov
 
-      - name: Build and run unit tests with code coverage
+      - name: Build and run unit tests
         run: |
-            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
-            cmake --build ./BuildCov
-            cd ./BuildCov
+            cmake pennylane_lightning/src -BBuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake --build ./Build
+            cd ./Build
             mkdir -p ./tests/results
             ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptests.xml
-            lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
-            lcov --remove coverage.info '/usr/*' --output-file coverage.info
-            mv coverage.info coverage-${{ github.job }}.info
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
         if: always()
         with:
           name: ubuntu-tests-reports
-          path: BuildCov/tests/results/report_cpptests.xml
+          path: Build/tests/results/report_cpptests.xml
+
+      - name: Build and run unit tests for code coverage
+        run: |
+            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake --build ./BuildCov
+            cd ./BuildCov
+            ./tests/runner
+            lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
+            lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}.info
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
@@ -148,16 +155,13 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 libopenblas-dev ninja-build gcovr lcov
 
-      - name: Build and run unit tests with code coverage
+      - name: Build and run unit tests
         run: |
-            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_BLAS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
-            cmake --build ./BuildCov
-            cd ./BuildCov
+            cmake pennylane_lightning/src -BBuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_BLAS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake --build ./Build
+            cd ./Build
             mkdir -p ./tests/results
             ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptestswithOpenBLAS.xml
-            lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
-            lcov --remove coverage.info '/usr/*' --output-file coverage.info
-            mv coverage.info coverage-${{ github.job }}.info
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -165,6 +169,16 @@ jobs:
         with:
           name: ubuntu-tests-reports
           path: BuildCov/tests/results/report_cpptestswithOpenBLAS.xml
+
+      - name: Build and run unit tests for code coverage
+        run: |
+            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DENABLE_BLAS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake --build ./BuildCov
+            cd ./BuildCov
+            ./tests/runner
+            lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
+            lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}.info
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
@@ -282,13 +296,27 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 ninja-build gcovr lcov
 
-      - name: Build and run unit tests with code coverage
+      - name: Build and run unit tests
         run: |
-            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_KOKKOS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
-            cmake --build ./BuildCov
-            cd ./BuildCov
+            cmake pennylane_lightning/src -BBuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_KOKKOS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake --build ./Build
+            cd ./Build
             mkdir -p ./tests/results
             ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptestswithKokkos.xml
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ubuntu-tests-reports
+          path: BuildCov/tests/results/report_cpptestswithKokkos.xml
+
+      - name: Build and run unit tests for code coverage
+        run: |
+            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DENABLE_KOKKOS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake --build ./BuildCov
+            cd ./BuildCov
+            ./tests/runner
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}.info
@@ -299,13 +327,6 @@ jobs:
         with:
           name: ubuntu-codecov-results-cpp
           path: ./BuildCov/coverage-${{ github.job }}.info
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: ubuntu-tests-reports
-          path: BuildCov/tests/results/report_cpptestswithKokkos.xml
 
   pythontestswithKokkos:
     needs: [build_and_cache_Kokkos]
@@ -426,13 +447,27 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 libopenblas-dev ninja-build gcovr lcov
 
-      - name: Build and run unit tests with code coverage
+      - name: Build and run unit tests
         run: |
-            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_BLAS=ON -DENABLE_KOKKOS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
-            cmake --build ./BuildCov
-            cd ./BuildCov
+            cmake pennylane_lightning/src -BBuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_BLAS=ON -DENABLE_KOKKOS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake --build ./Build
+            cd ./Build
             mkdir -p ./tests/results
             ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptestswithKokkosAndOpenBLAS.xml
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ubuntu-tests-reports
+          path: BuildCov/tests/results/report_cpptestswithKokkosAndOpenBLAS.xml
+
+      - name: Build and run unit tests for code coverage
+        run: |
+            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DENABLE_BLAS=ON -DENABLE_KOKKOS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake --build ./BuildCov
+            cd ./BuildCov
+            ./tests/runner
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}.info
@@ -443,13 +478,6 @@ jobs:
         with:
           name: ubuntu-codecov-results-cpp
           path: ./BuildCov/coverage-${{ github.job }}.info
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: ubuntu-tests-reports
-          path: BuildCov/tests/results/report_cpptestswithKokkosAndOpenBLAS.xml
 
   pythontestswithKokkosAndOpenBLAS:
     needs: [build_and_cache_Kokkos]
