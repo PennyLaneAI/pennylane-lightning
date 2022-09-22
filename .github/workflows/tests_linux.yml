@@ -521,7 +521,7 @@ jobs:
           path: ./main/coverage.xml
 
   upload-to-codecov:
-    needs: [cpptests, pythontests, cpptestswithOpenBLAS, pythontestswithBLAS, cpptestswithKokkos, pythontestwithKokkos, cpptestswithKokkosAndOpenBLAS, pythontestswithKokkosAndOpenBLAS]
+    needs: [cpptests, pythontests, cpptestswithOpenBLAS, pythontestswithBLAS, cpptestswithKokkos, pythontestswithKokkos, cpptestswithKokkosAndOpenBLAS, pythontestswithKokkosAndOpenBLAS]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Download coverage reports
