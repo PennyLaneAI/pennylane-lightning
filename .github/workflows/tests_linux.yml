@@ -49,6 +49,7 @@ jobs:
             ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptests.xml
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv converage.info coverage-${{ github.job }}.info
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -62,7 +63,7 @@ jobs:
         if: always()
         with:
           name: ubuntu-codecov-results
-          path: ./BuildCov/coverage.info
+          path: ./BuildCov/coverage-${{ github.job }}.info
 
   pythontests:
     strategy:
@@ -111,13 +112,14 @@ jobs:
           pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          mv coverage.xml coverage-${{ github.job }}.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         if: always()
         with:
           name: ubuntu-codecov-results
-          path: ./main/coverage.xml
+          path: ./main/coverage-${{ github.job }}.xml
 
   cpptestswithOpenBLAS:
     strategy:
@@ -155,6 +157,7 @@ jobs:
             ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptestswithOpenBLAS.xml
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}.info
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -168,7 +171,7 @@ jobs:
         if: always()
         with:
           name: ubuntu-codecov-results
-          path: ./BuildCov/coverage.info
+          path: ./BuildCov/coverage-${{ github.job }}.info
 
   pythontestswithBLAS:
     strategy:
@@ -222,13 +225,14 @@ jobs:
           pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          mv coverage.xml coverage-${{ github.job }}.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         if: always()
         with:
           name: ubuntu-codecov-results
-          path: ./main/coverage.xml
+          path: ./main/coverage-${{ github.job }}.xml
 
   build_and_cache_Kokkos:
     name: "Build and cache Kokkos and Kokkos Kernels"
@@ -287,13 +291,14 @@ jobs:
             ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptestswithKokkos.xml
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}.info
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         if: always()
         with:
           name: ubuntu-codecov-results
-          path: ./BuildCov/coverage.info
+          path: ./BuildCov/coverage-${{ github.job }}.info
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -370,13 +375,14 @@ jobs:
           pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          mv coverage.xml coverage-${{ github.job }}.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         if: always()
         with:
           name: ubuntu-codecov-results
-          path: ./main/coverage.xml
+          path: ./main/coverage-${{ github.job }}.xml
 
   cpptestswithKokkosAndOpenBLAS:
     needs: [build_and_cache_Kokkos]
@@ -429,13 +435,14 @@ jobs:
             ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptestswithKokkosAndOpenBLAS.xml
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv converage.info coverage-${{ github.job }}.info
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         if: always()
         with:
           name: ubuntu-codecov-results
-          path: ./BuildCov/coverage.info
+          path: ./BuildCov/coverage-${{ github.job }}.info
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -512,16 +519,18 @@ jobs:
           pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          mv coverage.xml coverage-${{ github.job }}.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         if: always()
         with:
           name: ubuntu-codecov-results
-          path: ./main/coverage.xml
+          path: ./main/coverage-${{ github.job }}.xml
 
   upload-to-codecov:
     needs: [cpptests, pythontests, cpptestswithOpenBLAS, pythontestswithBLAS, cpptestswithKokkos, pythontestswithKokkos, cpptestswithKokkosAndOpenBLAS, pythontestswithKokkosAndOpenBLAS]
+    name: Upload coverage data to codecov
     runs-on: ${{ matrix.os }}
     steps:
       - name: Download coverage reports
