@@ -531,7 +531,7 @@ jobs:
   upload-to-codecov:
     needs: [cpptests, pythontests, cpptestswithOpenBLAS, pythontestswithBLAS, cpptestswithKokkos, pythontestswithKokkos, cpptestswithKokkosAndOpenBLAS, pythontestswithKokkosAndOpenBLAS]
     name: Upload coverage data to codecov
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - name: Download coverage reports
         uses: actions/download-artifact@v3
