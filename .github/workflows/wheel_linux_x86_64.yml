@@ -13,57 +13,20 @@ on:
   release:
     types: [published]
 
-env:
-  PYTHON3_MIN_VERSION: "7"
-  PYTHON3_MAX_VERSION: "10"
-
 jobs:
-  linux-set-matrix-x86_64:
-    name: Set builder matrix
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.10.0
-        with:
-          access_token: ${{ github.token }}
-
-      - uses: actions/checkout@v3
-
-      - name: Python version
-        id: pyver
-        run: |
-          if [[ ${{ github.event_name }} == 'pull_request' ]]; then
-            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
-              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-              --max-version=3.${{ env.PYTHON3_MAX_VERSION }})"
-          else
-            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
-              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-              --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
-              --range)"
-          fi
-
-      - name: Kokkos execution strategy
-        id: exec_model
-        run: echo "::set-output name=exec_model::[\"SERIAL\"]" # We may also adopt [OPENMP, THREADS] in later iterations
-
-      - name: Kokkos version
-        id: kokkos_version
-        run: echo "::set-output name=kokkos_version::[\"3.6.00\"]"
-
-    outputs:
-      matrix: ${{ steps.pyver.outputs.matrix }}
-      exec_model: ${{ steps.exec_model.outputs.exec_model }}
-      kokkos_version: ${{ steps.kokkos_version.outputs.kokkos_version }}
+  set_wheel_build_matrix:
+    name: "Set wheel build matrix"
+    uses: ./.github/workflows/set_wheel_build_matrix.yml
+    with:
+      event_name: ${{ github.event_name }}
 
   build_dependencies:
-    needs: [linux-set-matrix-x86_64]
+    needs: [set_wheel_build_matrix]
     strategy:
       matrix:
         os: [ubuntu-latest]
-        exec_model: ${{ fromJson(needs.linux-set-matrix-x86_64.outputs.exec_model) }}
-        kokkos_version: ${{ fromJson(needs.linux-set-matrix-x86_64.outputs.kokkos_version) }}
+        exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
         container_img: ["quay.io/pypa/manylinux2014_x86_64"]
 
     name: Kokkos core & kernels (${{ matrix.exec_model }})
@@ -141,15 +104,15 @@ jobs:
           cmake --install ./Build
 
   linux-wheels-x86-64:
-    needs: [linux-set-matrix-x86_64, build_dependencies]
+    needs: [set_wheel_build_matrix, build_dependencies]
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
         arch: [x86_64]
-        cibw_build: ${{ fromJson(needs.linux-set-matrix-x86_64.outputs.matrix) }}
-        exec_model: ${{ fromJson(needs.linux-set-matrix-x86_64.outputs.exec_model) }}
-        kokkos_version: ${{ fromJson(needs.linux-set-matrix-x86_64.outputs.kokkos_version) }}
+        cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
+        exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
         container_img: ["quay.io/pypa/manylinux2014_x86_64"]
 
     name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
@@ -169,7 +132,8 @@ jobs:
           path: /root/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
-      - uses: actions/checkout@v3
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
 
       - name: Copy cached libraries
         run: |
