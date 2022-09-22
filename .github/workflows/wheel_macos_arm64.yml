@@ -36,18 +36,18 @@ jobs:
         id: pyver
         run: |
           if [[ ${{ github.event_name }} == 'pull_request' ]]; then
-            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
+            echo "::set-output name=python_version::$(python3 scripts/gen_pyver_matrix.py \
               --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
               --max-version=3.${{ env.PYTHON3_MAX_VERSION }})"
           else
-            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
+            echo "::set-output name=python_version::$(python3 scripts/gen_pyver_matrix.py \
               --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
               --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
               --range)"
           fi
 
     outputs:
-      matrix: ${{ steps.pyver.outputs.matrix }}
+      python_version: ${{ steps.pyver.outputs.python_version }}
 
   mac-wheels-arm64:
     needs: [mac-set-matrix-arm]
@@ -56,7 +56,7 @@ jobs:
       matrix:
         os: [macos-11]
         arch: [arm64]
-        cibw_build: ${{fromJson(needs.mac-set-matrix-arm.outputs.matrix)}}
+        cibw_build: ${{fromJson(needs.mac-set-matrix-arm.outputs.python_version)}}
 
     name: macos-latest::arm64 (Python ${{ fromJson('{ "cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
