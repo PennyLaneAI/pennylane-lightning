@@ -528,8 +528,8 @@ jobs:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}.xml
 
-  upload-to-codecov:
-    needs: [cpptests, pythontests, cpptestswithOpenBLAS, pythontestswithBLAS, cpptestswithKokkos, pythontestswithKokkos, cpptestswithKokkosAndOpenBLAS, pythontestswithKokkosAndOpenBLAS]
+  upload-to-codecov-cpp:
+    needs: [cpptests, cpptestswithOpenBLAS, cpptestswithKokkos, cpptestswithKokkosAndOpenBLAS]
     name: Upload coverage data to codecov
     runs-on: ubuntu-latest
     steps:
@@ -537,6 +537,18 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: ubuntu-codecov-results-cpp
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  upload-to-codecov-python:
+    needs: [pythontests, pythontestswithBLAS, pythontestswithKokkos, pythontestswithKokkosAndOpenBLAS]
+    name: Upload coverage data to codecov
+    runs-on: ubuntu-latest
+    steps:
 
       - name: Download coverage reports
         uses: actions/download-artifact@v3
