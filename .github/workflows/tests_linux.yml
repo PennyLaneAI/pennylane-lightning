@@ -40,13 +40,27 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 ninja-build gcovr lcov
 
-      - name: Build and run unit tests with code coverage
+      - name: Build and run unit tests
         run: |
-            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
-            cmake --build ./BuildCov
-            cd ./BuildCov
+            cmake pennylane_lightning/src -BBuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake --build ./Build
+            cd ./Build
             mkdir -p ./tests/results
             ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptests.xml
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ubuntu-tests-reports
+          path: Build/tests/results/report_cpptests.xml
+
+      - name: Build and run unit tests for code coverage
+        run: |
+            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake --build ./BuildCov
+            cd ./BuildCov
+            ./tests/runner
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
 
@@ -56,13 +70,6 @@ jobs:
           files: ./BuildCov/coverage.info
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: ubuntu-tests-reports
-          path: BuildCov/tests/results/report_cpptests.xml
 
   pythontests:
     strategy:
