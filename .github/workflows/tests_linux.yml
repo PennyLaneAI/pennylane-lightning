@@ -55,6 +55,7 @@ jobs:
         with:
           files: ./BuildCov/coverage.info
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -91,27 +92,32 @@ jobs:
           cd main
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
+
       - name: Install ML libraries for interfaces
         run: |
           pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
           pip install --upgrade "jax[cpu]"  # This also installs jaxlib
           pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
+
       - name: Install lightning.qubit device
         run: |
           cd main
           python setup.py build_ext -i --define="ENABLE_KOKKOS=OFF;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           pip install -e .
+
       - name: Run PennyLane-Lightning unit tests
         run: |
           cd main/
           pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           files: ./main/coverage.xml
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   cpptestswithOpenBLAS:
     strategy:
@@ -155,6 +161,7 @@ jobs:
         with:
           files: ./BuildCov/coverage.info
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -196,27 +203,32 @@ jobs:
           cd main
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
+
       - name: Install ML libraries for interfaces
         run: |
           pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
           pip install --upgrade "jax[cpu]"  # This also installs jaxlib
           pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
+
       - name: Install lightning.qubit device
         run: |
           cd main
           python setup.py build_ext -i --define="ENABLE_BLAS=ON;ENABLE_KOKKOS=OFF;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           pip install -e .
+
       - name: Run PennyLane-Lightning unit tests
         run: |
           cd main/
           pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           files: ./main/coverage.xml
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   build_and_cache_Kokkos:
     name: "Build and cache Kokkos and Kokkos Kernels"
@@ -281,6 +293,7 @@ jobs:
         with:
           files: ./BuildCov/coverage.info
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -363,6 +376,7 @@ jobs:
         with:
           files: ./main/coverage.xml
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   cpptestswithKokkosAndOpenBLAS:
     needs: [build_and_cache_Kokkos]
@@ -421,6 +435,7 @@ jobs:
         with:
           files: ./BuildCov/coverage.info
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -503,3 +518,4 @@ jobs:
         with:
           files: ./main/coverage.xml
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
