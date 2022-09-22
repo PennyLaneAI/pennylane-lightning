@@ -235,7 +235,7 @@ jobs:
       - name: Download coverage reports
         uses: actions/download-artifact@v3
         with:
-          name: windows-coverage-report 
+          name: windows-coverage-report
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v3
