@@ -62,7 +62,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: ubuntu-codecov-results
+          name: ubuntu-codecov-results-cpp
           path: ./BuildCov/coverage-${{ github.job }}.info
 
   pythontests:
@@ -118,7 +118,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: ubuntu-codecov-results
+          name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}.xml
 
   cpptestswithOpenBLAS:
@@ -170,7 +170,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: ubuntu-codecov-results
+          name: ubuntu-codecov-results-cpp
           path: ./BuildCov/coverage-${{ github.job }}.info
 
   pythontestswithBLAS:
@@ -231,7 +231,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: ubuntu-codecov-results
+          name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}.xml
 
   build_and_cache_Kokkos:
@@ -297,7 +297,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: ubuntu-codecov-results
+          name: ubuntu-codecov-results-cpp
           path: ./BuildCov/coverage-${{ github.job }}.info
 
       - name: Upload test results
@@ -381,7 +381,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: ubuntu-codecov-results
+          name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}.xml
 
   cpptestswithKokkosAndOpenBLAS:
@@ -441,7 +441,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: ubuntu-codecov-results
+          name: ubuntu-codecov-results-cpp
           path: ./BuildCov/coverage-${{ github.job }}.info
 
       - name: Upload test results
@@ -525,7 +525,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: ubuntu-codecov-results
+          name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}.xml
 
   upload-to-codecov:
@@ -536,7 +536,12 @@ jobs:
       - name: Download coverage reports
         uses: actions/download-artifact@v3
         with:
-          name: ubuntu-codecov-results
+          name: ubuntu-codecov-results-cpp
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-codecov-results-python
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v3
