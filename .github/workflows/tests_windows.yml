@@ -232,6 +232,9 @@ jobs:
     name: Upload coverage data to codecov
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Download coverage reports
         uses: actions/download-artifact@v3
         with:
