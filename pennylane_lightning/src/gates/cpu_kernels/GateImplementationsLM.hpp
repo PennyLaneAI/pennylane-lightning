@@ -66,7 +66,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         return {parity_high, parity_middle, parity_low};
     }
 
-    // static std::array<size_t, 4>
     static auto revWireParity(size_t rev_wire0, size_t rev_wire1,
                               size_t rev_wire2) {
         using Util::fillLeadingOnes;
@@ -90,7 +89,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         return parity;
     }
 
-    // static std::array<size_t, 5> revWireParity(size_t rev_wire0,
     static auto revWireParity(size_t rev_wire0, size_t rev_wire1,
                               size_t rev_wire2, size_t rev_wire3) {
         using Util::fillLeadingOnes;
