@@ -191,6 +191,20 @@ static void applyOperations_RandOps(benchmark::State &state,
     }
 }
 
+BENCHMARK_APPLYOPS(applyOperations_RandOps, float, LMN_CSWAP, Kernel::LMN,
+                   {"CSWAP"})
+    ->ArgsProduct({
+        benchmark::CreateRange(2, 4, /*mul=*/2),       // num_gates
+        benchmark::CreateDenseRange(6, 24, /*step=*/2), // num_qubits
+    });
+
+BENCHMARK_APPLYOPS(applyOperations_RandOps, float, LM_CSWAP, Kernel::LM,
+                   {"CSWAP"})
+    ->ArgsProduct({
+        benchmark::CreateRange(2, 4, /*mul=*/2),       // num_gates
+        benchmark::CreateDenseRange(6, 24, /*step=*/2), // num_qubits
+    });
+
 /* RXYZ */
 BENCHMARK_APPLYOPS(applyOperations_RandOps, float, LM_RXYZ, Kernel::LM,
                    {"RX", "RY", "RZ"})

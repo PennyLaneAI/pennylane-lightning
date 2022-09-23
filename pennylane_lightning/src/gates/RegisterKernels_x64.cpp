@@ -21,6 +21,7 @@
 #include "RuntimeInfo.hpp"
 #include "cpu_kernels/GateImplementationsLM.hpp"
 #include "cpu_kernels/GateImplementationsPI.hpp"
+#include "cpu_kernels/GateImplementationsLMN.hpp"
 
 namespace Pennylane::Internal {
 
@@ -28,6 +29,7 @@ int registerAllAvailableKernels_Float() {
     using Pennylane::Util::RuntimeInfo;
     registerKernel<float, float, Gates::GateImplementationsLM>();
     registerKernel<float, float, Gates::GateImplementationsPI>();
+    registerKernel<float, float, Gates::GateImplementationsLMN>();
 
     if (RuntimeInfo::AVX2() && RuntimeInfo::FMA()) {
         registerKernelsAVX2_Float();
@@ -42,6 +44,7 @@ int registerAllAvailableKernels_Double() {
     using Pennylane::Util::RuntimeInfo;
     registerKernel<double, double, Gates::GateImplementationsLM>();
     registerKernel<double, double, Gates::GateImplementationsPI>();
+    registerKernel<double, double, Gates::GateImplementationsLMN>();
 
     if (RuntimeInfo::AVX2() && RuntimeInfo::FMA()) {
         registerKernelsAVX2_Double();

@@ -19,17 +19,20 @@
 #include "RegisterKernel.hpp"
 #include "cpu_kernels/GateImplementationsLM.hpp"
 #include "cpu_kernels/GateImplementationsPI.hpp"
+#include "cpu_kernels/GateImplementationsLMN.hpp"
 
 namespace Pennylane::Internal {
 int registerAllAvailableKernels_Float() {
     registerKernel<float, float, Gates::GateImplementationsLM>();
     registerKernel<float, float, Gates::GateImplementationsPI>();
+    registerKernel<float, float, Gates::GateImplementationsLMN>();
     return 1;
 }
 
 int registerAllAvailableKernels_Double() {
     registerKernel<double, double, Gates::GateImplementationsLM>();
     registerKernel<double, double, Gates::GateImplementationsPI>();
+    registerKernel<double, double, Gates::GateImplementationsLMN>();
     return 1;
 }
 } // namespace Pennylane::Internal
