@@ -114,6 +114,48 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         return parity;
     }
 
+    template <const size_t SIZE>
+    static auto revWireParity_test(size_t num_qubits,
+                                   const std::vector<size_t> &wires,
+                                   std::array<size_t, SIZE> &rev_wires_shift,
+                                   std::array<size_t, SIZE + 1> &parity) {
+        using Util::fillLeadingOnes;
+        using Util::fillTrailingOnes;
+
+        std::array<size_t, SIZE> rev_wires;
+
+        std::transform(
+            wires.rbegin(), wires.rend(), rev_wires.begin(),
+            [num_qubits](size_t wire) { return num_qubits - wire - 1; });
+
+        std::transform(
+            rev_wires.begin(), rev_wires.end(), rev_wires_shift.begin(),
+            [](size_t wire) { return static_cast<size_t>(1U) << wire; });
+
+        std::sort(rev_wires.begin(), rev_wires.end());
+
+        parity[0] = fillTrailingOnes(rev_wires[0]);
+        parity[SIZE] = fillLeadingOnes(rev_wires[SIZE - 1] + 1);
+
+        if constexpr (SIZE == 2) {
+            parity[1] = fillLeadingOnes(rev_wires[0] + 1) &
+                        fillTrailingOnes(rev_wires[1]);
+        } else if constexpr (SIZE == 3) {
+            parity[1] = fillLeadingOnes(rev_wires[0] + 1) &
+                        fillTrailingOnes(rev_wires[1]);
+            parity[2] = fillLeadingOnes(rev_wires[1] + 1) &
+                        fillTrailingOnes(rev_wires[2]);
+        } else if constexpr (SIZE == 4) {
+            parity[1] = fillLeadingOnes(rev_wires[0] + 1) &
+                        fillTrailingOnes(rev_wires[1]);
+            parity[2] = fillLeadingOnes(rev_wires[1] + 1) &
+                        fillTrailingOnes(rev_wires[2]);
+            parity[3] = fillLeadingOnes(rev_wires[2] + 1) &
+                        fillTrailingOnes(rev_wires[3]);
+        } else {
+        }
+    }
+
   public:
     constexpr static KernelType kernel_id = KernelType::LM;
     constexpr static std::string_view name = "LM";
@@ -1057,6 +1099,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         }
     }
 
+    /*
     template <class PrecisionT>
     static void applyCSWAP(std::complex<PrecisionT> *arr, size_t num_qubits,
                            const std::vector<size_t> &wires,
@@ -1079,6 +1122,29 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                 ((k << 1U) & parity[1]) | (k & parity[0]);
             const size_t i101 = i000 | rev_wire2_shift | rev_wire0_shift;
             const size_t i110 = i000 | rev_wire2_shift | rev_wire1_shift;
+            std::swap(arr[i101], arr[i110]);
+        }
+    }
+    */
+
+    template <class PrecisionT>
+    static void applyCSWAP(std::complex<PrecisionT> *arr, size_t num_qubits,
+                           const std::vector<size_t> &wires,
+                           [[maybe_unused]] bool inverse) {
+        PL_ASSERT(wires.size() == 3);
+
+        const size_t wires_size = 3;
+        std::array<size_t, wires_size> rev_wires_shift;
+        std::array<size_t, wires_size + 1> parity;
+        revWireParity_test<wires_size>(num_qubits, wires, rev_wires_shift,
+                                       parity);
+
+        for (size_t k = 0; k < Util::exp2(num_qubits - 3); k++) {
+            const size_t i000 = ((k << 3U) & parity[3]) |
+                                ((k << 2U) & parity[2]) |
+                                ((k << 1U) & parity[1]) | (k & parity[0]);
+            const size_t i101 = i000 | rev_wires_shift[2] | rev_wires_shift[0];
+            const size_t i110 = i000 | rev_wires_shift[2] | rev_wires_shift[1];
             std::swap(arr[i101], arr[i110]);
         }
     }
