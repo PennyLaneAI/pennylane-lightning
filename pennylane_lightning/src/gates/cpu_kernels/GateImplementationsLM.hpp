@@ -66,13 +66,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         return {parity_high, parity_middle, parity_low};
     }
 
+    template <const size_t wire_size = 3>
     static constexpr auto revWireParity(size_t rev_wire0, size_t rev_wire1,
                                         size_t rev_wire2)
-        -> std::array<size_t, 4> {
+        -> std::array<size_t, wire_size + 1> {
         using Util::fillLeadingOnes;
         using Util::fillTrailingOnes;
 
-        std::array<size_t, 3> rev_wire{rev_wire0, rev_wire1, rev_wire2};
+        std::array<size_t, wire_size> rev_wire{rev_wire0, rev_wire1, rev_wire2};
 
         std::sort(rev_wire.begin(), rev_wire.end());
 
@@ -89,14 +90,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         return parity;
     }
-
+    template <const size_t wire_size = 4>
     static constexpr auto revWireParity(size_t rev_wire0, size_t rev_wire1,
                                         size_t rev_wire2, size_t rev_wire3)
-        -> std::array<size_t, 5> {
+        -> std::array<size_t, wire_size + 1> {
         using Util::fillLeadingOnes;
         using Util::fillTrailingOnes;
 
-        std::array<size_t, 4> rev_wire{rev_wire0, rev_wire1, rev_wire2,
+        std::array<size_t, wire_size> rev_wire{rev_wire0, rev_wire1, rev_wire2,
                                        rev_wire3};
 
         std::sort(rev_wire.begin(), rev_wire.end());
