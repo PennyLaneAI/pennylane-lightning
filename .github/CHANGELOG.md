@@ -12,6 +12,9 @@
 * Improve tests and checks CI/CD pipelines.
 [(#353)](https://github.com/PennyLaneAI/pennylane-lightning/pull/353)
 
+* Implement 3 Qubits gates (CSWAP & Toffoli) & 4 Qubits gates (DoubleExcitation, DoubleExcitationMinus, DoubleExcitationPlus) in LM manner.
+[(#362)](https://github.com/PennyLaneAI/pennylane-lightning/pull/362)
+
 ### Documentation
 
 ### Bug fixes
@@ -20,7 +23,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Chae-Yeun Park
+Amintor Dusko, Chae-Yeun Park, Shuli Shu
 
 ---
 
