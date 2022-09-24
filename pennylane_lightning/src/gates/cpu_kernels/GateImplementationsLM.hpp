@@ -98,7 +98,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         using Util::fillTrailingOnes;
 
         std::array<size_t, wire_size> rev_wire{rev_wire0, rev_wire1, rev_wire2,
-                                       rev_wire3};
+                                               rev_wire3};
 
         std::sort(rev_wire.begin(), rev_wire.end());
 
