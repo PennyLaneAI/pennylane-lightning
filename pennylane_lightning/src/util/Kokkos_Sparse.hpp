@@ -21,6 +21,8 @@
 
 #include "Error.hpp"
 
+// #define _ENABLE_KOKKOS
+
 #ifdef _ENABLE_KOKKOS
 
 #include "KokkosKernels_default_types.hpp"
@@ -131,15 +133,17 @@ void apply_Sparse_Matrix_Kokkos(
         const_data_view_type<fp_precision> vector_view(
             reinterpret_cast<const Kokkos::complex<fp_precision> *>(vector_ptr),
             vector_size);
-        Kokkos::View<data_type<fp_precision> *> result_view("rhs", vector_size);
+        std::vector<Kokkos::complex<fp_precision>> result_view_vector(vector_size);
+        data_view_type<fp_precision> result_view(result_view_vector.data(),
+            vector_size);
 
-        const_crs_matrix_type<fp_precision> myMatrix =
+        const_crs_matrix_type<fp_precision> Sparse_matrix =
             create_Kokkos_Sparse_Matrix(row_map_ptr, row_map_size - 1,
                                         entries_ptr, values_ptr, numNNZ);
 
         const data_type<fp_precision> alpha(1.0);
         const data_type<fp_precision> beta;
-        KokkosSparse::spmv("N", alpha, myMatrix, vector_view, beta,
+        KokkosSparse::spmv("N", alpha, Sparse_matrix, vector_view, beta,
                            result_view);
 
         result = std::move(std::vector<std::complex<fp_precision>>(
