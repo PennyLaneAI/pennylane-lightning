@@ -12,6 +12,9 @@
 * Improve tests and checks CI/CD pipelines.
 [(#353)](https://github.com/PennyLaneAI/pennylane-lightning/pull/353)
 
+* Upgrade Kokkos and Kokkos Kernels to 3.7.00.
+[(#361)](https://github.com/PennyLaneAI/pennylane-lightning/pull/361)
+
 ### Documentation
 
 ### Bug fixes

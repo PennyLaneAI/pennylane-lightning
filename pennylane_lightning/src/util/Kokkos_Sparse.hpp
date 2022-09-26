@@ -21,8 +21,6 @@
 
 #include "Error.hpp"
 
-// #define _ENABLE_KOKKOS
-
 #ifdef _ENABLE_KOKKOS
 
 #include "KokkosKernels_default_types.hpp"
