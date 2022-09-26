@@ -103,3 +103,5 @@ catch_discover_tests(runner)
 # We build compile time tests before the runtime tests as build error messages
 # are horrible if compile time constants are not well defined.
 add_dependencies(runner compile_time_tests)
+
+install(TARGETS runner DESTINATION bin)

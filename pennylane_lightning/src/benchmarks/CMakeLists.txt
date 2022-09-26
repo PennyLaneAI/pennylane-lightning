@@ -91,3 +91,10 @@ add_custom_command(TARGET bench_kernels POST_BUILD
                            ${PROJECT_SOURCE_DIR}/plot_gate_benchmark.py
                            ${PROJECT_BINARY_DIR}/plot_gate_benchmark.py
 )
+
+install(TARGETS bench_kernels apply_operations DESTINATION bin)
+install(FILES 
+    ${PROJECT_SOURCE_DIR}/benchmark_all.sh 
+    ${PROJECT_SOURCE_DIR}/plot_gate_benchmark.py 
+    DESTINATION bin
+)

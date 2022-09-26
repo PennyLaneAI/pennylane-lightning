@@ -48,6 +48,7 @@ option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_OPENMP "Enable OpenMP" ON)
 option(ENABLE_KOKKOS "Enable Kokkos" ON)
 option(ENABLE_BLAS "Enable BLAS" OFF)
+option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
 
 # Other build options
 option(BUILD_TESTS "Build cpp tests" OFF)
@@ -59,12 +60,15 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
 set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 # Add pybind11
 include(FetchContent)
+if(ENABLE_PYTHON)
 FetchContent_Declare(pybind11
                      GIT_REPOSITORY https://github.com/pybind/pybind11.git
                      GIT_TAG        v2.6.2
 )
 FetchContent_MakeAvailable(pybind11)
+endif()
 
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # All CMakeLists.txt in subdirectories use pennylane_lightning_compile_options and pennylane_lightning_external_libs
 add_subdirectory(pennylane_lightning/src)
@@ -76,11 +80,13 @@ add_library(pennylane_lightning INTERFACE)
 
 target_link_libraries(pennylane_lightning INTERFACE     lightning_utils
                                                         lightning_simulator
-                                                        lightning_algorithms)
+                                                        lightning_algorithms
+                                                        lightning_gates
+)
 target_include_directories(pennylane_lightning INTERFACE "pennylane_lightning/src")
 
 #####################################################
-
+if(ENABLE_PYTHON)
 pybind11_add_module(lightning_qubit_ops "pennylane_lightning/src/bindings/Bindings.cpp")
 target_link_libraries(lightning_qubit_ops PRIVATE lightning_algorithms
                                                   lightning_gates
@@ -92,6 +98,14 @@ target_link_libraries(lightning_qubit_ops PRIVATE lightning_compile_options
 set_target_properties(lightning_qubit_ops PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
 target_compile_definitions(lightning_qubit_ops PRIVATE VERSION_INFO=${VERSION_STRING})
+endif()
+
+install(TARGETS pennylane_lightning lightning_qubit_ops
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        INCLUDES DESTINATION include
+)
 
 if (BUILD_TESTS)
     enable_testing()
