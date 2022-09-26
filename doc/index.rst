@@ -24,7 +24,6 @@ PennyLane-Lightning provides the following device:
 
 .. toctree::
    :maxdepth: 2
-   :caption: PennyLane-Lightning
    :titlesonly:
    :hidden:
 
