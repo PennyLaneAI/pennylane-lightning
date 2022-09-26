@@ -5,6 +5,8 @@
 ### Breaking changes
 
 ### Improvements
+* Implement 3 Qubits gates (CSWAP & Toffoli) & 4 Qubits gates (DoubleExcitation, DoubleExcitationMinus, DoubleExcitationPlus) in LM manner.
+[(#358)](https://github.com/PennyLaneAI/pennylane-lightning/pull/358)
 
 * Update clang-tools version in Github workflows.
 [(#351)](https://github.com/PennyLaneAI/pennylane-lightning/pull/351)
@@ -20,7 +22,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Chae-Yeun Park
+Amintor Dusko, Chae-Yeun Park, Shuli Shu
 
 ---
 
