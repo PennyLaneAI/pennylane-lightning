@@ -133,9 +133,10 @@ void apply_Sparse_Matrix_Kokkos(
         const_data_view_type<fp_precision> vector_view(
             reinterpret_cast<const Kokkos::complex<fp_precision> *>(vector_ptr),
             vector_size);
-        std::vector<Kokkos::complex<fp_precision>> result_view_vector(vector_size);
-        data_view_type<fp_precision> result_view(result_view_vector.data(),
+        std::vector<Kokkos::complex<fp_precision>> result_view_vector(
             vector_size);
+        data_view_type<fp_precision> result_view(result_view_vector.data(),
+                                                 vector_size);
 
         const_crs_matrix_type<fp_precision> Sparse_matrix =
             create_Kokkos_Sparse_Matrix(row_map_ptr, row_map_size - 1,
