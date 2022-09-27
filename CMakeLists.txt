@@ -100,7 +100,7 @@ set_target_properties(lightning_qubit_ops PROPERTIES CXX_VISIBILITY_PRESET hidde
 target_compile_definitions(lightning_qubit_ops PRIVATE VERSION_INFO=${VERSION_STRING})
 endif()
 
-install(TARGETS pennylane_lightning lightning_qubit_ops
+install(TARGETS pennylane_lightning
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
