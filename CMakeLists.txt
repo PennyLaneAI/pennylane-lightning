@@ -49,6 +49,7 @@ option(ENABLE_OPENMP "Enable OpenMP" ON)
 option(ENABLE_KOKKOS "Enable Kokkos" ON)
 option(ENABLE_BLAS "Enable BLAS" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
+option(ENABLE_GATE_DISPATCHER "Enable gate kernel dispatching on AVX/AVX2/AVX512" ON)
 
 # Other build options
 option(BUILD_TESTS "Build cpp tests" OFF)
