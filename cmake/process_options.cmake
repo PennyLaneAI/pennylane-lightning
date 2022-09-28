@@ -120,6 +120,7 @@ if(ENABLE_KOKKOS)
 
     find_package(Kokkos
     HINTS   ${CMAKE_SOURCE_DIR}/Kokkos
+            ${Kokkos_Core_DIR}
             /usr
             /usr/local
             /opt
@@ -131,6 +132,7 @@ if(ENABLE_KOKKOS)
     find_package(KokkosKernels
     HINTS   ${CMAKE_SOURCE_DIR}/Kokkos
             ${CMAKE_SOURCE_DIR}/KokkosKernels
+            ${Kokkos_Kernels_DIR}
             /usr
             /usr/local
             /opt
@@ -139,6 +141,59 @@ if(ENABLE_KOKKOS)
         message(STATUS "Found existing Kokkos Kernels library")
     endif()
 
+    # If the package cannot be found, explicitly search for the built libs and headers
+    if (NOT (Kokkos_FOUND AND KokkosKernels_FOUND))
+        find_library(kokkos_core_lib
+            NAME kokkoscore.a libkokkoscore.a kokkoscore.so libkokkoscore.so
+            HINTS   ${CMAKE_SOURCE_DIR}/Kokkos/lib
+                    ${Kokkos_Core_DIR}/lib
+                    ${Kokkos_Core_DIR}/lib64
+                    /usr/lib
+                    /usr/lib64
+                    /usr/local/lib
+                    /usr/local/lib64
+                    ENV LD_LIBRARY_PATH
+        )
+        find_library(kokkos_kernels_lib
+            NAME kokkoskernels.a libkokkoskernels.a kokkoskernels.so libkokkoskernels.so
+            HINTS   ${CMAKE_SOURCE_DIR}/Kokkos/lib
+                    ${Kokkos_Kernels_DIR}/lib
+                    ${Kokkos_Kernels_DIR}/lib64
+                    /usr/lib
+                    /usr/lib64
+                    /usr/local/lib
+                    /usr/local/lib64
+                    ENV LD_LIBRARY_PATH
+        )
+        find_file(  kokkos_core_inc
+            NAMES   Kokkos_Core.hpp
+            HINTS   ${Kokkos_Core_DIR}/include
+                    /usr/include
+                    /usr/local/include
+                    ENV CPATH
+        )
+        find_file(  kokkos_sparse_inc
+            NAMES   KokkosSparse.hpp
+            HINTS   ${Kokkos_Kernels_DIR}/include
+                    /usr/include
+                    /usr/local/include
+                    ENV CPATH
+        )
+
+        add_library( kokkos SHARED IMPORTED GLOBAL)
+        add_library( kokkoskernels SHARED IMPORTED GLOBAL)
+
+        cmake_path(GET kokkos_core_inc ROOT_PATH kokkos_INC_DIR)
+        cmake_path(GET kokkos_sparse_inc ROOT_PATH kokkoskernels_INC_DIR)
+
+        set_target_properties( kokkos PROPERTIES IMPORTED_LOCATION ${kokkos_core_lib})
+        set_target_properties( kokkoskernels PROPERTIES IMPORTED_LOCATION ${kokkos_kernels_lib})
+        set_target_properties( kokkos PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkos_INC_DIR}")
+        set_target_properties( kokkoskernels PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkoskernels_INC_DIR}")
+
+    endif()
+
+    # If still not found
     if (NOT (Kokkos_FOUND AND KokkosKernels_FOUND))
         # Setting the Serial device.
         option(Kokkos_ENABLE_SERIAL  "Enable Kokkos SERIAL device" ON)
@@ -173,7 +228,7 @@ if(ENABLE_KOKKOS)
 
     endif()
     target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_KOKKOS=1")
-    target_link_libraries(lightning_external_libs INTERFACE Kokkos::kokkos Kokkos::kokkoskernels)
+    target_link_libraries(lightning_external_libs INTERFACE kokkos kokkoskernels)
 else()
     message(STATUS "ENABLE_KOKKOS is OFF.")
 endif()
