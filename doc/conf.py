@@ -203,7 +203,7 @@ html_css_files = [
 # -- Xanadu theme ---------------------------------------------------------
 html_theme = "pennylane"
 
-# xanadu theme options (see theme.conf for more information)
+# html theme options (see theme.conf for more information)
 html_theme_options = {
     "navbar_name": "PennyLane-Lightning",
     "navbar_active_link": 3,
