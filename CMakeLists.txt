@@ -62,11 +62,12 @@ set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 # Add pybind11
 include(FetchContent)
 if(ENABLE_PYTHON)
-FetchContent_Declare(pybind11
-                     GIT_REPOSITORY https://github.com/pybind/pybind11.git
-                     GIT_TAG        v2.6.2
-)
-FetchContent_MakeAvailable(pybind11)
+    find_package(Python COMPONENTS Interpreter Development)
+    FetchContent_Declare(pybind11
+                        GIT_REPOSITORY https://github.com/pybind/pybind11.git
+                        GIT_TAG        v2.6.2
+    )
+    FetchContent_MakeAvailable(pybind11)
 endif()
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
