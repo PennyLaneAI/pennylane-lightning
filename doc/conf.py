@@ -200,7 +200,7 @@ html_css_files = [
     'css/custom.css',
 ]
 
-# -- Xanadu theme ---------------------------------------------------------
+# -- html theme ---------------------------------------------------------
 html_theme = "pennylane"
 
 # html theme options (see theme.conf for more information)
