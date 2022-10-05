@@ -47,7 +47,7 @@ using const_index_view_type =
     typename Kokkos::View<const index_type *, default_layout, device_type,
                           Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
-template <class fp_precision> using data_type = Kokkos::complex<fp_precision>;
+template <class fp_precision> using data_type = std::complex<fp_precision>;
 
 template <class fp_precision>
 using crs_matrix_type =
@@ -94,9 +94,7 @@ const_crs_matrix_type<fp_precision> create_Kokkos_Sparse_Matrix(
     const index_type numNNZ) {
     const_index_view_type row_map(row_map_ptr, numRows + 1);
     const_index_view_type entries(entries_ptr, numNNZ);
-    const_data_view_type<fp_precision> values(
-        reinterpret_cast<const Kokkos::complex<fp_precision> *>(values_ptr),
-        numNNZ);
+    const_data_view_type<fp_precision> values(values_ptr, numNNZ);
 
     const_graph_type<fp_precision> myGraph(entries, row_map);
     const_crs_matrix_type<fp_precision> SparseMatrix("matrix", numRows, values,
@@ -128,24 +126,18 @@ void apply_Sparse_Matrix_Kokkos(
 
     Kokkos::initialize();
     {
-        const_data_view_type<fp_precision> vector_view(
-            reinterpret_cast<const Kokkos::complex<fp_precision> *>(vector_ptr),
-            vector_size);
-        Kokkos::View<data_type<fp_precision> *> result_view("rhs", vector_size);
+        const_data_view_type<fp_precision> vector_view(vector_ptr, vector_size);
+        result.resize(vector_size);
+        data_view_type<fp_precision> result_view(result.data(), vector_size);
 
-        const_crs_matrix_type<fp_precision> myMatrix =
+        const_crs_matrix_type<fp_precision> sparse_matrix =
             create_Kokkos_Sparse_Matrix(row_map_ptr, row_map_size - 1,
                                         entries_ptr, values_ptr, numNNZ);
 
         const data_type<fp_precision> alpha(1.0);
         const data_type<fp_precision> beta;
-        KokkosSparse::spmv("N", alpha, myMatrix, vector_view, beta,
+        KokkosSparse::spmv("N", alpha, sparse_matrix, vector_view, beta,
                            result_view);
-
-        result = std::move(std::vector<std::complex<fp_precision>>(
-            reinterpret_cast<std::complex<fp_precision> *>(result_view.data()),
-            reinterpret_cast<std::complex<fp_precision> *>(result_view.data()) +
-                result_view.size()));
     }
     Kokkos::finalize();
 };

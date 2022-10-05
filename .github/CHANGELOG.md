@@ -15,6 +15,9 @@
 * Implement 3 Qubits gates (CSWAP & Toffoli) & 4 Qubits gates (DoubleExcitation, DoubleExcitationMinus, DoubleExcitationPlus) in LM manner.
 [(#362)](https://github.com/PennyLaneAI/pennylane-lightning/pull/362)
 
+* Upgrade Kokkos and Kokkos Kernels to 3.7.00, and improve sparse matrix-vector multiplication performance and memory usage.
+[(#361)](https://github.com/PennyLaneAI/pennylane-lightning/pull/361)
+
 ### Documentation
 
 ### Bug fixes
