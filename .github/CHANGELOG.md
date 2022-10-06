@@ -29,7 +29,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Chae-Yeun Park,Monit Sharma, Shuli Shu
+Amintor Dusko, Chae-Yeun Park, Monit Sharma, Shuli Shu
 
 ---
 
