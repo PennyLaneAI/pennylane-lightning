@@ -1,5 +1,5 @@
 ---
-Checks:          '-*,clang-diagnostic-*,clang-analyzer-*,modernize-*,-modernize-use-trailing-return-type,-modernize-loop-convert,clang-analyzer-cplusplus*,openmp-*,performance-*,portability-*,readability-*,hicpp-*,-hicpp-avoid-c-arrays,-hicpp-no-array-decay,bugprone-suspicious-*,llvm-namespace-comment,cppcoreguidelines-avoid-non-const-global-variables,cppcoreguidelines-slicing,cppcoreguidelines-special-member-functions'
+Checks:          '-*,clang-diagnostic-*,clang-analyzer-*,modernize-*,-modernize-use-trailing-return-type,-modernize-loop-convert,clang-analyzer-cplusplus*,openmp-*,performance-*,portability-*,readability-*,hicpp-*,-hicpp-avoid-c-arrays,-hicpp-no-array-decay,bugprone-suspicious-*,llvm-namespace-comment,cppcoreguidelines-avoid-non-const-global-variables,cppcoreguidelines-slicing,cppcoreguidelines-special-member-functions,-readability-identifier-length'
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'
 AnalyzeTemporaryDtors: false

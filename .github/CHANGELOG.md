@@ -1,3 +1,35 @@
+# Release 0.27.0-dev
+
+### New features since last release
+
+### Breaking changes
+
+### Improvements
+
+* Update clang-tools version in Github workflows.
+[(#351)](https://github.com/PennyLaneAI/pennylane-lightning/pull/351)
+
+* Improve tests and checks CI/CD pipelines.
+[(#353)](https://github.com/PennyLaneAI/pennylane-lightning/pull/353)
+
+* Implement 3 Qubits gates (CSWAP & Toffoli) & 4 Qubits gates (DoubleExcitation, DoubleExcitationMinus, DoubleExcitationPlus) in LM manner.
+[(#362)](https://github.com/PennyLaneAI/pennylane-lightning/pull/362)
+
+* Upgrade Kokkos and Kokkos Kernels to 3.7.00, and improve sparse matrix-vector multiplication performance and memory usage.
+[(#361)](https://github.com/PennyLaneAI/pennylane-lightning/pull/361)
+
+### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Amintor Dusko, Chae-Yeun Park, Shuli Shu
+
+---
+
 # Release 0.26.0
 
 ### Improvements
@@ -67,7 +99,7 @@ Amintor Dusko, Christina Lee, Lee J. O'Riordan, Chae-Yeun Park
 
 ### Documentation
 
-* Updated ReadTheDocs runner version from Ubuntu 20.04 to 22.04 
+* Updated ReadTheDocs runner version from Ubuntu 20.04 to 22.04
 [(#327)](https://github.com/PennyLaneAI/pennylane-lightning/pull/327)
 
 ### Bug fixes
@@ -93,7 +125,7 @@ Amintor Dusko, Christina Lee, Rashid N H M, Lee J. O'Riordan, Chae-Yeun Park
 * Add a new dispatch mechanism for future kernels.
 [(#291)](https://github.com/PennyLaneAI/pennylane-lightning/pull/291)
 
-* Add `IsingXY` gate operation. 
+* Add `IsingXY` gate operation.
 [(#303)](https://github.com/PennyLaneAI/pennylane-lightning/pull/303)
 
 * Support `qml.state()` in vjp and Hamiltonian in adjoint jacobian.
@@ -112,8 +144,8 @@ Amintor Dusko, Christina Lee, Rashid N H M, Lee J. O'Riordan, Chae-Yeun Park
 * Split matrix operations, refactor dispatch mechanisms, and add a benchmark suits.
 [(#274)](https://github.com/PennyLaneAI/pennylane-lightning/pull/274)
 
-* Add native support for the calculation of sparse Hamiltonians' expectation values. 
-Sparse operations are offloaded to [Kokkos](https://github.com/kokkos/kokkos) and 
+* Add native support for the calculation of sparse Hamiltonians' expectation values.
+Sparse operations are offloaded to [Kokkos](https://github.com/kokkos/kokkos) and
 [Kokkos-Kernels](https://github.com/kokkos/kokkos-kernels).
 [(#283)](https://github.com/PennyLaneAI/pennylane-lightning/pull/283)
 
@@ -283,10 +315,10 @@ Ali Asadi, Chae-Yeun Park, Lee James O'Riordan
 * `setup.py` adds debug only when --debug is given
 [(#208)](https://github.com/PennyLaneAI/pennylane-lightning/pull/208)
 
-* Add new highly-performant C++ kernels for quantum gates. 
+* Add new highly-performant C++ kernels for quantum gates.
 [(#202)](https://github.com/PennyLaneAI/pennylane-lightning/pull/202)
 
-The new kernels significantly improve the runtime performance of PennyLane-Lightning 
+The new kernels significantly improve the runtime performance of PennyLane-Lightning
 for both differentiable and non-differentiable workflows. Here is an example workflow
 using the adjoint differentiation method with a circuit of 5 strongly entangling layers:
 
@@ -463,22 +495,22 @@ Ali Asadi, Lee James O'Riordan
 * PennyLane-Lightning now provides a high-performance
   [adjoint Jacobian](http://arxiv.org/abs/2009.02823) method for differentiating quantum circuits.
   [(#136)](https://github.com/PennyLaneAI/pennylane-lightning/pull/136)
-  
+
   The adjoint method operates after a forward pass by iteratively applying inverse gates to scan
   backwards through the circuit. The method is already available in PennyLane's
   `default.qubit` device, but the version provided by `lightning.qubit` integrates with the C++
   backend and is more performant, as shown in the plot below:
 
   <img src="https://raw.githubusercontent.com/PennyLaneAI/pennylane-lightning/master/doc/_static/lightning_adjoint.png" width=70%/>
-  
+
   The plot compares the average runtime of `lightning.qubit` and `default.qubit` for calculating the
   Jacobian of a circuit using the adjoint method for a range of qubit numbers. The circuit
   consists of ten `BasicEntanglerLayers` with a `PauliZ` expectation value calculated on each wire,
   repeated over ten runs. We see that `lightning.qubit` provides a speedup of around two to eight
   times, depending on the number of qubits.
-  
+
   The adjoint method can be accessed using the standard interface. Consider the following circuit:
-  
+
   ```python
   import pennylane as qml
 
@@ -493,9 +525,9 @@ Ali Asadi, Lee James O'Riordan
 
   weights = qml.init.strong_ent_layers_normal(layers, wires, seed=1967)
   ```
-  
+
   The circuit can be executed and its gradient calculated using:
-  
+
     ```pycon
   >>> print(f"Circuit evaluated: {circuit(weights)}")
   Circuit evaluated: 0.9801286266677633
@@ -507,7 +539,7 @@ Ali Asadi, Lee James O'Riordan
 
    [[-1.14472273e-04  3.85963953e-02  0.00000000e+00]
     [-5.76791765e-05 -9.78478343e-02  0.00000000e+00]
-    [-5.55111512e-17  0.00000000e+00 -1.11022302e-16]]]  
+    [-5.55111512e-17  0.00000000e+00 -1.11022302e-16]]]
   ```
 
 * PennyLane-Lightning now supports all of the operations and observables of `default.qubit`.
@@ -515,11 +547,11 @@ Ali Asadi, Lee James O'Riordan
 
 ### Improvements
 
-* A new state-vector class `StateVectorManaged` was added, enabling memory use to be bound to 
+* A new state-vector class `StateVectorManaged` was added, enabling memory use to be bound to
   statevector lifetime.
   [(#136)](https://github.com/PennyLaneAI/pennylane-lightning/pull/136)
 
-* The repository now has a well-defined component hierarchy, allowing each indepedent unit to be 
+* The repository now has a well-defined component hierarchy, allowing each indepedent unit to be
   compiled and linked separately.
   [(#136)](https://github.com/PennyLaneAI/pennylane-lightning/pull/136)
 
@@ -576,20 +608,20 @@ Thomas Bromley, Lee James O'Riordan
 * The PennyLane device test suite is now included in coverage reports.
   [(#123)](https://github.com/PennyLaneAI/pennylane-lightning/pull/123)
 
-* Static versions of jQuery and Bootstrap are no longer included in the CSS theme. 
+* Static versions of jQuery and Bootstrap are no longer included in the CSS theme.
   [(#118)](https://github.com/PennyLaneAI/pennylane-lightning/pull/118)
 
 * C++ tests have been ported to use Catch2 framework.
   [(#115)](https://github.com/PennyLaneAI/pennylane-lightning/pull/115)
 
-* Testing now exists for both float and double precision methods in C++ layer. 
+* Testing now exists for both float and double precision methods in C++ layer.
   [(#113)](https://github.com/PennyLaneAI/pennylane-lightning/pull/113)
   [(#115)](https://github.com/PennyLaneAI/pennylane-lightning/pull/115)
 
 * Compile-time utility methods with `constexpr` have been added.
   [(#113)](https://github.com/PennyLaneAI/pennylane-lightning/pull/113)
 
-* Wheel-build support for ARM64 (Linux and MacOS) and PowerPC (Linux) added. 
+* Wheel-build support for ARM64 (Linux and MacOS) and PowerPC (Linux) added.
   [(#110)](https://github.com/PennyLaneAI/pennylane-lightning/pull/110)
 
 * Add support for Controlled Phase Gate (`ControlledPhaseShift`).
