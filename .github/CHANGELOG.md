@@ -18,6 +18,9 @@
 * Upgrade Kokkos and Kokkos Kernels to 3.7.00, and improve sparse matrix-vector multiplication performance and memory usage.
 [(#361)](https://github.com/PennyLaneAI/pennylane-lightning/pull/361)
 
+* Updated GCC 10.x to 11.x in CI tests , changed the version of the gcc and g++ from 10 to 11 and the update brings improved supports for newer C++ features.
+[(#370)](https://github.com/PennyLaneAI/pennylane-lightning/pull/370)
+
 ### Documentation
 
 ### Bug fixes
@@ -26,7 +29,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Chae-Yeun Park, Shuli Shu
+Amintor Dusko, Chae-Yeun Park, Monit Sharma, Shuli Shu
 
 ---
 
