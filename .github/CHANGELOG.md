@@ -18,6 +18,9 @@
 * Upgrade Kokkos and Kokkos Kernels to 3.7.00, and improve sparse matrix-vector multiplication performance and memory usage.
 [(#361)](https://github.com/PennyLaneAI/pennylane-lightning/pull/361)
 
+* Change Lightning to inherit from QubitDevice instead of DefaultQubit.
+[(#365)](https://github.com/PennyLaneAI/pennylane-lightning/pull/365)
+
 ### Documentation
 
 ### Bug fixes
