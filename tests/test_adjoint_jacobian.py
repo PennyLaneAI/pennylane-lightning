@@ -818,6 +818,7 @@ class TestAdjointJacobianQNode:
 
         assert np.allclose(grad_adjoint, grad_fd, atol=tol)
 
+
 def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
     qml.QubitStateVector(unitary_group.rvs(2**4, random_state=0)[0], wires=wires)
