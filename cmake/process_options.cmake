@@ -123,6 +123,7 @@ if(ENABLE_KOKKOS)
             /usr
             /usr/local
             /opt
+            /opt/Kokkos
     )
     if(Kokkos_FOUND)
         message(STATUS "Found existing Kokkos library")
@@ -134,6 +135,7 @@ if(ENABLE_KOKKOS)
             /usr
             /usr/local
             /opt
+            /opt/KokkosKernels
     )
     if(KokkosKernels_FOUND)
         message(STATUS "Found existing Kokkos Kernels library")
