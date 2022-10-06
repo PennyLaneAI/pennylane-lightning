@@ -27,6 +27,7 @@ try:
 except (ImportError, ModuleNotFoundError):
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+
 class TestSparseExpval:
     """Tests for the expval function"""
 
@@ -34,7 +35,9 @@ class TestSparseExpval:
     def dev(self, request):
         return qml.device("lightning.qubit", wires=2, c_dtype=request.param)
 
-    @pytest.mark.skipif(Kokkos_info()["USE_KOKKOS"]==True, reason="Requires Kokkos and Kokkos Kernels.")
+    @pytest.mark.skipif(
+        Kokkos_info()["USE_KOKKOS"] == True, reason="Requires Kokkos and Kokkos Kernels."
+    )
     def test_create_device_with_unsupported_dtype(self, dev):
         @qml.qnode(dev, diff_method="parameter-shift")
         def circuit():
@@ -42,10 +45,17 @@ class TestSparseExpval:
             qml.RY(-0.2, wires=[1])
             return qml.expval(
                 qml.SparseHamiltonian(
-                    qml.utils.sparse_hamiltonian(qml.Hamiltonian([1], [qml.PauliX(0) @ qml.Identity(1)])), wires=[0, 1]
+                    qml.utils.sparse_hamiltonian(
+                        qml.Hamiltonian([1], [qml.PauliX(0) @ qml.Identity(1)])
+                    ),
+                    wires=[0, 1],
                 )
             )
-        with pytest.raises(NotImplementedError, match="The expval of a SparseHamiltonian requires Kokkos and Kokkos Kernels."):
+
+        with pytest.raises(
+            NotImplementedError,
+            match="The expval of a SparseHamiltonian requires Kokkos and Kokkos Kernels.",
+        ):
             circuit()
 
     @pytest.mark.parametrize(
@@ -59,7 +69,9 @@ class TestSparseExpval:
             [qml.Identity(0) @ qml.PauliZ(1), 0.98006657784124170],
         ],
     )
-    @pytest.mark.skipif(Kokkos_info()["USE_KOKKOS"]==False, reason="Requires Kokkos and Kokkos Kernels.")
+    @pytest.mark.skipif(
+        Kokkos_info()["USE_KOKKOS"] == False, reason="Requires Kokkos and Kokkos Kernels."
+    )
     def test_sparse_Pauli_words(self, cases, tol, dev):
         """Test expval of some simple sparse Hamiltonian"""
 
@@ -112,7 +124,9 @@ class TestSparseExpvalQChem:
             ],
         ],
     )
-    @pytest.mark.skipif(Kokkos_info()["USE_KOKKOS"]==False, reason="Requires Kokkos and Kokkos Kernels.")
+    @pytest.mark.skipif(
+        Kokkos_info()["USE_KOKKOS"] == False, reason="Requires Kokkos and Kokkos Kernels."
+    )
     def test_sparse_Pauli_words(self, qubits, wires, H_sparse, hf_state, excitations, tol, dev):
         """Test expval of some simple sparse Hamiltonian"""
 

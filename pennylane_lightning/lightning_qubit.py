@@ -1004,7 +1004,9 @@ class LightningQubit(QubitDevice):
                     CSR_SparseHamiltonian.indices,
                     CSR_SparseHamiltonian.data,
                 )
-            raise NotImplementedError("The expval of a SparseHamiltonian requires Kokkos and Kokkos Kernels.")
+            raise NotImplementedError(
+                "The expval of a SparseHamiltonian requires Kokkos and Kokkos Kernels."
+            )
 
         if observable.name in ["Hamiltonian", "Hermitian"]:
             ob_serialized = _serialize_ob(observable, self.wire_map, use_csingle=self.use_csingle)
