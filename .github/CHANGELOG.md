@@ -18,12 +18,12 @@
 * Upgrade Kokkos and Kokkos Kernels to 3.7.00, and improve sparse matrix-vector multiplication performance and memory usage.
 [(#361)](https://github.com/PennyLaneAI/pennylane-lightning/pull/361)
 
-
-
-
-
 * Updated wheel_linux_x86_64.yml, installed GCC11 onto the building container, and updated the wheeler builder compiler to GCC 11 and g++ 11
 [(#373)](https://github.com/PennyLaneAI/pennylane-lightning/pull/373)
+
+* Update gcc and g++ 10.x to 11.x in CI tests. This update brings improved support for newer C++ features.
+[(#370)](https://github.com/PennyLaneAI/pennylane-lightning/pull/370)
+
 
 ### Documentation
 
