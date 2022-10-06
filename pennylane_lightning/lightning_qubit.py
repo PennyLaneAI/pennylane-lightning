@@ -18,17 +18,18 @@ interfaces with C++ for fast linear algebra calculations.
 from typing import List
 from warnings import warn
 from os import getenv
-from itertools import islice
+from itertools import islice, product
+from functools import reduce
+from string import ascii_letters as ABC
 
 import numpy as np
 from pennylane import (
+    QubitDevice,
     math,
-    gradients,
     BasisState,
     QubitStateVector,
     QubitUnitary,
     Projector,
-    Hermitian,
     Rot,
     QuantumFunctionError,
     DeviceError,
@@ -37,9 +38,13 @@ from pennylane.devices import DefaultQubit
 from pennylane.operation import Tensor, Operation
 from pennylane.measurements import MeasurementProcess, Expectation, State
 from pennylane.wires import Wires
+from pennylane.ops.qubit.attributes import diagonal_in_z_basis
 
-# Remove after the next release of PL
-# Add from pennylane import matrix
+ABC_ARRAY = np.array(list(ABC))
+
+# tolerance for numerical errors
+tolerance = 1e-10
+
 import pennylane as qml
 
 from ._version import __version__
@@ -63,24 +68,91 @@ try:
 except ModuleNotFoundError:
     CPP_BINARY_AVAILABLE = False
 
-
 def _chunk_iterable(it, num_chunks):
     "Lazy-evaluated chunking of given iterable from https://stackoverflow.com/a/22045226"
     it = iter(it)
     return iter(lambda: tuple(islice(it, num_chunks)), ())
 
 
-def _remove_snapshot_from_operations(operations):
-    operations = operations.copy()
-    operations.discard("Snapshot")
-    return operations
+allowed_operations = {
+        "Identity",
+        "BasisState",
+        "QubitStateVector",
+        "QubitUnitary",
+        "ControlledQubitUnitary",
+        "MultiControlledX",
+        "DiagonalQubitUnitary",
+        "PauliX",
+        "PauliY",
+        "PauliZ",
+        "MultiRZ",
+        "Hadamard",
+        "S",
+        "Adjoint(S)",
+        "T",
+        "Adjoint(T)",
+        "SX",
+        "Adjoint(SX)",
+        "CNOT",
+        "SWAP",
+        "ISWAP",
+        "PSWAP",
+        "Adjoint(ISWAP)",
+        "SISWAP",
+        "Adjoint(SISWAP)",
+        "SQISW",
+        "CSWAP",
+        "Toffoli",
+        "CY",
+        "CZ",
+        "PhaseShift",
+        "ControlledPhaseShift",
+        "CPhase",
+        "RX",
+        "RY",
+        "RZ",
+        "Rot",
+        "CRX",
+        "CRY",
+        "CRZ",
+        "CRot",
+        "IsingXX",
+        "IsingYY",
+        "IsingZZ",
+        "IsingXY",
+        "SingleExcitation",
+        "SingleExcitationPlus",
+        "SingleExcitationMinus",
+        "DoubleExcitation",
+        "DoubleExcitationPlus",
+        "DoubleExcitationMinus",
+        "QubitCarry",
+        "QubitSum",
+        "OrbitalRotation",
+        "QFT",
+        "ECR",
+    }
 
+allowed_observables = {
+        "PauliX",
+        "PauliY",
+        "PauliZ",
+        "Hadamard",
+        "Hermitian",
+        "Identity",
+        "Projector",
+        "SparseHamiltonian",
+        "Hamiltonian",
+        "Sum",
+        "SProd",
+        "Prod",
+        "Exp",
+    }
 
-class LightningQubit(DefaultQubit):
+class LightningQubit(QubitDevice):
     """PennyLane Lightning device.
 
-    An extension of PennyLane's built-in ``default.qubit`` device that interfaces with C++ to
-    perform fast linear algebra calculations.
+    A device that interfaces with C++ to perform fast linear algebra calculations.
 
     Use of this device requires pre-built binaries or compilation from source. Check out the
     :doc:`/installation` guide for more details.
@@ -102,9 +174,10 @@ class LightningQubit(DefaultQubit):
     version = __version__
     author = "Xanadu Inc."
     _CPP_BINARY_AVAILABLE = True
-    operations = _remove_snapshot_from_operations(DefaultQubit.operations)
+    operations = allowed_operations
+    observables = allowed_observables
 
-    def __init__(self, wires, *, c_dtype=np.complex128, shots=None, batch_obs=False):
+    def __init__(self, wires, *, c_dtype=np.complex128, shots=None, batch_obs=False, analytic=None):
         if c_dtype is np.complex64:
             r_dtype = np.float32
             self.use_csingle = True
@@ -113,8 +186,39 @@ class LightningQubit(DefaultQubit):
             self.use_csingle = False
         else:
             raise TypeError(f"Unsupported complex Type: {c_dtype}")
-        super().__init__(wires, r_dtype=r_dtype, c_dtype=c_dtype, shots=shots)
+        super().__init__(wires, shots=shots, r_dtype=r_dtype, c_dtype=c_dtype, analytic=analytic)
         self._batch_obs = batch_obs
+
+        # Create the initial state. Internally, we store the
+        # state as an array of dimension [2]*wires.
+        self._state = self._create_basis_state(0)
+        self._pre_rotated_state = self._state
+
+    def _create_basis_state(self, index):
+        """Return a computational basis state over all wires.
+        Args:
+            index (int): integer representing the computational basis state
+        Returns:
+            array[complex]: complex array of shape ``[2]*self.num_wires``
+            representing the statevector of the basis state
+        Note: This function does not support broadcasted inputs yet.
+        """
+        state = np.zeros(2**self.num_wires, dtype=np.complex128)
+        state[index] = 1
+        state = self._asarray(state, dtype=self.C_DTYPE)
+        return self._reshape(state, [2] * self.num_wires)
+
+    @classmethod
+    def capabilities(cls):
+        capabilities = super().capabilities().copy()
+        capabilities.update(
+            model="qubit",
+            supports_inverse_operations=True,
+            supports_analytic_computation=True,
+            supports_broadcasting=False,
+            returns_state=True,
+        )
+        return capabilities
 
     @staticmethod
     def _asarray(arr, dtype=None):
@@ -127,56 +231,286 @@ class LightningQubit(DefaultQubit):
             dtype = arr.dtype
 
         # We allocate a new aligned memory and copy data to there if alignment or dtype mismatches
-        # Note that get_alignment does not neccsarily returns CPUMemoryModel(Unaligned) even for
-        # numpy allocated memory as the memory location happens to be aligend.
+        # Note that get_alignment does not necessarily returns CPUMemoryModel(Unaligned) even for
+        # numpy allocated memory as the memory location happens to be aligned.
         if int(get_alignment(arr)) < int(best_alignment()) or arr.dtype != dtype:
             new_arr = allocate_aligned_array(arr.size, np.dtype(dtype)).reshape(arr.shape)
             np.copyto(new_arr, arr)
             arr = new_arr
         return arr
 
-    @classmethod
-    def capabilities(cls):
-        capabilities = super().capabilities().copy()
-        capabilities.update(
-            model="qubit",
-            supports_inverse_operations=True,
-            supports_analytic_computation=True,
-            supports_broadcasting=False,
-            returns_state=True,
+    def reset(self):
+        """Reset the device"""
+        super().reset()
+
+        # init the state vector to |00..0>
+        self._state = self._create_basis_state(0)
+        self._pre_rotated_state = self._state
+
+    @property
+    def state(self):
+        dim = 2**self.num_wires
+        batch_size = self._get_batch_size(self._pre_rotated_state, (2,) * self.num_wires, dim)
+        # Do not flatten the state completely but leave the broadcasting dimension if there is one
+        shape = (batch_size, dim) if batch_size is not None else (dim,)
+        return self._reshape(self._pre_rotated_state, shape)
+
+    def _apply_state_vector(self, state, device_wires):
+        """Initialize the internal state vector in a specified state.
+        Args:
+            state (array[complex]): normalized input state of length ``2**len(wires)``
+                or broadcasted state of shape ``(batch_size, 2**len(wires))``
+            device_wires (Wires): wires that get initialized in the state
+        """
+
+        # translate to wire labels used by device
+        device_wires = self.map_wires(device_wires)
+        dim = 2 ** len(device_wires)
+
+        state = self._asarray(state, dtype=self.C_DTYPE)
+        batch_size = self._get_batch_size(state, (dim,), dim)
+        output_shape = [2] * self.num_wires
+        if batch_size is not None:
+            output_shape.insert(0, batch_size)
+
+        if not (state.shape in [(dim,), (batch_size, dim)]):
+            raise ValueError("State vector must have shape (2**wires,) or (batch_size, 2**wires).")
+
+        if not qml.math.is_abstract(state):
+            norm = qml.math.linalg.norm(state, axis=-1, ord=2)
+            if not qml.math.allclose(norm, 1.0, atol=tolerance):
+                raise ValueError("Sum of amplitudes-squared does not equal one.")
+
+        if len(device_wires) == self.num_wires and sorted(device_wires) == device_wires:
+            # Initialize the entire device state with the input state
+            self._state = self._reshape(state, output_shape)
+            return
+
+        # generate basis states on subset of qubits via the cartesian product
+        basis_states = np.array(list(product([0, 1], repeat=len(device_wires))))
+
+        # get basis states to alter on full set of qubits
+        unravelled_indices = np.zeros((2 ** len(device_wires), self.num_wires), dtype=int)
+        unravelled_indices[:, device_wires] = basis_states
+
+        # get indices for which the state is changed to input state vector elements
+        ravelled_indices = np.ravel_multi_index(unravelled_indices.T, [2] * self.num_wires)
+
+        if batch_size is not None:
+            state = self._scatter(
+                (slice(None), ravelled_indices), state, [batch_size, 2**self.num_wires]
+            )
+        else:
+            state = self._scatter(ravelled_indices, state, [2**self.num_wires])
+        state = self._reshape(state, output_shape)
+        self._state = self._asarray(state, dtype=self.C_DTYPE)
+
+    def _apply_basis_state(self, state, wires):
+        """Initialize the state vector in a specified computational basis state.
+
+        Args:
+            state (array[int]): computational basis state of shape ``(wires,)``
+                consisting of 0s and 1s.
+            wires (Wires): wires that the provided computational state should be initialized on
+
+        Note: This function does not support broadcasted inputs yet.
+        """
+        # translate to wire labels used by device
+        device_wires = self.map_wires(wires)
+
+        # length of basis state parameter
+        n_basis_state = len(state)
+
+        if not set(state.tolist()).issubset({0, 1}):
+            raise ValueError("BasisState parameter must consist of 0 or 1 integers.")
+
+        if n_basis_state != len(device_wires):
+            raise ValueError("BasisState parameter and wires must be of equal length.")
+
+        # get computational basis state number
+        basis_states = 2 ** (self.num_wires - 1 - np.array(device_wires))
+        basis_states = qml.math.convert_like(basis_states, state)
+        num = int(qml.math.dot(state, basis_states))
+
+        self._state = self._create_basis_state(num)
+
+    def _get_unitary_matrix(self, unitary):  # pylint: disable=no-self-use
+        """Return the matrix representing a unitary operation.
+
+        Args:
+            unitary (~.Operation): a PennyLane unitary operation
+
+        Returns:
+            array[complex]: Returns a 2D matrix representation of
+            the unitary in the computational basis, or, in the case of a diagonal unitary,
+            a 1D array representing the matrix diagonal.
+        """
+        if unitary in diagonal_in_z_basis:
+            return unitary.eigvals()
+
+        return unitary.matrix()
+
+    def _apply_diagonal_unitary(self, state, phases, wires):
+        r"""Apply multiplication of a phase vector to subsystems of the quantum state.
+
+        This represents the multiplication with diagonal gates in a more efficient manner.
+
+        Args:
+            state (array[complex]): input state
+            phases (array): vector to multiply
+            wires (Wires): target wires
+
+        Returns:
+            array[complex]: output state
+        """
+        # translate to wire labels used by device
+        device_wires = self.map_wires(wires)
+        dim = 2 ** len(device_wires)
+        batch_size = self._get_batch_size(phases, (dim,), dim)
+
+        # reshape vectors
+        shape = [2] * len(device_wires)
+        if batch_size is not None:
+            shape.insert(0, batch_size)
+        phases = self._cast(self._reshape(phases, shape), dtype=self.C_DTYPE)
+
+        state_indices = ABC[: self.num_wires]
+        affected_indices = "".join(ABC_ARRAY[list(device_wires)].tolist())
+
+        einsum_indices = f"...{affected_indices},...{state_indices}->...{state_indices}"
+        return self._einsum(einsum_indices, phases, state)
+
+    def _apply_unitary_einsum(self, state, mat, wires):
+        r"""Apply multiplication of a matrix to subsystems of the quantum state.
+
+        This function uses einsum instead of tensordot. This approach is only
+        faster for single- and two-qubit gates.
+
+        Args:
+            state (array[complex]): input state
+            mat (array): matrix to multiply
+            wires (Wires): target wires
+
+        Returns:
+            array[complex]: output state
+        """
+        # translate to wire labels used by device
+        device_wires = self.map_wires(wires)
+
+        dim = 2 ** len(device_wires)
+        batch_size = self._get_batch_size(mat, (dim, dim), dim**2)
+
+        # If the matrix is broadcasted, it is reshaped to have leading axis of size mat_batch_size
+        shape = [2] * (len(device_wires) * 2)
+        if batch_size is not None:
+            shape.insert(0, batch_size)
+        mat = self._cast(self._reshape(mat, shape), dtype=self.C_DTYPE)
+
+        # Tensor indices of the quantum state
+        state_indices = ABC[: self.num_wires]
+
+        # Indices of the quantum state affected by this operation
+        affected_indices = "".join(ABC_ARRAY[list(device_wires)].tolist())
+
+        # All affected indices will be summed over, so we need the same number of new indices
+        new_indices = ABC[self.num_wires : self.num_wires + len(device_wires)]
+
+        # The new indices of the state are given by the old ones with the affected indices
+        # replaced by the new_indices
+        new_state_indices = reduce(
+            lambda old_string, idx_pair: old_string.replace(idx_pair[0], idx_pair[1]),
+            zip(affected_indices, new_indices),
+            state_indices,
         )
-        capabilities.pop("passthru_devices", None)
-        return capabilities
 
-    def apply(self, operations, rotations=None, **kwargs):
-        # State preparation is currently done in Python
-        if operations:  # make sure operations[0] exists
-            if isinstance(operations[0], QubitStateVector):
-                self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
-                del operations[0]
-            elif isinstance(operations[0], BasisState):
-                self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
-                del operations[0]
+        # We now put together the indices in the notation numpy's einsum requires
+        # This notation allows for the state, the matrix, or both to be broadcasted
+        einsum_indices = (
+            f"...{new_indices}{affected_indices},...{state_indices}->...{new_state_indices}"
+        )
 
-        for operation in operations:
-            if isinstance(operation, (QubitStateVector, BasisState)):
-                raise DeviceError(
-                    "Operation {} cannot be used after other Operations have already been "
-                    "applied on a {} device.".format(operation.name, self.short_name)
+        return self._einsum(einsum_indices, mat, state)
+
+    def _apply_unitary(self, state, mat, wires):
+        r"""Apply multiplication of a matrix to subsystems of the quantum state.
+
+        Args:
+            state (array[complex]): input state
+            mat (array): matrix to multiply
+            wires (Wires): target wires
+
+        Returns:
+            array[complex]: output state
+
+        Note: This function does not support simultaneously broadcasted states and matrices yet.
+        """
+        # translate to wire labels used by device
+        device_wires = self.map_wires(wires)
+
+        dim = 2 ** len(device_wires)
+        mat_batch_size = self._get_batch_size(mat, (dim, dim), dim**2)
+        state_batch_size = self._get_batch_size(state, (2,) * self.num_wires, 2**self.num_wires)
+
+        shape = [2] * (len(device_wires) * 2)
+        state_axes = device_wires
+        # If the matrix is broadcasted, it is reshaped to have leading axis of size mat_batch_size
+        if mat_batch_size:
+            shape.insert(0, mat_batch_size)
+            if state_batch_size:
+                raise NotImplementedError(
+                    "Applying a broadcasted unitary to an already broadcasted state via "
+                    "_apply_unitary is not supported. Broadcasting sizes are "
+                    f"({mat_batch_size}, {state_batch_size})."
                 )
+        # If the state is broadcasted, the affected state axes need to be shifted by 1.
+        if state_batch_size:
+            state_axes = [ax + 1 for ax in state_axes]
+        mat = self._cast(self._reshape(mat, shape), dtype=self.C_DTYPE)
+        axes = (np.arange(-len(device_wires), 0), state_axes)
+        tdot = self._tensordot(mat, state, axes=axes)
 
-        if operations:
-            self._pre_rotated_state = self.apply_lightning(self._state, operations)
-        else:
-            self._pre_rotated_state = self._state
+        # tensordot causes the axes given in `wires` to end up in the first positions
+        # of the resulting tensor. This corresponds to a (partial) transpose of
+        # the correct output state
+        # We'll need to invert this permutation to put the indices in the correct place
+        unused_idxs = [idx for idx in range(self.num_wires) if idx not in device_wires]
+        perm = list(device_wires) + unused_idxs
+        # If the matrix is broadcasted, all but the first dimension are shifted by 1
+        if mat_batch_size:
+            perm = [idx + 1 for idx in perm]
+            perm.insert(0, 0)
+        if state_batch_size:
+            # As the state broadcasting dimension always is the first in the state, it always
+            # ends up in position `len(device_wires)` after the tensordot. The -1 causes it
+            # being permuted to the leading dimension after transposition
+            perm.insert(len(device_wires), -1)
 
-        if rotations:
-            if any(isinstance(r, QubitUnitary) for r in rotations):
-                super().apply(operations=[], rotations=rotations)
-            else:
-                self._state = self.apply_lightning(np.copy(self._pre_rotated_state), rotations)
-        else:
-            self._state = self._pre_rotated_state
+        inv_perm = np.argsort(perm)  # argsort gives inverse permutation
+        return self._transpose(tdot, inv_perm)
+
+    def _apply_operation(self, state, operation):
+        """Applies unitary operations to the input state.
+
+        Args:
+            state (array[complex]): input state
+            operation (~.Operation): operation to apply on the device
+
+        Returns:
+            array[complex]: output state
+        """
+        if operation.__class__.__name__ == "Identity":
+            return state
+        wires = operation.wires
+
+        matrix = self._asarray(self._get_unitary_matrix(operation), dtype=self.C_DTYPE)
+
+        if operation in diagonal_in_z_basis:
+            return self._apply_diagonal_unitary(state, matrix, wires)
+        if len(wires) <= 2:
+            # Einsum is faster for small gates
+            return self._apply_unitary_einsum(state, matrix, wires)
+
+        return self._apply_unitary(state, matrix, wires)
 
     def apply_lightning(self, state, operations):
         """Apply a list of operations to the state tensor.
@@ -225,6 +559,37 @@ class LightningQubit(DefaultQubit):
                 method(wires, inv, param)
 
         return np.reshape(state_vector, state.shape)
+
+    def apply(self, operations, rotations=None, **kwargs):
+        # State preparation is currently done in Python
+        if operations:  # make sure operations[0] exists
+            if isinstance(operations[0], QubitStateVector):
+                self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
+                del operations[0]
+            elif isinstance(operations[0], BasisState):
+                self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
+                del operations[0]
+
+        for operation in operations:
+            if isinstance(operation, (QubitStateVector, BasisState)):
+                raise DeviceError(
+                    "Operation {} cannot be used after other Operations have already been "
+                    "applied on a {} device.".format(operation.name, self.short_name)
+                )
+
+        if operations:
+            self._pre_rotated_state = self.apply_lightning(self._state, operations)
+        else:
+            self._pre_rotated_state = self._state
+
+        if rotations:
+            if any(isinstance(r, QubitUnitary) for r in rotations):
+                for operation in rotations:
+                    self._state = self._apply_operation(self._state, operation)
+            else:
+                self._state = self.apply_lightning(np.copy(self._pre_rotated_state), rotations)
+        else:
+            self._state = self._pre_rotated_state
 
     @staticmethod
     def _check_adjdiff_supported_measurements(measurements: List[MeasurementProcess]):
@@ -409,13 +774,13 @@ class LightningQubit(DefaultQubit):
             vjp_f = dev.vjp([qml.state()], dy)
             vjp = vjp_f(tape)
 
-        computes :math:`w = (w_1,\cdots,w_m)` where
+        computes :math:`w = (w_1,\\cdots,w_m)` where
 
         .. math::
 
-            w_k = \\langle v| \\frac{\partial}{\partial \\theta_k} | \psi_{\pmb{\\theta}} \\rangle.
+            w_k = \\langle v| \\frac{\\partial}{\\partial \\theta_k} | \\psi_{\\pmb{\\theta}} \\rangle.
 
-        Here, :math:`m` is the total number of trainable parameters, :math:`\pmb{\\theta}` is the vector of trainable parameters and :math:`\psi_{\pmb{\\theta}}`
+        Here, :math:`m` is the total number of trainable parameters, :math:`\\pmb{\\theta}` is the vector of trainable parameters and :math:`\\psi_{\\pmb{\\theta}}`
         is the output quantum state.
 
         Args:
@@ -573,10 +938,8 @@ class LightningQubit(DefaultQubit):
         # To support np.complex64 based on the type of self._state
         dtype = self._state.dtype
         ket = np.ravel(self._state)
-
         state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
-
         return M.probs(device_wires)
 
     def generate_samples(self):
@@ -698,7 +1061,6 @@ if not CPP_BINARY_AVAILABLE:
         version = __version__
         author = "Xanadu Inc."
         _CPP_BINARY_AVAILABLE = False
-        operations = _remove_snapshot_from_operations(DefaultQubit.operations)
 
         def __init__(self, wires, *, c_dtype=np.complex128, **kwargs):
             warn(
