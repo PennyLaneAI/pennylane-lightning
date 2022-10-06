@@ -194,7 +194,7 @@ if(ENABLE_KOKKOS)
     endif()
 
     # If still not found
-    if (NOT (Kokkos_FOUND AND KokkosKernels_FOUND))
+    if (NOT (kokkos_core_lib_FOUND AND kokkos_kernels_lib_FOUND))
         # Setting the Serial device.
         option(Kokkos_ENABLE_SERIAL  "Enable Kokkos SERIAL device" ON)
         message(STATUS "KOKKOS SERIAL DEVICE ENABLED.")
