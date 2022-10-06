@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests :mod:`pennylane_lightning.LightningQubit` device can be creaated.
+Unit tests :mod:`pennylane_lightning.LightningQubit` device can be created.
 """
 import pytest
 import numpy as np

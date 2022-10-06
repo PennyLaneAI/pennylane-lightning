@@ -1169,7 +1169,7 @@ class TestLightningQubitIntegration:
         def circuit():
             qml.Hadamard(0)
             qml.Snapshot()
-            qml.Snapshot().inv()
+            qml.adjoint(qml.Snapshot())
             qml.CNOT(wires=[0, 1])
             return qml.expval(qml.PauliZ(0))
 
@@ -1185,7 +1185,7 @@ class TestLightningQubitIntegration:
         def circuit():
             qml.Hadamard(0)
             qml.Snapshot()
-            qml.Snapshot().inv()
+            qml.adjoint(qml.Snapshot())
             qml.CNOT(wires=[0, 1])
             return qml.sample(qml.PauliZ(0)), qml.sample(qml.PauliZ(1))
 

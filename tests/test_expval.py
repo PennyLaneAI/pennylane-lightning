@@ -243,7 +243,7 @@ class TestTensorExpval:
         assert np.allclose(res, expected, tol)
 
     def test_pauliz_hadamard_pauliy(self, theta, phi, varphi, qubit_device_3_wires, tol):
-        """Test that a tensor product involving PauliZ and PauliY and hadamard
+        """Test that a tensor product involving PauliZ and PauliY and Hadamard
         works correctly"""
         dev = qubit_device_3_wires
         obs = qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2)

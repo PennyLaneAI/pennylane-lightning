@@ -402,7 +402,6 @@ class TestSerializeOps:
             ),
             False,
         )
-        print(s == s_expected)
         assert s == s_expected
 
     def test_skips_prep_circuit(self):
@@ -432,16 +431,16 @@ class TestSerializeOps:
         """Test expected serialization for a simple circuit that includes an inverse gate"""
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=0)
-            qml.RY(0.6, wires=1).inv()
+            qml.adjoint(qml.RY(0.6, wires=1), lazy=False)
             qml.CNOT(wires=[0, 1])
 
         s = _serialize_ops(tape, self.wires_dict)
         s_expected = (
             (
                 ["RX", "RY", "CNOT"],
-                [[0.4], [0.6], []],
+                [[0.4], [-0.6], []],
                 [[0], [1], [0, 1]],
-                [False, True, False],
+                [False, False, False],
                 [[], [], []],
             ),
             False,
@@ -477,7 +476,7 @@ class TestSerializeOps:
             qml.CNOT(wires=["a", 3.2])
             qml.SingleExcitation(0.5, wires=["a", 3.2])
             qml.SingleExcitationPlus(0.4, wires=["a", 3.2])
-            qml.SingleExcitationMinus(0.5, wires=["a", 3.2]).inv()
+            qml.adjoint(qml.SingleExcitationMinus(0.5, wires=["a", 3.2]), lazy=False)
 
         s = _serialize_ops(tape, wires_dict)
         s_expected = (
@@ -490,9 +489,9 @@ class TestSerializeOps:
                     "SingleExcitationPlus",
                     "SingleExcitationMinus",
                 ],
-                [[0.4], [0.6], [], [0.5], [0.4], [0.5]],
+                [[0.4], [0.6], [], [0.5], [0.4], [-0.5]],
                 [[0], [1], [0, 1], [0, 1], [0, 1], [0, 1]],
-                [False, False, False, False, False, True],
+                [False, False, False, False, False, False],
                 [[], [], [], [], [], []],
             ),
             False,
@@ -504,10 +503,10 @@ class TestSerializeOps:
         """Test expected serialization for a random circuit"""
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=0)
-            qml.RY(0.6, wires=1).inv().inv()
+            qml.adjoint(qml.adjoint(qml.RY(0.6, wires=1), lazy=False), lazy=False)
             qml.CNOT(wires=[0, 1])
             qml.QubitUnitary(np.eye(4), wires=[0, 1])
-            qml.templates.QFT(wires=[0, 1, 2]).inv()
+            qml.adjoint(qml.templates.QFT(wires=[0, 1, 2]))
             qml.DoubleExcitation(0.555, wires=[3, 2, 1, 0])
             qml.DoubleExcitationMinus(0.555, wires=[0, 1, 2, 3])
             qml.DoubleExcitationPlus(0.555, wires=[0, 1, 2, 3])
@@ -522,7 +521,7 @@ class TestSerializeOps:
                     "RY",
                     "CNOT",
                     "QubitUnitary",
-                    "QFT",
+                    "Adjoint(QFT)",
                     "DoubleExcitation",
                     "DoubleExcitationMinus",
                     "DoubleExcitationPlus",
@@ -535,7 +534,7 @@ class TestSerializeOps:
                     [],
                     [],
                     qml.matrix(qml.QubitUnitary(np.eye(4, dtype=dtype), wires=[0, 1])),
-                    qml.matrix(qml.templates.QFT(wires=[0, 1, 2]).inv()),
+                    qml.matrix(qml.adjoint(qml.templates.QFT(wires=[0, 1, 2]))),
                     [],
                     [],
                     [],
