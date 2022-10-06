@@ -111,7 +111,7 @@ test-cpp-kokkos:
 gbenchmark:
 	rm -rf ./BuildGBench
 	cmake $(LIGHTNING_CPP_DIR) -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_OPENMP=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release -DBLA_VENDOR=OpenBLAS
-	cmake --build ./BuildGBench 
+	cmake --build ./BuildGBench
 
 .PHONY: format format-cpp format-python
 format: format-cpp format-python
