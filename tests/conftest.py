@@ -22,7 +22,7 @@ import numpy as np
 import pennylane as qml
 
 # defaults
-TOL = 1e-6
+TOL = 1e-5
 TOL_STOCHASTIC = 0.05
 
 U = np.array(
