@@ -6,7 +6,7 @@ on:
       - master
 
 env:
-  GCC_VERSION: 10
+  GCC_VERSION: 11
 
 jobs:
   benchmarks:
@@ -32,7 +32,7 @@ jobs:
           python-version: '3.7'
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-10 g++-10 ninja-build libopenblas-dev
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-11 g++-11 ninja-build libopenblas-dev
 
       - name: Build GBenchmark
         run: |

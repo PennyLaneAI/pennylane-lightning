@@ -92,11 +92,11 @@ jobs:
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies
-        run: sudo apt update && sudo apt -y install clang-tidy-14 cmake g++-10 ninja-build libomp-14-dev
+        run: sudo apt update && sudo apt -y install clang-tidy-14 cmake g++-11 ninja-build libomp-14-dev
         env:
           DEBIAN_FRONTEND: noninteractive
 
       - name: Run clang-tidy compilation
         run: |
-          cmake -BBuild -DENABLE_CLANG_TIDY=ON -DCLANG_TIDY_BINARY=clang-tidy-14 -DBUILD_TESTS=ON -DENABLE_WARNINGS=ON -DCMAKE_CXX_COMPILER="$(which g++-10)" -G Ninja .
+          cmake -BBuild -DENABLE_CLANG_TIDY=ON -DCLANG_TIDY_BINARY=clang-tidy-14 -DBUILD_TESTS=ON -DENABLE_WARNINGS=ON -DCMAKE_CXX_COMPILER="$(which g++-11)" -G Ninja .
           cmake --build ./Build
