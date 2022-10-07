@@ -431,16 +431,16 @@ class TestSerializeOps:
         """Test expected serialization for a simple circuit that includes an inverse gate"""
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=0)
-            qml.adjoint(qml.RY(0.6, wires=1), lazy=False)
+            qml.RY(0.6, wires=1).inv()
             qml.CNOT(wires=[0, 1])
 
         s = _serialize_ops(tape, self.wires_dict)
         s_expected = (
             (
                 ["RX", "RY", "CNOT"],
-                [[0.4], [-0.6], []],
+                [[0.4], [0.6], []],
                 [[0], [1], [0, 1]],
-                [False, False, False],
+                [False, True, False],
                 [[], [], []],
             ),
             False,
@@ -503,10 +503,10 @@ class TestSerializeOps:
         """Test expected serialization for a random circuit"""
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=0)
-            qml.adjoint(qml.adjoint(qml.RY(0.6, wires=1), lazy=False), lazy=False)
+            qml.RY(0.6, wires=1).inv().inv()
             qml.CNOT(wires=[0, 1])
             qml.QubitUnitary(np.eye(4), wires=[0, 1])
-            qml.adjoint(qml.templates.QFT(wires=[0, 1, 2]))
+            qml.templates.QFT(wires=[0, 1, 2]).inv()
             qml.DoubleExcitation(0.555, wires=[3, 2, 1, 0])
             qml.DoubleExcitationMinus(0.555, wires=[0, 1, 2, 3])
             qml.DoubleExcitationPlus(0.555, wires=[0, 1, 2, 3])
@@ -521,7 +521,7 @@ class TestSerializeOps:
                     "RY",
                     "CNOT",
                     "QubitUnitary",
-                    "Adjoint(QFT)",
+                    "QFT",
                     "DoubleExcitation",
                     "DoubleExcitationMinus",
                     "DoubleExcitationPlus",
@@ -534,7 +534,7 @@ class TestSerializeOps:
                     [],
                     [],
                     qml.matrix(qml.QubitUnitary(np.eye(4, dtype=dtype), wires=[0, 1])),
-                    qml.matrix(qml.adjoint(qml.templates.QFT(wires=[0, 1, 2]))),
+                    qml.matrix(qml.templates.QFT(wires=[0, 1, 2]).inv()),
                     [],
                     [],
                     [],

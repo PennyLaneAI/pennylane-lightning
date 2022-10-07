@@ -36,7 +36,7 @@ class TestSparseExpval:
         return qml.device("lightning.qubit", wires=2, c_dtype=request.param)
 
     @pytest.mark.skipif(
-        Kokkos_info()["USE_KOKKOS"] == True, reason="Requires Kokkos and Kokkos Kernels."
+        Kokkos_info()["USE_KOKKOS"] == True, reason="Kokkos and Kokkos Kernels are present."
     )
     def test_create_device_with_unsupported_dtype(self, dev):
         @qml.qnode(dev, diff_method="parameter-shift")
