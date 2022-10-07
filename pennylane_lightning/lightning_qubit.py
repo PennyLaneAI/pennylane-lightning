@@ -19,7 +19,6 @@ from typing import List
 from warnings import warn
 from os import getenv
 from itertools import islice, product
-from functools import reduce
 from string import ascii_letters as ABC
 
 import numpy as np
@@ -28,7 +27,6 @@ from pennylane import (
     math,
     BasisState,
     QubitStateVector,
-    QubitUnitary,
     Projector,
     Rot,
     QuantumFunctionError,
@@ -38,7 +36,6 @@ from pennylane.devices import DefaultQubit
 from pennylane.operation import Tensor, Operation
 from pennylane.measurements import MeasurementProcess, Expectation, State
 from pennylane.wires import Wires
-from pennylane.ops.qubit.attributes import diagonal_in_z_basis
 
 ABC_ARRAY = np.array(list(ABC))
 
@@ -249,6 +246,16 @@ class LightningQubit(QubitDevice):
         self._state = self._create_basis_state(0)
         self._pre_rotated_state = self._state
 
+    # pylint: disable=arguments-differ
+    def _get_batch_size(self, tensor, expected_shape, expected_size):
+        """Determine whether a tensor has an additional batch dimension for broadcasting,
+        compared to an expected_shape."""
+        size = self._size(tensor)
+        if self._ndim(tensor) > len(expected_shape) or size > expected_size:
+            return size // expected_size
+
+        return None
+
     @property
     def state(self):
         dim = 2**self.num_wires
@@ -283,7 +290,7 @@ class LightningQubit(QubitDevice):
             if not qml.math.allclose(norm, 1.0, atol=tolerance):
                 raise ValueError("Sum of amplitudes-squared does not equal one.")
 
-        if len(device_wires) == self.num_wires and sorted(device_wires) == device_wires:
+        if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
             # Initialize the entire device state with the input state
             self._state = self._reshape(state, output_shape)
             return
@@ -298,12 +305,7 @@ class LightningQubit(QubitDevice):
         # get indices for which the state is changed to input state vector elements
         ravelled_indices = np.ravel_multi_index(unravelled_indices.T, [2] * self.num_wires)
 
-        if batch_size is not None:
-            state = self._scatter(
-                (slice(None), ravelled_indices), state, [batch_size, 2**self.num_wires]
-            )
-        else:
-            state = self._scatter(ravelled_indices, state, [2**self.num_wires])
+        state = self._scatter(ravelled_indices, state, [2**self.num_wires])
         state = self._reshape(state, output_shape)
         self._state = self._asarray(state, dtype=self.C_DTYPE)
 
@@ -336,183 +338,14 @@ class LightningQubit(QubitDevice):
 
         self._state = self._create_basis_state(num)
 
-    def _get_unitary_matrix(self, unitary):  # pylint: disable=no-self-use
-        """Return the matrix representing a unitary operation.
+    # To be able to validate the adjoint method [_validate_adjoint_method(device)],
+    #  the qnode requires the definition of:
+    # ["_apply_operation", "_apply_unitary", "adjoint_jacobian"]
+    def _apply_operation():
+        pass
 
-        Args:
-            unitary (~.Operation): a PennyLane unitary operation
-
-        Returns:
-            array[complex]: Returns a 2D matrix representation of
-            the unitary in the computational basis, or, in the case of a diagonal unitary,
-            a 1D array representing the matrix diagonal.
-        """
-        if unitary in diagonal_in_z_basis:
-            return unitary.eigvals()
-
-        return unitary.matrix()
-
-    def _apply_diagonal_unitary(self, state, phases, wires):
-        r"""Apply multiplication of a phase vector to subsystems of the quantum state.
-
-        This represents the multiplication with diagonal gates in a more efficient manner.
-
-        Args:
-            state (array[complex]): input state
-            phases (array): vector to multiply
-            wires (Wires): target wires
-
-        Returns:
-            array[complex]: output state
-        """
-        # translate to wire labels used by device
-        device_wires = self.map_wires(wires)
-        dim = 2 ** len(device_wires)
-        batch_size = self._get_batch_size(phases, (dim,), dim)
-
-        # reshape vectors
-        shape = [2] * len(device_wires)
-        if batch_size is not None:
-            shape.insert(0, batch_size)
-        phases = self._cast(self._reshape(phases, shape), dtype=self.C_DTYPE)
-
-        state_indices = ABC[: self.num_wires]
-        affected_indices = "".join(ABC_ARRAY[list(device_wires)].tolist())
-
-        einsum_indices = f"...{affected_indices},...{state_indices}->...{state_indices}"
-        return self._einsum(einsum_indices, phases, state)
-
-    def _apply_unitary_einsum(self, state, mat, wires):
-        r"""Apply multiplication of a matrix to subsystems of the quantum state.
-
-        This function uses einsum instead of tensordot. This approach is only
-        faster for single- and two-qubit gates.
-
-        Args:
-            state (array[complex]): input state
-            mat (array): matrix to multiply
-            wires (Wires): target wires
-
-        Returns:
-            array[complex]: output state
-        """
-        # translate to wire labels used by device
-        device_wires = self.map_wires(wires)
-
-        dim = 2 ** len(device_wires)
-        batch_size = self._get_batch_size(mat, (dim, dim), dim**2)
-
-        # If the matrix is broadcasted, it is reshaped to have leading axis of size mat_batch_size
-        shape = [2] * (len(device_wires) * 2)
-        if batch_size is not None:
-            shape.insert(0, batch_size)
-        mat = self._cast(self._reshape(mat, shape), dtype=self.C_DTYPE)
-
-        # Tensor indices of the quantum state
-        state_indices = ABC[: self.num_wires]
-
-        # Indices of the quantum state affected by this operation
-        affected_indices = "".join(ABC_ARRAY[list(device_wires)].tolist())
-
-        # All affected indices will be summed over, so we need the same number of new indices
-        new_indices = ABC[self.num_wires : self.num_wires + len(device_wires)]
-
-        # The new indices of the state are given by the old ones with the affected indices
-        # replaced by the new_indices
-        new_state_indices = reduce(
-            lambda old_string, idx_pair: old_string.replace(idx_pair[0], idx_pair[1]),
-            zip(affected_indices, new_indices),
-            state_indices,
-        )
-
-        # We now put together the indices in the notation numpy's einsum requires
-        # This notation allows for the state, the matrix, or both to be broadcasted
-        einsum_indices = (
-            f"...{new_indices}{affected_indices},...{state_indices}->...{new_state_indices}"
-        )
-
-        return self._einsum(einsum_indices, mat, state)
-
-    def _apply_unitary(self, state, mat, wires):
-        r"""Apply multiplication of a matrix to subsystems of the quantum state.
-
-        Args:
-            state (array[complex]): input state
-            mat (array): matrix to multiply
-            wires (Wires): target wires
-
-        Returns:
-            array[complex]: output state
-
-        Note: This function does not support simultaneously broadcasted states and matrices yet.
-        """
-        # translate to wire labels used by device
-        device_wires = self.map_wires(wires)
-
-        dim = 2 ** len(device_wires)
-        mat_batch_size = self._get_batch_size(mat, (dim, dim), dim**2)
-        state_batch_size = self._get_batch_size(state, (2,) * self.num_wires, 2**self.num_wires)
-
-        shape = [2] * (len(device_wires) * 2)
-        state_axes = device_wires
-        # If the matrix is broadcasted, it is reshaped to have leading axis of size mat_batch_size
-        if mat_batch_size:
-            shape.insert(0, mat_batch_size)
-            if state_batch_size:
-                raise NotImplementedError(
-                    "Applying a broadcasted unitary to an already broadcasted state via "
-                    "_apply_unitary is not supported. Broadcasting sizes are "
-                    f"({mat_batch_size}, {state_batch_size})."
-                )
-        # If the state is broadcasted, the affected state axes need to be shifted by 1.
-        if state_batch_size:
-            state_axes = [ax + 1 for ax in state_axes]
-        mat = self._cast(self._reshape(mat, shape), dtype=self.C_DTYPE)
-        axes = (np.arange(-len(device_wires), 0), state_axes)
-        tdot = self._tensordot(mat, state, axes=axes)
-
-        # tensordot causes the axes given in `wires` to end up in the first positions
-        # of the resulting tensor. This corresponds to a (partial) transpose of
-        # the correct output state
-        # We'll need to invert this permutation to put the indices in the correct place
-        unused_idxs = [idx for idx in range(self.num_wires) if idx not in device_wires]
-        perm = list(device_wires) + unused_idxs
-        # If the matrix is broadcasted, all but the first dimension are shifted by 1
-        if mat_batch_size:
-            perm = [idx + 1 for idx in perm]
-            perm.insert(0, 0)
-        if state_batch_size:
-            # As the state broadcasting dimension always is the first in the state, it always
-            # ends up in position `len(device_wires)` after the tensordot. The -1 causes it
-            # being permuted to the leading dimension after transposition
-            perm.insert(len(device_wires), -1)
-
-        inv_perm = np.argsort(perm)  # argsort gives inverse permutation
-        return self._transpose(tdot, inv_perm)
-
-    def _apply_operation(self, state, operation):
-        """Applies unitary operations to the input state.
-
-        Args:
-            state (array[complex]): input state
-            operation (~.Operation): operation to apply on the device
-
-        Returns:
-            array[complex]: output state
-        """
-        if operation.__class__.__name__ == "Identity":
-            return state
-        wires = operation.wires
-
-        matrix = self._asarray(self._get_unitary_matrix(operation), dtype=self.C_DTYPE)
-
-        if operation in diagonal_in_z_basis:
-            return self._apply_diagonal_unitary(state, matrix, wires)
-        if len(wires) <= 2:
-            # Einsum is faster for small gates
-            return self._apply_unitary_einsum(state, matrix, wires)
-
-        return self._apply_unitary(state, matrix, wires)
+    def _apply_unitary():
+        pass
 
     def apply_lightning(self, state, operations):
         """Apply a list of operations to the state tensor.
@@ -546,7 +379,6 @@ class LightningQubit(QubitDevice):
             method = getattr(sim, name, None)
 
             wires = self.wires.indices(o.wires)
-
             if method is None:
                 # Inverse can be set to False since qml.matrix(o) is already in inverted form
                 method = getattr(sim, "applyMatrix")
@@ -585,11 +417,7 @@ class LightningQubit(QubitDevice):
             self._pre_rotated_state = self._state
 
         if rotations:
-            if any(isinstance(r, QubitUnitary) for r in rotations):
-                for operation in rotations:
-                    self._state = self._apply_operation(self._state, operation)
-            else:
-                self._state = self.apply_lightning(np.copy(self._pre_rotated_state), rotations)
+            self._state = self.apply_lightning(np.copy(self._pre_rotated_state), rotations)
         else:
             self._state = self._pre_rotated_state
 
