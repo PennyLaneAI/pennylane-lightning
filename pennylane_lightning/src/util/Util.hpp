@@ -25,12 +25,12 @@
 #include <limits>
 #include <memory>
 #include <numeric>
+#include <ranges>
 #include <set>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
 #include <vector>
-#include <ranges>
 
 #if __has_include(<version>)
 #include <version>
