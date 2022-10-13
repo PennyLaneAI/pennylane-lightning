@@ -24,28 +24,33 @@ using std::string;
 using std::vector;
 
 TEST_CASE("Probabilities", "[Measures]") {
-    // Probabilities calculated with Pennylane default_qbit:
-    std::vector<std::vector<double>> Expected_Probabilities = {
-        {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072, 0.00801973,
-         0.02280642, 0.00104134}, // probs(0,1,2)
-        {0.67078706, 0.17564072, 0.0870997, 0.02280642, 0.03062806, 0.00801973,
-         0.00397696, 0.00104134}, // probs(2,1,0)
-        {0.67078706, 0.17564072, 0.03062806, 0.00801973, 0.0870997, 0.02280642,
-         0.00397696, 0.00104134}, // probs(2,0,1)
-        {0.67078706, 0.0870997, 0.17564072, 0.02280642, 0.03062806, 0.00397696,
-         0.00801973, 0.00104134},                         // probs(1,2,0)
-        {0.70141512, 0.09107666, 0.18366045, 0.02384776}, // probs(0,1)
-        {0.75788676, 0.03460502, 0.19844714, 0.00906107}, // probs(0,2)
-        {0.84642778, 0.0386478, 0.10990612, 0.0050183},   // probs(1,2)
-        {0.84642778, 0.10990612, 0.0386478, 0.0050183},   // probs(2,1)
-        {0.79249179, 0.20750821},                         // probs(0)
-        {0.88507558, 0.11492442},                         // probs(1)
-        {0.9563339, 0.0436661}                            // probs(2)
-    };
-
-    std::vector<std::vector<size_t>> Wires_Configuration = {
-        {0, 1, 2}, {2, 1, 0}, {2, 0, 1}, {1, 2, 0}, {0, 1}, {0, 2},
-        {1, 2},    {2, 1},    {0},       {1},       {2}};
+    // Probabilities calculated with Pennylane default.qubit:
+    std::vector<std::pair<std::vector<size_t>, std::vector<double>>> input = {
+        {{0, 1, 2},
+         {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072, 0.00801973,
+          0.02280642, 0.00104134}},
+        {{0, 2, 1},
+         {0.67078706, 0.0870997, 0.03062806, 0.00397696, 0.17564072, 0.02280642,
+          0.00801973, 0.00104134}},
+        {{1, 0, 2},
+         {0.67078706, 0.03062806, 0.17564072, 0.00801973, 0.0870997, 0.00397696,
+          0.02280642, 0.00104134}},
+        {{1, 2, 0},
+         {0.67078706, 0.0870997, 0.17564072, 0.02280642, 0.03062806, 0.00397696,
+          0.00801973, 0.00104134}},
+        {{2, 0, 1},
+         {0.67078706, 0.17564072, 0.03062806, 0.00801973, 0.0870997, 0.02280642,
+          0.00397696, 0.00104134}},
+        {{2, 1, 0},
+         {0.67078706, 0.17564072, 0.0870997, 0.02280642, 0.03062806, 0.00801973,
+          0.00397696, 0.00104134}},
+        {{0, 1}, {0.70141512, 0.09107666, 0.18366045, 0.02384776}},
+        {{0, 2}, {0.75788676, 0.03460502, 0.19844714, 0.00906107}},
+        {{1, 2}, {0.84642778, 0.0386478, 0.10990612, 0.0050183}},
+        {{2, 1}, {0.84642778, 0.10990612, 0.0386478, 0.0050183}},
+        {{0}, {0.79249179, 0.20750821}},
+        {{1}, {0.88507558, 0.11492442}},
+        {{2}, {0.9563339, 0.0436661}}};
 
     // Defining the State Vector that will be measured.
     auto Measured_StateVector = Initializing_StateVector();
@@ -58,11 +63,13 @@ TEST_CASE("Probabilities", "[Measures]") {
     vector<double> probabilities;
 
     SECTION("Looping over different wire configurations:") {
-        for (size_t conf = 0; conf < Expected_Probabilities.size(); conf++) {
-            probabilities = Measurer.probs(Wires_Configuration[conf]);
-            REQUIRE_THAT(
-                probabilities,
-                Catch::Approx(Expected_Probabilities[conf]).margin(1e-6));
+        for (auto term : input) {
+            probabilities = Measurer.probs(term.first);
+            std::cout << term.first << std::endl;
+            std::cout << term.second << std::endl;
+            std::cout << probabilities << std::endl;
+            REQUIRE_THAT(term.second,
+                         Catch::Approx(probabilities).margin(1e-6));
         }
     }
 }
