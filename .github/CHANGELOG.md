@@ -2,7 +2,7 @@
 
 ### Bug fixes
 
-* Fixes statevector transposition method.
+* Fixes the transposition method used in the probability calculation.
 [(#377)](https://github.com/PennyLaneAI/pennylane-lightning/pull/377)
 
 ### Contributor
