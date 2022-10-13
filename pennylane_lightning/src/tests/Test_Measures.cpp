@@ -65,9 +65,6 @@ TEST_CASE("Probabilities", "[Measures]") {
     SECTION("Looping over different wire configurations:") {
         for (const auto &term : input) {
             probabilities = Measurer.probs(term.first);
-            std::cout << term.first << std::endl;
-            std::cout << term.second << std::endl;
-            std::cout << probabilities << std::endl;
             REQUIRE_THAT(term.second,
                          Catch::Approx(probabilities).margin(1e-6));
         }
