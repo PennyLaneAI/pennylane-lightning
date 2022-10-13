@@ -63,7 +63,7 @@ TEST_CASE("Probabilities", "[Measures]") {
     vector<double> probabilities;
 
     SECTION("Looping over different wire configurations:") {
-        for (auto term : input) {
+        for (const auto term : input) {
             probabilities = Measurer.probs(term.first);
             std::cout << term.first << std::endl;
             std::cout << term.second << std::endl;
