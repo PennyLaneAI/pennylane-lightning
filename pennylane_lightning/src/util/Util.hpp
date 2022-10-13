@@ -30,6 +30,7 @@
 #include <tuple>
 #include <type_traits>
 #include <vector>
+#include <ranges>
 
 #if __has_include(<version>)
 #include <version>
@@ -313,8 +314,8 @@ inline auto transposed_state_index(size_t ind,
     -> size_t {
     size_t new_index = 0;
     auto max_axis = new_axes.size() - 1;
-    for (auto axis = new_axes.rbegin(); axis != new_axes.rend(); ++axis) {
-        new_index += (ind % 2) << (max_axis - *axis);
+    for (size_t axis : std::ranges::reverse_view(new_axes)) {
+        new_index += (ind % 2) << (max_axis - axis);
         ind /= 2;
     }
     return new_index;
