@@ -16,57 +16,22 @@ on:
 env:
   DISTUTILS_USE_SDK: 1
   MSSdk: 1
-  PYTHON3_MIN_VERSION: "7"
-  PYTHON3_MAX_VERSION: "10"
 
 jobs:
-  win-set-matrix-x86:
-    name: Set builder matrix
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.10.0
-        with:
-          access_token: ${{ github.token }}
-
-      - uses: actions/checkout@v2
-
-      - name: Python version
-        id: pyver
-        run: |
-          if [[ ${{ github.event_name }} == 'pull_request' ]]; then
-            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
-              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-              --max-version=3.${{ env.PYTHON3_MAX_VERSION }})"
-          else
-            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
-              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-              --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
-              --range)"
-          fi
-
-      - name: Kokkos execution strategy
-        id: exec_model
-        run: echo "::set-output name=exec_model::[\"SERIAL\"]" # We may also adopt [OPENMP, THREADS] in later iterations
-
-      - name: Kokkos version
-        id: kokkos_version
-        run: echo "::set-output name=kokkos_version::[\"3.6.00\"]"
-
-    outputs:
-      matrix: ${{ steps.pyver.outputs.matrix }}
-      exec_model: ${{ steps.exec_model.outputs.exec_model }}
-      kokkos_version: ${{ steps.kokkos_version.outputs.kokkos_version }}
+  set_wheel_build_matrix:
+    name: "Set wheel build matrix"
+    uses: ./.github/workflows/set_wheel_build_matrix.yml
+    with:
+      event_name: ${{ github.event_name }}
 
   build_dependencies:
-    needs: [win-set-matrix-x86]
+    needs: [set_wheel_build_matrix]
     strategy:
       fail-fast: false
       matrix:
         os: [windows-2019]
-        exec_model: ${{ fromJson(needs.win-set-matrix-x86.outputs.exec_model) }}
-        kokkos_version: ${{ fromJson(needs.win-set-matrix-x86.outputs.kokkos_version) }}
+        exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
 
     name: Kokkos core & kernels (${{ matrix.exec_model }})
     runs-on: ${{ matrix.os }}
@@ -82,7 +47,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: D:\a\install_dir\${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-RelWithDebInfo
 
       - name: Clone Kokkos libs
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
@@ -136,15 +101,15 @@ jobs:
           cmake --install ./Build --config RelWithDebInfo --verbose
 
   win-wheels:
-    needs: [win-set-matrix-x86, build_dependencies]
+    needs: [set_wheel_build_matrix, build_dependencies]
     strategy:
       fail-fast: false
       matrix:
         os: [windows-2019]
         arch: [AMD64]
-        cibw_build: ${{ fromJson(needs.win-set-matrix-x86.outputs.matrix) }}
-        exec_model: ${{ fromJson(needs.win-set-matrix-x86.outputs.exec_model) }}
-        kokkos_version: ${{ fromJson(needs.win-set-matrix-x86.outputs.kokkos_version) }}
+        cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
+        exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
     name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
 
@@ -159,7 +124,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: D:\a\install_dir\${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-RelWithDebInfo
 
       - uses: actions/checkout@v3
 
