@@ -1,4 +1,4 @@
-# Release 0.27.0-dev
+# Release 0.27.1-dev
 
 ### New features since last release
 
@@ -6,26 +6,17 @@
 
 ### Improvements
 
-* Update clang-tools version in Github workflows.
-[(#351)](https://github.com/PennyLaneAI/pennylane-lightning/pull/351)
-
-* Improve tests and checks CI/CD pipelines.
-[(#353)](https://github.com/PennyLaneAI/pennylane-lightning/pull/353)
-
-* Implement 3 Qubits gates (CSWAP & Toffoli) & 4 Qubits gates (DoubleExcitation, DoubleExcitationMinus, DoubleExcitationPlus) in LM manner.
-[(#362)](https://github.com/PennyLaneAI/pennylane-lightning/pull/362)
-
-* Upgrade Kokkos and Kokkos Kernels to 3.7.00, and improve sparse matrix-vector multiplication performance and memory usage.
-[(#361)](https://github.com/PennyLaneAI/pennylane-lightning/pull/361)
-
-* Update Linux (ubuntu-latest) architecture x86_64 wheel-builder from GCC 10.x to GCC 11.x.
-[(#373)](https://github.com/PennyLaneAI/pennylane-lightning/pull/373)
-
-* Update gcc and g++ 10.x to 11.x in CI tests. This update brings improved support for newer C++ features.
-[(#370)](https://github.com/PennyLaneAI/pennylane-lightning/pull/370)
-
-
 ### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+---
+
+# Release 0.26.1
 
 ### Bug fixes
 
