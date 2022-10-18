@@ -832,9 +832,9 @@ def circuit_ansatz(params, wires):
     qml.adjoint(qml.CRZ(params[5], wires=[wires[0], wires[3]]))
     qml.adjoint(qml.PhaseShift(params[6], wires=wires[0]))
     qml.Rot(params[6], params[7], params[8], wires=wires[0])
-    # #     qml.Rot(params[8], params[8], params[9], wires=wires[1]).inv()
+    qml.adjoint(qml.Rot(params[8], params[8], params[9], wires=wires[1]))
     qml.MultiRZ(params[11], wires=[wires[0], wires[1]])
-    # #     qml.PauliRot(params[12], "XXYZ", wires=[wires[0], wires[1], wires[2], wires[3]])
+    qml.PauliRot(params[12], "XXYZ", wires=[wires[0], wires[1], wires[2], wires[3]])
     qml.CPhase(params[12], wires=[wires[3], wires[2]])
     qml.IsingXX(params[13], wires=[wires[1], wires[0]])
     qml.IsingXY(params[14], wires=[wires[3], wires[2]])
@@ -843,7 +843,7 @@ def circuit_ansatz(params, wires):
     qml.U1(params[15], wires=wires[0])
     qml.U2(params[16], params[17], wires=wires[0])
     qml.U3(params[18], params[19], params[20], wires=wires[1])
-    # #     qml.CRot(params[21], params[22], params[23], wires=[wires[1], wires[2]]).inv()  # expected tofail
+    qml.adjoint(qml.CRot(params[21], params[22], params[23], wires=[wires[1], wires[2]]))
     qml.SingleExcitation(params[24], wires=[wires[2], wires[0]])
     qml.DoubleExcitation(params[25], wires=[wires[2], wires[0], wires[1], wires[3]])
     qml.SingleExcitationPlus(params[26], wires=[wires[0], wires[2]])
@@ -872,7 +872,7 @@ def test__tape_qchem(tol):
     dev_dq = qml.device("default.qubit", wires=4)
 
     circuit_lq = qml.QNode(circuit, dev_lq, diff_method="adjoint")
-    circuit_dq = qml.QNode(circuit, dev_lq, diff_method="parameter-shift")
+    circuit_dq = qml.QNode(circuit, dev_dq, diff_method="parameter-shift")
 
     assert np.allclose(qml.grad(circuit_lq)(params), qml.grad(circuit_dq)(params), tol)
 
