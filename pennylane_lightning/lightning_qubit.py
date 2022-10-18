@@ -262,7 +262,6 @@ class LightningQubit(QubitDevice):
 
         # translate to wire labels used by device
         device_wires = self.map_wires(device_wires)
-        dim = 2 ** len(device_wires)
 
         state = self._asarray(state, dtype=self.C_DTYPE)
         output_shape = [2] * self.num_wires
