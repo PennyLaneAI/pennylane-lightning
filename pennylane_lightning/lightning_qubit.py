@@ -230,7 +230,7 @@ class LightningQubit(QubitDevice):
             dtype = arr.dtype
 
         # We allocate a new aligned memory and copy data to there if alignment or dtype mismatches
-        # Note that get_alignment does not necessarily returns CPUMemoryModel(Unaligned) even for
+        # Note that get_alignment does not necessarily return CPUMemoryModel(Unaligned) even for
         # numpy allocated memory as the memory location happens to be aligned.
         if int(get_alignment(arr)) < int(best_alignment()) or arr.dtype != dtype:
             new_arr = allocate_aligned_array(arr.size, np.dtype(dtype)).reshape(arr.shape)
