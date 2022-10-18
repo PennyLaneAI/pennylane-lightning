@@ -246,22 +246,10 @@ class LightningQubit(QubitDevice):
         self._state = self._create_basis_state(0)
         self._pre_rotated_state = self._state
 
-    # pylint: disable=arguments-differ
-    def _get_batch_size(self, tensor, expected_shape, expected_size):
-        """Determine whether a tensor has an additional batch dimension for broadcasting,
-        compared to an expected_shape."""
-        size = self._size(tensor)
-        if self._ndim(tensor) > len(expected_shape) or size > expected_size:
-            return size // expected_size
-
-        return None
-
     @property
     def state(self):
-        dim = 2**self.num_wires
-        batch_size = self._get_batch_size(self._pre_rotated_state, (2,) * self.num_wires, dim)
-        # Do not flatten the state completely but leave the broadcasting dimension if there is one
-        shape = (batch_size, dim) if batch_size is not None else (dim,)
+        # Flattening the state.
+        shape = (1 << self.num_wires,)
         return self._reshape(self._pre_rotated_state, shape)
 
     def _apply_state_vector(self, state, device_wires):
@@ -277,13 +265,7 @@ class LightningQubit(QubitDevice):
         dim = 2 ** len(device_wires)
 
         state = self._asarray(state, dtype=self.C_DTYPE)
-        batch_size = self._get_batch_size(state, (dim,), dim)
         output_shape = [2] * self.num_wires
-        if batch_size is not None:
-            output_shape.insert(0, batch_size)
-
-        if not (state.shape in [(dim,), (batch_size, dim)]):
-            raise ValueError("State vector must have shape (2**wires,) or (batch_size, 2**wires).")
 
         if not qml.math.is_abstract(state):
             norm = qml.math.linalg.norm(state, axis=-1, ord=2)

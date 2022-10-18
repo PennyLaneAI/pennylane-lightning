@@ -455,13 +455,6 @@ class TestApply:
             dev.apply([qml.QubitStateVector(np.array([1, -1]), wires=[0])])
 
         with pytest.raises(
-            ValueError,
-            match=r"State vector must have shape \(2\*\*wires,\) or \(batch_size, 2\*\*wires\).",
-        ):
-            p = np.array([1, 0, 1, 1, 0]) / np.sqrt(3)
-            dev.apply([qml.QubitStateVector(p, wires=[0, 1])])
-
-        with pytest.raises(
             DeviceError,
             match="Operation QubitStateVector cannot be used after other Operations have already been applied ",
         ):
