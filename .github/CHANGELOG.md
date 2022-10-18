@@ -39,6 +39,18 @@ Amintor Dusko, Chae-Yeun Park, Monit Sharma, Shuli Shu
 
 ---
 
+# Release 0.26.1
+
+### Bug fixes
+
+* Fixes the transposition method used in the probability calculation.
+[(#377)](https://github.com/PennyLaneAI/pennylane-lightning/pull/377)
+
+### Contributor
+
+Amintor Dusko
+
+---
 # Release 0.26.0
 
 ### Improvements
