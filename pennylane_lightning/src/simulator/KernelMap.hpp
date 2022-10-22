@@ -26,6 +26,7 @@
 
 #include <deque>
 #include <functional>
+#include <mutex>
 #include <unordered_map>
 #include <utility>
 
@@ -161,7 +162,10 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
 
   private:
     EnumDispatchKernalMap kernel_map_;
+
+    /* TODO: Cache logic can be improved */
     mutable std::deque<std::tuple<size_t, uint32_t, EnumKernelMap>> cache_;
+    mutable std::mutex cache_mutex_;
 
     /**
      * @brief Allowed kernels for a given memory model
@@ -182,6 +186,34 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
                 Gates::KernelType::AVX2, Gates::KernelType::AVX512}},
               // LCOV_EXCL_STOP
           } {}
+
+    [[nodiscard]] auto updateCache(const size_t num_qubits,
+                                   uint32_t dispatch_key) const
+        -> std::unordered_map<Operation, Gates::KernelType> {
+        std::unordered_map<Operation, Gates::KernelType> kernel_for_op;
+
+        Util::for_each_enum<Operation>([&](Operation op) {
+            const auto key = std::make_pair(op, dispatch_key);
+            const auto &set = kernel_map_.at(key);
+            kernel_for_op.emplace(op, set.getKernel(num_qubits));
+        });
+
+        std::unique_lock cache_lock(cache_mutex_);
+
+        const auto cache_iter =
+            std::find_if(cache_.begin(), cache_.end(), [=](const auto &elt) {
+                return (std::get<0>(elt) == num_qubits) &&
+                       (std::get<1>(elt) == dispatch_key);
+            });
+
+        if (cache_iter == cache_.end()) {
+            if (cache_.size() == cache_size) {
+                cache_.pop_back();
+            }
+            cache_.emplace_front(num_qubits, dispatch_key, kernel_for_op);
+        }
+        return kernel_for_op;
+    }
 
   public:
     /**
@@ -314,8 +346,9 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
     [[nodiscard]] auto getKernelMap(size_t num_qubits, Threading threading,
                                     CPUMemoryModel memory_model) const
         -> EnumKernelMap {
-        // TODO: Add mutex for cache_ when we goto multithread.
         const uint32_t dispatch_key = toDispatchKey(threading, memory_model);
+
+        std::unique_lock cache_lock(cache_mutex_);
 
         const auto cache_iter =
             std::find_if(cache_.begin(), cache_.end(), [=](const auto &elt) {
@@ -323,18 +356,8 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
                        (std::get<1>(elt) == dispatch_key);
             });
         if (cache_iter == cache_.end()) {
-            std::unordered_map<Operation, Gates::KernelType> kernel_for_op;
-
-            Util::for_each_enum<Operation>([&](Operation op) {
-                const auto key = std::make_pair(op, dispatch_key);
-                const auto &set = kernel_map_.at(key);
-                kernel_for_op.emplace(op, set.getKernel(num_qubits));
-            });
-            if (cache_.size() == cache_size) {
-                cache_.pop_back();
-            }
-            cache_.emplace_front(num_qubits, dispatch_key, kernel_for_op);
-            return kernel_for_op;
+            cache_lock.unlock();
+            return updateCache(num_qubits, dispatch_key);
         }
         return std::get<2>(*cache_iter);
     }
