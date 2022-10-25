@@ -19,7 +19,6 @@ from typing import List
 from warnings import warn
 from os import getenv
 from itertools import islice, product
-from string import ascii_letters as ABC
 
 import numpy as np
 from pennylane import (
@@ -36,8 +35,6 @@ from pennylane.devices import DefaultQubit
 from pennylane.operation import Tensor, Operation
 from pennylane.measurements import MeasurementProcess, Expectation, State
 from pennylane.wires import Wires
-
-ABC_ARRAY = np.array(list(ABC))
 
 # tolerance for numerical errors
 tolerance = 1e-10
