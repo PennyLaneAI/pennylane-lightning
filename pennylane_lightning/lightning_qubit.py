@@ -190,6 +190,23 @@ class LightningQubit(QubitDevice):
         self._state = self._create_basis_state(0)
         self._pre_rotated_state = self._state
 
+    @property
+    def stopping_condition(self):
+        """.BooleanFn: Returns the stopping condition for the device. The returned
+        function accepts a queuable object (including a PennyLane operation
+        and observable) and returns ``True`` if supported by the device."""
+
+        def accepts_obj(obj):
+            if obj.name == "QFT" and len(obj.wires) >= 10:
+                return False
+            if obj.name == "GroverOperator" and len(obj.wires) >= 13:
+                return False
+            if getattr(obj, "has_matrix", False):
+                return not (qml.operation.is_trainable(obj))
+            return obj.name in self.observables.union(self.operations)
+
+        return qml.BooleanFn(accepts_obj)
+
     def _create_basis_state(self, index):
         """Return a computational basis state over all wires.
         Args:
