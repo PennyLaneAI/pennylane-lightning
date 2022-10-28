@@ -856,7 +856,7 @@ def circuit_ansatz(params, wires):
 
 @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 def test__tape_qchem(tol):
-    """The circit Ansatz with a QChem Hamiltonian produces correct results"""
+    """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
 
     H, qubits = qml.qchem.molecular_hamiltonian(
         ["H", "H"], np.array([0.0, 0.1, 0.0, 0.0, -0.1, 0.0])
