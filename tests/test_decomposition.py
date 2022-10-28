@@ -19,6 +19,11 @@ import numpy as np
 import pennylane as qml
 from pennylane_lightning import LightningQubit
 
+from pennylane_lightning.lightning_qubit import CPP_BINARY_AVAILABLE
+
+if not CPP_BINARY_AVAILABLE:
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+
 
 class TestDenseMatrixDecompositionThreshold:
     """Tests, for QFT and Grover operators, the automatic transition from full matrix to decomposition
