@@ -402,7 +402,6 @@ class TestSerializeOps:
             ),
             False,
         )
-        print(s == s_expected)
         assert s == s_expected
 
     def test_skips_prep_circuit(self):
@@ -477,7 +476,7 @@ class TestSerializeOps:
             qml.CNOT(wires=["a", 3.2])
             qml.SingleExcitation(0.5, wires=["a", 3.2])
             qml.SingleExcitationPlus(0.4, wires=["a", 3.2])
-            qml.SingleExcitationMinus(0.5, wires=["a", 3.2]).inv()
+            qml.adjoint(qml.SingleExcitationMinus(0.5, wires=["a", 3.2]), lazy=False)
 
         s = _serialize_ops(tape, wires_dict)
         s_expected = (
@@ -490,9 +489,9 @@ class TestSerializeOps:
                     "SingleExcitationPlus",
                     "SingleExcitationMinus",
                 ],
-                [[0.4], [0.6], [], [0.5], [0.4], [0.5]],
+                [[0.4], [0.6], [], [0.5], [0.4], [-0.5]],
                 [[0], [1], [0, 1], [0, 1], [0, 1], [0, 1]],
-                [False, False, False, False, False, True],
+                [False, False, False, False, False, False],
                 [[], [], [], [], [], []],
             ),
             False,

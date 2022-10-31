@@ -20,10 +20,10 @@ import pytest
 import numpy as np
 
 import pennylane as qml
-from pennylane_lightning import LightningQubit
 
 # defaults
 TOL = 1e-6
+TOL_STOCHASTIC = 0.05
 
 U = np.array(
     [
@@ -32,8 +32,38 @@ U = np.array(
     ]
 )
 
-U2 = np.array([[0, 1, 1, 1], [1, 0, 1, -1], [1, -1, 0, 1], [1, 1, -1, 0]]) / np.sqrt(3)
-A = np.array([[1.02789352, 1.61296440 - 0.3498192j], [1.61296440 + 0.3498192j, 1.23920938 + 0j]])
+U2 = np.array(
+    [
+        [
+            -0.07843244 - 3.57825948e-01j,
+            0.71447295 - 5.38069384e-02j,
+            0.20949966 + 6.59100734e-05j,
+            -0.50297381 + 2.35731613e-01j,
+        ],
+        [
+            -0.26626692 + 4.53837083e-01j,
+            0.27771991 - 2.40717436e-01j,
+            0.41228017 - 1.30198687e-01j,
+            0.01384490 - 6.33200028e-01j,
+        ],
+        [
+            -0.69254712 - 2.56963068e-02j,
+            -0.15484858 + 6.57298384e-02j,
+            -0.53082141 + 7.18073414e-02j,
+            -0.41060450 - 1.89462315e-01j,
+        ],
+        [
+            -0.09686189 - 3.15085273e-01j,
+            -0.53241387 - 1.99491763e-01j,
+            0.56928622 + 3.97704398e-01j,
+            -0.28671074 - 6.01574497e-02j,
+        ],
+    ]
+)
+
+THETA = np.linspace(0.11, 1, 3)
+PHI = np.linspace(0.32, 1, 3)
+VARPHI = np.linspace(0.02, 1, 3)
 
 
 @pytest.fixture(scope="session")
@@ -42,22 +72,22 @@ def tol():
     return float(os.environ.get("TOL", TOL))
 
 
+@pytest.fixture(scope="session")
+def tol_stochastic():
+    """Numerical tolerance for equality tests."""
+    return TOL_STOCHASTIC
+
+
 @pytest.fixture(scope="session", params=[2, 3])
 def n_subsystems(request):
     """Number of qubits or qumodes."""
     return request.param
 
 
+# General qubit_device fixture, for any number of wires.
 @pytest.fixture(scope="function", params=[np.complex64, np.complex128])
-def qubit_device_1_wire(request):
-    return LightningQubit(wires=1, c_dtype=request.param)
+def qubit_device(request):
+    def _device(wires):
+        return qml.device("lightning.qubit", wires=wires, c_dtype=request.param)
 
-
-@pytest.fixture(scope="function", params=[np.complex64, np.complex128])
-def qubit_device_2_wires(request):
-    return LightningQubit(wires=2, c_dtype=request.param)
-
-
-@pytest.fixture(scope="function", params=[np.complex64, np.complex128])
-def qubit_device_3_wires(request):
-    return LightningQubit(wires=3, c_dtype=request.param)
+    return _device
