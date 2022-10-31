@@ -24,6 +24,8 @@
 * Update gcc and g++ 10.x to 11.x in CI tests. This update brings improved support for newer C++ features.
 [(#370)](https://github.com/PennyLaneAI/pennylane-lightning/pull/370)
 
+* Change Lightning to inherit from QubitDevice instead of DefaultQubit.
+[(#365)](https://github.com/PennyLaneAI/pennylane-lightning/pull/365)
 
 ### Documentation
 

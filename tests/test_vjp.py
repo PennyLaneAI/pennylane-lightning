@@ -14,7 +14,6 @@
 """
 Tests for the ``vjp`` method of LightningQubit.
 """
-from cmath import exp
 import pytest
 import math
 

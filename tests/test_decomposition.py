@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests :mod:`pennylane_lightning.LightningQubit` device can be created.
+Unit tests for operation decomposition.
 """
 import pytest
 import numpy as np
 import pennylane as qml
+from pennylane_lightning import LightningQubit
 
 from pennylane_lightning.lightning_qubit import CPP_BINARY_AVAILABLE
 
@@ -24,18 +25,20 @@ if not CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
-def test_create_device():
-    dev = qml.device("lightning.qubit", wires=1)
+class TestDenseMatrixDecompositionThreshold:
+    """Tests, for QFT and Grover operators, the automatic transition from full matrix to decomposition
+    on calculations."""
 
+    input = [
+        (qml.QFT, 8, True),
+        (qml.QFT, 10, False),
+        (qml.GroverOperator, 8, True),
+        (qml.GroverOperator, 13, False),
+    ]
 
-@pytest.mark.parametrize("C", [np.complex64, np.complex128])
-def test_create_device_with_dtype(C):
-    dev = qml.device("lightning.qubit", wires=1, c_dtype=C)
+    @pytest.mark.parametrize("op, n_wires, condition", input)
+    def test_threshold(self, op, n_wires, condition):
 
-
-@pytest.mark.skipif(
-    not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
-)
-def test_create_device_with_unsupported_dtype():
-    with pytest.raises(TypeError, match="Unsupported complex Type:"):
-        dev = qml.device("lightning.qubit", wires=1, c_dtype=np.complex256)
+        wires = np.linspace(0, n_wires - 1, n_wires, dtype=int)
+        op = op(wires=wires)
+        assert LightningQubit.stopping_condition.__get__(op)(op) == condition
