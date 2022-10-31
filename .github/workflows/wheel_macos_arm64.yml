@@ -1,7 +1,7 @@
 name: Wheel::MacOS::ARM
 
 # **What it does**: Builds python wheels for MacOS (11) architecture ARM 64 and store it as artifacts.
-#                   Python versions: 3.8, 3.9, 3.10.
+#                   Python versions: 3.8, 3.9, 3.10, 3.11.
 # **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
@@ -16,7 +16,7 @@ on:
 env:
   ARCHS: 'arm64'
   PYTHON3_MIN_VERSION: "8"
-  PYTHON3_MAX_VERSION: "10"
+  PYTHON3_MAX_VERSION: "11"
 
 jobs:
   mac-set-matrix-arm:
@@ -58,7 +58,7 @@ jobs:
         arch: [arm64]
         cibw_build: ${{fromJson(needs.mac-set-matrix-arm.outputs.python_version)}}
 
-    name: macos-latest::arm64 (Python ${{ fromJson('{ "cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
+    name: macos-latest::arm64 (Python ${{ fromJson('{ "cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.10" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
 
     steps:
