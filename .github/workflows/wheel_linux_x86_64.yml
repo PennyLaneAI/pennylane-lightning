@@ -148,7 +148,7 @@ jobs:
           yum update -y && yum install -y docker
 
       - name: Install cibuildwheel
-        run: python3.8 -m pip install cibuildwheel==2.11.2
+        run: python3.8 -m pip install cibuildwheel~=2.11.0
 
       - name: Build wheels
         env:
