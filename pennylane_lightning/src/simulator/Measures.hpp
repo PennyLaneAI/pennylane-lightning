@@ -309,6 +309,65 @@ class Measures {
         return expected_value_list;
     };
 
+  template <class TransitionKernel, class fp_t>
+  size_t mcmc_step
+  (
+   const StateVectorManagedCPU<fp_t> & sv,
+   TransitionKernel & tk,
+   std::mt19937 & gen,
+   std::uniform_real_distribution<fp_t> & distrib,
+   size_t s1
+   )
+  {
+    auto s1_plog = log((sv_[s1]*std::conj(sv_[s1])).real());
+    
+    auto s1_qratio = tk(s1);
+    auto & s2 = s1_qratio.first;
+    auto & qratio = s1_qratio.second;
+
+    auto s2_plog = log((sv_[s2]*std::conj(sv_[s2])).real());
+ 
+    auto alph = std::min(1.,qratio*exp(s2_plog-s1_plog));
+    auto ran = distrib(gen);
+  
+    if (ran < alph) {
+      return s2;
+    }
+    else {
+      return s1;    
+    }
+  }  
+  
+  template <class TransitionKernel, class fp_t>
+  std::vector<size_t> generate_samples_mcmc
+  (
+   const StateVectorManagedCPU<fp_t> & sv,
+   size_t num_burnin,
+   size_t num_shots
+   )
+  {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<fp_t> distrib(0.0,1.0);
+
+    
+    TransitionKernel tk(sv);
+    size_t s1 = tk.InitState();
+ 
+    //Burn In
+    for (size_t i=0;i<num_burnin;i++) {
+      s1 = mcmc_step(tk,gen,distrib,s1); //Burn-in.
+    }
+
+    //Sample
+    std::vector<size_t> shots(num_shots);
+    auto t1 = high_resolution_clock::now();
+    for (size_t i=0;i<num_shots;i++) {
+      s1 = mcmc_step(plog,tk,gen,distrib,s1); //Burn-in.
+      probabilities[s1] += 1;
+    }
+  }
+  
     /**
      * @brief Generate samples using the alias method.
      * Reference: https://en.wikipedia.org/wiki/Alias_method
