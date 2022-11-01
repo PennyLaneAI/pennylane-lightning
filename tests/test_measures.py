@@ -24,12 +24,9 @@ from pennylane.measurements import (
 
 import pytest
 
-try:
-    from pennylane_lightning.lightning_qubit_ops import (
-        MeasuresC64,
-        MeasuresC128,
-    )
-except (ImportError, ModuleNotFoundError):
+from pennylane_lightning.lightning_qubit import CPP_BINARY_AVAILABLE
+
+if not CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
