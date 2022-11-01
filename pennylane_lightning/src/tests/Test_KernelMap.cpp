@@ -160,7 +160,8 @@ TEST_CASE("Test KernelMap is consistent in extreme usecase", "[KernelMap]") {
                                             CPUMemoryModel::Aligned256));
 
 #ifdef _OPENMP
-#pragma omp parallel
+#pragma omp parallel default(none)                                             \
+    shared(instance, records, rd, num_qubits, threadings, memory_models)
 #endif
     {
         std::mt19937 re;
