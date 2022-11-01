@@ -198,5 +198,5 @@ TEST_CASE("Test KernelMap is consistent in extreme usecase", "[KernelMap]") {
     records.push_back(instance.getKernelMap(12, Threading::SingleThread,
                                             CPUMemoryModel::Aligned256));
 
-    REQUIRE(records[0] == records[1]);
+    REQUIRE(records.front() == records.back());
 }
