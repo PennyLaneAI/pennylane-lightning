@@ -74,7 +74,7 @@ jobs:
             -i ${{ matrix.container_img }} \
             bash -c "cd /io && \
             python3.8 -m pip install ninja && \
-            ln -s /opt/python/cp38-cp38m/bin/ninja /usr/bin/ninja && \
+            ln -s /opt/python/cp38-cp38/bin/ninja /usr/bin/ninja && \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
                             -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
                             -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
@@ -96,7 +96,7 @@ jobs:
             -i ${{ matrix.container_img }} \
             bash -c "cd /io && \
             python3.8 -m pip install ninja && \
-            ln -s /opt/python/cp38-cp38m/bin/ninja /usr/bin/ninja && \
+            ln -s /opt/python/cp38-cp38/bin/ninja /usr/bin/ninja && \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
                             -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                             -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
