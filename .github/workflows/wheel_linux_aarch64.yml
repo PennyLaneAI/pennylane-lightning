@@ -1,7 +1,7 @@
 name: Wheel::Linux::ARM
 
 # **What it does**: Builds python wheels for Linux (ubuntu-latest) architecture ARM 64 and store it as artifacts.
-#                   Python versions: 3.7, 3.8, 3.9, 3.10.
+#                   Python versions: 3.7, 3.8, 3.9, 3.10, 3.11.
 # **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
@@ -72,8 +72,8 @@ jobs:
             -v ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}:/install \
             -i ${{ matrix.container_img }} \
             bash -c "cd /io && \
-            python3.7 -m pip install ninja && \
-            ln -s /opt/python/cp37-cp37m/bin/ninja /usr/bin/ninja && \
+            python3.8 -m pip install ninja && \
+            ln -s /opt/python/cp38-cp38m/bin/ninja /usr/bin/ninja && \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
                             -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
                             -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
@@ -94,8 +94,8 @@ jobs:
             -v ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}:/install \
             -i ${{ matrix.container_img }} \
             bash -c "cd /io && \
-            python3.7 -m pip install ninja && \
-            ln -s /opt/python/cp37-cp37m/bin/ninja /usr/bin/ninja && \
+            python3.8 -m pip install ninja && \
+            ln -s /opt/python/cp38-cp38m/bin/ninja /usr/bin/ninja && \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
                             -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                             -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
@@ -119,7 +119,7 @@ jobs:
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
         container_img: ["quay.io/pypa/manylinux2014_aarch64"]
 
-    name: ubuntu-latest::aarch64 (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
+    name: ubuntu-latest::aarch64 (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -143,7 +143,7 @@ jobs:
           cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install cibuildwheel
-        run: python3 -m pip install cibuildwheel==2.8.1
+        run: python3 -m pip install cibuildwheel~=2.11.0
 
       - uses: docker/setup-qemu-action@v2
         name: Set up QEMU

@@ -1,7 +1,7 @@
 name: Build and Cache Kokkos and Kokkos Kernels
 
 env:
-  GCC_VERSION: 10
+  GCC_VERSION: 11
 
 on:
   workflow_call:
