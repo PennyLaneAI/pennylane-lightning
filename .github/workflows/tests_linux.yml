@@ -38,7 +38,7 @@ jobs:
           fetch-depth: 2
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-11 g++-11 ninja-build gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
 
       - name: Build and run unit tests
         run: |
@@ -92,7 +92,7 @@ jobs:
           python-version: '3.8'
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-11 g++-11
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
 
       - name: Get required Python packages
         run: |
@@ -151,7 +151,7 @@ jobs:
           fetch-depth: 2
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-11 g++-11 libopenblas-dev ninja-build gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  libopenblas-dev ninja-build gcovr lcov
 
       - name: Build and run unit tests
         run: |
@@ -210,7 +210,7 @@ jobs:
           python-version: '3.8'
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-11 g++-11 libopenblas-dev
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  libopenblas-dev
 
       - name: Get required Python packages
         run: |
@@ -290,7 +290,7 @@ jobs:
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-11 g++-11 ninja-build gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
 
       - name: Build and run unit tests
         run: |
@@ -365,7 +365,7 @@ jobs:
           pwd
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-11 g++-11
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
 
       - name: Get required Python packages
         run: |
@@ -439,7 +439,7 @@ jobs:
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-11 g++-11 libopenblas-dev ninja-build gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  libopenblas-dev ninja-build gcovr lcov
 
       - name: Build and run unit tests
         run: |
@@ -514,7 +514,7 @@ jobs:
           pwd
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-11 g++-11 libopenblas-dev
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  libopenblas-dev
 
       - name: Get required Python packages
         run: |

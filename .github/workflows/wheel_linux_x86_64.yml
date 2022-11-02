@@ -5,6 +5,9 @@ name: Wheel::Linux::x86_64
 # **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
+env:
+  GCC_VERSION: 11
+
 on:
   pull_request:
   push:
@@ -49,7 +52,7 @@ jobs:
       - name: Install dependencies (Ubuntu)
         if: ${{ (matrix.container_img == 'ubuntu-latest') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
-          apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-11 g++-11 ninja-build git
+          apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build git
           echo "COMPILER=g++-11" >> $GITHUB_ENV
 
       - name: Install dependencies (CentOS)
