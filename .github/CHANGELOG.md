@@ -31,6 +31,9 @@
 
 ### Bug fixes
 
+* Use mutex when accessing cache in KernelMap.
+[(#382)](https://github.com/PennyLaneAI/pennylane-lightning/pull/382)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
