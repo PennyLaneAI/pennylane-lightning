@@ -187,6 +187,13 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
               // LCOV_EXCL_STOP
           } {}
 
+    /**
+     * @brief Update kernel map cache for the given number of qubits and
+     * dispatch key.
+     *
+     * @param num_qubits Number of qubits
+     * @param dispatch_key Dispatch key for cache
+     */
     [[nodiscard]] auto updateCache(const size_t num_qubits,
                                    uint32_t dispatch_key) const
         -> std::unordered_map<Operation, Gates::KernelType> {
