@@ -63,6 +63,7 @@ jobs:
             ./tests/runner
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}.info
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
@@ -118,6 +119,7 @@ jobs:
           pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          mv coverage.xml coverage-${{ github.job }}.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
@@ -176,6 +178,7 @@ jobs:
             ./tests/runner
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}.info
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
@@ -236,6 +239,7 @@ jobs:
           pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          mv coverage.xml coverage-${{ github.job }}.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
@@ -315,6 +319,7 @@ jobs:
             ./tests/runner
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}.info
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
@@ -391,6 +396,7 @@ jobs:
           pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          mv coverage.xml coverage-${{ github.job }}.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
@@ -464,6 +470,7 @@ jobs:
             ./tests/runner
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}.info
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
@@ -540,6 +547,7 @@ jobs:
           pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          mv coverage.xml coverage-${{ github.job }}.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
