@@ -19,9 +19,6 @@ import pytest
 import numpy as np
 import pennylane as qml
 
-from conftest import U, U2, A
-
-
 np.random.seed(42)
 
 THETA = np.linspace(0.11, 1, 3)

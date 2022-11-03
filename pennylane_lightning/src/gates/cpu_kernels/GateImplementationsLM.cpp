@@ -335,6 +335,20 @@ template void
 GateImplementationsLM::applySWAP<double>(std::complex<double> *, size_t,
                                          const std::vector<size_t> &, bool);
 
+template void
+GateImplementationsLM::applyCSWAP<float>(std::complex<float> *, size_t,
+                                         const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyCSWAP<double>(std::complex<double> *, size_t,
+                                          const std::vector<size_t> &, bool);
+
+template void
+GateImplementationsLM::applyToffoli<float>(std::complex<float> *, size_t,
+                                           const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyToffoli<double>(std::complex<double> *, size_t,
+                                            const std::vector<size_t> &, bool);
+
 template void GateImplementationsLM::applyIsingXX<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
 template void GateImplementationsLM::applyIsingXX<double, double>(
@@ -411,6 +425,30 @@ template void GateImplementationsLM::applySingleExcitationPlus<float, float>(
     const std::vector<size_t> &wires, bool inverse, float angle);
 
 template void GateImplementationsLM::applySingleExcitationPlus<double, double>(
+    std::complex<double> *arr, size_t num_qubits,
+    const std::vector<size_t> &wires, bool inverse, double angle);
+
+template void GateImplementationsLM::applyDoubleExcitation<float, float>(
+    std::complex<float> *arr, size_t num_qubits,
+    const std::vector<size_t> &wires, bool inverse, float angle);
+
+template void GateImplementationsLM::applyDoubleExcitation<double, double>(
+    std::complex<double> *arr, size_t num_qubits,
+    const std::vector<size_t> &wires, bool inverse, double angle);
+
+template void GateImplementationsLM::applyDoubleExcitationMinus<float, float>(
+    std::complex<float> *arr, size_t num_qubits,
+    const std::vector<size_t> &wires, bool inverse, float angle);
+
+template void GateImplementationsLM::applyDoubleExcitationMinus<double, double>(
+    std::complex<double> *arr, size_t num_qubits,
+    const std::vector<size_t> &wires, bool inverse, double angle);
+
+template void GateImplementationsLM::applyDoubleExcitationPlus<float, float>(
+    std::complex<float> *arr, size_t num_qubits,
+    const std::vector<size_t> &wires, bool inverse, float angle);
+
+template void GateImplementationsLM::applyDoubleExcitationPlus<double, double>(
     std::complex<double> *arr, size_t num_qubits,
     const std::vector<size_t> &wires, bool inverse, double angle);
 

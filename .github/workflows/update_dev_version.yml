@@ -14,10 +14,10 @@ jobs:
           ref: master
           path: main
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.8'
 
       - name: Checkout PennyLane-Lightning PR
         uses: actions/checkout@v3

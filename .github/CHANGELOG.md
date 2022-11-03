@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Enable building of python 3.11 wheels and upgrade python on CI/CD workflows to 3.8.
+[(#381)](https://github.com/PennyLaneAI/pennylane-lightning/pull/381)
+
 ### Breaking changes
 
 ### Improvements
@@ -12,18 +15,48 @@
 * Improve tests and checks CI/CD pipelines.
 [(#353)](https://github.com/PennyLaneAI/pennylane-lightning/pull/353)
 
+* Implement 3 Qubits gates (CSWAP & Toffoli) & 4 Qubits gates (DoubleExcitation, DoubleExcitationMinus, DoubleExcitationPlus) in LM manner.
+[(#362)](https://github.com/PennyLaneAI/pennylane-lightning/pull/362)
+
+* Upgrade Kokkos and Kokkos Kernels to 3.7.00, and improve sparse matrix-vector multiplication performance and memory usage.
+[(#361)](https://github.com/PennyLaneAI/pennylane-lightning/pull/361)
+
+* Update Linux (ubuntu-latest) architecture x86_64 wheel-builder from GCC 10.x to GCC 11.x.
+[(#373)](https://github.com/PennyLaneAI/pennylane-lightning/pull/373)
+
+* Update gcc and g++ 10.x to 11.x in CI tests. This update brings improved support for newer C++ features.
+[(#370)](https://github.com/PennyLaneAI/pennylane-lightning/pull/370)
+
+* Change Lightning to inherit from QubitDevice instead of DefaultQubit.
+[(#365)](https://github.com/PennyLaneAI/pennylane-lightning/pull/365)
+
 ### Documentation
 
 ### Bug fixes
+
+* Use mutex when accessing cache in KernelMap.
+[(#382)](https://github.com/PennyLaneAI/pennylane-lightning/pull/382)
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Chae-Yeun Park
+Amintor Dusko, Chae-Yeun Park, Monit Sharma, Shuli Shu
 
 ---
 
+# Release 0.26.1
+
+### Bug fixes
+
+* Fixes the transposition method used in the probability calculation.
+[(#377)](https://github.com/PennyLaneAI/pennylane-lightning/pull/377)
+
+### Contributor
+
+Amintor Dusko
+
+---
 # Release 0.26.0
 
 ### Improvements

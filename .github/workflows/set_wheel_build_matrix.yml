@@ -2,7 +2,7 @@ name: Set wheel build matrix
 
 env:
   PYTHON3_MIN_VERSION: "7"
-  PYTHON3_MAX_VERSION: "10"
+  PYTHON3_MAX_VERSION: "11"
 
 on:
   workflow_call:
@@ -54,7 +54,7 @@ jobs:
 
       - name: Kokkos version
         id: kokkos_version
-        run: echo "::set-output name=kokkos_version::[\"3.6.00\"]"
+        run: echo "::set-output name=kokkos_version::[\"3.7.00\"]"
 
     outputs:
       python_version: ${{ steps.pyver.outputs.python_version }}

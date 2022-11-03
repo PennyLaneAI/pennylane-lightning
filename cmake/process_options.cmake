@@ -1,6 +1,6 @@
 ##############################################################################
-# This file processes ENABLE_WARNINGS, ENABLE_NATIVE, ENABLE_OPENMP, 
-# ENABLE_KOKKOS, and ENABLE_BLAS 
+# This file processes ENABLE_WARNINGS, ENABLE_NATIVE, ENABLE_OPENMP,
+# ENABLE_KOKKOS, and ENABLE_BLAS
 # options and produces interface libraries
 # lightning_compile_options and lightning_external_libs.
 ##############################################################################
@@ -123,6 +123,7 @@ if(ENABLE_KOKKOS)
             /usr
             /usr/local
             /opt
+            /opt/Kokkos
     )
     if(Kokkos_FOUND)
         message(STATUS "Found existing Kokkos library")
@@ -134,6 +135,7 @@ if(ENABLE_KOKKOS)
             /usr
             /usr/local
             /opt
+            /opt/KokkosKernels
     )
     if(KokkosKernels_FOUND)
         message(STATUS "Found existing Kokkos Kernels library")
@@ -151,10 +153,10 @@ if(ENABLE_KOKKOS)
 
         FetchContent_Declare(kokkos
                             GIT_REPOSITORY https://github.com/kokkos/kokkos.git
-                            GIT_TAG        3.6.00
+                            GIT_TAG        3.7.00
                             GIT_SUBMODULES "" # Avoid recursively cloning all submodules
         )
-    
+
         FetchContent_MakeAvailable(kokkos)
 
         get_target_property(kokkos_INC_DIR kokkos INTERFACE_INCLUDE_DIRECTORIES)
@@ -162,12 +164,12 @@ if(ENABLE_KOKKOS)
 
         FetchContent_Declare(kokkoskernels
                             GIT_REPOSITORY https://github.com/kokkos/kokkos-kernels.git
-                            GIT_TAG        3.6.00
+                            GIT_TAG        3.7.00
                             GIT_SUBMODULES "" # Avoid recursively cloning all submodules
         )
-    
+
         FetchContent_MakeAvailable(kokkoskernels)
-    
+
         get_target_property(kokkoskernels_INC_DIR kokkoskernels INTERFACE_INCLUDE_DIRECTORIES)
         set_target_properties(kokkoskernels PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkoskernels_INC_DIR}")
 

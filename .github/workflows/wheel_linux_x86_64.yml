@@ -1,9 +1,12 @@
 name: Wheel::Linux::x86_64
 
 # **What it does**: Builds python wheels for Linux (ubuntu-latest) architecture x86_64 and store it as artifacts.
-#                   Python versions: 3.7, 3.8, 3.9, 3.10.
+#                   Python versions: 3.7, 3.8, 3.9, 3.10, 3.11.
 # **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
+
+env:
+  GCC_VERSION: 11
 
 on:
   pull_request:
@@ -49,8 +52,8 @@ jobs:
       - name: Install dependencies (Ubuntu)
         if: ${{ (matrix.container_img == 'ubuntu-latest') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
-          apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-10 g++-10 ninja-build git
-          echo "COMPILER=g++-10" >> $GITHUB_ENV
+          apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build git
+          echo "COMPILER=g++-11" >> $GITHUB_ENV
 
       - name: Install dependencies (CentOS)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
@@ -115,7 +118,7 @@ jobs:
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
         container_img: ["quay.io/pypa/manylinux2014_x86_64"]
 
-    name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
+    name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container_img }}
 
@@ -148,7 +151,7 @@ jobs:
           yum update -y && yum install -y docker
 
       - name: Install cibuildwheel
-        run: python3.7 -m pip install cibuildwheel==2.8.1
+        run: python3.8 -m pip install cibuildwheel~=2.11.0
 
       - name: Build wheels
         env:
@@ -162,7 +165,12 @@ jobs:
           CIBW_BEFORE_BUILD: |
             cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
             pip install ninja cmake
+            yum clean all -y
+            yum install centos-release-scl-rh -y
+            yum install devtoolset-11-gcc-c++ -y
+            source /opt/rh/devtoolset-11/enable -y
 
+          CIBW_ENVIRONMENT: PATH=/opt/rh/devtoolset-11/root/usr/bin:$PATH
           # Testing of built wheels
           CIBW_TEST_REQUIRES: numpy~=1.21 scipy pytest pytest-cov pytest-mock flaky
 
@@ -176,7 +184,7 @@ jobs:
 
           CIBW_BUILD_VERBOSITY: 3
 
-        run: python3.7 -m cibuildwheel --output-dir wheelhouse
+        run: python3.8 -m cibuildwheel --output-dir wheelhouse
 
       - uses: actions-ecosystem/action-regex-match@v2
         id: rc_build
