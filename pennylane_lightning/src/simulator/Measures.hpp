@@ -309,62 +309,6 @@ class Measures {
         return expected_value_list;
     };
 
-
-  class TransitionKernel {
-  public:
-    virtual size_t init_state () = 0;
-    virtual std::pair<size_t,fp_t> operator() (size_t) = 0;
-  };
-
-  class LocalTransitionKernel : TransitionKernel {
-    // : public TransitionKernel<fp_t> {
-  private:
-
-    std::random_device rd_;
-    std::mt19937 gen_;
-    std::uniform_int_distribution<size_t> distrib_num_qubits_;
-    std::uniform_int_distribution<size_t> distrib_binary_;
-    size_t num_qubits_;
-  
-  public:
-    
-    LocalTransitionKernel(size_t num_qubits) {
-      num_qubits_ = num_qubits;
-      gen_ = std::mt19937(rd_());
-      distrib_num_qubits_ = std::uniform_int_distribution<size_t>(0,num_qubits-1);
-      distrib_binary_ = std::uniform_int_distribution<size_t>(0,1);
-    }
-
-    size_t init_state(){
-      return 0;
-    }
-    
-    std::pair<size_t,fp_t> operator() (size_t s1) {
-      size_t qubit_site = distrib_num_qubits_(gen_);
-      size_t qubit_value = distrib_binary_(gen_);
-      size_t current_bit = (s1 >> qubit_site) & 1;
-    
-      if (qubit_value == current_bit)
-	return std::pair<size_t,fp_t>(s1,1);
-      else if (current_bit == 0){
-	return std::pair<size_t,fp_t>(s1+std::pow(2,qubit_site),1);
-      }
-      else {
-	return std::pair<size_t,fp_t>(s1-std::pow(2,qubit_site),1);
-      }
-    }
-  };
-
-  TransitionKernel* kernel_factory(const std::string & kernel_name,
-				   const StateVectorManagedCPU<fp_t> & sv)
-  {
-    if (kernel_name == "local"){
-      return new LocalTransitionKernel(sv.getNumQubits());
-    }
-    else { //local is the default as well
-      return new LocalTransitionKernel(sv.getNumQubits());       
-    }
-  }
   
   size_t mcmc_step
   (
