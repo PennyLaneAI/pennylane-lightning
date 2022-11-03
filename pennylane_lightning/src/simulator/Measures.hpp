@@ -309,11 +309,66 @@ class Measures {
         return expected_value_list;
     };
 
-  template <class TransitionKernel, class fp_t>
+
+  class TransitionKernel {
+  public:
+    virtual size_t init_state () = 0;
+    virtual std::pair<size_t,fp_t> operator() (size_t) = 0;
+  };
+
+  class LocalTransitionKernel : TransitionKernel {
+    // : public TransitionKernel<fp_t> {
+  private:
+
+    std::random_device rd_;
+    std::mt19937 gen_;
+    std::uniform_int_distribution<size_t> distrib_num_qubits_;
+    std::uniform_int_distribution<size_t> distrib_binary_;
+    size_t num_qubits_;
+  
+  public:
+    
+    LocalTransitionKernel(size_t num_qubits) {
+      num_qubits_ = num_qubits;
+      gen_ = std::mt19937(rd_());
+      distrib_num_qubits_ = std::uniform_int_distribution<size_t>(0,num_qubits-1);
+      distrib_binary_ = std::uniform_int_distribution<size_t>(0,1);
+    }
+
+    size_t init_state(){
+      return 0;
+    }
+    
+    std::pair<size_t,fp_t> operator() (size_t s1) {
+      size_t qubit_site = distrib_num_qubits_(gen_);
+      size_t qubit_value = distrib_binary_(gen_);
+      size_t current_bit = (s1 >> qubit_site) & 1;
+    
+      if (qubit_value == current_bit)
+	return std::pair<size_t,fp_t>(s1,1);
+      else if (current_bit == 0){
+	return std::pair<size_t,fp_t>(s1+std::pow(2,qubit_site),1);
+      }
+      else {
+	return std::pair<size_t,fp_t>(s1-std::pow(2,qubit_site),1);
+      }
+    }
+  };
+
+  TransitionKernel* kernel_factory(const std::string & kernel_name,
+				   const StateVectorManagedCPU<fp_t> & sv)
+  {
+    if (kernel_name == "local"){
+      return new LocalTransitionKernel(sv.getNumQubits());
+    }
+    else { //local is the default as well
+      return new LocalTransitionKernel(sv.getNumQubits());       
+    }
+  }
+  
   size_t mcmc_step
   (
    const StateVectorManagedCPU<fp_t> & sv,
-   TransitionKernel & tk,
    std::mt19937 & gen,
    std::uniform_real_distribution<fp_t> & distrib,
    size_t s1
@@ -338,10 +393,10 @@ class Measures {
     }
   }  
   
-  template <class TransitionKernel, class fp_t>
   std::vector<size_t> generate_samples_mcmc
   (
    const StateVectorManagedCPU<fp_t> & sv,
+   const std::string & transition_kernel,
    size_t num_burnin,
    size_t num_shots
    )
@@ -349,10 +404,11 @@ class Measures {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<fp_t> distrib(0.0,1.0);
-
+    std::vector<size_t> samples(num_samples * num_qubits, 0);
+    std::unordered_map<size_t, size_t> cache;
     
-    TransitionKernel tk(sv);
-    size_t s1 = tk.InitState();
+    TransitionKernel* tk = kernel_factory(transition_kernel, sv);
+    size_t s1 = tk->InitState();
  
     //Burn In
     for (size_t i=0;i<num_burnin;i++) {
@@ -363,9 +419,27 @@ class Measures {
     std::vector<size_t> shots(num_shots);
     auto t1 = high_resolution_clock::now();
     for (size_t i=0;i<num_shots;i++) {
-      s1 = mcmc_step(plog,tk,gen,distrib,s1); //Burn-in.
-      probabilities[s1] += 1;
+      s1 = mcmc_step(plog,tk,gen,distrib,s1);
+
+      if (cache.contains(idx)) {
+	size_t cache_id = cache[idx];
+	auto it_temp = samples.begin() + cache_id * num_qubits;
+	std::copy(it_temp, it_temp + num_qubits,
+		  samples.begin() + i * num_qubits);
+      }
+      
+      // If not cached, compute
+      else {
+	for (size_t j = 0; j < num_qubits; j++) {
+	  samples[i * num_qubits + (num_qubits - 1 - j)] =
+	    (idx >> j) & 1U;
+	}
+	cache[idx] = i;
+      }
+      
     }
+    
+    delete tk;
   }
   
     /**
