@@ -209,7 +209,7 @@ jobs:
             cmake ./pennylane_lightning/src -BBuild  -DBUILD_TESTS=ON -DENABLE_KOKKOS=ON -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos -DENABLE_OPENMP=OFF -DENABLE_WARNINGS=OFF -T clangcl
             cmake --build ./Build --config Debug -- /p:UseMultiToolTask=true /p:EnforceProcessCountAcrossBuilds=true /p:MultiProcMaxCount=2
             mkdir -p ./Build/tests/results
-            .\Build\tests\Debug\runner.exe --order lex --reporter junit --out .\Build\tests\results\report__${{ github.job }}.xml
+            .\Build\tests\Debug\runner.exe --order lex --reporter junit --out .\Build\tests\results\report_${{ github.job }}.xml
             OpenCppCoverage --sources pennylane_lightning\src --export_type cobertura:coverage.xml Build\tests\Debug\runner.exe
             Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}.xml
 
@@ -218,7 +218,7 @@ jobs:
         if: always()
         with:
           name: windows-test-report
-          path: .\Build\tests\results\report__${{ github.job }}.xml
+          path: .\Build\tests\results\report_${{ github.job }}.xml
 
       - name: Upload coverage results
         uses: actions/upload-artifact@v3
