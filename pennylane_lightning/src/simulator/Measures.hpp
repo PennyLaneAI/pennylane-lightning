@@ -31,6 +31,7 @@
 #include "Kokkos_Sparse.hpp"
 #include "LinearAlgebra.hpp"
 #include "Observables.hpp"
+#include "TransitionKernels.hpp"
 #include "StateVectorManagedCPU.hpp"
 #include "StateVectorRawCPU.hpp"
 
@@ -313,18 +314,21 @@ class Measures {
   size_t mcmc_step
   (
    const StateVectorManagedCPU<fp_t> & sv,
+   std::unique_ptr<TransitionKernel<fp_t>> & tk,
    std::mt19937 & gen,
    std::uniform_real_distribution<fp_t> & distrib,
    size_t s1
    )
   {
-    auto s1_plog = log((sv_[s1]*std::conj(sv_[s1])).real());
+    auto s1_plog = log((sv[s1]*std::conj(sv[s1])).real());
     
-    auto s1_qratio = tk(s1);
+    auto s1_qratio = tk->(s1);
+    
+    //transition kernel outputs these two
     auto & s2 = s1_qratio.first;
     auto & qratio = s1_qratio.second;
 
-    auto s2_plog = log((sv_[s2]*std::conj(sv_[s2])).real());
+    auto s2_plog = log((sv[s2]*std::conj(sv[s2])).real());
  
     auto alph = std::min(1.,qratio*exp(s2_plog-s1_plog));
     auto ran = distrib(gen);
@@ -337,10 +341,9 @@ class Measures {
     }
   }  
   
-  std::vector<size_t> generate_samples_mcmc
+  std::vector<size_t> generate_samples_metropolis
   (
-   const StateVectorManagedCPU<fp_t> & sv,
-   const std::string & transition_kernel,
+   const TransitionKernelType & transition_kernel,
    size_t num_burnin,
    size_t num_shots
    )
@@ -350,8 +353,9 @@ class Measures {
     std::uniform_real_distribution<fp_t> distrib(0.0,1.0);
     std::vector<size_t> samples(num_samples * num_qubits, 0);
     std::unordered_map<size_t, size_t> cache;
-    
-    TransitionKernel* tk = kernel_factory(transition_kernel, sv);
+
+    //unique_ptr and enum
+    auto tk = kernel_factory(transition_kernel, original_statevector);
     size_t s1 = tk->InitState();
  
     //Burn In
@@ -360,8 +364,6 @@ class Measures {
     }
 
     //Sample
-    std::vector<size_t> shots(num_shots);
-    auto t1 = high_resolution_clock::now();
     for (size_t i=0;i<num_shots;i++) {
       s1 = mcmc_step(plog,tk,gen,distrib,s1);
 
@@ -383,7 +385,6 @@ class Measures {
       
     }
     
-    delete tk;
   }
   
     /**

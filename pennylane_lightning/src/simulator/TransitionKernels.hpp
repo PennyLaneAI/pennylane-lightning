@@ -12,15 +12,19 @@
 #include "StateVectorRawCPU.hpp"
 
 namespace Pennylane {
-  
+
+  enum class TransitionKernelType {Local, NonRandom};
+
+  template<typename fp_t>
   class TransitionKernel {
   public:
     virtual size_t init_state () = 0;
+    //outputs the next state and the qratio
     virtual std::pair<size_t,fp_t> operator() (size_t) = 0;
   };
 
-  class LocalTransitionKernel : TransitionKernel {
-    // : public TransitionKernel<fp_t> {
+  template <typename fp_t>
+  class LocalTransitionKernel : public TransitionKernel<fp_t> {
   private:
 
     std::random_device rd_;
@@ -58,7 +62,8 @@ namespace Pennylane {
     }
   };
 
-  class NonZeroRandomTransitionKernel{
+  template <typename fp_t>  
+  class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
     // : public TransitionKernel<fp_t> {
   private:
     std::random_device rd_;
@@ -92,16 +97,20 @@ namespace Pennylane {
       return std::pair<size_t,fp_t>(non_zeros_[s2],1);
     }
   };
-
   
-  TransitionKernel* kernel_factory(const std::string & kernel_name,
-				   const StateVectorManagedCPU<fp_t> & sv)
+
+  template <typename fp_t>
+  std::unique_ptr<TransitionKernel<fp_t>> kernel_factory
+  (
+   const TransitionKernelType kernel_type,
+   const StateVectorManagedCPU<fp_t> & sv
+  )
   {
-    if (kernel_name == "local"){
-      return new NonZeroRandomKernel(sv.getNumQubits());
+    if (kernel_type == TransitionKernelType::Local){
+      return std::make_unique(NonZeroRandomKernel(sv.getNumQubits()));
     }
     else { //local is the default 
-      return new LocalTransitionKernel(sv.getNumQubits());       
+      return std::make_unique(LocalTransitionKernel(sv.getNumQubits()));       
     }
   }
 }
