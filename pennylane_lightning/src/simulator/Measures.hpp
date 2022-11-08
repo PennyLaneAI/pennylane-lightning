@@ -310,25 +310,25 @@ class Measures {
         return expected_value_list;
     };
 
-  
+
   size_t mcmc_step
   (
-   const StateVectorManagedCPU<fp_t> & sv,
+   const SVType & sv,
    std::unique_ptr<TransitionKernel<fp_t>> & tk,
    std::mt19937 & gen,
    std::uniform_real_distribution<fp_t> & distrib,
    size_t s1
    )
   {
-    auto s1_plog = log((sv[s1]*std::conj(sv[s1])).real());
+    auto s1_plog = log((sv.getData()[s1]*std::conj(sv.getData()[s1])).real());
     
-    auto s1_qratio = tk->(s1);
+    auto s1_qratio = tk->operator()(s1);
     
     //transition kernel outputs these two
     auto & s2 = s1_qratio.first;
     auto & qratio = s1_qratio.second;
 
-    auto s2_plog = log((sv[s2]*std::conj(sv[s2])).real());
+    auto s2_plog = log((sv.getData()[s2]*std::conj(sv.getData()[s2])).real());
  
     auto alph = std::min(1.,qratio*exp(s2_plog-s1_plog));
     auto ran = distrib(gen);
@@ -345,30 +345,30 @@ class Measures {
   (
    const TransitionKernelType & transition_kernel,
    size_t num_burnin,
-   size_t num_shots
+   size_t num_samples
    )
   {
+    size_t num_qubits = original_statevector.getNumQubits();
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<fp_t> distrib(0.0,1.0);
     std::vector<size_t> samples(num_samples * num_qubits, 0);
     std::unordered_map<size_t, size_t> cache;
 
-    //unique_ptr and enum
-    auto tk = kernel_factory(transition_kernel, original_statevector);
-    size_t s1 = tk->InitState();
+    auto tk = kernel_factory(transition_kernel, original_statevector.getData(), original_statevector.getNumQubits());
+    size_t s1 = tk->init_state();
  
     //Burn In
     for (size_t i=0;i<num_burnin;i++) {
-      s1 = mcmc_step(tk,gen,distrib,s1); //Burn-in.
+      s1 = mcmc_step(original_statevector,tk,gen,distrib,s1); //Burn-in.
     }
 
     //Sample
-    for (size_t i=0;i<num_shots;i++) {
-      s1 = mcmc_step(plog,tk,gen,distrib,s1);
+    for (size_t i=0;i<num_samples;i++) {
+      s1 = mcmc_step(original_statevector,tk,gen,distrib,s1);
 
-      if (cache.contains(idx)) {
-	size_t cache_id = cache[idx];
+      if (cache.contains(s1)) {
+	size_t cache_id = cache[s1];
 	auto it_temp = samples.begin() + cache_id * num_qubits;
 	std::copy(it_temp, it_temp + num_qubits,
 		  samples.begin() + i * num_qubits);
@@ -378,13 +378,13 @@ class Measures {
       else {
 	for (size_t j = 0; j < num_qubits; j++) {
 	  samples[i * num_qubits + (num_qubits - 1 - j)] =
-	    (idx >> j) & 1U;
+	    (s1 >> j) & 1U;
 	}
-	cache[idx] = i;
+	cache[s1] = i;
       }
       
     }
-    
+    return samples;
   }
   
     /**

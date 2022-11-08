@@ -222,8 +222,9 @@ TEMPLATE_TEST_CASE("Sample with Metropolis", "[Measures]", float, double) {
     size_t N = std::pow(2, num_qubits);
     size_t num_samples = 100000;
     size_t num_burnin = 1000;
+
     
-    auto &&samples = Measurer.generate_samples_metropolis(TransitionKernel::Local,
+    auto &&samples = Measurer.generate_samples_metropolis(TransitionKernelType::Local,
 							  num_burnin,
 							  num_samples);
 

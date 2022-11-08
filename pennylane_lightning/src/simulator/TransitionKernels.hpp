@@ -7,6 +7,7 @@
 #include <stack>
 #include <unordered_map>
 #include <vector>
+#include <type_traits>
 
 #include "StateVectorManagedCPU.hpp"
 #include "StateVectorRawCPU.hpp"
@@ -62,7 +63,7 @@ namespace Pennylane {
     }
   };
 
-  template <typename fp_t>  
+  template <typename fp_t>
   class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
     // : public TransitionKernel<fp_t> {
   private:
@@ -77,9 +78,9 @@ namespace Pennylane {
       return 0;
     }
     
-    NonZeroRandomTransitionKernel(const StateVectorManagedCPU<fp_t> & sv, fp_t min_error) {
-      auto data = sv.getData();
-      sv_length_ = sv.getLength();
+    NonZeroRandomTransitionKernel(const std::complex<fp_t>* sv, size_t sv_length, fp_t min_error) {
+      auto data = sv;
+      sv_length_ = sv_length;
 
       //find nonzero candidates
       for (size_t i = 0; i < sv_length_; i++){
@@ -92,7 +93,7 @@ namespace Pennylane {
       distrib_ = std::uniform_int_distribution<size_t>(0,non_zeros_.size()-1);
     }
   
-    std::pair<size_t,fp_t> operator() (size_t s1) {
+    std::pair<size_t,fp_t> operator() ([[maybe_unused]] size_t s1) {
       auto s2 = distrib_(gen_);
       return std::pair<size_t,fp_t>(non_zeros_[s2],1);
     }
@@ -103,14 +104,17 @@ namespace Pennylane {
   std::unique_ptr<TransitionKernel<fp_t>> kernel_factory
   (
    const TransitionKernelType kernel_type,
-   const StateVectorManagedCPU<fp_t> & sv
+   const std::complex<fp_t>* sv,
+   size_t num_qubits
   )
   {
+
+    auto sv_length = Util::exp2(num_qubits);
     if (kernel_type == TransitionKernelType::Local){
-      return std::make_unique(NonZeroRandomKernel(sv.getNumQubits()));
+      return std::unique_ptr<TransitionKernel<fp_t>>(new NonZeroRandomTransitionKernel<fp_t>(sv,sv_length,std::numeric_limits<fp_t>::epsilon()));
     }
     else { //local is the default 
-      return std::make_unique(LocalTransitionKernel(sv.getNumQubits()));       
+      return std::unique_ptr<TransitionKernel<fp_t>>(new LocalTransitionKernel<fp_t>(num_qubits));       
     }
   }
 }
