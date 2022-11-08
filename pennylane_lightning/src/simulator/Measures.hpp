@@ -326,7 +326,7 @@ class Measures {
         auto s2_plog =
             log((sv.getData()[s2] * std::conj(sv.getData()[s2])).real());
 
-        auto alph = std::min(1., qratio * exp(s2_plog - s1_plog));
+        auto alph = std::min<fp_t>(1., qratio * exp(s2_plog - s1_plog));
         auto ran = distrib(gen);
 
         if (ran < alph) {
