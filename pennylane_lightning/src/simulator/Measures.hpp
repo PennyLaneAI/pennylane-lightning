@@ -31,9 +31,9 @@
 #include "Kokkos_Sparse.hpp"
 #include "LinearAlgebra.hpp"
 #include "Observables.hpp"
-#include "TransitionKernels.hpp"
 #include "StateVectorManagedCPU.hpp"
 #include "StateVectorRawCPU.hpp"
+#include "TransitionKernels.hpp"
 
 namespace Pennylane::Simulators {
 
@@ -310,83 +310,76 @@ class Measures {
         return expected_value_list;
     };
 
+    size_t mcmc_step(const SVType &sv,
+                     std::unique_ptr<TransitionKernel<fp_t>> &tk,
+                     std::mt19937 &gen,
+                     std::uniform_real_distribution<fp_t> &distrib, size_t s1) {
+        auto s1_plog =
+            log((sv.getData()[s1] * std::conj(sv.getData()[s1])).real());
 
-  size_t mcmc_step
-  (
-   const SVType & sv,
-   std::unique_ptr<TransitionKernel<fp_t>> & tk,
-   std::mt19937 & gen,
-   std::uniform_real_distribution<fp_t> & distrib,
-   size_t s1
-   )
-  {
-    auto s1_plog = log((sv.getData()[s1]*std::conj(sv.getData()[s1])).real());
-    
-    auto s1_qratio = tk->operator()(s1);
-    
-    //transition kernel outputs these two
-    auto & s2 = s1_qratio.first;
-    auto & qratio = s1_qratio.second;
+        auto s1_qratio = tk->operator()(s1);
 
-    auto s2_plog = log((sv.getData()[s2]*std::conj(sv.getData()[s2])).real());
- 
-    auto alph = std::min(1.,qratio*exp(s2_plog-s1_plog));
-    auto ran = distrib(gen);
-  
-    if (ran < alph) {
-      return s2;
-    }
-    else {
-      return s1;    
-    }
-  }  
-  
-  std::vector<size_t> generate_samples_metropolis
-  (
-   const TransitionKernelType & transition_kernel,
-   size_t num_burnin,
-   size_t num_samples
-   )
-  {
-    size_t num_qubits = original_statevector.getNumQubits();
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<fp_t> distrib(0.0,1.0);
-    std::vector<size_t> samples(num_samples * num_qubits, 0);
-    std::unordered_map<size_t, size_t> cache;
+        // transition kernel outputs these two
+        auto &s2 = s1_qratio.first;
+        auto &qratio = s1_qratio.second;
 
-    auto tk = kernel_factory(transition_kernel, original_statevector.getData(), original_statevector.getNumQubits());
-    size_t s1 = tk->init_state();
- 
-    //Burn In
-    for (size_t i=0;i<num_burnin;i++) {
-      s1 = mcmc_step(original_statevector,tk,gen,distrib,s1); //Burn-in.
+        auto s2_plog =
+            log((sv.getData()[s2] * std::conj(sv.getData()[s2])).real());
+
+        auto alph = std::min(1., qratio * exp(s2_plog - s1_plog));
+        auto ran = distrib(gen);
+
+        if (ran < alph) {
+            return s2;
+        } else {
+            return s1;
+        }
     }
 
-    //Sample
-    for (size_t i=0;i<num_samples;i++) {
-      s1 = mcmc_step(original_statevector,tk,gen,distrib,s1);
+    std::vector<size_t>
+    generate_samples_metropolis(const TransitionKernelType &transition_kernel,
+                                size_t num_burnin, size_t num_samples) {
+        size_t num_qubits = original_statevector.getNumQubits();
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<fp_t> distrib(0.0, 1.0);
+        std::vector<size_t> samples(num_samples * num_qubits, 0);
+        std::unordered_map<size_t, size_t> cache;
 
-      if (cache.contains(s1)) {
-	size_t cache_id = cache[s1];
-	auto it_temp = samples.begin() + cache_id * num_qubits;
-	std::copy(it_temp, it_temp + num_qubits,
-		  samples.begin() + i * num_qubits);
-      }
-      
-      // If not cached, compute
-      else {
-	for (size_t j = 0; j < num_qubits; j++) {
-	  samples[i * num_qubits + (num_qubits - 1 - j)] =
-	    (s1 >> j) & 1U;
-	}
-	cache[s1] = i;
-      }
-      
+        auto tk =
+            kernel_factory(transition_kernel, original_statevector.getData(),
+                           original_statevector.getNumQubits());
+        size_t s1 = tk->init_state();
+
+        // Burn In
+        for (size_t i = 0; i < num_burnin; i++) {
+            s1 = mcmc_step(original_statevector, tk, gen, distrib,
+                           s1); // Burn-in.
+        }
+
+        // Sample
+        for (size_t i = 0; i < num_samples; i++) {
+            s1 = mcmc_step(original_statevector, tk, gen, distrib, s1);
+
+            if (cache.contains(s1)) {
+                size_t cache_id = cache[s1];
+                auto it_temp = samples.begin() + cache_id * num_qubits;
+                std::copy(it_temp, it_temp + num_qubits,
+                          samples.begin() + i * num_qubits);
+            }
+
+            // If not cached, compute
+            else {
+                for (size_t j = 0; j < num_qubits; j++) {
+                    samples[i * num_qubits + (num_qubits - 1 - j)] =
+                        (s1 >> j) & 1U;
+                }
+                cache[s1] = i;
+            }
+        }
+        return samples;
     }
-    return samples;
-  }
-  
+
     /**
      * @brief Generate samples using the alias method.
      * Reference: https://en.wikipedia.org/wiki/Alias_method

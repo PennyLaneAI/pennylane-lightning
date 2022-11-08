@@ -196,7 +196,6 @@ TEMPLATE_TEST_CASE("Sample", "[Measures]", float, double) {
     }
 }
 
-
 TEMPLATE_TEST_CASE("Sample with Metropolis", "[Measures]", float, double) {
     constexpr uint32_t twos[] = {
         1U << 0U,  1U << 1U,  1U << 2U,  1U << 3U,  1U << 4U,  1U << 5U,
@@ -223,10 +222,8 @@ TEMPLATE_TEST_CASE("Sample with Metropolis", "[Measures]", float, double) {
     size_t num_samples = 100000;
     size_t num_burnin = 1000;
 
-    
-    auto &&samples = Measurer.generate_samples_metropolis(TransitionKernelType::Local,
-							  num_burnin,
-							  num_samples);
+    auto &&samples = Measurer.generate_samples_metropolis(
+        TransitionKernelType::Local, num_burnin, num_samples);
 
     std::vector<size_t> counts(N, 0);
     std::vector<size_t> samples_decimal(num_samples, 0);
@@ -253,7 +250,6 @@ TEMPLATE_TEST_CASE("Sample with Metropolis", "[Measures]", float, double) {
                      Catch::Approx(expected_probabilities).margin(.05));
     }
 }
-
 
 TEMPLATE_TEST_CASE("Variances", "[Measures]", float, double) {
     // Defining the State Vector that will be measured.
@@ -330,7 +326,4 @@ TEMPLATE_TEST_CASE("Variances", "[Measures]", float, double) {
         variances_ref = {0.6577942, 0.4068672, 0.1670374};
         REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
     }
-
-
-    
 }
