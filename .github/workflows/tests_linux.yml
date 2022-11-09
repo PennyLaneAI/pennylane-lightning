@@ -30,7 +30,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.8'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
@@ -38,7 +38,7 @@ jobs:
           fetch-depth: 2
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-11 g++-11 ninja-build gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
 
       - name: Build and run unit tests
         run: |
@@ -46,14 +46,14 @@ jobs:
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
-            ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptests.xml
+            ./tests/runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
         if: always()
         with:
           name: ubuntu-tests-reports
-          path: Build/tests/results/report_cpptests.xml
+          path: ./Build/tests/results/report_${{ github.job }}.xml
 
       - name: Build and run unit tests for code coverage
         run: |
@@ -63,13 +63,13 @@ jobs:
             ./tests/runner
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}.info
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
         with:
-          files: ./BuildCov/coverage.info
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: ubuntu-codecov-results-cpp
+          path: ./BuildCov/coverage-${{ github.job }}.info
 
   pythontests:
     strategy:
@@ -89,10 +89,10 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.8'
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-11 g++-11
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
 
       - name: Get required Python packages
         run: |
@@ -118,13 +118,13 @@ jobs:
           pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          mv coverage.xml coverage-${{ github.job }}.xml
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
         with:
-          files: ./main/coverage.xml
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: ubuntu-codecov-results-python
+          path: ./main/coverage-${{ github.job }}.xml
 
   cpptestswithOpenBLAS:
     strategy:
@@ -143,7 +143,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.8'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
@@ -151,7 +151,7 @@ jobs:
           fetch-depth: 2
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-11 g++-11 libopenblas-dev ninja-build gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  libopenblas-dev ninja-build gcovr lcov
 
       - name: Build and run unit tests
         run: |
@@ -159,14 +159,14 @@ jobs:
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
-            ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptestswithOpenBLAS.xml
+            ./tests/runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
         if: always()
         with:
           name: ubuntu-tests-reports
-          path: BuildCov/tests/results/report_cpptestswithOpenBLAS.xml
+          path: ./Build/tests/results/report_${{ github.job }}.xml
 
       - name: Build and run unit tests for code coverage
         run: |
@@ -176,13 +176,13 @@ jobs:
             ./tests/runner
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}.info
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
         with:
-          files: ./BuildCov/coverage.info
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: ubuntu-codecov-results-cpp
+          path: ./BuildCov/coverage-${{ github.job }}.info
 
   pythontestswithBLAS:
     strategy:
@@ -207,10 +207,10 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.8'
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-11 g++-11 libopenblas-dev
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  libopenblas-dev
 
       - name: Get required Python packages
         run: |
@@ -236,13 +236,13 @@ jobs:
           pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          mv coverage.xml coverage-${{ github.job }}.xml
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
         with:
-          files: ./main/coverage.xml
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: ubuntu-codecov-results-python
+          path: ./main/coverage-${{ github.job }}.xml
 
   build_and_cache_Kokkos:
     name: "Build and cache Kokkos and Kokkos Kernels"
@@ -270,7 +270,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.8'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
@@ -290,7 +290,7 @@ jobs:
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-11 g++-11 ninja-build gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
 
       - name: Build and run unit tests
         run: |
@@ -298,14 +298,14 @@ jobs:
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
-            ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptestswithKokkos.xml
+            ./tests/runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
         if: always()
         with:
           name: ubuntu-tests-reports
-          path: BuildCov/tests/results/report_cpptestswithKokkos.xml
+          path: ./Build/tests/results/report_${{ github.job }}.xml
 
       - name: Build and run unit tests for code coverage
         run: |
@@ -315,13 +315,13 @@ jobs:
             ./tests/runner
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}.info
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
         with:
-          files: ./BuildCov/coverage.info
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: ubuntu-codecov-results-cpp
+          path: ./BuildCov/coverage-${{ github.job }}.info
 
   pythontestswithKokkos:
     needs: [build_and_cache_Kokkos]
@@ -349,7 +349,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.8'
 
       - name: Restoring cached dependencies
         id: kokkos-cache
@@ -365,7 +365,7 @@ jobs:
           pwd
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-11 g++-11
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
 
       - name: Get required Python packages
         run: |
@@ -391,13 +391,13 @@ jobs:
           pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          mv coverage.xml coverage-${{ github.job }}.xml
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
         with:
-          files: ./main/coverage.xml
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: ubuntu-codecov-results-python
+          path: ./main/coverage-${{ github.job }}.xml
 
   cpptestswithKokkosAndOpenBLAS:
     needs: [build_and_cache_Kokkos]
@@ -419,7 +419,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.8'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
@@ -439,7 +439,7 @@ jobs:
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-11 g++-11 libopenblas-dev ninja-build gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  libopenblas-dev ninja-build gcovr lcov
 
       - name: Build and run unit tests
         run: |
@@ -447,14 +447,14 @@ jobs:
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
-            ./tests/runner --order lex --reporter junit --out ./tests/results/report_cpptestswithKokkosAndOpenBLAS.xml
+            ./tests/runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
         if: always()
         with:
           name: ubuntu-tests-reports
-          path: BuildCov/tests/results/report_cpptestswithKokkosAndOpenBLAS.xml
+          path: ./Build/tests/results/report_${{ github.job }}.xml
 
       - name: Build and run unit tests for code coverage
         run: |
@@ -464,13 +464,13 @@ jobs:
             ./tests/runner
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}.info
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
         with:
-          files: ./BuildCov/coverage.info
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: ubuntu-codecov-results-cpp
+          path: ./BuildCov/coverage-${{ github.job }}.info
 
   pythontestswithKokkosAndOpenBLAS:
     needs: [build_and_cache_Kokkos]
@@ -498,7 +498,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.8'
 
       - name: Restoring cached dependencies
         id: kokkos-cache
@@ -514,7 +514,7 @@ jobs:
           pwd
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-11 g++-11 libopenblas-dev
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  libopenblas-dev
 
       - name: Get required Python packages
         run: |
@@ -540,10 +540,48 @@ jobs:
           pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          mv coverage.xml coverage-${{ github.job }}.xml
 
-      - name: Upload coverage to Codecov
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: ubuntu-codecov-results-python
+          path: ./main/coverage-${{ github.job }}.xml
+
+  upload-to-codecov-linux-python:
+    needs: [pythontests, pythontestswithBLAS, pythontestswithKokkos, pythontestswithKokkosAndOpenBLAS]
+    name: Upload coverage data to codecov
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-codecov-results-python
+
+      - name: Upload to Codecov
         uses: codecov/codecov-action@v3
         with:
-          files: ./main/coverage.xml
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  upload-to-codecov-linux-cpp:
+    needs: [cpptests, cpptestswithOpenBLAS, cpptestswithKokkos, cpptestswithKokkosAndOpenBLAS]
+    name: Upload coverage data to codecov
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-codecov-results-cpp
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v3
+        with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}

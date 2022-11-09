@@ -137,3 +137,70 @@ TEST_CASE("Test KernelMap functionalities", "[KernelMap]") {
             Util::LightningException, "does not exist");
     }
 }
+
+TEST_CASE("Test KernelMap is consistent in extreme usecase", "[KernelMap]") {
+    using Gates::GateOperation;
+    using Gates::KernelType;
+    using EnumKernelMap =
+        OperationKernelMap<Gates::GateOperation>::EnumKernelMap;
+    auto &instance = OperationKernelMap<Gates::GateOperation>::getInstance();
+
+    const auto num_qubits = std::vector<size_t>{4, 6, 8, 10, 12, 14, 16};
+    const auto threadings =
+        std::vector<Threading>{Threading::SingleThread, Threading::MultiThread};
+    const auto memory_models = std::vector<CPUMemoryModel>{
+        CPUMemoryModel::Unaligned, CPUMemoryModel::Aligned256,
+        CPUMemoryModel::Aligned512};
+
+    std::random_device rd;
+
+    std::vector<EnumKernelMap> records;
+
+    records.push_back(instance.getKernelMap(12, Threading::SingleThread,
+                                            CPUMemoryModel::Aligned256));
+
+    constexpr size_t num_iter = 8096;
+
+#ifdef _OPENMP
+#pragma omp parallel default(none)                                             \
+    shared(instance, records, rd, num_qubits, threadings, memory_models)       \
+        firstprivate(num_iter)
+#endif
+    {
+        std::mt19937 re;
+
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+        { re.seed(rd()); }
+
+        std::uniform_int_distribution<size_t> num_qubit_dist(
+            0, num_qubits.size() - 1);
+        std::uniform_int_distribution<size_t> threading_dist(
+            0, threadings.size() - 1);
+        std::uniform_int_distribution<size_t> memory_model_dist(
+            0, memory_models.size() - 1);
+
+        std::vector<EnumKernelMap> res;
+
+#ifdef _OPENMP
+#pragma omp for
+#endif
+        for (size_t i = 0; i < num_iter; i++) {
+            const auto num_qubit = num_qubits[num_qubit_dist(re)];
+            const auto threading = threadings[threading_dist(re)];
+            const auto memory_model = memory_models[memory_model_dist(re)];
+
+            res.push_back(
+                instance.getKernelMap(num_qubit, threading, memory_model));
+        }
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+        { records.insert(records.end(), res.begin(), res.end()); }
+    }
+    records.push_back(instance.getKernelMap(12, Threading::SingleThread,
+                                            CPUMemoryModel::Aligned256));
+
+    REQUIRE(records.front() == records.back());
+}

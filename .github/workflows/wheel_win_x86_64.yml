@@ -1,7 +1,7 @@
 name: Wheel::Windows::x86_64
 
 # **What it does**: Builds python wheels for Windows (windows-latest) and store it as artifacts.
-#                   Python versions: 3.7, 3.8, 3.9, 3.10.
+#                   Python versions: 3.7, 3.8, 3.9, 3.10, 3.11.
 # **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
@@ -110,7 +110,7 @@ jobs:
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
         exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
-    name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
+    name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -135,7 +135,7 @@ jobs:
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\Kokkos" -Recurse -Force
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.8.1
+        run: python -m pip install cibuildwheel~=2.11.0
 
       - name: Build wheels
         env:
