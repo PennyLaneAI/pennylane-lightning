@@ -46,13 +46,11 @@ class LocalTransitionKernel : public TransitionKernel<fp_t> {
     size_t num_qubits_;
 
   public:
-    LocalTransitionKernel(size_t num_qubits) {
-        num_qubits_ = num_qubits;
-        gen_ = std::mt19937(rd_());
-        distrib_num_qubits_ =
-            std::uniform_int_distribution<size_t>(0, num_qubits - 1);
-        distrib_binary_ = std::uniform_int_distribution<size_t>(0, 1);
-    }
+    LocalTransitionKernel(size_t num_qubits)
+        : num_qubits_(num_qubits), gen_(std::mt19937(rd_())),
+          distrib_num_qubits_(
+              std::uniform_int_distribution<size_t>(0, num_qubits - 1)),
+          distrib_binary_(std::uniform_int_distribution<size_t>(0, 1)) {}
 
     size_t init_state() { return 0; }
 
