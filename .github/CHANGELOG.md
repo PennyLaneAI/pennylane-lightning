@@ -1,11 +1,10 @@
-# Release 0.27.0-dev
+# Release 0.27.0
 
 ### New features since last release
 
 * Enable building of python 3.11 wheels and upgrade python on CI/CD workflows to 3.8.
 [(#381)](https://github.com/PennyLaneAI/pennylane-lightning/pull/381)
 
-### Breaking changes
 
 ### Improvements
 
@@ -30,12 +29,12 @@
 * Change Lightning to inherit from QubitDevice instead of DefaultQubit.
 [(#365)](https://github.com/PennyLaneAI/pennylane-lightning/pull/365)
 
-### Documentation
 
 ### Bug fixes
 
 * Use mutex when accessing cache in KernelMap.
 [(#382)](https://github.com/PennyLaneAI/pennylane-lightning/pull/382)
+
 
 ### Contributors
 
