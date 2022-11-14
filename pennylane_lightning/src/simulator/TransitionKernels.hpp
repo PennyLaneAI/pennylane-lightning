@@ -16,6 +16,11 @@ namespace Pennylane {
 
 enum class TransitionKernelType { Local, NonRandom };
 
+/**
+ * @brief Parent class to define interface for Transition Kernel
+ *
+ * @tparam fp_t Floating point precision of underlying measurements.
+ */
 template <typename fp_t> class TransitionKernel {
   public:
     virtual size_t init_state() = 0;
@@ -23,6 +28,14 @@ template <typename fp_t> class TransitionKernel {
     virtual std::pair<size_t, fp_t> operator()(size_t) = 0;
 };
 
+/**
+ * @brief Transition Kernel for a 'SpinFlip' local transition between states
+ *
+ * This class implements a local transition kernel for a spin flip operation.
+ * It goes about this by generating a random qubit site and then generating
+ * a random number to determine the new bit at that qubit site.
+ * @tparam fp_t Floating point precision of underlying measurements.
+ */
 template <typename fp_t>
 class LocalTransitionKernel : public TransitionKernel<fp_t> {
   private:
@@ -58,9 +71,16 @@ class LocalTransitionKernel : public TransitionKernel<fp_t> {
     }
 };
 
+/**
+ * @brief Transition Kernel for a random transition between non-zero states
+ *
+ * This class randomly transitions between states that have nonzero probability.
+ * To determine the states with non-zero probability we have O(2^num_qubits)
+ * overhead. Despite this, this method is still fast. This transition kernel
+ * can sample even GHZ states.
+ */
 template <typename fp_t>
 class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
-    // : public TransitionKernel<fp_t> {
   private:
     std::random_device rd_;
     std::mt19937 gen_;
@@ -94,6 +114,15 @@ class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
     }
 };
 
+/**
+ * @brief Factory function to create a transition kernel
+ *
+ * @param kernel_type Type of transition kernel to create
+ * @param sv pointer to the statevector data
+ * @param num_qubits number of qubits
+ * @tparam fp_t Floating point precision of underlying measurements.
+ * @return std::unique_ptr of the transition kernel
+ */
 template <typename fp_t>
 std::unique_ptr<TransitionKernel<fp_t>>
 kernel_factory(const TransitionKernelType kernel_type,

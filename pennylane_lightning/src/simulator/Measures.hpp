@@ -310,10 +310,21 @@ class Measures {
         return expected_value_list;
     };
 
-    size_t mcmc_step(const SVType &sv,
-                     std::unique_ptr<TransitionKernel<fp_t>> &tk,
-                     std::mt19937 &gen,
-                     std::uniform_real_distribution<fp_t> &distrib, size_t s1) {
+    /**
+     * @brief Complete a single Metropolis-Hastings step.
+     *
+     * @param sv state vector
+     * @param tk User-defined functor for producing transitions
+     * between metropolis states.
+     * @param gen Random number generator.
+     * @param distrib Random number distribution.
+     * @param s1 initial state
+     */
+    size_t metropolis_step(const SVType &sv,
+                           std::unique_ptr<TransitionKernel<fp_t>> &tk,
+                           std::mt19937 &gen,
+                           std::uniform_real_distribution<fp_t> &distrib,
+                           size_t s1) {
         auto s1_plog =
             log((sv.getData()[s1] * std::conj(sv.getData()[s1])).real());
 
@@ -336,6 +347,17 @@ class Measures {
         }
     }
 
+    /**
+     * @brief Generate samples using the Metropolis-Hastings method.
+     * Reference: Numerical Recipes, NetKet paper
+     *
+     * @param transition_kernel User-defined functor for producing transitions
+     * between metropolis states.
+     * @param num_burnin Number of Metropolis burn-in steps.
+     * @param num_samples The number of samples to generate.
+     * @return 1-D vector of samples in binary, each sample is
+     * separated by a stride equal to the number of qubits.
+     */
     std::vector<size_t>
     generate_samples_metropolis(const TransitionKernelType &transition_kernel,
                                 size_t num_burnin, size_t num_samples) {
@@ -353,13 +375,13 @@ class Measures {
 
         // Burn In
         for (size_t i = 0; i < num_burnin; i++) {
-            s1 = mcmc_step(original_statevector, tk, gen, distrib,
-                           s1); // Burn-in.
+            s1 = metropolis_step(original_statevector, tk, gen, distrib,
+                                 s1); // Burn-in.
         }
 
         // Sample
         for (size_t i = 0; i < num_samples; i++) {
-            s1 = mcmc_step(original_statevector, tk, gen, distrib, s1);
+            s1 = metropolis_step(original_statevector, tk, gen, distrib, s1);
 
             if (cache.contains(s1)) {
                 size_t cache_id = cache[s1];
