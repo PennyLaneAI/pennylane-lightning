@@ -14,7 +14,7 @@
 
 namespace Pennylane {
 
-enum class TransitionKernelType { Local, NonRandom };
+enum class TransitionKernelType { Local, NonZeroRandom };
 
 /**
  * @brief Parent class to define interface for Transition Kernel
