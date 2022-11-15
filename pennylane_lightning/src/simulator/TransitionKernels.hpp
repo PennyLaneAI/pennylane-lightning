@@ -39,11 +39,11 @@ template <typename fp_t> class TransitionKernel {
 template <typename fp_t>
 class LocalTransitionKernel : public TransitionKernel<fp_t> {
   private:
+    size_t num_qubits_;
     std::random_device rd_;
     std::mt19937 gen_;
     std::uniform_int_distribution<size_t> distrib_num_qubits_;
     std::uniform_int_distribution<size_t> distrib_binary_;
-    size_t num_qubits_;
 
   public:
     LocalTransitionKernel(size_t num_qubits)

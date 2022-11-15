@@ -1,5 +1,9 @@
-#include "StateVectorRawCPU.hpp"
+#include "TransitionKernels.hpp"
 
 // explicit instantiation
-template class Pennylane::StateVectorRawCPU<float>;
-template class Pennylane::StateVectorRawCPU<double>;
+template class Pennylane::TransitionKernel<float>;
+template class Pennylane::TransitionKernel<double>;
+template class Pennylane::LocalTransitionKernel<float>;
+template class Pennylane::LocalTransitionKernel<double>;
+template class Pennylane::NonZeroRandomTransitionKernel<float>;
+template class Pennylane::NonZeroRandomTransitionKernel<double>;
