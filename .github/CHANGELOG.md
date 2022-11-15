@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add MCMC sampler.
+[(#384)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/384)
+
 ### Breaking changes
 
 ### Improvements
@@ -14,6 +17,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Shuli Shu, Trevor Vincent
 ---
 
 # Release 0.27.0

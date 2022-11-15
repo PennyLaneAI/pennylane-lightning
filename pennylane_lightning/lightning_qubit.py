@@ -782,6 +782,32 @@ class LightningQubit(QubitDevice):
 
         return M.generate_samples(len(self.wires), self.shots).astype(int, copy=False)
 
+    def generate_mcmc_samples(self, kernel_name="Local", num_burnin=100):
+        """Generate Markov chain Monte Carlo(MCMC) samples
+        Args:
+            kernel_name (str): name of transition kernel.
+            num_burnin (int): number of steps that will be dropped.
+
+        Returns:
+            array[int]: array of samples in binary representation with shape ``(dev.shots, dev.num_wires)``
+        """
+        if kernel_name not in [
+            "Local",
+            "NonZeroRandom",
+        ]:
+            raise NotImplementedError(
+                f"The {kernel_name} is not supported and currently only 'Local' and 'NonZeroRandom' kernels are supported."
+            )
+        # Initialization of state
+        ket = np.ravel(self._state)
+
+        state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
+        M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
+
+        return M.generate_mcmc_samples(len(self.wires), kernel_name, num_burnin, self.shots).astype(
+            int, copy=False
+        )
+
     def expval(self, observable, shot_range=None, bin_size=None):
         """Expectation value of the supplied observable.
 
