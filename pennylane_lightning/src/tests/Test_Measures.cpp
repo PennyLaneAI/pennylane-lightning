@@ -308,8 +308,9 @@ TEMPLATE_TEST_CASE("Sample with Metropolis (NonZeroRandom Kernel)",
     }
 }
 
-TEMPLATE_TEST_CASE("Sample with Metropolis (Local Kernel) with different initial sv", "[Measures]", float,
-                   double) {
+TEMPLATE_TEST_CASE(
+    "Sample with Metropolis (NonZeroRandom Kernel) with different initial sv",
+    "[Measures]", float, double) {
     constexpr uint32_t twos[] = {
         1U << 0U,  1U << 1U,  1U << 2U,  1U << 3U,  1U << 4U,  1U << 5U,
         1U << 6U,  1U << 7U,  1U << 8U,  1U << 9U,  1U << 10U, 1U << 11U,
@@ -336,7 +337,7 @@ TEMPLATE_TEST_CASE("Sample with Metropolis (Local Kernel) with different initial
     size_t num_burnin = 1000;
 
     auto &&samples = Measurer.generate_samples_metropolis(
-        TransitionKernelType::Local, num_burnin, num_samples);
+        TransitionKernelType::NonZeroRandom, num_burnin, num_samples);
 
     std::vector<size_t> counts(N, 0);
     std::vector<size_t> samples_decimal(num_samples, 0);
@@ -363,7 +364,6 @@ TEMPLATE_TEST_CASE("Sample with Metropolis (Local Kernel) with different initial
                      Catch::Approx(expected_probabilities).margin(.05));
     }
 }
-
 
 TEMPLATE_TEST_CASE("Variances", "[Measures]", float, double) {
     // Defining the State Vector that will be measured.
