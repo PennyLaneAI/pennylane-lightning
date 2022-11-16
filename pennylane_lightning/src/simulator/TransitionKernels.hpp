@@ -23,8 +23,8 @@ enum class TransitionKernelType { Local, NonZeroRandom };
  */
 template <typename fp_t> class TransitionKernel {
   public:
-    virtual size_t init_state() = 0;
-    // outputs the next state and the qratio
+    // virtual size_t init_state() = 0;
+    //  outputs the next state and the qratio
     virtual std::pair<size_t, fp_t> operator()(size_t) = 0;
 };
 
@@ -46,18 +46,18 @@ class LocalTransitionKernel : public TransitionKernel<fp_t> {
     std::uniform_int_distribution<size_t> distrib_binary_;
 
   public:
-    LocalTransitionKernel(size_t num_qubits)
+    explicit LocalTransitionKernel(size_t num_qubits)
         : num_qubits_(num_qubits), gen_(std::mt19937(rd_())),
           distrib_num_qubits_(
               std::uniform_int_distribution<size_t>(0, num_qubits - 1)),
           distrib_binary_(std::uniform_int_distribution<size_t>(0, 1)) {}
 
-    size_t init_state() { return 0; }
+    // size_t init_state() override { return 0; }
 
     std::pair<size_t, fp_t> operator()(size_t s1) {
         size_t qubit_site = distrib_num_qubits_(gen_);
         size_t qubit_value = distrib_binary_(gen_);
-        size_t current_bit = (s1 >> qubit_site) & 1;
+        size_t current_bit = ((unsigned)s1 >> qubit_site) & 1;
 
         if (qubit_value == current_bit)
             return std::pair<size_t, fp_t>(s1, 1);
@@ -87,7 +87,7 @@ class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
     std::vector<size_t> non_zeros_;
 
   public:
-    size_t init_state() { return 0; }
+    // size_t init_state() override { return 0; }
 
     NonZeroRandomTransitionKernel(const std::complex<fp_t> *sv,
                                   size_t sv_length, fp_t min_error) {

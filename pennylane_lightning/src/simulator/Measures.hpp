@@ -371,7 +371,8 @@ class Measures {
         auto tk =
             kernel_factory(transition_kernel, original_statevector.getData(),
                            original_statevector.getNumQubits());
-        size_t s1 = tk->init_state();
+        size_t s1 = 0;
+        // size_t s1 = tk->init_state();
 
         // Burn In
         for (size_t i = 0; i < num_burnin; i++) {
