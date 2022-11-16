@@ -54,7 +54,7 @@ class LocalTransitionKernel : public TransitionKernel<fp_t> {
     std::pair<size_t, fp_t> operator()(size_t s1) final {
         size_t qubit_site = distrib_num_qubits_(gen_);
         size_t qubit_value = distrib_binary_(gen_);
-        size_t current_bit = ((unsigned)s1 >> (unsigned)qubit_site) & 1u;
+        size_t current_bit = ((unsigned)s1 >> (unsigned)qubit_site) & 1U;
 
         if (qubit_value == current_bit) {
             return std::pair<size_t, fp_t>(s1, 1);
@@ -117,9 +117,9 @@ class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
  * @return std::unique_ptr of the transition kernel
  */
 template <typename fp_t>
-std::unique_ptr<TransitionKernel<fp_t>>
-kernel_factory(const TransitionKernelType kernel_type,
-               const std::complex<fp_t> *sv, size_t num_qubits) {
+// std::unique_ptr<TransitionKernel<fp_t>>
+auto kernel_factory(const TransitionKernelType kernel_type,
+                    const std::complex<fp_t> *sv, size_t num_qubits) {
 
     auto sv_length = Util::exp2(num_qubits);
     if (kernel_type == TransitionKernelType::Local) {
