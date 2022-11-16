@@ -22,12 +22,14 @@ enum class TransitionKernelType { Local, NonZeroRandom };
  * @tparam fp_t Floating point precision of underlying measurements.
  */
 template <typename fp_t> class TransitionKernel {
-  public:
+  protected:
     TransitionKernel() = default;
     TransitionKernel(const TransitionKernel &) = default;
     TransitionKernel(TransitionKernel &&) noexcept = default;
     TransitionKernel &operator=(const TransitionKernel &) = default;
     TransitionKernel &operator=(TransitionKernel &&) noexcept = default;
+
+  public:
     //  outputs the next state and the qratio
     virtual std::pair<size_t, fp_t> operator()(size_t) = 0;
     virtual ~TransitionKernel() = default;
