@@ -94,7 +94,6 @@ class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
   public:
     NonZeroRandomTransitionKernel(const std::complex<fp_t> *sv,
                                   size_t sv_length, fp_t min_error) {
-
         auto data = sv;
         sv_length_ = sv_length;
         for (size_t i = 0; i < sv_length_; i++) {
@@ -106,7 +105,6 @@ class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
         distrib_ =
             std::uniform_int_distribution<size_t>(0, non_zeros_.size() - 1);
     }
-
     std::pair<size_t, fp_t> operator()([[maybe_unused]] size_t s1) final {
         auto s2 = distrib_(gen_);
         return std::pair<size_t, fp_t>(non_zeros_[s2], 1);
@@ -126,7 +124,6 @@ template <typename fp_t>
 std::unique_ptr<TransitionKernel<fp_t>>
 kernel_factory(const TransitionKernelType kernel_type,
                const std::complex<fp_t> *sv, size_t num_qubits) {
-
     auto sv_length = Util::exp2(num_qubits);
     if (kernel_type == TransitionKernelType::Local) {
         return std::unique_ptr<TransitionKernel<fp_t>>(
