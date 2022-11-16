@@ -96,6 +96,7 @@ class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
                                   size_t sv_length, fp_t min_error) {
         auto data = sv;
         sv_length_ = sv_length;
+        // find nonzero candidates
         for (size_t i = 0; i < sv_length_; i++) {
             if (std::abs(data[i]) > min_error) {
                 non_zeros_.push_back(i);
