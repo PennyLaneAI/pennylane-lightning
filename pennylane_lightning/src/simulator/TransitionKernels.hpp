@@ -23,7 +23,6 @@ enum class TransitionKernelType { Local, NonZeroRandom };
  */
 template <typename fp_t> class TransitionKernel {
   public:
-    // virtual size_t init_state() = 0;
     //  outputs the next state and the qratio
     virtual std::pair<size_t, fp_t> operator()(size_t) = 0;
 };
@@ -52,20 +51,18 @@ class LocalTransitionKernel : public TransitionKernel<fp_t> {
               std::uniform_int_distribution<size_t>(0, num_qubits - 1)),
           distrib_binary_(std::uniform_int_distribution<size_t>(0, 1)) {}
 
-    // size_t init_state() override { return 0; }
-
-    std::pair<size_t, fp_t> operator()(size_t s1) {
+    std::pair<size_t, fp_t> operator()(size_t s1) final {
         size_t qubit_site = distrib_num_qubits_(gen_);
         size_t qubit_value = distrib_binary_(gen_);
-        size_t current_bit = ((unsigned)s1 >> qubit_site) & 1;
+        size_t current_bit = ((unsigned)s1 >> (unsigned)qubit_site) & 1u;
 
-        if (qubit_value == current_bit)
+        if (qubit_value == current_bit) {
             return std::pair<size_t, fp_t>(s1, 1);
-        else if (current_bit == 0) {
-            return std::pair<size_t, fp_t>(s1 + std::pow(2, qubit_site), 1);
-        } else {
-            return std::pair<size_t, fp_t>(s1 - std::pow(2, qubit_site), 1);
         }
+        if (current_bit == 0) {
+            return std::pair<size_t, fp_t>(s1 + std::pow(2, qubit_site), 1);
+        }
+        return std::pair<size_t, fp_t>(s1 - std::pow(2, qubit_site), 1);
     }
 };
 
@@ -87,8 +84,6 @@ class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
     std::vector<size_t> non_zeros_;
 
   public:
-    // size_t init_state() override { return 0; }
-
     NonZeroRandomTransitionKernel(const std::complex<fp_t> *sv,
                                   size_t sv_length, fp_t min_error) {
         auto data = sv;
@@ -96,8 +91,8 @@ class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
 
         // find nonzero candidates
         for (size_t i = 0; i < sv_length_; i++) {
-            if (fabs(data[i].real()) > min_error ||
-                fabs(data[i].imag()) > min_error) {
+            if (std::fabs(data[i].real()) > min_error ||
+                std::fabs(data[i].imag()) > min_error) {
                 non_zeros_.push_back(i);
             }
         }
@@ -106,7 +101,7 @@ class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
             std::uniform_int_distribution<size_t>(0, non_zeros_.size() - 1);
     }
 
-    std::pair<size_t, fp_t> operator()([[maybe_unused]] size_t s1) {
+    std::pair<size_t, fp_t> operator()([[maybe_unused]] size_t s1) final {
         auto s2 = distrib_(gen_);
         return std::pair<size_t, fp_t>(non_zeros_[s2], 1);
     }
@@ -131,9 +126,8 @@ kernel_factory(const TransitionKernelType kernel_type,
         return std::unique_ptr<TransitionKernel<fp_t>>(
             new NonZeroRandomTransitionKernel<fp_t>(
                 sv, sv_length, std::numeric_limits<fp_t>::epsilon()));
-    } else { // local is the default
-        return std::unique_ptr<TransitionKernel<fp_t>>(
-            new LocalTransitionKernel<fp_t>(num_qubits));
     }
+    return std::unique_ptr<TransitionKernel<fp_t>>(
+        new LocalTransitionKernel<fp_t>(num_qubits));
 }
 } // namespace Pennylane

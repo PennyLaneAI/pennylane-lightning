@@ -326,7 +326,7 @@ class Measures {
                            std::uniform_real_distribution<fp_t> &distrib,
                            size_t s1) {
         auto s1_plog =
-            log((sv.getData()[s1] * std::conj(sv.getData()[s1])).real());
+            std::log((sv.getData()[s1] * std::conj(sv.getData()[s1])).real());
 
         auto s1_qratio = tk->operator()(s1);
 
@@ -335,16 +335,15 @@ class Measures {
         auto &qratio = s1_qratio.second;
 
         auto s2_plog =
-            log((sv.getData()[s2] * std::conj(sv.getData()[s2])).real());
+            std::log((sv.getData()[s2] * std::conj(sv.getData()[s2])).real());
 
         auto alph = std::min<fp_t>(1., qratio * exp(s2_plog - s1_plog));
         auto ran = distrib(gen);
 
         if (ran < alph) {
             return s2;
-        } else {
-            return s1;
         }
+        return s1;
     }
 
     /**
