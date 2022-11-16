@@ -25,6 +25,7 @@ template <typename fp_t> class TransitionKernel {
   public:
     //  outputs the next state and the qratio
     virtual std::pair<size_t, fp_t> operator()(size_t) = 0;
+    virtual ~TransitionKernel()=default;
 };
 
 /**
@@ -124,10 +125,12 @@ auto kernel_factory(const TransitionKernelType kernel_type,
     auto sv_length = Util::exp2(num_qubits);
     if (kernel_type == TransitionKernelType::Local) {
         return std::unique_ptr<TransitionKernel<fp_t>>(
+            // return std::make_unique<TransitionKernel<fp_t>>(
             new NonZeroRandomTransitionKernel<fp_t>(
                 sv, sv_length, std::numeric_limits<fp_t>::epsilon()));
     }
     return std::unique_ptr<TransitionKernel<fp_t>>(
+        // return std::make_unique<TransitionKernel<fp_t>>(
         new LocalTransitionKernel<fp_t>(num_qubits));
 }
 } // namespace Pennylane
