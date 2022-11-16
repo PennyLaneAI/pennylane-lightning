@@ -98,8 +98,8 @@ class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
         sv_length_ = sv_length;
         // find nonzero candidates
         for (size_t i = 0; i < sv_length_; i++) {
-            if ((std::fabs(data[i].real()) > min_error) ||
-                (std::fabs(data[i].imag()) > min_error)) {
+            if (std::fabs(data[i].imag()) > min_error ||
+                std::fabs(data[i].real()) > min_error) {
                 non_zeros_.push_back(i);
             }
         }
