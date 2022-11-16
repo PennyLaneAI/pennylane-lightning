@@ -94,7 +94,6 @@ class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
                                   size_t sv_length, fp_t min_error) {
         auto data = sv;
         sv_length_ = sv_length;
-
         // find nonzero candidates
         for (size_t i = 0; i < sv_length_; i++) {
             if (std::fabs(data[i].real()) > min_error ||
@@ -123,19 +122,17 @@ class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
  * @return std::unique_ptr of the transition kernel
  */
 template <typename fp_t>
-// std::unique_ptr<TransitionKernel<fp_t>>
-auto kernel_factory(const TransitionKernelType kernel_type,
-                    const std::complex<fp_t> *sv, size_t num_qubits) {
+std::unique_ptr<TransitionKernel<fp_t>>
+kernel_factory(const TransitionKernelType kernel_type,
+               const std::complex<fp_t> *sv, size_t num_qubits) {
 
     auto sv_length = Util::exp2(num_qubits);
     if (kernel_type == TransitionKernelType::Local) {
         return std::unique_ptr<TransitionKernel<fp_t>>(
-            // return std::make_unique<TransitionKernel<fp_t>>(
             new NonZeroRandomTransitionKernel<fp_t>(
                 sv, sv_length, std::numeric_limits<fp_t>::epsilon()));
     }
     return std::unique_ptr<TransitionKernel<fp_t>>(
-        // return std::make_unique<TransitionKernel<fp_t>>(
         new LocalTransitionKernel<fp_t>(num_qubits));
 }
 } // namespace Pennylane
