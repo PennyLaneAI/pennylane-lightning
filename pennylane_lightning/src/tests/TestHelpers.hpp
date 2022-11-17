@@ -396,43 +396,6 @@ StateVectorManagedCPU<T> Initializing_StateVector(size_t num_qubits = 3) {
 }
 
 /**
- * @brief Initialize the statevector in a non-trivial configuration.
- *
- * @tparam T statevector float point precision.
- * @param num_qubits number of qubits
- * @return StateVectorManaged<T>
- */
-template <typename T = double>
-StateVectorManagedCPU<T> Initializing_StateVector_Imag(size_t num_qubits = 3) {
-    size_t data_size = Util::exp2(num_qubits);
-
-    std::vector<std::complex<T>> arr(data_size, {0, 0});
-    arr[0] = {0, 1};
-    StateVectorManagedCPU<T> Measured_StateVector(arr.data(), data_size);
-
-    std::vector<std::string> gates;
-    std::vector<std::vector<size_t>> wires;
-    std::vector<bool> inv_op(num_qubits * 2, false);
-    std::vector<std::vector<T>> phase;
-
-    T initial_phase = 0.7;
-    for (size_t n_qubit = 0; n_qubit < num_qubits; n_qubit++) {
-        gates.emplace_back("RX");
-        gates.emplace_back("RY");
-
-        wires.push_back({n_qubit});
-        wires.push_back({n_qubit});
-
-        phase.push_back({initial_phase});
-        phase.push_back({initial_phase});
-        initial_phase -= 0.2;
-    }
-    Measured_StateVector.applyOperations(gates, wires, inv_op, phase);
-
-    return Measured_StateVector;
-}
-
-/**
  * @brief Fills the empty vectors with the CSR (Compressed Sparse Row) sparse
  * matrix representation for a tridiagonal + periodic boundary conditions
  * Hamiltonian.
