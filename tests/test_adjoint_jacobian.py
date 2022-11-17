@@ -855,7 +855,7 @@ def circuit_ansatz(params, wires):
 
 
 @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-def test__tape_qchem(tol):
+def test_tape_qchem(tol):
     """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
 
     H, qubits = qml.qchem.molecular_hamiltonian(
@@ -866,10 +866,10 @@ def test__tape_qchem(tol):
         circuit_ansatz(params, wires=range(4))
         return qml.expval(H)
 
-    params = np.arange(30) * 0.111
+    params = np.linspace(0,29,30) * 0.111
 
-    dev_lq = qml.device("lightning.qubit", wires=4)
-    dev_dq = qml.device("default.qubit", wires=4)
+    dev_lq = qml.device("lightning.qubit", wires=qubits)
+    dev_dq = qml.device("default.qubit", wires=qubits)
 
     circuit_lq = qml.QNode(circuit, dev_lq, diff_method="adjoint")
     circuit_dq = qml.QNode(circuit, dev_dq, diff_method="parameter-shift")
