@@ -866,7 +866,7 @@ def test_tape_qchem(tol):
         circuit_ansatz(params, wires=range(4))
         return qml.expval(H)
 
-    params = np.linspace(0,29,30) * 0.111
+    params = np.linspace(0, 29, 30) * 0.111
 
     dev_lq = qml.device("lightning.qubit", wires=qubits)
     dev_dq = qml.device("default.qubit", wires=qubits)

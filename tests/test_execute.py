@@ -12,32 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Integration tests for the execute method of the :mod:`pennylane_lightning.LightningQubit` device.
+Integration tests for the ``execute`` method of LightningQubit.
 """
 import pytest
 
 import pennylane as qml
 from pennylane import numpy as np
 
+
 @pytest.mark.parametrize("diff_method", ("param_shift", "finite_diff"))
 class TestQChem:
-    """Test tapes returning the expectation values of a Hamiltonian, with a qchem workflow. """
+    """Test tapes returning the expectation values of a Hamiltonian, with a qchem workflow."""
 
     def test_VQE_gradients(self, diff_method, tol):
         """Test if the VQE procedure returns the expected gradients."""
 
         symbols = ["H", "H"]
 
-        geometry = np.array([[-0.676411907, 0.000000000, 0.000000000],
-                            [0.676411907,  0.000000000, 0.000000000]], requires_grad = False)
+        geometry = np.array(
+            [[-0.676411907, 0.000000000, 0.000000000], [0.676411907, 0.000000000, 0.000000000]],
+            requires_grad=False,
+        )
 
-        mol = qml.qchem.Molecule(symbols, geometry, basis_name = 'STO-3G')
+        mol = qml.qchem.Molecule(symbols, geometry, basis_name="STO-3G")
 
         H, qubits = qml.qchem.molecular_hamiltonian(
-                symbols,
-                geometry,
-                basis='STO-3G',
-            )
+            symbols,
+            geometry,
+            basis="STO-3G",
+        )
 
         singles, doubles = qml.qchem.excitations(mol.n_electrons, len(H.wires))
 
@@ -78,4 +81,3 @@ class TestQChem:
 
         assert np.allclose(grad_dev_l, grad_qml_l, tol)
         assert np.allclose(grad_dev_l, grad_qml_d, tol)
-
