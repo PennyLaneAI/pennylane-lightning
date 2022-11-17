@@ -197,13 +197,13 @@ class LightningQubit(QubitDevice):
         and observable) and returns ``True`` if supported by the device."""
 
         def accepts_obj(obj):
-            if obj.name == "QFT" and len(obj.wires) >= 10:
-                return False
-            if obj.name == "GroverOperator" and len(obj.wires) >= 13:
-                return False
-            if getattr(obj, "has_matrix", False):
-                return not (qml.operation.is_trainable(obj))
-            return obj.name in self.observables.union(self.operations)
+            if obj.name == "QFT" and len(obj.wires) < 10:
+                return True
+            if obj.name == "GroverOperator" and len(obj.wires) < 13:
+                return True
+            return not isinstance(obj, qml.tape.QuantumTape) and getattr(
+                self, "supports_operation", lambda name: False
+            )(obj.name)
 
         return qml.BooleanFn(accepts_obj)
 
