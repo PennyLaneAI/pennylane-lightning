@@ -181,7 +181,10 @@ if(ENABLE_KOKKOS)
                     /usr/local/include
                     ENV CPATH
         )
+    endif()
 
+    # Check if the package has been found again
+    if (kokkos_core_lib_FOUND AND kokkos_kernels_lib_FOUND)
         add_library( kokkos SHARED IMPORTED GLOBAL)
         add_library( kokkoskernels SHARED IMPORTED GLOBAL)
 
@@ -192,11 +195,10 @@ if(ENABLE_KOKKOS)
         set_target_properties( kokkoskernels PROPERTIES IMPORTED_LOCATION ${kokkos_kernels_lib})
         set_target_properties( kokkos PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkos_INC_DIR}")
         set_target_properties( kokkoskernels PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkoskernels_INC_DIR}")
-
-    endif()
-
+        target_link_libraries( lightning_external_libs INTERFACE kokkos kokkoskernels)
+    
     # If still not found
-    if (NOT (kokkos_core_lib_FOUND AND kokkos_kernels_lib_FOUND))
+    else()
         # Setting the Serial device.
         option(Kokkos_ENABLE_SERIAL  "Enable Kokkos SERIAL device" ON)
         message(STATUS "KOKKOS SERIAL DEVICE ENABLED.")
@@ -227,10 +229,10 @@ if(ENABLE_KOKKOS)
 
         get_target_property(kokkoskernels_INC_DIR kokkoskernels INTERFACE_INCLUDE_DIRECTORIES)
         set_target_properties(kokkoskernels PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkoskernels_INC_DIR}")
-
+        target_link_libraries(lightning_external_libs INTERFACE kokkos kokkoskernels)
     endif()
     target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_KOKKOS=1")
-    target_link_libraries(lightning_external_libs INTERFACE kokkos kokkoskernels)
+
 else()
     message(STATUS "ENABLE_KOKKOS is OFF.")
 endif()
