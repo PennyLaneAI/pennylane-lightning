@@ -201,7 +201,7 @@ class LightningQubit(QubitDevice):
                 return True
             if obj.name == "GroverOperator" and len(obj.wires) < 13:
                 return True
-            return not isinstance(obj, qml.tape.QuantumTape) and getattr(
+            return (not isinstance(obj, qml.tape.QuantumTape)) and getattr(
                 self, "supports_operation", lambda name: False
             )(obj.name)
 
