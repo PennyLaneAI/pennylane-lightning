@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Improve Lightning package structure for external use as a C++ library.
+[(#369)](https://github.com/PennyLaneAI/pennylane-lightning/pull/369)
+
 ### Documentation
 
 ### Bug fixes
@@ -13,6 +16,8 @@
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Lee J. O'Riordan
 
 ---
 
