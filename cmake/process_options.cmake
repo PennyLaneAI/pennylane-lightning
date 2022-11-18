@@ -83,50 +83,50 @@ macro(FindKokkos target_name)
         if (Kokkos_core_lib_FOUND AND Kokkos_Kernels_lib_FOUND)
             message(STATUS "Found existing Kokkos compiled libraries")
 
-            add_library( Kokkos SHARED IMPORTED GLOBAL)
-            add_library( KokkosKernels SHARED IMPORTED GLOBAL)
+            add_library( kokkos SHARED IMPORTED GLOBAL)
+            add_library( kokkoskernels SHARED IMPORTED GLOBAL)
 
             cmake_path(GET Kokkos_core_inc ROOT_PATH Kokkos_INC_DIR)
             cmake_path(GET Kokkos_sparse_inc ROOT_PATH KokkosKernels_INC_DIR)
 
-            set_target_properties( Kokkos PROPERTIES IMPORTED_LOCATION ${Kokkos_core_lib})
-            set_target_properties( KokkosKernels PROPERTIES IMPORTED_LOCATION ${Kokkos_Kernels_lib})
-            set_target_properties( Kokkos PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${Kokkos_INC_DIR}")
-            set_target_properties( KokkosKernels PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${KokkosKernels_INC_DIR}")
+            set_target_properties( kokkos PROPERTIES IMPORTED_LOCATION ${Kokkos_core_lib})
+            set_target_properties( kokkoskernels PROPERTIES IMPORTED_LOCATION ${Kokkos_Kernels_lib})
+            set_target_properties( kokkos PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${Kokkos_INC_DIR}")
+            set_target_properties( kokkoskernels PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${KokkosKernels_INC_DIR}")
 
-            target_link_libraries(${target_name} PUBLIC Kokkos KokkosKernels)
+            target_link_libraries(${target_name} PRIVATE kokkos kokkoskernels)
             return()
         else()
-            option(Kokkos_ENABLE_SERIAL  "Enable Kokkos SERIAL device" ON)
-            message(STATUS "KOKKOS SERIAL DEVICE ENABLED.")
+            message(STATUS "Building Kokkos from source. SERIAL device enabled.")
 
+            option(Kokkos_ENABLE_SERIAL  "Enable Kokkos SERIAL device" ON)
             option(Kokkos_ENABLE_COMPLEX_ALIGN "Enable complex alignment in memory" OFF)
 
             set(CMAKE_POSITION_INDEPENDENT_CODE ON)
             include(FetchContent)
 
-            FetchContent_Declare(Kokkos
+            FetchContent_Declare(kokkos
                                 GIT_REPOSITORY https://github.com/kokkos/kokkos.git
                                 GIT_TAG        3.7.00
                                 GIT_SUBMODULES "" # Avoid recursively cloning all submodules
             )
 
-            FetchContent_MakeAvailable(Kokkos)
+            FetchContent_MakeAvailable(kokkos)
 
-            get_target_property(Kokkos_INC_DIR Kokkos INTERFACE_INCLUDE_DIRECTORIES)
-            set_target_properties(kokkos PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${Kokkos_INC_DIR}")
+            get_target_property(kokkos_INC_DIR kokkos INTERFACE_INCLUDE_DIRECTORIES)
+            set_target_properties(kokkos PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkos_INC_DIR}")
 
-            FetchContent_Declare(KokkosKernels
+            FetchContent_Declare(kokkoskernels
                                 GIT_REPOSITORY https://github.com/kokkos/kokkos-kernels.git
                                 GIT_TAG        3.7.00
                                 GIT_SUBMODULES "" # Avoid recursively cloning all submodules
             )
 
-            FetchContent_MakeAvailable(KokkosKernels)
+            FetchContent_MakeAvailable(kokkoskernels)
 
-            get_target_property(KokkosKernels_INC_DIR KokkosKernels INTERFACE_INCLUDE_DIRECTORIES)
-            set_target_properties(KokkosKernels PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${KokkosKernels_INC_DIR}")
-            target_link_libraries(${target_name} INTERFACE Kokkos::kokkos Kokkos::kokkoskernels)
+            get_target_property(kokkoskernels_INC_DIR kokkoskernels INTERFACE_INCLUDE_DIRECTORIES)
+            set_target_properties(kokkoskernels PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${kokkoskernels_INC_DIR}")
+            target_link_libraries(${target_name} INTERFACE kokkos kokkoskernels)
         endif()
     endif()
 endmacro()
