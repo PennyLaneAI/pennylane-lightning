@@ -15,5 +15,4 @@ target_link_libraries(lightning_simulator PRIVATE lightning_compile_options
                                                   lightning_external_libs
                                                   lightning_gates
                                                   lightning_utils)
-#target_link_libraries(lightning_simulator PUBLIC lightning_external_libs)
 set_property(TARGET lightning_simulator PROPERTY POSITION_INDEPENDENT_CODE ON)
