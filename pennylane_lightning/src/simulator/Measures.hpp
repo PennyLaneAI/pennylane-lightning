@@ -372,8 +372,9 @@ class Measures {
 
         TransitionKernelType transition_kernel =
             Pennylane::TransitionKernelType::Local;
-        if (kernelname == "NonZeroRandom")
+        if (kernelname == "NonZeroRandom") {
             transition_kernel = Pennylane::TransitionKernelType::NonZeroRandom;
+        }
 
         auto tk =
             kernel_factory(transition_kernel, original_statevector.getData(),
