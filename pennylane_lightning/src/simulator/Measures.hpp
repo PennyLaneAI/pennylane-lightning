@@ -358,7 +358,7 @@ class Measures {
      * separated by a stride equal to the number of qubits.
      */
     std::vector<size_t>
-    generate_samples_metropolis(const TransitionKernelType &transition_kernel,
+    generate_samples_metropolis(const std::string &kernelname,
                                 size_t num_burnin, size_t num_samples) {
         size_t num_qubits = original_statevector.getNumQubits();
         std::random_device rd;
@@ -367,11 +367,15 @@ class Measures {
         std::vector<size_t> samples(num_samples * num_qubits, 0);
         std::unordered_map<size_t, size_t> cache;
 
+        TransitionKernelType transition_kernel =
+            Pennylane::TransitionKernelType::Local;
+        if (kernelname == "NonZeroRandom")
+            transition_kernel = Pennylane::TransitionKernelType::NonZeroRandom;
+
         auto tk =
             kernel_factory(transition_kernel, original_statevector.getData(),
                            original_statevector.getNumQubits());
         size_t s1 = 0;
-        // size_t s1 = tk->init_state();
 
         // Burn In
         for (size_t i = 0; i < num_burnin; i++) {

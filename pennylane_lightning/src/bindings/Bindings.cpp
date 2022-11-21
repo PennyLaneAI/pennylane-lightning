@@ -138,13 +138,8 @@ void lightning_class_bindings(py::module_ &m) {
              [](Measures<PrecisionT> &M, size_t num_wires,
                 const std::string &kernelname, size_t num_burnin,
                 size_t num_shots) {
-                 TransitionKernelType kerneltype =
-                     Pennylane::TransitionKernelType::Local;
-                 if (kernelname == "NonZeroRandom")
-                     kerneltype =
-                         Pennylane::TransitionKernelType::NonZeroRandom;
-                 auto &&result = M.generate_samples_metropolis(
-                     kerneltype, num_burnin, num_shots);
+                 std::vector<size_t> &&result = M.generate_samples_metropolis(
+                     kernelname, num_burnin, num_shots);
 
                  const size_t ndim = 2;
                  const std::vector<size_t> shape{num_shots, num_wires};

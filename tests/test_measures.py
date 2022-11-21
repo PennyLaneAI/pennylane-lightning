@@ -567,85 +567,41 @@ class TestMCMCSample:
     def dev(self, request):
         return qml.device("lightning.qubit", wires=2, shots=1000, c_dtype=request.param)
 
-    def test_mcmc_sample_dimensions(self, dev):
+    test_data_no_parameters = [
+        ("Local", 10, 100, [0], qml.PauliZ(wires=[0]), 100),
+        ("Local", 10, 110, [1], qml.PauliZ(wires=[1]), 110),
+        ("Local", 10, 120, [0, 1], qml.PauliX(0) @ qml.PauliZ(1), 120),
+        ("NonZeroRandom", 10, 100, [0], qml.PauliZ(wires=[0]), 100),
+        ("NonZeroRandom", 10, 110, [1], qml.PauliZ(wires=[1]), 110),
+        ("NonZeroRandom", 10, 120, [0, 1], qml.PauliX(0) @ qml.PauliZ(1), 120),
+    ]
+
+    @pytest.mark.parametrize(
+        "kernel,num_burnin,num_shots,measured_wires,operation,shape", test_data_no_parameters
+    )
+    def test_mcmc_sample_dimensions(
+        self, dev, kernel, num_burnin, num_shots, measured_wires, operation, shape
+    ):
         """Tests if the samples returned by sample have
         the correct dimensions
         """
 
         dev.apply([qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])])
 
-        kernel = "Local"
-        num_burnin = 10
-        dev.shots = 10
-        dev._wires_measured = {0}
+        dev.shots = num_shots
+        dev._wires_measured = measured_wires
         dev._samples = dev.generate_mcmc_samples(kernel, num_burnin)
-        s1 = dev.sample(qml.PauliZ(wires=[0]))
-        assert np.array_equal(s1.shape, (10,))
+        s1 = dev.sample(operation)
 
-        dev.reset()
-        kernel = "Local"
-        num_burnin = 12
-        dev.shots = 12
-        dev._wires_measured = {1}
-        dev._samples = dev.generate_mcmc_samples(kernel, num_burnin)
-        s2 = dev.sample(qml.PauliZ(wires=[1]))
-        assert np.array_equal(s2.shape, (12,))
+        assert np.array_equal(s1.shape, (shape,))
 
-        dev.reset()
-        kernel = "Local"
-        num_burnin = 17
-        dev.shots = 17
-        dev._wires_measured = {0, 1}
-        dev._samples = dev.generate_mcmc_samples(kernel, num_burnin)
-        s3 = dev.sample(qml.PauliX(0) @ qml.PauliZ(1))
-        assert np.array_equal(s3.shape, (17,))
-
-        dev.reset()
-        kernel = "NonZeroRandom"
-        num_burnin = 10
-        dev.shots = 10
-        dev._wires_measured = {0}
-        dev._samples = dev.generate_mcmc_samples(kernel, num_burnin)
-        s2 = dev.sample(qml.PauliZ(wires=[0]))
-        assert np.array_equal(s2.shape, (10,))
-
-        dev.reset()
-        kernel = "NonZeroRandom"
-        num_burnin = 12
-        dev.shots = 12
-        dev._wires_measured = {1}
-        dev._samples = dev.generate_mcmc_samples(kernel, num_burnin)
-        s2 = dev.sample(qml.PauliZ(wires=[1]))
-        assert np.array_equal(s2.shape, (12,))
-
-        dev.reset()
-        kernel = "NonZeroRandom"
-        num_burnin = 17
-        dev.shots = 17
-        dev._wires_measured = {0, 1}
-        dev._samples = dev.generate_mcmc_samples(kernel, num_burnin)
-        s3 = dev.sample(qml.PauliX(0) @ qml.PauliZ(1))
-        assert np.array_equal(s3.shape, (17,))
-
-    def test_sample_values(self, dev, tol):
+    @pytest.mark.parametrize("kernel", ["Local", "NonZeroRandom"])
+    def test_sample_values(self, dev, tol, kernel):
         """Tests if the samples returned by sample have
         the correct values
         """
 
         dev.apply([qml.RX(1.5708, wires=[0])])
-        kernel = "Local"
-        num_burnin = 100
-        dev._wires_measured = {0}
-        dev._samples = dev.generate_mcmc_samples(kernel, num_burnin)
-
-        s1 = dev.sample(qml.PauliZ(0))
-
-        # s1 should only contain 1 and -1, which is guaranteed if
-        # they square to 1
-        assert np.allclose(s1**2, 1, atol=tol, rtol=0)
-
-        dev.reset()
-        kernel = "NonZeroRandom"
         num_burnin = 100
         dev._wires_measured = {0}
         dev._samples = dev.generate_mcmc_samples(kernel, num_burnin)

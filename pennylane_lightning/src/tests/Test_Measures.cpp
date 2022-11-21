@@ -223,8 +223,9 @@ TEMPLATE_TEST_CASE("Sample with Metropolis (Local Kernel)", "[Measures]", float,
     size_t num_samples = 100000;
     size_t num_burnin = 1000;
 
-    auto &&samples = Measurer.generate_samples_metropolis(
-        TransitionKernelType::Local, num_burnin, num_samples);
+    std::string kernel = "Local";
+    auto &&samples =
+        Measurer.generate_samples_metropolis(kernel, num_burnin, num_samples);
 
     std::vector<size_t> counts(N, 0);
     std::vector<size_t> samples_decimal(num_samples, 0);
@@ -279,8 +280,9 @@ TEMPLATE_TEST_CASE("Sample with Metropolis (NonZeroRandom Kernel)",
     size_t num_samples = 100000;
     size_t num_burnin = 1000;
 
-    auto &&samples = Measurer.generate_samples_metropolis(
-        TransitionKernelType::NonZeroRandom, num_burnin, num_samples);
+    const std::string kernel = "NonZeroRandom";
+    auto &&samples =
+        Measurer.generate_samples_metropolis(kernel, num_burnin, num_samples);
 
     std::vector<size_t> counts(N, 0);
     std::vector<size_t> samples_decimal(num_samples, 0);
