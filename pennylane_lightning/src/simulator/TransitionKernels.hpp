@@ -59,18 +59,19 @@ class LocalTransitionKernel : public TransitionKernel<fp_t> {
               std::uniform_int_distribution<size_t>(0, num_qubits - 1)),
           distrib_binary_(std::uniform_int_distribution<size_t>(0, 1)) {}
 
-    std::pair<size_t, fp_t> operator()(size_t s1) final {
+    std::pair<size_t, fp_t> operator()(size_t init_idx) final {
         size_t qubit_site = distrib_num_qubits_(gen_);
         size_t qubit_value = distrib_binary_(gen_);
-        size_t current_bit = ((unsigned)s1 >> (unsigned)qubit_site) & 1U;
+        size_t current_bit = ((unsigned)init_idx >> (unsigned)qubit_site) & 1U;
 
         if (qubit_value == current_bit) {
-            return std::pair<size_t, fp_t>(s1, 1);
+            return std::pair<size_t, fp_t>(init_idx, 1);
         }
         if (current_bit == 0) {
-            return std::pair<size_t, fp_t>(s1 + std::pow(2, qubit_site), 1);
+            return std::pair<size_t, fp_t>(init_idx + std::pow(2, qubit_site),
+                                           1);
         }
-        return std::pair<size_t, fp_t>(s1 - std::pow(2, qubit_site), 1);
+        return std::pair<size_t, fp_t>(init_idx - std::pow(2, qubit_site), 1);
     }
 };
 
@@ -106,9 +107,9 @@ class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
         distrib_ =
             std::uniform_int_distribution<size_t>(0, non_zeros_.size() - 1);
     }
-    std::pair<size_t, fp_t> operator()([[maybe_unused]] size_t s1) final {
-        auto s2 = distrib_(gen_);
-        return std::pair<size_t, fp_t>(non_zeros_[s2], 1);
+    std::pair<size_t, fp_t> operator()([[maybe_unused]] size_t init_idx) final {
+        auto trans_idx = distrib_(gen_);
+        return std::pair<size_t, fp_t>(non_zeros_[trans_idx], 1);
     }
 };
 

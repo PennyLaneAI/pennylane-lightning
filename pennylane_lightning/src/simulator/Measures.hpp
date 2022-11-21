@@ -318,32 +318,35 @@ class Measures {
      * between metropolis states.
      * @param gen Random number generator.
      * @param distrib Random number distribution.
-     * @param s1 initial state
+     * @param init_idx Init index of basis state.
      */
     size_t metropolis_step(const SVType &sv,
                            std::unique_ptr<TransitionKernel<fp_t>> &tk,
                            std::mt19937 &gen,
                            std::uniform_real_distribution<fp_t> &distrib,
-                           size_t s1) {
-        auto s1_plog =
-            std::log((sv.getData()[s1] * std::conj(sv.getData()[s1])).real());
+                           size_t init_idx) {
+        auto init_plog = std::log(
+            (sv.getData()[init_idx] * std::conj(sv.getData()[init_idx]))
+                .real());
 
-        auto s1_qratio = tk->operator()(s1);
+        auto init_qratio = tk->operator()(init_idx);
 
         // transition kernel outputs these two
-        auto &s2 = s1_qratio.first;
-        auto &qratio = s1_qratio.second;
+        auto &trans_idx = init_qratio.first;
+        auto &trans_qratio = init_qratio.second;
 
-        auto s2_plog =
-            std::log((sv.getData()[s2] * std::conj(sv.getData()[s2])).real());
+        auto trans_plog = std::log(
+            (sv.getData()[trans_idx] * std::conj(sv.getData()[trans_idx]))
+                .real());
 
-        auto alph = std::min<fp_t>(1., qratio * std::exp(s2_plog - s1_plog));
+        auto alph =
+            std::min<fp_t>(1., trans_qratio * std::exp(trans_plog - init_plog));
         auto ran = distrib(gen);
 
         if (ran < alph) {
-            return s2;
+            return trans_idx;
         }
-        return s1;
+        return init_idx;
     }
 
     /**
@@ -375,20 +378,20 @@ class Measures {
         auto tk =
             kernel_factory(transition_kernel, original_statevector.getData(),
                            original_statevector.getNumQubits());
-        size_t s1 = 0;
+        size_t idx = 0;
 
         // Burn In
         for (size_t i = 0; i < num_burnin; i++) {
-            s1 = metropolis_step(original_statevector, tk, gen, distrib,
-                                 s1); // Burn-in.
+            idx = metropolis_step(original_statevector, tk, gen, distrib,
+                                  idx); // Burn-in.
         }
 
         // Sample
         for (size_t i = 0; i < num_samples; i++) {
-            s1 = metropolis_step(original_statevector, tk, gen, distrib, s1);
+            idx = metropolis_step(original_statevector, tk, gen, distrib, idx);
 
-            if (cache.contains(s1)) {
-                size_t cache_id = cache[s1];
+            if (cache.contains(idx)) {
+                size_t cache_id = cache[idx];
                 auto it_temp = samples.begin() + cache_id * num_qubits;
                 std::copy(it_temp, it_temp + num_qubits,
                           samples.begin() + i * num_qubits);
@@ -398,9 +401,9 @@ class Measures {
             else {
                 for (size_t j = 0; j < num_qubits; j++) {
                     samples[i * num_qubits + (num_qubits - 1 - j)] =
-                        (s1 >> j) & 1U;
+                        (idx >> j) & 1U;
                 }
-                cache[s1] = i;
+                cache[idx] = i;
             }
         }
         return samples;

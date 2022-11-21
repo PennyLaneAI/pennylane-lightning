@@ -612,13 +612,13 @@ class TestMCMCSample:
         # they square to 1
         assert np.allclose(s1**2, 1, atol=tol, rtol=0)
 
-    def test_unsupported_sample_kernels(self, dev, tol):
+    @pytest.mark.parametrize("kernel", ["local", "nonZeroRandom", "Global", "global"])
+    def test_unsupported_sample_kernels(self, dev, tol, kernel):
         """Tests if the samples returned by sample have
         the correct values
         """
 
         dev.apply([qml.RX(1.5708, wires=[0])])
-        kernel = "Global"
         num_burnin = 100
         dev._wires_measured = {0}
         with pytest.raises(
