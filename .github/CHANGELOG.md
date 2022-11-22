@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Improve the stopping condition method.
+[(#386)](https://github.com/PennyLaneAI/pennylane-lightning/pull/386)
+
 ### Documentation
 
 ### Bug fixes
