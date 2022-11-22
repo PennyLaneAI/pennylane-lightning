@@ -321,7 +321,7 @@ class Measures {
      * @param init_idx Init index of basis state.
      */
     size_t metropolis_step(const SVType &sv,
-                           std::unique_ptr<TransitionKernel<fp_t>> &tk,
+                           const std::unique_ptr<TransitionKernel<fp_t>> &tk,
                            std::mt19937 &gen,
                            std::uniform_real_distribution<fp_t> &distrib,
                            size_t init_idx) {

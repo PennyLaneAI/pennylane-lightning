@@ -62,7 +62,9 @@ class LocalTransitionKernel : public TransitionKernel<fp_t> {
     std::pair<size_t, fp_t> operator()(size_t init_idx) final {
         size_t qubit_site = distrib_num_qubits_(gen_);
         size_t qubit_value = distrib_binary_(gen_);
-        size_t current_bit = ((unsigned)init_idx >> (unsigned)qubit_site) & 1U;
+        size_t current_bit = (static_cast<unsigned>(init_idx) >>
+                              static_cast<unsigned>(qubit_site)) &
+                             1U;
 
         if (qubit_value == current_bit) {
             return std::pair<size_t, fp_t>(init_idx, 1);
