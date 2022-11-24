@@ -13,6 +13,9 @@
 
 ### Bug fixes
 
+- Pin CMake to 3.24.x in wheel-builder to avoid Python not found error in CMake 3.25, when building wheels for PennyLane-Lightning-GPU.
+[(#387)](https://github.com/PennyLaneAI/pennylane-lightning/pull/387)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
