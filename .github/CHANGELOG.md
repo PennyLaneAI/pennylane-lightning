@@ -9,15 +9,21 @@
 * Improve Lightning package structure for external use as a C++ library.
 [(#369)](https://github.com/PennyLaneAI/pennylane-lightning/pull/369)
 
+* Improve the stopping condition method.
+[(#386)](https://github.com/PennyLaneAI/pennylane-lightning/pull/386)
+
 ### Documentation
 
 ### Bug fixes
+
+- Pin CMake to 3.24.x in wheel-builder to avoid Python not found error in CMake 3.25, when building wheels for PennyLane-Lightning-GPU.
+[(#387)](https://github.com/PennyLaneAI/pennylane-lightning/pull/387)
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Lee J. O'Riordan
+Amintor Dusko, Lee J. O'Riordan
 
 ---
 
