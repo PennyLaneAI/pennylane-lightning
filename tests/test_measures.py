@@ -291,7 +291,7 @@ class TestExpval:
         @qml.qnode(dev)
         def circuit():
             res = qml.expval(qml.PauliZ(0))
-            assert res.return_type is Expectation
+            assert isinstance(res, Expectation)
             return res
 
         circuit()
@@ -391,7 +391,7 @@ class TestVar:
         @qml.qnode(dev)
         def circuit():
             res = qml.var(qml.PauliZ(0))
-            assert res.return_type is Variance
+            assert isinstance(res, Variance)
             return res
 
         circuit()

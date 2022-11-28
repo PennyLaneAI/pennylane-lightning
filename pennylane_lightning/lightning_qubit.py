@@ -424,16 +424,16 @@ class LightningQubit(QubitDevice):
             measurements (List[MeasurementProcess]): a list of measurement processes to check.
 
         Returns:
-            Expectation or State: a common return type of measurements.
+            Expectation or State: a common measurement type.
         """
         if len(measurements) == 0:
             return None
 
-        if len(measurements) == 1 and measurements[0].return_type is State:
+        if len(measurements) == 1 and isinstance(measurements[0], State):
             return State
 
-        # Now the return_type of measurement processes must be expectation
-        if not all([m.return_type is Expectation for m in measurements]):
+        # Now measurement processes must be expectation
+        if not all([isinstance(m, Expectation) for m in measurements]):
             raise QuantumFunctionError(
                 "Adjoint differentiation method does not support expectation return type "
                 "mixed with other return types"
@@ -539,12 +539,12 @@ class LightningQubit(QubitDevice):
                 UserWarning,
             )
 
-        tape_return_type = self._check_adjdiff_supported_measurements(tape.measurements)
+        tape_measurement_type = self._check_adjdiff_supported_measurements(tape.measurements)
 
-        if not tape_return_type:  # the tape does not have measurements
+        if not tape_measurement_type:  # the tape does not have measurements
             return np.array([], dtype=self._state.dtype)
 
-        if tape_return_type is State:
+        if tape_measurement_type is State:
             raise QuantumFunctionError(
                 "This method does not support statevector return type. "
                 "Use vjp method instead for this purpose."
@@ -627,12 +627,12 @@ class LightningQubit(QubitDevice):
                 UserWarning,
             )
 
-        tape_return_type = self._check_adjdiff_supported_measurements(measurements)
+        tape_measurement_type = self._check_adjdiff_supported_measurements(measurements)
 
-        if math.allclose(dy, 0) or tape_return_type is None:
+        if math.allclose(dy, 0) or tape_measurement_type is None:
             return lambda tape: math.convert_like(np.zeros(len(tape.trainable_params)), dy)
 
-        if tape_return_type is Expectation:
+        if tape_measurement_type is Expectation:
             if len(dy) != len(measurements):
                 raise ValueError(
                     "Number of observables in the tape must be the same as the length of dy in the vjp method"
@@ -659,7 +659,7 @@ class LightningQubit(QubitDevice):
 
             return processing_fn
 
-        if tape_return_type is State:
+        if tape_measurement_type is State:
             if len(dy) != 2 ** len(self.wires):
                 raise ValueError(
                     "Size of the provided vector dy must be the same as the size of the statevector"
