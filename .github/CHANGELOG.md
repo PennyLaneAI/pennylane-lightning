@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Improve Lightning package structure for external use as a C++ library.
+[(#369)](https://github.com/PennyLaneAI/pennylane-lightning/pull/369)
+
 * Improve the stopping condition method.
 [(#386)](https://github.com/PennyLaneAI/pennylane-lightning/pull/386)
 
@@ -20,7 +23,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko
+Amintor Dusko, Lee J. O'Riordan
 
 ---
 
@@ -107,8 +110,6 @@ def circuit():
     return qml.expval(obs)
 ```
 
-### Documentation
-
 ### Bug fixes
 
 * Test updates to reflect new measurement error messages.
@@ -124,7 +125,7 @@ def circuit():
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Christina Lee, Chae-Yeun Park
+Amintor Dusko, Christina Lee, Lee J. O'Riordan, Chae-Yeun Park
 
 ---
 
