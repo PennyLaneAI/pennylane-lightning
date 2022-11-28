@@ -12,11 +12,15 @@
 * Improve the stopping condition method.
 [(#386)](https://github.com/PennyLaneAI/pennylane-lightning/pull/386)
 
+* With the introduction of custom measurement classes, all the `MeasurementProcess.return_type`
+  checks have been changed by `isinstance` checks.
+  [(#388)](https://github.com/PennyLaneAI/pennylane-lightning/pull/388)
+
 ### Documentation
 
 ### Bug fixes
 
-- Pin CMake to 3.24.x in wheel-builder to avoid Python not found error in CMake 3.25, when building wheels for PennyLane-Lightning-GPU.
+* Pin CMake to 3.24.x in wheel-builder to avoid Python not found error in CMake 3.25, when building wheels for PennyLane-Lightning-GPU.
 [(#387)](https://github.com/PennyLaneAI/pennylane-lightning/pull/387)
 
 ### Contributors
@@ -86,6 +90,7 @@ Amintor Dusko, Chae-Yeun Park, Monit Sharma, Shuli Shu
 Amintor Dusko
 
 ---
+
 # Release 0.26.0
 
 ### Improvements
@@ -291,7 +296,7 @@ Ali Asadi, Chae-Yeun Park, Lee James O'Riordan, and Trevor Vincent
 
 ### Bug fixes
 
-* Ensure `Identity ` kernel is registered to C++ dispatcher.
+* Ensure `Identity` kernel is registered to C++ dispatcher.
 [(#275)](https://github.com/PennyLaneAI/pennylane-lightning/pull/275)
 
 ---
@@ -397,6 +402,7 @@ init_weights = np.random.random(StronglyEntanglingLayers.shape(n_layers=n_layers
 params = np.array(init_weights,requires_grad=True)
 jac = qml.jacobian(circuit)(params)
 ```
+
 The latest release shows improved performance on both single and multi-threaded evaluations!
 
 <img src="https://raw.githubusercontent.com/PennyLaneAI/pennylane-lightning/v0.21.0-rc0/doc/_static/lightning_v20_v21_bm.png" width=50%/>
@@ -448,6 +454,7 @@ Ali Asadi, Amintor Dusko, Chae-Yeun Park, Lee James O'Riordan
 [(#191)](https://github.com/PennyLaneAI/pennylane-lightning/pull/191)
 
 ---
+
 # Release 0.20.2
 
 ### Bug fixes
@@ -688,7 +695,6 @@ Thomas Bromley, Lee James O'Riordan
 
 * Adds CMake build system support.
   [(#104)](https://github.com/PennyLaneAI/pennylane-lightning/pull/104)
-
 
 ### Breaking changes
 
