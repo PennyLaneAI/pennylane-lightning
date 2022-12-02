@@ -12,6 +12,9 @@
 * Improve the stopping condition method.
 [(#386)](https://github.com/PennyLaneAI/pennylane-lightning/pull/386)
 
+* Parameter broadcasting native implementation.
+[(#389)](https://github.com/PennyLaneAI/pennylane-lightning/pull/389)
+
 ### Documentation
 
 ### Bug fixes
