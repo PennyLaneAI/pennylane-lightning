@@ -586,71 +586,12 @@ class TestVar:
         assert var != 1.0
 
 
-class TestSample:
-    """Tests that samples are properly calculated."""
-
-    def test_sample_dimensions(self, qubit_device):
-        """Tests if the samples returned by the sample function have
-        the correct dimensions
-        """
-
-        # Explicitly resetting is necessary as the internal
-        # state is set to None in __init__ and only properly
-        # initialized during reset
-        dev = qubit_device(wires=2)
-        dev.reset()
-
-        dev.apply([qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])])
-
-        dev.shots = 10
-        dev._wires_measured = {0}
-        dev._samples = dev.generate_samples()
-        s1 = dev.sample(qml.PauliZ(wires=[0]))
-        assert np.array_equal(s1.shape, (10,))
-
-        dev.reset()
-        dev.shots = 12
-        dev._wires_measured = {1}
-        dev._samples = dev.generate_samples()
-        s2 = dev.sample(qml.PauliZ(wires=[1]))
-        assert np.array_equal(s2.shape, (12,))
-
-        dev.reset()
-        dev.shots = 17
-        dev._wires_measured = {0, 1}
-        dev._samples = dev.generate_samples()
-        s3 = dev.sample(qml.PauliX(0) @ qml.PauliZ(1))
-        assert np.array_equal(s3.shape, (17,))
-
-    def test_sample_values(self, qubit_device, tol):
-        """Tests if the samples returned by sample have
-        the correct values
-        """
-
-        # Explicitly resetting is necessary as the internal
-        # state is set to None in __init__ and only properly
-        # initialized during reset
-        dev = qubit_device(wires=2)
-        dev.reset()
-
-        dev.shots = 1000
-        dev.apply([qml.RX(1.5708, wires=[0])])
-        dev._wires_measured = {0}
-        dev._samples = dev.generate_samples()
-
-        s1 = dev.sample(qml.PauliZ(0))
-
-        # s1 should only contain 1 and -1, which is guaranteed if
-        # they square to 1
-        assert np.allclose(s1**2, 1, atol=tol, rtol=0)
-
-
 class TestLightningQubitIntegration:
-    """Integration tests for lightning.qubit. This test ensures it integrates
+    """Integration tests for lightning.qubit. These tests ensure it integrates
     properly with the PennyLane interface, in particular QNode."""
 
-    def test_load_default_qubit_device(self):
-        """Test that the default plugin loads correctly"""
+    def test_load_lightning_qubit_device(self):
+        """Test that the lightning plugin loads correctly"""
 
         dev = qml.device("lightning.qubit", wires=2)
         assert dev.num_wires == 2
@@ -691,7 +632,7 @@ class TestLightningQubitIntegration:
             qml.device("lightning.qubit")
 
     def test_qubit_circuit(self, qubit_device, tol):
-        """Test that the default qubit plugin provides correct result for a simple circuit"""
+        """Test that the lightning qubit plugin provides correct result for a simple circuit"""
 
         p = 0.543
         dev = qubit_device(wires=1)
@@ -706,7 +647,7 @@ class TestLightningQubitIntegration:
         assert np.isclose(circuit(p), expected, atol=tol, rtol=0)
 
     def test_qubit_identity(self, qubit_device, tol):
-        """Test that the default qubit plugin provides correct result for the Identity expectation"""
+        """Test that the lightning qubit plugin provides correct result for the Identity expectation"""
 
         p = 0.543
         dev = qubit_device(wires=1)
@@ -720,7 +661,7 @@ class TestLightningQubitIntegration:
         assert np.isclose(circuit(p), 1, atol=tol, rtol=0)
 
     def test_nonzero_shots(self, tol_stochastic):
-        """Test that the default qubit plugin provides correct result for high shot number"""
+        """Test that the lightning qubit plugin provides correct result for high shot number"""
 
         shots = 10**4
         dev = qml.device("lightning.qubit", wires=1, shots=shots)
