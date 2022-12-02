@@ -4,7 +4,7 @@
 
 ### Breaking changes
 
-* Deprecate support to Python 3.7.
+* Deprecate support for Python 3.7.
 [(#389)](https://github.com/PennyLaneAI/pennylane-lightning/pull/389)
 
 ### Improvements
