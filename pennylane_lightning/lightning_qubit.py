@@ -207,6 +207,16 @@ class LightningQubit(QubitDevice):
 
         return qml.BooleanFn(accepts_obj)
 
+    # pylint: disable=arguments-differ
+    def _get_batch_size(self, tensor, expected_shape, expected_size):
+        """Determine whether a tensor has an additional batch dimension for broadcasting,
+        compared to an expected_shape."""
+        size = self._size(tensor)
+        if self._ndim(tensor) > len(expected_shape) or size > expected_size:
+            return size // expected_size
+
+        return None
+
     def _create_basis_state(self, index):
         """Return a computational basis state over all wires.
         Args:
@@ -228,7 +238,7 @@ class LightningQubit(QubitDevice):
             model="qubit",
             supports_inverse_operations=True,
             supports_analytic_computation=True,
-            supports_broadcasting=False,
+            supports_broadcasting=True,
             returns_state=True,
         )
         return capabilities
@@ -263,14 +273,17 @@ class LightningQubit(QubitDevice):
     @property
     def state(self):
         # Flattening the state.
-        shape = (1 << self.num_wires,)
+        dim = 1 << self.num_wires
+        batch_size = self._get_batch_size(self._pre_rotated_state, (2,) * self.num_wires, dim)
+        # Do not flatten the state completely but leave the broadcasting dimension if there is one
+        shape = (batch_size, dim) if batch_size is not None else (dim,)
         return self._reshape(self._pre_rotated_state, shape)
 
     def _apply_state_vector(self, state, device_wires):
         """Initialize the internal state vector in a specified state.
+
         Args:
             state (array[complex]): normalized input state of length ``2**len(wires)``
-                or broadcasted state of shape ``(batch_size, 2**len(wires))``
             device_wires (Wires): wires that get initialized in the state
         """
 
@@ -278,7 +291,17 @@ class LightningQubit(QubitDevice):
         device_wires = self.map_wires(device_wires)
 
         state = self._asarray(state, dtype=self.C_DTYPE)
+
+        dim = 1 << len(device_wires)
+        batch_size = self._get_batch_size(state, (dim,), dim)
+
         output_shape = [2] * self.num_wires
+        if batch_size is not None:
+            output_shape.insert(0, batch_size)
+
+        # Lightning doesn't support broadcasted state vector initialization.
+        if batch_size:
+            raise ValueError("Lightning doesn't support broadcasted state vector initialization")
 
         if not qml.math.is_abstract(state):
             norm = qml.math.linalg.norm(state, axis=-1, ord=2)
@@ -342,6 +365,37 @@ class LightningQubit(QubitDevice):
     def _apply_unitary():
         pass
 
+    @staticmethod
+    def operations_batch_size(operations):
+        """Go through the operations list to find the batch size.
+        It is assumed that after some preprocessing the batch_size for each operation will be None or a same number.
+
+        Args:
+            operations (list[~pennylane.operation.Operation]): list of operation
+
+        Returns:
+            int: the batch size for operators.
+        """
+        for o in operations:
+            if o.batch_size:  # None is False for python.
+                return o.batch_size  # The search will stop when finding the first no None entry.
+        return None
+
+    def check_and_guarantee_batched_states_shape(self, state):
+        """Check if the state is batched and if not batch it with a batched dimension equal 1.
+
+        Args:
+            state (array[complex]): the input state tensor
+
+        Returns:
+            The batch dimension (None, if no batching is in action.),
+            and the state with an extra dimension for processing if not batching.
+        """
+        dim = 1 << self.num_wires
+        batch_size = self._get_batch_size(state, (dim,) * self.num_wires, dim)
+        batched_states = state if batch_size else state[np.newaxis, ...]
+        return batch_size, batched_states
+
     def apply_lightning(self, state, operations):
         """Apply a list of operations to the state tensor.
 
@@ -354,40 +408,61 @@ class LightningQubit(QubitDevice):
         Returns:
             array[complex]: the output state tensor
         """
-        state_vector = np.ravel(state)
+        batch_size_op = self.operations_batch_size(operations)
 
-        if self.use_csingle:
-            # use_csingle
-            sim = StateVectorC64(state_vector)
+        dim = 1 << self.num_wires
+        batch_size_state = self._get_batch_size(state, (dim,) * self.num_wires, dim)
+
+        if batch_size_state:
+            # We have already a batched state nothing need to be done.
+            batched_states = state
         else:
-            # self.C_DTYPE is np.complex128 by default
-            sim = StateVectorC128(state_vector)
+            # If the state is not batched, we need to properly batch it,
+            # even if there is no parameter broadcasting in play.
+            batched_states = (
+                np.repeat(state[np.newaxis, ...], batch_size_op, axis=0)
+                if batch_size_op
+                else state[np.newaxis, ...]
+            )
 
-        # Skip over identity operations instead of performing
-        # matrix multiplication with the identity.
-        skipped_ops = ["Identity"]
+        for batch_ind, state in enumerate(batched_states):
+            state_vector = np.ravel(state)
 
-        for o in operations:
-            if o.base_name in skipped_ops:
-                continue
-            name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
-            method = getattr(sim, name, None)
-
-            wires = self.wires.indices(o.wires)
-            if method is None:
-                # Inverse can be set to False since qml.matrix(o) is already in inverted form
-                method = getattr(sim, "applyMatrix")
-                try:
-                    method(qml.matrix(o), wires, False)
-                except AttributeError:  # pragma: no cover
-                    # To support older versions of PL
-                    method(o.matrix, wires, False)
+            if self.use_csingle:
+                sim = StateVectorC64(state_vector)  # use_csingle
             else:
-                inv = o.inverse
-                param = o.parameters
-                method(wires, inv, param)
+                # self.C_DTYPE is np.complex128 by default
+                sim = StateVectorC128(state_vector)
 
-        return np.reshape(state_vector, state.shape)
+            # Skip over identity operations instead of performing
+            # matrix multiplication with the identity.
+            skipped_ops = ["Identity"]
+            for o in operations:
+                if o.base_name in skipped_ops:
+                    continue
+                name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
+                method = getattr(sim, name, None)
+
+                wires = self.wires.indices(o.wires)
+                if method is None:
+                    # Inverse can be set to False since qml.matrix(o) is already in inverted form
+                    method = getattr(sim, "applyMatrix")
+
+                    try:
+                        _matrix = qml.matrix(o)[batch_ind] if o.batch_size else qml.matrix(o)
+                    except AttributeError:  # pragma: no cover
+                        # To support older versions of PL
+                        _matrix = o.matrix()[batch_ind] if o.batch_size else o.matrix()
+
+                    method(_matrix, wires, False)
+                else:
+                    inv = o.inverse
+                    param = np.transpose(np.array(o.parameters, copy=False))
+                    param = param[batch_ind] if o.batch_size else param
+                    method(wires, inv, param)
+            batched_states[batch_ind, ...] = np.reshape(state_vector, state.shape)
+        batched_states = batched_states if batch_size_op else batched_states[0, ...]
+        return batched_states
 
     def apply(self, operations, rotations=None, **kwargs):
         # State preparation is currently done in Python
@@ -760,12 +835,19 @@ class LightningQubit(QubitDevice):
         # translate to wire labels used by device
         device_wires = self.map_wires(wires)
 
-        # To support np.complex64 based on the type of self._state
-        dtype = self._state.dtype
-        ket = np.ravel(self._state)
-        state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
-        M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
-        return M.probs(device_wires)
+        batched_probs = []
+
+        batch_size, batched_states = self.check_and_guarantee_batched_states_shape(self._state)
+
+        for state in batched_states:
+            state = np.ravel(state)
+            state_vector = StateVectorC64(state) if self.use_csingle else StateVectorC128(state)
+            M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
+            batched_probs += [
+                M.probs(device_wires),
+            ]
+        batched_probs = batched_probs if batch_size else np.squeeze(batched_probs, axis=0)
+        return np.array(batched_probs, copy=False)
 
     def generate_samples(self):
         """Generate samples
@@ -774,13 +856,21 @@ class LightningQubit(QubitDevice):
             array[int]: array of samples in binary representation with shape ``(dev.shots, dev.num_wires)``
         """
 
-        # Initialization of state
-        ket = np.ravel(self._state)
+        batched_samples = []
+        batch_size, batched_states = self.check_and_guarantee_batched_states_shape(self._state)
 
-        state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
-        M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
+        for state in batched_states:
+            state = np.ravel(state)
+            state_vector = StateVectorC64(state) if self.use_csingle else StateVectorC128(state)
+            M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
+            samples = M.generate_samples(len(self.wires), self.shots).astype(int, copy=False)
 
-        return M.generate_samples(len(self.wires), self.shots).astype(int, copy=False)
+            batched_samples += [
+                samples,
+            ]
+
+        batched_samples = batched_samples if batch_size else np.squeeze(batched_samples, axis=0)
+        return np.array(batched_samples, copy=False)
 
     def expval(self, observable, shot_range=None, bin_size=None):
         """Expectation value of the supplied observable.
@@ -813,32 +903,50 @@ class LightningQubit(QubitDevice):
             samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
             return np.squeeze(np.mean(samples, axis=0))
 
-        # Initialization of state
-        ket = np.ravel(self._pre_rotated_state)
+        batched_expval = []
 
-        state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
-        M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
-        if observable.name == "SparseHamiltonian":
-            if Kokkos_info()["USE_KOKKOS"] == True:
-                # converting COO to CSR sparse representation.
-                CSR_SparseHamiltonian = observable.data[0].tocsr(copy=False)
-                return M.expval(
-                    CSR_SparseHamiltonian.indptr,
-                    CSR_SparseHamiltonian.indices,
-                    CSR_SparseHamiltonian.data,
+        batch_size, batched_states = self.check_and_guarantee_batched_states_shape(
+            self._pre_rotated_state
+        )
+        for state in batched_states:
+            state = np.ravel(state)
+
+            state_vector = StateVectorC64(state) if self.use_csingle else StateVectorC128(state)
+            M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
+            if observable.name == "SparseHamiltonian":
+                if Kokkos_info()["USE_KOKKOS"] == True:
+                    # converting COO to CSR sparse representation.
+                    CSR_SparseHamiltonian = observable.data[0].tocsr(copy=False)
+                    batched_expval += [
+                        M.expval(
+                            CSR_SparseHamiltonian.indptr,
+                            CSR_SparseHamiltonian.indices,
+                            CSR_SparseHamiltonian.data,
+                        )
+                    ]
+                    continue
+                raise NotImplementedError(
+                    "The expval of a SparseHamiltonian requires Kokkos and Kokkos Kernels."
                 )
-            raise NotImplementedError(
-                "The expval of a SparseHamiltonian requires Kokkos and Kokkos Kernels."
-            )
 
-        if observable.name in ["Hamiltonian", "Hermitian"]:
-            ob_serialized = _serialize_ob(observable, self.wire_map, use_csingle=self.use_csingle)
-            return M.expval(ob_serialized)
+            if observable.name in ["Hamiltonian", "Hermitian"]:
+                ob_serialized = _serialize_ob(
+                    observable, self.wire_map, use_csingle=self.use_csingle
+                )
+                batched_expval += [
+                    M.expval(ob_serialized),
+                ]
+                continue
 
-        # translate to wire labels used by device
-        observable_wires = self.map_wires(observable.wires)
+            # translate to wire labels used by device
+            observable_wires = self.map_wires(observable.wires)
 
-        return M.expval(observable.name, observable_wires)
+            batched_expval += [
+                M.expval(observable.name, observable_wires),
+            ]
+
+        batched_expval = batched_expval if batch_size else np.squeeze(batched_expval, axis=0)
+        return np.array(batched_expval, copy=False)
 
     def var(self, observable, shot_range=None, bin_size=None):
         """Variance of the supplied observable.
@@ -867,16 +975,24 @@ class LightningQubit(QubitDevice):
             samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
             return np.squeeze(np.var(samples, axis=0))
 
-        # Initialization of state
-        ket = np.ravel(self._pre_rotated_state)
+        batched_var = []
+        batch_size, batched_states = self.check_and_guarantee_batched_states_shape(
+            self._pre_rotated_state
+        )
+        for state in batched_states:
+            state = np.ravel(state)
 
-        state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
-        M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
+            state_vector = StateVectorC64(state) if self.use_csingle else StateVectorC128(state)
+            M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
 
-        # translate to wire labels used by device
-        observable_wires = self.map_wires(observable.wires)
+            # translate to wire labels used by device
+            observable_wires = self.map_wires(observable.wires)
+            batched_var += [
+                M.var(observable.name, observable_wires),
+            ]
 
-        return M.var(observable.name, observable_wires)
+        batched_var = batched_var if batch_size else np.squeeze(batched_var, axis=0)
+        return np.array(batched_var, copy=False)
 
 
 if not CPP_BINARY_AVAILABLE:
