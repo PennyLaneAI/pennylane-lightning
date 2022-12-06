@@ -295,13 +295,11 @@ class LightningQubit(QubitDevice):
         dim = 1 << len(device_wires)
         batch_size = self._get_batch_size(state, (dim,), dim)
 
-        output_shape = [2] * self.num_wires
-        if batch_size is not None:
-            output_shape.insert(0, batch_size)
-
         # Lightning doesn't support broadcasted state vector initialization.
         if batch_size:
             raise ValueError("Lightning doesn't support broadcasted state vector initialization")
+
+        output_shape = [2] * self.num_wires
 
         if not qml.math.is_abstract(state):
             norm = qml.math.linalg.norm(state, axis=-1, ord=2)
@@ -392,7 +390,7 @@ class LightningQubit(QubitDevice):
             and the state with an extra dimension for processing if not batching.
         """
         dim = 1 << self.num_wires
-        batch_size = self._get_batch_size(state, (dim,) * self.num_wires, dim)
+        batch_size = self._get_batch_size(state, (2,) * self.num_wires, dim)
         batched_states = state if batch_size else state[np.newaxis, ...]
         return batch_size, batched_states
 
@@ -411,7 +409,7 @@ class LightningQubit(QubitDevice):
         batch_size_op = self.operations_batch_size(operations)
 
         dim = 1 << self.num_wires
-        batch_size_state = self._get_batch_size(state, (dim,) * self.num_wires, dim)
+        batch_size_state = self._get_batch_size(state, (2,) * self.num_wires, dim)
 
         if batch_size_state:
             # We have already a batched state nothing need to be done.
@@ -843,9 +841,7 @@ class LightningQubit(QubitDevice):
             state = np.ravel(state)
             state_vector = StateVectorC64(state) if self.use_csingle else StateVectorC128(state)
             M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
-            batched_probs += [
-                M.probs(device_wires),
-            ]
+            batched_probs.append(M.probs(device_wires))
         batched_probs = batched_probs if batch_size else np.squeeze(batched_probs, axis=0)
         return np.array(batched_probs, copy=False)
 
@@ -864,10 +860,7 @@ class LightningQubit(QubitDevice):
             state_vector = StateVectorC64(state) if self.use_csingle else StateVectorC128(state)
             M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
             samples = M.generate_samples(len(self.wires), self.shots).astype(int, copy=False)
-
-            batched_samples += [
-                samples,
-            ]
+            batched_samples.append(samples)
 
         batched_samples = batched_samples if batch_size else np.squeeze(batched_samples, axis=0)
         return np.array(batched_samples, copy=False)
@@ -933,17 +926,13 @@ class LightningQubit(QubitDevice):
                 ob_serialized = _serialize_ob(
                     observable, self.wire_map, use_csingle=self.use_csingle
                 )
-                batched_expval += [
-                    M.expval(ob_serialized),
-                ]
+                batched_expval.append(M.expval(ob_serialized))
                 continue
 
             # translate to wire labels used by device
             observable_wires = self.map_wires(observable.wires)
 
-            batched_expval += [
-                M.expval(observable.name, observable_wires),
-            ]
+            batched_expval.append(M.expval(observable.name, observable_wires))
 
         batched_expval = batched_expval if batch_size else np.squeeze(batched_expval, axis=0)
         return np.array(batched_expval, copy=False)
@@ -987,9 +976,7 @@ class LightningQubit(QubitDevice):
 
             # translate to wire labels used by device
             observable_wires = self.map_wires(observable.wires)
-            batched_var += [
-                M.var(observable.name, observable_wires),
-            ]
+            batched_var.append(M.var(observable.name, observable_wires))
 
         batched_var = batched_var if batch_size else np.squeeze(batched_var, axis=0)
         return np.array(batched_var, copy=False)
