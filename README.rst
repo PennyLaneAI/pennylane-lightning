@@ -47,7 +47,7 @@ Features
 Installation
 ============
 
-PennyLane-Lightning requires Python version 3.7 and above. It can be installed using ``pip``:
+PennyLane-Lightning requires Python version 3.8 and above. It can be installed using ``pip``:
 
 .. code-block:: console
 
@@ -141,8 +141,8 @@ To test the C++ code:
     $ make
 
 Other supported options are ``-DENABLE_WARNINGS=ON``,
-``-DENABLE_NATIVE=ON`` (for ``-march=native``),  
-``-DENABLE_BLAS=ON``, ``-DENABLE_OPENMP=ON``, 
+``-DENABLE_NATIVE=ON`` (for ``-march=native``),
+``-DENABLE_BLAS=ON``, ``-DENABLE_OPENMP=ON``,
 ``-DENABLE_KOKKOS=ON``, and ``-DENABLE_CLANG_TIDY=ON``.
 
 Compile on Windows with MSVC
