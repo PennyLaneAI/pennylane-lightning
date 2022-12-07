@@ -689,6 +689,7 @@ Thomas Bromley, Lee James O'Riordan
 * Adds CMake build system support.
   [(#104)](https://github.com/PennyLaneAI/pennylane-lightning/pull/104)
 
+
 ### Breaking changes
 
 * Removes support for Python 3.6 and adds support for Python 3.9.
