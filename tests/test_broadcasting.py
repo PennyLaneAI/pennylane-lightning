@@ -41,12 +41,13 @@ class TestApply:
     def test_apply_operation_state_preparation(self, qubit_device, operation, par):
         """Tests that the statevector cannot be broadcasted during initialization"""
 
+        par = np.array(par)
+        dev = qubit_device(wires=2)
+        dev.reset()
+
         with pytest.raises(
             ValueError, match="Lightning doesn't support broadcasted state vector initialization"
         ):
-            par = np.array(par)
-            dev = qubit_device(wires=2)
-            dev.reset()
             dev.apply([operation(par, wires=[0, 1])])
 
     test_data_single_wire_with_single_parameters = [
@@ -428,8 +429,8 @@ class TestProbs:
         ],
     )
     def test_probs_broadcast_one_operation(self, qubit_device, wires, param, expected, tol):
-        """Tests the broadcasted probability for a circuit where some operations have non-broadcasted parameters,
-        and one operation has an increasing number of parameters. In all cases, operations have wires=[0]"""
+        """Tests the broadcasted probability for a circuit where some operations have non-broadcasted parameters and
+        one operation has broadcasted parameters. In all cases, operations have wires=[0]"""
 
         dev = qubit_device(wires=2)
 
@@ -476,7 +477,7 @@ class TestProbs:
     )
     def test_probs_broadcast_two_operations(self, qubit_device, wires, param, expected, tol):
         """Tests the broadcasted probability for a circuit where a operation has non-broadcasted parameters,
-        and some operations have an increasing number of parameters.
+        and some operations have broadcasted parameters.
         Broadcasted operations are applied to different wires."""
 
         dev = qubit_device(wires=2)
@@ -519,7 +520,7 @@ class TestExpval:
     )
     def test_expval_broadcast_one_operation(self, qubit_device, op, param, expected, tol):
         """Tests the broadcasted expval for a circuit where some operations have non-broadcasted parameters,
-        and one operation has an increasing number of parameters. In all cases, operations have wires=[0]"""
+        and one operation has broadcasted parameters. In all cases, operations have wires=[0]"""
 
         dev = qubit_device(wires=2)
 
@@ -565,7 +566,7 @@ class TestExpval:
     )
     def test_expval_broadcast_two_operations(self, qubit_device, op, param, expected, tol):
         """Tests the broadcasted expval for a circuit where a operation has non-broadcasted parameters,
-        and some operations have an increasing number of parameters.
+        and some operations have broadcasted parameters.
         Broadcasted operations are applied to different wires."""
         dev = qubit_device(wires=2)
 
@@ -677,7 +678,7 @@ class TestVar:
     )
     def test_var_broadcast_one_operation(self, qubit_device, op, param, expected, tol):
         """Tests the broadcasted var for a circuit where some operations have non-broadcasted parameters,
-        and one operation has an increasing number of parameters. In all cases, operations have wires=[0]"""
+        and one operation has broadcasted parameters. In all cases, operations have wires=[0]"""
 
         dev = qubit_device(wires=2)
 
@@ -715,7 +716,7 @@ class TestVar:
     )
     def test_var_broadcast_two_operations(self, qubit_device, op, param, expected, tol):
         """Tests the broadcasted var for a circuit where a operation has non-broadcasted parameters,
-        and some operations have an increasing number of parameters.
+        and some operations have broadcasted parameters.
         Broadcasted operations are applied to different wires."""
         dev = qubit_device(wires=2)
 
