@@ -438,7 +438,14 @@ class TestApply:
         (
             qml.QubitUnitary,
             [0.70710677, -0.70710677],
-            [np.diag([1.0, 1.0]), np.diag([1.0, -1.0]), np.diag([1.0, 1.0j]), np.diag([1.0, -1.0j]), np.diag([1.0j, 1.0]), np.diag([1.0j, -1.0])],
+            [
+                np.diag([1.0, 1.0]),
+                np.diag([1.0, -1.0]),
+                np.diag([1.0, 1.0j]),
+                np.diag([1.0, -1.0j]),
+                np.diag([1.0j, 1.0]),
+                np.diag([1.0j, -1.0]),
+            ],
             [0],
             [
                 [0.70710677, -0.70710677],
