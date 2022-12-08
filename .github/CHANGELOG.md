@@ -4,6 +4,9 @@
 
 ### Breaking changes
 
+* Deprecate support for Python 3.7.
+[(#391)](https://github.com/PennyLaneAI/pennylane-lightning/pull/391)
+
 ### Improvements
 
 * Improve Lightning package structure for external use as a C++ library.
