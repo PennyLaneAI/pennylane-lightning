@@ -111,16 +111,16 @@ class TestApply:
     ]
 
     @pytest.mark.parametrize(
-        "operation, input, expected_output, par", test_data_single_wire_with_single_parameters
+        "operation, state, expected_output, par", test_data_single_wire_with_single_parameters
     )
     def test_apply_single_param_single_wire_operation(
-        self, qubit_device, tol, operation, input, expected_output, par
+        self, qubit_device, tol, operation, state, expected_output, par
     ):
         """Tests that applying an operation yields the expected output state for single wire
         operations that have parameters."""
 
         dev = qubit_device(wires=1)
-        dev._state = np.array(input).astype(dev.C_DTYPE)
+        dev._state = np.array(state).astype(dev.C_DTYPE)
         dev.apply([operation(np.array(par), wires=[0])])
 
         assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
@@ -166,17 +166,17 @@ class TestApply:
     ]
 
     @pytest.mark.parametrize(
-        "operation, input, expected_output, phi, theta,omega",
+        "operation, state, expected_output, phi, theta, omega",
         test_data_single_wire_with_three_parameters,
     )
     def test_apply_three_param_single_wire_operation(
-        self, qubit_device, tol, operation, input, expected_output, phi, theta, omega
+        self, qubit_device, tol, operation, state, expected_output, phi, theta, omega
     ):
         """Tests that applying an operation yields the expected output state for single wire
         operations that have parameters."""
 
         dev = qubit_device(wires=1)
-        dev._state = np.array(input).astype(dev.C_DTYPE)
+        dev._state = np.array(state).astype(dev.C_DTYPE)
         dev.apply([operation(np.array(phi), np.array(theta), np.array(omega), wires=[0])])
 
         assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
@@ -328,16 +328,16 @@ class TestApply:
     ]
 
     @pytest.mark.parametrize(
-        "operation, input, expected_output, par", test_data_two_wires_with_single_parameter
+        "operation, state, expected_output, par", test_data_two_wires_with_single_parameter
     )
     def test_apply_operation_two_wires_with_parameters(
-        self, qubit_device, tol, operation, input, expected_output, par
+        self, qubit_device, tol, operation, state, expected_output, par
     ):
         """Tests that applying an operation yields the expected output state for two wire
         operations that have parameters."""
 
         dev = qubit_device(wires=2)
-        dev._state = np.array(input).reshape(2 * [2]).astype(dev.C_DTYPE)
+        dev._state = np.array(state).reshape(2 * [2]).astype(dev.C_DTYPE)
         dev.apply([operation(np.array(par), wires=[0, 1])])
 
         assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
@@ -383,18 +383,108 @@ class TestApply:
     ]
 
     @pytest.mark.parametrize(
-        "operation, input, expected_output, phi, theta, omega",
+        "operation, state, expected_output, phi, theta, omega",
         test_data_two_wires_with_three_parameter,
     )
     def test_apply_operation_two_wires_with_parameters(
-        self, qubit_device, tol, operation, input, expected_output, phi, theta, omega
+        self, qubit_device, tol, operation, state, expected_output, phi, theta, omega
     ):
         """Tests that applying an operation yields the expected output state for two wire
         operations that have parameters."""
 
         dev = qubit_device(wires=2)
-        dev._state = np.array(input).reshape(2 * [2]).astype(dev.C_DTYPE)
+        dev._state = np.array(state).reshape(2 * [2]).astype(dev.C_DTYPE)
         dev.apply([operation(np.array(phi), np.array(theta), np.array(omega), wires=[0, 1])])
+
+        assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
+        assert dev._state.dtype == dev.C_DTYPE
+
+    test_data_unitaries = [
+        (
+            qml.DiagonalQubitUnitary,
+            [0.70710677, -0.70710677],
+            [[1.0, 1.0], [1.0, -1.0], [1.0, 1.0j], [1.0, -1.0j], [1.0j, 1.0], [1.0j, -1.0]],
+            [0],
+            [
+                [0.70710677, -0.70710677],
+                [0.70710677, 0.70710677],
+                [0.70710677, -0.70710677j],
+                [0.70710677, 0.70710677j],
+                [0.70710677j, -0.70710677],
+                [0.70710677j, 0.70710677],
+            ],
+        ),
+        (
+            qml.DiagonalQubitUnitary,
+            [0.5, -0.5, 0.5, -0.5],
+            [
+                [1.0, 1.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0, -1.0],
+                [1.0, 1.0j, 1.0, 1.0],
+                [1.0, 1.0, 1.0, -1.0j],
+                [1.0j, 1.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0j, -1.0],
+            ],
+            [0, 1],
+            [
+                [0.5, -0.5, 0.5, -0.5],
+                [0.5, -0.5, 0.5, 0.5],
+                [0.5, -0.5j, 0.5, -0.5],
+                [0.5, -0.5, 0.5, 0.5j],
+                [0.5j, -0.5, 0.5, -0.5],
+                [0.5, -0.5, 0.5j, 0.5],
+            ],
+        ),
+        (
+            qml.QubitUnitary,
+            [0.70710677, -0.70710677],
+            [np.diag([1.0, 1.0]), np.diag([1.0, -1.0]), np.diag([1.0, 1.0j]), np.diag([1.0, -1.0j]), np.diag([1.0j, 1.0]), np.diag([1.0j, -1.0])],
+            [0],
+            [
+                [0.70710677, -0.70710677],
+                [0.70710677, 0.70710677],
+                [0.70710677, -0.70710677j],
+                [0.70710677, 0.70710677j],
+                [0.70710677j, -0.70710677],
+                [0.70710677j, 0.70710677],
+            ],
+        ),
+        (
+            qml.QubitUnitary,
+            [0.5, -0.5, 0.5, -0.5],
+            [
+                np.diag([1.0, 1.0, 1.0, 1.0]),
+                np.diag([1.0, 1.0, 1.0, -1.0]),
+                np.diag([1.0, 1.0j, 1.0, 1.0]),
+                np.diag([1.0, 1.0, 1.0, -1.0j]),
+                np.diag([1.0j, 1.0, 1.0, 1.0]),
+                np.diag([1.0, 1.0, 1.0j, -1.0]),
+            ],
+            [0, 1],
+            [
+                [0.5, -0.5, 0.5, -0.5],
+                [0.5, -0.5, 0.5, 0.5],
+                [0.5, -0.5j, 0.5, -0.5],
+                [0.5, -0.5, 0.5, 0.5j],
+                [0.5j, -0.5, 0.5, -0.5],
+                [0.5, -0.5, 0.5j, 0.5],
+            ],
+        ),
+    ]
+
+    @pytest.mark.parametrize(
+        "operation, state, param, wires, expected_output",
+        test_data_unitaries,
+    )
+    def test_apply_unitaries(
+        self, qubit_device, tol, operation, state, param, wires, expected_output
+    ):
+        """Tests that applying an operation yields the expected output state for single wire
+        operations that have parameters."""
+
+        dev = qubit_device(wires=len(wires))
+        dev._state = np.array(state).astype(dev.C_DTYPE)
+        dev.apply([operation(np.array(param), wires=wires)])
 
         assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
         assert dev._state.dtype == dev.C_DTYPE
