@@ -67,7 +67,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
     }
 
     template <size_t control> static constexpr auto maskInternalExternal() {
-        std::array<bool, packed_size> mask; 
+        std::array<bool, packed_size> mask;
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
                 mask[2 * k + 0] = true;

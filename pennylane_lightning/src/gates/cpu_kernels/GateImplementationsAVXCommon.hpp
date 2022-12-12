@@ -27,9 +27,10 @@
 #include "avx_common/AVX512Concept.hpp"
 #endif
 #include "avx_common/ApplyCNOT.hpp"
+#include "avx_common/ApplyCRY.hpp"
+#include "avx_common/ApplyCRZ.hpp"
 #include "avx_common/ApplyCY.hpp"
 #include "avx_common/ApplyCZ.hpp"
-#include "avx_common/ApplyCRY.hpp"
 #include "avx_common/ApplyControlledPhaseShift.hpp"
 #include "avx_common/ApplyGeneratorIsingXX.hpp"
 #include "avx_common/ApplyGeneratorIsingYY.hpp"
@@ -82,8 +83,8 @@ class GateImplementationsAVXCommon
         GateOperation::IsingXX,    GateOperation::IsingYY,
         GateOperation::IsingZZ,    GateOperation::CY,
         GateOperation::IsingXY,    GateOperation::ControlledPhaseShift,
-        GateOperation::CRY,
-        /* CRX, CRZ, CRot */
+        GateOperation::CRY,        GateOperation::CRZ,
+        /* CRX, CRot */
     };
 
     constexpr static std::array implemented_generators = {
@@ -483,17 +484,32 @@ class GateImplementationsAVXCommon
         gate_helper(arr, num_qubits, wires, inverse, angle);
     }
 
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void applyCRY(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                         const std::vector<size_t> &wires, bool inverse,
+                         ParamT angle) {
+        using ApplyCRYAVX =
+            AVXCommon::ApplyCRY<PrecisionT,
+                                Derived::packed_bytes / sizeof(PrecisionT)>;
+        static_assert(std::is_same_v<PrecisionT, float> ||
+                          std::is_same_v<PrecisionT, double>,
+                      "Only float and double are supported.");
+
+        assert(wires.size() == 2);
+
+        const AVXCommon::TwoQubitGateWithParamHelper<ApplyCRYAVX, ParamT>
+            gate_helper(&GateImplementationsLM::applyCRY<PrecisionT, ParamT>);
+
+        gate_helper(arr, num_qubits, wires, inverse, angle);
+    }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyCRY(std::complex<PrecisionT> *arr,
-                                          const size_t num_qubits,
-                                          const std::vector<size_t> &wires,
-                                          bool inverse,
-                                          ParamT angle) {
-        using ApplyCRYAVX =
-            AVXCommon::ApplyCRY<
-                PrecisionT, Derived::packed_bytes / sizeof(PrecisionT)>;
-        //static_assert(AVXCommon::AsymmetricTwoQubitGateWithParam<ApplyCRYAVX>);
+    static void applyCRZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                         const std::vector<size_t> &wires, bool inverse,
+                         ParamT angle) {
+        using ApplyCRZAVX =
+            AVXCommon::ApplyCRZ<PrecisionT,
+                                Derived::packed_bytes / sizeof(PrecisionT)>;
 
         static_assert(std::is_same_v<PrecisionT, float> ||
                           std::is_same_v<PrecisionT, double>,
@@ -501,10 +517,8 @@ class GateImplementationsAVXCommon
 
         assert(wires.size() == 2);
 
-        const AVXCommon::TwoQubitGateWithParamHelper<
-            ApplyCRYAVX, ParamT>
-            gate_helper(
-                &GateImplementationsLM::applyCRY<PrecisionT, ParamT>);
+        const AVXCommon::TwoQubitGateWithParamHelper<ApplyCRZAVX, ParamT>
+            gate_helper(&GateImplementationsLM::applyCRZ<PrecisionT, ParamT>);
 
         gate_helper(arr, num_qubits, wires, inverse, angle);
     }

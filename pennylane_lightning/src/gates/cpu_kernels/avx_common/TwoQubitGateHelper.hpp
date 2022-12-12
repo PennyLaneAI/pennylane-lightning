@@ -118,8 +118,8 @@ concept AsymmetricTwoQubitGateWithoutParam =
     HasExternalExternalWithoutParam<T>::value;
 
 template <class T>
-concept TwoQubitGateWithParam = SymmetricTwoQubitGateWithParam<T> ||
-    AsymmetricTwoQubitGateWithParam<T>;
+concept TwoQubitGateWithParam =
+    SymmetricTwoQubitGateWithParam<T> || AsymmetricTwoQubitGateWithParam<T>;
 
 template <class T>
 concept TwoQubitGateWithoutParam = SymmetricTwoQubitGateWithoutParam<T> ||
@@ -148,9 +148,8 @@ template <SymmetricTwoQubitGateWithParam AVXImpl, size_t control,
           typename ParamT, size_t... target>
 constexpr auto InternalInternalFunctions_IterTargets(
     [[maybe_unused]] std::index_sequence<target...> dummy) {
-    return std::array{
-        &AVXImpl::template applyInternalInternal<std::min(control, target),
-                                                 std::max(control, target), ParamT>...};
+    return std::array{&AVXImpl::template applyInternalInternal<
+        std::min(control, target), std::max(control, target), ParamT>...};
 }
 
 template <AsymmetricTwoQubitGateWithParam AVXImpl, size_t control,
@@ -166,8 +165,8 @@ constexpr auto InternalInternalFunctions_Iter(
     [[maybe_unused]] std::index_sequence<control...> dummy) {
     constexpr size_t internal_wires =
         Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
-    return Util::tuple_to_array(
-        std::tuple{InternalInternalFunctions_IterTargets<AVXImpl, control, ParamT>(
+    return Util::tuple_to_array(std::tuple{
+        InternalInternalFunctions_IterTargets<AVXImpl, control, ParamT>(
             std::make_index_sequence<internal_wires>())...});
 }
 
@@ -212,11 +211,12 @@ constexpr auto ExternalInternalFunctions() -> decltype(auto) {
     return ExternalInternalFunctions_Iter<AVXImpl>(
         std::make_index_sequence<internal_wires>());
 }
-template <AsymmetricTwoQubitGateWithParam AVXImpl, typename ParamT, size_t... targets>
+template <AsymmetricTwoQubitGateWithParam AVXImpl, typename ParamT,
+          size_t... targets>
 constexpr auto ExternalInternalFunctions_Iter(
     [[maybe_unused]] std::index_sequence<targets...> dummy) -> decltype(auto) {
-    return Util::tuple_to_array(
-        std::tuple{&AVXImpl::template applyExternalInternal<targets, ParamT>...});
+    return Util::tuple_to_array(std::tuple{
+        &AVXImpl::template applyExternalInternal<targets, ParamT>...});
 }
 
 template <AsymmetricTwoQubitGateWithParam AVXImpl, typename ParamT>
@@ -226,7 +226,6 @@ constexpr auto ExternalInternalFunctions() -> decltype(auto) {
     return ExternalInternalFunctions_Iter<AVXImpl, ParamT>(
         std::make_index_sequence<internal_wires>());
 }
-
 
 template <TwoQubitGateWithoutParam AVXImpl, size_t... controls>
 constexpr auto InternalExternalFunctions_Iter(
@@ -245,7 +244,8 @@ constexpr auto InternalExternalFunctions() -> decltype(auto) {
 template <TwoQubitGateWithParam AVXImpl, typename ParamT, size_t... controls>
 constexpr auto InternalExternalFunctions_Iter(
     [[maybe_unused]] std::index_sequence<controls...> dummy) -> decltype(auto) {
-    return std::array{&AVXImpl::template applyInternalExternal<controls, ParamT>...};
+    return std::array{
+        &AVXImpl::template applyInternalExternal<controls, ParamT>...};
 }
 
 template <TwoQubitGateWithParam AVXImpl, typename ParamT>
@@ -425,8 +425,8 @@ class TwoQubitGateWithParamHelper<AVXImpl, ParamT> {
 
     auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse,
-                    ParamT angle) const -> ReturnType
-        requires SymmetricTwoQubitGateWithParam<AVXImpl> {
+                    ParamT angle) const
+        -> ReturnType requires SymmetricTwoQubitGateWithParam<AVXImpl> {
         assert(wires.size() == 2);
 
         constexpr static size_t internal_wires =
@@ -462,8 +462,8 @@ class TwoQubitGateWithParamHelper<AVXImpl, ParamT> {
 
     auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse,
-                    ParamT angle) const -> ReturnType
-        requires AsymmetricTwoQubitGateWithParam<AVXImpl> {
+                    ParamT angle) const
+        -> ReturnType requires AsymmetricTwoQubitGateWithParam<AVXImpl> {
         assert(wires.size() == 2);
 
         constexpr static size_t internal_wires =
@@ -490,14 +490,13 @@ class TwoQubitGateWithParamHelper<AVXImpl, ParamT> {
         }
 
         if (control < internal_wires) {
-            return (*internal_external_functions[control])(arr, num_qubits,
-                                                           target, inverse, angle);
+            return (*internal_external_functions[control])(
+                arr, num_qubits, target, inverse, angle);
         }
 
         if (target < internal_wires) {
-            return (*external_internal_functions[target])(arr, num_qubits,
-                                                          control, inverse,
-                                                          angle);
+            return (*external_internal_functions[target])(
+                arr, num_qubits, control, inverse, angle);
         }
 
         return AVXImpl::applyExternalExternal(arr, num_qubits, control, target,
