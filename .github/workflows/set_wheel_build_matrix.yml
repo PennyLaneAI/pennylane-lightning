@@ -1,0 +1,62 @@
+name: Set wheel build matrix
+
+env:
+  PYTHON3_MIN_VERSION: "7"
+  PYTHON3_MAX_VERSION: "11"
+
+on:
+  workflow_call:
+    inputs:
+      event_name:
+        required: true
+        type: string
+    outputs:
+      python_version:
+        description: "Python versions."
+        value: ${{ jobs.set-builder-matrix.outputs.python_version }}
+      exec_model:
+        description: "The execution model for Kokkos."
+        value: ${{ jobs.set-builder-matrix.outputs.exec_model }}
+      kokkos_version:
+        description: "Kokkos version"
+        value: ${{ jobs.set-builder-matrix.outputs.kokkos_version }}
+
+jobs:
+  set-builder-matrix:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.10.0
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
+
+      - name: Python version
+        id: pyver
+        run: |
+          if [[ ${{ inputs.event_name }} == 'pull_request' ]]; then
+            echo "::set-output name=python_version::$(python3 scripts/gen_pyver_matrix.py \
+              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }})"
+          else
+            echo "::set-output name=python_version::$(python3 scripts/gen_pyver_matrix.py \
+              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
+              --range)"
+          fi
+
+      - name: Kokkos execution strategy
+        id: exec_model
+        run: echo "::set-output name=exec_model::[\"SERIAL\"]" # We may also adopt [OPENMP, THREADS] in later iterations
+
+      - name: Kokkos version
+        id: kokkos_version
+        run: echo "::set-output name=kokkos_version::[\"3.7.00\"]"
+
+    outputs:
+      python_version: ${{ steps.pyver.outputs.python_version }}
+      exec_model: ${{ steps.exec_model.outputs.exec_model }}
+      kokkos_version: ${{ steps.kokkos_version.outputs.kokkos_version }}

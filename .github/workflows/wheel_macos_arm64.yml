@@ -1,7 +1,7 @@
 name: Wheel::MacOS::ARM
 
 # **What it does**: Builds python wheels for MacOS (11) architecture ARM 64 and store it as artifacts.
-#                   Python versions: 3.8, 3.9, 3.10.
+#                   Python versions: 3.8, 3.9, 3.10, 3.11.
 # **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
@@ -16,7 +16,7 @@ on:
 env:
   ARCHS: 'arm64'
   PYTHON3_MIN_VERSION: "8"
-  PYTHON3_MAX_VERSION: "10"
+  PYTHON3_MAX_VERSION: "11"
 
 jobs:
   mac-set-matrix-arm:
@@ -29,24 +29,25 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - uses: actions/checkout@v2
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
 
       - name: Python version
         id: pyver
         run: |
           if [[ ${{ github.event_name }} == 'pull_request' ]]; then
-            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
+            echo "::set-output name=python_version::$(python3 scripts/gen_pyver_matrix.py \
               --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
               --max-version=3.${{ env.PYTHON3_MAX_VERSION }})"
           else
-            echo "::set-output name=matrix::$(python3 .github/workflows/gen_pyver_matrix.py \
+            echo "::set-output name=python_version::$(python3 scripts/gen_pyver_matrix.py \
               --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
               --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
               --range)"
           fi
 
     outputs:
-      matrix: ${{ steps.pyver.outputs.matrix }}
+      python_version: ${{ steps.pyver.outputs.python_version }}
 
   mac-wheels-arm64:
     needs: [mac-set-matrix-arm]
@@ -55,9 +56,9 @@ jobs:
       matrix:
         os: [macos-11]
         arch: [arm64]
-        cibw_build: ${{fromJson(needs.mac-set-matrix-arm.outputs.matrix)}}
+        cibw_build: ${{fromJson(needs.mac-set-matrix-arm.outputs.python_version)}}
 
-    name: macos-latest::arm64 (Python ${{ fromJson('{ "cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10" }')[matrix.cibw_build] }})
+    name: macos-latest::arm64 (Python ${{ fromJson('{ "cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -66,15 +67,16 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - uses: actions/checkout@v2
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         name: Install Python
         with:
           python-version: '3.8'
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.8.1
+        run: python -m pip install cibuildwheel~=2.11.0
 
       - name: Build wheels
         env:
@@ -86,7 +88,7 @@ jobs:
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            pip install pybind11 ninja cmake
+            pip install pybind11 ninja cmake~=3.24.0
 
           # Testing of built wheels
           CIBW_TEST_REQUIRES: numpy~=1.21 scipy pytest pytest-cov pytest-mock flaky

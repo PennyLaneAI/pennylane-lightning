@@ -355,7 +355,7 @@ class TestAdjointJacobian:
 
             qml.Rot(1.3, -2.3, 0.5, wires=[0])
             qml.RZ(-0.5, wires=0)
-            qml.RY(0.5, wires=1).inv()
+            qml.adjoint(qml.RY(0.5, wires=1), lazy=False)
             qml.CNOT(wires=[0, 1])
 
             qml.expval(obs(wires=0))
@@ -399,7 +399,7 @@ class TestAdjointJacobian:
 
             qml.Rot(1.3, -2.3, 0.5, wires=[0])
             qml.RZ(-0.5, wires=0)
-            qml.RY(0.5, wires=1).inv()
+            qml.adjoint(qml.RY(0.5, wires=1), lazy=False)
             qml.CNOT(wires=[0, 1])
 
             qml.expval(
@@ -819,60 +819,22 @@ class TestAdjointJacobianQNode:
         assert np.allclose(grad_adjoint, grad_fd, atol=tol)
 
 
-@pytest.mark.parametrize(
-    "r_dtype,c_dtype", [[np.float32, np.complex64], [np.float64, np.complex128]]
-)
-def test_qchem_expvalcost_correct(r_dtype, c_dtype):
-    """EvpvalCost with qchem Hamiltonian work corectly"""
-    from pennylane import qchem
-
-    symbols = ["Li", "H"]
-    geometry = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 2.969280527])
-    H, qubits = qchem.molecular_hamiltonian(
-        symbols, geometry, active_electrons=2, active_orbitals=5
-    )
-    active_electrons = 2
-    hf_state = qchem.hf_state(active_electrons, qubits)
-
-    def circuit_1(params, wires):
-        qml.BasisState(hf_state, wires=wires)
-        qml.RX(params[0], wires=0)
-        qml.RY(params[0], wires=1)
-        qml.RZ(params[0], wires=2)
-        qml.Hadamard(wires=1)
-
-    diff_method = "adjoint"
-    dev_lig = qml.device("lightning.qubit", wires=qubits, c_dtype=c_dtype)
-    cost_fn_lig = qml.ExpvalCost(circuit_1, H, dev_lig, optimize=False, diff_method=diff_method)
-    circuit_gradient_lig = qml.grad(cost_fn_lig, argnum=0)
-    params = np.array([0.123], requires_grad=True)
-    grads_lig = circuit_gradient_lig(params)
-
-    dev_def = qml.device("default.qubit", wires=qubits)
-    cost_fn_def = qml.ExpvalCost(circuit_1, H, dev_def, optimize=False, diff_method=diff_method)
-    circuit_gradient_def = qml.grad(cost_fn_def, argnum=0)
-    params = np.array([0.123], requires_grad=True)
-    grads_def = circuit_gradient_def(params)
-
-    assert np.allclose(grads_lig, grads_def)
-
-
 def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
     qml.QubitStateVector(unitary_group.rvs(2**4, random_state=0)[0], wires=wires)
     qml.RX(params[0], wires=wires[0])
     qml.RY(params[1], wires=wires[1])
-    qml.RX(params[2], wires=wires[2]).inv()
+    qml.adjoint(qml.RX(params[2], wires=wires[2]))
     qml.RZ(params[0], wires=wires[3])
     qml.CRX(params[3], wires=[wires[3], wires[0]])
     qml.PhaseShift(params[4], wires=wires[2])
     qml.CRY(params[5], wires=[wires[2], wires[1]])
-    qml.CRZ(params[5], wires=[wires[0], wires[3]]).inv()
-    qml.PhaseShift(params[6], wires=wires[0]).inv()
+    qml.adjoint(qml.CRZ(params[5], wires=[wires[0], wires[3]]))
+    qml.adjoint(qml.PhaseShift(params[6], wires=wires[0]))
     qml.Rot(params[6], params[7], params[8], wires=wires[0])
-    # #     qml.Rot(params[8], params[8], params[9], wires=wires[1]).inv()
+    qml.adjoint(qml.Rot(params[8], params[8], params[9], wires=wires[1]))
     qml.MultiRZ(params[11], wires=[wires[0], wires[1]])
-    # #     qml.PauliRot(params[12], "XXYZ", wires=[wires[0], wires[1], wires[2], wires[3]])
+    qml.PauliRot(params[12], "XXYZ", wires=[wires[0], wires[1], wires[2], wires[3]])
     qml.CPhase(params[12], wires=[wires[3], wires[2]])
     qml.IsingXX(params[13], wires=[wires[1], wires[0]])
     qml.IsingXY(params[14], wires=[wires[3], wires[2]])
@@ -881,7 +843,7 @@ def circuit_ansatz(params, wires):
     qml.U1(params[15], wires=wires[0])
     qml.U2(params[16], params[17], wires=wires[0])
     qml.U3(params[18], params[19], params[20], wires=wires[1])
-    # #     qml.CRot(params[21], params[22], params[23], wires=[wires[1], wires[2]]).inv()  # expected tofail
+    qml.adjoint(qml.CRot(params[21], params[22], params[23], wires=[wires[1], wires[2]]))
     qml.SingleExcitation(params[24], wires=[wires[2], wires[0]])
     qml.DoubleExcitation(params[25], wires=[wires[2], wires[0], wires[1], wires[3]])
     qml.SingleExcitationPlus(params[26], wires=[wires[0], wires[2]])
@@ -893,8 +855,8 @@ def circuit_ansatz(params, wires):
 
 
 @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-def test__tape_qchem(tol):
-    """The circit Ansatz with a QChem Hamiltonian produces correct results"""
+def test_tape_qchem(tol):
+    """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
 
     H, qubits = qml.qchem.molecular_hamiltonian(
         ["H", "H"], np.array([0.0, 0.1, 0.0, 0.0, -0.1, 0.0])
@@ -904,13 +866,13 @@ def test__tape_qchem(tol):
         circuit_ansatz(params, wires=range(4))
         return qml.expval(H)
 
-    params = np.arange(30) * 0.111
+    params = np.linspace(0, 29, 30) * 0.111
 
-    dev_lq = qml.device("lightning.qubit", wires=4)
-    dev_dq = qml.device("default.qubit", wires=4)
+    dev_lq = qml.device("lightning.qubit", wires=qubits)
+    dev_dq = qml.device("default.qubit", wires=qubits)
 
     circuit_lq = qml.QNode(circuit, dev_lq, diff_method="adjoint")
-    circuit_dq = qml.QNode(circuit, dev_lq, diff_method="parameter-shift")
+    circuit_dq = qml.QNode(circuit, dev_dq, diff_method="parameter-shift")
 
     assert np.allclose(qml.grad(circuit_lq)(params), qml.grad(circuit_dq)(params), tol)
 

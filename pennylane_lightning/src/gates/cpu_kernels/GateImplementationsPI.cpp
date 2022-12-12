@@ -60,42 +60,26 @@ void GateImplementationsPI::applyDoubleExcitationMinus(
 
     for (const size_t &externalIndex : externalIndices) {
         std::complex<PrecisionT> *shiftedState = arr + externalIndex;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         const std::complex<PrecisionT> v3 = shiftedState[indices[i0]];
-        // NOLINTNEXTLINE(readability-magic-numbers)
         const std::complex<PrecisionT> v12 = shiftedState[indices[i1]];
-        // NOLINTNEXTLINE(readability-magic-numbers)
+        // NOLINTBEGIN(readability-magic-numbers)
         shiftedState[indices[0]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[1]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[2]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[i0]] = c * v3 - s * v12;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[4]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[5]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[6]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[7]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[8]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[9]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[10]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[11]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[i1]] = s * v3 + c * v12;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[13]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[14]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[15]] *= e;
+        // NOLINTEND(readability-magic-numbers)
     }
 }
 
@@ -118,42 +102,26 @@ void GateImplementationsPI::applyDoubleExcitationPlus(
 
     for (const size_t &externalIndex : externalIndices) {
         std::complex<PrecisionT> *shiftedState = arr + externalIndex;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         const std::complex<PrecisionT> v3 = shiftedState[indices[i0]];
-        // NOLINTNEXTLINE(readability-magic-numbers)
         const std::complex<PrecisionT> v12 = shiftedState[indices[i1]];
-        // NOLINTNEXTLINE(readability-magic-numbers)
+        // NOLINTBEGIN(readability-magic-numbers)
         shiftedState[indices[0]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[1]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[2]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[i0]] = c * v3 - s * v12;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[4]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[5]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[6]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[7]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[8]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[9]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[10]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[11]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[i1]] = s * v3 + c * v12;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[13]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[14]] *= e;
-        // NOLINTNEXTLINE(readability-magic-numbers)
         shiftedState[indices[15]] *= e;
+        // NOLINTEND(readability-magic-numbers)
     }
 }
 
