@@ -39,7 +39,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
 
     template <size_t control, size_t target>
     static constexpr auto permutationInternalInternal() {
-        std::array<uint8_t, packed_size> perm;
+        std::array<uint8_t, packed_size> perm{};
 
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
@@ -55,7 +55,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
 
     template <size_t control, size_t target>
     static constexpr auto signsInternalInternal() {
-        std::array<PrecisionT, packed_size> signs;
+        std::array<PrecisionT, packed_size> signs{};
         // positions are after permutations
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {    // if control bit is 1
@@ -104,7 +104,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
 
     template <size_t control>
     static constexpr auto permuatationInternalExternal() {
-        std::array<uint8_t, packed_size> permutation;
+        std::array<uint8_t, packed_size> permutation{};
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
                 permutation[2 * k + 0] = 2 * k + 1;

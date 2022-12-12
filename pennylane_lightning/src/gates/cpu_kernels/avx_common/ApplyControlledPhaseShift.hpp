@@ -41,7 +41,7 @@ struct ApplyControlledPhaseShift {
     template <size_t rev_wire0, size_t rev_wire1>
     static constexpr auto permutationInternalInternal() {
         // Swap real and imaginary part of 11
-        std::array<uint8_t, packed_size> perm;
+        std::array<uint8_t, packed_size> perm{};
 
         for (size_t k = 0; k < (packed_size / 2); k++) {
             if ((((k >> rev_wire0) & 1U) & ((k >> rev_wire1) & 1U)) == 1) {
@@ -64,7 +64,7 @@ struct ApplyControlledPhaseShift {
         const auto isin = inverse ? -std::sin(angle) : std::sin(angle);
 
         const auto real_factor = [angle]() {
-            std::array<PrecisionT, packed_size> arr;
+            std::array<PrecisionT, packed_size> arr{};
 
             for (size_t k = 0; k < (packed_size / 2); k++) {
                 if ((((k >> rev_wire0) & 1U) & ((k >> rev_wire1) & 1U)) == 1) {
@@ -79,7 +79,7 @@ struct ApplyControlledPhaseShift {
             return set(arr);
         }();
         const auto imag_factor = [isin]() {
-            std::array<PrecisionT, packed_size> arr;
+            std::array<PrecisionT, packed_size> arr{};
 
             for (size_t k = 0; k < (packed_size / 2); k++) {
                 if ((((k >> rev_wire0) & 1U) & ((k >> rev_wire1) & 1U)) == 1) {
@@ -109,7 +109,7 @@ struct ApplyControlledPhaseShift {
 
     template <size_t min_rev_wire>
     constexpr static auto permutationInternalExternal() {
-        std::array<uint8_t, packed_size> perm;
+        std::array<uint8_t, packed_size> perm{};
 
         for (size_t k = 0; k < (packed_size / 2); k++) {
             if (((k >> min_rev_wire) & 1U) == 1) {
@@ -136,7 +136,7 @@ struct ApplyControlledPhaseShift {
 
         const auto isin = inverse ? -std::sin(angle) : std::sin(angle);
         const auto real_factor = [angle]() {
-            std::array<Precision, packed_size> arr;
+            std::array<Precision, packed_size> arr{};
 
             for (size_t k = 0; k < (packed_size / 2); k++) {
                 if (((k >> min_rev_wire) & 1U) == 1) {
@@ -153,7 +153,7 @@ struct ApplyControlledPhaseShift {
         }();
 
         const auto imag_factor = [isin]() {
-            std::array<Precision, packed_size> arr;
+            std::array<Precision, packed_size> arr{};
 
             for (size_t k = 0; k < (packed_size / 2); k++) {
                 if (((k >> min_rev_wire) & 1U) == 1) {

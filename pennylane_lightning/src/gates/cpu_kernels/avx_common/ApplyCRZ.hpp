@@ -39,7 +39,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
 
     template <size_t control>
     static constexpr auto applyInternalImagPermutation() {
-        std::array<uint8_t, packed_size> perm;
+        std::array<uint8_t, packed_size> perm{};
 
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
@@ -55,16 +55,16 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
 
     template <size_t control, size_t target, class ParamT>
     static auto applyInternalInternalRealFactor(ParamT angle) {
-        std::array<PrecisionT, packed_size> arr;
+        std::array<PrecisionT, packed_size> arr{};
 
         // positions are after permutations
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
-                arr[2 * k + 0] = std::cos(angle / 2.0);
-                arr[2 * k + 1] = std::cos(angle / 2.0);
+                arr[2 * k + 0] = std::cos(angle / 2);
+                arr[2 * k + 1] = std::cos(angle / 2);
             } else {
-                arr[2 * k + 0] = Precision{1.0};
-                arr[2 * k + 1] = Precision{1.0};
+                arr[2 * k + 0] = Precision{1};
+                arr[2 * k + 1] = Precision{1};
             }
         }
         return set<Precision, packed_size>(arr);
@@ -72,17 +72,17 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
 
     template <size_t control, size_t target, class ParamT>
     static auto applyInternalInternalImagFactor(ParamT angle) {
-        std::array<PrecisionT, packed_size> arr;
+        std::array<PrecisionT, packed_size> arr{};
 
         // positions are after permutations
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {    // if control bit is 1
                 if ((k >> target) & 1U) { // if target bit is 1
-                    arr[2 * k + 0] = -std::sin(angle / 2.0);
-                    arr[2 * k + 1] = std::sin(angle / 2.0);
+                    arr[2 * k + 0] = -std::sin(angle / 2);
+                    arr[2 * k + 1] = std::sin(angle / 2);
                 } else { // if target bit is 0
-                    arr[2 * k + 0] = std::sin(angle / 2.0);
-                    arr[2 * k + 1] = -std::sin(angle / 2.0);
+                    arr[2 * k + 0] = std::sin(angle / 2);
+                    arr[2 * k + 1] = -std::sin(angle / 2);
                 }
             } else {
                 arr[2 * k + 0] = Precision{0.0};
@@ -117,13 +117,13 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
 
     template <size_t control, typename ParamT>
     static auto applyInternalExternalRealFactor(ParamT angle) {
-        std::array<Precision, packed_size> arr;
+        std::array<Precision, packed_size> arr{};
 
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
                 // if control is 1
-                arr[2 * k + 0] = std::cos(angle / 2.0);
-                arr[2 * k + 1] = std::cos(angle / 2.0);
+                arr[2 * k + 0] = std::cos(angle / 2);
+                arr[2 * k + 1] = std::cos(angle / 2);
             } else {
                 arr[2 * k + 0] = 1.0;
                 arr[2 * k + 1] = 1.0;
@@ -134,13 +134,13 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
 
     template <size_t control, typename ParamT>
     static auto applyInternalExternalImagFactor(ParamT angle) {
-        std::array<Precision, packed_size> arr;
+        std::array<Precision, packed_size> arr{};
 
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
                 // if control is 1
-                arr[2 * k + 0] = std::sin(angle / 2.0);
-                arr[2 * k + 1] = -std::sin(angle / 2.0);
+                arr[2 * k + 0] = std::sin(angle / 2);
+                arr[2 * k + 1] = -std::sin(angle / 2);
             } else {
                 arr[2 * k + 0] = 0.0;
                 arr[2 * k + 1] = 0.0;
@@ -194,21 +194,21 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
 
     template <size_t target, typename ParamT>
     static auto applyExternalInternalRealFactor(ParamT angle) {
-        std::array<Precision, packed_size> arr;
-        arr.fill(std::cos(angle / 2.0));
+        std::array<Precision, packed_size> arr{};
+        arr.fill(std::cos(angle / 2));
         return set<Precision, packed_size>(arr);
     }
 
     template <size_t target, typename ParamT>
     static auto applyExternalInternalImagFactor(ParamT angle) {
-        std::array<Precision, packed_size> arr;
+        std::array<Precision, packed_size> arr{};
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> target) & 1U) { // target bit is 1
-                arr[2 * k + 0] = -std::sin(angle / 2.0);
-                arr[2 * k + 1] = std::sin(angle / 2.0);
+                arr[2 * k + 0] = -std::sin(angle / 2);
+                arr[2 * k + 1] = std::sin(angle / 2);
             } else {
-                arr[2 * k + 0] = std::sin(angle / 2.0);
-                arr[2 * k + 1] = -std::sin(angle / 2.0);
+                arr[2 * k + 0] = std::sin(angle / 2);
+                arr[2 * k + 1] = -std::sin(angle / 2);
             }
         }
         return set<Precision, packed_size>(arr);

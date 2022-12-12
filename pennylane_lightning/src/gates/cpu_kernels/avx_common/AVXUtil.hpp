@@ -270,14 +270,18 @@ template <typename PrecisionT, size_t packed_size> struct Set;
 template <> struct Set<float, 8> {
     constexpr static auto create(const std::array<float, 8> &arr)
         -> AVXIntrinsicType<float, 8> {
+        // NOLINTBEGIN(readability-magic-numbers)
         return __m256{arr[0], arr[1], arr[2], arr[3],
-                      arr[4], arr[5], arr[6], arr[7]};
+                      arr[4], arr[5], arr[6], arr[7]}; 
+        // NOLINTEND(readability-magic-numbers)
     }
 };
 template <> struct Set<double, 4> {
     constexpr static auto create(const std::array<double, 4> &arr)
         -> AVXIntrinsicType<double, 4> {
+        // NOLINTBEGIN(readability-magic-numbers)
         return __m256d{arr[0], arr[1], arr[2], arr[3]};
+        // NOLINTEND(readability-magic-numbers)
     }
 };
 #endif
@@ -285,16 +289,20 @@ template <> struct Set<double, 4> {
 template <> struct Set<float, 16> {
     constexpr static auto create(const std::array<float, 16> &arr)
         -> AVXIntrinsicType<float, 16> {
+        // NOLINTBEGIN(readability-magic-numbers)
         return __m512{arr[0],  arr[1],  arr[2],  arr[3], arr[4],  arr[5],
                       arr[6],  arr[7],  arr[8],  arr[9], arr[10], arr[11],
                       arr[12], arr[13], arr[14], arr[15]};
+        // NOLINTEND(readability-magic-numbers)
     }
 };
 template <> struct Set<double, 8> {
     constexpr static auto create(const std::array<double, 8> &arr)
         -> AVXIntrinsicType<double, 8> {
+        // NOLINTBEGIN(readability-magic-numbers)
         return __m512d{arr[0], arr[1], arr[2], arr[3],
                        arr[4], arr[5], arr[6], arr[7]};
+        // NOLINTEND(readability-magic-numbers)
     }
 };
 #endif
