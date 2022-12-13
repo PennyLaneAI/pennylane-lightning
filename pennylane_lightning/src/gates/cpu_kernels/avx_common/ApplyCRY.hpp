@@ -119,7 +119,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
     }
 
     template <size_t control, typename ParamT>
-    static auto applyInternalExternalDiag(ParamT angle) {
+    static auto applyInternalExternalDiagFactor(ParamT angle) {
         std::array<Precision, packed_size> arr{};
 
         for (size_t k = 0; k < packed_size / 2; k++) {
@@ -136,7 +136,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
     }
 
     template <size_t control, typename ParamT>
-    static auto applyInternalExternalOffDiag(ParamT angle) {
+    static auto applyInternalExternalOffDiagFactor(ParamT angle) {
         std::array<Precision, packed_size> arr{};
 
         for (size_t k = 0; k < packed_size / 2; k++) {
@@ -174,9 +174,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
             angle *= -1.0;
         }
 
-        const auto diag_factor = applyInternalExternalDiag<control>(angle);
+        const auto diag_factor = applyInternalExternalDiagFactor<control>(angle);
         const auto off_diag_factor =
-            applyInternalExternalOffDiag<control>(angle);
+            applyInternalExternalOffDiagFactor<control>(angle);
 
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
@@ -191,13 +191,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
             PrecisionAVXConcept::store(arr + i1,
                                        diag_factor * v1 + off_diag_factor * v0);
         }
-    }
-
-    template <size_t target, typename ParamT>
-    static auto applyExternalInternalDiagFactor(ParamT angle) {
-        std::array<Precision, packed_size> arr{};
-        arr.fill(std::cos(angle / 2));
-        return set<Precision, packed_size>(arr);
     }
 
     template <size_t target, typename ParamT>
@@ -233,7 +226,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
         if (inverse) {
             angle *= -1.0;
         }
-        const auto diag_factor = applyExternalInternalDiagFactor<target>(angle);
+        const auto diag_factor = set1<PrecisionT, packed_size>(std::cos(angle/2));
         const auto offdiag_factor =
             applyExternalInternalOffDiagFactor<target>(angle);
 

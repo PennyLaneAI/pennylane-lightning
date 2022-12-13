@@ -13,7 +13,7 @@
 // limitations under the License.
 /**
  * @file
- * Defines CRZ gate
+ * Defines CRX gate
  */
 #pragma once
 #include "AVXUtil.hpp"
@@ -30,21 +30,21 @@
 #include <utility>
 
 namespace Pennylane::Gates::AVXCommon {
-template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
+template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
     using Precision = PrecisionT;
     using PrecisionAVXConcept = AVXConceptType<PrecisionT, packed_size>;
 
     constexpr static auto packed_size_ = packed_size;
     constexpr static bool symmetric = false;
 
-    template <size_t control>
-    static constexpr auto applyInternalImagPermutation() {
-        std::array<uint8_t, packed_size> perm{};
+    template <size_t control, size_t target>
+    static constexpr auto applyInternalInternalPermutation() {
+        std::array<uint8_t, packed_size> perm;
 
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
-                perm[2 * k + 0] = 2 * k + 1;
-                perm[2 * k + 1] = 2 * k + 0;
+                perm[2 * k + 0] = 2 * (k ^ (1U << target)) + 1;
+                perm[2 * k + 1] = 2 * (k ^ (1U << target)) + 0;
             } else {
                 perm[2 * k + 0] = 2 * k + 0;
                 perm[2 * k + 1] = 2 * k + 1;
@@ -54,36 +54,13 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
     }
 
     template <size_t control, size_t target, class ParamT>
-    static auto applyInternalInternalRealFactor(ParamT angle) {
-        std::array<PrecisionT, packed_size> arr{};
-
+    static auto applyInternalInternalOffDiagFactor(ParamT angle) {
+        std::array<PrecisionT, packed_size> arr;
         // positions are after permutations
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
-                arr[2 * k + 0] = std::cos(angle / 2);
-                arr[2 * k + 1] = std::cos(angle / 2);
-            } else {
-                arr[2 * k + 0] = Precision{1};
-                arr[2 * k + 1] = Precision{1};
-            }
-        }
-        return set<Precision, packed_size>(arr);
-    }
-
-    template <size_t control, size_t target, class ParamT>
-    static auto applyInternalInternalImagFactor(ParamT angle) {
-        std::array<PrecisionT, packed_size> arr{};
-
-        // positions are after permutations
-        for (size_t k = 0; k < packed_size / 2; k++) {
-            if ((k >> control) & 1U) {    // if control bit is 1
-                if ((k >> target) & 1U) { // if target bit is 1
-                    arr[2 * k + 0] = -std::sin(angle / 2);
-                    arr[2 * k + 1] = std::sin(angle / 2);
-                } else { // if target bit is 0
-                    arr[2 * k + 0] = std::sin(angle / 2);
-                    arr[2 * k + 1] = -std::sin(angle / 2);
-                }
+                arr[2 * k + 0] = std::sin(angle / 2);
+                arr[2 * k + 1] = -std::sin(angle / 2);
             } else {
                 arr[2 * k + 0] = Precision{0.0};
                 arr[2 * k + 1] = Precision{0.0};
@@ -93,37 +70,56 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
     }
 
     template <size_t control, size_t target, class ParamT>
+    static auto applyInternalInternalDiagFactor(ParamT angle) {
+        std::array<PrecisionT, packed_size> arr;
+
+        // positions are after permutations
+        for (size_t k = 0; k < packed_size / 2; k++) {
+            if ((k >> control) & 1U) { // if control bit is 1
+                arr[2 * k + 0] = std::cos(angle / 2.0);
+                arr[2 * k + 1] = std::cos(angle / 2.0);
+            } else {
+                arr[2 * k + 0] = Precision{1.0};
+                arr[2 * k + 1] = Precision{1.0};
+            }
+        }
+        return set<Precision, packed_size>(arr);
+    }
+
+    template <size_t control, size_t target, class ParamT>
     static void applyInternalInternal(std::complex<PrecisionT> *arr,
                                       size_t num_qubits, bool inverse,
                                       ParamT angle) {
-        constexpr static auto perm = applyInternalImagPermutation<control>();
+        constexpr static auto perm =
+            applyInternalInternalPermutation<control, target>();
 
         if (inverse) {
             angle *= -1.0;
         }
 
-        const auto real_factor =
-            applyInternalInternalRealFactor<control, target>(angle);
-        const auto imag_factor =
-            applyInternalInternalImagFactor<control, target>(angle);
+        const auto off_diag_factor =
+            applyInternalInternalOffDiagFactor<control, target>(angle);
+        const auto diag_factor =
+            applyInternalInternalDiagFactor<control, target>(angle);
 
         for (size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
-            PrecisionAVXConcept::store(
-                arr + n,
-                real_factor * v + imag_factor * Permutation::permute<perm>(v));
+            const auto diag_w = diag_factor * v;
+            const auto off_diag_w =
+                off_diag_factor * Permutation::permute<perm>(v);
+            PrecisionAVXConcept::store(arr + n, diag_w + off_diag_w);
         }
     }
 
     template <size_t control, typename ParamT>
-    static auto applyInternalExternalRealFactor(ParamT angle) {
-        std::array<Precision, packed_size> arr{};
+    static auto applyInternalExternalDiagFactor(ParamT angle) {
+        std::array<Precision, packed_size> arr;
 
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
                 // if control is 1
-                arr[2 * k + 0] = std::cos(angle / 2);
-                arr[2 * k + 1] = std::cos(angle / 2);
+                arr[2 * k + 0] = std::cos(angle / 2.0);
+                arr[2 * k + 1] = std::cos(angle / 2.0);
             } else {
                 arr[2 * k + 0] = 1.0;
                 arr[2 * k + 1] = 1.0;
@@ -133,14 +129,14 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
     }
 
     template <size_t control, typename ParamT>
-    static auto applyInternalExternalImagFactor(ParamT angle) {
-        std::array<Precision, packed_size> arr{};
+    static auto applyInternalExternalOffDiagFactor(ParamT angle) {
+        std::array<Precision, packed_size> arr;
 
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
                 // if control is 1
-                arr[2 * k + 0] = std::sin(angle / 2);
-                arr[2 * k + 1] = -std::sin(angle / 2);
+                arr[2 * k + 0] = std::sin(angle / 2.0);
+                arr[2 * k + 1] = -std::sin(angle / 2.0);
             } else {
                 arr[2 * k + 0] = 0.0;
                 arr[2 * k + 1] = 0.0;
@@ -159,7 +155,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
                                       size_t num_qubits, size_t target,
                                       bool inverse, ParamT angle) {
         // control qubit is internal but target qubit is external
-        constexpr static auto perm = applyInternalImagPermutation<control>();
+        // const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
+        using namespace Permutation;
 
         const size_t target_rev_wire_shift =
             (static_cast<size_t>(1U) << target);
@@ -170,11 +167,11 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
             angle *= -1.0;
         }
 
-        const auto real_factor =
-            applyInternalExternalRealFactor<control>(angle);
-        const auto imag_factor_p =
-            applyInternalExternalImagFactor<control>(angle);
-        const auto imag_factor_m = -imag_factor_p;
+        const auto diag_factor = applyInternalExternalDiagFactor<control>(angle);
+        const auto off_diag_factor =
+            applyInternalExternalOffDiagFactor<control>(angle);
+
+        constexpr static auto perm = compilePermutation<PrecisionT>(swapRealImag(identity<packed_size>()));
 
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
@@ -184,55 +181,46 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
             const auto v0 = PrecisionAVXConcept::load(arr + i0); // target is 0
             const auto v1 = PrecisionAVXConcept::load(arr + i1); // target is 1
 
-            PrecisionAVXConcept::store(
-                arr + i0, real_factor * v0 +
-                              imag_factor_p * Permutation::permute<perm>(v0));
-            PrecisionAVXConcept::store(
-                arr + i1, real_factor * v1 +
-                              imag_factor_m * Permutation::permute<perm>(v1));
+            PrecisionAVXConcept::store(arr + i0,
+                                       diag_factor * v0 + off_diag_factor * permute<perm>(v1));
+            PrecisionAVXConcept::store(arr + i1,
+                                       diag_factor * v1 + off_diag_factor * permute<perm>(v0));
         }
     }
 
-    template <size_t target, typename ParamT>
-    static auto applyExternalInternalRealFactor(ParamT angle) {
-        std::array<Precision, packed_size> arr{};
-        arr.fill(std::cos(angle / 2));
-        return set<Precision, packed_size>(arr);
-    }
+    template <size_t target>
+    constexpr static auto applyExternalInternalOffDiagPerm() {
+        std::array<uint8_t, packed_size> arr{};
 
-    template <size_t target, typename ParamT>
-    static auto applyExternalInternalImagFactor(ParamT angle) {
-        std::array<Precision, packed_size> arr{};
+        uint8_t s = (uint8_t{1U} << target);
+
         for (size_t k = 0; k < packed_size / 2; k++) {
-            if ((k >> target) & 1U) { // target bit is 1
-                arr[2 * k + 0] = -std::sin(angle / 2);
-                arr[2 * k + 1] = std::sin(angle / 2);
-            } else {
-                arr[2 * k + 0] = std::sin(angle / 2);
-                arr[2 * k + 1] = -std::sin(angle / 2);
-            }
+            arr[2 * k + 0] = 2 * (k ^ s) + 1;
+            arr[2 * k + 1] = 2 * (k ^ s) + 0;
         }
-        return set<Precision, packed_size>(arr);
+        return Permutation::compilePermutation<PrecisionT>(arr);
     }
+
 
     template <size_t target, typename ParamT>
     static void applyExternalInternal(std::complex<PrecisionT> *arr,
                                       size_t num_qubits, size_t control,
                                       bool inverse, ParamT angle) {
+        // control qubit is external but target qubit is external
+        // const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
         using namespace Permutation;
 
         const size_t control_shift = (static_cast<size_t>(1U) << control);
         const size_t max_wire_parity = fillTrailingOnes(control);
         const size_t max_wire_parity_inv = fillLeadingOnes(control + 1);
 
-        constexpr static auto perm = compilePermutation<Precision>(
-            swapRealImag(identity<packed_size>()));
+        constexpr static auto perm = applyExternalInternalOffDiagPerm<target>();
 
         if (inverse) {
             angle *= -1.0;
         }
-        const auto real_factor = applyExternalInternalRealFactor<target>(angle);
-        const auto imag_factor = applyExternalInternalImagFactor<target>(angle);
+        const auto diag_factor = set1<PrecisionT, packed_size>(std::cos(angle/2));
+        const auto offdiag_factor = imagFactor<PrecisionT, packed_size>(-std::sin(angle/2));
 
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
@@ -243,7 +231,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
                 PrecisionAVXConcept::load(arr + i1); // control bit is 1
             const auto w1 = Permutation::permute<perm>(v1);
             PrecisionAVXConcept::store(arr + i1,
-                                       real_factor * v1 + imag_factor * w1);
+                                       diag_factor * v1 + offdiag_factor * w1);
         }
     }
 
@@ -264,18 +252,16 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
         const size_t parity_middle =
             fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
 
-        constexpr static auto perm = compilePermutation<Precision>(
-            swapRealImag(identity<packed_size>()));
-
         if (inverse) {
             angle *= -1.0;
         }
 
-        const auto real_factor =
+        const auto cos_factor =
             set1<PrecisionT, packed_size>(std::cos(angle / 2));
-        const auto imag_factor_p =
+        const auto sin_factor =
             imagFactor<PrecisionT, packed_size>(-std::sin(angle / 2));
-        const auto imag_factor_m = -imag_factor_p;
+
+        constexpr static auto perm = compilePermutation<PrecisionT>(swapRealImag(identity<packed_size>()));
 
         for (size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
             const size_t i00 = ((k << 2U) & parity_high) |
@@ -287,11 +273,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
             const auto v11 = PrecisionAVXConcept::load(arr + i11); // 11
 
             PrecisionAVXConcept::store(arr + i10,
-                                       real_factor * v10 +
-                                           imag_factor_p * permute<perm>(v10));
+                                    cos_factor * v10 + sin_factor * permute<perm>(v11));
             PrecisionAVXConcept::store(arr + i11,
-                                       real_factor * v11 +
-                                           imag_factor_m * permute<perm>(v11));
+                                    cos_factor * v11 + sin_factor * permute<perm>(v10));
         }
     }
 };
