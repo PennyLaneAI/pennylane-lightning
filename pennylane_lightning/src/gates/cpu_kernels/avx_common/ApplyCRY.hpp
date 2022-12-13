@@ -174,7 +174,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
             angle *= -1.0;
         }
 
-        const auto diag_factor = applyInternalExternalDiagFactor<control>(angle);
+        const auto diag_factor =
+            applyInternalExternalDiagFactor<control>(angle);
         const auto off_diag_factor =
             applyInternalExternalOffDiagFactor<control>(angle);
 
@@ -226,7 +227,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
         if (inverse) {
             angle *= -1.0;
         }
-        const auto diag_factor = set1<PrecisionT, packed_size>(std::cos(angle/2));
+        const auto diag_factor =
+            set1<PrecisionT, packed_size>(std::cos(angle / 2));
         const auto offdiag_factor =
             applyExternalInternalOffDiagFactor<target>(angle);
 

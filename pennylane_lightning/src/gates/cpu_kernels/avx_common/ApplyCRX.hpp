@@ -167,11 +167,13 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
             angle *= -1.0;
         }
 
-        const auto diag_factor = applyInternalExternalDiagFactor<control>(angle);
+        const auto diag_factor =
+            applyInternalExternalDiagFactor<control>(angle);
         const auto off_diag_factor =
             applyInternalExternalOffDiagFactor<control>(angle);
 
-        constexpr static auto perm = compilePermutation<PrecisionT>(swapRealImag(identity<packed_size>()));
+        constexpr static auto perm = compilePermutation<PrecisionT>(
+            swapRealImag(identity<packed_size>()));
 
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
@@ -182,9 +184,11 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
             const auto v1 = PrecisionAVXConcept::load(arr + i1); // target is 1
 
             PrecisionAVXConcept::store(arr + i0,
-                                       diag_factor * v0 + off_diag_factor * permute<perm>(v1));
+                                       diag_factor * v0 +
+                                           off_diag_factor * permute<perm>(v1));
             PrecisionAVXConcept::store(arr + i1,
-                                       diag_factor * v1 + off_diag_factor * permute<perm>(v0));
+                                       diag_factor * v1 +
+                                           off_diag_factor * permute<perm>(v0));
         }
     }
 
@@ -200,7 +204,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
         }
         return Permutation::compilePermutation<PrecisionT>(arr);
     }
-
 
     template <size_t target, typename ParamT>
     static void applyExternalInternal(std::complex<PrecisionT> *arr,
@@ -219,8 +222,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
         if (inverse) {
             angle *= -1.0;
         }
-        const auto diag_factor = set1<PrecisionT, packed_size>(std::cos(angle/2));
-        const auto offdiag_factor = imagFactor<PrecisionT, packed_size>(-std::sin(angle/2));
+        const auto diag_factor =
+            set1<PrecisionT, packed_size>(std::cos(angle / 2));
+        const auto offdiag_factor =
+            imagFactor<PrecisionT, packed_size>(-std::sin(angle / 2));
 
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
@@ -261,7 +266,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
         const auto sin_factor =
             imagFactor<PrecisionT, packed_size>(-std::sin(angle / 2));
 
-        constexpr static auto perm = compilePermutation<PrecisionT>(swapRealImag(identity<packed_size>()));
+        constexpr static auto perm = compilePermutation<PrecisionT>(
+            swapRealImag(identity<packed_size>()));
 
         for (size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
             const size_t i00 = ((k << 2U) & parity_high) |
@@ -272,10 +278,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
             const auto v10 = PrecisionAVXConcept::load(arr + i10); // 10
             const auto v11 = PrecisionAVXConcept::load(arr + i11); // 11
 
-            PrecisionAVXConcept::store(arr + i10,
-                                    cos_factor * v10 + sin_factor * permute<perm>(v11));
-            PrecisionAVXConcept::store(arr + i11,
-                                    cos_factor * v11 + sin_factor * permute<perm>(v10));
+            PrecisionAVXConcept::store(
+                arr + i10, cos_factor * v10 + sin_factor * permute<perm>(v11));
+            PrecisionAVXConcept::store(
+                arr + i11, cos_factor * v11 + sin_factor * permute<perm>(v10));
         }
     }
 };

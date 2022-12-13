@@ -55,7 +55,8 @@ struct ApplyGeneratorIsingYY {
             const auto v = PrecisionAVXConcept::load(arr + n);
             PrecisionAVXConcept::store(arr + n, signs * permute<perm>(v));
         }
-        return -static_cast<PrecisionT>(0.5); // NOLINT(readability-magic-numbers)
+        return -static_cast<PrecisionT>(
+            0.5); // NOLINT(readability-magic-numbers)
     }
 
     template <size_t min_rev_wire>
@@ -87,7 +88,8 @@ struct ApplyGeneratorIsingYY {
             PrecisionAVXConcept::store(arr + i0, permute<perm>(v1) * sign0);
             PrecisionAVXConcept::store(arr + i1, permute<perm>(v0) * sign1);
         }
-        return -static_cast<PrecisionT>(0.5); // NOLINT(readability-magic-numbers)
+        return -static_cast<PrecisionT>(
+            0.5); // NOLINT(readability-magic-numbers)
     }
 
     static auto applyExternalExternal(std::complex<PrecisionT> *arr,
@@ -126,7 +128,8 @@ struct ApplyGeneratorIsingYY {
             PrecisionAVXConcept::store(arr + i10, v01);
             PrecisionAVXConcept::store(arr + i11, -v00);
         }
-        return -static_cast<PrecisionT>(0.5); // NOLINT(readability-magic-numbers)
+        return -static_cast<PrecisionT>(
+            0.5); // NOLINT(readability-magic-numbers)
     }
 };
 } // namespace Pennylane::Gates::AVXCommon
