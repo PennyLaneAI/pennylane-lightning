@@ -39,7 +39,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
 
     template <size_t control, size_t target>
     static constexpr auto applyInternalInternalPermutation() {
-        std::array<uint8_t, packed_size> perm;
+        std::array<uint8_t, packed_size> perm{};
 
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
@@ -55,7 +55,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
 
     template <size_t control, size_t target, class ParamT>
     static auto applyInternalInternalOffDiagFactor(ParamT angle) {
-        std::array<PrecisionT, packed_size> arr;
+        std::array<PrecisionT, packed_size> arr{};
+
         // positions are after permutations
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
@@ -71,13 +72,13 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
 
     template <size_t control, size_t target, class ParamT>
     static auto applyInternalInternalDiagFactor(ParamT angle) {
-        std::array<PrecisionT, packed_size> arr;
+        std::array<PrecisionT, packed_size> arr{};
 
         // positions are after permutations
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
-                arr[2 * k + 0] = std::cos(angle / 2.0);
-                arr[2 * k + 1] = std::cos(angle / 2.0);
+                arr[2 * k + 0] = std::cos(angle / 2);
+                arr[2 * k + 1] = std::cos(angle / 2);
             } else {
                 arr[2 * k + 0] = Precision{1.0};
                 arr[2 * k + 1] = Precision{1.0};
@@ -113,13 +114,13 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
 
     template <size_t control, typename ParamT>
     static auto applyInternalExternalDiagFactor(ParamT angle) {
-        std::array<Precision, packed_size> arr;
+        std::array<Precision, packed_size> arr{};
 
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
                 // if control is 1
-                arr[2 * k + 0] = std::cos(angle / 2.0);
-                arr[2 * k + 1] = std::cos(angle / 2.0);
+                arr[2 * k + 0] = std::cos(angle / 2);
+                arr[2 * k + 1] = std::cos(angle / 2);
             } else {
                 arr[2 * k + 0] = 1.0;
                 arr[2 * k + 1] = 1.0;
@@ -130,13 +131,13 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
 
     template <size_t control, typename ParamT>
     static auto applyInternalExternalOffDiagFactor(ParamT angle) {
-        std::array<Precision, packed_size> arr;
+        std::array<Precision, packed_size> arr{};
 
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
                 // if control is 1
-                arr[2 * k + 0] = std::sin(angle / 2.0);
-                arr[2 * k + 1] = -std::sin(angle / 2.0);
+                arr[2 * k + 0] = std::sin(angle / 2);
+                arr[2 * k + 1] = -std::sin(angle / 2);
             } else {
                 arr[2 * k + 0] = 0.0;
                 arr[2 * k + 1] = 0.0;
