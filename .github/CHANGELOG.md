@@ -1,7 +1,5 @@
 # Release 0.28.0
 
-### New features since last release
-
 ### Breaking changes
 
 * Deprecate support for Python 3.7.
@@ -14,8 +12,6 @@
 
 * Improve the stopping condition method.
 [(#386)](https://github.com/PennyLaneAI/pennylane-lightning/pull/386)
-
-### Documentation
 
 ### Bug fixes
 
