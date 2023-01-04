@@ -111,9 +111,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
 
     template <size_t min_rev_wire>
     static constexpr auto permutationInternalExternal() {
-        std::array<uint8_t, packed_size> perm = {
-            0,
-        };
+        std::array<uint8_t, packed_size> perm{};
 
         size_t m = 1U << min_rev_wire;
 
@@ -154,9 +152,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
         }();
 
         const auto real_factor1 = [angle]() {
-            std::array<PrecisionT, packed_size> arr = {
-                0.0,
-            };
+            std::array<PrecisionT, packed_size> arr{};
             for (size_t k = 0; k < packed_size / 2; k++) {
                 if (((k >> min_rev_wire) & 1U) == 0) {
                     arr[2 * k + 0] = std::cos(angle / 2);
@@ -170,9 +166,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
         }();
 
         const auto imag_factor0 = [isin]() {
-            std::array<PrecisionT, packed_size> arr = {
-                0.0,
-            };
+            std::array<PrecisionT, packed_size> arr{};
             for (size_t k = 0; k < packed_size / 2; k++) {
                 if (((k >> min_rev_wire) & 1U) == 0) {
                     arr[2 * k + 0] = 0.0;
@@ -186,9 +180,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
         }();
 
         const auto imag_factor1 = [isin]() {
-            std::array<PrecisionT, packed_size> arr = {
-                0.0,
-            };
+            std::array<PrecisionT, packed_size> arr = {};
             for (size_t k = 0; k < packed_size / 2; k++) {
                 if (((k >> min_rev_wire) & 1U) == 0) {
                     arr[2 * k + 0] = -isin;
@@ -200,7 +192,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
             }
             return set(arr);
         }();
-        ;
 
         constexpr static auto perm =
             permutationInternalExternal<min_rev_wire>();
