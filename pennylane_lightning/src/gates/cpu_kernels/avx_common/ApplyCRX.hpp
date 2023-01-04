@@ -37,6 +37,22 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
     constexpr static auto packed_size_ = packed_size;
     constexpr static bool symmetric = false;
 
+    /**
+     * We implement CRX gate by dividing the matrix to diagonal and off-diagonal
+     * parts. The matrix is written as [1   0   0               0            ]
+     * [0   1   0               0            ]
+     * [0   0   cos(phi/2)      -i sin(phi/2)]
+     * [0   0   -i sin(phi/2)   cos(phi/2)   ]
+     *
+     * We thus
+     * (1) compute [v[0], v[1], cos(phi/2) v[2], cos(phi/2) v[3]]
+     * (2) compute [0, 0, -i sin(phi/2) v[3], -i sin(phi/2) v[2])]
+     * and sum them.
+     *
+     * Functions related to (1) contains "Diag" in the name whereas those
+     * related to (2) contains "OffDiang".
+     * */
+
     template <size_t control, size_t target>
     static constexpr auto applyInternalInternalPermutation() {
         std::array<uint8_t, packed_size> perm{};

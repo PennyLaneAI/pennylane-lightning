@@ -37,6 +37,21 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
     constexpr static auto packed_size_ = packed_size;
     constexpr static bool symmetric = false;
 
+    /**
+     * We implement CRX gate by dividing the matrix to diagonal and off-diagonal
+     * parts. The matrix is written as [1   0   0            0           ] [0 1
+     * 0            0           ] [0   0   cos(phi/2)    -sin(phi/2)] [0   0
+     * sin(phi/2)   cos(phi/2)  ]
+     *
+     * We thus
+     * (1) compute [v[0], v[1], cos(phi/2) v[2], cos(phi/2) v[3]]
+     * (2) compute [0, 0, -sin(phi/2) v[3], sin(phi/2) v[2])]
+     * and sum them.
+     *
+     * Functions related to (1) contains "Diag" in the name whereas those
+     * related to (2) contains "OffDiang".
+     * */
+
     template <size_t control, size_t target>
     static constexpr auto applyInternalInternalPermutation() {
         std::array<uint8_t, packed_size> perm{};
@@ -176,8 +191,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
 
         const auto diag_factor =
             applyInternalExternalDiagFactor<control>(angle);
-        const auto off_diag_factor =
+        const auto off_diag_factor_p =
             applyInternalExternalOffDiagFactor<control>(angle);
+        const auto off_diag_factor_m = -off_diag_factor_p;
 
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
@@ -187,10 +203,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
             const auto v0 = PrecisionAVXConcept::load(arr + i0); // target is 0
             const auto v1 = PrecisionAVXConcept::load(arr + i1); // target is 1
 
-            PrecisionAVXConcept::store(arr + i0,
-                                       diag_factor * v0 - off_diag_factor * v1);
-            PrecisionAVXConcept::store(arr + i1,
-                                       diag_factor * v1 + off_diag_factor * v0);
+            PrecisionAVXConcept::store(arr + i0, diag_factor * v0 +
+                                                     off_diag_factor_m * v1);
+            PrecisionAVXConcept::store(arr + i1, diag_factor * v1 +
+                                                     off_diag_factor_p * v0);
         }
     }
 
@@ -266,10 +282,11 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
             angle *= -1.0;
         }
 
-        const auto cos_factor =
+        const auto cos_factor_p =
             set1<PrecisionT, packed_size>(std::cos(angle / 2));
-        const auto sin_factor =
+        const auto sin_factor_p =
             set1<PrecisionT, packed_size>(std::sin(angle / 2));
+        const auto sin_factor_m = -sin_factor_p;
 
         for (size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
             const size_t i00 = ((k << 2U) & parity_high) |
@@ -281,9 +298,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
             const auto v11 = PrecisionAVXConcept::load(arr + i11); // 11
 
             PrecisionAVXConcept::store(arr + i10,
-                                       cos_factor * v10 - sin_factor * v11);
+                                       cos_factor_p * v10 + sin_factor_m * v11);
             PrecisionAVXConcept::store(arr + i11,
-                                       sin_factor * v10 + cos_factor * v11);
+                                       sin_factor_p * v10 + cos_factor_p * v11);
         }
     }
 };

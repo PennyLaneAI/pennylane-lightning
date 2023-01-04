@@ -163,7 +163,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
                                       size_t num_qubits, size_t target,
                                       [[maybe_unused]] bool inverse) {
         // control qubit is internal but target qubit is external
-        // const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
         using namespace Permutation;
 
         constexpr static auto perm = permuatationInternalExternal<control>();
@@ -215,7 +214,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
                                       size_t num_qubits, size_t control,
                                       [[maybe_unused]] bool inverse) {
         // control qubit is external but target qubit is external
-        // const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
         using namespace Permutation;
 
         const size_t control_shift = (static_cast<size_t>(1U) << control);
@@ -255,7 +253,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
 
         constexpr static auto perm = compilePermutation<Precision>(
             swapRealImag(identity<packed_size>()));
-        constexpr static auto factor = imagFactor<PrecisionT, packed_size>();
+        constexpr static auto factor_p = imagFactor<PrecisionT, packed_size>();
+        constexpr static auto factor_m = -factor_p;
 
         for (size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
             const size_t i00 = ((k << 2U) & parity_high) |
@@ -266,8 +265,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
             const auto v10 = PrecisionAVXConcept::load(arr + i10); // 10
             const auto v11 = PrecisionAVXConcept::load(arr + i11); // 11
 
-            PrecisionAVXConcept::store(arr + i10, -factor * permute<perm>(v11));
-            PrecisionAVXConcept::store(arr + i11, factor * permute<perm>(v10));
+            PrecisionAVXConcept::store(arr + i10,
+                                       factor_m * permute<perm>(v11));
+            PrecisionAVXConcept::store(arr + i11,
+                                       factor_p * permute<perm>(v10));
         }
     }
 };
