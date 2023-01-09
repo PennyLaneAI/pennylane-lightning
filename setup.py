@@ -54,6 +54,7 @@ class CMakeBuild(build_ext):
         configure_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
+            f"-DPython_EXECUTABLE={sys.executable}",
             "-DENABLE_WARNINGS=OFF",  # Ignore warnings
         ]
 
