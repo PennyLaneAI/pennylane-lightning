@@ -38,12 +38,14 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
     constexpr static bool symmetric = false;
 
     /**
-     * We implement CRX gate by dividing the matrix to diagonal and off-diagonal
-     * parts. The matrix is written as [1   0   0            0           ] [0 1
-     * 0            0           ] [0   0   cos(phi/2)    -sin(phi/2)] [0   0
-     * sin(phi/2)   cos(phi/2)  ]
+     * We implement CRY gate by dividing the matrix into diagonal and off-diagonal
+     * parts. The matrix is written as:
+     * [1   0   0            0           ] 
+     * [0   1   0            0           ] 
+     * [0   0   cos(phi/2)   -sin(phi/2)] 
+     * [0   0   sin(phi/2)   cos(phi/2)  ]
      *
-     * We thus
+     * Applying the matrix to a vector v, we thus
      * (1) compute [v[0], v[1], cos(phi/2) v[2], cos(phi/2) v[3]]
      * (2) compute [0, 0, -sin(phi/2) v[3], sin(phi/2) v[2])]
      * and sum them.
