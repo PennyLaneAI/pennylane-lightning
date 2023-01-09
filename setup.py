@@ -51,7 +51,7 @@ class CMakeBuild(build_ext):
 
         import site; 
 
-        ninja_path = str(shutil.which("ninja"), path=os.path.join(site.getsitepackages()[0], "ninja", "data"))
+        ninja_path = str(shutil.which("ninja", path=os.path.join(site.getsitepackages()[0], "ninja", "data")))
 
         # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
         configure_args = [
