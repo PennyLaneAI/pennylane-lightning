@@ -48,18 +48,13 @@ class CMakeBuild(build_ext):
         extdir = str(Path(self.get_ext_fullpath(ext.name)).parent.absolute())
 
         debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
-
-        import site; 
-
-        ninja_path = str(shutil.which("ninja", path=os.path.join(site.getsitepackages()[0], "ninja", "data", "bin")))
+        ninja_path = str(shutil.which("ninja"))
 
         # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
         configure_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPython_EXECUTABLE={sys.executable}",
             "-DENABLE_WARNINGS=OFF",  # Ignore warnings
-            "-GNinja",
-            f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
         ]
 
         if platform.system() == "Windows":
