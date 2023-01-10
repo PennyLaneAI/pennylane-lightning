@@ -135,7 +135,7 @@ jobs:
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\Kokkos" -Recurse -Force
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel~=2.11.0
+        run: python -m pip install cibuildwheel~=2.11.0 wheel
 
       - name: Build wheels
         env:
@@ -166,7 +166,8 @@ jobs:
 
       - name: Patch wheels
         run: |
-          $wheels = Get-ChildItem "./wheelhouse/" -Filter *.whl 
+          cd wheelhouse
+          $wheels = Get-ChildItem "./" -Filter *.whl
           foreach ($i in $wheels){
             python -m wheel unpack $i.Name
             $name = $i.Name
@@ -179,6 +180,7 @@ jobs:
             }
             Remove-Item $dirName -Recurse
           }
+          cd ..  
 
       - uses: actions-ecosystem/action-regex-match@v2
         id: rc_build
