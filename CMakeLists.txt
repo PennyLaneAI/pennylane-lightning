@@ -101,6 +101,16 @@ if(ENABLE_PYTHON)
     set_target_properties(lightning_qubit_ops PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
     target_compile_definitions(lightning_qubit_ops PRIVATE VERSION_INFO=${VERSION_STRING})
+
+    IF (WIN32)
+        add_custom_command(TARGET lightning_qubit_ops
+            # Run post build
+            POST_BUILD 
+            COMMAND pwsh -Command \"Get-ChildItem -Path . -Filter lightning_qubit_ops.* -Recurse  | ForEach-Object{$_} | Move-Item -Destination { \$_.Directory.Parent.FullName } \"
+            COMMENT "Moving files due to MSBuild output binary output directory choice"
+            VERBATIM
+        )
+    endif()
 endif()
 
 install(TARGETS pennylane_lightning
