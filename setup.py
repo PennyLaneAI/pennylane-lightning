@@ -108,6 +108,7 @@ class CMakeBuild(build_ext):
 
         subprocess.check_call(["cmake", str(ext.sourcedir)] + configure_args, cwd=self.build_temp)
         subprocess.check_call(["cmake", "--build", ".", "--verbose"] + build_args, cwd=self.build_temp)
+        subprocess.check_call(["cmake", "--install", ".", "--verbose"], cwd=self.build_temp)
 
 with open(os.path.join("pennylane_lightning", "_version.py")) as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")

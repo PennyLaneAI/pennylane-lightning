@@ -101,9 +101,14 @@ if(ENABLE_PYTHON)
     set_target_properties(lightning_qubit_ops PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
     target_compile_definitions(lightning_qubit_ops PRIVATE VERSION_INFO=${VERSION_STRING})
-    message(NOTICE "$CMAKE_BINARY_DIR")
-    message(NOTICE "${CMAKE_BINARY_DIR}")
-    message(NOTICE "${BINARY_DIR}")
+    
+    install(TARGETS target
+        CONFIGURATIONS Debug
+        RUNTIME DESTINATION ./bin)
+    install(TARGETS target
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION ./bin)
+
 endif()
 
 install(TARGETS pennylane_lightning
