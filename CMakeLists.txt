@@ -102,13 +102,12 @@ if(ENABLE_PYTHON)
 
     target_compile_definitions(lightning_qubit_ops PRIVATE VERSION_INFO=${VERSION_STRING})
     
-    install(TARGETS target
+    install(TARGETS lightning_qubit_ops
         CONFIGURATIONS Debug
-        RUNTIME DESTINATION ./bin)
-    install(TARGETS target
+        RUNTIME DESTINATION ./)
+    install(TARGETS lightning_qubit_ops
         CONFIGURATIONS Release
-        RUNTIME DESTINATION ./bin)
-
+        RUNTIME DESTINATION ./)
 endif()
 
 install(TARGETS pennylane_lightning
