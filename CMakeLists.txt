@@ -102,7 +102,7 @@ if(ENABLE_PYTHON)
 
     target_compile_definitions(lightning_qubit_ops PRIVATE VERSION_INFO=${VERSION_STRING})
 
-    IF (WIN32)
+    IF (FALSE)
         add_custom_command(TARGET lightning_qubit_ops
             # Run post build
             POST_BUILD 

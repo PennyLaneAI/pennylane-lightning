@@ -126,8 +126,8 @@ info = {
     "url": "https://github.com/XanaduAI/pennylane-lightning",
     "license": "Apache License 2.0",
     "packages": find_packages(where="."),
-    "package_data": {"pennylane_lightning": [os.path.join("src", "*"), os.path.join("src", "**", "*")]},
     "include_package_data": True,
+    "package_data": {"pennylane_lightning": [os.path.join("src", "*"), os.path.join("src", "**", "*"), os.path.join("RelWithDebInfo", "*")]},
     "entry_points": {
         "pennylane.plugins": [
             "lightning.qubit = pennylane_lightning:LightningQubit",
