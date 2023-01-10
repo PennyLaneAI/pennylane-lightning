@@ -106,8 +106,8 @@ if(ENABLE_PYTHON)
         add_custom_command(TARGET lightning_qubit_ops
             # Run post build
             POST_BUILD 
-            COMMAND pwsh -Command \"Get-ChildItem -Path . -Filter lightning_qubit_ops.* -Recurse  | ForEach-Object{$_} | Move-Item -Destination { \$_.Directory.Parent.FullName } \"
-            COMMENT "Moving files due to MSBuild output binary output directory choice"
+            COMMAND pwsh -File ${CMAKE_SOURCE_DIR}/bin/win_fix_build_dirs.ps1
+            COMMENT "Moving files due to MSBuild output binary output directory internal choices"
             VERBATIM
         )
     endif()
