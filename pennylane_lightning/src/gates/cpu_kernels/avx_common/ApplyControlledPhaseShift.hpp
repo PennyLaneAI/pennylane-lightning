@@ -38,6 +38,9 @@ struct ApplyControlledPhaseShift {
     constexpr static size_t packed_size_ = packed_size;
     constexpr static bool symmetric = true;
 
+    /**
+     * @brief Permutation applying imaginary `i` to |11>
+     */
     template <size_t rev_wire0, size_t rev_wire1>
     static constexpr auto permutationInternalInternal() {
         // Swap real and imaginary part of 11
@@ -107,6 +110,9 @@ struct ApplyControlledPhaseShift {
         }
     }
 
+    /**
+     * @brief Permutation applying product `i` when the target bit is 1
+     */
     template <size_t min_rev_wire>
     constexpr static auto permutationInternalExternal() {
         std::array<uint8_t, packed_size> perm{};

@@ -54,6 +54,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
      * related to (2) contains "OffDiang".
      * */
 
+    /**
+     * @brief Permutation for (2). Flip the target bit if control bit is 1.
+     */
     template <size_t control, size_t target>
     static constexpr auto applyInternalInternalPermutation() {
         std::array<uint8_t, packed_size> perm{};
@@ -70,6 +73,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
         return Permutation::compilePermutation<PrecisionT>(perm);
     }
 
+    /**
+     * @brief Factor for (2).
+     * [0, 0, 0, 0, -sin(phi/2), -sin(phi/2), sin(phi/2), sin(phi/2)]
+     */
     template <size_t control, size_t target, class ParamT>
     static auto applyInternalInternalOffDiagFactor(ParamT angle) {
         std::array<PrecisionT, packed_size> arr{};
@@ -135,6 +142,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
         }
     }
 
+    /**
+     * @brief Factor for (1).
+     * [1, 1, 1, 1, cos(phi/2), cos(phi/2), cos(phi/2), cos(phi/2)]
+     */
     template <size_t control, typename ParamT>
     static auto applyInternalExternalDiagFactor(ParamT angle) {
         std::array<Precision, packed_size> arr{};
@@ -152,6 +163,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
         return set(arr);
     }
 
+    /**
+     * @brief Factor for (2) when the target bit is 1
+     */
     template <size_t control, typename ParamT>
     static auto applyInternalExternalOffDiagFactor(ParamT angle) {
         std::array<Precision, packed_size> arr{};
@@ -212,6 +226,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
         }
     }
 
+    /**
+     * @brief Factor for (2) when the control bit is 1
+     */
     template <size_t target, typename ParamT>
     static auto applyExternalInternalOffDiagFactor(ParamT angle) {
         std::array<Precision, packed_size> arr{};
@@ -232,7 +249,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
                                       size_t num_qubits, size_t control,
                                       bool inverse, ParamT angle) {
         // control qubit is external but target qubit is external
-        // const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
         using namespace Permutation;
 
         const size_t control_shift = (static_cast<size_t>(1U) << control);
@@ -284,11 +300,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
             angle *= -1.0;
         }
 
-        const auto cos_factor_p =
+        const auto cos_factor =
             set1<PrecisionT, packed_size>(std::cos(angle / 2));
-        const auto sin_factor_p =
+        const auto sin_factor =
             set1<PrecisionT, packed_size>(std::sin(angle / 2));
-        const auto sin_factor_m = -sin_factor_p;
 
         for (size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
             const size_t i00 = ((k << 2U) & parity_high) |
@@ -300,9 +315,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
             const auto v11 = PrecisionAVXConcept::load(arr + i11); // 11
 
             PrecisionAVXConcept::store(arr + i10,
-                                       cos_factor_p * v10 + sin_factor_m * v11);
+                                       cos_factor * v10 - sin_factor * v11);
             PrecisionAVXConcept::store(arr + i11,
-                                       sin_factor_p * v10 + cos_factor_p * v11);
+                                       sin_factor * v10 + cos_factor * v11);
         }
     }
 };

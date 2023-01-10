@@ -54,6 +54,11 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
      * related to (2) contains "OffDiang".
      * */
 
+    /**
+     * @brief Permutation for (2).
+     * After applying this permutation, the array will be 
+     * [Re(v[0]), Im(v[0]), Re(v[1]), Im(v[1]), Im(v[3]), Re(v[3]), Im(v[2]), Re(v[2])]
+     */
     template <size_t control, size_t target>
     static constexpr auto applyInternalInternalPermutation() {
         std::array<uint8_t, packed_size> perm{};
@@ -70,6 +75,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
         return Permutation::compilePermutation<PrecisionT>(perm);
     }
 
+    /**
+     * @brief Factor for (2).
+     * [0, 0, 0, 0, sin(phi/2), -sin(phi/2), sin(phi/2), -sin(phi/2)]
+     */
     template <size_t control, size_t target, class ParamT>
     static auto applyInternalInternalOffDiagFactor(ParamT angle) {
         std::array<PrecisionT, packed_size> arr{};
@@ -87,6 +96,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
         return set<Precision, packed_size>(arr);
     }
 
+    /**
+     * @brief Factor for (1)
+     * [1, 1, 1, 1, cos(phi/2), cos(phi/2), cos(phi/2), cos(phi/2)]
+     */
     template <size_t control, size_t target, class ParamT>
     static auto applyInternalInternalDiagFactor(ParamT angle) {
         std::array<PrecisionT, packed_size> arr{};
@@ -129,6 +142,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
         }
     }
 
+    /**
+     * @brief Factor for (1) when the target bit is 0/1.
+     */
     template <size_t control, typename ParamT>
     static auto applyInternalExternalDiagFactor(ParamT angle) {
         std::array<Precision, packed_size> arr{};
@@ -146,6 +162,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
         return set(arr);
     }
 
+    /**
+     * @brief Factor for (2) when the target bit is 0/1.
+     */
     template <size_t control, typename ParamT>
     static auto applyInternalExternalOffDiagFactor(ParamT angle) {
         std::array<Precision, packed_size> arr{};
@@ -209,6 +228,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
         }
     }
 
+    /**
+     * @brief Permutation that flips the target bit.
+     */
     template <size_t target>
     constexpr static auto applyExternalInternalOffDiagPerm() {
         std::array<uint8_t, packed_size> arr{};

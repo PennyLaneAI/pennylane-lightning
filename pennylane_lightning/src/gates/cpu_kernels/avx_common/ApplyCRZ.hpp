@@ -37,6 +37,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
     constexpr static auto packed_size_ = packed_size;
     constexpr static bool symmetric = false;
 
+    /**
+     * @brief Permutation for applying `i` when the control bit is 1
+     */
     template <size_t control>
     static constexpr auto applyInternalImagPermutation() {
         std::array<uint8_t, packed_size> perm{};
@@ -53,6 +56,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
         return Permutation::compilePermutation<PrecisionT>(perm);
     }
 
+    /**
+     * @brief Factor for real parts
+     * [1, 1, 1, 1, cos(phi/2), cos(phi/2), cos(phi/2), cos(phi/2)]
+     */
     template <size_t control, size_t target, class ParamT>
     static auto applyInternalInternalRealFactor(ParamT angle) {
         std::array<PrecisionT, packed_size> arr{};
@@ -70,6 +77,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
         return set<Precision, packed_size>(arr);
     }
 
+    /**
+     * @brief Factor for imaginary parts
+     * [0, 0, 0, 0, sin(phi/2), -sin(phi/2), -sin(phi/2), sin(phi/2)]
+     */
     template <size_t control, size_t target, class ParamT>
     static auto applyInternalInternalImagFactor(ParamT angle) {
         std::array<PrecisionT, packed_size> arr{};
@@ -115,6 +126,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
         }
     }
 
+    /**
+     * @brief Factor for real parts when the target bit is 1
+     */
     template <size_t control, typename ParamT>
     static auto applyInternalExternalRealFactor(ParamT angle) {
         std::array<Precision, packed_size> arr{};
@@ -172,9 +186,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
 
         const auto real_factor =
             applyInternalExternalRealFactor<control>(angle);
-        const auto imag_factor_p =
+        const auto imag_factor =
             applyInternalExternalImagFactor<control>(angle);
-        const auto imag_factor_m = -imag_factor_p;
 
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
@@ -186,10 +199,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
 
             PrecisionAVXConcept::store(
                 arr + i0, real_factor * v0 +
-                              imag_factor_p * Permutation::permute<perm>(v0));
+                              imag_factor * Permutation::permute<perm>(v0));
             PrecisionAVXConcept::store(
-                arr + i1, real_factor * v1 +
-                              imag_factor_m * Permutation::permute<perm>(v1));
+                arr + i1, real_factor * v1 -
+                              imag_factor * Permutation::permute<perm>(v1));
         }
     }
 

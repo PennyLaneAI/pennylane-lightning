@@ -113,6 +113,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
         }
     }
 
+    /**
+     * @brief Permutation that flip the target bit.
+     */
     template <size_t target>
     static constexpr auto permutationExternalInternal() {
         std::array<uint8_t, packed_size> perm{};
