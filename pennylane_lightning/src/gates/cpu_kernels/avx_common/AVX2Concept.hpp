@@ -109,6 +109,36 @@ template <typename T> struct AVX2Concept {
                           std::is_same_v<PrecisionT, double>);
         }
     }
+
+    /**
+     * @brief v0*v1 + v2
+     */
+    PL_FORCE_INLINE
+    static auto mul_add(IntrinsicType v0, IntrinsicType v1, IntrinsicType v2) {
+        if constexpr(std::is_same_v<PrecisionT, float>) {
+            return _mm256_fmadd_ps(v0, v1, v2);
+        } else if (std::is_same_v<PrecisionT, double>) {
+            return _mm256_fmadd_pd(v0, v1, v2);
+        } else {
+            static_assert(std::is_same_v<PrecisionT, float> ||
+                          std::is_same_v<PrecisionT, double>);
+        }
+    }
+
+    /**
+     * @brief -v0*v1 + v2
+     */
+    PL_FORCE_INLINE
+    static auto nmul_add(IntrinsicType v0, IntrinsicType v1, IntrinsicType v2) {
+        if constexpr(std::is_same_v<PrecisionT, float>) {
+            return _mm256_fnmadd_ps(v0, v1, v2);
+        } else if (std::is_same_v<PrecisionT, double>) {
+            return _mm256_fnmadd_pd(v0, v1, v2);
+        } else {
+            static_assert(std::is_same_v<PrecisionT, float> ||
+                          std::is_same_v<PrecisionT, double>);
+        }
+    }
 };
 template <> struct AVXConcept<float, 8> { using Type = AVX2Concept<float>; };
 template <> struct AVXConcept<double, 4> { using Type = AVX2Concept<double>; };

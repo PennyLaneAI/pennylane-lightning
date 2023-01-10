@@ -196,13 +196,12 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
 
             const auto v0 = PrecisionAVXConcept::load(arr + i0); // target is 0
             const auto v1 = PrecisionAVXConcept::load(arr + i1); // target is 1
+            
+            const auto v0_new = real_factor* v0;
+            const auto v1_new = real_factor * v1;
 
-            PrecisionAVXConcept::store(
-                arr + i0, real_factor * v0 +
-                              imag_factor * Permutation::permute<perm>(v0));
-            PrecisionAVXConcept::store(
-                arr + i1, real_factor * v1 -
-                              imag_factor * Permutation::permute<perm>(v1));
+            PrecisionAVXConcept::store(arr + i0, PrecisionAVXConcept::mul_add(imag_factor, Permutation::permute<perm>(v0), v0_new));
+            PrecisionAVXConcept::store(arr + i1, PrecisionAVXConcept::nmul_add(imag_factor, Permutation::permute<perm>(v1), v1_new));
         }
     }
 

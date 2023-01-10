@@ -348,5 +348,4 @@ constexpr __m512i setr512i(int64_t  e0, int64_t  e1, int64_t  e2, int64_t  e3,
 // LCOV_EXCL_STOP
 #endif
 // clang-format on
-
 } // namespace Pennylane::Gates::AVXCommon
