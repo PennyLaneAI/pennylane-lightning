@@ -164,6 +164,22 @@ jobs:
 
         run: python -m cibuildwheel --output-dir wheelhouse
 
+      - name: Patch wheels
+        run: |
+          $wheels = Get-ChildItem "./wheelhouse/" -Filter *.whl 
+          foreach ($i in $wheels){
+            python -m wheel unpack $i.Name
+            $name = $i.Name
+            $dirName = python -c "s = '$name'; print('-'.join(s.split('-')[0:2]))"
+            if (Test-Path -Path $dirName\pennylane_lightning\RelWithDebInfo) {
+              Move-Item -Path $dirName\pennylane_lightning\RelWithDebInfo\* -Destination $dirName\pennylane_lightning
+              Remove-Item $dirName\pennylane_lightning\RelWithDebInfo -Recurse
+              python -m wheel pack $dirName
+              echo "Patched $name"
+            }
+            Remove-Item $dirName -Recurse
+          }
+
       - uses: actions-ecosystem/action-regex-match@v2
         id: rc_build
         with:
