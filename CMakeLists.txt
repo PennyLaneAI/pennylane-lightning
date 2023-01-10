@@ -104,10 +104,13 @@ if(ENABLE_PYTHON)
     
     install(TARGETS lightning_qubit_ops
         CONFIGURATIONS Debug
-        RUNTIME DESTINATION ./)
+        LIBRARY DESTINATION ./)
+    install(TARGETS lightning_qubit_ops
+        CONFIGURATIONS RelWithDebInfo
+        LIBRARY DESTINATION ./)
     install(TARGETS lightning_qubit_ops
         CONFIGURATIONS Release
-        RUNTIME DESTINATION ./)
+        LIBRARY DESTINATION ./)
 endif()
 
 install(TARGETS pennylane_lightning
