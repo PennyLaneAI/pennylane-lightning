@@ -1,3 +1,18 @@
+# Release 0.28.1
+
+### Bug fixes
+
+* Fix Pybind11 module versioning and locations for Windows wheels.
+[(#400)](https://github.com/PennyLaneAI/pennylane-lightning/pull/400)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Lee J. O'Riordan
+
+---
+
 # Release 0.28.0
 
 ### Breaking changes
