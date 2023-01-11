@@ -1,3 +1,18 @@
+# Release 0.28.1
+
+### Bug fixes
+
+* Fix Pybind11 module versioning and locations for Windows wheels.
+[(#)]()
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Lee J. O'Riordan
+
+---
+
 # Release 0.28.0
 
 ### Breaking changes
