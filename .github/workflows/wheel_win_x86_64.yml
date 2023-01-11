@@ -154,6 +154,7 @@ jobs:
             pip install git+https://github.com/PennyLaneAI/pennylane.git@master
 
           CIBW_TEST_COMMAND: |
+            python -m pip install -e .
             pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
@@ -180,7 +181,7 @@ jobs:
             }
             Remove-Item $dirName -Recurse
           }
-          cd ..  
+          cd ..
 
       - uses: actions-ecosystem/action-regex-match@v2
         id: rc_build

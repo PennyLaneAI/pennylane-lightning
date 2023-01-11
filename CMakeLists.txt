@@ -101,16 +101,6 @@ if(ENABLE_PYTHON)
     set_target_properties(lightning_qubit_ops PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
     target_compile_definitions(lightning_qubit_ops PRIVATE VERSION_INFO=${VERSION_STRING})
-
-    IF (FALSE)
-        add_custom_command(TARGET lightning_qubit_ops
-            # Run post build
-            POST_BUILD 
-            COMMAND pwsh -File ${CMAKE_SOURCE_DIR}/bin/win_fix_build_dirs.ps1
-            COMMENT "Moving files due to MSBuild output binary output directory internal choices"
-            VERBATIM
-        )
-    endif()
 endif()
 
 install(TARGETS pennylane_lightning
