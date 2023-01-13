@@ -328,7 +328,7 @@ class TwoQubitGateWithoutParamHelper {
     auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse) const
         -> ReturnType requires SymmetricTwoQubitGateWithoutParam<AVXImpl> {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
 
         constexpr static size_t internal_wires =
             Util::log2PerfectPower(packed_size / 2);
@@ -365,7 +365,7 @@ class TwoQubitGateWithoutParamHelper {
     auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse) const
         -> ReturnType requires AsymmetricTwoQubitGateWithoutParam<AVXImpl> {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
 
         constexpr static size_t internal_wires =
             Util::log2PerfectPower(packed_size / 2);
@@ -427,7 +427,7 @@ class TwoQubitGateWithParamHelper<AVXImpl, ParamT> {
                     const std::vector<size_t> &wires, bool inverse,
                     ParamT angle) const
         -> ReturnType requires SymmetricTwoQubitGateWithParam<AVXImpl> {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
 
         constexpr static size_t internal_wires =
             Util::log2PerfectPower(packed_size / 2);
@@ -464,7 +464,7 @@ class TwoQubitGateWithParamHelper<AVXImpl, ParamT> {
                     const std::vector<size_t> &wires, bool inverse,
                     ParamT angle) const
         -> ReturnType requires AsymmetricTwoQubitGateWithParam<AVXImpl> {
-        assert(wires.size() == 2);
+        PL_ASSERT(wires.size() == 2);
 
         constexpr static size_t internal_wires =
             Util::log2PerfectPower(packed_size / 2);

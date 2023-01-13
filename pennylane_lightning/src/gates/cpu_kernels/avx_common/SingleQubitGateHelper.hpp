@@ -124,7 +124,7 @@ class SingleQubitGateWithoutParamHelper {
     auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse) const
         -> ReturnType {
-        assert(wires.size() == 1);
+        PL_ASSERT(wires.size() == 1);
 
         constexpr static size_t internal_wires =
             Util::log2PerfectPower(packed_size / 2);
@@ -166,7 +166,7 @@ class SingleQubitGateWithParamHelper {
     auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse,
                     ParamT angle) const -> ReturnType {
-        assert(wires.size() == 1);
+        PL_ASSERT(wires.size() == 1);
 
         constexpr static size_t internal_wires =
             Util::log2PerfectPower(packed_size / 2);

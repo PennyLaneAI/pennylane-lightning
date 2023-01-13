@@ -17,6 +17,7 @@
  */
 #pragma once
 #include "BitUtil.hpp"
+#include "Error.hpp"
 #include "Macros.hpp"
 #include "Util.hpp"
 
@@ -133,7 +134,7 @@ template <> constexpr auto internalParity<float, 8>(size_t rev_wire) -> __m256 {
 template <>
 constexpr auto internalParity<double, 4>([[maybe_unused]] size_t rev_wire)
     -> __m256d {
-    assert(rev_wire == 0);
+    PL_ASSERT(rev_wire == 0);
     // When Z is applied to the 0th qubit
     return __m256d{1.0, 1.0, -1.0, -1.0};
 }
