@@ -2,7 +2,7 @@
 
 Each gate operation is implemented in a class with a corresponding name. For example, SWAP operation is implemented in `ApplySwap` class defined in [ApplySwap.cpp](ApplySwap.cpp) file. 
 
-Depending on the wires the gate applies to, the gate operation is divided by two (for single=qubit operations), three (for symmetric two-qubit operators), and four (for non-symmetric two-qubit operators).
+Depending on the wires gates apply to, we use two (for single=qubit operations), three (for symmetric two-qubit operators), and four (for non-symmetric two-qubit operators) functions for each gate.
 For single-qubit operations, functions `applyInternal` corresponds to intra-register gate operations  and `applyExternal` corresponds to inter-register gate operations.
 For two-qubit operations, we have `applyInternalInternal` (both wires act internally), `applyInternalExternal` (control wire acts internally whereas target wire acts externally), `applyExternalInternal` (target wire acts internally whereas control wire acts externally), and `applyExternalExternal` (both wires act externally).
 
