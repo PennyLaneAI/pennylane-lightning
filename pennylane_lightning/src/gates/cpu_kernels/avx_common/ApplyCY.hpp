@@ -37,8 +37,12 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
     constexpr static auto packed_size_ = packed_size;
     constexpr static bool symmetric = false;
 
+    /**
+     * @brief Permutation for multiplying `i` and flip the target bit if control
+     * is 1
+     */
     template <size_t control, size_t target>
-    static constexpr auto permutationInternalInternal() {
+    static constexpr auto applyInternalInternalPermuation() {
         std::array<uint8_t, packed_size> perm{};
 
         for (size_t k = 0; k < packed_size / 2; k++) {
@@ -53,8 +57,11 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
         return Permutation::compilePermutation<PrecisionT>(perm);
     }
 
+    /**
+     * @brief Factor to applying `-i` and `i`
+     */
     template <size_t control, size_t target>
-    static constexpr auto signsInternalInternal() {
+    static constexpr auto applyInternalInternalFactor() {
         std::array<PrecisionT, packed_size> signs{};
         // positions are after permutations
         for (size_t k = 0; k < packed_size / 2; k++) {
@@ -79,8 +86,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
                                       size_t num_qubits,
                                       [[maybe_unused]] bool inverse) {
         constexpr static auto perm =
-            permutationInternalInternal<control, target>();
-        constexpr static auto factor = signsInternalInternal<control, target>();
+            applyInternalInternalPermuation<control, target>();
+        constexpr static auto factor =
+            applyInternalInternalFactor<control, target>();
 
         for (size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
@@ -89,10 +97,13 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
         }
     }
 
-    template <size_t control> static constexpr auto maskInternalExternal() {
-        std::array<bool, packed_size> mask = {
-            false,
-        };
+    /**
+     * @brief Mask for blending. Using this mask, blending v0 and v1 will output
+     * v0 if the control bit is 0 v1 otherwise.
+     */
+    template <size_t control>
+    static constexpr auto applyInternalExternalMask() {
+        std::array<bool, packed_size> mask{};
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
                 mask[2 * k + 0] = true;
@@ -102,8 +113,11 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
         return compileMask<PrecisionT>(mask);
     }
 
+    /**
+     * @brief Permutation when the target bit is 1
+     */
     template <size_t control>
-    static constexpr auto permuatationInternalExternal() {
+    static constexpr auto applyInternalExternalPermutation() {
         std::array<uint8_t, packed_size> permutation{};
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
@@ -117,8 +131,11 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
         return Permutation::compilePermutation<Precision>(permutation);
     }
 
+    /**
+     * @brief Sign factor when the target bit is 0
+     */
     template <size_t control>
-    static constexpr auto signInternalExternal_target0() {
+    static constexpr auto applyInternalExternalSign_target0() {
         // Signs when the target is 0
         std::array<Precision, packed_size> signs = {
             1.0,
@@ -135,8 +152,11 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
         return set<Precision, packed_size>(signs);
     }
 
+    /**
+     * @brief Sign factor when the target bit is 1
+     */
     template <size_t control>
-    static constexpr auto signInternalExternal_target1() {
+    static constexpr auto applyInternalExternalSign_target1() {
         // Signs when the target is 1
         std::array<Precision, packed_size> signs = {
             1.0,
@@ -165,17 +185,19 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
         // control qubit is internal but target qubit is external
         using namespace Permutation;
 
-        constexpr static auto perm = permuatationInternalExternal<control>();
-
         const size_t target_rev_wire_shift =
             (static_cast<size_t>(1U) << target);
         const size_t target_wire_parity = fillTrailingOnes(target);
         const size_t target_wire_parity_inv = fillLeadingOnes(target + 1);
 
-        constexpr static auto mask = maskInternalExternal<control>();
+        constexpr static auto mask = applyInternalExternalMask<control>();
+        constexpr static auto perm =
+            applyInternalExternalPermutation<control>();
 
-        constexpr static auto sign0 = signInternalExternal_target0<control>();
-        constexpr static auto sign1 = signInternalExternal_target1<control>();
+        constexpr static auto sign0 =
+            applyInternalExternalSign_target0<control>();
+        constexpr static auto sign1 =
+            applyInternalExternalSign_target1<control>();
 
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
@@ -193,7 +215,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
         }
     }
 
-    template <size_t target> constexpr static auto signExternalInternal() {
+    /**
+     * @brief Sign factor when the control bit is 1.
+     */
+    template <size_t target> constexpr static auto applyExternalInternalSign() {
         std::array<Precision, packed_size> signs = {
             1.0,
         };
@@ -222,7 +247,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
 
         constexpr static auto perm = compilePermutation<Precision>(
             swapRealImag(flip(identity<packed_size>(), target)));
-        constexpr static auto factor = signExternalInternal<target>();
+        constexpr static auto factor = applyExternalInternalSign<target>();
 
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =

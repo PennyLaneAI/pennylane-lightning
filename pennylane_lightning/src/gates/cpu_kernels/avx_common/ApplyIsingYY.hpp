@@ -59,6 +59,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingYY {
 
         const auto real_cos =
             set1<PrecisionT, packed_size>(std::cos(angle / 2));
+
+        // Imaginary sin factor. It is -sin(phi/2) for 01 and 10, sin(phi/2)
+        // otherwise
         const auto imag_sin =
             imagFactor<PrecisionT, packed_size>(isin) *
             toParity<PrecisionT, packed_size>([](size_t n) {

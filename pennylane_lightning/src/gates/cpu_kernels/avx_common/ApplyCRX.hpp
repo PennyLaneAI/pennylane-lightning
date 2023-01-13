@@ -38,12 +38,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
     constexpr static bool symmetric = false;
 
     /**
-     * We implement CRX gate by dividing the matrix into diagonal and off-diagonal
-     * parts. The matrix is written as: 
-     * [1   0   0               0            ]
-     * [0   1   0               0            ]
-     * [0   0   cos(phi/2)      -i sin(phi/2)]
-     * [0   0   -i sin(phi/2)   cos(phi/2)   ]
+     * We implement CRX gate by dividing the matrix into diagonal and
+     * off-diagonal parts. The matrix is written as: [1   0   0               0
+     * ] [0   1   0               0            ] [0   0   cos(phi/2)      -i
+     * sin(phi/2)] [0   0   -i sin(phi/2)   cos(phi/2)   ]
      *
      * Applying the matrix to a vector v, we thus
      * (1) compute [v[0], v[1], cos(phi/2) v[2], cos(phi/2) v[3]]
@@ -56,8 +54,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
 
     /**
      * @brief Permutation for (2).
-     * After applying this permutation, the array will be 
-     * [Re(v[0]), Im(v[0]), Re(v[1]), Im(v[1]), Im(v[3]), Re(v[3]), Im(v[2]), Re(v[2])]
+     * After applying this permutation, the array will be
+     * [Re(v[0]), Im(v[0]), Re(v[1]), Im(v[1]), Im(v[3]), Re(v[3]), Im(v[2]),
+     * Re(v[2])]
      */
     template <size_t control, size_t target>
     static constexpr auto applyInternalInternalPermutation() {

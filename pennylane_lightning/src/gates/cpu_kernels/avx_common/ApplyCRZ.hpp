@@ -206,6 +206,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
         }
     }
 
+    /**
+     * @brief Factor for real parts when the control bit is 1
+     */
     template <size_t target, typename ParamT>
     static auto applyExternalInternalRealFactor(ParamT angle) {
         std::array<Precision, packed_size> arr{};
@@ -213,6 +216,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
         return set<Precision, packed_size>(arr);
     }
 
+    /**
+     * @brief Factor for real parts when the control bit is 1
+     */
     template <size_t target, typename ParamT>
     static auto applyExternalInternalImagFactor(ParamT angle) {
         std::array<Precision, packed_size> arr{};

@@ -42,7 +42,7 @@ struct ApplyControlledPhaseShift {
      * @brief Permutation applying imaginary `i` to |11>
      */
     template <size_t rev_wire0, size_t rev_wire1>
-    static constexpr auto permutationInternalInternal() {
+    static constexpr auto applyInternalInternalPermuation() {
         // Swap real and imaginary part of 11
         std::array<uint8_t, packed_size> perm{};
 
@@ -98,7 +98,7 @@ struct ApplyControlledPhaseShift {
         }();
 
         constexpr static auto perm =
-            permutationInternalInternal<rev_wire0, rev_wire1>();
+            applyInternalInternalPermuation<rev_wire0, rev_wire1>();
 
         for (size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
@@ -114,7 +114,7 @@ struct ApplyControlledPhaseShift {
      * @brief Permutation applying product `i` when the target bit is 1
      */
     template <size_t min_rev_wire>
-    constexpr static auto permutationInternalExternal() {
+    constexpr static auto applyInternalExternalPermuation() {
         std::array<uint8_t, packed_size> perm{};
 
         for (size_t k = 0; k < (packed_size / 2); k++) {
@@ -176,7 +176,7 @@ struct ApplyControlledPhaseShift {
         }();
 
         constexpr static auto perm =
-            permutationInternalExternal<min_rev_wire>();
+            applyInternalExternalPermuation<min_rev_wire>();
 
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =

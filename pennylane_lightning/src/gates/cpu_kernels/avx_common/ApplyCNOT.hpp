@@ -38,7 +38,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
     constexpr static bool symmetric = false;
 
     template <size_t control, size_t target>
-    static constexpr auto permutationInternalInternal() {
+    static constexpr auto applyInternalInternalPermuation() {
         std::array<uint8_t, packed_size> perm{};
 
         for (size_t k = 0; k < packed_size / 2; k++) {
@@ -58,7 +58,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
                                       size_t num_qubits,
                                       [[maybe_unused]] bool inverse) {
         constexpr static auto perm =
-            permutationInternalInternal<control, target>();
+            applyInternalInternalPermuation<control, target>();
 
         for (size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
@@ -66,7 +66,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
         }
     }
 
-    template <size_t control> static constexpr auto maskInternalExternal() {
+    template <size_t control>
+    static constexpr auto applyInternalExternalMask() {
         std::array<bool, packed_size> mask{};
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
@@ -98,7 +99,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
         const size_t max_wire_parity = fillTrailingOnes(rev_wire_max);
         const size_t max_wire_parity_inv = fillLeadingOnes(rev_wire_max + 1);
 
-        constexpr static auto mask = maskInternalExternal<control>();
+        constexpr static auto mask = applyInternalExternalMask<control>();
 
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
@@ -117,7 +118,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
      * @brief Permutation that flip the target bit.
      */
     template <size_t target>
-    static constexpr auto permutationExternalInternal() {
+    static constexpr auto applyExternalInternalPermutation() {
         std::array<uint8_t, packed_size> perm{};
         for (size_t k = 0; k < packed_size / 2; k++) {
             perm[2 * k + 0] = 2 * (k ^ (1U << target)) + 0;
@@ -136,7 +137,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
         const size_t max_wire_parity = fillTrailingOnes(control);
         const size_t max_wire_parity_inv = fillLeadingOnes(control + 1);
 
-        constexpr static auto perm = permutationExternalInternal<target>();
+        constexpr static auto perm = applyExternalInternalPermutation<target>();
 
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =

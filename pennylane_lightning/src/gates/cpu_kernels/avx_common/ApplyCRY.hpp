@@ -38,11 +38,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
     constexpr static bool symmetric = false;
 
     /**
-     * We implement CRY gate by dividing the matrix into diagonal and off-diagonal
-     * parts. The matrix is written as:
-     * [1   0   0            0           ] 
-     * [0   1   0            0           ] 
-     * [0   0   cos(phi/2)   -sin(phi/2)] 
+     * We implement CRY gate by dividing the matrix into diagonal and
+     * off-diagonal parts. The matrix is written as: [1   0   0            0 ]
+     * [0   1   0            0           ]
+     * [0   0   cos(phi/2)   -sin(phi/2)]
      * [0   0   sin(phi/2)   cos(phi/2)  ]
      *
      * Applying the matrix to a vector v, we thus
