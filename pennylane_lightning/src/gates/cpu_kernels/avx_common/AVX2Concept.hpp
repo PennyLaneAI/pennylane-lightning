@@ -18,7 +18,6 @@
 #pragma once
 #include "AVXUtil.hpp"
 #include "BitUtil.hpp"
-#include "Macros.hpp"
 #include "Util.hpp"
 
 #include <immintrin.h>
@@ -110,6 +109,4 @@ template <typename T> struct AVX2Concept {
         }
     }
 };
-template <> struct AVXConcept<float, 8> { using Type = AVX2Concept<float>; };
-template <> struct AVXConcept<double, 4> { using Type = AVX2Concept<double>; };
 } // namespace Pennylane::Gates::AVXCommon

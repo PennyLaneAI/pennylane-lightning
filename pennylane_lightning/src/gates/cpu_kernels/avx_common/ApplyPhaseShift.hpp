@@ -16,6 +16,7 @@
  * Defines PhaseShift gate
  */
 #pragma once
+#include "AVXConceptType.hpp"
 #include "AVXUtil.hpp"
 #include "BitUtil.hpp"
 #include "Permutation.hpp"

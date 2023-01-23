@@ -111,8 +111,4 @@ template <typename T> struct AVX512Concept {
     }
 };
 
-template <> struct AVXConcept<float, 16> { using Type = AVX512Concept<float>; };
-template <> struct AVXConcept<double, 8> {
-    using Type = AVX512Concept<double>;
-};
 } // namespace Pennylane::Gates::AVXCommon
