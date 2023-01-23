@@ -47,8 +47,8 @@ template <typename T> constexpr bool is_complex_v = is_complex<T>::value;
 template <class F> struct FuncReturn {
     // When instantiated
     static_assert(sizeof(F) == -1,
-                  "The given type is not a function. Currently, lambda "
-                  "function is not supported.");
+                  "The given type is not a function. Currently, lambda"
+                  "functions are not supported.");
 };
 template <class R, class... A> struct FuncReturn<R (*)(A...)> {
     using Type = R;
