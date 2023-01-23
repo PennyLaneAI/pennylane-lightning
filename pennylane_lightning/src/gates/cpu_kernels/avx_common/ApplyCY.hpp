@@ -43,7 +43,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
      * is 1
      */
     template <size_t control, size_t target>
-    static constexpr auto applyInternalInternalPermuation() {
+    static consteval auto applyInternalInternalPermuation() {
         std::array<uint8_t, packed_size> perm{};
 
         for (size_t k = 0; k < packed_size / 2; k++) {
@@ -62,7 +62,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
      * @brief Factor to applying `-i` and `i`
      */
     template <size_t control, size_t target>
-    static constexpr auto applyInternalInternalFactor() {
+    static consteval auto applyInternalInternalFactor() {
         std::array<PrecisionT, packed_size> signs{};
         // positions are after permutations
         for (size_t k = 0; k < packed_size / 2; k++) {
@@ -103,7 +103,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
      * v0 if the control bit is 0 v1 otherwise.
      */
     template <size_t control>
-    static constexpr auto applyInternalExternalMask() {
+    static consteval auto applyInternalExternalMask() {
         std::array<bool, packed_size> mask{};
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
@@ -118,7 +118,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
      * @brief Permutation when the target bit is 1
      */
     template <size_t control>
-    static constexpr auto applyInternalExternalPermutation() {
+    static consteval auto applyInternalExternalPermutation() {
         std::array<uint8_t, packed_size> permutation{};
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
@@ -136,7 +136,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
      * @brief Sign factor when the target bit is 0
      */
     template <size_t control>
-    static constexpr auto applyInternalExternalSign_target0() {
+    static consteval auto applyInternalExternalSign_target0() {
         // Signs when the target is 0
         std::array<Precision, packed_size> signs = {
             1.0,
@@ -157,7 +157,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
      * @brief Sign factor when the target bit is 1
      */
     template <size_t control>
-    static constexpr auto applyInternalExternalSign_target1() {
+    static consteval auto applyInternalExternalSign_target1() {
         // Signs when the target is 1
         std::array<Precision, packed_size> signs = {
             1.0,
@@ -219,7 +219,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
     /**
      * @brief Sign factor when the control bit is 1.
      */
-    template <size_t target> constexpr static auto applyExternalInternalSign() {
+    template <size_t target> static consteval auto applyExternalInternalSign() {
         std::array<Precision, packed_size> signs = {
             1.0,
         };
@@ -279,8 +279,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
 
         constexpr static auto perm = compilePermutation<Precision>(
             swapRealImag(identity<packed_size>()));
-        constexpr static auto factor_p = imagFactor<PrecisionT, packed_size>();
-        constexpr static auto factor_m = -factor_p;
+        constexpr static auto factor = imagFactor<PrecisionT, packed_size>();
 
         for (size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
             const size_t i00 = ((k << 2U) & parity_high) |
@@ -291,10 +290,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
             const auto v10 = PrecisionAVXConcept::load(arr + i10); // 10
             const auto v11 = PrecisionAVXConcept::load(arr + i11); // 11
 
-            PrecisionAVXConcept::store(arr + i10,
-                                       factor_m * permute<perm>(v11));
-            PrecisionAVXConcept::store(arr + i11,
-                                       factor_p * permute<perm>(v10));
+            PrecisionAVXConcept::store(arr + i10, -factor * permute<perm>(v11));
+            PrecisionAVXConcept::store(arr + i11, factor * permute<perm>(v10));
         }
     }
 };

@@ -35,6 +35,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyS {
 
     /**
      * @brief Permutation for applying `i` to
+     *
+     * FIXME: clang++-12 currently does not accept consteval here.
      */
     static constexpr auto applyInternalPermutation(size_t rev_wire) {
         std::array<uint8_t, packed_size> perm{};

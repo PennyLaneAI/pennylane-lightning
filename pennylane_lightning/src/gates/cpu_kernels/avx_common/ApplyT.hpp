@@ -35,10 +35,13 @@ template <typename PrecisionT, size_t packed_size> struct ApplyT {
     constexpr static size_t packed_size_ = packed_size;
     constexpr static auto isqrt2 = Util::INVSQRT2<PrecisionT>();
 
+    /**
+     * @brief Permutation for applying `i` if a bit is 1
+     *
+     * FIXME: clang++-12 currently does not accept consteval here.
+     */
     static constexpr auto applyInternalPermutation(size_t rev_wire) {
-        std::array<uint8_t, packed_size> perm = {
-            0,
-        };
+        std::array<uint8_t, packed_size> perm{};
 
         for (size_t n = 0; n < packed_size / 2; n++) {
             if (((n >> rev_wire) & 1U) == 0) {

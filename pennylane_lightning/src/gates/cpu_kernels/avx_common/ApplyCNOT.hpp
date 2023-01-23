@@ -39,7 +39,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
     constexpr static bool symmetric = false;
 
     template <size_t control, size_t target>
-    static constexpr auto applyInternalInternalPermuation() {
+    static consteval auto applyInternalInternalPermuation() {
         std::array<uint8_t, packed_size> perm{};
 
         for (size_t k = 0; k < packed_size / 2; k++) {
@@ -68,7 +68,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
     }
 
     template <size_t control>
-    static constexpr auto applyInternalExternalMask() {
+    static consteval auto applyInternalExternalMask() {
         std::array<bool, packed_size> mask{};
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
@@ -119,7 +119,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
      * @brief Permutation that flip the target bit.
      */
     template <size_t target>
-    static constexpr auto applyExternalInternalPermutation() {
+    static consteval auto applyExternalInternalPermutation() {
         std::array<uint8_t, packed_size> perm{};
         for (size_t k = 0; k < packed_size / 2; k++) {
             perm[2 * k + 0] = 2 * (k ^ (1U << target)) + 0;

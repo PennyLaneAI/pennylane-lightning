@@ -60,7 +60,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
      * Re(v[2])]
      */
     template <size_t control, size_t target>
-    static constexpr auto applyInternalInternalPermutation() {
+    static consteval auto applyInternalInternalPermutation() {
         std::array<uint8_t, packed_size> perm{};
 
         for (size_t k = 0; k < packed_size / 2; k++) {
@@ -232,7 +232,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
      * @brief Permutation that flips the target bit.
      */
     template <size_t target>
-    constexpr static auto applyExternalInternalOffDiagPerm() {
+    static consteval auto applyExternalInternalOffDiagPerm() {
         std::array<uint8_t, packed_size> arr{};
 
         uint8_t s = (uint8_t{1U} << target);

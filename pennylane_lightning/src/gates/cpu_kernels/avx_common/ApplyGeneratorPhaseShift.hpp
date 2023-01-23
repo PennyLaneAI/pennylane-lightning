@@ -36,7 +36,7 @@ struct ApplyGeneratorPhaseShift {
     constexpr static size_t packed_size_ = packed_size;
 
     template <size_t rev_wire>
-    constexpr static auto factorInternal() ->
+    static consteval auto factorInternal() ->
         typename PrecisionAVXConcept::IntrinsicType {
         std::array<PrecisionT, packed_size> factors{};
         for (size_t k = 0; k < packed_size_ / 2; k++) {

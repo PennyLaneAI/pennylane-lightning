@@ -36,6 +36,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyPhaseShift {
 
     /**
      * @brief Permutation for applying `i` if a bit is 1
+     *
+     * FIXME: clang++-12 currently does not accept consteval here.
      */
     static constexpr auto applyInternalPermutation(size_t rev_wire) {
         std::array<uint8_t, packed_size> perm{};

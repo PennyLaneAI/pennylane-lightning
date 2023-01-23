@@ -43,7 +43,7 @@ struct ApplyControlledPhaseShift {
      * @brief Permutation applying imaginary `i` to |11>
      */
     template <size_t rev_wire0, size_t rev_wire1>
-    static constexpr auto applyInternalInternalPermuation() {
+    static consteval auto applyInternalInternalPermuation() {
         // Swap real and imaginary part of 11
         std::array<uint8_t, packed_size> perm{};
 
@@ -115,7 +115,7 @@ struct ApplyControlledPhaseShift {
      * @brief Permutation applying product `i` when the target bit is 1
      */
     template <size_t min_rev_wire>
-    constexpr static auto applyInternalExternalPermuation() {
+    static consteval auto applyInternalExternalPermuation() {
         std::array<uint8_t, packed_size> perm{};
 
         for (size_t k = 0; k < (packed_size / 2); k++) {

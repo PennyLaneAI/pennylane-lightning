@@ -58,7 +58,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
      * @brief Permutation for (2). Flip the target bit if control bit is 1.
      */
     template <size_t control, size_t target>
-    static constexpr auto applyInternalInternalPermutation() {
+    static consteval auto applyInternalInternalPermutation() {
         std::array<uint8_t, packed_size> perm{};
 
         for (size_t k = 0; k < packed_size / 2; k++) {
