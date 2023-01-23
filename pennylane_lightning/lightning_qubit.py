@@ -504,7 +504,7 @@ class LightningQubit(QubitDevice):
         all_params = 0
 
         for op_idx, tp in enumerate(trainable_params):
-            op, _ = tape.get_operation(
+            op, _, _ = tape.get_operation(
                 op_idx
             )  # get op_idx-th operator among differentiable operators
             if isinstance(op, Operation) and not isinstance(op, (BasisState, QubitStateVector)):
