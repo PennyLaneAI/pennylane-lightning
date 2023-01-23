@@ -36,7 +36,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXX {
     constexpr static bool symmetric = true;
 
     template <size_t rev_wire0, size_t rev_wire1>
-    static constexpr auto permutationInternalInternal() {
+    static consteval auto permutationInternalInternal() {
         std::array<uint8_t, packed_size> perm = {
             0,
         };

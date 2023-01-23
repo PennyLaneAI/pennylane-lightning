@@ -16,6 +16,7 @@
  * Defines T gate
  */
 #pragma once
+#include "AVXConceptType.hpp"
 #include "AVXUtil.hpp"
 #include "BitUtil.hpp"
 #include "Permutation.hpp"
@@ -34,10 +35,13 @@ template <typename PrecisionT, size_t packed_size> struct ApplyT {
     constexpr static size_t packed_size_ = packed_size;
     constexpr static auto isqrt2 = Util::INVSQRT2<PrecisionT>();
 
-    static constexpr auto createPermutation(size_t rev_wire) {
-        std::array<uint8_t, packed_size> perm = {
-            0,
-        };
+    /**
+     * @brief Permutation for applying `i` if a bit is 1
+     *
+     * FIXME: clang++-12 currently does not accept consteval here.
+     */
+    static constexpr auto applyInternalPermutation(size_t rev_wire) {
+        std::array<uint8_t, packed_size> perm{};
 
         for (size_t n = 0; n < packed_size / 2; n++) {
             if (((n >> rev_wire) & 1U) == 0) {
@@ -52,11 +56,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyT {
         return Permutation::compilePermutation<PrecisionT>(perm);
     }
 
-    static auto cosFactor(size_t rev_wire)
+    static auto applyInternalRealFactor(size_t rev_wire)
         -> AVXIntrinsicType<PrecisionT, packed_size> {
-        std::array<PrecisionT, packed_size> data = {
-            0,
-        };
+        std::array<PrecisionT, packed_size> data{};
         for (size_t n = 0; n < packed_size / 2; n++) {
             if (((n >> rev_wire) & 1U) == 0) {
                 data[2 * n + 0] = 1.0;
@@ -69,11 +71,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyT {
         return PrecisionAVXConcept::loadu(data.data());
     }
 
-    static auto isinFactor(size_t rev_wire, bool inverse)
+    static auto applyInternalImagFactor(size_t rev_wire, bool inverse)
         -> AVXIntrinsicType<PrecisionT, packed_size> {
-        std::array<PrecisionT, packed_size> data = {
-            0,
-        };
+        std::array<PrecisionT, packed_size> data{};
         for (size_t n = 0; n < packed_size / 2; n++) {
             if (((n >> rev_wire) & 1U) == 0) {
                 data[2 * n + 0] = 0.0;
@@ -94,9 +94,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyT {
     template <size_t rev_wire>
     static void applyInternal(std::complex<PrecisionT> *arr,
                               const size_t num_qubits, bool inverse) {
-        constexpr static auto perm = createPermutation(rev_wire);
-        const auto cos_factor = cosFactor(rev_wire);
-        const auto isin_factor = isinFactor(rev_wire, inverse);
+        constexpr static auto perm = applyInternalPermutation(rev_wire);
+
+        const auto cos_factor = applyInternalRealFactor(rev_wire);
+        const auto isin_factor = applyInternalImagFactor(rev_wire, inverse);
 
         for (size_t k = 0; k < (1U << num_qubits); k += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + k);

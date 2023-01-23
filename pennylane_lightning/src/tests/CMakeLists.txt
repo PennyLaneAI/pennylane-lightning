@@ -69,6 +69,7 @@ target_link_libraries(compile_time_tests lightning_compile_options lightning_gat
 set(TEST_SOURCES CreateAllWires.cpp
                  Test_AdjDiff.cpp
                  Test_AlgUtil.cpp
+                 Test_AVXGateHelpers.cpp
                  #Test_Bindings.cpp
                  Test_CompilerSupport.cpp
                  Test_DynamicDispatcher.cpp
@@ -92,6 +93,7 @@ set(TEST_SOURCES CreateAllWires.cpp
                  Test_StateVecAdjDiff.cpp
                  Test_StateVectorManagedCPU.cpp
                  Test_StateVectorRawCPU.cpp
+                 Test_TypeTraits.cpp
                  Test_Util.cpp)
 
 add_executable(runner ${TEST_SOURCES})
