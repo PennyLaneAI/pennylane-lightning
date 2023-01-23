@@ -14,6 +14,13 @@
 /**
  * @file
  * A helper class for single-qubit gates
+ *
+ * Define helper classes for AVX2/512 implementations of single-qubit gates.
+ * Depending on the wire the gate applies to, one needs to call
+ * ``applyInternal`` or ``applyExternal`` in classes implementing AVX2/512
+ * gates. As ``applyInternal`` takes ``wire`` as a template parameters, we
+ * instantiates this function for all possible ``wire`` and call the correct one
+ * in runtime.
  */
 #pragma once
 #include "BitUtil.hpp"
@@ -104,6 +111,9 @@ constexpr auto InternalFunctions() -> decltype(auto) {
 } // namespace Internal
 /// @endcond
 
+/**
+ * @brief A Helper class for single-qubit gates without parameters.
+ */
 template <SingleQubitGateWithoutParam AVXImpl>
 class SingleQubitGateWithoutParamHelper {
   public:
@@ -121,6 +131,15 @@ class SingleQubitGateWithoutParamHelper {
     explicit SingleQubitGateWithoutParamHelper(FuncType fallback_func)
         : fallback_func_{fallback_func} {}
 
+    /**
+     * @brief This function calls corresponding AVX2/512 by finding the correct
+     * one based on ``wires``.
+     *
+     * @param arr Pointer to a statevector array
+     * @param num_qubits Number of qubits
+     * @param wires Wires the gate applies to
+     * @param inverse Apply the inverse of the gate when true
+     */
     auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse) const
         -> ReturnType {
@@ -146,6 +165,9 @@ class SingleQubitGateWithoutParamHelper {
     }
 };
 
+/**
+ * @brief A Helper class for single-qubit gates with parameters.
+ */
 template <SingleQubitGateWithParam AVXImpl, typename ParamT>
 class SingleQubitGateWithParamHelper {
   public:
@@ -163,6 +185,16 @@ class SingleQubitGateWithParamHelper {
     explicit SingleQubitGateWithParamHelper(FuncType fallback_func)
         : fallback_func_{fallback_func} {}
 
+    /**
+     * @brief This function calls corresponding AVX2/512 by finding the correct
+     * one based on ``wires``.
+     *
+     * @param arr Pointer to a statevector array
+     * @param num_qubits Number of qubits
+     * @param wires Wires the gate applies to
+     * @param inverse Apply the inverse of the gate when true
+     * @param angle Parameter of the gate
+     */
     auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse,
                     ParamT angle) const -> ReturnType {

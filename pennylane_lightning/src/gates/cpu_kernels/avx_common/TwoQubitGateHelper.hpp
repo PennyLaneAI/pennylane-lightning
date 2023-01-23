@@ -14,6 +14,15 @@
 /**
  * @file
  * A helper class for two-qubit gates
+ *
+ * Define helper classes for AVX2/512 implementations of two-qubit gates.
+ * Depending on the wire the gate applies to, one needs to call one of
+ * ``applyInternalInternal``, ``applyInternalExternal``,
+ * ``applyExternalInternal``, and `applyExternalExternal``` in classes
+ * implementing AVX2/512 gates (see README.md). As those functions takes
+ * ``control`` and ``target`` wires as a template parameters, we instantiates
+ * these function for all possible choice of ``wires`` and call the correct one
+ * in runtime.
  */
 #pragma once
 #include "BitUtil.hpp"
@@ -307,6 +316,9 @@ template <class T, class ParamT> class TwoQubitGateWithParamHelper {
     static_assert(sizeof(T) == -1, "Only specialized template can be used.");
 };
 
+/**
+ * @brief A helper class for two-qubit gate without parameters.
+ */
 template <class AVXImpl>
 requires TwoQubitGateWithoutParam<AVXImpl>
 class TwoQubitGateWithoutParamHelper {
@@ -325,6 +337,15 @@ class TwoQubitGateWithoutParamHelper {
     explicit TwoQubitGateWithoutParamHelper(FuncType fallback_func)
         : fallback_func_{fallback_func} {}
 
+    /**
+     * @brief A specialized function for symmetric two-qubit gates (control and
+     * target wires are symmetric).
+     *
+     * @param arr Pointer to a statevector array
+     * @param num_qubits Number of qubits
+     * @param wires Wires the gate applies to
+     * @param inverse Apply the inverse of the gate when true
+     */
     auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse) const
         -> ReturnType requires SymmetricTwoQubitGateWithoutParam<AVXImpl> {
@@ -362,6 +383,14 @@ class TwoQubitGateWithoutParamHelper {
                                               rev_wire1, inverse);
     }
 
+    /**
+     * @brief A specialized function for asymmetric two-qubit gates.
+     *
+     * @param arr Pointer to a statevector array
+     * @param num_qubits Number of qubits
+     * @param wires Wires the gate applies to
+     * @param inverse Apply the inverse of the gate when true
+     */
     auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse) const
         -> ReturnType requires AsymmetricTwoQubitGateWithoutParam<AVXImpl> {
@@ -405,6 +434,9 @@ class TwoQubitGateWithoutParamHelper {
     }
 };
 
+/**
+ * @brief A helper class for two-qubit gate without parameters.
+ */
 template <class AVXImpl, class ParamT>
 requires TwoQubitGateWithParam<AVXImpl>
 class TwoQubitGateWithParamHelper<AVXImpl, ParamT> {
@@ -423,6 +455,16 @@ class TwoQubitGateWithParamHelper<AVXImpl, ParamT> {
     explicit TwoQubitGateWithParamHelper(FuncType fallback_func)
         : fallback_func_{fallback_func} {}
 
+    /**
+     * @brief A specialized function for symmetric two-qubit gates (control and
+     * target wires are symmetric).
+     *
+     * @param arr Pointer to a statevector array
+     * @param num_qubits Number of qubits
+     * @param wires Wires the gate applies to
+     * @param inverse Apply the inverse of the gate when true
+     * @param angle Parameter of the gate
+     */
     auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse,
                     ParamT angle) const
@@ -460,6 +502,15 @@ class TwoQubitGateWithParamHelper<AVXImpl, ParamT> {
                                               rev_wire1, inverse, angle);
     }
 
+    /**
+     * @brief A specialized function for asymmetric two-qubit gates.
+     *
+     * @param arr Pointer to a statevector array
+     * @param num_qubits Number of qubits
+     * @param wires Wires the gate applies to
+     * @param inverse Apply the inverse of the gate when true
+     * @param angle Parameter of the gate
+     */
     auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse,
                     ParamT angle) const
