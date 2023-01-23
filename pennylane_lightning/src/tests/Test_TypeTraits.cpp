@@ -39,13 +39,13 @@ std::pair<int, int> g(std::tuple<int, int, int>);
 
 TEST_CASE("Test FuncReturn") {
     SECTION("FuncReturn returns correctly returns the return type") {
-        static_assert(
+        STATIC_REQUIRE(
             std::is_same_v<FuncReturn<decltype(g)>::Type,
                            std::pair<int, int>>); // return type of g is
                                                   // std::pair<int, int>
 
         using FuncPtr = std::pair<int, int> (*)(std::tuple<int, int, int>);
-        static_assert(
+        STATIC_REQUIRE(
             std::is_same_v<FuncReturn<FuncPtr>::Type,
                            std::pair<int, int>>); // return type of g is
                                                   // std::pair<int, int>
