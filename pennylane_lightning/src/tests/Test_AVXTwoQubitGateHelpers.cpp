@@ -613,7 +613,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithParamHelper", "[TwoQubitGateHelper]",
                 num_qubits - wires[1] - 1, inverse};
     };
 
-    const TestType angle = static_cast<TestType>(0.312);
+    const auto angle = static_cast<TestType>(0.312);
 
     SECTION("Test TwoQubitGateWithParamHelper for symmetric gates with "
             "packed_size = 8") {
