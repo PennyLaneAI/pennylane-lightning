@@ -1,5 +1,4 @@
 #include "cpu_kernels/avx_common/SingleQubitGateHelper.hpp"
-#include "cpu_kernels/avx_common/TwoQubitGateHelper.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -120,6 +119,12 @@ TEMPLATE_TEST_CASE("Test SingleQubitGateHelper template functions",
                    MockSingleQubitGateSomethingWrong<TestType, 4>>::value);
     STATIC_REQUIRE(HasExternalWithParam<
                    MockSingleQubitGateSomethingWrong<TestType, 4>>::value);
+
+    // Test concepts
+    STATIC_REQUIRE(SingleQubitGateWithoutParam<
+                   MockSingleQubitGateWithoutParam<TestType, 4>>);
+    STATIC_REQUIRE(
+        SingleQubitGateWithParam<MockSingleQubitGateWithParam<TestType, 4>>);
 }
 
 TEMPLATE_TEST_CASE("Test SingleQubitGateWithoutParamHelper",
