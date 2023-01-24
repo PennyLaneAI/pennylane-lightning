@@ -143,7 +143,7 @@ TEMPLATE_TEST_CASE("Test SingleQubitGateWithoutParamHelper",
             MockSingleQubitGateWithoutParam<TestType, packed_size>>
             func(fallback);
         // We pack 4 real numbers -> 2 complex numbers -> single qubit.
-        // Thus only `rev_wire=0` calls the internal functions.
+        // Thus only rev_wire = 0 calls the internal functions.
 
         for (bool inverse : {false, true}) {
             { // num_qubits= 4, wires = {0} -> rev_wires = 3
@@ -187,8 +187,8 @@ TEMPLATE_TEST_CASE("Test SingleQubitGateWithoutParamHelper",
         SingleQubitGateWithoutParamHelper<
             MockSingleQubitGateWithoutParam<TestType, packed_size>>
             func(fallback);
-        // We pack 8 real numbers -> 4 complex numbers -> two qubit.
-        // Thus `rev_wire=0,1` calls the internal functions.
+        // We pack 8 real numbers -> 4 complex numbers -> two qubits.
+        // Thus rev_wire = 0 or 1 calls the internal functions.
 
         for (bool inverse : {false, true}) {
             { // num_qubits= 4, wires = {0} -> rev_wires = 3
@@ -250,7 +250,7 @@ TEMPLATE_TEST_CASE("Test SingleQubitGateWithParamHelper",
             MockSingleQubitGateWithParam<TestType, packed_size>, TestType>
             func(fallback);
         // We pack 4 real numbers -> 2 complex numbers -> single qubit.
-        // Thus only `rev_wire=0` calls the internal functions.
+        // Thus only rev_wire = 0 calls the internal functions.
 
         TestType angle = 0.312;
 
@@ -296,8 +296,8 @@ TEMPLATE_TEST_CASE("Test SingleQubitGateWithParamHelper",
         SingleQubitGateWithParamHelper<
             MockSingleQubitGateWithParam<TestType, packed_size>, TestType>
             func(fallback);
-        // We pack 8 real numbers -> 4 complex numbers -> two qubit.
-        // Thus `rev_wire=0,1` calls the internal functions.
+        // We pack 8 real numbers -> 4 complex numbers -> two qubits.
+        // Thus rev_wire = 0 or 1 calls the internal functions.
 
         TestType angle = 0.312;
 

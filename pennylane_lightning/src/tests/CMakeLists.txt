@@ -70,6 +70,7 @@ set(TEST_SOURCES CreateAllWires.cpp
                  Test_AdjDiff.cpp
                  Test_AlgUtil.cpp
                  Test_AVXSingleQubitGateHelpers.cpp
+                 Test_AVXTwoQubitGateHelpers.cpp
                  #Test_Bindings.cpp
                  Test_CompilerSupport.cpp
                  Test_DynamicDispatcher.cpp
