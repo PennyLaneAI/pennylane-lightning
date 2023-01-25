@@ -64,7 +64,7 @@ include(FetchContent)
 
 if(ENABLE_PYTHON)
     set(PYTHON_EXECUTABLE ${Python_EXECUTABLE} CACHE) # To avoid a confict with Linux and Windows names.
-    find_package(Python COMPONENTS Interpreter Development)
+    find_package(Python COMPONENTS Interpreter Development REQUIRED)
     FetchContent_Declare(pybind11
                         GIT_REPOSITORY https://github.com/pybind/pybind11.git
                         GIT_TAG        v2.10.1
