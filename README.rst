@@ -1,6 +1,10 @@
 PennyLane-Lightning Plugin
 ##########################
 
+.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_linux.yml?label=Test%20%28Linux%29&style=flat-square
+    :alt: GitHub Workflow Status (branch)
+    :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_linux.yml
+
 .. image:: https://img.shields.io/github/workflow/status/PennyLaneAI/pennylane-lightning/Testing/master?logo=github&style=flat-square
     :alt: GitHub Workflow Status (branch)
     :target: https://github.com/PennyLaneAI/pennylane-lightning/actions?query=workflow%3ATesting
