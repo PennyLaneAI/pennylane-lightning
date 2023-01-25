@@ -1,7 +1,8 @@
 ninja
 flaky
 numpy
-git+https://github.com/PennyLaneAI/pennylane.git@master
+# git+https://github.com/PennyLaneAI/pennylane.git@master
+pennylane~=0.28
 pybind11
 pytest
 pytest-cov
