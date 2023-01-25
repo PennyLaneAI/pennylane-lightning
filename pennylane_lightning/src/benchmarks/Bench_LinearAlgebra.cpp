@@ -528,7 +528,7 @@ template <class T> static void blas_scaleAndAdd_cmplx(benchmark::State &state) {
 
     std::vector<std::complex<T>> vec1;
     std::vector<std::complex<T>> vec2;
-    std::complex<T> scale{std::cos(static_cast<T>{0.4123}), std::sin(static_cast<T>{0.4123})};
+    std::complex<T> scale{std::cos(static_cast<T>(0.4123)), std::sin(static_cast<T>(0.4123))};
 
     for (size_t i = 0; i < sz; i++) {
         vec1.push_back({distr(eng), distr(eng)});
