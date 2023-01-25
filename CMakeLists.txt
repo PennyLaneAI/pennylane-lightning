@@ -63,7 +63,7 @@ set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 include(FetchContent)
 
 if(ENABLE_PYTHON)
-    set(PYTHON_EXECUTABLE ${Python_EXECUTABLE}) # To avoid a confict with Linux and Windows names.
+    set(PYTHON_EXECUTABLE ${Python_EXECUTABLE} CACHE) # To avoid a confict with Linux and Windows names.
     find_package(Python COMPONENTS Interpreter Development)
     FetchContent_Declare(pybind11
                         GIT_REPOSITORY https://github.com/pybind/pybind11.git
