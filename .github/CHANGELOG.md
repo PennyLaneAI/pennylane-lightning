@@ -2,7 +2,7 @@
 
 ### Bug fixes
 
-* Fix Pybind11 module versioning and locations for Linux wheels.
+* Fix Python module versioning for Linux wheels.
 [(#407)](https://github.com/PennyLaneAI/pennylane-lightning/pull/407)
 
 ### Contributors
