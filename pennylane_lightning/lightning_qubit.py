@@ -226,7 +226,6 @@ class LightningQubit(QubitDevice):
         capabilities = super().capabilities().copy()
         capabilities.update(
             model="qubit",
-            supports_inverse_operations=True,
             supports_analytic_computation=True,
             supports_broadcasting=False,
             returns_state=True,
@@ -368,10 +367,9 @@ class LightningQubit(QubitDevice):
         skipped_ops = ["Identity"]
 
         for o in operations:
-            if o.base_name in skipped_ops:
+            if o.name in skipped_ops:
                 continue
-            name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
-            method = getattr(sim, name, None)
+            method = getattr(sim, o.name, None)
 
             wires = self.wires.indices(o.wires)
             if method is None:
@@ -383,7 +381,7 @@ class LightningQubit(QubitDevice):
                     # To support older versions of PL
                     method(o.matrix, wires, False)
             else:
-                inv = o.inverse
+                inv = False
                 param = o.parameters
                 method(wires, inv, param)
 

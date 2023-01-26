@@ -160,7 +160,6 @@ def _serialize_ops(
     names = []
     params = []
     wires = []
-    inverses = []
     mats = []
 
     uses_stateprep = False
@@ -175,23 +174,20 @@ def _serialize_ops(
             op_list = [o]
 
         for single_op in op_list:
-            is_inverse = single_op.inverse
 
-            name = single_op.name if not is_inverse else single_op.name[:-4]
+            name = single_op.name
             names.append(name)
 
             if not hasattr(StateVectorC128, name):
                 params.append([])
                 mats.append(qml.matrix(single_op))
 
-                if is_inverse:
-                    is_inverse = False
             else:
                 params.append(single_op.parameters)
                 mats.append([])
 
             wires_list = single_op.wires.tolist()
             wires.append([wires_map[w] for w in wires_list])
-            inverses.append(is_inverse)
 
+    inverses = [False] * len(names)
     return (names, params, wires, inverses, mats), uses_stateprep
