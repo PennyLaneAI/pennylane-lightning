@@ -1,4 +1,22 @@
-# Release 0.29.0-dev
+# Release 0.29.2-dev
+
+### New features since last release
+
+### Breaking changes
+
+### Improvements
+
+### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+---
+
+# Release 0.28.2
 
 ### New features since last release
 
