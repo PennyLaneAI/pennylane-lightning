@@ -14,6 +14,21 @@
 
 ---
 
+# Release 0.28.2
+
+### Bug fixes
+
+* Fix Python module versioning for Linux wheels.
+[(#407)](https://github.com/PennyLaneAI/pennylane-lightning/pull/407)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Amintor Dusko
+
+---
+
 # Release 0.28.1
 
 ### Bug fixes
