@@ -53,7 +53,8 @@ class CMakeBuild(build_ext):
         # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
         configure_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
-            f"-DPython_EXECUTABLE={sys.executable}",
+            f"-DPython_EXECUTABLE={sys.executable}", # (Windows)
+            f"-DPYTHON_EXECUTABLE={sys.executable}", # (Ubuntu)
             "-DENABLE_WARNINGS=OFF",  # Ignore warnings
         ]
 
