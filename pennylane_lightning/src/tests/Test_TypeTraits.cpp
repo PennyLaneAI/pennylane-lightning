@@ -38,7 +38,7 @@ TEST_CASE("Test is_complex") {
 std::pair<int, int> g(std::tuple<int, int, int>);
 
 TEST_CASE("Test FuncReturn") {
-    SECTION("FuncReturn returns correctly returns the return type") {
+    SECTION("FuncReturn gives correct return types") {
         STATIC_REQUIRE(
             std::is_same_v<FuncReturn<decltype(g)>::Type,
                            std::pair<int, int>>); // return type of g is
