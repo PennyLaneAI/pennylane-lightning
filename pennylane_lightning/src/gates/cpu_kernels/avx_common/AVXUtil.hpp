@@ -285,7 +285,7 @@ constexpr __m512i setr512i(int64_t  e0, int64_t  e1, int64_t  e2, int64_t  e3,
 
 /**
  * @brief @rst
- * For a function :math:`f(x)` with binary output, this function create
+ * For a function :math:`f(x)` with binary output, this function creates
  * an AVX intrinsic floating-point type with values :math:`(-1)^{f(x)}`
  * where :math:`x` is index of an array (viewed as a complex-valued array).
  * @endrst
@@ -325,7 +325,7 @@ auto setValueOneTwo(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
     std::array<PrecisionT, packed_size> data{};
     for (size_t idx = 0; idx < packed_size / 2; idx++) {
         data[2 * idx + 0] = static_cast<PrecisionT>(func(idx));
-        data[2 * idx + 1] = static_cast<PrecisionT>(func(idx));
+        data[2 * idx + 1] = data[2 * idx + 0];
     }
     return set(data);
 }
