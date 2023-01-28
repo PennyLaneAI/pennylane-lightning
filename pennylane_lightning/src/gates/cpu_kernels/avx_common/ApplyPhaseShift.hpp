@@ -70,7 +70,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyPhaseShift {
                 arr[2 * n + 1] = std::cos(angle);
             }
         }
-        return set<Precision, packed_size>(arr);
+        return set(arr);
     }
 
     /**
@@ -88,7 +88,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyPhaseShift {
                 arr[2 * n + 1] = std::sin(angle);
             }
         }
-        return set<PrecisionT, packed_size>(arr);
+        return set(arr);
     }
 
     template <size_t rev_wire, typename ParamT>
