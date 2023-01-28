@@ -67,7 +67,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyPhaseShift {
                 arr[2 * n + 1] = 1.0;
             } else {
                 arr[2 * n + 0] = std::cos(angle);
-                arr[2 * n + 1] = std::cos(angle);
+                arr[2 * n + 1] = arr[2 * n + 0];
             }
         }
         return set<Precision, packed_size>(arr);
@@ -85,7 +85,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyPhaseShift {
                 arr[2 * n + 1] = 0.0;
             } else {
                 arr[2 * n + 0] = -std::sin(angle);
-                arr[2 * n + 1] = std::sin(angle);
+                arr[2 * n + 1] = -arr[2 * n + 0];
             }
         }
         return set<PrecisionT, packed_size>(arr);

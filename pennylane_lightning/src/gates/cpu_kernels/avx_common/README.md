@@ -8,7 +8,7 @@ For two-qubit operations, we have `applyInternalInternal` (both wires act intern
 
 
 Most cases, we implement a gate operation by splitting it into permutations, multiplications, and summations. These operations are translated into intrinsics in the compile time using C++ template mechanism.
-Permutations and factors for multiplications are often obtained from functions. Those functions are named by concatenating the function name it is called with `Permutation` or `Factor`. For example, `applyInternalInternalPermuation` returns a permutation that is required for `applyInternalInternal` function.
+Permutations and factors for multiplications are often obtained from functions. Those functions are named by concatenating the function name it is called with `Permutation` or `Factor`. For example, `applyInternalInternalPermutation` returns a permutation that is required for `applyInternalInternal` function.
 
 
 See [the document](https://docs.pennylane.ai/projects/lightning/en/stable/avx_kernels/implementation.html) for details of the implementation.
