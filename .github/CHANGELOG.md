@@ -10,7 +10,27 @@
 
 ### Bug fixes
 
+* Fix Github shields in README.
+[(#402)](https://github.com/PennyLaneAI/pennylane-lightning/pull/402)
+
 ### Contributors
+
+Lee James O'Riordan, Chae-Yeun Park
+
+---
+
+# Release 0.28.2
+
+### Bug fixes
+
+* Fix Python module versioning for Linux wheels.
+[(#407)](https://github.com/PennyLaneAI/pennylane-lightning/pull/407)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Amintor Dusko
 
 ---
 
