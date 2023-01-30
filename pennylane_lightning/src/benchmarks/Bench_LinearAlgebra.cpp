@@ -112,7 +112,7 @@ template <class T> static void omp_innerProd_cmplx(benchmark::State &state) {
     for (auto _ : state) {
         std::complex<T> res(.0, .0);
 
-        Util::omp_innerProd(vec1.data(), vec2.data(), res, sz);
+        //Util::omp_innerProd(vec1.data(), vec2.data(), res, sz);
         benchmark::DoNotOptimize(res);
     }
 }
