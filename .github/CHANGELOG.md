@@ -10,7 +10,12 @@
 
 ### Bug fixes
 
+* Fix Github shields in README.
+[(#402)](https://github.com/PennyLaneAI/pennylane-lightning/pull/402)
+
 ### Contributors
+
+Lee James O'Riordan, Chae-Yeun Park
 
 ---
 
