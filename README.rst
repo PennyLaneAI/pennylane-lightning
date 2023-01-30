@@ -1,9 +1,17 @@
 PennyLane-Lightning Plugin
 ##########################
 
-.. image:: https://img.shields.io/github/workflow/status/PennyLaneAI/pennylane-lightning/Testing/master?logo=github&style=flat-square
-    :alt: GitHub Workflow Status (branch)
-    :target: https://github.com/PennyLaneAI/pennylane-lightning/actions?query=workflow%3ATesting
+.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_linux.yml?branch=master&label=Test%20%28Linux%29&style=flat-square
+    :alt: Linux x86_64 tests (branch)
+    :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_linux.yml
+
+.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_windows.yml?branch=master&label=Test%20%28Windows%29&style=flat-square
+    :alt: Windows tests (branch)
+    :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_windows.yml
+
+.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/.github/workflows/wheel_linux_x86_64.yml?branch=master&logo=github&style=flat-square
+    :alt: Linux x86_64 wheel builds (branch)
+    :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/wheel_linux_x86_64.yml?query=branch%3Amaster++
 
 .. image:: https://img.shields.io/codecov/c/github/PennyLaneAI/pennylane-lightning/master.svg?logo=codecov&style=flat-square
     :alt: Codecov coverage
