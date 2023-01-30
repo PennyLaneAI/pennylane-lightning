@@ -111,9 +111,11 @@ template <class T> static void omp_innerProd_cmplx(benchmark::State &state) {
 
     for (auto _ : state) {
         std::complex<T> res(.0, .0);
+        // Create indirection to avoid GCC issue with AVX512 compilation
+        std::complex<T> *res_ptr = &res;
 
-        //Util::omp_innerProd(vec1.data(), vec2.data(), res, sz);
-        benchmark::DoNotOptimize(res);
+        Util::omp_innerProd(vec1.data(), vec2.data(), *res_ptr, sz);
+        benchmark::DoNotOptimize(res_ptr);
     }
 }
 BENCHMARK(omp_innerProd_cmplx<float>)
@@ -147,14 +149,16 @@ template <class T> static void blas_innerProd_cmplx(benchmark::State &state) {
 
     for (auto _ : state) {
         std::complex<T> res(.0, .0);
+        // Create indirection to avoid GCC issue with AVX512 compilation
+        std::complex<T> *res_ptr = &res;
 
         if constexpr (std::is_same_v<T, float>) {
-            cblas_cdotc_sub(sz, vec1.data(), 1, vec2.data(), 1, &res);
+            cblas_cdotc_sub(sz, vec1.data(), 1, vec2.data(), 1, res_ptr);
         } else if constexpr (std::is_same_v<T, double>) {
-            cblas_zdotc_sub(sz, vec1.data(), 1, vec2.data(), 1, &res);
+            cblas_zdotc_sub(sz, vec1.data(), 1, vec2.data(), 1, res_ptr);
         }
 
-        benchmark::DoNotOptimize(res);
+        benchmark::DoNotOptimize(res_ptr);
     }
 }
 BENCHMARK(blas_innerProd_cmplx<float>)
@@ -528,7 +532,8 @@ template <class T> static void blas_scaleAndAdd_cmplx(benchmark::State &state) {
 
     std::vector<std::complex<T>> vec1;
     std::vector<std::complex<T>> vec2;
-    std::complex<T> scale{std::cos(static_cast<T>(0.4123)), std::sin(static_cast<T>(0.4123))};
+    std::complex<T> scale{std::cos(static_cast<T>(0.4123)),
+                          std::sin(static_cast<T>(0.4123))};
 
     for (size_t i = 0; i < sz; i++) {
         vec1.push_back({distr(eng), distr(eng)});
