@@ -1,6 +1,6 @@
 ninja
 flaky
-numpy
+numpy<1.24
 pennylane~=0.26
 pybind11
 pytest
