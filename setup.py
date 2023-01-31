@@ -115,7 +115,7 @@ with open(os.path.join("pennylane_lightning", "_version.py")) as f:
 
 requirements = [
     "ninja",
-    "numpy",
+    "numpy<1.24",
     "pennylane>=0.28",
 ]
 
