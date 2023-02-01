@@ -94,14 +94,14 @@ set(TEST_SOURCES CreateAllWires.cpp
                  Test_StateVectorRawCPU.cpp
                  Test_Util.cpp)
 
-add_executable(runner ${TEST_SOURCES})
-target_link_libraries(runner PRIVATE lightning_tests_dependency
+add_executable(pennylane_lightning_test_runner ${TEST_SOURCES})
+target_link_libraries(pennylane_lightning_test_runner PRIVATE lightning_tests_dependency
                                      lightning_compile_options
                                      lightning_external_libs)
-catch_discover_tests(runner)
+catch_discover_tests(pennylane_lightning_test_runner)
 
 # We build compile time tests before the runtime tests as build error messages
 # are horrible if compile time constants are not well defined.
-add_dependencies(runner compile_time_tests)
+add_dependencies(pennylane_lightning_test_runner compile_time_tests)
 
-install(TARGETS runner DESTINATION bin)
+install(TARGETS pennylane_lightning_test_runner DESTINATION bin)

@@ -46,7 +46,7 @@ jobs:
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
-            ./runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
+            ./pennylane_lightning_test_runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -60,7 +60,7 @@ jobs:
             cmake . -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DENABLE_KOKKOS=OFF -DENABLE_PYTHON=OFF -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
             cmake --build ./BuildCov
             cd ./BuildCov
-            ./runner
+            ./pennylane_lightning_test_runner
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}.info
@@ -159,7 +159,7 @@ jobs:
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
-            ./runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
+            ./pennylane_lightning_test_runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -173,7 +173,7 @@ jobs:
             cmake . -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DENABLE_KOKKOS=OFF -DENABLE_PYTHON=OFF -DENABLE_BLAS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
             cmake --build ./BuildCov
             cd ./BuildCov
-            ./runner
+            ./pennylane_lightning_test_runner
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}.info
@@ -298,7 +298,7 @@ jobs:
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
-            ./runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
+            ./pennylane_lightning_test_runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -312,7 +312,7 @@ jobs:
             cmake . -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DENABLE_KOKKOS=ON -DENABLE_PYTHON=OFF -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
             cmake --build ./BuildCov
             cd ./BuildCov
-            ./runner
+            ./pennylane_lightning_test_runner
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}.info
@@ -447,7 +447,7 @@ jobs:
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
-            ./runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
+            ./pennylane_lightning_test_runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -461,7 +461,7 @@ jobs:
             cmake . -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DENABLE_BLAS=ON -DENABLE_KOKKOS=ON -DENABLE_PYTHON=OFF -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
             cmake --build ./BuildCov
             cd ./BuildCov
-            ./runner
+            ./pennylane_lightning_test_runner
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}.info

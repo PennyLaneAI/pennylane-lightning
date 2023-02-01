@@ -86,7 +86,7 @@ target_link_libraries(pennylane_lightning INTERFACE     lightning_utils
                                                         lightning_algorithms
                                                         lightning_gates
 )
-target_include_directories(pennylane_lightning INTERFACE "pennylane_lightning/src")
+target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}/pennylane_lightning/src;include>")
 
 #####################################################
 if(ENABLE_PYTHON)
@@ -108,6 +108,12 @@ install(TARGETS pennylane_lightning
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
         INCLUDES DESTINATION include
+        PUBLIC_HEADER DESTINATION include
+)
+
+install(DIRECTORY 
+    ${PROJECT_SOURCE_DIR}/pennylane_lightning/src
+    DESTINATION include/pennylane_lightning
 )
 
 if (BUILD_TESTS)

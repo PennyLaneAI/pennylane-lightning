@@ -81,16 +81,12 @@ omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
 #pragma omp declare \
             reduction (sm:std::complex<T>:omp_out=ConstSum(omp_out, omp_in)) \
             initializer(omp_priv=std::complex<T> {0, 0})
-#endif
 
-#if defined(_OPENMP)
     size_t nthreads = data_size / NTERMS;
     if (nthreads < 1) {
         nthreads = 1;
     }
-#endif
 
-#if defined(_OPENMP)
 #pragma omp parallel for num_threads(nthreads) default(none)                   \
     shared(v1, v2, data_size) reduction(sm                                     \
                                         : result)
