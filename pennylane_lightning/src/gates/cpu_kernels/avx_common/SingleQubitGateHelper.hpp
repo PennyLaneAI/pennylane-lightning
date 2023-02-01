@@ -19,7 +19,7 @@
  * Depending on the wire the gate applies to, one needs to call
  * ``applyInternal`` or ``applyExternal`` in classes implementing AVX2/512
  * gates. As ``applyInternal`` takes ``wire`` as a template parameters, we
- * instantiates this function for all possible ``wire`` and call the correct one
+ * instantiate this function for all possible ``wire`` and call the correct one
  * in runtime.
  */
 #pragma once
