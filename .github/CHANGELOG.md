@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Allow better integration and installation support with CMake targeted binary builds.
+[(#403)](https://github.com/PennyLaneAI/pennylane-lightning/pull/403)
+
 ### Documentation
 
 ### Bug fixes
