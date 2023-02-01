@@ -10,7 +10,15 @@
 
 ### Bug fixes
 
+* Fix Github shields in README.
+[(#402)](https://github.com/PennyLaneAI/pennylane-lightning/pull/402)
+
+* Limit Numpy version to avoid conflicts with Autograd.
+[(#410)](https://github.com/PennyLaneAI/pennylane-lightning/pull/410)
+
 ### Contributors
+
+Amintor Dusko, Lee James O'Riordan, Chae-Yeun Park
 
 ---
 
@@ -19,7 +27,7 @@
 ### Bug fixes
 
 * Fix Python module versioning for Linux wheels.
-[(#407)](https://github.com/PennyLaneAI/pennylane-lightning/pull/407)
+[(#408)](https://github.com/PennyLaneAI/pennylane-lightning/pull/408)
 
 ### Contributors
 
