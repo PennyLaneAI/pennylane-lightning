@@ -42,4 +42,4 @@ jobs:
       - name: Run GBenchmark
         run: |
             ./BuildGBench/benchmarks/utils --benchmark_filter="^[a-z]+_innerProd_cmplx<double>/[0-9]+$"
-            ./BuildGBench/benchmarks/apply_operations --benchmark_filter="^applyOperations_RandOps<double>/LM_all/32/[0-9]+$"
+            ./BuildGBench/benchmarks/pennylane_lightning_bench_operations --benchmark_filter="^applyOperations_RandOps<double>/LM_all/32/[0-9]+$"

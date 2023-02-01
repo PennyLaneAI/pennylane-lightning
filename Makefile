@@ -79,32 +79,32 @@ coverage-cpp:
 	rm -rf ./BuildCov
 	cmake pennylane_lightning/src -BBuildCov  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON
 	cmake --build ./BuildCov
-	cd ./BuildCov; ./tests/runner; \
+	cd ./BuildCov; ./tests/pennylane_lightning_test_runner; \
 	lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info; \
 	genhtml coverage.info --output-directory out
 
 test-cpp:
 	rm -rf ./BuildTests
 	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON
-	cmake --build ./BuildTests --target runner
+	cmake --build ./BuildTests --target pennylane_lightning_test_runner
 	cmake --build ./BuildTests --target test
 
 test-cpp-blas:
 	rm -rf ./BuildTests
 	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON -DENABLE_BLAS=ON
-	cmake --build ./BuildTests --target runner
+	cmake --build ./BuildTests --target pennylane_lightning_test_runner
 	cmake --build ./BuildTests --target test
 
 test-cpp-no-omp:
 	rm -rf ./BuildTests
 	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON -DENABLE_OPENMP=OFF
-	cmake --build ./BuildTests --target runner
+	cmake --build ./BuildTests --target pennylane_lightning_test_runner
 	cmake --build ./BuildTests --target test
 
 test-cpp-kokkos:
 	rm -rf ./BuildTests
 	cmake $(LIGHTNING_CPP_DIR) -BBuildTests -DBUILD_TESTS=ON -DENABLE_KOKKOS=ON
-	cmake --build ./BuildTests --target runner
+	cmake --build ./BuildTests --target pennylane_lightning_test_runner
 	cmake --build ./BuildTests --target test
 
 .PHONY: gbenchmark

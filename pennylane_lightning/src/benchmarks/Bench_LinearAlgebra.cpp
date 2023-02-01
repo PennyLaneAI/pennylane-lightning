@@ -42,12 +42,12 @@ static void create_random_cmplx_vector(benchmark::State &state) {
     }
 }
 BENCHMARK(create_random_cmplx_vector<float>)
-    ->RangeMultiplier(1l << 3)
-    ->Range(1l << 5, 1l << 10);
+    ->RangeMultiplier(1U << 3)
+    ->Range(1U << 5, 1U << 10);
 
 BENCHMARK(create_random_cmplx_vector<double>)
-    ->RangeMultiplier(1l << 3)
-    ->Range(1l << 5, 1l << 10);
+    ->RangeMultiplier(1U << 3)
+    ->Range(1U << 5, 1U << 10);
 
 //***********************************************************************//
 //                            Inner Product
@@ -82,12 +82,12 @@ template <class T> static void std_innerProd_cmplx(benchmark::State &state) {
     }
 }
 BENCHMARK(std_innerProd_cmplx<float>)
-    ->RangeMultiplier(1l << 3)
-    ->Range(1l << 5, 1l << 10);
+    ->RangeMultiplier(1U << 3)
+    ->Range(1U << 5, 1U << 10);
 
 BENCHMARK(std_innerProd_cmplx<double>)
-    ->RangeMultiplier(1l << 3)
-    ->Range(1l << 5, 1l << 10);
+    ->RangeMultiplier(1U << 3)
+    ->Range(1U << 5, 1U << 10);
 
 /**
  * @brief Benchmark Util::omp_innerProd for two vectors of complex
@@ -111,18 +111,20 @@ template <class T> static void omp_innerProd_cmplx(benchmark::State &state) {
 
     for (auto _ : state) {
         std::complex<T> res(.0, .0);
+        // Create indirection to avoid GCC issue with AVX512 compilation
+        std::complex<T> *res_ptr = &res;
 
-        Util::omp_innerProd(vec1.data(), vec2.data(), res, sz);
-        benchmark::DoNotOptimize(res);
+        Util::omp_innerProd(vec1.data(), vec2.data(), *res_ptr, sz);
+        benchmark::DoNotOptimize(res_ptr);
     }
 }
 BENCHMARK(omp_innerProd_cmplx<float>)
-    ->RangeMultiplier(1l << 3)
-    ->Range(1l << 5, 1l << 10);
+    ->RangeMultiplier(1U << 3)
+    ->Range(1U << 5, 1U << 10);
 
 BENCHMARK(omp_innerProd_cmplx<double>)
-    ->RangeMultiplier(1l << 3)
-    ->Range(1l << 5, 1l << 10);
+    ->RangeMultiplier(1U << 3)
+    ->Range(1U << 5, 1U << 10);
 
 #if __has_include(<cblas.h>) && defined _ENABLE_BLAS
 /**
@@ -147,23 +149,25 @@ template <class T> static void blas_innerProd_cmplx(benchmark::State &state) {
 
     for (auto _ : state) {
         std::complex<T> res(.0, .0);
+        // Create indirection to avoid GCC issue with AVX512 compilation
+        std::complex<T> *res_ptr = &res;
 
         if constexpr (std::is_same_v<T, float>) {
-            cblas_cdotc_sub(sz, vec1.data(), 1, vec2.data(), 1, &res);
+            cblas_cdotc_sub(sz, vec1.data(), 1, vec2.data(), 1, res_ptr);
         } else if constexpr (std::is_same_v<T, double>) {
-            cblas_zdotc_sub(sz, vec1.data(), 1, vec2.data(), 1, &res);
+            cblas_zdotc_sub(sz, vec1.data(), 1, vec2.data(), 1, res_ptr);
         }
 
-        benchmark::DoNotOptimize(res);
+        benchmark::DoNotOptimize(res_ptr);
     }
 }
 BENCHMARK(blas_innerProd_cmplx<float>)
-    ->RangeMultiplier(1l << 3)
-    ->Range(1l << 5, 1l << 10);
+    ->RangeMultiplier(1U << 3)
+    ->Range(1U << 5, 1U << 10);
 
 BENCHMARK(blas_innerProd_cmplx<double>)
-    ->RangeMultiplier(1l << 3)
-    ->Range(1l << 5, 1l << 10);
+    ->RangeMultiplier(1U << 3)
+    ->Range(1U << 5, 1U << 10);
 #endif
 
 //***********************************************************************//
@@ -199,12 +203,12 @@ template <class T> static void naive_transpose_cmplx(benchmark::State &state) {
     }
 }
 BENCHMARK(naive_transpose_cmplx<float>)
-    ->RangeMultiplier(1l << 3)
-    ->Range(1l << 5, 1l << 10);
+    ->RangeMultiplier(1U << 3)
+    ->Range(1U << 5, 1U << 10);
 
 BENCHMARK(naive_transpose_cmplx<double>)
-    ->RangeMultiplier(1l << 3)
-    ->Range(1l << 5, 1l << 10);
+    ->RangeMultiplier(1U << 3)
+    ->Range(1U << 5, 1U << 10);
 
 /**
  * @brief Benchmark Util::CFTranspose for a randomly generated matrix
@@ -233,20 +237,20 @@ static void cf_transpose_cmplx(benchmark::State &state) {
     }
 }
 BENCHMARK(cf_transpose_cmplx<float, 16>)
-    ->RangeMultiplier(1l << 3)
-    ->Range(1l << 5, 1l << 10);
+    ->RangeMultiplier(1U << 3)
+    ->Range(1U << 5, 1U << 10);
 
 BENCHMARK(cf_transpose_cmplx<double, 16>)
-    ->RangeMultiplier(1l << 3)
-    ->Range(1l << 5, 1l << 10);
+    ->RangeMultiplier(1U << 3)
+    ->Range(1U << 5, 1U << 10);
 
 BENCHMARK(cf_transpose_cmplx<float, 32>)
-    ->RangeMultiplier(1l << 3)
-    ->Range(1l << 5, 1l << 10);
+    ->RangeMultiplier(1U << 3)
+    ->Range(1U << 5, 1U << 10);
 
 BENCHMARK(cf_transpose_cmplx<double, 32>)
-    ->RangeMultiplier(1l << 3)
-    ->Range(1l << 5, 1l << 10);
+    ->RangeMultiplier(1U << 3)
+    ->Range(1U << 5, 1U << 10);
 
 //***********************************************************************//
 //                         Matrix-Vector Product
@@ -283,12 +287,12 @@ static void omp_matrixVecProd_cmplx(benchmark::State &state) {
     }
 }
 BENCHMARK(omp_matrixVecProd_cmplx<float>)
-    ->RangeMultiplier(1l << 2)
-    ->Range(1l << 4, 1l << 8);
+    ->RangeMultiplier(1U << 2)
+    ->Range(1U << 4, 1U << 8);
 
 BENCHMARK(omp_matrixVecProd_cmplx<double>)
-    ->RangeMultiplier(1l << 2)
-    ->Range(1l << 4, 1l << 8);
+    ->RangeMultiplier(1U << 2)
+    ->Range(1U << 4, 1U << 8);
 
 #if __has_include(<cblas.h>) && defined _ENABLE_BLAS
 /**
@@ -332,12 +336,12 @@ static void blas_matrixVecProd_cmplx(benchmark::State &state) {
     }
 }
 BENCHMARK(blas_matrixVecProd_cmplx<float>)
-    ->RangeMultiplier(1l << 2)
-    ->Range(1l << 4, 1l << 8);
+    ->RangeMultiplier(1U << 2)
+    ->Range(1U << 4, 1U << 8);
 
 BENCHMARK(blas_matrixVecProd_cmplx<double>)
-    ->RangeMultiplier(1l << 2)
-    ->Range(1l << 4, 1l << 8);
+    ->RangeMultiplier(1U << 2)
+    ->Range(1U << 4, 1U << 8);
 #endif
 
 //***********************************************************************//
@@ -377,12 +381,12 @@ static void omp_matrixMatProd_cmplx(benchmark::State &state) {
     }
 }
 BENCHMARK(omp_matrixMatProd_cmplx<float>)
-    ->RangeMultiplier(1l << 2)
-    ->Range(1l << 4, 1l << 8);
+    ->RangeMultiplier(1U << 2)
+    ->Range(1U << 4, 1U << 8);
 
 BENCHMARK(omp_matrixMatProd_cmplx<double>)
-    ->RangeMultiplier(1l << 2)
-    ->Range(1l << 4, 1l << 8);
+    ->RangeMultiplier(1U << 2)
+    ->Range(1U << 4, 1U << 8);
 
 #if __has_include(<cblas.h>) && defined _ENABLE_BLAS
 /**
@@ -427,12 +431,12 @@ static void blas_matrixMatProd_cmplx(benchmark::State &state) {
     }
 }
 BENCHMARK(blas_matrixMatProd_cmplx<float>)
-    ->RangeMultiplier(1l << 2)
-    ->Range(1l << 4, 1l << 8);
+    ->RangeMultiplier(1U << 2)
+    ->Range(1U << 4, 1U << 8);
 
 BENCHMARK(blas_matrixMatProd_cmplx<double>)
-    ->RangeMultiplier(1l << 2)
-    ->Range(1l << 4, 1l << 8);
+    ->RangeMultiplier(1U << 2)
+    ->Range(1U << 4, 1U << 8);
 #endif
 
 //***********************************************************************//
@@ -528,7 +532,8 @@ template <class T> static void blas_scaleAndAdd_cmplx(benchmark::State &state) {
 
     std::vector<std::complex<T>> vec1;
     std::vector<std::complex<T>> vec2;
-    std::complex<T> scale{std::cos(0.4123), std::sin(0.4123)};
+    std::complex<T> scale{std::cos(static_cast<T>(0.4123)),
+                          std::sin(static_cast<T>(0.4123))};
 
     for (size_t i = 0; i < sz; i++) {
         vec1.push_back({distr(eng), distr(eng)});
