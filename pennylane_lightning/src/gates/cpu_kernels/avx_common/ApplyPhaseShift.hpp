@@ -70,7 +70,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyPhaseShift {
                 arr[2 * n + 1] = arr[2 * n + 0];
             }
         }
-        return set(arr);
+        return setValue(arr);
     }
 
     /**
@@ -88,7 +88,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyPhaseShift {
                 arr[2 * n + 1] = -arr[2 * n + 0];
             }
         }
-        return set(arr);
+        return setValue(arr);
     }
 
     template <size_t rev_wire, typename ParamT>

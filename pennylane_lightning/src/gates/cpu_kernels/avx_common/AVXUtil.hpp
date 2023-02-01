@@ -212,16 +212,15 @@ template <size_t packed_size> struct InternalWires {
 template <size_t packed_size>
 constexpr auto internal_wires_v = InternalWires<packed_size>::value;
 
-template <typename PrecisionT, size_t packed_size> struct Set;
 #ifdef PL_USE_AVX2
-constexpr static auto set(const std::array<float, 8> &arr)
+constexpr static auto setValue(const std::array<float, 8> &arr)
     -> AVXIntrinsicType<float, 8> {
     // NOLINTBEGIN(readability-magic-numbers)
     return __m256{arr[0], arr[1], arr[2], arr[3],
                   arr[4], arr[5], arr[6], arr[7]};
     // NOLINTEND(readability-magic-numbers)
 }
-constexpr static auto set(const std::array<double, 4> &arr)
+constexpr static auto setValue(const std::array<double, 4> &arr)
     -> AVXIntrinsicType<double, 4> {
     // NOLINTBEGIN(readability-magic-numbers)
     return __m256d{arr[0], arr[1], arr[2], arr[3]};
@@ -229,7 +228,7 @@ constexpr static auto set(const std::array<double, 4> &arr)
 }
 #endif
 #ifdef PL_USE_AVX512F
-constexpr static auto set(const std::array<float, 16> &arr)
+constexpr static auto setValue(const std::array<float, 16> &arr)
     -> AVXIntrinsicType<float, 16> {
     // NOLINTBEGIN(readability-magic-numbers)
     return __m512{arr[0],  arr[1],  arr[2],  arr[3], arr[4],  arr[5],
@@ -237,7 +236,7 @@ constexpr static auto set(const std::array<float, 16> &arr)
                   arr[12], arr[13], arr[14], arr[15]};
     // NOLINTEND(readability-magic-numbers)
 }
-constexpr static auto set(const std::array<double, 8> &arr)
+constexpr static auto setValue(const std::array<double, 8> &arr)
     -> AVXIntrinsicType<double, 8> {
     // NOLINTBEGIN(readability-magic-numbers)
     return __m512d{arr[0], arr[1], arr[2], arr[3],
@@ -311,7 +310,7 @@ auto toParity(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
         data[2 * idx + 1] = static_cast<PrecisionT>(1.0) -
                             2 * static_cast<PrecisionT>(func(idx));
     }
-    return set(data);
+    return setValue(data);
 }
 
 /**
@@ -327,6 +326,6 @@ auto setValueOneTwo(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
         data[2 * idx + 0] = static_cast<PrecisionT>(func(idx));
         data[2 * idx + 1] = data[2 * idx + 0];
     }
-    return set(data);
+    return setValue(data);
 }
 } // namespace Pennylane::Gates::AVXCommon
