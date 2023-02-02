@@ -9,15 +9,15 @@
 * Allow better integration and installation support with CMake targeted binary builds.
 [(#403)](https://github.com/PennyLaneAI/pennylane-lightning/pull/403)
 
+* Remove explicit Numpy and Scipy requirements.
+[(#412)](https://github.com/PennyLaneAI/pennylane-lightning/pull/412)
+
 ### Documentation
 
 ### Bug fixes
 
 * Fix Github shields in README.
 [(#402)](https://github.com/PennyLaneAI/pennylane-lightning/pull/402)
-
-* Limit Numpy version to avoid conflicts with Autograd.
-[(#410)](https://github.com/PennyLaneAI/pennylane-lightning/pull/410)
 
 ### Contributors
 
