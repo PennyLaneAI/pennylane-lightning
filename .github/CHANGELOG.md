@@ -9,7 +9,7 @@
 * Allow better integration and installation support with CMake targeted binary builds.
 [(#403)](https://github.com/PennyLaneAI/pennylane-lightning/pull/403)
 
-* Remove explicit Numpy and Scipy dependence.
+* Remove explicit Numpy and Scipy requirements.
 [(#412)](https://github.com/PennyLaneAI/pennylane-lightning/pull/412)
 
 ### Documentation
