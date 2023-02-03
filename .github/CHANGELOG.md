@@ -9,6 +9,9 @@
 * Allow better integration and installation support with CMake targeted binary builds.
 [(#403)](https://github.com/PennyLaneAI/pennylane-lightning/pull/403)
 
+* Update AVX2/512 kernel infrastructure for additional gate/generator operations.
+[(#404)](https://github.com/PennyLaneAI/pennylane-lightning/pull/404)
+
 ### Documentation
 
 ### Bug fixes
