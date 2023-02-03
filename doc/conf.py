@@ -212,7 +212,7 @@ html_theme_options = {
     "navbar_active_link": 3,
     "google_analytics_tracking_id": "UA-130507810-1",
     "extra_copyrights": [
-        "TensorFlow, the TensorFlow logo, and any related marks are trademarks " "of Google Inc."
+        "TensorFlow, the TensorFlow logo, and any related marks are trademarks of Google Inc."
     ],
     "toc_overview": True,
 }
