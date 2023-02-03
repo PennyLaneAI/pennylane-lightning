@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 20) # At least C++20 is required
 
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_OPENMP "Enable OpenMP" ON)
+option(ENABLE_GATE_DISPATCHER "Enable gate kernel dispatching on AVX/AVX2/AVX512" ON)
 
 if(ENABLE_CLANG_TIDY)
     if(NOT DEFINED CLANG_TIDY_BINARY)

@@ -18,7 +18,6 @@
 #pragma once
 #include "AVXUtil.hpp"
 #include "BitUtil.hpp"
-#include "Macros.hpp"
 #include "Util.hpp"
 
 #include <immintrin.h>
@@ -26,6 +25,7 @@
 #include <type_traits>
 
 namespace Pennylane::Gates::AVXCommon {
+///@cond DEV
 namespace Internal {
 template <typename T> struct AVX2Intrinsic {
     static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
@@ -33,6 +33,7 @@ template <typename T> struct AVX2Intrinsic {
 template <> struct AVX2Intrinsic<float> { using Type = __m256; };
 template <> struct AVX2Intrinsic<double> { using Type = __m256d; };
 } // namespace Internal
+///@endcond
 
 template <typename T> struct AVX2Concept {
     using PrecisionT = T;
@@ -110,6 +111,4 @@ template <typename T> struct AVX2Concept {
         }
     }
 };
-template <> struct AVXConcept<float, 8> { using Type = AVX2Concept<float>; };
-template <> struct AVXConcept<double, 4> { using Type = AVX2Concept<double>; };
 } // namespace Pennylane::Gates::AVXCommon
