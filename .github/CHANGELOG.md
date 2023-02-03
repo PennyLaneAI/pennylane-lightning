@@ -12,6 +12,9 @@
 * Remove explicit Numpy and Scipy requirements.
 [(#412)](https://github.com/PennyLaneAI/pennylane-lightning/pull/412)
 
+* Get `llvm` installation root from the environment variable `LLVM_ROOT_DIR` (or fallback to `brew`).
+[(#413)](https://github.com/PennyLaneAI/pennylane-lightning/pull/413)
+
 ### Documentation
 
 ### Bug fixes
@@ -21,7 +24,7 @@
 
 ### Contributors
 
-Amintor Dusko, Lee James O'Riordan, Chae-Yeun Park
+Amintor Dusko, Lee James O'Riordan, Chae-Yeun Park, Vincent Michaud-Rioux
 
 ---
 
