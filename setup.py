@@ -65,10 +65,11 @@ class CMakeBuild(build_ext):
                 "-T clangcl",
             ]
         else:
-            configure_args += [
-                "-GNinja",
-                f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
-            ]
+            if ninja_path:
+                configure_args += [
+                    "-GNinja",
+                    f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
+                ]
 
         build_args = []
 
@@ -114,7 +115,6 @@ with open(os.path.join("pennylane_lightning", "_version.py")) as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
-    "ninja",
     "pennylane>=0.28",
 ]
 
