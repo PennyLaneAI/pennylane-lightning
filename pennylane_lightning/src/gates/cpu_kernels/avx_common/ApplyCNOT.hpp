@@ -25,8 +25,6 @@
 #include "ConstantUtil.hpp"
 #include "Util.hpp"
 
-#include <immintrin.h>
-
 #include <complex>
 #include <utility>
 
