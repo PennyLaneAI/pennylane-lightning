@@ -26,6 +26,7 @@
 #include <type_traits>
 
 namespace Pennylane::Gates::AVXCommon {
+///@cond DEV
 namespace Internal {
 template <typename T> struct AVX512Intrinsic {
     static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
@@ -33,6 +34,7 @@ template <typename T> struct AVX512Intrinsic {
 template <> struct AVX512Intrinsic<float> { using Type = __m512; };
 template <> struct AVX512Intrinsic<double> { using Type = __m512d; };
 } // namespace Internal
+///@endcond
 
 template <typename T> struct AVX512Concept {
     using PrecisionT = T;

@@ -39,7 +39,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
     constexpr static bool symmetric = false;
 
     template <size_t control, size_t target>
-    static consteval auto applyInternalInternalPermuation() {
+    static consteval auto applyInternalInternalPermutation() {
         std::array<uint8_t, packed_size> perm{};
 
         for (size_t k = 0; k < packed_size / 2; k++) {
@@ -59,7 +59,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
                                       size_t num_qubits,
                                       [[maybe_unused]] bool inverse) {
         constexpr static auto perm =
-            applyInternalInternalPermuation<control, target>();
+            applyInternalInternalPermutation<control, target>();
 
         for (size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);

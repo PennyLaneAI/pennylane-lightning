@@ -36,8 +36,8 @@ jobs:
             cmake ./pennylane_lightning/src -BBuild  -DBUILD_TESTS=ON -DENABLE_OPENMP=OFF -DENABLE_WARNINGS=OFF
             cmake --build ./Build --config Debug
             mkdir -p ./Build/tests/results
-            .\Build\tests\Debug\runner.exe --order lex --reporter junit --out .\Build\tests\results\report_cpptests.xml
-            OpenCppCoverage --sources pennylane_lightning\src --export_type cobertura:coverage.xml Build\tests\Debug\runner.exe
+            .\Build\tests\Debug\pennylane_lightning_test_runner.exe --order lex --reporter junit --out .\Build\tests\results\report_cpptests.xml
+            OpenCppCoverage --sources pennylane_lightning\src --export_type cobertura:coverage.xml Build\tests\Debug\pennylane_lightning_test_runner.exe
             Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}.xml
 
       - name: Upload test results
@@ -208,8 +208,8 @@ jobs:
             cmake ./pennylane_lightning/src -BBuild  -DBUILD_TESTS=ON -DENABLE_KOKKOS=ON -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos -DENABLE_OPENMP=OFF -DENABLE_WARNINGS=OFF -T clangcl
             cmake --build ./Build --config Debug -- /p:UseMultiToolTask=true /p:EnforceProcessCountAcrossBuilds=true /p:MultiProcMaxCount=2
             mkdir -p ./Build/tests/results
-            .\Build\tests\Debug\runner.exe --order lex --reporter junit --out .\Build\tests\results\report_${{ github.job }}.xml
-            OpenCppCoverage --sources pennylane_lightning\src --export_type cobertura:coverage.xml Build\tests\Debug\runner.exe
+            .\Build\tests\Debug\pennylane_lightning_test_runner.exe --order lex --reporter junit --out .\Build\tests\results\report_${{ github.job }}.xml
+            OpenCppCoverage --sources pennylane_lightning\src --export_type cobertura:coverage.xml Build\tests\Debug\pennylane_lightning_test_runner.exe
             Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}.xml
 
       - name: Upload test results

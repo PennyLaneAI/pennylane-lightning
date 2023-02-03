@@ -1,6 +1,5 @@
 ninja
 flaky
-numpy
 git+https://github.com/PennyLaneAI/pennylane.git@master
 pybind11
 pytest

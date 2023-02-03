@@ -151,8 +151,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingYY {
 
         const auto cos_factor =
             set1<PrecisionT, packed_size>(std::cos(angle / 2));
-        const auto isin_factor_p = imagFactor<PrecisionT, packed_size>(isin);
-        const auto isin_factor_m = imagFactor<PrecisionT, packed_size>(-isin);
+        const auto isin_factor = imagFactor<PrecisionT, packed_size>(isin);
 
         constexpr static auto perm = compilePermutation<PrecisionT>(
             swapRealImag(identity<packed_size>()));
@@ -170,16 +169,16 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingYY {
             const auto v11 = PrecisionAVXConcept::load(arr + i11); // 11
 
             const auto prod_cos00 = cos_factor * v00;
-            const auto prod_isin00 = isin_factor_m * permute<perm>(v11);
+            const auto prod_isin00 = -isin_factor * permute<perm>(v11);
 
             const auto prod_cos01 = cos_factor * v01;
-            const auto prod_isin01 = isin_factor_p * permute<perm>(v10);
+            const auto prod_isin01 = isin_factor * permute<perm>(v10);
 
             const auto prod_cos10 = cos_factor * v10;
-            const auto prod_isin10 = isin_factor_p * permute<perm>(v01);
+            const auto prod_isin10 = isin_factor * permute<perm>(v01);
 
             const auto prod_cos11 = cos_factor * v11;
-            const auto prod_isin11 = isin_factor_m * permute<perm>(v00);
+            const auto prod_isin11 = -isin_factor * permute<perm>(v00);
 
             PrecisionAVXConcept::store(arr + i00, prod_cos00 + prod_isin00);
             PrecisionAVXConcept::store(arr + i01, prod_cos01 + prod_isin01);

@@ -16,17 +16,16 @@
  * Defines kernel functions for all AVX
  */
 #pragma once
+#include "avx_common/AVXGateKernels.hpp"
+#include "avx_common/SingleQubitGateHelper.hpp"
+#include "avx_common/TwoQubitGateHelper.hpp"
 
-// General implementations
 #include "Error.hpp"
 #include "GateImplementationsLM.hpp"
 #include "GateOperation.hpp"
 #include "Gates.hpp"
 #include "KernelType.hpp"
 #include "LinearAlgebra.hpp"
-#include "avx_common/AVXGateKernels.hpp"
-#include "avx_common/SingleQubitGateHelper.hpp"
-#include "avx_common/TwoQubitGateHelper.hpp"
 
 #include <immintrin.h>
 

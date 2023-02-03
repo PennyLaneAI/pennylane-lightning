@@ -19,12 +19,13 @@
  * Depending on the wire the gate applies to, one needs to call
  * ``applyInternal`` or ``applyExternal`` in classes implementing AVX2/512
  * gates. As ``applyInternal`` takes ``wire`` as a template parameters, we
- * instantiates this function for all possible ``wire`` and call the correct one
+ * instantiate this function for all possible ``wire`` and call the correct one
  * in runtime.
  */
 #pragma once
 #include "BitUtil.hpp"
 #include "ConstantUtil.hpp"
+#include "Error.hpp"
 #include "TypeTraits.hpp"
 
 #include <cassert>
@@ -93,6 +94,12 @@ InternalFunctions_Iter([[maybe_unused]] std::index_sequence<rev_wire...> dummy)
     return std::array{&AVXImpl::template applyInternal<rev_wire, ParamT>...};
 }
 
+/**
+ * @brief Generate an array of function pointers to ``applyInternal`` functions
+ * with different rev_wires.
+ *
+ * @tparam AVXImpl Class implementing AVX2/512 gates without parameters
+ */
 template <SingleQubitGateWithoutParam AVXImpl>
 constexpr auto InternalFunctions() -> decltype(auto) {
     constexpr size_t internal_wires =
@@ -101,6 +108,12 @@ constexpr auto InternalFunctions() -> decltype(auto) {
         std::make_index_sequence<internal_wires>());
 }
 
+/**
+ * @brief Generate an array of function pointers to ``applyInternal`` functions
+ * with different rev_wires.
+ *
+ * @tparam AVXImpl Class implementing AVX2/512 gate with a parameter
+ */
 template <SingleQubitGateWithParam AVXImpl, typename ParamT>
 constexpr auto InternalFunctions() -> decltype(auto) {
     constexpr size_t internal_wires =
@@ -132,8 +145,8 @@ class SingleQubitGateWithoutParamHelper {
         : fallback_func_{fallback_func} {}
 
     /**
-     * @brief This function calls corresponding AVX2/512 by finding the correct
-     * one based on ``wires``.
+     * @brief This function calls corresponding AVX2/512 kernel functions by
+     * finding the correct one based on ``wires``.
      *
      * @param arr Pointer to a statevector array
      * @param num_qubits Number of qubits
@@ -186,8 +199,8 @@ class SingleQubitGateWithParamHelper {
         : fallback_func_{fallback_func} {}
 
     /**
-     * @brief This function calls corresponding AVX2/512 by finding the correct
-     * one based on ``wires``.
+     * @brief This function calls corresponding AVX2/512 kernel functions by
+     * finding the correct one based on ``wires``.
      *
      * @param arr Pointer to a statevector array
      * @param num_qubits Number of qubits

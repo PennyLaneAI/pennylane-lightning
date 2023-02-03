@@ -6,11 +6,40 @@
 
 ### Improvements
 
+* Allow better integration and installation support with CMake targeted binary builds.
+[(#403)](https://github.com/PennyLaneAI/pennylane-lightning/pull/403)
+
+* Remove explicit Numpy and Scipy requirements.
+[(#412)](https://github.com/PennyLaneAI/pennylane-lightning/pull/412)
+
+* Update AVX2/512 kernel infrastructure for additional gate/generator operations.
+[(#404)](https://github.com/PennyLaneAI/pennylane-lightning/pull/404)
+
 ### Documentation
 
 ### Bug fixes
 
+* Fix Github shields in README.
+[(#402)](https://github.com/PennyLaneAI/pennylane-lightning/pull/402)
+
 ### Contributors
+
+Amintor Dusko, Lee James O'Riordan, Chae-Yeun Park
+
+---
+
+# Release 0.28.2
+
+### Bug fixes
+
+* Fix Python module versioning for Linux wheels.
+[(#408)](https://github.com/PennyLaneAI/pennylane-lightning/pull/408)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Amintor Dusko
 
 ---
 

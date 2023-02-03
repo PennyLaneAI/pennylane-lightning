@@ -212,52 +212,38 @@ template <size_t packed_size> struct InternalWires {
 template <size_t packed_size>
 constexpr auto internal_wires_v = InternalWires<packed_size>::value;
 
-template <typename PrecisionT, size_t packed_size> struct Set;
 #ifdef PL_USE_AVX2
-template <> struct Set<float, 8> {
-    constexpr static auto create(const std::array<float, 8> &arr)
-        -> AVXIntrinsicType<float, 8> {
-        // NOLINTBEGIN(readability-magic-numbers)
-        return __m256{arr[0], arr[1], arr[2], arr[3],
-                      arr[4], arr[5], arr[6], arr[7]};
-        // NOLINTEND(readability-magic-numbers)
-    }
-};
-template <> struct Set<double, 4> {
-    constexpr static auto create(const std::array<double, 4> &arr)
-        -> AVXIntrinsicType<double, 4> {
-        // NOLINTBEGIN(readability-magic-numbers)
-        return __m256d{arr[0], arr[1], arr[2], arr[3]};
-        // NOLINTEND(readability-magic-numbers)
-    }
-};
+constexpr static auto setValue(const std::array<float, 8> &arr)
+    -> AVXIntrinsicType<float, 8> {
+    // NOLINTBEGIN(readability-magic-numbers)
+    return __m256{arr[0], arr[1], arr[2], arr[3],
+                  arr[4], arr[5], arr[6], arr[7]};
+    // NOLINTEND(readability-magic-numbers)
+}
+constexpr static auto setValue(const std::array<double, 4> &arr)
+    -> AVXIntrinsicType<double, 4> {
+    // NOLINTBEGIN(readability-magic-numbers)
+    return __m256d{arr[0], arr[1], arr[2], arr[3]};
+    // NOLINTEND(readability-magic-numbers)
+}
 #endif
 #ifdef PL_USE_AVX512F
-template <> struct Set<float, 16> {
-    constexpr static auto create(const std::array<float, 16> &arr)
-        -> AVXIntrinsicType<float, 16> {
-        // NOLINTBEGIN(readability-magic-numbers)
-        return __m512{arr[0],  arr[1],  arr[2],  arr[3], arr[4],  arr[5],
-                      arr[6],  arr[7],  arr[8],  arr[9], arr[10], arr[11],
-                      arr[12], arr[13], arr[14], arr[15]};
-        // NOLINTEND(readability-magic-numbers)
-    }
-};
-template <> struct Set<double, 8> {
-    constexpr static auto create(const std::array<double, 8> &arr)
-        -> AVXIntrinsicType<double, 8> {
-        // NOLINTBEGIN(readability-magic-numbers)
-        return __m512d{arr[0], arr[1], arr[2], arr[3],
-                       arr[4], arr[5], arr[6], arr[7]};
-        // NOLINTEND(readability-magic-numbers)
-    }
-};
-#endif
-template <typename PrecisionT, size_t packed_size>
-constexpr auto set(const std::array<PrecisionT, packed_size> &arr)
-    -> AVXIntrinsicType<PrecisionT, packed_size> {
-    return Set<PrecisionT, packed_size>::create(arr);
+constexpr static auto setValue(const std::array<float, 16> &arr)
+    -> AVXIntrinsicType<float, 16> {
+    // NOLINTBEGIN(readability-magic-numbers)
+    return __m512{arr[0],  arr[1],  arr[2],  arr[3], arr[4],  arr[5],
+                  arr[6],  arr[7],  arr[8],  arr[9], arr[10], arr[11],
+                  arr[12], arr[13], arr[14], arr[15]};
+    // NOLINTEND(readability-magic-numbers)
 }
+constexpr static auto setValue(const std::array<double, 8> &arr)
+    -> AVXIntrinsicType<double, 8> {
+    // NOLINTBEGIN(readability-magic-numbers)
+    return __m512d{arr[0], arr[1], arr[2], arr[3],
+                   arr[4], arr[5], arr[6], arr[7]};
+    // NOLINTEND(readability-magic-numbers)
+}
+#endif
 
 // clang-format off
 #ifdef PL_USE_AVX2
@@ -298,7 +284,7 @@ constexpr __m512i setr512i(int64_t  e0, int64_t  e1, int64_t  e2, int64_t  e3,
 
 /**
  * @brief @rst
- * For a function :math:`f(x)` with binary output, this function create
+ * For a function :math:`f(x)` with binary output, this function creates
  * an AVX intrinsic floating-point type with values :math:`(-1)^{f(x)}`
  * where :math:`x` is index of an array (viewed as a complex-valued array).
  * @endrst
@@ -324,7 +310,7 @@ auto toParity(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
         data[2 * idx + 1] = static_cast<PrecisionT>(1.0) -
                             2 * static_cast<PrecisionT>(func(idx));
     }
-    return set(data);
+    return setValue(data);
 }
 
 /**
@@ -338,8 +324,8 @@ auto setValueOneTwo(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
     std::array<PrecisionT, packed_size> data{};
     for (size_t idx = 0; idx < packed_size / 2; idx++) {
         data[2 * idx + 0] = static_cast<PrecisionT>(func(idx));
-        data[2 * idx + 1] = static_cast<PrecisionT>(func(idx));
+        data[2 * idx + 1] = data[2 * idx + 0];
     }
-    return set(data);
+    return setValue(data);
 }
 } // namespace Pennylane::Gates::AVXCommon

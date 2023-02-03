@@ -174,7 +174,6 @@ def _serialize_ops(
             op_list = [o]
 
         for single_op in op_list:
-
             name = single_op.name
             names.append(name)
 
