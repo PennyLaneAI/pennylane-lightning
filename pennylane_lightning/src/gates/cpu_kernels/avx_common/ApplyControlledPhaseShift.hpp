@@ -80,7 +80,7 @@ struct ApplyControlledPhaseShift {
                     arr[2 * k + 1] = 1.0;
                 }
             }
-            return set(arr);
+            return setValue(arr);
         }();
         const auto imag_factor = [isin]() {
             std::array<PrecisionT, packed_size> arr{};
@@ -95,7 +95,7 @@ struct ApplyControlledPhaseShift {
                     arr[2 * k + 1] = 0.0;
                 }
             }
-            return set(arr);
+            return setValue(arr);
         }();
 
         constexpr static auto perm =
@@ -156,7 +156,7 @@ struct ApplyControlledPhaseShift {
                 }
             }
 
-            return set(arr);
+            return setValue(arr);
         }();
 
         const auto imag_factor = [isin]() {
@@ -173,7 +173,7 @@ struct ApplyControlledPhaseShift {
                 }
             }
 
-            return set(arr);
+            return setValue(arr);
         }();
 
         constexpr static auto perm =

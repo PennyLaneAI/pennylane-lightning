@@ -76,7 +76,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
                     arr[2 * k + 1] = std::cos(angle / 2);
                 }
             }
-            return set(arr);
+            return setValue(arr);
         }();
         const auto imag_factor = [isin]() {
             std::array<PrecisionT, packed_size> arr = {
@@ -93,7 +93,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
                     arr[2 * k + 1] = isin;
                 }
             }
-            return set(arr);
+            return setValue(arr);
         }();
 
         constexpr static auto perm =
@@ -148,7 +148,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
                     arr[2 * k + 1] = std::cos(angle / 2);
                 }
             }
-            return set(arr);
+            return setValue(arr);
         }();
 
         const auto real_factor1 = [angle]() {
@@ -162,7 +162,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
                     arr[2 * k + 1] = 1.0;
                 }
             }
-            return set(arr);
+            return setValue(arr);
         }();
 
         const auto imag_factor0 = [isin]() {
@@ -176,7 +176,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
                     arr[2 * k + 1] = isin;
                 }
             }
-            return set(arr);
+            return setValue(arr);
         }();
 
         const auto imag_factor1 = [isin]() {
@@ -190,7 +190,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
                     arr[2 * k + 1] = 0.0;
                 }
             }
-            return set(arr);
+            return setValue(arr);
         }();
 
         constexpr static auto perm =

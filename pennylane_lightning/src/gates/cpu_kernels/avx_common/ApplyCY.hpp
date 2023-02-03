@@ -79,7 +79,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
                 signs[2 * k + 1] = Precision{1.0};
             }
         }
-        return set<Precision, packed_size>(signs);
+        return setValue(signs);
     }
 
     template <size_t control, size_t target>
@@ -150,7 +150,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
                 signs[2 * k + 1] = 1.0;
             }
         }
-        return set<Precision, packed_size>(signs);
+        return setValue(signs);
     }
 
     /**
@@ -171,7 +171,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
                 signs[2 * k + 1] = 1.0;
             }
         }
-        return set<Precision, packed_size>(signs);
+        return setValue(signs);
     }
 
     /**
@@ -232,7 +232,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
                 signs[2 * k + 1] = -1.0;
             }
         }
-        return set<Precision, packed_size>(signs);
+        return setValue(signs);
     }
 
     template <size_t target>

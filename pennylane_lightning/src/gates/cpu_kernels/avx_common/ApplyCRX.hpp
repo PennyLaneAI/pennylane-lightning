@@ -93,7 +93,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
                 arr[2 * k + 1] = Precision{0.0};
             }
         }
-        return set<Precision, packed_size>(arr);
+        return setValue(arr);
     }
 
     /**
@@ -114,7 +114,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
                 arr[2 * k + 1] = Precision{1.0};
             }
         }
-        return set<Precision, packed_size>(arr);
+        return setValue(arr);
     }
 
     template <size_t control, size_t target, class ParamT>
@@ -159,7 +159,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
                 arr[2 * k + 1] = 1.0;
             }
         }
-        return set(arr);
+        return setValue(arr);
     }
 
     /**
@@ -179,7 +179,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
                 arr[2 * k + 1] = 0.0;
             }
         }
-        return set(arr);
+        return setValue(arr);
     }
 
     /**

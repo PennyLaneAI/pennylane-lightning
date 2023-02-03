@@ -48,7 +48,7 @@ struct ApplyGeneratorPhaseShift {
                 factors[2 * k + 1] = 1.0;
             }
         }
-        return set<PrecisionT, packed_size>(factors);
+        return setValue(factors);
     }
 
     template <size_t rev_wire>

@@ -75,7 +75,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
                 arr[2 * k + 1] = Precision{1};
             }
         }
-        return set<Precision, packed_size>(arr);
+        return setValue(arr);
     }
 
     /**
@@ -101,7 +101,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
                 arr[2 * k + 1] = Precision{0.0};
             }
         }
-        return set<Precision, packed_size>(arr);
+        return setValue(arr);
     }
 
     template <size_t control, size_t target, class ParamT>
@@ -144,7 +144,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
                 arr[2 * k + 1] = 1.0;
             }
         }
-        return set(arr);
+        return setValue(arr);
     }
 
     template <size_t control, typename ParamT>
@@ -161,7 +161,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
                 arr[2 * k + 1] = 0.0;
             }
         }
-        return set(arr);
+        return setValue(arr);
     }
 
     /**
@@ -214,7 +214,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
     static auto applyExternalInternalRealFactor(ParamT angle) {
         std::array<Precision, packed_size> arr{};
         arr.fill(std::cos(angle / 2));
-        return set<Precision, packed_size>(arr);
+        return setValue(arr);
     }
 
     /**
@@ -232,7 +232,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
                 arr[2 * k + 1] = -std::sin(angle / 2);
             }
         }
-        return set<Precision, packed_size>(arr);
+        return setValue(arr);
     }
 
     template <size_t target, typename ParamT>
