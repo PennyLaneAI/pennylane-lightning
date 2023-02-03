@@ -17,6 +17,7 @@
  */
 #pragma once
 #include "BitUtil.hpp"
+#include "Error.hpp"
 #include "Macros.hpp"
 #include "Util.hpp"
 
@@ -56,60 +57,6 @@ template <> struct AVXIntrinsic<double, 8> {
 };
 #endif
 
-template <class PrecisionT, size_t packed_size> struct AVXConcept;
-
-template <class PrecisionT, size_t packed_size>
-using AVXConceptType = typename AVXConcept<PrecisionT, packed_size>::Type;
-
-/**
- * @brief @rst
- * For a function :math:`f(x)` with binary output, this function create
- * an AVX intrinsic floating-point type with values :math:`(-1)^{f(x)}`
- * where :math:`x` is index of an array (viewed as a complex-valued array).
- * @endrst
- *
- * @rst
- * For example, when :math:`f(x) = x % 2`, this returns a packed array
- * with values [1, 1, -1, -1, 1, 1, -1, -1]. Note that each value is repeated
- * twice as it applies to the both real and imaginary parts. This function is
- * used e.g. in CZ gate.
- * @endrst
- *
- * @tparam PrecisionT Floating point precision type
- * @tparam packed_size Number of packed values for a AVX intrinsic type
- * @tparam Func Type of a function
- * @param func Binary output function
- */
-template <typename PrecisionT, size_t packed_size, typename Func>
-auto toParity(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
-    std::array<PrecisionT, packed_size> data = {};
-    for (size_t idx = 0; idx < packed_size / 2; idx++) {
-        data[2 * idx + 0] = static_cast<PrecisionT>(1.0) -
-                            2 * static_cast<PrecisionT>(func(idx));
-        data[2 * idx + 1] = static_cast<PrecisionT>(1.0) -
-                            2 * static_cast<PrecisionT>(func(idx));
-    }
-    return AVXConceptType<PrecisionT, packed_size>::loadu(data.data());
-}
-
-/**
- * @brief Repeat the value of the function twice.
- *
- * As we treat a complex number as two real numbers, this helps when we
- * multiply function outcomes to a AVX intrinsic type.
- */
-template <typename PrecisionT, size_t packed_size, typename Func>
-auto setValueOneTwo(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
-    std::array<PrecisionT, packed_size> data = {
-        0,
-    };
-    for (size_t idx = 0; idx < packed_size / 2; idx++) {
-        data[2 * idx + 0] = static_cast<PrecisionT>(func(idx));
-        data[2 * idx + 1] = static_cast<PrecisionT>(func(idx));
-    }
-    return AVXConceptType<PrecisionT, packed_size>::loadu(data.data());
-}
-
 /**
  * @brief one or minus one parity for reverse wire in packed data.
  */
@@ -133,7 +80,7 @@ template <> constexpr auto internalParity<float, 8>(size_t rev_wire) -> __m256 {
 template <>
 constexpr auto internalParity<double, 4>([[maybe_unused]] size_t rev_wire)
     -> __m256d {
-    assert(rev_wire == 0);
+    PL_ASSERT(rev_wire == 0);
     // When Z is applied to the 0th qubit
     return __m256d{1.0, 1.0, -1.0, -1.0};
 }
@@ -265,6 +212,39 @@ template <size_t packed_size> struct InternalWires {
 template <size_t packed_size>
 constexpr auto internal_wires_v = InternalWires<packed_size>::value;
 
+#ifdef PL_USE_AVX2
+constexpr static auto setValue(const std::array<float, 8> &arr)
+    -> AVXIntrinsicType<float, 8> {
+    // NOLINTBEGIN(readability-magic-numbers)
+    return __m256{arr[0], arr[1], arr[2], arr[3],
+                  arr[4], arr[5], arr[6], arr[7]};
+    // NOLINTEND(readability-magic-numbers)
+}
+constexpr static auto setValue(const std::array<double, 4> &arr)
+    -> AVXIntrinsicType<double, 4> {
+    // NOLINTBEGIN(readability-magic-numbers)
+    return __m256d{arr[0], arr[1], arr[2], arr[3]};
+    // NOLINTEND(readability-magic-numbers)
+}
+#endif
+#ifdef PL_USE_AVX512F
+constexpr static auto setValue(const std::array<float, 16> &arr)
+    -> AVXIntrinsicType<float, 16> {
+    // NOLINTBEGIN(readability-magic-numbers)
+    return __m512{arr[0],  arr[1],  arr[2],  arr[3], arr[4],  arr[5],
+                  arr[6],  arr[7],  arr[8],  arr[9], arr[10], arr[11],
+                  arr[12], arr[13], arr[14], arr[15]};
+    // NOLINTEND(readability-magic-numbers)
+}
+constexpr static auto setValue(const std::array<double, 8> &arr)
+    -> AVXIntrinsicType<double, 8> {
+    // NOLINTBEGIN(readability-magic-numbers)
+    return __m512d{arr[0], arr[1], arr[2], arr[3],
+                   arr[4], arr[5], arr[6], arr[7]};
+    // NOLINTEND(readability-magic-numbers)
+}
+#endif
+
 // clang-format off
 #ifdef PL_USE_AVX2
 constexpr __m256i setr256i(int32_t  e0, int32_t  e1, int32_t  e2, int32_t  e3,
@@ -302,4 +282,50 @@ constexpr __m512i setr512i(int64_t  e0, int64_t  e1, int64_t  e2, int64_t  e3,
 #endif
 // clang-format on
 
+/**
+ * @brief @rst
+ * For a function :math:`f(x)` with binary output, this function creates
+ * an AVX intrinsic floating-point type with values :math:`(-1)^{f(x)}`
+ * where :math:`x` is index of an array (viewed as a complex-valued array).
+ * @endrst
+ *
+ * @rst
+ * For example, when :math:`f(x) = x % 2`, this returns a packed array
+ * with values [1, 1, -1, -1, 1, 1, -1, -1]. Note that each value is repeated
+ * twice as it applies to the both real and imaginary parts. This function is
+ * used e.g. in CZ gate.
+ * @endrst
+ *
+ * @tparam PrecisionT Floating point precision type
+ * @tparam packed_size Number of packed values for a AVX intrinsic type
+ * @tparam Func Type of a function
+ * @param func Binary output function
+ */
+template <typename PrecisionT, size_t packed_size, typename Func>
+auto toParity(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
+    std::array<PrecisionT, packed_size> data{};
+    for (size_t idx = 0; idx < packed_size / 2; idx++) {
+        data[2 * idx + 0] = static_cast<PrecisionT>(1.0) -
+                            2 * static_cast<PrecisionT>(func(idx));
+        data[2 * idx + 1] = static_cast<PrecisionT>(1.0) -
+                            2 * static_cast<PrecisionT>(func(idx));
+    }
+    return setValue(data);
+}
+
+/**
+ * @brief Repeat the value of the function twice.
+ *
+ * As we treat a complex number as two real numbers, this helps when we
+ * multiply function outcomes to a AVX intrinsic type.
+ */
+template <typename PrecisionT, size_t packed_size, typename Func>
+auto setValueOneTwo(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
+    std::array<PrecisionT, packed_size> data{};
+    for (size_t idx = 0; idx < packed_size / 2; idx++) {
+        data[2 * idx + 0] = static_cast<PrecisionT>(func(idx));
+        data[2 * idx + 1] = data[2 * idx + 0];
+    }
+    return setValue(data);
+}
 } // namespace Pennylane::Gates::AVXCommon

@@ -15,6 +15,9 @@
 * Get `llvm` installation root from the environment variable `LLVM_ROOT_DIR` (or fallback to `brew`).
 [(#413)](https://github.com/PennyLaneAI/pennylane-lightning/pull/413)
 
+* Update AVX2/512 kernel infrastructure for additional gate/generator operations.
+[(#404)](https://github.com/PennyLaneAI/pennylane-lightning/pull/404)
+
 ### Documentation
 
 ### Bug fixes
