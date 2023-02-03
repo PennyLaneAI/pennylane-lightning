@@ -91,7 +91,11 @@ class CMakeBuild(build_ext):
                     "-DCMAKE_SYSTEM_PROCESSOR=ARM64",
                 ]
             else:  # X64 arch
-                llvmpath = subprocess.check_output(["brew", "--prefix", "llvm"]).decode().strip()
+                llvmpath = os.environ.get("LLVM_ROOT_DIR")
+                if llvmpath is None:
+                    llvmpath = (
+                        subprocess.check_output(["brew", "--prefix", "llvm"]).decode().strip()
+                    )
                 configure_args += [
                     f"-DCMAKE_CXX_COMPILER={llvmpath}/bin/clang++",
                     f"-DCMAKE_LINKER={llvmpath}/bin/lld",
