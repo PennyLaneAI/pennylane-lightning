@@ -36,6 +36,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
     constexpr static auto packed_size_ = packed_size;
     constexpr static bool symmetric = false;
 
+    // clang-format off
     /**
      * We implement CRY gate by dividing the matrix into diagonal and
      * off-diagonal parts. The matrix is written as: 
@@ -52,6 +53,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRY {
      * Functions related to (1) contains "Diag" in the name whereas those
      * related to (2) contains "OffDiang".
      * */
+    // clang-format on
 
     /**
      * @brief Permutation for (2). Flip the target bit if control bit is 1.
