@@ -263,21 +263,24 @@ compilePermutation<double, 8>(const std::array<uint8_t, 8> &permutation)
 
 template <size_t packed_size>
 constexpr auto identity() -> std::array<uint8_t, packed_size> {
-    std::array<uint8_t, packed_size> res = {
-        0,
-    };
+    std::array<uint8_t, packed_size> res{};
     for (uint8_t i = 0; i < packed_size; i++) {
         res[i] = i;
     }
     return res;
 }
 
+/**
+ * @brief Create a permutation that flip a bit in rev_wire. This is same as applying Pauli X gate to rev_wire.
+ *
+ * @tparam packed_size Number of elements in a packed type
+ * @param perm Previous permutation
+ * @param rev_wire Reverse wire
+ */
 template <size_t packed_size>
 constexpr auto flip(const std::array<uint8_t, packed_size> &perm,
                     size_t rev_wire) -> std::array<uint8_t, packed_size> {
-    std::array<uint8_t, packed_size> res = {
-        0,
-    };
+    std::array<uint8_t, packed_size> res{};
 
     for (size_t k = 0; k < packed_size / 2; k++) {
         res[2 * k + 0] = perm[2 * (k ^ (1U << rev_wire)) + 0];
@@ -285,12 +288,17 @@ constexpr auto flip(const std::array<uint8_t, packed_size> &perm,
     }
     return res;
 }
+
+/**
+ * @brief Create a permutation that swap real and imaginary parts of a packed array.
+ *
+ * @tparam packed_size Number of elements in a packed type
+ * @param perm Previous permutation
+ */
 template <size_t packed_size>
 constexpr auto swapRealImag(const std::array<uint8_t, packed_size> &perm)
     -> std::array<uint8_t, packed_size> {
-    std::array<uint8_t, packed_size> res = {
-        0,
-    };
+    std::array<uint8_t, packed_size> res{};
 
     for (uint8_t k = 0; k < packed_size / 2; k++) {
         res[2 * k + 0] = perm[2 * k + 1];
