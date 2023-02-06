@@ -6,7 +6,7 @@
 
 ### Improvements
 
-* Remove runtime dependench on ninja build system.
+* Remove runtime dependency on ninja build system.
 [(#414)](https://github.com/PennyLaneAI/pennylane-lightning/pull/414)
 
 * Allow better integration and installation support with CMake targeted binary builds.
