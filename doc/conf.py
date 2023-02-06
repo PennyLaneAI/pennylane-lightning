@@ -105,7 +105,9 @@ automodsumm_inherited_members = True
 breathe_projects = {"Lightning-Qubit": "./doxyoutput/xml"}
 breathe_default_project = "Lightning-Qubit"
 
-mathjax_path = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"
+mathjax_path = (
+    "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"
+)
 
 # Exhale extension
 # Setup the exhale extension
@@ -130,6 +132,7 @@ exhale_args = {
 
 # Add any paths that contain templates here, relative to this directory.
 from pennylane_sphinx_theme import templates_dir
+
 templates_path = [templates_dir()]
 
 # The suffix(es) of source filenames.
@@ -197,7 +200,7 @@ html_favicon = "_static/favicon.ico"
 html_static_path = ["_static"]
 
 html_css_files = [
-    'css/custom.css',
+    "css/custom.css",
 ]
 
 # -- html theme ---------------------------------------------------------
@@ -209,10 +212,9 @@ html_theme_options = {
     "navbar_active_link": 3,
     "google_analytics_tracking_id": "UA-130507810-1",
     "extra_copyrights": [
-        "TensorFlow, the TensorFlow logo, and any related marks are trademarks "
-        "of Google Inc."
+        "TensorFlow, the TensorFlow logo, and any related marks are trademarks " "of Google Inc."
     ],
-    "toc_overview": True
+    "toc_overview": True,
 }
 
 edit_on_github_project = "PennyLaneAI/pennylane-lightning"

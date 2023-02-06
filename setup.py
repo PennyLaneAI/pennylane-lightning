@@ -20,6 +20,7 @@ from pathlib import Path
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
 
+
 class CMakeExtension(Extension):
     def __init__(self, name, sourcedir=""):
         Extension.__init__(self, name, sources=[])
@@ -53,8 +54,8 @@ class CMakeBuild(build_ext):
         # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
         configure_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
-            f"-DPython_EXECUTABLE={sys.executable}", # (Windows)
-            f"-DPYTHON_EXECUTABLE={sys.executable}", # (Ubuntu)
+            f"-DPython_EXECUTABLE={sys.executable}",  # (Windows)
+            f"-DPYTHON_EXECUTABLE={sys.executable}",  # (Ubuntu)
             "-DENABLE_WARNINGS=OFF",  # Ignore warnings
         ]
 
@@ -65,10 +66,11 @@ class CMakeBuild(build_ext):
                 "-T clangcl",
             ]
         else:
-            configure_args += [
-                "-GNinja",
-                f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
-            ]
+            if ninja_path:
+                configure_args += [
+                    "-GNinja",
+                    f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
+                ]
 
         build_args = []
 
@@ -82,17 +84,19 @@ class CMakeBuild(build_ext):
 
         # Add more platform dependent options
         if platform.system() == "Darwin":
-            #To support ARM64
-            if os.getenv('ARCHS') == "arm64":
-                configure_args += ["-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11",
-                                   "-DCMAKE_SYSTEM_NAME=Darwin",
-                                   "-DCMAKE_SYSTEM_PROCESSOR=ARM64"]
-            else: # X64 arch
+            # To support ARM64
+            if os.getenv("ARCHS") == "arm64":
+                configure_args += [
+                    "-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11",
+                    "-DCMAKE_SYSTEM_NAME=Darwin",
+                    "-DCMAKE_SYSTEM_PROCESSOR=ARM64",
+                ]
+            else:  # X64 arch
                 llvmpath = subprocess.check_output(["brew", "--prefix", "llvm"]).decode().strip()
                 configure_args += [
-                        f"-DCMAKE_CXX_COMPILER={llvmpath}/bin/clang++",
-                        f"-DCMAKE_LINKER={llvmpath}/bin/lld",
-                ] # Use clang instead of appleclang
+                    f"-DCMAKE_CXX_COMPILER={llvmpath}/bin/clang++",
+                    f"-DCMAKE_LINKER={llvmpath}/bin/lld",
+                ]  # Use clang instead of appleclang
             # Disable OpenMP in M1 Macs
             if os.environ.get("USE_OMP"):
                 configure_args += []
@@ -108,13 +112,15 @@ class CMakeBuild(build_ext):
             os.makedirs(self.build_temp)
 
         subprocess.check_call(["cmake", str(ext.sourcedir)] + configure_args, cwd=self.build_temp)
-        subprocess.check_call(["cmake", "--build", ".", "--verbose"] + build_args, cwd=self.build_temp)
+        subprocess.check_call(
+            ["cmake", "--build", ".", "--verbose"] + build_args, cwd=self.build_temp
+        )
+
 
 with open(os.path.join("pennylane_lightning", "_version.py")) as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
-    "ninja",
     "pennylane>=0.28",
 ]
 
@@ -126,7 +132,9 @@ info = {
     "url": "https://github.com/XanaduAI/pennylane-lightning",
     "license": "Apache License 2.0",
     "packages": find_packages(where="."),
-    "package_data": {"pennylane_lightning": [os.path.join("src", "*"), os.path.join("src", "**", "*")]},
+    "package_data": {
+        "pennylane_lightning": [os.path.join("src", "*"), os.path.join("src", "**", "*")]
+    },
     "include_package_data": True,
     "entry_points": {
         "pennylane.plugins": [
@@ -143,7 +151,7 @@ info = {
     else [],
     "cmdclass": {"build_ext": CMakeBuild},
     "ext_package": "pennylane_lightning",
-    "extras_require": {"gpu" : ["pennylane-lightning-gpu"]}
+    "extras_require": {"gpu": ["pennylane-lightning-gpu"]},
 }
 
 classifiers = [
