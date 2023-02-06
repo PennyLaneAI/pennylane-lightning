@@ -15,6 +15,9 @@
 * Update AVX2/512 kernel infrastructure for additional gate/generator operations.
 [(#404)](https://github.com/PennyLaneAI/pennylane-lightning/pull/404)
 
+* Remove unnecessary lines for resolving CodeCov issue.
+[(#415)](https://github.com/PennyLaneAI/pennylane-lightning/pull/415)
+
 ### Documentation
 
 ### Bug fixes
