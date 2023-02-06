@@ -271,7 +271,8 @@ constexpr auto identity() -> std::array<uint8_t, packed_size> {
 }
 
 /**
- * @brief Create a permutation that flip a bit in rev_wire. This is same as applying Pauli X gate to rev_wire.
+ * @brief Create a permutation that flip a bit in rev_wire. This is same as
+ * applying Pauli X gate to rev_wire.
  *
  * @tparam packed_size Number of elements in a packed type
  * @param perm Previous permutation
@@ -290,7 +291,8 @@ constexpr auto flip(const std::array<uint8_t, packed_size> &perm,
 }
 
 /**
- * @brief Create a permutation that swap real and imaginary parts of a packed array.
+ * @brief Create a permutation that swap real and imaginary parts of a packed
+ * array.
  *
  * @tparam packed_size Number of elements in a packed type
  * @param perm Previous permutation
