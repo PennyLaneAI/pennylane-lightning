@@ -92,14 +92,21 @@ class CMakeBuild(build_ext):
                     "-DCMAKE_SYSTEM_PROCESSOR=ARM64",
                 ]
             else:  # X64 arch
-                llvmpath = os.environ.get("LLVM_ROOT_DIR")
-                if llvmpath is None:
-                    llvmpath = (
+                cxx_compiler = os.environ.get("CMAKE_CXX_COMPILER")
+                if cxx_compiler is None:
+                    cxx_compiler = (
                         subprocess.check_output(["brew", "--prefix", "llvm"]).decode().strip()
                     )
+                    cxx_compiler = f"{cxx_compiler}/bin/clang++"
+                cxx_linker = os.environ.get("CMAKE_LINKER")
+                if cxx_linker is None:
+                    cxx_linker = (
+                        subprocess.check_output(["brew", "--prefix", "llvm"]).decode().strip()
+                    )
+                    cxx_linker = f"{cxx_linker}/bin/lld"
                 configure_args += [
-                    f"-DCMAKE_CXX_COMPILER={llvmpath}/bin/clang++",
-                    f"-DCMAKE_LINKER={llvmpath}/bin/lld",
+                    f"-DCMAKE_CXX_COMPILER={cxx_compiler}",
+                    f"-DCMAKE_LINKER={cxx_linker}",
                 ]  # Use clang instead of appleclang
             # Disable OpenMP in M1 Macs
             if os.environ.get("USE_OMP"):
