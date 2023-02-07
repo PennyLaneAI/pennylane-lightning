@@ -21,7 +21,7 @@
 * Remove unnecessary lines for resolving CodeCov issue.
 [(#415)](https://github.com/PennyLaneAI/pennylane-lightning/pull/415)
 
-* Add more AVX2/512 gate operationrs.
+* Add more AVX2/512 gate operations.
 [(#393)](https://github.com/PennyLaneAI/pennylane-lightning/pull/393)
 
 ### Documentation
