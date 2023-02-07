@@ -1,4 +1,4 @@
-// Copyright 2022 Xanadu Quantum Technologies Inc.
+// Copyright 2023 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,10 +13,9 @@
 // limitations under the License.
 /**
  * @file
- * Defines PauliX gate
+ * Defines PhaseShift generator
  */
 #pragma once
-#include "AVXConceptType.hpp"
 #include "AVXUtil.hpp"
 #include "BitUtil.hpp"
 #include "Permutation.hpp"
@@ -25,42 +24,57 @@
 #include <complex>
 
 namespace Pennylane::Gates::AVXCommon {
-template <typename PrecisionT, size_t packed_size> struct ApplyPauliX {
+
+template <typename PrecisionT, size_t packed_size>
+struct ApplyGeneratorPhaseShift {
     using Precision = PrecisionT;
-    using PrecisionAVXConcept = AVXConceptType<PrecisionT, packed_size>;
+    using PrecisionAVXConcept =
+        typename AVXConcept<PrecisionT, packed_size>::Type;
 
     constexpr static size_t packed_size_ = packed_size;
 
     template <size_t rev_wire>
-    static void applyInternal(std::complex<PrecisionT> *arr,
-                              const size_t num_qubits,
-                              [[maybe_unused]] bool inverse) {
-        using namespace Permutation;
-        constexpr static auto compiled_permutation =
-            compilePermutation<PrecisionT>(
-                flip(identity<packed_size>(), rev_wire));
-        for (size_t k = 0; k < (1U << num_qubits); k += packed_size / 2) {
-            const auto v = PrecisionAVXConcept::load(arr + k);
-            PrecisionAVXConcept::store(arr + k,
-                                       permute<compiled_permutation>(v));
+    static consteval auto factorInternal() ->
+        typename PrecisionAVXConcept::IntrinsicType {
+        std::array<PrecisionT, packed_size> factors{};
+        for (size_t k = 0; k < packed_size_ / 2; k++) {
+            if (((k >> rev_wire) & size_t{1U}) == 0) {
+                factors[2 * k + 0] = 0.0;
+                factors[2 * k + 1] = 0.0;
+            } else {
+                factors[2 * k + 0] = 1.0;
+                factors[2 * k + 1] = 1.0;
+            }
         }
+        return setValue(factors);
     }
 
-    static void applyExternal(std::complex<PrecisionT> *arr,
+    template <size_t rev_wire>
+    static auto applyInternal(std::complex<PrecisionT> *arr,
+                              const size_t num_qubits,
+                              [[maybe_unused]] bool inverse) -> PrecisionT {
+        constexpr auto factor = factorInternal<rev_wire>();
+        for (size_t k = 0; k < (1U << num_qubits); k += packed_size / 2) {
+            const auto v = PrecisionAVXConcept::load(arr + k);
+            PrecisionAVXConcept::store(arr + k, factor * v);
+        }
+        return static_cast<PrecisionT>(1.0);
+    }
+
+    static auto applyExternal(std::complex<PrecisionT> *arr,
                               const size_t num_qubits, const size_t rev_wire,
-                              [[maybe_unused]] bool inverse) {
-        const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+                              [[maybe_unused]] bool inverse) -> PrecisionT {
         const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
+
+        constexpr auto zero =
+            typename PrecisionAVXConcept::IntrinsicType{PrecisionT{0.0}};
+
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
-            const size_t i1 = i0 | rev_wire_shift;
-
-            const auto v0 = PrecisionAVXConcept::load(arr + i0);
-            const auto v1 = PrecisionAVXConcept::load(arr + i1);
-            PrecisionAVXConcept::store(arr + i0, v1);
-            PrecisionAVXConcept::store(arr + i1, v0);
+            PrecisionAVXConcept::store(arr + i0, zero);
         }
+        return static_cast<PrecisionT>(1.0);
     }
 };
 } // namespace Pennylane::Gates::AVXCommon
