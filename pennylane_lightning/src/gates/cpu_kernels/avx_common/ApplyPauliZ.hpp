@@ -21,8 +21,6 @@
 #include "BitUtil.hpp"
 #include "Util.hpp"
 
-#include <immintrin.h>
-
 #include <complex>
 
 namespace Pennylane::Gates::AVXCommon {
