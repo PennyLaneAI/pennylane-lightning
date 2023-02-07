@@ -33,7 +33,7 @@
 
 ### Contributors
 
-Amintor Dusko, Lee James O'Riordan, Chae-Yeun Park, Vincent Michaud-Rioux
+Amintor Dusko, Vincent Michaud-Rioux, Lee James O'Riordan, Chae-Yeun Park
 
 ---
 
