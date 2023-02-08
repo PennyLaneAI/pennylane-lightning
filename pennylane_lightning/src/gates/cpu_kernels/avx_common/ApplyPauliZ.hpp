@@ -16,11 +16,10 @@
  * Defines PauliZ gate
  */
 #pragma once
+#include "AVXConceptType.hpp"
 #include "AVXUtil.hpp"
 #include "BitUtil.hpp"
 #include "Util.hpp"
-
-#include <immintrin.h>
 
 #include <complex>
 

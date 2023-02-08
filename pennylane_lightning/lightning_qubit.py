@@ -226,7 +226,6 @@ class LightningQubit(QubitDevice):
         capabilities = super().capabilities().copy()
         capabilities.update(
             model="qubit",
-            supports_inverse_operations=True,
             supports_analytic_computation=True,
             supports_broadcasting=False,
             returns_state=True,
@@ -279,11 +278,6 @@ class LightningQubit(QubitDevice):
 
         state = self._asarray(state, dtype=self.C_DTYPE)
         output_shape = [2] * self.num_wires
-
-        if not qml.math.is_abstract(state):
-            norm = qml.math.linalg.norm(state, axis=-1, ord=2)
-            if not qml.math.allclose(norm, 1.0, atol=tolerance):
-                raise ValueError("Sum of amplitudes-squared does not equal one.")
 
         if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
             # Initialize the entire device state with the input state
@@ -368,10 +362,9 @@ class LightningQubit(QubitDevice):
         skipped_ops = ["Identity"]
 
         for o in operations:
-            if o.base_name in skipped_ops:
+            if o.name in skipped_ops:
                 continue
-            name = o.name.split(".")[0]  # The split is because inverse gates have .inv appended
-            method = getattr(sim, name, None)
+            method = getattr(sim, o.name, None)
 
             wires = self.wires.indices(o.wires)
             if method is None:
@@ -383,7 +376,7 @@ class LightningQubit(QubitDevice):
                     # To support older versions of PL
                     method(o.matrix, wires, False)
             else:
-                inv = o.inverse
+                inv = False
                 param = o.parameters
                 method(wires, inv, param)
 

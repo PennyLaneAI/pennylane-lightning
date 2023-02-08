@@ -42,11 +42,11 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            cmake pennylane_lightning/src -BBuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake . -BBuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON -DENABLE_KOKKOS=OFF -DENABLE_PYTHON=OFF -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
-            ./tests/runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
+            ./pennylane_lightning_test_runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -57,10 +57,10 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
-            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake . -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DENABLE_KOKKOS=OFF -DENABLE_PYTHON=OFF -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
             cmake --build ./BuildCov
             cd ./BuildCov
-            ./tests/runner
+            ./pennylane_lightning_test_runner
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}.info
@@ -109,7 +109,7 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          python setup.py build_ext -i --define="ENABLE_KOKKOS=OFF;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
+          python setup.py build_ext -i --define="ENABLE_KOKKOS=OFF;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           pip install -e .
 
       - name: Run PennyLane-Lightning unit tests
@@ -155,11 +155,11 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            cmake pennylane_lightning/src -BBuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_BLAS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake . -BBuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_KOKKOS=OFF -DENABLE_PYTHON=OFF -DENABLE_BLAS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
-            ./tests/runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
+            ./pennylane_lightning_test_runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -170,10 +170,10 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
-            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DENABLE_BLAS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake . -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DENABLE_KOKKOS=OFF -DENABLE_PYTHON=OFF -DENABLE_BLAS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
             cmake --build ./BuildCov
             cd ./BuildCov
-            ./tests/runner
+            ./pennylane_lightning_test_runner
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}.info
@@ -227,7 +227,7 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          python setup.py build_ext -i --define="ENABLE_BLAS=ON;ENABLE_KOKKOS=OFF;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
+          python setup.py build_ext -i --define="ENABLE_BLAS=ON;ENABLE_KOKKOS=OFF;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           pip install -e .
 
       - name: Run PennyLane-Lightning unit tests
@@ -294,11 +294,11 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            cmake pennylane_lightning/src -BBuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_KOKKOS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake . -BBuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_KOKKOS=ON -DENABLE_PYTHON=OFF -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
-            ./tests/runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
+            ./pennylane_lightning_test_runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -309,10 +309,10 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
-            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DENABLE_KOKKOS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake . -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DENABLE_KOKKOS=ON -DENABLE_PYTHON=OFF -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
             cmake --build ./BuildCov
             cd ./BuildCov
-            ./tests/runner
+            ./pennylane_lightning_test_runner
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}.info
@@ -382,7 +382,7 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          python setup.py build_ext -i --define="CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
+          python setup.py build_ext -i --define="CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;ENABLE_KOKKOS=ON;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           pip install -e .
 
       - name: Run PennyLane-Lightning unit tests
@@ -443,11 +443,11 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            cmake pennylane_lightning/src -BBuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_BLAS=ON -DENABLE_KOKKOS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake . -BBuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_BLAS=ON -DENABLE_KOKKOS=ON -DENABLE_PYTHON=OFF -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
-            ./tests/runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
+            ./pennylane_lightning_test_runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -458,10 +458,10 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
-            cmake pennylane_lightning/src -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DENABLE_BLAS=ON -DENABLE_KOKKOS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
+            cmake . -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DENABLE_BLAS=ON -DENABLE_KOKKOS=ON -DENABLE_PYTHON=OFF -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" -G Ninja
             cmake --build ./BuildCov
             cd ./BuildCov
-            ./tests/runner
+            ./pennylane_lightning_test_runner
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}.info
@@ -531,7 +531,7 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          python setup.py build_ext -i --define="ENABLE_BLAS=ON;ENABLE_KOKKOS=ON;CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
+          python setup.py build_ext -i --define="ENABLE_BLAS=ON;ENABLE_KOKKOS=ON;DENABLE_PYTHON=ON;CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           pip install -e .
 
       - name: Run PennyLane-Lightning unit tests

@@ -16,13 +16,12 @@
  * Defines SWAP gate
  */
 #pragma once
+#include "AVXConceptType.hpp"
 #include "AVXUtil.hpp"
 #include "BitUtil.hpp"
 #include "Blender.hpp"
 #include "Permutation.hpp"
 #include "Util.hpp"
-
-#include <immintrin.h>
 
 #include <complex>
 
@@ -36,12 +35,13 @@ template <typename PrecisionT, size_t packed_size> struct ApplySWAP {
     constexpr static size_t packed_size_ = packed_size;
     constexpr static bool symmetric = true;
 
+    /**
+     * @brief Permutation that swaps bits in two wires
+     */
     template <size_t rev_wire0, size_t rev_wire1>
-    constexpr static auto swapPermutation() {
+    static consteval auto applyInternalInternalPermutation() {
         const auto identity_perm = Permutation::identity<packed_size>();
-        std::array<uint8_t, packed_size> perm = {
-            0,
-        };
+        std::array<uint8_t, packed_size> perm{};
 
         for (size_t i = 0; i < packed_size / 2; i++) {
             // swap rev_wire1 and rev_wire0 bits
@@ -58,7 +58,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplySWAP {
                                       size_t num_qubits,
                                       [[maybe_unused]] bool inverse) {
         using namespace Permutation;
-        constexpr static auto perm = swapPermutation<rev_wire0, rev_wire1>();
+        constexpr static auto perm =
+            applyInternalInternalPermutation<rev_wire0, rev_wire1>();
 
         for (size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
@@ -66,10 +67,11 @@ template <typename PrecisionT, size_t packed_size> struct ApplySWAP {
         }
     }
 
-    template <size_t min_rev_wire> constexpr static auto createMask0() {
-        std::array<bool, packed_size> m = {
-            false,
-        };
+    /**
+     * @brief Setting a mask. Mask is 1 if bits in min_rev_wire is set
+     */
+    template <size_t min_rev_wire> static consteval auto createMask0() {
+        std::array<bool, packed_size> m{};
         for (size_t i = 0; i < packed_size / 2; i++) {
             if ((i & (1U << min_rev_wire)) != 0) {
                 m[2 * i + 0] = true;
@@ -81,10 +83,12 @@ template <typename PrecisionT, size_t packed_size> struct ApplySWAP {
         }
         return compileMask<PrecisionT, packed_size>(m);
     }
-    template <size_t min_rev_wire> constexpr static auto createMask1() {
-        std::array<bool, packed_size> m = {
-            false,
-        };
+
+    /**
+     * @brief Setting a mask. Mask is 1 if bits in min_rev_wire is unset
+     */
+    template <size_t min_rev_wire> static consteval auto createMask1() {
+        std::array<bool, packed_size> m = {};
         for (size_t i = 0; i < packed_size / 2; i++) {
             if ((i & (1U << min_rev_wire)) != 0) {
                 m[2 * i + 0] = false;

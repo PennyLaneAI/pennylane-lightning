@@ -66,28 +66,35 @@ target_link_libraries(utils PRIVATE lightning_benchmarks_dependency
                                     benchmark::benchmark_main)
 
 ################################################################################
-# Add benchmark_apply_operations exe
+# Add pennylane_lightning_bench_operations exe
 ################################################################################
 
-add_executable(apply_operations Bench_ApplyOperations.cpp)
+add_executable(pennylane_lightning_bench_operations Bench_ApplyOperations.cpp)
 
-target_link_libraries(apply_operations PRIVATE lightning_benchmarks_dependency
+target_link_libraries(pennylane_lightning_bench_operations PRIVATE lightning_benchmarks_dependency
                                                benchmark::benchmark_main)
 
 ################################################################################
-# Add bench_kernels
+# Add pennylane_lightning_bench_kernels
 ################################################################################
 
-add_executable(bench_kernels Bench_Kernels.cpp)
-target_link_libraries(bench_kernels PRIVATE lightning_benchmarks_dependency
+add_executable(pennylane_lightning_bench_kernels Bench_Kernels.cpp)
+target_link_libraries(pennylane_lightning_bench_kernels PRIVATE lightning_benchmarks_dependency
                                             benchmark::benchmark)
 
 
-add_custom_command(TARGET bench_kernels POST_BUILD 
+add_custom_command(TARGET pennylane_lightning_bench_kernels POST_BUILD 
                    COMMAND ${CMAKE_COMMAND} -E create_symlink
                            ${PROJECT_SOURCE_DIR}/benchmark_all.sh
                            ${PROJECT_BINARY_DIR}/benchmark_all.sh
                    COMMAND ${CMAKE_COMMAND} -E create_symlink
                            ${PROJECT_SOURCE_DIR}/plot_gate_benchmark.py
                            ${PROJECT_BINARY_DIR}/plot_gate_benchmark.py
+)
+
+install(TARGETS pennylane_lightning_bench_kernels pennylane_lightning_bench_operations DESTINATION bin)
+install(FILES 
+    ${PROJECT_SOURCE_DIR}/benchmark_all.sh 
+    ${PROJECT_SOURCE_DIR}/plot_gate_benchmark.py 
+    DESTINATION bin
 )

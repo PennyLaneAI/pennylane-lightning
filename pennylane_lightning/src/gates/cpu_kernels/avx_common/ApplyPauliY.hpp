@@ -16,12 +16,11 @@
  * Defines PauliY gate
  */
 #pragma once
+#include "AVXConceptType.hpp"
 #include "AVXUtil.hpp"
 #include "BitUtil.hpp"
 #include "Permutation.hpp"
 #include "Util.hpp"
-
-#include <immintrin.h>
 
 #include <complex>
 

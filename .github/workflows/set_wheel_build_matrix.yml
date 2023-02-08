@@ -1,7 +1,7 @@
 name: Set wheel build matrix
 
 env:
-  PYTHON3_MIN_VERSION: "7"
+  PYTHON3_MIN_VERSION: "8"
   PYTHON3_MAX_VERSION: "11"
 
 on:

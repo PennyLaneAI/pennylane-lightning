@@ -6,7 +6,7 @@ project(lightning_gates)
 add_library(lightning_gates INTERFACE)
 target_include_directories(lightning_gates INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-if (UNIX AND (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(AMD64)|(X64)|(x64)|(x86_64)"))
+if (ENABLE_GATE_DISPATCHER AND UNIX AND (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(AMD64)|(X64)|(x64)|(x86_64)"))
     message(STATUS "Compiling for x86. Enable AVX2/AVX512 kernels (runtime enabled).")
 
     add_library(lightning_gates_register_kernels_avx2 STATIC RegisterKernels_AVX2.cpp)

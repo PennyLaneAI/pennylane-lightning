@@ -1,7 +1,7 @@
 name: Wheel::Linux::PowerPC
 
 # **What it does**: Builds python wheels for Linux (ubuntu-latest) architecture PowerPC 64 and store it as artifacts.
-#                   Python versions: 3.7, 3.8, 3.9, 3.10, 3.11.
+#                   Python versions: 3.8, 3.9, 3.10, 3.11.
 # **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
@@ -119,7 +119,7 @@ jobs:
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
         container_img: ["quay.io/pypa/manylinux2014_ppc64le"]
 
-    name: ubuntu-latest::ppc64le (Python ${{ fromJson('{ "cp37-*":"3.7","cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11" }')[matrix.cibw_build] }})
+    name: ubuntu-latest::ppc64le (Python ${{ fromJson('{ "cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -159,7 +159,7 @@ jobs:
           # Python build settings
           CIBW_BEFORE_BUILD: |
             cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
-            pip install ninja cmake
+            pip install ninja cmake~=3.24.0
 
           CIBW_MANYLINUX_PPC64LE_IMAGE: manylinux2014
 

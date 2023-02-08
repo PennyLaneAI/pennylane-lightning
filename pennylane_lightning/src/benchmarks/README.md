@@ -95,11 +95,11 @@ Besides, one can use `--benchmark_time_unit` to get the results in `ns`, `us`, `
 Check **GB CLI Flags** for the list of flags. 
 
 
-### `benchmarks/apply_operations`
+### `benchmarks/pennylane_lightning_bench_operations`
 To benchmark the `Pennylane::StateVectorManagedCPU` and `applyOperation` in PennyLane-Lightning, one can run:
 ```console
 $ make gbenchmark
-$ ./BuildGBench/benchmarks/apply_operations
+$ ./BuildGBench/benchmarks/pennylane_lightning_bench_operations
 ```
 
 The following arguments could be altered:
@@ -150,11 +150,11 @@ One can use `--benchmark_format` to get the results in other formats: `<console|
 Check **GB CLI Flags** for the list of flags. 
 
 
-### `benchmarks/bench_kernels`
+### `benchmarks/pennylane_lightning_bench_kernels`
 To benchmark the `Pennylane::StateVectorManagedCPU` for all gates, generators, matrix operations using different kernels:
 ```console
 $ make gbenchmark
-$ ./BuildGBench/benchmarks/bench_kernels
+$ ./BuildGBench/benchmarks/pennylane_lightning_bench_kernels
 ```
 
 The output is

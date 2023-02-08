@@ -16,12 +16,11 @@
  * Defines S gate
  */
 #pragma once
+#include "AVXConceptType.hpp"
 #include "AVXUtil.hpp"
 #include "BitUtil.hpp"
 #include "Permutation.hpp"
 #include "Util.hpp"
-
-#include <immintrin.h>
 
 #include <complex>
 
@@ -32,10 +31,13 @@ template <typename PrecisionT, size_t packed_size> struct ApplyS {
 
     constexpr static size_t packed_size_ = packed_size;
 
-    static constexpr auto createPermutation(size_t rev_wire) {
-        std::array<uint8_t, packed_size> perm = {
-            0,
-        };
+    /**
+     * @brief Permutation for applying `i` to
+     *
+     * FIXME: clang++-12 currently does not accept consteval here.
+     */
+    static constexpr auto applyInternalPermutation(size_t rev_wire) {
+        std::array<uint8_t, packed_size> perm{};
 
         for (size_t n = 0; n < packed_size / 2; n++) {
             if (((n >> rev_wire) & 1U) == 0) {
@@ -51,9 +53,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyS {
 
     static auto createFactor(size_t rev_wire, bool inverse)
         -> AVXIntrinsicType<PrecisionT, packed_size> {
-        std::array<PrecisionT, packed_size> data = {
-            0,
-        };
+        std::array<PrecisionT, packed_size> data{};
         for (size_t n = 0; n < packed_size / 2; n++) {
             if (((n >> rev_wire) & 1U) == 0) {
                 data[2 * n + 0] = 1.0;
@@ -74,7 +74,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyS {
     template <size_t rev_wire>
     static void applyInternal(std::complex<PrecisionT> *arr,
                               const size_t num_qubits, bool inverse) {
-        constexpr static auto perm = createPermutation(rev_wire);
+        constexpr static auto perm = applyInternalPermutation(rev_wire);
         const auto factor = createFactor(rev_wire, inverse);
 
         for (size_t k = 0; k < (1U << num_qubits); k += packed_size / 2) {

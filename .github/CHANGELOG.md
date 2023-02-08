@@ -1,4 +1,4 @@
-# Release 0.28.0-dev
+# Release 0.29.0-dev
 
 ### New features since last release
 
@@ -9,18 +9,92 @@
 
 ### Improvements
 
-* Improve the stopping condition method.
-[(#386)](https://github.com/PennyLaneAI/pennylane-lightning/pull/386)
+* Remove runtime dependency on ninja build system.
+[(#414)](https://github.com/PennyLaneAI/pennylane-lightning/pull/414)
+
+* Allow better integration and installation support with CMake targeted binary builds.
+[(#403)](https://github.com/PennyLaneAI/pennylane-lightning/pull/403)
+
+* Remove explicit Numpy and Scipy requirements.
+[(#412)](https://github.com/PennyLaneAI/pennylane-lightning/pull/412)
+
+* Update AVX2/512 kernel infrastructure for additional gate/generator operations.
+[(#404)](https://github.com/PennyLaneAI/pennylane-lightning/pull/404)
+
+* Remove unnecessary lines for resolving CodeCov issue.
+[(#415)](https://github.com/PennyLaneAI/pennylane-lightning/pull/415)
+
+* Add more AVX2/512 gate operations.
+[(#393)](https://github.com/PennyLaneAI/pennylane-lightning/pull/393)
 
 ### Documentation
 
 ### Bug fixes
+
+* Fix Github shields in README.
+[(#402)](https://github.com/PennyLaneAI/pennylane-lightning/pull/402)
+
+### Contributors
+
+Amintor Dusko, Lee James O'Riordan, Chae-Yeun Park
+
+---
+
+# Release 0.28.2
+
+### Bug fixes
+
+* Fix Python module versioning for Linux wheels.
+[(#408)](https://github.com/PennyLaneAI/pennylane-lightning/pull/408)
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
 Amintor Dusko, Shuli Shu, Trevor Vincent
+
+---
+
+# Release 0.28.1
+
+### Bug fixes
+
+* Fix Pybind11 module versioning and locations for Windows wheels.
+[(#400)](https://github.com/PennyLaneAI/pennylane-lightning/pull/400)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Lee J. O'Riordan
+
+---
+
+# Release 0.28.0
+
+### Breaking changes
+
+* Deprecate support for Python 3.7.
+[(#391)](https://github.com/PennyLaneAI/pennylane-lightning/pull/391)
+
+### Improvements
+
+* Improve Lightning package structure for external use as a C++ library.
+[(#369)](https://github.com/PennyLaneAI/pennylane-lightning/pull/369)
+
+* Improve the stopping condition method.
+[(#386)](https://github.com/PennyLaneAI/pennylane-lightning/pull/386)
+
+### Bug fixes
+
+- Pin CMake to 3.24.x in wheel-builder to avoid Python not found error in CMake 3.25, when building wheels for PennyLane-Lightning-GPU.
+[(#387)](https://github.com/PennyLaneAI/pennylane-lightning/pull/387)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Amintor Dusko, Lee J. O'Riordan
 
 ---
 
@@ -107,8 +181,6 @@ def circuit():
     return qml.expval(obs)
 ```
 
-### Documentation
-
 ### Bug fixes
 
 * Test updates to reflect new measurement error messages.
@@ -124,7 +196,7 @@ def circuit():
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Christina Lee, Chae-Yeun Park
+Amintor Dusko, Christina Lee, Lee J. O'Riordan, Chae-Yeun Park
 
 ---
 

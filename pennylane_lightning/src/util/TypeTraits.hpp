@@ -31,4 +31,28 @@ template <typename T> struct is_complex : std::false_type {};
 template <typename T> struct is_complex<std::complex<T>> : std::true_type {};
 
 template <typename T> constexpr bool is_complex_v = is_complex<T>::value;
+
+/**
+ * @brief Function return type
+ *
+ * Usage:
+ * .. code-block::cpp
+ *
+ *     std::pair<int, int> g(std::tuple<int, int, int>);
+ *     static_assert(std::is_same_v<FuncReturn<decltype(g)>::Type,
+ * std::pair<int,int>>); // return type of g is std::pair<int, int>
+ *
+ */
+
+template <class F> struct FuncReturn {
+    // When instantiated
+    static_assert(sizeof(F) == -1,
+                  "The given type is not a function. Currently, lambda"
+                  "functions are not supported.");
+};
+template <class R, class... A> struct FuncReturn<R (*)(A...)> {
+    using Type = R;
+};
+template <class R, class... A> struct FuncReturn<R(A...)> { using Type = R; };
+
 } // namespace Pennylane::Util

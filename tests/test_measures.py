@@ -120,15 +120,6 @@ class TestProbs:
         "cases",
         [
             [
-                [],
-                [
-                    0.9178264236525453,
-                    0.02096485729264079,
-                    0.059841820910257436,
-                    0.0013668981445561978,
-                ],
-            ],
-            [
                 [0, 1],
                 [
                     0.9178264236525453,
@@ -513,42 +504,35 @@ class TestWiresInExpval:
 class TestSample:
     """Tests that samples are properly calculated."""
 
-    @pytest.fixture(params=[np.complex64, np.complex128])
-    def dev(self, request):
-        return qml.device("lightning.qubit", wires=2, shots=1000, c_dtype=request.param)
-
-    def test_sample_dimensions(self, dev):
-        """Tests if the samples returned by sample have
+    @pytest.mark.parametrize(
+        "shots, wires",
+        [
+            [10, [0]],
+            [12, [1]],
+            [17, [0, 1]],
+        ],
+    )
+    def test_sample_dimensions(self, qubit_device, shots, wires):
+        """Tests if the samples returned by the sample function have
         the correct dimensions
         """
+        dev = qubit_device(wires=2)
 
         dev.apply([qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])])
 
-        dev.shots = 10
-        dev._wires_measured = {0}
+        dev.shots = shots
+        dev._wires_measured = wires
         dev._samples = dev.generate_samples()
         s1 = dev.sample(qml.PauliZ(wires=[0]))
-        assert np.array_equal(s1.shape, (10,))
+        assert np.array_equal(s1.shape, (dev.shots,))
 
-        dev.reset()
-        dev.shots = 12
-        dev._wires_measured = {1}
-        dev._samples = dev.generate_samples()
-        s2 = dev.sample(qml.PauliZ(wires=[1]))
-        assert np.array_equal(s2.shape, (12,))
-
-        dev.reset()
-        dev.shots = 17
-        dev._wires_measured = {0, 1}
-        dev._samples = dev.generate_samples()
-        s3 = dev.sample(qml.PauliX(0) @ qml.PauliZ(1))
-        assert np.array_equal(s3.shape, (17,))
-
-    def test_sample_values(self, dev, tol):
+    def test_sample_values(self, qubit_device, tol):
         """Tests if the samples returned by sample have
         the correct values
         """
+        dev = qubit_device(wires=2)
 
+        dev.shots = 1000
         dev.apply([qml.RX(1.5708, wires=[0])])
         dev._wires_measured = {0}
         dev._samples = dev.generate_samples()

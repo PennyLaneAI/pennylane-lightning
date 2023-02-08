@@ -427,26 +427,6 @@ class TestSerializeOps:
         )
         assert s == s_expected
 
-    def test_inverse_circuit(self):
-        """Test expected serialization for a simple circuit that includes an inverse gate"""
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.4, wires=0)
-            qml.RY(0.6, wires=1).inv()
-            qml.CNOT(wires=[0, 1])
-
-        s = _serialize_ops(tape, self.wires_dict)
-        s_expected = (
-            (
-                ["RX", "RY", "CNOT"],
-                [[0.4], [0.6], []],
-                [[0], [1], [0, 1]],
-                [False, True, False],
-                [[], [], []],
-            ),
-            False,
-        )
-        assert s == s_expected
-
     def test_unsupported_kernel_circuit(self):
         """Test expected serialization for a circuit including gates that do not have a dedicated
         kernel"""
@@ -503,10 +483,10 @@ class TestSerializeOps:
         """Test expected serialization for a random circuit"""
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=0)
-            qml.RY(0.6, wires=1).inv().inv()
+            qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
             qml.QubitUnitary(np.eye(4), wires=[0, 1])
-            qml.templates.QFT(wires=[0, 1, 2]).inv()
+            qml.templates.QFT(wires=[0, 1, 2])
             qml.DoubleExcitation(0.555, wires=[3, 2, 1, 0])
             qml.DoubleExcitationMinus(0.555, wires=[0, 1, 2, 3])
             qml.DoubleExcitationPlus(0.555, wires=[0, 1, 2, 3])
@@ -534,7 +514,7 @@ class TestSerializeOps:
                     [],
                     [],
                     qml.matrix(qml.QubitUnitary(np.eye(4, dtype=dtype), wires=[0, 1])),
-                    qml.matrix(qml.templates.QFT(wires=[0, 1, 2]).inv()),
+                    qml.matrix(qml.templates.QFT(wires=[0, 1, 2])),
                     [],
                     [],
                     [],
