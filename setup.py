@@ -65,12 +65,11 @@ class CMakeBuild(build_ext):
             configure_args += [
                 "-T clangcl",
             ]
-        else:
-            if ninja_path:
-                configure_args += [
-                    "-GNinja",
-                    f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
-                ]
+        elif ninja_path:
+            configure_args += [
+                "-GNinja",
+                f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
+            ]
 
         build_args = []
 
@@ -92,8 +91,7 @@ class CMakeBuild(build_ext):
                     "-DCMAKE_SYSTEM_PROCESSOR=ARM64",
                 ]
             else:  # X64 arch
-                brewpath = shutil.which("brew")
-                if brewpath:
+                if shutil.which("brew"):
                     llvmpath = (
                         subprocess.check_output(["brew", "--prefix", "llvm"]).decode().strip()
                     )
@@ -105,15 +103,11 @@ class CMakeBuild(build_ext):
                     f"-DCMAKE_LINKER={llvmpath}/bin/lld",
                 ]  # Use clang instead of appleclang
             # Disable OpenMP in M1 Macs
-            if os.environ.get("USE_OMP"):
-                configure_args += []
-            else:
-                configure_args += ["-DENABLE_OPENMP=OFF"]
+            configure_args += [] if os.environ.get("USE_OMP") else ["-DENABLE_OPENMP=OFF"]
         elif platform.system() == "Windows":
             configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
-        else:
-            if platform.system() != "Linux":
-                raise RuntimeError(f"Unsupported '{platform.system()}' platform")
+        elif platform.system() != "Linux":
+            raise RuntimeError(f"Unsupported '{platform.system()}' platform")
 
         if not Path(self.build_temp).exists():
             os.makedirs(self.build_temp)
