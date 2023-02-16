@@ -726,6 +726,12 @@ class LightningQubit(QubitDevice):
 
         return processing_fns
 
+    def _qubit_device_permute_wires(self, wires):
+        ordered_wires = self.order_wires(wires).tolist()
+        mapped_wires = list(self.map_wires(wires))
+        permutation = np.argsort(mapped_wires)
+        return Wires([ordered_wires[index] for index in permutation])
+
     def probability(self, wires=None, shot_range=None, bin_size=None):
         """Return the probability of each computational basis state.
 
@@ -747,8 +753,7 @@ class LightningQubit(QubitDevice):
         if self.shots is not None:
             return self.estimate_probability(wires=wires, shot_range=shot_range, bin_size=bin_size)
 
-        wires = wires or self.wires
-        wires = Wires(wires)
+        wires = self._qubit_device_permute_wires(Wires(wires)) if wires else self.wires
 
         # translate to wire labels used by device
         device_wires = self.map_wires(wires)
