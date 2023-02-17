@@ -357,11 +357,11 @@ class Measures {
 
         const fp_t mean_square = std::real(
             Util::innerProdC(operator_vector.data(), operator_vector.data(),
-                             operator_vector.getLength()));
+                             operator_vector.size()));
         const fp_t squared_mean = static_cast<fp_t>(
             std::pow(std::real(Util::innerProdC(operator_vector.data(),
                                                 original_statevector.getData(),
-                                                operator_vector.length())),
+                                                operator_vector.size())),
                      2));
         return (mean_square - squared_mean);
     };
