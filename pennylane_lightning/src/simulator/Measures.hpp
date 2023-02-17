@@ -355,13 +355,13 @@ class Measures {
             static_cast<index_type>(original_statevector.getLength()),
             row_map_ptr, row_map_size, entries_ptr, values_ptr, numNNZ);
 
-        const fp_t mean_square = std::real(Util::innerProdC(
-            operator_vector.getData(), operator_vector.getData(),
-            operator_vector.getLength()));
+        const fp_t mean_square = std::real(
+            Util::innerProdC(operator_vector.data(), operator_vector.data(),
+                             operator_vector.getLength()));
         const fp_t squared_mean = static_cast<fp_t>(
-            std::pow(std::real(Util::innerProdC(operator_vector.getData(),
+            std::pow(std::real(Util::innerProdC(operator_vector.data(),
                                                 original_statevector.getData(),
-                                                operator_vector.getLength())),
+                                                operator_vector.length())),
                      2));
         return (mean_square - squared_mean);
     };
