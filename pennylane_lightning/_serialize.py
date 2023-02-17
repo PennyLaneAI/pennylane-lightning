@@ -21,6 +21,7 @@ from pennylane import (
     BasisState,
     Hadamard,
     Projector,
+    Hamiltonian,
     QubitStateVector,
     Rot,
 )
@@ -65,10 +66,13 @@ def _obs_has_kernel(ob: Observable) -> bool:
     """
     if is_pauli_word(ob):
         return True
-    if isinstance(ob, (Hadamard, Projector)):
+    if isinstance(ob, (Hadamard)):
         return True
+    if isinstance(ob, Hamiltonian):
+        return all(_obs_has_kernel(o) for o in ob.ops)
     if isinstance(ob, Tensor):
         return all(_obs_has_kernel(o) for o in ob.obs)
+
     return False
 
 
