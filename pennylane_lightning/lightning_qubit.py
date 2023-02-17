@@ -789,15 +789,10 @@ class LightningQubit(QubitDevice):
         Returns:
             Expectation value of the observable
         """
-        if (
-            (observable.arithmetic_depth > 0)
-            or isinstance(observable.name, List)
-            or observable.name
-            in [
-                "Identity",
-                "Projector",
-            ]
-        ):
+        if observable.name in [
+            "Identity",
+            "Projector",
+        ]:
             return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
         if self.shots is not None:
@@ -827,7 +822,11 @@ class LightningQubit(QubitDevice):
                 "The expval of a SparseHamiltonian requires Kokkos and Kokkos Kernels."
             )
 
-        if observable.name in ["Hamiltonian", "Hermitian"]:
+        if (
+            observable.name in ["Hamiltonian", "Hermitian"]
+            or (observable.arithmetic_depth > 0)
+            or isinstance(observable.name, List)
+        ):
             ob_serialized = _serialize_ob(observable, self.wire_map, use_csingle=self.use_csingle)
             return M.expval(ob_serialized)
 
@@ -850,10 +849,9 @@ class LightningQubit(QubitDevice):
         Returns:
             Variance of the observable
         """
-        if isinstance(observable.name, List) or observable.name in [
+        if observable.name in [
             "Identity",
             "Projector",
-            "Hermitian",
         ]:
             return super().var(observable, shot_range=shot_range, bin_size=bin_size)
 
@@ -868,6 +866,30 @@ class LightningQubit(QubitDevice):
 
         state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
+
+        if observable.name == "SparseHamiltonian":
+            if Kokkos_info()["USE_KOKKOS"] == True:
+                # converting COO to CSR sparse representation.
+
+                CSR_SparseHamiltonian = observable.sparse_matrix(wire_order=self.wires).tocsr(
+                    copy=False
+                )
+                return M.var(
+                    CSR_SparseHamiltonian.indptr,
+                    CSR_SparseHamiltonian.indices,
+                    CSR_SparseHamiltonian.data,
+                )
+            raise NotImplementedError(
+                "The expval of a SparseHamiltonian requires Kokkos and Kokkos Kernels."
+            )
+
+        if (
+            observable.name in ["Hamiltonian", "Hermitian"]
+            or (observable.arithmetic_depth > 0)
+            or isinstance(observable.name, List)
+        ):
+            ob_serialized = _serialize_ob(observable, self.wire_map, use_csingle=self.use_csingle)
+            return M.var(ob_serialized)
 
         # translate to wire labels used by device
         observable_wires = self.map_wires(observable.wires)
