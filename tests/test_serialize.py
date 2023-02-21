@@ -61,29 +61,33 @@ class TestObsHasKernel:
         o = qml.Hadamard(0)
         assert _obs_has_kernel(o)
 
-    def test_projector(self):
-        """Tests if return is true for a Projector observable"""
-        o = qml.Projector([0], wires=0)
-        assert _obs_has_kernel(o)
-
     def test_hermitian(self):
         """Tests if return is false for a Hermitian observable"""
         o = qml.Hermitian(np.eye(2), wires=0)
         assert not _obs_has_kernel(o)
 
     def test_tensor_product_of_valid_terms(self):
-        """Tests if return is true for a tensor product of Pauli, Hadamard, and Projector terms"""
-        o = qml.PauliZ(0) @ qml.Hadamard(1) @ qml.Projector([0], wires=2)
+        """Tests if return is true for a tensor product of Pauli, Hadamard, and Hamiltonian terms"""
+        o = qml.PauliZ(0) @ qml.Hadamard(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3)))
         assert _obs_has_kernel(o)
 
     def test_tensor_product_of_invalid_terms(self):
         """Tests if return is false for a tensor product of Hermitian terms"""
-        o = qml.Hermitian(np.eye(2), wires=0) @ qml.Hermitian(np.eye(2), wires=1)
+        o = (
+            qml.Hermitian(np.eye(2), wires=0)
+            @ qml.Hermitian(np.eye(2), wires=1)
+            @ qml.Projector([0], wires=2)
+        )
         assert not _obs_has_kernel(o)
 
     def test_tensor_product_of_mixed_terms(self):
         """Tests if return is false for a tensor product of valid and invalid terms"""
-        o = qml.PauliZ(0) @ qml.Hermitian(np.eye(2), wires=1)
+        o = qml.PauliZ(0) @ qml.Hermitian(np.eye(2), wires=1) @ qml.Projector([0], wires=2)
+        assert not _obs_has_kernel(o)
+
+    def test_projector(self):
+        """Tests if return is false for a Projector observable"""
+        o = qml.Projector([0], wires=0)
         assert not _obs_has_kernel(o)
 
 

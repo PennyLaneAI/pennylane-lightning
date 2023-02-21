@@ -80,7 +80,9 @@ class Measures {
      * @return Floating point std::vector with probabilities.
      * The basis columns are rearranged according to wires.
      */
-    std::vector<fp_t> probs(const std::vector<size_t> &wires) {
+    std::vector<fp_t>
+    probs(const std::vector<size_t> &wires,
+          [[maybe_unused]] const std::vector<size_t> &device_wires = {}) {
         // Determining index that would sort the vector.
         // This information is needed later.
         const auto sorted_ind_wires = Util::sorting_indices(wires);
@@ -233,6 +235,26 @@ class Measures {
     }
 
     /**
+     * @brief Variance value for a general Observable
+     *
+     * @param ob Observable
+     */
+    auto var(const Observable<fp_t> &ob) -> fp_t {
+        // Copying the original state vector, for the application of the
+        // observable operator.
+        StateVectorManagedCPU<fp_t> op_sv(original_statevector);
+        ob.applyInPlace(op_sv);
+
+        const fp_t mean_square = std::real(Util::innerProdC(
+            op_sv.getData(), op_sv.getData(), op_sv.getLength()));
+        const fp_t squared_mean = static_cast<fp_t>(std::pow(
+            std::real(Util::innerProdC(original_statevector.getData(),
+                                       op_sv.getData(), op_sv.getLength())),
+            2));
+        return (mean_square - squared_mean);
+    }
+
+    /**
      * @brief Variance of an observable.
      *
      * @param operation String with the operator name.
@@ -307,6 +329,43 @@ class Measures {
         }
 
         return expected_value_list;
+    };
+
+    /**
+     * @brief Variance of a Sparse Hamiltonian.
+     *
+     * @tparam index_type integer type used as indices of the sparse matrix.
+     * @param row_map_ptr   row_map array pointer.
+     *                      The j element encodes the number of non-zeros above
+     * row j.
+     * @param row_map_size  row_map array size.
+     * @param entries_ptr   pointer to an array with column indices of the
+     * non-zero elements.
+     * @param values_ptr    pointer to an array with the non-zero elements.
+     * @param numNNZ        number of non-zero elements.
+     * @return fp_t Variance value.
+     */
+    template <class index_type>
+    fp_t var(const index_type *row_map_ptr, const index_type row_map_size,
+             const index_type *entries_ptr, const CFP_t *values_ptr,
+             const index_type numNNZ) {
+        PL_ABORT_IF(
+            (original_statevector.getLength() != (size_t(row_map_size) - 1)),
+            "Statevector and Hamiltonian have incompatible sizes.");
+        auto operator_vector = Util::apply_Sparse_Matrix(
+            original_statevector.getData(),
+            static_cast<index_type>(original_statevector.getLength()),
+            row_map_ptr, row_map_size, entries_ptr, values_ptr, numNNZ);
+
+        const fp_t mean_square = std::real(
+            Util::innerProdC(operator_vector.data(), operator_vector.data(),
+                             operator_vector.size()));
+        const fp_t squared_mean = static_cast<fp_t>(
+            std::pow(std::real(Util::innerProdC(operator_vector.data(),
+                                                original_statevector.getData(),
+                                                operator_vector.size())),
+                     2));
+        return (mean_square - squared_mean);
     };
 
     /**
