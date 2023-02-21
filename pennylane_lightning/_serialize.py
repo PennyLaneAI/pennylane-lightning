@@ -24,7 +24,7 @@ from pennylane import (
     QubitStateVector,
     Rot,
 )
-from pennylane.grouping import is_pauli_word
+from pennylane.pauli import is_pauli_word
 from pennylane.operation import Observable, Tensor
 from pennylane.tape import QuantumTape
 from pennylane.math import unwrap
