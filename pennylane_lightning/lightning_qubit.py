@@ -756,7 +756,7 @@ class LightningQubit(QubitDevice):
         if (
             device_wires
             and len(device_wires) > 1
-            and (not np.all(list(device_wires)[:-1] <= list(device_wires)[1:]))
+            and (not np.all(np.array(device_wires)[:-1] <= np.array(device_wires)[1:]))
         ):
             raise RuntimeError(
                 "Lightning does not currently support out-of-order indices for probabilities"
