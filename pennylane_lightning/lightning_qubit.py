@@ -814,7 +814,7 @@ class LightningQubit(QubitDevice):
         M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
         if observable.name == "SparseHamiltonian":
             if Kokkos_info()["USE_KOKKOS"] == True:
-                # converting COO to CSR sparse representation.
+                # ensuring CSR sparse representation.
 
                 CSR_SparseHamiltonian = observable.sparse_matrix(wire_order=self.wires).tocsr(
                     copy=False
