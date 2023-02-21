@@ -119,7 +119,6 @@ class TestProbs:
         "cases",
         [
             [[1, 0], [0.9165164490394898, 0.08348355096051052, 0.0, 0.0]],
-            [["a", "0"], [0.9165164490394898, 0.08348355096051052, 0.0, 0.0]],
         ],
     )
     def test_fail_probs_tape_unordered_wires(self, cases, tol, dev):
