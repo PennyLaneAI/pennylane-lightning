@@ -87,10 +87,11 @@ void lightning_class_bindings(py::module_ &m) {
         .def(py::init<const StateVectorRawCPU<PrecisionT> &>())
         .def("probs",
              [](Measures<PrecisionT> &M, const std::vector<size_t> &wires) {
-                 if (wires.empty()) {
-                     return py::array_t<ParamT>(py::cast(M.probs()));
-                 }
                  return py::array_t<ParamT>(py::cast(M.probs(wires)));
+             })
+        .def("probs",
+             [](Measures<PrecisionT> &M) {
+                 return py::array_t<ParamT>(py::cast(M.probs()));
              })
         .def("expval",
              static_cast<PrecisionT (Measures<PrecisionT>::*)(

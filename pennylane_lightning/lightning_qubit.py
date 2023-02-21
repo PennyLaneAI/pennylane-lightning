@@ -744,6 +744,11 @@ class LightningQubit(QubitDevice):
         Returns:
             array[float]: list of the probabilities
         """
+        if wires and len(wires) > 1 and (not np.all(list(wires)[:-1] <= list(wires)[1:])):
+            raise RuntimeError(
+                "Lightning does not currently support out-of-order indices for probabilities"
+            )
+
         if self.shots is not None:
             return self.estimate_probability(wires=wires, shot_range=shot_range, bin_size=bin_size)
 
@@ -756,6 +761,7 @@ class LightningQubit(QubitDevice):
         # To support np.complex64 based on the type of self._state
         dtype = self._state.dtype
         ket = np.ravel(self._state)
+
         state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
         return M.probs(device_wires)

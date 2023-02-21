@@ -80,7 +80,9 @@ class Measures {
      * @return Floating point std::vector with probabilities.
      * The basis columns are rearranged according to wires.
      */
-    std::vector<fp_t> probs(const std::vector<size_t> &wires) {
+    std::vector<fp_t>
+    probs(const std::vector<size_t> &wires,
+          [[maybe_unused]] const std::vector<size_t> &device_wires = {}) {
         // Determining index that would sort the vector.
         // This information is needed later.
         const auto sorted_ind_wires = Util::sorting_indices(wires);
