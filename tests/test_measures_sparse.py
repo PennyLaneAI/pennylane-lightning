@@ -45,9 +45,7 @@ class TestSparseExpval:
             qml.RY(-0.2, wires=[1])
             return qml.expval(
                 qml.SparseHamiltonian(
-                    qml.utils.sparse_hamiltonian(
-                        qml.Hamiltonian([1], [qml.PauliX(0) @ qml.Identity(1)])
-                    ),
+                    qml.Hamiltonian([1], [qml.PauliX(0) @ qml.Identity(1)]).sparse_matrix(),
                     wires=[0, 1],
                 )
             )
@@ -98,7 +96,7 @@ class TestSparseExpvalQChem:
         symbols,
         geometry,
     )
-    H_sparse = qml.utils.sparse_hamiltonian(H)
+    H_sparse = H.sparse_matrix()
 
     active_electrons = 1
 
@@ -114,7 +112,7 @@ class TestSparseExpvalQChem:
     @pytest.mark.parametrize(
         "qubits, wires, H_sparse, hf_state, excitations",
         [
-            [qubits, np.arange(qubits), H_sparse, hf_state, excitations],
+            [qubits, range(qubits), H_sparse, hf_state, excitations],
             [
                 qubits,
                 np.random.permutation(np.arange(qubits)),
