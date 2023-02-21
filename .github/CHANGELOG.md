@@ -28,6 +28,9 @@
 
 ### Bug fixes
 
+* Ensure error raised when asking for out of order marginal probabilities. Prevents the return of incorrect results.
+[(#416)](https://github.com/PennyLaneAI/pennylane-lightning/pull/416)
+
 * Fix Github shields in README.
 [(#402)](https://github.com/PennyLaneAI/pennylane-lightning/pull/402)
 
