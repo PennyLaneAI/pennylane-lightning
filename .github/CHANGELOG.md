@@ -1,8 +1,6 @@
-# Release 0.29.0-dev
+# Release 0.29.0.rc0
 
 ### New features since last release
-
-### Breaking changes
 
 ### Improvements
 
@@ -26,8 +24,6 @@
 
 * Add more AVX2/512 gate operations.
 [(#393)](https://github.com/PennyLaneAI/pennylane-lightning/pull/393)
-
-### Documentation
 
 ### Bug fixes
 
