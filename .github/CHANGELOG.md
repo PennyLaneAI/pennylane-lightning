@@ -15,6 +15,9 @@
 * Remove explicit Numpy and Scipy requirements.
 [(#412)](https://github.com/PennyLaneAI/pennylane-lightning/pull/412)
 
+* Get `llvm` installation root from the environment variable `LLVM_ROOT_DIR` (or fallback to `brew`).
+[(#413)](https://github.com/PennyLaneAI/pennylane-lightning/pull/413)
+
 * Update AVX2/512 kernel infrastructure for additional gate/generator operations.
 [(#404)](https://github.com/PennyLaneAI/pennylane-lightning/pull/404)
 
@@ -36,7 +39,7 @@
 
 ### Contributors
 
-Amintor Dusko, Lee James O'Riordan, Chae-Yeun Park
+Amintor Dusko, Vincent Michaud-Rioux, Lee James O'Riordan, Chae-Yeun Park
 
 ---
 

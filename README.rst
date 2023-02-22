@@ -95,7 +95,7 @@ You can also pass ``cmake`` options with ``build_ext``:
 
     $ python3 setup.py build_ext -i --define="ENABLE_OPENMP=OFF;ENABLE_NATIVE=ON"
 
-and install the compilied library with
+and install the compiled library with
 
 .. code-block:: console
 
@@ -202,7 +202,7 @@ Contributing
 
 We welcome contributions - simply fork the repository of this plugin, and then make a
 `pull request <https://help.github.com/articles/about-pull-requests/>`_ containing your contribution.
-All contributers to this plugin will be listed as authors on the releases.
+All contributors to this plugin will be listed as authors on the releases.
 
 We also encourage bug reports, suggestions for new features and enhancements, and even links to cool projects
 or applications built on PennyLane.
