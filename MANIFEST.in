@@ -1,2 +1,5 @@
 include requirements.txt
 include CHANGELOG.rst
+include CMakeLists.txt
+include cmake/*
+recursive-include pennylane_lightning *
