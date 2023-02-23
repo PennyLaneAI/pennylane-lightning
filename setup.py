@@ -17,7 +17,7 @@ import sys
 import subprocess
 import shutil
 from pathlib import Path
-from setuptools import setup, Extension, find_packages
+from setuptools import setup, Extension, find_packages, find_namespace_packages
 from setuptools.command.build_ext import build_ext
 
 
@@ -132,10 +132,6 @@ info = {
     "maintainer_email": "software@xanadu.ai",
     "url": "https://github.com/XanaduAI/pennylane-lightning",
     "license": "Apache License 2.0",
-    "packages": find_packages(where="."),
-    "package_data": {
-        "pennylane_lightning": [os.path.join("src", "*"), os.path.join("src", "**", "*")]
-    },
     "include_package_data": True,
     "entry_points": {
         "pennylane.plugins": [
