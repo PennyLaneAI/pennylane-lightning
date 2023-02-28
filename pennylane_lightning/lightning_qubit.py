@@ -144,6 +144,7 @@ allowed_observables = {
     "Exp",
 }
 
+
 class LightningQubit(QubitDevice):
     """PennyLane Lightning device.
 
