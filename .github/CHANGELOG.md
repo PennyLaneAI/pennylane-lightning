@@ -1,6 +1,4 @@
-# Release 0.29.0.rc1
-
-### New features since last release
+# Release 0.29.0
 
 ### Improvements
 

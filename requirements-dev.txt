@@ -1,6 +1,6 @@
 ninja
 flaky
-git+https://github.com/PennyLaneAI/pennylane.git@v0.29.0-rc0
+git+https://github.com/PennyLaneAI/pennylane.git@master
 pybind11
 pytest
 pytest-cov
