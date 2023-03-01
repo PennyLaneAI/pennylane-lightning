@@ -379,14 +379,17 @@ class TestSerializeObs:
         obtained_chunks = pennylane_lightning.lightning_qubit._chunk_iterable(s, ObsChunk)
         assert len(list(obtained_chunks)) == int(np.ceil(len(s) / ObsChunk))
 
-    @pytest.mark.parametrize("obs", [
-        qml.prod(qml.PauliZ(0), qml.PauliX(1)),
-        qml.s_prod(0.1, qml.PauliX(0)),
-        qml.sum(
-            0.5 * qml.prod(qml.PauliX(0), qml.PauliZ(1)),
-            0.1 * qml.prod(qml.PauliZ(0), qml.PauliY(1)),
-        ),
-    ])
+    @pytest.mark.parametrize(
+        "obs",
+        [
+            qml.prod(qml.PauliZ(0), qml.PauliX(1)),
+            qml.s_prod(0.1, qml.PauliX(0)),
+            qml.sum(
+                0.5 * qml.prod(qml.PauliX(0), qml.PauliZ(1)),
+                0.1 * qml.prod(qml.PauliZ(0), qml.PauliY(1)),
+            ),
+        ],
+    )
     @pytest.mark.parametrize("use_csingle", [True, False])
     def test_op_arithmetic_uses_hamiltonian(self, use_csingle, obs):
         """Tests that a Prod obs serializes as a Hamiltonian."""
