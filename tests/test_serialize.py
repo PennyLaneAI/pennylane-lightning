@@ -176,7 +176,7 @@ class TestSerializeObs:
             ),
             [0, 1],
         )
-        s[0] == s_expected
+        assert s[0] == s_expected
 
     @pytest.mark.parametrize("use_csingle", [True, False])
     def test_hermitian_tensor_return(self, use_csingle):
@@ -233,7 +233,6 @@ class TestSerializeObs:
         with qml.tape.QuantumTape() as tape:
             qml.expval(ham)
 
-        obs_str = "HamiltonianC64" if use_csingle else "HamiltonianC128"
         hamiltonian_obs = HamiltonianC64 if use_csingle else HamiltonianC128
         named_obs = NamedObsC64 if use_csingle else NamedObsC128
         hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
@@ -274,7 +273,6 @@ class TestSerializeObs:
             )
             qml.expval(ham @ qml.PauliZ(3))
 
-        obs_str = "HamiltonianC64" if use_csingle else "HamiltonianC128"
         hamiltonian_obs = HamiltonianC64 if use_csingle else HamiltonianC128
         named_obs = NamedObsC64 if use_csingle else NamedObsC128
         hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
@@ -328,7 +326,6 @@ class TestSerializeObs:
             qml.expval(ham1)
             qml.expval(ham2)
 
-        obs_str = "HamiltonianC64" if use_csingle else "HamiltonianC128"
         hamiltonian_obs = HamiltonianC64 if use_csingle else HamiltonianC128
         named_obs = NamedObsC64 if use_csingle else NamedObsC128
         hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
@@ -369,7 +366,7 @@ class TestSerializeObs:
 
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("ObsChunk", list(range(1, 5)))
-    def test_chunk_obs(self, monkeypatch, use_csingle, ObsChunk):
+    def test_chunk_obs(self, use_csingle, ObsChunk):
         """Test chunking of observable array"""
         with qml.tape.QuantumTape() as tape:
             qml.expval(qml.PauliZ(0) @ qml.PauliX(1))
@@ -381,6 +378,22 @@ class TestSerializeObs:
 
         obtained_chunks = pennylane_lightning.lightning_qubit._chunk_iterable(s, ObsChunk)
         assert len(list(obtained_chunks)) == int(np.ceil(len(s) / ObsChunk))
+
+    @pytest.mark.parametrize("obs", [
+        qml.prod(qml.PauliZ(0), qml.PauliX(1)),
+        qml.s_prod(0.1, qml.PauliX(0)),
+        qml.sum(
+            0.5 * qml.prod(qml.PauliX(0), qml.PauliZ(1)),
+            0.1 * qml.prod(qml.PauliZ(0), qml.PauliY(1)),
+        ),
+    ])
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    def test_op_arithmetic_uses_hamiltonian(self, use_csingle, obs):
+        """Tests that a Prod obs serializes as a Hamiltonian."""
+        tape = qml.tape.QuantumTape(measurements=[qml.expval(obs)])
+        res = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
+        assert len(res) == 1
+        assert isinstance(res[0], HamiltonianC64 if use_csingle else HamiltonianC128)
 
 
 class TestSerializeOps:
