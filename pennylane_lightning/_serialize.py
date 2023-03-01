@@ -76,23 +76,18 @@ def _obs_has_kernel(ob: Observable) -> bool:
     return False
 
 
-def _serialize_named_hermitian_ob(o, wires_map: dict, use_csingle: bool):
-    """Serializes an observable (Named or Hermitian)"""
+def _serialize_hermitian_ob(o, wires_map: dict, use_csingle: bool):
+    """Serializes a Hermitian observable"""
     assert not isinstance(o, Tensor)
 
     if use_csingle:
         ctype = np.complex64
-        named_obs = NamedObsC64
         hermitian_obs = HermitianObsC64
     else:
         ctype = np.complex128
-        named_obs = NamedObsC128
         hermitian_obs = HermitianObsC128
 
-    wires_list = o.wires.tolist()
-    wires = [wires_map[w] for w in wires_list]
-    if _obs_has_kernel(o):
-        return named_obs(o.name, wires)
+    wires = [wires_map[w] for w in o.wires]
     return hermitian_obs(qml.matrix(o).ravel().astype(ctype), wires)
 
 
@@ -126,8 +121,15 @@ def _serialize_ob(ob, wires_map, use_csingle):
         return _serialize_tensor_ob(ob, wires_map, use_csingle)
     elif ob.name == "Hamiltonian":
         return _serialize_hamiltonian(ob, wires_map, use_csingle)
+    elif _obs_has_kernel(ob):
+        named_obs = NamedObsC64 if use_csingle else NamedObsC128
+        wires = [wires_map[w] for w in ob.wires]
+        return named_obs(ob.name, wires)
+    elif ob._pauli_rep is not None:
+        ham = ob._pauli_rep.hamiltonian()
+        return _serialize_hamiltonian(ham, wires_map, use_csingle)
     else:
-        return _serialize_named_hermitian_ob(ob, wires_map, use_csingle)
+        return _serialize_hermitian_ob(ob, wires_map, use_csingle)
 
 
 def _serialize_observables(tape: QuantumTape, wires_map: dict, use_csingle: bool = False) -> List:
