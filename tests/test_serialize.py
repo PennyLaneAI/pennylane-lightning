@@ -380,23 +380,43 @@ class TestSerializeObs:
         assert len(list(obtained_chunks)) == int(np.ceil(len(s) / ObsChunk))
 
     @pytest.mark.parametrize(
-        "obs",
+        "obs,coeffs,terms",
         [
-            qml.prod(qml.PauliZ(0), qml.PauliX(1)),
-            qml.s_prod(0.1, qml.PauliX(0)),
-            qml.sum(
-                0.5 * qml.prod(qml.PauliX(0), qml.PauliZ(1)),
-                0.1 * qml.prod(qml.PauliZ(0), qml.PauliY(1)),
+            (qml.prod(qml.PauliZ(0), qml.PauliX(1)), [1], [[("PauliX", 1), ("PauliZ", 0)]]),
+            (qml.s_prod(0.1, qml.PauliX(0)), [0.1], ("PauliX", 0)),
+            (
+                qml.sum(
+                    0.5 * qml.prod(qml.PauliX(0), qml.PauliZ(1)),
+                    0.1 * qml.prod(qml.PauliZ(0), qml.PauliY(1)),
+                ),
+                [0.5, 0.1],
+                [[("PauliZ", 1), ("PauliX", 0)], [("PauliY", 1), ("PauliZ", 0)]],
             ),
         ],
     )
     @pytest.mark.parametrize("use_csingle", [True, False])
-    def test_op_arithmetic_uses_hamiltonian(self, use_csingle, obs):
-        """Tests that a Prod obs serializes as a Hamiltonian."""
+    def test_op_arithmetic_uses_hamiltonian(self, use_csingle, obs, coeffs, terms):
+        """Tests that an arithmetic obs with a PauliRep serializes as a Hamiltonian."""
         tape = qml.tape.QuantumTape(measurements=[qml.expval(obs)])
         res = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
         assert len(res) == 1
         assert isinstance(res[0], HamiltonianC64 if use_csingle else HamiltonianC128)
+
+        hamiltonian_obs = HamiltonianC64 if use_csingle else HamiltonianC128
+        tensor_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
+        named_obs = NamedObsC64 if use_csingle else NamedObsC128
+        rtype = np.float32 if use_csingle else np.float64
+        term_shape = np.array(terms).shape
+
+        if len(term_shape) == 1:  # just a single pauli op
+            expected_terms = [named_obs(terms[0], [terms[1]])]
+        elif len(term_shape) == 3:  # list of tensor products
+            expected_terms = [
+                tensor_obs([named_obs(pauli, [wire]) for pauli, wire in term]) for term in terms
+            ]
+
+        coeffs = np.array(coeffs).astype(rtype)
+        assert res[0] == hamiltonian_obs(coeffs, expected_terms)
 
 
 class TestSerializeOps:

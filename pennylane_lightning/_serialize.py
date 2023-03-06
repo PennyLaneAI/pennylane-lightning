@@ -54,6 +54,13 @@ try:
 except ImportError:
     pass
 
+pauli_name_map = {
+    "I": "Identity",
+    "X": "PauliX",
+    "Y": "PauliY",
+    "Z": "PauliZ",
+}
+
 
 def _obs_has_kernel(ob: Observable) -> bool:
     """Returns True if the input observable has a supported kernel in the C++ backend.
@@ -74,6 +81,13 @@ def _obs_has_kernel(ob: Observable) -> bool:
         return all(_obs_has_kernel(o) for o in ob.obs)
 
     return False
+
+
+def _serialize_named_obs(ob, wires_map: dict, use_csingle: bool):
+    """Serializes a Named observable"""
+    named_obs = NamedObsC64 if use_csingle else NamedObsC128
+    wires = [wires_map[w] for w in ob.wires]
+    return named_obs(ob.name, wires)
 
 
 def _serialize_hermitian_ob(o, wires_map: dict, use_csingle: bool):
@@ -116,18 +130,48 @@ def _serialize_hamiltonian(ob, wires_map: dict, use_csingle: bool):
     return hamiltonian_obs(coeffs, terms)
 
 
+def _serialize_pauli_word(ob, wires_map: dict, use_csingle: bool):
+    """Serialize a PauliWord into a Named or Tensor."""
+    if use_csingle:
+        named_obs = NamedObsC64
+        tensor_obs = TensorProdObsC64
+    else:
+        named_obs = NamedObsC128
+        tensor_obs = TensorProdObsC128
+
+    if len(ob) == 1:
+        wire, pauli = list(ob.items())[0]
+        return named_obs(pauli_name_map[pauli], [wires_map[wire]])
+
+    return tensor_obs(
+        [named_obs(pauli_name_map[pauli], [wires_map[wire]]) for wire, pauli in ob.items()]
+    )
+
+
+def _serialize_pauli_sentence(ob, wires_map: dict, use_csingle: bool):
+    """Serialize a PauliSentence into a Hamiltonian."""
+    if use_csingle:
+        rtype = np.float32
+        hamiltonian_obs = HamiltonianC64
+    else:
+        rtype = np.float64
+        hamiltonian_obs = HamiltonianC128
+
+    pwords, coeffs = zip(*ob.items())
+    terms = [_serialize_pauli_word(pw, wires_map, use_csingle) for pw in pwords]
+    coeffs = np.array(coeffs).astype(rtype)
+    return hamiltonian_obs(coeffs, terms)
+
+
 def _serialize_ob(ob, wires_map, use_csingle):
     if isinstance(ob, Tensor):
         return _serialize_tensor_ob(ob, wires_map, use_csingle)
     elif ob.name == "Hamiltonian":
         return _serialize_hamiltonian(ob, wires_map, use_csingle)
     elif _obs_has_kernel(ob):
-        named_obs = NamedObsC64 if use_csingle else NamedObsC128
-        wires = [wires_map[w] for w in ob.wires]
-        return named_obs(ob.name, wires)
+        return _serialize_named_obs(ob, wires_map, use_csingle)
     elif ob._pauli_rep is not None:
-        ham = ob._pauli_rep.hamiltonian()
-        return _serialize_hamiltonian(ham, wires_map, use_csingle)
+        return _serialize_pauli_sentence(ob._pauli_rep, wires_map, use_csingle)
     else:
         return _serialize_hermitian_ob(ob, wires_map, use_csingle)
 
