@@ -500,7 +500,8 @@ class LightningQubit(QubitDevice):
 
         for op_idx, tp in enumerate(trainable_params):
             op, _, _ = tape.get_operation(
-                op_idx, return_op_index=True,
+                op_idx,
+                return_op_index=True,
             )  # get op_idx-th operator among differentiable operators
             if isinstance(op, Operation) and not isinstance(op, (BasisState, QubitStateVector)):
                 # We now just ignore non-op or state preps
