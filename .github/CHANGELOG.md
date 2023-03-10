@@ -2,6 +2,10 @@
 
 ### New features since last release
 
+* Serialize PennyLane's arithmetic operators when they are used as observables
+  that are expressed in the Pauli basis.
+  [(#424)](https://github.com/PennyLaneAI/pennylane-lightning/pull/424)
+
 ### Breaking changes
 
 ### Improvements
@@ -13,6 +17,8 @@
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Matthew Silverman
 
 ---
 
