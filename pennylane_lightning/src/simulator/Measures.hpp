@@ -431,6 +431,8 @@ class Measures {
         }
         return samples;
     }
+    
+    /**
      * @brief Variance of a Sparse Hamiltonian.
      *
      * @tparam index_type integer type used as indices of the sparse matrix.
