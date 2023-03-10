@@ -1,4 +1,4 @@
-# Release 0.29.0-dev
+# Release 0.30.0-dev
 
 ### New features since last release
 
@@ -6,6 +6,20 @@
 [(#384)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/384)
 
 ### Breaking changes
+
+### Improvements
+
+### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+---
+
+# Release 0.29.0
 
 ### Improvements
 
@@ -17,6 +31,9 @@
 
 * Remove explicit Numpy and Scipy requirements.
 [(#412)](https://github.com/PennyLaneAI/pennylane-lightning/pull/412)
+
+* Get `llvm` installation root from the environment variable `LLVM_ROOT_DIR` (or fallback to `brew`).
+[(#413)](https://github.com/PennyLaneAI/pennylane-lightning/pull/413)
 
 * Update AVX2/512 kernel infrastructure for additional gate/generator operations.
 [(#404)](https://github.com/PennyLaneAI/pennylane-lightning/pull/404)
@@ -31,12 +48,15 @@
 
 ### Bug fixes
 
+* Ensure error raised when asking for out of order marginal probabilities. Prevents the return of incorrect results.
+[(#416)](https://github.com/PennyLaneAI/pennylane-lightning/pull/416)
+
 * Fix Github shields in README.
 [(#402)](https://github.com/PennyLaneAI/pennylane-lightning/pull/402)
 
 ### Contributors
 
-Amintor Dusko, Lee James O'Riordan, Chae-Yeun Park
+Amintor Dusko, Vincent Michaud-Rioux, Lee James O'Riordan, Chae-Yeun Park
 
 ---
 

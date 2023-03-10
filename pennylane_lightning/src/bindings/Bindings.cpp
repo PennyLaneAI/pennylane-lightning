@@ -87,10 +87,11 @@ void lightning_class_bindings(py::module_ &m) {
         .def(py::init<const StateVectorRawCPU<PrecisionT> &>())
         .def("probs",
              [](Measures<PrecisionT> &M, const std::vector<size_t> &wires) {
-                 if (wires.empty()) {
-                     return py::array_t<ParamT>(py::cast(M.probs()));
-                 }
                  return py::array_t<ParamT>(py::cast(M.probs(wires)));
+             })
+        .def("probs",
+             [](Measures<PrecisionT> &M) {
+                 return py::array_t<ParamT>(py::cast(M.probs()));
              })
         .def("expval",
              static_cast<PrecisionT (Measures<PrecisionT>::*)(
@@ -155,10 +156,36 @@ void lightning_class_bindings(py::module_ &m) {
                      strides /* strides for each axis     */
                      ));
              })
-        .def("var", [](Measures<PrecisionT> &M, const std::string &operation,
-                       const std::vector<size_t> &wires) {
-            return M.var(operation, wires);
-        });
+        .def("var",
+             [](Measures<PrecisionT> &M, const std::string &operation,
+                const std::vector<size_t> &wires) {
+                 return M.var(operation, wires);
+             })
+        .def("var",
+             static_cast<PrecisionT (Measures<PrecisionT>::*)(
+                 const std::string &, const std::vector<size_t> &)>(
+                 &Measures<PrecisionT>::var),
+             "Variance of an operation by name.")
+        .def(
+            "var",
+            [](Measures<PrecisionT> &M,
+               const std::shared_ptr<Observable<PrecisionT>> &ob) {
+                return M.var(*ob);
+            },
+            "Variance of an operation object.")
+        .def(
+            "var",
+            [](Measures<PrecisionT> &M, const np_arr_sparse_ind row_map,
+               const np_arr_sparse_ind entries, const np_arr_c values) {
+                return M.var(
+                    static_cast<sparse_index_type *>(row_map.request().ptr),
+                    static_cast<sparse_index_type>(row_map.request().size),
+                    static_cast<sparse_index_type *>(entries.request().ptr),
+                    static_cast<std::complex<PrecisionT> *>(
+                        values.request().ptr),
+                    static_cast<sparse_index_type>(values.request().size));
+            },
+            "Expected value of a sparse Hamiltonian.");
 }
 
 template <class PrecisionT, class ParamT>
