@@ -431,7 +431,7 @@ class Measures {
         }
         return samples;
     }
-    
+
     /**
      * @brief Variance of a Sparse Hamiltonian.
      *
