@@ -87,6 +87,8 @@ def _serialize_named_obs(ob, wires_map: dict, use_csingle: bool):
     """Serializes a Named observable"""
     named_obs = NamedObsC64 if use_csingle else NamedObsC128
     wires = [wires_map[w] for w in ob.wires]
+    if ob.name == "Identity":
+        wires = wires[:1]
     return named_obs(ob.name, wires)
 
 
