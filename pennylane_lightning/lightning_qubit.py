@@ -604,7 +604,7 @@ class LightningQubit(QubitDevice):
 
         Args:
             measurements (list): List of measurement processes for vector-Jacobian product. Now it must be expectation values or a quantum state.
-            dy (tensor_like): Gradient-output vector. Must have shape matching the output shape of the corresponding tape, i.e. number of measrurements if the return type is expectation or :math:`2^N` if the return type is statevector
+            dy (tensor_like): Gradient-output vector. Must have shape matching the output shape of the corresponding tape, i.e. number of measurements if the return type is expectation or :math:`2^N` if the return type is statevector
             starting_state (tensor_like): post-forward pass state to start execution with. It should be
                 complex-valued. Takes precedence over ``use_device_state``.
             use_device_state (bool): use current device state to initialize. A forward pass of the same
