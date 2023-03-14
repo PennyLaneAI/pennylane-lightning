@@ -173,7 +173,18 @@ class LightningQubit(QubitDevice):
     operations = allowed_operations
     observables = allowed_observables
 
-    def __init__(self, wires, *, c_dtype=np.complex128, shots=None, batch_obs=False, analytic=None):
+    def __init__(
+        self,
+        wires,
+        *,
+        c_dtype=np.complex128,
+        shots=None,
+        mcmc=False,
+        kernel_name="Local",
+        num_burnin=100,
+        batch_obs=False,
+        analytic=None,
+    ):
         if c_dtype is np.complex64:
             r_dtype = np.float32
             self.use_csingle = True
@@ -189,6 +200,20 @@ class LightningQubit(QubitDevice):
         # state as an array of dimension [2]*wires.
         self._state = self._create_basis_state(0)
         self._pre_rotated_state = self._state
+
+        self._mcmc = mcmc
+        if self._mcmc:
+            if kernel_name not in [
+                "Local",
+                "NonZeroRandom",
+            ]:
+                raise NotImplementedError(
+                    f"The {kernel_name} is not supported and currently only 'Local' and 'NonZeroRandom' kernels are supported."
+                )
+            if num_burnin >= shots:
+                raise ValueError("Shots should be greater than num_burnin.")
+            self._kernel_name = kernel_name
+            self._num_burnin = num_burnin
 
     @property
     def stopping_condition(self):
@@ -776,42 +801,17 @@ class LightningQubit(QubitDevice):
         Returns:
             array[int]: array of samples in binary representation with shape ``(dev.shots, dev.num_wires)``
         """
-
         # Initialization of state
         ket = np.ravel(self._state)
 
         state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
-
-        return M.generate_samples(len(self.wires), self.shots).astype(int, copy=False)
-
-    def generate_mcmc_samples(self, kernel_name="Local", num_burnin=100):
-        """Generate Markov chain Monte Carlo (MCMC) samples
-        Args:
-            kernel_name (str): name of transition kernel. Current version supports two kernels: ``Local`` and ``NonZeroRandom``. The ``Local`` kernel
-                conducts a ``SpinFlip`` local transition between states. The ``Local`` kernel generates a random qubit site and then generates a random
-                number to determine the new bit at that qubit site. The ``NonZeroRandom`` randomly transits between states that have nonzero probability.
-            num_burnin (int): number of steps that will be dropped.
-
-        Returns:
-            array[int]: array of samples in binary representation with shape ``(dev.shots, dev.num_wires)``
-        """
-        if kernel_name not in [
-            "Local",
-            "NonZeroRandom",
-        ]:
-            raise NotImplementedError(
-                f"The {kernel_name} is not supported and currently only 'Local' and 'NonZeroRandom' kernels are supported."
-            )
-        # Initialization of state
-        ket = np.ravel(self._state)
-
-        state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
-        M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
-
-        return M.generate_mcmc_samples(len(self.wires), kernel_name, num_burnin, self.shots).astype(
-            int, copy=False
-        )
+        if self._mcmc:
+            return M.generate_mcmc_samples(
+                len(self.wires), self._kernel_name, self._num_burnin, self.shots
+            ).astype(int, copy=False)
+        else:
+            return M.generate_samples(len(self.wires), self.shots).astype(int, copy=False)
 
     def expval(self, observable, shot_range=None, bin_size=None):
         """Expectation value of the supplied observable.

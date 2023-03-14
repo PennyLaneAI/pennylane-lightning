@@ -616,7 +616,7 @@ class TestMCMCSample:
 
     @pytest.fixture(params=[np.complex64, np.complex128])
     def dev(self, request):
-        return qml.device("lightning.qubit", wires=2, shots=1000, c_dtype=request.param)
+        return qml.device("lightning.qubit", wires=2, shots=1000, mcmc=True, c_dtype=request.param)
 
     test_data_no_parameters = [
         ("Local", 10, 100, [0], qml.PauliZ(wires=[0]), 100),
@@ -636,27 +636,27 @@ class TestMCMCSample:
         """Tests if the samples returned by sample have
         the correct dimensions
         """
-
         dev.apply([qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])])
 
         dev.shots = num_shots
         dev._wires_measured = measured_wires
-        dev._samples = dev.generate_mcmc_samples(kernel, num_burnin)
+        dev._samples = dev.generate_samples()
         s1 = dev.sample(operation)
 
         assert np.array_equal(s1.shape, (shape,))
 
     @pytest.mark.parametrize("kernel", ["Local", "NonZeroRandom"])
-    def test_sample_values(self, dev, tol, kernel):
+    def test_sample_values(self, tol, kernel):
         """Tests if the samples returned by sample have
         the correct values
         """
+        dev = qml.device(
+            "lightning.qubit", wires=2, shots=1000, mcmc=True, kernel_name=kernel, num_burnin=100
+        )
 
         dev.apply([qml.RX(1.5708, wires=[0])])
-        num_burnin = 100
         dev._wires_measured = {0}
-        dev._samples = dev.generate_mcmc_samples(kernel, num_burnin)
-
+        dev._samples = dev.generate_samples()
         s1 = dev.sample(qml.PauliZ(0))
 
         # s1 should only contain 1 and -1, which is guaranteed if
@@ -664,19 +664,26 @@ class TestMCMCSample:
         assert np.allclose(s1**2, 1, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("kernel", ["local", "nonZeroRandom", "Global", "global"])
-    def test_unsupported_sample_kernels(self, dev, tol, kernel):
+    def test_unsupported_sample_kernels(self, tol, kernel):
         """Tests if the samples returned by sample have
         the correct values
         """
-
-        dev.apply([qml.RX(1.5708, wires=[0])])
-        num_burnin = 100
-        dev._wires_measured = {0}
         with pytest.raises(
             NotImplementedError,
             match=f"The {kernel} is not supported and currently only 'Local' and 'NonZeroRandom' kernels are supported.",
         ):
-            dev._samples = dev.generate_mcmc_samples(kernel, num_burnin)
+            dev = qml.device(
+                "lightning.qubit",
+                wires=2,
+                shots=1000,
+                mcmc=True,
+                kernel_name=kernel,
+                num_burnin=100,
+            )
+
+    def test_wrong_num_burnin(self):
+        with pytest.raises(ValueError, match="Shots should be greater than num_burnin."):
+            dev = qml.device("lightning.qubit", wires=2, shots=1000, mcmc=True, num_burnin=1000)
 
 
 class TestWiresInVar:
