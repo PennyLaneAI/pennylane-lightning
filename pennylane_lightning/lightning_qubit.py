@@ -165,7 +165,8 @@ class LightningQubit(QubitDevice):
             The local kernel conducts a bit-flip local transition between states. The local kernel generates a
             random qubit site and then generates a random number to determine the new bit at that qubit site. The ``"NonZeroRandom"`` kernel
             randomly transits between states that have nonzero probability.
-        num_burnin (int): number of steps that will be dropped.
+        num_burnin (int): number of steps that will be dropped. Increasing this value will
+        result in a closer approximation but increased runtime.
         batch_obs (bool): Determine whether we process observables parallelly when computing the
             jacobian. This value is only relevant when the lightning qubit is built with OpenMP.
     """
