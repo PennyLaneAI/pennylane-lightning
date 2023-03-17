@@ -105,7 +105,7 @@ If you are computing a large number of expectation values, or if you are using a
 
 **Markov Chain Monte Carlo sampling support:**
 
-The ``lightning.qubit`` device allows users to use Markov Chain Monte Carlo (MCMC) sampling method to generate samples. To enable MCMC sampling method for sample generation, initialize a ``lightning.qubit`` device with the ``mcmc=True`` keyword argument, as:
+The ``lightning.qubit`` device allows users to use the Markov Chain Monte Carlo (MCMC) sampling method to generate approximate samples. To enable the MCMC sampling method for sample generation, initialize a ``lightning.qubit`` device with the ``mcmc=True`` keyword argument, as:
 
 .. code-block:: python
 
