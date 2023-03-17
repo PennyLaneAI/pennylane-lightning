@@ -161,9 +161,9 @@ class LightningQubit(QubitDevice):
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
         mcmc (bool): Determine whether to use the approximate Markov Chain Monte Carlo sampling method when generating samples.
-        kernel_name (str): name of transition kernel. Current version supports two kernels: ``Local`` and ``NonZeroRandom``.
-            The ``Local`` kernel conducts a ``SpinFlip`` local transition between states. The ``Local`` kernel generates a
-            random qubit site and then generates a random number to determine the new bit at that qubit site. The ``NonZeroRandom``
+        kernel_name (str): name of transition kernel. The current version supports two kernels: ``"Local"`` and ``"NonZeroRandom"``.
+            The local kernel conducts a bit-flip local transition between states. The local kernel generates a
+            random qubit site and then generates a random number to determine the new bit at that qubit site. The ``"NonZeroRandom"`` kernel
             randomly transits between states that have nonzero probability.
         num_burnin (int): number of steps that will be dropped.
         batch_obs (bool): Determine whether we process observables parallelly when computing the
