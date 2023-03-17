@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add MCMC sampler.
+[(#384)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/384)
+
 ### Breaking changes
 
 ### Improvements
@@ -68,7 +71,7 @@ Amintor Dusko, Vincent Michaud-Rioux, Lee James O'Riordan, Chae-Yeun Park
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko
+Amintor Dusko, Shuli Shu, Trevor Vincent
 
 ---
 
