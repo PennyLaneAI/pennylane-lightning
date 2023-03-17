@@ -114,7 +114,7 @@ The ``lightning.qubit`` device allows users to use the Markov Chain Monte Carlo 
 
 By default, the ``kernel_name`` is ``"Local"`` and ``num_burnin`` is ``100``. The local kernel conducts a bit-flip local transition between states. The local kernel generates a random qubit site and then generates a random number to determine  the new bit at that qubit site. 
 
-Current version also supports the ``NonZeroRandom`` kernel. The ``NonZeroRandom`` randomly transits between states that have nonzero probability. To enable the ``NonZeroRandom`` kernel and set ``num_burnin``, initialize a ``lightning.qubit`` device as:
+The ``lightning.qubit`` device also supports a ``"NonZeroRandom"`` kernel. This kernel randomly transits between states that have nonzero probability. It can be enabled by initializing the device as:
 
 .. code-block:: python
 
