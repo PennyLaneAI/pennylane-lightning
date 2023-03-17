@@ -160,7 +160,7 @@ class LightningQubit(QubitDevice):
             the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
-        mcmc (bool): Determine whether we use Markov Chain Monte Carlo sampling method when generating samples.
+        mcmc (bool): Determine whether to use the approximate Markov Chain Monte Carlo sampling method when generating samples.
         kernel_name (str): name of transition kernel. Current version supports two kernels: ``Local`` and ``NonZeroRandom``.
             The ``Local`` kernel conducts a ``SpinFlip`` local transition between states. The ``Local`` kernel generates a
             random qubit site and then generates a random number to determine the new bit at that qubit site. The ``NonZeroRandom``
