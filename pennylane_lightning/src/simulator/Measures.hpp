@@ -33,6 +33,7 @@
 #include "Observables.hpp"
 #include "StateVectorManagedCPU.hpp"
 #include "StateVectorRawCPU.hpp"
+#include "TransitionKernels.hpp"
 
 namespace Pennylane::Simulators {
 
@@ -330,6 +331,106 @@ class Measures {
 
         return expected_value_list;
     };
+
+    /**
+     * @brief Complete a single Metropolis-Hastings step.
+     *
+     * @param sv state vector
+     * @param tk User-defined functor for producing transitions
+     * between metropolis states.
+     * @param gen Random number generator.
+     * @param distrib Random number distribution.
+     * @param init_idx Init index of basis state.
+     */
+    size_t metropolis_step(const SVType &sv,
+                           const std::unique_ptr<TransitionKernel<fp_t>> &tk,
+                           std::mt19937 &gen,
+                           std::uniform_real_distribution<fp_t> &distrib,
+                           size_t init_idx) {
+        auto init_plog = std::log(
+            (sv.getData()[init_idx] * std::conj(sv.getData()[init_idx]))
+                .real());
+
+        auto init_qratio = tk->operator()(init_idx);
+
+        // transition kernel outputs these two
+        auto &trans_idx = init_qratio.first;
+        auto &trans_qratio = init_qratio.second;
+
+        auto trans_plog = std::log(
+            (sv.getData()[trans_idx] * std::conj(sv.getData()[trans_idx]))
+                .real());
+
+        auto alph =
+            std::min<fp_t>(1., trans_qratio * std::exp(trans_plog - init_plog));
+        auto ran = distrib(gen);
+
+        if (ran < alph) {
+            return trans_idx;
+        }
+        return init_idx;
+    }
+
+    /**
+     * @brief Generate samples using the Metropolis-Hastings method.
+     * Reference: Numerical Recipes, NetKet paper
+     *
+     * @param transition_kernel User-defined functor for producing transitions
+     * between metropolis states.
+     * @param num_burnin Number of Metropolis burn-in steps.
+     * @param num_samples The number of samples to generate.
+     * @return 1-D vector of samples in binary, each sample is
+     * separated by a stride equal to the number of qubits.
+     */
+    std::vector<size_t>
+    generate_samples_metropolis(const std::string &kernelname,
+                                size_t num_burnin, size_t num_samples) {
+        size_t num_qubits = original_statevector.getNumQubits();
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<fp_t> distrib(0.0, 1.0);
+        std::vector<size_t> samples(num_samples * num_qubits, 0);
+        std::unordered_map<size_t, size_t> cache;
+
+        TransitionKernelType transition_kernel =
+            Pennylane::TransitionKernelType::Local;
+        if (kernelname == "NonZeroRandom") {
+            transition_kernel = Pennylane::TransitionKernelType::NonZeroRandom;
+        }
+
+        auto tk =
+            kernel_factory(transition_kernel, original_statevector.getData(),
+                           original_statevector.getNumQubits());
+        size_t idx = 0;
+
+        // Burn In
+        for (size_t i = 0; i < num_burnin; i++) {
+            idx = metropolis_step(original_statevector, tk, gen, distrib,
+                                  idx); // Burn-in.
+        }
+
+        // Sample
+        for (size_t i = 0; i < num_samples; i++) {
+            idx = metropolis_step(original_statevector, tk, gen, distrib, idx);
+
+            if (cache.contains(idx)) {
+                size_t cache_id = cache[idx];
+                auto it_temp = samples.begin() + cache_id * num_qubits;
+                std::copy(it_temp, it_temp + num_qubits,
+                          samples.begin() + i * num_qubits);
+            }
+
+            // If not cached, compute
+            else {
+                for (size_t j = 0; j < num_qubits; j++) {
+                    samples[i * num_qubits + (num_qubits - 1 - j)] =
+                        (idx >> j) & 1U;
+                }
+                cache[idx] = i;
+            }
+        }
+        return samples;
+    }
 
     /**
      * @brief Variance of a Sparse Hamiltonian.

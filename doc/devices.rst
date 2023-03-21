@@ -98,3 +98,26 @@ If you are computing a large number of expectation values, or if you are using a
     os.environ["OMP_NUM_THREADS"] = 4
     import pennylane as qml
     dev = qml.device("lightning.qubit", wires=2, batch_obs=True)
+
+.. raw:: html
+
+    </div>
+
+**Markov Chain Monte Carlo sampling support:**
+
+The ``lightning.qubit`` device allows users to use the Markov Chain Monte Carlo (MCMC) sampling method to generate approximate samples. To enable the MCMC sampling method for sample generation, initialize a ``lightning.qubit`` device with the ``mcmc=True`` keyword argument, as:
+
+.. code-block:: python
+
+    import pennylane as qml
+    dev = qml.device("lightning.qubit", wires=2, shots=1000, mcmc=True)
+
+By default, the ``kernel_name`` is ``"Local"`` and ``num_burnin`` is ``100``. The local kernel conducts a bit-flip local transition between states. The local kernel generates a random qubit site and then generates a random number to determine  the new bit at that qubit site. 
+
+The ``lightning.qubit`` device also supports a ``"NonZeroRandom"`` kernel. This kernel randomly transits between states that have nonzero probability. It can be enabled by initializing the device as:
+
+.. code-block:: python
+
+    import pennylane as qml
+    dev = qml.device("lightning.qubit", wires=2, shots=1000, mcmc=True, kernel_name="NonZeroRandom", num_burnin=200)
+

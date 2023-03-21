@@ -135,6 +135,27 @@ void lightning_class_bindings(py::module_ &m) {
                      strides /* strides for each axis     */
                      ));
              })
+        .def("generate_mcmc_samples",
+             [](Measures<PrecisionT> &M, size_t num_wires,
+                const std::string &kernelname, size_t num_burnin,
+                size_t num_shots) {
+                 std::vector<size_t> &&result = M.generate_samples_metropolis(
+                     kernelname, num_burnin, num_shots);
+
+                 const size_t ndim = 2;
+                 const std::vector<size_t> shape{num_shots, num_wires};
+                 constexpr auto sz = sizeof(size_t);
+                 const std::vector<size_t> strides{sz * num_wires, sz};
+                 // return 2-D NumPy array
+                 return py::array(py::buffer_info(
+                     result.data(), /* data as contiguous array  */
+                     sz,            /* size of one scalar        */
+                     py::format_descriptor<size_t>::format(), /* data type */
+                     ndim,   /* number of dimensions      */
+                     shape,  /* shape of the matrix       */
+                     strides /* strides for each axis     */
+                     ));
+             })
         .def("var",
              [](Measures<PrecisionT> &M, const std::string &operation,
                 const std::vector<size_t> &wires) {

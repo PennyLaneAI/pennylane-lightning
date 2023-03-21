@@ -369,8 +369,8 @@ template <typename T = double>
 StateVectorManagedCPU<T> Initializing_StateVector(size_t num_qubits = 3) {
     size_t data_size = Util::exp2(num_qubits);
 
-    std::vector<std::complex<T>> arr(data_size, 0);
-    arr[0] = 1;
+    std::vector<std::complex<T>> arr(data_size, {0, 0});
+    arr[0] = {1, 0};
     StateVectorManagedCPU<T> Measured_StateVector(arr.data(), data_size);
 
     std::vector<std::string> gates;
