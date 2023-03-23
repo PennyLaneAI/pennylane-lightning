@@ -21,11 +21,30 @@ from pennylane.devices.experimental import ExecutionConfig
 from pennylane_lightning.experimental import LightningQubit2
 
 
+try:
+    from pennylane_lightning.lightning_qubit_ops import (
+        StateVectorC64,
+        StateVectorC128,
+    )
+
+    CPP_BINARY_AVAILABLE = True
+except ModuleNotFoundError:
+    CPP_BINARY_AVAILABLE = False
+
+
+@pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 def test_name():
     """Tests the name of LightningQubit2."""
     assert LightningQubit2().name == "lightning.qubit.2"
 
 
+@pytest.mark.skipif(CPP_BINARY_AVAILABLE, reason="Only when there is no binary")
+def test_name():
+    """Tests that we are offloading to the default qubit."""
+    assert LightningQubit2().name == "default.qubit.2"
+
+
+@pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 def test_no_jvp_functionality():
     """Test that jvp is not supported on LightningQubit2."""
     dev = LightningQubit2()
@@ -39,6 +58,7 @@ def test_no_jvp_functionality():
         dev.execute_and_compute_jvp(qml.tape.QuantumScript(), (10, 10))
 
 
+@pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 def test_no_vjp_functionality():
     """Test that vjp is not supported on LightningQubit2."""
     dev = LightningQubit2()
@@ -52,6 +72,7 @@ def test_no_vjp_functionality():
         dev.execute_and_compute_vjp(qml.tape.QuantumScript(), (10.0, 10.0))
 
 
+@pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 class TestTracking:
     """Testing the tracking capabilities of LightningQubit2."""
 
@@ -83,6 +104,7 @@ class TestTracking:
         assert tracker.latest == {"batches": 1, "executions": 2}
 
 
+@pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 class TestSupportsDerivatives:
     """Test that LightningQubit2 states what kind of derivatives it supports."""
 
@@ -105,6 +127,7 @@ class TestSupportsDerivatives:
         assert not dev.supports_derivatives(config)
 
 
+@pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 class TestBasicCircuit:
     """Tests a basic circuit with one RX gate and two simple expectation values."""
 
@@ -125,6 +148,7 @@ class TestBasicCircuit:
         assert np.allclose(result[1], np.cos(phi))
 
 
+@pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 class TestExecutingBatches:
     @staticmethod
     def f(phi):
@@ -173,6 +197,7 @@ class TestExecutingBatches:
         self.nested_compare(results, expected)
 
 
+@pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 class TestSumOfTermsDifferentiability:
     """Basically a copy of the `qubit.simulate` test but using the device instead."""
 
@@ -196,6 +221,7 @@ class TestSumOfTermsDifferentiability:
         return 2.5 * qml.math.prod(cosines) + 6.2 * qml.math.prod(sines)
 
 
+@pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 class TestPreprocessingIntegration:
     def test_preprocess_single_circuit(self):
         """Test integration between preprocessing and execution with numpy parameters."""
@@ -292,6 +318,7 @@ class TestPreprocessingIntegration:
         assert qml.math.allclose(expected_expval, processed_results[1])
 
 
+@pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 def test_broadcasted_parameter():
     """Test that LightningQubit2 handles broadcasted parameters as expected."""
     dev = LightningQubit2()
@@ -304,6 +331,7 @@ def test_broadcasted_parameter():
     assert qml.math.allclose(processed_results, np.cos(x))
 
 
+@pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 class TestDeviceDerivative:
     """Test that LightningQubit2 support device derivatives (adjoint)."""
 
