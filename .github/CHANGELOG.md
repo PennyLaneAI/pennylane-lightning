@@ -5,6 +5,9 @@
 * Add MCMC sampler.
 [(#384)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/384)
 
+* Add an experimental LightningQubit2 device implementing the new device interface.
+[(#425)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/425)
+
 ### Breaking changes
 
 ### Improvements
@@ -16,6 +19,8 @@
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Amintor Dusko
 
 ---
 
