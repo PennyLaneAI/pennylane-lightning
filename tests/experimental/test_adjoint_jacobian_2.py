@@ -31,18 +31,12 @@ except (ImportError, ModuleNotFoundError):
 AdjointConfig = ExecutionConfig(gradient_method="adjoint")
 
 
-class TestAdjointJacobian:
-    """Tests for the adjoint_jacobian method"""
+class TestAdjointJacobianSupport:
+    """Tests adjoint jacobian support"""
 
     @pytest.fixture(params=[np.complex64, np.complex128])
     def dev(self, request):
         return LightningQubit2(c_dtype=request.param)
-
-    @staticmethod
-    def calculate_reference(tape, c_dtype):
-        dev = qml.device("default.qubit", wires=3, c_dtype=c_dtype)
-        tapes, fn = qml.gradients.param_shift(tape)
-        return fn(qml.execute(tapes, dev, None))
 
     def test_not_expval(self, dev):
         """Tests if a QuantumFunctionError is raised for a tape with measurements that are not
@@ -55,18 +49,9 @@ class TestAdjointJacobian:
         with pytest.raises(
             qml.QuantumFunctionError, match="Adjoint differentiation method does not"
         ):
-            dev.compute_derivatives(tape, AdjointConfig)
+            dev.preprocess(tape, AdjointConfig)
 
-    def test_empty_measurements(self, dev):
-        """Tests if an empty array is returned when the measurements of the tape is empty."""
-
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.4, wires=[0])
-
-        jac = dev.compute_derivatives(tape, AdjointConfig)
-        assert len(jac) == 0
-
-    def test_unsupported_op(self, dev):
+    def test_CRot_unsupported(self, dev):
         """Tests if a QuantumFunctionError is raised for an unsupported operation, i.e.,
         multi-parameter operations that are not qml.Rot"""
 
@@ -77,9 +62,9 @@ class TestAdjointJacobian:
         with pytest.raises(
             qml.QuantumFunctionError, match="The CRot operation is not supported using the"
         ):
-            dev.compute_derivatives(tape, AdjointConfig)
+            dev.preprocess(tape, AdjointConfig)
 
-    def test_proj_unsupported(self, dev):
+    def test_Projector_unsupported(self, dev):
         """Tests if a QuantumFunctionError is raised for a Projector observable"""
         with qml.tape.QuantumTape() as tape:
             qml.CRX(0.1, wires=[0, 1])
@@ -88,7 +73,7 @@ class TestAdjointJacobian:
         with pytest.raises(
             qml.QuantumFunctionError, match="differentiation method does not support the Projector"
         ):
-            dev.compute_derivatives(tape, AdjointConfig)
+            dev.preprocess(tape, AdjointConfig)
 
         with qml.tape.QuantumTape() as tape:
             qml.CRX(0.1, wires=[0, 1])
@@ -97,7 +82,49 @@ class TestAdjointJacobian:
         with pytest.raises(
             qml.QuantumFunctionError, match="differentiation method does not support the Projector"
         ):
-            dev.compute_derivatives(tape, AdjointConfig)
+            dev.preprocess(tape, AdjointConfig)
+
+    def test_state_return_type_unsupported(self, dev):
+        """Tests if a QuantumFunctionError is raised when the return type is State"""
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(0.4, wires=[0])
+            qml.state()
+
+        tape.trainable_params = {0}
+
+        with pytest.raises(
+            qml.QuantumFunctionError, match="This method does not support statevector return type."
+        ):
+            dev.preprocess(tape, AdjointConfig)
+
+
+class TestAdjointJacobianComputeDerivatives:
+    """Tests for the adjoint_jacobian method"""
+
+    @pytest.fixture(params=[np.complex64, np.complex128])
+    def dev(self, request):
+        return LightningQubit2(c_dtype=request.param)
+
+    @staticmethod
+    def process_and_compute_derivatives(dev, tape):
+        batch, post_processing_fn = dev.preprocess(tape, AdjointConfig)
+        results = dev.compute_derivatives(batch, AdjointConfig)
+        return post_processing_fn(results)
+
+    @staticmethod
+    def calculate_reference(tape, c_dtype):
+        dev = qml.device("default.qubit", wires=3, c_dtype=c_dtype)
+        tapes, fn = qml.gradients.param_shift(tape)
+        return fn(qml.execute(tapes, dev, None))
+
+    def test_empty_measurements(self, dev):
+        """Tests if an empty array is returned when the measurements of the tape is empty."""
+
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(0.4, wires=[0])
+
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
+        assert len(calculated_val) == 0
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
     @pytest.mark.parametrize("G", [qml.RX, qml.RY, qml.RZ])
@@ -111,7 +138,8 @@ class TestAdjointJacobian:
 
         tape.trainable_params = {1}
 
-        calculated_val = dev.compute_derivatives(tape, AdjointConfig)
+        # gradients
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-6 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -131,7 +159,8 @@ class TestAdjointJacobian:
 
         tape.trainable_params = {1, 2, 3}
 
-        calculated_val = dev.compute_derivatives(tape, AdjointConfig)
+        # gradients
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-6 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -149,11 +178,10 @@ class TestAdjointJacobian:
         tape.trainable_params = {0}
 
         # gradients
-        exact = np.cos(par)
-        grad_A = dev.compute_derivatives(tape, AdjointConfig)
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
+        reference_val = np.cos(par)
 
-        # different methods must agree
-        assert np.allclose(grad_A, exact, atol=tol, rtol=0)
+        assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("par", [1, -2, 1.623, -0.051, 0])
     def test_rx_gradient(self, par, tol, dev):
@@ -163,10 +191,11 @@ class TestAdjointJacobian:
             qml.RX(par, wires=0)
             qml.expval(qml.PauliZ(0))
 
-        # circuit jacobians
-        dev_jacobian = dev.compute_derivatives(tape, AdjointConfig)
-        expected_jacobian = -np.sin(par)
-        assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
+        # gradients
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
+        reference_val = -np.sin(par)
+
+        assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
 
     def test_multiple_rx_gradient_PauliZ(self, tol, dev):
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result."""
@@ -180,10 +209,11 @@ class TestAdjointJacobian:
             for idx in range(3):
                 qml.expval(qml.PauliZ(idx))
 
-        # circuit jacobians
-        dev_jacobian = dev.compute_derivatives(tape, AdjointConfig)
-        expected_jacobian = -np.diag(np.sin(params))
-        assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
+        # gradients
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
+        reference_val = -np.diag(np.sin(params))
+
+        assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
 
     def test_multiple_rx_gradient_hermitian(self, tol, dev):
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result
@@ -201,10 +231,11 @@ class TestAdjointJacobian:
 
         tape.trainable_params = {0, 1, 2}
 
-        # circuit jacobians
-        dev_jacobian = dev.compute_derivatives(tape, AdjointConfig)
-        expected_jacobian = -np.diag(np.sin(params))
-        assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
+        # gradients
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
+        reference_val = -np.diag(np.sin(params))
+
+        assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
 
     qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
     ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
@@ -227,12 +258,14 @@ class TestAdjointJacobian:
             )
 
         tape.trainable_params = {0, 1, 2}
-        dev_jacobian = dev.compute_derivatives(tape, AdjointConfig)
-        expected_jacobian = np.array(
+
+        # gradients
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
+        reference_val = np.array(
             [-np.sin(params[0]) * np.cos(params[2]), 0, -np.cos(params[0]) * np.sin(params[2])]
         )
 
-        assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
+        assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
 
     qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
     ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
@@ -263,8 +296,10 @@ class TestAdjointJacobian:
             qml.expval(ham)
 
         tape.trainable_params = {0, 1, 2}
-        dev_jacobian = dev.compute_derivatives(tape, AdjointConfig)
-        expected_jacobian = (
+
+        # gradients
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
+        reference_val = (
             0.3 * np.array([-np.sin(params[0]), 0, 0])
             + 0.3 * np.array([0, -np.sin(params[1]), 0])
             + 0.4
@@ -273,7 +308,7 @@ class TestAdjointJacobian:
             )
         )
 
-        assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
+        assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
 
     qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
     ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
@@ -308,7 +343,8 @@ class TestAdjointJacobian:
 
         tape.trainable_params = set(range(1, 1 + op.num_params))
 
-        calculated_val = dev.compute_derivatives(tape, AdjointConfig)
+        # gradients
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-6 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -348,7 +384,8 @@ class TestAdjointJacobian:
 
         tape.trainable_params = set(range(1, 1 + op.num_params))
 
-        calculated_val = dev.compute_derivatives(tape, AdjointConfig)
+        # gradients
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-6 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -368,7 +405,8 @@ class TestAdjointJacobian:
 
         tape.trainable_params = {1, 2, 3}
 
-        calculated_val = dev.compute_derivatives(tape, AdjointConfig)
+        # gradients
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-6 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -391,7 +429,8 @@ class TestAdjointJacobian:
 
         tape.trainable_params = {1, 2, 3}
 
-        calculated_val = dev.compute_derivatives(tape, AdjointConfig)
+        # gradients
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-6 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -418,7 +457,8 @@ class TestAdjointJacobian:
 
         tape.trainable_params = {1, 2, 3}
 
-        calculated_val = dev.compute_derivatives(tape, AdjointConfig)
+        # gradients
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-6 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -429,26 +469,19 @@ class TestAdjointJacobian:
         # the different methods agree
         assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
 
-    def test_state_return_type(self, dev):
-        """Tests raise an exception when the return type is State"""
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.4, wires=[0])
-            qml.state()
 
-        tape.trainable_params = {0}
-
-        with pytest.raises(
-            qml.QuantumFunctionError, match="This method does not support statevector return type."
-        ):
-            dev.compute_derivatives(tape, AdjointConfig)
-
-
-class TestOperatorArithmetic:
+class TestOperatorArithmeticComputeDerivatives:
     """Tests integration with SProd, Prod, and Sum."""
 
     @pytest.fixture(params=[np.complex64, np.complex128])
     def dev(self, request):
         return LightningQubit2(c_dtype=request.param)
+
+    @staticmethod
+    def process_and_compute_derivatives(dev, tape):
+        batch, post_processing_fn = dev.preprocess(tape, AdjointConfig)
+        results = dev.compute_derivatives(batch, AdjointConfig)
+        return post_processing_fn(results)
 
     def test_s_prod(self, dev, tol):
         """Tests the `SProd` class."""
@@ -461,7 +494,8 @@ class TestOperatorArithmetic:
         )
         tape.trainable_params = {0}
 
-        calculated_val = dev.compute_derivatives(tape, AdjointConfig)
+        # gradients
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
         reference_val = -0.5 * np.sin(x)
 
         tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -479,7 +513,8 @@ class TestOperatorArithmetic:
         )
         tape.trainable_params = {0}
 
-        calculated_val = dev.compute_derivatives(tape, AdjointConfig)
+        # gradients
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
         reference_val = np.sin(x)
 
         tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -497,7 +532,8 @@ class TestOperatorArithmetic:
         )
         tape.trainable_params = {0, 1}
 
-        calculated_val = dev.compute_derivatives(tape, AdjointConfig)
+        # gradients
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
         reference_val = np.array([-np.sin(x), np.cos(y)])
 
         tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -517,7 +553,8 @@ class TestOperatorArithmetic:
         )
         tape.trainable_params = {0, 1}
 
-        calculated_val = dev.compute_derivatives(tape, AdjointConfig)
+        # gradients
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
         reference_val = np.array(
             [-2.3 * np.sin(x) + 0.5 * np.cos(y) * np.cos(x), -0.5 * np.sin(x) * np.sin(y)]
         )
@@ -525,3 +562,36 @@ class TestOperatorArithmetic:
         tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
 
         assert np.allclose(calculated_val, reference_val, tol)
+
+
+class TestTrackingComputeDerivatives:
+    """Testing the tracking capabilities of LightningQubit2."""
+
+    @staticmethod
+    def process_and_compute_derivatives(dev, tape):
+        batch, post_processing_fn = dev.preprocess(tape, AdjointConfig)
+        results = dev.compute_derivatives(batch, AdjointConfig)
+        return post_processing_fn(results)
+
+    def test_tracker_not_updated_if_not_active(self):
+        """Test that the tracker is not updated if not active."""
+        dev = LightningQubit2()
+        assert len(dev.tracker.totals) == 0
+
+        self.process_and_compute_derivatives(dev, qml.tape.QuantumScript())
+        assert len(dev.tracker.totals) == 0
+        assert len(dev.tracker.history) == 0
+
+    def test_tracking_batch(self):
+        """Test that the experimental qubit integrates with the tracker."""
+
+        qs = qml.tape.QuantumScript([], [qml.expval(qml.PauliZ(0))])
+
+        dev = LightningQubit2()
+        with qml.Tracker(dev) as tracker:
+            self.process_and_compute_derivatives(dev, qs)
+            self.process_and_compute_derivatives(dev, [qs, qs])
+
+        assert tracker.history == {"batches": [1, 1], "executions": [1, 2]}
+        assert tracker.totals == {"batches": 2, "executions": 3}
+        assert tracker.latest == {"batches": 1, "executions": 2}

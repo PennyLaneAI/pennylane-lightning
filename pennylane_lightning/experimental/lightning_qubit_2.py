@@ -21,9 +21,7 @@ from warnings import warn
 
 from pennylane.devices.experimental import Device
 from pennylane.tape import QuantumTape, QuantumScript
-from pennylane.devices.experimental.execution_config import ExecutionConfig
-
-# from pennylane.devices.experimental.execution_config import DefaultExecutionConfig
+from pennylane.devices.experimental.execution_config import ExecutionConfig, DefaultExecutionConfig
 
 from pennylane.devices.qubit.preprocess import preprocess
 
@@ -38,10 +36,10 @@ except ModuleNotFoundError:
     CPP_BINARY_AVAILABLE = False
 
 if CPP_BINARY_AVAILABLE:
-    from ._simulate import simulate
-    from ._adjoint_jacobian import adjoint_jacobian
+    from ._simulate import _execute_single_script
+    from ._adjoint_jacobian import adjoint_jacobian, _check_adjoint_method_supported
 
-    DeviceExecutionConfig = ExecutionConfig(gradient_method="adjoint")
+    DeviceExecutionConfig = DefaultExecutionConfig
 
     class LightningQubit2(Device):
         """PennyLane Lightning device.
@@ -96,6 +94,10 @@ if CPP_BINARY_AVAILABLE:
                 circuits = [circuits]
                 is_single_circuit = True
 
+            if execution_config.gradient_method == "adjoint":
+                for c in circuits:
+                    _check_adjoint_method_supported(c)
+
             batch, post_processing_fn = preprocess(circuits, execution_config=execution_config)
 
             if is_single_circuit:
@@ -131,7 +133,7 @@ if CPP_BINARY_AVAILABLE:
                 self.tracker.update(batches=1, executions=len(circuits))
                 self.tracker.record()
 
-            results = tuple(simulate(c, self.C_DTYPE) for c in circuits)
+            results = tuple(_execute_single_script(c, self.C_DTYPE) for c in circuits)
             return results[0] if is_single_circuit else results
 
         def supports_derivatives(
@@ -141,7 +143,7 @@ if CPP_BINARY_AVAILABLE:
         ) -> bool:
             """Check whether or not derivatives are available for a given configuration and circuit.
 
-            ``LightningQubit2`` supports no derivatives for now.
+            ``LightningQubit2`` supports on adjoint differentiation method.
 
             Args:
                 execution_config (ExecutionConfig): The configuration of the desired derivative calculation
@@ -149,7 +151,6 @@ if CPP_BINARY_AVAILABLE:
 
             Returns:
                 Bool: Whether or not a derivative can be calculated provided the given information
-
             """
             if (
                 execution_config.gradient_method != "adjoint"
@@ -184,9 +185,7 @@ if CPP_BINARY_AVAILABLE:
 
             If a batch of quantum scripts is provided, this method should return a tuple with each entry being the gradient of
             each individual quantum script. If the batch is of length 1, then the return tuple should still be of length 1, not squeezed.
-
             """
-
             if execution_config.gradient_method == "adjoint":
                 is_single_circuit = False
                 if isinstance(circuits, QuantumScript):

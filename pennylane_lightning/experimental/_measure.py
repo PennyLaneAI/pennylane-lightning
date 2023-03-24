@@ -47,7 +47,7 @@ def state_diagonalizing_gates(measurementprocess: StateMeasurement, state: np.ar
     """
     state = apply_operations(measurementprocess.diagonalizing_gates(), np.copy(state))
 
-    total_wires = state.size >> 1
+    total_wires = int(np.log2(state.size))
     wires = Wires(range(total_wires))
     return measurementprocess.process_state(state, wires)
 
@@ -72,7 +72,7 @@ def expval(measurementprocess: MeasurementProcess, state: np.array):
     if measurementprocess.obs.name == "SparseHamiltonian":
         if Kokkos_info()["USE_KOKKOS"] == True:
             # ensuring CSR sparse representation.
-            total_wires = state.size >> 1
+            total_wires = int(np.log2(state.size))
             CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
                 wire_order=list(range(total_wires))
             ).tocsr(copy=False)

@@ -161,7 +161,7 @@ def _process_jacobian_tape(tape, state):
     }
 
 
-def adjoint_jacobian(tape, c_dtype=np.complex128, starting_state=None):
+def adjoint_jacobian(tape, c_dtype=np.complex128):
     """Calculates the Adjoint Jacobian for a given tape.
 
     Args:
@@ -172,17 +172,12 @@ def adjoint_jacobian(tape, c_dtype=np.complex128, starting_state=None):
     Returns:
         np.array: An array results.
     """
-    if starting_state:
-        state = starting_state
-    else:
-        state = create_initial_state(tape.wires, tape._prep[0] if tape._prep else None)
-        state = np.ravel(asarray(state, c_dtype))
-        state = apply_operations(tape._ops, state)
+    state = create_initial_state(tape.wires, tape._prep[0] if tape._prep else None)
+    state = np.ravel(asarray(state, c_dtype))
+    state = apply_operations(tape._ops, state)
 
     if len(tape.measurements) == 0:  # the tape does not have measurements
         return np.array([], dtype=state.dtype)
-
-    _check_adjoint_method_supported(tape)
 
     processed_data = _process_jacobian_tape(tape, state)
 

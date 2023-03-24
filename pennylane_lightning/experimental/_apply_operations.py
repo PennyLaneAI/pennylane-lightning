@@ -53,11 +53,7 @@ def apply_operations(operations, state):
         if method is None:
             # Inverse can be set to False since qml.matrix(o) is already in inverted form
             method = getattr(sim, "applyMatrix")
-            try:
-                method(matrix(op), wires, False)
-            except AttributeError:  # pragma: no cover
-                # To support older versions of PL
-                method(op.matrix, wires, False)
+            method(matrix(op), wires, False)
         else:
             inv = False
             param = op.parameters

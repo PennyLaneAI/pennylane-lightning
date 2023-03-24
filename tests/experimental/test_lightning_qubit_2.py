@@ -44,6 +44,14 @@ def test_name():
     assert LightningQubit2().name == "default.qubit.2"
 
 
+@pytest.mark.skipif(
+    not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
+)
+def test_create_device_with_unsupported_dtype():
+    with pytest.raises(TypeError, match="Unsupported complex Type:"):
+        LightningQubit2(c_dtype=np.complex256)
+
+
 @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 def test_no_jvp_functionality():
     """Test that jvp is not supported on LightningQubit2."""
@@ -329,37 +337,3 @@ def test_broadcasted_parameter():
     results = dev.execute(batch)
     processed_results = post_processing_fn(results)
     assert qml.math.allclose(processed_results, np.cos(x))
-
-
-@pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-class TestDeviceDerivative:
-    """Test that LightningQubit2 support device derivatives (adjoint)."""
-
-    @pytest.fixture(params=[np.complex64, np.complex128])
-    def dev(self, request):
-        return LightningQubit2(c_dtype=request.param)
-
-    @staticmethod
-    def calculate_reference(tape, c_dtype):
-        dev = qml.device("default.qubit", wires=3, c_dtype=c_dtype)
-        tapes, fn = qml.gradients.param_shift(tape)
-        return fn(qml.execute(tapes, dev, None))
-
-    @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
-    @pytest.mark.parametrize("G", [qml.RX, qml.RY, qml.RZ])
-    def test_compute_derivatives_with_device_config(self, G, theta, dev):
-        """Tests gradient for Pauli gates."""
-
-        with qml.tape.QuantumTape() as tape:
-            qml.QubitStateVector(np.array([1.0, -1.0]) / np.sqrt(2), wires=0)
-            G(theta, wires=[0])
-            qml.expval(qml.PauliZ(0))
-
-        tape.trainable_params = {1}
-
-        calculated_val = dev.compute_derivatives(tape)
-        reference_val = self.calculate_reference(tape, dev.C_DTYPE)
-
-        tol = 1e-6 if dev.C_DTYPE == np.complex64 else 1e-7
-
-        assert np.allclose(calculated_val, reference_val[0][2], atol=tol, rtol=0)

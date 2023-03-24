@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tests for execute (expval calculation).
+Tests for process and execute (expval calculation).
 """
 import pytest
 
@@ -24,6 +24,7 @@ try:
     from pennylane_lightning.lightning_qubit_ops import (
         MeasuresC64,
         MeasuresC128,
+        Kokkos_info,
     )
 except (ImportError, ModuleNotFoundError):
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -41,9 +42,34 @@ class TestExpval:
     def dev(self, request):
         return LightningQubit2(c_dtype=request.param)
 
-    def calculate_reference(self, tape, c_dtype):
+    @staticmethod
+    def calculate_reference(tape, c_dtype):
         dev = qml.device("default.qubit", wires=3, c_dtype=c_dtype)
         return dev.execute(tape)
+
+    @staticmethod
+    def process_and_execute(dev, tape):
+        batch, post_processing_fn = dev.preprocess(tape)
+        results = dev.execute(batch)
+        return post_processing_fn(results)
+
+    def test_Identity(self, theta, phi, dev, tol):
+        """Tests applying identities."""
+
+        with qml.tape.QuantumTape() as tape:
+            qml.Identity(wires=[0])
+            qml.Identity(wires=[0, 1])
+            qml.Identity(wires=[1, 2])
+            qml.RX(theta, wires=[0])
+            qml.RX(phi, wires=[1])
+            qml.expval(qml.PauliX(0))
+
+        calculated_val = self.process_and_execute(dev, tape)
+        reference_val = self.calculate_reference(tape, dev.C_DTYPE)
+
+        tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
+
+        assert np.allclose(calculated_val, reference_val, tol)
 
     def test_identity_expectation(self, theta, phi, dev, tol):
         """Tests identity."""
@@ -53,7 +79,7 @@ class TestExpval:
             [qml.expval(qml.Identity(wires=[0])), qml.expval(qml.Identity(wires=[1]))],
         )
 
-        calculated_val = dev.execute(tape)
+        calculated_val = self.process_and_execute(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -68,7 +94,7 @@ class TestExpval:
             [qml.expval(qml.PauliZ(wires=[0])), qml.expval(qml.PauliZ(wires=[1]))],
         )
 
-        calculated_val = dev.execute(tape)
+        calculated_val = self.process_and_execute(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -83,7 +109,7 @@ class TestExpval:
             [qml.expval(qml.PauliX(wires=[0])), qml.expval(qml.PauliX(wires=[1]))],
         )
 
-        calculated_val = dev.execute(tape)
+        calculated_val = self.process_and_execute(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -98,7 +124,7 @@ class TestExpval:
             [qml.expval(qml.PauliY(wires=[0])), qml.expval(qml.PauliY(wires=[1]))],
         )
 
-        calculated_val = dev.execute(tape)
+        calculated_val = self.process_and_execute(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -113,7 +139,7 @@ class TestExpval:
             [qml.expval(qml.Hadamard(wires=[0])), qml.expval(qml.Hadamard(wires=[1]))],
         )
 
-        calculated_val = dev.execute(tape)
+        calculated_val = self.process_and_execute(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -131,7 +157,7 @@ class TestExpval:
             for idx in range(3):
                 qml.expval(qml.Hermitian([[1, 0], [0, -1]], wires=[idx]))
 
-        calculated_val = dev.execute(tape)
+        calculated_val = self.process_and_execute(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -158,7 +184,39 @@ class TestExpval:
 
             qml.expval(ham)
 
-        calculated_val = dev.execute(tape)
+        calculated_val = self.process_and_execute(dev, tape)
+        reference_val = self.calculate_reference(tape, dev.C_DTYPE)
+
+        tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
+
+        assert np.allclose(calculated_val, reference_val, tol)
+
+    @pytest.mark.skipif(
+        Kokkos_info()["USE_KOKKOS"] == False, reason="Kokkos and Kokkos Kernels are present."
+    )
+    def test_sparse_hamiltonian_expectation(self, theta, phi, dev, tol):
+        """Tests a Hamiltonian."""
+
+        ham = qml.SparseHamiltonian(
+            qml.Hamiltonian(
+                [1.0, 0.3, 0.3, 0.4],
+                [
+                    qml.PauliX(0) @ qml.PauliX(1),
+                    qml.PauliZ(0),
+                    qml.PauliZ(1),
+                    qml.PauliX(0) @ qml.PauliY(1),
+                ],
+            ).sparse_matrix(),
+            wires=[0, 1],
+        )
+
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(theta, wires=0)
+            qml.RX(phi, wires=1)
+
+            qml.expval(ham)
+
+        calculated_val = self.process_and_execute(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -174,9 +232,16 @@ class TestOperatorArithmetic:
     def dev(self, request):
         return LightningQubit2(c_dtype=request.param)
 
-    def calculate_reference(self, tape, c_dtype):
+    @staticmethod
+    def calculate_reference(tape, c_dtype):
         dev = qml.device("default.qubit", wires=3, c_dtype=c_dtype)
         return dev.execute(tape)
+
+    @staticmethod
+    def process_and_execute(dev, tape):
+        batch, post_processing_fn = dev.preprocess(tape)
+        results = dev.execute(batch)
+        return post_processing_fn(results)
 
     def test_s_prod(self, phi, dev, tol):
         """Tests the `SProd` class."""
@@ -186,7 +251,7 @@ class TestOperatorArithmetic:
             [qml.expval(qml.s_prod(0.5, qml.PauliZ(0)))],
         )
 
-        calculated_val = dev.execute(tape)
+        calculated_val = self.process_and_execute(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -201,7 +266,7 @@ class TestOperatorArithmetic:
             [qml.expval(qml.prod(qml.PauliZ(0), qml.PauliX(1)))],
         )
 
-        calculated_val = dev.execute(tape)
+        calculated_val = self.process_and_execute(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -215,7 +280,7 @@ class TestOperatorArithmetic:
             [qml.expval(qml.sum(qml.PauliZ(0), qml.PauliX(1)))],
         )
 
-        calculated_val = dev.execute(tape)
+        calculated_val = self.process_and_execute(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -232,7 +297,7 @@ class TestOperatorArithmetic:
             [qml.expval(obs)],
         )
 
-        calculated_val = dev.execute(tape)
+        calculated_val = self.process_and_execute(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -248,9 +313,16 @@ class TestTensorExpval:
     def dev(self, request):
         return LightningQubit2(c_dtype=request.param)
 
-    def calculate_reference(self, tape, c_dtype):
+    @staticmethod
+    def calculate_reference(tape, c_dtype):
         dev = qml.device("default.qubit", wires=3, c_dtype=c_dtype)
         return dev.execute(tape)
+
+    @staticmethod
+    def process_and_execute(dev, tape):
+        batch, post_processing_fn = dev.preprocess(tape)
+        results = dev.execute(batch)
+        return post_processing_fn(results)
 
     def test_PauliX_PauliY(self, theta, phi, varphi, dev, tol):
         """Tests a tensor product involving PauliX and PauliY."""
@@ -263,7 +335,7 @@ class TestTensorExpval:
             qml.CNOT(wires=[1, 2])
             qml.expval(qml.PauliX(0) @ qml.PauliY(2))
 
-        calculated_val = dev.execute(tape)
+        calculated_val = self.process_and_execute(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -274,6 +346,7 @@ class TestTensorExpval:
         """Tests a tensor product involving PauliZ and Identity."""
 
         with qml.tape.QuantumTape() as tape:
+            qml.Identity(wires=[0])
             qml.RX(theta, wires=[0])
             qml.RX(phi, wires=[1])
             qml.RX(varphi, wires=[2])
@@ -281,7 +354,7 @@ class TestTensorExpval:
             qml.CNOT(wires=[1, 2])
             qml.expval(qml.PauliZ(0) @ qml.Identity(1) @ qml.PauliZ(2))
 
-        calculated_val = dev.execute(tape)
+        calculated_val = self.process_and_execute(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
@@ -299,7 +372,7 @@ class TestTensorExpval:
             qml.CNOT(wires=[1, 2])
             qml.expval(qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2))
 
-        calculated_val = dev.execute(tape)
+        calculated_val = self.process_and_execute(dev, tape)
         reference_val = self.calculate_reference(tape, dev.C_DTYPE)
 
         tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7

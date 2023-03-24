@@ -39,19 +39,13 @@ def asarray(arr, dtype=np.complex128):
        Data is guaranteed to be aligned.
 
     Args:
-        arr (array[complex]): input array
+        arr (array[complex]): input float or complex array
         dtype (numpy data type, optional): array data type. Defaults to ``np.complex128``.
 
     Returns:
         array[dtype]: an array with data aligned in memory.
     """
     arr = np.asarray(arr)  # arr is not copied
-
-    if arr.dtype.kind not in ["f", "c"]:
-        return arr
-
-    if not dtype:
-        dtype = arr.dtype
 
     # We allocate a new aligned memory and copy data to there if alignment or dtype mismatches
     # Note that get_alignment does not necessarily return CPUMemoryModel(Unaligned) even for
@@ -63,8 +57,8 @@ def asarray(arr, dtype=np.complex128):
     return arr
 
 
-def simulate(circuit: QuantumScript, c_dtype=np.complex128) -> Union[tuple, TensorLike]:
-    """Simulate a single quantum script [Internal Function].
+def _execute_single_script(circuit: QuantumScript, c_dtype=np.complex128) -> Union[tuple, TensorLike]:
+    """Execute a single quantum script [Internal Function].
 
     Args:
         circuit (.QuantumScript): The single circuit to simulate
@@ -80,7 +74,7 @@ def simulate(circuit: QuantumScript, c_dtype=np.complex128) -> Union[tuple, Tens
     This function assumes that all operations provide matrices.
 
     >>> qs = qml.tape.QuantumScript([qml.RX(1.2, wires=0)], [qml.expval(qml.PauliZ(0)), qml.probs(wires=(0,1))])
-    >>> simulate(qs)
+    >>> _execute_single_script(qs)
     (0.36235775447667357,
     tensor([0.68117888, 0.        , 0.31882112, 0.        ], requires_grad=True))
 
