@@ -143,7 +143,7 @@ if CPP_BINARY_AVAILABLE:
         ) -> bool:
             """Check whether or not derivatives are available for a given configuration and circuit.
 
-            ``LightningQubit2`` supports on adjoint differentiation method.
+            ``LightningQubit2`` supports adjoint differentiation method.
 
             Args:
                 execution_config (ExecutionConfig): The configuration of the desired derivative calculation
