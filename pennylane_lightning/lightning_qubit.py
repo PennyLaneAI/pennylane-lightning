@@ -946,7 +946,9 @@ class LightningQubit(QubitDevice):
         meas_filtered = [
             m
             for m in circuit.measurements
-            if m.obs is None or not isinstance(m.obs, (qml.Hamiltonian, qml.ops.Sum))
+            if m.obs is None
+            or not isinstance(m.obs, qml.Hamiltonian)
+            and (not isinstance(m.obs, qml.ops.Sum) or m.obs._pauli_rep is None)
         ]
         return super()._get_diagonalizing_gates(qml.tape.QuantumScript(measurements=meas_filtered))
 
