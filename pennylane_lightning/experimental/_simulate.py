@@ -57,7 +57,9 @@ def asarray(arr, dtype=np.complex128):
     return arr
 
 
-def _execute_single_script(circuit: QuantumScript, c_dtype=np.complex128) -> Union[tuple, TensorLike]:
+def _execute_single_script(
+    circuit: QuantumScript, c_dtype=np.complex128
+) -> Union[tuple, TensorLike]:
     """Execute a single quantum script [Internal Function].
 
     Args:
