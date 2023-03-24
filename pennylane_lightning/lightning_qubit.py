@@ -942,6 +942,14 @@ class LightningQubit(QubitDevice):
 
         return M.var(observable.name, observable_wires)
 
+    def _get_diagonalizing_gates(self, circuit: qml.tape.QuantumTape) -> List[Operation]:
+        meas_filtered = [
+            m
+            for m in circuit.measurements
+            if m.obs is None or not isinstance(m.obs, (qml.Hamiltonian, qml.ops.Sum))
+        ]
+        return super()._get_diagonalizing_gates(qml.tape.QuantumScript(measurements=meas_filtered))
+
 
 if not CPP_BINARY_AVAILABLE:
 
