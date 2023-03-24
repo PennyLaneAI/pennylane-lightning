@@ -218,7 +218,13 @@ def test_arbitrary_inv_unitary_correct():
 def test_get_diagonalizing_gates():
     """Tests that _get_diagonalizing_gates filters measurements as expected."""
     dev = qml.device("lightning.qubit", wires=2)
-    qs = qml.tape.QuantumScript(measurements=[qml.expval(qml.Hamiltonian([1], [qml.PauliY(0)])), qml.expval(qml.PauliX(0)), qml.expval(qml.sum(qml.PauliZ(0), qml.PauliX(1)))])
+    qs = qml.tape.QuantumScript(
+        measurements=[
+            qml.expval(qml.Hamiltonian([1], [qml.PauliY(0)])),
+            qml.expval(qml.PauliX(0)),
+            qml.expval(qml.sum(qml.PauliZ(0), qml.PauliX(1))),
+        ]
+    )
     gates = dev._get_diagonalizing_gates(qs)
     assert len(gates) == 1
     assert qml.equal(gates[0], qml.Hadamard(0))
