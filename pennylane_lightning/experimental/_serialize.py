@@ -24,7 +24,7 @@ from pennylane import (
     QubitStateVector,
     Rot,
 )
-from pennylane.grouping import is_pauli_word
+from pennylane.pauli import is_pauli_word
 from pennylane.operation import Observable, Tensor
 from pennylane.tape import QuantumTape
 from pennylane.math import unwrap
@@ -60,10 +60,6 @@ def _obs_has_kernel(ob: Observable) -> bool:
         return True
     if isinstance(ob, (Hadamard)):
         return True
-    if isinstance(ob, Hamiltonian):
-        return all(_obs_has_kernel(o) for o in ob.ops)
-    if isinstance(ob, Tensor):
-        return all(_obs_has_kernel(o) for o in ob.obs)
 
     return False
 
