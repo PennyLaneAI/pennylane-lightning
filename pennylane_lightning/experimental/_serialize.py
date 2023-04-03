@@ -20,7 +20,6 @@ import numpy as np
 from pennylane import (
     BasisState,
     Hadamard,
-    Hamiltonian,
     QubitStateVector,
     Rot,
 )
@@ -56,9 +55,7 @@ def _obs_has_kernel(ob: Observable) -> bool:
     Returns:
         bool: indicating whether ``obs`` has a dedicated kernel in the backend
     """
-    if is_pauli_word(ob):
-        return True
-    if isinstance(ob, (Hadamard)):
+    if is_pauli_word(ob) or isinstance(ob, (Hadamard)):
         return True
 
     return False
