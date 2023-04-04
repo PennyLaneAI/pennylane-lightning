@@ -45,6 +45,13 @@ from ..lightning_qubit_ops.adjoint_diff import (
     HamiltonianC128,
 )
 
+pauli_name_map = {
+    "I": "Identity",
+    "X": "PauliX",
+    "Y": "PauliY",
+    "Z": "PauliZ",
+}
+
 
 def _obs_has_kernel(ob: Observable) -> bool:
     """Returns True if the input observable has a supported kernel in the C++ backend.
@@ -61,8 +68,17 @@ def _obs_has_kernel(ob: Observable) -> bool:
     return False
 
 
-def _serialize_named_hermitian_ob(ob, use_csingle: bool):
-    """Serializes a named or Hermitian observable.
+def _serialize_named_obs(ob, use_csingle: bool):
+    """Serializes a Named observable"""
+    named_obs = NamedObsC64 if use_csingle else NamedObsC128
+    wires = ob.wires.tolist()
+    if ob.name == "Identity":
+        wires = wires[:1]
+    return named_obs(ob.name, wires)
+
+
+def _serialize_hermitian_ob(ob, use_csingle: bool):
+    """Serializes a Hermitian observable
 
     Args:
         ob: a named or Hermitian observable
@@ -75,17 +91,12 @@ def _serialize_named_hermitian_ob(ob, use_csingle: bool):
 
     if use_csingle:
         ctype = np.complex64
-        named_obs = NamedObsC64
         hermitian_obs = HermitianObsC64
     else:
         ctype = np.complex128
-        named_obs = NamedObsC128
         hermitian_obs = HermitianObsC128
 
-    wires_list = ob.wires.tolist()
-    if _obs_has_kernel(ob):
-        return named_obs(ob.name, wires_list)
-    return hermitian_obs(matrix(ob).ravel().astype(ctype), wires_list)
+    return hermitian_obs(matrix(ob).ravel().astype(ctype), ob.wires.tolist())
 
 
 def _serialize_tensor_ob(ob, use_csingle: bool):
@@ -130,6 +141,37 @@ def _serialize_hamiltonian(ob, use_csingle: bool):
     return hamiltonian_obs(coeffs, terms)
 
 
+def _serialize_pauli_word(ob, use_csingle: bool):
+    """Serialize a PauliWord into a Named or Tensor."""
+    if use_csingle:
+        named_obs = NamedObsC64
+        tensor_obs = TensorProdObsC64
+    else:
+        named_obs = NamedObsC128
+        tensor_obs = TensorProdObsC128
+
+    if len(ob) == 1:
+        wire, pauli = list(ob.items())[0]
+        return named_obs(pauli_name_map[pauli], [wire])
+
+    return tensor_obs([named_obs(pauli_name_map[pauli], [wire]) for wire, pauli in ob.items()])
+
+
+def _serialize_pauli_sentence(ob, use_csingle: bool):
+    """Serialize a PauliSentence into a Hamiltonian."""
+    if use_csingle:
+        rtype = np.float32
+        hamiltonian_obs = HamiltonianC64
+    else:
+        rtype = np.float64
+        hamiltonian_obs = HamiltonianC128
+
+    pwords, coeffs = zip(*ob.items())
+    terms = [_serialize_pauli_word(pw, use_csingle) for pw in pwords]
+    coeffs = np.array(coeffs).astype(rtype)
+    return hamiltonian_obs(coeffs, terms)
+
+
 def _serialize_ob(ob, use_csingle: bool = False):
     """Serializes an observable.
 
@@ -144,8 +186,12 @@ def _serialize_ob(ob, use_csingle: bool = False):
         return _serialize_tensor_ob(ob, use_csingle)
     elif ob.name == "Hamiltonian":
         return _serialize_hamiltonian(ob, use_csingle)
+    elif ob._pauli_rep is not None:
+        return _serialize_pauli_sentence(ob._pauli_rep, use_csingle)
+    elif _obs_has_kernel(ob):
+        return _serialize_named_obs(ob, use_csingle)
     else:
-        return _serialize_named_hermitian_ob(ob, use_csingle)
+        return _serialize_hermitian_ob(ob, use_csingle)
 
 
 def _serialize_observables(tape: QuantumTape, use_csingle: bool = False) -> List:
@@ -158,7 +204,6 @@ def _serialize_observables(tape: QuantumTape, use_csingle: bool = False) -> List
     Returns:
         list(ObsStructC128 or ObsStructC64): A list of observable objects compatible with the C++ backend
     """
-
     return [_serialize_ob(ob, use_csingle) for ob in tape.observables]
 
 
