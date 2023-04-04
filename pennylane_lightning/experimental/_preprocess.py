@@ -58,7 +58,7 @@ def _accepted_operator(op: qml.operation.Operator) -> bool:
 def _operator_decomposition_gen(
     op: qml.operation.Operator,
 ) -> Generator[qml.operation.Operator, None, None]:
-    """A generator that yields the next operation that is accepted by DefaultQubit2."""
+    """A generator that yields the next operation that is accepted by LightningQubit2."""
     if _accepted_operator(op):
         yield op
     else:
@@ -66,7 +66,7 @@ def _operator_decomposition_gen(
             decomp = op.decomposition()
         except qml.operation.DecompositionUndefinedError as e:
             raise DeviceError(
-                f"Operator {op} not supported on DefaultQubit2. Must provide either a matrix or a decomposition."
+                f"Operator {op} not supported on LightningQubit2. Must provide either a matrix or a decomposition."
             ) from e
 
         for sub_op in decomp:
@@ -96,7 +96,7 @@ def expand_fn(circuit: qml.tape.QuantumScript) -> qml.tape.QuantumScript:
         circuit = qml.defer_measurements(circuit)
 
     if len(circuit._prep) > 1:
-        raise DeviceError("DefaultQubit2 accepts at most one state prep operation.")
+        raise DeviceError("LightningQubit2 accepts at most one state prep operation.")
 
     if not all(_accepted_operator(op) for op in circuit._ops):
         try:
@@ -113,9 +113,9 @@ def expand_fn(circuit: qml.tape.QuantumScript) -> qml.tape.QuantumScript:
     for observable in circuit.observables:
         if isinstance(observable, Tensor):
             if any(o.name not in _observables for o in observable.obs):
-                raise DeviceError(f"Observable {observable} not supported on DefaultQubit2")
+                raise DeviceError(f"Observable {observable} not supported on LightningQubit2")
         elif observable.name not in _observables:
-            raise DeviceError(f"Observable {observable} not supported on DefaultQubit2")
+            raise DeviceError(f"Observable {observable} not supported on LightningQubit2")
 
     # change this once shots are supported
     for m in circuit.measurements:
