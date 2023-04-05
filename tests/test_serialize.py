@@ -50,20 +50,30 @@ from pennylane_lightning.lightning_qubit_ops.adjoint_diff import (
         (qml.PauliZ(0) @ qml.PauliZ(1), TensorProdObsC64),
         (qml.Hadamard(0), NamedObsC64),
         (qml.Hermitian(np.eye(2), wires=0), HermitianObsC64),
-        (qml.PauliZ(0) @ qml.Hadamard(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3))), TensorProdObsC64),
-        ((
-            qml.Hermitian(np.eye(2), wires=0)
-            @ qml.Hermitian(np.eye(2), wires=1)
-            @ qml.Projector([0], wires=2)
-        ), TensorProdObsC64),
-        (qml.PauliZ(0) @ qml.Hermitian(np.eye(2), wires=1) @ qml.Projector([0], wires=2), TensorProdObsC64),
+        (
+            qml.PauliZ(0) @ qml.Hadamard(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3))),
+            TensorProdObsC64,
+        ),
+        (
+            (
+                qml.Hermitian(np.eye(2), wires=0)
+                @ qml.Hermitian(np.eye(2), wires=1)
+                @ qml.Projector([0], wires=2)
+            ),
+            TensorProdObsC64,
+        ),
+        (
+            qml.PauliZ(0) @ qml.Hermitian(np.eye(2), wires=1) @ qml.Projector([0], wires=2),
+            TensorProdObsC64,
+        ),
         (qml.Projector([0], wires=0), HermitianObsC64),
         (qml.Hamiltonian([1], [qml.PauliZ(0)]), HamiltonianC64),
-    ]
+    ],
 )
 def test_obs_returns_expected_type(obs, obs_type):
     """Tests that observables get serialized to the expected type."""
     assert isinstance(_serialize_ob(obs, dict(enumerate(obs.wires)), True), obs_type)
+
 
 class TestSerializeObs:
     """Tests for the _serialize_obs function"""
@@ -395,7 +405,7 @@ class TestSerializeObs:
     @pytest.mark.parametrize("use_csingle", [True, False])
     def test_multi_wire_identity(self, use_csingle):
         """Tests that multi-wire Identity does not fail serialization."""
-        tape = qml.tape.QuantumTape(measurements=[qml.expval(qml.Identity(wires=[1,2]))])
+        tape = qml.tape.QuantumTape(measurements=[qml.expval(qml.Identity(wires=[1, 2]))])
         res = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
         assert len(res) == 1
 

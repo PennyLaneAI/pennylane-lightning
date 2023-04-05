@@ -24,12 +24,10 @@ from pennylane import (
     PauliY,
     PauliZ,
     Identity,
-    Projector,
-    Hamiltonian,
     QubitStateVector,
     Rot,
 )
-from pennylane.operation import Observable, Tensor
+from pennylane.operation import Tensor
 from pennylane.tape import QuantumTape
 from pennylane.math import unwrap
 
