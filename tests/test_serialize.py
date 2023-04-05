@@ -21,7 +21,7 @@ import pennylane_lightning
 from pennylane_lightning._serialize import (
     _serialize_observables,
     _serialize_ops,
-    _obs_has_kernel,
+    _serialize_ob,
 )
 import pytest
 from unittest import mock
@@ -43,53 +43,27 @@ from pennylane_lightning.lightning_qubit_ops.adjoint_diff import (
 )
 
 
-class TestObsHasKernel:
-    """Tests for the _obs_has_kernel function"""
-
-    def test_pauli_z(self):
-        """Tests if return is true for a PauliZ observable"""
-        o = qml.PauliZ(0)
-        assert _obs_has_kernel(o)
-
-    def test_tensor_pauli(self):
-        """Tests if return is true for a tensor product of Pauli terms"""
-        o = qml.PauliZ(0) @ qml.PauliZ(1)
-        assert _obs_has_kernel(o)
-
-    def test_hadamard(self):
-        """Tests if return is true for a Hadamard observable"""
-        o = qml.Hadamard(0)
-        assert _obs_has_kernel(o)
-
-    def test_hermitian(self):
-        """Tests if return is false for a Hermitian observable"""
-        o = qml.Hermitian(np.eye(2), wires=0)
-        assert not _obs_has_kernel(o)
-
-    def test_tensor_product_of_valid_terms(self):
-        """Tests if return is true for a tensor product of Pauli, Hadamard, and Hamiltonian terms"""
-        o = qml.PauliZ(0) @ qml.Hadamard(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3)))
-        assert _obs_has_kernel(o)
-
-    def test_tensor_product_of_invalid_terms(self):
-        """Tests if return is false for a tensor product of Hermitian terms"""
-        o = (
+@pytest.mark.parametrize(
+    "obs,obs_type",
+    [
+        (qml.PauliZ(0), NamedObsC64),
+        (qml.PauliZ(0) @ qml.PauliZ(1), TensorProdObsC64),
+        (qml.Hadamard(0), NamedObsC64),
+        (qml.Hermitian(np.eye(2), wires=0), HermitianObsC64),
+        (qml.PauliZ(0) @ qml.Hadamard(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3))), TensorProdObsC64),
+        ((
             qml.Hermitian(np.eye(2), wires=0)
             @ qml.Hermitian(np.eye(2), wires=1)
             @ qml.Projector([0], wires=2)
-        )
-        assert not _obs_has_kernel(o)
-
-    def test_tensor_product_of_mixed_terms(self):
-        """Tests if return is false for a tensor product of valid and invalid terms"""
-        o = qml.PauliZ(0) @ qml.Hermitian(np.eye(2), wires=1) @ qml.Projector([0], wires=2)
-        assert not _obs_has_kernel(o)
-
-    def test_projector(self):
-        """Tests if return is false for a Projector observable"""
-        o = qml.Projector([0], wires=0)
-        assert not _obs_has_kernel(o)
-
+        ), TensorProdObsC64),
+        (qml.PauliZ(0) @ qml.Hermitian(np.eye(2), wires=1) @ qml.Projector([0], wires=2), TensorProdObsC64),
+        (qml.Projector([0], wires=0), HermitianObsC64),
+        (qml.Hamiltonian([1], [qml.PauliZ(0)]), HamiltonianC64),
+    ]
+)
+def test_obs_returns_expected_type(obs, obs_type):
+    """Tests that observables get serialized to the expected type."""
+    assert isinstance(_serialize_ob(obs, dict(enumerate(obs.wires)), True), obs_type)
 
 class TestSerializeObs:
     """Tests for the _serialize_obs function"""
