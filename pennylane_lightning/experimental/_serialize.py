@@ -22,6 +22,7 @@ from pennylane import (
     Hadamard,
     QubitStateVector,
     Rot,
+    Hamiltonian,
 )
 from pennylane.pauli import is_pauli_word
 from pennylane.operation import Observable, Tensor
@@ -62,9 +63,14 @@ def _obs_has_kernel(ob: Observable) -> bool:
     Returns:
         bool: indicating whether ``obs`` has a dedicated kernel in the backend
     """
-    if is_pauli_word(ob) or isinstance(ob, (Hadamard)):
+    if is_pauli_word(ob):
         return True
-
+    if isinstance(ob, (Hadamard)):
+        return True
+    if isinstance(ob, Hamiltonian):
+        return all(_obs_has_kernel(o) for o in ob.ops)
+    if isinstance(ob, Tensor):
+        return all(_obs_has_kernel(o) for o in ob.obs)
     return False
 
 
@@ -72,8 +78,6 @@ def _serialize_named_obs(ob, use_csingle: bool):
     """Serializes a Named observable"""
     named_obs = NamedObsC64 if use_csingle else NamedObsC128
     wires = ob.wires.tolist()
-    if ob.name == "Identity":
-        wires = wires[:1]
     return named_obs(ob.name, wires)
 
 
