@@ -158,11 +158,10 @@ class TestAdjointJacobian:
 
         calculated_val = dev.adjoint_jacobian(tape)
 
-        h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
         # compare to finite differences
-        tapes, fn = qml.gradients.finite_diff(tape, h=h)
+        tapes, fn = qml.gradients.param_shift(tape)
         numeric_val = fn(qml.execute(tapes, dev, None))
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
@@ -182,11 +181,10 @@ class TestAdjointJacobian:
 
         calculated_val = dev.adjoint_jacobian(tape)
 
-        h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
         # compare to finite differences
-        tapes, fn = qml.gradients.finite_diff(tape, h=h)
+        tapes, fn = qml.gradients.param_shift(tape)
         numeric_val = fn(qml.execute(tapes, dev, None))
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
@@ -366,12 +364,9 @@ class TestAdjointJacobian:
 
         tape.trainable_params = set(range(1, 1 + op.num_params))
 
-        h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
-        grad_F = (lambda t, fn: fn(qml.execute(t, dev, None)))(
-            *qml.gradients.finite_diff(tape, h=h)
-        )
+        grad_F = (lambda t, fn: fn(qml.execute(t, dev, None)))(*qml.gradients.param_shift(tape))
         grad_D = dev.adjoint_jacobian(tape)
 
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
@@ -413,12 +408,9 @@ class TestAdjointJacobian:
 
         tape.trainable_params = set(range(1, 1 + op.num_params))
 
-        h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
-        grad_F = (lambda t, fn: fn(qml.execute(t, dev, None)))(
-            *qml.gradients.finite_diff(tape, h=h)
-        )
+        grad_F = (lambda t, fn: fn(qml.execute(t, dev, None)))(*qml.gradients.param_shift(tape))
         grad_D = dev.adjoint_jacobian(tape)
 
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
@@ -435,11 +427,10 @@ class TestAdjointJacobian:
 
         tape.trainable_params = {1, 2, 3}
 
-        h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
         grad_D = dev.adjoint_jacobian(tape)
-        tapes, fn = qml.gradients.finite_diff(tape, h=h)
+        tapes, fn = qml.gradients.param_shift(tape)
         grad_F = fn(qml.execute(tapes, dev, None))
 
         # gradient has the correct shape and every element is nonzero
@@ -460,11 +451,10 @@ class TestAdjointJacobian:
 
         tape.trainable_params = {1, 2, 3}
 
-        h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
         grad_D = dev.adjoint_jacobian(tape)
-        tapes, fn = qml.gradients.finite_diff(tape, h=h)
+        tapes, fn = qml.gradients.param_shift(tape)
         grad_F = fn(qml.execute(tapes, dev, None))
 
         # gradient has the correct shape and every element is nonzero
@@ -490,11 +480,10 @@ class TestAdjointJacobian:
 
         tape.trainable_params = {1, 2, 3}
 
-        h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
         grad_D = dev.adjoint_jacobian(tape)
-        tapes, fn = qml.gradients.finite_diff(tape, h=h)
+        tapes, fn = qml.gradients.param_shift(tape)
         grad_F = fn(qml.execute(tapes, dev, None))
 
         # gradient has the correct shape and every element is nonzero
