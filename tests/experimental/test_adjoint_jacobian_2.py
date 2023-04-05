@@ -595,3 +595,34 @@ class TestTrackingComputeDerivatives:
         assert tracker.history == {"batches": [1, 1], "executions": [1, 2]}
         assert tracker.totals == {"batches": 2, "executions": 3}
         assert tracker.latest == {"batches": 1, "executions": 2}
+
+
+class TestBasicCircuit:
+    """Tests a basic circuit with one RX gate and two simple expectation values, without preprocessing."""
+
+    @staticmethod
+    def process_and_compute_derivatives(dev, tape):
+        results = dev.compute_derivatives(tape, AdjointConfig)
+        return results
+
+    @staticmethod
+    def calculate_reference(tape, c_dtype):
+        dev = qml.device("default.qubit", wires=3, c_dtype=c_dtype)
+        tapes, fn = qml.gradients.param_shift(tape)
+        return fn(qml.execute(tapes, dev, None))
+
+    def test_basic_circuit_numpy(self, tol):
+        """Test execution with a basic circuit."""
+        phi = np.array(0.397)
+        qs = qml.tape.QuantumScript(
+            [qml.RX(phi, wires=0)], [qml.expval(qml.PauliY(0)), qml.expval(qml.PauliZ(0))]
+        )
+
+        dev = LightningQubit2()
+
+        # gradients
+        calculated_val = self.process_and_compute_derivatives(dev, qs)
+        reference_val = self.calculate_reference(qs, dev.C_DTYPE)
+
+        assert len(calculated_val) == 2
+        assert np.allclose(calculated_val, reference_val, tol)

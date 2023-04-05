@@ -39,7 +39,7 @@ def test_name():
 
 
 @pytest.mark.skipif(CPP_BINARY_AVAILABLE, reason="Only when there is no binary")
-def test_name():
+def test_name_no_binary():
     """Tests that we are offloading to the default qubit."""
     assert LightningQubit2().name == "default.qubit.2"
 
@@ -156,7 +156,7 @@ class TestBasicCircuit:
         assert np.allclose(result[1], np.cos(phi))
 
 
-@pytest.mark.xfail  # xfail for now. Waiting for core update.
+@pytest.mark.xfail  # [Return before Merge]: xfail for now. Waiting for core update.
 @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 class TestExecutingBatches:
     @staticmethod
