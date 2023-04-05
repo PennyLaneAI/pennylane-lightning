@@ -86,6 +86,21 @@ class TestExpval:
 
         assert np.allclose(calculated_val, reference_val, tol)
 
+    def test_multi_wire_identity_expectation(self, theta, phi, dev, tol):
+        """Tests multi-wire identity."""
+
+        tape = qml.tape.QuantumScript(
+            [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
+            [qml.expval(qml.Identity(wires=[0, 1]))],
+        )
+
+        calculated_val = self.process_and_execute(dev, tape)
+        reference_val = self.calculate_reference(tape, dev.C_DTYPE)
+
+        tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
+
+        assert np.allclose(calculated_val, reference_val, tol)
+
     def test_PauliZ_expectation(self, theta, phi, dev, tol):
         """Tests PauliZ."""
 
