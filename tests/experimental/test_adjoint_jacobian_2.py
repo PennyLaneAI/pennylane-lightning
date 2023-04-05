@@ -129,11 +129,13 @@ class TestAdjointJacobianComputeDerivatives:
     def test_pauli_gradient(self, G, theta, dev):
         """Tests gradient for Pauli gates."""
 
-        with qml.tape.QuantumTape() as tape:
-            qml.QubitStateVector(np.array([1.0, -1.0]) / np.sqrt(2), wires=0)
-            G(theta, wires=[0])
-            qml.expval(qml.PauliZ(0))
+        random_state = np.array(
+            [0.43593284 - 0.02945156j, 0.40812291 + 0.80158023j], requires_grad=False
+        )
 
+        tape = qml.tape.QuantumScript(
+            [G(theta, 0)], [qml.expval(qml.PauliZ(0))], [qml.QubitStateVector(random_state, 0)]
+        )
         tape.trainable_params = {1}
 
         # gradients
@@ -142,7 +144,7 @@ class TestAdjointJacobianComputeDerivatives:
 
         tol = 1e-6 if dev.C_DTYPE == np.complex64 else 1e-7
 
-        assert np.allclose(calculated_val, reference_val[0][2], atol=tol, rtol=0)
+        assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
     def test_Rot_gradient(self, theta, dev):
@@ -151,7 +153,7 @@ class TestAdjointJacobianComputeDerivatives:
         params = np.array([theta, theta**3, np.sqrt(2) * theta])
 
         with qml.tape.QuantumTape() as tape:
-            qml.QubitStateVector(np.array([1.0, -1.0]) / np.sqrt(2), wires=0)
+            qml.QubitStateVector(np.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0)
             qml.Rot(*params, wires=[0])
             qml.expval(qml.PauliZ(0))
 
@@ -163,7 +165,7 @@ class TestAdjointJacobianComputeDerivatives:
 
         tol = 1e-6 if dev.C_DTYPE == np.complex64 else 1e-7
 
-        assert np.allclose(calculated_val, reference_val[0][2:], atol=tol, rtol=0)
+        assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("par", [1, -2, 1.623, -0.051, 0])  # integers, floats, zero
     def test_ry_gradient(self, par, tol, dev):
@@ -390,8 +392,8 @@ class TestAdjointJacobianComputeDerivatives:
 
         assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
 
-    def test_gradient_gate_with_multiple_parameters_PauliZ(self, dev):
-        """Tests gates with multiple free parameters and PauliZ."""
+    def test_gradient_gate_with_identity(self, dev):
+        """Tests gates with multiple free parameters and Identity."""
 
         x, y, z = [0.5, 0.3, -0.7]
 
@@ -399,7 +401,50 @@ class TestAdjointJacobianComputeDerivatives:
             qml.RX(0.4, wires=[0])
             qml.Rot(x, y, z, wires=[0])
             qml.RY(-0.2, wires=[0])
-            qml.expval(qml.PauliZ(0))
+            qml.expval(qml.Identity(0))
+
+        tape.trainable_params = {1, 2, 3}
+
+        # gradients
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
+        reference_val = self.calculate_reference(tape, dev.C_DTYPE)
+
+        tol = 1e-6 if dev.C_DTYPE == np.complex64 else 1e-7
+
+        # the different methods agree
+        assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
+
+    def test_gradient_gate_with_multi_wire_identity(self, dev):
+        """Tests gates with multiple free parameters and multi-wire Identity."""
+
+        x, y, z = [0.5, 0.3, -0.7]
+
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(0.4, wires=[0])
+            qml.Rot(x, y, z, wires=[1])
+            qml.RY(-0.2, wires=[0])
+            qml.expval(qml.Identity([0, 1]))
+
+        tape.trainable_params = {1, 2, 3}
+
+        # gradients
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
+        reference_val = self.calculate_reference(tape, dev.C_DTYPE)
+
+        tol = 1e-6 if dev.C_DTYPE == np.complex64 else 1e-7
+
+        # the different methods agree
+        assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
+
+    def test_gradient_gate_with_multiple_parameters_PauliZ(self, dev):
+        """Tests gates with multiple free parameters and PauliZ."""
+
+        x, y, z = [0.5, 0.3, -0.7]
+
+        tape = qml.tape.QuantumScript(
+            [qml.RX(0.4, wires=[0]), qml.Rot(x, y, z, wires=[0]), qml.RY(-0.2, wires=[0])],
+            [qml.expval(qml.PauliZ(0))],
+        )
 
         tape.trainable_params = {1, 2, 3}
 
@@ -410,7 +455,7 @@ class TestAdjointJacobianComputeDerivatives:
         tol = 1e-6 if dev.C_DTYPE == np.complex64 else 1e-7
 
         # gradient has the correct shape and every element is nonzero
-        assert calculated_val.shape == (1, 3)
+        assert len(calculated_val) == 3
         assert np.count_nonzero(calculated_val) == 3
         # the different methods agree
         assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
@@ -419,11 +464,10 @@ class TestAdjointJacobianComputeDerivatives:
         """Tests gates with multiple free parameters and an Hermitian operator."""
         x, y, z = [0.5, 0.3, -0.7]
 
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
-            qml.expval(qml.Hermitian([[0, 1], [1, 1]], wires=0))
+        tape = qml.tape.QuantumScript(
+            [qml.RX(0.4, wires=[0]), qml.Rot(x, y, z, wires=[0]), qml.RY(-0.2, wires=[0])],
+            [qml.expval(qml.Hermitian([[0, 1], [1, 1]], wires=0))],
+        )
 
         tape.trainable_params = {1, 2, 3}
 
@@ -434,7 +478,7 @@ class TestAdjointJacobianComputeDerivatives:
         tol = 1e-6 if dev.C_DTYPE == np.complex64 else 1e-7
 
         # gradient has the correct shape and every element is nonzero
-        assert calculated_val.shape == (1, 3)
+        assert len(calculated_val) == 3
         assert np.count_nonzero(calculated_val) == 3
         # the different methods agree
         assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
@@ -447,11 +491,10 @@ class TestAdjointJacobianComputeDerivatives:
             [1.0, 0.3, 0.3], [qml.PauliX(0) @ qml.PauliX(1), qml.PauliZ(0), qml.PauliZ(1)]
         )
 
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
-            qml.expval(ham)
+        tape = qml.tape.QuantumScript(
+            [qml.RX(0.4, wires=[0]), qml.Rot(x, y, z, wires=[0]), qml.RY(-0.2, wires=[0])],
+            [qml.expval(ham)],
+        )
 
         tape.trainable_params = {1, 2, 3}
 
@@ -462,7 +505,7 @@ class TestAdjointJacobianComputeDerivatives:
         tol = 1e-6 if dev.C_DTYPE == np.complex64 else 1e-7
 
         # gradient has the correct shape and every element is nonzero
-        assert calculated_val.shape == (1, 3)
+        assert len(calculated_val) == 3
         assert np.count_nonzero(calculated_val) == 3
         # the different methods agree
         assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
@@ -517,7 +560,7 @@ class TestOperatorArithmeticComputeDerivatives:
 
         tol = 1e-5 if dev.C_DTYPE == np.complex64 else 1e-7
 
-        assert np.allclose(calculated_val[0][0], reference_val, tol)
+        assert np.allclose(calculated_val, reference_val, tol)
 
     def test_sum(self, dev, tol):
         """Tests the `Sum` class."""

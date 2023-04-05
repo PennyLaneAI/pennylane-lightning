@@ -28,6 +28,7 @@ from pennylane.operation import Tensor, Operation
 from pennylane.measurements import MeasurementProcess, Expectation, State
 from pennylane.tape import QuantumTape
 from pennylane.devices.qubit.initialize_state import create_initial_state
+from pennylane import active_return
 
 from ._serialize import _serialize_observables, _serialize_ops
 from ._simulate import asarray
@@ -161,6 +162,23 @@ def _process_jacobian_tape(tape, state):
     }
 
 
+def _adjoint_jacobian_processing(jac):
+    """
+    Post-process the Jacobian matrix returned by ``adjoint_jacobian`` for
+    the new return type system.
+    """
+    jac = np.squeeze(jac)
+
+    if jac.ndim == 0:
+        return np.array(jac)
+
+    if jac.ndim == 1:
+        return tuple(np.array(j) for j in jac)
+
+    # must be 2-dimensional
+    return tuple(tuple(np.array(j_) for j_ in j) for j in jac)
+
+
 def adjoint_jacobian(tape, c_dtype=np.complex128):
     """Calculates the Adjoint Jacobian for a given tape.
 
@@ -196,4 +214,4 @@ def adjoint_jacobian(tape, c_dtype=np.complex128):
     jac = jac.reshape(-1, len(trainable_params))
     jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
     jac_r[:, processed_data["record_tp_rows"]] = jac
-    return jac_r
+    return _adjoint_jacobian_processing(jac_r) if active_return() else jac_r
