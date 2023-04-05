@@ -42,6 +42,7 @@ from pennylane_lightning.lightning_qubit_ops.adjoint_diff import (
     HamiltonianC128,
 )
 
+
 @pytest.mark.parametrize(
     "obs,obs_type",
     [
