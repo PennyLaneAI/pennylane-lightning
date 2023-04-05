@@ -532,7 +532,7 @@ class LightningQubit(QubitDevice):
 
         for op_idx, tp in enumerate(trainable_params):
             # get op_idx-th operator among differentiable operators
-            op, _, _ = tape.get_operation(op_idx, return_op_index=True)  
+            op, _, _ = tape.get_operation(op_idx, return_op_index=True)
             if isinstance(op, Operation) and not isinstance(op, (BasisState, QubitStateVector)):
                 # We now just ignore non-op or state preps
                 tp_shift.append(tp)
@@ -766,7 +766,10 @@ class LightningQubit(QubitDevice):
                 vjp = f(t)
 
                 # make sure vjp is iterable if using extend reduction
-                if not isinstance(vjp, tuple) and getattr(reduction, "__name__", reduction) == "extend":
+                if (
+                    not isinstance(vjp, tuple)
+                    and getattr(reduction, "__name__", reduction) == "extend"
+                ):
                     vjp = (vjp,)
 
                 if isinstance(reduction, str):

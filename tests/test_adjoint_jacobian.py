@@ -146,10 +146,13 @@ class TestAdjointJacobian:
     def test_pauli_rotation_gradient(self, G, theta, dev):
         """Tests that the automatic gradients of Pauli rotations are correct."""
 
-        random_state = np.array([0.43593284-0.02945156j, 0.40812291+0.80158023j], requires_grad=False)
+        random_state = np.array(
+            [0.43593284 - 0.02945156j, 0.40812291 + 0.80158023j], requires_grad=False
+        )
 
-        tape = qml.tape.QuantumScript([G(theta, 0)], [qml.expval(qml.PauliZ(0))],
-            [qml.QubitStateVector(random_state, 0)])
+        tape = qml.tape.QuantumScript(
+            [G(theta, 0)], [qml.expval(qml.PauliZ(0))], [qml.QubitStateVector(random_state, 0)]
+        )
 
         tape.trainable_params = {1}
 
@@ -425,12 +428,10 @@ class TestAdjointJacobian:
 
         x, y, z = [0.5, 0.3, -0.7]
 
-        tape = qml.tape.QuantumScript([
-            qml.RX(0.4, wires=[0]),
-            qml.Rot(x, y, z, wires=[0]),
-            qml.RY(-0.2, wires=[0])],
-            [qml.expval(qml.PauliZ(0))])
-
+        tape = qml.tape.QuantumScript(
+            [qml.RX(0.4, wires=[0]), qml.Rot(x, y, z, wires=[0]), qml.RY(-0.2, wires=[0])],
+            [qml.expval(qml.PauliZ(0))],
+        )
 
         tape.trainable_params = {1, 2, 3}
 
@@ -452,11 +453,10 @@ class TestAdjointJacobian:
         """Tests that gates with multiple free parameters yield correct gradients."""
         x, y, z = [0.5, 0.3, -0.7]
 
-        tape = qml.tape.QuantumScript([
-            qml.RX(0.4, wires=[0]),
-            qml.Rot(x, y, z, wires=[0]),
-            qml.RY(-0.2, wires=[0])],
-            [qml.expval(qml.Hermitian([[0, 1], [1, 1]], wires=0))])
+        tape = qml.tape.QuantumScript(
+            [qml.RX(0.4, wires=[0]), qml.Rot(x, y, z, wires=[0]), qml.RY(-0.2, wires=[0])],
+            [qml.expval(qml.Hermitian([[0, 1], [1, 1]], wires=0))],
+        )
 
         tape.trainable_params = {1, 2, 3}
 
@@ -483,11 +483,10 @@ class TestAdjointJacobian:
             [1.0, 0.3, 0.3], [qml.PauliX(0) @ qml.PauliX(1), qml.PauliZ(0), qml.PauliZ(1)]
         )
 
-        tape = qml.tape.QuantumScript([
-            qml.RX(0.4, wires=[0]),
-            qml.Rot(x, y, z, wires=[0]),
-            qml.RY(-0.2, wires=[0])],
-            [qml.expval(ham)])
+        tape = qml.tape.QuantumScript(
+            [qml.RX(0.4, wires=[0]), qml.Rot(x, y, z, wires=[0]), qml.RY(-0.2, wires=[0])],
+            [qml.expval(ham)],
+        )
 
         tape.trainable_params = {1, 2, 3}
 
