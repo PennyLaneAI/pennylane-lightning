@@ -20,12 +20,14 @@ import numpy as np
 from pennylane import (
     BasisState,
     Hadamard,
+    PauliX,
+    PauliY,
+    PauliZ,
+    Identity,
     QubitStateVector,
     Rot,
-    Hamiltonian,
 )
-from pennylane.pauli import is_pauli_word
-from pennylane.operation import Observable, Tensor
+from pennylane.operation import Tensor
 from pennylane.tape import QuantumTape
 from pennylane.math import unwrap
 
@@ -57,30 +59,12 @@ pauli_name_map = {
 }
 
 
-def _obs_has_kernel(ob: Observable) -> bool:
-    """Returns True if the input observable has a supported kernel in the C++ backend.
-
-    Args:
-        ob (Observable): the input observable
-
-    Returns:
-        bool: indicating whether ``obs`` has a dedicated kernel in the backend
-    """
-    if is_pauli_word(ob):
-        return True
-    if isinstance(ob, (Hadamard)):
-        return True
-    if isinstance(ob, Hamiltonian):
-        return all(_obs_has_kernel(o) for o in ob.ops)
-    if isinstance(ob, Tensor):
-        return all(_obs_has_kernel(o) for o in ob.obs)
-    return False
-
-
 def _serialize_named_obs(ob, use_csingle: bool):
     """Serializes a Named observable"""
     named_obs = NamedObsC64 if use_csingle else NamedObsC128
     wires = ob.wires.tolist()
+    if ob.name == "Identity":
+        wires = wires[:1]
     return named_obs(ob.name, wires)
 
 
@@ -193,10 +177,10 @@ def _serialize_ob(ob, use_csingle: bool = False):
         return _serialize_tensor_ob(ob, use_csingle)
     elif ob.name == "Hamiltonian":
         return _serialize_hamiltonian(ob, use_csingle)
+    elif isinstance(ob, (PauliX, PauliY, PauliZ, Identity, Hadamard)):
+        return _serialize_named_obs(ob, use_csingle)
     elif ob._pauli_rep is not None:
         return _serialize_pauli_sentence(ob._pauli_rep, use_csingle)
-    elif _obs_has_kernel(ob):
-        return _serialize_named_obs(ob, use_csingle)
     else:
         return _serialize_hermitian_ob(ob, use_csingle)
 
