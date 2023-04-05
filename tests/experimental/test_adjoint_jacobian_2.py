@@ -21,11 +21,9 @@ from pennylane import numpy as np
 from pennylane.devices.experimental import ExecutionConfig
 from pennylane_lightning.experimental import LightningQubit2
 
-try:
-    from pennylane_lightning.lightning_qubit_ops import (
-        adjoint_diff,
-    )
-except (ImportError, ModuleNotFoundError):
+from pennylane_lightning.experimental.lightning_qubit_2 import CPP_BINARY_AVAILABLE
+
+if not CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 AdjointConfig = ExecutionConfig(gradient_method="adjoint")

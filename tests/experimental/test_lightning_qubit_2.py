@@ -20,16 +20,7 @@ import pennylane as qml
 from pennylane.devices.experimental import ExecutionConfig
 from pennylane_lightning.experimental import LightningQubit2
 
-
-try:
-    from pennylane_lightning.lightning_qubit_ops import (
-        StateVectorC64,
-        StateVectorC128,
-    )
-
-    CPP_BINARY_AVAILABLE = True
-except ModuleNotFoundError:
-    CPP_BINARY_AVAILABLE = False
+from pennylane_lightning.experimental.lightning_qubit_2 import CPP_BINARY_AVAILABLE
 
 
 @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")

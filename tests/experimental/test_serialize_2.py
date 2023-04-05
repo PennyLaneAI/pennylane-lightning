@@ -26,15 +26,7 @@ from pennylane_lightning.experimental._serialize import (
 import pytest
 from unittest import mock
 
-try:
-    from pennylane_lightning.lightning_qubit_ops import (
-        StateVectorC64,
-        StateVectorC128,
-    )
-
-    CPP_BINARY_AVAILABLE = True
-except ModuleNotFoundError:
-    CPP_BINARY_AVAILABLE = False
+from pennylane_lightning.experimental.lightning_qubit_2 import CPP_BINARY_AVAILABLE
 
 if not CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

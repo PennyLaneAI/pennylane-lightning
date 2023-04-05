@@ -31,20 +31,23 @@ from pennylane.math import unwrap
 
 from pennylane import matrix
 
-from ..lightning_qubit_ops import (
-    StateVectorC64,
-    StateVectorC128,
-)
-from ..lightning_qubit_ops.adjoint_diff import (
-    NamedObsC64,
-    NamedObsC128,
-    HermitianObsC64,
-    HermitianObsC128,
-    TensorProdObsC64,
-    TensorProdObsC128,
-    HamiltonianC64,
-    HamiltonianC128,
-)
+try:
+    from ..lightning_qubit_ops import (
+        StateVectorC64,
+        StateVectorC128,
+    )
+    from ..lightning_qubit_ops.adjoint_diff import (
+        NamedObsC64,
+        NamedObsC128,
+        HermitianObsC64,
+        HermitianObsC128,
+        TensorProdObsC64,
+        TensorProdObsC128,
+        HamiltonianC64,
+        HamiltonianC128,
+    )
+except ImportError:
+    pass
 
 pauli_name_map = {
     "I": "Identity",
