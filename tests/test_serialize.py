@@ -418,6 +418,16 @@ class TestSerializeObs:
         coeffs = np.array(coeffs).astype(rtype)
         assert res[0] == hamiltonian_obs(coeffs, expected_terms)
 
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    def test_multi_wire_identity(self, use_csingle):
+        """Tests that multi-wire Identity does not fail serialization."""
+        tape = qml.tape.QuantumTape(measurements=[qml.expval(qml.Identity(wires=[1,2]))])
+        res = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
+        assert len(res) == 1
+
+        named_obs = NamedObsC64 if use_csingle else NamedObsC128
+        assert res[0] == named_obs("Identity", [1])
+
 
 class TestSerializeOps:
     """Tests for the _serialize_ops function"""
