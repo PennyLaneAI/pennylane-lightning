@@ -92,8 +92,10 @@ class CMakeBuild(build_ext):
                 ]
             else:  # X64 arch
                 if shutil.which("brew"):
+                    brew_llvm_version = os.environ["BREW_LLVM_VERSION"]:
+
                     llvmpath = (
-                        subprocess.check_output(["brew", "--prefix", "llvm"]).decode().strip()
+                        subprocess.check_output(["brew", "--prefix", "llvm" + f"@{brew_llvm_version}" if brew_llvm_version else ""]).decode().strip()
                     )
                 else:
                     llvmpath = shutil.which("clang++")
