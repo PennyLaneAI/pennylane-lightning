@@ -41,7 +41,7 @@ use with `qml.jacobian`:
 array([-0.87758256, -0.47942554])
 ```
 
-Alternatively, the quantum itself can return a numpy array of measurements:
+Alternatively, the quantum function itself can return a numpy array of measurements:
 
 ```
 >>> dev = qml.device('lightning.qubit', wires=1)
