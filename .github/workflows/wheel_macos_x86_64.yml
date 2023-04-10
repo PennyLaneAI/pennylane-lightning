@@ -163,7 +163,7 @@ jobs:
             python -m pip install pybind11 ninja cmake~=3.24.0 setuptools
 
           # Testing of built wheels
-          CIBW_TEST_REQUIRES: python -m pytest pytest-cov pytest-mock flaky
+          CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
 
           CIBW_BEFORE_TEST: python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
 
