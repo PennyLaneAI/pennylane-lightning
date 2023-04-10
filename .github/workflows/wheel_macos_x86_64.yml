@@ -49,7 +49,9 @@ jobs:
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Install clang
-        run: brew install llvm@15
+        run: |
+          brew install llvm@15
+          brew install libomp@15
 
       - name: Clone Kokkos libs
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
@@ -156,8 +158,8 @@ jobs:
           # MacOS specific build settings
           CIBW_BEFORE_ALL_MACOS: |
             brew uninstall --force oclint
-            brew install libomp@15
             brew install llvm@15
+            brew install libomp@15
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
