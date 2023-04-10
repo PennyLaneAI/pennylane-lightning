@@ -95,7 +95,7 @@ class CMakeBuild(build_ext):
                     brew_llvm_version = os.getenv("BREW_LLVM_VERSION")
 
                     llvmpath = (
-                        subprocess.check_output(
+                        subprocess.run(
                             [
                                 "brew",
                                 "--prefix",
@@ -103,9 +103,9 @@ class CMakeBuild(build_ext):
                             ],
                             check=True,
                             capture_output=True,
+                            text=True,
                         )
                         .stdout
-                        .decode()
                         .strip()
                     )
                     libomp_path = (
@@ -117,9 +117,9 @@ class CMakeBuild(build_ext):
                             ],
                             check=False,
                             capture_output=True,
+                            text=True,
                         )
                         .stdout
-                        .decode()
                         .strip()
                     )
                 else:
