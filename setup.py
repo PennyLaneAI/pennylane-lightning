@@ -100,7 +100,7 @@ class CMakeBuild(build_ext):
                                 "brew",
                                 "--prefix",
                                 "llvm" + f"@{brew_llvm_version}" if brew_llvm_version else "",
-                            ]
+                            ],
                             check=True,
                             capture_output=True,
                         )
