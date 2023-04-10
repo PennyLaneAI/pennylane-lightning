@@ -50,7 +50,6 @@ jobs:
 
       - name: Install clang
         run: |
-          brew install llvm@15
           brew install libomp
 
       - name: Clone Kokkos libs
@@ -84,7 +83,7 @@ jobs:
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-                          -DCMAKE_CXX_COMPILER=$(brew --prefix llvm@15)/bin/clang \
+                          -DCMAKE_CXX_COMPILER=g++ \
                           -G Ninja
           cmake --build ./Build --verbose
           cmake --install ./Build
@@ -102,7 +101,7 @@ jobs:
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_PREFIX_PATH=${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }} \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-                          -DCMAKE_CXX_COMPILER=$(brew --prefix llvm@15)/bin/clang \
+                          -DCMAKE_CXX_COMPILER=g++ \
                           -G Ninja
           cmake --build ./Build --verbose
           cmake --install ./Build
@@ -153,12 +152,10 @@ jobs:
       - name: Build wheels
         env:
           CIBW_BUILD: ${{ matrix.cibw_build }}
-          BREW_LLVM_VERSION: 15
 
           # MacOS specific build settings
           CIBW_BEFORE_ALL_MACOS: |
             brew uninstall --force oclint
-            brew install llvm@15
             brew install libomp
 
           # Python build settings
@@ -168,7 +165,7 @@ jobs:
           # Testing of built wheels
           CIBW_TEST_REQUIRES: python -m pytest pytest-cov pytest-mock flaky
 
-          CIBW_BEFORE_TEST: python -m pip pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+          CIBW_BEFORE_TEST: python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
 
           CIBW_TEST_COMMAND: |
             pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
