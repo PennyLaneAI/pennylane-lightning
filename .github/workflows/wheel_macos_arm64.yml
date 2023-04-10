@@ -102,8 +102,6 @@ jobs:
 
           CIBW_ARCHS_MACOS: ${{ matrix.arch }}
 
-          USE_OMP: 1
-
         run: |
           python -m cibuildwheel --output-dir wheelhouse
 
