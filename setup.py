@@ -130,7 +130,7 @@ class CMakeBuild(build_ext):
                     f"-DCMAKE_LINKER={llvmpath}/bin/lld",
                 ]  # Use clang instead of appleclang
             # Disable OpenMP in M1 Macs
-            configure_args += [f"-DOpenMP_ROOT={libomp_path}"] if (os.environ.get("USE_OMP") and libomp_path) else ["-DENABLE_OPENMP=OFF"]
+            configure_args += [f"-DOpenMP_ROOT={libomp_path}/", f"-DOPENMP_ROOT={libomp_path}/"] if (os.environ.get("USE_OMP") and libomp_path) else ["-DENABLE_OPENMP=OFF"]
         elif platform.system() == "Windows":
             configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
         elif platform.system() != "Linux":
