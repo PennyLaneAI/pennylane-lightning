@@ -92,7 +92,7 @@ class CMakeBuild(build_ext):
                 ]
             else:  # X64 arch
                 if shutil.which("brew"):
-                    brew_llvm_version = os.environ["BREW_LLVM_VERSION"]
+                    brew_llvm_version = os.getenv("BREW_LLVM_VERSION")
 
                     llvmpath = (
                         subprocess.check_output(
@@ -101,7 +101,24 @@ class CMakeBuild(build_ext):
                                 "--prefix",
                                 "llvm" + f"@{brew_llvm_version}" if brew_llvm_version else "",
                             ]
+                            check=True,
+                            capture_output=True,
                         )
+                        .stdout
+                        .decode()
+                        .strip()
+                    )
+                    libomp_path = (
+                        subprocess.run(
+                            [
+                                "brew",
+                                "--prefix",
+                                "libomp",
+                            ],
+                            check=False,
+                            capture_output=True,
+                        )
+                        .stdout
                         .decode()
                         .strip()
                     )
@@ -113,7 +130,7 @@ class CMakeBuild(build_ext):
                     f"-DCMAKE_LINKER={llvmpath}/bin/lld",
                 ]  # Use clang instead of appleclang
             # Disable OpenMP in M1 Macs
-            configure_args += [] if os.environ.get("USE_OMP") else ["-DENABLE_OPENMP=OFF"]
+            configure_args += [f"-DOpenMP_ROOT={libomp_path}"] if (os.environ.get("USE_OMP") and libomp_path) else ["-DENABLE_OPENMP=OFF"]
         elif platform.system() == "Windows":
             configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
         elif platform.system() != "Linux":
@@ -122,9 +139,10 @@ class CMakeBuild(build_ext):
         if not Path(self.build_temp).exists():
             os.makedirs(self.build_temp)
 
-        subprocess.check_call(["cmake", str(ext.sourcedir)] + configure_args, cwd=self.build_temp)
-        subprocess.check_call(
-            ["cmake", "--build", ".", "--verbose"] + build_args, cwd=self.build_temp
+        subprocess.run(["cmake", str(ext.sourcedir)] + configure_args, cwd=self.build_temp, check=True)
+        subprocess.run(
+            ["cmake", "--build", ".", "--verbose"] + build_args, cwd=self.build_temp,
+            check=True
         )
 
 
