@@ -89,6 +89,7 @@ class CMakeBuild(build_ext):
                     "-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11",
                     "-DCMAKE_SYSTEM_NAME=Darwin",
                     "-DCMAKE_SYSTEM_PROCESSOR=ARM64",
+                    "-DENABLE_OPENMP=OFF",
                 ]
             else:  # X64 arch
                 # If we explicitly request a brew LLVM version, use that
