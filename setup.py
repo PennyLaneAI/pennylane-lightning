@@ -91,7 +91,7 @@ class CMakeBuild(build_ext):
                     "-DCMAKE_SYSTEM_PROCESSOR=ARM64",
                 ]
             else:  # X64 arch
-                if os.getenv("USE_BREW_LLVM") and shutil.which("brew"):
+                if os.getenv("BREW_LLVM_VERSION") and shutil.which("brew"):
                     brew_llvm_version = os.getenv("BREW_LLVM_VERSION")
                     llvmpath = (
                         subprocess.run(
