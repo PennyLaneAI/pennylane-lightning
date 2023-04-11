@@ -89,21 +89,49 @@ class CMakeBuild(build_ext):
                     "-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11",
                     "-DCMAKE_SYSTEM_NAME=Darwin",
                     "-DCMAKE_SYSTEM_PROCESSOR=ARM64",
+                    "-DENABLE_OPENMP=OFF",
                 ]
             else:  # X64 arch
-                if shutil.which("brew"):
-                    llvmpath = (
-                        subprocess.check_output(["brew", "--prefix", "llvm"]).decode().strip()
-                    )
+                # If we explicitly request a brew LLVM version, use that
+                if os.getenv("BREW_LLVM_VERSION") and shutil.which("brew"):
+                    brew_llvm_version = os.getenv("BREW_LLVM_VERSION")
+                    llvmpath = subprocess.run(
+                        [
+                            "brew",
+                            "--prefix",
+                            "llvm" + f"@{brew_llvm_version}" if brew_llvm_version else "",
+                        ],
+                        check=True,
+                        capture_output=True,
+                        text=True,
+                    ).stdout.strip()
+                
                 else:
+                    # No brew, use the default clang++ install provided by MacOS
                     llvmpath = shutil.which("clang++")
                     llvmpath = Path(llvmpath).parent.parent
+
+                # Ensure the appropriate compiler and linker are chosen
                 configure_args += [
                     f"-DCMAKE_CXX_COMPILER={llvmpath}/bin/clang++",
                     f"-DCMAKE_LINKER={llvmpath}/bin/lld",
                 ]  # Use clang instead of appleclang
-            # Disable OpenMP in M1 Macs
-            configure_args += [] if os.environ.get("USE_OMP") else ["-DENABLE_OPENMP=OFF"]
+
+                # Try to support OpenMP through libomp if available
+                if os.environ.get("USE_OMP") and shutil.which("brew"):
+                    libomp_path = subprocess.run(
+                        [
+                            "brew",
+                            "--prefix",
+                            "libomp",
+                        ],
+                        check=False,
+                        capture_output=True,
+                        text=True,
+                    ).stdout.strip()
+                    configure_args += (
+                        [f"-DOpenMP_ROOT={libomp_path}/"] if libomp_path else ["-DENABLE_OPENMP=OFF"]
+                    )
         elif platform.system() == "Windows":
             configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
         elif platform.system() != "Linux":
@@ -112,9 +140,11 @@ class CMakeBuild(build_ext):
         if not Path(self.build_temp).exists():
             os.makedirs(self.build_temp)
 
-        subprocess.check_call(["cmake", str(ext.sourcedir)] + configure_args, cwd=self.build_temp)
-        subprocess.check_call(
-            ["cmake", "--build", ".", "--verbose"] + build_args, cwd=self.build_temp
+        subprocess.run(
+            ["cmake", str(ext.sourcedir)] + configure_args, cwd=self.build_temp, check=True
+        )
+        subprocess.run(
+            ["cmake", "--build", ".", "--verbose"] + build_args, cwd=self.build_temp, check=True
         )
 
 
