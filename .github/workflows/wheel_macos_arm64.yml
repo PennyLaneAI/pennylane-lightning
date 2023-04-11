@@ -88,7 +88,7 @@ jobs:
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            pip install pybind11 ninja cmake~=3.24.0
+            pip install pybind11 ninja cmake~=3.24.0 setuptools
 
           # Testing of built wheels
           CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
