@@ -91,6 +91,7 @@ class CMakeBuild(build_ext):
                     "-DCMAKE_SYSTEM_PROCESSOR=ARM64",
                 ]
             else:  # X64 arch
+                # If we explicitly request a brew LLVM version, use that
                 if os.getenv("BREW_LLVM_VERSION") and shutil.which("brew"):
                     brew_llvm_version = os.getenv("BREW_LLVM_VERSION")
                     llvmpath = subprocess.run(
@@ -103,11 +104,19 @@ class CMakeBuild(build_ext):
                         capture_output=True,
                         text=True,
                     ).stdout.strip()
+                
                 else:
+                    # No brew, use the default clang++ install provided by MacOS
                     llvmpath = shutil.which("clang++")
                     llvmpath = Path(llvmpath).parent.parent
 
-                libomp_path = None
+                # Ensure the appropriate compiler and linker are chosen
+                configure_args += [
+                    f"-DCMAKE_CXX_COMPILER={llvmpath}/bin/clang++",
+                    f"-DCMAKE_LINKER={llvmpath}/bin/lld",
+                ]  # Use clang instead of appleclang
+
+                # Try to support OpenMP through libomp if available
                 if os.environ.get("USE_OMP") and shutil.which("brew"):
                     libomp_path = subprocess.run(
                         [
@@ -119,14 +128,9 @@ class CMakeBuild(build_ext):
                         capture_output=True,
                         text=True,
                     ).stdout.strip()
-                configure_args += [
-                    f"-DCMAKE_CXX_COMPILER={llvmpath}/bin/clang++",
-                    f"-DCMAKE_LINKER={llvmpath}/bin/lld",
-                ]  # Use clang instead of appleclang
-            # Disable OpenMP in M1 Macs
-            configure_args += (
-                [f"-DOpenMP_ROOT={libomp_path}/"] if libomp_path else ["-DENABLE_OPENMP=OFF"]
-            )
+                    configure_args += (
+                        [f"-DOpenMP_ROOT={libomp_path}/"] if libomp_path else ["-DENABLE_OPENMP=OFF"]
+                    )
         elif platform.system() == "Windows":
             configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
         elif platform.system() != "Linux":
