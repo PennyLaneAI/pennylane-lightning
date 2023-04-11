@@ -42,6 +42,11 @@ jobs:
         env:
           SKIP_COMPILATION: True
 
+      - name: Validate wheels
+        run: |
+          python -m pip install twine
+          python -m twine check ./wheelhouse/*.whl
+
       - uses: actions/upload-artifact@v2
         if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
         with:
