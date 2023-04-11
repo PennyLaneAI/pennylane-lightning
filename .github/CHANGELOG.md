@@ -56,6 +56,9 @@ array([-0.87758256, -0.47942554])
 
 ### Improvements
 
+* Lightning wheels are now checked with `twine check` post-creation for PyPI compatibility.
+  [(#430)](https://github.com/PennyLaneAI/pennylane-lightning/pull/430)
+
 * Lightning has been made compatible with the change in return types specification.
   [(#427)](https://github.com/PennyLaneAI/pennylane-lightning/pull/427)
 
