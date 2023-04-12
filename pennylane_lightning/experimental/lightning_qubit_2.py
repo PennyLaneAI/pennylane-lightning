@@ -36,6 +36,7 @@ except ModuleNotFoundError:
 
 if CPP_BINARY_AVAILABLE:
     from ._simulate import _execute_single_script
+
     DeviceExecutionConfig = DefaultExecutionConfig
 
     class LightningQubit2(Device):
