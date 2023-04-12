@@ -23,7 +23,6 @@ from pennylane.devices.experimental import Device
 from pennylane.tape import QuantumTape, QuantumScript
 from pennylane.devices.experimental.execution_config import ExecutionConfig, DefaultExecutionConfig
 from pennylane.devices.qubit.simulate import simulate
-from pennylane.devices.qubit.preprocess import preprocess
 
 QuantumTapeBatch = Sequence[QuantumTape]
 QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
@@ -36,6 +35,8 @@ except ModuleNotFoundError:
     CPP_BINARY_AVAILABLE = False
 
 if CPP_BINARY_AVAILABLE:
+    from ._preprocess import preprocess
+
     DeviceExecutionConfig = DefaultExecutionConfig
 
     class LightningQubit2(Device):
