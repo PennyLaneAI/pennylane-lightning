@@ -22,7 +22,6 @@ from warnings import warn
 from pennylane.devices.experimental import Device
 from pennylane.tape import QuantumTape, QuantumScript
 from pennylane.devices.experimental.execution_config import ExecutionConfig, DefaultExecutionConfig
-from pennylane.devices.qubit.simulate import simulate
 from pennylane.devices.qubit.preprocess import preprocess
 
 QuantumTapeBatch = Sequence[QuantumTape]
@@ -36,6 +35,7 @@ except ModuleNotFoundError:
     CPP_BINARY_AVAILABLE = False
 
 if CPP_BINARY_AVAILABLE:
+    from ._simulate import _execute_single_script
     DeviceExecutionConfig = DefaultExecutionConfig
 
     class LightningQubit2(Device):
@@ -126,7 +126,7 @@ if CPP_BINARY_AVAILABLE:
                 self.tracker.update(batches=1, executions=len(circuits))
                 self.tracker.record()
 
-            results = tuple(simulate(c) for c in circuits)
+            results = tuple(_execute_single_script(c, self.C_DTYPE) for c in circuits)
             return results[0] if is_single_circuit else results
 
         def supports_derivatives(
