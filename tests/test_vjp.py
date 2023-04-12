@@ -211,7 +211,7 @@ class TestVectorJacobianProduct:
             with qml.tape.QuantumTape() as tape:
                 qml.RY(x, wires=(0,))
             vjp = fn(tape)
-            assert np.allclose(vjp[0], -0.8 * np.sin(x), atol=tol)
+            assert np.allclose(vjp, -0.8 * np.sin(x), atol=tol)
 
     def test_hermitian_tensor_expectation(self, dev, tol):
         obs = np.array([[1, 0], [0, -1]], dtype=dev.C_DTYPE, requires_grad=False)
@@ -554,36 +554,13 @@ class TestBatchVectorJacobianProduct:
         vjps = fn(tapes)
 
         assert len(vjps) == 2
-        assert all(isinstance(v, np.ndarray) for v in vjps)
-        assert all(len(v) == len(t.trainable_params) for t, v in zip(tapes, vjps))
+        assert len(vjps[1]) == 2
+        assert isinstance(vjps[0], np.ndarray)
+        assert isinstance(vjps[1][0], np.ndarray)
+        assert isinstance(vjps[1][1], np.ndarray)
 
-    def test_reduction_append_callable(self, dev):
-        """Test the 'append' reduction strategy"""
-        with qml.tape.QuantumTape() as tape1:
-            qml.RX(0.4, wires=0)
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
-
-        with qml.tape.QuantumTape() as tape2:
-            qml.RX(0.4, wires=0)
-            qml.RX(0.6, wires=0)
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
-
-        tape1.trainable_params = {0}
-        tape2.trainable_params = {0, 1}
-
-        tapes = [tape1, tape2]
-        dys = [np.array([1.0]), np.array([1.0])]
-
-        fn = dev.batch_vjp(tapes, dys, reduction="append")
-        vjps = fn(tapes)
-
-        assert len(vjps) == 2
-        assert all(isinstance(v, np.ndarray) for v in vjps)
-        assert all(len(v) == len(t.trainable_params) for t, v in zip(tapes, vjps))
-
-    def test_reduction_extend(self, dev):
+    @pytest.mark.parametrize("reduction_keyword", ("extend", list.extend))
+    def test_reduction_extend(self, dev, reduction_keyword):
         """Test the 'extend' reduction strategy"""
         with qml.tape.QuantumTape() as tape1:
             qml.RX(0.4, wires=0)
@@ -602,31 +579,7 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        fn = dev.batch_vjp(tapes, dys, reduction="extend")
-        vjps = fn(tapes)
-
-        assert len(vjps) == sum(len(t.trainable_params) for t in tapes)
-
-    def test_reduction_extend_callable(self, dev):
-        """Test the 'extend' reduction strategy"""
-        with qml.tape.QuantumTape() as tape1:
-            qml.RX(0.4, wires=0)
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
-
-        with qml.tape.QuantumTape() as tape2:
-            qml.RX(0.4, wires=0)
-            qml.RX(0.6, wires=0)
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
-
-        tape1.trainable_params = {0}
-        tape2.trainable_params = {0, 1}
-
-        tapes = [tape1, tape2]
-        dys = [np.array([1.0]), np.array([1.0])]
-
-        fn = dev.batch_vjp(tapes, dys, reduction=list.extend)
+        fn = dev.batch_vjp(tapes, dys, reduction=reduction_keyword)
         vjps = fn(tapes)
 
         assert len(vjps) == sum(len(t.trainable_params) for t in tapes)

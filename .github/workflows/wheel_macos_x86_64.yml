@@ -27,7 +27,7 @@ jobs:
     needs: [set_wheel_build_matrix]
     strategy:
       matrix:
-        os: [macos-11]
+        os: [macos-12]
         arch: [x86_64]
         exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
@@ -49,7 +49,8 @@ jobs:
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Install clang
-        run: brew install llvm
+        run: |
+          brew install libomp
 
       - name: Clone Kokkos libs
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
@@ -82,7 +83,7 @@ jobs:
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-                          -DCMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++ \
+                          -DCMAKE_CXX_COMPILER=g++ \
                           -G Ninja
           cmake --build ./Build --verbose
           cmake --install ./Build
@@ -100,7 +101,7 @@ jobs:
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_PREFIX_PATH=${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }} \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-                          -DCMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++ \
+                          -DCMAKE_CXX_COMPILER=g++ \
                           -G Ninja
           cmake --build ./Build --verbose
           cmake --install ./Build
@@ -111,7 +112,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-11]
+        os: [macos-12]
         arch: [x86_64]
         cibw_build: ${{fromJson(needs.set_wheel_build_matrix.outputs.python_version)}}
         exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
@@ -156,16 +157,15 @@ jobs:
           CIBW_BEFORE_ALL_MACOS: |
             brew uninstall --force oclint
             brew install libomp
-            brew install llvm
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            pip install pybind11 ninja cmake~=3.24.0
+            python -m pip install pybind11 ninja cmake~=3.24.0 setuptools
 
           # Testing of built wheels
           CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
 
-          CIBW_BEFORE_TEST: pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+          CIBW_BEFORE_TEST: python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
 
           CIBW_TEST_COMMAND: |
             pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
@@ -178,6 +178,11 @@ jobs:
 
         run: |
           python -m cibuildwheel --output-dir wheelhouse
+
+      - name: Validate wheels
+        run: |
+          python -m pip install twine
+          python -m twine check ./wheelhouse/*.whl
 
       - uses: actions-ecosystem/action-regex-match@v2
         id: rc_build

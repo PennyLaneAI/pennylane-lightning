@@ -7,7 +7,60 @@
 
 ### Breaking changes
 
+* Lightning now works with the new return types specification that is now default in PennyLane.
+  See [the PennyLane `qml.enable_return`](https://docs.pennylane.ai/en/stable/code/api/pennylane.enable_return.html?highlight=enable_return) documentation for more information on this change.
+  [(#427)](https://github.com/PennyLaneAI/pennylane-lightning/pull/427)
+
+Instead of creating potentially ragged numpy array, devices and `QNode`'s now return an object of the same type as that
+returned by the quantum function.
+
+```
+>>> dev = qml.device('lightning.qubit', wires=1)
+>>> @qml.qnode(dev, diff_method="adjoint")
+... def circuit(x):
+...     qml.RX(x, wires=0)
+...     return qml.expval(qml.PauliY(0)), qml.expval(qml.PauliZ(0))
+>>> x = qml.numpy.array(0.5)
+>>> circuit(qml.numpy.array(0.5))
+(array(-0.47942554), array(0.87758256))
+```
+
+Interfaces like Jax or Torch handle tuple outputs without issues:
+
+```
+>>> jax.jacobian(circuit)(jax.numpy.array(0.5))
+(Array(-0.87758255, dtype=float32, weak_type=True),
+Array(-0.47942555, dtype=float32, weak_type=True))
+```
+
+Autograd cannot differentiate an output tuple, so results must be converted to an array before
+use with `qml.jacobian`:
+
+```
+>>> qml.jacobian(lambda y: qml.numpy.array(circuit(y)))(x)
+array([-0.87758256, -0.47942554])
+```
+
+Alternatively, the quantum function itself can return a numpy array of measurements:
+
+```
+>>> dev = qml.device('lightning.qubit', wires=1)
+>>> @qml.qnode(dev, diff_method="adjoint")
+>>> def circuit2(x):
+...     qml.RX(x, wires=0)
+...     return np.array([qml.expval(qml.PauliY(0)), qml.expval(qml.PauliZ(0))])
+>>> qml.jacobian(circuit2)(np.array(0.5))
+array([-0.87758256, -0.47942554])
+```
+
+
 ### Improvements
+
+* Lightning wheels are now checked with `twine check` post-creation for PyPI compatibility.
+  [(#430)](https://github.com/PennyLaneAI/pennylane-lightning/pull/430)
+
+* Lightning has been made compatible with the change in return types specification.
+  [(#427)](https://github.com/PennyLaneAI/pennylane-lightning/pull/427)
 
 ### Documentation
 
@@ -16,6 +69,8 @@
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Christina Lee
 
 ---
 
