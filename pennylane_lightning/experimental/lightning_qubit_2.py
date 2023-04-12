@@ -22,8 +22,7 @@ from warnings import warn
 from pennylane.devices.experimental import Device
 from pennylane.tape import QuantumTape, QuantumScript
 from pennylane.devices.experimental.execution_config import ExecutionConfig, DefaultExecutionConfig
-from pennylane.devices.qubit.simulate import simulate
-from pennylane.devices.qubit.preprocess import preprocess
+
 
 QuantumTapeBatch = Sequence[QuantumTape]
 QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
@@ -36,6 +35,10 @@ except ModuleNotFoundError:
     CPP_BINARY_AVAILABLE = False
 
 if CPP_BINARY_AVAILABLE:
+    from ._preprocess import preprocess
+    from ._simulate import _execute_single_script
+    from ._adjoint_jacobian import adjoint_jacobian, _check_adjoint_method_supported
+
     DeviceExecutionConfig = DefaultExecutionConfig
 
     class LightningQubit2(Device):
@@ -91,6 +94,10 @@ if CPP_BINARY_AVAILABLE:
                 circuits = [circuits]
                 is_single_circuit = True
 
+            if execution_config.gradient_method == "adjoint":
+                for c in circuits:
+                    _check_adjoint_method_supported(c)
+
             batch, post_processing_fn = preprocess(circuits, execution_config=execution_config)
 
             if is_single_circuit:
@@ -126,7 +133,7 @@ if CPP_BINARY_AVAILABLE:
                 self.tracker.update(batches=1, executions=len(circuits))
                 self.tracker.record()
 
-            results = tuple(simulate(c) for c in circuits)
+            results = tuple(_execute_single_script(c, self.C_DTYPE) for c in circuits)
             return results[0] if is_single_circuit else results
 
         def supports_derivatives(
@@ -151,6 +158,48 @@ if CPP_BINARY_AVAILABLE:
             ):
                 return False
             return True
+
+        def compute_derivatives(
+            self,
+            circuits: QuantumTape_or_Batch,
+            execution_config: ExecutionConfig = DeviceExecutionConfig,
+        ):
+            """Calculate the jacobian of either a single or a batch of circuits on the device.
+
+            Args:
+                circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits to calculate derivatives for
+                execution_config (ExecutionConfig): a data structure with all additional information required for execution
+
+            Returns:
+                Tuple: The jacobian for each trainable parameter
+
+            .. seealso:: :meth:`~.supports_derivatives` and :meth:`~.execute_and_compute_derivatives`.
+
+            **Execution Config:**
+
+            The execution config has ``gradient_method`` and ``order`` property that describes the order of differentiation requested. If the requested
+            method or order of gradient is not provided, the device should raise a ``NotImplementedError``. The :meth:`~.supports_derivatives`
+            method can pre-validate supported orders and gradient methods.
+
+            **Return Shape:**
+
+            If a batch of quantum scripts is provided, this method should return a tuple with each entry being the gradient of
+            each individual quantum script. If the batch is of length 1, then the return tuple should still be of length 1, not squeezed.
+            """
+            if execution_config.gradient_method == "adjoint":
+                is_single_circuit = False
+                if isinstance(circuits, QuantumScript):
+                    is_single_circuit = True
+                    circuits = [circuits]
+
+                if self.tracker.active:
+                    self.tracker.update(batches=1, executions=len(circuits))
+                    self.tracker.record()
+
+                results = tuple(adjoint_jacobian(c, self.C_DTYPE) for c in circuits)
+                return results[0] if is_single_circuit else results
+
+            raise NotImplementedError
 
 else:
     from pennylane.devices.experimental import DefaultQubit2
