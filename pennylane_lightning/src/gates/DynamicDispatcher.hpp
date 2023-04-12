@@ -134,7 +134,7 @@ template <typename PrecisionT> class DynamicDispatcher {
         -> std::vector<Gates::KernelType> {
         std::vector<Gates::KernelType> kernels;
 
-		kernels.reserve(kernel_names_.size());
+        kernels.reserve(kernel_names_.size());
         for (const auto &[kernel, name] : kernel_names_) {
             kernels.emplace_back(kernel);
         }
