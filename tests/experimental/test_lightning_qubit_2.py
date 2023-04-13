@@ -147,7 +147,6 @@ class TestBasicCircuit:
         assert np.allclose(result[1], np.cos(phi))
 
 
-@pytest.mark.xfail  # [Return before Merge]: xfail for now. Waiting for core update.
 @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 class TestExecutingBatches:
     @staticmethod
