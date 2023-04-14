@@ -62,6 +62,9 @@ array([-0.87758256, -0.47942554])
 * Lightning has been made compatible with the change in return types specification.
   [(#427)](https://github.com/PennyLaneAI/pennylane-lightning/pull/427)
 
+* Lightning is compatible with clang-tidy version 16.
+  [(#429)](https://github.com/PennyLaneAI/pennylane-lightning/pull/429)
+
 ### Documentation
 
 ### Bug fixes
