@@ -75,7 +75,7 @@ array([-0.87758256, -0.47942554])
 
 This release contains contributions from (in alphabetical order):
 
-Christina Lee
+Chae-Yeun Park, Christina Lee, Lee James O'Riordan, Vincent Michaud-Rioux
 
 ---
 
