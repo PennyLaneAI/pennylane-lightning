@@ -38,22 +38,22 @@ jobs:
         id: pyver
         run: |
           if [[ ${{ inputs.event_name }} == 'pull_request' ]]; then
-            echo "{python_version}={$(python3 scripts/gen_pyver_matrix.py \
+            echo "python_version=$(python3 scripts/gen_pyver_matrix.py \
               --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-              --max-version=3.${{ env.PYTHON3_MAX_VERSION }})}" >> $GITHUB_OUTPUT
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }})" >> $GITHUB_OUTPUT
           else
-            echo "{python_version}={$(python3 scripts/gen_pyver_matrix.py \
+            echo "python_version=$(python3 scripts/gen_pyver_matrix.py \
               --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-              --max-version=3.${{ env.PYTHON3_MAX_VERSION }} --range)}" >> $GITHUB_OUTPUT
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }} --range)" >> $GITHUB_OUTPUT
           fi
 
       - name: Kokkos execution strategy
         id: exec_model
-        run: echo "{exec_model}=[\"SERIAL\"]" >> $GITHUB_OUTPUT # We may also adopt [OPENMP, THREADS] in later iterations
+        run: echo "exec_model=[\"SERIAL\"]" >> $GITHUB_OUTPUT # We may also adopt [OPENMP, THREADS] in later iterations
 
       - name: Kokkos version
         id: kokkos_version
-        run: echo "{kokkos_version}=[\"3.7.00\"]" >> $GITHUB_OUTPUT
+        run: echo "kokkos_version=[\"3.7.00\"]" >> $GITHUB_OUTPUT
 
     outputs:
       python_version: ${{ steps.pyver.outputs.python_version }}
