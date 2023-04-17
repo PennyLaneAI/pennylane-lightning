@@ -15,8 +15,6 @@ on:
 
 env:
   ARCHS: 'arm64'
-  PYTHON3_MIN_VERSION: "8"
-  PYTHON3_MAX_VERSION: "11"
 
 jobs:
   mac-set-matrix-arm:
@@ -35,15 +33,10 @@ jobs:
       - name: Python version
         id: pyver
         run: |
-          if [[ ${{ github.event_name }} == 'pull_request' ]]; then
-            echo "::set-output name=python_version::$(python3 scripts/gen_pyver_matrix.py \
-              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-              --max-version=3.${{ env.PYTHON3_MAX_VERSION }})"
+          if [[ ${{ inputs.event_name }} == 'pull_request' ]]; then
+            echo "{python_version}={[\"cp38-*\", \"cp311-*\"]}" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=python_version::$(python3 scripts/gen_pyver_matrix.py \
-              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-              --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
-              --range)"
+            echo "{python_version}={[\"cp38-*\", \"cp39-*\", \"cp310-*\", \"cp311-*\"]}" >> $GITHUB_OUTPUT
           fi
 
     outputs:

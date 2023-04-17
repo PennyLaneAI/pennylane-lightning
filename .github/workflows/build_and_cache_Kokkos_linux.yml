@@ -30,11 +30,11 @@ jobs:
 
       - name: Kokkos execution strategy
         id: exec_model
-        run: echo "::set-output name=exec_model::[\"SERIAL\"]" # We may also adopt [OPENMP, THREADS] in later iterations
+        run: echo "{exec_model}={[\"SERIAL\"]}" >> $GITHUB_OUTPUT # We may also adopt [OPENMP, THREADS] in later iterations
 
       - name: Kokkos version
         id: kokkos_version
-        run: echo "::set-output name=kokkos_version::[\"3.7.00\"]"
+        run: echo "{kokkos_version}={[\"3.7.00\"]}" >> $GITHUB_OUTPUT
 
     outputs:
       exec_model: ${{ steps.exec_model.outputs.exec_model }}

@@ -1,9 +1,5 @@
 name: Set wheel build matrix
 
-env:
-  PYTHON3_MIN_VERSION: "8"
-  PYTHON3_MAX_VERSION: "11"
-
 on:
   workflow_call:
     inputs:
@@ -38,23 +34,18 @@ jobs:
         id: pyver
         run: |
           if [[ ${{ inputs.event_name }} == 'pull_request' ]]; then
-            echo "::set-output name=python_version::$(python3 scripts/gen_pyver_matrix.py \
-              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-              --max-version=3.${{ env.PYTHON3_MAX_VERSION }})"
+            echo "{python_version}={[\"cp38-*\", \"cp311-*\"]}" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=python_version::$(python3 scripts/gen_pyver_matrix.py \
-              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-              --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
-              --range)"
+            echo "{python_version}={[\"cp38-*\", \"cp39-*\", \"cp310-*\", \"cp311-*\"]}" >> $GITHUB_OUTPUT
           fi
 
       - name: Kokkos execution strategy
         id: exec_model
-        run: echo "::set-output name=exec_model::[\"SERIAL\"]" # We may also adopt [OPENMP, THREADS] in later iterations
+        run: echo "{exec_model}=[\"SERIAL\"]" >> $GITHUB_OUTPUT # We may also adopt [OPENMP, THREADS] in later iterations
 
       - name: Kokkos version
         id: kokkos_version
-        run: echo "::set-output name=kokkos_version::[\"3.7.00\"]"
+        run: echo "{kokkos_version}=[\"3.7.00\"]" >> $GITHUB_OUTPUT
 
     outputs:
       python_version: ${{ steps.pyver.outputs.python_version }}
