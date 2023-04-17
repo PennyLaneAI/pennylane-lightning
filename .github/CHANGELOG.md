@@ -53,8 +53,10 @@ Alternatively, the quantum function itself can return a numpy array of measureme
 array([-0.87758256, -0.47942554])
 ```
 
-
 ### Improvements
+
+* Remove deprecated `set-output` commands from workflow files.
+  [(#437)](https://github.com/PennyLaneAI/pennylane-lightning/pull/437)
 
 * Lightning wheels are now checked with `twine check` post-creation for PyPI compatibility.
   [(#430)](https://github.com/PennyLaneAI/pennylane-lightning/pull/430)
