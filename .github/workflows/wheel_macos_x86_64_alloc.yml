@@ -1,4 +1,4 @@
-name: Wheel::MacOS::Intel
+name: Wheel::MacOS::Intel_Alloc
 
 # **What it does**: Builds python wheels for MacOS (10.15) architecture x86_64 and store it as artifacts.
 #                   Python versions: 3.8, 3.9, 3.10, 3.11.
