@@ -36,14 +36,13 @@ jobs:
         id: pyver
         run: |
           if [[ ${{ github.event_name }} == 'pull_request' ]]; then
-            echo "::set-output name=python_version::$(python3 scripts/gen_pyver_matrix.py \
+            echo "python_version=$(python3 scripts/gen_pyver_matrix.py \
               --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-              --max-version=3.${{ env.PYTHON3_MAX_VERSION }})"
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }})" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=python_version::$(python3 scripts/gen_pyver_matrix.py \
+            echo "python_version=$(python3 scripts/gen_pyver_matrix.py \
               --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-              --max-version=3.${{ env.PYTHON3_MAX_VERSION }} \
-              --range)"
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }} --range)" >> $GITHUB_OUTPUT
           fi
 
     outputs:
@@ -88,7 +87,7 @@ jobs:
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            pip install pybind11 ninja cmake~=3.24.0
+            pip install pybind11 ninja cmake~=3.24.0 setuptools
 
           # Testing of built wheels
           CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
@@ -104,6 +103,11 @@ jobs:
 
         run: |
           python -m cibuildwheel --output-dir wheelhouse
+
+      - name: Validate wheels
+        run: |
+          python -m pip install twine
+          python -m twine check ./wheelhouse/*.whl
 
       - uses: actions/upload-artifact@v2
         if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}

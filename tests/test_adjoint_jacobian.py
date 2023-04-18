@@ -146,22 +146,24 @@ class TestAdjointJacobian:
     def test_pauli_rotation_gradient(self, G, theta, dev):
         """Tests that the automatic gradients of Pauli rotations are correct."""
 
-        with qml.tape.QuantumTape() as tape:
-            qml.QubitStateVector(np.array([1.0, -1.0]) / np.sqrt(2), wires=0)
-            G(theta, wires=[0])
-            qml.expval(qml.PauliZ(0))
+        random_state = np.array(
+            [0.43593284 - 0.02945156j, 0.40812291 + 0.80158023j], requires_grad=False
+        )
+
+        tape = qml.tape.QuantumScript(
+            [G(theta, 0)], [qml.expval(qml.PauliZ(0))], [qml.QubitStateVector(random_state, 0)]
+        )
 
         tape.trainable_params = {1}
 
         calculated_val = dev.adjoint_jacobian(tape)
 
-        h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
         # compare to finite differences
-        tapes, fn = qml.gradients.finite_diff(tape, h=h)
+        tapes, fn = qml.gradients.param_shift(tape)
         numeric_val = fn(qml.execute(tapes, dev, None))
-        assert np.allclose(calculated_val, numeric_val[0][2], atol=tol, rtol=0)
+        assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
     def test_Rot_gradient(self, theta, dev):
@@ -171,7 +173,7 @@ class TestAdjointJacobian:
         params = np.array([theta, theta**3, np.sqrt(2) * theta])
 
         with qml.tape.QuantumTape() as tape:
-            qml.QubitStateVector(np.array([1.0, -1.0]) / np.sqrt(2), wires=0)
+            qml.QubitStateVector(np.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0)
             qml.Rot(*params, wires=[0])
             qml.expval(qml.PauliZ(0))
 
@@ -179,13 +181,12 @@ class TestAdjointJacobian:
 
         calculated_val = dev.adjoint_jacobian(tape)
 
-        h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
         # compare to finite differences
-        tapes, fn = qml.gradients.finite_diff(tape, h=h)
+        tapes, fn = qml.gradients.param_shift(tape)
         numeric_val = fn(qml.execute(tapes, dev, None))
-        assert np.allclose(calculated_val, numeric_val[0][2:], atol=tol, rtol=0)
+        assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("par", [1, -2, 1.623, -0.051, 0])  # integers, floats, zero
     def test_ry_gradient(self, par, tol, dev):
@@ -363,12 +364,9 @@ class TestAdjointJacobian:
 
         tape.trainable_params = set(range(1, 1 + op.num_params))
 
-        h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
-        grad_F = (lambda t, fn: fn(qml.execute(t, dev, None)))(
-            *qml.gradients.finite_diff(tape, h=h)
-        )
+        grad_F = (lambda t, fn: fn(qml.execute(t, dev, None)))(*qml.gradients.param_shift(tape))
         grad_D = dev.adjoint_jacobian(tape)
 
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
@@ -410,12 +408,9 @@ class TestAdjointJacobian:
 
         tape.trainable_params = set(range(1, 1 + op.num_params))
 
-        h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
-        grad_F = (lambda t, fn: fn(qml.execute(t, dev, None)))(
-            *qml.gradients.finite_diff(tape, h=h)
-        )
+        grad_F = (lambda t, fn: fn(qml.execute(t, dev, None)))(*qml.gradients.param_shift(tape))
         grad_D = dev.adjoint_jacobian(tape)
 
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
@@ -425,23 +420,22 @@ class TestAdjointJacobian:
 
         x, y, z = [0.5, 0.3, -0.7]
 
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
-            qml.expval(qml.PauliZ(0))
+        tape = qml.tape.QuantumScript(
+            [qml.RX(0.4, wires=[0]), qml.Rot(x, y, z, wires=[0]), qml.RY(-0.2, wires=[0])],
+            [qml.expval(qml.PauliZ(0))],
+        )
 
         tape.trainable_params = {1, 2, 3}
 
-        h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
         grad_D = dev.adjoint_jacobian(tape)
-        tapes, fn = qml.gradients.finite_diff(tape, h=h)
+        tapes, fn = qml.gradients.param_shift(tape)
         grad_F = fn(qml.execute(tapes, dev, None))
 
         # gradient has the correct shape and every element is nonzero
-        assert grad_D.shape == (1, 3)
+        assert len(grad_D) == 3
+        assert all(isinstance(v, np.ndarray) for v in grad_D)
         assert np.count_nonzero(grad_D) == 3
         # the different methods agree
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
@@ -450,23 +444,22 @@ class TestAdjointJacobian:
         """Tests that gates with multiple free parameters yield correct gradients."""
         x, y, z = [0.5, 0.3, -0.7]
 
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
-            qml.expval(qml.Hermitian([[0, 1], [1, 1]], wires=0))
+        tape = qml.tape.QuantumScript(
+            [qml.RX(0.4, wires=[0]), qml.Rot(x, y, z, wires=[0]), qml.RY(-0.2, wires=[0])],
+            [qml.expval(qml.Hermitian([[0, 1], [1, 1]], wires=0))],
+        )
 
         tape.trainable_params = {1, 2, 3}
 
-        h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
         grad_D = dev.adjoint_jacobian(tape)
-        tapes, fn = qml.gradients.finite_diff(tape, h=h)
+        tapes, fn = qml.gradients.param_shift(tape)
         grad_F = fn(qml.execute(tapes, dev, None))
 
         # gradient has the correct shape and every element is nonzero
-        assert grad_D.shape == (1, 3)
+        assert len(grad_D) == 3
+        assert all(isinstance(v, np.ndarray) for v in grad_D)
         assert np.count_nonzero(grad_D) == 3
         # the different methods agree
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
@@ -480,23 +473,22 @@ class TestAdjointJacobian:
             [1.0, 0.3, 0.3], [qml.PauliX(0) @ qml.PauliX(1), qml.PauliZ(0), qml.PauliZ(1)]
         )
 
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
-            qml.expval(ham)
+        tape = qml.tape.QuantumScript(
+            [qml.RX(0.4, wires=[0]), qml.Rot(x, y, z, wires=[0]), qml.RY(-0.2, wires=[0])],
+            [qml.expval(ham)],
+        )
 
         tape.trainable_params = {1, 2, 3}
 
-        h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
         grad_D = dev.adjoint_jacobian(tape)
-        tapes, fn = qml.gradients.finite_diff(tape, h=h)
+        tapes, fn = qml.gradients.param_shift(tape)
         grad_F = fn(qml.execute(tapes, dev, None))
 
         # gradient has the correct shape and every element is nonzero
-        assert grad_D.shape == (1, 3)
+        assert len(grad_D) == 3
+        assert all(isinstance(v, np.ndarray) for v in grad_D)
         assert np.count_nonzero(grad_D) == 3
         # the different methods agree
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
@@ -912,8 +904,14 @@ def test_integration(returns):
     qnode_def = qml.QNode(circuit, dev_def)
     qnode_lightning = qml.QNode(circuit, dev_lightning, diff_method="adjoint")
 
-    j_def = qml.jacobian(qnode_def)(params)
-    j_lightning = qml.jacobian(qnode_lightning)(params)
+    def casted_to_array_def(params):
+        return np.array(qnode_def(params))
+
+    def casted_to_array_lightning(params):
+        return np.array(qnode_lightning(params))
+
+    j_def = qml.jacobian(casted_to_array_def)(params)
+    j_lightning = qml.jacobian(casted_to_array_lightning)(params)
 
     assert np.allclose(j_def, j_lightning)
 
@@ -936,9 +934,18 @@ def test_integration_chunk_observables():
     qnode_lightning = qml.QNode(circuit, dev_lightning, diff_method="adjoint")
     qnode_lightning_batched = qml.QNode(circuit, dev_lightning_batched, diff_method="adjoint")
 
-    j_def = qml.jacobian(qnode_def)(params)
-    j_lightning = qml.jacobian(qnode_lightning)(params)
-    j_lightning_batched = qml.jacobian(qnode_lightning_batched)(params)
+    def casted_to_array_def(params):
+        return np.array(qnode_def(params))
+
+    def casted_to_array_lightning(params):
+        return np.array(qnode_lightning(params))
+
+    def casted_to_array_batched(params):
+        return np.array(qnode_lightning_batched(params))
+
+    j_def = qml.jacobian(casted_to_array_def)(params)
+    j_lightning = qml.jacobian(casted_to_array_lightning)(params)
+    j_lightning_batched = qml.jacobian(casted_to_array_batched)(params)
 
     assert np.allclose(j_def, j_lightning)
     assert np.allclose(j_def, j_lightning_batched)
@@ -984,7 +991,13 @@ def test_integration_custom_wires(returns):
     qnode_def = qml.QNode(circuit, dev_def)
     qnode_lightning = qml.QNode(circuit, dev_lightning, diff_method="adjoint")
 
-    j_def = qml.jacobian(qnode_def)(params)
-    j_lightning = qml.jacobian(qnode_lightning)(params)
+    def casted_to_array_def(params):
+        return np.array(qnode_def(params))
+
+    def casted_to_array_lightning(params):
+        return np.array(qnode_lightning(params))
+
+    j_def = qml.jacobian(casted_to_array_def)(params)
+    j_lightning = qml.jacobian(casted_to_array_lightning)(params)
 
     assert np.allclose(j_def, j_lightning)
