@@ -113,7 +113,7 @@ def _serialize_hamiltonian(ob, wires_map: dict, use_csingle: bool):
 
 
 def _serialize_pauli_word(ob, wires_map: dict, use_csingle: bool):
-    """Serialize a PauliWord into a Named or Tensor."""
+    """Serialize a :class:`pennylane.pauli.PauliWord` into a Named or Tensor observable."""
     if use_csingle:
         named_obs = NamedObsC64
         tensor_obs = TensorProdObsC64
@@ -131,7 +131,7 @@ def _serialize_pauli_word(ob, wires_map: dict, use_csingle: bool):
 
 
 def _serialize_pauli_sentence(ob, wires_map: dict, use_csingle: bool):
-    """Serialize a PauliSentence into a Hamiltonian."""
+    """Serialize a :class:`pennylane.pauli.PauliSentence` into a Hamiltonian."""
     if use_csingle:
         rtype = np.float32
         hamiltonian_obs = HamiltonianC64
