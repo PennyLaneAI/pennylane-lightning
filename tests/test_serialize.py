@@ -68,6 +68,7 @@ from pennylane_lightning.lightning_qubit_ops.adjoint_diff import (
         ),
         (qml.Projector([0], wires=0), HermitianObsC64),
         (qml.Hamiltonian([1], [qml.PauliZ(0)]), HamiltonianC64),
+        (qml.sum(qml.Hadamard(0), qml.PauliX(1)), HermitianObsC64),
     ],
 )
 def test_obs_returns_expected_type(obs, obs_type):

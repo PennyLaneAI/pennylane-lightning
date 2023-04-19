@@ -55,12 +55,7 @@ try:
 except ImportError:
     pass
 
-pauli_name_map = {
-    "I": "Identity",
-    "X": "PauliX",
-    "Y": "PauliY",
-    "Z": "PauliZ",
-}
+pauli_name_map = {k: v.__name__ for k, v in qml.pauli.pauli_arithmetic.op_map.items()}
 
 
 def _serialize_named_obs(ob, wires_map: dict, use_csingle: bool):
