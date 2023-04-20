@@ -213,3 +213,27 @@ def test_arbitrary_inv_unitary_correct():
 
     random_unitary_inv = random_unitary.conj().T
     assert np.allclose(unitary, random_unitary_inv)
+
+
+@pytest.mark.skipif(not LightningQubit._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+@pytest.mark.parametrize(
+    "obs,has_rotation",
+    [
+        (qml.Hamiltonian([1], [qml.PauliY(0)]), False),
+        (qml.sum(qml.PauliZ(0), qml.PauliX(1)), False),
+        (qml.PauliX(0), True),
+        (qml.sum(qml.PauliZ(0), qml.Hermitian(qml.PauliX(1).matrix(), 1)), True),
+    ],
+)
+def test_get_diagonalizing_gates(obs, has_rotation):
+    """Tests that _get_diagonalizing_gates filters measurements as expected."""
+    dev = qml.device("lightning.qubit", wires=2)
+    qs = qml.tape.QuantumScript(measurements=[qml.expval(obs)])
+    actual = dev._get_diagonalizing_gates(qs)
+    if has_rotation:
+        expected = obs.diagonalizing_gates()
+        assert len(actual) == len(expected)
+        for rot_actual, rot_expected in zip(actual, expected):
+            assert qml.equal(rot_actual, rot_expected)
+    else:
+        assert len(actual) == 0
