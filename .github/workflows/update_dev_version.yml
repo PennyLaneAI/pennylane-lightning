@@ -1,6 +1,6 @@
 name: Update dev version automatically
 on:
-  # pull_request:
+  pull_request:
 
 jobs:
   update-dev-version:
