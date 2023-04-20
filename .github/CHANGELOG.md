@@ -3,7 +3,11 @@
 ### New features since last release
 
 * Add MCMC sampler.
-[(#384)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/384)
+  [(#384)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/384)
+
+* Serialize PennyLane's arithmetic operators when they are used as observables
+  that are expressed in the Pauli basis.
+  [(#424)](https://github.com/PennyLaneAI/pennylane-lightning/pull/424)
 
 ### Breaking changes
 
@@ -75,7 +79,7 @@ array([-0.87758256, -0.47942554])
 
 This release contains contributions from (in alphabetical order):
 
-Chae-Yeun Park, Christina Lee, Lee James O'Riordan, Vincent Michaud-Rioux
+Christina Lee, Vincent Michaud-Rioux, Lee James O'Riordan, Chae-Yeun Park, Matthew Silverman
 
 ---
 

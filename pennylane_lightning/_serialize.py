@@ -20,13 +20,14 @@ import numpy as np
 from pennylane import (
     BasisState,
     Hadamard,
-    Projector,
-    Hamiltonian,
+    PauliX,
+    PauliY,
+    PauliZ,
+    Identity,
     QubitStateVector,
     Rot,
 )
-from pennylane.grouping import is_pauli_word
-from pennylane.operation import Observable, Tensor
+from pennylane.operation import Tensor
 from pennylane.tape import QuantumTape
 from pennylane.math import unwrap
 
@@ -54,45 +55,35 @@ try:
 except ImportError:
     pass
 
-
-def _obs_has_kernel(ob: Observable) -> bool:
-    """Returns True if the input observable has a supported kernel in the C++ backend.
-
-    Args:
-        ob (Observable): the input observable
-
-    Returns:
-        bool: indicating whether ``obs`` has a dedicated kernel in the backend
-    """
-    if is_pauli_word(ob):
-        return True
-    if isinstance(ob, (Hadamard)):
-        return True
-    if isinstance(ob, Hamiltonian):
-        return all(_obs_has_kernel(o) for o in ob.ops)
-    if isinstance(ob, Tensor):
-        return all(_obs_has_kernel(o) for o in ob.obs)
-
-    return False
+pauli_name_map = {
+    "I": "Identity",
+    "X": "PauliX",
+    "Y": "PauliY",
+    "Z": "PauliZ",
+}
 
 
-def _serialize_named_hermitian_ob(o, wires_map: dict, use_csingle: bool):
-    """Serializes an observable (Named or Hermitian)"""
+def _serialize_named_obs(ob, wires_map: dict, use_csingle: bool):
+    """Serializes a Named observable"""
+    named_obs = NamedObsC64 if use_csingle else NamedObsC128
+    wires = [wires_map[w] for w in ob.wires]
+    if ob.name == "Identity":
+        wires = wires[:1]
+    return named_obs(ob.name, wires)
+
+
+def _serialize_hermitian_ob(o, wires_map: dict, use_csingle: bool):
+    """Serializes a Hermitian observable"""
     assert not isinstance(o, Tensor)
 
     if use_csingle:
         ctype = np.complex64
-        named_obs = NamedObsC64
         hermitian_obs = HermitianObsC64
     else:
         ctype = np.complex128
-        named_obs = NamedObsC128
         hermitian_obs = HermitianObsC128
 
-    wires_list = o.wires.tolist()
-    wires = [wires_map[w] for w in wires_list]
-    if _obs_has_kernel(o):
-        return named_obs(o.name, wires)
+    wires = [wires_map[w] for w in o.wires]
     return hermitian_obs(qml.matrix(o).ravel().astype(ctype), wires)
 
 
@@ -121,13 +112,50 @@ def _serialize_hamiltonian(ob, wires_map: dict, use_csingle: bool):
     return hamiltonian_obs(coeffs, terms)
 
 
+def _serialize_pauli_word(ob, wires_map: dict, use_csingle: bool):
+    """Serialize a :class:`pennylane.pauli.PauliWord` into a Named or Tensor observable."""
+    if use_csingle:
+        named_obs = NamedObsC64
+        tensor_obs = TensorProdObsC64
+    else:
+        named_obs = NamedObsC128
+        tensor_obs = TensorProdObsC128
+
+    if len(ob) == 1:
+        wire, pauli = list(ob.items())[0]
+        return named_obs(pauli_name_map[pauli], [wires_map[wire]])
+
+    return tensor_obs(
+        [named_obs(pauli_name_map[pauli], [wires_map[wire]]) for wire, pauli in ob.items()]
+    )
+
+
+def _serialize_pauli_sentence(ob, wires_map: dict, use_csingle: bool):
+    """Serialize a :class:`pennylane.pauli.PauliSentence` into a Hamiltonian."""
+    if use_csingle:
+        rtype = np.float32
+        hamiltonian_obs = HamiltonianC64
+    else:
+        rtype = np.float64
+        hamiltonian_obs = HamiltonianC128
+
+    pwords, coeffs = zip(*ob.items())
+    terms = [_serialize_pauli_word(pw, wires_map, use_csingle) for pw in pwords]
+    coeffs = np.array(coeffs).astype(rtype)
+    return hamiltonian_obs(coeffs, terms)
+
+
 def _serialize_ob(ob, wires_map, use_csingle):
     if isinstance(ob, Tensor):
         return _serialize_tensor_ob(ob, wires_map, use_csingle)
     elif ob.name == "Hamiltonian":
         return _serialize_hamiltonian(ob, wires_map, use_csingle)
+    elif isinstance(ob, (PauliX, PauliY, PauliZ, Identity, Hadamard)):
+        return _serialize_named_obs(ob, wires_map, use_csingle)
+    elif ob._pauli_rep is not None:
+        return _serialize_pauli_sentence(ob._pauli_rep, wires_map, use_csingle)
     else:
-        return _serialize_named_hermitian_ob(ob, wires_map, use_csingle)
+        return _serialize_hermitian_ob(ob, wires_map, use_csingle)
 
 
 def _serialize_observables(tape: QuantumTape, wires_map: dict, use_csingle: bool = False) -> List:
