@@ -235,3 +235,5 @@ def test_get_diagonalizing_gates(obs, has_rotation):
         assert len(actual) == len(expected)
         for rot_actual, rot_expected in zip(actual, expected):
             assert qml.equal(rot_actual, rot_expected)
+    else:
+        assert len(actual) == 0

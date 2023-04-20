@@ -969,7 +969,7 @@ class LightningQubit(QubitDevice):
             isinstance(obs, qml.ops.Sum) and obs._pauli_rep is not None
         )
         meas_filtered = list(
-            filter(lambda m: m.obs is not None or not skip_diagonalizing(m), circuit.measurements)
+            filter(lambda m: m.obs is None or not skip_diagonalizing(m.obs), circuit.measurements)
         )
         return super()._get_diagonalizing_gates(qml.tape.QuantumScript(measurements=meas_filtered))
 
