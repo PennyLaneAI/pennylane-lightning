@@ -64,7 +64,7 @@ jobs:
           key: ${{ inputs.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Clone Kokkos repository
-        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           git clone https://github.com/kokkos/kokkos.git
           cd kokkos
