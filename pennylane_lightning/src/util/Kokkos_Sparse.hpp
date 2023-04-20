@@ -117,6 +117,10 @@ const_crs_matrix_type<fp_precision> create_Kokkos_Sparse_Matrix(
  * @param numNNZ        number of non-zero elements.
  * @param result        result of the matrix vector multiplication
  */
+
+static std::mutex kokkos_init_mutex;
+static bool kokkos_final_reg = false;
+
 template <class fp_precision, class index_type>
 void apply_Sparse_Matrix_Kokkos(
     const std::complex<fp_precision> *vector_ptr, const index_type vector_size,
@@ -124,7 +128,12 @@ void apply_Sparse_Matrix_Kokkos(
     const index_type *entries_ptr, const std::complex<fp_precision> *values_ptr,
     const index_type numNNZ, std::vector<std::complex<fp_precision>> &result) {
 
-    Kokkos::initialize();
+    {
+        const std::lock_guard<std::mutex> lock(kokkos_init_mutex);
+        if (!Kokkos::is_initialized()) {
+            Kokkos::initialize();
+        }
+    }
     {
         const_data_view_type<fp_precision> vector_view(vector_ptr, vector_size);
         result.resize(vector_size);
@@ -139,7 +148,17 @@ void apply_Sparse_Matrix_Kokkos(
         KokkosSparse::spmv("N", alpha, sparse_matrix, vector_view, beta,
                            result_view);
     }
-    Kokkos::finalize();
+    {
+        const std::lock_guard<std::mutex> lock(kokkos_init_mutex);
+        if (!kokkos_final_reg) {
+            kokkos_final_reg = true;
+            std::atexit([]() {
+                if (!Kokkos::is_finalized()) {
+                    Kokkos::finalize();
+                }
+            });
+        }
+    }
 };
 
 } // namespace Pennylane::Util
