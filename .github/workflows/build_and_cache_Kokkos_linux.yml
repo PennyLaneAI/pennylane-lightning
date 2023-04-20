@@ -64,7 +64,7 @@ jobs:
           key: ${{ inputs.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Clone Kokkos repository
-        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           git clone https://github.com/kokkos/kokkos.git
           cd kokkos
@@ -77,12 +77,12 @@ jobs:
           cd -
 
       - name: Install dependencies (Ubuntu)
-        if: ${{ (((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04')) }} # && (steps.kokkos-cache.outputs.cache-hit != 'true')) }}
+        if: ${{ (((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04')) && (steps.kokkos-cache.outputs.cache-hit != 'true')) }}
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build git
 
       - name: Build Kokkos core library (Ubuntu)
-        if: ${{ (((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04')) }} # && (steps.kokkos-cache.outputs.cache-hit != 'true')) }}
+        if: ${{ (((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04')) && (steps.kokkos-cache.outputs.cache-hit != 'true')) }}
         run: |
           mkdir -p ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos
@@ -99,7 +99,7 @@ jobs:
           cd -
 
       - name: Build Kokkos kernels library (Ubuntu)
-        if: ${{ (((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04')) }} # && (steps.kokkos-cache.outputs.cache-hit != 'true')) }}
+        if: ${{ (((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04')) && (steps.kokkos-cache.outputs.cache-hit != 'true')) }}
         run: |
           mkdir -p ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos-kernels

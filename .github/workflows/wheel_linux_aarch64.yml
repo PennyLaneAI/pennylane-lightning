@@ -46,7 +46,7 @@ jobs:
           key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Clone Kokkos libs
-        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           git clone https://github.com/kokkos/kokkos.git
           cd kokkos
@@ -62,7 +62,7 @@ jobs:
         name: Set up QEMU
 
       - name: Build Kokkos core library
-        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos
@@ -85,7 +85,7 @@ jobs:
             cmake --install ./Build; "
           cd -
       - name: Build Kokkos kernels library
-        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           cd kokkos-kernels
           docker run --platform linux/aarch64 \
