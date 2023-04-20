@@ -136,183 +136,193 @@ concept TwoQubitGateWithoutParam = SymmetricTwoQubitGateWithoutParam<T> ||
     AsymmetricTwoQubitGateWithoutParam<T>;
 
 namespace Internal {
-// InternalInternal for two qubit gates with param begin
-template <SymmetricTwoQubitGateWithParam AVXImpl, typename ParamT,
-          size_t control, size_t... target>
-constexpr auto InternalInternalFunctions_IterTargets(
-    [[maybe_unused]] std::index_sequence<target...> dummy) {
-    return std::array{&AVXImpl::template applyInternalInternal<
-        std::min(control, target), std::max(control, target), ParamT>...};
-}
-template <AsymmetricTwoQubitGateWithParam AVXImpl, typename ParamT,
-          size_t control, size_t... target>
-constexpr auto InternalInternalFunctions_IterTargets(
-    [[maybe_unused]] std::index_sequence<target...> dummy) {
-    return std::array{
-        &AVXImpl::template applyInternalInternal<control, target, ParamT>...};
-}
-template <TwoQubitGateWithParam AVXImpl, typename ParamT, size_t... control>
-constexpr auto InternalInternalFunctions_Iter(
-    [[maybe_unused]] std::index_sequence<control...> dummy) {
-    constexpr size_t internal_wires =
-        Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
-    return Util::tuple_to_array(std::tuple{
-        InternalInternalFunctions_IterTargets<AVXImpl, ParamT, control>(
-            std::make_index_sequence<internal_wires>())...});
-}
-/**
- * @brief Generate an array of function pointers
- * to ``applyInternalInternal`` functions with different internal (control and
- * target) wires.
- *
- * @tparam AVXImpl Class implementing AVX2/512 gates which are symmetric and
- * with a parameter
- */
-template <TwoQubitGateWithParam AVXImpl, typename ParamT>
-constexpr auto InternalInternalFunctions() {
-    constexpr size_t internal_wires =
-        Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
-    return InternalInternalFunctions_Iter<AVXImpl, ParamT>(
-        std::make_index_sequence<internal_wires>());
-}
-// InternalInternal for two qubit gates with param end
+    // InternalInternal for two qubit gates with param begin
+    template <SymmetricTwoQubitGateWithParam AVXImpl, typename ParamT,
+              size_t control, size_t... target>
+    constexpr auto InternalInternalFunctions_IterTargets(
+        [[maybe_unused]] std::index_sequence<target...> dummy) {
+        return std::array{&AVXImpl::template applyInternalInternal<
+            std::min(control, target), std::max(control, target), ParamT>...};
+    }
+    template <AsymmetricTwoQubitGateWithParam AVXImpl, typename ParamT,
+              size_t control, size_t... target>
+    constexpr auto InternalInternalFunctions_IterTargets(
+        [[maybe_unused]] std::index_sequence<target...> dummy) {
+        return std::array{
+            &AVXImpl::template applyInternalInternal<control, target,
+                                                     ParamT>...};
+    }
+    template <TwoQubitGateWithParam AVXImpl, typename ParamT, size_t... control>
+    constexpr auto InternalInternalFunctions_Iter(
+        [[maybe_unused]] std::index_sequence<control...> dummy) {
+        constexpr size_t internal_wires =
+            Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
+        return Util::tuple_to_array(std::tuple{
+            InternalInternalFunctions_IterTargets<AVXImpl, ParamT, control>(
+                std::make_index_sequence<internal_wires>())...});
+    }
+    /**
+     * @brief Generate an array of function pointers
+     * to ``applyInternalInternal`` functions with different internal (control
+     * and target) wires.
+     *
+     * @tparam AVXImpl Class implementing AVX2/512 gates which are symmetric and
+     * with a parameter
+     */
+    template <TwoQubitGateWithParam AVXImpl, typename ParamT>
+    constexpr auto InternalInternalFunctions() {
+        constexpr size_t internal_wires =
+            Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
+        return InternalInternalFunctions_Iter<AVXImpl, ParamT>(
+            std::make_index_sequence<internal_wires>());
+    }
+    // InternalInternal for two qubit gates with param end
 
-// InternalInternal for two qubit gates without param start
-template <AsymmetricTwoQubitGateWithoutParam AVXImpl, size_t control,
-          size_t... target>
-constexpr auto InternalInternalFunctions_IterTargets(
-    [[maybe_unused]] std::index_sequence<target...> dummy) {
-    return std::array{
-        &AVXImpl::template applyInternalInternal<control, target>...};
-}
-template <SymmetricTwoQubitGateWithoutParam AVXImpl, size_t control,
-          size_t... target>
-constexpr auto InternalInternalFunctions_IterTargets(
-    [[maybe_unused]] std::index_sequence<target...> dummy) {
-    return std::array{
-        &AVXImpl::template applyInternalInternal<std::min(control, target),
-                                                 std::max(control, target)>...};
-}
+    // InternalInternal for two qubit gates without param start
+    template <AsymmetricTwoQubitGateWithoutParam AVXImpl, size_t control,
+              size_t... target>
+    constexpr auto InternalInternalFunctions_IterTargets(
+        [[maybe_unused]] std::index_sequence<target...> dummy) {
+        return std::array{
+            &AVXImpl::template applyInternalInternal<control, target>...};
+    }
+    template <SymmetricTwoQubitGateWithoutParam AVXImpl, size_t control,
+              size_t... target>
+    constexpr auto InternalInternalFunctions_IterTargets(
+        [[maybe_unused]] std::index_sequence<target...> dummy) {
+        return std::array{&AVXImpl::template applyInternalInternal<
+            std::min(control, target), std::max(control, target)>...};
+    }
 
-template <TwoQubitGateWithoutParam AVXImpl, size_t... control>
-constexpr auto InternalInternalFunctions_Iter(
-    [[maybe_unused]] std::index_sequence<control...> dummy) {
-    constexpr size_t internal_wires =
-        Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
-    return Util::tuple_to_array(
-        std::tuple{InternalInternalFunctions_IterTargets<AVXImpl, control>(
-            std::make_index_sequence<internal_wires>())...});
-}
+    template <TwoQubitGateWithoutParam AVXImpl, size_t... control>
+    constexpr auto InternalInternalFunctions_Iter(
+        [[maybe_unused]] std::index_sequence<control...> dummy) {
+        constexpr size_t internal_wires =
+            Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
+        return Util::tuple_to_array(
+            std::tuple{InternalInternalFunctions_IterTargets<AVXImpl, control>(
+                std::make_index_sequence<internal_wires>())...});
+    }
 
-/**
- * @brief Generate an array of function pointers
- * to ``applyInternalInternal`` functions with different internal (control and
- * target) wires.
- *
- * @tparam AVXImpl Class implementing AVX2/512 gates which are symmetric and
- * without parameters
- */
-template <TwoQubitGateWithoutParam AVXImpl>
-constexpr auto InternalInternalFunctions() -> decltype(auto) {
-    constexpr size_t internal_wires =
-        Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
-    return InternalInternalFunctions_Iter<AVXImpl>(
-        std::make_index_sequence<internal_wires>());
-}
+    /**
+     * @brief Generate an array of function pointers
+     * to ``applyInternalInternal`` functions with different internal (control
+     * and target) wires.
+     *
+     * @tparam AVXImpl Class implementing AVX2/512 gates which are symmetric and
+     * without parameters
+     */
+    template <TwoQubitGateWithoutParam AVXImpl>
+    constexpr auto InternalInternalFunctions()->decltype(auto) {
+        constexpr size_t internal_wires =
+            Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
+        return InternalInternalFunctions_Iter<AVXImpl>(
+            std::make_index_sequence<internal_wires>());
+    }
 
-// InternalInternal for two qubit gates without param end
+    // InternalInternal for two qubit gates without param end
 
-// ExternalInternal for two qubit gates without param start
-template <AsymmetricTwoQubitGateWithoutParam AVXImpl, size_t... targets>
-constexpr auto ExternalInternalFunctions_Iter(
-    [[maybe_unused]] std::index_sequence<targets...> dummy) -> decltype(auto) {
-    return Util::tuple_to_array(
-        std::tuple{&AVXImpl::template applyExternalInternal<targets>...});
-}
+    // ExternalInternal for two qubit gates without param start
+    template <AsymmetricTwoQubitGateWithoutParam AVXImpl, size_t... targets>
+    constexpr auto ExternalInternalFunctions_Iter(
+        [[maybe_unused]] std::index_sequence<targets...> dummy)
+        ->decltype(auto) {
+        return Util::tuple_to_array(
+            std::tuple{&AVXImpl::template applyExternalInternal<targets>...});
+    }
 
-/**
- * @brief Generate an array of function pointers to ``applyExternalInternal``
- * functions with different internal (target) wires. Note that
- * ``applyExternalInternal`` functions are only defined for asymmetric gates.
- *
- * @tparam AVXImpl Class implementing AVX2/512 gates which are symmetric and
- * without parameters
- */
-template <AsymmetricTwoQubitGateWithoutParam AVXImpl>
-constexpr auto ExternalInternalFunctions() -> decltype(auto) {
-    constexpr size_t internal_wires =
-        Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
-    return ExternalInternalFunctions_Iter<AVXImpl>(
-        std::make_index_sequence<internal_wires>());
-}
-// ExternalInternal for two qubit gate without param end
+    /**
+     * @brief Generate an array of function pointers to
+     * ``applyExternalInternal`` functions with different internal (target)
+     * wires. Note that
+     * ``applyExternalInternal`` functions are only defined for asymmetric
+     * gates.
+     *
+     * @tparam AVXImpl Class implementing AVX2/512 gates which are symmetric and
+     * without parameters
+     */
+    template <AsymmetricTwoQubitGateWithoutParam AVXImpl>
+    constexpr auto ExternalInternalFunctions()->decltype(auto) {
+        constexpr size_t internal_wires =
+            Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
+        return ExternalInternalFunctions_Iter<AVXImpl>(
+            std::make_index_sequence<internal_wires>());
+    }
+    // ExternalInternal for two qubit gate without param end
 
-// ExternalInternal for two qubit gates with param start
-template <AsymmetricTwoQubitGateWithParam AVXImpl, typename ParamT,
-          size_t... targets>
-constexpr auto ExternalInternalFunctions_Iter(
-    [[maybe_unused]] std::index_sequence<targets...> dummy) -> decltype(auto) {
-    return Util::tuple_to_array(std::tuple{
-        &AVXImpl::template applyExternalInternal<targets, ParamT>...});
-}
+    // ExternalInternal for two qubit gates with param start
+    template <AsymmetricTwoQubitGateWithParam AVXImpl, typename ParamT,
+              size_t... targets>
+    constexpr auto ExternalInternalFunctions_Iter(
+        [[maybe_unused]] std::index_sequence<targets...> dummy)
+        ->decltype(auto) {
+        return Util::tuple_to_array(std::tuple{
+            &AVXImpl::template applyExternalInternal<targets, ParamT>...});
+    }
 
-/**
- * @brief Generate an array of function pointers to ``applyExternalInternal``
- * functions with different internal (target) wires. Note that
- * ``applyExternalInternal`` functions are only defined for asymmetric gates.
- *
- * @tparam AVXImpl Class implementing AVX2/512 gates which are symmetric and
- * with a parameter
- * @tparam ParamT Gate parameter type
- */
-template <AsymmetricTwoQubitGateWithParam AVXImpl, typename ParamT>
-constexpr auto ExternalInternalFunctions() -> decltype(auto) {
-    constexpr size_t internal_wires =
-        Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
-    return ExternalInternalFunctions_Iter<AVXImpl, ParamT>(
-        std::make_index_sequence<internal_wires>());
-}
-// ExternalInternal for two qubit gate with param end
+    /**
+     * @brief Generate an array of function pointers to
+     * ``applyExternalInternal`` functions with different internal (target)
+     * wires. Note that
+     * ``applyExternalInternal`` functions are only defined for asymmetric
+     * gates.
+     *
+     * @tparam AVXImpl Class implementing AVX2/512 gates which are symmetric and
+     * with a parameter
+     * @tparam ParamT Gate parameter type
+     */
+    template <AsymmetricTwoQubitGateWithParam AVXImpl, typename ParamT>
+    constexpr auto ExternalInternalFunctions()->decltype(auto) {
+        constexpr size_t internal_wires =
+            Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
+        return ExternalInternalFunctions_Iter<AVXImpl, ParamT>(
+            std::make_index_sequence<internal_wires>());
+    }
+    // ExternalInternal for two qubit gate with param end
 
-// InternalExternal for two qubit gates without param begin
-template <TwoQubitGateWithoutParam AVXImpl, size_t... controls>
-constexpr auto InternalExternalFunctions_Iter(
-    [[maybe_unused]] std::index_sequence<controls...> dummy) -> decltype(auto) {
-    return std::array{&AVXImpl::template applyInternalExternal<controls>...};
-}
+    // InternalExternal for two qubit gates without param begin
+    template <TwoQubitGateWithoutParam AVXImpl, size_t... controls>
+    constexpr auto InternalExternalFunctions_Iter(
+        [[maybe_unused]] std::index_sequence<controls...> dummy)
+        ->decltype(auto) {
+        return std::array{
+            &AVXImpl::template applyInternalExternal<controls>...};
+    }
 
-template <TwoQubitGateWithoutParam AVXImpl>
-constexpr auto InternalExternalFunctions() -> decltype(auto) {
-    constexpr size_t internal_wires =
-        Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
-    return InternalExternalFunctions_Iter<AVXImpl>(
-        std::make_index_sequence<internal_wires>());
-}
-// InternalExternal for two qubit gates without param end
+    template <TwoQubitGateWithoutParam AVXImpl>
+    constexpr auto InternalExternalFunctions()->decltype(auto) {
+        constexpr size_t internal_wires =
+            Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
+        return InternalExternalFunctions_Iter<AVXImpl>(
+            std::make_index_sequence<internal_wires>());
+    }
+    // InternalExternal for two qubit gates without param end
 
-// InternalExternal for two qubit gates with param start
-template <TwoQubitGateWithParam AVXImpl, typename ParamT, size_t... controls>
-constexpr auto InternalExternalFunctions_Iter(
-    [[maybe_unused]] std::index_sequence<controls...> dummy) -> decltype(auto) {
-    return std::array{
-        &AVXImpl::template applyInternalExternal<controls, ParamT>...};
-}
+    // InternalExternal for two qubit gates with param start
+    template <TwoQubitGateWithParam AVXImpl, typename ParamT,
+              size_t... controls>
+    constexpr auto InternalExternalFunctions_Iter(
+        [[maybe_unused]] std::index_sequence<controls...> dummy)
+        ->decltype(auto) {
+        return std::array{
+            &AVXImpl::template applyInternalExternal<controls, ParamT>...};
+    }
 
-/**
- * @brief Generate an array of function pointers
- * to ``applyInternalExternal`` functions with different internal wires.
- *
- * @tparam AVXImpl Class implementing AVX2/512 gates which are symmetric and
- * with a parameter
- */
-template <TwoQubitGateWithParam AVXImpl, typename ParamT>
-constexpr auto InternalExternalFunctions() -> decltype(auto) {
-    constexpr size_t internal_wires =
-        Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
-    return InternalExternalFunctions_Iter<AVXImpl, ParamT>(
-        std::make_index_sequence<internal_wires>());
-}
-// InternalExternal for two qubit gates with param end
+    /**
+     * @brief Generate an array of function pointers
+     * to ``applyInternalExternal`` functions with different internal wires.
+     *
+     * @tparam AVXImpl Class implementing AVX2/512 gates which are symmetric and
+     * with a parameter
+     */
+    template <TwoQubitGateWithParam AVXImpl, typename ParamT>
+    constexpr auto InternalExternalFunctions()->decltype(auto) {
+        constexpr size_t internal_wires =
+            Util::log2PerfectPower(AVXImpl::packed_size_ / 2);
+        return InternalExternalFunctions_Iter<AVXImpl, ParamT>(
+            std::make_index_sequence<internal_wires>());
+    }
+    // InternalExternal for two qubit gates with param end
 
 } // namespace Internal
 /// @endcond
@@ -377,8 +387,9 @@ class TwoQubitGateWithoutParamHelper {
         const auto max_rev_wire = std::max(rev_wire0, rev_wire1);
 
         if (min_rev_wire < internal_wires) {
-            return (*internal_external_functions[min_rev_wire])(
-                arr, num_qubits, max_rev_wire, inverse);
+            return (*internal_external_functions[min_rev_wire])(arr, num_qubits,
+                                                                max_rev_wire,
+                                                                inverse);
         }
 
         return AVXImpl::applyExternalExternal(arr, num_qubits, rev_wire0,
@@ -500,8 +511,9 @@ class TwoQubitGateWithParamHelper {
         const auto max_rev_wire = std::max(rev_wire0, rev_wire1);
 
         if (min_rev_wire < internal_wires) {
-            return (*internal_external_functions[min_rev_wire])(
-                arr, num_qubits, max_rev_wire, inverse, angle);
+            return (*internal_external_functions[min_rev_wire])(arr, num_qubits,
+                                                                max_rev_wire,
+                                                                inverse, angle);
         }
         return AVXImpl::applyExternalExternal(arr, num_qubits, rev_wire0,
                                               rev_wire1, inverse, angle);
@@ -548,13 +560,15 @@ class TwoQubitGateWithParamHelper {
         }
 
         if (control < internal_wires) {
-            return (*internal_external_functions[control])(
-                arr, num_qubits, target, inverse, angle);
+            return (*internal_external_functions[control])(arr, num_qubits,
+                                                           target, inverse,
+                                                           angle);
         }
 
         if (target < internal_wires) {
-            return (*external_internal_functions[target])(
-                arr, num_qubits, control, inverse, angle);
+            return (*external_internal_functions[target])(arr, num_qubits,
+                                                          control, inverse,
+                                                          angle);
         }
 
         return AVXImpl::applyExternalExternal(arr, num_qubits, control, target,
