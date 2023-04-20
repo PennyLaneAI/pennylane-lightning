@@ -64,7 +64,9 @@ jobs:
 
       - name: Create installation directory
         # if: steps.kokkos-cache.outputs.cache-hit != 'true'
-        run: mkdir -p D:\a\install_dir\${{ matrix.exec_model }}
+        run: |
+          if exist build rd /s /q build
+          mkdir -p D:\a\install_dir\${{ matrix.exec_model }}
 
       - name: Install dependencies
         # if: steps.kokkos-cache.outputs.cache-hit != 'true'
