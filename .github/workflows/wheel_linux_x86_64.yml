@@ -50,19 +50,16 @@ jobs:
           key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Install dependencies (Ubuntu)
-        if: ${{ (matrix.container_img == 'ubuntu-latest') }} #&& (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        if: ${{ (matrix.container_img == 'ubuntu-latest') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
           apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build git
           echo "COMPILER=g++-11" >> $GITHUB_ENV
 
       - name: Install dependencies (CentOS)
-        if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') }} #&& (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
           yum update -y && yum install -y cmake ninja-build
           echo "COMPILER=g++" >> $GITHUB_ENV
-
-      - name: Install cibuildwheel
-        run: python3.8 -m pip install ninja
 
       - name: Clone Kokkos libs
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
@@ -181,7 +178,7 @@ jobs:
             pip install git+https://github.com/PennyLaneAI/pennylane.git@master
 
           CIBW_TEST_COMMAND: |
-            OMP_PROC_BIND=false pl-device-test --device=lightning.qubit --skip-ops --tb=short --no-flaky-report
+            pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
 
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 

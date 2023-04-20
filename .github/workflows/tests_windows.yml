@@ -105,7 +105,7 @@ jobs:
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-Debug
 
       - name: Clone Kokkos libs
-        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           cd D:\a
           git clone https://github.com/kokkos/kokkos.git
@@ -118,18 +118,18 @@ jobs:
           cd ..
 
       - name: Create installation directory
-        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           rm D:\a\install_dir\${{ matrix.exec_model }} -r -fo
           mkdir -p D:\a\install_dir\${{ matrix.exec_model }}
 
       - name: Install dependencies
-        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           python -m pip install cmake build
 
       - name: Build Kokkos core library
-        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           cd D:\a\kokkos
           cmake -BBuild . -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\${{ matrix.exec_model }} `
@@ -144,7 +144,7 @@ jobs:
           cmake --install ./Build --config Debug --verbose
 
       - name: Build Kokkos kernels library
-        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           cd D:\a\kokkos-kernels
           cmake -BBuild . -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\${{ matrix.exec_model }} `
@@ -184,7 +184,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Copy cached libraries
-        # if: steps.kokkos-cache.outputs.cache-hit == 'true'
+        if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
           Copy-Item -Path "D:\a\install_dir\${{ matrix.exec_model }}\" `
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\Kokkos" -Recurse -Force
