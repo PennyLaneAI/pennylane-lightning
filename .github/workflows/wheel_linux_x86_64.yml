@@ -65,7 +65,7 @@ jobs:
         run: python3.8 -m pip install ninja
 
       - name: Clone Kokkos libs
-        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           git clone https://github.com/kokkos/kokkos.git
           cd kokkos
@@ -78,7 +78,7 @@ jobs:
           cd -
 
       - name: Build Kokkos core library
-        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p /root/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos
@@ -95,7 +95,7 @@ jobs:
           cd -
 
       - name: Build Kokkos kernels library
-        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p /root/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos-kernels
