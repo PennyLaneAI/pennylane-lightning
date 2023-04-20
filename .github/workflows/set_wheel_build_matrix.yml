@@ -53,7 +53,7 @@ jobs:
 
       - name: Kokkos version
         id: kokkos_version
-        run: echo "kokkos_version=[\"3.7.00\"]" >> $GITHUB_OUTPUT
+        run: echo "kokkos_version=[\"4.0.00\"]" >> $GITHUB_OUTPUT
 
     outputs:
       python_version: ${{ steps.pyver.outputs.python_version }}
