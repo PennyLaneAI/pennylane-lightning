@@ -76,8 +76,8 @@ using const_data_view_type =
                           device_type, Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
 namespace {
-std::mutex kokkos_init_mutex;
-bool kokkos_final_reg = false;
+std::mutex kokkos_init_mutex;  // NOLINT
+bool kokkos_final_reg = false; // NOLINT
 } // namespace
 
 /**
