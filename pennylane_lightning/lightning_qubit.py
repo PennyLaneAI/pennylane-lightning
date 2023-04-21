@@ -532,7 +532,7 @@ class LightningQubit(QubitDevice):
 
         for op_idx, tp in enumerate(trainable_params):
             # get op_idx-th operator among differentiable operators
-            op, _, _ = tape.get_operation(op_idx, return_op_index=True)
+            op, _, _ = tape.get_operation(op_idx)
             if isinstance(op, Operation) and not isinstance(op, (BasisState, QubitStateVector)):
                 # We now just ignore non-op or state preps
                 tp_shift.append(tp)
@@ -651,7 +651,7 @@ class LightningQubit(QubitDevice):
 
         Args:
             measurements (list): List of measurement processes for vector-Jacobian product. Now it must be expectation values or a quantum state.
-            dy (tensor_like): Gradient-output vector. Must have shape matching the output shape of the corresponding tape, i.e. number of measrurements if the return type is expectation or :math:`2^N` if the return type is statevector
+            dy (tensor_like): Gradient-output vector. Must have shape matching the output shape of the corresponding tape, i.e. number of measurements if the return type is expectation or :math:`2^N` if the return type is statevector
             starting_state (tensor_like): post-forward pass state to start execution with. It should be
                 complex-valued. Takes precedence over ``use_device_state``.
             use_device_state (bool): use current device state to initialize. A forward pass of the same
@@ -963,6 +963,15 @@ class LightningQubit(QubitDevice):
         observable_wires = self.map_wires(observable.wires)
 
         return M.var(observable.name, observable_wires)
+
+    def _get_diagonalizing_gates(self, circuit: qml.tape.QuantumTape) -> List[Operation]:
+        skip_diagonalizing = lambda obs: isinstance(obs, qml.Hamiltonian) or (
+            isinstance(obs, qml.ops.Sum) and obs._pauli_rep is not None
+        )
+        meas_filtered = list(
+            filter(lambda m: m.obs is None or not skip_diagonalizing(m.obs), circuit.measurements)
+        )
+        return super()._get_diagonalizing_gates(qml.tape.QuantumScript(measurements=meas_filtered))
 
 
 if not CPP_BINARY_AVAILABLE:

@@ -21,7 +21,7 @@ import pennylane_lightning
 from pennylane_lightning._serialize import (
     _serialize_observables,
     _serialize_ops,
-    _obs_has_kernel,
+    _serialize_ob,
 )
 import pytest
 from unittest import mock
@@ -43,52 +43,37 @@ from pennylane_lightning.lightning_qubit_ops.adjoint_diff import (
 )
 
 
-class TestObsHasKernel:
-    """Tests for the _obs_has_kernel function"""
-
-    def test_pauli_z(self):
-        """Tests if return is true for a PauliZ observable"""
-        o = qml.PauliZ(0)
-        assert _obs_has_kernel(o)
-
-    def test_tensor_pauli(self):
-        """Tests if return is true for a tensor product of Pauli terms"""
-        o = qml.PauliZ(0) @ qml.PauliZ(1)
-        assert _obs_has_kernel(o)
-
-    def test_hadamard(self):
-        """Tests if return is true for a Hadamard observable"""
-        o = qml.Hadamard(0)
-        assert _obs_has_kernel(o)
-
-    def test_hermitian(self):
-        """Tests if return is false for a Hermitian observable"""
-        o = qml.Hermitian(np.eye(2), wires=0)
-        assert not _obs_has_kernel(o)
-
-    def test_tensor_product_of_valid_terms(self):
-        """Tests if return is true for a tensor product of Pauli, Hadamard, and Hamiltonian terms"""
-        o = qml.PauliZ(0) @ qml.Hadamard(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3)))
-        assert _obs_has_kernel(o)
-
-    def test_tensor_product_of_invalid_terms(self):
-        """Tests if return is false for a tensor product of Hermitian terms"""
-        o = (
-            qml.Hermitian(np.eye(2), wires=0)
-            @ qml.Hermitian(np.eye(2), wires=1)
-            @ qml.Projector([0], wires=2)
-        )
-        assert not _obs_has_kernel(o)
-
-    def test_tensor_product_of_mixed_terms(self):
-        """Tests if return is false for a tensor product of valid and invalid terms"""
-        o = qml.PauliZ(0) @ qml.Hermitian(np.eye(2), wires=1) @ qml.Projector([0], wires=2)
-        assert not _obs_has_kernel(o)
-
-    def test_projector(self):
-        """Tests if return is false for a Projector observable"""
-        o = qml.Projector([0], wires=0)
-        assert not _obs_has_kernel(o)
+@pytest.mark.parametrize(
+    "obs,obs_type",
+    [
+        (qml.PauliZ(0), NamedObsC64),
+        (qml.PauliZ(0) @ qml.PauliZ(1), TensorProdObsC64),
+        (qml.Hadamard(0), NamedObsC64),
+        (qml.Hermitian(np.eye(2), wires=0), HermitianObsC64),
+        (
+            qml.PauliZ(0) @ qml.Hadamard(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3))),
+            TensorProdObsC64,
+        ),
+        (
+            (
+                qml.Hermitian(np.eye(2), wires=0)
+                @ qml.Hermitian(np.eye(2), wires=1)
+                @ qml.Projector([0], wires=2)
+            ),
+            TensorProdObsC64,
+        ),
+        (
+            qml.PauliZ(0) @ qml.Hermitian(np.eye(2), wires=1) @ qml.Projector([0], wires=2),
+            TensorProdObsC64,
+        ),
+        (qml.Projector([0], wires=0), HermitianObsC64),
+        (qml.Hamiltonian([1], [qml.PauliZ(0)]), HamiltonianC64),
+        (qml.sum(qml.Hadamard(0), qml.PauliX(1)), HermitianObsC64),
+    ],
+)
+def test_obs_returns_expected_type(obs, obs_type):
+    """Tests that observables get serialized to the expected type."""
+    assert isinstance(_serialize_ob(obs, dict(enumerate(obs.wires)), True), obs_type)
 
 
 class TestSerializeObs:
@@ -176,7 +161,7 @@ class TestSerializeObs:
             ),
             [0, 1],
         )
-        s[0] == s_expected
+        assert s[0] == s_expected
 
     @pytest.mark.parametrize("use_csingle", [True, False])
     def test_hermitian_tensor_return(self, use_csingle):
@@ -233,7 +218,6 @@ class TestSerializeObs:
         with qml.tape.QuantumTape() as tape:
             qml.expval(ham)
 
-        obs_str = "HamiltonianC64" if use_csingle else "HamiltonianC128"
         hamiltonian_obs = HamiltonianC64 if use_csingle else HamiltonianC128
         named_obs = NamedObsC64 if use_csingle else NamedObsC128
         hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
@@ -274,7 +258,6 @@ class TestSerializeObs:
             )
             qml.expval(ham @ qml.PauliZ(3))
 
-        obs_str = "HamiltonianC64" if use_csingle else "HamiltonianC128"
         hamiltonian_obs = HamiltonianC64 if use_csingle else HamiltonianC128
         named_obs = NamedObsC64 if use_csingle else NamedObsC128
         hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
@@ -328,7 +311,6 @@ class TestSerializeObs:
             qml.expval(ham1)
             qml.expval(ham2)
 
-        obs_str = "HamiltonianC64" if use_csingle else "HamiltonianC128"
         hamiltonian_obs = HamiltonianC64 if use_csingle else HamiltonianC128
         named_obs = NamedObsC64 if use_csingle else NamedObsC128
         hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
@@ -369,7 +351,7 @@ class TestSerializeObs:
 
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("ObsChunk", list(range(1, 5)))
-    def test_chunk_obs(self, monkeypatch, use_csingle, ObsChunk):
+    def test_chunk_obs(self, use_csingle, ObsChunk):
         """Test chunking of observable array"""
         with qml.tape.QuantumTape() as tape:
             qml.expval(qml.PauliZ(0) @ qml.PauliX(1))
@@ -381,6 +363,55 @@ class TestSerializeObs:
 
         obtained_chunks = pennylane_lightning.lightning_qubit._chunk_iterable(s, ObsChunk)
         assert len(list(obtained_chunks)) == int(np.ceil(len(s) / ObsChunk))
+
+    @pytest.mark.parametrize(
+        "obs,coeffs,terms",
+        [
+            (qml.prod(qml.PauliZ(0), qml.PauliX(1)), [1], [[("PauliX", 1), ("PauliZ", 0)]]),
+            (qml.s_prod(0.1, qml.PauliX(0)), [0.1], ("PauliX", 0)),
+            (
+                qml.sum(
+                    0.5 * qml.prod(qml.PauliX(0), qml.PauliZ(1)),
+                    0.1 * qml.prod(qml.PauliZ(0), qml.PauliY(1)),
+                ),
+                [0.5, 0.1],
+                [[("PauliZ", 1), ("PauliX", 0)], [("PauliY", 1), ("PauliZ", 0)]],
+            ),
+        ],
+    )
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    def test_op_arithmetic_uses_hamiltonian(self, use_csingle, obs, coeffs, terms):
+        """Tests that an arithmetic obs with a PauliRep serializes as a Hamiltonian."""
+        tape = qml.tape.QuantumTape(measurements=[qml.expval(obs)])
+        res = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
+        assert len(res) == 1
+        assert isinstance(res[0], HamiltonianC64 if use_csingle else HamiltonianC128)
+
+        hamiltonian_obs = HamiltonianC64 if use_csingle else HamiltonianC128
+        tensor_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
+        named_obs = NamedObsC64 if use_csingle else NamedObsC128
+        rtype = np.float32 if use_csingle else np.float64
+        term_shape = np.array(terms).shape
+
+        if len(term_shape) == 1:  # just a single pauli op
+            expected_terms = [named_obs(terms[0], [terms[1]])]
+        elif len(term_shape) == 3:  # list of tensor products
+            expected_terms = [
+                tensor_obs([named_obs(pauli, [wire]) for pauli, wire in term]) for term in terms
+            ]
+
+        coeffs = np.array(coeffs).astype(rtype)
+        assert res[0] == hamiltonian_obs(coeffs, expected_terms)
+
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    def test_multi_wire_identity(self, use_csingle):
+        """Tests that multi-wire Identity does not fail serialization."""
+        tape = qml.tape.QuantumTape(measurements=[qml.expval(qml.Identity(wires=[1, 2]))])
+        res = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
+        assert len(res) == 1
+
+        named_obs = NamedObsC64 if use_csingle else NamedObsC128
+        assert res[0] == named_obs("Identity", [1])
 
 
 class TestSerializeOps:
