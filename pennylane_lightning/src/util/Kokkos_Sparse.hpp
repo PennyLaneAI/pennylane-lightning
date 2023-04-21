@@ -128,41 +128,40 @@ void apply_Sparse_Matrix_Kokkos(
     const std::complex<fp_precision> *vector_ptr, const index_type vector_size,
     const index_type *row_map_ptr, const index_type row_map_size,
     const index_type *entries_ptr, const std::complex<fp_precision> *values_ptr,
-    const index_type numNNZ, std::vector<std::complex<fp_precision>> &result){
+    const index_type numNNZ, std::vector<std::complex<fp_precision>> &result) {
 
-    {const std::lock_guard<std::mutex> lock(kokkos_init_mutex);
-if (!Kokkos::is_initialized()) {
-    Kokkos::initialize();
-}
-} // namespace Pennylane::Util
-{
-    const_data_view_type<fp_precision> vector_view(vector_ptr, vector_size);
-    result.resize(vector_size);
-    data_view_type<fp_precision> result_view(result.data(), vector_size);
+    {
+        const std::lock_guard<std::mutex> lock(kokkos_init_mutex);
+        if (!Kokkos::is_initialized()) {
+            Kokkos::initialize();
+        }
+    } // namespace Pennylane::Util
+    {
+        const_data_view_type<fp_precision> vector_view(vector_ptr, vector_size);
+        result.resize(vector_size);
+        data_view_type<fp_precision> result_view(result.data(), vector_size);
 
-    const_crs_matrix_type<fp_precision> sparse_matrix =
-        create_Kokkos_Sparse_Matrix(row_map_ptr, row_map_size - 1, entries_ptr,
-                                    values_ptr, numNNZ);
+        const_crs_matrix_type<fp_precision> sparse_matrix =
+            create_Kokkos_Sparse_Matrix(row_map_ptr, row_map_size - 1,
+                                        entries_ptr, values_ptr, numNNZ);
 
-    const data_type<fp_precision> alpha(1.0);
-    const data_type<fp_precision> beta;
-    KokkosSparse::spmv("N", alpha, sparse_matrix, vector_view, beta,
-                       result_view);
-}
-{
-    const std::lock_guard<std::mutex> lock(kokkos_init_mutex);
-    if (!kokkos_final_reg) {
-        kokkos_final_reg = true;
-        std::atexit([]() {
-            if (!Kokkos::is_finalized()) {
-                Kokkos::finalize();
-            }
-        });
+        const data_type<fp_precision> alpha(1.0);
+        const data_type<fp_precision> beta;
+        KokkosSparse::spmv("N", alpha, sparse_matrix, vector_view, beta,
+                           result_view);
+    }
+    {
+        const std::lock_guard<std::mutex> lock(kokkos_init_mutex);
+        if (!kokkos_final_reg) {
+            kokkos_final_reg = true;
+            std::atexit([]() {
+                if (!Kokkos::is_finalized()) {
+                    Kokkos::finalize();
+                }
+            });
+        }
     }
 }
-}
-;
-
 } // namespace Pennylane::Util
 #else
 constexpr bool USE_KOKKOS = false;
