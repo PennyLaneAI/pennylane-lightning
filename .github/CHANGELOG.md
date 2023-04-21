@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Kokkos 4.0 support.
+* Update Kokkos support to 4.0.
   [(#439)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/439)
 
 * Add MCMC sampler.
