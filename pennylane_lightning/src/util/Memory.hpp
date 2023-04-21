@@ -80,10 +80,16 @@ template <class T> class AlignedAllocator {
     const uint32_t alignment_;
 
   public:
+    using pointer = T *;
+    using const_pointer = const T *;
+    using void_pointer = void *;
+    using const_void_pointer = const void *;
     using value_type = T;
     using size_type = std::size_t;
     using difference_type = std::ptrdiff_t;
     using propagate_on_container_move_assignment = std::true_type;
+
+    template <typename U> struct rebind { using other = AlignedAllocator<U>; };
 
     /**
      * @brief Constructor of AlignedAllocator class
@@ -102,8 +108,6 @@ template <class T> class AlignedAllocator {
      * @brief Get alignment of the allocator
      */
     [[nodiscard]] inline uint32_t alignment() const { return alignment_; }
-
-    template <class U> struct rebind { using other = AlignedAllocator<U>; };
 
     template <typename U>
     explicit constexpr AlignedAllocator(
