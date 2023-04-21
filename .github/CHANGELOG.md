@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Kokkos 4.0 support.
+  [(#439)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/439)
+
 * Add MCMC sampler.
   [(#384)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/384)
 
@@ -74,6 +77,9 @@ array([-0.87758256, -0.47942554])
 ### Documentation
 
 ### Bug fixes
+
+* Prevent multiple threads from calling `Kokkos::initialize` or `Kokkos::finalize`.
+  [(#439)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/439)
 
 ### Contributors
 
