@@ -120,9 +120,8 @@ constexpr auto constructMatrixOpsFunctorTupleIter() {
  * @tparam GateImplementation Gate implementation class.
  */
 template <class PrecisionT, class ParamT, class GateImplementation>
-constexpr auto gate_op_functor_tuple =
-    constructGateOpsFunctorTupleIter<PrecisionT, ParamT, GateImplementation,
-                                     0>();
+constexpr auto gate_op_functor_tuple = constructGateOpsFunctorTupleIter<
+    PrecisionT, ParamT, GateImplementation, 0>();
 
 /**
  * @brief Tuple of gate operation and function pointer pairs.

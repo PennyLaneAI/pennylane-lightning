@@ -108,10 +108,11 @@ concept SymmetricTwoQubitGateWithParam =
     HasExternalExternalWithParam<T>::value;
 
 template <class T>
-concept AsymmetricTwoQubitGateWithParam = !
-T::symmetric &&HasInternalInternalWithParam<T>::value
-    &&HasInternalExternalWithParam<T>::value &&HasExternalInternalWithParam<
-        T>::value &&HasExternalExternalWithParam<T>::value;
+concept AsymmetricTwoQubitGateWithParam =
+    !T::symmetric && HasInternalInternalWithParam<T>::value &&
+    HasInternalExternalWithParam<T>::value &&
+    HasExternalInternalWithParam<T>::value &&
+    HasExternalExternalWithParam<T>::value;
 
 template <class T>
 concept SymmetricTwoQubitGateWithoutParam =
@@ -120,10 +121,11 @@ concept SymmetricTwoQubitGateWithoutParam =
     HasExternalExternalWithoutParam<T>::value;
 
 template <class T>
-concept AsymmetricTwoQubitGateWithoutParam = !
-T::symmetric &&HasInternalInternalWithoutParam<T>::value &&
-    HasInternalExternalWithoutParam<T>::value &&HasExternalInternalWithoutParam<
-        T>::value &&HasExternalExternalWithoutParam<T>::value;
+concept AsymmetricTwoQubitGateWithoutParam =
+    !T::symmetric && HasInternalInternalWithoutParam<T>::value &&
+    HasInternalExternalWithoutParam<T>::value &&
+    HasExternalInternalWithoutParam<T>::value &&
+    HasExternalExternalWithoutParam<T>::value;
 
 template <class T>
 concept TwoQubitGateWithParam =
@@ -131,7 +133,7 @@ concept TwoQubitGateWithParam =
 
 template <class T>
 concept TwoQubitGateWithoutParam = SymmetricTwoQubitGateWithoutParam<T> ||
-                                   AsymmetricTwoQubitGateWithoutParam<T>;
+    AsymmetricTwoQubitGateWithoutParam<T>;
 
 namespace Internal {
 // InternalInternal for two qubit gates with param begin
@@ -319,7 +321,7 @@ constexpr auto InternalExternalFunctions() -> decltype(auto) {
  * @brief A helper class for two-qubit gate without parameters.
  */
 template <class AVXImpl>
-    requires TwoQubitGateWithoutParam<AVXImpl>
+requires TwoQubitGateWithoutParam<AVXImpl>
 class TwoQubitGateWithoutParamHelper {
   public:
     using Precision = typename AVXImpl::Precision;
@@ -348,9 +350,7 @@ class TwoQubitGateWithoutParamHelper {
      */
     auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse) const
-        -> ReturnType
-        requires SymmetricTwoQubitGateWithoutParam<AVXImpl>
-    {
+        -> ReturnType requires SymmetricTwoQubitGateWithoutParam<AVXImpl> {
         PL_ASSERT(wires.size() == 2);
 
         constexpr static size_t internal_wires =
@@ -397,9 +397,7 @@ class TwoQubitGateWithoutParamHelper {
      */
     auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse) const
-        -> ReturnType
-        requires AsymmetricTwoQubitGateWithoutParam<AVXImpl>
-    {
+        -> ReturnType requires AsymmetricTwoQubitGateWithoutParam<AVXImpl> {
         PL_ASSERT(wires.size() == 2);
 
         constexpr static size_t internal_wires =
@@ -444,7 +442,7 @@ class TwoQubitGateWithoutParamHelper {
  * @brief A helper class for two-qubit gate without parameters.
  */
 template <class AVXImpl, class ParamT>
-    requires TwoQubitGateWithParam<AVXImpl>
+requires TwoQubitGateWithParam<AVXImpl>
 class TwoQubitGateWithParamHelper {
   public:
     using Precision = typename AVXImpl::Precision;
@@ -474,9 +472,8 @@ class TwoQubitGateWithParamHelper {
      */
     auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse,
-                    ParamT angle) const -> ReturnType
-        requires SymmetricTwoQubitGateWithParam<AVXImpl>
-    {
+                    ParamT angle) const
+        -> ReturnType requires SymmetricTwoQubitGateWithParam<AVXImpl> {
         PL_ASSERT(wires.size() == 2);
 
         constexpr static size_t internal_wires =
@@ -523,9 +520,8 @@ class TwoQubitGateWithParamHelper {
      */
     auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse,
-                    ParamT angle) const -> ReturnType
-        requires AsymmetricTwoQubitGateWithParam<AVXImpl>
-    {
+                    ParamT angle) const
+        -> ReturnType requires AsymmetricTwoQubitGateWithParam<AVXImpl> {
         PL_ASSERT(wires.size() == 2);
 
         constexpr static size_t internal_wires =

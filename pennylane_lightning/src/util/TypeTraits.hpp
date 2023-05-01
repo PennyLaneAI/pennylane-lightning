@@ -20,9 +20,7 @@
 #include <type_traits>
 
 namespace Pennylane::Util {
-template <typename T> struct remove_complex {
-    using type = T;
-};
+template <typename T> struct remove_complex { using type = T; };
 template <typename T> struct remove_complex<std::complex<T>> {
     using type = T;
 };
@@ -55,8 +53,6 @@ template <class F> struct FuncReturn {
 template <class R, class... A> struct FuncReturn<R (*)(A...)> {
     using Type = R;
 };
-template <class R, class... A> struct FuncReturn<R(A...)> {
-    using Type = R;
-};
+template <class R, class... A> struct FuncReturn<R(A...)> { using Type = R; };
 
 } // namespace Pennylane::Util
