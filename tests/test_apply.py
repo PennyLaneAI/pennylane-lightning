@@ -1124,6 +1124,35 @@ class TestLightningQubitIntegration:
 
         assert np.array_equal(outcomes[0], outcomes[1])
 
+    def test_apply_qpe(self, qubit_device, tol):
+        """Test the application of qml.QuantumPhaseEstimation"""
+        dev = qubit_device(wires=2)
+
+        @qml.qnode(dev)
+        def circuit():
+            qml.Hadamard(wires=0)
+            qml.QuantumPhaseEstimation(qml.matrix(qml.Hadamard)(wires=0), [0], [1])
+
+        return qml.probs(wires=[0, 1])
+
+        circuit()
+
+        res_sv = dev.state
+        res_probs = dev.probability([0, 1])
+
+        expected_sv = np.array(
+            [
+                0.85355339 + 0.000000e00j,
+                -0.14644661 - 6.123234e-17j,
+                0.35355339 + 0.000000e00j,
+                0.35355339 + 0.000000e00j,
+            ]
+        )
+        expected_prob = np.array([0.72855339, 0.02144661, 0.125, 0.125])
+
+        assert np.allclose(res_sv, expected_sv, atol=tol, rtol=0)
+        assert np.allclose(res_probs, expected_prob, atol=tol, rtol=0)
+
 
 @pytest.mark.parametrize("theta,phi,varphi", list(zip(THETA, PHI, VARPHI)))
 class TestTensorExpval:
