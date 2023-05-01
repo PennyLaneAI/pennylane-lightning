@@ -50,19 +50,19 @@ jobs:
           key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Install dependencies (Ubuntu)
-        if: ${{ (matrix.container_img == 'ubuntu-latest') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        if: ${{ (matrix.container_img == 'ubuntu-latest') #&& (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
           apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build git
           echo "COMPILER=g++-11" >> $GITHUB_ENV
 
       - name: Install dependencies (CentOS)
-        if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') #&& (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
           yum update -y && yum install -y cmake ninja-build
           echo "COMPILER=g++" >> $GITHUB_ENV
 
       - name: Clone Kokkos libs
-        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        #if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           git clone https://github.com/kokkos/kokkos.git
           cd kokkos
@@ -75,7 +75,7 @@ jobs:
           cd -
 
       - name: Build Kokkos core library
-        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        #if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p /root/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos
@@ -92,7 +92,7 @@ jobs:
           cd -
 
       - name: Build Kokkos kernels library
-        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        #if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p /root/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos-kernels
