@@ -1132,8 +1132,7 @@ class TestLightningQubitIntegration:
         def circuit():
             qml.Hadamard(wires=0)
             qml.QuantumPhaseEstimation(qml.matrix(qml.Hadamard)(wires=0), [0], [1])
-
-        return qml.probs(wires=[0, 1])
+            return qml.probs(wires=[0, 1])
 
         circuit()
 
