@@ -120,7 +120,7 @@ jobs:
       - name: Create installation directory
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
-          Remove-Item -Path D:\a\install_dir\${{ matrix.exec_model }} -Recurse -Force
+          Remove-Item -Path D:\a\install_dir\${{ matrix.exec_model }} -Recurse -Force -ErrorAction Ignore
           mkdir -p D:\a\install_dir\${{ matrix.exec_model }}
 
       - name: Install dependencies
