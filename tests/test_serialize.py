@@ -46,13 +46,13 @@ from pennylane_lightning.lightning_qubit_ops.adjoint_diff import (
 @pytest.mark.parametrize(
     "obs,obs_type",
     [
-        (qml.PauliZ(0), NamedObsC64),
-        (qml.PauliZ(0) @ qml.PauliZ(1), TensorProdObsC64),
-        (qml.Hadamard(0), NamedObsC64),
-        (qml.Hermitian(np.eye(2), wires=0), HermitianObsC64),
+        (qml.PauliZ(0), NamedObsC128),
+        (qml.PauliZ(0) @ qml.PauliZ(1), TensorProdObsC128),
+        (qml.Hadamard(0), NamedObsC128),
+        (qml.Hermitian(np.eye(2), wires=0), HermitianObsC128),
         (
             qml.PauliZ(0) @ qml.Hadamard(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3))),
-            TensorProdObsC64,
+            HamiltonianC128,
         ),
         (
             (
@@ -60,20 +60,20 @@ from pennylane_lightning.lightning_qubit_ops.adjoint_diff import (
                 @ qml.Hermitian(np.eye(2), wires=1)
                 @ qml.Projector([0], wires=2)
             ),
-            TensorProdObsC64,
+            TensorProdObsC128,
         ),
         (
             qml.PauliZ(0) @ qml.Hermitian(np.eye(2), wires=1) @ qml.Projector([0], wires=2),
-            TensorProdObsC64,
+            TensorProdObsC128,
         ),
-        (qml.Projector([0], wires=0), HermitianObsC64),
-        (qml.Hamiltonian([1], [qml.PauliZ(0)]), HamiltonianC64),
-        (qml.sum(qml.Hadamard(0), qml.PauliX(1)), HermitianObsC64),
+        (qml.Projector([0], wires=0), HermitianObsC128),
+        (qml.Hamiltonian([1], [qml.PauliZ(0)]), HamiltonianC128),
+        (qml.sum(qml.Hadamard(0), qml.PauliX(1)), HermitianObsC128),
     ],
 )
 def test_obs_returns_expected_type(obs, obs_type):
     """Tests that observables get serialized to the expected type."""
-    assert isinstance(_serialize_ob(obs, dict(enumerate(obs.wires)), True), obs_type)
+    assert isinstance(_serialize_ob(obs, dict(enumerate(obs.wires)), False), obs_type)
 
 
 class TestSerializeObs:

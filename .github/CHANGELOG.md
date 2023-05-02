@@ -1,9 +1,30 @@
-# Release 0.30.0-dev
+# Release 0.31.0-dev
 
 ### New features since last release
 
 * Update Kokkos support to 4.0.
   [(#439)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/439)
+
+### Breaking changes
+
+### Improvements
+
+### Documentation
+
+### Bug fixes
+
+* Prevent multiple threads from calling `Kokkos::initialize` or `Kokkos::finalize`.
+  [(#439)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/439)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+---
+
+# Release 0.30.0
+
+### New features since last release
 
 * Add MCMC sampler.
   [(#384)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/384)
@@ -73,13 +94,6 @@ array([-0.87758256, -0.47942554])
 
 * Lightning is compatible with clang-tidy version 16.
   [(#429)](https://github.com/PennyLaneAI/pennylane-lightning/pull/429)
-
-### Documentation
-
-### Bug fixes
-
-* Prevent multiple threads from calling `Kokkos::initialize` or `Kokkos::finalize`.
-  [(#439)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/439)
 
 ### Contributors
 
