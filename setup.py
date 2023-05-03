@@ -105,7 +105,7 @@ class CMakeBuild(build_ext):
                         capture_output=True,
                         text=True,
                     ).stdout.strip()
-                
+
                 else:
                     # No brew, use the default clang++ install provided by MacOS
                     llvmpath = shutil.which("clang++")
@@ -130,7 +130,9 @@ class CMakeBuild(build_ext):
                         text=True,
                     ).stdout.strip()
                     configure_args += (
-                        [f"-DOpenMP_ROOT={libomp_path}/"] if libomp_path else ["-DENABLE_OPENMP=OFF"]
+                        [f"-DOpenMP_ROOT={libomp_path}/"]
+                        if libomp_path
+                        else ["-DENABLE_OPENMP=OFF"]
                     )
         elif platform.system() == "Windows":
             configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
@@ -141,10 +143,14 @@ class CMakeBuild(build_ext):
             os.makedirs(self.build_temp)
 
         subprocess.run(
-            ["cmake", str(ext.sourcedir)] + configure_args, cwd=self.build_temp, check=True
+            ["cmake", str(ext.sourcedir)] + configure_args,
+            cwd=self.build_temp,
+            check=True,
         )
         subprocess.run(
-            ["cmake", "--build", ".", "--verbose"] + build_args, cwd=self.build_temp, check=True
+            ["cmake", "--build", ".", "--verbose"] + build_args,
+            cwd=self.build_temp,
+            check=True,
         )
 
 
@@ -152,6 +158,7 @@ with open(os.path.join("pennylane_lightning", "_version.py")) as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
+    "setuptools",
     "pennylane>=0.28",
 ]
 
@@ -164,7 +171,10 @@ info = {
     "license": "Apache License 2.0",
     "packages": find_packages(where="."),
     "package_data": {
-        "pennylane_lightning": [os.path.join("src", "*"), os.path.join("src", "**", "*")]
+        "pennylane_lightning": [
+            os.path.join("src", "*"),
+            os.path.join("src", "**", "*"),
+        ]
     },
     "include_package_data": True,
     "entry_points": {
