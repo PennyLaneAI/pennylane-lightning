@@ -32,7 +32,9 @@ class CMakeBuild(build_ext):
     This class is built upon https://github.com/diegoferigo/cmake-build-extension/blob/master/src/cmake_build_extension/build_extension.py and https://github.com/pybind/cmake_example/blob/master/setup.py
     """
 
-    user_options = build_ext.user_options + [("define=", "D", "Define variables for CMake")]
+    user_options = build_ext.user_options + [
+        ("define=", "D", "Define variables for CMake")
+    ]
 
     def initialize_options(self):
         super().initialize_options()
@@ -99,7 +101,9 @@ class CMakeBuild(build_ext):
                         [
                             "brew",
                             "--prefix",
-                            "llvm" + f"@{brew_llvm_version}" if brew_llvm_version else "",
+                            "llvm" + f"@{brew_llvm_version}"
+                            if brew_llvm_version
+                            else "",
                         ],
                         check=True,
                         capture_output=True,
@@ -158,8 +162,7 @@ with open(os.path.join("pennylane_lightning", "_version.py")) as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
-    "setuptools",
-    "pennylane>=0.28",
+    "pennylane>=0.30",
 ]
 
 info = {
