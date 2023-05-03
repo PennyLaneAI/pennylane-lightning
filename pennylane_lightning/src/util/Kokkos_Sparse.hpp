@@ -122,7 +122,6 @@ const_crs_matrix_type<fp_precision> create_Kokkos_Sparse_Matrix(
  * @param numNNZ        number of non-zero elements.
  * @param result        result of the matrix vector multiplication
  */
-
 template <class fp_precision, class index_type>
 void apply_Sparse_Matrix_Kokkos(
     const std::complex<fp_precision> *vector_ptr, const index_type vector_size,
