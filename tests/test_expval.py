@@ -150,7 +150,7 @@ class TestExpOperatorArithmetic:
         def circuit(x, y):
             qml.RX(x, wires=0)
             qml.RY(y, wires=1)
-            return qml.expval(qml.op_sum(qml.PauliZ(0), qml.PauliX(1)))
+            return qml.expval(qml.sum(qml.PauliZ(0), qml.PauliX(1)))
 
         x = qml.numpy.array(-3.21, requires_grad=True)
         y = qml.numpy.array(2.34, requires_grad=True)
@@ -164,9 +164,7 @@ class TestExpOperatorArithmetic:
     def test_integration(self, diff_method):
         """Test a Combination of `Sum`, `SProd`, and `Prod`."""
 
-        obs = qml.op_sum(
-            qml.s_prod(2.3, qml.PauliZ(0)), -0.5 * qml.prod(qml.PauliY(0), qml.PauliZ(1))
-        )
+        obs = qml.sum(qml.s_prod(2.3, qml.PauliZ(0)), -0.5 * qml.prod(qml.PauliY(0), qml.PauliZ(1)))
 
         @qml.qnode(self.dev, diff_method=diff_method)
         def circuit(x, y):
