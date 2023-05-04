@@ -21,4 +21,6 @@ build:
     - libopenblas-base
     - libopenblas-dev
     - graphviz
-    - libffi-dev
+  jobs:
+    pre_install:
+      - pip install --force-reinstall --no-cache-dir pip~=22.0
