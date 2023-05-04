@@ -21,3 +21,4 @@ build:
     - libopenblas-base
     - libopenblas-dev
     - graphviz
+    - libffi-dev
