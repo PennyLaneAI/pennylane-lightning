@@ -7,6 +7,9 @@
 
 ### Breaking changes
 
+* Update tests to be compliant with PennyLane v0.31.0 development changes and deprecations.
+  [(#448)](https://github.com/PennyLaneAI/pennylane-lightning/pull/448)
+
 ### Improvements
 
 ### Documentation
@@ -19,6 +22,8 @@
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Lee J. O'Riordan
 
 ---
 
