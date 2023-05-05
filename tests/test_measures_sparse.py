@@ -79,7 +79,7 @@ class TestSparseExpval:
             qml.RY(-0.2, wires=[1])
             return qml.expval(
                 qml.SparseHamiltonian(
-                    qml.utils.sparse_hamiltonian(qml.Hamiltonian([1], [cases[0]])), wires=[0, 1]
+                    qml.Hamiltonian([1], [cases[0]]).sparse_matrix(), wires=[0, 1]
                 )
             )
 
