@@ -5,7 +5,7 @@ sphinx:
 
 python:
   install:
-    - requirements: ci_requirements.txt
+    - requirements: ci_build_requirements.txt
     - requirements: doc/requirements.txt
     - requirements: requirements.txt
     - method: pip
@@ -24,5 +24,4 @@ build:
     - graphviz
   jobs:
     pre_install:
-      - echo "setuptools~=66.0" >> ci_requirements.txt
-      - echo "pip~=22.0" >> ci_requirements.txt
+      - echo "setuptools~=66.0\npip~=22.0" >> ci_build_requirements.txt
