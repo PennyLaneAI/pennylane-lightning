@@ -75,6 +75,11 @@ using const_data_view_type =
     typename Kokkos::View<const data_type<fp_precision> *, default_layout,
                           device_type, Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
+namespace {
+std::mutex kokkos_init_mutex;  // NOLINT
+bool kokkos_final_reg = false; // NOLINT
+} // namespace
+
 /**
  * @brief Create a Kokkos Sparse Matrix object with unmanaged views.
  *
@@ -124,7 +129,12 @@ void apply_Sparse_Matrix_Kokkos(
     const index_type *entries_ptr, const std::complex<fp_precision> *values_ptr,
     const index_type numNNZ, std::vector<std::complex<fp_precision>> &result) {
 
-    Kokkos::initialize();
+    {
+        const std::lock_guard<std::mutex> lock(kokkos_init_mutex);
+        if (!Kokkos::is_initialized()) {
+            Kokkos::initialize();
+        }
+    } // namespace Pennylane::Util
     {
         const_data_view_type<fp_precision> vector_view(vector_ptr, vector_size);
         result.resize(vector_size);
@@ -139,9 +149,18 @@ void apply_Sparse_Matrix_Kokkos(
         KokkosSparse::spmv("N", alpha, sparse_matrix, vector_view, beta,
                            result_view);
     }
-    Kokkos::finalize();
-};
-
+    {
+        const std::lock_guard<std::mutex> lock(kokkos_init_mutex);
+        if (!kokkos_final_reg) {
+            kokkos_final_reg = true;
+            std::atexit([]() {
+                if (!Kokkos::is_finalized()) {
+                    Kokkos::finalize();
+                }
+            });
+        }
+    }
+}
 } // namespace Pennylane::Util
 #else
 constexpr bool USE_KOKKOS = false;

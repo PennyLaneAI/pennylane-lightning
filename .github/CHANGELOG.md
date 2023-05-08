@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Update Kokkos support to 4.0.
+  [(#439)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/439)
+
 ### Breaking changes
 
 * Update tests to be compliant with PennyLane v0.31.0 development changes and deprecations.
@@ -12,6 +15,9 @@
 ### Documentation
 
 ### Bug fixes
+
+* Prevent multiple threads from calling `Kokkos::initialize` or `Kokkos::finalize`.
+  [(#439)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/439)
 
 ### Contributors
 

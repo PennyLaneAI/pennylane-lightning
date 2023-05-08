@@ -95,8 +95,8 @@ InternalFunctions_Iter([[maybe_unused]] std::index_sequence<rev_wire...> dummy)
 }
 
 /**
- * @brief Generate an array of function pointers to ``applyInternal`` functions
- * with different rev_wires.
+ * @brief Generate an array of function pointers to ``applyInternal``
+ * functions with different rev_wires.
  *
  * @tparam AVXImpl Class implementing AVX2/512 gates without parameters
  */
@@ -109,8 +109,8 @@ constexpr auto InternalFunctions() -> decltype(auto) {
 }
 
 /**
- * @brief Generate an array of function pointers to ``applyInternal`` functions
- * with different rev_wires.
+ * @brief Generate an array of function pointers to ``applyInternal``
+ * functions with different rev_wires.
  *
  * @tparam AVXImpl Class implementing AVX2/512 gate with a parameter
  */
