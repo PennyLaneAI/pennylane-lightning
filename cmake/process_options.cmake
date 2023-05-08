@@ -107,7 +107,7 @@ macro(FindKokkos target_name)
 
             FetchContent_Declare(kokkos
                                 GIT_REPOSITORY https://github.com/kokkos/kokkos.git
-                                GIT_TAG        4.0.00
+                                GIT_TAG        4.0.01
                                 GIT_SUBMODULES "" # Avoid recursively cloning all submodules
             )
 
@@ -118,7 +118,7 @@ macro(FindKokkos target_name)
 
             FetchContent_Declare(kokkoskernels
                                 GIT_REPOSITORY https://github.com/kokkos/kokkos-kernels.git
-                                GIT_TAG        4.0.00
+                                GIT_TAG        4.0.01
                                 GIT_SUBMODULES "" # Avoid recursively cloning all submodules
             )
 
