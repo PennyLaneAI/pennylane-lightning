@@ -22,6 +22,7 @@ endif()
 ###############################################################################
 # Process options
 ###############################################################################
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/../../cmake")
 include("${PROJECT_SOURCE_DIR}/../../cmake/process_options.cmake")
 
 
