@@ -12,6 +12,9 @@
 
 ### Improvements
 
+* Detect CBLAS if `ENABLE_BLAS=ON` making sure that BLAS is linked as expected.
+  [(#448)](https://github.com/PennyLaneAI/pennylane-lightning/pull/448)
+
 ### Documentation
 
 ### Bug fixes
