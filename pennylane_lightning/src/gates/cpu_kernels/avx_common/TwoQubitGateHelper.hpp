@@ -162,8 +162,8 @@ constexpr auto InternalInternalFunctions_Iter(
 }
 /**
  * @brief Generate an array of function pointers
- * to ``applyInternalInternal`` functions with different internal (control and
- * target) wires.
+ * to ``applyInternalInternal`` functions with different internal (control
+ * and target) wires.
  *
  * @tparam AVXImpl Class implementing AVX2/512 gates which are symmetric and
  * with a parameter
@@ -206,8 +206,8 @@ constexpr auto InternalInternalFunctions_Iter(
 
 /**
  * @brief Generate an array of function pointers
- * to ``applyInternalInternal`` functions with different internal (control and
- * target) wires.
+ * to ``applyInternalInternal`` functions with different internal (control
+ * and target) wires.
  *
  * @tparam AVXImpl Class implementing AVX2/512 gates which are symmetric and
  * without parameters
@@ -231,9 +231,11 @@ constexpr auto ExternalInternalFunctions_Iter(
 }
 
 /**
- * @brief Generate an array of function pointers to ``applyExternalInternal``
- * functions with different internal (target) wires. Note that
- * ``applyExternalInternal`` functions are only defined for asymmetric gates.
+ * @brief Generate an array of function pointers to
+ * ``applyExternalInternal`` functions with different internal (target)
+ * wires. Note that
+ * ``applyExternalInternal`` functions are only defined for asymmetric
+ * gates.
  *
  * @tparam AVXImpl Class implementing AVX2/512 gates which are symmetric and
  * without parameters
@@ -257,9 +259,11 @@ constexpr auto ExternalInternalFunctions_Iter(
 }
 
 /**
- * @brief Generate an array of function pointers to ``applyExternalInternal``
- * functions with different internal (target) wires. Note that
- * ``applyExternalInternal`` functions are only defined for asymmetric gates.
+ * @brief Generate an array of function pointers to
+ * ``applyExternalInternal`` functions with different internal (target)
+ * wires. Note that
+ * ``applyExternalInternal`` functions are only defined for asymmetric
+ * gates.
  *
  * @tparam AVXImpl Class implementing AVX2/512 gates which are symmetric and
  * with a parameter

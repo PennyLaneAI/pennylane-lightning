@@ -32,7 +32,9 @@ class CMakeBuild(build_ext):
     This class is built upon https://github.com/diegoferigo/cmake-build-extension/blob/master/src/cmake_build_extension/build_extension.py and https://github.com/pybind/cmake_example/blob/master/setup.py
     """
 
-    user_options = build_ext.user_options + [("define=", "D", "Define variables for CMake")]
+    user_options = build_ext.user_options + [
+        ("define=", "D", "Define variables for CMake")
+    ]
 
     def initialize_options(self):
         super().initialize_options()
@@ -99,13 +101,15 @@ class CMakeBuild(build_ext):
                         [
                             "brew",
                             "--prefix",
-                            "llvm" + f"@{brew_llvm_version}" if brew_llvm_version else "",
+                            "llvm" + f"@{brew_llvm_version}"
+                            if brew_llvm_version
+                            else "",
                         ],
                         check=True,
                         capture_output=True,
                         text=True,
                     ).stdout.strip()
-                
+
                 else:
                     # No brew, use the default clang++ install provided by MacOS
                     llvmpath = shutil.which("clang++")
@@ -130,7 +134,9 @@ class CMakeBuild(build_ext):
                         text=True,
                     ).stdout.strip()
                     configure_args += (
-                        [f"-DOpenMP_ROOT={libomp_path}/"] if libomp_path else ["-DENABLE_OPENMP=OFF"]
+                        [f"-DOpenMP_ROOT={libomp_path}/"]
+                        if libomp_path
+                        else ["-DENABLE_OPENMP=OFF"]
                     )
         elif platform.system() == "Windows":
             configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
@@ -141,10 +147,14 @@ class CMakeBuild(build_ext):
             os.makedirs(self.build_temp)
 
         subprocess.run(
-            ["cmake", str(ext.sourcedir)] + configure_args, cwd=self.build_temp, check=True
+            ["cmake", str(ext.sourcedir)] + configure_args,
+            cwd=self.build_temp,
+            check=True,
         )
         subprocess.run(
-            ["cmake", "--build", ".", "--verbose"] + build_args, cwd=self.build_temp, check=True
+            ["cmake", "--build", ".", "--verbose"] + build_args,
+            cwd=self.build_temp,
+            check=True,
         )
 
 
@@ -152,7 +162,7 @@ with open(os.path.join("pennylane_lightning", "_version.py")) as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
-    "pennylane>=0.28",
+    "pennylane>=0.30",
 ]
 
 info = {
@@ -164,7 +174,10 @@ info = {
     "license": "Apache License 2.0",
     "packages": find_packages(where="."),
     "package_data": {
-        "pennylane_lightning": [os.path.join("src", "*"), os.path.join("src", "**", "*")]
+        "pennylane_lightning": [
+            os.path.join("src", "*"),
+            os.path.join("src", "**", "*"),
+        ]
     },
     "include_package_data": True,
     "entry_points": {
