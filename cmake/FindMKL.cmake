@@ -29,7 +29,7 @@ if (NOT MKLROOT_PATH)
             message(STATUS "Found MKL: ${P}")
             break()
         endif ()
-  endforeach()
+    endforeach()
 endif ()
 
 ###########################################################
