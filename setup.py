@@ -13,7 +13,6 @@
 # limitations under the License.
 import os
 import platform
-import sys
 import subprocess
 import shutil
 from pathlib import Path
@@ -79,69 +78,10 @@ class CMakeBuild(build_ext):
         configure_args += self.cmake_defines
 
         # Add more platform dependent options
-        # Add more platform dependent options
         if platform.system() == "Windows":
             configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
         elif platform.system() not in ["Darwin", "Linux"]:
             raise RuntimeError(f"Unsupported '{platform.system()}' platform")
-        # if platform.system() == "Darwin":
-        #     # To support ARM64
-        #     if os.getenv("ARCHS") == "arm64":
-        #         configure_args += [
-        #             "-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11",
-        #             "-DCMAKE_SYSTEM_NAME=Darwin",
-        #             "-DCMAKE_SYSTEM_PROCESSOR=ARM64",
-        #             "-DENABLE_OPENMP=OFF",
-        #         ]
-        #     else:  # X64 arch
-        #         # If we explicitly request a brew LLVM version, use that
-        #         if os.getenv("BREW_LLVM_VERSION") and shutil.which("brew"):
-        #             brew_llvm_version = os.getenv("BREW_LLVM_VERSION")
-        #             llvmpath = subprocess.run(
-        #                 [
-        #                     "brew",
-        #                     "--prefix",
-        #                     "llvm" + f"@{brew_llvm_version}"
-        #                     if brew_llvm_version
-        #                     else "",
-        #                 ],
-        #                 check=True,
-        #                 capture_output=True,
-        #                 text=True,
-        #             ).stdout.strip()
-
-        #         else:
-        #             # No brew, use the default clang++ install provided by MacOS
-        #             llvmpath = shutil.which("clang++")
-        #             llvmpath = Path(llvmpath).parent.parent
-
-        #         # Ensure the appropriate compiler and linker are chosen
-        #         configure_args += [
-        #             f"-DCMAKE_CXX_COMPILER={llvmpath}/bin/clang++",
-        #             f"-DCMAKE_LINKER={llvmpath}/bin/lld",
-        #         ]  # Use clang instead of appleclang
-
-        #         # Try to support OpenMP through libomp if available
-        #         if os.environ.get("USE_OMP") and shutil.which("brew"):
-        #             libomp_path = subprocess.run(
-        #                 [
-        #                     "brew",
-        #                     "--prefix",
-        #                     "libomp",
-        #                 ],
-        #                 check=False,
-        #                 capture_output=True,
-        #                 text=True,
-        #             ).stdout.strip()
-        #             configure_args += (
-        #                 [f"-DOpenMP_ROOT={libomp_path}/"]
-        #                 if libomp_path
-        #                 else ["-DENABLE_OPENMP=OFF"]
-        #             )
-        # elif platform.system() == "Windows":
-        #     configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
-        # elif platform.system() != "Linux":
-        #     raise RuntimeError(f"Unsupported '{platform.system()}' platform")
 
         if not Path(self.build_temp).exists():
             os.makedirs(self.build_temp)

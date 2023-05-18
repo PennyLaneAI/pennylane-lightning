@@ -161,6 +161,9 @@ jobs:
             cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
             pip install ninja cmake~=3.24.0
 
+          CIBW_ENVIRONMENT: |
+            CMAKE_ARGS="-DPYTHON_EXECUTABLE=$(which python)"
+
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
 
           CIBW_BUILD_VERBOSITY: 3

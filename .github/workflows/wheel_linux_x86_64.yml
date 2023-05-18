@@ -170,7 +170,8 @@ jobs:
             yum install devtoolset-11-gcc-c++ -y
             source /opt/rh/devtoolset-11/enable -y
 
-          CIBW_ENVIRONMENT: PATH=/opt/rh/devtoolset-11/root/usr/bin:$PATH
+          CIBW_ENVIRONMENT: |
+            PATH=/opt/rh/devtoolset-11/root/usr/bin:$PATH CMAKE_ARGS="-DPYTHON_EXECUTABLE=$(which python)"
           # Testing of built wheels
           CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
 
@@ -183,6 +184,8 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
           CIBW_BUILD_VERBOSITY: 3
+
+          OMP_PROC_BIND: false
 
         run: python3.8 -m cibuildwheel --output-dir wheelhouse
 

@@ -109,7 +109,7 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          python setup.py build_ext -i --define="ENABLE_KOKKOS=OFF;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
+          python setup.py build_ext -i --define="PYTHON_EXECUTABLE=$(which python);ENABLE_KOKKOS=OFF;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           pip install -e .
 
       - name: Run PennyLane-Lightning unit tests
@@ -227,7 +227,7 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          python setup.py build_ext -i --define="ENABLE_BLAS=ON;ENABLE_KOKKOS=OFF;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
+          python setup.py build_ext -i --define="PYTHON_EXECUTABLE=$(which python);ENABLE_BLAS=ON;ENABLE_KOKKOS=OFF;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           pip install -e .
 
       - name: Run PennyLane-Lightning unit tests
@@ -382,7 +382,7 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          python setup.py build_ext -i --define="CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;ENABLE_KOKKOS=ON;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
+          python setup.py build_ext -i --define="PYTHON_EXECUTABLE=$(which python);CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;ENABLE_KOKKOS=ON;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           pip install -e .
 
       - name: Run PennyLane-Lightning unit tests
@@ -531,7 +531,7 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          python setup.py build_ext -i --define="ENABLE_BLAS=ON;ENABLE_KOKKOS=ON;DENABLE_PYTHON=ON;CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
+          python setup.py build_ext -i --define="PYTHON_EXECUTABLE=$(which python);ENABLE_BLAS=ON;ENABLE_KOKKOS=ON;DENABLE_PYTHON=ON;CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           pip install -e .
 
       - name: Run PennyLane-Lightning unit tests
