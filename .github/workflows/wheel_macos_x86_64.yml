@@ -157,14 +157,13 @@ jobs:
           CIBW_BEFORE_ALL_MACOS: |
             brew uninstall --force oclint
             brew install libomp
-            brew install coreutils util-linux
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
             python -m pip install pybind11 ninja cmake~=3.24.0 setuptools
 
           CIBW_ENVIRONMENT: |
-            CLANGPATH=$(which clang++ | rev | gcut -d '/' -f 2- | rev) CMAKE_ARGS="-DPYTHON_EXECUTABLE=$(which python) -DCMAKE_CXX_COMPILER=$(which clang++) -DCMAKE_LINKER=${CLANGPATH}/lld -DOpenMP_ROOT=$(brew --prefix libomp)"
+            CMAKE_ARGS="-DPYTHON_EXECUTABLE=$(which python) -DCMAKE_CXX_COMPILER=$(python .github/workflows/llvmpath.py)/bin/clang++ -DCMAKE_LINKER=$(python .github/workflows/llvmpath.py)/bin/lld -DOpenMP_ROOT=$(brew --prefix libomp)"
 
           # Testing of built wheels
           CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
