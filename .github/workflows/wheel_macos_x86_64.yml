@@ -163,7 +163,7 @@ jobs:
             python -m pip install pybind11 ninja cmake~=3.24.0 setuptools
 
           CIBW_ENVIRONMENT: |
-            LLVMPATH=$(brew --prefix llvm@${BREW_LLVM_VERSION}) CMAKE_ARGS="-DPYTHON_EXECUTABLE=$(which python) -DCMAKE_CXX_COMPILER=${LLVMPATH}/bin/clang++ -DCMAKE_LINKER=${LLVMPATH}/bin/lld -DOpenMP_ROOT=$(brew --prefix libomp)"
+            CMAKE_ARGS="-DPYTHON_EXECUTABLE=$(which python) -DCMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++ -DCMAKE_LINKER=$(brew --prefix llvm)/bin/lld -DOpenMP_ROOT=$(brew --prefix libomp)"
 
           # Testing of built wheels
           CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
