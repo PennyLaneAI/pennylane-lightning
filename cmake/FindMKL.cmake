@@ -17,11 +17,19 @@
 ###########################################################
 
 set(MKLROOT_PATH $ENV{MKLROOT})
-
 if (NOT MKLROOT_PATH)
-  if (EXISTS "/opt/intel/mkl")
-    set(MKLROOT_PATH "/opt/intel/mkl")
-  endif ()
+    if ($ENV{ONEAPI_ROOT})
+        set(MKLROOT_PATH $ENV{ONEAPI_ROOT}/mkl/latest)
+    endif ()
+endif ()
+if (NOT MKLROOT_PATH)
+    foreach(P IN ITEMS "/opt/intel/oneapi/mkl/latest" "/opt/intel/mkl")
+        if (EXISTS "${P}")
+            set(MKLROOT_PATH "${P}")
+            message(STATUS "Found MKL: ${P}")
+            break()
+        endif ()
+  endforeach()
 endif ()
 
 ###########################################################
