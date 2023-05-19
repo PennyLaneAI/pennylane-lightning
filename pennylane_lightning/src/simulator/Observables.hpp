@@ -312,7 +312,7 @@ template <class T> struct HamiltonianApplyInPlace<T, true> {
                     const std::vector<std::shared_ptr<Observable<T>>> &terms,
                     StateVectorManagedCPU<T> &sv) {
         const size_t length = sv.getLength();
-        const auto allocator = sv.allocator();
+        auto allocator = sv.allocator();
 
         std::vector<std::complex<T>, decltype(allocator)> sum(
             length, std::complex<T>{}, allocator);
