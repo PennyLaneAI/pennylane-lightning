@@ -22,14 +22,17 @@
 
 ### Bug fixes
 
+* Ensure aligned allocator definition works with C++20 compilers.
+  [(#438)](https://github.com/PennyLaneAI/pennylane-lightning/pull/438)
+
 * Prevent multiple threads from calling `Kokkos::initialize` or `Kokkos::finalize`.
-  [(#439)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/439)
+  [(#439)](https://github.com/PennyLaneAI/pennylane-lightning/pull/439)
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Lee J. O'Riordan
+Lee J. O'Riordan, Chae-Yeun Park
 
 ---
 

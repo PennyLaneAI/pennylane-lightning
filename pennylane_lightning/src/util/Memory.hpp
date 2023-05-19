@@ -100,8 +100,6 @@ template <class T> class AlignedAllocator {
      */
     [[nodiscard]] inline uint32_t alignment() const { return alignment_; }
 
-    template <class U> struct rebind { using other = AlignedAllocator<U>; };
-
     template <typename U>
     explicit constexpr AlignedAllocator(
         [[maybe_unused]] const AlignedAllocator<U> &rhs) noexcept
