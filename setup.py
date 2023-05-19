@@ -52,13 +52,13 @@ class CMakeBuild(build_ext):
     def build_extension(self, ext: CMakeExtension):
         extdir = str(Path(self.get_ext_fullpath(ext.name)).parent.absolute())
         debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
-        cfg = "Debug" if debug else "RelWithDebInfo"
+        build_type = "Debug" if debug else "RelWithDebInfo"
         ninja_path = str(shutil.which("ninja"))
 
         build_args = ["--config", "Debug"] if debug else ["--config", "RelWithDebInfo"]
         configure_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
-            f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
+            f"-DCMAKE_BUILD_TYPE={build_type}",  # not used on MSVC, but no harm
             "-DENABLE_WARNINGS=OFF",  # Ignore warnings
             *(self.cmake_defines),
         ]
