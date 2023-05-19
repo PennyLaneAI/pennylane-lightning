@@ -13,7 +13,7 @@
 ### Improvements
 
 * Remove logic from `setup.py` and transfer paths and env variable definitions into workflow files.
-[(#450)](https://github.com/PennyLaneAI/pennylane-lightning/pull/450)
+  [(#450)](https://github.com/PennyLaneAI/pennylane-lightning/pull/450)
 
 * Detect MKL or CBLAS if `ENABLE_BLAS=ON` making sure that BLAS is linked as expected.
   [(#448)](https://github.com/PennyLaneAI/pennylane-lightning/pull/448)
