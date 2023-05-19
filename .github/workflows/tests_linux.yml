@@ -382,7 +382,7 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          python setup.py build_ext -i --define="PYTHON_EXECUTABLE=$(which python);CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;ENABLE_KOKKOS=ON;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
+          python setup.py build_ext -i --define="PYTHON_EXECUTABLE=$(which python);CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           pip install -e .
 
       - name: Run PennyLane-Lightning unit tests
