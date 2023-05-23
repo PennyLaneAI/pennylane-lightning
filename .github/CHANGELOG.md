@@ -19,6 +19,9 @@
 
 ### Bug fixes
 
+* Ensure cross-platform wheels continue to build with updates in git safety checks.
+  [(#452)](https://github.com/PennyLaneAI/pennylane-lightning/pull/452)
+
 * Ensure aligned allocator definition works with C++20 compilers.
   [(#438)](https://github.com/PennyLaneAI/pennylane-lightning/pull/438)
 
