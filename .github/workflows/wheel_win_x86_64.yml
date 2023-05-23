@@ -150,7 +150,7 @@ jobs:
             pip install pybind11 cmake~=3.24.0 build
 
           CIBW_ENVIRONMENT: |
-            Set-Variable -Name CMAKE_ARGS -Value "-DPython_EXECUTABLE=$(@(where.exe <file pattern> 2>$null)[0])"
+            Set-Variable -Name CMAKE_ARGS -Value "-DPython_EXECUTABLE=$(which python)"
 
           # Testing of built wheels
           CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
