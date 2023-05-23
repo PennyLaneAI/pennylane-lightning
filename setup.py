@@ -31,9 +31,7 @@ class CMakeBuild(build_ext):
     This class is built upon https://github.com/diegoferigo/cmake-build-extension/blob/master/src/cmake_build_extension/build_extension.py and https://github.com/pybind/cmake_example/blob/master/setup.py
     """
 
-    user_options = build_ext.user_options + [
-        ("define=", "D", "Define variables for CMake")
-    ]
+    user_options = build_ext.user_options + [("define=", "D", "Define variables for CMake")]
 
     def initialize_options(self):
         super().initialize_options()
@@ -90,10 +88,7 @@ class CMakeBuild(build_ext):
             os.environ["CMAKE_ARGS"] = ""
 
         subprocess.check_call(
-            ["cmake"]
-            + os.environ["CMAKE_ARGS"].split(" ")
-            + [str(ext.sourcedir)]
-            + configure_args,
+            ["cmake"] + os.environ["CMAKE_ARGS"].split(" ") + [str(ext.sourcedir)] + configure_args,
             cwd=self.build_temp,
             env=os.environ,
         )

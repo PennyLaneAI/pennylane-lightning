@@ -89,13 +89,19 @@ Alternatively, for development and testing, you can install by cloning the repos
 Note that subsequent calls to ``pip install -e .`` will use cached binaries stored in the
 ``build`` folder. Run ``make clean`` if you would like to recompile.
 
-You can also pass ``cmake`` options with ``build_ext``:
+You can also pass ``cmake`` options with ``CMAKE_ARGS`` as follows:
 
 .. code-block:: console
 
-    $ python3 setup.py build_ext -i --define="ENABLE_OPENMP=OFF;ENABLE_NATIVE=ON"
+    $ CMAKE_ARGS="-DENABLE_OPENMP=OFF -DENABLE_BLAS=OFF -DENABLE_KOKKOS=OFF" pip install -e . -vv
 
-and install the compiled library with
+or with ``build_ext`` and the ``--define`` flag as follows:
+
+.. code-block:: console
+
+    $ python3 setup.py build_ext -i --define="ENABLE_OPENMP=OFF;ENABLE_BLAS=OFF;ENABLE_KOKKOS=OFF"
+
+If using ``build_ext``, install the compiled library with
 
 .. code-block:: console
 
