@@ -90,7 +90,7 @@ jobs:
             pip install pybind11 ninja cmake~=3.24.0 setuptools
 
           CIBW_ENVIRONMENT: |
-            CMAKE_ARGS="-DPYTHON_EXECUTABLE=$(which python) -DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11 -DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=ARM64 -DENABLE_OPENMP=OFF"
+            CMAKE_ARGS="-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11 -DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=ARM64 -DENABLE_OPENMP=OFF"
 
           # Testing of built wheels
           CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
