@@ -177,8 +177,6 @@ jobs:
 
           CIBW_ARCHS_MACOS: ${{matrix.arch}}
 
-          OMP_PROC_BIND: false
-
         run: |
           python -m cibuildwheel --output-dir wheelhouse
 
