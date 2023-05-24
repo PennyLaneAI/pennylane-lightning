@@ -89,6 +89,9 @@ jobs:
           CIBW_BEFORE_BUILD: |
             pip install pybind11 ninja cmake~=3.24.0 setuptools
 
+          CIBW_ENVIRONMENT: |
+            CMAKE_ARGS="-DENABLE_OPENMP=OFF"
+
           # Testing of built wheels
           CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
 
