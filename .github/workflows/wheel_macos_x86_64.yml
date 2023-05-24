@@ -162,9 +162,6 @@ jobs:
           CIBW_BEFORE_BUILD: |
             python -m pip install pybind11 ninja cmake~=3.24.0 setuptools
 
-          CIBW_ENVIRONMENT: |
-            CMAKE_ARGS="-DCMAKE_CXX_COMPILER=$(which clang++) -DCMAKE_LINKER=$(dirname $(which clang++))/lld -DOpenMP_ROOT=$(brew --prefix libomp)"
-
           # Testing of built wheels
           CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
 
