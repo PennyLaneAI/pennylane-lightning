@@ -90,7 +90,7 @@ class CMakeBuild(build_ext):
                     text=True,
                 ).stdout.strip()
                 configure_args += (
-                    f"-DOpenMP_ROOT={libomp_path}/" if libomp_path else "-DENABLE_OPENMP=OFF"
+                    [f"-DOpenMP_ROOT={libomp_path}/"] if libomp_path else ["-DENABLE_OPENMP=OFF"]
                 )
         elif platform.system() == "Windows":
             configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
