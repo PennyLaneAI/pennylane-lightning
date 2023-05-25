@@ -77,14 +77,14 @@ class CMakeBuild(build_ext):
 
         # Add more platform dependent options
         if platform.system() == "Darwin":
-            if platform.machine() in ["arm", "arm64"]:
-                configure_args += [
-                    "-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11",
-                    "-DCMAKE_SYSTEM_NAME=Darwin",
-                    "-DCMAKE_SYSTEM_PROCESSOR=ARM64",
-                    "-DENABLE_OPENMP=OFF",
-                ]
-            else:
+            print("=====================================")
+            print("=====================================")
+            print("=====================================")
+            print(f"=============={platform.machine()}=================")
+            print("=====================================")
+            print("=====================================")
+            print("=====================================")
+            if platform.machine() == "x86_64":
                 clang_path = Path(shutil.which("clang++")).parent.parent
                 configure_args += [
                     f"-DCMAKE_CXX_COMPILER={clang_path}/bin/clang++",
@@ -102,6 +102,13 @@ class CMakeBuild(build_ext):
                         if libomp_path
                         else ["-DENABLE_OPENMP=OFF"]
                     )
+            else:
+                configure_args += [
+                    "-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11",
+                    "-DCMAKE_SYSTEM_NAME=Darwin",
+                    "-DCMAKE_SYSTEM_PROCESSOR=ARM64",
+                    "-DENABLE_OPENMP=OFF",
+                ]
         elif platform.system() == "Windows":
             configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
         elif platform.system() not in ["Linux"]:
