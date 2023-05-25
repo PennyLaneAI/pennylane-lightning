@@ -54,6 +54,7 @@ try:
         allocate_aligned_array,
         get_alignment,
         best_alignment,
+        supporting_gates,
     )
 
     from ._serialize import _serialize_ob, _serialize_observables, _serialize_ops
@@ -520,29 +521,24 @@ class LightningQubit(QubitDevice):
 
         ops_serialized = create_ops_list(*ops_serialized)
 
-        # We need to filter out indices in trainable_params which do not
-        # correspond to operators.
-        trainable_params = sorted(tape.trainable_params)
-        if len(trainable_params) == 0:
-            return None
-
         tp_shift = []
         record_tp_rows = []
-        all_params = 0
+        lightning_tp = 0
 
-        for op_idx, tp in enumerate(trainable_params):
+        for op_idx, tp in enumerate(tape.trainable_params):
             # get op_idx-th operator among differentiable operators
             op, _, _ = tape.get_operation(op_idx)
-            if isinstance(op, Operation) and not isinstance(op, (BasisState, QubitStateVector)):
+            if isinstance(op, (BasisState, QubitStateVector)):
+                # We just ignore this
+                pass
+            elif op.name not in supporting_gates():
+                # We ignore these gates too, but warn a user
+                warn("There is a gate with trainable parameters that lightning does not support natively. Even though you can use it, Lightning does not compute gradients of variables for those gates.")
+            else:
                 # We now just ignore non-op or state preps
-                tp_shift.append(tp)
-                record_tp_rows.append(all_params)
-            all_params += 1
-
-        if use_sp:
-            # When the first element of the tape is state preparation. Still, I am not sure
-            # whether there must be only one state preparation...
-            tp_shift = [i - 1 for i in tp_shift]
+                tp_shift.append(lightning_tp)
+                lightning_tp += 1
+                record_tp_rows.append(op_idx)
 
         ket = ket.reshape(-1)
         state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
@@ -552,7 +548,7 @@ class LightningQubit(QubitDevice):
             "ops_serialized": ops_serialized,
             "tp_shift": tp_shift,
             "record_tp_rows": record_tp_rows,
-            "all_params": all_params,
+            "all_params": len(tape.trainable_params),
         }
 
     def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):

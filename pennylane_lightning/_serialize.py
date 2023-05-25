@@ -210,16 +210,12 @@ def _serialize_ops(
             name = single_op.name
             wires_list = single_op.wires.tolist()
 
-            if not hasattr(StateVectorC128, name):
-                params.append([])
-                mats.append(qml.matrix(single_op))
-
-            elif name not in supporting_gates():
+            if name not in supporting_gates():
                 if len(wires_list) == 1:
                     name = "SingleQubitOp"
                 elif len(wires_list) == 2:
                     name = "TwoQubitOp"
-                elif len(wires_list) == 3:
+                else:
                     name = "MultiQubitOp"
                 params.append([])
                 mats.append(qml.matrix(single_op))

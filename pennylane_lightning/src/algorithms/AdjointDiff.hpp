@@ -96,7 +96,7 @@ void adjointJacobian(std::span<T> jac, const JacobianData<T> &jd,
 
     StateVectorManagedCPU<T> mu(lambda.getNumQubits());
 
-    for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
+    for (int op_idx = std::ssize(ops_name) - 1; op_idx >= 0;
          op_idx--) {
         PL_ABORT_IF(ops.getOpsParams()[op_idx].size() > 1,
                     "The operation is not supported using the adjoint "
@@ -110,7 +110,7 @@ void adjointJacobian(std::span<T> jac, const JacobianData<T> &jd,
             break; // All done
         }
         mu.updateData(lambda.getDataVector());
-        applyOperationAdj(lambda, ops, op_idx);
+        applyOperation(lambda, ops, op_idx, true);
 
         if (ops.hasParams(op_idx)) {
             if (current_param_idx == *tp_it) {

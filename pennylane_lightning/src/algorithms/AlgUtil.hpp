@@ -25,6 +25,37 @@
 
 namespace Pennylane::Algorithms {
 /**
+ * @brief Utility method to apply the adjoint indexed operation from
+ * `%OpsData<T>` object to `%StateVectorManagedCPU<T>`.
+ *
+ * @param state Statevector to be updated.
+ * @param operations Operations to apply.
+ * @param op_idx Adjointed operation index to apply.
+ */
+template <typename T>
+inline void applyOperation(StateVectorManagedCPU<T> &state,
+                           const OpsData<T> &operations, size_t op_idx, bool adj) {
+    constexpr static auto gate_ops_list =
+        Util::second_elts_of(Gates::Constant::gate_names);
+    constexpr static auto matrix_ops_list =
+        Util::second_elts_of(Gates::Constant::matrix_names);
+
+    std::string_view ops_name = operations.getOpsName()[op_idx];
+
+    if (Util::array_has_elt(gate_ops_list, ops_name)) {
+        state.applyOperation(operations.getOpsName()[op_idx],
+                                operations.getOpsWires()[op_idx],
+                                operations.getOpsInverses()[op_idx] ^ adj,
+                                operations.getOpsParams()[op_idx]);
+    } else if (Util::array_has_elt(matrix_ops_list, ops_name)) {
+        state.applyMatrix(operations.getOpsMatrices()[op_idx].data(),
+                            operations.getOpsWires()[op_idx],
+                            operations.getOpsInverses()[op_idx] ^ adj);
+    } else {
+        throw std::invalid_argument("An unknown operation is provided.");
+    }
+}
+/**
  * @brief Utility method to apply all operations from given `%OpsData<T>`
  * object to `%StateVectorManagedCPU<T>`
  *
@@ -35,43 +66,9 @@ namespace Pennylane::Algorithms {
 template <typename T>
 inline void applyOperations(StateVectorManagedCPU<T> &state,
                             const OpsData<T> &operations, bool adj = false) {
-    constexpr static auto gate_ops_list =
-        Util::second_elts_of(Gates::Constant::gate_names);
-    constexpr static auto matrix_ops_list =
-        Util::second_elts_of(Gates::Constant::matrix_names);
-
     for (size_t op_idx = 0; op_idx < operations.getOpsName().size(); op_idx++) {
-        std::string_view ops_name = operations.getOpsName()[op_idx];
-
-        if (Util::array_has_elt(gate_ops_list, ops_name)) {
-            state.applyOperation(operations.getOpsName()[op_idx],
-                                 operations.getOpsWires()[op_idx],
-                                 operations.getOpsInverses()[op_idx] ^ adj,
-                                 operations.getOpsParams()[op_idx]);
-        } else if (Util::array_has_elt(matrix_ops_list, ops_name)) {
-            state.applyMatrix(operations.getOpsMatrices()[op_idx].data(),
-                              operations.getOpsWires()[op_idx],
-                              operations.getOpsInverses()[op_idx] ^ adj);
-        } else {
-            throw std::invalid_argument("An unknown operation is provided.");
-        }
+        applyOperation(state, operations, op_idx, adj);
     }
-}
-/**
- * @brief Utility method to apply the adjoint indexed operation from
- * `%OpsData<T>` object to `%StateVectorManagedCPU<T>`.
- *
- * @param state Statevector to be updated.
- * @param operations Operations to apply.
- * @param op_idx Adjointed operation index to apply.
- */
-template <typename T>
-inline void applyOperationAdj(StateVectorManagedCPU<T> &state,
-                              const OpsData<T> &operations, size_t op_idx) {
-    state.applyOperation(operations.getOpsName()[op_idx],
-                         operations.getOpsWires()[op_idx],
-                         !operations.getOpsInverses()[op_idx],
-                         operations.getOpsParams()[op_idx]);
 }
 
 /**
@@ -173,7 +170,7 @@ inline void applyOperationsAdj(std::vector<StateVectorManagedCPU<T>> &states,
     #endif
         for (size_t st_idx = 0; st_idx < num_states; st_idx++) {
             try {
-                applyOperationAdj(states[st_idx], operations, op_idx);
+                applyOperation(states[st_idx], operations, op_idx, true);
             } catch (...) {
                 #if defined(_OPENMP)
                     #pragma omp critical

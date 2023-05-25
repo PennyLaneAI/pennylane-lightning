@@ -125,8 +125,8 @@ void statevectorVJP(std::span<std::complex<PrecisionT>> jac,
             }
             --current_param_idx;
         }
-        applyOperationAdj(lambda, ops, static_cast<size_t>(op_idx));
-        applyOperationAdj(mu, ops, static_cast<size_t>(op_idx));
+        applyOperation(lambda, ops, static_cast<size_t>(op_idx), true);
+        applyOperation(mu, ops, static_cast<size_t>(op_idx), true);
     }
 };
 } // namespace Pennylane::Algorithms
