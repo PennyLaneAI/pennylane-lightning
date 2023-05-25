@@ -76,9 +76,22 @@ class CMakeBuild(build_ext):
         configure_args += self.cmake_defines
 
         # Add more platform dependent options
-        if platform.system() == "Windows":
+        if platform.system() == "Darwin":
+            clang_path = Path(shutil.which("clang++")).parent.parent
+            configure_args += [
+                f"-DCMAKE_CXX_COMPILER={clang_path}/bin/clang++",
+                f"-DCMAKE_LINKER={clang_path}/bin/lld",
+            ]
+            if shutil.which("brew"):
+                libomp_path = subprocess.run(
+                    "brew --prefix libomp", check=False, capture_output=True, text=True
+                ).stdout.strip()
+                configure_args += (
+                    f"-DOpenMP_ROOT={libomp_path}/" if libomp_path else "-DENABLE_OPENMP=OFF"
+                )
+        elif platform.system() == "Windows":
             configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
-        elif platform.system() not in ["Darwin", "Linux"]:
+        elif platform.system() not in ["Linux"]:
             raise RuntimeError(f"Unsupported '{platform.system()}' platform")
 
         if not Path(self.build_temp).exists():
@@ -88,7 +101,7 @@ class CMakeBuild(build_ext):
             os.environ["CMAKE_ARGS"] = ""
 
         subprocess.check_call(
-            ["cmake"] + os.environ["CMAKE_ARGS"].split(" ") + [str(ext.sourcedir)] + configure_args,
+            ["cmake"] + [str(ext.sourcedir)] + configure_args + os.environ["CMAKE_ARGS"].split(" "),
             cwd=self.build_temp,
             env=os.environ,
         )
