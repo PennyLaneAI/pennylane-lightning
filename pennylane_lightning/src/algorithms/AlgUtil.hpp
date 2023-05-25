@@ -13,6 +13,8 @@
 // limitations under the License.
 #pragma once
 
+#include "Constant.hpp"
+#include "ConstantUtil.hpp"
 #include "JacobianTape.hpp"
 #include "LinearAlgebra.hpp"
 #include "StateVectorManagedCPU.hpp"
@@ -33,11 +35,26 @@ namespace Pennylane::Algorithms {
 template <typename T>
 inline void applyOperations(StateVectorManagedCPU<T> &state,
                             const OpsData<T> &operations, bool adj = false) {
+    constexpr static auto gate_ops_list =
+        Util::second_elts_of(Gates::Constant::gate_names);
+    constexpr static auto matrix_ops_list =
+        Util::second_elts_of(Gates::Constant::matrix_names);
+
     for (size_t op_idx = 0; op_idx < operations.getOpsName().size(); op_idx++) {
-        state.applyOperation(operations.getOpsName()[op_idx],
-                             operations.getOpsWires()[op_idx],
-                             operations.getOpsInverses()[op_idx] ^ adj,
-                             operations.getOpsParams()[op_idx]);
+        std::string_view ops_name = operations.getOpsName()[op_idx];
+
+        if (Util::array_has_elt(gate_ops_list, ops_name)) {
+            state.applyOperation(operations.getOpsName()[op_idx],
+                                 operations.getOpsWires()[op_idx],
+                                 operations.getOpsInverses()[op_idx] ^ adj,
+                                 operations.getOpsParams()[op_idx]);
+        } else if (Util::array_has_elt(matrix_ops_list, ops_name)) {
+            state.applyMatrix(operations.getOpsMatrices()[op_idx].data(),
+                              operations.getOpsWires()[op_idx],
+                              operations.getOpsInverses()[op_idx] ^ adj);
+        } else {
+            throw std::invalid_argument("An unknown operation is provided.");
+        }
     }
 }
 /**

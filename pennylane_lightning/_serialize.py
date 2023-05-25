@@ -39,6 +39,7 @@ try:
     from .lightning_qubit_ops import (
         StateVectorC64,
         StateVectorC128,
+        supporting_gates,
     )
     from .lightning_qubit_ops.adjoint_diff import (
         NamedObsC64,
@@ -207,9 +208,19 @@ def _serialize_ops(
 
         for single_op in op_list:
             name = single_op.name
-            names.append(name)
+            wires_list = single_op.wires.tolist()
 
             if not hasattr(StateVectorC128, name):
+                params.append([])
+                mats.append(qml.matrix(single_op))
+
+            elif name not in supporting_gates():
+                if len(wires_list) == 1:
+                    name = "SingleQubitOp"
+                elif len(wires_list) == 2:
+                    name = "TwoQubitOp"
+                elif len(wires_list) == 3:
+                    name = "MultiQubitOp"
                 params.append([])
                 mats.append(qml.matrix(single_op))
 
@@ -217,7 +228,8 @@ def _serialize_ops(
                 params.append(single_op.parameters)
                 mats.append([])
 
-            wires_list = single_op.wires.tolist()
+            names.append(name)
+
             wires.append([wires_map[w] for w in wires_list])
 
     inverses = [False] * len(names)

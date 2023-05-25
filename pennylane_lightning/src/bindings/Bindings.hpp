@@ -19,6 +19,8 @@
 #pragma once
 #include "AdjointDiff.hpp"
 #include "CPUMemoryModel.hpp"
+#include "Constant.hpp"
+#include "GateOperation.hpp"
 #include "Kokkos_Sparse.hpp"
 #include "Macros.hpp"
 #include "Measures.hpp"
@@ -339,5 +341,17 @@ auto getKokkosInfo() -> pybind11::dict {
     using namespace pybind11::literals;
 
     return pybind11::dict("USE_KOKKOS"_a = USE_KOKKOS);
+}
+
+/**
+ * @brief Provide list of native gates.
+ *
+ * @return list in C++ set type. Pybind11's STL conversion features will change
+ * this to python set type.
+ */
+auto getSupportingGates() -> std::set<std::string> {
+    constexpr auto gates_arr =
+        Util::second_elts_of(Gates::Constant::gate_names);
+    return std::set<std::string>(gates_arr.begin(), gates_arr.end());
 }
 } // namespace Pennylane
