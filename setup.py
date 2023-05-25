@@ -84,7 +84,10 @@ class CMakeBuild(build_ext):
             ]
             if shutil.which("brew"):
                 libomp_path = subprocess.run(
-                    "brew --prefix libomp", check=False, capture_output=True, text=True
+                    "brew --prefix libomp".split(" "),
+                    check=False,
+                    capture_output=True,
+                    text=True,
                 ).stdout.strip()
                 configure_args += (
                     f"-DOpenMP_ROOT={libomp_path}/" if libomp_path else "-DENABLE_OPENMP=OFF"
