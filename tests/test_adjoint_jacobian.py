@@ -421,23 +421,24 @@ class TestAdjointJacobian:
 
         assert np.allclose(grad1, grad2, atol=tol, rtol=0)
 
-
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
     def test_Rot_qubit_unitary_with_rot(self, theta, dev):
         """Tests that the device gradient of an arbitrary Euler-angle-parameterized gate is
         correct."""
 
         params = np.array([theta, theta**3, np.sqrt(2) * theta])
-        X2 = np.array([
-            [0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 1, 0, 0, 0, 0],
-            [1, 0, 0, 0, 0, 0, 0, 0],
-            [0, 1, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 1, 0],
-            [0, 0, 0, 0, 0, 0, 0, 1],
-            [0, 0, 0, 0, 1, 0, 0, 0],
-            [0, 0, 0, 0, 0, 1, 0, 0],
-            ]) # X2 in a matrix form
+        X2 = np.array(
+            [
+                [0, 0, 1, 0, 0, 0, 0, 0],
+                [0, 0, 0, 1, 0, 0, 0, 0],
+                [1, 0, 0, 0, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 0, 0, 0, 0, 0, 0, 1],
+                [0, 0, 0, 0, 1, 0, 0, 0],
+                [0, 0, 0, 0, 0, 1, 0, 0],
+            ]
+        )  # X2 in a matrix form
 
         with qml.tape.QuantumTape() as tape1:
             qml.QubitStateVector(np.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0)
@@ -461,7 +462,6 @@ class TestAdjointJacobian:
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
         assert np.allclose(grad1, grad2, atol=tol, rtol=0)
-
 
     @pytest.mark.parametrize(
         "op",

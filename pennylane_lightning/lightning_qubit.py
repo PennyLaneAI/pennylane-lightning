@@ -512,7 +512,9 @@ class LightningQubit(QubitDevice):
             ket = self._pre_rotated_state
 
         obs_serialized = _serialize_observables(tape, self.wire_map, use_csingle=self.use_csingle)
-        ops_serialized, trainable_op_idices, record_tp_rows = _serialize_ops(tape, self.wire_map, use_csingle=self.use_csingle)
+        ops_serialized, trainable_op_idices, record_tp_rows = _serialize_ops(
+            tape, self.wire_map, use_csingle=self.use_csingle
+        )
 
         ket = ket.reshape(-1)
         state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
@@ -550,8 +552,12 @@ class LightningQubit(QubitDevice):
         if not processed_data:  # training_params is empty
             return np.array([], dtype=self._state.dtype)
 
-        trainable_ops_indices = processed_data["trainable_op_idices"] # Operation indices only can be processed by Lightning
-        all_trainable_param_size = len(tape.trainable_params) # Number of all trainable parameters in the tape
+        trainable_ops_indices = processed_data[
+            "trainable_op_idices"
+        ]  # Operation indices only can be processed by Lightning
+        all_trainable_param_size = len(
+            tape.trainable_params
+        )  # Number of all trainable parameters in the tape
 
         if len(trainable_ops_indices) == 0:
             return np.zeros((len(processed_data["obs_serialized"]), all_trainable_param_size))
@@ -563,13 +569,14 @@ class LightningQubit(QubitDevice):
 
         if self._batch_obs and requested_threads > 1:
             obs_partitions = _chunk_iterable(processed_data["obs_serialized"], requested_threads)
+            trainable_ops_partitions = _chunk_iterable(trainable_ops_indices, requested_threads)
             jac = []
-            for obs_chunk in obs_partitions:
+            for obs_chunk, trainable_ops_chunk in zip(obs_partitions, trainable_ops_partitions):
                 jac_local = adjoint_diff.adjoint_jacobian(
                     processed_data["state_vector"],
                     obs_chunk,
                     processed_data["ops_serialized"],
-                    trainable_ops_indices,
+                    trainable_ops_chunk,
                 )
                 jac.extend(jac_local)
         else:
@@ -692,7 +699,7 @@ class LightningQubit(QubitDevice):
                     processed_data["state_vector"],
                     processed_data["ops_serialized"],
                     dy,
-                    processed_data["tp_shift"],
+                    processed_data["trainable_op_idices"],
                 )
 
             return processing_fn

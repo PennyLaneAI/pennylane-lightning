@@ -25,6 +25,7 @@ from pennylane_lightning._serialize import (
 )
 import pytest
 from unittest import mock
+import warnings
 
 from pennylane_lightning.lightning_qubit import CPP_BINARY_AVAILABLE
 
@@ -421,27 +422,31 @@ class TestSerializeOps:
 
     wires_dict = {i: i for i in range(10)}
 
-    def test_basic_circuit(self):
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    def test_basic_circuit(self, use_csingle):
         """Test expected serialization for a simple circuit"""
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=0)
             qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
 
-        s = _serialize_ops(tape, self.wires_dict)
+        s, _, _ = _serialize_ops(tape, self.wires_dict, use_csingle)
         s_expected = (
-            (
-                ["RX", "RY", "CNOT"],
-                [np.array([0.4]), np.array([0.6]), []],
-                [[0], [1], [0, 1]],
-                [False, False, False],
-                [[], [], []],
-            ),
-            False,
+            ["RX", "RY", "CNOT"],
+            [np.array([0.4]), np.array([0.6]), []],
+            [[0], [1], [0, 1]],
+            [False, False, False],
+            [[], [], []],
         )
-        assert s == s_expected
 
-    def test_skips_prep_circuit(self):
+        if use_csingle:
+            create_ops_list = create_ops_list_C64
+        else:
+            create_ops_list = create_ops_list_C128
+        assert s == create_ops_list(*s_expected)
+
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    def test_skips_prep_circuit(self, use_csingle):
         """Test expected serialization for a simple circuit with state preparation, such that
         the state preparation is skipped"""
         with qml.tape.QuantumTape() as tape:
@@ -451,40 +456,125 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
 
-        s = _serialize_ops(tape, self.wires_dict)
+        s, _, _ = _serialize_ops(tape, self.wires_dict, use_csingle)
         s_expected = (
-            (
-                ["RX", "RY", "CNOT"],
-                [[0.4], [0.6], []],
-                [[0], [1], [0, 1]],
-                [False, False, False],
-                [[], [], []],
-            ),
-            True,
+            ["RX", "RY", "CNOT"],
+            [[0.4], [0.6], []],
+            [[0], [1], [0, 1]],
+            [False, False, False],
+            [[], [], []],
         )
-        assert s == s_expected
 
-    def test_unsupported_kernel_circuit(self):
-        """Test expected serialization for a circuit including gates that do not have a dedicated
-        kernel"""
+        if use_csingle:
+            create_ops_list = create_ops_list_C64
+        else:
+            create_ops_list = create_ops_list_C128
+        assert s == create_ops_list(*s_expected)
+
+    def test_trainable_op_indices(self):
+        """Test expected serialization for a simple circuit with custom wire labels"""
         with qml.tape.QuantumTape() as tape:
+            qml.RX(0.4, wires=0)
+            qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
-            qml.RZ(0.2, wires=2)
+            qml.SingleExcitation(0.5, wires=[0, 1])
+            qml.SingleExcitationPlus(0.4, wires=[0, 1])
+            qml.adjoint(qml.SingleExcitationMinus(0.5, wires=[0, 1]), lazy=False)
 
-        s = _serialize_ops(tape, self.wires_dict)
-        s_expected = (
-            (
-                ["CNOT", "RZ"],
-                [[], [0.2]],
-                [[0, 1], [2]],
-                [False, False],
-            ),
-            False,
-        )
-        assert s[0][0] == s_expected[0][0]
-        assert s[0][1] == s_expected[0][1]
+        _, trainable_op_indices, _ = _serialize_ops(tape, self.wires_dict)
+        assert trainable_op_indices == [0, 1, 3, 4, 5]
 
-    def test_custom_wires_circuit(self):
+    def test_trainable_op_indices_with_custom_trainable_params(self):
+        """Test expected serialization for a simple circuit with custom trainable parameters"""
+        wires_dict = {"a": 0, 3.2: 1}
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(0.4, wires="a")
+            qml.RY(0.6, wires=3.2)
+            qml.CNOT(wires=["a", 3.2])
+            qml.SingleExcitation(0.5, wires=["a", 3.2])
+            qml.SingleExcitationPlus(0.4, wires=["a", 3.2])
+            qml.adjoint(qml.SingleExcitationMinus(0.5, wires=["a", 3.2]), lazy=False)
+
+        tape.trainable_params = set([1, 2, 4])  # RY, SingleExcitation, adjoint
+
+        _, trainable_op_indices, _ = _serialize_ops(tape, wires_dict)
+        assert trainable_op_indices == [1, 3, 5]  # RY and SingleExcitation
+
+    def test_trainable_op_indices_with_basis_state(self):
+        """Test expected serialization for a simple circuit with ignored ops"""
+        gate_mat = np.eye(8)
+        with qml.tape.QuantumTape() as tape:
+            qml.BasisState([3], wires=[0, 1])  # param 0, graident of this op is handled by qnode
+            qml.RX(0.4, wires=0)  # param 1
+            qml.RY(0.6, wires=1)  # param 2
+            qml.CNOT(wires=[0, 1])
+            qml.SingleExcitation(0.5, wires=[0, 1])  # param 3
+            qml.QubitUnitary(
+                gate_mat, wires=[0, 1, 2]
+            )  # param 4, becomes non-trainable in cpp layer
+            qml.SingleExcitationPlus(0.4, wires=[0, 1])  # param 5
+            qml.adjoint(qml.SingleExcitationMinus(0.5, wires=[0, 1]), lazy=False)  # param 6
+
+        tape.trainable_params = set([0, 1, 2, 5])  # BasisState, RX, RY, SingleExcitationPlus
+
+        _, trainable_op_indices, tp_record_rows = _serialize_ops(tape, self.wires_dict)
+        assert trainable_op_indices == [
+            0,
+            1,
+            5,
+        ]  # BasisState is ignored. Positions of RX, RY, SingleExicationPlus
+        assert tp_record_rows == [1, 2, 3]
+
+    def test_trainable_op_indices_ignored_ops_with_warnings(self):
+        """Test expected serialization for a simple circuit with ignored ops"""
+        gate_mat = np.eye(8)
+        with qml.tape.QuantumTape() as tape:
+            qml.BasisState([3], wires=[0, 1])  # param 0, graident of this op is handled by qnode
+            qml.RX(0.4, wires=0)  # param 1
+            qml.RY(0.6, wires=1)  # param 2
+            qml.CNOT(wires=[0, 1])
+            qml.SingleExcitation(0.5, wires=[0, 1])  # param 3
+            qml.QubitUnitary(
+                gate_mat, wires=[0, 1, 2]
+            )  # param 4, becomes non-trainable in cpp layer
+            qml.SingleExcitationPlus(0.4, wires=[0, 1])  # param 5
+            qml.adjoint(qml.SingleExcitationMinus(0.5, wires=[0, 1]), lazy=False)  # param 6
+
+        tape.trainable_params = set([1, 2, 4, 5])  # RX, RY, QubitUnitary, SingleExcitationPlus
+
+        with pytest.warns(
+            UserWarning,
+            match=r"There is a gate with trainable parameters that lightning does not support natively",
+        ):
+            _, trainable_op_indices, tp_record_rows = _serialize_ops(tape, self.wires_dict)
+        assert trainable_op_indices == [0, 1, 5]
+        assert tp_record_rows == [0, 1, 3]
+
+    def test_trainable_op_indices_ignored_ops_without_warnings(self):
+        """Test expected serialization for a simple circuit with ignored ops"""
+        gate_mat = np.eye(8)
+        with qml.tape.QuantumTape() as tape:
+            qml.BasisState([3], wires=[0, 1])  # param 0, graident of this op is handled by qnode
+            qml.RX(0.4, wires=0)  # param 1
+            qml.RY(0.6, wires=1)  # param 2
+            qml.CNOT(wires=[0, 1])
+            qml.CNOT(wires=[0, 1])
+            qml.SingleExcitation(0.5, wires=[0, 1])  # param 3
+            qml.QubitUnitary(
+                gate_mat, wires=[0, 1, 2]
+            )  # param 4, becomes non-trainable in cpp layer
+            qml.SingleExcitationPlus(0.4, wires=[0, 1])  # param 5
+            qml.adjoint(qml.SingleExcitationMinus(0.5, wires=[0, 1]), lazy=False)  # param 6
+
+        tape.trainable_params = set([1, 2, 5])  # RX, RY, SingleExcitationPlus
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            _, trainable_op_indices, tp_record_rows = _serialize_ops(tape, self.wires_dict)
+        assert trainable_op_indices == [0, 1, 6]
+        assert tp_record_rows == [0, 1, 2]
+
+    def test_trainable_op_indices_with_custom_wires(self):
         """Test expected serialization for a simple circuit with custom wire labels"""
         wires_dict = {"a": 0, 3.2: 1}
         with qml.tape.QuantumTape() as tape:
@@ -495,25 +585,41 @@ class TestSerializeOps:
             qml.SingleExcitationPlus(0.4, wires=["a", 3.2])
             qml.adjoint(qml.SingleExcitationMinus(0.5, wires=["a", 3.2]), lazy=False)
 
-        s = _serialize_ops(tape, wires_dict)
+        _, trainable_op_indices, _ = _serialize_ops(tape, wires_dict)
+        assert trainable_op_indices == [0, 1, 3, 4, 5]
+
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    def test_custom_wires_circuit(self, use_csingle):
+        """Test expected serialization for a simple circuit with custom wire labels"""
+        wires_dict = {"a": 0, 3.2: 1}
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(0.4, wires="a")
+            qml.RY(0.6, wires=3.2)
+            qml.CNOT(wires=["a", 3.2])
+            qml.SingleExcitation(0.5, wires=["a", 3.2])
+            qml.SingleExcitationPlus(0.4, wires=["a", 3.2])
+            qml.adjoint(qml.SingleExcitationMinus(0.5, wires=["a", 3.2]), lazy=False)
+
+        s, _, _ = _serialize_ops(tape, wires_dict, use_csingle)
         s_expected = (
-            (
-                [
-                    "RX",
-                    "RY",
-                    "CNOT",
-                    "SingleExcitation",
-                    "SingleExcitationPlus",
-                    "SingleExcitationMinus",
-                ],
-                [[0.4], [0.6], [], [0.5], [0.4], [-0.5]],
-                [[0], [1], [0, 1], [0, 1], [0, 1], [0, 1]],
-                [False, False, False, False, False, False],
-                [[], [], [], [], [], []],
-            ),
-            False,
+            [
+                "RX",
+                "RY",
+                "CNOT",
+                "SingleExcitation",
+                "SingleExcitationPlus",
+                "SingleExcitationMinus",
+            ],
+            [[0.4], [0.6], [], [0.5], [0.4], [-0.5]],
+            [[0], [1], [0, 1], [0, 1], [0, 1], [0, 1]],
+            [False, False, False, False, False, False],
+            [[], [], [], [], [], []],
         )
-        assert s == s_expected
+        if use_csingle:
+            create_ops_list = create_ops_list_C64
+        else:
+            create_ops_list = create_ops_list_C128
+        assert s == create_ops_list(*s_expected)
 
     @pytest.mark.parametrize("C", [True, False])
     def test_integration(self, C):

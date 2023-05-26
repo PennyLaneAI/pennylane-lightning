@@ -34,7 +34,8 @@ namespace Pennylane::Algorithms {
  */
 template <typename T>
 inline void applyOperation(StateVectorManagedCPU<T> &state,
-                           const OpsData<T> &operations, size_t op_idx, bool adj) {
+                           const OpsData<T> &operations, size_t op_idx,
+                           bool adj) {
     constexpr static auto gate_ops_list =
         Util::second_elts_of(Gates::Constant::gate_names);
     constexpr static auto matrix_ops_list =
@@ -44,13 +45,13 @@ inline void applyOperation(StateVectorManagedCPU<T> &state,
 
     if (Util::array_has_elt(gate_ops_list, ops_name)) {
         state.applyOperation(operations.getOpsName()[op_idx],
-                                operations.getOpsWires()[op_idx],
-                                operations.getOpsInverses()[op_idx] ^ adj,
-                                operations.getOpsParams()[op_idx]);
+                             operations.getOpsWires()[op_idx],
+                             operations.getOpsInverses()[op_idx] ^ adj,
+                             operations.getOpsParams()[op_idx]);
     } else if (Util::array_has_elt(matrix_ops_list, ops_name)) {
         state.applyMatrix(operations.getOpsMatrices()[op_idx].data(),
-                            operations.getOpsWires()[op_idx],
-                            operations.getOpsInverses()[op_idx] ^ adj);
+                          operations.getOpsWires()[op_idx],
+                          operations.getOpsInverses()[op_idx] ^ adj);
     } else {
         throw std::invalid_argument("An unknown operation is provided.");
     }

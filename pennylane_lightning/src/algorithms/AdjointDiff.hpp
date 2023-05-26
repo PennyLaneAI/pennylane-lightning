@@ -67,9 +67,9 @@ void adjointJacobian(std::span<T> jac, const JacobianData<T> &jd,
         return;
     }
 
-    for(const auto trainable_ops_idx: trainable_ops_indices) {
+    for (const auto trainable_ops_idx : trainable_ops_indices) {
         PL_ABORT_IF_NOT(ops.getOpsParams()[trainable_ops_idx].size() == 1,
-                "Trainable operation must have a single parameter");
+                        "Trainable operation must have a single parameter");
     }
 
     PL_ABORT_IF_NOT(jac.size() == trainable_ops_size * num_observables,
@@ -94,8 +94,7 @@ void adjointJacobian(std::span<T> jac, const JacobianData<T> &jd,
 
     StateVectorManagedCPU<T> mu(lambda.getNumQubits());
 
-    for (int op_idx = std::ssize(ops_name) - 1; op_idx >= 0;
-         op_idx--) {
+    for (int op_idx = std::ssize(ops_name) - 1; op_idx >= 0; op_idx--) {
         PL_ABORT_IF(ops.getOpsParams()[op_idx].size() > 1,
                     "The operation is not supported using the adjoint "
                     "differentiation method");
@@ -110,17 +109,17 @@ void adjointJacobian(std::span<T> jac, const JacobianData<T> &jd,
         mu.updateData(lambda.getDataVector());
         applyOperation(lambda, ops, op_idx, true);
 
-        if (ops.hasParams(op_idx) && 
-            (std::find(trainable_ops_indices.begin(), trainable_ops_indices.end(), op_idx) != trainable_ops_indices.end())) {
+        if (ops.hasParams(op_idx) &&
+            (std::find(trainable_ops_indices.begin(),
+                       trainable_ops_indices.end(),
+                       op_idx) != trainable_ops_indices.end())) {
             // if current parameter is a trainable parameter
             const T scalingFactor =
-                mu.applyGenerator(ops_name[op_idx],
-                                  ops.getOpsWires()[op_idx],
+                mu.applyGenerator(ops_name[op_idx], ops.getOpsWires()[op_idx],
                                   !ops.getOpsInverses()[op_idx]) *
                 (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
-            const size_t mat_row_idx =
-                trainable_ops_number * num_observables;
+            const size_t mat_row_idx = trainable_ops_number * num_observables;
 
             // clang-format off
             
@@ -134,16 +133,15 @@ void adjointJacobian(std::span<T> jac, const JacobianData<T> &jd,
             for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
                 jac[mat_row_idx + obs_idx] =
                     -2 * scalingFactor *
-                    std::imag(
-                        Util::innerProdC(H_lambda[obs_idx].getDataVector(),
-                                         mu.getDataVector()));
+                    std::imag(Util::innerProdC(
+                        H_lambda[obs_idx].getDataVector(), mu.getDataVector()));
             }
             --trainable_ops_number;
         }
         applyOperationsAdj(H_lambda, ops, static_cast<size_t>(op_idx));
     }
-    const auto jac_transpose =
-        Util::Transpose(std::span<const T>{jac}, trainable_ops_size, num_observables);
+    const auto jac_transpose = Util::Transpose(
+        std::span<const T>{jac}, trainable_ops_size, num_observables);
     std::copy(std::begin(jac_transpose), std::end(jac_transpose),
               std::begin(jac));
 }

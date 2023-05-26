@@ -44,8 +44,9 @@ TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=Z", "[Algorithms]") {
 
             StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
 
-            JacobianData<double> tape{
-                num_params, psi.getLength(), psi.getData(), {obs}, ops, trainable_ops_indices};
+            JacobianData<double> tape{num_params,    psi.getLength(),
+                                      psi.getData(), {obs},
+                                      ops,           trainable_ops_indices};
 
             adjointJacobian(std::span{jacobian}, tape, true);
 
@@ -75,17 +76,18 @@ TEST_CASE("Algorithms::adjointJacobian without trainable params",
 
             StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
 
-            JacobianData<double> tape{
-                num_params, psi.getLength(), psi.getData(), {obs}, ops, trainable_ops_indices};
+            JacobianData<double> tape{num_params,    psi.getLength(),
+                                      psi.getData(), {obs},
+                                      ops,           trainable_ops_indices};
 
             REQUIRE_NOTHROW(adjointJacobian(std::span{jacobian}, tape, true));
         }
     }
 }
 
-TEST_CASE(
-    "Algorithms::adjointJacobian throws an exception when operation does not have a parameter",
-    "[Algorithms]") {
+TEST_CASE("Algorithms::adjointJacobian throws an exception when operation does "
+          "not have a parameter",
+          "[Algorithms]") {
     const std::vector<size_t> trainable_ops_indices{1};
     const size_t num_qubits = 1;
     const size_t num_params = 3;
@@ -94,15 +96,17 @@ TEST_CASE(
         std::make_shared<NamedObs<double>>("PauliZ", std::vector<size_t>{0});
     std::vector<double> jacobian(num_obs * trainable_ops_indices.size() - 1, 0);
 
-    auto ops = OpsData<double>({"RX", "CNOT"}, {{0.742}, {}}, {{0}, {1}}, {false, false});
+    auto ops = OpsData<double>({"RX", "CNOT"}, {{0.742}, {}}, {{0}, {1}},
+                               {false, false});
 
     std::vector<std::complex<double>> cdata(1U << num_qubits);
     cdata[0] = std::complex<double>{1, 0};
 
     StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
 
-    JacobianData<double> tape{
-        num_params, psi.getLength(), psi.getData(), {obs}, ops, trainable_ops_indices};
+    JacobianData<double> tape{num_params,    psi.getLength(),
+                              psi.getData(), {obs},
+                              ops,           trainable_ops_indices};
 
     PL_REQUIRE_THROWS_MATCHES(
         adjointJacobian(std::span{jacobian}, tape, true),
@@ -128,8 +132,9 @@ TEST_CASE(
 
     StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
 
-    JacobianData<double> tape{
-        num_params, psi.getLength(), psi.getData(), {obs}, ops, trainable_ops_indices};
+    JacobianData<double> tape{num_params,    psi.getLength(),
+                              psi.getData(), {obs},
+                              ops,           trainable_ops_indices};
 
     PL_REQUIRE_THROWS_MATCHES(
         adjointJacobian(std::span{jacobian}, tape, true),
@@ -157,8 +162,9 @@ TEST_CASE("Algorithms::adjointJacobian Op=RY, Obs=X", "[Algorithms]") {
 
             StateVectorRawCPU<double> psi(cdata.data(), cdata.size());
 
-            JacobianData<double> tape{
-                num_params, psi.getLength(), psi.getData(), {obs}, ops, trainable_ops_indcs};
+            JacobianData<double> tape{num_params,    psi.getLength(),
+                                      psi.getData(), {obs},
+                                      ops,           trainable_ops_indcs};
 
             adjointJacobian(std::span{jacobian}, tape, true);
 
@@ -188,8 +194,9 @@ TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=[Z,Z]", "[Algorithms]") {
 
         auto ops = OpsData<double>({"RX"}, {{param[0]}}, {{0}}, {false});
 
-        JacobianData<double> tape{
-            num_params, psi.getLength(), psi.getData(), {obs1, obs2}, ops, trainable_ops_indcs};
+        JacobianData<double> tape{num_params,    psi.getLength(),
+                                  psi.getData(), {obs1, obs2},
+                                  ops,           trainable_ops_indcs};
 
         adjointJacobian(std::span{jacobian}, tape, true);
 
@@ -273,9 +280,12 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=[Z,Z,Z], "
 
         CAPTURE(jacobian);
         CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
-        CHECK(0 == Approx(jacobian[1 * trainable_ops_indcs.size() + 1]).margin(1e-7));
-        CHECK(-sin(param[2]) ==
-              Approx(jacobian[2 * trainable_ops_indcs.size() + 1]).margin(1e-7));
+        CHECK(
+            0 ==
+            Approx(jacobian[1 * trainable_ops_indcs.size() + 1]).margin(1e-7));
+        CHECK(
+            -sin(param[2]) ==
+            Approx(jacobian[2 * trainable_ops_indcs.size() + 1]).margin(1e-7));
     }
 }
 
@@ -304,8 +314,9 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
                                    {{param[0]}, {param[1]}, {param[2]}},
                                    {{0}, {1}, {2}}, {false, false, false});
 
-        JacobianData<double> tape{
-            num_params, psi.getLength(), psi.getData(), {obs}, ops, trainable_ops_indcs};
+        JacobianData<double> tape{num_params,    psi.getLength(),
+                                  psi.getData(), {obs},
+                                  ops,           trainable_ops_indcs};
 
         adjointJacobian(std::span{jacobian}, tape, true);
 
@@ -351,8 +362,9 @@ TEST_CASE("Algorithms::adjointJacobian Op=Mixed, Obs=[XXX]", "[Algorithms]") {
             {{0}, {0}, {0}, {0, 1}, {1, 2}, {1}, {1}, {1}},
             {false, false, false, false, false, false, false, false});
 
-        JacobianData<double> tape{
-            num_params, psi.getLength(), psi.getData(), {obs}, ops, trainable_ops_indcs};
+        JacobianData<double> tape{num_params,    psi.getLength(),
+                                  psi.getData(), {obs},
+                                  ops,           trainable_ops_indcs};
 
         adjointJacobian(std::span{jacobian}, tape, true);
 
@@ -395,7 +407,8 @@ TEST_CASE("Algorithms::adjointJacobian Decomposed Rot gate, non "
             const auto theta = thetas[i];
             std::vector<double> local_params{theta, std::pow(theta, 3),
                                              SQRT2<double>() * theta};
-            std::vector<double> jacobian(num_obs * trainable_ops_indcs.size(), 0);
+            std::vector<double> jacobian(num_obs * trainable_ops_indcs.size(),
+                                         0);
 
             std::vector<std::complex<double>> cdata{INVSQRT2<double>(),
                                                     -INVSQRT2<double>()};
@@ -406,8 +419,9 @@ TEST_CASE("Algorithms::adjointJacobian Decomposed Rot gate, non "
                 {{local_params[0]}, {local_params[1]}, {local_params[2]}},
                 {{0}, {0}, {0}}, {false, false, false});
 
-            JacobianData<double> tape{
-                num_params, psi.getLength(), psi.getData(), {obs}, ops, trainable_ops_indcs};
+            JacobianData<double> tape{num_params,    psi.getLength(),
+                                      psi.getData(), {obs},
+                                      ops,           trainable_ops_indcs};
 
             adjointJacobian(std::span{jacobian}, tape, true);
 
@@ -501,8 +515,9 @@ TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=Ham[Z0+Z1]", "[Algorithms]") {
 
         auto ops = OpsData<double>({"RX"}, {{param[0]}}, {{0}}, {false});
 
-        JacobianData<double> tape{
-            num_params, psi.getLength(), psi.getData(), {ham}, ops, trainable_ops_indcs};
+        JacobianData<double> tape{num_params,    psi.getLength(),
+                                  psi.getData(), {ham},
+                                  ops,           trainable_ops_indcs};
 
         adjointJacobian(std::span{jacobian}, tape, true);
 
@@ -540,8 +555,9 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=Ham[Z0+Z1+Z2], "
                                    {{param[0]}, {param[1]}, {param[2]}},
                                    {{0}, {1}, {2}}, {false, false, false});
 
-        JacobianData<double> tape{
-            num_params, psi.getLength(), psi.getData(), {ham}, ops, trainable_ops_indcs};
+        JacobianData<double> tape{num_params,    psi.getLength(),
+                                  psi.getData(), {ham},
+                                  ops,           trainable_ops_indcs};
 
         adjointJacobian(std::span{jacobian}, tape, true);
 
@@ -646,11 +662,13 @@ TEST_CASE("Algorithms::adjointJacobian Test HermitianObs", "[Algorithms]") {
                                    {{param[0]}, {param[1]}, {param[2]}},
                                    {{0}, {1}, {2}}, {false, false, false});
 
-        JacobianData<double> tape1{
-            num_params, psi.getLength(), psi.getData(), {obs1}, ops, trainable_ops_indcs};
+        JacobianData<double> tape1{num_params,    psi.getLength(),
+                                   psi.getData(), {obs1},
+                                   ops,           trainable_ops_indcs};
 
-        JacobianData<double> tape2{
-            num_params, psi.getLength(), psi.getData(), {obs2}, ops, trainable_ops_indcs};
+        JacobianData<double> tape2{num_params,    psi.getLength(),
+                                   psi.getData(), {obs2},
+                                   ops,           trainable_ops_indcs};
 
         adjointJacobian(std::span{jacobian1}, tape1, true);
         adjointJacobian(std::span{jacobian2}, tape2, true);

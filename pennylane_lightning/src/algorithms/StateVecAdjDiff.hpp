@@ -74,9 +74,9 @@ void statevectorVJP(std::span<std::complex<PrecisionT>> jac,
         return;
     }
 
-    for(const auto trainable_ops_idx: trainable_ops_indices) {
+    for (const auto trainable_ops_idx : trainable_ops_indices) {
         PL_ABORT_IF_NOT(ops.getOpsParams()[trainable_ops_idx].size() == 1,
-                "Trainable operation must have a single parameter");
+                        "Trainable operation must have a single parameter");
     }
 
     PL_ABORT_IF_NOT(jac.size() == trainable_ops_indices.size(),
@@ -110,20 +110,20 @@ void statevectorVJP(std::span<std::complex<PrecisionT>> jac,
             break; // All done
         }
 
-        if (ops.hasParams(op_idx) && 
-            (std::find(trainable_ops_indices.begin(), trainable_ops_indices.end(), op_idx) != trainable_ops_indices.end())) {
+        if (ops.hasParams(op_idx) &&
+            (std::find(trainable_ops_indices.begin(),
+                       trainable_ops_indices.end(),
+                       op_idx) != trainable_ops_indices.end())) {
             // if current parameter is a trainable parameter
             mu_d.updateData(mu.getDataVector());
             const auto scalingFactor =
-                mu_d.applyGenerator(ops_name[op_idx],
-                                    ops.getOpsWires()[op_idx],
+                mu_d.applyGenerator(ops_name[op_idx], ops.getOpsWires()[op_idx],
                                     !ops.getOpsInverses()[op_idx]) *
                 (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
             jac[trainable_ops_number] =
                 ComplexPrecisionT{0.0, scalingFactor} *
-                Util::innerProdC(mu_d.getDataVector(),
-                                 lambda.getDataVector());
+                Util::innerProdC(mu_d.getDataVector(), lambda.getDataVector());
             --trainable_ops_number;
         }
         applyOperation(lambda, ops, static_cast<size_t>(op_idx), true);

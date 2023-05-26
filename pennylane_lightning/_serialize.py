@@ -209,7 +209,7 @@ def _serialize_ops(tape: QuantumTape, wires_map: dict, use_csingle: bool = False
         ctype = np.complex128
 
     trainable_op_idices = []
-    param_idx = 0 # Parameter index for a tape
+    param_idx = 0  # Parameter index for a tape
     lightning_ops_idx = 0
     record_tp_rows = []
     record_tp_idx = 0
@@ -241,8 +241,10 @@ def _serialize_ops(tape: QuantumTape, wires_map: dict, use_csingle: bool = False
                 lightning_ops_idx += 1
 
                 if param_idx in tape.trainable_params:
-                    warn("There is a gate with trainable parameters that lightning does not support natively. Even though you can use it, Lightning does not compute gradients of variables for those gates.")
-                    record_tp_idx += 1
+                    warn(
+                        "There is a gate with trainable parameters that lightning does not support natively. Even though you can use it, Lightning does not compute gradients of variables for those gates."
+                    )
+
             else:
                 names.append(name)
                 wires.append([wires_map[w] for w in wires_list])
@@ -252,11 +254,17 @@ def _serialize_ops(tape: QuantumTape, wires_map: dict, use_csingle: bool = False
                 if single_op.num_params != 0 and param_idx in tape.trainable_params:
                     trainable_op_idices.append(lightning_ops_idx)
                     record_tp_rows.append(record_tp_idx)
-                    record_tp_idx += 1
 
                 lightning_ops_idx += 1
 
+            if single_op.num_params > 0 and param_idx in tape.trainable_params:
+                # if current operator is what should be recored
+                record_tp_idx += 1
             param_idx += single_op.num_params
 
     inverses = [False] * len(names)
-    return create_ops_list(names, params, wires, inverses, mats), trainable_op_idices, record_tp_rows
+    return (
+        create_ops_list(names, params, wires, inverses, mats),
+        trainable_op_idices,
+        record_tp_rows,
+    )

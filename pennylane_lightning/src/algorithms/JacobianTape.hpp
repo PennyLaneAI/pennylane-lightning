@@ -198,9 +198,12 @@ template <class T> class OpsData {
      *
      * @return true if two instances are the same
      */
-    [[nodiscard]] auto operator==(const OpsData& rhs) const -> bool {
-        return (ops_name_ == rhs.ops_name_) && (ops_params_ == rhs.ops_params_) && (ops_wires_ == rhs.ops_wires_) &&
-            (ops_inverses_ == rhs.ops_inverses_) && (ops_matrices_ == rhs.ops_matrices_);
+    [[nodiscard]] auto operator==(const OpsData &rhs) const -> bool {
+        return (ops_name_ == rhs.ops_name_) &&
+               (ops_params_ == rhs.ops_params_) &&
+               (ops_wires_ == rhs.ops_wires_) &&
+               (ops_inverses_ == rhs.ops_inverses_) &&
+               (ops_matrices_ == rhs.ops_matrices_);
     }
 
     /**
@@ -208,7 +211,7 @@ template <class T> class OpsData {
      *
      * @return true if two instances are not the same
      */
-    [[nodiscard]] auto operator!=(const OpsData& rhs) const -> bool {
+    [[nodiscard]] auto operator!=(const OpsData &rhs) const -> bool {
         return !(*this == rhs);
     }
 };
@@ -218,8 +221,8 @@ template <class T> class OpsData {
  */
 template <class T> class JacobianData {
   private:
-    size_t num_params_;      /**< Number of parameters in the tape */
-    size_t num_elts_;        /**< Length of the statevector data */
+    size_t num_params_;          /**< Number of parameters in the tape */
+    size_t num_elts_;            /**< Length of the statevector data */
     const std::complex<T> *psi_; /**< Pointer to the statevector data */
 
     /**
@@ -248,8 +251,8 @@ template <class T> class JacobianData {
      * @param psi Pointer to the statevector data.
      * @param observables Observables for which to calculate Jacobian.
      * @param operations Operations used to create given state.
-     * @param trainable_ops_indices Sorted list of operation indices participating in Jacobian
-     * computation.
+     * @param trainable_ops_indices Sorted list of operation indices
+     * participating in Jacobian computation.
      *
      * @rst
      * Each value :math:`i` in trainable operations indices means that
@@ -258,15 +261,17 @@ template <class T> class JacobianData {
      * Further note that ``ops`` does not contain state preparation operations
      * (e.g. QubitStateVector) or Hamiltonian coefficients.
      *
-     * We also restrict (inside Lightning's cpp layer) that each operation must have
-     * a single or zero parameters.
+     * We also restrict (inside Lightning's cpp layer) that each operation must
+     * have a single or zero parameters.
      * @endrst
      */
-    JacobianData(size_t num_params, size_t num_elts, std::complex<T> *psi,
-                 std::vector<std::shared_ptr<Simulators::Observable<T>>> observable,
-                 OpsData<T> operations, std::vector<size_t> trainable_ops_indices)
+    JacobianData(
+        size_t num_params, size_t num_elts, std::complex<T> *psi,
+        std::vector<std::shared_ptr<Simulators::Observable<T>>> observable,
+        OpsData<T> operations, std::vector<size_t> trainable_ops_indices)
         : num_params_(num_params), num_elts_(num_elts), psi_(psi),
-          observables_(std::move(observable)), operations_(std::move(operations)),
+          observables_(std::move(observable)),
+          operations_(std::move(operations)),
           trainable_ops_indices_(std::move(trainable_ops_indices)) {
         /* When the Hamiltonian has parameters, trainable parameters include
          * these. We explicitly ignore them. */
@@ -284,9 +289,7 @@ template <class T> class JacobianData {
      *
      * @return size_t
      */
-    [[nodiscard]] auto getSizeStateVec() const -> size_t {
-        return num_elts_;
-    }
+    [[nodiscard]] auto getSizeStateVec() const -> size_t { return num_elts_; }
 
     /**
      * @brief Get the pointer to the statevector data.

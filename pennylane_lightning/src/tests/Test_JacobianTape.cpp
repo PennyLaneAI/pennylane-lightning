@@ -19,17 +19,24 @@ using Pennylane::Algorithms::OpsData;
 
 TEST_CASE("Algorithms::OpsData works correctly", "[Algorithms]") {
     SECTION("Test two instances are equal") {
-        auto ops1 = OpsData<double>({"RX", "CNOT"}, {{0.312}, {}}, {{0}, {2}}, {false, true});
-        auto ops2 = OpsData<double>({"RX", "CNOT"}, {{0.312}, {}}, {{0}, {2}}, {false, true});
+        auto ops1 = OpsData<double>({"RX", "CNOT"}, {{0.312}, {}}, {{0}, {2}},
+                                    {false, true});
+        auto ops2 = OpsData<double>({"RX", "CNOT"}, {{0.312}, {}}, {{0}, {2}},
+                                    {false, true});
 
         REQUIRE(ops1 == ops2);
     }
     SECTION("Test two instances are not equal") {
-        auto ops1 = OpsData<double>({"RX", "CNOT"}, {{0.312}, {}}, {{0}, {2}}, {false, true});
-        auto ops2 = OpsData<double>({"RX", "CZ"}, {{0.312}, {}}, {{0}, {2}}, {false, true});
-        auto ops3 = OpsData<double>({"RX", "CNOT"}, {{0.128}, {}}, {{0}, {2}}, {false, true});
-        auto ops4 = OpsData<double>({"RX", "CNOT"}, {{0.312}, {}}, {{1}, {2}}, {false, true});
-        auto ops5 = OpsData<double>({"RX", "CNOT"}, {{0.312}, {}}, {{0}, {2}}, {true, true});
+        auto ops1 = OpsData<double>({"RX", "CNOT"}, {{0.312}, {}}, {{0}, {2}},
+                                    {false, true});
+        auto ops2 = OpsData<double>({"RX", "CZ"}, {{0.312}, {}}, {{0}, {2}},
+                                    {false, true});
+        auto ops3 = OpsData<double>({"RX", "CNOT"}, {{0.128}, {}}, {{0}, {2}},
+                                    {false, true});
+        auto ops4 = OpsData<double>({"RX", "CNOT"}, {{0.312}, {}}, {{1}, {2}},
+                                    {false, true});
+        auto ops5 = OpsData<double>({"RX", "CNOT"}, {{0.312}, {}}, {{0}, {2}},
+                                    {true, true});
 
         REQUIRE(ops1 != ops2);
         REQUIRE(ops1 != ops3);

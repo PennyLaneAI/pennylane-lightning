@@ -318,27 +318,31 @@ void registerAlgorithms(py::module_ &m) {
              const std::vector<std::vector<size_t>> &,
              const std::vector<bool> &,
              const std::vector<std::vector<std::complex<PrecisionT>>> &>())
-        .def("__repr__", [](const OpsData<PrecisionT> &ops) {
-            using namespace Pennylane::Util;
-            std::ostringstream ops_stream;
-            for (size_t op = 0; op < ops.getSize(); op++) {
-                ops_stream << "{'name': " << ops.getOpsName()[op];
-                ops_stream << ", 'params': " << ops.getOpsParams()[op];
-                ops_stream << ", 'inv': " << ops.getOpsInverses()[op];
-                ops_stream << "}";
-                if (op < ops.getSize() - 1) {
-                    ops_stream << ",";
+        .def("__repr__",
+             [](const OpsData<PrecisionT> &ops) {
+                 using namespace Pennylane::Util;
+                 std::ostringstream ops_stream;
+                 for (size_t op = 0; op < ops.getSize(); op++) {
+                     ops_stream << "{'name': " << ops.getOpsName()[op];
+                     ops_stream << ", 'params': " << ops.getOpsParams()[op];
+                     ops_stream << ", 'inv': " << ops.getOpsInverses()[op];
+                     ops_stream << "}";
+                     if (op < ops.getSize() - 1) {
+                         ops_stream << ",";
+                     }
+                 }
+                 return "Operations: [" + ops_stream.str() + "]";
+             })
+        .def(
+            "__eq__",
+            [](const OpsData<PrecisionT> &self, py::handle other) -> bool {
+                if (!py::isinstance<OpsData<PrecisionT>>(other)) {
+                    return false;
                 }
-            }
-            return "Operations: [" + ops_stream.str() + "]";
-        })
-        .def("__eq__", [](const OpsData<PrecisionT>& self, py::handle other) -> bool {
-            if (!py::isinstance<OpsData<PrecisionT>>(other)) {
-                return false;
-            }
-            auto other_cast = other.cast<OpsData<PrecisionT>>();
-            return self == other_cast;
-        }, "Compare two operation data");
+                auto other_cast = other.cast<OpsData<PrecisionT>>();
+                return self == other_cast;
+            },
+            "Compare two operation data");
 
     /**
      * Create operation list
