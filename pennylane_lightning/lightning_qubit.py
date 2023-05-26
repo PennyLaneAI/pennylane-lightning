@@ -569,14 +569,13 @@ class LightningQubit(QubitDevice):
 
         if self._batch_obs and requested_threads > 1:
             obs_partitions = _chunk_iterable(processed_data["obs_serialized"], requested_threads)
-            trainable_ops_partitions = _chunk_iterable(trainable_ops_indices, requested_threads)
             jac = []
-            for obs_chunk, trainable_ops_chunk in zip(obs_partitions, trainable_ops_partitions):
+            for obs_chunk in obs_partitions:
                 jac_local = adjoint_diff.adjoint_jacobian(
                     processed_data["state_vector"],
                     obs_chunk,
                     processed_data["ops_serialized"],
-                    trainable_ops_chunk,
+                    trainable_ops_indices,
                 )
                 jac.extend(jac_local)
         else:

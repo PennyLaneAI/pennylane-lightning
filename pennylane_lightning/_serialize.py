@@ -214,53 +214,57 @@ def _serialize_ops(tape: QuantumTape, wires_map: dict, use_csingle: bool = False
     record_tp_rows = []
     record_tp_idx = 0
 
-    for op_idx, op in enumerate(tape.operations):
+    expanded_ops = []
+
+    for op in tape.operations:
         if isinstance(op, Rot):
             op_list = op.expand().operations
         else:
             op_list = [op]
+        expanded_ops.extend(op_list)
 
-        for single_op in op_list:
-            name = single_op.name
-            wires_list = single_op.wires.tolist()
+    # Transform a tape
+    for op in expanded_ops:
+        name = op.name
+        wires_list = op.wires.tolist()
 
-            if isinstance(op, (BasisState, QubitStateVector)):
-                # We just ignore this
-                pass
-            elif name not in supporting_gates():
-                if len(wires_list) == 1:
-                    name = "SingleQubitOp"
-                elif len(wires_list) == 2:
-                    name = "TwoQubitOp"
-                else:
-                    name = "MultiQubitOp"
-                names.append(name)
-                wires.append([wires_map[w] for w in wires_list])
-                params.append([])
-                mats.append(qml.matrix(single_op).astype(ctype))
-                lightning_ops_idx += 1
-
-                if param_idx in tape.trainable_params:
-                    warn(
-                        "There is a gate with trainable parameters that lightning does not support natively. Even though you can use it, Lightning does not compute gradients of variables for those gates."
-                    )
-
+        if isinstance(op, (BasisState, QubitStateVector)):
+            # We just ignore this
+            pass
+        elif name not in supporting_gates():
+            if len(wires_list) == 1:
+                name = "SingleQubitOp"
+            elif len(wires_list) == 2:
+                name = "TwoQubitOp"
             else:
-                names.append(name)
-                wires.append([wires_map[w] for w in wires_list])
-                params.append(single_op.parameters)
-                mats.append([])
+                name = "MultiQubitOp"
+            names.append(name)
+            wires.append([wires_map[w] for w in wires_list])
+            params.append([])
+            mats.append(qml.matrix(op).astype(ctype))
+            lightning_ops_idx += 1
 
-                if single_op.num_params != 0 and param_idx in tape.trainable_params:
-                    trainable_op_idices.append(lightning_ops_idx)
-                    record_tp_rows.append(record_tp_idx)
+            if op.num_params > 0 and param_idx in tape.trainable_params:
+                warn(
+                    "There is a gate with trainable parameters that lightning does not support natively. Even though you can use it, Lightning does not compute gradients of variables for those gates."
+                )
 
-                lightning_ops_idx += 1
+        else:
+            names.append(name)
+            wires.append([wires_map[w] for w in wires_list])
+            params.append(op.parameters)
+            mats.append([])
 
-            if single_op.num_params > 0 and param_idx in tape.trainable_params:
-                # if current operator is what should be recored
-                record_tp_idx += 1
-            param_idx += single_op.num_params
+            if op.num_params > 0 and param_idx in tape.trainable_params:
+                trainable_op_idices.append(lightning_ops_idx)
+                record_tp_rows.append(record_tp_idx)
+
+            lightning_ops_idx += 1
+
+        if op.num_params > 0 and param_idx in tape.trainable_params:
+            # If the gradient of the current operator should be recored
+            record_tp_idx += 1
+        param_idx += op.num_params
 
     inverses = [False] * len(names)
     return (
