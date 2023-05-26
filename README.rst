@@ -67,12 +67,18 @@ To build PennyLane-Lightning from source you can run
 
     $ pip install pybind11 pennylane-lightning --no-binary :all:
 
-A C++ compiler such as ``g++``, ``clang``, or ``MSVC`` is required. On Debian-based systems, this
-can be installed via ``apt``:
+A C++ compiler such as ``g++``, ``clang++``, or ``MSVC`` is required.
+On Debian-based systems, this can be installed via ``apt``:
 
 .. code-block:: console
 
     $ sudo apt install g++
+
+On MacOS, we recommend using the latest version of ``clang++`` and ``libomp``:
+
+.. code-block:: console
+
+    $ brew install llvm libomp
 
 The `pybind11 <https://pybind11.readthedocs.io/en/stable/>`_ library is also used for binding the
 C++ functionality to Python.
@@ -100,18 +106,14 @@ or with ``build_ext`` and the ``--define`` flag as follows:
 .. code-block:: console
 
     $ python3 setup.py build_ext -i --define="ENABLE_OPENMP=OFF;ENABLE_BLAS=OFF;ENABLE_KOKKOS=OFF"
-
-If using ``build_ext``, install the compiled library with
-
-.. code-block:: console
-
     $ python3 setup.py develop
 
 
 GPU support
 -----------
 
-For GPU support, `PennyLane-Lightning-GPU <https://github.com/PennyLaneAI/pennylane-lightning-gpu>`_ can be installed by providing the optional ``[gpu]`` tag:
+For GPU support, `PennyLane-Lightning-GPU <https://github.com/PennyLaneAI/pennylane-lightning-gpu>`_
+can be installed by providing the optional ``[gpu]`` tag:
 
 .. code-block:: console
 
@@ -154,18 +156,26 @@ To test the C++ code:
     $ cmake -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Debug ..
     $ make
 
-Other supported options are ``-DENABLE_WARNINGS=ON``,
-``-DENABLE_NATIVE=ON`` (for ``-march=native``),
-``-DENABLE_BLAS=ON``, ``-DENABLE_OPENMP=ON``,
-``-DENABLE_KOKKOS=ON``, and ``-DENABLE_CLANG_TIDY=ON``.
+Other supported options are
+
+- ``-DENABLE_WARNINGS=ON``
+- ``-DENABLE_NATIVE=ON`` (for ``-march=native``)
+- ``-DENABLE_BLAS=ON``
+- ``-DENABLE_OPENMP=ON``
+- ``-DENABLE_KOKKOS=ON``
+- ``-DENABLE_CLANG_TIDY=ON``
 
 Compile on Windows with MSVC
 ----------------------------
 
-You can also compile Pennylane-Lightning on Windows using `Microsoft Visual C++ <https://visualstudio.microsoft.com/vs/features/cplusplus/>`_ compiler. You need `cmake <https://cmake.org/download/>`_ and appropriate Python environment (e.g. using `Anaconda <https://www.anaconda.com/>`_).
+You can also compile Pennylane-Lightning on Windows using
+`Microsoft Visual C++ <https://visualstudio.microsoft.com/vs/features/cplusplus/>`_ compiler.
+You need `cmake <https://cmake.org/download/>`_ and appropriate Python environment
+(e.g. using `Anaconda <https://www.anaconda.com/>`_).
 
 
-We recommend to use ``[x64 (or x86)] Native Tools Command Prompt for VS [version]`` for compiling the library. Be sure that ``cmake`` and ``python`` can be called within the prompt.
+We recommend to use ``[x64 (or x86)] Native Tools Command Prompt for VS [version]`` for compiling the library.
+Be sure that ``cmake`` and ``python`` can be called within the prompt.
 
 
 .. code-block:: console
