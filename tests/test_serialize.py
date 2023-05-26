@@ -40,6 +40,8 @@ from pennylane_lightning.lightning_qubit_ops.adjoint_diff import (
     TensorProdObsC128,
     HamiltonianC64,
     HamiltonianC128,
+    create_ops_list_C64,
+    create_ops_list_C128,
 )
 
 
@@ -526,41 +528,37 @@ class TestSerializeOps:
             qml.DoubleExcitationMinus(0.555, wires=[0, 1, 2, 3])
             qml.DoubleExcitationPlus(0.555, wires=[0, 1, 2, 3])
 
-        s = _serialize_ops(tape, self.wires_dict)
+        s, _, _ = _serialize_ops(tape, self.wires_dict, C)
 
         dtype = np.complex64 if C else np.complex128
         s_expected = (
-            (
-                [
-                    "RX",
-                    "RY",
-                    "CNOT",
-                    "QubitUnitary",
-                    "QFT",
-                    "DoubleExcitation",
-                    "DoubleExcitationMinus",
-                    "DoubleExcitationPlus",
-                ],
-                [[0.4], [0.6], [], [], [], [0.555], [0.555], [0.555]],
-                [[0], [1], [0, 1], [0, 1], [0, 1, 2], [3, 2, 1, 0], [0, 1, 2, 3], [0, 1, 2, 3]],
-                [False, False, False, False, False, False, False, False],
-                [
-                    [],
-                    [],
-                    [],
-                    qml.matrix(qml.QubitUnitary(np.eye(4, dtype=dtype), wires=[0, 1])),
-                    qml.matrix(qml.templates.QFT(wires=[0, 1, 2])),
-                    [],
-                    [],
-                    [],
-                ],
-            ),
-            False,
+            [
+                "RX",
+                "RY",
+                "CNOT",
+                "TwoQubitOp",
+                "MultiQubitOp",
+                "DoubleExcitation",
+                "DoubleExcitationMinus",
+                "DoubleExcitationPlus",
+            ],
+            [[0.4], [0.6], [], [], [], [0.555], [0.555], [0.555]],
+            [[0], [1], [0, 1], [0, 1], [0, 1, 2], [3, 2, 1, 0], [0, 1, 2, 3], [0, 1, 2, 3]],
+            [False, False, False, False, False, False, False, False],
+            [
+                [],
+                [],
+                [],
+                qml.matrix(qml.QubitUnitary(np.eye(4), wires=[0, 1])).astype(dtype),
+                qml.matrix(qml.templates.QFT(wires=[0, 1, 2])).astype(dtype),
+                [],
+                [],
+                [],
+            ],
         )
-        assert s[0][0] == s_expected[0][0]
-        assert s[0][1] == s_expected[0][1]
-        assert s[0][2] == s_expected[0][2]
-        assert s[0][3] == s_expected[0][3]
-        assert s[1] == s_expected[1]
-
-        assert all(np.allclose(s1, s2) for s1, s2 in zip(s[0][4], s_expected[0][4]))
+        if C:
+            create_ops_list = create_ops_list_C64
+        else:
+            create_ops_list = create_ops_list_C128
+        s_expected = create_ops_list(*s_expected)
+        assert s == s_expected

@@ -342,7 +342,7 @@ class TestAdjointJacobian:
             qml.Rot(0.2, -0.1, 0.2, wires=0),
         ],
     )
-    def test_gradients_pauliz(self, op, obs, dev):
+    def test_gradients_multiple_expvals(self, op, obs, dev):
         """Tests that the gradients of circuits match between the finite difference and device
         methods."""
 
@@ -352,7 +352,7 @@ class TestAdjointJacobian:
             qml.RX(0.543, wires=0)
             qml.CNOT(wires=[0, 1])
 
-            op
+            op.queue()
 
             qml.Rot(1.3, -2.3, 0.5, wires=[0])
             qml.RZ(-0.5, wires=0)
@@ -370,6 +370,98 @@ class TestAdjointJacobian:
         grad_D = dev.adjoint_jacobian(tape)
 
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
+
+    @pytest.mark.parametrize(
+        "op",
+        [
+            qml.QubitUnitary(np.eye(2), wires=0),
+            qml.QubitUnitary(np.eye(4), wires=[0, 1]),
+            qml.QubitUnitary(np.eye(8), wires=[0, 1, 2]),
+        ],
+    )
+    def test_gradients_with_qubit_unitary(self, op, dev):
+        """Tests that the gradients of circuits match between the finite difference and device
+        methods."""
+
+        # op.num_wires and op.num_params must be initialized a priori
+        with qml.tape.QuantumTape() as tape:
+            qml.Hadamard(wires=0)
+            qml.RX(0.543, wires=0)
+            qml.CNOT(wires=[0, 1])
+
+            op.queue()
+
+            qml.Rot(1.3, -2.3, 0.5, wires=[0])
+            qml.RZ(-0.5, wires=0)
+            qml.adjoint(qml.RY(0.5, wires=1), lazy=False)
+            qml.CNOT(wires=[0, 1])
+
+            qml.expval(qml.PauliZ(wires=1))
+
+        tape.trainable_params = set([3, 4, 5])
+
+        with qml.tape.QuantumTape() as tape_without:
+            qml.Hadamard(wires=0)
+            qml.RX(0.543, wires=0)
+            qml.CNOT(wires=[0, 1])
+
+            qml.Rot(1.3, -2.3, 0.5, wires=[0])
+            qml.RZ(-0.5, wires=0)
+            qml.adjoint(qml.RY(0.5, wires=1), lazy=False)
+            qml.CNOT(wires=[0, 1])
+
+            qml.expval(qml.PauliZ(wires=1))
+
+        tape_without.trainable_params = set([2, 3, 4])
+
+        tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+
+        grad1 = dev.adjoint_jacobian(tape)
+        grad2 = dev.adjoint_jacobian(tape_without)
+
+        assert np.allclose(grad1, grad2, atol=tol, rtol=0)
+
+
+    @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
+    def test_Rot_qubit_unitary_with_rot(self, theta, dev):
+        """Tests that the device gradient of an arbitrary Euler-angle-parameterized gate is
+        correct."""
+
+        params = np.array([theta, theta**3, np.sqrt(2) * theta])
+        X2 = np.array([
+            [0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0, 0],
+            [1, 0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 0],
+            [0, 0, 0, 0, 0, 0, 0, 1],
+            [0, 0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 0, 0, 1, 0, 0],
+            ]) # X2 in a matrix form
+
+        with qml.tape.QuantumTape() as tape1:
+            qml.QubitStateVector(np.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0)
+            qml.QubitUnitary(X2, wires=[0, 1, 2])
+            qml.Rot(*params, wires=[0])
+            qml.expval(qml.PauliZ(0))
+
+        tape1.trainable_params = {2, 3, 4}
+
+        with qml.tape.QuantumTape() as tape2:
+            qml.QubitStateVector(np.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0)
+            qml.PauliX(1)
+            qml.Rot(*params, wires=[0])
+            qml.expval(qml.PauliZ(0))
+
+        tape2.trainable_params = {1, 2, 3}
+
+        grad1 = dev.adjoint_jacobian(tape1)
+        grad2 = dev.adjoint_jacobian(tape2)
+
+        tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+
+        assert np.allclose(grad1, grad2, atol=tol, rtol=0)
+
 
     @pytest.mark.parametrize(
         "op",
