@@ -59,18 +59,27 @@ void statevectorVJP(std::span<std::complex<PrecisionT>> jac,
 
     assert(dy.size() == jd.getSizeStateVec());
 
-    if (!jd.hasTrainableParams()) {
+    if (!jd.hasTrainableOps()) {
         return;
     }
 
     const OpsData<PrecisionT> &ops = jd.getOperations();
     const std::vector<std::string> &ops_name = ops.getOpsName();
 
-    // We can assume the trainable params are sorted (from Python)
-    const size_t num_param_ops = ops.getNumParOps();
-    const auto &trainable_params = jd.getTrainableParams();
+    // We can assume the trainable operation indices are sorted (from Python)
+    const std::vector<size_t> trainable_ops_indices = jd.getTrainableOpsIndcs();
+    const size_t trainable_ops_size = trainable_ops_indices.size();
 
-    PL_ABORT_IF_NOT(jac.size() == trainable_params.size(),
+    if (!jd.hasTrainableOps()) {
+        return;
+    }
+
+    for(const auto trainable_ops_idx: trainable_ops_indices) {
+        PL_ABORT_IF_NOT(ops.getOpsParams()[trainable_ops_idx].size() == 1,
+                "Trainable operation must have a single parameter");
+    }
+
+    PL_ABORT_IF_NOT(jac.size() == trainable_ops_indices.size(),
                     "The size of preallocated jacobian must be same as "
                     "the number of trainable parameters.");
 
@@ -86,14 +95,9 @@ void statevectorVJP(std::span<std::complex<PrecisionT>> jac,
     StateVectorManagedCPU<PrecisionT> mu_d(
         Util::log2PerfectPower(jd.getSizeStateVec()));
 
-    const auto tp_rend = trainable_params.rend();
-    auto tp_it = trainable_params.rbegin();
-    size_t current_param_idx =
-        num_param_ops - 1; // total number of parametric ops
-    size_t trainable_param_idx = trainable_params.size() - 1;
+    size_t trainable_ops_number = trainable_ops_size - 1;
 
-    for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
-         op_idx--) {
+    for (int op_idx = std::ssize(ops_name) - 1; op_idx >= 0; op_idx--) {
         PL_ABORT_IF(ops.getOpsParams()[op_idx].size() > 1,
                     "The operation is not supported using the adjoint "
                     "differentiation method");
@@ -102,28 +106,25 @@ void statevectorVJP(std::span<std::complex<PrecisionT>> jac,
             continue; // ignore them
         }
 
-        if (tp_it == tp_rend) {
+        if (static_cast<std::size_t>(op_idx) < trainable_ops_indices[0]) {
             break; // All done
         }
 
-        if (ops.hasParams(op_idx)) {
-            if (current_param_idx == *tp_it) {
-                // if current parameter is a trainable parameter
-                mu_d.updateData(mu.getDataVector());
-                const auto scalingFactor =
-                    mu_d.applyGenerator(ops_name[op_idx],
-                                        ops.getOpsWires()[op_idx],
-                                        !ops.getOpsInverses()[op_idx]) *
-                    (ops.getOpsInverses()[op_idx] ? -1 : 1);
+        if (ops.hasParams(op_idx) && 
+            (std::find(trainable_ops_indices.begin(), trainable_ops_indices.end(), op_idx) != trainable_ops_indices.end())) {
+            // if current parameter is a trainable parameter
+            mu_d.updateData(mu.getDataVector());
+            const auto scalingFactor =
+                mu_d.applyGenerator(ops_name[op_idx],
+                                    ops.getOpsWires()[op_idx],
+                                    !ops.getOpsInverses()[op_idx]) *
+                (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
-                jac[trainable_param_idx] =
-                    ComplexPrecisionT{0.0, scalingFactor} *
-                    Util::innerProdC(mu_d.getDataVector(),
-                                     lambda.getDataVector());
-                --trainable_param_idx;
-                ++tp_it;
-            }
-            --current_param_idx;
+            jac[trainable_ops_number] =
+                ComplexPrecisionT{0.0, scalingFactor} *
+                Util::innerProdC(mu_d.getDataVector(),
+                                 lambda.getDataVector());
+            --trainable_ops_number;
         }
         applyOperation(lambda, ops, static_cast<size_t>(op_idx), true);
         applyOperation(mu, ops, static_cast<size_t>(op_idx), true);

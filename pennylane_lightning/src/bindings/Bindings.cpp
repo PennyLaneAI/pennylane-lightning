@@ -331,7 +331,14 @@ void registerAlgorithms(py::module_ &m) {
                 }
             }
             return "Operations: [" + ops_stream.str() + "]";
-        });
+        })
+        .def("__eq__", [](const OpsData<PrecisionT>& self, py::handle other) -> bool {
+            if (!py::isinstance<OpsData<PrecisionT>>(other)) {
+                return false;
+            }
+            auto other_cast = other.cast<OpsData<PrecisionT>>();
+            return self == other_cast;
+        }, "Compare two operation data");
 
     /**
      * Create operation list

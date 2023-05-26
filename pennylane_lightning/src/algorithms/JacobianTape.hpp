@@ -192,6 +192,25 @@ template <class T> class OpsData {
             ops_params_.begin(), ops_params_.end(), size_t{0U},
             [](size_t acc, auto &params) { return acc + params.size(); });
     }
+
+    /**
+     * @brief Check if two instances are the same
+     *
+     * @return true if two instances are the same
+     */
+    [[nodiscard]] auto operator==(const OpsData& rhs) const -> bool {
+        return (ops_name_ == rhs.ops_name_) && (ops_params_ == rhs.ops_params_) && (ops_wires_ == rhs.ops_wires_) &&
+            (ops_inverses_ == rhs.ops_inverses_) && (ops_matrices_ == rhs.ops_matrices_);
+    }
+
+    /**
+     * @brief Check if two instances are not the same
+     *
+     * @return true if two instances are not the same
+     */
+    [[nodiscard]] auto operator!=(const OpsData& rhs) const -> bool {
+        return !(*this == rhs);
+    }
 };
 
 /**
@@ -199,51 +218,56 @@ template <class T> class OpsData {
  */
 template <class T> class JacobianData {
   private:
-    size_t num_parameters;      /**< Number of parameters in the tape */
-    size_t num_elements;        /**< Length of the statevector data */
-    const std::complex<T> *psi; /**< Pointer to the statevector data */
+    size_t num_params_;      /**< Number of parameters in the tape */
+    size_t num_elts_;        /**< Length of the statevector data */
+    const std::complex<T> *psi_; /**< Pointer to the statevector data */
 
     /**
      * @var observables
      * Observables for which to calculate Jacobian.
      */
-    const std::vector<std::shared_ptr<Simulators::Observable<T>>> observables;
+    const std::vector<std::shared_ptr<Simulators::Observable<T>>> observables_;
 
     /**
      * @var operations
      * operations Operations used to create given state.
      */
-    const OpsData<T> operations;
+    const OpsData<T> operations_;
 
-    /* @var trainableParams      */
-    const std::vector<size_t> trainableParams;
+    /* @var trainable_ops_indices
+     * trainable operation indices
+     */
+    const std::vector<size_t> trainable_ops_indices_;
 
   public:
     /**
      * @brief Construct a JacobianData object
      *
      * @param num_params Number of parameters in the Tape.
-     * @param num_elem Length of the statevector data.
-     * @param ps Pointer to the statevector data.
-     * @param obs Observables for which to calculate Jacobian.
-     * @param ops Operations used to create given state.
-     * @param trainP Sorted list of parameters participating in Jacobian
+     * @param num_elts Length of the statevector data.
+     * @param psi Pointer to the statevector data.
+     * @param observables Observables for which to calculate Jacobian.
+     * @param operations Operations used to create given state.
+     * @param trainable_ops_indices Sorted list of operation indices participating in Jacobian
      * computation.
      *
      * @rst
-     * Each value :math:`i` in trainable params means that
+     * Each value :math:`i` in trainable operations indices means that
      * we want to take a derivative respect to the :math:`i`-th operation.
      *
      * Further note that ``ops`` does not contain state preparation operations
      * (e.g. QubitStateVector) or Hamiltonian coefficients.
+     *
+     * We also restrict (inside Lightning's cpp layer) that each operation must have
+     * a single or zero parameters.
      * @endrst
      */
-    JacobianData(size_t num_params, size_t num_elem, std::complex<T> *ps,
-                 std::vector<std::shared_ptr<Simulators::Observable<T>>> obs,
-                 OpsData<T> ops, std::vector<size_t> trainP)
-        : num_parameters(num_params), num_elements(num_elem), psi(ps),
-          observables(std::move(obs)), operations(std::move(ops)),
-          trainableParams(std::move(trainP)) {
+    JacobianData(size_t num_params, size_t num_elts, std::complex<T> *psi,
+                 std::vector<std::shared_ptr<Simulators::Observable<T>>> observable,
+                 OpsData<T> operations, std::vector<size_t> trainable_ops_indices)
+        : num_params_(num_params), num_elts_(num_elts), psi_(psi),
+          observables_(std::move(observable)), operations_(std::move(operations)),
+          trainable_ops_indices_(std::move(trainable_ops_indices)) {
         /* When the Hamiltonian has parameters, trainable parameters include
          * these. We explicitly ignore them. */
     }
@@ -253,7 +277,7 @@ template <class T> class JacobianData {
      *
      * @return size_t
      */
-    [[nodiscard]] auto getNumParams() const -> size_t { return num_parameters; }
+    [[nodiscard]] auto getNumParams() const -> size_t { return num_params_; }
 
     /**
      * @brief Get the length of the statevector data.
@@ -261,7 +285,7 @@ template <class T> class JacobianData {
      * @return size_t
      */
     [[nodiscard]] auto getSizeStateVec() const -> size_t {
-        return num_elements;
+        return num_elts_;
     }
 
     /**
@@ -270,7 +294,7 @@ template <class T> class JacobianData {
      * @return std::complex<T> *
      */
     [[nodiscard]] auto getPtrStateVec() const -> const std::complex<T> * {
-        return psi;
+        return psi_;
     }
 
     /**
@@ -280,7 +304,7 @@ template <class T> class JacobianData {
      */
     [[nodiscard]] auto getObservables() const
         -> const std::vector<std::shared_ptr<Simulators::Observable<T>>> & {
-        return observables;
+        return observables_;
     }
 
     /**
@@ -290,7 +314,7 @@ template <class T> class JacobianData {
      * @return size_t
      */
     [[nodiscard]] auto getNumObservables() const -> size_t {
-        return observables.size();
+        return observables_.size();
     }
 
     /**
@@ -299,7 +323,7 @@ template <class T> class JacobianData {
      * @return OpsData<T>&
      */
     [[nodiscard]] auto getOperations() const -> const OpsData<T> & {
-        return operations;
+        return operations_;
     }
 
     /**
@@ -308,19 +332,18 @@ template <class T> class JacobianData {
      *
      * @return std::vector<size_t>&
      */
-    [[nodiscard]] auto getTrainableParams() const
+    [[nodiscard]] auto getTrainableOpsIndcs() const
         -> const std::vector<size_t> & {
-        return trainableParams;
+        return trainable_ops_indices_;
     }
 
     /**
-     * @brief Get if the number of parameters participating in Jacobian
-     * calculation is zero.
+     * @brief Get if there is trainable operators
      *
-     * @return true If it has trainable parameters; false otherwise.
+     * @return true if it has trainable parameters; false otherwise.
      */
-    [[nodiscard]] auto hasTrainableParams() const -> bool {
-        return !trainableParams.empty();
+    [[nodiscard]] auto hasTrainableOps() const -> bool {
+        return !trainable_ops_indices_.empty();
     }
 };
 } // namespace Pennylane::Algorithms
