@@ -874,6 +874,7 @@ class LightningQubit(QubitDevice):
 
         state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
+        """
         if observable.name == "SparseHamiltonian":
             if Kokkos_info()["USE_KOKKOS"] == True:
                 # ensuring CSR sparse representation.
@@ -889,9 +890,9 @@ class LightningQubit(QubitDevice):
             raise NotImplementedError(
                 "The expval of a SparseHamiltonian requires Kokkos and Kokkos Kernels."
             )
-
+        """
         if (
-            observable.name in ["Hamiltonian", "Hermitian"]
+            observable.name in ["Hamiltonian", "Hermitian", "SparseHamiltonian"]
             or (observable.arithmetic_depth > 0)
             or isinstance(observable.name, List)
         ):

@@ -256,9 +256,6 @@ class TestAdjointJacobian:
 
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
 
-    qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
-    ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
-
     def test_multiple_rx_gradient_expval_hermitian(self, tol, dev):
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result
         with Hermitian observable
@@ -283,9 +280,6 @@ class TestAdjointJacobian:
         )
 
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
-
-    qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
-    ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
 
     @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_multiple_rx_gradient_expval_hamiltonian(self, tol, dev):
@@ -325,9 +319,6 @@ class TestAdjointJacobian:
         )
 
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
-
-    qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
-    ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
 
     @pytest.mark.parametrize("obs", [qml.PauliX, qml.PauliY])
     @pytest.mark.parametrize(
@@ -414,6 +405,48 @@ class TestAdjointJacobian:
         grad_D = dev.adjoint_jacobian(tape)
 
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
+
+    @pytest.mark.skipif(not lq._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    def test_multiple_rx_gradient_expval_hamiltonian_equals_sparse_hamiltonian(self, tol, dev):
+        """Tests that the gradient of multiple RX gates in a circuit yields the correct result
+        with Hermitian observable
+        """
+        params = np.array([np.pi / 3, np.pi / 4, np.pi / 5])
+
+        ham = qml.Hamiltonian(
+            [1.0, 0.3, 0.3, -0.2],
+            [
+                qml.PauliX(0) @ qml.PauliX(1),
+                qml.PauliZ(0),
+                qml.PauliZ(1),
+                qml.Identity(2)
+            ],
+        )
+
+        sparse_ham = qml.SparseHamiltonian(ham.sparse_matrix(), wires=range(3))
+        print(sparse_ham.sparse_matrix())
+
+        with qml.tape.QuantumTape() as tape1:
+            qml.RX(params[0], wires=0)
+            qml.RX(params[1], wires=1)
+            qml.RX(params[2], wires=2)
+
+            qml.expval(ham)
+
+        with qml.tape.QuantumTape() as tape2:
+            qml.RX(params[0], wires=0)
+            qml.RX(params[1], wires=1)
+            qml.RX(params[2], wires=2)
+
+            qml.expval(sparse_ham)
+
+        tape1.trainable_params = {0, 1, 2}
+        tape2.trainable_params = {0, 1, 2}
+
+        dev_jacobian1 = dev.adjoint_jacobian(tape1)
+        dev_jacobian2 = dev.adjoint_jacobian(tape2)
+
+        assert np.allclose(dev_jacobian1, dev_jacobian2, atol=tol, rtol=0)
 
     def test_gradient_gate_with_multiple_parameters_pauliz(self, dev):
         """Tests that gates with multiple free parameters yield correct gradients."""
