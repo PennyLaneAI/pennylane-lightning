@@ -190,9 +190,9 @@ info = {
     "long_description_content_type": "text/x-rst",
     "provides": ["pennylane_lightning"],
     "install_requires": requirements,
-    "ext_modules": [CMakeExtension("lightning_qubit_ops")]
-    if not os.environ.get("SKIP_COMPILATION", False)
-    else [],
+    "ext_modules": []
+    if os.environ.get("SKIP_COMPILATION", False)
+    else [CMakeExtension("lightning_qubit_ops")],
     "cmdclass": {"build_ext": CMakeBuild},
     "ext_package": "pennylane_lightning",
     "extras_require": {"gpu": ["pennylane-lightning-gpu"]},
