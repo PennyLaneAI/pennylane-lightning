@@ -20,6 +20,9 @@
 
 ### Documentation
 
+* Fix LightningQubit class parameter documentation.
+  [(#456)](https://github.com/PennyLaneAI/pennylane-lightning/pull/456)
+
 ### Bug fixes
 
 * Ensure aligned allocator definition works with C++20 compilers.
