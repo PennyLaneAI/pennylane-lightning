@@ -13,6 +13,7 @@
 # limitations under the License.
 import os
 import platform
+import sys
 import subprocess
 import shutil
 from pathlib import Path
@@ -31,34 +32,33 @@ class CMakeBuild(build_ext):
     This class is built upon https://github.com/diegoferigo/cmake-build-extension/blob/master/src/cmake_build_extension/build_extension.py and https://github.com/pybind/cmake_example/blob/master/setup.py
     """
 
-    user_options = build_ext.user_options + [("define=", "D", "Define variables for CMake")]
+    user_options = build_ext.user_options + [
+        ("define=", "D", "Define variables for CMake")
+    ]
 
     def initialize_options(self):
         super().initialize_options()
         self.define = None
-        self.verbosity = ""
 
     def finalize_options(self):
         # Parse the custom CMake options and store them in a new attribute
         defines = [] if self.define is None else self.define.split(";")
         self.cmake_defines = [f"-D{define}" for define in defines]
-        if self.verbosity != "":
-            self.verbosity = "--verbose"
 
         super().finalize_options()
 
     def build_extension(self, ext: CMakeExtension):
         extdir = str(Path(self.get_ext_fullpath(ext.name)).parent.absolute())
+
         debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
-        build_type = "Debug" if debug else "RelWithDebInfo"
         ninja_path = str(shutil.which("ninja"))
 
-        build_args = ["--config", "Debug"] if debug else ["--config", "RelWithDebInfo"]
+        # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
         configure_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
-            f"-DCMAKE_BUILD_TYPE={build_type}",  # not used on MSVC, but no harm
+            f"-DPython_EXECUTABLE={sys.executable}",  # (Windows)
+            f"-DPYTHON_EXECUTABLE={sys.executable}",  # (Ubuntu)
             "-DENABLE_WARNINGS=OFF",  # Ignore warnings
-            *(self.cmake_defines),
         ]
 
         if platform.system() == "Windows":
@@ -73,45 +73,88 @@ class CMakeBuild(build_ext):
                 f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
             ]
 
+        build_args = []
+
+        if debug:
+            configure_args += ["-DCMAKE_BUILD_TYPE=Debug"]
+            build_args += ["--config", "Debug"]
+        else:
+            build_args += ["--config", "RelWithDebInfo"]
+
         configure_args += self.cmake_defines
 
         # Add more platform dependent options
         if platform.system() == "Darwin":
-            clang_path = Path(shutil.which("clang++")).parent.parent
-            configure_args += [
-                f"-DCMAKE_CXX_COMPILER={clang_path}/bin/clang++",
-                f"-DCMAKE_LINKER={clang_path}/bin/lld",
-            ]
-            if shutil.which("brew"):
-                libomp_path = subprocess.run(
-                    "brew --prefix libomp".split(" "),
-                    check=False,
-                    capture_output=True,
-                    text=True,
-                ).stdout.strip()
-                configure_args += (
-                    [f"-DOpenMP_ROOT={libomp_path}/"] if libomp_path else ["-DENABLE_OPENMP=OFF"]
-                )
+            # To support ARM64
+            if os.getenv("ARCHS") == "arm64":
+                configure_args += [
+                    "-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11",
+                    "-DCMAKE_SYSTEM_NAME=Darwin",
+                    "-DCMAKE_SYSTEM_PROCESSOR=ARM64",
+                    "-DENABLE_OPENMP=OFF",
+                ]
+            else:  # X64 arch
+                # If we explicitly request a brew LLVM version, use that
+                if os.getenv("BREW_LLVM_VERSION") and shutil.which("brew"):
+                    brew_llvm_version = os.getenv("BREW_LLVM_VERSION")
+                    llvmpath = subprocess.run(
+                        [
+                            "brew",
+                            "--prefix",
+                            "llvm" + f"@{brew_llvm_version}"
+                            if brew_llvm_version
+                            else "",
+                        ],
+                        check=True,
+                        capture_output=True,
+                        text=True,
+                    ).stdout.strip()
+
+                else:
+                    # No brew, use the default clang++ install provided by MacOS
+                    llvmpath = shutil.which("clang++")
+                    llvmpath = Path(llvmpath).parent.parent
+
+                # Ensure the appropriate compiler and linker are chosen
+                configure_args += [
+                    f"-DCMAKE_CXX_COMPILER={llvmpath}/bin/clang++",
+                    f"-DCMAKE_LINKER={llvmpath}/bin/lld",
+                ]  # Use clang instead of appleclang
+
+                # Try to support OpenMP through libomp if available
+                if os.environ.get("USE_OMP") and shutil.which("brew"):
+                    libomp_path = subprocess.run(
+                        [
+                            "brew",
+                            "--prefix",
+                            "libomp",
+                        ],
+                        check=False,
+                        capture_output=True,
+                        text=True,
+                    ).stdout.strip()
+                    configure_args += (
+                        [f"-DOpenMP_ROOT={libomp_path}/"]
+                        if libomp_path
+                        else ["-DENABLE_OPENMP=OFF"]
+                    )
         elif platform.system() == "Windows":
             configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
-        elif platform.system() not in ["Linux"]:
+        elif platform.system() != "Linux":
             raise RuntimeError(f"Unsupported '{platform.system()}' platform")
 
         if not Path(self.build_temp).exists():
             os.makedirs(self.build_temp)
 
-        if "CMAKE_ARGS" not in os.environ.keys():
-            os.environ["CMAKE_ARGS"] = ""
-
-        subprocess.check_call(
-            ["cmake"] + [str(ext.sourcedir)] + configure_args + os.environ["CMAKE_ARGS"].split(" "),
+        subprocess.run(
+            ["cmake", str(ext.sourcedir)] + configure_args,
             cwd=self.build_temp,
-            env=os.environ,
+            check=True,
         )
-        subprocess.check_call(
+        subprocess.run(
             ["cmake", "--build", ".", "--verbose"] + build_args,
             cwd=self.build_temp,
-            env=os.environ,
+            check=True,
         )
 
 
