@@ -146,15 +146,18 @@ class CMakeBuild(build_ext):
         if not Path(self.build_temp).exists():
             os.makedirs(self.build_temp)
 
-        subprocess.run(
-            ["cmake", str(ext.sourcedir)] + configure_args,
+        if "CMAKE_ARGS" not in os.environ.keys():
+            os.environ["CMAKE_ARGS"] = ""
+
+        subprocess.check_call(
+            ["cmake"] + [str(ext.sourcedir)] + configure_args + os.environ["CMAKE_ARGS"].split(" "),
             cwd=self.build_temp,
-            check=True,
+            env=os.environ,
         )
-        subprocess.run(
+        subprocess.check_call(
             ["cmake", "--build", ".", "--verbose"] + build_args,
             cwd=self.build_temp,
-            check=True,
+            env=os.environ,
         )
 
 
