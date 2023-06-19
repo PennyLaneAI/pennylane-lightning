@@ -150,7 +150,7 @@ class CMakeBuild(build_ext):
             os.environ["CMAKE_ARGS"] = ""
 
         subprocess.run(
-            ["cmake", str(ext.sourcedir)] + configure_args + os.environ["CMAKE_ARGS"].split(" "),
+            ["cmake", str(ext.sourcedir)] + configure_args,
             cwd=self.build_temp,
             check=True,
         )
