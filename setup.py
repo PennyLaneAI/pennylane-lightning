@@ -13,7 +13,6 @@
 # limitations under the License.
 import os
 import platform
-import sys
 import subprocess
 import shutil
 from pathlib import Path
@@ -56,8 +55,6 @@ class CMakeBuild(build_ext):
         build_args = ["--config", "Debug"] if debug else ["--config", "RelWithDebInfo"]
         configure_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
-            f"-DPython_EXECUTABLE={sys.executable}",  # (Windows)
-            f"-DPYTHON_EXECUTABLE={sys.executable}",  # (Ubuntu)
             "-DENABLE_WARNINGS=OFF",  # Ignore warnings
             f"-DCMAKE_BUILD_TYPE={build_type}",  # not used on MSVC, but no harm
         ]
