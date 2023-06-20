@@ -49,14 +49,17 @@ class CMakeBuild(build_ext):
         extdir = str(Path(self.get_ext_fullpath(ext.name)).parent.absolute())
 
         debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
+        build_type = "Debug" if debug else "RelWithDebInfo"
         ninja_path = str(shutil.which("ninja"))
 
         # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
+        build_args = ["--config", "Debug"] if debug else ["--config", "RelWithDebInfo"]
         configure_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DPython_EXECUTABLE={sys.executable}",  # (Windows)
             f"-DPYTHON_EXECUTABLE={sys.executable}",  # (Ubuntu)
             "-DENABLE_WARNINGS=OFF",  # Ignore warnings
+            f"-DCMAKE_BUILD_TYPE={build_type}",  # not used on MSVC, but no harm
         ]
 
         if platform.system() == "Windows":
@@ -70,14 +73,6 @@ class CMakeBuild(build_ext):
                 "-GNinja",
                 f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
             ]
-
-        build_args = []
-
-        if debug:
-            configure_args += ["-DCMAKE_BUILD_TYPE=Debug"]
-            build_args += ["--config", "Debug"]
-        else:
-            build_args += ["--config", "RelWithDebInfo"]
 
         configure_args += self.cmake_defines
 
