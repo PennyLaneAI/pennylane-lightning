@@ -102,15 +102,15 @@ class CMakeBuild(build_ext):
         if "CMAKE_ARGS" not in os.environ.keys():
             os.environ["CMAKE_ARGS"] = ""
 
-        subprocess.run(
+        subprocess.check_call(
             ["cmake", str(ext.sourcedir)] + configure_args,
             cwd=self.build_temp,
-            check=True,
+            env=os.environ,
         )
-        subprocess.run(
+        subprocess.check_call(
             ["cmake", "--build", ".", "--verbose"] + build_args,
             cwd=self.build_temp,
-            check=True,
+            env=os.environ,
         )
 
 
