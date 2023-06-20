@@ -36,27 +36,28 @@ class CMakeBuild(build_ext):
     def initialize_options(self):
         super().initialize_options()
         self.define = None
+        self.verbosity = ""
 
     def finalize_options(self):
         # Parse the custom CMake options and store them in a new attribute
         defines = [] if self.define is None else self.define.split(";")
         self.cmake_defines = [f"-D{define}" for define in defines]
+        if self.verbosity != "":
+            self.verbosity = "--verbose"
 
         super().finalize_options()
 
     def build_extension(self, ext: CMakeExtension):
         extdir = str(Path(self.get_ext_fullpath(ext.name)).parent.absolute())
-
         debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
         build_type = "Debug" if debug else "RelWithDebInfo"
         ninja_path = str(shutil.which("ninja"))
 
-        # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
         build_args = ["--config", "Debug"] if debug else ["--config", "RelWithDebInfo"]
         configure_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
-            "-DENABLE_WARNINGS=OFF",  # Ignore warnings
             f"-DCMAKE_BUILD_TYPE={build_type}",  # not used on MSVC, but no harm
+            "-DENABLE_WARNINGS=OFF",  # Ignore warnings
         ]
 
         if platform.system() == "Windows":
