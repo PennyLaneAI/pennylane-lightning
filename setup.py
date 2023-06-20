@@ -88,6 +88,8 @@ class CMakeBuild(build_ext):
                     capture_output=True,
                     text=True,
                 ).stdout.strip()
+                if not Path(libomp_path).exists():
+                    libomp_path = ""
                 configure_args += (
                     [f"-DOpenMP_ROOT={libomp_path}/"] if libomp_path else ["-DENABLE_OPENMP=OFF"]
                 )
