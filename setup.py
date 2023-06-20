@@ -99,8 +99,8 @@ class CMakeBuild(build_ext):
         if not Path(self.build_temp).exists():
             os.makedirs(self.build_temp)
 
-        if "CMAKE_ARGS" not in os.environ.keys():
-            os.environ["CMAKE_ARGS"] = ""
+        if "CMAKE_ARGS" in os.environ.keys():
+            configure_args += os.environ["CMAKE_ARGS"].split(" ")
 
         subprocess.check_call(
             ["cmake", str(ext.sourcedir)] + configure_args,
