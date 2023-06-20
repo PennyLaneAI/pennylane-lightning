@@ -173,7 +173,7 @@ class LightningQubit(QubitDevice):
 
     name = "Lightning Qubit PennyLane plugin"
     short_name = "lightning.qubit"
-    pennylane_requires = ">=0.26"
+    pennylane_requires = ">=0.30"
     version = __version__
     author = "Xanadu Inc."
     _CPP_BINARY_AVAILABLE = True
@@ -979,7 +979,7 @@ if not CPP_BINARY_AVAILABLE:
     class LightningQubit(DefaultQubit):  # pragma: no cover
         name = "Lightning Qubit PennyLane plugin"
         short_name = "lightning.qubit"
-        pennylane_requires = ">=0.26"
+        pennylane_requires = ">=0.30"
         version = __version__
         author = "Xanadu Inc."
         _CPP_BINARY_AVAILABLE = False
