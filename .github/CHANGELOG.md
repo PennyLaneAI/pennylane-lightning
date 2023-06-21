@@ -25,6 +25,10 @@
 
 ### Bug fixes
 
+* Fixing Python version bug introduce in [(#450)](https://github.com/PennyLaneAI/pennylane-lightning/pull/450)
+  when `Python_EXECUTABLE` was removed from `setup.py`.
+  [(#461)](https://github.com/PennyLaneAI/pennylane-lightning/pull/461)
+
 * Ensure aligned allocator definition works with C++20 compilers.
   [(#438)](https://github.com/PennyLaneAI/pennylane-lightning/pull/438)
 
