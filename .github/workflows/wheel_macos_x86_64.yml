@@ -175,7 +175,7 @@ jobs:
           CIBW_ARCHS_MACOS: ${{matrix.arch}}
 
           CIBW_ENVIRONMENT: |
-            CMAKE_ARGS="-DPYTHON_EXECUTABLE=$(which python)"
+            CMAKE_ARGS="-DPython_EXECUTABLE=$(which python)"
 
         run: |
           python -m cibuildwheel --output-dir wheelhouse

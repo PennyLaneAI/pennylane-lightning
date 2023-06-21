@@ -165,7 +165,7 @@ jobs:
           CIBW_BUILD_FRONTEND: build
 
           CIBW_ENVIRONMENT: |
-            CMAKE_ARGS="-DPYTHON_EXECUTABLE=$(which python)"
+            CMAKE_ARGS="-DPython_EXECUTABLE=$(which python)"
 
         run: python -m cibuildwheel --output-dir wheelhouse
 
