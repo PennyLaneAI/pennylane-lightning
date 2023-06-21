@@ -36,59 +36,36 @@ TEMPLATE_TEST_CASE("Expected Values - Sparse Hamiltonian [Kokkos]",
     Measures<TestType, StateVectorManagedCPU<TestType>> Measurer(
         Measured_StateVector);
 
-    if constexpr (USE_KOKKOS) {
-        SECTION("Testing Sparse Hamiltonian:") {
-            long num_qubits = 3;
-            long data_size = Util::exp2(num_qubits);
+    SECTION("Testing Sparse Hamiltonian:") {
+        long num_qubits = 3;
+        long data_size = Util::exp2(num_qubits);
 
-            std::vector<long> row_map;
-            std::vector<long> entries;
-            std::vector<complex<TestType>> values;
-            write_CSR_vectors(row_map, entries, values, data_size);
+        std::vector<long> row_map;
+        std::vector<long> entries;
+        std::vector<complex<TestType>> values;
+        write_CSR_vectors(row_map, entries, values, data_size);
 
-            TestType exp_values = Measurer.expval(
-                row_map.data(), static_cast<long>(row_map.size()),
-                entries.data(), values.data(),
-                static_cast<long>(values.size()));
-            TestType exp_values_ref = 0.5930885;
-            REQUIRE(exp_values == Approx(exp_values_ref).margin(1e-6));
-        }
+        TestType exp_values = Measurer.expval(
+            row_map.data(), static_cast<long>(row_map.size()), entries.data(),
+            values.data(), static_cast<long>(values.size()));
+        TestType exp_values_ref = 0.5930885;
+        REQUIRE(exp_values == Approx(exp_values_ref).margin(1e-6));
+    }
 
-        SECTION("Testing Sparse Hamiltonian (incompatible sizes):") {
-            long num_qubits = 4;
-            long data_size = Util::exp2(num_qubits);
+    SECTION("Testing Sparse Hamiltonian (incompatible sizes):") {
+        long num_qubits = 4;
+        long data_size = Util::exp2(num_qubits);
 
-            std::vector<long> row_map;
-            std::vector<long> entries;
-            std::vector<complex<TestType>> values;
-            write_CSR_vectors(row_map, entries, values, data_size);
+        std::vector<long> row_map;
+        std::vector<long> entries;
+        std::vector<complex<TestType>> values;
+        write_CSR_vectors(row_map, entries, values, data_size);
 
-            PL_CHECK_THROWS_MATCHES(
-                Measurer.expval(row_map.data(),
-                                static_cast<long>(row_map.size()),
-                                entries.data(), values.data(),
-                                static_cast<long>(values.size())),
-                LightningException,
-                "Statevector and Hamiltonian have incompatible sizes.");
-        }
-    } else {
-        SECTION("Testing Sparse Hamiltonian:") {
-            long num_qubits = 3;
-            long data_size = Util::exp2(num_qubits);
-
-            std::vector<long> row_map;
-            std::vector<long> entries;
-            std::vector<complex<TestType>> values;
-            write_CSR_vectors(row_map, entries, values, data_size);
-
-            PL_CHECK_THROWS_MATCHES(
-                Measurer.expval(row_map.data(),
-                                static_cast<long>(row_map.size()),
-                                entries.data(), values.data(),
-                                static_cast<long>(values.size())),
-                LightningException,
-                "Executing the product of a Sparse matrix and a vector needs "
-                "Kokkos and Kokkos Kernels installation.");
-        }
+        PL_CHECK_THROWS_MATCHES(
+            Measurer.expval(row_map.data(), static_cast<long>(row_map.size()),
+                            entries.data(), values.data(),
+                            static_cast<long>(values.size())),
+            LightningException,
+            "Statevector and Hamiltonian have incompatible sizes.");
     }
 }

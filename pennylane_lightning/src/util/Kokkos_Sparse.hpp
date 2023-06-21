@@ -193,8 +193,15 @@ void apply_Sparse_Matrix_Kokkos(
     [[maybe_unused]] const std::complex<fp_precision> *values_ptr,
     [[maybe_unused]] const index_type numNNZ,
     [[maybe_unused]] std::vector<std::complex<fp_precision>> &result) {
-    PL_ABORT("Executing the product of a Sparse matrix and a vector needs "
-             "Kokkos and Kokkos Kernels installation.");
+    result.resize(vector_size);
+    int count = 0;
+    for (int i = 0; i < vector_size; ++i) {
+        result[i] = 0.0;
+        for (int j = 0; j < row_map_ptr[i + 1] - row_map_ptr[i]; ++j) {
+            result[i] += values_ptr[count] * vector_ptr[entries_ptr[count]];
+            ++count;
+        }
+    }
 };
 } // namespace Pennylane::Util
 #endif

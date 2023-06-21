@@ -78,9 +78,9 @@ inline static void
 omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
               std::complex<T> &result, const size_t data_size) {
 #if defined(_OPENMP)
-#pragma omp declare \
-            reduction (sm:std::complex<T>:omp_out=ConstSum(omp_out, omp_in)) \
-            initializer(omp_priv=std::complex<T> {0, 0})
+#pragma omp declare reduction(sm : std::complex<T> : omp_out =                 \
+                                  ConstSum(omp_out, omp_in))                   \
+    initializer(omp_priv = std::complex<T>{0, 0})
 
     size_t nthreads = data_size / NTERMS;
     if (nthreads < 1) {
@@ -149,9 +149,9 @@ inline static void
 omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
                std::complex<T> &result, const size_t data_size) {
 #if defined(_OPENMP)
-#pragma omp declare \
-            reduction (sm:std::complex<T>:omp_out=ConstSum(omp_out, omp_in)) \
-            initializer(omp_priv=std::complex<T> {0, 0})
+#pragma omp declare reduction(sm : std::complex<T> : omp_out =                 \
+                                  ConstSum(omp_out, omp_in))                   \
+    initializer(omp_priv = std::complex<T>{0, 0})
 #endif
 
 #if defined(_OPENMP)

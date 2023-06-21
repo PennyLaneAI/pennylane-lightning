@@ -55,33 +55,16 @@ TEMPLATE_TEST_CASE("apply_Sparse_Matrix_Kokkos", "[Kokkos Sparse]", float,
     std::vector<complex<TestType>> values;
     write_CSR_vectors(row_map, entries, values, data_size);
 
-    if constexpr (USE_KOKKOS) {
-        SECTION("Testing sparse matrix dense vector product:") {
-            for (size_t vec = 0; vec < vectors.size(); vec++) {
-                std::vector<complex<TestType>> result;
-                apply_Sparse_Matrix_Kokkos(
-                    vectors[vec].data(), static_cast<long>(vectors[vec].size()),
-                    row_map.data(), static_cast<long>(row_map.size()),
-                    entries.data(), values.data(),
-                    static_cast<long>(values.size()), result);
-                REQUIRE(result_refs[vec] == approx(result).margin(1e-6));
-            };
-        }
-    } else {
-        SECTION(
-            "Testing if apply_Sparse_Matrix_Kokkos is throwing an exception:") {
-            size_t vec = 0;
+    SECTION("Testing sparse matrix dense vector product:") {
+        for (size_t vec = 0; vec < vectors.size(); vec++) {
             std::vector<complex<TestType>> result;
-            PL_CHECK_THROWS_MATCHES(
-                apply_Sparse_Matrix_Kokkos(
-                    vectors[vec].data(), static_cast<long>(vectors[vec].size()),
-                    row_map.data(), static_cast<long>(row_map.size()),
-                    entries.data(), values.data(),
-                    static_cast<long>(values.size()), result),
-                LightningException,
-                "Executing the product of a Sparse matrix and a vector "
-                "needs Kokkos and Kokkos Kernels installation.");
-        }
+            apply_Sparse_Matrix_Kokkos(
+                vectors[vec].data(), static_cast<long>(vectors[vec].size()),
+                row_map.data(), static_cast<long>(row_map.size()),
+                entries.data(), values.data(), static_cast<long>(values.size()),
+                result);
+            REQUIRE(result_refs[vec] == approx(result).margin(1e-6));
+        };
     }
 }
 
@@ -118,29 +101,14 @@ TEMPLATE_TEST_CASE("apply_Sparse_Matrix", "[Kokkos Sparse]", float, double) {
     std::vector<complex<TestType>> values;
     write_CSR_vectors(row_map, entries, values, data_size);
 
-    if constexpr (USE_KOKKOS) {
-        SECTION("Testing sparse matrix dense vector product:") {
-            for (size_t vec = 0; vec < vectors.size(); vec++) {
-                std::vector<complex<TestType>> result = apply_Sparse_Matrix(
-                    vectors[vec].data(), static_cast<long>(vectors[vec].size()),
-                    row_map.data(), static_cast<long>(row_map.size()),
-                    entries.data(), values.data(),
-                    static_cast<long>(values.size()));
-                REQUIRE(result_refs[vec] == approx(result).margin(1e-6));
-            };
-        }
-    } else {
-        SECTION("Testing if apply_Sparse_Matrix is throwing an exception:") {
-            size_t vec = 0;
-            PL_CHECK_THROWS_MATCHES(
-                apply_Sparse_Matrix(
-                    vectors[vec].data(), static_cast<long>(vectors[vec].size()),
-                    row_map.data(), static_cast<long>(row_map.size()),
-                    entries.data(), values.data(),
-                    static_cast<long>(values.size())),
-                LightningException,
-                "Executing the product of a Sparse matrix and a vector "
-                "needs Kokkos and Kokkos Kernels installation.");
-        }
+    SECTION("Testing sparse matrix dense vector product:") {
+        for (size_t vec = 0; vec < vectors.size(); vec++) {
+            std::vector<complex<TestType>> result = apply_Sparse_Matrix(
+                vectors[vec].data(), static_cast<long>(vectors[vec].size()),
+                row_map.data(), static_cast<long>(row_map.size()),
+                entries.data(), values.data(),
+                static_cast<long>(values.size()));
+            REQUIRE(result_refs[vec] == approx(result).margin(1e-6));
+        };
     }
 }
