@@ -56,11 +56,15 @@ class CMakeBuild(build_ext):
 
         build_args = ["--config", "Debug"] if debug else ["--config", "RelWithDebInfo"]
         configure_args = [
-            f"-DPython_EXECUTABLE={sys.executable}",
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DCMAKE_BUILD_TYPE={build_type}",  # not used on MSVC, but no harm
             "-DENABLE_WARNINGS=OFF",  # Ignore warnings
         ]
+        configure_args += (
+            [f"-DPython_EXECUTABLE={sys.executable}"]
+            if platform.system() == "Windows"
+            else [f"-DPYTHON_EXECUTABLE={sys.executable}"]
+        )
 
         if platform.system() == "Windows":
             # As Ninja does not support long path for windows yet:
