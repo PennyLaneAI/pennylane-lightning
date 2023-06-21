@@ -15,6 +15,7 @@ import os
 import platform
 import subprocess
 import shutil
+import sys
 from pathlib import Path
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
@@ -59,6 +60,11 @@ class CMakeBuild(build_ext):
             f"-DCMAKE_BUILD_TYPE={build_type}",  # not used on MSVC, but no harm
             "-DENABLE_WARNINGS=OFF",  # Ignore warnings
         ]
+        configure_args += (
+            [f"-DPYTHON_EXECUTABLE={sys.executable}"]
+            if platform.system() == "Linux"
+            else [f"-DPython_EXECUTABLE={sys.executable}"]
+        )
 
         if platform.system() == "Windows":
             # As Ninja does not support long path for windows yet:
