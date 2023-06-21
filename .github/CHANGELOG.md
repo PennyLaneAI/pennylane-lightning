@@ -12,6 +12,9 @@
 
 ### Improvements
 
+* Remove logic from `setup.py` and transfer paths and env variable definitions into workflow files.
+  [(#450)](https://github.com/PennyLaneAI/pennylane-lightning/pull/450)
+
 * Detect MKL or CBLAS if `ENABLE_BLAS=ON` making sure that BLAS is linked as expected.
   [(#449)](https://github.com/PennyLaneAI/pennylane-lightning/pull/449)
 
@@ -21,6 +24,10 @@
   [(#456)](https://github.com/PennyLaneAI/pennylane-lightning/pull/456)
 
 ### Bug fixes
+
+* Fixing Python version bug introduce in [(#450)](https://github.com/PennyLaneAI/pennylane-lightning/pull/450)
+  when `Python_EXECUTABLE` was removed from `setup.py`.
+  [(#461)](https://github.com/PennyLaneAI/pennylane-lightning/pull/461)
 
 * Ensure aligned allocator definition works with C++20 compilers.
   [(#438)](https://github.com/PennyLaneAI/pennylane-lightning/pull/438)
