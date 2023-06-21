@@ -15,6 +15,7 @@ import os
 import platform
 import subprocess
 import shutil
+import sys
 from pathlib import Path
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
@@ -55,6 +56,7 @@ class CMakeBuild(build_ext):
 
         build_args = ["--config", "Debug"] if debug else ["--config", "RelWithDebInfo"]
         configure_args = [
+            f"-DPython_EXECUTABLE={sys.executable}",
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
             f"-DCMAKE_BUILD_TYPE={build_type}",  # not used on MSVC, but no harm
             "-DENABLE_WARNINGS=OFF",  # Ignore warnings
