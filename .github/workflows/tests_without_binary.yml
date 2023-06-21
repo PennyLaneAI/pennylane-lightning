@@ -41,7 +41,7 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          pip install -e .
+          pip install . -vv
         env:
           SKIP_COMPILATION: True
 

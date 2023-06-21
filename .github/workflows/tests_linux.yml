@@ -109,7 +109,7 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          CMAKE_ARGS="-DENABLE_KOKKOS=OFF -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" pip install -e . -vv
+          CMAKE_ARGS="-DENABLE_KOKKOS=OFF -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests
         run: |
@@ -226,7 +226,7 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          CMAKE_ARGS="-DENABLE_BLAS=ON -DENABLE_KOKKOS=OFF -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" pip install -e . -vv
+          CMAKE_ARGS="-DENABLE_BLAS=ON -DENABLE_KOKKOS=OFF -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests
         run: |
@@ -380,7 +380,7 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" pip install -e . -vv
+          CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests
         run: |
@@ -528,7 +528,7 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          CMAKE_ARGS="-DENABLE_BLAS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" pip install -e . -vv
+          CMAKE_ARGS="-DENABLE_BLAS=ON -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests
         run: |
