@@ -30,22 +30,18 @@ jobs:
         run: |
           python -m pip install --upgrade pip
 
-      - name: Install CMake and ninja
-        run: |
-          python -m pip install --upgrade cmake ninja
-
       - name: Build wheels
         run: |
-          python -m pip install --upgrade pip wheel
           cd main
-          python setup.py bdist_wheel
+          pip install . -vv --no-clean | tee log.txt
         env:
           SKIP_COMPILATION: True
 
       - name: Validate wheels
         run: |
+          WHEEL_PATH=`cat log.txt | grep "Stored in directory" | cut -d ':' -f 2`
           python -m pip install twine
-          python -m twine check main/dist/*.whl
+          python -m twine check ${WHEEL_PATH}/*.whl
 
       - uses: actions/upload-artifact@v2
         if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
