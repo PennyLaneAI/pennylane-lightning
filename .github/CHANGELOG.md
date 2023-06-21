@@ -16,7 +16,7 @@
   [(#450)](https://github.com/PennyLaneAI/pennylane-lightning/pull/450)
 
 * Detect MKL or CBLAS if `ENABLE_BLAS=ON` making sure that BLAS is linked as expected.
-  [(#448)](https://github.com/PennyLaneAI/pennylane-lightning/pull/448)
+  [(#449)](https://github.com/PennyLaneAI/pennylane-lightning/pull/449)
 
 ### Documentation
 
@@ -35,7 +35,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Lee J. O'Riordan, Chae-Yeun Park
+Vincent Michaud-Rioux, Lee J. O'Riordan, Chae-Yeun Park
 
 ---
 
