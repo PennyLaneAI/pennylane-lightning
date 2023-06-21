@@ -167,6 +167,9 @@ jobs:
 
           CIBW_BUILD_VERBOSITY: 3
 
+          CIBW_ENVIRONMENT: |
+            CMAKE_ARGS="-DPYTHON_EXECUTABLE=$(which python)"
+
         run: python3 -m cibuildwheel --output-dir wheelhouse
 
       - name: Validate wheels
