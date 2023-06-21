@@ -221,7 +221,7 @@ jobs:
       - name: Install ML libraries for interfaces
         run: |
           cd main
-          python -m venv venv && source venv/bin/activate
+          source venv/bin/activate
           pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
           pip install --upgrade "jax[cpu]"  # This also installs jaxlib
           pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
@@ -229,13 +229,13 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          python -m venv venv && source venv/bin/activate
+          source venv/bin/activate
           CMAKE_ARGS="-DENABLE_BLAS=ON -DENABLE_KOKKOS=OFF -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests
         run: |
           cd main
-          python -m venv venv && source venv/bin/activate
+          source venv/bin/activate
           pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
