@@ -1,7 +1,5 @@
-ninja
-flaky
 git+https://github.com/PennyLaneAI/pennylane.git@master
-pybind11
+flaky
 pytest
 pytest-cov
 pytest-mock

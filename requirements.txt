@@ -1,7 +1,0 @@
-ninja
-flaky
-pennylane>=0.30
-pybind11
-pytest
-pytest-cov
-pytest-mock
