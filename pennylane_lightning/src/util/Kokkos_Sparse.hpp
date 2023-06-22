@@ -185,19 +185,17 @@ namespace Pennylane::Util {
  */
 template <class fp_precision, class index_type>
 void apply_Sparse_Matrix_Kokkos(
-    [[maybe_unused]] const std::complex<fp_precision> *vector_ptr,
-    [[maybe_unused]] const index_type vector_size,
-    [[maybe_unused]] const index_type *row_map_ptr,
+    const std::complex<fp_precision> *vector_ptr, const index_type vector_size,
+    const index_type *row_map_ptr,
     [[maybe_unused]] const index_type row_map_size,
-    [[maybe_unused]] const index_type *entries_ptr,
-    [[maybe_unused]] const std::complex<fp_precision> *values_ptr,
+    const index_type *entries_ptr, const std::complex<fp_precision> *values_ptr,
     [[maybe_unused]] const index_type numNNZ,
-    [[maybe_unused]] std::vector<std::complex<fp_precision>> &result) {
+    std::vector<std::complex<fp_precision>> &result) {
     result.resize(vector_size);
-    int count = 0;
-    for (int i = 0; i < vector_size; ++i) {
+    size_t count = 0;
+    for (index_type i = 0; i < vector_size; ++i) {
         result[i] = 0.0;
-        for (int j = 0; j < row_map_ptr[i + 1] - row_map_ptr[i]; ++j) {
+        for (index_type j = 0; j < row_map_ptr[i + 1] - row_map_ptr[i]; ++j) {
             result[i] += values_ptr[count] * vector_ptr[entries_ptr[count]];
             ++count;
         }
