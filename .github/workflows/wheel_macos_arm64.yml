@@ -95,7 +95,7 @@ jobs:
           # Testing of built wheels
           CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
 
-          CIBW_BEFORE_TEST: pip install git+https://github.com/PennyLaneAI/pennylane.git@v0.31.0-rc0
+          CIBW_BEFORE_TEST: pip install git+https://github.com/PennyLaneAI/pennylane.git@master
 
           CIBW_TEST_COMMAND: |
             pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
