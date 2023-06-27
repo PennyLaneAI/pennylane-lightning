@@ -193,11 +193,11 @@ void apply_Sparse_Matrix_Kokkos(
     std::vector<std::complex<fp_precision>> &result) {
     result.resize(vector_size);
     size_t count = 0;
-    for (index_type i = 0; i < vector_size; ++i) {
+    for (index_type i = 0; i < vector_size; i++) {
         result[i] = 0.0;
-        for (index_type j = 0; j < row_map_ptr[i + 1] - row_map_ptr[i]; ++j) {
+        for (index_type j = 0; j < row_map_ptr[i + 1] - row_map_ptr[i]; j++) {
             result[i] += values_ptr[count] * vector_ptr[entries_ptr[count]];
-            ++count;
+            count++;
         }
     }
 };
