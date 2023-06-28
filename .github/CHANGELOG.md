@@ -23,7 +23,7 @@ This release contains contributions from (in alphabetical order):
 * Update Kokkos support to 4.0.01.
   [(#439)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/439)
 
-* Lightning supports SparseHamiltonian natively (without Kokkos & Kokkos-kernels).
+* Add native support to sparse Hamiltonians in the absence of Kokkos & Kokkos-kernels.
   [(#465)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/465)
 
 ### Breaking changes
