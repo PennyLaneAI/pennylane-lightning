@@ -73,7 +73,7 @@ jobs:
 
       - name: Kokkos version
         id: kokkos_version
-        run: echo "kokkos_version=[\"4.0.00\"]" >> $GITHUB_OUTPUT
+        run: echo "kokkos_version=[\"4.0.01\"]" >> $GITHUB_OUTPUT
 
     outputs:
       exec_model: ${{ steps.exec_model.outputs.exec_model }}
@@ -120,7 +120,7 @@ jobs:
       - name: Create installation directory
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
-          rm D:\a\install_dir\${{ matrix.exec_model }} -r -fo
+          Remove-Item -Path D:\a\install_dir\${{ matrix.exec_model }} -Recurse -Force -ErrorAction Ignore
           mkdir -p D:\a\install_dir\${{ matrix.exec_model }}
 
       - name: Install dependencies

@@ -45,7 +45,12 @@ option(ENABLE_CLANG_TIDY "Enable clang-tidy build checks" OFF)
 option(ENABLE_COVERAGE "Enable code coverage" OFF)
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
-option(ENABLE_OPENMP "Enable OpenMP" ON)
+find_package(OpenMP)
+if (OpenMP_CXX_FOUND)
+    option(ENABLE_OPENMP "Enable OpenMP" ON)
+else()
+    option(ENABLE_OPENMP "Enable OpenMP" OFF)
+endif()
 option(ENABLE_KOKKOS "Enable Kokkos" ON)
 option(ENABLE_BLAS "Enable BLAS" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
@@ -56,6 +61,7 @@ option(BUILD_TESTS "Build cpp tests" OFF)
 option(BUILD_BENCHMARKS "Enable cpp benchmarks" OFF)
 
 # Process compile options
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
 
 set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning

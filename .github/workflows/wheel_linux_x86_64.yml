@@ -170,7 +170,8 @@ jobs:
             yum install devtoolset-11-gcc-c++ -y
             source /opt/rh/devtoolset-11/enable -y
 
-          CIBW_ENVIRONMENT: PATH=/opt/rh/devtoolset-11/root/usr/bin:$PATH
+          CIBW_ENVIRONMENT: |
+            PATH=/opt/rh/devtoolset-11/root/usr/bin:$PATH
           # Testing of built wheels
           CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
 
@@ -198,7 +199,7 @@ jobs:
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
       - uses: actions/upload-artifact@v2
-        #if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
