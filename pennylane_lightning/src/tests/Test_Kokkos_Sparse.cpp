@@ -2,7 +2,7 @@
 #include <cstdio>
 #include <vector>
 
-#include "Kokkos_Sparse.hpp"
+#include "SparseLinAlg.hpp"
 
 #include "TestHelpers.hpp"
 #include <catch2/catch.hpp>

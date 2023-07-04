@@ -28,7 +28,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Kokkos_Sparse.hpp"
+#include "SparseLinAlg.hpp"
 #include "LinearAlgebra.hpp"
 #include "Observables.hpp"
 #include "StateVectorManagedCPU.hpp"

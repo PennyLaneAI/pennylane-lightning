@@ -2,7 +2,7 @@
 #include <cstdio>
 #include <vector>
 
-#include "Kokkos_Sparse.hpp"
+#include "SparseLinAlg.hpp"
 #include "Measures.hpp"
 #include "StateVectorManagedCPU.hpp"
 #include "StateVectorRawCPU.hpp"

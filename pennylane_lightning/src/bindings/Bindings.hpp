@@ -19,7 +19,7 @@
 #pragma once
 #include "AdjointDiff.hpp"
 #include "CPUMemoryModel.hpp"
-#include "Kokkos_Sparse.hpp"
+#include "SparseLinAlg.hpp"
 #include "Macros.hpp"
 #include "Measures.hpp"
 #include "Memory.hpp"
