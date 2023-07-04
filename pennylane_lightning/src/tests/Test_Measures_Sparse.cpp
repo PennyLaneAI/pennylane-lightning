@@ -2,8 +2,8 @@
 #include <cstdio>
 #include <vector>
 
-#include "SparseLinAlg.hpp"
 #include "Measures.hpp"
+#include "SparseLinAlg.hpp"
 #include "StateVectorManagedCPU.hpp"
 #include "StateVectorRawCPU.hpp"
 #include "Util.hpp"

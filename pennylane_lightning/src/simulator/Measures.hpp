@@ -28,9 +28,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "SparseLinAlg.hpp"
 #include "LinearAlgebra.hpp"
 #include "Observables.hpp"
+#include "SparseLinAlg.hpp"
 #include "StateVectorManagedCPU.hpp"
 #include "StateVectorRawCPU.hpp"
 #include "TransitionKernels.hpp"
