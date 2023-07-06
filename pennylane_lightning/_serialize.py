@@ -30,6 +30,7 @@ from pennylane import (
 from pennylane.operation import Tensor
 from pennylane.tape import QuantumTape
 from pennylane.math import unwrap
+from warnings import warn
 
 # Remove after the next release of PL
 # Add from pennylane import matrix
@@ -39,6 +40,7 @@ try:
     from .lightning_qubit_ops import (
         StateVectorC64,
         StateVectorC128,
+        supporting_gates,
     )
     from .lightning_qubit_ops.adjoint_diff import (
         NamedObsC64,
@@ -51,6 +53,8 @@ try:
         HamiltonianC128,
         OpsStructC64,
         OpsStructC128,
+        create_ops_list_C64,
+        create_ops_list_C128,
     )
 except ImportError:
     pass
@@ -173,9 +177,7 @@ def _serialize_observables(tape: QuantumTape, wires_map: dict, use_csingle: bool
     return [_serialize_ob(ob, wires_map, use_csingle) for ob in tape.observables]
 
 
-def _serialize_ops(
-    tape: QuantumTape, wires_map: dict
-) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]], List[bool], List[np.ndarray]]:
+def _serialize_ops(tape: QuantumTape, wires_map: dict, use_csingle: bool = False):
     """Serializes the operations of an input tape.
 
     The state preparation operations are not included.
@@ -194,31 +196,79 @@ def _serialize_ops(
     wires = []
     mats = []
 
-    uses_stateprep = False
+    if use_csingle:
+        create_ops_list = create_ops_list_C64
+    else:
+        create_ops_list = create_ops_list_C128
 
-    for o in tape.operations:
-        if isinstance(o, (BasisState, QubitStateVector)):
-            uses_stateprep = True
-            continue
-        elif isinstance(o, Rot):
-            op_list = o.expand().operations
+    if use_csingle:
+        rtype = np.float32
+        ctype = np.complex64
+    else:
+        rtype = np.float64
+        ctype = np.complex128
+
+    trainable_op_idices = []
+    param_idx = 0  # Parameter index for a tape
+    lightning_ops_idx = 0
+    record_tp_rows = []
+    record_tp_idx = 0
+
+    expanded_ops = []
+
+    for op in tape.operations:
+        if isinstance(op, Rot):
+            op_list = op.expand().operations
         else:
-            op_list = [o]
+            op_list = [op]
+        expanded_ops.extend(op_list)
 
-        for single_op in op_list:
-            name = single_op.name
-            names.append(name)
+    # Transform a tape
+    for op in expanded_ops:
+        name = op.name
+        wires_list = op.wires.tolist()
 
-            if not hasattr(StateVectorC128, name):
-                params.append([])
-                mats.append(qml.matrix(single_op))
-
+        if isinstance(op, (BasisState, QubitStateVector)):
+            # We just ignore this
+            pass
+        elif name not in supporting_gates():
+            if len(wires_list) == 1:
+                name = "SingleQubitOp"
+            elif len(wires_list) == 2:
+                name = "TwoQubitOp"
             else:
-                params.append(single_op.parameters)
-                mats.append([])
-
-            wires_list = single_op.wires.tolist()
+                name = "MultiQubitOp"
+            names.append(name)
             wires.append([wires_map[w] for w in wires_list])
+            params.append([])
+            mats.append(qml.matrix(op).astype(ctype))
+            lightning_ops_idx += 1
+
+            if op.num_params > 0 and param_idx in tape.trainable_params:
+                warn(
+                    "There is a gate with trainable parameters that lightning does not support natively. Even though you can use it, Lightning does not compute gradients of variables for those gates."
+                )
+
+        else:
+            names.append(name)
+            wires.append([wires_map[w] for w in wires_list])
+            params.append(op.parameters)
+            mats.append([])
+
+            if op.num_params > 0 and param_idx in tape.trainable_params:
+                trainable_op_idices.append(lightning_ops_idx)
+                record_tp_rows.append(record_tp_idx)
+
+            lightning_ops_idx += 1
+
+        if op.num_params > 0 and param_idx in tape.trainable_params:
+            # If the gradient of the current operator should be recored
+            record_tp_idx += 1
+        param_idx += op.num_params
 
     inverses = [False] * len(names)
-    return (names, params, wires, inverses, mats), uses_stateprep
+    return (
+        create_ops_list(names, params, wires, inverses, mats),
+        trainable_op_idices,
+        record_tp_rows,
+    )

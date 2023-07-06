@@ -86,6 +86,7 @@ set(TEST_SOURCES CreateAllWires.cpp
                  Test_GateImplementations_Param.cpp
                  Test_GateUtil.cpp
                  Test_Internal.cpp
+                 Test_JacobianTape.cpp
                  Test_KernelMap.cpp
                  Test_Kokkos_Sparse.cpp
                  Test_LinearAlgebra.cpp

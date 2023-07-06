@@ -104,7 +104,7 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
         SECTION("with apply_operations = true") {
             std::vector<ComplexPrecisionT> ini_st{
                 {isqrt2, 0.0}, {0.0, 0.0}, {isqrt2, 0.0}, {0.0, 0.0}};
-            JacobianData<TestType> jd{1, 4, ini_st.data(), {}, ops_data, {0}};
+            JacobianData<TestType> jd{1, 4, ini_st.data(), {}, ops_data, {1}};
 
             for (size_t i = 0; i < 4; i++) {
                 std::fill(dy.begin(), dy.end(), ComplexPrecisionT{0.0, 0.0});
@@ -123,7 +123,7 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
                 {0.0, -isqrt2 * sin(theta / 2)},
                 {0.0, -isqrt2 * sin(theta / 2)},
                 {cos(theta / 2) * isqrt2, 0.0}};
-            JacobianData<TestType> jd{1, 4, final_st.data(), {}, ops_data, {0}};
+            JacobianData<TestType> jd{1, 4, final_st.data(), {}, ops_data, {1}};
 
             for (size_t i = 0; i < 4; i++) {
                 std::fill(dy.begin(), dy.end(),
@@ -169,7 +169,7 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
                 {isqrt2, 0.0}, {0.0, 0.0}, {isqrt2, 0.0}, {0.0, 0.0}};
 
             JacobianData<TestType> jd{
-                1, 4, ini_st.data(), {}, ops_data, {1, 2} // trainable params
+                1, 4, ini_st.data(), {}, ops_data, {3, 5} // trainable ops
             };
 
             auto dy = std::vector<std::complex<TestType>>(4);
@@ -192,7 +192,7 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
                 {0.0, 0.0}, {isqrt2, 0.0}, {isqrt2, 0.0}, {0.0, 0.0}};
 
             JacobianData<TestType> jd{
-                4, 4, final_st.data(), {}, ops_data, {1, 2} // trainable params
+                4, 4, final_st.data(), {}, ops_data, {3, 5} // trainable ops
             };
 
             auto dy = std::vector<std::complex<TestType>>(4);
@@ -236,8 +236,8 @@ TEMPLATE_TEST_CASE("StateVector VJP", "[Test_StateVecAdjDiff]", float, double) {
         std::vector<ComplexPrecisionT> ini_st{
             {isqrt2, 0.0}, {0.0, 0.0}, {isqrt2, 0.0}, {0.0, 0.0}};
 
-        JacobianData<TestType> jd1{1, 4, ini_st.data(), {}, ops_data1, {0}};
-        JacobianData<TestType> jd2{1, 4, ini_st.data(), {}, ops_data2, {0}};
+        JacobianData<TestType> jd1{1, 4, ini_st.data(), {}, ops_data1, {1}};
+        JacobianData<TestType> jd2{1, 4, ini_st.data(), {}, ops_data2, {1}};
 
         std::vector<ComplexPrecisionT> vjp1(1);
         std::vector<ComplexPrecisionT> vjp2(1);

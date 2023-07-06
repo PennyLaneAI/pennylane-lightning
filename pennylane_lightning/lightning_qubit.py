@@ -54,6 +54,7 @@ try:
         allocate_aligned_array,
         get_alignment,
         best_alignment,
+        supporting_gates,
     )
 
     from ._serialize import _serialize_ob, _serialize_observables, _serialize_ops
@@ -496,11 +497,6 @@ class LightningQubit(QubitDevice):
 
     def _process_jacobian_tape(self, tape, starting_state, use_device_state):
         # To support np.complex64 based on the type of self._state
-        if self.use_csingle:
-            create_ops_list = adjoint_diff.create_ops_list_C64
-        else:
-            create_ops_list = adjoint_diff.create_ops_list_C128
-
         # Initialization of state
         if starting_state is not None:
             if starting_state.size != 2 ** len(self.wires):
@@ -516,33 +512,9 @@ class LightningQubit(QubitDevice):
             ket = self._pre_rotated_state
 
         obs_serialized = _serialize_observables(tape, self.wire_map, use_csingle=self.use_csingle)
-        ops_serialized, use_sp = _serialize_ops(tape, self.wire_map)
-
-        ops_serialized = create_ops_list(*ops_serialized)
-
-        # We need to filter out indices in trainable_params which do not
-        # correspond to operators.
-        trainable_params = sorted(tape.trainable_params)
-        if len(trainable_params) == 0:
-            return None
-
-        tp_shift = []
-        record_tp_rows = []
-        all_params = 0
-
-        for op_idx, tp in enumerate(trainable_params):
-            # get op_idx-th operator among differentiable operators
-            op, _, _ = tape.get_operation(op_idx)
-            if isinstance(op, Operation) and not isinstance(op, (BasisState, QubitStateVector)):
-                # We now just ignore non-op or state preps
-                tp_shift.append(tp)
-                record_tp_rows.append(all_params)
-            all_params += 1
-
-        if use_sp:
-            # When the first element of the tape is state preparation. Still, I am not sure
-            # whether there must be only one state preparation...
-            tp_shift = [i - 1 for i in tp_shift]
+        ops_serialized, trainable_op_idices, record_tp_rows = _serialize_ops(
+            tape, self.wire_map, use_csingle=self.use_csingle
+        )
 
         ket = ket.reshape(-1)
         state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
@@ -550,9 +522,8 @@ class LightningQubit(QubitDevice):
             "state_vector": state_vector,
             "obs_serialized": obs_serialized,
             "ops_serialized": ops_serialized,
-            "tp_shift": tp_shift,
+            "trainable_op_idices": trainable_op_idices,
             "record_tp_rows": record_tp_rows,
-            "all_params": all_params,
         }
 
     def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
@@ -581,7 +552,15 @@ class LightningQubit(QubitDevice):
         if not processed_data:  # training_params is empty
             return np.array([], dtype=self._state.dtype)
 
-        trainable_params = processed_data["tp_shift"]
+        trainable_ops_indices = processed_data[
+            "trainable_op_idices"
+        ]  # Operation indices only can be processed by Lightning
+        all_trainable_param_size = len(
+            tape.trainable_params
+        )  # Number of all trainable parameters in the tape
+
+        if len(trainable_ops_indices) == 0:
+            return np.zeros((len(processed_data["obs_serialized"]), all_trainable_param_size))
 
         # If requested batching over observables, chunk into OMP_NUM_THREADS sized chunks.
         # This will allow use of Lightning with adjoint for large-qubit numbers AND large
@@ -596,7 +575,7 @@ class LightningQubit(QubitDevice):
                     processed_data["state_vector"],
                     obs_chunk,
                     processed_data["ops_serialized"],
-                    trainable_params,
+                    trainable_ops_indices,
                 )
                 jac.extend(jac_local)
         else:
@@ -604,11 +583,11 @@ class LightningQubit(QubitDevice):
                 processed_data["state_vector"],
                 processed_data["obs_serialized"],
                 processed_data["ops_serialized"],
-                trainable_params,
+                trainable_ops_indices,
             )
         jac = np.array(jac)
-        jac = jac.reshape(-1, len(trainable_params))
-        jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
+        jac = jac.reshape(-1, len(trainable_ops_indices))
+        jac_r = np.zeros((jac.shape[0], all_trainable_param_size))
         jac_r[:, processed_data["record_tp_rows"]] = jac
         return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
 
@@ -719,7 +698,7 @@ class LightningQubit(QubitDevice):
                     processed_data["state_vector"],
                     processed_data["ops_serialized"],
                     dy,
-                    processed_data["tp_shift"],
+                    processed_data["trainable_op_idices"],
                 )
 
             return processing_fn

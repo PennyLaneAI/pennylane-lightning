@@ -84,6 +84,7 @@ template <typename PrecisionT> class DynamicDispatcher {
   private:
     std::unordered_map<std::string, Gates::GateOperation> str_to_gates_;
     std::unordered_map<std::string, Gates::GeneratorOperation> str_to_gntrs_;
+    std::unordered_map<std::string, Gates::MatrixOperation> str_to_matops_;
 
     std::unordered_map<std::pair<Gates::GateOperation, Gates::KernelType>,
                        GateFunc, Util::PairHash>
@@ -109,6 +110,9 @@ template <typename PrecisionT> class DynamicDispatcher {
         }
         for (const auto &[gntr_op, gntr_name] : gntr_names_without_prefix) {
             str_to_gntrs_.emplace(gntr_name, gntr_op);
+        }
+        for (const auto &[mat_op, matop_name] : Gates::Constant::matrix_names) {
+            str_to_matops_.emplace(matop_name, mat_op);
         }
     }
 
@@ -212,7 +216,7 @@ template <typename PrecisionT> class DynamicDispatcher {
     }
 
     /**
-     * @brief Gate name to gate operation
+     * @brief Gate name to a gate operation
      *
      * @param gate_name Gate name
      */
@@ -222,13 +226,23 @@ template <typename PrecisionT> class DynamicDispatcher {
     }
 
     /**
-     * @brief Generator name to generator operation
+     * @brief Generator name to a generator operation
      *
      * @param gntr_name Generator name without "Generator" prefix
      */
     [[nodiscard]] auto strToGeneratorOp(const std::string &gntr_name) const
         -> Gates::GeneratorOperation {
         return str_to_gntrs_.at(gntr_name);
+    }
+
+    /**
+     * @brief Matrix operation name to a matrix operation
+     *
+     * @param matop_name Matrix operation name
+     */
+    [[nodiscard]] auto strToMatrixOp(const std::string &matop_name) const
+        -> Gates::MatrixOperation {
+        return str_to_matops_.at(matop_name);
     }
 
     /**
