@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Wheels are built with native support for sparse Hamiltonians.
+  [(#470)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/470)
+
 * Add native support to sparse Hamiltonians in the absence of Kokkos & Kokkos-kernels.
   [(#465)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/465)
 
