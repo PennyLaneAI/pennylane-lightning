@@ -875,19 +875,13 @@ class LightningQubit(QubitDevice):
         state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
         M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
         if observable.name == "SparseHamiltonian":
-            if Kokkos_info()["USE_KOKKOS"] == True:
-                # ensuring CSR sparse representation.
-
-                CSR_SparseHamiltonian = observable.sparse_matrix(wire_order=self.wires).tocsr(
-                    copy=False
-                )
-                return M.expval(
-                    CSR_SparseHamiltonian.indptr,
-                    CSR_SparseHamiltonian.indices,
-                    CSR_SparseHamiltonian.data,
-                )
-            raise NotImplementedError(
-                "The expval of a SparseHamiltonian requires Kokkos and Kokkos Kernels."
+            CSR_SparseHamiltonian = observable.sparse_matrix(wire_order=self.wires).tocsr(
+                copy=False
+            )
+            return M.expval(
+                CSR_SparseHamiltonian.indptr,
+                CSR_SparseHamiltonian.indices,
+                CSR_SparseHamiltonian.data,
             )
 
         if (
@@ -936,19 +930,13 @@ class LightningQubit(QubitDevice):
         M = MeasuresC64(state_vector) if self.use_csingle else MeasuresC128(state_vector)
 
         if observable.name == "SparseHamiltonian":
-            if Kokkos_info()["USE_KOKKOS"] == True:
-                # ensuring CSR sparse representation.
-
-                CSR_SparseHamiltonian = observable.sparse_matrix(wire_order=self.wires).tocsr(
-                    copy=False
-                )
-                return M.var(
-                    CSR_SparseHamiltonian.indptr,
-                    CSR_SparseHamiltonian.indices,
-                    CSR_SparseHamiltonian.data,
-                )
-            raise NotImplementedError(
-                "The expval of a SparseHamiltonian requires Kokkos and Kokkos Kernels."
+            CSR_SparseHamiltonian = observable.sparse_matrix(wire_order=self.wires).tocsr(
+                copy=False
+            )
+            return M.var(
+                CSR_SparseHamiltonian.indptr,
+                CSR_SparseHamiltonian.indices,
+                CSR_SparseHamiltonian.data,
             )
 
         if (

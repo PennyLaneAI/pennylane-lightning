@@ -19,12 +19,12 @@
 #pragma once
 #include "AdjointDiff.hpp"
 #include "CPUMemoryModel.hpp"
-#include "Kokkos_Sparse.hpp"
 #include "Macros.hpp"
 #include "Measures.hpp"
 #include "Memory.hpp"
 #include "OpToMemberFuncPtr.hpp"
 #include "RuntimeInfo.hpp"
+#include "SparseLinAlg.hpp"
 #include "StateVectorManagedCPU.hpp"
 
 #include "pybind11/complex.h"

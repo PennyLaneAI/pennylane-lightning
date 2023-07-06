@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add native support to sparse Hamiltonians in the absence of Kokkos & Kokkos-kernels.
+  [(#465)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/465)
+
 ### Breaking changes
 
 ### Improvements
@@ -13,6 +16,8 @@
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Vincent Michaud-Rioux
 
 ---
 

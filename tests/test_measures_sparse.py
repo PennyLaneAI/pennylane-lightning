@@ -35,40 +35,16 @@ class TestSparseExpval:
     def dev(self, request):
         return qml.device("lightning.qubit", wires=2, c_dtype=request.param)
 
-    @pytest.mark.skipif(
-        Kokkos_info()["USE_KOKKOS"] == True, reason="Kokkos and Kokkos Kernels are present."
-    )
-    def test_create_device_with_unsupported_dtype(self, dev):
-        @qml.qnode(dev, diff_method="parameter-shift")
-        def circuit():
-            qml.RX(0.4, wires=[0])
-            qml.RY(-0.2, wires=[1])
-            return qml.expval(
-                qml.SparseHamiltonian(
-                    qml.Hamiltonian([1], [qml.PauliX(0) @ qml.Identity(1)]).sparse_matrix(),
-                    wires=[0, 1],
-                )
-            )
-
-        with pytest.raises(
-            NotImplementedError,
-            match="The expval of a SparseHamiltonian requires Kokkos and Kokkos Kernels.",
-        ):
-            circuit()
-
     @pytest.mark.parametrize(
         "cases",
         [
-            [qml.PauliX(0) @ qml.Identity(1), 0.00000000000000000],
-            [qml.Identity(0) @ qml.PauliX(1), -0.19866933079506122],
-            [qml.PauliY(0) @ qml.Identity(1), -0.38941834230865050],
-            [qml.Identity(0) @ qml.PauliY(1), 0.00000000000000000],
-            [qml.PauliZ(0) @ qml.Identity(1), 0.92106099400288520],
-            [qml.Identity(0) @ qml.PauliZ(1), 0.98006657784124170],
+            [qml.PauliX(0) @ qml.Identity(1), 0.00000000000000000, 1.000000000000000000],
+            [qml.Identity(0) @ qml.PauliX(1), -0.19866933079506122, 0.960530638694763184],
+            [qml.PauliY(0) @ qml.Identity(1), -0.38941834230865050, 0.848353326320648193],
+            [qml.Identity(0) @ qml.PauliY(1), 0.00000000000000000, 1.000000119209289551],
+            [qml.PauliZ(0) @ qml.Identity(1), 0.92106099400288520, 0.151646673679351807],
+            [qml.Identity(0) @ qml.PauliZ(1), 0.98006657784124170, 0.039469480514526367],
         ],
-    )
-    @pytest.mark.skipif(
-        Kokkos_info()["USE_KOKKOS"] == False, reason="Requires Kokkos and Kokkos Kernels."
     )
     def test_sparse_Pauli_words(self, cases, tol, dev):
         """Test expval of some simple sparse Hamiltonian"""
@@ -84,6 +60,18 @@ class TestSparseExpval:
             )
 
         assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
+
+        @qml.qnode(dev, diff_method="parameter-shift")
+        def circvar():
+            qml.RX(0.4, wires=[0])
+            qml.RY(-0.2, wires=[1])
+            return qml.var(
+                qml.SparseHamiltonian(
+                    qml.Hamiltonian([1], [cases[0]]).sparse_matrix(), wires=[0, 1]
+                )
+            )
+
+        assert np.allclose(circvar(), cases[2], atol=tol, rtol=0)
 
 
 class TestSparseExpvalQChem:
@@ -121,9 +109,6 @@ class TestSparseExpvalQChem:
                 excitations,
             ],
         ],
-    )
-    @pytest.mark.skipif(
-        Kokkos_info()["USE_KOKKOS"] == False, reason="Requires Kokkos and Kokkos Kernels."
     )
     def test_sparse_Pauli_words(self, qubits, wires, H_sparse, hf_state, excitations, tol, dev):
         """Test expval of some simple sparse Hamiltonian"""

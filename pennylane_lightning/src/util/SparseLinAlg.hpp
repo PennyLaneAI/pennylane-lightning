@@ -14,7 +14,7 @@
 
 /**
  * @file
- * Contains Kokkos Sparse (linear algebra) utility functions.
+ * Contains sparse linear algebra utility functions.
  */
 
 #pragma once
@@ -120,15 +120,15 @@ const_crs_matrix_type<fp_precision> create_Kokkos_Sparse_Matrix(
  * @param entries_ptr   pointer to the column indices of the non-zero elements.
  * @param values_ptr    non-zero elements.
  * @param numNNZ        number of non-zero elements.
- * @param result        result of the matrix vector multiplication
+ * @return result        result of the matrix vector multiplication
  */
 template <class fp_precision, class index_type>
-void apply_Sparse_Matrix_Kokkos(
+std::vector<std::complex<fp_precision>> apply_Sparse_Matrix(
     const std::complex<fp_precision> *vector_ptr, const index_type vector_size,
     const index_type *row_map_ptr, const index_type row_map_size,
     const index_type *entries_ptr, const std::complex<fp_precision> *values_ptr,
-    const index_type numNNZ, std::vector<std::complex<fp_precision>> &result) {
-
+    const index_type numNNZ) {
+    std::vector<std::complex<fp_precision>> result;
     {
         const std::lock_guard<std::mutex> lock(kokkos_init_mutex);
         if (!Kokkos::is_initialized()) {
@@ -160,6 +160,7 @@ void apply_Sparse_Matrix_Kokkos(
             });
         }
     }
+    return result;
 }
 } // namespace Pennylane::Util
 #else
@@ -167,9 +168,7 @@ constexpr bool USE_KOKKOS = false;
 namespace Pennylane::Util {
 
 /**
- * @brief Apply a sparse matrix to a vector with Kokkos.
- *  The only purpose of this function is to throw an exception if there is no
- *  Kokkos and Kokkos Kernels installation, except if throw_exception is false.
+ * @brief Apply a sparse matrix to a vector.
  *
  * @tparam fp_precision data float point precision.
  * @tparam index_type integer type used as indices of the sparse matrix.
@@ -181,52 +180,27 @@ namespace Pennylane::Util {
  * @param entries_ptr   pointer to the column indices of the non-zero elements.
  * @param values_ptr    non-zero elements.
  * @param numNNZ        number of non-zero elements.
- * @param result        result of the matrix vector multiplication.
+ * @return result        result of the matrix vector multiplication
  */
 template <class fp_precision, class index_type>
-void apply_Sparse_Matrix_Kokkos(
-    [[maybe_unused]] const std::complex<fp_precision> *vector_ptr,
-    [[maybe_unused]] const index_type vector_size,
-    [[maybe_unused]] const index_type *row_map_ptr,
-    [[maybe_unused]] const index_type row_map_size,
-    [[maybe_unused]] const index_type *entries_ptr,
-    [[maybe_unused]] const std::complex<fp_precision> *values_ptr,
-    [[maybe_unused]] const index_type numNNZ,
-    [[maybe_unused]] std::vector<std::complex<fp_precision>> &result) {
-    PL_ABORT("Executing the product of a Sparse matrix and a vector needs "
-             "Kokkos and Kokkos Kernels installation.");
+std::vector<std::complex<fp_precision>>
+apply_Sparse_Matrix(const std::complex<fp_precision> *vector_ptr,
+                    const index_type vector_size, const index_type *row_map_ptr,
+                    [[maybe_unused]] const index_type row_map_size,
+                    const index_type *entries_ptr,
+                    const std::complex<fp_precision> *values_ptr,
+                    [[maybe_unused]] const index_type numNNZ) {
+    std::vector<std::complex<fp_precision>> result;
+    result.resize(vector_size);
+    size_t count = 0;
+    for (index_type i = 0; i < vector_size; i++) {
+        result[i] = 0.0;
+        for (index_type j = 0; j < row_map_ptr[i + 1] - row_map_ptr[i]; j++) {
+            result[i] += values_ptr[count] * vector_ptr[entries_ptr[count]];
+            count++;
+        }
+    }
+    return result;
 };
 } // namespace Pennylane::Util
 #endif
-
-namespace Pennylane::Util {
-
-/**
- * @brief Apply a sparse matrix to a vector with Kokkos.
- *
- * @tparam fp_precision data float point precision.
- * @tparam index_type integer type used as indices of the sparse matrix.
- * @param vector_ptr    pointer to the vector.
- * @param vector_size   size of the vector.
- * @param row_map_ptr   Pointer to the row_map array. Elements of this array
- * return the number of non-zero terms in all rows before it.
- * @param row_map_size  number of elements in the row_map.
- * @param entries_ptr   pointer to the column indices of the non-zero elements.
- * @param values_ptr    non-zero elements.
- * @param numNNZ        number of non-zero elements.
- * @return std::vector<std::complex<fp_precision>> result of the matrix vector
- * multiplication.
- */
-template <class fp_precision, class index_type>
-std::vector<std::complex<fp_precision>> apply_Sparse_Matrix(
-    const std::complex<fp_precision> *vector_ptr, const index_type vector_size,
-    const index_type *row_map_ptr, const index_type row_map_size,
-    const index_type *entries_ptr, const std::complex<fp_precision> *values_ptr,
-    const index_type numNNZ) {
-    std::vector<std::complex<fp_precision>> result;
-    apply_Sparse_Matrix_Kokkos(vector_ptr, vector_size, row_map_ptr,
-                               row_map_size, entries_ptr, values_ptr, numNNZ,
-                               result);
-    return result;
-}
-} // namespace Pennylane::Util
