@@ -150,6 +150,10 @@ class StateVectorManagedCPU
         std::copy(new_data.data(), new_data.data() + new_data.size(),
                   data_.data());
     }
+    void updateData(std::vector<ComplexPrecisionT, Util::AlignedAllocator<ComplexPrecisionT>>&& new_data) {
+        assert(data_.size() == new_data.size());
+        data_ = std::move(new_data);
+    }
 
     Util::AlignedAllocator<ComplexPrecisionT> allocator() const {
         return data_.get_allocator();

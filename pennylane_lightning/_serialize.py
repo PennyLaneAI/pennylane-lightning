@@ -55,6 +55,8 @@ try:
         OpsStructC128,
         create_ops_list_C64,
         create_ops_list_C128,
+        SparseHamiltonianC64,
+        SparseHamiltonianC128,
     )
 except ImportError:
     pass
@@ -116,6 +118,25 @@ def _serialize_hamiltonian(ob, wires_map: dict, use_csingle: bool):
     return hamiltonian_obs(coeffs, terms)
 
 
+def _serialize_sparse_hamiltonian(ob, wires_map: dict, use_csingle: bool):
+    if use_csingle:
+        rtype = np.float32
+        ctype = np.complex64
+        sparse_hamiltonian_obs = SparseHamiltonianC64
+    else:
+        rtype = np.float64
+        ctype = np.complex128
+        sparse_hamiltonian_obs = SparseHamiltonianC128
+
+    CSR_SparseHamiltonian = ob.sparse_matrix().tocsr(
+        copy=False
+    )
+    return sparse_hamiltonian_obs(
+        CSR_SparseHamiltonian.indptr,
+        CSR_SparseHamiltonian.indices,
+        CSR_SparseHamiltonian.data.astype(ctype),
+    )
+
 def _serialize_pauli_word(ob, wires_map: dict, use_csingle: bool):
     """Serialize a :class:`pennylane.pauli.PauliWord` into a Named or Tensor observable."""
     if use_csingle:
@@ -154,6 +175,8 @@ def _serialize_ob(ob, wires_map, use_csingle):
         return _serialize_tensor_ob(ob, wires_map, use_csingle)
     elif ob.name == "Hamiltonian":
         return _serialize_hamiltonian(ob, wires_map, use_csingle)
+    elif ob.name == "SparseHamiltonian":
+        return _serialize_sparse_hamiltonian(ob, wires_map, use_csingle)
     elif isinstance(ob, (PauliX, PauliY, PauliZ, Identity, Hadamard)):
         return _serialize_named_obs(ob, wires_map, use_csingle)
     elif ob._pauli_rep is not None:

@@ -60,8 +60,7 @@ void lightning_class_bindings(py::module_ &m) {
     using sparse_index_type =
         long int; // Kokkos Kernels needs signed int as Ordinal type.
     using np_arr_sparse_ind =
-        py::array_t<sparse_index_type,
-                    py::array::c_style | py::array::forcecast>;
+        py::array_t<sparse_index_type, py::array::c_style | py::array::forcecast>;
 
     //***********************************************************************//
     //                              StateVector
@@ -185,7 +184,7 @@ void lightning_class_bindings(py::module_ &m) {
                         values.request().ptr),
                     static_cast<sparse_index_type>(values.request().size));
             },
-            "Expected value of a sparse Hamiltonian.");
+            "Variance of a sparse Hamiltonian.");
 }
 
 template <class PrecisionT, class ParamT>
@@ -193,12 +192,17 @@ void registerAlgorithms(py::module_ &m) {
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
+    using np_arr_c = py::array_t<std::complex<ParamT>, py::array::c_style>;
+    using np_arr_r = py::array_t<ParamT, py::array::c_style>;
+
+    using sparse_index_type =
+        long int; // Kokkos Kernels needs signed int as Ordinal type.
+    using np_arr_sparse_ind =
+        py::array_t<sparse_index_type, py::array::c_style>;
+
     //***********************************************************************//
     //                              Observable
     //***********************************************************************//
-
-    using np_arr_c = py::array_t<std::complex<ParamT>, py::array::c_style>;
-    using np_arr_r = py::array_t<ParamT, py::array::c_style>;
 
     std::string class_name;
 
@@ -302,6 +306,40 @@ void registerAlgorithms(py::module_ &m) {
                     return false;
                 }
                 auto other_cast = other.cast<Hamiltonian<PrecisionT>>();
+                return self == other_cast;
+            },
+            "Compare two observables");
+
+    class_name = "SparseHamiltonianC" + bitsize;
+    py::class_<SparseHamiltonian<PrecisionT>,
+               std::shared_ptr<SparseHamiltonian<PrecisionT>>,
+               Observable<PrecisionT>>(m, class_name.c_str(),
+                                       py::module_local())
+        .def(py::init([](const np_arr_sparse_ind row_map,
+                        const np_arr_sparse_ind entries,
+                        const np_arr_c values) {
+                auto row_map_buf = row_map.request();
+                auto entires_buf = entries.request();
+                auto values_buf = values.request();
+
+                return SparseHamiltonian<PrecisionT>(
+                    std::span{static_cast<long int*>(row_map_buf.ptr), static_cast<size_t>(row_map_buf.size)},
+                    std::span{static_cast<long int*>(entires_buf.ptr), static_cast<size_t>(entires_buf.size)},
+                    std::span{static_cast<std::complex<PrecisionT>*>(values_buf.ptr), static_cast<size_t>(values_buf.size)}
+                );
+            }),
+            /* keeps arguments alive while this C++ object alive */
+            py::keep_alive<1, 2>(), py::keep_alive<1, 3>(), py::keep_alive<1, 4>())
+        .def("__repr__", &SparseHamiltonian<PrecisionT>::getObsName)
+        .def("get_wires", &SparseHamiltonian<PrecisionT>::getWires,
+             "Get wires of observables")
+        .def(
+            "__eq__",
+            [](const SparseHamiltonian<PrecisionT> &self, py::handle other) -> bool {
+                if (!py::isinstance<SparseHamiltonian<PrecisionT>>(other)) {
+                    return false;
+                }
+                auto other_cast = other.cast<SparseHamiltonian<PrecisionT>>();
                 return self == other_cast;
             },
             "Compare two observables");

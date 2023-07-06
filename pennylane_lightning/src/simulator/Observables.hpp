@@ -14,6 +14,7 @@
 #pragma once
 
 #include "Error.hpp"
+#include "Kokkos_Sparse.hpp"
 #include "LinearAlgebra.hpp"
 #include "StateVectorManagedCPU.hpp"
 #include "Util.hpp"
@@ -441,5 +442,75 @@ template <typename T> class Hamiltonian final : public Observable<T> {
         return ss.str();
     }
 };
+/**
+ * @brief Sparse Hamiltonian
+ *
+ * Note that all internal information is saved as a pointer which is presumably from a Python
+ * layer. Thus destructing sparse matrix from a python layer may yield undefined behaviors.
+ */
+template <typename T> class SparseHamiltonian final : public Observable<T> {
+  public:
+    using PrecisionT = T;
 
+  private:
+    std::vector<long int> row_map_;
+    std::vector<long int> entries_;
+    std::vector<std::complex<T>> values_;
+
+    /**
+     * @brief Comparison between sparse Hamiltonian objects
+     */
+    [[nodiscard]] bool isEqual(const Observable<T> &other) const override {
+        const auto &other_cast = static_cast<const SparseHamiltonian<T> &>(other);
+
+        return (row_map_ == other_cast.row_map_) && (entries_ == other_cast.entries_) && (values_ == other_cast.values_);
+    }
+
+  public:
+    /**
+     * @brief Create a sparse Hamiltonian from the csr format
+     *
+     * @param row_map_size  row_map array size.
+     * @param numNNZ        number of non-zero elements.
+     * @param row_map_ptr   row_map array pointer.
+     *                      The j element encodes the number of non-zeros above
+     *                      row j.
+     * @param entries_ptr   pointer to an array with column indices of the
+     * non-zero elements.
+     * @param values_ptr    pointer to an array with the non-zero elements.
+     */
+    SparseHamiltonian(std::span<const long int> row_map,
+                      std::span<const long int> entries,
+                      std::span<const std::complex<T>> values)
+        : row_map_{row_map.begin(), row_map.end()},
+          entries_{entries.begin(), entries.end()},
+          values_{values.begin(), values.end()}
+    {
+    }
+
+    void applyInPlace(StateVectorManagedCPU<T> &sv) const override {
+        StateVectorManagedCPU<T> new_sv(sv.getNumQubits());
+        Util::apply_Sparse_Matrix_Kokkos(sv.getData(), static_cast<long int>(sv.getLength()),
+                row_map_.data(), static_cast<long int>(row_map_.size()), 
+                entries_.data(), values_.data(), static_cast<long int>(values_.size()), std::span{new_sv.getData(), new_sv.getLength()});
+        sv.updateData(std::move(new_sv.getDataVector()));
+    }
+
+    [[nodiscard]] auto getWires() const -> std::vector<size_t> override {
+        std::vector<size_t> wires;
+        const auto n_wires = Util::log2PerfectPower(row_map_.size() + 1);
+        wires.resize(n_wires);
+        std::iota(wires.begin(), wires.end(), 0);
+        return wires;
+    }
+
+    [[nodiscard]] auto getObsName() const -> std::string override {
+        using Util::operator<<;
+        std::ostringstream ss;
+        ss << "SparseHamiltonian: {";
+        ss << "size: " << row_map_.size();
+        ss << "}";
+        return ss.str();
+    }
+};
 } // namespace Pennylane::Simulators
