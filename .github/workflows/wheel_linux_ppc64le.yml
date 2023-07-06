@@ -71,7 +71,8 @@ jobs:
             -v `pwd`:/io \
             -v ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}:/install \
             -i ${{ matrix.container_img }} \
-            bash -c "cd /io && \
+            bash -c "git config --global --add safe.directory /io && \
+            cd /io && \
             python3.8 -m pip install ninja && \
             ln -s /opt/python/cp38-cp38/bin/ninja /usr/bin/ninja && \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
@@ -93,7 +94,8 @@ jobs:
             -v `pwd`:/io \
             -v ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}:/install \
             -i ${{ matrix.container_img }} \
-            bash -c "cd /io && \
+            bash -c "git config --global --add safe.directory /io && \
+            cd /io && \
             python3.8 -m pip install ninja && \
             ln -s /opt/python/cp38-cp38/bin/ninja /usr/bin/ninja && \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \

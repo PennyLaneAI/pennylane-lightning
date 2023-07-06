@@ -1,8 +1,26 @@
-# Release 0.31.0-dev
+# Release 0.32.0-dev
 
 ### New features since last release
 
-* Update Kokkos support to 4.0.
+### Breaking changes
+
+### Improvements
+
+### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+---
+
+# Release 0.31.0
+
+### New features since last release
+
+* Update Kokkos support to 4.0.01.
   [(#439)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/439)
 
 ### Breaking changes
@@ -12,8 +30,11 @@
 
 ### Improvements
 
+* Remove logic from `setup.py` and transfer paths and env variable definitions into workflow files.
+  [(#450)](https://github.com/PennyLaneAI/pennylane-lightning/pull/450)
+
 * Detect MKL or CBLAS if `ENABLE_BLAS=ON` making sure that BLAS is linked as expected.
-  [(#448)](https://github.com/PennyLaneAI/pennylane-lightning/pull/448)
+  [(#449)](https://github.com/PennyLaneAI/pennylane-lightning/pull/449)
 
 ### Documentation
 
@@ -21,6 +42,13 @@
   [(#456)](https://github.com/PennyLaneAI/pennylane-lightning/pull/456)
 
 ### Bug fixes
+
+* Ensure cross-platform wheels continue to build with updates in git safety checks.
+  [(#452)](https://github.com/PennyLaneAI/pennylane-lightning/pull/452)
+
+* Fixing Python version bug introduce in [(#450)](https://github.com/PennyLaneAI/pennylane-lightning/pull/450)
+  when `Python_EXECUTABLE` was removed from `setup.py`.
+  [(#461)](https://github.com/PennyLaneAI/pennylane-lightning/pull/461)
 
 * Ensure aligned allocator definition works with C++20 compilers.
   [(#438)](https://github.com/PennyLaneAI/pennylane-lightning/pull/438)
@@ -32,7 +60,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Lee J. O'Riordan, Chae-Yeun Park
+Vincent Michaud-Rioux, Lee J. O'Riordan, Chae-Yeun Park
 
 ---
 
@@ -122,35 +150,35 @@ Christina Lee, Vincent Michaud-Rioux, Lee James O'Riordan, Chae-Yeun Park, Matth
 ### Improvements
 
 * Remove runtime dependency on ninja build system.
-[(#414)](https://github.com/PennyLaneAI/pennylane-lightning/pull/414)
+  [(#414)](https://github.com/PennyLaneAI/pennylane-lightning/pull/414)
 
 * Allow better integration and installation support with CMake targeted binary builds.
-[(#403)](https://github.com/PennyLaneAI/pennylane-lightning/pull/403)
+  [(#403)](https://github.com/PennyLaneAI/pennylane-lightning/pull/403)
 
 * Remove explicit Numpy and Scipy requirements.
-[(#412)](https://github.com/PennyLaneAI/pennylane-lightning/pull/412)
+  [(#412)](https://github.com/PennyLaneAI/pennylane-lightning/pull/412)
 
 * Get `llvm` installation root from the environment variable `LLVM_ROOT_DIR` (or fallback to `brew`).
-[(#413)](https://github.com/PennyLaneAI/pennylane-lightning/pull/413)
+  [(#413)](https://github.com/PennyLaneAI/pennylane-lightning/pull/413)
 
 * Update AVX2/512 kernel infrastructure for additional gate/generator operations.
-[(#404)](https://github.com/PennyLaneAI/pennylane-lightning/pull/404)
+  [(#404)](https://github.com/PennyLaneAI/pennylane-lightning/pull/404)
 
 * Remove unnecessary lines for resolving CodeCov issue.
-[(#415)](https://github.com/PennyLaneAI/pennylane-lightning/pull/415)
+  [(#415)](https://github.com/PennyLaneAI/pennylane-lightning/pull/415)
 
 * Add more AVX2/512 gate operations.
-[(#393)](https://github.com/PennyLaneAI/pennylane-lightning/pull/393)
+  [(#393)](https://github.com/PennyLaneAI/pennylane-lightning/pull/393)
 
 ### Documentation
 
 ### Bug fixes
 
 * Ensure error raised when asking for out of order marginal probabilities. Prevents the return of incorrect results.
-[(#416)](https://github.com/PennyLaneAI/pennylane-lightning/pull/416)
+  [(#416)](https://github.com/PennyLaneAI/pennylane-lightning/pull/416)
 
 * Fix Github shields in README.
-[(#402)](https://github.com/PennyLaneAI/pennylane-lightning/pull/402)
+  [(#402)](https://github.com/PennyLaneAI/pennylane-lightning/pull/402)
 
 ### Contributors
 
@@ -163,7 +191,7 @@ Amintor Dusko, Vincent Michaud-Rioux, Lee James O'Riordan, Chae-Yeun Park
 ### Bug fixes
 
 * Fix Python module versioning for Linux wheels.
-[(#408)](https://github.com/PennyLaneAI/pennylane-lightning/pull/408)
+  [(#408)](https://github.com/PennyLaneAI/pennylane-lightning/pull/408)
 
 ### Contributors
 
@@ -178,7 +206,7 @@ Amintor Dusko, Shuli Shu, Trevor Vincent
 ### Bug fixes
 
 * Fix Pybind11 module versioning and locations for Windows wheels.
-[(#400)](https://github.com/PennyLaneAI/pennylane-lightning/pull/400)
+  [(#400)](https://github.com/PennyLaneAI/pennylane-lightning/pull/400)
 
 ### Contributors
 
@@ -193,20 +221,20 @@ Lee J. O'Riordan
 ### Breaking changes
 
 * Deprecate support for Python 3.7.
-[(#391)](https://github.com/PennyLaneAI/pennylane-lightning/pull/391)
+  [(#391)](https://github.com/PennyLaneAI/pennylane-lightning/pull/391)
 
 ### Improvements
 
 * Improve Lightning package structure for external use as a C++ library.
-[(#369)](https://github.com/PennyLaneAI/pennylane-lightning/pull/369)
+  [(#369)](https://github.com/PennyLaneAI/pennylane-lightning/pull/369)
 
 * Improve the stopping condition method.
-[(#386)](https://github.com/PennyLaneAI/pennylane-lightning/pull/386)
+  [(#386)](https://github.com/PennyLaneAI/pennylane-lightning/pull/386)
 
 ### Bug fixes
 
 - Pin CMake to 3.24.x in wheel-builder to avoid Python not found error in CMake 3.25, when building wheels for PennyLane-Lightning-GPU.
-[(#387)](https://github.com/PennyLaneAI/pennylane-lightning/pull/387)
+  [(#387)](https://github.com/PennyLaneAI/pennylane-lightning/pull/387)
 
 ### Contributors
 
@@ -221,39 +249,39 @@ Amintor Dusko, Lee J. O'Riordan
 ### New features since last release
 
 * Enable building of python 3.11 wheels and upgrade python on CI/CD workflows to 3.8.
-[(#381)](https://github.com/PennyLaneAI/pennylane-lightning/pull/381)
+  [(#381)](https://github.com/PennyLaneAI/pennylane-lightning/pull/381)
 
 ### Breaking changes
 
 ### Improvements
 
 * Update clang-tools version in Github workflows.
-[(#351)](https://github.com/PennyLaneAI/pennylane-lightning/pull/351)
+  [(#351)](https://github.com/PennyLaneAI/pennylane-lightning/pull/351)
 
 * Improve tests and checks CI/CD pipelines.
-[(#353)](https://github.com/PennyLaneAI/pennylane-lightning/pull/353)
+  [(#353)](https://github.com/PennyLaneAI/pennylane-lightning/pull/353)
 
 * Implement 3 Qubits gates (CSWAP & Toffoli) & 4 Qubits gates (DoubleExcitation, DoubleExcitationMinus, DoubleExcitationPlus) in LM manner.
-[(#362)](https://github.com/PennyLaneAI/pennylane-lightning/pull/362)
+  [(#362)](https://github.com/PennyLaneAI/pennylane-lightning/pull/362)
 
 * Upgrade Kokkos and Kokkos Kernels to 3.7.00, and improve sparse matrix-vector multiplication performance and memory usage.
-[(#361)](https://github.com/PennyLaneAI/pennylane-lightning/pull/361)
+  [(#361)](https://github.com/PennyLaneAI/pennylane-lightning/pull/361)
 
 * Update Linux (ubuntu-latest) architecture x86_64 wheel-builder from GCC 10.x to GCC 11.x.
-[(#373)](https://github.com/PennyLaneAI/pennylane-lightning/pull/373)
+  [(#373)](https://github.com/PennyLaneAI/pennylane-lightning/pull/373)
 
 * Update gcc and g++ 10.x to 11.x in CI tests. This update brings improved support for newer C++ features.
-[(#370)](https://github.com/PennyLaneAI/pennylane-lightning/pull/370)
+  [(#370)](https://github.com/PennyLaneAI/pennylane-lightning/pull/370)
 
 * Change Lightning to inherit from QubitDevice instead of DefaultQubit.
-[(#365)](https://github.com/PennyLaneAI/pennylane-lightning/pull/365)
+  [(#365)](https://github.com/PennyLaneAI/pennylane-lightning/pull/365)
 
 ### Documentation
 
 ### Bug fixes
 
 * Use mutex when accessing cache in KernelMap.
-[(#382)](https://github.com/PennyLaneAI/pennylane-lightning/pull/382)
+  [(#382)](https://github.com/PennyLaneAI/pennylane-lightning/pull/382)
 
 ### Contributors
 
@@ -268,7 +296,7 @@ Amintor Dusko, Chae-Yeun Park, Monit Sharma, Shuli Shu
 ### Bug fixes
 
 * Fixes the transposition method used in the probability calculation.
-[(#377)](https://github.com/PennyLaneAI/pennylane-lightning/pull/377)
+  [(#377)](https://github.com/PennyLaneAI/pennylane-lightning/pull/377)
 
 ### Contributor
 
@@ -280,13 +308,13 @@ Amintor Dusko
 ### Improvements
 
 * Introduces requirements-dev.txt and improves dockerfile.
-[(#330)](https://github.com/PennyLaneAI/pennylane-lightning/pull/330)
+  [(#330)](https://github.com/PennyLaneAI/pennylane-lightning/pull/330)
 
 * Support `expval` for a Hamiltonian.
-[(#333)](https://github.com/PennyLaneAI/pennylane-lightning/pull/333)
+  [(#333)](https://github.com/PennyLaneAI/pennylane-lightning/pull/333)
 
 * Implements caching for Kokkos installation.
-[(#316)](https://github.com/PennyLaneAI/pennylane-lightning/pull/316)
+  [(#316)](https://github.com/PennyLaneAI/pennylane-lightning/pull/316)
 
 * Supports measurements of operator arithmetic classes such as `Sum`, `Prod`,
   and `SProd` by deferring handling of them to `DefaultQubit`.
@@ -302,13 +330,13 @@ def circuit():
 ### Bug fixes
 
 * Test updates to reflect new measurement error messages.
-[(#334)](https://github.com/PennyLaneAI/pennylane-lightning/pull/334)
+  [(#334)](https://github.com/PennyLaneAI/pennylane-lightning/pull/334)
 
 * Updates to the release tagger to fix incompatibilities with RTD.
-[(#344)](https://github.com/PennyLaneAI/pennylane-lightning/pull/344)
+  [(#344)](https://github.com/PennyLaneAI/pennylane-lightning/pull/344)
 
 * Update cancel-workflow-action and bot credentials.
-[(#345)](https://github.com/PennyLaneAI/pennylane-lightning/pull/345)
+  [(#345)](https://github.com/PennyLaneAI/pennylane-lightning/pull/345)
 
 ### Contributors
 
@@ -334,23 +362,23 @@ Amintor Dusko, Christina Lee, Lee J. O'Riordan, Chae-Yeun Park
 ### Improvements
 
 * CI builders use a reduced set of resources and redundant tests for PRs.
-[(#319)](https://github.com/PennyLaneAI/pennylane-lightning/pull/319)
+  [(#319)](https://github.com/PennyLaneAI/pennylane-lightning/pull/319)
 
 * Parallelize wheel-builds where applicable.
-[(#314)](https://github.com/PennyLaneAI/pennylane-lightning/pull/314)
+  [(#314)](https://github.com/PennyLaneAI/pennylane-lightning/pull/314)
 
 * AVX2/512 kernels are now available on Linux/MacOS with x86-64 architecture.
-[(#313)](https://github.com/PennyLaneAI/pennylane-lightning/pull/313)
+  [(#313)](https://github.com/PennyLaneAI/pennylane-lightning/pull/313)
 
 ### Documentation
 
 * Updated ReadTheDocs runner version from Ubuntu 20.04 to 22.04
-[(#327)](https://github.com/PennyLaneAI/pennylane-lightning/pull/327)
+  [(#327)](https://github.com/PennyLaneAI/pennylane-lightning/pull/327)
 
 ### Bug fixes
 
 * Test updates to reflect new additions to PennyLane.
-[(#318)](https://github.com/PennyLaneAI/pennylane-lightning/pull/318)
+  [(#318)](https://github.com/PennyLaneAI/pennylane-lightning/pull/318)
 
 ### Contributors
 
@@ -365,37 +393,37 @@ Amintor Dusko, Christina Lee, Rashid N H M, Lee J. O'Riordan, Chae-Yeun Park
 ### New features since last release
 
 * Add `SingleExcitation` and `DoubleExcitation` qchem gates and generators.
-[(#289)](https://github.com/PennyLaneAI/pennylane-lightning/pull/289)
+  [(#289)](https://github.com/PennyLaneAI/pennylane-lightning/pull/289)
 
 * Add a new dispatch mechanism for future kernels.
-[(#291)](https://github.com/PennyLaneAI/pennylane-lightning/pull/291)
+  [(#291)](https://github.com/PennyLaneAI/pennylane-lightning/pull/291)
 
 * Add `IsingXY` gate operation.
-[(#303)](https://github.com/PennyLaneAI/pennylane-lightning/pull/303)
+  [(#303)](https://github.com/PennyLaneAI/pennylane-lightning/pull/303)
 
 * Support `qml.state()` in vjp and Hamiltonian in adjoint jacobian.
-[(#294)](https://github.com/PennyLaneAI/pennylane-lightning/pull/294)
+  [(#294)](https://github.com/PennyLaneAI/pennylane-lightning/pull/294)
 
 ### Breaking changes
 
 * Codebase is now moving to C++20. The default compiler for Linux is now GCC10.
-[(#295)](https://github.com/PennyLaneAI/pennylane-lightning/pull/295)
+  [(#295)](https://github.com/PennyLaneAI/pennylane-lightning/pull/295)
 
 * Minimum macOS version is changed to 10.15 (Catalina).
-[(#295)](https://github.com/PennyLaneAI/pennylane-lightning/pull/295)
+  [(#295)](https://github.com/PennyLaneAI/pennylane-lightning/pull/295)
 
 ### Improvements
 
 * Split matrix operations, refactor dispatch mechanisms, and add a benchmark suits.
-[(#274)](https://github.com/PennyLaneAI/pennylane-lightning/pull/274)
+  [(#274)](https://github.com/PennyLaneAI/pennylane-lightning/pull/274)
 
 * Add native support for the calculation of sparse Hamiltonians' expectation values.
 Sparse operations are offloaded to [Kokkos](https://github.com/kokkos/kokkos) and
 [Kokkos-Kernels](https://github.com/kokkos/kokkos-kernels).
-[(#283)](https://github.com/PennyLaneAI/pennylane-lightning/pull/283)
+  [(#283)](https://github.com/PennyLaneAI/pennylane-lightning/pull/283)
 
 * Device `lightning.qubit` now accepts a datatype for a statevector.
-[(#290)](https://github.com/PennyLaneAI/pennylane-lightning/pull/290)
+  [(#290)](https://github.com/PennyLaneAI/pennylane-lightning/pull/290)
 
 ```python
 dev1 = qml.device('lightning.qubit', wires=4, c_dtype=np.complex64) # for single precision
@@ -406,15 +434,15 @@ dev2 = qml.device('lightning.qubit', wires=4, c_dtype=np.complex128) # for doubl
 
 * Use the centralized [Xanadu Sphinx Theme](https://github.com/XanaduAI/xanadu-sphinx-theme)
   to style the Sphinx documentation.
-[(#287)](https://github.com/PennyLaneAI/pennylane-lightning/pull/287)
+  [(#287)](https://github.com/PennyLaneAI/pennylane-lightning/pull/287)
 
 ### Bug fixes
 
 * Fix the issue with using available `clang-format` version in format.
-[(#288)](https://github.com/PennyLaneAI/pennylane-lightning/pull/288)
+  [(#288)](https://github.com/PennyLaneAI/pennylane-lightning/pull/288)
 
 * Fix a bug in the generator of `DoubleExcitationPlus`.
-[(#298)](https://github.com/PennyLaneAI/pennylane-lightning/pull/298)
+  [(#298)](https://github.com/PennyLaneAI/pennylane-lightning/pull/298)
 
 ### Contributors
 
@@ -429,44 +457,44 @@ Mikhail Andrenkov, Ali Asadi, Amintor Dusko, Lee James O'Riordan, Chae-Yeun Park
 ### New features since last release
 
 * Add `generate_samples()` to lightning.
-[(#247)](https://github.com/PennyLaneAI/pennylane-lightning/pull/247)
+  [(#247)](https://github.com/PennyLaneAI/pennylane-lightning/pull/247)
 
 * Add Lightning GBenchmark Suite.
-[(#249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/249)
+  [(#249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/249)
 
 * Support runtime and compile information.
-[(#253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/253)
+  [(#253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/253)
 
 ### Improvements
 
 * Add `ENABLE_BLAS` build to CI checks.
-[(#249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/249)
+  [(#249)](https://github.com/PennyLaneAI/pennylane-lightning/pull/249)
 
 * Add more `clang-tidy` checks and kernel tests.
-[(#253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/253)
+  [(#253)](https://github.com/PennyLaneAI/pennylane-lightning/pull/253)
 
 * Add C++ code coverage to CI.
-[(#265)](https://github.com/PennyLaneAI/pennylane-lightning/pull/265)
+  [(#265)](https://github.com/PennyLaneAI/pennylane-lightning/pull/265)
 
 * Skip over identity operations in `"lightning.qubit"`.
-[(#268)](https://github.com/PennyLaneAI/pennylane-lightning/pull/268)
+  [(#268)](https://github.com/PennyLaneAI/pennylane-lightning/pull/268)
 
 ### Bug fixes
 
 * Update tests to remove `JacobianTape`.
-[(#260)](https://github.com/PennyLaneAI/pennylane-lightning/pull/260)
+  [(#260)](https://github.com/PennyLaneAI/pennylane-lightning/pull/260)
 
 * Fix tests for MSVC.
-[(#264)](https://github.com/PennyLaneAI/pennylane-lightning/pull/264)
+  [(#264)](https://github.com/PennyLaneAI/pennylane-lightning/pull/264)
 
 * Fix `#include <cpuid.h>` for PPC and AArch64 in Linux.
-[(#266)](https://github.com/PennyLaneAI/pennylane-lightning/pull/266)
+  [(#266)](https://github.com/PennyLaneAI/pennylane-lightning/pull/266)
 
 * Remove deprecated tape execution methods.
-[(#270)](https://github.com/PennyLaneAI/pennylane-lightning/pull/270)
+  [(#270)](https://github.com/PennyLaneAI/pennylane-lightning/pull/270)
 
 * Update `qml.probs` in `test_measures.py`.
-[(#280)](https://github.com/PennyLaneAI/pennylane-lightning/pull/280)
+  [(#280)](https://github.com/PennyLaneAI/pennylane-lightning/pull/280)
 
 ### Contributors
 
@@ -481,7 +509,7 @@ Ali Asadi, Chae-Yeun Park, Lee James O'Riordan, and Trevor Vincent
 ### Bug fixes
 
 * Ensure `Identity ` kernel is registered to C++ dispatcher.
-[(#275)](https://github.com/PennyLaneAI/pennylane-lightning/pull/275)
+  [(#275)](https://github.com/PennyLaneAI/pennylane-lightning/pull/275)
 
 ---
 
@@ -490,46 +518,46 @@ Ali Asadi, Chae-Yeun Park, Lee James O'Riordan, and Trevor Vincent
 ### New features since last release
 
 * Add Docker support.
-[(#234)](https://github.com/PennyLaneAI/pennylane-lightning/pull/234)
+  [(#234)](https://github.com/PennyLaneAI/pennylane-lightning/pull/234)
 
 ### Improvements
 
 * Update quantum tapes serialization and Python tests.
-[(#239)](https://github.com/PennyLaneAI/pennylane-lightning/pull/239)
+  [(#239)](https://github.com/PennyLaneAI/pennylane-lightning/pull/239)
 
 * Clang-tidy is now enabled for both tests and examples builds under Github Actions.
-[(#237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/237)
+  [(#237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/237)
 
 * The return type of `StateVectorBase` data is now derived-class defined.
-[(#237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/237)
+  [(#237)](https://github.com/PennyLaneAI/pennylane-lightning/pull/237)
 
 * Update adjointJacobian and VJP methods.
-[(#222)](https://github.com/PennyLaneAI/pennylane-lightning/pull/222)
+  [(#222)](https://github.com/PennyLaneAI/pennylane-lightning/pull/222)
 
 * Set GitHub workflow to upload wheels to Test PyPI.
-[(#220)](https://github.com/PennyLaneAI/pennylane-lightning/pull/220)
+  [(#220)](https://github.com/PennyLaneAI/pennylane-lightning/pull/220)
 
 * Finalize the new kernel implementation.
-[(#212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/212)
+  [(#212)](https://github.com/PennyLaneAI/pennylane-lightning/pull/212)
 
 ### Documentation
 
 * Use of batching with OpenMP threads is documented.
-[(#221)](https://github.com/PennyLaneAI/pennylane-lightning/pull/221)
+  [(#221)](https://github.com/PennyLaneAI/pennylane-lightning/pull/221)
 
 ### Bug fixes
 
 * Fix for OOM errors when using adjoint with large numbers of observables.
-[(#221)](https://github.com/PennyLaneAI/pennylane-lightning/pull/221)
+  [(#221)](https://github.com/PennyLaneAI/pennylane-lightning/pull/221)
 
 * Add virtual destructor to C++ state-vector classes.
-[(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
+  [(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
 
 * Fix a bug in Python tests with operations' `matrix` calls.
-[(#238)](https://github.com/PennyLaneAI/pennylane-lightning/pull/238)
+  [(#238)](https://github.com/PennyLaneAI/pennylane-lightning/pull/238)
 
 * Refactor utility header and fix a bug in linear algebra function with CBLAS.
-[(#228)](https://github.com/PennyLaneAI/pennylane-lightning/pull/228)
+  [(#228)](https://github.com/PennyLaneAI/pennylane-lightning/pull/228)
 
 ### Contributors
 
@@ -544,24 +572,24 @@ Ali Asadi, Chae-Yeun Park, Lee James O'Riordan
 ### New features since last release
 
 * Add C++ only benchmark for a given list of gates.
-[(#199)](https://github.com/PennyLaneAI/pennylane-lightning/pull/199)
+  [(#199)](https://github.com/PennyLaneAI/pennylane-lightning/pull/199)
 
 * Wheel-build support for Python 3.10.
-[(#186)](https://github.com/PennyLaneAI/pennylane-lightning/pull/186)
+  [(#186)](https://github.com/PennyLaneAI/pennylane-lightning/pull/186)
 
 * C++ support for probability, expectation value and variance calculations.
-[(#185)](https://github.com/PennyLaneAI/pennylane-lightning/pull/185)
+  [(#185)](https://github.com/PennyLaneAI/pennylane-lightning/pull/185)
 
 * Add bindings to C++ expval, var, probs.
-[(#214)](https://github.com/PennyLaneAI/pennylane-lightning/pull/214)
+  [(#214)](https://github.com/PennyLaneAI/pennylane-lightning/pull/214)
 
 ### Improvements
 
 * `setup.py` adds debug only when --debug is given
-[(#208)](https://github.com/PennyLaneAI/pennylane-lightning/pull/208)
+  [(#208)](https://github.com/PennyLaneAI/pennylane-lightning/pull/208)
 
 * Add new highly-performant C++ kernels for quantum gates.
-[(#202)](https://github.com/PennyLaneAI/pennylane-lightning/pull/202)
+  [(#202)](https://github.com/PennyLaneAI/pennylane-lightning/pull/202)
 
 The new kernels significantly improve the runtime performance of PennyLane-Lightning
 for both differentiable and non-differentiable workflows. Here is an example workflow
@@ -591,32 +619,32 @@ The latest release shows improved performance on both single and multi-threaded 
 <img src="https://raw.githubusercontent.com/PennyLaneAI/pennylane-lightning/v0.21.0-rc0/doc/_static/lightning_v20_v21_bm.png" width=50%/>
 
 * Ensure debug info is built into dynamic libraries.
-[(#201)](https://github.com/PennyLaneAI/pennylane-lightning/pull/201)
+  [(#201)](https://github.com/PennyLaneAI/pennylane-lightning/pull/201)
 
 ### Documentation
 
 * New guidelines on adding and benchmarking C++ kernels.
-[(#202)](https://github.com/PennyLaneAI/pennylane-lightning/pull/202)
+  [(#202)](https://github.com/PennyLaneAI/pennylane-lightning/pull/202)
 
 ### Bug fixes
 
 * Update clang-format version
-[(#219)](https://github.com/PennyLaneAI/pennylane-lightning/pull/219)
+  [(#219)](https://github.com/PennyLaneAI/pennylane-lightning/pull/219)
 
 * Fix failed tests on Windows.
-[(#218)](https://github.com/PennyLaneAI/pennylane-lightning/pull/218)
+  [(#218)](https://github.com/PennyLaneAI/pennylane-lightning/pull/218)
 
 * Update clang-format version
-[(#219)](https://github.com/PennyLaneAI/pennylane-lightning/pull/219)
+  [(#219)](https://github.com/PennyLaneAI/pennylane-lightning/pull/219)
 
 * Add virtual destructor to C++ state-vector classes.
-[(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
+  [(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
 
 * Fix failed tests for the non-binary wheel.
-[(#213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/213)
+  [(#213)](https://github.com/PennyLaneAI/pennylane-lightning/pull/213)
 
 * Add virtual destructor to C++ state-vector classes.
-[(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
+  [(#200)](https://github.com/PennyLaneAI/pennylane-lightning/pull/200)
 
 ### Contributors
 
@@ -631,10 +659,10 @@ Ali Asadi, Amintor Dusko, Chae-Yeun Park, Lee James O'Riordan
 ### Bug fixes
 
 * Fix missing header-files causing build errors in algorithms module.
-[(#193)](https://github.com/PennyLaneAI/pennylane-lightning/pull/193)
+  [(#193)](https://github.com/PennyLaneAI/pennylane-lightning/pull/193)
 
 * Fix failed tests for the non-binary wheel.
-[(#191)](https://github.com/PennyLaneAI/pennylane-lightning/pull/191)
+  [(#191)](https://github.com/PennyLaneAI/pennylane-lightning/pull/191)
 
 ---
 # Release 0.20.2
@@ -642,7 +670,7 @@ Ali Asadi, Amintor Dusko, Chae-Yeun Park, Lee James O'Riordan
 ### Bug fixes
 
 * Introduce CY kernel to Lightning to avoid issues with decomposition.
-[(#203)](https://github.com/PennyLaneAI/pennylane-lightning/pull/203)
+  [(#203)](https://github.com/PennyLaneAI/pennylane-lightning/pull/203)
 
 ### Contributors
 
@@ -655,10 +683,10 @@ Lee J. O'Riordan
 ### Bug fixes
 
 * Fix missing header-files causing build errors in algorithms module.
-[(#193)](https://github.com/PennyLaneAI/pennylane-lightning/pull/193)
+  [(#193)](https://github.com/PennyLaneAI/pennylane-lightning/pull/193)
 
 * Fix failed tests for the non-binary wheel.
-[(#191)](https://github.com/PennyLaneAI/pennylane-lightning/pull/191)
+  [(#191)](https://github.com/PennyLaneAI/pennylane-lightning/pull/191)
 
 # Release 0.20.0
 
@@ -668,25 +696,25 @@ Lee J. O'Riordan
   [(#186)](https://github.com/PennyLaneAI/pennylane-lightning/pull/186)
 
 * Add VJP support to PL-Lightning.
-[(#181)](https://github.com/PennyLaneAI/pennylane-lightning/pull/181)
+  [(#181)](https://github.com/PennyLaneAI/pennylane-lightning/pull/181)
 
 * Add complex64 support in PL-Lightning.
-[(#177)](https://github.com/PennyLaneAI/pennylane-lightning/pull/177)
+  [(#177)](https://github.com/PennyLaneAI/pennylane-lightning/pull/177)
 
 * Added examples folder containing aggregate gate performance test.
-[(#165)](https://github.com/PennyLaneAI/pennylane-lightning/pull/165)
+  [(#165)](https://github.com/PennyLaneAI/pennylane-lightning/pull/165)
 
 ### Breaking changes
 
 ### Improvements
 
 * Update PL-Lightning to support new features in PL.
-[(#179)](https://github.com/PennyLaneAI/pennylane-lightning/pull/179)
+  [(#179)](https://github.com/PennyLaneAI/pennylane-lightning/pull/179)
 
 ### Documentation
 
 * Lightning setup.py build process uses CMake.
-[(#176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/176)
+  [(#176)](https://github.com/PennyLaneAI/pennylane-lightning/pull/176)
 
 ### Contributors
 
@@ -699,7 +727,7 @@ Ali Asadi, Chae-Yeun Park, Isidor Schoch, Lee James O'Riordan
 # Release 0.19.0
 
 * Add Cache-Friendly DOTC, GEMV, GEMM along with BLAS Support.
-[(#155)](https://github.com/PennyLaneAI/pennylane-lightning/pull/155)
+  [(#155)](https://github.com/PennyLaneAI/pennylane-lightning/pull/155)
 
 ### Improvements
 
