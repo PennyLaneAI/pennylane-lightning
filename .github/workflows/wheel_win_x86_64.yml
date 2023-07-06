@@ -32,7 +32,6 @@ jobs:
         os: [windows-2019]
         arch: [AMD64]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
-        exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
     name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
 

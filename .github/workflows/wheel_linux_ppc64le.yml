@@ -27,8 +27,6 @@ jobs:
         os: [ubuntu-latest]
         arch: [ppc64le]
         cibw_build: ${{fromJson(needs.set_wheel_build_matrix.outputs.python_version)}}
-        exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
-        kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
         container_img: ["quay.io/pypa/manylinux2014_ppc64le"]
 
     name: ubuntu-latest::ppc64le (Python ${{ fromJson('{ "cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11" }')[matrix.cibw_build] }})
@@ -41,18 +39,6 @@ jobs:
           access_token: ${{ github.token }}
 
       - uses: actions/checkout@v3
-
-      - name: Restoring cached dependencies
-        id: kokkos-cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
-
-      - name: Copy cached libraries
-        run: |
-          mkdir Kokkos
-          cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install cibuildwheel
         run: python3 -m pip install cibuildwheel~=2.11.0

@@ -31,7 +31,6 @@ jobs:
         os: [ubuntu-latest]
         arch: [x86_64]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
-        exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
         container_img: ["quay.io/pypa/manylinux2014_x86_64"]
 
     name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11" }')[matrix.cibw_build] }})
