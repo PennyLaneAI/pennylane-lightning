@@ -24,94 +24,14 @@ jobs:
     with:
       event_name: ${{ github.event_name }}
 
-  build_dependencies:
-    needs: [set_wheel_build_matrix]
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-2019]
-        exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
-        kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
-
-    name: Kokkos core & kernels (${{ matrix.exec_model }})
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.10.0
-        with:
-          access_token: ${{ github.token }}
-
-      - name: Cache installation directories
-        id: kokkos-cache
-        uses: actions/cache@v3
-        with:
-          path: D:\a\install_dir\${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-RelWithDebInfo
-
-      - name: Clone Kokkos libs
-        if: steps.kokkos-cache.outputs.cache-hit != 'true'
-        run: |
-          cd D:\a
-          git clone https://github.com/kokkos/kokkos.git
-          cd D:\a\kokkos
-          git checkout ${{ matrix.kokkos_version }}
-          cd D:\a\
-          git clone https://github.com/kokkos/kokkos-kernels.git
-          cd D:\a\kokkos-kernels
-          git checkout ${{ matrix.kokkos_version }}
-          cd ..
-
-      - name: Create installation directory
-        if: steps.kokkos-cache.outputs.cache-hit != 'true'
-        run: |
-          Remove-Item -Path D:\a\install_dir\${{ matrix.exec_model }} -Recurse -Force -ErrorAction Ignore
-          mkdir -p D:\a\install_dir\${{ matrix.exec_model }}
-
-      - name: Install dependencies
-        if: steps.kokkos-cache.outputs.cache-hit != 'true'
-        run: |
-          python -m pip install cmake build
-
-      - name: Build Kokkos core library
-        if: steps.kokkos-cache.outputs.cache-hit != 'true'
-        run: |
-          cd D:\a\kokkos
-          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\${{ matrix.exec_model }} `
-                          -DKokkos_ENABLE_COMPLEX_ALIGN=OFF `
-                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON `
-                          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF `
-                          -DCMAKE_CXX_STANDARD=20 `
-                          -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
-                          -DCMAKE_BUILD_TYPE=RelWithDebInfo `
-                          -T clangcl
-          cmake --build ./Build --config RelWithDebInfo --verbose
-          cmake --install ./Build --config RelWithDebInfo --verbose
-
-      - name: Build Kokkos kernels library
-        if: steps.kokkos-cache.outputs.cache-hit != 'true'
-        run: |
-          cd D:\a\kokkos-kernels
-          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\${{ matrix.exec_model }} `
-                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON `
-                          -DCMAKE_CXX_STANDARD=20 `
-                          -DCMAKE_PREFIX_PATH=D:\a\install_dir\${{ matrix.exec_model }} `
-                          -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
-                          -DCMAKE_BUILD_TYPE=RelWithDebInfo `
-                          -T clangcl
-          cmake --build ./Build --config RelWithDebInfo --verbose
-          cmake --install ./Build --config RelWithDebInfo --verbose
-
   win-wheels:
-    needs: [set_wheel_build_matrix, build_dependencies]
+    needs: [set_wheel_build_matrix]
     strategy:
       fail-fast: false
       matrix:
         os: [windows-2019]
         arch: [AMD64]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
-        exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
-        kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
     name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
 
@@ -121,20 +41,7 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-      - name: Restoring cached dependencies
-        id: kokkos-cache
-        uses: actions/cache@v3
-        with:
-          path: D:\a\install_dir\${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-RelWithDebInfo
-
       - uses: actions/checkout@v3
-
-      - name: Copy cached libraries
-        if: steps.kokkos-cache.outputs.cache-hit == 'true'
-        run: |
-          Copy-Item -Path "D:\a\install_dir\${{ matrix.exec_model }}\" `
-                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\Kokkos" -Recurse -Force
 
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel~=2.11.0 wheel
