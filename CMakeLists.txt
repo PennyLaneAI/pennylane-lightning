@@ -54,7 +54,7 @@ endif()
 option(ENABLE_KOKKOS "Enable Kokkos" OFF)
 option(ENABLE_BLAS "Enable BLAS" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
-option(ENABLE_GATE_DISPATCHER "Enable gate kernel dispatching on AVX/AVX2/AVX512" ON)
+option(ENABLE_GATE_DISPATCHER "Enable gate kernel dispatching on AVX/AVX2/AVX512" OFF)
 
 # Other build options
 option(BUILD_TESTS "Build cpp tests" OFF)
