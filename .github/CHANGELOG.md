@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Complete overhaul of repository structure. This new structure allows for multiple backends. Refactoring efforts we directed to improve development performance, code reuse and decrease overall overhead to propagate changes through backends.
+  [(#472)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/472)
+
 * Wheels are built with native support for sparse Hamiltonians.
   [(#470)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/470)
 
@@ -11,6 +14,8 @@
 ### Breaking changes
 
 ### Improvements
+* Merge Lightning Kokkos backend to the new single repository.
+  [(#472)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/472)
 
 ### Documentation
 
@@ -20,7 +25,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Vincent Michaud-Rioux
+Amintor Dusko, Vincent Michaud-Rioux, Lee J. O'Riordan
 
 ---
 
