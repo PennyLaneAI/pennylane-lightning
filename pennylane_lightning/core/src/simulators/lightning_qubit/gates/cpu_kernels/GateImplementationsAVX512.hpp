@@ -28,7 +28,6 @@
 #include "Macros.hpp"
 
 namespace Pennylane::LightningQubit::Gates {
-
 // LCOV_EXCL_START
 class GateImplementationsAVX512
     : public GateImplementationsAVXCommon<GateImplementationsAVX512> {

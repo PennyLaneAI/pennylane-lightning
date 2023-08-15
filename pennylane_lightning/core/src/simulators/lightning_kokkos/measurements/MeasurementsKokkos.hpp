@@ -36,11 +36,9 @@ using Pennylane::Util::exp2;
 /// @endcond
 
 namespace Pennylane::LightningKokkos::Measures {
-
 template <class StateVectorT>
 class Measurements final
     : public MeasurementsBase<StateVectorT, Measurements<StateVectorT>> {
-
   private:
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -698,7 +696,6 @@ class Measurements final
      * number between 0 and num_samples-1.
      */
     auto generate_samples(size_t num_samples) -> std::vector<size_t> {
-
         const size_t num_qubits = this->_statevector.getNumQubits();
         const size_t N = this->_statevector.getLength();
 

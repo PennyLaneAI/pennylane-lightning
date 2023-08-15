@@ -54,7 +54,6 @@
     PL_ABORT_IF_NOT(expression, "Assertion failed: " #expression)
 
 namespace Pennylane::Util {
-
 /**
  * @brief `%LightningException` is the general exception thrown by PennyLane for
  * runtime errors.

@@ -287,7 +287,6 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                             const ComplexT *matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
-
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         auto *arr = this->getData();
 
@@ -310,7 +309,6 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                             const std::vector<ComplexT> &matrix,
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
-
         PL_ABORT_IF(matrix.size() != exp2(2 * wires.size()),
                     "The size of matrix does not match with the given "
                     "number of wires");

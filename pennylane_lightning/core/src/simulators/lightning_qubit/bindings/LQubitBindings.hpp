@@ -41,7 +41,6 @@ using Pennylane::LightningQubit::StateVectorLQubitRaw;
 namespace py = pybind11;
 
 namespace Pennylane::LightningQubit {
-
 using StateVectorBackends =
     Pennylane::Util::TypeList<StateVectorLQubitRaw<float>,
                               StateVectorLQubitRaw<double>, void>;
@@ -90,7 +89,6 @@ auto svKernelMap(const StateVectorT &sv) -> py::dict {
  */
 template <class StateVectorT, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
-
     registerGatesForStateVector<StateVectorT>(pyclass);
 
     pyclass.def("kernel_map", &svKernelMap<StateVectorT>,

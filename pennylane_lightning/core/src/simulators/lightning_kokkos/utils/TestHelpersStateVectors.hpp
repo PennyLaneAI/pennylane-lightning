@@ -27,7 +27,6 @@ using namespace Pennylane::LightningKokkos;
 /// @endcond
 
 namespace Pennylane::LightningKokkos::Util {
-
 template <class StateVector> struct StateVectorToName;
 
 template <> struct StateVectorToName<StateVectorKokkos<float>> {

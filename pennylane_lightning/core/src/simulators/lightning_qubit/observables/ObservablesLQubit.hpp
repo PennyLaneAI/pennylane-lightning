@@ -43,7 +43,6 @@ using Pennylane::LightningQubit::StateVectorLQubitRaw;
 /// @endcond
 
 namespace Pennylane::LightningQubit::Observables {
-
 /**
  * @brief Final class for named observables (PauliX, PauliY, PauliZ, etc.)
  *

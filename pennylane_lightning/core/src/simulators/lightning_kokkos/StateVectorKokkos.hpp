@@ -47,7 +47,6 @@ using std::size_t;
 /// @endcond
 
 namespace Pennylane::LightningKokkos {
-
 /**
  * @brief  Kokkos state vector class
  *
@@ -56,7 +55,6 @@ namespace Pennylane::LightningKokkos {
 template <class fp_t = double>
 class StateVectorKokkos final
     : public StateVectorBase<fp_t, StateVectorKokkos<fp_t>> {
-
   private:
     using BaseType = StateVectorBase<fp_t, StateVectorKokkos<fp_t>>;
 
@@ -247,7 +245,6 @@ class StateVectorKokkos final
         const std::string &opName, const std::vector<size_t> &wires,
         bool inverse = false, const std::vector<fp_t> &params = {},
         [[maybe_unused]] const std::vector<ComplexT> &gate_matrix = {}) {
-
         if (opName == "Identity") {
             // No op
         } else if (gates_indices_.contains(opName)) {
@@ -295,7 +292,6 @@ class StateVectorKokkos final
     void applyTwoQubitOp(const KokkosVector &matrix,
                          const std::vector<size_t> &wires,
                          bool inverse = false) {
-
         auto &&num_qubits = this->getNumQubits();
         if (!inverse) {
             Kokkos::parallel_for(
@@ -326,7 +322,6 @@ class StateVectorKokkos final
         } else if (wires.size() == 2) {
             applyTwoQubitOp(matrix, wires, inverse);
         } else {
-
             Kokkos::View<const size_t *, Kokkos::HostSpace,
                          Kokkos::MemoryTraits<Kokkos::Unmanaged>>
                 wires_host(wires.data(), wires.size());
@@ -809,7 +804,7 @@ class StateVectorKokkos final
     inline static bool is_exit_reg_ = false;
     // clang-format off
     /**
-    * @brief Register gate operations in the gates_indices_ attribute: 
+    * @brief Register gate operations in the gates_indices_ attribute:
     *        an unordered_map mapping strings to GateOperation enumeration keywords.
     */
     void init_gates_indices_() {

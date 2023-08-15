@@ -34,7 +34,6 @@ using Pennylane::Util::log2PerfectPower;
 /// @endcond
 
 namespace Pennylane::LightningQubit::Algorithms {
-
 /**
  * @brief Vector Jacobian Product (VJP) functor.
  *
@@ -81,7 +80,6 @@ class VectorJacobianProduct final
                     const JacobianData<StateVectorT> &jd,
                     std::span<const ComplexT> dy,
                     bool apply_operations = false) {
-
         PL_ASSERT(dy.size() == jd.getSizeStateVec());
 
         if (!jd.hasTrainableParams()) {

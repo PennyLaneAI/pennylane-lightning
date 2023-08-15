@@ -437,7 +437,6 @@ getIndicesAfterExclusion(const std::vector<size_t> &indicesToExclude,
 
 inline auto generateBitsPatterns(const std::vector<size_t> &qubitIndices,
                                  size_t num_qubits) -> std::vector<size_t> {
-
     std::vector<size_t> indices;
     indices.reserve(exp2(qubitIndices.size()));
     indices.emplace_back(0);

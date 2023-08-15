@@ -88,7 +88,6 @@ using Pennylane::Util::getMemoryModel;
 namespace py = pybind11;
 
 namespace Pennylane {
-
 /**
  * @brief Create a State Vector From a 1D Numpy Data object.
  *

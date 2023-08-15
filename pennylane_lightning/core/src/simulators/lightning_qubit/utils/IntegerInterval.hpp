@@ -23,7 +23,6 @@
 #include "Error.hpp"
 
 namespace Pennylane::LightningQubit::Util {
-
 /**
  * @brief Define integer interval [min_, max_)
  */

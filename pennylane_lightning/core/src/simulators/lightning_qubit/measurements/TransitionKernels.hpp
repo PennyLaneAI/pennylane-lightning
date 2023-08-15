@@ -33,7 +33,6 @@
 #include "Util.hpp" // exp2
 
 namespace Pennylane::LightningQubit::Measures {
-
 enum class TransitionKernelType { Local, NonZeroRandom };
 
 /**

@@ -26,7 +26,6 @@
 #include <complex>
 
 namespace Pennylane::LightningQubit::Gates::AVXCommon {
-
 template <typename PrecisionT, size_t packed_size> struct ApplySWAP {
     using Precision = PrecisionT;
     using PrecisionAVXConcept =

@@ -35,7 +35,6 @@ using Pennylane::LightningKokkos::StateVectorKokkos;
 /// @endcond
 
 namespace Pennylane::LightningKokkos::Observables {
-
 /**
  * @brief Final class for named observables (PauliX, PauliY, PauliZ, etc.)
  *
@@ -187,7 +186,6 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
      * @param sv The statevector to update
      */
     void applyInPlace(StateVectorT &sv) const override {
-
         StateVectorT buffer(sv.getNumQubits());
         buffer.initZeros();
 

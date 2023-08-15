@@ -45,7 +45,6 @@ std::mt19937_64 re{1337};
 TEMPLATE_TEST_CASE("StateVectorLQubit::Constructibility",
                    "[Default Constructibility]", StateVectorLQubitRaw<>,
                    StateVectorLQubitManaged<>) {
-
     SECTION("StateVectorBackend<>") {
         REQUIRE(!std::is_constructible_v<TestType>);
     }
@@ -139,7 +138,6 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyMatrix with a pointer",
     SECTION("Test with different number of wires") {
         const size_t num_qubits = 5;
         for (size_t num_wires = 1; num_wires < num_qubits; num_wires++) {
-
             VectorT st_data_1 =
                 createRandomStateVectorData<PrecisionT>(re, num_qubits);
             VectorT st_data_2 = st_data_1;

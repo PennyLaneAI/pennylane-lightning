@@ -23,7 +23,6 @@
 #include "cpu_kernels/GateImplementationsPI.hpp"
 
 namespace Pennylane::LightningQubit::Internal {
-
 int registerAllAvailableKernels_Float() {
     using Pennylane::Util::RuntimeInfo;
     registerKernel<float, float, Gates::GateImplementationsLM>();

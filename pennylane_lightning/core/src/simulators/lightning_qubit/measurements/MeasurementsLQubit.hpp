@@ -48,7 +48,6 @@ using Pennylane::LightningQubit::Util::innerProdC;
 /// @endcond
 
 namespace Pennylane::LightningQubit::Measures {
-
 /**
  * @brief Observable's Measurement Class.
  *

@@ -28,7 +28,6 @@
 #endif
 
 namespace Pennylane::LightningQubit::Gates::AVXCommon {
-
 template <class PrecisionT, size_t packed_size> struct AVXConcept;
 
 #ifdef PL_USE_AVX2

@@ -26,7 +26,6 @@ using Pennylane::LightningKokkos::Util::getImagOfComplexInnerProduct;
 /// @endcond
 
 namespace Pennylane::LightningKokkos::Algorithms {
-
 /**
  * @brief Kokkos-enabled adjoint Jacobian evaluator following the method of
  * arXiV:2009.02823

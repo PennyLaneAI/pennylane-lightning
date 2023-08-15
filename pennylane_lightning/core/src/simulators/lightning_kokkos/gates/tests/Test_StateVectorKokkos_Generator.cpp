@@ -820,7 +820,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyGeneratorRX",
                                          result_gate_svm.size());
 
             for (size_t j = 0; j < exp2(num_qubits); j++) {
-
                 CHECK(-scale * imag(result_gntr_sv[j]) ==
                       Approx(0.5 *
                              (real(result_gate_svp[j]) -

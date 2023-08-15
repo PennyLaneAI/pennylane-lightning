@@ -22,7 +22,6 @@
 #include <vector>
 
 namespace Pennylane::LightningQubit::Util {
-
 /**
  * @brief Apply a sparse matrix to a vector.
  *

@@ -30,7 +30,6 @@ using Pennylane::Util::RuntimeInfo;
 /// @endcond
 
 namespace Pennylane::LightningQubit::KernelMap::Internal {
-
 int assignKernelsForGateOp() {
     assignKernelsForGateOp_Default();
 

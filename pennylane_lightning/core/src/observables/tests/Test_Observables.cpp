@@ -433,7 +433,6 @@ template <typename TypeList> void testHamiltonianBase() {
 
             DYNAMIC_SECTION("applyInPlace must fail - "
                             << StateVectorToName<StateVectorT>::name) {
-
                 auto ham =
                     HamiltonianT::create({PrecisionT{1.0}, h, h}, {zz, x1, x2});
                 auto st_data = createZeroState<ComplexT>(2);

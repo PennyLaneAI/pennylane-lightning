@@ -22,7 +22,6 @@ using Pennylane::Util::exp2;
 /// @endcond
 
 namespace Pennylane::LightningQubit::Gates {
-
 template <class PrecisionT, class ParamT>
 void GateImplementationsLM::applySingleExcitation(
     std::complex<PrecisionT> *arr, size_t num_qubits,

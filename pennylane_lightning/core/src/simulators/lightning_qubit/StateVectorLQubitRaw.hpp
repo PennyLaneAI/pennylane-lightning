@@ -37,7 +37,6 @@ using Pennylane::Util::log2PerfectPower;
 /// @endcond
 
 namespace Pennylane::LightningQubit {
-
 /**
  * @brief State-vector operations class.
  *

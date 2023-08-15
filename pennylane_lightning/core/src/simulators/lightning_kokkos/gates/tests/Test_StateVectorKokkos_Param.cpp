@@ -456,7 +456,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingXX",
         }
         SECTION("IsingXX 0,2") {
             for (size_t index = 0; index < angles.size(); index++) {
-
                 StateVectorKokkos<TestType> kokkos_sv{num_qubits};
                 kokkos_sv.applyOperation("IsingXX", {0, 2}, false,
                                          {angles[index]});
@@ -588,7 +587,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingYY",
         }
         SECTION("IsingYY 0,2") {
             for (size_t index = 0; index < angles.size(); index++) {
-
                 StateVectorKokkos<TestType> kokkos_sv{num_qubits};
                 kokkos_sv.applyOperation("IsingYY", {0, 2}, false,
                                          {angles[index]});
@@ -699,7 +697,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingZZ",
         }
         SECTION("IsingZZ 0,2") {
             for (size_t index = 0; index < angles.size(); index++) {
-
                 StateVectorKokkos<TestType> kokkos_sv{num_qubits};
                 kokkos_sv.applyOperation("IsingZZ", {0, 2}, false,
                                          {angles[index]});
@@ -1156,7 +1153,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyDoubleExcitationPlus",
 
 TEMPLATE_TEST_CASE("Sample", "[StateVectorKokkosManaged_Param]", float,
                    double) {
-
     constexpr uint32_t twos[] = {
         1U << 0U,  1U << 1U,  1U << 2U,  1U << 3U,  1U << 4U,  1U << 5U,
         1U << 6U,  1U << 7U,  1U << 8U,  1U << 9U,  1U << 10U, 1U << 11U,

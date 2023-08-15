@@ -42,7 +42,6 @@ using Pennylane::Util::log2PerfectPower;
 /// @endcond
 
 namespace Pennylane::LightningQubit {
-
 /**
  * @brief StateVector class where data resides in CPU memory. Memory ownership
  * resides within class.

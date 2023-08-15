@@ -31,7 +31,6 @@
  * using functions below.
  */
 namespace Pennylane::LightningQubit::Gates {
-
 /**
  * @brief Get indices of statevector data not participating in application
  * operation.

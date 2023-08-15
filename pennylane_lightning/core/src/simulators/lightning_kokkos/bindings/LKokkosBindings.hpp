@@ -40,7 +40,6 @@ using Pennylane::LightningKokkos::StateVectorKokkos;
 namespace py = pybind11;
 
 namespace Pennylane::LightningKokkos {
-
 using StateVectorBackends =
     Pennylane::Util::TypeList<StateVectorKokkos<float>,
                               StateVectorKokkos<double>, void>;

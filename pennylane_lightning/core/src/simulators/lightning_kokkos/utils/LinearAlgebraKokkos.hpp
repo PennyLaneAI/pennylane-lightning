@@ -23,7 +23,6 @@
 #include "Error.hpp"
 
 namespace Pennylane::LightningKokkos::Util {
-
 /**
  * @brief @rst
  * Kokkos functor for :math:`y+=\alpha*x` operation.
@@ -68,7 +67,6 @@ inline auto axpy_Kokkos(Kokkos::complex<PrecisionT> alpha,
  * @endrst
  */
 template <class PrecisionT> struct SparseMV_KokkosFunctor {
-
     using KokkosVector = Kokkos::View<Kokkos::complex<PrecisionT> *>;
     using KokkosSizeTVector = Kokkos::View<size_t *>;
 
@@ -120,7 +118,6 @@ void SparseMV_Kokkos(Kokkos::View<ComplexT *> x, Kokkos::View<ComplexT *> y,
                      const size_t *row_map, const size_t row_map_size,
                      const size_t *entries_ptr, const ComplexT *values_ptr,
                      const size_t numNNZ) {
-
     using ConstComplexHostView =
         Kokkos::View<const ComplexT *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
@@ -150,7 +147,6 @@ void SparseMV_Kokkos(Kokkos::View<ComplexT *> x, Kokkos::View<ComplexT *> y,
  * @endrst
  */
 template <class PrecisionT> struct getRealOfComplexInnerProductFunctor {
-
     Kokkos::View<Kokkos::complex<PrecisionT> *> x;
     Kokkos::View<Kokkos::complex<PrecisionT> *> y;
 
@@ -180,7 +176,6 @@ inline auto
 getRealOfComplexInnerProduct(Kokkos::View<Kokkos::complex<PrecisionT> *> x,
                              Kokkos::View<Kokkos::complex<PrecisionT> *> y)
     -> PrecisionT {
-
     PL_ASSERT(x.size() == y.size());
     PrecisionT inner = 0;
     Kokkos::parallel_reduce(
@@ -194,7 +189,6 @@ getRealOfComplexInnerProduct(Kokkos::View<Kokkos::complex<PrecisionT> *> x,
  * @endrst
  */
 template <class PrecisionT> struct getImagOfComplexInnerProductFunctor {
-
     Kokkos::View<Kokkos::complex<PrecisionT> *> x;
     Kokkos::View<Kokkos::complex<PrecisionT> *> y;
 
@@ -224,7 +218,6 @@ inline auto
 getImagOfComplexInnerProduct(Kokkos::View<Kokkos::complex<PrecisionT> *> x,
                              Kokkos::View<Kokkos::complex<PrecisionT> *> y)
     -> PrecisionT {
-
     PL_ASSERT(x.size() == y.size());
     PrecisionT inner = 0;
     Kokkos::parallel_reduce(

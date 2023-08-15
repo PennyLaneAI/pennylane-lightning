@@ -25,7 +25,6 @@
 
 // LCOV_EXCL_START
 namespace Pennylane::Util {
-
 /**
  * @brief Enum class for defining CPU memory alignments
  */

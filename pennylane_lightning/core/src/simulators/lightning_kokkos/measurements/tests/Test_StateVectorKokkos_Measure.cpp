@@ -235,7 +235,6 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
 }
 
 TEST_CASE("Test tensor transposition", "[Measure]") {
-
     // Init Kokkos creating a StateVectorKokkos
     auto statevector_data = createNonTrivialState<StateVectorKokkos<double>>();
     StateVectorKokkos<double> statevector(statevector_data.data(),

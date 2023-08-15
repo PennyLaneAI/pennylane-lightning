@@ -27,7 +27,6 @@ using namespace Pennylane::Util;
 /// @endcond
 
 namespace Pennylane::Gates {
-
 /**
  * @brief Create a matrix representation of the PauliX gate data in row-major
  * format.

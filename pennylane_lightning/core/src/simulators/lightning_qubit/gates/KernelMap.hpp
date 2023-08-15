@@ -50,7 +50,6 @@ using Pennylane::Util::PairHash;
 namespace Pennylane::LightningQubit::KernelMap {
 ///@cond DEV
 namespace Internal {
-
 int assignKernelsForGateOp();
 int assignKernelsForGeneratorOp();
 int assignKernelsForMatrixOp();
@@ -162,7 +161,6 @@ class PriorityDispatchSet {
     }
 
     void clearPriority(uint32_t remove_priority) {
-
         const auto begin =
             std::lower_bound(ordered_vec_.begin(), ordered_vec_.end(),
                              remove_priority, [](const auto &elem, uint32_t p) {

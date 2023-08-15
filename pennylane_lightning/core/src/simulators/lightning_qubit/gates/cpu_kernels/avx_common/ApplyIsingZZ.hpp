@@ -24,7 +24,6 @@
 #include <complex>
 
 namespace Pennylane::LightningQubit::Gates::AVXCommon {
-
 template <typename PrecisionT, size_t packed_size> struct ApplyIsingZZ {
     using PrecisionAVXConcept =
         typename AVXConcept<PrecisionT, packed_size>::Type;

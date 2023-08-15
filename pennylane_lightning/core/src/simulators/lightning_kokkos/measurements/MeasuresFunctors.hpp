@@ -24,7 +24,6 @@ namespace Pennylane::LightningKokkos::Functors {
  * @param probabilities_ Discrete probability distribution.
  */
 template <class PrecisionT> struct getProbFunctor {
-
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
     Kokkos::View<PrecisionT *> probability;
 
@@ -53,7 +52,6 @@ template <class PrecisionT> struct getProbFunctor {
 template <class PrecisionT, template <class ExecutionSpace> class GeneratorPool,
           class ExecutionSpace = Kokkos::DefaultExecutionSpace>
 struct Sampler {
-
     Kokkos::View<size_t *> samples;
     Kokkos::View<PrecisionT *> cdf;
     GeneratorPool<ExecutionSpace> rand_pool;
@@ -112,7 +110,6 @@ struct Sampler {
  * @param max_index_sorted_ind_wires_ Length of sorted_ind_wires.
  */
 struct getTransposedIndexFunctor {
-
     Kokkos::View<size_t *> sorted_ind_wires;
     Kokkos::View<size_t *> trans_index;
     const size_t max_index_sorted_ind_wires;
@@ -142,7 +139,6 @@ struct getTransposedIndexFunctor {
  * @return Transposed Tensor.
  */
 template <class PrecisionT> struct getTransposedFunctor {
-
     Kokkos::View<PrecisionT *> transProb;
     Kokkos::View<PrecisionT *> probability;
     Kokkos::View<size_t *> trans_index;

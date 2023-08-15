@@ -28,7 +28,6 @@ using namespace Pennylane::Observables;
 /// @endcond
 
 namespace Pennylane::Measures {
-
 /**
  * @brief Observable's Measurement Class.
  *

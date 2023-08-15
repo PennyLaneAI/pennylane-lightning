@@ -309,7 +309,6 @@ auto createPlusState(size_t num_qubits)
 template <typename PrecisionT, class RandomEngine>
 auto createRandomStateVectorData(RandomEngine &re, size_t num_qubits)
     -> TestVector<std::complex<PrecisionT>> {
-
     TestVector<std::complex<PrecisionT>> res(
         size_t{1U} << num_qubits, 0.0,
         getBestAllocator<std::complex<PrecisionT>>());

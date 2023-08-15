@@ -42,7 +42,6 @@ using std::size_t;
 
 TEMPLATE_TEST_CASE("StateVectorKokkos::CopyConstructor",
                    "[StateVectorKokkos_Nonparam]", float, double) {
-
     {
         const size_t num_qubits = 3;
         StateVectorKokkos<TestType> kokkos_sv_1{num_qubits};
@@ -71,7 +70,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::CopyConstructor",
 
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyHadamard",
                    "[StateVectorKokkos_Nonparam]", float, double) {
-
     {
         const size_t num_qubits = 3;
         SECTION("Apply using dispatcher") {
@@ -245,7 +243,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyS", "[StateVectorKokkos_Nonparam]",
 
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyT", "[StateVectorKokkos_Nonparam]",
                    float, double) {
-
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 3;
@@ -323,7 +320,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyCNOT",
 
 TEMPLATE_TEST_CASE("StateVectorKokkos::applySWAP",
                    "[StateVectorKokkos_Nonparam]", float, double) {
-
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 3;
@@ -418,7 +414,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applySWAP",
 
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyCZ", "[StateVectorKokkos_Nonparam]",
                    float, double) {
-
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 3;
@@ -632,7 +627,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMultiQubitOp",
 
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyCSWAP",
                    "[StateVectorKokkos_Nonparam]", float, double) {
-
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 3;

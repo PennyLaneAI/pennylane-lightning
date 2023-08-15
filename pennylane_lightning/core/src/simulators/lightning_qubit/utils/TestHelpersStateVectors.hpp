@@ -28,7 +28,6 @@ using namespace Pennylane::LightningQubit;
 /// @endcond
 
 namespace Pennylane::LightningQubit::Util {
-
 template <class StateVector> struct StateVectorToName;
 
 template <> struct StateVectorToName<StateVectorLQubitManaged<float>> {

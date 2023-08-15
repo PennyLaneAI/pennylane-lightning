@@ -68,7 +68,6 @@ constexpr auto generatorNamesWithoutPrefix() {
 /// @endcond
 
 namespace Pennylane::LightningQubit {
-
 /**
  * @brief DynamicDispatcher class
  *

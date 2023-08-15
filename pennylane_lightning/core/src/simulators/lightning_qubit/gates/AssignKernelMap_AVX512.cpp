@@ -36,7 +36,6 @@ using Util::less_than_equal_to;
 /// @endcond
 
 namespace Pennylane::LightningQubit::KernelMap::Internal {
-
 constexpr static auto leq_four = larger_than_equal_to<size_t>(4);
 
 void assignKernelsForGateOp_AVX512(CPUMemoryModel memory_model) {

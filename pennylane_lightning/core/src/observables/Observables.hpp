@@ -24,7 +24,6 @@
 #include "Util.hpp"
 
 namespace Pennylane::Observables {
-
 /**
  * @brief A base class (CRTP) for all observable classes.
  *

@@ -91,7 +91,6 @@ class AdjointJacobian final
         const RefStateVectorT &reference_state,
         const std::vector<std::shared_ptr<Observable<StateVectorT>>>
             &observables) {
-
         std::exception_ptr ex = nullptr;
         size_t num_observables = observables.size();
 

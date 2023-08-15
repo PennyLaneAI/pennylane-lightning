@@ -22,9 +22,7 @@ using namespace Pennylane::Util;
 }
 
 namespace Pennylane::LightningKokkos::Functors {
-
 template <class PrecisionT> struct getExpectationValueIdentityFunctor {
-
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     getExpectationValueIdentityFunctor(
@@ -41,7 +39,6 @@ template <class PrecisionT> struct getExpectationValueIdentityFunctor {
 };
 
 template <class PrecisionT> struct getExpectationValuePauliXFunctor {
-
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire;
@@ -71,7 +68,6 @@ template <class PrecisionT> struct getExpectationValuePauliXFunctor {
 };
 
 template <class PrecisionT> struct getExpectationValuePauliYFunctor {
-
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire;
@@ -105,7 +101,6 @@ template <class PrecisionT> struct getExpectationValuePauliYFunctor {
 };
 
 template <class PrecisionT> struct getExpectationValuePauliZFunctor {
-
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire;
@@ -134,7 +129,6 @@ template <class PrecisionT> struct getExpectationValuePauliZFunctor {
 };
 
 template <class PrecisionT> struct getExpectationValueHadamardFunctor {
-
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire;
@@ -166,7 +160,6 @@ template <class PrecisionT> struct getExpectationValueHadamardFunctor {
 };
 
 template <class PrecisionT> struct getExpectationValueSingleQubitOpFunctor {
-
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
     Kokkos::View<Kokkos::complex<PrecisionT> *> matrix;
 
@@ -201,7 +194,6 @@ template <class PrecisionT> struct getExpectationValueSingleQubitOpFunctor {
 };
 
 template <class PrecisionT> struct getExpectationValueTwoQubitOpFunctor {
-
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
     Kokkos::View<Kokkos::complex<PrecisionT> *> matrix;
 
@@ -263,7 +255,6 @@ template <class PrecisionT> struct getExpectationValueTwoQubitOpFunctor {
 };
 
 template <class PrecisionT> struct getExpectationValueSparseFunctor {
-
     using KokkosComplexVector = Kokkos::View<Kokkos::complex<PrecisionT> *>;
     using KokkosSizeTVector = Kokkos::View<std::size_t *>;
 

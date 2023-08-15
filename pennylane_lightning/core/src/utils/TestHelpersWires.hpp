@@ -31,7 +31,6 @@
 #include "Macros.hpp"
 
 namespace Pennylane::Util {
-
 inline auto createWires(Pennylane::Gates::GateOperation op, size_t num_qubits)
     -> std::vector<size_t> {
     if (array_has_elem(Pennylane::Gates::Constant::multi_qubit_gates, op)) {
