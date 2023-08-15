@@ -47,7 +47,7 @@ if (MKLROOT_PATH)
     elseif (CMAKE_SYSTEM_NAME MATCHES "Linux")
         set(EXPECT_MKL_LIBPATH "${MKLROOT_PATH}/lib/intel64")
     endif()
-    
+
     ###########################################################
     # Set MKL_INCLUDE and MKL_LIBRARY_DIR
     ###########################################################
@@ -65,7 +65,7 @@ if (MKLROOT_PATH)
     ###########################################################
 
     find_library(LIB_MKL_RT NAMES mkl_rt mkl_rt.1 HINTS ${MKL_LIBRARY_DIR})
-    find_library(LIB_PTHREAD NAMES pthread) 
+    find_library(LIB_PTHREAD NAMES pthread)
 
 endif (MKLROOT_PATH)
 
@@ -77,7 +77,7 @@ set(MKL_LIBRARY "${LIB_MKL_RT};${LIB_PTHREAD}")
 
 include(FindPackageHandleStandardArgs)
 
-find_package_handle_standard_args(MKL DEFAULT_MSG 
+find_package_handle_standard_args(MKL DEFAULT_MSG
                                       MKL_LIBRARY_DIR
                                       LIB_MKL_RT
                                       LIB_PTHREAD

@@ -1,4 +1,4 @@
-# Copyright 2020 Xanadu Quantum Technologies Inc.
+# Copyright 2018-2023 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,35 +12,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for the serialization helper functions
+Unit tests for the serialization helper functions.
 """
-import pennylane as qml
-import numpy as np
-import pennylane_lightning
-
-from pennylane_lightning._serialize import (
-    _serialize_observables,
-    _serialize_ops,
-    _serialize_ob,
-)
 import pytest
-from unittest import mock
+from conftest import device_name
 
-from pennylane_lightning.lightning_qubit import CPP_BINARY_AVAILABLE
+import numpy as np
+import pennylane as qml
+from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
-if not CPP_BINARY_AVAILABLE:
-    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-
-from pennylane_lightning.lightning_qubit_ops.adjoint_diff import (
-    NamedObsC64,
-    NamedObsC128,
-    HermitianObsC64,
-    HermitianObsC128,
-    TensorProdObsC64,
-    TensorProdObsC128,
-    HamiltonianC64,
-    HamiltonianC128,
-)
+try:
+    from pennylane_lightning.lightning_kokkos_ops.observables import (
+        NamedObsC64,
+        NamedObsC128,
+        HermitianObsC64,
+        HermitianObsC128,
+        TensorProdObsC64,
+        TensorProdObsC128,
+        HamiltonianC64,
+        HamiltonianC128,
+    )
+except ImportError:
+    try:
+        from pennylane_lightning.lightning_qubit_ops.observables import (
+            NamedObsC64,
+            NamedObsC128,
+            HermitianObsC64,
+            HermitianObsC128,
+            TensorProdObsC64,
+            TensorProdObsC128,
+            HamiltonianC64,
+            HamiltonianC128,
+        )
+    except ImportError:
+        pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
 @pytest.mark.parametrize(
@@ -73,56 +78,15 @@ from pennylane_lightning.lightning_qubit_ops.adjoint_diff import (
 )
 def test_obs_returns_expected_type(obs, obs_type):
     """Tests that observables get serialized to the expected type."""
-    assert isinstance(_serialize_ob(obs, dict(enumerate(obs.wires)), False), obs_type)
+    assert isinstance(
+        QuantumScriptSerializer(device_name)._ob(obs, dict(enumerate(obs.wires))), obs_type
+    )
 
 
 class TestSerializeObs:
-    """Tests for the _serialize_obs function"""
+    """Tests for the _observables function"""
 
     wires_dict = {i: i for i in range(10)}
-
-    @pytest.mark.parametrize("ObsFunc", [NamedObsC128, NamedObsC64])
-    def test_basic_return(self, monkeypatch, ObsFunc):
-        """Test expected serialization for a simple return"""
-        with qml.tape.QuantumTape() as tape:
-            qml.expval(qml.PauliZ(0))
-
-        mock_obs = mock.MagicMock()
-
-        use_csingle = True if ObsFunc == NamedObsC64 else False
-        obs_str = "NamedObsC64" if ObsFunc == NamedObsC64 else "NamedObsC128"
-
-        with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
-            _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
-
-        s = mock_obs.call_args[0]
-        s_expected = ("PauliZ", [0])
-        ObsFunc(*s_expected)
-
-        assert s == s_expected
-
-    @pytest.mark.parametrize("use_csingle", [True, False])
-    def test_tensor_return(self, monkeypatch, use_csingle):
-        """Test expected serialization for a tensor product return"""
-        with qml.tape.QuantumTape() as tape:
-            qml.expval(qml.PauliZ(0) @ qml.PauliZ(1))
-
-        mock_obs = mock.MagicMock()
-
-        ObsFunc = TensorProdObsC64 if use_csingle else TensorProdObsC128
-        named_obs = NamedObsC64 if use_csingle else NamedObsC128
-        obs_str = "TensorProdObsC64" if use_csingle else "TensorProdObsC128"
-
-        with monkeypatch.context() as m:
-            m.setattr(pennylane_lightning._serialize, obs_str, mock_obs)
-            _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
-
-        s = mock_obs.call_args[0]
-        s_expected = ([named_obs("PauliZ", [0]), named_obs("PauliZ", [1])],)
-        ObsFunc(*s_expected)
-
-        assert s == s_expected
 
     @pytest.mark.parametrize("use_csingle", [True, False])
     def test_tensor_non_tensor_return(self, use_csingle):
@@ -135,7 +99,9 @@ class TestSerializeObs:
         tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
         named_obs = NamedObsC64 if use_csingle else NamedObsC128
 
-        s = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
+        s = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+            tape, self.wires_dict
+        )
 
         s_expected = [
             tensor_prod_obs([named_obs("PauliZ", [0]), named_obs("PauliX", [1])]),
@@ -153,7 +119,9 @@ class TestSerializeObs:
         hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
         c_dtype = np.complex64 if use_csingle else np.complex128
 
-        s = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
+        s = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+            tape, self.wires_dict
+        )
         s_expected = hermitian_obs(
             np.array(
                 [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0],
@@ -172,7 +140,9 @@ class TestSerializeObs:
         c_dtype = np.complex64 if use_csingle else np.complex128
         tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
         hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
-        s = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
+        s = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+            tape, self.wires_dict
+        )
 
         s_expected = tensor_prod_obs(
             [
@@ -194,7 +164,9 @@ class TestSerializeObs:
         hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
         named_obs = NamedObsC64 if use_csingle else NamedObsC128
 
-        s = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
+        s = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+            tape, self.wires_dict
+        )
 
         s_expected = tensor_prod_obs(
             [hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]), named_obs("PauliY", [2])]
@@ -225,7 +197,9 @@ class TestSerializeObs:
         r_dtype = np.float32 if use_csingle else np.float64
         c_dtype = np.complex64 if use_csingle else np.complex128
 
-        s = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
+        s = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+            tape, self.wires_dict
+        )
 
         s_expected = hamiltonian_obs(
             np.array([0.3, 0.5, 0.4], dtype=r_dtype),
@@ -265,7 +239,9 @@ class TestSerializeObs:
         r_dtype = np.float32 if use_csingle else np.float64
         c_dtype = np.complex64 if use_csingle else np.complex128
 
-        s = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
+        s = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+            tape, self.wires_dict
+        )
 
         # Expression (ham @ obs) is converted internally by Pennylane
         # where obs is appended to each term of the ham
@@ -318,7 +294,9 @@ class TestSerializeObs:
         r_dtype = np.float32 if use_csingle else np.float64
         c_dtype = np.complex64 if use_csingle else np.complex128
 
-        s = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
+        s = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+            tape, self.wires_dict
+        )
 
         s_expected1 = hamiltonian_obs(
             np.array([0.3, 0.5, 0.4], dtype=r_dtype),
@@ -349,21 +327,6 @@ class TestSerializeObs:
         assert s[0] == s_expected1
         assert s[1] == s_expected2
 
-    @pytest.mark.parametrize("use_csingle", [True, False])
-    @pytest.mark.parametrize("ObsChunk", list(range(1, 5)))
-    def test_chunk_obs(self, use_csingle, ObsChunk):
-        """Test chunking of observable array"""
-        with qml.tape.QuantumTape() as tape:
-            qml.expval(qml.PauliZ(0) @ qml.PauliX(1))
-            qml.expval(qml.PauliY(wires=1))
-            qml.expval(qml.PauliX(0) @ qml.Hermitian([[0, 1], [1, 0]], wires=3) @ qml.Hadamard(2))
-            qml.expval(qml.Hermitian(qml.PauliZ.compute_matrix(), wires=0) @ qml.Identity(1))
-
-        s = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
-
-        obtained_chunks = pennylane_lightning.lightning_qubit._chunk_iterable(s, ObsChunk)
-        assert len(list(obtained_chunks)) == int(np.ceil(len(s) / ObsChunk))
-
     @pytest.mark.parametrize(
         "obs,coeffs,terms",
         [
@@ -383,7 +346,9 @@ class TestSerializeObs:
     def test_op_arithmetic_uses_hamiltonian(self, use_csingle, obs, coeffs, terms):
         """Tests that an arithmetic obs with a PauliRep serializes as a Hamiltonian."""
         tape = qml.tape.QuantumTape(measurements=[qml.expval(obs)])
-        res = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
+        res = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+            tape, self.wires_dict
+        )
         assert len(res) == 1
         assert isinstance(res[0], HamiltonianC64 if use_csingle else HamiltonianC128)
 
@@ -407,7 +372,9 @@ class TestSerializeObs:
     def test_multi_wire_identity(self, use_csingle):
         """Tests that multi-wire Identity does not fail serialization."""
         tape = qml.tape.QuantumTape(measurements=[qml.expval(qml.Identity(wires=[1, 2]))])
-        res = _serialize_observables(tape, self.wires_dict, use_csingle=use_csingle)
+        res = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+            tape, self.wires_dict
+        )
         assert len(res) == 1
 
         named_obs = NamedObsC64 if use_csingle else NamedObsC128
@@ -415,7 +382,7 @@ class TestSerializeObs:
 
 
 class TestSerializeOps:
-    """Tests for the _serialize_ops function"""
+    """Tests for the _ops function"""
 
     wires_dict = {i: i for i in range(10)}
 
@@ -426,7 +393,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
 
-        s = _serialize_ops(tape, self.wires_dict)
+        s = QuantumScriptSerializer(device_name).serialize_ops(tape, self.wires_dict)
         s_expected = (
             (
                 ["RX", "RY", "CNOT"],
@@ -449,7 +416,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
 
-        s = _serialize_ops(tape, self.wires_dict)
+        s = QuantumScriptSerializer(device_name).serialize_ops(tape, self.wires_dict)
         s_expected = (
             (
                 ["RX", "RY", "CNOT"],
@@ -469,7 +436,7 @@ class TestSerializeOps:
             qml.CNOT(wires=[0, 1])
             qml.RZ(0.2, wires=2)
 
-        s = _serialize_ops(tape, self.wires_dict)
+        s = QuantumScriptSerializer(device_name).serialize_ops(tape, self.wires_dict)
         s_expected = (
             (
                 ["CNOT", "RZ"],
@@ -493,7 +460,7 @@ class TestSerializeOps:
             qml.SingleExcitationPlus(0.4, wires=["a", 3.2])
             qml.adjoint(qml.SingleExcitationMinus(0.5, wires=["a", 3.2]), lazy=False)
 
-        s = _serialize_ops(tape, wires_dict)
+        s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_dict)
         s_expected = (
             (
                 [
@@ -526,7 +493,7 @@ class TestSerializeOps:
             qml.DoubleExcitationMinus(0.555, wires=[0, 1, 2, 3])
             qml.DoubleExcitationPlus(0.555, wires=[0, 1, 2, 3])
 
-        s = _serialize_ops(tape, self.wires_dict)
+        s = QuantumScriptSerializer(device_name).serialize_ops(tape, self.wires_dict)
 
         dtype = np.complex64 if C else np.complex128
         s_expected = (

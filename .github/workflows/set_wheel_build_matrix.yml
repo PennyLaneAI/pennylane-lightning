@@ -1,7 +1,7 @@
 name: Set wheel build matrix
 
 env:
-  PYTHON3_MIN_VERSION: "8"
+  PYTHON3_MIN_VERSION: "9"
   PYTHON3_MAX_VERSION: "11"
 
 on:
@@ -14,17 +14,22 @@ on:
       python_version:
         description: "Python versions."
         value: ${{ jobs.set-builder-matrix.outputs.python_version }}
+      exec_model:
+        description: "The execution model for Kokkos."
+        value: ${{ jobs.set-builder-matrix.outputs.exec_model }}
+      kokkos_version:
+        description: "Kokkos version"
+        value: ${{ jobs.set-builder-matrix.outputs.kokkos_version }}
+
+concurrency:
+  group: set_wheel_build_matrix-${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
 
 jobs:
   set-builder-matrix:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.10.0
-        with:
-          access_token: ${{ github.token }}
-
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
 
@@ -41,5 +46,15 @@ jobs:
               --max-version=3.${{ env.PYTHON3_MAX_VERSION }} --range)" >> $GITHUB_OUTPUT
           fi
 
+      - name: Kokkos execution strategy
+        id: exec_model
+        run: echo "exec_model=[\"OPENMP\"]" >> $GITHUB_OUTPUT # We may also adopt [THREADS] in later iterations
+
+      - name: Kokkos version
+        id: kokkos_version
+        run: echo "kokkos_version=[\"4.0.01\"]" >> $GITHUB_OUTPUT
+
     outputs:
       python_version: ${{ steps.pyver.outputs.python_version }}
+      exec_model: ${{ steps.exec_model.outputs.exec_model }}
+      kokkos_version: ${{ steps.kokkos_version.outputs.kokkos_version }}

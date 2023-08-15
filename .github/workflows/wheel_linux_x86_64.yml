@@ -1,7 +1,7 @@
 name: Wheel::Linux::x86_64
 
 # **What it does**: Builds python wheels for Linux (ubuntu-latest) architecture x86_64 and store it as artifacts.
-#                   Python versions: 3.8, 3.9, 3.10, 3.11.
+#                   Python versions: 3.9, 3.10, 3.11.
 # **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
@@ -16,6 +16,10 @@ on:
   release:
     types: [published]
 
+concurrency:
+  group: wheel_linux_x86_64-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   set_wheel_build_matrix:
     name: "Set wheel build matrix"
@@ -23,28 +27,98 @@ jobs:
     with:
       event_name: ${{ github.event_name }}
 
-  linux-wheels-x86-64:
+  build_dependencies:
     needs: [set_wheel_build_matrix]
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
+        container_img: ["quay.io/pypa/manylinux2014_x86_64"]
+
+    name: Kokkos core (${{ matrix.exec_model }})
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container_img }}
+
+    steps:
+      - name: Cache installation directories
+        id: kokkos-cache
+        uses: actions/cache@v3
+        with:
+          path: /root/Kokkos_install/${{ matrix.exec_model }}
+          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
+      - name: Install dependencies (Ubuntu)
+        if: ${{ (matrix.container_img == 'ubuntu-latest') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        run: |
+          apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build git
+          echo "COMPILER=g++-11" >> $GITHUB_ENV
+
+      - name: Install dependencies (CentOS)
+        if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+        run: |
+          yum update -y && yum install -y cmake ninja-build
+          echo "COMPILER=g++" >> $GITHUB_ENV
+
+      - name: Clone Kokkos libs
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone https://github.com/kokkos/kokkos.git
+          cd kokkos
+          git checkout ${{ matrix.kokkos_version }}
+          cd -
+          pushd . &> /dev/null
+
+      - name: Build Kokkos core library
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p /root/Kokkos_install/${{ matrix.exec_model }}
+          cd kokkos
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/root/Kokkos_install/${{ matrix.exec_model }} \
+                          -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
+                          -DKokkos_ENABLE_SERIAL=ON \
+                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
+                          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                          -DCMAKE_CXX_COMPILER=${{ env.COMPILER }} \
+                          -DCMAKE_CXX_STANDARD=20 \
+                          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                          -G Ninja
+          cmake --build ./Build --verbose
+          cmake --install ./Build
+          cd -
+
+  linux-wheels-x86-64:
+    needs: [set_wheel_build_matrix, build_dependencies]
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
         arch: [x86_64]
+        pl_backend: ["lightning_kokkos", "lightning_qubit"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
+        exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
         container_img: ["quay.io/pypa/manylinux2014_x86_64"]
 
-    name: ${{ matrix.os }} (Python ${{ fromJson('{ "cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11" }')[matrix.cibw_build] }})
+    name: ${{ matrix.os }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container_img }}
 
     steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.10.0
+      - name: Restoring cached dependencies
+        id: kokkos-cache
+        uses: actions/cache@v3
         with:
-          access_token: ${{ github.token }}
+          path: /root/Kokkos_install/${{ matrix.exec_model }}
+          key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
+
+      - name: Copy cached libraries
+        run: |
+          mkdir Kokkos
+          cp -rf /root/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies (CentOS)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') }}
@@ -54,7 +128,7 @@ jobs:
           yum update -y && yum install -y docker
 
       - name: Install cibuildwheel
-        run: python3.8 -m pip install cibuildwheel~=2.11.0
+        run: python3.9 -m pip install cibuildwheel~=2.11.0
 
       - name: Build wheels
         env:
@@ -67,33 +141,36 @@ jobs:
           # Python build settings
           CIBW_BEFORE_BUILD: |
             cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
-            pip install ninja cmake~=3.24.0
+            python -m pip install ninja cmake~=3.24.0
             yum clean all -y
             yum install centos-release-scl-rh -y
             yum install devtoolset-11-gcc-c++ -y
             source /opt/rh/devtoolset-11/enable -y
 
           CIBW_ENVIRONMENT: |
-            PATH=/opt/rh/devtoolset-11/root/usr/bin:$PATH
+            PATH="/opt/rh/devtoolset-11/root/usr/bin:$PATH" \
+            PL_BACKEND="${{ matrix.pl_backend }}"
+
           # Testing of built wheels
           CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
 
           CIBW_BEFORE_TEST: |
-            pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+            python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
 
           CIBW_TEST_COMMAND: |
-            pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+            DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
 
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
           CIBW_BUILD_VERBOSITY: 3
 
-        run: python3.8 -m cibuildwheel --output-dir wheelhouse
+        run: python3.9 -m cibuildwheel --output-dir wheelhouse
 
       - name: Validate wheels
         run: |
-          python3.8 -m pip install twine
-          python3.8 -m twine check ./wheelhouse/*.whl
+          python3.9 -m pip install twine
+          python3.9 -m twine check ./wheelhouse/*.whl
 
       - uses: actions-ecosystem/action-regex-match@v2
         id: rc_build
@@ -104,22 +181,23 @@ jobs:
       - uses: actions/upload-artifact@v2
         if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         with:
-          name: ${{ runner.os }}-wheels-${{ matrix.arch }}.zip
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
 
-  upload-pypi:
-    needs: linux-wheels-x86-64
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
-    steps:
-      - uses: actions/download-artifact@v2
-        with:
-          name: Linux-wheels-x86_64.zip
-          path: dist
+  # Refine and uncomment before merging to pennylane-lightning repository
+  # upload-pypi:
+  #   needs: linux-wheels-x86-64
+  #   runs-on: ubuntu-latest
+  #   if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
+  #   steps:
+  #     - uses: actions/download-artifact@v2
+  #       with:
+  #         name: Linux-wheels-x86_64.zip
+  #         path: dist
 
-      - name: Upload wheels to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
+  #     - name: Upload wheels to PyPI
+  #       uses: pypa/gh-action-pypi-publish@release/v1
+  #       with:
+  #         user: __token__
+  #         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+  #         repository_url: https://test.pypi.org/legacy/

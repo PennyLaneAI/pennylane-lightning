@@ -1,4 +1,4 @@
-# Copyright 2021 Xanadu Quantum Technologies Inc.
+# Copyright 2018-2023 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,15 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for the correct application of gates with lightning.qubit.
+Unit tests for the correct application of gates with a Lightning device.
 """
-import itertools
+import pytest
+from conftest import LightningDevice, device_name
 
+import itertools
 import numpy as np
 import pennylane as qml
-import pytest
-
-from pennylane_lightning import LightningQubit
 
 
 @pytest.fixture
@@ -80,9 +79,9 @@ def op(op_name):
     return ops_list.get(op_name)
 
 
-@pytest.mark.parametrize("op_name", LightningQubit.operations)
+@pytest.mark.parametrize("op_name", LightningDevice.operations)
 def test_gate_unitary_correct(op, op_name):
-    """Test if lightning.qubit correctly applies gates by reconstructing the unitary matrix and
+    """Test if lightning device correctly applies gates by reconstructing the unitary matrix and
     comparing to the expected version"""
 
     if op_name in ("BasisState", "QubitStateVector"):
@@ -92,7 +91,7 @@ def test_gate_unitary_correct(op, op_name):
 
     wires = len(op[2]["wires"])
 
-    dev = qml.device("lightning.qubit", wires=wires)
+    dev = qml.device(device_name, wires=wires)
 
     @qml.qnode(dev)
     def output(input):
@@ -111,9 +110,9 @@ def test_gate_unitary_correct(op, op_name):
     assert np.allclose(unitary, unitary_expected)
 
 
-@pytest.mark.parametrize("op_name", LightningQubit.operations)
+@pytest.mark.parametrize("op_name", LightningDevice.operations)
 def test_inverse_unitary_correct(op, op_name):
-    """Test if lightning.qubit correctly applies inverse gates by reconstructing the unitary matrix
+    """Test if lightning device correctly applies inverse gates by reconstructing the unitary matrix
     and comparing to the expected version"""
 
     if op_name in ("BasisState", "QubitStateVector"):
@@ -123,7 +122,7 @@ def test_inverse_unitary_correct(op, op_name):
 
     wires = len(op[2]["wires"])
 
-    dev = qml.device("lightning.qubit", wires=wires)
+    dev = qml.device(device_name, wires=wires)
 
     @qml.qnode(dev)
     def output(input):
@@ -173,10 +172,10 @@ random_unitary = np.array(
 
 
 def test_arbitrary_unitary_correct():
-    """Test if lightning.qubit correctly applies an arbitrary unitary by reconstructing its
+    """Test if lightning device correctly applies an arbitrary unitary by reconstructing its
     matrix"""
     wires = 2
-    dev = qml.device("lightning.qubit", wires=wires)
+    dev = qml.device(device_name, wires=wires)
 
     @qml.qnode(dev)
     def output(input):
@@ -194,10 +193,10 @@ def test_arbitrary_unitary_correct():
 
 
 def test_arbitrary_inv_unitary_correct():
-    """Test if lightning.qubit correctly applies the inverse of an arbitrary unitary by
+    """Test if lightning device correctly applies the inverse of an arbitrary unitary by
     reconstructing its matrix"""
     wires = 2
-    dev = qml.device("lightning.qubit", wires=wires)
+    dev = qml.device(device_name, wires=wires)
 
     @qml.qnode(dev)
     def output(input):
@@ -215,7 +214,7 @@ def test_arbitrary_inv_unitary_correct():
     assert np.allclose(unitary, random_unitary_inv)
 
 
-@pytest.mark.skipif(not LightningQubit._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+@pytest.mark.skipif(not LightningDevice._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 @pytest.mark.parametrize(
     "obs,has_rotation",
     [
@@ -227,7 +226,7 @@ def test_arbitrary_inv_unitary_correct():
 )
 def test_get_diagonalizing_gates(obs, has_rotation):
     """Tests that _get_diagonalizing_gates filters measurements as expected."""
-    dev = qml.device("lightning.qubit", wires=2)
+    dev = qml.device(device_name, wires=2)
     qs = qml.tape.QuantumScript(measurements=[qml.expval(obs)])
     actual = dev._get_diagonalizing_gates(qs)
     if has_rotation:

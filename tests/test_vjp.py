@@ -1,4 +1,4 @@
-# Copyright 2018-2021 Xanadu Quantum Technologies Inc.
+# Copyright 2018-2023 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,17 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tests for the ``vjp`` method of LightningQubit.
+Tests for the ``vjp`` method of LightningKokkos.
 """
 import pytest
-import math
+from conftest import device_name, LightningDevice as ld
 
+import math
 import pennylane as qml
 from pennylane import numpy as np
 
-from pennylane_lightning.lightning_qubit import CPP_BINARY_AVAILABLE
-
-if not CPP_BINARY_AVAILABLE:
+if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
@@ -31,7 +30,7 @@ class TestVectorJacobianProduct:
 
     @pytest.fixture(params=[np.complex64, np.complex128])
     def dev(self, request):
-        return qml.device("lightning.qubit", wires=2, c_dtype=request.param)
+        return qml.device(device_name, wires=2, c_dtype=request.param)
 
     def test_use_device_state(self, tol, dev):
         """Tests that when using the device state, the correct answer is still returned."""
@@ -74,7 +73,8 @@ class TestVectorJacobianProduct:
         vjp1 = fn1(tape)
 
         qml.execute([tape], dev, None)
-        fn2 = dev.vjp(tape.measurements, dy, starting_state=dev._pre_rotated_state)
+
+        fn2 = dev.vjp(tape.measurements, dy, starting_state=dev.state)
         vjp2 = fn2(tape)
 
         assert np.allclose(vjp1, vjp2, atol=tol, rtol=0)
@@ -110,7 +110,7 @@ class TestVectorJacobianProduct:
 
         assert np.allclose(vjp1, vjp2, atol=tol, rtol=0)
 
-    def test_wrong_dy_expval(self, tol, dev):
+    def test_wrong_dy_expval(self, dev):
         """Tests raise an exception when dy is incorrect"""
         x, y, z = [0.5, 0.3, -0.7]
 
@@ -131,7 +131,9 @@ class TestVectorJacobianProduct:
             dev.vjp(tape1.measurements, dy1)
 
         dy2 = np.array([1.0 + 3.0j, 0.3 + 2.0j, 0.5 + 0.1j])
-        with pytest.raises(ValueError, match="The vjp method only works with a real-valued dy"):
+        with pytest.raises(
+            ValueError, match="The vjp method only works with a real-valued grad_vec"
+        ):
             dev.vjp(tape1.measurements, dy2)
 
     def test_not_expval(self, dev):
@@ -151,7 +153,7 @@ class TestVectorJacobianProduct:
     def test_finite_shots_warns(self):
         """Tests warning raised when finite shots specified"""
 
-        dev = qml.device("lightning.qubit", wires=1, shots=1)
+        dev = qml.device(device_name, wires=1, shots=1)
 
         with qml.tape.QuantumTape() as tape:
             qml.expval(qml.PauliZ(0))
@@ -159,7 +161,8 @@ class TestVectorJacobianProduct:
         dy = np.array([1.0])
 
         with pytest.warns(
-            UserWarning, match="Requested adjoint differentiation to be computed with finite shots."
+            UserWarning,
+            match="Requested adjoint differentiation to be computed with finite shots.",
         ):
             dev.vjp(tape.measurements, dy)(tape)
 
@@ -174,7 +177,8 @@ class TestVectorJacobianProduct:
         dy = np.array([1.0])
 
         with pytest.raises(
-            qml.QuantumFunctionError, match="The CRot operation is not supported using the"
+            qml.QuantumFunctionError,
+            match="The CRot operation is not supported using the",
         ):
             dev.vjp(tape.measurements, dy)(tape)
 
@@ -188,7 +192,8 @@ class TestVectorJacobianProduct:
         dy = np.array([1.0])
 
         with pytest.raises(
-            qml.QuantumFunctionError, match="differentiation method does not support the Projector"
+            qml.QuantumFunctionError,
+            match="differentiation method does not support the Projector",
         ):
             dev.vjp(tape.measurements, dy)(tape)
 
@@ -197,7 +202,8 @@ class TestVectorJacobianProduct:
             qml.expval(qml.Projector([0], wires=[0]) @ qml.PauliZ(0))
 
         with pytest.raises(
-            qml.QuantumFunctionError, match="differentiation method does not support the Projector"
+            qml.QuantumFunctionError,
+            match="differentiation method does not support the Projector",
         ):
             dev.vjp(tape.measurements, dy)(tape)
 
@@ -224,9 +230,18 @@ class TestVectorJacobianProduct:
                 qml.RY(x, wires=(0,))
             assert np.allclose(fn(tape), -0.8 * np.sin(x), atol=tol)
 
+    @pytest.mark.skipif(
+        device_name == device_name,
+        reason="Adjoint differentiation does not support State measurements.",
+    )
     def test_statevector_ry(self, dev, tol):
         dy = np.array(
-            [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
+            [
+                [1.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+            ]
         )
         fn0 = dev.vjp([qml.state()], dy[0, :])
         fn1 = dev.vjp([qml.state()], dy[1, :])
@@ -241,7 +256,11 @@ class TestVectorJacobianProduct:
             assert np.allclose(fn2(tape), 0.0, atol=tol)
             assert np.allclose(fn3(tape), 0.0, atol=tol)
 
-    def test_wrong_dy_statevector(self, tol, dev):
+    @pytest.mark.skipif(
+        device_name == device_name,
+        reason="Adjoint differentiation does not support State measurements.",
+    )
+    def test_wrong_dy_statevector(self, dev):
         """Tests raise an exception when dy is incorrect"""
         x, y, z = [0.5, 0.3, -0.7]
 
@@ -256,18 +275,30 @@ class TestVectorJacobianProduct:
         dy1 = np.ones(3, dtype=dev.C_DTYPE)
 
         with pytest.raises(
-            ValueError, match="Size of the provided vector dy must be the same as the size of"
+            ValueError,
+            match="Size of the provided vector grad_vec must be the same as the size of",
         ):
             dev.vjp(tape.measurements, dy1)
 
         dy2 = np.ones(4, dtype=dev.R_DTYPE)
 
-        with pytest.warns(UserWarning, match="The vjp method only works with complex-valued dy"):
+        with pytest.warns(
+            UserWarning, match="The vjp method only works with complex-valued grad_vec"
+        ):
             dev.vjp(tape.measurements, dy2)
 
+    @pytest.mark.skipif(
+        device_name == device_name,
+        reason="Adjoint differentiation does not support State measurements.",
+    )
     def test_statevector_complex_circuit(self, dev, tol):
         dy = np.array(
-            [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
+            [
+                [1.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+            ]
         )
         fn0 = dev.vjp([qml.state()], dy[0, :])
         fn1 = dev.vjp([qml.state()], dy[1, :])
@@ -329,7 +360,8 @@ class TestVectorJacobianProduct:
 
     def test_no_trainable_parameters_NEW(self, dev):
         """A tape with no trainable parameters will simply return None"""
-        dev._state = dev._asarray(dev._state)
+        _state = dev._asarray(dev.state)
+        dev._apply_state_vector(_state, dev.wires)
 
         x = 0.4
 
@@ -427,7 +459,8 @@ class TestVectorJacobianProduct:
     def test_prob_expectation_values(self, dev):
         """Tests correct output shape and evaluation for a tape
         with prob and expval outputs"""
-        dev._state = dev._asarray(dev._state)
+        _state = dev._asarray(dev.state)
+        dev._apply_state_vector(_state, dev.wires)
 
         x = 0.543
         y = -0.654
@@ -443,7 +476,8 @@ class TestVectorJacobianProduct:
         dy = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
 
         with pytest.raises(
-            qml.QuantumFunctionError, match="Adjoint differentiation method does not support"
+            qml.QuantumFunctionError,
+            match="Adjoint differentiation method does not support",
         ):
             dev.vjp(tape.measurements, dy)(tape)
 
@@ -453,7 +487,7 @@ class TestBatchVectorJacobianProduct:
 
     @pytest.fixture(params=[np.complex64, np.complex128])
     def dev(self, request):
-        return qml.device("lightning.qubit", wires=2, c_dtype=request.param)
+        return qml.device(device_name, wires=2, c_dtype=request.param)
 
     def test_one_tape_no_trainable_parameters_1(self, dev):
         """A tape with no trainable parameters will simply return None"""
@@ -531,7 +565,8 @@ class TestBatchVectorJacobianProduct:
 
     def test_reduction_append(self, dev):
         """Test the 'append' reduction strategy"""
-        dev._state = dev._asarray(dev._state)
+        _state = dev._asarray(dev.state)
+        dev._apply_state_vector(_state, dev.wires)
 
         with qml.tape.QuantumTape() as tape1:
             qml.RX(0.4, wires=0)

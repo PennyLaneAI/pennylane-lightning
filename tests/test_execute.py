@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Integration tests for the ``execute`` method of LightningQubit.
+Integration tests for the ``execute`` method of Lightning devices.
 """
 import pytest
+from conftest import device_name
 
 import pennylane as qml
 from pennylane import numpy as np
@@ -67,11 +68,11 @@ class TestQChem:
 
         gradient_tapes, fn_grad = getattr(qml.gradients, diff_method)(tape)
 
-        dev_l = qml.device("lightning.qubit", wires=qubits)
+        dev_l = qml.device(device_name, wires=qubits)
         dev_d = qml.device("default.qubit", wires=qubits)
 
         def dev_l_execute(t):
-            dev = qml.device("lightning.qubit", wires=qubits)
+            dev = qml.device(device_name, wires=qubits)
             return dev.execute(t)
 
         grad_dev_l = fn_grad([dev_l_execute(t) for t in gradient_tapes])

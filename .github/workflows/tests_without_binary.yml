@@ -8,6 +8,10 @@ on:
 env:
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
 
+concurrency:
+  group: tests_without_binary-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   pythontests:
     name: Python tests
@@ -17,11 +21,6 @@ jobs:
         os: [ubuntu-22.04]
 
     steps:
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.10.0
-        with:
-          access_token: ${{ github.token }}
-
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
         with:
@@ -30,31 +29,23 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.8'
+          python-version: '3.9'
 
       - name: Get required Python packages
         run: |
           cd main
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
+          python -m pip install -r requirements-dev.txt
 
       - name: Install lightning.qubit device
         run: |
           cd main
-          pip install -e .
+          python -m pip install -e . -vv
         env:
           SKIP_COMPILATION: True
 
       - name: Run PennyLane-Lightning unit tests
         run: |
           cd main/
-          pytest tests/ $COVERAGE_FLAGS
+          python -m pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./main/coverage.xml
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}

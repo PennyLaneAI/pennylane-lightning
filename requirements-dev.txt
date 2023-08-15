@@ -1,8 +1,9 @@
+pip==23.0
+git+https://github.com/PennyLaneAI/pennylane.git@feature/lightning_ready
 ninja
 flaky
-git+https://github.com/PennyLaneAI/pennylane.git@master
 pybind11
 pytest
 pytest-cov
 pytest-mock
-black>=21
+black==23.7.0

@@ -1,4 +1,4 @@
-# Copyright 2022 Xanadu Quantum Technologies Inc.
+# Copyright 2018-2023 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,8 +17,50 @@ import subprocess
 import shutil
 import sys
 from pathlib import Path
-from setuptools import setup, Extension, find_packages
+from setuptools import setup, Extension, find_namespace_packages
 from setuptools.command.build_ext import build_ext
+
+default_backend = "lightning_qubit"
+supported_backends = {"lightning_kokkos", "lightning_qubit"}
+supported_backends.update({sb.replace("_", ".") for sb in supported_backends})
+
+
+def get_backend():
+    """Return backend.
+
+    The backend is ``lightning_qubit`` by default.
+    Allowed values are: "lightning_kokkos", "lightning_qubit".
+    A dot can also be used instead of an underscore.
+    If the environment variable ``PL_BACKEND`` is defined, its value is used.
+    Otherwise, if the environment variable ``CMAKE_ARGS`` is defined and it
+    contains the CMake option ``PL_BACKEND``, its value is used.
+    Dots are replaced by underscores upon exiting.
+    """
+    backend = None
+    if "PL_BACKEND" in os.environ:
+        backend = os.environ.get("PL_BACKEND", default_backend)
+        backend = backend.replace(".", "_")
+    if "CMAKE_ARGS" in os.environ:
+        cmake_args = os.environ["CMAKE_ARGS"].split(" ")
+        arg = [x for x in cmake_args if "PL_BACKEND" in x]
+        if not arg and backend is not None:
+            cmake_backend = backend
+        else:
+            cmake_backend = arg[0].split("=")[1].replace(".", "_") if arg else default_backend
+        if backend is not None and backend != cmake_backend:
+            raise ValueError(
+                f"Backends {backend} and {cmake_backend} specified by PL_BACKEND and CMAKE_ARGS respectively do not match."
+            )
+        backend = cmake_backend
+    if backend is None:
+        backend = default_backend
+    if backend not in supported_backends:
+        raise ValueError(f"Invalid backend {backend}.")
+    return backend
+
+
+backend = get_backend()
+device_name = backend.replace("_", ".")
 
 
 class CMakeExtension(Extension):
@@ -78,6 +120,7 @@ class CMakeBuild(build_ext):
                 f"-DCMAKE_MAKE_PROGRAM={ninja_path}",
             ]
 
+        configure_args += [f"-DPL_BACKEND={backend}"]
         configure_args += self.cmake_defines
 
         # Add more platform dependent options
@@ -107,7 +150,7 @@ class CMakeBuild(build_ext):
         if not Path(self.build_temp).exists():
             os.makedirs(self.build_temp)
 
-        if "CMAKE_ARGS" in os.environ.keys():
+        if "CMAKE_ARGS" in os.environ:
             configure_args += os.environ["CMAKE_ARGS"].split(" ")
 
         subprocess.check_call(
@@ -121,45 +164,44 @@ class CMakeBuild(build_ext):
             env=os.environ,
         )
 
-
-with open(os.path.join("pennylane_lightning", "_version.py")) as f:
+with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="utf-8") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
-    "pennylane>=0.30",
+    "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@feature/lightning_ready#egg=pennylane",
 ]
 
+suffix = backend.replace("lightning_", "")
+suffix = suffix[0].upper() + suffix[1:]
+
+pennylane_plugins = [device_name + " = pennylane_lightning." + backend + ":Lightning" + suffix]
+
 info = {
-    "name": "PennyLane-Lightning",
+    "name": f"PennyLane_Lightning_{suffix}",
     "version": version,
     "maintainer": "Xanadu Inc.",
     "maintainer_email": "software@xanadu.ai",
     "url": "https://github.com/XanaduAI/pennylane-lightning",
     "license": "Apache License 2.0",
-    "packages": find_packages(where="."),
+    "packages": find_namespace_packages(include=['pennylane_lightning.core',
+                                                 'pennylane_lightning.'+backend]),
     "package_data": {
-        "pennylane_lightning": [
+        'pennylane_lightning.core': [
             os.path.join("src", "*"),
             os.path.join("src", "**", "*"),
         ]
     },
     "include_package_data": True,
-    "entry_points": {
-        "pennylane.plugins": [
-            "lightning.qubit = pennylane_lightning:LightningQubit",
-        ],
-    },
+    "entry_points": {"pennylane.plugins": pennylane_plugins},
     "description": "PennyLane-Lightning plugin",
     "long_description": open("README.rst").read(),
-    "long_description_content_type": "text/x-rst",
-    "provides": ["pennylane_lightning"],
+    "long_description_content_type": "text/markdown",
     "install_requires": requirements,
     "ext_modules": []
     if os.environ.get("SKIP_COMPILATION", False)
-    else [CMakeExtension("lightning_qubit_ops")],
+    else [CMakeExtension(f"{backend}_ops")],
     "cmdclass": {"build_ext": CMakeBuild},
     "ext_package": "pennylane_lightning",
-    "extras_require": {"gpu": ["pennylane-lightning-gpu"]},
 }
 
 classifiers = [
@@ -174,7 +216,6 @@ classifiers = [
     "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",

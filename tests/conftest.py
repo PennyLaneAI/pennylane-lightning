@@ -1,4 +1,4 @@
-# Copyright 2020 Xanadu Quantum Technologies Inc.
+# Copyright 2018-2023 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import pytest
 import numpy as np
 
 import pennylane as qml
+import pennylane_lightning
 
 # defaults
 TOL = 1e-6
@@ -84,10 +85,22 @@ def n_subsystems(request):
     return request.param
 
 
+# Device specification
+# Here we'll check for lightning.kokkos binaries and proceed with this device if found.
+try:
+    from pennylane_lightning import lightning_kokkos_ops
+    from pennylane_lightning.lightning_kokkos import LightningKokkos as LightningDevice
+except:
+    from pennylane_lightning.lightning_qubit import LightningQubit as LightningDevice
+
+
+device_name = LightningDevice.short_name
+
+
 # General qubit_device fixture, for any number of wires.
 @pytest.fixture(scope="function", params=[np.complex64, np.complex128])
 def qubit_device(request):
     def _device(wires):
-        return qml.device("lightning.qubit", wires=wires, c_dtype=request.param)
+        return qml.device(device_name, wires=wires, c_dtype=request.param)
 
     return _device
