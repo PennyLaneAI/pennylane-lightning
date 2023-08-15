@@ -17,7 +17,7 @@ import importlib
 
 import re
 
-VERSION_FILE_PATH = "pennylane_lightning/_version.py"
+VERSION_FILE_PATH = "pennylane_lightning/core/_version.py"
 
 rgx_ver = re.compile('^__version__ = "(.*?)"$')
 
