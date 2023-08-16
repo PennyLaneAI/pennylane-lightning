@@ -183,7 +183,8 @@ jobs:
 
   upload-pypi:
     needs: win-wheels
-    matrix:
+    strategy:
+      matrix:
         os: [windows-2022]
         arch: [AMD64]
         pl_backend: ["lightning_qubit"]

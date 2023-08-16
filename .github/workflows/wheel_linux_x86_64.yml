@@ -186,7 +186,8 @@ jobs:
 
   upload-pypi:
     needs: linux-wheels-x86-64
-    matrix:
+    strategy:
+      matrix:
         os: [ubuntu-latest]
         arch: [x86_64]
         pl_backend: ["lightning_qubit"]

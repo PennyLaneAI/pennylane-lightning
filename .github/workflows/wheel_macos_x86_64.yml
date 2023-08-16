@@ -175,7 +175,8 @@ jobs:
 
   upload-pypi:
     needs: mac-wheels-x86
-    matrix:
+    strategy:
+      matrix:
         os: [macos-12]
         arch: [x86_64]
         pl_backend: ["lightning_qubit"]

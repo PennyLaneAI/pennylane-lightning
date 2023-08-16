@@ -423,7 +423,7 @@ jobs:
           mv coverage.xml coverage-${{ github.job }}.xml
 
       - name: Install all backend devices
-        if: ${{ matrix.pl_backend == 'all' }}
+        if: ${{ matrix.pl_backend == 'all' }}pythontestswithBLAS
         run: |
           cd main
           python -m pip uninstall -y pennylane-lightning
@@ -451,7 +451,7 @@ jobs:
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
   upload-to-codecov-linux-python:
-    needs: [pythontests, pythontestswithBLAS, pythontestswithKokkos, pythontestswithKokkosAndOpenBLAS]
+    needs: [pythontests, pythontestswithOpenBLAS, pythontestswithKokkos]
     name: Upload coverage data to codecov
     runs-on: ubuntu-latest
     steps:
