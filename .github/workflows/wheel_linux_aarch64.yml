@@ -171,8 +171,6 @@ jobs:
         os: [ubuntu-latest]
         arch: [aarch64]
         pl_backend: ["lightning_qubit"]
-
-    name: Upload to pypi - ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }}
     runs-on: ${{ matrix.os }}
 
     if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}

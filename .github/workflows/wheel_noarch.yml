@@ -69,8 +69,6 @@ jobs:
     strategy:
       matrix:
         pl_backend: ["lightning_qubit"]
-
-    name: Upload to pypi - ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }}
     runs-on: ${{ matrix.os }}
 
     if: ${{ github.event_name == 'release' }}
