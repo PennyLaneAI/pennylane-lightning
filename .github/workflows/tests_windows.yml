@@ -51,7 +51,10 @@ jobs:
               $filename = $filename.Substring($filename.LastIndexOf("\")+1)
               $test_call = $file.ToString() + " --order lex --reporter junit --out .\Build\tests\results\report_" + $filename + ".xml"
               Invoke-Expression $test_call
+              $cov_call = "OpenCppCoverage --sources pennylane_lightning\core\src --export_type cobertura:coverage.xml " + $file.ToString()
+              Invoke-Expression $cov_call
             }
+            Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -59,6 +62,12 @@ jobs:
         with:
           name: windows-test-report-${{ github.job }}-${{ matrix.pl_backend }}
           path: .\Build\tests\results\
+
+      - name: Upload coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-coverage-report
+          path: .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
 
   win-set-matrix-x86:
@@ -201,7 +210,10 @@ jobs:
               $filename = $filename.Substring($filename.LastIndexOf("\")+1)
               $test_call = $file.ToString() + " --order lex --reporter junit --out .\Build\tests\results\report_" + $filename + ".xml"
               Invoke-Expression $test_call
+              $cov_call = "OpenCppCoverage --sources pennylane_lightning\core\src --export_type cobertura:coverage.xml " + $file.ToString()
+              Invoke-Expression $cov_call
             }
+            Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -209,3 +221,28 @@ jobs:
         with:
           name: windows-test-report-${{ github.job }}-${{ matrix.pl_backend }}
           path: .\Build\tests\results\
+
+      - name: Upload coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-coverage-report
+          path: .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+
+  upload-to-codecov-windows:
+    needs: [cpptests, cpptestswithKokkos]
+    name: Upload coverage data to codecov
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          name: windows-coverage-report
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}

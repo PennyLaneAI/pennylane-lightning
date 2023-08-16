@@ -60,6 +60,29 @@ jobs:
           name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}
           path: ./Build/tests/results/
 
+      - name: Build and run unit tests for code coverage
+        run: |
+            cmake . -BBuildCov -G Ninja \
+              -DCMAKE_BUILD_TYPE=Debug \
+              -DBUILD_TESTS=ON \
+              -DENABLE_PYTHON=OFF \
+              -DPL_BACKEND=${{ matrix.pl_backend }} \
+              -DENABLE_COVERAGE=ON \
+              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)
+            cmake --build ./BuildCov
+            cd ./BuildCov
+            for file in *runner ; do ./$file; done;
+            lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
+            lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: ubuntu-codecov-results-cpp
+          path: ./BuildCov/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+
+
   pythontests:
     strategy:
       matrix:
@@ -108,13 +131,13 @@ jobs:
           pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv coverage.xml coverage-${{ github.job }}.xml
+          mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-python
-          path: ./main/coverage-${{ github.job }}.xml
+          path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
   cpptestswithOpenBLAS:
     strategy:
@@ -159,6 +182,29 @@ jobs:
         with:
           name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}
           path: ./Build/tests/results/
+
+      - name: Build and run unit tests for code coverage
+        run: |
+            cmake . -BBuildCov -G Ninja \
+              -DCMAKE_BUILD_TYPE=Debug \
+              -DBUILD_TESTS=ON \
+              -DENABLE_PYTHON=OFF \
+              -DENABLE_BLAS=ON \
+              -DPL_BACKEND=${{ matrix.pl_backend }} \
+              -DENABLE_COVERAGE=ON \
+              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)
+            cmake --build ./BuildCov
+            cd ./BuildCov
+            for file in *runner ; do ./$file; done;
+            lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
+            lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: ubuntu-codecov-results-cpp
+          path: ./BuildCov/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
 
   pythontestswithOpenBLAS:
     strategy:
@@ -208,13 +254,13 @@ jobs:
           pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv coverage.xml coverage-${{ github.job }}.xml
+          mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-python
-          path: ./main/coverage-${{ github.job }}.xml
+          path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
   build_and_cache_Kokkos:
     name: "Build and cache Kokkos"
@@ -265,7 +311,6 @@ jobs:
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=RelWithDebInfo \
               -DBUILD_TESTS=ON \
-              \
               -DENABLE_PYTHON=OFF \
               -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
@@ -281,6 +326,29 @@ jobs:
         with:
           name: ubuntu-tests-reports-${{ github.job }}_${{ matrix.pl_backend }}
           path: ./Build/tests/results_${{ github.job }}_${{ matrix.pl_backend }}
+
+      - name: Build and run unit tests for code coverage
+        run: |
+            cmake . -BBuildCov -G Ninja \
+              -DCMAKE_BUILD_TYPE=Debug \
+              -DBUILD_TESTS=ON \
+              -DENABLE_PYTHON=OFF \
+              -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
+              -DPL_BACKEND=${{ matrix.pl_backend }} \
+              -DENABLE_COVERAGE=ON \
+              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)
+            cmake --build ./BuildCov
+            cd ./BuildCov
+            for file in *runner ; do ./$file; done;
+            lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
+            lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: ubuntu-codecov-results-cpp
+          path: ./BuildCov/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
 
   pythontestswithKokkos:
     needs: [build_and_cache_Kokkos]
@@ -374,10 +442,48 @@ jobs:
           pl-device-test --device lightning.kokkos --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv coverage.xml coverage-${{ github.job }}.xml
+          mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-python
-          path: ./main/coverage-${{ github.job }}.xml
+          path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+
+  upload-to-codecov-linux-python:
+    needs: [pythontests, pythontestswithBLAS, pythontestswithKokkos, pythontestswithKokkosAndOpenBLAS]
+    name: Upload coverage data to codecov
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-codecov-results-python
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  upload-to-codecov-linux-cpp:
+    needs: [cpptests, cpptestswithOpenBLAS, cpptestswithKokkos, cpptestswithKokkosAndOpenBLAS]
+    name: Upload coverage data to codecov
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-codecov-results-cpp
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
