@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Complete overhaul of repository structure. This new structure allows for multiple backends. Refactoring efforts we directed to improve development performance, code reuse and decrease overall overhead to propagate changes through backends.
+* Complete overhaul of repository structure to facilitates integration of multiple backends. Refactoring efforts we directed to improve development performance, code reuse and decrease overall overhead to propagate changes through backends. New C++ modular build strategy allows for faster test builds restricted to a module. Update CI/CD actions concurrency strategy. Change minimal Python version to 3.9.
   [(#472)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/472)
 
 * Wheels are built with native support for sparse Hamiltonians.
@@ -14,7 +14,7 @@
 ### Breaking changes
 
 ### Improvements
-* Merge Lightning Kokkos backend to the new single repository.
+* Merge Lightning Qubit and Lightning Kokkos backends in the new repository.
   [(#472)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/472)
 
 ### Documentation
