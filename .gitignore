@@ -3,6 +3,7 @@ kokkos/
 kokkosKernels/
 prototypes/
 doc/_build/
+doc/code/api/
 PennyLane_Lightning_Qubit.egg-info/
 PennyLane_Lightning_Kokkos.egg-info/
 build/
