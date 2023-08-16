@@ -470,7 +470,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   upload-to-codecov-linux-cpp:
-    needs: [cpptests, cpptestswithOpenBLAS, cpptestswithKokkos, cpptestswithKokkosAndOpenBLAS]
+    needs: [cpptests, cpptestswithOpenBLAS, cpptestswithKokkos]
     name: Upload coverage data to codecov
     runs-on: ubuntu-latest
     steps:
