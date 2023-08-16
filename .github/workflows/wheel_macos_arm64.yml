@@ -85,7 +85,8 @@ jobs:
             python -m pip install pybind11 ninja cmake~=3.24.0 setuptools
 
           CIBW_ENVIRONMENT: |
-            CMAKE_ARGS="-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11 -DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=ARM64 -DENABLE_OPENMP=OFF"
+            CMAKE_ARGS="-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11 -DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=ARM64 -DENABLE_OPENMP=OFF" \
+            PL_BACKEND="${{ matrix.pl_backend }}"
 
           # Testing of built wheels
           CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
@@ -93,9 +94,10 @@ jobs:
           CIBW_BEFORE_TEST: python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
 
           CIBW_TEST_COMMAND: |
-            pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+            DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
 
-          CIBW_BUILD_VERBOSITY: 1
+          CIBW_BUILD_VERBOSITY: 3
 
           CIBW_ARCHS_MACOS: ${{ matrix.arch }}
 
@@ -107,26 +109,32 @@ jobs:
           python -m pip install twine
           python -m twine check ./wheelhouse/*.whl
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
 
-  # Refine and uncomment before merging to pennylane-lightning repository
-  # upload-pypi:
-  #   needs: mac-wheels-arm64
-  #   runs-on: ubuntu-latest
-  #   if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
-  #   steps:
-  #     - uses: actions/download-artifact@v2
-  #       with:
-  #         name: macOS-wheels-arm64.zip
-  #         path: dist
+  upload-pypi:
+    needs: mac-wheels-arm64
+    matrix:
+        os: [macos-11]
+        arch: [arm64]
+        pl_backend: ["lightning_qubit"]
 
-  #     - name: Upload wheels to PyPI
-  #       uses: pypa/gh-action-pypi-publish@release/v1
-  #       with:
-  #         user: __token__
-  #         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-  #         repository_url: https://test.pypi.org/legacy/
+    name: Upload to pypi - ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }}
+    runs-on: ${{ matrix.os }}
+
+    if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
+          path: dist
+
+      - name: Upload wheels to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/

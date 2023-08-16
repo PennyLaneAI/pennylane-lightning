@@ -94,13 +94,13 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         arch: [x86_64]
-        pl_backend: ["lightning_kokkos", "lightning_qubit"]
+        pl_backend: ["lightning_qubit"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
         exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
         container_img: ["quay.io/pypa/manylinux2014_x86_64"]
 
-    name: ${{ matrix.os }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11" }')[matrix.cibw_build] }})
+    name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container_img }}
 
@@ -172,32 +172,38 @@ jobs:
           python3.9 -m pip install twine
           python3.9 -m twine check ./wheelhouse/*.whl
 
-      - uses: actions-ecosystem/action-regex-match@v2
+      - uses: actions-ecosystem/action-regex-match@main
         id: rc_build
         with:
           text: ${{ github.event.pull_request.head.ref }}
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
 
-  # Refine and uncomment before merging to pennylane-lightning repository
-  # upload-pypi:
-  #   needs: linux-wheels-x86-64
-  #   runs-on: ubuntu-latest
-  #   if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
-  #   steps:
-  #     - uses: actions/download-artifact@v2
-  #       with:
-  #         name: Linux-wheels-x86_64.zip
-  #         path: dist
+  upload-pypi:
+    needs: linux-wheels-x86-64
+    matrix:
+        os: [ubuntu-latest]
+        arch: [x86_64]
+        pl_backend: ["lightning_qubit"]
 
-  #     - name: Upload wheels to PyPI
-  #       uses: pypa/gh-action-pypi-publish@release/v1
-  #       with:
-  #         user: __token__
-  #         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-  #         repository_url: https://test.pypi.org/legacy/
+    name: Upload to pypi - ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }}
+    runs-on: ${{ matrix.os }}
+
+    if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
+          path: dist
+
+      - name: Upload wheels to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/

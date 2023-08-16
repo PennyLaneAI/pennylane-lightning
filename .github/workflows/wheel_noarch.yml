@@ -58,26 +58,30 @@ jobs:
           python -m pip install twine
           python -m twine check main/dist/*.whl
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: main/dist/*.whl
 
-  # Refine and uncomment before merging to pennylane-lightning repository
-  # upload-pypi:
-  #   needs: build-pure-python-wheel
-  #   runs-on: ubuntu-latest
-  #   if: ${{ github.event_name == 'release' }}
-  #   steps:
-  #     - uses: actions/download-artifact@v2
-  #       with:
-  #         name: pure-python-wheels.zip
-  #         path: dist
+  upload-pypi:
+    needs: build-pure-python-wheel
+    matrix:
+        pl_backend: ["lightning_qubit"]
 
-  #     - name: Upload wheels to PyPI
-  #       uses: pypa/gh-action-pypi-publish@release/v1
-  #       with:
-  #         user: __token__
-  #         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-  #         repository_url: https://test.pypi.org/legacy/
+    name: Upload to pypi - ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }}
+    runs-on: ${{ matrix.os }}
+
+    if: ${{ github.event_name == 'release' }}
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: pure-python-wheels-${{ matrix.pl_backend }}.zip
+          path: dist
+
+      - name: Upload wheels to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
