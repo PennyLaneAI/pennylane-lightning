@@ -168,7 +168,7 @@ with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
-    "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@feature/lightning_ready#egg=pennylane",
+    "pennylane>=0.31",
 ]
 
 suffix = backend.replace("lightning_", "")
