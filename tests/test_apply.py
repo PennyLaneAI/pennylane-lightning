@@ -204,7 +204,10 @@ class TestApply:
         par = np.array(par)
         dev = qubit_device(wires=2)
         dev.reset()
-        dev.apply([operation(par, wires=[0, 1])])
+        ops = [operation(par, wires=[0, 1])]
+
+        dev.apply(ops)
+        assert len(ops) == 1 # input not mutated
 
         assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
 
