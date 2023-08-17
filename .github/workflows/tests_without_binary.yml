@@ -40,9 +40,10 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }}" python -m pip install -e . -vv
+          python -m pip install -e . -vv
         env:
           SKIP_COMPILATION: True
+          PL_BACKEND: ${{ matrix.pl_backend }}
 
       - name: Run PennyLane-Lightning unit tests
         run: |
