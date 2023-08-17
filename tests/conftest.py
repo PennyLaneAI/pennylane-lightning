@@ -20,7 +20,6 @@ import pytest
 import numpy as np
 
 import pennylane as qml
-import pennylane_lightning
 
 # defaults
 TOL = 1e-6
@@ -85,16 +84,44 @@ def n_subsystems(request):
     return request.param
 
 
+# Looking for the device for testing.
+default_device = "lightning.qubit"
+supported_devices = {"lightning.kokkos", "lightning.qubit"}
+supported_devices.update({sb.replace(".", "_") for sb in supported_devices})
+
+
+def get_device():
+    """Return the pennylane lightning device.
+
+    The device is ``lightning.qubit`` by default.
+    Allowed values are: "lightning.kokkos" and "lightning.qubit".
+    An underscore can also be used instead of a dot.
+    If the environment variable ``PL_DEVICE`` is defined, its value is used.
+    Underscores are replaced by dots upon exiting.
+    """
+    device = None
+    if "PL_DEVICE" in os.environ:
+        device = os.environ.get("PL_DEVICE", default_device)
+        device = device.replace("_", ".")
+    if device is None:
+        device = default_device
+    if device not in supported_devices:
+        raise ValueError(f"Invalid backend {device}.")
+    return device
+
+
+device_name = get_device()
+
+if device_name not in qml.plugin_devices:
+    raise qml.DeviceError(
+        f"Device {device_name} does not exist. Make sure the required plugin is installed."
+    )
+
 # Device specification
-# Here we'll check for lightning.kokkos binaries and proceed with this device if found.
-try:
-    from pennylane_lightning import lightning_kokkos_ops
+if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos import LightningKokkos as LightningDevice
-except:
+else:
     from pennylane_lightning.lightning_qubit import LightningQubit as LightningDevice
-
-
-device_name = LightningDevice.short_name
 
 
 # General qubit_device fixture, for any number of wires.

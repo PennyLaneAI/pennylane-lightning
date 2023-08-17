@@ -1457,5 +1457,5 @@ class TestApplyLightningMethod:
 )
 def test_warning():
     """Tests if a warning is raised when lightning device binaries are not available"""
-    with pytest.warns(UserWarning, match="Pre-compiled binaries for lightning.qubit"):
+    with pytest.warns(UserWarning, match="Pre-compiled binaries for " + device_name):
         qml.device(device_name, wires=1)

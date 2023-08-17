@@ -53,7 +53,7 @@ clean:
 
 .PHONY : test-builtin test-suite test-python coverage coverage-cpp test-cpp test-cpp-no-omp test-cpp-blas test-cpp-kokkos
 test-builtin:
-	$(PYTHON) -I $(TESTRUNNER)
+	PL_DEVICE=$(if $(device:-=),$(device),lightning.qubit) $(PYTHON) -I $(TESTRUNNER)
 
 test-suite:
 	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --skip-ops --shots=20000

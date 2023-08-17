@@ -128,9 +128,10 @@ jobs:
       - name: Run PennyLane-Lightning unit tests
         run: |
           cd main/
-          pytest tests/ $COVERAGE_FLAGS
-          pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
+          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results
@@ -251,9 +252,10 @@ jobs:
       - name: Run PennyLane-Lightning unit tests
         run: |
           cd main/
-          pytest tests/ $COVERAGE_FLAGS
-          pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
+          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results
@@ -417,13 +419,13 @@ jobs:
         run: |
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          pytest tests/ $COVERAGE_FLAGS
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv coverage.xml coverage-${{ github.job }}.xml
 
       - name: Install all backend devices
-        if: ${{ matrix.pl_backend == 'all' }}pythontestswithBLAS
+        if: ${{ matrix.pl_backend == 'all' }}
         run: |
           cd main
           python -m pip uninstall -y pennylane-lightning
@@ -437,11 +439,12 @@ jobs:
         if: ${{ matrix.pl_backend == 'all' }}
         run: |
           cd main/
-          pytest tests/ $COVERAGE_FLAGS
-          pl-device-test --device lightning.kokkos --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.kokkos --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          PL_DEVICE=lightning.qubit python -m pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          PL_DEVICE=lightning.kokkos python -m pytest tests/ $COVERAGE_FLAGS
+          pl-device-test --device lightning.kokkos --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device lightning.kokkos --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results

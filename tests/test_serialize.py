@@ -15,13 +15,16 @@
 Unit tests for the serialization helper functions.
 """
 import pytest
-from conftest import device_name
+from conftest import device_name, LightningDevice
 
 import numpy as np
 import pennylane as qml
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
-try:
+if not LightningDevice._CPP_BINARY_AVAILABLE:
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+
+if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos_ops.observables import (
         NamedObsC64,
         NamedObsC128,
@@ -32,20 +35,17 @@ try:
         HamiltonianC64,
         HamiltonianC128,
     )
-except ImportError:
-    try:
-        from pennylane_lightning.lightning_qubit_ops.observables import (
-            NamedObsC64,
-            NamedObsC128,
-            HermitianObsC64,
-            HermitianObsC128,
-            TensorProdObsC64,
-            TensorProdObsC128,
-            HamiltonianC64,
-            HamiltonianC128,
-        )
-    except ImportError:
-        pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+else:
+    from pennylane_lightning.lightning_qubit_ops.observables import (
+        NamedObsC64,
+        NamedObsC128,
+        HermitianObsC64,
+        HermitianObsC128,
+        TensorProdObsC64,
+        TensorProdObsC128,
+        HamiltonianC64,
+        HamiltonianC128,
+    )
 
 
 @pytest.mark.parametrize(

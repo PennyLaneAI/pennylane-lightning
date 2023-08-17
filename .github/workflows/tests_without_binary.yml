@@ -19,6 +19,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04]
+        pl_backend: ["lightning_qubit, lightning_kokkos"]
 
     steps:
       - name: Checkout PennyLane-Lightning
@@ -39,16 +40,17 @@ jobs:
       - name: Install lightning.qubit device
         run: |
           cd main
-          python -m pip install -e . -vv
+          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }}" python -m pip install -e . -vv
         env:
           SKIP_COMPILATION: True
 
       - name: Run PennyLane-Lightning unit tests
         run: |
           cd main/
-          python -m pytest tests/ $COVERAGE_FLAGS
-          pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
+          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
