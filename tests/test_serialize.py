@@ -48,6 +48,13 @@ else:
     )
 
 
+def test_wrong_device_name():
+    """Test the device name is not a valid option"""
+
+    with pytest.raises(qml.DeviceError, match="The device name"):
+        QuantumScriptSerializer("thunder.qubit")
+
+
 @pytest.mark.parametrize(
     "obs,obs_type",
     [
