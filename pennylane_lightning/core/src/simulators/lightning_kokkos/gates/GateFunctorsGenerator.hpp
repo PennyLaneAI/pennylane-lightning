@@ -18,14 +18,17 @@
 
 #include "BitUtil.hpp"
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::Util;
 using Kokkos::Experimental::swap;
 } // namespace
+/// @endcond
 
 namespace Pennylane::LightningKokkos::Functors {
 template <class PrecisionT, bool adj = false>
 struct generatorPhaseShiftFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire;
@@ -53,6 +56,7 @@ struct generatorPhaseShiftFunctor {
 };
 
 template <class PrecisionT, bool adj = false> struct generatorIsingXXFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire0;
@@ -100,6 +104,7 @@ template <class PrecisionT, bool adj = false> struct generatorIsingXXFunctor {
 };
 
 template <class PrecisionT, bool adj = false> struct generatorIsingXYFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire0;
@@ -148,6 +153,7 @@ template <class PrecisionT, bool adj = false> struct generatorIsingXYFunctor {
 };
 
 template <class PrecisionT, bool adj = false> struct generatorIsingYYFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire0;
@@ -197,6 +203,7 @@ template <class PrecisionT, bool adj = false> struct generatorIsingYYFunctor {
 };
 
 template <class PrecisionT, bool adj = false> struct generatorIsingZZFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire0;
@@ -243,6 +250,7 @@ template <class PrecisionT, bool adj = false> struct generatorIsingZZFunctor {
 
 template <class PrecisionT, bool adj = false>
 struct generatorSingleExcitationFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire0;
@@ -295,6 +303,7 @@ struct generatorSingleExcitationFunctor {
 
 template <class PrecisionT, bool adj = false>
 struct generatorSingleExcitationMinusFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire0;
@@ -344,6 +353,7 @@ struct generatorSingleExcitationMinusFunctor {
 
 template <class PrecisionT, bool adj = false>
 struct generatorSingleExcitationPlusFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire0;
@@ -397,6 +407,7 @@ struct generatorSingleExcitationPlusFunctor {
 
 template <class PrecisionT, bool inverse = false>
 struct generatorDoubleExcitationFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire0;
@@ -539,6 +550,7 @@ struct generatorDoubleExcitationFunctor {
 
 template <class PrecisionT, bool inverse = false>
 struct generatorDoubleExcitationMinusFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire0;
@@ -648,6 +660,7 @@ struct generatorDoubleExcitationMinusFunctor {
 
 template <class PrecisionT, bool inverse = false>
 struct generatorDoubleExcitationPlusFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire0;
@@ -757,6 +770,7 @@ struct generatorDoubleExcitationPlusFunctor {
 
 template <class PrecisionT, bool adj = false>
 struct generatorControlledPhaseShiftFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire0;
@@ -803,6 +817,7 @@ struct generatorControlledPhaseShiftFunctor {
 };
 
 template <class PrecisionT, bool adj = false> struct generatorCRXFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire0;
@@ -850,6 +865,7 @@ template <class PrecisionT, bool adj = false> struct generatorCRXFunctor {
 };
 
 template <class PrecisionT, bool adj = false> struct generatorCRYFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire0;
@@ -902,6 +918,7 @@ template <class PrecisionT, bool adj = false> struct generatorCRYFunctor {
 };
 
 template <class PrecisionT, bool adj = false> struct generatorCRZFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire0;
@@ -949,6 +966,7 @@ template <class PrecisionT, bool adj = false> struct generatorCRZFunctor {
 };
 
 template <class PrecisionT, bool adj = false> struct generatorMultiRZFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t wires_parity;

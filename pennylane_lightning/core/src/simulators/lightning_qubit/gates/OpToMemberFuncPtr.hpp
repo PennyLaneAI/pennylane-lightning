@@ -26,12 +26,15 @@
 #include "Error.hpp"
 #include "GateOperation.hpp"
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::Gates;
 using Pennylane::Gates::GateOperation;
 } // namespace
+/// @endcond
 
 namespace Pennylane::LightningQubit::Gates {
+
 /**
  * @brief Return a specific member function pointer for a given gate operation.
  * See specialized classes.

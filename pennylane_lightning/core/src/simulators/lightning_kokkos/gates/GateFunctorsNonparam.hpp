@@ -18,13 +18,17 @@
 
 #include "BitUtil.hpp"
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::Util;
 using Kokkos::Experimental::swap;
 } // namespace
+/// @endcond
 
 namespace Pennylane::LightningKokkos::Functors {
+
 template <class PrecisionT, bool inverse = false> struct hadamardFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire;
@@ -71,6 +75,7 @@ template <class PrecisionT, bool inverse = false> struct hadamardFunctor {
 };
 
 template <class PrecisionT, bool inverse = false> struct pauliXFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire;
@@ -98,6 +103,7 @@ template <class PrecisionT, bool inverse = false> struct pauliXFunctor {
 };
 
 template <class PrecisionT, bool inverse = false> struct pauliYFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire;
@@ -128,6 +134,7 @@ template <class PrecisionT, bool inverse = false> struct pauliYFunctor {
 };
 
 template <class PrecisionT, bool inverse = false> struct pauliZFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire;
@@ -155,6 +162,7 @@ template <class PrecisionT, bool inverse = false> struct pauliZFunctor {
 };
 
 template <class PrecisionT, bool inverse = false> struct sFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire;
@@ -184,6 +192,7 @@ template <class PrecisionT, bool inverse = false> struct sFunctor {
 };
 
 template <class PrecisionT, bool inverse = false> struct tFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire;
@@ -216,6 +225,7 @@ template <class PrecisionT, bool inverse = false> struct tFunctor {
 };
 
 template <class PrecisionT, bool inverse = false> struct cnotFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire0;
@@ -260,6 +270,7 @@ template <class PrecisionT, bool inverse = false> struct cnotFunctor {
 };
 
 template <class PrecisionT, bool inverse = false> struct cyFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire0;
@@ -305,6 +316,7 @@ template <class PrecisionT, bool inverse = false> struct cyFunctor {
 };
 
 template <class PrecisionT, bool inverse = false> struct czFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire0;
@@ -347,6 +359,7 @@ template <class PrecisionT, bool inverse = false> struct czFunctor {
 };
 
 template <class PrecisionT, bool inverse = false> struct swapFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire0;
@@ -390,6 +403,7 @@ template <class PrecisionT, bool inverse = false> struct swapFunctor {
 };
 
 template <class PrecisionT, bool inverse = false> struct cSWAPFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire0;
@@ -457,6 +471,7 @@ template <class PrecisionT, bool inverse = false> struct cSWAPFunctor {
 };
 
 template <class PrecisionT, bool inverse = false> struct toffoliFunctor {
+
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
     std::size_t rev_wire0;

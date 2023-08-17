@@ -24,11 +24,10 @@ sys.path.insert(0, os.path.abspath(""))
 sys.path.insert(0, os.path.abspath("_ext"))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath("doc")), "doc"))
 
-
 # For obtaining all relevant C++ source files
 currdir = Path(__file__).resolve().parent  # PROJECT_SOURCE_DIR/docs
 PROJECT_SOURCE_DIR = currdir.parent
-CPP_SOURCE_DIR = PROJECT_SOURCE_DIR.joinpath("pennylane_lightning/src")
+CPP_SOURCE_DIR = PROJECT_SOURCE_DIR.joinpath("pennylane_lightning/core/src")
 CPP_EXCLUDE_DIRS = ["tests", "benchmarks"]  # relative to CPP_SOURCE_DIR
 
 
@@ -63,7 +62,8 @@ class Mock(MagicMock):
         return MagicMock()
 
 
-MOCK_MODULES = ["pennylane_lightning.lightning_qubit_ops"]
+MOCK_MODULES = ["pennylane_lightning.lightning_qubit_ops",
+                "pennylane_lightning.lightning_qubit_ops.algorithms"]
 
 mock = Mock()
 for mod_name in MOCK_MODULES:
@@ -153,10 +153,10 @@ add_module_names = False
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 
-import pennylane_lightning
+from pennylane_lightning import lightning_qubit
 
 # The full version, including alpha/beta/rc tags.
-release = pennylane_lightning.__version__
+release = lightning_qubit.__version__
 
 # The short X.Y version.
 version = re.match(r"^(\d+\.\d+)", release).expand(r"\1")
