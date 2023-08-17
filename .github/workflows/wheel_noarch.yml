@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        pl_backend: ["lightning_qubit"]
+        pl_backend: ["lightning_kokkos", "lightning_qubit"]
 
     name: ${{ matrix.os }} - Pure Python wheels - ${{ matrix.pl_backend }} (Python 3.9)
     runs-on: ${{ matrix.os }}
