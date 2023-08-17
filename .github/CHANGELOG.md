@@ -21,11 +21,14 @@
 
 ### Bug fixes
 
+* `apply` no longer mutates the inputted list of operations.
+  [(#474)](https://github.com/PennyLaneAI/pennylane-lightning/pull/474)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Vincent Michaud-Rioux, Lee J. O'Riordan
+Amintor Dusko, Christina Lee, Vincent Michaud-Rioux, Lee J. O'Riordan
 
 ---
 
