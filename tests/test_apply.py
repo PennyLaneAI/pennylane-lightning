@@ -207,7 +207,7 @@ class TestApply:
         ops = [operation(par, wires=[0, 1])]
 
         dev.apply(ops)
-        assert len(ops) == 1 # input not mutated
+        assert len(ops) == 1  # input not mutated
 
         assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
 
