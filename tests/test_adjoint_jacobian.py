@@ -796,8 +796,9 @@ class TestAdjointJacobianQNode:
             qml.RY(jax.numpy.cos(params2), wires=[0])
             return qml.expval(qml.PauliZ(0))
 
-        params1 = jax.numpy.array(0.3, dtype=dev.R_DTYPE)
-        params2 = jax.numpy.array(0.4, dtype=dev.R_DTYPE)
+        dtype = jax.numpy.float32 if dev.R_DTYPE == np.float32 else jax.numpy.float64
+        params1 = jax.numpy.array(0.3, dtype=dtype)
+        params2 = jax.numpy.array(0.4, dtype=dtype)
 
         h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
