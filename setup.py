@@ -176,8 +176,10 @@ suffix = suffix[0].upper() + suffix[1:]
 
 pennylane_plugins = [device_name + " = pennylane_lightning." + backend + ":Lightning" + suffix]
 
+pkg_suffix = "" if suffix == "Qubit" else "_"+suffix
+
 info = {
-    "name": f"PennyLane_Lightning_{suffix}",
+    "name": f"PennyLane_Lightning{pkg_suffix}",
     "version": version,
     "maintainer": "Xanadu Inc.",
     "maintainer_email": "software@xanadu.ai",
