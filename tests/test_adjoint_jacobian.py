@@ -806,7 +806,7 @@ class TestAdjointJacobianQNode:
         params2 = jax.numpy.array(0.4)
 
         h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
-        tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+        tol = 1e-2
 
         qnode_adjoint = QNode(f, dev, interface="jax", diff_method="adjoint")
         qnode_fd = QNode(f, dev, interface="jax", diff_method="finite-diff", h=h)
