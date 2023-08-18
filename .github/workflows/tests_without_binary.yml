@@ -45,6 +45,12 @@ jobs:
           cd main
           python -m pip install -e . -vv
 
+      - name: Uninstall old pennylane_lightning package
+        if: ${{ matrix.pl_backend == 'lightning_kokkos'}}
+        run: |
+          cd main
+          python -m pip uninstall -y pennylane-lightning
+
       - name: Run PennyLane-Lightning unit tests
         run: |
           cd main/

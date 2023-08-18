@@ -410,9 +410,9 @@ jobs:
         if: ${{ matrix.pl_backend != 'all'}}
         run: |
           cd main
-          python -m pip uninstall -y pennylane-lightning
           CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
+          python -m pip uninstall -y pennylane-lightning
 
       - name: Run PennyLane-Lightning unit tests
         if: ${{ matrix.pl_backend != 'all'}}
