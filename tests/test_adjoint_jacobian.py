@@ -791,6 +791,7 @@ class TestAdjointJacobianQNode:
         jax = pytest.importorskip("jax")
         if dev.R_DTYPE == np.float64:
             from jax.config import config
+
             config.update("jax_enable_x64", True)
 
         def f(params1, params2):
