@@ -789,6 +789,10 @@ class TestAdjointJacobianQNode:
         jax interface"""
 
         jax = pytest.importorskip("jax")
+        if dev.R_DTYPE == np.float64:
+            from jax.config import config
+
+            config.update("jax_enable_x64", True)
 
         def f(params1, params2):
             qml.RX(0.4, wires=[0])
