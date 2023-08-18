@@ -13,6 +13,10 @@ This section contains the API documentation for the PennyLane-Lightning plugin.
 
 .. currentmodule:: pennylane_lightning
 
-.. automodapi:: pennylane_lightning
+.. automodapi:: pennylane_lightning.lightning_qubit
+    :no-heading:
+    :include-all-objects:
+
+.. automodapi:: pennylane_lightning.lightning_kokkos
     :no-heading:
     :include-all-objects:
