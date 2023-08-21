@@ -36,6 +36,7 @@ using namespace Pennylane::Gates;
 using Pennylane::Util::exp2;
 using Pennylane::Util::INVSQRT2;
 } // namespace
+/// @endcond
 
 namespace Pennylane::LightningQubit::Gates {
 /**

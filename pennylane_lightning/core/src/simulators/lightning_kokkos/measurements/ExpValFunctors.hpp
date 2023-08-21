@@ -20,7 +20,7 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
-}
+} // namespace
 /// @endcond
 
 namespace Pennylane::LightningKokkos::Functors {
