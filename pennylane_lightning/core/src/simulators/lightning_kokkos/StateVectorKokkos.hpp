@@ -62,6 +62,7 @@ class StateVectorKokkos final
     using PrecisionT = fp_t;
     using ComplexT = Kokkos::complex<fp_t>;
     using KokkosExecSpace = Kokkos::DefaultExecutionSpace;
+    using HostExecSpace = Kokkos::DefaultHostExecutionSpace;
     using KokkosVector = Kokkos::View<ComplexT *>;
     using KokkosSizeTVector = Kokkos::View<size_t *>;
     using KokkosRangePolicy = Kokkos::RangePolicy<KokkosExecSpace>;
@@ -81,12 +82,10 @@ class StateVectorKokkos final
         Kokkos::View<PrecisionT *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using ScratchViewComplex =
-        Kokkos::View<ComplexT *,
-                     Kokkos::DefaultExecutionSpace::scratch_memory_space,
+        Kokkos::View<ComplexT *, KokkosExecSpace::scratch_memory_space,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using ScratchViewSizeT =
-        Kokkos::View<size_t *,
-                     Kokkos::DefaultExecutionSpace::scratch_memory_space,
+        Kokkos::View<size_t *, KokkosExecSpace::scratch_memory_space,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using TeamPolicy = Kokkos::TeamPolicy<>;
 
@@ -398,10 +397,14 @@ class StateVectorKokkos final
                             bool inverse = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
         size_t n = 1U << wires.size();
-        KokkosVector matrix_("matrix_", n * n);
-        for (size_t i = 0; i < n * n; i++) {
-            matrix_(i) = matrix[i];
-        }
+        size_t n2 = n * n;
+        KokkosVector matrix_("matrix_", n2);
+        typename KokkosVector::HostMirror matrix_h =
+            Kokkos::create_mirror_view(matrix_);
+        Kokkos::parallel_for(
+            Kokkos::RangePolicy<HostExecSpace>(0, n2),
+            KOKKOS_LAMBDA(const size_t i) { matrix_h(i) = matrix[i]; });
+        Kokkos::deep_copy(matrix_, matrix_h);
         applyMultiQubitOp(matrix_, wires, inverse);
     }
 
@@ -760,13 +763,14 @@ class StateVectorKokkos final
      * @brief Get underlying data vector
      */
     [[nodiscard]] auto getDataVector() -> std::vector<ComplexT> {
-        std::vector<ComplexT> data_(getData(), getData() + this->getLength());
+        std::vector<ComplexT> data_(this->getLength());
+        DeviceToHost(data_.data(), data_.size());
         return data_;
     }
 
     [[nodiscard]] auto getDataVector() const -> const std::vector<ComplexT> {
-        const std::vector<ComplexT> data_(getData(),
-                                          getData() + this->getLength());
+        std::vector<ComplexT> data_(this->getLength());
+        DeviceToHost(data_.data(), data_.size());
         return data_;
     }
 
@@ -782,7 +786,7 @@ class StateVectorKokkos final
      * @brief Copy data from the device space to the host space.
      *
      */
-    inline void DeviceToHost(ComplexT *sv, size_t length) {
+    inline void DeviceToHost(ComplexT *sv, size_t length) const {
         Kokkos::deep_copy(UnmanagedComplexHostView(sv, length), *data_);
     }
 

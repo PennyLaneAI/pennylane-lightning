@@ -462,15 +462,20 @@ auto registerAdjointJacobian(
     using PrecisionT = typename StateVectorT::PrecisionT;
     std::vector<PrecisionT> jac(observables.size() * trainableParams.size(),
                                 PrecisionT{0.0});
+#ifdef _ENABLE_PLQUBIT
+    auto svdata = sv.getData();
+#elif _ENABLE_PLKOKKOS == 1
+    std::vector<Kokkos::complex<PrecisionT>> datavec(sv.getLength());
+    sv.DeviceToHost(datavec.data(), datavec.size());
+    auto svdata = datavec.data();
+#endif
     const JacobianData<StateVectorT> jd{operations.getTotalNumParams(),
                                         sv.getLength(),
-                                        sv.getData(),
+                                        svdata,
                                         observables,
                                         operations,
                                         trainableParams};
-
     adjoint_jacobian.adjointJacobian(std::span{jac}, jd);
-
     return py::array_t<PrecisionT>(py::cast(jac));
 }
 

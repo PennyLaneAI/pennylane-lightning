@@ -112,12 +112,10 @@ class AdjointJacobian final
         auto tp_it = tp.rbegin();
         const auto tp_rend = tp.rend();
 
-        StateVectorKokkos<PrecisionT> ref_data(jd.getPtrStateVec(),
-                                               jd.getSizeStateVec());
+        StateVectorT ref_data(jd.getPtrStateVec(), jd.getSizeStateVec());
 
         // Create $U_{1:p}\vert \lambda \rangle$
-        StateVectorT lambda(ref_data.getNumQubits());
-        lambda.DeviceToDevice(ref_data.getView());
+        StateVectorT lambda{ref_data};
 
         // Apply given operations to statevector if requested
         if (apply_operations) {
@@ -129,7 +127,7 @@ class AdjointJacobian final
                                            StateVectorT(lambda.getNumQubits()));
         this->applyObservables(H_lambda, lambda, obs);
 
-        StateVectorT mu(lambda.getNumQubits());
+        StateVectorT mu{lambda.getNumQubits()};
 
         for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
              op_idx--) {

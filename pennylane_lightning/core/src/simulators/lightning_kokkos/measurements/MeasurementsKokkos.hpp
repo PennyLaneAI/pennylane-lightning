@@ -312,8 +312,7 @@ class Measurements final
      * @return Expectation value with respect to the given observable.
      */
     PrecisionT expval(const Observable<StateVectorT> &ob) {
-        StateVectorT ob_sv(this->_statevector.getNumQubits());
-        ob_sv.DeviceToDevice(this->_statevector.getView());
+        StateVectorT ob_sv{this->_statevector};
         ob.applyInPlace(ob_sv);
         return getRealOfComplexInnerProduct(this->_statevector.getView(),
                                             ob_sv.getView());
@@ -328,8 +327,7 @@ class Measurements final
      */
     PrecisionT expval(const std::vector<ComplexT> &matrix,
                       const std::vector<size_t> &wires) {
-        StateVectorT ob_sv(this->_statevector.getNumQubits());
-        ob_sv.DeviceToDevice(this->_statevector.getView());
+        StateVectorT ob_sv{this->_statevector};
         ob_sv.applyMatrix(matrix, wires);
         return getRealOfComplexInnerProduct(this->_statevector.getView(),
                                             ob_sv.getView());
@@ -344,8 +342,7 @@ class Measurements final
      */
     PrecisionT expval(const std::string &operation,
                       const std::vector<size_t> &wires) {
-        StateVectorT ob_sv(this->_statevector.getNumQubits());
-        ob_sv.DeviceToDevice(this->_statevector.getView());
+        StateVectorT ob_sv{this->_statevector};
         ob_sv.applyOperation(operation, wires);
         return getRealOfComplexInnerProduct(this->_statevector.getView(),
                                             ob_sv.getView());
@@ -425,8 +422,7 @@ class Measurements final
      * @return Variance with respect to the given observable.
      */
     auto var(const Observable<StateVectorT> &ob) -> PrecisionT {
-        StateVectorT ob_sv(this->_statevector.getNumQubits());
-        ob_sv.DeviceToDevice(this->_statevector.getView());
+        StateVectorT ob_sv{this->_statevector};
         ob.applyInPlace(ob_sv);
 
         const PrecisionT mean_square =
@@ -447,8 +443,7 @@ class Measurements final
      */
     PrecisionT var(const std::string &operation,
                    const std::vector<size_t> &wires) {
-        StateVectorT ob_sv(this->_statevector.getNumQubits());
-        ob_sv.DeviceToDevice(this->_statevector.getView());
+        StateVectorT ob_sv{this->_statevector};
         ob_sv.applyOperation(operation, wires);
 
         const PrecisionT mean_square =
@@ -469,8 +464,7 @@ class Measurements final
      */
     PrecisionT var(const std::vector<ComplexT> &matrix,
                    const std::vector<size_t> &wires) {
-        StateVectorT ob_sv(this->_statevector.getNumQubits());
-        ob_sv.DeviceToDevice(this->_statevector.getView());
+        StateVectorT ob_sv{this->_statevector};
         ob_sv.applyMatrix(matrix, wires);
 
         const PrecisionT mean_square =
@@ -533,8 +527,7 @@ class Measurements final
             (this->_statevector.getLength() != (size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
 
-        StateVectorT ob_sv(this->_statevector.getNumQubits());
-        ob_sv.DeviceToDevice(this->_statevector.getView());
+        StateVectorT ob_sv{this->_statevector};
 
         SparseMV_Kokkos<PrecisionT>(this->_statevector.getView(),
                                     ob_sv.getView(), row_map_ptr, row_map_size,
@@ -582,7 +575,7 @@ class Measurements final
      * @return Floating point std::vector with probabilities.
      * The basis columns are rearranged according to wires.
      */
-    auto probs(const std::vector<size_t> &wires) {
+    std::vector<PrecisionT> probs(const std::vector<size_t> &wires) {
         using MDPolicyType_2D =
             Kokkos::MDRangePolicy<Kokkos::Rank<2, Kokkos::Iterate::Left>>;
 
