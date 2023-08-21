@@ -2,7 +2,7 @@ AVX2/512 kernel build system
 ############################
 
 
-In PennyLane-Lightning, a kernel is registered to :cpp:class:`Pennylane::LightningQubit::DynamicDispatcher`
+In Lightning Qubit, a kernel is registered to :cpp:class:`Pennylane::LightningQubit::DynamicDispatcher`
 when the library is loaded, and it is used at runtime when it is the most suitable kernel for the given input.
 
 To support AVX2 and AVX512 kernels, we always compile those kernels if the target system is UNIX on x86-64.

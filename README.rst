@@ -1,5 +1,5 @@
-PennyLane-Lightning Plugin
-##########################
+Lightning Plugin
+################
 
 .. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_linux.yml?branch=master&label=Test%20%28Linux%29&style=flat-square
     :alt: Linux x86_64 tests (branch)
@@ -35,7 +35,7 @@ PennyLane-Lightning Plugin
 
 .. header-start-inclusion-marker-do-not-remove
 
-The PennyLane-Lightning plugin provides fast state-vector simulators written in C++.
+The Lightning plugin provides fast state-vector simulators written in C++.
 
 `PennyLane <https://docs.pennylane.ai>`_ is a cross-platform Python library for quantum machine
 learning, automatic differentiation, and optimization of hybrid quantum-classical computations.
@@ -46,7 +46,7 @@ learning, automatic differentiation, and optimization of hybrid quantum-classica
 Features
 ========
 
-* Combine PennyLane-Lightning's high performance simulators with PennyLane's
+* Combine Lightning's high performance simulators with PennyLane's
   automatic differentiation and optimization.
 
 .. installation-start-inclusion-marker-do-not-remove
@@ -55,13 +55,13 @@ Features
 Installation
 ============
 
-PennyLane-Lightning requires Python version 3.9 and above. It can be installed using ``pip``:
+Lightning requires Python version 3.9 and above. It can be installed using ``pip``:
 
 .. code-block:: console
 
     $ pip install pennylane-lightning
 
-To build PennyLane-Lightning from source you can run
+To build Lightning from source you can run
 
 .. code-block:: console
 
@@ -112,7 +112,7 @@ or with ``build_ext`` and the ``--define`` flag as follows:
 GPU support
 -----------
 
-For GPU support, `PennyLane-Lightning-GPU <https://github.com/PennyLaneAI/pennylane-lightning-gpu>`_
+For GPU support, `Lightning GPU <https://github.com/PennyLaneAI/pennylane-lightning-gpu>`_
 can be installed by providing the optional ``[gpu]`` tag:
 
 .. code-block:: console
@@ -168,7 +168,7 @@ Other supported options are
 Compile on Windows with MSVC
 ----------------------------
 
-You can also compile Pennylane-Lightning on Windows using
+You can also compile Lightning on Windows using
 `Microsoft Visual C++ <https://visualstudio.microsoft.com/vs/features/cplusplus/>`_ compiler.
 You need `cmake <https://cmake.org/download/>`_ and appropriate Python environment
 (e.g. using `Anaconda <https://www.anaconda.com/>`_).
@@ -202,7 +202,7 @@ well as to the `PennyLane documentation <https://docs.pennylane.ai/>`_ for furth
 
 Docker Support
 --------------
-One can also build the Pennylane-Lightning image using Docker:
+One can also build the Lightning image using Docker:
 
 .. code-block:: console
 
@@ -237,9 +237,9 @@ Please make your best effort to comply with `black` and `pylint` before using di
 Authors
 =======
 
-PennyLane-Lightning is the work of `many contributors <https://github.com/PennyLaneAI/pennylane-lightning/graphs/contributors>`_.
+Lightning is the work of `many contributors <https://github.com/PennyLaneAI/pennylane-lightning/graphs/contributors>`_.
 
-If you are doing research using PennyLane and PennyLane-Lightning, please cite `our paper <https://arxiv.org/abs/1811.04968>`_:
+If you are doing research using PennyLane and Lightning, please cite `our paper <https://arxiv.org/abs/1811.04968>`_:
 
     Ville Bergholm, Josh Izaac, Maria Schuld, Christian Gogolin, M. Sohaib Alam, Shahnawaz Ahmed,
     Juan Miguel Arrazola, Carsten Blank, Alain Delgado, Soran Jahangiri, Keri McKiernan, Johannes Jakob Meyer,

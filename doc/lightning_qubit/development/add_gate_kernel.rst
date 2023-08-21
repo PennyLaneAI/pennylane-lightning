@@ -3,7 +3,9 @@
 Adding a gate implementation
 ############################
 
-We discuss how one can add another gate implementation in this document. Assume that you want to add a custom ``PauliX`` gate implementation in Pennylane-Lightning. In this case, you may first create a file and add a class:
+We discuss how one can add another gate implementation in this document.
+Assume that you want to add a custom ``PauliX`` gate implementation in Lightning Qubit.
+In this case, you may first create a file and add a class:
 
 .. code-block:: cpp
 
@@ -31,7 +33,7 @@ We discuss how one can add another gate implementation in this document. Assume 
         }
     };
 
-Then you can add your gate implementation to Pennylane-Lightning.
+Then you can add your gate implementation to Lightning Qubit.
 This can be done by modifying two files:
 
 .. code-block:: cpp

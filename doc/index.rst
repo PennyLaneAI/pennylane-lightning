@@ -1,5 +1,5 @@
-PennyLane-Lightning Plugin
-##########################
+Lightning
+#########
 
 About
 -----
@@ -8,7 +8,7 @@ About
 
 .. image:: _static/pennylane_lightning.png
     :align: left
-    :width: 250px
+    :width: 200px
     :target: javascript:void(0);
 
 .. include:: ../README.rst
@@ -19,7 +19,7 @@ About
 Devices
 -------
 
-PennyLane-Lightning provides the following devices:
+Lightning provides the following devices:
 
 .. title-card::
     :name: 'lightning.qubit'

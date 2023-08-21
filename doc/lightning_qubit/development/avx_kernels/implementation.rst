@@ -6,7 +6,7 @@ AVX2 (AVX512) works with 256-bit (512-bit) registers and naturally supports diff
 Those instructions are accessible within C++ using intrinsic functions provided by compilers (Intel/GCC/Clang) [#f1]_.
 As an introduction to AVX2/512 intrinsic is out of the scope of this document, we recommend e.g. `this website <https://chryswoods.com/vector_c++/immintrin.html>`_ for an introduction and `Intel intrinsics guide <https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html>`_ for a reference.
 
-We now discuss how we use SIMD to implement quantum gate operations in PennyLane-Lightning.
+We now discuss how we use SIMD to implement quantum gate operations in Lightning Qubit.
 When using SIMD, it is natural to consider data as a list of packed arrays, i.e. two-dimensional array where each row has ``packed_size`` numbers.
 For example, let us consider a four-qubit quantum state :math:`C` (which has 16 complex numbers) and ``packed_size=8`` (when we use AVX512 with a double precision floating point or AVX2 with a single precision floating point). In this case, we can write down the statevector (coefficients in the computational basis) as
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# PennyLane-Lightning documentation build configuration file.
+# Lightning documentation build configuration file.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -143,7 +143,7 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = "PennyLane-Lightning"
+project = "Lightning"
 copyright = "2023, Xanadu Quantum Technologies"
 author = "Xanadu Inc."
 
@@ -208,7 +208,7 @@ html_theme = "pennylane"
 
 # html theme options (see theme.conf for more information)
 html_theme_options = {
-    "navbar_name": "PennyLane-Lightning",
+    "navbar_name": "Lightning",
     "navbar_active_link": 3,
     "google_analytics_tracking_id": "G-C480Z9JL0D",
     "extra_copyrights": [

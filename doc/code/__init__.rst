@@ -1,7 +1,7 @@
 pennylane_lightning
 ===================
 
-This section contains the API documentation for the PennyLane-Lightning plugin.
+This section contains the API documentation for the Lightning plugins.
 
 .. warning::
 
@@ -9,7 +9,7 @@ This section contains the API documentation for the PennyLane-Lightning plugin.
     to use these classes and functions directly.
 
     See the :doc:`overview </index>` page for more
-    details on using PennyLane-Lightning.
+    details on using Lightning.
 
 .. currentmodule:: pennylane_lightning
 
