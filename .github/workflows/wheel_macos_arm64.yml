@@ -121,16 +121,15 @@ jobs:
     needs: mac-wheels-arm64
     strategy:
       matrix:
-        os: [macos-11]
         arch: [arm64]
         pl_backend: ["lightning_qubit"]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
     steps:
       - uses: actions/download-artifact@v3
         with:
-          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
+          name: macOS-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
           path: dist
 
       - name: Upload wheels to PyPI
@@ -138,4 +137,4 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
+          repository-url: https://test.pypi.org/legacy/

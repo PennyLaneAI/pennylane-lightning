@@ -69,7 +69,7 @@ jobs:
     strategy:
       matrix:
         pl_backend: ["lightning_qubit"]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     if: ${{ github.event_name == 'release' }}
     steps:
@@ -83,4 +83,4 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
+          repository-url: https://test.pypi.org/legacy/

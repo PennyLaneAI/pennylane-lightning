@@ -27,7 +27,6 @@
 namespace py = pybind11;
 
 namespace Pennylane::Bindings {
-
 /**
  * @brief Register matrix.
  */
