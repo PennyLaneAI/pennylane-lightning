@@ -19,7 +19,7 @@ endforeach()
 
 if (BUILD_TESTS)
     # Include macros supporting tests.
-    include("${CMAKE_SOURCE_DIR}/cmake/support_tests.cmake")
+    include("${pennylane_lightning_SOURCE_DIR}/cmake/support_tests.cmake")
     FetchAndIncludeCatch()
 
     include(CTest)

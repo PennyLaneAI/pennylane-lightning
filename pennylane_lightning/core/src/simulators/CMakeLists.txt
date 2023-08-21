@@ -7,7 +7,7 @@ add_subdirectory(base)
 ###############################################################################
 # Determine simulator and include its directory
 ###############################################################################
-include("${CMAKE_SOURCE_DIR}/cmake/support_simulators.cmake")
+include("${pennylane_lightning_SOURCE_DIR}/cmake/support_simulators.cmake")
 FIND_AND_ADD_SIMULATOR()
 
 if (BUILD_TESTS)
