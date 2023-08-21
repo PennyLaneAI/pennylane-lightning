@@ -59,7 +59,7 @@ jobs:
           python -m twine check main/dist/*.whl
 
       - uses: actions/upload-artifact@v3
-        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
+        # if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: main/dist/*.whl
@@ -69,9 +69,9 @@ jobs:
     strategy:
       matrix:
         pl_backend: ["lightning_qubit"]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
-    if: ${{ github.event_name == 'release' }}
+    # if: ${{ github.event_name == 'release' }}
     steps:
       - uses: actions/download-artifact@v3
         with:
@@ -83,4 +83,4 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
+          repository-url: https://test.pypi.org/legacy/

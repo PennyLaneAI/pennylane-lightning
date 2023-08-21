@@ -170,7 +170,7 @@ jobs:
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
       - uses: actions/upload-artifact@v3
-        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
+        # if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
@@ -179,16 +179,15 @@ jobs:
     needs: mac-wheels-x86
     strategy:
       matrix:
-        os: [macos-12]
         arch: [x86_64]
         pl_backend: ["lightning_qubit"]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
-    if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
+    # if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
     steps:
       - uses: actions/download-artifact@v3
         with:
-          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
+          name: macOS-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
           path: dist
 
       - name: Upload wheels to PyPI
@@ -196,4 +195,4 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
+          repository-url: https://test.pypi.org/legacy/
