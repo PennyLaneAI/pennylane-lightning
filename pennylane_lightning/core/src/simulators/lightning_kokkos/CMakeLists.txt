@@ -37,7 +37,7 @@ option(PLKOKKOS_ENABLE_SANITIZER "Enable address sanitizer" OFF)
 option(PLKOKKOS_ENABLE_WARNINGS "Enable warnings" ON)
 
 # Include macro and functions supporting Kokkos libraries.
-include("${CMAKE_SOURCE_DIR}/cmake/support_kokkos.cmake")
+include("${pennylane_lightning_SOURCE_DIR}/cmake/support_kokkos.cmake")
 FindKokkos(lightning_external_libs)
 
 if(PLKOKKOS_ENABLE_SANITIZER)

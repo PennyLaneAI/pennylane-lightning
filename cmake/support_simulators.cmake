@@ -9,7 +9,7 @@ include_guard()
 # All simulators have their own directory in "simulators"
 # This macro will extract this list of directories.
 MACRO(FIND_SIMULATORS_LIST RESULT)
-    set(SIMULATORS_DIR ${CMAKE_SOURCE_DIR}/pennylane_lightning/core/src/simulators)
+    set(SIMULATORS_DIR ${pennylane_lightning_SOURCE_DIR}/pennylane_lightning/core/src/simulators)
     FILE(GLOB FULL_LIST RELATIVE ${SIMULATORS_DIR} ${SIMULATORS_DIR}/*)
     SET(${RESULT} "")
     FOREACH(ITEM ${FULL_LIST})

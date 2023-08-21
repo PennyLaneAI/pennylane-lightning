@@ -13,8 +13,8 @@ set(KOKKOS_VERSION 4.0.01)
 # 3. Not installed, so fall back to building from source.
 macro(FindKokkos target_name)
     find_package(Kokkos
-    HINTS   ${CMAKE_SOURCE_DIR}/kokkos
-            ${CMAKE_SOURCE_DIR}/Kokkos
+    HINTS   ${pennylane_lightning_SOURCE_DIR}/kokkos
+            ${pennylane_lightning_SOURCE_DIR}/Kokkos
             ${Kokkos_Core_DIR}
             /usr
             /usr/local
@@ -30,7 +30,7 @@ macro(FindKokkos target_name)
 
         find_library(Kokkos_core_lib
             NAME kokkoscore.a libkokkoscore.a kokkoscore.so libkokkoscore.so
-            HINTS   ${CMAKE_SOURCE_DIR}/Kokkos/lib
+            HINTS   ${pennylane_lightning_SOURCE_DIR}/Kokkos/lib
                     ${Kokkos_Core_DIR}/lib
                     ${Kokkos_Core_DIR}/lib64
                     /usr/lib
