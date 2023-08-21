@@ -21,6 +21,9 @@
 
 ### Bug fixes
 
+* Modify `registerAdjointJacobian` and LKokkos' `applyMatrix` method to support device execution (with CUDA-12)
+  [(#477)](https://github.com/PennyLaneAI/pennylane-lightning/pull/477)
+
 * `apply` no longer mutates the inputted list of operations.
   [(#474)](https://github.com/PennyLaneAI/pennylane-lightning/pull/474)
 
