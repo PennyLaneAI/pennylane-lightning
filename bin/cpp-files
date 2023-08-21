@@ -1,0 +1,34 @@
+#!/usr/bin/python3
+
+import argparse
+import json
+import sys
+
+from utils import get_cpp_files
+
+
+if __name__ == '__main__':
+    """
+    This program output a json list of all C++ source files.
+    """
+    parser = argparse.ArgumentParser(
+        description="Output C/C++ files in json list"
+    )
+    parser.add_argument(
+        "--header-only", action='store_true', dest='header_only', help="whether only include header files"
+    )
+    parser.add_argument(
+        "paths", nargs="+", metavar="DIR", help="paths to the root source directories"
+    )
+    parser.add_argument(
+        "--exclude-dirs", dest="exclude_dirs", nargs="*", metavar="DIR", help="paths exclude from"
+    )
+
+    args = parser.parse_args()
+
+    files = set(get_cpp_files(args.paths, header_only = args.header_only))
+    if args.exclude_dirs:
+        files_excludes = set(get_cpp_files(args.exclude_dirs, header_only = args.header_only))
+        files -= files_excludes
+
+    json.dump(list(files), sys.stdout)
