@@ -1,14 +1,23 @@
 PennyLane-Lightning Plugin
 ##########################
 
+About
+-----
+
 :Release: |release|
+
+.. image:: _static/pennylane_lightning.png
+    :align: left
+    :width: 250px
+    :target: javascript:void(0);
 
 .. include:: ../README.rst
   :start-after:   header-start-inclusion-marker-do-not-remove
   :end-before: header-end-inclusion-marker-do-not-remove
 
+
 Devices
-=======
+-------
 
 PennyLane-Lightning provides the following devices:
 
