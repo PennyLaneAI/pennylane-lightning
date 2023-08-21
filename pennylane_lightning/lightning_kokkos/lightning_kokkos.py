@@ -430,10 +430,10 @@ if LK_CPP_BINARY_AVAILABLE:
                     self._apply_state_vector(
                         operations[0].parameters[0].copy(), operations[0].wires
                     )
-                    del operations[0]
+                    operations = operations[1:]
                 elif isinstance(operations[0], BasisState):
                     self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
-                    del operations[0]
+                    operations = operations[1:]
 
             for operation in operations:
                 if isinstance(operation, (QubitStateVector, BasisState)):

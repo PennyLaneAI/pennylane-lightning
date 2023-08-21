@@ -45,6 +45,12 @@ jobs:
           cd main
           python -m pip install -e . -vv
 
+      - name: Install the new pennylane_lightning package
+        if: ${{ matrix.pl_backend == 'lightning_kokkos'}}
+        run: |
+          cd main
+          SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv
+
       - name: Run PennyLane-Lightning unit tests
         run: |
           cd main/

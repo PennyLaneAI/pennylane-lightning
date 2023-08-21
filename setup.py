@@ -168,7 +168,7 @@ with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
-    "pennylane @ git+https://github.com/PennyLaneAI/pennylane.git@feature/lightning_ready#egg=pennylane",
+    "pennylane>=0.31",
 ]
 
 suffix = backend.replace("lightning_", "")
@@ -176,8 +176,10 @@ suffix = suffix[0].upper() + suffix[1:]
 
 pennylane_plugins = [device_name + " = pennylane_lightning." + backend + ":Lightning" + suffix]
 
+pkg_suffix = "" if suffix == "Qubit" else "_"+suffix
+
 info = {
-    "name": f"PennyLane_Lightning_{suffix}",
+    "name": f"PennyLane_Lightning{pkg_suffix}",
     "version": version,
     "maintainer": "Xanadu Inc.",
     "maintainer_email": "software@xanadu.ai",
